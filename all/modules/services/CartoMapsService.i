@@ -6,7 +6,7 @@
 !proxy_imports(carto::CartoMapsService, core.Variant, core.StringVariantMap, core.StringMap, layers.Layers, vectortiles.VectorTileDecoder, vectortiles.TorqueTileDecoder)
 
 %{
-#include "carto/CartoMapsService.h"
+#include "services/CartoMapsService.h"
 %}
 
 %include <std_string.i>
@@ -20,7 +20,7 @@
 %import "vectortiles/VectorTileDecoder.i"
 %import "vectortiles/TorqueTileDecoder.i"
 
-!shared_ptr(carto::CartoMapsService, carto.CartoMapsService)
+!shared_ptr(carto::CartoMapsService, services.CartoMapsService)
 
 %attributestring(carto::CartoMapsService, std::string, Username, getUsername, setUsername)
 %attributestring(carto::CartoMapsService, std::string, APIKey, getAPIKey, setAPIKey)
@@ -31,6 +31,6 @@
 %attributestring(carto::CartoMapsService, std::shared_ptr<carto::TorqueTileDecoder>, TorqueTileDecoder, getTorqueTileDecoder, setTorqueTileDecoder)
 !standard_equals(carto::CartoMapsService);
 
-%include "carto/CartoMapsService.h"
+%include "services/CartoMapsService.h"
 
 #endif

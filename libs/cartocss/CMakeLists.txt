@@ -19,7 +19,7 @@ set(cartocss_LIBS_DIR "${PROJECT_SOURCE_DIR}/../libs-external")
 file(GLOB cartocss_SRC_FILES "${cartocss_SRC_DIR}/*.cpp" "${cartocss_SRC_DIR}/*.h")
 
 if(WIN32)
-set_source_files_properties("${cartocss_SRC_DIR}/CartoCSS/CartoCSSParser.cpp" PROPERTIES COMPILE_FLAGS "/Od /Ob2")
+set_source_files_properties("${cartocss_SRC_DIR}/CartoCSSParser.cpp" PROPERTIES COMPILE_FLAGS "/Od /Ob2")
 endif(WIN32)
 
 if(SINGLE_LIBRARY)
