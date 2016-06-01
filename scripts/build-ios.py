@@ -56,7 +56,7 @@ def buildIOSFramework(args, archs):
   if not makesymlink('%s/CartoMobileSDK.framework' % distDir, 'Versions/A/CartoMobileSDK', 'CartoMobileSDK'):
     return False
 
-  for dir in ['%s/all/native', '%s/ios/native', '%s/ios/objc', '%s/generated/ios-objc/proxies', '%s/all/libs/cglib']:
+  for dir in ['%s/all/native', '%s/ios/native', '%s/ios/objc', '%s/generated/ios-objc/proxies', '%s/libs-external/cglib']:
     currentDir = os.getcwd()
     os.chdir(dir % baseDir)
     for dirpath, dirnames, filenames in os.walk('.'):
