@@ -1,0 +1,37 @@
+#ifndef _BASEMAPVIEW_I
+#define _BASEMAPVIEW_I
+
+%module BaseMapView
+
+!proxy_imports(carto::BaseMapView, components.Options, core.MapPos, core.MapVec, core.MapBounds, core.ScreenPos, core.ScreenBounds, layers.Layers, components.LicenseManagerListener, renderers.MapRenderer, renderers.RedrawRequestListener, ui.MapEventListener)
+!java_imports(carto::BaseMapView, com.carto.components.ProjectionMode)
+
+%{
+#include "core/MapPos.h"
+#include "core/MapBounds.h"
+#include "core/ScreenPos.h"
+#include "core/ScreenBounds.h"
+#include "components/LicenseManagerListener.h"
+#include "renderers/MapRenderer.h"
+#include "renderers/RedrawRequestListener.h"
+#include "ui/MapEventListener.h"
+#include "ui/BaseMapView.h"
+%}
+
+%include <cartoswig.i>
+
+%import "components/Options.i"
+%import "core/MapPos.i"
+%import "core/MapBounds.i"
+%import "core/ScreenPos.i"
+%import "core/ScreenBounds.i"
+%import "core/MapVec.i"
+%import "layers/Layers.i"
+%import "components/LicenseManagerListener.i"
+%import "renderers/MapRenderer.i"
+%import "renderers/RedrawRequestListener.i"
+%import "ui/MapEventListener.i"
+
+%include "ui/BaseMapView.h"
+
+#endif

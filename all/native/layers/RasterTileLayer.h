@@ -1,0 +1,118 @@
+/*
+ * Copyright (c) 2016 CartoDB. All rights reserved.
+ * Copying and using this code is allowed only according
+ * to license terms, as given in https://cartodb.com/terms/
+ */
+
+#ifndef _CARTO_RASTERTILELAYER_H_
+#define _CARTO_RASTERTILELAYER_H_
+
+#include "TileLayer.h"
+#include "components/CancelableTask.h"
+#include "components/DirectorPtr.h"
+#include "components/Task.h"
+#include "core/MapTile.h"
+
+#include <atomic>
+#include <memory>
+#include <map>
+
+#include <stdext/timed_lru_cache.h>
+
+namespace carto {
+    class TileDrawData;
+    class TileRenderer;
+    namespace vt {
+        class Tile;
+    }
+    
+    /**
+     * A tile layer where each tile is a bitmap. Should be used together with corresponding data source.
+     */
+    class RasterTileLayer: public TileLayer {
+    public:
+        /**
+         * Constructs a RasterTileLayer object from a data source.
+         * @param dataSource The data source from which this layer loads data.
+         */
+        RasterTileLayer(const std::shared_ptr<TileDataSource>& dataSource);
+        virtual ~RasterTileLayer();
+        
+        /**
+         * Returns the tile texture cache capacity.
+         * @return The tile texture cache capacity in bytes.
+         */
+        unsigned int getTextureCacheCapacity() const;
+        /**
+         * Sets the tile texture cache capacity. Texture cache is the primary storage for raster data,
+         * all tiles contained within the texture cache are stored as uncompressed openGL textures and can immediately be
+         * drawn to the screen. Setting the cache size too small may cause artifacts, such as disappearing tiles.
+         * The more tiles are visible on the screen, the larger this cache should be. A single opaque 256x256 tile takes
+         * up 192KB of memory, a transparent tile of the same size takes 256KB. The number of tiles on the screen depends
+         * on the screen size and density, current rotation and tilt angle, tile draw size parameter and 
+         * whether or not preloading is enabled.
+         * The default is 10MB, which should be enough for most use cases with preloading enabled. If preloading is
+         * disabled, the cache size should be reduced by the user to conserve memory.
+         * @return The new tile bitmap cache capacity in bytes.
+         */
+        void setTextureCacheCapacity(unsigned int capacityInBytes);
+    
+        virtual void clearTileCaches(bool all);
+    
+    protected:
+        class FetchTask : public TileLayer::FetchTaskBase {
+        public:
+            FetchTask(const std::shared_ptr<RasterTileLayer>& layer, const MapTile& tile, bool preloadingTile);
+    
+        protected:
+            bool loadTile(const std::shared_ptr<TileLayer>& tileLayer);
+            
+        private:
+            static std::shared_ptr<Bitmap> extractSubTile(const MapTile& subTile, const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap);
+            static std::shared_ptr<vt::Tile> createVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap);
+        };
+    
+        virtual int getCullDelay() const;
+
+        virtual bool tileExists(const MapTile& mapTile, bool preloadingCache);
+        virtual bool tileIsValid(const MapTile& mapTile) const;
+        virtual void fetchTile(const MapTile& mapTile, bool preloadingTile,bool invalidated);
+    
+        virtual void calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile);
+        virtual void refreshDrawData(const std::shared_ptr<CullState>& cullState);
+        
+        virtual void tilesChanged(bool removeTiles);
+        
+        virtual int getMinZoom() const;
+        virtual int getMaxZoom() const;
+        
+        virtual void offsetLayerHorizontally(double offset) ;
+        
+        virtual void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
+        virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& BillboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
+        virtual void onSurfaceDestroyed();
+        
+        virtual void calculateRayIntersectedElements(const Projection& projection, const MapPos& rayOrig, const MapVec& rayDir,
+                                                     const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
+        virtual bool processRayIntersectedElement(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement) const;
+
+        virtual void registerDataSourceListener();
+        virtual void unregisterDataSourceListener();
+
+    private:    
+        static const int CULL_DELAY_TIME = 200;
+        static const int PRELOADING_PRIORITY_OFFSET = -2;
+        static const int EXTRA_TILE_FOOTPRINT = 4096;
+        static const int DEFAULT_PRELOADING_CACHE_SIZE = 10 * 1024 * 1024;
+        
+        std::shared_ptr<TileRenderer> _renderer;
+        
+        std::vector<std::shared_ptr<TileDrawData> > _tempDrawDatas;
+        
+        cache::timed_lru_cache<long long, std::shared_ptr<const vt::Tile> > _visibleCache;
+        cache::timed_lru_cache<long long, std::shared_ptr<const vt::Tile> > _preloadingCache;
+    };
+    
+}
+
+#endif

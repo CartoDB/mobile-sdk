@@ -1,0 +1,30 @@
+#ifndef _LINE_I
+#define _LINE_I
+
+%module Line
+
+!proxy_imports(carto::Line, core.MapPosVector, geometry.LineGeometry, styles.LineStyle, vectorelements.VectorElement)
+
+%{
+#include "vectorelements/Line.h"
+#include <memory>
+%}
+
+%include <std_shared_ptr.i>
+%include <cartoswig.i>
+
+%import "geometry/LineGeometry.i"
+%import "styles/LineStyle.i"
+%import "vectorelements/VectorElement.i"
+
+!polymorphic_shared_ptr(carto::Line, vectorelements.Line)
+
+%csmethodmodifiers carto::Line::Geometry "public new";
+!attributestring_polymorphic(carto::Line, geometry.LineGeometry, Geometry, getGeometry, setGeometry)
+%attributestring(carto::Line, std::shared_ptr<carto::LineStyle>, Style, getStyle, setStyle)
+%ignore carto::Line::getDrawData;
+%ignore carto::Line::setDrawData;
+
+%include "vectorelements/Line.h"
+
+#endif

@@ -1,0 +1,179 @@
+package nml;
+
+option optimize_for = LITE_RUNTIME;
+option java_package = "com.nutiteq.nmlpackage";
+
+message Vector3 {
+	required float x = 1;
+	required float y = 2;
+	required float z = 3;
+}
+
+message ColorRGBA {
+	required float r = 1;
+	required float g = 2;
+	required float b = 3;
+	required float a = 4;
+}
+
+message Bounds3 {
+	required Vector3 min = 1;
+	required Vector3 max = 2;
+}
+
+message Matrix4 {
+	required float m00 = 1; // row 1, col 1
+	required float m01 = 2; // row 2, col 1
+	required float m02 = 3; // ...
+	required float m03 = 4;
+	required float m10 = 5;
+	required float m11 = 6;
+	required float m12 = 7;
+	required float m13 = 8;
+	required float m20 = 9;
+	required float m21 = 10;
+	required float m22 = 11;
+	required float m23 = 12;
+	required float m30 = 13;
+	required float m31 = 14;
+	required float m32 = 15;
+	required float m33 = 16;
+}
+
+message Sampler {
+	enum Filter {
+		NEAREST = 1;
+		BILINEAR = 2;
+		TRILINEAR = 3;
+	}
+	enum WrapMode {
+		CLAMP = 1;
+		REPEAT = 2;
+		MIRROR = 3;
+	}
+	optional Filter filter = 1;
+	optional WrapMode wrap_s = 2;
+	optional WrapMode wrap_t = 3;
+}
+
+message Texture {
+	enum Format {
+		JPEG = -2; // intermediate format
+		PNG = -1;  // intermediate format
+		LUMINANCE8 = 1;
+		RGB8 = 2;
+		RGBA8 = 3;
+		ETC1 = 4;  // contains also 16-byte PKM header
+		PVRTC = 5; // contains 52-byte PVRTCv3 header
+		DXTC = 6; // contains 12-byte (format,width,height) header
+	}
+	required string id = 1;
+	required Format format = 2;
+	required int32 width = 3;
+	required int32 height = 4;
+	required Sampler sampler = 5;
+	repeated bytes mipmaps = 6; // mipmaps starting from highest resolution to the lowest, encoding depends on format
+}
+
+message ColorOrTexture {
+	enum Type {
+		COLOR = 1;
+		TEXTURE = 2;
+	}
+	required Type type = 1;
+	optional ColorRGBA color = 2;
+	optional string texture_id = 3; // primary texture
+}
+
+message Material {
+	enum Type {
+		CONSTANT = 1;
+		LAMBERT = 2;
+	}
+	enum Culling {
+		NONE = 1;
+		FRONT = 2;
+		BACK = 3;
+	}
+	required string id = 1;
+	required Type type = 2;
+	required Culling culling = 3;
+	optional ColorOrTexture emission = 4;
+	optional ColorOrTexture ambient = 5;
+	optional ColorOrTexture diffuse = 6;
+	optional bool translucent = 7;
+}
+
+message Submesh {
+	enum Type {
+		POINTS = 1;
+		LINES = 2;
+		LINE_STRIPS = 3;
+		TRIANGLES = 4;
+		TRIANGLE_STRIPS = 5;
+		TRIANGLE_FANS = 6;
+	}
+	required Type type = 1; // Type values
+	required string material_id = 2; // reference to MeshInstance material table
+	repeated int32 vertex_counts = 3; // for POINTS, LINES, TRIANGLES, this contains 1 element - the number of vertices. For strips/fans, this contains number of elements for each strip/fan before restarting
+	required bytes positions = 4; // xyz*vertices*float (encoded as little-endian IEE754)
+	optional bytes normals = 5; // xyz*vertices*float (encoded as little-endian IEE754)
+	optional bytes uvs = 6; // uv*vertices*float (encoded as little-endian IEE754)
+	optional bytes colors = 7; // rgba*vertices*byte
+	repeated int64 vertex_ids = 8; // vertex ids, encoded as count (upper 32 bits) + id (lower 32 bits). For example, if vertex_ids == [3 << 32 | 1, 1 << 32 | 0], then ids of vertices are [1, 1, 1, 0]
+}
+
+message Mesh {
+	required string id = 1;
+	required Bounds3 bounds = 2;
+	repeated Submesh submeshes = 3;
+}
+
+message MeshInstance {
+	required string mesh_id = 1; // reference to Model mesh table
+	repeated Material materials = 2;
+	optional Matrix4 transform = 3;
+}
+
+message SubmeshOp {
+	required int32 submesh_idx = 1; // reference to submesh index inside Mesh
+	required int32 offset = 2; // vertex offset in submesh
+	required int32 count = 3; // vertex count in submesh
+	required float tex_u_scale = 4; // u, v linear transformation data
+	required float tex_v_scale = 5;
+	required float tex_u_trans = 6;
+	required float tex_v_trans = 7;
+}
+
+message SubmeshOpList {
+	required Submesh.Type type = 1; // Submesh Type value
+	required string material_id = 2; // reference to MeshInstance material table
+	repeated SubmeshOp submesh_ops = 3;
+}
+
+message MeshOp {
+	required string id = 1;
+	required Bounds3 bounds = 2;
+	repeated SubmeshOpList submesh_op_lists = 3; // for each submesh inside mesh, one submesh slice
+}
+
+message Model {
+	required string id = 1;
+	repeated MeshInstance mesh_instances = 2;
+	repeated Mesh meshes = 3;
+	repeated Texture textures = 4;
+	required Bounds3 bounds = 5;
+	required int32 mesh_footprint = 6; // approx. geometry footprint when loaded
+	required int32 texture_footprint = 7; // approx. texture footprint when loaded
+}
+
+message ModelLODTreeNode {
+	required int32 id = 1;
+	required Bounds3 bounds = 2; // bounds of current octree/quadtree node (NOTE: not same as model bounds!)
+	required Model model = 3;
+	repeated int32 children_ids = 4; // child indices to ModelLODTree.nodes array
+}
+
+message ModelLODTree {
+	repeated ModelLODTreeNode nodes = 1;
+}

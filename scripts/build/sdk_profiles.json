@@ -1,0 +1,18 @@
+{
+	"lite": {
+		"defines": ""
+	},
+
+	"standard": {
+		"defines": "_CARTO_PACKAGEMANAGER_SUPPORT"
+	},
+
+	"gisextensions-lite": {
+		"defines": "_CARTO_PACKAGEMANAGER_SUPPORT;_CARTO_WKBT_SUPPORT;_CARTO_EDITABLE_SUPPORT"
+	},
+
+	"gisextensions": {
+		"cmake-options": "INCLUDE_GDAL:BOOL=ON",
+		"defines": "_CARTO_PACKAGEMANAGER_SUPPORT;_CARTO_GDAL_SUPPORT;_CARTO_WKBT_SUPPORT;_CARTO_EDITABLE_SUPPORT"
+	}
+}

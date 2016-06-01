@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <ProjectGuid>{8672B607-448B-464C-A865-45A127479E2B}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Nutiteq</RootNamespace>
+    <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
+    <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
+    <AndroidResgenClass>Resource</AndroidResgenClass>
+    <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
+    <AndroidUseLatestPlatformSdk>True</AndroidUseLatestPlatformSdk>
+    <AssemblyName>NutiteqMapsSDK.Android</AssemblyName>
+    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>$distDir\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AndroidLinkMode>None</AndroidLinkMode>
+    <ConsolePause>false</ConsolePause>
+    <DocumentationFile>$distDir\Debug\NutiteqMapsSDK.Android.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>$distDir\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
+    <ConsolePause>false</ConsolePause>
+    <DocumentationFile>$distDir\Release\NutiteqMapsSDK.Android.xml</DocumentationFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="Mono.Android" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$baseDir\android\csharp\Properties\AssemblyInfo.cs">
+      <Link>Properties\AssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="$baseDir\android\csharp\UI\ConfigChooser.cs">
+      <Link>UI\ConfigChooser.cs</Link>
+    </Compile>
+    <Compile Include="$baseDir\android\csharp\UI\MapRedrawRequestListener.cs">
+      <Link>UI\MapRedrawRequestListener.cs</Link>
+    </Compile>
+    <Compile Include="$baseDir\android\csharp\UI\BaseMapViewRenderer.cs">
+      <Link>UI\BaseMapViewRenderer.cs</Link>
+    </Compile>
+    <Compile Include="$baseDir\android\csharp\UI\MapView.cs">
+      <Link>UI\MapView.cs</Link>
+    </Compile>
+    <Compile Include="$baseDir\dotnet\csharp\ui\MapLicenseManagerListener.cs">
+      <Link>UI\MapLicenseManagerListener.cs</Link>
+    </Compile>
+    <Compile Include="$baseDir\dotnet\csharp\ui\MapViewBase.cs">
+      <Link>UI\MapViewBase.cs</Link>
+    </Compile>
+    <Compile Include="$baseDir\dotnet\csharp\ui\IMapView.cs">
+      <Link>UI\IMapView.cs</Link>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$baseDir\dotnet\generated_android\proxies\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedNativeLibrary Include="$buildDir\..\xamarin_android-armeabi\libnutiteq_maps_sdk.so">
+      <Abi>armeabi</Abi>
+      <Link>armeabi\libnutiteq_maps_sdk.so</Link>
+    </EmbeddedNativeLibrary>
+    <EmbeddedNativeLibrary Include="$buildDir\..\xamarin_android-armeabi-v7a\libnutiteq_maps_sdk.so">
+      <Abi>armeabi-v7a</Abi>
+      <Link>armeabi-v7a\libnutiteq_maps_sdk.so</Link>
+    </EmbeddedNativeLibrary>
+    <EmbeddedNativeLibrary Include="$buildDir\..\xamarin_android-x86\libnutiteq_maps_sdk.so">
+      <Abi>x86</Abi>
+      <Link>x86\libnutiteq_maps_sdk.so</Link>
+    </EmbeddedNativeLibrary>
+    <EmbeddedNativeLibrary Include="$buildDir\..\xamarin_android-arm64-v8a\libnutiteq_maps_sdk.so">
+      <Abi>arm64-v8a</Abi>
+      <Link>arm64-v8a\libnutiteq_maps_sdk.so</Link>
+    </EmbeddedNativeLibrary>
+    <EmbeddedNativeLibrary Include="$buildDir\..\xamarin_android-x86_64\libnutiteq_maps_sdk.so">
+      <Abi>x86_64</Abi>
+      <Link>x86_64\libnutiteq_maps_sdk.so</Link>
+    </EmbeddedNativeLibrary>
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
+  <ItemGroup>
+    <Folder Include="Proxies\" />
+    <Folder Include="UI\" />
+    <Folder Include="PackageManager\" />
+    <Folder Include="Properties\" />
+    <Folder Include="armeabi\" />
+    <Folder Include="armeabi-v7a\" />
+    <Folder Include="x86\" />
+    <Folder Include="arm64-v8a\" />
+    <Folder Include="x86_64\" />
+  </ItemGroup>
+</Project>

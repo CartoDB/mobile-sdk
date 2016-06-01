@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectTypeGuids>{FEACFBD2-3405-455C-9665-78FE426C6842};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <ProjectGuid>{2E2DE024-A633-449F-B727-31DCEDE81BD0}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Nutiteq</RootNamespace>
+    <IPhoneResourcePrefix>Resources</IPhoneResourcePrefix>
+    <AssemblyName>NutiteqMapsSDK.iOS</AssemblyName>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>$distDir\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DocumentationFile>$distDir\Debug\NutiteqMapsSDK.iOS.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <OutputPath>$distDir\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <DocumentationFile>$distDir\Release\NutiteqMapsSDK.iOS.xml</DocumentationFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="Xamarin.iOS" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\" />
+    <Folder Include="UI\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$baseDir\ios\csharp\Properties\AssemblyInfo.cs">
+      <Link>Properties\AssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="$baseDir\ios\csharp\UI\MapRedrawRequestListener.cs">
+      <Link>UI\MapRedrawRequestListener.cs</Link>
+    </Compile>
+    <Compile Include="$baseDir\ios\csharp\UI\MapView.cs">
+      <Link>UI\MapView.cs</Link>
+    </Compile>
+    <Compile Include="$baseDir\dotnet\csharp\ui\MapLicenseManagerListener.cs">
+      <Link>UI\MapLicenseManagerListener.cs</Link>
+    </Compile>
+    <Compile Include="$baseDir\dotnet\csharp\ui\MapViewBase.cs">
+      <Link>UI\MapViewBase.cs</Link>
+    </Compile>
+    <Compile Include="$baseDir\dotnet\csharp\ui\IMapView.cs">
+      <Link>UI\IMapView.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="$baseDir\dotnet\generated_ios\proxies\*.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.ObjCBinding.CSharp.targets" />
+  <ItemGroup>
+    <ObjcBindingNativeLibrary Include="$buildDir\..\xamarin_ios_unified\libnutiteq_maps_sdk.a">
+      <Link>libnutiteq_maps_sdk.a</Link>
+    </ObjcBindingNativeLibrary>
+  </ItemGroup>
+  <ItemGroup>
+    <ObjcBindingApiDefinition Include="$baseDir\ios\csharp\Properties\ApiDefinition.cs" />
+  </ItemGroup>
+</Project>

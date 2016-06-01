@@ -1,0 +1,43 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:1.2.3'
+    }
+    System.properties['com.android.build.gradle.overrideVersionCheck'] = 'true'
+}
+
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 23
+    buildToolsVersion "23.0.1"
+
+    defaultConfig {
+        minSdkVersion 10
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+    }
+	
+	sourceSets {
+	        main {
+				assets.srcDirs = ['assets']
+				jniLibs.srcDir '../../dist/android/'
+	        }
+	}
+	
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: '../../dist/android/', include: ['*.jar'])
+}
+
+project.buildDir = '../../build/android-aar'

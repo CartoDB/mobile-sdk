@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011">
+  <Metadata>
+    <Identity Id="NutiteqMapsSDK.WinPhone10" Version="3.3" Language="en-US" Publisher="Nutiteq" />
+    <DisplayName>Nutiteq Maps SDK for Windows Phone 10</DisplayName>
+    <Description>Nutiteq Maps SDK is advanced maps component with flexible extendability. It suits best for advanced client apps for Geographical Information Systems (GIS) data display and editing, field survey, 3D visualization and also end-user apps which need offline maps, professional developer support and more customization options.</Description>
+    <MoreInfo>http://developer.nutiteq.com/</MoreInfo>
+    <License>License.md</License>
+    <Icon>NutiteqMapsSDK_128x128.png</Icon>
+    <Tags>maps, nutiteq, offline</Tags>
+  </Metadata>
+  <Installation AllUsers="true" Scope="Global">
+    <InstallationTarget Id="Microsoft.ExtensionSDK" TargetPlatformIdentifier="UAP" TargetPlatformVersion="v10" SdkName="NutiteqMapsSDK.WinPhone10" SdkVersion="3.3" />
+  </Installation>
+  <Assets>
+    <Asset Type="Microsoft.ExtensionSDK" Path="SDKManifest.xml" />
+  </Assets>
+</PackageManifest>
