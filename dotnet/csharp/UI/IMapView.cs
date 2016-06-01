@@ -1,5 +1,4 @@
-﻿namespace Carto.Ui
-{
+﻿namespace Carto.Ui {
     using Carto.Core;
     using Carto.Components;
     using Carto.Layers;
@@ -9,8 +8,7 @@
     /// IMapView is a platform independent interface to the
     /// platform-specific map rendering and interaction class.
     /// </summary>
-    public interface IMapView
-    {
+    public interface IMapView {
         /// <summary>
         /// The map event listener property. May be null.
         /// </summary>
@@ -263,4 +261,3 @@
         void ClearAllCaches();
     }
 }
-

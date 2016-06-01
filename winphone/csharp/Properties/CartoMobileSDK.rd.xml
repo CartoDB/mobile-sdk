@@ -26,6 +26,6 @@
 -->
 <Directives xmlns="http://schemas.microsoft.com/netfx/2013/01/metadata">
   <Library>
-    <Assembly Name="CartoMobileSDK" Dynamic="Required All" Activate="Required All" Browse="Required All" />
+    <Assembly Name="CartoMobileSDK.WinPhone" Dynamic="Required All" Activate="Required All" Browse="Required All" />
   </Library>
 </Directives>

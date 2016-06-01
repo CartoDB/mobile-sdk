@@ -106,6 +106,15 @@
     <None Include="project.json" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="$baseDir\winphone\csharp\System\ApplicationException.cs">
+      <Link>System\ApplicationException.cs</Link>
+    </Compile>
+    <Compile Include="$baseDir\winphone\csharp\System\HandleRef.cs">
+      <Link>System\HandleRef.cs</Link>
+    </Compile>
+    <Compile Include="$baseDir\winphone\csharp\System\SystemException.cs">
+      <Link>System\SystemException.cs</Link>
+    </Compile>
     <Compile Include="$baseDir\dotnet\csharp\ui\MapLicenseManagerListener.cs">
       <Link>UI\MapLicenseManagerListener.cs</Link>
     </Compile>
@@ -115,23 +124,14 @@
     <Compile Include="$baseDir\dotnet\csharp\ui\MapViewBase.cs">
       <Link>UI\MapViewBase.cs</Link>
     </Compile>
-    <Compile Include="$baseDir\winphone\csharp\System\ApplicationException.cs">
-      <Link>System\ApplicationException.cs</Link>
-    </Compile>
-    <Compile Include="$baseDir\winphone\csharp\System\HandleRef.cs">
-      <Link>System\HandleRef.cs</Link>
-    </Compile>
-    <Compile Include="$baseDir\winphone\csharp\Properties\AssemblyInfo.cs">
-      <Link>System\AssemblyInfo.cs</Link>
-    </Compile>
-    <Compile Include="$baseDir\winphone\csharp\System\SystemException.cs">
-      <Link>System\SystemException.cs</Link>
-    </Compile>
     <Compile Include="$baseDir\winphone\csharp\UI\MapView.cs">
       <Link>UI\MapView.cs</Link>
     </Compile>
     <Compile Include="$baseDir\winphone\csharp\UI\MapViewRedrawRequestListener.cs">
       <Link>UI\MapViewRedrawRequestListener.cs</Link>
+    </Compile>
+    <Compile Include="$baseDir\winphone\csharp\Properties\AssemblyInfo.cs">
+      <Link>Properties\AssemblyInfo.cs</Link>
     </Compile>
     <Content Include="$baseDir\winphone\csharp\Properties\CartoMobileSDK.rd.xml">
       <Link>Properties\CartoMobileSDK.rd.xml</Link>
