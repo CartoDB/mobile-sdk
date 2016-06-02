@@ -21,12 +21,12 @@ namespace carto {
                 return std::shared_ptr<BinaryData>();
             }
 
-            asset = std::shared_ptr<AAsset>(AAssetManager_open(_AssetManagerPtr, path.c_str(), AASSET_MODE_UNKNOWN), AAsset_close);
-        }
-
-        if (!asset) {
-            Log::Errorf("AssetManager::LoadAsset: Asset not found: %s", path.c_str());
-            return std::shared_ptr<BinaryData>();
+            AAsset* assetRaw = AAssetManager_open(_AssetManagerPtr, path.c_str(), AASSET_MODE_UNKNOWN);
+            if (!assetRaw) {
+                Log::Errorf("AssetManager::LoadAsset: Asset not found: %s", path.c_str());
+                return std::shared_ptr<BinaryData>();
+            }
+            asset = std::shared_ptr<AAsset>(assetRaw, AAsset_close);
         }
 
         int size = AAsset_getLength(asset.get());
