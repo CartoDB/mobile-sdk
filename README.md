@@ -8,8 +8,8 @@ to external-libs/prebuilt at the project root directory level.
 In addition, boost library should be downloaded and configured as described
 in mobile-external-libs documentation.
 
-Special swig version (swig-2.0.11-nutiteq) is needed for generating 
-language-specific wrappers, this can be downloaded from https://bitbucket.org/nutiteq/swig-2.0.11-nutiteq
+Special swig version (swig-2.0.11-nutiteq branch) is needed for generating 
+language-specific wrappers, this can be downloaded from https://github.com/CartoDB/swig
 
 ## Building
 Use swigpp-XXX.py scripts for generating the wrapper and proxies for target platforms
