@@ -500,7 +500,7 @@ namespace carto {
         if (mapEventListener) {
             ViewState viewState = _mapRenderer->getViewState();
             if (isValidTouchPosition(targetPos, viewState)) {
-                mapEventListener->onMapClicked(std::make_shared<MapClickInfo>(ClickType::CLICK_TYPE_SINGLE, _options->getBaseProjection()->fromInternal(targetPos)));
+                mapEventListener->onMapClicked(std::make_shared<MapClickInfo>(clickType, _options->getBaseProjection()->fromInternal(targetPos)));
             }
         }
     }
