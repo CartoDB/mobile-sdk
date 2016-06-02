@@ -25,7 +25,7 @@ def buildIOSLib(args, arch):
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
     "-DSDK_PLATFORM='iOS'",
-    '%s/scripts' % baseDir
+    '%s/scripts/build' % baseDir
   ]):
     return False
   return cmake(args, buildDir, [

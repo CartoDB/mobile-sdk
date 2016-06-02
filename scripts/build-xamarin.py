@@ -28,7 +28,7 @@ def buildAndroidSO(args, abi):
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
     "-DSDK_PLATFORM='Xamarin Android'",
-    '%s/all/native' % baseDir
+    '%s/scripts/build' % baseDir
   ]):
     return False
   return cmake(args, buildDir, [
@@ -56,7 +56,7 @@ def buildIOSLib(args, arch):
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
     "-DSDK_PLATFORM='Xamarin iOS'",
-    '%s/all/native' % baseDir
+    '%s/scripts/build' % baseDir
   ]):
     return False
   return cmake(args, buildDir, [

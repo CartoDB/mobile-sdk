@@ -42,10 +42,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif(CMAKE_COMPILER_IS_GNUCXX)
 
 # Directories
-set(SDK_SRC_DIR "${PROJECT_SOURCE_DIR}/../all/native")
-set(SDK_BASE_DIR "${PROJECT_SOURCE_DIR}/...")
-set(SDK_LIBS_DIR "${PROJECT_SOURCE_DIR}/../libs" )
-set(SDK_EXTERNAL_LIBS_DIR "${PROJECT_SOURCE_DIR}/../libs-external")
+set(SDK_BASE_DIR "${PROJECT_SOURCE_DIR}/../..")
+set(SDK_SRC_DIR "${SDK_BASE_DIR}/all/native")
+set(SDK_LIBS_DIR "${SDK_BASE_DIR}/libs" )
+set(SDK_EXTERNAL_LIBS_DIR "${SDK_BASE_DIR}/libs-external")
 
 set(ZLIB_INCLUDE_DIR "${SDK_EXTERNAL_LIBS_DIR}/zlib")
 set(PNG_INCLUDE_DIR "${SDK_EXTERNAL_LIBS_DIR}/png")

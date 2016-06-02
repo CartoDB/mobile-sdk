@@ -48,7 +48,7 @@ def buildWinPhoneNativeDLL(args, arch):
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
     "-DSDK_PLATFORM='Windows Phone 10'",
-    '%s/scripts' % baseDir
+    '%s/scripts/build' % baseDir
   ]):
     return False
   patchVcxprojFile(baseDir, '%s/carto_mobile_sdk.vcxproj' % buildDir)
