@@ -34,6 +34,8 @@
 %ignore carto::TileDataSource::registerOnChangeListener;
 %ignore carto::TileDataSource::unregisterOnChangeListener;
 
+%feature("nodirector") carto::TileDataSource::buildTagValues;
+
 %include "datasources/TileDataSource.h"
 
 #endif
