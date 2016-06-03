@@ -6,9 +6,9 @@
     <ProjectTypeGuids>{FEACFBD2-3405-455C-9665-78FE426C6842};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <ProjectGuid>{2E2DE024-A633-449F-B727-31DCEDE81BD0}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>Nutiteq</RootNamespace>
+    <RootNamespace>Carto</RootNamespace>
     <IPhoneResourcePrefix>Resources</IPhoneResourcePrefix>
-    <AssemblyName>NutiteqMapsSDK.iOS</AssemblyName>
+    <AssemblyName>CartoMobileSDK.iOS</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -20,7 +20,7 @@
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DocumentationFile>$distDir\Debug\NutiteqMapsSDK.iOS.xml</DocumentationFile>
+    <DocumentationFile>$distDir\Debug\CartoMobileSDK.iOS.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
@@ -28,7 +28,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
-    <DocumentationFile>$distDir\Release\NutiteqMapsSDK.iOS.xml</DocumentationFile>
+    <DocumentationFile>$distDir\Release\CartoMobileSDK.iOS.xml</DocumentationFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
@@ -62,12 +62,12 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="$baseDir\dotnet\generated_ios\proxies\*.cs" />
+    <Compile Include="$baseDir\generated\ios-csharp\proxies\*.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.ObjCBinding.CSharp.targets" />
   <ItemGroup>
-    <ObjcBindingNativeLibrary Include="$buildDir\..\xamarin_ios_unified\libnutiteq_maps_sdk.a">
-      <Link>libnutiteq_maps_sdk.a</Link>
+    <ObjcBindingNativeLibrary Include="$buildDir\..\xamarin_ios_unified\libcarto_mobile_sdk.a">
+      <Link>libcarto_mobile_sdk.a</Link>
     </ObjcBindingNativeLibrary>
   </ItemGroup>
   <ItemGroup>

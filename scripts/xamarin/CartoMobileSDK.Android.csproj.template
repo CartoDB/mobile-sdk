@@ -6,13 +6,13 @@
     <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <ProjectGuid>{8672B607-448B-464C-A865-45A127479E2B}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>Nutiteq</RootNamespace>
+    <RootNamespace>Carto</RootNamespace>
     <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
     <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
     <AndroidResgenClass>Resource</AndroidResgenClass>
     <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
     <AndroidUseLatestPlatformSdk>True</AndroidUseLatestPlatformSdk>
-    <AssemblyName>NutiteqMapsSDK.Android</AssemblyName>
+    <AssemblyName>CartoMobileSDK.Android</AssemblyName>
     <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -25,7 +25,7 @@
     <WarningLevel>4</WarningLevel>
     <AndroidLinkMode>None</AndroidLinkMode>
     <ConsolePause>false</ConsolePause>
-    <DocumentationFile>$distDir\Debug\NutiteqMapsSDK.Android.xml</DocumentationFile>
+    <DocumentationFile>$distDir\Debug\CartoMobileSDK.Android.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -35,7 +35,7 @@
     <WarningLevel>4</WarningLevel>
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
     <ConsolePause>false</ConsolePause>
-    <DocumentationFile>$distDir\Release\NutiteqMapsSDK.Android.xml</DocumentationFile>
+    <DocumentationFile>$distDir\Release\CartoMobileSDK.Android.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -71,29 +71,29 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="$baseDir\dotnet\generated_android\proxies\*.cs" />
+    <Compile Include="$baseDir\generated\android-csharp\proxies\*.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedNativeLibrary Include="$buildDir\..\xamarin_android-armeabi\libnutiteq_maps_sdk.so">
+    <EmbeddedNativeLibrary Include="$buildDir\..\xamarin_android-armeabi\libcarto_mobile_sdk.so">
       <Abi>armeabi</Abi>
-      <Link>armeabi\libnutiteq_maps_sdk.so</Link>
+      <Link>armeabi\libcarto_mobile_sdk.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="$buildDir\..\xamarin_android-armeabi-v7a\libnutiteq_maps_sdk.so">
+    <EmbeddedNativeLibrary Include="$buildDir\..\xamarin_android-armeabi-v7a\libcarto_mobile_sdk.so">
       <Abi>armeabi-v7a</Abi>
-      <Link>armeabi-v7a\libnutiteq_maps_sdk.so</Link>
+      <Link>armeabi-v7a\libcarto_mobile_sdk.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="$buildDir\..\xamarin_android-x86\libnutiteq_maps_sdk.so">
+    <EmbeddedNativeLibrary Include="$buildDir\..\xamarin_android-x86\libcarto_mobile_sdk.so">
       <Abi>x86</Abi>
-      <Link>x86\libnutiteq_maps_sdk.so</Link>
+      <Link>x86\libcarto_mobile_sdk.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="$buildDir\..\xamarin_android-arm64-v8a\libnutiteq_maps_sdk.so">
+    <EmbeddedNativeLibrary Include="$buildDir\..\xamarin_android-arm64-v8a\libcarto_mobile_sdk.so">
       <Abi>arm64-v8a</Abi>
-      <Link>arm64-v8a\libnutiteq_maps_sdk.so</Link>
+      <Link>arm64-v8a\libcarto_mobile_sdk.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="$buildDir\..\xamarin_android-x86_64\libnutiteq_maps_sdk.so">
+    <EmbeddedNativeLibrary Include="$buildDir\..\xamarin_android-x86_64\libcarto_mobile_sdk.so">
       <Abi>x86_64</Abi>
-      <Link>x86_64\libnutiteq_maps_sdk.so</Link>
+      <Link>x86_64\libcarto_mobile_sdk.so</Link>
     </EmbeddedNativeLibrary>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />

@@ -23,10 +23,21 @@ git clone https://github.com/CartoDB/mobile-sdk.git
 cd mobile-sdk
 ln -s ../mobile-external-libs/libs-external/
 cd mobile-sdk/scripts
-
+```
 
 # Android SDK build 
-python swigpp-java.py --profile standard
+```python swigpp-java.py --profile standard
 python build-android.py --profile standard --javac /Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Commands/javac
 ```
 
+#iOS build:
+```
+python swigpp-objc.py --profile standard
+python build-objc.py --profile standard
+```
+
+#Xamarin Android build:
+```
+python swigpp-csharp.py --profile standard android
+python build-xamarin.py --profile standard android
+```
