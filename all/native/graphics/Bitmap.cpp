@@ -380,16 +380,16 @@ namespace carto {
     }
     
     std::shared_ptr<Bitmap> Bitmap::getPaddedBitmap(int xPadding, int yPadding) const {
-        if (xPadding < 0 || yPadding < 0) {
-            return std::shared_ptr<Bitmap>();
-        }
-    
-        std::vector<unsigned char> pixelData((_width + xPadding) * (_height + yPadding) * _bytesPerPixel, 0);
+        int x0 = std::max(-xPadding, 0);
+        int y0 = std::max(-yPadding, 0);
+        unsigned int newWidth = _width + std::abs(xPadding);
+        unsigned int newHeight = _height + std::abs(yPadding);
+        std::vector<unsigned char> newPixelData(newWidth * newHeight * _bytesPerPixel, 0);
         for (unsigned int y = 0; y < _height; y++) {
             const unsigned char* row = &_pixelData[((_height - 1 - y) * _width) * _bytesPerPixel];
-            std::copy(row, row + _width * _bytesPerPixel, &pixelData[y * (_width + xPadding) * _bytesPerPixel]);
+            std::copy(row, row + _width * _bytesPerPixel, &newPixelData[(x0 + (y + y0) * newWidth) * _bytesPerPixel]);
         }
-        return std::make_shared<Bitmap>(pixelData.data(), _width + xPadding, _height + yPadding, _colorFormat, static_cast<int>((_width + xPadding) * _bytesPerPixel));
+        return std::make_shared<Bitmap>(newPixelData.data(), newWidth, newHeight, _colorFormat, static_cast<int>(newWidth * _bytesPerPixel));
     }
     
     std::shared_ptr<Bitmap> Bitmap::getRGBABitmap() const {

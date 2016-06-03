@@ -161,12 +161,11 @@ namespace carto {
 
         /**
          * Returns paddedsub-bitmap with specified offsets and dimensions.
-         * @param xPadding Padding along X coordinate.
-         * @param yPadding Padding along Y coordinate.
+         * @param xPadding Padding along X coordinate. If negative value is used, the bitmap is padded from the left. By default, bitmap is padded from the right.
+         * @param yPadding Padding along Y coordinate. If negative value is used, the bitmap is padded from the top. By default, bitmap is padded from the bottom.
          * @return Padded bitmap instance or null in case of error (wrong dimensions).
          */
         std::shared_ptr<Bitmap> getPaddedBitmap(int xPadding, int yPadding) const;
-
         
         /**
          * Returns copy of the bitmap converted to RGBA format.

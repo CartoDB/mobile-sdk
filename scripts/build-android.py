@@ -3,8 +3,6 @@ import shutil
 import argparse
 from build.sdk_build_utils import *
 
-ANDROID_ABIS = ['armeabi', 'armeabi-v7a', 'x86', 'mips', 'arm64-v8a', 'x86_64', 'mips64']
-
 ANDROID_TOOLCHAINS = {
   'armeabi':     'arm-linux-androideabi',
   'armeabi-v7a': 'arm-linux-androideabi',
@@ -14,6 +12,8 @@ ANDROID_TOOLCHAINS = {
   'x86_64':      'x86_64',
   'mips64':      'mips64el-linux-android'
 }
+
+ANDROID_ABIS = ANDROID_TOOLCHAINS.keys()
 
 def javac(args, dir, *cmdArgs):
   return execute(args.javac, dir, *cmdArgs)

@@ -57,7 +57,7 @@ namespace carto {
             else if (genMipmaps) {
                 int xPadding = GeneralUtils::UpperPow2(bitmap->getWidth())  - bitmap->getWidth();
                 int yPadding = GeneralUtils::UpperPow2(bitmap->getHeight()) - bitmap->getHeight();
-                _bitmap = _bitmap->getPaddedBitmap(xPadding, yPadding);
+                _bitmap = _bitmap->getPaddedBitmap(xPadding, -yPadding);
                 _texCoordScale = cglib::vec2<float>(static_cast<float>(bitmap->getWidth()) / _bitmap->getWidth(), static_cast<float>(bitmap->getHeight()) / _bitmap->getHeight());
             }
         }
