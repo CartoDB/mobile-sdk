@@ -322,7 +322,6 @@ namespace carto {
         virtual void clearTiles(bool preloadingTiles) = 0;
         virtual void tilesChanged(bool removeTiles) = 0;
 
-        MapBounds calculateInternalTileBounds(const MapTile& mapTile) const;
         virtual void calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile) = 0;
         virtual void refreshDrawData(const std::shared_ptr<CullState>& cullState) = 0;
         
@@ -332,6 +331,8 @@ namespace carto {
         virtual void calculateRayIntersectedElements(const Projection& projection, const MapPos& rayOrig, const MapVec& rayDir,
             const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
         virtual bool processRayIntersectedElement(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement) const;
+
+        MapBounds calculateInternalTileBounds(const MapTile& mapTile) const;
 
         static const float DISCRETE_ZOOM_LEVEL_BIAS;
 

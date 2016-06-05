@@ -34,6 +34,7 @@
 %ignore carto::TileLayer::FetchTaskBase;
 %ignore carto::TileLayer::FetchingTiles;
 %ignore carto::TileLayer::DataSourceListener;
+%ignore carto::TileLayer::UTFGridTile;
 %ignore carto::TileLayer::getMinZoom;
 %ignore carto::TileLayer::getMaxZoom;
 
