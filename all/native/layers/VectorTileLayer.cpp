@@ -23,7 +23,7 @@ namespace carto {
         _labelCullThreadPool(std::make_shared<CancelableThreadPool>()),
         _renderer(),
         _tempDrawDatas(),
-        _visibleCache(64 * 1024 * 1024), // NOTE: the limit should never be reached in normal cases
+        _visibleCache(128 * 1024 * 1024), // NOTE: the limit should never be reached in normal cases
         _preloadingCache(DEFAULT_PRELOADING_CACHE_SIZE)
     {
         _labelCullThreadPool->setPoolSize(1);
@@ -61,37 +61,30 @@ namespace carto {
         refresh();
     }
     
-    void VectorTileLayer::clearTileCaches(bool all) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        if (all) {
-            _visibleCache.clear();
-        }
-        _preloadingCache.clear();
-    }
-        
     int VectorTileLayer::getCullDelay() const {
         return CULL_DELAY_TIME;
     }
     
-    bool VectorTileLayer::tileExists(const MapTile& tile, bool preloadingCache) {
+    bool VectorTileLayer::tileExists(const MapTile& tile, bool preloadingCache) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         long long tileId = getTileId(tile);
         if (preloadingCache) {
             return _preloadingCache.exists(tileId);
         }
-        return _visibleCache.exists(tileId);
+        else {
+            return _visibleCache.exists(tileId);
+        }
     }
     
-    bool VectorTileLayer::tileIsValid(const MapTile& tile) const {
+    bool VectorTileLayer::tileValid(const MapTile& tile, bool preloadingCache) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         long long tileId = getTileId(tile);
-        if (_visibleCache.exists(tileId)) {
-            return _visibleCache.valid(tileId);
+        if (preloadingCache) {
+            return _preloadingCache.exists(tileId) && _preloadingCache.valid(tileId);
         }
-        if (_preloadingCache.exists(tileId)) {
-            return _preloadingCache.valid(tileId);
+        else {
+            return _visibleCache.exists(tileId) && _visibleCache.valid(tileId);
         }
-        return false;
     }
     
     void VectorTileLayer::fetchTile(const MapTile& tile, bool preloadingTile, bool invalidated) {
@@ -124,6 +117,36 @@ namespace carto {
         if (tileThreadPool) {
             tileThreadPool->execute(task, preloadingTile ? getUpdatePriority() + PRELOADING_PRIORITY_OFFSET : getUpdatePriority());
         }
+    }
+
+    void VectorTileLayer::clearTiles(bool preloadingTiles) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        if (preloadingTiles) {
+            _preloadingCache.clear();
+        }
+        else {
+            _visibleCache.clear();
+        }
+    }
+
+    void VectorTileLayer::tilesChanged(bool removeTiles) {
+        // Invalidate current tasks
+        for (const std::shared_ptr<FetchTaskBase>& task : _fetchingTiles.getTasks()) {
+            task->invalidate();
+        }
+
+        // Flush caches
+        if (removeTiles) {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _visibleCache.clear();
+            _preloadingCache.clear();
+        }
+        else {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _visibleCache.invalidate_all(std::chrono::steady_clock::now());
+            _preloadingCache.invalidate_all(std::chrono::steady_clock::now());
+        }
+        refresh();
     }
 
     long long VectorTileLayer::getTileId(const MapTile& mapTile) const {
@@ -215,25 +238,6 @@ namespace carto {
         _tempDrawDatas.clear();
     }
     
-    void VectorTileLayer::tilesChanged(bool removeTiles) {
-        // Invalidate current tasks
-        for (const std::shared_ptr<FetchTaskBase>& task : _fetchingTiles.getTasks()) {
-            task->invalidate();
-        }
-
-        // Flush caches
-        if (removeTiles) {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _visibleCache.clear();
-            _preloadingCache.clear();
-        } else {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _visibleCache.clear();
-            _preloadingCache.clear();
-        }
-        refresh();
-    }
-    
     int VectorTileLayer::getMinZoom() const {
         return std::max(_dataSource->getMinZoom(), _tileDecoder->getMinZoom());
     }
@@ -304,13 +308,6 @@ namespace carto {
         Layer::onSurfaceDestroyed();
     }
     
-    void VectorTileLayer::calculateRayIntersectedElements(const Projection& projection, const MapPos& rayOrig, const MapVec& rayDir, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
-    }
-    
-    bool VectorTileLayer::processRayIntersectedElement(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement) const {
-        return false;
-    }
-    
     void VectorTileLayer::registerDataSourceListener() {
         _tileDecoderListener = std::make_shared<TileDecoderListener>(std::static_pointer_cast<VectorTileLayer>(shared_from_this()));
         _tileDecoder->registerOnChangeListener(_tileDecoderListener);
@@ -320,11 +317,11 @@ namespace carto {
     }
     
     void VectorTileLayer::unregisterDataSourceListener() {
-        _tileDecoder->unregisterOnChangeListener(_tileDecoderListener);
-        _tileDecoderListener.reset();
-    
         _dataSource->unregisterOnChangeListener(_dataSourceListener);
         _dataSourceListener.reset();
+
+        _tileDecoder->unregisterOnChangeListener(_tileDecoderListener);
+        _tileDecoderListener.reset();
     }
     
     VectorTileLayer::TileDecoderListener::TileDecoderListener(const std::shared_ptr<VectorTileLayer>& layer) :

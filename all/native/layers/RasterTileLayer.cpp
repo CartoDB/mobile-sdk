@@ -35,37 +35,30 @@ namespace carto {
         _preloadingCache.resize(capacityInBytes);
     }
     
-    void RasterTileLayer::clearTileCaches(bool all) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        if (all) {
-            _visibleCache.clear();
-        }
-        _preloadingCache.clear();
-    }
-        
     int RasterTileLayer::getCullDelay() const {
         return CULL_DELAY_TIME;
     }
     
-    bool RasterTileLayer::tileExists(const MapTile& tile, bool preloadingCache) {
+    bool RasterTileLayer::tileExists(const MapTile& tile, bool preloadingCache) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         long long tileId = tile.getTileId();
         if (preloadingCache) {
             return _preloadingCache.exists(tileId);
         }
-        return _visibleCache.exists(tileId);
+        else {
+            return _visibleCache.exists(tileId);
+        }
     }
     
-    bool RasterTileLayer::tileIsValid(const MapTile& tile) const {
+    bool RasterTileLayer::tileValid(const MapTile& tile, bool preloadingCache) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         long long tileId = tile.getTileId();
-        if (_visibleCache.exists(tileId)) {
-            return _visibleCache.valid(tileId);
+        if (preloadingCache) {
+            return _preloadingCache.exists(tileId) && _preloadingCache.valid(tileId);
         }
-        if (_preloadingCache.exists(tileId)) {
-            return _preloadingCache.valid(tileId);
+        else {
+            return _visibleCache.exists(tileId) && _visibleCache.valid(tileId);
         }
-        return false;
     }
     
     void RasterTileLayer::fetchTile(const MapTile& tile, bool preloadingTile, bool invalidated) {
@@ -100,6 +93,36 @@ namespace carto {
         }
     }
     
+    void RasterTileLayer::clearTiles(bool preloadingTiles) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        if (preloadingTiles) {
+            _preloadingCache.clear();
+        }
+        else {
+            _visibleCache.clear();
+        }
+    }
+
+    void RasterTileLayer::tilesChanged(bool removeTiles) {
+        // Invalidate current tasks
+        for (const std::shared_ptr<FetchTaskBase>& task : _fetchingTiles.getTasks()) {
+            task->invalidate();
+        }
+
+        // Flush caches
+        if (removeTiles) {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _visibleCache.clear();
+            _preloadingCache.clear();
+        }
+        else {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _visibleCache.invalidate_all(std::chrono::steady_clock::now());
+            _preloadingCache.invalidate_all(std::chrono::steady_clock::now());
+        }
+        refresh();
+    }
+
     void RasterTileLayer::calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
@@ -165,25 +188,6 @@ namespace carto {
         _tempDrawDatas.clear();
     }
     
-    void RasterTileLayer::tilesChanged(bool removeTiles) {
-        // Invalidate current tasks
-        for (const std::shared_ptr<FetchTaskBase>& task : _fetchingTiles.getTasks()) {
-            task->invalidate();
-        }
-
-        // Flush caches
-        if (removeTiles) {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _visibleCache.clear();
-            _preloadingCache.clear();
-        } else {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _visibleCache.clear();
-            _preloadingCache.clear();
-        }
-        refresh();
-    }
-        
     int RasterTileLayer::getMinZoom() const {
         return _dataSource->getMinZoom();
     }
@@ -232,13 +236,6 @@ namespace carto {
         }
     
         Layer::onSurfaceDestroyed();
-    }
-    
-    void RasterTileLayer::calculateRayIntersectedElements(const Projection& projection, const MapPos& rayOrig, const MapVec& rayDir, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
-    }
-
-    bool RasterTileLayer::processRayIntersectedElement(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement) const {
-        return false;
     }
     
     void RasterTileLayer::registerDataSourceListener() {

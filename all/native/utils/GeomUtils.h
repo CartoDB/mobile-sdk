@@ -37,6 +37,8 @@ namespace carto {
         static bool PolygonsIntersect(const std::vector<MapPos>& polygon1, const std::vector<MapPos>& polygon2);
     
         static std::vector<MapPos> CalculateConvexHull(std::vector<MapPos> points);
+
+        static bool RayZPlaneIntersect(const MapPos& rayOrig, const MapVec& rayDir, double z, MapPos& result);
     
         static bool RayTriangleIntersect(const MapPos& rayOrig, const MapVec& rayDir,
                 const MapPos& triPoint0, const MapPos& triPoint1, const MapPos& triPoint2, MapPos& result);
@@ -46,8 +48,6 @@ namespace carto {
     private:
         GeomUtils();
 
-        static bool LexicalComparator(const MapPos& mapPos1, const MapPos& mapPos2);
-    
         static bool PointsInsidePolygonEdges(const std::vector<MapPos>& polygon, const std::vector<MapPos>& points);
     };
     

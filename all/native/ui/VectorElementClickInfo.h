@@ -24,12 +24,10 @@ namespace carto {
     class VectorElementClickInfo {
     public:
         /**
-         * Constructs a VectorElementClickInfo object from a click position, distance, draw order and a vector element.
+         * Constructs a VectorElementClickInfo object from a click position and a vector element.
          * @param clickType The click type (SINGLE, DUAL, etc)
          * @param clickPos The click position in the coordinate system of the base projection.
          * @param elementClickPos The click position in the coordinate system of the base projection that corresponds to element point.
-         * @param distance The distance from the vector element to the camera in the internal coordiante system.
-         * @param order The draw order of this element relative to others.
          * @param vectorElement The vector element on which the click was performed.
          * @param layer The layer of the vector element on which the click was performed.
          */
@@ -62,6 +60,7 @@ namespace carto {
          * @return The vector element on which the click was performed.
          */
         std::shared_ptr<VectorElement> getVectorElement() const;
+
         /**
          * Returns the layer of the clicked vector element.
          * @return The layer of the vector element on which the click was performed.
@@ -70,7 +69,6 @@ namespace carto {
     
     private:
         ClickType::ClickType _clickType;
-
         MapPos _clickPos;
         MapPos _elementClickPos;
     

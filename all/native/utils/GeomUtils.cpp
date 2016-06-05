@@ -154,7 +154,15 @@ namespace carto {
     
     std::vector<MapPos> GeomUtils::CalculateConvexHull(std::vector<MapPos> points) {
         std::vector<MapPos> h(points.size() * 2);
-        std::sort(points.begin(), points.end(), LexicalComparator);
+        std::sort(points.begin(), points.end(), [](const MapPos& mapPos1, const MapPos& mapPos2) {
+            double dx = mapPos1.getX() - mapPos2.getX();
+            if (dx != 0) {
+                return (dx < 0 ? true : false);
+            }
+            double dy = mapPos1.getY() - mapPos2.getY();
+        
+            return (dy < 0 ? true : false);
+        });
         int k = 0;
     
         // Build lower hull
@@ -195,68 +203,79 @@ namespace carto {
         // Create result list
         h.resize(k);
         return h;
-      }
+    }
     
+    bool GeomUtils::RayZPlaneIntersect(const MapPos& rayOrig, const MapVec& rayDir, double z, MapPos& result) {
+        if (rayDir.getZ() == 0) {
+            return false;
+        }
+
+        double t = (z - rayOrig.getZ()) / rayDir.getZ();
+        result = rayOrig;
+        result += rayDir * t;
+        return true;
+    }
+
     bool GeomUtils::RayTriangleIntersect(const MapPos& rayOrig, const MapVec& rayDir,
             const MapPos& triPoint0, const MapPos& triPoint1, const MapPos& triPoint2, MapPos& result) {
         static const double EPSILON = 0.000001;
-    
-       // Find vectors for two edges sharing vert0
-       MapVec edge1(triPoint1 - triPoint0);
-       MapVec edge2(triPoint2 - triPoint0);
-    
-       // Begin calculating determinant - also used to calculate U parameter
-       MapVec pvec(rayDir.crossProduct3D(edge2));
-    
-       // If determinant is near zero, ray lies in plane of triangle
-       MapVec qvec;
-       double det = edge1.dotProduct(pvec);
-       if (det > EPSILON) {
-          // Calculate distance from vert0 to ray origin
-          MapVec tvec(rayOrig - triPoint0);
-    
-          // Calculate U parameter and test bounds
-          double u = tvec.dotProduct(pvec);
-          if (u < 0.0 || u > det) {
-        	  return false;
-          }
-    
-          // Prepare to test V parameter
-          qvec = tvec.crossProduct3D(edge1);
-    
-          // Calculate V parameter and test bounds
-          double v = rayDir.dotProduct(qvec);
-          if (v < 0.0 || u + v > det) {
-        	  return false;
-          }
-       } else if (det < -EPSILON) {
-           // Calculate distance from vert0 to ray origin
-          MapVec tvec(rayOrig - triPoint0);
-    
-          // Calculate U parameter and test bounds
-          double u = tvec.dotProduct(pvec);
-          if (u > 0.0 || u < det) {
-        	  return false;
-          }
-    
-          // Prepare to test V parameter
-          qvec = tvec.crossProduct3D(edge1);
-    
-          // Calculate V parameter and test bounds
-          double v = rayDir.dotProduct(qvec);
-          if (v > 0.0 || u + v < det) {
-        	  return false;
-          }
-       } else {
-           // Ray is parallel to the plane of the triangle
-           return false;
-       }
-    
-       // Calculate t, ray intersects triangle
-       double t = edge2.dotProduct(qvec) / det;
-       result = rayOrig;
-       result += rayDir * t;
-       return true;
+     
+        // Find vectors for two edges sharing vert0
+        MapVec edge1(triPoint1 - triPoint0);
+        MapVec edge2(triPoint2 - triPoint0);
+     
+        // Begin calculating determinant - also used to calculate U parameter
+        MapVec pvec(rayDir.crossProduct3D(edge2));
+     
+        // If determinant is near zero, ray lies in plane of triangle
+        MapVec qvec;
+        double det = edge1.dotProduct(pvec);
+        if (det > EPSILON) {
+            // Calculate distance from vert0 to ray origin
+            MapVec tvec(rayOrig - triPoint0);
+      
+            // Calculate U parameter and test bounds
+            double u = tvec.dotProduct(pvec);
+            if (u < 0.0 || u > det) {
+                return false;
+            }
+      
+            // Prepare to test V parameter
+            qvec = tvec.crossProduct3D(edge1);
+      
+            // Calculate V parameter and test bounds
+            double v = rayDir.dotProduct(qvec);
+            if (v < 0.0 || u + v > det) {
+                return false;
+            }
+        } else if (det < -EPSILON) {
+             // Calculate distance from vert0 to ray origin
+            MapVec tvec(rayOrig - triPoint0);
+      
+            // Calculate U parameter and test bounds
+            double u = tvec.dotProduct(pvec);
+            if (u > 0.0 || u < det) {
+                return false;
+            }
+      
+            // Prepare to test V parameter
+            qvec = tvec.crossProduct3D(edge1);
+      
+            // Calculate V parameter and test bounds
+            double v = rayDir.dotProduct(qvec);
+            if (v > 0.0 || u + v < det) {
+          	  return false;
+            }
+        } else {
+            // Ray is parallel to the plane of the triangle
+            return false;
+        }
+     
+        // Calculate t, ray intersects triangle
+        double t = edge2.dotProduct(qvec) / det;
+        result = rayOrig;
+        result += rayDir * t;
+        return true;
     }
     
     bool GeomUtils::RayBoundingBoxIntersect(const MapPos& rayOrig, const MapVec& rayDir, const MapBounds& bbox) {
@@ -280,16 +299,6 @@ namespace carto {
         tmax = std::min(tmax, std::max(tz1, tz2));
     
         return tmax >= std::max(0.0, tmin);
-    }
-    
-    bool GeomUtils::LexicalComparator(const MapPos& mapPos1, const MapPos& mapPos2) {
-        double dx = mapPos1.getX() - mapPos2.getX();
-        if (dx != 0) {
-            return (dx < 0 ? true : false);
-        }
-        double dy = mapPos1.getY() - mapPos2.getY();
-    
-        return (dy < 0 ? true : false);
     }
     
     bool GeomUtils::PointsInsidePolygonEdges(const std::vector<MapPos>& polygon, const std::vector<MapPos>& points) {

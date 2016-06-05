@@ -22,6 +22,7 @@ namespace carto {
     class CancelableTask;
     class CullState;
     class TileLoadListener;
+    class UTFGridEventListener;
     
     namespace TileSubstitutionPolicy {
         /**
@@ -56,6 +57,17 @@ namespace carto {
          * @return The tile data source assigned to this layer.
          */
         std::shared_ptr<TileDataSource> getDataSource() const;
+
+        /**
+         * Returns the tile data source of the associated UTF grid. By default this is null.
+         * @return The tile data source of the associated UTF grid.
+         */
+        std::shared_ptr<TileDataSource> getUTFGridDataSource() const;
+        /**
+         * Sets the tile data source of the associated UTF grid.
+         * @param dataSource The data source to use. Can be null if UTF grid is not used.
+         */
+        void setUTFGridDataSource(const std::shared_ptr<TileDataSource>& dataSource);
     
         /**
          * Returns the current frame number.
@@ -146,7 +158,7 @@ namespace carto {
          * Clears layer tile caches. This will release memory allocated to tiles.
          * @param all True if all tiles should be released, otherwise only preloading (invisible) tiles are released.
          */
-        virtual void clearTileCaches(bool all) = 0;
+        void clearTileCaches(bool all);
 
         /**
          * Returns the tile load listener.
@@ -158,6 +170,17 @@ namespace carto {
          * @param tileLoadListener The tile load listener.
          */
         void setTileLoadListener(const std::shared_ptr<TileLoadListener>& tileLoadListener);
+
+        /**
+         * Returns the UTF grid event listener.
+         * @return The UTF grid event listener.
+         */
+        std::shared_ptr<UTFGridEventListener> getUTFGridEventListener() const;
+        /**
+         * Sets the UTF grid event listener.
+         * @param utfGridEventListener The UTF grid event listener.
+         */
+        void setUTFGridEventListener(const std::shared_ptr<UTFGridEventListener>& utfGridEventListener);
     
         virtual bool isUpdateInProgress() const;
         
@@ -190,6 +213,8 @@ namespace carto {
             std::vector<MapTile> _dataSourceTiles; // tiles in valid datasource range, ordered to top
 
         private:
+            bool loadUTFGridTile(const std::shared_ptr<TileLayer>& layer);
+
             bool _preloadingTile;
             bool _started;
             bool _invalidated;
@@ -250,25 +275,64 @@ namespace carto {
             mutable std::mutex _mutex;
         };
         
+        class UTFGridTile {
+        public:
+            UTFGridTile(const std::vector<std::string>& keys, const std::map<std::string, std::map<std::string, std::string> >& data, const std::vector<int>& keyIds, int xSize, int ySize) : _keys(keys), _data(data), _keyIds(keyIds), _xSize(xSize), _ySize(ySize) { }
+
+            std::string getKey(int keyId) const {
+                return keyId >= 0 && keyId <= static_cast<int>(_keys.size()) ? _keys[keyId] : std::string();
+            }
+            
+            std::map<std::string, std::string> getData(const std::string& key) const {
+                auto it = _data.find(key);
+                return it != _data.end() ? it->second : std::map<std::string, std::string>();
+            }
+
+            int getXSize() const {
+                return _xSize;
+            }
+            
+            int getYSize() const {
+                return _ySize;
+            }
+            
+            int getKeyId(int x, int y) const {
+                return x >= 0 && y >= 0 && x < getXSize() && y < getYSize() ? _keyIds[y * getXSize() + x] : 0;
+            }
+
+            static std::shared_ptr<UTFGridTile> DecodeUTFTile(const TileData& tileData);
+
+        private:
+            std::vector<std::string> _keys;
+            std::map<std::string, std::map<std::string, std::string> > _data;
+            std::vector<int> _keyIds;
+            int _xSize;
+            int _ySize;
+        };
+
         TileLayer(const std::shared_ptr<TileDataSource>& dataSource);
         
         virtual void loadData(const std::shared_ptr<CullState>& cullState);
 
         virtual void updateTileLoadListener();
 
-        virtual bool tileExists(const MapTile& tile, bool preloadingCache) = 0;
-        virtual bool tileIsValid(const MapTile& tile) const = 0;
+        virtual bool tileExists(const MapTile& tile, bool preloadingCache) const = 0;
+        virtual bool tileValid(const MapTile& tile, bool preloadingCache) const = 0;
         virtual void fetchTile(const MapTile& tile, bool preloadingTile, bool invalidated) = 0;
+        virtual void clearTiles(bool preloadingTiles) = 0;
+        virtual void tilesChanged(bool removeTiles) = 0;
 
         MapBounds calculateInternalTileBounds(const MapTile& mapTile) const;
         virtual void calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile) = 0;
         virtual void refreshDrawData(const std::shared_ptr<CullState>& cullState) = 0;
         
-        virtual void tilesChanged(bool removeTiles) = 0;
-        
         virtual int getMinZoom() const = 0;
         virtual int getMaxZoom() const = 0;
         
+        virtual void calculateRayIntersectedElements(const Projection& projection, const MapPos& rayOrig, const MapVec& rayDir,
+            const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
+        virtual bool processRayIntersectedElement(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement) const;
+
         static const float DISCRETE_ZOOM_LEVEL_BIAS;
 
         std::atomic<bool> _synchronizedRefresh;
@@ -278,10 +342,16 @@ namespace carto {
         
         const DirectorPtr<TileDataSource> _dataSource;
         std::shared_ptr<DataSourceListener> _dataSourceListener;
+
+        DirectorPtr<TileDataSource> _utfGridDataSource;
+        mutable std::mutex _utfGridDataSourceMutex;
         
         DirectorPtr<TileLoadListener> _tileLoadListener;
         mutable std::mutex _tileLoadListenerMutex;
     
+        DirectorPtr<UTFGridEventListener> _utfGridEventListener;
+        mutable std::mutex _utfGridEventListenerMutex;
+
         FetchingTileTasks _fetchingTiles;
         
         int _frameNr;
@@ -309,6 +379,7 @@ namespace carto {
         
         std::vector<MapTile> _visibleTiles;
         std::vector<MapTile> _preloadingTiles;
+        std::unordered_map<MapTile, std::shared_ptr<UTFGridTile> > _utfGridTiles;
     };
     
 }

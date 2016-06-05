@@ -18,6 +18,7 @@
 
 %import "datasources/TileDataSource.i"
 %import "core/StringVector.i"
+%import "core/StringMap.i"
 
 !polymorphic_shared_ptr(carto::HTTPTileDataSource, datasources.HTTPTileDataSource)
 

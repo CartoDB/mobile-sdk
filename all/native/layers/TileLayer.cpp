@@ -1,14 +1,26 @@
 #include "TileLayer.h"
+#include "core/BinaryData.h"
+#include "core/TileData.h"
 #include "components/CancelableTask.h"
 #include "layers/TileLoadListener.h"
+#include "layers/UTFGridEventListener.h"
 #include "renderers/components/CullState.h"
+#include "renderers/components/RayIntersectedElement.h"
 #include "renderers/MapRenderer.h"
 #include "projections/Projection.h"
+#include "ui/UTFGridClickInfo.h"
 #include "utils/Const.h"
 #include "utils/GeomUtils.h"
 #include "utils/Log.h"
 
 #include <sstream>
+
+#include <boost/lexical_cast.hpp>
+
+#include <rapidjson/rapidjson.h>
+#include <rapidjson/document.h>
+
+#include <utf8.h>
 
 namespace carto {
 
@@ -19,6 +31,16 @@ namespace carto {
         return _dataSource.get();
     }
     
+    std::shared_ptr<TileDataSource> TileLayer::getUTFGridDataSource() const {
+        std::lock_guard<std::mutex> lock(_utfGridDataSourceMutex);
+        return _utfGridDataSource.get();
+    }
+    
+    void TileLayer::setUTFGridDataSource(const std::shared_ptr<TileDataSource>& dataSource) {
+        std::lock_guard<std::mutex> lock(_utfGridDataSourceMutex);
+        _utfGridDataSource = DirectorPtr<TileDataSource>(dataSource);
+    }
+
     int TileLayer::getFrameNr() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _frameNr;
@@ -102,6 +124,13 @@ namespace carto {
         return MapBounds(pos0, pos1);
     }
     
+    void TileLayer::clearTileCaches(bool all) {
+        clearTiles(true);
+        if (all) {
+            clearTiles(false);
+        }
+    }
+
     std::shared_ptr<TileLoadListener> TileLayer::getTileLoadListener() const {
         std::lock_guard<std::mutex> lock(_tileLoadListenerMutex);
         return _tileLoadListener.get();
@@ -110,6 +139,16 @@ namespace carto {
     void TileLayer::setTileLoadListener(const std::shared_ptr<TileLoadListener>& tileLoadListener) {
         std::lock_guard<std::mutex> lock(_tileLoadListenerMutex);
         _tileLoadListener = DirectorPtr<TileLoadListener>(tileLoadListener);
+    }
+
+    std::shared_ptr<UTFGridEventListener> TileLayer::getUTFGridEventListener() const {
+        std::lock_guard<std::mutex> lock(_utfGridEventListenerMutex);
+        return _utfGridEventListener.get();
+    }
+    
+    void TileLayer::setUTFGridEventListener(const std::shared_ptr<UTFGridEventListener>& utfGridEventListener) {
+        std::lock_guard<std::mutex> lock(_utfGridEventListenerMutex);
+        _utfGridEventListener = DirectorPtr<UTFGridEventListener>(utfGridEventListener);
     }
     
     bool TileLayer::isUpdateInProgress() const {
@@ -136,8 +175,12 @@ namespace carto {
         _refreshedTiles(false),
         _dataSource(dataSource),
         _dataSourceListener(),
+        _utfGridDataSource(),
+        _utfGridDataSourceMutex(),
         _tileLoadListener(),
         _tileLoadListenerMutex(),
+        _utfGridEventListener(),
+        _utfGridEventListenerMutex(),
         _fetchingTiles(),
         _frameNr(0),
         _lastFrameNr(-1),
@@ -145,7 +188,8 @@ namespace carto {
         _substitutionPolicy(TileSubstitutionPolicy::TILE_SUBSTITUTION_POLICY_ALL),
         _zoomLevelBias(0.0f),
         _visibleTiles(),
-        _preloadingTiles()
+        _preloadingTiles(),
+        _utfGridTiles()
     {
     }
     
@@ -154,6 +198,16 @@ namespace carto {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
         _calculatingTiles = true;
+
+        // Remove UTF grid tiles that are missing from the cache
+        for (auto it = _utfGridTiles.begin(); it != _utfGridTiles.end(); ) {
+            if (!tileExists(it->first, false) && !tileExists(it->first, true)) {
+                it = _utfGridTiles.erase(it);
+            }
+            else {
+                it++;
+            }
+        }
     
         // Cancel old tasks
         for (const std::shared_ptr<FetchTaskBase>& task : _fetchingTiles.getTasks()) {
@@ -221,6 +275,59 @@ namespace carto {
         }
     }
     
+    void TileLayer::calculateRayIntersectedElements(const Projection& projection, const MapPos& rayOrig, const MapVec& rayDir, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
+        MapPos mapPos;
+        if (!GeomUtils::RayZPlaneIntersect(rayOrig, rayDir, 0, mapPos)) {
+            return;
+        }
+        int zoom = std::min(getMaxZoom(), static_cast<int>(viewState.getZoom() + getZoomLevelBias() + DISCRETE_ZOOM_LEVEL_BIAS));
+
+        MapTile mapTile = calculateMapTile(mapPos, std::min(_utfGridDataSource->getMaxZoom(), std::max(_utfGridDataSource->getMinZoom(), zoom)));
+        double tileWidth = _utfGridDataSource->getProjection()->getBounds().getDelta().getX() / (1 << mapTile.getZoom());
+        double tileHeight = _utfGridDataSource->getProjection()->getBounds().getDelta().getY() / (1 << mapTile.getZoom());
+        MapVec mapVec(mapTile.getX() * tileWidth, mapTile.getY() * tileHeight);
+        MapPos mapTileOrigin = _utfGridDataSource->getProjection()->getBounds().getMin() + mapVec;
+        double xRel = (mapPos.getX() - mapTileOrigin.getX()) / tileWidth;
+        double yRel = 1 - (mapPos.getY() - mapTileOrigin.getY()) / tileHeight;
+
+        // Try to get the tile from cache
+        std::shared_ptr<UTFGridTile> utfGridTile;
+        if (tileExists(mapTile, false) || tileExists(mapTile, true)) {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            auto it = _utfGridTiles.find(mapTile);
+            if (it != _utfGridTiles.end()) {
+                utfGridTile = it->second;
+            }
+        }
+
+        if (utfGridTile) {
+            int x = static_cast<int>(std::floor(xRel * utfGridTile->getXSize()));
+            int y = static_cast<int>(std::floor(yRel * utfGridTile->getYSize()));
+            int keyId = utfGridTile->getKeyId(x, y);
+            if (keyId != 0) {
+                auto elementInfo = std::make_shared<std::map<std::string, std::string> >(utfGridTile->getData(utfGridTile->getKey(keyId)));
+                std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
+                results.push_back(RayIntersectedElement(elementInfo, thisLayer, mapPos, mapPos, 0));
+            }
+        }
+    }
+
+    bool TileLayer::processRayIntersectedElement(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement) const {
+        DirectorPtr<UTFGridEventListener> utfGridEventListener;
+        {
+            std::lock_guard<std::mutex> lock(_utfGridEventListenerMutex);
+            utfGridEventListener = _utfGridEventListener;
+        }
+
+        if (utfGridEventListener) {
+            std::shared_ptr<std::map<std::string, std::string> > elementInfo = intersectedElement.getElement<std::map<std::string, std::string> >();
+            auto utfGridClickInfo = std::make_shared<UTFGridClickInfo>(clickType, intersectedElement.getHitPos(), *elementInfo, intersectedElement.getLayer());
+            return utfGridEventListener->onUTFGridClicked(utfGridClickInfo);
+        }
+
+        return clickType == ClickType::CLICK_TYPE_SINGLE || clickType == ClickType::CLICK_TYPE_LONG; // by default, disable 'click through' for single and long clicks
+    }
+
     void TileLayer::calculateVisibleTiles(const std::shared_ptr<CullState>& cullState) {
         // Remove last visible and preloading tiles
         _visibleTiles.clear();
@@ -303,7 +410,7 @@ namespace carto {
                 calculateDrawData(visTile, tile, preloadingTiles);
 
                 // Re-fetch invalid tile
-                if (!tileIsValid(tile)) {
+                if (!tileValid(tile, preloadingTiles) && !tileValid(tile, !preloadingTiles)) {
                     fetchTile(tile, preloadingTiles, true);
                 }
                 continue;
@@ -454,7 +561,10 @@ namespace carto {
             _started = true;
         }
         
-        bool refresh = loadTile(layer);
+        bool refresh = loadUTFGridTile(layer);
+        if (loadTile(layer)) {
+            refresh = true;
+        }
     
         layer->_fetchingTiles.remove(_tile.getTileId());
 
@@ -471,6 +581,134 @@ namespace carto {
         }
     }
     
+    bool TileLayer::FetchTaskBase::loadUTFGridTile(const std::shared_ptr<TileLayer>& tileLayer) {
+        DirectorPtr<TileDataSource> dataSource;
+        {
+            std::lock_guard<std::mutex> lock(tileLayer->_utfGridDataSourceMutex);
+            dataSource = tileLayer->_utfGridDataSource;
+        }
+        
+        std::vector<MapTile> dataSourceTiles;
+        if (dataSource) {
+            for (MapTile dataSourceTile = _tile; true; ) {
+                int zoom = dataSourceTile.getZoom();
+                if (zoom >= dataSource->getMinZoom() && zoom <= dataSource->getMaxZoom()) {
+                    dataSourceTiles.push_back(dataSourceTile);
+                }
+                if (zoom <= 0) {
+                    break;
+                }
+                dataSourceTile = dataSourceTile.getParent();
+            }
+        }
+
+        bool refresh = false;
+        for (const MapTile& dataSourceTile : dataSourceTiles) {
+            std::shared_ptr<TileData> tileData = dataSource->loadTile(dataSourceTile);
+            if (!tileData) {
+                break;
+            }
+            if (tileData->isReplaceWithParent()) {
+                continue;
+            }
+
+            std::shared_ptr<TileLayer::UTFGridTile> utfTile = TileLayer::UTFGridTile::DecodeUTFTile(*tileData);
+            if (utfTile) {
+                std::lock_guard<std::recursive_mutex> lock(tileLayer->_mutex);
+                tileLayer->_utfGridTiles[dataSourceTile] = utfTile; // we ignore expiration info here
+                refresh = true;
+            }
+            else {
+                Log::Error("TileLayer::FetchTaskBase: Failed to decode UTF grid tile");
+            }
+            break;
+        }
+        return refresh;
+    }
+
+    std::shared_ptr<TileLayer::UTFGridTile> TileLayer::UTFGridTile::DecodeUTFTile(const TileData& tileData) {
+        std::string json(reinterpret_cast<const char*>(tileData.getData()->data()), tileData.getData()->size());
+        rapidjson::Document doc;
+        if (doc.Parse<rapidjson::kParseDefaultFlags>(json.c_str()).HasParseError()) {
+            Log::Error("TileLayer::DecodeUTFTile: Failed to parse JSON");
+            return std::shared_ptr<UTFGridTile>();
+        }
+
+        std::vector<std::string> keys;
+        for (unsigned int i = 0; i < doc["keys"].Size(); i++) {
+            keys.push_back(doc["keys"][i].GetString());
+        }
+
+        std::map<std::string, std::map<std::string, std::string> > data;
+        if (doc.FindMember("data") != doc.MemberEnd()) {
+            for (rapidjson::Value::ConstMemberIterator it = doc["data"].MemberBegin(); it != doc["data"].MemberEnd(); ++it) {
+                if (!it->name.IsString() || !it->value.IsObject()) {
+                    continue;
+                }
+                std::string key = it->name.GetString();
+                for (rapidjson::Value::ConstMemberIterator it2 = it->value.MemberBegin(); it2 != it->value.MemberEnd(); it2++) {
+                    const rapidjson::Value* value = &it2->value;
+                    if (!it2->name.IsString()) {
+                        continue;
+                    }
+                    std::string str;
+                    if (value->IsString()) {
+                        str = value->GetString();
+                    }
+                    else if (value->IsInt()) {
+                        str = boost::lexical_cast<std::string>(value->GetInt());
+                    }
+                    else if (value->IsUint()) {
+                        str = boost::lexical_cast<std::string>(value->GetUint());
+                    }
+                    else if (value->IsInt64()) {
+                        str = boost::lexical_cast<std::string>(value->GetInt64());
+                    }
+                    else if (value->IsUint64()) {
+                        str = boost::lexical_cast<std::string>(value->GetUint64());
+                    }
+                    else if (value->IsNumber()) {
+                        str = boost::lexical_cast<std::string>(value->GetDouble());
+                    }
+                    data[key][it2->name.GetString()] = str;
+                }
+            }
+        }
+
+        unsigned int rows = doc["grid"].Size();
+        unsigned int cols = 0;
+        for (unsigned int i = 0; i < rows; i++) {
+            std::string columnUTF8 = doc["grid"][i].GetString();
+            std::vector<std::uint32_t> column;
+            column.reserve(columnUTF8.size());
+            utf8::utf8to32(columnUTF8.begin(), columnUTF8.end(), std::back_inserter(column));
+
+            cols = std::max(cols, static_cast<unsigned int>(column.size()));
+        }
+        std::vector<int> keyIds;
+        keyIds.reserve(cols * rows);
+        for (unsigned int i = 0; i < rows; i++) {
+            std::string columnUTF8 = doc["grid"][i].GetString();
+            std::vector<std::uint32_t> column;
+            column.reserve(columnUTF8.size());
+            utf8::utf8to32(columnUTF8.begin(), columnUTF8.end(), std::back_inserter(column));
+
+            if (column.size() != cols) {
+                Log::Warnf("TileLayer::DecodeUTFTile: Mismatching rows/columns");
+                column.resize(cols - column.size(), ' ');
+            }
+
+            for (std::size_t j = 0; j < column.size(); j++) {
+                std::uint32_t code = column[j];
+                if (code >= 93) code--;
+                if (code >= 35) code--;
+                code -= 32;
+                keyIds.push_back(code);
+            }
+        }
+        return std::make_shared<UTFGridTile>(keys, data, keyIds, cols, rows);
+    }
+
     const float TileLayer::DISCRETE_ZOOM_LEVEL_BIAS = 0.001f;
 
     const float TileLayer::PRELOADING_TILE_SCALE = 2.0f;

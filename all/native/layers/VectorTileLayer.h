@@ -88,22 +88,20 @@ namespace carto {
          */
         void setLabelOrder(VectorTileLabelOrder::VectorTileLabelOrder labelOrder);
     
-        virtual void clearTileCaches(bool all);
-        
     protected:
         virtual int getCullDelay() const;
     
-        virtual bool tileExists(const MapTile& mapTile, bool preloadingCache);
-        virtual bool tileIsValid(const MapTile& mapTile) const;
+        virtual bool tileExists(const MapTile& mapTile, bool preloadingCache) const;
+        virtual bool tileValid(const MapTile& mapTile, bool preloadingCache) const;
         virtual void fetchTile(const MapTile& mapTile, bool preloadingTile, bool invalidated);
-    
+        virtual void clearTiles(bool preloadingTiles);
+        virtual void tilesChanged(bool removeTiles);
+
         virtual long long getTileId(const MapTile& mapTile) const;
 
         virtual void calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile);
         virtual void refreshDrawData(const std::shared_ptr<CullState>& cullState);
     
-        virtual void tilesChanged(bool removeTiles);
-        
         virtual int getMinZoom() const;
         virtual int getMaxZoom() const;
         
@@ -114,10 +112,6 @@ namespace carto {
         virtual bool onDrawFrame3D(float deltaSeconds, BillboardSorter& BillboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
         virtual void onSurfaceDestroyed();
         
-        virtual void calculateRayIntersectedElements(const Projection& projection, const MapPos& rayOrig, const MapVec& rayDir,
-                                                     const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
-        virtual bool processRayIntersectedElement(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement) const;
-    
         virtual void registerDataSourceListener();
         virtual void unregisterDataSourceListener();
 
