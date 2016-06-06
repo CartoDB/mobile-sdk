@@ -33,7 +33,7 @@ find ${tempDir} -name "*.java" > ${tempDir}/files
 # Execute JavaDoc
 rm -rf ${javadocDir}
 mkdir -p ${javadocDir}
-${javadocExec} -source 1.6 -d ${javadocDir} -doctitle "Nutiteq SDK 3 for Android" "@${tempDir}/files"
+${javadocExec} -source 1.6 -d ${javadocDir} -doctitle "Carto Mobile SDK for Android" "@${tempDir}/files"
 
 # Finished
 echo "Done!"

@@ -26,8 +26,6 @@ find ${tempDir} -name "*NTIOSUtils.*" -exec rm {} \;
 find ${tempDir} -name "*.h" -exec sed -i '' 's/__attribute__ ((visibility("default")))//g' {} \;
 
 # Execute doxygen
-# rm -rf ${distDir}/docC++
-# ${doxygenDir}/doxygen "doxygen/doxygen-c++.conf"
 rm -rf ${distDir}/docObjC
 ${doxygenDir}/doxygen "doxygen/doxygen-objc.conf"
 

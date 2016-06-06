@@ -8,16 +8,16 @@ icons:
   - NutiteqMapsSDK_128x128.png
   - NutiteqMapsSDK_512x512.png
 publisher: CartoDB
-name: Nutiteq Maps SDK by CartoDB
-id: NutiteqMapsSDK
+name: Carto Mobile SDK
+id: CartoMobileSDK
 samples: 
-  - name: "Nutiteq Maps SDK samples"
-    description: "iOs and Android apps with shared code"
-    path: ../../samples/nutiteqSample/hellomap-xamarin.sln
+  - name: "Carto Mobile SDK samples"
+    description: "iOS and Android apps with shared code"
+    path: ../../samples/NutiteqSample/hellomap-xamarin.sln
     nobuild: true
-publisher-url: http://developer.nutiteq.com
+publisher-url: https://www.cartodb.com/mobile/
 libraries: 
-  ios-unified: ../../../dist/xamarin/Release/NutiteqMapsSDK.iOS.dll
-  android: ../../../dist/xamarin/Release/NutiteqMapsSDK.Android.dll
-version: 3.3
+  ios-unified: ../../../dist/xamarin/Release/CartoMobileSDK.iOS.dll
+  android: ../../../dist/xamarin/Release/CartoMobileSDK.Android.dll
+version: 1.0
 nobuild: true

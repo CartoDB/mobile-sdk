@@ -1,12 +1,12 @@
 # About
 
-This is package to create Nutiteq SDK 3.x Xamarin component for the store
+This is package to create Carto Mobile SDK Xamarin component for the store
 
 
 # How to compile package
 
  1. build iOS/Android DLL, MDB and XML (documentation) files using ../scripts/build-xamarin.py script
- 1. add samples to samples/folders (see yaml). Same as in github.com/nutiteq/hellomap3d-dotnet project
+ 1. add samples to samples/folders (see yaml). Same as in github.com/CartoDB/mobile-dotnet-samples project
  2. update component.yaml - version number
  3. in same folder where is component.yaml run:
   `mono ../../xamarin-component.exe package`
@@ -15,10 +15,10 @@ This is package to create Nutiteq SDK 3.x Xamarin component for the store
 # Installing locally (for testing)
 
 win:
-  `xamarin-component.exe install NutiteqMapsSDK-3.2.4.xam`
+  `xamarin-component.exe install CartoMobileSDK-1.0.0.xam`
 
 mac:
-  `mono ../../xamarin-component.exe install NutiteqMapsSDK-3.2.4.xam`
+  `mono ../../xamarin-component.exe install CartoMobileSDK-1.0.0.xam`
 
 
 # References

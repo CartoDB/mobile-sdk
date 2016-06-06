@@ -1,5 +1,5 @@
 #
-#  Be sure to run `pod spec lint Nutiteq.podspec' to ensure this is a
+#  Be sure to run `pod spec lint CartoMobileSDK.podspec' to ensure this is a
 #  valid spec and to remove all comments including this before submitting the spec.
 #
 #  To learn more about Podspec attributes see http://docs.cocoapods.org/specification.html
@@ -15,9 +15,9 @@ Pod::Spec.new do |s|
   #  summary should be tweet-length, and the description more in depth.
   #
 
-  s.name         = "Nutiteq"
-  s.version      = "3.3"
-  s.summary      = "Nutiteq maps SDK is advanced MapView with 3D, offline maps and other features"
+  s.name         = "Carto Mobile SDK"
+  s.version      = "1.0"
+  s.summary      = "Carto Mobile SDK is advanced MapView with 3D, offline maps and other features"
 
   s.description  = <<-DESC
                    Advanced MapView API
@@ -31,7 +31,7 @@ Pod::Spec.new do |s|
                    Provided by CartoDB.com
                    DESC
 
-  s.homepage     = "https://developer.nutiteq.com"
+  s.homepage     = "https://cartodb.com/mobile/"
   s.screenshots  = "https://developer.nutiteq.com/images/animated3d.gif"
 
 
@@ -42,7 +42,7 @@ Pod::Spec.new do |s|
   #  Popular ones are 'MIT', 'BSD' and 'Apache License, Version 2.0'.
   #
 
-  s.license      = { :type => "Commercial", :text => "see http://www.nutiteq.com/license/" }
+  s.license      = { :type => "Commercial", :text => "see http://www.cartodb.com/license/" }
 
 
   # ――― Author Metadata  ――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
@@ -55,8 +55,8 @@ Pod::Spec.new do |s|
   #  profile URL.
   #
 
-  s.author             = { "Nutiteq" => "https://www.nutiteq.com" }
-  s.social_media_url   = "http://twitter.com/nutiteq"
+  s.author             = { "Carto" => "https://www.cartodb.com" }
+  s.social_media_url   = "http://twitter.com/cartodb"
 
   # ――― Platform Specifics ――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
   #
@@ -90,10 +90,10 @@ Pod::Spec.new do |s|
   #  Not including the public_header_files will make all headers public.
   #
 
-  s.source_files  = "Nuti.framework/**/*.{h,m}"
+  s.source_files  = "CartoMobileSDK.framework/**/*.{h,m}"
   # s.exclude_files = "Classes/Exclude"
 
-  s.public_header_files = "Nuti.framework/**/*.{h,m}"
+  s.public_header_files = "CartoMobileSDK.framework/**/*.{h,m}"
   #s.header_dir = 
 
   # ――― Resources ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
@@ -107,7 +107,7 @@ Pod::Spec.new do |s|
   s.resource  = "nutibright-v2a.zip"
   # s.resources = "Resources/*.png"
 
-  s.preserve_paths = "Nuti.framework"
+  s.preserve_paths = "CartoMobileSDK.framework"
 
 
   # ――― Project Linking ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
@@ -117,7 +117,7 @@ Pod::Spec.new do |s|
   #
 
   # s.framework  = "SomeFramework"
-  s.frameworks = "GLKit", "CoreGraphics", "Nuti"
+  s.frameworks = "GLKit", "CoreGraphics", "CartoMobileSDK"
 
   # s.library   = "iconv"
   s.libraries = "z", "c++", "stdc++.6"
@@ -131,7 +131,7 @@ Pod::Spec.new do |s|
 
   s.requires_arc = true
 
-  s.xcconfig = { "FRAMEWORK_SEARCH_PATHS" => "\"$(PODS_ROOT)/Nutiteq/\"" }
+  s.xcconfig = { "FRAMEWORK_SEARCH_PATHS" => "\"$(PODS_ROOT)/CartoMobileSDK/\"" }
   # s.dependency "JSONKit", "~> 1.4"
 
 end

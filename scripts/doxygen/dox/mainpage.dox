@@ -1,12 +1,12 @@
-\mainpage Nutiteq SDK for iOS
+\mainpage Carto Mobile SDK for iOS
 
 \section intro_sec Introduction
-Nutiteq SDK for iOS is a native-level maps library, provided as prebuilt binary for armv7/armv8 and x86/x64 architectures and with ObjectiveC and Swift API.
+Carto Mobile SDK for iOS is a native-level maps library, provided as prebuilt binary for armv7/armv8 and x86/x64 architectures and with ObjectiveC and Swift API.
 
 \section install_sec Getting started
 
-* See tutorials in [wiki pages](https://github.com/nutiteq/hellomap3d-ios/wiki/) 
-* [View On GitHub] (https://github.com/nutiteq/hellomap3d-ios)
+* See tutorials in [wiki pages](https://github.com/CartoDB/mobile-ios-samples/wiki/) 
+* [View On GitHub] (https://github.com/CartoDB/mobile-ios-samples)
 
 
 ![Screenshot sample](screenshot_sample.png)

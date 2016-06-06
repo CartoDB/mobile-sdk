@@ -15,7 +15,7 @@ Nutiteq Maps SDK is provided by [CartoDB](http://cartodb.com), the leading provi
 * **Advanced GIS extensions**: vector overlays (Shapefiles, KML, GPX, WFS etc), raster overlays (GeoTIFF, WMS etc), vector map editing and custom projections are available as separate Pro package. Ask licensing@nutiteq.com for details.
 
 ###Windows Phone support
-For preliminary **Windows Phone 8.1** and **Windows Phone 10** support please check out [https://github.com/nutiteq/hellomap3d-dotnet/](https://github.com/nutiteq/hellomap3d-dotnet/) project. This is not included in Xamarin component.
+For **Windows Phone 10** support please check out [https://github.com/nutiteq/hellomap3d-dotnet/](https://github.com/nutiteq/hellomap3d-dotnet/) project. This is not included in Xamarin component.
 
 ###Usage
 

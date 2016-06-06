@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <FileList
-    DisplayName="Nutiteq Maps SDK for Windows Phone 10"
-    ProductFamilyName="NutiteqMapsSDK.WinPhone10"
-    MoreInfo="http://developer.nutiteq.com/"
+    DisplayName="Carto Mobile SDK for Windows Phone 10"
+    ProductFamilyName="CartoMobileSDK.WinPhone10"
+    MoreInfo="https://www.cartodb.com/mobile/"
     MinVSVersion="14.0"
     DependsOn="Microsoft.VCLibs, Version=14.0"
     SupportsMultipleVersions="Error"
@@ -10,7 +10,7 @@
 <!--
   <File Reference="libEGL.winmd" Implementation="libEGL.dll" />
   <File Reference="libGLESv2.winmd" Implementation="libGLESv2.dll" /> 
-  <File Reference="nutiteq_maps_sdk.winmd" Implementation="nutiteq_maps_sdk.dll" />
+  <File Reference="carto_mobile_sdk.winmd" Implementation="carto_mobile_sdk.dll" />
 -->
 
 </FileList>
