@@ -309,9 +309,9 @@ namespace carto {
             int _xSize;
             int _ySize;
         };
-
-        TileLayer(const std::shared_ptr<TileDataSource>& dataSource);
         
+        TileLayer(const std::shared_ptr<TileDataSource>& dataSource);
+
         virtual void loadData(const std::shared_ptr<CullState>& cullState);
 
         virtual void updateTileLoadListener();

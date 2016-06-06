@@ -74,7 +74,7 @@ namespace carto {
 
         virtual bool tileExists(const MapTile& mapTile, bool preloadingCache) const;
         virtual bool tileValid(const MapTile& mapTile, bool preloadingCache) const;
-        virtual void fetchTile(const MapTile& mapTile, bool preloadingTile,bool invalidated);
+        virtual void fetchTile(const MapTile& mapTile, bool preloadingTile, bool invalidated);
         virtual void clearTiles(bool preloadingTiles);
         virtual void tilesChanged(bool removeTiles);
 

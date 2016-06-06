@@ -7,10 +7,8 @@
 #ifndef _CARTO_UTFGRIDCLICKINFO_H_
 #define _CARTO_UTFGRIDCLICKINFO_H_
 
-#include "components/DirectorPtr.h"
 #include "core/MapPos.h"
 #include "ui/ClickType.h"
-#include "vectorelements/VectorElement.h"
 
 #include <memory>
 #include <string>
