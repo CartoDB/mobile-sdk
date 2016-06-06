@@ -19,8 +19,6 @@
 
 namespace carto {
     class Layers;
-    class VectorTileDecoder;
-    class TorqueTileDecoder;
 
     class CartoMapsService {
     public:
@@ -44,12 +42,6 @@ namespace carto {
 
         bool isVectorLayerMode(int index) const;
         void setVectorLayerMode(int index, bool enabled);
-
-        std::shared_ptr<VectorTileDecoder> getVectorTileDecoder() const;
-        void setVectorTileDecoder(const std::shared_ptr<VectorTileDecoder>& tileDecoder);
-
-        std::shared_ptr<TorqueTileDecoder> getTorqueTileDecoder() const;
-        void setTorqueTileDecoder(const std::shared_ptr<TorqueTileDecoder>& tileDecoder);
 
         void buildNamedMap(const std::shared_ptr<Layers>& layers, const std::string& templateId, const std::map<std::string, Variant>& templateParams) const;
         void buildMap(const std::shared_ptr<Layers>& layers, const Variant& mapConfig) const;
@@ -80,8 +72,6 @@ namespace carto {
         std::string _authToken;
         LayerType _defaultLayerType;
         std::map<int, LayerType> _layerTypes;
-        std::shared_ptr<VectorTileDecoder> _vectorTileDecoder;
-        std::shared_ptr<TorqueTileDecoder> _torqueTileDecoder;
 
         mutable std::shared_ptr<std::recursive_mutex> _mutex;
     };

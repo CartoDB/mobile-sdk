@@ -6,6 +6,7 @@
 #include "layers/VectorTileLayer.h"
 #include "layers/TorqueTileLayer.h"
 #include "vectortiles/MBVectorTileDecoder.h"
+#include "vectortiles/TorqueTileDecoder.h"
 #include "vectortiles/CartoCSSStyleSet.h"
 #include "utils/GeneralUtils.h"
 #include "utils/NetworkUtils.h"
@@ -99,26 +100,6 @@ namespace carto {
         _layerTypes[index] = (enabled ? LAYER_TYPE_VECTOR : LAYER_TYPE_RASTER);
     }
 
-    std::shared_ptr<VectorTileDecoder> CartoMapsService::getVectorTileDecoder() const {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
-        return _vectorTileDecoder;
-    }
-
-    void CartoMapsService::setVectorTileDecoder(const std::shared_ptr<VectorTileDecoder>& tileDecoder) {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
-        _vectorTileDecoder = tileDecoder;
-    }
-
-    std::shared_ptr<TorqueTileDecoder> CartoMapsService::getTorqueTileDecoder() const {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
-        return _torqueTileDecoder;
-    }
-
-    void CartoMapsService::setTorqueTileDecoder(const std::shared_ptr<TorqueTileDecoder>& tileDecoder) {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
-        _torqueTileDecoder = tileDecoder;
-    }
-
     void CartoMapsService::buildNamedMap(const std::shared_ptr<Layers>& layers, const std::string& templateId, const std::map<std::string, Variant>& templateParams) const {
         std::lock_guard<std::recursive_mutex> lock(*_mutex);
 
@@ -142,7 +123,11 @@ namespace carto {
         std::shared_ptr<BinaryData> responseData;
         std::map<std::string, std::string> responseHeaders;
         if (client.get(url, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
-            Log::Error("CartoMapsService::buildNamedMap: Failed to read map configuration");
+            std::string result;
+            if (responseData) {
+                result = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+            }
+            Log::Errorf("CartoMapsService::buildNamedMap: Failed to read map configuration: %s", result.c_str());
             return;
         }
         
@@ -151,7 +136,7 @@ namespace carto {
         picojson::value mapConfig;
         std::string err = picojson::parse(mapConfig, result);
         if (!err.empty()) {
-            Log::Error("CartoMapsService::buildNamedMap: Failed to parse map configuration");
+            Log::Errorf("CartoMapsService::buildNamedMap: Failed to parse map configuration: %s", err.c_str());
             return;
         }
 
@@ -187,7 +172,11 @@ namespace carto {
         std::shared_ptr<BinaryData> responseData;
         std::map<std::string, std::string> responseHeaders;
         if (client.post(url, "application/json", requestData, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
-            Log::Error("CartoMapsService::buildMap: Failed to read layer group id");
+            std::string result;
+            if (responseData) {
+                result = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+            }
+            Log::Errorf("CartoMapsService::buildMap: Failed to read map configuration: %s", result.c_str());
             return;
         }
 
@@ -196,7 +185,7 @@ namespace carto {
         picojson::value mapInfo;
         std::string err = picojson::parse(mapInfo, result);
         if (!err.empty()) {
-            // log error
+            Log::Errorf("CartoMapsService::buildMap: Failed to parse response: %s", err.c_str());
             return;
         }
         std::string layerGroupId = mapInfo.get("layergroupid").get<std::string>();
@@ -261,8 +250,8 @@ namespace carto {
                 auto dataSource = std::make_shared<HTTPTileDataSource>(getMinZoom(mapConfig), getMaxZoom(mapConfig), urlTemplateBase + ".torque");
                 // TODO: AssetPackage support
                 auto styleSet = std::make_shared<CartoCSSStyleSet>(cartoCSS);
-                std::static_pointer_cast<MBVectorTileDecoder>(_vectorTileDecoder)->setCartoCSSStyleSet(styleSet);
-                auto layer = std::make_shared<TorqueTileLayer>(dataSource, _torqueTileDecoder);
+                auto torqueTileDecoder = std::make_shared<TorqueTileDecoder>(styleSet);
+                auto layer = std::make_shared<TorqueTileLayer>(dataSource, torqueTileDecoder);
                 layers->add(layer);
             }
             else if (layerType == LAYER_TYPE_VECTOR) {
@@ -270,8 +259,8 @@ namespace carto {
                 auto dataSource = std::make_shared<HTTPTileDataSource>(getMinZoom(mapConfig), getMaxZoom(mapConfig), urlTemplateBase + ".mvt");
                 // TODO: AssetPackage support
                 auto styleSet = std::make_shared<CartoCSSStyleSet>(cartoCSS);
-                std::static_pointer_cast<MBVectorTileDecoder>(_vectorTileDecoder)->setCartoCSSStyleSet(styleSet);
-                auto layer = std::make_shared<VectorTileLayer>(dataSource, _vectorTileDecoder);
+                auto vectorTileDecoder = std::make_shared<MBVectorTileDecoder>(styleSet);
+                auto layer = std::make_shared<VectorTileLayer>(dataSource, vectorTileDecoder);
                 layers->add(layer);
             }
             else {
