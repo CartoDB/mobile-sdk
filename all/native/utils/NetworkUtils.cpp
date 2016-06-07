@@ -131,12 +131,12 @@ namespace carto {
         return valueMap;
     }
 
-    std::string NetworkUtils::BuildURLFromParameters(const std::string& baseUrl, const std::map<std::string, std::string>& params) {
+    std::string NetworkUtils::BuildURLFromParameters(const std::string& baseURL, const std::map<std::string, std::string>& params) {
         return BuildURLFromParameters(baseURL, std::multimap<std::string, std::string>(params.begin(), params.end()));
     }
 
-    std::string NetworkUtils::BuildURLFromParameters(const std::string& baseUrl, const std::multimap<std::string, std::string>& params) {
-        std::string url = baseUrl;
+    std::string NetworkUtils::BuildURLFromParameters(const std::string& baseURL, const std::multimap<std::string, std::string>& params) {
+        std::string url = baseURL;
         if (!params.empty()) {
             url += (url.find('?') == std::string::npos ? '?' : '&');
             url += URLEncodeMap(params);

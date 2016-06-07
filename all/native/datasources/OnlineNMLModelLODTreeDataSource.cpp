@@ -109,13 +109,14 @@ namespace carto {
                 break;
             }
             std::string metaDataEnc = dataStream.readString();
+            std::multimap<std::string, std::string> metaData = NetworkUtils::URLDecodeMap(metaDataEnc);
             double mapPosX = dataStream.readDouble();
             double mapPosY = dataStream.readDouble();
             double mapPosZ = dataStream.readDouble();
     
             std::shared_ptr<NMLModelLODTreeProxy> proxy(std::make_shared<NMLModelLODTreeProxy>(MapPos(mapPosX, mapPosY, mapPosZ)));
             proxy->setId(modelId);
-            proxy->setMetaData(NetworkUtils::URLDecodeMap(metaDataEnc));
+            proxy->setMetaData(std::map<std::string, std::string>(metaData.begin(), metaData.end()));
             proxyMap[modelId] = proxy;
         }
     
