@@ -31,13 +31,15 @@ namespace carto {
 
         static std::string URLEncode(const std::string& value);
 
-        static std::string URLEncodeMap(const std::map<std::string, std::string>& valueMap);
+        static std::string URLEncodeMap(const std::multimap<std::string, std::string>& valueMap);
 
         static std::string URLDecode(const std::string& encValue);
 
-        static std::map<std::string, std::string> URLDecodeMap(const std::string& encValueMap);
+        static std::multimap<std::string, std::string> URLDecodeMap(const std::string& encValueMap);
 
         static std::string BuildURLFromParameters(const std::string& baseUrl, const std::map<std::string, std::string>& params);
+
+        static std::string BuildURLFromParameters(const std::string& baseUrl, const std::multimap<std::string, std::string>& params);
 
         static std::string SetURLProtocol(const std::string& url, const std::string& proto);
 

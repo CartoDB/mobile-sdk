@@ -79,7 +79,7 @@ namespace carto {
         return escaped.str();
     }
 
-    std::string NetworkUtils::URLEncodeMap(const std::map<std::string, std::string>& valueMap) {
+    std::string NetworkUtils::URLEncodeMap(const std::multimap<std::string, std::string>& valueMap) {
         std::string encValueMap;
         for (auto it = valueMap.begin(); it != valueMap.end(); it++) {
             if (!encValueMap.empty()) {
@@ -115,23 +115,27 @@ namespace carto {
         return value;
     }
 
-    std::map<std::string, std::string> NetworkUtils::URLDecodeMap(const std::string& encValueMap) {
-        std::map<std::string, std::string> valueMap;
+    std::multimap<std::string, std::string> NetworkUtils::URLDecodeMap(const std::string& encValueMap) {
+        std::multimap<std::string, std::string> valueMap;
         std::stringstream stream(encValueMap);
         std::string encKeyValue;
         while (std::getline(stream, encKeyValue, '&')) {
             std::string::size_type pos = encKeyValue.find('=');
             if (pos == std::string::npos) {
-                valueMap[URLDecode(encKeyValue)] = std::string();
+                valueMap.insert({ URLDecode(encKeyValue), std::string() });
             }
             else {
-                valueMap[URLDecode(encKeyValue.substr(0, pos))] = URLDecode(encKeyValue.substr(pos + 1));
+                valueMap.insert({ URLDecode(encKeyValue.substr(0, pos)), URLDecode(encKeyValue.substr(pos + 1)) });
             }
         }
         return valueMap;
     }
 
     std::string NetworkUtils::BuildURLFromParameters(const std::string& baseUrl, const std::map<std::string, std::string>& params) {
+        return BuildURLFromParameters(baseURL, std::multimap<std::string, std::string>(params.begin(), params.end()));
+    }
+
+    std::string NetworkUtils::BuildURLFromParameters(const std::string& baseUrl, const std::multimap<std::string, std::string>& params) {
         std::string url = baseUrl;
         if (!params.empty()) {
             url += (url.find('?') == std::string::npos ? '?' : '&');
