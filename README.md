@@ -13,6 +13,10 @@ language-specific wrappers, this can be downloaded from https://github.com/Carto
 
 Python 2.7.x is used for build scripts
 
+Android build requires Android SDK and Android NDK r11 or later.
+
+iOS build requires XCode 7.3 or later.
+
 Windows Phone build requires Visual Studio 2015 AND Visual Studio 2015 SDK.
 
 ## Building
