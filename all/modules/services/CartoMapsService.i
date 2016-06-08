@@ -3,7 +3,7 @@
 
 %module CartoMapsService
 
-!proxy_imports(carto::CartoMapsService, core.Variant, core.StringVariantMap, core.StringMap, core.StringVector, layers.LayerVector)
+!proxy_imports(carto::CartoMapsService, core.Variant, core.StringVariantMap, core.StringMap, core.StringVector, layers.Layer, layers.LayerVector)
 
 %{
 #include "services/CartoMapsService.h"

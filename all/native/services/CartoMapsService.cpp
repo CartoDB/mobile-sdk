@@ -301,9 +301,8 @@ namespace carto {
 
         // If layer filter is defined, check the type of the layer first
         if (!_layerFilter.empty()) {
-            std::vector<std::string> types;
-            boost::algorithm::split(types, boost::algorithm::to_lower_copy(_layerFilter), boost::is_any_of(","));
-            if (std::find(types.begin(), types.end(), type) == types.end()) {
+            std::string paddedLayerFilter = "," + _layerFilter + ",";
+            if (paddedLayerFilter.find("," + type + ",") == std::string::npos) {
                 // TODO: what to do if filter is 'mapnik' but layer is 'cartodb'?
                 return;
             }
@@ -383,7 +382,7 @@ namespace carto {
             auto layer = std::make_shared<RasterTileLayer>(dataSource);
             layers.push_back(layer);
         }
-        else if (type == "named") {
+        else if (type == "named" || type == "namedmap") {
             std::string name = options.get("name").get<std::string>();
 
             const picojson::object& config = options.get("config").get<picojson::object>();
