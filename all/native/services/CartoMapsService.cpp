@@ -1,7 +1,7 @@
 #include "CartoMapsService.h"
 #include "core/BinaryData.h"
 #include "datasources/HTTPTileDataSource.h"
-#include "layers/Layers.h"
+#include "layers/Layer.h"
 #include "layers/RasterTileLayer.h"
 #include "layers/VectorTileLayer.h"
 #include "layers/TorqueTileLayer.h"
@@ -17,6 +17,7 @@
 #include <regex>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <picojson/picojson.h>
 
@@ -26,7 +27,11 @@ namespace carto {
         _username(),
         _apiKey(),
         _apiTemplate(DEFAULT_API_TEMPLATE),
-        _authToken(),
+        _tilerURL(),
+        _statTag(),
+        _layerFilter(),
+        _authTokens(),
+        _layerIndices(),
         _defaultLayerType(LAYER_TYPE_RASTER),
         _layerTypes(),
         _mutex(std::make_shared<std::recursive_mutex>())
@@ -66,14 +71,54 @@ namespace carto {
         _apiTemplate = apiTemplate;
     }
 
-    std::string CartoMapsService::getAuthToken() const {
+    std::string CartoMapsService::getTilerURL() const {
         std::lock_guard<std::recursive_mutex> lock(*_mutex);
-        return _authToken;
+        return _tilerURL;
     }
 
-    void CartoMapsService::setAuthToken(const std::string& authToken) {
+    void CartoMapsService::setTilerURL(const std::string& tilerURL) {
         std::lock_guard<std::recursive_mutex> lock(*_mutex);
-        _authToken = authToken;
+        _tilerURL = tilerURL;
+    }
+
+    std::string CartoMapsService::getStatTag() const {
+        std::lock_guard<std::recursive_mutex> lock(*_mutex);
+        return _statTag;
+    }
+
+    void CartoMapsService::setStatTag(const std::string& statTag) {
+        std::lock_guard<std::recursive_mutex> lock(*_mutex);
+        _statTag = statTag;
+    }
+
+    std::string CartoMapsService::getLayerFilter() const {
+        std::lock_guard<std::recursive_mutex> lock(*_mutex);
+        return _layerFilter;
+    }
+
+    void CartoMapsService::setLayerFilter(const std::string& filter) {
+        std::lock_guard<std::recursive_mutex> lock(*_mutex);
+        _layerFilter = filter;
+    }
+
+    std::vector<std::string> CartoMapsService::getAuthTokens() const {
+        std::lock_guard<std::recursive_mutex> lock(*_mutex);
+        return _authTokens;
+    }
+
+    void CartoMapsService::setAuthTokens(const std::vector<std::string>& authTokens) {
+        std::lock_guard<std::recursive_mutex> lock(*_mutex);
+        _authTokens = authTokens;
+    }
+
+    std::vector<int> CartoMapsService::getLayerIndices() const {
+        std::lock_guard<std::recursive_mutex> lock(*_mutex);
+        return _layerIndices;
+    }
+
+    void CartoMapsService::setLayerIndices(const std::vector<int>& layerIndices) {
+        std::lock_guard<std::recursive_mutex> lock(*_mutex);
+        _layerIndices = layerIndices;
     }
 
     bool CartoMapsService::isDefaultVectorLayerMode() const {
@@ -100,23 +145,15 @@ namespace carto {
         _layerTypes[index] = (enabled ? LAYER_TYPE_VECTOR : LAYER_TYPE_RASTER);
     }
 
-    void CartoMapsService::buildNamedMap(const std::shared_ptr<Layers>& layers, const std::string& templateId, const std::map<std::string, Variant>& templateParams) const {
+    void CartoMapsService::buildNamedMap(std::vector<std::shared_ptr<Layer> >& layers, const std::string& templateId, const std::map<std::string, Variant>& templateParams) const {
         std::lock_guard<std::recursive_mutex> lock(*_mutex);
 
         // Build URL
         std::string url = getAPITemplate(picojson::value());
         url += "/api/v1/map/named/" + NetworkUtils::URLEncode(templateId);
+        url = getServiceURL(url);
 
-        std::map<std::string, std::string> urlParams;
-        if (!_apiKey.empty()) {
-            urlParams["api_key"] = _apiKey;
-            url = NetworkUtils::SetURLProtocol(url, "https");
-        }
-        if (!_authToken.empty()) {
-            urlParams["auth_token"] = _authToken;
-            url = NetworkUtils::SetURLProtocol(url, "https");
-        }
-        url = NetworkUtils::BuildURLFromParameters(url, urlParams);
+        // TODO: replace this with instantiation?
 
         // Perform HTTP request
         HTTPClient client(false);
@@ -140,6 +177,8 @@ namespace carto {
             return;
         }
 
+        // TODO: replace mapConfig CartoCSS with the cartocss with response - this is already preprocessed cartocss
+
         // Update placeholders
         if (mapConfig.contains("placeholders")) {
             picojson::object placeholders = mapConfig.get("placeholders").get<picojson::object>();
@@ -150,20 +189,13 @@ namespace carto {
         buildMap(layers, Variant::FromPicoJSON(mapConfig));
     }
 
-    void CartoMapsService::buildMap(const std::shared_ptr<Layers>& layers, const Variant& mapConfig) const {
+    void CartoMapsService::buildMap(std::vector<std::shared_ptr<Layer> >& layers, const Variant& mapConfig) const {
         std::lock_guard<std::recursive_mutex> lock(*_mutex);
 
         // Build URL
         std::string url = getAPITemplate(mapConfig.toPicoJSON());
         url += "/api/v1/map";
-        std::map<std::string, std::string> urlParams;
-        if (!_apiKey.empty()) {
-            urlParams["api_key"] = _apiKey;
-        }
-        if (!_authToken.empty()) {
-            urlParams["auth_token"] = _authToken;
-        }
-        url = NetworkUtils::BuildURLFromParameters(url, urlParams);
+        url = getServiceURL(url);
 
         // Do HTTP POST request
         std::string mapConfigJSON = mapConfig.toString();
@@ -197,20 +229,24 @@ namespace carto {
         }
     }
 
-    int CartoMapsService::getMinZoom(const picojson::value& mapConfig) const {
-        const picojson::value& minZoom = mapConfig.get("minzoom");
-        if (!minZoom.is<std::int64_t>()) {
-            return 0;
+    int CartoMapsService::getMinZoom(const picojson::value& options) const {
+        if (options.contains("minzoom")) {
+            return static_cast<int>(options.get("minzoom").get<std::int64_t>());
         }
-        return static_cast<int>(minZoom.get<std::int64_t>());
+        if (options.contains("minZoom")) {
+            return static_cast<int>(options.get("minZoom").get<std::int64_t>());
+        }
+        return 0;
     }
 
-    int CartoMapsService::getMaxZoom(const picojson::value& mapConfig) const {
-        const picojson::value& maxZoom = mapConfig.get("maxzoom");
-        if (!maxZoom.is<std::int64_t>()) {
-            return Const::MAX_SUPPORTED_ZOOM_LEVEL;
+    int CartoMapsService::getMaxZoom(const picojson::value& options) const {
+        if (options.contains("maxzoom")) {
+            return static_cast<int>(options.get("maxzoom").get<std::int64_t>());
         }
-        return static_cast<int>(maxZoom.get<std::int64_t>());
+        if (options.contains("maxZoom")) {
+            return static_cast<int>(options.get("maxZoom").get<std::int64_t>());
+        }
+        return Const::MAX_SUPPORTED_ZOOM_LEVEL;
     }
 
     std::string CartoMapsService::getUsername(const picojson::value& mapConfig) const {
@@ -227,21 +263,71 @@ namespace carto {
         return GeneralUtils::ReplaceTags(_apiTemplate, tagValues, "{", "}", false);
     }
 
-    void CartoMapsService::createLayer(const std::shared_ptr<Layers>& layers, const picojson::value& mapConfig, const picojson::value& layerConfig, const std::string& layerGroupId) const {
-        // TODO: layer filter
-        std::string type = layerConfig.get("type").get<std::string>();
+    std::string CartoMapsService::getTilerURL(const picojson::value& mapConfig) const {
+        if (!_tilerURL.empty()) {
+            std::string username = getUsername(mapConfig);
+            std::map<std::string, std::string> tagValues = { { "user", username }, { "username", username } };
+            return GeneralUtils::ReplaceTags(_apiTemplate, tagValues, "{", "}", false);
+        }
+        return getAPITemplate(mapConfig);
+    }
+
+    std::string CartoMapsService::getServiceURL(const std::string& baseURL) const {
+        std::string url = baseURL;
+
+        std::multimap<std::string, std::string> urlParams;
+        if (!_apiKey.empty()) {
+            urlParams.insert({ "api_key", _apiKey });
+            url = NetworkUtils::SetURLProtocol(url, "https");
+        }
+
+        if (!_authTokens.empty()) {
+            for (const std::string& authToken : _authTokens) {
+                urlParams.insert({ _authTokens.size() == 1 ? "auth_token" : "auth_token[]", authToken });
+            }
+            url = NetworkUtils::SetURLProtocol(url, "https");
+        }
+
+        if (!_statTag.empty()) {
+            urlParams.insert({ "stat_tag", _statTag });
+        }
+
+        return NetworkUtils::BuildURLFromParameters(url, urlParams);
+    }
+
+    void CartoMapsService::createLayer(std::vector<std::shared_ptr<Layer> >& layers, const picojson::value& mapConfig, const picojson::value& layerConfig, const std::string& layerGroupId) const {
+        std::string type = boost::algorithm::to_lower_copy(layerConfig.get("type").get<std::string>());
         const picojson::value& options = layerConfig.get("options");
-        if (type == "plain") {
+
+        // If layer filter is defined, check the type of the layer first
+        if (!_layerFilter.empty()) {
+            std::vector<std::string> types;
+            boost::algorithm::split(types, boost::algorithm::to_lower_copy(_layerFilter), boost::is_any_of(","));
+            if (std::find(types.begin(), types.end(), type) == types.end()) {
+                // TODO: what to do if filter is 'mapnik' but layer is 'cartodb'?
+                return;
+            }
+        }
+
+        if (type == "plain" || type == "background") {
             // TODO: if layers empty and plain color, set background color
             // Otherwise create RasterTileLayer with constant-color tiles?
             // Warn if imageUrl is defined
+            Log::Warnf("CartoMapsService::createLayer: unimplemented layer type: %s", type.c_str());
         }
-        else if (type == "mapnik" || type == "cartodb" || type == "torque") {
+        else if (type == "mapnik" || type == "carto" || type == "cartodb" || type == "torque") {
             // TODO: use cdn parameter?
-            std::string urlTemplateBase = getAPITemplate(mapConfig);
-            urlTemplateBase += "/api/v1/map/" + layerGroupId + "/{z}/{x}/{y}";
+            std::string urlTemplateBase = getTilerURL(mapConfig);
+            urlTemplateBase += "/api/v1/map/" + layerGroupId;
+            for (std::size_t i = 0; i < _layerIndices.size(); i++) {
+                urlTemplateBase += (i == 0 ? "/" : ",") + boost::lexical_cast<std::string>(_layerIndices[i]);
+            }
+            urlTemplateBase += "/{z}/{x}/{y}";
+
+            std::size_t layerIndex = layers.size();
+
             LayerType layerType = _defaultLayerType;
-            auto it = _layerTypes.find(layers->count());
+            auto it = _layerTypes.find(layers.size());
             if (it != _layerTypes.end()) {
                 layerType = it->second;
             }
@@ -252,7 +338,7 @@ namespace carto {
                 auto styleSet = std::make_shared<CartoCSSStyleSet>(cartoCSS);
                 auto torqueTileDecoder = std::make_shared<TorqueTileDecoder>(styleSet);
                 auto layer = std::make_shared<TorqueTileLayer>(dataSource, torqueTileDecoder);
-                layers->add(layer);
+                layers.push_back(layer);
             }
             else if (layerType == LAYER_TYPE_VECTOR) {
                 std::string cartoCSS = options.get("cartocss").get<std::string>();
@@ -261,12 +347,19 @@ namespace carto {
                 auto styleSet = std::make_shared<CartoCSSStyleSet>(cartoCSS);
                 auto vectorTileDecoder = std::make_shared<MBVectorTileDecoder>(styleSet);
                 auto layer = std::make_shared<VectorTileLayer>(dataSource, vectorTileDecoder);
-                layers->add(layer);
+                layers.push_back(layer);
             }
             else {
                 auto dataSource = std::make_shared<HTTPTileDataSource>(getMinZoom(mapConfig), getMaxZoom(mapConfig), urlTemplateBase + ".png");
                 auto layer = std::make_shared<RasterTileLayer>(dataSource);
-                layers->add(layer);
+                layers.push_back(layer);
+            }
+
+            if (options.contains("interactivity")) {
+                auto dataSource = std::make_shared<HTTPTileDataSource>(getMinZoom(mapConfig), getMaxZoom(mapConfig), urlTemplateBase + ".grid.json");
+                for (std::size_t i = layerIndex; i < layers.size(); i++) {
+                    std::static_pointer_cast<TileLayer>(layers[i])->setUTFGridDataSource(dataSource);
+                }
             }
         }
         else if (type == "http") {
@@ -288,15 +381,17 @@ namespace carto {
             dataSource->setTMSScheme(tmsScheme);
 
             auto layer = std::make_shared<RasterTileLayer>(dataSource);
-            layers->add(layer);
+            layers.push_back(layer);
         }
         else if (type == "named") {
             std::string name = options.get("name").get<std::string>();
+
             const picojson::object& config = options.get("config").get<picojson::object>();
             std::map<std::string, Variant> params;
             for (auto it = config.begin(); it != config.end(); it++) {
                 params[it->first] = Variant::FromPicoJSON(it->second);
             }
+
             std::vector<std::string> authTokens;
             if (options.contains("auth_tokens")) {
                 const picojson::array& authTokensOption = options.get("auth_tokens").get<picojson::array>();
@@ -305,17 +400,15 @@ namespace carto {
                 });
             }
 
-            auto mapsService = std::make_shared<CartoMapsService>(*this);
-            if (!authTokens.empty()) {
-                mapsService->setAuthToken(authTokens.front()); // TODO: what to do if more than 1?
-            }
-            else {
-                mapsService->setAuthToken("");
-            }
-            mapsService->buildNamedMap(layers, name, params);
+            CartoMapsService mapsService(*this);
+            mapsService.setAuthTokens(authTokens);
+            mapsService.buildNamedMap(layers, name, params);
         }
         else if (type == "layergroup") {
             buildMap(layers, Variant::FromPicoJSON(options));
+        }
+        else {
+            Log::Warnf("CartoMapsService::createLayer: Unsupported layer type: %s", type.c_str());
         }
     }
 

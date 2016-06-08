@@ -18,7 +18,7 @@
 #include <picojson/picojson.h>
 
 namespace carto {
-    class Layers;
+    class Layer;
 
     class CartoMapsService {
     public:
@@ -34,8 +34,20 @@ namespace carto {
         std::string getAPITemplate() const;
         void setAPITemplate(const std::string& apiTemplate);
 
-        std::string getAuthToken() const;
-        void setAuthToken(const std::string& authToken);
+        std::string getTilerURL() const;
+        void setTilerURL(const std::string& tilerURL);
+
+        std::string getStatTag() const;
+        void setStatTag(const std::string& statTag);
+
+        std::string getLayerFilter() const;
+        void setLayerFilter(const std::string& filter);
+
+        std::vector<std::string> getAuthTokens() const;
+        void setAuthTokens(const std::vector<std::string>& authTokens);
+
+        std::vector<int> getLayerIndices() const;
+        void setLayerIndices(const std::vector<int>& layerIndices);
 
         bool isDefaultVectorLayerMode() const;
         void setDefaultVectorLayerMode(bool enabled);
@@ -43,8 +55,8 @@ namespace carto {
         bool isVectorLayerMode(int index) const;
         void setVectorLayerMode(int index, bool enabled);
 
-        void buildNamedMap(const std::shared_ptr<Layers>& layers, const std::string& templateId, const std::map<std::string, Variant>& templateParams) const;
-        void buildMap(const std::shared_ptr<Layers>& layers, const Variant& mapConfig) const;
+        void buildNamedMap(std::vector<std::shared_ptr<Layer> >& layers, const std::string& templateId, const std::map<std::string, Variant>& templateParams) const;
+        void buildMap(std::vector<std::shared_ptr<Layer> >& layers, const Variant& mapConfig) const;
 
     private:
         enum LayerType {
@@ -52,12 +64,16 @@ namespace carto {
             LAYER_TYPE_VECTOR
         };
         
-        int getMinZoom(const picojson::value& mapConfig) const;
-        int getMaxZoom(const picojson::value& mapConfig) const;
+        int getMinZoom(const picojson::value& options) const;
+        int getMaxZoom(const picojson::value& options) const;
+
         std::string getUsername(const picojson::value& mapConfig) const;
         std::string getAPITemplate(const picojson::value& mapConfig) const;
+        std::string getTilerURL(const picojson::value& mapConfig) const;
 
-        void createLayer(const std::shared_ptr<Layers>& layers, const picojson::value& mapConfig, const picojson::value& layerConfig, const std::string& layerGroupId) const;
+        std::string getServiceURL(const std::string& baseURL) const;
+
+        void createLayer(std::vector<std::shared_ptr<Layer> >& layers, const picojson::value& mapConfig, const picojson::value& layerConfig, const std::string& layerGroupId) const;
 
         static std::string escapeParam(const std::string& value, const std::string& type);
 
@@ -69,7 +85,11 @@ namespace carto {
         std::string _username;
         std::string _apiKey;
         std::string _apiTemplate;
-        std::string _authToken;
+        std::string _tilerURL;
+        std::string _statTag;
+        std::string _layerFilter;
+        std::vector<std::string> _authTokens;
+        std::vector<int> _layerIndices;
         LayerType _defaultLayerType;
         std::map<int, LayerType> _layerTypes;
 
