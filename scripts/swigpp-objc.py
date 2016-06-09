@@ -63,6 +63,10 @@ static carto::ClassRegistry::Entry $TYPE$RegistryEntry(typeid(const $CLASSNAME$&
   }
   return [$TYPE$ swigCreatePolymorphicInstance:cPtr swigOwnCObject:YES];
 }
+
+%typemap(objcdirectorin) std::shared_ptr<$CLASSNAME$>, const std::shared_ptr<$CLASSNAME$>&, std::shared_ptr<$CLASSNAME$>& %{
+  [$TYPE$ swigCreatePolymorphicInstance:$iminput swigOwnCObject:YES]
+%}
 """
 
 POLYMORPHIC_SHARED_PTR_INTERFACE_TEMPLATE = """
