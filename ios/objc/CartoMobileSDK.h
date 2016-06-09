@@ -57,8 +57,8 @@
 #import "NTLayers.h"
 #import "NTNMLModelLODTreeLayer.h"
 #import "NTRasterTileLayer.h"
-#import "NTUTFGridRasterTileLayer.h"
 #import "NTTileLoadListener.h"
+#import "NTUTFGridEventListener.h"
 #import "NTVectorElementEventListener.h"
 #import "NTVectorLayer.h"
 #import "NTVectorTileLayer.h"
@@ -146,5 +146,8 @@
 #import "NTTorqueTileDecoder.h"
 
 #import "NTCartoMapsService.h"
+#import "NTCartoSQLService.h"
+#import "NTCartoVisLoader.h"
+#import "NTCartoUIBuilder.h"
 
 #endif
