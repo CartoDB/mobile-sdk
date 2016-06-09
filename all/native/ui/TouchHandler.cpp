@@ -486,7 +486,7 @@ namespace carto {
         _mapRenderer->calculateRayIntersectedElements(targetPos, results);
 
         for (const RayIntersectedElement& intersectedElement : results) {
-            if (intersectedElement.getLayer()->processRayIntersectedElement(ClickType::CLICK_TYPE_SINGLE, intersectedElement)) {
+            if (intersectedElement.getLayer()->processRayIntersectedElement(clickType, intersectedElement)) {
                 return;
             }
         }
