@@ -102,9 +102,7 @@ namespace carto {
             subdomains = _subdomains;
         }
 
-        MapTile flippedTile(tile.getX(), (1 << tile.getZoom()) - 1 - tile.getY(), tile.getZoom(), tile.getFrameNr());
-
-        std::map<std::string, std::string> tagValues = buildTagValues(tmsScheme ? flippedTile : tile);
+        std::map<std::string, std::string> tagValues = buildTagValues(tmsScheme ? tile.getFlipped() : tile);
         if (!subdomains.empty()) {
             tagValues["s"] = _subdomains[rand() % _subdomains.size()];
         }

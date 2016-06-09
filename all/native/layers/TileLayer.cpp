@@ -294,23 +294,32 @@ namespace carto {
         int zoom = std::min(getMaxZoom(), static_cast<int>(viewState.getZoom() + getZoomLevelBias() + DISCRETE_ZOOM_LEVEL_BIAS));
 
         MapTile mapTile = calculateMapTile(mapPos, std::min(utfGridDataSource->getMaxZoom(), std::max(utfGridDataSource->getMinZoom(), zoom)));
+
         double tileWidth = utfGridDataSource->getProjection()->getBounds().getDelta().getX() / (1 << mapTile.getZoom());
         double tileHeight = utfGridDataSource->getProjection()->getBounds().getDelta().getY() / (1 << mapTile.getZoom());
+
         MapVec mapVec(mapTile.getX() * tileWidth, mapTile.getY() * tileHeight);
         MapPos mapTileOrigin = utfGridDataSource->getProjection()->getBounds().getMin() + mapVec;
         double xRel = (mapPos.getX() - mapTileOrigin.getX()) / tileWidth;
         double yRel = 1 - (mapPos.getY() - mapTileOrigin.getY()) / tileHeight;
-
+        
         // Try to get the tile from cache
         std::shared_ptr<UTFGridTile> utfGridTile;
-        if (tileExists(mapTile, false) || tileExists(mapTile, true)) {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            auto it = _utfGridTiles.find(mapTile);
-            if (it != _utfGridTiles.end()) {
-                utfGridTile = it->second;
+        for (MapTile flippedMapTile = mapTile.getFlipped(); !utfGridTile; flippedMapTile = flippedMapTile.getParent()) {
+            if (tileExists(flippedMapTile, false) || tileExists(flippedMapTile, true)) {
+                std::lock_guard<std::recursive_mutex> lock(_mutex);
+                auto it = _utfGridTiles.find(flippedMapTile);
+                if (it != _utfGridTiles.end()) {
+                    utfGridTile = it->second;
+                    break;
+                }
+            }
+            if (flippedMapTile.getZoom() == 0) {
+                break;
             }
         }
 
+        // If succeeded and valid key under the click position, call the listener
         if (utfGridTile) {
             int x = static_cast<int>(std::floor(xRel * utfGridTile->getXSize()));
             int y = static_cast<int>(std::floor(yRel * utfGridTile->getYSize()));
@@ -572,9 +581,9 @@ namespace carto {
             _started = true;
         }
         
-        bool refresh = loadUTFGridTile(layer);
-        if (loadTile(layer)) {
-            refresh = true;
+        bool refresh = loadTile(layer);
+        if (refresh) {
+            loadUTFGridTile(layer);
         }
     
         layer->_fetchingTiles.remove(_tile.getTileId());
