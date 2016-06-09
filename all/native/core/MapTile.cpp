@@ -55,6 +55,10 @@ namespace carto {
     MapTile MapTile::getChild(int index) const {
         return MapTile(_x * 2 + (index % 2), _y * 2 + (index / 2), _zoom + 1, _frameNr);
     }
+
+    MapTile MapTile::getFlipped() const {
+        return MapTile(_x, (1 << _zoom) - 1 - _y, _zoom, _frameNr);
+    }
     
     int MapTile::hash() const {
         return static_cast<int>(std::hash<long long>()(_id));

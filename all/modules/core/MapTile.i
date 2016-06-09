@@ -21,6 +21,7 @@
 %attribute(carto::MapTile, long long, TileId, getTileId)
 %ignore carto::MapTile::getParent;
 %ignore carto::MapTile::getChild;
+%ignore carto::MapTile::getFlipped;
 !custom_equals(carto::MapTile);
 !custom_tostring(carto::MapTile);
 

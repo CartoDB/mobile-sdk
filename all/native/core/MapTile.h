@@ -81,6 +81,12 @@ namespace carto {
         MapTile getChild(int index) const;
 
         /**
+         * Get vertically flipped version of the tile.
+         * @return The vertically flipped version of the tile.
+         */
+        MapTile getFlipped() const;
+
+        /**
          * Returns the hash value of this object.
          * @return The hash value of this object.
          */
