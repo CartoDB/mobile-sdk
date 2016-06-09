@@ -3,7 +3,7 @@
 
 %module(directors="1") CartoOnlineTileDataSource
 
-!proxy_imports(carto::CartoOnlineTileDataSource, core.MapTile, core.StringMap, core.TileData, datasources.TileDataSource)
+!proxy_imports(carto::CartoOnlineTileDataSource, core.MapTile, core.StringMap, datasources.TileDataSource, datasources.components.TileData)
 
 %{
 #include "datasources/CartoOnlineTileDataSource.h"

@@ -1,4 +1,5 @@
 #include "TorqueTileDecoder.h"
+#include "core/BinaryData.h"
 #include "vectortiles/CartoCSSStyleSet.h"
 #include "vectortiles/utils/MapnikVTLogger.h"
 #include "vectortiles/utils/VTBitmapLoader.h"
@@ -100,7 +101,15 @@ namespace carto {
         return Const::MAX_SUPPORTED_ZOOM_LEVEL;
     }
         
-    std::shared_ptr<TorqueTileDecoder::TileMap> TorqueTileDecoder::decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<TileData>& tileData) const {
+    std::shared_ptr<TorqueTileDecoder::TileMap> TorqueTileDecoder::decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const {
+        if (!tileData) {
+            Log::Error("TorqueTileDecoder::decodeTile: Null tile data");
+            return std::shared_ptr<TileMap>();
+        }
+        if (tileData->empty()) {
+            return std::shared_ptr<TileMap>();
+        }
+
         std::shared_ptr<mvt::TorqueMap> map;
         std::shared_ptr<mvt::SymbolizerContext> symbolizerContext;
         int resolution;
@@ -114,12 +123,9 @@ namespace carto {
         if (!map || !symbolizerContext) {
             return std::shared_ptr<TileMap>();
         }
-        if (!tileData || tileData->getData()->empty()) {
-            return std::shared_ptr<TileMap>();
-        }
         try {
             auto logger = std::make_shared<MapnikVTLogger>("TorqueTileDecoder");
-            mvt::TorqueFeatureDecoder decoder(*tileData->getData()->getDataPtr(), resolution, calculateTileTransform(tile, targetTile), logger);
+            mvt::TorqueFeatureDecoder decoder(*tileData->getDataPtr(), resolution, calculateTileTransform(tile, targetTile), logger);
             auto tileMap = std::make_shared<TileMap>();
             for (int frame = 0; frame < map->getTorqueSettings().frameCount; frame++) {
                 mvt::TorqueTileReader reader(map, frame, true, *symbolizerContext, decoder);

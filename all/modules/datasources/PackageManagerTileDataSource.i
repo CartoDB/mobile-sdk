@@ -5,7 +5,7 @@
 
 #ifdef _CARTO_PACKAGEMANAGER_SUPPORT
 
-!proxy_imports(carto::PackageManagerTileDataSource, core.MapTile, core.StringMap, core.TileData, datasources.TileDataSource, packagemanager.PackageManager)
+!proxy_imports(carto::PackageManagerTileDataSource, core.MapTile, core.StringMap, datasources.TileDataSource, datasources.components.TileData, packagemanager.PackageManager)
 
 %{
 #include "datasources/PackageManagerTileDataSource.h"

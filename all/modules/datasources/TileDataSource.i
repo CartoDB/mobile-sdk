@@ -6,7 +6,7 @@
 
 %module(directors="1") TileDataSource
 
-!proxy_imports(carto::TileDataSource, core.MapTile, core.StringMap, core.TileData, projections.Projection)
+!proxy_imports(carto::TileDataSource, core.MapTile, core.StringMap, datasources.components.TileData, projections.Projection)
 
 %{
 #include "datasources/TileDataSource.h"
@@ -19,7 +19,7 @@
 
 %import "core/MapTile.i"
 %import "core/StringMap.i"
-%import "core/TileData.i"
+%import "datasources/components/TileData.i"
 %import "projections/Projection.i"
 %import "datasources/TileDataSource.i"
 

@@ -3,7 +3,7 @@
 
 %module(directors="1") MBTilesTileDataSource
 
-!proxy_imports(carto::MBTilesTileDataSource, core.MapTile, datasources.TileDataSource, core.TileData, core.MapBounds, core.StringMap)
+!proxy_imports(carto::MBTilesTileDataSource, core.MapTile, core.MapBounds, core.StringMap, datasources.TileDataSource, datasources.components.TileData)
 
 %{
 #include "datasources/MBTilesTileDataSource.h"
@@ -15,9 +15,9 @@
 %include <cartoswig.i>
 
 %import "core/MapTile.i"
-%import "core/TileData.i"
 %import "core/StringMap.i"
 %import "datasources/TileDataSource.i"
+%import "datasources/components/TileData.i"
 
 !polymorphic_shared_ptr(carto::MBTilesTileDataSource, datasources.MBTilesTileDataSource)
 

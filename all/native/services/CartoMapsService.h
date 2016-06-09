@@ -73,12 +73,7 @@ namespace carto {
 
         std::string getServiceURL(const std::string& baseURL) const;
 
-        void createLayer(std::vector<std::shared_ptr<Layer> >& layers, const picojson::value& mapConfig, const picojson::value& layerConfig, const std::string& layerGroupId) const;
-
-        static std::string escapeParam(const std::string& value, const std::string& type);
-
-        static void replaceTemplateTags(picojson::value& value, const std::map<std::string, std::string>& tagValues);
-        static void replaceTemplateParams(picojson::value& templateObject, const picojson::object& placeholders, const std::map<std::string, Variant>& templateParams);
+        void createLayer(std::vector<std::shared_ptr<Layer> >& layers, const picojson::value& mapConfig, const std::string& type, const picojson::value& options, const std::string& layerGroupId, const std::vector<int>& layerIndices) const;
 
         static const std::string DEFAULT_API_TEMPLATE;
         

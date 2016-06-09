@@ -5,7 +5,7 @@
 
 #ifdef _CARTO_GDAL_SUPPORT
 
-!proxy_imports(carto::GDALRasterTileDataSource, core.MapTile, core.MapBounds, core.TileData)
+!proxy_imports(carto::GDALRasterTileDataSource, core.MapTile, core.MapBounds, datasources.components.TileData)
 
 %{
 #include "datasources/GDALRasterTileDataSource.h"
@@ -16,9 +16,9 @@
 %include <cartoswig.i>
 
 %import "core/MapTile.i"
-%import "core/TileData.i"
 %import "core/MapBounds.i"
 %import "datasources/TileDataSource.i"
+%import "datasources/components/TileData.i"
 
 !polymorphic_shared_ptr(carto::GDALRasterTileDataSource, datasources.GDALRasterTileDataSource)
 

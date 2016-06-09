@@ -30,10 +30,15 @@ namespace carto {
         std::shared_ptr<CartoUIBuilder> getCartoUIBuilder() const;
         void setCartoUIBuilder(const std::shared_ptr<CartoUIBuilder>& cartoUIBuilder);
 
-        void loadVis(const std::shared_ptr<BaseMapView>& mapView, const std::string& visURL) const;
+        // TODO: fix?
+        void loadVis(BaseMapView* mapView, const std::string& visURL) const;
 
     private:
         void configureMapsService(CartoMapsService& mapsService, const picojson::value& options) const;
+
+        int getMinZoom(const picojson::value& options) const;
+        int getMaxZoom(const picojson::value& options) const;
+
         void createLayer(std::vector<std::shared_ptr<Layer> >& layers, const picojson::value& layerConfig) const;
 
         DirectorPtr<CartoUIBuilder> _cartoUIBuilder;

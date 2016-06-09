@@ -6,7 +6,7 @@
 !proxy_imports(carto::TileData, core.BinaryData)
 
 %{
-#include "core/TileData.h"
+#include "datasources/components/TileData.h"
 #include <memory>
 %}
 
@@ -15,13 +15,13 @@
 
 %import "core/BinaryData.i"
 
-!shared_ptr(carto::TileData, core.TileData)
+!shared_ptr(carto::TileData, datasources.components.TileData)
 
 %attribute(carto::TileData, long long, MaxAge, getMaxAge, setMaxAge)
 %attribute(carto::TileData, bool, ReplaceWithParent, isReplaceWithParent, setReplaceWithParent)
 %attributestring(carto::TileData, std::shared_ptr<carto::BinaryData>, Data, getData)
 !standard_equals(carto::TileData);
 
-%include "core/TileData.h"
+%include "datasources/components/TileData.h"
 
 #endif

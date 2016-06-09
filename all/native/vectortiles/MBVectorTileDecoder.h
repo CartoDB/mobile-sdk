@@ -107,7 +107,7 @@ namespace carto {
         
         virtual int getMaxZoom() const;
     
-        virtual std::shared_ptr<TileMap> decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<TileData>& tileData) const;
+        virtual std::shared_ptr<TileMap> decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const;
     
     protected:
         void updateCurrentStyle();

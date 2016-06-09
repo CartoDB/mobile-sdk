@@ -3,7 +3,7 @@
 
 %module(directors="1") BitmapOverlayRasterTileDataSource
 
-!proxy_imports(carto::BitmapOverlayRasterTileDataSource, core.MapPos, core.MapPosVector, core.MapBounds, core.ScreenPos, core.ScreenPosVector, core.ScreenPosVector, core.MapTile, core.StringMap, core.TileData, datasources.TileDataSource, projections.Projection, graphics.Bitmap)
+!proxy_imports(carto::BitmapOverlayRasterTileDataSource, core.MapPos, core.MapPosVector, core.MapBounds, core.ScreenPos, core.ScreenPosVector, core.ScreenPosVector, core.MapTile, core.StringMap, datasources.TileDataSource, datasources.components.TileData, projections.Projection, graphics.Bitmap)
 
 %{
 #include "datasources/BitmapOverlayRasterTileDataSource.h"
@@ -17,8 +17,8 @@
 %import "core/MapBounds.i"
 %import "core/ScreenPos.i"
 %import "core/MapTile.i"
-%import "core/TileData.i"
 %import "datasources/TileDataSource.i"
+%import "datasources/components/TileData.i"
 %import "projections/Projection.i"
 %import "graphics/Bitmap.i"
 

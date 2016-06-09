@@ -3,10 +3,9 @@
 
 %module VectorTileLayer
 
-!proxy_imports(carto::VectorTileLayer, core.TileData, datasources.TileDataSource, layers.TileLayer, vectortiles.VectorTileDecoder)
+!proxy_imports(carto::VectorTileLayer, datasources.TileDataSource, datasources.components.TileData, layers.TileLayer, vectortiles.VectorTileDecoder)
 
 %{
-#include "core/TileData.h"
 #include "datasources/TileDataSource.h"
 #include "layers/VectorTileLayer.h"
 #include <memory>

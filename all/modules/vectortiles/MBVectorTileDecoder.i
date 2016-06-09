@@ -3,10 +3,9 @@
 
 %module MBVectorTileDecoder
 
-!proxy_imports(carto::MBVectorTileDecoder, core.StringVector, graphics.Color, vectortiles.CompiledStyleSet, vectortiles.CartoCSSStyleSet, vectortiles.VectorTileDecoder)
+!proxy_imports(carto::MBVectorTileDecoder, core.BinaryData, core.StringVector, graphics.Color, vectortiles.CompiledStyleSet, vectortiles.CartoCSSStyleSet, vectortiles.VectorTileDecoder)
 
 %{
-#include "core/TileData.h"
 #include "vectortiles/MBVectorTileDecoder.h"
 #include "vectortiles/CompiledStyleSet.h"
 #include "vectortiles/CartoCSSStyleSet.h"
@@ -17,7 +16,7 @@
 %include <std_vector.i>
 %include <cartoswig.i>
 
-%import "core/TileData.i"
+%import "core/BinaryData.i"
 %import "vectortiles/CompiledStyleSet.i"
 %import "vectortiles/CartoCSSStyleSet.i"
 %import "vectortiles/VectorTileDecoder.i"

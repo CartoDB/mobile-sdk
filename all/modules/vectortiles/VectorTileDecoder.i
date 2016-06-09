@@ -5,10 +5,9 @@
 
 %module VectorTileDecoder
 
-!proxy_imports(carto::VectorTileDecoder, core.TileData, graphics.Color)
+!proxy_imports(carto::VectorTileDecoder, core.BinaryData, graphics.Color)
 
 %{
-#include "core/TileData.h"
 #include "vectortiles/VectorTileDecoder.h"
 #include <memory>
 %}
@@ -16,7 +15,7 @@
 %include <std_shared_ptr.i>
 %include <cartoswig.i>
 
-%import "core/TileData.i"
+%import "core/BinaryData.i"
 %import "graphics/Color.i"
 
 !polymorphic_shared_ptr(carto::VectorTileDecoder, vectortiles.VectorTileDecoder)

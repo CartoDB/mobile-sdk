@@ -1,4 +1,5 @@
 #include "MBVectorTileDecoder.h"
+#include "core/BinaryData.h"
 #include "graphics/Bitmap.h"
 #include "vectortiles/AssetPackage.h"
 #include "vectortiles/CompiledStyleSet.h"
@@ -231,7 +232,15 @@ namespace carto {
         return Const::MAX_SUPPORTED_ZOOM_LEVEL;
     }
         
-    std::shared_ptr<MBVectorTileDecoder::TileMap> MBVectorTileDecoder::decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<TileData>& tileData) const {
+    std::shared_ptr<MBVectorTileDecoder::TileMap> MBVectorTileDecoder::decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const {
+        if (!tileData) {
+            Log::Error("MBVectorTileDecoder::decodeTile: Null tile data");
+            return std::shared_ptr<TileMap>();
+        }
+        if (tileData->empty()) {
+            return std::shared_ptr<TileMap>();
+        }
+
         std::shared_ptr<mvt::Map> map;
         std::shared_ptr<mvt::SymbolizerContext> symbolizerContext;
         float buffer;
@@ -245,11 +254,8 @@ namespace carto {
         if (!map || !symbolizerContext) {
             return std::shared_ptr<TileMap>();
         }
-        if (!tileData || tileData->getData()->empty()) {
-            return std::shared_ptr<TileMap>();
-        }
         try {
-            mvt::MBVTFeatureDecoder decoder(*tileData->getData()->getDataPtr(), calculateTileTransform(tile, targetTile), buffer, _logger);
+            mvt::MBVTFeatureDecoder decoder(*tileData->getDataPtr(), calculateTileTransform(tile, targetTile), buffer, _logger);
             mvt::MBVTTileReader reader(map, *symbolizerContext, decoder);
             if (std::shared_ptr<vt::Tile> tile = reader.readTile(targetTile)) {
                 auto tileMap = std::make_shared<TileMap>();

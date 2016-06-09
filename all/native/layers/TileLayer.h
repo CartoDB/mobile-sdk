@@ -14,6 +14,7 @@
 #include "components/DirectorPtr.h"
 #include "datasources/TileDataSource.h"
 #include "layers/Layer.h"
+#include "layers/components/FetchingTileTasks.h"
 
 #include <atomic>
 #include <unordered_map>
@@ -22,6 +23,7 @@ namespace carto {
     class CancelableTask;
     class CullState;
     class TileLoadListener;
+    class UTFGridTile;
     class UTFGridEventListener;
     
     namespace TileSubstitutionPolicy {
@@ -220,96 +222,6 @@ namespace carto {
             bool _invalidated;
         };
         
-        class FetchingTileTasks {
-        public:
-            FetchingTileTasks() : _fetchingTiles(), _mutex() {}
-            
-            void add(long long tileId, const std::shared_ptr<FetchTaskBase>& task) {
-                std::lock_guard<std::mutex> lock(_mutex);
-                _fetchingTiles[tileId] = task;
-            }
-            
-            bool exists(long long tileId) {
-                std::lock_guard<std::mutex> lock(_mutex);
-                return _fetchingTiles.find(tileId) != _fetchingTiles.end();
-            }
-            
-            void remove(long long tileId) {
-                std::lock_guard<std::mutex> lock(_mutex);
-                _fetchingTiles.erase(tileId);
-            }
-            
-            std::vector<std::shared_ptr<FetchTaskBase> > getTasks() const {
-                std::lock_guard<std::mutex> lock(_mutex);
-                std::vector<std::shared_ptr<FetchTaskBase> > tasks;
-                for (const auto& pair : _fetchingTiles) {
-                    tasks.push_back(pair.second);
-                }
-                return tasks;
-            }
-            
-            int getPreloadingCount() const {
-                std::lock_guard<std::mutex> lock(_mutex);
-                int count = 0;
-                for (const auto& pair : _fetchingTiles) {
-                    if (pair.second->isPreloading()) {
-                        count++;
-                    }
-                }
-                return count;
-            }
-            
-            int getVisibleCount() const {
-                std::lock_guard<std::mutex> lock(_mutex);
-                int count = 0;
-                for (const auto& pair : _fetchingTiles) {
-                    if (!pair.second->isPreloading()) {
-                        count++;
-                    }
-                }
-                return count;
-            }
-
-        private:
-            std::unordered_map<long long, std::shared_ptr<FetchTaskBase> > _fetchingTiles;
-            mutable std::mutex _mutex;
-        };
-        
-        class UTFGridTile {
-        public:
-            UTFGridTile(const std::vector<std::string>& keys, const std::map<std::string, std::map<std::string, std::string> >& data, const std::vector<int>& keyIds, int xSize, int ySize) : _keys(keys), _data(data), _keyIds(keyIds), _xSize(xSize), _ySize(ySize) { }
-
-            std::string getKey(int keyId) const {
-                return keyId >= 0 && keyId <= static_cast<int>(_keys.size()) ? _keys[keyId] : std::string();
-            }
-            
-            std::map<std::string, std::string> getData(const std::string& key) const {
-                auto it = _data.find(key);
-                return it != _data.end() ? it->second : std::map<std::string, std::string>();
-            }
-
-            int getXSize() const {
-                return _xSize;
-            }
-            
-            int getYSize() const {
-                return _ySize;
-            }
-            
-            int getKeyId(int x, int y) const {
-                return x >= 0 && y >= 0 && x < getXSize() && y < getYSize() ? _keyIds[y * getXSize() + x] : 0;
-            }
-
-            static std::shared_ptr<UTFGridTile> DecodeUTFTile(const TileData& tileData);
-
-        private:
-            std::vector<std::string> _keys;
-            std::map<std::string, std::map<std::string, std::string> > _data;
-            std::vector<int> _keyIds;
-            int _xSize;
-            int _ySize;
-        };
-        
         TileLayer(const std::shared_ptr<TileDataSource>& dataSource);
 
         virtual void loadData(const std::shared_ptr<CullState>& cullState);
@@ -353,7 +265,7 @@ namespace carto {
         DirectorPtr<UTFGridEventListener> _utfGridEventListener;
         mutable std::mutex _utfGridEventListenerMutex;
 
-        FetchingTileTasks _fetchingTiles;
+        FetchingTileTasks<FetchTaskBase> _fetchingTiles;
         
         int _frameNr;
         int _lastFrameNr;

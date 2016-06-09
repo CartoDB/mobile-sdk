@@ -1,9 +1,10 @@
 #include "TileLayer.h"
 #include "core/BinaryData.h"
-#include "core/TileData.h"
 #include "components/CancelableTask.h"
+#include "datasources/components/TileData.h"
 #include "layers/TileLoadListener.h"
 #include "layers/UTFGridEventListener.h"
+#include "layers/components/UTFGridTile.h"
 #include "renderers/components/CullState.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/MapRenderer.h"
@@ -12,15 +13,6 @@
 #include "utils/Const.h"
 #include "utils/GeomUtils.h"
 #include "utils/Log.h"
-
-#include <sstream>
-
-#include <boost/lexical_cast.hpp>
-
-#include <rapidjson/rapidjson.h>
-#include <rapidjson/document.h>
-
-#include <utf8.h>
 
 namespace carto {
 
@@ -632,7 +624,7 @@ namespace carto {
                 continue;
             }
 
-            std::shared_ptr<TileLayer::UTFGridTile> utfTile = TileLayer::UTFGridTile::DecodeUTFTile(*tileData);
+            std::shared_ptr<UTFGridTile> utfTile = UTFGridTile::DecodeUTFTile(tileData->getData());
             if (utfTile) {
                 std::lock_guard<std::recursive_mutex> lock(tileLayer->_mutex);
                 tileLayer->_utfGridTiles[dataSourceTile] = utfTile; // we ignore expiration info here
@@ -644,89 +636,6 @@ namespace carto {
             break;
         }
         return refresh;
-    }
-
-    std::shared_ptr<TileLayer::UTFGridTile> TileLayer::UTFGridTile::DecodeUTFTile(const TileData& tileData) {
-        std::string json(reinterpret_cast<const char*>(tileData.getData()->data()), tileData.getData()->size());
-        rapidjson::Document doc;
-        if (doc.Parse<rapidjson::kParseDefaultFlags>(json.c_str()).HasParseError()) {
-            Log::Error("TileLayer::DecodeUTFTile: Failed to parse JSON");
-            return std::shared_ptr<UTFGridTile>();
-        }
-
-        std::vector<std::string> keys;
-        for (unsigned int i = 0; i < doc["keys"].Size(); i++) {
-            keys.push_back(doc["keys"][i].GetString());
-        }
-
-        std::map<std::string, std::map<std::string, std::string> > data;
-        if (doc.FindMember("data") != doc.MemberEnd()) {
-            for (rapidjson::Value::ConstMemberIterator it = doc["data"].MemberBegin(); it != doc["data"].MemberEnd(); ++it) {
-                if (!it->name.IsString() || !it->value.IsObject()) {
-                    continue;
-                }
-                std::string key = it->name.GetString();
-                for (rapidjson::Value::ConstMemberIterator it2 = it->value.MemberBegin(); it2 != it->value.MemberEnd(); it2++) {
-                    const rapidjson::Value* value = &it2->value;
-                    if (!it2->name.IsString()) {
-                        continue;
-                    }
-                    std::string str;
-                    if (value->IsString()) {
-                        str = value->GetString();
-                    }
-                    else if (value->IsInt()) {
-                        str = boost::lexical_cast<std::string>(value->GetInt());
-                    }
-                    else if (value->IsUint()) {
-                        str = boost::lexical_cast<std::string>(value->GetUint());
-                    }
-                    else if (value->IsInt64()) {
-                        str = boost::lexical_cast<std::string>(value->GetInt64());
-                    }
-                    else if (value->IsUint64()) {
-                        str = boost::lexical_cast<std::string>(value->GetUint64());
-                    }
-                    else if (value->IsNumber()) {
-                        str = boost::lexical_cast<std::string>(value->GetDouble());
-                    }
-                    data[key][it2->name.GetString()] = str;
-                }
-            }
-        }
-
-        unsigned int rows = doc["grid"].Size();
-        unsigned int cols = 0;
-        for (unsigned int i = 0; i < rows; i++) {
-            std::string columnUTF8 = doc["grid"][i].GetString();
-            std::vector<std::uint32_t> column;
-            column.reserve(columnUTF8.size());
-            utf8::utf8to32(columnUTF8.begin(), columnUTF8.end(), std::back_inserter(column));
-
-            cols = std::max(cols, static_cast<unsigned int>(column.size()));
-        }
-        std::vector<int> keyIds;
-        keyIds.reserve(cols * rows);
-        for (unsigned int i = 0; i < rows; i++) {
-            std::string columnUTF8 = doc["grid"][i].GetString();
-            std::vector<std::uint32_t> column;
-            column.reserve(columnUTF8.size());
-            utf8::utf8to32(columnUTF8.begin(), columnUTF8.end(), std::back_inserter(column));
-
-            if (column.size() != cols) {
-                Log::Warnf("TileLayer::DecodeUTFTile: Mismatching rows/columns");
-                column.resize(cols - column.size(), ' ');
-            }
-
-            for (std::size_t j = 0; j < column.size(); j++) {
-                std::uint32_t code = column[j];
-                if (code >= 93) code--;
-                if (code >= 35) code--;
-                code -= 32;
-                keyIds.push_back(code);
-            }
-        }
-        return std::make_shared<UTFGridTile>(keys, data, keyIds, cols, rows);
     }
 
     const float TileLayer::DISCRETE_ZOOM_LEVEL_BIAS = 0.001f;

@@ -1,7 +1,9 @@
 #include "CartoVisLoader.h"
 #include "core/BinaryData.h"
+#include "datasources/HTTPTileDataSource.h"
 #include "layers/Layer.h"
 #include "layers/Layers.h"
+#include "layers/RasterTileLayer.h"
 #include "network/HTTPClient.h"
 #include "services/CartoMapsService.h"
 #include "services/CartoUIBuilder.h"
@@ -38,7 +40,8 @@ namespace carto {
         _cartoUIBuilder = DirectorPtr<CartoUIBuilder>(cartoUIBuilder);
     }
 
-    void CartoVisLoader::loadVis(const std::shared_ptr<BaseMapView>& mapView, const std::string& visURL) const {
+    void CartoVisLoader::loadVis(BaseMapView* mapView, const std::string& visURL) const {
+        // TODO: global try/catch logger
         HTTPClient client(false);
         std::shared_ptr<BinaryData> responseData;
         std::map<std::string, std::string> responseHeaders;
@@ -90,20 +93,79 @@ namespace carto {
 
         std::string tilerProtocol = options.contains("tiler_protocol") ? options.get("tiler_protocol").get<std::string>() : "http";
         std::string tilerDomain = options.contains("tiler_domain") ? options.get("tiler_domain").get<std::string>() : "cartodb.com";
-        std::string tilerPort = options.contains("tiler_port") ? boost::lexical_cast<std::string>(options.get("tiler_port").get<std::int64_t>()) : (tilerProtocol == "https" ? "443" : "80");
+        std::string tilerPort = tilerProtocol == "https" ? "443" : "80";
+        if (options.contains("tiler_port")) {
+            const picojson::value& portOption = options.get("tiler_port");
+            if (portOption.is<std::int64_t>()) {
+                tilerPort = boost::lexical_cast<std::string>(portOption.get<std::int64_t>());
+            } else {
+                tilerPort = portOption.get<std::string>();
+            }
+        }
         mapsService.setTilerURL(tilerProtocol + "://" + (options.contains("user_name") ? "{user}." : "") + tilerDomain + ":" + tilerPort);
+    }
+    
+    int CartoVisLoader::getMinZoom(const picojson::value& options) const {
+        if (options.get("minZoom").is<std::int64_t>()) {
+            return static_cast<int>(options.get("minZoom").get<std::int64_t>());
+        }
+        if (options.get("minZoom").is<std::string>()) {
+            return boost::lexical_cast<int>(options.get("minZoom").get<std::string>());
+        }
+        return 0;
+    }
+    
+    int CartoVisLoader::getMaxZoom(const picojson::value& options) const {
+        if (options.get("maxZoom").is<std::int64_t>()) {
+            return static_cast<int>(options.get("maxZoom").get<std::int64_t>());
+        }
+        if (options.get("maxZoom").is<std::string>()) {
+            return boost::lexical_cast<int>(options.get("maxZoom").get<std::string>());
+        }
+        return Const::MAX_SUPPORTED_ZOOM_LEVEL;
     }
 
     void CartoVisLoader::createLayer(std::vector<std::shared_ptr<Layer> >& layers, const picojson::value& layerConfig) const {
+        DirectorPtr<CartoUIBuilder> cartoUIBuilder;
+        {
+            std::lock_guard<std::mutex> lock(_cartoUIBuilderMutex);
+            cartoUIBuilder = _cartoUIBuilder;
+        }
+        
         std::string type = boost::algorithm::to_lower_copy(layerConfig.get("type").get<std::string>());
         const picojson::value& options = layerConfig.get("options");
 
         std::size_t layerIndex = layers.size();
 
-        if (type == "tiled" || type == "plain" || type == "background") {
-            CartoMapsService mapsService;
-            configureMapsService(mapsService, options);
-            mapsService.buildMap(layers, Variant::FromPicoJSON(options));
+        if (type == "tiled") {
+            std::string urlTemplate = options.get("urlTemplate").get<std::string>();
+            auto dataSource = std::make_shared<HTTPTileDataSource>(getMinZoom(options), getMaxZoom(options), urlTemplate);
+            
+            std::vector<std::string> subdomains = { "a", "b", "c" };
+            if (options.get("subdomains").is<picojson::array>()) {
+                const picojson::array& subdomainsOption = options.get("subdomains").get<picojson::array>();
+                subdomains.clear();
+                std::transform(subdomainsOption.begin(), subdomainsOption.end(), std::back_inserter(subdomains), [](const picojson::value& subdomain) {
+                    return subdomain.get<std::string>();
+                });
+            }
+            else if (options.get("subdomains").is<std::string>()) {
+                const std::string& subdomainsOption = options.get("subdomains").get<std::string>();
+                subdomains.clear();
+                std::transform(subdomainsOption.begin(), subdomainsOption.end(), std::back_inserter(subdomains), [](char subdomain) {
+                    return std::string(1, subdomain);
+                });
+            }
+            dataSource->setSubdomains(subdomains);
+
+            bool tmsScheme = false;
+            if (options.get("tms").is<bool>()) {
+                tmsScheme = options.get("tms").get<bool>();
+            }
+            dataSource->setTMSScheme(tmsScheme);
+            
+            auto layer = std::make_shared<RasterTileLayer>(dataSource);
+            layers.push_back(layer);
         }
         else if (type == "torque") {
             if (options.contains("named_map")) {
@@ -157,13 +219,26 @@ namespace carto {
                     const picojson::value& layerConfig = *it;
                     if (layerConfig.contains("infowindow")) {
                         const picojson::value& infoWindow = layerConfig.get("infowindow");
-                        // TODO: add listener to layer
+                        if (cartoUIBuilder) {
+                            std::shared_ptr<Layer> layer = layers[layerIndex + (it - layerConfigs.begin())];
+                            cartoUIBuilder->createInfoWindow(layer, Variant::FromPicoJSON(infoWindow));
+                        }
                     }
                 }
             }
         }
         else if (type == "layergroup") {
-            const picojson::value& layerDefinition = options.get("layer_definition");
+            picojson::value layerDefinition = options.get("layer_definition");
+            
+            // Translate layer types
+            picojson::array& layersOption = layerDefinition.get("layers").get<picojson::array>();
+            for (picojson::value& layerOption : layersOption) {
+                std::string type = boost::to_lower_copy(layerOption.get("type").get<std::string>());
+                if (type == "cartodb") {
+                    type = "mapnik";
+                }
+                layerOption.get("type").get<std::string>() = type;
+            }
 
             CartoMapsService mapsService;
             configureMapsService(mapsService, options);
@@ -175,7 +250,10 @@ namespace carto {
                     const picojson::value& layerConfig = *it;
                     if (layerConfig.contains("infowindow")) {
                         const picojson::value& infoWindow = layerConfig.get("infowindow");
-                        // TODO: add listener to layer
+                        if (cartoUIBuilder) {
+                            std::shared_ptr<Layer> layer = layers[layerIndex + (it - layerConfigs.begin())];
+                            cartoUIBuilder->createInfoWindow(layer, Variant::FromPicoJSON(infoWindow));
+                        }
                     }
                 }
             }

@@ -13,7 +13,7 @@
 #include <map>
 
 #include "core/MapTile.h"
-#include "core/TileData.h"
+#include "datasources/components/TileData.h"
 
 namespace carto {
     class Projection;

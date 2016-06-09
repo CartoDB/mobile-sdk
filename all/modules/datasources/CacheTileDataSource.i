@@ -3,7 +3,7 @@
 
 %module(directors="1") CacheTileDataSource
 
-!proxy_imports(carto::CacheTileDataSource, core.MapTile, core.StringMap, core.TileData, datasources.TileDataSource)
+!proxy_imports(carto::CacheTileDataSource, core.MapTile, core.StringMap, datasources.TileDataSource, datasources.components.TileData)
 
 %{
 #include "datasources/CacheTileDataSource.h"

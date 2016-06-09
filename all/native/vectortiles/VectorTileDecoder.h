@@ -7,12 +7,12 @@
 #ifndef _CARTO_VECTORTILEDECODER_H_
 #define _CARTO_VECTORTILEDECODER_H_
 
-#include "core/TileData.h"
 #include "graphics/Color.h"
 
 #include <memory>
 #include <mutex>
 #include <map>
+#include <vector>
 
 #include <cglib/mat.h>
 
@@ -23,6 +23,8 @@ namespace carto {
         struct BitmapPattern;
     }
     
+    class BinaryData;
+
     /**
      * Abstract base class for vector tile decoders.
      */
@@ -75,7 +77,7 @@ namespace carto {
          * @param tileData The tile data to decode.
          * @return The vector tile data, for each frame. If the tile is not available, null is returned.
          */
-        virtual std::shared_ptr<TileMap> decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<TileData>& tileData) const = 0;
+        virtual std::shared_ptr<TileMap> decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const = 0;
     
         /**
          * Notifies listeners that the decoder parameters have changed. Action taken depends on the implementation of the

@@ -3,7 +3,7 @@
 
 %module(directors="1") AssetTileDataSource
 
-!proxy_imports(carto::AssetTileDataSource, core.MapTile, core.StringMap, core.TileData, datasources.TileDataSource)
+!proxy_imports(carto::AssetTileDataSource, core.MapTile, core.StringMap, datasources.TileDataSource, datasources.components.TileData)
 
 %{
 #include "datasources/AssetTileDataSource.h"

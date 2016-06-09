@@ -6,7 +6,6 @@
 !proxy_imports(carto::TorqueTileDecoder, core.BinaryData, graphics.Color, vectortiles.CartoCSSStyleSet, vectortiles.VectorTileDecoder)
 
 %{
-#include "core/TileData.h"
 #include "vectortiles/TorqueTileDecoder.h"
 #include "vectortiles/CartoCSSStyleSet.h"
 #include <memory>
@@ -16,7 +15,6 @@
 %include <cartoswig.i>
 
 %import "core/BinaryData.i"
-%import "core/TileData.i"
 %import "vectortiles/AssetPackage.i"
 %import "vectortiles/CartoCSSStyleSet.i"
 %import "vectortiles/VectorTileDecoder.i"
