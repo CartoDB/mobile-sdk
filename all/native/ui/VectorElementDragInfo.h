@@ -9,7 +9,6 @@
 
 #ifdef _CARTO_EDITABLE_SUPPORT
 
-#include "components/DirectorPtr.h"
 #include "core/MapPos.h"
 #include "core/ScreenPos.h"
 #include "vectorelements/VectorElement.h"
@@ -79,7 +78,7 @@ namespace carto {
         ScreenPos _screenPos;
         MapPos _mapPos;
         
-        DirectorPtr<VectorElement> _vectorElement;
+        std::shared_ptr<VectorElement> _vectorElement;
     };
     
 }

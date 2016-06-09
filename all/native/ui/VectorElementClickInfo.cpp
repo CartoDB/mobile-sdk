@@ -29,7 +29,7 @@ namespace carto {
     }
     
     std::shared_ptr<VectorElement> VectorElementClickInfo::getVectorElement() const {
-        return _vectorElement.get();
+        return _vectorElement;
     }
     
     std::shared_ptr<Layer> VectorElementClickInfo::getLayer() const {

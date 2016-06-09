@@ -28,7 +28,7 @@ namespace carto {
     }
     
     std::shared_ptr<VectorElement> VectorElementDragInfo::getVectorElement() const {
-        return _vectorElement.get();
+        return _vectorElement;
     }
     
 }

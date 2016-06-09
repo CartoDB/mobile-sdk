@@ -52,7 +52,8 @@ namespace carto {
          */
         virtual std::shared_ptr<Bitmap> drawBitmap(const ScreenPos& anchorScreenPos,
                                                     float screenWidth, float screenHeight, float dpToPX) = 0;
-        
+
+        // TODO: ScreenPos getAnchorPoint/setAnchorPoint
         /**
          * Returns the horizontal anchor point of this popup.
          * @return The horizontal anchor point of this popup.

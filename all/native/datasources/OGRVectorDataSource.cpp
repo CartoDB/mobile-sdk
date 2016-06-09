@@ -235,7 +235,7 @@ namespace carto {
 
             long long id = _localElementId--;
             element->setId(id);
-            _localElements[id] = DirectorPtr<VectorElement>(element);
+            _localElements[id] = element;
         }
         notifyElementAdded(element);
     }
@@ -255,7 +255,7 @@ namespace carto {
                 }
                 _localElements.erase(it);
             } else {
-                _localElements[elementToRemove->getId()] = DirectorPtr<VectorElement>();
+                _localElements[elementToRemove->getId()] = std::shared_ptr<VectorElement>();
             }
         }
         notifyElementRemoved(elementToRemove);
@@ -285,7 +285,7 @@ namespace carto {
             
             for (auto it = _localElements.begin(); it != _localElements.end(); ) {
                 long long id = it->first;
-                std::shared_ptr<VectorElement> element = it->second.get();
+                std::shared_ptr<VectorElement> element = it->second;
                 ++it;
                 if (id < 0) {
                     if (element) {
@@ -342,7 +342,7 @@ namespace carto {
             }
 
             for (auto it = _localElements.begin(); it != _localElements.end(); it++) {
-                std::shared_ptr<VectorElement> element = it->second.get();
+                std::shared_ptr<VectorElement> element = it->second;
                 rolledbackElements.push_back(element);
             }
             _localElements.clear();
@@ -458,7 +458,7 @@ namespace carto {
             auto elementIt = _localElements.find(poFeature->GetFID());
             if (elementIt != _localElements.end()) {
                 if (elementIt->second) {
-                    elements.push_back(elementIt->second.get());
+                    elements.push_back(elementIt->second);
                 }
                 continue;
             }
@@ -505,7 +505,7 @@ namespace carto {
         
         for (auto elementIt = _localElements.begin(); elementIt != _localElements.end(); elementIt++) {
             if (elementIt->first < 0 && elementIt->second) {
-                elements.push_back(elementIt->second.get());
+                elements.push_back(elementIt->second);
             }
         }
 
@@ -520,7 +520,7 @@ namespace carto {
     void OGRVectorDataSource::notifyElementChanged(const std::shared_ptr<VectorElement>& element) {
         {
             std::lock_guard<std::mutex> lock(_dataBase->_mutex);
-            _localElements[element->getId()] = DirectorPtr<VectorElement>(element);
+            _localElements[element->getId()] = element;
         }
         VectorDataSource::notifyElementChanged(element);
     }

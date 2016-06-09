@@ -7,7 +7,6 @@
 #ifndef _CARTO_LOCALVECTORDATASOURCE_H_
 #define _CARTO_LOCALVECTORDATASOURCE_H_
 
-#include "components/DirectorPtr.h"
 #include "core/MapBounds.h"
 #include "datasources/VectorDataSource.h"
 #include "geometry/utils/SpatialIndex.h"
@@ -122,7 +121,7 @@ namespace carto {
 
     private:
         std::shared_ptr<GeometrySimplifier> _geometrySimplifier;
-        std::shared_ptr<SpatialIndex<DirectorPtr<VectorElement> > > _spatialIndex;
+        std::shared_ptr<SpatialIndex<std::shared_ptr<VectorElement> > > _spatialIndex;
         
         unsigned int _elementId;
 

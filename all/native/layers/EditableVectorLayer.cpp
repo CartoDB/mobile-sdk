@@ -64,19 +64,19 @@ namespace carto {
 
     std::shared_ptr<VectorElement> EditableVectorLayer::getSelectedVectorElement() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _selectedVectorElement.get();
+        return _selectedVectorElement;
     }
     
     void EditableVectorLayer::setSelectedVectorElement(const std::shared_ptr<VectorElement>& element) {
-        DirectorPtr<VectorElement> oldSelectedVectorElement;
+        std::shared_ptr<VectorElement> oldSelectedVectorElement;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             oldSelectedVectorElement = _selectedVectorElement;
-            if (element == oldSelectedVectorElement.get()) {
+            if (element == oldSelectedVectorElement) {
                 return;
             }
 
-            _selectedVectorElement = DirectorPtr<VectorElement>();
+            _selectedVectorElement = std::shared_ptr<VectorElement>();
 
             _overlayPoints.clear(); // do not cache overlay points
             _overlayDragPoint.reset();
@@ -95,7 +95,7 @@ namespace carto {
         }
         if (vectorEditEventListener) {
             if (oldSelectedVectorElement) {
-                vectorEditEventListener->onElementDeselected(oldSelectedVectorElement.get());
+                vectorEditEventListener->onElementDeselected(oldSelectedVectorElement);
             }
             if (element) {
                 if (vectorEditEventListener->onElementSelect(element)) {
@@ -104,7 +104,7 @@ namespace carto {
                     std::shared_ptr<PointStyle> overlayStyleSelected = vectorEditEventListener->onSelectDragPointStyle(element, VectorElementDragPointStyle::VECTOR_ELEMENT_DRAG_POINT_STYLE_SELECTED);
                         
                     std::lock_guard<std::recursive_mutex> lock(_mutex);
-                    _selectedVectorElement = DirectorPtr<VectorElement>(element);
+                    _selectedVectorElement = element;
                     _overlayStyleNormal = overlayStyleNormal;
                     _overlayStyleVirtual = overlayStyleVirtual;
                     _overlayStyleSelected = overlayStyleSelected;
@@ -163,23 +163,23 @@ namespace carto {
     }
 
     void EditableVectorLayer::addRendererElement(const std::shared_ptr<VectorElement>& element) {
-        if (!IsSameElement(element, _selectedVectorElement.get())) { // NOTE: locked already
+        if (!IsSameElement(element, _selectedVectorElement)) { // NOTE: locked already
             VectorLayer::addRendererElement(element);
         }
     }
     
     bool EditableVectorLayer::refreshRendererElements() {
         if (_selectedVectorElement) { // NOTE: locked already
-            VectorLayer::addRendererElement(_selectedVectorElement.get());
+            VectorLayer::addRendererElement(_selectedVectorElement);
         }
         bool billboardChanged = VectorLayer::refreshRendererElements();
-        syncElementOverlayPoints(_selectedVectorElement.get());
+        syncElementOverlayPoints(_selectedVectorElement);
         return billboardChanged;
     }
     
     bool EditableVectorLayer::syncRendererElement(const std::shared_ptr<VectorElement>& element, const ViewState& viewState, bool remove) {
-        if (IsSameElement(element, _selectedVectorElement.get())) { // NOTE: locked already
-            syncElementOverlayPoints(_selectedVectorElement.get());
+        if (IsSameElement(element, _selectedVectorElement)) { // NOTE: locked already
+            syncElementOverlayPoints(_selectedVectorElement);
         }
         return VectorLayer::syncRendererElement(element, viewState, remove);
     }

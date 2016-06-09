@@ -1,7 +1,7 @@
 #ifndef _LABEL_I
 #define _LABEL_I
 
-%module(directors="1") Label
+%module Label
 
 !proxy_imports(carto::Label, core.MapPos, graphics.Bitmap, geometry.Geometry, geometry.PointGeometry, styles.LabelStyle, vectorelements.Billboard)
 
@@ -19,11 +19,7 @@
 
 !polymorphic_shared_ptr(carto::Label, vectorelements.Label)
 
-%feature("director") carto::Label;
-
 !attributestring_polymorphic(carto::Label, styles.LabelStyle, Style, getStyle, setStyle)
-
-%feature("nodirector") carto::Label::getBounds;
 
 %include "vectorelements/Label.h"
 

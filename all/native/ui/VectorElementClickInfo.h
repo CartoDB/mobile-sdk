@@ -7,7 +7,6 @@
 #ifndef _CARTO_VECTORELEMENTCLICKINFO_H_
 #define _CARTO_VECTORELEMENTCLICKINFO_H_
 
-#include "components/DirectorPtr.h"
 #include "core/MapPos.h"
 #include "ui/ClickType.h"
 #include "vectorelements/VectorElement.h"
@@ -72,7 +71,7 @@ namespace carto {
         MapPos _clickPos;
         MapPos _elementClickPos;
     
-        DirectorPtr<VectorElement> _vectorElement;
+        std::shared_ptr<VectorElement> _vectorElement;
         std::shared_ptr<Layer> _layer;
     };
     

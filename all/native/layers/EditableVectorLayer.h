@@ -124,7 +124,7 @@ namespace carto {
 
         std::shared_ptr<TouchHandlerListener> _touchHandlerListener;
 
-        DirectorPtr<VectorElement> _selectedVectorElement;
+        std::shared_ptr<VectorElement> _selectedVectorElement;
 
         std::shared_ptr<PointRenderer> _overlayRenderer;
         std::shared_ptr<PointStyle> _overlayStyleNormal;

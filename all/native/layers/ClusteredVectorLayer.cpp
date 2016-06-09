@@ -102,7 +102,7 @@ namespace carto {
                 if (!cluster) {
                     continue;
                 }
-                if (cluster->clusterElement.get() == clusterElement) {
+                if (cluster->clusterElement == clusterElement) {
                     cluster->expandPx = px;
                     updated = true;
                     break;
@@ -357,13 +357,9 @@ namespace carto {
             cluster->expandPx = 0;
             cluster->staticPos = cluster->transitionPos = mapPos;
             cluster->mapBoundsInternal = MapBounds(_dataSource->getProjection()->toInternal(mapPos), _dataSource->getProjection()->toInternal(mapPos));
-            cluster->elements.insert(DirectorPtr<VectorElement>(element));
+            cluster->elements.insert(element);
 
-            std::vector<std::shared_ptr<VectorElement> > vectorElements;
-            std::transform(cluster->elements.begin(), cluster->elements.end(), std::back_inserter(vectorElements), [](const DirectorPtr<VectorElement>& element) {
-                return element.get();
-            });
-            cluster->clusterElement = DirectorPtr<VectorElement>(_clusterElementBuilder->buildClusterElement(cluster->transitionPos, vectorElements));
+            cluster->clusterElement = _clusterElementBuilder->buildClusterElement(cluster->transitionPos, std::vector<std::shared_ptr<VectorElement> >(cluster->elements.begin(), cluster->elements.end()));
         }
         return cluster;
     }
@@ -387,11 +383,7 @@ namespace carto {
         cluster1->parentCluster = cluster;
         cluster2->parentCluster = cluster;
 
-        std::vector<std::shared_ptr<VectorElement> > vectorElements;
-        std::transform(cluster->elements.begin(), cluster->elements.end(), std::back_inserter(vectorElements), [](const DirectorPtr<VectorElement>& element) {
-            return element.get();
-        });
-        cluster->clusterElement = DirectorPtr<VectorElement>(_clusterElementBuilder->buildClusterElement(cluster->transitionPos, vectorElements));
+        cluster->clusterElement = _clusterElementBuilder->buildClusterElement(cluster->transitionPos, std::vector<std::shared_ptr<VectorElement> >(cluster->elements.begin(), cluster->elements.end()));
         return cluster;
     }
 
@@ -417,9 +409,9 @@ namespace carto {
         
         // First pass, create rendering elements from scratch
         for (const std::shared_ptr<Cluster>& cluster : _renderClusters) {
-            std::shared_ptr<VectorElement> element = cluster->clusterElement.get();
+            std::shared_ptr<VectorElement> element = cluster->clusterElement;
             if ((cluster->elements.size() == 1 && cluster->transitionPos == cluster->staticPos)) {
-                element = cluster->elements.begin()->get();
+                element = *cluster->elements.begin();
             }
             addRendererElement(element);
         }
@@ -429,8 +421,8 @@ namespace carto {
         // Second pass, update positions of clustering elements
         for (const std::shared_ptr<Cluster>& cluster : _renderClusters) {
             if (!(cluster->elements.size() == 1 && cluster->transitionPos == cluster->staticPos)) {
-                SetVectorElementPos(cluster->clusterElement.get(), cluster->transitionPos);
-                billboardsChanged = syncRendererElement(cluster->clusterElement.get(), viewState, false) || billboardsChanged;
+                SetVectorElementPos(cluster->clusterElement, cluster->transitionPos);
+                billboardsChanged = syncRendererElement(cluster->clusterElement, viewState, false) || billboardsChanged;
             }
         }
 

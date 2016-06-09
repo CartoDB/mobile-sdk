@@ -87,8 +87,8 @@ namespace carto {
             MapPos staticPos;
             MapPos transitionPos;
             MapBounds mapBoundsInternal;
-            std::unordered_set<DirectorPtr<VectorElement> > elements;
-            DirectorPtr<VectorElement> clusterElement;
+            std::unordered_set<std::shared_ptr<VectorElement> > elements;
+            std::shared_ptr<VectorElement> clusterElement;
             std::weak_ptr<Cluster> parentCluster;
             std::shared_ptr<Cluster> subClusters[2];
         };

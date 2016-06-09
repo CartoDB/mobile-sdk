@@ -24,7 +24,7 @@ namespace carto {
     LocalVectorDataSource::LocalVectorDataSource(const std::shared_ptr<Projection>& projection) :
         VectorDataSource(projection),
         _geometrySimplifier(),
-        _spatialIndex(std::make_shared<NullSpatialIndex<DirectorPtr<VectorElement> > >()),
+        _spatialIndex(std::make_shared<NullSpatialIndex<std::shared_ptr<VectorElement> > >()),
         _elementId(0),
         _mutex()
     {
@@ -39,10 +39,10 @@ namespace carto {
     {
         switch (spatialIndexType) {
             case LocalSpatialIndexType::LOCAL_SPATIAL_INDEX_TYPE_KDTREE:
-                _spatialIndex = std::make_shared<KDTreeSpatialIndex<DirectorPtr<VectorElement> > >();
+                _spatialIndex = std::make_shared<KDTreeSpatialIndex<std::shared_ptr<VectorElement> > >();
                 break;
             default:
-                _spatialIndex = std::make_shared<NullSpatialIndex<DirectorPtr<VectorElement> > >();
+                _spatialIndex = std::make_shared<NullSpatialIndex<std::shared_ptr<VectorElement> > >();
                 break;
         }
     }
@@ -52,15 +52,8 @@ namespace carto {
     
     std::vector<std::shared_ptr<VectorElement> > LocalVectorDataSource::loadElements(const std::shared_ptr<CullState>& cullState) {
         std::lock_guard<std::mutex> lock(_mutex);
-        std::vector<DirectorPtr<VectorElement> > dirElements = _spatialIndex->query(cullState->getViewState().getFrustum());
+        std::vector<std::shared_ptr<VectorElement> > elements = _spatialIndex->query(cullState->getViewState().getFrustum());
         
-        // Transform director elements to normal elements
-        std::vector<std::shared_ptr<VectorElement> > elements;
-        elements.reserve(dirElements.size());
-        std::transform(dirElements.begin(), dirElements.end(), std::back_inserter(elements), [](const DirectorPtr<VectorElement>& dirElement) {
-            return dirElement.get();
-        });
-
         // If geometry simplifier is specified, create new vector elements with simplified geometry
         if (_geometrySimplifier) {
             float simplifierScale = calculateGeometrySimplifierScale(cullState->getViewState());
@@ -81,47 +74,32 @@ namespace carto {
     
     std::vector<std::shared_ptr<VectorElement> > LocalVectorDataSource::getAll() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        std::vector<DirectorPtr<VectorElement> > dirElements = _spatialIndex->getAll();
-
-        // Transform director elements to normal elements
-        std::vector<std::shared_ptr<VectorElement> > elements;
-        elements.reserve(dirElements.size());
-        std::transform(dirElements.begin(), dirElements.end(), std::back_inserter(elements), [](const DirectorPtr<VectorElement>& dirElement) {
-            return dirElement.get();
-        });
-
-        return elements;
+        return _spatialIndex->getAll();
     }
     
-    void LocalVectorDataSource::setAll(const std::vector<std::shared_ptr<VectorElement> > &elements) {
+    void LocalVectorDataSource::setAll(const std::vector<std::shared_ptr<VectorElement> >& elements) {
         std::vector<std::shared_ptr<VectorElement> > elementsAdded, elementsRemoved;
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            std::vector<DirectorPtr<VectorElement> > oldDirElements = _spatialIndex->getAll();
+            std::vector<std::shared_ptr<VectorElement> > oldElements = _spatialIndex->getAll();
+            std::unordered_set<std::shared_ptr<VectorElement> > oldElementSet(oldElements.begin(), oldElements.end());
             
-            // Transform director elements to normal elements
-            std::unordered_set<std::shared_ptr<VectorElement> > oldElements;
-            oldElements.reserve(oldDirElements.size());
-            std::transform(oldDirElements.begin(), oldDirElements.end(), std::inserter(oldElements, oldElements.begin()), [](const DirectorPtr<VectorElement>& dirElement) {
-                return dirElement.get();
-            });
-
             // Rebuild spatial index, create list of added and removed elements
             _spatialIndex->clear();
             for (const std::shared_ptr<VectorElement>& element : elements) {
                 const MapBounds& bounds = element->getBounds();
                 MapBounds internalBounds(_projection->toInternal(bounds.getMin()), _projection->toInternal(bounds.getMax()));
-                auto it = oldElements.find(element);
-                if (it != oldElements.end()) {
-                    oldElements.erase(it);
+                auto it = oldElementSet.find(element);
+                if (it != oldElementSet.end()) {
+                    oldElementSet.erase(it);
                 } else {
                     element->setId(_elementId);
                     elementsAdded.push_back(element);
                     _elementId++;
                 }
-                _spatialIndex->insert(internalBounds, DirectorPtr<VectorElement>(element));
+                _spatialIndex->insert(internalBounds, element);
             }
-            std::copy(oldElements.begin(), oldElements.end(), std::back_inserter(elementsRemoved));
+            std::copy(oldElementSet.begin(), oldElementSet.end(), std::back_inserter(elementsRemoved));
         }
         notifyElementsAdded(elementsAdded);
         notifyElementsRemoved(elementsRemoved);
@@ -133,7 +111,7 @@ namespace carto {
             element->setId(_elementId);
             const MapBounds& bounds = element->getBounds();
             MapBounds internalBounds(_projection->toInternal(bounds.getMin()), _projection->toInternal(bounds.getMax()));
-            _spatialIndex->insert(internalBounds, DirectorPtr<VectorElement>(element));
+            _spatialIndex->insert(internalBounds, element);
             _elementId++;
         }
         notifyElementAdded(element);
@@ -146,7 +124,7 @@ namespace carto {
                 element->setId(_elementId);
                 const MapBounds& bounds = element->getBounds();
                 MapBounds internalBounds(_projection->toInternal(bounds.getMin()), _projection->toInternal(bounds.getMax()));
-                _spatialIndex->insert(internalBounds, DirectorPtr<VectorElement>(element));
+                _spatialIndex->insert(internalBounds, element);
                 _elementId++;
             }
         }
@@ -159,7 +137,7 @@ namespace carto {
             std::lock_guard<std::mutex> lock(_mutex);
             const MapBounds& bounds = elementToRemove->getBounds();
             MapBounds internalBounds(_projection->toInternal(bounds.getMin()), _projection->toInternal(bounds.getMax()));
-            removed = _spatialIndex->remove(internalBounds, DirectorPtr<VectorElement>(elementToRemove));
+            removed = _spatialIndex->remove(internalBounds, elementToRemove);
         }
         if (removed) {
             notifyElementRemoved(elementToRemove);
@@ -193,7 +171,7 @@ namespace carto {
     MapBounds LocalVectorDataSource::getDataExtent() const {
         std::lock_guard<std::mutex> lock(_mutex);
         MapBounds mapBounds;
-        for (const DirectorPtr<VectorElement>& element : _spatialIndex->getAll()) {
+        for (const std::shared_ptr<VectorElement>& element : _spatialIndex->getAll()) {
             const MapPos& p0 = element->getBounds().getMin();
             const MapPos& p1 = element->getBounds().getMax();
             mapBounds.expandToContain(MapPos(p0.getX(), p0.getY()));
@@ -254,11 +232,10 @@ namespace carto {
         {
             std::lock_guard<std::mutex> lock(_mutex);
             if (!(std::dynamic_pointer_cast<NullSpatialIndex<std::shared_ptr<VectorElement> > >(_spatialIndex))) {
-                DirectorPtr<VectorElement> dirElement(element);
-                _spatialIndex->remove(dirElement);
+                _spatialIndex->remove(element);
                 const MapBounds& bounds = element->getBounds();
                 MapBounds internalBounds(_projection->toInternal(bounds.getMin()), _projection->toInternal(bounds.getMax()));
-                _spatialIndex->insert(internalBounds, dirElement);
+                _spatialIndex->insert(internalBounds, element);
             }
         }
         VectorDataSource::notifyElementChanged(element);
