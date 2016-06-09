@@ -276,17 +276,28 @@ namespace carto {
     }
     
     void TileLayer::calculateRayIntersectedElements(const Projection& projection, const MapPos& rayOrig, const MapVec& rayDir, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
-        MapPos mapPos;
-        if (!GeomUtils::RayZPlaneIntersect(rayOrig, rayDir, 0, mapPos)) {
+        DirectorPtr<TileDataSource> utfGridDataSource;
+        {
+            std::lock_guard<std::mutex> lock(_utfGridDataSourceMutex);
+            utfGridDataSource = _utfGridDataSource;
+        }
+        if (!utfGridDataSource) {
             return;
         }
+        
+        MapPos mapPosInternal;
+        if (!GeomUtils::RayZPlaneIntersect(rayOrig, rayDir, 0, mapPosInternal)) {
+            return;
+        }
+
+        MapPos mapPos = utfGridDataSource->getProjection()->fromInternal(mapPosInternal);
         int zoom = std::min(getMaxZoom(), static_cast<int>(viewState.getZoom() + getZoomLevelBias() + DISCRETE_ZOOM_LEVEL_BIAS));
 
-        MapTile mapTile = calculateMapTile(mapPos, std::min(_utfGridDataSource->getMaxZoom(), std::max(_utfGridDataSource->getMinZoom(), zoom)));
-        double tileWidth = _utfGridDataSource->getProjection()->getBounds().getDelta().getX() / (1 << mapTile.getZoom());
-        double tileHeight = _utfGridDataSource->getProjection()->getBounds().getDelta().getY() / (1 << mapTile.getZoom());
+        MapTile mapTile = calculateMapTile(mapPos, std::min(utfGridDataSource->getMaxZoom(), std::max(utfGridDataSource->getMinZoom(), zoom)));
+        double tileWidth = utfGridDataSource->getProjection()->getBounds().getDelta().getX() / (1 << mapTile.getZoom());
+        double tileHeight = utfGridDataSource->getProjection()->getBounds().getDelta().getY() / (1 << mapTile.getZoom());
         MapVec mapVec(mapTile.getX() * tileWidth, mapTile.getY() * tileHeight);
-        MapPos mapTileOrigin = _utfGridDataSource->getProjection()->getBounds().getMin() + mapVec;
+        MapPos mapTileOrigin = utfGridDataSource->getProjection()->getBounds().getMin() + mapVec;
         double xRel = (mapPos.getX() - mapTileOrigin.getX()) / tileWidth;
         double yRel = 1 - (mapPos.getY() - mapTileOrigin.getY()) / tileHeight;
 
