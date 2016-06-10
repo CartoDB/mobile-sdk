@@ -25,7 +25,11 @@
 namespace carto {
     
     MBVectorTileDecoder::MBVectorTileDecoder(const std::shared_ptr<CompiledStyleSet>& compiledStyleSet) :
-        _buffer(0), _compiledStyleSet(compiledStyleSet), _cartoCSSStyleSet(), _styleSetData(compiledStyleSet->getAssetPackage())
+        _buffer(0),
+        _cartoCSSLayerNamesIgnored(false),
+        _compiledStyleSet(compiledStyleSet),
+        _cartoCSSStyleSet(),
+        _styleSetData(compiledStyleSet->getAssetPackage())
     {
         _logger = std::make_shared<MapnikVTLogger>("MBVectorTileDecoder");
 
@@ -37,7 +41,11 @@ namespace carto {
     }
     
     MBVectorTileDecoder::MBVectorTileDecoder(const std::shared_ptr<CartoCSSStyleSet>& cartoCSSStyleSet) :
-        _buffer(0), _compiledStyleSet(), _cartoCSSStyleSet(cartoCSSStyleSet), _styleSetData(cartoCSSStyleSet->getAssetPackage())
+        _buffer(0),
+        _cartoCSSLayerNamesIgnored(false),
+        _compiledStyleSet(),
+        _cartoCSSStyleSet(cartoCSSStyleSet),
+        _styleSetData(cartoCSSStyleSet->getAssetPackage())
     {
         _logger = std::make_shared<MapnikVTLogger>("MBVectorTileDecoder");
 
@@ -207,8 +215,26 @@ namespace carto {
     }
         
     void MBVectorTileDecoder::setBuffering(float buffer) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            _buffer = buffer;
+        }
+
+        notifyDecoderChanged();
+    }
+
+    bool MBVectorTileDecoder::isCartoCSSLayerNamesIgnored() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        _buffer = buffer;
+        return _cartoCSSLayerNamesIgnored;
+    }
+
+    void MBVectorTileDecoder::setCartoCSSLayerNamesIgnored(bool ignore) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            _cartoCSSLayerNamesIgnored = ignore;
+        }
+
+        notifyDecoderChanged();
     }
         
     Color MBVectorTileDecoder::getBackgroundColor() const {
@@ -352,6 +378,7 @@ namespace carto {
         try {
             auto assetLoader = std::make_shared<CartoCSSAssetLoader>(FileUtils::GetFilePath(styleAssetName), styleSetData);
             css::CartoCSSMapLoader mapLoader(assetLoader, _logger);
+            mapLoader.setIgnoreLayerPredicates(_cartoCSSLayerNamesIgnored);
             return mapLoader.loadMapProject(styleAssetName);
         }
         catch (const std::exception& ex) {
@@ -364,6 +391,7 @@ namespace carto {
         try {
             auto assetLoader = std::make_shared<CartoCSSAssetLoader>("", styleSet->getAssetPackage());
             css::CartoCSSMapLoader mapLoader(assetLoader, _logger);
+            mapLoader.setIgnoreLayerPredicates(_cartoCSSLayerNamesIgnored);
             return mapLoader.loadMap(styleSet->getCartoCSS());
         }
         catch (const std::exception& ex) {

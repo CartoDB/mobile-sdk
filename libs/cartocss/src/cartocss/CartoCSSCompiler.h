@@ -40,7 +40,7 @@ namespace carto { namespace css {
             std::list<PropertySet> propertySets;
         };
         
-        explicit CartoCSSCompiler(const ExpressionContext& context) : _context(context) { }
+        explicit CartoCSSCompiler(const ExpressionContext& context, bool ignoreLayerPredicates) : _context(context), _ignoreLayerPredicates(ignoreLayerPredicates) { }
 
         void compileMap(const StyleSheet& styleSheet, std::map<std::string, Value>& mapProperties) const;
         
@@ -61,7 +61,9 @@ namespace carto { namespace css {
         static bool isRedundantPropertySet(std::list<PropertySet>::iterator begin, std::list<PropertySet>::iterator end, const PropertySet& propertySet);
         
         static Property::Specificity calculateSpecificity(const std::vector<std::shared_ptr<const Predicate>>& predicates, int order);
-        
+
+        bool _ignoreLayerPredicates;
+
         ExpressionContext _context;
     };
 } }

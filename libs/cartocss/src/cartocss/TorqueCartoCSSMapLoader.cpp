@@ -69,7 +69,8 @@ namespace carto { namespace css {
         {
             try {
                 ExpressionContext context;
-                CartoCSSCompiler compiler(context);
+
+                CartoCSSCompiler compiler(context, false);
                 std::map<std::string, Value> mapProperties;
                 compiler.compileMap(styleSheet, mapProperties);
 
@@ -90,12 +91,13 @@ namespace carto { namespace css {
                 std::map<std::string, AttachmentStyle> attachmentStyleMap;
                 for (int zoom = 0; zoom < MAX_ZOOM; zoom++) {
                     try {
-                        std::map<std::string, Value> predefinedFieldMap;
                         ExpressionContext context;
+                        std::map<std::string, Value> predefinedFieldMap;
                         context.predefinedFieldMap = &predefinedFieldMap;
                         (*context.predefinedFieldMap)["zoom"] = Value(static_cast<long long>(zoom));
                         (*context.predefinedFieldMap)["frame-offset"] = Value(static_cast<long long>(frameOffset));
-                        CartoCSSCompiler compiler(context);
+
+                        CartoCSSCompiler compiler(context, _ignoreLayerPredicates);
                         std::list<CartoCSSCompiler::LayerAttachment> layerAttachments;
                         compiler.compileLayer(layerName, styleSheet, layerAttachments);
 

@@ -99,6 +99,19 @@ namespace carto {
          */
         void setBuffering(float buffer);
 
+        /**
+         * Returns the value CartoCSS 'layer name ignore' flag.
+         * If set to true, CSS filters like '#layer0' are ignored and the corresponding rules are applied to all filters.
+         * @return The value of CartoCSS 'layer name ignore' flag. Default is false.
+         */
+        bool isCartoCSSLayerNamesIgnored() const;
+        /**
+         * Sets the value of CartoCSS 'layer name ignore' flag
+         * If set to true, CSS filters like '#layer0' are ignored and the corresponding rules are applied to all filters.
+         * @param ignore The value of the flag.
+         */
+        void setCartoCSSLayerNamesIgnored(bool ignore);
+
         virtual Color getBackgroundColor() const;
     
         virtual std::shared_ptr<const vt::BitmapPattern> getBackgroundPattern() const;
@@ -121,6 +134,7 @@ namespace carto {
         static const int GLYPHMAP_SIZE;
         
         float _buffer;
+        bool _cartoCSSLayerNamesIgnored;
         std::shared_ptr<CompiledStyleSet> _compiledStyleSet;
         std::shared_ptr<CartoCSSStyleSet> _cartoCSSStyleSet;
         std::shared_ptr<AssetPackage> _styleSetData;

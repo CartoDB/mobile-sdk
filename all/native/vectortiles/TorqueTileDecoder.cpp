@@ -56,6 +56,7 @@ namespace carto {
             _symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
             try {
                 css::TorqueCartoCSSMapLoader mapLoader(assetLoader, logger);
+                mapLoader.setIgnoreLayerPredicates(true);
                 _map = mapLoader.loadMap(styleSet->getCartoCSS());
             }
             catch (const std::exception& ex) {

@@ -34,9 +34,11 @@ namespace carto { namespace css {
         };
 
         explicit CartoCSSMapLoader(std::shared_ptr<AssetLoader> assetLoader, std::shared_ptr<mvt::Logger> logger) : _assetLoader(std::move(assetLoader)), _logger(std::move(logger)) { }
-        virtual ~CartoCSSMapLoader() = default;
+
+        void setIgnoreLayerPredicates(bool ignore) { _ignoreLayerPredicates = ignore; }
 
         std::shared_ptr<mvt::Map> loadMap(const std::string& cartoCSS) const;
+
         std::shared_ptr<mvt::Map> loadMapProject(const std::string& fileName) const;
 
     protected:
@@ -67,6 +69,7 @@ namespace carto { namespace css {
         void buildAttachmentStyleMap(const CartoCSSMapnikTranslator& translator, const std::shared_ptr<mvt::Map>& map, int zoom, const std::list<CartoCSSCompiler::LayerAttachment>& layerAttachments, std::map<std::string, AttachmentStyle>& attachmentStyleMap) const;
         std::vector<AttachmentStyle> getSortedAttachmentStyles(const std::map<std::string, AttachmentStyle>& attachmentStyleMap) const;
 
+        bool _ignoreLayerPredicates = false;
         std::shared_ptr<AssetLoader> _assetLoader;
         std::shared_ptr<mvt::Logger> _logger;
     };

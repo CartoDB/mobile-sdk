@@ -48,6 +48,9 @@ namespace carto { namespace css {
         }
 
         virtual boost::tribool contains(const std::shared_ptr<const Predicate>& pred) const override {
+            if (auto mapPred = std::dynamic_pointer_cast<const MapPredicate>(pred)) {
+                return true;
+            }
             return boost::indeterminate;
         }
 

@@ -154,7 +154,14 @@ namespace carto { namespace css {
         for (const Selector& selector : selectors) {
             // Build filters for given selector
             std::vector<std::shared_ptr<const Predicate>> selectorFilters(filters);
-            selectorFilters.insert(selectorFilters.end(), selector.getPredicates().begin(), selector.getPredicates().end());
+            for (const std::shared_ptr<const Predicate>& pred : selector.getPredicates()) {
+                if (std::dynamic_pointer_cast<const LayerPredicate>(pred)) {
+                    if (_ignoreLayerPredicates) {
+                        continue;
+                    }
+                }
+                selectorFilters.push_back(pred);
+            }
             
             // Check if the filter list is 'reachable'. Also, remove always true conditions from the filter
             bool unreachable = false;

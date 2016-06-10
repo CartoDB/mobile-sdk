@@ -20,6 +20,8 @@ namespace carto { namespace css {
     public:
         explicit TorqueCartoCSSMapLoader(std::shared_ptr<AssetLoader> assetLoader, std::shared_ptr<mvt::Logger> logger) : CartoCSSMapLoader(std::move(assetLoader), std::move(logger)) { }
 
+        using CartoCSSMapLoader::setIgnoreLayerPredicates;
+
         std::shared_ptr<mvt::TorqueMap> loadMap(const std::string& cartoCSS) const;
 
     protected:
