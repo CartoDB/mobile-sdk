@@ -13,6 +13,9 @@
 #include <mutex>
 
 namespace carto {
+
+    template <typename T>
+    class DirectorPtr;
     
     template <typename T>
     class ThreadSafeDirectorPtr {
@@ -24,10 +27,8 @@ namespace carto {
             }
         }
         ThreadSafeDirectorPtr(const ThreadSafeDirectorPtr& other) : _ptr(), _mutex() {
-            {
-                std::lock_guard<std::mutex> lock(other._mutex);
-                _ptr = other._ptr;
-            }
+            std::lock_guard<std::mutex> lock(other._mutex);
+            _ptr = other._ptr;
             if (auto director = std::dynamic_pointer_cast<Director>(_ptr)) {
                 director->retainDirector();
             }
@@ -75,6 +76,8 @@ namespace carto {
         }
 
     private:
+        friend DirectorPtr<T>;
+
         std::shared_ptr<T> _ptr;
         mutable std::mutex _mutex;
     };
@@ -93,7 +96,9 @@ namespace carto {
                 director->retainDirector();
             }
         }
-        DirectorPtr(const ThreadSafeDirectorPtr<T>& other) : _ptr(other.get()) {
+        DirectorPtr(const ThreadSafeDirectorPtr<T>& other) : _ptr() {
+            std::lock_guard<std::mutex> lock(other._mutex);
+            _ptr = other._ptr;
             if (auto director = std::dynamic_pointer_cast<Director>(_ptr)) {
                 director->retainDirector();
             }
@@ -145,7 +150,8 @@ namespace carto {
         }
 
         DirectorPtr& operator = (const ThreadSafeDirectorPtr<T>& other) {
-            set(other.get());
+            std::lock_guard<std::mutex> lock(other._mutex);
+            set(other._ptr);
             return *this;
         }
         
