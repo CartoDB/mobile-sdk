@@ -202,6 +202,14 @@ set_source_files_properties("${SDK_SRC_DIR}/../../winphone/native/utils/GLESCont
 set_source_files_properties("${SDK_SRC_DIR}/../../winphone/native/components/Task.cpp" PROPERTIES COMPILE_FLAGS "/ZW")
 endif()
 
+# Group wrapper files into different groups, to reduce clutter
+source_group("Wrapper Sources"
+    REGULAR_EXPRESSION ".*_wrap.cpp"
+)
+source_group("Wrapper Headers"
+    REGULAR_EXPRESSION ".*_wrap.h"
+)
+
 # Linking
 if(SINGLE_LIBRARY)
 
