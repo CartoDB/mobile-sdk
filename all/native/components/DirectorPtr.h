@@ -56,14 +56,14 @@ namespace carto {
             _ptr = ptr;
         }
         
-        bool operator == (const ThreadSafeDirectorPtr<T>& other) const {
+        bool operator == (const ThreadSafeDirectorPtr& other) const {
             std::lock(_mutex, other._mutex);
             std::lock_guard<std::mutex> lock1(_mutex, std::adopt_lock);
             std::lock_guard<std::mutex> lock2(other._mutex, std::adopt_lock);
             return _ptr == other._ptr;
         }
 
-        bool operator != (const ThreadSafeDirectorPtr<T>& other) const {
+        bool operator != (const ThreadSafeDirectorPtr& other) const {
             return !(*this == other);
         }
         
