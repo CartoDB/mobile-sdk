@@ -125,6 +125,8 @@
 #import "NTLog.h"
 
 #import "NTBalloonPopup.h"
+#import "NTCustomPopup.h"
+#import "NTCustomPopupHandler.h"
 #import "NTGeometryCollection.h"
 #import "NTLabel.h"
 #import "NTLine.h"
