@@ -137,8 +137,7 @@ namespace carto {
         bool _overlayDragStarted;
         VectorElementDragMode::VectorElementDragMode _overlayDragMode;
 
-        DirectorPtr<VectorEditEventListener> _vectorEditEventListener;
-        mutable std::recursive_mutex _vectorEditEventListenerMutex;
+        ThreadSafeDirectorPtr<VectorEditEventListener> _vectorEditEventListener;
     };
 
 }

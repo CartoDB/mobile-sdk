@@ -141,8 +141,7 @@ namespace carto {
         bool _noDualPointerYet;
         std::chrono::steady_clock::time_point _dualPointerReleaseTime;
     
-        DirectorPtr<MapEventListener> _mapEventListener;
-        mutable std::mutex _mapEventListenerMutex;
+        ThreadSafeDirectorPtr<MapEventListener> _mapEventListener;
         
         std::shared_ptr<ClickHandlerWorker> _clickHandlerWorker;
         std::thread _clickHandlerThread;

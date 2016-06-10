@@ -22,8 +22,7 @@
 namespace carto {
 
     CartoVisLoader::CartoVisLoader() :
-        _cartoUIBuilder(),
-        _cartoUIBuilderMutex()
+        _cartoUIBuilder()
     {
     }
 
@@ -31,13 +30,11 @@ namespace carto {
     }
 
     std::shared_ptr<CartoUIBuilder> CartoVisLoader::getCartoUIBuilder() const {
-        std::lock_guard<std::mutex> lock(_cartoUIBuilderMutex);
         return _cartoUIBuilder.get();
     }
 
     void CartoVisLoader::setCartoUIBuilder(const std::shared_ptr<CartoUIBuilder>& cartoUIBuilder) {
-        std::lock_guard<std::mutex> lock(_cartoUIBuilderMutex);
-        _cartoUIBuilder = DirectorPtr<CartoUIBuilder>(cartoUIBuilder);
+        _cartoUIBuilder.set(cartoUIBuilder);
     }
 
     void CartoVisLoader::loadVis(BaseMapView* mapView, const std::string& visURL) const {
@@ -126,11 +123,7 @@ namespace carto {
     }
 
     void CartoVisLoader::createLayer(std::vector<std::shared_ptr<Layer> >& layers, const picojson::value& layerConfig) const {
-        DirectorPtr<CartoUIBuilder> cartoUIBuilder;
-        {
-            std::lock_guard<std::mutex> lock(_cartoUIBuilderMutex);
-            cartoUIBuilder = _cartoUIBuilder;
-        }
+        DirectorPtr<CartoUIBuilder> cartoUIBuilder = _cartoUIBuilder;
         
         std::string type = boost::algorithm::to_lower_copy(layerConfig.get("type").get<std::string>());
         const picojson::value& options = layerConfig.get("options");

@@ -190,11 +190,10 @@ namespace carto {
         
         bool _surfaceChanged;
         mutable std::atomic<bool> _redrawPending;
-        DirectorPtr<RedrawRequestListener> _redrawRequestListener;
-        mutable std::mutex _redrawRequestListenerMutex;
 
-        DirectorPtr<MapRendererListener> _mapRendererListener;
-        mutable std::mutex _mapRendererListenerMutex;
+        ThreadSafeDirectorPtr<RedrawRequestListener> _redrawRequestListener;
+
+        ThreadSafeDirectorPtr<MapRendererListener> _mapRendererListener;
 
         std::vector<std::pair<DirectorPtr<RendererCaptureListener>, bool> > _rendererCaptureListeners;
         mutable std::mutex _rendererCaptureListenersMutex;

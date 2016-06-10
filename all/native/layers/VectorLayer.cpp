@@ -44,7 +44,6 @@ namespace carto {
         _dataSource(dataSource),
         _dataSourceListener(),
         _vectorElementEventListener(),
-        _vectorElementEventListenerMutex(),
         _billboardRenderer(std::make_shared<BillboardRenderer>()),
         _geometryCollectionRenderer(std::make_shared<GeometryCollectionRenderer>()),
         _lineRenderer(std::make_shared<LineRenderer>()),
@@ -64,13 +63,11 @@ namespace carto {
     }
     
     std::shared_ptr<VectorElementEventListener> VectorLayer::getVectorElementEventListener() const {
-        std::lock_guard<std::mutex> lock(_vectorElementEventListenerMutex);
         return _vectorElementEventListener.get();
     }
     
     void VectorLayer::setVectorElementEventListener(const std::shared_ptr<VectorElementEventListener>& vectorElementEventListener) {
-        std::lock_guard<std::mutex> lock(_vectorElementEventListenerMutex);
-        _vectorElementEventListener = DirectorPtr<VectorElementEventListener>(vectorElementEventListener);
+        _vectorElementEventListener.set(vectorElementEventListener);
     }
     
     bool VectorLayer::isUpdateInProgress() const {
@@ -214,11 +211,7 @@ namespace carto {
             }
         }
 
-        DirectorPtr<VectorElementEventListener> vectorElementEventListener;
-        {
-            std::lock_guard<std::mutex> lock(_vectorElementEventListenerMutex);
-            vectorElementEventListener = _vectorElementEventListener;
-        }
+        DirectorPtr<VectorElementEventListener> vectorElementEventListener = _vectorElementEventListener;
 
         if (vectorElementEventListener) {
             auto vectorElementClickInfo = std::make_shared<VectorElementClickInfo>(clickType, intersectedElement.getHitPos(), intersectedElement.getElementPos(), element, intersectedElement.getLayer());

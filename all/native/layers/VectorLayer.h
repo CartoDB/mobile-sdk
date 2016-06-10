@@ -136,8 +136,7 @@ namespace carto {
         std::shared_ptr<VectorDataSource::OnChangeListener> _dataSourceListener;
         
     private:
-        DirectorPtr<VectorElementEventListener> _vectorElementEventListener;
-        mutable std::mutex _vectorElementEventListenerMutex;
+        ThreadSafeDirectorPtr<VectorElementEventListener> _vectorElementEventListener;
 
         std::shared_ptr<BillboardRenderer> _billboardRenderer;
         std::shared_ptr<GeometryCollectionRenderer> _geometryCollectionRenderer;

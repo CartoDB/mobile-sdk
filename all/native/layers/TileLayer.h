@@ -256,14 +256,11 @@ namespace carto {
         const DirectorPtr<TileDataSource> _dataSource;
         std::shared_ptr<DataSourceListener> _dataSourceListener;
 
-        DirectorPtr<TileDataSource> _utfGridDataSource;
-        mutable std::mutex _utfGridDataSourceMutex;
+        ThreadSafeDirectorPtr<TileDataSource> _utfGridDataSource;
         
-        DirectorPtr<TileLoadListener> _tileLoadListener;
-        mutable std::mutex _tileLoadListenerMutex;
+        ThreadSafeDirectorPtr<TileLoadListener> _tileLoadListener;
     
-        DirectorPtr<UTFGridEventListener> _utfGridEventListener;
-        mutable std::mutex _utfGridEventListenerMutex;
+        ThreadSafeDirectorPtr<UTFGridEventListener> _utfGridEventListener;
 
         FetchingTileTasks<FetchTaskBase> _fetchingTiles;
         

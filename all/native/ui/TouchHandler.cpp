@@ -26,7 +26,6 @@ namespace carto {
         _mapMoving(false),
         _noDualPointerYet(true),
         _mapEventListener(),
-        _mapEventListenerMutex(),
         _clickHandlerWorker(std::make_shared<ClickHandlerWorker>(options)),
         _clickHandlerThread(),
         _options(options),
@@ -58,13 +57,11 @@ namespace carto {
     }
     
     std::shared_ptr<MapEventListener> TouchHandler::getMapEventListener() const {
-        std::lock_guard<std::mutex> lock(_mapEventListenerMutex);
         return _mapEventListener.get();
     }
     
     void TouchHandler::setMapEventListener(const std::shared_ptr<MapEventListener>& mapEventListener) {
-        std::lock_guard<std::mutex> lock(_mapEventListenerMutex);
-        _mapEventListener = DirectorPtr<MapEventListener>(mapEventListener);
+        _mapEventListener.set(mapEventListener);
     }
     
     void TouchHandler::onTouchEvent(int action, const ScreenPos& screenPos1, const ScreenPos& screenPos2) {
@@ -241,11 +238,8 @@ namespace carto {
         }
 
         if (stable) {
-            DirectorPtr<MapEventListener> mapEventListener;
-            {
-                std::lock_guard<std::mutex> lock(_mapEventListenerMutex);
-                mapEventListener = _mapEventListener;
-            }
+            DirectorPtr<MapEventListener> mapEventListener = _mapEventListener;
+
             if (mapEventListener) {
                 mapEventListener->onMapStable();
             }
@@ -492,11 +486,7 @@ namespace carto {
             }
         }
 
-        DirectorPtr<MapEventListener> mapEventListener;
-        {
-            std::lock_guard<std::mutex> lock(_mapEventListenerMutex);
-            mapEventListener = _mapEventListener;
-        }
+        DirectorPtr<MapEventListener> mapEventListener = _mapEventListener;
 
         if (mapEventListener) {
             ViewState viewState = _mapRenderer->getViewState();
@@ -544,11 +534,9 @@ namespace carto {
                 std::lock_guard<std::mutex> lock(touchHandler->_mutex);
                 touchHandler->_mapMoving = true;
             }
-            DirectorPtr<MapEventListener> mapEventListener;
-            {
-                std::lock_guard<std::mutex> lock(touchHandler->_mapEventListenerMutex);
-                mapEventListener = touchHandler->_mapEventListener;
-            }
+
+            DirectorPtr<MapEventListener> mapEventListener = touchHandler->_mapEventListener;
+
             if (mapEventListener) {
                 mapEventListener->onMapMoved();
             }
@@ -561,11 +549,9 @@ namespace carto {
                 std::lock_guard<std::mutex> lock(touchHandler->_mutex);
                 touchHandler->_mapMoving = false;
             }
-            DirectorPtr<MapEventListener> mapEventListener;
-            {
-                std::lock_guard<std::mutex> lock(touchHandler->_mapEventListenerMutex);
-                mapEventListener = touchHandler->_mapEventListener;
-            }
+
+            DirectorPtr<MapEventListener> mapEventListener = touchHandler->_mapEventListener;
+
             if (mapEventListener) {
                 mapEventListener->onMapIdle();
             }

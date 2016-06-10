@@ -10,21 +10,90 @@
 #include "Director.h"
 
 #include <memory>
+#include <mutex>
 
 namespace carto {
     
     template <typename T>
-    class DirectorPtr {
+    class ThreadSafeDirectorPtr {
     public:
-        DirectorPtr() : _ptr() { }
-
-        DirectorPtr(const DirectorPtr<T>& directorPtr) : _ptr(directorPtr._ptr) {
+        ThreadSafeDirectorPtr() : _ptr(), _mutex() { }
+        ThreadSafeDirectorPtr(const std::shared_ptr<T>& ptr) : _ptr(ptr), _mutex() {
             if (auto director = std::dynamic_pointer_cast<Director>(_ptr)) {
                 director->retainDirector();
             }
         }
+        ThreadSafeDirectorPtr(const ThreadSafeDirectorPtr& other) : _ptr(), _mutex() {
+            {
+                std::lock_guard<std::mutex> lock(other._mutex);
+                _ptr = other._ptr;
+            }
+            if (auto director = std::dynamic_pointer_cast<Director>(_ptr)) {
+                director->retainDirector();
+            }
+        }
+
+        ~ThreadSafeDirectorPtr() {
+            if (auto director = std::dynamic_pointer_cast<Director>(_ptr)) {
+                director->releaseDirector();
+            }
+        }
         
-        explicit DirectorPtr(const std::shared_ptr<T>& ptr) : _ptr(ptr) {
+        std::shared_ptr<T> get() const {
+            std::lock_guard<std::mutex> lock(_mutex);
+            return _ptr;
+        }
+
+        void set(const std::shared_ptr<T>& ptr) {
+            std::lock_guard<std::mutex> lock(_mutex);
+            if (auto director = std::dynamic_pointer_cast<Director>(ptr)) {
+                director->retainDirector();
+            }
+            if (auto director = std::dynamic_pointer_cast<Director>(_ptr)) {
+                director->releaseDirector();
+            }
+            _ptr = ptr;
+        }
+        
+        bool operator == (const ThreadSafeDirectorPtr<T>& other) const {
+            std::lock(_mutex, other._mutex);
+            std::lock_guard<std::mutex> lock1(_mutex, std::adopt_lock);
+            std::lock_guard<std::mutex> lock2(other._mutex, std::adopt_lock);
+            return _ptr == other._ptr;
+        }
+
+        bool operator != (const ThreadSafeDirectorPtr<T>& other) const {
+            return !(*this == other);
+        }
+        
+        ThreadSafeDirectorPtr& operator = (ThreadSafeDirectorPtr other) {
+            std::lock(_mutex, other._mutex);
+            std::lock_guard<std::mutex> lock1(_mutex, std::adopt_lock);
+            std::lock_guard<std::mutex> lock2(other._mutex, std::adopt_lock);
+            std::swap(_ptr, other._ptr);
+            return *this;
+        }
+
+    private:
+        std::shared_ptr<T> _ptr;
+        mutable std::mutex _mutex;
+    };
+
+    template <typename T>
+    class DirectorPtr {
+    public:
+        DirectorPtr() : _ptr() { }
+        DirectorPtr(const std::shared_ptr<T>& ptr) : _ptr(ptr) {
+            if (auto director = std::dynamic_pointer_cast<Director>(_ptr)) {
+                director->retainDirector();
+            }
+        }
+        DirectorPtr(const DirectorPtr& other) : _ptr(other._ptr) {
+            if (auto director = std::dynamic_pointer_cast<Director>(_ptr)) {
+                director->retainDirector();
+            }
+        }
+        DirectorPtr(const ThreadSafeDirectorPtr<T>& other) : _ptr(other.get()) {
             if (auto director = std::dynamic_pointer_cast<Director>(_ptr)) {
                 director->retainDirector();
             }
@@ -36,10 +105,20 @@ namespace carto {
             }
         }
         
-        const std::shared_ptr<T>& get() const {
+        std::shared_ptr<T> get() const {
             return _ptr;
         }
-        
+
+        void set(const std::shared_ptr<T>& ptr) {
+            if (auto director = std::dynamic_pointer_cast<Director>(ptr)) {
+                director->retainDirector();
+            }
+            if (auto director = std::dynamic_pointer_cast<Director>(_ptr)) {
+                director->releaseDirector();
+            }
+            _ptr = ptr;
+        }
+
         T* operator -> () const {
             return _ptr.get();
         }
@@ -52,16 +131,21 @@ namespace carto {
             return (bool)_ptr;
         }
         
-        bool operator == (const DirectorPtr<T>& other) const {
+        bool operator == (const DirectorPtr& other) const {
             return _ptr == other._ptr;
         }
 
-        bool operator != (const DirectorPtr<T>& other) const {
-            return _ptr != other._ptr;
+        bool operator != (const DirectorPtr& other) const {
+            return !(*this == other);
         }
         
-        DirectorPtr<T>& operator = (DirectorPtr<T> directorPtr) {
-            std::swap(_ptr, directorPtr._ptr);
+        DirectorPtr& operator = (DirectorPtr other) {
+            std::swap(_ptr, other._ptr);
+            return *this;
+        }
+
+        DirectorPtr& operator = (const ThreadSafeDirectorPtr<T>& other) {
+            set(other.get());
             return *this;
         }
         
@@ -75,8 +159,8 @@ namespace std {
 
     template <typename T>
     struct hash<carto::DirectorPtr<T> > {
-        size_t operator() (const carto::DirectorPtr<T>& ptr) const {
-            return hash<shared_ptr<T> >()(ptr.get());
+        size_t operator() (const carto::DirectorPtr<T>& directorPtr) const {
+            return hash<shared_ptr<T> >()(directorPtr.get());
         }
     };
 

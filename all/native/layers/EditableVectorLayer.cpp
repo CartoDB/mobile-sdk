@@ -54,8 +54,7 @@ namespace carto {
         _overlayDragGeometryPos(),
         _overlayDragStarted(false),
         _overlayDragMode(VectorElementDragMode::VECTOR_ELEMENT_DRAG_MODE_VERTEX),
-        _vectorEditEventListener(),
-        _vectorEditEventListenerMutex()
+        _vectorEditEventListener()
     {
     }
 
@@ -88,11 +87,8 @@ namespace carto {
             _overlayStyleSelected.reset();
         }
 
-        DirectorPtr<VectorEditEventListener> vectorEditEventListener;
-        {
-            std::lock_guard<std::recursive_mutex> lock(_vectorEditEventListenerMutex);
-            vectorEditEventListener = _vectorEditEventListener;
-        }
+        DirectorPtr<VectorEditEventListener> vectorEditEventListener = _vectorEditEventListener;
+
         if (vectorEditEventListener) {
             if (oldSelectedVectorElement) {
                 vectorEditEventListener->onElementDeselected(oldSelectedVectorElement);
@@ -116,13 +112,11 @@ namespace carto {
     }
 
     std::shared_ptr<VectorEditEventListener> EditableVectorLayer::getVectorEditEventListener() const {
-        std::lock_guard<std::recursive_mutex> lock(_vectorEditEventListenerMutex);
         return _vectorEditEventListener.get();
     }
     
     void EditableVectorLayer::setVectorEditEventListener(const std::shared_ptr<VectorEditEventListener>& listener) {
-        std::lock_guard<std::recursive_mutex> lock(_vectorEditEventListenerMutex);
-        _vectorEditEventListener = DirectorPtr<VectorEditEventListener>(listener);
+        _vectorEditEventListener.set(listener);
     }
 
     void EditableVectorLayer::setComponents(const std::shared_ptr<CancelableThreadPool>& envelopeThreadPool,
@@ -282,11 +276,7 @@ namespace carto {
             return false;
         }
 
-        DirectorPtr<VectorEditEventListener> vectorEditEventListener;
-        {
-            std::lock_guard<std::recursive_mutex> listenerLock(layer->_vectorEditEventListenerMutex);
-            vectorEditEventListener = layer->_vectorEditEventListener;
-        }
+        DirectorPtr<VectorEditEventListener> vectorEditEventListener = _vectorEditEventListener;
 
         std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
 
@@ -466,11 +456,8 @@ namespace carto {
         
         geometry = updateGeometryPoints(geometry, delta);
 
-        DirectorPtr<VectorEditEventListener> vectorEditEventListener;
-        {
-            std::lock_guard<std::recursive_mutex> listenerLock(_vectorEditEventListenerMutex);
-            vectorEditEventListener = _vectorEditEventListener;
-        }
+        DirectorPtr<VectorEditEventListener> vectorEditEventListener = _vectorEditEventListener;
+
         if (vectorEditEventListener) {
             vectorEditEventListener->onElementModify(element, geometry);
         }
@@ -507,11 +494,8 @@ namespace carto {
     }
     
     void EditableVectorLayer::removeElement(std::shared_ptr<VectorElement> element) {
-        DirectorPtr<VectorEditEventListener> vectorEditEventListener;
-        {
-            std::lock_guard<std::recursive_mutex> listenerLock(_vectorEditEventListenerMutex);
-            vectorEditEventListener = _vectorEditEventListener;
-        }
+        DirectorPtr<VectorEditEventListener> vectorEditEventListener = _vectorEditEventListener;
+
         if (vectorEditEventListener) {
             vectorEditEventListener->onElementDelete(element);
         }
@@ -539,11 +523,8 @@ namespace carto {
         std::shared_ptr<Geometry> geometry = element->getGeometry();
         geometry = updateGeometryPoint(geometry, offset, index, mapPos);
 
-        DirectorPtr<VectorEditEventListener> vectorEditEventListener;
-        {
-            std::lock_guard<std::recursive_mutex> listenerLock(_vectorEditEventListenerMutex);
-            vectorEditEventListener = _vectorEditEventListener;
-        }
+        DirectorPtr<VectorEditEventListener> vectorEditEventListener = _vectorEditEventListener;
+
         if (geometry) {
             if (vectorEditEventListener) {
                 vectorEditEventListener->onElementModify(element, geometry);
@@ -639,11 +620,8 @@ namespace carto {
         std::shared_ptr<Geometry> geometry = element->getGeometry();
         geometry = removeGeometryPoint(geometry, offset, index);
     
-        DirectorPtr<VectorEditEventListener> vectorEditEventListener;
-        {
-            std::lock_guard<std::recursive_mutex> listenerLock(_vectorEditEventListenerMutex);
-            vectorEditEventListener = _vectorEditEventListener;
-        }
+        DirectorPtr<VectorEditEventListener> vectorEditEventListener = _vectorEditEventListener;
+
         if (geometry) {
             if (vectorEditEventListener) {
                 vectorEditEventListener->onElementModify(element, geometry);

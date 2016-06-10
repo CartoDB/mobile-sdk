@@ -51,9 +51,7 @@ namespace carto {
         _surfaceChanged(false),
         _redrawPending(false),
         _redrawRequestListener(),
-        _redrawRequestListenerMutex(),
         _mapRendererListener(),
-        _mapRendererListenerMutex(),
         _rendererCaptureListeners(),
         _rendererCaptureListenersMutex(),
         _onChangeListeners(),
@@ -91,23 +89,19 @@ namespace carto {
     }
         
     std::shared_ptr<RedrawRequestListener> MapRenderer::getRedrawRequestListener() const {
-         std::lock_guard<std::mutex> lock(_redrawRequestListenerMutex);
          return _redrawRequestListener.get();
     }
         
     void MapRenderer::setRedrawRequestListener(const std::shared_ptr<RedrawRequestListener>& listener) {
-        std::lock_guard<std::mutex> lock(_redrawRequestListenerMutex);
-        _redrawRequestListener = DirectorPtr<RedrawRequestListener>(listener);
+        _redrawRequestListener.set(listener);
     }
         
     std::shared_ptr<MapRendererListener> MapRenderer::getMapRendererListener() const {
-        std::lock_guard<std::mutex> lock(_mapRendererListenerMutex);
         return _mapRendererListener.get();
     }
 
     void MapRenderer::setMapRendererListener(const std::shared_ptr<MapRendererListener>& listener) {
-        std::lock_guard<std::mutex> lock(_mapRendererListenerMutex);
-        _mapRendererListener = DirectorPtr<MapRendererListener>(listener);
+        _mapRendererListener.set(listener);
     }
 
     ViewState MapRenderer::getViewState() const {
@@ -118,11 +112,8 @@ namespace carto {
     }
         
     void MapRenderer::requestRedraw() const {
-        DirectorPtr<RedrawRequestListener> redrawRequestListener;
-        {
-            std::lock_guard<std::mutex> lock(_redrawRequestListenerMutex);
-            redrawRequestListener = _redrawRequestListener;
-        }
+        DirectorPtr<RedrawRequestListener> redrawRequestListener = _redrawRequestListener;
+
         if (redrawRequestListener) {
             _redrawPending = true;
             redrawRequestListener->onRedrawRequested();
@@ -474,11 +465,7 @@ namespace carto {
             onChangeListeners = _onChangeListeners;
         }
 
-        DirectorPtr<MapRendererListener> mapRendererListener;
-        {
-            std::lock_guard<std::mutex> lock(_mapRendererListenerMutex);
-            mapRendererListener = _mapRendererListener;
-        }
+        DirectorPtr<MapRendererListener> mapRendererListener = _mapRendererListener;
 
         _textureManager->processTextures();
         _shaderManager->processShaders();

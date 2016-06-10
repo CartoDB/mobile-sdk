@@ -327,8 +327,7 @@ namespace carto {
         PackageAction::PackageAction _prevAction = PackageAction::PACKAGE_ACTION_WAITING;
         int _prevRoundedProgress = 0;
 
-        DirectorPtr<PackageManagerListener> _packageManagerListener;
-        mutable std::recursive_mutex _packageManagerListenerMutex;
+        ThreadSafeDirectorPtr<PackageManagerListener> _packageManagerListener;
 
         mutable std::recursive_mutex _mutex; // guards all state
     };

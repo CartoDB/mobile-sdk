@@ -41,8 +41,7 @@ namespace carto {
 
         void createLayer(std::vector<std::shared_ptr<Layer> >& layers, const picojson::value& layerConfig) const;
 
-        DirectorPtr<CartoUIBuilder> _cartoUIBuilder;
-        mutable std::mutex _cartoUIBuilderMutex;
+        ThreadSafeDirectorPtr<CartoUIBuilder> _cartoUIBuilder;
     };
 
 }

@@ -24,13 +24,11 @@ namespace carto {
     }
     
     std::shared_ptr<TileDataSource> TileLayer::getUTFGridDataSource() const {
-        std::lock_guard<std::mutex> lock(_utfGridDataSourceMutex);
         return _utfGridDataSource.get();
     }
     
     void TileLayer::setUTFGridDataSource(const std::shared_ptr<TileDataSource>& dataSource) {
-        std::lock_guard<std::mutex> lock(_utfGridDataSourceMutex);
-        _utfGridDataSource = DirectorPtr<TileDataSource>(dataSource);
+        _utfGridDataSource.set(dataSource);
     }
 
     int TileLayer::getFrameNr() const {
@@ -124,23 +122,19 @@ namespace carto {
     }
 
     std::shared_ptr<TileLoadListener> TileLayer::getTileLoadListener() const {
-        std::lock_guard<std::mutex> lock(_tileLoadListenerMutex);
         return _tileLoadListener.get();
     }
     
     void TileLayer::setTileLoadListener(const std::shared_ptr<TileLoadListener>& tileLoadListener) {
-        std::lock_guard<std::mutex> lock(_tileLoadListenerMutex);
-        _tileLoadListener = DirectorPtr<TileLoadListener>(tileLoadListener);
+        _tileLoadListener.set(tileLoadListener);
     }
 
     std::shared_ptr<UTFGridEventListener> TileLayer::getUTFGridEventListener() const {
-        std::lock_guard<std::mutex> lock(_utfGridEventListenerMutex);
         return _utfGridEventListener.get();
     }
     
     void TileLayer::setUTFGridEventListener(const std::shared_ptr<UTFGridEventListener>& utfGridEventListener) {
-        std::lock_guard<std::mutex> lock(_utfGridEventListenerMutex);
-        _utfGridEventListener = DirectorPtr<UTFGridEventListener>(utfGridEventListener);
+        _utfGridEventListener.set(utfGridEventListener);
     }
     
     bool TileLayer::isUpdateInProgress() const {
@@ -168,11 +162,8 @@ namespace carto {
         _dataSource(dataSource),
         _dataSourceListener(),
         _utfGridDataSource(),
-        _utfGridDataSourceMutex(),
         _tileLoadListener(),
-        _tileLoadListenerMutex(),
         _utfGridEventListener(),
-        _utfGridEventListenerMutex(),
         _fetchingTiles(),
         _frameNr(0),
         _lastFrameNr(-1),
@@ -247,11 +238,8 @@ namespace carto {
     void TileLayer::updateTileLoadListener() {
         bool calculatingTiles = _calculatingTiles;
     
-        DirectorPtr<TileLoadListener> tileLoadListener;
-        {
-            std::lock_guard<std::mutex> lock(_tileLoadListenerMutex);
-            tileLoadListener = _tileLoadListener;
-        }
+        DirectorPtr<TileLoadListener> tileLoadListener = _tileLoadListener;
+
         if (!calculatingTiles && tileLoadListener) {
             bool refreshedTiles = std::atomic_exchange(&_refreshedTiles, false);
     
@@ -268,11 +256,8 @@ namespace carto {
     }
     
     void TileLayer::calculateRayIntersectedElements(const Projection& projection, const MapPos& rayOrig, const MapVec& rayDir, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
-        DirectorPtr<TileDataSource> utfGridDataSource;
-        {
-            std::lock_guard<std::mutex> lock(_utfGridDataSourceMutex);
-            utfGridDataSource = _utfGridDataSource;
-        }
+        DirectorPtr<TileDataSource> utfGridDataSource = _utfGridDataSource;
+
         if (!utfGridDataSource) {
             return;
         }
@@ -325,11 +310,7 @@ namespace carto {
     }
 
     bool TileLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
-        DirectorPtr<UTFGridEventListener> utfGridEventListener;
-        {
-            std::lock_guard<std::mutex> lock(_utfGridEventListenerMutex);
-            utfGridEventListener = _utfGridEventListener;
-        }
+        DirectorPtr<UTFGridEventListener> utfGridEventListener = _utfGridEventListener;
 
         if (utfGridEventListener) {
             std::shared_ptr<std::map<std::string, std::string> > elementInfo = intersectedElement.getElement<std::map<std::string, std::string> >();
@@ -594,12 +575,8 @@ namespace carto {
     }
     
     bool TileLayer::FetchTaskBase::loadUTFGridTile(const std::shared_ptr<TileLayer>& tileLayer) {
-        DirectorPtr<TileDataSource> dataSource;
-        {
-            std::lock_guard<std::mutex> lock(tileLayer->_utfGridDataSourceMutex);
-            dataSource = tileLayer->_utfGridDataSource;
-        }
-        
+        DirectorPtr<TileDataSource> dataSource = tileLayer->_utfGridDataSource;
+
         std::vector<MapTile> dataSourceTiles;
         if (dataSource) {
             for (MapTile dataSourceTile = _tile; true; ) {

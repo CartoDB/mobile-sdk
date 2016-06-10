@@ -108,13 +108,11 @@ namespace carto {
     }
 
     std::shared_ptr<PackageManagerListener> PackageManager::getPackageManagerListener() const {
-        std::lock_guard<std::recursive_mutex> lock(_packageManagerListenerMutex);
         return _packageManagerListener.get();
     }
 
     void PackageManager::setPackageManagerListener(const std::shared_ptr<PackageManagerListener>& listener) {
-        std::lock_guard<std::recursive_mutex> lock(_packageManagerListenerMutex);
-        _packageManagerListener = DirectorPtr<PackageManagerListener>(listener);
+        _packageManagerListener.set(listener);
     }
 
     void PackageManager::registerOnChangeListener(const std::shared_ptr<OnChangeListener>& listener) {
@@ -1207,11 +1205,8 @@ namespace carto {
             _prevRoundedProgress = roundedProgress;
         }
 
-        DirectorPtr<PackageManagerListener> packageManagerListener;
-        {
-            std::lock_guard<std::recursive_mutex> lock(_packageManagerListenerMutex);
-            packageManagerListener = _packageManagerListener;
-        }
+        DirectorPtr<PackageManagerListener> packageManagerListener = _packageManagerListener;
+
         if (packageManagerListener) {
             Task task = _taskQueue->getTask(taskId);
             if (!task.packageId.empty()) {
@@ -1237,11 +1232,8 @@ namespace carto {
             onChangeListener->onTilesChanged();
         }
 
-        DirectorPtr<PackageManagerListener> packageManagerListener;
-        {
-            std::lock_guard<std::recursive_mutex> lock(_packageManagerListenerMutex);
-            packageManagerListener = _packageManagerListener;
-        }
+        DirectorPtr<PackageManagerListener> packageManagerListener = _packageManagerListener;
+
         if (packageManagerListener) {
             if (task.packageId.empty()) {
                 packageManagerListener->onPackageListUpdated();
@@ -1255,11 +1247,8 @@ namespace carto {
     void PackageManager::setTaskPaused(int taskId) {
         Task task = _taskQueue->getTask(taskId);
 
-        DirectorPtr<PackageManagerListener> packageManagerListener;
-        {
-            std::lock_guard<std::recursive_mutex> lock(_packageManagerListenerMutex);
-            packageManagerListener = _packageManagerListener;
-        }
+        DirectorPtr<PackageManagerListener> packageManagerListener = _packageManagerListener;
+
         if (packageManagerListener) {
             if (!task.packageId.empty()) {
                 std::shared_ptr<PackageStatus> status = getLocalPackageStatus(task.packageId, task.packageVersion);
@@ -1274,11 +1263,8 @@ namespace carto {
         Task task = _taskQueue->getTask(taskId);
         _taskQueue->deleteTask(taskId);
 
-        DirectorPtr<PackageManagerListener> packageManagerListener;
-        {
-            std::lock_guard<std::recursive_mutex> lock(_packageManagerListenerMutex);
-            packageManagerListener = _packageManagerListener;
-        }
+        DirectorPtr<PackageManagerListener> packageManagerListener = _packageManagerListener;
+
         if (packageManagerListener) {
             if (!task.packageId.empty()) {
                 packageManagerListener->onPackageCancelled(task.packageId, task.packageVersion);
@@ -1290,11 +1276,8 @@ namespace carto {
         Task task = _taskQueue->getTask(taskId);
         _taskQueue->deleteTask(taskId);
 
-        DirectorPtr<PackageManagerListener> packageManagerListener;
-        {
-            std::lock_guard<std::recursive_mutex> lock(_packageManagerListenerMutex);
-            packageManagerListener = _packageManagerListener;
-        }
+        DirectorPtr<PackageManagerListener> packageManagerListener = _packageManagerListener;
+
         if (packageManagerListener) {
             if (task.packageId.empty()) {
                 packageManagerListener->onPackageListFailed();
