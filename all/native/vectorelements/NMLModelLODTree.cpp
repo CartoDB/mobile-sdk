@@ -1,3 +1,5 @@
+#ifdef _CARTO_NMLMODELLODTREE_SUPPORT
+
 #include "NMLModelLODTree.h"
 #include "geometry/PointGeometry.h"
 #include "graphics/ViewState.h"
@@ -82,3 +84,5 @@ namespace carto {
     }
     
 }
+
+#endif

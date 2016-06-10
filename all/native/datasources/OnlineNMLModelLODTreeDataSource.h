@@ -7,6 +7,8 @@
 #ifndef _CARTO_ONLINENMLMODELLODTREEDATASOURCE_H_
 #define _CARTO_ONLINENMLMODELLODTREEDATASOURCE_H_
 
+#ifdef _CARTO_NMLMODELLODTREE_SUPPORT
+
 #include "NMLModelLODTreeDataSource.h"
 
 namespace carto {
@@ -54,5 +56,7 @@ namespace carto {
     };
     
 }
+
+#endif
 
 #endif

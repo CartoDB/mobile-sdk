@@ -1,3 +1,5 @@
+#ifdef _CARTO_NMLMODELLODTREE_SUPPORT
+
 #include "NMLModelLODTreeDataSource.h"
 #include "projections/Projection.h"
 
@@ -17,3 +19,5 @@ namespace carto {
     }
     
 }
+
+#endif

@@ -7,6 +7,8 @@
 #ifndef _CARTO_NMLMODELLODTREERENDERER_H_
 #define _CARTO_NMLMODELLODTREERENDERER_H_
 
+#ifdef _CARTO_NMLMODELLODTREE_SUPPORT
+
 #include "renderers/NMLModelRendererBase.h"
 #include "renderers/drawdatas/NMLModelLODTreeDrawData.h"
 #include "nml/Model.h"
@@ -49,5 +51,7 @@ namespace carto {
     };
     
 }
+
+#endif
 
 #endif

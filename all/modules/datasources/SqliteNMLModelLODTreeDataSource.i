@@ -3,6 +3,8 @@
 
 %module SqliteNMLModelLODTreeDataSource
 
+#ifdef _CARTO_NMLMODELLODTREE_SUPPORT
+
 !proxy_imports(carto::SqliteNMLModelLODTreeDataSource, datasources.NMLModelLODTreeDataSource, projections.Projection)
 
 %{
@@ -18,5 +20,7 @@
 !polymorphic_shared_ptr(carto::SqliteNMLModelLODTreeDataSource, datasources.SqliteNMLModelLODTreeDataSource)
 
 %include "datasources/SqliteNMLModelLODTreeDataSource.h"
+
+#endif
 
 #endif

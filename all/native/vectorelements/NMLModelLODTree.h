@@ -7,6 +7,8 @@
 #ifndef _CARTO_NMLMODELLODTREE_H_
 #define _CARTO_NMLMODELLODTREE_H_
 
+#ifdef _CARTO_NMLMODELLODTREE_SUPPORT
+
 #include "VectorElement.h"
 #include "core/MapPos.h"
 #include "projections/Projection.h"
@@ -106,5 +108,7 @@ namespace carto {
     };
     
 }
+
+#endif
 
 #endif

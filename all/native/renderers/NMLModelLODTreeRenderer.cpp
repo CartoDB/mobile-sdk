@@ -1,3 +1,5 @@
+#ifdef _CARTO_NMLMODELLODTREE_SUPPORT
+
 #include "NMLModelLODTreeRenderer.h"
 #include "datasources/NMLModelLODTreeDataSource.h"
 #include "graphics/Shader.h"
@@ -220,3 +222,5 @@ namespace carto {
     }
     
 }
+
+#endif

@@ -1,3 +1,5 @@
+#ifdef _CARTO_NMLMODELLODTREE_SUPPORT
+
 #include "NMLModelLODTreeDrawData.h"
 
 namespace carto {
@@ -43,3 +45,5 @@ namespace carto {
     }
     
 }
+
+#endif

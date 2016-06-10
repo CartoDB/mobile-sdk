@@ -3,6 +3,8 @@
 
 %module OnlineNMLModelLODTreeDataSource
 
+#ifdef _CARTO_NMLMODELLODTREE_SUPPORT
+
 !proxy_imports(carto::OnlineNMLModelLODTreeDataSource, datasources.NMLModelLODTreeDataSource, projections.Projection)
 
 %{
@@ -18,5 +20,7 @@
 !polymorphic_shared_ptr(carto::OnlineNMLModelLODTreeDataSource, datasources.OnlineNMLModelLODTreeDataSource)
 
 %include "datasources/OnlineNMLModelLODTreeDataSource.h"
+
+#endif
 
 #endif

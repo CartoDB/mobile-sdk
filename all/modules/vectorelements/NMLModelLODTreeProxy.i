@@ -5,6 +5,8 @@
 
 %module NMLModelLODTreeProxy
 
+#ifdef _CARTO_NMLMODELLODTREE_SUPPORT
+
 !proxy_imports(carto::NMLModelLODTreeProxy, core.MapPos, geometry.PointGeometry, vectorelements.VectorElement)
 
 %{
@@ -30,5 +32,7 @@
 !attributestring_polymorphic(carto::NMLModelLODTreeProxy, geometry.PointGeometry, Geometry, getGeometry)
 
 %include "vectorelements/NMLModelLODTree.h"
+
+#endif
 
 #endif

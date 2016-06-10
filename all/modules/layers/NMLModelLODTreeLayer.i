@@ -3,6 +3,8 @@
 
 %module NMLModelLODTreeLayer
 
+#ifdef _CARTO_NMLMODELLODTREE_SUPPORT
+
 !proxy_imports(carto::NMLModelLODTreeLayer, datasources.NMLModelLODTreeDataSource, layers.Layer)
 
 %{
@@ -23,5 +25,7 @@
 %attribute(carto::NMLModelLODTreeLayer, float, LODResolutionFactor, getLODResolutionFactor, setLODResolutionFactor)
 
 %include "layers/NMLModelLODTreeLayer.h"
+
+#endif
 
 #endif

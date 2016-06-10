@@ -6,6 +6,8 @@
 
 %module NMLModelLODTreeDataSource
 
+#ifdef _CARTO_NMLMODELLODTREE_SUPPORT
+
 !proxy_imports(carto::NMLModelLODTreeDataSource, projections.Projection)
 
 %{
@@ -29,5 +31,7 @@
 %ignore carto::NMLModelLODTreeDataSource::loadTexture;
 
 %include "datasources/NMLModelLODTreeDataSource.h"
+
+#endif
 
 #endif

@@ -7,6 +7,8 @@
 #ifndef _CARTO_SQLITENMLMODELLODTREEDATASOURCE_H_
 #define _CARTO_SQLITENMLMODELLODTREEDATASOURCE_H_
 
+#ifdef _CARTO_NMLMODELLODTREE_SUPPORT
+
 #include "NMLModelLODTreeDataSource.h"
 
 namespace sqlite3pp {
@@ -39,5 +41,7 @@ namespace carto {
     };
 
 }
+
+#endif
 
 #endif

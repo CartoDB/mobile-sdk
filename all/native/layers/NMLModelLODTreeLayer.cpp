@@ -1,3 +1,5 @@
+#ifdef _CARTO_NMLMODELLODTREE_SUPPORT
+
 #include "NMLModelLODTreeLayer.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/components/CullState.h"
@@ -675,3 +677,5 @@ namespace carto {
     }
     
 }
+
+#endif

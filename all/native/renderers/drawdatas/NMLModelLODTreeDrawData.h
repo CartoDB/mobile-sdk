@@ -7,6 +7,8 @@
 #ifndef _CARTO_NMLMODELLODTREEDRAWDATA_H_
 #define _CARTO_NMLMODELLODTREEDRAWDATA_H_
 
+#ifdef _CARTO_NMLMODELLODTREE_SUPPORT
+
 #include "VectorElementDrawData.h"
 #include "vectorelements/NMLModelLODTree.h"
 
@@ -40,5 +42,7 @@ namespace carto {
     };
     
 }
+
+#endif
 
 #endif

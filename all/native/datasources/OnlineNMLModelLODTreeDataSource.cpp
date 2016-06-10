@@ -1,3 +1,5 @@
+#ifdef _CARTO_NMLMODELLODTREE_SUPPORT
+
 #include "OnlineNMLModelLODTreeDataSource.h"
 #include "core/BinaryData.h"
 #include "graphics/ViewState.h"
@@ -334,3 +336,5 @@ namespace carto {
     }
     
 }
+
+#endif

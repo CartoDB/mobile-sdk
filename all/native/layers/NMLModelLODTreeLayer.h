@@ -7,6 +7,8 @@
 #ifndef _CARTO_NMLMODELLODTREELAYER_H_
 #define _CARTO_NMLMODELLODTREELAYER_H_
 
+#ifdef _CARTO_NMLMODELLODTREE_SUPPORT
+
 #include "layers/Layer.h"
 #include "components/CancelableTask.h"
 #include "components/CancelableThreadPool.h"
@@ -207,5 +209,7 @@ namespace carto {
     };
     
 }
+
+#endif
 
 #endif

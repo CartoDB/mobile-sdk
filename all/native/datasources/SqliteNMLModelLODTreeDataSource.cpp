@@ -1,3 +1,5 @@
+#ifdef _CARTO_NMLMODELLODTREE_SUPPORT
+
 #include "SqliteNMLModelLODTreeDataSource.h"
 #include "renderers/components/CullState.h"
 #include "projections/Projection.h"
@@ -204,3 +206,5 @@ namespace carto {
     }
     
 }
+
+#endif
