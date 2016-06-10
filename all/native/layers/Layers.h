@@ -46,7 +46,17 @@ namespace carto {
          * @return The layer at the specified index.
          */
         std::shared_ptr<Layer> get(int index) const;
+        /**
+         * Replaces the layer at the specified index.
+         * @param index The layer index to replace. Must be between 0 and count (exclusive).
+         * @param layer The new layer.
+         */
+        void set(int index, const std::shared_ptr<Layer>& layer);
 
+        /**
+         * Clears the layer stack.
+         */
+        void clear();
         /**
          * Inserts a new layer at the specified position.
          * All previous layers starting from this index will be moved to the next position.
@@ -67,10 +77,15 @@ namespace carto {
         bool remove(const std::shared_ptr<Layer>& layer);
         
         /**
-         * Returns a list of layers. The layers are in the order in which they were added.
+         * Returns the list of all layers. The layers are in the order in which they were added.
          * @return A vector of all previously added layers.
          */
-        std::vector<std::shared_ptr<Layer> > getLayers() const;
+        std::vector<std::shared_ptr<Layer> > getAll() const;
+        /**
+         * Replaces the layers with the given layer list.
+         * @param layers The new list of layers.
+         */
+        void setAll(const std::vector<std::shared_ptr<Layer> >& layers);
         
     protected:
         friend class BaseMapView;

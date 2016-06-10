@@ -266,7 +266,7 @@ namespace carto {
     }
     
     void BaseMapView::clearPreloadingCaches() {
-        for (const std::shared_ptr<Layer>& layer : _layers->getLayers()) {
+        for (const std::shared_ptr<Layer>& layer : _layers->getAll()) {
             if (const std::shared_ptr<TileLayer>& tileLayer = std::dynamic_pointer_cast<TileLayer>(layer)) {
                 tileLayer->clearTileCaches(false);
             }
@@ -274,7 +274,7 @@ namespace carto {
     }
     
     void BaseMapView::clearAllCaches() {
-        for (const std::shared_ptr<Layer>& layer : _layers->getLayers()) {
+        for (const std::shared_ptr<Layer>& layer : _layers->getAll()) {
             if (const std::shared_ptr<TileLayer>& tileLayer = std::dynamic_pointer_cast<TileLayer>(layer)) {
                 tileLayer->clearTileCaches(true);
             }

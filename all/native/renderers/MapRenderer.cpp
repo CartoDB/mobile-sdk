@@ -60,7 +60,7 @@ namespace carto {
         _renderThreadCallbacksMutex(),
         _mutex()
     {
-        _layers->getLayers();
+        _layers->getAll();
     }
         
     MapRenderer::~MapRenderer() {
@@ -442,8 +442,7 @@ namespace carto {
         _backgroundRenderer.onSurfaceCreated(_shaderManager, _textureManager);
         _watermarkRenderer.onSurfaceCreated(_shaderManager, _textureManager);
     
-        std::vector<std::shared_ptr<Layer> > layers = _layers->getLayers();
-        for (const std::shared_ptr<Layer>& layer : layers) {
+        for (const std::shared_ptr<Layer>& layer : _layers->getAll()) {
             layer->onSurfaceCreated(_shaderManager, _textureManager);
         }
         
@@ -565,8 +564,7 @@ namespace carto {
         _styleCache.reset();
 
         // Clean up all opengl resources
-        std::vector<std::shared_ptr<Layer> > layers = _layers->getLayers();
-        for (const std::shared_ptr<Layer>& layer : layers) {
+        for (const std::shared_ptr<Layer>& layer : _layers->getAll()) {
             layer->onSurfaceDestroyed();
         }
         
@@ -590,8 +588,7 @@ namespace carto {
     
         // Normal layer click detection is done in the layer order
         const std::shared_ptr<Projection> projection = _options->getBaseProjection();
-        std::vector<std::shared_ptr<Layer> > layers = _layers->getLayers();
-        for (const std::shared_ptr<Layer>& layer : layers) {
+        for (const std::shared_ptr<Layer>& layer : _layers->getAll()) {
             layer->calculateRayIntersectedElements(*projection, viewState.getCameraPos(), rayDir, viewState, results);
         }
     
@@ -623,8 +620,7 @@ namespace carto {
     }
     
     void MapRenderer::viewChanged(bool delay) {
-        std::vector<std::shared_ptr<Layer> > layers = _layers->getLayers();
-        for (const std::shared_ptr<Layer>& layer : layers) {
+        for (const std::shared_ptr<Layer>& layer : _layers->getAll()) {
             int delayTime = layer->getCullDelay();
             _cullWorker->init(layer, delay ? delayTime : 0);
         }
@@ -685,6 +681,8 @@ namespace carto {
     void MapRenderer::drawLayers(float deltaSeconds, const ViewState& viewState) {
         bool needRedraw = false;
         {
+            std::vector<std::shared_ptr<Layer> > layers = _layers->getAll();
+
             // BillboardSorter modifications must be synchronized
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             
@@ -692,7 +690,6 @@ namespace carto {
             _billboardSorter.clear();
             
             // Do base drawing pass
-            std::vector<std::shared_ptr<Layer> > layers = _layers->getLayers();
             for (const std::shared_ptr<Layer>& layer : layers) {
                 if (viewState.getHorizontalLayerOffsetDir() != 0) {
                     layer->offsetLayerHorizontally(viewState.getHorizontalLayerOffsetDir() * Const::WORLD_SIZE);
@@ -772,7 +769,7 @@ namespace carto {
             bool waitWhileUpdating = rendererCaptureListeners[i].second;
             if (waitWhileUpdating) {
                 bool layersUpdating = false;
-                for (const std::shared_ptr<Layer>& layer : _layers->getLayers()) {
+                for (const std::shared_ptr<Layer>& layer : _layers->getAll()) {
                     if (layer->isUpdateInProgress()) {
                         layersUpdating = true;
                         break;

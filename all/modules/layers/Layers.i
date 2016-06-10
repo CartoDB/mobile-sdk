@@ -16,9 +16,10 @@
 
 !shared_ptr(carto::Layers, layers.Layers)
 
-%typemap(cscode) carto::Layers %{ public Layer this[int index] { get { return GetLayers()[index]; } set { GetLayers()[index] = value; } } %}
+%typemap(cscode) carto::Layers %{ public Layer this[int index] { get { return Get(index); } set { Set(index, value); } } %}
 
-%csmethodmodifiers carto::Layers::getLayers "private";
+%csmethodmodifiers carto::Layers::get "private";
+%csmethodmodifiers carto::Layers::set "private";
 
 %attribute(carto::Layers, int, Count, count)
 %ignore carto::Layers::Layers;
