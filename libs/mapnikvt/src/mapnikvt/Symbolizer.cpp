@@ -76,14 +76,23 @@ namespace carto { namespace mvt {
     }
 
     long long Symbolizer::getTextId(long long id, std::size_t hash) {
+        if (id == 0) {
+            id = std::rand(); // if id is missing, generate random id
+        }
         return (id * 3 + 0) | (static_cast<long long>(hash & 0x7fffffff) << 32);
     }
 
     long long Symbolizer::getShieldId(long long id, std::size_t hash) {
+        if (id == 0) {
+            id = std::rand(); // if id is missing, generate random id
+        }
         return (id * 3 + 1) | (static_cast<long long>(hash & 0x7fffffff) << 32);
     }
 
     long long Symbolizer::getBitmapId(long long id, const std::string& file) {
+        if (id == 0) {
+            id = std::rand(); // if id is missing, generate random id
+        }
         std::size_t hash = std::hash<std::string>()(file);
         return (id * 3 + 2) | (static_cast<long long>(hash & 0x7fffffff) << 32);
     }
