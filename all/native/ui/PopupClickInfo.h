@@ -4,34 +4,33 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_UTFGRIDCLICKINFO_H_
-#define _CARTO_UTFGRIDCLICKINFO_H_
+#ifndef _CARTO_POPUPCLICKINFO_H_
+#define _CARTO_POPUPCLICKINFO_H_
 
 #include "core/MapPos.h"
+#include "core/ScreenPos.h"
 #include "ui/ClickType.h"
+#include "vectorelements/Popup.h"
 
 #include <memory>
-#include <string>
-#include <map>
 
 namespace carto {
-    class Layer;
     
     /**
      * A container class that provides information about a click performed on
-     * an UTF grid.
+     * a popup.
      */
-    class UTFGridClickInfo {
+    class PopupClickInfo {
     public:
         /**
-         * Constructs an UTFGridClickInfo object from a click position and grid element metadata.
+         * Constructs a PopupClickInfo object from a click position and a vector element.
          * @param clickType The click type (SINGLE, DUAL, etc)
          * @param clickPos The click position in the coordinate system of the base projection.
-         * @param elementInfo The key-value map of element info that was clicked.
-         * @param layer The layer on which the click was performed.
+         * @param elementClickPos The 2D click position on the popup.
+         * @param popup The popup on which the click was performed.
          */
-        UTFGridClickInfo(ClickType::ClickType clickType, const MapPos& clickPos, const std::map<std::string, std::string>& elementInfo, const std::shared_ptr<Layer>& layer);
-        virtual ~UTFGridClickInfo();
+        PopupClickInfo(ClickType::ClickType clickType, const MapPos& clickPos, const ScreenPos& elementClickPos, const std::shared_ptr<Popup>& popup);
+        virtual ~PopupClickInfo();
     
         /**
          * Returns the click type.
@@ -46,23 +45,22 @@ namespace carto {
         const MapPos& getClickPos() const;
         
         /**
-         * Returns the key-value map of the clicked element.
-         * @return The key-value map of the clicked element.
+         * Returns the 2D click position on the clicked popup.
+         * @return The 2D element click position.
          */
-        const std::map<std::string, std::string>& getElementInfo() const;
-
-        /**
-         * Returns the clicked layer.
-         * @return The clicked layer.
-         */
-        std::shared_ptr<Layer> getLayer() const;
+        const ScreenPos& getElementClickPos() const;
     
+        /**
+         * Returns the clicked popup.
+         * @return The popup on which the click was performed.
+         */
+        std::shared_ptr<Popup> getPopup() const;
+
     private:
         ClickType::ClickType _clickType;
         MapPos _clickPos;
-
-        std::map<std::string, std::string> _elementInfo;
-        std::shared_ptr<Layer> _layer;
+        ScreenPos _elementClickPos;
+        std::shared_ptr<Popup> _popup;
     };
     
 }

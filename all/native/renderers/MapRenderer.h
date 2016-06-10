@@ -126,7 +126,7 @@ namespace carto {
         void onDrawFrame();
         void onSurfaceDestroyed();
     
-        void calculateRayIntersectedElements(const MapPos& targetPos, std::vector<RayIntersectedElement>& results);
+        void calculateRayIntersectedElements(const MapPos& targetPos, ViewState& viewState, std::vector<RayIntersectedElement>& results);
     
         void billboardsChanged();
         void layerChanged(const std::shared_ptr<Layer>& layer, bool delay);

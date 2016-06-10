@@ -17,7 +17,7 @@ namespace carto {
     class Layer;
     
     /**
-     * A container class that provies information about a click performed on
+     * A container class that provides information about a click performed on
      * a vector element.
      */
     class VectorElementClickInfo {

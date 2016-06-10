@@ -482,11 +482,12 @@ namespace carto {
     }
     
     void TouchHandler::handleClick(ClickType::ClickType clickType, const MapPos& targetPos) const {
+        ViewState viewState;
         std::vector<RayIntersectedElement> results;
-        _mapRenderer->calculateRayIntersectedElements(targetPos, results);
+        _mapRenderer->calculateRayIntersectedElements(targetPos, viewState, results);
 
         for (const RayIntersectedElement& intersectedElement : results) {
-            if (intersectedElement.getLayer()->processRayIntersectedElement(clickType, intersectedElement)) {
+            if (intersectedElement.getLayer()->processClick(clickType, intersectedElement, viewState)) {
                 return;
             }
         }

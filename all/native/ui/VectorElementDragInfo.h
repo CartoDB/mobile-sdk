@@ -34,7 +34,7 @@ namespace carto {
     }
     
     /**
-     * A container class that provies information about a dragging performed on
+     * A container class that provides information about a dragging performed on
      * a vector element or vector element vertex.
      */
     class VectorElementDragInfo {

@@ -121,7 +121,7 @@ namespace carto {
         
         virtual void calculateRayIntersectedElements(const Projection& projection, const MapPos& rayOrig, const MapVec& rayDir,
                                                      const ViewState& viewState, std::vector<RayIntersectedElement>& results) const = 0;
-        virtual bool processRayIntersectedElement(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement) const = 0;
+        virtual bool processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const = 0;
     
         virtual void registerDataSourceListener() = 0;
         virtual void unregisterDataSourceListener() = 0;

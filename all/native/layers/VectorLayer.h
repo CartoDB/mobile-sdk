@@ -119,7 +119,7 @@ namespace carto {
         
         virtual void calculateRayIntersectedElements(const Projection& projection, const MapPos& rayOrig, const MapVec& rayDir,
                                                      const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
-        virtual bool processRayIntersectedElement(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement) const;
+        virtual bool processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const;
 
         virtual void refreshElement(const std::shared_ptr<VectorElement>& element, bool remove);
 

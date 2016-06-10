@@ -324,7 +324,7 @@ namespace carto {
         }
     }
 
-    bool TileLayer::processRayIntersectedElement(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement) const {
+    bool TileLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
         DirectorPtr<UTFGridEventListener> utfGridEventListener;
         {
             std::lock_guard<std::mutex> lock(_utfGridEventListenerMutex);

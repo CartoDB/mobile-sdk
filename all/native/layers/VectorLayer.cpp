@@ -31,6 +31,7 @@
 #include "vectorelements/Polygon3D.h"
 #include "vectorelements/Polygon.h"
 #include "vectorelements/Popup.h"
+#include "vectorelements/CustomPopup.h"
 #include "ui/VectorElementClickInfo.h"
 #include "utils/Log.h"
 
@@ -194,7 +195,25 @@ namespace carto {
         _nmlModelRenderer->calculateRayIntersectedElements(thisLayer, rayOrig, rayDir, viewState, results);
     }
 
-    bool VectorLayer::processRayIntersectedElement(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement) const {
+    bool VectorLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
+        std::shared_ptr<VectorElement> element = intersectedElement.getElement<VectorElement>();
+
+        if (auto customPopup = std::dynamic_pointer_cast<CustomPopup>(element)) {
+            if (auto drawData = customPopup->getDrawData()) {
+                std::vector<float> coordBuf(12);
+                BillboardRenderer::CalculateBillboardCoords(*drawData, viewState, coordBuf, 0);
+                
+                MapPos topLeft = viewState.getCameraPos() + MapVec(coordBuf[0], coordBuf[1], coordBuf[2]);
+                MapPos bottomLeft = viewState.getCameraPos() + MapVec(coordBuf[3], coordBuf[4], coordBuf[5]);
+                MapPos topRight = viewState.getCameraPos() + MapVec(coordBuf[6], coordBuf[7], coordBuf[8]);
+                MapVec delta = _dataSource->getProjection()->toInternal(intersectedElement.getHitPos()) - topLeft;
+
+                float x = static_cast<float>(delta.dotProduct(topRight - topLeft) / (topRight - topLeft).lengthSqr());
+                float y = static_cast<float>(delta.dotProduct(bottomLeft - topLeft) / (bottomLeft - topLeft).lengthSqr());
+                return customPopup->processClick(clickType, intersectedElement.getHitPos(), ScreenPos(x, y));
+            }
+        }
+
         DirectorPtr<VectorElementEventListener> vectorElementEventListener;
         {
             std::lock_guard<std::mutex> lock(_vectorElementEventListenerMutex);
@@ -202,7 +221,6 @@ namespace carto {
         }
 
         if (vectorElementEventListener) {
-            std::shared_ptr<VectorElement> element = intersectedElement.getElement<VectorElement>();
             auto vectorElementClickInfo = std::make_shared<VectorElementClickInfo>(clickType, intersectedElement.getHitPos(), intersectedElement.getElementPos(), element, intersectedElement.getLayer());
             return vectorElementEventListener->onVectorElementClicked(vectorElementClickInfo);
         }

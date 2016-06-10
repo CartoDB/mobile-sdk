@@ -593,8 +593,7 @@ namespace carto {
         }
     }
     
-    void MapRenderer::calculateRayIntersectedElements(const MapPos& targetPos, std::vector<RayIntersectedElement>& results) {
-        ViewState viewState;
+    void MapRenderer::calculateRayIntersectedElements(const MapPos& targetPos, ViewState& viewState, std::vector<RayIntersectedElement>& results) {
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             viewState = _viewState;

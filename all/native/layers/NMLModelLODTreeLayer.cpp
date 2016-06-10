@@ -122,7 +122,7 @@ namespace carto {
         _renderer->calculateRayIntersectedElements(thisLayer, rayOrig, rayDir, viewState, results);
     }
 
-    bool NMLModelLODTreeLayer::processRayIntersectedElement(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement) const {
+    bool NMLModelLODTreeLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
         // TODO: implement?
         return false;
     }

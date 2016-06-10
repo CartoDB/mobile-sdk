@@ -22,10 +22,10 @@ namespace carto {
     class Popup : public Billboard {
     public:
         /**
-        * Constructs an abstract Popup object with the specified style and attaches it to a billboard element.
-        * @param baseBillboard The billboard this popup will be attached to.
-        * @param style The style that defines what this popup looks like.
-        */
+         * Constructs an abstract Popup object with the specified style and attaches it to a billboard element.
+         * @param baseBillboard The billboard this popup will be attached to.
+         * @param style The style that defines what this popup looks like.
+         */
         Popup(const std::shared_ptr<Billboard>& baseBillboard, const std::shared_ptr<PopupStyle>& style);
         /**
          * Constructs an abstract Popup object from a geometry object and a style.
