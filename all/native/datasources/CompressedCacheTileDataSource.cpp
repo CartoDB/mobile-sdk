@@ -23,7 +23,7 @@ namespace carto {
         Log::Infof("CompressedCacheTileDataSource::loadTile: Loading %s", mapTile.toString().c_str());
         
         std::shared_ptr<TileData> tileData;
-    if (_cache.read(mapTile.getTileId(), tileData)) {
+        if (_cache.read(mapTile.getTileId(), tileData)) {
             if (tileData->getMaxAge() != 0) {
                 return tileData;
             }

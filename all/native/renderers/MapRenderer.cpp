@@ -60,7 +60,6 @@ namespace carto {
         _renderThreadCallbacksMutex(),
         _mutex()
     {
-        _layers->getAll();
     }
         
     MapRenderer::~MapRenderer() {
