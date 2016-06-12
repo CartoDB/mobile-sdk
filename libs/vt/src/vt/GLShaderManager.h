@@ -19,13 +19,17 @@ namespace carto { namespace vt {
     public:
         using ShaderContext = std::shared_ptr<const std::set<std::string>>;
         
+        void registerShaders(const std::string& programName, const std::string& vsh, const std::string& fsh);
+
         GLuint createProgram(const std::string& programName, const ShaderContext& context);
         void resetPrograms();
         void deletePrograms();
 
     private:
-        static std::string createShader(const std::string& name, const std::map<std::string, const std::string*>& shaderMap, const std::set<std::string>& defs);
+        static std::string createShader(const std::string& name, const std::map<std::string, std::string>& shaderMap, const std::set<std::string>& defs);
         
+        std::map<std::string, std::string> _vertexShaderMap;
+        std::map<std::string, std::string> _fragmentShaderMap;
         std::map<std::pair<std::string, ShaderContext>, GLuint> _programMap;
     };
 } }
