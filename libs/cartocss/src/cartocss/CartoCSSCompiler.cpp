@@ -197,7 +197,9 @@ namespace carto { namespace css {
                     blockFields.insert(decl->getField());
                     
                     // Find property set list for current attachment
-                    auto propertyListsIt = std::find_if(propertyLists.begin(), propertyLists.end(), [&](const FilteredPropertyList& propertyList) { return propertyList.attachment == selectorAttachment; });
+                    auto propertyListsIt = std::find_if(propertyLists.begin(), propertyLists.end(), [&](const FilteredPropertyList& propertyList) {
+                        return propertyList.attachment == selectorAttachment;
+                    });
                     if (propertyListsIt == propertyLists.end()) {
                         FilteredPropertyList propertyList;
                         propertyList.attachment = selectorAttachment;

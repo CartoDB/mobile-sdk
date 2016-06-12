@@ -224,6 +224,10 @@ namespace carto {
         return _renderer->onDrawFrame(deltaSeconds, viewState);
     }
     
+    bool RasterTileLayer::onDrawFrame3D(float deltaSeconds, BillboardSorter& BillboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
+        return _renderer->onDrawFrame3D(deltaSeconds, viewState);
+    }
+
     void RasterTileLayer::onSurfaceDestroyed() {
         _renderer->onSurfaceDestroyed();
         _renderer.reset();
