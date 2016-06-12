@@ -53,7 +53,7 @@ namespace carto {
          * whether or not preloading is enabled.
          * The default is 10MB, which should be enough for most use cases with preloading enabled. If preloading is
          * disabled, the cache size should be reduced by the user to conserve memory.
-         * @return The new tile bitmap cache capacity in bytes.
+         * @param capacityInBytes The new tile bitmap cache capacity in bytes.
          */
         void setTextureCacheCapacity(unsigned int capacityInBytes);
     

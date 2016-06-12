@@ -129,7 +129,7 @@ namespace carto { namespace vt {
         }
 
         void reserve(std::size_t count) {
-            std::size_t size = (_end - _begin) * 2 + count;
+            std::size_t size = (_end - _begin) * 2 + count * 4;
             T* begin = new T[size];
             std::copy(_begin, _end, begin);
             delete[] _begin;
