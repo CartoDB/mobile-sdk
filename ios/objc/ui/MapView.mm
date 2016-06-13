@@ -38,10 +38,6 @@ static const int NATIVE_NO_COORDINATE = -1;
 +(void) initialize {
     if (self == [NTMapView class]) {
         carto::IOSUtils::InitializeLog();
-        
-        // A hack to register NTNMLModelLODTreeProxy class, this class is never referenced in the objc SDK code
-        // and because of that can't be found using NSClassFromString(), which is necessary for vector element click events
-        [NTNMLModelLODTreeProxy class];
     }
 }
 
