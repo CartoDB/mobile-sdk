@@ -171,22 +171,20 @@ namespace carto {
             const picojson::array& layerConfigs = layersOption.get<picojson::array>();
 
             // Build layer orders and sort
-            std::vector<std::pair<std::size_t, int> > layerOrders;
+            std::vector<std::pair<int, std::size_t> > layerOrders;
             for (const picojson::value& layerConfig : layerConfigs) {
                 int order = static_cast<int>(layerOrders.size());
                 if (auto orderOpt = getInt(layerConfig.get("order"))) {
                     order = *orderOpt;
                 }
-                layerOrders.emplace_back(layerOrders.size(), order);
+                layerOrders.emplace_back(order, layerOrders.size());
             }
 
-            std::sort(layerOrders.begin(), layerOrders.end(), [](std::pair<std::size_t, int> order1, std::pair<std::size_t, int> order2) {
-                return order1.second > order2.second;
-            });
+            std::sort(layerOrders.begin(), layerOrders.end());
 
             // Create layers
             for (std::size_t i = 0; i < layerOrders.size(); i++) {
-                createLayers(builder, layerConfigs[layerOrders[i].first]);
+                createLayers(builder, layerConfigs[layerOrders[i].second]);
             }
         }
 
@@ -418,7 +416,7 @@ namespace carto {
                 if (layerConfig.contains("legend")) {
                     attributes["legend"] = layerConfig.get("legend");
                 }
-                if (layerConfig.contains("layer_name")) {
+                if (layerConfig.contains("layer_name")) { // TODO: options/layer_name?
                     attributes["name"] = layerConfig.get("layer_name");
                 }
                 layerAttributes[layer] = attributes;
@@ -448,20 +446,44 @@ namespace carto {
 
         // Configue Maps service and get the layers
         CartoMapsService mapsService;
+        mapsService.setDefaultVectorLayerMode(true); // TODO:
         configureMapsService(mapsService, options);
         std::vector<std::shared_ptr<Layer> > layers = mapsService.buildMap(Variant::FromPicoJSON(layerDefinition));
 
-        // Create attributes for the layer
-        picojson::object attributes;
-        readLayerAttributes(attributes, options);
-        if (!infoWindow.is<picojson::null>()) {
-            attributes["infowindow"] = infoWindow;
+        // Create attributes for the layers
+        std::map<std::shared_ptr<Layer>, picojson::object> layerAttributes;
+        if (layerDefinition.get("layers").is<picojson::array>()) {
+            const picojson::array& layerConfigs = layerDefinition.get("layers").get<picojson::array>();
+            for (std::size_t i = 0; i < layerConfigs.size() && i < layers.size(); i++) {
+                const std::shared_ptr<Layer>& layer = layers[i];
+                const picojson::value& layerConfig = layerConfigs[i];
+                
+                if (auto visible = getBool(layerConfig.get("visible"))) {
+                    layer->setVisible(*visible);
+                }
+                
+                picojson::object attributes;
+                readLayerAttributes(attributes, options);
+                if (!infoWindow.is<picojson::null>()) {
+                    attributes["infowindow"] = infoWindow;
+                }
+                if (layerConfig.contains("infowindow")) {
+                    attributes["infowindow"] = layerConfig.get("infowindow");
+                }
+                if (layerConfig.contains("legend")) {
+                    attributes["legend"] = layerConfig.get("legend");
+                }
+                if (layerConfig.contains("layer_name")) { // TODO: options/layer_name?
+                    attributes["name"] = layerConfig.get("layer_name");
+                }
+                layerAttributes[layer] = attributes;
+            }
         }
 
         // Create layer info list
         std::vector<LayerInfo> layerInfos;
         for (const std::shared_ptr<Layer>& layer : layers) {
-            layerInfos.push_back(LayerInfo(layer, attributes));
+            layerInfos.push_back(LayerInfo(layer, layerAttributes[layer]));
         }
         return layerInfos;
     }
