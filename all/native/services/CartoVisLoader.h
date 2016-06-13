@@ -14,34 +14,41 @@
 #include <mutex>
 #include <string>
 
+#include <boost/optional.hpp>
+
 #include <picojson/picojson.h>
 
 namespace carto {
     class Layer;
     class BaseMapView;
-    class CartoUIBuilder;
     class CartoMapsService;
+    class CartoVisBuilder;
 
     class CartoVisLoader {
     public:
         CartoVisLoader();
         virtual ~CartoVisLoader();
 
-        std::shared_ptr<CartoUIBuilder> getCartoUIBuilder() const;
-        void setCartoUIBuilder(const std::shared_ptr<CartoUIBuilder>& cartoUIBuilder);
-
-        // TODO: fix?
-        void loadVis(BaseMapView* mapView, const std::string& visURL) const;
+        bool loadVis(const std::shared_ptr<CartoVisBuilder>& builder, const std::string& visURL) const;
 
     private:
-        void configureMapsService(CartoMapsService& mapsService, const picojson::value& options) const;
+        struct LayerInfo {
+            std::shared_ptr<Layer> layer;
+            picojson::object attributes;
 
-        int getMinZoom(const picojson::value& options) const;
-        int getMaxZoom(const picojson::value& options) const;
+            LayerInfo(const std::shared_ptr<Layer>& layer, const picojson::object& attributes) : layer(layer), attributes(attributes) { }
+        };
 
-        void createLayer(std::vector<std::shared_ptr<Layer> >& layers, const picojson::value& layerConfig) const;
+        static void readLayerAttributes(picojson::object& attributes, const picojson::value& options);
+        
+        static void configureMapsService(CartoMapsService& mapsService, const picojson::value& options);
+        
+        void createLayers(const std::shared_ptr<CartoVisBuilder>& builder, const picojson::value& layerConfig) const;
 
-        ThreadSafeDirectorPtr<CartoUIBuilder> _cartoUIBuilder;
+        boost::optional<LayerInfo> createTiledLayer(const picojson::value& options) const;
+        boost::optional<LayerInfo> createTorqueLayer(const picojson::value& options, const picojson::value& legend) const;
+        std::vector<LayerInfo> createNamedLayers(const picojson::value& options) const;
+        std::vector<LayerInfo> createLayerGroup(const picojson::value& options, const picojson::value& infoWindow) const;
     };
 
 }

@@ -46,6 +46,7 @@ namespace carto {
         std::vector<std::string> getAuthTokens() const;
         void setAuthTokens(const std::vector<std::string>& authTokens);
 
+        // TODO: remove once LayerType is made public
         std::vector<int> getLayerIndices() const;
         void setLayerIndices(const std::vector<int>& layerIndices);
 
@@ -55,11 +56,12 @@ namespace carto {
         bool isVectorLayerMode(int index) const;
         void setVectorLayerMode(int index, bool enabled);
 
-        void buildNamedMap(std::vector<std::shared_ptr<Layer> >& layers, const std::string& templateId, const std::map<std::string, Variant>& templateParams) const;
-        void buildMap(std::vector<std::shared_ptr<Layer> >& layers, const Variant& mapConfig) const;
+        std::vector<std::shared_ptr<Layer> > buildNamedMap(const std::string& templateId, const std::map<std::string, Variant>& templateParams) const;
+        std::vector<std::shared_ptr<Layer> > buildMap(const Variant& mapConfig) const;
 
     private:
         enum LayerType {
+            // TODO: make public, add LAYER_TYPE_IGNORE/NONE
             LAYER_TYPE_RASTER,
             LAYER_TYPE_VECTOR
         };
@@ -73,7 +75,7 @@ namespace carto {
 
         std::string getServiceURL(const std::string& baseURL) const;
 
-        void createLayer(std::vector<std::shared_ptr<Layer> >& layers, const picojson::value& mapConfig, const std::string& type, const picojson::value& options, const std::string& layerGroupId, const std::vector<int>& layerIndices) const;
+        void createLayers(std::vector<std::shared_ptr<Layer> >& layers, const picojson::value& mapConfig, const std::string& type, const picojson::value& options, const std::string& cartoCSS, const std::string& layerGroupId, const std::vector<int>& layerIndices) const;
 
         static const std::string DEFAULT_API_TEMPLATE;
         

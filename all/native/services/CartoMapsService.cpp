@@ -145,7 +145,9 @@ namespace carto {
         _layerTypes[index] = (enabled ? LAYER_TYPE_VECTOR : LAYER_TYPE_RASTER);
     }
 
-    void CartoMapsService::buildNamedMap(std::vector<std::shared_ptr<Layer> >& layers, const std::string& templateId, const std::map<std::string, Variant>& templateParams) const {
+    std::vector<std::shared_ptr<Layer> > CartoMapsService::buildNamedMap(const std::string& templateId, const std::map<std::string, Variant>& templateParams) const {
+        std::vector<std::shared_ptr<Layer> > layers;
+            
         // TODO: global catch/log
         std::lock_guard<std::recursive_mutex> lock(*_mutex);
 
@@ -168,7 +170,7 @@ namespace carto {
                 result = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
             }
             Log::Errorf("CartoMapsService::buildNamedMap: Failed to read map configuration: %s", result.c_str());
-            return;
+            return layers;
         }
         
         // Read layergroupid, meta data
@@ -177,7 +179,7 @@ namespace carto {
         std::string err = picojson::parse(mapInfo, result);
         if (!err.empty()) {
             Log::Errorf("CartoMapsService::buildNamedMap: Failed to parse response: %s", err.c_str());
-            return;
+            return layers;
         }
 
         std::string layerGroupId = mapInfo.get("layergroupid").get<std::string>();
@@ -199,18 +201,31 @@ namespace carto {
                     }
                 }
 
+                // Check that the layer index is not in 'ignore' list
                 int layerIndex = it - layerConfigs.begin();
                 if (!_layerIndices.empty() && std::find(_layerIndices.begin(), _layerIndices.end(), layerIndex) == _layerIndices.end()) {
                     continue;
                 }
-                createLayer(layers, picojson::value(picojson::object()), type == "torque" ? "torque" : "mapnik", options, layerGroupId, std::vector<int> { layerIndex });
+
+                // Read CartoCSS
+                std::string cartoCSS;
+                if (options.get("cartocss").is<std::string>()) {
+                    cartoCSS = options.get("cartocss").get<std::string>();
+                }
+
+                createLayers(layers, picojson::value(picojson::object()), type == "torque" ? "torque" : "mapnik", options, cartoCSS, layerGroupId, std::vector<int> { layerIndex });
             }
         } else {
-            createLayer(layers, picojson::value(picojson::object()), "mapnik", picojson::value(picojson::object()), layerGroupId, _layerIndices);
+            Log::Warn("CartoMapsService::buildNamedMap: Failed to read layer metadata, using fallback");
+            createLayers(layers, picojson::value(picojson::object()), "mapnik", picojson::value(picojson::object()), std::string(), layerGroupId, _layerIndices);
         }
+
+        return layers;
     }
 
-    void CartoMapsService::buildMap(std::vector<std::shared_ptr<Layer> >& layers, const Variant& mapConfig) const {
+    std::vector<std::shared_ptr<Layer> > CartoMapsService::buildMap(const Variant& mapConfig) const {
+        std::vector<std::shared_ptr<Layer> > layers;
+
         // TODO: global catch/log
         std::lock_guard<std::recursive_mutex> lock(*_mutex);
 
@@ -233,7 +248,7 @@ namespace carto {
                 result = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
             }
             Log::Errorf("CartoMapsService::buildMap: Failed to read map configuration: %s", result.c_str());
-            return;
+            return layers;
         }
 
         // Get layergroupid from the response
@@ -242,14 +257,13 @@ namespace carto {
         std::string err = picojson::parse(mapInfo, result);
         if (!err.empty()) {
             Log::Errorf("CartoMapsService::buildMap: Failed to parse response: %s", err.c_str());
-            return;
+            return layers;
         }
         std::string layerGroupId = mapInfo.get("layergroupid").get<std::string>();
 
         // Build layers
         const picojson::array& layerConfigs = mapConfig.toPicoJSON().get("layers").get<picojson::array>();
         for (auto it = layerConfigs.begin(); it != layerConfigs.end(); it++) {
-// TODO: read cartocss from mapInfo?
             const picojson::value& layerConfig = *it;
             std::string type = boost::algorithm::to_lower_copy(layerConfig.get("type").get<std::string>());
             const picojson::value& options = layerConfig.get("options");
@@ -262,8 +276,22 @@ namespace carto {
                 }
             }
 
-            createLayer(layers, mapConfig.toPicoJSON(), type, options, layerGroupId, std::vector<int> { });
+            // Check that the layer index is not in 'ignore' list
+            int layerIndex = it - layerConfigs.begin();
+            if (!_layerIndices.empty() && std::find(_layerIndices.begin(), _layerIndices.end(), layerIndex) == _layerIndices.end()) {
+                continue;
+            }
+
+            // Read CartoCSS
+            std::string cartoCSS;
+            if (options.get("cartocss").is<std::string>()) {
+                cartoCSS = options.get("cartocss").get<std::string>();
+            }
+
+            createLayers(layers, mapConfig.toPicoJSON(), type, options, cartoCSS, layerGroupId, std::vector<int> { });
         }
+
+        return layers;
     }
 
     int CartoMapsService::getMinZoom(const picojson::value& options) const {
@@ -332,14 +360,14 @@ namespace carto {
         return NetworkUtils::BuildURLFromParameters(url, urlParams);
     }
 
-    void CartoMapsService::createLayer(std::vector<std::shared_ptr<Layer> >& layers, const picojson::value& mapConfig, const std::string& type, const picojson::value& options, const std::string& layerGroupId, const std::vector<int>& layerIndices) const {
+    void CartoMapsService::createLayers(std::vector<std::shared_ptr<Layer> >& layers, const picojson::value& mapConfig, const std::string& type, const picojson::value& options, const std::string& cartoCSS, const std::string& layerGroupId, const std::vector<int>& layerIndices) const {
         if (type == "plain" || type == "background") {
             // TODO: if layers empty and plain color, set background color
             // Otherwise create RasterTileLayer with constant-color tiles?
             // Warn if imageUrl is defined
-            Log::Warnf("CartoMapsService::createLayer: unimplemented layer type: %s", type.c_str());
+            Log::Warnf("CartoMapsService::createLayers: unimplemented layer type: %s", type.c_str());
         }
-        else if (type == "mapnik" || type == "carto" || type == "cartodb" || type == "torque") {
+        else if (type == "mapnik" || type == "cartodb" || type == "torque") {
             // TODO: use cdn parameter?
             std::string urlTemplateBase = getTilerURL(mapConfig);
             urlTemplateBase += "/api/v1/map/" + layerGroupId;
@@ -359,11 +387,6 @@ namespace carto {
                 layerType = it->second;
             }
 
-            std::string cartoCSS;
-            if (options.contains("cartocss") && options.get("cartocss").is<std::string>()) {
-                cartoCSS = options.get("cartocss").get<std::string>();
-            }
-
             if (type == "torque") {
                 auto dataSource = std::make_shared<HTTPTileDataSource>(getMinZoom(mapConfig), getMaxZoom(mapConfig), urlTemplateBase + ".torque");
                 // TODO: AssetPackage support
@@ -377,6 +400,7 @@ namespace carto {
                 // TODO: AssetPackage support
                 auto styleSet = std::make_shared<CartoCSSStyleSet>(cartoCSS);
                 auto vectorTileDecoder = std::make_shared<MBVectorTileDecoder>(styleSet);
+                vectorTileDecoder->setCartoCSSLayerNamesIgnored(true); // all layer name filters should be ignored
                 auto layer = std::make_shared<VectorTileLayer>(dataSource, vectorTileDecoder);
                 layers.push_back(layer);
             }
@@ -417,14 +441,16 @@ namespace carto {
         else if (type == "named" || type == "namedmap") {
             std::string name = options.get("name").get<std::string>();
 
-            const picojson::object& config = options.get("config").get<picojson::object>();
             std::map<std::string, Variant> params;
-            for (auto it = config.begin(); it != config.end(); it++) {
-                params[it->first] = Variant::FromPicoJSON(it->second);
+            if (options.get("config").is<picojson::object>()) {
+                const picojson::object& configOption = options.get("config").get<picojson::object>();
+                for (auto it = configOption.begin(); it != configOption.end(); it++) {
+                    params[it->first] = Variant::FromPicoJSON(it->second);
+                }
             }
 
             std::vector<std::string> authTokens;
-            if (options.contains("auth_tokens")) {
+            if (options.get("auth_tokens").is<picojson::array>()) {
                 const picojson::array& authTokensOption = options.get("auth_tokens").get<picojson::array>();
                 std::transform(authTokensOption.begin(), authTokensOption.end(), std::back_inserter(authTokens), [](const picojson::value& authToken) {
                     return authToken.get<std::string>();
@@ -433,13 +459,15 @@ namespace carto {
 
             CartoMapsService mapsService(*this);
             mapsService.setAuthTokens(authTokens);
-            mapsService.buildNamedMap(layers, name, params);
+            std::vector<std::shared_ptr<Layer> > subLayers = mapsService.buildNamedMap(name, params);
+            layers.insert(layers.end(), subLayers.begin(), subLayers.end());
         }
         else if (type == "layergroup") {
-            buildMap(layers, Variant::FromPicoJSON(options));
+            std::vector<std::shared_ptr<Layer> > subLayers = buildMap(Variant::FromPicoJSON(options));
+            layers.insert(layers.end(), subLayers.begin(), subLayers.end());
         }
         else {
-            Log::Warnf("CartoMapsService::createLayer: Unsupported layer type: %s", type.c_str());
+            Log::Warnf("CartoMapsService::createLayers: Unsupported layer type: %s", type.c_str());
         }
     }
 
