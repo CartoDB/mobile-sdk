@@ -10,7 +10,7 @@
 #include "core/MapRange.h"
 #include "renderers/components/StyleTextureCache.h"
 #include "renderers/components/CullState.h"
-#include "ui/MapClickInfo.h"
+#include "ui/ClickType.h"
 
 #include <atomic>
 #include <memory>

@@ -150,6 +150,6 @@
 #import "NTCartoMapsService.h"
 #import "NTCartoSQLService.h"
 #import "NTCartoVisLoader.h"
-#import "NTCartoUIBuilder.h"
+#import "NTCartoVisBuilder.h"
 
 #endif

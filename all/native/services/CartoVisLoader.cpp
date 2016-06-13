@@ -79,7 +79,7 @@ namespace {
 
     boost::optional<std::string> getString(const picojson::value& val) {
         if (val.is<bool>()) {
-            return val.get<bool>() ? "true" : "false";
+            return std::string(val.get<bool>() ? "true" : "false");
         }
         if (val.is<std::int64_t>()) {
             return boost::lexical_cast<std::string>(val.get<std::int64_t>());

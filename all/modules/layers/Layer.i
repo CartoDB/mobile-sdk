@@ -17,6 +17,7 @@
 
 %import "core/MapRange.i"
 %import "renderers/components/CullState.i"
+%import "ui/ClickType.i"
 
 !polymorphic_shared_ptr(carto::Layer, layers.Layer)
 !value_type(std::vector<std::shared_ptr<carto::Layer> >, layers.LayerVector)
