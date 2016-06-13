@@ -270,18 +270,24 @@ namespace carto {
         std::shared_ptr<mvt::Map> map;
         std::shared_ptr<mvt::SymbolizerContext> symbolizerContext;
         float buffer;
+        bool ignoreLayerNames;
         {
             std::lock_guard<std::mutex> lock(_mutex);
             map = _map;
             symbolizerContext = _symbolizerContext;
             buffer = _buffer;
+            ignoreLayerNames = _cartoCSSLayerNamesIgnored;
         }
     
         if (!map || !symbolizerContext) {
             return std::shared_ptr<TileMap>();
         }
         try {
-            mvt::MBVTFeatureDecoder decoder(*tileData->getDataPtr(), calculateTileTransform(tile, targetTile), buffer, _logger);
+            mvt::MBVTFeatureDecoder decoder(*tileData->getDataPtr(), _logger);
+            decoder.setTransform(calculateTileTransform(tile, targetTile));
+            decoder.setBuffer(buffer);
+            decoder.setIgnoreLayerNames(ignoreLayerNames);
+            
             mvt::MBVTTileReader reader(map, *symbolizerContext, decoder);
             if (std::shared_ptr<vt::Tile> tile = reader.readTile(targetTile)) {
                 auto tileMap = std::make_shared<TileMap>();

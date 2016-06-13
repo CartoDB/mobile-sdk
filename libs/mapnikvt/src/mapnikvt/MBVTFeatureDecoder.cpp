@@ -22,7 +22,9 @@
 namespace carto { namespace mvt {
     class MBVTFeatureDecoder::MBVTFeatureIterator : public carto::mvt::FeatureDecoder::FeatureIterator {
     public:
-        explicit MBVTFeatureIterator(const vector_tile::Tile& tile, const vector_tile::Tile::Layer& layer, const std::unordered_set<std::string>& fields, const cglib::mat3x3<float>& transform, const cglib::bbox2<float>& clipBox, float buffer, std::map<std::vector<int>, std::shared_ptr<FeatureData>>& featureDataCache) : _tile(tile), _layer(layer), _transform(transform), _clipBox(clipBox), _buffer(buffer), _featureDataCache(featureDataCache) {
+        explicit MBVTFeatureIterator(const vector_tile::Tile& tile, const vector_tile::Tile::Layer& layer, const std::unordered_set<std::string>& fields, const cglib::mat3x3<float>& transform, const cglib::bbox2<float>& clipBox, float buffer, std::map<std::vector<int>, std::shared_ptr<FeatureData>>& featureDataCache) :
+            _tile(tile), _layer(layer), _transform(transform), _clipBox(clipBox), _buffer(buffer), _featureDataCache(featureDataCache)
+        {
             for (int i = 0; i < layer.keys_size(); i++) {
                 auto it = fields.find(layer.keys(i));
                 if (layer.keys(i) == "id") {
@@ -279,8 +281,8 @@ namespace carto { namespace mvt {
         std::map<std::vector<int>, std::shared_ptr<FeatureData>>& _featureDataCache;
     };
 
-    MBVTFeatureDecoder::MBVTFeatureDecoder(const std::vector<unsigned char>& data, const cglib::mat3x3<float>& transform, float buffer, std::shared_ptr<Logger> logger) :
-        _transform(transform), _buffer(buffer), _clipBox(cglib::vec2<float>(-0.1f, -0.1f), cglib::vec2<float>(1.1f, 1.1f)), _tile(), _layerMap(), _logger(std::move(logger))
+    MBVTFeatureDecoder::MBVTFeatureDecoder(const std::vector<unsigned char>& data, std::shared_ptr<Logger> logger) :
+        _transform(cglib::mat3x3<float>::identity()), _buffer(0), _ignoreLayerNames(false), _clipBox(cglib::vec2<float>(-0.1f, -0.1f), cglib::vec2<float>(1.1f, 1.1f)), _tile(), _layerMap(), _logger(std::move(logger))
     {
         std::vector<unsigned char> pbfData;
         pbfData.reserve(data.size() * 3);
@@ -304,8 +306,27 @@ namespace carto { namespace mvt {
         }
     }
 
+    void MBVTFeatureDecoder::setTransform(const cglib::mat3x3<float>& transform) {
+        _transform = transform;
+    }
+
+    void MBVTFeatureDecoder::setClipBox(const cglib::bbox2<float>& clipBox) {
+        _clipBox = clipBox;
+    }
+
+    void MBVTFeatureDecoder::setBuffer(float buffer) {
+        _buffer = buffer;
+    }
+
+    void MBVTFeatureDecoder::setIgnoreLayerNames(bool ignore) {
+        _ignoreLayerNames = ignore;
+    }
+
     std::shared_ptr<FeatureDecoder::FeatureIterator> MBVTFeatureDecoder::createLayerFeatureIterator(const std::string& name, const std::unordered_set<std::string>& fields) const {
         auto layerIt = _layerMap.find(name);
+        if (layerIt == _layerMap.end() && _ignoreLayerNames) {
+            layerIt = _layerMap.begin();
+        }
         if (layerIt == _layerMap.end()) {
             return std::shared_ptr<FeatureIterator>();
         }
