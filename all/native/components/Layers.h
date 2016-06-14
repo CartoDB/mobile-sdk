@@ -41,22 +41,34 @@ namespace carto {
         int count() const;
         
         /**
+         * Clears the layer stack.
+         */
+        void clear();
+
+        /**
          * Returns the layer at the specified index.
          * @param index The layer index to return. Must be between 0 and count (exclusive).
          * @return The layer at the specified index.
          */
         std::shared_ptr<Layer> get(int index) const;
         /**
+         * Returns the list of all layers. The layers are in the order in which they were added.
+         * @return A vector of all previously added layers.
+         */
+        std::vector<std::shared_ptr<Layer> > getAll() const;
+
+        /**
          * Replaces the layer at the specified index.
          * @param index The layer index to replace. Must be between 0 and count (exclusive).
          * @param layer The new layer.
          */
         void set(int index, const std::shared_ptr<Layer>& layer);
-
         /**
-         * Clears the layer stack.
+         * Replaces all the layers with the given layer list.
+         * @param layers The new list of layers.
          */
-        void clear();
+        void setAll(const std::vector<std::shared_ptr<Layer> >& layers);
+        
         /**
          * Inserts a new layer at the specified position.
          * All previous layers starting from this index will be moved to the next position.
@@ -64,29 +76,31 @@ namespace carto {
          * @param layer The new layer.
          */
         void insert(int index, const std::shared_ptr<Layer>& layer);
+
         /**
          * Adds a new layer to the layer stack. The new layer will be the last (and topmost) layer.
          * @param layer The layer to be added.
          */
         void add(const std::shared_ptr<Layer>& layer);
         /**
-         * Removes a layer to the layer stack.
+         * Adds a a list of layers to the layer stack. The new layers will be the last (and topmost) layers.
+         * @param layers The layer list to be added.
+         */
+        void addAll(const std::vector<std::shared_ptr<Layer> >& layers);
+
+        /**
+         * Removes a layer from the layer stack.
          * @param layer The layer to be removed.
          * @return True if the layer was removed. False otherwise (layer was not found).
          */
         bool remove(const std::shared_ptr<Layer>& layer);
-        
         /**
-         * Returns the list of all layers. The layers are in the order in which they were added.
-         * @return A vector of all previously added layers.
+         * Removes a list of layers from the layer stack.
+         * @param layers The list of layers to be removed.
+         * @return True if all layer were removed. False otherwise (some layers were not found).
          */
-        std::vector<std::shared_ptr<Layer> > getAll() const;
-        /**
-         * Replaces the layers with the given layer list.
-         * @param layers The new list of layers.
-         */
-        void setAll(const std::vector<std::shared_ptr<Layer> >& layers);
-        
+        bool removeAll(const std::vector<std::shared_ptr<Layer> >& layers);
+
     protected:
         friend class BaseMapView;
         
