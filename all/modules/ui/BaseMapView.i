@@ -3,7 +3,7 @@
 
 %module BaseMapView
 
-!proxy_imports(carto::BaseMapView, components.Options, core.MapPos, core.MapVec, core.MapBounds, core.ScreenPos, core.ScreenBounds, layers.Layers, components.LicenseManagerListener, renderers.MapRenderer, renderers.RedrawRequestListener, ui.MapEventListener)
+!proxy_imports(carto::BaseMapView, core.MapPos, core.MapVec, core.MapBounds, core.ScreenPos, core.ScreenBounds, components.Options, components.Layers, components.LicenseManagerListener, renderers.MapRenderer, renderers.RedrawRequestListener, ui.MapEventListener)
 !java_imports(carto::BaseMapView, com.carto.components.ProjectionMode)
 
 %{
@@ -20,13 +20,13 @@
 
 %include <cartoswig.i>
 
-%import "components/Options.i"
 %import "core/MapPos.i"
 %import "core/MapBounds.i"
 %import "core/ScreenPos.i"
 %import "core/ScreenBounds.i"
 %import "core/MapVec.i"
-%import "layers/Layers.i"
+%import "components/Options.i"
+%import "components/Layers.i"
 %import "components/LicenseManagerListener.i"
 %import "renderers/MapRenderer.i"
 %import "renderers/RedrawRequestListener.i"

@@ -2,7 +2,6 @@
 #include "core/BinaryData.h"
 #include "datasources/HTTPTileDataSource.h"
 #include "layers/Layer.h"
-#include "layers/Layers.h"
 #include "layers/RasterTileLayer.h"
 #include "network/HTTPClient.h"
 #include "services/CartoMapsService.h"

@@ -6,7 +6,7 @@
 !proxy_imports(carto::Layers, layers.Layer, layers.LayerVector)
 
 %{
-#include "layers/Layers.h"
+#include "comonents/Layers.h"
 %}
 
 %include <std_shared_ptr.i>
@@ -14,7 +14,7 @@
 
 %import "layers/Layer.i"
 
-!shared_ptr(carto::Layers, layers.Layers)
+!shared_ptr(carto::Layers, components.Layers)
 
 %typemap(cscode) carto::Layers %{ public Layer this[int index] { get { return Get(index); } set { Set(index, value); } } %}
 
@@ -25,6 +25,6 @@
 %ignore carto::Layers::Layers;
 !standard_equals(carto::Layers);
 
-%include "layers/Layers.h"
+%include "components/Layers.h"
 
 #endif
