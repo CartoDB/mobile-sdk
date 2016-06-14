@@ -6,7 +6,7 @@
 !proxy_imports(carto::Layers, layers.Layer, layers.LayerVector)
 
 %{
-#include "comonents/Layers.h"
+#include "components/Layers.h"
 %}
 
 %include <std_shared_ptr.i>
