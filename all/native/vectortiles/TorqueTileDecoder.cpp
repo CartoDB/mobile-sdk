@@ -126,7 +126,9 @@ namespace carto {
         }
         try {
             auto logger = std::make_shared<MapnikVTLogger>("TorqueTileDecoder");
-            mvt::TorqueFeatureDecoder decoder(*tileData->getDataPtr(), resolution, calculateTileTransform(tile, targetTile), logger);
+            mvt::TorqueFeatureDecoder decoder(*tileData->getDataPtr(), resolution, logger);
+            decoder.setTransform(calculateTileTransform(tile, targetTile));
+
             auto tileMap = std::make_shared<TileMap>();
             for (int frame = 0; frame < map->getTorqueSettings().frameCount; frame++) {
                 mvt::TorqueTileReader reader(map, frame, true, *symbolizerContext, decoder);

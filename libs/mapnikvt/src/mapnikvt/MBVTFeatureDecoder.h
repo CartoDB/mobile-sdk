@@ -26,7 +26,12 @@ namespace carto { namespace mvt {
     
     class MBVTFeatureDecoder : public FeatureDecoder {
     public:
-        explicit MBVTFeatureDecoder(const std::vector<unsigned char>& data, const cglib::mat3x3<float>& transform, float buffer, std::shared_ptr<Logger> logger);
+        explicit MBVTFeatureDecoder(const std::vector<unsigned char>& data, std::shared_ptr<Logger> logger);
+
+        void setTransform(const cglib::mat3x3<float>& transform);
+        void setClipBox(const cglib::bbox2<float>& clipBox);
+        void setBuffer(float buffer);
+        void setIgnoreLayerNames(bool ignore);
 
         std::shared_ptr<FeatureIterator> createLayerFeatureIterator(const std::string& name, const std::unordered_set<std::string>& fields) const;
 
@@ -35,9 +40,10 @@ namespace carto { namespace mvt {
 
         static bool inflate(const std::vector<unsigned char>& in, std::vector<unsigned char>& out);
         
-        const cglib::mat3x3<float> _transform;
-        const float _buffer;
-        const cglib::bbox2<float> _clipBox;
+        cglib::mat3x3<float> _transform;
+        float _buffer;
+        bool _ignoreLayerNames;
+        cglib::bbox2<float> _clipBox;
         std::shared_ptr<vector_tile::Tile> _tile;
         std::map<std::string, int> _layerMap;
         mutable std::map<std::string, std::map<std::vector<int>, std::shared_ptr<FeatureData>>> _layerFeatureDataCache;

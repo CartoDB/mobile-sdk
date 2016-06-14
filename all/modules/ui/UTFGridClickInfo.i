@@ -25,7 +25,6 @@
 %attributeval(carto::UTFGridClickInfo, carto::MapPos, ClickPos, getClickPos)
 %attributeval(carto::UTFGridClickInfo, %arg(std::map<std::string, std::string>), ElementInfo, getElementInfo)
 !attributestring_polymorphic(carto::UTFGridClickInfo, layers.Layer, Layer, getLayer)
-%ignore carto::UTFGridClickInfo::getClickType;
 !standard_equals(carto::UTFGridClickInfo);
 
 %include "ui/UTFGridClickInfo.h"

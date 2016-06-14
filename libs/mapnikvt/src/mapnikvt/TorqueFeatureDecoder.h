@@ -22,7 +22,10 @@ namespace carto { namespace mvt {
     
     class TorqueFeatureDecoder : public FeatureDecoder {
     public:
-        explicit TorqueFeatureDecoder(const std::vector<unsigned char>& data, int resolution, const cglib::mat3x3<float>& transform, const std::shared_ptr<Logger>& logger);
+        explicit TorqueFeatureDecoder(const std::vector<unsigned char>& data, int resolution, const std::shared_ptr<Logger>& logger);
+
+        void setTransform(const cglib::mat3x3<float>& transform);
+        void setClipBox(const cglib::bbox2<float>& clipBox);
 
         std::shared_ptr<FeatureIterator> createFrameFeatureIterator(int frame) const;
 
@@ -40,8 +43,8 @@ namespace carto { namespace mvt {
         std::unordered_map<int, std::vector<Element>> _timeValueMap;
 
         const int _resolution;
-        const cglib::mat3x3<float> _transform;
-        const cglib::bbox2<float> _clipBox;
+        cglib::mat3x3<float> _transform;
+        cglib::bbox2<float> _clipBox;
         const std::shared_ptr<Logger> _logger;
     };
 } }

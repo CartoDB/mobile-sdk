@@ -71,8 +71,8 @@ namespace carto { namespace mvt {
         mutable std::unordered_map<double, std::shared_ptr<FeatureData>> _featureDataCache;
     };
 
-    TorqueFeatureDecoder::TorqueFeatureDecoder(const std::vector<unsigned char>& data, int resolution, const cglib::mat3x3<float>& transform, const std::shared_ptr<Logger>& logger) :
-        _transform(transform), _resolution(resolution), _clipBox(cglib::vec2<float>(-0.1f, -0.1f), cglib::vec2<float>(1.1f, 1.1f)), _logger(logger)
+    TorqueFeatureDecoder::TorqueFeatureDecoder(const std::vector<unsigned char>& data, int resolution, const std::shared_ptr<Logger>& logger) :
+        _transform(cglib::mat3x3<float>::identity()), _resolution(resolution), _clipBox(cglib::vec2<float>(-0.1f, -0.1f), cglib::vec2<float>(1.1f, 1.1f)), _logger(logger)
     {
         rapidjson::Document torqueDoc;
         std::string torqueJson(reinterpret_cast<const char*>(data.data()), reinterpret_cast<const char*>(data.data() + data.size()));
@@ -130,6 +130,14 @@ namespace carto { namespace mvt {
                 _timeValueMap[time].emplace_back(x, y, value);
             }
         }
+    }
+
+    void TorqueFeatureDecoder::setTransform(const cglib::mat3x3<float>& transform) {
+        _transform = transform;
+    }
+
+    void TorqueFeatureDecoder::setClipBox(const cglib::bbox2<float>& clipBox) {
+        _clipBox = clipBox;
     }
 
     std::shared_ptr<FeatureDecoder::FeatureIterator> TorqueFeatureDecoder::createFrameFeatureIterator(int frame) const {
