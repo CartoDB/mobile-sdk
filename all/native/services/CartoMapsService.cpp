@@ -333,7 +333,7 @@ namespace carto {
             
             if (_defaultVectorLayerMode) {
                 if (!cartoCSS.empty()) {
-                    auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "{z}/{x}/{y}.mvt");
+                    auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.mvt");
                     auto styleSet = std::make_shared<CartoCSSStyleSet>(cartoCSS, _vectorTileAssetPackage);
                     auto vectorTileDecoder = std::make_shared<MBVectorTileDecoder>(styleSet);
                     vectorTileDecoder->setCartoCSSLayerNamesIgnored(true); // all layer name filters should be ignored
@@ -345,19 +345,19 @@ namespace carto {
             }
             
             if (!layer) {
-                auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "{z}/{x}/{y}.png");
+                auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.png");
                 layer = std::make_shared<RasterTileLayer>(dataSource);
             }
 
             if (_interactive) {
-                auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "{z}/{x}/{y}.grid");
+                auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.grid");
                 layer->setUTFGridDataSource(dataSource);
             }
             
             return layer;
         }
 
-        auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "{z}/{x}/{y}.png");
+        auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.png");
         return std::make_shared<RasterTileLayer>(dataSource);
     }
 
@@ -385,12 +385,13 @@ namespace carto {
         for (auto it = layersInfo.begin(); it != layersInfo.end(); it++) {
             const picojson::value& layerInfo = *it;
 
+            // Layer type
             std::string type = layerInfo.get("type").get<std::string>();
 
             // Read CDN URLs
             std::map<std::string, std::string> cdnURLs;
-            if (layerInfo.get("cdn_urls").is<picojson::object>()) {
-                const picojson::object& cdnURLsObject = layerInfo.get("cdn_urls").get<picojson::object>();
+            if (layerInfo.get("cdn_url").is<picojson::object>()) {
+                const picojson::object& cdnURLsObject = layerInfo.get("cdn_url").get<picojson::object>();
                 for (auto it = cdnURLsObject.begin(); it != cdnURLsObject.end(); it++) {
                     if (it->second.is<std::string>()) {
                         cdnURLs[it->first] = it->second.get<std::string>();
@@ -409,7 +410,9 @@ namespace carto {
 
             int layerIndex = static_cast<int>(it - layersInfo.begin());
             std::shared_ptr<Layer> layer = createLayer(layerIndex, layerGroupId, type, cartoCSS, cdnURLs);
-            layers.push_back(layer);
+            if (layer) {
+                layers.push_back(layer);
+            }
         }
 
         return layers;

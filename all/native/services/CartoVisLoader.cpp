@@ -289,7 +289,7 @@ namespace carto {
                         baseURL = baseURL.substr(0, pos);
                     }
                     
-                    auto gridDataSource = std::make_shared<HTTPTileDataSource>(dataSource->getMinZoom(), dataSource->getMaxZoom(), baseURL + ".grid");
+                    auto gridDataSource = std::make_shared<HTTPTileDataSource>(dataSource->getMinZoom(), dataSource->getMaxZoom(), baseURL + ".grid.json");
                     tileLayer->setUTFGridDataSource(gridDataSource);
                 }
             }
@@ -531,7 +531,10 @@ namespace carto {
                 const std::shared_ptr<Layer>& layer = layers[i];
                 const picojson::value& layerConfig = layerConfigs[i];
                 
-                configureLayerInteractivity(*layer, layerConfig.get("interactivity"));
+                const picojson::value& layerConfigOptions = layerConfig.get("options");
+                if (layerConfigOptions.is<picojson::object>()) {
+                    configureLayerInteractivity(*layer, layerConfigOptions.get("interactivity"));
+                }
 
                 if (auto visible = getBool(layerConfig.get("visible"))) {
                     layer->setVisible(*visible);

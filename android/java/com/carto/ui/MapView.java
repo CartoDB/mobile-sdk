@@ -14,13 +14,13 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 
 import com.carto.components.Options;
+import com.carto.components.Layers;
 import com.carto.components.LicenseManagerListener;
 import com.carto.core.MapBounds;
 import com.carto.core.MapPos;
 import com.carto.core.ScreenPos;
 import com.carto.core.ScreenBounds;
 import com.carto.core.MapVec;
-import com.carto.layers.Layers;
 import com.carto.renderers.MapRenderer;
 import com.carto.renderers.RedrawRequestListener;
 import com.carto.utils.AndroidUtils;
