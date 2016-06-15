@@ -19,6 +19,7 @@
 #include <picojson/picojson.h>
 
 namespace carto {
+    class AssetPackage;
     class Layer;
     class BaseMapView;
     class CartoMapsService;
@@ -28,6 +29,12 @@ namespace carto {
     public:
         CartoVisLoader();
         virtual ~CartoVisLoader();
+
+        bool isDefaultVectorLayerMode() const;
+        void setDefaultVectorLayerMode(bool enabled);
+
+        std::shared_ptr<AssetPackage> getVectorTileAssetPackage() const;
+        void setVectorTileAssetPackage(const std::shared_ptr<AssetPackage>& assetPackage);
 
         bool loadVis(const std::shared_ptr<CartoVisBuilder>& builder, const std::string& visURL) const;
 
@@ -41,14 +48,21 @@ namespace carto {
 
         static void readLayerAttributes(picojson::object& attributes, const picojson::value& options);
         
-        static void configureMapsService(CartoMapsService& mapsService, const picojson::value& options);
+        void configureMapsService(CartoMapsService& mapsService, const picojson::value& options) const;
         
+        void configureLayerInteractivity(Layer& layer, const picojson::value& options) const;
+
         void createLayers(const std::shared_ptr<CartoVisBuilder>& builder, const picojson::value& layerConfig) const;
 
         boost::optional<LayerInfo> createTiledLayer(const picojson::value& options) const;
         boost::optional<LayerInfo> createTorqueLayer(const picojson::value& options, const picojson::value& legend) const;
         std::vector<LayerInfo> createNamedLayers(const picojson::value& options) const;
         std::vector<LayerInfo> createLayerGroup(const picojson::value& options, const picojson::value& infoWindow) const;
+
+        bool _defaultVectorLayerMode;
+        std::shared_ptr<AssetPackage> _vectorTileAssetPackage;
+
+        mutable std::recursive_mutex _mutex;
     };
 
 }

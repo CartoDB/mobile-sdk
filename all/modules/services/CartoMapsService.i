@@ -3,7 +3,7 @@
 
 %module CartoMapsService
 
-!proxy_imports(carto::CartoMapsService, core.Variant, core.StringVariantMap, core.StringMap, core.StringVector, layers.Layer, layers.LayerVector)
+!proxy_imports(carto::CartoMapsService, core.Variant, core.StringVariantMap, core.StringMap, core.StringVector, layers.Layer, layers.LayerVector, vectortiles.AssetPackage)
 
 %{
 #include "services/CartoMapsService.h"
@@ -18,6 +18,7 @@
 %import "core/StringVector.i"
 %import "core/StringMap.i"
 %import "layers/Layer.i"
+%import "vectortiles/AssetPackage.i"
 
 !shared_ptr(carto::CartoMapsService, services.CartoMapsService)
 
@@ -25,7 +26,9 @@
 %attributestring(carto::CartoMapsService, std::string, APIKey, getAPIKey, setAPIKey)
 %attributestring(carto::CartoMapsService, std::string, APITemplate, getAPITemplate, setAPITemplate)
 %attributeval(carto::CartoMapsService, %arg(std::vector<std::string>), AuthTokens, getAuthTokens, setAuthTokens)
+%attribute(carto::CartoMapsService, bool, Interactive, isInteractive, setInteractive)
 %attribute(carto::CartoMapsService, bool, DefaultVectorLayerMode, isDefaultVectorLayerMode, setDefaultVectorLayerMode)
+%attributestring(carto::CartoMapsService, std::shared_ptr<carto::AssetPackage>, VectorTileAssetPackage, getVectorTileAssetPackage, setVectorTileAssetPackage)
 %ignore carto::CartoMapsService::getTilerURL;
 %ignore carto::CartoMapsService::setTilerURL;
 %ignore carto::CartoMapsService::getStatTag;
@@ -34,6 +37,8 @@
 %ignore carto::CartoMapsService::setLayerFilter;
 %ignore carto::CartoMapsService::getLayerIndices;
 %ignore carto::CartoMapsService::setLayerIndices;
+%ignore carto::CartoMapsService::getCDNURLs;
+%ignore carto::CartoMapsService::setCDNURLs;
 !standard_equals(carto::CartoMapsService);
 
 %include "services/CartoMapsService.h"

@@ -3,7 +3,7 @@
 
 %module CartoVisLoader
 
-!proxy_imports(carto::CartoVisLoader, services.CartoVisBuilder, ui.BaseMapView)
+!proxy_imports(carto::CartoVisLoader, services.CartoVisBuilder, ui.BaseMapView, vectortiles.AssetPackage)
 
 %{
 #include "services/CartoVisLoader.h"
@@ -14,9 +14,12 @@
 %include <cartoswig.i>
 
 %import "services/CartoVisBuilder.i"
-%import "ui/BaseMapView.i"
+%import "vectortiles/AssetPackage.i"
 
 !shared_ptr(carto::CartoVisLoader, services.CartoVisLoader)
+
+%attribute(carto::CartoVisLoader, bool, DefaultVectorLayerMode, isDefaultVectorLayerMode, setDefaultVectorLayerMode)
+%attributestring(carto::CartoVisLoader, std::shared_ptr<carto::AssetPackage>, VectorTileAssetPackage, getVectorTileAssetPackage, setVectorTileAssetPackage)
 
 !standard_equals(carto::CartoVisLoader);
 

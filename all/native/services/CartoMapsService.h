@@ -18,6 +18,7 @@
 #include <picojson/picojson.h>
 
 namespace carto {
+    class AssetPackage;
     class Layer;
 
     class CartoMapsService {
@@ -40,42 +41,39 @@ namespace carto {
         std::string getStatTag() const;
         void setStatTag(const std::string& statTag);
 
-        std::string getLayerFilter() const;
-        void setLayerFilter(const std::string& filter);
+        bool isInteractive() const;
+        void setInteractive(bool interactive);
+
+        std::vector<int> getLayerIndices() const;
+        void setLayerIndices(const std::vector<int>& layerIndices);
+
+        std::vector<std::string> getLayerFilter() const;
+        void setLayerFilter(const std::vector<std::string>& filter);
 
         std::vector<std::string> getAuthTokens() const;
         void setAuthTokens(const std::vector<std::string>& authTokens);
 
-        // TODO: remove once LayerType is made public
-        std::vector<int> getLayerIndices() const;
-        void setLayerIndices(const std::vector<int>& layerIndices);
+        std::map<std::string, std::string> getCDNURLs() const;
+        void setCDNURLs(const std::map<std::string, std::string>& cdnURLs);
 
         bool isDefaultVectorLayerMode() const;
         void setDefaultVectorLayerMode(bool enabled);
 
-        bool isVectorLayerMode(int index) const;
-        void setVectorLayerMode(int index, bool enabled);
+        std::shared_ptr<AssetPackage> getVectorTileAssetPackage() const;
+        void setVectorTileAssetPackage(const std::shared_ptr<AssetPackage>& assetPackage);
 
-        std::vector<std::shared_ptr<Layer> > buildNamedMap(const std::string& templateId, const std::map<std::string, Variant>& templateParams) const;
         std::vector<std::shared_ptr<Layer> > buildMap(const Variant& mapConfig) const;
 
+        std::vector<std::shared_ptr<Layer> > buildNamedMap(const std::string& templateId, const std::map<std::string, Variant>& templateParams) const;
+
     private:
-        enum LayerType {
-            // TODO: make public, add LAYER_TYPE_IGNORE/NONE
-            LAYER_TYPE_RASTER,
-            LAYER_TYPE_VECTOR
-        };
-        
-        int getMinZoom(const picojson::value& options) const;
-        int getMaxZoom(const picojson::value& options) const;
+        std::string getServiceURL(const std::string& path) const;
 
-        std::string getUsername(const picojson::value& mapConfig) const;
-        std::string getAPITemplate(const picojson::value& mapConfig) const;
-        std::string getTilerURL(const picojson::value& mapConfig) const;
+        std::string getTilerURL(const std::map<std::string, std::string>& cdnURLs) const;
 
-        std::string getServiceURL(const std::string& baseURL) const;
+        std::shared_ptr<Layer> createLayer(int layerIndex, const std::string& layerGroupId, const std::string& type, const std::string& cartoCSS, const std::map<std::string, std::string>& cdnURLs) const;
 
-        void createLayers(std::vector<std::shared_ptr<Layer> >& layers, const picojson::value& mapConfig, const std::string& type, const picojson::value& options, const std::string& cartoCSS, const std::string& layerGroupId, const std::vector<int>& layerIndices) const;
+        std::vector<std::shared_ptr<Layer> > createLayers(const picojson::value& mapInfo) const;
 
         static const std::string DEFAULT_API_TEMPLATE;
         
@@ -84,13 +82,15 @@ namespace carto {
         std::string _apiTemplate;
         std::string _tilerURL;
         std::string _statTag;
-        std::string _layerFilter;
-        std::vector<std::string> _authTokens;
+        bool _interactive;
         std::vector<int> _layerIndices;
-        LayerType _defaultLayerType;
-        std::map<int, LayerType> _layerTypes;
+        std::vector<std::string> _layerFilter;
+        std::vector<std::string> _authTokens;
+        std::map<std::string, std::string> _cdnURLs;
+        bool _defaultVectorLayerMode;
+        std::shared_ptr<AssetPackage> _vectorTileAssetPackage;
 
-        mutable std::shared_ptr<std::recursive_mutex> _mutex;
+        mutable std::recursive_mutex _mutex;
     };
 
 }

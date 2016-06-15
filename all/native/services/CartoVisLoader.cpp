@@ -6,6 +6,7 @@
 #include "network/HTTPClient.h"
 #include "services/CartoMapsService.h"
 #include "services/CartoVisBuilder.h"
+#include "vectortiles/AssetPackage.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 
@@ -17,8 +18,6 @@
 #include <boost/optional.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
-
-#include <picojson/picojson.h>
 
 namespace {
     
@@ -124,70 +123,101 @@ namespace {
 
 namespace carto {
 
-    CartoVisLoader::CartoVisLoader() {
+    CartoVisLoader::CartoVisLoader() :
+        _defaultVectorLayerMode(false),
+        _vectorTileAssetPackage(),
+        _mutex()
+    {
     }
 
     CartoVisLoader::~CartoVisLoader() {
     }
 
+    bool CartoVisLoader::isDefaultVectorLayerMode() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _defaultVectorLayerMode;
+    }
+
+    void CartoVisLoader::setDefaultVectorLayerMode(bool enabled) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _defaultVectorLayerMode = enabled;
+    }
+
+    std::shared_ptr<AssetPackage> CartoVisLoader::getVectorTileAssetPackage() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _vectorTileAssetPackage;
+    }
+
+    void CartoVisLoader::setVectorTileAssetPackage(const std::shared_ptr<AssetPackage>& assetPackage) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _vectorTileAssetPackage = assetPackage;
+    }
+
     bool CartoVisLoader::loadVis(const std::shared_ptr<CartoVisBuilder>& builder, const std::string& visURL) const {
-        // TODO: global try/catch logger
-        HTTPClient client(false);
-        std::shared_ptr<BinaryData> responseData;
-        std::map<std::string, std::string> responseHeaders;
-        if (client.get(visURL, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
-            Log::Error("CartoVisLoader::loadVis: Failed to read VisJSON configuration");
-            return false;
-        }
+        try {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-        // Read VisJSON
-        std::string result(reinterpret_cast<const char*>(responseData->data()), responseData->size());
-        picojson::value visJSON;
-        std::string err = picojson::parse(visJSON, result);
-        if (!err.empty()) {
-            Log::Errorf("CartoVisLoader::loadVis: Failed to parse VisJSON configuration: %s", err.c_str());
-            return false;
-        }
+            HTTPClient client(false);
+            std::shared_ptr<BinaryData> responseData;
+            std::map<std::string, std::string> responseHeaders;
+            if (client.get(visURL, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
+                Log::Error("CartoVisLoader::loadVis: Failed to read VisJSON configuration");
+                return false;
+            }
 
-        // Base options
-        if (auto center = getMapPos(visJSON.get("center"))) {
-            builder->setCenter(*center);
-        }
+            // Read VisJSON
+            std::string result(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+            picojson::value visJSON;
+            std::string err = picojson::parse(visJSON, result);
+            if (!err.empty()) {
+                Log::Errorf("CartoVisLoader::loadVis: Failed to parse VisJSON configuration: %s", err.c_str());
+                return false;
+            }
 
-        if (auto zoom = getDouble(visJSON.get("zoom"))) {
-            builder->setZoom(static_cast<float>(*zoom));
-        }
+            // Base options
+            if (auto center = getMapPos(visJSON.get("center"))) {
+                builder->setCenter(*center);
+            }
 
-        if (auto bounds = getMapBounds(visJSON.get("bounds"))) {
-            builder->setBounds(*bounds);
-        }
+            if (auto zoom = getDouble(visJSON.get("zoom"))) {
+                builder->setZoom(static_cast<float>(*zoom));
+            }
 
-        builder->setDescription(Variant::FromPicoJSON(visJSON));
+            if (auto bounds = getMapBounds(visJSON.get("bounds"))) {
+                builder->setBounds(*bounds);
+            }
 
-        // Configue layers
-        const picojson::value& layersOption = visJSON.get("layers");
-        if (layersOption.is<picojson::array>()) {
-            const picojson::array& layerConfigs = layersOption.get<picojson::array>();
+            builder->setDescription(Variant::FromPicoJSON(visJSON));
 
-            // Build layer orders and sort
-            std::vector<std::pair<int, std::size_t> > layerOrders;
-            for (const picojson::value& layerConfig : layerConfigs) {
-                int order = static_cast<int>(layerOrders.size());
-                if (auto orderOpt = getInt(layerConfig.get("order"))) {
-                    order = *orderOpt;
+            // Configue layers
+            const picojson::value& layersOption = visJSON.get("layers");
+            if (layersOption.is<picojson::array>()) {
+                const picojson::array& layerConfigs = layersOption.get<picojson::array>();
+
+                // Build layer orders and sort
+                std::vector<std::pair<int, std::size_t> > layerOrders;
+                for (const picojson::value& layerConfig : layerConfigs) {
+                    int order = static_cast<int>(layerOrders.size());
+                    if (auto orderOpt = getInt(layerConfig.get("order"))) {
+                        order = *orderOpt;
+                    }
+                    layerOrders.emplace_back(order, layerOrders.size());
                 }
-                layerOrders.emplace_back(order, layerOrders.size());
+
+                std::sort(layerOrders.begin(), layerOrders.end());
+
+                // Create layers
+                for (std::size_t i = 0; i < layerOrders.size(); i++) {
+                    createLayers(builder, layerConfigs[layerOrders[i].second]);
+                }
             }
 
-            std::sort(layerOrders.begin(), layerOrders.end());
-
-            // Create layers
-            for (std::size_t i = 0; i < layerOrders.size(); i++) {
-                createLayers(builder, layerConfigs[layerOrders[i].second]);
-            }
+            return true;
         }
-
-        return true;
+        catch (const std::exception& ex) {
+            Log::Errorf("CartoVisLoader::loadVis: Exception: %s", ex.what());
+            return false;
+        }
     }
 
     void CartoVisLoader::readLayerAttributes(picojson::object& attributes, const picojson::value& options) {
@@ -199,7 +229,7 @@ namespace carto {
         }
     }
 
-    void CartoVisLoader::configureMapsService(CartoMapsService& mapsService, const picojson::value& options) {
+    void CartoVisLoader::configureMapsService(CartoMapsService& mapsService, const picojson::value& options) const {
         if (auto userName = getString(options.get("user_name"))) {
             mapsService.setUsername(*userName);
         }
@@ -213,7 +243,9 @@ namespace carto {
         }
 
         if (auto filter = getString(options.get("filter"))) {
-            mapsService.setLayerFilter(*filter);
+            std::vector<std::string> filterList;
+            boost::split(filterList, *filter, boost::is_any_of(","));
+            mapsService.setLayerFilter(filterList);
         }
 
         std::string tilerProtocol = "http";
@@ -230,13 +262,51 @@ namespace carto {
         }
         mapsService.setTilerURL(tilerProtocol + "://" + (options.contains("user_name") ? "{user}." : "") + tilerDomain + ":" + tilerPort);
 
-        // TODO: cdn_url?
+        const picojson::value& cdnURLsOption = options.get("cdn_url");
+        if (cdnURLsOption.is<picojson::object>()) {
+            const picojson::object cdnURLs = cdnURLsOption.get<picojson::object>();
+
+            std::map<std::string, std::string> urls;
+            for (auto it = cdnURLs.begin(); it != cdnURLs.end(); it++) {
+                if (auto url = getString(it->second)) {
+                    urls[it->first] = *url;
+                }
+            }
+            mapsService.setCDNURLs(urls);
+        }
+
+        mapsService.setDefaultVectorLayerMode(_defaultVectorLayerMode);
+        mapsService.setVectorTileAssetPackage(_vectorTileAssetPackage);
+    }
+    
+    void CartoVisLoader::configureLayerInteractivity(Layer& layer, const picojson::value& options) const {
+        if (!options.is<picojson::null>()) {
+            if (auto tileLayer = dynamic_cast<TileLayer*>(&layer)) {
+                if (auto dataSource = std::dynamic_pointer_cast<HTTPTileDataSource>(tileLayer->getDataSource())) {
+                    std::string baseURL = dataSource->getBaseURL();
+                    std::string::size_type pos = baseURL.rfind('.');
+                    if (pos != std::string::npos) {
+                        baseURL = baseURL.substr(0, pos);
+                    }
+                    
+                    auto gridDataSource = std::make_shared<HTTPTileDataSource>(dataSource->getMinZoom(), dataSource->getMaxZoom(), baseURL + ".grid");
+                    tileLayer->setUTFGridDataSource(gridDataSource);
+                }
+            }
+        }
     }
     
     void CartoVisLoader::createLayers(const std::shared_ptr<CartoVisBuilder>& builder, const picojson::value& layerConfig) const {
-        std::string type = boost::algorithm::to_lower_copy(layerConfig.get("type").get<std::string>());
-        const picojson::value& options = layerConfig.get("options");
+        std::string type;
+        if (auto typeOpt = getString(layerConfig.get("type"))) {
+            type = boost::algorithm::to_lower_copy(*typeOpt);
+        }
+        picojson::value options = picojson::value(picojson::object());
+        if (layerConfig.get("options").is<picojson::object>()) {
+            options = layerConfig.get("options");
+        }
 
+        // Create layer based on type and options
         std::vector<LayerInfo> layerInfos;
         if (type == "tiled") {
             if (auto layerInfo = createTiledLayer(options)) {
@@ -260,8 +330,8 @@ namespace carto {
 
         // Final layer configuration
         for (const LayerInfo& layerInfo : layerInfos) {
-            if (layerConfig.contains("visible")) {
-                layerInfo.layer->setVisible(layerConfig.get("visible").get<bool>());
+            if (auto visible = getBool(layerConfig.get("visible"))) {
+                layerInfo.layer->setVisible(*visible);
             }
 
             builder->addLayer(layerInfo.layer, Variant::FromPicoJSON(picojson::value(layerInfo.attributes)));
@@ -403,6 +473,8 @@ namespace carto {
                 const std::shared_ptr<Layer>& layer = layers[i];
                 const picojson::value& layerConfig = layerConfigs[i];
                 
+                configureLayerInteractivity(*layer, layerConfig.get("interactivity"));
+
                 if (auto visible = getBool(layerConfig.get("visible"))) {
                     layer->setVisible(*visible);
                 }
@@ -415,8 +487,11 @@ namespace carto {
                 if (layerConfig.contains("legend")) {
                     attributes["legend"] = layerConfig.get("legend");
                 }
-                if (layerConfig.contains("layer_name")) { // TODO: options/layer_name?
+                if (layerConfig.contains("layer_name")) {
                     attributes["name"] = layerConfig.get("layer_name");
+                }
+                else if (options.contains("laye_name")) {
+                    attributes["name"] = options.get("layer_name");
                 }
                 layerAttributes[layer] = attributes;
             }
@@ -445,7 +520,6 @@ namespace carto {
 
         // Configue Maps service and get the layers
         CartoMapsService mapsService;
-        mapsService.setDefaultVectorLayerMode(true); // TODO:
         configureMapsService(mapsService, options);
         std::vector<std::shared_ptr<Layer> > layers = mapsService.buildMap(Variant::FromPicoJSON(layerDefinition));
 
@@ -457,6 +531,8 @@ namespace carto {
                 const std::shared_ptr<Layer>& layer = layers[i];
                 const picojson::value& layerConfig = layerConfigs[i];
                 
+                configureLayerInteractivity(*layer, layerConfig.get("interactivity"));
+
                 if (auto visible = getBool(layerConfig.get("visible"))) {
                     layer->setVisible(*visible);
                 }
@@ -472,8 +548,11 @@ namespace carto {
                 if (layerConfig.contains("legend")) {
                     attributes["legend"] = layerConfig.get("legend");
                 }
-                if (layerConfig.contains("layer_name")) { // TODO: options/layer_name?
+                if (layerConfig.contains("layer_name")) {
                     attributes["name"] = layerConfig.get("layer_name");
+                }
+                else if (options.contains("laye_name")) {
+                    attributes["name"] = options.get("layer_name");
                 }
                 layerAttributes[layer] = attributes;
             }

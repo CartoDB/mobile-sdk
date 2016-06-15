@@ -5,6 +5,7 @@
 #include "layers/RasterTileLayer.h"
 #include "layers/VectorTileLayer.h"
 #include "layers/TorqueTileLayer.h"
+#include "vectortiles/AssetPackage.h"
 #include "vectortiles/MBVectorTileDecoder.h"
 #include "vectortiles/TorqueTileDecoder.h"
 #include "vectortiles/CartoCSSStyleSet.h"
@@ -14,12 +15,8 @@
 #include "utils/Log.h"
 
 #include <algorithm>
-#include <regex>
 
-#include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
-
-#include <picojson/picojson.h>
 
 namespace carto {
 
@@ -29,12 +26,14 @@ namespace carto {
         _apiTemplate(DEFAULT_API_TEMPLATE),
         _tilerURL(),
         _statTag(),
+        _interactive(false),
+        _layerIndices(),
         _layerFilter(),
         _authTokens(),
-        _layerIndices(),
-        _defaultLayerType(LAYER_TYPE_RASTER),
-        _layerTypes(),
-        _mutex(std::make_shared<std::recursive_mutex>())
+        _cdnURLs(),
+        _defaultVectorLayerMode(false),
+        _vectorTileAssetPackage(),
+        _mutex()
     {
     }
 
@@ -42,303 +41,212 @@ namespace carto {
     }
 
     std::string CartoMapsService::getUsername() const {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _username;
     }
         
     void CartoMapsService::setUsername(const std::string& username) {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         _username = username;
     }
 
     std::string CartoMapsService::getAPIKey() const {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _apiKey;
     }
 
     void CartoMapsService::setAPIKey(const std::string& apiKey) {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         _apiKey = apiKey;
     }
 
     std::string CartoMapsService::getAPITemplate() const {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _apiTemplate;
     }
 
     void CartoMapsService::setAPITemplate(const std::string& apiTemplate) {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         _apiTemplate = apiTemplate;
     }
 
     std::string CartoMapsService::getTilerURL() const {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _tilerURL;
     }
 
     void CartoMapsService::setTilerURL(const std::string& tilerURL) {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         _tilerURL = tilerURL;
     }
 
     std::string CartoMapsService::getStatTag() const {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _statTag;
     }
 
     void CartoMapsService::setStatTag(const std::string& statTag) {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         _statTag = statTag;
     }
 
-    std::string CartoMapsService::getLayerFilter() const {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
-        return _layerFilter;
+    bool CartoMapsService::isInteractive() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _interactive;
     }
-
-    void CartoMapsService::setLayerFilter(const std::string& filter) {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
-        _layerFilter = filter;
-    }
-
-    std::vector<std::string> CartoMapsService::getAuthTokens() const {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
-        return _authTokens;
-    }
-
-    void CartoMapsService::setAuthTokens(const std::vector<std::string>& authTokens) {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
-        _authTokens = authTokens;
+    
+    void CartoMapsService::setInteractive(bool interactive) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _interactive = interactive;
     }
 
     std::vector<int> CartoMapsService::getLayerIndices() const {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _layerIndices;
     }
 
     void CartoMapsService::setLayerIndices(const std::vector<int>& layerIndices) {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         _layerIndices = layerIndices;
     }
 
+    std::vector<std::string> CartoMapsService::getLayerFilter() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _layerFilter;
+    }
+
+    void CartoMapsService::setLayerFilter(const std::vector<std::string>& filter) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _layerFilter = filter;
+    }
+
+    std::vector<std::string> CartoMapsService::getAuthTokens() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _authTokens;
+    }
+
+    void CartoMapsService::setAuthTokens(const std::vector<std::string>& authTokens) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _authTokens = authTokens;
+    }
+
+    std::map<std::string, std::string> CartoMapsService::getCDNURLs() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _cdnURLs;
+    }
+
+    void CartoMapsService::setCDNURLs(const std::map<std::string, std::string>& cdnURLs) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _cdnURLs = cdnURLs;
+    }
+
     bool CartoMapsService::isDefaultVectorLayerMode() const {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
-        return _defaultLayerType == LAYER_TYPE_VECTOR;
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _defaultVectorLayerMode;
     }
 
     void CartoMapsService::setDefaultVectorLayerMode(bool enabled) {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
-        _defaultLayerType = (enabled ? LAYER_TYPE_VECTOR : LAYER_TYPE_RASTER);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _defaultVectorLayerMode = enabled;
     }
 
-    bool CartoMapsService::isVectorLayerMode(int index) const {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
-        auto it = _layerTypes.find(index);
-        if (it == _layerTypes.end()) {
-            return _defaultLayerType == LAYER_TYPE_VECTOR;
-        }
-        return it->second == LAYER_TYPE_VECTOR;
+    std::shared_ptr<AssetPackage> CartoMapsService::getVectorTileAssetPackage() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _vectorTileAssetPackage;
     }
-
-    void CartoMapsService::setVectorLayerMode(int index, bool enabled) {
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
-        _layerTypes[index] = (enabled ? LAYER_TYPE_VECTOR : LAYER_TYPE_RASTER);
-    }
-
-    std::vector<std::shared_ptr<Layer> > CartoMapsService::buildNamedMap(const std::string& templateId, const std::map<std::string, Variant>& templateParams) const {
-        std::vector<std::shared_ptr<Layer> > layers;
-            
-        // TODO: global catch/log
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
-
-        // Build URL
-        std::string url = getAPITemplate(picojson::value(picojson::object()));
-        url += "/api/v1/map/named/" + NetworkUtils::URLEncode(templateId);
-        url = getServiceURL(url);
-
-        // Create request data by serializing parameters
-        std::string paramsJSON = Variant(templateParams).toString();
-        auto requestData = std::make_shared<BinaryData>(reinterpret_cast<const unsigned char*>(paramsJSON.data()), paramsJSON.size());
-
-        // Perform HTTP request
-        HTTPClient client(false);
-        std::shared_ptr<BinaryData> responseData;
-        std::map<std::string, std::string> responseHeaders;
-        if (client.post(url, "application/json", requestData, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
-            std::string result;
-            if (responseData) {
-                result = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
-            }
-            Log::Errorf("CartoMapsService::buildNamedMap: Failed to read map configuration: %s", result.c_str());
-            return layers;
-        }
-        
-        // Read layergroupid, meta data
-        std::string result(reinterpret_cast<const char*>(responseData->data()), responseData->size());
-        picojson::value mapInfo;
-        std::string err = picojson::parse(mapInfo, result);
-        if (!err.empty()) {
-            Log::Errorf("CartoMapsService::buildNamedMap: Failed to parse response: %s", err.c_str());
-            return layers;
-        }
-
-        std::string layerGroupId = mapInfo.get("layergroupid").get<std::string>();
-        const picojson::value& metadata = mapInfo.get("metadata");
-        if (metadata.is<picojson::object>()) {
-            // TODO: option to group raster/vector layers
-            const picojson::array& layerConfigs = metadata.get("layers").get<picojson::array>();
-            for (auto it = layerConfigs.begin(); it != layerConfigs.end(); it++) {
-                const picojson::value& layerConfig = *it;
-                std::string type = boost::algorithm::to_lower_copy(layerConfig.get("type").get<std::string>());
-                const picojson::value& options = layerConfig.get("meta");
-
-                // If layer filter is defined, check the type of the layer first
-                if (!_layerFilter.empty()) {
-                    std::string paddedLayerFilter = "," + _layerFilter + ",";
-                    if (paddedLayerFilter.find("," + type + ",") == std::string::npos) {
-                        // TODO: what to do if filter is 'mapnik' but layer is 'cartodb'?
-                        continue;
-                    }
-                }
-
-                // Check that the layer index is not in 'ignore' list
-                int layerIndex = it - layerConfigs.begin();
-                if (!_layerIndices.empty() && std::find(_layerIndices.begin(), _layerIndices.end(), layerIndex) == _layerIndices.end()) {
-                    continue;
-                }
-
-                // Read CartoCSS
-                std::string cartoCSS;
-                if (options.get("cartocss").is<std::string>()) {
-                    cartoCSS = options.get("cartocss").get<std::string>();
-                }
-
-                createLayers(layers, picojson::value(picojson::object()), type == "torque" ? "torque" : "mapnik", options, cartoCSS, layerGroupId, std::vector<int> { layerIndex });
-            }
-        } else {
-            Log::Warn("CartoMapsService::buildNamedMap: Failed to read layer metadata, using fallback");
-            createLayers(layers, picojson::value(picojson::object()), "mapnik", picojson::value(picojson::object()), std::string(), layerGroupId, _layerIndices);
-        }
-
-        return layers;
+    
+    void CartoMapsService::setVectorTileAssetPackage(const std::shared_ptr<AssetPackage>& assetPackage) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _vectorTileAssetPackage = assetPackage;
     }
 
     std::vector<std::shared_ptr<Layer> > CartoMapsService::buildMap(const Variant& mapConfig) const {
-        std::vector<std::shared_ptr<Layer> > layers;
+        try {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-        // TODO: global catch/log
-        std::lock_guard<std::recursive_mutex> lock(*_mutex);
+            // Build URL
+            std::string url = getServiceURL("/api/v1/map");
 
-        // Build URL
-        std::string url = getAPITemplate(mapConfig.toPicoJSON());
-        url += "/api/v1/map";
-        url = getServiceURL(url);
+            // Create request data
+            std::string mapConfigJSON = mapConfig.toString();
+            auto requestData = std::make_shared<BinaryData>(reinterpret_cast<const unsigned char*>(mapConfigJSON.data()), mapConfigJSON.size());
 
-        // Create request data
-        std::string mapConfigJSON = mapConfig.toString();
-        auto requestData = std::make_shared<BinaryData>(reinterpret_cast<const unsigned char*>(mapConfigJSON.data()), mapConfigJSON.size());
-
-        // Do HTTP POST request
-        HTTPClient client(false);
-        std::shared_ptr<BinaryData> responseData;
-        std::map<std::string, std::string> responseHeaders;
-        if (client.post(url, "application/json", requestData, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
-            std::string result;
-            if (responseData) {
-                result = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
-            }
-            Log::Errorf("CartoMapsService::buildMap: Failed to read map configuration: %s", result.c_str());
-            return layers;
-        }
-
-        // Get layergroupid from the response
-        std::string result(reinterpret_cast<const char*>(responseData->data()), responseData->size());
-        picojson::value mapInfo;
-        std::string err = picojson::parse(mapInfo, result);
-        if (!err.empty()) {
-            Log::Errorf("CartoMapsService::buildMap: Failed to parse response: %s", err.c_str());
-            return layers;
-        }
-        std::string layerGroupId = mapInfo.get("layergroupid").get<std::string>();
-
-        // Build layers
-        const picojson::array& layerConfigs = mapConfig.toPicoJSON().get("layers").get<picojson::array>();
-        for (auto it = layerConfigs.begin(); it != layerConfigs.end(); it++) {
-            const picojson::value& layerConfig = *it;
-            std::string type = boost::algorithm::to_lower_copy(layerConfig.get("type").get<std::string>());
-            const picojson::value& options = layerConfig.get("options");
-
-            // If layer filter is defined, check the type of the layer first
-            if (!_layerFilter.empty()) {
-                std::string paddedLayerFilter = "," + _layerFilter + ",";
-                if (paddedLayerFilter.find("," + type + ",") == std::string::npos) {
-                    continue;
+            // Do HTTP POST request
+            HTTPClient client(false);
+            std::shared_ptr<BinaryData> responseData;
+            std::map<std::string, std::string> responseHeaders;
+            if (client.post(url, "application/json", requestData, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
+                std::string result;
+                if (responseData) {
+                    result = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
                 }
+                Log::Errorf("CartoMapsService::buildMap: Failed to read map configuration: %s", result.c_str());
+                return std::vector<std::shared_ptr<Layer> >();
             }
 
-            // Check that the layer index is not in 'ignore' list
-            int layerIndex = it - layerConfigs.begin();
-            if (!_layerIndices.empty() && std::find(_layerIndices.begin(), _layerIndices.end(), layerIndex) == _layerIndices.end()) {
-                continue;
+            // Parse result
+            std::string result(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+            picojson::value mapInfo;
+            std::string err = picojson::parse(mapInfo, result);
+            if (!err.empty()) {
+                Log::Errorf("CartoMapsService::buildMap: Failed to parse response: %s", err.c_str());
+                return std::vector<std::shared_ptr<Layer> >();
             }
 
-            // Read CartoCSS
-            std::string cartoCSS;
-            if (options.get("cartocss").is<std::string>()) {
-                cartoCSS = options.get("cartocss").get<std::string>();
+            // Create layers
+            return createLayers(mapInfo);
+        }
+        catch (const std::exception& ex) {
+            Log::Errorf("CartoMapsService::buildMap: Exception: %s", ex.what());
+            return std::vector<std::shared_ptr<Layer> >();
+        }
+    }
+
+    std::vector<std::shared_ptr<Layer> > CartoMapsService::buildNamedMap(const std::string& templateId, const std::map<std::string, Variant>& templateParams) const {
+        try {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+            // Build URL
+            std::string url = getServiceURL("/api/v1/map/named/" + NetworkUtils::URLEncode(templateId));
+
+            // Create request data by serializing parameters
+            std::string paramsJSON = Variant(templateParams).toString();
+            auto requestData = std::make_shared<BinaryData>(reinterpret_cast<const unsigned char*>(paramsJSON.data()), paramsJSON.size());
+
+            // Perform HTTP request
+            HTTPClient client(false);
+            std::shared_ptr<BinaryData> responseData;
+            std::map<std::string, std::string> responseHeaders;
+            if (client.post(url, "application/json", requestData, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
+                std::string result;
+                if (responseData) {
+                    result = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+                }
+                Log::Errorf("CartoMapsService::buildNamedMap: Failed to read map configuration: %s", result.c_str());
+                return std::vector<std::shared_ptr<Layer> >();
+            }
+            
+            // Parse result
+            std::string result(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+            picojson::value mapInfo;
+            std::string err = picojson::parse(mapInfo, result);
+            if (!err.empty()) {
+                Log::Errorf("CartoMapsService::buildNamedMap: Failed to parse response: %s", err.c_str());
+                return std::vector<std::shared_ptr<Layer> >();
             }
 
-            createLayers(layers, mapConfig.toPicoJSON(), type, options, cartoCSS, layerGroupId, std::vector<int> { });
+            // Create layers
+            return createLayers(mapInfo);
         }
-
-        return layers;
+        catch (const std::exception& ex) {
+            Log::Errorf("CartoMapsService::buildNamedMap: Exception: %s", ex.what());
+            return std::vector<std::shared_ptr<Layer> >();
+        }
     }
 
-    int CartoMapsService::getMinZoom(const picojson::value& options) const {
-        if (options.contains("minzoom")) {
-            return static_cast<int>(options.get("minzoom").get<std::int64_t>());
-        }
-        if (options.contains("minZoom")) {
-            return static_cast<int>(options.get("minZoom").get<std::int64_t>());
-        }
-        return 0;
-    }
-
-    int CartoMapsService::getMaxZoom(const picojson::value& options) const {
-        if (options.contains("maxzoom")) {
-            return static_cast<int>(options.get("maxzoom").get<std::int64_t>());
-        }
-        if (options.contains("maxZoom")) {
-            return static_cast<int>(options.get("maxZoom").get<std::int64_t>());
-        }
-        return Const::MAX_SUPPORTED_ZOOM_LEVEL;
-    }
-
-    std::string CartoMapsService::getUsername(const picojson::value& mapConfig) const {
-        const picojson::value& username = mapConfig.get("user_name");
-        if (!username.is<std::string>()) {
-            return _username;
-        }
-        return username.get<std::string>();
-    }
-
-    std::string CartoMapsService::getAPITemplate(const picojson::value& mapConfig) const {
-        std::string username = getUsername(mapConfig);
-        std::map<std::string, std::string> tagValues = { { "user", username }, { "username", username } };
-        return GeneralUtils::ReplaceTags(_apiTemplate, tagValues, "{", "}", false);
-    }
-
-    std::string CartoMapsService::getTilerURL(const picojson::value& mapConfig) const {
-        if (!_tilerURL.empty()) {
-            std::string username = getUsername(mapConfig);
-            std::map<std::string, std::string> tagValues = { { "user", username }, { "username", username } };
-            return GeneralUtils::ReplaceTags(_apiTemplate, tagValues, "{", "}", false);
-        }
-        return getAPITemplate(mapConfig);
-    }
-
-    std::string CartoMapsService::getServiceURL(const std::string& baseURL) const {
-        std::string url = baseURL;
+    std::string CartoMapsService::getServiceURL(const std::string& path) const {
+        std::map<std::string, std::string> tagValues = { { "user", _username },{ "username", _username } };
+        std::string url = GeneralUtils::ReplaceTags(_apiTemplate, tagValues, "{", "}", false) + path;
 
         std::multimap<std::string, std::string> urlParams;
         if (!_apiKey.empty()) {
@@ -360,115 +268,151 @@ namespace carto {
         return NetworkUtils::BuildURLFromParameters(url, urlParams);
     }
 
-    void CartoMapsService::createLayers(std::vector<std::shared_ptr<Layer> >& layers, const picojson::value& mapConfig, const std::string& type, const picojson::value& options, const std::string& cartoCSS, const std::string& layerGroupId, const std::vector<int>& layerIndices) const {
-        if (type == "plain" || type == "background") {
-            // TODO: if layers empty and plain color, set background color
-            // Otherwise create RasterTileLayer with constant-color tiles?
-            // Warn if imageUrl is defined
-            Log::Warnf("CartoMapsService::createLayers: unimplemented layer type: %s", type.c_str());
+    std::string CartoMapsService::getTilerURL(const std::map<std::string, std::string>& cdnURLs) const {
+        std::string url = getAPITemplate();
+
+        if (!_tilerURL.empty()) {
+            std::map<std::string, std::string> tagValues = { { "user", _username }, { "username", _username } };
+            url = GeneralUtils::ReplaceTags(_tilerURL, tagValues, "{", "}", false);
         }
-        else if (type == "mapnik" || type == "cartodb" || type == "torque") {
-            // TODO: use cdn parameter?
-            std::string urlTemplateBase = getTilerURL(mapConfig);
-            urlTemplateBase += "/api/v1/map/" + layerGroupId;
-            for (std::size_t i = 0; i < layerIndices.size(); i++) {
-                urlTemplateBase += (i == 0 ? "/" : ",") + boost::lexical_cast<std::string>(layerIndices[i]);
-            }
-            if (layerIndices.empty() && options.contains("interactivity")) {
-                urlTemplateBase += "/0"; // TODO: hack
-            }
-            urlTemplateBase += "/{z}/{x}/{y}";
 
-            std::size_t layerIndex = layers.size();
+        std::string::size_type pos = url.find("://");
+        if (pos != std::string::npos) {
+            std::string proto = url.substr(0, pos);
 
-            LayerType layerType = _defaultLayerType;
-            auto it = _layerTypes.find(layers.size());
-            if (it != _layerTypes.end()) {
-                layerType = it->second;
+            std::map<std::string, std::string> urls = _cdnURLs;
+            urls.insert(cdnURLs.begin(), cdnURLs.end());
+            auto it = urls.find(proto);
+            if (it != urls.end()) {
+                url = it->first + "://" + it->second + "/" + _username;
             }
+        }
 
-            if (type == "torque") {
-                auto dataSource = std::make_shared<HTTPTileDataSource>(getMinZoom(mapConfig), getMaxZoom(mapConfig), urlTemplateBase + ".torque");
-                // TODO: AssetPackage support
-                auto styleSet = std::make_shared<CartoCSSStyleSet>(cartoCSS);
+        return url;
+    }
+
+    std::shared_ptr<Layer> CartoMapsService::createLayer(int layerIndex, const std::string& layerGroupId, const std::string& type, const std::string& cartoCSS, const std::map<std::string, std::string>& cdnURLs) const {
+        // Check layer indices filter
+        if (!_layerIndices.empty()) {
+            if (std::find(_layerIndices.begin(), _layerIndices.end(), layerIndex) == _layerIndices.end()) {
+                return std::shared_ptr<Layer>();
+            }
+        }
+
+        // Check layer type filter
+        if (!_layerFilter.empty()) {
+            if (std::find(_layerFilter.begin(), _layerFilter.end(), type) == _layerFilter.end()) {
+                return std::shared_ptr<Layer>();
+            }
+        }
+
+        // Data source parameters
+        int minZoom = 0;
+        int maxZoom = Const::MAX_SUPPORTED_ZOOM_LEVEL;
+
+        std::string urlTemplateBase = getTilerURL(cdnURLs);
+        urlTemplateBase += "/api/v1/map/" + layerGroupId;
+        urlTemplateBase += "/" + boost::lexical_cast<std::string>(layerIndex);
+
+        // Create layer based on type and flags
+        if (type == "torque") {
+            if (!cartoCSS.empty()) {
+                auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.torque");
+                auto styleSet = std::make_shared<CartoCSSStyleSet>(cartoCSS, _vectorTileAssetPackage);
                 auto torqueTileDecoder = std::make_shared<TorqueTileDecoder>(styleSet);
-                auto layer = std::make_shared<TorqueTileLayer>(dataSource, torqueTileDecoder);
-                layers.push_back(layer);
-            }
-            else if (layerType == LAYER_TYPE_VECTOR && !cartoCSS.empty()) {
-                auto dataSource = std::make_shared<HTTPTileDataSource>(getMinZoom(mapConfig), getMaxZoom(mapConfig), urlTemplateBase + ".mvt");
-                // TODO: AssetPackage support
-                auto styleSet = std::make_shared<CartoCSSStyleSet>(cartoCSS);
-                auto vectorTileDecoder = std::make_shared<MBVectorTileDecoder>(styleSet);
-                vectorTileDecoder->setCartoCSSLayerNamesIgnored(true); // all layer name filters should be ignored
-                auto layer = std::make_shared<VectorTileLayer>(dataSource, vectorTileDecoder);
-                layers.push_back(layer);
+                return std::make_shared<TorqueTileLayer>(dataSource, torqueTileDecoder);
             }
             else {
-                auto dataSource = std::make_shared<HTTPTileDataSource>(getMinZoom(mapConfig), getMaxZoom(mapConfig), urlTemplateBase + ".png");
-                auto layer = std::make_shared<RasterTileLayer>(dataSource);
-                layers.push_back(layer);
-            }
-
-            if (options.contains("interactivity")) {
-                auto dataSource = std::make_shared<HTTPTileDataSource>(getMinZoom(mapConfig), getMaxZoom(mapConfig), urlTemplateBase + ".grid.json");
-                for (std::size_t i = layerIndex; i < layers.size(); i++) {
-                    std::static_pointer_cast<TileLayer>(layers[i])->setUTFGridDataSource(dataSource);
-                }
+                Log::Warn("CartoMapsService::createLayer: No CartoCSS for Torque layer, ignoring layer");
+                return std::shared_ptr<Layer>();
             }
         }
-        else if (type == "http") {
-            std::string urlTemplate = options.get("urlTemplate").get<std::string>();
-            auto dataSource = std::make_shared<HTTPTileDataSource>(getMinZoom(mapConfig), getMaxZoom(mapConfig), urlTemplate);
-            std::vector<std::string> subdomains = { "a", "b", "c" };
-            if (options.contains("subdomains")) {
-                const picojson::array& subdomainsOption = options.get("subdomains").get<picojson::array>();
-                subdomains.clear();
-                std::transform(subdomainsOption.begin(), subdomainsOption.end(), std::back_inserter(subdomains), [](const picojson::value& subdomain) {
-                    return subdomain.get<std::string>();
-                });
-            }
-            dataSource->setSubdomains(subdomains);
-            bool tmsScheme = false;
-            if (options.contains("tms")) {
-                tmsScheme = options.get("tms").get<bool>();
-            }
-            dataSource->setTMSScheme(tmsScheme);
 
-            auto layer = std::make_shared<RasterTileLayer>(dataSource);
+        if (type == "mapnik" || type == "cartodb") {
+            std::shared_ptr<TileLayer> layer;
+            
+            if (_defaultVectorLayerMode) {
+                if (!cartoCSS.empty()) {
+                    auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "{z}/{x}/{y}.mvt");
+                    auto styleSet = std::make_shared<CartoCSSStyleSet>(cartoCSS, _vectorTileAssetPackage);
+                    auto vectorTileDecoder = std::make_shared<MBVectorTileDecoder>(styleSet);
+                    vectorTileDecoder->setCartoCSSLayerNamesIgnored(true); // all layer name filters should be ignored
+                    return std::make_shared<VectorTileLayer>(dataSource, vectorTileDecoder);
+                }
+                else {
+                    Log::Warn("CartoMapsService::createLayer: No CartoCSS for layer, using raster tiles");
+                }
+            }
+            
+            if (!layer) {
+                auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "{z}/{x}/{y}.png");
+                layer = std::make_shared<RasterTileLayer>(dataSource);
+            }
+
+            if (_interactive) {
+                auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "{z}/{x}/{y}.grid");
+                layer->setUTFGridDataSource(dataSource);
+            }
+            
+            return layer;
+        }
+
+        auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "{z}/{x}/{y}.png");
+        return std::make_shared<RasterTileLayer>(dataSource);
+    }
+
+    std::vector<std::shared_ptr<Layer> > CartoMapsService::createLayers(const picojson::value& mapInfo) const {
+        std::vector<std::shared_ptr<Layer> > layers;
+
+        if (!mapInfo.get("layergroupid").is<std::string>()) {
+            Log::Warn("CartoMapsService::createLayers: No layergroupid in response");
+            return layers;
+        }
+        std::string layerGroupId = mapInfo.get("layergroupid").get<std::string>();
+
+        const picojson::value& metadata = mapInfo.get("metadata");
+        if (!metadata.is<picojson::object>()) {
+            Log::Warn("CartoMapsService::createLayers: No metadata in response");
+            return layers;
+        }
+
+        if (!metadata.get("layers").is<picojson::array>()) {
+            Log::Warn("CartoMapsService::createLayers: No layers info in response");
+            return layers;
+        }
+        const picojson::array& layersInfo = metadata.get("layers").get<picojson::array>();
+
+        for (auto it = layersInfo.begin(); it != layersInfo.end(); it++) {
+            const picojson::value& layerInfo = *it;
+
+            std::string type = layerInfo.get("type").get<std::string>();
+
+            // Read CDN URLs
+            std::map<std::string, std::string> cdnURLs;
+            if (layerInfo.get("cdn_urls").is<picojson::object>()) {
+                const picojson::object& cdnURLsObject = layerInfo.get("cdn_urls").get<picojson::object>();
+                for (auto it = cdnURLsObject.begin(); it != cdnURLsObject.end(); it++) {
+                    if (it->second.is<std::string>()) {
+                        cdnURLs[it->first] = it->second.get<std::string>();
+                    }
+                }
+            }
+
+            // Read CartoCSS
+            std::string cartoCSS;
+            if (layerInfo.get("meta").is<picojson::object>()) {
+                const picojson::value& metaValue = layerInfo.get("meta");
+                if (metaValue.get("cartocss").is<std::string>()) {
+                    cartoCSS = metaValue.get("cartocss").get<std::string>();
+                }
+            }
+
+            int layerIndex = static_cast<int>(it - layersInfo.begin());
+            std::shared_ptr<Layer> layer = createLayer(layerIndex, layerGroupId, type, cartoCSS, cdnURLs);
             layers.push_back(layer);
         }
-        else if (type == "named" || type == "namedmap") {
-            std::string name = options.get("name").get<std::string>();
 
-            std::map<std::string, Variant> params;
-            if (options.get("config").is<picojson::object>()) {
-                const picojson::object& configOption = options.get("config").get<picojson::object>();
-                for (auto it = configOption.begin(); it != configOption.end(); it++) {
-                    params[it->first] = Variant::FromPicoJSON(it->second);
-                }
-            }
-
-            std::vector<std::string> authTokens;
-            if (options.get("auth_tokens").is<picojson::array>()) {
-                const picojson::array& authTokensOption = options.get("auth_tokens").get<picojson::array>();
-                std::transform(authTokensOption.begin(), authTokensOption.end(), std::back_inserter(authTokens), [](const picojson::value& authToken) {
-                    return authToken.get<std::string>();
-                });
-            }
-
-            CartoMapsService mapsService(*this);
-            mapsService.setAuthTokens(authTokens);
-            std::vector<std::shared_ptr<Layer> > subLayers = mapsService.buildNamedMap(name, params);
-            layers.insert(layers.end(), subLayers.begin(), subLayers.end());
-        }
-        else if (type == "layergroup") {
-            std::vector<std::shared_ptr<Layer> > subLayers = buildMap(Variant::FromPicoJSON(options));
-            layers.insert(layers.end(), subLayers.begin(), subLayers.end());
-        }
-        else {
-            Log::Warnf("CartoMapsService::createLayers: Unsupported layer type: %s", type.c_str());
-        }
+        return layers;
     }
 
     const std::string CartoMapsService::DEFAULT_API_TEMPLATE = "http://{user}.cartodb.com";
