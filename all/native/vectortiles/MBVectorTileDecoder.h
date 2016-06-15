@@ -112,6 +112,17 @@ namespace carto {
          */
         void setCartoCSSLayerNamesIgnored(bool ignore);
 
+        /**
+         * Returns the vector tile 'layer name override'. If empty, actual layer names are used.
+         * @return The 'layer name override'.
+         */
+        std::string getLayerNameOverride() const;
+        /**
+         * Sets the 'layer name override' value. If set to non-empty value, the specific layer is used from the vector tiles.
+         * @param name The new 'layer name override' value. If empty, override is not used.
+         */
+        void setLayerNameOverride(const std::string& name);
+
         virtual Color getBackgroundColor() const;
     
         virtual std::shared_ptr<const vt::BitmapPattern> getBackgroundPattern() const;
@@ -135,6 +146,7 @@ namespace carto {
         
         float _buffer;
         bool _cartoCSSLayerNamesIgnored;
+        std::string _layerNameOverride;
         std::shared_ptr<CompiledStyleSet> _compiledStyleSet;
         std::shared_ptr<CartoCSSStyleSet> _cartoCSSStyleSet;
         std::shared_ptr<AssetPackage> _styleSetData;

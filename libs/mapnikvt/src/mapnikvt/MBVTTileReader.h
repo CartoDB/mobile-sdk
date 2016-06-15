@@ -17,10 +17,13 @@ namespace carto { namespace mvt {
     public:
         explicit MBVTTileReader(std::shared_ptr<Map> map, const SymbolizerContext& symbolizerContext, const MBVTFeatureDecoder& featureDecoder) : TileReader(std::move(map), symbolizerContext), _featureDecoder(featureDecoder) { }
 
+        void setLayerNameOverride(const std::string& name);
+
     protected:
         virtual std::shared_ptr<FeatureDecoder::FeatureIterator> createFeatureIterator(const std::shared_ptr<Layer>& layer, const std::shared_ptr<Style>& style, const ExpressionContext& exprContext) const override;
 
         const MBVTFeatureDecoder& _featureDecoder;
+        std::string _layerNameOverride;
     };
 } }
 

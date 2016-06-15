@@ -27,6 +27,7 @@ namespace carto {
     MBVectorTileDecoder::MBVectorTileDecoder(const std::shared_ptr<CompiledStyleSet>& compiledStyleSet) :
         _buffer(0),
         _cartoCSSLayerNamesIgnored(false),
+        _layerNameOverride(),
         _compiledStyleSet(compiledStyleSet),
         _cartoCSSStyleSet(),
         _styleSetData(compiledStyleSet->getAssetPackage())
@@ -43,6 +44,7 @@ namespace carto {
     MBVectorTileDecoder::MBVectorTileDecoder(const std::shared_ptr<CartoCSSStyleSet>& cartoCSSStyleSet) :
         _buffer(0),
         _cartoCSSLayerNamesIgnored(false),
+        _layerNameOverride(),
         _compiledStyleSet(),
         _cartoCSSStyleSet(cartoCSSStyleSet),
         _styleSetData(cartoCSSStyleSet->getAssetPackage())
@@ -237,6 +239,20 @@ namespace carto {
         notifyDecoderChanged();
     }
         
+    std::string MBVectorTileDecoder::getLayerNameOverride() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _layerNameOverride;
+    }
+
+    void MBVectorTileDecoder::setLayerNameOverride(const std::string& name) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            _layerNameOverride = name;
+        }
+
+        notifyDecoderChanged();
+    }
+
     Color MBVectorTileDecoder::getBackgroundColor() const {
         std::lock_guard<std::mutex> lock(_mutex);
         if (!_map) {
@@ -270,13 +286,13 @@ namespace carto {
         std::shared_ptr<mvt::Map> map;
         std::shared_ptr<mvt::SymbolizerContext> symbolizerContext;
         float buffer;
-        bool ignoreLayerNames;
+        std::string layerNameOverride;
         {
             std::lock_guard<std::mutex> lock(_mutex);
             map = _map;
             symbolizerContext = _symbolizerContext;
             buffer = _buffer;
-            ignoreLayerNames = _cartoCSSLayerNamesIgnored;
+            layerNameOverride = _layerNameOverride;
         }
     
         if (!map || !symbolizerContext) {
@@ -286,9 +302,10 @@ namespace carto {
             mvt::MBVTFeatureDecoder decoder(*tileData->getDataPtr(), _logger);
             decoder.setTransform(calculateTileTransform(tile, targetTile));
             decoder.setBuffer(buffer);
-            decoder.setIgnoreLayerNames(ignoreLayerNames);
             
             mvt::MBVTTileReader reader(map, *symbolizerContext, decoder);
+            reader.setLayerNameOverride(layerNameOverride);
+
             if (std::shared_ptr<vt::Tile> tile = reader.readTile(targetTile)) {
                 auto tileMap = std::make_shared<TileMap>();
                 (*tileMap)[0] = tile;

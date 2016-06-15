@@ -71,7 +71,7 @@ namespace carto {
 
         std::string getTilerURL(const std::map<std::string, std::string>& cdnURLs) const;
 
-        std::shared_ptr<Layer> createLayer(int layerIndex, const std::string& layerGroupId, const std::string& type, const std::string& cartoCSS, const std::map<std::string, std::string>& cdnURLs) const;
+        std::shared_ptr<Layer> createLayer(int layerIndex, const std::string& layerGroupId, const std::string& type, const std::string& layerId, const std::string& cartoCSS, const std::map<std::string, std::string>& cdnURLs) const;
 
         std::vector<std::shared_ptr<Layer> > createLayers(const picojson::value& mapInfo) const;
 

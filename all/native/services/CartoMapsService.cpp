@@ -291,7 +291,7 @@ namespace carto {
         return url;
     }
 
-    std::shared_ptr<Layer> CartoMapsService::createLayer(int layerIndex, const std::string& layerGroupId, const std::string& type, const std::string& cartoCSS, const std::map<std::string, std::string>& cdnURLs) const {
+    std::shared_ptr<Layer> CartoMapsService::createLayer(int layerIndex, const std::string& layerGroupId, const std::string& type, const std::string& layerId, const std::string& cartoCSS, const std::map<std::string, std::string>& cdnURLs) const {
         // Check layer indices filter
         if (!_layerIndices.empty()) {
             if (std::find(_layerIndices.begin(), _layerIndices.end(), layerIndex) == _layerIndices.end()) {
@@ -332,15 +332,16 @@ namespace carto {
             std::shared_ptr<TileLayer> layer;
             
             if (_defaultVectorLayerMode) {
-                if (!cartoCSS.empty()) {
+                if (!layerId.empty() && !cartoCSS.empty()) {
                     auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.mvt");
                     auto styleSet = std::make_shared<CartoCSSStyleSet>(cartoCSS, _vectorTileAssetPackage);
                     auto vectorTileDecoder = std::make_shared<MBVectorTileDecoder>(styleSet);
                     vectorTileDecoder->setCartoCSSLayerNamesIgnored(true); // all layer name filters should be ignored
+                    vectorTileDecoder->setLayerNameOverride(layerId);
                     return std::make_shared<VectorTileLayer>(dataSource, vectorTileDecoder);
                 }
                 else {
-                    Log::Warn("CartoMapsService::createLayer: No CartoCSS for layer, using raster tiles");
+                    Log::Warn("CartoMapsService::createLayer: No id/CartoCSS for layer, using raster tiles");
                 }
             }
             
@@ -385,9 +386,13 @@ namespace carto {
         for (auto it = layersInfo.begin(); it != layersInfo.end(); it++) {
             const picojson::value& layerInfo = *it;
 
-            // Layer type
+            // Read layer type and id
             std::string type = layerInfo.get("type").get<std::string>();
-
+            std::string layerId;
+            if (layerInfo.get("id").is<std::string>()) {
+                layerId = layerInfo.get("id").get<std::string>();
+            }
+            
             // Read CDN URLs
             std::map<std::string, std::string> cdnURLs;
             if (layerInfo.get("cdn_url").is<picojson::object>()) {
@@ -409,7 +414,7 @@ namespace carto {
             }
 
             int layerIndex = static_cast<int>(it - layersInfo.begin());
-            std::shared_ptr<Layer> layer = createLayer(layerIndex, layerGroupId, type, cartoCSS, cdnURLs);
+            std::shared_ptr<Layer> layer = createLayer(layerIndex, layerGroupId, type, layerId, cartoCSS, cdnURLs);
             if (layer) {
                 layers.push_back(layer);
             }
