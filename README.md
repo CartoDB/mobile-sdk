@@ -42,7 +42,7 @@ python build-android.py --profile standard --javac /Library/Java/JavaVirtualMach
 # iOS build:
 ```
 python swigpp-objc.py --profile standard
-python build-objc.py --profile standard
+python build-ios.py --profile standard
 ```
 
 # Xamarin Android build:
