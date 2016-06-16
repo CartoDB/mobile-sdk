@@ -73,8 +73,15 @@ namespace carto {
     }
 
     void LocalVectorDataSource::clear() {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _spatialIndex->clear();
+        std::vector<std::shared_ptr<VectorElement> > removedElements;
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            removedElements = _spatialIndex->getAll();
+            _spatialIndex->clear();
+        }
+        if (!removedElements.empty()) {
+            notifyElementsRemoved(removedElements);
+        }
     }
     
     std::vector<std::shared_ptr<VectorElement> > LocalVectorDataSource::getAll() const {
@@ -106,8 +113,12 @@ namespace carto {
             }
             std::copy(oldElementSet.begin(), oldElementSet.end(), std::back_inserter(elementsRemoved));
         }
-        notifyElementsAdded(elementsAdded);
-        notifyElementsRemoved(elementsRemoved);
+        if (!elementsAdded.empty()) {
+            notifyElementsAdded(elementsAdded);
+        }
+        if (!elementsRemoved.empty()) {
+            notifyElementsRemoved(elementsRemoved);
+        }
     }
     
     void LocalVectorDataSource::add(const std::shared_ptr<VectorElement>& element) {
@@ -133,7 +144,9 @@ namespace carto {
                 _elementId++;
             }
         }
-        notifyElementsAdded(elements);
+        if (!elements.empty()) {
+            notifyElementsAdded(elements);
+        }
     }
     
     bool LocalVectorDataSource::remove(const std::shared_ptr<VectorElement>& element) {
@@ -162,8 +175,8 @@ namespace carto {
                 }
             }
         }
-        for (const std::shared_ptr<VectorElement>& element : removedElements) {
-            notifyElementRemoved(element);
+        if (!removedElements.empty()) {
+            notifyElementsRemoved(removedElements);
         }
         return removedElements.size() == elements.size();
     }
