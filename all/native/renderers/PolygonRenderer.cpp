@@ -235,7 +235,7 @@ namespace carto {
                 if (GeomUtils::RayTriangleIntersect(rayOrig, rayDir, coords[indices[i]], coords[indices[i + 1]], coords[indices[i + 2]], clickPos)) {
                     double distance = GeomUtils::DistanceFromPoint(clickPos, viewState.getCameraPos());
                     MapPos projectedClickPos = layer->getDataSource()->getProjection()->fromInternal(clickPos);
-                    unsigned int priority = static_cast<unsigned int>(results.size());
+                    int priority = static_cast<int>(results.size());
                     results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projectedClickPos, projectedClickPos, priority));
                     return true;
                 }

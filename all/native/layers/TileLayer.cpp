@@ -331,8 +331,10 @@ namespace carto {
         if (auto options = _options.lock()) {
             if (options->isSeamlessPanning()) {
                 // Additional visibility testing has to be done if seamless panning is enabled
-                calculateVisibleTilesRecursive(cullState, MapTile(-1, 0, 0, _frameNr));
-                calculateVisibleTilesRecursive(cullState, MapTile( 1, 0, 0, _frameNr));
+                for (int i = 1; i <= 5; i++) {
+                    calculateVisibleTilesRecursive(cullState, MapTile(-i, 0, 0, _frameNr));
+                    calculateVisibleTilesRecursive(cullState, MapTile( i, 0, 0, _frameNr));
+                }
             }
         }
         

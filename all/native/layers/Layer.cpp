@@ -115,7 +115,7 @@ namespace carto {
         _surfaceCreated = true;
     }
     
-    bool Layer::onDrawFrame3D(float deltaSeconds, BillboardSorter& BillboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
+    bool Layer::onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
         return false;
     }
     

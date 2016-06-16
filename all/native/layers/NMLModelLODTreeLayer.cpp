@@ -109,7 +109,7 @@ namespace carto {
         _renderer->onSurfaceCreated(shaderManager, textureManager);
     }
     
-    bool NMLModelLODTreeLayer::onDrawFrame(float deltaSeconds, BillboardSorter& BillboardSorter, StyleTextureCache& styleCache, const ViewState& viewState)
+    bool NMLModelLODTreeLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState)
     {
         return _renderer->onDrawFrame(deltaSeconds, viewState);
     }

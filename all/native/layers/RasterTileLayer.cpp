@@ -218,13 +218,13 @@ namespace carto {
         _renderer->onSurfaceCreated(shaderManager, textureManager);
     }
     
-    bool RasterTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& BillboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
+    bool RasterTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
         updateTileLoadListener();
 
         return _renderer->onDrawFrame(deltaSeconds, viewState);
     }
     
-    bool RasterTileLayer::onDrawFrame3D(float deltaSeconds, BillboardSorter& BillboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
+    bool RasterTileLayer::onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
         return _renderer->onDrawFrame3D(deltaSeconds, viewState);
     }
 

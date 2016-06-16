@@ -247,7 +247,10 @@ namespace carto {
                 clickPos += originShift;
                 double distance = GeomUtils::DistanceFromPoint(clickPos, viewState.getCameraPos());
                 const std::shared_ptr<Projection>& projection = layer->getDataSource()->getProjection();
-                unsigned int priority = static_cast<unsigned int>(results.size());
+                int priority = static_cast<int>(results.size());
+                if (viewState.getTilt() == 90) { // if distances are equal, billboards are ordered based on 2D distance
+                    priority = -drawData->getScreenBottomDistance();
+                }
                 results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projection->fromInternal(clickPos), projection->fromInternal(drawData->getPos()), priority));
             }
         }
