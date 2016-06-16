@@ -58,6 +58,11 @@ namespace carto {
         virtual ~LocalVectorDataSource();
         
         virtual std::vector<std::shared_ptr<VectorElement> > loadElements(const std::shared_ptr<CullState>& cullState);
+
+        /**
+         * Clear the data source by removing all elements.
+         */
+        void clear();
         
         /**
          * Returns all vector elements added to this data source using add() and addAll() methods.
@@ -82,20 +87,22 @@ namespace carto {
          * Adds multiple vector elements to the data source. The vector elements' coordinates are expected to be
          * in the data source's projection's coordinate system. The order in which the elements are added has
          * no effect on the order they get rendered.
-         * @param elements A vector of vector elements to be added.
+         * @param elements A list of vector elements to be added.
          */
         void addAll(const std::vector<std::shared_ptr<VectorElement> >& elements);
+
         /**
          * Removes a vector element from the data source.
-         * @param elementToRemove The vector element to be removed.
+         * @param element The vector element to be removed.
          * @return True if the vector element existed in the data source.
          */
-        bool remove(const std::shared_ptr<VectorElement>& elementToRemove);
+        bool remove(const std::shared_ptr<VectorElement>& element);
         /**
-         * Removes all vector elements from the data source.
-         * @return The removed vector elements.
+         * Removes multiple vector elements from the data source.
+         * @param elements A list of vector elements to be removed.
+         * @return True if all listed elements were removed. False otherwise.
          */
-        std::vector<std::shared_ptr<VectorElement> > removeAll();
+        bool removeAll(const std::vector<std::shared_ptr<VectorElement> >& elements);
         
         /**
          * Returns the active geometry simplifier of the data source.

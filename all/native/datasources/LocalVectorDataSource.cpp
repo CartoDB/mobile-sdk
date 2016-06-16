@@ -71,6 +71,11 @@ namespace carto {
 
         return elements;
     }
+
+    void LocalVectorDataSource::clear() {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _spatialIndex->clear();
+    }
     
     std::vector<std::shared_ptr<VectorElement> > LocalVectorDataSource::getAll() const {
         std::lock_guard<std::mutex> lock(_mutex);
@@ -131,28 +136,36 @@ namespace carto {
         notifyElementsAdded(elements);
     }
     
-    bool LocalVectorDataSource::remove(const std::shared_ptr<VectorElement>& elementToRemove) {
+    bool LocalVectorDataSource::remove(const std::shared_ptr<VectorElement>& element) {
         bool removed = false;
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            const MapBounds& bounds = elementToRemove->getBounds();
+            const MapBounds& bounds = element->getBounds();
             MapBounds internalBounds(_projection->toInternal(bounds.getMin()), _projection->toInternal(bounds.getMax()));
-            removed = _spatialIndex->remove(internalBounds, elementToRemove);
+            removed = _spatialIndex->remove(internalBounds, element);
         }
         if (removed) {
-            notifyElementRemoved(elementToRemove);
+            notifyElementRemoved(element);
         }
         return removed;
     }
     
-    std::vector<std::shared_ptr<VectorElement> > LocalVectorDataSource::removeAll() {
-        std::vector<std::shared_ptr<VectorElement> > elements = getAll();
+    bool LocalVectorDataSource::removeAll(const std::vector<std::shared_ptr<VectorElement> >& elements) {
+        std::vector<std::shared_ptr<VectorElement> > removedElements;
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            _spatialIndex->clear();
+            for (const std::shared_ptr<VectorElement>& element : elements) {
+                const MapBounds& bounds = element->getBounds();
+                MapBounds internalBounds(_projection->toInternal(bounds.getMin()), _projection->toInternal(bounds.getMax()));
+                if (_spatialIndex->remove(internalBounds, element)) {
+                    removedElements.push_back(element);
+                }
+            }
         }
-        notifyElementsRemoved(elements);
-        return elements;
+        for (const std::shared_ptr<VectorElement>& element : removedElements) {
+            notifyElementRemoved(element);
+        }
+        return removedElements.size() == elements.size();
     }
     
     std::shared_ptr<GeometrySimplifier> LocalVectorDataSource::getGeometrySimplifier() const {
