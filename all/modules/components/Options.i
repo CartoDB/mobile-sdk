@@ -37,9 +37,9 @@
 %attributeval(carto::Options, carto::MapRange, TiltRange, getTiltRange, setTiltRange)
 %attributeval(carto::Options, carto::MapBounds, PanBounds, getPanBounds, setPanBounds)
 %attributeval(carto::Options, carto::ScreenPos, FocusPointOffset, getFocusPointOffset, setFocusPointOffset)
-%attributeval(carto::Options, carto::MapVec, MainLightDirection, getMainLightDirection)
-%attributeval(carto::Options, carto::Color, MainLightColor, getMainLightColor)
-%attributeval(carto::Options, carto::Color, AmbientLightColor, getAmbientLightColor)
+%attributeval(carto::Options, carto::Color, AmbientLightColor, getAmbientLightColor, setAmbientLightColor)
+%attributeval(carto::Options, carto::Color, MainLightColor, getMainLightColor, setMainLightColor)
+%attributeval(carto::Options, carto::MapVec, MainLightDirection, getMainLightDirection, setMainLightDirection)
 !attributestring_polymorphic(carto::Options, projections.Projection, BaseProjection, getBaseProjection, setBaseProjection)
 %attribute(carto::Options, carto::ProjectionMode::ProjectionMode, ProjectionMode, getProjectionMode, setProjectionMode)
 %attribute(carto::Options, carto::PanningMode::PanningMode, PanningMode, getPanningMode, setPanningMode)
@@ -52,11 +52,10 @@
 %attribute(carto::Options, float, DPI, getDPI, setDPI)
 %attribute(carto::Options, float, DrawDistance, getDrawDistance, setDrawDistance)
 %attributestring(carto::Options, std::shared_ptr<carto::Bitmap>, WatermarkBitmap, getWatermarkBitmap, setWatermarkBitmap)
-%attribute(carto::Options, float, WatermarkAlignmentX, getWatermarkAlignmentX)
-%attribute(carto::Options, float, WatermarkAlignmentY, getWatermarkAlignmentY)
+%attribute(carto::Options, float, WatermarkAlignmentX, getWatermarkAlignmentX, setWatermarkAlignmentX)
+%attribute(carto::Options, float, WatermarkAlignmentY, getWatermarkAlignmentY, setWatermarkAlignmentY)
 %attribute(carto::Options, float, WatermarkScale, getWatermarkScale, setWatermarkScale)
-%attribute(carto::Options, float, WatermarkPaddingX, getWatermarkPaddingX)
-%attribute(carto::Options, float, WatermarkPaddingY, getWatermarkPaddingY)
+%attributeval(carto::Options, carto::ScreenPos, WatermarkPadding, getWatermarkPadding, setWatermarkPadding)
 !objc_rename(setWatermarkAnchorX) carto::Options::setWatermarkAnchor;
 !objc_rename(setWatermarkPaddingX) carto::Options::setWatermarkPadding;
 %ignore carto::Options::Options;

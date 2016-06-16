@@ -124,8 +124,8 @@ namespace carto {
             // If the license is limited, draw the watermark in a random corner with a fixed padding
             float watermarkAlignmentX = limitedLicense ? _randomAlignmentX : _options.getWatermarkAlignmentX();
             float watermarkAlignmentY = limitedLicense ? _randomAlignmentY : _options.getWatermarkAlignmentY();
-            float watermarkPaddingX = limitedLicense ? FIXED_WATERMARK_PADDING_X : _options.getWatermarkPaddingX();
-            float watermarkPaddingY = limitedLicense ? FIXED_WATERMARK_PADDING_Y : _options.getWatermarkPaddingY();
+            float watermarkPaddingX = limitedLicense ? FIXED_WATERMARK_PADDING_X : _options.getWatermarkPadding().getX();
+            float watermarkPaddingY = limitedLicense ? FIXED_WATERMARK_PADDING_Y : _options.getWatermarkPadding().getY();
             float watermarkScale = limitedLicense ? 1.0f : _options.getWatermarkScale();
             
             // Calculate some params

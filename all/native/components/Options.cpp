@@ -32,8 +32,7 @@ namespace carto {
         _watermarkAlignmentX(-1),
         _watermarkAlignmentY(-1),
         _watermarkBitmap(GetDefaultWatermarkBitmap()),
-        _watermarkPaddingX(4),
-        _watermarkPaddingY(4),
+        _watermarkPadding(4, 4),
         _watermarkScale(1.0f),
         _userInput(true),
         _kineticPan(true),
@@ -61,7 +60,7 @@ namespace carto {
         return _ambientLightColor;
     }
     
-    void Options::setAmbientLight(const Color& color) {
+    void Options::setAmbientLightColor(const Color& color) {
         {
             std::lock_guard<std::mutex> lock(_mutex);
             if (_ambientLightColor == color) {
@@ -69,7 +68,7 @@ namespace carto {
             }
             _ambientLightColor = color;
         }
-        notifyOptionChanged("AmbientLight");
+        notifyOptionChanged("AmbientLightColor");
     }
     
     Color Options::getMainLightColor() const {
@@ -77,24 +76,34 @@ namespace carto {
         return _mainLightColor;
     }
     
+    void Options::setMainLightColor(const Color& color) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            if (_mainLightColor == color) {
+                return;
+            }
+            _mainLightColor = color;
+        }
+        notifyOptionChanged("MainLightColor");
+    }
+    
     MapVec Options::getMainLightDirection() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _mainLightDir * (-1);
     }
     
-    void Options::setMainLight(const Color& color, const MapVec& direction) {
+    void Options::setMainLightDirection(const MapVec& direction) {
         {
             std::lock_guard<std::mutex> lock(_mutex);
             MapVec directionNormalized = direction;
             directionNormalized.normalize();
             directionNormalized *= -1;
-            if (_mainLightColor == color && _mainLightDir == directionNormalized) {
+            if (_mainLightDir == directionNormalized) {
                 return;
             }
-            _mainLightColor = color;
             _mainLightDir = directionNormalized;
         }
-        notifyOptionChanged("MainLight");
+        notifyOptionChanged("MainLightDirection");
     }
     
     ProjectionMode::ProjectionMode Options::getProjectionMode() const {
@@ -310,20 +319,30 @@ namespace carto {
         return _watermarkAlignmentX;
     }
     
+    void Options::setWatermarkAlignmentX(float alignmentX) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            float alignmentXClipped = GeneralUtils::Clamp(alignmentX, -1.0f, 1.0f);
+            if (_watermarkAlignmentX == alignmentXClipped) {
+                return;
+            }
+            _watermarkAlignmentX = alignmentXClipped;
+        }
+        notifyOptionChanged("WatermarkAlignment");
+    }
+        
     float Options::getWatermarkAlignmentY() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _watermarkAlignmentY;
     }
         
-    void Options::setWatermarkAlignment(float alignmentX, float alignmentY) {
+    void Options::setWatermarkAlignmentY(float alignmentY) {
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            float alignmentXClipped = GeneralUtils::Clamp(alignmentX, -1.0f, 1.0f);
             float alignmentYClipped = GeneralUtils::Clamp(alignmentY, -1.0f, 1.0f);
-            if (_watermarkAlignmentX == alignmentXClipped && _watermarkAlignmentY == alignmentYClipped) {
+            if (_watermarkAlignmentY == alignmentYClipped) {
                 return;
             }
-            _watermarkAlignmentX = alignmentXClipped;
             _watermarkAlignmentY = alignmentYClipped;
         }
         notifyOptionChanged("WatermarkAlignment");
@@ -361,24 +380,18 @@ namespace carto {
         notifyOptionChanged("WatermarkBitmap");
     }
         
-    float Options::getWatermarkPaddingX() const {
+    ScreenPos Options::getWatermarkPadding() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return _watermarkPaddingX;
+        return _watermarkPadding;
     }
     
-    float Options::getWatermarkPaddingY() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _watermarkPaddingY;
-    }
-        
-    void Options::setWatermarkPadding(float paddingX, float paddingY) {
+    void Options::setWatermarkPadding(const ScreenPos& padding) {
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            if (_watermarkPaddingX == paddingX && _watermarkPaddingY == paddingY) {
+            if (_watermarkPadding == padding) {
                 return;
             }
-            _watermarkPaddingX = paddingX;
-            _watermarkPaddingY = paddingY;
+            _watermarkPadding = padding;
         }
         notifyOptionChanged("WatermarkPadding");
     }

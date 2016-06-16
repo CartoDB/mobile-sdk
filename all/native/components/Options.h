@@ -117,11 +117,11 @@ namespace carto {
          */
         Color getAmbientLightColor() const;
         /**
-         * Sets the parameters for the ambient light. Ambient light affects all lighting enabled models
-         * in the scene equally, it has no direction or location.
+         * Sets the ambient light color.
+         * Ambient light affects all lighting enabled models in the scene equally, it has no direction or location.
          * @param color The new color for the ambient light.
          */
-        void setAmbientLight(const Color& color);
+        void setAmbientLightColor(const Color& color);
         
         /**
          * Returns the color of the main light.
@@ -129,18 +129,24 @@ namespace carto {
          */
         Color getMainLightColor() const;
         /**
+         * Sets the color of the main light. The main light affects all lighting enabled models
+         * in the scene equally from a certain direction. This light can be used to simulate sun or moon light.
+         * @param color The new color for the main light.
+         */
+        void setMainLightColor(const Color& color);
+
+        /**
          * Returns the direction of the main light.
          * @return The direction of the main light.
          */
         MapVec getMainLightDirection() const;
         /**
-         * Sets the parameters for the main light. The main light affects all lighting enabled models
+         * Sets the direction of the main light. The main light affects all lighting enabled models
          * in the scene equally from a certain direction. This light can be used to simulate sun or moon light.
-         * @param color The new color for the main light.
          * @param direction The new direction vector for the main light. (0,0,-1) means straight down, (-0.707,0,-0.707) means
          *        from east with a 45 degree angle. The direction vector will be normalized.
          */
-        void setMainLight(const Color& color, const MapVec& direction);
+        void setMainLightDirection(const MapVec& direction);
     
         /**
          * Returns the projection mode.
@@ -314,18 +320,22 @@ namespace carto {
          */
         float getWatermarkAlignmentX() const;
         /**
+         * Sets the position of the watermark relative to the screen. Values will be clamped to [-1, 1] range.
+         * @param alignmentX The new horizontal alignment for the watermark. -1 means the left side,
+         * 0 the center and 1 the right side. The default is 1.
+         */
+        void setWatermarkAlignmentX(float alignmentX);
+        /**
          * Returns the vertical alignment of the watermark.
          * @return The vertical alignment of the watermark.
          */
         float getWatermarkAlignmentY() const;
         /**
          * Sets the position of the watermark relative to the screen. Values will be clamped to [-1, 1] range.
-         * @param alignmentX The new horizontal alignment for the watermark. -1 means the left side,
-         * 0 the center and 1 the right side. The default is 1.
          * @param alignmentY The new vertical alignment for the watermark. -1 means the bottom,
          * 0 the center and 1 the top. The default is -1.
          */
-        void setWatermarkAlignment(float alignmentX, float alignmentY);
+        void setWatermarkAlignmentY(float alignmentY);
     
         /**
          * Returns the watermark relative scale.
@@ -352,21 +362,15 @@ namespace carto {
         void setWatermarkBitmap(const std::shared_ptr<Bitmap>& watermarkBitmap);
         
         /**
-         * Returns the horizontal padding of the watermark.
-         * @return The horizontal padding of the watermark in dp.
+         * Returns the padding of the watermark.
+         * @return The padding of the watermark in dp.
          */
-        float getWatermarkPaddingX() const;
-        /**
-         * Returns the vertical padding of the watermark.
-         * @return The vertical padding of the watermark in dp.
-         */
-        float getWatermarkPaddingY() const;
+        ScreenPos getWatermarkPadding() const;
         /**
          * Sets the padding between the watermark and the edge of the screen.
-         * @param paddingX The new horizontal padding for the watermark in dp. The default is 4.
-         * @param paddingY The new vertical padding for the watermark in dp. The default is 4.
+         * @param padding The new padding for the watermark in dp. The default is 4,4.
          */
-        void setWatermarkPadding(float paddingX, float paddingY);
+        void setWatermarkPadding(const ScreenPos& padding);
         
         /**
          * Returns the state of the user input flag.
@@ -559,8 +563,7 @@ namespace carto {
         float _watermarkAlignmentX;
         float _watermarkAlignmentY;
         std::shared_ptr<Bitmap> _watermarkBitmap;
-        float _watermarkPaddingX;
-        float _watermarkPaddingY;
+        ScreenPos _watermarkPadding;
         float _watermarkScale;
         
         bool _userInput;
