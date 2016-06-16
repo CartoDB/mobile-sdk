@@ -97,9 +97,15 @@ namespace {
             if (arr.size() == 2) {
                 if (auto x = getDouble(arr[0])) {
                     if (auto y = getDouble(arr[1])) {
-                        return carto::MapPos(*x, *y);
+                        return carto::MapPos(*y, *x); // lat/long coordinates are flipped
                     }
                 }
+            }
+        }
+        else if (val.is<std::string>()) {
+            picojson::value parsedVal;
+            if (picojson::parse(parsedVal, val.get<std::string>()).empty()) {
+                return getMapPos(parsedVal);
             }
         }
         return boost::optional<carto::MapPos>();
@@ -114,6 +120,12 @@ namespace {
                         return carto::MapBounds(*min, *max);
                     }
                 }
+            }
+        }
+        else if (val.is<std::string>()) {
+            picojson::value parsedVal;
+            if (picojson::parse(parsedVal, val.get<std::string>()).empty()) {
+                return getMapBounds(parsedVal);
             }
         }
         return boost::optional<carto::MapBounds>();
