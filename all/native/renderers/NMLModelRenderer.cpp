@@ -90,7 +90,7 @@ namespace carto {
                 MapPos clickPos(pos(0), pos(1), pos(2));
                 double distance = GeomUtils::DistanceFromPoint(clickPos, viewState.getCameraPos());
                 MapPos projectedClickPos = layer->getDataSource()->getProjection()->fromInternal(clickPos);
-                unsigned int priority = static_cast<unsigned int>(results.size());
+                int priority = static_cast<int>(results.size());
                 results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projectedClickPos, projectedClickPos, priority));
             }
         }

@@ -293,7 +293,7 @@ namespace carto {
                     double distance = GeomUtils::DistanceFromPoint(clickPos, viewState.getCameraPos());
                     const MapPos& linePos = GeomUtils::CalculateNearestPointOnLineSegment(clickPos, *prevPos, *pos);
                     const std::shared_ptr<Projection>& projection = layer->getDataSource()->getProjection();
-                    unsigned int priority = static_cast<unsigned int>(results.size());
+                    int priority = static_cast<int>(results.size());
                     results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projection->fromInternal(clickPos), projection->fromInternal(linePos), priority));
                     return true;
                 }

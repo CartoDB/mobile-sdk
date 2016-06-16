@@ -272,7 +272,7 @@ namespace carto {
         }
     }
     
-    bool VectorTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& BillboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
+    bool VectorTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
         updateTileLoadListener();
 
         VectorTileLabelOrder::VectorTileLabelOrder labelOrder = getLabelOrder();
@@ -290,7 +290,7 @@ namespace carto {
         return _renderer->onDrawFrame(deltaSeconds, viewState);
     }
         
-    bool VectorTileLayer::onDrawFrame3D(float deltaSeconds, BillboardSorter& BillboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
+    bool VectorTileLayer::onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
         return _renderer->onDrawFrame3D(deltaSeconds, viewState);
     }
     
