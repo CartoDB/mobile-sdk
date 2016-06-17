@@ -32,13 +32,10 @@ namespace {
             return val.get<double>() != 0;
         }
         if (val.is<std::string>()) {
-            if (val.get<std::string>() == "true") {
-                return true;
+            picojson::value parsedVal;
+            if (picojson::parse(parsedVal, val.get<std::string>()).empty()) {
+                return getBool(parsedVal);
             }
-            if (val.get<std::string>() == "false") {
-                return true;
-            }
-            return boost::lexical_cast<bool>(val.get<std::string>());
         }
         return boost::optional<bool>();
     }

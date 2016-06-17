@@ -46,6 +46,7 @@ namespace carto { namespace mvt {
         float _haloOpacity = 1.0f;
         float _haloRadius = 0.0f;
         float _orientation = 0.0f;
+        bool _orientationDefined = false;
         float _dx = 0.0f;
         float _dy = 0.0f;
         float _minimumDistance = 0.0f;

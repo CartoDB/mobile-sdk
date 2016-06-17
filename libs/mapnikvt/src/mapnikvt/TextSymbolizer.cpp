@@ -37,6 +37,9 @@ namespace carto { namespace mvt {
         std::string text = getTransformedText(_text);
         std::size_t hash = std::hash<std::string>()(text);
         vt::LabelOrientation placement = convertLabelPlacement(_placement);
+        if (_orientationDefined) { // if orientation parameter is explicitly defined, use point placement
+            placement = vt::LabelOrientation::POINT;
+        }
         float minimumDistance = _minimumDistance * std::pow(2.0f, -exprContext.getZoom());
         long long groupId = (_allowOverlap ? -1 : (minimumDistance > 0 ? (hash & 0x7fffffff) : 0));
 
@@ -157,6 +160,7 @@ namespace carto { namespace mvt {
         }
         else if (name == "orientation") {
             bind(&_orientation, parseExpression(value));
+            _orientationDefined = true;
         }
         else if (name == "dx") {
             bind(&_dx, parseExpression(value));
