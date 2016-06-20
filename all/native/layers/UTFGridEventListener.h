@@ -23,10 +23,10 @@ namespace carto {
          * Listener method that gets called when a click is performed on an UTF grid element.
          * If the method returns true, all subsequent layers are ignored and click event is not passed down.
          * This method will NOT be called from the main thread.
-         * @param utfGridClickInfo A container that provides information about the click.
+         * @param clickInfo A container that provides information about the click.
          * @return True if the click is handled and subsequent layers do not need to be notified.
          */
-        virtual bool onUTFGridClicked(const std::shared_ptr<UTFGridClickInfo>& utfGridClickInfo) { return true; }
+        virtual bool onUTFGridClicked(const std::shared_ptr<UTFGridClickInfo>& clickInfo) { return true; }
     };
     
 }
