@@ -61,11 +61,11 @@ namespace carto {
             const NMLModelDrawData& drawData = *element->getDrawData();
             
             std::shared_ptr<nml::Model> sourceModel = drawData.getSourceModel();
-            GLModelMap::const_iterator model_it = _glModelMap.find(sourceModel);
-            if (model_it == _glModelMap.end()) {
+            GLModelMap::const_iterator modelIt = _glModelMap.find(sourceModel);
+            if (modelIt == _glModelMap.end()) {
                 continue;
             }
-            std::shared_ptr<nmlgl::Model> glModel = model_it->second;
+            std::shared_ptr<nmlgl::Model> glModel = modelIt->second;
     
             cglib::mat4x4<double> modelMat = drawData.getLocalMat();
             cglib::mat4x4<double> invModelMat = cglib::inverse(modelMat);

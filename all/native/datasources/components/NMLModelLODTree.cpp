@@ -8,17 +8,8 @@
 #include <cassert>
 
 namespace carto {
-    NMLModelLODTreeProxy::NMLModelLODTreeProxy(const MapPos& pos) :
-        VectorElement(std::make_shared<PointGeometry>(pos))
-    {
-    }
-    
-    std::shared_ptr<PointGeometry> NMLModelLODTreeProxy::getGeometry() const {
-        return std::static_pointer_cast<PointGeometry>(_geometry);
-    }
-    
+
     NMLModelLODTree::NMLModelLODTree(long long modelLODTreeId, const MapPos& mapPos, std::shared_ptr<Projection> projection, std::shared_ptr<nml::ModelLODTree> sourceModelLODTree, const ProxyMap& proxyMap, const MeshBindingsMap& meshBindingsMap, const TextureBindingsMap& textureBindingsMap) :
-        VectorElement(std::shared_ptr<Geometry>()),
         _modelLODTreeId(modelLODTreeId),
         _mapPos(mapPos),
         _localMat(ViewState::GetLocalMat(mapPos, *projection)),

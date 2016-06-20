@@ -12,6 +12,7 @@
 #include "layers/Layer.h"
 #include "components/CancelableTask.h"
 #include "components/CancelableThreadPool.h"
+#include "components/DirectorPtr.h"
 #include "datasources/NMLModelLODTreeDataSource.h"
 #include "renderers/NMLModelLODTreeRenderer.h"
 #include "graphics/ViewState.h"
@@ -22,6 +23,7 @@
 
 namespace carto {
     class CullState;
+    class NMLModelLODTreeEventListener;
     
     /**
      * An advanced layer for 3D models that supports automatic Level of Detail (LOD) calculation based on view.
@@ -68,6 +70,17 @@ namespace carto {
          * @param factor The relative LOD resolution factor.
          */
         void setLODResolutionFactor(float factor);
+    
+        /**
+         * Returns the NML model event listener.
+         * @return The NML model event listener.
+         */
+        std::shared_ptr<NMLModelLODTreeEventListener> getNMLModelLODTreeEventListener() const;
+        /**
+         * Sets the NML model event listener.
+         * @param nmlModelLODTreeEventListener The vector element event listener.
+         */
+        void setNMLModelLODTreeEventListener(const std::shared_ptr<NMLModelLODTreeEventListener>& nmlModelLODTreeEventListener);
     
         virtual bool isUpdateInProgress() const;
 
@@ -203,6 +216,8 @@ namespace carto {
         FetchingTasks _fetchingTextures;
         
         std::shared_ptr<CancelableThreadPool> _fetchThreadPool;
+
+        ThreadSafeDirectorPtr<NMLModelLODTreeEventListener> _nmlModelLODTreeEventListener;
     
         std::shared_ptr<NMLModelLODTreeDataSource> _dataSource;
         std::shared_ptr<NMLModelLODTreeRenderer> _renderer;

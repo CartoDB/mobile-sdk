@@ -5,7 +5,7 @@
 
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT
 
-!proxy_imports(carto::NMLModelLODTreeLayer, datasources.NMLModelLODTreeDataSource, layers.Layer)
+!proxy_imports(carto::NMLModelLODTreeLayer, datasources.NMLModelLODTreeDataSource, layers.Layer, layers.NMLModelLODTreeEventListener)
 
 %{
 #include "layers/NMLModelLODTreeLayer.h"

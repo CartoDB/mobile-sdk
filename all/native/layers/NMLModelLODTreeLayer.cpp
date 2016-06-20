@@ -1,12 +1,15 @@
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT
 
 #include "NMLModelLODTreeLayer.h"
+#include "components/CancelableThreadPool.h"
+#include "layers/NMLModelLODTreeEventListener.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/components/CullState.h"
+#include "renderers/components/RayIntersectedElement.h"
+#include "ui/NMLModelLODTreeClickInfo.h"
+#include "utils/Log.h"
 #include "nml/Mesh.h"
 #include "nml/Texture.h"
-#include "components/CancelableThreadPool.h"
-#include "utils/Log.h"
 #include "nml/nmlpackage/NMLPackage.pb.h"
 
 namespace {
@@ -59,6 +62,7 @@ namespace carto {
         _fetchingMeshes(),
         _fetchingTextures(),
         _fetchThreadPool(std::make_shared<CancelableThreadPool>()),
+        _nmlModelLODTreeEventListener(),
         _dataSource(dataSource),
         _renderer(std::make_shared<NMLModelLODTreeRenderer>())
     {
@@ -96,6 +100,14 @@ namespace carto {
         refresh();
     }
 
+    std::shared_ptr<NMLModelLODTreeEventListener> NMLModelLODTreeLayer::getNMLModelLODTreeEventListener() const {
+        return _nmlModelLODTreeEventListener.get();
+    }
+    
+    void NMLModelLODTreeLayer::setNMLModelLODTreeEventListener(const std::shared_ptr<NMLModelLODTreeEventListener>& nmlModelLODTreeEventListener) {
+        _nmlModelLODTreeEventListener.set(nmlModelLODTreeEventListener);
+    }
+    
     bool NMLModelLODTreeLayer::isUpdateInProgress() const {
         return _fetchingModelLODTrees.getTaskCount() > 0 || _fetchingMeshes.getTaskCount() > 0 || _fetchingTextures.getTaskCount() > 0;
     }
@@ -125,8 +137,16 @@ namespace carto {
     }
 
     bool NMLModelLODTreeLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
-        // TODO: implement?
-        return false;
+        std::shared_ptr<NMLModelLODTree::Proxy> element = intersectedElement.getElement<NMLModelLODTree::Proxy>();
+
+        DirectorPtr<NMLModelLODTreeEventListener> nmlModelLODTreeEventListener = _nmlModelLODTreeEventListener;
+
+        if (nmlModelLODTreeEventListener) {
+            auto clickInfo = std::make_shared<NMLModelLODTreeClickInfo>(clickType, intersectedElement.getHitPos(), intersectedElement.getElementPos(), element->metaData, intersectedElement.getLayer());
+            return nmlModelLODTreeEventListener->onNMLModelLODTreeClicked(clickInfo);
+        }
+
+        return clickType == ClickType::CLICK_TYPE_SINGLE || clickType == ClickType::CLICK_TYPE_LONG; // by default, disable 'click through' for single and long clicks
     }
     
     void NMLModelLODTreeLayer::registerDataSourceListener() {

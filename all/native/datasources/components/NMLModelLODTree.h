@@ -9,10 +9,11 @@
 
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT
 
-#include "VectorElement.h"
 #include "core/MapPos.h"
 #include "projections/Projection.h"
 
+#include <memory>
+#include <map>
 #include <list>
 #include <vector>
 
@@ -27,33 +28,17 @@ namespace nml {
 }
     
 namespace carto {
-    class PointGeometry;
-        
-    /**
-     * A proxy class representing a small part (f.e a single building) of the NMLModelLODTree.
-     */
-    class NMLModelLODTreeProxy : public VectorElement {
+
+    class NMLModelLODTree : public std::enable_shared_from_this<NMLModelLODTree> {
     public:
-        /**
-         * Constructs a NMLModelLODTreeProxy object from a map position.
-         * @param pos The map position that defines the location of this proxy.
-         */
-        NMLModelLODTreeProxy(const MapPos& pos);
-        
-        std::shared_ptr<PointGeometry> getGeometry() const;
-    };
+        struct Proxy {
+            long long id;
+            MapPos mapPos;
+            std::map<std::string, std::string> metaData;
+
+            Proxy(long long id, const MapPos& mapPos, const std::map<std::string, std::string>& metaData) : id(id), mapPos(mapPos), metaData(metaData) { }
+        };
     
-    /**
-     * A combined 3D NML model with Level of Detail (LOD) representation that can be displayed on the map.
-     *
-     * NML LOD trees can be created from KMZ or GeoJSON files. LOD trees are optimized for large 
-     * number of static objects (buildings, for example), and support rendering of hundreds or even thousands of textured objects simultaneously.
-     *
-     * This class is an internal representation of NML LOD trees and should not be used directly.
-     * Instead LOD tree layer with corresponding LOD tree data source should be used.
-     */
-    class NMLModelLODTree : public VectorElement {
-    public:
         struct MeshBinding {
             long long meshId;
             std::string localId;
@@ -70,7 +55,7 @@ namespace carto {
     
             TextureBinding(long long textureId, int level, const std::string &localId) : textureId(textureId), level(level), localId(localId) { }
         };
-    
+
         typedef nml::Mesh Mesh;
         typedef nml::MeshOp MeshOp;
         typedef nml::Texture Texture;
@@ -78,7 +63,7 @@ namespace carto {
         typedef std::list<TextureBinding> TextureBindingList;
         typedef std::map<int, MeshBindingList> MeshBindingsMap;
         typedef std::map<int, TextureBindingList> TextureBindingsMap;
-        typedef std::map<int, std::shared_ptr<NMLModelLODTreeProxy> > ProxyMap;
+        typedef std::map<int, Proxy> ProxyMap;
         
         NMLModelLODTree(long long modelLODTreeId, const MapPos& mapPos, std::shared_ptr<Projection> projection, std::shared_ptr<nml::ModelLODTree> sourceModelLODTree, const ProxyMap& proxyMap, const MeshBindingsMap& meshBindingsMap, const TextureBindingsMap& textureBindingsMap);
         virtual ~NMLModelLODTree();

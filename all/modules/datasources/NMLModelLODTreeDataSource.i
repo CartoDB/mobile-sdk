@@ -19,7 +19,6 @@
 %include <cartoswig.i>
 
 %import "projections/Projection.i"
-%import "vectorelements/NMLModelLODTreeProxy.i"
 
 !polymorphic_shared_ptr(carto::NMLModelLODTreeDataSource, datasources.NMLModelLODTreeDataSource)
 

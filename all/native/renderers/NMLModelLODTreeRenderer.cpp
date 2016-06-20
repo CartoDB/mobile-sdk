@@ -75,8 +75,7 @@ namespace carto {
         }
     }
 
-    void NMLModelLODTreeRenderer::calculateRayIntersectedElements(const std::shared_ptr<NMLModelLODTreeLayer>& layer, const MapPos& rayOrig, const MapVec& rayDir, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const
-    {
+    void NMLModelLODTreeRenderer::calculateRayIntersectedElements(const std::shared_ptr<NMLModelLODTreeLayer>& layer, const MapPos& rayOrig, const MapVec& rayDir, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
         std::lock_guard<std::mutex> lock(_mutex);
     
         for (auto it = _drawRecordMap.begin(); it != _drawRecordMap.end(); it++) {
@@ -104,8 +103,8 @@ namespace carto {
             glModel->calculateRayIntersections(nmlgl::Ray(rayOrigModel, rayDirModel), intersections);
             
             for (size_t i = 0; i < intersections.size(); i++) {
-                NMLModelLODTree::ProxyMap::const_iterator proxy_it = record.drawData.getProxyMap()->find(intersections[i].vertexId);
-                if (proxy_it == record.drawData.getProxyMap()->end()) {
+                NMLModelLODTree::ProxyMap::const_iterator proxyIt = record.drawData.getProxyMap()->find(intersections[i].vertexId);
+                if (proxyIt == record.drawData.getProxyMap()->end()) {
                     continue;
                 }
                 
@@ -114,7 +113,7 @@ namespace carto {
                 double distance = GeomUtils::DistanceFromPoint(clickPos, viewState.getCameraPos());
                 MapPos projectedClickPos = layer->getDataSource()->getProjection()->fromInternal(clickPos);
                 int priority = static_cast<int>(results.size());
-                results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(proxy_it->second), layer, projectedClickPos, projectedClickPos, priority));
+                results.push_back(RayIntersectedElement(std::make_shared<NMLModelLODTree::Proxy>(proxyIt->second), layer, projectedClickPos, projectedClickPos, priority));
             }
         }
     }
