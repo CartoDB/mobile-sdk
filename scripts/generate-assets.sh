@@ -10,4 +10,4 @@ xxd -i default-polygon-3d.png > ../all/native/assets/DefaultPolygon3DPNG.h
 xxd -i default-sky.png > ../all/native/assets/DefaultSkyPNG.h
 xxd -i evaluation-watermark.png | sed 's/unsigned/static unsigned/' > ../all/native/assets/EvaluationWatermarkPNG.h
 xxd -i expired-watermark.png | sed 's/unsigned/static unsigned/' > ../all/native/assets/ExpiredWatermarkPNG.h
-xxd -i nutiteq-watermark.png | sed 's/unsigned/static unsigned/' > ../all/native/assets/NutiteqWatermarkPNG.h
+xxd -i carto-watermark.png | sed 's/unsigned/static unsigned/' > ../all/native/assets/CartoWatermarkPNG.h
