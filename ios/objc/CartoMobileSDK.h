@@ -106,9 +106,6 @@
 #import "NTTextStyle.h"
 #import "NTGeometryCollectionStyle.h"
 #import "NTGeometryCollectionStyleBuilder.h"
-#import "NTStyleSelector.h"
-#import "NTStyleSelectorBuilder.h"
-#import "NTCartoCSSParser.h"
 
 #import "NTMapRenderer.h"
 #import "NTMapRendererListener.h"
