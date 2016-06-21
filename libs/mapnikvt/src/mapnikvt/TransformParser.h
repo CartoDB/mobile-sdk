@@ -66,7 +66,7 @@ namespace carto { namespace mvt {
 
                 rotate =
                       (rotate_kw >> '(' >> number >> ')') [_val = phx::bind(&makeRotateTransform, 0, 0, _1)]
-                    | (rotate_kw >> ('(' > number > ',' > number > ',' > number > ')')) [_val = phx::bind(&makeRotateTransform, _1, _2, _3)]
+                    | (rotate_kw >> ('(' > number > ',' > number > ',' > number > ')')) [_val = phx::bind(&makeRotateTransform, _2, _3, _1)]
                     ;
 
                 scale =

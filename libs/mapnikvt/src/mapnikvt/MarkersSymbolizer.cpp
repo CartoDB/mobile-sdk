@@ -12,6 +12,9 @@ namespace carto { namespace mvt {
 
         float fontScale = symbolizerContext.getSettings().getFontScale();
         vt::LabelOrientation placement = convertLabelPlacement(_placement);
+        if (_transformDefined) { // if orientation parameter is explicitly defined, use point placement
+            placement = vt::LabelOrientation::POINT;
+        }
 
         float bitmapScaleX = fontScale, bitmapScaleY = fontScale;
         std::shared_ptr<const vt::Bitmap> bitmap;
@@ -191,6 +194,7 @@ namespace carto { namespace mvt {
         }
         else if (name == "transform") {
             bind(&_transform, parseStringExpression(value), &MarkersSymbolizer::convertTransform);
+            _transformDefined = true;
         }
         else if (name == "opacity") { // binds to 2 parameters
             bind(&_fillOpacity, parseExpression(value));
