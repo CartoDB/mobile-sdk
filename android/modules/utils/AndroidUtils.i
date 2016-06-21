@@ -9,6 +9,8 @@
 #include "utils/AndroidUtils.h"	
 %}
 
+%include <std_string.i>
+
 #ifdef SWIGJAVA
 %typemap(in) JNIEnv* %{
     $1 = jenv;
