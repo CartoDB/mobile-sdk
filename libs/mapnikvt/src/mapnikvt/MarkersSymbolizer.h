@@ -40,6 +40,7 @@ namespace carto { namespace mvt {
         bool _allowOverlap = false;
         bool _ignorePlacement = false;
         cglib::mat3x3<float> _transform = cglib::mat3x3<float>::identity();
+        bool _transformDefined;
     };
 } }
 
