@@ -24,19 +24,20 @@ namespace carto { namespace nmlgl {
     class Mesh;
     class MeshInstance;
     class Texture;
+    class ShaderManager;
 
     class Model {
     public:
         Model(const nml::Model& model);
             
-        void create(const std::shared_ptr<GLContext>& gl);
-        void dispose(const std::shared_ptr<GLContext>& gl);
+        void create(ShaderManager& shaderManager);
+        void dispose();
 
         void replaceMesh(const std::string& id, const std::shared_ptr<Mesh>& glMesh);
         void replaceMesh(const std::string& id, const std::shared_ptr<Mesh>& glMesh, const std::shared_ptr<nml::MeshOp>& meshOp);
         void replaceTexture(const std::string& id, const std::shared_ptr<Texture>& glTexture);
 
-        void draw(const std::shared_ptr<GLContext>& gl);
+        void draw(const RenderState& renderState);
 
         void calculateRayIntersections(const Ray& ray, std::vector<RayIntersection>& intersections) const;
 
@@ -46,7 +47,7 @@ namespace carto { namespace nmlgl {
         int getTotalGeometrySize() const;
 
     private:
-        typedef std::pair<std::shared_ptr<Mesh>, std::shared_ptr<nml::MeshOp> > MeshMeshOpPair;
+        typedef std::pair<std::shared_ptr<Mesh>, std::shared_ptr<nml::MeshOp>> MeshMeshOpPair;
 
         cglib::bbox3<float> _bounds = cglib::bbox3<float>::smallest();
         std::map<std::string, MeshMeshOpPair> _meshMap;

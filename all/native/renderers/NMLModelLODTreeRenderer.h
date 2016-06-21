@@ -9,45 +9,66 @@
 
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT
 
-#include "renderers/NMLModelRendererBase.h"
 #include "renderers/drawdatas/NMLModelLODTreeDrawData.h"
-#include "nml/Model.h"
 #include "vectorelements/NMLModelLODTree.h"
 
+#include <memory>
+#include <mutex>
 #include <list>
 #include <vector>
 
 namespace carto {
+    class MapPos;
+    class MapVec;
+    class Options;
+    class Shader;
+    class ShaderManager;
+    class TextureManager;
+    class RayIntersectedElement;
+    class ViewState;
     class NMLModelLODTreeDataSource;
     class NMLModelLODTreeLayer;
     
-    class NMLModelLODTreeRenderer : public NMLModelRendererBase {
+    namespace nmlgl {
+        class Model;
+        class ShaderManager;
+    }
+
+    class NMLModelLODTreeRenderer {
     public:
         NMLModelLODTreeRenderer();
         virtual ~NMLModelLODTreeRenderer();
     
         void addDrawData(const std::shared_ptr<NMLModelLODTreeDrawData>& drawData);
         void refreshDrawData();
+
+        void setOptions(const std::weak_ptr<Options>& options);
         
         virtual void offsetLayerHorizontally(double offset);
     
+        virtual void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
+        virtual bool onDrawFrame(float deltaSeconds, const ViewState& viewState);
+        virtual void onSurfaceDestroyed();
+
         virtual void calculateRayIntersectedElements(const std::shared_ptr<NMLModelLODTreeLayer>& layer, const MapPos& rayOrig, const MapVec& rayDir, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
     
     protected:
         struct ModelNodeDrawRecord {
             NMLModelLODTreeDrawData drawData;
             ModelNodeDrawRecord* parent;
-            std::vector<ModelNodeDrawRecord *> children;
+            std::vector<ModelNodeDrawRecord*> children;
             bool used;
             bool created;
     
             ModelNodeDrawRecord(const NMLModelLODTreeDrawData& drawData) : drawData(drawData), parent(0), children(), used(false), created(false) { }
         };
     
+        std::shared_ptr<nmlgl::ShaderManager> _glShaderManager;
         std::vector<std::shared_ptr<NMLModelLODTreeDrawData> > _tempDrawDatas;
         std::map<long long, std::shared_ptr<ModelNodeDrawRecord> > _drawRecordMap;
-    
-        virtual bool drawModels(const ViewState& viewState);
+        std::weak_ptr<Options> _options;
+
+        mutable std::mutex _mutex;
     };
     
 }

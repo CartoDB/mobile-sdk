@@ -20,19 +20,22 @@ namespace nml {
 
 namespace carto { namespace nmlgl {
     class Texture;
+    class ShaderManager;
 
     class Material {
     public:
         Material(const nml::Material& material, const std::map<std::string, std::shared_ptr<Texture>>& textureMap);
 
-        void replaceTexture(const std::string& textureId, const std::shared_ptr<Texture>& glTexture);
-
-        void bind(const std::shared_ptr<GLContext>& gl);
+        void create(ShaderManager& shaderManager);
+        void dispose();
 
         int getCulling() const;
 
-    private:
+        void replaceTexture(const std::string& textureId, const std::shared_ptr<Texture>& glTexture);
 
+        void bind(const RenderState& renderState, const cglib::mat4x4<float>& mvMatrix, const cglib::mat4x4<float>& invTransMVMatrix);
+
+    private:
         struct ColorOrTexture {
             std::string textureId;
             std::shared_ptr<Texture> texture;
@@ -44,9 +47,15 @@ namespace carto { namespace nmlgl {
 
         int _type;
         int _culling;
-        bool _translucent;
+        int _opaqueMode;
+        ColorOrTexture _emission;
+        ColorOrTexture _ambient;
         ColorOrTexture _diffuse;
-        std::shared_ptr<Texture> _nullTexture;
+        ColorOrTexture _transparent;
+        float _transparency;
+        ColorOrTexture _specular;
+        float _shininess;
+        GLuint _glProgramId;
     };
 } }
 

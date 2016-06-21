@@ -6,6 +6,7 @@
 #include "layers/VectorLayer.h"
 #include "projections/Projection.h"
 #include "nml/Model.h"
+#include "nml/ShaderManager.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "utils/Log.h"
 #include "utils/GLES2.h"
@@ -15,9 +16,12 @@
 namespace carto {
 
     NMLModelRenderer::NMLModelRenderer() :
+        _glShaderManager(),
         _glModelMap(),
         _elements(),
-        _tempElements()
+        _tempElements(),
+        _options(),
+        _mutex()
     {
     }
     
@@ -46,12 +50,84 @@ namespace carto {
         _elements.erase(std::remove(_elements.begin(), _elements.end(), element), _elements.end());
     }
     
+    void NMLModelRenderer::setOptions(const std::weak_ptr<Options>& options) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _options = options;
+    }
+
     void NMLModelRenderer::offsetLayerHorizontally(double offset) {
         std::lock_guard<std::mutex> lock(_mutex);
         
         for (const std::shared_ptr<NMLModel>& element : _elements) {
             element->getDrawData()->offsetHorizontally(offset);
         }
+    }
+
+    void NMLModelRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
+        _glShaderManager = std::make_shared<nmlgl::ShaderManager>();
+        _glModelMap.clear();
+    }
+
+    bool NMLModelRenderer::onDrawFrame(float deltaSeconds, const ViewState& viewState) {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        std::shared_ptr<Options> options = _options.lock();
+        if (!options) {
+            return false;
+        }
+    
+        // Set expected GL state
+        glDepthMask(GL_TRUE);
+        glEnable(GL_DEPTH_TEST);
+
+        // Calculate lighting state
+        Color ambientColor = options->getAmbientLightColor();
+        cglib::vec4<float> ambientLightColor = cglib::vec4<float>(ambientColor.getR(), ambientColor.getG(), ambientColor.getB(), ambientColor.getA()) * (1.0f / 255.0f);
+        Color mainColor = options->getMainLightColor();
+        cglib::vec4<float> mainLightColor = cglib::vec4<float>(mainColor.getR(), mainColor.getG(), mainColor.getB(), mainColor.getA()) * (1.0f / 255.0f);
+        MapVec mainDir = options->getMainLightDirection();
+        cglib::vec3<float> mainLightDir = cglib::unit(cglib::vec3<float>::convert(cglib::transform_vector(cglib::vec3<double>(mainDir.getX(), mainDir.getY(), mainDir.getZ()), viewState.getModelviewMat())));
+
+        // Draw models
+        cglib::mat4x4<float> projMat = cglib::mat4x4<float>::convert(viewState.getProjectionMat());
+        for (const std::shared_ptr<NMLModel>& element : _elements) {
+            const NMLModelDrawData& drawData = *element->getDrawData();
+            std::shared_ptr<nml::Model> sourceModel = drawData.getSourceModel();
+            std::shared_ptr<nmlgl::Model> glModel = _glModelMap[sourceModel];
+            if (!glModel) {
+                glModel = std::make_shared<nmlgl::Model>(*sourceModel);
+                glModel->create(*_glShaderManager);
+                _glModelMap[sourceModel] = glModel;
+            }
+    
+            cglib::mat4x4<float> mvMat = cglib::mat4x4<float>::convert(viewState.getModelviewMat() * drawData.getLocalMat());
+            nmlgl::RenderState renderState(projMat, mvMat, ambientLightColor, mainLightColor, -mainLightDir);
+
+            glModel->draw(renderState);
+        }
+    
+        // Dispose unused models
+        for (auto it = _glModelMap.begin(); it != _glModelMap.end(); ) {
+            if (it->first.unique()) {
+                it->second->dispose();
+                it = _glModelMap.erase(it);
+            } else {
+                it++;
+            }
+        }
+
+        // Restore expected GL state
+        glDepthMask(GL_TRUE);
+        glDisable(GL_DEPTH_TEST);
+        glActiveTexture(GL_TEXTURE0);
+
+        GLUtils::checkGLError("NMLModelRenderer::onDrawFrame()");
+        return false;
+    }
+
+    void NMLModelRenderer::onSurfaceDestroyed() {
+        _glShaderManager.reset();
+        _glModelMap.clear();
     }
 
     void NMLModelRenderer::calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const MapPos& rayOrig, const MapVec& rayDir, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
@@ -61,11 +137,11 @@ namespace carto {
             const NMLModelDrawData& drawData = *element->getDrawData();
             
             std::shared_ptr<nml::Model> sourceModel = drawData.getSourceModel();
-            GLModelMap::const_iterator model_it = _glModelMap.find(sourceModel);
-            if (model_it == _glModelMap.end()) {
+            auto modelIt = _glModelMap.find(sourceModel);
+            if (modelIt == _glModelMap.end()) {
                 continue;
             }
-            std::shared_ptr<nmlgl::Model> glModel = model_it->second;
+            std::shared_ptr<nmlgl::Model> glModel = modelIt->second;
     
             cglib::mat4x4<double> modelMat = drawData.getLocalMat();
             cglib::mat4x4<double> invModelMat = cglib::inverse(modelMat);
@@ -94,40 +170,6 @@ namespace carto {
                 results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projectedClickPos, projectedClickPos, priority));
             }
         }
-    }
-    
-    bool NMLModelRenderer::drawModels(const ViewState& viewState) {
-        std::lock_guard<std::mutex> lock(_mutex);
-    
-        // Draw all models, create missing model objects
-        for (const std::shared_ptr<NMLModel>& element : _elements) {
-            const NMLModelDrawData& drawData = *element->getDrawData();
-            std::shared_ptr<nml::Model> sourceModel = drawData.getSourceModel();
-            std::shared_ptr<nmlgl::Model> glModel = _glModelMap[sourceModel];
-            if (!glModel) {
-                glModel = std::make_shared<nmlgl::Model>(*sourceModel);
-                glModel->create(_glContext);
-                _glModelMap[sourceModel] = glModel;
-            }
-    
-            cglib::mat4x4<float> lmvpMat = cglib::mat4x4<float>::convert(viewState.getModelviewProjectionMat() * drawData.getLocalMat());
-            _glContext->setModelviewProjectionMatrix(lmvpMat);
-    
-            glModel->draw(_glContext);
-        }
-    
-        // Dispose unused models
-        for (GLModelMap::iterator it = _glModelMap.begin(); it != _glModelMap.end(); ) {
-            if (it->first.unique()) {
-                it->second->dispose(_glContext);
-                it = _glModelMap.erase(it);
-            } else {
-                it++;
-            }
-        }
-        
-        // No need to refresh
-        return false;
     }
     
 }

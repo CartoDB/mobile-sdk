@@ -10,7 +10,7 @@ namespace carto { namespace nmlgl {
     {
         for (int i = 0; i < mesh.submeshes_size(); i++) {
             nml::Submesh submesh = mesh.submeshes(i);
-            std::shared_ptr<Submesh> glSubmesh = std::make_shared<Submesh>(submesh);
+            auto glSubmesh = std::make_shared<Submesh>(submesh);
             _submeshList.push_back(glSubmesh);
         }
     }
@@ -20,20 +20,20 @@ namespace carto { namespace nmlgl {
     {
         for (int i = 0; i < meshOp.submesh_op_lists_size(); i++) {
             const nml::SubmeshOpList &submeshOpList = meshOp.submesh_op_lists(i);
-            std::shared_ptr<Submesh> glSubmesh = std::make_shared<Submesh>(Mesh, submeshOpList);
+            auto glSubmesh = std::make_shared<Submesh>(Mesh, submeshOpList);
             _submeshList.push_back(glSubmesh);
         }
     }
     
-    void Mesh::create(const std::shared_ptr<GLContext>& gl) {
+    void Mesh::create() {
         for (auto it = _submeshList.begin(); it != _submeshList.end(); it++) {
-            (*it)->create(gl);
+            (*it)->create();
         }
     }
     
-    void Mesh::dispose(const std::shared_ptr<GLContext>& gl) {
+    void Mesh::dispose() {
         for (auto it = _submeshList.begin(); it != _submeshList.end(); it++) {
-            (*it)->dispose(gl);
+            (*it)->dispose();
         }
     }
     

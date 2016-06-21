@@ -23,10 +23,10 @@ namespace carto { namespace nmlgl {
     public:
         Texture(std::shared_ptr<nml::Texture> texture);
 
-        void create(const std::shared_ptr<GLContext>& gl);
-        void dispose(const std::shared_ptr<GLContext>& gl);
+        void create();
+        void dispose();
 
-        void bind(const std::shared_ptr<GLContext>& gl);
+        void bind(int texUnit);
 
         int getTextureSize() const;
 
@@ -36,16 +36,15 @@ namespace carto { namespace nmlgl {
         static GLuint getSamplerWrapMode(int wrapMode);
         static bool hasGLExtension(const char* ext);
         
-        void updateSampler(const std::shared_ptr<GLContext>& gl, bool hasSampler, nml::Sampler sampler, bool complete);
-        void updateMipLevel(const std::shared_ptr<GLContext>& gl, int level, const nml::Texture& texture);
-        void updateMipMaps(const std::shared_ptr<GLContext>& gl, const nml::Texture& texture);
-        void uploadTexture(const std::shared_ptr<GLContext>& gl);
+        void updateSampler(bool hasSampler, nml::Sampler sampler, bool complete);
+        void updateMipLevel(int level, const nml::Texture& texture);
+        void updateMipMaps(const nml::Texture& texture);
+        void uploadTexture();
 
         int _refCount;
         std::shared_ptr<nml::Texture> _texture;
 
         GLuint _glTextureId;
-        std::weak_ptr<GLContext> _glContext;
         int _glSize;
     };
 } }

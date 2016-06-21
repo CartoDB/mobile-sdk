@@ -7,21 +7,31 @@
 #ifndef _CARTO_NMLMODELRENDERER_H_
 #define _CARTO_NMLMODELRENDERER_H_
 
-#include "NMLModelRendererBase.h"
 #include "renderers/drawdatas/NMLModelDrawData.h"
 #include "vectorelements/NMLModel.h"
 
+#include <memory>
+#include <mutex>
 #include <list>
 #include <vector>
 
 namespace carto {
+    class MapPos;
+    class MapVec;
+    class Options;
+    class Shader;
+    class ShaderManager;
+    class TextureManager;
+    class RayIntersectedElement;
+    class ViewState;
     class VectorLayer;
     
     namespace nmlgl {
         class Model;
+        class ShaderManager;
     }
     
-    class NMLModelRenderer : public NMLModelRendererBase {
+    class NMLModelRenderer {
     public:
         NMLModelRenderer();
         virtual ~NMLModelRenderer();
@@ -30,21 +40,26 @@ namespace carto {
         void refreshElements();
         void updateElement(const std::shared_ptr<NMLModel>& element);
         void removeElement(const std::shared_ptr<NMLModel>& element);
+
+        void setOptions(const std::weak_ptr<Options>& options);
     
         virtual void offsetLayerHorizontally(double offset);
         
+        virtual void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
+        virtual bool onDrawFrame(float deltaSeconds, const ViewState& viewState);
+        virtual void onSurfaceDestroyed();
+
         virtual void calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const MapPos& rayOrig, const MapVec& rayDir, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
     
-    protected:
-        virtual bool drawModels(const ViewState& viewState);
-    
     private:
-        typedef std::vector<std::shared_ptr<NMLModel> > ElementsVector;
-        typedef std::map<std::shared_ptr<nml::Model>, std::shared_ptr<nmlgl::Model>> GLModelMap;
-    
-        GLModelMap _glModelMap;
-        ElementsVector _elements;
-        ElementsVector _tempElements;
+        std::shared_ptr<nmlgl::ShaderManager> _glShaderManager;
+        std::map<std::shared_ptr<nml::Model>, std::shared_ptr<nmlgl::Model> > _glModelMap;
+        std::vector<std::shared_ptr<NMLModel> > _elements;
+        std::vector<std::shared_ptr<NMLModel> > _tempElements;
+
+        std::weak_ptr<Options> _options;
+
+        mutable std::mutex _mutex;
     };
     
 }

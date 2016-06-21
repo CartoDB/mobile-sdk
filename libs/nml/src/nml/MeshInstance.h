@@ -22,15 +22,19 @@ namespace carto { namespace nmlgl {
     class Material;
     class Mesh;
     class Texture;
+    class ShaderManager;
         
     class MeshInstance {
     public:
         MeshInstance(const nml::MeshInstance& meshInstance, const std::map<std::string, std::shared_ptr<Mesh>>& meshMap, const std::map<std::string, std::shared_ptr<Texture>>& textureMap);
 
+        void create(ShaderManager& shaderManager);
+        void dispose();
+
         void replaceMesh(const std::string& meshId, const std::shared_ptr<Mesh>& glMesh);
         void replaceTexture(const std::string& textureId, const std::shared_ptr<Texture>& glTexture);
 
-        void draw(const std::shared_ptr<GLContext>& gl);
+        void draw(const RenderState& renderState);
 
         void calculateRayIntersections(const Ray& ray, std::vector<RayIntersection>& intersections) const;
 
@@ -42,6 +46,7 @@ namespace carto { namespace nmlgl {
         std::map<std::string, std::shared_ptr<Material>> _materialMap;
         bool _transformEnabled;
         cglib::mat4x4<float> _transformMatrix;
+        cglib::mat4x4<float> _invTransTransformMatrix;
     };
 } }
 

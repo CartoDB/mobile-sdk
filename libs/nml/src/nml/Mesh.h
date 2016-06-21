@@ -25,8 +25,8 @@ namespace carto { namespace nmlgl {
         Mesh(const nml::Mesh& mesh);
         Mesh(const Mesh& glMesh, const nml::MeshOp& meshOp);
 
-        void create(const std::shared_ptr<GLContext>& gl);
-        void dispose(const std::shared_ptr<GLContext>& gl);
+        void create();
+        void dispose();
 
         const std::vector<std::shared_ptr<Submesh>>& getSubmeshList() const;
 

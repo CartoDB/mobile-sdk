@@ -3,6 +3,7 @@
 #include "Texture.h"
 #include "Material.h"
 #include "Submesh.h"
+#include "ShaderManager.h"
 
 #include "nmlpackage/NMLPackage.pb.h"
 
@@ -14,9 +15,9 @@ namespace carto { namespace nmlgl {
         _meshId = meshInstance.mesh_id();
     
         // Look up mesh
-        std::map<std::string, std::shared_ptr<Mesh>>::const_iterator mesh_it = meshMap.find(meshInstance.mesh_id());
-        if (mesh_it != meshMap.end()) {
-            _mesh = mesh_it->second;
+        auto meshIt = meshMap.find(meshInstance.mesh_id());
+        if (meshIt != meshMap.end()) {
+            _mesh = meshIt->second;
         }
     
         // Set node transformation matrix
@@ -45,15 +46,30 @@ namespace carto { namespace nmlgl {
         } else {
             _transformMatrix = cglib::mat4x4<float>::identity();
         }
+
+        // Create inverse-transpose of the transform matrix for normals
+        _invTransTransformMatrix = cglib::transpose(cglib::inverse(_transformMatrix));
     
         // Create material map
         for (int i = 0; i < meshInstance.materials_size(); i++) {
             const nml::Material& material = meshInstance.materials(i);
-            std::shared_ptr<Material> glMaterial = std::make_shared<Material>(material, textureMap);
+            auto glMaterial = std::make_shared<Material>(material, textureMap);
             _materialMap[material.id()] = glMaterial;
         }
     }
-    
+
+    void MeshInstance::create(ShaderManager& shaderManager) {
+        for (auto it = _materialMap.begin(); it != _materialMap.end(); it++) {
+            it->second->create(shaderManager);
+        }
+    }
+
+    void MeshInstance::dispose() {
+        for (auto it = _materialMap.begin(); it != _materialMap.end(); it++) {
+            it->second->dispose();
+        }
+    }
+
     void MeshInstance::replaceMesh(const std::string& meshId, const std::shared_ptr<Mesh>& glMesh) {
         if (_meshId == meshId) {
             _mesh = glMesh;
@@ -66,20 +82,25 @@ namespace carto { namespace nmlgl {
         }
     }
     
-    void MeshInstance::draw(const std::shared_ptr<GLContext>& gl) {
+    void MeshInstance::draw(const RenderState& renderState) {
         if (!_mesh) {
             return;
         }
     
-        gl->setLocalModelviewMatrix(_transformMatrix.data());
-        const std::vector<std::shared_ptr<Submesh>>& submeshList = _mesh->getSubmeshList();
-        for (auto submeshIt = submeshList.begin(); submeshIt != submeshList.end(); submeshIt++) {
-            const std::shared_ptr<Submesh>& submesh = *submeshIt;
+        cglib::mat4x4<float> mvMatrix = renderState.mvMatrix;
+        cglib::mat4x4<float> invTransMVMatrix = renderState.invTransMVMatrix;
+        if (_transformEnabled) {
+            mvMatrix = mvMatrix * _transformMatrix;
+            invTransMVMatrix = invTransMVMatrix * _invTransTransformMatrix;
+        }
+
+        for (const std::shared_ptr<Submesh>& submesh : _mesh->getSubmeshList()) {
             auto materialIt = _materialMap.find(submesh->getMaterialId());
             if (materialIt != _materialMap.end()) {
                 const std::shared_ptr<Material>& material = materialIt->second;
-                material->bind(gl);
-                submesh->draw(gl);
+
+                material->bind(renderState, mvMatrix, invTransMVMatrix);
+                submesh->draw(renderState);
             }
         }
     }
@@ -96,16 +117,16 @@ namespace carto { namespace nmlgl {
             cglib::vec3<double> dirTransformed = cglib::transform_point(ray.origin + ray.dir, invTransformMatrix) - originTransformed;
             rayTransformed = Ray(originTransformed, dirTransformed);
         }
-        const std::vector<std::shared_ptr<Submesh>>& submeshList = _mesh->getSubmeshList();
-        for (auto submeshIt = submeshList.begin(); submeshIt != submeshList.end(); submeshIt++) {
-            const std::shared_ptr<Submesh>& submesh = *submeshIt;
+
+        for (const std::shared_ptr<Submesh>& submesh : _mesh->getSubmeshList()) {
             auto materialIt = _materialMap.find(submesh->getMaterialId());
             if (materialIt != _materialMap.end()) {
                 const std::shared_ptr<Material>& material = materialIt->second;
+
                 std::vector<RayIntersection> submeshIntersections;
                 submesh->calculateRayIntersections(rayTransformed, submeshIntersections);
     
-                for (size_t i = 0; i < submeshIntersections.size(); i++) {
+                for (std::size_t i = 0; i < submeshIntersections.size(); i++) {
                     RayIntersection intersection = submeshIntersections[i];
                     if (material->getCulling() != nml::Material::NONE) {
                         double sign = material->getCulling() == nml::Material::FRONT ? 1 : -1;
@@ -113,12 +134,14 @@ namespace carto { namespace nmlgl {
                             continue;
                         }
                     }
+
                     if (_transformEnabled) {
                         cglib::mat4x4<double> transformMatrix = cglib::mat4x4<double>::convert(_transformMatrix);
-                        cglib::mat4x4<double> invTransTransformMatrix = cglib::transpose(cglib::inverse(transformMatrix));
+                        cglib::mat4x4<double> invTransTransformMatrix = cglib::mat4x4<double>::convert(_invTransTransformMatrix);
                         intersection.pos = cglib::transform_point(intersection.pos, transformMatrix);
                         intersection.normal = cglib::transform_vector(intersection.pos, invTransTransformMatrix);
                     }
+                    
                     intersections.push_back(intersection);
                 }
             }
@@ -131,8 +154,8 @@ namespace carto { namespace nmlgl {
         }
     
         int count = 0;
-        for (auto it = _mesh->getSubmeshList().begin(); it != _mesh->getSubmeshList().end(); it++) {
-            count += (*it)->getDrawCallCount();
+        for (const std::shared_ptr<Submesh>& submesh : _mesh->getSubmeshList()) {
+            count += submesh->getDrawCallCount();
         }
         return count;
     }

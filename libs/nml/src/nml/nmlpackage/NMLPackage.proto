@@ -88,7 +88,10 @@ message ColorOrTexture {
 message Material {
 	enum Type {
 		CONSTANT = 1;
-		LAMBERT = 2;
+		PREBAKED = 2;
+		LAMBERT = 3;
+		PHONG = 4;
+		BLINN = 5;
 	}
 	enum Culling {
 		NONE = 1;
@@ -102,6 +105,8 @@ message Material {
 	optional ColorOrTexture ambient = 5;
 	optional ColorOrTexture diffuse = 6;
 	optional bool translucent = 7;
+	optional ColorOrTexture specular = 8;
+	optional float shininess = 9;
 }
 
 message Submesh {

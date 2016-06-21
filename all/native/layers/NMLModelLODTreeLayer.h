@@ -13,15 +13,25 @@
 #include "components/CancelableTask.h"
 #include "components/CancelableThreadPool.h"
 #include "datasources/NMLModelLODTreeDataSource.h"
-#include "renderers/NMLModelLODTreeRenderer.h"
 #include "graphics/ViewState.h"
 
+#include <string>
 #include <memory>
+#include <map>
+#include <vector>
 
 #include <stdext/timed_lru_cache.h>
 
 namespace carto {
     class CullState;
+    class NMLModelLODTreeDrawData;
+    class NMLModelLODTreeRenderer;
+
+    namespace nmlgl {
+        class Model;
+        class Mesh;
+        class Texture;
+    }
     
     /**
      * An advanced layer for 3D models that supports automatic Level of Detail (LOD) calculation based on view.
@@ -84,6 +94,12 @@ namespace carto {
         virtual void registerDataSourceListener();
         virtual void unregisterDataSourceListener();
     
+        virtual void setComponents(const std::shared_ptr<CancelableThreadPool>& envelopeThreadPool,
+                                   const std::shared_ptr<CancelableThreadPool>& tileThreadPool,
+                                   const std::weak_ptr<Options>& options,
+                                   const std::weak_ptr<MapRenderer>& mapRenderer,
+                                   const std::weak_ptr<TouchHandler>& touchHandler);
+
         virtual void loadData(const std::shared_ptr<CullState>& cullState);
     
     private:

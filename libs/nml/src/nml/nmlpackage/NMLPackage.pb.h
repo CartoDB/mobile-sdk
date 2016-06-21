@@ -57,12 +57,20 @@ enum ColorOrTexture_Type {
 };
 enum Material_Type {
   Material_Type_CONSTANT = 1,
-  Material_Type_LAMBERT = 2
+  Material_Type_PREBAKED = 2,
+  Material_Type_LAMBERT = 3,
+  Material_Type_PHONG = 4,
+  Material_Type_BLINN = 5
 };
 enum Material_Culling {
   Material_Culling_NONE = 1,
   Material_Culling_FRONT = 2,
   Material_Culling_BACK = 3
+};
+enum Material_OpaqueMode {
+  Material_OpaqueMode_OPAQUE = 0,
+  Material_OpaqueMode_TRANSPARENT_RGB = 1,
+  Material_OpaqueMode_TRANSPARENT_ALPHA = 2
 };
 enum Submesh_Type {
   Submesh_Type_POINTS = 1,
@@ -75,7 +83,7 @@ enum Submesh_Type {
 // ===================================================================
 
 class Vector3 {
-public:
+ public:
   inline Vector3();
   inline explicit Vector3(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -105,7 +113,7 @@ public:
   inline float z() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.Vector3)
-private:
+ private:
   std::uint32_t _has_bits_[1];
   float x_ = 0;
   float y_ = 0;
@@ -114,7 +122,7 @@ private:
 // -------------------------------------------------------------------
 
 class ColorRGBA {
-public:
+ public:
   inline ColorRGBA();
   inline explicit ColorRGBA(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -149,7 +157,7 @@ public:
   inline float a() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.ColorRGBA)
-private:
+ private:
   std::uint32_t _has_bits_[1];
   float r_ = 0;
   float g_ = 0;
@@ -159,7 +167,7 @@ private:
 // -------------------------------------------------------------------
 
 class Bounds3 {
-public:
+ public:
   inline Bounds3();
   inline explicit Bounds3(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -184,7 +192,7 @@ public:
   inline const ::nml::Vector3& max() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.Bounds3)
-private:
+ private:
   std::uint32_t _has_bits_[1];
   ::nml::Vector3 min_ = ::nml::Vector3();
   ::nml::Vector3 max_ = ::nml::Vector3();
@@ -192,7 +200,7 @@ private:
 // -------------------------------------------------------------------
 
 class Matrix4 {
-public:
+ public:
   inline Matrix4();
   inline explicit Matrix4(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -287,7 +295,7 @@ public:
   inline float m33() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.Matrix4)
-private:
+ private:
   std::uint32_t _has_bits_[1];
   float m00_ = 0;
   float m01_ = 0;
@@ -309,7 +317,7 @@ private:
 // -------------------------------------------------------------------
 
 class Sampler {
-public:
+ public:
   inline Sampler();
   inline explicit Sampler(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -349,7 +357,7 @@ public:
   inline ::nml::Sampler_WrapMode wrap_t() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.Sampler)
-private:
+ private:
   std::uint32_t _has_bits_[1];
   int filter_ = 1;
   int wrap_s_ = 1;
@@ -358,7 +366,7 @@ private:
 // -------------------------------------------------------------------
 
 class Texture {
-public:
+ public:
   inline Texture();
   inline explicit Texture(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -426,7 +434,7 @@ public:
   }
 
   // @@protoc_insertion_point(class_scope:NMLPackage.Texture)
-private:
+ private:
   std::uint32_t _has_bits_[1];
   ::std::string id_ = "";
   int format_ = -2;
@@ -438,7 +446,7 @@ private:
 // -------------------------------------------------------------------
 
 class ColorOrTexture {
-public:
+ public:
   inline ColorOrTexture();
   inline explicit ColorOrTexture(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -472,7 +480,7 @@ public:
   inline const ::std::string& texture_id() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.ColorOrTexture)
-private:
+ private:
   std::uint32_t _has_bits_[1];
   ::nml::ColorRGBA color_ = ::nml::ColorRGBA();
   ::std::string texture_id_ = "";
@@ -481,7 +489,7 @@ private:
 // -------------------------------------------------------------------
 
 class Material {
-public:
+ public:
   inline Material();
   inline explicit Material(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -495,12 +503,20 @@ public:
 
   typedef Material_Type Type;
   static const Type CONSTANT = Material_Type_CONSTANT;
+  static const Type PREBAKED = Material_Type_PREBAKED;
   static const Type LAMBERT = Material_Type_LAMBERT;
+  static const Type PHONG = Material_Type_PHONG;
+  static const Type BLINN = Material_Type_BLINN;
 
   typedef Material_Culling Culling;
   static const Culling NONE = Material_Culling_NONE;
   static const Culling FRONT = Material_Culling_FRONT;
   static const Culling BACK = Material_Culling_BACK;
+
+  typedef Material_OpaqueMode OpaqueMode;
+  static const OpaqueMode OPAQUE = Material_OpaqueMode_OPAQUE;
+  static const OpaqueMode TRANSPARENT_RGB = Material_OpaqueMode_TRANSPARENT_RGB;
+  static const OpaqueMode TRANSPARENT_ALPHA = Material_OpaqueMode_TRANSPARENT_ALPHA;
 
   // accessors -------------------------------------------------------
 
@@ -534,13 +550,33 @@ public:
   inline bool has_diffuse() const;
   inline const ::nml::ColorOrTexture& diffuse() const;
 
-  // optional bool translucent = 7;
-  static const int kTranslucentFieldNumber = 7;
-  inline bool has_translucent() const;
-  inline bool translucent() const;
+  // optional .NMLPackage.Material.OpaqueMode opaque_mode = 7;
+  static const int kOpaqueModeFieldNumber = 7;
+  inline bool has_opaque_mode() const;
+  inline ::nml::Material_OpaqueMode opaque_mode() const;
+
+  // optional float transparency = 8;
+  static const int kTransparencyFieldNumber = 8;
+  inline bool has_transparency() const;
+  inline float transparency() const;
+
+  // optional .NMLPackage.ColorOrTexture transparent = 9;
+  static const int kTransparentFieldNumber = 9;
+  inline bool has_transparent() const;
+  inline const ::nml::ColorOrTexture& transparent() const;
+
+  // optional float shininess = 10;
+  static const int kShininessFieldNumber = 10;
+  inline bool has_shininess() const;
+  inline float shininess() const;
+
+  // optional .NMLPackage.ColorOrTexture specular = 11;
+  static const int kSpecularFieldNumber = 11;
+  inline bool has_specular() const;
+  inline const ::nml::ColorOrTexture& specular() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.Material)
-private:
+ private:
   std::uint32_t _has_bits_[1];
   ::std::string id_ = "";
   int type_ = 1;
@@ -548,12 +584,16 @@ private:
   ::nml::ColorOrTexture emission_ = ::nml::ColorOrTexture();
   ::nml::ColorOrTexture ambient_ = ::nml::ColorOrTexture();
   ::nml::ColorOrTexture diffuse_ = ::nml::ColorOrTexture();
-  bool translucent_ = false;
+  int opaque_mode_ = 0;
+  float transparency_ = 0;
+  ::nml::ColorOrTexture transparent_ = ::nml::ColorOrTexture();
+  ::nml::ColorOrTexture specular_ = ::nml::ColorOrTexture();
+  float shininess_ = 0;
 };
 // -------------------------------------------------------------------
 
 class Submesh {
-public:
+ public:
   inline Submesh();
   inline explicit Submesh(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -618,7 +658,7 @@ public:
   inline const std::vector< std::int64_t >& vertex_ids() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.Submesh)
-private:
+ private:
   std::uint32_t _has_bits_[1];
   ::std::string material_id_ = "";
   std::vector< std::int32_t > vertex_counts_;
@@ -632,7 +672,7 @@ private:
 // -------------------------------------------------------------------
 
 class Mesh {
-public:
+ public:
   inline Mesh();
   inline explicit Mesh(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -663,7 +703,7 @@ public:
   inline const std::vector< ::nml::Submesh >& submeshes() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.Mesh)
-private:
+ private:
   std::uint32_t _has_bits_[1];
   ::std::string id_ = "";
   ::nml::Bounds3 bounds_ = ::nml::Bounds3();
@@ -672,7 +712,7 @@ private:
 // -------------------------------------------------------------------
 
 class MeshInstance {
-public:
+ public:
   inline MeshInstance();
   inline explicit MeshInstance(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -703,7 +743,7 @@ public:
   inline const ::nml::Matrix4& transform() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.MeshInstance)
-private:
+ private:
   std::uint32_t _has_bits_[1];
   ::std::string mesh_id_ = "";
   std::vector< ::nml::Material > materials_;
@@ -712,7 +752,7 @@ private:
 // -------------------------------------------------------------------
 
 class SubmeshOp {
-public:
+ public:
   inline SubmeshOp();
   inline explicit SubmeshOp(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -762,7 +802,7 @@ public:
   inline float tex_v_trans() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.SubmeshOp)
-private:
+ private:
   std::uint32_t _has_bits_[1];
   std::int32_t submesh_idx_ = 0;
   std::int32_t offset_ = 0;
@@ -775,7 +815,7 @@ private:
 // -------------------------------------------------------------------
 
 class SubmeshOpList {
-public:
+ public:
   inline SubmeshOpList();
   inline explicit SubmeshOpList(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -806,7 +846,7 @@ public:
   inline const std::vector< ::nml::SubmeshOp >& submesh_ops() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.SubmeshOpList)
-private:
+ private:
   std::uint32_t _has_bits_[1];
   ::std::string material_id_ = "";
   std::vector< ::nml::SubmeshOp > submesh_ops_;
@@ -815,7 +855,7 @@ private:
 // -------------------------------------------------------------------
 
 class MeshOp {
-public:
+ public:
   inline MeshOp();
   inline explicit MeshOp(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -846,7 +886,7 @@ public:
   inline const std::vector< ::nml::SubmeshOpList >& submesh_op_lists() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.MeshOp)
-private:
+ private:
   std::uint32_t _has_bits_[1];
   ::std::string id_ = "";
   ::nml::Bounds3 bounds_ = ::nml::Bounds3();
@@ -855,7 +895,7 @@ private:
 // -------------------------------------------------------------------
 
 class Model {
-public:
+ public:
   inline Model();
   inline explicit Model(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -908,7 +948,7 @@ public:
   inline std::int32_t texture_footprint() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.Model)
-private:
+ private:
   std::uint32_t _has_bits_[1];
   ::std::string id_ = "";
   std::vector< ::nml::MeshInstance > mesh_instances_;
@@ -921,7 +961,7 @@ private:
 // -------------------------------------------------------------------
 
 class ModelLODTreeNode {
-public:
+ public:
   inline ModelLODTreeNode();
   inline explicit ModelLODTreeNode(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -957,7 +997,7 @@ public:
   inline const std::vector< std::int32_t >& children_ids() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.ModelLODTreeNode)
-private:
+ private:
   std::uint32_t _has_bits_[1];
   ::nml::Bounds3 bounds_ = ::nml::Bounds3();
   ::nml::Model model_ = ::nml::Model();
@@ -967,7 +1007,7 @@ private:
 // -------------------------------------------------------------------
 
 class ModelLODTree {
-public:
+ public:
   inline ModelLODTree();
   inline explicit ModelLODTree(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -988,7 +1028,7 @@ public:
   inline const std::vector< ::nml::ModelLODTreeNode >& nodes() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.ModelLODTree)
-private:
+ private:
   std::uint32_t _has_bits_[1];
   std::vector< ::nml::ModelLODTreeNode > nodes_;
 };
@@ -1654,9 +1694,25 @@ inline Material::Material(const protobuf::message& srcMsg) {
       diffuse_ = ::nml::ColorOrTexture(msg.read_message());
       _has_bits_[0] |= 0x00000020u;
     }
-    else if (msg.tag == kTranslucentFieldNumber) {
-      translucent_ = msg.read_bool();
+    else if (msg.tag == kOpaqueModeFieldNumber) {
+      opaque_mode_ = msg.read_int32();
       _has_bits_[0] |= 0x00000040u;
+    }
+    else if (msg.tag == kTransparencyFieldNumber) {
+      transparency_ = msg.read_float();
+      _has_bits_[0] |= 0x00000080u;
+    }
+    else if (msg.tag == kTransparentFieldNumber) {
+      transparent_ = ::nml::ColorOrTexture(msg.read_message());
+      _has_bits_[0] |= 0x00000100u;
+    }
+    else if (msg.tag == kShininessFieldNumber) {
+      shininess_ = msg.read_float();
+      _has_bits_[0] |= 0x00000200u;
+    }
+    else if (msg.tag == kSpecularFieldNumber) {
+      specular_ = ::nml::ColorOrTexture(msg.read_message());
+      _has_bits_[0] |= 0x00000400u;
     }
     else msg.skip();
   }
@@ -1722,14 +1778,54 @@ inline const ::nml::ColorOrTexture& Material::diffuse() const {
   return diffuse_;
 }
 
-// optional bool translucent = 7;
-inline bool Material::has_translucent() const {
+// optional .NMLPackage.Material.OpaqueMode opaque_mode = 7;
+inline bool Material::has_opaque_mode() const {
   return (_has_bits_[0] & 0x00000040u) != 0;
 }
 
-inline bool Material::translucent() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Material.translucent)
-  return translucent_;
+inline ::nml::Material_OpaqueMode Material::opaque_mode() const {
+  // @@protoc_insertion_point(field_get:NMLPackage.Material.opaque_mode)
+  return static_cast< ::nml::Material_OpaqueMode >(opaque_mode_);
+}
+
+// optional float transparency = 8;
+inline bool Material::has_transparency() const {
+  return (_has_bits_[0] & 0x00000080u) != 0;
+}
+
+inline float Material::transparency() const {
+  // @@protoc_insertion_point(field_get:NMLPackage.Material.transparency)
+  return transparency_;
+}
+
+// optional .NMLPackage.ColorOrTexture transparent = 9;
+inline bool Material::has_transparent() const {
+  return (_has_bits_[0] & 0x00000100u) != 0;
+}
+
+inline const ::nml::ColorOrTexture& Material::transparent() const {
+  // @@protoc_insertion_point(field_get:NMLPackage.Material.transparent)
+  return transparent_;
+}
+
+// optional float shininess = 10;
+inline bool Material::has_shininess() const {
+  return (_has_bits_[0] & 0x00000200u) != 0;
+}
+
+inline float Material::shininess() const {
+  // @@protoc_insertion_point(field_get:NMLPackage.Material.shininess)
+  return shininess_;
+}
+
+// optional .NMLPackage.ColorOrTexture specular = 11;
+inline bool Material::has_specular() const {
+  return (_has_bits_[0] & 0x00000400u) != 0;
+}
+
+inline const ::nml::ColorOrTexture& Material::specular() const {
+  // @@protoc_insertion_point(field_get:NMLPackage.Material.specular)
+  return specular_;
 }
 
 // -------------------------------------------------------------------
@@ -2463,7 +2559,7 @@ inline const std::vector< ::nml::ModelLODTreeNode >& ModelLODTree::nodes() const
 
 // @@protoc_insertion_point(namespace_scope)
 
-}  // namespace NML
+}  // namespace NMLPackage
 
 // @@protoc_insertion_point(global_scope)
 

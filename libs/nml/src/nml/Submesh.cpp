@@ -20,8 +20,7 @@ namespace carto { namespace nmlgl {
         _glPositionVBOId(0),
         _glNormalVBOId(0),
         _glUVVBOId(0),
-        _glColorVBOId(0),
-        _glContext()
+        _glColorVBOId(0)
     {
         // Translate submesh type
         _glType = convertType(submesh.type());
@@ -35,17 +34,17 @@ namespace carto { namespace nmlgl {
     
         // Create vertex buffers
         convertToFloatBuffer(submesh.positions(), _positionBuffer);
-        // convertToFloatBuffer(submesh.normals(), _normalBuffer);
+        convertToFloatBuffer(submesh.normals(), _normalBuffer);
         convertToFloatBuffer(submesh.uvs(), _uvBuffer);
-        _uvBuffer.resize(_positionBuffer.size() / 3 * 2, 0.5f); // TODO: remove once material/default texture issues are fixed
+        _uvBuffer.resize(_positionBuffer.size() / 3 * 2, 0.5f);
         convertToByteBuffer(submesh.colors(), _colorBuffer);
         _colorBuffer.resize(_positionBuffer.size() / 3 * 4, 255);
     
         // Generate vertex id buffer
         _vertexIdBuffer.clear();
         for (int i = 0; i < submesh.vertex_ids_size(); i++) {
-            int count = (int) (submesh.vertex_ids(i) >> 32);
-            unsigned int id = (unsigned int) (submesh.vertex_ids(i) & (unsigned int) -1);
+            int count = static_cast<int>(submesh.vertex_ids(i) >> 32);
+            unsigned int id = static_cast<unsigned int>(submesh.vertex_ids(i) & (unsigned int) -1);
             _vertexIdBuffer.insert(_vertexIdBuffer.end(), count, id);
         }
     }
@@ -63,8 +62,7 @@ namespace carto { namespace nmlgl {
         _glPositionVBOId(0),
         _glNormalVBOId(0),
         _glUVVBOId(0),
-        _glColorVBOId(0),
-        _glContext()
+        _glColorVBOId(0)
     {
         _glType = convertType(submeshOpList.type());
         _materialId = submeshOpList.material_id();
@@ -76,7 +74,7 @@ namespace carto { namespace nmlgl {
         _vertexCounts.assign(1, vertexCount);
     
         _positionBuffer.reserve(vertexCount * 3);
-        // _normalBuffer.reserve(vertexCount * 3);
+        _normalBuffer.reserve(vertexCount * 3);
         _colorBuffer.reserve(vertexCount * 4);
         _vertexIdBuffer.reserve(vertexCount);
         _uvBuffer.reserve(vertexCount * 2);
@@ -86,12 +84,19 @@ namespace carto { namespace nmlgl {
     
             int start = submeshOp.offset(), end = submeshOp.offset() + submeshOp.count();
             _positionBuffer.insert(_positionBuffer.end(), src._positionBuffer.begin() + start * 3, src._positionBuffer.begin() + end * 3);
-            // if (!src._normalBuffer.empty())
-            //	_normalBuffer.insert(_normalBuffer.end(), src._normalBuffer.begin() + start * 3, src._normalBuffer.begin() + end * 3);
-            if (!src._colorBuffer.empty())
+
+            if (!src._normalBuffer.empty()) {
+                _normalBuffer.insert(_normalBuffer.end(), src._normalBuffer.begin() + start * 3, src._normalBuffer.begin() + end * 3);
+            }
+
+            if (!src._colorBuffer.empty()) {
                 _colorBuffer.insert(_colorBuffer.end(), src._colorBuffer.begin() + start * 4, src._colorBuffer.begin() + end * 4);
-            if (!src._vertexIdBuffer.empty())
+            }
+
+            if (!src._vertexIdBuffer.empty()) {
                 _vertexIdBuffer.insert(_vertexIdBuffer.end(), src._vertexIdBuffer.begin() + start, src._vertexIdBuffer.begin() + end);
+            }
+
             if (!src._uvBuffer.empty()) {
                 for (int idx = start; idx < end; idx++) {
                     float u = src._uvBuffer[idx * 2 + 0] * submeshOp.tex_u_scale() + submeshOp.tex_u_trans();
@@ -103,110 +108,102 @@ namespace carto { namespace nmlgl {
         }
     }
     
-    void Submesh::create(const std::shared_ptr<GLContext>& gl) {
+    void Submesh::create() {
         if (_refCount++ > 0) {
             return;
         }
     
-        uploadSubmesh(gl);
-    
-        _glContext = gl;
+        uploadSubmesh();
     }
     
-    void Submesh::dispose(const std::shared_ptr<GLContext>& gl) {
+    void Submesh::dispose() {
         if (--_refCount > 0) {
             return;
         }
     
-        if (_glContext.lock() == gl) {
-            if (_glPositionVBOId != 0) {
-                glDeleteBuffers(1, &_glPositionVBOId);
-            }
-            if (_glNormalVBOId != 0) {
-                // glDeleteBuffers(1, &_glNormalVBOId);
-            }
-            if (_glUVVBOId != 0) {
-                glDeleteBuffers(1, &_glUVVBOId);
-            }
-            if (_glColorVBOId != 0) {
-                glDeleteBuffers(1, &_glColorVBOId);
-            }
+        if (_glPositionVBOId != 0) {
+            glDeleteBuffers(1, &_glPositionVBOId);
+        }
+        if (_glNormalVBOId != 0) {
+            glDeleteBuffers(1, &_glNormalVBOId);
+        }
+        if (_glUVVBOId != 0) {
+            glDeleteBuffers(1, &_glUVVBOId);
+        }
+        if (_glColorVBOId != 0) {
+            glDeleteBuffers(1, &_glColorVBOId);
         }
         
-        _glContext.reset();
         _glPositionVBOId = 0;
         _glNormalVBOId = 0;
         _glUVVBOId = 0;
         _glColorVBOId = 0;
     }
     
-    void Submesh::draw(const std::shared_ptr<GLContext>& gl) {
-        if (_glContext.lock() != gl) {
-            uploadSubmesh(gl);
-            _glContext = gl;
+    void Submesh::draw(const RenderState& renderState) {
+        if (_vertexCounts.empty()) {
+            return;
         }
     
-        if (_vertexCounts.empty())
-            return;
-    
+        if (_glPositionVBOId == 0) {
+            uploadSubmesh();
+        }
+
         // Enable vertex buffers
+        GLint programId = 0;
+        glGetIntegerv(GL_CURRENT_PROGRAM, &programId);
+
         if (!_positionBuffer.empty()) {
-            GLuint positionLocation = gl->getAttribLocation("coord");
+            GLint positionLocation = glGetAttribLocation(programId, "aVertexPosition");
             glBindBuffer(GL_ARRAY_BUFFER, _glPositionVBOId);
             glEnableVertexAttribArray(positionLocation);
             glVertexAttribPointer(positionLocation, 3, GL_FLOAT, GL_FALSE, 0, 0);
         } else {
             return;
         }
-        if (!_normalBuffer.empty()) {
-            // GLuint normalLocation = gl->getAttribLocation("normal");
-            // glBindBuffer(GL_ARRAY_BUFFER, _glNormalVBOId);
-            // glEnableVertexAttribArray(normalLocation);
-            // glVertexAttribPointer(normalLocation, 3, GL_FLOAT, GL_FALSE, 0, 0);
+
+        GLint normalLocation = glGetAttribLocation(programId, "aVertexNormal");
+        if (normalLocation != -1) {
+            if (!_normalBuffer.empty()) {
+                glBindBuffer(GL_ARRAY_BUFFER, _glNormalVBOId);
+                glEnableVertexAttribArray(normalLocation);
+                glVertexAttribPointer(normalLocation, 3, GL_FLOAT, GL_FALSE, 0, 0);
+            } else {
+                glDisableVertexAttribArray(normalLocation);
+                glVertexAttrib3f(normalLocation, 0, 0, 0);
+            }
         }
-        if (!_uvBuffer.empty()) {
-            GLuint uvLocation = gl->getAttribLocation("texCoord");
-            glBindBuffer(GL_ARRAY_BUFFER, _glUVVBOId);
-            glEnableVertexAttribArray(uvLocation);
-            glVertexAttribPointer(uvLocation, 2, GL_FLOAT, GL_FALSE, 0, 0);
-        } else {
-            GLuint uvLocation = gl->getAttribLocation("texCoord");
-            glDisableVertexAttribArray(uvLocation);
+
+        GLint uvLocation = glGetAttribLocation(programId, "aVertexUV");
+        if (uvLocation != -1) {
+            if (!_uvBuffer.empty()) {
+                glBindBuffer(GL_ARRAY_BUFFER, _glUVVBOId);
+                glEnableVertexAttribArray(uvLocation);
+                glVertexAttribPointer(uvLocation, 2, GL_FLOAT, GL_FALSE, 0, 0);
+            } else {
+                glDisableVertexAttribArray(uvLocation);
+                glVertexAttrib2f(uvLocation, 0, 0);
+            }
         }
-        if (!_colorBuffer.empty()) {
-            GLuint colorLocation = gl->getAttribLocation("color");
-            glBindBuffer(GL_ARRAY_BUFFER, _glColorVBOId);
-            glEnableVertexAttribArray(colorLocation);
-            glVertexAttribPointer(colorLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, 0);
-        } else {
-            GLuint colorLocation = gl->getAttribLocation("color");
-            glDisableVertexAttribArray(colorLocation);
+
+        GLint colorLocation = glGetAttribLocation(programId, "aVertexColor");
+        if (colorLocation != -1) {
+            if (!_colorBuffer.empty()) {
+                glBindBuffer(GL_ARRAY_BUFFER, _glColorVBOId);
+                glEnableVertexAttribArray(colorLocation);
+                glVertexAttribPointer(colorLocation, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, 0);
+            } else {
+                glDisableVertexAttribArray(colorLocation);
+                glVertexAttrib4f(colorLocation, 1, 1, 1, 1);
+            }
         }
     
         // Draw primitives
         int idx = 0;
-        for (size_t i = 0; i < _vertexCounts.size(); i++) {
+        for (std::size_t i = 0; i < _vertexCounts.size(); i++) {
             int count = _vertexCounts[i];
             glDrawArrays(_glType, idx, count);
             idx += count;
-        }
-    
-        // Disable vertex buffers
-        if (!_colorBuffer.empty()) {
-            GLuint colorLocation = gl->getAttribLocation("color");
-            glDisableVertexAttribArray(colorLocation);
-        }
-        if (!_uvBuffer.empty()) {
-            GLuint uvLocation = gl->getAttribLocation("texCoord");
-            glDisableVertexAttribArray(uvLocation);
-        }
-        if (!_normalBuffer.empty()) {
-            // GLuint normalLocation = gl->getAttribLocation("normal");
-            // glDisableVertexAttribArray(normalLocation);
-        }
-        if (!_positionBuffer.empty()) {
-            GLuint positionLocation = gl->getAttribLocation("coord");
-            glDisableVertexAttribArray(positionLocation);
         }
     
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -219,10 +216,10 @@ namespace carto { namespace nmlgl {
     
         // Do ray-triangle test for each individual triangles
         int idx = 0;
-        for (size_t i = 0; i < _vertexCounts.size(); i++) {
+        for (std::size_t i = 0; i < _vertexCounts.size(); i++) {
             int count = _vertexCounts[i];
             for (int k = 2; k < count; ) {
-                size_t i0, i1, i2;
+                std::size_t i0, i1, i2;
                 if (_glType == GL_TRIANGLE_FAN) {
                     i0 = idx;
                     i1 = idx + k - 1;
@@ -265,39 +262,42 @@ namespace carto { namespace nmlgl {
     }
     
     int Submesh::getDrawCallCount() const {
-        return (int) _vertexCounts.size();
+        return static_cast<int>(_vertexCounts.size());
     }
     
     int Submesh::getTotalGeometrySize() const {
-        int size = 0;
+        std::size_t size = 0;
         size += _positionBuffer.size() * sizeof(float);
         size += _normalBuffer.size() * sizeof(float);
         size += _uvBuffer.size() * sizeof(float);
         size += _colorBuffer.size() * sizeof(unsigned char);
         size += _vertexIdBuffer.size() * sizeof(unsigned char);
-        return size;
+        return static_cast<int>(size);
     }
     
-    void Submesh::uploadSubmesh(const std::shared_ptr<GLContext>& gl) {
+    void Submesh::uploadSubmesh() {
         if (!_positionBuffer.empty()) {
             glGenBuffers(1, &_glPositionVBOId);
             glBindBuffer(GL_ARRAY_BUFFER, _glPositionVBOId);
-            glBufferData(GL_ARRAY_BUFFER, _positionBuffer.size() * sizeof(float), &_positionBuffer[0], GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, _positionBuffer.size() * sizeof(float), _positionBuffer.data(), GL_STATIC_DRAW);
         }
+
         if (!_normalBuffer.empty()) {
-            // glGenBuffers(1, &_glNormalVBOId);
-            // glBindBuffer(GL_ARRAY_BUFFER, _glNormalVBOId);
-            // glBufferData(GL_ARRAY_BUFFER, _normalBuffer.size() * sizeof(float), &_normalBuffer[0], GL_STATIC_DRAW);
+            glGenBuffers(1, &_glNormalVBOId);
+            glBindBuffer(GL_ARRAY_BUFFER, _glNormalVBOId);
+            glBufferData(GL_ARRAY_BUFFER, _normalBuffer.size() * sizeof(float), _normalBuffer.data(), GL_STATIC_DRAW);
         }
+        
         if (!_uvBuffer.empty()) {
             glGenBuffers(1, &_glUVVBOId);
             glBindBuffer(GL_ARRAY_BUFFER, _glUVVBOId);
-            glBufferData(GL_ARRAY_BUFFER, _uvBuffer.size() * sizeof(float), &_uvBuffer[0], GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, _uvBuffer.size() * sizeof(float), _uvBuffer.data(), GL_STATIC_DRAW);
         }
+        
         if (!_colorBuffer.empty()) {
             glGenBuffers(1, &_glColorVBOId);
             glBindBuffer(GL_ARRAY_BUFFER, _glColorVBOId);
-            glBufferData(GL_ARRAY_BUFFER, _colorBuffer.size() * sizeof(unsigned char), &_colorBuffer[0], GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, _colorBuffer.size() * sizeof(unsigned char), _colorBuffer.data(), GL_STATIC_DRAW);
         }
     
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -367,15 +367,18 @@ namespace carto { namespace nmlgl {
             return;
         }
     
-        buf.assign(reinterpret_cast<const float *>(str.data()), reinterpret_cast<const float *>(str.data()) + str.size() / sizeof(float));
-    #ifdef BIG_ENDIAN_ARCH
-        unsigned char *bytePtr = reinterpret_cast<unsigned char *>(&buf[0]);
-        for (size_t i = 0; i < buf.size(); i++) {
-            for (int j = 0; j < sizeof(float) - j - 1; j++) {
-                std::swap(bytePtr[i * sizeof(float) + j], bytePtr[i * sizeof(float) + sizeof(float) - j - 1]);
+        buf.assign(reinterpret_cast<const float*>(str.data()), reinterpret_cast<const float*>(str.data()) + str.size() / sizeof(float));
+
+        // Detect if the host is big-endian - swap bytes in that case
+        int num = 1;
+        if (*(char*)&num != 1) {
+            unsigned char* bytePtr = reinterpret_cast<unsigned char*>(buf.data());
+            for (std::size_t i = 0; i < buf.size(); i++) {
+                for (std::size_t j = 0; j < sizeof(float) - j - 1; j++) {
+                    std::swap(bytePtr[i * sizeof(float) + j], bytePtr[i * sizeof(float) + sizeof(float) - j - 1]);
+                }
             }
         }
-    #endif
     }
     
     void Submesh::convertToByteBuffer(const std::string& str, std::vector<unsigned char>& buf) {
@@ -384,7 +387,7 @@ namespace carto { namespace nmlgl {
             return;
         }
     
-        buf.assign(reinterpret_cast<const unsigned char *>(str.data()), reinterpret_cast<const unsigned char *>(str.data()) + str.size() / sizeof(unsigned char));
+        buf.assign(reinterpret_cast<const unsigned char*>(str.data()), reinterpret_cast<const unsigned char *>(str.data()) + str.size() / sizeof(unsigned char));
     }
     
 } }

@@ -84,6 +84,12 @@ namespace carto {
     void Polygon3DRenderer::onDrawFrame(float deltaSeconds, const ViewState& viewState) {
         std::lock_guard<std::mutex> lock(_mutex);
         
+        // Check if options are available
+        std::shared_ptr<Options> options = _options.lock();
+        if (!options) {
+            return;
+        }
+
         if (_elements.empty()) {
             // Early return, to avoid calling glUseProgram etc.
             return;
@@ -99,11 +105,6 @@ namespace carto {
         glEnableVertexAttribArray(_a_coord);
         glEnableVertexAttribArray(_a_normal);
         glDisableVertexAttribArray(_a_texCoord);
-        // Check if options are available
-        auto options = _options.lock();
-        if (!options) {
-            return;
-        }
         // Ambient light color
         const Color& ambientLightColor = options->getAmbientLightColor();
         glUniform4f(_u_ambientColor, ambientLightColor.getR() / 255.0f, ambientLightColor.getG() / 255.0f,

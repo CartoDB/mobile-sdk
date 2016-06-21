@@ -1,13 +1,16 @@
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT
 
 #include "NMLModelLODTreeLayer.h"
+#include "datasources/NMLModelLODTreeDataSource.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/components/CullState.h"
+#include "renderers/NMLModelLODTreeRenderer.h"
+#include "nml/Model.h"
 #include "nml/Mesh.h"
 #include "nml/Texture.h"
+#include "nml/nmlpackage/NMLPackage.pb.h"
 #include "components/CancelableThreadPool.h"
 #include "utils/Log.h"
-#include "nml/nmlpackage/NMLPackage.pb.h"
 
 namespace {
 
@@ -135,6 +138,16 @@ namespace carto {
     
     void NMLModelLODTreeLayer::unregisterDataSourceListener() {
     
+    }
+
+    void NMLModelLODTreeLayer::setComponents(const std::shared_ptr<CancelableThreadPool>& envelopeThreadPool,
+                                    const std::shared_ptr<CancelableThreadPool>& tileThreadPool,
+                                    const std::weak_ptr<Options>& options,
+                                    const std::weak_ptr<MapRenderer>& mapRenderer,
+                                    const std::weak_ptr<TouchHandler>& touchHandler)
+    {
+        Layer::setComponents(envelopeThreadPool, tileThreadPool, options, mapRenderer, touchHandler);
+        _renderer->setOptions(options);
     }
     
     void NMLModelLODTreeLayer::loadData(const std::shared_ptr<CullState>& cullState) {

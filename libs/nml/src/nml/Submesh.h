@@ -26,10 +26,10 @@ namespace carto { namespace nmlgl {
         Submesh(const nml::Submesh& submesh);
         Submesh(const Mesh& glMesh, const nml::SubmeshOpList& submeshOpList);
 
-        void create(const std::shared_ptr<GLContext>& gl);
-        void dispose(const std::shared_ptr<GLContext>& gl);
+        void create();
+        void dispose();
 
-        void draw(const std::shared_ptr<GLContext>& gl);
+        void draw(const RenderState& renderState);
 
         void calculateRayIntersections(const Ray& ray, std::vector<RayIntersection>& intersections) const;
 
@@ -39,7 +39,7 @@ namespace carto { namespace nmlgl {
         int getTotalGeometrySize() const;
 
     private:
-        void uploadSubmesh(const std::shared_ptr<GLContext>& gl);
+        void uploadSubmesh();
         
         static bool findRayTriangleIntersection(const cglib::vec3<float>* points, const Ray& ray, cglib::vec3<float>& p, cglib::vec3<float>& n);
 
@@ -62,7 +62,6 @@ namespace carto { namespace nmlgl {
         GLuint _glNormalVBOId;
         GLuint _glUVVBOId;
         GLuint _glColorVBOId;
-        std::weak_ptr<GLContext> _glContext;
     };
 } }
 

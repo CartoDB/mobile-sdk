@@ -21,6 +21,7 @@
 #include <cglib/vec.h>
 
 namespace carto { namespace nmlgl {
+
     struct Ray {
         cglib::vec3<double> origin;
         cglib::vec3<double> dir;
@@ -35,13 +36,18 @@ namespace carto { namespace nmlgl {
     
         RayIntersection(unsigned int vertexId, const cglib::vec3<double>& pos, const cglib::vec3<double>& normal) : vertexId(vertexId), pos(pos), normal(normal) { }
     };
-    
-    struct GLContext {
-        virtual ~GLContext() { }
-        virtual GLuint getUniformLocation(const char *name) const = 0;
-        virtual GLuint getAttribLocation(const char *name) const = 0;
-        virtual void setLocalModelviewMatrix(const float matrix[]) = 0;
+
+    struct RenderState {
+        cglib::mat4x4<float> projMatrix;
+        cglib::mat4x4<float> mvMatrix;
+        cglib::mat4x4<float> invTransMVMatrix;
+        cglib::vec4<float> ambientLightColor;
+        cglib::vec4<float> mainLightColor;
+        cglib::vec3<float> mainLightDir;
+
+        RenderState(const cglib::mat4x4<float>& projMatrix, const cglib::mat4x4<float>& mvMatrix, const cglib::vec4<float>& ambientLightColor, const cglib::vec4<float>& mainLightColor, const cglib::vec3<float>& mainLightDir) : projMatrix(projMatrix), mvMatrix(mvMatrix), invTransMVMatrix(cglib::transpose(cglib::inverse(mvMatrix))), ambientLightColor(ambientLightColor), mainLightColor(mainLightColor), mainLightDir(mainLightDir) { }
     };
+   
 } }
 
 #endif

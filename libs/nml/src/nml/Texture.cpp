@@ -47,51 +47,48 @@ namespace carto { namespace nmlgl {
         _refCount(0),
         _texture(texture),
         _glTextureId(0),
-        _glContext(),
         _glSize(0)
     {
     }
     
-    void Texture::create(const std::shared_ptr<GLContext>& gl) {
+    void Texture::create() {
         if (_refCount++ > 0) {
             return;
         }
     
-        uploadTexture(gl);
-        _glContext = gl;
+        uploadTexture();
     }
     
-    void Texture::dispose(const std::shared_ptr<GLContext>& gl)	{
+    void Texture::dispose()	{
         if (--_refCount > 0) {
             return;
         }
     
-        if (_glContext.lock() == gl) {
-            if (_glTextureId != 0) {
-                glDeleteTextures(1, &_glTextureId);
-            }
+        if (_glTextureId != 0) {
+            glDeleteTextures(1, &_glTextureId);
         }
-        _glContext.reset();
         _glTextureId = 0;
     }
     
-    void Texture::bind(const std::shared_ptr<GLContext>& gl) {
-        if (_glContext.lock() != gl) {
-            uploadTexture(gl);
-            _glContext = gl;
+    void Texture::bind(int texUnit) {
+        if (_glTextureId == 0) {
+            uploadTexture();
         }
+
+        glActiveTexture(GL_TEXTURE0 + texUnit);
         glBindTexture(GL_TEXTURE_2D, _glTextureId);
     }
     
     int Texture::getTextureSize() const {
-        if (!_texture)
+        if (!_texture) {
             return 0;
+        }
     
-        int size = 0;
+        std::size_t size = 0;
         for (int i = 0; i < _texture->mipmaps_size(); i++) {
             size += _texture->mipmaps(i).size();
         }
-        return size;
+        return static_cast<int>(size);
     }
     
     GLuint Texture::getSamplerWrapMode(int wrapMode) {
@@ -105,11 +102,11 @@ namespace carto { namespace nmlgl {
 
     bool Texture::hasGLExtension(const char* ext) {
         static std::mutex mutex;
-        static std::shared_ptr<std::unordered_set<std::string> > extensions;
+        static std::shared_ptr<std::unordered_set<std::string>> extensions;
 
         std::lock_guard<std::mutex> lock(mutex);
         if (!extensions) {
-            extensions = std::make_shared<std::unordered_set<std::string> >();
+            extensions = std::make_shared<std::unordered_set<std::string>>();
 
             const char* extensionsString = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
             if (!extensionsString) {
@@ -124,7 +121,7 @@ namespace carto { namespace nmlgl {
         return extensions->find(ext) != extensions->end();
     }
     
-    void Texture::updateSampler(const std::shared_ptr<GLContext>& gl, bool hasSampler, nml::Sampler sampler, bool complete) {
+    void Texture::updateSampler(bool hasSampler, nml::Sampler sampler, bool complete) {
         if (hasSampler) {
             switch (sampler.filter()) {
             case nml::Sampler::NEAREST:
@@ -159,7 +156,7 @@ namespace carto { namespace nmlgl {
         }
     }
     
-    void Texture::updateMipLevel(const std::shared_ptr<GLContext>& gl, int level, const nml::Texture& texture) {
+    void Texture::updateMipLevel(int level, const nml::Texture& texture) {
         GLint glFormat = -1, glFormatInternal = -1;
         std::string glTextureData = texture.mipmaps(level);
         switch (texture.format()) {
@@ -175,19 +172,19 @@ namespace carto { namespace nmlgl {
         case nml::Texture::ETC1:
             if (hasGLExtension("GL_OES_compressed_ETC1_RGB8_texture")) {
                 GLuint size = 8 * ((texture.width() + 3) >> 2) * ((texture.height() + 3) >> 2);
-                size_t offset = 16;
+                std::size_t offset = 16;
                 glCompressedTexImage2D(GL_TEXTURE_2D, level, GL_ETC1_RGB8_OES, texture.width(), texture.height(), 0, size, &glTextureData[offset]);
                 return;
             }
             {
                 nml::Texture textureCopy(texture);
                 uncompressTexture(textureCopy);
-                updateMipLevel(gl, level, textureCopy);
+                updateMipLevel(level, textureCopy);
             }
             return;
         case nml::Texture::PVRTC:
             if (hasGLExtension("GL_IMG_texture_compression_pvrtc")) {
-                const PVRTextureHeaderV3 *header = reinterpret_cast<const PVRTextureHeaderV3 *>(&glTextureData[0]);
+                const PVRTextureHeaderV3* header = reinterpret_cast<const PVRTextureHeaderV3*>(glTextureData.data());
                 GLuint format = 0;
                 switch (header->u64PixelFormat)
                 {
@@ -215,7 +212,7 @@ namespace carto { namespace nmlgl {
             {
                 nml::Texture textureCopy(texture);
                 uncompressTexture(textureCopy);
-                updateMipLevel(gl, level, textureCopy);
+                updateMipLevel(level, textureCopy);
             }
             return;
         default:
@@ -227,13 +224,13 @@ namespace carto { namespace nmlgl {
         }
     }
     
-    void Texture::updateMipMaps(const std::shared_ptr<GLContext>& gl, const nml::Texture& texture) {
+    void Texture::updateMipMaps(const nml::Texture& texture) {
         for (int i = 0; i < texture.mipmaps_size(); i++) {
-            updateMipLevel(gl, i, texture);
+            updateMipLevel(i, texture);
         }
     }
     
-    void Texture::uploadTexture(const std::shared_ptr<GLContext>& gl) {
+    void Texture::uploadTexture() {
         if (!_texture) {
             return;
         }
@@ -246,8 +243,8 @@ namespace carto { namespace nmlgl {
         glGenTextures(1, &_glTextureId);
     
         glBindTexture(GL_TEXTURE_2D, _glTextureId);
-        updateMipMaps(gl, texture);
-        updateSampler(gl, texture.has_sampler(), texture.sampler(), texture.mipmaps_size() > 1);
+        updateMipMaps(texture);
+        updateSampler(texture.has_sampler(), texture.sampler(), texture.mipmaps_size() > 1);
     }
     
     void Texture::uncompressTexture(nml::Texture& texture) {
@@ -257,7 +254,7 @@ namespace carto { namespace nmlgl {
                 std::string textureData = texture.mipmaps(i);
                 int etc1Width = (texture.width() + 3) & ~3, etc1Height = (texture.height() + 3) & ~3;
                 std::vector<unsigned int> etc1Image(texture.width() * texture.height());
-                size_t offset = 16;
+                std::size_t offset = 16;
                 for (int y = 0; y + 4 <= etc1Height; y += 4) {
                     for (int x = 0; x + 4 <= etc1Width; x += 4) {
                         unsigned int block[4 * 4];
@@ -278,7 +275,7 @@ namespace carto { namespace nmlgl {
                 }
                 textureData.clear();
                 if (!etc1Image.empty()) {
-                    textureData.assign(reinterpret_cast<const char *>(&etc1Image[0]), reinterpret_cast<const char *>(&etc1Image[0] + etc1Image.size()));
+                    textureData.assign(reinterpret_cast<const char*>(etc1Image.data()), reinterpret_cast<const char*>(etc1Image.data() + etc1Image.size()));
                 }
                 texture.set_mipmaps(i, textureData);
             }
@@ -288,14 +285,14 @@ namespace carto { namespace nmlgl {
         case nml::Texture::PVRTC:
             for (int i = 0; i < texture.mipmaps_size(); i++) {
                 std::string textureData = texture.mipmaps(i);
-                const PVRTextureHeaderV3 *header = reinterpret_cast<const PVRTextureHeaderV3 *>(&textureData[0]);
+                const PVRTextureHeaderV3* header = reinterpret_cast<const PVRTextureHeaderV3*>(textureData.data());
                 bool bpp2 = header->u64PixelFormat == ePVRTPF_PVRTCI_2bpp_RGB || header->u64PixelFormat == ePVRTPF_PVRTCI_2bpp_RGBA;
                 std::vector<unsigned long> pvrtcImage(texture.width() * texture.height());
-                PVRTDecompressPVRTC(&textureData[PVRTEX3_HEADERSIZE], bpp2, texture.width(), texture.height(), reinterpret_cast<unsigned char *>(&pvrtcImage[0]));
+                PVRTDecompressPVRTC(&textureData[PVRTEX3_HEADERSIZE], bpp2, texture.width(), texture.height(), reinterpret_cast<unsigned char*>(&pvrtcImage[0]));
     
                 textureData.clear();
                 if (!pvrtcImage.empty()) {
-                    textureData.assign(reinterpret_cast<const char *>(&pvrtcImage[0]), reinterpret_cast<const char *>(&pvrtcImage[0] + pvrtcImage.size()));
+                    textureData.assign(reinterpret_cast<const char*>(pvrtcImage.data()), reinterpret_cast<const char*>(pvrtcImage.data() + pvrtcImage.size()));
                 }
                 texture.set_mipmaps(i, textureData);
             }
