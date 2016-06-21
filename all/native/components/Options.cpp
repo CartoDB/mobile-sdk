@@ -14,9 +14,9 @@
 namespace carto {
 
     Options::Options(const std::shared_ptr<CancelableThreadPool>& envelopeThreadPool, const std::shared_ptr<CancelableThreadPool>& tileThreadPool) :
-        _ambientLightColor(0xFF737373),
-        _mainLightColor(0xFFFFFFFF),
-        _mainLightDir(-0.35, -0.35, 0.87),
+        _ambientLightColor(0xFF707070),
+        _mainLightColor(0xFF8F8F8F),
+        _mainLightDir(0.35, 0.35, -0.87),
         _projectionMode(ProjectionMode::PROJECTION_MODE_PERSPECTIVE),
         _clickTypeDetection(true),
         _tileDrawSize(256),
@@ -89,7 +89,7 @@ namespace carto {
     
     MapVec Options::getMainLightDirection() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return _mainLightDir * (-1);
+        return _mainLightDir;
     }
     
     void Options::setMainLightDirection(const MapVec& direction) {
@@ -97,7 +97,6 @@ namespace carto {
             std::lock_guard<std::mutex> lock(_mutex);
             MapVec directionNormalized = direction;
             directionNormalized.normalize();
-            directionNormalized *= -1;
             if (_mainLightDir == directionNormalized) {
                 return;
             }
