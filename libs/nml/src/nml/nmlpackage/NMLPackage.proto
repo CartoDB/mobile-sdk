@@ -1,4 +1,4 @@
-package nml;
+package carto.nml;
 
 option optimize_for = LITE_RUNTIME;
 option java_package = "com.nutiteq.nmlpackage";
@@ -98,15 +98,22 @@ message Material {
 		FRONT = 2;
 		BACK = 3;
 	}
+	enum OpaqueMode {
+		OPAQUE = 0;
+		TRANSPARENT_RGB = 1;
+		TRANSPARENT_ALPHA = 2;
+	}
 	required string id = 1;
 	required Type type = 2;
 	required Culling culling = 3;
 	optional ColorOrTexture emission = 4;
 	optional ColorOrTexture ambient = 5;
 	optional ColorOrTexture diffuse = 6;
-	optional bool translucent = 7;
-	optional ColorOrTexture specular = 8;
-	optional float shininess = 9;
+	optional OpaqueMode opaque_mode = 7;
+	optional float transparency = 8;
+	optional ColorOrTexture transparent = 9;
+	optional float shininess = 10;
+	optional ColorOrTexture specular = 11;
 }
 
 message Submesh {

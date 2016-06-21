@@ -12,7 +12,8 @@
 
 // @@protoc_insertion_point(includes)
 
-namespace carto { namespace nml {
+namespace carto {
+namespace nml {
 class Vector3;
 class ColorRGBA;
 class Bounds3;
@@ -83,7 +84,7 @@ enum Submesh_Type {
 // ===================================================================
 
 class Vector3 {
- public:
+public:
   inline Vector3();
   inline explicit Vector3(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -112,8 +113,8 @@ class Vector3 {
   inline bool has_z() const;
   inline float z() const;
 
-  // @@protoc_insertion_point(class_scope:NMLPackage.Vector3)
- private:
+  // @@protoc_insertion_point(class_scope:carto.nml.Vector3)
+private:
   std::uint32_t _has_bits_[1];
   float x_ = 0;
   float y_ = 0;
@@ -122,7 +123,7 @@ class Vector3 {
 // -------------------------------------------------------------------
 
 class ColorRGBA {
- public:
+public:
   inline ColorRGBA();
   inline explicit ColorRGBA(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -156,8 +157,8 @@ class ColorRGBA {
   inline bool has_a() const;
   inline float a() const;
 
-  // @@protoc_insertion_point(class_scope:NMLPackage.ColorRGBA)
- private:
+  // @@protoc_insertion_point(class_scope:carto.nml.ColorRGBA)
+private:
   std::uint32_t _has_bits_[1];
   float r_ = 0;
   float g_ = 0;
@@ -167,7 +168,7 @@ class ColorRGBA {
 // -------------------------------------------------------------------
 
 class Bounds3 {
- public:
+public:
   inline Bounds3();
   inline explicit Bounds3(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -181,18 +182,18 @@ class Bounds3 {
 
   // accessors -------------------------------------------------------
 
-  // required .NMLPackage.Vector3 min = 1;
+  // required .carto.nml.Vector3 min = 1;
   static const int kMinFieldNumber = 1;
   inline bool has_min() const;
   inline const ::carto::nml::Vector3& min() const;
 
-  // required .NMLPackage.Vector3 max = 2;
+  // required .carto.nml.Vector3 max = 2;
   static const int kMaxFieldNumber = 2;
   inline bool has_max() const;
   inline const ::carto::nml::Vector3& max() const;
 
-  // @@protoc_insertion_point(class_scope:NMLPackage.Bounds3)
- private:
+  // @@protoc_insertion_point(class_scope:carto.nml.Bounds3)
+private:
   std::uint32_t _has_bits_[1];
   ::carto::nml::Vector3 min_ = ::carto::nml::Vector3();
   ::carto::nml::Vector3 max_ = ::carto::nml::Vector3();
@@ -200,7 +201,7 @@ class Bounds3 {
 // -------------------------------------------------------------------
 
 class Matrix4 {
- public:
+public:
   inline Matrix4();
   inline explicit Matrix4(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -294,8 +295,8 @@ class Matrix4 {
   inline bool has_m33() const;
   inline float m33() const;
 
-  // @@protoc_insertion_point(class_scope:NMLPackage.Matrix4)
- private:
+  // @@protoc_insertion_point(class_scope:carto.nml.Matrix4)
+private:
   std::uint32_t _has_bits_[1];
   float m00_ = 0;
   float m01_ = 0;
@@ -317,7 +318,7 @@ class Matrix4 {
 // -------------------------------------------------------------------
 
 class Sampler {
- public:
+public:
   inline Sampler();
   inline explicit Sampler(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -341,23 +342,23 @@ class Sampler {
 
   // accessors -------------------------------------------------------
 
-  // optional .NMLPackage.Sampler.Filter filter = 1;
+  // optional .carto.nml.Sampler.Filter filter = 1;
   static const int kFilterFieldNumber = 1;
   inline bool has_filter() const;
   inline ::carto::nml::Sampler_Filter filter() const;
 
-  // optional .NMLPackage.Sampler.WrapMode wrap_s = 2;
+  // optional .carto.nml.Sampler.WrapMode wrap_s = 2;
   static const int kWrapSFieldNumber = 2;
   inline bool has_wrap_s() const;
   inline ::carto::nml::Sampler_WrapMode wrap_s() const;
 
-  // optional .NMLPackage.Sampler.WrapMode wrap_t = 3;
+  // optional .carto.nml.Sampler.WrapMode wrap_t = 3;
   static const int kWrapTFieldNumber = 3;
   inline bool has_wrap_t() const;
   inline ::carto::nml::Sampler_WrapMode wrap_t() const;
 
-  // @@protoc_insertion_point(class_scope:NMLPackage.Sampler)
- private:
+  // @@protoc_insertion_point(class_scope:carto.nml.Sampler)
+private:
   std::uint32_t _has_bits_[1];
   int filter_ = 1;
   int wrap_s_ = 1;
@@ -366,7 +367,7 @@ class Sampler {
 // -------------------------------------------------------------------
 
 class Texture {
- public:
+public:
   inline Texture();
   inline explicit Texture(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -396,7 +397,7 @@ class Texture {
   inline const ::std::string& id() const;
   inline void set_id(const std::string& id) { id_ = id; }
 
-  // required .NMLPackage.Texture.Format format = 2;
+  // required .carto.nml.Texture.Format format = 2;
   static const int kFormatFieldNumber = 2;
   inline bool has_format() const;
   inline ::carto::nml::Texture_Format format() const;
@@ -414,7 +415,7 @@ class Texture {
   inline std::int32_t height() const;
   inline void set_height(int height) { height_ = height; }
 
-  // required .NMLPackage.Sampler sampler = 5;
+  // required .carto.nml.Sampler sampler = 5;
   static const int kSamplerFieldNumber = 5;
   inline bool has_sampler() const;
   inline const ::carto::nml::Sampler& sampler() const;
@@ -433,8 +434,8 @@ class Texture {
     return &mipmaps_.back();
   }
 
-  // @@protoc_insertion_point(class_scope:NMLPackage.Texture)
- private:
+  // @@protoc_insertion_point(class_scope:carto.nml.Texture)
+private:
   std::uint32_t _has_bits_[1];
   ::std::string id_ = "";
   int format_ = -2;
@@ -446,7 +447,7 @@ class Texture {
 // -------------------------------------------------------------------
 
 class ColorOrTexture {
- public:
+public:
   inline ColorOrTexture();
   inline explicit ColorOrTexture(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -464,12 +465,12 @@ class ColorOrTexture {
 
   // accessors -------------------------------------------------------
 
-  // required .NMLPackage.ColorOrTexture.Type type = 1;
+  // required .carto.nml.ColorOrTexture.Type type = 1;
   static const int kTypeFieldNumber = 1;
   inline bool has_type() const;
   inline ::carto::nml::ColorOrTexture_Type type() const;
 
-  // optional .NMLPackage.ColorRGBA color = 2;
+  // optional .carto.nml.ColorRGBA color = 2;
   static const int kColorFieldNumber = 2;
   inline bool has_color() const;
   inline const ::carto::nml::ColorRGBA& color() const;
@@ -479,8 +480,8 @@ class ColorOrTexture {
   inline bool has_texture_id() const;
   inline const ::std::string& texture_id() const;
 
-  // @@protoc_insertion_point(class_scope:NMLPackage.ColorOrTexture)
- private:
+  // @@protoc_insertion_point(class_scope:carto.nml.ColorOrTexture)
+private:
   std::uint32_t _has_bits_[1];
   ::carto::nml::ColorRGBA color_ = ::carto::nml::ColorRGBA();
   ::std::string texture_id_ = "";
@@ -489,7 +490,7 @@ class ColorOrTexture {
 // -------------------------------------------------------------------
 
 class Material {
- public:
+public:
   inline Material();
   inline explicit Material(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -525,32 +526,32 @@ class Material {
   inline bool has_id() const;
   inline const ::std::string& id() const;
 
-  // required .NMLPackage.Material.Type type = 2;
+  // required .carto.nml.Material.Type type = 2;
   static const int kTypeFieldNumber = 2;
   inline bool has_type() const;
   inline ::carto::nml::Material_Type type() const;
 
-  // required .NMLPackage.Material.Culling culling = 3;
+  // required .carto.nml.Material.Culling culling = 3;
   static const int kCullingFieldNumber = 3;
   inline bool has_culling() const;
   inline ::carto::nml::Material_Culling culling() const;
 
-  // optional .NMLPackage.ColorOrTexture emission = 4;
+  // optional .carto.nml.ColorOrTexture emission = 4;
   static const int kEmissionFieldNumber = 4;
   inline bool has_emission() const;
   inline const ::carto::nml::ColorOrTexture& emission() const;
 
-  // optional .NMLPackage.ColorOrTexture ambient = 5;
+  // optional .carto.nml.ColorOrTexture ambient = 5;
   static const int kAmbientFieldNumber = 5;
   inline bool has_ambient() const;
   inline const ::carto::nml::ColorOrTexture& ambient() const;
 
-  // optional .NMLPackage.ColorOrTexture diffuse = 6;
+  // optional .carto.nml.ColorOrTexture diffuse = 6;
   static const int kDiffuseFieldNumber = 6;
   inline bool has_diffuse() const;
   inline const ::carto::nml::ColorOrTexture& diffuse() const;
 
-  // optional .NMLPackage.Material.OpaqueMode opaque_mode = 7;
+  // optional .carto.nml.Material.OpaqueMode opaque_mode = 7;
   static const int kOpaqueModeFieldNumber = 7;
   inline bool has_opaque_mode() const;
   inline ::carto::nml::Material_OpaqueMode opaque_mode() const;
@@ -560,7 +561,7 @@ class Material {
   inline bool has_transparency() const;
   inline float transparency() const;
 
-  // optional .NMLPackage.ColorOrTexture transparent = 9;
+  // optional .carto.nml.ColorOrTexture transparent = 9;
   static const int kTransparentFieldNumber = 9;
   inline bool has_transparent() const;
   inline const ::carto::nml::ColorOrTexture& transparent() const;
@@ -570,13 +571,13 @@ class Material {
   inline bool has_shininess() const;
   inline float shininess() const;
 
-  // optional .NMLPackage.ColorOrTexture specular = 11;
+  // optional .carto.nml.ColorOrTexture specular = 11;
   static const int kSpecularFieldNumber = 11;
   inline bool has_specular() const;
   inline const ::carto::nml::ColorOrTexture& specular() const;
 
-  // @@protoc_insertion_point(class_scope:NMLPackage.Material)
- private:
+  // @@protoc_insertion_point(class_scope:carto.nml.Material)
+private:
   std::uint32_t _has_bits_[1];
   ::std::string id_ = "";
   int type_ = 1;
@@ -593,7 +594,7 @@ class Material {
 // -------------------------------------------------------------------
 
 class Submesh {
- public:
+public:
   inline Submesh();
   inline explicit Submesh(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -615,7 +616,7 @@ class Submesh {
 
   // accessors -------------------------------------------------------
 
-  // required .NMLPackage.Submesh.Type type = 1;
+  // required .carto.nml.Submesh.Type type = 1;
   static const int kTypeFieldNumber = 1;
   inline bool has_type() const;
   inline ::carto::nml::Submesh_Type type() const;
@@ -657,8 +658,8 @@ class Submesh {
   inline std::int64_t vertex_ids(int index) const;
   inline const std::vector< std::int64_t >& vertex_ids() const;
 
-  // @@protoc_insertion_point(class_scope:NMLPackage.Submesh)
- private:
+  // @@protoc_insertion_point(class_scope:carto.nml.Submesh)
+private:
   std::uint32_t _has_bits_[1];
   ::std::string material_id_ = "";
   std::vector< std::int32_t > vertex_counts_;
@@ -672,7 +673,7 @@ class Submesh {
 // -------------------------------------------------------------------
 
 class Mesh {
- public:
+public:
   inline Mesh();
   inline explicit Mesh(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -691,19 +692,19 @@ class Mesh {
   inline bool has_id() const;
   inline const ::std::string& id() const;
 
-  // required .NMLPackage.Bounds3 bounds = 2;
+  // required .carto.nml.Bounds3 bounds = 2;
   static const int kBoundsFieldNumber = 2;
   inline bool has_bounds() const;
   inline const ::carto::nml::Bounds3& bounds() const;
 
-  // repeated .NMLPackage.Submesh submeshes = 3;
+  // repeated .carto.nml.Submesh submeshes = 3;
   static const int kSubmeshesFieldNumber = 3;
   inline int submeshes_size() const;
   inline const ::carto::nml::Submesh& submeshes(int index) const;
   inline const std::vector< ::carto::nml::Submesh >& submeshes() const;
 
-  // @@protoc_insertion_point(class_scope:NMLPackage.Mesh)
- private:
+  // @@protoc_insertion_point(class_scope:carto.nml.Mesh)
+private:
   std::uint32_t _has_bits_[1];
   ::std::string id_ = "";
   ::carto::nml::Bounds3 bounds_ = ::carto::nml::Bounds3();
@@ -712,7 +713,7 @@ class Mesh {
 // -------------------------------------------------------------------
 
 class MeshInstance {
- public:
+public:
   inline MeshInstance();
   inline explicit MeshInstance(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -731,19 +732,19 @@ class MeshInstance {
   inline bool has_mesh_id() const;
   inline const ::std::string& mesh_id() const;
 
-  // repeated .NMLPackage.Material materials = 2;
+  // repeated .carto.nml.Material materials = 2;
   static const int kMaterialsFieldNumber = 2;
   inline int materials_size() const;
   inline const ::carto::nml::Material& materials(int index) const;
   inline const std::vector< ::carto::nml::Material >& materials() const;
 
-  // optional .NMLPackage.Matrix4 transform = 3;
+  // optional .carto.nml.Matrix4 transform = 3;
   static const int kTransformFieldNumber = 3;
   inline bool has_transform() const;
   inline const ::carto::nml::Matrix4& transform() const;
 
-  // @@protoc_insertion_point(class_scope:NMLPackage.MeshInstance)
- private:
+  // @@protoc_insertion_point(class_scope:carto.nml.MeshInstance)
+private:
   std::uint32_t _has_bits_[1];
   ::std::string mesh_id_ = "";
   std::vector< ::carto::nml::Material > materials_;
@@ -752,7 +753,7 @@ class MeshInstance {
 // -------------------------------------------------------------------
 
 class SubmeshOp {
- public:
+public:
   inline SubmeshOp();
   inline explicit SubmeshOp(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -801,8 +802,8 @@ class SubmeshOp {
   inline bool has_tex_v_trans() const;
   inline float tex_v_trans() const;
 
-  // @@protoc_insertion_point(class_scope:NMLPackage.SubmeshOp)
- private:
+  // @@protoc_insertion_point(class_scope:carto.nml.SubmeshOp)
+private:
   std::uint32_t _has_bits_[1];
   std::int32_t submesh_idx_ = 0;
   std::int32_t offset_ = 0;
@@ -815,7 +816,7 @@ class SubmeshOp {
 // -------------------------------------------------------------------
 
 class SubmeshOpList {
- public:
+public:
   inline SubmeshOpList();
   inline explicit SubmeshOpList(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -829,7 +830,7 @@ class SubmeshOpList {
 
   // accessors -------------------------------------------------------
 
-  // required .NMLPackage.Submesh.Type type = 1;
+  // required .carto.nml.Submesh.Type type = 1;
   static const int kTypeFieldNumber = 1;
   inline bool has_type() const;
   inline ::carto::nml::Submesh_Type type() const;
@@ -839,14 +840,14 @@ class SubmeshOpList {
   inline bool has_material_id() const;
   inline const ::std::string& material_id() const;
 
-  // repeated .NMLPackage.SubmeshOp submesh_ops = 3;
+  // repeated .carto.nml.SubmeshOp submesh_ops = 3;
   static const int kSubmeshOpsFieldNumber = 3;
   inline int submesh_ops_size() const;
   inline const ::carto::nml::SubmeshOp& submesh_ops(int index) const;
   inline const std::vector< ::carto::nml::SubmeshOp >& submesh_ops() const;
 
-  // @@protoc_insertion_point(class_scope:NMLPackage.SubmeshOpList)
- private:
+  // @@protoc_insertion_point(class_scope:carto.nml.SubmeshOpList)
+private:
   std::uint32_t _has_bits_[1];
   ::std::string material_id_ = "";
   std::vector< ::carto::nml::SubmeshOp > submesh_ops_;
@@ -855,7 +856,7 @@ class SubmeshOpList {
 // -------------------------------------------------------------------
 
 class MeshOp {
- public:
+public:
   inline MeshOp();
   inline explicit MeshOp(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -874,19 +875,19 @@ class MeshOp {
   inline bool has_id() const;
   inline const ::std::string& id() const;
 
-  // required .NMLPackage.Bounds3 bounds = 2;
+  // required .carto.nml.Bounds3 bounds = 2;
   static const int kBoundsFieldNumber = 2;
   inline bool has_bounds() const;
   inline const ::carto::nml::Bounds3& bounds() const;
 
-  // repeated .NMLPackage.SubmeshOpList submesh_op_lists = 3;
+  // repeated .carto.nml.SubmeshOpList submesh_op_lists = 3;
   static const int kSubmeshOpListsFieldNumber = 3;
   inline int submesh_op_lists_size() const;
   inline const ::carto::nml::SubmeshOpList& submesh_op_lists(int index) const;
   inline const std::vector< ::carto::nml::SubmeshOpList >& submesh_op_lists() const;
 
-  // @@protoc_insertion_point(class_scope:NMLPackage.MeshOp)
- private:
+  // @@protoc_insertion_point(class_scope:carto.nml.MeshOp)
+private:
   std::uint32_t _has_bits_[1];
   ::std::string id_ = "";
   ::carto::nml::Bounds3 bounds_ = ::carto::nml::Bounds3();
@@ -895,7 +896,7 @@ class MeshOp {
 // -------------------------------------------------------------------
 
 class Model {
- public:
+public:
   inline Model();
   inline explicit Model(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -914,25 +915,25 @@ class Model {
   inline bool has_id() const;
   inline const ::std::string& id() const;
 
-  // repeated .NMLPackage.MeshInstance mesh_instances = 2;
+  // repeated .carto.nml.MeshInstance mesh_instances = 2;
   static const int kMeshInstancesFieldNumber = 2;
   inline int mesh_instances_size() const;
   inline const ::carto::nml::MeshInstance& mesh_instances(int index) const;
   inline const std::vector< ::carto::nml::MeshInstance >& mesh_instances() const;
 
-  // repeated .NMLPackage.Mesh meshes = 3;
+  // repeated .carto.nml.Mesh meshes = 3;
   static const int kMeshesFieldNumber = 3;
   inline int meshes_size() const;
   inline const ::carto::nml::Mesh& meshes(int index) const;
   inline const std::vector< ::carto::nml::Mesh >& meshes() const;
 
-  // repeated .NMLPackage.Texture textures = 4;
+  // repeated .carto.nml.Texture textures = 4;
   static const int kTexturesFieldNumber = 4;
   inline int textures_size() const;
   inline const ::carto::nml::Texture& textures(int index) const;
   inline const std::vector< ::carto::nml::Texture >& textures() const;
 
-  // required .NMLPackage.Bounds3 bounds = 5;
+  // required .carto.nml.Bounds3 bounds = 5;
   static const int kBoundsFieldNumber = 5;
   inline bool has_bounds() const;
   inline const ::carto::nml::Bounds3& bounds() const;
@@ -947,8 +948,8 @@ class Model {
   inline bool has_texture_footprint() const;
   inline std::int32_t texture_footprint() const;
 
-  // @@protoc_insertion_point(class_scope:NMLPackage.Model)
- private:
+  // @@protoc_insertion_point(class_scope:carto.nml.Model)
+private:
   std::uint32_t _has_bits_[1];
   ::std::string id_ = "";
   std::vector< ::carto::nml::MeshInstance > mesh_instances_;
@@ -961,7 +962,7 @@ class Model {
 // -------------------------------------------------------------------
 
 class ModelLODTreeNode {
- public:
+public:
   inline ModelLODTreeNode();
   inline explicit ModelLODTreeNode(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -980,12 +981,12 @@ class ModelLODTreeNode {
   inline bool has_id() const;
   inline std::int32_t id() const;
 
-  // required .NMLPackage.Bounds3 bounds = 2;
+  // required .carto.nml.Bounds3 bounds = 2;
   static const int kBoundsFieldNumber = 2;
   inline bool has_bounds() const;
   inline const ::carto::nml::Bounds3& bounds() const;
 
-  // required .NMLPackage.Model model = 3;
+  // required .carto.nml.Model model = 3;
   static const int kModelFieldNumber = 3;
   inline bool has_model() const;
   inline const ::carto::nml::Model& model() const;
@@ -996,8 +997,8 @@ class ModelLODTreeNode {
   inline std::int32_t children_ids(int index) const;
   inline const std::vector< std::int32_t >& children_ids() const;
 
-  // @@protoc_insertion_point(class_scope:NMLPackage.ModelLODTreeNode)
- private:
+  // @@protoc_insertion_point(class_scope:carto.nml.ModelLODTreeNode)
+private:
   std::uint32_t _has_bits_[1];
   ::carto::nml::Bounds3 bounds_ = ::carto::nml::Bounds3();
   ::carto::nml::Model model_ = ::carto::nml::Model();
@@ -1007,7 +1008,7 @@ class ModelLODTreeNode {
 // -------------------------------------------------------------------
 
 class ModelLODTree {
- public:
+public:
   inline ModelLODTree();
   inline explicit ModelLODTree(const protobuf::message& srcMsg);
   #if _PROTOBUF_USE_RVALUE_REFS
@@ -1021,14 +1022,14 @@ class ModelLODTree {
 
   // accessors -------------------------------------------------------
 
-  // repeated .NMLPackage.ModelLODTreeNode nodes = 1;
+  // repeated .carto.nml.ModelLODTreeNode nodes = 1;
   static const int kNodesFieldNumber = 1;
   inline int nodes_size() const;
   inline const ::carto::nml::ModelLODTreeNode& nodes(int index) const;
   inline const std::vector< ::carto::nml::ModelLODTreeNode >& nodes() const;
 
-  // @@protoc_insertion_point(class_scope:NMLPackage.ModelLODTree)
- private:
+  // @@protoc_insertion_point(class_scope:carto.nml.ModelLODTree)
+private:
   std::uint32_t _has_bits_[1];
   std::vector< ::carto::nml::ModelLODTreeNode > nodes_;
 };
@@ -1065,7 +1066,7 @@ inline bool Vector3::has_x() const {
 }
 
 inline float Vector3::x() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Vector3.x)
+  // @@protoc_insertion_point(field_get:carto.nml.Vector3.x)
   return x_;
 }
 
@@ -1075,7 +1076,7 @@ inline bool Vector3::has_y() const {
 }
 
 inline float Vector3::y() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Vector3.y)
+  // @@protoc_insertion_point(field_get:carto.nml.Vector3.y)
   return y_;
 }
 
@@ -1085,7 +1086,7 @@ inline bool Vector3::has_z() const {
 }
 
 inline float Vector3::z() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Vector3.z)
+  // @@protoc_insertion_point(field_get:carto.nml.Vector3.z)
   return z_;
 }
 
@@ -1126,7 +1127,7 @@ inline bool ColorRGBA::has_r() const {
 }
 
 inline float ColorRGBA::r() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.ColorRGBA.r)
+  // @@protoc_insertion_point(field_get:carto.nml.ColorRGBA.r)
   return r_;
 }
 
@@ -1136,7 +1137,7 @@ inline bool ColorRGBA::has_g() const {
 }
 
 inline float ColorRGBA::g() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.ColorRGBA.g)
+  // @@protoc_insertion_point(field_get:carto.nml.ColorRGBA.g)
   return g_;
 }
 
@@ -1146,7 +1147,7 @@ inline bool ColorRGBA::has_b() const {
 }
 
 inline float ColorRGBA::b() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.ColorRGBA.b)
+  // @@protoc_insertion_point(field_get:carto.nml.ColorRGBA.b)
   return b_;
 }
 
@@ -1156,7 +1157,7 @@ inline bool ColorRGBA::has_a() const {
 }
 
 inline float ColorRGBA::a() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.ColorRGBA.a)
+  // @@protoc_insertion_point(field_get:carto.nml.ColorRGBA.a)
   return a_;
 }
 
@@ -1183,23 +1184,23 @@ inline Bounds3::Bounds3(const protobuf::message& srcMsg) {
   }
 }
 
-// required .NMLPackage.Vector3 min = 1;
+// required .carto.nml.Vector3 min = 1;
 inline bool Bounds3::has_min() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
 
 inline const ::carto::nml::Vector3& Bounds3::min() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Bounds3.min)
+  // @@protoc_insertion_point(field_get:carto.nml.Bounds3.min)
   return min_;
 }
 
-// required .NMLPackage.Vector3 max = 2;
+// required .carto.nml.Vector3 max = 2;
 inline bool Bounds3::has_max() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
 
 inline const ::carto::nml::Vector3& Bounds3::max() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Bounds3.max)
+  // @@protoc_insertion_point(field_get:carto.nml.Bounds3.max)
   return max_;
 }
 
@@ -1288,7 +1289,7 @@ inline bool Matrix4::has_m00() const {
 }
 
 inline float Matrix4::m00() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Matrix4.m00)
+  // @@protoc_insertion_point(field_get:carto.nml.Matrix4.m00)
   return m00_;
 }
 
@@ -1298,7 +1299,7 @@ inline bool Matrix4::has_m01() const {
 }
 
 inline float Matrix4::m01() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Matrix4.m01)
+  // @@protoc_insertion_point(field_get:carto.nml.Matrix4.m01)
   return m01_;
 }
 
@@ -1308,7 +1309,7 @@ inline bool Matrix4::has_m02() const {
 }
 
 inline float Matrix4::m02() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Matrix4.m02)
+  // @@protoc_insertion_point(field_get:carto.nml.Matrix4.m02)
   return m02_;
 }
 
@@ -1318,7 +1319,7 @@ inline bool Matrix4::has_m03() const {
 }
 
 inline float Matrix4::m03() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Matrix4.m03)
+  // @@protoc_insertion_point(field_get:carto.nml.Matrix4.m03)
   return m03_;
 }
 
@@ -1328,7 +1329,7 @@ inline bool Matrix4::has_m10() const {
 }
 
 inline float Matrix4::m10() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Matrix4.m10)
+  // @@protoc_insertion_point(field_get:carto.nml.Matrix4.m10)
   return m10_;
 }
 
@@ -1338,7 +1339,7 @@ inline bool Matrix4::has_m11() const {
 }
 
 inline float Matrix4::m11() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Matrix4.m11)
+  // @@protoc_insertion_point(field_get:carto.nml.Matrix4.m11)
   return m11_;
 }
 
@@ -1348,7 +1349,7 @@ inline bool Matrix4::has_m12() const {
 }
 
 inline float Matrix4::m12() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Matrix4.m12)
+  // @@protoc_insertion_point(field_get:carto.nml.Matrix4.m12)
   return m12_;
 }
 
@@ -1358,7 +1359,7 @@ inline bool Matrix4::has_m13() const {
 }
 
 inline float Matrix4::m13() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Matrix4.m13)
+  // @@protoc_insertion_point(field_get:carto.nml.Matrix4.m13)
   return m13_;
 }
 
@@ -1368,7 +1369,7 @@ inline bool Matrix4::has_m20() const {
 }
 
 inline float Matrix4::m20() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Matrix4.m20)
+  // @@protoc_insertion_point(field_get:carto.nml.Matrix4.m20)
   return m20_;
 }
 
@@ -1378,7 +1379,7 @@ inline bool Matrix4::has_m21() const {
 }
 
 inline float Matrix4::m21() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Matrix4.m21)
+  // @@protoc_insertion_point(field_get:carto.nml.Matrix4.m21)
   return m21_;
 }
 
@@ -1388,7 +1389,7 @@ inline bool Matrix4::has_m22() const {
 }
 
 inline float Matrix4::m22() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Matrix4.m22)
+  // @@protoc_insertion_point(field_get:carto.nml.Matrix4.m22)
   return m22_;
 }
 
@@ -1398,7 +1399,7 @@ inline bool Matrix4::has_m23() const {
 }
 
 inline float Matrix4::m23() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Matrix4.m23)
+  // @@protoc_insertion_point(field_get:carto.nml.Matrix4.m23)
   return m23_;
 }
 
@@ -1408,7 +1409,7 @@ inline bool Matrix4::has_m30() const {
 }
 
 inline float Matrix4::m30() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Matrix4.m30)
+  // @@protoc_insertion_point(field_get:carto.nml.Matrix4.m30)
   return m30_;
 }
 
@@ -1418,7 +1419,7 @@ inline bool Matrix4::has_m31() const {
 }
 
 inline float Matrix4::m31() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Matrix4.m31)
+  // @@protoc_insertion_point(field_get:carto.nml.Matrix4.m31)
   return m31_;
 }
 
@@ -1428,7 +1429,7 @@ inline bool Matrix4::has_m32() const {
 }
 
 inline float Matrix4::m32() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Matrix4.m32)
+  // @@protoc_insertion_point(field_get:carto.nml.Matrix4.m32)
   return m32_;
 }
 
@@ -1438,7 +1439,7 @@ inline bool Matrix4::has_m33() const {
 }
 
 inline float Matrix4::m33() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Matrix4.m33)
+  // @@protoc_insertion_point(field_get:carto.nml.Matrix4.m33)
   return m33_;
 }
 
@@ -1469,33 +1470,33 @@ inline Sampler::Sampler(const protobuf::message& srcMsg) {
   }
 }
 
-// optional .NMLPackage.Sampler.Filter filter = 1;
+// optional .carto.nml.Sampler.Filter filter = 1;
 inline bool Sampler::has_filter() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
 
 inline ::carto::nml::Sampler_Filter Sampler::filter() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Sampler.filter)
+  // @@protoc_insertion_point(field_get:carto.nml.Sampler.filter)
   return static_cast< ::carto::nml::Sampler_Filter >(filter_);
 }
 
-// optional .NMLPackage.Sampler.WrapMode wrap_s = 2;
+// optional .carto.nml.Sampler.WrapMode wrap_s = 2;
 inline bool Sampler::has_wrap_s() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
 
 inline ::carto::nml::Sampler_WrapMode Sampler::wrap_s() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Sampler.wrap_s)
+  // @@protoc_insertion_point(field_get:carto.nml.Sampler.wrap_s)
   return static_cast< ::carto::nml::Sampler_WrapMode >(wrap_s_);
 }
 
-// optional .NMLPackage.Sampler.WrapMode wrap_t = 3;
+// optional .carto.nml.Sampler.WrapMode wrap_t = 3;
 inline bool Sampler::has_wrap_t() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
 
 inline ::carto::nml::Sampler_WrapMode Sampler::wrap_t() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Sampler.wrap_t)
+  // @@protoc_insertion_point(field_get:carto.nml.Sampler.wrap_t)
   return static_cast< ::carto::nml::Sampler_WrapMode >(wrap_t_);
 }
 
@@ -1544,17 +1545,17 @@ inline bool Texture::has_id() const {
 }
 
 inline const ::std::string& Texture::id() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Texture.id)
+  // @@protoc_insertion_point(field_get:carto.nml.Texture.id)
   return id_;
 }
 
-// required .NMLPackage.Texture.Format format = 2;
+// required .carto.nml.Texture.Format format = 2;
 inline bool Texture::has_format() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
 
 inline ::carto::nml::Texture_Format Texture::format() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Texture.format)
+  // @@protoc_insertion_point(field_get:carto.nml.Texture.format)
   return static_cast< ::carto::nml::Texture_Format >(format_);
 }
 
@@ -1564,7 +1565,7 @@ inline bool Texture::has_width() const {
 }
 
 inline std::int32_t Texture::width() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Texture.width)
+  // @@protoc_insertion_point(field_get:carto.nml.Texture.width)
   return width_;
 }
 
@@ -1574,17 +1575,17 @@ inline bool Texture::has_height() const {
 }
 
 inline std::int32_t Texture::height() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Texture.height)
+  // @@protoc_insertion_point(field_get:carto.nml.Texture.height)
   return height_;
 }
 
-// required .NMLPackage.Sampler sampler = 5;
+// required .carto.nml.Sampler sampler = 5;
 inline bool Texture::has_sampler() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
 
 inline const ::carto::nml::Sampler& Texture::sampler() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Texture.sampler)
+  // @@protoc_insertion_point(field_get:carto.nml.Texture.sampler)
   return sampler_;
 }
 
@@ -1594,11 +1595,11 @@ inline int Texture::mipmaps_size() const {
 }
 
 inline const ::std::string& Texture::mipmaps(int index) const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Texture.mipmaps)
+  // @@protoc_insertion_point(field_get:carto.nml.Texture.mipmaps)
   return mipmaps_[index];
 }
 inline const std::vector< ::std::string>& Texture::mipmaps() const {
-  // @@protoc_insertion_point(field_list:NMLPackage.Texture.mipmaps)
+  // @@protoc_insertion_point(field_list:carto.nml.Texture.mipmaps)
   return mipmaps_;
 }
 
@@ -1629,23 +1630,23 @@ inline ColorOrTexture::ColorOrTexture(const protobuf::message& srcMsg) {
   }
 }
 
-// required .NMLPackage.ColorOrTexture.Type type = 1;
+// required .carto.nml.ColorOrTexture.Type type = 1;
 inline bool ColorOrTexture::has_type() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
 
 inline ::carto::nml::ColorOrTexture_Type ColorOrTexture::type() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.ColorOrTexture.type)
+  // @@protoc_insertion_point(field_get:carto.nml.ColorOrTexture.type)
   return static_cast< ::carto::nml::ColorOrTexture_Type >(type_);
 }
 
-// optional .NMLPackage.ColorRGBA color = 2;
+// optional .carto.nml.ColorRGBA color = 2;
 inline bool ColorOrTexture::has_color() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
 
 inline const ::carto::nml::ColorRGBA& ColorOrTexture::color() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.ColorOrTexture.color)
+  // @@protoc_insertion_point(field_get:carto.nml.ColorOrTexture.color)
   return color_;
 }
 
@@ -1655,7 +1656,7 @@ inline bool ColorOrTexture::has_texture_id() const {
 }
 
 inline const ::std::string& ColorOrTexture::texture_id() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.ColorOrTexture.texture_id)
+  // @@protoc_insertion_point(field_get:carto.nml.ColorOrTexture.texture_id)
   return texture_id_;
 }
 
@@ -1724,67 +1725,67 @@ inline bool Material::has_id() const {
 }
 
 inline const ::std::string& Material::id() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Material.id)
+  // @@protoc_insertion_point(field_get:carto.nml.Material.id)
   return id_;
 }
 
-// required .NMLPackage.Material.Type type = 2;
+// required .carto.nml.Material.Type type = 2;
 inline bool Material::has_type() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
 
 inline ::carto::nml::Material_Type Material::type() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Material.type)
+  // @@protoc_insertion_point(field_get:carto.nml.Material.type)
   return static_cast< ::carto::nml::Material_Type >(type_);
 }
 
-// required .NMLPackage.Material.Culling culling = 3;
+// required .carto.nml.Material.Culling culling = 3;
 inline bool Material::has_culling() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
 
 inline ::carto::nml::Material_Culling Material::culling() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Material.culling)
+  // @@protoc_insertion_point(field_get:carto.nml.Material.culling)
   return static_cast< ::carto::nml::Material_Culling >(culling_);
 }
 
-// optional .NMLPackage.ColorOrTexture emission = 4;
+// optional .carto.nml.ColorOrTexture emission = 4;
 inline bool Material::has_emission() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
 
 inline const ::carto::nml::ColorOrTexture& Material::emission() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Material.emission)
+  // @@protoc_insertion_point(field_get:carto.nml.Material.emission)
   return emission_;
 }
 
-// optional .NMLPackage.ColorOrTexture ambient = 5;
+// optional .carto.nml.ColorOrTexture ambient = 5;
 inline bool Material::has_ambient() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
 
 inline const ::carto::nml::ColorOrTexture& Material::ambient() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Material.ambient)
+  // @@protoc_insertion_point(field_get:carto.nml.Material.ambient)
   return ambient_;
 }
 
-// optional .NMLPackage.ColorOrTexture diffuse = 6;
+// optional .carto.nml.ColorOrTexture diffuse = 6;
 inline bool Material::has_diffuse() const {
   return (_has_bits_[0] & 0x00000020u) != 0;
 }
 
 inline const ::carto::nml::ColorOrTexture& Material::diffuse() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Material.diffuse)
+  // @@protoc_insertion_point(field_get:carto.nml.Material.diffuse)
   return diffuse_;
 }
 
-// optional .NMLPackage.Material.OpaqueMode opaque_mode = 7;
+// optional .carto.nml.Material.OpaqueMode opaque_mode = 7;
 inline bool Material::has_opaque_mode() const {
   return (_has_bits_[0] & 0x00000040u) != 0;
 }
 
 inline ::carto::nml::Material_OpaqueMode Material::opaque_mode() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Material.opaque_mode)
+  // @@protoc_insertion_point(field_get:carto.nml.Material.opaque_mode)
   return static_cast< ::carto::nml::Material_OpaqueMode >(opaque_mode_);
 }
 
@@ -1794,17 +1795,17 @@ inline bool Material::has_transparency() const {
 }
 
 inline float Material::transparency() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Material.transparency)
+  // @@protoc_insertion_point(field_get:carto.nml.Material.transparency)
   return transparency_;
 }
 
-// optional .NMLPackage.ColorOrTexture transparent = 9;
+// optional .carto.nml.ColorOrTexture transparent = 9;
 inline bool Material::has_transparent() const {
   return (_has_bits_[0] & 0x00000100u) != 0;
 }
 
 inline const ::carto::nml::ColorOrTexture& Material::transparent() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Material.transparent)
+  // @@protoc_insertion_point(field_get:carto.nml.Material.transparent)
   return transparent_;
 }
 
@@ -1814,17 +1815,17 @@ inline bool Material::has_shininess() const {
 }
 
 inline float Material::shininess() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Material.shininess)
+  // @@protoc_insertion_point(field_get:carto.nml.Material.shininess)
   return shininess_;
 }
 
-// optional .NMLPackage.ColorOrTexture specular = 11;
+// optional .carto.nml.ColorOrTexture specular = 11;
 inline bool Material::has_specular() const {
   return (_has_bits_[0] & 0x00000400u) != 0;
 }
 
 inline const ::carto::nml::ColorOrTexture& Material::specular() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Material.specular)
+  // @@protoc_insertion_point(field_get:carto.nml.Material.specular)
   return specular_;
 }
 
@@ -1875,13 +1876,13 @@ inline Submesh::Submesh(const protobuf::message& srcMsg) {
   }
 }
 
-// required .NMLPackage.Submesh.Type type = 1;
+// required .carto.nml.Submesh.Type type = 1;
 inline bool Submesh::has_type() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
 
 inline ::carto::nml::Submesh_Type Submesh::type() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Submesh.type)
+  // @@protoc_insertion_point(field_get:carto.nml.Submesh.type)
   return static_cast< ::carto::nml::Submesh_Type >(type_);
 }
 
@@ -1891,7 +1892,7 @@ inline bool Submesh::has_material_id() const {
 }
 
 inline const ::std::string& Submesh::material_id() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Submesh.material_id)
+  // @@protoc_insertion_point(field_get:carto.nml.Submesh.material_id)
   return material_id_;
 }
 
@@ -1901,12 +1902,12 @@ inline int Submesh::vertex_counts_size() const {
 }
 
 inline std::int32_t Submesh::vertex_counts(int index) const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Submesh.vertex_counts)
+  // @@protoc_insertion_point(field_get:carto.nml.Submesh.vertex_counts)
   return vertex_counts_[index];
 }
 
 inline const std::vector< std::int32_t >& Submesh::vertex_counts() const {
-  // @@protoc_insertion_point(field_list:NMLPackage.Submesh.vertex_counts)
+  // @@protoc_insertion_point(field_list:carto.nml.Submesh.vertex_counts)
   return vertex_counts_;
 }
 
@@ -1916,7 +1917,7 @@ inline bool Submesh::has_positions() const {
 }
 
 inline const ::std::string& Submesh::positions() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Submesh.positions)
+  // @@protoc_insertion_point(field_get:carto.nml.Submesh.positions)
   return positions_;
 }
 
@@ -1926,7 +1927,7 @@ inline bool Submesh::has_normals() const {
 }
 
 inline const ::std::string& Submesh::normals() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Submesh.normals)
+  // @@protoc_insertion_point(field_get:carto.nml.Submesh.normals)
   return normals_;
 }
 
@@ -1936,7 +1937,7 @@ inline bool Submesh::has_uvs() const {
 }
 
 inline const ::std::string& Submesh::uvs() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Submesh.uvs)
+  // @@protoc_insertion_point(field_get:carto.nml.Submesh.uvs)
   return uvs_;
 }
 
@@ -1946,7 +1947,7 @@ inline bool Submesh::has_colors() const {
 }
 
 inline const ::std::string& Submesh::colors() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Submesh.colors)
+  // @@protoc_insertion_point(field_get:carto.nml.Submesh.colors)
   return colors_;
 }
 
@@ -1956,12 +1957,12 @@ inline int Submesh::vertex_ids_size() const {
 }
 
 inline std::int64_t Submesh::vertex_ids(int index) const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Submesh.vertex_ids)
+  // @@protoc_insertion_point(field_get:carto.nml.Submesh.vertex_ids)
   return vertex_ids_[index];
 }
 
 inline const std::vector< std::int64_t >& Submesh::vertex_ids() const {
-  // @@protoc_insertion_point(field_list:NMLPackage.Submesh.vertex_ids)
+  // @@protoc_insertion_point(field_list:carto.nml.Submesh.vertex_ids)
   return vertex_ids_;
 }
 
@@ -1998,31 +1999,31 @@ inline bool Mesh::has_id() const {
 }
 
 inline const ::std::string& Mesh::id() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Mesh.id)
+  // @@protoc_insertion_point(field_get:carto.nml.Mesh.id)
   return id_;
 }
 
-// required .NMLPackage.Bounds3 bounds = 2;
+// required .carto.nml.Bounds3 bounds = 2;
 inline bool Mesh::has_bounds() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
 
 inline const ::carto::nml::Bounds3& Mesh::bounds() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Mesh.bounds)
+  // @@protoc_insertion_point(field_get:carto.nml.Mesh.bounds)
   return bounds_;
 }
 
-// repeated .NMLPackage.Submesh submeshes = 3;
+// repeated .carto.nml.Submesh submeshes = 3;
 inline int Mesh::submeshes_size() const {
   return static_cast<int>(submeshes_.size());
 }
 
 inline const ::carto::nml::Submesh& Mesh::submeshes(int index) const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Mesh.submeshes)
+  // @@protoc_insertion_point(field_get:carto.nml.Mesh.submeshes)
   return submeshes_[index];
 }
 inline const std::vector< ::carto::nml::Submesh >& Mesh::submeshes() const {
-  // @@protoc_insertion_point(field_list:NMLPackage.Mesh.submeshes)
+  // @@protoc_insertion_point(field_list:carto.nml.Mesh.submeshes)
   return submeshes_;
 }
 
@@ -2059,31 +2060,31 @@ inline bool MeshInstance::has_mesh_id() const {
 }
 
 inline const ::std::string& MeshInstance::mesh_id() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.MeshInstance.mesh_id)
+  // @@protoc_insertion_point(field_get:carto.nml.MeshInstance.mesh_id)
   return mesh_id_;
 }
 
-// repeated .NMLPackage.Material materials = 2;
+// repeated .carto.nml.Material materials = 2;
 inline int MeshInstance::materials_size() const {
   return static_cast<int>(materials_.size());
 }
 
 inline const ::carto::nml::Material& MeshInstance::materials(int index) const {
-  // @@protoc_insertion_point(field_get:NMLPackage.MeshInstance.materials)
+  // @@protoc_insertion_point(field_get:carto.nml.MeshInstance.materials)
   return materials_[index];
 }
 inline const std::vector< ::carto::nml::Material >& MeshInstance::materials() const {
-  // @@protoc_insertion_point(field_list:NMLPackage.MeshInstance.materials)
+  // @@protoc_insertion_point(field_list:carto.nml.MeshInstance.materials)
   return materials_;
 }
 
-// optional .NMLPackage.Matrix4 transform = 3;
+// optional .carto.nml.Matrix4 transform = 3;
 inline bool MeshInstance::has_transform() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
 
 inline const ::carto::nml::Matrix4& MeshInstance::transform() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.MeshInstance.transform)
+  // @@protoc_insertion_point(field_get:carto.nml.MeshInstance.transform)
   return transform_;
 }
 
@@ -2136,7 +2137,7 @@ inline bool SubmeshOp::has_submesh_idx() const {
 }
 
 inline std::int32_t SubmeshOp::submesh_idx() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.SubmeshOp.submesh_idx)
+  // @@protoc_insertion_point(field_get:carto.nml.SubmeshOp.submesh_idx)
   return submesh_idx_;
 }
 
@@ -2146,7 +2147,7 @@ inline bool SubmeshOp::has_offset() const {
 }
 
 inline std::int32_t SubmeshOp::offset() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.SubmeshOp.offset)
+  // @@protoc_insertion_point(field_get:carto.nml.SubmeshOp.offset)
   return offset_;
 }
 
@@ -2156,7 +2157,7 @@ inline bool SubmeshOp::has_count() const {
 }
 
 inline std::int32_t SubmeshOp::count() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.SubmeshOp.count)
+  // @@protoc_insertion_point(field_get:carto.nml.SubmeshOp.count)
   return count_;
 }
 
@@ -2166,7 +2167,7 @@ inline bool SubmeshOp::has_tex_u_scale() const {
 }
 
 inline float SubmeshOp::tex_u_scale() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.SubmeshOp.tex_u_scale)
+  // @@protoc_insertion_point(field_get:carto.nml.SubmeshOp.tex_u_scale)
   return tex_u_scale_;
 }
 
@@ -2176,7 +2177,7 @@ inline bool SubmeshOp::has_tex_v_scale() const {
 }
 
 inline float SubmeshOp::tex_v_scale() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.SubmeshOp.tex_v_scale)
+  // @@protoc_insertion_point(field_get:carto.nml.SubmeshOp.tex_v_scale)
   return tex_v_scale_;
 }
 
@@ -2186,7 +2187,7 @@ inline bool SubmeshOp::has_tex_u_trans() const {
 }
 
 inline float SubmeshOp::tex_u_trans() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.SubmeshOp.tex_u_trans)
+  // @@protoc_insertion_point(field_get:carto.nml.SubmeshOp.tex_u_trans)
   return tex_u_trans_;
 }
 
@@ -2196,7 +2197,7 @@ inline bool SubmeshOp::has_tex_v_trans() const {
 }
 
 inline float SubmeshOp::tex_v_trans() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.SubmeshOp.tex_v_trans)
+  // @@protoc_insertion_point(field_get:carto.nml.SubmeshOp.tex_v_trans)
   return tex_v_trans_;
 }
 
@@ -2227,13 +2228,13 @@ inline SubmeshOpList::SubmeshOpList(const protobuf::message& srcMsg) {
   }
 }
 
-// required .NMLPackage.Submesh.Type type = 1;
+// required .carto.nml.Submesh.Type type = 1;
 inline bool SubmeshOpList::has_type() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
 
 inline ::carto::nml::Submesh_Type SubmeshOpList::type() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.SubmeshOpList.type)
+  // @@protoc_insertion_point(field_get:carto.nml.SubmeshOpList.type)
   return static_cast< ::carto::nml::Submesh_Type >(type_);
 }
 
@@ -2243,21 +2244,21 @@ inline bool SubmeshOpList::has_material_id() const {
 }
 
 inline const ::std::string& SubmeshOpList::material_id() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.SubmeshOpList.material_id)
+  // @@protoc_insertion_point(field_get:carto.nml.SubmeshOpList.material_id)
   return material_id_;
 }
 
-// repeated .NMLPackage.SubmeshOp submesh_ops = 3;
+// repeated .carto.nml.SubmeshOp submesh_ops = 3;
 inline int SubmeshOpList::submesh_ops_size() const {
   return static_cast<int>(submesh_ops_.size());
 }
 
 inline const ::carto::nml::SubmeshOp& SubmeshOpList::submesh_ops(int index) const {
-  // @@protoc_insertion_point(field_get:NMLPackage.SubmeshOpList.submesh_ops)
+  // @@protoc_insertion_point(field_get:carto.nml.SubmeshOpList.submesh_ops)
   return submesh_ops_[index];
 }
 inline const std::vector< ::carto::nml::SubmeshOp >& SubmeshOpList::submesh_ops() const {
-  // @@protoc_insertion_point(field_list:NMLPackage.SubmeshOpList.submesh_ops)
+  // @@protoc_insertion_point(field_list:carto.nml.SubmeshOpList.submesh_ops)
   return submesh_ops_;
 }
 
@@ -2294,31 +2295,31 @@ inline bool MeshOp::has_id() const {
 }
 
 inline const ::std::string& MeshOp::id() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.MeshOp.id)
+  // @@protoc_insertion_point(field_get:carto.nml.MeshOp.id)
   return id_;
 }
 
-// required .NMLPackage.Bounds3 bounds = 2;
+// required .carto.nml.Bounds3 bounds = 2;
 inline bool MeshOp::has_bounds() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
 
 inline const ::carto::nml::Bounds3& MeshOp::bounds() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.MeshOp.bounds)
+  // @@protoc_insertion_point(field_get:carto.nml.MeshOp.bounds)
   return bounds_;
 }
 
-// repeated .NMLPackage.SubmeshOpList submesh_op_lists = 3;
+// repeated .carto.nml.SubmeshOpList submesh_op_lists = 3;
 inline int MeshOp::submesh_op_lists_size() const {
   return static_cast<int>(submesh_op_lists_.size());
 }
 
 inline const ::carto::nml::SubmeshOpList& MeshOp::submesh_op_lists(int index) const {
-  // @@protoc_insertion_point(field_get:NMLPackage.MeshOp.submesh_op_lists)
+  // @@protoc_insertion_point(field_get:carto.nml.MeshOp.submesh_op_lists)
   return submesh_op_lists_[index];
 }
 inline const std::vector< ::carto::nml::SubmeshOpList >& MeshOp::submesh_op_lists() const {
-  // @@protoc_insertion_point(field_list:NMLPackage.MeshOp.submesh_op_lists)
+  // @@protoc_insertion_point(field_list:carto.nml.MeshOp.submesh_op_lists)
   return submesh_op_lists_;
 }
 
@@ -2371,59 +2372,59 @@ inline bool Model::has_id() const {
 }
 
 inline const ::std::string& Model::id() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Model.id)
+  // @@protoc_insertion_point(field_get:carto.nml.Model.id)
   return id_;
 }
 
-// repeated .NMLPackage.MeshInstance mesh_instances = 2;
+// repeated .carto.nml.MeshInstance mesh_instances = 2;
 inline int Model::mesh_instances_size() const {
   return static_cast<int>(mesh_instances_.size());
 }
 
 inline const ::carto::nml::MeshInstance& Model::mesh_instances(int index) const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Model.mesh_instances)
+  // @@protoc_insertion_point(field_get:carto.nml.Model.mesh_instances)
   return mesh_instances_[index];
 }
 inline const std::vector< ::carto::nml::MeshInstance >& Model::mesh_instances() const {
-  // @@protoc_insertion_point(field_list:NMLPackage.Model.mesh_instances)
+  // @@protoc_insertion_point(field_list:carto.nml.Model.mesh_instances)
   return mesh_instances_;
 }
 
-// repeated .NMLPackage.Mesh meshes = 3;
+// repeated .carto.nml.Mesh meshes = 3;
 inline int Model::meshes_size() const {
   return static_cast<int>(meshes_.size());
 }
 
 inline const ::carto::nml::Mesh& Model::meshes(int index) const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Model.meshes)
+  // @@protoc_insertion_point(field_get:carto.nml.Model.meshes)
   return meshes_[index];
 }
 inline const std::vector< ::carto::nml::Mesh >& Model::meshes() const {
-  // @@protoc_insertion_point(field_list:NMLPackage.Model.meshes)
+  // @@protoc_insertion_point(field_list:carto.nml.Model.meshes)
   return meshes_;
 }
 
-// repeated .NMLPackage.Texture textures = 4;
+// repeated .carto.nml.Texture textures = 4;
 inline int Model::textures_size() const {
   return static_cast<int>(textures_.size());
 }
 
 inline const ::carto::nml::Texture& Model::textures(int index) const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Model.textures)
+  // @@protoc_insertion_point(field_get:carto.nml.Model.textures)
   return textures_[index];
 }
 inline const std::vector< ::carto::nml::Texture >& Model::textures() const {
-  // @@protoc_insertion_point(field_list:NMLPackage.Model.textures)
+  // @@protoc_insertion_point(field_list:carto.nml.Model.textures)
   return textures_;
 }
 
-// required .NMLPackage.Bounds3 bounds = 5;
+// required .carto.nml.Bounds3 bounds = 5;
 inline bool Model::has_bounds() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
 
 inline const ::carto::nml::Bounds3& Model::bounds() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Model.bounds)
+  // @@protoc_insertion_point(field_get:carto.nml.Model.bounds)
   return bounds_;
 }
 
@@ -2433,7 +2434,7 @@ inline bool Model::has_mesh_footprint() const {
 }
 
 inline std::int32_t Model::mesh_footprint() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Model.mesh_footprint)
+  // @@protoc_insertion_point(field_get:carto.nml.Model.mesh_footprint)
   return mesh_footprint_;
 }
 
@@ -2443,7 +2444,7 @@ inline bool Model::has_texture_footprint() const {
 }
 
 inline std::int32_t Model::texture_footprint() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.Model.texture_footprint)
+  // @@protoc_insertion_point(field_get:carto.nml.Model.texture_footprint)
   return texture_footprint_;
 }
 
@@ -2484,27 +2485,27 @@ inline bool ModelLODTreeNode::has_id() const {
 }
 
 inline std::int32_t ModelLODTreeNode::id() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.ModelLODTreeNode.id)
+  // @@protoc_insertion_point(field_get:carto.nml.ModelLODTreeNode.id)
   return id_;
 }
 
-// required .NMLPackage.Bounds3 bounds = 2;
+// required .carto.nml.Bounds3 bounds = 2;
 inline bool ModelLODTreeNode::has_bounds() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
 
 inline const ::carto::nml::Bounds3& ModelLODTreeNode::bounds() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.ModelLODTreeNode.bounds)
+  // @@protoc_insertion_point(field_get:carto.nml.ModelLODTreeNode.bounds)
   return bounds_;
 }
 
-// required .NMLPackage.Model model = 3;
+// required .carto.nml.Model model = 3;
 inline bool ModelLODTreeNode::has_model() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
 
 inline const ::carto::nml::Model& ModelLODTreeNode::model() const {
-  // @@protoc_insertion_point(field_get:NMLPackage.ModelLODTreeNode.model)
+  // @@protoc_insertion_point(field_get:carto.nml.ModelLODTreeNode.model)
   return model_;
 }
 
@@ -2514,12 +2515,12 @@ inline int ModelLODTreeNode::children_ids_size() const {
 }
 
 inline std::int32_t ModelLODTreeNode::children_ids(int index) const {
-  // @@protoc_insertion_point(field_get:NMLPackage.ModelLODTreeNode.children_ids)
+  // @@protoc_insertion_point(field_get:carto.nml.ModelLODTreeNode.children_ids)
   return children_ids_[index];
 }
 
 inline const std::vector< std::int32_t >& ModelLODTreeNode::children_ids() const {
-  // @@protoc_insertion_point(field_list:NMLPackage.ModelLODTreeNode.children_ids)
+  // @@protoc_insertion_point(field_list:carto.nml.ModelLODTreeNode.children_ids)
   return children_ids_;
 }
 
@@ -2542,24 +2543,25 @@ inline ModelLODTree::ModelLODTree(const protobuf::message& srcMsg) {
   }
 }
 
-// repeated .NMLPackage.ModelLODTreeNode nodes = 1;
+// repeated .carto.nml.ModelLODTreeNode nodes = 1;
 inline int ModelLODTree::nodes_size() const {
   return static_cast<int>(nodes_.size());
 }
 
 inline const ::carto::nml::ModelLODTreeNode& ModelLODTree::nodes(int index) const {
-  // @@protoc_insertion_point(field_get:NMLPackage.ModelLODTree.nodes)
+  // @@protoc_insertion_point(field_get:carto.nml.ModelLODTree.nodes)
   return nodes_[index];
 }
 inline const std::vector< ::carto::nml::ModelLODTreeNode >& ModelLODTree::nodes() const {
-  // @@protoc_insertion_point(field_list:NMLPackage.ModelLODTree.nodes)
+  // @@protoc_insertion_point(field_list:carto.nml.ModelLODTree.nodes)
   return nodes_;
 }
 
 
 // @@protoc_insertion_point(namespace_scope)
 
-} }  // namespace NMLPackage
+}  // namespace nml
+}  // namespace carto
 
 // @@protoc_insertion_point(global_scope)
 
