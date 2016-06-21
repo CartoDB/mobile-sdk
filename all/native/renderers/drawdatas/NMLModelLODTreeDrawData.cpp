@@ -5,13 +5,13 @@
 namespace carto {
 
     NMLModelLODTreeDrawData::NMLModelLODTreeDrawData(const std::shared_ptr<NMLModelLODTree>& modelLODTree, long long nodeId, const std::vector<long long>& parentIds, const std::shared_ptr<nmlgl::Model>& glModel) :
-        VectorElementDrawData(Color()),
         _modelLODTree(modelLODTree),
         _nodeId(nodeId),
         _parentIds(parentIds),
         _localMat(modelLODTree->getLocalMat()),
         _glModel(glModel),
-        _proxyMap(modelLODTree->getProxyMap())
+        _proxyMap(modelLODTree->getProxyMap()),
+        _isOffset(false)
     {
     }
     
@@ -39,9 +39,13 @@ namespace carto {
         return _proxyMap;
     }
     
+    bool NMLModelLODTreeDrawData::isOffset() const {
+        return _isOffset;
+    }
+    
     void NMLModelLODTreeDrawData::offsetHorizontally(double offset) {
         _localMat = cglib::translate4_matrix(cglib::vec3<double>(offset, 0, 0)) * _localMat;
-        setIsOffset(true);
+        _isOffset = true;
     }
     
 }

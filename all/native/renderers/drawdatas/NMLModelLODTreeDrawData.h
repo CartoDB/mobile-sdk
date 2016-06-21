@@ -9,8 +9,7 @@
 
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT
 
-#include "VectorElementDrawData.h"
-#include "vectorelements/NMLModelLODTree.h"
+#include "datasources/components/NMLModelLODTree.h"
 
 #include <memory>
 
@@ -19,7 +18,7 @@ namespace carto {
         class Model;
     }
     
-    class NMLModelLODTreeDrawData : public VectorElementDrawData {
+    class NMLModelLODTreeDrawData {
     public:
         NMLModelLODTreeDrawData(const std::shared_ptr<NMLModelLODTree>& modelLODTree, long long nodeId, const std::vector<long long>& parentIds, const std::shared_ptr<nmlgl::Model>& glModel);
     
@@ -30,6 +29,7 @@ namespace carto {
         const std::shared_ptr<nmlgl::Model>& getGLModel() const;
         const std::shared_ptr<NMLModelLODTree::ProxyMap> getProxyMap() const;
         
+        virtual bool isOffset() const;
         virtual void offsetHorizontally(double offset);
     
     private:
@@ -39,6 +39,7 @@ namespace carto {
         cglib::mat4x4<double> _localMat;
         std::shared_ptr<nmlgl::Model> _glModel;
         std::shared_ptr<NMLModelLODTree::ProxyMap> _proxyMap;
+        bool _isOffset;
     };
     
 }

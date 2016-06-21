@@ -9,8 +9,8 @@
 
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT
 
+#include "datasources/components/NMLModelLODTree.h"
 #include "renderers/drawdatas/NMLModelLODTreeDrawData.h"
-#include "vectorelements/NMLModelLODTree.h"
 
 #include <memory>
 #include <mutex>

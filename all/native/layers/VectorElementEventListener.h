@@ -26,10 +26,10 @@ namespace carto {
          * If the method returns true, all subsequent elements are ignored. Otherwise the method is called
          * on the next element and so on.
          * This method will NOT be called from the main thread.
-         * @param vectorElementClickInfo A container that provides information about the click.
+         * @param clickInfo A container that provides information about the click.
          * @return True if the click is handled and subsequent elements should not be handled. False if the next element should be called.
          */
-        virtual bool onVectorElementClicked(const std::shared_ptr<VectorElementClickInfo>& vectorElementClickInfo) { return true; }
+        virtual bool onVectorElementClicked(const std::shared_ptr<VectorElementClickInfo>& clickInfo) { return true; }
     };
     
 }

@@ -91,6 +91,49 @@ namespace carto {
         _drawRecordMap.clear();
     }
 
+    void NMLModelLODTreeRenderer::calculateRayIntersectedElements(const std::shared_ptr<NMLModelLODTreeLayer>& layer, const MapPos& rayOrig, const MapVec& rayDir, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
+        std::lock_guard<std::mutex> lock(_mutex);
+    
+        for (auto it = _drawRecordMap.begin(); it != _drawRecordMap.end(); it++) {
+            const ModelNodeDrawRecord& record = *it->second;
+            if (!(record.used && record.created))
+                continue;
+    
+            std::shared_ptr<nmlgl::Model> glModel = record.drawData.getGLModel();
+            const cglib::mat4x4<double>& modelMat = record.drawData.getLocalMat();
+            cglib::mat4x4<double> invModelMat = cglib::inverse(modelMat);
+    
+            cglib::vec3<double> rayOrigModel = cglib::transform_point(cglib::vec3<double>(rayOrig.getX(), rayOrig.getY(), rayOrig.getZ()), invModelMat);
+            cglib::vec3<double> rayDirModel = cglib::transform_point(cglib::vec3<double>(rayOrig.getX() + rayDir.getX(), rayOrig.getY() + rayDir.getY(), rayOrig.getZ() + rayDir.getZ()), invModelMat) - rayOrigModel;
+            cglib::bbox3<float> modelBounds = glModel->getBounds();
+            
+            if (!GeomUtils::RayBoundingBoxIntersect(
+                    MapPos(rayOrigModel(0), rayOrigModel(1), rayOrigModel(2)),
+                    MapVec(rayDirModel(0), rayDirModel(1), rayDirModel(2)),
+                    MapBounds(MapPos(modelBounds.min(0), modelBounds.min(1), modelBounds.min(2)), MapPos(modelBounds.max(0), modelBounds.max(1), modelBounds.max(2)))))
+            {
+                continue;
+            }
+            
+            std::vector<nmlgl::RayIntersection> intersections;
+            glModel->calculateRayIntersections(nmlgl::Ray(rayOrigModel, rayDirModel), intersections);
+            
+            for (size_t i = 0; i < intersections.size(); i++) {
+                NMLModelLODTree::ProxyMap::const_iterator proxyIt = record.drawData.getProxyMap()->find(intersections[i].vertexId);
+                if (proxyIt == record.drawData.getProxyMap()->end()) {
+                    continue;
+                }
+                
+                cglib::vec3<double> pos = cglib::transform_point(intersections[i].pos, modelMat);
+                MapPos clickPos(pos(0), pos(1), pos(2));
+                double distance = GeomUtils::DistanceFromPoint(clickPos, viewState.getCameraPos());
+                MapPos projectedClickPos = layer->getDataSource()->getProjection()->fromInternal(clickPos);
+                int priority = static_cast<int>(results.size());
+                results.push_back(RayIntersectedElement(std::make_shared<NMLModelLODTree::Proxy>(proxyIt->second), layer, projectedClickPos, projectedClickPos, priority));
+            }
+        }
+    }
+
     bool NMLModelLODTreeRenderer::onDrawFrame(float deltaSeconds, const ViewState& viewState) {
         std::lock_guard<std::mutex> lock(_mutex);
     
@@ -229,50 +272,6 @@ namespace carto {
         _drawRecordMap.clear();
     }
 
-    void NMLModelLODTreeRenderer::calculateRayIntersectedElements(const std::shared_ptr<NMLModelLODTreeLayer>& layer, const MapPos& rayOrig, const MapVec& rayDir, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
-        std::lock_guard<std::mutex> lock(_mutex);
-    
-        for (auto it = _drawRecordMap.begin(); it != _drawRecordMap.end(); it++) {
-            const ModelNodeDrawRecord& record = *it->second;
-            if (!(record.used && record.created)) {
-                continue;
-            }
-    
-            std::shared_ptr<nmlgl::Model> glModel = record.drawData.getGLModel();
-            const cglib::mat4x4<double>& modelMat = record.drawData.getLocalMat();
-            cglib::mat4x4<double> invModelMat = cglib::inverse(modelMat);
-    
-            cglib::vec3<double> rayOrigModel = cglib::transform_point(cglib::vec3<double>(rayOrig.getX(), rayOrig.getY(), rayOrig.getZ()), invModelMat);
-            cglib::vec3<double> rayDirModel = cglib::transform_point(cglib::vec3<double>(rayOrig.getX() + rayDir.getX(), rayOrig.getY() + rayDir.getY(), rayOrig.getZ() + rayDir.getZ()), invModelMat) - rayOrigModel;
-            cglib::bbox3<float> modelBounds = glModel->getBounds();
-            
-            if (!GeomUtils::RayBoundingBoxIntersect(
-                    MapPos(rayOrigModel(0), rayOrigModel(1), rayOrigModel(2)),
-                    MapVec(rayDirModel(0), rayDirModel(1), rayDirModel(2)),
-                    MapBounds(MapPos(modelBounds.min(0), modelBounds.min(1), modelBounds.min(2)), MapPos(modelBounds.max(0), modelBounds.max(1), modelBounds.max(2)))))
-            {
-                continue;
-            }
-            
-            std::vector<nmlgl::RayIntersection> intersections;
-            glModel->calculateRayIntersections(nmlgl::Ray(rayOrigModel, rayDirModel), intersections);
-            
-            for (size_t i = 0; i < intersections.size(); i++) {
-                NMLModelLODTree::ProxyMap::const_iterator proxy_it = record.drawData.getProxyMap()->find(intersections[i].vertexId);
-                if (proxy_it == record.drawData.getProxyMap()->end()) {
-                    continue;
-                }
-                
-                cglib::vec3<double> pos = cglib::transform_point(intersections[i].pos, modelMat);
-                MapPos clickPos(pos(0), pos(1), pos(2));
-                double distance = GeomUtils::DistanceFromPoint(clickPos, viewState.getCameraPos());
-                MapPos projectedClickPos = layer->getDataSource()->getProjection()->fromInternal(clickPos);
-                int priority = static_cast<int>(results.size());
-                results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(proxy_it->second), layer, projectedClickPos, projectedClickPos, priority));
-            }
-        }
-    }
-    
 }
 
 #endif

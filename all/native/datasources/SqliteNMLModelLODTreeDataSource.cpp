@@ -104,22 +104,20 @@ namespace carto {
                 std::map<std::string, std::string> metaData;
                 for (int i = 0; i < queryProxyBindings.column_count(); i++) {
                     std::string columnName = queryProxyBindings.column_name(i);
-                    if (columnName == "model_id")
+                    if (columnName == "model_id") {
                         modelId = (*qitProxyBindings).get<int32_t>(i);
-                    else if (columnName == "mappos_x")
+                    } else if (columnName == "mappos_x") {
                         mapPos.setX((*qitProxyBindings).get<double>(i));
-                    else if (columnName == "mappos_y")
+                    } else if (columnName == "mappos_y") {
                         mapPos.setY((*qitProxyBindings).get<double>(i));
-                    else if (columnName == "groundheight")
+                    } else if (columnName == "groundheight") {
                         mapPos.setZ((*qitProxyBindings).get<double>(i));
-                    else if (columnName != "modellodtree_id" && columnName != "global_id")
+                    } else if (columnName != "modellodtree_id" && columnName != "global_id") {
                         metaData[columnName] = (*qitProxyBindings).get<const char *>(i);
+                    }
                 }
     
-                std::shared_ptr<NMLModelLODTreeProxy> proxy(std::make_shared<NMLModelLODTreeProxy>(mapPos));
-                proxy->setId(modelId);
-                proxy->setMetaData(metaData);
-                proxyMap[modelId] = proxy;
+                proxyMap.emplace(modelId, NMLModelLODTree::Proxy(modelId, mapPos, metaData));
             }
             queryProxyBindings.finish();
     

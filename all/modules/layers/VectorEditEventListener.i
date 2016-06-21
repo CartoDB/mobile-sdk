@@ -25,7 +25,7 @@
 %import "styles/PointStyle.i"
 %import "ui/VectorElementDragInfo.i"
 
-!polymorphic_shared_ptr(carto::VectorEditEventListener, ui.VectorEditEventListener)
+!polymorphic_shared_ptr(carto::VectorEditEventListener, layers.VectorEditEventListener)
 
 %feature("director") carto::VectorEditEventListener;
 
