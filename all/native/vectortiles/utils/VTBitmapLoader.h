@@ -10,13 +10,14 @@
 #include "core/BinaryData.h"
 #include "graphics/Bitmap.h"
 #include "network/URLFileLoader.h"
+#include "utils/AssetPackage.h"
 #include "utils/FileUtils.h"
 #include "utils/Log.h"
-#include "vectortiles/AssetPackage.h"
-#include "vt/Bitmap.h"
-#include "vt/BitmapManager.h"
 
 #include <vector>
+
+#include <vt/Bitmap.h>
+#include <vt/BitmapManager.h>
 
 namespace carto {
     

@@ -9,12 +9,12 @@
 
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT
 
-#include "layers/Layer.h"
 #include "components/CancelableTask.h"
 #include "components/CancelableThreadPool.h"
 #include "components/DirectorPtr.h"
 #include "datasources/NMLModelLODTreeDataSource.h"
 #include "graphics/ViewState.h"
+#include "layers/Layer.h"
 
 #include <string>
 #include <memory>

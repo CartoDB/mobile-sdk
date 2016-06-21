@@ -8,12 +8,13 @@
 #define _CARTO_TORQUETILEDECODER_H_
 
 #include "VectorTileDecoder.h"
-#include "Mapnikvt/Value.h"
 
 #include <memory>
 #include <mutex>
 #include <map>
 #include <string>
+
+#include <mapnikvt/Value.h>
 
 #include <cglib/mat.h>
 

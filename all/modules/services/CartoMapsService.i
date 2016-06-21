@@ -3,7 +3,7 @@
 
 %module CartoMapsService
 
-!proxy_imports(carto::CartoMapsService, core.Variant, core.StringVariantMap, core.StringMap, core.StringVector, layers.Layer, layers.LayerVector, vectortiles.AssetPackage)
+!proxy_imports(carto::CartoMapsService, core.Variant, core.StringVariantMap, core.StringMap, core.StringVector, layers.Layer, layers.LayerVector, utils.AssetPackage)
 
 %{
 #include "services/CartoMapsService.h"
@@ -18,7 +18,7 @@
 %import "core/StringVector.i"
 %import "core/StringMap.i"
 %import "layers/Layer.i"
-%import "vectortiles/AssetPackage.i"
+%import "utils/AssetPackage.i"
 
 !shared_ptr(carto::CartoMapsService, services.CartoMapsService)
 

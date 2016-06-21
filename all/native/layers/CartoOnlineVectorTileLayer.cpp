@@ -1,9 +1,9 @@
 #include "CartoOnlineVectorTileLayer.h"
 #include "core/BinaryData.h"
 #include "datasources/CartoOnlineTileDataSource.h"
-#include "vectortiles/ZippedAssetPackage.h"
-#include "vectortiles/CompiledStyleSet.h"
+#include "styles/CompiledStyleSet.h"
 #include "vectortiles/MBVectorTileDecoder.h"
+#include "utils/ZippedAssetPackage.h"
 #include "utils/AssetUtils.h"
 #include "utils/Log.h"
 

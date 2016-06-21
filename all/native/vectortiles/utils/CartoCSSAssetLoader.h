@@ -10,8 +10,9 @@
 #include "network/URLFileLoader.h"
 #include "utils/FileUtils.h"
 #include "utils/Log.h"
-#include "vectortiles/AssetPackage.h"
-#include "cartocss/CartoCSSMapLoader.h"
+#include "utils/AssetPackage.h"
+
+#include <cartocss/CartoCSSMapLoader.h>
 
 namespace carto {
     

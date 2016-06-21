@@ -1,23 +1,24 @@
 #include "MBVectorTileDecoder.h"
 #include "core/BinaryData.h"
 #include "graphics/Bitmap.h"
-#include "vectortiles/AssetPackage.h"
-#include "vectortiles/CompiledStyleSet.h"
-#include "vectortiles/CartoCSSStyleSet.h"
+#include "styles/CompiledStyleSet.h"
+#include "styles/CartoCSSStyleSet.h"
 #include "vectortiles/utils/MapnikVTLogger.h"
 #include "vectortiles/utils/VTBitmapLoader.h"
 #include "vectortiles/utils/CartoCSSAssetLoader.h"
-#include "vt/Tile.h"
-#include "Mapnikvt/Value.h"
-#include "Mapnikvt/SymbolizerParser.h"
-#include "Mapnikvt/SymbolizerContext.h"
-#include "Mapnikvt/MBVTFeatureDecoder.h"
-#include "Mapnikvt/MBVTTileReader.h"
-#include "Mapnikvt/MapParser.h"
-#include "cartocss/CartoCSSMapLoader.h"
+#include "utils/AssetPackage.h"
 #include "utils/FileUtils.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
+
+#include <vt/Tile.h>
+#include <mapnikvt/Value.h>
+#include <mapnikvt/SymbolizerParser.h>
+#include <mapnikvt/SymbolizerContext.h>
+#include <mapnikvt/MBVTFeatureDecoder.h>
+#include <mapnikvt/MBVTTileReader.h>
+#include <mapnikvt/MapParser.h>
+#include <cartocss/CartoCSSMapLoader.h>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/predicate.hpp>

@@ -6,7 +6,7 @@
 #include "network/HTTPClient.h"
 #include "services/CartoMapsService.h"
 #include "services/CartoVisBuilder.h"
-#include "vectortiles/AssetPackage.h"
+#include "utils/AssetPackage.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 

@@ -3,11 +3,11 @@
 
 %module TorqueTileDecoder
 
-!proxy_imports(carto::TorqueTileDecoder, core.BinaryData, graphics.Color, vectortiles.CartoCSSStyleSet, vectortiles.VectorTileDecoder)
+!proxy_imports(carto::TorqueTileDecoder, core.BinaryData, graphics.Color, styles.CartoCSSStyleSet, vectortiles.VectorTileDecoder)
 
 %{
+#include "styles/CartoCSSStyleSet.h"
 #include "vectortiles/TorqueTileDecoder.h"
-#include "vectortiles/CartoCSSStyleSet.h"
 #include <memory>
 %}
 
@@ -15,8 +15,7 @@
 %include <cartoswig.i>
 
 %import "core/BinaryData.i"
-%import "vectortiles/AssetPackage.i"
-%import "vectortiles/CartoCSSStyleSet.i"
+%import "styles/CartoCSSStyleSet.i"
 %import "vectortiles/VectorTileDecoder.i"
 
 !polymorphic_shared_ptr(carto::TorqueTileDecoder, vectortiles.TorqueTileDecoder)

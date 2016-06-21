@@ -1,19 +1,18 @@
 #include "TorqueTileDecoder.h"
 #include "core/BinaryData.h"
-#include "vectortiles/CartoCSSStyleSet.h"
+#include "styles/CartoCSSStyleSet.h"
 #include "vectortiles/utils/MapnikVTLogger.h"
 #include "vectortiles/utils/VTBitmapLoader.h"
 #include "vectortiles/utils/CartoCSSAssetLoader.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
-#include "vt/Tile.h"
-#include "Mapnikvt/Value.h"
-#include "Mapnikvt/SymbolizerContext.h"
-#include "Mapnikvt/TorqueFeatureDecoder.h"
-#include "Mapnikvt/TorqueTileReader.h"
-#include "cartocss/TorqueCartoCSSMapLoader.h"
 
-#include <vector>
+#include <vt/Tile.h>
+#include <mapnikvt/Value.h>
+#include <mapnikvt/SymbolizerContext.h>
+#include <mapnikvt/TorqueFeatureDecoder.h>
+#include <mapnikvt/TorqueTileReader.h>
+#include <cartocss/TorqueCartoCSSMapLoader.h>
 
 #include <boost/lexical_cast.hpp>
 

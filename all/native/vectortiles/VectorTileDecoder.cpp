@@ -1,5 +1,6 @@
 #include "VectorTileDecoder.h"
-#include "vt/TileId.h"
+
+#include <vt/TileId.h>
 
 #include <algorithm>
 

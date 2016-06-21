@@ -7,8 +7,9 @@
 #ifndef _CARTO_MAPNIKVTLOGGER_H_
 #define _CARTO_MAPNIKVTLOGGER_H_
 
-#include "mapnikvt/Logger.h"
 #include "utils/Log.h"
+
+#include <mapnikvt/Logger.h>
 
 namespace carto {
     

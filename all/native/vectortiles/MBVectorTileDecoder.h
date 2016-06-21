@@ -8,13 +8,14 @@
 #define _CARTO_MBVECTORTILEDECODER_H_
 
 #include "VectorTileDecoder.h"
-#include "Mapnikvt/Value.h"
 
 #include <memory>
 #include <mutex>
 #include <map>
 #include <vector>
 #include <string>
+
+#include <mapnikvt/Value.h>
 
 namespace carto {
     namespace mvt {

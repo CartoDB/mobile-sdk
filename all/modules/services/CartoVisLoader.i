@@ -3,7 +3,7 @@
 
 %module CartoVisLoader
 
-!proxy_imports(carto::CartoVisLoader, services.CartoVisBuilder, ui.BaseMapView, vectortiles.AssetPackage)
+!proxy_imports(carto::CartoVisLoader, services.CartoVisBuilder, ui.BaseMapView, utils.AssetPackage)
 
 %{
 #include "services/CartoVisLoader.h"
@@ -14,7 +14,7 @@
 %include <cartoswig.i>
 
 %import "services/CartoVisBuilder.i"
-%import "vectortiles/AssetPackage.i"
+%import "utils/AssetPackage.i"
 
 !shared_ptr(carto::CartoVisLoader, services.CartoVisLoader)
 

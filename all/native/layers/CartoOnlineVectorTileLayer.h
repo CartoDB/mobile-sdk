@@ -7,7 +7,7 @@
 #ifndef _CARTO_CARTOONLINEVECTORTILELAYER_H_
 #define _CARTO_CARTOONLINEVECTORTILELAYER_H_
 
-#include "VectorTileLayer.h"
+#include "layers/VectorTileLayer.h"
 
 #include <string>
 
