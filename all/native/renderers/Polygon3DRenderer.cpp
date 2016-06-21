@@ -246,16 +246,11 @@ namespace carto {
     
             // Coords and colors
             const Color& color = drawData->getColor();
+            const Color& sideColor = drawData->getSideColor();
             const std::vector<cglib::vec3<float> >& normals = drawData->getNormals();
             std::vector<MapPos>::const_iterator cit;
             std::vector<cglib::vec3<float> >::const_iterator nit;
             for (cit = coords.begin(), nit = normals.begin(); cit != coords.end() && nit != normals.end(); ++cit, ++nit) {
-                colorBuf[colorIndex + 0] = color.getR();
-                colorBuf[colorIndex + 1] = color.getG();
-                colorBuf[colorIndex + 2] = color.getB();
-                colorBuf[colorIndex + 3] = color.getA();
-                colorIndex += 4;
-                
                 const MapPos& coord = *cit;
                 coordBuf[coordIndex + 0] = coord.getX() - cameraPos.getX();
                 coordBuf[coordIndex + 1] = coord.getY() - cameraPos.getY();
@@ -267,6 +262,19 @@ namespace carto {
                 normalBuf[normalIndex + 1] = normal(1);
                 normalBuf[normalIndex + 2] = normal(2);
                 normalIndex += 3;
+
+                if (normal(2) == 1) {
+                    colorBuf[colorIndex + 0] = color.getR();
+                    colorBuf[colorIndex + 1] = color.getG();
+                    colorBuf[colorIndex + 2] = color.getB();
+                    colorBuf[colorIndex + 3] = color.getA();
+                } else {
+                    colorBuf[colorIndex + 0] = sideColor.getR();
+                    colorBuf[colorIndex + 1] = sideColor.getG();
+                    colorBuf[colorIndex + 2] = sideColor.getB();
+                    colorBuf[colorIndex + 3] = sideColor.getA();
+                }
+                colorIndex += 4;
             }
         }
     

@@ -22,9 +22,19 @@ namespace carto {
          * Constructs a Polygon3DStyle object from various parameters. Instantiating the object directly is
          * not recommended, Polygon3DStyleBuilder should be used instead.
          * @param color The color for the 3d polygon.
+         * @param sideColor The color for sides of the 3d polygon.
          */
-        Polygon3DStyle(const Color& color);
+        Polygon3DStyle(const Color& color, const Color& sideColor);
         virtual ~Polygon3DStyle();
+
+        /**
+         * Returns the color for sides of the 3d polygon.
+         * @return The color for sides of the 3d polygon.
+         */
+        const Color& getSideColor() const;
+
+    private:
+        Color _sideColor;
     };
     
 }

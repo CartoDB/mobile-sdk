@@ -292,7 +292,6 @@ namespace carto {
         
         int _triangleWidth;
         int _triangleHeight;
-        
     };
 
 }

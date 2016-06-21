@@ -13,6 +13,7 @@
 %include <std_shared_ptr.i>
 %include <cartoswig.i>
 
+%import "graphics/Color.i"
 %import "styles/Style.i"
 
 !polymorphic_shared_ptr(carto::Polygon3DStyle, styles.Polygon3DStyle)

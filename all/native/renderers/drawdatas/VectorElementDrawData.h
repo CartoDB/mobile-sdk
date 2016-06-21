@@ -24,6 +24,8 @@ namespace carto {
         virtual void offsetHorizontally(double offset) = 0;
     
     protected:
+        static Color GetPremultipliedColor(const Color& color);
+
         VectorElementDrawData(const Color& color);
 
         void setIsOffset(bool isOffset);

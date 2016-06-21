@@ -3,7 +3,7 @@
 
 %module Polygon3DStyleBuilder
 
-!proxy_imports(carto::Polygon3DStyleBuilder, styles.Polygon3DStyle, styles.StyleBuilder)
+!proxy_imports(carto::Polygon3DStyleBuilder, graphics.Color, styles.Polygon3DStyle, styles.StyleBuilder)
 
 %{
 #include "styles/Polygon3DStyleBuilder.h"
@@ -13,6 +13,7 @@
 %include <std_shared_ptr.i>
 %include <cartoswig.i>
 
+%import "graphics/Color.i"
 %import "styles/Polygon3DStyle.i"
 %import "styles/StyleBuilder.i"
 

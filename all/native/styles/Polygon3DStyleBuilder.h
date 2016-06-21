@@ -24,12 +24,28 @@ namespace carto {
          */
         Polygon3DStyleBuilder();
         virtual ~Polygon3DStyleBuilder();
+
+        /**
+         * Returns the color of the 3d polygon sides.
+         * @return The color of the 3d polygon sides.
+         */
+        Color getSideColor() const;
+        /**
+         * Sets the the color of the 3d polygon sides. The side color is also affected by lighting settings,
+         * so that sides with different orientation are distinguishable.
+         * @param sideColor The new color for the 3d polygon sides.
+         */
+        void setSideColor(const Color& sideColor);
     
         /**
          * Builds a new instance of the Polygon3DStyle object using previously set parameters.
          * @return A new Polygon3DStyle object.
          */
         std::shared_ptr<Polygon3DStyle> buildStyle() const;
+
+    private:
+        Color _sideColor;
+        bool _sideColorDefined;
     };
     
 }

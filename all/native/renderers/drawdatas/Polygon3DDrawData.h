@@ -25,6 +25,8 @@ namespace carto {
         Polygon3DDrawData(const Polygon3D& polygon3D, const Polygon3DStyle& style, const Projection& projection);
         Polygon3DDrawData(const Polygon3DDrawData& drawData);
         virtual ~Polygon3DDrawData();
+
+        const Color& getSideColor() const;
     
         const MapBounds& getBoundingBox() const;
     
@@ -36,6 +38,8 @@ namespace carto {
     
     private:
         static const int MAX_INDICES_PER_ELEMENT = 3;
+
+        Color _sideColor;
     
         MapBounds _boundingBox;
     

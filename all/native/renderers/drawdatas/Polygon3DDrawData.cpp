@@ -30,6 +30,7 @@ namespace carto {
 
     Polygon3DDrawData::Polygon3DDrawData(const Polygon3D& polygon3D, const Polygon3DStyle& style, const Projection& projection) :
         VectorElementDrawData(style.getColor()),
+        _sideColor(GetPremultipliedColor(style.getSideColor())),
         _boundingBox(),
         _coords(),
         _normals()
@@ -165,6 +166,10 @@ namespace carto {
     }
     
     Polygon3DDrawData::~Polygon3DDrawData() {
+    }
+
+    const Color& Polygon3DDrawData::getSideColor() const {
+        return _sideColor;
     }
     
     const MapBounds& Polygon3DDrawData::getBoundingBox() const {
