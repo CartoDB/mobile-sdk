@@ -1,47 +1,46 @@
-#include "Mesh.h"
-#include "Submesh.h"
+#include "GLMesh.h"
+#include "GLSubmesh.h"
+#include "Package.h"
 
-#include "nmlpackage/NMLPackage.pb.h"
+namespace carto { namespace nml {
 
-namespace carto { namespace nmlgl {
-
-    Mesh::Mesh(const nml::Mesh& mesh) :
+    GLMesh::GLMesh(const Mesh& mesh) :
         _submeshList()
     {
         for (int i = 0; i < mesh.submeshes_size(); i++) {
-            nml::Submesh submesh = mesh.submeshes(i);
-            auto glSubmesh = std::make_shared<Submesh>(submesh);
+            Submesh submesh = mesh.submeshes(i);
+            auto glSubmesh = std::make_shared<GLSubmesh>(submesh);
             _submeshList.push_back(glSubmesh);
         }
     }
     
-    Mesh::Mesh(const Mesh& Mesh, const nml::MeshOp& meshOp) :
+    GLMesh::GLMesh(const GLMesh& glMesh, const MeshOp& meshOp) :
         _submeshList()
     {
         for (int i = 0; i < meshOp.submesh_op_lists_size(); i++) {
-            const nml::SubmeshOpList &submeshOpList = meshOp.submesh_op_lists(i);
-            auto glSubmesh = std::make_shared<Submesh>(Mesh, submeshOpList);
+            const SubmeshOpList& submeshOpList = meshOp.submesh_op_lists(i);
+            auto glSubmesh = std::make_shared<GLSubmesh>(glMesh, submeshOpList);
             _submeshList.push_back(glSubmesh);
         }
     }
     
-    void Mesh::create() {
+    void GLMesh::create() {
         for (auto it = _submeshList.begin(); it != _submeshList.end(); it++) {
             (*it)->create();
         }
     }
     
-    void Mesh::dispose() {
+    void GLMesh::dispose() {
         for (auto it = _submeshList.begin(); it != _submeshList.end(); it++) {
             (*it)->dispose();
         }
     }
     
-    const std::vector<std::shared_ptr<Submesh>>& Mesh::getSubmeshList() const {
+    const std::vector<std::shared_ptr<GLSubmesh>>& GLMesh::getSubmeshList() const {
         return _submeshList;
     }
     
-    int Mesh::getTotalGeometrySize() const {
+    int GLMesh::getTotalGeometrySize() const {
         int size = 0;
         for (auto it = _submeshList.begin(); it != _submeshList.end(); it++) {
             size += (*it)->getTotalGeometrySize();

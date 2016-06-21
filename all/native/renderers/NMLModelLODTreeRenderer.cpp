@@ -8,12 +8,13 @@
 #include "layers/NMLModelLODTreeLayer.h"
 #include "projections/Projection.h"
 #include "renderers/components/RayIntersectedElement.h"
-#include "nml/Model.h"
-#include "nml/ShaderManager.h"
 #include "utils/Log.h"
 #include "utils/GLES2.h"
 #include "utils/GeomUtils.h"
 #include "utils/GLUtils.h"
+
+#include <nml/GLModel.h>
+#include <nml/GLShaderManager.h>
 
 namespace carto {
 
@@ -87,7 +88,7 @@ namespace carto {
     }
 
     void NMLModelLODTreeRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        _glShaderManager = std::make_shared<nmlgl::ShaderManager>();
+        _glShaderManager = std::make_shared<nml::GLShaderManager>();
         _drawRecordMap.clear();
     }
 
@@ -99,7 +100,7 @@ namespace carto {
             if (!(record.used && record.created))
                 continue;
     
-            std::shared_ptr<nmlgl::Model> glModel = record.drawData.getGLModel();
+            std::shared_ptr<nml::GLModel> glModel = record.drawData.getGLModel();
             const cglib::mat4x4<double>& modelMat = record.drawData.getLocalMat();
             cglib::mat4x4<double> invModelMat = cglib::inverse(modelMat);
     
@@ -115,8 +116,8 @@ namespace carto {
                 continue;
             }
             
-            std::vector<nmlgl::RayIntersection> intersections;
-            glModel->calculateRayIntersections(nmlgl::Ray(rayOrigModel, rayDirModel), intersections);
+            std::vector<nml::RayIntersection> intersections;
+            glModel->calculateRayIntersections(nml::Ray(rayOrigModel, rayDirModel), intersections);
             
             for (size_t i = 0; i < intersections.size(); i++) {
                 NMLModelLODTree::ProxyMap::const_iterator proxyIt = record.drawData.getProxyMap()->find(intersections[i].vertexId);
@@ -220,7 +221,7 @@ namespace carto {
             }
 
             cglib::mat4x4<float> mvMat = cglib::mat4x4<float>::convert(viewState.getModelviewMat() * record.drawData.getLocalMat());
-            nmlgl::RenderState renderState(projMat, mvMat, ambientLightColor, mainLightColor, mainLightDir);
+            nml::RenderState renderState(projMat, mvMat, ambientLightColor, mainLightColor, mainLightDir);
 
             record.drawData.getGLModel()->draw(renderState);
         }

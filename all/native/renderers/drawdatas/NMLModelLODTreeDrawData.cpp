@@ -4,7 +4,7 @@
 
 namespace carto {
 
-    NMLModelLODTreeDrawData::NMLModelLODTreeDrawData(const std::shared_ptr<NMLModelLODTree>& modelLODTree, long long nodeId, const std::vector<long long>& parentIds, const std::shared_ptr<nmlgl::Model>& glModel) :
+    NMLModelLODTreeDrawData::NMLModelLODTreeDrawData(const std::shared_ptr<NMLModelLODTree>& modelLODTree, long long nodeId, const std::vector<long long>& parentIds, const std::shared_ptr<nml::GLModel>& glModel) :
         _modelLODTree(modelLODTree),
         _nodeId(nodeId),
         _parentIds(parentIds),
@@ -31,7 +31,7 @@ namespace carto {
         return _localMat;
     }
     
-    const std::shared_ptr<nmlgl::Model>& NMLModelLODTreeDrawData::getGLModel() const {
+    const std::shared_ptr<nml::GLModel>& NMLModelLODTreeDrawData::getGLModel() const {
         return _glModel;
     }
     

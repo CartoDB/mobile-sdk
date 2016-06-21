@@ -19,15 +19,14 @@
 
 #include <cglib/mat.h>
 
-namespace nml {
-    class Mesh;
-    class MeshOp;
-    class Texture;
-    class ModelLODTree;
-    class ModelLODTreeNode;
-}
-    
 namespace carto {
+    namespace nml {
+        class Mesh;
+        class MeshOp;
+        class Texture;
+        class ModelLODTree;
+        class ModelLODTreeNode;
+    }
 
     class NMLModelLODTree : public std::enable_shared_from_this<NMLModelLODTree> {
     public:

@@ -4,8 +4,8 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_NML_BASETYPES_H_
-#define _CARTO_NML_BASETYPES_H_
+#ifndef _CARTO_NML_GLBASE_H_
+#define _CARTO_NML_GLBASE_H_
 
 #ifdef __APPLE__
 #include <OpenGLES/ES2/gl.h>
@@ -20,7 +20,7 @@
 #include <cglib/mat.h>
 #include <cglib/vec.h>
 
-namespace carto { namespace nmlgl {
+namespace carto { namespace nml {
 
     struct Ray {
         cglib::vec3<double> origin;

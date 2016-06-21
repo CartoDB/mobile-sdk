@@ -15,14 +15,14 @@
 
 #include <cglib/mat.h>
 
-namespace nml {
-    class Model;
-}
-
 namespace carto {
     class BinaryData;
     class MapPos;
     class NMLModelDrawData;
+
+    namespace nml {
+        class Model;
+    }
 
     /**
      * A 3D model that can be displayed on the map.

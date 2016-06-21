@@ -3,9 +3,10 @@
 #include "NMLModelLODTree.h"
 #include "geometry/PointGeometry.h"
 #include "graphics/ViewState.h"
-#include "nml/nmlpackage/NMLPackage.pb.h"
 
 #include <cassert>
+
+#include <nml/Package.h>
 
 namespace carto {
 

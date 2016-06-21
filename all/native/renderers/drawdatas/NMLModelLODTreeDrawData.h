@@ -14,19 +14,19 @@
 #include <memory>
 
 namespace carto {
-    namespace nmlgl {
-        class Model;
+    namespace nml {
+        class GLModel;
     }
     
     class NMLModelLODTreeDrawData {
     public:
-        NMLModelLODTreeDrawData(const std::shared_ptr<NMLModelLODTree>& modelLODTree, long long nodeId, const std::vector<long long>& parentIds, const std::shared_ptr<nmlgl::Model>& glModel);
+        NMLModelLODTreeDrawData(const std::shared_ptr<NMLModelLODTree>& modelLODTree, long long nodeId, const std::vector<long long>& parentIds, const std::shared_ptr<nml::GLModel>& glModel);
     
         std::shared_ptr<NMLModelLODTree> getModelLODTree() const;
         long long getNodeId() const;
         const std::vector<long long>& getParentIds() const;
         const cglib::mat4x4<double>& getLocalMat() const;
-        const std::shared_ptr<nmlgl::Model>& getGLModel() const;
+        const std::shared_ptr<nml::GLModel>& getGLModel() const;
         const std::shared_ptr<NMLModelLODTree::ProxyMap> getProxyMap() const;
         
         virtual bool isOffset() const;
@@ -37,7 +37,7 @@ namespace carto {
         long long _nodeId;
         std::vector<long long> _parentIds;
         cglib::mat4x4<double> _localMat;
-        std::shared_ptr<nmlgl::Model> _glModel;
+        std::shared_ptr<nml::GLModel> _glModel;
         std::shared_ptr<NMLModelLODTree::ProxyMap> _proxyMap;
         bool _isOffset;
     };

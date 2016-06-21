@@ -9,20 +9,21 @@
 #include "renderers/components/RayIntersectedElement.h"
 #include "ui/NMLModelLODTreeClickInfo.h"
 #include "utils/Log.h"
-#include "nml/Model.h"
-#include "nml/Mesh.h"
-#include "nml/Texture.h"
-#include "nml/nmlpackage/NMLPackage.pb.h"
+
+#include <nml/GLModel.h>
+#include <nml/GLMesh.h>
+#include <nml/GLTexture.h>
+#include <nml/Package.h>
 
 namespace {
 
-    cglib::bbox3<double> calculateBounds(const nml::Bounds3& bounds, const cglib::mat4x4<double>& matrix) {
+    cglib::bbox3<double> calculateBounds(const carto::nml::Bounds3& bounds, const cglib::mat4x4<double>& matrix) {
         cglib::vec3<double> minBounds(bounds.min().x(), bounds.min().y(), bounds.min().z());
         cglib::vec3<double> maxBounds(bounds.max().x(), bounds.max().y(), bounds.max().z());
         return cglib::transform_bbox(cglib::bbox3<double>(minBounds, maxBounds), matrix);
     }
     
-    float calculateProjectedScreenSize(const nml::Bounds3& bounds, const cglib::mat4x4<double>& frustumMVP) {
+    float calculateProjectedScreenSize(const carto::nml::Bounds3& bounds, const cglib::mat4x4<double>& frustumMVP) {
         static const double NEAR_DISTANCE = 0.5;
     
         cglib::bbox3<double> projBounds = cglib::bbox3<double>::smallest();
@@ -177,7 +178,7 @@ namespace carto {
             return;
         }
     
-        std::shared_ptr<MapTilesFetchTask> task = std::make_shared<MapTilesFetchTask>(std::static_pointer_cast<NMLModelLODTreeLayer>(shared_from_this()), cullState);
+        auto task = std::make_shared<MapTilesFetchTask>(std::static_pointer_cast<NMLModelLODTreeLayer>(shared_from_this()), cullState);
         if (_envelopeThreadPool) {
             _envelopeThreadPool->execute(task, getUpdatePriority());
         }
@@ -201,7 +202,7 @@ namespace carto {
                         return false;
                     }
                     if (!_fetchingModelLODTrees.exists(mapTile.modelLODTreeId)) {
-                        std::shared_ptr<ModelLODTreeFetchTask> task = std::make_shared<ModelLODTreeFetchTask>(std::static_pointer_cast<NMLModelLODTreeLayer>(shared_from_this()), mapTile);
+                        auto task = std::make_shared<ModelLODTreeFetchTask>(std::static_pointer_cast<NMLModelLODTreeLayer>(shared_from_this()), mapTile);
                         _fetchThreadPool->execute(task, getUpdatePriority() + MODELLODTREE_LOADING_PRIORITY_OFFSET);
                     }
                 }
@@ -221,7 +222,7 @@ namespace carto {
     
             MeshMap::const_iterator meshIt = _meshMap.find(binding.meshId);
             if (meshIt == _meshMap.end()) {
-                std::shared_ptr<nmlgl::Mesh> glMesh;
+                std::shared_ptr<nml::GLMesh> glMesh;
                 if (_meshCache.read(binding.meshId, glMesh)) {
                     _meshMap[binding.meshId] = glMesh;
                 } else {
@@ -229,7 +230,7 @@ namespace carto {
                         return false;
                     }
                     if (!_fetchingMeshes.exists(binding.meshId)) {
-                        std::shared_ptr<MeshFetchTask> task = std::make_shared<MeshFetchTask>(std::static_pointer_cast<NMLModelLODTreeLayer>(shared_from_this()), binding);
+                        auto task = std::make_shared<MeshFetchTask>(std::static_pointer_cast<NMLModelLODTreeLayer>(shared_from_this()), binding);
                         _fetchThreadPool->execute(task, getUpdatePriority() + MESH_LOADING_PRIORITY_OFFSET);
                     }
                 }
@@ -249,7 +250,7 @@ namespace carto {
     
             TextureMap::const_iterator textureIt = _textureMap.find(binding.textureId);
             if (textureIt == _textureMap.end()) {
-                std::shared_ptr<nmlgl::Texture> glTexture;
+                std::shared_ptr<nml::GLTexture> glTexture;
                 if (_textureCache.read(binding.textureId, glTexture)) {
                     _textureMap[binding.textureId] = glTexture;
                 } else {
@@ -257,7 +258,7 @@ namespace carto {
                         return false;
                     }
                     if (!_fetchingTextures.exists(binding.textureId)) {
-                        std::shared_ptr<TextureFetchTask> task = std::make_shared<TextureFetchTask>(std::static_pointer_cast<NMLModelLODTreeLayer>(shared_from_this()), binding);
+                        auto task = std::make_shared<TextureFetchTask>(std::static_pointer_cast<NMLModelLODTreeLayer>(shared_from_this()), binding);
                         _fetchThreadPool->execute(task, getUpdatePriority() + TEXTURE_LOADING_PRIORITY_OFFSET);
                     }
                 }
@@ -281,7 +282,7 @@ namespace carto {
         }
     }
     
-    void NMLModelLODTreeLayer::updateMeshes(const NMLModelLODTree* modelLODTree, int nodeId, std::shared_ptr<nmlgl::Model> glModel, MeshMap& meshMap) {
+    void NMLModelLODTreeLayer::updateMeshes(const NMLModelLODTree* modelLODTree, int nodeId, std::shared_ptr<nml::GLModel> glModel, MeshMap& meshMap) {
         NMLModelLODTree::MeshBindingsMap::const_iterator mapIt = modelLODTree->getMeshBindingsMap().find(nodeId);
         if (mapIt == modelLODTree->getMeshBindingsMap().end()) {
             return;
@@ -290,7 +291,7 @@ namespace carto {
         for (NMLModelLODTree::MeshBindingList::const_iterator listIt = mapIt->second.begin(); listIt != mapIt->second.end(); listIt++) {
             const NMLModelLODTree::MeshBinding& binding = *listIt;
     
-            std::shared_ptr<nmlgl::Mesh> glMesh;
+            std::shared_ptr<nml::GLMesh> glMesh;
             if (!_meshCache.read(binding.meshId, glMesh)) {
                 MeshMap::const_iterator meshIt = _meshMap.find(binding.meshId);
                 if (meshIt == _meshMap.end()) {
@@ -306,7 +307,7 @@ namespace carto {
         }
     }
     
-    void NMLModelLODTreeLayer::updateTextures(const NMLModelLODTree* modelLODTree, int nodeId, std::shared_ptr<nmlgl::Model> glModel, TextureMap& textureMap) {
+    void NMLModelLODTreeLayer::updateTextures(const NMLModelLODTree* modelLODTree, int nodeId, std::shared_ptr<nml::GLModel> glModel, TextureMap& textureMap) {
         NMLModelLODTree::TextureBindingsMap::const_iterator mapIt = modelLODTree->getTextureBindingsMap().find(nodeId);
         if (mapIt == modelLODTree->getTextureBindingsMap().end()) {
             return;
@@ -315,7 +316,7 @@ namespace carto {
         for (NMLModelLODTree::TextureBindingList::const_iterator listIt = mapIt->second.begin(); listIt != mapIt->second.end(); listIt++) {
             const NMLModelLODTree::TextureBinding& binding = *listIt;
     
-            std::shared_ptr<nmlgl::Texture> glTexture;
+            std::shared_ptr<nml::GLTexture> glTexture;
             if (!_textureCache.read(binding.textureId, glTexture)) {
                 TextureMap::const_iterator textureIt = _textureMap.find(binding.textureId);
                 if (textureIt == _textureMap.end()) {
@@ -511,7 +512,7 @@ namespace carto {
             if (it != _nodeDrawDataMap.end() && !it->second->isOffset()) {
                 nodeDrawData = it->second;
             } else {
-                std::shared_ptr<nmlgl::Model> glModel = std::make_shared<nmlgl::Model>(modelLODTree->getSourceNode(nodeId)->model());
+                auto glModel = std::make_shared<nml::GLModel>(modelLODTree->getSourceNode(nodeId)->model());
     
                 std::vector<long long> globalParentIds;
                 for (int parentId = nodeId; parentId != 0; ) {
@@ -652,7 +653,7 @@ namespace carto {
         // Load new mesh
         std::shared_ptr<nml::Mesh> mesh = layer->_dataSource->loadMesh(_binding.meshId);
         if (mesh) {
-            std::shared_ptr<nmlgl::Mesh> glMesh = std::make_shared<nmlgl::Mesh>(*mesh);
+            auto glMesh = std::make_shared<nml::GLMesh>(*mesh);
     
             std::unique_lock<std::recursive_mutex> lock(layer->_mutex);
             layer->_meshMap[_binding.meshId] = glMesh;
@@ -695,7 +696,7 @@ namespace carto {
         // Load new mesh
         std::shared_ptr<nml::Texture> texture = layer->_dataSource->loadTexture(_binding.textureId, _binding.level);
         if (texture) {
-            std::shared_ptr<nmlgl::Texture> glTexture = std::make_shared<nmlgl::Texture>(texture);
+            auto glTexture = std::make_shared<nml::GLTexture>(texture);
     
             std::unique_lock<std::recursive_mutex> lock(layer->_mutex);
             layer->_textureMap[_binding.textureId] = glTexture;

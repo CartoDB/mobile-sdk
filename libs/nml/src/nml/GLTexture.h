@@ -4,24 +4,22 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_NML_TEXTURE_H_
-#define _CARTO_NML_TEXTURE_H_
+#ifndef _CARTO_NML_GLTEXTURE_H_
+#define _CARTO_NML_GLTEXTURE_H_
 
-#include "BaseTypes.h"
+#include "GLBase.h"
 
 #include <map>
 #include <memory>
 #include <string>
 
-namespace nml {
+namespace carto { namespace nml {
     class Texture;
     class Sampler;
-}
 
-namespace carto { namespace nmlgl {
-    class Texture {
+    class GLTexture {
     public:
-        Texture(std::shared_ptr<nml::Texture> texture);
+        GLTexture(std::shared_ptr<Texture> texture);
 
         void create();
         void dispose();
@@ -30,19 +28,19 @@ namespace carto { namespace nmlgl {
 
         int getTextureSize() const;
 
-        static void uncompressTexture(nml::Texture& texture);
+        static void uncompressTexture(Texture& texture);
 
     private:
         static GLuint getSamplerWrapMode(int wrapMode);
         static bool hasGLExtension(const char* ext);
         
-        void updateSampler(bool hasSampler, nml::Sampler sampler, bool complete);
-        void updateMipLevel(int level, const nml::Texture& texture);
-        void updateMipMaps(const nml::Texture& texture);
+        void updateSampler(bool hasSampler, const Sampler& sampler, bool complete);
+        void updateMipLevel(int level, const Texture& texture);
+        void updateMipMaps(const Texture& texture);
         void uploadTexture();
 
         int _refCount;
-        std::shared_ptr<nml::Texture> _texture;
+        std::shared_ptr<Texture> _texture;
 
         GLuint _glTextureId;
         int _glSize;

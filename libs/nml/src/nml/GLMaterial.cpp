@@ -1,8 +1,7 @@
-#include "Material.h"
-#include "Texture.h"
-#include "ShaderManager.h"
-
-#include "nmlpackage/NMLPackage.pb.h"
+#include "GLMaterial.h"
+#include "GLTexture.h"
+#include "GLShaderManager.h"
+#include "Package.h"
 
 namespace {
 
@@ -213,16 +212,16 @@ namespace {
 
 }
 
-namespace carto { namespace nmlgl {
+namespace carto { namespace nml {
 
-    Material::ColorOrTexture::ColorOrTexture() :
+    GLMaterial::GLColorOrTexture::GLColorOrTexture() :
         textureId(),
         texture(),
         color(cglib::vec4<float>::zero())
     {
     }
     
-    Material::ColorOrTexture::ColorOrTexture(const nml::ColorOrTexture& colorOrTexture, const std::map<std::string, std::shared_ptr<Texture>>& textureMap) :
+    GLMaterial::GLColorOrTexture::GLColorOrTexture(const ColorOrTexture& colorOrTexture, const std::map<std::string, std::shared_ptr<GLTexture>>& textureMap) :
         textureId(),
         texture(),
         color(cglib::vec4<float>::zero())
@@ -235,15 +234,15 @@ namespace carto { namespace nmlgl {
             }
         }
         if (colorOrTexture.has_color()) {
-            nml::ColorRGBA c = colorOrTexture.color();
+            ColorRGBA c = colorOrTexture.color();
             color = cglib::vec4<float>(c.r(), c.g(),c.b(), c.a());
         }
     }
     
-    Material::Material(const nml::Material& material, const std::map<std::string, std::shared_ptr<Texture>>& textureMap) :
-        _type(nml::Material::CONSTANT),
-        _culling(nml::Material::NONE),
-        _opaqueMode(nml::Material::OPAQUE),
+    GLMaterial::GLMaterial(const Material& material, const std::map<std::string, std::shared_ptr<GLTexture>>& textureMap) :
+        _type(Material::CONSTANT),
+        _culling(Material::NONE),
+        _opaqueMode(Material::OPAQUE),
         _emission(),
         _ambient(),
         _diffuse(),
@@ -255,17 +254,17 @@ namespace carto { namespace nmlgl {
     {
         _type = material.type();
         _culling = material.culling();
-        _opaqueMode = material.has_opaque_mode() ? material.opaque_mode() : nml::Material::OPAQUE;
-        _emission = material.has_emission() ? ColorOrTexture(material.emission(), textureMap) : ColorOrTexture();
-        _ambient = material.has_ambient() ? ColorOrTexture(material.ambient(), textureMap) : ColorOrTexture();
-        _diffuse = material.has_diffuse() ? ColorOrTexture(material.diffuse(), textureMap) : ColorOrTexture();
-        _transparent = material.has_transparent() ? ColorOrTexture(material.transparent(), textureMap) : ColorOrTexture();
+        _opaqueMode = material.has_opaque_mode() ? material.opaque_mode() : Material::OPAQUE;
+        _emission = material.has_emission() ? GLColorOrTexture(material.emission(), textureMap) : GLColorOrTexture();
+        _ambient = material.has_ambient() ? GLColorOrTexture(material.ambient(), textureMap) : GLColorOrTexture();
+        _diffuse = material.has_diffuse() ? GLColorOrTexture(material.diffuse(), textureMap) : GLColorOrTexture();
+        _transparent = material.has_transparent() ? GLColorOrTexture(material.transparent(), textureMap) : GLColorOrTexture();
         _transparency = material.has_transparency() ? material.transparency() : 0.0f;
-        _specular = material.has_specular() ? ColorOrTexture(material.specular(), textureMap) : ColorOrTexture();
+        _specular = material.has_specular() ? GLColorOrTexture(material.specular(), textureMap) : GLColorOrTexture();
         _shininess = material.has_shininess() ? material.shininess() : 0.0f;
     }
     
-    void Material::create(ShaderManager& shaderManager) {
+    void GLMaterial::create(GLShaderManager& shaderManager) {
         std::set<std::string> defs;
         if (!_emission.textureId.empty()) {
             defs.insert("EMISSION_TEXTURE");
@@ -284,20 +283,20 @@ namespace carto { namespace nmlgl {
         }
 
         switch (_type) {
-        case nml::Material::CONSTANT:
+        case Material::CONSTANT:
             _glProgramId = shaderManager.createProgram(constantVsh, constantFsh, defs);
             break;
-        case nml::Material::PREBAKED:
+        case Material::PREBAKED:
             _glProgramId = shaderManager.createProgram(prebakedVsh, prebakedFsh, defs);
             break;
-        case nml::Material::LAMBERT:
+        case Material::LAMBERT:
             _glProgramId = shaderManager.createProgram(lambertPhongBlinnVsh, lambertPhongBlinnFsh, defs);
             break;
-        case nml::Material::PHONG:
+        case Material::PHONG:
             defs.insert("PHONG");
             _glProgramId = shaderManager.createProgram(lambertPhongBlinnVsh, lambertPhongBlinnFsh, defs);
             break;
-        case nml::Material::BLINN:
+        case Material::BLINN:
             defs.insert("BLINN");
             _glProgramId = shaderManager.createProgram(lambertPhongBlinnVsh, lambertPhongBlinnFsh, defs);
             break;
@@ -306,15 +305,15 @@ namespace carto { namespace nmlgl {
         }
     }
 
-    void Material::dispose() {
+    void GLMaterial::dispose() {
     }
 
-    int Material::getCulling() const {
+    int GLMaterial::getCulling() const {
         return _culling;
     }
 
-    void Material::replaceTexture(const std::string &textureId, const std::shared_ptr<Texture>& glTexture) {
-        ColorOrTexture* channels[] = {
+    void GLMaterial::replaceTexture(const std::string &textureId, const std::shared_ptr<GLTexture>& texture) {
+        GLColorOrTexture* channels[] = {
             &_emission,
             &_ambient,
             &_diffuse,
@@ -324,27 +323,27 @@ namespace carto { namespace nmlgl {
 
         for (int i = 0; channels[i]; i++) {
             if (channels[i]->textureId == textureId) {
-                channels[i]->texture = glTexture;
+                channels[i]->texture = texture;
             }
         }
     }
     
-    void Material::bind(const RenderState& renderState, const cglib::mat4x4<float>& mvMatrix, const cglib::mat4x4<float>& invTransMVMatrix) {
-        glDepthMask(_opaqueMode == nml::Material::OPAQUE ? GL_TRUE : GL_FALSE);
+    void GLMaterial::bind(const RenderState& renderState, const cglib::mat4x4<float>& mvMatrix, const cglib::mat4x4<float>& invTransMVMatrix) {
+        glDepthMask(_opaqueMode == Material::OPAQUE ? GL_TRUE : GL_FALSE);
         
         glUseProgram(_glProgramId);
         
         glUniformMatrix4fv(glGetUniformLocation(_glProgramId, "uProjMatrix"), 1, GL_FALSE, renderState.projMatrix.data());
         glUniformMatrix4fv(glGetUniformLocation(_glProgramId, "uMVMatrix"), 1, GL_FALSE, mvMatrix.data());
 
-        if (_culling == nml::Material::NONE) {
+        if (_culling == Material::NONE) {
             glDisable(GL_CULL_FACE);
         } else {
             glEnable(GL_CULL_FACE);
-            glCullFace(_culling == nml::Material::FRONT ? GL_FRONT : GL_BACK);
+            glCullFace(_culling == Material::FRONT ? GL_FRONT : GL_BACK);
         }
 
-        if (_type != nml::Material::PREBAKED) {
+        if (_type != Material::PREBAKED) {
             if (_emission.texture) {
                 glUniform1i(glGetUniformLocation(_glProgramId, "uEmissionTex"), 0);
                 _emission.texture->bind(0);
@@ -353,7 +352,7 @@ namespace carto { namespace nmlgl {
             }
         }
         
-        if (_type != nml::Material::CONSTANT) {
+        if (_type != Material::CONSTANT) {
             if (_diffuse.texture) {
                 glUniform1i(glGetUniformLocation(_glProgramId, "uDiffuseTex"), 1);
                 _diffuse.texture->bind(1);
@@ -369,7 +368,7 @@ namespace carto { namespace nmlgl {
             }
             glUniform1f(glGetUniformLocation(_glProgramId, "uTransparency"), 1.0f);
 
-            if (_type != nml::Material::PREBAKED) {
+            if (_type != Material::PREBAKED) {
                 if (_ambient.texture) {
                     glUniform1i(glGetUniformLocation(_glProgramId, "uAmbientTex"), 3);
                     _ambient.texture->bind(3);
@@ -377,7 +376,7 @@ namespace carto { namespace nmlgl {
                     glUniform4fv(glGetUniformLocation(_glProgramId, "uAmbientColor"), 1, _ambient.color.data());
                 }
                 
-                if (_type != nml::Material::LAMBERT) {
+                if (_type != Material::LAMBERT) {
                     if (_specular.texture) {
                         glUniform1i(glGetUniformLocation(_glProgramId, "uSpecularTex"), 4);
                         _specular.texture->bind(4);

@@ -12,7 +12,7 @@
 
 // @@protoc_insertion_point(includes)
 
-namespace nml {
+namespace carto { namespace nml {
 class Vector3;
 class ColorRGBA;
 class Bounds3;
@@ -184,18 +184,18 @@ class Bounds3 {
   // required .NMLPackage.Vector3 min = 1;
   static const int kMinFieldNumber = 1;
   inline bool has_min() const;
-  inline const ::nml::Vector3& min() const;
+  inline const ::carto::nml::Vector3& min() const;
 
   // required .NMLPackage.Vector3 max = 2;
   static const int kMaxFieldNumber = 2;
   inline bool has_max() const;
-  inline const ::nml::Vector3& max() const;
+  inline const ::carto::nml::Vector3& max() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.Bounds3)
  private:
   std::uint32_t _has_bits_[1];
-  ::nml::Vector3 min_ = ::nml::Vector3();
-  ::nml::Vector3 max_ = ::nml::Vector3();
+  ::carto::nml::Vector3 min_ = ::carto::nml::Vector3();
+  ::carto::nml::Vector3 max_ = ::carto::nml::Vector3();
 };
 // -------------------------------------------------------------------
 
@@ -344,17 +344,17 @@ class Sampler {
   // optional .NMLPackage.Sampler.Filter filter = 1;
   static const int kFilterFieldNumber = 1;
   inline bool has_filter() const;
-  inline ::nml::Sampler_Filter filter() const;
+  inline ::carto::nml::Sampler_Filter filter() const;
 
   // optional .NMLPackage.Sampler.WrapMode wrap_s = 2;
   static const int kWrapSFieldNumber = 2;
   inline bool has_wrap_s() const;
-  inline ::nml::Sampler_WrapMode wrap_s() const;
+  inline ::carto::nml::Sampler_WrapMode wrap_s() const;
 
   // optional .NMLPackage.Sampler.WrapMode wrap_t = 3;
   static const int kWrapTFieldNumber = 3;
   inline bool has_wrap_t() const;
-  inline ::nml::Sampler_WrapMode wrap_t() const;
+  inline ::carto::nml::Sampler_WrapMode wrap_t() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.Sampler)
  private:
@@ -399,8 +399,8 @@ class Texture {
   // required .NMLPackage.Texture.Format format = 2;
   static const int kFormatFieldNumber = 2;
   inline bool has_format() const;
-  inline ::nml::Texture_Format format() const;
-  inline void set_format(::nml::Texture_Format format) { format_ = format; }
+  inline ::carto::nml::Texture_Format format() const;
+  inline void set_format(::carto::nml::Texture_Format format) { format_ = format; }
 
   // required int32 width = 3;
   static const int kWidthFieldNumber = 3;
@@ -417,7 +417,7 @@ class Texture {
   // required .NMLPackage.Sampler sampler = 5;
   static const int kSamplerFieldNumber = 5;
   inline bool has_sampler() const;
-  inline const ::nml::Sampler& sampler() const;
+  inline const ::carto::nml::Sampler& sampler() const;
 
   // repeated bytes mipmaps = 6;
   static const int kMipmapsFieldNumber = 6;
@@ -439,7 +439,7 @@ class Texture {
   ::std::string id_ = "";
   int format_ = -2;
   std::int32_t width_ = 0;
-  ::nml::Sampler sampler_ = ::nml::Sampler();
+  ::carto::nml::Sampler sampler_ = ::carto::nml::Sampler();
   std::vector< ::std::string > mipmaps_;
   std::int32_t height_ = 0;
 };
@@ -467,12 +467,12 @@ class ColorOrTexture {
   // required .NMLPackage.ColorOrTexture.Type type = 1;
   static const int kTypeFieldNumber = 1;
   inline bool has_type() const;
-  inline ::nml::ColorOrTexture_Type type() const;
+  inline ::carto::nml::ColorOrTexture_Type type() const;
 
   // optional .NMLPackage.ColorRGBA color = 2;
   static const int kColorFieldNumber = 2;
   inline bool has_color() const;
-  inline const ::nml::ColorRGBA& color() const;
+  inline const ::carto::nml::ColorRGBA& color() const;
 
   // optional string texture_id = 3;
   static const int kTextureIdFieldNumber = 3;
@@ -482,7 +482,7 @@ class ColorOrTexture {
   // @@protoc_insertion_point(class_scope:NMLPackage.ColorOrTexture)
  private:
   std::uint32_t _has_bits_[1];
-  ::nml::ColorRGBA color_ = ::nml::ColorRGBA();
+  ::carto::nml::ColorRGBA color_ = ::carto::nml::ColorRGBA();
   ::std::string texture_id_ = "";
   int type_ = 1;
 };
@@ -528,32 +528,32 @@ class Material {
   // required .NMLPackage.Material.Type type = 2;
   static const int kTypeFieldNumber = 2;
   inline bool has_type() const;
-  inline ::nml::Material_Type type() const;
+  inline ::carto::nml::Material_Type type() const;
 
   // required .NMLPackage.Material.Culling culling = 3;
   static const int kCullingFieldNumber = 3;
   inline bool has_culling() const;
-  inline ::nml::Material_Culling culling() const;
+  inline ::carto::nml::Material_Culling culling() const;
 
   // optional .NMLPackage.ColorOrTexture emission = 4;
   static const int kEmissionFieldNumber = 4;
   inline bool has_emission() const;
-  inline const ::nml::ColorOrTexture& emission() const;
+  inline const ::carto::nml::ColorOrTexture& emission() const;
 
   // optional .NMLPackage.ColorOrTexture ambient = 5;
   static const int kAmbientFieldNumber = 5;
   inline bool has_ambient() const;
-  inline const ::nml::ColorOrTexture& ambient() const;
+  inline const ::carto::nml::ColorOrTexture& ambient() const;
 
   // optional .NMLPackage.ColorOrTexture diffuse = 6;
   static const int kDiffuseFieldNumber = 6;
   inline bool has_diffuse() const;
-  inline const ::nml::ColorOrTexture& diffuse() const;
+  inline const ::carto::nml::ColorOrTexture& diffuse() const;
 
   // optional .NMLPackage.Material.OpaqueMode opaque_mode = 7;
   static const int kOpaqueModeFieldNumber = 7;
   inline bool has_opaque_mode() const;
-  inline ::nml::Material_OpaqueMode opaque_mode() const;
+  inline ::carto::nml::Material_OpaqueMode opaque_mode() const;
 
   // optional float transparency = 8;
   static const int kTransparencyFieldNumber = 8;
@@ -563,7 +563,7 @@ class Material {
   // optional .NMLPackage.ColorOrTexture transparent = 9;
   static const int kTransparentFieldNumber = 9;
   inline bool has_transparent() const;
-  inline const ::nml::ColorOrTexture& transparent() const;
+  inline const ::carto::nml::ColorOrTexture& transparent() const;
 
   // optional float shininess = 10;
   static const int kShininessFieldNumber = 10;
@@ -573,7 +573,7 @@ class Material {
   // optional .NMLPackage.ColorOrTexture specular = 11;
   static const int kSpecularFieldNumber = 11;
   inline bool has_specular() const;
-  inline const ::nml::ColorOrTexture& specular() const;
+  inline const ::carto::nml::ColorOrTexture& specular() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.Material)
  private:
@@ -581,13 +581,13 @@ class Material {
   ::std::string id_ = "";
   int type_ = 1;
   int culling_ = 1;
-  ::nml::ColorOrTexture emission_ = ::nml::ColorOrTexture();
-  ::nml::ColorOrTexture ambient_ = ::nml::ColorOrTexture();
-  ::nml::ColorOrTexture diffuse_ = ::nml::ColorOrTexture();
+  ::carto::nml::ColorOrTexture emission_ = ::carto::nml::ColorOrTexture();
+  ::carto::nml::ColorOrTexture ambient_ = ::carto::nml::ColorOrTexture();
+  ::carto::nml::ColorOrTexture diffuse_ = ::carto::nml::ColorOrTexture();
   int opaque_mode_ = 0;
   float transparency_ = 0;
-  ::nml::ColorOrTexture transparent_ = ::nml::ColorOrTexture();
-  ::nml::ColorOrTexture specular_ = ::nml::ColorOrTexture();
+  ::carto::nml::ColorOrTexture transparent_ = ::carto::nml::ColorOrTexture();
+  ::carto::nml::ColorOrTexture specular_ = ::carto::nml::ColorOrTexture();
   float shininess_ = 0;
 };
 // -------------------------------------------------------------------
@@ -618,7 +618,7 @@ class Submesh {
   // required .NMLPackage.Submesh.Type type = 1;
   static const int kTypeFieldNumber = 1;
   inline bool has_type() const;
-  inline ::nml::Submesh_Type type() const;
+  inline ::carto::nml::Submesh_Type type() const;
 
   // required string material_id = 2;
   static const int kMaterialIdFieldNumber = 2;
@@ -694,20 +694,20 @@ class Mesh {
   // required .NMLPackage.Bounds3 bounds = 2;
   static const int kBoundsFieldNumber = 2;
   inline bool has_bounds() const;
-  inline const ::nml::Bounds3& bounds() const;
+  inline const ::carto::nml::Bounds3& bounds() const;
 
   // repeated .NMLPackage.Submesh submeshes = 3;
   static const int kSubmeshesFieldNumber = 3;
   inline int submeshes_size() const;
-  inline const ::nml::Submesh& submeshes(int index) const;
-  inline const std::vector< ::nml::Submesh >& submeshes() const;
+  inline const ::carto::nml::Submesh& submeshes(int index) const;
+  inline const std::vector< ::carto::nml::Submesh >& submeshes() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.Mesh)
  private:
   std::uint32_t _has_bits_[1];
   ::std::string id_ = "";
-  ::nml::Bounds3 bounds_ = ::nml::Bounds3();
-  std::vector< ::nml::Submesh > submeshes_;
+  ::carto::nml::Bounds3 bounds_ = ::carto::nml::Bounds3();
+  std::vector< ::carto::nml::Submesh > submeshes_;
 };
 // -------------------------------------------------------------------
 
@@ -734,20 +734,20 @@ class MeshInstance {
   // repeated .NMLPackage.Material materials = 2;
   static const int kMaterialsFieldNumber = 2;
   inline int materials_size() const;
-  inline const ::nml::Material& materials(int index) const;
-  inline const std::vector< ::nml::Material >& materials() const;
+  inline const ::carto::nml::Material& materials(int index) const;
+  inline const std::vector< ::carto::nml::Material >& materials() const;
 
   // optional .NMLPackage.Matrix4 transform = 3;
   static const int kTransformFieldNumber = 3;
   inline bool has_transform() const;
-  inline const ::nml::Matrix4& transform() const;
+  inline const ::carto::nml::Matrix4& transform() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.MeshInstance)
  private:
   std::uint32_t _has_bits_[1];
   ::std::string mesh_id_ = "";
-  std::vector< ::nml::Material > materials_;
-  ::nml::Matrix4 transform_ = ::nml::Matrix4();
+  std::vector< ::carto::nml::Material > materials_;
+  ::carto::nml::Matrix4 transform_ = ::carto::nml::Matrix4();
 };
 // -------------------------------------------------------------------
 
@@ -832,7 +832,7 @@ class SubmeshOpList {
   // required .NMLPackage.Submesh.Type type = 1;
   static const int kTypeFieldNumber = 1;
   inline bool has_type() const;
-  inline ::nml::Submesh_Type type() const;
+  inline ::carto::nml::Submesh_Type type() const;
 
   // required string material_id = 2;
   static const int kMaterialIdFieldNumber = 2;
@@ -842,14 +842,14 @@ class SubmeshOpList {
   // repeated .NMLPackage.SubmeshOp submesh_ops = 3;
   static const int kSubmeshOpsFieldNumber = 3;
   inline int submesh_ops_size() const;
-  inline const ::nml::SubmeshOp& submesh_ops(int index) const;
-  inline const std::vector< ::nml::SubmeshOp >& submesh_ops() const;
+  inline const ::carto::nml::SubmeshOp& submesh_ops(int index) const;
+  inline const std::vector< ::carto::nml::SubmeshOp >& submesh_ops() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.SubmeshOpList)
  private:
   std::uint32_t _has_bits_[1];
   ::std::string material_id_ = "";
-  std::vector< ::nml::SubmeshOp > submesh_ops_;
+  std::vector< ::carto::nml::SubmeshOp > submesh_ops_;
   int type_ = 1;
 };
 // -------------------------------------------------------------------
@@ -877,20 +877,20 @@ class MeshOp {
   // required .NMLPackage.Bounds3 bounds = 2;
   static const int kBoundsFieldNumber = 2;
   inline bool has_bounds() const;
-  inline const ::nml::Bounds3& bounds() const;
+  inline const ::carto::nml::Bounds3& bounds() const;
 
   // repeated .NMLPackage.SubmeshOpList submesh_op_lists = 3;
   static const int kSubmeshOpListsFieldNumber = 3;
   inline int submesh_op_lists_size() const;
-  inline const ::nml::SubmeshOpList& submesh_op_lists(int index) const;
-  inline const std::vector< ::nml::SubmeshOpList >& submesh_op_lists() const;
+  inline const ::carto::nml::SubmeshOpList& submesh_op_lists(int index) const;
+  inline const std::vector< ::carto::nml::SubmeshOpList >& submesh_op_lists() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.MeshOp)
  private:
   std::uint32_t _has_bits_[1];
   ::std::string id_ = "";
-  ::nml::Bounds3 bounds_ = ::nml::Bounds3();
-  std::vector< ::nml::SubmeshOpList > submesh_op_lists_;
+  ::carto::nml::Bounds3 bounds_ = ::carto::nml::Bounds3();
+  std::vector< ::carto::nml::SubmeshOpList > submesh_op_lists_;
 };
 // -------------------------------------------------------------------
 
@@ -917,25 +917,25 @@ class Model {
   // repeated .NMLPackage.MeshInstance mesh_instances = 2;
   static const int kMeshInstancesFieldNumber = 2;
   inline int mesh_instances_size() const;
-  inline const ::nml::MeshInstance& mesh_instances(int index) const;
-  inline const std::vector< ::nml::MeshInstance >& mesh_instances() const;
+  inline const ::carto::nml::MeshInstance& mesh_instances(int index) const;
+  inline const std::vector< ::carto::nml::MeshInstance >& mesh_instances() const;
 
   // repeated .NMLPackage.Mesh meshes = 3;
   static const int kMeshesFieldNumber = 3;
   inline int meshes_size() const;
-  inline const ::nml::Mesh& meshes(int index) const;
-  inline const std::vector< ::nml::Mesh >& meshes() const;
+  inline const ::carto::nml::Mesh& meshes(int index) const;
+  inline const std::vector< ::carto::nml::Mesh >& meshes() const;
 
   // repeated .NMLPackage.Texture textures = 4;
   static const int kTexturesFieldNumber = 4;
   inline int textures_size() const;
-  inline const ::nml::Texture& textures(int index) const;
-  inline const std::vector< ::nml::Texture >& textures() const;
+  inline const ::carto::nml::Texture& textures(int index) const;
+  inline const std::vector< ::carto::nml::Texture >& textures() const;
 
   // required .NMLPackage.Bounds3 bounds = 5;
   static const int kBoundsFieldNumber = 5;
   inline bool has_bounds() const;
-  inline const ::nml::Bounds3& bounds() const;
+  inline const ::carto::nml::Bounds3& bounds() const;
 
   // required int32 mesh_footprint = 6;
   static const int kMeshFootprintFieldNumber = 6;
@@ -951,10 +951,10 @@ class Model {
  private:
   std::uint32_t _has_bits_[1];
   ::std::string id_ = "";
-  std::vector< ::nml::MeshInstance > mesh_instances_;
-  std::vector< ::nml::Mesh > meshes_;
-  std::vector< ::nml::Texture > textures_;
-  ::nml::Bounds3 bounds_ = ::nml::Bounds3();
+  std::vector< ::carto::nml::MeshInstance > mesh_instances_;
+  std::vector< ::carto::nml::Mesh > meshes_;
+  std::vector< ::carto::nml::Texture > textures_;
+  ::carto::nml::Bounds3 bounds_ = ::carto::nml::Bounds3();
   std::int32_t mesh_footprint_ = 0;
   std::int32_t texture_footprint_ = 0;
 };
@@ -983,12 +983,12 @@ class ModelLODTreeNode {
   // required .NMLPackage.Bounds3 bounds = 2;
   static const int kBoundsFieldNumber = 2;
   inline bool has_bounds() const;
-  inline const ::nml::Bounds3& bounds() const;
+  inline const ::carto::nml::Bounds3& bounds() const;
 
   // required .NMLPackage.Model model = 3;
   static const int kModelFieldNumber = 3;
   inline bool has_model() const;
-  inline const ::nml::Model& model() const;
+  inline const ::carto::nml::Model& model() const;
 
   // repeated int32 children_ids = 4;
   static const int kChildrenIdsFieldNumber = 4;
@@ -999,8 +999,8 @@ class ModelLODTreeNode {
   // @@protoc_insertion_point(class_scope:NMLPackage.ModelLODTreeNode)
  private:
   std::uint32_t _has_bits_[1];
-  ::nml::Bounds3 bounds_ = ::nml::Bounds3();
-  ::nml::Model model_ = ::nml::Model();
+  ::carto::nml::Bounds3 bounds_ = ::carto::nml::Bounds3();
+  ::carto::nml::Model model_ = ::carto::nml::Model();
   std::vector< std::int32_t > children_ids_;
   std::int32_t id_ = 0;
 };
@@ -1024,13 +1024,13 @@ class ModelLODTree {
   // repeated .NMLPackage.ModelLODTreeNode nodes = 1;
   static const int kNodesFieldNumber = 1;
   inline int nodes_size() const;
-  inline const ::nml::ModelLODTreeNode& nodes(int index) const;
-  inline const std::vector< ::nml::ModelLODTreeNode >& nodes() const;
+  inline const ::carto::nml::ModelLODTreeNode& nodes(int index) const;
+  inline const std::vector< ::carto::nml::ModelLODTreeNode >& nodes() const;
 
   // @@protoc_insertion_point(class_scope:NMLPackage.ModelLODTree)
  private:
   std::uint32_t _has_bits_[1];
-  std::vector< ::nml::ModelLODTreeNode > nodes_;
+  std::vector< ::carto::nml::ModelLODTreeNode > nodes_;
 };
 // ===================================================================
 
@@ -1172,11 +1172,11 @@ inline Bounds3::Bounds3(const protobuf::message& srcMsg) {
   std::fill(_has_bits_, _has_bits_ + sizeof(_has_bits_) / sizeof(std::uint32_t), 0);
   for (protobuf::message msg(srcMsg); msg.next(); ) {
     if (msg.tag == kMinFieldNumber) {
-      min_ = ::nml::Vector3(msg.read_message());
+      min_ = ::carto::nml::Vector3(msg.read_message());
       _has_bits_[0] |= 0x00000001u;
     }
     else if (msg.tag == kMaxFieldNumber) {
-      max_ = ::nml::Vector3(msg.read_message());
+      max_ = ::carto::nml::Vector3(msg.read_message());
       _has_bits_[0] |= 0x00000002u;
     }
     else msg.skip();
@@ -1188,7 +1188,7 @@ inline bool Bounds3::has_min() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
 
-inline const ::nml::Vector3& Bounds3::min() const {
+inline const ::carto::nml::Vector3& Bounds3::min() const {
   // @@protoc_insertion_point(field_get:NMLPackage.Bounds3.min)
   return min_;
 }
@@ -1198,7 +1198,7 @@ inline bool Bounds3::has_max() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
 
-inline const ::nml::Vector3& Bounds3::max() const {
+inline const ::carto::nml::Vector3& Bounds3::max() const {
   // @@protoc_insertion_point(field_get:NMLPackage.Bounds3.max)
   return max_;
 }
@@ -1474,9 +1474,9 @@ inline bool Sampler::has_filter() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
 
-inline ::nml::Sampler_Filter Sampler::filter() const {
+inline ::carto::nml::Sampler_Filter Sampler::filter() const {
   // @@protoc_insertion_point(field_get:NMLPackage.Sampler.filter)
-  return static_cast< ::nml::Sampler_Filter >(filter_);
+  return static_cast< ::carto::nml::Sampler_Filter >(filter_);
 }
 
 // optional .NMLPackage.Sampler.WrapMode wrap_s = 2;
@@ -1484,9 +1484,9 @@ inline bool Sampler::has_wrap_s() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
 
-inline ::nml::Sampler_WrapMode Sampler::wrap_s() const {
+inline ::carto::nml::Sampler_WrapMode Sampler::wrap_s() const {
   // @@protoc_insertion_point(field_get:NMLPackage.Sampler.wrap_s)
-  return static_cast< ::nml::Sampler_WrapMode >(wrap_s_);
+  return static_cast< ::carto::nml::Sampler_WrapMode >(wrap_s_);
 }
 
 // optional .NMLPackage.Sampler.WrapMode wrap_t = 3;
@@ -1494,9 +1494,9 @@ inline bool Sampler::has_wrap_t() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
 
-inline ::nml::Sampler_WrapMode Sampler::wrap_t() const {
+inline ::carto::nml::Sampler_WrapMode Sampler::wrap_t() const {
   // @@protoc_insertion_point(field_get:NMLPackage.Sampler.wrap_t)
-  return static_cast< ::nml::Sampler_WrapMode >(wrap_t_);
+  return static_cast< ::carto::nml::Sampler_WrapMode >(wrap_t_);
 }
 
 // -------------------------------------------------------------------
@@ -1527,7 +1527,7 @@ inline Texture::Texture(const protobuf::message& srcMsg) {
       _has_bits_[0] |= 0x00000008u;
     }
     else if (msg.tag == kSamplerFieldNumber) {
-      sampler_ = ::nml::Sampler(msg.read_message());
+      sampler_ = ::carto::nml::Sampler(msg.read_message());
       _has_bits_[0] |= 0x00000010u;
     }
     else if (msg.tag == kMipmapsFieldNumber) {
@@ -1553,9 +1553,9 @@ inline bool Texture::has_format() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
 
-inline ::nml::Texture_Format Texture::format() const {
+inline ::carto::nml::Texture_Format Texture::format() const {
   // @@protoc_insertion_point(field_get:NMLPackage.Texture.format)
-  return static_cast< ::nml::Texture_Format >(format_);
+  return static_cast< ::carto::nml::Texture_Format >(format_);
 }
 
 // required int32 width = 3;
@@ -1583,7 +1583,7 @@ inline bool Texture::has_sampler() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
 
-inline const ::nml::Sampler& Texture::sampler() const {
+inline const ::carto::nml::Sampler& Texture::sampler() const {
   // @@protoc_insertion_point(field_get:NMLPackage.Texture.sampler)
   return sampler_;
 }
@@ -1618,7 +1618,7 @@ inline ColorOrTexture::ColorOrTexture(const protobuf::message& srcMsg) {
       _has_bits_[0] |= 0x00000001u;
     }
     else if (msg.tag == kColorFieldNumber) {
-      color_ = ::nml::ColorRGBA(msg.read_message());
+      color_ = ::carto::nml::ColorRGBA(msg.read_message());
       _has_bits_[0] |= 0x00000002u;
     }
     else if (msg.tag == kTextureIdFieldNumber) {
@@ -1634,9 +1634,9 @@ inline bool ColorOrTexture::has_type() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
 
-inline ::nml::ColorOrTexture_Type ColorOrTexture::type() const {
+inline ::carto::nml::ColorOrTexture_Type ColorOrTexture::type() const {
   // @@protoc_insertion_point(field_get:NMLPackage.ColorOrTexture.type)
-  return static_cast< ::nml::ColorOrTexture_Type >(type_);
+  return static_cast< ::carto::nml::ColorOrTexture_Type >(type_);
 }
 
 // optional .NMLPackage.ColorRGBA color = 2;
@@ -1644,7 +1644,7 @@ inline bool ColorOrTexture::has_color() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
 
-inline const ::nml::ColorRGBA& ColorOrTexture::color() const {
+inline const ::carto::nml::ColorRGBA& ColorOrTexture::color() const {
   // @@protoc_insertion_point(field_get:NMLPackage.ColorOrTexture.color)
   return color_;
 }
@@ -1683,15 +1683,15 @@ inline Material::Material(const protobuf::message& srcMsg) {
       _has_bits_[0] |= 0x00000004u;
     }
     else if (msg.tag == kEmissionFieldNumber) {
-      emission_ = ::nml::ColorOrTexture(msg.read_message());
+      emission_ = ::carto::nml::ColorOrTexture(msg.read_message());
       _has_bits_[0] |= 0x00000008u;
     }
     else if (msg.tag == kAmbientFieldNumber) {
-      ambient_ = ::nml::ColorOrTexture(msg.read_message());
+      ambient_ = ::carto::nml::ColorOrTexture(msg.read_message());
       _has_bits_[0] |= 0x00000010u;
     }
     else if (msg.tag == kDiffuseFieldNumber) {
-      diffuse_ = ::nml::ColorOrTexture(msg.read_message());
+      diffuse_ = ::carto::nml::ColorOrTexture(msg.read_message());
       _has_bits_[0] |= 0x00000020u;
     }
     else if (msg.tag == kOpaqueModeFieldNumber) {
@@ -1703,7 +1703,7 @@ inline Material::Material(const protobuf::message& srcMsg) {
       _has_bits_[0] |= 0x00000080u;
     }
     else if (msg.tag == kTransparentFieldNumber) {
-      transparent_ = ::nml::ColorOrTexture(msg.read_message());
+      transparent_ = ::carto::nml::ColorOrTexture(msg.read_message());
       _has_bits_[0] |= 0x00000100u;
     }
     else if (msg.tag == kShininessFieldNumber) {
@@ -1711,7 +1711,7 @@ inline Material::Material(const protobuf::message& srcMsg) {
       _has_bits_[0] |= 0x00000200u;
     }
     else if (msg.tag == kSpecularFieldNumber) {
-      specular_ = ::nml::ColorOrTexture(msg.read_message());
+      specular_ = ::carto::nml::ColorOrTexture(msg.read_message());
       _has_bits_[0] |= 0x00000400u;
     }
     else msg.skip();
@@ -1733,9 +1733,9 @@ inline bool Material::has_type() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
 
-inline ::nml::Material_Type Material::type() const {
+inline ::carto::nml::Material_Type Material::type() const {
   // @@protoc_insertion_point(field_get:NMLPackage.Material.type)
-  return static_cast< ::nml::Material_Type >(type_);
+  return static_cast< ::carto::nml::Material_Type >(type_);
 }
 
 // required .NMLPackage.Material.Culling culling = 3;
@@ -1743,9 +1743,9 @@ inline bool Material::has_culling() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
 
-inline ::nml::Material_Culling Material::culling() const {
+inline ::carto::nml::Material_Culling Material::culling() const {
   // @@protoc_insertion_point(field_get:NMLPackage.Material.culling)
-  return static_cast< ::nml::Material_Culling >(culling_);
+  return static_cast< ::carto::nml::Material_Culling >(culling_);
 }
 
 // optional .NMLPackage.ColorOrTexture emission = 4;
@@ -1753,7 +1753,7 @@ inline bool Material::has_emission() const {
   return (_has_bits_[0] & 0x00000008u) != 0;
 }
 
-inline const ::nml::ColorOrTexture& Material::emission() const {
+inline const ::carto::nml::ColorOrTexture& Material::emission() const {
   // @@protoc_insertion_point(field_get:NMLPackage.Material.emission)
   return emission_;
 }
@@ -1763,7 +1763,7 @@ inline bool Material::has_ambient() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
 
-inline const ::nml::ColorOrTexture& Material::ambient() const {
+inline const ::carto::nml::ColorOrTexture& Material::ambient() const {
   // @@protoc_insertion_point(field_get:NMLPackage.Material.ambient)
   return ambient_;
 }
@@ -1773,7 +1773,7 @@ inline bool Material::has_diffuse() const {
   return (_has_bits_[0] & 0x00000020u) != 0;
 }
 
-inline const ::nml::ColorOrTexture& Material::diffuse() const {
+inline const ::carto::nml::ColorOrTexture& Material::diffuse() const {
   // @@protoc_insertion_point(field_get:NMLPackage.Material.diffuse)
   return diffuse_;
 }
@@ -1783,9 +1783,9 @@ inline bool Material::has_opaque_mode() const {
   return (_has_bits_[0] & 0x00000040u) != 0;
 }
 
-inline ::nml::Material_OpaqueMode Material::opaque_mode() const {
+inline ::carto::nml::Material_OpaqueMode Material::opaque_mode() const {
   // @@protoc_insertion_point(field_get:NMLPackage.Material.opaque_mode)
-  return static_cast< ::nml::Material_OpaqueMode >(opaque_mode_);
+  return static_cast< ::carto::nml::Material_OpaqueMode >(opaque_mode_);
 }
 
 // optional float transparency = 8;
@@ -1803,7 +1803,7 @@ inline bool Material::has_transparent() const {
   return (_has_bits_[0] & 0x00000100u) != 0;
 }
 
-inline const ::nml::ColorOrTexture& Material::transparent() const {
+inline const ::carto::nml::ColorOrTexture& Material::transparent() const {
   // @@protoc_insertion_point(field_get:NMLPackage.Material.transparent)
   return transparent_;
 }
@@ -1823,7 +1823,7 @@ inline bool Material::has_specular() const {
   return (_has_bits_[0] & 0x00000400u) != 0;
 }
 
-inline const ::nml::ColorOrTexture& Material::specular() const {
+inline const ::carto::nml::ColorOrTexture& Material::specular() const {
   // @@protoc_insertion_point(field_get:NMLPackage.Material.specular)
   return specular_;
 }
@@ -1880,9 +1880,9 @@ inline bool Submesh::has_type() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
 
-inline ::nml::Submesh_Type Submesh::type() const {
+inline ::carto::nml::Submesh_Type Submesh::type() const {
   // @@protoc_insertion_point(field_get:NMLPackage.Submesh.type)
-  return static_cast< ::nml::Submesh_Type >(type_);
+  return static_cast< ::carto::nml::Submesh_Type >(type_);
 }
 
 // required string material_id = 2;
@@ -1981,7 +1981,7 @@ inline Mesh::Mesh(const protobuf::message& srcMsg) {
       _has_bits_[0] |= 0x00000001u;
     }
     else if (msg.tag == kBoundsFieldNumber) {
-      bounds_ = ::nml::Bounds3(msg.read_message());
+      bounds_ = ::carto::nml::Bounds3(msg.read_message());
       _has_bits_[0] |= 0x00000002u;
     }
     else if (msg.tag == kSubmeshesFieldNumber) {
@@ -2007,7 +2007,7 @@ inline bool Mesh::has_bounds() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
 
-inline const ::nml::Bounds3& Mesh::bounds() const {
+inline const ::carto::nml::Bounds3& Mesh::bounds() const {
   // @@protoc_insertion_point(field_get:NMLPackage.Mesh.bounds)
   return bounds_;
 }
@@ -2017,11 +2017,11 @@ inline int Mesh::submeshes_size() const {
   return static_cast<int>(submeshes_.size());
 }
 
-inline const ::nml::Submesh& Mesh::submeshes(int index) const {
+inline const ::carto::nml::Submesh& Mesh::submeshes(int index) const {
   // @@protoc_insertion_point(field_get:NMLPackage.Mesh.submeshes)
   return submeshes_[index];
 }
-inline const std::vector< ::nml::Submesh >& Mesh::submeshes() const {
+inline const std::vector< ::carto::nml::Submesh >& Mesh::submeshes() const {
   // @@protoc_insertion_point(field_list:NMLPackage.Mesh.submeshes)
   return submeshes_;
 }
@@ -2046,7 +2046,7 @@ inline MeshInstance::MeshInstance(const protobuf::message& srcMsg) {
       _has_bits_[0] |= 0x00000002u;
     }
     else if (msg.tag == kTransformFieldNumber) {
-      transform_ = ::nml::Matrix4(msg.read_message());
+      transform_ = ::carto::nml::Matrix4(msg.read_message());
       _has_bits_[0] |= 0x00000004u;
     }
     else msg.skip();
@@ -2068,11 +2068,11 @@ inline int MeshInstance::materials_size() const {
   return static_cast<int>(materials_.size());
 }
 
-inline const ::nml::Material& MeshInstance::materials(int index) const {
+inline const ::carto::nml::Material& MeshInstance::materials(int index) const {
   // @@protoc_insertion_point(field_get:NMLPackage.MeshInstance.materials)
   return materials_[index];
 }
-inline const std::vector< ::nml::Material >& MeshInstance::materials() const {
+inline const std::vector< ::carto::nml::Material >& MeshInstance::materials() const {
   // @@protoc_insertion_point(field_list:NMLPackage.MeshInstance.materials)
   return materials_;
 }
@@ -2082,7 +2082,7 @@ inline bool MeshInstance::has_transform() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
 
-inline const ::nml::Matrix4& MeshInstance::transform() const {
+inline const ::carto::nml::Matrix4& MeshInstance::transform() const {
   // @@protoc_insertion_point(field_get:NMLPackage.MeshInstance.transform)
   return transform_;
 }
@@ -2232,9 +2232,9 @@ inline bool SubmeshOpList::has_type() const {
   return (_has_bits_[0] & 0x00000001u) != 0;
 }
 
-inline ::nml::Submesh_Type SubmeshOpList::type() const {
+inline ::carto::nml::Submesh_Type SubmeshOpList::type() const {
   // @@protoc_insertion_point(field_get:NMLPackage.SubmeshOpList.type)
-  return static_cast< ::nml::Submesh_Type >(type_);
+  return static_cast< ::carto::nml::Submesh_Type >(type_);
 }
 
 // required string material_id = 2;
@@ -2252,11 +2252,11 @@ inline int SubmeshOpList::submesh_ops_size() const {
   return static_cast<int>(submesh_ops_.size());
 }
 
-inline const ::nml::SubmeshOp& SubmeshOpList::submesh_ops(int index) const {
+inline const ::carto::nml::SubmeshOp& SubmeshOpList::submesh_ops(int index) const {
   // @@protoc_insertion_point(field_get:NMLPackage.SubmeshOpList.submesh_ops)
   return submesh_ops_[index];
 }
-inline const std::vector< ::nml::SubmeshOp >& SubmeshOpList::submesh_ops() const {
+inline const std::vector< ::carto::nml::SubmeshOp >& SubmeshOpList::submesh_ops() const {
   // @@protoc_insertion_point(field_list:NMLPackage.SubmeshOpList.submesh_ops)
   return submesh_ops_;
 }
@@ -2277,7 +2277,7 @@ inline MeshOp::MeshOp(const protobuf::message& srcMsg) {
       _has_bits_[0] |= 0x00000001u;
     }
     else if (msg.tag == kBoundsFieldNumber) {
-      bounds_ = ::nml::Bounds3(msg.read_message());
+      bounds_ = ::carto::nml::Bounds3(msg.read_message());
       _has_bits_[0] |= 0x00000002u;
     }
     else if (msg.tag == kSubmeshOpListsFieldNumber) {
@@ -2303,7 +2303,7 @@ inline bool MeshOp::has_bounds() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
 
-inline const ::nml::Bounds3& MeshOp::bounds() const {
+inline const ::carto::nml::Bounds3& MeshOp::bounds() const {
   // @@protoc_insertion_point(field_get:NMLPackage.MeshOp.bounds)
   return bounds_;
 }
@@ -2313,11 +2313,11 @@ inline int MeshOp::submesh_op_lists_size() const {
   return static_cast<int>(submesh_op_lists_.size());
 }
 
-inline const ::nml::SubmeshOpList& MeshOp::submesh_op_lists(int index) const {
+inline const ::carto::nml::SubmeshOpList& MeshOp::submesh_op_lists(int index) const {
   // @@protoc_insertion_point(field_get:NMLPackage.MeshOp.submesh_op_lists)
   return submesh_op_lists_[index];
 }
-inline const std::vector< ::nml::SubmeshOpList >& MeshOp::submesh_op_lists() const {
+inline const std::vector< ::carto::nml::SubmeshOpList >& MeshOp::submesh_op_lists() const {
   // @@protoc_insertion_point(field_list:NMLPackage.MeshOp.submesh_op_lists)
   return submesh_op_lists_;
 }
@@ -2350,7 +2350,7 @@ inline Model::Model(const protobuf::message& srcMsg) {
       _has_bits_[0] |= 0x00000008u;
     }
     else if (msg.tag == kBoundsFieldNumber) {
-      bounds_ = ::nml::Bounds3(msg.read_message());
+      bounds_ = ::carto::nml::Bounds3(msg.read_message());
       _has_bits_[0] |= 0x00000010u;
     }
     else if (msg.tag == kMeshFootprintFieldNumber) {
@@ -2380,11 +2380,11 @@ inline int Model::mesh_instances_size() const {
   return static_cast<int>(mesh_instances_.size());
 }
 
-inline const ::nml::MeshInstance& Model::mesh_instances(int index) const {
+inline const ::carto::nml::MeshInstance& Model::mesh_instances(int index) const {
   // @@protoc_insertion_point(field_get:NMLPackage.Model.mesh_instances)
   return mesh_instances_[index];
 }
-inline const std::vector< ::nml::MeshInstance >& Model::mesh_instances() const {
+inline const std::vector< ::carto::nml::MeshInstance >& Model::mesh_instances() const {
   // @@protoc_insertion_point(field_list:NMLPackage.Model.mesh_instances)
   return mesh_instances_;
 }
@@ -2394,11 +2394,11 @@ inline int Model::meshes_size() const {
   return static_cast<int>(meshes_.size());
 }
 
-inline const ::nml::Mesh& Model::meshes(int index) const {
+inline const ::carto::nml::Mesh& Model::meshes(int index) const {
   // @@protoc_insertion_point(field_get:NMLPackage.Model.meshes)
   return meshes_[index];
 }
-inline const std::vector< ::nml::Mesh >& Model::meshes() const {
+inline const std::vector< ::carto::nml::Mesh >& Model::meshes() const {
   // @@protoc_insertion_point(field_list:NMLPackage.Model.meshes)
   return meshes_;
 }
@@ -2408,11 +2408,11 @@ inline int Model::textures_size() const {
   return static_cast<int>(textures_.size());
 }
 
-inline const ::nml::Texture& Model::textures(int index) const {
+inline const ::carto::nml::Texture& Model::textures(int index) const {
   // @@protoc_insertion_point(field_get:NMLPackage.Model.textures)
   return textures_[index];
 }
-inline const std::vector< ::nml::Texture >& Model::textures() const {
+inline const std::vector< ::carto::nml::Texture >& Model::textures() const {
   // @@protoc_insertion_point(field_list:NMLPackage.Model.textures)
   return textures_;
 }
@@ -2422,7 +2422,7 @@ inline bool Model::has_bounds() const {
   return (_has_bits_[0] & 0x00000010u) != 0;
 }
 
-inline const ::nml::Bounds3& Model::bounds() const {
+inline const ::carto::nml::Bounds3& Model::bounds() const {
   // @@protoc_insertion_point(field_get:NMLPackage.Model.bounds)
   return bounds_;
 }
@@ -2463,11 +2463,11 @@ inline ModelLODTreeNode::ModelLODTreeNode(const protobuf::message& srcMsg) {
       _has_bits_[0] |= 0x00000001u;
     }
     else if (msg.tag == kBoundsFieldNumber) {
-      bounds_ = ::nml::Bounds3(msg.read_message());
+      bounds_ = ::carto::nml::Bounds3(msg.read_message());
       _has_bits_[0] |= 0x00000002u;
     }
     else if (msg.tag == kModelFieldNumber) {
-      model_ = ::nml::Model(msg.read_message());
+      model_ = ::carto::nml::Model(msg.read_message());
       _has_bits_[0] |= 0x00000004u;
     }
     else if (msg.tag == kChildrenIdsFieldNumber) {
@@ -2493,7 +2493,7 @@ inline bool ModelLODTreeNode::has_bounds() const {
   return (_has_bits_[0] & 0x00000002u) != 0;
 }
 
-inline const ::nml::Bounds3& ModelLODTreeNode::bounds() const {
+inline const ::carto::nml::Bounds3& ModelLODTreeNode::bounds() const {
   // @@protoc_insertion_point(field_get:NMLPackage.ModelLODTreeNode.bounds)
   return bounds_;
 }
@@ -2503,7 +2503,7 @@ inline bool ModelLODTreeNode::has_model() const {
   return (_has_bits_[0] & 0x00000004u) != 0;
 }
 
-inline const ::nml::Model& ModelLODTreeNode::model() const {
+inline const ::carto::nml::Model& ModelLODTreeNode::model() const {
   // @@protoc_insertion_point(field_get:NMLPackage.ModelLODTreeNode.model)
   return model_;
 }
@@ -2547,11 +2547,11 @@ inline int ModelLODTree::nodes_size() const {
   return static_cast<int>(nodes_.size());
 }
 
-inline const ::nml::ModelLODTreeNode& ModelLODTree::nodes(int index) const {
+inline const ::carto::nml::ModelLODTreeNode& ModelLODTree::nodes(int index) const {
   // @@protoc_insertion_point(field_get:NMLPackage.ModelLODTree.nodes)
   return nodes_[index];
 }
-inline const std::vector< ::nml::ModelLODTreeNode >& ModelLODTree::nodes() const {
+inline const std::vector< ::carto::nml::ModelLODTreeNode >& ModelLODTree::nodes() const {
   // @@protoc_insertion_point(field_list:NMLPackage.ModelLODTree.nodes)
   return nodes_;
 }
@@ -2559,7 +2559,7 @@ inline const std::vector< ::nml::ModelLODTreeNode >& ModelLODTree::nodes() const
 
 // @@protoc_insertion_point(namespace_scope)
 
-}  // namespace NMLPackage
+} }  // namespace NMLPackage
 
 // @@protoc_insertion_point(global_scope)
 

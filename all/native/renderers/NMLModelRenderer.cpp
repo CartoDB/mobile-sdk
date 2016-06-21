@@ -5,13 +5,14 @@
 #include "graphics/ViewState.h"
 #include "layers/VectorLayer.h"
 #include "projections/Projection.h"
-#include "nml/Model.h"
-#include "nml/ShaderManager.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "utils/Log.h"
 #include "utils/GLES2.h"
 #include "utils/GeomUtils.h"
 #include "utils/GLUtils.h"
+
+#include <nml/GLModel.h>
+#include <nml/GLShaderManager.h>
 
 namespace carto {
 
@@ -64,7 +65,7 @@ namespace carto {
     }
 
     void NMLModelRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        _glShaderManager = std::make_shared<nmlgl::ShaderManager>();
+        _glShaderManager = std::make_shared<nml::GLShaderManager>();
         _glModelMap.clear();
     }
 
@@ -93,15 +94,15 @@ namespace carto {
         for (const std::shared_ptr<NMLModel>& element : _elements) {
             const NMLModelDrawData& drawData = *element->getDrawData();
             std::shared_ptr<nml::Model> sourceModel = drawData.getSourceModel();
-            std::shared_ptr<nmlgl::Model> glModel = _glModelMap[sourceModel];
+            std::shared_ptr<nml::GLModel> glModel = _glModelMap[sourceModel];
             if (!glModel) {
-                glModel = std::make_shared<nmlgl::Model>(*sourceModel);
+                glModel = std::make_shared<nml::GLModel>(*sourceModel);
                 glModel->create(*_glShaderManager);
                 _glModelMap[sourceModel] = glModel;
             }
     
             cglib::mat4x4<float> mvMat = cglib::mat4x4<float>::convert(viewState.getModelviewMat() * drawData.getLocalMat());
-            nmlgl::RenderState renderState(projMat, mvMat, ambientLightColor, mainLightColor, -mainLightDir);
+            nml::RenderState renderState(projMat, mvMat, ambientLightColor, mainLightColor, -mainLightDir);
 
             glModel->draw(renderState);
         }
@@ -141,7 +142,7 @@ namespace carto {
             if (modelIt == _glModelMap.end()) {
                 continue;
             }
-            std::shared_ptr<nmlgl::Model> glModel = modelIt->second;
+            std::shared_ptr<nml::GLModel> glModel = modelIt->second;
     
             cglib::mat4x4<double> modelMat = drawData.getLocalMat();
             cglib::mat4x4<double> invModelMat = cglib::inverse(modelMat);
@@ -158,8 +159,8 @@ namespace carto {
                 continue;
             }
             
-            std::vector<nmlgl::RayIntersection> intersections;
-            glModel->calculateRayIntersections(nmlgl::Ray(rayOrigModel, rayDirModel), intersections);
+            std::vector<nml::RayIntersection> intersections;
+            glModel->calculateRayIntersections(nml::Ray(rayOrigModel, rayDirModel), intersections);
             
             for (size_t i = 0; i < intersections.size(); i++) {
                 cglib::vec3<double> pos = cglib::transform_point(intersections[i].pos, modelMat);

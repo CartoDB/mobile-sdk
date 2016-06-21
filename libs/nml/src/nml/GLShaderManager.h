@@ -4,18 +4,18 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_NML_SHADERMANAGER_H_
-#define _CARTO_NML_SHADERMANAGER_H_
+#ifndef _CARTO_NML_GLSHADERMANAGER_H_
+#define _CARTO_NML_GLSHADERMANAGER_H_
 
-#include "BaseTypes.h"
+#include "GLBase.h"
 
 #include <string>
 #include <map>
 #include <set>
 
-namespace carto { namespace nmlgl {
+namespace carto { namespace nml {
 
-    class ShaderManager {
+    class GLShaderManager {
     public:
         GLuint createProgram(const std::string& vertexShader, const std::string& fragmentShader, const std::set<std::string>& defs);
 

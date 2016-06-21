@@ -1,13 +1,12 @@
-#include "Submesh.h"
-#include "Mesh.h"
-
-#include "nmlpackage/NMLPackage.pb.h"
+#include "GLSubmesh.h"
+#include "GLMesh.h"
+#include "Package.h"
 
 #include <cassert>
 
-namespace carto { namespace nmlgl {
+namespace carto { namespace nml {
 
-    Submesh::Submesh(const nml::Submesh& submesh) :
+    GLSubmesh::GLSubmesh(const Submesh& submesh) :
         _refCount(0),
         _glType(-1),
         _vertexCounts(),
@@ -49,7 +48,7 @@ namespace carto { namespace nmlgl {
         }
     }
     
-    Submesh::Submesh(const Mesh& glMesh, const nml::SubmeshOpList& submeshOpList) :
+    GLSubmesh::GLSubmesh(const GLMesh& glMesh, const SubmeshOpList& submeshOpList) :
         _refCount(0),
         _glType(-1),
         _vertexCounts(),
@@ -79,8 +78,8 @@ namespace carto { namespace nmlgl {
         _vertexIdBuffer.reserve(vertexCount);
         _uvBuffer.reserve(vertexCount * 2);
         for (int i = 0; i < submeshOpList.submesh_ops_size(); i++) {
-            const nml::SubmeshOp& submeshOp = submeshOpList.submesh_ops(i);
-            const Submesh& src = *glMesh.getSubmeshList()[submeshOp.submesh_idx()];
+            const SubmeshOp& submeshOp = submeshOpList.submesh_ops(i);
+            const GLSubmesh& src = *glMesh.getSubmeshList()[submeshOp.submesh_idx()];
     
             int start = submeshOp.offset(), end = submeshOp.offset() + submeshOp.count();
             _positionBuffer.insert(_positionBuffer.end(), src._positionBuffer.begin() + start * 3, src._positionBuffer.begin() + end * 3);
@@ -108,7 +107,7 @@ namespace carto { namespace nmlgl {
         }
     }
     
-    void Submesh::create() {
+    void GLSubmesh::create() {
         if (_refCount++ > 0) {
             return;
         }
@@ -116,7 +115,7 @@ namespace carto { namespace nmlgl {
         uploadSubmesh();
     }
     
-    void Submesh::dispose() {
+    void GLSubmesh::dispose() {
         if (--_refCount > 0) {
             return;
         }
@@ -140,7 +139,7 @@ namespace carto { namespace nmlgl {
         _glColorVBOId = 0;
     }
     
-    void Submesh::draw(const RenderState& renderState) {
+    void GLSubmesh::draw(const RenderState& renderState) {
         if (_vertexCounts.empty()) {
             return;
         }
@@ -209,7 +208,7 @@ namespace carto { namespace nmlgl {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
     
-    void Submesh::calculateRayIntersections(const Ray& ray, std::vector<RayIntersection>& intersections) const {
+    void GLSubmesh::calculateRayIntersections(const Ray& ray, std::vector<RayIntersection>& intersections) const {
         if (!(_glType == GL_TRIANGLES || _glType == GL_TRIANGLE_FAN || _glType == GL_TRIANGLE_STRIP)) {
             return;
         }
@@ -257,15 +256,15 @@ namespace carto { namespace nmlgl {
         }
     }
     
-    const std::string& Submesh::getMaterialId() const {
+    const std::string& GLSubmesh::getMaterialId() const {
         return _materialId;
     }
     
-    int Submesh::getDrawCallCount() const {
+    int GLSubmesh::getDrawCallCount() const {
         return static_cast<int>(_vertexCounts.size());
     }
     
-    int Submesh::getTotalGeometrySize() const {
+    int GLSubmesh::getTotalGeometrySize() const {
         std::size_t size = 0;
         size += _positionBuffer.size() * sizeof(float);
         size += _normalBuffer.size() * sizeof(float);
@@ -275,7 +274,7 @@ namespace carto { namespace nmlgl {
         return static_cast<int>(size);
     }
     
-    void Submesh::uploadSubmesh() {
+    void GLSubmesh::uploadSubmesh() {
         if (!_positionBuffer.empty()) {
             glGenBuffers(1, &_glPositionVBOId);
             glBindBuffer(GL_ARRAY_BUFFER, _glPositionVBOId);
@@ -303,7 +302,7 @@ namespace carto { namespace nmlgl {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
     
-    bool Submesh::findRayTriangleIntersection(const cglib::vec3<float>* points, const Ray& ray, cglib::vec3<float>& p, cglib::vec3<float>& n) {
+    bool GLSubmesh::findRayTriangleIntersection(const cglib::vec3<float>* points, const Ray& ray, cglib::vec3<float>& p, cglib::vec3<float>& n) {
         cglib::vec3<float> u = points[1] - points[0];
         cglib::vec3<float> v = points[2] - points[0];
         n = cglib::vector_product(u, v);
@@ -334,25 +333,25 @@ namespace carto { namespace nmlgl {
         return s0 >= 0 && s1 >= 0 && s0 + s1 <= 1;
     }
     
-    GLint Submesh::convertType(int type) {
+    GLint GLSubmesh::convertType(int type) {
         GLint glType = -1;
         switch (type) {
-        case nml::Submesh::POINTS:
+        case Submesh::POINTS:
             glType = GL_POINTS;
             break;
-        case nml::Submesh::LINES:
+        case Submesh::LINES:
             glType = GL_LINES;
             break;
-        case nml::Submesh::LINE_STRIPS:
+        case Submesh::LINE_STRIPS:
             glType = GL_LINE_STRIP;
             break;
-        case nml::Submesh::TRIANGLES:
+        case Submesh::TRIANGLES:
             glType = GL_TRIANGLES;
             break;
-        case nml::Submesh::TRIANGLE_STRIPS:
+        case Submesh::TRIANGLE_STRIPS:
             glType = GL_TRIANGLE_STRIP;
             break;
-        case nml::Submesh::TRIANGLE_FANS:
+        case Submesh::TRIANGLE_FANS:
             glType = GL_TRIANGLE_FAN;
             break;
         default:
@@ -361,7 +360,7 @@ namespace carto { namespace nmlgl {
         return glType;
     }
     
-    void Submesh::convertToFloatBuffer(const std::string& str, std::vector<float>& buf) {
+    void GLSubmesh::convertToFloatBuffer(const std::string& str, std::vector<float>& buf) {
         if (str.empty()) {
             buf.clear();
             return;
@@ -381,7 +380,7 @@ namespace carto { namespace nmlgl {
         }
     }
     
-    void Submesh::convertToByteBuffer(const std::string& str, std::vector<unsigned char>& buf) {
+    void GLSubmesh::convertToByteBuffer(const std::string& str, std::vector<unsigned char>& buf) {
         if (str.empty()) {
             buf.clear();
             return;

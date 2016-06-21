@@ -29,9 +29,9 @@ namespace carto {
     class NMLModelLODTreeDataSource;
     class NMLModelLODTreeLayer;
     
-    namespace nmlgl {
-        class Model;
-        class ShaderManager;
+    namespace nml {
+        class GLModel;
+        class GLShaderManager;
     }
 
     class NMLModelLODTreeRenderer {
@@ -63,7 +63,7 @@ namespace carto {
             ModelNodeDrawRecord(const NMLModelLODTreeDrawData& drawData) : drawData(drawData), parent(0), children(), used(false), created(false) { }
         };
     
-        std::shared_ptr<nmlgl::ShaderManager> _glShaderManager;
+        std::shared_ptr<nml::GLShaderManager> _glShaderManager;
         std::vector<std::shared_ptr<NMLModelLODTreeDrawData> > _tempDrawDatas;
         std::map<long long, std::shared_ptr<ModelNodeDrawRecord> > _drawRecordMap;
         std::weak_ptr<Options> _options;

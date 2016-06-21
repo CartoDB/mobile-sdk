@@ -29,10 +29,10 @@ namespace carto {
     class NMLModelLODTreeRenderer;
     class NMLModelLODTreeEventListener;
 
-    namespace nmlgl {
-        class Model;
-        class Mesh;
-        class Texture;
+    namespace nml {
+        class GLModel;
+        class GLMesh;
+        class GLTexture;
     }
     
     /**
@@ -119,10 +119,10 @@ namespace carto {
         typedef std::vector<NMLModelLODTreeDataSource::MapTile> MapTileList;
         typedef std::map<long long, std::shared_ptr<NMLModelLODTree> > ModelLODTreeMap;
         typedef cache::timed_lru_cache<long long, std::shared_ptr<NMLModelLODTree> > ModelLODTreeCache;
-        typedef std::map<long long, std::shared_ptr<nmlgl::Mesh> > MeshMap;
-        typedef cache::timed_lru_cache<long long, std::shared_ptr<nmlgl::Mesh> > MeshCache;
-        typedef std::map<long long, std::shared_ptr<nmlgl::Texture> > TextureMap;
-        typedef cache::timed_lru_cache<long long, std::shared_ptr<nmlgl::Texture> > TextureCache;
+        typedef std::map<long long, std::shared_ptr<nml::GLMesh> > MeshMap;
+        typedef cache::timed_lru_cache<long long, std::shared_ptr<nml::GLMesh> > MeshCache;
+        typedef std::map<long long, std::shared_ptr<nml::GLTexture> > TextureMap;
+        typedef cache::timed_lru_cache<long long, std::shared_ptr<nml::GLTexture> > TextureCache;
         typedef std::map<long long, std::shared_ptr<NMLModelLODTreeDrawData> > NodeDrawDataMap;
     
         class FetchingTasks {
@@ -201,8 +201,8 @@ namespace carto {
         bool loadMeshes(const NMLModelLODTree* modelLODTree, int nodeId, bool checkOnly);
         bool loadTextures(const NMLModelLODTree* modelLODTree, int nodeId, bool checkOnly);
         void updateModelLODTrees(const MapTileList& mapTileList, ModelLODTreeMap& modelLODTreeMap);
-        void updateMeshes(const NMLModelLODTree* modelLODTree, int nodeId, std::shared_ptr<nmlgl::Model> glModel, MeshMap& meshMap);
-        void updateTextures(const NMLModelLODTree* modelLODTree, int nodeId, std::shared_ptr<nmlgl::Model> glModel, TextureMap& textureMap);
+        void updateMeshes(const NMLModelLODTree* modelLODTree, int nodeId, std::shared_ptr<nml::GLModel> glModel, MeshMap& meshMap);
+        void updateTextures(const NMLModelLODTree* modelLODTree, int nodeId, std::shared_ptr<nml::GLModel> glModel, TextureMap& textureMap);
         void updateDrawLists(const ViewState& viewState, MeshMap& meshMap, TextureMap& textureMap, NodeDrawDataMap& nodeDrawDataMap);
     
         static const int MODELLODTREE_LOADING_PRIORITY_OFFSET = 1;

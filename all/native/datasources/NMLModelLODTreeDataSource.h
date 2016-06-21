@@ -14,12 +14,6 @@
 #include <memory>
 #include <mutex>
 
-namespace nmlgl {
-    class Mesh;
-    class Texture;
-    class NMLModelLODTree;
-}
-    
 namespace carto {
     class CullState;
     class Projection;

@@ -1,15 +1,14 @@
-#include "MeshInstance.h"
-#include "Mesh.h"
-#include "Texture.h"
-#include "Material.h"
-#include "Submesh.h"
-#include "ShaderManager.h"
+#include "GLMeshInstance.h"
+#include "GLMesh.h"
+#include "GLTexture.h"
+#include "GLMaterial.h"
+#include "GLSubmesh.h"
+#include "GLShaderManager.h"
+#include "Package.h"
 
-#include "nmlpackage/NMLPackage.pb.h"
+namespace carto { namespace nml {
 
-namespace carto { namespace nmlgl {
-
-    MeshInstance::MeshInstance(const nml::MeshInstance& meshInstance, const std::map<std::string, std::shared_ptr<Mesh>>& meshMap, const std::map<std::string, std::shared_ptr<Texture>>& textureMap) :
+    GLMeshInstance::GLMeshInstance(const MeshInstance& meshInstance, const std::map<std::string, std::shared_ptr<GLMesh>>& meshMap, const std::map<std::string, std::shared_ptr<GLTexture>>& textureMap) :
         _transformEnabled(false)
     {
         _meshId = meshInstance.mesh_id();
@@ -23,7 +22,7 @@ namespace carto { namespace nmlgl {
         // Set node transformation matrix
         _transformEnabled = meshInstance.has_transform();
         if (_transformEnabled) {
-            const nml::Matrix4& transform = meshInstance.transform();
+            const Matrix4& transform = meshInstance.transform();
             _transformMatrix(0, 0) = transform.m00();
             _transformMatrix(1, 0) = transform.m10();
             _transformMatrix(2, 0) = transform.m20();
@@ -52,37 +51,37 @@ namespace carto { namespace nmlgl {
     
         // Create material map
         for (int i = 0; i < meshInstance.materials_size(); i++) {
-            const nml::Material& material = meshInstance.materials(i);
-            auto glMaterial = std::make_shared<Material>(material, textureMap);
+            const Material& material = meshInstance.materials(i);
+            auto glMaterial = std::make_shared<GLMaterial>(material, textureMap);
             _materialMap[material.id()] = glMaterial;
         }
     }
 
-    void MeshInstance::create(ShaderManager& shaderManager) {
+    void GLMeshInstance::create(GLShaderManager& shaderManager) {
         for (auto it = _materialMap.begin(); it != _materialMap.end(); it++) {
             it->second->create(shaderManager);
         }
     }
 
-    void MeshInstance::dispose() {
+    void GLMeshInstance::dispose() {
         for (auto it = _materialMap.begin(); it != _materialMap.end(); it++) {
             it->second->dispose();
         }
     }
 
-    void MeshInstance::replaceMesh(const std::string& meshId, const std::shared_ptr<Mesh>& glMesh) {
+    void GLMeshInstance::replaceMesh(const std::string& meshId, const std::shared_ptr<GLMesh>& mesh) {
         if (_meshId == meshId) {
-            _mesh = glMesh;
+            _mesh = mesh;
         }
     }
     
-    void MeshInstance::replaceTexture(const std::string& textureId, const std::shared_ptr<Texture>& glTexture) {
+    void GLMeshInstance::replaceTexture(const std::string& textureId, const std::shared_ptr<GLTexture>& texture) {
         for (auto it = _materialMap.begin(); it != _materialMap.end(); it++) {
-            it->second->replaceTexture(textureId, glTexture);
+            it->second->replaceTexture(textureId, texture);
         }
     }
     
-    void MeshInstance::draw(const RenderState& renderState) {
+    void GLMeshInstance::draw(const RenderState& renderState) {
         if (!_mesh) {
             return;
         }
@@ -94,10 +93,10 @@ namespace carto { namespace nmlgl {
             invTransMVMatrix = invTransMVMatrix * _invTransTransformMatrix;
         }
 
-        for (const std::shared_ptr<Submesh>& submesh : _mesh->getSubmeshList()) {
+        for (const std::shared_ptr<GLSubmesh>& submesh : _mesh->getSubmeshList()) {
             auto materialIt = _materialMap.find(submesh->getMaterialId());
             if (materialIt != _materialMap.end()) {
-                const std::shared_ptr<Material>& material = materialIt->second;
+                const std::shared_ptr<GLMaterial>& material = materialIt->second;
 
                 material->bind(renderState, mvMatrix, invTransMVMatrix);
                 submesh->draw(renderState);
@@ -105,7 +104,7 @@ namespace carto { namespace nmlgl {
         }
     }
     
-    void MeshInstance::calculateRayIntersections(const Ray& ray, std::vector<RayIntersection>& intersections) const {
+    void GLMeshInstance::calculateRayIntersections(const Ray& ray, std::vector<RayIntersection>& intersections) const {
         if (!_mesh) {
             return;
         }
@@ -118,18 +117,18 @@ namespace carto { namespace nmlgl {
             rayTransformed = Ray(originTransformed, dirTransformed);
         }
 
-        for (const std::shared_ptr<Submesh>& submesh : _mesh->getSubmeshList()) {
+        for (const std::shared_ptr<GLSubmesh>& submesh : _mesh->getSubmeshList()) {
             auto materialIt = _materialMap.find(submesh->getMaterialId());
             if (materialIt != _materialMap.end()) {
-                const std::shared_ptr<Material>& material = materialIt->second;
+                const std::shared_ptr<GLMaterial>& material = materialIt->second;
 
                 std::vector<RayIntersection> submeshIntersections;
                 submesh->calculateRayIntersections(rayTransformed, submeshIntersections);
     
                 for (std::size_t i = 0; i < submeshIntersections.size(); i++) {
                     RayIntersection intersection = submeshIntersections[i];
-                    if (material->getCulling() != nml::Material::NONE) {
-                        double sign = material->getCulling() == nml::Material::FRONT ? 1 : -1;
+                    if (material->getCulling() != Material::NONE) {
+                        double sign = material->getCulling() == Material::FRONT ? 1 : -1;
                         if (sign * cglib::dot_product(intersection.normal, rayTransformed.dir) < 0) {
                             continue;
                         }
@@ -148,13 +147,13 @@ namespace carto { namespace nmlgl {
         }
     }
     
-    int MeshInstance::getDrawCallCount() const {
+    int GLMeshInstance::getDrawCallCount() const {
         if (!_mesh) {
             return 0;
         }
     
         int count = 0;
-        for (const std::shared_ptr<Submesh>& submesh : _mesh->getSubmeshList()) {
+        for (const std::shared_ptr<GLSubmesh>& submesh : _mesh->getSubmeshList()) {
             count += submesh->getDrawCallCount();
         }
         return count;

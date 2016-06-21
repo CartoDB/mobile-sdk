@@ -4,7 +4,8 @@
 #include "renderers/components/CullState.h"
 #include "projections/Projection.h"
 #include "utils/Log.h"
-#include "nml/nmlpackage/NMLPackage.pb.h"
+
+#include <nml/Package.h>
 
 #include <sqlite3pp.h>
 

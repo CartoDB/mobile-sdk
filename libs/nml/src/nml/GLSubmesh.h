@@ -4,27 +4,24 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_NML_SUBMESH_H_
-#define _CARTO_NML_SUBMESH_H_
+#ifndef _CARTO_NML_GLSUBMESH_H_
+#define _CARTO_NML_GLSUBMESH_H_
 
-#include "BaseTypes.h"
+#include "GLBase.h"
 
 #include <memory>
 #include <string>
 #include <vector>
 
-namespace nml {
+namespace carto { namespace nml {
     class Submesh;
     class SubmeshOpList;
-}
+    class GLMesh;
 
-namespace carto { namespace nmlgl {
-    class Mesh;
-
-    class Submesh {
+    class GLSubmesh {
     public:
-        Submesh(const nml::Submesh& submesh);
-        Submesh(const Mesh& glMesh, const nml::SubmeshOpList& submeshOpList);
+        GLSubmesh(const Submesh& submesh);
+        GLSubmesh(const GLMesh& glMesh, const SubmeshOpList& submeshOpList);
 
         void create();
         void dispose();

@@ -1,10 +1,10 @@
-#include "ShaderManager.h"
+#include "GLShaderManager.h"
 
 #include <vector>
 
-namespace carto { namespace nmlgl {
+namespace carto { namespace nml {
 
-    GLuint ShaderManager::createProgram(const std::string& vertexShader, const std::string& fragmentShader, const std::set<std::string>& defs) {
+    GLuint GLShaderManager::createProgram(const std::string& vertexShader, const std::string& fragmentShader, const std::set<std::string>& defs) {
         std::pair<std::pair<std::string, std::string>, std::set<std::string>> program = std::make_pair(std::make_pair(vertexShader, fragmentShader), defs);
         auto it = _programMap.find(program);
         if (it != _programMap.end()) {
@@ -79,11 +79,11 @@ namespace carto { namespace nmlgl {
         return programId;
     }
 
-    void ShaderManager::resetPrograms() {
+    void GLShaderManager::resetPrograms() {
         _programMap.clear();
     }
 
-    void ShaderManager::deletePrograms() {
+    void GLShaderManager::deletePrograms() {
         for (auto it = _programMap.begin(); it != _programMap.end(); it++) {
             GLuint program = it->second;
             glDeleteProgram(program);
@@ -91,7 +91,7 @@ namespace carto { namespace nmlgl {
         _programMap.clear();
     }
 
-    std::string ShaderManager::createShader(const std::string& shader, const std::set<std::string>& defs) {
+    std::string GLShaderManager::createShader(const std::string& shader, const std::set<std::string>& defs) {
         std::string glslDefs;
         for (auto it2 = defs.begin(); it2 != defs.end(); it2++) {
             glslDefs += "#define " + *it2 + "\n";

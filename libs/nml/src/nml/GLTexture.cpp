@@ -1,6 +1,5 @@
-#include "Texture.h"
-
-#include "nmlpackage/NMLPackage.pb.h"
+#include "GLTexture.h"
+#include "Package.h"
 
 #include "rg_etc1.h"
 
@@ -41,9 +40,9 @@
 #include <sstream>
 #include <unordered_set>
 
-namespace carto { namespace nmlgl {
+namespace carto { namespace nml {
 
-    Texture::Texture(std::shared_ptr<nml::Texture> texture) :
+    GLTexture::GLTexture(std::shared_ptr<Texture> texture) :
         _refCount(0),
         _texture(texture),
         _glTextureId(0),
@@ -51,7 +50,7 @@ namespace carto { namespace nmlgl {
     {
     }
     
-    void Texture::create() {
+    void GLTexture::create() {
         if (_refCount++ > 0) {
             return;
         }
@@ -59,7 +58,7 @@ namespace carto { namespace nmlgl {
         uploadTexture();
     }
     
-    void Texture::dispose()	{
+    void GLTexture::dispose()	{
         if (--_refCount > 0) {
             return;
         }
@@ -70,7 +69,7 @@ namespace carto { namespace nmlgl {
         _glTextureId = 0;
     }
     
-    void Texture::bind(int texUnit) {
+    void GLTexture::bind(int texUnit) {
         if (_glTextureId == 0) {
             uploadTexture();
         }
@@ -79,7 +78,7 @@ namespace carto { namespace nmlgl {
         glBindTexture(GL_TEXTURE_2D, _glTextureId);
     }
     
-    int Texture::getTextureSize() const {
+    int GLTexture::getTextureSize() const {
         if (!_texture) {
             return 0;
         }
@@ -91,16 +90,16 @@ namespace carto { namespace nmlgl {
         return static_cast<int>(size);
     }
     
-    GLuint Texture::getSamplerWrapMode(int wrapMode) {
+    GLuint GLTexture::getSamplerWrapMode(int wrapMode) {
         switch (wrapMode) {
-        case nml::Sampler::CLAMP:
+        case Sampler::CLAMP:
             return GL_CLAMP_TO_EDGE;
         default:
             return GL_REPEAT; // ignore MIRROR, etc
         }
     }
 
-    bool Texture::hasGLExtension(const char* ext) {
+    bool GLTexture::hasGLExtension(const char* ext) {
         static std::mutex mutex;
         static std::shared_ptr<std::unordered_set<std::string>> extensions;
 
@@ -121,18 +120,18 @@ namespace carto { namespace nmlgl {
         return extensions->find(ext) != extensions->end();
     }
     
-    void Texture::updateSampler(bool hasSampler, nml::Sampler sampler, bool complete) {
+    void GLTexture::updateSampler(bool hasSampler, const Sampler& sampler, bool complete) {
         if (hasSampler) {
             switch (sampler.filter()) {
-            case nml::Sampler::NEAREST:
+            case Sampler::NEAREST:
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
                 break;
-            case nml::Sampler::BILINEAR:
+            case Sampler::BILINEAR:
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 break;
-            case nml::Sampler::TRILINEAR:
+            case Sampler::TRILINEAR:
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, complete ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 break;
@@ -156,20 +155,20 @@ namespace carto { namespace nmlgl {
         }
     }
     
-    void Texture::updateMipLevel(int level, const nml::Texture& texture) {
+    void GLTexture::updateMipLevel(int level, const Texture& texture) {
         GLint glFormat = -1, glFormatInternal = -1;
         std::string glTextureData = texture.mipmaps(level);
         switch (texture.format()) {
-        case nml::Texture::LUMINANCE8:
+        case Texture::LUMINANCE8:
             glFormat = glFormatInternal = GL_LUMINANCE;
             break;
-        case nml::Texture::RGB8:
+        case Texture::RGB8:
             glFormat = glFormatInternal = GL_RGB;
             break;
-        case nml::Texture::RGBA8:
+        case Texture::RGBA8:
             glFormat = glFormatInternal = GL_RGBA;
             break;
-        case nml::Texture::ETC1:
+        case Texture::ETC1:
             if (hasGLExtension("GL_OES_compressed_ETC1_RGB8_texture")) {
                 GLuint size = 8 * ((texture.width() + 3) >> 2) * ((texture.height() + 3) >> 2);
                 std::size_t offset = 16;
@@ -177,12 +176,12 @@ namespace carto { namespace nmlgl {
                 return;
             }
             {
-                nml::Texture textureCopy(texture);
+                Texture textureCopy(texture);
                 uncompressTexture(textureCopy);
                 updateMipLevel(level, textureCopy);
             }
             return;
-        case nml::Texture::PVRTC:
+        case Texture::PVRTC:
             if (hasGLExtension("GL_IMG_texture_compression_pvrtc")) {
                 const PVRTextureHeaderV3* header = reinterpret_cast<const PVRTextureHeaderV3*>(glTextureData.data());
                 GLuint format = 0;
@@ -210,7 +209,7 @@ namespace carto { namespace nmlgl {
                 }
             }
             {
-                nml::Texture textureCopy(texture);
+                Texture textureCopy(texture);
                 uncompressTexture(textureCopy);
                 updateMipLevel(level, textureCopy);
             }
@@ -224,18 +223,18 @@ namespace carto { namespace nmlgl {
         }
     }
     
-    void Texture::updateMipMaps(const nml::Texture& texture) {
+    void GLTexture::updateMipMaps(const Texture& texture) {
         for (int i = 0; i < texture.mipmaps_size(); i++) {
             updateMipLevel(i, texture);
         }
     }
     
-    void Texture::uploadTexture() {
+    void GLTexture::uploadTexture() {
         if (!_texture) {
             return;
         }
     
-        const nml::Texture& texture = *_texture;
+        const Texture& texture = *_texture;
         if (texture.width() < 1 || texture.height() < 1) {
             return;
         }
@@ -247,9 +246,9 @@ namespace carto { namespace nmlgl {
         updateSampler(texture.has_sampler(), texture.sampler(), texture.mipmaps_size() > 1);
     }
     
-    void Texture::uncompressTexture(nml::Texture& texture) {
+    void GLTexture::uncompressTexture(Texture& texture) {
         switch (texture.format()) {
-        case nml::Texture::ETC1:
+        case Texture::ETC1:
             for (int i = 0; i < texture.mipmaps_size(); i++) {
                 std::string textureData = texture.mipmaps(i);
                 int etc1Width = (texture.width() + 3) & ~3, etc1Height = (texture.height() + 3) & ~3;
@@ -279,10 +278,10 @@ namespace carto { namespace nmlgl {
                 }
                 texture.set_mipmaps(i, textureData);
             }
-            texture.set_format(nml::Texture::RGBA8);
+            texture.set_format(Texture::RGBA8);
             break;
         
-        case nml::Texture::PVRTC:
+        case Texture::PVRTC:
             for (int i = 0; i < texture.mipmaps_size(); i++) {
                 std::string textureData = texture.mipmaps(i);
                 const PVRTextureHeaderV3* header = reinterpret_cast<const PVRTextureHeaderV3*>(textureData.data());
@@ -296,7 +295,7 @@ namespace carto { namespace nmlgl {
                 }
                 texture.set_mipmaps(i, textureData);
             }
-            texture.set_format(nml::Texture::RGBA8);
+            texture.set_format(Texture::RGBA8);
             break;
         
         default:

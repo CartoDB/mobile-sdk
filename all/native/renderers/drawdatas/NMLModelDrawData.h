@@ -13,11 +13,10 @@
 
 #include <cglib/mat.h>
 
-namespace nml {
-    class Model;
-}
-
 namespace carto {
+    namespace nml {
+        class Model;
+    }
 
     class NMLModelDrawData : public VectorElementDrawData {
     public:

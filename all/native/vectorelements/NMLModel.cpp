@@ -3,7 +3,8 @@
 #include "geometry/PointGeometry.h"
 #include "renderers/drawdatas/NMLModelDrawData.h"
 #include "utils/Const.h"
-#include "nml/nmlpackage/NMLPackage.pb.h"
+
+#include <nml/Package.h>
 
 namespace carto {
 

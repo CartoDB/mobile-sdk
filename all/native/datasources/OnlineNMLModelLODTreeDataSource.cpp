@@ -7,7 +7,8 @@
 #include "renderers/components/CullState.h"
 #include "utils/Log.h"
 #include "utils/NetworkUtils.h"
-#include "nml/nmlpackage/NMLPackage.pb.h"
+
+#include <nml/Package.h>
 
 #include <cglib/frustum3.h>
 
