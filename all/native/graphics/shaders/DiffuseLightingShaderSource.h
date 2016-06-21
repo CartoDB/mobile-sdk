@@ -22,7 +22,7 @@ static std::string diffuse_lighting_vert_glsl =
     "   if (a_normal.z != 1.0) {"
     "      float dotProduct = max(0.0, dot(a_normal, u_lightDir));"
     "	   v_color = vec4(u_ambientColor.rgb + u_lightColor.rgb * dotProduct, 1.0) * a_color;"
-    "   else {"
+    "   } else {"
     "      v_color = a_color;"
     "   }"
     "   v_texCoord = a_texCoord;"
