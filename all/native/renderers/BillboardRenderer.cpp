@@ -13,7 +13,6 @@
 #include "renderers/components/BillboardSorter.h"
 #include "styles/BillboardStyle.h"
 #include "utils/Const.h"
-#include "utils/GeomUtils.h"
 #include "utils/GLES2.h"
 #include "utils/GLUtils.h"
 #include "utils/Log.h"
@@ -242,7 +241,6 @@ namespace carto {
                 cglib::intersect_triangle(bottomLeft, bottomRight, topRight, ray, &t))
             {
                 MapPos clickPos(ray(t)(0), ray(t)(1), ray(t)(2));
-                double distance = GeomUtils::DistanceFromPoint(clickPos, viewState.getCameraPos());
                 const std::shared_ptr<Projection>& projection = layer->getDataSource()->getProjection();
                 int priority = static_cast<int>(results.size());
                 if (viewState.getTilt() == 90) { // if distances are equal, billboards are ordered based on 2D distance

@@ -10,7 +10,6 @@
 #include "renderers/components/RayIntersectedElement.h"
 #include "utils/Log.h"
 #include "utils/GLES2.h"
-#include "utils/GeomUtils.h"
 #include "utils/GLUtils.h"
 
 #include <nml/GLModel.h>
@@ -122,7 +121,6 @@ namespace carto {
                 
                 cglib::vec3<double> pos = cglib::transform_point(intersections[i].pos, modelMat);
                 MapPos clickPos(pos(0), pos(1), pos(2));
-                double distance = GeomUtils::DistanceFromPoint(clickPos, viewState.getCameraPos());
                 MapPos projectedClickPos = layer->getDataSource()->getProjection()->fromInternal(clickPos);
                 int priority = static_cast<int>(results.size());
                 results.push_back(RayIntersectedElement(std::make_shared<NMLModelLODTree::Proxy>(proxyIt->second), layer, projectedClickPos, projectedClickPos, priority));

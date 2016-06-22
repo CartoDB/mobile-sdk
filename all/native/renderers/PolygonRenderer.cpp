@@ -14,7 +14,6 @@
 #include "renderers/components/StyleTextureCache.h"
 #include "projections/Projection.h"
 #include "utils/Const.h"
-#include "utils/GeomUtils.h"
 #include "utils/GLES2.h"
 #include "utils/GLUtils.h"
 #include "utils/Log.h"
@@ -235,7 +234,6 @@ namespace carto {
                 double t = 0;
                 if (cglib::intersect_triangle(coords[indices[i + 0]], coords[indices[i + 1]], coords[indices[i + 2]], ray, &t)) {
                     MapPos clickPos(ray(t)(0), ray(t)(1), ray(t)(2));
-                    double distance = GeomUtils::DistanceFromPoint(clickPos, viewState.getCameraPos());
                     MapPos projectedClickPos = layer->getDataSource()->getProjection()->fromInternal(clickPos);
                     int priority = static_cast<int>(results.size());
                     results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projectedClickPos, projectedClickPos, priority));

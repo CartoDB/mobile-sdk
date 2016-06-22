@@ -11,7 +11,6 @@
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/components/StyleTextureCache.h"
 #include "utils/Const.h"
-#include "utils/GeomUtils.h"
 #include "utils/GLES2.h"
 #include "utils/GLUtils.h"
 #include "utils/Log.h"
@@ -240,7 +239,6 @@ namespace carto {
             cglib::intersect_triangle(bottomLeft, bottomRight, topRight, ray, &t))
         {
             MapPos clickPos(ray(t)(0), ray(t)(1), ray(t)(2));
-            double distance = GeomUtils::DistanceFromPoint(clickPos, viewState.getCameraPos());
             const std::shared_ptr<Projection>& projection = layer->getDataSource()->getProjection();
             int priority = static_cast<int>(results.size());
             results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projection->fromInternal(clickPos), projection->fromInternal(MapPos(pos(0), pos(1), pos(2))), priority));

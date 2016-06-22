@@ -12,7 +12,6 @@
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/components/StyleTextureCache.h"
 #include "utils/Const.h"
-#include "utils/GeomUtils.h"
 #include "utils/GLUtils.h"
 #include "utils/Log.h"
 #include "vectorelements/Line.h"
@@ -287,9 +286,11 @@ namespace carto {
                 // Test a line triangle against the click position
                 double t = 0;
                 if (cglib::intersect_triangle(worldCoords[indices[i + 0]], worldCoords[indices[i + 1]], worldCoords[indices[i + 2]], ray, &t)) {
+                    cglib::vec3<double> dp = ray(t) - *prevPos;
+                    cglib::vec3<double> ds = *pos - *prevPos;
+                    cglib::vec3<double> p = *prevPos + ds * std::max(0.0, std::min(1.0, cglib::dot_product(dp, ds) / cglib::norm(ds)));
                     MapPos clickPos(ray(t)(0), ray(t)(1), ray(t)(2));
-                    double distance = GeomUtils::DistanceFromPoint(clickPos, viewState.getCameraPos());
-                    const MapPos& linePos = GeomUtils::CalculateNearestPointOnLineSegment(clickPos, MapPos((*prevPos)(0), (*prevPos)(1), (*prevPos)(2)), MapPos((*pos)(0), (*pos)(1), (*pos)(2)));
+                    MapPos linePos(p(0), p(1), p(2));
                     const std::shared_ptr<Projection>& projection = layer->getDataSource()->getProjection();
                     int priority = static_cast<int>(results.size());
                     results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projection->fromInternal(clickPos), projection->fromInternal(linePos), priority));
