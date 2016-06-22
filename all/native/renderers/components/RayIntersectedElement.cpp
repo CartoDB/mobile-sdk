@@ -22,6 +22,10 @@ namespace carto {
         return _order;
     }
 
+    bool RayIntersectedElement::is3D() const {
+        return _is3D;
+    }
+
     double RayIntersectedElement::getDistance(const MapPos& origin) const {
         return (origin - _hitPos).length();
     }

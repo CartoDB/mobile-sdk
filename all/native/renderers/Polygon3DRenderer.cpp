@@ -187,7 +187,7 @@ namespace carto {
                     MapPos clickPos(ray(t)(0), ray(t)(1), ray(t)(2));
                     MapPos projectedClickPos = layer->getDataSource()->getProjection()->fromInternal(clickPos);
                     int priority = static_cast<int>(results.size());
-                    results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projectedClickPos, projectedClickPos, priority));
+                    results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projectedClickPos, projectedClickPos, priority, true));
                     break;
                 }
             }

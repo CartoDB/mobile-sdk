@@ -19,12 +19,13 @@ namespace carto {
     class RayIntersectedElement {
     public:
         template <typename T>
-        RayIntersectedElement(const std::shared_ptr<T>& element, const std::shared_ptr<Layer>& layer, const MapPos& hitPos, const MapPos& elementPos, int order) :
+        RayIntersectedElement(const std::shared_ptr<T>& element, const std::shared_ptr<Layer>& layer, const MapPos& hitPos, const MapPos& elementPos, int order, bool is3D = false) :
             _element(element),
             _layer(layer),
             _hitPos(hitPos),
             _elementPos(elementPos),
-            _order(order)
+            _order(order),
+            _is3D(is3D)
         {
         }
 
@@ -43,6 +44,8 @@ namespace carto {
 
         int getOrder() const;
 
+        bool is3D() const;
+
         double getDistance(const MapPos& origin) const;
     
     private:
@@ -51,6 +54,7 @@ namespace carto {
         MapPos _hitPos;
         MapPos _elementPos;
         int _order;
+        bool _is3D;
     };
     
 }

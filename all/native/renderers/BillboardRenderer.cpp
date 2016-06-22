@@ -247,7 +247,7 @@ namespace carto {
                     priority = -drawData->getScreenBottomDistance();
                 }
                 cglib::vec3<double> pos = drawData->getPos();
-                results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projection->fromInternal(clickPos), projection->fromInternal(MapPos(pos(0), pos(1), pos(2))), priority));
+                results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projection->fromInternal(clickPos), projection->fromInternal(MapPos(pos(0), pos(1), pos(2))), priority, true));
             }
         }
     }
