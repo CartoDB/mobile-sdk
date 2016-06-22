@@ -49,11 +49,11 @@ namespace carto {
         for (std::size_t i = 0; i < poses.size() * 2; i += 2) {
             std::size_t index = i / 2;
             const MapPos& internalPos = projection.toInternal(poses[index]);
-            posesArray[i] = internalPos.getX();
+            posesArray[i + 0] = internalPos.getX();
             posesArray[i + 1] = internalPos.getY();
             _boundingBox.expandToContain(internalPos);
         }
-        tessAddContour(tess, 2, &posesArray[0], sizeof(double) * 2, static_cast<unsigned int>(poses.size()));
+        tessAddContour(tess, 2, posesArray.data(), sizeof(double) * 2, static_cast<unsigned int>(poses.size()));
     
         // Prepare polygon holes
         const std::vector<std::vector<MapPos> >& holes = polygon3D.getGeometry()->getHoles();
@@ -70,7 +70,7 @@ namespace carto {
                 holeArray[i + 1] = internalPos.getY();
                 _boundingBox.expandToContain(internalPos);
             }
-            tessAddContour(tess, 2, &holeArray[0], sizeof(double) * 2, static_cast<unsigned int>(hole.size()));
+            tessAddContour(tess, 2, holeArray.data(), sizeof(double) * 2, static_cast<unsigned int>(hole.size()));
         }
     
         // Triangulate
@@ -176,7 +176,7 @@ namespace carto {
         return _boundingBox;
     }
     
-    const std::vector<MapPos>& Polygon3DDrawData::getCoords() const {
+    const std::vector<cglib::vec3<double> >& Polygon3DDrawData::getCoords() const {
         return _coords;
     }
     
@@ -185,8 +185,8 @@ namespace carto {
     }
     
     void Polygon3DDrawData::offsetHorizontally(double offset) {
-        for (MapPos& pos : _coords) {
-            pos.setX(pos.getX() + offset);
+        for (cglib::vec3<double>& pos : _coords) {
+            pos(0) += offset;
         }
         setIsOffset(true);
     }

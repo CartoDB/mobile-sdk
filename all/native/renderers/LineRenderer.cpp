@@ -142,7 +142,7 @@ namespace carto {
         std::size_t totalIndexCount = 0;
         for (const LineDrawData* drawData : drawDataBuffer) {
             for (size_t i = 0; i < drawData->getCoords().size(); i++) {
-                const std::vector<MapPos*>& coords = drawData->getCoords()[i];
+                const std::vector<cglib::vec3<double>*>& coords = drawData->getCoords()[i];
                 const std::vector<unsigned int>& indices = drawData->getIndices()[i];
                 
                 totalCoordCount += coords.size();
@@ -198,7 +198,7 @@ namespace carto {
                 
                 // Coords, tex coords and colors
                 const Color& color = drawData->getColor();
-                const std::vector<MapPos*>& coords = drawData->getCoords()[i];
+                const std::vector<cglib::vec3<double>*>& coords = drawData->getCoords()[i];
                 const std::vector<cglib::vec2<float> >& normals = drawData->getNormals()[i];
                 const std::vector<cglib::vec2<float> >& texCoords = drawData->getTexCoords()[i];
                 auto cit = coords.begin();
@@ -206,11 +206,11 @@ namespace carto {
                 auto tit = texCoords.begin();
                 for ( ; cit != coords.end(); ++cit, ++nit, ++tit) {
                     // Coords
-                    const MapPos& pos = **cit;
+                    const cglib::vec3<double>& pos = **cit;
                     const cglib::vec2<float>& normal = *nit;
-                    coordBuf[coordIndex + 0] = pos.getX() + normal(0) * normalScale - cameraPos.getX();
-                    coordBuf[coordIndex + 1] = pos.getY() + normal(1) * normalScale - cameraPos.getY();
-                    coordBuf[coordIndex + 2] = pos.getZ() - cameraPos.getZ();
+                    coordBuf[coordIndex + 0] = pos(0) + normal(0) * normalScale - cameraPos.getX();
+                    coordBuf[coordIndex + 1] = pos(1) + normal(1) * normalScale - cameraPos.getY();
+                    coordBuf[coordIndex + 2] = pos(2) - cameraPos.getZ();
                     coordIndex += 3;
                     
                     // Tex coords
@@ -249,7 +249,7 @@ namespace carto {
 
         for (size_t i = 0; i < drawData->getCoords().size(); i++) {
             // Resize the buffer for calculated world coordinates
-            const std::vector<MapPos*>& coords = drawData->getCoords()[i];
+            const std::vector<cglib::vec3<double>*>& coords = drawData->getCoords()[i];
             worldCoords.clear();
             worldCoords.reserve(coords.size());
             
@@ -259,11 +259,11 @@ namespace carto {
             auto cit = coords.begin();
             auto nit = normals.begin();
             for ( ; cit != coords.end() && nit != normals.end(); ++cit, ++nit) {
-                const MapPos& pos = **cit;
+                const cglib::vec3<double>& pos = **cit;
                 const cglib::vec2<float>& normal = *nit;
-                MapPos worldCoord(pos.getX() + normal(0) * viewState.getUnitToDPCoef() * drawData->getClickScale(),
-                                  pos.getY() + normal(1) * viewState.getUnitToDPCoef() * drawData->getClickScale(),
-                                  pos.getZ());
+                MapPos worldCoord(pos(0) + normal(0) * viewState.getUnitToDPCoef() * drawData->getClickScale(),
+                                  pos(1) + normal(1) * viewState.getUnitToDPCoef() * drawData->getClickScale(),
+                                  pos(2));
                 bounds.expandToContain(worldCoord);
                 worldCoords.push_back(worldCoord);
             }
@@ -276,12 +276,12 @@ namespace carto {
             // Click test
             MapPos clickPos;
             const std::vector<unsigned int>& indices = drawData->getIndices()[i];
-            const MapPos* prevPos = nullptr;
+            const cglib::vec3<double>* prevPos = nullptr;
             for (size_t i = 0; i < indices.size(); i += 3) {
                 // Figure out the start and end point of the current line segment
-                const MapPos* pos = prevPos;
+                const cglib::vec3<double>* pos = prevPos;
                 for (size_t j = 0; j < 3; j++) {
-                    const MapPos* nextPos = coords[indices[i + j]];
+                    const cglib::vec3<double>* nextPos = coords[indices[i + j]];
                     if (nextPos != pos) {
                         prevPos = pos;
                         pos = nextPos;
@@ -291,7 +291,7 @@ namespace carto {
                 // Test a line triangle against the click position
                 if (GeomUtils::RayTriangleIntersect(rayOrig, rayDir, worldCoords[indices[i]], worldCoords[indices[i + 1]], worldCoords[indices[i + 2]], clickPos)) {
                     double distance = GeomUtils::DistanceFromPoint(clickPos, viewState.getCameraPos());
-                    const MapPos& linePos = GeomUtils::CalculateNearestPointOnLineSegment(clickPos, *prevPos, *pos);
+                    const MapPos& linePos = GeomUtils::CalculateNearestPointOnLineSegment(clickPos, MapPos((*prevPos)(0), (*prevPos)(1), (*prevPos)(2)), MapPos((*pos)(0), (*pos)(1), (*pos)(2)));
                     const std::shared_ptr<Projection>& projection = layer->getDataSource()->getProjection();
                     int priority = static_cast<int>(results.size());
                     results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projection->fromInternal(clickPos), projection->fromInternal(linePos), priority));

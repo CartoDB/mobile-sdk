@@ -12,6 +12,7 @@
 
 #include <memory>
 #include <vector>
+
 #include <cglib/vec.h>
 
 namespace carto {
@@ -30,7 +31,7 @@ namespace carto {
     
         const MapBounds& getBoundingBox() const;
     
-        const std::vector<MapPos>& getCoords() const;
+        const std::vector<cglib::vec3<double> >& getCoords() const;
     
         const std::vector<cglib::vec3<float> >& getNormals() const;
     
@@ -43,7 +44,7 @@ namespace carto {
     
         MapBounds _boundingBox;
     
-        std::vector<MapPos> _coords;
+        std::vector<cglib::vec3<double> > _coords;
 
         std::vector<cglib::vec3<float> > _normals;
     };

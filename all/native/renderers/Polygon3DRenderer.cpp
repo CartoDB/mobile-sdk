@@ -182,9 +182,13 @@ namespace carto {
     
             // Test triangles
             MapPos clickPos;
-            const std::vector<MapPos>& coords = drawData.getCoords();
+            const std::vector<cglib::vec3<double> >& coords = drawData.getCoords();
             for (size_t i = 0; i < coords.size(); i += 3) {
-                if (GeomUtils::RayTriangleIntersect(rayOrig, rayDir, coords[i], coords[i + 1], coords[i + 2], clickPos)) {
+                MapPos points[3];
+                for (int j = 0; j < 3; j++) {
+                    points[j] = MapPos(coords[i + j](0), coords[i + j](1), coords[i + j](2));
+                }
+                if (GeomUtils::RayTriangleIntersect(rayOrig, rayDir, points[0], points[1], points[2], clickPos)) {
                     double distance = GeomUtils::DistanceFromPoint(clickPos, viewState.getCameraPos());
                     MapPos projectedClickPos = layer->getDataSource()->getProjection()->fromInternal(clickPos);
                     int priority = static_cast<int>(results.size());
@@ -225,7 +229,7 @@ namespace carto {
         for (size_t i = 0; i < drawDataBuffer.size(); i++) {
             const std::shared_ptr<Polygon3DDrawData>& drawData = drawDataBuffer[i];
             
-            const std::vector<MapPos>& coords = drawData->getCoords();
+            const std::vector<cglib::vec3<double> >& coords = drawData->getCoords();
             if (coords.size() > GLUtils::MAX_VERTEXBUFFER_SIZE) {
                 Log::Error("Polygon3DRenderer::BuildAndDrawBuffers: Maximum buffer size exceeded, 3d polygon can't be drawn");
                 continue;
@@ -248,13 +252,13 @@ namespace carto {
             const Color& color = drawData->getColor();
             const Color& sideColor = drawData->getSideColor();
             const std::vector<cglib::vec3<float> >& normals = drawData->getNormals();
-            std::vector<MapPos>::const_iterator cit;
+            std::vector<cglib::vec3<double> >::const_iterator cit;
             std::vector<cglib::vec3<float> >::const_iterator nit;
             for (cit = coords.begin(), nit = normals.begin(); cit != coords.end() && nit != normals.end(); ++cit, ++nit) {
-                const MapPos& coord = *cit;
-                coordBuf[coordIndex + 0] = coord.getX() - cameraPos.getX();
-                coordBuf[coordIndex + 1] = coord.getY() - cameraPos.getY();
-                coordBuf[coordIndex + 2] = coord.getZ() - cameraPos.getZ();
+                const cglib::vec3<double>& coord = *cit;
+                coordBuf[coordIndex + 0] = coord(0) - cameraPos.getX();
+                coordBuf[coordIndex + 1] = coord(1) - cameraPos.getY();
+                coordBuf[coordIndex + 2] = coord(2) - cameraPos.getZ();
                 coordIndex += 3;
                 
                 const cglib::vec3<float>& normal = *nit;

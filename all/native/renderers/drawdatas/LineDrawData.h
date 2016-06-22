@@ -11,6 +11,7 @@
 
 #include <memory>
 #include <vector>
+
 #include <cglib/vec.h>
 
 namespace carto {
@@ -35,7 +36,7 @@ namespace carto {
     
         float getClickScale() const;
     
-        const std::vector<std::vector<MapPos*> >& getCoords() const;
+        const std::vector<std::vector<cglib::vec3<double>*> >& getCoords() const;
     
         const std::vector<std::vector<cglib::vec2<float> > >& getNormals() const;
     
@@ -60,10 +61,10 @@ namespace carto {
         float _clickScale;
     
         // Actual line coordinates
-        std::vector<MapPos> _poses;
+        std::vector<cglib::vec3<double> > _poses;
     
         // Origin point and normal for each vertex
-        std::vector<std::vector<MapPos*> > _coords;
+        std::vector<std::vector<cglib::vec3<double>*> > _coords;
         std::vector<std::vector<cglib::vec2<float> > > _normals;
         std::vector<std::vector<cglib::vec2<float> > > _texCoords;
     

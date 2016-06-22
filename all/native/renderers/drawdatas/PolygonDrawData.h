@@ -13,6 +13,8 @@
 #include <memory>
 #include <vector>
 
+#include <cglib/vec.h>
+
 namespace carto {
     class Bitmap;
     class LineDrawData;
@@ -31,7 +33,7 @@ namespace carto {
     
         const MapBounds& getBoundingBox() const;
     
-        const std::vector<std::vector<MapPos> >& getCoords() const;
+        const std::vector<std::vector<cglib::vec3<double> > >& getCoords() const;
     
         const std::vector<std::vector<unsigned int> >& getIndices() const;
     
@@ -46,7 +48,7 @@ namespace carto {
     
         MapBounds _boundingBox;
     
-        std::vector<std::vector<MapPos> > _coords;
+        std::vector<std::vector<cglib::vec3<double> > > _coords;
 
         std::vector<std::vector<unsigned int> > _indices;
     

@@ -137,7 +137,7 @@ namespace carto {
         std::size_t totalIndexCount = 0;
         for (const std::shared_ptr<PolygonDrawData>& drawData : drawDataBuffer) {
             for (size_t i = 0; i < drawData->getCoords().size(); i++) {
-                const std::vector<MapPos>& coords = drawData->getCoords()[i];
+                const std::vector<cglib::vec3<double> >& coords = drawData->getCoords()[i];
                 const std::vector<unsigned int>& indices = drawData->getIndices()[i];
                 totalCoordCount += coords.size();
                 totalIndexCount += indices.size();
@@ -164,7 +164,7 @@ namespace carto {
             for (size_t i = 0; i < drawData->getCoords().size(); i++) {
                 
                 // Check for possible overflow in the buffers
-                const std::vector<MapPos>& coords = drawData->getCoords()[i];
+                const std::vector<cglib::vec3<double> >& coords = drawData->getCoords()[i];
                 const std::vector<unsigned int>& indices = drawData->getIndices()[i];
                 if (indices.size() > GLUtils::MAX_VERTEXBUFFER_SIZE) {
                     Log::Error("PolygonRenderer::BuildAndDrawBuffers: Maximum buffer size exceeded, polygon can't be drawn");
@@ -175,6 +175,7 @@ namespace carto {
                     glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, &coordBuf[0]);
                     glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &colorBuf[0]);
                     glDrawElements(GL_TRIANGLES, indexIndex, GL_UNSIGNED_SHORT, &indexBuf[0]);
+
                     // Start filling buffers from the beginning
                     colorIndex = 0;
                     coordIndex = 0;
@@ -190,16 +191,16 @@ namespace carto {
                 
                 // Colors and coords
                 const Color& color = drawData->getColor();
-                for (const MapPos& pos : coords) {
+                for (const cglib::vec3<double>& pos : coords) {
                     colorBuf[colorIndex + 0] = color.getR();
                     colorBuf[colorIndex + 1] = color.getG();
                     colorBuf[colorIndex + 2] = color.getB();
                     colorBuf[colorIndex + 3] = color.getA();
                     colorIndex += 4;
                     
-                    coordBuf[coordIndex + 0] = pos.getX() - cameraPos.getX();
-                    coordBuf[coordIndex + 1] = pos.getY() - cameraPos.getY();
-                    coordBuf[coordIndex + 2] = pos.getZ() - cameraPos.getZ();
+                    coordBuf[coordIndex + 0] = pos(0) - cameraPos.getX();
+                    coordBuf[coordIndex + 1] = pos(1) - cameraPos.getY();
+                    coordBuf[coordIndex + 2] = pos(2) - cameraPos.getZ();
                     coordIndex += 3;
                 }
             }
@@ -228,11 +229,15 @@ namespace carto {
         // Test triangles
         MapPos clickPos;
         for (size_t i = 0; i < drawData->getCoords().size(); i++) {
-            const std::vector<MapPos>& coords = drawData->getCoords()[i];
+            const std::vector<cglib::vec3<double> >& coords = drawData->getCoords()[i];
             const std::vector<unsigned int>& indices = drawData->getIndices()[i];
             
             for (size_t i = 0; i < indices.size(); i += 3) {
-                if (GeomUtils::RayTriangleIntersect(rayOrig, rayDir, coords[indices[i]], coords[indices[i + 1]], coords[indices[i + 2]], clickPos)) {
+                MapPos points[3];
+                for (int j = 0; j < 3; j++) {
+                    points[j] = MapPos(coords[indices[i + j]](0), coords[indices[i + j]](1), coords[indices[i + j]](2));
+                }
+                if (GeomUtils::RayTriangleIntersect(rayOrig, rayDir, points[0], points[1], points[2], clickPos)) {
                     double distance = GeomUtils::DistanceFromPoint(clickPos, viewState.getCameraPos());
                     MapPos projectedClickPos = layer->getDataSource()->getProjection()->fromInternal(clickPos);
                     int priority = static_cast<int>(results.size());

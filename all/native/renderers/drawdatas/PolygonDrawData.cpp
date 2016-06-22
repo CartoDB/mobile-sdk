@@ -58,11 +58,11 @@ namespace carto {
         for (std::size_t i = 0; i < poses.size() * 2; i += 2) {
             std::size_t index = i / 2;
             internalPoses.push_back(projection.toInternal(poses[index]));
-            posesArray[i] = internalPoses.back().getX();
+            posesArray[i + 0] = internalPoses.back().getX();
             posesArray[i + 1] = internalPoses.back().getY();
             _boundingBox.expandToContain(internalPoses.back());
         }
-        tessAddContour(tess, 2, &posesArray[0], sizeof(double) * 2, static_cast<unsigned int>(poses.size()));
+        tessAddContour(tess, 2, posesArray.data(), sizeof(double) * 2, static_cast<unsigned int>(poses.size()));
     
         if (style.getLineStyle()) {
             _lineDrawDatas.emplace_back(geometry, internalPoses, *style.getLineStyle(), projection);
@@ -81,7 +81,7 @@ namespace carto {
                 holeArray[i + 1] = internalPoses.back().getY();
                 _boundingBox.expandToContain(internalPoses.back());
             }
-            tessAddContour(tess, 2, &holeArray[0], sizeof(double) * 2, static_cast<unsigned int>(hole.size()));
+            tessAddContour(tess, 2, holeArray.data(), sizeof(double) * 2, static_cast<unsigned int>(hole.size()));
     
             if (style.getLineStyle()) {
                 _lineDrawDatas.emplace_back(geometry, internalPoses, *style.getLineStyle(), projection);
@@ -109,7 +109,7 @@ namespace carto {
         const MapPos& center = _boundingBox.getCenter();
     
         // Convert tesselation results to drawable format, split if into multiple buffers, if the polyong is too big
-        _coords.push_back(std::vector<MapPos>());
+        _coords.push_back(std::vector<cglib::vec3<double> >());
         _coords.back().reserve(std::min(vertexCount, GLUtils::MAX_VERTEXBUFFER_SIZE));
         _indices.push_back(std::vector<unsigned int>());
         _indices.back().reserve(std::min(elementCount * MAX_INDICES_PER_ELEMENT, GLUtils::MAX_VERTEXBUFFER_SIZE));
@@ -120,7 +120,7 @@ namespace carto {
             if (_indices.back().size() + 3 > GLUtils::MAX_VERTEXBUFFER_SIZE) {
                 // The buffer is full, create a new one
                 _coords.back().shrink_to_fit();
-                _coords.push_back(std::vector<MapPos>());
+                _coords.push_back(std::vector<cglib::vec3<double> >());
                 _coords.back().reserve(std::min(vertexCount, GLUtils::MAX_VERTEXBUFFER_SIZE));
                 _indices.back().shrink_to_fit();
                 _indices.push_back(std::vector<unsigned int>());
@@ -166,7 +166,7 @@ namespace carto {
         return _boundingBox;
     }
     
-    const std::vector<std::vector<MapPos> >& PolygonDrawData::getCoords() const {
+    const std::vector<std::vector<cglib::vec3<double> > >& PolygonDrawData::getCoords() const {
         return _coords;
     }
     
@@ -179,9 +179,9 @@ namespace carto {
     }
     
     void PolygonDrawData::offsetHorizontally(double offset) {
-        for (std::vector<MapPos>& coords : _coords) {
-            for (MapPos& coord : coords) {
-                coord.setX(coord.getX() + offset);
+        for (std::vector<cglib::vec3<double> >& coords : _coords) {
+            for (cglib::vec3<double>& coord : coords) {
+                coord(0) += offset;
             }
         }
     
