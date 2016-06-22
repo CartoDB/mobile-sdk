@@ -16,9 +16,11 @@ namespace carto {
         VectorElementDrawData(style.getColor()),
         _bitmap(style.getBitmap()),
         _clickScale(style.getClickSize() == -1 ? std::max(1.0f, 1 + (IDEAL_CLICK_SIZE - style.getSize()) * CLICK_SIZE_COEF / style.getSize()) : style.getClickSize()),
-        _pos(projection.toInternal(geometry.getPos())),
+        _pos(),
         _size(style.getSize())
     {
+        MapPos posInternal = projection.toInternal(geometry.getPos());
+        _pos = cglib::vec3<double>(posInternal.getX(), posInternal.getY(), posInternal.getZ());
     }
     
     PointDrawData::~PointDrawData() {
@@ -32,7 +34,7 @@ namespace carto {
         return _clickScale;
     }
     
-    const MapPos& PointDrawData::getPos() const {
+    const cglib::vec3<double>& PointDrawData::getPos() const {
         return _pos;
     }
     
@@ -41,7 +43,7 @@ namespace carto {
     }
     
     void PointDrawData::offsetHorizontally(double offset) {
-        _pos.setX(_pos.getX() + offset);
+        _pos(0) += offset;
         setIsOffset(true);
     }
     

@@ -15,6 +15,8 @@
 #include <atomic>
 #include <memory>
 
+#include <cglib/vec.h>
+
 namespace carto {
     class Bitmap;
     class Billboard;
@@ -39,7 +41,7 @@ namespace carto {
     
         std::shared_ptr<Bitmap> getBitmap() const;
     
-        const MapVec* getCoords() const;
+        const cglib::vec2<float>* getCoords() const;
     
         bool isFlippable() const;
     
@@ -59,9 +61,8 @@ namespace carto {
     
         float getPlacementPriority() const;
     
-        const MapPos& getPos() const;
-        // Used for setting label positon, when it's attached to another billboards
-        void setPos(const MapPos& pos);
+        const cglib::vec3<double>& getPos() const;
+        void setPos(const cglib::vec3<double>& pos); // Used for setting label positon, when it's attached to another billboards
     
         float getRotation() const;
         
@@ -107,7 +108,7 @@ namespace carto {
     
         std::shared_ptr<Bitmap> _bitmap;
     
-        MapVec _coords[4];
+        cglib::vec2<float> _coords[4];
     
         bool _flippable;
     
@@ -124,7 +125,7 @@ namespace carto {
         
         int _placementPriority;
     
-        MapPos _pos;
+        cglib::vec3<double> _pos;
     
         float _rotation;
         

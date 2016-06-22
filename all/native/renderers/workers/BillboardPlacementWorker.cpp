@@ -201,7 +201,7 @@ namespace carto {
             return drawData1->getCameraPlaneZoomDistance() < drawData2->getCameraPlaneZoomDistance();
         } else {
             // If in 2D, sort by z coordinate and then by the distance to the bottom of the screen
-            double zDelta = drawData2->getPos().getZ() - drawData1->getPos().getZ();
+            double zDelta = drawData2->getPos()(2) - drawData1->getPos()(2);
             if (zDelta > 0) {
                 return false;
             } else if (zDelta < 0) {

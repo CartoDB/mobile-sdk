@@ -145,10 +145,8 @@ namespace carto {
         GLuint drawDataIndex = 0;
         for (size_t i = 0; i < drawDataBuffer.size(); i++) {
             const std::shared_ptr<PointDrawData>& drawData = drawDataBuffer[i];
-            const MapPos& pos = drawData->getPos();
-            MapPos translate(pos.getX() - cameraPos.getX(),
-                    pos.getY() - cameraPos.getY(),
-                    pos.getZ() - cameraPos.getZ());
+            const cglib::vec3<double>& pos = drawData->getPos();
+            cglib::vec3<double> translate(pos(0) - cameraPos.getX(), pos(1) - cameraPos.getY(), pos(2) - cameraPos.getZ());
     
             // Check for possible overflow in the buffers
             if ((drawDataIndex + 1) * 6 > GLUtils::MAX_VERTEXBUFFER_SIZE) {
@@ -164,18 +162,18 @@ namespace carto {
             // Calculate coordinates
             float coordScale = drawData->getSize() * viewState.getUnitToDPCoef() * 0.5f;
             int coordIndex = drawDataIndex * 4 * 3;
-            coordBuf[coordIndex + 0] = translate.getX() - coordScale;
-            coordBuf[coordIndex + 1] = translate.getY() + coordScale;
-            coordBuf[coordIndex + 2] = translate.getZ();
-            coordBuf[coordIndex + 3] = translate.getX() - coordScale;
-            coordBuf[coordIndex + 4] = translate.getY() - coordScale;
-            coordBuf[coordIndex + 5] = translate.getZ();
-            coordBuf[coordIndex + 6] = translate.getX() + coordScale;
-            coordBuf[coordIndex + 7] = translate.getY() + coordScale;
-            coordBuf[coordIndex + 8] = translate.getZ();
-            coordBuf[coordIndex + 9] = translate.getX() + coordScale;
-            coordBuf[coordIndex + 10] = translate.getY() - coordScale;
-            coordBuf[coordIndex + 11] = translate.getZ();
+            coordBuf[coordIndex + 0] = translate(0) - coordScale;
+            coordBuf[coordIndex + 1] = translate(1) + coordScale;
+            coordBuf[coordIndex + 2] = translate(2);
+            coordBuf[coordIndex + 3] = translate(0) - coordScale;
+            coordBuf[coordIndex + 4] = translate(1) - coordScale;
+            coordBuf[coordIndex + 5] = translate(2);
+            coordBuf[coordIndex + 6] = translate(0) + coordScale;
+            coordBuf[coordIndex + 7] = translate(1) + coordScale;
+            coordBuf[coordIndex + 8] = translate(2);
+            coordBuf[coordIndex + 9] = translate(0) + coordScale;
+            coordBuf[coordIndex + 10] = translate(1) - coordScale;
+            coordBuf[coordIndex + 11] = translate(2);
     
             // Calculate texture coordinates
             int texCoordIndex = drawDataIndex * 4 * 2;
@@ -227,14 +225,14 @@ namespace carto {
                                                    const ViewState& viewState,
                                                    std::vector<RayIntersectedElement>& results)
     {
-        const MapPos& pos = drawData->getPos();
+        const cglib::vec3<double>& pos = drawData->getPos();
             
         // Calculate coordinates
         float coordScale = drawData->getSize() * viewState.getUnitToDPCoef() * 0.5f * drawData->getClickScale();
-        MapPos topLeft(		pos.getX() - coordScale, pos.getY() + coordScale, pos.getZ());
-        MapPos bottomLeft(	pos.getX() - coordScale, pos.getY() - coordScale, pos.getZ());
-        MapPos topRight(	pos.getX() + coordScale, pos.getY() + coordScale, pos.getZ());
-        MapPos bottomRight(	pos.getX() + coordScale, pos.getY() - coordScale, pos.getZ());
+        MapPos topLeft    (pos(0) - coordScale, pos(1) + coordScale, pos(2));
+        MapPos bottomLeft (pos(0) - coordScale, pos(1) - coordScale, pos(2));
+        MapPos topRight   (pos(0) + coordScale, pos(1) + coordScale, pos(2));
+        MapPos bottomRight(pos(0) + coordScale, pos(1) - coordScale, pos(2));
             
         // If either triangle intersects the ray, add the element to result list
         MapPos clickPos;
@@ -243,7 +241,7 @@ namespace carto {
             double distance = GeomUtils::DistanceFromPoint(clickPos, viewState.getCameraPos());
             const std::shared_ptr<Projection>& projection = layer->getDataSource()->getProjection();
             int priority = static_cast<int>(results.size());
-            results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projection->fromInternal(clickPos), projection->fromInternal(pos), priority));
+            results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projection->fromInternal(clickPos), projection->fromInternal(MapPos(pos(0), pos(1), pos(2))), priority));
             return true;
         }
         return false;

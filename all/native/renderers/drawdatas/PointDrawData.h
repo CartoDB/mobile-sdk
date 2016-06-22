@@ -12,6 +12,8 @@
 
 #include <memory>
 
+#include <cglib/vec.h>
+
 namespace carto {
     class Bitmap;
     class PointGeometry;
@@ -27,7 +29,7 @@ namespace carto {
     
         float getClickScale() const;
     
-        const MapPos& getPos() const;
+        const cglib::vec3<double>& getPos() const;
     
         float getSize() const;
     
@@ -42,7 +44,7 @@ namespace carto {
     
         float _clickScale;
     
-        MapPos _pos;
+        cglib::vec3<double> _pos;
     
         float _size;
     };

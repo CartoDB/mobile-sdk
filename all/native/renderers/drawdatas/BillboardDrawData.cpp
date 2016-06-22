@@ -46,7 +46,7 @@ namespace carto {
         return _bitmap;
     }
     
-    const MapVec* BillboardDrawData::getCoords() const {
+    const cglib::vec2<float>* BillboardDrawData::getCoords() const {
         return _coords;
     }
     
@@ -90,11 +90,11 @@ namespace carto {
         return static_cast<float>(_placementPriority);
     }
     
-    const MapPos& BillboardDrawData::getPos() const {
+    const cglib::vec3<double>& BillboardDrawData::getPos() const {
         return _pos;
     }
         
-    void BillboardDrawData::setPos(const MapPos& pos) {
+    void BillboardDrawData::setPos(const cglib::vec3<double>& pos) {
         _pos = pos;
     }
     
@@ -139,7 +139,7 @@ namespace carto {
     }
     
     void BillboardDrawData::offsetHorizontally(double offset) {
-        _pos.setX(_pos.getX() + offset);
+        _pos(0) += offset;
         setIsOffset(true);
     }
     
@@ -172,7 +172,7 @@ namespace carto {
         _hideIfOverlapped(style.isHideIfOverlapped()),
         _overlapping(style.isHideIfOverlapped() ? true : false),
         _placementPriority(style.getPlacementPriority()),
-        _pos(billboard.getGeometry() ? projection.toInternal(billboard.getGeometry()->getCenterPos()) : MapPos()),
+        _pos(),
         _rotation(billboard.getRotation()),
         _scaleWithDPI(style.isScaleWithDPI()),
         _scalingMode(scalingMode),
@@ -181,51 +181,35 @@ namespace carto {
         _screenBottomDistance(0),
         _renderer()
     {
+        if (billboard.getGeometry()) {
+            MapPos posInternal = projection.toInternal(billboard.getGeometry()->getCenterPos());
+            _pos = cglib::vec3<double>(posInternal.getX(), posInternal.getY(), posInternal.getZ());
+        }
+
         // If size was given in meters, calculate the approximate internal size
         if (scalingMode == BillboardScaling::BILLBOARD_SCALING_WORLD_SIZE) {
-            /* //Take distortion into account, size is stretched near the poles
-            MapPos scalePos;
-            // If this billboard is attached to another billboard, find the root billboard
-            if (!billboard.getGeometry()) {
-                std::shared_ptr<Billboard> baseBillboard(_baseBillboard);
-                while (baseBillboard) {
-                    if (baseBillboard->getGeometry()) {
-                        scalePos = baseBillboard->getGeometry()->getPos();
-                        break;
-                    }
-                    baseBillboard = baseBillboard->getBaseBillboard();
-                }
-            } else {
-                scalePos = billboard.getGeometry()->getPos();
-            }
-            // Calculate approzimate size towards north-east
-            _size = projection.toInternalScale(scalePos, MapVec(0.70710678118f, 0.70710678118f), _size);*/
-            
             // Don't account for the projection distortion, calculate size at the equator
             _size = static_cast<float>(projection.toInternalScale(_size));
         }
         
-        double left = ((-_anchorPointX - 1.0f) * 0.5f * _size + _horizontalOffset);
-        double right = left + _size;
-        double bottom = ((-_anchorPointY - 1.0f) * 0.5f / _aspect * _size + _verticalOffset);
-        double top = bottom + _size / _aspect;
+        float left = ((-_anchorPointX - 1.0f) * 0.5f * _size + _horizontalOffset);
+        float right = left + _size;
+        float bottom = ((-_anchorPointY - 1.0f) * 0.5f / _aspect * _size + _verticalOffset);
+        float top = bottom + _size / _aspect;
     
-        _coords[0].setX(left);
-        _coords[0].setY(top);
-        _coords[1].setX(left);
-        _coords[1].setY(bottom);
-        _coords[2].setX(right);
-        _coords[2].setY(top);
-        _coords[3].setX(right);
-        _coords[3].setY(bottom);
+        _coords[0] = cglib::vec2<float>(left, top);
+        _coords[1] = cglib::vec2<float>(left, bottom);
+        _coords[2] = cglib::vec2<float>(right, top);
+        _coords[3] = cglib::vec2<float>(right, bottom);
     
         if (_rotation != 0.0f) {
             float sin = static_cast<float>(std::sin(_rotation * Const::DEG_TO_RAD));
             float cos = static_cast<float>(std::cos(_rotation * Const::DEG_TO_RAD));
-            _coords[0].rotate2D(sin, cos);
-            _coords[1].rotate2D(sin, cos);
-            _coords[2].rotate2D(sin, cos);
-            _coords[3].rotate2D(sin, cos);
+            for (int i = 0; i < 4; i++) {
+                float x = cos * _coords[i](0) - sin * _coords[i](1);
+                float y = sin * _coords[i](0) + cos * _coords[i](1);
+                _coords[i] = cglib::vec2<float>(x, y);
+            }
         }
     }
     

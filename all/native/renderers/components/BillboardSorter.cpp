@@ -42,16 +42,16 @@ namespace carto {
         // Calculate billboard distances
         const cglib::mat4x4<double>& mvpMat = viewState.getModelviewProjectionMat();
         for (const std::shared_ptr<BillboardDrawData>& drawData : _billboardDrawDatas) {
-            const MapPos& pos = drawData->getPos();
+            const cglib::vec3<double>& pos = drawData->getPos();
     
             // Calculate distance to the camera plane, adjust to zoom
-            double distance = pos.getX() * mvpMat(3, 0) + pos.getY() * mvpMat(3, 1) + pos.getZ() * mvpMat(3, 2) + mvpMat(3, 3);
+            double distance = pos(0) * mvpMat(3, 0) + pos(1) * mvpMat(3, 1) + pos(2) * mvpMat(3, 2) + mvpMat(3, 3);
             double zoomDistance = distance * viewState.get2PowZoom() / viewState.getZoom0Distance();
             drawData->setCameraPlaneZoomDistance(zoomDistance);
     
             if (!_sort3D) {
                 // If in 2D, calculate distance from the bottom of the screen
-                double dist = GeomUtils::DistanceFromLine(pos, bottomLeft, bottomRight);
+                double dist = GeomUtils::DistanceFromLine(MapPos(pos(0), pos(1), pos(2)), bottomLeft, bottomRight);
                 drawData->setScreenBottomDistance(static_cast<int>(dist));
             }
         }
@@ -78,7 +78,7 @@ namespace carto {
             return drawData1->getCameraPlaneZoomDistance() > drawData2->getCameraPlaneZoomDistance();
         } else {
             // If in 2D, sort by z coordinate and then by the distance to the bottom of the screen
-            double zDelta = drawData2->getPos().getZ() - drawData1->getPos().getZ();
+            double zDelta = drawData2->getPos()(2) - drawData1->getPos()(2);
             if (zDelta > 0) {
                 return true;
             } else if (zDelta < 0) {
