@@ -19,10 +19,8 @@ namespace carto {
     class LineGeometry;
     class LineStyle;
     class MapPos;
-    class MapVec;
     class PolygonGeometry;
     class Projection;
-    class Tuple3D;
     
     class LineDrawData : public VectorElementDrawData {
     public:

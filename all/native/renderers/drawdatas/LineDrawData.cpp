@@ -1,6 +1,5 @@
 #include "LineDrawData.h"
 #include "core/MapPos.h"
-#include "core/MapVec.h"
 #include "geometry/LineGeometry.h"
 #include "graphics/Bitmap.h"
 #include "projections/Projection.h"
