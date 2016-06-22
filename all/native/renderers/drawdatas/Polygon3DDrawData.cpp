@@ -94,7 +94,7 @@ namespace carto {
         cglib::vec3<double> center = _boundingBox.center();
         float baseZ = static_cast<float>(center(2));
         float roofZ = static_cast<float>(center(2) + projection.toInternalScale(polygon3D.getHeight()));
-        _boundsBox.add(cglib::vec3<double>(center(0), center(1), roofZ));
+        _boundingBox.add(cglib::vec3<double>(center(0), center(1), roofZ));
         
         // Convert triangulator output to coord array
         for (int i = 0; i < roofElementCount * MAX_INDICES_PER_ELEMENT; i += 3) {

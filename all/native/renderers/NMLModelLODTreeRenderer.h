@@ -17,6 +17,8 @@
 #include <list>
 #include <vector>
 
+#include <cglib/ray.h>
+
 namespace carto {
     class MapPos;
     class MapVec;

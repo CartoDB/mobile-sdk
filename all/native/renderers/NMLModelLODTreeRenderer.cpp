@@ -112,7 +112,7 @@ namespace carto {
             }
             
             std::vector<nml::RayIntersection> intersections;
-            glModel->calculateRayIntersections(nml::Ray(rayOrigModel, rayDirModel), intersections);
+            glModel->calculateRayIntersections(rayModel, intersections);
             
             for (size_t i = 0; i < intersections.size(); i++) {
                 NMLModelLODTree::ProxyMap::const_iterator proxyIt = record.drawData.getProxyMap()->find(intersections[i].vertexId);

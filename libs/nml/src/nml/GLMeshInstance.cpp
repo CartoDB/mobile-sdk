@@ -104,17 +104,15 @@ namespace carto { namespace nml {
         }
     }
     
-    void GLMeshInstance::calculateRayIntersections(const Ray& ray, std::vector<RayIntersection>& intersections) const {
+    void GLMeshInstance::calculateRayIntersections(const cglib::ray3<double>& ray, std::vector<RayIntersection>& intersections) const {
         if (!_mesh) {
             return;
         }
     
-        Ray rayTransformed = ray;
+        cglib::ray3<double> rayTransformed = ray;
         if (_transformEnabled) {
             cglib::mat4x4<double> invTransformMatrix = cglib::inverse(cglib::mat4x4<double>::convert(_transformMatrix));
-            cglib::vec3<double> originTransformed = cglib::transform_point(ray.origin, invTransformMatrix);
-            cglib::vec3<double> dirTransformed = cglib::transform_point(ray.origin + ray.dir, invTransformMatrix) - originTransformed;
-            rayTransformed = Ray(originTransformed, dirTransformed);
+            rayTransformed = cglib::transform_ray(ray, invTransformMatrix);
         }
 
         for (const std::shared_ptr<GLSubmesh>& submesh : _mesh->getSubmeshList()) {
@@ -129,7 +127,7 @@ namespace carto { namespace nml {
                     RayIntersection intersection = submeshIntersections[i];
                     if (material->getCulling() != Material::NONE) {
                         double sign = material->getCulling() == Material::FRONT ? 1 : -1;
-                        if (sign * cglib::dot_product(intersection.normal, rayTransformed.dir) < 0) {
+                        if (sign * cglib::dot_product(intersection.normal, rayTransformed.direction) < 0) {
                             continue;
                         }
                     }

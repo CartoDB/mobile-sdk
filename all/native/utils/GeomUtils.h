@@ -38,13 +38,6 @@ namespace carto {
     
         static std::vector<MapPos> CalculateConvexHull(std::vector<MapPos> points);
 
-        static bool RayZPlaneIntersect(const MapPos& rayOrig, const MapVec& rayDir, double z, MapPos& result);
-    
-        static bool RayTriangleIntersect(const MapPos& rayOrig, const MapVec& rayDir,
-                const MapPos& triPoint0, const MapPos& triPoint1, const MapPos& triPoint2, MapPos& result);
-    
-        static bool RayBoundingBoxIntersect(const MapPos& rayOrig, const MapVec& rayDir, const MapBounds& bbox);
-    
     private:
         GeomUtils();
 

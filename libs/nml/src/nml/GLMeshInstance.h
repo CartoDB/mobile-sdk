@@ -33,7 +33,7 @@ namespace carto { namespace nml {
 
         void draw(const RenderState& renderState);
 
-        void calculateRayIntersections(const Ray& ray, std::vector<RayIntersection>& intersections) const;
+        void calculateRayIntersections(const cglib::ray3<double>& ray, std::vector<RayIntersection>& intersections) const;
 
         int getDrawCallCount() const;
 

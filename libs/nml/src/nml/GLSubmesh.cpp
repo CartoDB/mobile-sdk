@@ -208,7 +208,7 @@ namespace carto { namespace nml {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
     
-    void GLSubmesh::calculateRayIntersections(const Ray& ray, std::vector<RayIntersection>& intersections) const {
+    void GLSubmesh::calculateRayIntersections(const cglib::ray3<double>& ray, std::vector<RayIntersection>& intersections) const {
         if (!(_glType == GL_TRIANGLES || _glType == GL_TRIANGLE_FAN || _glType == GL_TRIANGLE_STRIP)) {
             return;
         }
@@ -236,20 +236,21 @@ namespace carto { namespace nml {
                     k += 3;
                 }
 
-                cglib::vec3<float> points[] = {
-                    cglib::vec3<float>(_positionBuffer[i0 * 3 + 0], _positionBuffer[i0 * 3 + 1], _positionBuffer[i0 * 3 + 2]),
-                    cglib::vec3<float>(_positionBuffer[i1 * 3 + 0], _positionBuffer[i1 * 3 + 1], _positionBuffer[i1 * 3 + 2]),
-                    cglib::vec3<float>(_positionBuffer[i2 * 3 + 0], _positionBuffer[i2 * 3 + 1], _positionBuffer[i2 * 3 + 2])
+                cglib::vec3<double> points[] = {
+                    cglib::vec3<double>(_positionBuffer[i0 * 3 + 0], _positionBuffer[i0 * 3 + 1], _positionBuffer[i0 * 3 + 2]),
+                    cglib::vec3<double>(_positionBuffer[i1 * 3 + 0], _positionBuffer[i1 * 3 + 1], _positionBuffer[i1 * 3 + 2]),
+                    cglib::vec3<double>(_positionBuffer[i2 * 3 + 0], _positionBuffer[i2 * 3 + 1], _positionBuffer[i2 * 3 + 2])
                 };
     
-                cglib::vec3<float> pos;
-                cglib::vec3<float> normal;
-                if (findRayTriangleIntersection(points, ray, pos, normal)) {
+                double t = 0;
+                if (cglib::intersect_triangle(points[0], points[1], points[2], ray, &t)) {
+                    cglib::vec3<double> pos = ray(t);
+                    cglib::vec3<double> normal = cglib::unit(cglib::vector_product(points[1] - points[0], points[2] - points[0]));
                     unsigned int id = 0;
                     if (i0 < _vertexIdBuffer.size()) {
                         id = _vertexIdBuffer[i0];
                     }
-                    intersections.push_back(RayIntersection(id, cglib::vec3<double>::convert(pos), cglib::vec3<double>::convert(normal)));
+                    intersections.push_back(RayIntersection(id, pos, normal));
                 }
             }
             idx += _vertexCounts[i];
@@ -300,37 +301,6 @@ namespace carto { namespace nml {
         }
     
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-    }
-    
-    bool GLSubmesh::findRayTriangleIntersection(const cglib::vec3<float>* points, const Ray& ray, cglib::vec3<float>& p, cglib::vec3<float>& n) {
-        cglib::vec3<float> u = points[1] - points[0];
-        cglib::vec3<float> v = points[2] - points[0];
-        n = cglib::vector_product(u, v);
-        if (cglib::norm(n) == 0) {
-            return false;
-        }
-        n = cglib::unit(n);
-        float nd = cglib::dot_product(n, cglib::vec3<float>::convert(ray.dir));
-        if (nd == 0) {
-            return false;
-        }
-        float d = cglib::dot_product(points[0], n);
-        double t = (d - cglib::dot_product(ray.origin, cglib::vec3<double>::convert(n))) / nd;
-        if (t < 0) {
-            return false;
-        }
-        p = cglib::vec3<float>::convert(ray.origin + ray.dir * t);
-        
-        cglib::vec3<float> w = p - points[0];
-        float uu = cglib::dot_product(u, u);
-        float uv = cglib::dot_product(u, v);
-        float vv = cglib::dot_product(v, v);
-        float wu = cglib::dot_product(w, u);
-        float wv = cglib::dot_product(w, v);
-        float det = uv * uv - uu * vv;
-        float s0 = (uv * wv - vv * wu) / det;
-        float s1 = (uv * wu - uu * wv) / det;
-        return s0 >= 0 && s1 >= 0 && s0 + s1 <= 1;
     }
     
     GLint GLSubmesh::convertType(int type) {

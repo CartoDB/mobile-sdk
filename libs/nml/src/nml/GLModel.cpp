@@ -124,7 +124,7 @@ namespace carto { namespace nml {
         }
     }
     
-    void GLModel::calculateRayIntersections(const Ray& ray, std::vector<RayIntersection>& intersections) const {
+    void GLModel::calculateRayIntersections(const cglib::ray3<double>& ray, std::vector<RayIntersection>& intersections) const {
         std::lock_guard<std::mutex> lock(_mutex);
     
         for (const std::shared_ptr<GLMeshInstance>& meshInstance : _meshInstanceList) {

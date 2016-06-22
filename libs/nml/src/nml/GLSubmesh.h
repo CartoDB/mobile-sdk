@@ -28,7 +28,7 @@ namespace carto { namespace nml {
 
         void draw(const RenderState& renderState);
 
-        void calculateRayIntersections(const Ray& ray, std::vector<RayIntersection>& intersections) const;
+        void calculateRayIntersections(const cglib::ray3<double>& ray, std::vector<RayIntersection>& intersections) const;
 
         const std::string& getMaterialId() const;
 
@@ -38,8 +38,6 @@ namespace carto { namespace nml {
     private:
         void uploadSubmesh();
         
-        static bool findRayTriangleIntersection(const cglib::vec3<float>* points, const Ray& ray, cglib::vec3<float>& p, cglib::vec3<float>& n);
-
         static GLint convertType(int type);
         static void convertToFloatBuffer(const std::string& str, std::vector<float>& buf);
         static void convertToByteBuffer(const std::string& str, std::vector<unsigned char>& buf);

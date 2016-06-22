@@ -15,20 +15,14 @@
 #include <GLES2/gl2ext.h>
 #endif
 
+#include <cglib/vec.h>
+#include <cglib/mat.h>
 #include <cglib/bbox.h>
 #include <cglib/frustum3.h>
-#include <cglib/mat.h>
-#include <cglib/vec.h>
+#include <cglib/ray.h>
 
 namespace carto { namespace nml {
 
-    struct Ray {
-        cglib::vec3<double> origin;
-        cglib::vec3<double> dir;
-        
-        Ray(const cglib::vec3<double>& origin, const cglib::vec3<double>& dir) : origin(origin), dir(dir) { }
-    };
-    
     struct RayIntersection {
         unsigned int vertexId;
         cglib::vec3<double> pos;

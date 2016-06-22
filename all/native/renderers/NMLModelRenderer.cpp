@@ -154,7 +154,7 @@ namespace carto {
             }
 
             std::vector<nml::RayIntersection> intersections;
-            glModel->calculateRayIntersections(nml::Ray(rayModel.origin, rayModel.direction), intersections);
+            glModel->calculateRayIntersections(rayModel, intersections);
             
             for (size_t i = 0; i < intersections.size(); i++) {
                 cglib::vec3<double> pos = cglib::transform_point(intersections[i].pos, modelMat);
