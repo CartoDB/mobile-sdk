@@ -112,11 +112,11 @@ namespace carto {
         _elements.erase(std::remove(_elements.begin(), _elements.end(), element), _elements.end());
     }
     
-    void PointRenderer::calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const MapPos& rayOrig, const MapVec& rayDir, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
+    void PointRenderer::calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
         std::lock_guard<std::mutex> lock(_mutex);
     
         for (const std::shared_ptr<Point>& element : _elements) {
-            FindElementRayIntersection(element, element->getDrawData(), layer, rayOrig, rayDir, viewState, results);
+            FindElementRayIntersection(element, element->getDrawData(), layer, ray, viewState, results);
         }
     }
     
@@ -221,7 +221,7 @@ namespace carto {
     bool PointRenderer::FindElementRayIntersection(const std::shared_ptr<VectorElement>& element,
                                                    const std::shared_ptr<PointDrawData>& drawData,
                                                    const std::shared_ptr<VectorLayer>& layer,
-                                                   const MapPos& rayOrig, const MapVec& rayDir,
+                                                   const cglib::ray3<double>& ray,
                                                    const ViewState& viewState,
                                                    std::vector<RayIntersectedElement>& results)
     {
@@ -229,15 +229,17 @@ namespace carto {
             
         // Calculate coordinates
         float coordScale = drawData->getSize() * viewState.getUnitToDPCoef() * 0.5f * drawData->getClickScale();
-        MapPos topLeft    (pos(0) - coordScale, pos(1) + coordScale, pos(2));
-        MapPos bottomLeft (pos(0) - coordScale, pos(1) - coordScale, pos(2));
-        MapPos topRight   (pos(0) + coordScale, pos(1) + coordScale, pos(2));
-        MapPos bottomRight(pos(0) + coordScale, pos(1) - coordScale, pos(2));
+        cglib::vec3<double> topLeft    (pos(0) - coordScale, pos(1) + coordScale, pos(2));
+        cglib::vec3<double> bottomLeft (pos(0) - coordScale, pos(1) - coordScale, pos(2));
+        cglib::vec3<double> topRight   (pos(0) + coordScale, pos(1) + coordScale, pos(2));
+        cglib::vec3<double> bottomRight(pos(0) + coordScale, pos(1) - coordScale, pos(2));
             
         // If either triangle intersects the ray, add the element to result list
-        MapPos clickPos;
-        if (GeomUtils::RayTriangleIntersect(rayOrig, rayDir, topLeft, bottomLeft, topRight, clickPos) ||
-            GeomUtils::RayTriangleIntersect(rayOrig, rayDir, bottomLeft, bottomRight, topRight, clickPos)) {
+        double t = 0;
+        if (cglib::intersect_triangle(topLeft, bottomLeft, topRight, ray, &t) ||
+            cglib::intersect_triangle(bottomLeft, bottomRight, topRight, ray, &t))
+        {
+            MapPos clickPos(ray(t)(0), ray(t)(1), ray(t)(2));
             double distance = GeomUtils::DistanceFromPoint(clickPos, viewState.getCameraPos());
             const std::shared_ptr<Projection>& projection = layer->getDataSource()->getProjection();
             int priority = static_cast<int>(results.size());

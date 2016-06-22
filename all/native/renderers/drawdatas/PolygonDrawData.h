@@ -7,13 +7,13 @@
 #ifndef _CARTO_POLYGONDRAWDATA_H_
 #define _CARTO_POLYGONDRAWDATA_H_
 
-#include "core/MapBounds.h"
 #include "renderers/drawdatas/VectorElementDrawData.h"
 
 #include <memory>
 #include <vector>
 
 #include <cglib/vec.h>
+#include <cglib/bbox.h>
 
 namespace carto {
     class Bitmap;
@@ -31,7 +31,7 @@ namespace carto {
     
         const std::shared_ptr<Bitmap> getBitmap() const;
     
-        const MapBounds& getBoundingBox() const;
+        const cglib::bbox3<double>& getBoundingBox() const;
     
         const std::vector<std::vector<cglib::vec3<double> > >& getCoords() const;
     
@@ -46,7 +46,7 @@ namespace carto {
     
         std::shared_ptr<Bitmap> _bitmap;
     
-        MapBounds _boundingBox;
+        cglib::bbox3<double> _boundingBox;
     
         std::vector<std::vector<cglib::vec3<double> > > _coords;
 

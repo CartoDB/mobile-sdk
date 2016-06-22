@@ -127,17 +127,17 @@ namespace carto {
         _elements.erase(std::remove(_elements.begin(), _elements.end(), element), _elements.end());
     }
 
-    void GeometryCollectionRenderer::calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const MapPos& rayOrig, const MapVec& rayDir, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
+    void GeometryCollectionRenderer::calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
         std::lock_guard<std::mutex> lock(_mutex);
 
         for (const std::shared_ptr<GeometryCollection>& element : _elements) {
             for (const std::shared_ptr<VectorElementDrawData>& drawData : element->getDrawData()->getDrawDatas()) {
                 if (std::shared_ptr<PointDrawData> pointDrawData = std::dynamic_pointer_cast<PointDrawData>(drawData)) {
-                    PointRenderer::FindElementRayIntersection(element, pointDrawData, layer, rayOrig, rayDir, viewState, results);
+                    PointRenderer::FindElementRayIntersection(element, pointDrawData, layer, ray, viewState, results);
                 } else if (std::shared_ptr<LineDrawData> lineDrawData = std::dynamic_pointer_cast<LineDrawData>(drawData)) {
-                    LineRenderer::FindElementRayIntersection(element, lineDrawData, layer, rayOrig, rayDir, viewState, results);
+                    LineRenderer::FindElementRayIntersection(element, lineDrawData, layer, ray, viewState, results);
                 } else if (std::shared_ptr<PolygonDrawData> polygonDrawData = std::dynamic_pointer_cast<PolygonDrawData>(drawData)) {
-                    PolygonRenderer::FindElementRayIntersection(element, polygonDrawData, layer, rayOrig, rayDir, viewState, results);
+                    PolygonRenderer::FindElementRayIntersection(element, polygonDrawData, layer, ray, viewState, results);
                 }
             }
         }

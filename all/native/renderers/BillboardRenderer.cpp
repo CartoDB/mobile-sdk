@@ -216,13 +216,8 @@ namespace carto {
         return _layer.lock();
     }
     
-    void BillboardRenderer::calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const MapPos& rayOrigin, const MapVec& rayDir, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
+    void BillboardRenderer::calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        
-        // Adjusted ray origin
-        MapVec originShift(viewState.getCameraPos().getX(), viewState.getCameraPos().getY(), viewState.getCameraPos().getZ());
-        MapPos rteRayOrigin(rayOrigin);
-        rteRayOrigin -= originShift;
         
         // Buffer for world coordinates
         std::vector<float> coordBuf(12);
@@ -235,16 +230,18 @@ namespace carto {
             }
     
             CalculateBillboardCoords(*drawData, viewState, coordBuf, 0);
-            MapPos topLeft(coordBuf[0], coordBuf[1], coordBuf[2]);
-            MapPos bottomLeft(coordBuf[3], coordBuf[4], coordBuf[5]);
-            MapPos topRight(coordBuf[6], coordBuf[7], coordBuf[8]);
-            MapPos bottomRight(coordBuf[9], coordBuf[10], coordBuf[11]);
+            cglib::vec3<double> originShift(viewState.getCameraPos().getX(), viewState.getCameraPos().getY(), viewState.getCameraPos().getZ());
+            cglib::vec3<double> topLeft = cglib::vec3<double>(coordBuf[0], coordBuf[1], coordBuf[2]) + originShift;
+            cglib::vec3<double> bottomLeft = cglib::vec3<double>(coordBuf[3], coordBuf[4], coordBuf[5]) + originShift;
+            cglib::vec3<double> topRight = cglib::vec3<double>(coordBuf[6], coordBuf[7], coordBuf[8]) + originShift;
+            cglib::vec3<double> bottomRight = cglib::vec3<double>(coordBuf[9], coordBuf[10], coordBuf[11]) + originShift;
             
             // If either triangle intersects the ray, add the element to result list
-            MapPos clickPos;
-            if (GeomUtils::RayTriangleIntersect(rteRayOrigin, rayDir, topLeft, bottomLeft, topRight, clickPos) ||
-                    GeomUtils::RayTriangleIntersect(rteRayOrigin, rayDir, bottomLeft, bottomRight, topRight, clickPos)) {
-                clickPos += originShift;
+            double t = 0;
+            if (cglib::intersect_triangle(topLeft, bottomLeft, topRight, ray, &t) ||
+                cglib::intersect_triangle(bottomLeft, bottomRight, topRight, ray, &t))
+            {
+                MapPos clickPos(ray(t)(0), ray(t)(1), ray(t)(2));
                 double distance = GeomUtils::DistanceFromPoint(clickPos, viewState.getCameraPos());
                 const std::shared_ptr<Projection>& projection = layer->getDataSource()->getProjection();
                 int priority = static_cast<int>(results.size());

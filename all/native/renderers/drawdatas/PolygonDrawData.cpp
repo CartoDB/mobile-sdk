@@ -32,7 +32,7 @@ namespace carto {
     PolygonDrawData::PolygonDrawData(const PolygonGeometry& geometry, const PolygonStyle& style, const Projection& projection) :
         VectorElementDrawData(style.getColor()),
         _bitmap(style.getBitmap()),
-        _boundingBox(),
+        _boundingBox(cglib::bbox3<double>::smallest()),
         _coords(),
         _indices(),
         _lineDrawDatas()
@@ -57,10 +57,11 @@ namespace carto {
         std::vector<double> posesArray(poses.size() * 2);
         for (std::size_t i = 0; i < poses.size() * 2; i += 2) {
             std::size_t index = i / 2;
-            internalPoses.push_back(projection.toInternal(poses[index]));
-            posesArray[i + 0] = internalPoses.back().getX();
-            posesArray[i + 1] = internalPoses.back().getY();
-            _boundingBox.expandToContain(internalPoses.back());
+            MapPos internalPos = projection.toInternal(poses[index]);
+            internalPoses.push_back(internalPos);
+            posesArray[i + 0] = internalPos.getX();
+            posesArray[i + 1] = internalPos.getY();
+            _boundingBox.add(cglib::vec3<double>(internalPos.getX(), internalPos.getY(), internalPos.getZ()));
         }
         tessAddContour(tess, 2, posesArray.data(), sizeof(double) * 2, static_cast<unsigned int>(poses.size()));
     
@@ -76,10 +77,11 @@ namespace carto {
             std::vector<double> holeArray(hole.size() * 2);
             for (std::size_t i = 0; i < hole.size() * 2; i += 2) {
                 std::size_t index = i / 2;
-                internalPoses.push_back(projection.toInternal(hole[index]));
-                holeArray[i] = internalPoses.back().getX();
-                holeArray[i + 1] = internalPoses.back().getY();
-                _boundingBox.expandToContain(internalPoses.back());
+                MapPos internalPos = projection.toInternal(hole[index]);
+                internalPoses.push_back(internalPos);
+                holeArray[i + 0] = internalPos.getX();
+                holeArray[i + 1] = internalPos.getY();
+                _boundingBox.add(cglib::vec3<double>(internalPos.getX(), internalPos.getY(), internalPos.getZ()));
             }
             tessAddContour(tess, 2, holeArray.data(), sizeof(double) * 2, static_cast<unsigned int>(hole.size()));
     
@@ -89,10 +91,7 @@ namespace carto {
         }
     
         // Tesselate
-        double normal[3];
-        normal[0] = 0;
-        normal[1] = 0;
-        normal[2] = 1;
+        double normal[3] = { 0, 0, 1 };
         if (!tessTesselate(tess, TESS_WINDING_ODD, TESS_POLYGONS, MAX_INDICES_PER_ELEMENT, 2, normal)) {
             Log::Error("PolygonDrawData::PolygonDrawData: Failed to triangulate polygon!");
             tessDeleteTess(tess);
@@ -106,7 +105,7 @@ namespace carto {
         size_t elementCount = tessGetElementCount(tess);
     
         // Calculate center
-        const MapPos& center = _boundingBox.getCenter();
+        cglib::vec3<double> center = _boundingBox.center();
     
         // Convert tesselation results to drawable format, split if into multiple buffers, if the polyong is too big
         _coords.push_back(std::vector<cglib::vec3<double> >());
@@ -140,7 +139,7 @@ namespace carto {
                 auto it = indexMap.find(index);
                 if (it == indexMap.end()) {
                     unsigned int newIndex = static_cast<unsigned int>(_coords.back().size());
-                    _coords.back().emplace_back(coords[index * 2], coords[index * 2 + 1], center.getZ());
+                    _coords.back().emplace_back(coords[index * 2], coords[index * 2 + 1], center(2));
                     _indices.back().push_back(newIndex);
                     indexMap[index] = newIndex;
                 } else {
@@ -162,7 +161,7 @@ namespace carto {
         return _bitmap;
     }
     
-    const MapBounds& PolygonDrawData::getBoundingBox() const {
+    const cglib::bbox3<double>& PolygonDrawData::getBoundingBox() const {
         return _boundingBox;
     }
     

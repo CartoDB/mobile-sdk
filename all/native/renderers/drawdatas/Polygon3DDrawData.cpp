@@ -31,7 +31,7 @@ namespace carto {
     Polygon3DDrawData::Polygon3DDrawData(const Polygon3D& polygon3D, const Polygon3DStyle& style, const Projection& projection) :
         VectorElementDrawData(style.getColor()),
         _sideColor(GetPremultipliedColor(style.getSideColor())),
-        _boundingBox(),
+        _boundingBox(cglib::bbox3<double>::smallest()),
         _coords(),
         _normals()
     {
@@ -51,7 +51,7 @@ namespace carto {
             const MapPos& internalPos = projection.toInternal(poses[index]);
             posesArray[i + 0] = internalPos.getX();
             posesArray[i + 1] = internalPos.getY();
-            _boundingBox.expandToContain(internalPos);
+            _boundingBox.add(cglib::vec3<double>(internalPos.getX(), internalPos.getY(), internalPos.getZ()));
         }
         tessAddContour(tess, 2, posesArray.data(), sizeof(double) * 2, static_cast<unsigned int>(poses.size()));
     
@@ -66,18 +66,15 @@ namespace carto {
             for (std::size_t i = 0; i < hole.size() * 2; i += 2) {
                 std::size_t index = i / 2;
                 const MapPos& internalPos = projection.toInternal(hole[index]);
-                holeArray[i] = internalPos.getX();
+                holeArray[i + 0] = internalPos.getX();
                 holeArray[i + 1] = internalPos.getY();
-                _boundingBox.expandToContain(internalPos);
+                _boundingBox.add(cglib::vec3<double>(internalPos.getX(), internalPos.getY(), internalPos.getZ()));
             }
             tessAddContour(tess, 2, holeArray.data(), sizeof(double) * 2, static_cast<unsigned int>(hole.size()));
         }
     
         // Triangulate
-        double normal[3];
-        normal[0] = 0;
-        normal[1] = 0;
-        normal[2] = 1;
+        double normal[3] = { 0, 0, 1 };
         if (!tessTesselate(tess, TESS_WINDING_ODD, TESS_POLYGONS, MAX_INDICES_PER_ELEMENT, 2, normal)) {
             Log::Error("Polygon3DDrawData::Polygon3DDrawData: Failed to triangulate 3d polygon!");
             tessDeleteTess(tess);
@@ -94,9 +91,10 @@ namespace carto {
         _normals.reserve(roofVertexCount + edgeVertexCount * 6);
         
         // Calculate height in the internal coordinate system
-        const MapPos& center = _boundingBox.getCenter();
-        float baseZ = static_cast<float>(center.getZ());
-        float roofZ = static_cast<float>(baseZ + projection.toInternalScale(polygon3D.getHeight()));
+        cglib::vec3<double> center = _boundingBox.center();
+        float baseZ = static_cast<float>(center(2));
+        float roofZ = static_cast<float>(center(2) + projection.toInternalScale(polygon3D.getHeight()));
+        _boundsBox.add(cglib::vec3<double>(center(0), center(1), roofZ));
         
         // Convert triangulator output to coord array
         for (int i = 0; i < roofElementCount * MAX_INDICES_PER_ELEMENT; i += 3) {
@@ -108,10 +106,10 @@ namespace carto {
                 index = roofElements[i + 2] * 2;
                 _coords.emplace_back(roofCoords[index], roofCoords[index + 1], roofZ);
                 
-                cglib::vec3<float> compactNormal(0, 0, 1);
-                _normals.push_back(compactNormal);
-                _normals.push_back(compactNormal);
-                _normals.push_back(compactNormal);
+                cglib::vec3<float> roofNormal(0, 0, 1);
+                _normals.push_back(roofNormal);
+                _normals.push_back(roofNormal);
+                _normals.push_back(roofNormal);
             }
         }
         tessDeleteTess(tess);
@@ -143,18 +141,15 @@ namespace carto {
                     _coords.emplace_back(p1[0], p1[1], roofZ);
                     
                     // Calculate side normal
-                    MapVec sideNormal(p1[0] - p0[0], p1[1] - p0[1]);
-                    sideNormal.normalize();
-                    sideNormal.setCoords(sideNormal.getY(), -sideNormal.getX());
-                    cglib::vec3<float> compactNormal(static_cast<float>(sideNormal.getX()), static_cast<float>(sideNormal.getY()), static_cast<float>(sideNormal.getZ()));
+                    cglib::vec3<float> sideNormal = cglib::unit(cglib::vec3<float>(p1[1] - p0[1], p0[0] - p1[0], 0));
                     
                     // Add normal for each vertex
-                    _normals.push_back(compactNormal);
-                    _normals.push_back(compactNormal);
-                    _normals.push_back(compactNormal);
-                    _normals.push_back(compactNormal);
-                    _normals.push_back(compactNormal);
-                    _normals.push_back(compactNormal);
+                    _normals.push_back(sideNormal);
+                    _normals.push_back(sideNormal);
+                    _normals.push_back(sideNormal);
+                    _normals.push_back(sideNormal);
+                    _normals.push_back(sideNormal);
+                    _normals.push_back(sideNormal);
                 }
                 prevPos = pos;
             }
@@ -172,7 +167,7 @@ namespace carto {
         return _sideColor;
     }
     
-    const MapBounds& Polygon3DDrawData::getBoundingBox() const {
+    const cglib::bbox3<double>& Polygon3DDrawData::getBoundingBox() const {
         return _boundingBox;
     }
     

@@ -50,7 +50,7 @@ namespace carto {
         virtual bool onDrawFrame(float deltaSeconds, const ViewState& viewState);
         virtual void onSurfaceDestroyed();
 
-        virtual void calculateRayIntersectedElements(const std::shared_ptr<NMLModelLODTreeLayer>& layer, const MapPos& rayOrig, const MapVec& rayDir, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
+        virtual void calculateRayIntersectedElements(const std::shared_ptr<NMLModelLODTreeLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
     
     protected:
         struct ModelNodeDrawRecord {

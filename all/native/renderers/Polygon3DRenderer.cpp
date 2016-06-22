@@ -169,26 +169,23 @@ namespace carto {
         _elements.erase(std::remove(_elements.begin(), _elements.end(), element), _elements.end());
     }
     
-    void Polygon3DRenderer::calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const MapPos& rayOrig, const MapVec& rayDir, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
+    void Polygon3DRenderer::calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
         std::lock_guard<std::mutex> lock(_mutex);
     
         for (const std::shared_ptr<Polygon3D>& element : _elements) {
             const Polygon3DDrawData& drawData = *element->getDrawData();
     
             // Bounding box check
-            if (!GeomUtils::RayBoundingBoxIntersect(rayOrig, rayDir, drawData.getBoundingBox())) {
+            if (!cglib::intersect_bbox(drawData.getBoundingBox(), ray)) {
                 continue;
             }
     
             // Test triangles
-            MapPos clickPos;
             const std::vector<cglib::vec3<double> >& coords = drawData.getCoords();
             for (size_t i = 0; i < coords.size(); i += 3) {
-                MapPos points[3];
-                for (int j = 0; j < 3; j++) {
-                    points[j] = MapPos(coords[i + j](0), coords[i + j](1), coords[i + j](2));
-                }
-                if (GeomUtils::RayTriangleIntersect(rayOrig, rayDir, points[0], points[1], points[2], clickPos)) {
+                double t = 0;
+                if (cglib::intersect_triangle(coords[i + 0], coords[i + 1], coords[i + 2], ray, &t)) {
+                    MapPos clickPos(ray(t)(0), ray(t)(1), ray(t)(2));
                     double distance = GeomUtils::DistanceFromPoint(clickPos, viewState.getCameraPos());
                     MapPos projectedClickPos = layer->getDataSource()->getProjection()->fromInternal(clickPos);
                     int priority = static_cast<int>(results.size());

@@ -17,6 +17,8 @@
 #include <mutex>
 #include <vector>
 
+#include <cglib/ray.h>
+
 namespace carto {
     class BillboardSorter;
     class DataSource;
@@ -119,7 +121,7 @@ namespace carto {
         virtual bool onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
         virtual void onSurfaceDestroyed();
         
-        virtual void calculateRayIntersectedElements(const Projection& projection, const MapPos& rayOrig, const MapVec& rayDir,
+        virtual void calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray,
                                                      const ViewState& viewState, std::vector<RayIntersectedElement>& results) const = 0;
         virtual bool processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const = 0;
     

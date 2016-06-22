@@ -7,9 +7,9 @@
 #ifndef _CARTO_TILEDRAWDATA_H_
 #define _CARTO_TILEDRAWDATA_H_
 
-#include "vt/TileId.h"
-
 #include <memory>
+
+#include <vt/TileId.h>
 
 namespace carto {
     namespace vt {

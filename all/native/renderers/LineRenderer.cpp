@@ -113,13 +113,12 @@ namespace carto {
         _elements.erase(std::remove(_elements.begin(), _elements.end(), element), _elements.end());
     }
     
-    void LineRenderer::calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const MapPos& rayOrig, const MapVec& rayDir,
-            const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
+    void LineRenderer::calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
         std::lock_guard<std::mutex> lock(_mutex);
     
         std::vector<MapPos> worldCoords;
         for (const std::shared_ptr<Line>& element : _elements) {
-            FindElementRayIntersection(element, element->getDrawData(), layer, rayOrig, rayDir, viewState, results);
+            FindElementRayIntersection(element, element->getDrawData(), layer, ray, viewState, results);
         }
     }
         
@@ -241,11 +240,11 @@ namespace carto {
     bool LineRenderer::FindElementRayIntersection(const std::shared_ptr<VectorElement>& element,
                                                   const std::shared_ptr<LineDrawData>& drawData,
                                                   const std::shared_ptr<VectorLayer>& layer,
-                                                  const MapPos& rayOrig, const MapVec& rayDir,
+                                                  const cglib::ray3<double>& ray,
                                                   const ViewState& viewState,
                                                   std::vector<RayIntersectedElement>& results)
     {
-        std::vector<MapPos> worldCoords;
+        std::vector<cglib::vec3<double> > worldCoords;
 
         for (size_t i = 0; i < drawData->getCoords().size(); i++) {
             // Resize the buffer for calculated world coordinates
@@ -254,27 +253,24 @@ namespace carto {
             worldCoords.reserve(coords.size());
             
             // Calculate world coordinates and bounding box
-            MapBounds bounds;
+            cglib::bbox3<double> bounds = cglib::bbox3<double>::smallest();
             const std::vector<cglib::vec2<float> >& normals = drawData->getNormals()[i];
             auto cit = coords.begin();
             auto nit = normals.begin();
             for ( ; cit != coords.end() && nit != normals.end(); ++cit, ++nit) {
                 const cglib::vec3<double>& pos = **cit;
                 const cglib::vec2<float>& normal = *nit;
-                MapPos worldCoord(pos(0) + normal(0) * viewState.getUnitToDPCoef() * drawData->getClickScale(),
-                                  pos(1) + normal(1) * viewState.getUnitToDPCoef() * drawData->getClickScale(),
-                                  pos(2));
-                bounds.expandToContain(worldCoord);
+                cglib::vec3<double> worldCoord = pos + cglib::vec3<double>(normal(0), normal(1), 0) * static_cast<double>(viewState.getUnitToDPCoef() * drawData->getClickScale());
+                bounds.add(worldCoord);
                 worldCoords.push_back(worldCoord);
             }
             
             // Bounding box check
-            if (!GeomUtils::RayBoundingBoxIntersect(rayOrig, rayDir, bounds)) {
+            if (!cglib::intersect_bbox(bounds, ray)) {
                 continue;
             }
             
             // Click test
-            MapPos clickPos;
             const std::vector<unsigned int>& indices = drawData->getIndices()[i];
             const cglib::vec3<double>* prevPos = nullptr;
             for (size_t i = 0; i < indices.size(); i += 3) {
@@ -289,7 +285,9 @@ namespace carto {
                 }
                 
                 // Test a line triangle against the click position
-                if (GeomUtils::RayTriangleIntersect(rayOrig, rayDir, worldCoords[indices[i]], worldCoords[indices[i + 1]], worldCoords[indices[i + 2]], clickPos)) {
+                double t = 0;
+                if (cglib::intersect_triangle(worldCoords[indices[i + 0]], worldCoords[indices[i + 1]], worldCoords[indices[i + 2]], ray, &t)) {
+                    MapPos clickPos(ray(t)(0), ray(t)(1), ray(t)(2));
                     double distance = GeomUtils::DistanceFromPoint(clickPos, viewState.getCameraPos());
                     const MapPos& linePos = GeomUtils::CalculateNearestPointOnLineSegment(clickPos, MapPos((*prevPos)(0), (*prevPos)(1), (*prevPos)(2)), MapPos((*pos)(0), (*pos)(1), (*pos)(2)));
                     const std::shared_ptr<Projection>& projection = layer->getDataSource()->getProjection();

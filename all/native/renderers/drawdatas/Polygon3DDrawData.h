@@ -7,16 +7,15 @@
 #ifndef _CARTO_POLYGON3DDRAWDATA_H_
 #define _CARTO_POLYGON3DDRAWDATA_H_
 
-#include "core/MapBounds.h"
 #include "renderers/drawdatas/VectorElementDrawData.h"
 
 #include <memory>
 #include <vector>
 
 #include <cglib/vec.h>
+#include <cglib/bbox.h>
 
 namespace carto {
-    class MapPos;
     class Polygon3D;
     class Polygon3DStyle;
     class Projection;
@@ -29,7 +28,7 @@ namespace carto {
 
         const Color& getSideColor() const;
     
-        const MapBounds& getBoundingBox() const;
+        const cglib::bbox3<double>& getBoundingBox() const;
     
         const std::vector<cglib::vec3<double> >& getCoords() const;
     
@@ -42,7 +41,7 @@ namespace carto {
 
         Color _sideColor;
     
-        MapBounds _boundingBox;
+        cglib::bbox3<double> _boundingBox;
     
         std::vector<cglib::vec3<double> > _coords;
 

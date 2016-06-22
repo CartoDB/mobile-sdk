@@ -15,6 +15,8 @@
 #include <list>
 #include <vector>
 
+#include <cglib/ray.h>
+
 namespace carto {
     class MapPos;
     class MapVec;
@@ -49,7 +51,7 @@ namespace carto {
         virtual bool onDrawFrame(float deltaSeconds, const ViewState& viewState);
         virtual void onSurfaceDestroyed();
 
-        virtual void calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const MapPos& rayOrig, const MapVec& rayDir, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
+        virtual void calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
     
     private:
         std::shared_ptr<nml::GLShaderManager> _glShaderManager;

@@ -89,7 +89,7 @@ namespace carto { namespace mvt {
             FeatureData::GeometryType geomType = convertGeometryType(feature.type());
             std::vector<std::pair<std::string, Value>> dataMap;
             dataMap.reserve(tags.size());
-            for (int i = 0; i < _fieldKeys.size(); i++) {
+            for (std::size_t i = 0; i < _fieldKeys.size(); i++) {
                 if (tags[i] >= 0 && tags[i] < _layer.values_size()) {
                     dataMap.emplace_back(_layer.keys(_fieldKeys[i]), convertValue(_layer.values(tags[i])));
                 }

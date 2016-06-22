@@ -255,18 +255,19 @@ namespace carto {
         }
     }
     
-    void TileLayer::calculateRayIntersectedElements(const Projection& projection, const MapPos& rayOrig, const MapVec& rayDir, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
+    void TileLayer::calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
         DirectorPtr<TileDataSource> utfGridDataSource = _utfGridDataSource;
 
         if (!utfGridDataSource) {
             return;
         }
-        
-        MapPos mapPosInternal;
-        if (!GeomUtils::RayZPlaneIntersect(rayOrig, rayDir, 0, mapPosInternal)) {
+
+        double t = 0;
+        if (!cglib::intersect_plane(cglib::vec4<double>(0, 0, 1, 0), ray, &t)) {
             return;
         }
 
+        MapPos mapPosInternal(ray(t)(0), ray(t)(1), ray(t)(2));
         MapPos mapPos = utfGridDataSource->getProjection()->fromInternal(mapPosInternal);
         int zoom = std::min(getMaxZoom(), static_cast<int>(viewState.getZoom() + getZoomLevelBias() + DISCRETE_ZOOM_LEVEL_BIAS));
 

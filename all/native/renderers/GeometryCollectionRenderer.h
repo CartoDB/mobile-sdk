@@ -42,7 +42,7 @@ namespace carto {
         void updateElement(const std::shared_ptr<GeometryCollection>& element);
         void removeElement(const std::shared_ptr<GeometryCollection>& element);
 
-        virtual void calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const MapPos& rayOrig, const MapVec& rayDir, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
+        virtual void calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
 
     private:
         std::vector<std::shared_ptr<GeometryCollection> > _elements;

@@ -7,13 +7,14 @@
 #ifndef _CARTO_LINERENDERER_H_
 #define _CARTO_LINERENDERER_H_
 
-#include "core/MapPos.h"
 #include "utils/GLES2.h"
 
 #include <deque>
 #include <memory>
 #include <mutex>
 #include <vector>
+
+#include <cglib/ray.h>
 
 namespace carto {
     class Bitmap;
@@ -44,7 +45,7 @@ namespace carto {
         void updateElement(const std::shared_ptr<Line>& element);
         void removeElement(const std::shared_ptr<Line>& element);
     
-        void calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const MapPos& rayOrig, const MapVec& rayDir, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
+        void calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
     
     protected:
         friend class PolygonRenderer;
@@ -65,7 +66,7 @@ namespace carto {
         static bool FindElementRayIntersection(const std::shared_ptr<VectorElement>& element,
                                                const std::shared_ptr<LineDrawData>& drawData,
                                                const std::shared_ptr<VectorLayer>& layer,
-                                               const MapPos& rayOrig, const MapVec& rayDir,
+                                               const cglib::ray3<double>& ray,
                                                const ViewState& viewState,
                                                std::vector<RayIntersectedElement>& results);
 

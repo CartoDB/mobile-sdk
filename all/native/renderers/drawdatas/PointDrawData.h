@@ -7,7 +7,6 @@
 #ifndef _CARTO_POINTDRAWDATA_H_
 #define _CARTO_POINTDRAWDATA_H_
 
-#include "core/MapPos.h"
 #include "renderers/drawdatas/VectorElementDrawData.h"
 
 #include <memory>

@@ -240,7 +240,7 @@ namespace carto {
         virtual int getMinZoom() const = 0;
         virtual int getMaxZoom() const = 0;
         
-        virtual void calculateRayIntersectedElements(const Projection& projection, const MapPos& rayOrig, const MapVec& rayDir,
+        virtual void calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray,
             const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
         virtual bool processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const;
 

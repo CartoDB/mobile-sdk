@@ -17,6 +17,7 @@
 #include <vector>
 
 #include <cglib/vec.h>
+#include <cglib/ray.h>
 
 namespace carto {
     class Billboard;
@@ -55,7 +56,7 @@ namespace carto {
         void setLayer(const std::shared_ptr<VectorLayer>& layer);
         std::shared_ptr<VectorLayer> getLayer() const;
     
-        virtual void calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const MapPos& rayOrig, const MapVec& rayDir, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
+        virtual void calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
     
     private:
         static void BuildAndDrawBuffers(GLuint a_color,

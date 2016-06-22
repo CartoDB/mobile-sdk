@@ -582,13 +582,15 @@ namespace carto {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             viewState = _viewState;
         }
-    
-        MapVec rayDir(targetPos - viewState.getCameraPos());
+
+        MapPos rayOrigin = viewState.getCameraPos();
+        MapVec rayDir = targetPos - viewState.getCameraPos();
+        cglib::ray3<double> ray(cglib::vec3<double>(rayOrigin.getX(), rayOrigin.getY(), rayOrigin.getZ()), cglib::vec3<double>(rayDir.getX(), rayDir.getY(), rayDir.getZ()));
     
         // Normal layer click detection is done in the layer order
         const std::shared_ptr<Projection> projection = _options->getBaseProjection();
         for (const std::shared_ptr<Layer>& layer : _layers->getAll()) {
-            layer->calculateRayIntersectedElements(*projection, viewState.getCameraPos(), rayDir, viewState, results);
+            layer->calculateRayIntersectedElements(*projection, ray, viewState, results);
         }
     
         // Sort the results

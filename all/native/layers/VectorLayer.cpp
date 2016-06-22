@@ -181,16 +181,16 @@ namespace carto {
         Layer::onSurfaceDestroyed();
     }
     
-    void VectorLayer::calculateRayIntersectedElements(const Projection& projection, const MapPos& rayOrig, const MapVec& rayDir,
+    void VectorLayer::calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray,
                 const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
         std::shared_ptr<VectorLayer> thisLayer = std::static_pointer_cast<VectorLayer>(std::const_pointer_cast<Layer>(shared_from_this()));
-        _billboardRenderer->calculateRayIntersectedElements(thisLayer, rayOrig, rayDir, viewState, results);
-        _geometryCollectionRenderer->calculateRayIntersectedElements(thisLayer, rayOrig, rayDir, viewState, results);
-        _lineRenderer->calculateRayIntersectedElements(thisLayer, rayOrig, rayDir, viewState, results);
-        _pointRenderer->calculateRayIntersectedElements(thisLayer, rayOrig, rayDir, viewState, results);
-        _polygonRenderer->calculateRayIntersectedElements(thisLayer, rayOrig, rayDir, viewState, results);
-        _polygon3DRenderer->calculateRayIntersectedElements(thisLayer, rayOrig, rayDir, viewState, results);
-        _nmlModelRenderer->calculateRayIntersectedElements(thisLayer, rayOrig, rayDir, viewState, results);
+        _billboardRenderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
+        _geometryCollectionRenderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
+        _lineRenderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
+        _pointRenderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
+        _polygonRenderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
+        _polygon3DRenderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
+        _nmlModelRenderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
     }
 
     bool VectorLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {

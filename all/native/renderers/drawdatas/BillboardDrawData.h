@@ -7,8 +7,6 @@
 #ifndef _CARTO_BILLBOARDDRAWDATA_H_
 #define _CARTO_BILLBOARDDRAWDATA_H_
 
-#include "core/MapPos.h"
-#include "core/MapVec.h"
 #include "styles/BillboardStyle.h"
 #include "renderers/drawdatas/VectorElementDrawData.h"
 

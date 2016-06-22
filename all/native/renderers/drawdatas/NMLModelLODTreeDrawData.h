@@ -13,6 +13,8 @@
 
 #include <memory>
 
+#include <cglib/mat.h>
+
 namespace carto {
     namespace nml {
         class GLModel;

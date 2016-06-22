@@ -131,7 +131,7 @@ namespace carto {
         _glModelMap.clear();
     }
 
-    void NMLModelRenderer::calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const MapPos& rayOrig, const MapVec& rayDir, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
+    void NMLModelRenderer::calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
         std::lock_guard<std::mutex> lock(_mutex);
         
         for (const std::shared_ptr<NMLModel>& element : _elements) {
@@ -147,20 +147,14 @@ namespace carto {
             cglib::mat4x4<double> modelMat = drawData.getLocalMat();
             cglib::mat4x4<double> invModelMat = cglib::inverse(modelMat);
     
-            cglib::vec3<double> rayOrigModel = cglib::transform_point(cglib::vec3<double>(rayOrig.getX(), rayOrig.getY(), rayOrig.getZ()), invModelMat);
-            cglib::vec3<double> rayDirModel = cglib::transform_point(cglib::vec3<double>(rayOrig.getX() + rayDir.getX(), rayOrig.getY() + rayDir.getY(), rayOrig.getZ() + rayDir.getZ()), invModelMat) - rayOrigModel;
-            cglib::bbox3<float> modelBounds = glModel->getBounds();
-            
-            if (!GeomUtils::RayBoundingBoxIntersect(
-                    MapPos(rayOrigModel(0), rayOrigModel(1), rayOrigModel(2)),
-                    MapVec(rayDirModel(0), rayDirModel(1), rayDirModel(2)),
-                    MapBounds(MapPos(modelBounds.min(0), modelBounds.min(1), modelBounds.min(2)), MapPos(modelBounds.max(0), modelBounds.max(1), modelBounds.max(2)))))
-            {
+            cglib::ray3<double> rayModel = cglib::transform_ray(ray, invModelMat);
+            cglib::bbox3<double> modelBounds = cglib::bbox3<double>::convert(glModel->getBounds());
+            if (!cglib::intersect_bbox(modelBounds, rayModel)) {
                 continue;
             }
-            
+
             std::vector<nml::RayIntersection> intersections;
-            glModel->calculateRayIntersections(nml::Ray(rayOrigModel, rayDirModel), intersections);
+            glModel->calculateRayIntersections(nml::Ray(rayModel.origin, rayModel.direction), intersections);
             
             for (size_t i = 0; i < intersections.size(); i++) {
                 cglib::vec3<double> pos = cglib::transform_point(intersections[i].pos, modelMat);
