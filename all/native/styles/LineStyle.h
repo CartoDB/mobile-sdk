@@ -19,9 +19,9 @@ namespace carto {
          */
         enum LineEndType {
             /**
-             * No line end points are drawn, line end with a straight line.
+             * No line end points are drawn.
              */
-            LINE_END_TYPE_STRAIGHT,
+            LINE_END_TYPE_NONE,
             /**
              * Line end points are drawn as half circles.
              */
@@ -29,25 +29,29 @@ namespace carto {
         };
     };
     
-    namespace LineJointType {
+    namespace LineJoinType {
         /**
          * Possible styles in which line segments are connected with each other.
          */
-        enum LineJointType {
+        enum LineJoinType {
             /**
              * Line segments are not connected with each other. The fastest and ugliest.
              */
-            LINE_JOINT_TYPE_NONE,
+            LINE_JOIN_TYPE_NONE,
             /**
-             * Line segments are connected with each other using straight line connectors. Fast
+             * Line segments are connected with each other using miter connections. This is the preferred mode (fast and good looking generally).
+             */
+            LINE_JOIN_TYPE_MITER,
+            /**
+             * Line segments are connected with each other using bevel (straight line) connectors. Fast
              * but results in an unnatural line.
              */
-            LINE_JOINT_TYPE_STRAIGHT,
+            LINE_JOIN_TYPE_BEVEL,
             /**
              * Line segments are connected with each other using circle sectors resulting in 
              * round corners. Slowest and prettiest.
              */
-            LINE_JOINT_TYPE_ROUND
+            LINE_JOIN_TYPE_ROUND
         };
     };
     
@@ -65,12 +69,12 @@ namespace carto {
          * @param bitmap The bitmap for the line.
          * @param clickWidth The width of the line used for click detection.
          * @param lineEndType The line's end point type.
-         * @param lineJointType The joint type for the line.
+         * @param lineJoinType The join type for the line.
          * @param stretchFactor The color for the line.
          * @param width The width for the line.
          */
         LineStyle(const Color& color, const std::shared_ptr<Bitmap>& bitmap, float clickWidth,
-                LineEndType::LineEndType lineEndType, LineJointType::LineJointType lineJointType,
+                LineEndType::LineEndType lineEndType, LineJoinType::LineJoinType lineJoinType,
                 float stretchFactor, float width);
         virtual ~LineStyle();
     
@@ -93,10 +97,10 @@ namespace carto {
         LineEndType::LineEndType getLineEndType() const;
     
         /**
-         * Returns the joint type of the line.
-         * @return The joint type of the line.
+         * Returns the join type of the line.
+         * @return The join type of the line.
          */
-        LineJointType::LineJointType getLineJointType() const;
+        LineJoinType::LineJoinType getLineJoinType() const;
     
         /**
          * Returns the stretching factor of the line.
@@ -117,7 +121,7 @@ namespace carto {
     
         LineEndType::LineEndType _lineEndType;
     
-        LineJointType::LineJointType _lineJointType;
+        LineJoinType::LineJoinType _lineJoinType;
     
         float _stretchFactor;
     

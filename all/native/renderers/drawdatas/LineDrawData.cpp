@@ -153,13 +153,16 @@ namespace carto {
     
         // Detect looped line
         bool loopedLine = (_poses.front() == _poses.back()) && (_poses.size() > 2);
+
+        // Detect if we must tesselate line joins
+        bool tesselateLineJoin = (style.getLineJoinType() == LineJoinType::LINE_JOIN_TYPE_BEVEL || style.getLineJoinType() == LineJoinType::LINE_JOIN_TYPE_ROUND);
     
         // Calculate angles between lines and buffers sizes
         std::size_t coordCount = (_poses.size() - 1) * 4;
         std::size_t indexCount = (_poses.size() - 1) * 6;
         std::vector<float> deltaAngles(_poses.size() - 1);
         float prevAngle = 0;
-        if (style.getLineJointType() != LineJointType::LINE_JOINT_TYPE_NONE) {
+        if (tesselateLineJoin) {
             for (std::size_t i = 0; i < _poses.size(); i++) {
                 if (!loopedLine && i + 1 >= _poses.size()) {
                     break;
@@ -168,7 +171,7 @@ namespace carto {
                 const cglib::vec3<double>& pos = _poses[i];
                 const cglib::vec3<double>& nextPos = (i + 1 <  _poses.size()) ? _poses[i + 1] : _poses[1];
                 cglib::vec3<double> nextLine(nextPos - pos);
-                float nextAngle = std::atan2(nextLine(1), nextLine(0)) * Const::RAD_TO_DEG - 90;
+                float nextAngle = static_cast<float>(std::atan2(nextLine(1), nextLine(0)) * Const::RAD_TO_DEG - 90);
     
                 if (i > 0) {
                     float deltaAngle = std::fmod((nextAngle - prevAngle + 360.0f), 360.0f);
@@ -178,7 +181,7 @@ namespace carto {
                     deltaAngles[i - 1] = deltaAngle;
     
                     int segments = 0;
-                    if (style.getLineJointType() == LineJointType::LINE_JOINT_TYPE_STRAIGHT) {
+                    if (style.getLineJoinType() == LineJoinType::LINE_JOIN_TYPE_BEVEL) {
                         segments = deltaAngle != 0 ? 1 : 0;
                     } else { //style.getLineJoinType() == LineJoinType::ROUND
                         segments = static_cast<int>(std::ceil(std::abs(deltaAngle) * style.getWidth() * LINE_ENDPOINT_TESSELATION_FACTOR));
@@ -199,151 +202,184 @@ namespace carto {
             indexCount += segments * 3 * 2;
         }
     
-        _coords.reserve(coordCount);
-        _normals.reserve(indexCount);
-        _texCoords.reserve(coordCount);
-        _indices.reserve(indexCount);
-    
         // Texture bounds
         float texCoordX = 1.0f;
         float texCoordY = 0.0f;
         float texCoordYScale = 1.0f / (style.getStretchFactor() * _bitmap->getHeight());
         bool useTexCoordY = _bitmap->getHeight() > 1;
-    
+
+        // Normal scale
+        float normalScale = style.getWidth() / 2.0f;
+
         // Instead of calculating actual vertex positions calculate vertex origins and normals
         // Actual vertex positions are view dependent and will be calculated in the renderer
         std::vector<cglib::vec3<double>*> coords;
         std::vector<cglib::vec2<float> > normals;
         std::vector<cglib::vec2<float> > texCoords;
         std::vector<unsigned int> indices;
-        cglib::vec3<double> firstLine;
-        cglib::vec3<double> lastLine;
-        cglib::vec3<double>* prevPos = nullptr;
-        unsigned int vertexIndex = 0;
-        for (std::size_t i = 0; i < _poses.size(); i++) {
-            cglib::vec3<double>& pos = _poses[i];
-            if (prevPos) {
-                // Calculate line body
-                cglib::vec3<double> prevLine(pos - *prevPos);
-                if (i == 1) {
-                    firstLine = prevLine;
-                }
-                if (i == _poses.size() - 1) {
-                    lastLine = prevLine;
-                }
-                float prevLineLength = static_cast<float>(cglib::length(prevLine));
-                cglib::vec2<float> prevPerpVec1(-prevLine(1), prevLine(0));
-                cglib::vec2<float> prevPerpVec2(prevLine(1), -prevLine(0));
-                prevPerpVec1 = prevPerpVec1 * static_cast<float>(style.getWidth() / 2 / prevLineLength);
-                prevPerpVec2 = prevPerpVec2 * static_cast<float>(style.getWidth() / 2 / prevLineLength);
-                
-                // Add line vertices, normals and indices
-                coords.push_back(prevPos);
-                coords.push_back(prevPos);
-                coords.push_back(&pos);
-                coords.push_back(&pos);
-                
-                if (useTexCoordY) {
-                    float texCoordYOffset = prevLineLength * texCoordYScale;
-                    texCoords.push_back(cglib::vec2<float>(0, texCoordY));
-                    texCoords.push_back(cglib::vec2<float>(texCoordX, texCoordY));
-                    texCoords.push_back(cglib::vec2<float>(0, texCoordY + texCoordYOffset));
-                    texCoords.push_back(cglib::vec2<float>(texCoordX, texCoordY + texCoordYOffset));
-                    texCoordY += texCoordYOffset;
-                } else {
-                    texCoords.push_back(cglib::vec2<float>(0, 0));
-                    texCoords.push_back(cglib::vec2<float>(texCoordX, 0));
-                    texCoords.push_back(cglib::vec2<float>(0, 1));
-                    texCoords.push_back(cglib::vec2<float>(texCoordX, 1));
-                }
-                
-                normals.push_back(prevPerpVec1);
-                normals.push_back(prevPerpVec2);
-                normals.push_back(prevPerpVec1);
-                normals.push_back(prevPerpVec2);
-                
-                indices.push_back(vertexIndex + 0);
-                indices.push_back(vertexIndex + 1);
-                indices.push_back(vertexIndex + 2);
-                indices.push_back(vertexIndex + 1);
-                indices.push_back(vertexIndex + 3);
-                indices.push_back(vertexIndex + 2);
-                
-                vertexIndex += 4;
-                
-                // Calculate line joints, if necessary
-                if ((i + 1 <  _poses.size() || loopedLine) && style.getLineJointType() != LineJointType::LINE_JOINT_TYPE_NONE) {
-                    float deltaAngle = deltaAngles[i - 1];
-                    
-                    int segments = 0;
-                    if (style.getLineJointType() == LineJointType::LINE_JOINT_TYPE_STRAIGHT) {
-                        segments = deltaAngle != 0 ? 1 : 0;
-                    } else { //style.getLineJoinType() == LineJoinType::ROUND
-                        segments = static_cast<int>(std::ceil(std::abs(deltaAngle) * style.getWidth() * LINE_JOINT_TESSELATION_FACTOR));
-                    }
-                    if (segments > 0) {
-                        float segmentDeltaAngle = deltaAngle / segments;
-                        float sin = std::sin(segmentDeltaAngle * Const::DEG_TO_RAD);
-                        float cos = std::cos(segmentDeltaAngle * Const::DEG_TO_RAD);
-                        
-                        // Add the t vertex
-                        coords.push_back(&pos);
-                        normals.push_back(cglib::vec2<float>(0, 0));
-                        texCoords.push_back(cglib::vec2<float>(0.5f, texCoordY));
-                        
-                        // Add vertices and normals, do not create double vertices anywhere
-                        bool leftTurn = (deltaAngle <= 0);
-                        cglib::vec2<float> rotVec(leftTurn ? prevPerpVec1 : prevPerpVec2);
-                        for (int j = 0; j < segments - 1; j++) {
-                            rotVec = rotate2D(rotVec, sin, cos);
-                            coords.push_back(&pos);
-                            normals.push_back(rotVec);
-                            texCoords.push_back(cglib::vec2<float>(leftTurn ? 0 : 1, texCoordY));
-                        }
-                        
-                        // Add indices, make use of existing and future line's vertices
-                        if (deltaAngle <= 0) {
-                            for (int j = 0; j < segments; j++) {
-                                indices.push_back(vertexIndex);
-                                if (j == segments - 1) {
-                                    indices.push_back((i == _poses.size() - 1) ? 0 : (vertexIndex + j + 1));
-                                } else {
-                                    indices.push_back(vertexIndex + j + 1);
-                                }
-                                indices.push_back((j == 0) ? vertexIndex - 2 : (vertexIndex + j));
-                            }
-                        } else {
-                            for (int j = 0; j < segments; j++) {
-                                indices.push_back(vertexIndex);
-                                indices.push_back((j == 0) ? vertexIndex - 1 : (vertexIndex + j));
-                                if (j == segments - 1) {
-                                    indices.push_back((i == _poses.size() - 1) ? 1 : (vertexIndex + j + 2));
-                                } else {
-                                    indices.push_back(vertexIndex + j + 1);
-                                }
-                            }
-                        }
-                        
-                        vertexIndex += segments;
-                    }
+        coords.reserve(coordCount);
+        normals.reserve(coordCount);
+        texCoords.reserve(coordCount);
+        indices.reserve(indexCount);
+
+        // Calculate initial state for line string
+        cglib::vec3<float> nextLine = cglib::vec3<float>::convert(_poses[1] - _poses[0]);
+        float nextLineLength = cglib::length(nextLine);
+        cglib::vec2<float> nextPerpVec(-nextLine(1) / nextLineLength, nextLine(0) / nextLineLength);
+
+        cglib::vec2<float> nextNormalVec = nextPerpVec * normalScale;
+        if (style.getLineJoinType() == LineJoinType::LINE_JOIN_TYPE_MITER) {
+            if (loopedLine) {
+                cglib::vec3<float> prevLine = cglib::vec3<float>::convert(_poses.front() - _poses.back());
+                float prevLineLength = cglib::length(prevLine);
+                cglib::vec2<float> prevPerpVec = cglib::vec2<float>(-prevLine(1) / prevLineLength, prevLine(0) / prevLineLength);
+
+                float dot = cglib::dot_product(prevPerpVec, nextPerpVec);
+                if (dot >= LINE_JOIN_MIN_MITER_DOT) {
+                    nextNormalVec = cglib::unit(prevPerpVec + nextPerpVec) * (1 / std::sqrt((1 + dot) / 2)) * normalScale;
                 }
             }
-    
-            prevPos = &pos;
+        }
+
+        // Loop over line segments
+        cglib::vec2<float> firstPerpVec;
+        cglib::vec2<float> lastPerpVec;
+        unsigned int vertexIndex = 0;
+        for (std::size_t i = 1; i < _poses.size(); i++) {
+            cglib::vec2<float> prevNormalVec = nextNormalVec;
+
+            cglib::vec3<double>& pos = _poses[i];
+            cglib::vec3<double>& prevPos = _poses[i - 1];
+            cglib::vec3<double>& nextPos = _poses[i + 1 < _poses.size() ? i + 1 : 0];
+
+            // Calculate line body
+            cglib::vec3<float> prevLine = cglib::vec3<float>::convert(pos - prevPos);
+            float prevLineLength = cglib::length(prevLine);
+            cglib::vec2<float> prevPerpVec(-prevLine(1) / prevLineLength, prevLine(0) / prevLineLength);
+
+            nextNormalVec = prevPerpVec * normalScale;
+            if (style.getLineJoinType() == LineJoinType::LINE_JOIN_TYPE_MITER) {
+                cglib::vec3<float> nextLine = cglib::vec3<float>::convert(nextPos - pos);
+                float nextLineLength = cglib::length(nextLine);
+                cglib::vec2<float> nextPerpVec(-nextLine(1) / nextLineLength, nextLine(0) / nextLineLength);
+
+                float dot = cglib::dot_product(prevPerpVec, nextPerpVec);
+                if (dot >= LINE_JOIN_MIN_MITER_DOT) {
+                    nextNormalVec = cglib::unit(prevPerpVec + nextPerpVec) * (1 / std::sqrt((1 + dot) / 2)) * normalScale;
+                }
+            } else {
+                prevNormalVec = nextNormalVec;
+            }
+
+            if (i == 1) {
+                firstPerpVec = prevPerpVec;
+            }
+            if (i == _poses.size() - 1) {
+                lastPerpVec = prevPerpVec;
+            }
+
+            // Add line vertices, normals and indices
+            coords.push_back(&prevPos);
+            coords.push_back(&prevPos);
+            coords.push_back(&pos);
+            coords.push_back(&pos);
+            
+            if (useTexCoordY) {
+                float texCoordYOffset = prevLineLength * texCoordYScale;
+                texCoords.push_back(cglib::vec2<float>(0, texCoordY));
+                texCoords.push_back(cglib::vec2<float>(texCoordX, texCoordY));
+                texCoords.push_back(cglib::vec2<float>(0, texCoordY + texCoordYOffset));
+                texCoords.push_back(cglib::vec2<float>(texCoordX, texCoordY + texCoordYOffset));
+                texCoordY += texCoordYOffset;
+            } else {
+                texCoords.push_back(cglib::vec2<float>(0, 0));
+                texCoords.push_back(cglib::vec2<float>(texCoordX, 0));
+                texCoords.push_back(cglib::vec2<float>(0, 1));
+                texCoords.push_back(cglib::vec2<float>(texCoordX, 1));
+            }
+
+            normals.push_back(prevNormalVec);
+            normals.push_back(-prevNormalVec);
+            normals.push_back(nextNormalVec);
+            normals.push_back(-nextNormalVec);
+            
+            indices.push_back(vertexIndex + 0);
+            indices.push_back(vertexIndex + 1);
+            indices.push_back(vertexIndex + 2);
+            indices.push_back(vertexIndex + 1);
+            indices.push_back(vertexIndex + 3);
+            indices.push_back(vertexIndex + 2);
+            
+            vertexIndex += 4;
+            
+            // Calculate line joins, if necessary
+            if (tesselateLineJoin && (i + 1 <  _poses.size() || loopedLine)) {
+                float deltaAngle = deltaAngles[i - 1];
+                
+                int segments = 0;
+                if (style.getLineJoinType() == LineJoinType::LINE_JOIN_TYPE_BEVEL) {
+                    segments = deltaAngle != 0 ? 1 : 0;
+                } else { //style.getLineJoinType() == LineJoinType::ROUND
+                    segments = static_cast<int>(std::ceil(std::abs(deltaAngle) * style.getWidth() * LINE_JOIN_TESSELATION_FACTOR));
+                }
+                if (segments > 0) {
+                    float segmentDeltaAngle = deltaAngle / segments;
+                    float sin = static_cast<float>(std::sin(segmentDeltaAngle * Const::DEG_TO_RAD));
+                    float cos = static_cast<float>(std::cos(segmentDeltaAngle * Const::DEG_TO_RAD));
+                    
+                    // Add the t vertex
+                    coords.push_back(&pos);
+                    normals.push_back(cglib::vec2<float>(0, 0));
+                    texCoords.push_back(cglib::vec2<float>(0.5f, texCoordY));
+                    
+                    // Add vertices and normals, do not create double vertices anywhere
+                    bool leftTurn = (deltaAngle <= 0);
+                    cglib::vec2<float> rotVec(leftTurn ? prevNormalVec : -prevNormalVec);
+                    for (int j = 0; j < segments - 1; j++) {
+                        rotVec = rotate2D(rotVec, sin, cos);
+                        coords.push_back(&pos);
+                        normals.push_back(rotVec);
+                        texCoords.push_back(cglib::vec2<float>(leftTurn ? 0.0f : 1.0f, texCoordY));
+                    }
+                    
+                    // Add indices, make use of existing and future line's vertices
+                    if (deltaAngle <= 0) {
+                        for (int j = 0; j < segments; j++) {
+                            indices.push_back(vertexIndex);
+                            if (j == segments - 1) {
+                                indices.push_back((i == _poses.size() - 1) ? 0 : (vertexIndex + j + 1));
+                            } else {
+                                indices.push_back(vertexIndex + j + 1);
+                            }
+                            indices.push_back((j == 0) ? vertexIndex - 2 : (vertexIndex + j));
+                        }
+                    } else {
+                        for (int j = 0; j < segments; j++) {
+                            indices.push_back(vertexIndex);
+                            indices.push_back((j == 0) ? vertexIndex - 1 : (vertexIndex + j));
+                            if (j == segments - 1) {
+                                indices.push_back((i == _poses.size() - 1) ? 1 : (vertexIndex + j + 2));
+                            } else {
+                                indices.push_back(vertexIndex + j + 1);
+                            }
+                        }
+                    }
+                    
+                    vertexIndex += segments;
+                }
+            }
         }
         
         // Calculate line end points
         if (!loopedLine && style.getLineEndType() == LineEndType::LINE_END_TYPE_ROUND) {
             int segments = static_cast<int>(180 * style.getWidth() * LINE_ENDPOINT_TESSELATION_FACTOR);
             if (segments > 0) {
-                float segmentDeltaAngle = 180 / segments;
-                float sin = std::sin(segmentDeltaAngle * Const::DEG_TO_RAD);
-                float cos = std::cos(segmentDeltaAngle * Const::DEG_TO_RAD);
+                float segmentDeltaAngle = 180.0f / segments;
+                float sin = static_cast<float>(std::sin(segmentDeltaAngle * Const::DEG_TO_RAD));
+                float cos = static_cast<float>(std::cos(segmentDeltaAngle * Const::DEG_TO_RAD));
                 
-                // Last end point, prevLine contains the last valid line segment
-                float lastLineLength = static_cast<float>(cglib::length(lastLine));
-                cglib::vec2<float> rotVec(lastLine(1), -lastLine(0));
-                rotVec = rotVec * (style.getWidth() / 2 / lastLineLength);
+                // Last end point, lastLine contains the last valid line segment
+                cglib::vec2<float> rotVec(-lastPerpVec);
                 cglib::vec2<float> uvRotVec(-1, 0);
                 
                 // Add the t vertex
@@ -369,9 +405,7 @@ namespace carto {
                 vertexIndex += segments;
                 
                 // First end point, firstLine contains the first valid line segment
-                float firstLineLength = static_cast<float>(cglib::length(firstLine));
-                rotVec = cglib::vec2<float>(-firstLine(1), firstLine(0));
-                rotVec = rotVec * (style.getWidth() / 2 / firstLineLength);
+                rotVec = firstPerpVec;
                 uvRotVec = cglib::vec2<float>(1, 0);
                 
                 // Add the t vertex
@@ -395,7 +429,6 @@ namespace carto {
                     indices.push_back((j == segments - 1) ? 1 : (vertexIndex + j + 1));
                 }
                 vertexIndex += segments;
-    
             }
         }
         
@@ -459,7 +492,8 @@ namespace carto {
     }
     
     const float LineDrawData::LINE_ENDPOINT_TESSELATION_FACTOR = 0.004f;
-    const float LineDrawData::LINE_JOINT_TESSELATION_FACTOR = 0.0018f;
+    const float LineDrawData::LINE_JOIN_TESSELATION_FACTOR = 0.0018f;
+    const float LineDrawData::LINE_JOIN_MIN_MITER_DOT = -0.8f;
     
     const float LineDrawData::CLICK_WIDTH_COEF = 0.5f;
     

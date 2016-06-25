@@ -46,7 +46,8 @@ namespace carto {
     
     private:
         static const float LINE_ENDPOINT_TESSELATION_FACTOR;
-        static const float LINE_JOINT_TESSELATION_FACTOR;
+        static const float LINE_JOIN_TESSELATION_FACTOR;
+        static const float LINE_JOIN_MIN_MITER_DOT;
     
         static const int IDEAL_CLICK_WIDTH = 64;
     

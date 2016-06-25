@@ -21,7 +21,7 @@
 %attribute(carto::LineStyleBuilder, float, Width, getWidth, setWidth)
 %attribute(carto::LineStyleBuilder, float, ClickWidth, getClickWidth, setClickWidth)
 %attribute(carto::LineStyleBuilder, float, StretchFactor, getStretchFactor, setStretchFactor)
-%attribute(carto::LineStyleBuilder, carto::LineJointType::LineJointType, LineJointType, getLineJointType, setLineJointType)
+%attribute(carto::LineStyleBuilder, carto::LineJoinType::LineJoinType, LineJoinType, getLineJoinType, setLineJoinType)
 %attribute(carto::LineStyleBuilder, carto::LineEndType::LineEndType, LineEndType, getLineEndType, setLineEndType)
 %attributestring(carto::LineStyleBuilder, std::shared_ptr<carto::Bitmap>, Bitmap, getBitmap, setBitmap)
 

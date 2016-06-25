@@ -3,13 +3,13 @@
 namespace carto {
 
     LineStyle::LineStyle(const Color& color, const std::shared_ptr<Bitmap>& bitmap, float clickWidth,
-            LineEndType::LineEndType lineEndType, LineJointType::LineJointType lineJointType,
+            LineEndType::LineEndType lineEndType, LineJoinType::LineJoinType lineJoinType,
             float stretchFactor, float width) :
         Style(color),
         _bitmap(bitmap),
         _clickWidth(clickWidth),
         _lineEndType(lineEndType),
-        _lineJointType(lineJointType),
+        _lineJoinType(lineJoinType),
         _stretchFactor(stretchFactor),
         _width(width)
     {
@@ -30,8 +30,8 @@ namespace carto {
         return _lineEndType;
     }
     
-    LineJointType::LineJointType LineStyle::getLineJointType() const {
-        return _lineJointType;
+    LineJoinType::LineJoinType LineStyle::getLineJoinType() const {
+        return _lineJoinType;
     }
     
     float LineStyle::getStretchFactor() const {

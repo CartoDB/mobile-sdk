@@ -9,7 +9,7 @@ namespace carto {
         _bitmap(GetDefaultBitmap()),
         _clickWidth(-1),
         _lineEndType(LineEndType::LINE_END_TYPE_ROUND),
-        _lineJointType(LineJointType::LINE_JOINT_TYPE_ROUND),
+        _lineJoinType(LineJoinType::LINE_JOIN_TYPE_MITER),
         _stretchFactor(1),
         _width(12)
     {
@@ -48,14 +48,14 @@ namespace carto {
         _lineEndType = lineEndType;
     }
         
-    LineJointType::LineJointType LineStyleBuilder::getLineJointType() {
+    LineJoinType::LineJoinType LineStyleBuilder::getLineJoinType() {
         std::lock_guard<std::mutex> lock(_mutex);
-        return _lineJointType;
+        return _lineJoinType;
     }
     
-    void LineStyleBuilder::setLineJointType(LineJointType::LineJointType lineJointType) {
+    void LineStyleBuilder::setLineJoinType(LineJoinType::LineJoinType lineJoinType) {
         std::lock_guard<std::mutex> lock(_mutex);
-        _lineJointType = lineJointType;
+        _lineJoinType = lineJoinType;
     }
         
     float LineStyleBuilder::getStretchFactor() {
@@ -80,7 +80,7 @@ namespace carto {
     
     std::shared_ptr<LineStyle> LineStyleBuilder::buildStyle() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return std::make_shared<LineStyle>(_color, _bitmap, _clickWidth, _lineEndType, _lineJointType,
+        return std::make_shared<LineStyle>(_color, _bitmap, _clickWidth, _lineEndType, _lineJoinType,
                 _stretchFactor, _width);
     }
     

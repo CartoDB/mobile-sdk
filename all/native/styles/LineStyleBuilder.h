@@ -66,15 +66,15 @@ namespace carto {
         void setLineEndType(LineEndType::LineEndType lineEndType);
     
         /**
-         * Returns the joint type of the line.
-         * @return The joint type of the line.
+         * Returns the join type of the line.
+         * @return The join type of the line.
          */
-        LineJointType::LineJointType getLineJointType();
+        LineJoinType::LineJoinType getLineJoinType();
         /**
-         * Sets the style in which the line segments will be connected with each other. The default is LineJointType::ROUND.
-         * @param lineJointType The new line joint type.
+         * Sets the style in which the line segments will be connected with each other. The default is LineJoinType::MITER.
+         * @param lineJoinType The new line join type.
          */
-        void setLineJointType(LineJointType::LineJointType lineJointType);
+        void setLineJoinType(LineJoinType::LineJoinType lineJoinType);
     
         /**
          * Returns the stretch factor of the line.
@@ -119,7 +119,7 @@ namespace carto {
     
         LineEndType::LineEndType _lineEndType;
     
-        LineJointType::LineJointType _lineJointType;
+        LineJoinType::LineJoinType _lineJoinType;
     
         float _stretchFactor;
     
