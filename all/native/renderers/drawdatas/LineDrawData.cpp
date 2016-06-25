@@ -169,7 +169,7 @@ namespace carto {
                 }
     
                 const cglib::vec3<double>& pos = _poses[i];
-                const cglib::vec3<double>& nextPos = (i + 1 <  _poses.size()) ? _poses[i + 1] : _poses[1];
+                const cglib::vec3<double>& nextPos = (i + 1 < _poses.size()) ? _poses[i + 1] : _poses[1];
                 cglib::vec3<double> nextLine(nextPos - pos);
                 float nextAngle = static_cast<float>(std::atan2(nextLine(1), nextLine(0)) * Const::RAD_TO_DEG - 90);
     
@@ -230,7 +230,7 @@ namespace carto {
         cglib::vec2<float> nextNormalVec = nextPerpVec * normalScale;
         if (style.getLineJoinType() == LineJoinType::LINE_JOIN_TYPE_MITER) {
             if (loopedLine) {
-                cglib::vec3<float> prevLine = cglib::vec3<float>::convert(_poses.front() - _poses.back());
+                cglib::vec3<float> prevLine = cglib::vec3<float>::convert(_poses[0] - _poses[_poses.size() - 2]);
                 float prevLineLength = cglib::length(prevLine);
                 cglib::vec2<float> prevPerpVec = cglib::vec2<float>(-prevLine(1) / prevLineLength, prevLine(0) / prevLineLength);
 
@@ -250,7 +250,7 @@ namespace carto {
 
             cglib::vec3<double>& pos = _poses[i];
             cglib::vec3<double>& prevPos = _poses[i - 1];
-            cglib::vec3<double>& nextPos = _poses[i + 1 < _poses.size() ? i + 1 : 0];
+            cglib::vec3<double>& nextPos = _poses[i + 1 < _poses.size() ? i + 1 : 1];
 
             // Calculate line body
             cglib::vec3<float> prevLine = cglib::vec3<float>::convert(pos - prevPos);
@@ -259,13 +259,15 @@ namespace carto {
 
             nextNormalVec = prevPerpVec * normalScale;
             if (style.getLineJoinType() == LineJoinType::LINE_JOIN_TYPE_MITER) {
-                cglib::vec3<float> nextLine = cglib::vec3<float>::convert(nextPos - pos);
-                float nextLineLength = cglib::length(nextLine);
-                cglib::vec2<float> nextPerpVec(-nextLine(1) / nextLineLength, nextLine(0) / nextLineLength);
+                if (i + 1 < _poses.size() || loopedLine) {
+                    cglib::vec3<float> nextLine = cglib::vec3<float>::convert(nextPos - pos);
+                    float nextLineLength = cglib::length(nextLine);
+                    cglib::vec2<float> nextPerpVec(-nextLine(1) / nextLineLength, nextLine(0) / nextLineLength);
 
-                float dot = cglib::dot_product(prevPerpVec, nextPerpVec);
-                if (dot >= LINE_JOIN_MIN_MITER_DOT) {
-                    nextNormalVec = cglib::unit(prevPerpVec + nextPerpVec) * (1 / std::sqrt((1 + dot) / 2)) * normalScale;
+                    float dot = cglib::dot_product(prevPerpVec, nextPerpVec);
+                    if (dot >= LINE_JOIN_MIN_MITER_DOT) {
+                        nextNormalVec = cglib::unit(prevPerpVec + nextPerpVec) * (1 / std::sqrt((1 + dot) / 2)) * normalScale;
+                    }
                 }
             } else {
                 prevNormalVec = nextNormalVec;
@@ -379,7 +381,7 @@ namespace carto {
                 float cos = static_cast<float>(std::cos(segmentDeltaAngle * Const::DEG_TO_RAD));
                 
                 // Last end point, lastLine contains the last valid line segment
-                cglib::vec2<float> rotVec(-lastPerpVec);
+                cglib::vec2<float> rotVec = -lastPerpVec * normalScale;
                 cglib::vec2<float> uvRotVec(-1, 0);
                 
                 // Add the t vertex
@@ -405,7 +407,7 @@ namespace carto {
                 vertexIndex += segments;
                 
                 // First end point, firstLine contains the first valid line segment
-                rotVec = firstPerpVec;
+                rotVec = firstPerpVec * normalScale;
                 uvRotVec = cglib::vec2<float>(1, 0);
                 
                 // Add the t vertex
