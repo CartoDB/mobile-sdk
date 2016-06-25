@@ -23,6 +23,10 @@ namespace carto {
              */
             LINE_END_TYPE_NONE,
             /**
+             * Line end points are drawn as squares.
+             */
+            LINE_END_TYPE_SQUARE,
+            /**
              * Line end points are drawn as half circles.
              */
             LINE_END_TYPE_ROUND

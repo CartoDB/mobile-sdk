@@ -321,7 +321,7 @@ namespace carto {
                 int segments = 0;
                 if (style.getLineJoinType() == LineJoinType::LINE_JOIN_TYPE_BEVEL) {
                     segments = deltaAngle != 0 ? 1 : 0;
-                } else { //style.getLineJoinType() == LineJoinType::ROUND
+                } else { // style.getLineJoinType() == LineJoinType::ROUND
                     segments = static_cast<int>(std::ceil(std::abs(deltaAngle) * style.getWidth() * LINE_JOIN_TESSELATION_FACTOR));
                 }
                 if (segments > 0) {
@@ -373,10 +373,18 @@ namespace carto {
         }
         
         // Calculate line end points
-        if (!loopedLine && style.getLineEndType() == LineEndType::LINE_END_TYPE_ROUND) {
-            int segments = static_cast<int>(180 * style.getWidth() * LINE_ENDPOINT_TESSELATION_FACTOR);
-            if (segments > 0) {
-                float segmentDeltaAngle = 180.0f / segments;
+        if (!loopedLine && style.getLineEndType() != LineEndType::LINE_END_TYPE_NONE) {
+            int segments = 0;
+            float segmentDeltaAngle = 0.0f;
+            if (style.getLineEndType() == LineEndType::LINE_END_TYPE_SQUARE) {
+                segments = 3;
+                segmentDeltaAngle = 45.0f;
+                normalScale *= std::sqrtf(2.0f);
+            } else { // style.getLineEndType() == LineEndType::SQUARE
+                segments = static_cast<int>(180 * style.getWidth() * LINE_ENDPOINT_TESSELATION_FACTOR);
+                segmentDeltaAngle = 180.0f / segments;
+            }
+            if (segments > 1) {
                 float sin = static_cast<float>(std::sin(segmentDeltaAngle * Const::DEG_TO_RAD));
                 float cos = static_cast<float>(std::cos(segmentDeltaAngle * Const::DEG_TO_RAD));
                 
@@ -396,6 +404,10 @@ namespace carto {
                     coords.push_back(&_poses[_poses.size() - 1]);
                     normals.push_back(rotVec);
                     texCoords.push_back(cglib::vec2<float>(uvRotVec(0) * 0.5f + 0.5f, texCoordY));
+                    if (i == 0 && style.getLineEndType() == LineEndType::LINE_END_TYPE_SQUARE) {
+                        rotVec = rotate2D(rotVec, sin, cos);
+                        uvRotVec = rotate2D(uvRotVec, sin, cos);
+                    }
                 }
                 
                 // Indices
@@ -422,6 +434,10 @@ namespace carto {
                     coords.push_back(&_poses[0]);
                     normals.push_back(rotVec);
                     texCoords.push_back(cglib::vec2<float>(uvRotVec(0) * 0.5f + 0.5f, 0));
+                    if (i == 0 && style.getLineEndType() == LineEndType::LINE_END_TYPE_SQUARE) {
+                        rotVec = rotate2D(rotVec, sin, cos);
+                        uvRotVec = rotate2D(uvRotVec, sin, cos);
+                    }
                 }
                 
                 // Indices
