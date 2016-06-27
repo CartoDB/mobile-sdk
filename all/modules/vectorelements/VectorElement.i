@@ -5,7 +5,7 @@
 
 %module VectorElement
 
-!proxy_imports(carto::VectorElement, core.MapBounds, core.Variant, core.VariantMap, geometry.Geometry)
+!proxy_imports(carto::VectorElement, core.MapBounds, core.Variant, core.StringVariantMap, geometry.Geometry)
 
 %{
 #include "vectorelements/VectorElement.h"
