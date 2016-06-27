@@ -290,8 +290,8 @@ namespace carto {
             unbind();
             
             // Draw the draw datas, multiple passes may be necessary
-            for (const LineDrawData& lineDrawData : drawData->getLineDrawDatas()) {
-                _lineRenderer.addToBatch(std::make_shared<LineDrawData>(lineDrawData), styleCache, viewState); // TODO: fix performance, do not create new shared_ptr
+            for (const std::shared_ptr<LineDrawData>& lineDrawData : drawData->getLineDrawDatas()) {
+                _lineRenderer.addToBatch(lineDrawData, styleCache, viewState);
             }
 
             _lineRenderer.bind(viewState);

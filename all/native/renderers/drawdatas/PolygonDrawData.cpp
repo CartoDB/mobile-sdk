@@ -66,7 +66,7 @@ namespace carto {
         tessAddContour(tess, 2, posesArray.data(), sizeof(double) * 2, static_cast<unsigned int>(poses.size()));
     
         if (style.getLineStyle()) {
-            _lineDrawDatas.emplace_back(geometry, internalPoses, *style.getLineStyle(), projection);
+            _lineDrawDatas.push_back(std::make_shared<LineDrawData>(geometry, internalPoses, *style.getLineStyle(), projection));
         }
     
         // Add polygon holes
@@ -86,7 +86,7 @@ namespace carto {
             tessAddContour(tess, 2, holeArray.data(), sizeof(double) * 2, static_cast<unsigned int>(hole.size()));
     
             if (style.getLineStyle()) {
-                _lineDrawDatas.emplace_back(geometry, internalPoses, *style.getLineStyle(), projection);
+                _lineDrawDatas.push_back(std::make_shared<LineDrawData>(geometry, internalPoses, *style.getLineStyle(), projection));
             }
         }
     
@@ -173,7 +173,7 @@ namespace carto {
         return _indices;
     }
     
-    const std::vector<LineDrawData>& PolygonDrawData::getLineDrawDatas() const {
+    const std::vector<std::shared_ptr<LineDrawData> >& PolygonDrawData::getLineDrawDatas() const {
         return _lineDrawDatas;
     }
     
@@ -184,8 +184,8 @@ namespace carto {
             }
         }
     
-        for (LineDrawData& drawData : _lineDrawDatas) {
-            drawData.offsetHorizontally(offset);
+        for (const std::shared_ptr<LineDrawData>& drawData : _lineDrawDatas) {
+            drawData->offsetHorizontally(offset);
         }
         
         setIsOffset(true);

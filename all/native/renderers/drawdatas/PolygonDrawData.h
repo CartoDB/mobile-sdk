@@ -37,7 +37,7 @@ namespace carto {
     
         const std::vector<std::vector<unsigned int> >& getIndices() const;
     
-        const std::vector<LineDrawData>& getLineDrawDatas() const;
+        const std::vector<std::shared_ptr<LineDrawData> >& getLineDrawDatas() const;
     
         virtual void offsetHorizontally(double offset);
     
@@ -52,7 +52,7 @@ namespace carto {
 
         std::vector<std::vector<unsigned int> > _indices;
     
-        std::vector<LineDrawData> _lineDrawDatas;
+        std::vector<std::shared_ptr<LineDrawData> > _lineDrawDatas;
     };
     
 }
