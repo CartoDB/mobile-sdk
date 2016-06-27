@@ -48,7 +48,7 @@ namespace carto {
         Log::Infof("CartoOnlineTileDataSource::loadOnlineTile: Loading tile %d/%d/%d", mapTile.getZoom(), mapTile.getX(), mapTile.getY());
 
         std::stringstream ss;
-        ss << "http://api.nutiteq.com/v1/" << _source << "/" << mapTile.getZoom() << "/" << mapTile.getX() << "/" << mapTile.getY() << ".vt?user_key=" << LicenseManager::GetInstance().getUserKey();
+        ss << TILE_SERVICE_URL << _source << "/" << mapTile.getZoom() << "/" << mapTile.getX() << "/" << mapTile.getY() << ".vt?user_key=" << LicenseManager::GetInstance().getUserKey();
         std::string url = ss.str();
         std::map<std::string, std::string> requestHeaders;
         std::map<std::string, std::string> responseHeaders;
@@ -64,5 +64,9 @@ namespace carto {
         }
         return tileData;
     }
+
+    const int CartoOnlineTileDataSource::DEFAULT_CACHED_TILES = 8;
+
+    const std::string CartoOnlineTileDataSource::TILE_SERVICE_URL = "http://api.nutiteq.com/v1/";
     
 }

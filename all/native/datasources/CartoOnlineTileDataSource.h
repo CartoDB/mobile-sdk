@@ -32,7 +32,9 @@ namespace carto {
     protected:
         std::shared_ptr<TileData> loadOnlineTile(const MapTile& mapTile);
 
-                static const int DEFAULT_CACHED_TILES = 8;
+        static const int DEFAULT_CACHED_TILES;
+
+        static const std::string TILE_SERVICE_URL;
 
         std::string _source;
         cache::timed_lru_cache<long long, std::shared_ptr<TileData> > _cache;

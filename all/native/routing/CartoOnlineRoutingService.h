@@ -30,9 +30,9 @@ namespace carto {
         virtual std::shared_ptr<RoutingResult> calculateRoute(const std::shared_ptr<RoutingRequest>& request) const;
 
     protected:
+        static const std::string ROUTING_SERVICE_URL;
+
         std::string _source;
-        
-        static const double COORDINATE_SCALE;
     };
     
 }

@@ -39,7 +39,9 @@ namespace carto {
         
     private:
         static const std::string MAP_PACKAGE_LIST_URL;
+
         static const std::string ROUTING_PACKAGE_LIST_URL;
+
         static const std::string CUSTOM_BBOX_PACKAGE_URL;
         
         static const std::string SERVER_ENC_KEY;

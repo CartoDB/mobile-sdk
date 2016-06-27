@@ -22,7 +22,7 @@ namespace carto {
         std::shared_ptr<Projection> proj = request->getProjection();
         
         std::stringstream ss;
-        ss << "http://api.nutiteq.com/routing/v1/" << _source << "/viaroute" << "?user_key=" << LicenseManager::GetInstance().getUserKey();
+        ss << ROUTING_SERVICE_URL << _source << "/viaroute" << "?user_key=" << LicenseManager::GetInstance().getUserKey();
         for (std::size_t i = 0; i < request->getPoints().size(); i++) {
             MapPos p = proj->toWgs84(request->getPoints()[i]);
             ss << "&loc=" << p.getY() << "," << p.getX();
@@ -38,5 +38,7 @@ namespace carto {
         }
         return std::shared_ptr<RoutingResult>();
     }
+
+    const std::string CartoOnlineRoutingService::ROUTING_SERVICE_URL = "http://api.nutiteq.com/routing/v1/";
     
 }

@@ -13,7 +13,6 @@ namespace carto {
             _fragSource(fragSource)
         {
         }
-        virtual ~ShaderSource() {}
     
         const std::string& getName() const { return _name; }
     

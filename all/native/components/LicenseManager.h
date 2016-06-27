@@ -56,7 +56,7 @@ namespace carto {
         mutable std::mutex _mutex;
 
         static const std::string LICENSE_PREFIX;
-        static const std::string LICENSESERVER_URL;
+        static const std::string LICENSE_SERVICE_URL;
         static const std::string PUBLIC_KEY;
         static const std::string PRODUCT_VERSION;
     };
