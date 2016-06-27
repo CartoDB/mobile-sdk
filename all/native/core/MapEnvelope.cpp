@@ -119,12 +119,11 @@ namespace carto {
     std::string MapEnvelope::toString() const {
         std::stringstream ss;
         ss << std::setiosflags(std::ios::fixed);
-        ss << "Envelope [";
+        ss << "MapEnvelope [";
         if (_rectangularConvexHull) {
             ss << _bounds.toString();
         } else {
-            std::vector<MapPos>::const_iterator it;
-            for (it = _convexHull.begin(); it != _convexHull.end(); ++it) {
+            for (auto it = _convexHull.begin(); it != _convexHull.end(); ++it) {
                 const MapPos& pos = *it;
                 ss << (it == _convexHull.begin() ? "" : ", ") << pos.toString();
             }

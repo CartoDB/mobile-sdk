@@ -8,6 +8,7 @@
 #define _CARTO_VECTORELEMENT_H_
 
 #include "core/MapBounds.h"
+#include "core/Variant.h"
 
 #include <map>
 #include <memory>
@@ -55,25 +56,25 @@ namespace carto {
          * Returns a modifiable meta data map. Users may add their data as key-value pairs.
          * @return The modifiable meta data map of this vector element.
          */
-        std::map<std::string, std::string> getMetaData() const;
+        std::map<std::string, Variant> getMetaData() const;
         /**
          * Sets a new meta data map for the vector element. Old meta data values will be lost.
          * @param metaData The new meta data map for this vector element.
          */
-        void setMetaData(const std::map<std::string, std::string>& metaData);
+        void setMetaData(const std::map<std::string, Variant>& metaData);
         
         /** 
-         * Returns a meta data element corresponding to the key. If no value is found an empty string is returned.
+         * Returns a meta data element corresponding to the key. If no value is found null variant is returned.
          * @return The value corresponding to the key from the meta data map. May be null.
          */
-        std::string getMetaDataElement(const std::string& key) const;
+        Variant getMetaDataElement(const std::string& key) const;
         /**
          * Adds a new key-value pair to the meta data map. If the key already exists in the map,
          * it's value will be replaced by the new value.
          * @param key The new key.
          * @param element The new value.
          */
-        void setMetaDataElement(const std::string& key, const std::string& element);
+        void setMetaDataElement(const std::string& key, const Variant& element);
     
         /**
          * Returns the state of the visibility flag of this vector element.
@@ -110,7 +111,7 @@ namespace carto {
     private:
         long long _id;
     
-        std::map<std::string, std::string> _metaData;
+        std::map<std::string, Variant> _metaData;
     
         bool _visible;
     };

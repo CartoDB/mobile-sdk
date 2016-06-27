@@ -468,21 +468,36 @@ namespace carto {
                 continue;
             }
 
-            std::map<std::string, std::string> metaData;
+            std::map<std::string, Variant> metaData;
             OGRFeatureDefn *poFDefn = _poLayer->GetLayerDefn();
             if (poFDefn) {
                 for (int i = 0; i < poFDefn->GetFieldCount(); i++) {
-                    const char* value = poFeature->GetFieldAsString(i);
-                    if (!value) {
-                        continue;
+                    OGRFieldDefn* poFieldDefn = poFeature->GetFieldDefnRef(i);
+                    Variant value;
+                    switch (poFieldDefn->getType()) {
+                        case OFTInteger:
+                        case OFTInteger64:
+                            value = Variant(poFeature->GetFieldAsInteger64());
+                            break;
+                        case OFTReal:
+                            value = Variant(poFeature->GetFieldAsDouble());
+                            break;
+                        default: {
+                            const char* strValue = poFeature->GetFieldAsString(i);
+                            if (!strValue) {
+                                continue;
+                            }
+                            char* utf8Value = CPLRecode(strValue, _codePage.c_str(), "UTF-8");
+                            if (utf8Value) {
+                                value = Variant(utf8Value);
+                                CPLFree(utf8Value);
+                            } else {
+                                value = Variant(strValue);
+                            }
+                            break;
+                        }
                     }
-                    char* utf8Value = CPLRecode(value, _codePage.c_str(), "UTF-8");
-                    if (utf8Value) {
-                        metaData[poFDefn->GetFieldDefn(i)->GetNameRef()] = utf8Value;
-                        CPLFree(utf8Value);
-                    } else {
-                        metaData[poFDefn->GetFieldDefn(i)->GetNameRef()] = value;
-                    }
+                    metaData[poFDefn->GetFieldDefn(i)->GetNameRef()] = value;
                 }
             }
                 
@@ -737,19 +752,41 @@ namespace carto {
         // Set meta data
         OGRFeatureDefn *poFDefn = _poLayer->GetLayerDefn();
         if (poFDefn) {
-            std::map<std::string, std::string> metaData = element->getMetaData();
+            std::map<std::string, Variant> metaData = element->getMetaData();
             for (int i = 0; i < poFDefn->GetFieldCount(); i++) {
-                std::string value;
+                Variant value;
                 auto it = metaData.find(poFDefn->GetFieldDefn(i)->GetNameRef());
                 if (it != metaData.end()) {
                     value = it->second;
                 }
-                char* encValue = CPLRecode(value.c_str(), "UTF-8", _codePage.c_str());
-                if (encValue) {
-                    poFeature->SetField(i, encValue);
-                    CPLFree(encValue);
-                } else {
-                    poFeature->SetField(i, value.c_str());
+
+                OGRFieldDefn* poFieldDefn = poFeature->GetFieldDefnRef(i);
+                switch (poFieldDefn->getType()) {
+                    case OFTInteger:
+                        poFeature->SetField(i, static_cast<int>(value.getLong()));
+                        break;
+                    case OFTInteger64:
+                        poFeature->SetField(i, value.getLong());
+                        break;
+                    case OFTReal:
+                        poFeature->SetField(i, value.getDouble());
+                        break;
+                    default: {
+                        std::string strValue;
+                        if (value.getType() == VariantType::VARIANT_TYPE_STRING) {
+                            strValue = value.getString();
+                        } else {
+                            strValue = value.toString();
+                        }
+                        char* encValue = CPLRecode(strValue.c_str(), "UTF-8", _codePage.c_str());
+                        if (encValue) {
+                            poFeature->SetField(i, encValue);
+                            CPLFree(encValue);
+                        } else {
+                            poFeature->SetField(i, strValue.c_str());
+                        }
+                        break;
+                    }
                 }
             }
         }

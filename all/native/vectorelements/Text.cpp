@@ -46,7 +46,12 @@ namespace carto {
         // Use actual text or text field
         std::string text = _text;
         if (text.empty() && !_style->getTextField().empty()) {
-            text = getMetaDataElement(_style->getTextField());
+            Variant value = getMetaDataElement(_style->getTextField());
+            if (value.getType() == VariantType::VARIANT_TYPE_STRING) {
+                text = value.getString();
+            } else {
+                text = value.toString();
+            }
         }
 
         float fontSize = _style->getFontSize() * dpToPX;

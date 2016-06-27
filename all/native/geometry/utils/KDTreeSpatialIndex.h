@@ -213,7 +213,7 @@ namespace carto {
         }
         
         // Remove object from current node
-        for (typename std::list<Record>::iterator it = node->records.begin(); it != node->records.end(); ++it) {
+        for (auto it = node->records.begin(); it != node->records.end(); ++it) {
             const Record& record = *it;
             if (record.object == object) {
                 it = node->records.erase(it);

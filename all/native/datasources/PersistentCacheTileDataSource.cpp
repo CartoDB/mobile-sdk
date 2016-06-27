@@ -201,7 +201,7 @@ namespace carto {
             return std::shared_ptr<TileData>();
         }
     
-        CacheElementItMap::const_iterator it = _mappedElements.find(tileId);
+        auto it = _mappedElements.find(tileId);
         if (it == _mappedElements.end()) {
             return std::shared_ptr<TileData>();
         } else {
@@ -250,7 +250,7 @@ namespace carto {
             return;
         }
         
-        CacheElementItMap::const_iterator it = _mappedElements.find(tileId);
+        auto it = _mappedElements.find(tileId);
         if (it != _mappedElements.end()) {
             CacheElement& element = *it->second;
             _sizeInBytes -= element._sizeInBytes;

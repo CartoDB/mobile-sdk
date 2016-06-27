@@ -68,7 +68,7 @@ namespace carto {
         std::ostringstream escaped;
         escaped.fill('0');
         escaped << std::hex;
-        for (std::string::const_iterator it = value.begin(); it != value.end(); it++) {
+        for (auto it = value.begin(); it != value.end(); it++) {
             char c = *it;
             if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '-' || c == '_' || c == '.' || c == '~') {
                 escaped << c;

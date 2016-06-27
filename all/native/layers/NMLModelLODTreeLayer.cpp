@@ -189,10 +189,10 @@ namespace carto {
     }	
     
     bool NMLModelLODTreeLayer::loadModelLODTrees(const MapTileList& mapTileList, bool checkOnly) {
-        for (MapTileList::const_iterator it = mapTileList.begin(); it != mapTileList.end(); it++) {
+        for (auto it = mapTileList.begin(); it != mapTileList.end(); it++) {
             const NMLModelLODTreeDataSource::MapTile& mapTile = *it;
     
-            ModelLODTreeMap::const_iterator modelLODTreeIt = _modelLODTreeMap.find(mapTile.modelLODTreeId);
+            auto modelLODTreeIt = _modelLODTreeMap.find(mapTile.modelLODTreeId);
             if (modelLODTreeIt == _modelLODTreeMap.end()) {
                 std::shared_ptr<NMLModelLODTree> modelLODTree;
                 if (_modelLODTreeCache.read(mapTile.modelLODTreeId, modelLODTree)) {
@@ -212,15 +212,15 @@ namespace carto {
     }
     
     bool NMLModelLODTreeLayer::loadMeshes(const NMLModelLODTree* modelLODTree, int nodeId, bool checkOnly) {
-        NMLModelLODTree::MeshBindingsMap::const_iterator mapIt = modelLODTree->getMeshBindingsMap().find(nodeId);
+        auto mapIt = modelLODTree->getMeshBindingsMap().find(nodeId);
         if (mapIt == modelLODTree->getMeshBindingsMap().end()) {
             return false;
         }
     
-        for (NMLModelLODTree::MeshBindingList::const_iterator listIt = mapIt->second.begin(); listIt != mapIt->second.end(); listIt++) {
+        for (auto listIt = mapIt->second.begin(); listIt != mapIt->second.end(); listIt++) {
             const NMLModelLODTree::MeshBinding& binding = *listIt;
     
-            MeshMap::const_iterator meshIt = _meshMap.find(binding.meshId);
+            auto meshIt = _meshMap.find(binding.meshId);
             if (meshIt == _meshMap.end()) {
                 std::shared_ptr<nml::GLMesh> glMesh;
                 if (_meshCache.read(binding.meshId, glMesh)) {
@@ -240,15 +240,15 @@ namespace carto {
     }
     
     bool NMLModelLODTreeLayer::loadTextures(const NMLModelLODTree* modelLODTree, int nodeId, bool checkOnly) {
-        NMLModelLODTree::TextureBindingsMap::const_iterator mapIt = modelLODTree->getTextureBindingsMap().find(nodeId);
+        auto mapIt = modelLODTree->getTextureBindingsMap().find(nodeId);
         if (mapIt == modelLODTree->getTextureBindingsMap().end()) {
             return false;
         }
     
-        for (NMLModelLODTree::TextureBindingList::const_iterator listIt = mapIt->second.begin(); listIt != mapIt->second.end(); listIt++) {
+        for (auto listIt = mapIt->second.begin(); listIt != mapIt->second.end(); listIt++) {
             const NMLModelLODTree::TextureBinding& binding = *listIt;
     
-            TextureMap::const_iterator textureIt = _textureMap.find(binding.textureId);
+            auto textureIt = _textureMap.find(binding.textureId);
             if (textureIt == _textureMap.end()) {
                 std::shared_ptr<nml::GLTexture> glTexture;
                 if (_textureCache.read(binding.textureId, glTexture)) {
@@ -268,11 +268,11 @@ namespace carto {
     }
     
     void NMLModelLODTreeLayer::updateModelLODTrees(const MapTileList& mapTileList, ModelLODTreeMap& modelLODTreeMap) {
-        for (MapTileList::const_iterator it = mapTileList.begin(); it != mapTileList.end(); it++) {
+        for (auto it = mapTileList.begin(); it != mapTileList.end(); it++) {
             const NMLModelLODTreeDataSource::MapTile& mapTile = *it;
             std::shared_ptr<NMLModelLODTree> modelLODTree;
             if (!_modelLODTreeCache.read(mapTile.modelLODTreeId, modelLODTree)) {
-                ModelLODTreeMap::const_iterator modelLODTreeIt = _modelLODTreeMap.find(mapTile.modelLODTreeId);
+                auto modelLODTreeIt = _modelLODTreeMap.find(mapTile.modelLODTreeId);
                 if (modelLODTreeIt == _modelLODTreeMap.end()) {
                     continue;
                 }
@@ -283,17 +283,17 @@ namespace carto {
     }
     
     void NMLModelLODTreeLayer::updateMeshes(const NMLModelLODTree* modelLODTree, int nodeId, std::shared_ptr<nml::GLModel> glModel, MeshMap& meshMap) {
-        NMLModelLODTree::MeshBindingsMap::const_iterator mapIt = modelLODTree->getMeshBindingsMap().find(nodeId);
+        auto mapIt = modelLODTree->getMeshBindingsMap().find(nodeId);
         if (mapIt == modelLODTree->getMeshBindingsMap().end()) {
             return;
         }
     
-        for (NMLModelLODTree::MeshBindingList::const_iterator listIt = mapIt->second.begin(); listIt != mapIt->second.end(); listIt++) {
+        for (auto listIt = mapIt->second.begin(); listIt != mapIt->second.end(); listIt++) {
             const NMLModelLODTree::MeshBinding& binding = *listIt;
     
             std::shared_ptr<nml::GLMesh> glMesh;
             if (!_meshCache.read(binding.meshId, glMesh)) {
-                MeshMap::const_iterator meshIt = _meshMap.find(binding.meshId);
+                auto meshIt = _meshMap.find(binding.meshId);
                 if (meshIt == _meshMap.end()) {
                     continue;
                 }
@@ -308,17 +308,17 @@ namespace carto {
     }
     
     void NMLModelLODTreeLayer::updateTextures(const NMLModelLODTree* modelLODTree, int nodeId, std::shared_ptr<nml::GLModel> glModel, TextureMap& textureMap) {
-        NMLModelLODTree::TextureBindingsMap::const_iterator mapIt = modelLODTree->getTextureBindingsMap().find(nodeId);
+        auto mapIt = modelLODTree->getTextureBindingsMap().find(nodeId);
         if (mapIt == modelLODTree->getTextureBindingsMap().end()) {
             return;
         }
     
-        for (NMLModelLODTree::TextureBindingList::const_iterator listIt = mapIt->second.begin(); listIt != mapIt->second.end(); listIt++) {
+        for (auto listIt = mapIt->second.begin(); listIt != mapIt->second.end(); listIt++) {
             const NMLModelLODTree::TextureBinding& binding = *listIt;
     
             std::shared_ptr<nml::GLTexture> glTexture;
             if (!_textureCache.read(binding.textureId, glTexture)) {
-                TextureMap::const_iterator textureIt = _textureMap.find(binding.textureId);
+                auto textureIt = _textureMap.find(binding.textureId);
                 if (textureIt == _textureMap.end()) {
                     continue;
                 }
@@ -341,7 +341,7 @@ namespace carto {
     
         // Create initial node queue from roots
         std::priority_queue<SizeNodePair> initialQueue;
-        for (ModelLODTreeMap::const_iterator it = _modelLODTreeMap.begin(); it != _modelLODTreeMap.end(); it++) {
+        for (auto it = _modelLODTreeMap.begin(); it != _modelLODTreeMap.end(); it++) {
             const NMLModelLODTree* modelLODTree = it->second.get();
             if (modelLODTree->getSourceNodeCount() == 0)
                 continue;

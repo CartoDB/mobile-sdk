@@ -147,7 +147,7 @@ namespace carto {
         {
             std::lock_guard<std::mutex> lock(_mutex);
             for (const std::shared_ptr<Layer>& layer : layers) {
-                std::vector<std::shared_ptr<Layer> >::iterator it(std::remove(_layers.begin(), _layers.end(), layer));
+                auto it = std::remove(_layers.begin(), _layers.end(), layer);
                 if (it == _layers.end()) {
                     removedAll = false;
                     continue;

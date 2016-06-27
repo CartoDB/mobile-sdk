@@ -5,7 +5,7 @@
 
 %module VectorElement
 
-!proxy_imports(carto::VectorElement, core.MapBounds, geometry.Geometry, core.StringMap)
+!proxy_imports(carto::VectorElement, core.MapBounds, core.Variant, core.VariantMap, geometry.Geometry)
 
 %{
 #include "vectorelements/VectorElement.h"
@@ -18,13 +18,14 @@
 %include <cartoswig.i>
 
 %import "core/MapBounds.i"
-%import "core/StringMap.i"
+%import "core/Variant.i"
 %import "geometry/Geometry.i"
 
 !polymorphic_shared_ptr(carto::VectorElement, vectorelements.VectorElement)
 !value_type(std::vector<std::shared_ptr<carto::VectorElement> >, vectorelements.VectorElementVector)
 
 %attribute(carto::VectorElement, long long, Id, getId, setId)
+%attributeval(carto::VectorElement, %arg(std::map<std::string, carto::Variant>), MetaData, getMetaData, setMetaData)
 %attribute(carto::VectorElement, bool, Visible, isVisible, setVisible)
 %csmethodmodifiers carto::VectorElement::Bounds "public virtual";
 %attributeval(carto::VectorElement, carto::MapBounds, Bounds, getBounds)

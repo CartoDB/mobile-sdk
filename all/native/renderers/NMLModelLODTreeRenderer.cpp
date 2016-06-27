@@ -114,7 +114,7 @@ namespace carto {
             glModel->calculateRayIntersections(rayModel, intersections);
             
             for (size_t i = 0; i < intersections.size(); i++) {
-                NMLModelLODTree::ProxyMap::const_iterator proxyIt = record.drawData.getProxyMap()->find(intersections[i].vertexId);
+                auto proxyIt = record.drawData.getProxyMap()->find(intersections[i].vertexId);
                 if (proxyIt == record.drawData.getProxyMap()->end()) {
                     continue;
                 }

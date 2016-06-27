@@ -16,7 +16,7 @@ namespace carto {
     bool GLUtils::hasGLExtension(const std::string& extension) {
         std::lock_guard<std::mutex> lock(_mutex);
     
-        ExtensionCache::const_iterator it = _extensionCache.find(extension);
+        auto it = _extensionCache.find(extension);
         if (it != _extensionCache.end()) {
             return true;
         }

@@ -32,12 +32,12 @@ namespace carto {
         notifyElementChanged();
     }
     
-    std::map<std::string, std::string> VectorElement::getMetaData() const {
+    std::map<std::string, Variant> VectorElement::getMetaData() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _metaData;
     }
         
-    void VectorElement::setMetaData(const std::map<std::string, std::string>& metaData) {
+    void VectorElement::setMetaData(const std::map<std::string, Variant>& metaData) {
         {
             std::lock_guard<std::mutex> lock(_mutex);
             _metaData = metaData;
@@ -45,16 +45,16 @@ namespace carto {
         notifyElementChanged();
     }
     
-    std::string VectorElement::getMetaDataElement(const std::string& key) const {
+    Variant VectorElement::getMetaDataElement(const std::string& key) const {
         std::lock_guard<std::mutex> lock(_mutex);
-        std::map<std::string, std::string>::const_iterator it = _metaData.find(key);
+        auto it = _metaData.find(key);
         if (it == _metaData.end()) {
-            return std::string();
+            return Variant();
         }
         return it->second;
     }
     
-    void VectorElement::setMetaDataElement(const std::string& key, const std::string& element) {
+    void VectorElement::setMetaDataElement(const std::string& key, const Variant& element) {
         {
             std::lock_guard<std::mutex> lock(_mutex);
             _metaData[key] = element;
