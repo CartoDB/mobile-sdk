@@ -28,6 +28,7 @@ namespace carto {
     LineDrawData::LineDrawData(const LineGeometry& geometry, const LineStyle& style, const Projection& projection) :
         VectorElementDrawData(style.getColor()),
         _bitmap(style.getBitmap()),
+        _normalScale(style.getWidth() / 2),
         _clickScale(style.getClickWidth() == -1 ? std::max(1.0f, 1 + (IDEAL_CLICK_WIDTH - style.getWidth()) * CLICK_WIDTH_COEF / style.getWidth()) : style.getClickWidth()),
         _poses(),
         _coords(),
@@ -53,6 +54,7 @@ namespace carto {
     LineDrawData::LineDrawData(const PolygonGeometry& geometry, const std::vector<MapPos>& internalPoses, const LineStyle& style, const Projection& projection) :
         VectorElementDrawData(style.getColor()),
         _bitmap(style.getBitmap()),
+        _normalScale(style.getWidth() / 2),
         _clickScale(std::max(1.0f, 1 + (IDEAL_CLICK_WIDTH - style.getWidth()) * CLICK_WIDTH_COEF / style.getWidth())),
         _poses(),
         _coords(),
@@ -84,6 +86,7 @@ namespace carto {
     LineDrawData::LineDrawData(const LineDrawData& lineDrawData) :
         VectorElementDrawData(lineDrawData.getColor()),
         _bitmap(lineDrawData._bitmap),
+        _normalScale(lineDrawData._normalScale),
         _clickScale(lineDrawData._clickScale),
         _poses(lineDrawData._poses),
         _coords(),
@@ -113,6 +116,10 @@ namespace carto {
     
     const std::shared_ptr<Bitmap> LineDrawData::getBitmap() const {
         return _bitmap;
+    }
+
+    float LineDrawData::getNormalScale() const {
+        return _normalScale;
     }
     
     float LineDrawData::getClickScale() const {
@@ -208,9 +215,6 @@ namespace carto {
         float texCoordYScale = 1.0f / (style.getStretchFactor() * _bitmap->getHeight());
         bool useTexCoordY = _bitmap->getHeight() > 1;
 
-        // Normal scale
-        float normalScale = style.getWidth() / 2.0f;
-
         // Instead of calculating actual vertex positions calculate vertex origins and normals
         // Actual vertex positions are view dependent and will be calculated in the renderer
         std::vector<cglib::vec3<double>*> coords;
@@ -227,7 +231,7 @@ namespace carto {
         float nextLineLength = cglib::length(nextLine);
         cglib::vec2<float> nextPerpVec(-nextLine(1) / nextLineLength, nextLine(0) / nextLineLength);
 
-        cglib::vec2<float> nextNormalVec = nextPerpVec * normalScale;
+        cglib::vec2<float> nextNormalVec = nextPerpVec;
         if (style.getLineJoinType() == LineJoinType::LINE_JOIN_TYPE_MITER) {
             if (loopedLine) {
                 cglib::vec3<float> prevLine = cglib::vec3<float>::convert(_poses[0] - _poses[_poses.size() - 2]);
@@ -236,7 +240,7 @@ namespace carto {
 
                 float dot = cglib::dot_product(prevPerpVec, nextPerpVec);
                 if (dot >= LINE_JOIN_MIN_MITER_DOT) {
-                    nextNormalVec = cglib::unit(prevPerpVec + nextPerpVec) * (1 / std::sqrt((1 + dot) / 2)) * normalScale;
+                    nextNormalVec = cglib::unit(prevPerpVec + nextPerpVec) * (1 / std::sqrt((1 + dot) / 2));
                 }
             }
         }
@@ -257,7 +261,7 @@ namespace carto {
             float prevLineLength = cglib::length(prevLine);
             cglib::vec2<float> prevPerpVec(-prevLine(1) / prevLineLength, prevLine(0) / prevLineLength);
 
-            nextNormalVec = prevPerpVec * normalScale;
+            nextNormalVec = prevPerpVec;
             if (style.getLineJoinType() == LineJoinType::LINE_JOIN_TYPE_MITER) {
                 if (i + 1 < _poses.size() || loopedLine) {
                     cglib::vec3<float> nextLine = cglib::vec3<float>::convert(nextPos - pos);
@@ -266,7 +270,7 @@ namespace carto {
 
                     float dot = cglib::dot_product(prevPerpVec, nextPerpVec);
                     if (dot >= LINE_JOIN_MIN_MITER_DOT) {
-                        nextNormalVec = cglib::unit(prevPerpVec + nextPerpVec) * (1 / std::sqrt((1 + dot) / 2)) * normalScale;
+                        nextNormalVec = cglib::unit(prevPerpVec + nextPerpVec) * (1 / std::sqrt((1 + dot) / 2));
                     }
                 }
             } else {
@@ -389,12 +393,12 @@ namespace carto {
                 
                 // Add the t vertex
                 coords.push_back(&_poses[_poses.size() - 1]);
-                normals.push_back(cglib::expand(lastPerpVec * normalScale, 0.0f));
+                normals.push_back(cglib::expand(lastPerpVec, 0.0f));
                 texCoords.push_back(cglib::vec2<float>(0.5f, texCoordY));
                 
                 if (style.getLineEndType() == LineEndType::LINE_END_TYPE_ROUND) {
                     // Last end point, lastLine contains the last valid line segment
-                    cglib::vec2<float> rotVec = lastPerpVec * normalScale;
+                    cglib::vec2<float> rotVec = lastPerpVec;
                     cglib::vec2<float> uvRotVec(-1, 0);
                 
                     // Vertices
@@ -408,7 +412,7 @@ namespace carto {
                 } else {
                     // Vertices
                     for (int s = -1; s <= 1; s += 2) {
-                        cglib::vec2<float> normalVec = rotate2D(lastPerpVec * normalScale, -s * sin, cos) * std::sqrt(2.0f);
+                        cglib::vec2<float> normalVec = rotate2D(lastPerpVec, -s * sin, cos) * std::sqrt(2.0f);
                         coords.push_back(&_poses[_poses.size() - 1]);
                         normals.push_back(cglib::expand(normalVec, static_cast<float>(s)));
                         texCoords.push_back(cglib::vec2<float>(s * 0.5f + 0.5f, texCoordY));
@@ -425,12 +429,12 @@ namespace carto {
                 
                 // Add the t vertex for the other end point
                 coords.push_back(&_poses[0]);
-                normals.push_back(cglib::expand(firstPerpVec * normalScale, 0.0f));
+                normals.push_back(cglib::expand(firstPerpVec, 0.0f));
                 texCoords.push_back(cglib::vec2<float>(0.5f, 0));
                 
                 if (style.getLineEndType() == LineEndType::LINE_END_TYPE_ROUND) {
                     // First end point, firstLine contains the first valid line segment
-                    cglib::vec2<float> rotVec = firstPerpVec * normalScale;
+                    cglib::vec2<float> rotVec = firstPerpVec;
                     cglib::vec2<float> uvRotVec(1, 0);
                 
                     // Vertices
@@ -444,7 +448,7 @@ namespace carto {
                 } else {
                     // Vertices
                     for (int s = 1; s >= -1; s -= 2) {
-                        cglib::vec2<float> normalVec = rotate2D(firstPerpVec * normalScale, s * sin, cos) * std::sqrt(2.0f);
+                        cglib::vec2<float> normalVec = rotate2D(firstPerpVec, s * sin, cos) * std::sqrt(2.0f);
                         coords.push_back(&_poses[0]);
                         normals.push_back(cglib::expand(normalVec, static_cast<float>(s)));
                         texCoords.push_back(cglib::vec2<float>(s * 0.5f + 0.5f, 0));

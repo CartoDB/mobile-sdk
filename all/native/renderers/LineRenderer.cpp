@@ -207,7 +207,20 @@ namespace carto {
                 }
                 
                 // Coords, tex coords and colors
-                const Color& color = drawData->getColor();
+                Color color = drawData->getColor();
+                float normalScale = drawData->getNormalScale();
+
+                // If subpixel width is requested, adjust normal scale and fade color
+                if (normalScale < 0.5f) {
+                    float c = normalScale / 0.5f;
+                    color = Color(
+                        static_cast<unsigned char>(color.getR() * c),
+                        static_cast<unsigned char>(color.getG() * c),
+                        static_cast<unsigned char>(color.getB() * c),
+                        static_cast<unsigned char>(color.getA() * c)
+                    );
+                    normalScale = 0.5f;
+                }
                 const std::vector<cglib::vec3<double>*>& coords = drawData->getCoords()[i];
                 const std::vector<cglib::vec3<float> >& normals = drawData->getNormals()[i];
                 const std::vector<cglib::vec2<float> >& texCoords = drawData->getTexCoords()[i];
@@ -231,8 +244,8 @@ namespace carto {
                     coordIndex += 3;
 
                     // Normals
-                    normalBuf[normalIndex + 0] = normal(0);
-                    normalBuf[normalIndex + 1] = normal(1);
+                    normalBuf[normalIndex + 0] = normal(0) * normalScale;
+                    normalBuf[normalIndex + 1] = normal(1) * normalScale;
                     normalBuf[normalIndex + 2] = normal(2);
                     normalIndex += 3;
                     

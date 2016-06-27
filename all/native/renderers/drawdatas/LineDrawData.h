@@ -31,6 +31,8 @@ namespace carto {
         virtual ~LineDrawData();
     
         const std::shared_ptr<Bitmap> getBitmap() const;
+
+        float getNormalScale() const;
     
         float getClickScale() const;
     
@@ -57,6 +59,8 @@ namespace carto {
     
         std::shared_ptr<Bitmap> _bitmap;
     
+        float _normalScale;
+
         float _clickScale;
     
         // Actual line coordinates
