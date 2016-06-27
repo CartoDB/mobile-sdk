@@ -54,11 +54,13 @@ namespace carto {
     private:
         static void BuildAndDrawBuffers(GLuint a_color,
                                         GLuint a_coord,
+                                        GLuint a_normal,
                                         GLuint a_texCoord,
                                         std::vector<unsigned char>& colorBuf,
                                         std::vector<float>& coordBuf,
-                                        std::vector<unsigned short>& indexBuf,
+                                        std::vector<float>& normalBuf,
                                         std::vector<float>& texCoordBuf,
+                                        std::vector<unsigned short>& indexBuf,
                                         std::vector<const LineDrawData*>& drawDataBuffer,
                                         StyleTextureCache& styleCache,
                                         const ViewState& viewState);
@@ -86,13 +88,17 @@ namespace carto {
     
         std::vector<unsigned char> _colorBuf;
         std::vector<float> _coordBuf;
-        std::vector<unsigned short> _indexBuf;
+        std::vector<float> _normalBuf;
         std::vector<float> _texCoordBuf;
+        std::vector<unsigned short> _indexBuf;
     
         std::shared_ptr<Shader> _shader;
         GLuint _a_color;
         GLuint _a_coord;
+        GLuint _a_normal;
         GLuint _a_texCoord;
+        GLuint _u_gamma;
+        GLuint _u_normalScale;
         GLuint _u_mvpMat;
         GLuint _u_tex;
     

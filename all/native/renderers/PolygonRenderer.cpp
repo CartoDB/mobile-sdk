@@ -7,7 +7,6 @@
 #include "graphics/shaders/RegularShaderSource.h"
 #include "graphics/ViewState.h"
 #include "layers/VectorLayer.h"
-#include "renderers/LineRenderer.h"
 #include "renderers/drawdatas/LineDrawData.h"
 #include "renderers/drawdatas/PolygonDrawData.h"
 #include "renderers/components/RayIntersectedElement.h"
@@ -27,7 +26,6 @@ namespace carto {
         _elements(),
         _tempElements(),
         _drawDataBuffer(),
-        _lineDrawDataBuffer(),
         _prevBitmap(nullptr),
         _colorBuf(),
         _coordBuf(),
@@ -53,6 +51,8 @@ namespace carto {
         for (const std::shared_ptr<Polygon>& element : _elements) {
             element->getDrawData()->offsetHorizontally(offset);
         }
+
+        _lineRenderer.offsetLayerHorizontally(offset);
     }
     
     void PolygonRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
@@ -65,6 +65,8 @@ namespace carto {
         _a_texCoord = _shader->getAttribLoc("a_texCoord");
         _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
         _u_tex = _shader->getUniformLoc("u_tex");
+
+        _lineRenderer.onSurfaceCreated(shaderManager, textureManager);
     }
     
     void PolygonRenderer::onDrawFrame(float deltaSeconds, StyleTextureCache& styleCache, const ViewState& viewState) {
@@ -90,6 +92,8 @@ namespace carto {
     
     void PolygonRenderer::onSurfaceDestroyed() {
         _shader.reset();
+
+        _lineRenderer.onSurfaceDestroyed();
     }
     
     void PolygonRenderer::addElement(const std::shared_ptr<Polygon>& element) {
@@ -268,7 +272,7 @@ namespace carto {
         return _drawDataBuffer.empty();
     }
     
-    void PolygonRenderer::addToBatch(const std::shared_ptr<PolygonDrawData> &drawData, StyleTextureCache &styleCache, const ViewState &viewState) {
+    void PolygonRenderer::addToBatch(const std::shared_ptr<PolygonDrawData>& drawData, StyleTextureCache& styleCache, const ViewState& viewState) {
         const Bitmap* bitmap = drawData->getBitmap().get();
         
         if (_prevBitmap && _prevBitmap != bitmap) {
@@ -279,18 +283,22 @@ namespace carto {
         _prevBitmap = bitmap;
         
         if (!drawData->getLineDrawDatas().empty()) {
-            // TODO: should use unbind, _lineRenderer.bind/draw/unbind, bind
             if (_prevBitmap) {
                 drawBatch(styleCache, viewState);
             }
+
+            unbind();
             
             // Draw the draw datas, multiple passes may be necessary
-            _lineDrawDataBuffer.clear();
             for (const LineDrawData& lineDrawData : drawData->getLineDrawDatas()) {
-                _lineDrawDataBuffer.push_back(&lineDrawData);
+                _lineRenderer.addToBatch(std::make_shared<LineDrawData>(lineDrawData), styleCache, viewState); // TODO: fix performance, do not create new shared_ptr
             }
-            
-            LineRenderer::BuildAndDrawBuffers(_a_color, _a_coord, _a_texCoord, _colorBuf, _coordBuf, _indexBuf, _texCoordBuf, _lineDrawDataBuffer, styleCache, viewState);
+
+            _lineRenderer.bind(viewState);
+            _lineRenderer.drawBatch(styleCache, viewState);
+            _lineRenderer.unbind();
+
+            bind(viewState);
         }
     }
     

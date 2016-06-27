@@ -8,6 +8,7 @@
 #define _CARTO_POLYGONRENDERER_H_
 
 #include "utils/GLES2.h"
+#include "renderers/LineRenderer.h"
 
 #include <deque>
 #include <memory>
@@ -79,7 +80,6 @@ namespace carto {
         std::vector<std::shared_ptr<Polygon> > _tempElements;
         
         std::vector<std::shared_ptr<PolygonDrawData> > _drawDataBuffer;
-        std::vector<const LineDrawData*> _lineDrawDataBuffer;
         const Bitmap* _prevBitmap;
     
         std::vector<unsigned char> _colorBuf;
@@ -93,6 +93,8 @@ namespace carto {
         GLuint _a_texCoord;
         GLuint _u_mvpMat;
         GLuint _u_tex;
+
+        LineRenderer _lineRenderer;
     
         mutable std::mutex _mutex;
     };

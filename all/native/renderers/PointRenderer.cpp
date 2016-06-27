@@ -272,7 +272,7 @@ namespace carto {
         return _drawDataBuffer.empty();
     }
     
-    void PointRenderer::addToBatch(const std::shared_ptr<PointDrawData> &drawData, StyleTextureCache &styleCache, const ViewState &viewState) {
+    void PointRenderer::addToBatch(const std::shared_ptr<PointDrawData>& drawData, StyleTextureCache& styleCache, const ViewState& viewState) {
         const Bitmap* bitmap = drawData->getBitmap().get();
         
         if (!_drawDataBuffer.empty() && ((_prevBitmap != bitmap))) {
