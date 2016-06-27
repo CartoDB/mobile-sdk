@@ -13,21 +13,22 @@ static const std::string line_vert_glsl = R"GLSL(
     attribute vec2 a_texCoord;
     attribute vec4 a_color;
     uniform float u_gamma;
-    uniform float u_normalScale;
+    uniform float u_dpToPX;
+    uniform float u_unitToDP;
     uniform mat4 u_mvpMat;
     varying lowp vec4 v_color;
     varying vec2 v_texCoord;
-    varying vec2 v_dist;
+    varying float v_dist;
     varying float v_width;
 
     void main() {
-        float width = length(a_normal.xy);
+        float width = length(a_normal.xy) * u_dpToPX;
         float roundedWidth = width + 1.0;
-        vec3 pos = a_coord + u_normalScale * roundedWidth / width * vec3(a_normal.xy * a_normal.z, 0.0);
+        vec3 pos = a_coord + u_unitToDP * roundedWidth / width * vec3(a_normal.xy * a_normal.z, 0.0);
         v_color = a_color;
         v_texCoord = a_texCoord;
-        v_dist = vec2(0.0, a_normal.z) * roundedWidth * u_gamma;
-        v_width = (width - 1.0) * u_gamma;
+        v_dist = a_normal.z * roundedWidth * u_gamma;
+        v_width = 1.0 + (width - 1.0) * u_gamma;
         gl_Position = u_mvpMat * vec4(pos, 1.0);
     }
 )GLSL";
@@ -39,12 +40,11 @@ static std::string line_frag_glsl = R"GLSL(
     uniform sampler2D u_tex;
     varying lowp vec4 v_color;
     varying vec2 v_texCoord;
-    varying vec2 v_dist;
+    varying float v_dist;
     varying float v_width;
 
     void main() {
-        float dist = length(v_dist) - v_width;
-        lowp float a = clamp(1.0 - dist, 0.0, 1.0);
+        lowp float a = clamp(v_width - abs(v_dist), 0.0, 1.0);
         gl_FragColor = texture2D(u_tex, v_texCoord) * v_color * a;
     }
 )GLSL";

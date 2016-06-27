@@ -38,7 +38,8 @@ namespace carto {
         _a_normal(0),
         _a_texCoord(0),
         _u_gamma(0),
-        _u_normalScale(0),
+        _u_dpToPX(0),
+        _u_unitToDP(0),
         _u_mvpMat(0),
         _u_tex(0),
         _mutex()
@@ -67,7 +68,8 @@ namespace carto {
         _a_normal = _shader->getAttribLoc("a_normal");
         _a_texCoord = _shader->getAttribLoc("a_texCoord");
         _u_gamma = _shader->getUniformLoc("u_gamma");
-        _u_normalScale = _shader->getUniformLoc("u_normalScale");
+        _u_dpToPX = _shader->getUniformLoc("u_dpToPX");
+        _u_unitToDP = _shader->getUniformLoc("u_unitToDP");
         _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
         _u_tex = _shader->getUniformLoc("u_tex");
     }
@@ -342,8 +344,9 @@ namespace carto {
         glEnableVertexAttribArray(_a_normal);
         glEnableVertexAttribArray(_a_texCoord);
         // Scale, gamma
-        glUniform1f(_u_gamma, 1.0f);
-        glUniform1f(_u_normalScale, viewState.getUnitToDPCoef());
+        glUniform1f(_u_gamma, 0.5f);
+        glUniform1f(_u_dpToPX, viewState.getDPToPX());
+        glUniform1f(_u_unitToDP, viewState.getUnitToDPCoef());
         // Matrix
         const cglib::mat4x4<float>& mvpMat = viewState.getRTEModelviewProjectionMat();
         glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, mvpMat.data());

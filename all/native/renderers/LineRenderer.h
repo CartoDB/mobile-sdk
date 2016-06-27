@@ -98,7 +98,8 @@ namespace carto {
         GLuint _a_normal;
         GLuint _a_texCoord;
         GLuint _u_gamma;
-        GLuint _u_normalScale;
+        GLuint _u_dpToPX;
+        GLuint _u_unitToDP;
         GLuint _u_mvpMat;
         GLuint _u_tex;
     
