@@ -22,7 +22,7 @@ namespace carto {
     public:
         /**
          * Constructs a CartoOnlineTileDataSource object.
-         * @param source Tile source id. Default: "nutiteq.osm".
+         * @param source Tile source id. For example "nutiteq.osm" for legacy tiles with old styles and "mapzen.osm" for latest MapZen tiles.
          */
         CartoOnlineTileDataSource(const std::string& source);
         virtual ~CartoOnlineTileDataSource();
@@ -32,9 +32,12 @@ namespace carto {
     protected:
         std::shared_ptr<TileData> loadOnlineTile(const MapTile& mapTile);
 
+        static int GetSourceMaxZoom(const std::string& source);
+
         static const int DEFAULT_CACHED_TILES;
 
-        static const std::string TILE_SERVICE_URL;
+        static const std::string NUTITEQ_TILE_SERVICE_URL;
+        static const std::string MAPZEN_TILE_SERVICE_URL;
 
         std::string _source;
         cache::timed_lru_cache<long long, std::shared_ptr<TileData> > _cache;

@@ -9,7 +9,7 @@
 namespace carto {
     
     CartoOnlineTileDataSource::CartoOnlineTileDataSource(const std::string& source) :
-        TileDataSource(0, 14),
+        TileDataSource(0, GetSourceMaxZoom(source)),
         _source(source),
         _cache(DEFAULT_CACHED_TILES),
         _httpClient(false),
@@ -48,7 +48,11 @@ namespace carto {
         Log::Infof("CartoOnlineTileDataSource::loadOnlineTile: Loading tile %d/%d/%d", mapTile.getZoom(), mapTile.getX(), mapTile.getY());
 
         std::stringstream ss;
-        ss << TILE_SERVICE_URL << _source << "/" << mapTile.getZoom() << "/" << mapTile.getX() << "/" << mapTile.getY() << ".vt?user_key=" << LicenseManager::GetInstance().getUserKey();
+        if (_source.substr(0, 7) == "mapzen.") {
+            ss << MAPZEN_TILE_SERVICE_URL << _source.substr(7) << "/all/" << mapTile.getZoom() << "/" << mapTile.getX() << "/" << mapTile.getY() << ".mvt";
+        } else {
+            ss << NUTITEQ_TILE_SERVICE_URL << _source << "/" << mapTile.getZoom() << "/" << mapTile.getX() << "/" << mapTile.getY() << ".vt?user_key=" << LicenseManager::GetInstance().getUserKey();
+        }
         std::string url = ss.str();
         std::map<std::string, std::string> requestHeaders;
         std::map<std::string, std::string> responseHeaders;
@@ -65,8 +69,18 @@ namespace carto {
         return tileData;
     }
 
+    int CartoOnlineTileDataSource::GetSourceMaxZoom(const std::string& source) {
+       if (source.substr(0, 7) == "mapzen.") {
+           return 17;
+       } else {
+           return 14;
+       }
+    }
+
     const int CartoOnlineTileDataSource::DEFAULT_CACHED_TILES = 8;
 
-    const std::string CartoOnlineTileDataSource::TILE_SERVICE_URL = "http://api.nutiteq.com/v1/";
+    const std::string CartoOnlineTileDataSource::NUTITEQ_TILE_SERVICE_URL = "http://api.nutiteq.com/v1/";
+
+    const std::string CartoOnlineTileDataSource::MAPZEN_TILE_SERVICE_URL = "http://vector.dev.mapzen.com/";
     
 }

@@ -3,7 +3,7 @@
 
 %module CartoOnlineVectorTileLayer
 
-!proxy_imports(carto::CartoOnlineVectorTileLayer, layers.VectorTileLayer)
+!proxy_imports(carto::CartoOnlineVectorTileLayer, layers.VectorTileLayer, utils.AssetPackage)
 
 %{
 #include "layers/CartoOnlineVectorTileLayer.h"
@@ -14,6 +14,7 @@
 %include <cartoswig.i>
 
 %import "layers/VectorTileLayer.i"
+%import "utils/AssetPackage.i"
 
 !polymorphic_shared_ptr(carto::CartoOnlineVectorTileLayer, layers.CartoOnlineVectorTileLayer)
 

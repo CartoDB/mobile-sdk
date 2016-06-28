@@ -10,8 +10,11 @@
 #include "layers/VectorTileLayer.h"
 
 #include <string>
+#include <memory>
 
 namespace carto {
+    class AssetPackage;
+
     /**
      * Specialized online vector tile layer that connects to Carto online tile server.
      * This layer is intended as a 'shortcut' to make using Carto online service and
@@ -20,26 +23,18 @@ namespace carto {
     class CartoOnlineVectorTileLayer : public VectorTileLayer {
     public:
         /**
-         * Constructs a CartoOnlineVectorTileLayer object from a style asset name.
-         * Uses "nutiteq.osm" as a source.
-         * Style asset must be included in the project, style asset defines visual style of the map.
-         * @param styleAssetName The name of the style asset that defines visual style of the map.
+         * Constructs a CartoOnlineVectorTileLayer object from a source name and style asset package.
+         * Style asset package defines visual style of the map and must be compatible with the source.
+         * @param source The tile source name. The legacy source is "nutiteq.osm", new source is "mapzen.osm" but this requires different style asset package.
+         * @param styleAssetPackage The style asset package (usually a zipped file or an asset)
          */
-        CartoOnlineVectorTileLayer(const std::string& styleAssetName);
-        /**
-         * Constructs a CartoOnlineVectorTileLayer object from a source name and style asset name.
-         * Style asset must be included in the project, style asset defines visual style of the map.
-         * @param source The tile source name. Main and default source is currently "nutiteq.osm".
-         * @param styleAssetName The name of the style asset that defines visual style of the map.
-         */
-        CartoOnlineVectorTileLayer(const std::string& source, const std::string& styleAssetName);
+        CartoOnlineVectorTileLayer(const std::string& source, const std::shared_ptr<AssetPackage>& styleAssetPackage);
         virtual ~CartoOnlineVectorTileLayer();
         
     private:
         static std::shared_ptr<TileDataSource> CreateDataSource(const std::string& source);
-        static std::shared_ptr<VectorTileDecoder> CreateTileDecoder(const std::string& syleAssetName);
-        
-        static const std::string DEFAULT_SOURCE;
+
+        static std::shared_ptr<VectorTileDecoder> CreateTileDecoder(const std::shared_ptr<AssetPackage>& styleAssetPackage);
     };
     
 }
