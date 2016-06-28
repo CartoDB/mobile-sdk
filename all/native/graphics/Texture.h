@@ -25,7 +25,7 @@ namespace carto {
         
         bool isRepeat() const;
         
-        unsigned int getSize() const;
+        std::size_t getSize() const;
         
         const cglib::vec2<float>& getTexCoordScale() const;
         
@@ -42,7 +42,7 @@ namespace carto {
     private:
         static const int MAX_ANISOTROPY;
         
-        static const float MIPMAP_SIZE_MULTIPLIER;
+        static const double MIPMAP_SIZE_MULTIPLIER;
     
         GLuint loadFromBitmap(const Bitmap& bitmap, bool genMipmaps, bool repeat) const;
         
@@ -50,7 +50,7 @@ namespace carto {
         bool _mipmaps;
         bool _repeat;
         
-        unsigned int _sizeInBytes;
+        std::size_t _sizeInBytes;
         
         cglib::vec2<float> _texCoordScale;
     

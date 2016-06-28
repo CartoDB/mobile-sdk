@@ -38,12 +38,12 @@ namespace carto {
         return _tileDecoder;
     }
     
-    unsigned int VectorTileLayer::getTileCacheCapacity() const {
+    std::size_t VectorTileLayer::getTileCacheCapacity() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _preloadingCache.capacity();
     }
     
-    void VectorTileLayer::setTileCacheCapacity(unsigned int capacityInBytes) {
+    void VectorTileLayer::setTileCacheCapacity(std::size_t capacityInBytes) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _preloadingCache.resize(capacityInBytes);
     }
@@ -361,9 +361,9 @@ namespace carto {
             if (tileMap) {
                 // Store tile to cache, unless invalidated
                 if (!isInvalidated()) {
-                    unsigned int tileMapSize = EXTRA_TILE_FOOTPRINT;
+                    std::size_t tileMapSize = EXTRA_TILE_FOOTPRINT;
                     for (auto it = tileMap->begin(); it != tileMap->end(); it++) {
-                        tileMapSize += static_cast<unsigned int>(it->second->getResidentSize());
+                        tileMapSize += it->second->getResidentSize();
                     }
 
                     long long tileId = layer->getTileId(_tile);

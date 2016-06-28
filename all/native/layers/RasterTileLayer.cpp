@@ -25,12 +25,12 @@ namespace carto {
     RasterTileLayer::~RasterTileLayer() {
     }
     
-    unsigned int RasterTileLayer::getTextureCacheCapacity() const {
+    std::size_t RasterTileLayer::getTextureCacheCapacity() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _preloadingCache.capacity();
     }
     
-    void RasterTileLayer::setTextureCacheCapacity(unsigned int capacityInBytes) {
+    void RasterTileLayer::setTextureCacheCapacity(std::size_t capacityInBytes) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _preloadingCache.resize(capacityInBytes);
     }
@@ -283,7 +283,7 @@ namespace carto {
                 if (!isInvalidated()) {
                     // Build the bitmap object
                     std::shared_ptr<vt::Tile> vtTile = createVectorTile(_tile, bitmap);
-                    unsigned int tileSize = EXTRA_TILE_FOOTPRINT + vtTile->getResidentSize();
+                    std::size_t tileSize = EXTRA_TILE_FOOTPRINT + vtTile->getResidentSize();
                     if (isPreloading()) {
                         std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
                         layer->_preloadingCache.put(_tile.getTileId(), vtTile, tileSize);

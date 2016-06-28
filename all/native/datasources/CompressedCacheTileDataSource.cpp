@@ -50,12 +50,12 @@ namespace carto {
         _cache.clear();
     }
     
-    unsigned int CompressedCacheTileDataSource::getCapacity() const {
+    std::size_t CompressedCacheTileDataSource::getCapacity() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _cache.capacity();
     }
     
-    void CompressedCacheTileDataSource::setCapacity(unsigned int capacity) {
+    void CompressedCacheTileDataSource::setCapacity(std::size_t capacity) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _cache.resize(capacity);
     }

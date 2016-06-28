@@ -20,7 +20,7 @@ namespace carto {
         return _repeat;
     }
         
-    unsigned int Texture::getSize() const {
+    std::size_t Texture::getSize() const {
         return _sizeInBytes;
     }
         
@@ -62,7 +62,7 @@ namespace carto {
             }
         }
 
-        _sizeInBytes = static_cast<int>(_bitmap->getWidth() * _bitmap->getHeight() * _bitmap->getBytesPerPixel() * (_mipmaps ? MIPMAP_SIZE_MULTIPLIER : 1.0f));
+        _sizeInBytes = static_cast<std::size_t>((_mipmaps ? MIPMAP_SIZE_MULTIPLIER : 1.0) * _bitmap->getWidth() * _bitmap->getHeight() * _bitmap->getBytesPerPixel());
     }
 
     void Texture::load() const {
@@ -126,6 +126,6 @@ namespace carto {
         
     const int Texture::MAX_ANISOTROPY = 4;
         
-    const float Texture::MIPMAP_SIZE_MULTIPLIER = 1.33f;
+    const double Texture::MIPMAP_SIZE_MULTIPLIER = 1.33;
     
 }

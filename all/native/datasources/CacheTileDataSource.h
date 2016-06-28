@@ -30,13 +30,13 @@ namespace carto {
          * Returns the compressed tile cache capacity.
          * @return The compressed tile cache capacity in bytes.
          */
-        virtual unsigned int getCapacity() const = 0;
+        virtual std::size_t getCapacity() const = 0;
         
         /**
          * Sets the cache capacity.
          * @return The new tile cache capacity in bytes.
          */
-        virtual void setCapacity(unsigned int capacity) = 0;
+        virtual void setCapacity(std::size_t capacity) = 0;
 
     protected:
         class DataSourceListener : public TileDataSource::OnChangeListener {

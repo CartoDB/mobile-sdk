@@ -46,7 +46,7 @@ namespace carto {
 
         cglib::vec<double, 8> uvs = cglib::vec<double, 8>::zero();
         std::array<cglib::vec2<double>, 4> xys;
-        for (unsigned int i = 0; i < mapPoses.size(); i++) {
+        for (std::size_t i = 0; i < mapPoses.size(); i++) {
             uvs(i * 2 + 0) = bitmapPoses[i].getX();
             uvs(i * 2 + 1) = bitmapPoses[i].getY();
             MapPos pos = mapPoses[i];

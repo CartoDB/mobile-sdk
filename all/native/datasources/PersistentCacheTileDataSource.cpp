@@ -82,12 +82,12 @@ namespace carto {
         }
     }
     
-    unsigned int PersistentCacheTileDataSource::getCapacity() const {
+    std::size_t PersistentCacheTileDataSource::getCapacity() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _capacityInBytes;
     }
     
-    void PersistentCacheTileDataSource::setCapacity(unsigned int capacity) {
+    void PersistentCacheTileDataSource::setCapacity(std::size_t capacity) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _capacityInBytes = capacity;
         try {

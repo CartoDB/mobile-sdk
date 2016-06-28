@@ -63,9 +63,9 @@ namespace carto {
         
         virtual void clear();
         
-        virtual unsigned int getCapacity() const;
+        virtual std::size_t getCapacity() const;
 
-        virtual void setCapacity(unsigned int capacity);
+        virtual void setCapacity(std::size_t capacity);
 
     protected:
         struct CacheElement {
@@ -94,8 +94,8 @@ namespace carto {
         std::unique_ptr<sqlite3pp::database> _database;
         
         bool _cacheOnlyMode;
-        unsigned int _capacityInBytes;
-        unsigned int _sizeInBytes;
+        std::size_t _capacityInBytes;
+        std::size_t _sizeInBytes;
         
         CacheElementList _lruElements;
         CacheElementItMap _mappedElements;

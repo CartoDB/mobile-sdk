@@ -21,7 +21,7 @@
 !polymorphic_shared_ptr(carto::NMLModelLODTreeLayer, layers.NMLModelLODTreeLayer)
 
 !attributestring_polymorphic(carto::NMLModelLODTreeLayer, datasources.NMLModelLODTreeDataSource, DataSource, getDataSource);
-%attribute(carto::NMLModelLODTreeLayer, unsigned int, MaxMemorySize, getMaxMemorySize, setMaxMemorySize)
+%attribute(carto::NMLModelLODTreeLayer, std::size_t, MaxMemorySize, getMaxMemorySize, setMaxMemorySize)
 %attribute(carto::NMLModelLODTreeLayer, float, LODResolutionFactor, getLODResolutionFactor, setLODResolutionFactor)
 
 %include "layers/NMLModelLODTreeLayer.h"

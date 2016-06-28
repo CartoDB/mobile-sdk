@@ -81,12 +81,12 @@ namespace carto {
         return _dataSource;
     }
 
-    unsigned int NMLModelLODTreeLayer::getMaxMemorySize() const {
+    std::size_t NMLModelLODTreeLayer::getMaxMemorySize() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _maxMemorySize;
     }    
 
-    void NMLModelLODTreeLayer::setMaxMemorySize(unsigned int size) {
+    void NMLModelLODTreeLayer::setMaxMemorySize(std::size_t size) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _maxMemorySize = size;
         refresh();

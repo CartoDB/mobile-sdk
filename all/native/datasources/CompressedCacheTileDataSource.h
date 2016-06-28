@@ -31,9 +31,9 @@ namespace carto {
                 
         virtual void clear();
 
-        virtual unsigned int getCapacity() const;
+        virtual std::size_t getCapacity() const;
         
-        virtual void setCapacity(unsigned int capacity);
+        virtual void setCapacity(std::size_t capacity);
     
     protected:
         static const int DEFAULT_CAPACITY = 6 * 1024 * 1024;

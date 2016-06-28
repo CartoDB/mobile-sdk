@@ -19,7 +19,7 @@
 
 %feature("director") carto::CacheTileDataSource;
 
-%attribute(carto::CacheTileDataSource, unsigned int, Capacity, getCapacity, setCapacity)
+%attribute(carto::CacheTileDataSource, std::size_t, Capacity, getCapacity, setCapacity)
 
 %include "datasources/CacheTileDataSource.h"
 

@@ -65,7 +65,7 @@ namespace carto {
          * Returns the tile cache capacity.
          * @return The tile cache capacity in bytes.
          */
-        unsigned int getTileCacheCapacity() const;
+        std::size_t getTileCacheCapacity() const;
         /**
          * Sets the vector tile cache capacity. Tile cache is the primary storage for vector data,
          * all tiles contained within the cache are stored as uncompressed vertex buffers and can immediately be
@@ -75,7 +75,7 @@ namespace carto {
          * disabled, the cache size should be reduced by the user to conserve memory.
          * @return The new tile bitmap cache capacity in bytes.
          */
-        void setTileCacheCapacity(unsigned int capacityInBytes);
+        void setTileCacheCapacity(std::size_t capacityInBytes);
         
         /**
          * Returns the current display order of the labels.

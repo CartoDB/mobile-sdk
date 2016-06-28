@@ -42,7 +42,7 @@ namespace carto {
          * Returns the tile texture cache capacity.
          * @return The tile texture cache capacity in bytes.
          */
-        unsigned int getTextureCacheCapacity() const;
+        std::size_t getTextureCacheCapacity() const;
         /**
          * Sets the tile texture cache capacity. Texture cache is the primary storage for raster data,
          * all tiles contained within the texture cache are stored as uncompressed openGL textures and can immediately be
@@ -55,7 +55,7 @@ namespace carto {
          * disabled, the cache size should be reduced by the user to conserve memory.
          * @param capacityInBytes The new tile bitmap cache capacity in bytes.
          */
-        void setTextureCacheCapacity(unsigned int capacityInBytes);
+        void setTextureCacheCapacity(std::size_t capacityInBytes);
     
     protected:
         class FetchTask : public TileLayer::FetchTaskBase {

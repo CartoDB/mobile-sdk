@@ -58,7 +58,7 @@ namespace carto {
          * Returns memory usage constraints for the layer.
          * @return The memory usage constraints for the layer.
          */
-        unsigned int getMaxMemorySize() const;
+        std::size_t getMaxMemorySize() const;
         /**
          * Set memory usage constraints for the layer. The specified limit is not exact, 
          * but should be relatively close to the actual memory usage of the layer.
@@ -66,7 +66,7 @@ namespace carto {
          * of the models are used. The default is 40MB.
          * @param size The memory limit in bytes.
          */
-        void setMaxMemorySize(unsigned int size);
+        void setMaxMemorySize(std::size_t size);
 
         /**
          * Returns relative model LOD resolution.
@@ -214,7 +214,7 @@ namespace carto {
         static const int DEFAULT_MESH_CACHE_SIZE = 40 * 1024 * 1024;
         static const int DEFAULT_TEXTURE_CACHE_SIZE = 40 * 1024 * 1024;
     
-        unsigned int _maxMemorySize;
+        std::size_t _maxMemorySize;
         float _LODResolutionFactor;
     
         MapTileList _mapTileList;

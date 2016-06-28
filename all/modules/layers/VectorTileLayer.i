@@ -20,7 +20,7 @@
 
 !polymorphic_shared_ptr(carto::VectorTileLayer, layers.VectorTileLayer)
 
-%attribute(carto::VectorTileLayer, unsigned int, TileCacheCapacity, getTileCacheCapacity, setTileCacheCapacity)
+%attribute(carto::VectorTileLayer, std::size_t, TileCacheCapacity, getTileCacheCapacity, setTileCacheCapacity)
 %attribute(carto::VectorTileLayer, VectorTileLabelOrder::VectorTileLabelOrder, LabelOrder, getLabelOrder, setLabelOrder)
 %attributestring(carto::VectorTileLayer, std::shared_ptr<carto::VectorTileDecoder>, TileDecoder, getTileDecoder)
 %ignore carto::VectorTileLayer::FetchTask;
