@@ -70,16 +70,31 @@ namespace carto {
         
         /**
          * Transforms a position from the WGS84 coordinate system to the coordinate system of this projection.
-         * @param pos The position in the WGS84 coordinate system.
+         * @param pos The position in the WGS84 coordinate system. It should be encoded as longitude-latitude.
          * @return The transformed position in the coordinate system of this projection.
          */
         virtual MapPos fromWgs84(const MapPos& pos) const = 0;
         /**
          * Transforms a position from the coordinate system of this projection to the WGS84 coordinate system.
          * @param pos The position in the coordinate system of this projection.
-         * @return The transformed position in the WGS84 coordinate system.
+         * @return The transformed position in the WGS84 coordinate system. It is given as longitude-latitude.
          */
-        virtual MapPos toWgs84(const MapPos &pos) const = 0;
+        virtual MapPos toWgs84(const MapPos& pos) const = 0;
+    
+        /**
+         * Transforms a position given using latitutde-longitude coordinates from the WGS84 coordinate system to the coordinate system of this projection.
+         * @param lat The latitude in the WGS84 coordinate system. It should be in range -90..90.
+         * @param lng The longitude in the WGS84 coordinate system. It should be in range -180..180.
+         * @return The transformed position in the coordinate system of this projection.
+         */
+        MapPos fromLatLong(double lat, double lng) const;
+        /**
+         * Transforms a position from the coordinate system of this projection to the WGS84 coordinate system latitude-longitute coordinates.
+         * @param x The x position in the coordinate system of this projection.
+         * @param y The y position in the coordinate system of this projection.
+         * @return The transformed position in the WGS84 coordinate system given as latitude-longitude.
+         */
+        MapPos toLatLong(double x, double y) const;
     
         /**
          * Return name of this projection in Well-Known format. For example, as "EPSG:3857"

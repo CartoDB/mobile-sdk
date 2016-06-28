@@ -51,6 +51,15 @@ namespace carto {
         double scaleY = Const::WORLD_SIZE / boundsDelta.getY();
         return MapPos((pos.getX() + offsetX) * scaleX, (pos.getY() + offsetY) * scaleY, toInternalScale(pos.getZ()));
     }
+
+    MapPos Projection::fromLatLong(double lat, double lng) const {
+        return fromWgs84(MapPos(lng, lat));
+    }
+
+    MapPos Projection::toLatLong(double x, double y) const {
+        MapPos wgs84Pos = toWgs84(MapPos(x, y));
+        return MapPos(wgs84Pos.getY(), wgs84Pos.getX());
+    }
         
     Projection::Projection(const MapBounds& bounds) :
         _bounds(bounds)
