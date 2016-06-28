@@ -64,7 +64,7 @@ namespace carto {
         }
 
 
-        int statusCode = CFHTTPMessageGetResponseStatusCode(cfResponse);
+        int statusCode = static_cast<int>(CFHTTPMessageGetResponseStatusCode(cfResponse));
 
         std::map<std::string, std::string> headers;
         CFUniquePtr<CFDictionaryRef> headersDict(CFHTTPMessageCopyAllHeaderFields(cfResponse));

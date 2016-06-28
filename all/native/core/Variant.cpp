@@ -110,7 +110,7 @@ namespace carto {
     int Variant::getArraySize() const {
         const picojson::value& val = toPicoJSON();
         if (val.is<picojson::value::array>()) {
-            return val.get<picojson::value::array>().size();
+            return static_cast<int>(val.get<picojson::value::array>().size());
         }
         return 0;
     }

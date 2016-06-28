@@ -15,13 +15,13 @@ namespace carto {
     StyleTextureCache::~StyleTextureCache() {
     }
     
-    unsigned int StyleTextureCache::getCapacity() const {
+    std::size_t StyleTextureCache::getCapacity() const {
         std::lock_guard<std::mutex> lock(_mutex);
 
         return _cache.capacity();
     }
     
-    void StyleTextureCache::setCapacity(unsigned int capacityInBytes) {
+    void StyleTextureCache::setCapacity(std::size_t capacityInBytes) {
         std::lock_guard<std::mutex> lock(_mutex);
 
         _cache.resize(capacityInBytes);

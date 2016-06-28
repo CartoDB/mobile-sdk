@@ -686,7 +686,7 @@ namespace carto { namespace vt {
         // Blend screen FBO, if FBO rendering enabled
         if (_useFBO) {
             if (_glExtensions->GL_EXT_discard_framebuffer_supported() && !_screenFBO.depthStencilAttachments.empty()) {
-                _glExtensions->glDiscardFramebufferEXT(GL_FRAMEBUFFER, _screenFBO.depthStencilAttachments.size(), _screenFBO.depthStencilAttachments.data());
+                _glExtensions->glDiscardFramebufferEXT(GL_FRAMEBUFFER, static_cast<unsigned int>(_screenFBO.depthStencilAttachments.size()), _screenFBO.depthStencilAttachments.data());
             }
             
             glBindFramebuffer(GL_FRAMEBUFFER, currentFBO);

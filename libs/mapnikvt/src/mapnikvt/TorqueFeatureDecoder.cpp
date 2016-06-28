@@ -72,7 +72,7 @@ namespace carto { namespace mvt {
     };
 
     TorqueFeatureDecoder::TorqueFeatureDecoder(const std::vector<unsigned char>& data, int resolution, const std::shared_ptr<Logger>& logger) :
-        _transform(cglib::mat3x3<float>::identity()), _resolution(resolution), _clipBox(cglib::vec2<float>(-0.1f, -0.1f), cglib::vec2<float>(1.1f, 1.1f)), _logger(logger)
+        _resolution(resolution), _transform(cglib::mat3x3<float>::identity()), _clipBox(cglib::vec2<float>(-0.1f, -0.1f), cglib::vec2<float>(1.1f, 1.1f)), _logger(logger)
     {
         rapidjson::Document torqueDoc;
         std::string torqueJson(reinterpret_cast<const char*>(data.data()), reinterpret_cast<const char*>(data.data() + data.size()));
@@ -119,12 +119,12 @@ namespace carto { namespace mvt {
             const rapidjson::Value& rowValue = *jit;
             int x = rowValue[xField.c_str()].GetInt();
             int y = rowValue[yField.c_str()].GetInt();
-            std::size_t valueCount = rowValue[valueField.c_str()].Size();
-            std::size_t timeCount = rowValue[timeField.c_str()].Size();
+            unsigned int valueCount = rowValue[valueField.c_str()].Size();
+            unsigned int timeCount = rowValue[timeField.c_str()].Size();
             if (valueCount != timeCount) {
                 _logger->write(Logger::Severity::ERROR, "Value/time array mismatch");
             }
-            for (std::size_t i = 0; i < valueCount; i++) {
+            for (unsigned int i = 0; i < valueCount; i++) {
                 int time = (i < timeCount ? rowValue[timeField.c_str()][i].GetInt() : -1);
                 double value = rowValue[valueField.c_str()][i].GetDouble();
                 _timeValueMap[time].emplace_back(x, y, value);

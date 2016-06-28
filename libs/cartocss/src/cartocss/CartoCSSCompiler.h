@@ -61,10 +61,10 @@ namespace carto { namespace css {
         static bool isRedundantPropertySet(std::list<PropertySet>::iterator begin, std::list<PropertySet>::iterator end, const PropertySet& propertySet);
         
         static Property::Specificity calculateSpecificity(const std::vector<std::shared_ptr<const Predicate>>& predicates, int order);
+        
+        ExpressionContext _context;
 
         bool _ignoreLayerPredicates;
-
-        ExpressionContext _context;
     };
 } }
 

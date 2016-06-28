@@ -555,8 +555,6 @@ namespace carto {
     
         bool _seamlessPanning;
     
-        int _zoomLevelBias;
-    
         std::shared_ptr<Bitmap> _backgroundBitmap;
         std::shared_ptr<Bitmap> _skyBitmap;
         

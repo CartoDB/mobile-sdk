@@ -43,7 +43,6 @@ namespace carto { namespace nml {
         std::shared_ptr<Texture> _texture;
 
         GLuint _glTextureId;
-        int _glSize;
     };
 } }
 

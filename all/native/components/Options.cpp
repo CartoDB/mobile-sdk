@@ -26,7 +26,6 @@ namespace carto {
         _panningMode(PanningMode::PANNING_MODE_FREE),
         _pivotMode(PivotMode::PIVOT_MODE_TOUCHPOINT),
         _seamlessPanning(true),
-        _zoomLevelBias(0),
         _backgroundBitmap(GetDefaultBackgroundBitmap()),
         _skyBitmap(GetDefaultSkyBitmap()),
         _watermarkAlignmentX(-1),

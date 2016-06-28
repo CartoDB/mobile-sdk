@@ -24,11 +24,6 @@ namespace carto {
         NSData* fileData = [fileHandle readDataToEndOfFile];
         [fileHandle closeFile];
         
-        if ([fileData length] < 0) {
-            Log::Errorf("AssetUtils::LoadAsset: Data length <0: %s", path.c_str());
-            return std::shared_ptr<BinaryData>();
-        }
-        
         // Copy the data to vector
         std::vector<unsigned char> data;
         const unsigned char* bytes = static_cast<const unsigned char*>([fileData bytes]);

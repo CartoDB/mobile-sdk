@@ -6,9 +6,9 @@
 namespace carto {
 
     TextureManager::TextureManager() :
+        _glThreadId(),
         _createQueue(),
         _deleteTexIdQueue(),
-        _glThreadId(),
         _mutex()
     {
     }
@@ -48,7 +48,7 @@ namespace carto {
             }
 
             if (!_deleteTexIdQueue.empty()) {
-                glDeleteTextures(_deleteTexIdQueue.size(), _deleteTexIdQueue.data());
+                glDeleteTextures(static_cast<unsigned int>(_deleteTexIdQueue.size()), _deleteTexIdQueue.data());
                 _deleteTexIdQueue.clear();
             }
 

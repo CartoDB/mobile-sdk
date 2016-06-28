@@ -472,7 +472,6 @@ namespace carto {
     }
     
     cglib::mat4x4<double> ViewState::calculateModelViewMat(const carto::Options &options) const {
-        cglib::mat4x4<double> modelviewProjectionMat;
         if (_cameraChanged) {
             // Camera has changed, but the matrices have not been updated yet from the render thread
             

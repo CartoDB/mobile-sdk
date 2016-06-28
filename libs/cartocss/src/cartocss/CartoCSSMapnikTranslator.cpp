@@ -142,7 +142,7 @@ namespace carto { namespace css {
                 if (prop.field == symbolizerType + "-face-name") {
                     if (auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(prop.expression)) {
                         Value value = constExpr->getValue();
-                        if (auto faceNames = boost::get<std::vector<Value>>(&value)) {
+                        if (boost::get<std::vector<Value>>(&value)) {
                             mapnikSymbolizer->setParameter("fontset-name", boost::lexical_cast<std::string>(value));
                         }
                         else {

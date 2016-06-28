@@ -22,8 +22,8 @@ namespace carto {
         StyleTextureCache(const std::shared_ptr<TextureManager>& textureManager, unsigned int capacityInBytes);
         virtual ~StyleTextureCache();
         
-        unsigned int getCapacity() const;
-        void setCapacity(unsigned int capacityInBytes);
+        std::size_t getCapacity() const;
+        void setCapacity(std::size_t capacityInBytes);
 
         void setTextureManager(const std::shared_ptr<TextureManager>& textureManager);
         

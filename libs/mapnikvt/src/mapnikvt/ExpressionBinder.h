@@ -99,9 +99,9 @@ namespace carto { namespace mvt {
         struct Binding {
             V* field;
             std::shared_ptr<Expression> expr;
-            const T* object = nullptr;
             V(*convertFn)(const Value&) = nullptr;
             V (T::*memberConvertFn)(const Value&) const = nullptr;
+            const T* object = nullptr;
 
             explicit Binding(V* field, std::shared_ptr<Expression> expr, V(*convertFn)(const Value&)) : field(field), expr(std::move(expr)), convertFn(convertFn) { }
             explicit Binding(V* field, std::shared_ptr<Expression> expr, V (T::*memberConvertFn)(const Value&) const, const T* object) : field(field), expr(std::move(expr)), memberConvertFn(memberConvertFn), object(object) { }

@@ -171,12 +171,7 @@ namespace carto {
         png_write_info(pngPtr, infoPtr);
     
         // Set row start pointers
-        std::unique_ptr<png_bytep> rowPointers(new png_bytep[_height]);
-        if (!rowPointers) {
-            png_destroy_write_struct(&pngPtr, &infoPtr);
-            Log::Error("Bitmap::compressToPng: Failed to compress bitmap to PNG");
-            return std::shared_ptr<BinaryData>();
-        }
+        std::vector<png_bytep> rowPointers(_height);
     
         // Unpremultiply
         std::vector<unsigned char> pixelData = _pixelData;
@@ -197,11 +192,11 @@ namespace carto {
         unsigned char* pixelDataPtr =  const_cast<unsigned char*>(&pixelData[0]);
         int bytesPerRealRow = _width * _bytesPerPixel;
         for (size_t i = 0; i < _height; i++) {
-            rowPointers.get()[_height - 1 - i] = pixelDataPtr + i * bytesPerRealRow;
+            rowPointers[_height - 1 - i] = pixelDataPtr + i * bytesPerRealRow;
         }
     
         // Write image
-        png_write_image(pngPtr, rowPointers.get());
+        png_write_image(pngPtr, rowPointers.data());
     
         // Write end
         png_write_end(pngPtr, infoPtr);
@@ -347,6 +342,9 @@ namespace carto {
                         }
                         wa += w;
                     }
+                }
+                if (wa <= 0) {
+                    wa = std::numeric_limits<int>::max();
                 }
     
                 // Write results
@@ -813,21 +811,15 @@ namespace carto {
         unsigned char* pixelDataPtr = &_pixelData[0];
     
         // Set row start pointers
-        std::unique_ptr<png_bytep> rowPointers(new png_bytep[_height]);
-        if (!rowPointers) {
-            _colorFormat = ColorFormat::COLOR_FORMAT_UNSUPPORTED;
-            png_destroy_read_struct(&pngPtr, &infoPtr, &endInfo);
-            Log::Error("Bitmap::loadPNG: Failed to load PNG");
-            return false;
-        }
+        std::vector<png_bytep> rowPointers(_height);
     
         // Set the individual row pointers to point at the correct offsets of image data
         for (size_t i = 0; i < _height; i++) {
-            rowPointers.get()[_height - 1 - i] = pixelDataPtr + i * bytesPerRow;
+            rowPointers[_height - 1 - i] = pixelDataPtr + i * bytesPerRow;
         }
     
         // Read the png into image_data through row_pointers
-        png_read_image(pngPtr, rowPointers.get());
+        png_read_image(pngPtr, rowPointers.data());
     
         if (premultiply) {
             // Premultiply alpha

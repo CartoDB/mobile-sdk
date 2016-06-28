@@ -45,8 +45,7 @@ namespace carto { namespace nml {
     GLTexture::GLTexture(std::shared_ptr<Texture> texture) :
         _refCount(0),
         _texture(texture),
-        _glTextureId(0),
-        _glSize(0)
+        _glTextureId(0)
     {
     }
     

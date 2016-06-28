@@ -117,7 +117,6 @@ namespace carto { namespace mvt {
         int canvasWidth = static_cast<int>(std::ceil(width + strokeWidth));
         int canvasHeight = static_cast<int>(std::ceil(height + strokeWidth));
         vt::BitmapCanvas canvas(canvasWidth, canvasHeight);
-        float x0 = canvasWidth * 0.5f, y0 = canvasHeight * 0.5f;
         if (strokeWidth > 0) {
             canvas.setColor(strokeColor);
             canvas.drawRectangle(0, 0, width + strokeWidth * 0.5f, height + strokeWidth * 0.5f);

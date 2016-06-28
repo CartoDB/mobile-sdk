@@ -316,6 +316,9 @@ namespace carto {
                         pos = nextPos;
                     }
                 }
+                if (!pos || !prevPos) {
+                    continue;
+                }
                 
                 // Test a line triangle against the click position
                 double t = 0;
