@@ -20,6 +20,7 @@
 
 %attributeval(carto::Projection, carto::MapBounds, Bounds, getBounds)
 %attributestring(carto::Projection, std::string, Name, getName)
+!objc_rename(fromLat) carto::Projection::fromLatLong;
 %ignore carto::Projection::toInternalScale;
 %ignore carto::Projection::fromInternal;
 %ignore carto::Projection::toInternal;
