@@ -7,6 +7,8 @@
 #ifndef _CARTO_UTFGRIDTILE_H_
 #define _CARTO_UTFGRIDTILE_H_
 
+#include "core/Variant.h"
+
 #include <memory>
 #include <map>
 #include <vector>
@@ -17,15 +19,15 @@ namespace carto {
         
     class UTFGridTile {
     public:
-        UTFGridTile(const std::vector<std::string>& keys, const std::map<std::string, std::map<std::string, std::string> >& data, const std::vector<int>& keyIds, int xSize, int ySize) : _keys(keys), _data(data), _keyIds(keyIds), _xSize(xSize), _ySize(ySize) { }
+        UTFGridTile(const std::vector<std::string>& keys, const std::map<std::string, Variant>& data, const std::vector<int>& keyIds, int xSize, int ySize) : _keys(keys), _data(data), _keyIds(keyIds), _xSize(xSize), _ySize(ySize) { }
 
         std::string getKey(int keyId) const {
             return keyId >= 0 && keyId <= static_cast<int>(_keys.size()) ? _keys[keyId] : std::string();
         }
         
-        std::map<std::string, std::string> getData(const std::string& key) const {
+        Variant getData(const std::string& key) const {
             auto it = _data.find(key);
-            return it != _data.end() ? it->second : std::map<std::string, std::string>();
+            return it != _data.end() ? it->second : Variant();
         }
 
         int getXSize() const {
@@ -44,7 +46,7 @@ namespace carto {
 
     private:
         std::vector<std::string> _keys;
-        std::map<std::string, std::map<std::string, std::string> > _data;
+        std::map<std::string, Variant> _data;
         std::vector<int> _keyIds;
         int _xSize;
         int _ySize;

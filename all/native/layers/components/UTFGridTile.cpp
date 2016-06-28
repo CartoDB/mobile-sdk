@@ -9,6 +9,51 @@
 
 #include <utf8.h>
 
+namespace {
+
+    carto::Variant rapidJSONToVariant(const rapidjson::Value& value) {
+        if (value.IsString()) {
+            return carto::Variant(value.GetString());
+        }
+        else if (value.IsInt()) {
+            return carto::Variant(static_cast<long long>(value.GetInt()));
+        }
+        else if (value.IsUint()) {
+            return carto::Variant(static_cast<long long>(value.GetUint()));
+        }
+        else if (value.IsInt64()) {
+            return carto::Variant(static_cast<long long>(value.GetInt64()));
+        }
+        else if (value.IsUint64()) {
+            return carto::Variant(static_cast<long long>(value.GetUint64()));
+        }
+        else if (value.IsNumber()) {
+            return carto::Variant(value.GetDouble());
+        }
+        else if (value.IsArray()) {
+            std::vector<carto::Variant> values;
+            for (rapidjson::Value::ConstValueIterator it = value.Begin(); it != value.End(); it++) {
+                values.push_back(rapidJSONToVariant(*it));
+            }
+            return carto::Variant(values);
+        }
+        else if (value.IsObject()) {
+            std::map<std::string, carto::Variant> valueMap;
+            for (rapidjson::Value::ConstMemberIterator it = value.MemberBegin(); it != value.MemberEnd(); it++) {
+                const rapidjson::Value* value = &it->value;
+                if (!it->name.IsString()) {
+                    continue;
+                }
+          
+                valueMap[it->name.GetString()] = rapidJSONToVariant(it->value);
+            }
+            return carto::Variant(valueMap);
+        }
+        return carto::Variant();
+    }
+
+}
+
 namespace carto {
 
     std::shared_ptr<UTFGridTile> UTFGridTile::DecodeUTFTile(const std::shared_ptr<BinaryData>& tileData) {
@@ -29,39 +74,14 @@ namespace carto {
             keys.push_back(doc["keys"][i].GetString());
         }
 
-        std::map<std::string, std::map<std::string, std::string> > data;
+        std::map<std::string, Variant> data;
         if (doc.FindMember("data") != doc.MemberEnd()) {
             for (rapidjson::Value::ConstMemberIterator it = doc["data"].MemberBegin(); it != doc["data"].MemberEnd(); ++it) {
-                if (!it->name.IsString() || !it->value.IsObject()) {
+                if (!it->name.IsString()) {
                     continue;
                 }
-                std::string key = it->name.GetString();
-                for (rapidjson::Value::ConstMemberIterator it2 = it->value.MemberBegin(); it2 != it->value.MemberEnd(); it2++) {
-                    const rapidjson::Value* value = &it2->value;
-                    if (!it2->name.IsString()) {
-                        continue;
-                    }
-                    std::string str;
-                    if (value->IsString()) {
-                        str = value->GetString();
-                    }
-                    else if (value->IsInt()) {
-                        str = boost::lexical_cast<std::string>(value->GetInt());
-                    }
-                    else if (value->IsUint()) {
-                        str = boost::lexical_cast<std::string>(value->GetUint());
-                    }
-                    else if (value->IsInt64()) {
-                        str = boost::lexical_cast<std::string>(value->GetInt64());
-                    }
-                    else if (value->IsUint64()) {
-                        str = boost::lexical_cast<std::string>(value->GetUint64());
-                    }
-                    else if (value->IsNumber()) {
-                        str = boost::lexical_cast<std::string>(value->GetDouble());
-                    }
-                    data[key][it2->name.GetString()] = str;
-                }
+
+                data[it->name.GetString()] = rapidJSONToVariant(it->value);
             }
         }
 

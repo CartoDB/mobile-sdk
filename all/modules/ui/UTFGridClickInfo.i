@@ -3,7 +3,7 @@
 
 %module UTFGridClickInfo
 
-!proxy_imports(carto::UTFGridClickInfo, core.MapPos, core.StringMap, layers.Layer, ui.ClickType)
+!proxy_imports(carto::UTFGridClickInfo, core.MapPos, core.Variant, layers.Layer, ui.ClickType)
 
 %{
 #include "ui/UTFGridClickInfo.h"
@@ -16,14 +16,14 @@
 
 %import "ui/ClickType.i"
 %import "core/MapPos.i"
-%import "core/StringMap.i"
+%import "core/Variant.i"
 %import "layers/Layer.i"
 
 !shared_ptr(carto::UTFGridClickInfo, ui.UTFGridClickInfo)
 
 %attribute(carto::UTFGridClickInfo, carto::ClickType::ClickType, ClickType, getClickType)
 %attributeval(carto::UTFGridClickInfo, carto::MapPos, ClickPos, getClickPos)
-%attributeval(carto::UTFGridClickInfo, %arg(std::map<std::string, std::string>), ElementInfo, getElementInfo)
+%attributeval(carto::UTFGridClickInfo, carto::Variant, ElementInfo, getElementInfo)
 !attributestring_polymorphic(carto::UTFGridClickInfo, layers.Layer, Layer, getLayer)
 !standard_equals(carto::UTFGridClickInfo);
 

@@ -303,7 +303,7 @@ namespace carto {
             int y = static_cast<int>(std::floor(yRel * utfGridTile->getYSize()));
             int keyId = utfGridTile->getKeyId(x, y);
             if (keyId != 0) {
-                auto elementInfo = std::make_shared<std::map<std::string, std::string> >(utfGridTile->getData(utfGridTile->getKey(keyId)));
+                auto elementInfo = std::make_shared<Variant>(utfGridTile->getData(utfGridTile->getKey(keyId)));
                 std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
                 results.push_back(RayIntersectedElement(elementInfo, thisLayer, mapPos, mapPos, 0));
             }
@@ -314,7 +314,7 @@ namespace carto {
         DirectorPtr<UTFGridEventListener> utfGridEventListener = _utfGridEventListener;
 
         if (utfGridEventListener) {
-            std::shared_ptr<std::map<std::string, std::string> > elementInfo = intersectedElement.getElement<std::map<std::string, std::string> >();
+            std::shared_ptr<Variant> elementInfo = intersectedElement.getElement<Variant>();
             auto utfGridClickInfo = std::make_shared<UTFGridClickInfo>(clickType, intersectedElement.getHitPos(), *elementInfo, intersectedElement.getLayer());
             return utfGridEventListener->onUTFGridClicked(utfGridClickInfo);
         }
