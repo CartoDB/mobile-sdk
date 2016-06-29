@@ -135,8 +135,8 @@ namespace carto {
         
         // truncate the last line before drawing it
         if (count) {
-            CGPoint lastOrigin = origins[count-1];
-            CTLineRef lastLine = (CTLineRef)CFArrayGetValueAtIndex(lines, count-1);
+            CGPoint lastOrigin = origins[count - 1];
+            CTLineRef lastLine = (CTLineRef)CFArrayGetValueAtIndex(lines, count - 1);
             
             // truncation token is a CTLineRef itself
             CFRange effectiveRange;
@@ -158,7 +158,7 @@ namespace carto {
             // line for that string
             CFUniquePtr<CTLineRef> longLine(CTLineCreateWithAttributedString(longString));
             
-            CFUniquePtr<CTLineRef> truncatedLine(CTLineCreateTruncatedLine(longLine, frameRect.size.width, kCTLineTruncationEnd, truncationToken));
+            CFUniquePtr<CTLineRef> truncatedLine(CTLineCreateTruncatedLine(longLine, std::ceil(frameRect.size.width), kCTLineTruncationEnd, truncationToken));
             
             // if 'truncated' is NULL, then no truncation was required to fit it
             if (!truncatedLine) {
