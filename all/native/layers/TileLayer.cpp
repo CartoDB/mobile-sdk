@@ -271,25 +271,18 @@ namespace carto {
         MapPos mapPos = utfGridDataSource->getProjection()->fromInternal(mapPosInternal);
         int zoom = std::min(getMaxZoom(), static_cast<int>(viewState.getZoom() + getZoomLevelBias() + DISCRETE_ZOOM_LEVEL_BIAS));
 
-        MapTile mapTile = calculateMapTile(mapPos, std::min(utfGridDataSource->getMaxZoom(), std::max(utfGridDataSource->getMinZoom(), zoom)));
-
-        double tileWidth = utfGridDataSource->getProjection()->getBounds().getDelta().getX() / (1 << mapTile.getZoom());
-        double tileHeight = utfGridDataSource->getProjection()->getBounds().getDelta().getY() / (1 << mapTile.getZoom());
-
-        MapVec mapVec(mapTile.getX() * tileWidth, mapTile.getY() * tileHeight);
-        MapPos mapTileOrigin = utfGridDataSource->getProjection()->getBounds().getMin() + mapVec;
-        double xRel = (mapPos.getX() - mapTileOrigin.getX()) / tileWidth;
-        double yRel = 1 - (mapPos.getY() - mapTileOrigin.getY()) / tileHeight;
-        
         // Try to get the tile from cache
         std::shared_ptr<UTFGridTile> utfGridTile;
-        for (MapTile flippedMapTile = mapTile.getFlipped(); !utfGridTile; flippedMapTile = flippedMapTile.getParent()) {
-            if (tileExists(flippedMapTile, false) || tileExists(flippedMapTile, true)) {
-                std::lock_guard<std::recursive_mutex> lock(_mutex);
-                auto it = _utfGridTiles.find(flippedMapTile);
-                if (it != _utfGridTiles.end()) {
-                    utfGridTile = it->second;
-                    break;
+        int utfGridTileZoom = -1;
+        for (MapTile flippedMapTile = calculateMapTile(mapPos, utfGridDataSource->getMaxZoom()).getFlipped(); true; flippedMapTile = flippedMapTile.getParent()) {
+            if (std::abs(flippedMapTile.getZoom() - zoom) < std::abs(utfGridTileZoom - zoom)) {
+                if (tileExists(flippedMapTile, false) || tileExists(flippedMapTile, true)) {
+                    std::lock_guard<std::recursive_mutex> lock(_mutex);
+                    auto it = _utfGridTiles.find(flippedMapTile);
+                    if (it != _utfGridTiles.end()) {
+                        utfGridTile = it->second;
+                        utfGridTileZoom = flippedMapTile.getZoom();
+                    }
                 }
             }
             if (flippedMapTile.getZoom() == 0) {
@@ -299,6 +292,14 @@ namespace carto {
 
         // If succeeded and valid key under the click position, call the listener
         if (utfGridTile) {
+            MapTile mapTile = calculateMapTile(mapPos, std::min(utfGridDataSource->getMaxZoom(), std::max(utfGridDataSource->getMinZoom(), utfGridTileZoom)));
+            double tileWidth = utfGridDataSource->getProjection()->getBounds().getDelta().getX() / (1 << mapTile.getZoom());
+            double tileHeight = utfGridDataSource->getProjection()->getBounds().getDelta().getY() / (1 << mapTile.getZoom());
+
+            MapVec mapVec(mapTile.getX() * tileWidth, mapTile.getY() * tileHeight);
+            MapPos mapTileOrigin = utfGridDataSource->getProjection()->getBounds().getMin() + mapVec;
+            double xRel = (mapPos.getX() - mapTileOrigin.getX()) / tileWidth;
+            double yRel = 1 - (mapPos.getY() - mapTileOrigin.getY()) / tileHeight;
             int x = static_cast<int>(std::floor(xRel * utfGridTile->getXSize()));
             int y = static_cast<int>(std::floor(yRel * utfGridTile->getYSize()));
             int keyId = utfGridTile->getKeyId(x, y);
