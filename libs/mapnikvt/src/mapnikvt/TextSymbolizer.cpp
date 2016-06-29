@@ -36,10 +36,7 @@ namespace carto { namespace mvt {
         float textSize = -1;
         std::string text = getTransformedText(_text);
         std::size_t hash = std::hash<std::string>()(text);
-        vt::LabelOrientation placement = convertLabelPlacement(_placement);
-        if (_orientationDefined) { // if orientation parameter is explicitly defined, use point placement
-            placement = vt::LabelOrientation::POINT;
-        }
+        vt::LabelOrientation placement = convertTextPlacement(_placement);
         float minimumDistance = _minimumDistance * std::pow(2.0f, -exprContext.getZoom());
         long long groupId = (_allowOverlap ? -1 : (minimumDistance > 0 ? (hash & 0x7fffffff) : 0));
 
@@ -278,5 +275,18 @@ namespace carto { namespace mvt {
             alignment(1) = 1.0f;
         }
         return vt::TextFormatter::Options(alignment, offset, _wrapBefore, _wrapWidth * fontScale, _characterSpacing, _lineSpacing);
+    }
+
+    vt::LabelOrientation TextSymbolizer::convertTextPlacement(const std::string& orientation) const {
+        vt::LabelOrientation placement = convertLabelPlacement(orientation);
+        if (placement != vt::LabelOrientation::LINE) {
+            if (_orientationDefined) { // if orientation is explictly defined, use POINT placement
+                return vt::LabelOrientation::POINT_FLIPPING;
+            }
+            if (placement == vt::LabelOrientation::POINT) { // texts should flip if viewed from upside down
+                return vt::LabelOrientation::POINT_FLIPPING;
+            }
+        }
+        return placement;
     }
 } }

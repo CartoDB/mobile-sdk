@@ -22,7 +22,7 @@ namespace carto { namespace mvt {
         float bitmapSize = static_cast<float>(std::max(backgroundBitmap->width, backgroundBitmap->height)) * fontScale;
         std::string text = getTransformedText(_text);
         std::size_t hash = std::hash<std::string>()(text);
-        vt::LabelOrientation placement = convertLabelPlacement(_placement);
+        vt::LabelOrientation placement = convertTextPlacement(_placement);
         float minimumDistance = (_minimumDistance + bitmapSize) * std::pow(2.0f, -exprContext.getZoom()) / symbolizerContext.getSettings().getTileSize() * 2;
         long long groupId = (_allowOverlap ? -1 : 1); // use separate group from markers, markers use group 0
 

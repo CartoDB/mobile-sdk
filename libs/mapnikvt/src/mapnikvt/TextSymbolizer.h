@@ -30,6 +30,7 @@ namespace carto { namespace mvt {
         std::shared_ptr<vt::Font> getFont(const SymbolizerContext& symbolizerContext) const;
         cglib::bbox2<float> calculateTextSize(const std::shared_ptr<vt::Font>& font, const std::string& text, const vt::TextFormatter::Options& formatterOptions) const;
         vt::TextFormatter::Options getFormatterOptions(const SymbolizerContext& symbolizerContext) const;
+        vt::LabelOrientation convertTextPlacement(const std::string& orientation) const;
 
         const std::vector<std::shared_ptr<FontSet>> _fontSets;
         std::shared_ptr<Expression> _textExpression;
