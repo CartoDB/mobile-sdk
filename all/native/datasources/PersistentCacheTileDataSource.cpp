@@ -148,6 +148,9 @@ namespace carto {
             for (auto it = query.begin(); it != query.end(); ++it) {
                 long long tileId = (*it).get<uint64_t>(0);
                 int tileSize = (*it).get<int>(1);
+                if (_cache.capacity() < _cache.size() + tileSize) {
+                    _cache.resize(_cache.size() + tileSize); // if cache size is not configured yet, just increase the capacity until everything can be loaded
+                }
                 _cache.put(tileId, createTileId(tileId), tileSize);
             }
             query.finish();
