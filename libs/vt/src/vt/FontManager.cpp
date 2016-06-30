@@ -16,8 +16,8 @@
 #include FT_TRUETYPE_IDS_H
 #include FT_STROKER_H
 
-#include "hb.h"
-#include "hb-ft.h"
+#include <hb.h>
+#include <hb-ft.h>
 
 extern "C" {
     hb_unicode_funcs_t *hb_ucdn_get_unicode_funcs(void);

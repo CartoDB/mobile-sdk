@@ -22,11 +22,11 @@
 %attribute(carto::Bitmap, unsigned int, Height, getHeight)
 %attribute(carto::Bitmap, carto::ColorFormat::ColorFormat, ColorFormat, getColorFormat)
 %attribute(carto::Bitmap, unsigned int, BytesPerPixel, getBytesPerPixel)
-%ignore carto::Bitmap::Bitmap(const unsigned char*, size_t);
+%ignore carto::Bitmap::Bitmap(const unsigned char*, std::size_t);
 %ignore carto::Bitmap::Bitmap(const unsigned char*, unsigned int, unsigned int, ColorFormat::ColorFormat, unsigned int);
 %ignore carto::Bitmap::getPixelData;
 %rename(getPixelData) carto::Bitmap::getPixelDataPtr;
-%ignore carto::Bitmap::CreateFromCompressed(const unsigned char*, size_t);
+%ignore carto::Bitmap::CreateFromCompressed(const unsigned char*, std::size_t);
 !standard_equals(carto::Bitmap);
 
 %include "graphics/Bitmap.h"
