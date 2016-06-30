@@ -66,7 +66,7 @@ namespace carto {
     
     bool BillboardSorter::distanceComparator(const std::shared_ptr<BillboardDrawData>& drawData1, const std::shared_ptr<BillboardDrawData>& drawData2) const {
         // First compare placement priorities
-        int priorityDelta = drawData2->getPlacementPriority() - drawData1->getPlacementPriority();
+        float priorityDelta = drawData2->getPlacementPriority() - drawData1->getPlacementPriority();
         if (priorityDelta > 0) {
             return true;
         } else if (priorityDelta < 0) {

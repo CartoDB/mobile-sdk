@@ -287,8 +287,8 @@ namespace carto { namespace vt {
 
         void blendFreeTypeBitmap(std::vector<std::uint32_t>& buffer, std::size_t width, FT_Bitmap* bitmap, const Color& color, int x0, int y0) const {
             std::array<std::uint8_t, 4> glyphColor = color.rgba8();
-            for (int y = 0; y < bitmap->rows; y++) {
-                for (int x = 0; x < bitmap->width; x++) {
+            for (unsigned int y = 0; y < bitmap->rows; y++) {
+                for (unsigned int x = 0; x < bitmap->width; x++) {
                     int alpha = bitmap->buffer[y * std::abs(bitmap->pitch) + x];
                     if (alpha == 0) {
                         continue;

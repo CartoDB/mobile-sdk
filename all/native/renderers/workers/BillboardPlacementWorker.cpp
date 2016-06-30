@@ -189,7 +189,7 @@ namespace carto {
         }
     
         // Sort by priority
-        int priorityDelta = drawData2->getPlacementPriority() - drawData1->getPlacementPriority();
+        float priorityDelta = drawData2->getPlacementPriority() - drawData1->getPlacementPriority();
         if (priorityDelta > 0) {
             return false;
         } else if (priorityDelta < 0) {

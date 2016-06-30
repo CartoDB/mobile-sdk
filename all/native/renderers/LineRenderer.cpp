@@ -204,7 +204,7 @@ namespace carto {
                 std::size_t indexOffset = coordIndex / 3;
                 std::vector<unsigned int>::const_iterator iit;
                 for (iit = indices.begin(); iit != indices.end(); ++iit) {
-                    indexBuf[indexIndex] = indexOffset + *iit;
+                    indexBuf[indexIndex] = static_cast<unsigned short>(indexOffset + *iit);
                     indexIndex++;
                 }
                 
@@ -239,13 +239,13 @@ namespace carto {
 
                     // Coords
                     const cglib::vec3<double>& pos = **cit;
-                    const cglib::vec3<float>& normal = *nit;
-                    coordBuf[coordIndex + 0] = pos(0) - cameraPos.getX();
-                    coordBuf[coordIndex + 1] = pos(1) - cameraPos.getY();
-                    coordBuf[coordIndex + 2] = pos(2) - cameraPos.getZ();
+                    coordBuf[coordIndex + 0] = static_cast<float>(pos(0) - cameraPos.getX());
+                    coordBuf[coordIndex + 1] = static_cast<float>(pos(1) - cameraPos.getY());
+                    coordBuf[coordIndex + 2] = static_cast<float>(pos(2) - cameraPos.getZ());
                     coordIndex += 3;
 
                     // Normals
+                    const cglib::vec3<float>& normal = *nit;
                     normalBuf[normalIndex + 0] = normal(0) * normalScale;
                     normalBuf[normalIndex + 1] = normal(1) * normalScale;
                     normalBuf[normalIndex + 2] = normal(2);

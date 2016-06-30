@@ -25,7 +25,8 @@ namespace carto {
     void BillboardRenderer::CalculateBillboardCoords(const BillboardDrawData& drawData, const ViewState& viewState,
                                                      std::vector<float>& coordBuf, int drawDataIndex)
     {
-        cglib::vec3<double> translate(drawData.getPos()(0) - viewState.getCameraPos().getX(), drawData.getPos()(1) - viewState.getCameraPos().getY(), drawData.getPos()(2) - viewState.getCameraPos().getZ());
+        const MapPos& cameraPos = viewState.getCameraPos();
+        cglib::vec3<float> translate = cglib::vec3<float>::convert(drawData.getPos() - cglib::vec3<double>(cameraPos.getX(), cameraPos.getY(), cameraPos.getZ()));
         
         const ViewState::RotationState& rotationState = viewState.getRotationState();
         const cglib::vec2<float>* coords = drawData.getCoords();
@@ -45,7 +46,7 @@ namespace carto {
                     break;
                 case BillboardScaling::BILLBOARD_SCALING_CONST_SCREEN_SIZE:
                 default:
-                    float coef = scale * drawData.getCameraPlaneZoomDistance();
+                    float coef = static_cast<float>(scale * drawData.getCameraPlaneZoomDistance());
                     x *= coef;
                     y *= coef;
                     break;
@@ -299,7 +300,7 @@ namespace carto {
             // Billboards with ground orientation (like some texts) have to be flipped to readable
             bool flip = false;
             if (drawData->isFlippable() && drawData->getOrientationMode() == BillboardOrientation::BILLBOARD_ORIENTATION_GROUND) {
-                float dAngle = fmod(viewState.getRotation() - drawData->getRotation() + 360, 360);
+                float dAngle = std::fmod(viewState.getRotation() - drawData->getRotation() + 360.0f, 360.0f);
                 flip = dAngle > 90 && dAngle < 270;
             }
             
@@ -329,7 +330,7 @@ namespace carto {
             const Color& color = drawData->getColor();
             int colorIndex = drawDataIndex * 4 * 4;
             for (int i = 0; i < 16; i += 4) {
-                colorBuf[colorIndex + i] = color.getR();
+                colorBuf[colorIndex + i + 0] = color.getR();
                 colorBuf[colorIndex + i + 1] = color.getG();
                 colorBuf[colorIndex + i + 2] = color.getB();
                 colorBuf[colorIndex + i + 3] = color.getA();
@@ -338,7 +339,7 @@ namespace carto {
             // Calculate indices
             int indexIndex = drawDataIndex * 6;
             int vertexIndex = drawDataIndex * 4;
-            indexBuf[indexIndex + 0] = vertexIndex;
+            indexBuf[indexIndex + 0] = vertexIndex + 0;
             indexBuf[indexIndex + 1] = vertexIndex + 1;
             indexBuf[indexIndex + 2] = vertexIndex + 2;
             indexBuf[indexIndex + 3] = vertexIndex + 1;
@@ -377,14 +378,14 @@ namespace carto {
                                / baseBillboardDrawData->getAspect() * halfSize), 0);
         
         if (baseBillboardDrawData->getRotation() != 0) {
-            float sin = std::sin(baseBillboardDrawData->getRotation() * Const::DEG_TO_RAD);
-            float cos = std::cos(baseBillboardDrawData->getRotation() * Const::DEG_TO_RAD);
+            float sin = static_cast<float>(std::sin(baseBillboardDrawData->getRotation() * Const::DEG_TO_RAD));
+            float cos = static_cast<float>(std::cos(baseBillboardDrawData->getRotation() * Const::DEG_TO_RAD));
             labelAnchorVec.rotate2D(sin, cos);
         }
         
         const ViewState::RotationState& rotationState = viewState.getRotationState();
-        float x = labelAnchorVec.getX();
-        float y = labelAnchorVec.getY();
+        float x = static_cast<float>(labelAnchorVec.getX());
+        float y = static_cast<float>(labelAnchorVec.getY());
         
         float scale = baseBillboardDrawData->isScaleWithDPI() ? viewState.getUnitToDPCoef() : viewState.getUnitToPXCoef();
         // Calculate scaling
@@ -398,9 +399,8 @@ namespace carto {
             case BillboardScaling::BILLBOARD_SCALING_CONST_SCREEN_SIZE:
             default:
                 const cglib::mat4x4<double>& mvpMat = viewState.getModelviewProjectionMat();
-                double distance = baseBillboardPos(0) * mvpMat(3, 0) + baseBillboardPos(1) * mvpMat(3, 1)
-                + baseBillboardPos(2) * mvpMat(3, 2) + mvpMat(3, 3);
-                double coef = distance * viewState.get2PowZoom() / viewState.getZoom0Distance() * scale;
+                double distance = baseBillboardPos(0) * mvpMat(3, 0) + baseBillboardPos(1) * mvpMat(3, 1) + baseBillboardPos(2) * mvpMat(3, 2) + mvpMat(3, 3);
+                float coef = static_cast<float>(distance * viewState.get2PowZoom() / viewState.getZoom0Distance() * scale);
                 x *= coef;
                 y *= coef;
                 break;

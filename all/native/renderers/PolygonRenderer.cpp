@@ -201,9 +201,9 @@ namespace carto {
                     colorBuf[colorIndex + 3] = color.getA();
                     colorIndex += 4;
                     
-                    coordBuf[coordIndex + 0] = pos(0) - cameraPos.getX();
-                    coordBuf[coordIndex + 1] = pos(1) - cameraPos.getY();
-                    coordBuf[coordIndex + 2] = pos(2) - cameraPos.getZ();
+                    coordBuf[coordIndex + 0] = static_cast<float>(pos(0) - cameraPos.getX());
+                    coordBuf[coordIndex + 1] = static_cast<float>(pos(1) - cameraPos.getY());
+                    coordBuf[coordIndex + 2] = static_cast<float>(pos(2) - cameraPos.getZ());
                     coordIndex += 3;
                 }
             }

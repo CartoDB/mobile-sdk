@@ -110,7 +110,7 @@ namespace carto {
             if (SUCCEEDED(hr)) {
                 hr = _state->_d2dDevice->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, &_state->_d2dContext);
                 if (SUCCEEDED(hr)) {
-                    D2D1_SIZE_U size = { width, height };
+                    D2D1_SIZE_U size = { static_cast<UINT32>(width), static_cast<UINT32>(height) };
                     D2D1_BITMAP_PROPERTIES1 targetProperties = { { DXGI_FORMAT_R8G8B8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED }, 96, 96, D2D1_BITMAP_OPTIONS_TARGET, 0 };
                     hr = _state->_d2dContext->CreateBitmap(size, NULL, 0, &targetProperties, &_state->_d2dTargetBitmap);
                     if (SUCCEEDED(hr)) {
@@ -308,12 +308,12 @@ namespace carto {
             _state->_d2dContext->EndDraw();
 
             ComPtr<ID2D1Bitmap1> d2dBitmap;
-            D2D1_SIZE_U size = { _state->_width, _state->_height };
+            D2D1_SIZE_U size = { static_cast<UINT32>(_state->_width), static_cast<UINT32>(_state->_height) };
             D2D1_BITMAP_PROPERTIES1 properties = { { DXGI_FORMAT_R8G8B8A8_UNORM, D2D1_ALPHA_MODE_PREMULTIPLIED }, 96, 96, D2D1_BITMAP_OPTIONS_CANNOT_DRAW | D2D1_BITMAP_OPTIONS_CPU_READ, 0 };
             HRESULT hr = _state->_d2dContext->CreateBitmap(size, NULL, 0, &properties, &d2dBitmap);
             if (SUCCEEDED(hr)) {
                 D2D1_POINT_2U point = { 0, 0 };
-                D2D1_RECT_U rect = { 0, 0, _state->_width, _state->_height };
+                D2D1_RECT_U rect = { 0, 0, static_cast<UINT32>(_state->_width), static_cast<UINT32>(_state->_height) };
                 d2dBitmap->CopyFromBitmap(&point, _state->_d2dTargetBitmap.Get(), &rect);
 
                 D2D1_MAPPED_RECT mapped;

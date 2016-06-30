@@ -396,11 +396,11 @@ namespace carto { namespace vt {
         case LabelOrientation::POINT_FLIPPING:
             if (_transform) {
                 const cglib::mat3x3<float>& m = _transform.get();
-                float s = (cglib::dot_product(cglib::vec3<float>(m(0, 0), m(1, 0), m(2, 0)), viewState.orientation[0]) < 0 ? -1 : 1);
+                float s = (cglib::dot_product(cglib::vec3<float>(m(0, 0), m(1, 0), m(2, 0)), viewState.orientation[0]) < 0 ? -1.0f : 1.0f);
                 xAxis = cglib::vec3<float>(s, 0, 0);
                 yAxis = cglib::vec3<float>(0, s, 0);
             } else {
-                float s = (viewState.orientation[0][0] < 0 ? -1 : 1);
+                float s = (viewState.orientation[0][0] < 0 ? -1.0f : 1.0f);
                 xAxis = cglib::vec3<float>(s, 0, 0);
                 yAxis = cglib::vec3<float>(0, s, 0);
             }

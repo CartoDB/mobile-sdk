@@ -116,9 +116,9 @@ namespace carto {
             float backgroundScale = static_cast<float>(viewState.getFar() * 2 / viewState.getCosHalfFOVXY());
             const MapPos cameraPos = viewState.getCameraPos();
             for (int i = 0; i < BACKGROUND_VERTEX_COUNT * 3; i += 3) {
-                _backgroundCoords[i] = BACKGROUND_COORDS[i] * backgroundScale;
+                _backgroundCoords[i + 0] = BACKGROUND_COORDS[i + 0] * backgroundScale;
                 _backgroundCoords[i + 1] = BACKGROUND_COORDS[i + 1] * backgroundScale;
-                _backgroundCoords[i + 2] = -cameraPos.getZ();
+                _backgroundCoords[i + 2] = static_cast<float>(-cameraPos.getZ());
             }
             const cglib::mat4x4<float>& mvpMat = viewState.getRTEModelviewProjectionMat();
             glUniformMatrix4fv(_shader->getUniformLoc("u_mvpMat"), 1, GL_FALSE, mvpMat.data());
@@ -131,8 +131,8 @@ namespace carto {
             translateX -= std::floor(translateX);
             translateY -= std::floor(translateY);
             for (int i = 0; i < BACKGROUND_VERTEX_COUNT * 2; i += 2) {
-                _backgroundTexCoords[i] = (BACKGROUND_TEX_COORDS[i] - 0.5f) * scale * backgroundScale + translateX;
-                _backgroundTexCoords[i + 1] = (BACKGROUND_TEX_COORDS[i + 1] - 0.5f) * scale * backgroundScale + translateY;
+                _backgroundTexCoords[i + 0] = static_cast<float>((BACKGROUND_TEX_COORDS[i + 0] - 0.5f) * scale * backgroundScale + translateX);
+                _backgroundTexCoords[i + 1] = static_cast<float>((BACKGROUND_TEX_COORDS[i + 1] - 0.5f) * scale * backgroundScale + translateY);
             }
     
             // Draw

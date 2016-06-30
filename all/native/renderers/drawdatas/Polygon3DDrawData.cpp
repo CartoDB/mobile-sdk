@@ -141,7 +141,7 @@ namespace carto {
                     _coords.emplace_back(p1[0], p1[1], roofZ);
                     
                     // Calculate side normal
-                    cglib::vec3<float> sideNormal = cglib::unit(cglib::vec3<float>(p1[1] - p0[1], p0[0] - p1[0], 0));
+                    cglib::vec3<float> sideNormal = cglib::unit(cglib::vec3<float>(static_cast<float>(p1[1] - p0[1]), static_cast<float>(p0[0] - p1[0]), 0));
                     
                     // Add normal for each vertex
                     _normals.push_back(sideNormal);

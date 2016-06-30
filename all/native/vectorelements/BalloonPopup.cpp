@@ -142,9 +142,8 @@ namespace carto {
         
         // Calculate triangle height with stroke
         float halfTriangleWidth = triangleWidth * 0.5f;
-    	float halfTriangleAngle = std::atan2(triangleWidth, (triangleHeight * 2));
-    	int triangleStrokeOffset = triangleHeight + 2 * std::cos(halfTriangleAngle) *
-    	strokeWidth * 0.5f / std::cos(Const::PI / 2 - 2 * halfTriangleAngle) + 0.5f;
+    	double halfTriangleAngle = std::atan2(triangleWidth, (triangleHeight * 2));
+    	int triangleStrokeOffset = static_cast<int>(triangleHeight + 2 * std::cos(halfTriangleAngle) * strokeWidth * 0.5f / std::cos(Const::PI / 2 - 2 * halfTriangleAngle) + 0.5f);
         
         // Calculate bitmap size and create canvas
         int popupWidth = std::max(titleSize.getWidth() + titleMarginWidth, descSize.getWidth() + descMarginWidth);

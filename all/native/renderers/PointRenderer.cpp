@@ -144,8 +144,7 @@ namespace carto {
         GLuint drawDataIndex = 0;
         for (size_t i = 0; i < drawDataBuffer.size(); i++) {
             const std::shared_ptr<PointDrawData>& drawData = drawDataBuffer[i];
-            const cglib::vec3<double>& pos = drawData->getPos();
-            cglib::vec3<double> translate(pos(0) - cameraPos.getX(), pos(1) - cameraPos.getY(), pos(2) - cameraPos.getZ());
+            cglib::vec3<float> translate = cglib::vec3<float>::convert(drawData->getPos() - cglib::vec3<double>(cameraPos.getX(), cameraPos.getY(), cameraPos.getZ()));
     
             // Check for possible overflow in the buffers
             if ((drawDataIndex + 1) * 6 > GLUtils::MAX_VERTEXBUFFER_SIZE) {

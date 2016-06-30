@@ -114,7 +114,7 @@ namespace carto {
                     mainLightColor.getB() / 255.0f, mainLightColor.getA() / 255.0f);
         // Main light direction
         const MapVec& mainLightDir = options->getMainLightDirection();
-        glUniform3f(_u_lightDir, mainLightDir.getX(), mainLightDir.getY(), mainLightDir.getZ());
+        glUniform3f(_u_lightDir, static_cast<float>(mainLightDir.getX()), static_cast<float>(mainLightDir.getY()), static_cast<float>(mainLightDir.getZ()));
         // Matrix
         const cglib::mat4x4<float>& mvpMat = viewState.getRTEModelviewProjectionMat();
         glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, mvpMat.data());
@@ -251,9 +251,9 @@ namespace carto {
             std::vector<cglib::vec3<float> >::const_iterator nit;
             for (cit = coords.begin(), nit = normals.begin(); cit != coords.end() && nit != normals.end(); ++cit, ++nit) {
                 const cglib::vec3<double>& coord = *cit;
-                coordBuf[coordIndex + 0] = coord(0) - cameraPos.getX();
-                coordBuf[coordIndex + 1] = coord(1) - cameraPos.getY();
-                coordBuf[coordIndex + 2] = coord(2) - cameraPos.getZ();
+                coordBuf[coordIndex + 0] = static_cast<float>(coord(0) - cameraPos.getX());
+                coordBuf[coordIndex + 1] = static_cast<float>(coord(1) - cameraPos.getY());
+                coordBuf[coordIndex + 2] = static_cast<float>(coord(2) - cameraPos.getZ());
                 coordIndex += 3;
                 
                 const cglib::vec3<float>& normal = *nit;
