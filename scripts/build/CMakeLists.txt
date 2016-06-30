@@ -63,7 +63,7 @@ include_directories(
     "${SDK_EXTERNAL_LIBS_DIR}/stdext"
     "${SDK_EXTERNAL_LIBS_DIR}/cryptopp"
     "${SDK_EXTERNAL_LIBS_DIR}/freetype/include"
-    "${SDK_EXTERNAL_LIBS_DIR}/harfbuzz"
+    "${SDK_EXTERNAL_LIBS_DIR}/harfbuzz/src"
     "${SDK_EXTERNAL_LIBS_DIR}/bidi"
     "${SDK_EXTERNAL_LIBS_DIR}/jpeg-turbo"
     "${SDK_EXTERNAL_LIBS_DIR}/miniz"
