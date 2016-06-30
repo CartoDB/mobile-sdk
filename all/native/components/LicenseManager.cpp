@@ -386,10 +386,10 @@ namespace carto {
     
     const std::string LicenseManager::LICENSE_PREFIX = "X";
         
-    const std::string LicenseManager::LICENSE_SERVICE_URL = "https://service.nutiteq.com/nutiteqsdk/";
+    const std::string LicenseManager::LICENSE_SERVICE_URL = "https://service.nutiteq.com/cartosdk/api/";
 
     const std::string LicenseManager::PUBLIC_KEY = "MIIBtjCCASsGByqGSM44BAEwggEeAoGBAIlFs9OqwdM4lcfhXQVCyYDzPc6rO6sbtlKuEYa/uSzeuk1tvYcGybBwB3mYLYvOh0Qd/65TUO6rYI9xTAHK0HtjGj+XLaNDiP4eEvaVfg2fhX26XDdaAGXfKWKCHKiZ0cWLnBtTap2woVvSt6TLxcxrDnwG9mrL3Lt06rflF4oJAhUAyWhMdWcGzgq37TUJcKauhX7OEHcCgYAsXe5Q9JRA3yQsAGijSifQS8Pth1FfF69dU7VUeYD55VZ5x4UVAQP+wg7K5e6RQgJpaL1R4duVkFRgr3RuTwevv1szi/3ENiIQW4vNhPxc/sN+Y2YdlNnguOhV2LEcYmneX+F5cb2UXQZBBDhVgEtU7c9bxyA6tSwKuC70EqfZSQOBhAACgYAzp7pUQ1XxR79N8NbaB1PUPE7n1bZdFLF1QsK9thjL4Q3dbg6fub3qZfSPL286nZjfD+15oya1ORFKwSplindHNx6vSL+AmNhI4GYdyIasPnLAqCV9rIMTgQ+RfmyWDvSLxSDVqWqA83M6m/FFuWMKWKqMOEueJZTwrr/HNNTk+w==";
     
-    const std::string LicenseManager::PRODUCT_VERSION = "3.0.0"; // TODO: bump to 4.0.0 before release
+    const std::string LicenseManager::PRODUCT_VERSION = "4.0.0";
 
 }

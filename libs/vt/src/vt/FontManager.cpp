@@ -259,7 +259,11 @@ namespace carto { namespace vt {
             int width = baseBitmap->width;
             int height = baseBitmap->rows;
             if (haloBitmap) {
-                if (haloBitmapLeft <= baseBitmapLeft && haloBitmapTop >= baseBitmapTop && haloBitmapLeft + haloBitmap->width >= baseBitmapLeft + baseBitmap->width && haloBitmapTop - haloBitmap->rows <= baseBitmapTop - baseBitmap->rows) {
+                int haloBitmapRight = haloBitmapLeft + haloBitmap->width;
+                int baseBitmapRight = baseBitmapLeft + baseBitmap->width;
+                int haloBitmapBottom = haloBitmapTop - haloBitmap->rows;
+                int baseBitmapBottom = baseBitmapTop - baseBitmap->rows;
+                if (haloBitmapLeft <= baseBitmapLeft && haloBitmapTop >= baseBitmapTop && haloBitmapRight >= baseBitmapRight && haloBitmapBottom <= baseBitmapBottom) {
                     left = haloBitmapLeft;
                     top = haloBitmapTop;
                     width = haloBitmap->width;
