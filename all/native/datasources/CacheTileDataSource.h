@@ -34,9 +34,9 @@ namespace carto {
         
         /**
          * Sets the cache capacity.
-         * @return The new tile cache capacity in bytes.
+         * @param capacityInBytes The new tile cache capacity in bytes.
          */
-        virtual void setCapacity(std::size_t capacity) = 0;
+        virtual void setCapacity(std::size_t capacityInBytes) = 0;
 
     protected:
         class DataSourceListener : public TileDataSource::OnChangeListener {

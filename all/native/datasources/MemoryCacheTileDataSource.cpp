@@ -55,9 +55,9 @@ namespace carto {
         return _cache.capacity();
     }
     
-    void MemoryCacheTileDataSource::setCapacity(std::size_t capacity) {
+    void MemoryCacheTileDataSource::setCapacity(std::size_t capacityInBytes) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        _cache.resize(capacity);
+        _cache.resize(capacityInBytes);
     }
         
 }

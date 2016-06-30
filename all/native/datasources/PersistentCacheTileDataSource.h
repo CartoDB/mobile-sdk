@@ -9,9 +9,9 @@
 
 #include "datasources/CacheTileDataSource.h"
 
-#include <list>
 #include <string>
-#include <unordered_map>
+
+#include <stdext/timed_lru_cache.h>
 
 namespace sqlite3pp {
     class database;
@@ -65,41 +65,25 @@ namespace carto {
         
         virtual std::size_t getCapacity() const;
 
-        virtual void setCapacity(std::size_t capacity);
+        virtual void setCapacity(std::size_t capacityInBytes);
 
     protected:
-        struct CacheElement {
-            CacheElement(long long tileId, size_t sizeInBytes);
-            long long _tileId;
-            size_t _sizeInBytes;
-        };
-        
-        typedef std::list<CacheElement> CacheElementList;
-        typedef std::unordered_map<long long, CacheElementList::iterator> CacheElementItMap;
-        
+        static const int DEFAULT_CAPACITY = 50 * 1024 * 1024;
+
         void openDatabase(const std::string& databasePath);
         void closeDatabase();
         
-        void loadTileSet();
-        
-        void removeOldestElements();
-        
         std::shared_ptr<TileData> get(long long tileId);
-        
+        void store(long long tileId, const std::shared_ptr<TileData>& tileData);
         void remove(long long tileId);
-        void removeAll();
-        
-        void store(long long tileId, const std::shared_ptr<TileData>& tileBitmap);
+
+        std::shared_ptr<long long> createTileId(long long tileId);
         
         std::unique_ptr<sqlite3pp::database> _database;
         
         bool _cacheOnlyMode;
-        std::size_t _capacityInBytes;
-        std::size_t _sizeInBytes;
         
-        CacheElementList _lruElements;
-        CacheElementItMap _mappedElements;
-        
+        cache::timed_lru_cache<long long, std::shared_ptr<long long> > _cache;
         mutable std::recursive_mutex _mutex;
     };
 
