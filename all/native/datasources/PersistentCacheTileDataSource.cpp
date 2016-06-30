@@ -46,7 +46,8 @@ namespace carto {
 
         std::shared_ptr<long long> tileIdPtr;
         if (_cache.read(mapTile.getTileId(), tileIdPtr)) {
-            if (tileData = get(mapTile.getTileId())) {
+            tileData = get(mapTile.getTileId());
+            if (tileData) {
                 if (tileData->getMaxAge() != 0) {
                     return tileData;
                 }
@@ -63,7 +64,9 @@ namespace carto {
         if (tileData) {
             if (tileData->getMaxAge() != 0 && !tileData->isReplaceWithParent() && tileData->getData()) {
                 _cache.put(mapTile.getTileId(), createTileId(mapTile.getTileId()), tileData->getData()->size());
-                store(mapTile.getTileId(), tileData);
+                if (_cache.exists(mapTile.getTileId())) { // make sure the tile was added
+                    store(mapTile.getTileId(), tileData);
+                }
             }
         } else {
             Log::Infof("PersistentCacheTileDataSource::loadTile: Failed to load %s.", mapTile.toString().c_str());
@@ -80,7 +83,7 @@ namespace carto {
     void PersistentCacheTileDataSource::clear() {
         try {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _cache.clear();
+            _cache.clear(); // forces all elements to be removed, but can be slow
         } catch (const std::exception& e) {
             Log::Errorf("PersistentCacheTileDataSource::clear: Failed to clear cache: %s.", e.what());
         }
@@ -97,10 +100,6 @@ namespace carto {
     }
     
     void PersistentCacheTileDataSource::openDatabase(const std::string& databasePath) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-
-        closeDatabase();
-        
         try {
             _database.reset(new sqlite3pp::database(databasePath.c_str()));
         } catch (const std::exception& e) {
@@ -160,14 +159,10 @@ namespace carto {
     }
     
     void PersistentCacheTileDataSource::closeDatabase() {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-
         if (!_database) {
             return;
         }
 
-        _cache.clear();
-    
         try {
             if (_database->disconnect() != SQLITE_OK) {
                 Log::Error("PersistentCacheTileDataSource::closeDatabase: Failed to close database.");
@@ -176,13 +171,12 @@ namespace carto {
         } catch (const std::exception& e) {
             Log::Errorf("PersistentCacheTileDataSource::closeDatabase: Failed to close database: %s.", e.what());
             _database.reset();
-            return;
         }
+
+        _cache.clear(); // NOTE: as the database is closed at this point, elements are not removed
     }
     
     std::shared_ptr<TileData> PersistentCacheTileDataSource::get(long long tileId) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-
         if (!_database) {
             return std::shared_ptr<TileData>();
         }
@@ -217,27 +211,7 @@ namespace carto {
         }
     }
     
-    void PersistentCacheTileDataSource::remove(long long tileId) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-
-        if (!_database) {
-            return;
-        }
-        
-        try {
-            sqlite3pp::command command(*_database, "DELETE FROM persistent_cache WHERE tileId=:tileId");
-            command.bind(":tileId", static_cast<uint64_t>(tileId));
-            command.execute();
-            command.finish();
-        } catch (const std::exception& e) {
-            Log::Errorf("PersistentCacheTileDataSource::remove: Failed to remove tile from the database: %s.", e.what());
-            return;
-        }
-    }
-    
     void PersistentCacheTileDataSource::store(long long tileId, const std::shared_ptr<TileData>& tileData) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-
         if (!_database) {
             return;
         }
@@ -259,17 +233,29 @@ namespace carto {
             command.finish();
         } catch (const std::exception& e) {
             Log::Errorf("PersistentCacheTileDataSource::store: Failed to store tile data in the database: %s.", e.what());
-            return;
         }
     }
 
+    void PersistentCacheTileDataSource::remove(long long tileId) {
+        if (!_database) {
+            return;
+        }
+        
+        try {
+            sqlite3pp::command command(*_database, "DELETE FROM persistent_cache WHERE tileId=:tileId");
+            command.bind(":tileId", static_cast<uint64_t>(tileId));
+            command.execute();
+            command.finish();
+        } catch (const std::exception& e) {
+            Log::Errorf("PersistentCacheTileDataSource::remove: Failed to remove tile from the database: %s.", e.what());
+        }
+    }
+    
     std::shared_ptr<long long> PersistentCacheTileDataSource::createTileId(long long tileId) {
-        std::weak_ptr<PersistentCacheTileDataSource> dataSourceWeak(std::static_pointer_cast<PersistentCacheTileDataSource>(shared_from_this()));
-        return std::shared_ptr<long long>(new long long(tileId), [dataSourceWeak](long long* tileId) {
-            if (auto dataSource = dataSourceWeak.lock()) {
-                dataSource->remove(*tileId);
-                delete tileId;
-           }
+        return std::shared_ptr<long long>(new long long(tileId), [=](long long* tileId) {
+            std::lock_guard<std::recursive_mutex> lock(_mutex); // probably not needed, as this gets called from already locked state
+            remove(*tileId);
+            delete tileId;
         });
     }
     
