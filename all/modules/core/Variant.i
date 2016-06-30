@@ -30,6 +30,7 @@
 %attributestring(carto::Variant, std::string, String, getString)
 %attribute(carto::Variant, int, ArraySize, getArraySize)
 %attributeval(carto::Variant, std::vector<std::string>, ObjectKeys, getObjectKeys)
+%ignore carto::Variant::Variant(const char*);
 %ignore carto::Variant::toPicoJSON;
 %ignore carto::Variant::FromPicoJSON;
 !custom_equals(carto::Variant);

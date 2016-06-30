@@ -79,6 +79,11 @@ namespace carto {
         explicit Variant(double doubleVal);
         /**
          * Constructs Variant object from a string.
+         * @param str The string value.
+         */
+        explicit Variant(const char* str);
+        /**
+         * Constructs Variant object from a string.
          * @param string The string value.
          */
         explicit Variant(const std::string& string);

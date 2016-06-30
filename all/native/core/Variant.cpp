@@ -23,6 +23,11 @@ namespace carto {
     {
     }
 
+    Variant::Variant(const char* str) :
+        _value(std::string(str))
+    {
+    }
+
     Variant::Variant(const std::string& string) :
         _value(string)
     {
