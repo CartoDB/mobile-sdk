@@ -187,24 +187,24 @@ namespace carto {
          * @param dataSize size of the compressed data.
          * @return The bitmap created from the compressed data. If the decompression fails, null is returned.
          */
-        static std::shared_ptr<Bitmap> CreateFromCompressed(const unsigned char* compressedData, size_t dataSize);
+        static std::shared_ptr<Bitmap> CreateFromCompressed(const unsigned char* compressedData, std::size_t dataSize);
         
     protected:
         Bitmap();
         
-        bool loadFromCompressedBytes(const unsigned char* compressedData, size_t dataSize);
+        bool loadFromCompressedBytes(const unsigned char* compressedData, std::size_t dataSize);
         bool loadFromUncompressedBytes(const unsigned char* pixelData, unsigned int width, unsigned int height,
                                        ColorFormat::ColorFormat colorFormat, int bytesPerRow);
     
-        static bool IsJPEG(const unsigned char* compressedData, size_t dataSize);
-        static bool IsPNG(const unsigned char* compressedData, size_t dataSize);
-        static bool IsWEBP(const unsigned char* compressedData, size_t dataSize);
-        static bool IsNUTI(const unsigned char* compressedData, size_t dataSize);
+        static bool IsJPEG(const unsigned char* compressedData, std::size_t dataSize);
+        static bool IsPNG(const unsigned char* compressedData, std::size_t dataSize);
+        static bool IsWEBP(const unsigned char* compressedData, std::size_t dataSize);
+        static bool IsNUTI(const unsigned char* compressedData, std::size_t dataSize);
     
-        bool loadJPEG(const unsigned char* compressedData, size_t dataSize);
-        bool loadPNG(const unsigned char* compressedData, size_t dataSize);
-        bool loadWEBP(const unsigned char* compressedData, size_t dataSize);
-        bool loadNUTI(const unsigned char* compressedData, size_t dataSize);
+        bool loadJPEG(const unsigned char* compressedData, std::size_t dataSize);
+        bool loadPNG(const unsigned char* compressedData, std::size_t dataSize);
+        bool loadWEBP(const unsigned char* compressedData, std::size_t dataSize);
+        bool loadNUTI(const unsigned char* compressedData, std::size_t dataSize);
         
         static const unsigned int PNG_SIGNATURE_LENGTH = 8;
     

@@ -39,7 +39,7 @@ namespace carto {
         // Remove consecutive duplicates and project coordinates to internal coordinate system
         const std::vector<MapPos>& poses = geometry.getPoses();
         _poses.reserve(poses.size());
-        for (size_t i = 0; i < poses.size(); i++) {
+        for (std::size_t i = 0; i < poses.size(); i++) {
             MapPos posInternal = projection.toInternal(poses[i]);
             cglib::vec3<double> pos(posInternal.getX(), posInternal.getY(), posInternal.getZ());
             if (i == 0 || _poses.back() != pos) {
@@ -64,7 +64,7 @@ namespace carto {
     {
         // Remove consecutive duplicates, do NOT project coordinates
         _poses.reserve(internalPoses.size());
-        for (size_t i = 0; i < internalPoses.size(); i++) {
+        for (std::size_t i = 0; i < internalPoses.size(); i++) {
             const MapPos& posInternal = internalPoses[i];
             cglib::vec3<double> pos(posInternal.getX(), posInternal.getY(), posInternal.getZ());
             if (i == 0 || _poses.back() != pos) {
@@ -481,7 +481,7 @@ namespace carto {
             _texCoords.back().reserve(std::min(texCoords.size(), GLUtils::MAX_VERTEXBUFFER_SIZE));
             _indices.back().reserve(std::min(indices.size(), GLUtils::MAX_VERTEXBUFFER_SIZE));
             std::unordered_map<unsigned int, unsigned int> indexMap;
-            for (size_t i = 0; i < indices.size(); i += 3) {
+            for (std::size_t i = 0; i < indices.size(); i += 3) {
                 
                 // Check for possible GL buffer overflow
                 if (_indices.back().size() + 3 > GLUtils::MAX_VERTEXBUFFER_SIZE) {

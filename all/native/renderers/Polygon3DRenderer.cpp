@@ -181,7 +181,7 @@ namespace carto {
     
             // Test triangles
             const std::vector<cglib::vec3<double> >& coords = drawData.getCoords();
-            for (size_t i = 0; i < coords.size(); i += 3) {
+            for (std::size_t i = 0; i < coords.size(); i += 3) {
                 double t = 0;
                 if (cglib::intersect_triangle(coords[i + 0], coords[i + 1], coords[i + 2], ray, &t)) {
                     MapPos clickPos(ray(t)(0), ray(t)(1), ray(t)(2));
@@ -221,7 +221,7 @@ namespace carto {
         std::size_t colorIndex = 0;
         std::size_t normalIndex = 0;
         GLuint coordIndex = 0;
-        for (size_t i = 0; i < drawDataBuffer.size(); i++) {
+        for (std::size_t i = 0; i < drawDataBuffer.size(); i++) {
             const std::shared_ptr<Polygon3DDrawData>& drawData = drawDataBuffer[i];
             
             const std::vector<cglib::vec3<double> >& coords = drawData->getCoords();

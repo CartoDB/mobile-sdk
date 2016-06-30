@@ -54,7 +54,7 @@ namespace carto {
         query.bind(":x1", bounds.getMax().getX());
         query.bind(":y1", bounds.getMax().getY());
         query.bind(":width", _projection->getBounds().getDelta().getX());
-        for (sqlite3pp::query::iterator qit = query.begin(); qit != query.end(); qit++) {
+        for (auto qit = query.begin(); qit != query.end(); qit++) {
             long long mapTileId = (*qit).get<uint64_t>(0);
             
             long long modelLODTreeId = (*qit).get<uint64_t>(1);
@@ -90,16 +90,16 @@ namespace carto {
     
         sqlite3pp::query query(*_db, "SELECT id, LENGTH(nmlmodellodtree), nmlmodellodtree FROM ModelLODTrees WHERE id=:id");
         query.bind(":id", static_cast<uint64_t>(mapTile.modelLODTreeId));
-        for (sqlite3pp::query::iterator qit = query.begin(); qit != query.end(); qit++) {
+        for (auto qit = query.begin(); qit != query.end(); qit++) {
             long long modelLODTreeId = (*qit).get<uint64_t>(0);
-            size_t nmlModelLODTreeSize = (*qit).get<uint32_t>(1);
+            std::size_t nmlModelLODTreeSize = (*qit).get<uint32_t>(1);
             const void * nmlModelLODTreeData = (*qit).get<const void *>(2);
             std::shared_ptr<nml::ModelLODTree> sourceModelLODTree = std::make_shared<nml::ModelLODTree>(protobuf::message(nmlModelLODTreeData, nmlModelLODTreeSize));
     
             sqlite3pp::query queryProxyBindings(*_db, "SELECT * FROM ModelInfo WHERE modellodtree_id=:modellodtree_id");
             queryProxyBindings.bind(":modellodtree_id", static_cast<uint64_t>(modelLODTreeId));
             NMLModelLODTree::ProxyMap proxyMap;
-            for (sqlite3pp::query::iterator qitProxyBindings = queryProxyBindings.begin(); qitProxyBindings != queryProxyBindings.end(); qitProxyBindings++) {
+            for (auto qitProxyBindings = queryProxyBindings.begin(); qitProxyBindings != queryProxyBindings.end(); qitProxyBindings++) {
                 int modelId = -1;
                 MapPos mapPos(0, 0, 0);
                 std::map<std::string, std::string> metaData;
@@ -126,11 +126,11 @@ namespace carto {
             try {
                 sqlite3pp::query queryMeshBindings(*_db, "SELECT node_id, local_id, mesh_id, LENGTH(nmlmeshop), nmlmeshop FROM ModelLODTreeNodeMeshes WHERE modellodtree_id=:modellodtree_id");
                 queryMeshBindings.bind(":modellodtree_id", static_cast<uint64_t>(modelLODTreeId));
-                for (sqlite3pp::query::iterator qitMeshBindings = queryMeshBindings.begin(); qitMeshBindings != queryMeshBindings.end(); qitMeshBindings++) {
+                for (auto qitMeshBindings = queryMeshBindings.begin(); qitMeshBindings != queryMeshBindings.end(); qitMeshBindings++) {
                     int nodeId = (*qitMeshBindings).get<uint32_t>(0);
                     std::string localId = (*qitMeshBindings).get<const char *>(1);
                     long long meshId = (*qitMeshBindings).get<uint64_t>(2);
-                    size_t nmlMeshOpSize = (*qitMeshBindings).get<uint32_t>(3);
+                    std::size_t nmlMeshOpSize = (*qitMeshBindings).get<uint32_t>(3);
                     const void * nmlMeshOpData = (*qitMeshBindings).get<const void *>(4);
                     if (nmlMeshOpSize > 0) {
                         std::shared_ptr<nml::MeshOp> meshOp = std::make_shared<nml::MeshOp>(protobuf::message(nmlMeshOpData, nmlMeshOpSize));
@@ -147,7 +147,7 @@ namespace carto {
             sqlite3pp::query queryTexBindings(*_db, "SELECT node_id, local_id, texture_id, level FROM ModelLODTreeNodeTextures WHERE modellodtree_id=:modellodtree_id");
             queryTexBindings.bind(":modellodtree_id", static_cast<uint64_t>(modelLODTreeId));
             NMLModelLODTree::TextureBindingsMap textureBindingsMap;
-            for (sqlite3pp::query::iterator qitTexBindings = queryTexBindings.begin(); qitTexBindings != queryTexBindings.end(); qitTexBindings++) {
+            for (auto qitTexBindings = queryTexBindings.begin(); qitTexBindings != queryTexBindings.end(); qitTexBindings++) {
                 int nodeId = (*qitTexBindings).get<uint32_t>(0);
                 std::string localId = (*qitTexBindings).get<const char *>(1);
                 long long textureId = (*qitTexBindings).get<uint64_t>(2);
@@ -173,8 +173,8 @@ namespace carto {
     
         sqlite3pp::query query(*_db, "SELECT LENGTH(nmlmesh), nmlmesh FROM Meshes WHERE id=:source_id");
         query.bind(":source_id", static_cast<uint64_t>(meshId));
-        for (sqlite3pp::query::iterator qit = query.begin(); qit != query.end(); qit++) {
-            size_t nmlMeshSize = (*qit).get<uint32_t>(0);
+        for (auto qit = query.begin(); qit != query.end(); qit++) {
+            std::size_t nmlMeshSize = (*qit).get<uint32_t>(0);
             const void * nmlMeshData = (*qit).get<const void *>(1);
             std::shared_ptr<nml::Mesh> mesh = std::make_shared<nml::Mesh>(protobuf::message(nmlMeshData, nmlMeshSize));
             return mesh;
@@ -194,8 +194,8 @@ namespace carto {
         sqlite3pp::query query(*_db, "SELECT LENGTH(nmltexture), nmltexture FROM Textures WHERE id=:source_id AND textures.level=:level ORDER BY textures.level ASC");
         query.bind(":source_id", static_cast<uint64_t>(textureId));
         query.bind(":level", level);
-        for (sqlite3pp::query::iterator qit = query.begin(); qit != query.end(); qit++) {
-            size_t nmlTextureSize = (*qit).get<uint32_t>(0);
+        for (auto qit = query.begin(); qit != query.end(); qit++) {
+            std::size_t nmlTextureSize = (*qit).get<uint32_t>(0);
             const void * nmlTextureData = (*qit).get<const void *>(1);
             std::shared_ptr<nml::Texture> texture = std::make_shared<nml::Texture>(protobuf::message(nmlTextureData, nmlTextureSize));
             return texture;

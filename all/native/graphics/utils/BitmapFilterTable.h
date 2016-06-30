@@ -40,7 +40,7 @@ namespace carto {
 
     private:
         void calculatePixelSamples(int ui, int vi, float uf, float vf, int du, int dv, float a, float b, float c) {
-            size_t sampleIndex = _samples.size();
+            std::size_t sampleIndex = _samples.size();
             float samplesWeight = 0;
 
             // Filter using EWA
@@ -133,7 +133,7 @@ namespace carto {
         // Calculate all samples
         for (int y = 0; y < sizeY; y++) {
             for (int x = 0; x < sizeX; x++) {
-                size_t sampleIndex = _samples.size();
+                std::size_t sampleIndex = _samples.size();
 
                 // Calculate samples
                 cglib::vec2<double> uv = transform(x, y);

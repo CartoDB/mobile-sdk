@@ -685,7 +685,7 @@ namespace carto {
                             _overlayPoints.erase(_overlayPoints.begin() + index);
                             geometry = std::make_shared<PolygonGeometry>(rings);
                         } else {
-                            size_t n = std::find(rings.begin(), rings.end(), ring) - rings.begin();
+                            std::size_t n = std::find(rings.begin(), rings.end(), ring) - rings.begin();
                             if (n > 0) {
                                 rings.erase(rings.begin() + n);
                                 geometry = std::make_shared<PolygonGeometry>(rings);
@@ -741,7 +741,7 @@ namespace carto {
             overlayPoints.push_back(createOverlayPoint(mapPos, false, index++));
         } else if (auto lineGeometry = std::dynamic_pointer_cast<LineGeometry>(geometry)) {
             const std::vector<MapPos>& mapPoses = lineGeometry->getPoses();
-            for (size_t i = 0; i < mapPoses.size(); i++) {
+            for (std::size_t i = 0; i < mapPoses.size(); i++) {
                 MapPos mapPos = mapPoses[i];
                 if (i > 0) {
                     MapPos prevMapPos = mapPoses[i - 1];
@@ -752,7 +752,7 @@ namespace carto {
         } else if (auto polygonGeometry = std::dynamic_pointer_cast<PolygonGeometry>(geometry)) {
             for (const std::vector<MapPos>& ring : polygonGeometry->getRings()) {
                 bool closedRing = !ring.empty() && ring.front() == ring.back();
-                for (size_t i = 0; i < ring.size() - (closedRing ? 1 : 0); i++) {
+                for (std::size_t i = 0; i < ring.size() - (closedRing ? 1 : 0); i++) {
                     MapPos mapPos = ring[i];
                     overlayPoints.push_back(createOverlayPoint(mapPos, false, index++));
                     MapPos nextMapPos = ring[i + 1 < ring.size() ? i + 1 : 0];

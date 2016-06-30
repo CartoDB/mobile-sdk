@@ -32,7 +32,7 @@ namespace {
     struct GDALVirtualFile {
         const char* fileName;
         unsigned char* contents;
-        size_t size;
+        std::size_t size;
     };
     
     static const GDALVirtualFile _GDALVirtualFiles[] = {
@@ -260,7 +260,7 @@ namespace carto {
 
             poRasterBand->RasterIO(GF_Read, minU, minV, maxU - minU, maxV - minV, (void *)&bandData[0], maxUds - minUds, maxVds - minVds, GDT_Byte, 0, 0);
 
-            size_t sampleIndex = 0;
+            std::size_t sampleIndex = 0;
             const std::vector<BitmapFilterTable::Sample>& samples = filterTable.getSamples();
             for (int i = 0; i < _tileSize * _tileSize; i++) {
                 int count = filterTable.getSampleCounts()[i];
@@ -281,7 +281,7 @@ namespace carto {
             }
         }
         if (!_hasAlpha) {
-            size_t sampleIndex = 0;
+            std::size_t sampleIndex = 0;
             const std::vector<BitmapFilterTable::Sample>& samples = filterTable.getSamples();
             for (int i = 0; i < _tileSize * _tileSize; i++) {
                 int count = filterTable.getSampleCounts()[i];

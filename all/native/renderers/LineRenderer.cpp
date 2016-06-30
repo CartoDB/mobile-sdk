@@ -150,7 +150,7 @@ namespace carto {
         std::size_t totalCoordCount = 0;
         std::size_t totalIndexCount = 0;
         for (const LineDrawData* drawData : drawDataBuffer) {
-            for (size_t i = 0; i < drawData->getCoords().size(); i++) {
+            for (std::size_t i = 0; i < drawData->getCoords().size(); i++) {
                 const std::vector<cglib::vec3<double>*>& coords = drawData->getCoords()[i];
                 const std::vector<unsigned int>& indices = drawData->getIndices()[i];
                 
@@ -181,7 +181,7 @@ namespace carto {
         float texCoordYScale = (bitmap->getHeight() > 1 ? 1.0f / viewState.getUnitToDPCoef() : 1.0f);
         for (const LineDrawData* drawData : drawDataBuffer) {
             // Draw data vertex info may be split into multiple buffers, draw each one
-            for (size_t i = 0; i < drawData->getCoords().size(); i++) {
+            for (std::size_t i = 0; i < drawData->getCoords().size(); i++) {
                 
                 // Check for possible overflow in the buffer
                 const std::vector<unsigned int>& indices = drawData->getIndices()[i];
@@ -279,7 +279,7 @@ namespace carto {
     {
         std::vector<cglib::vec3<double> > worldCoords;
 
-        for (size_t i = 0; i < drawData->getCoords().size(); i++) {
+        for (std::size_t i = 0; i < drawData->getCoords().size(); i++) {
             // Resize the buffer for calculated world coordinates
             const std::vector<cglib::vec3<double>*>& coords = drawData->getCoords()[i];
             worldCoords.clear();
@@ -306,10 +306,10 @@ namespace carto {
             // Click test
             const std::vector<unsigned int>& indices = drawData->getIndices()[i];
             const cglib::vec3<double>* prevPos = nullptr;
-            for (size_t i = 0; i < indices.size(); i += 3) {
+            for (std::size_t i = 0; i < indices.size(); i += 3) {
                 // Figure out the start and end point of the current line segment
                 const cglib::vec3<double>* pos = prevPos;
-                for (size_t j = 0; j < 3; j++) {
+                for (std::size_t j = 0; j < 3; j++) {
                     const cglib::vec3<double>* nextPos = coords[indices[i + j]];
                     if (nextPos != pos) {
                         prevPos = pos;

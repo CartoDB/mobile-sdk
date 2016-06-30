@@ -19,7 +19,7 @@ namespace carto {
 
     class NetworkUtils {
     public:
-        typedef std::function<bool(std::uint64_t, std::uint64_t, const unsigned char*, size_t)> HandlerFn;
+        typedef std::function<bool(std::uint64_t, std::uint64_t, const unsigned char*, std::size_t)> HandlerFn;
 
         static bool GetHTTP(const std::string& url, std::shared_ptr<BinaryData>& responseData, bool log);
 

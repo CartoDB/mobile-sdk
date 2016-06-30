@@ -139,7 +139,7 @@ namespace carto {
         std::size_t totalCoordCount = 0;
         std::size_t totalIndexCount = 0;
         for (const std::shared_ptr<PolygonDrawData>& drawData : drawDataBuffer) {
-            for (size_t i = 0; i < drawData->getCoords().size(); i++) {
+            for (std::size_t i = 0; i < drawData->getCoords().size(); i++) {
                 const std::vector<cglib::vec3<double> >& coords = drawData->getCoords()[i];
                 const std::vector<unsigned int>& indices = drawData->getIndices()[i];
                 totalCoordCount += coords.size();
@@ -164,8 +164,7 @@ namespace carto {
         GLuint indexIndex = 0;
         for (const std::shared_ptr<PolygonDrawData>& drawData : drawDataBuffer) {
             // Draw data vertex info may be split into multiple buffers, draw each one
-            for (size_t i = 0; i < drawData->getCoords().size(); i++) {
-                
+            for (std::size_t i = 0; i < drawData->getCoords().size(); i++) {
                 // Check for possible overflow in the buffers
                 const std::vector<cglib::vec3<double> >& coords = drawData->getCoords()[i];
                 const std::vector<unsigned int>& indices = drawData->getIndices()[i];
@@ -230,11 +229,11 @@ namespace carto {
         }
         
         // Test triangles
-        for (size_t i = 0; i < drawData->getCoords().size(); i++) {
+        for (std::size_t i = 0; i < drawData->getCoords().size(); i++) {
             const std::vector<cglib::vec3<double> >& coords = drawData->getCoords()[i];
             const std::vector<unsigned int>& indices = drawData->getIndices()[i];
             
-            for (size_t i = 0; i < indices.size(); i += 3) {
+            for (std::size_t i = 0; i < indices.size(); i += 3) {
                 double t = 0;
                 if (cglib::intersect_triangle(coords[indices[i + 0]], coords[indices[i + 1]], coords[indices[i + 2]], ray, &t)) {
                     MapPos clickPos(ray(t)(0), ray(t)(1), ray(t)(2));

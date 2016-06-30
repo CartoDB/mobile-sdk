@@ -43,7 +43,7 @@ namespace carto {
         epsg3857Points.reserve(totalPoints);
         std::vector<RoutingInstruction> instructions;
         instructions.reserve(totalInstructions);
-        for (size_t i = 0; i < results.size(); i++) {
+        for (std::size_t i = 0; i < results.size(); i++) {
             const Routing::RoutingResult& result = results[i];
             if (result.getInstructions().empty()) {
                 continue;

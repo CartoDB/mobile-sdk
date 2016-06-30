@@ -101,8 +101,8 @@ namespace carto {
         // Get tesselation results
         const double* coords = tessGetVertices(tess);
         const int* elements = tessGetElements(tess);
-        size_t vertexCount = tessGetVertexCount(tess);
-        size_t elementCount = tessGetElementCount(tess);
+        std::size_t vertexCount = tessGetVertexCount(tess);
+        std::size_t elementCount = tessGetElementCount(tess);
     
         // Calculate center
         cglib::vec3<double> center = _boundingBox.center();
@@ -113,7 +113,7 @@ namespace carto {
         _indices.push_back(std::vector<unsigned int>());
         _indices.back().reserve(std::min(elementCount * MAX_INDICES_PER_ELEMENT, GLUtils::MAX_VERTEXBUFFER_SIZE));
         std::unordered_map<unsigned int, unsigned int> indexMap;
-        for (size_t i = 0; i < elementCount * MAX_INDICES_PER_ELEMENT; i += 3) {
+        for (std::size_t i = 0; i < elementCount * MAX_INDICES_PER_ELEMENT; i += 3) {
             
             // Check for possible GL buffer overflow
             if (_indices.back().size() + 3 > GLUtils::MAX_VERTEXBUFFER_SIZE) {

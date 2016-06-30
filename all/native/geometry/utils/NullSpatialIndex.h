@@ -18,7 +18,7 @@ namespace carto {
     public:
         NullSpatialIndex();
         
-        virtual size_t size() const;
+        virtual std::size_t size() const;
         
         virtual void clear();
         virtual void insert(const MapBounds& bounds, const T& object);
@@ -40,7 +40,7 @@ namespace carto {
     }
     
     template<typename T>
-    size_t NullSpatialIndex<T>::size() const {
+    std::size_t NullSpatialIndex<T>::size() const {
         return _objects.size();
     }
     
@@ -61,7 +61,7 @@ namespace carto {
     
     template<typename T>
     bool NullSpatialIndex<T>::remove(const T& object) {
-        size_t count = _objects.size();
+        std::size_t count = _objects.size();
         while (true) {
             auto it = std::find(_objects.begin(), _objects.end(), object);
             if (it == _objects.end()) {

@@ -16,7 +16,7 @@ namespace carto {
 
     class GLUtils {
     public:
-        static const size_t MAX_VERTEXBUFFER_SIZE;
+        static const std::size_t MAX_VERTEXBUFFER_SIZE;
     
         static void checkGLError(const std::string& place);
     

@@ -39,7 +39,7 @@ namespace carto {
 
         std::vector<unsigned char> content;
         content.reserve(65536);
-        auto handlerFn = [&content](std::uint64_t offset, std::uint64_t length, const unsigned char* buf, size_t size) -> bool {
+        auto handlerFn = [&content](std::uint64_t offset, std::uint64_t length, const unsigned char* buf, std::size_t size) -> bool {
             if (content.size() != offset) {
                 content.resize(static_cast<size_t>(offset));
             }
@@ -82,7 +82,7 @@ namespace carto {
         
         std::vector<unsigned char> content;
         content.reserve(65536);
-        auto handlerFn = [&content](std::uint64_t offset, std::uint64_t length, const unsigned char* buf, size_t size) -> bool {
+        auto handlerFn = [&content](std::uint64_t offset, std::uint64_t length, const unsigned char* buf, std::size_t size) -> bool {
             if (content.size() != offset) {
                 content.resize(static_cast<size_t>(offset));
             }
@@ -132,7 +132,7 @@ namespace carto {
             return true;
         };
 
-        auto dataFn = [&](const unsigned char* data, size_t size) {
+        auto dataFn = [&](const unsigned char* data, std::size_t size) {
             bool result = handlerFn(offset, contentOffset + contentLength, data, size);
             offset += size;
             return result;

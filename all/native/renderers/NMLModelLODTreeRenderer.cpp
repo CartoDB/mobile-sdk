@@ -58,7 +58,7 @@ namespace carto {
         // Build node hierarchy, create parent-child links between draw records
         for (auto it = _drawRecordMap.begin(); it != _drawRecordMap.end(); it++) {
             ModelNodeDrawRecord& record = *it->second;
-            for (size_t i = 0; i < record.drawData.getParentIds().size(); i++) {
+            for (std::size_t i = 0; i < record.drawData.getParentIds().size(); i++) {
                 auto it2 = _drawRecordMap.find(record.drawData.getParentIds()[i]);
                 if (it2 != _drawRecordMap.end()) {
                     ModelNodeDrawRecord& parentRecord = *it2->second;
@@ -113,7 +113,7 @@ namespace carto {
             std::vector<nml::RayIntersection> intersections;
             glModel->calculateRayIntersections(rayModel, intersections);
             
-            for (size_t i = 0; i < intersections.size(); i++) {
+            for (std::size_t i = 0; i < intersections.size(); i++) {
                 auto proxyIt = record.drawData.getProxyMap()->find(intersections[i].vertexId);
                 if (proxyIt == record.drawData.getProxyMap()->end()) {
                     continue;
@@ -232,7 +232,7 @@ namespace carto {
                 record.parent->children.erase(childIt);
                 record.parent->children.insert(record.parent->children.end(), record.children.begin(), record.children.end());
             }
-            for (size_t i = 0; i < record.children.size(); i++) {
+            for (std::size_t i = 0; i < record.children.size(); i++) {
                 record.children[i]->parent = record.parent;
             }
             if (record.created) {

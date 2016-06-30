@@ -189,7 +189,7 @@ namespace carto {
                             query.bind(":zoom", zoom);
                             query.bind(":x", x);
                             query.bind(":y", y);
-                            for (sqlite3pp::query::iterator qit = query.begin(); qit != query.end(); qit++) {
+                            for (auto qit = query.begin(); qit != query.end(); qit++) {
                                 Log::Infof("PackageManager::loadTile: Using package %s", packageInfo->getPackageId().c_str());
                                 const unsigned char* dataPtr = reinterpret_cast<const unsigned char*>(qit->get<const void*>(0));
                                 std::size_t dataSize = qit->column_bytes(0);
@@ -700,7 +700,7 @@ namespace carto {
             sqlite3pp::query query(*_localDb, "SELECT id FROM packages WHERE package_id=:package_id AND version=:version AND valid=1");
             query.bind(":package_id", task.packageId.c_str());
             query.bind(":version", task.packageVersion);
-            for (sqlite3pp::query::iterator qit = query.begin(); qit != query.end(); qit++) {
+            for (auto qit = query.begin(); qit != query.end(); qit++) {
                 Log::Infof("PackageManager: Package %s already imported", task.packageId.c_str());
                 return true;
             }
@@ -749,7 +749,7 @@ namespace carto {
                 sqlite3pp::database packageDb(packageFileName.c_str());
                 sqlite3pp::query query(packageDb, "SELECT zoom_level, tile_column, tile_row FROM tiles");
                 std::vector<PackageTileMask::Tile> tiles;
-                for (sqlite3pp::query::iterator qit = query.begin(); qit != query.end(); qit++) {
+                for (auto qit = query.begin(); qit != query.end(); qit++) {
                     PackageTileMask::Tile tile(qit->get<int>(0), qit->get<int>(1), qit->get<int>(2));
                     tiles.push_back(tile);
                 }
@@ -763,7 +763,7 @@ namespace carto {
                 sqlite3pp::query query1(*_localDb, "SELECT id FROM packages WHERE package_id=:package_id AND version=:version");
                 query1.bind(":package_id", task.packageId.c_str());
                 query1.bind(":version", task.packageVersion);
-                for (sqlite3pp::query::iterator qit = query1.begin(); qit != query1.end(); qit++) {
+                for (auto qit = query1.begin(); qit != query1.end(); qit++) {
                     id = qit->get<int>(0);
                 }
                 if (id == -1) {
@@ -815,7 +815,7 @@ namespace carto {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             sqlite3pp::query query(*_localDb, "SELECT version FROM packages WHERE package_id=:package_id AND valid=1");
             query.bind(":package_id", task.packageId.c_str());
-            for (sqlite3pp::query::iterator qit = query.begin(); qit != query.end(); qit++) {
+            for (auto qit = query.begin(); qit != query.end(); qit++) {
                 if (qit->get<int>(0) == task.packageVersion && task.packageVersion != -1) {
                     Log::Infof("PackageManager: Package %s already downloaded", task.packageId.c_str());
                     return true;
@@ -913,7 +913,7 @@ namespace carto {
                 sqlite3pp::query query(*_localDb, "SELECT id FROM packages WHERE package_id=:package_id AND version=:version");
                 query.bind(":package_id", task.packageId.c_str());
                 query.bind(":version", task.packageVersion);
-                for (sqlite3pp::query::iterator qit = query.begin(); qit != query.end(); qit++) {
+                for (auto qit = query.begin(); qit != query.end(); qit++) {
                     id = qit->get<int>(0);
                 }
                 if (id == -1) {
@@ -929,7 +929,7 @@ namespace carto {
                         sqlite3pp::database packageDb(packageFileName.c_str());
                         sqlite3pp::query query2(packageDb, "SELECT zoom_level, tile_column, tile_row FROM tiles");
                         std::vector<PackageTileMask::Tile> tiles;
-                        for (sqlite3pp::query::iterator qit2 = query2.begin(); qit2 != query2.end(); qit2++) {
+                        for (auto qit2 = query2.begin(); qit2 != query2.end(); qit2++) {
                             PackageTileMask::Tile tile(qit2->get<int>(0), qit2->get<int>(1), qit2->get<int>(2));
                             tiles.push_back(tile);
                         }
@@ -990,7 +990,7 @@ namespace carto {
             sqlite3pp::query query(*_localDb, "SELECT id FROM packages WHERE package_id=:package_id AND version=:version");
             query.bind(":package_id", task.packageId.c_str());
             query.bind(":version", task.packageVersion);
-            for (sqlite3pp::query::iterator qit = query.begin(); qit != query.end(); qit++) {
+            for (auto qit = query.begin(); qit != query.end(); qit++) {
                 id = qit->get<int>(0);
             }
         }
@@ -1019,7 +1019,7 @@ namespace carto {
             // Find all valid packages
             std::vector<std::shared_ptr<PackageInfo> > packages;
             sqlite3pp::query query(*_localDb, "SELECT package_id, package_type, version, size, server_url, tile_mask, metainfo FROM packages WHERE valid=1 ORDER BY id ASC");
-            for (sqlite3pp::query::iterator qit = query.begin(); qit != query.end(); qit++) {
+            for (auto qit = query.begin(); qit != query.end(); qit++) {
                 std::shared_ptr<PackageTileMask> tileMask;
                 if (strlen(qit->get<const char*>(5)) != 0) {
                     tileMask = std::make_shared<PackageTileMask>(qit->get<const char*>(5));
@@ -1136,7 +1136,7 @@ namespace carto {
         // Delete older invalid packages
         sqlite3pp::query query(*_localDb, "SELECT id FROM packages WHERE package_id=:package_id AND valid=0");
         query.bind(":package_id", packageId.c_str());
-        for (sqlite3pp::query::iterator qit = query.begin(); qit != query.end(); qit++) {
+        for (auto qit = query.begin(); qit != query.end(); qit++) {
             int otherId = qit->get<int>(0);
             deleteLocalPackage(otherId);
         }
@@ -1154,7 +1154,7 @@ namespace carto {
             query.bind(":id", id);
             std::string packageFileName;
             PackageType::PackageType packageType = PackageType::PACKAGE_TYPE_MAP;
-            for (sqlite3pp::query::iterator qit = query.begin(); qit != query.end(); qit++) {
+            for (auto qit = query.begin(); qit != query.end(); qit++) {
                 std::string packageId = qit->get<const char*>(0);
                 packageType = static_cast<PackageType::PackageType>(qit->get<int>(1));
                 int version = qit->get<int>(2);
@@ -1386,7 +1386,7 @@ namespace carto {
         
         std::string dbHash;
         sqlite3pp::query query(db, "SELECT value FROM metadata WHERE name='nutikeysha1'");
-        for (sqlite3pp::query::iterator qit = query.begin(); qit != query.end(); qit++) {
+        for (auto qit = query.begin(); qit != query.end(); qit++) {
             dbHash = qit->get<const char*>(0);
         }
         if (dbHash.empty()) {
@@ -1404,7 +1404,7 @@ namespace carto {
 
     bool PackageManager::addDbField(sqlite3pp::database& db, const std::string& table, const std::string& field, const std::string& def) {
         sqlite3pp::query query(db, ("PRAGMA table_info(" + table + ")").c_str());
-        for (sqlite3pp::query::iterator qit = query.begin(); qit != query.end(); qit++) {
+        for (auto qit = query.begin(); qit != query.end(); qit++) {
             if (qit->get<const char *>(1) == field) {
                 return false;
             }
@@ -1415,7 +1415,7 @@ namespace carto {
 
     bool PackageManager::checkDbEncryption(sqlite3pp::database& db, const std::string& encKey) {
         sqlite3pp::query query(db, "SELECT value FROM metadata WHERE name='nutikeysha1'");
-        for (sqlite3pp::query::iterator qit = query.begin(); qit != query.end(); qit++) {
+        for (auto qit = query.begin(); qit != query.end(); qit++) {
             if (encKey.empty()) {
                 throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM, "Package database is encrypted and needs encryption key");
             }
@@ -1597,7 +1597,7 @@ namespace carto {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         sqlite3pp::query query(*_localDb, "SELECT id, package_id, (CASE WHEN id=:active_id THEN -1 ELSE id END) as ordering FROM manager_tasks WHERE priority>=0 OR cancelled=1 ORDER BY priority DESC, ordering ASC LIMIT 1");
         query.bind(":active_id", currentActiveTaskId);
-        for (sqlite3pp::query::iterator qit = query.begin(); qit != query.end(); qit++) {
+        for (auto qit = query.begin(); qit != query.end(); qit++) {
             int taskId = qit->get<int>(0);
             const char* packageId = qit->get<const char*>(1);
             if (!packageId) {
@@ -1607,7 +1607,7 @@ namespace carto {
             // This is a package task - package tasks have to be processed in-order, so take the first task with the same package (even if it is paused).
             sqlite3pp::query query2(*_localDb, "SELECT id FROM manager_tasks WHERE package_id=:package_id ORDER BY id ASC LIMIT 1");
             query2.bind(":package_id", packageId);
-            for (sqlite3pp::query::iterator qit2 = query2.begin(); qit2 != query2.end(); qit2++) {
+            for (auto qit2 = query2.begin(); qit2 != query2.end(); qit2++) {
                 return qit2->get<int>(0);
             }
         }
@@ -1618,7 +1618,7 @@ namespace carto {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         sqlite3pp::query query(*_localDb, "SELECT id FROM manager_tasks");
         std::vector<int> taskIds;
-        for (sqlite3pp::query::iterator qit = query.begin(); qit != query.end(); qit++) {
+        for (auto qit = query.begin(); qit != query.end(); qit++) {
             taskIds.push_back(qit->get<int>(0));
         }
         return taskIds;
@@ -1629,7 +1629,7 @@ namespace carto {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         sqlite3pp::query query(*_localDb, "SELECT command, priority, action, progress, package_id, package_type, package_version, package_location FROM manager_tasks WHERE id=:task_id");
         query.bind(":task_id", taskId);
-        for (sqlite3pp::query::iterator qit = query.begin(); qit != query.end(); qit++) {
+        for (auto qit = query.begin(); qit != query.end(); qit++) {
             task.command = static_cast<Task::Command>(qit->get<int>(0));
             task.priority = qit->get<int>(1);
             task.action = static_cast<PackageAction::PackageAction>(qit->get<int>(2));
@@ -1661,7 +1661,7 @@ namespace carto {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         sqlite3pp::query query(*_localDb, "SELECT cancelled FROM manager_tasks WHERE id=:task_id");
         query.bind(":task_id", taskId);
-        for (sqlite3pp::query::iterator qit = query.begin(); qit != query.end(); qit++) {
+        for (auto qit = query.begin(); qit != query.end(); qit++) {
             return qit->get<bool>(0);
         }
         return true;

@@ -70,7 +70,7 @@ namespace carto {
             std::lock_guard<std::mutex> lock(_onTouchListenersMutex);
             onTouchListeners = _onTouchListeners;
         }
-        for (size_t i = onTouchListeners.size(); i-- > 0; ) {
+        for (std::size_t i = onTouchListeners.size(); i-- > 0; ) {
             if (onTouchListeners[i]->onTouchEvent(action, screenPos1, screenPos2)) {
                 return;
             }

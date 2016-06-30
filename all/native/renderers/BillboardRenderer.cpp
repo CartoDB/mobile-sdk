@@ -177,7 +177,7 @@ namespace carto {
         _shader.reset();
     }
     
-    size_t BillboardRenderer::getElementCount() const {
+    std::size_t BillboardRenderer::getElementCount() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _elements.size();
     }
@@ -275,7 +275,7 @@ namespace carto {
         
         // Calculate and draw buffers
         GLuint drawDataIndex = 0;
-        for (size_t i = 0; i < drawDataBuffer.size(); i++) {
+        for (std::size_t i = 0; i < drawDataBuffer.size(); i++) {
             const std::shared_ptr<BillboardDrawData>& drawData = drawDataBuffer[i];
             
             // Check for possible overflow in the buffers

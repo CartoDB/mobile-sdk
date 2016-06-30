@@ -142,7 +142,7 @@ namespace carto {
         // Calculate and draw buffers
         const MapPos& cameraPos = viewState.getCameraPos();
         GLuint drawDataIndex = 0;
-        for (size_t i = 0; i < drawDataBuffer.size(); i++) {
+        for (std::size_t i = 0; i < drawDataBuffer.size(); i++) {
             const std::shared_ptr<PointDrawData>& drawData = drawDataBuffer[i];
             cglib::vec3<float> translate = cglib::vec3<float>::convert(drawData->getPos() - cglib::vec3<double>(cameraPos.getX(), cameraPos.getY(), cameraPos.getZ()));
     

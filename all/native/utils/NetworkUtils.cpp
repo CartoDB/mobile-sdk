@@ -94,7 +94,7 @@ namespace carto {
 
     std::string NetworkUtils::URLDecode(const std::string& encValue) {
         std::string value;
-        for (size_t i = 0; i < encValue.size(); i++) {
+        for (std::size_t i = 0; i < encValue.size(); i++) {
             char c = encValue[i];
 
             if (c == '%' && i + 2 < encValue.size()) {
@@ -155,7 +155,7 @@ namespace carto {
 
     std::string NetworkUtils::ParseURLHostName(std::string url) {
         // Remove http://, if exists
-        size_t index = url.find("://");
+        std::size_t index = url.find("://");
         if (index != std::string::npos) {
             url.erase(0, index + 3);
         }
@@ -177,7 +177,7 @@ namespace carto {
 
     int NetworkUtils::ParseURLPort(std::string url) {
         // Remove http://, if exists
-        size_t index = url.find("://");
+        std::size_t index = url.find("://");
         if (index != std::string::npos) {
             url.erase(0, index + 3);
         }
@@ -202,7 +202,7 @@ namespace carto {
 
     std::string NetworkUtils::ParseURLPath(std::string url) {
         // Remove http://, if exists
-        size_t index = url.find("://");
+        std::size_t index = url.find("://");
         if (index != std::string::npos) {
             url.erase(0, index + 3);
         }

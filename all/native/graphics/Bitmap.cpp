@@ -19,7 +19,7 @@ namespace {
     
     void readPngCallback(png_structp pngPtr, png_bytep data, png_size_t length) {
         LibPNGIOContainer* ioContainer = static_cast<LibPNGIOContainer*>(png_get_io_ptr(pngPtr));
-        for (size_t i = 0; i < length; i++) {
+        for (std::size_t i = 0; i < length; i++) {
             data[i] = ioContainer->_compressedDataPtr[i];
         }
     
@@ -29,7 +29,7 @@ namespace {
     void writePngCallback(png_structp pngPtr, png_bytep data, png_size_t length) {
         std::vector<unsigned char>* compressedData = static_cast<std::vector<unsigned char>* >(png_get_io_ptr(pngPtr));
         compressedData->reserve(compressedData->size() + length);
-        for (size_t i = 0; i < length; i++) {
+        for (std::size_t i = 0; i < length; i++) {
             compressedData->push_back(data[i]);
         }
     }
@@ -46,17 +46,17 @@ namespace {
     }
     
     template <typename T>
-    void encodeInt(T data, unsigned char* buffer, size_t size) {
-        for (size_t i = 0; i < size; i++) {
+    void encodeInt(T data, unsigned char* buffer, std::size_t size) {
+        for (std::size_t i = 0; i < size; i++) {
             buffer[i] = data & 255;
             data >>= 8;
         }
     }
         
     template <typename T>
-    T decodeInt(const unsigned char* buffer, size_t size) {
+    T decodeInt(const unsigned char* buffer, std::size_t size) {
         T data = 0;
-        for (size_t i = 0; i < size; i++) {
+        for (std::size_t i = 0; i < size; i++) {
             data <<= 8;
             data |= buffer[size - 1 - i];
         }
@@ -176,7 +176,7 @@ namespace carto {
         // Unpremultiply
         std::vector<unsigned char> pixelData = _pixelData;
         if (unpremultiply) {
-            for (size_t i = 0; i < pixelData.size(); i += _bytesPerPixel) {
+            for (std::size_t i = 0; i < pixelData.size(); i += _bytesPerPixel) {
                 unsigned int a = pixelData[i + _bytesPerPixel - 1];
                 if (a == 0) {
                     continue;
@@ -191,7 +191,7 @@ namespace carto {
         // Set the individual row pointers to point at the correct offsets of image data
         unsigned char* pixelDataPtr =  const_cast<unsigned char*>(&pixelData[0]);
         int bytesPerRealRow = _width * _bytesPerPixel;
-        for (size_t i = 0; i < _height; i++) {
+        for (std::size_t i = 0; i < _height; i++) {
             rowPointers[_height - 1 - i] = pixelDataPtr + i * bytesPerRealRow;
         }
     
@@ -209,10 +209,10 @@ namespace carto {
     }
     
     std::shared_ptr<BinaryData> Bitmap::compressToInternal() const {
-        size_t size = sizeof(_width) + sizeof(_height) + sizeof(_bytesPerPixel) + sizeof(unsigned int) + _width * _height * _bytesPerPixel;
+        std::size_t size = sizeof(_width) + sizeof(_height) + sizeof(_bytesPerPixel) + sizeof(unsigned int) + _width * _height * _bytesPerPixel;
         std::vector<unsigned char> compressedData(4 + size);
         memcpy(&compressedData.at(0), "NUTi", 4);
-        size_t offset = 4;
+        std::size_t offset = 4;
         encodeInt(_width, &compressedData.at(offset), sizeof(_width));
         offset += sizeof(_width);
         encodeInt(_height, &compressedData.at(offset), sizeof(_height));
@@ -270,7 +270,7 @@ namespace carto {
     
         std::vector<int> g_px1ab(width * 2 * 2);
     
-        for (size_t x2 = 0; x2 < width; x2++) {
+        for (std::size_t x2 = 0; x2 < width; x2++) {
             // Find the x-range of input pixels that will contribute:
             int x1a = static_cast<int>((x2) * fw);
             int x1b = static_cast<int>((x2 + 1) * fw);
@@ -284,7 +284,7 @@ namespace carto {
         }
     
         // For every output pixel
-        for (size_t y2 = 0; y2 < height; y2++) {
+        for (std::size_t y2 = 0; y2 < height; y2++) {
             // Find the y-range of input pixels that will contribute:
             int y1a = static_cast<int>((y2) * fh);
             int y1b = static_cast<int>((y2 + 1) * fh);
@@ -296,7 +296,7 @@ namespace carto {
             int y1c = y1a >> 8;
             int y1d = y1b >> 8;
     
-            for (size_t x2 = 0; x2 < width; x2++) {
+            for (std::size_t x2 = 0; x2 < width; x2++) {
                 // Find the x-range of input pixels that will contribute
                 int x1a = g_px1ab[x2 * 2 + 0];
                 int x1b = g_px1ab[x2 * 2 + 1];
@@ -473,7 +473,7 @@ namespace carto {
         return CreateFromCompressed(compressedData->data(), compressedData->size());
     }
 
-    std::shared_ptr<Bitmap> Bitmap::CreateFromCompressed(const unsigned char* compressedData, size_t dataSize) {
+    std::shared_ptr<Bitmap> Bitmap::CreateFromCompressed(const unsigned char* compressedData, std::size_t dataSize) {
         if (!compressedData) {
             return std::shared_ptr<Bitmap>();
         }
@@ -493,7 +493,7 @@ namespace carto {
     {
     }
 
-    bool Bitmap::loadFromCompressedBytes(const unsigned char* compressedData, size_t dataSize) {
+    bool Bitmap::loadFromCompressedBytes(const unsigned char* compressedData, std::size_t dataSize) {
         if (IsJPEG(compressedData, dataSize)) {
             return loadJPEG(compressedData, dataSize);
         } else if (IsPNG(compressedData, dataSize)) {
@@ -627,7 +627,7 @@ namespace carto {
         return true;
     }
     
-    bool Bitmap::IsJPEG(const unsigned char* compressedData, size_t dataSize) {
+    bool Bitmap::IsJPEG(const unsigned char* compressedData, std::size_t dataSize) {
         if (dataSize < 4) {
             return false;
         }
@@ -635,22 +635,22 @@ namespace carto {
                 (compressedData[3] == 0xE0 || compressedData[3] == 0xE1);
     }
     
-    bool Bitmap::IsPNG(const unsigned char* compressedData, size_t dataSize) {
+    bool Bitmap::IsPNG(const unsigned char* compressedData, std::size_t dataSize) {
         return png_sig_cmp(compressedData, 0, PNG_SIGNATURE_LENGTH) == 0;
     }
         
-    bool Bitmap::IsWEBP(const unsigned char* compressedData, size_t dataSize) {
+    bool Bitmap::IsWEBP(const unsigned char* compressedData, std::size_t dataSize) {
         return WebPGetInfo(compressedData, dataSize, nullptr, nullptr) == 1;
     }
     
-    bool Bitmap::IsNUTI(const unsigned char* compressedData, size_t dataSize) {
+    bool Bitmap::IsNUTI(const unsigned char* compressedData, std::size_t dataSize) {
         if (dataSize < 4) {
             return false;
         }
         return memcmp(compressedData, "NUTi", 4) == 0;
     }
         
-    bool Bitmap::loadJPEG(const unsigned char* compressedData, size_t dataSize) {
+    bool Bitmap::loadJPEG(const unsigned char* compressedData, std::size_t dataSize) {
         jpeg_decompress_struct cinfo;
         JPEGErrorManager jerr;
         cinfo.err = jpeg_std_error(&jerr.pub);
@@ -705,7 +705,7 @@ namespace carto {
         return true;
     }
     
-    bool Bitmap::loadPNG(const unsigned char* compressedData, size_t dataSize) {
+    bool Bitmap::loadPNG(const unsigned char* compressedData, std::size_t dataSize) {
         png_structp pngPtr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
         if (!pngPtr) {
             Log::Error("Bitmap::loadPNG: Failed to load PNG");
@@ -814,7 +814,7 @@ namespace carto {
         std::vector<png_bytep> rowPointers(_height);
     
         // Set the individual row pointers to point at the correct offsets of image data
-        for (size_t i = 0; i < _height; i++) {
+        for (std::size_t i = 0; i < _height; i++) {
             rowPointers[_height - 1 - i] = pixelDataPtr + i * bytesPerRow;
         }
     
@@ -823,8 +823,8 @@ namespace carto {
     
         if (premultiply) {
             // Premultiply alpha
-            for (size_t i = 0; i < _pixelData.size(); i += _bytesPerPixel) {
-                for (size_t j = 0; j < _bytesPerPixel - 1; j++) {
+            for (std::size_t i = 0; i < _pixelData.size(); i += _bytesPerPixel) {
+                for (std::size_t j = 0; j < _bytesPerPixel - 1; j++) {
                     _pixelData[i + j] = (_pixelData[i + j] * _pixelData[i + _bytesPerPixel - 1]) / 255;
                 }
             }
@@ -837,7 +837,7 @@ namespace carto {
         return true;
     }
         
-    bool Bitmap::loadWEBP(const unsigned char* compressedData, size_t dataSize) {
+    bool Bitmap::loadWEBP(const unsigned char* compressedData, std::size_t dataSize) {
         WebPBitstreamFeatures features;
         if (WebPGetFeatures(compressedData, dataSize, &features) != VP8_STATUS_OK) {
             Log::Error("Bitmap::loadWEBP: Failed to load WEBP features");
@@ -871,8 +871,8 @@ namespace carto {
         return true;
     }
     
-    bool Bitmap::loadNUTI(const unsigned char* compressedData, size_t dataSize) {
-        size_t offset = 4;
+    bool Bitmap::loadNUTI(const unsigned char* compressedData, std::size_t dataSize) {
+        std::size_t offset = 4;
         _width = decodeInt<unsigned int>(&compressedData[offset], sizeof(_width));
         offset += sizeof(_width);
         _height = decodeInt<unsigned int>(&compressedData[offset], sizeof(_height));

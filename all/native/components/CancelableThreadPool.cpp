@@ -86,8 +86,8 @@ namespace carto {
     void CancelableThreadPool::cancelAll() {
         std::lock_guard<std::mutex> lock(_mutex);
         
-        size_t taskRecordsSize = _taskRecords.size();
-        for (size_t i = 0; i < taskRecordsSize; i++) {
+        std::size_t taskRecordsSize = _taskRecords.size();
+        for (std::size_t i = 0; i < taskRecordsSize; i++) {
             const std::shared_ptr<CancelableTask>& task = _taskRecords.top()._task;
             task->cancel();
             _taskRecords.pop();
@@ -95,9 +95,10 @@ namespace carto {
     }
     
     CancelableThreadPool::TaskRecord::TaskRecord(std::shared_ptr<CancelableTask> task, int priority, long long sequence) :
-            _task(task),
-            _priority(priority),
-            _sequence(sequence) {
+        _task(task),
+        _priority(priority),
+        _sequence(sequence)
+    {
     }
     
     bool CancelableThreadPool::TaskRecord::operator <(const TaskRecord& taskRecord) const {

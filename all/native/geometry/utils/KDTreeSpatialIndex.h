@@ -18,7 +18,7 @@ namespace carto {
     public:
         KDTreeSpatialIndex();
         
-        virtual size_t size() const;
+        virtual std::size_t size() const;
         
         virtual void clear();
         virtual void insert(const MapBounds& bounds, const T& object);
@@ -50,7 +50,7 @@ namespace carto {
         };
         
         static const int MAX_DEPTH = 20;
-        static const size_t MIN_SPLIT_COUNT = 2;
+        static const std::size_t MIN_SPLIT_COUNT = 2;
         
         void insertToNode(const std::shared_ptr<Node>& node, const MapBounds& bounds, const T& object, int depth);
         std::shared_ptr<Node> removeFromNode(const std::shared_ptr<Node>& node, const MapBounds* bounds, const T& object);
@@ -60,7 +60,7 @@ namespace carto {
         void getAllFromNode(const std::shared_ptr<Node>& node, std::vector<T>& results) const;
         
         std::shared_ptr<Node> _root;
-        size_t _count;
+        std::size_t _count;
     };
     
     template<typename T>
@@ -71,7 +71,7 @@ namespace carto {
     }
     
     template<typename T>
-    size_t KDTreeSpatialIndex<T>::size() const {
+    std::size_t KDTreeSpatialIndex<T>::size() const {
         return _count;
     }
     
@@ -91,14 +91,14 @@ namespace carto {
     
     template<typename T>
     bool KDTreeSpatialIndex<T>::remove(const MapBounds& bounds, const T& object) {
-        size_t count = _count;
+        std::size_t count = _count;
         _root = removeFromNode(_root, &bounds, object);
         return count != _count;
     }
     
     template<typename T>
     bool KDTreeSpatialIndex<T>::remove(const T& object) {
-        size_t count = _count;
+        std::size_t count = _count;
         _root = removeFromNode(_root, nullptr, object);
         return count != _count;
     }
@@ -223,7 +223,7 @@ namespace carto {
         
         // Recurse and prune
         bool empty = true;
-        for (size_t i = 0; i < node->children.size(); i++) {
+        for (std::size_t i = 0; i < node->children.size(); i++) {
             node->children[i] = removeFromNode(node->children[i], bounds, object);
             if (node->children[i]) {
                 empty = false;

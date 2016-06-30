@@ -697,7 +697,7 @@ namespace carto {
             const std::vector<MapPos>& mapPoses = lineGeometry->getPoses();
             auto poLineString = std::make_shared<OGRLineString>();
             poLineString->setNumPoints(mapPoses.size());
-            for (size_t i = 0; i < mapPoses.size(); i++) {
+            for (std::size_t i = 0; i < mapPoses.size(); i++) {
                 MapPos mapPos = _poLayerSpatialRef->inverseTransform(mapPoses[i]);
                 poLineString->setPoint(i, mapPos.getX(), mapPos.getY(), mapPos.getZ());
             }
@@ -708,7 +708,7 @@ namespace carto {
             for (const std::vector<MapPos>& mapPoses : rings) {
                 auto poLineString = std::make_shared<OGRLinearRing>();
                 poLineString->setNumPoints(mapPoses.size());
-                for (size_t i = 0; i < mapPoses.size(); i++) {
+                for (std::size_t i = 0; i < mapPoses.size(); i++) {
                     MapPos mapPos = _poLayerSpatialRef->inverseTransform(mapPoses[i]);
                     poLineString->setPoint(i, mapPos.getX(), mapPos.getY(), mapPos.getZ());
                 }

@@ -27,7 +27,7 @@ namespace carto {
         return _data;
     }
 
-    void WKBGeometryWriter::Stream::reserve(size_t count) {
+    void WKBGeometryWriter::Stream::reserve(std::size_t count) {
         _data.reserve(_data.size() + count);
     }
 

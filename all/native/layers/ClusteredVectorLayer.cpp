@@ -204,14 +204,14 @@ namespace carto {
         return mergeClusters(clusters.begin(), clusters.end(), 1).front();
     }
 
-    std::vector<std::shared_ptr<ClusteredVectorLayer::Cluster> > ClusteredVectorLayer::mergeClusters(std::vector<std::shared_ptr<Cluster> >::iterator clustersBegin, std::vector<std::shared_ptr<Cluster> >::iterator clustersEnd, size_t maxClusters) const {
+    std::vector<std::shared_ptr<ClusteredVectorLayer::Cluster> > ClusteredVectorLayer::mergeClusters(std::vector<std::shared_ptr<Cluster> >::iterator clustersBegin, std::vector<std::shared_ptr<Cluster> >::iterator clustersEnd, std::size_t maxClusters) const {
         struct ClusterInfo {
             std::shared_ptr<Cluster> cluster;
             double closestClusterDistance;
             std::list<ClusterInfo>::iterator closestClusterInfoIt;
         };
         
-        size_t initialClusters = clustersEnd - clustersBegin;
+        std::size_t initialClusters = clustersEnd - clustersBegin;
 
         // Find axis of bigger variance, use this axis for sorting
         cglib::vec2<double> mean = std::accumulate(clustersBegin, clustersEnd, cglib::vec2<double>::zero(), [initialClusters](const cglib::vec2<double>& result, const std::shared_ptr<Cluster>& cluster) {

@@ -44,7 +44,7 @@ namespace carto {
     }
     
     bool GeomUtils::IsConvexPolygonClockwise(const std::vector<MapPos>& polygon) {
-        for (size_t i = 0; i < polygon.size(); i++) {
+        for (std::size_t i = 0; i < polygon.size(); i++) {
             const MapPos& v1 = polygon[(i + polygon.size() - 1) % polygon.size()];
             const MapPos& v2 = polygon[i];
             const MapPos& v3 = polygon[(i + 1) % polygon.size()];
@@ -61,7 +61,7 @@ namespace carto {
     bool GeomUtils::IsConcavePolygonClockwise(const std::vector<MapPos>& polygon) {
         double area = 0;
         MapVec prevLine;
-        for (size_t i = 0; i < polygon.size(); i++) {
+        for (std::size_t i = 0; i < polygon.size(); i++) {
             const MapPos& pos1 = polygon[i];
             const MapPos& pos2 = (i + 1 < polygon.size()) ? polygon[i + 1] : polygon[1];
             MapVec nextLine(pos2 - pos1);
@@ -75,7 +75,7 @@ namespace carto {
     
     bool GeomUtils::PointInsidePolygon(const std::vector<MapPos>& polygon, const MapPos& point) {
         float c = IsConvexPolygonClockwise(polygon) ? -1.0f : 1.0f;
-        for (size_t i = 0; i < polygon.size(); i++) {
+        for (std::size_t i = 0; i < polygon.size(); i++) {
             const MapPos& v1 = polygon[i];
             const MapPos& v2 = polygon[(i + 1) % polygon.size()];
             double d = (v2 - v1).crossProduct2D(point - v1);
@@ -99,8 +99,8 @@ namespace carto {
         rings.push_back(polygon);
         rings.insert(rings.end(), holes.begin(), holes.end());
         for (const std::vector<MapPos>& ring : rings) {
-            for (size_t i = 0; i < ring.size(); i++) {
-                size_t j = (i + 1) % ring.size();
+            for (std::size_t i = 0; i < ring.size(); i++) {
+                std::size_t j = (i + 1) % ring.size();
                 const MapPos& p0 = ring[i];
                 const MapPos& p1 = ring[j];
                 if (p0.getY() == p1.getY()) {
@@ -118,7 +118,7 @@ namespace carto {
         // Sort intersections and find one close to centroid
         std::sort(ts.begin(), ts.end());
         double best_t = ts.size() >= 2 ? std::numeric_limits<double>::infinity() : 0;
-        for (size_t i = 0; i + 1 < ts.size(); i += 2) {
+        for (std::size_t i = 0; i + 1 < ts.size(); i += 2) {
             double t = (ts[i + 0] + ts[i + 1]) * 0.5;
             if (std::abs(t) < std::abs(best_t)) {
                 best_t = t;
@@ -130,14 +130,14 @@ namespace carto {
     MapPos GeomUtils::CalculatePointOnLine(const std::vector<MapPos>& line) {
         // Calculate total line length
         double len = 0;
-        for (size_t i = 1; i < line.size(); i++) {
+        for (std::size_t i = 1; i < line.size(); i++) {
             len += (line[i] - line[i - 1]).length();
         }
         
         // Find point at the center of the line
         MapPos midPoint(0, 0);
         double t = 0;
-        for (size_t i = 1; i < line.size(); i++) {
+        for (std::size_t i = 1; i < line.size(); i++) {
             double dt = (line[i] - line[i - 1]).length() / len;
             if (t + dt >= 0.5) {
                 midPoint = line[i - 1] + (line[i] - line[i - 1]) * ((0.5 - t) / dt);
@@ -166,7 +166,7 @@ namespace carto {
         int k = 0;
     
         // Build lower hull
-        for (size_t i = 0; i < points.size(); i++) {
+        for (std::size_t i = 0; i < points.size(); i++) {
             while (k >= 2) {
                 if ((h[k - 1] - h[k - 2]).crossProduct2D(points[i] - h[k - 2]) < 0) {
                     break;
@@ -207,11 +207,11 @@ namespace carto {
     
     bool GeomUtils::PointsInsidePolygonEdges(const std::vector<MapPos>& polygon, const std::vector<MapPos>& points) {
         float c = IsConvexPolygonClockwise(polygon) ? -1.0f : 1.0f;
-        for (size_t i = 0; i < polygon.size(); i++) {
+        for (std::size_t i = 0; i < polygon.size(); i++) {
             const MapPos& v1 = polygon[i];
             const MapPos& v2 = polygon[(i + 1) % polygon.size()];
             bool inside = false;
-            for (size_t j = 0; j < polygon.size(); j++) {
+            for (std::size_t j = 0; j < polygon.size(); j++) {
                 MapPos v3(polygon[j]);
                 double d = ((v2 - v1).crossProduct2D(v3 - v1));
                 if (c * d >= 0) {

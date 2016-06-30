@@ -44,7 +44,7 @@ namespace carto {
     
         // Prepare polygon exterior, calculate bounding box
         const std::vector<MapPos>& poses = polygon3D.getGeometry()->getPoses();
-        size_t edgeVertexCount = poses.size();
+        std::size_t edgeVertexCount = poses.size();
         std::vector<double> posesArray(poses.size() * 2);
         for (std::size_t i = 0; i < poses.size() * 2; i += 2) {
             std::size_t index = i / 2;
@@ -58,7 +58,7 @@ namespace carto {
         // Prepare polygon holes
         const std::vector<std::vector<MapPos> >& holes = polygon3D.getGeometry()->getHoles();
         std::vector<std::vector<double> > holesArray(holes.size() * 2);
-        for (size_t n = 0; n < holes.size(); n++) {
+        for (std::size_t n = 0; n < holes.size(); n++) {
             const std::vector<MapPos>& hole = holes[n];
             edgeVertexCount += hole.size();
             std::vector<double>& holeArray = holesArray[n];
@@ -125,7 +125,7 @@ namespace carto {
             clockWise = (i >= 0) ? !clockWise : clockWise;
             
             const double* prevPos = sideArray->size() >= 2 ? &(*sideArray)[sideArray->size() - 2] : nullptr;
-            for (size_t j = 0; j < sideArray->size(); j += 2) {
+            for (std::size_t j = 0; j < sideArray->size(); j += 2) {
                 const double* pos = &(*sideArray)[j];
                 
                 if (prevPos) {

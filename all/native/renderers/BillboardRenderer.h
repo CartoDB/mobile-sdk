@@ -47,7 +47,7 @@ namespace carto {
         void onDrawFrameSorted(float deltaSeconds, const std::vector<std::shared_ptr<BillboardDrawData> >& billboardDrawDatas, StyleTextureCache& styleCache, const ViewState& viewState);
         void onSurfaceDestroyed();
     
-        size_t getElementCount() const;
+        std::size_t getElementCount() const;
         void addElement(const std::shared_ptr<Billboard>& element);
         void refreshElements();
         void updateElement(const std::shared_ptr<Billboard>& element);

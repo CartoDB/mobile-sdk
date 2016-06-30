@@ -20,7 +20,7 @@ namespace carto {
 
     class HTTPClient {
     public:
-        typedef std::function<bool(std::uint64_t, std::uint64_t, const unsigned char*, size_t)> HandlerFn;
+        typedef std::function<bool(std::uint64_t, std::uint64_t, const unsigned char*, std::size_t)> HandlerFn;
 
         explicit HTTPClient(bool log);
 
@@ -64,7 +64,7 @@ namespace carto {
         class Impl {
         public:
             typedef std::function<bool(int, const std::map<std::string, std::string>&)> HeadersFn;
-            typedef std::function<bool(const unsigned char*, size_t)> DataFn;
+            typedef std::function<bool(const unsigned char*, std::size_t)> DataFn;
 
             virtual ~Impl();
             

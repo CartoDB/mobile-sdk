@@ -352,7 +352,7 @@ namespace carto {
         }
     
         // Create new queue by taking root nodes from initial queue until size limits are exceeded
-        size_t totalSize = 0;
+        std::size_t totalSize = 0;
         std::priority_queue<SizeNodePair> queue;
         while (!initialQueue.empty()) {
             SizeNodePair sizeNodePair = initialQueue.top();
@@ -369,7 +369,7 @@ namespace carto {
             }
     
             // Test if this node can be added or we have already exceeded max memory footprint
-            size_t nodeSize = node->model().texture_footprint() + node->model().mesh_footprint();
+            std::size_t nodeSize = node->model().texture_footprint() + node->model().mesh_footprint();
             if (totalSize + nodeSize <= _maxMemorySize) {
                 queue.push(sizeNodePair);
                 totalSize += nodeSize;
@@ -391,8 +391,8 @@ namespace carto {
             // Decide whether to subdivide this node - this depends on node screen size estimation and whether we can stay within memory size constraints after subdividing
             if (screenSize * _LODResolutionFactor > 2 && node->children_ids_size() > 0) {
                 childList.clear();
-                size_t nodeSize = node->model().texture_footprint() + node->model().mesh_footprint();
-                size_t childListTotalSize = totalSize - nodeSize;
+                std::size_t nodeSize = node->model().texture_footprint() + node->model().mesh_footprint();
+                std::size_t childListTotalSize = totalSize - nodeSize;
                 for (int i = 0; i < node->children_ids_size(); i++) {
                     const nml::ModelLODTreeNode* childNode = modelLODTree->getSourceNode(node->children_ids(i));
     
@@ -400,12 +400,12 @@ namespace carto {
                     cglib::bbox3<double> childModelBounds = calculateBounds(childNode->model().bounds(), modelLODTree->getLocalMat());
                     if (frustum.inside(childModelBounds)) {
                         childList.push_back(childNode);
-                        size_t childNodeSize = childNode->model().texture_footprint() + childNode->model().mesh_footprint();
+                        std::size_t childNodeSize = childNode->model().texture_footprint() + childNode->model().mesh_footprint();
                         childListTotalSize += childNodeSize;
                     }
                 }
                 if (childListTotalSize <= _maxMemorySize) {
-                    for (size_t i = 0; i < childList.size(); i++) {
+                    for (std::size_t i = 0; i < childList.size(); i++) {
                         const nml::ModelLODTreeNode* childNode = childList[i];
                         float screenSize = calculateProjectedScreenSize(childNode->bounds(), mvpMatrix * modelLODTree->getLocalMat());
                         queue.push(SizeNodePair(screenSize, Node(modelLODTree, childNode->id())));
@@ -421,7 +421,7 @@ namespace carto {
     
         // Build children list for each parent node of current draw list
         std::map<long long, std::vector<int> > childrenIdsMap;
-        for (size_t idx = 0; idx < nodeDrawList.size(); idx++) {
+        for (std::size_t idx = 0; idx < nodeDrawList.size(); idx++) {
             const NMLModelLODTree* modelLODTree = nodeDrawList[idx].first;
             int nodeId = nodeDrawList[idx].second;
     
@@ -432,7 +432,7 @@ namespace carto {
         }
     
         // Refine data - if data is not available for any nodes, try substitutions
-        for (size_t idx = 0; idx < nodeDrawList.size(); ) {
+        for (std::size_t idx = 0; idx < nodeDrawList.size(); ) {
             const NMLModelLODTree* modelLODTree = nodeDrawList[idx].first;
             int nodeId = nodeDrawList[idx].second;
     
@@ -449,7 +449,7 @@ namespace carto {
             // Check if some children have data available. Size constraints are ignored from now on.
             int childNodeCounter = 0;
             std::vector<int> childIds = childrenIdsMap[modelLODTree->getGlobalNodeId(nodeId)];
-            for (size_t j = 0; j < childIds.size(); j++) {
+            for (std::size_t j = 0; j < childIds.size(); j++) {
                 int childId = childIds[j];
                 if (isDataAvailable(modelLODTree, childId)) {
                     if (childNodeCounter++ == 0) {
@@ -480,7 +480,7 @@ namespace carto {
         
         // Create map of node ids
         std::map<long long, int> nodeIdsMap;
-        for (size_t idx = 0; idx < nodeDrawList.size(); idx++) {
+        for (std::size_t idx = 0; idx < nodeDrawList.size(); idx++) {
             const NMLModelLODTree* modelLODTree = nodeDrawList[idx].first;
             int nodeId = nodeDrawList[idx].second;
     
@@ -488,7 +488,7 @@ namespace carto {
         }
     
         // Remove children of parent nodes already included
-        for (size_t idx = 0; idx < nodeDrawList.size(); idx++) {
+        for (std::size_t idx = 0; idx < nodeDrawList.size(); idx++) {
             const NMLModelLODTree* modelLODTree = nodeDrawList[idx].first;
             int nodeId = nodeDrawList[idx].second;
     
@@ -503,7 +503,7 @@ namespace carto {
         }
     
         // Load data
-        for (size_t idx = 0; idx < nodeDrawList.size(); idx++) {
+        for (std::size_t idx = 0; idx < nodeDrawList.size(); idx++) {
             const NMLModelLODTree* modelLODTree = nodeDrawList[idx].first;
             int nodeId = nodeDrawList[idx].second;
     

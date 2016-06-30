@@ -47,7 +47,7 @@ namespace carto {
         
         private:
             const std::vector<unsigned char>& _data;
-            size_t _offset;
+            std::size_t _offset;
         };
     
         static bool inflate(const std::vector<unsigned char>& in, std::vector<unsigned char>& out);

@@ -29,7 +29,7 @@ namespace carto {
     }
     
     void GeneralUtils::ReplaceSubstrings(std::string& base, const std::string& search, const std::string& replace) {
-        for (size_t pos = 0;; pos += replace.length()) {
+        for (std::size_t pos = 0;; pos += replace.length()) {
             pos = base.find(search, pos);
             if (pos == std::string::npos) {
                 break;

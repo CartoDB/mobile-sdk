@@ -165,7 +165,7 @@ namespace carto {
         BitmapFilterTable filterTable(0, 0, _bitmap->getWidth(), _bitmap->getHeight());
         filterTable.calculateFilterTable(ProjectiveTransform(invTransform), _tileSize, _tileSize, FILTER_SCALE, MAX_FILTER_WIDTH);
         
-        size_t sampleIndex = 0;
+        std::size_t sampleIndex = 0;
         std::vector<unsigned char> data(_tileSize * _tileSize * 4);
         const std::vector<BitmapFilterTable::Sample>& samples = filterTable.getSamples();
         for (int i = 0; i < _tileSize * _tileSize; i++) {

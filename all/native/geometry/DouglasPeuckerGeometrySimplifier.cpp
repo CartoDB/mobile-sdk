@@ -17,7 +17,7 @@ namespace {
     // This is taken from http://psimpl.sourceforge.net/douglas-peucker.html
     class DPHelper {
     public:
-        static void Approximate(const carto::MapPos* points, size_t pointCount, double minDist, unsigned char* keys) {
+        static void Approximate(const carto::MapPos* points, std::size_t pointCount, double minDist, unsigned char* keys) {
             double minDist2 = minDist * minDist;
             std::stack<SubPoly> stack;
             stack.push(SubPoly(0, pointCount - 1));
@@ -35,23 +35,23 @@ namespace {
 
     private:
         struct SubPoly {
-            SubPoly(size_t first = 0, size_t last = 0) : first(first), last(last) { }
+            SubPoly(std::size_t first = 0, std::size_t last = 0) : first(first), last(last) { }
 
-            size_t first;
-            size_t last;
+            std::size_t first;
+            std::size_t last;
         };
 
         struct KeyInfo {
-            KeyInfo(size_t index = 0, double dist2 = 0) : index(index), dist2(dist2) { }
+            KeyInfo(std::size_t index = 0, double dist2 = 0) : index(index), dist2(dist2) { }
 
-            size_t index;
+            std::size_t index;
             double dist2;
         };
 
-        static KeyInfo FindKey(const carto::MapPos* points, size_t first, size_t last) {
+        static KeyInfo FindKey(const carto::MapPos* points, std::size_t first, std::size_t last) {
             KeyInfo keyInfo;
 
-            for (size_t current = first + 1; current < last; current++) {
+            for (std::size_t current = first + 1; current < last; current++) {
                 double d2 = FindSegmentDistance2(points[first], points[last], points[current]);
                 if (d2 < keyInfo.dist2) {
                     continue;
@@ -181,7 +181,7 @@ namespace carto {
         std::vector<MapPos> simplifiedRing;
         simplifiedRing.reserve(ring.size());
         simplifiedRing.push_back(ring.front());
-        for (size_t i = 1; i + 1 < ring.size(); i++) {
+        for (std::size_t i = 1; i + 1 < ring.size(); i++) {
             double dist2 = (ring[i] - simplifiedRing.back()).lengthSqr();
             if (dist2 > minDist2) {
                 simplifiedRing.push_back(ring[i]);
@@ -202,7 +202,7 @@ namespace carto {
         DPHelper::Approximate(&ring[0], ring.size(), scale * _tolerance, &keys[0]);
         std::vector<MapPos> simplifiedRing;
         simplifiedRing.reserve(std::count(keys.begin(), keys.end(), 1));
-        for (size_t i = 0; i < ring.size(); i++) {
+        for (std::size_t i = 0; i < ring.size(); i++) {
             if (keys[i] == 1) {
                 simplifiedRing.push_back(ring[i]);
             }

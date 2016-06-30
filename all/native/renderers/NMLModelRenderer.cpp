@@ -155,7 +155,7 @@ namespace carto {
             std::vector<nml::RayIntersection> intersections;
             glModel->calculateRayIntersections(rayModel, intersections);
             
-            for (size_t i = 0; i < intersections.size(); i++) {
+            for (std::size_t i = 0; i < intersections.size(); i++) {
                 cglib::vec3<double> pos = cglib::transform_point(intersections[i].pos, modelMat);
                 MapPos clickPos(pos(0), pos(1), pos(2));
                 MapPos projectedClickPos = layer->getDataSource()->getProjection()->fromInternal(clickPos);

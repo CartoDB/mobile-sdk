@@ -66,7 +66,7 @@ namespace carto {
             Stream();
 
             const std::vector<unsigned char>& data() const;
-            void reserve(size_t count);
+            void reserve(std::size_t count);
 
             void pushBigEndian(bool little);
             void popBigEndian();

@@ -69,7 +69,7 @@ namespace carto {
             // Make the query and check for database error
             std::map<std::string, std::string> metaData;
             sqlite3pp::query query(*_db, "SELECT name, value FROM metadata");
-            for (sqlite3pp::query::iterator it = query.begin(); it != query.end(); it++) {
+            for (auto it = query.begin(); it != query.end(); it++) {
                 metaData[it->get<const char*>(0)] = it->get<const char*>(1);
             }
             query.finish();
@@ -89,7 +89,7 @@ namespace carto {
         
         // As a first step, try to use meta data
         sqlite3pp::query query(*_db, "SELECT value FROM metadata WHERE name='bounds'");
-        for (sqlite3pp::query::iterator it = query.begin(); it != query.end(); it++) {
+        for (auto it = query.begin(); it != query.end(); it++) {
             std::string bounds = (*it).get<const char*>(0);
             std::vector<std::string> coordinates;
             boost::split(coordinates, bounds, boost::is_any_of(","));
@@ -112,7 +112,7 @@ namespace carto {
         try {
             sqlite3pp::query query(*_db, "SELECT MIN(tile_column), MIN(tile_row), MAX(tile_column), MAX(tile_row) FROM tiles WHERE zoom_level=:zoom");
             query.bind(":zoom", _maxZoom);
-            for (sqlite3pp::query::iterator it = query.begin(); it != query.end(); it++) {
+            for (auto it = query.begin(); it != query.end(); it++) {
                 int tileX0 = (*it).get<int>(0);
                 int tileY0 = (*it).get<int>(1);
                 int tileX1 = (*it).get<int>(2) + 1;
@@ -155,7 +155,7 @@ namespace carto {
             query.bind(":x", mapTile.getX());
             query.bind(":y", _scheme == MBTilesScheme::MBTILES_SCHEME_XYZ ? mapTile.getY() : (1 << (mapTile.getZoom())) - 1 - mapTile.getY());
             
-            sqlite3pp::query::iterator it = query.begin();
+            auto it = query.begin();
             if (it == query.end()) {
                 std::shared_ptr<TileData> tileData = std::make_shared<TileData>(std::shared_ptr<BinaryData>());
                 if (mapTile.getZoom() > getMinZoom()) {
@@ -185,7 +185,7 @@ namespace carto {
             sqlite3pp::database db(path.c_str());
             int minZoom = 0;
             sqlite3pp::query query(db, "SELECT MIN(zoom_level) FROM tiles");
-            for (sqlite3pp::query::iterator it = query.begin(); it != query.end(); it++) {
+            for (auto it = query.begin(); it != query.end(); it++) {
                 minZoom = it->get<int>(0);
             }
             query.finish();
@@ -201,7 +201,7 @@ namespace carto {
             sqlite3pp::database db(path.c_str());
             int maxZoom = 0;
             sqlite3pp::query query(db, "SELECT MAX(zoom_level) FROM tiles");
-            for (sqlite3pp::query::iterator it = query.begin(); it != query.end(); it++) {
+            for (auto it = query.begin(); it != query.end(); it++) {
                 maxZoom = it->get<int>(0);
             }
             query.finish();

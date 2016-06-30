@@ -768,7 +768,7 @@ namespace carto {
             std::lock_guard<std::mutex> lock(_rendererCaptureListenersMutex);
             _rendererCaptureListeners.swap(rendererCaptureListeners);
         }
-        for (size_t i = 0; i < rendererCaptureListeners.size(); i++) {
+        for (std::size_t i = 0; i < rendererCaptureListeners.size(); i++) {
             const DirectorPtr<RendererCaptureListener>& listener = rendererCaptureListeners[i].first;
             bool waitWhileUpdating = rendererCaptureListeners[i].second;
             if (waitWhileUpdating) {

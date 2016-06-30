@@ -21,7 +21,7 @@ namespace carto {
     public:
         virtual ~SpatialIndex() = default;
         
-        virtual size_t size() const = 0;
+        virtual std::size_t size() const = 0;
         
         virtual void clear() = 0;
         virtual void insert(const MapBounds& bounds, const T& object) = 0;

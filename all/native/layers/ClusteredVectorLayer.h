@@ -109,7 +109,7 @@ namespace carto {
             virtual bool loadElements(const std::shared_ptr<CullState>& cullState);
         };
 
-        static const size_t THRESHOLD = 100;
+        static const std::size_t THRESHOLD = 100;
 
         const DirectorPtr<ClusterElementBuilder> _clusterElementBuilder;
 
@@ -128,7 +128,7 @@ namespace carto {
         virtual std::shared_ptr<CancelableTask> createFetchTask(const std::shared_ptr<CullState>& cullState);
 
         std::shared_ptr<Cluster> createClusters(const std::vector<std::shared_ptr<VectorElement> >& vectorElements) const;
-        std::vector<std::shared_ptr<Cluster> > mergeClusters(std::vector<std::shared_ptr<Cluster> >::iterator clustersBegin, std::vector<std::shared_ptr<Cluster> >::iterator clustersEnd, size_t maxClusters) const;
+        std::vector<std::shared_ptr<Cluster> > mergeClusters(std::vector<std::shared_ptr<Cluster> >::iterator clustersBegin, std::vector<std::shared_ptr<Cluster> >::iterator clustersEnd, std::size_t maxClusters) const;
         std::shared_ptr<Cluster> createSingletonCluster(const std::shared_ptr<VectorElement>& element) const;
         std::shared_ptr<Cluster> createMergedCluster(const std::shared_ptr<Cluster>& cluster1, const std::shared_ptr<Cluster>& cluster2) const;
 

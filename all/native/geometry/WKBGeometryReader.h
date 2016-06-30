@@ -50,7 +50,7 @@ namespace carto {
         
         private:
             const std::vector<unsigned char>& _data;
-            size_t _offset;
+            std::size_t _offset;
             std::stack<bool> _bigEndian;
         };
 

@@ -325,7 +325,7 @@ namespace carto {
         return std::string(reinterpret_cast<const char *>(_data.data() + offset), reinterpret_cast<const char *>(_data.data() + _offset));
     }
     
-    std::vector<unsigned char> OnlineNMLModelLODTreeDataSource::DataInputStream::readBytes(size_t size) {
+    std::vector<unsigned char> OnlineNMLModelLODTreeDataSource::DataInputStream::readBytes(std::size_t size) {
         if (_offset + size > _data.size()) {
             Log::Error("OnlineNMLModelLODTreeDataSource::DataInputStream: reading past the end");
             return std::vector<unsigned char>();
