@@ -23,7 +23,7 @@ namespace carto { namespace mvt {
             bool operator () (bool val1, long long val2) const { return Op<long long>()(static_cast<long long>(val1), val2); }
             bool operator () (bool val1, double val2) const { return Op<double>()(static_cast<double>(val1), val2); }
             bool operator () (long long val1, bool val2) const { return Op<long long>()(val1, static_cast<long long>(val2)); }
-            bool operator () (long long val1, double val2) const { return Op<double>()(val1, static_cast<double>(val2)); }
+            bool operator () (long long val1, double val2) const { return Op<double>()(static_cast<double>(val1), val2); }
             bool operator () (double val1, bool val2) const { return Op<double>()(val1, static_cast<double>(val2)); }
             bool operator () (double val1, long long val2) const { return Op<double>()(val1, static_cast<double>(val2)); }
             template <typename T> bool operator () (T val1, T val2) const { return Op<T>()(val1, val2); }
