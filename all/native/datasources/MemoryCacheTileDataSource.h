@@ -4,8 +4,8 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_COMPRESSEDCACHETILEDATASOURCE_H_
-#define _CARTO_COMPRESSEDCACHETILEDATASOURCE_H_
+#ifndef _CARTO_MEMORYCACHETILEDATASOURCE_H_
+#define _CARTO_MEMORYCACHETILEDATASOURCE_H_
 
 #include "datasources/CacheTileDataSource.h"
 
@@ -15,17 +15,17 @@ namespace carto {
 
     /**
      * A tile data source that loads tiles from another tile data source
-     * and caches them in memory as compressed images. This cache is not persistent, tiles 
+     * and caches them in memory. This cache is not persistent, tiles 
      * will be cleared once the application closes. Default cache capacity is 6MB.
      */
-    class CompressedCacheTileDataSource : public CacheTileDataSource {
+    class MemoryCacheTileDataSource : public CacheTileDataSource {
     public:
         /**
-         * Constructs a CompressedCacheTileDataSource object from tile data source.
+         * Constructs a MemoryCacheTileDataSource object from tile data source.
          * @param dataSource The datasource to be cached.
          */
-        CompressedCacheTileDataSource(const std::shared_ptr<TileDataSource>& dataSource);
-        virtual ~CompressedCacheTileDataSource();
+        MemoryCacheTileDataSource(const std::shared_ptr<TileDataSource>& dataSource);
+        virtual ~MemoryCacheTileDataSource();
     
         virtual std::shared_ptr<TileData> loadTile(const MapTile& mapTile);
                 

@@ -27,8 +27,8 @@ namespace carto {
         virtual void clear() = 0;
         
         /**
-         * Returns the compressed tile cache capacity.
-         * @return The compressed tile cache capacity in bytes.
+         * Returns the tile cache capacity.
+         * @return The tile cache capacity in bytes.
          */
         virtual std::size_t getCapacity() const = 0;
         
