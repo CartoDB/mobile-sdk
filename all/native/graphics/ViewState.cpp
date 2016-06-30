@@ -141,11 +141,11 @@ namespace carto {
         return _aspectRatio;
     }
     
-    double ViewState::getNear() const {
+    float ViewState::getNear() const {
         return _near;
     }
     
-    double ViewState::getFar() const {
+    float ViewState::getFar() const {
         return _far;
     }
     

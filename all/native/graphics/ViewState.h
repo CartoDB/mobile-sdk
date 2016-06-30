@@ -169,12 +169,12 @@ namespace carto {
          * Returns the near plane distance.
          * @return The new plane distance.
          */
-        double getNear() const;
+        float getNear() const;
         /**
          * Returns the far plane distance.
          * @return The far plane distance.
          */
-        double getFar() const;
+        float getFar() const;
     
         /**
          * Returns the vertical field of view angle.
@@ -372,8 +372,8 @@ namespace carto {
         float _aspectRatio;
         bool _screenSizeChanged;
     
-        double _near;
-        double _far;
+        float _near;
+        float _far;
     
         int _fovY;
         float _halfFOVY;
