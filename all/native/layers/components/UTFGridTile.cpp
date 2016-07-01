@@ -40,7 +40,6 @@ namespace {
         else if (value.IsObject()) {
             std::map<std::string, carto::Variant> valueMap;
             for (rapidjson::Value::ConstMemberIterator it = value.MemberBegin(); it != value.MemberEnd(); it++) {
-                const rapidjson::Value* value = &it->value;
                 if (!it->name.IsString()) {
                     continue;
                 }

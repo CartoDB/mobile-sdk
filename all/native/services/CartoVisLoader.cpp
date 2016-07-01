@@ -162,14 +162,14 @@ namespace carto {
         _vectorTileAssetPackage = assetPackage;
     }
 
-    bool CartoVisLoader::loadVis(const std::shared_ptr<CartoVisBuilder>& builder, const std::string& visJsonURL) const {
+    bool CartoVisLoader::loadVis(const std::shared_ptr<CartoVisBuilder>& builder, const std::string& visURL) const {
         try {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
 
             HTTPClient client(false);
             std::shared_ptr<BinaryData> responseData;
             std::map<std::string, std::string> responseHeaders;
-            if (client.get(visJsonURL, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
+            if (client.get(visURL, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
                 Log::Error("CartoVisLoader::loadVis: Failed to read VisJSON configuration");
                 return false;
             }

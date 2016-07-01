@@ -200,13 +200,9 @@ namespace carto {
         _worker.reset();
     }
 
-// Disable optimizations for the method when using GCC - GCC 4.9 seems to optimize _startTime expressions too eagerly    
-#ifdef __GNUC__
-    void __attribute__((optimize("O0"))) ClickHandlerWorker::run() {
-#else
     void ClickHandlerWorker::run() {
-#endif
         ThreadUtils::SetThreadPriority(ThreadPriority::LOW);
+
         while (true) {
             // If not running, wait until notified or exit thread if interrupted
             {

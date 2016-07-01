@@ -18,7 +18,7 @@ namespace carto {
         _useStencil(true),
         _useTileMapMode(false),
         _labelRenderOrder(VectorTileRenderOrder::VECTOR_TILE_RENDER_ORDER_LAYER),
-        _buildingRenderOrder(VectorTileRenderOrder::VECTOR_TILE_RENDER_ORDER_LAYER),
+        _buildingRenderOrder(VectorTileRenderOrder::VECTOR_TILE_RENDER_ORDER_LAST),
         _tileDecoder(decoder),
         _tileDecoderListener(),
         _labelCullThreadPool(std::make_shared<CancelableThreadPool>()),
