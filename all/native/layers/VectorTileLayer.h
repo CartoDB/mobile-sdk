@@ -22,23 +22,24 @@ namespace carto {
     class TileDrawData;
     class TileRenderer;
         
-    namespace VectorTileLabelOrder {
+    namespace VectorTileRenderOrder {
         /**
-         * Vector tile label display ordering.
+         * Vector tile rendering order.
          */
-        enum VectorTileLabelOrder {
+        enum VectorTileRenderOrder {
             /**
-             * Labels are hidden.
+             * No rendering, elements are hidden.
              */
-            VECTOR_TILE_LABEL_ORDER_HIDDEN,
+            VECTOR_TILE_RENDER_ORDER_HIDDEN = -1,
             /**
-             * Labels are rendered on top of other current layer elements but before subsequent layers.
+             * Elements are rendered together with the same layer elements.
+             * Layers that are on top of the layers are rendered on top this layer.
              */
-            VECTOR_TILE_LABEL_ORDER_LAYER,
+            VECTOR_TILE_RENDER_ORDER_LAYER = 0,
             /**
-             * Labels are rendered on top of all normal layers, except 3D layers.
+             * Elements are rendered on top of all normal layers.
              */
-            VECTOR_TILE_LABEL_ORDER_LAST
+            VECTOR_TILE_RENDER_ORDER_LAST = 1
         };
     };
     
@@ -79,14 +80,25 @@ namespace carto {
         
         /**
          * Returns the current display order of the labels.
-         * @return The display order of the labels. Default is VECTOR_TILE_LABEL_ORDER_LAYER.
+         * @return The display order of the labels. Default is VECTOR_TILE_RENDER_ORDER_LAYER.
          */
-        VectorTileLabelOrder::VectorTileLabelOrder getLabelOrder() const;
+        VectorTileRenderOrder::VectorTileRenderOrder getLabelRenderOrder() const;
         /**
          * Sets the current display order of the labels.
-         * @param labelOrder The new display order of the labels.
+         * @param renderOrder The new display order of the labels.
          */
-        void setLabelOrder(VectorTileLabelOrder::VectorTileLabelOrder labelOrder);
+        void setLabelRenderOrder(VectorTileRenderOrder::VectorTileRenderOrder renderOrder);
+    
+        /**
+         * Returns the current display order of the buildings.
+         * @return The display order of the buildigns. Default is VECTOR_TILE_RENDER_ORDER_LAYER.
+         */
+        VectorTileRenderOrder::VectorTileRenderOrder getBuildingRenderOrder() const;
+        /**
+         * Sets the current display order of the buildings.
+         * @param renderOrder The new display order of the labels.
+         */
+        void setBuildingRenderOrder(VectorTileRenderOrder::VectorTileRenderOrder renderOrder);
     
     protected:
         virtual int getCullDelay() const;
@@ -158,7 +170,8 @@ namespace carto {
         static const int EXTRA_TILE_FOOTPRINT = 4096;
         static const int DEFAULT_PRELOADING_CACHE_SIZE = 10 * 1024 * 1024;
         
-        VectorTileLabelOrder::VectorTileLabelOrder _labelOrder;
+        VectorTileRenderOrder::VectorTileRenderOrder _labelRenderOrder;
+        VectorTileRenderOrder::VectorTileRenderOrder _buildingRenderOrder;
     
         std::shared_ptr<VectorTileDecoder> _tileDecoder;
         std::shared_ptr<TileDecoderListener> _tileDecoderListener;

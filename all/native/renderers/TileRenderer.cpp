@@ -41,6 +41,7 @@ namespace carto {
         _useDepth(useDepth),
         _useStencil(useStencil),
         _labelOrder(0),
+        _buildingOrder(1),
         _horizontalLayerOffset(0),
         _tiles(),
         _mutex()
@@ -50,9 +51,14 @@ namespace carto {
     TileRenderer::~TileRenderer() {
     }
     
-    void TileRenderer::setLabelOrder(int labelOrder) {
+    void TileRenderer::setLabelOrder(int order) {
         std::lock_guard<std::mutex> lock(_mutex);
-        _labelOrder = labelOrder;
+        _labelOrder = order;
+    }
+    
+    void TileRenderer::setBuildingOrder(int order) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _buildingOrder = order;
     }
     
     void TileRenderer::offsetLayerHorizontally(double offset) {
@@ -93,9 +99,16 @@ namespace carto {
         _glRenderer->setViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution());
         
         _glRenderer->startFrame(deltaSeconds * 3);
+
         bool refresh = _glRenderer->render2D();
         if (_labelOrder == 0) {
-            refresh = _glRenderer->renderLabels() || refresh;
+            refresh = _glRenderer->renderLabels(true, false) || refresh;
+        }
+        if (_buildingOrder == 0) {
+            refresh = _glRenderer->render3D() || refresh;
+        }
+        if (_labelOrder == 0) {
+            refresh = _glRenderer->renderLabels(false, true) || refresh;
         }
     
         // Reset GL state to the expected state
@@ -117,9 +130,15 @@ namespace carto {
 
         bool refresh = false;	
         if (_labelOrder == 1) {
-            refresh = _glRenderer->renderLabels() || refresh;
+            refresh = _glRenderer->renderLabels(true, false) || refresh;
         }
-        refresh = _glRenderer->render3D() || refresh;
+        if (_buildingOrder == 1) {
+            refresh = _glRenderer->render3D() || refresh;
+        }
+        if (_labelOrder == 1) {
+            refresh = _glRenderer->renderLabels(false, true) || refresh;
+        }
+
         _glRenderer->endFrame();
 
         // Reset GL state to the expected state

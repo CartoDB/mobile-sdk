@@ -35,7 +35,8 @@ namespace carto {
         TileRenderer(const std::weak_ptr<MapRenderer>& mapRenderer, bool useFBO, bool useDepth, bool useStencil);
         virtual ~TileRenderer();
     
-        void setLabelOrder(int labelOrder);
+        void setLabelOrder(int order);
+        void setBuildingOrder(int order);
 
         void offsetLayerHorizontally(double offset);
     
@@ -57,6 +58,7 @@ namespace carto {
         bool _useDepth;
         bool _useStencil;
         int _labelOrder;
+        int _buildingOrder;
         double _horizontalLayerOffset;
         std::map<vt::TileId, std::shared_ptr<const vt::Tile> > _tiles;
 

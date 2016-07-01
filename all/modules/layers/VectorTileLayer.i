@@ -21,7 +21,8 @@
 !polymorphic_shared_ptr(carto::VectorTileLayer, layers.VectorTileLayer)
 
 %attribute(carto::VectorTileLayer, std::size_t, TileCacheCapacity, getTileCacheCapacity, setTileCacheCapacity)
-%attribute(carto::VectorTileLayer, VectorTileLabelOrder::VectorTileLabelOrder, LabelOrder, getLabelOrder, setLabelOrder)
+%attribute(carto::VectorTileLayer, VectorTileRenderOrder::VectorTileRenderOrder, LabelRenderOrder, getLabelRenderOrder, setLabelRenderOrder)
+%attribute(carto::VectorTileLayer, VectorTileRenderOrder::VectorTileRenderOrder, BuildingRenderOrder, getBuildingRenderOrder, setBuildingRenderOrder)
 %attributestring(carto::VectorTileLayer, std::shared_ptr<carto::VectorTileDecoder>, TileDecoder, getTileDecoder)
 %ignore carto::VectorTileLayer::FetchTask;
 %ignore carto::VectorTileLayer::getMinZoom;

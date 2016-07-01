@@ -361,7 +361,7 @@ namespace carto { namespace vt {
         _lightDir(0.5f, 0.5f, -0.707f), _projectionMatrix(cglib::mat4x4<double>::identity()), _cameraMatrix(cglib::mat4x4<double>::identity()), _cameraProjMatrix(cglib::mat4x4<double>::identity()), _labelMatrix(cglib::mat4x4<double>::identity()), _labelViewState(cglib::mat4x4<double>::identity(), cglib::mat4x4<double>::identity(), 0, 1, scale), _scale(scale), _useFBO(useFBO), _useDepth(useDepth), _useStencil(useStencil), _glExtensions(std::move(glExtensions)), _mutex(std::move(mutex))
     {
         _blendNodes = std::make_shared<std::vector<std::shared_ptr<BlendNode>>>();
-        _bitmapLabelMap = std::make_shared<std::unordered_map<std::shared_ptr<const Bitmap>, std::vector<std::shared_ptr<TileLabel>>>>();
+        _bitmapLabelMap[0] = _bitmapLabelMap[1] = std::make_shared<BitmapLabelMap>();
     }
     
     void GLTileRenderer::setViewState(const cglib::mat4x4<double>& projectionMatrix, const cglib::mat4x4<double>& cameraMatrix, float zoom, float aspectRatio, float resolution) {
@@ -475,10 +475,13 @@ namespace carto { namespace vt {
         // Build final label list, group labels by font bitmaps
         std::vector<std::shared_ptr<TileLabel>> labels;
         labels.reserve(_labelMap.size());
-        auto bitmapLabelMap = std::make_shared<std::unordered_map<std::shared_ptr<const Bitmap>, std::vector<std::shared_ptr<TileLabel>>>>();
+        std::array<std::shared_ptr<BitmapLabelMap>, 2> bitmapLabelMap;
+        bitmapLabelMap[0] = std::make_shared<BitmapLabelMap>();
+        bitmapLabelMap[1] = std::make_shared<BitmapLabelMap>();
         for (auto labelIt = _labelMap.begin(); labelIt != _labelMap.end(); labelIt++) {
             const std::shared_ptr<TileLabel>& label = labelIt->second;
-            (*bitmapLabelMap)[label->getFont()->getBitmapPattern()->bitmap].push_back(label);
+            int pass = (label->getOrientation() == LabelOrientation::BILLBOARD3D ? 1 : 0);
+            (*bitmapLabelMap[pass])[label->getFont()->getBitmapPattern()->bitmap].push_back(label);
             labels.push_back(label);
         }
         _labels = std::move(labels);
@@ -598,8 +601,10 @@ namespace carto { namespace vt {
         
         _blendNodes.reset();
         _renderBlendNodes.reset();
-        _bitmapLabelMap.reset();
-        _renderBitmapLabelMap.reset();
+        _bitmapLabelMap[0].reset();
+        _bitmapLabelMap[1].reset();
+        _renderBitmapLabelMap[0].reset();
+        _renderBitmapLabelMap[1].reset();
         _labels.clear();
         _labelMap.clear();
     }
@@ -615,8 +620,10 @@ namespace carto { namespace vt {
         
         // Update labels
         _renderBitmapLabelMap = _bitmapLabelMap;
-        for (const std::pair<std::shared_ptr<const Bitmap>, std::vector<std::shared_ptr<TileLabel>>>& bitmapLabels : *_renderBitmapLabelMap) {
-            updateLabels(bitmapLabels.second, dt);
+        for (int pass = 0; pass < 2; pass++) {
+            for (const std::pair<std::shared_ptr<const Bitmap>, std::vector<std::shared_ptr<TileLabel>>>& bitmapLabels : *_renderBitmapLabelMap[pass]) {
+                updateLabels(bitmapLabels.second, dt);
+            }
         }
         
         // Load viewport dimensions, update dependent values
@@ -696,7 +703,7 @@ namespace carto { namespace vt {
         return update;
     }
     
-    bool GLTileRenderer::renderLabels() {
+    bool GLTileRenderer::renderLabels(bool render2D, bool render3D) {
         std::lock_guard<std::mutex> lock(*_mutex);
         
         // Update GL state
@@ -710,8 +717,12 @@ namespace carto { namespace vt {
 
         // Label pass
         bool update = false;
-        for (const std::pair<std::shared_ptr<const Bitmap>, std::vector<std::shared_ptr<TileLabel>>>& bitmapLabels : *_renderBitmapLabelMap) {
-            update = renderLabels(bitmapLabels.first, bitmapLabels.second) || update;
+        for (int pass = 0; pass < 2; pass++) {
+            if ((pass == 0 && render2D) || (pass == 1 && render3D)) {
+                for (const std::pair<std::shared_ptr<const Bitmap>, std::vector<std::shared_ptr<TileLabel>>>& bitmapLabels : *_renderBitmapLabelMap[pass]) {
+                    update = renderLabels(bitmapLabels.first, bitmapLabels.second) || update;
+                }
+            }
         }
         
         // Restore GL state

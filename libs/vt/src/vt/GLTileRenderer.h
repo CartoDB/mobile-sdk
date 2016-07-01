@@ -41,11 +41,13 @@ namespace carto { namespace vt {
 
         void startFrame(float dt);
         bool render2D();
-        bool renderLabels();
+        bool renderLabels(bool render2D, bool render3D);
         bool render3D();
         void endFrame();
 
     private:
+        using BitmapLabelMap = std::unordered_map<std::shared_ptr<const Bitmap>, std::vector<std::shared_ptr<TileLabel>>>;
+
         struct BlendNode {
             TileId tileId;
             std::shared_ptr<const Tile> tile;
@@ -168,8 +170,8 @@ namespace carto { namespace vt {
 
         std::shared_ptr<std::vector<std::shared_ptr<BlendNode>>> _blendNodes;
         std::shared_ptr<std::vector<std::shared_ptr<BlendNode>>> _renderBlendNodes;
-        std::shared_ptr<std::unordered_map<std::shared_ptr<const Bitmap>, std::vector<std::shared_ptr<TileLabel>>>> _bitmapLabelMap;
-        std::shared_ptr<std::unordered_map<std::shared_ptr<const Bitmap>, std::vector<std::shared_ptr<TileLabel>>>> _renderBitmapLabelMap;
+        std::array<std::shared_ptr<BitmapLabelMap>, 2> _bitmapLabelMap; // for 'ground' labels and for 'billboard' labels
+        std::array<std::shared_ptr<BitmapLabelMap>, 2> _renderBitmapLabelMap;  // for 'ground' labels and for 'billboard' labels
         std::vector<std::shared_ptr<TileLabel>> _labels;
         std::unordered_map<std::pair<int, long long>, std::shared_ptr<TileLabel>, LabelHash> _labelMap;
         std::unordered_map<std::shared_ptr<const Bitmap>, CompiledBitmap> _compiledBitmapMap;

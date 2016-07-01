@@ -17,7 +17,8 @@ namespace carto {
         _useDepth(true),
         _useStencil(true),
         _useTileMapMode(false),
-        _labelOrder(VectorTileLabelOrder::VECTOR_TILE_LABEL_ORDER_LAYER),
+        _labelRenderOrder(VectorTileRenderOrder::VECTOR_TILE_RENDER_ORDER_LAYER),
+        _buildingRenderOrder(VectorTileRenderOrder::VECTOR_TILE_RENDER_ORDER_LAYER),
         _tileDecoder(decoder),
         _tileDecoderListener(),
         _labelCullThreadPool(std::make_shared<CancelableThreadPool>()),
@@ -48,15 +49,28 @@ namespace carto {
         _preloadingCache.resize(capacityInBytes);
     }
     
-    VectorTileLabelOrder::VectorTileLabelOrder VectorTileLayer::getLabelOrder() const {
+    VectorTileRenderOrder::VectorTileRenderOrder VectorTileLayer::getLabelRenderOrder() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _labelOrder;
+        return _labelRenderOrder;
     }
     
-    void VectorTileLayer::setLabelOrder(VectorTileLabelOrder::VectorTileLabelOrder labelOrder) {
+    void VectorTileLayer::setLabelRenderOrder(VectorTileRenderOrder::VectorTileRenderOrder renderOrder) {
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _labelOrder = labelOrder;
+            _labelRenderOrder = renderOrder;
+        }
+        refresh();
+    }
+    
+    VectorTileRenderOrder::VectorTileRenderOrder VectorTileLayer::getBuildingRenderOrder() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _buildingRenderOrder;
+    }
+    
+    void VectorTileLayer::setBuildingRenderOrder(VectorTileRenderOrder::VectorTileRenderOrder renderOrder) {
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _buildingRenderOrder = renderOrder;
         }
         refresh();
     }
@@ -275,18 +289,8 @@ namespace carto {
     bool VectorTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
         updateTileLoadListener();
 
-        VectorTileLabelOrder::VectorTileLabelOrder labelOrder = getLabelOrder();
-        switch (labelOrder) {
-            case VectorTileLabelOrder::VECTOR_TILE_LABEL_ORDER_HIDDEN:
-                _renderer->setLabelOrder(-1);
-                break;
-            case VectorTileLabelOrder::VECTOR_TILE_LABEL_ORDER_LAYER:
-                _renderer->setLabelOrder(0);
-                break;
-            case VectorTileLabelOrder::VECTOR_TILE_LABEL_ORDER_LAST:
-                _renderer->setLabelOrder(1);
-                break;
-        }
+        _renderer->setLabelOrder(static_cast<int>(getLabelRenderOrder()));
+        _renderer->setBuildingOrder(static_cast<int>(getBuildingRenderOrder()));
         return _renderer->onDrawFrame(deltaSeconds, viewState);
     }
         
