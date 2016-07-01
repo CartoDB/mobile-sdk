@@ -145,9 +145,9 @@ namespace carto {
         return _defaultVectorLayerMode;
     }
 
-    void CartoMapsService::setDefaultVectorLayerMode(bool enabled) {
+    void CartoMapsService::setDefaultVectorLayerMode(bool vectorLayerMode) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        _defaultVectorLayerMode = enabled;
+        _defaultVectorLayerMode = vectorLayerMode;
     }
 
     std::shared_ptr<AssetPackage> CartoMapsService::getVectorTileAssetPackage() const {

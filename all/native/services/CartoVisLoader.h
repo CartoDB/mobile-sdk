@@ -25,18 +25,55 @@ namespace carto {
     class CartoMapsService;
     class CartoVisBuilder;
 
+    /**
+     * A high level interface for loading VisJSON configurations.
+     * VisJSON defines full map visualizations, together with
+     * base maps and interactive overlays.
+     */
     class CartoVisLoader {
     public:
+        /**
+         * Constructs a new instance of CartoVisLoader with default settings.
+         */
         CartoVisLoader();
         virtual ~CartoVisLoader();
 
+        /**
+         * Returns true if the service configures layers as vector tile layers,
+         * when possible. By default this is false. Vector layers
+         * provide much better visual quality at the expense of performance.
+         * @return True if vector layers should be used. False is raster layers are used.
+         */
         bool isDefaultVectorLayerMode() const;
-        void setDefaultVectorLayerMode(bool enabled);
+        /**
+         * Sets the service to vector layer mode or raster layer mode.
+         * By default service creates raster layers, but vector layers may
+         * provide much better visual quality at the expense of performance.
+         * @param vectorLayerMode True if vector layers should be used. False is raster layers are used.
+         */
+        void setDefaultVectorLayerMode(bool vectorLayerMode);
 
+        /**
+         * Returns the asset package used when decoding vector tiles.
+         * By default, no asset package is used and null is returned.
+         * @return The asset package used when decoding vector tiles.
+         */
         std::shared_ptr<AssetPackage> getVectorTileAssetPackage() const;
+        /**
+         * Sets the asset package used when decoding vector tiles.
+         * Asset package with fonts is needed when texts are used.
+         * @param assetPackage The asset package to use for vector tiles.
+         */
         void setVectorTileAssetPackage(const std::shared_ptr<AssetPackage>& assetPackage);
 
-        bool loadVis(const std::shared_ptr<CartoVisBuilder>& builder, const std::string& visURL) const;
+        /**
+         * Loads a specified online VisJSON configuration.
+         * The actual map configuration must be done via callbacks in
+         * the specified CartoVisBuilder instance.
+         * @param builder The handler that receives events for configuring the map.
+         * @param visJsonURL The VisJSON URL to use.
+         */
+        bool loadVis(const std::shared_ptr<CartoVisBuilder>& builder, const std::string& visJsonURL) const;
 
     private:
         struct LayerInfo {
