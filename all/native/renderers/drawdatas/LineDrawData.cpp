@@ -271,6 +271,17 @@ namespace carto {
                     float dot = cglib::dot_product(prevPerpVec, nextPerpVec);
                     if (dot >= LINE_JOIN_MIN_MITER_DOT) {
                         nextNormalVec = cglib::unit(prevPerpVec + nextPerpVec) * (1 / std::sqrt((1 + dot) / 2));
+
+                        // Trick to reuse already generated vertex data
+                        if (vertexIndex >= 2) {
+                            vertexIndex -= 2;
+                            coords.pop_back();
+                            coords.pop_back();
+                            texCoords.pop_back();
+                            texCoords.pop_back();
+                            normals.pop_back();
+                            normals.pop_back();
+                        }
                     }
                 }
             } else {
@@ -298,17 +309,17 @@ namespace carto {
                 texCoords.push_back(cglib::vec2<float>(texCoordX, texCoordY + texCoordYOffset));
                 texCoordY += texCoordYOffset;
             } else {
-                texCoords.push_back(cglib::vec2<float>(0, 0));
-                texCoords.push_back(cglib::vec2<float>(texCoordX, 0));
-                texCoords.push_back(cglib::vec2<float>(0, 1));
-                texCoords.push_back(cglib::vec2<float>(texCoordX, 1));
+                texCoords.push_back(cglib::vec2<float>(0, 0.5f));
+                texCoords.push_back(cglib::vec2<float>(texCoordX, 0.5f));
+                texCoords.push_back(cglib::vec2<float>(0, 0.5f));
+                texCoords.push_back(cglib::vec2<float>(texCoordX, 0.5f));
             }
 
             normals.push_back(cglib::expand(prevNormalVec, 1.0f));
             normals.push_back(cglib::expand(prevNormalVec, -1.0f));
             normals.push_back(cglib::expand(nextNormalVec, 1.0f));
             normals.push_back(cglib::expand(nextNormalVec, -1.0f));
-            
+
             indices.push_back(vertexIndex + 0);
             indices.push_back(vertexIndex + 1);
             indices.push_back(vertexIndex + 2);
