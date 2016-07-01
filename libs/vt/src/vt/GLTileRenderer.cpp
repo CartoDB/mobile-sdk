@@ -480,7 +480,7 @@ namespace carto { namespace vt {
         bitmapLabelMap[1] = std::make_shared<BitmapLabelMap>();
         for (auto labelIt = _labelMap.begin(); labelIt != _labelMap.end(); labelIt++) {
             const std::shared_ptr<TileLabel>& label = labelIt->second;
-            int pass = (label->getOrientation() == LabelOrientation::BILLBOARD3D ? 1 : 0);
+            int pass = (label->getOrientation() == LabelOrientation::BILLBOARD_3D ? 1 : 0);
             (*bitmapLabelMap[pass])[label->getFont()->getBitmapPattern()->bitmap].push_back(label);
             labels.push_back(label);
         }

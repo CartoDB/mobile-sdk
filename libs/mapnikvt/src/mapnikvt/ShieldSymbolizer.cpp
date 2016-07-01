@@ -57,7 +57,7 @@ namespace carto { namespace mvt {
                 if (placement == vt::LabelOrientation::LINE) {
                     for (const auto& vertices : lineGeometry->getVerticesList()) {
                         if (_spacing <= 0) {
-                            addLabel(getShieldId(featureId, hash), vt::LabelOrientation::BILLBOARD2D, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices);
+                            addLabel(getShieldId(featureId, hash), vt::LabelOrientation::BILLBOARD_2D, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices);
                             continue;
                         }
 
@@ -73,7 +73,7 @@ namespace carto { namespace mvt {
                             while (linePos < lineLen) {
                                 cglib::vec2<float> pos = v0 + (v1 - v0) * (linePos / lineLen);
                                 if (std::min(pos(0), pos(1)) > 0.0f && std::max(pos(0), pos(1)) < 1.0f) {
-                                    addLabel(getMultiShieldId(featureId, hash), vt::LabelOrientation::BILLBOARD2D, pos, vertices);
+                                    addLabel(getMultiShieldId(featureId, hash), vt::LabelOrientation::BILLBOARD_2D, pos, vertices);
                                 }
 
                                 linePos += _spacing + bitmapSize;

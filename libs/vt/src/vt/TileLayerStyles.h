@@ -30,7 +30,7 @@ namespace carto { namespace vt {
     };
     
     enum class LabelOrientation {
-        BILLBOARD2D, BILLBOARD3D, POINT, POINT_FLIPPING, LINE
+        BILLBOARD_2D, BILLBOARD_3D, POINT, POINT_FLIPPING, LINE
     };
 
     enum class LineJoinMode {

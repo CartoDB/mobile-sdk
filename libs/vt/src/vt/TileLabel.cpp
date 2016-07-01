@@ -381,11 +381,11 @@ namespace carto { namespace vt {
     void TileLabel::setupCoordinateSystem(const ViewState& viewState, const std::shared_ptr<Placement>& placement, cglib::vec3<float>& origin, cglib::vec3<float>& xAxis, cglib::vec3<float>& yAxis) const {
         origin = cglib::vec3<float>::convert(placement->pos - viewState.origin);
         switch (_orientation) {
-        case LabelOrientation::BILLBOARD2D:
+        case LabelOrientation::BILLBOARD_2D:
             xAxis = viewState.orientation[0];
             yAxis = cglib::vector_product(cglib::vec3<float>(0, 0, 1), xAxis);
             break;
-        case LabelOrientation::BILLBOARD3D:
+        case LabelOrientation::BILLBOARD_3D:
             xAxis = viewState.orientation[0];
             yAxis = viewState.orientation[1];
             break;

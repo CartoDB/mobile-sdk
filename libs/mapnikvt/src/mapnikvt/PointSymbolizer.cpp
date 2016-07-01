@@ -28,7 +28,7 @@ namespace carto { namespace mvt {
             bitmapScale = 4.0f / RECTANGLE_SIZE;
         }
 
-        vt::BitmapLabelStyle style(vt::LabelOrientation::BILLBOARD2D, vt::blendColor(_fill, _opacity), symbolizerContext.getFontManager()->getNullFont(), bitmap, _transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScale, bitmapScale, 1)));
+        vt::BitmapLabelStyle style(vt::LabelOrientation::BILLBOARD_2D, vt::blendColor(_fill, _opacity), symbolizerContext.getFontManager()->getNullFont(), bitmap, _transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScale, bitmapScale, 1)));
 
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
             if (auto pointGeometry = std::dynamic_pointer_cast<const PointGeometry>(featureCollection.getGeometry(index))) {
