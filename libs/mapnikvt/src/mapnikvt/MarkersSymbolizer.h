@@ -19,6 +19,8 @@ namespace carto { namespace mvt {
     protected:
         virtual void bindParameter(const std::string& name, const std::string& value) override;
 
+        static bool containsRotationTransform(const Value& val);
+
         static std::shared_ptr<vt::Bitmap> makeEllipseBitmap(float width, float height, const vt::Color& color, float strokeWidth, const vt::Color& strokeColor);
         static std::shared_ptr<vt::Bitmap> makeArrowBitmap(float width, float height, const vt::Color& color, float strokeWidth, const vt::Color& strokeColor);
 
@@ -40,7 +42,7 @@ namespace carto { namespace mvt {
         bool _allowOverlap = false;
         bool _ignorePlacement = false;
         cglib::mat3x3<float> _transform = cglib::mat3x3<float>::identity();
-        bool _transformDefined;
+        std::shared_ptr<Expression> _transformExpression;
     };
 } }
 

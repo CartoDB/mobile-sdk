@@ -12,8 +12,10 @@ namespace carto { namespace mvt {
 
         float fontScale = symbolizerContext.getSettings().getFontScale();
         vt::LabelOrientation placement = convertLabelPlacement(_placement);
-        if (_transformDefined) { // if orientation parameter is explicitly defined, use point placement
-            placement = vt::LabelOrientation::POINT;
+        if (_transformExpression) { // if rotation transform is explicitly defined, use point placement
+            if (containsRotationTransform(_transformExpression->evaluate(exprContext))) {
+                placement = vt::LabelOrientation::POINT;
+            }
         }
 
         float bitmapScaleX = fontScale, bitmapScaleY = fontScale;
@@ -193,8 +195,8 @@ namespace carto { namespace mvt {
             bind(&_ignorePlacement, parseExpression(value));
         }
         else if (name == "transform") {
-            bind(&_transform, parseStringExpression(value), &MarkersSymbolizer::convertTransform);
-            _transformDefined = true;
+            _transformExpression = parseStringExpression(value);
+            bind(&_transform, _transformExpression, &MarkersSymbolizer::convertTransform);
         }
         else if (name == "opacity") { // binds to 2 parameters
             bind(&_fillOpacity, parseExpression(value));
@@ -202,6 +204,21 @@ namespace carto { namespace mvt {
         }
         else {
             Symbolizer::bindParameter(name, value);
+        }
+    }
+    
+    bool MarkersSymbolizer::containsRotationTransform(const Value& val) {
+        try {
+            std::vector<std::shared_ptr<Transform>> transforms = parseTransformList(boost::lexical_cast<std::string>(val));
+            for (const std::shared_ptr<Transform>& transform : transforms) {
+                if (std::dynamic_pointer_cast<RotateTransform>(transform)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        catch (const ParserException&) {
+            return false;
         }
     }
 
