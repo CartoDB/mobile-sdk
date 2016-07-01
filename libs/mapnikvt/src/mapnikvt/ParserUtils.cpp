@@ -57,6 +57,7 @@ namespace carto { namespace mvt {
         static const std::unordered_map<std::string, vt::LabelOrientation> labelOrientationTable = {
             { "point",         vt::LabelOrientation::BILLBOARD2D },
             { "nutibillboard", vt::LabelOrientation::BILLBOARD3D },
+            { "nutipoint",     vt::LabelOrientation::POINT },
             { "line",          vt::LabelOrientation::LINE }
         };
 
