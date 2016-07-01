@@ -180,7 +180,7 @@ namespace carto {
          */
         bool deleteField(int index);
         
-        virtual std::vector<std::shared_ptr<VectorElement> > loadElements(const std::shared_ptr<CullState>& cullState);
+        virtual std::shared_ptr<VectorData> loadElements(const std::shared_ptr<CullState>& cullState);
 
         /**
          * Tests the data source capability.

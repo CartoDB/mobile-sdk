@@ -6,21 +6,20 @@
 
 %module(directors="1") VectorDataSource
 
-!proxy_imports(carto::VectorDataSource, projections.Projection, renderers.components.CullState, graphics.ViewState, vectorelements.VectorElement, vectorelements.VectorElementVector)
+!proxy_imports(carto::VectorDataSource, datasources.components.VectorData, projections.Projection, renderers.components.CullState, graphics.ViewState)
 
 %{
 #include "datasources/VectorDataSource.h"
-#include "vectorelements/VectorElement.h"
 #include <memory>
 %}
 
 %include <std_shared_ptr.i>
 %include <cartoswig.i>
 
+%import "datasources/components/VectorData.i"
 %import "projections/Projection.i"
 %import "renderers/components/CullState.i"
 %import "graphics/ViewState.i"
-%import "vectorelements/VectorElement.i"
 
 !polymorphic_shared_ptr(carto::VectorDataSource, datasources.VectorDataSource)
 

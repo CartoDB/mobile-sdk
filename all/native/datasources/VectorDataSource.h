@@ -7,7 +7,7 @@
 #ifndef _CARTO_VECTORDATASOURCE_H_
 #define _CARTO_VECTORDATASOURCE_H_
 
-#include "vectorelements/VectorElement.h"
+#include "datasources/components/VectorData.h"
 
 #include <memory>
 #include <vector>
@@ -82,7 +82,7 @@ namespace carto {
          * @param cullState State for describing view parameters and conservative view envelope.
          * @return The vector of loaded vector elements. If no elements are available, null may be returned.
          */
-        virtual std::vector<std::shared_ptr<VectorElement> > loadElements(const std::shared_ptr<CullState>& cullState) = 0;
+        virtual std::shared_ptr<VectorData> loadElements(const std::shared_ptr<CullState>& cullState) = 0;
         
         /**
          * Notifies listeners that all vector elements have changed. This method refreshes all the existing 

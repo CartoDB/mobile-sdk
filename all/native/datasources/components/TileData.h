@@ -53,17 +53,12 @@ namespace carto {
          * Returns tile data as binary data.
          * @return Tile data as binary data.
          */
-        std::shared_ptr<BinaryData> getData() const;
-        /**
-         * Sets the tile binary data.
-         * @param data The tile binary data.
-         */
-        void setData(const std::shared_ptr<BinaryData>& data);
+        const std::shared_ptr<BinaryData>& getData() const;
         
     private:
+        const std::shared_ptr<BinaryData> _data;
         std::shared_ptr<std::chrono::steady_clock::time_point> _expirationTime;
         bool _replaceWithParent;
-        std::shared_ptr<BinaryData> _data;
         mutable std::mutex _mutex;
     };
 

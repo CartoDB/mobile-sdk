@@ -3,7 +3,7 @@
 
 %module(directors="1") LocalVectorDataSource
 
-!proxy_imports(carto::LocalVectorDataSource, datasources.VectorDataSource, geometry.GeometrySimplifier, projections.Projection, core.MapBounds, renderers.components.CullState, vectorelements.VectorElement, vectorelements.VectorElementVector)
+!proxy_imports(carto::LocalVectorDataSource, datasources.VectorDataSource, datasources.components.VectorData, geometry.GeometrySimplifier, projections.Projection, core.MapBounds, renderers.components.CullState, vectorelements.VectorElement, vectorelements.VectorElementVector)
 
 %{
 #include "datasources/LocalVectorDataSource.h"

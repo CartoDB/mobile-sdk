@@ -57,7 +57,7 @@ namespace carto {
         LocalVectorDataSource(const std::shared_ptr<Projection>& projection, LocalSpatialIndexType::LocalSpatialIndexType spatialIndexType);
         virtual ~LocalVectorDataSource();
         
-        virtual std::vector<std::shared_ptr<VectorElement> > loadElements(const std::shared_ptr<CullState>& cullState);
+        virtual std::shared_ptr<VectorData> loadElements(const std::shared_ptr<CullState>& cullState);
 
         /**
          * Clear the data source by removing all elements.

@@ -5,7 +5,7 @@
 
 #ifdef _CARTO_GDAL_SUPPORT
 
-!proxy_imports(carto::OGRVectorDataSource, datasources.OGRVectorDataBase, datasources.OGRFieldType, datasources.OGRGeometryType, core.MapBounds, core.StringVector, geometry.GeometrySimplifier, projections.Projection, renderers.components.CullState, styles.StyleSelector, vectorelements.VectorElement, vectorelements.VectorElementVector)
+!proxy_imports(carto::OGRVectorDataSource, core.MapBounds, core.StringVector, datasources.VectorDataSource, datasources.components.VectorData, datasources.OGRVectorDataBase, datasources.OGRFieldType, datasources.OGRGeometryType, geometry.GeometrySimplifier, projections.Projection, renderers.components.CullState, styles.StyleSelector)
 
 %{
 #include "datasources/OGRVectorDataSource.h"

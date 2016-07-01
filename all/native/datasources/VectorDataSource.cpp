@@ -1,5 +1,6 @@
 #include "VectorDataSource.h"
 #include "graphics/ViewState.h"
+#include "vectorelements/VectorElement.h"
 #include "utils/Log.h"
 
 #include <algorithm>

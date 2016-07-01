@@ -4,7 +4,7 @@
 namespace carto {
     
     TileData::TileData(const std::shared_ptr<BinaryData>& data) :
-        _expirationTime(), _replaceWithParent(false), _data(data)
+        _data(data), _expirationTime(), _replaceWithParent(false), _mutex()
     {
     }
 
@@ -42,14 +42,8 @@ namespace carto {
         _replaceWithParent = flag;
     }
     
-    std::shared_ptr<BinaryData> TileData::getData() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-    return _data;
-    }
-
-    void TileData::setData(const std::shared_ptr<BinaryData>& data) {
-        std::lock_guard<std::mutex> lock(_mutex);
-    _data = data;
+    const std::shared_ptr<BinaryData>& TileData::getData() const {
+        return _data;
     }
 
 }

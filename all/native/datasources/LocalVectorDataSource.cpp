@@ -50,7 +50,7 @@ namespace carto {
     LocalVectorDataSource::~LocalVectorDataSource() {
     }
     
-    std::vector<std::shared_ptr<VectorElement> > LocalVectorDataSource::loadElements(const std::shared_ptr<CullState>& cullState) {
+    std::shared_ptr<VectorData> LocalVectorDataSource::loadElements(const std::shared_ptr<CullState>& cullState) {
         std::lock_guard<std::mutex> lock(_mutex);
         std::vector<std::shared_ptr<VectorElement> > elements = _spatialIndex->query(cullState->getViewState().getFrustum());
         
@@ -69,7 +69,7 @@ namespace carto {
             std::swap(elements, simplifiedElements);
         }
 
-        return elements;
+        return std::make_shared<VectorData>(elements);
     }
 
     void LocalVectorDataSource::clear() {

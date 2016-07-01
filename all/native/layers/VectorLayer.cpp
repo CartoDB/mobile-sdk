@@ -545,11 +545,14 @@ namespace carto {
     
     bool VectorLayer::FetchTask::loadElements(const std::shared_ptr<CullState>& cullState) {
         const std::shared_ptr<VectorLayer>& layer = _layer.lock();
-        
-        std::vector<std::shared_ptr<VectorElement> > elements = layer->_dataSource->loadElements(cullState);
+
+        std::shared_ptr<VectorData> vectorData = layer->_dataSource->loadElements(cullState);
+        if (!vectorData) {
+            return false;
+        }
 
         std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
-        for (const std::shared_ptr<VectorElement>& element : elements) {
+        for (const std::shared_ptr<VectorElement>& element : vectorData->getElements()) {
             layer->addRendererElement(element);
         }
         return layer->refreshRendererElements();

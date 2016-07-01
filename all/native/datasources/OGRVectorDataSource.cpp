@@ -436,11 +436,11 @@ namespace carto {
         return true;
     }
 
-    std::vector<std::shared_ptr<VectorElement>> OGRVectorDataSource::loadElements(const std::shared_ptr<CullState>& cullState) {
+    std::shared_ptr<VectorData> OGRVectorDataSource::loadElements(const std::shared_ptr<CullState>& cullState) {
         std::lock_guard<std::mutex> lock(_dataBase->_mutex);
         
         if (!_poLayer) {
-            return std::vector<std::shared_ptr<VectorElement> >();
+            return std::shared_ptr<VectorData>();
         }
 
         float simplifierScale = calculateGeometrySimplifierScale(cullState->getViewState());
@@ -524,7 +524,7 @@ namespace carto {
             }
         }
 
-        return elements;
+        return std::make_shared<VectorData>(elements);
     }
 
     bool OGRVectorDataSource::testCapability(const std::string& capability) {
