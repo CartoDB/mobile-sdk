@@ -106,7 +106,11 @@ namespace {
     )GLSL";
 
     static const std::string lambertPhongBlinnFsh = R"GLSL(
+        #ifdef GL_FRAGMENT_PRECISION_HIGH
+        precision highp float;
+        #else
         precision mediump float;
+        #endif
         varying vec2 vUV;
         varying vec3 vNormal;
         varying vec3 vPos;
