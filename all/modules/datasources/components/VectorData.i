@@ -3,7 +3,7 @@
 
 %module VectorData
 
-!proxy_imports(carto::VectorData, vectorelements.VectorElements, vectorelements.VectorElementVector)
+!proxy_imports(carto::VectorData, vectorelements.VectorElement, vectorelements.VectorElementVector)
 
 %{
 #include "datasources/components/VectorData.h"
