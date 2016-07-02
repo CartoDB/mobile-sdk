@@ -65,7 +65,7 @@ include_directories(
     "${SDK_EXTERNAL_LIBS_DIR}/freetype/include"
     "${SDK_EXTERNAL_LIBS_DIR}/harfbuzz/src"
     "${SDK_EXTERNAL_LIBS_DIR}/bidi"
-    "${SDK_EXTERNAL_LIBS_DIR}/jpeg-turbo"
+    "${SDK_EXTERNAL_LIBS_DIR}/jpeg"
     "${SDK_EXTERNAL_LIBS_DIR}/miniz"
     "${SDK_EXTERNAL_LIBS_DIR}/pion/include"
     "${SDK_EXTERNAL_LIBS_DIR}/png"
@@ -128,7 +128,7 @@ add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/bidi" bidi)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/cryptopp" cryptopp)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/freetype" freetype)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/harfbuzz" harfbuzz)
-add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/jpeg-turbo" jpeg)
+add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/jpeg" jpeg)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/miniz" miniz)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/png" png)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/pugixml" pugixml)
