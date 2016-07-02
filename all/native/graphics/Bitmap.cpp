@@ -866,7 +866,7 @@ namespace carto {
             }
         }
         
-        std::free(decodedData);
+        WebPFree(decodedData);
         
         return true;
     }
