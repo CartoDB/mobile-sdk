@@ -20,14 +20,14 @@ namespace carto {
     enum LogType { LOG_TYPE_FATAL = ANDROID_LOG_ERROR, LOG_TYPE_ERROR = ANDROID_LOG_ERROR, LOG_TYPE_WARNING = ANDROID_LOG_WARN, LOG_TYPE_INFO = ANDROID_LOG_INFO, LOG_TYPE_DEBUG = ANDROID_LOG_DEBUG };
 
     static void OutputLog(LogType logType, const std::string& tag, const char* text) {
-        __android_log_vprint(static_cast<int>(logType), tag.c_str(), "%s", text);
+        __android_log_print(static_cast<int>(logType), tag.c_str(), "%s", text);
     }
 #endif
 #ifdef __APPLE__
     enum LogType { LOG_TYPE_FATAL = ASL_LEVEL_EMERG, LOG_TYPE_ERROR = ASL_LEVEL_ERR, LOG_TYPE_WARNING = ASL_LEVEL_WARNING, LOG_TYPE_INFO = ASL_LEVEL_INFO, LOG_TYPE_DEBUG = ASL_LEVEL_DEBUG };
 
     static void OutputLog(LogType logType, const std::string& tag, const char* text) {
-        asl_vlog(NULL, NULL, static_cast<int>(logType), "%s", text);
+        asl_log(NULL, NULL, static_cast<int>(logType), "%s", text);
     }
 #endif
 #ifdef _WIN32
