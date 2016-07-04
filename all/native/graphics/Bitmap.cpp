@@ -659,7 +659,7 @@ namespace carto {
         // Establish the setjmp return context for JPEGErrorExit to use
         if (setjmp(jerr.setjmp_buffer)) {
             jpeg_destroy_decompress(&cinfo);
-            Log::Errorf("Bitmap::loadJPEG: Failed to load JPEG", *cinfo.err->output_message);
+            Log::Error("Bitmap::loadJPEG: Failed to load JPEG");
             return false;
         }
     
