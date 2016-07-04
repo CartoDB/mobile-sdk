@@ -3,8 +3,9 @@
 #include "graphics/ShaderManager.h"
 #include "graphics/Texture.h"
 #include "graphics/TextureManager.h"
-#include "graphics/shaders/RegularShaderSource.h"
 #include "graphics/ViewState.h"
+#include "graphics/shaders/RegularShaderSource.h"
+#include "graphics/utils/GLContext.h"
 #include "layers/VectorLayer.h"
 #include "projections/Projection.h"
 #include "renderers/drawdatas/PointDrawData.h"
@@ -12,7 +13,6 @@
 #include "renderers/components/StyleTextureCache.h"
 #include "utils/Const.h"
 #include "utils/GLES2.h"
-#include "utils/GLUtils.h"
 #include "utils/Log.h"
 #include "vectorelements/Point.h"
 
@@ -82,7 +82,7 @@ namespace carto {
         
         unbind();
     
-        GLUtils::checkGLError("PointRenderer::onDrawFrame");
+        GLContext::CheckGLError("PointRenderer::onDrawFrame");
     }
     
     void PointRenderer::onSurfaceDestroyed() {
@@ -133,10 +133,10 @@ namespace carto {
     {
         // Resize the buffers, if necessary
         if (coordBuf.size() < drawDataBuffer.size() * 4 * 3) {
-            coordBuf.resize(std::min(drawDataBuffer.size() * 4 * 3, GLUtils::MAX_VERTEXBUFFER_SIZE * 3));
-            texCoordBuf.resize(std::min(drawDataBuffer.size() * 4 * 2, GLUtils::MAX_VERTEXBUFFER_SIZE * 2));
-            colorBuf.resize(std::min(drawDataBuffer.size() * 4 * 4, GLUtils::MAX_VERTEXBUFFER_SIZE * 4));
-            indexBuf.resize(std::min(drawDataBuffer.size() * 6, GLUtils::MAX_VERTEXBUFFER_SIZE));
+            coordBuf.resize(std::min(drawDataBuffer.size() * 4 * 3, GLContext::MAX_VERTEXBUFFER_SIZE * 3));
+            texCoordBuf.resize(std::min(drawDataBuffer.size() * 4 * 2, GLContext::MAX_VERTEXBUFFER_SIZE * 2));
+            colorBuf.resize(std::min(drawDataBuffer.size() * 4 * 4, GLContext::MAX_VERTEXBUFFER_SIZE * 4));
+            indexBuf.resize(std::min(drawDataBuffer.size() * 6, GLContext::MAX_VERTEXBUFFER_SIZE));
         }
     
         // Calculate and draw buffers
@@ -147,7 +147,7 @@ namespace carto {
             cglib::vec3<float> translate = cglib::vec3<float>::convert(drawData->getPos() - cglib::vec3<double>(cameraPos.getX(), cameraPos.getY(), cameraPos.getZ()));
     
             // Check for possible overflow in the buffers
-            if ((drawDataIndex + 1) * 6 > GLUtils::MAX_VERTEXBUFFER_SIZE) {
+            if ((drawDataIndex + 1) * 6 > GLContext::MAX_VERTEXBUFFER_SIZE) {
                 // If it doesn't fit, stop and draw the buffers
                 glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &colorBuf[0]);
                 glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, &coordBuf[0]);

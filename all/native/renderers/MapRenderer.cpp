@@ -1,9 +1,4 @@
 #include "MapRenderer.h"
-
-#include "renderers/cameraevents/CameraPanEvent.h"
-#include "renderers/cameraevents/CameraRotationEvent.h"
-#include "renderers/cameraevents/CameraTiltEvent.h"
-#include "renderers/cameraevents/CameraZoomEvent.h"
 #include "components/ThreadWorker.h"
 #include "components/Layers.h"
 #include "core/MapPos.h"
@@ -14,15 +9,19 @@
 #include "graphics/Shader.h"
 #include "graphics/ShaderManager.h"
 #include "graphics/TextureManager.h"
+#include "graphics/utils/GLContext.h"
 #include "layers/Layer.h"
 #include "renderers/BillboardRenderer.h"
 #include "renderers/MapRendererListener.h"
 #include "renderers/RendererCaptureListener.h"
 #include "renderers/RedrawRequestListener.h"
 #include "renderers/components/RayIntersectedElement.h"
+#include "renderers/cameraevents/CameraPanEvent.h"
+#include "renderers/cameraevents/CameraRotationEvent.h"
+#include "renderers/cameraevents/CameraTiltEvent.h"
+#include "renderers/cameraevents/CameraZoomEvent.h"
 #include "utils/Const.h"
 #include "utils/GLES2.h"
-#include "utils/GLUtils.h"
 #include "utils/Log.h"
 #include "utils/ThreadUtils.h"
 
@@ -426,7 +425,7 @@ namespace carto {
     void MapRenderer::onSurfaceCreated() {
         ThreadUtils::SetThreadPriority(ThreadPriority::MAXIMUM);
         
-        GLUtils::loadExtensions();
+        GLContext::LoadExtensions();
     
         glPixelStorei(GL_PACK_ALIGNMENT, 1);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -445,7 +444,7 @@ namespace carto {
             layer->onSurfaceCreated(_shaderManager, _textureManager);
         }
         
-       	GLUtils::checkGLError("MapRenderer::onSurfaceCreated");
+       	GLContext::CheckGLError("MapRenderer::onSurfaceCreated");
     }
     
     void MapRenderer::onSurfaceChanged(int width, int height) {
@@ -478,7 +477,7 @@ namespace carto {
                 _kineticEventHandler.stopRotation();
                 _kineticEventHandler.stopZoom();
             
-                GLUtils::checkGLError("MapRenderer::onSurfaceChanged");
+                GLContext::CheckGLError("MapRenderer::onSurfaceChanged");
     
                 _lastFrameTime = std::chrono::steady_clock::now();
             }
@@ -543,7 +542,7 @@ namespace carto {
             }
         }
 
-        GLUtils::checkGLError("MapRenderer::onDrawFrame");
+        GLContext::CheckGLError("MapRenderer::onDrawFrame");
     }
     
     void MapRenderer::onSurfaceDestroyed() {

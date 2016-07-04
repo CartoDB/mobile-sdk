@@ -1,12 +1,11 @@
 #include "Polygon3DDrawData.h"
 #include "core/MapPos.h"
-
 #include "geometry/PolygonGeometry.h"
+#include "graphics/utils/GLContext.h"
 #include "projections/Projection.h"
 #include "styles/Polygon3DStyle.h"
 #include "utils/Const.h"
 #include "utils/GeomUtils.h"
-#include "utils/GLUtils.h"
 #include "utils/Log.h"
 #include "vectorelements/Polygon3D.h"
 
@@ -155,7 +154,7 @@ namespace carto {
             }
         }
         
-        if (_coords.size() > GLUtils::MAX_VERTEXBUFFER_SIZE) {
+        if (_coords.size() > GLContext::MAX_VERTEXBUFFER_SIZE) {
             Log::Error("Polygon3DDrawData::Polygon3DDrawData: Maximum buffer size exceeded, 3d polygon can't be drawn");
         }
     }

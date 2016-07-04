@@ -5,12 +5,12 @@
 #include "graphics/Shader.h"
 #include "graphics/ShaderManager.h"
 #include "graphics/ViewState.h"
+#include "graphics/utils/GLContext.h"
 #include "layers/NMLModelLODTreeLayer.h"
 #include "projections/Projection.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "utils/Log.h"
 #include "utils/GLES2.h"
-#include "utils/GLUtils.h"
 
 #include <nml/GLModel.h>
 #include <nml/GLShaderManager.h>

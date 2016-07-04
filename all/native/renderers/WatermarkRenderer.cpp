@@ -7,12 +7,12 @@
 #include "graphics/Shader.h"
 #include "graphics/ShaderManager.h"
 #include "graphics/TextureManager.h"
-#include "graphics/shaders/TexturedShaderSource.h"
 #include "graphics/Texture.h"
 #include "graphics/ViewState.h"
+#include "graphics/shaders/TexturedShaderSource.h"
+#include "graphics/utils/GLContext.h"
 #include "utils/Const.h"
 #include "utils/GLES2.h"
-#include "utils/GLUtils.h"
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
 
@@ -172,7 +172,7 @@ namespace carto {
             drawWatermark(viewState);
         }
     
-        GLUtils::checkGLError("WatermarkRenderer::onDrawFrame");
+        GLContext::CheckGLError("WatermarkRenderer::onDrawFrame");
     }
     
     void WatermarkRenderer::onSurfaceDestroyed() {

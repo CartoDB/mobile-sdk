@@ -1,13 +1,13 @@
 #include "PolygonDrawData.h"
 #include "core/MapPos.h"
 #include "geometry/PolygonGeometry.h"
+#include "graphics/utils/GLContext.h"
 #include "projections/Projection.h"
 #include "renderers/drawdatas/LineDrawData.h"
 #include "styles/PolygonStyle.h"
 #include "vectorelements/Line.h"
 #include "vectorelements/Polygon.h"
 #include "utils/Const.h"
-#include "utils/GLUtils.h"
 #include "utils/Log.h"
 
 #include <cmath>
@@ -109,21 +109,21 @@ namespace carto {
     
         // Convert tesselation results to drawable format, split if into multiple buffers, if the polyong is too big
         _coords.push_back(std::vector<cglib::vec3<double> >());
-        _coords.back().reserve(std::min(vertexCount, GLUtils::MAX_VERTEXBUFFER_SIZE));
+        _coords.back().reserve(std::min(vertexCount, GLContext::MAX_VERTEXBUFFER_SIZE));
         _indices.push_back(std::vector<unsigned int>());
-        _indices.back().reserve(std::min(elementCount * MAX_INDICES_PER_ELEMENT, GLUtils::MAX_VERTEXBUFFER_SIZE));
+        _indices.back().reserve(std::min(elementCount * MAX_INDICES_PER_ELEMENT, GLContext::MAX_VERTEXBUFFER_SIZE));
         std::unordered_map<unsigned int, unsigned int> indexMap;
         for (std::size_t i = 0; i < elementCount * MAX_INDICES_PER_ELEMENT; i += 3) {
             
             // Check for possible GL buffer overflow
-            if (_indices.back().size() + 3 > GLUtils::MAX_VERTEXBUFFER_SIZE) {
+            if (_indices.back().size() + 3 > GLContext::MAX_VERTEXBUFFER_SIZE) {
                 // The buffer is full, create a new one
                 _coords.back().shrink_to_fit();
                 _coords.push_back(std::vector<cglib::vec3<double> >());
-                _coords.back().reserve(std::min(vertexCount, GLUtils::MAX_VERTEXBUFFER_SIZE));
+                _coords.back().reserve(std::min(vertexCount, GLContext::MAX_VERTEXBUFFER_SIZE));
                 _indices.back().shrink_to_fit();
                 _indices.push_back(std::vector<unsigned int>());
-                _indices.back().reserve(std::min(elementCount * MAX_INDICES_PER_ELEMENT, GLUtils::MAX_VERTEXBUFFER_SIZE));
+                _indices.back().reserve(std::min(elementCount * MAX_INDICES_PER_ELEMENT, GLContext::MAX_VERTEXBUFFER_SIZE));
                 indexMap.clear();
             }
             

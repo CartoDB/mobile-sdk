@@ -4,8 +4,9 @@
 #include "graphics/ShaderManager.h"
 #include "graphics/Texture.h"
 #include "graphics/TextureManager.h"
-#include "graphics/shaders/RegularShaderSource.h"
 #include "graphics/ViewState.h"
+#include "graphics/shaders/RegularShaderSource.h"
+#include "graphics/utils/GLContext.h"
 #include "layers/VectorLayer.h"
 #include "renderers/drawdatas/LineDrawData.h"
 #include "renderers/drawdatas/PolygonDrawData.h"
@@ -14,7 +15,6 @@
 #include "projections/Projection.h"
 #include "utils/Const.h"
 #include "utils/GLES2.h"
-#include "utils/GLUtils.h"
 #include "utils/Log.h"
 #include "vectorelements/Polygon.h"
 
@@ -87,7 +87,7 @@ namespace carto {
         
         unbind();
     
-        GLUtils::checkGLError("PolygonRenderer::onDrawFrame");
+        GLContext::CheckGLError("PolygonRenderer::onDrawFrame");
     }
     
     void PolygonRenderer::onSurfaceDestroyed() {
@@ -149,12 +149,12 @@ namespace carto {
     
         // Resize the buffers, if necessary
         if (coordBuf.size() < totalCoordCount * 3) {
-            colorBuf.resize(std::min(totalCoordCount * 4, GLUtils::MAX_VERTEXBUFFER_SIZE * 4));
-            coordBuf.resize(std::min(totalCoordCount * 3, GLUtils::MAX_VERTEXBUFFER_SIZE * 3));
+            colorBuf.resize(std::min(totalCoordCount * 4, GLContext::MAX_VERTEXBUFFER_SIZE * 4));
+            coordBuf.resize(std::min(totalCoordCount * 3, GLContext::MAX_VERTEXBUFFER_SIZE * 3));
         }
     
         if (indexBuf.size() < totalIndexCount) {
-            indexBuf.resize(std::min(totalIndexCount, GLUtils::MAX_VERTEXBUFFER_SIZE));
+            indexBuf.resize(std::min(totalIndexCount, GLContext::MAX_VERTEXBUFFER_SIZE));
         }
     
         // View state specific data
@@ -168,11 +168,11 @@ namespace carto {
                 // Check for possible overflow in the buffers
                 const std::vector<cglib::vec3<double> >& coords = drawData->getCoords()[i];
                 const std::vector<unsigned int>& indices = drawData->getIndices()[i];
-                if (indices.size() > GLUtils::MAX_VERTEXBUFFER_SIZE) {
+                if (indices.size() > GLContext::MAX_VERTEXBUFFER_SIZE) {
                     Log::Error("PolygonRenderer::BuildAndDrawBuffers: Maximum buffer size exceeded, polygon can't be drawn");
                     continue;
                 }
-                if (indexIndex + indices.size() > GLUtils::MAX_VERTEXBUFFER_SIZE) {
+                if (indexIndex + indices.size() > GLContext::MAX_VERTEXBUFFER_SIZE) {
                     // If it doesn't fit, stop and draw the buffers
                     glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, &coordBuf[0]);
                     glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &colorBuf[0]);

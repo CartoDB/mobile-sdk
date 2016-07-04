@@ -1,7 +1,7 @@
 #include "Shader.h"
 #include "ShaderManager.h"
 #include "graphics/shaders/ShaderSource.h"
-#include "utils/GLUtils.h"
+#include "graphics/utils/GLContext.h"
 #include "utils/Log.h"
 
 #include <vector>
@@ -79,7 +79,7 @@ namespace carto {
         _uniformMap.clear();
         _attribMap.clear();
         
-        GLUtils::checkGLError("Shader::unload()");
+        GLContext::CheckGLError("Shader::unload()");
     }
     
     void Shader::registerVars(GLuint progId) const {
@@ -111,7 +111,7 @@ namespace carto {
             _attribMap[varName] = loc;
         }
         
-        GLUtils::checkGLError("Shader::registerVars()");
+        GLContext::CheckGLError("Shader::registerVars()");
     }
 
     GLuint Shader::loadProg(GLuint vertShaderId, GLuint fragShaderId) const {
@@ -138,13 +138,12 @@ namespace carto {
             progId = 0;
         }
 
-        GLUtils::checkGLError("Shader::loadProg()");
+        GLContext::CheckGLError("Shader::loadProg()");
 
         return progId;
     }
 
     GLuint Shader::loadShader(const std::string& source, GLenum shaderType) const {
-        GLUtils::checkGLError("Shader::loadShader() start");
         GLuint shaderId = glCreateShader(shaderType);
         if (shaderId == 0) {
             Log::Errorf("Shader::loadShader: Failed to create shader type %i in '%s' shader", shaderType, _shaderSource.getName().c_str());
@@ -169,7 +168,7 @@ namespace carto {
             shaderId = 0;
         }
 
-        GLUtils::checkGLError("Shader::loadShader()");
+        GLContext::CheckGLError("Shader::loadShader()");
 
         return shaderId;
     }

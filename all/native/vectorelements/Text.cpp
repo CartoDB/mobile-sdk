@@ -3,7 +3,6 @@
 #include "graphics/BitmapCanvas.h"
 #include "styles/TextStyle.h"
 #include "utils/Const.h"
-#include "utils/GLUtils.h"
 
 #include <cstdlib>
 #include <cmath>

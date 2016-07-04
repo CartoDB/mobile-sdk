@@ -2,7 +2,6 @@
 #include "graphics/Bitmap.h"
 #include "utils/BitmapUtils.h"
 #include "utils/AndroidUtils.h"
-#include "utils/GLUtils.h"
 #include "utils/JNIUniqueGlobalRef.h"
 #include "utils/Log.h"
 

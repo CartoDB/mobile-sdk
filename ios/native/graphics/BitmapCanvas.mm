@@ -1,8 +1,10 @@
 #include "graphics/BitmapCanvas.h"
 #include "graphics/Bitmap.h"
-#include "utils/GLUtils.h"
 #include "utils/CFUniquePtr.h"
 #include "utils/Log.h"
+
+#include <cmath>
+#include <vector>
 
 #import <CoreGraphics/CoreGraphics.h>
 #import <CoreText/CoreText.h>

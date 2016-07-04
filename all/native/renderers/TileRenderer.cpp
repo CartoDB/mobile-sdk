@@ -4,10 +4,10 @@
 #include "graphics/Shader.h"
 #include "graphics/ShaderManager.h"
 #include "graphics/ViewState.h"
+#include "graphics/utils/GLContext.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/drawdatas/TileDrawData.h"
 #include "utils/GLES2.h"
-#include "utils/GLUtils.h"
 #include "utils/Log.h"
 #include "utils/Const.h"
 #include "vt/GLTileRenderer.h"
@@ -84,7 +84,7 @@ namespace carto {
         );
         _glRenderer->initializeRenderer();
         _tiles.clear();
-        GLUtils::checkGLError("TileRenderer::onSurfaceCreated()");
+        GLContext::CheckGLError("TileRenderer::onSurfaceCreated()");
     }
     
     bool TileRenderer::onDrawFrame(float deltaSeconds, const ViewState& viewState) {
@@ -117,7 +117,7 @@ namespace carto {
         glDisable(GL_DEPTH_TEST);
         glDepthMask(GL_TRUE);
 
-        GLUtils::checkGLError("TileRenderer::onDrawFrame()");
+        GLContext::CheckGLError("TileRenderer::onDrawFrame()");
         return refresh;
     }
     
@@ -147,7 +147,7 @@ namespace carto {
         glDisable(GL_DEPTH_TEST);
         glDepthMask(GL_TRUE);
 
-        GLUtils::checkGLError("TileRenderer::onDrawFrame3D()");
+        GLContext::CheckGLError("TileRenderer::onDrawFrame3D()");
         return refresh;
     }
     

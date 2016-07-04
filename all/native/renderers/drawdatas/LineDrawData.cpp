@@ -2,12 +2,12 @@
 #include "core/MapPos.h"
 #include "geometry/LineGeometry.h"
 #include "graphics/Bitmap.h"
+#include "graphics/utils/GLContext.h"
 #include "projections/Projection.h"
 #include "styles/LineStyle.h"
 #include "vectorelements/Line.h"
 #include "vectorelements/Polygon.h"
 #include "utils/Const.h"
-#include "utils/GLUtils.h"
 #include "utils/Log.h"
 
 #include <cmath>
@@ -480,35 +480,35 @@ namespace carto {
         _normals.push_back(std::vector<cglib::vec3<float> >());
         _texCoords.push_back(std::vector<cglib::vec2<float> >());
         _indices.push_back(std::vector<unsigned int>());
-        if (indices.size() <= GLUtils::MAX_VERTEXBUFFER_SIZE) {
+        if (indices.size() <= GLContext::MAX_VERTEXBUFFER_SIZE) {
             _coords.back().swap(coords);
             _normals.back().swap(normals);
             _texCoords.back().swap(texCoords);
             _indices.back().swap(indices);
         } else {
             // Buffers too big, split into multiple buffers
-            _coords.back().reserve(std::min(coords.size(), GLUtils::MAX_VERTEXBUFFER_SIZE));
-            _normals.back().reserve(std::min(normals.size(), GLUtils::MAX_VERTEXBUFFER_SIZE));
-            _texCoords.back().reserve(std::min(texCoords.size(), GLUtils::MAX_VERTEXBUFFER_SIZE));
-            _indices.back().reserve(std::min(indices.size(), GLUtils::MAX_VERTEXBUFFER_SIZE));
+            _coords.back().reserve(std::min(coords.size(), GLContext::MAX_VERTEXBUFFER_SIZE));
+            _normals.back().reserve(std::min(normals.size(), GLContext::MAX_VERTEXBUFFER_SIZE));
+            _texCoords.back().reserve(std::min(texCoords.size(), GLContext::MAX_VERTEXBUFFER_SIZE));
+            _indices.back().reserve(std::min(indices.size(), GLContext::MAX_VERTEXBUFFER_SIZE));
             std::unordered_map<unsigned int, unsigned int> indexMap;
             for (std::size_t i = 0; i < indices.size(); i += 3) {
                 
                 // Check for possible GL buffer overflow
-                if (_indices.back().size() + 3 > GLUtils::MAX_VERTEXBUFFER_SIZE) {
+                if (_indices.back().size() + 3 > GLContext::MAX_VERTEXBUFFER_SIZE) {
                     // The buffer is full, create a new one
                     _coords.back().shrink_to_fit();
                     _coords.push_back(std::vector<cglib::vec3<double>*>());
-                    _coords.back().reserve(std::min(coords.size(), GLUtils::MAX_VERTEXBUFFER_SIZE));
+                    _coords.back().reserve(std::min(coords.size(), GLContext::MAX_VERTEXBUFFER_SIZE));
                     _normals.back().shrink_to_fit();
                     _normals.push_back(std::vector<cglib::vec3<float> >());
-                    _normals.back().reserve(std::min(normals.size(), GLUtils::MAX_VERTEXBUFFER_SIZE));
+                    _normals.back().reserve(std::min(normals.size(), GLContext::MAX_VERTEXBUFFER_SIZE));
                     _texCoords.back().shrink_to_fit();
                     _texCoords.push_back(std::vector<cglib::vec2<float> >());
-                    _texCoords.back().reserve(std::min(texCoords.size(), GLUtils::MAX_VERTEXBUFFER_SIZE));
+                    _texCoords.back().reserve(std::min(texCoords.size(), GLContext::MAX_VERTEXBUFFER_SIZE));
                     _indices.back().shrink_to_fit();
                     _indices.push_back(std::vector<unsigned int>());
-                    _indices.back().reserve(std::min(indices.size(), GLUtils::MAX_VERTEXBUFFER_SIZE));
+                    _indices.back().reserve(std::min(indices.size(), GLContext::MAX_VERTEXBUFFER_SIZE));
                     indexMap.clear();
                 }
                 

@@ -1,6 +1,5 @@
 #include "TextureManager.h"
 #include "graphics/Texture.h"
-#include "utils/GLUtils.h"
 #include "utils/Log.h"
 
 namespace carto {

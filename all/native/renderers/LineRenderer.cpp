@@ -4,15 +4,15 @@
 #include "graphics/ShaderManager.h"
 #include "graphics/Texture.h"
 #include "graphics/TextureManager.h"
-#include "graphics/shaders/LineShaderSource.h"
 #include "graphics/ViewState.h"
+#include "graphics/shaders/LineShaderSource.h"
+#include "graphics/utils/GLContext.h"
 #include "layers/VectorLayer.h"
 #include "projections/Projection.h"
 #include "renderers/drawdatas/LineDrawData.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/components/StyleTextureCache.h"
 #include "utils/Const.h"
-#include "utils/GLUtils.h"
 #include "utils/Log.h"
 #include "vectorelements/Line.h"
 
@@ -92,7 +92,7 @@ namespace carto {
         
         unbind();
     
-        GLUtils::checkGLError("LineRenderer::onDrawFrame");
+        GLContext::CheckGLError("LineRenderer::onDrawFrame");
     }
     
     void LineRenderer::onSurfaceDestroyed() {
@@ -161,14 +161,14 @@ namespace carto {
         
         // Resize the buffers, if necessary
         if (coordBuf.size() < totalCoordCount * 3) {
-            colorBuf.resize(std::min(totalCoordCount * 4, GLUtils::MAX_VERTEXBUFFER_SIZE * 4));
-            coordBuf.resize(std::min(totalCoordCount * 3, GLUtils::MAX_VERTEXBUFFER_SIZE * 3));
-            normalBuf.resize(std::min(totalCoordCount * 3, GLUtils::MAX_VERTEXBUFFER_SIZE * 3));
-            texCoordBuf.resize(std::min(totalCoordCount * 2, GLUtils::MAX_VERTEXBUFFER_SIZE * 2));
+            colorBuf.resize(std::min(totalCoordCount * 4, GLContext::MAX_VERTEXBUFFER_SIZE * 4));
+            coordBuf.resize(std::min(totalCoordCount * 3, GLContext::MAX_VERTEXBUFFER_SIZE * 3));
+            normalBuf.resize(std::min(totalCoordCount * 3, GLContext::MAX_VERTEXBUFFER_SIZE * 3));
+            texCoordBuf.resize(std::min(totalCoordCount * 2, GLContext::MAX_VERTEXBUFFER_SIZE * 2));
         }
         
         if (indexBuf.size() < totalIndexCount) {
-            indexBuf.resize(std::min(totalIndexCount, GLUtils::MAX_VERTEXBUFFER_SIZE));
+            indexBuf.resize(std::min(totalIndexCount, GLContext::MAX_VERTEXBUFFER_SIZE));
         }
         
         // Calculate and draw buffers
@@ -185,7 +185,7 @@ namespace carto {
                 
                 // Check for possible overflow in the buffer
                 const std::vector<unsigned int>& indices = drawData->getIndices()[i];
-                if (indexIndex + indices.size() > GLUtils::MAX_VERTEXBUFFER_SIZE) {
+                if (indexIndex + indices.size() > GLContext::MAX_VERTEXBUFFER_SIZE) {
                     // If it doesn't fit, stop and draw the buffers
                     glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &colorBuf[0]);
                     glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, &coordBuf[0]);

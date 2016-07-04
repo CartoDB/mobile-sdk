@@ -3,12 +3,12 @@
 #include "graphics/Shader.h"
 #include "graphics/ShaderManager.h"
 #include "graphics/ViewState.h"
+#include "graphics/utils/GLContext.h"
 #include "layers/VectorLayer.h"
 #include "projections/Projection.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "utils/Log.h"
 #include "utils/GLES2.h"
-#include "utils/GLUtils.h"
 
 #include <nml/GLModel.h>
 #include <nml/GLShaderManager.h>
@@ -121,7 +121,7 @@ namespace carto {
         glDisable(GL_DEPTH_TEST);
         glActiveTexture(GL_TEXTURE0);
 
-        GLUtils::checkGLError("NMLModelRenderer::onDrawFrame()");
+        GLContext::CheckGLError("NMLModelRenderer::onDrawFrame()");
         return false;
     }
 

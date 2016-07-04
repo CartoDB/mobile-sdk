@@ -2,7 +2,6 @@
 #include "core/BinaryData.h"
 #include "utils/AssetUtils.h"
 #include "graphics/Bitmap.h"
-#include "utils/GLUtils.h"
 #include "utils/Log.h"
 
 #include <stdio.h>

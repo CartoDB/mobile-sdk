@@ -3,7 +3,6 @@
 #include "graphics/Bitmap.h"
 #include "utils/AssetUtils.h"
 #include "utils/AndroidUtils.h"
-#include "utils/GLUtils.h"
 #include "utils/Log.h"
 
 #include <android/bitmap.h>

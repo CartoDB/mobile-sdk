@@ -1,8 +1,8 @@
 #include "Texture.h"
 #include "graphics/TextureManager.h"
 #include "graphics/Bitmap.h"
+#include "graphics/utils/GLContext.h"
 #include "utils/Log.h"
-#include "utils/GLUtils.h"
 #include "utils/GeneralUtils.h"
 
 #include <algorithm>
@@ -48,7 +48,7 @@ namespace carto {
         _textureManager(textureManager)
     {
         bool npot = !GeneralUtils::IsPow2(bitmap->getWidth()) || !GeneralUtils::IsPow2(bitmap->getHeight());
-        if (npot && !GLUtils::isTextureNPOTRepeat()) {
+        if (npot && !GLContext::TEXTURE_NPOT_REPEAT) {
             if (repeat) {
                 int pow2Width  = GeneralUtils::UpperPow2(bitmap->getWidth());
                 int pow2Height = GeneralUtils::UpperPow2(bitmap->getHeight());
@@ -76,7 +76,7 @@ namespace carto {
             glDeleteTextures(1, &_texId);
             _texId = 0;
 
-            GLUtils::checkGLError("Texture::unload()");
+            GLContext::CheckGLError("Texture::unload()");
         }
     }
     
@@ -110,21 +110,23 @@ namespace carto {
         } else {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     
-            if (GLUtils::isTextureFilterAnisotropic()) {
-                GLint deviceMaxAnisotropy;
+            if (GLContext::TEXTURE_FILTER_ANISOTROPIC) {
+                GLint deviceMaxAnisotropy = 0;
                 glGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &deviceMaxAnisotropy);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, std::min(MAX_ANISOTROPY, deviceMaxAnisotropy));
+                if (deviceMaxAnisotropy > 1) {
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, std::min(MAX_ANISOTROPY, deviceMaxAnisotropy));
+                }
             }
     
             glGenerateMipmap(GL_TEXTURE_2D);
         }
     
-        GLUtils::checkGLError("Texture::loadFromBitmap()");
+        GLContext::CheckGLError("Texture::loadFromBitmap()");
     
         return texId;
     }
         
-    const int Texture::MAX_ANISOTROPY = 4;
+    const int Texture::MAX_ANISOTROPY = 8;
         
     const double Texture::MIPMAP_SIZE_MULTIPLIER = 1.33;
     

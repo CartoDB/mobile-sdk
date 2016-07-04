@@ -2,7 +2,6 @@
 #include "graphics/Shader.h"
 #include "graphics/shaders/ShaderSource.h"
 #include "utils/AssetUtils.h"
-#include "utils/GLUtils.h"
 #include "utils/Log.h"
 
 namespace carto {

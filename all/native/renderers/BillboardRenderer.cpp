@@ -3,8 +3,9 @@
 #include "graphics/ShaderManager.h"
 #include "graphics/Texture.h"
 #include "graphics/TextureManager.h"
-#include "graphics/shaders/RegularShaderSource.h"
 #include "graphics/ViewState.h"
+#include "graphics/shaders/RegularShaderSource.h"
+#include "graphics/utils/GLContext.h"
 #include "layers/VectorLayer.h"
 #include "projections/Projection.h"
 #include "renderers/drawdatas/BillboardDrawData.h"
@@ -14,7 +15,6 @@
 #include "styles/BillboardStyle.h"
 #include "utils/Const.h"
 #include "utils/GLES2.h"
-#include "utils/GLUtils.h"
 #include "utils/Log.h"
 #include "vectorelements/Billboard.h"
 
@@ -170,7 +170,7 @@ namespace carto {
         glDisableVertexAttribArray(_a_texCoord);
         glDisableVertexAttribArray(_a_color);
     
-        GLUtils::checkGLError("BillboardRenderer::onDrawFrameSorted");
+        GLContext::CheckGLError("BillboardRenderer::onDrawFrameSorted");
     }
     
     void BillboardRenderer::onSurfaceDestroyed() {
@@ -267,10 +267,10 @@ namespace carto {
     {
         // Resize the buffers, if necessary
         if (coordBuf.size() < drawDataBuffer.size() * 4 * 3) {
-            coordBuf.resize(std::min(drawDataBuffer.size() * 4 * 3, GLUtils::MAX_VERTEXBUFFER_SIZE * 3));
-            texCoordBuf.resize(std::min(drawDataBuffer.size() * 4 * 2, GLUtils::MAX_VERTEXBUFFER_SIZE * 2));
-            colorBuf.resize(std::min(drawDataBuffer.size() * 4 * 4, GLUtils::MAX_VERTEXBUFFER_SIZE * 4));
-            indexBuf.resize(std::min(drawDataBuffer.size() * 6, GLUtils::MAX_VERTEXBUFFER_SIZE));
+            coordBuf.resize(std::min(drawDataBuffer.size() * 4 * 3, GLContext::MAX_VERTEXBUFFER_SIZE * 3));
+            texCoordBuf.resize(std::min(drawDataBuffer.size() * 4 * 2, GLContext::MAX_VERTEXBUFFER_SIZE * 2));
+            colorBuf.resize(std::min(drawDataBuffer.size() * 4 * 4, GLContext::MAX_VERTEXBUFFER_SIZE * 4));
+            indexBuf.resize(std::min(drawDataBuffer.size() * 6, GLContext::MAX_VERTEXBUFFER_SIZE));
         }
         
         // Calculate and draw buffers
@@ -279,7 +279,7 @@ namespace carto {
             const std::shared_ptr<BillboardDrawData>& drawData = drawDataBuffer[i];
             
             // Check for possible overflow in the buffers
-            if ((drawDataIndex + 1) * 6 > GLUtils::MAX_VERTEXBUFFER_SIZE) {
+            if ((drawDataIndex + 1) * 6 > GLContext::MAX_VERTEXBUFFER_SIZE) {
                 // If it doesn't fit, stop and draw the buffers
                 glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, &coordBuf[0]);
                 glVertexAttribPointer(a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, &texCoordBuf[0]);
