@@ -39,7 +39,7 @@ def buildAndroidSO(args, abi):
     '-DWRAPPER_DIR=%s' % ('%s/generated/android-java/wrappers' % baseDir),
     "-DANDROID_TOOLCHAIN_NAME='%s-%s'" % (ANDROID_TOOLCHAINS[abi], args.compiler if not args.compiler.startswith('gcc-') else args.compiler[4:]),
     "-DANDROID_ABI='%s'" % abi,
-    "-DANDROID_STL='%s'" % ('c++_static' if args.compiler.startswith('clang-') else 'gnustl_static'),
+    "-DANDROID_STL='%s'" % ('c++_static' if args.compiler.startswith('clang') else 'gnustl_static'),
     "-DANDROID_NATIVE_API_LEVEL='%s'" % ('android-21' if '64' in abi else 'android-10'),
     '-DSDK_CPP_DEFINES=%s' % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
@@ -124,7 +124,7 @@ parser.add_argument('--cmake', dest='cmake', default='cmake', help='CMake execut
 parser.add_argument('--cmake-options', dest='cmakeoptions', default='', help='CMake options')
 parser.add_argument('--gradle', dest='gradle', default='', help='Gradle executable')
 parser.add_argument('--build-number', dest='buildnumber', default='', help='Build sequence number, goes to version str')
-parser.add_argument('--compiler', dest='compiler', default='gcc-4.9', choices=['gcc-4.9', 'clang-3.6'], help='C++ compiler')
+parser.add_argument('--compiler', dest='compiler', default='gcc-4.9', choices=['gcc-4.9', 'clang'], help='C++ compiler')
 parser.add_argument('--configuration', dest='configuration', default='Release', choices=['Release', 'Debug'], help='Configuration')
 args = parser.parse_args()
 if 'all' in args.androidabi:
