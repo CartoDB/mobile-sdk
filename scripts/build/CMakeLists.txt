@@ -77,6 +77,7 @@ include_directories(
     "${SDK_EXTERNAL_LIBS_DIR}/rg_etc1"
     "${SDK_EXTERNAL_LIBS_DIR}/sqlite"
     "${SDK_EXTERNAL_LIBS_DIR}/sqlite3pp"
+    "${SDK_EXTERNAL_LIBS_DIR}/tinyformat"
     "${SDK_EXTERNAL_LIBS_DIR}/tess2/include"
     "${SDK_EXTERNAL_LIBS_DIR}/utf8/source"
     "${SDK_EXTERNAL_LIBS_DIR}/webp/src"

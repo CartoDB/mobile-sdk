@@ -10,6 +10,8 @@
 #include <mutex>
 #include <string>
 
+#include <tinyformat.h>
+
 namespace carto {
 
     /**
@@ -95,11 +97,37 @@ namespace carto {
          */
         static void Debug(const char* text);
 
-        static void Fatalf(const char* text, ...);
-        static void Errorf(const char* text, ...);
-        static void Warnf(const char* text, ...);
-        static void Infof(const char* text, ...);
-        static void Debugf(const char* text, ...);
+#ifndef SWIG
+        template <typename... Args>
+        static void Fatalf(const char* formatString, const Args&... args) {
+            std::string msg = tfm::format(formatString, args...);
+            Fatal(msg.c_str());
+        }
+
+        template <typename... Args>
+        static void Errorf(const char* formatString, const Args&... args) {
+            std::string msg = tfm::format(formatString, args...);
+            Error(msg.c_str());
+        }
+
+        template <typename... Args>
+        static void Warnf(const char* formatString, const Args&... args) {
+            std::string msg = tfm::format(formatString, args...);
+            Warn(msg.c_str());
+        }
+
+        template <typename... Args>
+        static void Infof(const char* formatString, const Args&... args) {
+            std::string msg = tfm::format(formatString, args...);
+            Info(msg.c_str());
+        }
+
+        template <typename... Args>
+        static void Debugf(const char* formatString, const Args&... args) {
+            std::string msg = tfm::format(formatString, args...);
+            Debug(msg.c_str());
+        }
+#endif
 
     private:
         Log();
