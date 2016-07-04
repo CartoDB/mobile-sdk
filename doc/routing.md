@@ -1,13 +1,13 @@
 # Routing - offline and online
 
-Nutiteq SDK includes routing functionality starting from version 3.3.0. This includes both offline routing using special data packages stored on the device, and online routing using our online service.
+Carto SDK includes routing functionality starting from version 3.3.0. This includes both offline routing using special data packages stored on the device, and online routing using our online service.
 
 ## Functionality
 
-<img src = "/images/route.png" alt="Offline routing with Nutiteq" align="right">
+<img src = "/images/route.png" alt="Offline routing with Carto" align="right">
 
 
-Nutiteq SDK provides following routing features:
+Carto SDK provides following routing features:
 
  * **find fastest route** from A to B
  * find fastest route between X points, in given order
@@ -31,11 +31,11 @@ Note that initial routing feature does not include live navigation features, lik
 
 ### Offline route packages
 
-Offline routing is based on special routing packages, similar to offline map packages. Nutiteq has prepared **world-wide offline route packages** and corresponding online service for most common profiles: **osm.car** and **osm.foot** using OpenStreetMap as map data source. Other profiles will be added based on demand. List of country packages is the same as for offline maps, see https://developer.nutiteq.com/guides/packages for the full list.
+Offline routing is based on special routing packages, similar to offline map packages. Carto has prepared **world-wide offline route packages** and corresponding online service for most common profiles: **osm.car** and **osm.foot** using OpenStreetMap as map data source. Other profiles will be added based on demand. List of country packages is the same as for offline maps, see https://developer.nutiteq.com/guides/packages for the full list.
 
 Download size of the offline routing package is about 10-40% of corresponding offline map package. Car profile packages are considerably smaller than walking packages, for example.
 
-For commercial / enterprise users we can also provide sets of offline routing packages using **HERE.com map data**. In many countries (especially outside Europe) this is cleaner, has more roads covered and provides higher quality results. In addition, HERE includes address data. Please contact Nutiteq if you consider using this commercial map data in your app.
+For commercial / enterprise users we can also provide sets of offline routing packages using **HERE.com map data**. In many countries (especially outside Europe) this is cleaner, has more roads covered and provides higher quality results. In addition, HERE includes address data. Please contact Carto if you consider using this commercial map data in your app.
 
 ## Using routing in your app
 
@@ -70,7 +70,7 @@ Following code samples demonstrate essential routing code. Linking this to UI an
 
 ### Online routing
  
-Online routing is quite simple: just create *NutiteqOnlineRoutingService* and call the *calculateRoute* request to calculate route. As processing the request may take some time (online query), using a background thread/task is a good idea.
+Online routing is quite simple: just create *CartoOnlineRoutingService* and call the *calculateRoute* request to calculate route. As processing the request may take some time (online query), using a background thread/task is a good idea.
 
 #### 1. Create service
 
@@ -83,19 +83,19 @@ Online routing is quite simple: just create *NutiteqOnlineRoutingService* and ca
 <div id="i4">
 <pre class="brush: objc">
  // create  online routing service 
- _onlineRoutingService = [[NTNutiteqOnlineRoutingService alloc] initWithSource:@"nutiteq.osm.car"];
+ _onlineRoutingService = [[NTCartoOnlineRoutingService alloc] initWithSource:@"nutiteq.osm.car"];
 </pre>
 </div>
 <div id="a4">
 <pre class="brush: java">
  // create  online routing service 
- onlineRoutingService = new NutiteqOnlineRoutingService("nutiteq.osm.car");
+ onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
 </pre>
 </div>
 <div id="n4">
 <pre class="brush: csharp">
  // create  online routing service
- onlineRoutingService = new NutiteqOnlineRoutingService("nutiteq.osm.car");
+ onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
 </pre>
 </div>
 </div>
@@ -231,7 +231,7 @@ See our full sample to see how to show the instructions on the map, as Line and 
 ### Offline routing
 
 
-#### 1. Create NutiteqPackageManager to prepare download of routing packages
+#### 1. Create CartoPackageManager to prepare download of routing packages
 
 For offline routing you need to download routing packages, for this you use the same *PackageManager* what is used for [offline map packages](offline-maps). The download process and listener events are the same, so see offline map package manual for some details. However, as it uses different packages (specified by *source*), you must create two instances if you need both offline map packages and routing packages.
 
@@ -254,7 +254,7 @@ First you need to define folder where to keep the files (different from your map
     NSError *error;
     [[NSFileManager defaultManager] createDirectoryAtPath:packagesDir withIntermediateDirectories:YES attributes:nil error:&error];
     
-    NTNutiteqPackageManager* packageManager = [[NTNutiteqPackageManager alloc] initWithSource:@"routing:nutiteq.osm.car" dataFolder:packagesDir];
+    NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"routing:nutiteq.osm.car" dataFolder:packagesDir];
 
 </pre>
 </div>
@@ -266,7 +266,7 @@ First you need to define folder where to keep the files (different from your map
         if (!(packageFolder.mkdirs() || packageFolder.isDirectory())) {
         	Log.e(Const.LOG_TAG, "Could not create package folder!");
         }
-        packageManager = new NutiteqPackageManager("routing:nutiteq.osm.car", packageFolder.getAbsolutePath());
+        packageManager = new CartoPackageManager("routing:nutiteq.osm.car", packageFolder.getAbsolutePath());
         
 </pre>
 </div>
@@ -279,7 +279,7 @@ First you need to define folder where to keep the files (different from your map
 		Log.Fatal("Could not create package folder!");
 	}
 
-	packageManager = new NutiteqPackageManager("routing:nutiteq.osm.car", packageFolder.AbsolutePath);
+	packageManager = new CartoPackageManager("routing:nutiteq.osm.car", packageFolder.AbsolutePath);
 </pre>
 </div>
 </div>
@@ -288,7 +288,7 @@ First you need to define folder where to keep the files (different from your map
 			
 #### 2. Use PackageManagerListener to get DownloadManager events
 
-Routing package download cannot be started immediately - SDK needs to get latest definition of packages from Nutiteq online service. Once this list is received, PackageManagerListener's .onPackageListUpdated() is called. This similar to offline map packages - see [call flow diagram](/images/pm_flow.png)
+Routing package download cannot be started immediately - SDK needs to get latest definition of packages from Carto online service. Once this list is received, PackageManagerListener's .onPackageListUpdated() is called. This similar to offline map packages - see [call flow diagram](/images/pm_flow.png)
 
 For this you need to write your own PackageManagerListener, and start offline download in the *onPackageListUpdated* method, where it is sure that package metadata is already downloaded and known.
 
