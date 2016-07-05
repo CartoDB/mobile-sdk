@@ -13,7 +13,6 @@
 #include "projections/Projection.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "utils/Const.h"
-#include "utils/GLES2.h"
 #include "utils/Log.h"
 #include "vectorelements/Polygon3D.h"
 

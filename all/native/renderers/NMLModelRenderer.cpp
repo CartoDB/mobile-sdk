@@ -8,7 +8,6 @@
 #include "projections/Projection.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "utils/Log.h"
-#include "utils/GLES2.h"
 
 #include <nml/GLModel.h>
 #include <nml/GLShaderManager.h>

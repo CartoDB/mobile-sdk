@@ -1,4 +1,4 @@
-#include "GLESContext.h"
+#include "EGLContextWrapper.h"
 #include "utils/Log.h"
 
 #include <stdexcept>
@@ -17,15 +17,15 @@ using namespace Windows::UI::Xaml::Controls;
 
 namespace carto {
 
-    GLESContext::GLESContext() : mEglConfig(NULL), mEglDisplay(EGL_NO_DISPLAY), mEglContext(EGL_NO_CONTEXT) {
-        Initialize();
+    EGLContextWrapper::EGLContextWrapper() : _eglConfig(NULL), _eglDisplay(EGL_NO_DISPLAY), _eglContext(EGL_NO_CONTEXT) {
+        initialize();
     }
 
-    GLESContext::~GLESContext() {
-        Cleanup();
+    EGLContextWrapper::~EGLContextWrapper() {
+        cleanup();
     }
 
-    void GLESContext::Initialize() {
+    void EGLContextWrapper::initialize() {
         const EGLint configAttributes[] = {
             EGL_RED_SIZE, 8,
             EGL_GREEN_SIZE, 8,
@@ -86,60 +86,60 @@ namespace carto {
             }
 
             // This tries to initialize EGL to D3D11 Feature Level 9_3, if 10_0+ is unavailable (e.g. on Windows Phone, or certain Windows tablets).
-            mEglDisplay = eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE, EGL_DEFAULT_DISPLAY, fl9_3DisplayAttributes);
-            if (mEglDisplay == EGL_NO_DISPLAY) {
+            _eglDisplay = eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE, EGL_DEFAULT_DISPLAY, fl9_3DisplayAttributes);
+            if (_eglDisplay == EGL_NO_DISPLAY) {
                 throw std::runtime_error("Failed to get EGL display");
             }
 
-            if (eglInitialize(mEglDisplay, NULL, NULL) == EGL_FALSE) {
+            if (eglInitialize(_eglDisplay, NULL, NULL) == EGL_FALSE) {
                 // This initializes EGL to D3D11 Feature Level 11_0 on WARP, if 9_3+ is unavailable on the default GPU (e.g. on Surface RT).
-                mEglDisplay = eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE, EGL_DEFAULT_DISPLAY, warpDisplayAttributes);
-                if (mEglDisplay == EGL_NO_DISPLAY) {
+                _eglDisplay = eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE, EGL_DEFAULT_DISPLAY, warpDisplayAttributes);
+                if (_eglDisplay == EGL_NO_DISPLAY) {
                     throw std::runtime_error("Failed to get EGL display");
                 }
 
-                if (eglInitialize(mEglDisplay, NULL, NULL) == EGL_FALSE) {
+                if (eglInitialize(_eglDisplay, NULL, NULL) == EGL_FALSE) {
                     // If all of the calls to eglInitialize returned EGL_FALSE then an error has occurred.
                     throw std::runtime_error("Failed to initialize EGL");
                 }
             }
 
             EGLint numConfigs = 0;
-            if ((eglChooseConfig(mEglDisplay, configAttributes, &mEglConfig, 1, &numConfigs) == EGL_FALSE) || (numConfigs == 0)) {
+            if ((eglChooseConfig(_eglDisplay, configAttributes, &_eglConfig, 1, &numConfigs) == EGL_FALSE) || (numConfigs == 0)) {
                 throw std::runtime_error("Failed to choose first EGLConfig");
             }
 
-            mEglContext = eglCreateContext(mEglDisplay, mEglConfig, EGL_NO_CONTEXT, contextAttributes);
-            if (mEglContext == EGL_NO_CONTEXT) {
+            _eglContext = eglCreateContext(_eglDisplay, _eglConfig, EGL_NO_CONTEXT, contextAttributes);
+            if (_eglContext == EGL_NO_CONTEXT) {
                 throw std::runtime_error("Failed to create EGL context");
             }
         }
         catch (const std::exception& ex) {
-            Log::Errorf("GLESContext: Exception %s", ex.what());
+            Log::Errorf("EGLContextWrapper: Exception %s", ex.what());
         }
     }
 
-    void GLESContext::Cleanup() {
-        if (mEglDisplay != EGL_NO_DISPLAY && mEglContext != EGL_NO_CONTEXT) {
-            eglDestroyContext(mEglDisplay, mEglContext);
-            mEglContext = EGL_NO_CONTEXT;
+    void EGLContextWrapper::cleanup() {
+        if (_eglDisplay != EGL_NO_DISPLAY && _eglContext != EGL_NO_CONTEXT) {
+            eglDestroyContext(_eglDisplay, _eglContext);
+            _eglContext = EGL_NO_CONTEXT;
         }
 
-        if (mEglDisplay != EGL_NO_DISPLAY) {
-            eglTerminate(mEglDisplay);
-            mEglDisplay = EGL_NO_DISPLAY;
+        if (_eglDisplay != EGL_NO_DISPLAY) {
+            eglTerminate(_eglDisplay);
+            _eglDisplay = EGL_NO_DISPLAY;
         }
     }
 
-    void GLESContext::Reset() {
-        Cleanup();
-        Initialize();
+    void EGLContextWrapper::reset() {
+        cleanup();
+        initialize();
     }
 
-    EGLSurface GLESContext::CreateSurface(void* panelPtr, int renderSurfaceWidth, int renderSurfaceHeight) {
+    EGLSurface EGLContextWrapper::createSurface(void* panelPtr, int renderSurfaceWidth, int renderSurfaceHeight) {
         SwapChainPanel^ panel = reinterpret_cast<SwapChainPanel^>(panelPtr);
         if (!panel) {
-            Log::Error("GLESContext: SwapChainPanel parameter is invalid");
+            Log::Error("EGLContextWrapper: SwapChainPanel parameter is invalid");
             return NULL;
         }
 
@@ -161,28 +161,28 @@ namespace carto {
             surfaceCreationProperties->Insert(ref new String(EGLRenderSurfaceSizeProperty), PropertyValue::CreateSize(Size(renderSurfaceWidth, renderSurfaceHeight)));
         }
 
-        surface = eglCreateWindowSurface(mEglDisplay, mEglConfig, reinterpret_cast<IInspectable*>(surfaceCreationProperties), surfaceAttributes);
+        surface = eglCreateWindowSurface(_eglDisplay, _eglConfig, reinterpret_cast<IInspectable*>(surfaceCreationProperties), surfaceAttributes);
         if (surface == EGL_NO_SURFACE) {
-            Log::Error("GLESContext: Failed to create EGL surface");
+            Log::Error("EGLContextWrapper: Failed to create EGL surface");
         }
 
         return surface;
     }
 
-    void GLESContext::DestroySurface(const EGLSurface surface) {
-        if (mEglDisplay != EGL_NO_DISPLAY && surface != EGL_NO_SURFACE) {
-            eglDestroySurface(mEglDisplay, surface);
+    void EGLContextWrapper::destroySurface(const EGLSurface surface) {
+        if (_eglDisplay != EGL_NO_DISPLAY && surface != EGL_NO_SURFACE) {
+            eglDestroySurface(_eglDisplay, surface);
         }
     }
 
-    void GLESContext::MakeCurrent(const EGLSurface surface) {
-        if (eglMakeCurrent(mEglDisplay, surface, surface, mEglContext) == EGL_FALSE) {
-            Log::Error("GLESContext: Failed to make EGLSurface current");
+    void EGLContextWrapper::makeCurrent(const EGLSurface surface) {
+        if (eglMakeCurrent(_eglDisplay, surface, surface, _eglContext) == EGL_FALSE) {
+            Log::Error("EGLContextWrapper: Failed to make EGLSurface current");
         }
     }
 
-    bool GLESContext::SwapBuffers(const EGLSurface surface) {
-        return (eglSwapBuffers(mEglDisplay, surface)) != EGL_FALSE;
+    bool EGLContextWrapper::swapBuffers(const EGLSurface surface) {
+        return (eglSwapBuffers(_eglDisplay, surface)) != EGL_FALSE;
     }
 
 }

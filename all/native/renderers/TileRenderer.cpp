@@ -7,7 +7,6 @@
 #include "graphics/utils/GLContext.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/drawdatas/TileDrawData.h"
-#include "utils/GLES2.h"
 #include "utils/Log.h"
 #include "utils/Const.h"
 #include "vt/GLTileRenderer.h"

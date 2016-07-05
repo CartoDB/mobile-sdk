@@ -9,7 +9,6 @@
 #include "graphics/shaders/TexturedShaderSource.h"
 #include "graphics/utils/GLContext.h"
 #include "utils/Const.h"
-#include "utils/GLES2.h"
 #include "utils/Log.h"
 
 #include <cglib/mat.h>

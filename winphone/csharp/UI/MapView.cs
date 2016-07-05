@@ -1,13 +1,14 @@
 ﻿namespace Carto.Ui {
     using System;
     using Carto.Renderers;
+    using Carto.Utils;
     using Windows.UI.Xaml.Markup;
 
     /// <summary>
     /// MapView is a Windows Phone specific view class supporting map rendering and interaction.
     /// </summary>
     public partial class MapView : Windows.UI.Xaml.Controls.UserControl, Windows.UI.Xaml.Markup.IComponentConnector {
-        Utils.GLESContext _glesContext;
+        EGLContextWrapper _eglContext;
         bool _contentLoaded;
         System.Collections.Generic.List<PointerState> _pointerStates = new System.Collections.Generic.List<PointerState>();
         float _resolutionScale;
@@ -70,7 +71,7 @@
                 return;
             }
 
-            _glesContext = new Utils.GLESContext();
+            _eglContext = new EGLContextWrapper();
             _contentLoaded = true;
 
             _swapChainPanel = new Windows.UI.Xaml.Controls.SwapChainPanel();
@@ -160,15 +161,15 @@
             if (_renderSurface == IntPtr.Zero) {
                 int width = (int)(ConvertDipsToPixels(_swapChainPanelSize.Width) + 0.5f);
                 int height = (int)(ConvertDipsToPixels(_swapChainPanelSize.Height) + 0.5f);
-                _renderSurface = _glesContext.CreateSurface(_swapChainPanel, width, height);
-                _glesContext.MakeCurrent(_renderSurface);
+                _renderSurface = _eglContext.CreateSurface(_swapChainPanel, width, height);
+                _eglContext.MakeCurrent(_renderSurface);
                 _baseMapView.OnSurfaceCreated();
             }
         }
 
         void DestroyRenderSurface() {
             if (_renderSurface != IntPtr.Zero) {
-                _glesContext.DestroySurface(_renderSurface);
+                _eglContext.DestroySurface(_renderSurface);
             }
             _renderSurface = IntPtr.Zero;
         }
@@ -178,7 +179,7 @@
 
             lock (_renderSurfaceLock) {
                 DestroyRenderSurface();
-                _glesContext.Reset();
+                _eglContext.Reset();
                 CreateRenderSurface();
             }
 
@@ -194,7 +195,7 @@
             // Create a task for rendering that will be run on a background thread.
             var workItemHandler = new Windows.System.Threading.WorkItemHandler((Windows.Foundation.IAsyncAction action) => {
                 lock (_renderSurfaceLock) {
-                    _glesContext.MakeCurrent(_renderSurface);
+                    _eglContext.MakeCurrent(_renderSurface);
 
                     int oldPanelWidth = -1;
                     int oldPanelHeight = -1;
@@ -213,7 +214,7 @@
 
                         // The call to eglSwapBuffers might not be successful (i.e. due to Device Lost)
                         // If the call fails, then we must reinitialize EGL and the GL resources.
-                        if (!_glesContext.SwapBuffers(_renderSurface)) {
+                        if (!_eglContext.SwapBuffers(_renderSurface)) {
                             // XAML objects like the SwapChainPanel must only be manipulated on the UI thread.
                             var worker = _swapChainPanel.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, new Windows.UI.Core.DispatchedHandler(() => {
                                 RecoverFromLostDevice();

@@ -8,7 +8,7 @@
 #define _CARTO_BILLBOARDRENDERER_H_
 
 #include "core/MapPos.h"
-#include "utils/GLES2.h"
+#include "graphics/utils/GLContext.h"
 
 #include <deque>
 #include <memory>

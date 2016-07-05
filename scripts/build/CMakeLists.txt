@@ -199,7 +199,7 @@ set(SDK_SRC_FILES "${SDK_SRC_FILES}" "${SDK_WINRT_SRC_FILES}")
 
 set_source_files_properties("${SDK_SRC_DIR}/../../winphone/native/utils/AssetUtils.cpp" PROPERTIES COMPILE_FLAGS "/ZW")
 set_source_files_properties("${SDK_SRC_DIR}/../../winphone/native/utils/PlatformUtils.cpp" PROPERTIES COMPILE_FLAGS "/ZW")
-set_source_files_properties("${SDK_SRC_DIR}/../../winphone/native/utils/GLESContext.cpp" PROPERTIES COMPILE_FLAGS "/ZW")
+set_source_files_properties("${SDK_SRC_DIR}/../../winphone/native/utils/EGLContextWrapper.cpp" PROPERTIES COMPILE_FLAGS "/ZW")
 set_source_files_properties("${SDK_SRC_DIR}/../../winphone/native/components/Task.cpp" PROPERTIES COMPILE_FLAGS "/ZW")
 endif()
 

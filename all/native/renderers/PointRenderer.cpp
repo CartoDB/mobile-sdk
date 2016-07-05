@@ -12,7 +12,6 @@
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/components/StyleTextureCache.h"
 #include "utils/Const.h"
-#include "utils/GLES2.h"
 #include "utils/Log.h"
 #include "vectorelements/Point.h"
 

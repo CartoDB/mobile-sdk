@@ -14,7 +14,6 @@
 #include "renderers/components/BillboardSorter.h"
 #include "styles/BillboardStyle.h"
 #include "utils/Const.h"
-#include "utils/GLES2.h"
 #include "utils/Log.h"
 #include "vectorelements/Billboard.h"
 

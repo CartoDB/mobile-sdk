@@ -1,12 +1,12 @@
-#ifndef _GLESCONTEXT_I
-#define _GLESCONTEXT_I
+#ifndef _EGLCONTEXTWRAPPER_I
+#define _EGLCONTEXTWRAPPER_I
 
-%module GLESContext
+%module EGLContextWrapper
 
-!proxy_imports(carto::GLESContext)
+!proxy_imports(carto::EGLContextWrapper)
 
 %{
-#include "utils/GLESContext.h"
+#include "utils/EGLContextWrapper.h"
 %}
 
 %typemap(imtype) const EGLSurface, EGLSurface "System.IntPtr"
@@ -20,6 +20,6 @@
     return surface;
 }
 
-%include "utils/GLESContext.h"
+%include "utils/EGLContextWrapper.h"
 
 #endif

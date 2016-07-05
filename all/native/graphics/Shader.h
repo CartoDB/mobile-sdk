@@ -8,7 +8,7 @@
 #define _CARTO_SHADER_H_
 
 #include "graphics/shaders/ShaderSource.h"
-#include "utils/GLES2.h"
+#include "graphics/utils/GLContext.h"
 
 #include <memory>
 #include <string>

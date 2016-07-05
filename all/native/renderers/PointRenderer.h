@@ -7,7 +7,7 @@
 #ifndef _CARTO_POINTRENDERER_H_
 #define _CARTO_POINTRENDERER_H_
 
-#include "utils/GLES2.h"
+#include "graphics/utils/GLContext.h"
 
 #include <deque>
 #include <memory>

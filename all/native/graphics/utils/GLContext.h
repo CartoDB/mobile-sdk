@@ -7,6 +7,14 @@
 #ifndef _CARTO_GLCONTEXT_H_
 #define _CARTO_GLCONTEXT_H_
 
+#ifdef __APPLE__
+#include <OpenGLES/ES2/gl.h>
+#include <OpenGLES/ES2/glext.h>
+#else
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+#endif
+
 #include <mutex>
 #include <string>
 #include <unordered_set>
@@ -22,12 +30,12 @@ namespace carto {
 
         static std::size_t MAX_VERTEXBUFFER_SIZE;
     
-        static void CheckGLError(const std::string& place);
-    
-        static bool HasGLExtension(const std::string& extension);
+        static bool HasGLExtension(const char* extension);
     
         static void LoadExtensions();
         
+        static void CheckGLError(const char* place);
+    
     private:
         GLContext();
 

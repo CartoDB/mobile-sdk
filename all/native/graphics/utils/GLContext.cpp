@@ -1,19 +1,10 @@
 #include "GLContext.h"
-#include "utils/GLES2.h"
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
 
-#include <string>
-
 namespace carto {
 
-    void GLContext::CheckGLError(const std::string& place) {
-        for (GLint error = glGetError(); error; error = glGetError()) {
-            Log::Errorf("GLContext::CheckGLError: GLError (0x%x) at %s \n", error, place.c_str());
-        }
-    }
-    
-    bool GLContext::HasGLExtension(const std::string& extension) {
+    bool GLContext::HasGLExtension(const char* extension) {
         std::lock_guard<std::mutex> lock(_Mutex);
     
         auto it = _ExtensionCache.find(extension);
@@ -42,6 +33,12 @@ namespace carto {
         TEXTURE_NPOT_MIPMAPS = HasGLExtension("GL_OES_texture_npot") || HasGLExtension("NV_texture_npot_2D_mipmap");
     }
         
+    void GLContext::CheckGLError(const char* place) {
+        for (GLint error = glGetError(); error; error = glGetError()) {
+            Log::Errorf("GLContext::CheckGLError: GLError (0x%x) at %s \n", error, place);
+        }
+    }
+    
     GLContext::GLContext() {
     }
     

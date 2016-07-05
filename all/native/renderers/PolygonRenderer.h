@@ -7,7 +7,7 @@
 #ifndef _CARTO_POLYGONRENDERER_H_
 #define _CARTO_POLYGONRENDERER_H_
 
-#include "utils/GLES2.h"
+#include "graphics/utils/GLContext.h"
 #include "renderers/LineRenderer.h"
 
 #include <deque>

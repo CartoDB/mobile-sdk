@@ -3,6 +3,7 @@
 #include "assets/ExpiredWatermarkPNG.h"
 #include "assets/CartoWatermarkPNG.h"
 #include "components/Options.h"
+#include "components/LicenseManager.h"
 #include "graphics/Bitmap.h"
 #include "graphics/Shader.h"
 #include "graphics/ShaderManager.h"
@@ -12,7 +13,6 @@
 #include "graphics/shaders/TexturedShaderSource.h"
 #include "graphics/utils/GLContext.h"
 #include "utils/Const.h"
-#include "utils/GLES2.h"
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
 
