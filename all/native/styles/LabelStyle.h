@@ -17,7 +17,7 @@ namespace carto {
     /**
      * A style for labels. Contains attributes for configuring how the label is drawn on the screen.
      */
-    class LabelStyle: public BillboardStyle {
+    class LabelStyle : public BillboardStyle {
     public:
         /**
          * Constructs a LabelStyle object from various parameters. Instantiating the object directly is

@@ -11,12 +11,12 @@ namespace carto {
 
     class ThreadWorker {
     public:
-        virtual ~ThreadWorker() {}
+        virtual ~ThreadWorker() { }
     
         virtual void operator()() = 0;
     
     protected:
-        ThreadWorker() {}
+        ThreadWorker() { }
     };
     
 }

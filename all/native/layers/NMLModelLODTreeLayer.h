@@ -127,7 +127,7 @@ namespace carto {
     
         class FetchingTasks {
         public:
-            FetchingTasks() : _fetchingTasks(), _mutex() {}
+            FetchingTasks() : _fetchingTasks(), _mutex() { }
             
             int getTaskCount() const {
                 std::lock_guard<std::mutex> lock(_mutex);

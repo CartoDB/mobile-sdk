@@ -15,7 +15,7 @@ namespace carto {
 
     class CancelableTask : public Task {
     public:
-        virtual ~CancelableTask() {}
+        virtual ~CancelableTask() { }
     
         bool isCanceled() const {
             std::lock_guard<std::mutex> lock(_mutex);
@@ -29,9 +29,9 @@ namespace carto {
     
     protected:
         CancelableTask() :
-            _canceled(false),
-            _mutex()
-        {}
+            _canceled(false), _mutex()
+        {
+        }
     
         bool _canceled;
     

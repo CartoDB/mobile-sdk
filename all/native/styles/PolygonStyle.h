@@ -18,7 +18,7 @@ namespace carto {
     /**
      * A style for polygons. Contains attributes for configuring how the polygon is drawn on the screen.
      */
-    class PolygonStyle: public Style {
+    class PolygonStyle : public Style {
     public:
         /**
          * Constructs a PolygonStyle object from various parameters. Instantiating the object directly is

@@ -17,7 +17,7 @@ namespace carto {
     /**
      * A style for popups. Contains attributes for configuring how the popup is drawn on the screen.
      */
-    class PopupStyle: public BillboardStyle {
+    class PopupStyle : public BillboardStyle {
     public:
         /**
          * Constructs a PopupStyle object from various parameters. Instantiating the object directly is

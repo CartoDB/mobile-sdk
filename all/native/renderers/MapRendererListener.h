@@ -14,7 +14,7 @@ namespace carto {
      */
     class MapRendererListener {
     public:
-        virtual ~MapRendererListener() {}
+        virtual ~MapRendererListener() { }
         
         /**
          * Listener method that gets called at the start of the rendering process.

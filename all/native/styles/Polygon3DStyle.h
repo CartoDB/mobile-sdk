@@ -16,7 +16,7 @@ namespace carto {
     /**
      * A style for 3d polygons. Contains attributes for configuring how the 3d polygon is drawn on the screen.
      */
-    class Polygon3DStyle: public Style {
+    class Polygon3DStyle : public Style {
     public:
         /**
          * Constructs a Polygon3DStyle object from various parameters. Instantiating the object directly is

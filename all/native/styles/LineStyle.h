@@ -64,7 +64,7 @@ namespace carto {
     /**
      * A style for lines. Contains attributes for configuring how the line is drawn on the screen.
      */
-    class LineStyle: public Style {
+    class LineStyle : public Style {
     public:
         /**
          * Constructs a LineStyle object from various parameters. Instantiating the object directly is

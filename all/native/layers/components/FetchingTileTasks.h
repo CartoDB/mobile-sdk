@@ -14,7 +14,7 @@ namespace carto {
     template <typename Task>
     class FetchingTileTasks {
     public:
-        FetchingTileTasks() : _fetchingTiles(), _mutex() {}
+        FetchingTileTasks() : _fetchingTiles(), _mutex() { }
         
         void add(long long tileId, const std::shared_ptr<Task>& task) {
             std::lock_guard<std::mutex> lock(_mutex);

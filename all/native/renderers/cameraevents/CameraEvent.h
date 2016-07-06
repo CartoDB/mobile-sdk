@@ -13,12 +13,12 @@ namespace carto {
     
     class CameraEvent {
     public:
-        virtual ~CameraEvent() {}
+        virtual ~CameraEvent() { }
     
         virtual void calculate(Options& options, ViewState& viewState) = 0;
     
     protected:
-        CameraEvent() {}
+        CameraEvent() { }
     };
     
 }

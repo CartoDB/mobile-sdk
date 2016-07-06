@@ -17,7 +17,7 @@ namespace carto {
     /**
      * A style for markers. Contains attributes for configuring how the marker is drawn on the screen.
      */
-    class MarkerStyle: public BillboardStyle {
+    class MarkerStyle : public BillboardStyle {
     public:
         /**
          * Constructs a MarkerStyle object from various parameters. Instantiating the object directly is

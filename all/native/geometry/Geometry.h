@@ -19,7 +19,7 @@ namespace carto {
      */
     class Geometry {
     public:
-        virtual ~Geometry() {}
+        virtual ~Geometry() { }
         
         /**
          * Returns the center point of the geometry.
@@ -36,7 +36,7 @@ namespace carto {
         }
     
     protected:
-        Geometry() : _bounds() {}
+        Geometry() : _bounds() { }
     
         MapBounds _bounds;
     };

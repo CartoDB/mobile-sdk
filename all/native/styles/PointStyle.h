@@ -17,7 +17,7 @@ namespace carto {
     /**
      * A style for points. Contains attributes for configuring how the point is drawn on the screen.
      */
-    class PointStyle: public Style {
+    class PointStyle : public Style {
     public:
         /**
          * Constructs a PointStyle object from various parameters. Instantiating the object directly is

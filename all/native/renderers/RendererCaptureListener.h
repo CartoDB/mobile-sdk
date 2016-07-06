@@ -17,7 +17,7 @@ namespace carto {
      */
     class RendererCaptureListener {
     public:
-        virtual ~RendererCaptureListener() {}
+        virtual ~RendererCaptureListener() { }
         
         /**
          * Listener method that is called when the view has been rendered.
