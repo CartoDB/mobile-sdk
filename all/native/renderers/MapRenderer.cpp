@@ -463,8 +463,13 @@ namespace carto {
 
         DirectorPtr<MapRendererListener> mapRendererListener = _mapRendererListener;
 
-        _textureManager->processTextures();
+        // Re-set GL thread ids, Windows Phone needs this as onSurfaceCreate/onSurfaceChange may be called from different threads
+        _shaderManager->setGLThreadId(std::this_thread::get_id());
+        _textureManager->setGLThreadId(std::this_thread::get_id());
+
+        // Create pending textures and shaders
         _shaderManager->processShaders();
+        _textureManager->processTextures();
 
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
