@@ -32,7 +32,7 @@ namespace carto {
     
     std::shared_ptr<Layer> Layers::get(int index) const {
         std::lock_guard<std::mutex> lock(_mutex);
-        if (index < 0 && static_cast<std::size_t>(index) >= _layers.size()) {
+        if (index < 0 || static_cast<std::size_t>(index) >= _layers.size()) {
             Log::Error("Layers::get: Layer index out of range");
             return std::shared_ptr<Layer>();
         }
@@ -48,7 +48,7 @@ namespace carto {
         std::shared_ptr<MapRenderer> mapRenderer;
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            if (index < 0 && static_cast<std::size_t>(index) >= _layers.size()) {
+            if (index < 0 || static_cast<std::size_t>(index) >= _layers.size()) {
                 Log::Error("Layers::set: Layer index out of range");
                 return;
             }
@@ -95,7 +95,7 @@ namespace carto {
         std::shared_ptr<MapRenderer> mapRenderer;
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            if (index < 0 && static_cast<std::size_t>(index) > _layers.size()) {
+            if (index < 0 || static_cast<std::size_t>(index) > _layers.size()) {
                 Log::Error("Layers::insert: Layer index out of range");
                 return;
             }
