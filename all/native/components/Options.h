@@ -256,6 +256,17 @@ namespace carto {
          * @param enabled The new state of seamless horizontal panning flag.
          */
         void setSeamlessPanning(bool enabled);
+
+        /**
+         * Returns true if tilting gesture direction is reversed (and same as with Google Maps).
+         * @return True if tilting gesture direction is reversed (and same as with Google Maps). Otherwise returns false.
+         */
+        bool isTiltGestureReversed() const;
+        /**
+         * Sets the tilting gesture direction. By default, the gesture is not reversed.
+         * @param reversed True if Google Maps compatible mode should be used. False otherwise (default).
+         */
+        void setTiltGestureReversed(bool reversed);
     
         /**
          * Returns the number of threads used by the envelope task pool.
@@ -554,6 +565,8 @@ namespace carto {
         PivotMode::PivotMode _pivotMode;
     
         bool _seamlessPanning;
+
+        bool _tiltGestureReversed;
     
         std::shared_ptr<Bitmap> _backgroundBitmap;
         std::shared_ptr<Bitmap> _skyBitmap;

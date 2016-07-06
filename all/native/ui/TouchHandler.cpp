@@ -360,9 +360,12 @@ namespace carto {
             _mapRenderer->getAnimationHandler().stopTilt();
             _mapRenderer->getAnimationHandler().stopZoom();
             
+            float scale = INCHES_TO_VIEW_ANGLE / _options->getDPI();
+            if (_options->isTiltGestureReversed()) {
+                scale = -scale;
+            }
             CameraTiltEvent cameraEvent;
-            cameraEvent.setTiltDelta(static_cast<float>((screenPos.getY() - _prevScreenPos1.getY())
-                                                        / _options->getDPI() * INCHES_TO_VIEW_ANGLE));
+            cameraEvent.setTiltDelta((screenPos.getY() - _prevScreenPos1.getY()) * scale);
             _mapRenderer->calculateCameraEvent(cameraEvent, 0, false);
         }
         _prevScreenPos1 = screenPos;

@@ -26,6 +26,7 @@ namespace carto {
         _panningMode(PanningMode::PANNING_MODE_FREE),
         _pivotMode(PivotMode::PIVOT_MODE_TOUCHPOINT),
         _seamlessPanning(true),
+        _tiltGestureReversed(false),
         _backgroundBitmap(GetDefaultBackgroundBitmap()),
         _skyBitmap(GetDefaultSkyBitmap()),
         _watermarkAlignmentX(-1),
@@ -246,6 +247,22 @@ namespace carto {
             _seamlessPanning = enabled;
         }
         notifyOptionChanged("SeamlessPanning");
+    }
+        
+    bool Options::isTiltGestureReversed() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _tiltGestureReversed;
+    }
+    
+    void Options::setTiltGestureReversed(bool reversed) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            if (_tiltGestureReversed == reversed) {
+                return;
+            }
+            _tiltGestureReversed = reversed;
+        }
+        notifyOptionChanged("TiltGestureReversed");
     }
         
     int Options::getEnvelopeThreadPoolSize() const {
