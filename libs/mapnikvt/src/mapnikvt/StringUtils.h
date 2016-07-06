@@ -10,6 +10,7 @@
 #include <string>
 
 namespace carto { namespace mvt {
+    std::size_t stringLength(const std::string& str);
     std::string toUpper(const std::string& str);
     std::string toLower(const std::string& str);
     std::string capitalize(const std::string& str);

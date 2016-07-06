@@ -15,7 +15,7 @@ namespace carto { namespace mvt {
     struct LengthOperator : public UnaryExpression::Operator {
         virtual Value apply(const Value& val) const override {
             std::string str = ValueConverter<std::string>::convert(val);
-            return Value(static_cast<long long>(str.size()));
+            return Value(static_cast<long long>(stringLength(str)));
         }
     };
 

@@ -496,6 +496,12 @@ namespace {
 }
 
 namespace carto { namespace mvt {
+    std::size_t stringLength(const std::string& str) {
+        std::basic_string<unsigned int> wstr;
+        utf8::utf8to32(str.begin(), str.end(), std::back_inserter(wstr));
+        return wstr.size();
+    }
+
     std::string toUpper(const std::string& str) {
         std::basic_string<unsigned int> wstr;
         utf8::utf8to32(str.begin(), str.end(), std::back_inserter(wstr));
