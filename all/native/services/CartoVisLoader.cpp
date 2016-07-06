@@ -517,6 +517,9 @@ namespace carto {
     std::vector<CartoVisLoader::LayerInfo> CartoVisLoader::createLayerGroup(const picojson::value& options, const picojson::value& infoWindow) const {
         picojson::value layerDefinition = options.get("layer_definition");
         
+        // Manually reset layer definition
+        layerDefinition.get("version") = picojson::value(std::string("1.5.0"));
+
         // Translate layer types
         picojson::array& layersOption = layerDefinition.get("layers").get<picojson::array>();
         for (picojson::value& layerOption : layersOption) {
