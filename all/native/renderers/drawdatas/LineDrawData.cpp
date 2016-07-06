@@ -282,7 +282,11 @@ namespace carto {
                             normals.pop_back();
                             normals.pop_back();
                         }
+                    } else {
+                        prevNormalVec = nextNormalVec;
                     }
+                } else {
+                    prevNormalVec = nextNormalVec;
                 }
             } else {
                 prevNormalVec = nextNormalVec;
