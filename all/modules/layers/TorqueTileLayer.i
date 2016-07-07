@@ -18,6 +18,8 @@
 
 !polymorphic_shared_ptr(carto::TorqueTileLayer, layers.TorqueTileLayer)
 
+%std_exceptions(carto::TorqueTileLayer::TorqueTileLayer)
+
 %include "layers/TorqueTileLayer.h"
 
 #endif

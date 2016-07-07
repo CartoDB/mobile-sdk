@@ -45,7 +45,7 @@ namespace carto {
             void popBigEndian();
 
             unsigned char readByte();
-            uint32_t readUInt32();
+            std::uint32_t readUInt32();
             double readDouble();
         
         private:
@@ -55,9 +55,9 @@ namespace carto {
         };
 
         std::shared_ptr<Geometry> readGeometry(Stream& stream) const;
-        MapPos readPoint(Stream& stream, uint32_t type) const;
-        std::vector<MapPos> readRing(Stream& stream, uint32_t type) const;
-        std::vector<std::vector<MapPos> > readRings(Stream& stream, uint32_t type) const;
+        MapPos readPoint(Stream& stream, std::uint32_t type) const;
+        std::vector<MapPos> readRing(Stream& stream, std::uint32_t type) const;
+        std::vector<std::vector<MapPos> > readRings(Stream& stream, std::uint32_t type) const;
     };
 
 }

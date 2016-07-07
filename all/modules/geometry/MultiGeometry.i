@@ -20,6 +20,7 @@
 !polymorphic_shared_ptr(carto::MultiGeometry, geometry.MultiGeometry)
 
 %attribute(carto::MultiGeometry, int, GeometryCount, getGeometryCount)
+%std_exceptions(carto::MultiGeometry::getGeometry)
 
 %include "geometry/MultiGeometry.h"
 

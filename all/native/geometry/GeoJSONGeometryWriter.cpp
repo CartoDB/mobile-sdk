@@ -47,6 +47,10 @@ namespace carto {
     }
 
     std::string GeoJSONGeometryWriter::writeGeometry(const std::shared_ptr<Geometry>& geometry) const {
+        if (!geometry) {
+            throw std::invalid_argument("Null geometry");
+        }
+
         std::lock_guard<std::mutex> lock(_mutex);
 
         try {

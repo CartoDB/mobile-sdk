@@ -18,6 +18,8 @@
 
 !polymorphic_shared_ptr(carto::CartoOnlineVectorTileLayer, layers.CartoOnlineVectorTileLayer)
 
+%std_exceptions(carto::CartoOnlineVectorTileLayer::CartoOnlineVectorTileLayer)
+
 %include "layers/CartoOnlineVectorTileLayer.h"
 
 #endif

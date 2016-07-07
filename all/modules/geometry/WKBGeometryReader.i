@@ -19,6 +19,8 @@
 %import "core/BinaryData.i"
 %import "geometry/Geometry.i"
 
+%std_exceptions(carto::WKBGeometryReader::readGeometry)
+
 %include "geometry/WKBGeometryReader.h"
 
 #endif

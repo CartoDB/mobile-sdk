@@ -174,6 +174,9 @@ namespace carto {
         _preloadingTiles(),
         _utfGridTiles()
     {
+        if (!dataSource) {
+            throw std::invalid_argument("Null dataSource");
+        }
     }
     
     void TileLayer::loadData(const std::shared_ptr<CullState>& cullState) {

@@ -81,12 +81,12 @@ namespace carto {
         };
 
         void writeGeometry(const std::shared_ptr<Geometry>& geometry, Stream& stream) const;
-        void writePoint(const MapPos& pos, uint32_t type, Stream& stream) const;
-        void writeRing(const std::vector<MapPos>& ring, uint32_t type, Stream& stream) const;
-        void writeRings(const std::vector<std::vector<MapPos> >& rings, uint32_t type, Stream& stream) const;
+        void writePoint(const MapPos& pos, std::uint32_t type, Stream& stream) const;
+        void writeRing(const std::vector<MapPos>& ring, std::uint32_t type, Stream& stream) const;
+        void writeRings(const std::vector<std::vector<MapPos> >& rings, std::uint32_t type, Stream& stream) const;
 
         bool _bigEndian;
-        uint32_t _maskZM;
+        std::uint32_t _maskZM;
 
         mutable std::mutex _mutex;
     };

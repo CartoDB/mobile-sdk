@@ -24,6 +24,7 @@
 
 %attributestring(carto::EditableVectorLayer, std::shared_ptr<carto::VectorElement>, SelectedVectorElement, getSelectedVectorElement, setSelectedVectorElement)
 !attributestring_polymorphic(carto::EditableVectorLayer, layers.VectorEditEventListener, VectorEditEventListener, getVectorEditEventListener, setVectorEditEventListener)
+%std_exceptions(carto::EditableVectorLayer::EditableVectorLayer)
 
 %include "layers/EditableVectorLayer.h"
 

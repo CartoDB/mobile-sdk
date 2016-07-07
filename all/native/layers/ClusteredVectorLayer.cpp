@@ -39,6 +39,9 @@ namespace carto {
         _renderClusters(),
         _clusterMutex()
     {
+        if (!clusterElementBuilder) {
+            throw std::invalid_argument("Null clusterElementBuilder");
+        }
     }
 
     ClusteredVectorLayer::~ClusteredVectorLayer() {

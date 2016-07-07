@@ -53,6 +53,9 @@ namespace carto {
         _nmlModelRenderer(std::make_shared<NMLModelRenderer>()),
         _lastTask()
     {
+        if (!dataSource) {
+            throw std::invalid_argument("Null dataSource");
+        }
     }
     
     VectorLayer::~VectorLayer() {

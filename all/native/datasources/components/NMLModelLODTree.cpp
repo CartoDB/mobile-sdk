@@ -33,11 +33,11 @@ namespace carto {
     NMLModelLODTree::~NMLModelLODTree() {
     }
     
-    const MapPos &NMLModelLODTree::getMapPos() const {
+    const MapPos& NMLModelLODTree::getMapPos() const {
         return _mapPos;
     }
     
-    const cglib::mat4x4<double> &NMLModelLODTree::getLocalMat() const {
+    const cglib::mat4x4<double>& NMLModelLODTree::getLocalMat() const {
         return _localMat;
     }
     
@@ -61,7 +61,7 @@ namespace carto {
         return _sourceModelLODTree->nodes_size();
     }
     
-    const nml::ModelLODTreeNode *NMLModelLODTree::getSourceNode(int nodeId) const {
+    const nml::ModelLODTreeNode* NMLModelLODTree::getSourceNode(int nodeId) const {
         assert(nodeId >= 0 && nodeId < _sourceModelLODTree->nodes_size());
         return &_sourceModelLODTree->nodes(nodeId);
     }

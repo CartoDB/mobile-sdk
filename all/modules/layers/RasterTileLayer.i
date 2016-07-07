@@ -20,6 +20,7 @@
 !polymorphic_shared_ptr(carto::RasterTileLayer, layers.RasterTileLayer)
 
 %attribute(carto::RasterTileLayer, std::size_t, TextureCacheCapacity, getTextureCacheCapacity, setTextureCacheCapacity)
+%std_exceptions(carto::RasterTileLayer::RasterTileLayer)
 %ignore carto::RasterTileLayer::FetchTask;
 %ignore carto::RasterTileLayer::getMinZoom;
 %ignore carto::RasterTileLayer::getMaxZoom;

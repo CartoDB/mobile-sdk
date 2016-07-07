@@ -22,8 +22,7 @@ namespace carto {
     
     std::shared_ptr<VectorTileDecoder> CartoOnlineVectorTileLayer::CreateTileDecoder(const std::shared_ptr<AssetPackage>& styleAssetPackage) {
         if (!styleAssetPackage) {
-            Log::Error("CartoOnlineVectorTileLayer: Null asset package!");
-            return std::shared_ptr<VectorTileDecoder>();
+            throw std::invalid_argument("Null styleAssetPackage");
         }
         return std::make_shared<MBVectorTileDecoder>(std::make_shared<CompiledStyleSet>(styleAssetPackage));
     }

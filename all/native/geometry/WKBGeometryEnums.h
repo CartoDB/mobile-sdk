@@ -9,22 +9,22 @@
 
 namespace carto {
     
-    enum wkbGeometryType {
-        wkbPoint = 1,
-        wkbLineString = 2,
-        wkbPolygon = 3,
-        wkbMultiPoint = 4,
-        wkbMultiLineString = 5,
-        wkbMultiPolygon = 6,
-        wkbGeometryCollection = 7,
+    enum WKBGeometryType {
+        WKB_POINT = 1,
+        WKB_LINESTRING = 2,
+        WKB_POLYGON = 3,
+        WKB_MULTIPOINT = 4,
+        WKB_MULTILINESTRING = 5,
+        WKB_MULTIPOLYGON = 6,
+        WKB_GEOMETRYCOLLECTION = 7,
 
-        wkbZMask = 0x1000,
-        wkbMMask = 0x2000
+        WKB_ZMASK = 0x1000,
+        WKB_MMASK = 0x2000
     };
 
-    enum wkbBigEndian {
-        wkbXDR = 0,             // Big Endian
-        wkbNDR = 1           // Little Endian
+    enum WKBBigEndian {
+        WKB_XDR = 0,             // Big Endian
+        WKB_NDR = 1           // Little Endian
     };
 
 }

@@ -21,6 +21,7 @@
 
 !attributestring_polymorphic(carto::GeoJSONGeometryWriter, projections.Projection, SourceProjection, getSourceProjection, setSourceProjection)
 %attribute(carto::GeoJSONGeometryWriter, bool, Z, getZ, setZ)
+%std_exceptions(carto::GeoJSONGeometryWriter::writeGeometry)
 
 %include "geometry/GeoJSONGeometryWriter.h"
 

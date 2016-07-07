@@ -35,8 +35,7 @@ namespace carto {
     
     std::shared_ptr<Geometry> MultiGeometry::getGeometry(int index) const {
         if (index < 0 || index >= static_cast<int>(_geometries.size())) {
-            Log::Errorf("MultiGeometry::getGeometry: Index %d out of range", (int)index);
-            return std::shared_ptr<Geometry>();
+            throw std::invalid_argument("Geometry index out of range");
         }
         return _geometries[index];
     }

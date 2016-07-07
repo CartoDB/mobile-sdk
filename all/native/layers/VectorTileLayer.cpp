@@ -27,6 +27,10 @@ namespace carto {
         _visibleCache(128 * 1024 * 1024), // NOTE: the limit should never be reached in normal cases
         _preloadingCache(DEFAULT_PRELOADING_CACHE_SIZE)
     {
+        if (!decoder) {
+            throw std::invalid_argument("Null decoder");
+        }
+
         _labelCullThreadPool->setPoolSize(1);
     }
     

@@ -39,11 +39,11 @@ namespace carto {
         return _data[_offset++];
     }
 
-    uint32_t WKBGeometryReader::Stream::readUInt32() {
+    std::uint32_t WKBGeometryReader::Stream::readUInt32() {
         if (_offset + 4 > _data.size()) {
             throw std::runtime_error("Stream array too short, can not read 32-bit word");
         }
-        uint32_t val = 0;
+        std::uint32_t val = 0;
         if (_bigEndian.top()) {
             val = _data[_offset + 0];
             val = (val << 8) | _data[_offset + 1];
@@ -63,7 +63,7 @@ namespace carto {
         if (_offset + 8 > _data.size()) {
             throw std::runtime_error("Stream array too short, can not read double float");
         }
-        uint64_t val = 0;
+        std::uint64_t val = 0;
         if (_bigEndian.top()) {
             for (int i = 0; i < 8; i++) {
                 val = (val << 8) | _data[_offset + i];
@@ -82,7 +82,7 @@ namespace carto {
 
     std::shared_ptr<Geometry> WKBGeometryReader::readGeometry(const std::shared_ptr<BinaryData>& wkbData) const {
         if (!wkbData) {
-            return std::shared_ptr<Geometry>();
+            throw std::invalid_argument("Null wkbData");
         }
 
         Stream stream(*wkbData->getDataPtr());
@@ -96,26 +96,26 @@ namespace carto {
 
     std::shared_ptr<Geometry> WKBGeometryReader::readGeometry(Stream& stream) const {
         unsigned char bigEndian = stream.readByte();
-        stream.pushBigEndian(bigEndian == wkbXDR);
+        stream.pushBigEndian(bigEndian == WKB_XDR);
 
-        uint32_t type = stream.readUInt32();
+        std::uint32_t type = stream.readUInt32();
         std::shared_ptr<Geometry> geometry;
-        switch (type & ~(wkbZMask | wkbMMask)) {
-            case wkbPoint: {
+        switch (type & ~(WKB_ZMASK | WKB_MMASK)) {
+            case WKB_POINT: {
                 geometry = std::make_shared<PointGeometry>(readPoint(stream, type));
                 break;
             }
-            case wkbLineString: {
+            case WKB_LINESTRING: {
                 geometry = std::make_shared<LineGeometry>(readRing(stream, type));
                 break;
             }
-            case wkbPolygon: {
+            case WKB_POLYGON: {
                 geometry = std::make_shared<PolygonGeometry>(readRings(stream, type));
                 break;
             }
-            case wkbMultiPoint: {
+            case WKB_MULTIPOINT: {
                 std::vector<std::shared_ptr<PointGeometry> > points;
-                uint32_t pointCount = stream.readUInt32();
+                std::uint32_t pointCount = stream.readUInt32();
                 points.reserve(pointCount);
                 while (pointCount-- > 0) {
                     if (auto point = std::dynamic_pointer_cast<PointGeometry>(readGeometry(stream))) {
@@ -127,9 +127,9 @@ namespace carto {
                 geometry = std::make_shared<MultiPointGeometry>(points);
                 break;
             }
-            case wkbMultiLineString: {
+            case WKB_MULTILINESTRING: {
                 std::vector<std::shared_ptr<LineGeometry> > lines;
-                uint32_t lineCount = stream.readUInt32();
+                std::uint32_t lineCount = stream.readUInt32();
                 lines.reserve(lineCount);
                 while (lineCount-- > 0) {
                     if (auto line = std::dynamic_pointer_cast<LineGeometry>(readGeometry(stream))) {
@@ -141,9 +141,9 @@ namespace carto {
                 geometry = std::make_shared<MultiLineGeometry>(lines);
                 break;
             }
-            case wkbMultiPolygon: {
+            case WKB_MULTIPOLYGON: {
                 std::vector<std::shared_ptr<PolygonGeometry> > polygons;
-                uint32_t polygonCount = stream.readUInt32();
+                std::uint32_t polygonCount = stream.readUInt32();
                 polygons.reserve(polygonCount);
                 while (polygonCount-- > 0) {
                     if (auto polygon = std::dynamic_pointer_cast<PolygonGeometry>(readGeometry(stream))) {
@@ -155,9 +155,9 @@ namespace carto {
                 geometry = std::make_shared<MultiPolygonGeometry>(polygons);
                 break;
             }
-            case wkbGeometryCollection: {
+            case WKB_GEOMETRYCOLLECTION: {
                 std::vector<std::shared_ptr<Geometry> > geometries;
-                uint32_t geometryCount = stream.readUInt32();
+                std::uint32_t geometryCount = stream.readUInt32();
                 geometries.reserve(geometryCount);
                 while (geometryCount-- > 0) {
                     if (auto geometry = readGeometry(stream)) {
@@ -176,21 +176,21 @@ namespace carto {
         return geometry;
     }
 
-    MapPos WKBGeometryReader::readPoint(Stream& stream, uint32_t type) const {
+    MapPos WKBGeometryReader::readPoint(Stream& stream, std::uint32_t type) const {
         double x = stream.readDouble();
         double y = stream.readDouble();
         double z = 0;
-        if (type & wkbZMask) {
+        if (type & WKB_ZMASK) {
             z = stream.readDouble();
         }
-        if (type & wkbMMask) {
+        if (type & WKB_MMASK) {
             stream.readDouble();
         }
         return MapPos(x, y, z);
     }
 
-    std::vector<MapPos> WKBGeometryReader::readRing(Stream& stream, uint32_t type) const {
-        uint32_t pointCount = stream.readUInt32();
+    std::vector<MapPos> WKBGeometryReader::readRing(Stream& stream, std::uint32_t type) const {
+        std::uint32_t pointCount = stream.readUInt32();
         std::vector<MapPos> ring;
         ring.reserve(pointCount);
         while (pointCount-- > 0) {
@@ -199,8 +199,8 @@ namespace carto {
         return ring;
     }
 
-    std::vector<std::vector<MapPos> > WKBGeometryReader::readRings(Stream& stream, uint32_t type) const {
-        uint32_t ringCount = stream.readUInt32();
+    std::vector<std::vector<MapPos> > WKBGeometryReader::readRings(Stream& stream, std::uint32_t type) const {
+        std::uint32_t ringCount = stream.readUInt32();
         std::vector<std::vector<MapPos> > rings;
         rings.reserve(ringCount);
         while (ringCount-- > 0) {

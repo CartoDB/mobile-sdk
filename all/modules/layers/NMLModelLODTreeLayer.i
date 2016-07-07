@@ -23,6 +23,7 @@
 !attributestring_polymorphic(carto::NMLModelLODTreeLayer, datasources.NMLModelLODTreeDataSource, DataSource, getDataSource);
 %attribute(carto::NMLModelLODTreeLayer, std::size_t, MaxMemorySize, getMaxMemorySize, setMaxMemorySize)
 %attribute(carto::NMLModelLODTreeLayer, float, LODResolutionFactor, getLODResolutionFactor, setLODResolutionFactor)
+%std_exceptions(carto::NMLModelLODTreeLayer::NMLModelLODTreeLayer)
 
 %include "layers/NMLModelLODTreeLayer.h"
 

@@ -43,8 +43,8 @@ namespace carto {
             std::string localId;
             std::shared_ptr<nml::MeshOp> meshOp;
     
-            MeshBinding(long long meshId, const std::string &localId) : meshId(meshId), localId(localId), meshOp() { }
-            MeshBinding(long long meshId, const std::string &localId, std::shared_ptr<nml::MeshOp> meshOp) : meshId(meshId), localId(localId), meshOp(meshOp) { }
+            MeshBinding(long long meshId, const std::string& localId) : meshId(meshId), localId(localId), meshOp() { }
+            MeshBinding(long long meshId, const std::string& localId, std::shared_ptr<nml::MeshOp> meshOp) : meshId(meshId), localId(localId), meshOp(meshOp) { }
         };
     
         struct TextureBinding {
@@ -52,7 +52,7 @@ namespace carto {
             int level;
             std::string localId;
     
-            TextureBinding(long long textureId, int level, const std::string &localId) : textureId(textureId), level(level), localId(localId) { }
+            TextureBinding(long long textureId, int level, const std::string& localId) : textureId(textureId), level(level), localId(localId) { }
         };
 
         typedef nml::Mesh Mesh;

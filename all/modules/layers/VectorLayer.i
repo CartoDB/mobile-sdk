@@ -22,6 +22,7 @@
 
 !attributestring_polymorphic(carto::VectorLayer, datasources.VectorDataSource, DataSource, getDataSource)
 !attributestring_polymorphic(carto::VectorLayer, layers.VectorElementEventListener, VectorElementEventListener, getVectorElementEventListener, setVectorElementEventListener)
+%std_exceptions(carto::VectorLayer::VectorLayer)
 
 %include "layers/VectorLayer.h"
 

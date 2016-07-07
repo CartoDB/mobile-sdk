@@ -24,6 +24,7 @@
 %attribute(carto::VectorTileLayer, VectorTileRenderOrder::VectorTileRenderOrder, LabelRenderOrder, getLabelRenderOrder, setLabelRenderOrder)
 %attribute(carto::VectorTileLayer, VectorTileRenderOrder::VectorTileRenderOrder, BuildingRenderOrder, getBuildingRenderOrder, setBuildingRenderOrder)
 %attributestring(carto::VectorTileLayer, std::shared_ptr<carto::VectorTileDecoder>, TileDecoder, getTileDecoder)
+%std_exceptions(carto::VectorTileLayer::VectorTileLayer)
 %ignore carto::VectorTileLayer::FetchTask;
 %ignore carto::VectorTileLayer::getMinZoom;
 %ignore carto::VectorTileLayer::getMaxZoom;

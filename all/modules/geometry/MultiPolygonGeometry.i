@@ -19,6 +19,8 @@
 
 !polymorphic_shared_ptr(carto::MultiPolygonGeometry, geometry.MultiPolygonGeometry)
 
+%std_exceptions(carto::MultiPolygonGeometry::getGeometry)
+
 %include "geometry/MultiPolygonGeometry.h"
 
 #endif

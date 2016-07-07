@@ -69,6 +69,9 @@ namespace carto {
         _dataSource(dataSource),
         _renderer(std::make_shared<NMLModelLODTreeRenderer>())
     {
+        if (!dataSource) {
+            throw std::invalid_argument("Null dataSource");
+        }
         _fetchThreadPool->setPoolSize(1);
     }
     
