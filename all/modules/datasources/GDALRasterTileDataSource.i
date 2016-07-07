@@ -22,9 +22,10 @@
 
 !polymorphic_shared_ptr(carto::GDALRasterTileDataSource, datasources.GDALRasterTileDataSource)
 
-%feature("director") carto::GDALRasterTileDataSource;
-
 %attributeval(carto::GDALRasterTileDataSource, carto::MapBounds, DataExtent, getDataExtent)
+%std_exceptions(carto::GDALRasterTileDataSource::GDALRasterTileDataSource)
+
+%feature("director") carto::GDALRasterTileDataSource;
 
 %include "datasources/GDALRasterTileDataSource.h"
 

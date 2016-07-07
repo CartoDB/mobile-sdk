@@ -22,9 +22,10 @@
 
 !polymorphic_shared_ptr(carto::PackageManagerTileDataSource, datasources.PackageManagerTileDataSource)
 
-%feature("director") carto::PackageManagerTileDataSource;
-
 !attributestring_polymorphic(carto::PackageManagerTileDataSource, packagemanager.PackageManager, PackageManager, getPackageManager)
+%std_exceptions(carto::PackageManagerTileDataSource::PackageManagerTileDataSource)
+
+%feature("director") carto::PackageManagerTileDataSource;
 
 %include "datasources/PackageManagerTileDataSource.h"
 

@@ -21,9 +21,9 @@
 
 !polymorphic_shared_ptr(carto::MBTilesTileDataSource, datasources.MBTilesTileDataSource)
 
-%feature("director") carto::MBTilesTileDataSource;
-
 %attributeval(carto::MBTilesTileDataSource, carto::MapBounds, DataExtent, getDataExtent)
+
+%feature("director") carto::MBTilesTileDataSource;
 
 %include "datasources/MBTilesTileDataSource.h"
 

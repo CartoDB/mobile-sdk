@@ -12,6 +12,9 @@ namespace carto {
         _onChangeListeners(std::make_shared<std::vector<std::shared_ptr<OnChangeListener> > >()),
         _onChangeListenersMutex()
     {
+        if (!projection) {
+            throw std::invalid_argument("Null projection");
+        }
     }
         
     VectorDataSource::~VectorDataSource() {

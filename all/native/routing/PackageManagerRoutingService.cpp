@@ -20,6 +20,9 @@ namespace carto {
         _cachedRouteFinder(),
         _mutex()
     {
+        if (!packageManager) {
+            throw std::invalid_argument("Null packageManager");
+        }
     }
 
     PackageManagerRoutingService::~PackageManagerRoutingService() {

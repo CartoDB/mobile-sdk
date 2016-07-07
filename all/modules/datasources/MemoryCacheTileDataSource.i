@@ -18,6 +18,8 @@
 
 !polymorphic_shared_ptr(carto::MemoryCacheTileDataSource, datasources.MemoryCacheTileDataSource)
 
+%std_exceptions(carto::MemoryCacheTileDataSource::MemoryCacheTileDataSource)
+
 %feature("director") carto::MemoryCacheTileDataSource;
 
 %include "datasources/MemoryCacheTileDataSource.h"

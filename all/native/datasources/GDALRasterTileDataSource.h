@@ -39,7 +39,7 @@ namespace carto {
          * @param minZoom The minimum zoom level supported by this data source.
          * @param maxZoom The maximum zoom level supported by this data source.
          * @param fileName The full path of the data file
-         * @param srs The spatial reference of the data ("EPSG:34326", for example)
+         * @param srs The spatial reference system of the data ("EPSG:34326", for example)
          */
         GDALRasterTileDataSource(int minZoom, int maxZoom, const std::string& fileName, const std::string& srs);
         virtual ~GDALRasterTileDataSource();

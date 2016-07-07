@@ -12,6 +12,9 @@ namespace carto {
         _projection(projection),
         _mutex()
     {
+        if (!projection) {
+            throw std::invalid_argument("Null projection");
+        }
     }
     
     std::shared_ptr<Projection> NMLModelLODTreeDataSource::getProjection() const {

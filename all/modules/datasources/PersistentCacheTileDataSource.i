@@ -18,9 +18,10 @@
 
 !polymorphic_shared_ptr(carto::PersistentCacheTileDataSource, datasources.PersistentCacheTileDataSource)
 
-%feature("director") carto::PersistentCacheTileDataSource;
-
 %attribute(carto::PersistentCacheTileDataSource, bool, CacheOnlyMode, isCacheOnlyMode, setCacheOnlyMode)
+%std_exceptions(carto::PersistentCacheTileDataSource::PersistentCacheTileDataSource)
+
+%feature("director") carto::PersistentCacheTileDataSource;
 
 %include "datasources/PersistentCacheTileDataSource.h"
 

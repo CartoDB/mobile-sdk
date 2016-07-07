@@ -34,6 +34,7 @@
 %attributeval(carto::OGRVectorDataSource, std::vector<std::string>, FieldNames, getFieldNames)
 %attributestring(carto::OGRVectorDataSource, std::string, CodePage, getCodePage, setCodePage)
 !attributestring_polymorphic(carto::OGRVectorDataSource, geometry.GeometrySimplifier, GeometrySimplifier, getGeometrySimplifier, setGeometrySimplifier)
+%std_exceptions(carto::OGRVectorDataSource::OGRVectorDataSource)
 %std_exceptions(carto::OGRVectorDataSource::add)
 %std_exceptions(carto::OGRVectorDataSource::remove)
 

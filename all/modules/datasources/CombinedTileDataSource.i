@@ -18,6 +18,8 @@
 
 !polymorphic_shared_ptr(carto::CombinedTileDataSource, datasources.CombinedTileDataSource)
 
+%std_exceptions(carto::CombinedTileDataSource::CombinedTileDataSource)
+
 %feature("director") carto::CombinedTileDataSource;
 
 %include "datasources/CombinedTileDataSource.h"

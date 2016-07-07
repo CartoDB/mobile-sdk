@@ -24,9 +24,10 @@
 
 !polymorphic_shared_ptr(carto::BitmapOverlayRasterTileDataSource, datasources.BitmapOverlayRasterTileDataSource)
 
-%feature("director") carto::BitmapOverlayRasterTileDataSource;
-
 %attributeval(carto::BitmapOverlayRasterTileDataSource, carto::MapBounds, DataExtent, getDataExtent)
+%std_exceptions(carto::BitmapOverlayRasterTileDataSource::BitmapOverlayRasterTileDataSource)
+
+%feature("director") carto::BitmapOverlayRasterTileDataSource;
 
 %include "datasources/BitmapOverlayRasterTileDataSource.h"
 

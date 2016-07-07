@@ -26,6 +26,7 @@
 %feature("director") carto::VectorDataSource;
 
 !attributestring_polymorphic(carto::VectorDataSource, projections.Projection, Projection, getProjection)
+%std_exceptions(carto::VectorDataSource::VectorDataSource)
 %ignore carto::VectorDataSource::OnChangeListener;
 %ignore carto::VectorDataSource::registerOnChangeListener;
 %ignore carto::VectorDataSource::unregisterOnChangeListener;

@@ -17,9 +17,10 @@
 
 !polymorphic_shared_ptr(carto::CacheTileDataSource, datasources.CacheTileDataSource)
 
-%feature("director") carto::CacheTileDataSource;
-
 %attribute(carto::CacheTileDataSource, std::size_t, Capacity, getCapacity, setCapacity)
+%std_exceptions(carto::CacheTileDataSource::CacheTileDataSource)
+
+%feature("director") carto::CacheTileDataSource;
 
 %include "datasources/CacheTileDataSource.h"
 

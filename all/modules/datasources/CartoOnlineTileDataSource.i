@@ -18,6 +18,8 @@
 
 !polymorphic_shared_ptr(carto::CartoOnlineTileDataSource, datasources.CartoOnlineTileDataSource)
 
+%std_exceptions(carto::CartoOnlineTileDataSource::CartoOnlineTileDataSource)
+
 %feature("director") carto::CartoOnlineTileDataSource;
 
 %include "datasources/CartoOnlineTileDataSource.h"

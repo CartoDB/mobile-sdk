@@ -7,8 +7,12 @@
 namespace carto {
     
     CacheTileDataSource::CacheTileDataSource(const std::shared_ptr<TileDataSource>& dataSource) :
-        TileDataSource(dataSource->getMinZoom(), dataSource->getMaxZoom()), _dataSource(dataSource)
+        TileDataSource(dataSource ? dataSource->getMinZoom() : 0, dataSource ? dataSource->getMaxZoom() : 0), _dataSource(dataSource)
     {
+        if (!dataSource) {
+            throw std::invalid_argument("Null dataSource");
+        }
+
         _dataSourceListener = std::make_shared<DataSourceListener>(*this);
         _dataSource->registerOnChangeListener(_dataSourceListener);
     }

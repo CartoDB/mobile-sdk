@@ -25,8 +25,6 @@
 
 !polymorphic_shared_ptr(carto::TileDataSource, datasources.TileDataSource)
 
-%feature("director") carto::TileDataSource;
-
 %attribute(carto::TileDataSource, int, MinZoom, getMinZoom)
 %attribute(carto::TileDataSource, int, MaxZoom, getMaxZoom)
 !attributestring_polymorphic(carto::TileDataSource, projections.Projection, Projection, getProjection)
@@ -34,6 +32,7 @@
 %ignore carto::TileDataSource::registerOnChangeListener;
 %ignore carto::TileDataSource::unregisterOnChangeListener;
 
+%feature("director") carto::TileDataSource;
 %feature("nodirector") carto::TileDataSource::buildTagValues;
 
 %include "datasources/TileDataSource.h"

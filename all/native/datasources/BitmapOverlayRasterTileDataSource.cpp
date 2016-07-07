@@ -35,13 +35,15 @@ namespace carto {
         _bitmap(),
         _projection(std::make_shared<EPSG3857>())
     {
+        if (!bitmap) {
+            throw std::invalid_argument("Null bitmap");
+        }
+
         if (mapPoses.size() != 2 && mapPoses.size() != 3 && mapPoses.size() != 4) {
-            Log::Errorf("BitmapOverlayRasterTileDataSource: Position arrays must contain 3 or 4 elements!");
-            return;
+            throw std::invalid_argument("Position arrays must contain 3 or 4 elements");
         }
         if (mapPoses.size() != bitmapPoses.size()) {
-            Log::Errorf("BitmapOverlayRasterTileDataSource: Size mismatch between position arrays!");
-            return;
+            throw std::invalid_argument("Size mismatch between position arrays");
         }
 
         cglib::vec<double, 8> uvs = cglib::vec<double, 8>::zero();
@@ -94,8 +96,7 @@ namespace carto {
             posTransform(4, 4) = posTransform(5, 5) = posTransform(6, 6) = posTransform(7, 7) = 1;
         }
         if (cglib::determinant(posTransform) == 0) {
-            Log::Errorf("BitmapOverlayRasterTileDataSource: Map positions are collinear!");
-            return;
+            throw std::invalid_argument("Map positions are collinear");
         }
 
         cglib::vec<double, 8> coeffs = cglib::transform(uvs, cglib::inverse(posTransform));

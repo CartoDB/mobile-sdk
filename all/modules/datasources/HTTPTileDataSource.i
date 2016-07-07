@@ -22,12 +22,12 @@
 
 !polymorphic_shared_ptr(carto::HTTPTileDataSource, datasources.HTTPTileDataSource)
 
-%feature("director") carto::HTTPTileDataSource;
-
 %attributestring(carto::HTTPTileDataSource, std::string, BaseURL, getBaseURL, setBaseURL)
 %attributeval(carto::HTTPTileDataSource, %arg(std::vector<std::string>), Subdomains, getSubdomains, setSubdomains)
 %attribute(carto::HTTPTileDataSource, bool, TMSScheme, isTMSScheme, setTMSScheme)
 %attributeval(carto::HTTPTileDataSource, %arg(std::map<std::string, std::string>), HTTPHeaders, getHTTPHeaders, setHTTPHeaders)
+
+%feature("director") carto::HTTPTileDataSource;
 
 %include "datasources/HTTPTileDataSource.h"
 

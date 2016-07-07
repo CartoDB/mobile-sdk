@@ -12,6 +12,10 @@ namespace carto {
     PackageManagerTileDataSource::PackageManagerTileDataSource(const std::shared_ptr<PackageManager>& packageManager) :
         TileDataSource(0, Const::MAX_SUPPORTED_ZOOM_LEVEL), _packageManager(packageManager)
     {
+        if (!packageManager) {
+            throw std::invalid_argument("Null packageManager");
+        }
+
         _packageManagerListener = std::make_shared<PackageManagerListener>(*this);
         _packageManager->registerOnChangeListener(_packageManagerListener);
     }
