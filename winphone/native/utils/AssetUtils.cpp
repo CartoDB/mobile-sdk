@@ -2,9 +2,9 @@
 #include "core/BinaryData.h"
 #include "utils/Log.h"
 
-#include <stdio.h>
-
 #include <utf8.h>
+
+#include <stdio.h>
 
 namespace carto {
 

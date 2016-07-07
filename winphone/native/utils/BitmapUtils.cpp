@@ -5,6 +5,8 @@
 #include "graphics/utils/GLContext.h"
 #include "utils/Log.h"
 
+#include <utf8.h>
+
 #include <stdio.h>
 
 namespace carto {
@@ -18,7 +20,9 @@ namespace carto {
     }
 
     std::shared_ptr<Bitmap> BitmapUtils::LoadBitmapFromFile(const std::string& filePath) {
-        FILE* fpRaw = fopen(filePath.c_str(), "rb");
+        std::wstring wfilePath;
+        utf8::utf8to16(filePath.begin(), filePath.end(), std::back_inserter(wfilePath));
+        FILE* fpRaw = _wfopen(wfilePath.c_str(), L"rb");
         if (!fpRaw) {
             Log::Errorf("BitmapUtils::LoadBitmapFromFile: Failed to load: %s", filePath.c_str());
             return std::shared_ptr<Bitmap>();
