@@ -23,6 +23,9 @@
 %attributestring(carto::Polygon, std::shared_ptr<carto::PolygonStyle>, Style, getStyle, setStyle)
 %csmethodmodifiers carto::Polygon::Geometry "public new";
 !attributestring_polymorphic(carto::Polygon, geometry.PolygonGeometry, Geometry, getGeometry, setGeometry)
+%std_exceptions(carto::Polygon::Polygon)
+%std_exceptions(carto::Polygon::setGeometry)
+%std_exceptions(carto::Polygon::setStyle)
 %ignore carto::Polygon::getDrawData;
 %ignore carto::Polygon::setDrawData;
 

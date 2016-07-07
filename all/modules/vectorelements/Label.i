@@ -20,6 +20,8 @@
 !polymorphic_shared_ptr(carto::Label, vectorelements.Label)
 
 !attributestring_polymorphic(carto::Label, styles.LabelStyle, Style, getStyle, setStyle)
+%std_exceptions(carto::Label::Label)
+%std_exceptions(carto::Label::setStyle)
 
 %include "vectorelements/Label.h"
 

@@ -24,6 +24,8 @@
 %attribute(carto::Popup, float, AnchorPointX, getAnchorPointX)
 %attribute(carto::Popup, float, AnchorPointY, getAnchorPointY)
 !attributestring_polymorphic(carto::Popup, styles.PopupStyle, Style, getStyle, setStyle)
+%std_exceptions(carto::Popup::Popup)
+%std_exceptions(carto::Popup::setStyle)
 !objc_rename(setAnchorPointX) carto::Popup::setAnchorPoint;
 
 %include "vectorelements/Popup.h"

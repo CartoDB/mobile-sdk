@@ -10,12 +10,18 @@ namespace carto {
         VectorElement(geometry),
         _style(style)
     {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
     }
         
     Polygon::Polygon(const std::vector<MapPos>& poses, const std::shared_ptr<PolygonStyle>& style)  :
         VectorElement(std::make_shared<PolygonGeometry>(poses)),
         _style(style)
     {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
     }
     
     Polygon::Polygon(const std::vector<MapPos>& poses, const std::vector<std::vector<MapPos> >& holes,
@@ -23,6 +29,9 @@ namespace carto {
         VectorElement(std::make_shared<PolygonGeometry>(poses, holes)),
         _style(style)
     {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
     }
     
     Polygon::~Polygon() {
@@ -34,6 +43,10 @@ namespace carto {
     }
     
     void Polygon::setGeometry(const std::shared_ptr<PolygonGeometry>& geometry) {
+        if (!geometry) {
+            throw std::invalid_argument("Null geometry");
+        }
+
         {
             std::lock_guard<std::mutex> lock(_mutex);
             _geometry = geometry;
@@ -71,6 +84,10 @@ namespace carto {
     }
     
     void Polygon::setStyle(const std::shared_ptr<PolygonStyle>& style) {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
+
         {
             std::lock_guard<std::mutex> lock(_mutex);
             _style = style;

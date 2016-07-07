@@ -11,6 +11,7 @@
 %}
 
 %include <std_shared_ptr.i>
+%include <cartoswig.i>
 
 %import "core/ScreenPos.i"
 %import "graphics/Bitmap.i"
@@ -23,6 +24,8 @@
 %attributestring(carto::BalloonPopup, std::string, Description, getDescription, setDescription)
 %csmethodmodifiers carto::BalloonPopup::Style "public new";
 !attributestring_polymorphic(carto::BalloonPopup, styles.BalloonPopupStyle, Style, getStyle, setStyle)
+%std_exceptions(carto::BalloonPopup::BalloonPopup)
+%std_exceptions(carto::BalloonPopup::setStyle)
 
 %include "vectorelements/BalloonPopup.h"
 

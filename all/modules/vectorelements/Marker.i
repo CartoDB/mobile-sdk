@@ -19,6 +19,8 @@
 !polymorphic_shared_ptr(carto::Marker, vectorelements.Marker)
 
 %attributestring(carto::Marker, std::shared_ptr<carto::MarkerStyle>, Style, getStyle, setStyle)
+%std_exceptions(carto::Marker::Marker)
+%std_exceptions(carto::Marker::setStyle)
 
 %include "vectorelements/Marker.h"
 

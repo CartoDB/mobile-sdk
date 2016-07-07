@@ -23,6 +23,11 @@
 
 %attributeval(carto::LocalVectorDataSource, carto::MapBounds, DataExtent, getDataExtent)
 !attributestring_polymorphic(carto::LocalVectorDataSource, geometry.GeometrySimplifier, GeometrySimplifier, getGeometrySimplifier, setGeometrySimplifier)
+%std_exceptions(carto::LocalVectorDataSource::setAll)
+%std_exceptions(carto::LocalVectorDataSource::add)
+%std_exceptions(carto::LocalVectorDataSource::addAll)
+%std_exceptions(carto::LocalVectorDataSource::remove)
+%std_exceptions(carto::LocalVectorDataSource::removeAll)
 
 %include "datasources/LocalVectorDataSource.h"
 

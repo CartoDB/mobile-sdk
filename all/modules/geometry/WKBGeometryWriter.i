@@ -21,6 +21,7 @@
 
 %attribute(carto::WKBGeometryWriter, bool, Z, getZ, setZ)
 %attribute(carto::WKBGeometryWriter, bool, BigEndian, getBigEndian, setBigEndian)
+%std_exceptions(carto::WKBGeometryWriter::writeGeometry)
 
 %include "geometry/WKBGeometryWriter.h"
 

@@ -163,6 +163,10 @@ namespace carto {
     }
 
     bool CartoVisLoader::loadVis(const std::shared_ptr<CartoVisBuilder>& builder, const std::string& visURL) const {
+        if (!builder) {
+            throw std::invalid_argument("Null builder");
+        }
+
         try {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
 

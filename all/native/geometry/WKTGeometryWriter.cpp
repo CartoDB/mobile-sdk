@@ -31,6 +31,10 @@ namespace carto {
     }
 
     std::string WKTGeometryWriter::writeGeometry(const std::shared_ptr<Geometry>& geometry) const {
+        if (!geometry) {
+            throw std::invalid_argument("Null geometry");
+        }
+
         std::lock_guard<std::mutex> lock(_mutex);
 
         std::string wkt;

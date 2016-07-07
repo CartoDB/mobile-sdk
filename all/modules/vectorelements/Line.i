@@ -22,6 +22,9 @@
 %csmethodmodifiers carto::Line::Geometry "public new";
 !attributestring_polymorphic(carto::Line, geometry.LineGeometry, Geometry, getGeometry, setGeometry)
 %attributestring(carto::Line, std::shared_ptr<carto::LineStyle>, Style, getStyle, setStyle)
+%std_exceptions(carto::Line::Line)
+%std_exceptions(carto::Line::setGeometry)
+%std_exceptions(carto::Line::setStyle)
 %ignore carto::Line::getDrawData;
 %ignore carto::Line::setDrawData;
 

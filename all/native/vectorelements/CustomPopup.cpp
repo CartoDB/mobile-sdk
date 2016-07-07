@@ -9,18 +9,27 @@ namespace carto {
         Popup(baseBillboard, style),
         _popupHandler(popupHandler)
     {
+        if (!popupHandler) {
+            throw std::invalid_argument("Null popupHandler");
+        }
     }
     
     CustomPopup::CustomPopup(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<PopupStyle>& style, const std::shared_ptr<CustomPopupHandler>& popupHandler) :
         Popup(geometry, style),
         _popupHandler(popupHandler)
     {
+        if (!popupHandler) {
+            throw std::invalid_argument("Null popupHandler");
+        }
     }
     
     CustomPopup::CustomPopup(const MapPos& pos, const std::shared_ptr<PopupStyle>& style, const std::shared_ptr<CustomPopupHandler>& popupHandler) :
         Popup(pos, style),
         _popupHandler(popupHandler)
     {
+        if (!popupHandler) {
+            throw std::invalid_argument("Null popupHandler");
+        }
     }
     
     CustomPopup::~CustomPopup() {

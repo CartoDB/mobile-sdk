@@ -31,8 +31,14 @@ namespace carto {
         _layerNameOverride(),
         _compiledStyleSet(compiledStyleSet),
         _cartoCSSStyleSet(),
-        _styleSetData(compiledStyleSet->getAssetPackage())
+        _styleSetData()
     {
+        if (!compiledStyleSet) {
+            throw std::invalid_argument("Null compiledStyleSet");
+        }
+
+        _styleSetData = compiledStyleSet->getAssetPackage();
+
         _logger = std::make_shared<MapnikVTLogger>("MBVectorTileDecoder");
 
         if (!_compiledStyleSet->getStyleAssetName().empty()) {
@@ -48,8 +54,14 @@ namespace carto {
         _layerNameOverride(),
         _compiledStyleSet(),
         _cartoCSSStyleSet(cartoCSSStyleSet),
-        _styleSetData(cartoCSSStyleSet->getAssetPackage())
+        _styleSetData()
     {
+        if (!cartoCSSStyleSet) {
+            throw std::invalid_argument("Null cartoCSSStyleSet");
+        }
+
+        _styleSetData = cartoCSSStyleSet->getAssetPackage();
+
         _logger = std::make_shared<MapnikVTLogger>("MBVectorTileDecoder");
 
         updateCurrentStyle();
@@ -64,6 +76,10 @@ namespace carto {
     }
     
     void MBVectorTileDecoder::setCompiledStyleSet(const std::shared_ptr<CompiledStyleSet>& styleSet) {
+        if (!styleSet) {
+            throw std::invalid_argument("Null styleSet");
+        }
+
         {
             std::lock_guard<std::mutex> lock(_mutex);
             _compiledStyleSet = styleSet;
@@ -71,7 +87,6 @@ namespace carto {
             _styleSetData = styleSet->getAssetPackage();
             updateCurrentStyle();
         }
-
         notifyDecoderChanged();
     }
 
@@ -81,6 +96,10 @@ namespace carto {
     }
     
     void MBVectorTileDecoder::setCartoCSSStyleSet(const std::shared_ptr<CartoCSSStyleSet>& styleSet) {
+        if (!styleSet) {
+            throw std::invalid_argument("Null styleSet");
+        }
+
         {
             std::lock_guard<std::mutex> lock(_mutex);
             _cartoCSSStyleSet = styleSet;
@@ -88,7 +107,6 @@ namespace carto {
             _styleSetData = styleSet->getAssetPackage();
             updateCurrentStyle();
         }
-
         notifyDecoderChanged();
     }
 
@@ -202,13 +220,12 @@ namespace carto {
                 }
                 catch (const boost::bad_numeric_cast&) {
                     Log::Errorf("MBVectorTileDecoder::setParameter: Could not convert parameter %s value: %s", param.c_str(), value.c_str());
-        }
+                }
             }
     
             mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, *_parameterValueMap);
             _symbolizerContext = std::make_shared<mvt::SymbolizerContext>(_symbolizerContext->getBitmapManager(), _symbolizerContext->getFontManager(), _symbolizerContext->getStrokeMap(), _symbolizerContext->getGlyphMap(), settings);
         }
-
         notifyDecoderChanged();
     }
 
@@ -222,7 +239,6 @@ namespace carto {
             std::lock_guard<std::mutex> lock(_mutex);
             _buffer = buffer;
         }
-
         notifyDecoderChanged();
     }
 
@@ -250,7 +266,6 @@ namespace carto {
             std::lock_guard<std::mutex> lock(_mutex);
             _layerNameOverride = name;
         }
-
         notifyDecoderChanged();
     }
 

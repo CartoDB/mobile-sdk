@@ -9,6 +9,9 @@ namespace carto {
         VectorElement(geometry),
         _style(style)
     {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
     }
 
     GeometryCollection::~GeometryCollection() {
@@ -20,6 +23,10 @@ namespace carto {
     }
 
     void GeometryCollection::setGeometry(const std::shared_ptr<MultiGeometry>& geometry) {
+        if (!geometry) {
+            throw std::invalid_argument("Null geometry");
+        }
+
         {
             std::lock_guard<std::mutex> lock(_mutex);
             _geometry = geometry;
@@ -33,6 +40,10 @@ namespace carto {
     }
 
     void GeometryCollection::setStyle(const std::shared_ptr<GeometryCollectionStyle>& style) {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
+
         {
             std::lock_guard<std::mutex> lock(_mutex);
             _style = style;

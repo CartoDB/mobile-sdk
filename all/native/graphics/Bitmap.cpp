@@ -468,20 +468,20 @@ namespace carto {
     
     std::shared_ptr<Bitmap> Bitmap::CreateFromCompressed(const std::shared_ptr<BinaryData>& compressedData) {
         if (!compressedData) {
-            return std::shared_ptr<Bitmap>();
+            throw std::invalid_argument("Null compressedData");
         }
         return CreateFromCompressed(compressedData->data(), compressedData->size());
     }
 
     std::shared_ptr<Bitmap> Bitmap::CreateFromCompressed(const unsigned char* compressedData, std::size_t dataSize) {
         if (!compressedData) {
-            return std::shared_ptr<Bitmap>();
+            throw std::invalid_argument("Null compressedData");
         }
         std::shared_ptr<Bitmap> bitmap(new Bitmap);
-        if (bitmap->loadFromCompressedBytes(compressedData, dataSize)) {
-            return bitmap;
+        if (!bitmap->loadFromCompressedBytes(compressedData, dataSize)) {
+            return std::shared_ptr<Bitmap>();
         }
-        return std::shared_ptr<Bitmap>();
+        return bitmap;
     }
     
     Bitmap::Bitmap() :
@@ -893,4 +893,3 @@ namespace carto {
     }
         
 }
-

@@ -9,12 +9,18 @@ namespace carto {
         VectorElement(geometry),
         _style(style)
     {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
     }
         
     Point::Point(const MapPos& pos, const std::shared_ptr<PointStyle>& style) :
         VectorElement(std::make_shared<PointGeometry>(pos)),
         _style(style)
     {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
     }
     
     Point::~Point() {
@@ -26,6 +32,10 @@ namespace carto {
     }
     
     void Point::setGeometry(const std::shared_ptr<PointGeometry>& geometry) {
+        if (!geometry) {
+            throw std::invalid_argument("Null geometry");
+        }
+
         {
             std::lock_guard<std::mutex> lock(_mutex);
             _geometry = geometry;
@@ -51,6 +61,10 @@ namespace carto {
     }
     
     void Point::setStyle(const std::shared_ptr<PointStyle>& style) {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
+
         {
             std::lock_guard<std::mutex> lock(_mutex);
             _style = style;

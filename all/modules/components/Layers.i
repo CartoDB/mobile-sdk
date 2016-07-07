@@ -22,6 +22,9 @@
 %csmethodmodifiers carto::Layers::set "private";
 
 %attribute(carto::Layers, int, Count, count)
+%std_exceptions(carto::Layers::get)
+%std_exceptions(carto::Layers::set)
+%std_exceptions(carto::Layers::insert)
 %ignore carto::Layers::Layers;
 !standard_equals(carto::Layers);
 

@@ -31,6 +31,7 @@
 %attributeval(carto::VectorElement, carto::MapBounds, Bounds, getBounds)
 %csmethodmodifiers carto::VectorElement::Geometry "public virtual";
 !attributestring_polymorphic(carto::VectorElement, geometry.Geometry, Geometry, getGeometry)
+%std_exceptions(carto::VectorElement::VectorElement)
 !standard_equals(carto::VectorElement);
 
 %include "vectorelements/VectorElement.h"

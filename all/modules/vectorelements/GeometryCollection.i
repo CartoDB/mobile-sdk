@@ -22,6 +22,9 @@
 %csmethodmodifiers carto::GeometryCollection::Geometry "public new";
 !attributestring_polymorphic(carto::GeometryCollection, geometry.MultiGeometry, Geometry, getGeometry, setGeometry)
 %attributestring(carto::GeometryCollection, std::shared_ptr<carto::GeometryCollectionStyle>, Style, getStyle, setStyle)
+%std_exceptions(carto::GeometryCollection::GeometryCollection)
+%std_exceptions(carto::GeometryCollection::setGeometry)
+%std_exceptions(carto::GeometryCollection::setStyle)
 %ignore carto::GeometryCollection::getDrawData;
 %ignore carto::GeometryCollection::setDrawData;
 

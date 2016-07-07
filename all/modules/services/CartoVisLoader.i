@@ -20,6 +20,7 @@
 
 %attribute(carto::CartoVisLoader, bool, DefaultVectorLayerMode, isDefaultVectorLayerMode, setDefaultVectorLayerMode)
 %attributestring(carto::CartoVisLoader, std::shared_ptr<carto::AssetPackage>, VectorTileAssetPackage, getVectorTileAssetPackage, setVectorTileAssetPackage)
+%std_exceptions(carto::CartoVisLoader::loadVis)
 
 !standard_equals(carto::CartoVisLoader);
 

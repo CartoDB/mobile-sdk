@@ -29,6 +29,9 @@
 %attribute(carto::MBVectorTileDecoder, float, Buffering, getBuffering, setBuffering)
 %attribute(carto::MBVectorTileDecoder, bool, CartoCSSLayerNamesIgnored, isCartoCSSLayerNamesIgnored, setCartoCSSLayerNamesIgnored)
 %attributestring(carto::MBVectorTileDecoder, std::string, LayerNameOverride, getLayerNameOverride, setLayerNameOverride)
+%std_exceptions(carto::MBVectorTileDecoder::MBVectorTileDecoder)
+%std_exceptions(carto::MBVectorTileDecoder::setCompiledStyleSet)
+%std_exceptions(carto::MBVectorTileDecoder::setCartoCSSStyleSet)
 %ignore carto::MBVectorTileDecoder::decodeTile;
 %ignore carto::MBVectorTileDecoder::getBackgroundColor;
 %ignore carto::MBVectorTileDecoder::getBackgroundPattern;

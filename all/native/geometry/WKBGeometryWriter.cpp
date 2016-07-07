@@ -98,10 +98,11 @@ namespace carto {
     }
 
     std::shared_ptr<BinaryData> WKBGeometryWriter::writeGeometry(const std::shared_ptr<Geometry>& geometry) const {
-        std::lock_guard<std::mutex> lock(_mutex);
         if (!geometry) {
-            return std::shared_ptr<BinaryData>();
+            throw std::invalid_argument("Null geometry");
         }
+
+        std::lock_guard<std::mutex> lock(_mutex);
 
         Stream stream;
         try {

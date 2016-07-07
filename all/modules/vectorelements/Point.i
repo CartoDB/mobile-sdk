@@ -23,6 +23,9 @@
 %csmethodmodifiers carto::Point::Geometry "public new";
 !attributestring_polymorphic(carto::Point, geometry.PointGeometry, Geometry, getGeometry, setGeometry)
 %attributestring(carto::Point, std::shared_ptr<carto::PointStyle>, Style, getStyle, setStyle)
+%std_exceptions(carto::Point::Point)
+%std_exceptions(carto::Point::setGeometry)
+%std_exceptions(carto::Point::setStyle)
 %ignore carto::Point::getDrawData;
 %ignore carto::Point::setDrawData;
 

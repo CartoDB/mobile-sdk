@@ -8,18 +8,27 @@ namespace carto {
         Billboard(baseBillboard),
         _style(style)
     {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
     }
     
     Label::Label(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<LabelStyle>& style) :
         Billboard(geometry),
         _style(style)
     {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
     }
     
     Label::Label(const MapPos& pos, const std::shared_ptr<LabelStyle>& style) :
         Billboard(pos),
         _style(style)
     {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
     }
         
     Label::~Label() {
@@ -31,6 +40,10 @@ namespace carto {
     }
     
     void Label::setStyle(const std::shared_ptr<LabelStyle>& style) {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
+
         {
             std::lock_guard<std::mutex> lock(_mutex);
             _style = style;

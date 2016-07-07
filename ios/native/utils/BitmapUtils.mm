@@ -39,7 +39,7 @@ namespace carto {
         static const unsigned int RGB_INDEX_REMAP[] = { };
 
         if (!image) {
-            return std::shared_ptr<Bitmap>();
+            throw std::invalid_argument("Null image");
         }
     	
         CGImageRef cgImage = image.CGImage;
@@ -156,7 +156,7 @@ namespace carto {
         
     UIImage* BitmapUtils::CreateUIImageFromBitmap(const std::shared_ptr<Bitmap>& bitmap) {
         if (!bitmap) {
-            return nil;
+            throw std::invalid_argument("Null bitmap");
         }
 
         CGBitmapInfo bitmapInfo;

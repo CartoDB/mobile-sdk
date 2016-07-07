@@ -25,6 +25,7 @@
 !polymorphic_shared_ptr(carto::CustomPopup, vectorelements.CustomPopup)
 
 !attributestring_polymorphic(carto::CustomPopup, vectorelements.CustomPopupHandler, PopupHandler, getPopupHandler)
+%std_exceptions(carto::CustomPopup::CustomPopup)
 
 %include "vectorelements/CustomPopup.h"
 

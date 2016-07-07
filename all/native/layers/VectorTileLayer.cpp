@@ -358,6 +358,9 @@ namespace carto {
             if (tileData->isReplaceWithParent()) {
                 continue;
             }
+            if (!tileData->getData()) {
+                break;
+            }
     
             vt::TileId vtTile(_tile.getZoom(), _tile.getX(), _tile.getY());
             vt::TileId vtDataSourceTile(dataSourceTile.getZoom(), dataSourceTile.getX(), dataSourceTile.getY());

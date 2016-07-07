@@ -21,6 +21,10 @@ namespace carto {
     TorqueTileDecoder::TorqueTileDecoder(const std::shared_ptr<CartoCSSStyleSet>& styleSet) :
         _resolution(256), _map(), _symbolizerContext(), _styleSet(), _mutex()
     {
+        if (!styleSet) {
+            throw std::invalid_argument("Null styleSet");
+        }
+
         setStyleSet(styleSet);
     }
     
@@ -41,6 +45,10 @@ namespace carto {
     }
     
     void TorqueTileDecoder::setStyleSet(const std::shared_ptr<CartoCSSStyleSet>& styleSet) {
+        if (!styleSet) {
+            throw std::invalid_argument("Null styleSet");
+        }
+
         {
             std::lock_guard<std::mutex> lock(_mutex);
     

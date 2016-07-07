@@ -15,6 +15,10 @@ namespace carto {
         _scale(1),
         _sourceModel(sourceModel)
     {
+        if (!sourceModel) {
+            throw std::invalid_argument("Null sourceModel");
+        }
+
         const nml::Vector3& minBounds = _sourceModel->bounds().min();
         const nml::Vector3& maxBounds = _sourceModel->bounds().max();
         _bounds = MapBounds(MapPos(minBounds.x(), minBounds.y(), minBounds.z()), MapPos(maxBounds.x(), maxBounds.y(), maxBounds.z()));
@@ -27,6 +31,10 @@ namespace carto {
         _scale(1),
         _sourceModel(sourceModel)
     {
+        if (!sourceModel) {
+            throw std::invalid_argument("Null sourceModel");
+        }
+
         const nml::Vector3& minBounds = _sourceModel->bounds().min();
         const nml::Vector3& maxBounds = _sourceModel->bounds().max();
         _bounds = MapBounds(MapPos(minBounds.x(), minBounds.y(), minBounds.z()), MapPos(maxBounds.x(), maxBounds.y(), maxBounds.z()));
@@ -39,6 +47,10 @@ namespace carto {
         _scale(1),
         _sourceModel()
     {
+        if (!sourceModelData) {
+            throw std::invalid_argument("Null sourceModelData");
+        }
+
         std::shared_ptr<std::vector<unsigned char> > data = sourceModelData->getDataPtr();
         protobuf::message modelMsg(data->data(), data->size());
         _sourceModel = std::make_shared<nml::Model>(modelMsg);
@@ -54,6 +66,10 @@ namespace carto {
         _scale(1),
         _sourceModel()
     {
+        if (!sourceModelData) {
+            throw std::invalid_argument("Null sourceModelData");
+        }
+
         std::shared_ptr<std::vector<unsigned char> > data = sourceModelData->getDataPtr();
         protobuf::message modelMsg(data->data(), data->size());
         _sourceModel = std::make_shared<nml::Model>(modelMsg);
@@ -71,6 +87,10 @@ namespace carto {
     }
     
     void NMLModel::setGeometry(const std::shared_ptr<Geometry>& geometry) {
+        if (!geometry) {
+            throw std::invalid_argument("Null geometry");
+        }
+
         {
             std::lock_guard<std::mutex> lock(_mutex);
             _geometry = geometry;

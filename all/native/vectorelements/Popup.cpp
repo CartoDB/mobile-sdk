@@ -10,6 +10,9 @@ namespace carto {
         _anchorPointY(-1),
         _style(style)
     {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
     }
     
     Popup::Popup(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<PopupStyle>& style) :
@@ -18,6 +21,9 @@ namespace carto {
         _anchorPointY(-1),
         _style(style)
     {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
     }
     
     Popup::Popup(const MapPos& pos, const std::shared_ptr<PopupStyle>& style) :
@@ -26,6 +32,9 @@ namespace carto {
         _anchorPointY(-1),
         _style(style)
     {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
     }
     
     Popup::~Popup() {
@@ -53,6 +62,10 @@ namespace carto {
     }
     
     void Popup::setStyle(const std::shared_ptr<PopupStyle>& style) {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
+
         {
             std::lock_guard<std::mutex> lock(_mutex);
             _style = style;

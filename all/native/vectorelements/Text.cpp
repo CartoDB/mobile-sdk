@@ -96,6 +96,10 @@ namespace carto {
     }
 
     void Text::setStyle(const std::shared_ptr<TextStyle>& style) {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
+
         {
             std::lock_guard<std::mutex> lock(_mutex);
             _style = style;

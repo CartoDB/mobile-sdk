@@ -118,6 +118,10 @@ namespace carto {
     }
     
     void MapRenderer::captureRendering(const std::shared_ptr<RendererCaptureListener>& listener, bool waitWhileUpdating) {
+        if (!listener) {
+            throw std::invalid_argument("Null listener");
+        }
+
         {
             std::lock_guard<std::mutex> lock(_rendererCaptureListenersMutex);
             _rendererCaptureListeners.push_back(std::make_pair(DirectorPtr<RendererCaptureListener>(listener), waitWhileUpdating));

@@ -90,6 +90,12 @@ namespace carto {
     }
     
     void LocalVectorDataSource::setAll(const std::vector<std::shared_ptr<VectorElement> >& elements) {
+        for (const std::shared_ptr<VectorElement>& element : elements) {
+            if (!element) {
+                throw std::invalid_argument("Null element");
+            }
+        }
+
         std::vector<std::shared_ptr<VectorElement> > elementsAdded, elementsRemoved;
         {
             std::lock_guard<std::mutex> lock(_mutex);
@@ -122,6 +128,10 @@ namespace carto {
     }
     
     void LocalVectorDataSource::add(const std::shared_ptr<VectorElement>& element) {
+        if (!element) {
+            throw std::invalid_argument("Null element");
+        }
+
         {
             std::lock_guard<std::mutex> lock(_mutex);
             element->setId(_elementId);
@@ -134,6 +144,12 @@ namespace carto {
     }
     
     void LocalVectorDataSource::addAll(const std::vector<std::shared_ptr<VectorElement> >& elements) {
+        for (const std::shared_ptr<VectorElement>& element : elements) {
+            if (!element) {
+                throw std::invalid_argument("Null element");
+            }
+        }
+
         {
             std::lock_guard<std::mutex> lock(_mutex);
             for (const std::shared_ptr<VectorElement>& element : elements) {
@@ -150,6 +166,10 @@ namespace carto {
     }
     
     bool LocalVectorDataSource::remove(const std::shared_ptr<VectorElement>& element) {
+        if (!element) {
+            throw std::invalid_argument("Null element");
+        }
+
         bool removed = false;
         {
             std::lock_guard<std::mutex> lock(_mutex);
@@ -164,6 +184,12 @@ namespace carto {
     }
     
     bool LocalVectorDataSource::removeAll(const std::vector<std::shared_ptr<VectorElement> >& elements) {
+        for (const std::shared_ptr<VectorElement>& element : elements) {
+            if (!element) {
+                throw std::invalid_argument("Null element");
+            }
+        }
+
         std::vector<std::shared_ptr<VectorElement> > removedElements;
         {
             std::lock_guard<std::mutex> lock(_mutex);

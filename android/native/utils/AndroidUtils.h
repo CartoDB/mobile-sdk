@@ -33,7 +33,7 @@ namespace carto {
         };
 
         static void AttachJVM(JNIEnv* jenv);
-    static void SetContext(jobject context);
+        static void SetContext(jobject context);
 
         static JavaVM* GetJVM();
         static JNIEnv* GetCurrentThreadJNIEnv();

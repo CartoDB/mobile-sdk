@@ -269,6 +269,9 @@ namespace carto {
             if (tileData->isReplaceWithParent()) {
                 continue;
             }
+            if (!tileData->getData()) {
+                break;
+            }
     
             // Save tile to texture cache, unless invalidated
             vt::TileId vtTile(_tile.getZoom(), _tile.getX(), _tile.getY());

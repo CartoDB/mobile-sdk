@@ -139,10 +139,10 @@ namespace carto {
         /**
          * Removes a vector element from the data source. The vector element is not removed persistently from actual
          * data source until commited.
-         * @param elementToRemove The vector element to be removed.
+         * @param element The vector element to be removed.
          * @return True if the vector element existed in the data source.
          */
-        bool remove(const std::shared_ptr<VectorElement>& elementToRemove);
+        bool remove(const std::shared_ptr<VectorElement>& element);
 
         /**
          * Returns whether all changes to data source elements have been committed.

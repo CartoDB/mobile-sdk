@@ -584,6 +584,10 @@ namespace carto {
     }
     
     void Options::setBaseProjection(const std::shared_ptr<Projection>& baseProjection) {
+        if (!baseProjection) {
+            throw std::invalid_argument("Null base projection");
+        }
+
         {
             std::lock_guard<std::mutex> lock(_mutex);
             if (_baseProjection == baseProjection) {

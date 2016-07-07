@@ -9,18 +9,27 @@ namespace carto {
         Billboard(baseBillboard),
         _style(style)
     {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
     }
     
     Marker::Marker(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<MarkerStyle>& style) :
         Billboard(geometry),
         _style(style)
     {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
     }
         
     Marker::Marker(const MapPos& pos, const std::shared_ptr<MarkerStyle>& style) :
         Billboard(pos),
         _style(style)
     {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
     }
     
     Marker::~Marker() {
@@ -32,6 +41,10 @@ namespace carto {
     }
     
     void Marker::setStyle(const std::shared_ptr<MarkerStyle>& style) {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
+
         {
             std::lock_guard<std::mutex> lock(_mutex);
             _style = style;

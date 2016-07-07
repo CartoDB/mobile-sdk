@@ -11,6 +11,7 @@
 
 %include <std_shared_ptr.i>
 %include <std_string.i>
+%include <cartoswig.i>
 
 %import "graphics/Bitmap.i"
 
@@ -35,6 +36,9 @@
 %typemap(jstype) jobject "android.graphics.Bitmap"
 %typemap(imtype) jobject "System.IntPtr"
 %typemap(cstype) jobject "Android.Graphics.Bitmap"
+
+%std_exceptions(carto::BitmapUtils::CreateBitmapFromAndroidBitmap)
+%std_exceptions(carto::BitmapUtils::CreateAndroidBitmapFromBitmap)
 
 %include "utils/BitmapUtils.h"
 

@@ -226,6 +226,10 @@ namespace carto {
     }
     
     void OGRVectorDataSource::add(const std::shared_ptr<VectorElement>& element) {
+        if (!element) {
+            throw std::invalid_argument("Null element");
+        }
+
         {
             std::lock_guard<std::mutex> lock(_dataBase->_mutex);
 
@@ -240,7 +244,11 @@ namespace carto {
         notifyElementAdded(element);
     }
     
-    bool OGRVectorDataSource::remove(const std::shared_ptr<VectorElement>& elementToRemove) {
+    bool OGRVectorDataSource::remove(const std::shared_ptr<VectorElement>& element) {
+        if (!element) {
+            throw std::invalid_argument("Null element");
+        }
+
         {
             std::lock_guard<std::mutex> lock(_dataBase->_mutex);
 
@@ -248,17 +256,17 @@ namespace carto {
                 return false;
             }
             
-            if (elementToRemove->getId() < 0) {
-                auto it = _localElements.find(elementToRemove->getId());
+            if (element->getId() < 0) {
+                auto it = _localElements.find(element->getId());
                 if (it == _localElements.end()) {
                     return false;
                 }
                 _localElements.erase(it);
             } else {
-                _localElements[elementToRemove->getId()] = std::shared_ptr<VectorElement>();
+                _localElements[element->getId()] = std::shared_ptr<VectorElement>();
             }
         }
-        notifyElementRemoved(elementToRemove);
+        notifyElementRemoved(element);
         return true;
     }
     

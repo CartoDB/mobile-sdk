@@ -57,6 +57,7 @@
 %attribute(carto::Options, float, WatermarkAlignmentY, getWatermarkAlignmentY, setWatermarkAlignmentY)
 %attribute(carto::Options, float, WatermarkScale, getWatermarkScale, setWatermarkScale)
 %attributeval(carto::Options, carto::ScreenPos, WatermarkPadding, getWatermarkPadding, setWatermarkPadding)
+%std_exceptions(carto::Options::setBaseProjection)
 !objc_rename(setWatermarkAnchorX) carto::Options::setWatermarkAnchor;
 !objc_rename(setWatermarkPaddingX) carto::Options::setWatermarkPadding;
 %ignore carto::Options::Options;

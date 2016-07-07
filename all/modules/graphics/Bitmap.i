@@ -22,6 +22,7 @@
 %attribute(carto::Bitmap, unsigned int, Height, getHeight)
 %attribute(carto::Bitmap, carto::ColorFormat::ColorFormat, ColorFormat, getColorFormat)
 %attribute(carto::Bitmap, unsigned int, BytesPerPixel, getBytesPerPixel)
+%std_exceptions(carto::Bitmap::CreateFromCompressed)
 %ignore carto::Bitmap::Bitmap(const unsigned char*, std::size_t);
 %ignore carto::Bitmap::Bitmap(const unsigned char*, unsigned int, unsigned int, ColorFormat::ColorFormat, unsigned int);
 %ignore carto::Bitmap::getPixelData;

@@ -10,6 +10,9 @@ namespace carto {
         _height(height),
         _style(style)
     {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
     }
         
     Polygon3D::Polygon3D(const std::vector<MapPos>& poses, const std::shared_ptr<Polygon3DStyle>& style, float height) :
@@ -17,6 +20,9 @@ namespace carto {
         _height(height),
         _style(style)
     {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
     }
     
     Polygon3D::Polygon3D(const std::vector<MapPos>& poses, const std::vector<std::vector<MapPos> >& holes,
@@ -25,6 +31,9 @@ namespace carto {
         _height(height),
         _style(style)
     {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
     }
     
     Polygon3D::~Polygon3D() {
@@ -36,6 +45,10 @@ namespace carto {
     }
     
     void Polygon3D::setGeometry(const std::shared_ptr<PolygonGeometry>& geometry) {
+        if (!geometry) {
+            throw std::invalid_argument("Null geometry");
+        }
+
         {
             std::lock_guard<std::mutex> lock(_mutex);
             _geometry = geometry;
@@ -86,6 +99,10 @@ namespace carto {
     }
     
     void Polygon3D::setStyle(const std::shared_ptr<Polygon3DStyle>& style) {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
+
         {
             std::lock_guard<std::mutex> lock(_mutex);
             _style = style;

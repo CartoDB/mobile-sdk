@@ -17,6 +17,8 @@
 
 !polymorphic_shared_ptr(carto::CartoOnlineRoutingService, routing.CartoOnlineRoutingService)
 
+%std_exceptions(carto::CartoOnlineRoutingService::calculateRoute)
+
 %feature("director") carto::CartoOnlineRoutingService;
 
 %include "routing/CartoOnlineRoutingService.h"

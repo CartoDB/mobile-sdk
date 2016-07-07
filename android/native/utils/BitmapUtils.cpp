@@ -35,11 +35,11 @@ namespace carto {
     }
 
     std::shared_ptr<Bitmap> BitmapUtils::CreateBitmapFromAndroidBitmap(jobject androidBitmap) {
-        JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
-
         if (!androidBitmap) {
-            return std::shared_ptr<Bitmap>();
+            throw std::invalid_argument("Null androidBitmap");
         }
+
+        JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
 
         AndroidBitmapInfo bitmapInfo;
         AndroidBitmap_getInfo(jenv, androidBitmap, &bitmapInfo);
@@ -85,11 +85,11 @@ namespace carto {
     }
 
     jobject BitmapUtils::CreateAndroidBitmapFromBitmap(const std::shared_ptr<Bitmap>& bitmap) {
-        JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
-
         if (!bitmap) {
-            return NULL;
+            throw std::invalid_argument("Null bitmap");
         }
+
+        JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
 
         jobject javaBitmapGlobal = NULL;
         {

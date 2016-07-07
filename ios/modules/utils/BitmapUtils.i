@@ -35,6 +35,9 @@
     $result = (__bridge_retained void*)$1;
 %}
 
+%std_exceptions(carto::BitmapUtils::CreateBitmapFromUIImage)
+%std_exceptions(carto::BitmapUtils::CreateUIImageFromBitmap)
+
 %include "utils/BitmapUtils.h"
 
 #endif

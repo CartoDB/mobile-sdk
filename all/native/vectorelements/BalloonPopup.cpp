@@ -287,6 +287,10 @@ namespace carto {
     }
 
     void BalloonPopup::setStyle(const std::shared_ptr<BalloonPopupStyle>& style) {
+        if (!style) {
+            throw std::invalid_argument("Null style");
+        }
+
         {
             std::lock_guard<std::mutex> lock(_mutex);
             _style = style;

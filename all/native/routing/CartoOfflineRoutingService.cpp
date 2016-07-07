@@ -29,6 +29,10 @@ namespace carto {
     }
 
     std::shared_ptr<RoutingResult> CartoOfflineRoutingService::calculateRoute(const std::shared_ptr<RoutingRequest>& request) const {
+        if (!request) {
+            throw std::invalid_argument("Null request");
+        }
+
         if (!_routeFinder) {
             Log::Errorf("CartoOfflineRoutingService::calculateRoute: Router not initialized");
             return std::shared_ptr<RoutingResult>();

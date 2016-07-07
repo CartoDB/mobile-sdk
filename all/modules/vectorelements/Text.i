@@ -21,6 +21,8 @@
 %attributestring(carto::Text, std::string, Title, getText, setText)
 %csmethodmodifiers carto::Text::Style "public new";
 !attributestring_polymorphic(carto::Text, styles.TextStyle, Style, getStyle, setStyle)
+%std_exceptions(carto::Text::Text)
+%std_exceptions(carto::Text::setStyle)
 
 %include "vectorelements/Text.h"
 

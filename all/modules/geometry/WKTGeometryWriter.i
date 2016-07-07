@@ -20,6 +20,7 @@
 %import "geometry/Geometry.i"
 
 %attribute(carto::WKTGeometryWriter, bool, Z, getZ, setZ)
+%std_exceptions(carto::WKTGeometryWriter::writeGeometry)
 
 %include "geometry/WKTGeometryWriter.h"
 

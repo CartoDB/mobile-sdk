@@ -20,6 +20,7 @@
 !shared_ptr(carto::MapRenderer, renderers.MapRenderer)
 
 %attributestring(carto::MapRenderer, std::shared_ptr<carto::MapRendererListener>, MapRendererListener, getMapRendererListener, setMapRendererListener)
+%std_exceptions(carto::MapRenderer::captureRendering)
 %ignore carto::MapRenderer::MapRenderer;
 %ignore carto::MapRenderer::init;
 %ignore carto::MapRenderer::deinit;

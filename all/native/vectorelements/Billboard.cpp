@@ -14,12 +14,16 @@ namespace carto {
     }
     
     void Billboard::setBaseBillboard(const std::shared_ptr<Billboard>& baseBillboard) {
+        if (!baseBillboard) {
+            throw std::invalid_argument("Null baseBillboard");
+        }
+
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            // TODO: Check for loops?
-            if (baseBillboard.get() == this) {
-                Log::Error("Billboard::setBaseBillboard: Billboard can't be attached to itself");
-                return;
+            for (std::shared_ptr<Billboard> billboard = baseBillboard; billboard; billboard = billboard->getBaseBillboard()) {
+                if (billboard.get() == this) {
+                    throw std::invalid_argument("Cycling loop when setting baseBillboard");
+                }
             }
     
             _baseBillboard = baseBillboard;
@@ -60,6 +64,10 @@ namespace carto {
     }
     
     void Billboard::setGeometry(const std::shared_ptr<Geometry>& geometry) {
+        if (!geometry) {
+            throw std::invalid_argument("Null geometry");
+        }
+   
         {
             std::lock_guard<std::mutex> lock(_mutex);
             _geometry = geometry;

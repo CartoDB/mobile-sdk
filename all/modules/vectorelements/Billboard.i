@@ -27,6 +27,9 @@
 %csmethodmodifiers carto::Billboard::Geometry "public new";
 !attributestring_polymorphic(carto::Billboard, geometry.Geometry, Geometry, getGeometry, setGeometry)
 %attributestring(carto::Billboard, std::shared_ptr<carto::Billboard>, BaseBillboard, getBaseBillboard, setBaseBillboard)
+%std_exceptions(carto::Billboard::Billboard)
+%std_exceptions(carto::Billboard::setBaseBillboard)
+%std_exceptions(carto::Billboard::setGeometry)
 %ignore carto::Billboard::getDrawData;
 %ignore carto::Billboard::setDrawData;
 
