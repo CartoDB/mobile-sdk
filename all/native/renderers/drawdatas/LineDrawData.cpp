@@ -232,6 +232,7 @@ namespace carto {
         cglib::vec2<float> nextPerpVec(-nextLine(1) / nextLineLength, nextLine(0) / nextLineLength);
 
         cglib::vec2<float> nextNormalVec = nextPerpVec;
+        bool resetNormalVec = true;
         if (style.getLineJoinType() == LineJoinType::LINE_JOIN_TYPE_MITER) {
             if (loopedLine) {
                 cglib::vec3<float> prevLine = cglib::vec3<float>::convert(_poses[0] - _poses[_poses.size() - 2]);
@@ -241,6 +242,7 @@ namespace carto {
                 float dot = cglib::dot_product(prevPerpVec, nextPerpVec);
                 if (dot >= LINE_JOIN_MIN_MITER_DOT) {
                     nextNormalVec = cglib::unit(prevPerpVec + nextPerpVec) * (1 / std::sqrt((1 + dot) / 2));
+                    resetNormalVec = false;
                 }
             }
         }
@@ -250,8 +252,6 @@ namespace carto {
         cglib::vec2<float> lastPerpVec;
         unsigned int vertexIndex = 0;
         for (std::size_t i = 1; i < _poses.size(); i++) {
-            cglib::vec2<float> prevNormalVec = nextNormalVec;
-
             cglib::vec3<double>& pos = _poses[i];
             cglib::vec3<double>& prevPos = _poses[i - 1];
             cglib::vec3<double>& nextPos = _poses[i + 1 < _poses.size() ? i + 1 : 1];
@@ -261,7 +261,21 @@ namespace carto {
             float prevLineLength = cglib::length(prevLine);
             cglib::vec2<float> prevPerpVec(-prevLine(1) / prevLineLength, prevLine(0) / prevLineLength);
 
+            // Trick to reuse already generated vertex data (only for mitered lines)
+            if (!resetNormalVec && vertexIndex >= 2) {
+                vertexIndex -= 2;
+                coords.pop_back();
+                coords.pop_back();
+                texCoords.pop_back();
+                texCoords.pop_back();
+                normals.pop_back();
+                normals.pop_back();
+            }
+
+            cglib::vec2<float> prevNormalVec = (resetNormalVec ? prevPerpVec : nextNormalVec);
             nextNormalVec = prevPerpVec;
+            resetNormalVec = true;
+
             if (style.getLineJoinType() == LineJoinType::LINE_JOIN_TYPE_MITER) {
                 if (i + 1 < _poses.size() || loopedLine) {
                     cglib::vec3<float> nextLine = cglib::vec3<float>::convert(nextPos - pos);
@@ -271,25 +285,9 @@ namespace carto {
                     float dot = cglib::dot_product(prevPerpVec, nextPerpVec);
                     if (dot >= LINE_JOIN_MIN_MITER_DOT) {
                         nextNormalVec = cglib::unit(prevPerpVec + nextPerpVec) * (1 / std::sqrt((1 + dot) / 2));
-
-                        // Trick to reuse already generated vertex data
-                        if (vertexIndex >= 2) {
-                            vertexIndex -= 2;
-                            coords.pop_back();
-                            coords.pop_back();
-                            texCoords.pop_back();
-                            texCoords.pop_back();
-                            normals.pop_back();
-                            normals.pop_back();
-                        }
-                    } else {
-                        prevNormalVec = nextNormalVec;
+                        resetNormalVec = false;
                     }
-                } else {
-                    prevNormalVec = nextNormalVec;
                 }
-            } else {
-                prevNormalVec = nextNormalVec;
             }
 
             if (i == 1) {
