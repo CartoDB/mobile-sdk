@@ -53,17 +53,30 @@ namespace carto {
         virtual std::shared_ptr<Bitmap> drawBitmap(const ScreenPos& anchorScreenPos,
                                                     float screenWidth, float screenHeight, float dpToPX) = 0;
 
-        // TODO: ScreenPos getAnchorPoint/setAnchorPoint
         /**
          * Returns the horizontal anchor point of this popup.
          * @return The horizontal anchor point of this popup.
          */
         float getAnchorPointX() const;
         /**
+         * Sets the horizontal anchor point for the popup. It should only be called from
+         * Popup::drawBitmap method, to match the anchor point to the drawn bitmap. 
+         * @param anchorPointX The new horizontal anchor point for the popup. -1 means the left side,
+         * 0 the center and 1 the right side of the popup. The default is 0.
+         */
+        void setAnchorPointX(float anchorPointX);
+        /**
          * Returns the vertical anchor point of this popup.
          * @return The vertical anchor point of this popup.
          */
         float getAnchorPointY() const;
+        /**
+         * Sets the vertical anchor point for the popup. It should only be called from
+         * Popup::drawBitmap method, to match the anchor point to the drawn bitmap. 
+         * @param anchorPointY The vertical anchor point for the popup. -1 means the bottom,
+         * 0 the center and 1 the top of the popup. The default is -1.
+         */
+        void setAnchorPointY(float anchorPointY);
         /**
          * Sets the anchor point for the popup. It should only be called from
          * Popup::drawBitmap method, to match the anchor point to the drawn bitmap. 

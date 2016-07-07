@@ -19,7 +19,7 @@
 
 !shared_ptr(carto::PopupDrawInfo, ui.PopupDrawInfo)
 
-%attributeval(carto::PopupDrawInfo, carto::ScreenPos, AnchorPoint, getAnchorPoint)
+%attributeval(carto::PopupDrawInfo, carto::ScreenPos, AnchorScreenPos, getAnchorScreenPos)
 %attributeval(carto::PopupDrawInfo, carto::ScreenBounds, ScreenBounds, getScreenBounds)
 !attributestring_polymorphic(carto::PopupDrawInfo, vectorelements.Popup, Popup, getPopup)
 %attribute(carto::PopupDrawInfo, float, DPToPX, getDPToPX)

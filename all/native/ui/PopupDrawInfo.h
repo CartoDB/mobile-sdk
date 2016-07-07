@@ -22,19 +22,19 @@ namespace carto {
     public:
         /**
          * Constructs a PopupClickInfo object from a click position and a vector element.
-         * @param anchorPoint The anchor point of the popup.
+         * @param anchorScreenPos The screen position of the anchor point of this popup in pixels.
          * @param screenBounds The screen bounds for clipping the popup.
          * @param popup The popup on which the click was performed.
          * @param dpToPX The value used for converting display independent pixels (dp) to pixels (px).
          */
-        PopupDrawInfo(const ScreenPos& anchorPoint, const ScreenBounds& screenBounds, const std::shared_ptr<Popup>& popup, float dpToPX);
+        PopupDrawInfo(const ScreenPos& anchorScreenPos, const ScreenBounds& screenBounds, const std::shared_ptr<Popup>& popup, float dpToPX);
         virtual ~PopupDrawInfo();
     
         /**
-         * Returns the popup anchor point coordinates.
-         * @return The popup anchor point coordinates.
+         * Returns the screen position of the anchor point of this popup in pixels.
+         * @return The screen position of the anchor point of this popup in pixels.
          */
-        const ScreenPos& getAnchorPoint() const;
+        const ScreenPos& getAnchorScreenPos() const;
         
         /**
          * Returns the screen bounds, so that the popup can be clipped if neccessary.
@@ -55,7 +55,7 @@ namespace carto {
         float getDPToPX() const;
     
     private:
-        ScreenPos _anchorPoint;
+        ScreenPos _anchorScreenPos;
         ScreenBounds _screenBounds;
         std::shared_ptr<Popup> _popup;
         float _dpToPX;

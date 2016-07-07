@@ -21,8 +21,8 @@
 
 !polymorphic_shared_ptr(carto::Popup, vectorelements.Popup)
 
-%attribute(carto::Popup, float, AnchorPointX, getAnchorPointX)
-%attribute(carto::Popup, float, AnchorPointY, getAnchorPointY)
+%attribute(carto::Popup, float, AnchorPointX, getAnchorPointX, setAnchorPointX)
+%attribute(carto::Popup, float, AnchorPointY, getAnchorPointY, setAnchorPointY)
 !attributestring_polymorphic(carto::Popup, styles.PopupStyle, Style, getStyle, setStyle)
 %std_exceptions(carto::Popup::Popup)
 %std_exceptions(carto::Popup::setStyle)
