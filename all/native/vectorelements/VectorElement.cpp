@@ -94,9 +94,6 @@ namespace carto {
         _metaData(),
         _visible(true)
     {
-        if (!geometry) {
-            throw std::invalid_argument("Null geometry");
-        }
     }
         
     void VectorElement::attachToDataSource(const std::weak_ptr<VectorDataSource>& dataSource) {

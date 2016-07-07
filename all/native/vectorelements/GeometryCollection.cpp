@@ -9,6 +9,9 @@ namespace carto {
         VectorElement(geometry),
         _style(style)
     {
+        if (!geometry) {
+            throw std::invalid_argument("Null geometry");
+        }
         if (!style) {
             throw std::invalid_argument("Null style");
         }

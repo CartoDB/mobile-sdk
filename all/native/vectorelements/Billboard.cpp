@@ -103,6 +103,9 @@ namespace carto {
         _baseBillboard(baseBillboard),
         _rotation(0)
     {
+        if (!baseBillboard) {
+            throw std::invalid_argument("Null baseBillboard");
+        }
     }
     
     Billboard::Billboard(const std::shared_ptr<Geometry>& geometry) :
@@ -110,6 +113,9 @@ namespace carto {
         _baseBillboard(),
         _rotation(0)
     {
+        if (!geometry) {
+            throw std::invalid_argument("Null geometry");
+        }
     }
         
     Billboard::Billboard(const MapPos& pos) :

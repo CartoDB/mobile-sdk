@@ -15,6 +15,9 @@ namespace carto {
         _scale(1),
         _sourceModel(sourceModel)
     {
+        if (!geometry) {
+            throw std::invalid_argument("Null geometry");
+        }
         if (!sourceModel) {
             throw std::invalid_argument("Null sourceModel");
         }
@@ -47,6 +50,9 @@ namespace carto {
         _scale(1),
         _sourceModel()
     {
+        if (!geometry) {
+            throw std::invalid_argument("Null geometry");
+        }
         if (!sourceModelData) {
             throw std::invalid_argument("Null sourceModelData");
         }
