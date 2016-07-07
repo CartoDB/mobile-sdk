@@ -32,7 +32,7 @@ namespace carto {
             MapPos mapPos;
             long long modelLODTreeId;
     
-            MapTile(long long mapTileId, const MapPos &mapPos, long long modelLODTreeId) : mapTileId(mapTileId), mapPos(mapPos), modelLODTreeId(modelLODTreeId) { }
+            MapTile(long long mapTileId, const MapPos& mapPos, long long modelLODTreeId) : mapTileId(mapTileId), mapPos(mapPos), modelLODTreeId(modelLODTreeId) { }
         };
     
         virtual ~NMLModelLODTreeDataSource();

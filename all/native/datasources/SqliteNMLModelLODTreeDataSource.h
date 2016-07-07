@@ -25,10 +25,9 @@ namespace carto {
     public:
         /**
          * Constructs a SqliteNMLModelLODTreeDataSource object.
-         * @param projection The projection for the database. Currently only EPSG3857 is supported.
          * @param fileName The file name of the sqlite database file.
          */
-        SqliteNMLModelLODTreeDataSource(const std::shared_ptr<Projection>& projection, const std::string& fileName);
+        SqliteNMLModelLODTreeDataSource(const std::string& fileName);
         virtual ~SqliteNMLModelLODTreeDataSource();
 
         virtual std::vector<MapTile> loadMapTiles(const std::shared_ptr<CullState>& cullState);

@@ -2,7 +2,7 @@
 
 #include "SqliteNMLModelLODTreeDataSource.h"
 #include "renderers/components/CullState.h"
-#include "projections/Projection.h"
+#include "projections/EPSG3857.h"
 #include "utils/Log.h"
 
 #include <nml/Package.h>
@@ -13,8 +13,8 @@
 
 namespace carto {
 
-    SqliteNMLModelLODTreeDataSource::SqliteNMLModelLODTreeDataSource(const std::shared_ptr<Projection>& projection, const std::string& fileName) :
-        NMLModelLODTreeDataSource(projection),
+    SqliteNMLModelLODTreeDataSource::SqliteNMLModelLODTreeDataSource(const std::string& fileName) :
+        NMLModelLODTreeDataSource(std::make_shared<EPSG3857>()),
         _db()
     {
         try {

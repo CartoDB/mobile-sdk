@@ -21,10 +21,9 @@ namespace carto {
     public:
         /**
          * Constructs an OnlineNMLModelLODTreeDataSource object.
-         * @param projection The projection for the database. Currently only EPSG3857 is supported.
-         * @param serviceUrl The service connection point.
+         * @param serviceURL The service connection point.
          */
-        OnlineNMLModelLODTreeDataSource(const std::shared_ptr<Projection>& projection, const std::string& serviceUrl);
+        OnlineNMLModelLODTreeDataSource(const std::string& serviceURL);
         virtual ~OnlineNMLModelLODTreeDataSource();
     
         virtual std::vector<MapTile> loadMapTiles(const std::shared_ptr<CullState>& cullState);
@@ -52,7 +51,7 @@ namespace carto {
     
         static bool inflate(const std::vector<unsigned char>& in, std::vector<unsigned char>& out);
     
-        std::string _serviceUrl;
+        std::string _serviceURL;
     };
     
 }

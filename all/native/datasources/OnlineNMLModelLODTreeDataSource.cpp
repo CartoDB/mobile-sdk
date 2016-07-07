@@ -3,7 +3,7 @@
 #include "OnlineNMLModelLODTreeDataSource.h"
 #include "core/BinaryData.h"
 #include "graphics/ViewState.h"
-#include "projections/Projection.h"
+#include "projections/EPSG3857.h"
 #include "renderers/components/CullState.h"
 #include "utils/Log.h"
 #include "utils/NetworkUtils.h"
@@ -20,9 +20,9 @@
 
 namespace carto {
 
-    OnlineNMLModelLODTreeDataSource::OnlineNMLModelLODTreeDataSource(const std::shared_ptr<Projection>& projection, const std::string& serviceUrl) :
-        NMLModelLODTreeDataSource(projection),
-        _serviceUrl(serviceUrl)
+    OnlineNMLModelLODTreeDataSource::OnlineNMLModelLODTreeDataSource(const std::shared_ptr<Projection>& projection, const std::string& serviceURL) :
+        NMLModelLODTreeDataSource(std::make_shared<EPSG3857>()),
+        _serviceURL(serviceURL)
     {
     }
     
@@ -39,7 +39,7 @@ namespace carto {
         urlParams["mapbounds_x1"] = boost::lexical_cast<std::string>(bounds.getMax().getX());
         urlParams["mapbounds_y1"] = boost::lexical_cast<std::string>(bounds.getMax().getY());
         urlParams["width"] = boost::lexical_cast<std::string>(_projection->getBounds().getDelta().getX());
-        std::string url = NetworkUtils::BuildURLFromParameters(_serviceUrl, urlParams);
+        std::string url = NetworkUtils::BuildURLFromParameters(_serviceURL, urlParams);
     
         Log::Debugf("OnlineNMLModelLODTreeDataSource: Request %s", url.c_str());
         std::shared_ptr<BinaryData> response;
@@ -81,7 +81,7 @@ namespace carto {
         std::map<std::string, std::string> urlParams;
         urlParams["q"] = "ModelLODTree";
         urlParams["id"] = boost::lexical_cast<std::string>(mapTile.modelLODTreeId);
-        std::string url = NetworkUtils::BuildURLFromParameters(_serviceUrl, urlParams);
+        std::string url = NetworkUtils::BuildURLFromParameters(_serviceURL, urlParams);
     
         Log::Debugf("OnlineNMLModelLODTreeDataSource: Request %s", url.c_str());
         std::shared_ptr<BinaryData> response;
@@ -164,7 +164,7 @@ namespace carto {
         std::map<std::string, std::string> urlParams;
         urlParams["q"] = "Meshes";
         urlParams["ids"] = boost::lexical_cast<std::string>(meshId);
-        std::string url = NetworkUtils::BuildURLFromParameters(_serviceUrl, urlParams);
+        std::string url = NetworkUtils::BuildURLFromParameters(_serviceURL, urlParams);
     
         Log::Debugf("OnlineNMLModelLODTreeDataSource: Request %s", url.c_str());
         std::shared_ptr<BinaryData> response;
@@ -191,7 +191,7 @@ namespace carto {
         std::map<std::string, std::string> urlParams;
         urlParams["q"] = "Textures";
         urlParams["ids"] = boost::lexical_cast<std::string>(textureId);
-        std::string url = NetworkUtils::BuildURLFromParameters(_serviceUrl, urlParams);
+        std::string url = NetworkUtils::BuildURLFromParameters(_serviceURL, urlParams);
     
         Log::Debugf("OnlineNMLModelLODTreeDataSource: Request %s", url.c_str());
         std::shared_ptr<BinaryData> response;
