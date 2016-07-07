@@ -79,6 +79,17 @@
   }
 %enddef
 
+%include <exception.i>
+
+%define %std_exceptions(Method)
+%feature("except") Method {
+  try {
+    $action
+  }
+  SWIG_CATCH_STDEXCEPT
+}
+%enddef
+
 // Change director ownership, native side
 // Dotnet/PInvoke does not support this, so ownership handling
 // must be done on managed side.
