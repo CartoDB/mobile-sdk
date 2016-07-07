@@ -9,14 +9,19 @@
 
 #ifdef _CARTO_EDITABLE_SUPPORT
 
+#include "core/MapPos.h"
+#include "core/MapVec.h"
 #include "components/DirectorPtr.h"
 #include "layers/VectorLayer.h"
+#include "ui/TouchHandler.h"
+#include "ui/VectorElementDragInfo.h"
 
 #include <memory>
 
 namespace carto {
+    class Geometry;
+    class VectorElement;
     class PointStyle;
-    class TouchHandler;
     class VectorEditEventListener;
 
     /**

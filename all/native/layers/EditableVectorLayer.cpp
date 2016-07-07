@@ -16,6 +16,7 @@
 #include "renderers/Polygon3DRenderer.h"
 #include "renderers/PolygonRenderer.h"
 #include "renderers/components/CullState.h"
+#include "renderers/components/RayIntersectedElement.h"
 #include "renderers/drawdatas/LabelDrawData.h"
 #include "renderers/drawdatas/LineDrawData.h"
 #include "renderers/drawdatas/MarkerDrawData.h"
@@ -32,8 +33,6 @@
 #include "vectorelements/Polygon3D.h"
 #include "vectorelements/Polygon.h"
 #include "vectorelements/Popup.h"
-#include "ui/TouchHandler.h"
-#include "ui/VectorElementDragInfo.h"
 #include "utils/Log.h"
 
 #include <vector>
@@ -139,9 +138,9 @@ namespace carto {
         _overlayRenderer->offsetLayerHorizontally(offset);
     }
 
-    void EditableVectorLayer::onSurfaceCreated(ShaderManager& shaderManager) {
-        VectorLayer::onSurfaceCreated(shaderManager);
-        _overlayRenderer->onSurfaceCreated(shaderManager);
+    void EditableVectorLayer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
+        VectorLayer::onSurfaceCreated(shaderManager, textureManager);
+        _overlayRenderer->onSurfaceCreated(shaderManager, textureManager);
     }
 
     bool EditableVectorLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState)
@@ -276,7 +275,7 @@ namespace carto {
             return false;
         }
 
-        DirectorPtr<VectorEditEventListener> vectorEditEventListener = _vectorEditEventListener;
+        DirectorPtr<VectorEditEventListener> vectorEditEventListener = layer->_vectorEditEventListener;
 
         std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
 
@@ -296,10 +295,13 @@ namespace carto {
         case TouchHandler::ACTION_POINTER_1_DOWN:
             {
                 MapPos mapPos1 = layer->_dataSource->getProjection()->fromInternal(mapRenderer->screenToWorld(screenPos1));
-                MapPos cameraPos = mapRenderer->getCameraPos();
                 MapPos touchPos = mapRenderer->screenToWorld(screenPos1);
+                MapPos rayOrigin = mapRenderer->getCameraPos();
+                MapVec rayDir = touchPos - mapRenderer->getCameraPos();
+                cglib::ray3<double> ray(cglib::vec3<double>(rayOrigin.getX(), rayOrigin.getY(), rayOrigin.getZ()), cglib::vec3<double>(rayDir.getX(), rayDir.getY(), rayDir.getZ()));
+
                 std::vector<RayIntersectedElement> results;
-                layer->_overlayRenderer->calculateRayIntersectedElements(layer, cameraPos, touchPos - cameraPos, mapRenderer->getViewState(), results);
+                layer->_overlayRenderer->calculateRayIntersectedElements(layer, ray, mapRenderer->getViewState(), results);
                 if (!results.empty()) {
                     VectorElementDragResult::VectorElementDragResult result = VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_IGNORE;
                     if (vectorEditEventListener) {
@@ -326,7 +328,7 @@ namespace carto {
                 }
                 
                 results.clear();
-                layer->calculateRayIntersectedElements(*layer->_dataSource->getProjection(), cameraPos, touchPos - cameraPos, mapRenderer->getViewState(), results);
+                layer->calculateRayIntersectedElements(*layer->_dataSource->getProjection(), ray, mapRenderer->getViewState(), results);
                 for (const RayIntersectedElement& result : results) {
                     if (result.getElement<VectorElement>() != selectedElement) {
                         continue;
