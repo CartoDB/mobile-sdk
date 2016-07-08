@@ -535,7 +535,7 @@ namespace carto {
         return std::make_shared<VectorData>(elements);
     }
 
-    bool OGRVectorDataSource::testCapability(const std::string& capability) {
+    bool OGRVectorDataSource::testCapability(const std::string& capability) const {
         std::lock_guard<std::mutex> lock(_dataBase->_mutex);
         return _poLayer->TestCapability(capability.c_str()) != 0;
     }

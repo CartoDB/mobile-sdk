@@ -187,7 +187,7 @@ namespace carto {
          * @param capability The name of the capability (for example, "CreateFeature", "DeleteFeature", etc)
          * @return True when the capability exists, false otherwise.
          */
-        bool testCapability(const std::string& capability);
+        bool testCapability(const std::string& capability) const;
 
         /**
          * Sets global OGR configuration option. This method can be used to redefine default locale, for example.

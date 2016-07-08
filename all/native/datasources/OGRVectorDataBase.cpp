@@ -129,7 +129,7 @@ namespace carto {
         return true;
     }
     
-    bool OGRVectorDataBase::testCapability(const std::string& capability) {
+    bool OGRVectorDataBase::testCapability(const std::string& capability) const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _poDS->TestCapability(capability.c_str()) != 0;
     }
