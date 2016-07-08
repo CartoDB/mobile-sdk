@@ -33,8 +33,7 @@ namespace carto {
     std::shared_ptr<Layer> Layers::get(int index) const {
         std::lock_guard<std::mutex> lock(_mutex);
         if (index < 0 || static_cast<std::size_t>(index) >= _layers.size()) {
-            Log::Error("Layers::get: Layer index out of range");
-            throw std::invalid_argument("Layer index out of range");
+            throw std::out_of_range("Layer index out of range");
         }
         return _layers[index];
     }
@@ -49,7 +48,7 @@ namespace carto {
         {
             std::lock_guard<std::mutex> lock(_mutex);
             if (index < 0 || static_cast<std::size_t>(index) >= _layers.size()) {
-                throw std::invalid_argument("Layer index out of range");
+                throw std::out_of_range("Layer index out of range");
             }
 
             _layers[index]->setComponents(std::shared_ptr<CancelableThreadPool>(), std::shared_ptr<CancelableThreadPool>(), std::shared_ptr<Options>(), std::weak_ptr<MapRenderer>(), std::weak_ptr<TouchHandler>());
@@ -95,7 +94,7 @@ namespace carto {
         {
             std::lock_guard<std::mutex> lock(_mutex);
             if (index < 0 || static_cast<std::size_t>(index) > _layers.size()) {
-                throw std::invalid_argument("Layer index out of range");
+                throw std::out_of_range("Layer index out of range");
             }
             layer->setComponents(_envelopeThreadPool, _tileThreadPool, _options, _mapRenderer, _touchHandler);
             _layers.insert(_layers.begin() + index, layer);

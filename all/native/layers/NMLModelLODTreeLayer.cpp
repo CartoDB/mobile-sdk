@@ -72,6 +72,7 @@ namespace carto {
         if (!dataSource) {
             throw std::invalid_argument("Null dataSource");
         }
+
         _fetchThreadPool->setPoolSize(1);
     }
     
