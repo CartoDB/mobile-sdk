@@ -38,6 +38,9 @@ namespace carto {
         if (!bitmap) {
             throw std::invalid_argument("Null bitmap");
         }
+        if (!projection) {
+            throw std::invalid_argument("Null projection");
+        }
 
         if (mapPoses.size() != 2 && mapPoses.size() != 3 && mapPoses.size() != 4) {
             throw std::invalid_argument("Position arrays must contain 3 or 4 elements");

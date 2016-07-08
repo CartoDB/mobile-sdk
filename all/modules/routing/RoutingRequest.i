@@ -22,6 +22,7 @@
 
 %attributestring(carto::RoutingRequest, std::shared_ptr<carto::Projection>, Projection, getProjection)
 %attributeval(carto::RoutingRequest, std::vector<carto::MapPos>, Points, getPoints)
+%std_exceptions(carto::RoutingRequest::RoutingRequest)
 !standard_equals(carto::RoutingRequest);
 
 %include "routing/RoutingRequest.h"

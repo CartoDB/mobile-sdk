@@ -6,6 +6,9 @@ namespace carto {
         _projection(projection),
         _points(points)
     {
+        if (!projection) {
+            throw std::runtime_error("Null projection");
+        }
     }
 
     RoutingRequest::~RoutingRequest() {

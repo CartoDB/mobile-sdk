@@ -27,6 +27,7 @@
 %attributeval(carto::RoutingResult, std::vector<carto::RoutingInstruction>, Instructions, getInstructions)
 %attribute(carto::RoutingResult, double, TotalDistance, getTotalDistance)
 %attribute(carto::RoutingResult, double, TotalTime, getTotalTime)
+%std_exceptions(carto::RoutingResult::RoutingResult)
 !standard_equals(carto::RoutingResult);
 
 %include "routing/RoutingResult.h"

@@ -11,6 +11,9 @@ namespace carto {
         _points(points),
         _instructions(instructions)
     {
+        if (!projection) {
+            throw std::runtime_error("Null projection");
+        }
     }
 
     RoutingResult::~RoutingResult() {
