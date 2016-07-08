@@ -51,6 +51,10 @@ namespace carto {
     }
     
     void MarkerStyleBuilder::setBitmap(const std::shared_ptr<Bitmap>& bitmap) {
+        if (!bitmap) {
+            throw std::invalid_argument("Null bitmap");
+        }
+
         std::lock_guard<std::mutex> lock(_mutex);
         _bitmap = bitmap;
     }

@@ -15,10 +15,6 @@ namespace carto {
     PolygonStyleBuilder::~PolygonStyleBuilder() {
     }
     
-    /*void PolygonStyleBuilder::setBitmap(const std::shared_ptr<Bitmap>& bitmap) {
-        _bitmap = bitmap;
-    }*/
-        
     std::shared_ptr<LineStyle> PolygonStyleBuilder::getLineStyle() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _lineStyle;

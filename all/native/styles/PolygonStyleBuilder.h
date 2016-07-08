@@ -27,18 +27,6 @@ namespace carto {
         PolygonStyleBuilder();
         virtual ~PolygonStyleBuilder();
     
-        /*
-         * Returns the bitmap of the polygon.
-         * @return The bitmap of the polygon.
-         */
-        //std::shared_ptr<Bitmap> getBitmap() const;
-        /*
-         * Sets the bitmap that will be used for drawing the polygon. The image will be repeated 
-         * vertically and horizontally to cover the polygon. The default is "default_polygon.png"
-         * @param bitmap The new bitmap for the polygon.
-         */
-        //void setBitmap(const std::shared_ptr<Bitmap>& bitmap);
-    
         /**
          * Returns the line style of the edges of the polygon.
          * @return The line style of the edges of the polygon. May be null.

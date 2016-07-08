@@ -24,6 +24,7 @@
 %attribute(carto::MarkerStyleBuilder, float, AnchorPointX, getAnchorPointX, setAnchorPointX)
 %attribute(carto::MarkerStyleBuilder, float, AnchorPointY, getAnchorPointY, setAnchorPointY)
 %attributestring(carto::MarkerStyleBuilder, std::shared_ptr<carto::Bitmap>, Bitmap, getBitmap, setBitmap)
+%std_exceptions(carto::MarkerStyleBuilder::setBitmap)
 !objc_rename(setAnchorPointX) carto::MarkerStyleBuilder::setAnchorPoint(float, float);
 
 %include "styles/MarkerStyleBuilder.h"

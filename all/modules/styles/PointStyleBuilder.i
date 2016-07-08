@@ -21,6 +21,7 @@
 %attribute(carto::PointStyleBuilder, float, Size, getSize, setSize)
 %attribute(carto::PointStyleBuilder, float, ClickSize, getClickSize, setClickSize)
 %attributestring(carto::PointStyleBuilder, std::shared_ptr<carto::Bitmap>, Bitmap, getBitmap, setBitmap)
+%std_exceptions(carto::PointStyleBuilder::setBitmap)
 
 %include "styles/PointStyleBuilder.h"
 
