@@ -192,9 +192,10 @@ namespace carto { namespace css {
             return mvt::generateValueString(buildValue(constExpr->getValue()));
         }
         else if (auto fieldVarExpr = std::dynamic_pointer_cast<const FieldOrVarExpression>(expr)) {
-            if (fieldVarExpr->isField()) {
-                return "[" + fieldVarExpr->getFieldOrVar() + "]";
+            if (!fieldVarExpr->isField()) {
+                throw TranslatorException("FieldOrVarExpression: expecting field, not variable");
             }
+            return "[" + fieldVarExpr->getFieldOrVar() + "]";
         }
         else if (auto unaryExpr = std::dynamic_pointer_cast<const UnaryExpression>(expr)) {
             std::string exprStr = buildEscapedExpressionString(unaryExpr->getExpression());
@@ -246,7 +247,13 @@ namespace carto { namespace css {
     }
 
     std::shared_ptr<mvt::Predicate> CartoCSSMapnikTranslator::buildPredicate(const std::shared_ptr<const Predicate>& pred) const {
-        if (auto clsPred = std::dynamic_pointer_cast<const ClassPredicate>(pred)) {
+        if (std::dynamic_pointer_cast<const MapPredicate>(pred)) {
+            return std::shared_ptr<mvt::Predicate>();
+        }
+        else if (std::dynamic_pointer_cast<const LayerPredicate>(pred)) {
+            return std::shared_ptr<mvt::Predicate>();
+        }
+        else if (auto clsPred = std::dynamic_pointer_cast<const ClassPredicate>(pred)) {
             if (std::shared_ptr<mvt::ComparisonPredicate::Operator> op = buildOperator(OpPredicate::Op::EQ)) {
                 mvt::Value val = buildValue(clsPred->getClass());
                 return std::make_shared<mvt::ComparisonPredicate>(op, std::make_shared<mvt::VariableExpression>("class"), std::make_shared<mvt::ConstExpression>(val));
@@ -254,8 +261,7 @@ namespace carto { namespace css {
         }
         else if (auto opPred = std::dynamic_pointer_cast<const OpPredicate>(pred)) {
             if (!opPred->isField()) {
-                _logger->write(mvt::Logger::Severity::ERROR, "OpPredicate: expecting field");
-                return std::shared_ptr<mvt::Predicate>();
+                throw TranslatorException("OpPredicate: expecting field, not variable");
             }
             if (std::shared_ptr<mvt::ComparisonPredicate::Operator> op = buildOperator(opPred->getOp())) {
                 std::string var = opPred->getFieldOrVar();
@@ -263,8 +269,7 @@ namespace carto { namespace css {
                 return std::make_shared<mvt::ComparisonPredicate>(op, std::make_shared<mvt::VariableExpression>(var), std::make_shared<mvt::ConstExpression>(val));
             }
         }
-        _logger->write(mvt::Logger::Severity::ERROR, "Unsupported expression type");
-        return std::shared_ptr<mvt::Predicate>();
+        throw TranslatorException("Unsupported predicate type");
     }
 
     std::shared_ptr<mvt::ComparisonPredicate::Operator> CartoCSSMapnikTranslator::buildOperator(OpPredicate::Op op) const {
@@ -284,8 +289,7 @@ namespace carto { namespace css {
         case OpPredicate::Op::MATCH:
             return std::make_shared<mvt::MatchOperator>();
         }
-        _logger->write(mvt::Logger::Severity::ERROR, "Unsupported OpPredicate operator");
-        return std::shared_ptr<mvt::ComparisonPredicate::Operator>();
+        throw TranslatorException("Unsupported predicate operator");
     }
 
     mvt::Value CartoCSSMapnikTranslator::buildValue(const Value& val) const {
