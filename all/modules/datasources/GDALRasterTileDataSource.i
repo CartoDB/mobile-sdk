@@ -9,6 +9,7 @@
 
 %{
 #include "datasources/GDALRasterTileDataSource.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 
@@ -23,7 +24,7 @@
 !polymorphic_shared_ptr(carto::GDALRasterTileDataSource, datasources.GDALRasterTileDataSource)
 
 %attributeval(carto::GDALRasterTileDataSource, carto::MapBounds, DataExtent, getDataExtent)
-%std_exceptions(carto::GDALRasterTileDataSource::GDALRasterTileDataSource)
+%std_io_exceptions(carto::GDALRasterTileDataSource::GDALRasterTileDataSource)
 
 %feature("director") carto::GDALRasterTileDataSource;
 

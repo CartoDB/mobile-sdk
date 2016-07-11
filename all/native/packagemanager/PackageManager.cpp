@@ -2,6 +2,7 @@
 
 #include "PackageManager.h"
 #include "core/BinaryData.h"
+#include "components/Exceptions.h"
 #include "utils/Log.h"
 
 #include <cstdint>
@@ -69,14 +70,14 @@ namespace carto {
             _taskQueue = std::make_shared<PersistentTaskQueue>(createLocalFilePath(taskDbFileName));
         }
         catch (const std::exception& ex) {
-            Log::Errorf("PackageManager: Error while constructing PackageManager::PersistentTaskQueue: %s", ex.what());
+            Log::Errorf("PackageManager: Error while constructing PackageManager::PersistentTaskQueue: %s, trying to remove...", ex.what());
+            _taskQueue.reset();
             unlink(taskDbFileName.c_str());
             try {
                 _taskQueue = std::make_shared<PersistentTaskQueue>(createLocalFilePath(taskDbFileName));
             }
             catch (const std::exception& ex) {
-                Log::Errorf("PackageManager: Second error while constructing PackageManager::PersistentTaskQueue: %s", ex.what());
-                return;
+                throw FileException("Failed to create/open package manager task queue database", taskDbFileName);
             }
         }
 
@@ -86,7 +87,7 @@ namespace carto {
             initializeDb(*_localDb, _serverEncKey + _localEncKey);
         }
         catch (const std::exception& ex) {
-            Log::Errorf("PackageManager: Error while constructing PackageManager: %s", ex.what());
+            Log::Errorf("PackageManager: Error while constructing PackageManager: %s, trying to remove", ex.what());
             _localDb.reset();
             unlink(packageDbFileName.c_str());
             try {
@@ -94,9 +95,7 @@ namespace carto {
                 initializeDb(*_localDb, _serverEncKey + _localEncKey);
             }
             catch (const std::exception& ex) {
-                Log::Errorf("PackageManager: Second error while constructing PackageManager: %s", ex.what());
-                _localDb.reset();
-                return;
+                throw FileException("Failed to create/open package manager database", packageDbFileName);
             }
         }
 

@@ -1,4 +1,5 @@
 #include "CartoOfflineRoutingService.h"
+#include "components/Exceptions.h"
 #include "projections/Projection.h"
 #include "projections/EPSG3857.h"
 #include "routing/RoutingProxy.h"
@@ -17,10 +18,10 @@ namespace carto {
         auto graph = std::make_shared<Routing::RoutingGraph>(graphSettings);
         try {
             if (!graph->import(path)) {
-                Log::Errorf("CartoOfflineRoutingService: Failed to import graph file: %s", path.c_str());
+                throw FileException("Failed to import routing graph", path);
             }
         } catch (const std::exception& ex) {
-            Log::Errorf("CartoOfflineRoutingService: Exception while importing graph: %s", ex.what());
+            throw FileException("Exception while importing routing graph", path);
         }
         _routeFinder = std::make_shared<Routing::RouteFinder>(graph);
     }

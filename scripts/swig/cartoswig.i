@@ -90,6 +90,23 @@
 }
 %enddef
 
+%define %std_io_exceptions(Method)
+%feature("except", throws="java.io.IOException") Method {
+  try {
+    $action
+  }
+  catch (const carto::FileException& e) {
+    SWIG_exception(SWIG_IOError, e.what());
+    return $null;
+  }
+  catch (const carto::NetworkException& e) {
+    SWIG_exception(SWIG_IOError, e.what());
+    return $null;
+  }
+  SWIG_CATCH_STDEXCEPT
+}
+%enddef
+
 // Change director ownership, native side
 // Dotnet/PInvoke does not support this, so ownership handling
 // must be done on managed side.

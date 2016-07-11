@@ -9,6 +9,7 @@
 
 %{
 #include "datasources/OGRVectorDataSource.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 
@@ -34,7 +35,7 @@
 %attributeval(carto::OGRVectorDataSource, std::vector<std::string>, FieldNames, getFieldNames)
 %attributestring(carto::OGRVectorDataSource, std::string, CodePage, getCodePage, setCodePage)
 !attributestring_polymorphic(carto::OGRVectorDataSource, geometry.GeometrySimplifier, GeometrySimplifier, getGeometrySimplifier, setGeometrySimplifier)
-%std_exceptions(carto::OGRVectorDataSource::OGRVectorDataSource)
+%std_io_exceptions(carto::OGRVectorDataSource::OGRVectorDataSource)
 %std_exceptions(carto::OGRVectorDataSource::add)
 %std_exceptions(carto::OGRVectorDataSource::remove)
 

@@ -1,6 +1,7 @@
 #ifdef _CARTO_GDAL_SUPPORT
 
 #include "OGRVectorDataBase.h"
+#include "components/Exceptions.h"
 #include "utils/Log.h"
 
 #include <ogrsf_frmts.h>
@@ -27,8 +28,7 @@ namespace carto {
         OGRSFDriver* poDriver = nullptr;
         _poDS = OGRSFDriverRegistrar::Open(fileName.c_str(), writable, &poDriver);
         if (!_poDS) {
-            Log::Errorf("OGRVectorDataBase: Failed to open file %s.", fileName.c_str());
-            return;
+            throw FileException("Failed to open file", fileName);
         }
         
         for (int i = 0; i < _poDS->GetLayerCount(); i++) {

@@ -1,6 +1,7 @@
 #ifdef _CARTO_GDAL_SUPPORT
 
 #include "GDALRasterTileDataSource.h"
+#include "components/Exceptions.h"
 #include "projections/Projection.h"
 #include "projections/EPSG3857.h"
 #include "graphics/Bitmap.h"
@@ -100,8 +101,7 @@ namespace carto {
     {
         _poDataset = (GDALDataset*)GDALOpen(fileName.c_str(), GA_ReadOnly);
         if (!_poDataset) {
-            Log::Errorf("GDALRasterTileDataSource: Failed to open file %s.", fileName.c_str());
-            return;
+            throw FileExeption("Failed to open file", fileName);
         }
 
         _width = _poDataset->GetRasterXSize();
@@ -130,8 +130,7 @@ namespace carto {
     {
         _poDataset = (GDALDataset*)GDALOpen(fileName.c_str(), GA_ReadOnly);
         if (!_poDataset) {
-            Log::Errorf("GDALRasterTileDataSource: Failed to open file %s.", fileName.c_str());
-            return;
+            throw FileExeption("Failed to open file", fileName);
         }
         
         _width = _poDataset->GetRasterXSize();

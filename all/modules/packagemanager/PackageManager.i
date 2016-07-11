@@ -16,6 +16,8 @@
 #include "packagemanager/PackageMetaInfo.h"
 #include "packagemanager/PackageStatus.h"
 #include "packagemanager/PackageManagerListener.h"
+#include "components/Exceptions.h"
+#include <memory>
 %}
 
 %include <stdint.i>
@@ -36,6 +38,7 @@ using std::uint64_t;
 %attribute(carto::PackageManager, int, ServerPackageListAge, getServerPackageListAge)
 %attributestring(carto::PackageManager, std::shared_ptr<carto::PackageMetaInfo>, ServerPackageListMetaInfo, getServerPackageListMetaInfo)
 !attributestring_polymorphic(carto::PackageManager, packagemanager.PackageManagerListener, PackageManagerListener, getPackageManagerListener, setPackageManagerListener)
+%std_io_exceptions(carto::PackageManager::PackageManager)
 %ignore carto::PackageManager::PackageManager(const std::string&, const std::string&, const std::string&, const std::string&, const std::shared_ptr<Logger>&);
 %ignore carto::PackageManager::Logger;
 %ignore carto::PackageManager::OnChangeListener;

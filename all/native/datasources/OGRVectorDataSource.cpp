@@ -3,6 +3,7 @@
 #include "OGRVectorDataSource.h"
 #include "OGRVectorDataBase.h"
 #include "core/MapEnvelope.h"
+#include "components/Exceptions.h"
 #include "graphics/ViewState.h"
 #include "projections/Projection.h"
 #include "geometry/PointGeometry.h"
@@ -108,7 +109,7 @@ namespace carto {
             _poLayer = _dataBase->_poLayers.front();
             _poLayerSpatialRef = std::make_shared<LayerSpatialReference>(_poLayer, projection);
         } else {
-            Log::Errorf("OGRVectorDataSource: No layers in file %s", fileName.c_str());
+            Log::Infof("OGRVectorDataSource: No layers in file %s", fileName.c_str());
         }
     }
 
@@ -128,7 +129,7 @@ namespace carto {
             _poLayer = _dataBase->_poLayers[layerIndex];
             _poLayerSpatialRef = std::make_shared<LayerSpatialReference>(_poLayer, projection);
         } else {
-            Log::Errorf("OGRVectorDataSource: No layer %d in database", layerIndex);
+            throw std::invalid_argument("Invalid layer index");
         }
     }
     

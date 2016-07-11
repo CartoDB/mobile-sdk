@@ -1,6 +1,7 @@
 #include "MBTilesTileDataSource.h"
 #include "core/BinaryData.h"
 #include "core/MapTile.h"
+#include "components/Exceptions.h"
 #include "projections/Projection.h"
 #include "utils/Log.h"
 #include "utils/Utils.h"
@@ -18,8 +19,7 @@ namespace carto {
         try {
             _db.reset(new sqlite3pp::database(path.c_str()));
         } catch (...) {
-            Log::Error("MBTilesTileDataSource: Failed to connect to the database.");
-            _db.reset();
+            throw FileException("Failed to open database file", path);
         }
     }
     
@@ -29,8 +29,7 @@ namespace carto {
         try {
             _db.reset(new sqlite3pp::database(path.c_str()));
         } catch (...) {
-            Log::Error("MBTilesTileDataSource: Failed to connect to the database.");
-            _db.reset();
+            throw FileException("Failed to open database file", path);
         }
     }
     
@@ -40,8 +39,7 @@ namespace carto {
         try {
             _db.reset(new sqlite3pp::database(path.c_str()));
         } catch (...) {
-            Log::Error("MBTilesTileDataSource: Failed to connect to the database.");
-            _db.reset();
+            throw FileException("Failed to open database file", path);
         }
     }
         

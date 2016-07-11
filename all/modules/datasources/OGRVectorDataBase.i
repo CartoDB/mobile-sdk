@@ -9,6 +9,7 @@
 
 %{
 #include "datasources/OGRVectorDataBase.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 
@@ -22,6 +23,7 @@
 
 %attribute(carto::OGRVectorDataBase, int, LayerCount, getLayerCount)
 %attributeval(carto::OGRVectorDataBase, std::vector<std::string>, LayerNames, getLayerNames)
+%std_io_exceptions(carto::OGRVectorDataBase::OGRVectorDataBase)
 
 %include "datasources/OGRVectorDataBase.h"
 

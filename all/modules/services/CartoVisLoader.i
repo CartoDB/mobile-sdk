@@ -7,6 +7,8 @@
 
 %{
 #include "services/CartoVisLoader.h"
+#include "components/Exceptions.h"
+#include <memory>
 %}
 
 %include <std_string.i>
@@ -20,7 +22,7 @@
 
 %attribute(carto::CartoVisLoader, bool, DefaultVectorLayerMode, isDefaultVectorLayerMode, setDefaultVectorLayerMode)
 %attributestring(carto::CartoVisLoader, std::shared_ptr<carto::AssetPackage>, VectorTileAssetPackage, getVectorTileAssetPackage, setVectorTileAssetPackage)
-%std_exceptions(carto::CartoVisLoader::loadVis)
+%std_io_exceptions(carto::CartoVisLoader::loadVis)
 
 !standard_equals(carto::CartoVisLoader);
 

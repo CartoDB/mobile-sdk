@@ -9,6 +9,7 @@
 
 %{
 #include "datasources/SqliteNMLModelLODTreeDataSource.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 
@@ -18,6 +19,8 @@
 %import "datasources/NMLModelLODTreeDataSource.i"
 
 !polymorphic_shared_ptr(carto::SqliteNMLModelLODTreeDataSource, datasources.SqliteNMLModelLODTreeDataSource)
+
+%std_io_exceptions(carto::SqliteNMLModelLODTreeDataSource::SqliteNMLModelLODTreeDataSource)
 
 %include "datasources/SqliteNMLModelLODTreeDataSource.h"
 

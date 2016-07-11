@@ -1,6 +1,7 @@
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT
 
 #include "SqliteNMLModelLODTreeDataSource.h"
+#include "components/Exceptions.h"
 #include "renderers/components/CullState.h"
 #include "projections/EPSG3857.h"
 #include "utils/Log.h"
@@ -21,7 +22,7 @@ namespace carto {
             _db.reset(new sqlite3pp::database(fileName.c_str()));
             _db->execute("PRAGMA encoding='UTF-8'");
         } catch (const std::exception& e) {
-            Log::Errorf("SqliteNMLModelLODTreeDataSource::SqliteNMLModelLODTreeDataSource: Failed to open database: %s", e.what());
+            throw FileException("Failed to open database", fileName);
         }
     }
     

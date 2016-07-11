@@ -12,6 +12,8 @@
 
 %{
 #include "packagemanager/CartoPackageManager.h"
+#include "components/Exceptions.h"
+#include <memory>
 %}
 
 %include <stdint.i>
@@ -21,6 +23,8 @@
 %import "packagemanager/PackageManager.i"
 
 !polymorphic_shared_ptr(carto::CartoPackageManager, packagemanager.CartoPackageManager)
+
+%std_io_exceptions(carto::CartoPackageManager::CartoPackageManager)
 
 %include "packagemanager/CartoPackageManager.h"
 

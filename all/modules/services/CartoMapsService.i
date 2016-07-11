@@ -7,6 +7,8 @@
 
 %{
 #include "services/CartoMapsService.h"
+#include "components/Exceptions.h"
+#include <memory>
 %}
 
 %include <std_string.i>
@@ -29,6 +31,8 @@
 %attribute(carto::CartoMapsService, bool, Interactive, isInteractive, setInteractive)
 %attribute(carto::CartoMapsService, bool, DefaultVectorLayerMode, isDefaultVectorLayerMode, setDefaultVectorLayerMode)
 %attributestring(carto::CartoMapsService, std::shared_ptr<carto::AssetPackage>, VectorTileAssetPackage, getVectorTileAssetPackage, setVectorTileAssetPackage)
+%std_io_exceptions(carto::CartoMapsService::buildMap)
+%std_io_exceptions(carto::CartoMapsService::buildNamedMap)
 %ignore carto::CartoMapsService::getTilerURL;
 %ignore carto::CartoMapsService::setTilerURL;
 %ignore carto::CartoMapsService::getStatTag;
