@@ -114,6 +114,7 @@ STANDARD_EQUALS_TEMPLATE = """
 STANDARD_EQUALS_CODE_TEMPLATE = """
   /**
    * Checks if this object is equal to the specified object.
+   * @param obj The reference object.
    * @return True when objects are equal, false otherwise.
    */
   public boolean equals(Object obj) {
@@ -143,6 +144,7 @@ CUSTOM_EQUALS_TEMPLATE = """
 CUSTOM_EQUALS_CODE_TEMPLATE = """
   /**
    * Checks if this object is equal to the specified object.
+   * @param obj The reference object.
    * @return True when objects are equal, false otherwise.
    */
   public boolean equals(Object obj) {

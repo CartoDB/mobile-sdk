@@ -72,6 +72,9 @@ static carto::ClassRegistry::Entry $TYPE$RegistryEntry(typeid(const $CLASSNAME$&
 POLYMORPHIC_SHARED_PTR_INTERFACE_TEMPLATE = """
 /**
  * Creates a polymorphic instance of the given native object. This is used internally by the SDK.
+ * @param cPtr The native pointer of the instance.
+ * @param cMemoryOwn The ownership flag.
+ * @return The new instance.
  */
 +($TYPE$*)swigCreatePolymorphicInstance:(void*)cPtr swigOwnCObject:(BOOL)cMemoryOwn;
 """
@@ -108,6 +111,7 @@ VALUE_TEMPLATE_TEMPLATE = """
 EQUALS_INTERFACE_TEMPLATE = """
 /**  
  * Checks if this object is equal to the specified object.
+ * @param object The reference object.
  * @return True when objects are equal, false otherwise.
  */
 -(BOOL)isEqual:(id)object;

@@ -21,12 +21,14 @@ namespace carto {
         /**
          * Loads the specified bitmap asset bundled with the application.
          * @param assetPath The asset path to the image to be loaded.
+         * @return The loaded bitmap.
          */
         static std::shared_ptr<Bitmap> LoadBitmapFromAssets(const std::string& assetPath);
         
         /**
          * Loads bitmap from specified file.
          * @param filePath The path to the image to be loaded.
+         * @return The loaded bitmap.
          */
         static std::shared_ptr<Bitmap> LoadBitmapFromFile(const std::string& filePath);
 

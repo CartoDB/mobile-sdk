@@ -84,6 +84,9 @@ POLYMORPHIC_SHARED_PTR_CODE_TEMPLATE = """
   /// <summary>
   /// Creates a polymorphic instance of the given native object. This is used internally by the SDK.
   /// </summary>
+  /// <param name="cPtr">The native pointer of the instance.</param>
+  /// <param name="cMemoryOwn">The ownership flag.</param>
+  /// <returns>The created instance.</returns>
   public static $NAMESPACE$.$TYPE$ SwigCreatePolymorphicInstance$TYPE$(System.IntPtr cPtr, bool cMemoryOwn) {
     if (cPtr == System.IntPtr.Zero) {
       return null;
@@ -133,6 +136,7 @@ STANDARD_EQUALS_CODE_TEMPLATE = """
   /// <summary>
   /// Checks if this object is equal to the specified object.
   /// </summary>
+  /// <param name="obj">The reference object.</param>
   /// <returns>True when objects are equal, false otherwise.</returns>
   public override bool Equals(object obj) {
     if (obj is $csclassname) {
@@ -162,6 +166,7 @@ CUSTOM_EQUALS_CODE_TEMPLATE = """
   /// <summary>
   /// Checks if this object is equal to the specified object.
   /// </summary>
+  /// <param name="obj">The reference object.</param>
   /// <returns>True when objects are equal, false otherwise.</returns>
   public override bool Equals(object obj) {
     if (obj is $csclassname) {

@@ -23,24 +23,28 @@ namespace carto {
         /**
          * Loads the specified bitmap asset bundled with the application.
          * @param assetPath The asset path to the image to be loaded.
+         * @return The loaded bitmap.
          */
         static std::shared_ptr<Bitmap> LoadBitmapFromAssets(const std::string& assetPath);
         
         /**
          * Loads bitmap from specified file.
          * @param filePath The path to the image to be loaded.
+         * @return The loaded bitmap.
          */
         static std::shared_ptr<Bitmap> LoadBitmapFromFile(const std::string& filePath);
         
         /**
          * Creates a new Bitmap object from an existing UIImage.
          * @param image The reference UIImage.
+         * @return The created bitmap.
          */
         static std::shared_ptr<Bitmap> CreateBitmapFromUIImage(const UIImage* image);
     	
         /**
          * Creates a new UIImage object from an existing Bitmap.
-         * @return The UIImage.
+         * @param bitmap The reference bitmap.
+         * @return The created UIImage.
          */
         static UIImage* CreateUIImageFromBitmap(const std::shared_ptr<Bitmap>& bitmap);
 
