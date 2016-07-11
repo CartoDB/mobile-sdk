@@ -23,23 +23,27 @@ namespace carto {
         /**
          * Loads the specified bitmap asset bundled with the application.
          * @param assetPath The asset path to the image to be loaded.
+         * @return The loaded bitmap.
          */
         static std::shared_ptr<Bitmap> LoadBitmapFromAssets(const std::string& assetPath);
         
         /**
          * Loads bitmap from specified file.
          * @param filePath The path to the image to be loaded.
+         * @return The loaded bitmap.
          */
         static std::shared_ptr<Bitmap> LoadBitmapFromFile(const std::string& filePath);
 
         /**
          * Creates a new Bitmap object from an existing Android Bitmap.
-         * @param image The reference Android bitmap.
+         * @param androidBitmap The reference Android bitmap.
+         * @return The created bitmap.
          */
         static std::shared_ptr<Bitmap> CreateBitmapFromAndroidBitmap(jobject androidBitmap);
         
         /**
          * Creates a new Android Bitmap from an existing Bitmap.
+         * @param bitmap The existing bitmap.
          * @return The android Bitmap.
          */
         static jobject CreateAndroidBitmapFromBitmap(const std::shared_ptr<Bitmap>& bitmap);

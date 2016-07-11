@@ -79,7 +79,7 @@ namespace carto {
          * BillboardOrientation::FACE_CAMERA_GROUND then the rotation angle is added to the calculated billboard 
          * angle. If the orientation mode is set to BillboardOrientation::GROUND then the rotation means absolute
          * rotation, where 0 is points to the north.
-         * @return The new rotation angle of this billboard in degrees.
+         * @param rotation The new rotation angle of this billboard in degrees.
          */
         void setRotation(float rotation);
     

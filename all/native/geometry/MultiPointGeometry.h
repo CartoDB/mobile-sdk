@@ -19,12 +19,14 @@ namespace carto {
     public:
         /**
          * Constructs a MultiPointGeometry from the vector of points.
+         * @geometries The vector of point geometries.
          */
         MultiPointGeometry(const std::vector<std::shared_ptr<PointGeometry> >& geometries);
         virtual ~MultiPointGeometry();
 
         /**
          * Returns the point geometry at the specified index. Index must be between 0 and getGeometryCount (exclusive)
+         * @param index The index of the point geometry.
          * @return The point geometry at specified index.
          */
         std::shared_ptr<PointGeometry> getGeometry(int index) const;

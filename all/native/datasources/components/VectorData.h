@@ -20,15 +20,15 @@ namespace carto {
     class VectorData {
     public:
         /**
-         * Constructs a TileData object from a data blob.
-         * @param data The source tile data.
+         * Constructs a VectorData object from a list of vector elements.
+         * @param elements The list of vector elements.
          */
         VectorData(const std::vector<std::shared_ptr<VectorElement> >& elements);
         virtual ~VectorData();
         
         /**
-         * Returns tile data as binary data.
-         * @return Tile data as binary data.
+         * Returns the list of vector elements.
+         * @return The list of vector elements.
          */
         const std::vector<std::shared_ptr<VectorElement> >& getElements() const;
         

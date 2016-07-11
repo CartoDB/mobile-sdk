@@ -75,7 +75,7 @@ namespace carto {
         BillboardOrientation::BillboardOrientation getOrientationMode() const;
         /**
          * Sets the orientation mode for the marker. The default is BillboardOrientation::FACE_CAMERA_BILLBOARD.
-         * @return The new orientation mode for the marker.
+         * @param orientationMode The new orientation mode for the marker.
          */
         void setOrientationMode(BillboardOrientation::BillboardOrientation orientationMode);
         
@@ -86,7 +86,7 @@ namespace carto {
         BillboardScaling::BillboardScaling getScalingMode() const;
         /**
          * Sets the scaling mode for the marker. The default is BillboardScaling::CONST_SCREEN_SIZE.
-         * @return The new scaling mode for the marker.
+         * @param scalingMode The new scaling mode for the marker.
          */
         void setScalingMode(BillboardScaling::BillboardScaling scalingMode);
         

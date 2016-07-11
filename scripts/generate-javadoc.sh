@@ -7,7 +7,7 @@ javadocExec="javadoc"
 cmdDir=$(dirname $0)
 baseDir="${cmdDir}/.."
 javaDir="${baseDir}/android/java"
-javaGenDir="${baseDir}/android/generated/proxies"
+javaGenDir="${baseDir}/generated/android-java/proxies"
 javadocDir="${baseDir}/dist/android/javadoc"
 tempDir="${baseDir}/build/javadoc"
 
@@ -20,12 +20,8 @@ cp -r ${javaDir}/* ${tempDir}
 cp -r ${javaGenDir}/* ${tempDir}
 find ${tempDir} -name "*BaseMapView.java" -exec rm {} \;
 find ${tempDir} -name "*JNI.java" -exec rm {} \;
-find ${tempDir} -name "*MapTileQuadTreeNode.java" -exec rm {} \;
-find ${tempDir} -name "*QuadTreeNodeType.java" -exec rm {} \;
-find ${tempDir} -name "*QuadTreeRootType.java" -exec rm {} \;
 find ${tempDir} -name "*RedrawRequestListener.java" -exec rm {} \;
 find ${tempDir} -name "*ConfigChooser.java" -exec rm {} \;
-find ${tempDir} -name "*GLUtils.java" -exec rm {} \;
 find ${tempDir} -name "*AndroidUtils.java" -exec rm {} \;
 find ${tempDir} -name "*LicenseType.java" -exec rm {} \;
 find ${tempDir} -name "*.java" > ${tempDir}/files

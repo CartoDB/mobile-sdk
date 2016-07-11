@@ -63,7 +63,7 @@ namespace carto {
         std::shared_ptr<TextStyle> getStyle() const;
         /**
          * Sets the style for this text label.
-         * @return The new style that defines what this text label looks like.
+         * @param style The new style that defines what this text label looks like.
          */
         void setStyle(const std::shared_ptr<TextStyle>& style);
 

@@ -95,7 +95,7 @@ namespace carto {
         std::shared_ptr<PopupStyle> getStyle() const;
         /**
          * Sets the style for this Popup.
-         * @return The new style that defines what this popup looks like.
+         * @param style The new style that defines what this popup looks like.
          */
         void setStyle(const std::shared_ptr<PopupStyle>& style);
         

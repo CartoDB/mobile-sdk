@@ -22,34 +22,34 @@ namespace carto {
         virtual ~BillboardStyleBuilder();
     
         /**
-         * Returns the horizontal attaching anchor point of the billoard.
-         * @return The horizontal attaching anchor point of the billoard.
+         * Returns the horizontal attaching anchor point of the billboard.
+         * @return The horizontal attaching anchor point of the billboard.
          */
         float getAttachAnchorPointX() const;
         /**
-         * Sets the horizontal attaching anchor point of the billoard.
-         * @param attachAnchorPointX The new horizontal attaching anchor point for the billoard. -1 means the left side,
+         * Sets the horizontal attaching anchor point of the billboard.
+         * @param attachAnchorPointX The new horizontal attaching anchor point for the billboard. -1 means the left side,
          * 0 the center and 1 the right side. The default is 0.
          */
         void setAttachAnchorPointX(float attachAnchorPointX);
         /**
-         * Returns the vertical attaching anchor point of the billoard.
-         * @return The vertical attaching anchor point of the billoard.
+         * Returns the vertical attaching anchor point of the billboard.
+         * @return The vertical attaching anchor point of the billboard.
          */
         float getAttachAnchorPointY() const;
         /**
-         * Sets the vertical attaching anchor point of the billoard.
-         * @param attachAnchorPointY The new vertical attaching anchor point for the billoard. -1 means the bottom,
+         * Sets the vertical attaching anchor point of the billboard.
+         * @param attachAnchorPointY The new vertical attaching anchor point for the billboard. -1 means the bottom,
          * 0 the center and 1 the top. The default is 1.
          */
         void setAttachAnchorPointY(float attachAnchorPointY);
         /**
-         * Sets the attaching anchor point for the billoard. The attaching anchor point is
+         * Sets the attaching anchor point for the billboard. The attaching anchor point is
          * only used if the billboard is attached to another (base) billboard. It defines the point
          * on the base billboard where the attachable billboard will be placed.
-         * @param attachAnchorPointX The new horizontal attaching anchor point for the billoard. -1 means the left side,
+         * @param attachAnchorPointX The new horizontal attaching anchor point for the billboard. -1 means the left side,
          * 0 the center and 1 the right side. The default is 0.
-         * @param attachAnchorPointY The new vertical attaching anchor point for the billoard. -1 means the bottom,
+         * @param attachAnchorPointY The new vertical attaching anchor point for the billboard. -1 means the bottom,
          * 0 the center and 1 the top. The default is 1.
          */
         void setAttachAnchorPoint(float attachAnchorPointX, float attachAnchorPointY);
@@ -119,7 +119,7 @@ namespace carto {
          * Sets the placement priority for the billboard. Higher priority billboard get drawn in front of lower
          * priority billboards regardless of their distance to the camera. If billboards are not allowed to overlap then
          * higher priority billboards hide overlapping lower priority billboards. The default is 0.
-         * @return The new orientation mode for the billboard.
+         * @param placementPriority The new placement priority for the billboard.
          */
         void setPlacementPriority(int placementPriority);
         

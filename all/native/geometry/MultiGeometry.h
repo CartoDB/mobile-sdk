@@ -36,6 +36,7 @@ namespace carto {
 
         /**
          * Returns the geometry at the specified index. Index must be between 0 and getGeometryCount (exclusive)
+         * @param index The index of the geometry.
          * @return The geometry at specified index.
          */
         std::shared_ptr<Geometry> getGeometry(int index) const;

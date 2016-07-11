@@ -43,7 +43,7 @@ namespace carto {
         std::shared_ptr<GeometryCollectionStyle> getStyle() const;
         /**
          * Sets the style for this geometry collection.
-         * @return The new style that defines defines multigeometry rendering.
+         * @param style The new style that defines defines multigeometry rendering.
          */
         void setStyle(const std::shared_ptr<GeometryCollectionStyle>& style);
 

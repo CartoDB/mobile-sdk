@@ -45,7 +45,7 @@ namespace carto {
         virtual std::shared_ptr<MarkerStyle> getStyle() const;
         /**
          * Sets the style for this marker.
-         * @return The new style that defines what this marker looks like.
+         * @param style The new style that defines what this marker looks like.
          */
         void setStyle(const std::shared_ptr<MarkerStyle>& style);
         

@@ -19,12 +19,14 @@ namespace carto {
     public:
         /**
          * Constructs a MultiLineGeometry object from the vector of lines.
+         * @param geometries The vector of line geometries.
          */
         MultiLineGeometry(const std::vector<std::shared_ptr<LineGeometry> >& geometries);
         virtual ~MultiLineGeometry();
         
         /**
          * Returns the line geometry at the specified index. Index must be between 0 and getGeometryCount (exclusive)
+         * @param index The index of the line geometry.
          * @return The line geometry at specified index.
          */
         std::shared_ptr<LineGeometry> getGeometry(int index) const;

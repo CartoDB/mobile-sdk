@@ -141,11 +141,13 @@ namespace carto {
         /**
          * Returns the specified server package.
          * Note that the list must be retrieved from the server first, using startPackageListDownload.
+         * @param packageId The id of the package.
          * @return The specified server package or null if it is not in the server package list.
          */
         std::shared_ptr<PackageInfo> getServerPackage(const std::string& packageId) const;
         /**
          * Returns the specified local package.
+         * @param packageId The id of the package.
          * @return The specified local package or null if it can not be found in the package list.
          */
         std::shared_ptr<PackageInfo> getLocalPackage(const std::string& packageId) const;

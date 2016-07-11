@@ -65,6 +65,7 @@ namespace carto {
         
         /** 
          * Returns a meta data element corresponding to the key. If no value is found null variant is returned.
+         * @param key The key to use.
          * @return The value corresponding to the key from the meta data map. May be null.
          */
         Variant getMetaDataElement(const std::string& key) const;

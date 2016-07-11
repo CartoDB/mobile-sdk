@@ -19,12 +19,14 @@ namespace carto {
     public:
         /**
          * Constructs a MultiPolygonGeometry from the vector of polygons.
+         * @param geometries The vector of polygon geometries.
          */
         MultiPolygonGeometry(const std::vector<std::shared_ptr<PolygonGeometry> >& geometries);
         virtual ~MultiPolygonGeometry();
         
         /**
          * Returns the polygon geometry at the specified index. Index must be between 0 and getGeometryCount (exclusive)
+         * @param index The index of the polygon geometry.
          * @return The polygon geometry at specified index.
          */
         std::shared_ptr<PolygonGeometry> getGeometry(int index) const;

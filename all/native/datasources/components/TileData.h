@@ -36,7 +36,7 @@ namespace carto {
          * Sets the maximum age of tile data, tile data will expire after that point.
          * @param maxAge Tile data maximum age in milliseconds, or -1 if the data does not expire.
          */
-        void setMaxAge(long long age);
+        void setMaxAge(long long maxAge);
         
         /**
          * Returns true if the tile should be replaced with parent tile.

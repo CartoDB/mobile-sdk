@@ -61,7 +61,7 @@ namespace carto {
         std::shared_ptr<LineStyle> getStyle() const;
         /**
          * Sets the style for this line.
-         * @return The new style that defines what this line looks like.
+         * @param style The new style that defines what this line looks like.
          */
         void setStyle(const std::shared_ptr<LineStyle>& style);
         

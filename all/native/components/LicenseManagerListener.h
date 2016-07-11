@@ -18,6 +18,7 @@ namespace carto {
     
         /**
          * Called when the new license has been retrieved.
+         * @param licenseKey The new license key.
          */
         virtual void onLicenseUpdated(const std::string& licenseKey) = 0;
     };

@@ -20,6 +20,7 @@ namespace carto {
     public:
         /**
          * Constructs a new LineGeometry object from a map position list.
+         * @param poses The map position list.
          */
         LineGeometry(const std::vector<MapPos>& poses);
         virtual ~LineGeometry();

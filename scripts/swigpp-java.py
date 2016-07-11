@@ -75,6 +75,9 @@ static carto::ClassRegistry::Entry $TYPE$RegistryEntry(typeid(const $CLASSNAME$&
 POLYMORPHIC_SHARED_PTR_CODE_TEMPLATE = """
   /**
    * Creates a polymorphic instance of the given native object. This is used internally by the SDK.
+   * @param cPtr The native pointer of the instance.
+   * @param cMemoryOwn The ownership flag.
+   * @return The created instance.
    */
   public static $PACKAGE$.$TYPE$ swigCreatePolymorphicInstance(long cPtr, boolean cMemoryOwn) {
     if (cPtr == 0) {
