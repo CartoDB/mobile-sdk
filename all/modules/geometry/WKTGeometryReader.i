@@ -9,7 +9,7 @@
 
 %{
 #include "geometry/WKTGeometryReader.h"
-#include "geometry/Geometry.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 
@@ -18,6 +18,8 @@
 %include <cartoswig.i>
 
 %import "geometry/Geometry.i"
+
+%std_exceptions(carto::WKTGeometryReader::readGeometry)
 
 %include "geometry/WKTGeometryReader.h"
 

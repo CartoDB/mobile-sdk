@@ -8,6 +8,7 @@
 #define _CARTO_GEOJSONGEOMETRYREADER_H_
 
 #include "core/MapPos.h"
+#include "core/Variant.h"
 
 #include <memory>
 #include <string>
@@ -23,12 +24,14 @@ namespace rapidjson {
 }
 
 namespace carto {
+    class Feature;
+    class FeatureCollection;
     class Geometry;
     class Projection;
 
     /**
      * A GeoJSON parser.
-     * Only Geometry objects are supported, Features and FeatureCollections are not supported.
+     * Parser supports Geometry, Feature and FeatureCollection inputs.
      */
     class GeoJSONGeometryReader {
     public:
@@ -58,8 +61,25 @@ namespace carto {
          */
         std::shared_ptr<Geometry> readGeometry(const std::string& geoJSON) const;
 
+        /**
+         * Reads feature from the specified GeoJSON string.
+         * @param geoJSON The GeoJSON string to read.
+         * @return The feature read from the string. Null if reading failed.
+         */
+        std::shared_ptr<Feature> readFeature(const std::string& geoJSON) const;
+
+        /**
+         * Reads feature collection from the specified GeoJSON string.
+         * @param geoJSON The GeoJSON string to read.
+         * @return The feature collection read from the string. Null if reading failed.
+         */
+        std::shared_ptr<FeatureCollection> readFeatureCollection(const std::string& geoJSON) const;
+
     private:
+        std::shared_ptr<FeatureCollection> readFeatureCollection(const rapidjson::Value& value) const;
+        std::shared_ptr<Feature> readFeature(const rapidjson::Value& value) const;
         std::shared_ptr<Geometry> readGeometry(const rapidjson::Value& value) const;
+        Variant readProperties(const rapidjson::Value& value) const;
         MapPos readPoint(const rapidjson::Value& value) const;
         std::vector<MapPos> readRing(const rapidjson::Value& value) const;
         std::vector<std::vector<MapPos> > readRings(const rapidjson::Value& value) const;

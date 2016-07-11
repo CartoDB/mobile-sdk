@@ -1,4 +1,6 @@
 #include "GeoJSONGeometryWriter.h"
+#include "Feature.h"
+#include "FeatureCollection.h"
 #include "Geometry.h"
 #include "PointGeometry.h"
 #include "LineGeometry.h"
@@ -66,6 +68,67 @@ namespace carto {
         return std::string();
     }
 
+    std::string GeoJSONGeometryWriter::writeFeature(const std::shared_ptr<Feature>& feature) const {
+        if (!feature) {
+            throw std::invalid_argument("Null feature");
+        }
+
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        try {
+            rapidjson::StringBuffer geoJSON;
+            rapidjson::Writer<rapidjson::StringBuffer> writer(geoJSON);
+            rapidjson::Document doc;
+            writeFeature(feature, doc, doc.GetAllocator());
+            doc.Accept(writer);
+            return geoJSON.GetString();
+        } catch (const std::exception& ex) {
+            Log::Errorf("GeoJSONGeometryWriter: Exception while writing feature: %s", ex.what());
+        }
+        return std::string();
+    }
+
+    std::string GeoJSONGeometryWriter::writeFeatureCollection(const std::shared_ptr<FeatureCollection>& featureCollection) const {
+        if (!featureCollection) {
+            throw std::invalid_argument("Null feature collection");
+        }
+
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        try {
+            rapidjson::StringBuffer geoJSON;
+            rapidjson::Writer<rapidjson::StringBuffer> writer(geoJSON);
+            rapidjson::Document doc;
+            writeFeatureCollection(featureCollection, doc, doc.GetAllocator());
+            doc.Accept(writer);
+            return geoJSON.GetString();
+        } catch (const std::exception& ex) {
+            Log::Errorf("GeoJSONGeometryWriter: Exception while writing feature collection: %s", ex.what());
+        }
+        return std::string();
+    }
+
+    void GeoJSONGeometryWriter::writeFeatureCollection(const std::shared_ptr<FeatureCollection>& featureCollection, rapidjson::Value& value, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& allocator) const {
+        value.SetObject();
+        value.AddMember("type", "FeatureCollection", allocator);
+        rapidjson::Value featuresValue;
+        featuresValue.SetArray();
+        for (int i = 0; i < featureCollection->getFeatureCount(); i++) {
+            featuresValue.PushBack(rapidjson::Value(), allocator);
+            writeFeature(featureCollection->getFeature(i), featuresValue[i], allocator);
+        }
+        value.AddMember("features", featuresValue.Move(), allocator);
+    }
+
+    void GeoJSONGeometryWriter::writeFeature(const std::shared_ptr<Feature>& feature, rapidjson::Value& value, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& allocator) const {
+        value.SetObject();
+        value.AddMember("type", "Feature", allocator);
+        value.AddMember("geometry", rapidjson::Value(), allocator);
+        writeGeometry(feature->getGeometry(), value["geometry"], allocator);
+        value.AddMember("properties", rapidjson::Value(), allocator);
+        writeProperties(feature->getProperties(), value["properties"], allocator);
+    }
+
     void GeoJSONGeometryWriter::writeGeometry(const std::shared_ptr<Geometry>& geometry, rapidjson::Value& value, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& allocator) const {
         value.SetObject();
         if (auto point = std::dynamic_pointer_cast<PointGeometry>(geometry)) {
@@ -119,6 +182,15 @@ namespace carto {
         } else {
             throw std::runtime_error("Unsupported geometry type");
         }
+    }
+
+    void GeoJSONGeometryWriter::writeProperties(const Variant& properties, rapidjson::Value& value, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& allocator) const {
+        rapidjson::Document propertiesDoc;
+        if (propertiesDoc.Parse<rapidjson::kParseDefaultFlags>(properties.toString().c_str()).HasParseError()) {
+            throw std::runtime_error("Failed to read properties");
+        }
+
+        value.CopyFrom(propertiesDoc, allocator);
     }
 
     void GeoJSONGeometryWriter::writePoint(const MapPos& pos, rapidjson::Value& value, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& allocator) const {

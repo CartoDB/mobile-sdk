@@ -1,4 +1,6 @@
 #include "GeoJSONGeometryReader.h"
+#include "Feature.h"
+#include "FeatureCollection.h"
 #include "Geometry.h"
 #include "PointGeometry.h"
 #include "LineGeometry.h"
@@ -13,6 +15,8 @@
 #include <stdexcept>
 
 #include <rapidjson/rapidjson.h>
+#include <rapidjson/writer.h>
+#include <rapidjson/stringbuffer.h>
 #include <rapidjson/document.h>
 
 namespace carto {
@@ -46,6 +50,73 @@ namespace carto {
             Log::Errorf("GeoJSONGeometryReader::readGeometry: Failed to read geometry: %s", ex.what());
         }
         return std::shared_ptr<Geometry>();
+    }
+
+    std::shared_ptr<Feature> GeoJSONGeometryReader::readFeature(const std::string& geoJSON) const {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        rapidjson::Document featureDoc;
+        if (featureDoc.Parse<rapidjson::kParseDefaultFlags>(geoJSON.c_str()).HasParseError()) {
+            Log::Error("GeoJSONGeometryReader::readFeature: Error while parsing package list");
+            return std::shared_ptr<Feature>();
+        }
+        try {
+            return readFeature(featureDoc);
+        } catch (const std::exception& ex) {
+            Log::Errorf("GeoJSONGeometryReader::readFeature: Failed to read geometry: %s", ex.what());
+        }
+        return std::shared_ptr<Feature>();
+    }
+
+    std::shared_ptr<FeatureCollection> GeoJSONGeometryReader::readFeatureCollection(const std::string& geoJSON) const {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        rapidjson::Document featureCollectionDoc;
+        if (featureCollectionDoc.Parse<rapidjson::kParseDefaultFlags>(geoJSON.c_str()).HasParseError()) {
+            Log::Error("GeoJSONGeometryReader::readFeatureCollection: Error while parsing package list");
+            return std::shared_ptr<FeatureCollection>();
+        }
+        try {
+            return readFeatureCollection(featureCollectionDoc);
+        } catch (const std::exception& ex) {
+            Log::Errorf("GeoJSONGeometryReader::readFeatureCollection: Failed to read geometry: %s", ex.what());
+        }
+        return std::shared_ptr<FeatureCollection>();
+    }
+
+    std::shared_ptr<FeatureCollection> GeoJSONGeometryReader::readFeatureCollection(const rapidjson::Value& value) const {
+        if (!value.IsObject()) {
+            throw std::runtime_error("Wrong JSON type for feature collection");
+        }
+
+        std::string type = value["type"].GetString();
+        if (type != "FeatureCollection") {
+             throw std::runtime_error("Illegal type for the feature collection");
+        }
+
+        const rapidjson::Value& featuresValue = value["features"];
+        std::vector<std::shared_ptr<Feature> > features;
+        features.reserve(featuresValue.Size());
+        for (rapidjson::SizeType i = 0; i < featuresValue.Size(); i++) {
+            std::shared_ptr<Feature> feature = readFeature(featuresValue[i]);
+            features.push_back(feature);
+        }
+        return std::make_shared<FeatureCollection>(features);
+    }
+
+    std::shared_ptr<Feature> GeoJSONGeometryReader::readFeature(const rapidjson::Value& value) const {
+        if (!value.IsObject()) {
+            throw std::runtime_error("Wrong JSON type for feature");
+        }
+
+        std::string type = value["type"].GetString();
+        if (type != "Feature") {
+             throw std::runtime_error("Illegal type for the feature");
+        }
+
+        std::shared_ptr<Geometry> geometry = readGeometry(value["geometry"]);
+        Variant properties = readProperties(value["properties"]);
+        return std::make_shared<Feature>(geometry, properties);
     }
 
     std::shared_ptr<Geometry> GeoJSONGeometryReader::readGeometry(const rapidjson::Value& value) const {
@@ -107,6 +178,13 @@ namespace carto {
         } else {
             throw std::runtime_error("Unsupported geometry type: " + type);
         }
+    }
+
+    Variant GeoJSONGeometryReader::readProperties(const rapidjson::Value& value) const {
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        value.Accept(writer);
+        return Variant::FromString(buffer.GetString());
     }
 
     MapPos GeoJSONGeometryReader::readPoint(const rapidjson::Value& value) const {

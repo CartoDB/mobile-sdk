@@ -9,7 +9,7 @@
 
 %{
 #include "geometry/WKTGeometryWriter.h"
-#include "geometry/Geometry.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

@@ -13,14 +13,19 @@ namespace carto {
 
     class ParseException : public std::runtime_error {
     public:
-        explicit ParseException(const std::string& msg, const std::string& string) : runtime_error(msg), _string(string) { }
+        explicit ParseException(const std::string& msg, const std::string& string, int position) : runtime_error(msg), _string(string), _position(position) { }
 
         const std::string& getString() const {
             return _string;
         }
 
+        int getPosition() const {
+            return _position;
+        }
+
     private:
         std::string _string;
+        int _position;
     };      
 
     class FileException : public std::runtime_error {
