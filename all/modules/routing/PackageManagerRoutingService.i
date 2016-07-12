@@ -9,6 +9,7 @@
 
 %{
 #include "routing/PackageManagerRoutingService.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 
@@ -21,7 +22,7 @@
 !polymorphic_shared_ptr(carto::PackageManagerRoutingService, routing.PackageManagerRoutingService)
 
 %std_exceptions(carto::PackageManagerRoutingService::PackageManagerRoutingService)
-%std_exceptions(carto::PackageManagerRoutingService::calculateRoute)
+%std_io_exceptions(carto::PackageManagerRoutingService::calculateRoute)
 
 %feature("director") carto::PackageManagerRoutingService;
 

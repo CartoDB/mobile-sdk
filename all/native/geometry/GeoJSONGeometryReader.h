@@ -57,21 +57,21 @@ namespace carto {
         /**
          * Reads geometry from the specified GeoJSON string.
          * @param geoJSON The GeoJSON string to read.
-         * @return The geometry read from the string. Null if reading failed.
+         * @return The geometry read from the string.
          */
         std::shared_ptr<Geometry> readGeometry(const std::string& geoJSON) const;
 
         /**
          * Reads feature from the specified GeoJSON string.
          * @param geoJSON The GeoJSON string to read.
-         * @return The feature read from the string. Null if reading failed.
+         * @return The feature read from the string.
          */
         std::shared_ptr<Feature> readFeature(const std::string& geoJSON) const;
 
         /**
          * Reads feature collection from the specified GeoJSON string.
          * @param geoJSON The GeoJSON string to read.
-         * @return The feature collection read from the string. Null if reading failed.
+         * @return The feature collection read from the string.
          */
         std::shared_ptr<FeatureCollection> readFeatureCollection(const std::string& geoJSON) const;
 

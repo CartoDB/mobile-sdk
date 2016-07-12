@@ -1,5 +1,6 @@
 #include "CartoSQLService.h"
 #include "core/BinaryData.h"
+#include "components/Exceptions.h"
 #include "network/HTTPClient.h"
 #include "utils/GeneralUtils.h"
 #include "utils/NetworkUtils.h"
@@ -69,9 +70,11 @@ namespace carto {
         std::shared_ptr<BinaryData> responseData;
         std::map<std::string, std::string> responseHeaders;
         if (client.get(url, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
-            // TODO: expect error?
-            Log::Error("CartoSQLService::queryData: Failed to read response");
-            return Variant();
+            std::string result;
+            if (responseData) {
+                result = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+            }
+            throw GenericException("Failed to execute query", result);
         }
 
         // Parse result

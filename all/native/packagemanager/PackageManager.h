@@ -61,12 +61,12 @@ namespace carto {
          * Constructs a new package manager, given URL for package list and data folder.
          * The data folder must exist before creating a new package manager and it is assumed to be persistent.
          * Note: the package manager must be explicitly started using start() method!
-         * @param packageListUrl The URL that defines all packages.
+         * @param packageListURL The URL that defines all packages.
          * @param dataFolder The folder where downloaded packages are kept. It must exist and must be writable.
          * @param serverEncKey Encryption key for server packages
          * @param localEncKey Encryption key for local packages
          */
-        PackageManager(const std::string& packageListUrl, const std::string& dataFolder, const std::string& serverEncKey, const std::string& localEncKey);
+        PackageManager(const std::string& packageListURL, const std::string& dataFolder, const std::string& serverEncKey, const std::string& localEncKey);
         virtual ~PackageManager();
 
         /**
@@ -206,8 +206,8 @@ namespace carto {
     protected:
         virtual std::string createLocalFilePath(const std::string& name) const;
         virtual std::string createPackageFileName(const std::string& packageId, PackageType::PackageType packageType, int version) const;
-        virtual std::string createPackageListUrl(const std::string& baseUrl) const;
-        virtual std::string createPackageUrl(const std::string& packageId, int version, const std::string& baseUrl, bool downloaded) const;
+        virtual std::string createPackageListURL(const std::string& baseURL) const;
+        virtual std::string createPackageURL(const std::string& packageId, int version, const std::string& baseURL, bool downloaded) const;
         
         virtual std::shared_ptr<PackageInfo> getCustomPackage(const std::string& packageId, int version) const;
         
@@ -310,7 +310,7 @@ namespace carto {
         static int downloadFile(const std::string& url, NetworkUtils::HandlerFn handler, std::uint64_t offset = 0);
         static bool inflateData(const std::vector<unsigned char>& in, std::vector<unsigned char>& out);
 
-        const std::string _packageListUrl;
+        const std::string _packageListURL;
         const std::string _packageListFileName;
         const std::string _dataFolder;
         const std::string _serverEncKey;

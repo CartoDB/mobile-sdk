@@ -1,16 +1,17 @@
 #ifdef _CARTO_WKBT_SUPPORT
 
 #include "WKBGeometryWriter.h"
-#include "WKBGeometryEnums.h"
-#include "Geometry.h"
-#include "PointGeometry.h"
-#include "LineGeometry.h"
-#include "PolygonGeometry.h"
-#include "MultiGeometry.h"
-#include "MultiPointGeometry.h"
-#include "MultiLineGeometry.h"
-#include "MultiPolygonGeometry.h"
 #include "core/BinaryData.h"
+#include "components/Exceptions.h"
+#include "geometry/Geometry.h"
+#include "geometry/PointGeometry.h"
+#include "geometry/LineGeometry.h"
+#include "geometry/PolygonGeometry.h"
+#include "geometry/MultiGeometry.h"
+#include "geometry/MultiPointGeometry.h"
+#include "geometry/MultiLineGeometry.h"
+#include "geometry/MultiPolygonGeometry.h"
+#include "geometry/WKBGeometryEnums.h"
 #include "utils/Log.h"
 
 #include <stdexcept>
@@ -105,13 +106,8 @@ namespace carto {
         std::lock_guard<std::mutex> lock(_mutex);
 
         Stream stream;
-        try {
-            writeGeometry(geometry, stream);
-            return std::make_shared<BinaryData>(stream.data());
-        } catch (const std::exception& ex) {
-            Log::Errorf("WKBGeometryWriter::writeGeometry: Exception while writing geometry: %s", ex.what());
-        }
-        return std::shared_ptr<BinaryData>();
+        writeGeometry(geometry, stream);
+        return std::make_shared<BinaryData>(stream.data());
     }
 
     void WKBGeometryWriter::writeGeometry(const std::shared_ptr<Geometry>& geometry, Stream& stream) const {
@@ -146,7 +142,7 @@ namespace carto {
                 writeGeometry(multiGeometry->getGeometry(i), stream);
             }
         } else {
-            throw std::runtime_error("Unsupported geometry type");
+            throw std::invalid_argument("Unsupported geometry type");
         }
 
         stream.popBigEndian();

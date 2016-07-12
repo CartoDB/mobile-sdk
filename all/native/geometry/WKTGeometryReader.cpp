@@ -1,15 +1,16 @@
 #ifdef _CARTO_WKBT_SUPPORT
 
 #include "WKTGeometryReader.h"
-#include "Geometry.h"
-#include "PointGeometry.h"
-#include "LineGeometry.h"
-#include "PolygonGeometry.h"
-#include "MultiGeometry.h"
-#include "MultiPointGeometry.h"
-#include "MultiLineGeometry.h"
-#include "MultiPolygonGeometry.h"
-#include "WKTGeometryParser.h"
+#include "components/Exceptions.h"
+#include "geometry/Geometry.h"
+#include "geometry/PointGeometry.h"
+#include "geometry/LineGeometry.h"
+#include "geometry/PolygonGeometry.h"
+#include "geometry/MultiGeometry.h"
+#include "geometry/MultiPointGeometry.h"
+#include "geometry/MultiLineGeometry.h"
+#include "geometry/MultiPolygonGeometry.h"
+#include "geometry/WKTGeometryParser.h"
 #include "utils/Log.h"
 
 #include <memory>
@@ -30,9 +31,9 @@ namespace carto {
         std::shared_ptr<Geometry> geometry;
         bool result = boost::spirit::qi::phrase_parse(it, end, WKTGeometryParser<std::string::const_iterator>(), space, geometry);
         if (!result) {
-            Log::Error("WKTGeometryReader: Failed to parse WKT geometry.");
+            throw ParseException("Failed to parse WKT geometry", wkt);
         } else if (it != wkt.end()) {
-            Log::Error("WKTGeometryReader: Could not parse to the end of WKT geometry.");
+            throw ParseException("Could not parse to the end of WKT geometry", wkt, static_cast<int>(it - wkt.begin()));
         }
         return geometry;
     }

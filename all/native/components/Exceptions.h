@@ -13,7 +13,7 @@ namespace carto {
 
     class ParseException : public std::runtime_error {
     public:
-        explicit ParseException(const std::string& msg, const std::string& string, int position) : runtime_error(msg), _string(string), _position(position) { }
+        explicit ParseException(const std::string& msg, const std::string& string, int position = -1) : runtime_error(msg), _string(string), _position(position) { }
 
         const std::string& getString() const {
             return _string;
@@ -26,6 +26,11 @@ namespace carto {
     private:
         std::string _string;
         int _position;
+    };      
+
+    class GenerateException : public std::runtime_error {
+    public:
+        explicit GenerateException(const std::string& msg) : runtime_error(msg) { }
     };      
 
     class FileException : public std::runtime_error {
@@ -50,6 +55,18 @@ namespace carto {
 
     private:
         std::string _host;
+    };
+
+    class GenericException : public std::runtime_error {
+    public:
+        explicit GenericException(const std::string& msg, const std::string& details = std::string()) : runtime_error(msg), _details(details) { }
+
+        const std::string& getDetails() const {
+            return _details;
+        }
+
+    private:
+        std::string _details;
     };
 
 }

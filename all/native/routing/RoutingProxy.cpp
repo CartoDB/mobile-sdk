@@ -1,8 +1,10 @@
 #include "RoutingProxy.h"
 #include "core/BinaryData.h"
+#include "components/Exceptions.h"
 #include "projections/Projection.h"
 #include "projections/EPSG3857.h"
 #include "network/HTTPClient.h"
+#include "utils/NetworkUtils.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "routing/RouteFinder.h"
@@ -13,6 +15,7 @@
 
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
+#include <rapidjson/error/en.h>
 
 namespace carto {
 
@@ -29,8 +32,7 @@ namespace carto {
             Routing::RoutingQuery query(Routing::WGSPos(p0.getY(), p0.getX()), Routing::WGSPos(p1.getY(), p1.getX()));
             Routing::RoutingResult result = routeFinder->find(query);
             if (result.getStatus() == Routing::RoutingResult::Status::FAILED) {
-                Log::Info("RoutingProxy::CalculateRoute: Routing failed");
-                return std::shared_ptr<RoutingResult>();
+                throw GenericException("Routing failed");
             }
             totalPoints += result.getGeometry().size();
             totalInstructions += result.getInstructions().size();
@@ -92,21 +94,20 @@ namespace carto {
         std::map<std::string, std::string> responseHeaders;
         std::shared_ptr<BinaryData> responseData;
         if (httpClient.get(url, requestHeaders, responseHeaders, responseData) != 0) {
-            Log::Errorf("RoutingProxy::CalculateRoute: Failed to retrieve route data");
-            return std::shared_ptr<RoutingResult>();
+            throw NetworkException("Failed to retrieve route data", NetworkUtils::ParseURLHostName(url));
         }
         
         const char* responseDataPtr = reinterpret_cast<const char*>(responseData->data());
         std::string json(responseDataPtr, responseDataPtr + responseData->size());
         rapidjson::Document responseDoc;
         if (responseDoc.Parse<rapidjson::kParseDefaultFlags>(json.c_str()).HasParseError()) {
-            Log::Error("CartoOnlineRoutingService::calculateRoute: Error while parsing response");
-            return std::shared_ptr<RoutingResult>();
+            std::string err = rapidjson::GetParseError_En(responseDoc.GetParseError());
+            throw ParseException(err, json, static_cast<int>(responseDoc.GetErrorOffset()));
         }
+
         int statusCode = responseDoc["status"].GetInt();
         if (statusCode != 0 && statusCode != 200) {
-            Log::Errorf("RoutingProxy::CalculateRoute: Routing failed: %s", responseDoc["status_message"].GetString());
-            return std::shared_ptr<RoutingResult>();
+            throw GenericException("Routing failed", responseDoc["status_message"].GetString());
         }
         
         std::vector<MapPos> wgs84Points = DecodeGeometry(responseDoc["route_geometry"].GetString());

@@ -561,9 +561,15 @@ namespace carto {
             _started = true;
         }
         
-        bool refresh = loadTile(layer);
-        if (refresh) {
-            loadUTFGridTile(layer);
+        bool refresh = false;
+        try {
+            refresh = loadTile(layer);
+            if (refresh) {
+                loadUTFGridTile(layer);
+            }
+        }
+        catch (const std::exception& ex) {
+            Log::Errorf("TileLayer::FetchTaskBase: Exception while loading tile: %s", ex.what());
         }
     
         layer->_fetchingTiles.remove(_tile.getTileId());

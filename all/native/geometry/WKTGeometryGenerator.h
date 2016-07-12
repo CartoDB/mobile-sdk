@@ -7,14 +7,14 @@
 #ifndef _CARTO_WKTGEOMETRYGENERATOR_H_
 #define _CARTO_WKTGEOMETRYGENERATOR_H_
 
-#include "Geometry.h"
-#include "PointGeometry.h"
-#include "LineGeometry.h"
-#include "PolygonGeometry.h"
-#include "MultiGeometry.h"
-#include "MultiPointGeometry.h"
-#include "MultiLineGeometry.h"
-#include "MultiPolygonGeometry.h"
+#include "geometry/Geometry.h"
+#include "geometry/PointGeometry.h"
+#include "geometry/LineGeometry.h"
+#include "geometry/PolygonGeometry.h"
+#include "geometry/MultiGeometry.h"
+#include "geometry/MultiPointGeometry.h"
+#include "geometry/MultiLineGeometry.h"
+#include "geometry/MultiPolygonGeometry.h"
 #include "utils/Log.h"
 
 #include <memory>

@@ -564,7 +564,12 @@ namespace carto {
             layer->_fetchThreadPool->cancelAll();
             
             lock.unlock();
-            MapTileList mapTileList = layer->_dataSource->loadMapTiles(_cullState);
+            MapTileList mapTileList;
+            try {
+                mapTileList = layer->_dataSource->loadMapTiles(_cullState);
+            } catch (const std::exception& ex) {
+                Log::Errorf("NMLModelLODTreeLayer::MapTilesFetchTask: Exception while loading tiles: %s", ex.what());
+            }
             lock.lock();
     
             layer->_mapTileList = mapTileList;
@@ -614,7 +619,13 @@ namespace carto {
             return;
         }
     
-        std::shared_ptr<NMLModelLODTree> modelLODTree = layer->_dataSource->loadModelLODTree(_mapTile);
+        std::shared_ptr<NMLModelLODTree> modelLODTree;
+        try {
+            modelLODTree = layer->_dataSource->loadModelLODTree(_mapTile);
+        } catch (const std::exception& ex) {
+            Log::Errorf("NMLModelLODTreeLayer::ModelLODTreeFetchTask: Exception while loading LOD tree: %s", ex.what());
+        }
+
         if (modelLODTree) {
             std::unique_lock<std::recursive_mutex> lock(layer->_mutex);
             layer->_modelLODTreeMap[_mapTile.modelLODTreeId] = modelLODTree;
@@ -655,7 +666,13 @@ namespace carto {
         }
     
         // Load new mesh
-        std::shared_ptr<nml::Mesh> mesh = layer->_dataSource->loadMesh(_binding.meshId);
+        std::shared_ptr<nml::Mesh> mesh;
+        try {
+            mesh = layer->_dataSource->loadMesh(_binding.meshId);
+        } catch (const std::exception& ex) {
+            Log::Errorf("NMLModelLODTreeLayer::MeshFetchTask: Exception while loading mesh: %s", ex.what());
+        }
+
         if (mesh) {
             auto glMesh = std::make_shared<nml::GLMesh>(*mesh);
     
@@ -698,7 +715,13 @@ namespace carto {
         }
     
         // Load new mesh
-        std::shared_ptr<nml::Texture> texture = layer->_dataSource->loadTexture(_binding.textureId, _binding.level);
+        std::shared_ptr<nml::Texture> texture;
+        try {
+            texture = layer->_dataSource->loadTexture(_binding.textureId, _binding.level);
+        } catch (const std::exception& ex) {
+            Log::Errorf("NMLModelLODTreeLayer::TextureFetchTask: Exception while loading texture: %s", ex.what());
+        }
+
         if (texture) {
             auto glTexture = std::make_shared<nml::GLTexture>(texture);
     

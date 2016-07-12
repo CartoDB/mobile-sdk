@@ -1,5 +1,6 @@
 #include "CartoVisLoader.h"
 #include "core/BinaryData.h"
+#include "components/Exceptions.h"
 #include "datasources/HTTPTileDataSource.h"
 #include "layers/Layer.h"
 #include "layers/RasterTileLayer.h"
@@ -162,74 +163,68 @@ namespace carto {
         _vectorTileAssetPackage = assetPackage;
     }
 
-    bool CartoVisLoader::loadVis(const std::shared_ptr<CartoVisBuilder>& builder, const std::string& visURL) const {
+    void CartoVisLoader::loadVis(const std::shared_ptr<CartoVisBuilder>& builder, const std::string& visURL) const {
         if (!builder) {
             throw std::invalid_argument("Null builder");
         }
 
-        try {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-            HTTPClient client(false);
-            std::shared_ptr<BinaryData> responseData;
-            std::map<std::string, std::string> responseHeaders;
-            if (client.get(visURL, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
-                Log::Error("CartoVisLoader::loadVis: Failed to read VisJSON configuration");
-                return false;
+        HTTPClient client(false);
+        std::shared_ptr<BinaryData> responseData;
+        std::map<std::string, std::string> responseHeaders;
+        if (client.get(visURL, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
+            std::string result;
+            if (responseData) {
+                result = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
             }
-
-            // Read VisJSON
-            std::string result(reinterpret_cast<const char*>(responseData->data()), responseData->size());
-            picojson::value visJSON;
-            std::string err = picojson::parse(visJSON, result);
-            if (!err.empty()) {
-                Log::Errorf("CartoVisLoader::loadVis: Failed to parse VisJSON configuration: %s", err.c_str());
-                return false;
-            }
-
-            // Base options
-            if (auto center = getMapPos(visJSON.get("center"))) {
-                builder->setCenter(*center);
-            }
-
-            if (auto zoom = getDouble(visJSON.get("zoom"))) {
-                builder->setZoom(static_cast<float>(*zoom));
-            }
-
-            if (auto bounds = getMapBounds(visJSON.get("bounds"))) {
-                builder->setBounds(*bounds);
-            }
-
-            builder->setDescription(Variant::FromPicoJSON(visJSON));
-
-            // Configue layers
-            const picojson::value& layersOption = visJSON.get("layers");
-            if (layersOption.is<picojson::array>()) {
-                const picojson::array& layerConfigs = layersOption.get<picojson::array>();
-
-                // Build layer orders and sort
-                std::vector<std::pair<int, std::size_t> > layerOrders;
-                for (const picojson::value& layerConfig : layerConfigs) {
-                    int order = static_cast<int>(layerOrders.size());
-                    if (auto orderOpt = getInt(layerConfig.get("order"))) {
-                        order = *orderOpt;
-                    }
-                    layerOrders.emplace_back(order, layerOrders.size());
-                }
-
-                std::sort(layerOrders.begin(), layerOrders.end());
-
-                // Create layers
-                for (std::size_t i = 0; i < layerOrders.size(); i++) {
-                    createLayers(builder, layerConfigs[layerOrders[i].second]);
-                }
-            }
-
-            return true;
+            throw GenericException("Failed to read visJSON configuration", result);
         }
-        catch (const std::exception& ex) {
-            Log::Errorf("CartoVisLoader::loadVis: Exception: %s", ex.what());
-            return false;
+
+        // Read VisJSON
+        std::string result(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+        picojson::value visJSON;
+        std::string err = picojson::parse(visJSON, result);
+        if (!err.empty()) {
+            throw ParseException("Failed to parse visJSON configuration", result);
+        }
+
+        // Base options
+        if (auto center = getMapPos(visJSON.get("center"))) {
+            builder->setCenter(*center);
+        }
+
+        if (auto zoom = getDouble(visJSON.get("zoom"))) {
+            builder->setZoom(static_cast<float>(*zoom));
+        }
+
+        if (auto bounds = getMapBounds(visJSON.get("bounds"))) {
+            builder->setBounds(*bounds);
+        }
+
+        builder->setDescription(Variant::FromPicoJSON(visJSON));
+
+        // Configue layers
+        const picojson::value& layersOption = visJSON.get("layers");
+        if (layersOption.is<picojson::array>()) {
+            const picojson::array& layerConfigs = layersOption.get<picojson::array>();
+
+            // Build layer orders and sort
+            std::vector<std::pair<int, std::size_t> > layerOrders;
+            for (const picojson::value& layerConfig : layerConfigs) {
+                int order = static_cast<int>(layerOrders.size());
+                if (auto orderOpt = getInt(layerConfig.get("order"))) {
+                    order = *orderOpt;
+                }
+                layerOrders.emplace_back(order, layerOrders.size());
+            }
+
+            std::sort(layerOrders.begin(), layerOrders.end());
+
+            // Create layers
+            for (std::size_t i = 0; i < layerOrders.size(); i++) {
+                createLayers(builder, layerConfigs[layerOrders[i].second]);
+            }
         }
     }
 

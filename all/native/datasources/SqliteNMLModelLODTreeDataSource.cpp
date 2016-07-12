@@ -39,7 +39,7 @@ namespace carto {
         std::lock_guard<std::mutex> lock(_mutex);
     
         if (!_db) {
-            Log::Error("NMLModelLODTreeDataSource::loadMapTiles: Failed to load tiles, couldn't connect to database.");
+            Log::Error("NMLModelLODTreeDataSource::loadMapTiles: Failed to load tiles, could not connect to database");
             return std::vector<MapTile>();
         }
     
@@ -85,7 +85,7 @@ namespace carto {
         std::lock_guard<std::mutex> lock(_mutex);
     
         if (!_db) {
-            Log::Error("SqliteNMLModelLODTreeDataSource::loadModelLODTree: Failed to load LOD tree, couldn't connect to database.");
+            Log::Error("SqliteNMLModelLODTreeDataSource::loadModelLODTree: Failed to load LOD tree, could not connect to database");
             return std::shared_ptr<NMLModelLODTree>();
         }
     
@@ -168,7 +168,7 @@ namespace carto {
         std::lock_guard<std::mutex> lock(_mutex);
     
         if (!_db) {
-            Log::Error("SqliteNMLModelLODTreeDataSource::loadMesh: Failed to load mesh, couldn't connect to database.");
+            Log::Error("SqliteNMLModelLODTreeDataSource::loadMesh: Failed to load mesh, could not connect to database");
             return std::shared_ptr<nml::Mesh>();
         }
     
@@ -188,7 +188,7 @@ namespace carto {
         std::lock_guard<std::mutex> lock(_mutex);
     
         if (!_db) {
-            Log::Error("SqliteNMLModelLODTreeDataSource::loadTexture: Failed to load texture, couldn't connect to database.");
+            Log::Error("SqliteNMLModelLODTreeDataSource::loadTexture: Failed to load texture, could not connect to database");
             return std::shared_ptr<nml::Texture>();
         }
     

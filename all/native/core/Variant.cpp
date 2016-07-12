@@ -1,4 +1,5 @@
 #include "Variant.h"
+#include "components/Exceptions.h"
 #include "utils/Log.h"
 
 namespace carto {
@@ -172,7 +173,7 @@ namespace carto {
         picojson::value val;
         std::string err = picojson::parse(val, str);
         if (!err.empty()) {
-            Log::Errorf("Variant::FromString: Failed to read JSON value: %s", str.c_str());
+            throw ParseException(err, str);
         }
         return FromPicoJSON(val);
     }

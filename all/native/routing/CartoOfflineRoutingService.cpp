@@ -21,7 +21,7 @@ namespace carto {
                 throw FileException("Failed to import routing graph", path);
             }
         } catch (const std::exception& ex) {
-            throw FileException("Exception while importing routing graph", path);
+            throw GenericException("Exception while importing routing graph", ex.what());
         }
         _routeFinder = std::make_shared<Routing::RouteFinder>(graph);
     }
@@ -34,19 +34,7 @@ namespace carto {
             throw std::invalid_argument("Null request");
         }
 
-        if (!_routeFinder) {
-            Log::Errorf("CartoOfflineRoutingService::calculateRoute: Router not initialized");
-            return std::shared_ptr<RoutingResult>();
-        }
-
-        try {
-            return RoutingProxy::CalculateRoute(_routeFinder, request);
-        }
-        catch (const std::exception& ex) {
-            Log::Errorf("CartoOfflineRoutingService::calculateRoute: Exception while calculating route: %s", ex.what());
-            return std::shared_ptr<RoutingResult>();
-        }
-        return std::shared_ptr<RoutingResult>();
+        return RoutingProxy::CalculateRoute(_routeFinder, request);
     }
 
 }

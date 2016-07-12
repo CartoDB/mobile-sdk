@@ -12,7 +12,7 @@
 namespace carto {
 
     CartoPackageManager::CartoPackageManager(const std::string& source, const std::string& dataFolder) :
-        PackageManager(GetPackageListUrl(source), dataFolder, SERVER_ENC_KEY, GetLocalEncKey()), _source(source)
+        PackageManager(GetPackageListURL(source), dataFolder, SERVER_ENC_KEY, GetLocalEncKey()), _source(source)
     {
         if (!PlatformUtils::ExcludeFolderFromBackup(dataFolder)) {
             Log::Warn("CartoPackageManager: Failed to change package manager directory attributes");
@@ -22,7 +22,7 @@ namespace carto {
     CartoPackageManager::~CartoPackageManager() {
     }
     
-    std::string CartoPackageManager::GetPackageListUrl(const std::string& source) {
+    std::string CartoPackageManager::GetPackageListURL(const std::string& source) {
         std::string type = "map";
         std::string id = source;
         std::string::size_type pos = source.find(':');
@@ -31,12 +31,12 @@ namespace carto {
             id = source.substr(pos + 1);
         }
 
-        std::string baseUrl;
+        std::string baseURL;
         if (type == "map") {
-            baseUrl = MAP_PACKAGE_LIST_URL + NetworkUtils::URLEncode(id) + "/packages";
+            baseURL = MAP_PACKAGE_LIST_URL + NetworkUtils::URLEncode(id) + "/packages";
         }
         else if (type == "routing") {
-            baseUrl = ROUTING_PACKAGE_LIST_URL + NetworkUtils::URLEncode(id) + "/packages";
+            baseURL = ROUTING_PACKAGE_LIST_URL + NetworkUtils::URLEncode(id) + "/packages";
         }
         else {
             Log::Errorf("CartoPackageManager: Illegal package type: %s", type.c_str());
@@ -44,7 +44,7 @@ namespace carto {
         }
         std::map<std::string, std::string> params;
         params["user_key"] = LicenseManager::GetInstance().getUserKey();
-        return NetworkUtils::BuildURLFromParameters(baseUrl, params);
+        return NetworkUtils::BuildURLFromParameters(baseURL, params);
     }
     
     std::string CartoPackageManager::GetLocalEncKey() {
@@ -58,11 +58,11 @@ namespace carto {
         return encKey;
     }
     
-    std::string CartoPackageManager::createPackageUrl(const std::string& packageId, int version, const std::string& baseUrl, bool downloaded) const {
+    std::string CartoPackageManager::createPackageURL(const std::string& packageId, int version, const std::string& baseURL, bool downloaded) const {
         std::map<std::string, std::string> params;
         params["user_key"] = LicenseManager::GetInstance().getUserKey();
         params["update"] = (downloaded ? "1" : "0");
-        return NetworkUtils::BuildURLFromParameters(baseUrl, params);
+        return NetworkUtils::BuildURLFromParameters(baseURL, params);
     }
 
     std::shared_ptr<PackageInfo> CartoPackageManager::getCustomPackage(const std::string& packageId, int version) const {
@@ -77,14 +77,14 @@ namespace carto {
             }
             std::map<std::string, std::string> params;
             params["bbox"] = std::string(results[1].first, results[1].second);
-            std::string packageUrl = NetworkUtils::BuildURLFromParameters(CUSTOM_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(id) + "/extract", params);
+            std::string packageURL = NetworkUtils::BuildURLFromParameters(CUSTOM_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(id) + "/extract", params);
 
             auto packageInfo = std::make_shared<PackageInfo>(
                 packageId,
                 PackageType::PACKAGE_TYPE_MAP,
                 version,
                 0,
-                packageUrl,
+                packageURL,
                 std::shared_ptr<PackageTileMask>(),
                 std::shared_ptr<PackageMetaInfo>()
             );

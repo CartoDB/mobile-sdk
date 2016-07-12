@@ -30,10 +30,10 @@ namespace carto {
         virtual ~CartoPackageManager();
         
     protected:
-        static std::string GetPackageListUrl(const std::string& source);
+        static std::string GetPackageListURL(const std::string& source);
         static std::string GetLocalEncKey();
 
-        virtual std::string createPackageUrl(const std::string& packageId, int version, const std::string& baseUrl, bool downloaded) const;
+        virtual std::string createPackageURL(const std::string& packageId, int version, const std::string& baseURL, bool downloaded) const;
 
         virtual std::shared_ptr<PackageInfo> getCustomPackage(const std::string& packageId, int version) const;
         

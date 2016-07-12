@@ -1,16 +1,16 @@
 #ifdef _CARTO_WKBT_SUPPORT
 
 #include "WKBGeometryReader.h"
-#include "WKBGeometryEnums.h"
-#include "Geometry.h"
-#include "PointGeometry.h"
-#include "LineGeometry.h"
-#include "PolygonGeometry.h"
-#include "MultiGeometry.h"
-#include "MultiPointGeometry.h"
-#include "MultiLineGeometry.h"
-#include "MultiPolygonGeometry.h"
 #include "core/BinaryData.h"
+#include "geometry/Geometry.h"
+#include "geometry/PointGeometry.h"
+#include "geometry/LineGeometry.h"
+#include "geometry/PolygonGeometry.h"
+#include "geometry/MultiGeometry.h"
+#include "geometry/MultiPointGeometry.h"
+#include "geometry/MultiLineGeometry.h"
+#include "geometry/MultiPolygonGeometry.h"
+#include "geometry/WKBGeometryEnums.h"
 #include "utils/Log.h"
 
 #include <stdexcept>
@@ -34,14 +34,14 @@ namespace carto {
 
     unsigned char WKBGeometryReader::Stream::readByte() {
         if (_offset + 1 > _data.size()) {
-            throw std::runtime_error("Stream array too short, can not read byte");
+            throw std::length_error("Stream array too short, can not read byte");
         }
         return _data[_offset++];
     }
 
     std::uint32_t WKBGeometryReader::Stream::readUInt32() {
         if (_offset + 4 > _data.size()) {
-            throw std::runtime_error("Stream array too short, can not read 32-bit word");
+            throw std::length_error("Stream array too short, can not read 32-bit word");
         }
         std::uint32_t val = 0;
         if (_bigEndian.top()) {
@@ -61,7 +61,7 @@ namespace carto {
 
     double WKBGeometryReader::Stream::readDouble() {
         if (_offset + 8 > _data.size()) {
-            throw std::runtime_error("Stream array too short, can not read double float");
+            throw std::length_error("Stream array too short, can not read double float");
         }
         std::uint64_t val = 0;
         if (_bigEndian.top()) {
@@ -86,12 +86,7 @@ namespace carto {
         }
 
         Stream stream(*wkbData->getDataPtr());
-        try {
-            return readGeometry(stream);
-        } catch (const std::exception& ex) {
-            Log::Errorf("WKBGeometryReader::readGeometry: Exception while reading geometry: %s", ex.what());
-        }
-        return std::shared_ptr<Geometry>();
+        return readGeometry(stream);
     }
 
     std::shared_ptr<Geometry> WKBGeometryReader::readGeometry(Stream& stream) const {
@@ -168,7 +163,7 @@ namespace carto {
                 break;
             }
             default: {
-                throw std::runtime_error("Unknown geometry type"); // NOTE: not possible to continue after this
+                throw std::invalid_argument("Unknown geometry type"); // NOTE: not possible to continue after this
             }
         }
 

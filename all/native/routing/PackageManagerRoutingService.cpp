@@ -1,6 +1,7 @@
 #ifdef _CARTO_PACKAGEMANAGER_SUPPORT
 
 #include "PackageManagerRoutingService.h"
+#include "components/Exceptions.h"
 #include "packagemanager/PackageManager.h"
 #include "packagemanager/PackageInfo.h"
 #include "projections/Projection.h"
@@ -44,7 +45,6 @@ namespace carto {
         // Call router via package manager
         std::shared_ptr<RoutingResult> result;
         _packageManager->accessPackageFiles(packageIds, [this, request, &result](const std::map<std::string, std::shared_ptr<std::ifstream> >& packageFileMap) {
-            // TODO: fix lock scope, once route finder is thread safe
             std::lock_guard<std::mutex> lock(_mutex);
             if (packageFileMap != _cachedPackageFileMap || !_cachedRouteFinder) {
                 Routing::RoutingGraph::Settings graphSettings;
@@ -52,22 +52,18 @@ namespace carto {
                 for (auto it = packageFileMap.begin(); it != packageFileMap.end(); it++) {
                     try {
                         if (!graph->import(it->second)) {
-                            Log::Errorf("CartoOfflineRoutingService::calculateRoute: Failed to import graph: %s", it->first.c_str());
+                            throw FileException("Failed to import graph " + it->first, "");
                         }
                     }
                     catch (const std::exception& ex) {
-                        Log::Errorf("PackageManagerRoutingService: Exception while importing graph: %s", ex.what());
+                        throw GenericException("Exception while importing graph" + it->first, ex.what());
                     }
                 }
                 _cachedPackageFileMap = packageFileMap;
                 _cachedRouteFinder = std::make_shared<Routing::RouteFinder>(graph);
             }
-            try {
-                result = RoutingProxy::CalculateRoute(_cachedRouteFinder, request);
-            }
-            catch (const std::exception& ex) {
-                Log::Errorf("PackageManagerRoutingService: Exception while calculating route: %s", ex.what());
-            }
+
+            result = RoutingProxy::CalculateRoute(_cachedRouteFinder, request);
         });
         return result;
     }

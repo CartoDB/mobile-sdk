@@ -10,6 +10,7 @@
 
 %{
 #include "routing/RoutingService.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 
@@ -20,6 +21,8 @@
 %import "routing/RoutingResult.i"
 
 !polymorphic_shared_ptr(carto::RoutingService, routing.RoutingService)
+
+%std_io_exceptions(carto::RoutingService::calculateRoute)
 
 %feature("director") carto::RoutingService;
 

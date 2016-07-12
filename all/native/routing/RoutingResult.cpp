@@ -12,7 +12,7 @@ namespace carto {
         _instructions(instructions)
     {
         if (!projection) {
-            throw std::runtime_error("Null projection");
+            throw std::invalid_argument("Null projection");
         }
     }
 

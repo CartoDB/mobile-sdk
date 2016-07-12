@@ -19,7 +19,7 @@
 !polymorphic_shared_ptr(carto::CartoOfflineRoutingService, routing.CartoOfflineRoutingService)
 
 %std_io_exceptions(carto::CartoOfflineRoutingService::CartoOfflineRoutingService)
-%std_exceptions(carto::CartoOfflineRoutingService::calculateRoute)
+%std_io_exceptions(carto::CartoOfflineRoutingService::calculateRoute)
 
 %feature("director") carto::CartoOfflineRoutingService;
 

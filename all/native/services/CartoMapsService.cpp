@@ -1,5 +1,6 @@
 #include "CartoMapsService.h"
 #include "core/BinaryData.h"
+#include "components/Exceptions.h"
 #include "datasources/HTTPTileDataSource.h"
 #include "layers/Layer.h"
 #include "layers/RasterTileLayer.h"
@@ -161,87 +162,71 @@ namespace carto {
     }
 
     std::vector<std::shared_ptr<Layer> > CartoMapsService::buildMap(const Variant& mapConfig) const {
-        try {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-            // Build URL
-            std::string url = getServiceURL("/api/v1/map");
+        // Build URL
+        std::string url = getServiceURL("/api/v1/map");
 
-            // Create request data
-            std::string mapConfigJSON = mapConfig.toString();
-            auto requestData = std::make_shared<BinaryData>(reinterpret_cast<const unsigned char*>(mapConfigJSON.data()), mapConfigJSON.size());
+        // Create request data
+        std::string mapConfigJSON = mapConfig.toString();
+        auto requestData = std::make_shared<BinaryData>(reinterpret_cast<const unsigned char*>(mapConfigJSON.data()), mapConfigJSON.size());
 
-            // Do HTTP POST request
-            HTTPClient client(false);
-            std::shared_ptr<BinaryData> responseData;
-            std::map<std::string, std::string> responseHeaders;
-            if (client.post(url, "application/json", requestData, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
-                std::string result;
-                if (responseData) {
-                    result = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
-                }
-                Log::Errorf("CartoMapsService::buildMap: Failed to read map configuration: %s", result.c_str());
-                return std::vector<std::shared_ptr<Layer> >();
+        // Do HTTP POST request
+        HTTPClient client(false);
+        std::shared_ptr<BinaryData> responseData;
+        std::map<std::string, std::string> responseHeaders;
+        if (client.post(url, "application/json", requestData, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
+            std::string result;
+            if (responseData) {
+                result = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
             }
-
-            // Parse result
-            std::string result(reinterpret_cast<const char*>(responseData->data()), responseData->size());
-            picojson::value mapInfo;
-            std::string err = picojson::parse(mapInfo, result);
-            if (!err.empty()) {
-                Log::Errorf("CartoMapsService::buildMap: Failed to parse response: %s", err.c_str());
-                return std::vector<std::shared_ptr<Layer> >();
-            }
-
-            // Create layers
-            return createLayers(mapInfo);
+            throw GenericException("Failed to read map configuration", result);
         }
-        catch (const std::exception& ex) {
-            Log::Errorf("CartoMapsService::buildMap: Exception: %s", ex.what());
-            return std::vector<std::shared_ptr<Layer> >();
+
+        // Parse result
+        std::string result(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+        picojson::value mapInfo;
+        std::string err = picojson::parse(mapInfo, result);
+        if (!err.empty()) {
+            throw ParseException("Failed to parse map configuration response", result);
         }
+
+        // Create layers
+        return createLayers(mapInfo);
     }
 
     std::vector<std::shared_ptr<Layer> > CartoMapsService::buildNamedMap(const std::string& templateId, const std::map<std::string, Variant>& templateParams) const {
-        try {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-            // Build URL
-            std::string url = getServiceURL("/api/v1/map/named/" + NetworkUtils::URLEncode(templateId));
+        // Build URL
+        std::string url = getServiceURL("/api/v1/map/named/" + NetworkUtils::URLEncode(templateId));
 
-            // Create request data by serializing parameters
-            std::string paramsJSON = Variant(templateParams).toString();
-            auto requestData = std::make_shared<BinaryData>(reinterpret_cast<const unsigned char*>(paramsJSON.data()), paramsJSON.size());
+        // Create request data by serializing parameters
+        std::string paramsJSON = Variant(templateParams).toString();
+        auto requestData = std::make_shared<BinaryData>(reinterpret_cast<const unsigned char*>(paramsJSON.data()), paramsJSON.size());
 
-            // Perform HTTP request
-            HTTPClient client(false);
-            std::shared_ptr<BinaryData> responseData;
-            std::map<std::string, std::string> responseHeaders;
-            if (client.post(url, "application/json", requestData, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
-                std::string result;
-                if (responseData) {
-                    result = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
-                }
-                Log::Errorf("CartoMapsService::buildNamedMap: Failed to read map configuration: %s", result.c_str());
-                return std::vector<std::shared_ptr<Layer> >();
+        // Perform HTTP request
+        HTTPClient client(false);
+        std::shared_ptr<BinaryData> responseData;
+        std::map<std::string, std::string> responseHeaders;
+        if (client.post(url, "application/json", requestData, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
+            std::string result;
+            if (responseData) {
+                result = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
             }
-            
-            // Parse result
-            std::string result(reinterpret_cast<const char*>(responseData->data()), responseData->size());
-            picojson::value mapInfo;
-            std::string err = picojson::parse(mapInfo, result);
-            if (!err.empty()) {
-                Log::Errorf("CartoMapsService::buildNamedMap: Failed to parse response: %s", err.c_str());
-                return std::vector<std::shared_ptr<Layer> >();
-            }
+            throw GenericException("Failed to read map configuration", result);
+        }
+        
+        // Parse result
+        std::string result(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+        picojson::value mapInfo;
+        std::string err = picojson::parse(mapInfo, result);
+        if (!err.empty()) {
+            throw ParseException("Failed to parse map configuration response", result);
+        }
 
-            // Create layers
-            return createLayers(mapInfo);
-        }
-        catch (const std::exception& ex) {
-            Log::Errorf("CartoMapsService::buildNamedMap: Exception: %s", ex.what());
-            return std::vector<std::shared_ptr<Layer> >();
-        }
+        // Create layers
+        return createLayers(mapInfo);
     }
 
     std::string CartoMapsService::getServiceURL(const std::string& path) const {

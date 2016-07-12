@@ -1,15 +1,16 @@
 #ifdef _CARTO_WKBT_SUPPORT
 
 #include "WKTGeometryWriter.h"
-#include "WKTGeometryGenerator.h"
-#include "Geometry.h"
-#include "PointGeometry.h"
-#include "LineGeometry.h"
-#include "PolygonGeometry.h"
-#include "MultiGeometry.h"
-#include "MultiPointGeometry.h"
-#include "MultiLineGeometry.h"
-#include "MultiPolygonGeometry.h"
+#include "components/Exceptions.h"
+#include "geometry/Geometry.h"
+#include "geometry/PointGeometry.h"
+#include "geometry/LineGeometry.h"
+#include "geometry/PolygonGeometry.h"
+#include "geometry/MultiGeometry.h"
+#include "geometry/MultiPointGeometry.h"
+#include "geometry/MultiLineGeometry.h"
+#include "geometry/MultiPolygonGeometry.h"
+#include "geometry/WKTGeometryGenerator.h"
 #include "utils/Log.h"
 
 namespace carto {
@@ -42,8 +43,7 @@ namespace carto {
         WKTGeometryGenerator<std::back_insert_iterator<std::string> > grammar;
         bool result = boost::spirit::karma::generate(it, grammar(_z), geometry);
         if (!result) {
-            Log::Error("WKTGeometryWriter: Failed to generate WKT");
-            return std::string();
+            throw GenerateException("Failed to generate WKT");
         }
         return wkt;
     }

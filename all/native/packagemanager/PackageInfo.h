@@ -45,11 +45,11 @@ namespace carto {
          * @param packageType The type of the package
          * @param version The increasing version number of the package
          * @param size Size of the package in bytes
-         * @param serverUrl Location of the package
+         * @param serverURL Location of the package
          * @param tileMask The tile mask of the package
          * @param metaInfo Package meta info
          */
-        PackageInfo(const std::string& packageId, PackageType::PackageType packageType, int version, std::uint64_t size, const std::string& serverUrl, const std::shared_ptr<PackageTileMask>& tileMask, const std::shared_ptr<PackageMetaInfo>& metaInfo) : _packageId(packageId), _packageType(packageType), _version(version), _size(size), _serverUrl(serverUrl), _tileMask(tileMask), _metaInfo(metaInfo) { }
+        PackageInfo(const std::string& packageId, PackageType::PackageType packageType, int version, std::uint64_t size, const std::string& serverURL, const std::shared_ptr<PackageTileMask>& tileMask, const std::shared_ptr<PackageMetaInfo>& metaInfo) : _packageId(packageId), _packageType(packageType), _version(version), _size(size), _serverURL(serverURL), _tileMask(tileMask), _metaInfo(metaInfo) { }
 
         /**
          * Returns the internal package id. This should not be displayed to the user.
@@ -102,8 +102,8 @@ namespace carto {
          * Returns the location of the package. This should not be displayed to the user.
          * @return The location of the package
          */
-        const std::string& getServerUrl() const {
-            return _serverUrl;
+        const std::string& getServerURL() const {
+            return _serverURL;
         }
 
         /**
@@ -128,7 +128,7 @@ namespace carto {
         PackageType::PackageType _packageType;
         int _version;
         std::uint64_t _size;
-        std::string _serverUrl;
+        std::string _serverURL;
         std::shared_ptr<PackageTileMask> _tileMask;
         std::shared_ptr<PackageMetaInfo> _metaInfo;
     };

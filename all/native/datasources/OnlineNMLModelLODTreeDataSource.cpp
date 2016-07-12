@@ -20,7 +20,7 @@
 
 namespace carto {
 
-    OnlineNMLModelLODTreeDataSource::OnlineNMLModelLODTreeDataSource(const std::shared_ptr<Projection>& projection, const std::string& serviceURL) :
+    OnlineNMLModelLODTreeDataSource::OnlineNMLModelLODTreeDataSource(const std::string& serviceURL) :
         NMLModelLODTreeDataSource(std::make_shared<EPSG3857>()),
         _serviceURL(serviceURL)
     {

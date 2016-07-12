@@ -62,8 +62,8 @@ namespace {
 
 namespace carto {
     
-    PackageManager::PackageManager(const std::string& packageListUrl, const std::string& dataFolder, const std::string& serverEncKey, const std::string& localEncKey) :
-        _packageListUrl(packageListUrl), _packageListFileName("serverpackages.json"), _dataFolder(dataFolder), _serverEncKey(serverEncKey), _localEncKey(localEncKey)
+    PackageManager::PackageManager(const std::string& packageListURL, const std::string& dataFolder, const std::string& serverEncKey, const std::string& localEncKey) :
+        _packageListURL(packageListURL), _packageListFileName("serverpackages.json"), _dataFolder(dataFolder), _serverEncKey(serverEncKey), _localEncKey(localEncKey)
     {
         std::string taskDbFileName = "tasks_v1.sqlite";
         try {
@@ -267,9 +267,9 @@ namespace carto {
                 for (rapidjson::Value::ValueIterator jit = packageListDoc["packages"].Begin(); jit != packageListDoc["packages"].End(); jit++) {
                     rapidjson::Value& jsonPackageInfo = *jit;
                     std::string packageId = jsonPackageInfo["id"].GetString();
-                    std::string packageUrl = jsonPackageInfo["url"].GetString();
+                    std::string packageURL = jsonPackageInfo["url"].GetString();
                     PackageType::PackageType packageType = PackageType::PACKAGE_TYPE_MAP;
-                    if (packageUrl.find(".nutigraph") != std::string::npos) {
+                    if (packageURL.find(".nutigraph") != std::string::npos) {
                         packageType = PackageType::PACKAGE_TYPE_ROUTING;
                     }
                     std::shared_ptr<PackageMetaInfo> metaInfo;
@@ -285,7 +285,7 @@ namespace carto {
                         packageType,
                         jsonPackageInfo["version"].GetInt(),
                         jsonPackageInfo["size"].GetInt64(),
-                        packageUrl,
+                        packageURL,
                         tileMask,
                         metaInfo
                     );
@@ -464,7 +464,7 @@ namespace carto {
             downloadTask.packageId = package->getPackageId();
             downloadTask.packageType = package->getPackageType();
             downloadTask.packageVersion = package->getVersion();
-            downloadTask.packageLocation = package->getServerUrl();
+            downloadTask.packageLocation = package->getServerURL();
             int taskId = _taskQueue->scheduleTask(downloadTask);
             updateTaskStatus(taskId, PackageAction::PACKAGE_ACTION_WAITING, 0);
             _taskQueueCondition.notify_one();
@@ -633,7 +633,7 @@ namespace carto {
                 Log::Info("PackageManager: Retrying package list download");
             }
 
-            int errorCode = downloadFile(createPackageListUrl(_packageListUrl), [this, &packageListData, taskId](std::uint64_t offset, std::uint64_t length, const unsigned char* buf, std::size_t size) {
+            int errorCode = downloadFile(createPackageListURL(_packageListURL), [this, &packageListData, taskId](std::uint64_t offset, std::uint64_t length, const unsigned char* buf, std::size_t size) {
                 if (isTaskCancelled(taskId)) {
                     return false;
                 }
@@ -848,7 +848,7 @@ namespace carto {
                     updateTaskStatus(taskId, PackageAction::PACKAGE_ACTION_DOWNLOADING, static_cast<float>(fileOffset) / static_cast<float>(fileSize));
                 }
 
-                int errorCode = downloadFile(createPackageUrl(task.packageId, task.packageVersion, task.packageLocation, downloaded), [this, fp, taskId, packageFileName, &fileOffset, fileSize](std::uint64_t offset, std::uint64_t length, const unsigned char* buf, std::size_t size) {
+                int errorCode = downloadFile(createPackageURL(task.packageId, task.packageVersion, task.packageLocation, downloaded), [this, fp, taskId, packageFileName, &fileOffset, fileSize](std::uint64_t offset, std::uint64_t length, const unsigned char* buf, std::size_t size) {
                     if (isTaskCancelled(taskId)) {
                         return false;
                     }
@@ -948,7 +948,7 @@ namespace carto {
                     command.bind(":package_type", static_cast<int>(package->getPackageType()));
                     command.bind(":version", package->getVersion());
                     command.bind(":size", fileSize);
-                    command.bind(":server_url", package->getServerUrl().c_str());
+                    command.bind(":server_url", package->getServerURL().c_str());
                     command.bind(":tile_mask", tileMask.c_str());
                     command.bind(":metainfo", metaInfo.c_str());
                     command.execute();
@@ -1310,12 +1310,12 @@ namespace carto {
         return ss.str();
     }
 
-    std::string PackageManager::createPackageListUrl(const std::string& baseUrl) const {
-        return baseUrl;
+    std::string PackageManager::createPackageListURL(const std::string& baseURL) const {
+        return baseURL;
     }
 
-    std::string PackageManager::createPackageUrl(const std::string& packageId, int version, const std::string& baseUrl, bool downloaded) const {
-        return baseUrl;
+    std::string PackageManager::createPackageURL(const std::string& packageId, int version, const std::string& baseURL, bool downloaded) const {
+        return baseURL;
     }
 
     std::shared_ptr<PackageInfo> PackageManager::getCustomPackage(const std::string& packageId, int version) const {

@@ -1,4 +1,5 @@
 #include "CartoOnlineRoutingService.h"
+#include "components/Exceptions.h"
 #include "components/LicenseManager.h"
 #include "projections/Projection.h"
 #include "routing/RoutingProxy.h"
@@ -32,15 +33,10 @@ namespace carto {
             ss << "&loc=" << p.getY() << "," << p.getX();
         }
         ss << "&instructions=true&alt=false&geometry=true&output=json";
+        std::string url = ss.str();
 
-        try {
-            std::string url = ss.str();
-            HTTPClient httpClient(false);
-            return RoutingProxy::CalculateRoute(httpClient, url, request);
-        } catch (const std::exception& ex) {
-            Log::Errorf("CartoOnlineRoutingService::calculateRoute: Exception while calculating route: %s", ex.what());
-        }
-        return std::shared_ptr<RoutingResult>();
+        HTTPClient httpClient(false);
+        return RoutingProxy::CalculateRoute(httpClient, url, request);
     }
 
     const std::string CartoOnlineRoutingService::ROUTING_SERVICE_URL = "http://api.nutiteq.com/routing/v1/";

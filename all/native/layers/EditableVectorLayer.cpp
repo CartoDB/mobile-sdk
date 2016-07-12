@@ -211,7 +211,7 @@ namespace carto {
             layer->refreshElement(element, false);
         }
         else {
-            Log::Error("EditableVectorLayer::DataSourceListener: lost connection to layer");
+            Log::Error("EditableVectorLayer::DataSourceListener: Lost connection to layer");
         }
     }
 
@@ -220,7 +220,7 @@ namespace carto {
             layer->refreshElement(element, false);
         }
         else {
-            Log::Error("EditableVectorLayer::DataSourceListener: lost connection to layer");
+            Log::Error("EditableVectorLayer::DataSourceListener: Lost connection to layer");
         }
     }
 
@@ -232,7 +232,7 @@ namespace carto {
             layer->refreshElement(element, true);
         }
         else {
-            Log::Error("EditableVectorLayer::DataSourceListener: lost connection to layer");
+            Log::Error("EditableVectorLayer::DataSourceListener: Lost connection to layer");
         }
     }
 
@@ -241,7 +241,7 @@ namespace carto {
             layer->refresh();
         }
         else {
-            Log::Error("EditableVectorLayer::DataSourceListener: lost connection to layer");
+            Log::Error("EditableVectorLayer::DataSourceListener: Lost connection to layer");
         }
     }
 
@@ -250,7 +250,7 @@ namespace carto {
             layer->refresh();
         }
         else {
-            Log::Error("EditableVectorLayer::DataSourceListener: lost connection to layer");
+            Log::Error("EditableVectorLayer::DataSourceListener: Lost connection to layer");
         }
     }
 
@@ -260,7 +260,7 @@ namespace carto {
             layer->refresh();
         }
         else {
-            Log::Error("EditableVectorLayer::DataSourceListener: lost connection to layer");
+            Log::Error("EditableVectorLayer::DataSourceListener: Lost connection to layer");
         }
     }
 

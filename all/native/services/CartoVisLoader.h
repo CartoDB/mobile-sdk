@@ -73,7 +73,7 @@ namespace carto {
          * @param builder The handler that receives events for configuring the map.
          * @param visURL The VisJSON URL to use.
          */
-        bool loadVis(const std::shared_ptr<CartoVisBuilder>& builder, const std::string& visURL) const;
+        void loadVis(const std::shared_ptr<CartoVisBuilder>& builder, const std::string& visURL) const;
 
     private:
         struct LayerInfo {

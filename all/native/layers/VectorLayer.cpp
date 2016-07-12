@@ -426,7 +426,7 @@ namespace carto {
         if (std::shared_ptr<VectorLayer> layer = _layer.lock()) {
             layer->refreshElement(element, false);
         } else {
-            Log::Error("VectorLayer::DataSourceListener: lost connection to layer");
+            Log::Error("VectorLayer::DataSourceListener: Lost connection to layer");
         }
     }
     
@@ -434,7 +434,7 @@ namespace carto {
         if (std::shared_ptr<VectorLayer> layer = _layer.lock()) {
             layer->refreshElement(element, false);
         } else {
-            Log::Error("VectorLayer::DataSourceListener: lost connection to layer");
+            Log::Error("VectorLayer::DataSourceListener: Lost connection to layer");
         }
     }
     
@@ -442,7 +442,7 @@ namespace carto {
         if (std::shared_ptr<VectorLayer> layer = _layer.lock()) {
             layer->refreshElement(element, true);
         } else {
-            Log::Error("VectorLayer::DataSourceListener: lost connection to layer");
+            Log::Error("VectorLayer::DataSourceListener: Lost connection to layer");
         }
     }
         
@@ -450,7 +450,7 @@ namespace carto {
         if (std::shared_ptr<VectorLayer> layer = _layer.lock()) {
             layer->refresh();
         } else {
-            Log::Error("VectorLayer::DataSourceListener: lost connection to layer");
+            Log::Error("VectorLayer::DataSourceListener: Lost connection to layer");
         }
     }
         
@@ -458,7 +458,7 @@ namespace carto {
         if (std::shared_ptr<VectorLayer> layer = _layer.lock()) {
             layer->refresh();
         } else {
-            Log::Error("VectorLayer::DataSourceListener: lost connection to layer");
+            Log::Error("VectorLayer::DataSourceListener: Lost connection to layer");
         }
     }
     
@@ -466,7 +466,7 @@ namespace carto {
         if (std::shared_ptr<VectorLayer> layer = _layer.lock()) {
             layer->refresh();
         } else {
-            Log::Error("VectorLayer::DataSourceListener: lost connection to layer");
+            Log::Error("VectorLayer::DataSourceListener: Lost connection to layer");
         }
     }
     
@@ -521,7 +521,12 @@ namespace carto {
                 }
             }
             if (lastCullState) {
-                billboardsChanged = loadElements(lastCullState);
+                try {
+                    billboardsChanged = loadElements(lastCullState);
+                }
+                catch (const std::exception& ex) {
+                    Log::Errorf("VectorLayer::FetchTask: Exception while loading elements: %s", ex.what());
+                }
             } else {
                 std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
                 billboardsChanged = layer->refreshRendererElements();

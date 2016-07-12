@@ -55,17 +55,12 @@ namespace carto {
 
         std::lock_guard<std::mutex> lock(_mutex);
 
-        try {
-            rapidjson::StringBuffer geoJSON;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(geoJSON);
-            rapidjson::Document doc;
-            writeGeometry(geometry, doc, doc.GetAllocator());
-            doc.Accept(writer);
-            return geoJSON.GetString();
-        } catch (const std::exception& ex) {
-            Log::Errorf("GeoJSONGeometryWriter: Exception while writing geometry: %s", ex.what());
-        }
-        return std::string();
+        rapidjson::StringBuffer geoJSON;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(geoJSON);
+        rapidjson::Document doc;
+        writeGeometry(geometry, doc, doc.GetAllocator());
+        doc.Accept(writer);
+        return geoJSON.GetString();
     }
 
     std::string GeoJSONGeometryWriter::writeFeature(const std::shared_ptr<Feature>& feature) const {
@@ -75,17 +70,12 @@ namespace carto {
 
         std::lock_guard<std::mutex> lock(_mutex);
 
-        try {
-            rapidjson::StringBuffer geoJSON;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(geoJSON);
-            rapidjson::Document doc;
-            writeFeature(feature, doc, doc.GetAllocator());
-            doc.Accept(writer);
-            return geoJSON.GetString();
-        } catch (const std::exception& ex) {
-            Log::Errorf("GeoJSONGeometryWriter: Exception while writing feature: %s", ex.what());
-        }
-        return std::string();
+        rapidjson::StringBuffer geoJSON;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(geoJSON);
+        rapidjson::Document doc;
+        writeFeature(feature, doc, doc.GetAllocator());
+        doc.Accept(writer);
+        return geoJSON.GetString();
     }
 
     std::string GeoJSONGeometryWriter::writeFeatureCollection(const std::shared_ptr<FeatureCollection>& featureCollection) const {
@@ -95,17 +85,12 @@ namespace carto {
 
         std::lock_guard<std::mutex> lock(_mutex);
 
-        try {
-            rapidjson::StringBuffer geoJSON;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(geoJSON);
-            rapidjson::Document doc;
-            writeFeatureCollection(featureCollection, doc, doc.GetAllocator());
-            doc.Accept(writer);
-            return geoJSON.GetString();
-        } catch (const std::exception& ex) {
-            Log::Errorf("GeoJSONGeometryWriter: Exception while writing feature collection: %s", ex.what());
-        }
-        return std::string();
+        rapidjson::StringBuffer geoJSON;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(geoJSON);
+        rapidjson::Document doc;
+        writeFeatureCollection(featureCollection, doc, doc.GetAllocator());
+        doc.Accept(writer);
+        return geoJSON.GetString();
     }
 
     void GeoJSONGeometryWriter::writeFeatureCollection(const std::shared_ptr<FeatureCollection>& featureCollection, rapidjson::Value& value, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& allocator) const {
@@ -180,14 +165,14 @@ namespace carto {
                 writeGeometry(multiGeometry->getGeometry(i), geometries[i], allocator);
             }
         } else {
-            throw std::runtime_error("Unsupported geometry type");
+            throw std::invalid_argument("Unsupported geometry type");
         }
     }
 
     void GeoJSONGeometryWriter::writeProperties(const Variant& properties, rapidjson::Value& value, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& allocator) const {
         rapidjson::Document propertiesDoc;
         if (propertiesDoc.Parse<rapidjson::kParseDefaultFlags>(properties.toString().c_str()).HasParseError()) {
-            throw std::runtime_error("Failed to read properties");
+            throw std::invalid_argument("Failed to read properties");
         }
 
         value.CopyFrom(propertiesDoc, allocator);
