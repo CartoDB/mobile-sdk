@@ -33,6 +33,8 @@
 #import "NTOGRVectorDataSource.h"
 #import "NTGDALRasterTileDataSource.h"
 
+#import "NTFeature.h"
+#import "NTFeatureCollection.h"
 #import "NTLineGeometry.h"
 #import "NTPointGeometry.h"
 #import "NTPolygonGeometry.h"
