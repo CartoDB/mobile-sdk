@@ -7,8 +7,7 @@
 
 %{
 #include "layers/ClusteredVectorLayer.h"
-#include "layers/ClusterElementBuilder.h"
-#include "datasources/LocalVectorDataSource.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

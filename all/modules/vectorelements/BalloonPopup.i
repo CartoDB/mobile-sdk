@@ -7,6 +7,7 @@
 
 %{
 #include "vectorelements/BalloonPopup.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

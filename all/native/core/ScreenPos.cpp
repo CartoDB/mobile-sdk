@@ -1,4 +1,5 @@
 #include "ScreenPos.h"
+#include "components/Exceptions.h"
 
 #include <cmath>
 #include <sstream>
@@ -41,7 +42,7 @@ namespace carto {
             case 1:
                 return _y;
         }
-        throw std::out_of_range("ScreenPos::operator[]");
+        throw OutOfRangeException("ScreenPos::operator[]");
     }
     
     float& ScreenPos::operator[](std::size_t n) {
@@ -51,7 +52,7 @@ namespace carto {
             case 1:
                 return _y;
         }
-        throw std::out_of_range("ScreenPos::operator[]");
+        throw OutOfRangeException("ScreenPos::operator[]");
     }
     
     void ScreenPos::setCoords(float x, float y) {

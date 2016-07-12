@@ -1,6 +1,7 @@
 #include "MapRenderer.h"
-#include "components/ThreadWorker.h"
+#include "components/Exceptions.h"
 #include "components/Layers.h"
+#include "components/ThreadWorker.h"
 #include "core/MapPos.h"
 #include "core/ScreenPos.h"
 #include "core/ScreenBounds.h"
@@ -119,7 +120,7 @@ namespace carto {
     
     void MapRenderer::captureRendering(const std::shared_ptr<RendererCaptureListener>& listener, bool waitWhileUpdating) {
         if (!listener) {
-            throw std::invalid_argument("Null listener");
+            throw NullArgumentException("Null listener");
         }
 
         {

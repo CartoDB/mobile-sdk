@@ -6,7 +6,6 @@
 %{
 #include "renderers/RedrawRequestListener.h"
 #include <memory>
-#include <string>
 %}
 
 %include <std_shared_ptr.i>

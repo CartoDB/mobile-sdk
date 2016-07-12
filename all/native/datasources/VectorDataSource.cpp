@@ -1,4 +1,5 @@
 #include "VectorDataSource.h"
+#include "components/Exceptions.h"
 #include "graphics/ViewState.h"
 #include "vectorelements/VectorElement.h"
 #include "utils/Log.h"
@@ -13,7 +14,7 @@ namespace carto {
         _onChangeListenersMutex()
     {
         if (!projection) {
-            throw std::invalid_argument("Null projection");
+            throw NullArgumentException("Null projection");
         }
     }
         

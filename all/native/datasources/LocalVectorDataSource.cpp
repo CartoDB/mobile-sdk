@@ -1,4 +1,5 @@
 #include "LocalVectorDataSource.h"
+#include "components/Exceptions.h"
 #include "geometry/Geometry.h"
 #include "geometry/PointGeometry.h"
 #include "geometry/LineGeometry.h"
@@ -92,7 +93,7 @@ namespace carto {
     void LocalVectorDataSource::setAll(const std::vector<std::shared_ptr<VectorElement> >& elements) {
         for (const std::shared_ptr<VectorElement>& element : elements) {
             if (!element) {
-                throw std::invalid_argument("Null element");
+                throw NullArgumentException("Null element");
             }
         }
 
@@ -129,7 +130,7 @@ namespace carto {
     
     void LocalVectorDataSource::add(const std::shared_ptr<VectorElement>& element) {
         if (!element) {
-            throw std::invalid_argument("Null element");
+            throw NullArgumentException("Null element");
         }
 
         {
@@ -146,7 +147,7 @@ namespace carto {
     void LocalVectorDataSource::addAll(const std::vector<std::shared_ptr<VectorElement> >& elements) {
         for (const std::shared_ptr<VectorElement>& element : elements) {
             if (!element) {
-                throw std::invalid_argument("Null element");
+                throw NullArgumentException("Null element");
             }
         }
 
@@ -167,7 +168,7 @@ namespace carto {
     
     bool LocalVectorDataSource::remove(const std::shared_ptr<VectorElement>& element) {
         if (!element) {
-            throw std::invalid_argument("Null element");
+            throw NullArgumentException("Null element");
         }
 
         bool removed = false;
@@ -186,7 +187,7 @@ namespace carto {
     bool LocalVectorDataSource::removeAll(const std::vector<std::shared_ptr<VectorElement> >& elements) {
         for (const std::shared_ptr<VectorElement>& element : elements) {
             if (!element) {
-                throw std::invalid_argument("Null element");
+                throw NullArgumentException("Null element");
             }
         }
 

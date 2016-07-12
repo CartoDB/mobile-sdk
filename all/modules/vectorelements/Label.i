@@ -7,6 +7,7 @@
 
 %{
 #include "vectorelements/Label.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

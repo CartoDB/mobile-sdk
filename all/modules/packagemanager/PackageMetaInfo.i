@@ -8,9 +8,8 @@
 !proxy_imports(carto::PackageMetaInfo, core.Variant)
 
 %{
-#include <memory>
-#include <vector>
 #include "packagemanager/PackageMetaInfo.h"
+#include <memory>
 %}
 
 %include <std_shared_ptr.i>

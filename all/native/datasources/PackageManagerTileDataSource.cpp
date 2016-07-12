@@ -2,6 +2,7 @@
 
 #include "PackageManagerTileDataSource.h"
 #include "core/MapTile.h"
+#include "components/Exceptions.h"
 #include "utils/Log.h"
 #include "utils/Const.h"
 
@@ -13,7 +14,7 @@ namespace carto {
         TileDataSource(0, Const::MAX_SUPPORTED_ZOOM_LEVEL), _packageManager(packageManager)
     {
         if (!packageManager) {
-            throw std::invalid_argument("Null packageManager");
+            throw NullArgumentException("Null packageManager");
         }
 
         _packageManagerListener = std::make_shared<PackageManagerListener>(*this);

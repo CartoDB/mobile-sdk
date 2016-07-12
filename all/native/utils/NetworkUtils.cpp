@@ -27,12 +27,26 @@ namespace carto {
 
     bool NetworkUtils::GetHTTP(const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, std::shared_ptr<BinaryData>& responseData, bool log) {
         HTTPClient client(log);
-        return client.get(url, requestHeaders, responseHeaders, responseData) == 0;
+        try {
+            return client.get(url, requestHeaders, responseHeaders, responseData) == 0;
+        } catch (const std::exception& ex) {
+            if (log) {
+                Log::Errorf("GetHTTP: Exception: %s", ex.what());
+            }
+        }
+        return false;
     }
 
     int NetworkUtils::GetHTTP(const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, HandlerFn handler, std::uint64_t offset, bool log) {
         HTTPClient client(log);
-        return client.get(url, requestHeaders, responseHeaders, handler, offset);
+        try {
+            return client.get(url, requestHeaders, responseHeaders, handler, offset);
+        } catch (const std::exception& ex) {
+            if (log) {
+                Log::Errorf("GetHTTP: Exception: %s", ex.what());
+            }
+        }
+        return -1;
     }
 
     int NetworkUtils::GetMaxAgeHTTPHeader(const std::map<std::string, std::string>& headers) {

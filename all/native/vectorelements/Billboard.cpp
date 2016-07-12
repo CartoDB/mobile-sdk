@@ -1,4 +1,5 @@
 #include "Billboard.h"
+#include "components/Exceptions.h"
 #include "geometry/PointGeometry.h"
 #include "renderers/drawdatas/BillboardDrawData.h"
 #include "utils/Log.h"
@@ -15,14 +16,14 @@ namespace carto {
     
     void Billboard::setBaseBillboard(const std::shared_ptr<Billboard>& baseBillboard) {
         if (!baseBillboard) {
-            throw std::invalid_argument("Null baseBillboard");
+            throw NullArgumentException("Null baseBillboard");
         }
 
         {
             std::lock_guard<std::mutex> lock(_mutex);
             for (std::shared_ptr<Billboard> billboard = baseBillboard; billboard; billboard = billboard->getBaseBillboard()) {
                 if (billboard.get() == this) {
-                    throw std::invalid_argument("Cycling loop when setting baseBillboard");
+                    throw InvalidArgumentException("Cycling loop when setting baseBillboard");
                 }
             }
     
@@ -65,7 +66,7 @@ namespace carto {
     
     void Billboard::setGeometry(const std::shared_ptr<Geometry>& geometry) {
         if (!geometry) {
-            throw std::invalid_argument("Null geometry");
+            throw NullArgumentException("Null geometry");
         }
    
         {
@@ -104,7 +105,7 @@ namespace carto {
         _rotation(0)
     {
         if (!baseBillboard) {
-            throw std::invalid_argument("Null baseBillboard");
+            throw NullArgumentException("Null baseBillboard");
         }
     }
     
@@ -114,7 +115,7 @@ namespace carto {
         _rotation(0)
     {
         if (!geometry) {
-            throw std::invalid_argument("Null geometry");
+            throw NullArgumentException("Null geometry");
         }
     }
         

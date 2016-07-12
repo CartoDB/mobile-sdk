@@ -1,4 +1,5 @@
 #include "HTTPClientAndroidImpl.h"
+#include "components/Exceptions.h"
 #include "utils/AndroidUtils.h"
 #include "utils/JNIUniqueGlobalRef.h"
 #include "utils/Log.h"
@@ -94,10 +95,8 @@ namespace carto {
         JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
         AndroidUtils::JNILocalFrame jframe(jenv, 32, "HTTPClient::AndroidImpl::HTTPClientAndroidImpl");
         if (!jframe.isValid()) {
-            if (_log) {
-                Log::Errorf("HTTPClient::AndroidImpl::makeRequest: JNILocalFrame not valid");
-            }
-            return false;
+            Log::Error("HTTPClient::AndroidImpl::makeRequest: JNILocalFrame not valid");
+            throw std::runtime_error("JNILocalFrame not valid");
         }
         
         {
@@ -120,20 +119,14 @@ namespace carto {
         jobject url = jenv->NewObject(_URLClass->clazz, _URLClass->constructor, jenv->NewStringUTF(request.url.c_str()));
         if (jenv->ExceptionCheck()) {
             jenv->ExceptionClear();
-            if (_log) {
-                Log::Errorf("HTTPClient::AndroidImpl::makeRequest: Illegal URL: %s", request.url.c_str());
-            }
-            return false;
+            throw NetworkException("Invalid URL", request.url);
         }
         
         // Open HTTP connection
         jobject conn = jenv->CallObjectMethod(url, _URLClass->openConnection);
         if (jenv->ExceptionCheck()) {
             jenv->ExceptionClear();
-            if (_log) {
-                Log::Errorf("HTTPClient::AndroidImpl::makeRequest: Unable to open connection: %s", request.url.c_str());
-            }
-            return false;
+            throw NetworkException("Unable to open connection", request.url);
         }
         
         // Configure connection parameters
@@ -156,10 +149,7 @@ namespace carto {
             jobject outputStream = jenv->CallObjectMethod(conn, _HttpURLConnectionClass->getOutputStream);
             if (jenv->ExceptionCheck()) {
                 jenv->ExceptionClear();
-                if (_log) {
-                    Log::Errorf("HTTPClient::AndroidImpl::makeRequest: Failed to get output stream: %s", request.url.c_str());
-                }
-                return false;
+                throw NetworkException("Unable to get output stream", request.url);
             }
 
             jbyteArray jbuf = jenv->NewByteArray(request.body.size());
@@ -168,18 +158,12 @@ namespace carto {
             jenv->CallVoidMethod(outputStream, _OutputStreamClass->write, jbuf);
             if (jenv->ExceptionCheck()) {
                 jenv->ExceptionClear();
-                if (_log) {
-                    Log::Errorf("HTTPClient::AndroidImpl::makeRequest: Unable to write data: %s", request.url.c_str());
-                }
-                return false;
+                throw NetworkException("Unable to write data", request.url);
             }
             jenv->CallVoidMethod(outputStream, _OutputStreamClass->close);
             if (jenv->ExceptionCheck()) {
                 jenv->ExceptionClear();
-                if (_log) {
-                    Log::Errorf("HTTPClient::AndroidImpl::makeRequest: Unable to write data: %s", request.url.c_str());
-                }
-                return false;
+                throw NetworkException("Unable to write data", request.url);
             }
         }
         
@@ -187,10 +171,7 @@ namespace carto {
         jenv->CallVoidMethod(conn, _HttpURLConnectionClass->connect);
         if (jenv->ExceptionCheck()) {
             jenv->ExceptionClear();
-            if (_log) {
-                Log::Errorf("HTTPClient::AndroidImpl::makeRequest: Unable to connect: %s", request.url.c_str());
-            }
-            return false;
+            throw NetworkException("Unable to connect", request.url);
         }
         
         // Read response header
@@ -237,19 +218,13 @@ namespace carto {
             jint numBytesRead = jenv->CallIntMethod(bufferedInputStream, _BufferedInputStreamClass->read, jbuf);
             if (jenv->ExceptionCheck()) {
                 jenv->ExceptionClear();
-                if (_log) {
-                    Log::Errorf("HTTPClient::AndroidImpl::makeRequest: Unable to read data: %s", request.url.c_str());
-                }
-                return false;
+                throw NetworkException("Unable to read data", request.url);
             }
             if (numBytesRead < 0) {
-                if (contentLength != std::numeric_limits<std::uint64_t>::max()) {
-                    if (_log) {
-                        Log::Errorf("HTTPClient::AndroidImpl::makeRequest: Failed to read full response: URL: %s", request.url.c_str());
-                    }
-                    return false;
+                if (contentLength == std::numeric_limits<std::uint64_t>::max()) {
+                    break;
                 }
-                break;
+                throw NetworkException("Unable to read full data", request.url);
             }
             jenv->GetByteArrayRegion(jbuf, 0, numBytesRead, buf);
             

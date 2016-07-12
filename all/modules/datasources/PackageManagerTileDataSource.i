@@ -9,7 +9,7 @@
 
 %{
 #include "datasources/PackageManagerTileDataSource.h"
-#include "packagemanager/PackageManager.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

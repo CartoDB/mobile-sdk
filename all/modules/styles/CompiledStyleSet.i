@@ -6,7 +6,6 @@
 !proxy_imports(carto::CompiledStyleSet, utils.AssetPackage)
 
 %{
-#include "utils/AssetPackage.h"
 #include "styles/CompiledStyleSet.h"
 #include <memory>
 %}

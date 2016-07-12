@@ -7,6 +7,7 @@
 
 %{
 #include "datasources/CacheTileDataSource.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

@@ -7,7 +7,6 @@
 
 %{
 #include "renderers/RendererCaptureListener.h"
-#include "graphics/Bitmap.h"
 #include <memory>
 %}
 

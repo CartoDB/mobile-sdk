@@ -1,6 +1,7 @@
 #include "layers/ClusteredVectorLayer.h"
 #include "core/MapPos.h"
 #include "core/MapTile.h"
+#include "components/Exceptions.h"
 #include "geometry/Geometry.h"
 #include "geometry/PointGeometry.h"
 #include "datasources/VectorDataSource.h"
@@ -40,7 +41,7 @@ namespace carto {
         _clusterMutex()
     {
         if (!clusterElementBuilder) {
-            throw std::invalid_argument("Null clusterElementBuilder");
+            throw NullArgumentException("Null clusterElementBuilder");
         }
     }
 

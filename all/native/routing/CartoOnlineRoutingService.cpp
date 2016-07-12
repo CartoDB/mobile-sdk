@@ -21,7 +21,7 @@ namespace carto {
 
     std::shared_ptr<RoutingResult> CartoOnlineRoutingService::calculateRoute(const std::shared_ptr<RoutingRequest>& request) const {
         if (!request) {
-            throw std::invalid_argument("Null request");
+            throw NullArgumentException("Null request");
         }
 
         std::shared_ptr<Projection> proj = request->getProjection();

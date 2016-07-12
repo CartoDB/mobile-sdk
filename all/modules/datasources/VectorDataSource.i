@@ -10,6 +10,7 @@
 
 %{
 #include "datasources/VectorDataSource.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

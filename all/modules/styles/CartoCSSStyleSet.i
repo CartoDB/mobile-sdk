@@ -6,7 +6,6 @@
 !proxy_imports(carto::CartoCSSStyleSet, utils.AssetPackage)
 
 %{
-#include "utils/AssetPackage.h"
 #include "styles/CartoCSSStyleSet.h"
 #include <memory>
 %}

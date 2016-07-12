@@ -7,7 +7,7 @@
 
 %{
 #include "layers/RasterTileLayer.h"
-#include "layers/TileLoadListener.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

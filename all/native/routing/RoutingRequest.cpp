@@ -1,4 +1,5 @@
 #include "RoutingRequest.h"
+#include "components/Exceptions.h"
 
 namespace carto {
 
@@ -7,7 +8,7 @@ namespace carto {
         _points(points)
     {
         if (!projection) {
-            throw std::invalid_argument("Null projection");
+            throw NullArgumentException("Null projection");
         }
     }
 

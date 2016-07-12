@@ -7,6 +7,7 @@
 
 %{
 #include "vectorelements/NMLModel.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

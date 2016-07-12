@@ -7,7 +7,8 @@
 
 %{
 #include "components/LicenseManager.h"
-#include "components/LicenseManagerListener.h"
+#include "components/Exceptions.h"
+#include <memory>
 %}
 
 %include <std_string.i>

@@ -1,5 +1,6 @@
 #include "CacheTileDataSource.h"
 #include "core/MapTile.h"
+#include "components/Exceptions.h"
 #include "utils/Log.h"
 
 #include <memory>
@@ -10,7 +11,7 @@ namespace carto {
         TileDataSource(dataSource ? dataSource->getMinZoom() : 0, dataSource ? dataSource->getMaxZoom() : 0), _dataSource(dataSource)
     {
         if (!dataSource) {
-            throw std::invalid_argument("Null dataSource");
+            throw NullArgumentException("Null dataSource");
         }
 
         _dataSourceListener = std::make_shared<DataSourceListener>(*this);

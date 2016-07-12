@@ -1,4 +1,5 @@
 #include "HTTPClientPionImpl.h"
+#include "components/Exceptions.h"
 #include "utils/Log.h"
 
 #include <chrono>
@@ -20,16 +21,10 @@ namespace carto {
         std::string proto, host, path, query;
         std::uint16_t port;
         if (!pion::http::parser::parse_uri(request.url, proto, host, port, path, query)) {
-            if (_log) {
-                Log::Errorf("HTTPClient::PionImpl::makeRequest: Failed to parse URL: %s", request.url.c_str());
-            }
-            return false;
+            throw NetworkException("Invalid URL", request.url);
         }
         if (proto == "https") {
-            if (_log) {
-                Log::Error("HTTPClient::PionImpl::makeRequest: Protocol not supported: https");
-            }
-            return false;
+            throw NetworkException("HTTPS protocol not supported", request.url);
         }
         auto connectionKey = std::make_pair(host, port);
 
@@ -52,14 +47,8 @@ namespace carto {
                 continue;
             }
 
-            try {
-                result = makeRequest(*connection, request, headerFn, dataFn);
-            }
-            catch (const std::exception& ex) {
-                if (_log) {
-                    Log::Errorf("HTTPClient::PionImpl::makeRequest: Exception: %s", ex.what());
-                }
-            }
+            result = makeRequest(*connection, request, headerFn, dataFn);
+
             if (result) {
                 std::lock_guard<std::mutex> lock(_mutex);
                 if (request.method == "GET") {
@@ -75,14 +64,8 @@ namespace carto {
             return false;
         }
 
-        try {
-            result = makeRequest(*connection, request, headerFn, dataFn);
-        }
-        catch (const std::exception& ex) {
-            if (_log) {
-                Log::Errorf("HTTPClient::PionImpl::makeRequest: Exception: %s", ex.what());
-            }
-        }
+        result = makeRequest(*connection, request, headerFn, dataFn);
+
         if (result) {
             std::lock_guard<std::mutex> lock(_mutex);
             if (request.method == "GET") {
@@ -97,10 +80,7 @@ namespace carto {
         std::string proto, host, path, query;
         std::uint16_t port;
         if (!pion::http::parser::parse_uri(request.url, proto, host, port, path, query)) {
-            if (_log) {
-                Log::Errorf("HTTPClient::PionImpl::makeRequest: Failed to parse URL: %s", url.c_str());
-                return false;
-            }
+            throw NetworkException("Invalid URL", request.url);
         }
 
         // Form and send request
@@ -115,13 +95,13 @@ namespace carto {
         else {
             pionRequest.set_do_not_send_content_length();
         }
-        pionRequest.add_header("Host", host);
+        pionRequest.add_header("Host", request.url);
         for (auto it = request.headers.begin(); it != request.headers.end(); it++) {
             pionRequest.add_header(it->first, it->second);
         }
         pionRequest.send(*connection.connection, socketError);
         if (socketError) {
-            return false;
+            throw NetworkException(socketError.message(), request.url);
         }
 
         // Send the request
@@ -138,11 +118,7 @@ namespace carto {
         asio::streambuf buffer;
         std::size_t bytesRead = asio::read_until(*connection.connection, buffer, "\r\n\r\n", socketError);
         if (socketError) {
-            if (_log) {
-                std::string message = socketError.message();
-                Log::Errorf("HTTPClient::PionImpl::makeRequest: Socket error: %s, URL: %s", message.c_str(), url.c_str());
-            }
-            return false;
+            throw NetworkException(socketError.message(), request.url);
         }
 
         // Feed read data to HTTP parser
@@ -152,10 +128,7 @@ namespace carto {
         parser.parse(pionResponse, parserError);
         buffer.consume(bufferData.size());
         if (parserError) {
-            if (_log) {
-                Log::Errorf("HTTPClient::PionImpl::makeRequest: HTTP parsing error, URL: %s", url.c_str());
-            }
-            return false;
+            throw NetworkException(parserError.message(), request.url);
         }
 
         // Call headers callback
@@ -201,11 +174,7 @@ namespace carto {
                 if (socketError == asio::error::eof && contentLength == std::numeric_limits<std::uint64_t>::max()) {
                     break;
                 }
-                if (_log) {
-                    std::string message = socketError.message();
-                    Log::Errorf("HTTPClient::PionImpl::makeRequest: Socket error: %s, URL: %s", message.c_str(), url.c_str());
-                }
-                return false;
+                throw NetworkException(socketError.message(), request.url);
             }
 
             // Parse read data
@@ -214,10 +183,7 @@ namespace carto {
             parser.parse(pionResponse, parserError);
             buffer.consume(bufferData.size());
             if (parserError) {
-                if (_log) {
-                    Log::Errorf("HTTPClient::PionImpl::makeRequest: HTTP parsing error, URL: %s", url.c_str());
-                }
-                return false;
+                throw NetworkException(parserError.message(), request.url);
             }
 
             offset += bytesRead;

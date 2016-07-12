@@ -7,7 +7,6 @@
 
 %{
 #include "layers/VectorElementEventListener.h"
-#include "ui/VectorElementClickInfo.h"
 #include <memory>
 %}
 

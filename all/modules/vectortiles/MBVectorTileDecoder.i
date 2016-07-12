@@ -6,9 +6,8 @@
 !proxy_imports(carto::MBVectorTileDecoder, core.BinaryData, core.StringVector, graphics.Color, styles.CompiledStyleSet, styles.CartoCSSStyleSet, vectortiles.VectorTileDecoder)
 
 %{
-#include "styles/CompiledStyleSet.h"
-#include "styles/CartoCSSStyleSet.h"
 #include "vectortiles/MBVectorTileDecoder.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

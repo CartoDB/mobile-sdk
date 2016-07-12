@@ -7,6 +7,7 @@
 
 %{
 #include "vectorelements/Popup.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

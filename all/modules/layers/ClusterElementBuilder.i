@@ -6,8 +6,6 @@
 
 %{
 #include "layers/ClusterElementBuilder.h"
-#include "core/MapPos.h"
-#include "vectorelements/VectorElement.h"
 #include <memory>
 %}
 

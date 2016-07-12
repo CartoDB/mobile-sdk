@@ -6,8 +6,8 @@
 !proxy_imports(carto::MultiGeometry, core.MapPos, geometry.Geometry, geometry.GeometryVector)
 
 %{
-#include "geometry/Geometry.h"
 #include "geometry/MultiGeometry.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

@@ -1,4 +1,5 @@
 #include "Popup.h"
+#include "components/Exceptions.h"
 #include "styles/PopupStyle.h"
 #include "renderers/drawdatas/PopupDrawData.h"
 
@@ -11,7 +12,7 @@ namespace carto {
         _style(style)
     {
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
     }
     
@@ -22,7 +23,7 @@ namespace carto {
         _style(style)
     {
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
     }
     
@@ -33,7 +34,7 @@ namespace carto {
         _style(style)
     {
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
     }
     
@@ -73,7 +74,7 @@ namespace carto {
     
     void Popup::setStyle(const std::shared_ptr<PopupStyle>& style) {
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
 
         {

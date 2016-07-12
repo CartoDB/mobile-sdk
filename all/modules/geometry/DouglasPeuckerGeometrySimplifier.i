@@ -7,7 +7,6 @@
 
 %{
 #include "geometry/DouglasPeuckerGeometrySimplifier.h"
-#include "core/MapPos.h"
 #include <memory>
 %}
 

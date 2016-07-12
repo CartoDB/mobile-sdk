@@ -100,7 +100,7 @@ namespace carto {
 
     std::shared_ptr<BinaryData> WKBGeometryWriter::writeGeometry(const std::shared_ptr<Geometry>& geometry) const {
         if (!geometry) {
-            throw std::invalid_argument("Null geometry");
+            throw NullArgumentException("Null geometry");
         }
 
         std::lock_guard<std::mutex> lock(_mutex);
@@ -142,7 +142,7 @@ namespace carto {
                 writeGeometry(multiGeometry->getGeometry(i), stream);
             }
         } else {
-            throw std::invalid_argument("Unsupported geometry type");
+            throw ParseException("Unsupported geometry type");
         }
 
         stream.popBigEndian();

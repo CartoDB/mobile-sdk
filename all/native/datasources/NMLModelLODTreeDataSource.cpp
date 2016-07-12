@@ -1,6 +1,7 @@
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT
 
 #include "NMLModelLODTreeDataSource.h"
+#include "components/Exceptions.h"
 #include "projections/Projection.h"
 
 namespace carto {
@@ -13,7 +14,7 @@ namespace carto {
         _mutex()
     {
         if (!projection) {
-            throw std::invalid_argument("Null projection");
+            throw NullArgumentException("Null projection");
         }
     }
     

@@ -7,6 +7,7 @@
 
 %{
 #include "vectorelements/Text.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

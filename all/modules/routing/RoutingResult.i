@@ -9,7 +9,7 @@
 
 %{
 #include "routing/RoutingResult.h"
-#include "routing/RoutingInstruction.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

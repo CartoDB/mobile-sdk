@@ -1,4 +1,5 @@
 #include "BitmapOverlayRasterTileDataSource.h"
+#include "components/Exceptions.h"
 #include "projections/Projection.h"
 #include "projections/EPSG3857.h"
 #include "graphics/Bitmap.h"
@@ -36,17 +37,17 @@ namespace carto {
         _projection(std::make_shared<EPSG3857>())
     {
         if (!bitmap) {
-            throw std::invalid_argument("Null bitmap");
+            throw NullArgumentException("Null bitmap");
         }
         if (!projection) {
-            throw std::invalid_argument("Null projection");
+            throw NullArgumentException("Null projection");
         }
 
         if (mapPoses.size() != 2 && mapPoses.size() != 3 && mapPoses.size() != 4) {
-            throw std::invalid_argument("Position arrays must contain 3 or 4 elements");
+            throw InvalidArgumentException("Position arrays must contain 3 or 4 elements");
         }
         if (mapPoses.size() != bitmapPoses.size()) {
-            throw std::invalid_argument("Size mismatch between position arrays");
+            throw InvalidArgumentException("Size mismatch between position arrays");
         }
 
         cglib::vec<double, 8> uvs = cglib::vec<double, 8>::zero();
@@ -99,7 +100,7 @@ namespace carto {
             posTransform(4, 4) = posTransform(5, 5) = posTransform(6, 6) = posTransform(7, 7) = 1;
         }
         if (cglib::determinant(posTransform) == 0) {
-            throw std::invalid_argument("Map positions are collinear");
+            throw InvalidArgumentException("Map positions are collinear");
         }
 
         cglib::vec<double, 8> coeffs = cglib::transform(uvs, cglib::inverse(posTransform));

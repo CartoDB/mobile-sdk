@@ -1,4 +1,5 @@
 #include "VectorTileLayer.h"
+#include "components/Exceptions.h"
 #include "components/CancelableThreadPool.h"
 #include "datasources/TileDataSource.h"
 #include "renderers/MapRenderer.h"
@@ -28,7 +29,7 @@ namespace carto {
         _preloadingCache(DEFAULT_PRELOADING_CACHE_SIZE)
     {
         if (!decoder) {
-            throw std::invalid_argument("Null decoder");
+            throw NullArgumentException("Null decoder");
         }
 
         _labelCullThreadPool->setPoolSize(1);

@@ -6,9 +6,9 @@
 !proxy_imports(carto::Variant, core.StringVector, core.VariantVector, core.StringVariantMap)
 
 %{
-#include <memory>
-#include <vector>
 #include "core/Variant.h"
+#include "components/Exceptions.h"
+#include <memory>
 %}
 
 %include <std_shared_ptr.i>

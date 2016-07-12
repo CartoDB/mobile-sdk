@@ -1,4 +1,5 @@
 #include "Marker.h"
+#include "components/Exceptions.h"
 #include "styles/MarkerStyle.h"
 #include "renderers/drawdatas/MarkerDrawData.h"
 
@@ -10,7 +11,7 @@ namespace carto {
         _style(style)
     {
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
     }
     
@@ -19,7 +20,7 @@ namespace carto {
         _style(style)
     {
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
     }
         
@@ -28,7 +29,7 @@ namespace carto {
         _style(style)
     {
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
     }
     
@@ -42,7 +43,7 @@ namespace carto {
     
     void Marker::setStyle(const std::shared_ptr<MarkerStyle>& style) {
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
 
         {

@@ -7,6 +7,7 @@
 
 %{
 #include "datasources/BitmapOverlayRasterTileDataSource.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

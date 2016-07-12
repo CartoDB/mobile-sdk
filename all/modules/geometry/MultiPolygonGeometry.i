@@ -7,6 +7,7 @@
 
 %{
 #include "geometry/MultiPolygonGeometry.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

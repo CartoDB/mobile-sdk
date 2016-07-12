@@ -1,8 +1,9 @@
 #include "VectorLayer.h"
-#include "layers/VectorElementEventListener.h"
+#include "components/Exceptions.h"
 #include "components/CancelableThreadPool.h"
 #include "datasources/VectorDataSource.h"
 #include "geometry/PointGeometry.h"
+#include "layers/VectorElementEventListener.h"
 #include "renderers/BillboardRenderer.h"
 #include "renderers/GeometryCollectionRenderer.h"
 #include "renderers/LineRenderer.h"
@@ -54,7 +55,7 @@ namespace carto {
         _lastTask()
     {
         if (!dataSource) {
-            throw std::invalid_argument("Null dataSource");
+            throw NullArgumentException("Null dataSource");
         }
     }
     

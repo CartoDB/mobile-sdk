@@ -7,6 +7,7 @@
 
 %{
 #include "vectorelements/GeometryCollection.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

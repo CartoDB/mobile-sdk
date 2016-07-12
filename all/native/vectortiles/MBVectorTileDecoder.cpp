@@ -1,5 +1,6 @@
 #include "MBVectorTileDecoder.h"
 #include "core/BinaryData.h"
+#include "components/Exceptions.h"
 #include "graphics/Bitmap.h"
 #include "styles/CompiledStyleSet.h"
 #include "styles/CartoCSSStyleSet.h"
@@ -34,7 +35,7 @@ namespace carto {
         _styleSetData()
     {
         if (!compiledStyleSet) {
-            throw std::invalid_argument("Null compiledStyleSet");
+            throw NullArgumentException("Null compiledStyleSet");
         }
 
         _styleSetData = compiledStyleSet->getAssetPackage();
@@ -57,7 +58,7 @@ namespace carto {
         _styleSetData()
     {
         if (!cartoCSSStyleSet) {
-            throw std::invalid_argument("Null cartoCSSStyleSet");
+            throw NullArgumentException("Null cartoCSSStyleSet");
         }
 
         _styleSetData = cartoCSSStyleSet->getAssetPackage();
@@ -77,7 +78,7 @@ namespace carto {
     
     void MBVectorTileDecoder::setCompiledStyleSet(const std::shared_ptr<CompiledStyleSet>& styleSet) {
         if (!styleSet) {
-            throw std::invalid_argument("Null styleSet");
+            throw NullArgumentException("Null styleSet");
         }
 
         {
@@ -97,7 +98,7 @@ namespace carto {
     
     void MBVectorTileDecoder::setCartoCSSStyleSet(const std::shared_ptr<CartoCSSStyleSet>& styleSet) {
         if (!styleSet) {
-            throw std::invalid_argument("Null styleSet");
+            throw NullArgumentException("Null styleSet");
         }
 
         {

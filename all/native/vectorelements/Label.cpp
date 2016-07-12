@@ -1,4 +1,5 @@
 #include "Label.h"
+#include "components/Exceptions.h"
 #include "styles/LabelStyle.h"
 #include "renderers/drawdatas/LabelDrawData.h"
 
@@ -9,7 +10,7 @@ namespace carto {
         _style(style)
     {
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
     }
     
@@ -18,7 +19,7 @@ namespace carto {
         _style(style)
     {
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
     }
     
@@ -27,7 +28,7 @@ namespace carto {
         _style(style)
     {
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
     }
         
@@ -41,7 +42,7 @@ namespace carto {
     
     void Label::setStyle(const std::shared_ptr<LabelStyle>& style) {
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
 
         {

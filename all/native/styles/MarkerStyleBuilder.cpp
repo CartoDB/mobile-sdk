@@ -1,5 +1,6 @@
 #include "MarkerStyleBuilder.h"
 #include "assets/DefaultMarkerPNG.h"
+#include "components/Exceptions.h"
 #include "graphics/Bitmap.h"
 #include "styles/MarkerStyle.h"
 
@@ -52,7 +53,7 @@ namespace carto {
     
     void MarkerStyleBuilder::setBitmap(const std::shared_ptr<Bitmap>& bitmap) {
         if (!bitmap) {
-            throw std::invalid_argument("Null bitmap");
+            throw NullArgumentException("Null bitmap");
         }
 
         std::lock_guard<std::mutex> lock(_mutex);

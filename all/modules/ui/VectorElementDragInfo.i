@@ -9,9 +9,7 @@
 
 %{
 #include "ui/VectorElementDragInfo.h"
-#include "core/MapPos.h"
-#include "core/ScreenPos.h"
-#include "vectorelements/VectorElement.h"
+#include <memory>
 %}
 
 %import <std_shared_ptr.i>

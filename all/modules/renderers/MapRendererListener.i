@@ -5,7 +5,6 @@
 
 %{
 #include "renderers/MapRendererListener.h"
-#include "graphics/Bitmap.h"
 #include <memory>
 %}
 

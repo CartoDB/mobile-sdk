@@ -8,11 +8,8 @@
 !proxy_imports(carto::PackageInfo, packagemanager.PackageMetaInfo, packagemanager.PackageTileMask, core.StringVector)
 
 %{
-#include <memory>
-#include <vector>
 #include "packagemanager/PackageInfo.h"
-#include "packagemanager/PackageMetaInfo.h"
-#include "packagemanager/PackageTileMask.h"
+#include <memory>
 %}
 
 %include <stdint.i>

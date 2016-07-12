@@ -9,6 +9,7 @@
 
 %{
 #include "layers/TileLayer.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

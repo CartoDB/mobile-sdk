@@ -1,5 +1,6 @@
 #include "MapPos.h"
-#include "MapVec.h"
+#include "core/MapVec.h"
+#include "components/Exceptions.h"
 #include "utils/GeneralUtils.h"
 
 #include <cmath>
@@ -55,7 +56,7 @@ namespace carto {
         case 2:
             return _z;
         }
-        throw std::out_of_range("MapPos::operator[]");
+        throw OutOfRangeException("MapPos::operator[]");
     }
 
     double& MapPos::operator[](std::size_t n) {
@@ -67,7 +68,7 @@ namespace carto {
         case 2:
             return _z;
         }
-        throw std::out_of_range("MapPos::operator[]");
+        throw OutOfRangeException("MapPos::operator[]");
     }
 
     void MapPos::setCoords(double x, double y) {

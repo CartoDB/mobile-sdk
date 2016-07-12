@@ -1,4 +1,5 @@
 #include "GeometryCollection.h"
+#include "components/Exceptions.h"
 #include "datasources/VectorDataSource.h"
 #include "geometry/MultiGeometry.h"
 #include "renderers/drawdatas/GeometryCollectionDrawData.h"
@@ -10,10 +11,10 @@ namespace carto {
         _style(style)
     {
         if (!geometry) {
-            throw std::invalid_argument("Null geometry");
+            throw NullArgumentException("Null geometry");
         }
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
     }
 
@@ -27,7 +28,7 @@ namespace carto {
 
     void GeometryCollection::setGeometry(const std::shared_ptr<MultiGeometry>& geometry) {
         if (!geometry) {
-            throw std::invalid_argument("Null geometry");
+            throw NullArgumentException("Null geometry");
         }
 
         {
@@ -44,7 +45,7 @@ namespace carto {
 
     void GeometryCollection::setStyle(const std::shared_ptr<GeometryCollectionStyle>& style) {
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
 
         {

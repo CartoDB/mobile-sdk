@@ -7,15 +7,9 @@
 !java_imports(carto::BaseMapView, com.carto.components.ProjectionMode)
 
 %{
-#include "core/MapPos.h"
-#include "core/MapBounds.h"
-#include "core/ScreenPos.h"
-#include "core/ScreenBounds.h"
-#include "components/LicenseManagerListener.h"
-#include "renderers/MapRenderer.h"
-#include "renderers/RedrawRequestListener.h"
-#include "ui/MapEventListener.h"
 #include "ui/BaseMapView.h"
+#include "core/MapPos.h"
+#include "core/ScreenPos.h"
 %}
 
 %include <cartoswig.i>

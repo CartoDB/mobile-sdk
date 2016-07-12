@@ -2,6 +2,7 @@
 
 #include "WKBGeometryReader.h"
 #include "core/BinaryData.h"
+#include "components/Exceptions.h"
 #include "geometry/Geometry.h"
 #include "geometry/PointGeometry.h"
 #include "geometry/LineGeometry.h"
@@ -34,14 +35,14 @@ namespace carto {
 
     unsigned char WKBGeometryReader::Stream::readByte() {
         if (_offset + 1 > _data.size()) {
-            throw std::length_error("Stream array too short, can not read byte");
+            throw ParseException("Stream array too short, can not read byte");
         }
         return _data[_offset++];
     }
 
     std::uint32_t WKBGeometryReader::Stream::readUInt32() {
         if (_offset + 4 > _data.size()) {
-            throw std::length_error("Stream array too short, can not read 32-bit word");
+            throw ParseException("Stream array too short, can not read 32-bit word");
         }
         std::uint32_t val = 0;
         if (_bigEndian.top()) {
@@ -61,7 +62,7 @@ namespace carto {
 
     double WKBGeometryReader::Stream::readDouble() {
         if (_offset + 8 > _data.size()) {
-            throw std::length_error("Stream array too short, can not read double float");
+            throw ParseException("Stream array too short, can not read double float");
         }
         std::uint64_t val = 0;
         if (_bigEndian.top()) {
@@ -82,7 +83,7 @@ namespace carto {
 
     std::shared_ptr<Geometry> WKBGeometryReader::readGeometry(const std::shared_ptr<BinaryData>& wkbData) const {
         if (!wkbData) {
-            throw std::invalid_argument("Null wkbData");
+            throw NullArgumentException("Null wkbData");
         }
 
         Stream stream(*wkbData->getDataPtr());
@@ -163,7 +164,7 @@ namespace carto {
                 break;
             }
             default: {
-                throw std::invalid_argument("Unknown geometry type"); // NOTE: not possible to continue after this
+                throw ParseException("Unknown geometry type"); // NOTE: not possible to continue after this
             }
         }
 

@@ -94,7 +94,11 @@ namespace carto {
         std::map<std::string, std::string> responseHeaders;
         std::shared_ptr<BinaryData> responseData;
         if (httpClient.get(url, requestHeaders, responseHeaders, responseData) != 0) {
-            throw NetworkException("Failed to retrieve route data", NetworkUtils::ParseURLHostName(url));
+            std::string result;
+            if (responseData) {
+                result = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+            }
+            throw GenericException("Failed to read routing data", result);
         }
         
         const char* responseDataPtr = reinterpret_cast<const char*>(responseData->data());

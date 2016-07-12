@@ -1,4 +1,5 @@
 #include "MultiGeometry.h"
+#include "components/Exceptions.h"
 #include "utils/Log.h"
 
 #include <algorithm>
@@ -35,7 +36,7 @@ namespace carto {
     
     std::shared_ptr<Geometry> MultiGeometry::getGeometry(int index) const {
         if (index < 0 || index >= static_cast<int>(_geometries.size())) {
-            throw std::out_of_range("Geometry index out of range");
+            throw OutOfRangeException("Geometry index out of range");
         }
         return _geometries[index];
     }

@@ -86,6 +86,17 @@
   try {
     $action
   }
+  catch (const carto::NullArgumentException& e) {
+#if SWIGJAVA
+    SWIG_JavaException(jenv, SWIG_JavaNullPointerException, e.what());
+#endif
+#if SWIGCSHARP
+    SWIG_CSharpSetPendingException(SWIG_CSharpNullReferenceException, e.what());
+#endif
+#if SWIGOBJECTIVEC
+    SWIG_ObjcThrowException(SWIG_ObjcNullPointerException, e.what());
+#endif
+  }
   SWIG_CATCH_STDEXCEPT
 }
 %enddef
@@ -94,6 +105,17 @@
 %feature("except", throws="java.io.IOException") Method {
   try {
     $action
+  }
+  catch (const carto::NullArgumentException& e) {
+#if SWIGJAVA
+    SWIG_JavaException(jenv, SWIG_JavaNullPointerException, e.what());
+#endif
+#if SWIGCSHARP
+    SWIG_CSharpSetPendingException(SWIG_CSharpNullReferenceException, e.what());
+#endif
+#if SWIGOBJECTIVEC
+    SWIG_ObjcThrowException(SWIG_ObjcNullPointerException, e.what());
+#endif
   }
   catch (const carto::FileException& e) {
     SWIG_exception(SWIG_IOError, e.what());

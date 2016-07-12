@@ -7,6 +7,7 @@
 
 %{
 #include "vectorelements/Polygon3D.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

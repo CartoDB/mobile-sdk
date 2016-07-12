@@ -7,7 +7,6 @@
 
 %{
 #include "ui/MapEventListener.h"
-#include "ui/MapClickInfo.h"
 #include <memory>
 %}
 

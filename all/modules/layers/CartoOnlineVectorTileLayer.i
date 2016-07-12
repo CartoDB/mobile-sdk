@@ -7,6 +7,7 @@
 
 %{
 #include "layers/CartoOnlineVectorTileLayer.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

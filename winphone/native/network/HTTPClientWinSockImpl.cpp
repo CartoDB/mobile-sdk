@@ -1,4 +1,5 @@
 #include "HTTPClientWinSockImpl.h"
+#include "components/Exceptions.h"
 #include "utils/Log.h"
 
 #include <cstddef>
@@ -220,10 +221,7 @@ namespace carto {
             1,
             &mqi);
         if (FAILED(hr) || FAILED(mqi.hr)) {
-            if (_log) {
-                Log::Errorf("HTTPClient::WinSockImpl::makeRequest: Failed to create XMLHTTP object: URL: %s", request.url.c_str());
-            }
-            return false;
+            throw NetworkException("Failed to create XMLHTTP object", request.url);
         }
 
         Microsoft::WRL::ComPtr<IXMLHTTPRequest2> httpRequest2;
@@ -240,10 +238,7 @@ namespace carto {
         Microsoft::WRL::ComPtr<HTTPCallbackProxy> callbackProxy;
         hr = Microsoft::WRL::MakeAndInitialize<HTTPCallbackProxy>(&callbackProxy, headersFn, dataFn, finishFn);
         if (FAILED(hr)) {
-            if (_log) {
-                Log::Errorf("HTTPClient::WinSockImpl::makeRequest: Failed to initialize callback proxy: URL: %s", request.url.c_str());
-            }
-            return false;
+            throw NetworkException("Failed to initialize callback proxy", request.url);
         }
 
         for (auto it = request.headers.begin(); it != request.headers.end(); it++) {
@@ -259,20 +254,14 @@ namespace carto {
             nullptr);
 
         if (FAILED(hr)) {
-            if (_log) {
-                Log::Errorf("HTTPClient::WinSockImpl::makeRequest: Failed to open HTTP request: URL: %s", request.url.c_str());
-            }
-            return false;
+            throw NetworkException("Failed to open HTTP connection", request.url);
         }
 
         if (!request.contentType.empty()) {
             Microsoft::WRL::ComPtr<HTTPPostStream> postStream;
             hr = Microsoft::WRL::MakeAndInitialize<HTTPPostStream>(&postStream, request.body.data(), request.body.size());
             if (FAILED(hr)) {
-                if (_log) {
-                    Log::Errorf("HTTPClient::WinSockImpl::makeRequest: Failed to initialize HTTP POST stream: URL: %s", request.url.c_str());
-                }
-                return false;
+                throw NetworkException("Failed to initialize HTTP POST stream", request.url);
             }
 
             hr = httpRequest2->Send(postStream.Get(), request.body.size());
@@ -282,10 +271,7 @@ namespace carto {
         }
 
         if (FAILED(hr)) {
-            if (_log) {
-                Log::Errorf("HTTPClient::WinSockImpl::makeRequest: Failed to send HTTP request: URL: %s", request.url.c_str());
-            }
-            return false;
+            throw NetworkException("Failed to send HTTP request", request.url);
         }
 
         ::WaitForSingleObjectEx(resultEvent.get(), INFINITE, FALSE);

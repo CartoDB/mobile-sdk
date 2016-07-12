@@ -1,5 +1,6 @@
 #include "BitmapUtils.h"
 #include "core/BinaryData.h"
+#include "components/Exceptions.h"
 #include "graphics/Bitmap.h"
 #include "utils/AssetUtils.h"
 #include "utils/AndroidUtils.h"
@@ -36,7 +37,7 @@ namespace carto {
 
     std::shared_ptr<Bitmap> BitmapUtils::CreateBitmapFromAndroidBitmap(jobject androidBitmap) {
         if (!androidBitmap) {
-            throw std::invalid_argument("Null androidBitmap");
+            throw NullArgumentException("Null androidBitmap");
         }
 
         JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
@@ -86,7 +87,7 @@ namespace carto {
 
     jobject BitmapUtils::CreateAndroidBitmapFromBitmap(const std::shared_ptr<Bitmap>& bitmap) {
         if (!bitmap) {
-            throw std::invalid_argument("Null bitmap");
+            throw NullArgumentException("Null bitmap");
         }
 
         JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();

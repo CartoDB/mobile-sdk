@@ -7,6 +7,7 @@
 
 %{
 #include "geometry/MultiPointGeometry.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

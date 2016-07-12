@@ -57,8 +57,13 @@ namespace carto {
         std::map<std::string, std::string> requestHeaders;
         std::map<std::string, std::string> responseHeaders;
         std::shared_ptr<BinaryData> responseData;
-        if (_httpClient.get(url, requestHeaders, responseHeaders, responseData) != 0) {
-            Log::Errorf("CartoOnlineTileDataSource::loadOnlineTile: Failed to load tile %d/%d/%d", mapTile.getZoom(), mapTile.getX(), mapTile.getY());
+        try {
+            if (_httpClient.get(url, requestHeaders, responseHeaders, responseData) != 0) {
+                Log::Errorf("CartoOnlineTileDataSource::loadOnlineTile: Failed to load tile %d/%d/%d", mapTile.getZoom(), mapTile.getX(), mapTile.getY());
+                return std::shared_ptr<TileData>();
+            }
+        } catch (const std::exception& ex) {
+            Log::Errorf("CartoOnlineTileDataSource::loadOnlineTile: Exception while loading tile %d/%d/%d: %s", mapTile.getZoom(), mapTile.getX(), mapTile.getY(), ex.what());
             return std::shared_ptr<TileData>();
         }
         int maxAge = NetworkUtils::GetMaxAgeHTTPHeader(responseHeaders);

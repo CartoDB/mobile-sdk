@@ -1,5 +1,6 @@
 #include "BitmapUtils.h"
 #include "core/BinaryData.h"
+#include "components/Exceptions.h"
 #include "utils/AssetUtils.h"
 #include "graphics/Bitmap.h"
 #include "utils/Log.h"
@@ -39,7 +40,7 @@ namespace carto {
         static const unsigned int RGB_INDEX_REMAP[] = { };
 
         if (!image) {
-            throw std::invalid_argument("Null image");
+            throw NullArgumentException("Null image");
         }
     	
         CGImageRef cgImage = image.CGImage;
@@ -156,7 +157,7 @@ namespace carto {
         
     UIImage* BitmapUtils::CreateUIImageFromBitmap(const std::shared_ptr<Bitmap>& bitmap) {
         if (!bitmap) {
-            throw std::invalid_argument("Null bitmap");
+            throw NullArgumentException("Null bitmap");
         }
 
         CGBitmapInfo bitmapInfo;

@@ -1,5 +1,6 @@
 #include "Bitmap.h"
 #include "core/BinaryData.h"
+#include "components/Exceptions.h"
 #include "utils/Log.h"
 
 #include <algorithm>
@@ -468,14 +469,14 @@ namespace carto {
     
     std::shared_ptr<Bitmap> Bitmap::CreateFromCompressed(const std::shared_ptr<BinaryData>& compressedData) {
         if (!compressedData) {
-            throw std::invalid_argument("Null compressedData");
+            throw NullArgumentException("Null compressedData");
         }
         return CreateFromCompressed(compressedData->data(), compressedData->size());
     }
 
     std::shared_ptr<Bitmap> Bitmap::CreateFromCompressed(const unsigned char* compressedData, std::size_t dataSize) {
         if (!compressedData) {
-            throw std::invalid_argument("Null compressedData");
+            throw NullArgumentException("Null compressedData");
         }
         std::shared_ptr<Bitmap> bitmap(new Bitmap);
         if (!bitmap->loadFromCompressedBytes(compressedData, dataSize)) {

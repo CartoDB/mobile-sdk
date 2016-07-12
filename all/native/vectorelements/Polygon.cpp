@@ -1,4 +1,5 @@
 #include "Polygon.h"
+#include "components/Exceptions.h"
 #include "datasources/VectorDataSource.h"
 #include "geometry/PolygonGeometry.h"
 #include "renderers/drawdatas/PolygonDrawData.h"
@@ -11,10 +12,10 @@ namespace carto {
         _style(style)
     {
         if (!geometry) {
-            throw std::invalid_argument("Null geometry");
+            throw NullArgumentException("Null geometry");
         }
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
     }
         
@@ -23,7 +24,7 @@ namespace carto {
         _style(style)
     {
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
     }
     
@@ -33,7 +34,7 @@ namespace carto {
         _style(style)
     {
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
     }
     
@@ -47,7 +48,7 @@ namespace carto {
     
     void Polygon::setGeometry(const std::shared_ptr<PolygonGeometry>& geometry) {
         if (!geometry) {
-            throw std::invalid_argument("Null geometry");
+            throw NullArgumentException("Null geometry");
         }
 
         {
@@ -88,7 +89,7 @@ namespace carto {
     
     void Polygon::setStyle(const std::shared_ptr<PolygonStyle>& style) {
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
 
         {

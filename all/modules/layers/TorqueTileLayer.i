@@ -7,6 +7,7 @@
 
 %{
 #include "layers/TorqueTileLayer.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

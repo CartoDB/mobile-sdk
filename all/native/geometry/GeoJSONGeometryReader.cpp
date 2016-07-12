@@ -76,12 +76,12 @@ namespace carto {
 
     std::shared_ptr<FeatureCollection> GeoJSONGeometryReader::readFeatureCollection(const rapidjson::Value& value) const {
         if (!value.IsObject()) {
-            throw std::invalid_argument("Wrong JSON type for feature collection");
+            throw ParseException("Wrong JSON type for feature collection");
         }
 
         std::string type = value["type"].GetString();
         if (type != "FeatureCollection") {
-             throw std::invalid_argument("Illegal type for the feature collection");
+             throw ParseException("Illegal type for the feature collection");
         }
 
         const rapidjson::Value& featuresValue = value["features"];
@@ -96,12 +96,12 @@ namespace carto {
 
     std::shared_ptr<Feature> GeoJSONGeometryReader::readFeature(const rapidjson::Value& value) const {
         if (!value.IsObject()) {
-            throw std::invalid_argument("Wrong JSON type for feature");
+            throw ParseException("Wrong JSON type for feature");
         }
 
         std::string type = value["type"].GetString();
         if (type != "Feature") {
-             throw std::invalid_argument("Illegal type for the feature");
+             throw ParseException("Illegal type for the feature");
         }
 
         std::shared_ptr<Geometry> geometry = readGeometry(value["geometry"]);
@@ -111,7 +111,7 @@ namespace carto {
 
     std::shared_ptr<Geometry> GeoJSONGeometryReader::readGeometry(const rapidjson::Value& value) const {
         if (!value.IsObject()) {
-            throw std::invalid_argument("Wrong JSON type for geometry");
+            throw ParseException("Wrong JSON type for geometry");
         }
 
         std::string type = value["type"].GetString();
@@ -124,7 +124,7 @@ namespace carto {
         } else if (type == "MultiPoint") {
             const rapidjson::Value& coordinates = value["coordinates"];
             if (!coordinates.IsArray()) {
-                throw std::invalid_argument("Wrong JSON type for coordinates");
+                throw ParseException("Wrong JSON type for coordinates");
             }
             std::vector<std::shared_ptr<PointGeometry> > points;
             points.reserve(coordinates.Size());
@@ -135,7 +135,7 @@ namespace carto {
         } else if (type == "MultiLineString") {
             const rapidjson::Value& coordinates = value["coordinates"];
             if (!coordinates.IsArray()) {
-                throw std::invalid_argument("Wrong JSON type for coordinates");
+                throw ParseException("Wrong JSON type for coordinates");
             }
             std::vector<std::shared_ptr<LineGeometry> > lines;
             lines.reserve(coordinates.Size());
@@ -146,7 +146,7 @@ namespace carto {
         } else if (type == "MultiPolygon") {
             const rapidjson::Value& coordinates = value["coordinates"];
             if (!coordinates.IsArray()) {
-                throw std::invalid_argument("Wrong JSON type for coordinates");
+                throw ParseException("Wrong JSON type for coordinates");
             }
             std::vector<std::shared_ptr<PolygonGeometry> > polygons;
             polygons.reserve(coordinates.Size());
@@ -157,7 +157,7 @@ namespace carto {
         } else if (type == "GeometryCollection") {
             const rapidjson::Value& geometries = value["geometries"];
             if (!geometries.IsArray()) {
-                throw std::invalid_argument("Wrong JSON type for geometries");
+                throw ParseException("Wrong JSON type for geometries");
             }
             std::vector<std::shared_ptr<Geometry> > geometryList;
             geometryList.reserve(geometries.Size());
@@ -166,7 +166,7 @@ namespace carto {
             }
             return std::make_shared<MultiGeometry>(geometryList);
         } else {
-            throw std::invalid_argument("Unsupported geometry type: " + type);
+            throw ParseException("Unsupported geometry type: " + type);
         }
     }
 
@@ -179,10 +179,10 @@ namespace carto {
 
     MapPos GeoJSONGeometryReader::readPoint(const rapidjson::Value& value) const {
         if (!value.IsArray()) {
-            throw std::invalid_argument("Wrong JSON type for coordinates");
+            throw ParseException("Wrong JSON type for coordinates");
         }
         if (value.Size() < 2) {
-            throw std::invalid_argument("Too few components in coordinates");
+            throw ParseException("Too few components in coordinates");
         }
         MapPos mapPos(value[0].GetDouble(), value[1].GetDouble(), value.Size() > 2 ? value[2].GetDouble() : 0);
         if (_targetProjection) {
@@ -193,7 +193,7 @@ namespace carto {
 
     std::vector<MapPos> GeoJSONGeometryReader::readRing(const rapidjson::Value& value) const {
         if (!value.IsArray()) {
-            throw std::invalid_argument("Wrong JSON type for coordinates");
+            throw ParseException("Wrong JSON type for coordinates");
         }
         std::vector<MapPos> ring;
         ring.reserve(value.Size());
@@ -205,7 +205,7 @@ namespace carto {
 
     std::vector<std::vector<MapPos> > GeoJSONGeometryReader::readRings(const rapidjson::Value& value) const {
         if (!value.IsArray()) {
-            throw std::invalid_argument("Wrong JSON type for coordinates");
+            throw ParseException("Wrong JSON type for coordinates");
         }
         std::vector<std::vector<MapPos> > rings;
         rings.reserve(value.Size());

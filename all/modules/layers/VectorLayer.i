@@ -7,7 +7,7 @@
 
 %{
 #include "layers/VectorLayer.h"
-#include "layers/VectorElementEventListener.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

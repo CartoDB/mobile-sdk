@@ -1,4 +1,5 @@
 #include "Point.h"
+#include "components/Exceptions.h"
 #include "datasources/VectorDataSource.h"
 #include "geometry/PointGeometry.h"
 #include "renderers/drawdatas/PointDrawData.h"
@@ -10,10 +11,10 @@ namespace carto {
         _style(style)
     {
         if (!geometry) {
-            throw std::invalid_argument("Null geometry");
+            throw NullArgumentException("Null geometry");
         }
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
     }
         
@@ -22,7 +23,7 @@ namespace carto {
         _style(style)
     {
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
     }
     
@@ -36,7 +37,7 @@ namespace carto {
     
     void Point::setGeometry(const std::shared_ptr<PointGeometry>& geometry) {
         if (!geometry) {
-            throw std::invalid_argument("Null geometry");
+            throw NullArgumentException("Null geometry");
         }
 
         {
@@ -65,7 +66,7 @@ namespace carto {
     
     void Point::setStyle(const std::shared_ptr<PointStyle>& style) {
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
 
         {

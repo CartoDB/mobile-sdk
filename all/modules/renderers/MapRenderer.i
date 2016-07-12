@@ -7,6 +7,8 @@
 
 %{
 #include "renderers/MapRenderer.h"
+#include "components/Exceptions.h"
+#include <memory>
 %}
 
 %include <std_shared_ptr.i>

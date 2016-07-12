@@ -1,4 +1,5 @@
 #include "RoutingResult.h"
+#include "components/Exceptions.h"
 
 #include <numeric>
 #include <functional>
@@ -12,7 +13,7 @@ namespace carto {
         _instructions(instructions)
     {
         if (!projection) {
-            throw std::invalid_argument("Null projection");
+            throw NullArgumentException("Null projection");
         }
     }
 

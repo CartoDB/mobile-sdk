@@ -9,6 +9,7 @@
 
 %{
 #include "layers/NMLModelLODTreeLayer.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 
@@ -16,6 +17,7 @@
 %include <cartoswig.i>
 
 %import "datasources/NMLModelLODTreeDataSource.i"
+%import "layers/NMLModelLODTreeEventListener.i"
 %import "layers/Layer.i"
 
 !polymorphic_shared_ptr(carto::NMLModelLODTreeLayer, layers.NMLModelLODTreeLayer)

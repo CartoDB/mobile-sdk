@@ -1,5 +1,6 @@
 #include "TileLayer.h"
 #include "core/BinaryData.h"
+#include "components/Exceptions.h"
 #include "components/CancelableTask.h"
 #include "datasources/components/TileData.h"
 #include "layers/TileLoadListener.h"
@@ -175,7 +176,7 @@ namespace carto {
         _utfGridTiles()
     {
         if (!dataSource) {
-            throw std::invalid_argument("Null dataSource");
+            throw NullArgumentException("Null dataSource");
         }
     }
     

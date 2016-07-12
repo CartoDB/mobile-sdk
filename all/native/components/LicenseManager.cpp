@@ -1,5 +1,6 @@
 #include "LicenseManager.h"
 #include "core/BinaryData.h"
+#include "components/Exceptions.h"
 #include "components/LicenseManagerListener.h"
 #include "utils/PlatformUtils.h"
 #include "utils/NetworkUtils.h"
@@ -154,7 +155,7 @@ namespace carto {
     std::unordered_map<std::string, std::string> LicenseManager::DecodeLicense(const std::string& licenseKey) {
         // Unsalt and decode the license string
         if (licenseKey.substr(0, LICENSE_PREFIX.size()) != LICENSE_PREFIX) {
-            throw std::runtime_error("Invalid license prefix");
+            throw ParseException("Invalid license prefix");
         }
         std::string decodedLicense;
         CryptoPP::Base64Decoder* decoder = new CryptoPP::Base64Decoder(new CryptoPP::StringSink(decodedLicense));
@@ -172,7 +173,7 @@ namespace carto {
             encodedSignature += line;
         }
         if (!line.empty()) {
-            throw std::runtime_error("Invalid license, expecting empty line");
+            throw ParseException("Invalid license, expecting empty line");
         }
 
         // Decode signature. Note: it is in DER-format and needs to be converted to raw 40-byte signature
@@ -204,7 +205,7 @@ namespace carto {
         publicKey.Load(CryptoPP::StringSource(decodedPublicKey, true).Ref());
         CryptoPP::RandomPool rnd;
         if (!publicKey.Validate(rnd, 2)) {
-            throw std::runtime_error("Public key validation failed");
+            throw GenericException("Public key validation failed");
         }
 
         // Check signature, first convert signature from DER to P1364 format
@@ -219,7 +220,7 @@ namespace carto {
             CryptoPP::SignatureVerificationFilter::SIGNATURE_AT_END | CryptoPP::SignatureVerificationFilter::PUT_RESULT);
         CryptoPP::StringSource(message + std::string(signature, signature + verifier.SignatureLength()), true, verificationFilter);
         if (!result) {
-            throw std::runtime_error("Signature validation failed: " + ss.str());
+            throw GenericException("Signature validation failed", ss.str());
         }
 
         // Success

@@ -9,6 +9,7 @@
 
 %{
 #include "routing/RoutingRequest.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

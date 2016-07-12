@@ -7,7 +7,6 @@
 
 %{
 #include "layers/UTFGridEventListener.h"
-#include "ui/UTFGridClickInfo.h"
 #include <memory>
 %}
 

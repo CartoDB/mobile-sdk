@@ -1,4 +1,5 @@
 #include "HTTPClientCFImpl.h"
+#include "components/Exceptions.h"
 #include "utils/CFUniquePtr.h"
 #include "utils/Log.h"
 
@@ -38,31 +39,21 @@ namespace carto {
         CFUniquePtr<CFReadStreamRef> requestStream(CFReadStreamCreateForHTTPRequest(kCFAllocatorDefault, cfRequest));
         CFReadStreamSetProperty(requestStream, kCFStreamPropertyHTTPShouldAutoredirect, kCFBooleanTrue);
         if (!CFReadStreamOpen(requestStream)) {
-            if (_log) {
-                Log::Errorf("HTTPClient::CFImpl::makeRequest: Failed to open HTTP stream: %s", request.url.c_str());
-            }
-            return false;
+            throw NetworkException("Failed to open HTTP stream", request.url);
         }
 
         // Read initial block of the message. This is needed to parse the headers
         UInt8 buf[4096];
         CFIndex numBytesRead = CFReadStreamRead(requestStream, buf, sizeof(buf));
         if (numBytesRead < 0) {
-            if (_log) {
-                Log::Errorf("HTTPClient::CFImpl::makeRequest: Failed to read response: URL: %s", request.url.c_str());
-            }
-            return false;
+            throw NetworkException("Failed to read response", request.url);
         }
 
         // Get response
         CFUniquePtr<CFHTTPMessageRef> cfResponse((CFHTTPMessageRef)CFReadStreamCopyProperty(requestStream, kCFStreamPropertyHTTPResponseHeader));
         if (!cfResponse) {
-            if (_log) {
-                Log::Errorf("HTTPClient::CFImpl::makeRequest: Failed to read HTTP stream headers: %s", request.url.c_str());
-            }
-            return false;
+            throw NetworkException("Failed to read HTTP headers", request.url);
         }
-
 
         int statusCode = static_cast<int>(CFHTTPMessageGetResponseStatusCode(cfResponse));
 
@@ -107,19 +98,13 @@ namespace carto {
         for (std::uint64_t offset = numBytesRead; offset < contentLength && !cancel; ) {
             numBytesRead = CFReadStreamRead(requestStream, buf, sizeof(buf));
             if (numBytesRead < 0) {
-                if (_log) {
-                    Log::Errorf("HTTPClient::CFImpl::makeRequest: Failed to read response: URL: %s", request.url.c_str());
-                }
-                return false;
+                throw NetworkException("Failed to read data", request.url);
             }
             else if (numBytesRead == 0) {
-                if (contentLength != std::numeric_limits<std::uint64_t>::max()) {
-                    if (_log) {
-                        Log::Errorf("HTTPClient::CFImpl::makeRequest: Failed to read full response: URL: %s", request.url.c_str());
-                    }
-                    return false;
+                if (contentLength == std::numeric_limits<std::uint64_t>::max()) {
+                    break;
                 }
-                break;
+                throw NetworkException("Failed to read full data", request.url);
             }
 
             if (!dataFn(static_cast<const unsigned char*>(&buf[0]), numBytesRead)) {

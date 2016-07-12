@@ -10,7 +10,6 @@
 
 %{
 #include "layers/NMLModelLODTreeEventListener.h"
-#include "ui/NMLModelLODTreeClickInfo.h"
 #include <memory>
 %}
 

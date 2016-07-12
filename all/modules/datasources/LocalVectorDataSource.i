@@ -7,6 +7,7 @@
 
 %{
 #include "datasources/LocalVectorDataSource.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

@@ -7,6 +7,7 @@
 
 %{
 #include "vectorelements/Line.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

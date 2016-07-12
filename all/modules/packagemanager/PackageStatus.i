@@ -6,8 +6,8 @@
 #ifdef _CARTO_PACKAGEMANAGER_SUPPORT
 
 %{
-#include <memory>
 #include "packagemanager/PackageStatus.h"
+#include <memory>
 %}
 
 %include <std_shared_ptr.i>

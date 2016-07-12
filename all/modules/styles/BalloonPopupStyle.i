@@ -6,8 +6,7 @@
 !proxy_imports(carto::BalloonPopupStyle, graphics.Color, graphics.Bitmap, styles.PopupStyle)
 
 %{
-#include "styles/PopupStyle.h"
-#include "styles/BalloonPopupStyleBuilder.h"
+#include "styles/BalloonPopupStyle.h"
 #include <memory>
 %}
 

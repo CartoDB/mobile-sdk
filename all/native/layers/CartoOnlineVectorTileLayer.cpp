@@ -1,5 +1,6 @@
 #include "CartoOnlineVectorTileLayer.h"
 #include "core/BinaryData.h"
+#include "components/Exceptions.h"
 #include "datasources/CartoOnlineTileDataSource.h"
 #include "styles/CompiledStyleSet.h"
 #include "vectortiles/MBVectorTileDecoder.h"
@@ -22,7 +23,7 @@ namespace carto {
     
     std::shared_ptr<VectorTileDecoder> CartoOnlineVectorTileLayer::CreateTileDecoder(const std::shared_ptr<AssetPackage>& styleAssetPackage) {
         if (!styleAssetPackage) {
-            throw std::invalid_argument("Null styleAssetPackage");
+            throw NullArgumentException("Null styleAssetPackage");
         }
         return std::make_shared<MBVectorTileDecoder>(std::make_shared<CompiledStyleSet>(styleAssetPackage));
     }

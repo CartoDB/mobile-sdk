@@ -1,5 +1,6 @@
 #include "LineStyleBuilder.h"
 #include "assets/DefaultLinePNG.h"
+#include "components/Exceptions.h"
 #include "graphics/Bitmap.h"
 
 namespace carto {
@@ -25,7 +26,7 @@ namespace carto {
     
     void LineStyleBuilder::setBitmap(const std::shared_ptr<Bitmap>& bitmap) {
         if (!bitmap) {
-            throw std::invalid_argument("Null bitmap");
+            throw NullArgumentException("Null bitmap");
         }
 
         std::lock_guard<std::mutex> lock(_mutex);

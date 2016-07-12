@@ -22,7 +22,7 @@ namespace carto {
         _mutex()
     {
         if (!packageManager) {
-            throw std::invalid_argument("Null packageManager");
+            throw NullArgumentException("Null packageManager");
         }
     }
 
@@ -31,7 +31,7 @@ namespace carto {
 
     std::shared_ptr<RoutingResult> PackageManagerRoutingService::calculateRoute(const std::shared_ptr<RoutingRequest>& request) const {
         if (!request) {
-            throw std::invalid_argument("Null request");
+            throw NullArgumentException("Null request");
         }
 
         // Find all routing packages

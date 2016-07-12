@@ -7,6 +7,7 @@
 
 %{
 #include "geometry/FeatureCollection.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

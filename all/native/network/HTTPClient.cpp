@@ -1,5 +1,6 @@
 #include "HTTPClient.h"
 #include "core/BinaryData.h"
+#include "components/Exceptions.h"
 #include "utils/Log.h"
 
 #include <chrono>
@@ -116,9 +117,8 @@ namespace carto {
                 }
                 if (contentOffset != offset) {
                     if (_log) {
-                        Log::Errorf("HTTPClient::makeRequest: Content range mismatch: URL: %s", request.url.c_str());
+                        Log::Errorf("HTTPClient::makeRequest: Content range mismatch: %d/%d, URL: %s", static_cast<int>(contentOffset), static_cast<int>(offset), request.url.c_str());
                     }
-                    response = Response();
                     return false;
                 }
             }
@@ -139,7 +139,10 @@ namespace carto {
         };
 
         if (!_impl->makeRequest(request, headersFn, dataFn)) {
-            return -1;
+            if (response.statusCode == 206 && contentOffset != offset) {
+                throw OutOfRangeException("Content range mismatch");
+            }
+            return -1; // request was cancelled
         }
 
         if (response.statusCode >= 300 && response.statusCode < 400) {

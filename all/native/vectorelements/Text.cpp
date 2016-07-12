@@ -1,4 +1,5 @@
 #include "Text.h"
+#include "components/Exceptions.h"
 #include "graphics/Bitmap.h"
 #include "graphics/BitmapCanvas.h"
 #include "styles/TextStyle.h"
@@ -97,7 +98,7 @@ namespace carto {
 
     void Text::setStyle(const std::shared_ptr<TextStyle>& style) {
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
 
         {

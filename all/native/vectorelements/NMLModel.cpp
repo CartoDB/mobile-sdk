@@ -1,5 +1,6 @@
 #include "NMLModel.h"
 #include "core/BinaryData.h"
+#include "components/Exceptions.h"
 #include "geometry/PointGeometry.h"
 #include "renderers/drawdatas/NMLModelDrawData.h"
 #include "utils/Const.h"
@@ -16,10 +17,10 @@ namespace carto {
         _sourceModel(sourceModel)
     {
         if (!geometry) {
-            throw std::invalid_argument("Null geometry");
+            throw NullArgumentException("Null geometry");
         }
         if (!sourceModel) {
-            throw std::invalid_argument("Null sourceModel");
+            throw NullArgumentException("Null sourceModel");
         }
 
         const nml::Vector3& minBounds = _sourceModel->bounds().min();
@@ -35,7 +36,7 @@ namespace carto {
         _sourceModel(sourceModel)
     {
         if (!sourceModel) {
-            throw std::invalid_argument("Null sourceModel");
+            throw NullArgumentException("Null sourceModel");
         }
 
         const nml::Vector3& minBounds = _sourceModel->bounds().min();
@@ -51,10 +52,10 @@ namespace carto {
         _sourceModel()
     {
         if (!geometry) {
-            throw std::invalid_argument("Null geometry");
+            throw NullArgumentException("Null geometry");
         }
         if (!sourceModelData) {
-            throw std::invalid_argument("Null sourceModelData");
+            throw NullArgumentException("Null sourceModelData");
         }
 
         std::shared_ptr<std::vector<unsigned char> > data = sourceModelData->getDataPtr();
@@ -73,7 +74,7 @@ namespace carto {
         _sourceModel()
     {
         if (!sourceModelData) {
-            throw std::invalid_argument("Null sourceModelData");
+            throw NullArgumentException("Null sourceModelData");
         }
 
         std::shared_ptr<std::vector<unsigned char> > data = sourceModelData->getDataPtr();
@@ -94,7 +95,7 @@ namespace carto {
     
     void NMLModel::setGeometry(const std::shared_ptr<Geometry>& geometry) {
         if (!geometry) {
-            throw std::invalid_argument("Null geometry");
+            throw NullArgumentException("Null geometry");
         }
 
         {

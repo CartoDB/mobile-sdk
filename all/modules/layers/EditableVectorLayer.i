@@ -9,7 +9,7 @@
 
 %{
 #include "layers/EditableVectorLayer.h"
-#include "layers/VectorEditEventListener.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

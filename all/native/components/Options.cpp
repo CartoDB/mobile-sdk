@@ -2,6 +2,7 @@
 #include "assets/DefaultBackgroundPNG.h"
 #include "assets/DefaultSkyPNG.h"
 #include "assets/CartoWatermarkPNG.h"
+#include "components/Exceptions.h"
 #include "components/CancelableThreadPool.h"
 #include "graphics/Bitmap.h"
 #include "projections/EPSG3857.h"
@@ -585,7 +586,7 @@ namespace carto {
     
     void Options::setBaseProjection(const std::shared_ptr<Projection>& baseProjection) {
         if (!baseProjection) {
-            throw std::invalid_argument("Null base projection");
+            throw NullArgumentException("Null baseProjection");
         }
 
         {

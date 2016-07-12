@@ -1,4 +1,5 @@
 #include "Line.h"
+#include "components/Exceptions.h"
 #include "datasources/VectorDataSource.h"
 #include "geometry/LineGeometry.h"
 #include "renderers/drawdatas/LineDrawData.h"
@@ -11,10 +12,10 @@ namespace carto {
         _style(style)
     {
         if (!geometry) {
-            throw std::invalid_argument("Null geometry");
+            throw NullArgumentException("Null geometry");
         }
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
     }
         
@@ -23,7 +24,7 @@ namespace carto {
         _style(style)
     {
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
     }
     
@@ -37,7 +38,7 @@ namespace carto {
     
     void Line::setGeometry(const std::shared_ptr<LineGeometry>& geometry) {
         if (!geometry) {
-            throw std::invalid_argument("Null geometry");
+            throw NullArgumentException("Null geometry");
         }
 
         {
@@ -67,7 +68,7 @@ namespace carto {
     
     void Line::setStyle(const std::shared_ptr<LineStyle>& style) {
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
 
         {

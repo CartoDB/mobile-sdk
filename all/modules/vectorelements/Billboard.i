@@ -7,6 +7,7 @@
 
 %{
 #include "vectorelements/Billboard.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

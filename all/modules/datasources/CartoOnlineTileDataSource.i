@@ -7,6 +7,7 @@
 
 %{
 #include "datasources/CartoOnlineTileDataSource.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

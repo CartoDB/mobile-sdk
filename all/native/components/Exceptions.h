@@ -11,9 +11,24 @@
 
 namespace carto {
 
+    class NullArgumentException : public std::invalid_argument {
+    public:
+        explicit NullArgumentException(const std::string& msg) : invalid_argument(msg) { }
+    };
+
+    class InvalidArgumentException : public std::invalid_argument {
+    public:
+        explicit InvalidArgumentException(const std::string& msg) : invalid_argument(msg) { }
+    };
+
+    class OutOfRangeException : public std::out_of_range {
+    public:
+        explicit OutOfRangeException(const std::string& msg) : out_of_range(msg) { }
+    };
+
     class ParseException : public std::runtime_error {
     public:
-        explicit ParseException(const std::string& msg, const std::string& string, int position = -1) : runtime_error(msg), _string(string), _position(position) { }
+        explicit ParseException(const std::string& msg, const std::string& str = std::string(), int position = -1) : runtime_error(msg), _string(str), _position(position) { }
 
         const std::string& getString() const {
             return _string;
@@ -47,14 +62,14 @@ namespace carto {
 
     class NetworkException : public std::runtime_error {
     public:
-        explicit NetworkException(const std::string& msg, const std::string& host) : runtime_error(msg), _host(host) { }
+        explicit NetworkException(const std::string& msg, const std::string& details = std::string()) : runtime_error(msg), _details(details) { }
 
-        const std::string& getHost() const {
-            return _host;
+        const std::string& getDetails() const {
+            return _details;
         }
 
     private:
-        std::string _host;
+        std::string _details;
     };
 
     class GenericException : public std::runtime_error {

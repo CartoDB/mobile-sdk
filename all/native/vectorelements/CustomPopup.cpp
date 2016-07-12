@@ -1,4 +1,5 @@
 #include "CustomPopup.h"
+#include "components/Exceptions.h"
 #include "vectorelements/CustomPopupHandler.h"
 #include "ui/PopupClickInfo.h"
 #include "ui/PopupDrawInfo.h"
@@ -10,7 +11,7 @@ namespace carto {
         _popupHandler(popupHandler)
     {
         if (!popupHandler) {
-            throw std::invalid_argument("Null popupHandler");
+            throw NullArgumentException("Null popupHandler");
         }
     }
     
@@ -19,7 +20,7 @@ namespace carto {
         _popupHandler(popupHandler)
     {
         if (!popupHandler) {
-            throw std::invalid_argument("Null popupHandler");
+            throw NullArgumentException("Null popupHandler");
         }
     }
     
@@ -28,7 +29,7 @@ namespace carto {
         _popupHandler(popupHandler)
     {
         if (!popupHandler) {
-            throw std::invalid_argument("Null popupHandler");
+            throw NullArgumentException("Null popupHandler");
         }
     }
     

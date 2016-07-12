@@ -1,4 +1,5 @@
 #include "FeatureCollection.h"
+#include "components/Exceptions.h"
 #include "utils/Log.h"
 
 namespace carto {
@@ -17,7 +18,7 @@ namespace carto {
     
     std::shared_ptr<Feature> FeatureCollection::getFeature(int index) const {
         if (index < 0 || index >= static_cast<int>(_features.size())) {
-            throw std::out_of_range("Feature index out of range");
+            throw OutOfRangeException("Feature index out of range");
         }
         return _features[index];
     }

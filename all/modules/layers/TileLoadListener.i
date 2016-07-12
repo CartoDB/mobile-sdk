@@ -6,7 +6,6 @@
 %{
 #include "layers/TileLoadListener.h"	
 #include <memory>
-#include <string>
 %}
 
 %include <std_string.i>

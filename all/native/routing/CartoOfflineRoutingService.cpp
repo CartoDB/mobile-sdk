@@ -31,7 +31,7 @@ namespace carto {
 
     std::shared_ptr<RoutingResult> CartoOfflineRoutingService::calculateRoute(const std::shared_ptr<RoutingRequest>& request) const {
         if (!request) {
-            throw std::invalid_argument("Null request");
+            throw NullArgumentException("Null request");
         }
 
         return RoutingProxy::CalculateRoute(_routeFinder, request);

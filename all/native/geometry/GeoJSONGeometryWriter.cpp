@@ -1,14 +1,15 @@
 #include "GeoJSONGeometryWriter.h"
-#include "Feature.h"
-#include "FeatureCollection.h"
-#include "Geometry.h"
-#include "PointGeometry.h"
-#include "LineGeometry.h"
-#include "PolygonGeometry.h"
-#include "MultiGeometry.h"
-#include "MultiPointGeometry.h"
-#include "MultiLineGeometry.h"
-#include "MultiPolygonGeometry.h"
+#include "components/Exceptions.h"
+#include "geometry/Feature.h"
+#include "geometry/FeatureCollection.h"
+#include "geometry/Geometry.h"
+#include "geometry/PointGeometry.h"
+#include "geometry/LineGeometry.h"
+#include "geometry/PolygonGeometry.h"
+#include "geometry/MultiGeometry.h"
+#include "geometry/MultiPointGeometry.h"
+#include "geometry/MultiLineGeometry.h"
+#include "geometry/MultiPolygonGeometry.h"
 #include "projections/Projection.h"
 #include "utils/Log.h"
 
@@ -50,7 +51,7 @@ namespace carto {
 
     std::string GeoJSONGeometryWriter::writeGeometry(const std::shared_ptr<Geometry>& geometry) const {
         if (!geometry) {
-            throw std::invalid_argument("Null geometry");
+            throw NullArgumentException("Null geometry");
         }
 
         std::lock_guard<std::mutex> lock(_mutex);
@@ -65,7 +66,7 @@ namespace carto {
 
     std::string GeoJSONGeometryWriter::writeFeature(const std::shared_ptr<Feature>& feature) const {
         if (!feature) {
-            throw std::invalid_argument("Null feature");
+            throw NullArgumentException("Null feature");
         }
 
         std::lock_guard<std::mutex> lock(_mutex);
@@ -80,7 +81,7 @@ namespace carto {
 
     std::string GeoJSONGeometryWriter::writeFeatureCollection(const std::shared_ptr<FeatureCollection>& featureCollection) const {
         if (!featureCollection) {
-            throw std::invalid_argument("Null feature collection");
+            throw NullArgumentException("Null feature collection");
         }
 
         std::lock_guard<std::mutex> lock(_mutex);
@@ -165,14 +166,14 @@ namespace carto {
                 writeGeometry(multiGeometry->getGeometry(i), geometries[i], allocator);
             }
         } else {
-            throw std::invalid_argument("Unsupported geometry type");
+            throw ParseException("Unsupported geometry type");
         }
     }
 
     void GeoJSONGeometryWriter::writeProperties(const Variant& properties, rapidjson::Value& value, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& allocator) const {
         rapidjson::Document propertiesDoc;
         if (propertiesDoc.Parse<rapidjson::kParseDefaultFlags>(properties.toString().c_str()).HasParseError()) {
-            throw std::invalid_argument("Failed to read properties");
+            throw ParseException("Failed to read properties");
         }
 
         value.CopyFrom(propertiesDoc, allocator);

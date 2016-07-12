@@ -1,5 +1,6 @@
 #include "TorqueTileDecoder.h"
 #include "core/BinaryData.h"
+#include "components/Exceptions.h"
 #include "styles/CartoCSSStyleSet.h"
 #include "vectortiles/utils/MapnikVTLogger.h"
 #include "vectortiles/utils/VTBitmapLoader.h"
@@ -22,7 +23,7 @@ namespace carto {
         _resolution(256), _map(), _symbolizerContext(), _styleSet(), _mutex()
     {
         if (!styleSet) {
-            throw std::invalid_argument("Null styleSet");
+            throw NullArgumentException("Null styleSet");
         }
 
         setStyleSet(styleSet);
@@ -46,7 +47,7 @@ namespace carto {
     
     void TorqueTileDecoder::setStyleSet(const std::shared_ptr<CartoCSSStyleSet>& styleSet) {
         if (!styleSet) {
-            throw std::invalid_argument("Null styleSet");
+            throw NullArgumentException("Null styleSet");
         }
 
         {

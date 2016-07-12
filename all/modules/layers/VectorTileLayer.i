@@ -6,8 +6,8 @@
 !proxy_imports(carto::VectorTileLayer, datasources.TileDataSource, datasources.components.TileData, layers.TileLayer, vectortiles.VectorTileDecoder)
 
 %{
-#include "datasources/TileDataSource.h"
 #include "layers/VectorTileLayer.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

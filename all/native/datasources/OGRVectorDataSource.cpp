@@ -104,6 +104,10 @@ namespace carto {
         _poLayer(),
         _poLayerSpatialRef()
     {
+        if (!styleSelector) {
+            throw NullArgumentException("Null styleSelector");
+        }
+
         std::lock_guard<std::mutex> lock(_dataBase->_mutex);
         if (!_dataBase->_poLayers.empty()) {
             _poLayer = _dataBase->_poLayers.front();
@@ -124,12 +128,19 @@ namespace carto {
         _poLayer(),
         _poLayerSpatialRef()
     {
+        if (!styleSelector) {
+            throw NullArgumentException("Null styleSelector");
+        }
+        if (!dataBase) {
+            throw NullArgumentException("Null dataBase");
+        }
+
         std::lock_guard<std::mutex> lock(_dataBase->_mutex);
         if (layerIndex >= 0 && layerIndex < static_cast<int>(_dataBase->_poLayers.size())) {
             _poLayer = _dataBase->_poLayers[layerIndex];
             _poLayerSpatialRef = std::make_shared<LayerSpatialReference>(_poLayer, projection);
         } else {
-            throw std::invalid_argument("Invalid layer index");
+            throw IndexRangeException("Invalid layer index");
         }
     }
     
@@ -228,7 +239,7 @@ namespace carto {
     
     void OGRVectorDataSource::add(const std::shared_ptr<VectorElement>& element) {
         if (!element) {
-            throw std::invalid_argument("Null element");
+            throw NullArgumentException("Null element");
         }
 
         {
@@ -247,7 +258,7 @@ namespace carto {
     
     bool OGRVectorDataSource::remove(const std::shared_ptr<VectorElement>& element) {
         if (!element) {
-            throw std::invalid_argument("Null element");
+            throw NullArgumentException("Null element");
         }
 
         {

@@ -1,5 +1,6 @@
 #include "CombinedTileDataSource.h"
 #include "core/MapTile.h"
+#include "components/Exceptions.h"
 #include "utils/Log.h"
 
 #include <memory>
@@ -10,10 +11,10 @@ namespace carto {
         TileDataSource(dataSource1 ? dataSource1->getMinZoom() : 0, dataSource2 ? dataSource2->getMaxZoom() : 0), _dataSource1(dataSource1), _dataSource2(dataSource2), _zoomLevel(zoomLevel)
     {
         if (!dataSource1) {
-            throw std::invalid_argument("Null dataSource1");
+            throw NullArgumentException("Null dataSource1");
         }
         if (!dataSource2) {
-            throw std::invalid_argument("Null dataSource2");
+            throw NullArgumentException("Null dataSource2");
         }
 
         _dataSourceListener = std::make_shared<DataSourceListener>(*this);

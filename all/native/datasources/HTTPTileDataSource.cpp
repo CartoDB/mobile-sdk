@@ -81,8 +81,13 @@ namespace carto {
         std::map<std::string, std::string> requestHeaders;
         std::map<std::string, std::string> responseHeaders;
         std::shared_ptr<BinaryData> responseData;
-        if (_httpClient.get(url, requestHeaders, responseHeaders, responseData) != 0) {
-            Log::Errorf("HTTPTileDataSource::loadTile: Failed to load %s", url.c_str());
+        try {
+            if (_httpClient.get(url, requestHeaders, responseHeaders, responseData) != 0) {
+                Log::Errorf("HTTPTileDataSource::loadTile: Failed to load %s", url.c_str());
+                return std::shared_ptr<TileData>();
+            }
+        } catch (const std::exception& ex) {
+            Log::Errorf("HTTPTileDataSource::loadTile: Exception while loading tile %d/%d/%d: %s", mapTile.getZoom(), mapTile.getX(), mapTile.getY(), ex.what());
             return std::shared_ptr<TileData>();
         }
         auto tileData = std::make_shared<TileData>(responseData);

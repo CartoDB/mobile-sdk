@@ -1,6 +1,7 @@
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT
 
 #include "NMLModelLODTreeLayer.h"
+#include "components/Exceptions.h"
 #include "components/CancelableThreadPool.h"
 #include "layers/NMLModelLODTreeEventListener.h"
 #include "renderers/MapRenderer.h"
@@ -70,7 +71,7 @@ namespace carto {
         _renderer(std::make_shared<NMLModelLODTreeRenderer>())
     {
         if (!dataSource) {
-            throw std::invalid_argument("Null dataSource");
+            throw NullArgumentException("Null dataSource");
         }
 
         _fetchThreadPool->setPoolSize(1);

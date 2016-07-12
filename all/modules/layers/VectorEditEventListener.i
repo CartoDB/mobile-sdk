@@ -9,11 +9,6 @@
 
 %{
 #include "layers/VectorEditEventListener.h"
-#include "ui/VectorElementDragInfo.h"
-#include "core/ScreenPos.h"
-#include "geometry/Geometry.h"
-#include "vectorelements/VectorElement.h"
-#include "styles/PointStyle.h"
 #include <memory>
 %}
 

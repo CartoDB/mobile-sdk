@@ -6,7 +6,6 @@
 !proxy_imports(carto::ZippedAssetPackage, core.BinaryData, core.StringVector, utils.AssetPackage)
 
 %{
-#include "utils/AssetPackage.h"
 #include "utils/ZippedAssetPackage.h"
 #include <memory>
 %}

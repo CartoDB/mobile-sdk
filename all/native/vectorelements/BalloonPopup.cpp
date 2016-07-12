@@ -1,4 +1,5 @@
 #include "BalloonPopup.h"
+#include "components/Exceptions.h"
 #include "core/MapPos.h"
 #include "core/ScreenPos.h"
 #include "core/ScreenBounds.h"
@@ -288,7 +289,7 @@ namespace carto {
 
     void BalloonPopup::setStyle(const std::shared_ptr<BalloonPopupStyle>& style) {
         if (!style) {
-            throw std::invalid_argument("Null style");
+            throw NullArgumentException("Null style");
         }
 
         {

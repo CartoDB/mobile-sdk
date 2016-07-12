@@ -7,6 +7,7 @@
 
 %{
 #include "geometry/MultiLineGeometry.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

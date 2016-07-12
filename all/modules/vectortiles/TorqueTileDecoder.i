@@ -6,8 +6,8 @@
 !proxy_imports(carto::TorqueTileDecoder, core.BinaryData, graphics.Color, styles.CartoCSSStyleSet, vectortiles.VectorTileDecoder)
 
 %{
-#include "styles/CartoCSSStyleSet.h"
 #include "vectortiles/TorqueTileDecoder.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

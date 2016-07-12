@@ -12,10 +12,6 @@
 
 %{
 #include "packagemanager/PackageManager.h"
-#include "packagemanager/PackageInfo.h"
-#include "packagemanager/PackageMetaInfo.h"
-#include "packagemanager/PackageStatus.h"
-#include "packagemanager/PackageManagerListener.h"
 #include "components/Exceptions.h"
 #include <memory>
 %}
