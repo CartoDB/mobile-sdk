@@ -7,6 +7,7 @@
 
 %{
 #include "styles/MarkerStyleBuilder.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

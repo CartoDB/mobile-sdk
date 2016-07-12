@@ -7,6 +7,7 @@
 
 %{
 #include "styles/LineStyleBuilder.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

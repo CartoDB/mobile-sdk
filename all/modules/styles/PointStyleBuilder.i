@@ -7,6 +7,7 @@
 
 %{
 #include "styles/PointStyleBuilder.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 

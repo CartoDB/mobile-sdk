@@ -9,6 +9,7 @@
 
 %{
 #include "utils/BitmapUtils.h"
+#include "components/Exceptions.h"
 %}
 
 %include <std_shared_ptr.i>
