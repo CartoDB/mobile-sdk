@@ -254,11 +254,14 @@ namespace carto {
     }
 
     std::string CartoMapsService::getTilerURL(const std::map<std::string, std::string>& cdnURLs) const {
-        std::string url = getAPITemplate();
+        std::map<std::string, std::string> tagValues = { { "user", _username }, { "username", _username } };
 
-        if (!_tilerURL.empty()) {
-            std::map<std::string, std::string> tagValues = { { "user", _username }, { "username", _username } };
-            url = GeneralUtils::ReplaceTags(_tilerURL, tagValues, "{", "}", false);
+        std::string apiTemplate = getAPITemplate();
+        std::string url = GeneralUtils::ReplaceTags(apiTemplate, tagValues, "{", "}", false);
+
+        std::string tilerURL = getTilerURL();
+        if (!tilerURL.empty()) {
+            url = GeneralUtils::ReplaceTags(tilerURL, tagValues, "{", "}", false);
         }
 
         std::string::size_type pos = url.find("://");
@@ -299,10 +302,15 @@ namespace carto {
         urlTemplateBase += "/api/v1/map/" + layerGroupId;
         urlTemplateBase += "/" + boost::lexical_cast<std::string>(layerIndex);
 
+        std::string urlTemplateSuffix;
+        if (!_apiKey.empty()) {
+            urlTemplateSuffix = "?api_key=" + NetworkUtils::URLEncode(_apiKey);
+        }
+
         // Create layer based on type and flags
         if (type == "torque") {
             if (!cartoCSS.empty()) {
-                auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.torque");
+                auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.torque" + urlTemplateSuffix);
                 auto styleSet = std::make_shared<CartoCSSStyleSet>(cartoCSS, _vectorTileAssetPackage);
                 auto torqueTileDecoder = std::make_shared<TorqueTileDecoder>(styleSet);
                 return std::make_shared<TorqueTileLayer>(dataSource, torqueTileDecoder);
@@ -318,7 +326,7 @@ namespace carto {
             
             if (_defaultVectorLayerMode) {
                 if (!layerId.empty() && !cartoCSS.empty()) {
-                    auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.mvt");
+                    auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.mvt" + urlTemplateSuffix);
                     auto styleSet = std::make_shared<CartoCSSStyleSet>(cartoCSS, _vectorTileAssetPackage);
                     auto vectorTileDecoder = std::make_shared<MBVectorTileDecoder>(styleSet);
                     vectorTileDecoder->setCartoCSSLayerNamesIgnored(true); // all layer name filters should be ignored
@@ -331,19 +339,19 @@ namespace carto {
             }
             
             if (!layer) {
-                auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.png");
+                auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.png" + urlTemplateSuffix);
                 layer = std::make_shared<RasterTileLayer>(dataSource);
             }
 
             if (_interactive) {
-                auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.grid");
+                auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.grid" + urlTemplateSuffix);
                 layer->setUTFGridDataSource(dataSource);
             }
             
             return layer;
         }
 
-        auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.png");
+        auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.png" + urlTemplateSuffix);
         return std::make_shared<RasterTileLayer>(dataSource);
     }
 
