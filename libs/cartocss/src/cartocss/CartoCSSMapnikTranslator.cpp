@@ -193,7 +193,7 @@ namespace carto { namespace css {
         }
         else if (auto fieldVarExpr = std::dynamic_pointer_cast<const FieldOrVarExpression>(expr)) {
             if (!fieldVarExpr->isField()) {
-                throw TranslatorException("FieldOrVarExpression: expecting field, not variable");
+                throw TranslatorException("FieldOrVarExpression: expecting field, not variable (@" + fieldVarExpr->getFieldOrVar() + ")");
             }
             return "[" + fieldVarExpr->getFieldOrVar() + "]";
         }
@@ -261,7 +261,7 @@ namespace carto { namespace css {
         }
         else if (auto opPred = std::dynamic_pointer_cast<const OpPredicate>(pred)) {
             if (!opPred->isField()) {
-                throw TranslatorException("OpPredicate: expecting field, not variable");
+                throw TranslatorException("OpPredicate: expecting field, not variable (@" + opPred->getFieldOrVar() + ")");
             }
             if (std::shared_ptr<mvt::ComparisonPredicate::Operator> op = buildOperator(opPred->getOp())) {
                 std::string var = opPred->getFieldOrVar();
