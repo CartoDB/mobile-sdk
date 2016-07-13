@@ -268,8 +268,8 @@ namespace carto {
         if (pos != std::string::npos) {
             std::string proto = url.substr(0, pos);
 
-            std::map<std::string, std::string> urls = _cdnURLs;
-            urls.insert(cdnURLs.begin(), cdnURLs.end());
+            std::map<std::string, std::string> urls = cdnURLs;
+            urls.insert(_cdnURLs.begin(), _cdnURLs.end());
             auto it = urls.find(proto);
             if (it != urls.end()) {
                 url = it->first + "://" + it->second + "/" + _username;
@@ -388,8 +388,8 @@ namespace carto {
             
             // Read CDN URLs
             std::map<std::string, std::string> cdnURLs;
-            if (layerInfo.get("cdn_url").is<picojson::object>()) {
-                const picojson::object& cdnURLsObject = layerInfo.get("cdn_url").get<picojson::object>();
+            if (mapInfo.get("cdn_url").is<picojson::object>()) {
+                const picojson::object& cdnURLsObject = mapInfo.get("cdn_url").get<picojson::object>();
                 for (auto it = cdnURLsObject.begin(); it != cdnURLsObject.end(); it++) {
                     if (it->second.is<std::string>()) {
                         cdnURLs[it->first] = it->second.get<std::string>();
