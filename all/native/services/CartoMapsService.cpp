@@ -33,6 +33,7 @@ namespace carto {
         _authTokens(),
         _cdnURLs(),
         _defaultVectorLayerMode(false),
+        _strictMode(false),
         _vectorTileAssetPackage(),
         _mutex()
     {
@@ -149,6 +150,16 @@ namespace carto {
     void CartoMapsService::setDefaultVectorLayerMode(bool vectorLayerMode) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _defaultVectorLayerMode = vectorLayerMode;
+    }
+
+    bool CartoMapsService::isStrictMode() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _strictMode;
+    }
+    
+    void CartoMapsService::setStrictMode(bool strictMode) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _strictMode = strictMode;
     }
 
     std::shared_ptr<AssetPackage> CartoMapsService::getVectorTileAssetPackage() const {
@@ -407,9 +418,16 @@ namespace carto {
             }
 
             int layerIndex = static_cast<int>(it - layersInfo.begin());
-            std::shared_ptr<Layer> layer = createLayer(layerIndex, layerGroupId, type, layerId, cartoCSS, cdnURLs);
-            if (layer) {
-                layers.push_back(layer);
+            try {
+                if (std::shared_ptr<Layer> layer = createLayer(layerIndex, layerGroupId, type, layerId, cartoCSS, cdnURLs)) {
+                    layers.push_back(layer);
+                }
+            }
+            catch (const std::exception& ex) {
+                if (_strictMode) {
+                    throw ex;
+                }
+                Log::Errorf("CartoMapsService::createLayers: Exception while creating layer: %s", ex.what());
             }
         }
 

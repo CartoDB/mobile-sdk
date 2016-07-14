@@ -135,6 +135,7 @@ namespace carto {
 
     CartoVisLoader::CartoVisLoader() :
         _defaultVectorLayerMode(false),
+        _strictMode(false),
         _vectorTileAssetPackage(),
         _mutex()
     {
@@ -151,6 +152,16 @@ namespace carto {
     void CartoVisLoader::setDefaultVectorLayerMode(bool vectorLayerMode) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _defaultVectorLayerMode = vectorLayerMode;
+    }
+
+    bool CartoVisLoader::isStrictMode() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _strictMode;
+    }
+    
+    void CartoVisLoader::setStrictMode(bool strictMode) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _strictMode = strictMode;
     }
 
     std::shared_ptr<AssetPackage> CartoVisLoader::getVectorTileAssetPackage() const {
@@ -284,6 +295,7 @@ namespace carto {
         }
 
         mapsService.setDefaultVectorLayerMode(_defaultVectorLayerMode);
+        mapsService.setStrictMode(_strictMode);
         mapsService.setVectorTileAssetPackage(_vectorTileAssetPackage);
     }
     

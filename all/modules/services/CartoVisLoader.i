@@ -21,6 +21,7 @@
 !shared_ptr(carto::CartoVisLoader, services.CartoVisLoader)
 
 %attribute(carto::CartoVisLoader, bool, DefaultVectorLayerMode, isDefaultVectorLayerMode, setDefaultVectorLayerMode)
+%attribute(carto::CartoVisLoader, bool, StrictMode, isStrictMode, setStrictMode)
 %attributestring(carto::CartoVisLoader, std::shared_ptr<carto::AssetPackage>, VectorTileAssetPackage, getVectorTileAssetPackage, setVectorTileAssetPackage)
 %std_io_exceptions(carto::CartoVisLoader::loadVis)
 

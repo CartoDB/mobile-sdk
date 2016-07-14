@@ -54,6 +54,17 @@ namespace carto {
         void setDefaultVectorLayerMode(bool vectorLayerMode);
 
         /**
+         * Returns true if 'strict mode' is enabled (the service throws exceptions whenever an error is encountered).
+         * @return True if 'strict mode' is enabled.
+         */
+        bool isStrictMode() const;
+        /**
+         * Sets the 'strict mode' flag.
+         * @param strictMode True if all errors result in exceptions. The default is false.
+         */
+        void setStrictMode(bool strictMode);
+
+        /**
          * Returns the asset package used when decoding vector tiles.
          * By default, no asset package is used and null is returned.
          * @return The asset package used when decoding vector tiles.
@@ -98,6 +109,7 @@ namespace carto {
         std::vector<LayerInfo> createLayerGroup(const picojson::value& options, const picojson::value& infoWindow) const;
 
         bool _defaultVectorLayerMode;
+        bool _strictMode;
         std::shared_ptr<AssetPackage> _vectorTileAssetPackage;
 
         mutable std::recursive_mutex _mutex;
