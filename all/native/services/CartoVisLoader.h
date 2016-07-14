@@ -72,6 +72,7 @@ namespace carto {
          * the specified CartoVisBuilder instance.
          * @param builder The handler that receives events for configuring the map.
          * @param visURL The VisJSON URL to use.
+         * @throws std::runtime_error If IO error occured during the operation.
          */
         void loadVis(const std::shared_ptr<CartoVisBuilder>& builder, const std::string& visURL) const;
 

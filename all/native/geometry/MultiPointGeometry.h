@@ -28,6 +28,7 @@ namespace carto {
          * Returns the point geometry at the specified index. Index must be between 0 and getGeometryCount (exclusive)
          * @param index The index of the point geometry.
          * @return The point geometry at specified index.
+         * @throws std::out_of_range If the index is out of range.
          */
         std::shared_ptr<PointGeometry> getGeometry(int index) const;
     };

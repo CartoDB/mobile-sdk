@@ -58,6 +58,7 @@ namespace carto {
          * Creates a WKB data corresponding to the specified geometry.
          * @param geometry The geometry to write.
          * @return The corresponding WKB data.
+         * @throws std::runtime_error If writing fails.
          */
         std::shared_ptr<BinaryData> writeGeometry(const std::shared_ptr<Geometry>& geometry) const;
 

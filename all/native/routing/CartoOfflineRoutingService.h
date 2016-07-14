@@ -25,6 +25,7 @@ namespace carto {
         /**
          * Constructs a new CartoOfflineRoutingService instance given database file.
          * @param path The full path to the database file.
+         * @throws std::runtime_error If the database file could not be opened or read.
          */
         CartoOfflineRoutingService(const std::string& path);
         virtual ~CartoOfflineRoutingService();

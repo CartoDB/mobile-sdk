@@ -33,7 +33,7 @@ using std::uint64_t;
 %attribute(carto::PackageInfo, std::uint64_t, Size, getSize)
 %attributestring(carto::PackageInfo, std::shared_ptr<carto::PackageMetaInfo>, MetaInfo, getMetaInfo)
 %attributestring(carto::PackageInfo, std::shared_ptr<carto::PackageTileMask>, TileMask, getTileMask)
-%ignore carto::PackageInfo::getServerUrl;
+%ignore carto::PackageInfo::getServerURL;
 !standard_equals(carto::PackageInfo);
 
 %include "packagemanager/PackageInfo.h"

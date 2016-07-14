@@ -34,6 +34,7 @@ namespace carto {
         /**
          * Constructs a new TorqueTileDecoder given style.
          * @param styleSet The style set used by decoder.
+         * @throws std::runtime_error If the decoder could not be created or there are issues with the style set.
          */
         TorqueTileDecoder(const std::shared_ptr<CartoCSSStyleSet>& styleSet);
         virtual ~TorqueTileDecoder();
@@ -52,6 +53,7 @@ namespace carto {
         /**
          * Sets the current style set used by the decoder.
          * @param styleSet The new style set to use.
+         * @throws std::runtime_error If the decoder could not be updated or there are issues with the style set.
          */
         void setStyleSet(const std::shared_ptr<CartoCSSStyleSet>& styleSet);
 
@@ -77,6 +79,8 @@ namespace carto {
         virtual std::shared_ptr<TileMap> decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const;
 
     protected:
+        void updateCurrentStyle(const std::shared_ptr<CartoCSSStyleSet>& styleSet);
+
         static const int DEFAULT_TILE_SIZE;
         static const int GLYPHMAP_SIZE;
 

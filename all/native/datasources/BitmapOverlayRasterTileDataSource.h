@@ -32,6 +32,7 @@ namespace carto {
          * @param projection The projection definining coordinate system of the control points.
          * @param mapPoses The geographical control points. The list must contain either 2, 3 or 4 points.
          * @param bitmapPoses The pixel coordinates in the bitmap corresponding to geographical control points. The number of coordinates must be equal to the number of control points in mapPoses list.
+         * @throws std::invalid_argument If the transformation can not be calculated.
          */
         BitmapOverlayRasterTileDataSource(int minZoom, int maxZoom, const std::shared_ptr<Bitmap>& bitmap, const std::shared_ptr<Projection>& projection, const std::vector<MapPos>& mapPoses, const std::vector<ScreenPos>& bitmapPoses);
         virtual ~BitmapOverlayRasterTileDataSource();

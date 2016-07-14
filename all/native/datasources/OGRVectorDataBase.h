@@ -70,6 +70,7 @@ namespace carto {
          * Constructs a new OGR database instance given OGR supported data file.
          * @param fileName The full path of the data file
          * @param writable True when the database supports write operations. False when only read-only access is needed.
+         * @throws std::exception If the the file could not be opened or created.
          */
         OGRVectorDataBase(const std::string& fileName, bool writable);
         virtual ~OGRVectorDataBase();

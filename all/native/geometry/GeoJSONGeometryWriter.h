@@ -70,6 +70,7 @@ namespace carto {
          * Creates a GeoJSON string corresponding to the specified geometry.
          * @param geometry The geometry to write.
          * @return The corresponding GeoJSON string.
+         * @throws std::runtime_error If string could not be generated.
          */
         std::string writeGeometry(const std::shared_ptr<Geometry>& geometry) const;
 
@@ -77,6 +78,7 @@ namespace carto {
          * Creates a GeoJSON string corresponding to the specified feature.
          * @param feature The feature to write.
          * @return The corresponding GeoJSON string.
+         * @throws std::runtime_error If string could not be generated.
          */
         std::string writeFeature(const std::shared_ptr<Feature>& feature) const;
 
@@ -84,6 +86,7 @@ namespace carto {
          * Creates a GeoJSON string corresponding to the specified feature collection.
          * @param featureCollection The feature collection to write.
          * @return The corresponding GeoJSON string.
+         * @throws std::runtime_error If string could not be generated.
          */
         std::string writeFeatureCollection(const std::shared_ptr<FeatureCollection>& featureCollection) const;
 

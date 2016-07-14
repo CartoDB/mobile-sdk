@@ -142,7 +142,7 @@ namespace carto {
                 writeGeometry(multiGeometry->getGeometry(i), stream);
             }
         } else {
-            throw ParseException("Unsupported geometry type");
+            throw GenerateException("Unsupported geometry type");
         }
 
         stream.popBigEndian();

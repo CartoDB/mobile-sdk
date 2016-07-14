@@ -166,14 +166,14 @@ namespace carto {
                 writeGeometry(multiGeometry->getGeometry(i), geometries[i], allocator);
             }
         } else {
-            throw ParseException("Unsupported geometry type");
+            throw GenerateException("Unsupported geometry type");
         }
     }
 
     void GeoJSONGeometryWriter::writeProperties(const Variant& properties, rapidjson::Value& value, rapidjson::MemoryPoolAllocator<rapidjson::CrtAllocator>& allocator) const {
         rapidjson::Document propertiesDoc;
         if (propertiesDoc.Parse<rapidjson::kParseDefaultFlags>(properties.toString().c_str()).HasParseError()) {
-            throw ParseException("Failed to read properties");
+            throw GenerateException("Failed to read properties");
         }
 
         value.CopyFrom(propertiesDoc, allocator);

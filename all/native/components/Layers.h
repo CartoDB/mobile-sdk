@@ -49,6 +49,7 @@ namespace carto {
          * Returns the layer at the specified index.
          * @param index The layer index to return. Must be between 0 and count (exclusive).
          * @return The layer at the specified index.
+         * @throws std::runtime_exception If the index is out of range.
          */
         std::shared_ptr<Layer> get(int index) const;
         /**
@@ -61,6 +62,7 @@ namespace carto {
          * Replaces the layer at the specified index.
          * @param index The layer index to replace. Must be between 0 and count (exclusive).
          * @param layer The new layer.
+         * @throws std::runtime_exception If the index is out of range.
          */
         void set(int index, const std::shared_ptr<Layer>& layer);
         /**
@@ -74,6 +76,7 @@ namespace carto {
          * All previous layers starting from this index will be moved to the next position.
          * @param index The layer index. Must be between 0 and count (inclusive).
          * @param layer The new layer.
+         * @throws std::runtime_exception If the index is out of range.
          */
         void insert(int index, const std::shared_ptr<Layer>& layer);
 

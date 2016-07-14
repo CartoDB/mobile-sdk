@@ -43,6 +43,7 @@ namespace carto {
          * Creates a WKT string corresponding to the specified geometry.
          * @param geometry The geometry to write.
          * @return The corresponding WKT string.
+         * @throws std::runtime_error If writing fails.
          */
         std::string writeGeometry(const std::shared_ptr<Geometry>& geometry) const;
 

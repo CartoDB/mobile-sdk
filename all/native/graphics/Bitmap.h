@@ -178,6 +178,7 @@ namespace carto {
          * If the power of two conversion flag is set, additional padding will be added to the image to make it's dimensions power of two.
          * @param compressedData The compressed bitmap data.
          * @return The bitmap created from the compressed data. If the decompression fails, null is returned.
+         * @throws std::runtime_error If bitmap decompression fails.
          */
         static std::shared_ptr<Bitmap> CreateFromCompressed(const std::shared_ptr<BinaryData>& compressedData);
         /**
@@ -186,6 +187,7 @@ namespace carto {
          * @param compressedData The compressed bitmap data.
          * @param dataSize size of the compressed data.
          * @return The bitmap created from the compressed data. If the decompression fails, null is returned.
+         * @throws std::runtime_error If bitmap decompression fails.
          */
         static std::shared_ptr<Bitmap> CreateFromCompressed(const unsigned char* compressedData, std::size_t dataSize);
         

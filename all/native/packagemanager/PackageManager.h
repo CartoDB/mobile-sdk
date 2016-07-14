@@ -65,6 +65,7 @@ namespace carto {
          * @param dataFolder The folder where downloaded packages are kept. It must exist and must be writable.
          * @param serverEncKey Encryption key for server packages
          * @param localEncKey Encryption key for local packages
+         * @throws std::runtime_error If package manager fails to open or create package database.
          */
         PackageManager(const std::string& packageListURL, const std::string& dataFolder, const std::string& serverEncKey, const std::string& localEncKey);
         virtual ~PackageManager();

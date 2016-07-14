@@ -25,6 +25,7 @@ namespace carto {
          * Note: the package manager must be explicitly started using start() method!
          * @param source Name of the package source. Default: "nutiteq.osm"
          * @param dataFolder The folder where downloaded packages are kept. It must exist and must be writable.
+         * @throws std::runtime_error If package manager fails to open or create package database.
          */
         CartoPackageManager(const std::string& source, const std::string& dataFolder);
         virtual ~CartoPackageManager();

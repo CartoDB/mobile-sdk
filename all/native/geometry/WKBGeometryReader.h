@@ -34,6 +34,7 @@ namespace carto {
          * Reads geometry from the specified WKB data.
          * @param wkbData The WKB data to read.
          * @return The geometry read from the data vector. Null if reading failed.
+         * @throws std::runtime_error If reading fails.
          */
         std::shared_ptr<Geometry> readGeometry(const std::shared_ptr<BinaryData>& wkbData) const;
 

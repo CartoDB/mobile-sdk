@@ -25,6 +25,7 @@ namespace carto {
          * Calculates routing result (path) based on routing result.
          * @param request The routing request defining via points.
          * @return The result or null if routing failed.
+         * @throws std::runtime_error If IO error occured during the route calculation.
          */
         virtual std::shared_ptr<RoutingResult> calculateRoute(const std::shared_ptr<RoutingRequest>& request) const = 0;
 

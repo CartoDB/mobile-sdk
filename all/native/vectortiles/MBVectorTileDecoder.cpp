@@ -30,42 +30,36 @@ namespace carto {
         _buffer(0),
         _cartoCSSLayerNamesIgnored(false),
         _layerNameOverride(),
-        _compiledStyleSet(compiledStyleSet),
-        _cartoCSSStyleSet(),
-        _styleSetData()
+        _logger(std::make_shared<MapnikVTLogger>("MBVectorTileDecoder")),
+        _map(),
+        _parameterValueMap(),
+        _backgroundPattern(),
+        _symbolizerContext(),
+        _styleSet(compiledStyleSet)
     {
         if (!compiledStyleSet) {
             throw NullArgumentException("Null compiledStyleSet");
         }
 
-        _styleSetData = compiledStyleSet->getAssetPackage();
-
-        _logger = std::make_shared<MapnikVTLogger>("MBVectorTileDecoder");
-
-        if (!_compiledStyleSet->getStyleAssetName().empty()) {
-            updateCurrentStyle();
-        } else {
-            Log::Error("MBVectorTileDecoder::MBVectorTileDecoder: Could not find any styles in the style set");
-        }
+        updateCurrentStyle(compiledStyleSet);
     }
     
     MBVectorTileDecoder::MBVectorTileDecoder(const std::shared_ptr<CartoCSSStyleSet>& cartoCSSStyleSet) :
         _buffer(0),
         _cartoCSSLayerNamesIgnored(false),
         _layerNameOverride(),
-        _compiledStyleSet(),
-        _cartoCSSStyleSet(cartoCSSStyleSet),
-        _styleSetData()
+        _logger(std::make_shared<MapnikVTLogger>("MBVectorTileDecoder")),
+        _map(),
+        _parameterValueMap(),
+        _backgroundPattern(),
+        _symbolizerContext(),
+        _styleSet(cartoCSSStyleSet)
     {
         if (!cartoCSSStyleSet) {
             throw NullArgumentException("Null cartoCSSStyleSet");
         }
 
-        _styleSetData = cartoCSSStyleSet->getAssetPackage();
-
-        _logger = std::make_shared<MapnikVTLogger>("MBVectorTileDecoder");
-
-        updateCurrentStyle();
+        updateCurrentStyle(cartoCSSStyleSet);
     }
     
     MBVectorTileDecoder::~MBVectorTileDecoder() {
@@ -73,7 +67,10 @@ namespace carto {
         
     std::shared_ptr<CompiledStyleSet> MBVectorTileDecoder::getCompiledStyleSet() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return _compiledStyleSet;
+        if (auto compiledStyleSet = boost::get<std::shared_ptr<CompiledStyleSet> >(&_styleSet)) {
+            return *compiledStyleSet;
+        }
+        return std::shared_ptr<CompiledStyleSet>();
     }
     
     void MBVectorTileDecoder::setCompiledStyleSet(const std::shared_ptr<CompiledStyleSet>& styleSet) {
@@ -81,19 +78,17 @@ namespace carto {
             throw NullArgumentException("Null styleSet");
         }
 
-        {
-            std::lock_guard<std::mutex> lock(_mutex);
-            _compiledStyleSet = styleSet;
-            _cartoCSSStyleSet.reset();
-            _styleSetData = styleSet->getAssetPackage();
-            updateCurrentStyle();
-        }
+        updateCurrentStyle(styleSet);
         notifyDecoderChanged();
     }
 
     std::shared_ptr<CartoCSSStyleSet> MBVectorTileDecoder::getCartoCSSStyleSet() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return _cartoCSSStyleSet;
+
+        if (auto cartoCSSStyleSet = boost::get<std::shared_ptr<CartoCSSStyleSet> >(&_styleSet)) {
+            return *cartoCSSStyleSet;
+        }
+        return std::shared_ptr<CartoCSSStyleSet>();
     }
     
     void MBVectorTileDecoder::setCartoCSSStyleSet(const std::shared_ptr<CartoCSSStyleSet>& styleSet) {
@@ -101,22 +96,12 @@ namespace carto {
             throw NullArgumentException("Null styleSet");
         }
 
-        {
-            std::lock_guard<std::mutex> lock(_mutex);
-            _cartoCSSStyleSet = styleSet;
-            _compiledStyleSet.reset();
-            _styleSetData = styleSet->getAssetPackage();
-            updateCurrentStyle();
-        }
+        updateCurrentStyle(styleSet);
         notifyDecoderChanged();
     }
 
     std::vector<std::string> MBVectorTileDecoder::getStyleParameters() const {
         std::lock_guard<std::mutex> lock(_mutex);
-    
-        if (!_map) {
-            return std::vector<std::string>();
-        }
     
         std::vector<std::string> params;
         for (auto it = _map->getNutiParameterMap().begin(); it != _map->getNutiParameterMap().end(); it++) {
@@ -128,15 +113,9 @@ namespace carto {
     std::string MBVectorTileDecoder::getStyleParameter(const std::string& param) const {
         std::lock_guard<std::mutex> lock(_mutex);
 
-        if (!_map) {
-            Log::Errorf("MBVectorTileDecoder::getStyleParameter: Could not find parameter %s", param.c_str());
-            return std::string();
-        }
-
         auto it = _map->getNutiParameterMap().find(param);
         if (it == _map->getNutiParameterMap().end()) {
-            Log::Errorf("MBVectorTileDecoder::getStyleParameter: Could not find parameter %s", param.c_str());
-            return std::string();
+            throw InvalidArgumentException("Could not find parameter");
         }
         const mvt::NutiParameter& nutiParam = it->second;
         
@@ -176,52 +155,41 @@ namespace carto {
         {
             std::lock_guard<std::mutex> lock(_mutex);
     
-            if (!_map) {
-                return;
-            }
-    
             auto it = _map->getNutiParameterMap().find(param);
             if (it == _map->getNutiParameterMap().end()) {
-                Log::Errorf("MBVectorTileDecoder::setStyleParameter: Could not find parameter %s", param.c_str());
-                return;
+                throw InvalidArgumentException("Could not find parameter");
             }
             const mvt::NutiParameter& nutiParam = it->second;
 
             if (!nutiParam.getEnumMap().empty()) {
                 auto it2 = nutiParam.getEnumMap().find(boost::lexical_cast<std::string>(value));
                 if (it2 == nutiParam.getEnumMap().end()) {
-                    Log::Errorf("MBVectorTileDecoder::setStyleParameter: Illegal enum value for parameter %s: %s", param.c_str(), value.c_str());
-                    return;
+                    throw InvalidArgumentException("Illegal enum value for parameter");
                 }
                 (*_parameterValueMap)[param] = it2->second;
             } else {
-                try {
-                    mvt::Value val = nutiParam.getDefaultValue();
-                    if (boost::get<bool>(&val)) {
-                        if (value == "true") {
-                            val = mvt::Value(true);
-                        }
-                        else if (value == "false") {
-                            val = mvt::Value(false);
-                        }
-                        else {
-                            val = mvt::Value(boost::lexical_cast<bool>(value));
-                        }
+                mvt::Value val = nutiParam.getDefaultValue();
+                if (boost::get<bool>(&val)) {
+                    if (value == "true") {
+                        val = mvt::Value(true);
                     }
-                    else if (boost::get<long long>(&val)) {
-                        val = mvt::Value(boost::lexical_cast<long long>(value));
+                    else if (value == "false") {
+                        val = mvt::Value(false);
                     }
-                    else if (boost::get<double>(&val)) {
-                        val = mvt::Value(boost::lexical_cast<double>(value));
+                    else {
+                        val = mvt::Value(boost::lexical_cast<bool>(value));
                     }
-                    else if (boost::get<std::string>(&val)) {
-                        val = value;
-                    }
-                    (*_parameterValueMap)[param] = val;
                 }
-                catch (const boost::bad_numeric_cast&) {
-                    Log::Errorf("MBVectorTileDecoder::setParameter: Could not convert parameter %s value: %s", param.c_str(), value.c_str());
+                else if (boost::get<long long>(&val)) {
+                    val = mvt::Value(boost::lexical_cast<long long>(value));
                 }
+                else if (boost::get<double>(&val)) {
+                    val = mvt::Value(boost::lexical_cast<double>(value));
+                }
+                else if (boost::get<std::string>(&val)) {
+                    val = value;
+                }
+                (*_parameterValueMap)[param] = val;
             }
     
             mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, *_parameterValueMap);
@@ -272,9 +240,6 @@ namespace carto {
 
     Color MBVectorTileDecoder::getBackgroundColor() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        if (!_map) {
-            return Color(0);
-        }
         return Color(_map->getSettings().backgroundColor.value());
     }
     
@@ -293,7 +258,7 @@ namespace carto {
         
     std::shared_ptr<MBVectorTileDecoder::TileMap> MBVectorTileDecoder::decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const {
         if (!tileData) {
-            Log::Error("MBVectorTileDecoder::decodeTile: Null tile data");
+            Log::Warn("MBVectorTileDecoder::decodeTile: Null tile data");
             return std::shared_ptr<TileMap>();
         }
         if (tileData->empty()) {
@@ -312,9 +277,6 @@ namespace carto {
             layerNameOverride = _layerNameOverride;
         }
     
-        if (!map || !symbolizerContext) {
-            return std::shared_ptr<TileMap>();
-        }
         try {
             mvt::MBVTFeatureDecoder decoder(*tileData->getDataPtr(), _logger);
             decoder.setTransform(calculateTileTransform(tile, targetTile));
@@ -334,110 +296,111 @@ namespace carto {
         return std::shared_ptr<TileMap>();
     }
 
-    void MBVectorTileDecoder::updateCurrentStyle() {
-        std::string styleAssetName;
+    void MBVectorTileDecoder::updateCurrentStyle(const boost::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> >& styleSet) {
+        std::lock_guard<std::mutex> lock(_mutex);
 
-        // CartoCSS is defined, use it
-        if (_cartoCSSStyleSet) {
-            Log::Info("MBVectorTileDecoder::updateCurrentStyle: Loading CartoCSS style");
-            _map = loadCartoCSSMap(_cartoCSSStyleSet);
-        }
-        else if (_compiledStyleSet) {
-            styleAssetName = _compiledStyleSet->getStyleAssetName();
-            if (!styleAssetName.empty()) {
-                if (std::shared_ptr<BinaryData> styleData = _styleSetData->loadAsset(styleAssetName)) {
-                    if (boost::algorithm::ends_with(styleAssetName, ".xml")) {
-                        Log::Info("MBVectorTileDecoder::updateCurrentStyle: Loading Mapnik style");
-                        _map = loadMapnikMap(*styleData->getDataPtr());
-                    }
-                    else  if (boost::algorithm::ends_with(styleAssetName, ".json")) {
-                        Log::Info("MBVectorTileDecoder::updateCurrentStyle: Loading CartoCSS project");
-                        _map = loadCartoCSSMap(styleAssetName, _styleSetData);
-                    }
-                    else {
-                        Log::Error("MBVectorTileDecoder::updateCurrentStyle: Could not load style element from style set");
-                        return;
-                    }
-                }
+        std::string styleAssetName;
+        std::shared_ptr<AssetPackage> styleSetData;
+        std::shared_ptr<mvt::Map> map;
+
+        if (auto cartoCSSStyleSet = boost::get<std::shared_ptr<CartoCSSStyleSet> >(&styleSet)) {
+            styleAssetName = "";
+            styleSetData = (*cartoCSSStyleSet)->getAssetPackage();
+
+            try {
+                auto assetLoader = std::make_shared<CartoCSSAssetLoader>("", (*cartoCSSStyleSet)->getAssetPackage());
+                css::CartoCSSMapLoader mapLoader(assetLoader, _logger);
+                mapLoader.setIgnoreLayerPredicates(_cartoCSSLayerNamesIgnored);
+                map = mapLoader.loadMap((*cartoCSSStyleSet)->getCartoCSS());
+            }
+            catch (const std::exception& ex) {
+                throw ParseException("CartoCSS style parsing failed", ex.what());
             }
         }
+        else if (auto compiledStyleSet = boost::get<std::shared_ptr<CompiledStyleSet> >(&styleSet)) {
+            styleAssetName = (*compiledStyleSet)->getStyleAssetName();
+            if (styleAssetName.empty()) {
+                throw InvalidArgumentException("Could not find any styles in the style set");
+            }
 
-        if (!_map) {
-            return;
-        }
-    
-        _parameterValueMap = std::make_shared<std::map<std::string, mvt::Value> >();
-        for (auto it = _map->getNutiParameterMap().begin(); it != _map->getNutiParameterMap().end(); it++) {
-            (*_parameterValueMap)[it->first] = it->second.getDefaultValue();
+            styleSetData = (*compiledStyleSet)->getAssetPackage();
+
+            std::shared_ptr<BinaryData> styleData;
+            if (styleSetData) {
+                styleData = styleSetData->loadAsset(styleAssetName);
+            }
+            if (!styleData) {
+                throw GenericException("Failed to load style description asset");
+            }
+
+            if (boost::algorithm::ends_with(styleAssetName, ".xml")) {
+                pugi::xml_document doc;
+                if (!doc.load_buffer(styleData->data(), styleData->size())) {
+                    throw ParseException("Style element XML parsing failed");
+                }
+                try {
+                    auto symbolizerParser = std::make_shared<mvt::SymbolizerParser>(_logger);
+                    mvt::MapParser mapParser(symbolizerParser, _logger);
+                    map = mapParser.parseMap(doc);
+                }
+                catch (const std::exception& ex) {
+                    throw ParseException("XML style processing failed", ex.what());
+                }
+            }
+            else if (boost::algorithm::ends_with(styleAssetName, ".json")) {
+                try {
+                    auto assetLoader = std::make_shared<CartoCSSAssetLoader>(FileUtils::GetFilePath(styleAssetName), styleSetData);
+                    css::CartoCSSMapLoader mapLoader(assetLoader, _logger);
+                    mapLoader.setIgnoreLayerPredicates(_cartoCSSLayerNamesIgnored);
+                    map = mapLoader.loadMapProject(styleAssetName);
+                }
+                catch (const std::exception& ex) {
+                    throw ParseException("CartoCSS style parsing failed", ex.what());
+                }
+            }
+            else {
+                throw GenericException("Failed to detect style asset type");
+            }
+        } else {
+            throw InvalidArgumentException("Invalid style set");
         }
 
-        mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, *_parameterValueMap);
+        auto parameterValueMap = std::make_shared<std::map<std::string, mvt::Value> >();
+        for (auto it = map->getNutiParameterMap().begin(); it != map->getNutiParameterMap().end(); it++) {
+            (*parameterValueMap)[it->first] = it->second.getDefaultValue();
+        }
+
+        mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, *parameterValueMap);
         auto fontManager = std::make_shared<vt::FontManager>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
-        auto bitmapLoader = std::make_shared<VTBitmapLoader>(FileUtils::GetFilePath(styleAssetName), _styleSetData);
+        auto bitmapLoader = std::make_shared<VTBitmapLoader>(FileUtils::GetFilePath(styleAssetName), styleSetData);
         auto bitmapManager = std::make_shared<vt::BitmapManager>(bitmapLoader);
         auto strokeMap = std::make_shared<vt::StrokeMap>(STROKEMAP_SIZE);
         auto glyphMap = std::make_shared<vt::GlyphMap>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
-        _symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
+        auto symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
 
-        if (_styleSetData) {
-            Log::Info("MBVectorTileDecoder::updateCurrentStyle: Loading fonts");
-            std::string fontPrefix = _map->getSettings().fontDirectory;
+        if (styleSetData) {
+            std::string fontPrefix = map->getSettings().fontDirectory;
             fontPrefix = FileUtils::NormalizePath(FileUtils::GetFilePath(styleAssetName) + fontPrefix + "/");
-            for (const std::string& assetName : _styleSetData->getAssetNames()) {
+
+            for (const std::string& assetName : styleSetData->getAssetNames()) {
                 if (assetName.size() > fontPrefix.size() && assetName.substr(0, fontPrefix.size()) == fontPrefix) {
-                    if (std::shared_ptr<BinaryData> fontData = _styleSetData->loadAsset(assetName)) {
+                    if (std::shared_ptr<BinaryData> fontData = styleSetData->loadAsset(assetName)) {
                         fontManager->loadFontData(*fontData->getDataPtr());
                     }
                 }
             }
         }
 
-        if (!_map->getSettings().backgroundImage.empty()) {
-            _backgroundPattern = bitmapManager->loadBitmapPattern(_map->getSettings().backgroundImage, 1.0f, 1.0f);
+        std::shared_ptr<const vt::BitmapPattern> backgroundPattern;
+        if (!map->getSettings().backgroundImage.empty()) {
+            backgroundPattern = bitmapManager->loadBitmapPattern(map->getSettings().backgroundImage, 1.0f, 1.0f);
         }
-    }
-    
-    std::shared_ptr<mvt::Map> MBVectorTileDecoder::loadMapnikMap(const std::vector<unsigned char>& styleData) {
-        pugi::xml_document doc;
-        if (!doc.load_buffer(styleData.data(), styleData.size())) {
-            Log::Error("MBVectorTileDecoder::loadMapnikMap: Could not load style element XML");
-            return std::shared_ptr<mvt::Map>();
-        }
-        try {
-            auto symbolizerParser = std::make_shared<mvt::SymbolizerParser>(_logger);
-            mvt::MapParser mapParser(symbolizerParser, _logger);
-            return mapParser.parseMap(doc);
-        }
-        catch (const std::exception& ex) {
-            Log::Errorf("MBVectorTileDecoder::loadMapnikMap: Mapnik style parsing failed: %s", ex.what());
-            return std::shared_ptr<mvt::Map>();
-        }
-    }
 
-    std::shared_ptr<mvt::Map> MBVectorTileDecoder::loadCartoCSSMap(const std::string& styleAssetName, const std::shared_ptr<AssetPackage>& styleSetData) {
-        try {
-            auto assetLoader = std::make_shared<CartoCSSAssetLoader>(FileUtils::GetFilePath(styleAssetName), styleSetData);
-            css::CartoCSSMapLoader mapLoader(assetLoader, _logger);
-            mapLoader.setIgnoreLayerPredicates(_cartoCSSLayerNamesIgnored);
-            return mapLoader.loadMapProject(styleAssetName);
-        }
-        catch (const std::exception& ex) {
-            Log::Errorf("MBVectorTileDecoder::loadCartoCSSMap: CartoCSS style parsing failed: %s", ex.what());
-            return std::shared_ptr<mvt::Map>();
-        }
-    }
-    
-    std::shared_ptr<mvt::Map> MBVectorTileDecoder::loadCartoCSSMap(const std::shared_ptr<CartoCSSStyleSet>& styleSet) {
-        try {
-            auto assetLoader = std::make_shared<CartoCSSAssetLoader>("", styleSet->getAssetPackage());
-            css::CartoCSSMapLoader mapLoader(assetLoader, _logger);
-            mapLoader.setIgnoreLayerPredicates(_cartoCSSLayerNamesIgnored);
-            return mapLoader.loadMap(styleSet->getCartoCSS());
-        }
-        catch (const std::exception& ex) {
-            Log::Errorf("MBVectorTileDecoder::loadCartoCSSMap: CartoCSS style parsing failed: %s", ex.what());
-            return std::shared_ptr<mvt::Map>();
-        }
+        _map = map;
+        _parameterValueMap = parameterValueMap;
+        _backgroundPattern = backgroundPattern;
+        _symbolizerContext = symbolizerContext;
+        _styleSet = styleSet;
     }
     
     const int MBVectorTileDecoder::DEFAULT_TILE_SIZE = 256;

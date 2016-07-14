@@ -26,6 +26,7 @@ namespace carto {
         /**
          * Constructs a SqliteNMLModelLODTreeDataSource object.
          * @param fileName The file name of the sqlite database file.
+         * @throws std::exception If the file could not be opened.
          */
         SqliteNMLModelLODTreeDataSource(const std::string& fileName);
         virtual ~SqliteNMLModelLODTreeDataSource();

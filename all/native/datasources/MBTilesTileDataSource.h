@@ -45,8 +45,9 @@ namespace carto {
     public:
         /**
          * Constructs a MBTilesTileDataSource object. TMS tile scheme is used,
-         * min and max zoom levels are automatically detected.
+         * Min and max zoom levels are automatically detected.
          * @param path The path to the local Sqlite database file.
+         * @throws std::exception If the the file could not be opened.
          */
         MBTilesTileDataSource(const std::string& path);
         
@@ -55,6 +56,7 @@ namespace carto {
          * @param minZoom The minimum zoom level supported by this data source.
          * @param maxZoom The maximum zoom level supported by this data source.
          * @param path The path to the local Sqlite database file.
+         * @throws std::exception If the the file could not be opened.
          */
         MBTilesTileDataSource(int minZoom, int maxZoom, const std::string& path);
     
@@ -64,6 +66,7 @@ namespace carto {
          * @param maxZoom The maximum zoom level supported by this data source.
          * @param path The path to the local Sqlite database file.
          * @param scheme Tile scheme to use.
+         * @throws std::exception If the the file could not be opened.
          */
         MBTilesTileDataSource(int minZoom, int maxZoom, const std::string& path, MBTilesScheme::MBTilesScheme scheme);
     

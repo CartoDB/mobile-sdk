@@ -31,6 +31,8 @@
 %std_exceptions(carto::MBVectorTileDecoder::MBVectorTileDecoder)
 %std_exceptions(carto::MBVectorTileDecoder::setCompiledStyleSet)
 %std_exceptions(carto::MBVectorTileDecoder::setCartoCSSStyleSet)
+%std_exceptions(carto::MBVectorTileDecoder::getStyleParameter)
+%std_exceptions(carto::MBVectorTileDecoder::setStyleParameter)
 %ignore carto::MBVectorTileDecoder::decodeTile;
 %ignore carto::MBVectorTileDecoder::getBackgroundColor;
 %ignore carto::MBVectorTileDecoder::getBackgroundPattern;

@@ -75,6 +75,7 @@ namespace carto {
          * @param projection The projection to use for data coordinates. Note that if actual data is in different coordinates, coordinates will be re-projected.
          * @param styleSelector The style selector to use when loading geometry from OGR file.
          * @param fileName The full path of the data file
+         * @throws std::exception If the file could not be opened.
          */
         OGRVectorDataSource(const std::shared_ptr<Projection>& projection, const std::shared_ptr<StyleSelector>& styleSelector, const std::string& fileName);
 

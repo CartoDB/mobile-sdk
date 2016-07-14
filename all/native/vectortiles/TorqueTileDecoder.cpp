@@ -20,13 +20,17 @@
 namespace carto {
     
     TorqueTileDecoder::TorqueTileDecoder(const std::shared_ptr<CartoCSSStyleSet>& styleSet) :
-        _resolution(256), _map(), _symbolizerContext(), _styleSet(), _mutex()
+        _resolution(256),
+        _map(),
+        _symbolizerContext(),
+        _styleSet(),
+        _mutex()
     {
         if (!styleSet) {
             throw NullArgumentException("Null styleSet");
         }
 
-        setStyleSet(styleSet);
+        updateCurrentStyle(styleSet);
     }
     
     TorqueTileDecoder::~TorqueTileDecoder() {
@@ -34,9 +38,6 @@ namespace carto {
 
     int TorqueTileDecoder::getFrameCount() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        if (!_map) {
-            return 0;
-        }
         return std::static_pointer_cast<mvt::TorqueMap>(_map)->getTorqueSettings().frameCount;
     }
 
@@ -50,30 +51,7 @@ namespace carto {
             throw NullArgumentException("Null styleSet");
         }
 
-        {
-            std::lock_guard<std::mutex> lock(_mutex);
-    
-            auto logger = std::make_shared<MapnikVTLogger>("TorqueTileDecoder");
-            auto bitmapLoader = std::make_shared<VTBitmapLoader>("", std::shared_ptr<AssetPackage>());
-            auto assetLoader = std::make_shared<CartoCSSAssetLoader>("", std::shared_ptr<AssetPackage>());
-            mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, std::map<std::string, mvt::Value>());
-            auto fontManager = std::make_shared<vt::FontManager>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
-            auto bitmapManager = std::make_shared<vt::BitmapManager>(bitmapLoader);
-            auto strokeMap = std::make_shared<vt::StrokeMap>(1);
-            auto glyphMap = std::make_shared<vt::GlyphMap>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
-            _symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
-            try {
-                css::TorqueCartoCSSMapLoader mapLoader(assetLoader, logger);
-                mapLoader.setIgnoreLayerPredicates(true);
-                _map = mapLoader.loadMap(styleSet->getCartoCSS());
-            }
-            catch (const std::exception& ex) {
-                Log::Errorf("TorqueTileDecoder: Style parsing failed: %s", ex.what());
-                return;
-            }
-
-            _styleSet = styleSet;
-        }
+        updateCurrentStyle(styleSet);
         notifyDecoderChanged();
     }
 
@@ -92,9 +70,6 @@ namespace carto {
     
     Color TorqueTileDecoder::getBackgroundColor() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        if (!_map) {
-            return Color(0);
-        }
         return Color(std::static_pointer_cast<mvt::TorqueMap>(_map)->getTorqueSettings().clearColor.value());
     }
     
@@ -112,26 +87,23 @@ namespace carto {
         
     std::shared_ptr<TorqueTileDecoder::TileMap> TorqueTileDecoder::decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const {
         if (!tileData) {
-            Log::Error("TorqueTileDecoder::decodeTile: Null tile data");
+            Log::Warn("TorqueTileDecoder::decodeTile: Null tile data");
             return std::shared_ptr<TileMap>();
         }
         if (tileData->empty()) {
             return std::shared_ptr<TileMap>();
         }
 
+        int resolution;
         std::shared_ptr<mvt::TorqueMap> map;
         std::shared_ptr<mvt::SymbolizerContext> symbolizerContext;
-        int resolution;
         {
             std::lock_guard<std::mutex> lock(_mutex);
+            resolution = _resolution;
             map = _map;
             symbolizerContext = _symbolizerContext;
-            resolution = _resolution;
         }
     
-        if (!map || !symbolizerContext) {
-            return std::shared_ptr<TileMap>();
-        }
         try {
             auto logger = std::make_shared<MapnikVTLogger>("TorqueTileDecoder");
             mvt::TorqueFeatureDecoder decoder(*tileData->getDataPtr(), resolution, logger);
@@ -147,8 +119,36 @@ namespace carto {
             return tileMap;
         } catch (const std::exception& ex) {
             Log::Errorf("TorqueTileDecoder::decodeTile: Exception while decoding: %s", ex.what());
-            return std::shared_ptr<TileMap>();
         }
+        return std::shared_ptr<TileMap>();
+    }
+
+    void TorqueTileDecoder::updateCurrentStyle(const std::shared_ptr<CartoCSSStyleSet>& styleSet) {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        std::shared_ptr<mvt::TorqueMap> map;
+        try {
+            auto logger = std::make_shared<MapnikVTLogger>("TorqueTileDecoder");
+            auto assetLoader = std::make_shared<CartoCSSAssetLoader>("", std::shared_ptr<AssetPackage>());
+            css::TorqueCartoCSSMapLoader mapLoader(assetLoader, logger);
+            mapLoader.setIgnoreLayerPredicates(true);
+            map = mapLoader.loadMap(styleSet->getCartoCSS());
+        }
+        catch (const std::exception& ex) {
+            throw ParseException("Style parsing failed", ex.what());
+        }
+
+        auto bitmapLoader = std::make_shared<VTBitmapLoader>("", std::shared_ptr<AssetPackage>());
+        auto fontManager = std::make_shared<vt::FontManager>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
+        auto bitmapManager = std::make_shared<vt::BitmapManager>(bitmapLoader);
+        auto strokeMap = std::make_shared<vt::StrokeMap>(1);
+        auto glyphMap = std::make_shared<vt::GlyphMap>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
+        mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, std::map<std::string, mvt::Value>());
+        auto symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
+
+        _map = map;
+        _symbolizerContext = symbolizerContext;
+        _styleSet = styleSet;
     }
     
     const int TorqueTileDecoder::DEFAULT_TILE_SIZE = 256;

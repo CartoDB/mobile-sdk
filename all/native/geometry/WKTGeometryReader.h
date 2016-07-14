@@ -29,6 +29,7 @@ namespace carto {
          * Reads geometry from the specified WKT string.
          * @param wkt The WKT string to read. For example, "POINT(1,1)"
          * @return The geometry read from the string. Null if reading failed.
+         * @throws std::runtime_error If reading fails.
          */
         std::shared_ptr<Geometry> readGeometry(const std::string& wkt) const;
     };

@@ -28,6 +28,7 @@ namespace carto {
          * Returns the line geometry at the specified index. Index must be between 0 and getGeometryCount (exclusive)
          * @param index The index of the line geometry.
          * @return The line geometry at specified index.
+         * @throws std::out_of_range If the index is out of range.
          */
         std::shared_ptr<LineGeometry> getGeometry(int index) const;
     };

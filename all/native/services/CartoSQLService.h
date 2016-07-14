@@ -68,6 +68,7 @@ namespace carto {
          * The resulting JSON is deserialized into a Variant that is returned.
          * @param sql The SQL query to use.
          * @return The query result. If query fails, null variant is returned.
+         * @throws std::runtime_error If IO error occured during the operation.
          */
         Variant queryData(const std::string& sql) const;
 

@@ -184,6 +184,7 @@ namespace carto {
          * Creates a Variant object from a JSON string representation.
          * @param str The JSON string to use for the variant.
          * @return The corresponding Variant object.
+         * @throws std::runtime_exception If the string parsing fails.
          */
         static Variant FromString(const std::string& str);
 

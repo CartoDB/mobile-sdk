@@ -185,6 +185,7 @@ namespace carto {
          * The map configuration specification can be found in CartoDB documentation page.
          * @param mapConfig The map configuration JSON deserialized as Variant type.
          * @return The list of created layers.
+         * @throws std::runtime_error If IO error occured during the operation.
          */
         std::vector<std::shared_ptr<Layer> > buildMap(const Variant& mapConfig) const;
 
@@ -193,6 +194,7 @@ namespace carto {
          * @param templateId The named map id.
          * @param templateParams The map containing named map parameter names and their values.
          * @return The list of created layers.
+         * @throws std::runtime_error If IO error occured during the operation.
          */
         std::vector<std::shared_ptr<Layer> > buildNamedMap(const std::string& templateId, const std::map<std::string, Variant>& templateParams) const;
 

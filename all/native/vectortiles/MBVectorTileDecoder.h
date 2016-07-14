@@ -15,6 +15,8 @@
 #include <vector>
 #include <string>
 
+#include <boost/variant.hpp>
+
 #include <mapnikvt/Value.h>
 
 namespace carto {
@@ -36,11 +38,13 @@ namespace carto {
         /**
          * Constructs a decoder for MapBox vector tiles based on specified compiled style set.
          * @param compiledStyleSet The compiled style set for the tiles.
+         * @throws std::runtime_error If the decoder could not be created or there are issues with the style set.
          */
         MBVectorTileDecoder(const std::shared_ptr<CompiledStyleSet>& compiledStyleSet);
         /**
          * Constructs a decoder for MapBox vector tiles based on specified CartoCSS style set.
          * @param cartoCSSStyleSet The CartoCSS style set for the tiles.
+         * @throws std::runtime_error If the decoder could not be created or there are issues with the style set.
          */
         MBVectorTileDecoder(const std::shared_ptr<CartoCSSStyleSet>& cartoCSSStyleSet);
         virtual ~MBVectorTileDecoder();
@@ -54,6 +58,7 @@ namespace carto {
         /**
          * Sets the current compiled style set used by the decoder.
          * @param styleSet The new style set to use.
+         * @throws std::runtime_error If the decoder could not be updated or there are issues with the style set.
          */
         void setCompiledStyleSet(const std::shared_ptr<CompiledStyleSet>& styleSet);
     
@@ -66,6 +71,7 @@ namespace carto {
         /**
          * Sets the current CartoCSS style set used by the decoder.
          * @param styleSet The new style set to use.
+         * @throws std::runtime_error If the decoder could not be updated or there are issues with the style set.
          */
         void setCartoCSSStyleSet(const std::shared_ptr<CartoCSSStyleSet>& styleSet);
 
@@ -79,6 +85,7 @@ namespace carto {
          * The style parameter must be declared in the current style.
          * @param param The parameter to return.
          * @return The value of the parameter. If parameter does not exists, empty string is returned.
+         * @throws std::invalid_argument If the style parameter does not exist.
          */
         std::string getStyleParameter(const std::string& param) const;
         /**
@@ -86,6 +93,7 @@ namespace carto {
          * The style parameter must be declared in the current style.
          * @param param The parameter to set.
          * @param value The value for the parameter.
+         * @throws std::invalid_argument If the style parameter does not exist or could not be set.
          */
         void setStyleParameter(const std::string& param, const std::string& value);
 
@@ -135,12 +143,8 @@ namespace carto {
         virtual std::shared_ptr<TileMap> decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const;
     
     protected:
-        void updateCurrentStyle();
+        void updateCurrentStyle(const boost::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> >& styleSet);
 
-        std::shared_ptr<mvt::Map> loadMapnikMap(const std::vector<unsigned char>& styleData);
-        std::shared_ptr<mvt::Map> loadCartoCSSMap(const std::string& styleAssetName, const std::shared_ptr<AssetPackage>& styleSetData);
-        std::shared_ptr<mvt::Map> loadCartoCSSMap(const std::shared_ptr<CartoCSSStyleSet>& styleSet);
-    
         static const int DEFAULT_TILE_SIZE;
         static const int STROKEMAP_SIZE;
         static const int GLYPHMAP_SIZE;
@@ -148,14 +152,12 @@ namespace carto {
         float _buffer;
         bool _cartoCSSLayerNamesIgnored;
         std::string _layerNameOverride;
-        std::shared_ptr<CompiledStyleSet> _compiledStyleSet;
-        std::shared_ptr<CartoCSSStyleSet> _cartoCSSStyleSet;
-        std::shared_ptr<AssetPackage> _styleSetData;
-        std::shared_ptr<mvt::Map> _map;
         std::shared_ptr<mvt::Logger> _logger;
+        std::shared_ptr<mvt::Map> _map;
         std::shared_ptr<std::map<std::string, mvt::Value> > _parameterValueMap;
         std::shared_ptr<const vt::BitmapPattern> _backgroundPattern;
         std::shared_ptr<mvt::SymbolizerContext> _symbolizerContext;
+        boost::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> > _styleSet;
     
         mutable std::mutex _mutex;
     };
