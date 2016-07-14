@@ -497,6 +497,11 @@ namespace carto {
         float deltaSeconds = std::chrono::duration_cast<std::chrono::duration<float> >(currentTime - _lastFrameTime).count();
         _lastFrameTime = currentTime;
     
+        // Callback for synchronized rendering
+        if (mapRendererListener) {
+            mapRendererListener->onBeforeDrawFrame();
+        }
+        
         // Calculate camera params and make a synchronized copy of the view state
         ViewState viewState;
         {
@@ -510,11 +515,6 @@ namespace carto {
             _surfaceChanged = false;
             // Don't delay calling the cull task, the view state was already updated
             viewChanged(false);
-        }
-        
-        // Callback for synchronized rendering
-        if (mapRendererListener) {
-            mapRendererListener->onBeforeDrawFrame();
         }
         
         // Calculate map moving animations and kinetic events
