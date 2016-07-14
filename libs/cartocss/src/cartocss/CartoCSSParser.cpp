@@ -70,6 +70,7 @@ namespace carto { namespace css {
 
                 number =
                       (qi::real_parser<double, qi::real_policies<double>>() >> *qi::space >> '%') [_val = phx::construct<Value>(_1 / 100.0)]
+                    | (qi::real_parser<double, qi::real_policies<double>>() >> *qi::space >> "px") [_val = phx::construct<Value>(_1)]
                     | qi::real_parser<double, qi::strict_real_policies<double>>() [_val = phx::construct<Value>(_1)]
                     | qi::long_long                                 [_val = phx::construct<Value>(_1)]
                     ;
