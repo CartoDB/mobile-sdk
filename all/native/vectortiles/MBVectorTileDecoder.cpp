@@ -151,20 +151,22 @@ namespace carto {
         return std::string();
     }
 
-    void MBVectorTileDecoder::setStyleParameter(const std::string& param, const std::string& value) {
+    bool MBVectorTileDecoder::setStyleParameter(const std::string& param, const std::string& value) {
         {
             std::lock_guard<std::mutex> lock(_mutex);
     
             auto it = _map->getNutiParameterMap().find(param);
             if (it == _map->getNutiParameterMap().end()) {
-                throw InvalidArgumentException("Could not find parameter");
+                Log::Infof("MBVectorTileDecoder::setStyleParameter: Could not find parameter: %s", param.c_str());
+                return false;
             }
             const mvt::NutiParameter& nutiParam = it->second;
 
             if (!nutiParam.getEnumMap().empty()) {
                 auto it2 = nutiParam.getEnumMap().find(boost::lexical_cast<std::string>(value));
                 if (it2 == nutiParam.getEnumMap().end()) {
-                    throw InvalidArgumentException("Illegal enum value for parameter");
+                    Log::Infof("MBVectorTileDecoder::setStyleParameter: Illegal enum value for parameter: %s/%s", param.c_str(), value.c_str());
+                    return false;
                 }
                 (*_parameterValueMap)[param] = it2->second;
             } else {
@@ -196,6 +198,7 @@ namespace carto {
             _symbolizerContext = std::make_shared<mvt::SymbolizerContext>(_symbolizerContext->getBitmapManager(), _symbolizerContext->getFontManager(), _symbolizerContext->getStrokeMap(), _symbolizerContext->getGlyphMap(), settings);
         }
         notifyDecoderChanged();
+        return true;
     }
 
     float MBVectorTileDecoder::getBuffering() const {
@@ -221,7 +224,6 @@ namespace carto {
             std::lock_guard<std::mutex> lock(_mutex);
             _cartoCSSLayerNamesIgnored = ignore;
         }
-
         notifyDecoderChanged();
     }
         

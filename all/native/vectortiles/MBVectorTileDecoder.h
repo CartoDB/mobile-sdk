@@ -93,9 +93,9 @@ namespace carto {
          * The style parameter must be declared in the current style.
          * @param param The parameter to set.
          * @param value The value for the parameter.
-         * @throws std::invalid_argument If the style parameter does not exist or could not be set.
+         * @return True if the parameter was set. False if the style parameter does not exist or could not be set.
          */
-        void setStyleParameter(const std::string& param, const std::string& value);
+        bool setStyleParameter(const std::string& param, const std::string& value);
 
         /**
          * Returns the value of tile buffering used. This is intended for special tile sources like MapZen.
