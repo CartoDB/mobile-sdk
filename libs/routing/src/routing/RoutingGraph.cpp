@@ -6,6 +6,8 @@
 #include <queue>
 #include <unordered_set>
 
+#include <utf8.h>
+
 namespace carto { namespace Routing {
     RoutingGraph::RoutingGraph(const Settings& settings) :
         _packages(),
@@ -21,7 +23,13 @@ namespace carto { namespace Routing {
     bool RoutingGraph::import(const std::string& fileName) {
         auto file = std::make_shared<std::ifstream>();
         file->exceptions(std::ifstream::failbit | std::ifstream::badbit);
+#ifdef _WIN32
+        std::wstring wfileName;
+        utf8::utf8to16(fileName.begin(), fileName.end(), std::back_inserter(wfileName));
+        file->open(wfileName, std::ios::binary);
+#else
         file->open(fileName, std::ios::binary);
+#endif
         return import(file);
     }
 
