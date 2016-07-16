@@ -6,9 +6,9 @@
 #include "utils/AndroidUtils.h"
 #include "utils/Log.h"
 
-#include <android/bitmap.h>
+#include <stdext/utf8_filesystem.h>
 
-#include <stdio.h>
+#include <android/bitmap.h>
 
 namespace carto {
 
@@ -21,7 +21,7 @@ namespace carto {
     }
 
     std::shared_ptr<Bitmap> BitmapUtils::LoadBitmapFromFile(const std::string& filePath) {
-        FILE* fpRaw = fopen(filePath.c_str(), "rb");
+        FILE* fpRaw = utf8_filesystem::fopen(filePath.c_str(), "rb");
         if (!fpRaw) {
             Log::Errorf("BitmapUtils::LoadBitmapFromFile: Failed to load: %s", filePath.c_str());
             return std::shared_ptr<Bitmap>();

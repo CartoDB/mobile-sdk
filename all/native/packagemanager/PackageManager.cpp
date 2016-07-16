@@ -10,11 +10,9 @@
 #include <utility>
 #include <algorithm>
 #include <limits>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <time.h>
+
+#include <stdext/utf8_filesystem.h>
 
 #include <sqlite3pp.h>
 #include <sqlite3ppext.h>
@@ -32,23 +30,6 @@
 
 #define MINIZ_HEADER_FILE_ONLY
 #include <miniz.c>
-
-#ifdef _WIN32
-#include <io.h>
-#define fseeko64 _fseeki64
-#define ftello64 _ftelli64
-#define unlink _unlink
-#define ftruncate _chsize
-#define fileno _fileno
-#endif
-#ifdef __ANDROID__
-#define fseeko64(fp, offset, whence) lseek64(fileno(fp), (offset), (whence))
-#define ftello64(fp) lseek64(fileno(fp), 0, SEEK_CUR)
-#endif
-#ifdef __APPLE__
-#define fseeko64(fp, offset, whence) fseeko((fp), (offset), (whence))
-#define ftello64(fp) ftello(fp)
-#endif
 
 namespace {
     std::shared_ptr<carto::PackageMetaInfo> createPackageMetaInfo(const rapidjson::Value& value) {
@@ -72,7 +53,7 @@ namespace carto {
         catch (const std::exception& ex) {
             Log::Errorf("PackageManager: Error while constructing PackageManager::PersistentTaskQueue: %s, trying to remove...", ex.what());
             _taskQueue.reset();
-            unlink(taskDbFileName.c_str());
+            utf8_filesystem::unlink(taskDbFileName.c_str());
             try {
                 _taskQueue = std::make_shared<PersistentTaskQueue>(createLocalFilePath(taskDbFileName));
             }
@@ -89,7 +70,7 @@ namespace carto {
         catch (const std::exception& ex) {
             Log::Errorf("PackageManager: Error while constructing PackageManager: %s, trying to remove", ex.what());
             _localDb.reset();
-            unlink(packageDbFileName.c_str());
+            utf8_filesystem::unlink(packageDbFileName.c_str());
             try {
                 _localDb = std::make_shared<sqlite3pp::database>(createLocalFilePath(packageDbFileName).c_str());
                 initializeDb(*_localDb, _serverEncKey + _localEncKey);
@@ -329,9 +310,9 @@ namespace carto {
     int PackageManager::getServerPackageListAge() const {
         // Use last modification time of package list file
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        struct stat st;
+        utf8_filesystem::stat st;
         memset(&st, 0, sizeof(st));
-        if (stat(createLocalFilePath(_packageListFileName).c_str(), &st) == 0) {
+        if (utf8_filesystem::stat64(createLocalFilePath(_packageListFileName).c_str(), &st) == 0) {
             return static_cast<int>(time(NULL) - st.st_mtime);
         }
         return std::numeric_limits<int>::max();
@@ -710,15 +691,15 @@ namespace carto {
             // Determine file size, copy file
             std::uint64_t fileSize = 0;
             {
-                FILE* fpSrcRaw = fopen(task.packageLocation.c_str(), "rb");
+                FILE* fpSrcRaw = utf8_filesystem::fopen(task.packageLocation.c_str(), "rb");
                 if (!fpSrcRaw) {
                     throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM, std::string("Could not open package file ") + task.packageLocation);
                 }
                 std::shared_ptr<FILE> fpSrc(fpSrcRaw, fclose);
-                fseeko64(fpSrc.get(), 0, SEEK_END);
-                fileSize = ftello64(fpSrc.get());
-                fseeko64(fpSrc.get(), 0, SEEK_SET);
-                FILE* fpDestRaw = fopen(packageFileName.c_str(), "wb");
+                utf8_filesystem::fseek64(fpSrc.get(), 0, SEEK_END);
+                fileSize = utf8_filesystem::ftell64(fpSrc.get());
+                utf8_filesystem::fseek64(fpSrc.get(), 0, SEEK_SET);
+                FILE* fpDestRaw = utf8_filesystem::fopen(packageFileName.c_str(), "wb");
                 if (!fpDestRaw) {
                     throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM, std::string("Could not create file ") + packageFileName);
                 }
@@ -781,7 +762,7 @@ namespace carto {
             importLocalPackage(id, taskId, task.packageId, task.packageType, packageFileName);
         }
         catch (...) {
-            unlink(packageFileName.c_str());
+            utf8_filesystem::unlink(packageFileName.c_str());
             throw;
         }
 
@@ -830,16 +811,16 @@ namespace carto {
             // Try to download the package
             for (int retry = 0; true; retry++) {
                 if (retry > 0) {
-                    unlink(packageFileName.c_str());
+                    utf8_filesystem::unlink(packageFileName.c_str());
                     Log::Infof("PackageManager: Retrying package %s download", task.packageId.c_str());
                 }
-                FILE* fpRaw = fopen(packageFileName.c_str(), "ab");
+                FILE* fpRaw = utf8_filesystem::fopen(packageFileName.c_str(), "ab");
                 if (!fpRaw) {
                     throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM, std::string("Could not create download package file ") + packageFileName);
                 }
                 std::shared_ptr<FILE> fp(fpRaw, fclose);
-                fseeko64(fp.get(), 0, SEEK_END);
-                std::uint64_t fileOffset = ftello64(fp.get());
+                utf8_filesystem::fseek64(fp.get(), 0, SEEK_END);
+                std::uint64_t fileOffset = utf8_filesystem::ftell64(fp.get());
                 std::uint64_t fileSize = package->getSize();
                 if (!packageSizeIndeterminate && fileOffset == fileSize) {
                     break;
@@ -858,8 +839,8 @@ namespace carto {
 
                     if (offset != fileOffset) {
                         Log::Infof("PackageManager: Truncating file");
-                        fseeko64(fp.get(), offset, SEEK_SET);
-                        ftruncate(fileno(fp.get()), offset);
+                        utf8_filesystem::fseek64(fp.get(), offset, SEEK_SET);
+                        utf8_filesystem::ftruncate64(fp.get(), offset);
                     }
                     if (fwrite(buf, sizeof(unsigned char), size, fp.get()) != size) {
                         Log::Errorf("PackageManager: Storage full? Could not write to package file %s", packageFileName.c_str());
@@ -936,11 +917,11 @@ namespace carto {
                     }
                     std::uint64_t fileSize = package->getSize();
                     if (packageSizeIndeterminate) {
-                        FILE* fpRaw = fopen(packageFileName.c_str(), "rb");
+                        FILE* fpRaw = utf8_filesystem::fopen(packageFileName.c_str(), "rb");
                         if (fpRaw) {
                             std::shared_ptr<FILE> fp(fpRaw, fclose);
-                            fseeko64(fp.get(), 0, SEEK_END);
-                            fileSize = ftello64(fp.get());
+                            utf8_filesystem::fseek64(fp.get(), 0, SEEK_END);
+                            fileSize = utf8_filesystem::ftell64(fp.get());
                         }
                     }
                     sqlite3pp::command command(*_localDb, "INSERT INTO packages(package_id, package_type, version, size, server_url, tile_mask, metainfo, valid) VALUES(:package_id, :package_type, :version, :size, :server_url, :tile_mask, :metainfo, 0)");
@@ -963,11 +944,11 @@ namespace carto {
             throw;
         }
         catch (const CancelException&) {
-            unlink(packageFileName.c_str());
+            utf8_filesystem::unlink(packageFileName.c_str());
             throw;
         }
         catch (...) {
-            unlink(packageFileName.c_str());
+            utf8_filesystem::unlink(packageFileName.c_str());
             throw;
         }
 
@@ -1170,7 +1151,7 @@ namespace carto {
             command.execute();
             
             // Delete file
-            unlink(packageFileName.c_str());
+            utf8_filesystem::unlink(packageFileName.c_str());
         }
 
         // Sync
@@ -1325,7 +1306,7 @@ namespace carto {
     std::string PackageManager::loadPackageListJson(const std::string& jsonFileName) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         std::string packageListFileName = createLocalFilePath(jsonFileName);
-        FILE* fpRaw = fopen(packageListFileName.c_str(), "rb");
+        FILE* fpRaw = utf8_filesystem::fopen(packageListFileName.c_str(), "rb");
         if (!fpRaw) {
             return std::string();
         }
@@ -1346,7 +1327,7 @@ namespace carto {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         std::string packageListFileName = createLocalFilePath(jsonFileName);
         std::string tempPackageListFileName = createLocalFilePath(jsonFileName + ".tmp");
-        FILE* fpRaw = fopen(tempPackageListFileName.c_str(), "wb");
+        FILE* fpRaw = utf8_filesystem::fopen(tempPackageListFileName.c_str(), "wb");
         if (!fpRaw) {
             throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM, std::string("Could not create package list file ") + tempPackageListFileName);
         }
@@ -1355,8 +1336,8 @@ namespace carto {
             throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM, std::string("Could not write to package list file ") + tempPackageListFileName);
         }
         fp.reset();
-        unlink(packageListFileName.c_str());
-        if (rename(tempPackageListFileName.c_str(), packageListFileName.c_str()) != 0) {
+        utf8_filesystem::unlink(packageListFileName.c_str());
+        if (utf8_filesystem::rename(tempPackageListFileName.c_str(), packageListFileName.c_str()) != 0) {
             throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM, std::string("Could not rename package list file ") + tempPackageListFileName);
         }
         _serverPackageCache.clear();
