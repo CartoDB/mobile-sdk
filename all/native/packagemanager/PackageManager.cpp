@@ -312,7 +312,7 @@ namespace carto {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         utf8_filesystem::stat st;
         memset(&st, 0, sizeof(st));
-        if (utf8_filesystem::stat64(createLocalFilePath(_packageListFileName).c_str(), &st) == 0) {
+        if (utf8_filesystem::fstat(createLocalFilePath(_packageListFileName).c_str(), &st) == 0) {
             return static_cast<int>(time(NULL) - st.st_mtime);
         }
         return std::numeric_limits<int>::max();
