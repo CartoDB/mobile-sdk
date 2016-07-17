@@ -39,7 +39,7 @@ namespace carto { namespace mvt {
                 null_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["null"]];
 
                 string =
-                    '\'' >> *(unesc_char | "\\x" >> octet_ | (qi::print - '\'')) >> '\'';
+                    '\'' >> *(unesc_char | "\\x" >> octet_ | (qi::char_ - '\'')) >> '\'';
 
                 value =
                       null_kw				[_val = phx::construct<Value>()]

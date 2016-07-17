@@ -50,8 +50,8 @@ namespace carto { namespace css {
                 hex_       = *qi::char_("0-9a-fA-F");
 
                 string =
-                      '\'' >> *(unesc_char | "\\x" >> octet_ | (qi::print - '\'')) >> '\''
-                    | '\"' >> *(unesc_char | "\\x" >> octet_ | (qi::print - '\"')) >> '\"'
+                      '\'' >> *(unesc_char | "\\x" >> octet_ | (qi::char_ - '\'')) >> '\''
+                    | '\"' >> *(unesc_char | "\\x" >> octet_ | (qi::char_ - '\"')) >> '\"'
                     ;
                 
                 literal =
