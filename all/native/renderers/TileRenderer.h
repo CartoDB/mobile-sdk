@@ -9,13 +9,14 @@
 
 #include "graphics/Color.h"
 #include "graphics/ViewState.h"
-#include "vt/TileId.h"
-#include "vt/Tile.h"
 
 #include <memory>
 #include <mutex>
 #include <map>
 #include <vector>
+
+#include <vt/TileId.h>
+#include <vt/Tile.h>
 
 namespace carto {
     class MapPos;

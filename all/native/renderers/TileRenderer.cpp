@@ -9,9 +9,10 @@
 #include "renderers/drawdatas/TileDrawData.h"
 #include "utils/Log.h"
 #include "utils/Const.h"
-#include "vt/GLTileRenderer.h"
-#include "vt/GLExtensions.h"
-#include "vt/TileLabelCuller.h"
+
+#include <vt/TileLabelCuller.h>
+#include <vt/GLTileRenderer.h>
+#include <vt/GLExtensions.h>
 
 #include <cglib/mat.h>
 

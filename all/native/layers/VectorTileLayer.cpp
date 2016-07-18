@@ -6,9 +6,11 @@
 #include "renderers/TileRenderer.h"
 #include "renderers/drawdatas/TileDrawData.h"
 #include "utils/Log.h"
+#include "utils/Const.h"
 #include "vectortiles/VectorTileDecoder.h"
-#include "vt/TileId.h"
-#include "vt/Tile.h"
+
+#include <vt/TileId.h>
+#include <vt/Tile.h>
 
 namespace carto {
 
