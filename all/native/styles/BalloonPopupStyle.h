@@ -60,11 +60,13 @@ namespace carto {
          * @param rightMargins The margins of the right part of the popup.
          * @param titleColor The color of the title.
          * @param titleFontName The name of the title font.
+         * @param titleField The metadata field name for title.
          * @param titleFontSize The size of the title font.
          * @param titleMargins The margins of the title.
          * @param titleWrap True if long titles are wrapped, false if it is truncated.
          * @param descColor The color of the description.
          * @param descFontName The name of the description font.
+         * @param descField The metadata field for description.
          * @param descFontSize The size of the description font.
          * @param descMargins The margins of the description.
          * @param descWrap True if long descriptions are wrapped, false if it is truncated.
@@ -91,11 +93,13 @@ namespace carto {
                           BalloonPopupMargins& rightMargins,
                           const Color& titleColor,
                           const std::string& titleFontName,
+                          const std::string& titleField,
                           int titleFontSize,
                           const BalloonPopupMargins& titleMargins,
                           bool titleWrap,
                           const Color& descColor,
                           const std::string& descFontName,
+                          const std::string& descField,
                           int descFontSize,
                           const BalloonPopupMargins& descMargins,
                           bool descWrap,
@@ -159,6 +163,11 @@ namespace carto {
          */
         const std::string& getTitleFontName() const;
         /**
+         * Returns the title field variable to use.
+         * @return The title field variable.
+         */
+        const std::string& getTitleField() const;
+        /**
          * Returns the size of the title font.
          * @return The size of the title font.
          */
@@ -184,6 +193,11 @@ namespace carto {
          * @return The name of the description font.
          */
         const std::string& getDescriptionFontName() const;
+        /**
+         * Returns the description field variable to use.
+         * @return The description field variable.
+         */
+        const std::string& getDescriptionField() const;
         /**
          * Returns the size of the description font.
          * @return The size of the description font.
@@ -236,12 +250,14 @@ namespace carto {
         
         Color _titleColor;
         std::string _titleFontName;
+        std::string _titleField;
         int _titleFontSize;
         BalloonPopupMargins _titleMargins;
         bool _titleWrap;
         
         Color _descColor;
         std::string _descFontName;
+        std::string _descField;
         int _descFontSize;
         BalloonPopupMargins _descMargins;
         bool _descWrap;

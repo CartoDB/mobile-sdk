@@ -13,11 +13,13 @@ namespace carto {
         _rightMargins(BalloonPopupMargins(0, 0, 0, 0)),
         _titleColor(Color(0xFF000000)),
         _titleFontName("HelveticaNeue-Light"),
+        _titleField(),
         _titleFontSize(16),
         _titleMargins(BalloonPopupMargins(8, 4, 8, 0)),
         _titleWrap(true),
         _descColor(Color(0xFF000000)),
         _descFontName("HelveticaNeue-Light"),
+        _descField(),
         _descFontSize(14),
         _descMargins(BalloonPopupMargins(8, 0, 8, 6)),
         _descWrap(true),
@@ -121,6 +123,16 @@ namespace carto {
         _titleFontName = titleFontName;
     }
 
+    std::string BalloonPopupStyleBuilder::getTitleField() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _titleField;
+    }
+    
+    void BalloonPopupStyleBuilder::setTitleField(const std::string& field) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _titleField = field;
+    }
+
     int BalloonPopupStyleBuilder::getTitleFontSize() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _titleFontSize;
@@ -169,6 +181,16 @@ namespace carto {
     void BalloonPopupStyleBuilder::setDescriptionFontName(const std::string& descFontName) {
         std::lock_guard<std::mutex> lock(_mutex);
         _descFontName = descFontName;
+    }
+
+    std::string BalloonPopupStyleBuilder::getDescriptionField() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _descField;
+    }
+    
+    void BalloonPopupStyleBuilder::setDescriptionField(const std::string& field) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _descField = field;
     }
 
     int BalloonPopupStyleBuilder::getDescriptionFontSize() const {
@@ -261,11 +283,13 @@ namespace carto {
                                                                         _rightMargins,
                                                                         _titleColor,
                                                                         _titleFontName,
+                                                                        _titleField,
                                                                         _titleFontSize,
                                                                         _titleMargins,
                                                                         _titleWrap,
                                                                         _descColor,
                                                                         _descFontName,
+                                                                        _descField,
                                                                         _descFontSize,
                                                                         _descMargins,
                                                                         _descWrap,

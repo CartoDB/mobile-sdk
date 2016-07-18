@@ -93,6 +93,27 @@ namespace carto {
         
         int screenPadding = SCREEN_PADDING * dpToPX;
         
+        // Use actual texts or text fields
+        std::string title = _title;
+        if (title.empty() && !_style->getTitleField().empty()) {
+            Variant value = getMetaDataElement(_style->getTitleField());
+            if (value.getType() == VariantType::VARIANT_TYPE_STRING) {
+                title = value.getString();
+            } else {
+                title = value.toString();
+            }
+        }
+
+        std::string desc = _desc;
+        if (desc.empty() && !_style->getDescriptionField().empty()) {
+            Variant value = getMetaDataElement(_style->getDescriptionField());
+            if (value.getType() == VariantType::VARIANT_TYPE_STRING) {
+                desc = value.getString();
+            } else {
+                desc = value.toString();
+            }
+        }
+
         // Get colors
         const Color& backgroundColor = _style->getBackgroundColor();
         const Color& leftColor = _style->getLeftColor();
@@ -111,7 +132,7 @@ namespace carto {
         
         int titleMarginWidth = 0;
         int titleMarginHeight = 0;
-        if (_title != "") {
+        if (!title.empty()) {
             titleMarginWidth = titleMargins.getLeft() + titleMargins.getRight();
             titleMarginHeight = titleMargins.getTop() + titleMargins.getBottom();
         }
@@ -120,7 +141,7 @@ namespace carto {
         
         int descMarginWidth = 0;
         int descMarginHeight = 0;
-        if (_desc != "") {
+        if (!desc.empty()) {
             descMarginWidth = descMargins.getLeft() + descMargins.getRight();
             descMarginHeight = descMargins.getTop() + descMargins.getBottom();
         }
@@ -128,17 +149,17 @@ namespace carto {
 
         // Measure title and description sizes
         ScreenBounds titleSize(ScreenPos(0, 0), ScreenPos(0, 0));
-        if (!_title.empty()) {
+        if (!title.empty()) {
             BitmapCanvas measureCanvas(0, 0);
             measureCanvas.setFont(_style->getTitleFontName(), titleFontSize);
-            titleSize = measureCanvas.measureTextSize(_title, maxTitleWidth, _style->isTitleWrap());
+            titleSize = measureCanvas.measureTextSize(title, maxTitleWidth, _style->isTitleWrap());
         }
         
         ScreenBounds descSize(ScreenPos(0, 0), ScreenPos(0, 0));
-        if (!_desc.empty()) {
+        if (!desc.empty()) {
             BitmapCanvas measureCanvas(0, 0);
             measureCanvas.setFont(_style->getDescriptionFontName(), descFontSize);
-            descSize = measureCanvas.measureTextSize(_desc, maxDescWidth, _style->isDescriptionWrap());
+            descSize = measureCanvas.measureTextSize(desc, maxDescWidth, _style->isDescriptionWrap());
         }
         
         // Calculate triangle height with stroke
@@ -232,21 +253,21 @@ namespace carto {
         }
         
         // Draw title
-        if (!_title.empty()) {
+        if (!title.empty()) {
             ScreenPos titlePos(halfStrokeWidth + leftMarginWidth + titleMargins.getLeft(),
                                halfStrokeWidth + titleMargins.getTop());
             canvas.setColor(_style->getTitleColor());
             canvas.setFont(_style->getTitleFontName(), titleFontSize);
-            canvas.drawText(_title, titlePos, titleSize.getWidth(), _style->isTitleWrap());
+            canvas.drawText(title, titlePos, titleSize.getWidth(), _style->isTitleWrap());
         }
         
         // Draw description
-        if (!_desc.empty()) {
+        if (!desc.empty()) {
             ScreenPos descPos(halfStrokeWidth + leftMarginWidth + descMargins.getLeft(),
                               halfStrokeWidth + titleSize.getHeight() + titleMarginHeight + descMargins.getTop());
             canvas.setColor(_style->getDescriptionColor());
             canvas.setFont(_style->getDescriptionFontName(), descFontSize);
-            canvas.drawText(_desc, descPos, descSize.getWidth(), _style->isDescriptionWrap());
+            canvas.drawText(desc, descPos, descSize.getWidth(), _style->isDescriptionWrap());
         }
 
         // Done with internal state, update anchor point and build bitmap

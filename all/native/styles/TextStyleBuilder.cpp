@@ -32,7 +32,7 @@ namespace carto {
         return _textField;
     }
     
-    void TextStyleBuilder::setTextField(const std::string &field) {
+    void TextStyleBuilder::setTextField(const std::string& field) {
         std::lock_guard<std::mutex> lock(_mutex);
         _textField = field;
     }

@@ -128,6 +128,16 @@ namespace carto {
          */
         void setTitleFontName(const std::string& titleFontName);
         /**
+         * Returns the title field variable. If not empty, this variable is used to read actual text string from object meta info.
+         * @return The current title variable.
+         */
+        std::string getTitleField() const;
+        /**
+         * Sets the title field variable. If not empty, this variable is used to read actual text string from object meta info.
+         * @param field The text field to use for displaying title from metainfo.
+         */
+        void setTitleField(const std::string& field);
+        /**
          * Returns the size of the title font.
          * @return The size of the title font.
          */
@@ -182,6 +192,16 @@ namespace carto {
          * @param descFontName The new name for the description font.
          */
         void setDescriptionFontName(const std::string& descFontName);
+        /**
+         * Returns the description field variable. If not empty, this variable is used to read actual text string from object meta info.
+         * @return The current description variable.
+         */
+        std::string getDescriptionField() const;
+        /**
+         * Sets the description field variable. If not empty, this variable is used to read actual text string from object meta info.
+         * @param field The description field to use for displaying text from metainfo.
+         */
+        void setDescriptionField(const std::string& field);
         /**
          * Returns the size of the description font.
          * @return The size of the description font.
@@ -277,12 +297,14 @@ namespace carto {
         
         Color _titleColor;
         std::string _titleFontName;
+        std::string _titleField;
         int _titleFontSize;
         BalloonPopupMargins _titleMargins;
         bool _titleWrap;
         
         Color _descColor;
         std::string _descFontName;
+        std::string _descField;
         int _descFontSize;
         BalloonPopupMargins _descMargins;
         bool _descWrap;

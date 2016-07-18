@@ -48,11 +48,13 @@ namespace carto {
                                          BalloonPopupMargins& rightMargins,
                                          const Color& titleColor,
                                          const std::string& titleFontName,
+                                         const std::string& titleField,
                                          int titleFontSize,
                                          const BalloonPopupMargins& titleMargins,
                                          bool titleWrap,
                                          const Color& descColor,
                                          const std::string& descFontName,
+                                         const std::string& descField,
                                          int descFontSize,
                                          const BalloonPopupMargins& descMargins,
                                          bool descWrap,
@@ -79,11 +81,13 @@ namespace carto {
         _rightMargins(rightMargins),
         _titleColor(titleColor),
         _titleFontName(titleFontName),
+        _titleField(titleField),
         _titleFontSize(titleFontSize),
         _titleMargins(titleMargins),
         _titleWrap(titleWrap),
         _descColor(descColor),
         _descFontName(descFontName),
+        _descField(descField),
         _descFontSize(descFontSize),
         _descMargins(descMargins),
         _descWrap(descWrap),
@@ -137,6 +141,10 @@ namespace carto {
         return _titleFontName;
     }
 
+    const std::string& BalloonPopupStyle::getTitleField() const {
+        return _titleField;
+    }
+
     int BalloonPopupStyle::getTitleFontSize() const {
         return _titleFontSize;
     }
@@ -155,6 +163,10 @@ namespace carto {
 
     const std::string& BalloonPopupStyle::getDescriptionFontName() const {
         return _descFontName;
+    }
+
+    const std::string& BalloonPopupStyle::getDescriptionField() const {
+        return _descField;
     }
 
     int BalloonPopupStyle::getDescriptionFontSize() const {
