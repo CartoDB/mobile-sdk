@@ -21,7 +21,6 @@
 !shared_ptr(carto::CartoSQLService, services.CartoSQLService)
 
 %attributestring(carto::CartoSQLService, std::string, Username, getUsername, setUsername)
-%attributestring(carto::CartoSQLService, std::string, APIKey, getAPIKey, setAPIKey)
 %attributestring(carto::CartoSQLService, std::string, APITemplate, getAPITemplate, setAPITemplate)
 %std_io_exceptions(carto::CartoSQLService::queryData)
 !standard_equals(carto::CartoSQLService);

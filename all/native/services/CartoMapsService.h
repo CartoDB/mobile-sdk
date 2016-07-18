@@ -46,18 +46,6 @@ namespace carto {
         void setUsername(const std::string& username);
 
         /**
-         * Returns the API key used when accessing the online service.
-         * @return The API key used when accessing the online service.
-         */
-        std::string getAPIKey() const;
-        /**
-         * Sets the optional API key used when accessing the online service.
-         * Usually this is not needed and can be left blank.
-         * @param apiKey The optional API key used when accessing the online service.
-         */
-        void setAPIKey(const std::string& apiKey);
-
-        /**
          * Returns the API endpoint template of the online service.
          * @return The API endpoint template of the online service.
          */
@@ -221,7 +209,6 @@ namespace carto {
         static const std::string DEFAULT_API_TEMPLATE;
         
         std::string _username;
-        std::string _apiKey;
         std::string _apiTemplate;
         std::string _tilerURL;
         std::string _statTag;

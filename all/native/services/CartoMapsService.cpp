@@ -23,7 +23,6 @@ namespace carto {
 
     CartoMapsService::CartoMapsService() :
         _username(),
-        _apiKey(),
         _apiTemplate(DEFAULT_API_TEMPLATE),
         _tilerURL(),
         _statTag(),
@@ -50,16 +49,6 @@ namespace carto {
     void CartoMapsService::setUsername(const std::string& username) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _username = username;
-    }
-
-    std::string CartoMapsService::getAPIKey() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _apiKey;
-    }
-
-    void CartoMapsService::setAPIKey(const std::string& apiKey) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        _apiKey = apiKey;
     }
 
     std::string CartoMapsService::getAPITemplate() const {
@@ -243,12 +232,7 @@ namespace carto {
     std::string CartoMapsService::getServiceURL(const std::string& path) const {
         std::map<std::string, std::string> tagValues = { { "user", _username },{ "username", _username } };
         std::string url = GeneralUtils::ReplaceTags(_apiTemplate, tagValues, "{", "}", false) + path;
-
         std::multimap<std::string, std::string> urlParams;
-        if (!_apiKey.empty()) {
-            urlParams.insert({ "api_key", _apiKey });
-            url = NetworkUtils::SetURLProtocol(url, "https");
-        }
 
         if (!_authTokens.empty()) {
             for (const std::string& authToken : _authTokens) {
@@ -312,11 +296,7 @@ namespace carto {
         std::string urlTemplateBase = getTilerURL(cdnURLs);
         urlTemplateBase += "/api/v1/map/" + layerGroupId;
         urlTemplateBase += "/" + boost::lexical_cast<std::string>(layerIndex);
-
         std::string urlTemplateSuffix;
-        if (!_apiKey.empty()) {
-            urlTemplateSuffix = "?api_key=" + NetworkUtils::URLEncode(_apiKey);
-        }
 
         // Create layer based on type and flags
         if (type == "torque") {

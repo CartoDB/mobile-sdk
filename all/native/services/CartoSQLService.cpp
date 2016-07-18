@@ -11,7 +11,6 @@ namespace carto {
 
     CartoSQLService::CartoSQLService() :
         _username(),
-        _apiKey(),
         _apiTemplate(DEFAULT_API_TEMPLATE),
         _mutex()
     {
@@ -28,16 +27,6 @@ namespace carto {
     void CartoSQLService::setUsername(const std::string& username) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _username = username;
-    }
-
-    std::string CartoSQLService::getAPIKey() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _apiKey;
-    }
-
-    void CartoSQLService::setAPIKey(const std::string& apiKey) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        _apiKey = apiKey;
     }
 
     std::string CartoSQLService::getAPITemplate() const {
@@ -59,10 +48,6 @@ namespace carto {
 
         std::map<std::string, std::string> urlParams;
         urlParams["q"] = sql;
-        if (!_apiKey.empty()) {
-            urlParams["api_key"] = _apiKey;
-            url = NetworkUtils::SetURLProtocol(url, "https");
-        }
         url = NetworkUtils::BuildURLFromParameters(url, urlParams);
 
         // Perform HTTP request
