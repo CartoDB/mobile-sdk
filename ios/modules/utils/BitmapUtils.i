@@ -29,7 +29,7 @@
     var uiImage = $imcall; $excode;
     return ObjCRuntime.Runtime.GetNSObject<UIImage>(uiImage);
 }
-%typemap(in) UIImage* %{
+%typemap(in, canthrow=1) UIImage* %{
     $1 = (__bridge UIImage*)$input;
 %}
 %typemap(out) UIImage* %{

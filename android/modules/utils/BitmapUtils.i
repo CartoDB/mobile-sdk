@@ -16,7 +16,7 @@
 
 %import "graphics/Bitmap.i"
 
-%typemap(in) jobject androidBitmap %{
+%typemap(in, canthrow=1) jobject androidBitmap %{
     $1 = (jobject)$input;
 %}
 
