@@ -6,14 +6,14 @@ namespace carto { namespace mvt {
 
         updateBindings(exprContext);
 
-        vt::CompOp compOp = convertCompOp(_compOp);
-        
         std::shared_ptr<const vt::BitmapPattern> pattern = symbolizerContext.getBitmapManager()->loadBitmapPattern(_file, 0.75f, 0.75f);
         if (!pattern) {
             _logger->write(Logger::Severity::ERROR, "Failed to load polygon pattern bitmap " + _file);
             return;
         }
 
+        vt::CompOp compOp = convertCompOp(_compOp);
+        
         vt::PolygonStyle style(compOp, vt::blendColor(_fill, _opacity), pattern, _geometryTransform);
 
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {

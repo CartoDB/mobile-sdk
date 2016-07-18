@@ -6,16 +6,17 @@ namespace carto { namespace mvt {
 
         updateBindings(exprContext);
 
-        float geomScale = symbolizerContext.getSettings().getGeometryScale();
-        vt::CompOp compOp = convertCompOp(_compOp);
-        
         std::shared_ptr<const vt::BitmapPattern> pattern = symbolizerContext.getBitmapManager()->loadBitmapPattern(_file, 0.5f, 1.0f);
         if (!pattern) {
             _logger->write(Logger::Severity::ERROR, "Failed to load line pattern bitmap " + _file);
             return;
         }
         
-        vt::LineStyle style(compOp, vt::LineJoinMode::MITER, vt::LineCapMode::NONE, vt::blendColor(_fill, _opacity), pattern->bitmap->height * geomScale * 0.375f * 0.5f, symbolizerContext.getStrokeMap(), pattern, _geometryTransform);
+        float geomScale = symbolizerContext.getSettings().getGeometryScale();
+        float width = pattern->bitmap->height * geomScale * 0.375f;
+        vt::CompOp compOp = convertCompOp(_compOp);
+        
+        vt::LineStyle style(compOp, vt::LineJoinMode::MITER, vt::LineCapMode::NONE, vt::blendColor(_fill, _opacity), width * 0.5f, symbolizerContext.getStrokeMap(), pattern, _geometryTransform);
 
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
             if (auto lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(featureCollection.getGeometry(index))) {

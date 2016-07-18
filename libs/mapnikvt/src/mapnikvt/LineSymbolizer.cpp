@@ -13,9 +13,12 @@ namespace carto { namespace mvt {
         updateBindings(exprContext);
 
         float geomScale = symbolizerContext.getSettings().getGeometryScale();
-        vt::CompOp compOp = convertCompOp(_compOp);
+        float width = std::abs(_strokeWidth * geomScale);
+        if (width == 0) {
+            return;
+        }
         vt::LineJoinMode lineJoin = vt::LineJoinMode::MITER;
-        if (_strokeWidth * geomScale > 1.5f) {
+        if (width > 1.5f) {
             if (_strokeLinejoin == "round") {
                 lineJoin = vt::LineJoinMode::ROUND;
             }
@@ -27,7 +30,7 @@ namespace carto { namespace mvt {
             }
         }
         vt::LineCapMode lineCap = vt::LineCapMode::NONE;
-        if (_strokeWidth * geomScale > 1.5f) {
+        if (width > 1.5f) {
             if (_strokeLinecap == "round") {
                 lineCap = vt::LineCapMode::ROUND;
             }
@@ -38,6 +41,7 @@ namespace carto { namespace mvt {
                 lineCap = vt::LineCapMode::NONE;
             }
         }
+        vt::CompOp compOp = convertCompOp(_compOp);
         
         std::shared_ptr<const vt::BitmapPattern> strokePattern;
         if (!_strokeDashArray.empty()) {
@@ -63,7 +67,7 @@ namespace carto { namespace mvt {
             }
         }
         
-        vt::LineStyle style(compOp, lineJoin, lineCap, vt::blendColor(_stroke, _strokeOpacity), _strokeWidth * geomScale * 0.5f, symbolizerContext.getStrokeMap(), strokePattern, _geometryTransform);
+        vt::LineStyle style(compOp, lineJoin, lineCap, vt::blendColor(_stroke, _strokeOpacity), width * 0.5f, symbolizerContext.getStrokeMap(), strokePattern, _geometryTransform);
 
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
             if (auto lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(featureCollection.getGeometry(index))) {
