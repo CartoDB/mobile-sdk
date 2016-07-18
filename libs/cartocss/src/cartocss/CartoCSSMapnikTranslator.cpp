@@ -98,7 +98,11 @@ namespace carto { namespace css {
                 if (prop.field == symbolizerType + "-name") {
                     try {
                         if (auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(prop.expression)) {
-                            textExpr = mvt::parseStringExpression(boost::lexical_cast<std::string>(constExpr->getValue()));
+                            std::string value = boost::lexical_cast<std::string>(constExpr->getValue());
+                            if (value.empty()) {
+                                return std::shared_ptr<mvt::Symbolizer>();
+                            }
+                            textExpr = mvt::parseStringExpression(value);
                         }
                         else {
                             textExpr = mvt::parseExpression(buildEscapedExpressionString(prop.expression));
