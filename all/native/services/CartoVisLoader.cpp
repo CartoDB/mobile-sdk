@@ -422,29 +422,33 @@ namespace carto {
         }
         else {
             // Build map config for Maps service
-            std::map<std::string, Variant> layerConfig;
-            layerConfig["table_name"] = Variant(*getString(options.get("table_name")));
+            std::map<std::string, Variant> layerOptions;
+            layerOptions["table_name"] = Variant(*getString(options.get("table_name")));
             if (auto query = getString(options.get("query"))) {
-                layerConfig["sql"] = Variant(*query);
+                layerOptions["sql"] = Variant(*query);
             }
             if (auto sql = getString(options.get("sql"))) {
-                layerConfig["sql"] = Variant(*sql);
+                layerOptions["sql"] = Variant(*sql);
             }
             if (auto tileStyle = getString(options.get("tile_style"))) {
-                layerConfig["cartocss"] = Variant(*tileStyle);
+                layerOptions["cartocss"] = Variant(*tileStyle);
             }
             if (auto cartoCSS = getString(options.get("cartocss"))) {
-                layerConfig["cartocss"] = Variant(*cartoCSS);
+                layerOptions["cartocss"] = Variant(*cartoCSS);
             }
-            layerConfig["cartocss_version"] = Variant("2.1.1");
+            layerOptions["cartocss_version"] = Variant("2.1.1");
             if (auto cartoCSSVersion = getString(options.get("cartocss_version"))) {
-                layerConfig["cartocss_version"] = Variant(*cartoCSSVersion);
+                layerOptions["cartocss_version"] = Variant(*cartoCSSVersion);
             }
+
+            std::map<std::string, Variant> layerConfig;
+            layerConfig["type"] = Variant("torque");
+            layerConfig["options"] = Variant(layerOptions);
 
             std::map<std::string, Variant> mapConfig;
-            mapConfig["type"] = Variant("torque");
-            mapConfig["options"] = Variant(mapConfig);
-
+            mapConfig["version"] = Variant(std::string("1.5.0"));
+            mapConfig["layers"] = Variant(std::vector<Variant> { Variant(layerConfig) });
+            
             CartoMapsService mapsService;
             configureMapsService(mapsService, options);
             layers = mapsService.buildMap(Variant(mapConfig));

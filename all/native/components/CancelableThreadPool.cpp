@@ -179,7 +179,7 @@ namespace carto {
         }
     
         // If there are too many threads, remove this worker and it's thread
-        if ((int) _threads.size() >_poolSize) {
+        if (static_cast<int>(_threads.size()) > _poolSize) {
     
             // Find the index of the finished worker, it's thread will have the same index in _threads vector
             int index = 0;
