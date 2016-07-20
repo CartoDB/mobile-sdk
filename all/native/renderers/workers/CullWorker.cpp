@@ -32,18 +32,15 @@ namespace carto {
     }
     
     void CullWorker::init(const std::shared_ptr<Layer>& layer, int delayTime) {
-        {
-            std::lock_guard<std::mutex> lock(_mutex);
-    
-            std::chrono::steady_clock::time_point wakeupTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(delayTime);
-            if (_layerWakeupMap.find(layer) != _layerWakeupMap.end()) {
-                if (_layerWakeupMap[layer] <= wakeupTime)
-                    return;
-            }
-            _layerWakeupMap[layer] = wakeupTime;
-        }
-    
         std::lock_guard<std::mutex> lock(_mutex);
+    
+        std::chrono::steady_clock::time_point wakeupTime = std::chrono::steady_clock::now() + std::chrono::milliseconds(delayTime);
+        if (_layerWakeupMap.find(layer) != _layerWakeupMap.end()) {
+            if (_layerWakeupMap[layer] <= wakeupTime) {
+                return;
+            }
+        }
+        _layerWakeupMap[layer] = wakeupTime;
         _idle = false;
         _condition.notify_one();
     }
@@ -80,7 +77,7 @@ namespace carto {
                 for (auto it = _layerWakeupMap.begin(); it != _layerWakeupMap.end(); ) {
                     if (it->second - currentTime < std::chrono::milliseconds(1)) {
                         layers.push_back(it->first);
-                        _layerWakeupMap.erase(it++);
+                        it = _layerWakeupMap.erase(it);
                     } else {
                         wakeupTime = std::min(wakeupTime, it->second);
                         it++;
