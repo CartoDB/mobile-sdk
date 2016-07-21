@@ -12,7 +12,7 @@ distDir="${baseDir}/dist/ios"
 # Copy proxy files to temp directory
 rm -rf ${tempDir}
 mkdir -p ${tempDir}
-cp -r ${baseDir}/ios/generated/proxies/* ${tempDir}
+cp -r ${baseDir}/generated/ios-objc/proxies/* ${tempDir}
 cp -r ${baseDir}/ios/objc/ui/MapView.h ${tempDir}
 find ${tempDir} -name "*NTBaseMapView.*" -exec rm {} \;
 find ${tempDir} -name "*NTMapTileQuadTreeNode.*" -exec rm {} \;
