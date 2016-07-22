@@ -80,8 +80,8 @@ namespace carto { namespace mvt {
         }
 
         template <typename V>
-        void bind(std::shared_ptr<const V>* field, const std::shared_ptr<const Expression>& expr) {
-            bindParameter(field, expr);
+        void bind(std::shared_ptr<const std::function<V(const vt::ViewState&)>>* field, const std::shared_ptr<const Expression>& expr) {
+            bindParameter(field, expr, std::function<V(const Value&)>(ValueConverter<V>::convert));
             if (!std::dynamic_pointer_cast<const ConstExpression>(expr)) {
                 _parameterExprs.push_back(expr);
             }
@@ -132,12 +132,12 @@ namespace carto { namespace mvt {
             _optionalMatrixBinder.bind(field, expr, convertFn);
         }
 
-        void bindParameter(std::shared_ptr<const vt::FloatFunction>* field, const std::shared_ptr<const Expression>& expr) {
-            _floatFunctionBinder.bind(field, expr);
+        void bindParameter(std::shared_ptr<const vt::FloatFunction>* field, const std::shared_ptr<const Expression>& expr, const std::function<float(const Value&)>& convertFn) {
+            _floatFunctionBinder.bind(field, expr, convertFn);
         }
 
-        void bindParameter(std::shared_ptr<const vt::ColorFunction>* field, const std::shared_ptr<const Expression>& expr) {
-            _colorFunctionBinder.bind(field, expr);
+        void bindParameter(std::shared_ptr<const vt::ColorFunction>* field, const std::shared_ptr<const Expression>& expr, const std::function<vt::Color(const Value&)>& convertFn) {
+            _colorFunctionBinder.bind(field, expr, convertFn);
         }
 
         ExpressionBinder<bool> _boolBinder;
@@ -147,8 +147,8 @@ namespace carto { namespace mvt {
         ExpressionBinder<std::string> _stringBinder;
         ExpressionBinder<cglib::mat<float, 3, cglib::float_traits<float>>> _matrixBinder;
         ExpressionBinder<boost::optional<cglib::mat<float, 3, cglib::float_traits<float>>>> _optionalMatrixBinder;
-        ExpressionFunctionBinder<vt::FloatFunction> _floatFunctionBinder;
-        ExpressionFunctionBinder<vt::ColorFunction> _colorFunctionBinder;
+        ExpressionFunctionBinder<float> _floatFunctionBinder;
+        ExpressionFunctionBinder<vt::Color> _colorFunctionBinder;
         
         std::map<std::string, std::string> _parameterMap;
         

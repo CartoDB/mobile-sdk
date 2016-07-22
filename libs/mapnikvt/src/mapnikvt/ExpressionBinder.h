@@ -22,6 +22,10 @@ namespace carto { namespace mvt {
     public:
         ExpressionBinder() = default;
 
+        ExpressionBinder& bind(V* field, const std::shared_ptr<const Expression>& expr) {
+            return bind(field, expr, std::function<V(const Value&)>(ValueConverter<V>::convert));
+        }
+        
         ExpressionBinder& bind(V* field, const std::shared_ptr<const Expression>& expr, std::function<V(const Value& val)> convertFn) {
             if (auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(expr)) {
                 *field = convertFn(constExpr->getConstant());
@@ -54,36 +58,50 @@ namespace carto { namespace mvt {
     template <typename V>
     class ExpressionFunctionBinder {
     public:
+        using Func = std::shared_ptr<const std::function<V(const vt::ViewState&)>>;
+
         ExpressionFunctionBinder() = default;
 
-        ExpressionFunctionBinder& bind(std::shared_ptr<const V>* field, const std::shared_ptr<const Expression>& expr) {
+        ExpressionFunctionBinder& bind(Func* field, const std::shared_ptr<const Expression>& expr) {
+            return bind(field, expr, std::function<V(const Value&)>(ValueConverter<V>::convert));
+        }
+
+        ExpressionFunctionBinder& bind(Func* field, const std::shared_ptr<const Expression>& expr, std::function<V(const Value&)> convertFn) {
             if (auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(expr)) {
-                *field = buildFunction(expr);
+                *field = buildFunction(expr, convertFn);
             }
             else {
-                _bindingMap.insert({ field, expr });
+                _bindingMap.insert({ field, Binding(expr, convertFn) });
             }
             return *this;
         }
 
         void update(const FeatureExpressionContext& context) const {
             for (auto it = _bindingMap.begin(); it != _bindingMap.end(); it++) {
-                std::shared_ptr<const Expression> expr = simplifyExpression(it->second, context);
-                *it->first = buildFunction(expr);
+                const Binding& binding = it->second;
+                std::shared_ptr<const Expression> expr = simplifyExpression(binding.expr, context);
+                *it->first = buildFunction(expr, binding.convertFn);
             }
         }
 
     private:
-        std::shared_ptr<const V> buildFunction(const std::shared_ptr<const Expression>& expr) const {
+        struct Binding {
+            std::shared_ptr<const Expression> expr;
+            std::function<V(const Value&)> convertFn;
+
+            explicit Binding(std::shared_ptr<const Expression> expr, std::function<V(const Value&)> convertFn) : expr(std::move(expr)), convertFn(std::move(convertFn)) { }
+        };
+
+        Func buildFunction(const std::shared_ptr<const Expression>& expr, const std::function<V(const Value&)>& convertFn) const {
             for (auto it = _functionCache.begin(); it != _functionCache.end(); it++) {
                 if (it->first->equals(expr)) {
                     return it->second;
                 }
             }
-            auto func = std::make_shared<const V>([expr](const vt::ViewState& viewState) {
+            auto func = std::make_shared<const std::function<V(const vt::ViewState&)>>([expr, convertFn](const vt::ViewState& viewState) {
                 ViewExpressionContext context;
                 context.setZoom(viewState.zoom);
-                return ValueConverter<float>::convert(expr->evaluate(context));
+                return convertFn(expr->evaluate(context));
             });
             if (_functionCache.size() > 16) {
                 _functionCache.erase(_functionCache.begin()); // erase any element to keep cache compact
@@ -111,8 +129,8 @@ namespace carto { namespace mvt {
             });
         }
 
-        std::map<std::shared_ptr<const V>*, std::shared_ptr<const Expression>> _bindingMap;
-        mutable std::map<std::shared_ptr<const Expression>, std::shared_ptr<const V>> _functionCache;
+        std::map<Func*, Binding> _bindingMap;
+        mutable std::map<std::shared_ptr<const Expression>, Func> _functionCache;
     };
 } }
 
