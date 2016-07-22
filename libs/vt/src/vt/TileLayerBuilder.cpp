@@ -29,17 +29,17 @@ namespace carto { namespace vt {
             return;
         }
         
-        if (_styleParameters.type != TileGeometry::Type::POINT || _styleParameters.glyphMap != style.glyphMap || _styleParameters.transform != style.transform || _styleParameters.compOp != style.compOp || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
+        if (_builderParameters.type != TileGeometry::Type::POINT || _builderParameters.glyphMap != style.glyphMap || _styleParameters.transform != style.transform || _styleParameters.compOp != style.compOp || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
             appendGeometry();
         }
-        _styleParameters.type = TileGeometry::Type::POINT;
-        _styleParameters.glyphMap = style.glyphMap;
+        _builderParameters.type = TileGeometry::Type::POINT;
+        _builderParameters.glyphMap = style.glyphMap;
         _styleParameters.transform = style.transform;
         _styleParameters.compOp = style.compOp;
         GlyphMap::GlyphId glyphId = style.glyphMap->loadBitmapGlyph(style.bitmap, 0);
         int styleIndex = _styleParameters.parameterCount;
         while (--styleIndex >= 0) {
-            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.widthTable[styleIndex] == style.size && _styleParameters.pointGlyphIds[styleIndex] == glyphId) {
+            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.widthTable[styleIndex] == style.size && _builderParameters.pointGlyphIds[styleIndex] == glyphId) {
                 break;
             }
         }
@@ -47,7 +47,7 @@ namespace carto { namespace vt {
             styleIndex = _styleParameters.parameterCount++;
             _styleParameters.colorTable[styleIndex] = style.color;
             _styleParameters.widthTable[styleIndex] = style.size;
-            _styleParameters.pointGlyphIds[styleIndex] = glyphId;
+            _builderParameters.pointGlyphIds[styleIndex] = glyphId;
         }
         for (const Vertex& point : vertices) {
             tesselatePoint(point, static_cast<char>(styleIndex), style.glyphMap->getGlyph(glyphId).get(), style);
@@ -59,18 +59,18 @@ namespace carto { namespace vt {
             return;
         }
         
-        if (_styleParameters.type != TileGeometry::Type::LINE || _styleParameters.strokeMap != style.strokeMap || _styleParameters.transform != style.transform || _styleParameters.compOp != style.compOp || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
+        if (_builderParameters.type != TileGeometry::Type::LINE || _builderParameters.strokeMap != style.strokeMap || _styleParameters.transform != style.transform || _styleParameters.compOp != style.compOp || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
             appendGeometry();
         }
-        _styleParameters.type = TileGeometry::Type::LINE;
-        _styleParameters.strokeMap = style.strokeMap;
+        _builderParameters.type = TileGeometry::Type::LINE;
+        _builderParameters.strokeMap = style.strokeMap;
         _styleParameters.transform = style.transform;
         _styleParameters.compOp = style.compOp;
         StrokeMap::StrokeId strokeId = (style.strokePattern ? style.strokeMap->loadBitmapPattern(style.strokePattern) : 0);
         const std::unique_ptr<const StrokeMap::Stroke>& stroke = style.strokeMap->getStroke(strokeId);
         int styleIndex = _styleParameters.parameterCount;
         while (--styleIndex >= 0) {
-            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.widthTable[styleIndex] == style.width && _styleParameters.lineStrokeIds[styleIndex] == strokeId) {
+            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.widthTable[styleIndex] == style.width && _builderParameters.lineStrokeIds[styleIndex] == strokeId) {
                 break;
             }
         }
@@ -78,7 +78,7 @@ namespace carto { namespace vt {
             styleIndex = _styleParameters.parameterCount++;
             _styleParameters.colorTable[styleIndex] = style.color;
             _styleParameters.widthTable[styleIndex] = style.width;
-            _styleParameters.lineStrokeIds[styleIndex] = strokeId;
+            _builderParameters.lineStrokeIds[styleIndex] = strokeId;
         }
         for (const Vertices& points : verticesList) {
             tesselateLine(points, static_cast<char>(styleIndex), stroke.get(), style);
@@ -90,10 +90,10 @@ namespace carto { namespace vt {
             return;
         }
 
-        if (_styleParameters.type != TileGeometry::Type::POLYGON || _styleParameters.pattern != style.pattern || _styleParameters.transform != style.transform || _styleParameters.compOp != style.compOp || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
+        if (_builderParameters.type != TileGeometry::Type::POLYGON || _styleParameters.pattern != style.pattern || _styleParameters.transform != style.transform || _styleParameters.compOp != style.compOp || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
             appendGeometry();
         }
-        _styleParameters.type = TileGeometry::Type::POLYGON;
+        _builderParameters.type = TileGeometry::Type::POLYGON;
         _styleParameters.pattern = style.pattern;
         _styleParameters.transform = style.transform;
         _styleParameters.compOp = style.compOp;
@@ -117,10 +117,10 @@ namespace carto { namespace vt {
             return;
         }
         
-        if (_styleParameters.type != TileGeometry::Type::POLYGON3D || _styleParameters.transform != style.transform || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
+        if (_builderParameters.type != TileGeometry::Type::POLYGON3D || _styleParameters.transform != style.transform || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
             appendGeometry();
         }
-        _styleParameters.type = TileGeometry::Type::POLYGON3D;
+        _builderParameters.type = TileGeometry::Type::POLYGON3D;
         _styleParameters.transform = style.transform;
         int styleIndex = _styleParameters.parameterCount;
         while (--styleIndex >= 0) {
@@ -215,26 +215,26 @@ namespace carto { namespace vt {
     }
 
     void TileLayerBuilder::appendGeometry() {
-        if (_styleParameters.type == TileGeometry::Type::NONE) {
+        if (_builderParameters.type == TileGeometry::Type::NONE) {
             return;
         }
 
-        if (_styleParameters.strokeMap) {
+        if (_builderParameters.strokeMap) {
             // If stroking is used, normalize V coordinates according to actual pattern bitmap height
-            bool strokeUsed = std::any_of(_styleParameters.lineStrokeIds.begin(), _styleParameters.lineStrokeIds.begin() + _styleParameters.parameterCount, [](StrokeMap::StrokeId strokeId) { return strokeId != 0; });
+            bool strokeUsed = std::any_of(_builderParameters.lineStrokeIds.begin(), _builderParameters.lineStrokeIds.begin() + _styleParameters.parameterCount, [](StrokeMap::StrokeId strokeId) { return strokeId != 0; });
             if (strokeUsed) {
-                _styleParameters.pattern = _styleParameters.strokeMap->getBitmapPattern();
+                _styleParameters.pattern = _builderParameters.strokeMap->getBitmapPattern();
                 float vScale = 1.0f / _styleParameters.pattern->bitmap->height;
                 for (std::size_t i = 0; i < _texCoords.size(); i++) {
                     _texCoords[i](1) *= vScale;
                 }
             }
         }
-        if (_styleParameters.glyphMap) {
+        if (_builderParameters.glyphMap) {
             // If glyph map is used, normalize U, V coordinates according to actual pattern bitmap dimensions
-            bool glyphUsed = std::any_of(_styleParameters.pointGlyphIds.begin(), _styleParameters.pointGlyphIds.begin() + _styleParameters.parameterCount, [](GlyphMap::GlyphId glyphId) { return glyphId != 0; });
+            bool glyphUsed = std::any_of(_builderParameters.pointGlyphIds.begin(), _builderParameters.pointGlyphIds.begin() + _styleParameters.parameterCount, [](GlyphMap::GlyphId glyphId) { return glyphId != 0; });
             if (glyphUsed) {
-                _styleParameters.pattern = _styleParameters.glyphMap->getBitmapPattern();
+                _styleParameters.pattern = _builderParameters.glyphMap->getBitmapPattern();
                 float uScale = 1.0f / _styleParameters.pattern->bitmap->width;
                 float vScale = 1.0f / _styleParameters.pattern->bitmap->height;
                 for (std::size_t i = 0; i < _texCoords.size(); i++) {
@@ -254,7 +254,8 @@ namespace carto { namespace vt {
         }
         appendGeometry(calculateScale(_vertices), calculateScale(_binormals), calculateScale(_texCoords), _vertices, _texCoords, _binormals, _heights, _attribs, _indices, 0, _vertices.size());
 
-        _styleParameters = StyleBuilderParameters();
+        _builderParameters = BuilderParameters();
+        _styleParameters = TileGeometry::StyleParameters();
         _vertices.clear();
         _texCoords.clear();
         _binormals.clear();
@@ -339,7 +340,7 @@ namespace carto { namespace vt {
                 compressedIndices.append(static_cast<unsigned short>(index - offset));
             }
 
-            auto geometry = std::make_shared<TileGeometry>(_styleParameters.type, _tileSize, _geomScale, _styleParameters, geometryLayoutParameters, static_cast<unsigned int>(indices.size()), std::move(compressedVertexGeometry), std::move(compressedIndices));
+            auto geometry = std::make_shared<TileGeometry>(_builderParameters.type, _tileSize, _geomScale, _styleParameters, geometryLayoutParameters, static_cast<unsigned int>(indices.size()), std::move(compressedVertexGeometry), std::move(compressedIndices));
             _geometryList.push_back(std::move(geometry));
             return;
         }

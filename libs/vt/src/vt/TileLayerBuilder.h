@@ -47,15 +47,14 @@ namespace carto { namespace vt {
     private:
         enum { RESERVED_VERTICES = 4096 };
 
-        // TODO: aggregate
-        struct StyleBuilderParameters : TileGeometry::StyleParameters {
+        struct BuilderParameters {
             TileGeometry::Type type;
-            std::array<StrokeMap::StrokeId, MAX_PARAMETERS> lineStrokeIds;
-            std::array<Font::CodePoint, MAX_PARAMETERS> pointGlyphIds;
+            std::array<StrokeMap::StrokeId, TileGeometry::StyleParameters::MAX_PARAMETERS> lineStrokeIds;
+            std::array<Font::CodePoint, TileGeometry::StyleParameters::MAX_PARAMETERS> pointGlyphIds;
             std::shared_ptr<StrokeMap> strokeMap;
             std::shared_ptr<GlyphMap> glyphMap;
 
-            StyleBuilderParameters() : StyleParameters(), type(TileGeometry::Type::NONE), lineStrokeIds(), pointGlyphIds(), strokeMap(), glyphMap() { }
+            BuilderParameters() : type(TileGeometry::Type::NONE), lineStrokeIds(), pointGlyphIds(), strokeMap(), glyphMap() { }
         };
 
         void appendGeometry();
@@ -68,9 +67,10 @@ namespace carto { namespace vt {
         bool tesselateLine(const Vertices& points, char styleIndex, const StrokeMap::Stroke* stroke, const LineStyle& style);
         bool tesselateLineEndPoint(const Vertex& p0, float u0, float v0, float v1, int i0, const cglib::vec2<float>& tangent, const cglib::vec2<float>& binormal, char styleIndex, const LineStyle& style);
 
-        float _tileSize;
-        float _geomScale;
-        StyleBuilderParameters _styleParameters;
+        const float _tileSize;
+        const float _geomScale;
+        BuilderParameters _builderParameters;
+        TileGeometry::StyleParameters _styleParameters;
 
         VertexArray<cglib::vec2<float>> _vertices;
         VertexArray<cglib::vec2<float>> _texCoords;
