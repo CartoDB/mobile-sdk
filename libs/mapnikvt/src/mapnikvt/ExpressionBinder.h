@@ -13,107 +13,52 @@
 #include "vt/Color.h"
 #include "vt/Styles.h"
 
-#include <vector>
 #include <memory>
-
-#include <boost/variant.hpp>
-#include <boost/optional.hpp>
-#include <boost/lexical_cast.hpp>
-
-#include <cglib/mat.h>
+#include <functional>
 
 namespace carto { namespace mvt {
-    namespace exprbinderimpl {
-        struct Setter : public boost::static_visitor<> {
-            explicit Setter(const ExpressionContext& context) : _exprContext(context) { }
-
-            template <typename V>
-            void operator()(V & binding) const {
-                Value val = binding.expr->evaluate(_exprContext);
-                if (binding.object) {
-                    *binding.field = (binding.object->*binding.memberConvertFn)(val);
-                }
-                else {
-                    *binding.field = (*binding.convertFn)(val);
-                }
-            }
-
-        private:
-            const ExpressionContext& _exprContext;
-        };
-    }
-
-    template <typename T>
+    template <typename V>
     class ExpressionBinder {
     public:
         ExpressionBinder() = default;
 
-        template <typename V>
-        ExpressionBinder& bind(V* field, const std::shared_ptr<const Expression>& expr) {
+        ExpressionBinder& bind(V* field, const std::shared_ptr<const Expression>& expr, std::function<V(const Value& val)> convertFn) {
             if (auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(expr)) {
-                *field = ValueConverter<V>::convert(constExpr->getConstant());
+                *field = convertFn(constExpr->getConstant());
             }
             else {
-                _bindingMap.insert({ field, Binding<V>(field, expr, &ValueConverter<V>::convert) });
+                _bindingMap.insert({ field, Binding(expr, std::move(convertFn)) });
             }
             return *this;
         }
 
-        template <typename V>
-        ExpressionBinder& bind(V* field, const std::shared_ptr<const Expression>& expr, V(*convertFn)(const Value& val)) {
-            if (auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(expr)) {
-                *field = (*convertFn)(constExpr->getConstant());
-            }
-            else {
-                _bindingMap.insert({ field, Binding<V>(field, expr, convertFn) });
-            }
-            return *this;
-        }
-
-        template <typename V>
-        ExpressionBinder& bind(V* field, const std::shared_ptr<const Expression>& expr, V (T::*memberConvertFn)(const Value& val) const, const T* object) {
-            if (auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(expr)) {
-                *field = (object->*memberConvertFn)(constExpr->getConstant());
-            }
-            else {
-                _bindingMap.insert({ field, Binding<V>(field, expr, memberConvertFn, object) });
-            }
-            return *this;
-        }
-
-        void evaluate(const FeatureExpressionContext& context) const {
+        void update(const FeatureExpressionContext& context) const {
             for (auto it = _bindingMap.begin(); it != _bindingMap.end(); it++) {
-                const BindingVariant& binding = it->second;
-                boost::apply_visitor(exprbinderimpl::Setter(context), binding);
+                const Binding& binding = it->second;
+                Value val = binding.expr->evaluate(context);
+                *it->first = binding.convertFn(val);
             }
         }
 
     private:
-        template <typename V>
         struct Binding {
-            V* field;
             std::shared_ptr<const Expression> expr;
-            V(*convertFn)(const Value&) = nullptr;
-            V (T::*memberConvertFn)(const Value&) const = nullptr;
-            const T* object = nullptr;
+            std::function<V(const Value&)> convertFn;
 
-            explicit Binding(V* field, std::shared_ptr<const Expression> expr, V(*convertFn)(const Value&)) : field(field), expr(std::move(expr)), convertFn(convertFn) { }
-            explicit Binding(V* field, std::shared_ptr<const Expression> expr, V (T::*memberConvertFn)(const Value&) const, const T* object) : field(field), expr(std::move(expr)), memberConvertFn(memberConvertFn), object(object) { }
+            explicit Binding(std::shared_ptr<const Expression> expr, std::function<V(const Value&)> convertFn) : expr(std::move(expr)), convertFn(std::move(convertFn)) { }
         };
 
-        using BindingVariant = boost::variant<Binding<bool>, Binding<int>, Binding<float>, Binding<std::string>, Binding<vt::Color>, Binding<cglib::mat3x3<float>>, Binding<boost::optional<cglib::mat3x3<float>>>>;
-
-        std::vector<std::shared_ptr<const Expression>> _exprs;
-        std::map<void *, BindingVariant> _bindingMap;
+        std::map<V*, Binding> _bindingMap;
     };
 
+    template <typename V>
     class ExpressionFunctionBinder {
     public:
         ExpressionFunctionBinder() = default;
 
-        ExpressionFunctionBinder& bind(std::shared_ptr<const vt::FloatFunction>* field, const std::shared_ptr<const Expression>& expr) {
+        ExpressionFunctionBinder& bind(std::shared_ptr<const V>* field, const std::shared_ptr<const Expression>& expr) {
             if (auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(expr)) {
-                *field = buildFloatFunction(expr);
+                *field = buildFunction(expr);
             }
             else {
                 _bindingMap.insert({ field, expr });
@@ -121,21 +66,21 @@ namespace carto { namespace mvt {
             return *this;
         }
 
-        void evaluate(const FeatureExpressionContext& context) const {
+        void update(const FeatureExpressionContext& context) const {
             for (auto it = _bindingMap.begin(); it != _bindingMap.end(); it++) {
                 std::shared_ptr<const Expression> expr = simplifyExpression(it->second, context);
-                *it->first = buildFloatFunction(expr);
+                *it->first = buildFunction(expr);
             }
         }
 
     private:
-        std::shared_ptr<const vt::FloatFunction> buildFloatFunction(const std::shared_ptr<const Expression>& expr) const {
+        std::shared_ptr<const V> buildFunction(const std::shared_ptr<const Expression>& expr) const {
             for (auto it = _functionCache.begin(); it != _functionCache.end(); it++) {
                 if (it->first->equals(expr)) {
                     return it->second;
                 }
             }
-            auto func = std::make_shared<vt::FloatFunction>([expr](const vt::ViewState& viewState) {
+            auto func = std::make_shared<const V>([expr](const vt::ViewState& viewState) {
                 ViewExpressionContext context;
                 context.setZoom(viewState.zoom);
                 return ValueConverter<float>::convert(expr->evaluate(context));
@@ -166,8 +111,8 @@ namespace carto { namespace mvt {
             });
         }
 
-        std::map<std::shared_ptr<const vt::FloatFunction>*, std::shared_ptr<const Expression>> _bindingMap;
-        mutable std::map<std::shared_ptr<const Expression>, std::shared_ptr<const vt::FloatFunction>> _functionCache;
+        std::map<std::shared_ptr<const V>*, std::shared_ptr<const Expression>> _bindingMap;
+        mutable std::map<std::shared_ptr<const Expression>, std::shared_ptr<const V>> _functionCache;
     };
 } }
 

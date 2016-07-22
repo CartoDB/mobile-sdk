@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <mutex>
+#include <functional>
 
 #include <cglib/mat.h>
 
@@ -54,38 +55,48 @@ namespace carto { namespace mvt {
 
         template <typename V>
         void bind(V* field, const std::shared_ptr<const Expression>& expr) {
-            _binder.bind(field, expr);
+            bindParameter(field, expr, std::function<V(const Value&)>(ValueConverter<V>::convert));
             if (!std::dynamic_pointer_cast<const ConstExpression>(expr)) {
                 _parameterExprs.push_back(expr);
             }
         }
 
         template <typename V>
-        void bind(V* field, const std::shared_ptr<const Expression>& expr, V (*convertFn)(const Value& val)) {
-            _binder.bind(field, expr, convertFn);
+        void bind(V* field, const std::shared_ptr<const Expression>& expr, V(*convertFn)(const Value&)) {
+            bindParameter(field, expr, std::function<V(const Value&)>(convertFn));
             if (!std::dynamic_pointer_cast<const ConstExpression>(expr)) {
                 _parameterExprs.push_back(expr);
             }
         }
 
         template <typename V>
-        void bind(V* field, const std::shared_ptr<const Expression>& expr, V (Symbolizer::*memberConvertFn)(const Value& val) const) {
-            _binder.bind(field, expr, memberConvertFn, this);
+        void bind(V* field, const std::shared_ptr<const Expression>& expr, V(Symbolizer::*memberConvertFn)(const Value&) const) {
+            bindParameter(field, expr, [this, memberConvertFn](const Value& val) -> V {
+                return (this->*memberConvertFn)(val);
+            });
             if (!std::dynamic_pointer_cast<const ConstExpression>(expr)) {
                 _parameterExprs.push_back(expr);
             }
         }
 
-        void bind(std::shared_ptr<const vt::FloatFunction>* field, const std::shared_ptr<const Expression>& expr) {
-            _functionBinder.bind(field, expr);
+        template <typename V>
+        void bind(std::shared_ptr<const V>* field, const std::shared_ptr<const Expression>& expr) {
+            bindParameter(field, expr);
             if (!std::dynamic_pointer_cast<const ConstExpression>(expr)) {
                 _parameterExprs.push_back(expr);
             }
         }
 
         void updateBindings(const FeatureExpressionContext& exprContext) {
-            _binder.evaluate(exprContext);
-            _functionBinder.evaluate(exprContext);
+            _boolBinder.update(exprContext);
+            _intBinder.update(exprContext);
+            _floatBinder.update(exprContext);
+            _colorBinder.update(exprContext);
+            _stringBinder.update(exprContext);
+            _matrixBinder.update(exprContext);
+            _optionalMatrixBinder.update(exprContext);
+            _floatFunctionBinder.update(exprContext);
+            _colorFunctionBinder.update(exprContext);
         }
 
         mutable std::mutex _mutex; // guards internal state as bindings may update it
@@ -93,9 +104,54 @@ namespace carto { namespace mvt {
         std::shared_ptr<Logger> _logger;
 
     private:
-        ExpressionBinder<Symbolizer> _binder;
-        ExpressionFunctionBinder _functionBinder;
+        void bindParameter(bool* field, const std::shared_ptr<const Expression>& expr, const std::function<bool(const Value&)>& convertFn) {
+            _boolBinder.bind(field, expr, convertFn);
+        }
+
+        void bindParameter(int* field, const std::shared_ptr<const Expression>& expr, const std::function<int(const Value&)>& convertFn) {
+            _intBinder.bind(field, expr, convertFn);
+        }
+
+        void bindParameter(float* field, const std::shared_ptr<const Expression>& expr, const std::function<float(const Value&)>& convertFn) {
+            _floatBinder.bind(field, expr, convertFn);
+        }
+
+        void bindParameter(vt::Color* field, const std::shared_ptr<const Expression>& expr, const std::function<vt::Color(const Value&)>& convertFn) {
+            _colorBinder.bind(field, expr, convertFn);
+        }
+
+        void bindParameter(std::string* field, const std::shared_ptr<const Expression>& expr, const std::function<std::string(const Value&)>& convertFn) {
+            _stringBinder.bind(field, expr, convertFn);
+        }
+
+        void bindParameter(cglib::mat<float, 3, cglib::float_traits<float>>* field, const std::shared_ptr<const Expression>& expr, const std::function<cglib::mat<float, 3, cglib::float_traits<float>>(const Value&)>& convertFn) {
+            _matrixBinder.bind(field, expr, convertFn);
+        }
+
+        void bindParameter(boost::optional<cglib::mat<float, 3, cglib::float_traits<float>>>* field, const std::shared_ptr<const Expression>& expr, const std::function<boost::optional<cglib::mat<float, 3, cglib::float_traits<float>>>(const Value&)>& convertFn) {
+            _optionalMatrixBinder.bind(field, expr, convertFn);
+        }
+
+        void bindParameter(std::shared_ptr<const vt::FloatFunction>* field, const std::shared_ptr<const Expression>& expr) {
+            _floatFunctionBinder.bind(field, expr);
+        }
+
+        void bindParameter(std::shared_ptr<const vt::ColorFunction>* field, const std::shared_ptr<const Expression>& expr) {
+            _colorFunctionBinder.bind(field, expr);
+        }
+
+        ExpressionBinder<bool> _boolBinder;
+        ExpressionBinder<int> _intBinder;
+        ExpressionBinder<float> _floatBinder;
+        ExpressionBinder<vt::Color> _colorBinder;
+        ExpressionBinder<std::string> _stringBinder;
+        ExpressionBinder<cglib::mat<float, 3, cglib::float_traits<float>>> _matrixBinder;
+        ExpressionBinder<boost::optional<cglib::mat<float, 3, cglib::float_traits<float>>>> _optionalMatrixBinder;
+        ExpressionFunctionBinder<vt::FloatFunction> _floatFunctionBinder;
+        ExpressionFunctionBinder<vt::ColorFunction> _colorFunctionBinder;
+        
         std::map<std::string, std::string> _parameterMap;
+        
         std::vector<std::shared_ptr<const Expression>> _parameterExprs;
     };
 } }

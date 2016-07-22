@@ -50,7 +50,7 @@ namespace carto { namespace mvt {
         }
 
         std::shared_ptr<const vt::FloatFunction> widthFunc;
-        ExpressionFunctionBinder().bind(&widthFunc, std::make_shared<ConstExpression>(Value(width))).evaluate(exprContext);
+        ExpressionFunctionBinder<vt::FloatFunction>().bind(&widthFunc, std::make_shared<ConstExpression>(Value(width))).update(exprContext);
 
         vt::PointStyle style(compOp, fill, widthFunc, symbolizerContext.getGlyphMap(), bitmap, boost::optional<cglib::mat3x3<float>>());
 
