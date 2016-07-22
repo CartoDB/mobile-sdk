@@ -99,27 +99,27 @@ namespace carto {
         case PlatformType::PLATFORM_TYPE_ANDROID:
             appParam = "packageName";
             sdkProduct = "sdk-android-";
-            platformId = "Android";
+            platformId = "android";
             break;
         case PlatformType::PLATFORM_TYPE_IOS:
             appParam = "bundleIdentifier";
             sdkProduct = "sdk-ios-";
-            platformId = "iOS";
+            platformId = "ios";
             break;
         case PlatformType::PLATFORM_TYPE_XAMARIN_ANDROID:
             appParam = "packageName";
             sdkProduct = "sdk-xamarin-android-";
-            platformId = "Xamarin Android";
+            platformId = "xamarin-android";
             break;
         case PlatformType::PLATFORM_TYPE_XAMARIN_IOS:
             appParam = "bundleIdentifier";
             sdkProduct = "sdk-xamarin-ios-";
-            platformId = "Xamarin iOS";
+            platformId = "xamarin-ios";
             break;
         case PlatformType::PLATFORM_TYPE_WINDOWS_PHONE:
             appParam = "productId";
             sdkProduct = "sdk-winphone-";
-            platformId = "Windows Phone";
+            platformId = "windows-phone";
             break;
         default:
             return false;
@@ -277,9 +277,9 @@ namespace carto {
             return false;
         }
         WatermarkType watermarkType = EVALUATION_WATERMARK;
-        if (it->second == "carto") {
+        if (it->second == "carto" || it->second == "nutiteq") {
             watermarkType = CARTO_WATERMARK;
-        } else if (it->second == "evaluation") {
+        } else if (it->second == "evaluation" || it->second == "development") {
             watermarkType = EVALUATION_WATERMARK;
         } else if (it->second == "custom") {
             watermarkType = CUSTOM_WATERMARK;
@@ -341,12 +341,16 @@ namespace carto {
         // Request new license from server
         std::map<std::string, std::string> params;
         params["device"] = PlatformUtils::GetDeviceId();
-        params["user_key"] = getUserKey();
+//        params["user_key"] = getUserKey();
         params["platform"] = platformId;
-        std::string url = NetworkUtils::BuildURLFromParameters(LICENSE_SERVICE_URL + NetworkUtils::URLEncode(PlatformUtils::GetAppIdentifier()) + "/getUserLicense", params);
+        std::string url = NetworkUtils::BuildURLFromParameters(LICENSE_SERVICE_URL + NetworkUtils::URLEncode(PlatformUtils::GetAppIdentifier()) + "/getLicense", params);
         std::shared_ptr<BinaryData> responseData;
         if (!NetworkUtils::GetHTTP(url, responseData, false)) {
-            Log::Warnf("LicenseManager::updateOnlineLicense: Failed to update license");
+            std::string result;
+            if (responseData) {
+                result = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+            }
+            Log::Warnf("LicenseManager::updateOnlineLicense: Failed to update license: %s", result.c_str());
             return std::string();
         }
         std::string licenseKey;
@@ -359,7 +363,7 @@ namespace carto {
                 return std::string();
             }
             if (responseDoc.is<picojson::value::object>()) {
-                const picojson::value& licenseCode = responseDoc.get("license_code");
+                const picojson::value& licenseCode = responseDoc.get("license_key");
                 if (licenseCode.is<std::string>()) {
                     licenseKey = licenseCode.get<std::string>();
                 }
