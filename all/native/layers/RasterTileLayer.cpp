@@ -339,7 +339,7 @@ namespace carto {
             break;
         }
 
-        vt::TileLayerBuilder tileLayerBuilder(256.0f); // Note: the size argument is ignored
+        vt::TileLayerBuilder tileLayerBuilder(256.0f, 1.0f); // Note: the size/scale argument is ignored
         tileLayerBuilder.addBitmap(tileBitmap);
         std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.build(0, 1.0f, boost::optional<vt::CompOp>());
 

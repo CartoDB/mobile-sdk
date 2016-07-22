@@ -34,7 +34,7 @@ namespace carto { namespace mvt {
         return boost::trim_copy(str);
     }
 
-    std::string generateExpressionString(const std::shared_ptr<Expression>& expr) {
+    std::string generateExpressionString(const std::shared_ptr<const Expression>& expr) {
         std::string str;
         std::back_insert_iterator<std::string> it(str);
         exprgenimpl::encoding::space_type space;
@@ -45,7 +45,7 @@ namespace carto { namespace mvt {
         return boost::trim_copy(str);
     }
 
-    std::string generateStringExpressionString(const std::shared_ptr<Expression>& expr) {
+    std::string generateStringExpressionString(const std::shared_ptr<const Expression>& expr) {
         std::string str;
         std::back_insert_iterator<std::string> it(str);
         exprgenimpl::encoding::space_type space;

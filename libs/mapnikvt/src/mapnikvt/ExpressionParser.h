@@ -152,29 +152,29 @@ namespace carto { namespace mvt {
                 return std::make_shared<ConstExpression>(std::move(val));
             }
 
-            static std::shared_ptr<Expression> makeVariableExpression(std::shared_ptr<Expression> expr) {
+            static std::shared_ptr<Expression> makeVariableExpression(std::shared_ptr<const Expression> expr) {
                 return std::make_shared<VariableExpression>(std::move(expr));
             }
 
-            static std::shared_ptr<Expression> makeNotPredicate(std::shared_ptr<Expression> expr) {
-                std::shared_ptr<Predicate> exprPred;
-                if (auto predExpr = std::dynamic_pointer_cast<PredicateExpression>(expr)) {
+            static std::shared_ptr<Expression> makeNotPredicate(std::shared_ptr<const Expression> expr) {
+                std::shared_ptr<const Predicate> exprPred;
+                if (auto predExpr = std::dynamic_pointer_cast<const PredicateExpression>(expr)) {
                     exprPred = predExpr->getPredicate();
                 } else {
-                    exprPred = std::make_shared<ExpressionPredicate>(expr);
+                    exprPred = std::make_shared<const ExpressionPredicate>(expr);
                 }
                 return std::make_shared<PredicateExpression>(std::make_shared<NotPredicate>(exprPred));
             }
 
-            static std::shared_ptr<Expression> makeOrPredicate(std::shared_ptr<Expression> expr1, std::shared_ptr<Expression> expr2) {
-                std::shared_ptr<Predicate> exprPred1, exprPred2;
-                if (auto predExpr1 = std::dynamic_pointer_cast<PredicateExpression>(expr1)) {
+            static std::shared_ptr<Expression> makeOrPredicate(std::shared_ptr<const Expression> expr1, std::shared_ptr<const Expression> expr2) {
+                std::shared_ptr<const Predicate> exprPred1, exprPred2;
+                if (auto predExpr1 = std::dynamic_pointer_cast<const PredicateExpression>(expr1)) {
                     exprPred1 = predExpr1->getPredicate();
                 }
                 else {
                     exprPred1 = std::make_shared<ExpressionPredicate>(expr1);
                 }
-                if (auto predExpr2 = std::dynamic_pointer_cast<PredicateExpression>(expr2)) {
+                if (auto predExpr2 = std::dynamic_pointer_cast<const PredicateExpression>(expr2)) {
                     exprPred2 = predExpr2->getPredicate();
                 }
                 else {
@@ -183,15 +183,15 @@ namespace carto { namespace mvt {
                 return std::make_shared<PredicateExpression>(std::make_shared<OrPredicate>(exprPred1, exprPred2));
             }
 
-            static std::shared_ptr<Expression> makeAndPredicate(std::shared_ptr<Expression> expr1, std::shared_ptr<Expression> expr2) {
-                std::shared_ptr<Predicate> exprPred1, exprPred2;
-                if (auto predExpr1 = std::dynamic_pointer_cast<PredicateExpression>(expr1)) {
+            static std::shared_ptr<Expression> makeAndPredicate(std::shared_ptr<const Expression> expr1, std::shared_ptr<const Expression> expr2) {
+                std::shared_ptr<const Predicate> exprPred1, exprPred2;
+                if (auto predExpr1 = std::dynamic_pointer_cast<const PredicateExpression>(expr1)) {
                     exprPred1 = predExpr1->getPredicate();
                 }
                 else {
                     exprPred1 = std::make_shared<ExpressionPredicate>(expr1);
                 }
-                if (auto predExpr2 = std::dynamic_pointer_cast<PredicateExpression>(expr2)) {
+                if (auto predExpr2 = std::dynamic_pointer_cast<const PredicateExpression>(expr2)) {
                     exprPred2 = predExpr2->getPredicate();
                 }
                 else {
@@ -201,22 +201,22 @@ namespace carto { namespace mvt {
             }
 
             template <typename Op>
-            static std::shared_ptr<Expression> makeComparisonPredicate(std::shared_ptr<Expression> expr1, std::shared_ptr<Expression> expr2) {
+            static std::shared_ptr<Expression> makeComparisonPredicate(std::shared_ptr<const Expression> expr1, std::shared_ptr<const Expression> expr2) {
                 return std::make_shared<PredicateExpression>(std::make_shared<ComparisonPredicate>(std::make_shared<Op>(), std::move(expr1), std::move(expr2)));
             }
 
             template <typename Op>
-            static std::shared_ptr<Expression> makeUnaryExpression(std::shared_ptr<Expression> expr) {
+            static std::shared_ptr<Expression> makeUnaryExpression(std::shared_ptr<const Expression> expr) {
                 return std::make_shared<UnaryExpression>(std::make_shared<Op>(), std::move(expr));
             }
 
             template <typename Op>
-            static std::shared_ptr<Expression> makeBinaryExpression(std::shared_ptr<Expression> expr1, std::shared_ptr<Expression> expr2) {
+            static std::shared_ptr<Expression> makeBinaryExpression(std::shared_ptr<const Expression> expr1, std::shared_ptr<const Expression> expr2) {
                 return std::make_shared<BinaryExpression>(std::make_shared<Op>(), std::move(expr1), std::move(expr2));
             }
 
             template <typename Op>
-            static std::shared_ptr<Expression> makeTertiaryExpression(std::shared_ptr<Expression> expr1, std::shared_ptr<Expression> expr2, std::shared_ptr<Expression> expr3) {
+            static std::shared_ptr<Expression> makeTertiaryExpression(std::shared_ptr<const Expression> expr1, std::shared_ptr<const Expression> expr2, std::shared_ptr<const Expression> expr3) {
                 return std::make_shared<TertiaryExpression>(std::make_shared<Op>(), std::move(expr1), std::move(expr2), std::move(expr3));
             }
         };

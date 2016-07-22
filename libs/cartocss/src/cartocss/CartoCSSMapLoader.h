@@ -47,7 +47,7 @@ namespace carto { namespace css {
             int order = 0;
             float opacity = 1.0f;
             std::string compOp;
-            std::vector<std::shared_ptr<mvt::Rule>> rules;
+            std::vector<std::shared_ptr<const mvt::Rule>> rules;
         };
         
         template <typename T>

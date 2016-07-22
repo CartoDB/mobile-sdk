@@ -21,7 +21,7 @@ namespace carto { namespace mvt {
         void setTextExpression(std::shared_ptr<Expression> textExpression);
         const std::shared_ptr<Expression>& getTextExpression() const;
         
-        virtual void build(const FeatureCollection& featureCollection, const SymbolizerContext& symbolizerContext, const ExpressionContext& exprContext, vt::TileLayerBuilder& layerBuilder) override;
+        virtual void build(const FeatureCollection& featureCollection, const FeatureExpressionContext& exprContext, const SymbolizerContext& symbolizerContext, vt::TileLayerBuilder& layerBuilder) override;
 
     protected:
         virtual void bindParameter(const std::string& name, const std::string& value) override;

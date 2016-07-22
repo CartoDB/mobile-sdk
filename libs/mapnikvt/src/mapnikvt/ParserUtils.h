@@ -11,7 +11,7 @@
 #include "Expression.h"
 #include "Transform.h"
 #include "vt/Color.h"
-#include "vt/TileLayerStyles.h"
+#include "vt/Styles.h"
 
 #include <stdexcept>
 #include <memory>

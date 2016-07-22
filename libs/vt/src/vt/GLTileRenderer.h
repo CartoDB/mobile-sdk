@@ -8,6 +8,7 @@
 #define _CARTO_VT_GLTILERENDERER_H_
 
 #include "Color.h"
+#include "ViewState.h"
 #include "Tile.h"
 #include "GLExtensions.h"
 #include "GLShaderManager.h"
@@ -158,7 +159,7 @@ namespace carto { namespace vt {
         cglib::mat4x4<double> _cameraProjMatrix;
         cglib::frustum3<double> _frustum;
         cglib::mat4x4<double> _labelMatrix;
-        TileLabel::ViewState _labelViewState;
+        ViewState _viewState;
         VertexArray<cglib::vec3<float>> _labelVertices;
         VertexArray<cglib::vec2<float>> _labelTexCoords;
         VertexArray<cglib::vec4<float>> _labelColors;

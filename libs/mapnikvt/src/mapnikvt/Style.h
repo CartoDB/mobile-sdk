@@ -27,26 +27,26 @@ namespace carto { namespace mvt {
             FIRST
         };
 
-        explicit Style(std::string name, float opacity, std::string compOp, FilterMode filterMode, std::vector<std::shared_ptr<Rule>> rules);
+        explicit Style(std::string name, float opacity, std::string compOp, FilterMode filterMode, std::vector<std::shared_ptr<const Rule>> rules);
 
         const std::string& getName() const { return _name; }
         float getOpacity() const { return _opacity; }
         const std::string& getCompOp() const { return _compOp; }
         FilterMode getFilterMode() const { return _filterMode; }
-        const std::vector<std::shared_ptr<Rule>>& getRules() const { return _rules; }
+        const std::vector<std::shared_ptr<const Rule>>& getRules() const { return _rules; }
             
-        const std::vector<std::shared_ptr<Rule>>& getZoomRules(int zoom) const;
+        const std::vector<std::shared_ptr<const Rule>>& getZoomRules(int zoom) const;
 
-        const std::unordered_set<std::shared_ptr<Expression>>& getReferencedFields(int zoom) const;
+        const std::unordered_set<std::shared_ptr<const Expression>>& getReferencedFields(int zoom) const;
 
     private:
         const std::string _name;
         const float _opacity;
         const std::string _compOp;
         const FilterMode _filterMode;
-        const std::vector<std::shared_ptr<Rule>> _rules;
-        std::unordered_map<int, std::vector<std::shared_ptr<Rule>>> _zoomRuleMap;
-        std::unordered_map<int, std::unordered_set<std::shared_ptr<Expression>>> _zoomFieldExprsMap;
+        const std::vector<std::shared_ptr<const Rule>> _rules;
+        std::unordered_map<int, std::vector<std::shared_ptr<const Rule>>> _zoomRuleMap;
+        std::unordered_map<int, std::unordered_set<std::shared_ptr<const Expression>>> _zoomFieldExprsMap;
     };
 } }
 

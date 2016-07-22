@@ -98,7 +98,7 @@ namespace carto { namespace mvt {
                 ruleNode.append_child("MinScaleDenominator").append_child(pugi::node_pcdata).set_value(boost::lexical_cast<std::string>(zoom2ScaleDenominator(rule.getMaxZoom())).c_str());
                 ruleNode.append_child("MaxScaleDenominator").append_child(pugi::node_pcdata).set_value(boost::lexical_cast<std::string>(zoom2ScaleDenominator(rule.getMinZoom())).c_str());
                 
-                if (std::shared_ptr<Filter> filter = rule.getFilter()) {
+                if (std::shared_ptr<const Filter> filter = rule.getFilter()) {
                     pugi::xml_node filterNode;
                     switch (filter->getType()) {
                     case Filter::Type::FILTER:
@@ -111,7 +111,7 @@ namespace carto { namespace mvt {
                         filterNode = ruleNode.append_child("AlsoFilter");
                         break;
                     }
-                    if (std::shared_ptr<Predicate> pred = filter->getPredicate()) {
+                    if (std::shared_ptr<const Predicate> pred = filter->getPredicate()) {
                         filterNode.append_child(pugi::node_pcdata).set_value(generateExpressionString(std::make_shared<PredicateExpression>(pred)).c_str());
                     }
                 }

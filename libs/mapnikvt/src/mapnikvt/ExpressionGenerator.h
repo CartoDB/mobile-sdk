@@ -31,7 +31,7 @@ namespace carto { namespace mvt {
         namespace encoding = boost::spirit::iso8859_1;
 
         template <typename OutputIterator, bool StringExpression>
-        struct Grammar : karma::grammar<OutputIterator, std::shared_ptr<Expression>()> {
+        struct Grammar : karma::grammar<OutputIterator, std::shared_ptr<const Expression>()> {
             Grammar() : Grammar::base_type(StringExpression ? stringExpression : genericExpression) {
                 using karma::_pass;
                 using karma::_val;
@@ -120,13 +120,13 @@ namespace carto { namespace mvt {
 
             ValueGenerator<OutputIterator> constant;
             karma::rule<OutputIterator, std::string()> string;
-            karma::rule<OutputIterator, std::shared_ptr<Expression>()> stringExpression, genericExpression;
-            karma::rule<OutputIterator, std::shared_ptr<Expression>(), encoding::space_type> expression, term0, term1, term2, term3, unary, postfix, factor;
-            karma::rule<OutputIterator, std::shared_ptr<Predicate>(), encoding::space_type> predicate;
+            karma::rule<OutputIterator, std::shared_ptr<const Expression>()> stringExpression, genericExpression;
+            karma::rule<OutputIterator, std::shared_ptr<const Expression>(), encoding::space_type> expression, term0, term1, term2, term3, unary, postfix, factor;
+            karma::rule<OutputIterator, std::shared_ptr<const Predicate>(), encoding::space_type> predicate;
 
         private:
-            static bool getString(const std::shared_ptr<Expression>& expr, std::string& str) {
-                if (auto constExpr = std::dynamic_pointer_cast<ConstExpression>(expr)) {
+            static bool getString(const std::shared_ptr<const Expression>& expr, std::string& str) {
+                if (auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(expr)) {
                     Value val = constExpr->getConstant();
                     if (auto s = boost::get<std::string>(&val)) {
                         str = *s;
@@ -136,41 +136,41 @@ namespace carto { namespace mvt {
                 return false;
             }
 
-            static bool getConstant(const std::shared_ptr<Expression>& expr, Value& val) {
-                if (auto constExpr = std::dynamic_pointer_cast<ConstExpression>(expr)) {
+            static bool getConstant(const std::shared_ptr<const Expression>& expr, Value& val) {
+                if (auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(expr)) {
                     val = constExpr->getConstant();
                     return true;
                 }
                 return false;
             }
 
-            static bool getVariableExpression(const std::shared_ptr<Expression>& expr, std::shared_ptr<Expression>& expr1) {
-                if (auto varExpr = std::dynamic_pointer_cast<VariableExpression>(expr)) {
+            static bool getVariableExpression(const std::shared_ptr<const Expression>& expr, std::shared_ptr<const Expression>& expr1) {
+                if (auto varExpr = std::dynamic_pointer_cast<const VariableExpression>(expr)) {
                     expr1 = varExpr->getVariableExpression();
                     return true;
                 }
                 return false;
             }
 
-            static bool getExpressionPredicate(const std::shared_ptr<Expression>& expr, std::shared_ptr<Predicate>& pred1) {
-                if (auto predExpr = std::dynamic_pointer_cast<PredicateExpression>(expr)) {
+            static bool getExpressionPredicate(const std::shared_ptr<const Expression>& expr, std::shared_ptr<const Predicate>& pred1) {
+                if (auto predExpr = std::dynamic_pointer_cast<const PredicateExpression>(expr)) {
                     pred1 = predExpr->getPredicate();
                     return true;
                 }
                 return false;
             }
 
-            static bool getPredicateExpression(const std::shared_ptr<Predicate>& pred, std::shared_ptr<Expression>& expr1) {
-                if (auto exprPred = std::dynamic_pointer_cast<ExpressionPredicate>(pred)) {
+            static bool getPredicateExpression(const std::shared_ptr<const Predicate>& pred, std::shared_ptr<const Expression>& expr1) {
+                if (auto exprPred = std::dynamic_pointer_cast<const ExpressionPredicate>(pred)) {
                     expr1 = exprPred->getExpression();
                     return true;
                 }
                 return false;
             }
 
-            static bool getNotPredicate(const std::shared_ptr<Expression>& expr, std::shared_ptr<Expression>& expr1) {
-                if (auto predExpr = std::dynamic_pointer_cast<PredicateExpression>(expr)) {
-                    if (auto notPred = std::dynamic_pointer_cast<NotPredicate>(predExpr->getPredicate())) {
+            static bool getNotPredicate(const std::shared_ptr<const Expression>& expr, std::shared_ptr<const Expression>& expr1) {
+                if (auto predExpr = std::dynamic_pointer_cast<const PredicateExpression>(expr)) {
+                    if (auto notPred = std::dynamic_pointer_cast<const NotPredicate>(predExpr->getPredicate())) {
                         expr1 = std::make_shared<PredicateExpression>(notPred->getPredicate());
                         return true;
                     }
@@ -178,9 +178,9 @@ namespace carto { namespace mvt {
                 return false;
             }
 
-            static bool getOrPredicate(const std::shared_ptr<Expression>& expr, std::shared_ptr<Expression>& expr1, std::shared_ptr<Expression>& expr2) {
-                if (auto predExpr = std::dynamic_pointer_cast<PredicateExpression>(expr)) {
-                    if (auto orPred = std::dynamic_pointer_cast<OrPredicate>(predExpr->getPredicate())) {
+            static bool getOrPredicate(const std::shared_ptr<const Expression>& expr, std::shared_ptr<const Expression>& expr1, std::shared_ptr<const Expression>& expr2) {
+                if (auto predExpr = std::dynamic_pointer_cast<const PredicateExpression>(expr)) {
+                    if (auto orPred = std::dynamic_pointer_cast<const OrPredicate>(predExpr->getPredicate())) {
                         expr1 = std::make_shared<PredicateExpression>(orPred->getPredicate1());
                         expr2 = std::make_shared<PredicateExpression>(orPred->getPredicate2());
                         return true;
@@ -189,9 +189,9 @@ namespace carto { namespace mvt {
                 return false;
             }
 
-            static bool getAndPredicate(const std::shared_ptr<Expression>& expr, std::shared_ptr<Expression>& expr1, std::shared_ptr<Expression>& expr2) {
-                if (auto predExpr = std::dynamic_pointer_cast<PredicateExpression>(expr)) {
-                    if (auto andPred = std::dynamic_pointer_cast<AndPredicate>(predExpr->getPredicate())) {
+            static bool getAndPredicate(const std::shared_ptr<const Expression>& expr, std::shared_ptr<const Expression>& expr1, std::shared_ptr<const Expression>& expr2) {
+                if (auto predExpr = std::dynamic_pointer_cast<const PredicateExpression>(expr)) {
+                    if (auto andPred = std::dynamic_pointer_cast<const AndPredicate>(predExpr->getPredicate())) {
                         expr1 = std::make_shared<PredicateExpression>(andPred->getPredicate1());
                         expr2 = std::make_shared<PredicateExpression>(andPred->getPredicate2());
                         return true;
@@ -201,10 +201,10 @@ namespace carto { namespace mvt {
             }
 
             template <typename Op>
-            static bool getComparisonPredicate(const std::shared_ptr<Expression>& expr, std::shared_ptr<Expression>& expr1, std::shared_ptr<Expression>& expr2) {
-                if (auto predExpr = std::dynamic_pointer_cast<PredicateExpression>(expr)) {
-                    if (auto comparisonPred = std::dynamic_pointer_cast<ComparisonPredicate>(predExpr->getPredicate())) {
-                        if (std::dynamic_pointer_cast<Op>(comparisonPred->getOperator())) {
+            static bool getComparisonPredicate(const std::shared_ptr<const Expression>& expr, std::shared_ptr<const Expression>& expr1, std::shared_ptr<const Expression>& expr2) {
+                if (auto predExpr = std::dynamic_pointer_cast<const PredicateExpression>(expr)) {
+                    if (auto comparisonPred = std::dynamic_pointer_cast<const ComparisonPredicate>(predExpr->getPredicate())) {
+                        if (std::dynamic_pointer_cast<const Op>(comparisonPred->getOperator())) {
                             expr1 = comparisonPred->getExpression1();
                             expr2 = comparisonPred->getExpression2();
                             return true;
@@ -215,9 +215,9 @@ namespace carto { namespace mvt {
             }
 
             template <typename Op>
-            static bool getUnaryExpression(const std::shared_ptr<Expression>& expr, std::shared_ptr<Expression>& expr1) {
-                if (auto unaryExpr = std::dynamic_pointer_cast<UnaryExpression>(expr)) {
-                    if (std::dynamic_pointer_cast<Op>(unaryExpr->getOperator())) {
+            static bool getUnaryExpression(const std::shared_ptr<const Expression>& expr, std::shared_ptr<const Expression>& expr1) {
+                if (auto unaryExpr = std::dynamic_pointer_cast<const UnaryExpression>(expr)) {
+                    if (std::dynamic_pointer_cast<const Op>(unaryExpr->getOperator())) {
                         expr1 = unaryExpr->getExpression();
                         return true;
                     }
@@ -226,9 +226,9 @@ namespace carto { namespace mvt {
             }
 
             template <typename Op>
-            static bool getBinaryExpression(const std::shared_ptr<Expression>& expr, std::shared_ptr<Expression>& expr1, std::shared_ptr<Expression>& expr2) {
-                if (auto binaryExpr = std::dynamic_pointer_cast<BinaryExpression>(expr)) {
-                    if (std::dynamic_pointer_cast<Op>(binaryExpr->getOperator())) {
+            static bool getBinaryExpression(const std::shared_ptr<const Expression>& expr, std::shared_ptr<const Expression>& expr1, std::shared_ptr<const Expression>& expr2) {
+                if (auto binaryExpr = std::dynamic_pointer_cast<const BinaryExpression>(expr)) {
+                    if (std::dynamic_pointer_cast<const Op>(binaryExpr->getOperator())) {
                         expr1 = binaryExpr->getExpression1();
                         expr2 = binaryExpr->getExpression2();
                         return true;
@@ -238,9 +238,9 @@ namespace carto { namespace mvt {
             }
 
             template <typename Op>
-            static bool getTertiaryExpression(const std::shared_ptr<Expression>& expr, std::shared_ptr<Expression>& expr1, std::shared_ptr<Expression>& expr2, std::shared_ptr<Expression>& expr3) {
-                if (auto tertiaryExpr = std::dynamic_pointer_cast<TertiaryExpression>(expr)) {
-                    if (std::dynamic_pointer_cast<Op>(tertiaryExpr->getOperator())) {
+            static bool getTertiaryExpression(const std::shared_ptr<const Expression>& expr, std::shared_ptr<const Expression>& expr1, std::shared_ptr<const Expression>& expr2, std::shared_ptr<const Expression>& expr3) {
+                if (auto tertiaryExpr = std::dynamic_pointer_cast<const TertiaryExpression>(expr)) {
+                    if (std::dynamic_pointer_cast<const Op>(tertiaryExpr->getOperator())) {
                         expr1 = tertiaryExpr->getExpression1();
                         expr2 = tertiaryExpr->getExpression2();
                         expr3 = tertiaryExpr->getExpression3();

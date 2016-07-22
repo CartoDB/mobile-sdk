@@ -11,7 +11,7 @@
 #include <tesselator.h>
 
 namespace carto { namespace vt {
-    TileLayerBuilder::TileLayerBuilder(float tileSize) : _tileSize(tileSize) {
+    TileLayerBuilder::TileLayerBuilder(float tileSize, float geomScale) : _tileSize(tileSize), _geomScale(geomScale) {
         _vertices.reserve(RESERVED_VERTICES);
         _texCoords.reserve(RESERVED_VERTICES);
         _binormals.reserve(RESERVED_VERTICES);
@@ -39,14 +39,14 @@ namespace carto { namespace vt {
         GlyphMap::GlyphId glyphId = style.glyphMap->loadBitmapGlyph(style.bitmap, 0);
         int styleIndex = _styleParameters.parameterCount;
         while (--styleIndex >= 0) {
-            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.widthTable[styleIndex] == style.size * 0.5f && _styleParameters.pointGlyphIds[styleIndex] == glyphId) {
+            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.widthTable[styleIndex] == style.size && _styleParameters.pointGlyphIds[styleIndex] == glyphId) {
                 break;
             }
         }
         if (styleIndex < 0) {
             styleIndex = _styleParameters.parameterCount++;
             _styleParameters.colorTable[styleIndex] = style.color;
-            _styleParameters.widthTable[styleIndex] = style.size * 0.5f;
+            _styleParameters.widthTable[styleIndex] = style.size;
             _styleParameters.pointGlyphIds[styleIndex] = glyphId;
         }
         for (const Vertex& point : vertices) {
@@ -339,7 +339,7 @@ namespace carto { namespace vt {
                 compressedIndices.append(static_cast<unsigned short>(index - offset));
             }
 
-            auto geometry = std::make_shared<TileGeometry>(_styleParameters.type, _tileSize, _styleParameters, geometryLayoutParameters, static_cast<unsigned int>(indices.size()), std::move(compressedVertexGeometry), std::move(compressedIndices));
+            auto geometry = std::make_shared<TileGeometry>(_styleParameters.type, _tileSize, _geomScale, _styleParameters, geometryLayoutParameters, static_cast<unsigned int>(indices.size()), std::move(compressedVertexGeometry), std::move(compressedIndices));
             _geometryList.push_back(std::move(geometry));
             return;
         }

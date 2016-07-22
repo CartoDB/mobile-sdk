@@ -29,9 +29,9 @@ namespace carto { namespace mvt {
 
         void setParameter(const std::string& name, const std::string& value);
         const std::map<std::string, std::string>& getParameterMap() const;
-        const std::vector<std::shared_ptr<Expression>>& getParameterExpressions() const;
+        const std::vector<std::shared_ptr<const Expression>>& getParameterExpressions() const;
 
-        virtual void build(const FeatureCollection& featureCollection, const SymbolizerContext& symbolizerContext, const ExpressionContext& exprContext, vt::TileLayerBuilder& layerBuilder) = 0;
+        virtual void build(const FeatureCollection& featureCollection, const FeatureExpressionContext& exprContext, const SymbolizerContext& symbolizerContext, vt::TileLayerBuilder& layerBuilder) = 0;
 
     protected:
         explicit Symbolizer(std::shared_ptr<Logger> logger) : _logger(std::move(logger)) { }
@@ -53,22 +53,39 @@ namespace carto { namespace mvt {
         static long long getMultiBitmapId(long long id, const std::string& file);
 
         template <typename V>
-        void bind(V* field, const std::shared_ptr<Expression>& expr) {
+        void bind(V* field, const std::shared_ptr<const Expression>& expr) {
             _binder.bind(field, expr);
+            if (!std::dynamic_pointer_cast<const ConstExpression>(expr)) {
+                _parameterExprs.push_back(expr);
+            }
         }
 
         template <typename V>
-        void bind(V* field, const std::shared_ptr<Expression>& expr, V (*convertFn)(const Value& val)) {
+        void bind(V* field, const std::shared_ptr<const Expression>& expr, V (*convertFn)(const Value& val)) {
             _binder.bind(field, expr, convertFn);
+            if (!std::dynamic_pointer_cast<const ConstExpression>(expr)) {
+                _parameterExprs.push_back(expr);
+            }
         }
 
         template <typename V>
-        void bind(V* field, const std::shared_ptr<Expression>& expr, V (Symbolizer::*memberConvertFn)(const Value& val) const) {
+        void bind(V* field, const std::shared_ptr<const Expression>& expr, V (Symbolizer::*memberConvertFn)(const Value& val) const) {
             _binder.bind(field, expr, memberConvertFn, this);
+            if (!std::dynamic_pointer_cast<const ConstExpression>(expr)) {
+                _parameterExprs.push_back(expr);
+            }
         }
 
-        void updateBindings(const ExpressionContext& exprContext) {
+        void bind(std::shared_ptr<const vt::FloatFunction>* field, const std::shared_ptr<const Expression>& expr) {
+            _functionBinder.bind(field, expr);
+            if (!std::dynamic_pointer_cast<const ConstExpression>(expr)) {
+                _parameterExprs.push_back(expr);
+            }
+        }
+
+        void updateBindings(const FeatureExpressionContext& exprContext) {
             _binder.evaluate(exprContext);
+            _functionBinder.evaluate(exprContext);
         }
 
         mutable std::mutex _mutex; // guards internal state as bindings may update it
@@ -77,7 +94,9 @@ namespace carto { namespace mvt {
 
     private:
         ExpressionBinder<Symbolizer> _binder;
+        ExpressionFunctionBinder _functionBinder;
         std::map<std::string, std::string> _parameterMap;
+        std::vector<std::shared_ptr<const Expression>> _parameterExprs;
     };
 } }
 

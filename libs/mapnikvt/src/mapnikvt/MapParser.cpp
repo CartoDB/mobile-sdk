@@ -106,14 +106,14 @@ namespace carto { namespace mvt {
                 }
             }
 
-            std::vector<std::shared_ptr<Rule>> rules;
+            std::vector<std::shared_ptr<const Rule>> rules;
             pugi::xpath_node_set ruleNodes = pugi::xpath_query("Rule").evaluate_node_set(styleNode);
             for (pugi::xpath_node_set::const_iterator ruleIt = ruleNodes.begin(); ruleIt != ruleNodes.end(); ++ruleIt) {
                 pugi::xml_node ruleNode = (*ruleIt).node();
                 std::string ruleName = ruleNode.attribute("name").as_string();
                 float minScaleDenominator = 0;
                 float maxScaleDenominator = std::numeric_limits<float>::infinity();
-                std::shared_ptr<Filter> filter;
+                std::shared_ptr<const Filter> filter;
                 std::vector<std::shared_ptr<Symbolizer>> symbolizers;
 
                 for (pugi::xml_node_iterator nodeIt = ruleNode.children().begin(); nodeIt != ruleNode.children().end(); ++nodeIt) {
@@ -129,7 +129,7 @@ namespace carto { namespace mvt {
                         std::string exprStr = node.text().as_string();
                         if (!exprStr.empty()) {
                             std::shared_ptr<Expression> expr = parseExpression(exprStr);
-                            std::shared_ptr<Predicate> pred;
+                            std::shared_ptr<const Predicate> pred;
                             if (auto predExpr = std::dynamic_pointer_cast<PredicateExpression>(expr)) {
                                 pred = predExpr->getPredicate();
                             } else {

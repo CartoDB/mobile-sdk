@@ -358,7 +358,7 @@ namespace {
 
 namespace carto { namespace vt {
     GLTileRenderer::GLTileRenderer(std::shared_ptr<std::mutex> mutex, std::shared_ptr<GLExtensions> glExtensions, float scale, bool useFBO, bool useDepth, bool useStencil) :
-        _lightDir(0.5f, 0.5f, -0.707f), _projectionMatrix(cglib::mat4x4<double>::identity()), _cameraMatrix(cglib::mat4x4<double>::identity()), _cameraProjMatrix(cglib::mat4x4<double>::identity()), _labelMatrix(cglib::mat4x4<double>::identity()), _labelViewState(cglib::mat4x4<double>::identity(), cglib::mat4x4<double>::identity(), 0, 1, scale), _scale(scale), _useFBO(useFBO), _useDepth(useDepth), _useStencil(useStencil), _glExtensions(std::move(glExtensions)), _mutex(std::move(mutex))
+        _lightDir(0.5f, 0.5f, -0.707f), _projectionMatrix(cglib::mat4x4<double>::identity()), _cameraMatrix(cglib::mat4x4<double>::identity()), _cameraProjMatrix(cglib::mat4x4<double>::identity()), _labelMatrix(cglib::mat4x4<double>::identity()), _viewState(cglib::mat4x4<double>::identity(), cglib::mat4x4<double>::identity(), 0, 1, scale), _scale(scale), _useFBO(useFBO), _useDepth(useDepth), _useStencil(useStencil), _glExtensions(std::move(glExtensions)), _mutex(std::move(mutex))
     {
         _blendNodes = std::make_shared<std::vector<std::shared_ptr<BlendNode>>>();
         _bitmapLabelMap[0] = _bitmapLabelMap[1] = std::make_shared<BitmapLabelMap>();
@@ -374,7 +374,7 @@ namespace carto { namespace vt {
         _halfResolution = resolution * 0.5f;
         _frustum = cglib::gl_projection_frustum(_cameraProjMatrix);
         _labelMatrix = calculateLocalViewMatrix(cameraMatrix);
-        _labelViewState = TileLabel::ViewState(projectionMatrix, cameraMatrix, zoom, aspectRatio, _scale);
+        _viewState = ViewState(projectionMatrix, cameraMatrix, zoom, aspectRatio, _scale);
     }
     
     void GLTileRenderer::setLightDir(const cglib::vec3<float>& lightDir) {
@@ -1134,7 +1134,7 @@ namespace carto { namespace vt {
             }
             
             std::size_t verticesSize = _labelVertices.size();
-            label->calculateVertexData(_labelViewState, _labelVertices, _labelTexCoords, _labelIndices);
+            label->calculateVertexData(_viewState, _labelVertices, _labelTexCoords, _labelIndices);
             Color color = label->getColor() * label->getOpacity();
             _labelColors.fill(color.rgba(), _labelVertices.size() - verticesSize);
 
@@ -1459,7 +1459,7 @@ namespace carto { namespace vt {
         if (geometry->getType() == TileGeometry::Type::POINT) {
             std::array<float, TileGeometry::StyleParameters::MAX_PARAMETERS> widths;
             for (int i = 0; i < styleParams.parameterCount; i++) {
-                float width = styleParams.widthTable[i] / geometry->getTileSize();
+                float width = 0.5f * (*styleParams.widthTable[i])(_viewState) * geometry->getGeometryScale() / geometry->getTileSize();
                 widths[i] = width;
             }
             glUniform1f(glGetUniformLocation(shaderProgram, "uBinormalScale"), geometryLayoutParams.vertexScale / (_halfResolution * std::pow(2.0f, _zoom - tileId.zoom)));
@@ -1470,7 +1470,7 @@ namespace carto { namespace vt {
             float gamma = 0.5f;
             std::array<float, TileGeometry::StyleParameters::MAX_PARAMETERS> widths;
             for (int i = 0; i < styleParams.parameterCount; i++) {
-                float width = styleParams.widthTable[i] / geometry->getTileSize();
+                float width = 0.5f * (*styleParams.widthTable[i])(_viewState) * geometry->getGeometryScale() / geometry->getTileSize();
                 float pixelWidth = 2.0f * _halfResolution * width;
                 if (pixelWidth < 1.0f) {
                     colors[i] = colors[i] * pixelWidth; // should do gamma correction here, but simple implementation gives closer results to Mapnik

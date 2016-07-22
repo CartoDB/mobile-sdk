@@ -10,8 +10,9 @@
 #include "Color.h"
 #include "Bitmap.h"
 #include "Font.h"
+#include "ViewState.h"
 #include "VertexArray.h"
-#include "TileLayerStyles.h"
+#include "Styles.h"
 
 #include <memory>
 #include <array>
@@ -22,33 +23,9 @@
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
 
-#include <cglib/vec.h>
-#include <cglib/mat.h>
-#include <cglib/bbox.h>
-#include <cglib/frustum3.h>
-
 namespace carto { namespace vt {
     class TileLabel {
     public:
-        struct ViewState {
-            float scale;
-            float aspect;
-            std::array<cglib::vec3<float>, 3> orientation;
-            cglib::vec3<double> origin;
-            cglib::frustum3<double> frustum;
-
-            explicit ViewState(const cglib::mat4x4<double>& projectionMatrix, const cglib::mat4x4<double>& cameraMatrix, float zoom, float aspectRatio, float scaleFactor) {
-                cglib::mat4x4<double> invCameraMatrix = cglib::inverse(cameraMatrix);
-                scale = std::pow(2.0f, -zoom) * scaleFactor;
-                aspect = aspectRatio;
-                for (int i = 0; i < 3; i++) {
-                    orientation[i] = cglib::vec3<float>::convert(cglib::proj_o(cglib::col_vector(invCameraMatrix, i)));
-                }
-                origin = cglib::proj_p(cglib::col_vector(invCameraMatrix, 3));
-                frustum = cglib::gl_projection_frustum(projectionMatrix * cameraMatrix);
-            }
-        };
-
         explicit TileLabel(long long id, long long groupId, std::shared_ptr<const Font> font, std::vector<Font::Glyph> glyphs, boost::optional<cglib::vec3<double>> position, std::vector<cglib::vec3<double>> vertices, LabelOrientation orientation, const boost::optional<cglib::mat3x3<float>>& transform, float scale, const Color& color);
 
         long long getId() const { return _id; }

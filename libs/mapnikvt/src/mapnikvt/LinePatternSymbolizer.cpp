@@ -1,7 +1,7 @@
 #include "LinePatternSymbolizer.h"
 
 namespace carto { namespace mvt {
-    void LinePatternSymbolizer::build(const FeatureCollection& featureCollection, const SymbolizerContext& symbolizerContext, const ExpressionContext& exprContext, vt::TileLayerBuilder& layerBuilder) {
+    void LinePatternSymbolizer::build(const FeatureCollection& featureCollection, const FeatureExpressionContext& exprContext, const SymbolizerContext& symbolizerContext, vt::TileLayerBuilder& layerBuilder) {
         std::lock_guard<std::mutex> lock(_mutex);
 
         updateBindings(exprContext);
@@ -12,11 +12,12 @@ namespace carto { namespace mvt {
             return;
         }
         
-        float geomScale = symbolizerContext.getSettings().getGeometryScale();
-        float width = pattern->bitmap->height * geomScale * 0.375f;
         vt::CompOp compOp = convertCompOp(_compOp);
-        
-        vt::LineStyle style(compOp, vt::LineJoinMode::MITER, vt::LineCapMode::NONE, vt::blendColor(_fill, _opacity), width * 0.5f, symbolizerContext.getStrokeMap(), pattern, _geometryTransform);
+
+        std::shared_ptr<const vt::FloatFunction> width;
+        ExpressionFunctionBinder().bind(&width, std::make_shared<ConstExpression>(Value(pattern->bitmap->height * 0.375f))).evaluate(exprContext);
+
+        vt::LineStyle style(compOp, vt::LineJoinMode::MITER, vt::LineCapMode::NONE, vt::blendColor(_fill, _opacity), width, symbolizerContext.getStrokeMap(), pattern, _geometryTransform);
 
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
             if (auto lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(featureCollection.getGeometry(index))) {

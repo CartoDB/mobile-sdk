@@ -20,14 +20,14 @@ namespace carto { namespace mvt {
             ALSOFILTER
         };
 
-        explicit Filter(Type type, std::shared_ptr<Predicate> pred) : _type(type), _pred(std::move(pred)) { }
+        explicit Filter(Type type, std::shared_ptr<const Predicate> pred) : _type(type), _pred(std::move(pred)) { }
 
         Type getType() const { return _type; }
-        const std::shared_ptr<Predicate>& getPredicate() const { return _pred; }
+        const std::shared_ptr<const Predicate>& getPredicate() const { return _pred; }
 
     private:
         const Type _type;
-        const std::shared_ptr<Predicate> _pred;
+        const std::shared_ptr<const Predicate> _pred;
     };
 } }
 

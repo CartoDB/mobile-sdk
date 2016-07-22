@@ -3,12 +3,11 @@
 #include "vt/BitmapCanvas.h"
 
 namespace carto { namespace mvt {
-    void TorqueMarkerSymbolizer::build(const FeatureCollection& featureCollection, const SymbolizerContext& symbolizerContext, const ExpressionContext& exprContext, vt::TileLayerBuilder& layerBuilder) {
+    void TorqueMarkerSymbolizer::build(const FeatureCollection& featureCollection, const FeatureExpressionContext& exprContext, const SymbolizerContext& symbolizerContext, vt::TileLayerBuilder& layerBuilder) {
         std::lock_guard<std::mutex> lock(_mutex);
 
         updateBindings(exprContext);
 
-        float geomScale = symbolizerContext.getSettings().getGeometryScale();
         vt::CompOp compOp = convertCompOp(_compOp);
 
         float width = DEFAULT_MARKER_SIZE, height = DEFAULT_MARKER_SIZE;
@@ -50,7 +49,10 @@ namespace carto { namespace mvt {
             }
         }
 
-        vt::PointStyle style(compOp, fill, width * geomScale, symbolizerContext.getGlyphMap(), bitmap, boost::optional<cglib::mat3x3<float>>());
+        std::shared_ptr<const vt::FloatFunction> widthFunc;
+        ExpressionFunctionBinder().bind(&widthFunc, std::make_shared<ConstExpression>(Value(width))).evaluate(exprContext);
+
+        vt::PointStyle style(compOp, fill, widthFunc, symbolizerContext.getGlyphMap(), bitmap, boost::optional<cglib::mat3x3<float>>());
 
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
             if (auto pointGeometry = std::dynamic_pointer_cast<const PointGeometry>(featureCollection.getGeometry(index))) {

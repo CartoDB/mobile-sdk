@@ -2,7 +2,7 @@
 #include "ParserUtils.h"
 
 namespace carto { namespace mvt {
-    void PolygonSymbolizer::build(const FeatureCollection& featureCollection, const SymbolizerContext& symbolizerContext, const ExpressionContext& exprContext, vt::TileLayerBuilder& layerBuilder) {
+    void PolygonSymbolizer::build(const FeatureCollection& featureCollection, const FeatureExpressionContext& exprContext, const SymbolizerContext& symbolizerContext, vt::TileLayerBuilder& layerBuilder) {
         std::lock_guard<std::mutex> lock(_mutex);
 
         updateBindings(exprContext);

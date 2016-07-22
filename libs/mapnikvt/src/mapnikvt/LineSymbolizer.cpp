@@ -7,39 +7,30 @@
 #include <boost/algorithm/string.hpp>
 
 namespace carto { namespace mvt {
-    void LineSymbolizer::build(const FeatureCollection& featureCollection, const SymbolizerContext& symbolizerContext, const ExpressionContext& exprContext, vt::TileLayerBuilder& layerBuilder) {
+    void LineSymbolizer::build(const FeatureCollection& featureCollection, const FeatureExpressionContext& exprContext, const SymbolizerContext& symbolizerContext, vt::TileLayerBuilder& layerBuilder) {
         std::lock_guard<std::mutex> lock(_mutex);
 
         updateBindings(exprContext);
 
-        float geomScale = symbolizerContext.getSettings().getGeometryScale();
-        float width = std::abs(_strokeWidth * geomScale);
-        if (width == 0) {
-            return;
-        }
         vt::LineJoinMode lineJoin = vt::LineJoinMode::MITER;
-        if (width > 1.5f) {
-            if (_strokeLinejoin == "round") {
-                lineJoin = vt::LineJoinMode::ROUND;
-            }
-            else if (_strokeLinejoin == "bevel") {
-                lineJoin = vt::LineJoinMode::BEVEL;
-            }
-            else if (_strokeLinejoin == "miter") {
-                lineJoin = vt::LineJoinMode::MITER;
-            }
+        if (_strokeLinejoin == "round") {
+            lineJoin = vt::LineJoinMode::ROUND;
+        }
+        else if (_strokeLinejoin == "bevel") {
+            lineJoin = vt::LineJoinMode::BEVEL;
+        }
+        else if (_strokeLinejoin == "miter") {
+            lineJoin = vt::LineJoinMode::MITER;
         }
         vt::LineCapMode lineCap = vt::LineCapMode::NONE;
-        if (width > 1.5f) {
-            if (_strokeLinecap == "round") {
-                lineCap = vt::LineCapMode::ROUND;
-            }
-            else if (_strokeLinecap == "square") {
-                lineCap = vt::LineCapMode::SQUARE;
-            }
-            else if (_strokeLinecap == "butt") {
-                lineCap = vt::LineCapMode::NONE;
-            }
+        if (_strokeLinecap == "round") {
+            lineCap = vt::LineCapMode::ROUND;
+        }
+        else if (_strokeLinecap == "square") {
+            lineCap = vt::LineCapMode::SQUARE;
+        }
+        else if (_strokeLinecap == "butt") {
+            lineCap = vt::LineCapMode::NONE;
         }
         vt::CompOp compOp = convertCompOp(_compOp);
         
@@ -67,7 +58,7 @@ namespace carto { namespace mvt {
             }
         }
         
-        vt::LineStyle style(compOp, lineJoin, lineCap, vt::blendColor(_stroke, _strokeOpacity), width * 0.5f, symbolizerContext.getStrokeMap(), strokePattern, _geometryTransform);
+        vt::LineStyle style(compOp, lineJoin, lineCap, vt::blendColor(_stroke, _strokeOpacity), _strokeWidth, symbolizerContext.getStrokeMap(), strokePattern, _geometryTransform);
 
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
             if (auto lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(featureCollection.getGeometry(index))) {

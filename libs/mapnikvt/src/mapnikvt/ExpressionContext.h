@@ -18,9 +18,14 @@ namespace carto { namespace mvt {
 
     class ExpressionContext {
     public:
-        using NutiParameterValueMap = std::map<std::string, Value>;
-
-        ExpressionContext();
+        virtual ~ExpressionContext() = default;
+        
+        virtual Value getVariable(const std::string& name) const = 0;
+    };
+    
+    class FeatureExpressionContext : public ExpressionContext {
+    public:
+        FeatureExpressionContext();
 
         void setZoom(int zoom);
         int getZoom() const { return _zoom; }
@@ -29,16 +34,30 @@ namespace carto { namespace mvt {
         void setFeatureData(std::shared_ptr<FeatureData> featureData) { _featureData = std::move(featureData); }
         const std::shared_ptr<FeatureData>& getFeatureDataPtr() const { return _featureData; }
 
-        void setNutiParameterValueMap(NutiParameterValueMap paramValueMap) { _nutiParameterValueMap = std::move(paramValueMap); }
-        const NutiParameterValueMap& getNutiParameterValueMap() const { return _nutiParameterValueMap; }
+        void setNutiParameterValueMap(std::map<std::string, Value> paramValueMap) { _nutiParameterValueMap = std::move(paramValueMap); }
+        const std::map<std::string, Value>& getNutiParameterValueMap() const { return _nutiParameterValueMap; }
 
-        Value getVariable(const std::string& name) const;
+        virtual Value getVariable(const std::string& name) const override;
 
     private:
         int _zoom = 0;
         float _scaleDenom = 0;
         std::shared_ptr<FeatureData> _featureData;
-        NutiParameterValueMap _nutiParameterValueMap;
+        std::map<std::string, Value> _nutiParameterValueMap;
+    };
+
+    class ViewExpressionContext : public ExpressionContext {
+    public:
+        ViewExpressionContext();
+
+        void setZoom(float zoom);
+
+        virtual Value getVariable(const std::string& name) const override;
+
+        static bool isViewVariable(const std::string& name);
+
+    private:
+        float _zoom = 0;
     };
 } }
 

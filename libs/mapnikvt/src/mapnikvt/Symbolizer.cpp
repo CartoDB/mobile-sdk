@@ -18,8 +18,8 @@ namespace carto { namespace mvt {
         return _parameterMap;
     }
 
-    const std::vector<std::shared_ptr<Expression>>& Symbolizer::getParameterExpressions() const {
-        return _binder.getExpressions();
+    const std::vector<std::shared_ptr<const Expression>>& Symbolizer::getParameterExpressions() const {
+        return _parameterExprs;
     }
 
     vt::CompOp Symbolizer::convertCompOp(const std::string& compOp) const {

@@ -4,17 +4,19 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_VT_TILELAYERSTYLES_H_
-#define _CARTO_VT_TILELAYERSTYLES_H_
+#ifndef _CARTO_VT_STYLES_H_
+#define _CARTO_VT_STYLES_H_
 
 #include "Color.h"
 #include "Bitmap.h"
 #include "Font.h"
+#include "ViewState.h"
 #include "StrokeMap.h"
 #include "GlyphMap.h"
 #include "TextFormatter.h"
 
 #include <memory>
+#include <functional>
 
 #include <boost/optional.hpp>
 
@@ -41,15 +43,18 @@ namespace carto { namespace vt {
         NONE, SQUARE, ROUND
     };
 
+    using FloatFunction = std::function<float(const ViewState&)>;
+    using ColorFunction = std::function<Color(const ViewState&)>;
+
     struct PointStyle {
         CompOp compOp;
         Color color;
-        float size;
+        std::shared_ptr<const FloatFunction> size;
         std::shared_ptr<GlyphMap> glyphMap;
         std::shared_ptr<const Bitmap> bitmap;
         boost::optional<cglib::mat3x3<float>> transform;
 
-        explicit PointStyle(CompOp compOp, const Color& color, float size, std::shared_ptr<GlyphMap> glyphMap, std::shared_ptr<const Bitmap> bitmap, const boost::optional<cglib::mat3x3<float>>& transform) : compOp(compOp), color(color), size(size), glyphMap(std::move(glyphMap)), bitmap(std::move(bitmap)), transform(transform) { }
+        explicit PointStyle(CompOp compOp, const Color& color, std::shared_ptr<const FloatFunction> size, std::shared_ptr<GlyphMap> glyphMap, std::shared_ptr<const Bitmap> bitmap, const boost::optional<cglib::mat3x3<float>>& transform) : compOp(compOp), color(color), size(std::move(size)), glyphMap(std::move(glyphMap)), bitmap(std::move(bitmap)), transform(transform) { }
     };
 
     struct LineStyle {
@@ -57,12 +62,12 @@ namespace carto { namespace vt {
         LineJoinMode joinMode;
         LineCapMode capMode;
         Color color;
-        float width;
+        std::shared_ptr<const FloatFunction> width;
         std::shared_ptr<StrokeMap> strokeMap;
         std::shared_ptr<const BitmapPattern> strokePattern;
         boost::optional<cglib::mat3x3<float>> transform;
 
-        explicit LineStyle(CompOp compOp, LineJoinMode joinMode, LineCapMode capMode, const Color& color, float width, std::shared_ptr<StrokeMap> strokeMap, std::shared_ptr<const BitmapPattern> strokePattern, const boost::optional<cglib::mat3x3<float>>& transform) : compOp(compOp), joinMode(joinMode), capMode(capMode), color(color), width(width), strokeMap(std::move(strokeMap)), strokePattern(std::move(strokePattern)), transform(transform) { }
+        explicit LineStyle(CompOp compOp, LineJoinMode joinMode, LineCapMode capMode, const Color& color, std::shared_ptr<const FloatFunction> width, std::shared_ptr<StrokeMap> strokeMap, std::shared_ptr<const BitmapPattern> strokePattern, const boost::optional<cglib::mat3x3<float>>& transform) : compOp(compOp), joinMode(joinMode), capMode(capMode), color(color), width(std::move(width)), strokeMap(std::move(strokeMap)), strokePattern(std::move(strokePattern)), transform(transform) { }
     };
 
     struct PolygonStyle {

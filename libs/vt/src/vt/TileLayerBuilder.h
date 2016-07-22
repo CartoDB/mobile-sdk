@@ -11,7 +11,7 @@
 #include "TileGeometry.h"
 #include "TileLabel.h"
 #include "TileLayer.h"
-#include "TileLayerStyles.h"
+#include "Styles.h"
 #include "PoolAllocator.h"
 #include "VertexArray.h"
 
@@ -32,7 +32,7 @@ namespace carto { namespace vt {
         using Vertices = std::vector<Vertex>;
         using VerticesList = std::vector<Vertices>;
 
-        explicit TileLayerBuilder(float tileSize);
+        explicit TileLayerBuilder(float tileSize, float geomScale);
 
         void addBitmap(const std::shared_ptr<TileBitmap>& bitmap);
         void addPoints(const Vertices& vertices, const PointStyle& style);
@@ -47,6 +47,7 @@ namespace carto { namespace vt {
     private:
         enum { RESERVED_VERTICES = 4096 };
 
+        // TODO: aggregate
         struct StyleBuilderParameters : TileGeometry::StyleParameters {
             TileGeometry::Type type;
             std::array<StrokeMap::StrokeId, MAX_PARAMETERS> lineStrokeIds;
@@ -68,6 +69,7 @@ namespace carto { namespace vt {
         bool tesselateLineEndPoint(const Vertex& p0, float u0, float v0, float v1, int i0, const cglib::vec2<float>& tangent, const cglib::vec2<float>& binormal, char styleIndex, const LineStyle& style);
 
         float _tileSize;
+        float _geomScale;
         StyleBuilderParameters _styleParameters;
 
         VertexArray<cglib::vec2<float>> _vertices;

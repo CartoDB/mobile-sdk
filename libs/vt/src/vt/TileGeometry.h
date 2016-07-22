@@ -11,7 +11,7 @@
 #include "Color.h"
 #include "StrokeMap.h"
 #include "VertexArray.h"
-#include "TileLayerStyles.h"
+#include "Styles.h"
 
 #include <memory>
 #include <array>
@@ -32,7 +32,7 @@ namespace carto { namespace vt {
             enum { MAX_PARAMETERS = 16 };
             int parameterCount;
             std::array<Color, MAX_PARAMETERS> colorTable;
-            std::array<float, MAX_PARAMETERS> widthTable;
+            std::array<std::shared_ptr<const FloatFunction>, MAX_PARAMETERS> widthTable;
             std::shared_ptr<const BitmapPattern> pattern;
             boost::optional<cglib::mat3x3<float>> transform;
             CompOp compOp;
@@ -54,10 +54,11 @@ namespace carto { namespace vt {
             GeometryLayoutParameters() : vertexSize(0), vertexOffset(-1), attribsOffset(-1), texCoordOffset(-1), binormalOffset(-1), heightOffset(-1), vertexScale(0), texCoordScale(0), binormalScale(0) { }
         };
 
-        explicit TileGeometry(Type type, float tileSize, const StyleParameters& styleParameters, const GeometryLayoutParameters& geometryLayoutParameters, unsigned int indicesCount, VertexArray<unsigned char> vertexGeometry, VertexArray<unsigned short> indices) : _type(type), _tileSize(tileSize), _styleParameters(styleParameters), _geometryLayoutParameters(geometryLayoutParameters), _indicesCount(indicesCount), _vertexGeometry(std::move(vertexGeometry)), _indices(std::move(indices)) { }
+        explicit TileGeometry(Type type, float tileSize, float geomScale, const StyleParameters& styleParameters, const GeometryLayoutParameters& geometryLayoutParameters, unsigned int indicesCount, VertexArray<unsigned char> vertexGeometry, VertexArray<unsigned short> indices) : _type(type), _tileSize(tileSize), _geomScale(geomScale), _styleParameters(styleParameters), _geometryLayoutParameters(geometryLayoutParameters), _indicesCount(indicesCount), _vertexGeometry(std::move(vertexGeometry)), _indices(std::move(indices)) { }
 
         Type getType() const { return _type; }
         float getTileSize() const { return _tileSize; }
+        float getGeometryScale() const { return _geomScale; }
         const StyleParameters& getStyleParameters() const { return _styleParameters; }
         const GeometryLayoutParameters& getGeometryLayoutParameters() const { return _geometryLayoutParameters; }
         unsigned int getIndicesCount() const { return _indicesCount; }
@@ -79,6 +80,7 @@ namespace carto { namespace vt {
     private:
         Type _type;
         float _tileSize;
+        float _geomScale;
         StyleParameters _styleParameters;
         GeometryLayoutParameters _geometryLayoutParameters;
         unsigned int _indicesCount;

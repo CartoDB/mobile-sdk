@@ -21,7 +21,7 @@ namespace carto { namespace mvt {
     class Filter;
     class Rule;
     class Expression;
-    class ExpressionContext;
+    class FeatureExpressionContext;
     class Symbolizer;
     class SymbolizerContext;
     class Layer;
@@ -36,15 +36,15 @@ namespace carto { namespace mvt {
     protected:
         explicit TileReader(std::shared_ptr<Map> map, const SymbolizerContext& symbolizerContext);
 
-        void processLayer(const std::shared_ptr<Layer>& layer, const std::shared_ptr<Style>& style, ExpressionContext& exprContext, vt::TileLayerBuilder& layerBuilder) const;
+        void processLayer(const std::shared_ptr<Layer>& layer, const std::shared_ptr<Style>& style, FeatureExpressionContext& exprContext, vt::TileLayerBuilder& layerBuilder) const;
 
-        std::vector<std::shared_ptr<Symbolizer>> findFeatureSymbolizers(const std::shared_ptr<Style>& style, ExpressionContext& exprContext) const;
+        std::vector<std::shared_ptr<Symbolizer>> findFeatureSymbolizers(const std::shared_ptr<Style>& style, FeatureExpressionContext& exprContext) const;
         
-        virtual std::shared_ptr<FeatureDecoder::FeatureIterator> createFeatureIterator(const std::shared_ptr<Layer>& layer, const std::shared_ptr<Style>& style, const ExpressionContext& exprContext) const = 0;
+        virtual std::shared_ptr<FeatureDecoder::FeatureIterator> createFeatureIterator(const std::shared_ptr<Layer>& layer, const std::shared_ptr<Style>& style, const FeatureExpressionContext& exprContext) const = 0;
 
         const std::shared_ptr<Map> _map;
         const SymbolizerContext& _symbolizerContext;
-        const std::shared_ptr<Filter> _trueFilter;
+        const std::shared_ptr<const Filter> _trueFilter;
     };
 } }
 

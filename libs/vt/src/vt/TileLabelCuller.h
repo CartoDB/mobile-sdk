@@ -7,6 +7,7 @@
 #ifndef _CARTO_VT_TILELABELCULLER_H_
 #define _CARTO_VT_TILELABELCULLER_H_
 
+#include "ViewState.h"
 #include "TileLabel.h"
 
 #include <array>
@@ -47,7 +48,7 @@ namespace carto { namespace vt {
         static cglib::mat4x4<double> calculateLocalViewMatrix(const cglib::mat4x4<double>& cameraMatrix);
 
         cglib::mat4x4<float> _mvpMatrix;
-        TileLabel::ViewState _labelViewState;
+        ViewState _viewState;
         float _resolution = 0;
         std::vector<Record> _recordGrid[GRID_RESOLUTION][GRID_RESOLUTION];
 

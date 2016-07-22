@@ -12,9 +12,11 @@
 namespace carto { namespace mvt {
     class LineSymbolizer : public GeometrySymbolizer {
     public:
-        explicit LineSymbolizer(std::shared_ptr<Logger> logger) : GeometrySymbolizer(std::move(logger)) { }
+        explicit LineSymbolizer(std::shared_ptr<Logger> logger) : GeometrySymbolizer(std::move(logger)) {
+            bind(&_strokeWidth, std::make_shared<ConstExpression>(Value(1.0f)));
+        }
 
-        virtual void build(const FeatureCollection& featureCollection, const SymbolizerContext& symbolizerContext, const ExpressionContext& exprContext, vt::TileLayerBuilder& layerBuilder) override;
+        virtual void build(const FeatureCollection& featureCollection, const FeatureExpressionContext& exprContext, const SymbolizerContext& symbolizerContext, vt::TileLayerBuilder& layerBuilder) override;
 
     protected:
         virtual void bindParameter(const std::string& name, const std::string& value) override;
@@ -24,7 +26,7 @@ namespace carto { namespace mvt {
         enum { MIN_SUPERSAMPLING_FACTOR = 2, MAX_SUPERSAMPLING_FACTOR = 16 };
 
         vt::Color _stroke = vt::Color(0xff000000);
-        float _strokeWidth = 1.0f;
+        std::shared_ptr<const vt::FloatFunction> _strokeWidth; // 1.0f
         float _strokeOpacity = 1.0f;
         std::string _strokeLinejoin = "miter";
         std::string _strokeLinecap = "butt";
