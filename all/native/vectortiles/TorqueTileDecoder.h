@@ -16,8 +16,6 @@
 
 #include <mapnikvt/Value.h>
 
-#include <cglib/mat.h>
-
 namespace carto {
     namespace mvt {
         class TorqueMap;

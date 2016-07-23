@@ -1,5 +1,6 @@
 #import  "MapView.h"
 #import  "NTBaseMapView.h"
+#import  "NTPolymorphicClasses.h"
 #import  "ui/MapRedrawRequestListener.h"
 #import  "ui/BaseMapView.h"
 #import  "ui/MapLicenseManagerListener.h"
@@ -37,6 +38,9 @@ static const int NATIVE_NO_COORDINATE = -1;
 +(void) initialize {
     if (self == [NTMapView class]) {
         carto::IOSUtils::InitializeLog();
+
+        // Because iOS uses static library, we must explicitly refer to all polymorphic classes created via reflection; otherwise linking may leave them from the build
+        initNTPolymorphicClasses();
     }
 }
 
