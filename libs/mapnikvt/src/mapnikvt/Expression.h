@@ -13,6 +13,7 @@
 
 #include <memory>
 #include <functional>
+#include <vector>
 
 namespace carto { namespace mvt {
     class Predicate;
@@ -236,6 +237,34 @@ namespace carto { namespace mvt {
         const std::shared_ptr<const Expression> _expr1;
         const std::shared_ptr<const Expression> _expr2;
         const std::shared_ptr<const Expression> _expr3;
+    };
+
+    class InterpolateExpression : public Expression {
+    public:
+        enum class Method {
+            STEP,
+            LINEAR,
+            CUBIC
+        };
+        
+        explicit InterpolateExpression(Method method, std::shared_ptr<const Expression> timeExpr, std::vector<std::shared_ptr<const Expression>> keyFrameExprs) : _method(method), _timeExpr(std::move(timeExpr)), _keyFrameExprs(std::move(keyFrameExprs)) { }
+
+        Method getMethod() const { return _method; }
+        const std::shared_ptr<const Expression>& getTimeExpression() const { return _timeExpr; }
+        const std::vector<std::shared_ptr<const Expression>>& getKeyFrameExpressions() const { return _keyFrameExprs; }
+
+        virtual Value evaluate(const ExpressionContext& context) const override;
+
+        virtual bool equals(const std::shared_ptr<const Expression>& expr) const override;
+
+        virtual std::shared_ptr<const Expression> map(std::function<std::shared_ptr<const Expression>(const std::shared_ptr<const Expression>&)> fn) const override;
+
+        virtual void fold(std::function<void(const std::shared_ptr<const Expression>&)> fn) const override;
+
+    private:
+        const Method _method;
+        const std::shared_ptr<const Expression> _timeExpr;
+        const std::vector<std::shared_ptr<const Expression>> _keyFrameExprs;
     };
 } }
 

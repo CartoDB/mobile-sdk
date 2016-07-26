@@ -26,7 +26,7 @@ namespace carto { namespace mvt {
         namespace encoding = boost::spirit::iso8859_1;
 
         template <typename OutputIterator>
-        struct Grammar : karma::grammar<OutputIterator, std::shared_ptr<Transform>(), encoding::space_type> {
+        struct Grammar : karma::grammar<OutputIterator, std::shared_ptr<const Transform>(), encoding::space_type> {
             Grammar() : Grammar::base_type(transform) {
                 using karma::_pass;
                 using karma::_val;
@@ -74,11 +74,11 @@ namespace carto { namespace mvt {
             }
 
             karma::rule<OutputIterator, float()> number;
-            karma::rule<OutputIterator, std::shared_ptr<Transform>(), encoding::space_type> transform, matrix, translate, rotate, scale, skewx, skewy;
+            karma::rule<OutputIterator, std::shared_ptr<const Transform>(), encoding::space_type> transform, matrix, translate, rotate, scale, skewx, skewy;
 
         private:
-            static bool getMatrixTransform(const std::shared_ptr<Transform>& transform, float& a, float& b, float& c, float& d, float& e, float& f) {
-                if (auto matrixTransform = std::dynamic_pointer_cast<MatrixTransform>(transform)) {
+            static bool getMatrixTransform(const std::shared_ptr<const Transform>& transform, float& a, float& b, float& c, float& d, float& e, float& f) {
+                if (auto matrixTransform = std::dynamic_pointer_cast<const MatrixTransform>(transform)) {
                     cglib::mat3x3<float> m = matrixTransform->getMatrix();
                     a = m(0, 0);
                     b = m(1, 0);
@@ -91,8 +91,8 @@ namespace carto { namespace mvt {
                 return false;
             }
 
-            static bool getTranslateTransform(const std::shared_ptr<Transform>& transform, float& x, float& y) {
-                if (auto translateTransform = std::dynamic_pointer_cast<TranslateTransform>(transform)) {
+            static bool getTranslateTransform(const std::shared_ptr<const Transform>& transform, float& x, float& y) {
+                if (auto translateTransform = std::dynamic_pointer_cast<const TranslateTransform>(transform)) {
                     x = translateTransform->getPos()(0);
                     y = translateTransform->getPos()(1);
                     return true;
@@ -100,8 +100,8 @@ namespace carto { namespace mvt {
                 return false;
             }
 
-            static bool getRotateTransform(const std::shared_ptr<Transform>& transform, float& x, float& y, float& angle) {
-                if (auto rotateTransform = std::dynamic_pointer_cast<RotateTransform>(transform)) {
+            static bool getRotateTransform(const std::shared_ptr<const Transform>& transform, float& x, float& y, float& angle) {
+                if (auto rotateTransform = std::dynamic_pointer_cast<const RotateTransform>(transform)) {
                     x = rotateTransform->getPos()(0);
                     y = rotateTransform->getPos()(1);
                     angle = rotateTransform->getAngle();
@@ -110,8 +110,8 @@ namespace carto { namespace mvt {
                 return false;
             }
 
-            static bool getScaleTransform(const std::shared_ptr<Transform>& transform, float& sx, float& sy) {
-                if (auto scaleTransform = std::dynamic_pointer_cast<ScaleTransform>(transform)) {
+            static bool getScaleTransform(const std::shared_ptr<const Transform>& transform, float& sx, float& sy) {
+                if (auto scaleTransform = std::dynamic_pointer_cast<const ScaleTransform>(transform)) {
                     sx = scaleTransform->getScale()(0);
                     sy = scaleTransform->getScale()(1);
                     return true;
@@ -120,8 +120,8 @@ namespace carto { namespace mvt {
             }
 
             template <typename SkewTransform>
-            static bool getSkewTransform(const std::shared_ptr<Transform>& transform, float& angle) {
-                if (auto skewTransform = std::dynamic_pointer_cast<SkewTransform>(transform)) {
+            static bool getSkewTransform(const std::shared_ptr<const Transform>& transform, float& angle) {
+                if (auto skewTransform = std::dynamic_pointer_cast<const SkewTransform>(transform)) {
                     angle = skewTransform->getAngle();
                     return true;
                 }

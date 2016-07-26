@@ -94,7 +94,7 @@ namespace carto { namespace css {
                 funcid = (nmstart_ > *nmchar_) [_pass = phx::bind(&makeIdentifier, _val, _1, _2)];
 
                 expressionlist =
-                      (expression >> (',' > (expression % ',')))   [_val = phx::bind(&makeListExpression, _1, _2)]
+                      (expression >> (',' > (expression % ',')))    [_val = phx::bind(&makeListExpression, _1, _2)]
                     | expression                                    [_val = _1]
                     ;
 
@@ -121,7 +121,7 @@ namespace carto { namespace css {
                       ('@' > varid)					                [_val = phx::bind(&makeFieldVarExpression, false, _1)]
                     | ('[' > unescapedfieldid > ']')                [_val = phx::bind(&makeFieldVarExpression, true, _1)]
                     | (funcid >> ('(' > (expression % ',') > ')'))  [_val = phx::bind(&makeFunctionExpression, _1, _2)]
-                    | ('(' > expression > ')')					    [_val = _1]
+                    | ('(' > expressionlist > ')')					[_val = _1]
                     | constant									    [_val = phx::bind(&makeConstExpression, _1)]
                     ;
                 

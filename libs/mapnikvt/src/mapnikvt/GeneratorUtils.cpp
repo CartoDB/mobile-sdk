@@ -56,7 +56,7 @@ namespace carto { namespace mvt {
         return boost::trim_copy(str);
     }
 
-    std::string generateTransformListString(const std::vector<std::shared_ptr<Transform>>& transforms) {
+    std::string generateTransformListString(const std::vector<std::shared_ptr<const Transform>>& transforms) {
         std::string str;
         std::back_insert_iterator<std::string> it(str);
         transgenimpl::encoding::space_type space;

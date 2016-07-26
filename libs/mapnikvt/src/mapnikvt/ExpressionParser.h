@@ -55,6 +55,9 @@ namespace carto { namespace mvt {
                 concat_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["concat"]];
                 match_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["match"]];
                 replace_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["replace"]];
+                step_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["step"]];
+                linear_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["linear"]];
+                cubic_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["cubic"]];
 
                 string %=
                     qi::lexeme[+(qi::print - '[' - ']' - '{' - '}')]
@@ -132,6 +135,9 @@ namespace carto { namespace mvt {
 
                 factor =
                       constant										  [_val = phx::bind(&makeConstExpression, _1)]
+                    | (step_kw   >> '(' > expression > ',' > (expression % ',') > ')') [_val = phx::bind(&makeInterpolateExpression, InterpolateExpression::Method::STEP, _1, _2)]
+                    | (linear_kw >> '(' > expression > ',' > (expression % ',') > ')') [_val = phx::bind(&makeInterpolateExpression, InterpolateExpression::Method::LINEAR, _1, _2)]
+                    | (cubic_kw  >> '(' > expression > ',' > (expression % ',') > ')') [_val = phx::bind(&makeInterpolateExpression, InterpolateExpression::Method::CUBIC, _1, _2)]
                     | ('[' > stringExpression > ']')				  [_val = phx::bind(&makeVariableExpression, _1)]
                     | ('(' > expression > ')')				    	  [_val = _1]
                     ;
@@ -139,7 +145,7 @@ namespace carto { namespace mvt {
 
             ValueParser<Iterator> constant;
             qi::rule<Iterator, std::string()> string;
-            qi::rule<Iterator, qi::unused_type()> not_kw, and_kw, or_kw, neq_kw, eq_kw, le_kw, ge_kw, lt_kw, gt_kw, length_kw, uppercase_kw, lowercase_kw, capitalize_kw, concat_kw, match_kw, replace_kw;
+            qi::rule<Iterator, qi::unused_type()> not_kw, and_kw, or_kw, neq_kw, eq_kw, le_kw, ge_kw, lt_kw, gt_kw, length_kw, uppercase_kw, lowercase_kw, capitalize_kw, concat_kw, match_kw, replace_kw, step_kw, linear_kw, cubic_kw;
             qi::rule<Iterator, std::shared_ptr<Expression>()> stringExpression, genericExpression;
             qi::rule<Iterator, std::shared_ptr<Expression>(), encoding::space_type> expression, term0, term1, term2, term3, unary, postfix, factor;
 
@@ -218,6 +224,10 @@ namespace carto { namespace mvt {
             template <typename Op>
             static std::shared_ptr<Expression> makeTertiaryExpression(std::shared_ptr<const Expression> expr1, std::shared_ptr<const Expression> expr2, std::shared_ptr<const Expression> expr3) {
                 return std::make_shared<TertiaryExpression>(std::make_shared<Op>(), std::move(expr1), std::move(expr2), std::move(expr3));
+            }
+
+            static std::shared_ptr<Expression> makeInterpolateExpression(InterpolateExpression::Method method, std::shared_ptr<const Expression> expr1, std::vector<std::shared_ptr<Expression>> exprs) {
+                return std::make_shared<InterpolateExpression>(method, expr1, std::vector<std::shared_ptr<const Expression>>(exprs.begin(), exprs.end()));
             }
         };
     }

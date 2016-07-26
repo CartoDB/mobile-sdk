@@ -108,6 +108,9 @@ namespace carto { namespace mvt {
 
                 factor =
                       constant							[_pass = phx::bind(&getConstant, _val, _1)]
+                    | (karma::lit("step")   << '(' << expression << ',' << (expression % ',') << ')') [_pass = phx::bind(&getInterpolateExpression, InterpolateExpression::Method::STEP, _val, _1, _2)]
+                    | (karma::lit("linear") << '(' << expression << ',' << (expression % ',') << ')') [_pass = phx::bind(&getInterpolateExpression, InterpolateExpression::Method::LINEAR, _val, _1, _2)]
+                    | (karma::lit("cubic")  << '(' << expression << ',' << (expression % ',') << ')') [_pass = phx::bind(&getInterpolateExpression, InterpolateExpression::Method::CUBIC, _val, _1, _2)]
                     | predicate                         [_pass = phx::bind(&getExpressionPredicate, _val, _1)]
                     | (karma::no_delimit['[' << stringExpression] << ']') [_pass = phx::bind(&getVariableExpression, _val, _1)]
                     | ('(' << expression << ')')		[_1 = _val]
@@ -244,6 +247,17 @@ namespace carto { namespace mvt {
                         expr1 = tertiaryExpr->getExpression1();
                         expr2 = tertiaryExpr->getExpression2();
                         expr3 = tertiaryExpr->getExpression3();
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            static bool getInterpolateExpression(InterpolateExpression::Method method, const std::shared_ptr<const Expression>& expr, std::shared_ptr<const Expression>& expr1, std::vector<std::shared_ptr<const Expression>>& exprs) {
+                if (auto interpolateExpr = std::dynamic_pointer_cast<const InterpolateExpression>(expr)) {
+                    if (interpolateExpr->getMethod() == method) {
+                        expr1 = interpolateExpr->getTimeExpression();
+                        exprs = interpolateExpr->getKeyFrameExpressions();
                         return true;
                     }
                 }

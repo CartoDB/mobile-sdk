@@ -201,6 +201,16 @@ namespace carto { namespace css {
             }
             return "[" + fieldVarExpr->getFieldOrVar() + "]";
         }
+        else if (auto listExpr = std::dynamic_pointer_cast<const ListExpression>(expr)) {
+            std::string exprStr;
+            for (const std::shared_ptr<const Expression>& subExpr : listExpr->getExpressions()) {
+                if (!exprStr.empty()) {
+                    exprStr += ",";
+                }
+                exprStr += buildEscapedExpressionString(subExpr);
+            }
+            return exprStr;
+        }
         else if (auto unaryExpr = std::dynamic_pointer_cast<const UnaryExpression>(expr)) {
             std::string exprStr = buildEscapedExpressionString(unaryExpr->getExpression());
             std::string op;
