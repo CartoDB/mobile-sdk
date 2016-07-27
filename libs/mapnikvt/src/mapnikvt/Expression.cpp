@@ -32,8 +32,9 @@ namespace carto { namespace mvt {
         float time = ValueConverter<float>::convert(_timeExpr->evaluate(context));
         std::vector<cglib::vec2<float>> keyFrames;
         for (const std::shared_ptr<const Expression>& keyFrameExpr : _keyFrameExprs) {
+            std::string keyFrame = ValueConverter<std::string>::convert(keyFrameExpr->evaluate(context));
             std::vector<std::string> keyValue;
-            boost::split(keyValue, ValueConverter<std::string>::convert(keyFrameExpr->evaluate(context)), boost::is_any_of(","));
+            boost::split(keyValue, keyFrame, boost::is_any_of(","));
             if (keyValue.size() == 2) {
                 float key = boost::lexical_cast<float>(keyValue[0]);
                 float val = boost::lexical_cast<float>(keyValue[1]);
