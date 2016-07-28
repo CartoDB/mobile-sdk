@@ -24,6 +24,9 @@
 #include <cglib/mat.h>
 
 namespace carto { namespace vt {
+    using FloatFunction = std::function<float(const ViewState&)>;
+    using ColorFunction = std::function<Color(const ViewState&)>;
+
     enum class CompOp {
         SRC, SRC_OVER, SRC_IN, SRC_ATOP, 
         DST, DST_OVER, DST_IN, DST_ATOP,
@@ -42,9 +45,6 @@ namespace carto { namespace vt {
     enum class LineCapMode {
         NONE, SQUARE, ROUND
     };
-
-    using FloatFunction = std::function<float(const ViewState&)>;
-    using ColorFunction = std::function<Color(const ViewState&)>;
 
     struct PointStyle {
         CompOp compOp;

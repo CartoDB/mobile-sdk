@@ -42,7 +42,10 @@ namespace carto { namespace mvt {
                     // ignore the error
                 }
                 
-                std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.build(layerIdx * 65536 + styleIdx, style->getOpacity(), compOp);
+                float opacity = style->getOpacity();
+                std::shared_ptr<vt::FloatFunction> opacityFn = std::make_shared<vt::FloatFunction>([opacity](const vt::ViewState& viewState) { return opacity; });
+                
+                std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.build(layerIdx * 65536 + styleIdx, opacityFn, compOp);
                 if (!(tileLayer->getBitmaps().empty() && tileLayer->getLabels().empty() && tileLayer->getGeometries().empty() && !compOp)) {
                     tileLayers.push_back(tileLayer);
                 }

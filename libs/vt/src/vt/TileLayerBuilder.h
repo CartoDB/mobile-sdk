@@ -42,7 +42,7 @@ namespace carto { namespace vt {
         void addBitmapLabel(long long id, long long groupId, const boost::variant<Vertex, Vertices>& position, float minimumGroupDistance, const BitmapLabelStyle& style);
         void addTextLabel(long long id, long long groupId, const std::string& text, const boost::optional<Vertex>& position, const Vertices& vertices, float minimumGroupDistance, const TextLabelStyle& style);
 
-        std::shared_ptr<TileLayer> build(int layerIdx, float opacity, boost::optional<CompOp> compOp);
+        std::shared_ptr<TileLayer> build(int layerIdx, std::shared_ptr<FloatFunction> opacity, boost::optional<CompOp> compOp);
 
     private:
         enum { RESERVED_VERTICES = 4096 };

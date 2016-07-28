@@ -986,6 +986,11 @@ namespace carto { namespace vt {
             for (auto it = renderNodeMap.begin(); it != renderNodeMap.end(); it++) {
                 const RenderNode& renderNode = it->second;
                 
+                float opacity = 1.0f;
+                if (renderNode.layer->getCompOp() && renderNode.layer->getOpacity()) {
+                    opacity = (*renderNode.layer->getOpacity())(_viewState);
+                }
+
                 GLint currentFBO = 0;
                 bool blendGeometry = false;
 
@@ -1015,7 +1020,7 @@ namespace carto { namespace vt {
                     setupFrameBuffer();
                     
                     setBlendState(CompOp::SRC_OVER);
-                    renderTileBitmap(renderNode.tileId, blendNode->tileId, renderNode.blend, !renderNode.layer->getCompOp() ? renderNode.layer->getOpacity() : 1.0f, bitmap);
+                    renderTileBitmap(renderNode.tileId, blendNode->tileId, renderNode.blend, opacity, bitmap);
                 }
                 
                 for (const std::shared_ptr<TileGeometry>& geometry : renderNode.layer->getGeometries()) {
@@ -1047,7 +1052,7 @@ namespace carto { namespace vt {
                     }
 
                     setBlendState(geometry->getStyleParameters().compOp);
-                    renderTileGeometry(renderNode.tileId, blendNode->tileId, renderNode.blend, !renderNode.layer->getCompOp() ? renderNode.layer->getOpacity() : 1.0f, geometry);
+                    renderTileGeometry(renderNode.tileId, blendNode->tileId, renderNode.blend, opacity, geometry);
                 }
                 update = renderNode.blend < 1.0f || update;
 
@@ -1058,7 +1063,7 @@ namespace carto { namespace vt {
                     }
 
                     setBlendState(renderNode.layer->getCompOp().get());
-                    blendTileTexture(renderNode.tileId, renderNode.layer->getOpacity(), _layerFBOs[layerFBOMap[renderNode.layer->getLayerIndex()]].colorTexture);
+                    blendTileTexture(renderNode.tileId, opacity, _layerFBOs[layerFBOMap[renderNode.layer->getLayerIndex()]].colorTexture);
                 }
             }
         }
@@ -1078,6 +1083,12 @@ namespace carto { namespace vt {
             
             for (auto it = renderNodeMap.begin(); it != renderNodeMap.end(); it++) {
                 const RenderNode& renderNode = it->second;
+
+                float opacity = 1.0f;
+                if (renderNode.layer->getCompOp() && renderNode.layer->getOpacity()) {
+                    opacity = (*renderNode.layer->getOpacity())(_viewState);
+                }
+
                 for (const std::shared_ptr<TileGeometry>& geometry : renderNode.layer->getGeometries()) {
                     if (geometry->getType() != TileGeometry::Type::POLYGON3D) {
                         continue;
@@ -1098,7 +1109,7 @@ namespace carto { namespace vt {
                         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                     }
                     
-                    renderTileGeometry(renderNode.tileId, blendNode->tileId, renderNode.blend, renderNode.layer->getOpacity(), geometry);
+                    renderTileGeometry(renderNode.tileId, blendNode->tileId, renderNode.blend, opacity, geometry);
                 }
                 update = renderNode.blend < 1.0f || update;
             }

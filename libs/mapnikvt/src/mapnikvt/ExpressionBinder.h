@@ -98,11 +98,20 @@ namespace carto { namespace mvt {
                     return it->second;
                 }
             }
-            auto func = std::make_shared<const std::function<V(const vt::ViewState&)>>([expr, convertFn](const vt::ViewState& viewState) {
-                ViewExpressionContext context;
-                context.setZoom(viewState.zoom);
-                return convertFn(expr->evaluate(context));
-            });
+            std::shared_ptr<const std::function<V(const vt::ViewState&)>> func;
+            if (auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(expr)) {
+                V val = convertFn(constExpr->getConstant());
+                func = std::make_shared<const std::function<V(const vt::ViewState&)>>([val](const vt::ViewState& viewState) {
+                    return val;
+                });
+            }
+            else {
+                func = std::make_shared<const std::function<V(const vt::ViewState&)>>([expr, convertFn](const vt::ViewState& viewState) {
+                    ViewExpressionContext context;
+                    context.setZoom(viewState.zoom);
+                    return convertFn(expr->evaluate(context));
+                });
+            }
             if (_functionCache.size() > 16) {
                 _functionCache.erase(_functionCache.begin()); // erase any element to keep cache compact
             }
