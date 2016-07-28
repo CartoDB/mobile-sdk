@@ -32,12 +32,13 @@ namespace carto { namespace vt {
             enum { MAX_PARAMETERS = 16 };
             int parameterCount;
             std::array<Color, MAX_PARAMETERS> colorTable;
+            std::array<std::shared_ptr<const FloatFunction>, MAX_PARAMETERS> opacityTable;
             std::array<std::shared_ptr<const FloatFunction>, MAX_PARAMETERS> widthTable;
             std::shared_ptr<const BitmapPattern> pattern;
             boost::optional<cglib::mat3x3<float>> transform;
             CompOp compOp;
 
-            StyleParameters() : parameterCount(0), colorTable(), widthTable(), pattern(), transform(), compOp(CompOp::SRC_OVER) { }
+            StyleParameters() : parameterCount(0), colorTable(), opacityTable(), widthTable(), pattern(), transform(), compOp(CompOp::SRC_OVER) { }
         };
 
         struct GeometryLayoutParameters {

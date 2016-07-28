@@ -49,12 +49,13 @@ namespace carto { namespace vt {
     struct PointStyle {
         CompOp compOp;
         Color color;
+        std::shared_ptr<const FloatFunction> opacity;
         std::shared_ptr<const FloatFunction> size;
         std::shared_ptr<GlyphMap> glyphMap;
         std::shared_ptr<const Bitmap> bitmap;
         boost::optional<cglib::mat3x3<float>> transform;
 
-        explicit PointStyle(CompOp compOp, const Color& color, std::shared_ptr<const FloatFunction> size, std::shared_ptr<GlyphMap> glyphMap, std::shared_ptr<const Bitmap> bitmap, const boost::optional<cglib::mat3x3<float>>& transform) : compOp(compOp), color(color), size(std::move(size)), glyphMap(std::move(glyphMap)), bitmap(std::move(bitmap)), transform(transform) { }
+        explicit PointStyle(CompOp compOp, const Color& color, std::shared_ptr<const FloatFunction> opacity, std::shared_ptr<const FloatFunction> size, std::shared_ptr<GlyphMap> glyphMap, std::shared_ptr<const Bitmap> bitmap, const boost::optional<cglib::mat3x3<float>>& transform) : compOp(compOp), color(color), opacity(std::move(opacity)), size(std::move(size)), glyphMap(std::move(glyphMap)), bitmap(std::move(bitmap)), transform(transform) { }
     };
 
     struct LineStyle {
@@ -62,28 +63,31 @@ namespace carto { namespace vt {
         LineJoinMode joinMode;
         LineCapMode capMode;
         Color color;
+        std::shared_ptr<const FloatFunction> opacity;
         std::shared_ptr<const FloatFunction> width;
         std::shared_ptr<StrokeMap> strokeMap;
         std::shared_ptr<const BitmapPattern> strokePattern;
         boost::optional<cglib::mat3x3<float>> transform;
 
-        explicit LineStyle(CompOp compOp, LineJoinMode joinMode, LineCapMode capMode, const Color& color, std::shared_ptr<const FloatFunction> width, std::shared_ptr<StrokeMap> strokeMap, std::shared_ptr<const BitmapPattern> strokePattern, const boost::optional<cglib::mat3x3<float>>& transform) : compOp(compOp), joinMode(joinMode), capMode(capMode), color(color), width(std::move(width)), strokeMap(std::move(strokeMap)), strokePattern(std::move(strokePattern)), transform(transform) { }
+        explicit LineStyle(CompOp compOp, LineJoinMode joinMode, LineCapMode capMode, const Color& color, std::shared_ptr<const FloatFunction> opacity, std::shared_ptr<const FloatFunction> width, std::shared_ptr<StrokeMap> strokeMap, std::shared_ptr<const BitmapPattern> strokePattern, const boost::optional<cglib::mat3x3<float>>& transform) : compOp(compOp), joinMode(joinMode), capMode(capMode), color(color), opacity(std::move(opacity)), width(std::move(width)), strokeMap(std::move(strokeMap)), strokePattern(std::move(strokePattern)), transform(transform) { }
     };
 
     struct PolygonStyle {
         CompOp compOp;
         Color color;
+        std::shared_ptr<const FloatFunction> opacity;
         std::shared_ptr<const BitmapPattern> pattern;
         boost::optional<cglib::mat3x3<float>> transform;
 
-        explicit PolygonStyle(CompOp compOp, const Color& color, std::shared_ptr<const BitmapPattern> pattern, const boost::optional<cglib::mat3x3<float>>& transform) : compOp(compOp), color(color), pattern(std::move(pattern)), transform(transform) { }
+        explicit PolygonStyle(CompOp compOp, const Color& color, std::shared_ptr<const FloatFunction> opacity, std::shared_ptr<const BitmapPattern> pattern, const boost::optional<cglib::mat3x3<float>>& transform) : compOp(compOp), color(color), opacity(std::move(opacity)), pattern(std::move(pattern)), transform(transform) { }
     };
 
     struct Polygon3DStyle {
         Color color;
+        std::shared_ptr<const FloatFunction> opacity;
         boost::optional<cglib::mat3x3<float>> transform;
 
-        explicit Polygon3DStyle(const Color& color, const boost::optional<cglib::mat3x3<float>>& transform) : color(color), transform(transform) { }
+        explicit Polygon3DStyle(const Color& color, std::shared_ptr<const FloatFunction> opacity, const boost::optional<cglib::mat3x3<float>>& transform) : color(color), opacity(std::move(opacity)), transform(transform) { }
     };
 
     struct BitmapLabelStyle {

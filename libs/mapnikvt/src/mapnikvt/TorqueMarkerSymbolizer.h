@@ -29,7 +29,7 @@ namespace carto { namespace mvt {
         std::string _markerType;
         vt::Color _fill = vt::Color(0xff0000ff);
         float _fillOpacity = 1.0f;
-        float _width = 10.0f; 
+        float _width = 10.0f;
         vt::Color _stroke = vt::Color(0xff000000);
         float _strokeOpacity = 1.0f;
         float _strokeWidth = 0.0f;

@@ -16,15 +16,15 @@ namespace carto { namespace mvt {
         }
 
         std::shared_ptr<const vt::Bitmap> bitmap;
-        vt::Color fill = vt::blendColor(_fill, _fillOpacity);
-        vt::Color stroke = vt::blendColor(_stroke, _strokeOpacity);
+        vt::Color fill = _fill * _fillOpacity;
+        vt::Color stroke = _stroke * _strokeOpacity;
         if (!_file.empty()) {
             bitmap = symbolizerContext.getBitmapManager()->loadBitmap(_file);
             if (!bitmap) {
                 _logger->write(Logger::Severity::ERROR, "Failed to load marker bitmap " + _file);
                 return;
             }
-            fill = vt::blendColor(vt::Color(0xffffffff), _fillOpacity);
+            fill = vt::Color(0xffffffff) * _fillOpacity;
             width = bitmap->width;
             height = bitmap->height;
         }
@@ -51,8 +51,10 @@ namespace carto { namespace mvt {
 
         std::shared_ptr<const vt::FloatFunction> widthFunc;
         ExpressionFunctionBinder<float>().bind(&widthFunc, std::make_shared<ConstExpression>(Value(width))).update(exprContext);
+        std::shared_ptr<const vt::FloatFunction> opacityFunc;
+        ExpressionFunctionBinder<float>().bind(&opacityFunc, std::make_shared<ConstExpression>(Value(1.0f))).update(exprContext);
 
-        vt::PointStyle style(compOp, fill, widthFunc, symbolizerContext.getGlyphMap(), bitmap, boost::optional<cglib::mat3x3<float>>());
+        vt::PointStyle style(compOp, fill, opacityFunc, widthFunc, symbolizerContext.getGlyphMap(), bitmap, boost::optional<cglib::mat3x3<float>>());
 
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
             if (auto pointGeometry = std::dynamic_pointer_cast<const PointGeometry>(featureCollection.getGeometry(index))) {

@@ -14,7 +14,7 @@ namespace carto { namespace mvt {
 
         vt::CompOp compOp = convertCompOp(_compOp);
         
-        vt::PolygonStyle style(compOp, vt::blendColor(_fill, _opacity), pattern, _geometryTransform);
+        vt::PolygonStyle style(compOp, _fill, _opacity, pattern, _geometryTransform);
 
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
             if (auto polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(featureCollection.getGeometry(index))) {

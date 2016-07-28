@@ -58,7 +58,7 @@ namespace carto { namespace mvt {
             }
         }
         
-        vt::LineStyle style(compOp, lineJoin, lineCap, vt::blendColor(_stroke, _strokeOpacity), _strokeWidth, symbolizerContext.getStrokeMap(), strokePattern, _geometryTransform);
+        vt::LineStyle style(compOp, lineJoin, lineCap, _stroke, _strokeOpacity, _strokeWidth, symbolizerContext.getStrokeMap(), strokePattern, _geometryTransform);
 
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
             if (auto lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(featureCollection.getGeometry(index))) {

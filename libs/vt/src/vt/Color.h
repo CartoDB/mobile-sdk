@@ -95,10 +95,6 @@ namespace carto { namespace vt {
     inline bool operator != (const Color& color1, const Color& color2) {
         return !(color1 == color2);
     }
-
-    inline Color blendColor(const Color& color, float blendFactor) {
-        return color * blendFactor;
-    }
 } }
 
 #endif

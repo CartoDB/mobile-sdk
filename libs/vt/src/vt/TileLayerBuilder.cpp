@@ -39,13 +39,14 @@ namespace carto { namespace vt {
         GlyphMap::GlyphId glyphId = style.glyphMap->loadBitmapGlyph(style.bitmap, 0);
         int styleIndex = _styleParameters.parameterCount;
         while (--styleIndex >= 0) {
-            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.widthTable[styleIndex] == style.size && _builderParameters.pointGlyphIds[styleIndex] == glyphId) {
+            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.opacityTable[styleIndex] == style.opacity &&_styleParameters.widthTable[styleIndex] == style.size && _builderParameters.pointGlyphIds[styleIndex] == glyphId) {
                 break;
             }
         }
         if (styleIndex < 0) {
             styleIndex = _styleParameters.parameterCount++;
             _styleParameters.colorTable[styleIndex] = style.color;
+            _styleParameters.opacityTable[styleIndex] = style.opacity;
             _styleParameters.widthTable[styleIndex] = style.size;
             _builderParameters.pointGlyphIds[styleIndex] = glyphId;
         }
@@ -70,13 +71,14 @@ namespace carto { namespace vt {
         const std::unique_ptr<const StrokeMap::Stroke>& stroke = style.strokeMap->getStroke(strokeId);
         int styleIndex = _styleParameters.parameterCount;
         while (--styleIndex >= 0) {
-            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.widthTable[styleIndex] == style.width && _builderParameters.lineStrokeIds[styleIndex] == strokeId) {
+            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.opacityTable[styleIndex] == style.opacity && _styleParameters.widthTable[styleIndex] == style.width && _builderParameters.lineStrokeIds[styleIndex] == strokeId) {
                 break;
             }
         }
         if (styleIndex < 0) {
             styleIndex = _styleParameters.parameterCount++;
             _styleParameters.colorTable[styleIndex] = style.color;
+            _styleParameters.opacityTable[styleIndex] = style.opacity;
             _styleParameters.widthTable[styleIndex] = style.width;
             _builderParameters.lineStrokeIds[styleIndex] = strokeId;
         }
@@ -99,13 +101,14 @@ namespace carto { namespace vt {
         _styleParameters.compOp = style.compOp;
         int styleIndex = _styleParameters.parameterCount;
         while (--styleIndex >= 0) {
-            if (_styleParameters.colorTable[styleIndex] == style.color) {
+            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.opacityTable[styleIndex] == style.opacity) {
                 break;
             }
         }
         if (styleIndex < 0) {
             styleIndex = _styleParameters.parameterCount++;
             _styleParameters.colorTable[styleIndex] = style.color;
+            _styleParameters.opacityTable[styleIndex] = style.opacity;
         }
         for (const VerticesList& verticesList : polygonList) {
             tesselatePolygon(verticesList, static_cast<char>(styleIndex), style);
@@ -124,13 +127,14 @@ namespace carto { namespace vt {
         _styleParameters.transform = style.transform;
         int styleIndex = _styleParameters.parameterCount;
         while (--styleIndex >= 0) {
-            if (_styleParameters.colorTable[styleIndex] == style.color) {
+            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.opacityTable[styleIndex] == style.opacity) {
                 break;
             }
         }
         if (styleIndex < 0) {
             styleIndex = _styleParameters.parameterCount++;
             _styleParameters.colorTable[styleIndex] = style.color;
+            _styleParameters.opacityTable[styleIndex] = style.opacity;
         }
         for (const VerticesList& verticesList : polygonList) {
             tesselatePolygon3D(verticesList, height, static_cast<char>(styleIndex), style);

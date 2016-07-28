@@ -7,7 +7,7 @@ namespace carto { namespace mvt {
 
         updateBindings(exprContext);
 
-        vt::Polygon3DStyle style(vt::blendColor(_fill, _fillOpacity), _geometryTransform);
+        vt::Polygon3DStyle style(_fill, _fillOpacity, _geometryTransform);
 
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
             if (auto polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(featureCollection.getGeometry(index))) {

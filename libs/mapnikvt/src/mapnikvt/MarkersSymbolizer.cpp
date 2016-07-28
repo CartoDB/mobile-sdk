@@ -21,15 +21,15 @@ namespace carto { namespace mvt {
         float bitmapScaleX = fontScale, bitmapScaleY = fontScale;
         std::shared_ptr<const vt::Bitmap> bitmap;
         std::string file = _file;
-        vt::Color fill = vt::blendColor(_fill, _fillOpacity);
-        vt::Color stroke = vt::blendColor(_stroke, _strokeOpacity);
+        vt::Color fill = _fill * _fillOpacity;
+        vt::Color stroke = _stroke * _strokeOpacity;
         if (!file.empty()) {
             bitmap = symbolizerContext.getBitmapManager()->loadBitmap(file);
             if (!bitmap) {
                 _logger->write(Logger::Severity::ERROR, "Failed to load marker bitmap " + file);
                 return;
             }
-            fill = vt::blendColor(vt::Color(0xffffffff), _fillOpacity);
+            fill = vt::Color(0xffffffff) * _fillOpacity;
             if (_width > 0) {
                 bitmapScaleX = fontScale * _width / bitmap->width;
                 bitmapScaleY = (_height > 0 ? fontScale * _height / bitmap->height : bitmapScaleX);

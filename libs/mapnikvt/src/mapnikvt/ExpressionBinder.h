@@ -112,7 +112,7 @@ namespace carto { namespace mvt {
                     return convertFn(expr->evaluate(context));
                 });
             }
-            if (_functionCache.size() > 16) {
+            if (_functionCache.size() >= 32) { // 32 is a good fit is function depends on 'discrete zoom'
                 _functionCache.erase(_functionCache.begin()); // erase any element to keep cache compact
             }
             _functionCache[expr] = func;

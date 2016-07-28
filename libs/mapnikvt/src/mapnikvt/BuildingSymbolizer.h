@@ -12,7 +12,9 @@
 namespace carto { namespace mvt {
     class BuildingSymbolizer : public GeometrySymbolizer {
     public:
-        explicit BuildingSymbolizer(std::shared_ptr<Logger> logger) : GeometrySymbolizer(std::move(logger)) { }
+        explicit BuildingSymbolizer(std::shared_ptr<Logger> logger) : GeometrySymbolizer(std::move(logger)) {
+            bind(&_fillOpacity, std::make_shared<ConstExpression>(Value(1.0f)));
+        }
 
         virtual void build(const FeatureCollection& featureCollection, const FeatureExpressionContext& exprContext, const SymbolizerContext& symbolizerContext, vt::TileLayerBuilder& layerBuilder) override;
 
@@ -22,7 +24,7 @@ namespace carto { namespace mvt {
         const float HEIGHT_SCALE = static_cast<float>(0.5 / 20037508.34);
 
         vt::Color _fill = vt::Color(0xff808080);
-        float _fillOpacity = 1.0f;
+        std::shared_ptr<const vt::FloatFunction> _fillOpacity; // 1.0f
         float _height = 0.0f;
     };
 } }
