@@ -87,6 +87,24 @@ namespace carto { namespace mvt {
             }
         }
 
+        template <typename V>
+        void bind(std::shared_ptr<const std::function<V(const vt::ViewState&)>>* field, const std::shared_ptr<const Expression>& expr, V(*convertFn)(const Value&)) {
+            bindParameter(field, expr, std::function<V(const Value&)>(convertFn));
+            if (!std::dynamic_pointer_cast<const ConstExpression>(expr)) {
+                _parameterExprs.push_back(expr);
+            }
+        }
+
+        template <typename V>
+        void bind(std::shared_ptr<const std::function<V(const vt::ViewState&)>>* field, const std::shared_ptr<const Expression>& expr, V(Symbolizer::*memberConvertFn)(const Value&) const) {
+            bindParameter(field, expr, [this, memberConvertFn](const Value& val) -> V {
+                return (this->*memberConvertFn)(val);
+            });
+            if (!std::dynamic_pointer_cast<const ConstExpression>(expr)) {
+                _parameterExprs.push_back(expr);
+            }
+        }
+
         void updateBindings(const FeatureExpressionContext& exprContext) {
             _boolBinder.update(exprContext);
             _intBinder.update(exprContext);

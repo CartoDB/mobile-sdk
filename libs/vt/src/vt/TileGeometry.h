@@ -31,7 +31,7 @@ namespace carto { namespace vt {
         struct StyleParameters {
             enum { MAX_PARAMETERS = 16 };
             int parameterCount;
-            std::array<Color, MAX_PARAMETERS> colorTable;
+            std::array<std::shared_ptr<const ColorFunction>, MAX_PARAMETERS> colorTable;
             std::array<std::shared_ptr<const FloatFunction>, MAX_PARAMETERS> opacityTable;
             std::array<std::shared_ptr<const FloatFunction>, MAX_PARAMETERS> widthTable;
             std::shared_ptr<const BitmapPattern> pattern;

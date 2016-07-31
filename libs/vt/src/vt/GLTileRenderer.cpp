@@ -1463,7 +1463,7 @@ namespace carto { namespace vt {
 
         std::array<cglib::vec4<float>, TileGeometry::StyleParameters::MAX_PARAMETERS> colors;
         for (int i = 0; i < styleParams.parameterCount; i++) {
-            Color color = styleParams.colorTable[i] * (blend * opacity * (*styleParams.opacityTable[i])(_viewState));
+            Color color = (*styleParams.colorTable[i])(_viewState) * (blend * opacity * (*styleParams.opacityTable[i])(_viewState));
             colors[i] = color.rgba();
         }
         

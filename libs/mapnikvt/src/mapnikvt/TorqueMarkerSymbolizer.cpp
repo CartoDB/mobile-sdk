@@ -16,19 +16,19 @@ namespace carto { namespace mvt {
         }
 
         std::shared_ptr<const vt::Bitmap> bitmap;
-        vt::Color fill = _fill * _fillOpacity;
-        vt::Color stroke = _stroke * _strokeOpacity;
+        float fillOpacity = _fillOpacity;
         if (!_file.empty()) {
             bitmap = symbolizerContext.getBitmapManager()->loadBitmap(_file);
             if (!bitmap) {
                 _logger->write(Logger::Severity::ERROR, "Failed to load marker bitmap " + _file);
                 return;
             }
-            fill = vt::Color(0xffffffff) * _fillOpacity;
             width = bitmap->width;
             height = bitmap->height;
         }
         else {
+            vt::Color fill = _fill * _fillOpacity;
+            vt::Color stroke = _stroke * _strokeOpacity;
             if (_markerType == "rectangle") {
                 std::string file = "__torque_marker_rectangle_" + boost::lexical_cast<std::string>(width) + "_" + boost::lexical_cast<std::string>(height) + "_" + boost::lexical_cast<std::string>(fill.value()) + "_" + boost::lexical_cast<std::string>(_strokeWidth) + "_" + boost::lexical_cast<std::string>(stroke.value()) + ".bmp";
                 bitmap = symbolizerContext.getBitmapManager()->getBitmap(file);
@@ -36,7 +36,6 @@ namespace carto { namespace mvt {
                     bitmap = makeRectangleBitmap(width * SUPERSAMPLING_FACTOR, height * SUPERSAMPLING_FACTOR, fill, _strokeWidth * SUPERSAMPLING_FACTOR, stroke);
                     symbolizerContext.getBitmapManager()->storeBitmap(file, bitmap);
                 }
-                fill = vt::Color(0xffffffff);
             }
             else {
                 std::string file = "__torque_marker_ellipse_" + boost::lexical_cast<std::string>(width) + "_" + boost::lexical_cast<std::string>(height) + "_" + boost::lexical_cast<std::string>(fill.value()) + "_" + boost::lexical_cast<std::string>(_strokeWidth) + "_" + boost::lexical_cast<std::string>(stroke.value()) + ".bmp";
@@ -45,16 +44,20 @@ namespace carto { namespace mvt {
                     bitmap = makeEllipseBitmap(width * SUPERSAMPLING_FACTOR, height * SUPERSAMPLING_FACTOR, fill, _strokeWidth * SUPERSAMPLING_FACTOR, stroke);
                     symbolizerContext.getBitmapManager()->storeBitmap(file, bitmap);
                 }
-                fill = vt::Color(0xffffffff);
             }
+            fillOpacity = 1.0f;
         }
 
         std::shared_ptr<const vt::FloatFunction> widthFunc;
         ExpressionFunctionBinder<float>().bind(&widthFunc, std::make_shared<ConstExpression>(Value(width))).update(exprContext);
+        std::shared_ptr<const vt::ColorFunction> fillFunc;
+        ExpressionFunctionBinder<vt::Color>().bind(&fillFunc, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), [this](const Value& val) -> vt::Color {
+            return convertColor(val);
+        }).update(exprContext);
         std::shared_ptr<const vt::FloatFunction> opacityFunc;
-        ExpressionFunctionBinder<float>().bind(&opacityFunc, std::make_shared<ConstExpression>(Value(1.0f))).update(exprContext);
+        ExpressionFunctionBinder<float>().bind(&opacityFunc, std::make_shared<ConstExpression>(Value(fillOpacity))).update(exprContext);
 
-        vt::PointStyle style(compOp, fill, opacityFunc, widthFunc, symbolizerContext.getGlyphMap(), bitmap, boost::optional<cglib::mat3x3<float>>());
+        vt::PointStyle style(compOp, fillFunc, opacityFunc, widthFunc, symbolizerContext.getGlyphMap(), bitmap, boost::optional<cglib::mat3x3<float>>());
 
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
             if (auto pointGeometry = std::dynamic_pointer_cast<const PointGeometry>(featureCollection.getGeometry(index))) {

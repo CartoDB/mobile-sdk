@@ -105,7 +105,7 @@ namespace carto { namespace css {
                             textExpr = mvt::parseStringExpression(value);
                         }
                         else {
-                            textExpr = mvt::parseExpression(buildEscapedExpressionString(prop.expression));
+                            textExpr = mvt::parseExpression(buildExpressionString(prop.expression, false));
                         }
                     }
                     catch (const std::runtime_error& ex) {
@@ -173,7 +173,7 @@ namespace carto { namespace css {
             }
             if (!it->second.empty()) {
                 try {
-                    mapnikSymbolizer->setParameter(it->second, buildExpressionString(prop.expression));
+                    mapnikSymbolizer->setParameter(it->second, buildExpressionString(prop.expression, isStringExpression(propertyId)));
                 }
                 catch (const std::runtime_error& ex) {
                     _logger->write(mvt::Logger::Severity::ERROR, ex.what());
@@ -184,15 +184,11 @@ namespace carto { namespace css {
         return mapnikSymbolizer;
     }
 
-    std::string CartoCSSMapnikTranslator::buildExpressionString(const std::shared_ptr<const Expression>& expr) const {
+    std::string CartoCSSMapnikTranslator::buildExpressionString(const std::shared_ptr<const Expression>& expr, bool stringExpr) const {
         if (auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(expr)) {
-            return boost::lexical_cast<std::string>(buildValue(constExpr->getValue()));
-        }
-        return buildEscapedExpressionString(expr);
-    }
-
-    std::string CartoCSSMapnikTranslator::buildEscapedExpressionString(const std::shared_ptr<const Expression>& expr) const {
-        if (auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(expr)) {
+            if (stringExpr) {
+                return boost::lexical_cast<std::string>(buildValue(constExpr->getValue()));
+            }
             return mvt::generateValueString(buildValue(constExpr->getValue()));
         }
         else if (auto fieldVarExpr = std::dynamic_pointer_cast<const FieldOrVarExpression>(expr)) {
@@ -207,12 +203,12 @@ namespace carto { namespace css {
                 if (!exprStr.empty()) {
                     exprStr += ",";
                 }
-                exprStr += buildEscapedExpressionString(subExpr);
+                exprStr += (stringExpr ? "{" : "") + buildExpressionString(subExpr, false) + (stringExpr ? "}" : "");
             }
             return exprStr;
         }
         else if (auto unaryExpr = std::dynamic_pointer_cast<const UnaryExpression>(expr)) {
-            std::string exprStr = buildEscapedExpressionString(unaryExpr->getExpression());
+            std::string subExprStr = buildExpressionString(unaryExpr->getExpression(), false);
             std::string op;
             switch (unaryExpr->getOp()) {
             case UnaryExpression::Op::NEG:
@@ -221,11 +217,12 @@ namespace carto { namespace css {
             default:
                 throw TranslatorException("Unsupported unary operator type");
             }
-            return op + "(" + exprStr + ")";
+            std::string exprStr = op + "(" + subExprStr + ")";
+            return (stringExpr ? "{" : "") + exprStr + (stringExpr ? "}" : "");
         }
         else if (auto binaryExpr = std::dynamic_pointer_cast<const BinaryExpression>(expr)) {
-            std::string expr1Str = buildEscapedExpressionString(binaryExpr->getExpression1());
-            std::string expr2Str = buildEscapedExpressionString(binaryExpr->getExpression2());
+            std::string subExpr1Str = buildExpressionString(binaryExpr->getExpression1(), false);
+            std::string subExpr2Str = buildExpressionString(binaryExpr->getExpression2(), false);
             std::string op;
             switch (binaryExpr->getOp()) {
             case BinaryExpression::Op::ADD:
@@ -243,21 +240,86 @@ namespace carto { namespace css {
             default:
                 throw TranslatorException("Unsupported binary operator type");
             }
-            return "(" + expr1Str + ")" + op + "(" + expr2Str + ")";
+            std::string exprStr = "(" + subExpr1Str + ")" + op + "(" + subExpr2Str + ")";
+            return (stringExpr ? "{" : "") + exprStr + (stringExpr ? "}" : "");
         }
         else if (auto funcExpr = std::dynamic_pointer_cast<const FunctionExpression>(expr)) {
+            return buildFunctionExpressionString(funcExpr, stringExpr);
+        }
+        throw TranslatorException("Unsupported expression type");
+    }
+
+    std::string CartoCSSMapnikTranslator::buildFunctionExpressionString(const std::shared_ptr<const FunctionExpression>& funcExpr, bool stringExpr) const {
+        if (funcExpr->getFunc() == "step" || funcExpr->getFunc() == "linear" || funcExpr->getFunc() == "cubic") {
+            if (funcExpr->getArgs().size() < 2) {
+                throw TranslatorException("Unsupported interpolated expression type");
+            }
+            bool colorMode = false;
+            for (std::size_t i = 1; i < funcExpr->getArgs().size(); i++) {
+                auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(funcExpr->getArgs()[i]);
+                if (!constExpr) {
+                    throw TranslatorException("Expecting constant interpolation list");
+                }
+                auto keyFrames = boost::get<std::vector<Value>>(&constExpr->getValue());
+                if (!keyFrames || keyFrames->size() != 2) {
+                    throw TranslatorException("Expecting interpolation elements of size 2");
+                }
+                if (boost::get<Color>(&keyFrames->at(1))) {
+                    colorMode = true;
+                }
+            }
+
+            if (colorMode) {
+                // Color interpolation. Split color values into 4 components and create separate interpolators for each
+                std::string exprStr = "rgba";
+                exprStr += "(";
+                for (std::size_t c = 0; c < 4; c++) {
+                    std::string subExprStr = funcExpr->getFunc();
+                    subExprStr += "(";
+                    subExprStr += buildExpressionString(funcExpr->getArgs()[0], false);
+                    for (std::size_t i = 1; i < funcExpr->getArgs().size(); i++) {
+                        auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(funcExpr->getArgs()[i]);
+                        auto keyFrames = boost::get<std::vector<Value>>(&constExpr->getValue());
+                        subExprStr += "," + boost::lexical_cast<std::string>(buildValue(keyFrames->at(0)));
+                        subExprStr += "," + boost::lexical_cast<std::string>(boost::get<Color>(keyFrames->at(1)).rgba()[c] * 255.0f);
+                    }
+                    subExprStr += ")";
+
+                    if (c > 0) {
+                        exprStr += ",";
+                    }
+                    exprStr += (stringExpr ? "{" : "") + subExprStr + (stringExpr ? "}" : "");
+                }
+                exprStr += ")";
+                return exprStr;
+            }
+            else {
+                // Assume scalar interpolation
+                std::string exprStr = funcExpr->getFunc();
+                exprStr += "(";
+                exprStr += (stringExpr ? "{" : "") + buildExpressionString(funcExpr->getArgs()[0], false) + (stringExpr ? "}" : "");
+                for (std::size_t i = 1; i < funcExpr->getArgs().size(); i++) {
+                    auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(funcExpr->getArgs()[i]);
+                    auto keyFrames = boost::get<std::vector<Value>>(&constExpr->getValue());
+                    exprStr += "," + boost::lexical_cast<std::string>(buildValue(keyFrames->at(0)));
+                    exprStr += "," + mvt::generateValueString(buildValue(keyFrames->at(1)));
+                }
+                exprStr += ")";
+                return exprStr;
+            }
+        }
+        else {
             std::string exprStr = funcExpr->getFunc();
             exprStr += "(";
             for (std::size_t i = 0; i < funcExpr->getArgs().size(); i++) {
                 if (i > 0) {
                     exprStr += ",";
                 }
-                exprStr += buildEscapedExpressionString(funcExpr->getArgs()[i]);
+                exprStr += (stringExpr ? "{" : "") + buildExpressionString(funcExpr->getArgs()[i], false) + (stringExpr ? "}" : "");
             }
             exprStr += ")";
             return exprStr;
         }
-        throw TranslatorException("Unsupported expression type");
     }
 
     std::shared_ptr<mvt::Predicate> CartoCSSMapnikTranslator::buildPredicate(const std::shared_ptr<const Predicate>& pred) const {
@@ -310,17 +372,10 @@ namespace carto { namespace css {
         return boost::apply_visitor(ValueBuilder(), val);
     }
 
-    const std::vector<std::string> CartoCSSMapnikTranslator::_symbolizerList = {
-        "line-pattern",
-        "line",
-        "polygon-pattern",
-        "polygon",
-        "point",
-        "text",
-        "marker",
-        "shield",
-        "building",
-    };
+    bool CartoCSSMapnikTranslator::isStringExpression(const std::string& propertyName) const {
+        std::string propertyType = propertyName.substr(propertyName.rfind('-') + 1);
+        return _symbolizerNonStringProperties.find(propertyType) == _symbolizerNonStringProperties.end();
+    }
 
     std::string CartoCSSMapnikTranslator::getPropertySymbolizerId(const std::string& propertyName) const {
         std::string::size_type symbolizerTypePos = propertyName.rfind('/') + 1;
@@ -332,7 +387,32 @@ namespace carto { namespace css {
         return std::string();
     }
 
-    const std::map<std::string, std::string> CartoCSSMapnikTranslator::_symbolizerPropertyMap = {
+    const std::vector<std::string> CartoCSSMapnikTranslator::_symbolizerList = {
+        "line-pattern",
+        "line",
+        "polygon-pattern",
+        "polygon",
+        "point",
+        "text",
+        "marker",
+        "shield",
+        "building"
+    };
+
+    const std::unordered_set<std::string> CartoCSSMapnikTranslator::_symbolizerNonStringProperties = {
+        "width",
+        "height",
+        "size",
+        "opacity",
+        "radius",
+        "distance",
+        "spacing",
+        "orientation",
+        "dx",
+        "dy"
+    };
+
+    const std::unordered_map<std::string, std::string> CartoCSSMapnikTranslator::_symbolizerPropertyMap = {
         { "line-color", "stroke" },
         { "line-opacity", "stroke-opacity" },
         { "line-width", "stroke-width" },
@@ -438,6 +518,6 @@ namespace carto { namespace css {
         { "building-fill", "fill" },
         { "building-fill-opacity", "fill-opacity" },
         { "building-height", "height" },
-        { "building-geometry-transform", "geometry-transform" },
+        { "building-geometry-transform", "geometry-transform" }
     };
 } }

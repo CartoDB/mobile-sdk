@@ -15,6 +15,8 @@
 #include <functional>
 #include <vector>
 
+#include <cglib/fcurve.h>
+
 namespace carto { namespace mvt {
     class Predicate;
     
@@ -247,11 +249,11 @@ namespace carto { namespace mvt {
             CUBIC
         };
         
-        explicit InterpolateExpression(Method method, std::shared_ptr<const Expression> timeExpr, std::vector<std::shared_ptr<const Expression>> keyFrameExprs) : _method(method), _timeExpr(std::move(timeExpr)), _keyFrameExprs(std::move(keyFrameExprs)) { }
+        explicit InterpolateExpression(Method method, std::shared_ptr<const Expression> timeExpr, std::vector<Value> keyFrames);
 
         Method getMethod() const { return _method; }
         const std::shared_ptr<const Expression>& getTimeExpression() const { return _timeExpr; }
-        const std::vector<std::shared_ptr<const Expression>>& getKeyFrameExpressions() const { return _keyFrameExprs; }
+        const std::vector<Value>& getKeyFrames() const { return _keyFrames; }
 
         virtual Value evaluate(const ExpressionContext& context) const override;
 
@@ -264,7 +266,8 @@ namespace carto { namespace mvt {
     private:
         const Method _method;
         const std::shared_ptr<const Expression> _timeExpr;
-        const std::vector<std::shared_ptr<const Expression>> _keyFrameExprs;
+        const std::vector<Value> _keyFrames;
+        cglib::fcurve<cglib::vec2<float>> _fcurve;
     };
 } }
 

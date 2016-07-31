@@ -135,9 +135,9 @@ namespace carto { namespace mvt {
 
                 factor =
                       constant										  [_val = phx::bind(&makeConstExpression, _1)]
-                    | (step_kw   >> '(' > expression > ',' > (expression % ',') > ')') [_val = phx::bind(&makeInterpolateExpression, InterpolateExpression::Method::STEP, _1, _2)]
-                    | (linear_kw >> '(' > expression > ',' > (expression % ',') > ')') [_val = phx::bind(&makeInterpolateExpression, InterpolateExpression::Method::LINEAR, _1, _2)]
-                    | (cubic_kw  >> '(' > expression > ',' > (expression % ',') > ')') [_val = phx::bind(&makeInterpolateExpression, InterpolateExpression::Method::CUBIC, _1, _2)]
+                    | (step_kw   >> '(' > expression > ',' > (constant % ',') > ')') [_val = phx::bind(&makeInterpolateExpression, InterpolateExpression::Method::STEP, _1, _2)]
+                    | (linear_kw >> '(' > expression > ',' > (constant % ',') > ')') [_val = phx::bind(&makeInterpolateExpression, InterpolateExpression::Method::LINEAR, _1, _2)]
+                    | (cubic_kw  >> '(' > expression > ',' > (constant % ',') > ')') [_val = phx::bind(&makeInterpolateExpression, InterpolateExpression::Method::CUBIC, _1, _2)]
                     | ('[' > stringExpression > ']')				  [_val = phx::bind(&makeVariableExpression, _1)]
                     | ('(' > expression > ')')				    	  [_val = _1]
                     ;
@@ -226,8 +226,8 @@ namespace carto { namespace mvt {
                 return std::make_shared<TertiaryExpression>(std::make_shared<Op>(), std::move(expr1), std::move(expr2), std::move(expr3));
             }
 
-            static std::shared_ptr<Expression> makeInterpolateExpression(InterpolateExpression::Method method, std::shared_ptr<const Expression> expr1, std::vector<std::shared_ptr<Expression>> exprs) {
-                return std::make_shared<InterpolateExpression>(method, expr1, std::vector<std::shared_ptr<const Expression>>(exprs.begin(), exprs.end()));
+            static std::shared_ptr<Expression> makeInterpolateExpression(InterpolateExpression::Method method, std::shared_ptr<const Expression> timeExpr, std::vector<Value> keyFrames) {
+                return std::make_shared<InterpolateExpression>(method, timeExpr, keyFrames);
             }
         };
     }

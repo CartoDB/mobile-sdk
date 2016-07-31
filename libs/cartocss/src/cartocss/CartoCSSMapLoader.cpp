@@ -238,11 +238,11 @@ namespace carto { namespace css {
                 // Note that we ignore filters, this is CartoCSS design issue and represents how CartoCSS is translated to Mapnik.
                 auto opacityIt = propertySet.properties.find("opacity");
                 if (opacityIt != propertySet.properties.end()) {
-                    attachmentStyle.opacity = boost::lexical_cast<float>(translator.buildExpressionString(opacityIt->second.expression));
+                    attachmentStyle.opacity = boost::lexical_cast<float>(translator.buildExpressionString(opacityIt->second.expression, false));
                 }
                 auto compOpIt = propertySet.properties.find("comp-op");
                 if (compOpIt != propertySet.properties.end()) {
-                    attachmentStyle.compOp = translator.buildExpressionString(compOpIt->second.expression);
+                    attachmentStyle.compOp = translator.buildExpressionString(compOpIt->second.expression, true);
                 }
             }
         }

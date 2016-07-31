@@ -1,9 +1,10 @@
 #include "Expression.h"
 #include "Predicate.h"
+#include "ParserUtils.h"
+#include "GeneratorUtils.h"
 
 #include <algorithm>
-
-#include <boost/algorithm/string.hpp>
+#include <sstream>
 
 #include <cglib/fcurve.h>
 
@@ -28,66 +29,48 @@ namespace carto { namespace mvt {
         _pred->fold(fn);
     }
 
-    Value InterpolateExpression::evaluate(const ExpressionContext& context) const {
-        float time = ValueConverter<float>::convert(_timeExpr->evaluate(context));
-        std::vector<cglib::vec2<float>> keyFrames;
-        for (const std::shared_ptr<const Expression>& keyFrameExpr : _keyFrameExprs) {
-            std::string keyFrame = ValueConverter<std::string>::convert(keyFrameExpr->evaluate(context));
-            std::vector<std::string> keyValue;
-            boost::split(keyValue, keyFrame, boost::is_any_of(","));
-            if (keyValue.size() == 2) {
-                float key = boost::lexical_cast<float>(keyValue[0]);
-                float val = boost::lexical_cast<float>(keyValue[1]);
-                keyFrames.emplace_back(key, val);
-            }
-        }
-        cglib::fcurve<cglib::vec2<float>>::curve_type type = cglib::fcurve<cglib::vec2<float>>::linear_curve;
-        switch (_method)
-        {
+    InterpolateExpression::InterpolateExpression(Method method, std::shared_ptr<const Expression> timeExpr, std::vector<Value> keyFrames) : _method(method), _timeExpr(std::move(timeExpr)), _keyFrames(std::move(keyFrames)), _fcurve() {
+        cglib::fcurve_type type = cglib::fcurve_type::linear;
+        switch (_method) {
         case Method::STEP:
-            type = cglib::fcurve<cglib::vec2<float>>::step_curve;
+            type = cglib::fcurve_type::step;
             break;
         case Method::LINEAR:
-            type = cglib::fcurve<cglib::vec2<float>>::linear_curve;
+            type = cglib::fcurve_type::linear;
             break;
         case Method::CUBIC:
-            type = cglib::fcurve<cglib::vec2<float>>::cubic_curve;
+            type = cglib::fcurve_type::cubic;
             break;
         }
-        cglib::fcurve<cglib::vec2<float>> curve = cglib::fcurve<cglib::vec2<float>>::create(type, keyFrames.begin(), keyFrames.end());
-        float val = curve.evaluate(time)(1);
+
+        std::vector<cglib::vec2<float>> keyFramesList;
+        for (std::size_t i = 0; i + 1 < _keyFrames.size(); i += 2) {
+            keyFramesList.emplace_back(ValueConverter<float>::convert(_keyFrames[i + 0]), ValueConverter<float>::convert(_keyFrames[i + 1]));
+        }
+
+        _fcurve = cglib::fcurve<cglib::vec2<float>>::create(type, keyFramesList.begin(), keyFramesList.end());
+    }
+
+    Value InterpolateExpression::evaluate(const ExpressionContext& context) const {
+        float time = ValueConverter<float>::convert(_timeExpr->evaluate(context));
+        float val = _fcurve.evaluate(time)(1);
         return Value(val);
     }
 
     bool InterpolateExpression::equals(const std::shared_ptr<const Expression>& expr) const {
         if (auto interpolateExpr = std::dynamic_pointer_cast<const InterpolateExpression>(expr)) {
-            if (!(interpolateExpr->_method == _method && interpolateExpr->_timeExpr->equals(_timeExpr) && interpolateExpr->_keyFrameExprs.size() == _keyFrameExprs.size())) {
-                return false;
-            }
-            for (std::size_t i = 0; i < _keyFrameExprs.size(); i++) {
-                if (!interpolateExpr->_keyFrameExprs[i]->equals(_keyFrameExprs[i])) {
-                    return false;
-                }
-            }
-            return true;
+            return interpolateExpr->_method == _method && interpolateExpr->_timeExpr->equals(_timeExpr) && interpolateExpr->_keyFrames == _keyFrames;
         }
         return false;
     }
 
     std::shared_ptr<const Expression> InterpolateExpression::map(std::function<std::shared_ptr<const Expression>(const std::shared_ptr<const Expression>&)> fn) const {
         std::shared_ptr<const Expression> timeExpr = _timeExpr->map(fn);
-        std::vector<std::shared_ptr<const Expression>> keyFrameExprs;
-        std::transform(_keyFrameExprs.begin(), _keyFrameExprs.end(), std::back_inserter(keyFrameExprs), [&fn](const std::shared_ptr<const Expression>& expr) {
-            return fn(expr);
-        });
-        return fn(std::make_shared<InterpolateExpression>(_method, timeExpr, keyFrameExprs));
+        return fn(std::make_shared<InterpolateExpression>(_method, timeExpr, _keyFrames));
     }
 
     void InterpolateExpression::fold(std::function<void(const std::shared_ptr<const Expression>&)> fn) const {
         fn(shared_from_this());
         fn(_timeExpr);
-        for (const std::shared_ptr<const Expression>& expr : _keyFrameExprs) {
-            fn(expr);
-        }
     }
 } }

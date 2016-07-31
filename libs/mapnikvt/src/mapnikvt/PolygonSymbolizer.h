@@ -13,6 +13,7 @@ namespace carto { namespace mvt {
     class PolygonSymbolizer : public GeometrySymbolizer {
     public:
         explicit PolygonSymbolizer(std::shared_ptr<Logger> logger) : GeometrySymbolizer(std::move(logger)) {
+            bind(&_fill, std::make_shared<ConstExpression>(Value(std::string("#808080"))), &PolygonSymbolizer::convertColor);
             bind(&_fillOpacity, std::make_shared<ConstExpression>(Value(1.0f)));
         }
 
@@ -21,7 +22,7 @@ namespace carto { namespace mvt {
     protected:
         virtual void bindParameter(const std::string& name, const std::string& value) override;
 
-        vt::Color _fill = vt::Color(0xff808080);
+        std::shared_ptr<const vt::ColorFunction> _fill; // vt::Color(0xff808080)
         std::shared_ptr<const vt::FloatFunction> _fillOpacity; // 1.0f
     };
 } }

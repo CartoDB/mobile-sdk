@@ -17,7 +17,7 @@ namespace carto { namespace css {
             }
             if (!it->second.empty()) {
                 try {
-                    std::string exprStr = buildExpressionString(prop.expression);
+                    std::string exprStr = buildExpressionString(prop.expression, isStringExpression(propertyId));
                     mapnikSymbolizer->setParameter(it->second, exprStr);
                 }
                 catch (const std::runtime_error& ex) {
@@ -34,7 +34,7 @@ namespace carto { namespace css {
         return "marker";
     }
 
-    const std::map<std::string, std::string> TorqueCartoCSSMapnikTranslator::_symbolizerPropertyMap = {
+    const std::unordered_map<std::string, std::string> TorqueCartoCSSMapnikTranslator::_symbolizerPropertyMap = {
         { "marker-type", "marker-type" },
         { "marker-file", "file" },
         { "marker-fill", "fill" },

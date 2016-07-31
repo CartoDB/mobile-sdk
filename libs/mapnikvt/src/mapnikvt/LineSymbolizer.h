@@ -13,6 +13,7 @@ namespace carto { namespace mvt {
     class LineSymbolizer : public GeometrySymbolizer {
     public:
         explicit LineSymbolizer(std::shared_ptr<Logger> logger) : GeometrySymbolizer(std::move(logger)) {
+            bind(&_stroke, std::make_shared<ConstExpression>(Value(std::string("#000000"))), &LineSymbolizer::convertColor);
             bind(&_strokeWidth, std::make_shared<ConstExpression>(Value(1.0f)));
             bind(&_strokeOpacity, std::make_shared<ConstExpression>(Value(1.0f)));
         }
@@ -26,7 +27,7 @@ namespace carto { namespace mvt {
 
         enum { MIN_SUPERSAMPLING_FACTOR = 2, MAX_SUPERSAMPLING_FACTOR = 16 };
 
-        vt::Color _stroke = vt::Color(0xff000000);
+        std::shared_ptr<const vt::ColorFunction> _stroke; // vt::Color(0xff000000)
         std::shared_ptr<const vt::FloatFunction> _strokeWidth; // 1.0f
         std::shared_ptr<const vt::FloatFunction> _strokeOpacity; // 1.0f
         std::string _strokeLinejoin = "miter";

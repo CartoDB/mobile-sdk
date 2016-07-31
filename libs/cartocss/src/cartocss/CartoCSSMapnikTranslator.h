@@ -19,6 +19,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <unordered_set>
+#include <unordered_map>
 
 namespace carto { namespace css {
     class CartoCSSMapnikTranslator {
@@ -34,9 +36,9 @@ namespace carto { namespace css {
 
         virtual std::shared_ptr<mvt::Symbolizer> buildSymbolizer(const std::string& symbolizerType, const std::list<CartoCSSCompiler::Property>& properties, const std::shared_ptr<mvt::Map>& map, int zoom) const;
 
-        virtual std::string buildExpressionString(const std::shared_ptr<const Expression>& expr) const;
+        virtual std::string buildExpressionString(const std::shared_ptr<const Expression>& expr, bool stringExpr) const;
 
-        virtual std::string buildEscapedExpressionString(const std::shared_ptr<const Expression>& expr) const;
+        virtual std::string buildFunctionExpressionString(const std::shared_ptr<const FunctionExpression>& funcExpr, bool topLevel) const;
 
         virtual std::shared_ptr<mvt::Predicate> buildPredicate(const std::shared_ptr<const Predicate>& pred) const;
 
@@ -44,6 +46,8 @@ namespace carto { namespace css {
 
     protected:
         virtual mvt::Value buildValue(const Value& val) const;
+
+        virtual bool isStringExpression(const std::string& propertyName) const;
 
         virtual std::string getPropertySymbolizerId(const std::string& propertyName) const;
 
@@ -53,7 +57,8 @@ namespace carto { namespace css {
         struct ValueBuilder;
         
         static const std::vector<std::string> _symbolizerList;
-        static const std::map<std::string, std::string> _symbolizerPropertyMap;
+        static const std::unordered_set<std::string> _symbolizerNonStringProperties;
+        static const std::unordered_map<std::string, std::string> _symbolizerPropertyMap;
     };
 } }
 

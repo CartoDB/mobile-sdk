@@ -20,7 +20,7 @@ namespace carto { namespace css {
         virtual std::string getPropertySymbolizerId(const std::string& propertyName) const override;
 
     private:
-        static const std::map<std::string, std::string> _symbolizerPropertyMap;
+        static const std::unordered_map<std::string, std::string> _symbolizerPropertyMap;
     };
 } }
 

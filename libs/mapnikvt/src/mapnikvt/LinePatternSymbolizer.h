@@ -13,6 +13,7 @@ namespace carto { namespace mvt {
     class LinePatternSymbolizer : public GeometrySymbolizer {
     public:
         explicit LinePatternSymbolizer(std::shared_ptr<Logger> logger) : GeometrySymbolizer(std::move(logger)) {
+            bind(&_fill, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), &LinePatternSymbolizer::convertColor);
             bind(&_opacity, std::make_shared<ConstExpression>(Value(1.0f)));
         }
 
@@ -22,7 +23,7 @@ namespace carto { namespace mvt {
         virtual void bindParameter(const std::string& name, const std::string& value) override;
 
         std::string _file;
-        vt::Color _fill = vt::Color(0xffffffff);
+        std::shared_ptr<const vt::ColorFunction> _fill; // vt::Color(0xffffffff)
         std::shared_ptr<const vt::FloatFunction> _opacity; // 1.0f
     };
 } }
