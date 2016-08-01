@@ -21,6 +21,7 @@ namespace carto {
         _visibleCache(128 * 1024 * 1024), // limit should be never reached during normal use cases
         _preloadingCache(DEFAULT_PRELOADING_CACHE_SIZE)
     {
+        setCullDelay(DEFAULT_CULL_DELAY);
     }
     
     RasterTileLayer::~RasterTileLayer() {
@@ -34,10 +35,6 @@ namespace carto {
     void RasterTileLayer::setTextureCacheCapacity(std::size_t capacityInBytes) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _preloadingCache.resize(capacityInBytes);
-    }
-    
-    int RasterTileLayer::getCullDelay() const {
-        return CULL_DELAY_TIME;
     }
     
     bool RasterTileLayer::tileExists(const MapTile& tile, bool preloadingCache) const {

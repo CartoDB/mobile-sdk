@@ -54,6 +54,19 @@ namespace carto {
         void setUpdatePriority(int priority);
     
         /**
+         * Returns the culling delay of the layer in milliseconds.
+         * @return The culling delay in milliseconds.
+         */
+        int getCullDelay() const;
+        /**
+         * Sets the layer culling delay. The culling delay is used to delay layer content rendering in case of user interaction,
+         * higher delay improves performance and battery life at the expense of interactivity. Default is 200ms-400ms, depending
+         * on layer type.
+         * @param delay The new culling delay in milliseconds.
+         */
+        void setCullDelay(int delay);
+    
+        /**
          * Returns the visibility of this layer.
          * @return True if the layer is visible.
          */
@@ -109,8 +122,6 @@ namespace carto {
     
         std::shared_ptr<CullState> getLastCullState() const;
     
-        virtual int getCullDelay() const;
-    
         virtual void loadData(const std::shared_ptr<CullState>& cullState) = 0;
         
         virtual void offsetLayerHorizontally(double offset) = 0;
@@ -137,6 +148,8 @@ namespace carto {
         std::shared_ptr<CullState> _lastCullState;
        
         std::atomic<int> _updatePriority;
+
+        std::atomic<int> _cullDelay;
         
         bool _visible;
         
@@ -145,7 +158,7 @@ namespace carto {
         mutable std::recursive_mutex _mutex;
 
     private:
-        static const int CULL_DELAY = 400;
+        static const int DEFAULT_CULL_DELAY = 400;
 
         bool _surfaceCreated;
     };
