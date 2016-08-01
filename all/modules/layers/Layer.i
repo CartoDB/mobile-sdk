@@ -24,6 +24,7 @@
 
 %attribute(carto::Layer, bool, Visible, isVisible, setVisible)
 %attribute(carto::Layer, int, UpdatePriority, getUpdatePriority, setUpdatePriority)
+%attribute(carto::Layer, int, CullDelay, getCullDelay, setCullDelay)
 %attributeval(carto::Layer, carto::MapRange, VisibleZoomRange, getVisibleZoomRange, setVisibleZoomRange)
 %ignore carto::Layer::isSurfaceCreated;
 %ignore carto::Layer::onSurfaceCreated;

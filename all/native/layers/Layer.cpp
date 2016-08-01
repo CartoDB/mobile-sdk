@@ -18,6 +18,14 @@ namespace carto {
         _updatePriority = priority;
     }
     
+    int Layer::getCullDelay() const {
+        return _cullDelay;
+    }
+
+    void Layer::setCullDelay(int cullDelay) {
+        _cullDelay = cullDelay;
+    }
+        
     bool Layer::isSurfaceCreated() {
         return _surfaceCreated;
     }
@@ -72,6 +80,7 @@ namespace carto {
         _mapRenderer(),
         _lastCullState(),
         _updatePriority(0),
+        _cullDelay(DEFAULT_CULL_DELAY),
         _visible(true),
         _visibleZoomRange(0, std::numeric_limits<float>::infinity()),
         _mutex(),
@@ -107,10 +116,6 @@ namespace carto {
         return _lastCullState;
     }
     
-    int Layer::getCullDelay() const {
-        return CULL_DELAY;
-    }
-        
     void Layer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
         _surfaceCreated = true;
     }

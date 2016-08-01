@@ -101,8 +101,6 @@ namespace carto {
         void setBuildingRenderOrder(VectorTileRenderOrder::VectorTileRenderOrder renderOrder);
     
     protected:
-        virtual int getCullDelay() const;
-    
         virtual bool tileExists(const MapTile& mapTile, bool preloadingCache) const;
         virtual bool tileValid(const MapTile& mapTile, bool preloadingCache) const;
         virtual void fetchTile(const MapTile& mapTile, bool preloadingTile, bool invalidated);
@@ -165,7 +163,7 @@ namespace carto {
             ViewState _viewState;
         };
     
-        static const int CULL_DELAY_TIME = 200;
+        static const int DEFAULT_CULL_DELAY = 200;
         static const int PRELOADING_PRIORITY_OFFSET = -2;
         static const int EXTRA_TILE_FOOTPRINT = 4096;
         static const int DEFAULT_PRELOADING_CACHE_SIZE = 10 * 1024 * 1024;

@@ -35,6 +35,8 @@ namespace carto {
         }
 
         _labelCullThreadPool->setPoolSize(1);
+
+        setCullDelay(DEFAULT_CULL_DELAY);
     }
     
     VectorTileLayer::~VectorTileLayer() {
@@ -80,10 +82,6 @@ namespace carto {
             _buildingRenderOrder = renderOrder;
         }
         refresh();
-    }
-    
-    int VectorTileLayer::getCullDelay() const {
-        return CULL_DELAY_TIME;
     }
     
     bool VectorTileLayer::tileExists(const MapTile& tile, bool preloadingCache) const {
