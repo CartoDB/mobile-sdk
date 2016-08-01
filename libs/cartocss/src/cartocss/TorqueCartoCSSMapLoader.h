@@ -12,8 +12,8 @@
 #include <memory>
 
 #include "CartoCSSMapLoader.h"
-#include "Mapnikvt/TorqueMap.h"
-#include "Mapnikvt/Logger.h"
+#include "mapnikvt/TorqueMap.h"
+#include "mapnikvt/Logger.h"
 
 namespace carto { namespace css {
     class TorqueCartoCSSMapLoader : protected CartoCSSMapLoader {

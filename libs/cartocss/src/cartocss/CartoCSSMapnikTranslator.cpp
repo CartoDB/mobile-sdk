@@ -3,24 +3,24 @@
 #include "Predicate.h"
 #include "CartoCSSParser.h"
 #include "CartoCSSCompiler.h"
-#include "Mapnikvt/Expression.h"
-#include "Mapnikvt/ExpressionOperator.h"
-#include "Mapnikvt/Predicate.h"
-#include "Mapnikvt/PredicateOperator.h"
-#include "Mapnikvt/Filter.h"
-#include "Mapnikvt/Rule.h"
-#include "Mapnikvt/Style.h"
-#include "Mapnikvt/Layer.h"
-#include "Mapnikvt/PointSymbolizer.h"
-#include "Mapnikvt/LineSymbolizer.h"
-#include "Mapnikvt/LinePatternSymbolizer.h"
-#include "Mapnikvt/PolygonSymbolizer.h"
-#include "Mapnikvt/PolygonPatternSymbolizer.h"
-#include "Mapnikvt/TextSymbolizer.h"
-#include "Mapnikvt/MarkersSymbolizer.h"
-#include "Mapnikvt/ShieldSymbolizer.h"
-#include "Mapnikvt/BuildingSymbolizer.h"
-#include "Mapnikvt/GeneratorUtils.h"
+#include "mapnikvt/Expression.h"
+#include "mapnikvt/ExpressionOperator.h"
+#include "mapnikvt/Predicate.h"
+#include "mapnikvt/PredicateOperator.h"
+#include "mapnikvt/Filter.h"
+#include "mapnikvt/Rule.h"
+#include "mapnikvt/Style.h"
+#include "mapnikvt/Layer.h"
+#include "mapnikvt/PointSymbolizer.h"
+#include "mapnikvt/LineSymbolizer.h"
+#include "mapnikvt/LinePatternSymbolizer.h"
+#include "mapnikvt/PolygonSymbolizer.h"
+#include "mapnikvt/PolygonPatternSymbolizer.h"
+#include "mapnikvt/TextSymbolizer.h"
+#include "mapnikvt/MarkersSymbolizer.h"
+#include "mapnikvt/ShieldSymbolizer.h"
+#include "mapnikvt/BuildingSymbolizer.h"
+#include "mapnikvt/GeneratorUtils.h"
 
 namespace carto { namespace css {
     struct CartoCSSMapnikTranslator::ValueBuilder : boost::static_visitor<mvt::Value> {
@@ -171,14 +171,7 @@ namespace carto { namespace css {
                 _logger->write(mvt::Logger::Severity::WARNING, "Unsupported symbolizer property: " + propertyId);
                 continue;
             }
-            if (!it->second.empty()) {
-                try {
-                    mapnikSymbolizer->setParameter(it->second, buildExpressionString(prop.expression, isStringExpression(propertyId)));
-                }
-                catch (const std::runtime_error& ex) {
-                    _logger->write(mvt::Logger::Severity::ERROR, ex.what());
-                }
-            }
+            setSymbolizerParameter(mapnikSymbolizer, it->second, prop.expression, isStringExpression(propertyId));
         }
 
         return mapnikSymbolizer;
@@ -385,6 +378,23 @@ namespace carto { namespace css {
             }
         }
         return std::string();
+    }
+
+    void CartoCSSMapnikTranslator::setSymbolizerParameter(const std::shared_ptr<mvt::Symbolizer>& symbolizer, const std::string& name, const std::shared_ptr<const Expression>& expr, bool stringExpr) const {
+        if (!name.empty()) {
+            try {
+                std::string exprStr;
+                if (auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(expr)) {
+                    exprStr = boost::lexical_cast<std::string>(buildValue(constExpr->getValue()));
+                } else {
+                    exprStr = buildExpressionString(expr, stringExpr);
+                }
+                symbolizer->setParameter(name, exprStr);
+            }
+            catch (const std::runtime_error& ex) {
+                _logger->write(mvt::Logger::Severity::ERROR, ex.what());
+            }
+        }
     }
 
     const std::vector<std::string> CartoCSSMapnikTranslator::_symbolizerList = {

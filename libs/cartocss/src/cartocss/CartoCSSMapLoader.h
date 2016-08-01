@@ -10,8 +10,8 @@
 #include "CartoCSSCompiler.h"
 #include "CartoCSSMapnikTranslator.h"
 #include "Value.h"
-#include "Mapnikvt/Map.h"
-#include "Mapnikvt/Logger.h"
+#include "mapnikvt/Map.h"
+#include "mapnikvt/Logger.h"
 
 #include <memory>
 #include <string>

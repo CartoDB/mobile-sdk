@@ -10,11 +10,11 @@
 #include "Expression.h"
 #include "Predicate.h"
 #include "CartoCSSCompiler.h"
-#include "Mapnikvt/Map.h"
-#include "Mapnikvt/Rule.h"
-#include "Mapnikvt/Expression.h"
-#include "Mapnikvt/Predicate.h"
-#include "Mapnikvt/Logger.h"
+#include "mapnikvt/Map.h"
+#include "mapnikvt/Rule.h"
+#include "mapnikvt/Expression.h"
+#include "mapnikvt/Predicate.h"
+#include "mapnikvt/Logger.h"
 
 #include <memory>
 #include <string>
@@ -50,6 +50,8 @@ namespace carto { namespace css {
         virtual bool isStringExpression(const std::string& propertyName) const;
 
         virtual std::string getPropertySymbolizerId(const std::string& propertyName) const;
+
+        virtual void setSymbolizerParameter(const std::shared_ptr<mvt::Symbolizer>& symbolizer, const std::string& name, const std::shared_ptr<const Expression>& expr, bool stringExpr) const;
 
         std::shared_ptr<mvt::Logger> _logger;
 

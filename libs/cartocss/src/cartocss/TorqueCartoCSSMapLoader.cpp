@@ -1,7 +1,7 @@
 #include "TorqueCartoCSSMapLoader.h"
 #include "CartoCSSParser.h"
 #include "TorqueCartoCSSMapnikTranslator.h"
-#include "Mapnikvt/TorqueLayer.h"
+#include "mapnikvt/TorqueLayer.h"
 
 namespace carto { namespace css {
     std::shared_ptr<mvt::TorqueMap> TorqueCartoCSSMapLoader::loadMap(const std::string& cartoCSS) const {

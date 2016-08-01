@@ -1,5 +1,5 @@
 #include "TorqueCartoCSSMapnikTranslator.h"
-#include "Mapnikvt/TorqueMarkerSymbolizer.h"
+#include "mapnikvt/TorqueMarkerSymbolizer.h"
 
 namespace carto { namespace css {
     std::shared_ptr<mvt::Symbolizer> TorqueCartoCSSMapnikTranslator::buildSymbolizer(const std::string& symbolizerType, const std::list<CartoCSSCompiler::Property>& properties, const std::shared_ptr<mvt::Map>& map, int zoom) const {
@@ -15,15 +15,7 @@ namespace carto { namespace css {
                 _logger->write(mvt::Logger::Severity::ERROR, "Unsupported Torque symbolizer property: " + propertyId);
                 continue;
             }
-            if (!it->second.empty()) {
-                try {
-                    std::string exprStr = buildExpressionString(prop.expression, isStringExpression(propertyId));
-                    mapnikSymbolizer->setParameter(it->second, exprStr);
-                }
-                catch (const std::runtime_error& ex) {
-                    _logger->write(mvt::Logger::Severity::ERROR, ex.what());
-                }
-            }
+            setSymbolizerParameter(mapnikSymbolizer, it->second, prop.expression, isStringExpression(propertyId));
         }
 
         return mapnikSymbolizer;
