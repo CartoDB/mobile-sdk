@@ -44,7 +44,7 @@ endif(CMAKE_COMPILER_IS_GNUCXX)
 # Directories
 set(SDK_BASE_DIR "${PROJECT_SOURCE_DIR}/../..")
 set(SDK_SRC_DIR "${SDK_BASE_DIR}/all/native")
-set(SDK_LIBS_DIR "${SDK_BASE_DIR}/libs" )
+set(SDK_CARTO_LIBS_DIR "${SDK_BASE_DIR}/libs-carto" )
 set(SDK_EXTERNAL_LIBS_DIR "${SDK_BASE_DIR}/libs-external")
 
 set(ZLIB_INCLUDE_DIR "${SDK_EXTERNAL_LIBS_DIR}/zlib")
@@ -52,11 +52,11 @@ set(PNG_INCLUDE_DIR "${SDK_EXTERNAL_LIBS_DIR}/png")
 
 include_directories(
     "${SDK_SRC_DIR}"
-    "${SDK_LIBS_DIR}/vt/src"
-    "${SDK_LIBS_DIR}/mapnikvt/src"
-    "${SDK_LIBS_DIR}/cartocss/src"
-    "${SDK_LIBS_DIR}/nml/src"
-    "${SDK_LIBS_DIR}/routing/src"
+    "${SDK_CARTO_LIBS_DIR}/vt/src"
+    "${SDK_CARTO_LIBS_DIR}/mapnikvt/src"
+    "${SDK_CARTO_LIBS_DIR}/cartocss/src"
+    "${SDK_CARTO_LIBS_DIR}/nml/src"
+    "${SDK_CARTO_LIBS_DIR}/routing/src"
     "${SDK_EXTERNAL_LIBS_DIR}/boost"
     "${SDK_EXTERNAL_LIBS_DIR}/asio"
     "${SDK_EXTERNAL_LIBS_DIR}/cglib"
@@ -120,11 +120,11 @@ include_directories(
 endif()
 
 # Subprojects
-add_subdirectory("${SDK_LIBS_DIR}/vt" vt)
-add_subdirectory("${SDK_LIBS_DIR}/mapnikvt" mapnikvt)
-add_subdirectory("${SDK_LIBS_DIR}/cartocss" cartocss)
-add_subdirectory("${SDK_LIBS_DIR}/nml" nml)
-add_subdirectory("${SDK_LIBS_DIR}/routing" routing)
+add_subdirectory("${SDK_CARTO_LIBS_DIR}/vt" vt)
+add_subdirectory("${SDK_CARTO_LIBS_DIR}/mapnikvt" mapnikvt)
+add_subdirectory("${SDK_CARTO_LIBS_DIR}/cartocss" cartocss)
+add_subdirectory("${SDK_CARTO_LIBS_DIR}/nml" nml)
+add_subdirectory("${SDK_CARTO_LIBS_DIR}/routing" routing)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/bidi" bidi)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/cryptopp" cryptopp)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/freetype" freetype)
