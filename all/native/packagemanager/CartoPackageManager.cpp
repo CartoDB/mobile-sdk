@@ -1,7 +1,6 @@
 #ifdef _CARTO_PACKAGEMANAGER_SUPPORT
 
 #include "CartoPackageManager.h"
-#include "components/LicenseManager.h"
 #include "utils/NetworkUtils.h"
 #include "utils/PlatformUtils.h"
 #include "utils/Log.h"
@@ -33,17 +32,16 @@ namespace carto {
 
         std::string baseURL;
         if (type == "map") {
-            baseURL = MAP_PACKAGE_LIST_URL + NetworkUtils::URLEncode(id) + "/packages";
+            baseURL = MAP_PACKAGE_LIST_URL + NetworkUtils::URLEncode(id) + "/1/packages.json";
         }
         else if (type == "routing") {
-            baseURL = ROUTING_PACKAGE_LIST_URL + NetworkUtils::URLEncode(id) + "/packages";
+            baseURL = ROUTING_PACKAGE_LIST_URL + NetworkUtils::URLEncode(id) + "/1/packages.json";
         }
         else {
             Log::Errorf("CartoPackageManager: Illegal package type: %s", type.c_str());
             return "";
         }
         std::map<std::string, std::string> params;
-        params["user_key"] = LicenseManager::GetInstance().getUserKey();
         return NetworkUtils::BuildURLFromParameters(baseURL, params);
     }
     
@@ -60,7 +58,6 @@ namespace carto {
     
     std::string CartoPackageManager::createPackageURL(const std::string& packageId, int version, const std::string& baseURL, bool downloaded) const {
         std::map<std::string, std::string> params;
-        params["user_key"] = LicenseManager::GetInstance().getUserKey();
         params["update"] = (downloaded ? "1" : "0");
         return NetworkUtils::BuildURLFromParameters(baseURL, params);
     }
@@ -93,11 +90,11 @@ namespace carto {
         return std::shared_ptr<PackageInfo>();
     }
 
-    const std::string CartoPackageManager::MAP_PACKAGE_LIST_URL = "http://api.nutiteq.com/mappackages/v1/";
+    const std::string CartoPackageManager::MAP_PACKAGE_LIST_URL = "http://api.nutiteq.com/v2/";
 
-    const std::string CartoPackageManager::ROUTING_PACKAGE_LIST_URL = "http://api.nutiteq.com/mappackages/v1/";
+    const std::string CartoPackageManager::ROUTING_PACKAGE_LIST_URL = "http://api.nutiteq.com/v2/";
 
-    const std::string CartoPackageManager::CUSTOM_BBOX_PACKAGE_URL = "http://api.nutiteq.com/mappackages/v1/";
+    const std::string CartoPackageManager::CUSTOM_BBOX_PACKAGE_URL = "http://api.nutiteq.com/v2/";
     
     const std::string CartoPackageManager::SERVER_ENC_KEY = "Hkz2jexmz9";
 

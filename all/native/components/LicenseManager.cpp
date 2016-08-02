@@ -64,11 +64,6 @@ namespace carto {
         return result;
     }
 
-    std::string LicenseManager::getUserKey() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _userKey;
-    }
-
     LicenseManager::WatermarkType LicenseManager::getWatermarkType() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _watermarkType;
@@ -81,7 +76,6 @@ namespace carto {
 
     LicenseManager::LicenseManager() :
         _appId(),
-        _userKey(),
         _watermarkType(EVALUATION_WATERMARK),
         _updateThreads(),
         _mutex()
@@ -288,13 +282,6 @@ namespace carto {
             return false;
         }
 
-        // Store user key. Even if license is expired, we will store this.
-        _userKey.clear();
-        it = parameters.find("userKey");
-        if (it != parameters.end()) {
-            _userKey = it->second;
-        }
-
         // Check the license valid until date, if it exists
         it = parameters.find("validUntil");
         if (it != parameters.end()) {
@@ -341,7 +328,6 @@ namespace carto {
         // Request new license from server
         std::map<std::string, std::string> params;
         params["device"] = PlatformUtils::GetDeviceId();
-//        params["user_key"] = getUserKey();
         params["platform"] = platformId;
         std::string url = NetworkUtils::BuildURLFromParameters(LICENSE_SERVICE_URL + NetworkUtils::URLEncode(PlatformUtils::GetAppIdentifier()) + "/getLicense", params);
         std::shared_ptr<BinaryData> responseData;

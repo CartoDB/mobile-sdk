@@ -1,6 +1,5 @@
 #include "CartoOnlineRoutingService.h"
 #include "components/Exceptions.h"
-#include "components/LicenseManager.h"
 #include "projections/Projection.h"
 #include "routing/RoutingProxy.h"
 #include "network/HTTPClient.h"
@@ -27,7 +26,7 @@ namespace carto {
         std::shared_ptr<Projection> proj = request->getProjection();
         
         std::stringstream ss;
-        ss << ROUTING_SERVICE_URL << _source << "/viaroute" << "?user_key=" << LicenseManager::GetInstance().getUserKey();
+        ss << ROUTING_SERVICE_URL << _source << "/viaroute";
         for (std::size_t i = 0; i < request->getPoints().size(); i++) {
             MapPos p = proj->toWgs84(request->getPoints()[i]);
             ss << "&loc=" << p.getY() << "," << p.getX();
@@ -39,6 +38,6 @@ namespace carto {
         return RoutingProxy::CalculateRoute(httpClient, url, request);
     }
 
-    const std::string CartoOnlineRoutingService::ROUTING_SERVICE_URL = "http://api.nutiteq.com/routing/v1/";
+    const std::string CartoOnlineRoutingService::ROUTING_SERVICE_URL = "http://api.nutiteq.com/routing/v2/";
     
 }

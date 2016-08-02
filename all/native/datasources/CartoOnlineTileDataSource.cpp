@@ -1,6 +1,5 @@
 #include "CartoOnlineTileDataSource.h"
 #include "core/MapTile.h"
-#include "components/LicenseManager.h"
 #include "utils/Log.h"
 #include "utils/NetworkUtils.h"
 
@@ -51,7 +50,7 @@ namespace carto {
         if (_source.substr(0, 7) == "mapzen.") {
             ss << MAPZEN_TILE_SERVICE_URL << _source.substr(7) << "/all/" << mapTile.getZoom() << "/" << mapTile.getX() << "/" << mapTile.getY() << ".mvt";
         } else {
-            ss << NUTITEQ_TILE_SERVICE_URL << _source << "/" << mapTile.getZoom() << "/" << mapTile.getX() << "/" << mapTile.getY() << ".vt?user_key=" << LicenseManager::GetInstance().getUserKey();
+            ss << NUTITEQ_TILE_SERVICE_URL << _source << "/1/tiles/" << mapTile.getZoom() << "/" << mapTile.getX() << "/" << mapTile.getY() << ".vt";
         }
         std::string url = ss.str();
         std::map<std::string, std::string> requestHeaders;
@@ -84,7 +83,7 @@ namespace carto {
 
     const int CartoOnlineTileDataSource::DEFAULT_CACHED_TILES = 8;
 
-    const std::string CartoOnlineTileDataSource::NUTITEQ_TILE_SERVICE_URL = "http://api.nutiteq.com/v1/";
+    const std::string CartoOnlineTileDataSource::NUTITEQ_TILE_SERVICE_URL = "http://api.nutiteq.com/v2/";
 
     const std::string CartoOnlineTileDataSource::MAPZEN_TILE_SERVICE_URL = "http://vector.dev.mapzen.com/";
     
