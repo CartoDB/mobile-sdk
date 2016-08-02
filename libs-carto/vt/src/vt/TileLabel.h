@@ -49,7 +49,7 @@ namespace carto { namespace vt {
         void setActive(bool active) { _active = active; }
 
         void transformGeometry(const cglib::mat4x4<double>& transform);
-        void mergeGeometries(const TileLabel& label);
+        void mergeGeometries(TileLabel& label);
 
         LabelOrientation getOrientation() const { return _orientation; }
         const std::shared_ptr<const Font>& getFont() const { return _font; }

@@ -382,6 +382,12 @@ namespace carto { namespace vt {
         
         _lightDir = lightDir;
     }
+
+    void GLTileRenderer::setSubTileBlending(bool blend) {
+        std::lock_guard<std::mutex> lock(*_mutex);
+
+        _subTileBlending = blend;
+    }
     
     void GLTileRenderer::setFBOClearColor(const Color& clearColor) {
         std::lock_guard<std::mutex> lock(*_mutex);
@@ -403,6 +409,12 @@ namespace carto { namespace vt {
     
     void GLTileRenderer::setVisibleTiles(const std::map<TileId, std::shared_ptr<const Tile>>& tiles, bool blend) {
         using TilePair = std::pair<TileId, std::shared_ptr<const Tile>>;
+
+        // Clear the 'visible' label list for now (used only for culling)
+        {
+            std::lock_guard<std::mutex> lock(*_mutex);
+            _labels.clear();
+        }
 
         // Build visible tile list for labels. Some tiles may be outside the frustum, ignore labels of such tiles as label rendering is quite expensive
         cglib::frustum3<double> frustum;
@@ -498,9 +510,14 @@ namespace carto { namespace vt {
                     break;
                 }
                 if (blend && blendNode->tileId.intersects(oldBlendNode->tileId)) {
-                    blendNode->childNodes.push_back(oldBlendNode);
-                    oldBlendNode->blend = calculateBlendNodeOpacity(*oldBlendNode, 1.0f); // this is an optimization, to reduce extensive blending subtrees
-                    oldBlendNode->childNodes.clear();
+                    if (_subTileBlending) {
+                        blendNode->childNodes.push_back(oldBlendNode);
+                        oldBlendNode->blend = calculateBlendNodeOpacity(*oldBlendNode, 1.0f); // this is an optimization, to reduce extensive blending subtrees
+                        oldBlendNode->childNodes.clear();
+                    }
+                    else {
+                        blendNode->blend = std::max(blendNode->blend, oldBlendNode->blend);
+                    }
                 }
             }
             blendNodes->push_back(std::move(blendNode));

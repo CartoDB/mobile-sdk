@@ -48,6 +48,7 @@ namespace carto { namespace vt {
         if (!_originalVertices.empty()) {
             _transformedVerticesList.resize(1);
             _transformedVerticesList.front().clear();
+            _transformedVerticesList.front().reserve(_originalVertices.size());
             for (const Vertex& vertex : _originalVertices) {
                 _transformedVerticesList.front().push_back(cglib::transform_point(vertex, transform));
             }
@@ -57,16 +58,16 @@ namespace carto { namespace vt {
         }
     }
 
-    void TileLabel::mergeGeometries(const TileLabel& label) {
-        for (auto labelVertex : label._transformedPositions) {
+    void TileLabel::mergeGeometries(TileLabel& label) {
+        for (Vertex& labelVertex : label._transformedPositions) {
             if (std::find(_transformedPositions.begin(), _transformedPositions.end(), labelVertex) == _transformedPositions.end()) {
                 _transformedPositions.push_back(labelVertex);
             }
         }
 
-        for (const Vertices& labelVertices : label._transformedVerticesList) {
+        for (Vertices& labelVertices : label._transformedVerticesList) {
             if (std::find(_transformedVerticesList.begin(), _transformedVerticesList.end(), labelVertices) == _transformedVerticesList.end()) {
-                _transformedVerticesList.push_back(labelVertices);
+                _transformedVerticesList.push_back(std::move(labelVertices));
             }
         }
     }
