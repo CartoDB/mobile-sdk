@@ -76,7 +76,7 @@ namespace carto {
             baseURL = _baseURL;
             headers = _headers;
         }
-        const std::string& url = buildTileURL(baseURL, mapTile);
+        std::string url = buildTileURL(baseURL, mapTile);
         Log::Infof("HTTPTileDataSource::loadTile: Loading %s", url.c_str());
         std::map<std::string, std::string> requestHeaders;
         std::map<std::string, std::string> responseHeaders;

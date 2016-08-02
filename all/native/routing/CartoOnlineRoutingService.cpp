@@ -6,7 +6,7 @@
 #include "utils/Const.h"
 #include "utils/Log.h"
 
-#include <sstream>
+#include <boost/lexical_cast.hpp>
 
 namespace carto {
 
@@ -25,14 +25,11 @@ namespace carto {
 
         std::shared_ptr<Projection> proj = request->getProjection();
         
-        std::stringstream ss;
-        ss << ROUTING_SERVICE_URL << _source << "/viaroute";
-        for (std::size_t i = 0; i < request->getPoints().size(); i++) {
-            MapPos p = proj->toWgs84(request->getPoints()[i]);
-            ss << "&loc=" << p.getY() << "," << p.getX();
+        std::string url = ROUTING_SERVICE_URL + _source + "/viaroute?instructions=true&alt=false&geometry=true&output=json";
+        for (const MapPos& pos : request->getPoints()) {
+            MapPos wgsPos = proj->toWgs84(pos);
+            url += "&loc=" + boost::lexical_cast<std::string>(wgsPos.getY()) + "," + boost::lexical_cast<std::string>(wgsPos.getX());
         }
-        ss << "&instructions=true&alt=false&geometry=true&output=json";
-        std::string url = ss.str();
 
         HTTPClient httpClient(false);
         return RoutingProxy::CalculateRoute(httpClient, url, request);

@@ -10,6 +10,7 @@
 
 %{
 #include "datasources/TileDataSource.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 
@@ -24,6 +25,8 @@
 %import "datasources/TileDataSource.i"
 
 !polymorphic_shared_ptr(carto::TileDataSource, datasources.TileDataSource)
+
+%std_exceptions(carto::TileDataSource::TileDataSource)
 
 %attribute(carto::TileDataSource, int, MinZoom, getMinZoom)
 %attribute(carto::TileDataSource, int, MaxZoom, getMaxZoom)
