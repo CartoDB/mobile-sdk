@@ -10,6 +10,8 @@
 #include "TileDataSource.h"
 #include "network/HTTPClient.h"
 
+#include <vector>
+
 #include <stdext/timed_lru_cache.h>
 
 namespace carto {
@@ -26,22 +28,28 @@ namespace carto {
          */
         CartoOnlineTileDataSource(const std::string& source);
         virtual ~CartoOnlineTileDataSource();
-        
+
         virtual std::shared_ptr<TileData> loadTile(const MapTile& mapTile);
         
     protected:
-        std::shared_ptr<TileData> loadOnlineTile(const MapTile& mapTile);
+        std::string buildTileURL(const std::string& baseURL, const MapTile& tile) const;
 
-        static int GetSourceMaxZoom(const std::string& source);
+        bool loadTileURLs();
+
+        std::shared_ptr<TileData> loadOnlineTile(const std::string& url, const MapTile& mapTile);
 
         static const int DEFAULT_CACHED_TILES;
 
         static const std::string NUTITEQ_TILE_SERVICE_URL;
         static const std::string MAPZEN_TILE_SERVICE_URL;
 
-        std::string _source;
+        const std::string _source;
         cache::timed_lru_cache<long long, std::shared_ptr<TileData> > _cache;
         HTTPClient _httpClient;
+
+        bool _tmsScheme;
+        std::vector<std::string> _tileURLs;
+
         mutable std::recursive_mutex _mutex;
     };
     

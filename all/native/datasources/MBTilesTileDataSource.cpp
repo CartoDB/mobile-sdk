@@ -14,15 +14,26 @@
 namespace carto {
 
     MBTilesTileDataSource::MBTilesTileDataSource(const std::string& path) :
-        TileDataSource(GetMinZoom(path), GetMaxZoom(path)), _scheme(MBTilesScheme::MBTILES_SCHEME_TMS), _db(), _mutex()
+        TileDataSource(), _scheme(MBTilesScheme::MBTILES_SCHEME_TMS), _db(), _mutex()
     {
         try {
             _db.reset(new sqlite3pp::database(path.c_str()));
         } catch (...) {
             throw FileException("Failed to open database file", path);
         }
+
+        try {
+            sqlite3pp::query query(*_db, "SELECT MIN(zoom_level), MAX(zoom_level) FROM tiles");
+            for (auto it = query.begin(); it != query.end(); it++) {
+                _minZoom = it->get<int>(0);
+                _maxZoom = it->get<int>(1);
+            }
+            query.finish();
+        } catch (...) {
+            Log::Error("MBTilesTileDataSource: Failed to read min/max zoom info.");
+        }
     }
-    
+
     MBTilesTileDataSource::MBTilesTileDataSource(int minZoom, int maxZoom, const std::string& path) :
         TileDataSource(minZoom, maxZoom), _scheme(MBTilesScheme::MBTILES_SCHEME_TMS), _db(), _mutex()
     {
@@ -178,36 +189,4 @@ namespace carto {
         }
     }
     
-    int MBTilesTileDataSource::GetMinZoom(const std::string& path) {
-        try {
-            sqlite3pp::database db(path.c_str());
-            int minZoom = 0;
-            sqlite3pp::query query(db, "SELECT MIN(zoom_level) FROM tiles");
-            for (auto it = query.begin(); it != query.end(); it++) {
-                minZoom = it->get<int>(0);
-            }
-            query.finish();
-            return minZoom;
-        } catch (...) {
-            Log::Error("MBTilesTileDataSource::GetMinZoom: Failed to connect to the database.");
-            return 0;
-        }
-    }
-
-    int MBTilesTileDataSource::GetMaxZoom(const std::string& path) {
-        try {
-            sqlite3pp::database db(path.c_str());
-            int maxZoom = 0;
-            sqlite3pp::query query(db, "SELECT MAX(zoom_level) FROM tiles");
-            for (auto it = query.begin(); it != query.end(); it++) {
-                maxZoom = it->get<int>(0);
-            }
-            query.finish();
-            return maxZoom;
-        } catch (...) {
-            Log::Error("MBTilesTileDataSource::GetMaxZoom: Failed to connect to the database.");
-            return 0;
-        }
-    }
-
 }

@@ -7,6 +7,7 @@
 #ifndef _CARTO_TILEDATASOURCE_H_
 #define _CARTO_TILEDATASOURCE_H_
 
+#include <atomic>
 #include <mutex>
 #include <memory>
 #include <vector>
@@ -44,12 +45,12 @@ namespace carto {
          * Returns the minimum zoom level supported by this data source.
          * @return The minimum zoom level supported (inclusive).
          */
-        int getMinZoom() const;
+        virtual int getMinZoom() const;
         /**
          * Returns the maximum zoom level supported by this data source.
          * @return The maximum zoom level supported (exclusive).
          */
-        int getMaxZoom() const;
+        virtual int getMaxZoom() const;
         /**
          * Returns the projection of this tile source.
          * @return The projection of this tile source.
@@ -86,6 +87,11 @@ namespace carto {
     protected:
         /**
          * Constructs an abstract TileDataSource object.
+         * Note: EPSG3857 projection is used. minZoom is defined to be 0, maxZoom is defined to be 24.
+         */
+        TileDataSource();
+        /**
+         * Constructs an abstract TileDataSource object.
          * Note: EPSG3857 projection is used.
          * @param minZoom The minimum zoom level supported by this data source.
          * @param maxZoom The maximum zoom level supported by this data source.
@@ -99,9 +105,9 @@ namespace carto {
          */
         virtual std::map<std::string, std::string> buildTagValues(const MapTile& tile) const;
 
-        int _minZoom;
-        int _maxZoom;
-        std::shared_ptr<Projection> _projection;
+        std::atomic<int> _minZoom;
+        std::atomic<int> _maxZoom;
+        const std::shared_ptr<Projection> _projection;
     
     private:
         std::vector<std::shared_ptr<OnChangeListener> > _onChangeListeners;
