@@ -1,5 +1,5 @@
 # MBTiles map data
-[MBTiles](http://mapbox.com/developers/mbtiles/) support is included in Nutiteq SDK. MBTiles uses SQLite database format, so you have just one file to be downloaded and managed. Following are some tools to create MBTiles packages:
+[MBTiles](http://mapbox.com/developers/mbtiles/) support is included in Carto Mobile SDK. MBTiles uses SQLite database format, so you have just one file to be downloaded and managed. Following are some tools to create MBTiles packages:
 
 ## a) Raster maps
 
@@ -12,5 +12,5 @@
 ## b) Vector maps
 
 * Nutiteq SDK bundled [Package Manager API](/guides/offline-maps) downloads country-wide or bounding box based map packages with **OpenStreetMap data**. These files are not directly visible, as Package Manager downlods the files, you only use the API.
-* If you need to create vector map files **from different sources or your own data** (e.g. Shapefiles), then please contact Nutiteq (support@nutiteq.com) - we can provide you converter toolchain, and do free demo conversions.
+* If you need to create vector map files **from different sources or your own data** (e.g. Shapefiles), then please contact Carto support - we can provide you converter toolchain, and do free demo conversions.
 

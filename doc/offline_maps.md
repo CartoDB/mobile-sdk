@@ -1,7 +1,7 @@
 # Offline map service
 
 ## Introduction
-Nutiteq provides service to download base map packages in special vector format for offline use. There is no direct URL to get these packages, instead we provide cross-platform API from within SDK: **Package Manager API**. Application should use this API to download packages. The API provides following features:
+Carto provides service to download base map packages in special vector format for offline use. There is no direct URL to get these packages, instead we provide cross-platform API from within SDK: **Package Manager API**. Application should use this API to download packages. The API provides following features:
 
 * Listing of available packages (countries), get IDs and metadata of specific packages
 * Start package download
@@ -45,7 +45,7 @@ Application must handle properly following possible additional asynchronous even
 ### Steps for single package download
 Following are steps to implement **single map package** downloading
 
-* **Initialize NutiteqPackageManager**
+* **Initialize CartoPackageManager**
 
 <div id="tabs1">
   <ul>
@@ -68,7 +68,7 @@ Following are steps to implement **single map package** downloading
 	// Create package manager and package manager listener
 	// we had defined packageManager and packageManagerListener already, as properties
 	// currently the only package data source is nutiteq.mbstreets, it has OpenStreetMap global data
-	_packageManager = [[NTNutiteqPackageManager alloc] initWithSource:@"nutiteq.mbstreets" dataFolder:packagesDir];
+	_packageManager = [[NTCartoPackageManager alloc] initWithSource:@"nutiteq.mbstreets" dataFolder:packagesDir];
     [_packageManager start];
 </pre>
 </div>
@@ -82,7 +82,7 @@ Following are steps to implement **single map package** downloading
  if (!(packageFolder.mkdirs() || packageFolder.isDirectory())) {
     Log.e(Const.LOG_TAG, "Could not create package folder!");
  }
- packageManager = new NutiteqPackageManager("nutiteq.mbstreets", packageFolder.getAbsolutePath());
+ packageManager = new CartoPackageManager("nutiteq.mbstreets", packageFolder.getAbsolutePath());
  packageManager.start();
 
 </pre>
@@ -112,7 +112,7 @@ Following are steps to implement **single map package** downloading
 // Create package manager
 
 // define PackageManager listener, definition is in same class above
-var packageManager = new NutiteqPackageManager("nutiteq.mbstreets", packageFolder);
+var packageManager = new CartoPackageManager("nutiteq.mbstreets", packageFolder);
 packageManager.PackageManagerListener = new PackageListener(packageManager);
 
 // Download new package list only if it is older than 24h
@@ -266,8 +266,8 @@ if (packageManager.ServerPackageListAge > 24 * 60 * 60) {
 
 // PackageListener.cs:
 
-using Nutiteq.PackageManager;
-using Nutiteq.Utils;
+using Carto.PackageManager;
+using Carto.Utils;
 
 namespace HelloMap
 {
@@ -516,7 +516,7 @@ mapView.Layers.Add(baseLayer);
 ### Updating packages
 
 
-There is no special event or method to check package updates, so updates can be checked and controlled by application using following logic. You can call this logic as soon as you feel appropriate. Nutiteq Maps service has OSM offline package updates approximately once a month, different packages can be updated in different point of time, and with different frequency.
+There is no special event or method to check package updates, so updates can be checked and controlled by application using following logic. You can call this logic as soon as you feel appropriate. Carto Maps service has OSM offline package updates approximately once a month, different packages can be updated in different point of time, and with different frequency.
 
 1. Use packagemanager *startPackageListDownload* to get server packages
 2. Wait for listener's *onPackageListUpdated* event, now server packages were downloaded

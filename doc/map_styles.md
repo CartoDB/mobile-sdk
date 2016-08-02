@@ -1,24 +1,24 @@
 # Vector Styles
 
-Usage of vector-based base map enables you to re-style map according to your needs: set colors, transparency, line styles (width, patterns, casings, endings), polygon patterns, icons, text placements, fonts and many other vector data parameters. Nutiteq uses Mapnik (http://mapnik.org) XML style description language for customizing the visual style of vector tiles. Our styling is optimized for mobile, so we add some style parameters, and ignore some others, but generally you can mostly reuse your existing Mapnik XML or CartoCSS styling files and tools (like TileMill/Mapbox Studio).
+Usage of vector-based base map enables you to re-style map according to your needs: set colors, transparency, line styles (width, patterns, casings, endings), polygon patterns, icons, text placements, fonts and many other vector data parameters. Carto uses Mapnik (http://mapnik.org) XML style description language for customizing the visual style of vector tiles. Our styling is optimized for mobile, so we add some style parameters, and ignore some others, but generally you can mostly reuse your existing Mapnik XML or CartoCSS styling files and tools (like TileMill/Mapbox Studio).
 
 Vector styling is applied in mobile client side, and the style files are usually bundled with application installer. Application can change the styling anytime without reloading vector map data, so you can download map data once, and change styling from "day mode" to "night mode" with no new downloads.
 
-Nutiteq map rendering implementation is intended for real-time rendering and, as a result, several limitations apply.
+Carto map rendering implementation is intended for real-time rendering and, as a result, several limitations apply.
 
 ### Ready-made styles
-See [Downloads](/downloads#Vector style files) for ready-made styles by Nutiteq. These are compatible with our vector tile sources.
+See [Mobile Styles](/mobileStyles) page for ready-made styles by Carto. These are compatible with our vector tile sources.
 
 ### Mapnik style format
-Mapnik map style definition is a common file format for map styles, it is based on XML. It is originally done for Mapnik, but is used by other softwares like Nutiteq SDK. File format specification is in [XMLConfigReference](https://github.com/mapnik/mapnik/wiki/XMLConfigReference) document. There are several ways you can use the styles, from simplest to most advanced:
+Mapnik map style definition is a common file format for map styles, it is based on XML. It is originally done for Mapnik, but is used by other softwares like our Mobile SDK. File format specification is in [XMLConfigReference](https://github.com/mapnik/mapnik/wiki/XMLConfigReference) document. There are several ways you can use the styles, from simplest to most advanced:
 
- 1. Use Nutiteq provided styles as they are
+ 1. Use Carto provided styles as they are
  1. Modify style.xml inside sample style to tweak it
- 1. Create own style using some tool which edits Mapnik styles. Probably currently the best tool is free MapBox Studio, which uses CartoCSS as primary style definition. We don't use CartoCSS in Nutiteq SDK, but Studio but can export also Mapnik XML styles. However, these style files needs a bit modification to be compatible with Nutiteq SDK. 
+ 1. Create own style using some tool which edits Mapnik styles. Probably currently the best tool is free MapBox Studio, which uses CartoCSS as primary style definition. We don't use CartoCSS in Carto SDK, but Studio but can export also Mapnik XML styles. However, these style files needs a bit modification to be compatible with Carto SDK. 
 
 ### Creating style package
 
-Nutiteq vector styles are distributed as zip-archives. All style-related files/folders must be placed into a single zip file.
+Carto vector styles are distributed as zip-archives. All style-related files/folders must be placed into a single zip file.
 The most important part of the style is a style definition file, usually named _project.xml_. This file contains style descriptions of all layers and it usually references other files, like fonts, icons, pattern bitmaps which should be placed in various subfolders.
 
 ### Limitations/incompatibilities
@@ -39,7 +39,7 @@ The most important part of the style is a style definition file, usually named _
 
 * Text characters are rendered one by one. If characters overlap, halo of one character may cover glyph of another character. Workaround is to increase spacing or decrease halo radius.
 
-* This list is not final. Mapnik XML is not official standard, and mostly due to performance penalty on the mobile Nutiteq SDK does not implement 100% of the tags and features of Mapnik. If you need some of the not implemented styling options, please contact our support. 
+* This list is not final. Mapnik XML is not official standard, and mostly due to performance penalty on the mobile Carto SDK does not implement 100% of the tags and features of Mapnik. If you need some of the not implemented styling options, please contact our support. 
 
 ### Performance hints 
 
@@ -49,7 +49,7 @@ The most important part of the style is a style definition file, usually named _
 
 * It is best to keep all bitmaps with power-of-two dimensions, this increases performance.
 
-### Nutiteq-specific extension to Mapnik style files
+### Carto-specific extension to Mapnik XML style files
 
 #### _NutiParameters_
 
@@ -85,7 +85,7 @@ markers act as billboards (always facing the viewer) even when screen is tilted.
 
 ### Supported symbolizers and parameters
 
-The following list contains all supported symbolizers and parameters, as of version 3.2.2:
+The following list contains all supported symbolizers and parameters, as of version 4.0.0:
 
 * PointSymbolizer: file, opacity, allow-overlap, ignore-placement, transform
 
@@ -104,3 +104,7 @@ The following list contains all supported symbolizers and parameters, as of vers
 * TextSymbolizer: name, face-name, fontset-name, placement, size, spacing, fill, opacity, halo-fill, halo-opacity, halo-radius, allow-overlap, minimum-distance, text-transform, orientation, dx, dy, wrap-width, wrap-before, character-spacing, line-spacing, horizontal-alignment, vertical-alignment
 
 * ShieldSymbolizer: name, face-name, fontset-name, placement, size, spacing, fill, opacity, halo-fill, halo-opacity, halo-radius, allow-overlap, minimum-distance, text-transform, orientation, dx, dy, wrap-width, wrap-before, character-spacing, line-spacing, horizontal-alignment, vertical-alignment, file, shield-dx, shield-dy, unlock-image
+
+### CartoCSS extensions
+
+Same extensions: metavariables and nutiparameters are available for  

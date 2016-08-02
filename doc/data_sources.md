@@ -1,7 +1,7 @@
 Data sources
 ============
 
-Following DataSources are available for Nutiteq SDK 3.x on all supported
+Following DataSources are available for Carto SDK 3.x on all supported
 platforms (iOS, Android and others).
 
 Some DataSources are more universal and could be used for different data
@@ -73,13 +73,13 @@ mapView.Layers.Add (mbTilesLayer);
 </div>
 **b) MBtiles as VectorTileLayer**
 
-For own packaged vector data you need Nutiteq specific vector files
+For own packaged vector data you need Carto specific vector files
 packages (NTVT - *NutiTeq Vector Tile*) and styling files in Mapnik XML
 format. Here is free sample packages with OpenStreetMap data:
 
 -   [estonia\_ntvt.mbtiles](https://dl.dropboxusercontent.com/u/3573333/public_web/ntvt_packages/estonia_ntvt.mbtiles)
 
-Nutiteq SDK provides built-in download service called **Package
+Carto SDK provides built-in download service called **Package
 Manager** to get the map packages for a country or smaller region
 easily, this is described in separate page: [learn
 more](/guides/offline-maps) . Sample here is for case when you have
@@ -172,10 +172,10 @@ mapView.Layers.Add(vectorTileLayer);
 **HTTPTileDataSource** is also universal datasource for vector or raster
 data.
 
-**a) Nutiteq online Vector Tile Layer**
+**a) Carto online Vector Tile Layer**
 
-Nutiteq SDK provides support for built-in vector tiles, as provided by
-Nutiteq Maps as a Service packages and it is available for all plans.
+Carto SDK provides support for built-in vector tiles, as provided by
+Carto Maps as a Service packages and it is available for all plans.
 This is suitable as universial base map.
 
 For vector styling you use exactly same osmbright.zip file as for
@@ -195,7 +195,7 @@ offline tiles, see above.
 </ul>
 <div id="i3">
 ``` {.brush: .objc}
-NTVectorTileLayer* vectorTileLayer = [[NTNutiteqOnlineVectorTileLayer alloc] initWithStyleAssetName:@"osmbright.zip"];
+NTVectorTileLayer* vectorTileLayer = [[NTCartoOnlineVectorTileLayer alloc] initWithStyleAssetName:@"osmbright.zip"];
 [[mapView getLayers] add:vectorTileLayer];
 ```
 
@@ -203,7 +203,7 @@ NTVectorTileLayer* vectorTileLayer = [[NTNutiteqOnlineVectorTileLayer alloc] ini
 <div id="a3">
 ``` {.brush: .java}
 // Create base layer. Use vector style from assets (osmbright.zip)
-VectorTileLayer baseLayer = new NutiteqOnlineVectorTileLayer("osmbright.zip");
+VectorTileLayer baseLayer = new CartoOnlineVectorTileLayer("osmbright.zip");
 mapView.getLayers().add(baseLayer);
 ```
 
@@ -211,7 +211,7 @@ mapView.getLayers().add(baseLayer);
 <div id="n3">
 ``` {.brush: .csharp}
 // Create base layer. Use vector style from assets (osmbright.zip)
-var baseLayer = new NutiteqOnlineVectorTileLayer("osmbright.zip");
+var baseLayer = new CartoOnlineVectorTileLayer("osmbright.zip");
 mapView.Layers.Add(baseLayer);
 ```
 
@@ -219,7 +219,7 @@ mapView.Layers.Add(baseLayer);
 </div>
 **b) Web (HTTP) tiles as VectorTileLayer**
 
-With Nutiteq Starter, Pro or Enterprise plans you can use also other
+With Carto Starter, Pro or Enterprise plans you can use also other
 vector tile map data sources. It is similar to custom raster map data
 sources, only adding vector decoder is needed.
 
@@ -361,7 +361,7 @@ mapView.Layers.Add(baseLayer);
 </div>
 ### 3. Application-defined vector overlay {#application-defined-vector-data}
 
-Nutiteq SDK has in-memory datasources where application can add vector
+Carto SDK has in-memory datasources where application can add vector
 objects which are shown on map as overlay layer.
 
 **LocalVectorDataSource** is a dynamic data source that is empty
@@ -373,7 +373,7 @@ Markers, Texts, Lines and Polygons to map.
 
 ### 4. Application-defined ground overlays {#ground-overlay}
 
-Nutiteq SDK supports **Ground Overlays** - bitmaps (PNG, JPG etc) which
+Carto SDK supports **Ground Overlays** - bitmaps (PNG, JPG etc) which
 are put to map to your defined location. Most commonly this is used for
 **indoor floorplans**, but it can be used also for other cases.
 
@@ -480,7 +480,7 @@ data source.
     for offline data.
 -   **NMLModelLODTreeOnlineDataSource** - uses NMLDB online API for “3D
     city” layer. 3D tools are provided as commercial service, contact
-    Nutiteq to get more info about it.
+    Carto to get more info about it.
 -   **NMLModelLODTreeSqliteDataSource** - An offline version of
     *NMLModelLODTreeOnlineDataSource*, model info is kept in sqlite
     database file. Note that simple individual 3D objects (NML models)
@@ -491,7 +491,7 @@ data source.
 With the GIS extension we provide **OGRVectorDataSource** and
 **GDALRasterTileDataSource** which can open ESRI Shapefile, GeoTIFF,
 KML, GML, GPX, MapInfo and many other GIS vector and raster formats
-directly. Your code just defines file and layer to be used. Nutiteq
+directly. Your code just defines file and layer to be used. Carto
 provides it as commercial package, also free evaluation is avaliable,
 email sales@nutiteq.com to get it.
 

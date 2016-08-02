@@ -1,7 +1,7 @@
 Offline Map packages
 ====================
 
-Following map packages can be downloaded from Nutiteq map service for
+Following map packages can be downloaded from Carto map service for
 offline use. Your app needs to use **Package Manager** API to get the
 list, download and consume the packages.
 
@@ -21,7 +21,7 @@ Package names:
     currently support as map language. Contact us if you need
     another language.
 
-### Nutiteq OpenStreetMap Packages
+### Carto OpenStreetMap Packages
 
 -   Use source ID: **nutiteq.osm** when initializing Package Manager
 -   Map data: [OpenStreetMap](http://www.openstreetmap.org)

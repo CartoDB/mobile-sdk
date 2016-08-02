@@ -2,26 +2,24 @@
 
 ## Basic principles
 
-In high level you deal with two key concepts in Nutiteq SDK API.
+Following are key objects in Carto Maps SDK:
 
-* The map view object **MapView** provides methods for directly manipulating the view. 
-* The layers object is called **Layers** and it provides methods for adding data to the map. It's accessible trough the map view object.
-* Layers are created with specific **DataSource** which defines from where the data is taken, typically it is from memory, a persistent file or on-line API.
-* The options object is called **Options** and it provides methods for tweaking the map parameters. It's accessible trough the map view object.
+*  **MapView** is the object which goes to your app View hierarchy and it provides methods for directly manipulating the map and it's view - e.g. set center location, zoom etc. 
+*  **Layers** object (member of MapView) provides methods for adding data to the map. 
+* Layers are created with **DataSource** (member of Layer) which defines from where the data is taken, there are specific DataSource implementations which keep data in memory, load from a persistent file or on-line API.
+*  **Options** object (member of MapView) provides methods for tweaking the map parameters.
 
 ### Adding objects to the map
 
-Data is added to the map as **Layers**, the concept which is familiar to GIS users. The usual approach is to add one **TileLayer** as a background; e.g. Nutiteq Vector Map with OpenStreetMap data, as given in Getting Started Guide. Then you add one or several interactive **VectorLayers** on top of it (with _Markers_, _Texts_, _Popups_ etc).
+Map data is organized as **Layers**, the concept which is familiar to GIS users. The usual approach is to add one **TileLayer** as a general background; e.g. a Tiled Vector Map with OpenStreetMap data, as given in Getting Started Guide. Then you add one or several interactive **VectorLayers** on top of it (with _Markers_, _Texts_, _Popups_ etc).
 
-Each map layer is required to have a **DataSource**, which defines from where and how the layer retrieves data. Several common data source implementations are built into Nutiteq SDK, but you can define also own specific data sources. For example **HTTPRasterTileDataSource** is used for retrieving map tiles as images over HTTP connection and **LocalVectorDataSource** keeps data in memory and is used for adding per user session vector objects to the map.
+Each map layer is required to have a **DataSource**, which defines from where and how the layer retrieves data. Several common data source implementations are built into the maps SDK, but you can define also own specific data sources. For example **HTTPRasterTileDataSource** is used for retrieving map tiles as images over HTTP connection and **LocalVectorDataSource** keeps data in memory and is used for adding per user session vector objects to the map.
 
 In following examples we show **vector elements**: Markers, Points, Lines, Polygons, Texts and BalloonPopups on the map. For each we define styling, create objects to given coordinates and add them to a memory-based vector data source *LocalVectorDataSource*. First of all we create a *VectorLayer* with the data source, and add the Layer to the map.
 
-Note that just adding vector element to map layer does not define or open automatically any popup labels. This is different from older Nutiteq SDK 2. Popup is now a map object of its own, and should be added using object click listener.
+Note that Popup (callout, bubble) which is opened when you click on map is a map object of its own, and should be added using object click listener.
 
 ## 1. Add a Marker
-
-There are no built-in marker bitmaps in Nutiteq SDK, so first you must add an image **marker.png** to your application project. This is used as key Marker style element.
 
 <div id="tabs1">
   <ul>
@@ -46,20 +44,17 @@ There are no built-in marker bitmaps in Nutiteq SDK, so first you must add an im
   // 4. Set visible zoom range for the vector layer
   [vectorLayer1 setVisibleZoomRange:[[NTMapRange alloc] initWithMin:10 max:24]];
 
-  // 5. Load bitmaps for custom markers
-  UIImage* markerImage = [UIImage imageNamed:@"marker.png"];
-  NTBitmap* markerBitmap = [NTBitmapUtils createBitmapFromUIImage: markerImage];
-
-  // 6. Create a marker style
+  // 5. Create a marker style, we use default marker bitmap here
   NTMarkerStyleBuilder* markerStyleBuilder = [[NTMarkerStyleBuilder alloc] init];
-  [markerStyleBuilder setBitmap:markerBitmap];
     // Styles use dpi-independent units, no need to adjust it for retina
   [markerStyleBuilder setSize:30];
+   // Green colour using ARGB format
+  [markerStyleBuilder setColor:[[NTColor alloc] initWithColor:0xFF00FF00]]; 
   NTMarkerStyle* sharedMarkerStyle = [markerStyleBuilder buildStyle];
 
   // 7. Define position and metadata for marker. Two important notes:
     // (1) Position in latitude/longitude has to be converted using projection
-    // (2) X is longitude, Y is latitude, NOT like in many other APIs !
+    // (2) X is longitude, Y is latitude !
   NTMapPos* pos = [proj fromWgs84:[[NTMapPos alloc] initWithX:24.651488 y:59.423581]];
   NTMarker* marker1 = [[NTMarker alloc] initWithPos:pos style:sharedMarkerStyle];
   
@@ -86,16 +81,13 @@ mapView.getLayers().add(vectorLayer1);
 // Set limited visible zoom range for the vector layer
 vectorLayer1.setVisibleZoomRange(new MapRange(10, 24));
 
-// Load bitmaps for custom markers
-Bitmap androidMarkerBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.marker);
-com.nutiteq.graphics.Bitmap markerBitmap = BitmapUtils.createBitmapFromAndroidBitmap(androidMarkerBitmap);
 
 // Create marker style
 MarkerStyleBuilder markerStyleBuilder = new MarkerStyleBuilder();
-markerStyleBuilder.setBitmap(markerBitmap);
 
-//markerStyleBuilder.setHideIfOverlapped(false);
 markerStyleBuilder.setSize(30);
+// Green colour as ARGB
+markerStyleBuilder.setColor(new Color(0xFF00FF00));
 MarkerStyle sharedMarkerStyle = markerStyleBuilder.buildStyle();
 
 // Add marker
@@ -107,13 +99,9 @@ vectorDataSource1.add(marker1);
 </div>
 <div id="n1">
 <pre class="brush: csharp">
-// Load bitmaps for markers
-UnsignedCharVector iconBytes = AssetUtils.LoadBytes("Icon.png");
-var markerBitmap = new Bitmap (iconBytes, true);
 
 // Create marker style
 MarkerStyleBuilder markerStyleBuilder = new MarkerStyleBuilder();
-markerStyleBuilder.Bitmap = markerBitmap;
 
 //markerStyleBuilder.setHideIfOverlapped(false);
 markerStyleBuilder.Size = 30;
@@ -139,7 +127,7 @@ Points are marking specific location points, just as Markers. Key difference is 
 You can add any type of vector objects to same Layer and UnculledVectorDataSource, so we reuse same as defined for Marker. You should define different Layers and DataSources for specific reasons:
 
  * to delete all objects of data source at once
- * specify drawing order. Drawing order within one Layer is undefined, but Layers which are added before are always drawed below next Layers.
+ * specify drawing order. Drawing order within one Layer is undefined, but Layers which are added before are always drawn below next Layers.
 
 <div id="tabs2">
   <ul>
@@ -153,7 +141,8 @@ You can add any type of vector objects to same Layer and UnculledVectorDataSourc
 	NTPointStyleBuilder* pointStyleBuilder = [[NTPointStyleBuilder alloc] init];
 
      //color is defined as ARGB integer, i.e. following is opaque green
-     //you can not use UIColor (or any other ObjectiveC specific class) in Nutiteq
+     //you can not use UIColor (or any other ObjectiveC specific class) in Carto mobile SDK
+     
 	[pointStyleBuilder setColor:[[NTColor alloc] initWithColor:0xFF00FF00]];
 	[pointStyleBuilder setSize:16];
 	NTMapPos* pos = [proj fromWgs84:[[NTMapPos alloc] initWithX:24.651488 y:59.423581]];
@@ -296,7 +285,7 @@ Following defines and adds a polygon with a hole
 
     // 2. define polygon coordinates
      // First define outline as MapPosVector, which is array of MapPos
-     // We cannot use Objective C objects, like NSArray in Nutiteq SDK, 
+     // We cannot use Objective C objects, like NSArray in Carto mobile SDK, 
      // so there are special objects for collections
 	MapPosVector* polygonPoses = [[MapPosVector alloc] init];
 	[polygonPoses add:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.650930 y:59.421659]]];
@@ -422,7 +411,7 @@ vectorDataSource1.Add(polygon);
 
 Text style parameters are similar to Marker, as both are Billboards, i.e. objects which have two special features:
 
-* Overlapping can be prohibited, based which one is nearer and explicit priority paramteter
+* Overlapping can be prohibited, based which one is nearer and explicit priority parameter
 * These can be shown as billboards in 2.5D (tilted) view. Set OrientationMode for this. There are 3 options: show on ground, and rotate with map (like street names), show on ground (do not rotate with map), or show as billboard (no rotation). See image below for the options.
 
 <div id="tabs5">
@@ -609,13 +598,13 @@ dataSource.Add(popup);
 
 ## 6. Add 3D model objects
 
-One special feature of Nutiteq Maps SDK is that you can add 3D objects (models) to map. For example you can add small moving car or other decorative or informative elements.
+One special feature of Carto Mobile SDK is that you can add 3D objects (models) to map. For example you can add small moving car or other decorative or informative elements.
 
-3D objects are added to same *LocalVectorDataSource* as 2D objects. The only special requirement is that it has to be in special Nutiteq Markup Language (**NML**) format. As name tells, it is specific to Nutiteq SDK, and it is mobile-optimised (multi-resolution) 3D file format.
+3D objects are added to same *LocalVectorDataSource* as 2D objects. The only special requirement is that it has to be in special *Nutiteq Markup Language* (**NML**) format. As name tells, it comes from the Nutiteq SDK, predecessor of Carto Mobile SDK and it is mobile-optimised (multi-resolution) 3D file format.
 
-1. First you need a NML file. You can get some free samples from [here](https://github.com/nutiteq/hellomap3d/wiki/NML-model-samples). If you have own model as Collada DAE (or KMZ) format, then you would need **Nutiteq 3D converter tools** to convert it to NML, so it can be used in mobile. Please ask licensing@nutiteq.com for more info about it.
+1. First you need a NML file. You can get some free samples from [here](https://github.com/nutiteq/hellomap3d/wiki/NML-model-samples). If you have own model as Collada DAE (or KMZ) format, then you would need **Carto Mobile 3D converter tools** to convert it to NML, so it can be used in mobile. Please ask sales@cartodb.com for more info about it.
 
-2. Typical NML files are quite small (below 100K), if they are large then they are probably too slow to render anyway, so consider using lower detail models. Then you can add it to **res/raw** folder on Android app, or any **resource folder** in iOS project.
+2. Typical NML files are quite small (below 100K), if they are large then they are probably too slow to render anyway, so consider using lower detail models. Then you can add it to **res/raw** folder on Android app, or as **resource file** in iOS project.
 
 3. Finally load the model in code, and add to map
 
@@ -675,7 +664,7 @@ var modelFile = AssetUtils.LoadBytes("fcd_auto.nml");
 var modelPos = proj.FromWgs84(new MapPos(24.646469, 59.423939));
 var model = new NMLModel(modelPos, modelFile);
 
-// oversize it 20*, just to make it more visible (optional)
+// oversize it 20x, just to make it more visible (optional)
 model.Scale = 20;
 
 // add metadata for click handling (optional)
@@ -696,7 +685,7 @@ dataSource.Add(model);
 **LocalVectorDataSource** has additional creation option **spatialIndexType** which enables to define spatial index to the datasource. By default there is no spatial index. Our suggestion:
 
 * Use no spatial index (default option) if number of elements is small, below ~1000 points or markers (less if you have complex lines and polygons)
-* Use *KDTREE_SPATIAL_INDEX* as index type for **bigger number of elements.** 
+* Use *NT_LOCAL_SPATIAL_INDEX_TYPE_KDTREE* as index type for **bigger number of elements.** 
 
 Advantage of the index is that CPU usage decreases a lot for large number of objects and you will have smoother map interaction (pan and zoom). But the downside is that showing overlay is slightly delayed: using index is not done immediately when you move the map, but after some hundred milliseconds. 
 
@@ -713,12 +702,12 @@ Overall maximum number of objects on map is in any case limited to the RAM avail
 // Initialize a local vector data source with spatial index
   NTLocalVectorDataSource* vectorDataSource1 =
     [[NTLocalVectorDataSource alloc] initWithProjection:proj
-        spatialIndexType: NTLocalSpatialIndexType::NT_KDTREE_SPATIAL_INDEX];
+        spatialIndexType: NTLocalSpatialIndexType::NT_LOCAL_SPATIAL_INDEX_TYPE_KDTREE];
 </pre>
 </div>
 <div id="a7">
 <pre class="brush: java">
-LocalVectorDataSource vectorDataSource2 = new LocalVectorDataSource(proj, LocalSpatialIndexType.KDTREE_SPATIAL_INDEX);
+LocalVectorDataSource vectorDataSource2 = new LocalVectorDataSource(proj, LocalSpatialIndexType.NT_LOCAL_SPATIAL_INDEX_TYPE_KDTREE);
 </pre>
 </div>
 <div id="n7">
@@ -728,7 +717,7 @@ var vectorDataSource1 = new LocalVectorDataSource(proj, LocalSpatialIndexType.Kd
 </div>
 </div>
 
-Another special case is if you have **very complex lines or polygons**: objects with high number of vertexes. By high number I mean more than hundreds of points per object. Typical example would be GPS traces for long periods of time, recording a point every second or so. Indexing does not help here much, as you would want to show whole track on screen. Here LocalVectorDataSource provides **automatic line simplification** feature, which reduces number of polygon and line points while trying to keep the shape of the object similar to original. By *automatic* simpification we mean zoom-dependent re-simplification: when map is zoomed out, more aggressive simplification is used as you will not notice it, and when you zoom in, then less simplification is applied, until in fill zoom in you see original details.
+Another special case is if you have **very complex lines or polygons**: objects with high number of vertexes. By high number I mean more than hundreds of points per object. Typical example would be GPS traces for long periods of time, recording a point every second or so. Indexing does not help here much, as you would want to show whole track on screen. Here LocalVectorDataSource provides **automatic line simplification** feature, which reduces number of polygon and line points while trying to keep the shape of the object similar to original. By *automatic* simplification we mean zoom-dependent re-simplification: when map is zoomed out, more aggressive simplification is used as you will not notice it, and when you zoom in, then less simplification is applied, until in fill zoom in you see original details.
 
 There are several ways how to simplify geometries, currently Nutiteq SDK has one method implemented for lines and polygons: the most common Ramer-Douglas-Peucker algorithm. To be exact, simplification is done in two passes - first pass uses fast Radial Distance vertex rejection, second pass uses Ramer-Douglas-Peuckerworst algorithm (with worst case quadratic complexity). All this is can be used with just one line of code - in following example (under iOS) for minimal 1-pixel simplification, where result should be invisible but effect can be significant, depending on your source data:
 
@@ -751,15 +740,14 @@ There are several ways how to simplify geometries, currently Nutiteq SDK has one
 
 </pre>
 </div>
-<div id="n8">
-<pre class="brush: csharp">
+<div id="n8">adsd<pre class="brush: csharp">as
 vectorDataSource1.GeometrySimplifier = new DouglasPeuckerGeometrySimplifier( 1.0f / 320.0f);
 
 </pre>
 </div>
 </div>
 
-The simplification makes rendering (GPU tasks) faster with the cost of some additional computation (CPU), and for aggressive simplification you can see reducement of line quality. So use it carefully, only when you need it.
+The simplification makes rendering (GPU tasks) faster with the cost of some additional computation (CPU), and for aggressive simplification you can see decrease of line quality. So use it carefully, only when you need it.
 
 <script>
 		$( "#tabs1" ).tabs();
