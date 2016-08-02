@@ -8,7 +8,7 @@
 namespace carto {
     
     CombinedTileDataSource::CombinedTileDataSource(const std::shared_ptr<TileDataSource>& dataSource1, const std::shared_ptr<TileDataSource>& dataSource2, int zoomLevel) :
-        TileDataSource(dataSource1 ? dataSource1->getMinZoom() : 0, dataSource2 ? dataSource2->getMaxZoom() : 0), _dataSource1(dataSource1), _dataSource2(dataSource2), _zoomLevel(zoomLevel)
+        TileDataSource(), _dataSource1(dataSource1), _dataSource2(dataSource2), _zoomLevel(zoomLevel)
     {
         if (!dataSource1) {
             throw NullArgumentException("Null dataSource1");
@@ -26,6 +26,14 @@ namespace carto {
         _dataSource2->unregisterOnChangeListener(_dataSourceListener);
         _dataSource1->unregisterOnChangeListener(_dataSourceListener);
         _dataSourceListener.reset();
+    }
+
+    int CombinedTileDataSource::getMinZoom() const {
+        return _dataSource1 ? _dataSource1->getMinZoom() : 0;
+    }
+
+    int CombinedTileDataSource::getMaxZoom() const {
+        return _dataSource2 ? _dataSource2->getMaxZoom() : 0;
     }
     
     std::shared_ptr<TileData> CombinedTileDataSource::loadTile(const MapTile& mapTile) {

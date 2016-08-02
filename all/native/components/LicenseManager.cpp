@@ -64,11 +64,6 @@ namespace carto {
         return result;
     }
 
-    std::string LicenseManager::getUserKey() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _userKey;
-    }
-
     LicenseManager::WatermarkType LicenseManager::getWatermarkType() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _watermarkType;
@@ -81,7 +76,6 @@ namespace carto {
 
     LicenseManager::LicenseManager() :
         _appId(),
-        _userKey(),
         _watermarkType(EVALUATION_WATERMARK),
         _updateThreads(),
         _mutex()
@@ -94,32 +88,27 @@ namespace carto {
         }
     }
 
-    bool LicenseManager::GetProductPlatformId(std::string& appParam, std::string& sdkProduct, std::string& platformId) {
+    bool LicenseManager::GetProductId(std::string& appParam, std::string& sdkProduct) {
         switch (PlatformUtils::GetPlatformType()) {
         case PlatformType::PLATFORM_TYPE_ANDROID:
             appParam = "packageName";
             sdkProduct = "sdk-android-";
-            platformId = "android";
             break;
         case PlatformType::PLATFORM_TYPE_IOS:
             appParam = "bundleIdentifier";
             sdkProduct = "sdk-ios-";
-            platformId = "ios";
             break;
         case PlatformType::PLATFORM_TYPE_XAMARIN_ANDROID:
             appParam = "packageName";
             sdkProduct = "sdk-xamarin-android-";
-            platformId = "xamarin-android";
             break;
         case PlatformType::PLATFORM_TYPE_XAMARIN_IOS:
             appParam = "bundleIdentifier";
             sdkProduct = "sdk-xamarin-ios-";
-            platformId = "xamarin-ios";
             break;
         case PlatformType::PLATFORM_TYPE_WINDOWS_PHONE:
             appParam = "productId";
             sdkProduct = "sdk-winphone-";
-            platformId = "windows-phone";
             break;
         default:
             return false;
@@ -228,8 +217,8 @@ namespace carto {
     }
 
     bool LicenseManager::verifyLicenseParameters(const std::unordered_map<std::string, std::string>& parameters) {
-        std::string appParam, sdkProduct, platformId;
-        if (!GetProductPlatformId(appParam, sdkProduct, platformId)) {
+        std::string appParam, sdkProduct;
+        if (!GetProductId(appParam, sdkProduct)) {
             Log::Error("LicenseManager::verifyLicenseParameters: Unsupported platform");
             return false;
         }
@@ -288,13 +277,6 @@ namespace carto {
             return false;
         }
 
-        // Store user key. Even if license is expired, we will store this.
-        _userKey.clear();
-        it = parameters.find("userKey");
-        if (it != parameters.end()) {
-            _userKey = it->second;
-        }
-
         // Check the license valid until date, if it exists
         it = parameters.find("validUntil");
         if (it != parameters.end()) {
@@ -335,14 +317,10 @@ namespace carto {
     }
 
     std::string LicenseManager::updateOnlineLicense() {
-        std::string appParam, sdkProduct, platformId;
-        GetProductPlatformId(appParam, sdkProduct, platformId);
-
         // Request new license from server
         std::map<std::string, std::string> params;
         params["device"] = PlatformUtils::GetDeviceId();
-//        params["user_key"] = getUserKey();
-        params["platform"] = platformId;
+        params["platform"] = PlatformUtils::GetPlatformId();
         std::string url = NetworkUtils::BuildURLFromParameters(LICENSE_SERVICE_URL + NetworkUtils::URLEncode(PlatformUtils::GetAppIdentifier()) + "/getLicense", params);
         std::shared_ptr<BinaryData> responseData;
         if (!NetworkUtils::GetHTTP(url, responseData, false)) {

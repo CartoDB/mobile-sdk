@@ -27,6 +27,9 @@ namespace carto {
          */
         CombinedTileDataSource(const std::shared_ptr<TileDataSource>& dataSource1, const std::shared_ptr<TileDataSource>& dataSource2, int zoomLevel);
         virtual ~CombinedTileDataSource();
+
+        virtual int getMinZoom() const;
+        virtual int getMaxZoom() const;
         
         virtual std::shared_ptr<TileData> loadTile(const MapTile& tile);
         

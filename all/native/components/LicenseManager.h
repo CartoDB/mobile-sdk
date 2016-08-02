@@ -31,7 +31,6 @@ namespace carto {
 
         bool registerLicense(const std::string& licenseKey, const std::shared_ptr<LicenseManagerListener>& listener);
 
-        std::string getUserKey() const;
         WatermarkType getWatermarkType() const;
 
         static LicenseManager& GetInstance();
@@ -39,7 +38,7 @@ namespace carto {
     private:
         LicenseManager();
             
-        static bool GetProductPlatformId(std::string& appParam, std::string& sdkProduct, std::string& platformId);
+        static bool GetProductId(std::string& appParam, std::string& sdkProduct);
         static bool MatchProduct(const std::string& productTemplate, const std::string& product);
         static bool MatchAppId(const std::string& appIdTemplate, const std::string& appId);
 
@@ -50,7 +49,6 @@ namespace carto {
         std::string updateOnlineLicense();
 
         std::string _appId;
-        std::string _userKey;
         WatermarkType _watermarkType;
         std::vector<std::thread> _updateThreads;
         mutable std::mutex _mutex;

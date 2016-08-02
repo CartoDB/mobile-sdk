@@ -88,9 +88,6 @@ namespace carto {
         virtual std::shared_ptr<TileData> loadTile(const MapTile& mapTile);
     
     private:
-        static int GetMinZoom(const std::string& path);
-        static int GetMaxZoom(const std::string& path);
-        
         MBTilesScheme::MBTilesScheme _scheme;
         std::unique_ptr<sqlite3pp::database> _db;
         mutable std::mutex _mutex;

@@ -18,6 +18,9 @@ namespace carto {
     class CacheTileDataSource : public TileDataSource {
     public:
         virtual ~CacheTileDataSource();
+
+        virtual int getMinZoom() const;
+        virtual int getMaxZoom() const;
         
         virtual void notifyTilesChanged(bool removeTiles);
         

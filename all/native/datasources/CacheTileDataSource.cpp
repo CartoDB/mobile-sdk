@@ -8,7 +8,7 @@
 namespace carto {
     
     CacheTileDataSource::CacheTileDataSource(const std::shared_ptr<TileDataSource>& dataSource) :
-        TileDataSource(dataSource ? dataSource->getMinZoom() : 0, dataSource ? dataSource->getMaxZoom() : 0), _dataSource(dataSource)
+        TileDataSource(), _dataSource(dataSource)
     {
         if (!dataSource) {
             throw NullArgumentException("Null dataSource");
@@ -21,6 +21,14 @@ namespace carto {
     CacheTileDataSource::~CacheTileDataSource() {
         _dataSource->unregisterOnChangeListener(_dataSourceListener);
         _dataSourceListener.reset();
+    }
+
+    int CacheTileDataSource::getMinZoom() const {
+        return _dataSource->getMinZoom();
+    }
+
+    int CacheTileDataSource::getMaxZoom() const {
+        return _dataSource->getMaxZoom();
     }
 
     void CacheTileDataSource::notifyTilesChanged(bool removeTiles) {

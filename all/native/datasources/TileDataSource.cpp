@@ -46,6 +46,15 @@ namespace carto {
         _onChangeListeners.erase(std::remove(_onChangeListeners.begin(), _onChangeListeners.end(), listener), _onChangeListeners.end());
     }
     
+    TileDataSource::TileDataSource() :
+        _minZoom(0),
+        _maxZoom(Const::MAX_SUPPORTED_ZOOM_LEVEL),
+        _projection(std::make_shared<EPSG3857>()),
+        _onChangeListeners(),
+        _onChangeListenersMutex()
+    {
+    }
+
     TileDataSource::TileDataSource(int minZoom, int maxZoom) :
         _minZoom(std::max(0, minZoom)),
         _maxZoom(std::min(static_cast<int>(Const::MAX_SUPPORTED_ZOOM_LEVEL), maxZoom)),
@@ -53,9 +62,6 @@ namespace carto {
         _onChangeListeners(),
         _onChangeListenersMutex()
     {
-        if (_minZoom > _maxZoom) {
-            _maxZoom = _minZoom;
-        }
     }
     
     std::map<std::string, std::string> TileDataSource::buildTagValues(const MapTile& tile) const {

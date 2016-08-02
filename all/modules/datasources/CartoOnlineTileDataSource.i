@@ -21,6 +21,10 @@
 
 %std_exceptions(carto::CartoOnlineTileDataSource::CartoOnlineTileDataSource)
 
+%ignore carto::CartoOnlineTileDataSource::buildTileURL;
+%ignore carto::CartoOnlineTileDataSource::loadTileURLs;
+%ignore carto::CartoOnlineTileDataSource::loadOnlineTile;
+
 %feature("director") carto::CartoOnlineTileDataSource;
 
 %include "datasources/CartoOnlineTileDataSource.h"
