@@ -221,7 +221,7 @@ namespace carto {
             // Find replacements for preloading tiles
             findTiles(_preloadingTiles, true);
             
-            // Pre-fetch parent tiles
+            // Pre-fetch up to 2 levels of parent tiles
             std::vector<MapTile> allTiles = _visibleTiles;
             allTiles.insert(allTiles.end(), _preloadingTiles.begin(), _preloadingTiles.end());
             for (const MapTile& visTile : allTiles) {
@@ -229,6 +229,9 @@ namespace carto {
                     int tileMask = (1 << visTile.getZoom()) - 1;
                     MapTile tile(visTile.getX() & tileMask, visTile.getY() & tileMask, visTile.getZoom(), visTile.getFrameNr());
                     fetchTile(tile.getParent(), true, false);
+                    if (visTile.getZoom() > 1) {
+                        fetchTile(tile.getParent().getParent(), true, false);
+                    }
                 }
             }
         }
