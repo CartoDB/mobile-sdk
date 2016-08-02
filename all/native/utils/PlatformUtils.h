@@ -27,13 +27,15 @@ namespace carto {
     class PlatformUtils {
     public:
         static PlatformType::PlatformType GetPlatformType();
+
+        static std::string GetPlatformId();
         
         static std::string GetDeviceId();
-        
+
         static std::string GetDeviceType();
 
         static std::string GetDeviceOS();
-        
+
         static std::string GetAppIdentifier();
 
         static std::string GetAppDeviceId();

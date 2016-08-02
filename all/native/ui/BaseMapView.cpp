@@ -31,11 +31,12 @@ namespace carto {
     }
 
     std::string BaseMapView::GetSDKVersion() {
+        std::string platformId = PlatformUtils::GetPlatformId();
         std::string deviceOS = PlatformUtils::GetDeviceOS();
         std::string deviceType = PlatformUtils::GetDeviceType();
 
         std::stringstream ss;
-        ss << "Build: " <<_CARTO_MOBILE_SDK_PLATFORM << "-" << _CARTO_MOBILE_SDK_VERSION;
+        ss << "Build: " << platformId << "-" << _CARTO_MOBILE_SDK_VERSION;
         ss << ", time: " << __DATE__ << " " << __TIME__;
         ss << ", device type: " << deviceType;
         ss << ", device OS: " << deviceOS;

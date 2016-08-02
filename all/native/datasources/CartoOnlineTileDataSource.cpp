@@ -3,6 +3,7 @@
 #include "core/MapTile.h"
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
+#include "utils/PlatformUtils.h"
 #include "utils/NetworkUtils.h"
 
 #include <picojson/picojson.h>
@@ -18,7 +19,7 @@ namespace carto {
         _tileURLs(),
         _mutex()
     {
-        _maxZoom = 0;//(source.substr(0, 7) == "mapzen." ? 17 : 14);
+        _maxZoom = (source.substr(0, 7) == "mapzen." ? 17 : 14);
     }
     
     CartoOnlineTileDataSource::~CartoOnlineTileDataSource() {
@@ -61,7 +62,14 @@ namespace carto {
     }
 
     bool CartoOnlineTileDataSource::loadTileURLs() {
-        std::string url = NUTITEQ_TILE_SERVICE_URL + _source + "/1/tiles.json";
+        std::string baseURL = NUTITEQ_TILE_SERVICE_URL + NetworkUtils::URLEncode(_source) + "/1/tiles.json";
+        std::map<std::string, std::string> params;
+        params["appId"] = PlatformUtils::GetAppIdentifier();
+        params["deviceId"] = PlatformUtils::GetDeviceId();
+        params["platform"] = PlatformUtils::GetPlatformId();
+        params["sdk_build"] = _CARTO_MOBILE_SDK_VERSION;
+        std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
+
         std::shared_ptr<BinaryData> responseData;
         if (!NetworkUtils::GetHTTP(url, responseData, false)) {
             Log::Error("CartoOnlineTileDataSource: Failed to fetch tile source configuration");

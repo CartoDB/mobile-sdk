@@ -38,7 +38,7 @@ namespace carto {
     private:
         LicenseManager();
             
-        static bool GetProductPlatformId(std::string& appParam, std::string& sdkProduct, std::string& platformId);
+        static bool GetProductId(std::string& appParam, std::string& sdkProduct);
         static bool MatchProduct(const std::string& productTemplate, const std::string& product);
         static bool MatchAppId(const std::string& appIdTemplate, const std::string& appId);
 

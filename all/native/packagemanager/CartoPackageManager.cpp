@@ -41,7 +41,12 @@ namespace carto {
             Log::Errorf("CartoPackageManager: Illegal package type: %s", type.c_str());
             return "";
         }
+
         std::map<std::string, std::string> params;
+        params["appId"] = PlatformUtils::GetAppIdentifier();
+        params["deviceId"] = PlatformUtils::GetDeviceId();
+        params["platform"] = PlatformUtils::GetPlatformId();
+        params["sdk_build"] = _CARTO_MOBILE_SDK_VERSION;
         return NetworkUtils::BuildURLFromParameters(baseURL, params);
     }
     
@@ -72,16 +77,23 @@ namespace carto {
             if (pos != std::string::npos) {
                 id = _source.substr(pos + 1);
             }
+
+            std::string baseURL = CUSTOM_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(id) + "/1/extract";
+
             std::map<std::string, std::string> params;
             params["bbox"] = std::string(results[1].first, results[1].second);
-            std::string packageURL = NetworkUtils::BuildURLFromParameters(CUSTOM_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(id) + "/extract", params);
+            params["appId"] = PlatformUtils::GetAppIdentifier();
+            params["deviceId"] = PlatformUtils::GetDeviceId();
+            params["platform"] = PlatformUtils::GetPlatformId();
+            params["sdk_build"] = _CARTO_MOBILE_SDK_VERSION;
+            std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
 
             auto packageInfo = std::make_shared<PackageInfo>(
                 packageId,
                 PackageType::PACKAGE_TYPE_MAP,
                 version,
                 0,
-                packageURL,
+                url,
                 std::shared_ptr<PackageTileMask>(),
                 std::shared_ptr<PackageMetaInfo>()
             );
