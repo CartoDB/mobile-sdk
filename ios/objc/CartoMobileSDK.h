@@ -66,6 +66,7 @@
 #import "NTVectorLayer.h"
 #import "NTVectorTileLayer.h"
 #import "NTTorqueTileLayer.h"
+#import "NTCartoOnlineRasterTileLayer.h"
 #import "NTCartoOnlineVectorTileLayer.h"
 #import "NTEditableVectorLayer.h"
 #import "NTClusteredVectorLayer.h"
