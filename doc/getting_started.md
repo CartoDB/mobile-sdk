@@ -7,7 +7,7 @@ https://developer.nutiteq.com/getting-started
 
 This getting started procedure describes how to create simple map applications for your mobile platform. It is recommended to familiarise yourself with the setup for the platform that you are using. You can then add basic and advanced map features, as specified in this high-level workflow for using the Mobile SDK. 
 
-1. Register for a [CartoDB account](https://cartodb.com/) and register **Mobile API Key** under Account.
+1. Register for a [CARTO account](https://carto.com/) and register **Mobile API Key** under Account.
 
 
 ## Android
@@ -77,7 +77,7 @@ Define the MapView type in your main activity class and load layout. This enable
 
 The map object needs a default map source in order to initialize. There are several requirements for this to work properly.
 
-- Replace `YOUR_LICENSE_KEY` with your Carto Mobile license key. For this you need to register your app in your Carto web account, under **API keys** section.
+- Replace `YOUR_LICENSE_KEY` with your CARTO Mobile license key. For this you need to register your app in your CARTO web account, under **API keys** section.
 
 - Define the first layer of the map, which will be the basemap layer. This is a vector map layer, which requires that you load and define styles in the assets of this layer. You can also add other map layers once a basemap is configured.
 
@@ -106,7 +106,7 @@ The following example shows the complete request for initializing your Android m
 Congratulations! You can now start the application on your phone and view your map. 
 
 ## iOS
-### 1. Create new project with Carto Mobile SDK framework
+### 1. Create new project with CARTO Mobile SDK framework
 
 *Create new project in Xcode, add SDK framework using Podfile*
 
@@ -131,7 +131,7 @@ sure it is Objective C++, not plain Objective C class*
 2.  Make **ViewController.h** to extend **GLKViewController** instead of
     UIViewController
 3.  Replace **YOUR\_LICENSE\_KEY** with your license key in code below.
-    For this you need to register your app in your Carto web account, under **API keys** section.
+    For this you need to register your app in your CARTO web account, under **API keys** section.
     
 ``` {.brush: .objc}
 #import 
@@ -220,17 +220,17 @@ Manipulating the map view goes via *MapView* object methods:
 
 ### Get component from Xamarin Store
 
-[Xamarin Component Store](https://components.xamarin.com/view/cartomapssdk) has Carto Maps SDK as *component*, which can be added to your Android or iOS project directly from Xamarin Studio or Visual Studio.
+[Xamarin Component Store](https://components.xamarin.com/view/cartomapssdk) has CARTO Maps SDK as *component*, which can be added to your Android or iOS project directly from Xamarin Studio or Visual Studio.
 
 
 ### Register license key
 
-You need to register your app in your Carto web account, under **API keys** section.
+You need to register your app in your CARTO web account, under **API keys** section.
 If you cover both platforms, register license codes for the two apps.
 
 ### Cross-platform apps
 
-You can create one Xamarin project (solution) for Android and iOS and share code. These still need to be two apps, as many app aspects (UI, file system etc) are platform-specific. From Carto Maps SDK point of view the API is almost the same and your code can be shared, except some specific API calls which need Android *context* or file system references. For example these calls must be platform specific:
+You can create one Xamarin project (solution) for Android and iOS and share code. These still need to be two apps, as many app aspects (UI, file system etc) are platform-specific. From CARTO Maps SDK point of view the API is almost the same and your code can be shared, except some specific API calls which need Android *context* or file system references. For example these calls must be platform specific:
 
 * Register license key: *MapView.RegisterLicense()*
 * Create package manager: *new CartoPackageManager()*
@@ -239,7 +239,7 @@ Almost all of the map API related code: adding layers and objects to map, handli
 
 ### Xamarin Forms app
 
-Xamarin Forms from version 3.3.0 support *Native Controls*, and if you add Carto Mobile SDK separately to iOS and Android part, then for Xamarin it works as a Native Control. See https://blog.xamarin.com/embedding-native-controls-into-xamarin-forms. Generally you can share most of code which works with the control,  just creation of it has to be platform-specific as shown below:
+Xamarin Forms from version 3.3.0 support *Native Controls*, and if you add CARTO Mobile SDK separately to iOS and Android part, then for Xamarin it works as a Native Control. See https://blog.xamarin.com/embedding-native-controls-into-xamarin-forms. Generally you can share most of code which works with the control,  just creation of it has to be platform-specific as shown below:
 
 <pre class="brush: csharp">
 #if __IOS__
@@ -257,7 +257,7 @@ It seems the native controls currently work only if you create or update Form in
 
 ### Android native app
 
-1) **Add Carto SDK Component** to your project
+1) **Add CARTO SDK Component** to your project
 
 2) **Copy vector style file** (as *.zip* file) to your project *Assets* folder. You can take it from samples. This is needed for vector basemap.
 
@@ -284,7 +284,7 @@ You you can load layout from a xml and load the MapView from Layout, or create i
 <pre class="brush: csharp">
 using Carto.Ui;
 using Carto.Layers;
-using CartoCarto.DataSources;
+using Carto.DataSources;
 
 
 [Activity (Label = "Carto.HelloMap", MainLauncher = true)]
@@ -316,7 +316,7 @@ public class MainActivity : Activity
 
 ### iOS app
 
-1) **Uncompress Carto Xamarin iOS SDK package** to your project, so you have the .dll file under Assemblies folder
+1) **Uncompress CARTO Xamarin iOS SDK package** to your project, so you have the .dll file under Assemblies folder
 
 2) **Copy vector style file** (*osmbright.zip*) to your project. You can take it from samples. This is needed for vector basemap.
 
@@ -395,7 +395,7 @@ You must have *Icon.png* in your Assets folder to set bitmap
 
 ### Other map actions
 
-See [mobile-dotnet-samples](https://github.com/CartoDB/mobile-dotnet-samples/) sample code how to:
+See [mobile-dotnet-samples](https://github.com/CARTO/mobile-dotnet-samples/) sample code how to:
 
 * **Control map view** - set zoom, center, tilt etc
 * **Listen events** (MapListener.cs) of clicks to map and map objects
@@ -411,16 +411,16 @@ Requirements:
 * Windows 10
 * MS Visual Studio 2013 Community edition, or better
 * Windows Phone 10 SDK, should come with Visual Studio
-* Visual Studio extension (VSIX) for Carto Maps SDK component. Download and just start the package to install it.
+* Visual Studio extension (VSIX) for CARTO Maps SDK component. Download and just start the package to install it.
 
 
 ### Register license key
 
-Sign up in CartoDB web and go to your profile **API Keys** section and add new mobile app. Select **Windows Phone** as application type, and make sure you enter same application ID as you have in your *Package.appmanifest > Packaging > Package name* For example, sample app ID is **c882d38a-5c09-4994-87f0-89875cdee539**. Finally you should get license code, which is a long string starting with *"XTU..."*. This is needed for your code.
+Sign up in CARTO web and go to your profile **API Keys** section and add new mobile app. Select **Windows Phone** as application type, and make sure you enter same application ID as you have in your *Package.appmanifest > Packaging > Package name* For example, sample app ID is **c882d38a-5c09-4994-87f0-89875cdee539**. Finally you should get license code, which is a long string starting with *"XTU..."*. This is needed for your code.
 
 ### Cross-platform apps
 
-You can create one .Net project (solution) for Android, iOS, Windows Phone and share map-related code. These still need to be separate apps, as many app aspects (UI, file system etc) are platform-specific. From Carto SDK point of view the API is almost the same and your code can be shared, except some specific API calls which need e.g. file system references or app resources. 
+You can create one .Net project (solution) for Android, iOS, Windows Phone and share map-related code. These still need to be separate apps, as many app aspects (UI, file system etc) are platform-specific. From CARTO SDK point of view the API is almost the same and your code can be shared, except some specific API calls which need e.g. file system references or app resources. 
 
 Almost all of the map API related code: adding layers and objects to map, handling interactions/clicks etc can be shared for iOS and Android!
 
@@ -428,7 +428,7 @@ Almost all of the map API related code: adding layers and objects to map, handli
 
 ### Creating WP app 
 
-1) Make sure you have Carto VS extension installed, and your app project has Internet Capability as minimum. In *Solution Explorer References* section, add *Carto Maps SDK for Windows Phone*. You should find it from Windows Phone 8.1 extensions. We don't have NuGet package yet, but it will come if you show us interest.
+1) Make sure you have CARTO VS extension installed, and your app project has Internet Capability as minimum. In *Solution Explorer References* section, add *Carto Maps SDK for Windows Phone*. You should find it from Windows Phone 8.1 extensions. We don't have NuGet package yet, but it will come if you show us interest.
 
 2) **Copy vector style file** (*osmbright.zip*) to your project *Assets* folder. You can take it from samples. This is needed for vector basemap.
 
@@ -451,7 +451,7 @@ protected async override void OnLaunched(LaunchActivatedEventArgs e)
 {
 	if (mapView == null)
 	{
-        // Register Carto app license
+        // Register CARTO app license
         var licenseOk = Carto.Ui.MapView.RegisterLicense("YOUR_LICENSE_KEY");
 
         // Create map view and initialize
@@ -506,7 +506,7 @@ dataSource.Add(marker);
 
 ### Other map actions
 
-See [mobile-dotnet-samples](https://github.com/CartoDB/mobile-dotnet-samples/) sample project (solution: *hellomap-winphone.sln*) how to:
+See [mobile-dotnet-samples](https://github.com/CARTO/mobile-dotnet-samples/) sample project (solution: *hellomap-winphone.sln*) how to:
 
 * **Control map view** - set zoom, center, tilt etc
 * **Listen events** (MapListener.cs) of clicks to map and map objects
