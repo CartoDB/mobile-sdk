@@ -86,7 +86,7 @@ namespace carto {
         
         virtual void loadData(const std::shared_ptr<CullState>& cullState);
 
-        virtual void offsetLayerHorizontally(double offset) ;
+        virtual void offsetLayerHorizontally(double offset);
         
         virtual void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
         virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
@@ -95,6 +95,9 @@ namespace carto {
         virtual void calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray,
                                                      const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
         virtual bool processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const;
+
+        virtual void registerDataSourceListener();
+        virtual void unregisterDataSourceListener();
 
     private:
         Color _color;

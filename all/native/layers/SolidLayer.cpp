@@ -108,4 +108,10 @@ namespace carto {
         return clickType == ClickType::CLICK_TYPE_SINGLE || clickType == ClickType::CLICK_TYPE_LONG; // by default, disable 'click through' for single and long clicks
     }
     
+    void SolidLayer::registerDataSourceListener() {
+    }
+
+    void SolidLayer::unregisterDataSourceListener() {
+    }
+
 }

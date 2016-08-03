@@ -22,9 +22,8 @@ static std::string solid_frag_glsl =
     "varying vec2 v_texCoord;"
     "uniform sampler2D u_tex;"
     "uniform vec4 u_color;"
-    "uniform float u_scale;"
     "void main() {"
-    "	gl_FragColor = texture2D(u_tex, v_texCoord * u_scale) * u_color;"
+    "	gl_FragColor = texture2D(u_tex, v_texCoord) * u_color;"
     "}";
 
 static carto::ShaderSource solid_shader_source("solid", &solid_vert_glsl, &solid_frag_glsl);

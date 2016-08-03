@@ -25,7 +25,6 @@ namespace carto {
         _u_mvpMat(0),
         _u_tex(0),
         _u_color(0),
-        _u_scale(),
         _textureManager()
     {
     }
@@ -42,7 +41,6 @@ namespace carto {
         _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
         _u_tex = _shader->getUniformLoc("u_tex");
         _u_color = _shader->getUniformLoc("u_color");
-        _u_scale = _shader->getUniformLoc("u_scale");
         _a_coord = _shader->getAttribLoc("a_coord");
         _a_texCoord = _shader->getAttribLoc("a_texCoord");
     
@@ -59,7 +57,7 @@ namespace carto {
     }
 
     void SolidRenderer::setBitmap(const std::shared_ptr<Bitmap>& bitmap, float scale) {
-        if (_bitmap != bitmap) {
+        if (_bitmap != bitmap || !_bitmapTex) {
             if (bitmap) {
                 _bitmapTex = _textureManager->createTexture(bitmap, true, true);
             }
@@ -78,28 +76,29 @@ namespace carto {
         // Texture, color
         glUniform1i(_u_tex, 0);
         glActiveTexture(GL_TEXTURE0);
-        glUniform1f(_u_scale, _bitmapScale);
-        glUniform4f(_u_color, _color.getR() / 255.0f, _color.getG() / 255.0f, _color.getB() / 255.0f, _color.getA() / 255.0f);
+        glBindTexture(GL_TEXTURE_2D, _bitmapTex->getTexId());
+        float alpha = _color.getA() / 255.0f;
+        glUniform4f(_u_color, _color.getR() * alpha / 255.0f, _color.getG() * alpha / 255.0f, _color.getB() * alpha / 255.0f, alpha);
         // Coords, texCoords, colors
         glEnableVertexAttribArray(_a_coord);
         glEnableVertexAttribArray(_a_texCoord);
 
-        // Texture
-        glBindTexture(GL_TEXTURE_2D, _bitmapTex->getTexId());
-
         // Scale bitmap coordinates
-        const MapPos cameraPos = viewState.getCameraPos();
-        for (int i = 0; i < QUAD_VERTEX_COUNT * 3; i += 3) {
-            _quadCoords[i + 0] = QUAD_COORDS[i + 0] * viewState.getWidth();
-            _quadCoords[i + 1] = QUAD_COORDS[i + 1] * viewState.getHeight();
-            _quadCoords[i + 2] = QUAD_COORDS[i + 2];
+        float bitmapWScale = 1.0f, bitmapHScale = 1.0f;
+        if (_bitmap) {
+            bitmapWScale = 0.5f / viewState.getWidth()  * _bitmap->getWidth()  * _bitmapScale;
+            bitmapHScale = 0.5f / viewState.getHeight() * _bitmap->getHeight() * _bitmapScale;
         }
-        cglib::mat4x4<float> mvpMat = cglib::ortho4_matrix(0.0f, 0.0f, static_cast<float>(viewState.getWidth()), static_cast<float>(viewState.getHeight()), -1.0f, 1.0f);
+        for (int i = 0; i < QUAD_VERTEX_COUNT * 2; i += 2) {
+            _quadTexCoords[i + 0] = QUAD_TEX_COORDS[i + 0] / bitmapWScale;
+            _quadTexCoords[i + 1] = QUAD_TEX_COORDS[i + 1] / bitmapHScale;
+        }
+        cglib::mat4x4<float> mvpMat = cglib::mat4x4<float>::identity();
         glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, mvpMat.data());
 
         // Draw
-        glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 0, _quadCoords);
-        glVertexAttribPointer(_a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, QUAD_TEX_COORDS);
+        glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 0, QUAD_COORDS);
+        glVertexAttribPointer(_a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, _quadTexCoords);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, QUAD_VERTEX_COUNT);
 
         // Disable bound arrays
@@ -122,7 +121,7 @@ namespace carto {
     };
 
     const float SolidRenderer::QUAD_COORDS[] = {
-        0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f
+        -1.0f, 1.0f, 0.0f, -1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, -1.0f, 0.0f
     };
     
     const float SolidRenderer::QUAD_TEX_COORDS[] = {

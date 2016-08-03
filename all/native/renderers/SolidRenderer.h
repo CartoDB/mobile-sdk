@@ -44,16 +44,14 @@ namespace carto {
         std::shared_ptr<Bitmap> _bitmap;
         std::shared_ptr<Texture> _bitmapTex;
         float _bitmapScale;
-        float _quadCoords[QUAD_VERTEX_COUNT * 3];
+        float _quadTexCoords[QUAD_VERTEX_COUNT * 2];
 
         std::shared_ptr<Shader> _shader;
-        GLuint _a_color;
         GLuint _a_coord;
         GLuint _a_texCoord;
         GLuint _u_mvpMat;
         GLuint _u_tex;
         GLuint _u_color;
-        GLuint _u_scale;
 
         std::shared_ptr<TextureManager> _textureManager;
     };

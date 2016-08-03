@@ -95,7 +95,7 @@ namespace carto {
         virtual bool isUpdateInProgress() const;
 
     protected:
-        virtual void offsetLayerHorizontally(double offset) ;
+        virtual void offsetLayerHorizontally(double offset);
     
         virtual void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
         virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
