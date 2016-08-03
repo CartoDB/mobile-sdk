@@ -67,7 +67,7 @@ namespace carto {
         // Choose a random corner, this is used for placing the watermark with
         // the evaluation license
         std::mt19937 rng;
-        rng.seed((int)time(NULL));
+        rng.seed(static_cast<int>(time(NULL)));
         for (int i = 0; i < 16; i++) {
             rng();
         }
@@ -75,10 +75,10 @@ namespace carto {
         _randomAlignmentX = dist(rng) * 2 - 1;
         _randomAlignmentY = dist(rng) * 2 - 1;
         
-        cglib::mat4x4<float> modelviewMat = cglib::lookat4_matrix(cglib::vec3<float>(0, 0, 10), cglib::vec3<float>(0, 0, 0), cglib::vec3<float>(0, 1, 0));
+        cglib::mat4x4<float> modelviewMat = cglib::lookat4_matrix(cglib::vec3<float>(0, 0, 1), cglib::vec3<float>(0, 0, 0), cglib::vec3<float>(0, 1, 0));
         
         float aspectRatio = static_cast<float>(width) / height;
-        cglib::mat4x4<float> projectionMat = cglib::ortho4_matrix<float, cglib::float_traits<float> >(-aspectRatio, aspectRatio, -1, 1, 1, 100);
+        cglib::mat4x4<float> projectionMat = cglib::ortho4_matrix(-aspectRatio, aspectRatio, -1.0f, 1.0f, -2.0f, 2.0f);
         
         _modelviewProjectionMat = projectionMat * modelviewMat;
         
