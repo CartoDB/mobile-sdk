@@ -85,18 +85,21 @@ def getProfiles():
     return { unicode(key).encode('utf-8') : val for key, val in profiles.items() }
 
 def getVersion(buildnumber):
-  lastCommit = "None"
-  gitLog = subprocess.Popen(["git", "describe"], stdout=subprocess.PIPE).communicate()[0]
-  lastCommit = gitLog
+  try:
+    lastCommit = "None"
+    gitLog = subprocess.Popen(["git", "describe"], stdout=subprocess.PIPE).communicate()[0]
+    lastCommit = gitLog
 
-  branch = "None"
-  gitBranches = subprocess.Popen(["git", "branch"], stdout=subprocess.PIPE).communicate()[0]
-  for line in gitBranches.split("\n"):
-    match = re.match("\\*\s+(.*)", line)
-    if match:
-      branch = match.group(1)
+    branch = "None"
+    gitBranches = subprocess.Popen(["git", "branch"], stdout=subprocess.PIPE).communicate()[0]
+    for line in gitBranches.split("\n"):
+      match = re.match("\\*\s+(.*)", line)
+      if match:
+        branch = match.group(1)
 
-  return "%s|%s|%s" % (buildnumber, branch, lastCommit)
+    return "%s|%s|%s" % (buildnumber, branch, lastCommit)
+  except:
+    return "%s|%s|%s" % (buildnumber, "UNKNOWN", "UNKNOWN")
 
 def readLines(fileName):
   with open(fileName, 'r') as f:
