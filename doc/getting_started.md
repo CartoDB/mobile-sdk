@@ -30,7 +30,7 @@ allprojects {
 }
 
 dependencies {
-   compile 'com.carto:mobile-sdk:4.0.0-SNAPSHOT@aar'
+   compile 'com.carto:carto-mobile-sdk:4.0.0-snapshot@aar'
 }
 </pre>
 
@@ -189,7 +189,7 @@ instead.*
     Inspector**, and change the first parameter (Custom Class) to
     **NTMapView** (from the default UIView).
 
-![](/images/xcode_storyboard.png)
+![](https://developer.nutiteq.com/images/xcode_storyboard.png)
 
 ### 3. Run the app
 
