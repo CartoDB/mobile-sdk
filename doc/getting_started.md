@@ -112,9 +112,13 @@ Congratulations! You can now start the application on your phone and view your m
 
 1.  Create a new Xcode project. ‘File’ ~~&gt; ’New’~~&gt; ‘Project’
     -&gt; ‘Single View application’.
-2.  Create **Podfile** in your project folder with dependency
+2.  For beta preview: 
+ * Get SDK package latest dev build: [sdk4-ios-snapshot-latest.zip](https://nutifront.s3.amazonaws.com/sdk_snapshots/sdk4-ios-snapshot-latest.zip)
+ * Unzip it and copy *CartoMobileSDK.framework* to the Xcode project root folder
+3.  For live SDK release: create **Podfile** in your project folder with dependency
     [‘Carto-Mobile-SDK’](https://cocoapods.org/pods/Carto-Mobile-SDK) , install the Pods
-    and open *Workspace* file.
+    and open *Workspace* file. **Note: not available yet**
+
 
 
 ### 2. Modify Controller for Map View {#controller-for-map-view}
