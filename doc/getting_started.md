@@ -218,10 +218,9 @@ Manipulating the map view goes via *MapView* object methods:
 
 ## Xamarin (Android and iOS)
 
-### Get component from Xamarin Store
+### Get library from nuget
 
-[Xamarin Component Store](https://components.xamarin.com/view/cartomapssdk) has CARTO Maps SDK as *component*, which can be added to your Android or iOS project directly from Xamarin Studio or Visual Studio.
-
+Add library as nuget [CartoMobileSDK](https://www.nuget.org/packages/CartoMobileSDK/) from the main repo to your app.
 
 ### Register license key
 
@@ -249,7 +248,7 @@ Xamarin Forms from version 3.3.0 support *Native Controls*, and if you add CARTO
             stack.Children.Add(mapView);
 #endif
  // now the common code in different platforms
-    var baseLayer = new Carto.Layers.CartoOnlineVectorTileLayer("nutiteq.osm");
+    var baseLayer = new Carto.Layers.CartoOnlineVectorTileLayer("carto.osm");
      mapView.Layers.Add(baseLayer);
 </pre>
 
@@ -257,7 +256,7 @@ It seems the native controls currently work only if you create or update Form in
 
 ### Android native app
 
-1) **Add CARTO SDK Component** to your project
+1) **Add CARTO Mobile SDK** Package to your project from nuget
 
 2) **Copy vector style file** (as *.zip* file) to your project *Assets* folder. You can take it from samples. This is needed for vector basemap.
 
@@ -395,7 +394,7 @@ You must have *Icon.png* in your Assets folder to set bitmap
 
 ### Other map actions
 
-See [mobile-dotnet-samples](https://github.com/CARTO/mobile-dotnet-samples/) sample code how to:
+See [mobile-dotnet-samples](https://github.com/CartoDB/mobile-dotnet-samples/) sample code how to:
 
 * **Control map view** - set zoom, center, tilt etc
 * **Listen events** (MapListener.cs) of clicks to map and map objects
@@ -458,7 +457,7 @@ protected async override void OnLaunched(LaunchActivatedEventArgs e)
         mapView = new Carto.Ui.MapView();
 
         // Online vector base layer
-        var baseLayer = new CartoOnlineVectorTileLayer("osmbright.zip");
+        var baseLayer = new CartoOnlineVectorTileLayer("osmbright-v3.zip");
 
         // Set online base layer.
         // Note: assuming here that Map is an outlet added to the controller.
@@ -506,7 +505,7 @@ dataSource.Add(marker);
 
 ### Other map actions
 
-See [mobile-dotnet-samples](https://github.com/CARTO/mobile-dotnet-samples/) sample project (solution: *hellomap-winphone.sln*) how to:
+See [mobile-dotnet-samples](https://github.com/CartoDB/mobile-dotnet-samples/) sample project (solution: *hellomap-winphone.sln*) how to:
 
 * **Control map view** - set zoom, center, tilt etc
 * **Listen events** (MapListener.cs) of clicks to map and map objects
