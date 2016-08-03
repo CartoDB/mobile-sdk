@@ -21,10 +21,10 @@ namespace carto {
         _skyBitmap(),
         _skyTex(),
         _shader(),
-        _u_tex(0),
-        _u_mvpMat(0),
         _a_coord(0),
         _a_texCoord(0),
+        _u_tex(0),
+        _u_mvpMat(0),
         _textureManager(),
         _options(options)
     {
@@ -78,6 +78,7 @@ namespace carto {
             glUseProgram(_shader->getProgId());
             // Texture
             glUniform1i(_u_tex, 0);
+            glActiveTexture(GL_TEXTURE0);
             // Matrix
             const cglib::mat4x4<float>& mvpMat = viewState.getRTEModelviewProjectionMat();
             glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, mvpMat.data());
@@ -120,7 +121,7 @@ namespace carto {
                 _backgroundCoords[i + 2] = static_cast<float>(-cameraPos.getZ());
             }
             const cglib::mat4x4<float>& mvpMat = viewState.getRTEModelviewProjectionMat();
-            glUniformMatrix4fv(_shader->getUniformLoc("u_mvpMat"), 1, GL_FALSE, mvpMat.data());
+            glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, mvpMat.data());
     
             // Transform texture coordinates
             int intTwoPowZoom = (int) std::pow(2.0f, (int) viewState.getZoom());
@@ -153,7 +154,7 @@ namespace carto {
                 _skyCoords[i] = SKY_COORDS[i] * skyScale;
             }
             const cglib::mat4x4<float>& mvpMat = viewState.getRTEModelviewProjectionMat();
-            glUniformMatrix4fv(_shader->getUniformLoc("u_mvpMat"), 1, GL_FALSE, mvpMat.data());
+            glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, mvpMat.data());
     
             // Draw
             glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 0, _skyCoords);
@@ -163,31 +164,35 @@ namespace carto {
     }
     
     const float BackgroundRenderer::SKY_COORDS[] = {
-          // North
-          -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f,
-          // East
-          0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f, 0.5f,
-          // South
-          0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f,
-          // West
-          -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f };
-    
+        // North
+        -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f,
+        // East
+        0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f, 0.5f,
+        // South
+        0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f,
+        // West
+        -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f
+    };
+
     const float BackgroundRenderer::SKY_TEX_COORDS[] = {
-          // North
-          0.0f, 0.0f, 0.25f, 0.0f, 0.0f, 1.0f, 0.25f, 1.0f,
-          // East
-          0.25f, 0.0f, 0.5f, 0.0f, 0.25f, 1.0f, 0.5f, 1.0f,
-          // South
-          0.5f, 0.0f, 0.75f, 0.0f, 0.5f, 1.0f, 0.75f, 1.0f,
-          // West
-          0.75f, 0.0f, 1.0f, 0.0f, 0.75f, 1.0f, 1.0f, 1.0f };
-    
+        // North
+        0.0f, 0.0f, 0.25f, 0.0f, 0.0f, 1.0f, 0.25f, 1.0f,
+        // East
+        0.25f, 0.0f, 0.5f, 0.0f, 0.25f, 1.0f, 0.5f, 1.0f,
+        // South
+        0.5f, 0.0f, 0.75f, 0.0f, 0.5f, 1.0f, 0.75f, 1.0f,
+        // West
+        0.75f, 0.0f, 1.0f, 0.0f, 0.75f, 1.0f, 1.0f, 1.0f
+    };
+
     const float BackgroundRenderer::SKY_SCALE_MULTIPLIER = 2.0f / std::sqrt(3.0f);
-    
+
     const float BackgroundRenderer::BACKGROUND_COORDS[] = {
-          -0.5f, 0.5f, 0.0f, -0.5f, -0.5f, 0.0f, 0.5f, 0.5f, 0.0f, 0.5f, -0.5f, 0.0f};
-    
+        -0.5f, 0.5f, 0.0f, -0.5f, -0.5f, 0.0f, 0.5f, 0.5f, 0.0f, 0.5f, -0.5f, 0.0f
+    };
+
     const float BackgroundRenderer::BACKGROUND_TEX_COORDS[] = {
-          0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f};
-    
+        0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f
+    };
+
 }
