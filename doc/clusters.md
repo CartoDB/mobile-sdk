@@ -4,7 +4,7 @@ In many cases you may have so many Points of Interest (POIs) that these cannot b
 
 ![Cluster sample](http://share.gifyoutube.com/vMPDzX.gif)
 
-Since Nutiteq SDK 3.2 there is built-in cluster feature, which is highly customizable. You can define in you app code:
+Carto Mobile SDK has built-in cluster feature, which is highly customizable. You can define in you app code:
 
 * style for cluster objects
 * generate cluster object style dynamically, so it has e.g. number of objects in it

@@ -26,8 +26,6 @@
 
 !polymorphic_shared_ptr(carto::TileDataSource, datasources.TileDataSource)
 
-%std_exceptions(carto::TileDataSource::TileDataSource)
-
 %attribute(carto::TileDataSource, int, MinZoom, getMinZoom)
 %attribute(carto::TileDataSource, int, MaxZoom, getMaxZoom)
 !attributestring_polymorphic(carto::TileDataSource, projections.Projection, Projection, getProjection)

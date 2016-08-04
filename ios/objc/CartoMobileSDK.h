@@ -8,6 +8,7 @@
 #define _CARTOMOBILESDK_H_
 
 #import "NTOptions.h"
+#import "NTLayers.h"
 
 #import "NTMapBounds.h"
 #import "NTMapEnvelope.h"
@@ -56,7 +57,7 @@
 #import "NTColor.h"
 #import "NTViewState.h"
 
-#import "NTLayers.h"
+#import "NTSolidLayer.h"
 #import "NTNMLModelLODTreeLayer.h"
 #import "NTRasterTileLayer.h"
 #import "NTTileLoadListener.h"
@@ -65,6 +66,7 @@
 #import "NTVectorLayer.h"
 #import "NTVectorTileLayer.h"
 #import "NTTorqueTileLayer.h"
+#import "NTCartoOnlineRasterTileLayer.h"
 #import "NTCartoOnlineVectorTileLayer.h"
 #import "NTEditableVectorLayer.h"
 #import "NTClusteredVectorLayer.h"

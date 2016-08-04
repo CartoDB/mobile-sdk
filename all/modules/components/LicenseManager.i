@@ -16,7 +16,6 @@
 
 %import "components/LicenseManagerListener.i"
 
-%attributestring(carto::LicenseManager, std::string, UserKey, getUserKey)
 %ignore carto::LicenseManager::WatermarkType;
 %ignore carto::LicenseManager::registerLicense;
 %ignore carto::LicenseManager::getWatermarkType;

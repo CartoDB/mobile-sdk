@@ -1,6 +1,6 @@
 # Raster tile sources
 
-With Nutiteq **Starter, Pro or Enterprise plans** (not Lite) you can use any raster tile map source: your own, 3rd party etc. Here is collection of various raster map tile sources.
+With Carto Mobile **Pro and Enterprise plans** (not Lite) you can use any raster tile map source: your own, 3rd party etc. Here is collection of various raster map tile sources.
 
 To use following tile sources use *HTTPTileDataSource*, and create *RasterTileLayer* using it. The DataSource constructor takes URL pattern which are given below, and requires also minimum and maximum zoom levels. For all above 0 is minimum zoom, and maximum varies from 14 to 19.
 

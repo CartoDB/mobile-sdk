@@ -1,13 +1,16 @@
 #include "CartoVisLoader.h"
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
+#include "graphics/Bitmap.h"
 #include "datasources/HTTPTileDataSource.h"
 #include "layers/Layer.h"
+#include "layers/SolidLayer.h"
 #include "layers/RasterTileLayer.h"
 #include "network/HTTPClient.h"
 #include "services/CartoMapsService.h"
 #include "services/CartoVisBuilder.h"
 #include "utils/AssetPackage.h"
+#include "utils/NetworkUtils.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 
@@ -19,6 +22,8 @@
 #include <boost/optional.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
+
+#include <mapnikvt/CSSColorParser.h>
 
 namespace {
     
@@ -333,6 +338,11 @@ namespace carto {
                 layerInfos.push_back(*layerInfo);
             }
         }
+        else if (type == "background") {
+            if (auto layerInfo = createBackgroundLayer(options)) {
+                layerInfos.push_back(*layerInfo);
+            }
+        }
         else if (type == "torque") {
             if (auto layerInfo = createTorqueLayer(options, layerConfig.get("legend"))) {
                 layerInfos.push_back(*layerInfo);
@@ -392,6 +402,40 @@ namespace carto {
         picojson::object attributes;
         readLayerAttributes(attributes, options);
         return LayerInfo(rasterLayer, attributes);
+    }
+
+    boost::optional<CartoVisLoader::LayerInfo> CartoVisLoader::createBackgroundLayer(const picojson::value& options) const {
+        // Read color
+        Color color(255, 255, 255, 255);
+        if (options.get("color").is<std::string>()) {
+            unsigned int value = 0;
+            if (mvt::parseCSSColor(options.get("color").get<std::string>(), value)) {
+                color = Color(value);
+            }
+            else {
+                Log::Warn("CartoVisLoader::createBackgroundLayer: Failed to parse CSS color");
+            }
+        }
+
+        // Read optional image
+        std::shared_ptr<Bitmap> image;
+        if (options.get("image").is<std::string>()) {
+            std::shared_ptr<BinaryData> responseData;
+            if (NetworkUtils::GetHTTP(options.get("image").get<std::string>(), responseData, true)) {
+                image = Bitmap::CreateFromCompressed(responseData);
+            }
+            else {
+                Log::Warn("CartoVisLoader::createBackgroundLayer: Failed to load background image");
+            }
+        }
+
+        // Create solid layer
+        auto solidLayer = std::make_shared<SolidLayer>(color);
+        solidLayer->setBitmap(image);
+
+        picojson::object attributes;
+        readLayerAttributes(attributes, options);
+        return LayerInfo(solidLayer, attributes);
     }
 
     boost::optional<CartoVisLoader::LayerInfo> CartoVisLoader::createTorqueLayer(const picojson::value& options, const picojson::value& legend) const {

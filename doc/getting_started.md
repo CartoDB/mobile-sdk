@@ -7,7 +7,7 @@ https://developer.nutiteq.com/getting-started
 
 This getting started procedure describes how to create simple map applications for your mobile platform. It is recommended to familiarise yourself with the setup for the platform that you are using. You can then add basic and advanced map features, as specified in this high-level workflow for using the Mobile SDK. 
 
-1. Register for a [CartoDB account](https://cartodb.com/) and register **Mobile API Key** under Account.
+1. Register for a [CARTO account](https://carto.com/) and register **Mobile API Key** under Account.
 
 
 ## Android
@@ -30,7 +30,7 @@ allprojects {
 }
 
 dependencies {
-   compile 'com.nutiteq:nutiteq-sdk:3.2.4@aar'
+   compile 'com.carto:carto-mobile-sdk:4.0.0-snapshot@aar'
 }
 </pre>
 
@@ -43,7 +43,7 @@ dependencies {
 
 3) Define your application layout
 
-Define **main layout** as **res/layout/main.xml**, so that it contains `com.nutiteq.ui.MapView` element:
+Define **main layout** as **res/layout/main.xml**, so that it contains `com.carto.ui.MapView` element:
 
 {% highlight xml %}
 <?xml version="1.0" encoding="utf-8"?>
@@ -52,7 +52,7 @@ Define **main layout** as **res/layout/main.xml**, so that it contains `com.nuti
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical" >
-   <com.nutiteq.ui.MapView
+   <com.carto.ui.MapView
     android:id="@+id/mapView"
     android:layout_width="fill_parent" 
     android:layout_height="fill_parent" 
@@ -77,9 +77,7 @@ Define the MapView type in your main activity class and load layout. This enable
 
 The map object needs a default map source in order to initialize. There are several requirements for this to work properly.
 
-- Replace `YOUR_LICENSE_KEY` with your Nutiteq license key
-
-    Once [registered](#getting-started), you can get your license key from the [Nutiteq admin / My apps](https://developer.nutiteq.com/login) page.
+- Replace `YOUR_LICENSE_KEY` with your CARTO Mobile license key. For this you need to register your app in your CARTO web account, under **API keys** section.
 
 - Define the first layer of the map, which will be the basemap layer. This is a vector map layer, which requires that you load and define styles in the assets of this layer. You can also add other map layers once a basemap is configured.
 
@@ -98,31 +96,30 @@ The following example shows the complete request for initializing your Android m
         mapView = (MapView) this.findViewById(R.id.mapView);
  
         // Create basemap layer. Use vector style from assets
-        VectorTileLayer baseLayer = new NutiteqOnlineVectorTileLayer("nutibright-v2a.zip");
+        VectorTileLayer baseLayer = new CartoOnlineVectorTileLayer("nutiteq.osm");
  
         // Add layer to map
         mapView.getLayers().add(baseLayer);
     }
 </pre>
 
-Congratulations! You can now start the application on your phone and view your map. View the [Sample Mobile Apps](/cartodb-platform/mobilesdk/sampleapps/#sample-apps) section if you need help testing and viewing Android maps on your phone.
+Congratulations! You can now start the application on your phone and view your map. 
 
 ## iOS
-### 1. Create new project with Nutiteq SDK framework
+### 1. Create new project with CARTO Mobile SDK framework
 
-*Create new project in Xcode, add SDK framework (binary and headers) and
-assets to it, and make sure that builder will find new framework .h
-files. Also add dependencies: GLKit and libz.*
+*Create new project in Xcode, add SDK framework using Podfile*
 
 1.  Create a new Xcode project. ‘File’ ~~&gt; ’New’~~&gt; ‘Project’
     -&gt; ‘Single View application’.
-2.  Suggested: Create **Podfile** with dependency
-    [‘Nutiteq’](https://cocoapods.org/pods/Nutiteq) , install the Pods
-    and open Workspace file.
-3.  (Alternative: Copy Nuti.framework and nutibright.zip to the project
-    root directory. You get these files from [Downloads](/downloads) .
-    Then add dependencies: **GLkit.framework** and **libz** frameworks
-    (Build Phases &gt; Link Binary with Libraries))
+2.  For beta preview: 
+ * Get SDK package latest dev build: [sdk4-ios-snapshot-latest.zip](https://nutifront.s3.amazonaws.com/sdk_snapshots/sdk4-ios-snapshot-latest.zip)
+ * Unzip it and copy *CartoMobileSDK.framework* to the Xcode project root folder
+3.  For live SDK release: create **Podfile** in your project folder with dependency
+    [‘Carto-Mobile-SDK’](https://cocoapods.org/pods/Carto-Mobile-SDK) , install the Pods
+    and open *Workspace* file. **Note: not available yet**
+
+
 
 ### 2. Modify Controller for Map View {#controller-for-map-view}
 
@@ -134,11 +131,8 @@ sure it is Objective C++, not plain Objective C class*
 2.  Make **ViewController.h** to extend **GLKViewController** instead of
     UIViewController
 3.  Replace **YOUR\_LICENSE\_KEY** with your license key in code below.
-    You have to be [registered
-    here](https://developer.nutiteq.com/signup?plan_ids[]=2357355792402)
-    (free Lite plan is fine), and get the code from [My
-    apps](https://developer.nutiteq.com/admin) page.
-
+    For this you need to register your app in your CARTO web account, under **API keys** section.
+    
 ``` {.brush: .objc}
 #import 
 
@@ -174,7 +168,7 @@ and implementation **ViewController.mm** :
   NTMapView* mapView = (NTMapView*) self.view;
 
   // Create online vector tile layer, use style asset embedded in the project
-  NTVectorTileLayer* vectorTileLayer = [[NTNutiteqOnlineVectorTileLayer alloc] initWithSource: @"nutiteq.osm" styleAssetName:@"nutibright.zip"];
+  NTVectorTileLayer* vectorTileLayer = [[NTCartoOnlineVectorTileLayer alloc] initWithSource: @"nutiteq.osm" styleAssetName:@"nutibright-v3.zip"];
 
   // Add vector tile layer
   [[mapView getLayers] add:vectorTileLayer];
@@ -188,14 +182,14 @@ and implementation **ViewController.mm** :
 *Default storyboard template uses UIView class, we need NTMapView here
 instead.*
 
-1.  Repeat next step with both **Main\_iPhone.storyboard** and
-    **Main\_iPad.storyboard** files, if you have both
+1.  Repeat next step with both **Main\_iPhone.storyboard** (and
+    **Main\_iPad.storyboard** files, if you have both)
 2.  Open Main.Storyboard, find *View Controller Scene -&gt; View
     Controller* and *View*. From Navigator window find **Identity
     Inspector**, and change the first parameter (Custom Class) to
     **NTMapView** (from the default UIView).
 
-![](/images/xcode_storyboard.png)
+![](https://developer.nutiteq.com/images/xcode_storyboard.png)
 
 ### 3. Run the app
 
@@ -224,31 +218,47 @@ Manipulating the map view goes via *MapView* object methods:
 
 ## Xamarin (Android and iOS)
 
-### Get component from Xamarin Store
+### Get library from nuget
 
-[Xamarin Component Store](https://components.xamarin.com/view/nutiteqmapssdk) has Nutiteq Maps SDK component, which can be added to your Android or iOS project directly from Xamarin Studio.
-
+Add library as nuget [CartoMobileSDK](https://www.nuget.org/packages/CartoMobileSDK/) from the main repo to your app.
 
 ### Register license key
 
-Sign up in [developer.nutiteq.com](http://developer.nutiteq.com) and add an application. Select **xamarin-ios** or **xamarin-android** as application type, and make sure you enter same application ID as you have in your app. For examole, sample app ID is **com.nutiteq.hellomap.xamarin** for both platforms. Finally you should get license code, which is a long string starting with *"XTU..."*. This is needed for your code
-
+You need to register your app in your CARTO web account, under **API keys** section.
 If you cover both platforms, register license codes for the two apps.
 
 ### Cross-platform apps
 
-You can create one Xamarin project (solution) for Android and iOS and share code. These still need to be two apps, as many app aspects (UI, file system etc) are platform-specific. From Nutiteq SDK point of view the API is almost the same and your code can be shared, except some specific API calls which need Android *context* or file system references. For example these calls must be platform specific:
+You can create one Xamarin project (solution) for Android and iOS and share code. These still need to be two apps, as many app aspects (UI, file system etc) are platform-specific. From CARTO Maps SDK point of view the API is almost the same and your code can be shared, except some specific API calls which need Android *context* or file system references. For example these calls must be platform specific:
 
 * Register license key: *MapView.RegisterLicense()*
-* Create package manager: *new NutiteqPackageManager()*
+* Create package manager: *new CartoPackageManager()*
 
 Almost all of the map API related code: adding layers and objects to map, handling interactions/clicks etc can be shared for iOS and Android!
 
-### Android app
+### Xamarin Forms app
 
-1) **Uncompress Nutiteq Xamarin SDK Android package** to your project, so you have the .dll file under Assemblies folder
+Xamarin Forms from version 3.3.0 support *Native Controls*, and if you add CARTO Mobile SDK separately to iOS and Android part, then for Xamarin it works as a Native Control. See https://blog.xamarin.com/embedding-native-controls-into-xamarin-forms. Generally you can share most of code which works with the control,  just creation of it has to be platform-specific as shown below:
 
-2) **Copy vector style file** (*osmbright.zip*) to your project *Assets* folder. You can take it from samples. This is needed for vector basemap.
+<pre class="brush: csharp">
+#if __IOS__
+ // iOS specific code
+            var mapView = new Carto.Ui.MapView();
+            mapView.Frame = new CGRect(20, 20, 280, 80);
+            stack.Children.Add(mapView);
+#endif
+ // now the common code in different platforms
+    var baseLayer = new Carto.Layers.CartoOnlineVectorTileLayer("carto.osm");
+     mapView.Layers.Add(baseLayer);
+</pre>
+
+It seems the native controls currently work only if you create or update Form in code, not with xaml definition. But this part of Xamarin is in heavy development and can change with every release. Also using our map SDK in Xamarin Forms is experimental phase, as so far most Xamarin users have used it with native apps.
+
+### Android native app
+
+1) **Add CARTO Mobile SDK** Package to your project from nuget
+
+2) **Copy vector style file** (as *.zip* file) to your project *Assets* folder. You can take it from samples. This is needed for vector basemap.
 
 3) **Add MapView to your application main layout**
 
@@ -258,7 +268,7 @@ Almost all of the map API related code: adding layers and objects to map, handli
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical" >
-   <nutiteq.ui.MapView
+   <carto.ui.MapView
     android:id="@+id/mapView"
     android:layout_width="fill_parent" 
     android:layout_height="fill_parent" 
@@ -271,12 +281,12 @@ Almost all of the map API related code: adding layers and objects to map, handli
 You you can load layout from a xml and load the MapView from Layout, or create it with code. Definition of base layer is enough for minimal map configuration.
 
 <pre class="brush: csharp">
-using Nutiteq.Ui;
-using Nutiteq.Layers;
-using Nutiteq.DataSources;
+using Carto.Ui;
+using Carto.Layers;
+using Carto.DataSources;
 
 
-[Activity (Label = "Nutiteq.HelloMap", MainLauncher = true)]
+[Activity (Label = "Carto.HelloMap", MainLauncher = true)]
 public class MainActivity : Activity
 {
 
@@ -294,7 +304,7 @@ public class MainActivity : Activity
 		var mapView = FindViewById<MapView> ( Resource.Id.mapView );
 
 		/// Online vector base layer
-		var baseLayer = new NutiteqOnlineVectorTileLayer("osmbright.zip");
+		var baseLayer = new CartoOnlineVectorTileLayer("osmbright.zip");
 
 		/// Set online base layer  
 		mapView.Layers.Add(baseLayer);
@@ -305,7 +315,7 @@ public class MainActivity : Activity
 
 ### iOS app
 
-1) **Uncompress Nutiteq Xamarin iOS SDK package** to your project, so you have the .dll file under Assemblies folder
+1) **Uncompress CARTO Xamarin iOS SDK package** to your project, so you have the .dll file under Assemblies folder
 
 2) **Copy vector style file** (*osmbright.zip*) to your project. You can take it from samples. This is needed for vector basemap.
 
@@ -318,9 +328,9 @@ In the example below, it is assumed that the outlet name of the map view is *Map
 Add into MainViewController.cs:
 
 <pre class="brush: csharp">
-using Nutiteq.Ui;
-using Nutiteq.Layers;
-using Nutiteq.DataSources;
+using Carto.Ui;
+using Carto.Layers;
+using Carto.DataSources;
 
 public class MainViewController : GLKit.GLKViewController
 {
@@ -336,7 +346,7 @@ public class MainViewController : GLKit.GLKViewController
 		MapView.RegisterLicense("YOUR_LICENSE_KEY");
 
 		// Online vector base layer
-		var baseLayer = new NutiteqOnlineVectorTileLayer("osmbright.zip");
+		var baseLayer = new CartoOnlineVectorTileLayer("osmbright.zip");
 
 		// Set online base layer.
 		// Note: assuming here that Map is an outlet added to the controller.
@@ -384,14 +394,14 @@ You must have *Icon.png* in your Assets folder to set bitmap
 
 ### Other map actions
 
-See [hellomap3d-dotnet](https://github.com/nutiteq/hellomap3d-dotnet/) sample code how to:
+See [mobile-dotnet-samples](https://github.com/CartoDB/mobile-dotnet-samples/) sample code how to:
 
 * **Control map view** - set zoom, center, tilt etc
 * **Listen events** (MapListener.cs) of clicks to map and map objects
 * **Add other objects**: Lines, Polygons, Points, Balloons (callouts). You can even add 3D objects and use customized Balloons.
 * **Download offline map packages** for country or smaller region
 
-## Windows Phone 10
+## Windows Phone 10 (experimental)
 
 ### Get Visual Studio extension package
 
@@ -400,16 +410,16 @@ Requirements:
 * Windows 10
 * MS Visual Studio 2013 Community edition, or better
 * Windows Phone 10 SDK, should come with Visual Studio
-* Visual Studio extension (VSIX) for Nutiteq Maps SDK component from [Nutiteq SDK Downloads](/downloads). Download and just start the package to install it.
+* Visual Studio extension (VSIX) for CARTO Maps SDK component. Download and just start the package to install it.
 
 
 ### Register license key
 
-Sign up in [developer.nutiteq.com](http://developer.nutiteq.com) and add an application. Select **Windows Phone** as application type, and make sure you enter same application ID as you have in your *Package.appmanifest > Packaging > Package name*. For example, sample app ID is **c882d38a-5c09-4994-87f0-89875cdee539**. Finally you should get license code, which is a long string starting with *"XTU..."*. This is needed for your code.
+Sign up in CARTO web and go to your profile **API Keys** section and add new mobile app. Select **Windows Phone** as application type, and make sure you enter same application ID as you have in your *Package.appmanifest > Packaging > Package name* For example, sample app ID is **c882d38a-5c09-4994-87f0-89875cdee539**. Finally you should get license code, which is a long string starting with *"XTU..."*. This is needed for your code.
 
 ### Cross-platform apps
 
-You can create one .Net project (solution) for Android, iOS, Windows Phone and share map-related code. These still need to be separate apps, as many app aspects (UI, file system etc) are platform-specific. From Nutiteq SDK point of view the API is almost the same and your code can be shared, except some specific API calls which need e.g. file system references or app resources. 
+You can create one .Net project (solution) for Android, iOS, Windows Phone and share map-related code. These still need to be separate apps, as many app aspects (UI, file system etc) are platform-specific. From CARTO SDK point of view the API is almost the same and your code can be shared, except some specific API calls which need e.g. file system references or app resources. 
 
 Almost all of the map API related code: adding layers and objects to map, handling interactions/clicks etc can be shared for iOS and Android!
 
@@ -417,7 +427,7 @@ Almost all of the map API related code: adding layers and objects to map, handli
 
 ### Creating WP app 
 
-1) Make sure you have Nutiteq VS extension installed, and your app project has Internet Capability as minimum. In *Solution Explorer References* section, add *Nutiteq Maps SDK for Windows Phone*. You should find it from Windows Phone 8.1 extensions. We don't have NuGet package yet, but it will come if you show us interest.
+1) Make sure you have CARTO VS extension installed, and your app project has Internet Capability as minimum. In *Solution Explorer References* section, add *Carto Maps SDK for Windows Phone*. You should find it from Windows Phone 8.1 extensions. We don't have NuGet package yet, but it will come if you show us interest.
 
 2) **Copy vector style file** (*osmbright.zip*) to your project *Assets* folder. You can take it from samples. This is needed for vector basemap.
 
@@ -426,13 +436,13 @@ Almost all of the map API related code: adding layers and objects to map, handli
 You can create MapView object with code. Definition of base layer is enough for minimal map configuration.
 
 <pre class="brush: csharp">
-using Nutiteq.Core;
-using Nutiteq.Graphics;
-using Nutiteq.DataSources;
-using Nutiteq.Projections;
-using Nutiteq.Layers;
-using Nutiteq.Styles;
-using Nutiteq.VectorElements;
+using Carto.Core;
+using Carto.Graphics;
+using Carto.DataSources;
+using Carto.Projections;
+using Carto.Layers;
+using Carto.Styles;
+using Carto.VectorElements;
 
 ...
 
@@ -440,14 +450,14 @@ protected async override void OnLaunched(LaunchActivatedEventArgs e)
 {
 	if (mapView == null)
 	{
-        // Register Nutiteq app license
-        var licenseOk = Nutiteq.Ui.MapView.RegisterLicense("YOUR_LICENSE_KEY");
+        // Register CARTO app license
+        var licenseOk = Carto.Ui.MapView.RegisterLicense("YOUR_LICENSE_KEY");
 
         // Create map view and initialize
-        mapView = new Nutiteq.Ui.MapView();
+        mapView = new Carto.Ui.MapView();
 
         // Online vector base layer
-        var baseLayer = new NutiteqOnlineVectorTileLayer("osmbright.zip");
+        var baseLayer = new CartoOnlineVectorTileLayer("osmbright-v3.zip");
 
         // Set online base layer.
         // Note: assuming here that Map is an outlet added to the controller.
@@ -460,7 +470,7 @@ protected async override void OnLaunched(LaunchActivatedEventArgs e)
 	Windows.UI.Xaml.Window.Current.Activate();
 }
 
-private Nutiteq.Ui.MapView mapView;	
+private Carto.Ui.MapView mapView;	
 
 ...
 
@@ -495,7 +505,7 @@ dataSource.Add(marker);
 
 ### Other map actions
 
-See [hellomap3d-dotnet](https://github.com/nutiteq/hellomap3d-dotnet/) sample project (solution: *hellomap-winphone.sln*) how to:
+See [mobile-dotnet-samples](https://github.com/CartoDB/mobile-dotnet-samples/) sample project (solution: *hellomap-winphone.sln*) how to:
 
 * **Control map view** - set zoom, center, tilt etc
 * **Listen events** (MapListener.cs) of clicks to map and map objects

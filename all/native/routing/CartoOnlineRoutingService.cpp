@@ -26,7 +26,7 @@ namespace carto {
 
         std::shared_ptr<Projection> proj = request->getProjection();
         
-        std::string baseURL = ROUTING_SERVICE_URL + NetworkUtils::URLEncode(_source) + "/viaroute?instructions=true&alt=false&geometry=true&output=json";
+        std::string baseURL = ROUTING_SERVICE_URL + NetworkUtils::URLEncode(_source) + "/1/viaroute?instructions=true&alt=false&geometry=true&output=json";
         for (const MapPos& pos : request->getPoints()) {
             MapPos wgsPos = proj->toWgs84(pos);
             baseURL += "&loc=" + boost::lexical_cast<std::string>(wgsPos.getY()) + "," + boost::lexical_cast<std::string>(wgsPos.getX());

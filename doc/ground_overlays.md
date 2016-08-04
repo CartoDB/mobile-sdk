@@ -1,6 +1,6 @@
 # Ground Overlays
 
-Nutiteq SDK since 3.1 supports *Ground Overlays* - bitmaps (PNG, JPG etc) which are put to map to your defined location. Most commonly this is used for **indoor floorplans**, but it can be used also for other cases.
+Carto Mobile SDK since 3.1 supports *Ground Overlays* - bitmaps (PNG, JPG etc) which are put to map to your defined location. Most commonly this is used for **indoor floorplans**, but it can be used also for other cases.
 
 <img src = "/images/ground_overlay.png" alt = "Sample bitmap" width="550">
 
@@ -11,7 +11,7 @@ Your bitmap must be have defined **geographical map coordinates**, and this is d
 * If you have more control points in your data, then you should select 3/4 best ones, and use these.
 * Control points must be defined in app code. SDK does not read this automatically from source file metadata. So if you need GeoTIFF, ESRI World File, MapInfo TAB, Geospatial PDF or another already referenced data, then you will get this from GIS Extension (see below).
 
-Key limitation with Nutiteq standard SDK package is that **whole bitmap must fit to device memory** (RAM), so maximum size could be something like 2000x2000 pixels or so, depending on target device. For larger rasters you can use **Nutiteq SDK GIS Extension** which allows to show any size bitmaps, even hundreds of megabytes, and these are read directly from common GIS raster formats, e.g. GeoTIFF, BSB, ECW, MrSID, JPEG2000 etc, and source data can be in different coordinate systems. Please ask from sales@nutiteq.com if you need this.
+Key limitation with Carto standard SDK package is that **whole bitmap must fit to device memory** (RAM), so maximum size could be something like 2000x2000 pixels or so, depending on target device. For larger rasters you can use **Carto Mobile SDK GIS Extension** which allows to show any size bitmaps, even hundreds of megabytes, and these are read directly from common GIS raster formats, e.g. GeoTIFF, BSB, ECW, MrSID, JPEG2000 etc, and source data can be in different coordinate systems. Please ask from sales@nutiteq.com if you need this.
 
 Following sample assumes that you have bitmap file **jefferson-building-ground-floor.jpg** in your application project: under *assets* in Android, anywhere in project in iOS. Here we use only one geographical coordinate, and we know size of the building and that it is exactly heading to north, so we can calculate other ground points with the code. Now four ground control points are set to the corners of the bitmap, which gives usually most accurate result. 
 
