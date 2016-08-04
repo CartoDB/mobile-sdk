@@ -180,6 +180,8 @@ def fixProxyCode(fileName):
   with open(fileName, 'w') as f:
     f.writelines(lines_out)
 
+polymorphic_objcClasses = []
+
 def transformSwigFile(sourcePath, outPath, moduleDirs, headerDirs):
   lines_in = [line.rstrip('\n') for line in readUncommentedLines(sourcePath)]
   lines_out = []
@@ -234,6 +236,7 @@ def transformSwigFile(sourcePath, outPath, moduleDirs, headerDirs):
     if match:
       className = match.group(1).strip()
       objcClass = 'NT%s' % match.group(2).strip().split(".")[-1]
+      polymorphic_objcClasses.append(objcClass)
       args = { 'CLASSNAME': match.group(1).strip(), 'TYPE': objcClass, 'RAWTYPE': objcClass[2:] }
       interface = class_interface.get(className, [])
       interface += applyTemplate(POLYMORPHIC_SHARED_PTR_INTERFACE_TEMPLATE, args)
@@ -472,6 +475,22 @@ def buildSwigPackages(args, sourceDir, basePackageName):
       return False
   return True
 
+def buildPolymorphicReferences(args):
+  polymorphicHeaderPath = os.path.join(args.proxyDir, 'NTPolymorphicClasses.h')
+  with open(polymorphicHeaderPath, 'w') as f:
+    for objcClass in polymorphic_objcClasses:
+      f.write('#import "%s.h"\n' % objcClass)
+    f.write('static void initNTPolymorphicClasses() {\n')
+    for objcClass in polymorphic_objcClasses:
+      headerPath = os.path.join(args.proxyDir, '%s.h' % objcClass)
+      with open(headerPath, 'r') as f2:
+        for line in f2:
+          if re.search('@interface\s+%s' % objcClass, line):
+            f.write('  [%s class];\n' % objcClass)
+            break
+    f.write('}\n')
+  return True
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--profile', dest='profile', default='standard', choices=getProfiles().keys(), help='Build profile')
 parser.add_argument('--swig', dest='swigExecutable', default='swig', help='path to Swig executable')
@@ -495,4 +514,6 @@ for sourceDir in args.sourceDir.split(";"):
   if not transformSwigPackages(args, sourceDir, args.moduleDir, ""):
     sys.exit(-1)
 if not buildSwigPackages(args, args.moduleDir, ""):
+  sys.exit(-1)
+if not buildPolymorphicReferences(args):
   sys.exit(-1)
