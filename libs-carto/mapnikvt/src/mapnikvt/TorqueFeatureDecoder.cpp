@@ -6,6 +6,38 @@
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
 
+namespace {
+    int readRapidJSONInt(const rapidjson::Value& value) {
+        if (value.IsInt()) {
+            return value.GetInt();
+        } else if (value.IsUint()) {
+            return value.GetUint();
+        } else if (value.IsInt64()) {
+            return static_cast<int>(value.GetInt64());
+        } else if (value.IsUint64()) {
+            return static_cast<int>(value.GetUint64());
+        } else if (value.IsNumber()) {
+            return static_cast<int>(value.GetDouble());
+        }
+        return 0;
+    }
+
+    int readRapidJSONDouble(const rapidjson::Value& value) {
+        if (value.IsInt()) {
+            return value.GetInt();
+        } else if (value.IsUint()) {
+            return value.GetUint();
+        } else if (value.IsInt64()) {
+            return value.GetInt64();
+        } else if (value.IsUint64()) {
+            return value.GetUint64();
+        } else if (value.IsNumber()) {
+            return value.GetDouble();
+        }
+        return 0.0;
+    }
+}
+
 namespace carto { namespace mvt {
     class TorqueFeatureDecoder::TorqueFeatureIterator : public carto::mvt::FeatureDecoder::FeatureIterator {
     public:
@@ -117,16 +149,16 @@ namespace carto { namespace mvt {
 
         for (rapidjson::Value::ConstValueIterator jit = rows->Begin(); jit != rows->End(); jit++) {
             const rapidjson::Value& rowValue = *jit;
-            int x = rowValue[xField.c_str()].GetInt();
-            int y = rowValue[yField.c_str()].GetInt();
+            int x = readRapidJSONInt(rowValue[xField.c_str()]);
+            int y = readRapidJSONInt(rowValue[yField.c_str()]);
             unsigned int valueCount = rowValue[valueField.c_str()].Size();
             unsigned int timeCount = rowValue[timeField.c_str()].Size();
             if (valueCount != timeCount) {
                 _logger->write(Logger::Severity::ERROR, "Value/time array mismatch");
             }
             for (unsigned int i = 0; i < valueCount; i++) {
-                int time = (i < timeCount ? rowValue[timeField.c_str()][i].GetInt() : -1);
-                double value = rowValue[valueField.c_str()][i].GetDouble();
+                int time = (i < timeCount ? readRapidJSONInt(rowValue[timeField.c_str()][i]) : -1);
+                double value = readRapidJSONDouble(rowValue[valueField.c_str()][i]);
                 _timeValueMap[time].emplace_back(x, y, value);
             }
         }

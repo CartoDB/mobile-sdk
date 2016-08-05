@@ -1,7 +1,7 @@
 #include "SolidLayer.h"
 #include "components/Exceptions.h"
 #include "graphics/Bitmap.h"
-#include "renderers/SolidRenderer.cpp"
+#include "renderers/SolidRenderer.h"
 #include "utils/Log.h"
 
 #include <vector>
