@@ -48,7 +48,7 @@ namespace carto { namespace mvt {
             keyFramesList.emplace_back(ValueConverter<float>::convert(_keyFrames[i + 0]), ValueConverter<float>::convert(_keyFrames[i + 1]));
         }
 
-        _fcurve = cglib::fcurve<cglib::vec2<float>>::create(type, keyFramesList.begin(), keyFramesList.end());
+        _fcurve = cglib::fcurve2<float>::create(type, keyFramesList.begin(), keyFramesList.end());
     }
 
     Value InterpolateExpression::evaluate(const ExpressionContext& context) const {

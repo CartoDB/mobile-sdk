@@ -267,7 +267,7 @@ namespace carto { namespace mvt {
         const Method _method;
         const std::shared_ptr<const Expression> _timeExpr;
         const std::vector<Value> _keyFrames;
-        cglib::fcurve<cglib::vec2<float>> _fcurve;
+        cglib::fcurve2<float> _fcurve;
     };
 } }
 
