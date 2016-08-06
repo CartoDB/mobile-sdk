@@ -130,6 +130,7 @@ namespace carto { namespace vt {
         void renderTileGeometry(const TileId& tileId, const TileId& targetTileId, float blend, float opacity, const std::shared_ptr<TileGeometry>& geometry);
         void renderLabelBatch(const std::shared_ptr<const Bitmap>& bitmap);
         void setBlendState(CompOp compOp);
+        bool isEmptyBlendRequired(CompOp compOp) const;
         void checkGLError();
 
         GLuint createBuffer();

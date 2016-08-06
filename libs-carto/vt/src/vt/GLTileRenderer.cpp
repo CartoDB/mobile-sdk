@@ -931,7 +931,7 @@ namespace carto { namespace vt {
         return exists;
     }
     
-    void GLTileRenderer::addRenderNode(const RenderNode& renderNode, std::multimap<int, RenderNode> &renderNodeMap) {
+    void GLTileRenderer::addRenderNode(const RenderNode& renderNode, std::multimap<int, RenderNode>& renderNodeMap) {
         const std::shared_ptr<const TileLayer>& layer = renderNode.layer;
         auto range = renderNodeMap.equal_range(layer->getLayerIndex());
         auto it = range.first;
@@ -1032,6 +1032,12 @@ namespace carto { namespace vt {
                         activeTileMaskId = TileId(-1, -1, -1); // force stencil mask update
                     }
                 };
+
+                if (renderNode.layer->getCompOp()) {
+                    if (isEmptyBlendRequired(renderNode.layer->getCompOp().get())) {
+                        setupFrameBuffer();
+                    }
+                }
 
                 for (const std::shared_ptr<TileBitmap>& bitmap : renderNode.layer->getBitmaps()) {
                     setupFrameBuffer();
@@ -1668,6 +1674,21 @@ namespace carto { namespace vt {
         if (it != compOpBlendStates.end()) {
             glBlendEquation(it->second.blendEquation);
             glBlendFunc(it->second.blendFuncSrc, it->second.blendFuncDst);
+        }
+    }
+
+    bool GLTileRenderer::isEmptyBlendRequired(CompOp compOp) const {
+        switch (compOp) {
+        case CompOp::SRC:
+        case CompOp::SRC_OVER:
+        case CompOp::DST_OVER:
+        case CompOp::DST_ATOP:
+        case CompOp::PLUS:
+        case CompOp::MINUS:
+        case CompOp::LIGHTEN:
+            return false;
+        default:
+            return true;
         }
     }
     
