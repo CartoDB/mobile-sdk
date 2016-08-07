@@ -28,24 +28,24 @@ namespace carto { namespace mvt {
             _geometries.clear();
         }
         
-        void append(long long id, std::shared_ptr<Geometry> geometry) {
+        void append(long long id, std::shared_ptr<const Geometry> geometry) {
             _ids.push_back(id);
             _geometries.push_back(std::move(geometry));
         }
 
-        void setFeatureData(std::shared_ptr<FeatureData> featureData) {
+        void setFeatureData(std::shared_ptr<const FeatureData> featureData) {
             _featureData = std::move(featureData);
         }
 
         std::size_t getSize() const { return _ids.size(); }
         long long getId(std::size_t index) const { return _ids.at(index); }
-        const std::shared_ptr<Geometry>& getGeometry(std::size_t index) const { return _geometries.at(index); }
-        const std::shared_ptr<FeatureData>& getFeatureData() const { return _featureData; }
+        const std::shared_ptr<const Geometry>& getGeometry(std::size_t index) const { return _geometries.at(index); }
+        const std::shared_ptr<const FeatureData>& getFeatureData() const { return _featureData; }
 
     private:
         std::vector<long long> _ids;
-        std::vector<std::shared_ptr<Geometry>> _geometries;
-        std::shared_ptr<FeatureData> _featureData;
+        std::vector<std::shared_ptr<const Geometry>> _geometries;
+        std::shared_ptr<const FeatureData> _featureData;
     };
 } }
 

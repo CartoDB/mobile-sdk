@@ -22,6 +22,9 @@ namespace carto { namespace mvt {
         struct Converter : boost::static_visitor<V> {
             V operator() (boost::blank) const { return V(); }
             V operator() (const std::string& val) const {
+                if (val.empty()) {
+                    return V();
+                }
                 try {
                     return boost::lexical_cast<V>(val);
                 }

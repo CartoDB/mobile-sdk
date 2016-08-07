@@ -66,7 +66,7 @@ namespace carto { namespace mvt {
             return 0;
         }
 
-        virtual std::shared_ptr<FeatureData> getFeatureData() const override {
+        virtual std::shared_ptr<const FeatureData> getFeatureData() const override {
             const TorqueFeatureDecoder::Element& element = _elements[_index0];
             auto it = _featureDataCache.find(element.value);
             if (it != _featureDataCache.end()) {
@@ -80,7 +80,7 @@ namespace carto { namespace mvt {
             return featureData;
         }
 
-        virtual std::shared_ptr<Geometry> getGeometry() const override {
+        virtual std::shared_ptr<const Geometry> getGeometry() const override {
             float scale = 1.0f / _resolution;
             std::vector<cglib::vec2<float>> vertices;
             for (std::size_t i = _index0; i < _index1; i++) {

@@ -45,7 +45,7 @@ namespace carto { namespace mvt {
 
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
             long long featureId = featureCollection.getId(index);
-            const std::shared_ptr<Geometry>& geometry = featureCollection.getGeometry(index);
+            const std::shared_ptr<const Geometry>& geometry = featureCollection.getGeometry(index);
 
             if (auto pointGeometry = std::dynamic_pointer_cast<const PointGeometry>(geometry)) {
                 for (const auto& vertex : pointGeometry->getVertices()) {

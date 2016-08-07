@@ -70,7 +70,7 @@ namespace carto { namespace mvt {
             return 0;
         }
 
-        virtual std::shared_ptr<FeatureData> getFeatureData() const override {
+        virtual std::shared_ptr<const FeatureData> getFeatureData() const override {
             const vector_tile::Tile::Feature& feature = _layer.features(_index);
             std::vector<int> tags(_fieldKeys.size() + 1, -1);
             tags.back() = static_cast<int>(feature.type());
@@ -100,7 +100,7 @@ namespace carto { namespace mvt {
             return featureData;
         }
 
-        virtual std::shared_ptr<Geometry> getGeometry() const override {
+        virtual std::shared_ptr<const Geometry> getGeometry() const override {
             std::vector<std::vector<cglib::vec2<float>>> verticesList;
             decodeGeometry(_layer.features(_index), verticesList, 1.0f / _layer.extent());
             if (_buffer > 0 && _layer.features(_index).type() == vector_tile::Tile::LINESTRING) {

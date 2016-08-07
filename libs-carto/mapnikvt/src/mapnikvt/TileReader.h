@@ -34,15 +34,15 @@ namespace carto { namespace mvt {
         virtual std::shared_ptr<vt::Tile> readTile(const vt::TileId& tileId) const;
 
     protected:
-        explicit TileReader(std::shared_ptr<Map> map, const SymbolizerContext& symbolizerContext);
+        explicit TileReader(std::shared_ptr<const Map> map, const SymbolizerContext& symbolizerContext);
 
-        void processLayer(const std::shared_ptr<Layer>& layer, const std::shared_ptr<Style>& style, FeatureExpressionContext& exprContext, vt::TileLayerBuilder& layerBuilder) const;
+        void processLayer(const std::shared_ptr<const Layer>& layer, const std::shared_ptr<const Style>& style, FeatureExpressionContext& exprContext, vt::TileLayerBuilder& layerBuilder) const;
 
-        std::vector<std::shared_ptr<Symbolizer>> findFeatureSymbolizers(const std::shared_ptr<Style>& style, FeatureExpressionContext& exprContext) const;
+        std::vector<std::shared_ptr<Symbolizer>> findFeatureSymbolizers(const std::shared_ptr<const Style>& style, FeatureExpressionContext& exprContext) const;
         
-        virtual std::shared_ptr<FeatureDecoder::FeatureIterator> createFeatureIterator(const std::shared_ptr<Layer>& layer, const std::shared_ptr<Style>& style, const FeatureExpressionContext& exprContext) const = 0;
+        virtual std::shared_ptr<FeatureDecoder::FeatureIterator> createFeatureIterator(const std::shared_ptr<const Layer>& layer, const std::shared_ptr<const Style>& style, const FeatureExpressionContext& exprContext) const = 0;
 
-        const std::shared_ptr<Map> _map;
+        const std::shared_ptr<const Map> _map;
         const SymbolizerContext& _symbolizerContext;
         const std::shared_ptr<const Filter> _trueFilter;
     };

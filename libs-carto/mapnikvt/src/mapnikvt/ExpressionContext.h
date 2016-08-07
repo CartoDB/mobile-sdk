@@ -31,8 +31,8 @@ namespace carto { namespace mvt {
         int getZoom() const { return _zoom; }
         float getScaleDenominator() const { return _scaleDenom; }
 
-        void setFeatureData(std::shared_ptr<FeatureData> featureData) { _featureData = std::move(featureData); }
-        const std::shared_ptr<FeatureData>& getFeatureDataPtr() const { return _featureData; }
+        void setFeatureData(std::shared_ptr<const FeatureData> featureData) { _featureData = std::move(featureData); }
+        const std::shared_ptr<const FeatureData>& getFeatureDataPtr() const { return _featureData; }
 
         void setNutiParameterValueMap(std::map<std::string, Value> paramValueMap) { _nutiParameterValueMap = std::move(paramValueMap); }
         const std::map<std::string, Value>& getNutiParameterValueMap() const { return _nutiParameterValueMap; }
@@ -42,7 +42,7 @@ namespace carto { namespace mvt {
     private:
         int _zoom = 0;
         float _scaleDenom = 0;
-        std::shared_ptr<FeatureData> _featureData;
+        std::shared_ptr<const FeatureData> _featureData;
         std::map<std::string, Value> _nutiParameterValueMap;
     };
 

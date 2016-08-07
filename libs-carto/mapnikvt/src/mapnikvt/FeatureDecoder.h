@@ -25,8 +25,8 @@ namespace carto { namespace mvt {
             virtual void advance() = 0;
 
             virtual long long getFeatureId() const = 0;
-            virtual std::shared_ptr<FeatureData> getFeatureData() const = 0;
-            virtual std::shared_ptr<Geometry> getGeometry() const = 0;
+            virtual std::shared_ptr<const FeatureData> getFeatureData() const = 0;
+            virtual std::shared_ptr<const Geometry> getGeometry() const = 0;
         };
 
         virtual ~FeatureDecoder() = default;

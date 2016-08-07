@@ -9,7 +9,7 @@
 #include "Map.h"
 
 namespace carto { namespace mvt {
-    TileReader::TileReader(std::shared_ptr<Map> map, const SymbolizerContext& symbolizerContext) :
+    TileReader::TileReader(std::shared_ptr<const Map> map, const SymbolizerContext& symbolizerContext) :
         _map(std::move(map)), _symbolizerContext(symbolizerContext), _trueFilter(std::make_shared<Filter>(Filter::Type::FILTER, std::make_shared<ConstPredicate>(true)))
     {
     }
@@ -56,14 +56,14 @@ namespace carto { namespace mvt {
         return std::make_shared<vt::Tile>(tileId, tileLayers);
     }
 
-    void TileReader::processLayer(const std::shared_ptr<Layer>& layer, const std::shared_ptr<Style>& style, FeatureExpressionContext& exprContext, vt::TileLayerBuilder& layerBuilder) const {
+    void TileReader::processLayer(const std::shared_ptr<const Layer>& layer, const std::shared_ptr<const Style>& style, FeatureExpressionContext& exprContext, vt::TileLayerBuilder& layerBuilder) const {
         std::shared_ptr<Symbolizer> currentSymbolizer;
         FeatureCollection currentFeatureCollection;
-        std::unordered_map<std::shared_ptr<FeatureData>, std::vector<std::shared_ptr<Symbolizer>>> featureDataSymbolizersMap;
+        std::unordered_map<std::shared_ptr<const FeatureData>, std::vector<std::shared_ptr<Symbolizer>>> featureDataSymbolizersMap;
         if (auto featureIt = createFeatureIterator(layer, style, exprContext)) {
             for (; featureIt->valid(); featureIt->advance()) {
                 // Cache symbolizer evaluation for each feature data object
-                std::shared_ptr<FeatureData> featureData = featureIt->getFeatureData();
+                std::shared_ptr<const FeatureData> featureData = featureIt->getFeatureData();
                 auto symbolizersIt = featureDataSymbolizersMap.find(featureData);
                 if (symbolizersIt == featureDataSymbolizersMap.end()) {
                     exprContext.setFeatureData(featureData);
@@ -73,7 +73,7 @@ namespace carto { namespace mvt {
 
                 // Process symbolizers, try to batch as many calls together as possible
                 for (const std::shared_ptr<Symbolizer>& symbolizer : symbolizersIt->second) {
-                    if (std::shared_ptr<Geometry> geometry = featureIt->getGeometry()) {
+                    if (std::shared_ptr<const Geometry> geometry = featureIt->getGeometry()) {
                         bool batch = false;
                         if (currentSymbolizer == symbolizer) {
                             if (currentFeatureCollection.getFeatureData() == featureData || symbolizer->getParameterExpressions().empty()) {
@@ -104,7 +104,7 @@ namespace carto { namespace mvt {
         }
     }
 
-    std::vector<std::shared_ptr<Symbolizer>> TileReader::findFeatureSymbolizers(const std::shared_ptr<Style>& style, FeatureExpressionContext& exprContext) const {
+    std::vector<std::shared_ptr<Symbolizer>> TileReader::findFeatureSymbolizers(const std::shared_ptr<const Style>& style, FeatureExpressionContext& exprContext) const {
         bool anyMatch = false;
         std::vector<std::shared_ptr<Symbolizer>> symbolizers;
         for (const std::shared_ptr<const Rule>& rule : style->getZoomRules(exprContext.getZoom())) {

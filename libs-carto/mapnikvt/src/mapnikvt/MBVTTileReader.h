@@ -20,7 +20,7 @@ namespace carto { namespace mvt {
         void setLayerNameOverride(const std::string& name);
 
     protected:
-        virtual std::shared_ptr<FeatureDecoder::FeatureIterator> createFeatureIterator(const std::shared_ptr<Layer>& layer, const std::shared_ptr<Style>& style, const FeatureExpressionContext& exprContext) const override;
+        virtual std::shared_ptr<FeatureDecoder::FeatureIterator> createFeatureIterator(const std::shared_ptr<const Layer>& layer, const std::shared_ptr<const Style>& style, const FeatureExpressionContext& exprContext) const override;
 
         const MBVTFeatureDecoder& _featureDecoder;
         std::string _layerNameOverride;
