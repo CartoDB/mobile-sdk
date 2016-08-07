@@ -917,7 +917,8 @@ namespace carto { namespace vt {
             
             // Add render nodes for each layer
             for (const std::shared_ptr<TileLayer>& layer : blendNode.tile->getLayers()) {
-                RenderNode renderNode(tileId, layer, blend * blendNode.blend);
+                // Special case for raster layers - ignore global blend factor
+                RenderNode renderNode(tileId, layer, (layer->getGeometries().empty() ? blendNode.blend : blend * blendNode.blend));
                 addRenderNode(renderNode, renderNodeMap);
             }
             exists = true;
@@ -935,19 +936,26 @@ namespace carto { namespace vt {
         const std::shared_ptr<const TileLayer>& layer = renderNode.layer;
         auto range = renderNodeMap.equal_range(layer->getLayerIndex());
         auto it = range.first;
+
+        // Check if this is a raster tile; in that case blend the tile
+        if (layer->getGeometries().empty()) {
+            range.second = it;
+        }
+
         for (; it != range.second; it++) {
-            if (!renderNode.tileId.intersects(it->second.tileId)) {
+            RenderNode& baseRenderNode = it->second;
+            if (!renderNode.tileId.intersects(baseRenderNode.tileId)) {
                 continue;
             }
-            
+
             TileGeometry::Type type = TileGeometry::Type::NONE;
             if (layer->getGeometries().size() == 1) {
                 type = layer->getGeometries().front()->getType();
             }
             
             TileGeometry::Type baseType = TileGeometry::Type::NONE;
-            if (it->second.layer->getGeometries().size() == 1) {
-                baseType = it->second.layer->getGeometries().front()->getType();
+            if (baseRenderNode.layer->getGeometries().size() == 1) {
+                baseType = baseRenderNode.layer->getGeometries().front()->getType();
             }
             
             // If layer appears or disappears and is of type polygon, add it to render node map. Otherwise "blend"
@@ -955,10 +963,12 @@ namespace carto { namespace vt {
                 renderNodeMap.insert(++it, { layer->getLayerIndex(), renderNode });
             }
             else {
-                it->second.blend = std::min(it->second.blend + renderNode.blend, 1.0f);
+                baseRenderNode.blend = std::min(baseRenderNode.blend + renderNode.blend, 1.0f);
             }
             return;
         }
+        
+        // New/non-intersecting layer. Add it to render node map.
         renderNodeMap.insert(it, { layer->getLayerIndex(), renderNode });
     }
     
@@ -1335,7 +1345,7 @@ namespace carto { namespace vt {
         glVertexAttribPointer(glGetAttribLocation(shaderProgram, "aVertexPosition"), 2, GL_FLOAT, GL_FALSE, 0, &tileVertices[0]);
         glEnableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexPosition"));
 
-        cglib::mat4x4<float> mvpMatrix = calculateTileMVPMatrix(targetTileId);
+        cglib::mat4x4<float> mvpMatrix = calculateTileMVPMatrix(targetTileId.zoom > tileId.zoom ? targetTileId : tileId);
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "uMVPMatrix"), 1, GL_FALSE, mvpMatrix.data());
 
         CompiledBitmap compiledTileBitmap;
@@ -1377,8 +1387,8 @@ namespace carto { namespace vt {
         glBindTexture(GL_TEXTURE_2D, compiledTileBitmap.texture);
         glUniform1i(glGetUniformLocation(shaderProgram, "uPattern"), 0);
 
-        int deltaMask = (1 << (targetTileId.zoom - tileId.zoom)) - 1;
-        float s = 1.0f / (1 << (targetTileId.zoom - tileId.zoom));
+        int deltaMask = (1 << (std::max(tileId.zoom, targetTileId.zoom) - tileId.zoom)) - 1;
+        float s = 1.0f / (1 << (std::max(tileId.zoom, targetTileId.zoom) - tileId.zoom));
         float x = (targetTileId.x & deltaMask) * s;
         float y = (targetTileId.y & deltaMask) * s;
         glUniform2fv(glGetUniformLocation(shaderProgram, "uUVScale"), 1, cglib::vec2<float>(s, s).data());

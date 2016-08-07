@@ -82,6 +82,7 @@ namespace carto {
         _glRenderer = std::shared_ptr<vt::GLTileRenderer>(
             new vt::GLTileRenderer(_glRendererMutex, std::make_shared<carto::vt::GLExtensions>(), carto::Const::WORLD_SIZE, _useFBO, _useDepth, _useStencil), glRendererDeleter
         );
+        _glRenderer->setSubTileBlending(true);
         _glRenderer->initializeRenderer();
         _tiles.clear();
         GLContext::CheckGLError("TileRenderer::onSurfaceCreated()");
