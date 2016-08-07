@@ -238,11 +238,22 @@ namespace carto { namespace css {
                 // Note that we ignore filters, this is CartoCSS design issue and represents how CartoCSS is translated to Mapnik.
                 auto opacityIt = propertySet.properties.find("opacity");
                 if (opacityIt != propertySet.properties.end()) {
-                    attachmentStyle.opacity = boost::lexical_cast<float>(translator.buildExpressionString(opacityIt->second.expression, false));
+                    if (auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(opacityIt->second.expression)) {
+                        attachmentStyle.opacity = mvt::ValueConverter<float>::convert(translator.buildValue(constExpr->getValue()));
+                    }
+                    else {
+                        _logger->write(mvt::Logger::Severity::WARNING, "Opacity must be constant expression");
+                    }
                 }
+                
                 auto compOpIt = propertySet.properties.find("comp-op");
                 if (compOpIt != propertySet.properties.end()) {
-                    attachmentStyle.compOp = translator.buildExpressionString(compOpIt->second.expression, true);
+                    if (auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(compOpIt->second.expression)) {
+                        attachmentStyle.compOp = mvt::ValueConverter<std::string>::convert(translator.buildValue(constExpr->getValue()));
+                    }
+                    else {
+                        _logger->write(mvt::Logger::Severity::WARNING, "CompOp must be constant expression");
+                    }
                 }
             }
         }

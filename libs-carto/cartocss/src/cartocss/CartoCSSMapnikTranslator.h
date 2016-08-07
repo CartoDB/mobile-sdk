@@ -44,9 +44,9 @@ namespace carto { namespace css {
 
         virtual std::shared_ptr<mvt::ComparisonPredicate::Operator> buildOperator(OpPredicate::Op op) const;
 
-    protected:
         virtual mvt::Value buildValue(const Value& val) const;
 
+    protected:
         virtual bool isStringExpression(const std::string& propertyName) const;
 
         virtual std::string getPropertySymbolizerId(const std::string& propertyName) const;
