@@ -100,7 +100,7 @@ def buildWinPhoneVSIX(args):
   return False
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--profile', dest='profile', default='standard', choices=getProfiles().keys(), help='Build profile')
+parser.add_argument('--profile', dest='profile', default=getDefaultProfile(), choices=getProfiles().keys(), help='Build profile')
 parser.add_argument('--winphone-arch', dest='winphonearch', default=['all'], choices=WINPHONE10_ARCHS + ['all'], nargs='+', help='Windows phone target architectures')
 parser.add_argument('--defines', dest='defines', default='', help='Defines for compilation')
 parser.add_argument('--msbuild', dest='msbuild', default='auto', help='WinPhone msbuild executable')

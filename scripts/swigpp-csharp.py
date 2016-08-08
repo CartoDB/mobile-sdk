@@ -500,15 +500,15 @@ def buildSwigPackages(args, sourceDir, basePackageName):
   return True
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--profile', dest='profile', default='standard', choices=getProfiles().keys(), help='Build profile')
+parser.add_argument('--profile', dest='profile', default=getDefaultProfile(), choices=getProfiles().keys(), help='Build profile')
 parser.add_argument('--swig', dest='swigExecutable', default='swig', help='path to Swig executable')
 parser.add_argument('--dll', dest='dllName', default='carto_mobile_sdk', help='name of the DLL (Android only)')
 parser.add_argument('--defines', dest='defines', default='', help='Defines for Swig')
-parser.add_argument('--cppdir', dest='cppDir', default='../all/native;../all/libs;../{target}/native', help='directories containing C++ headers')
+parser.add_argument('--cppdir', dest='cppDir', default='../all/native;../extensions/native;../{target}/native', help='directories containing C++ headers')
 parser.add_argument('--proxydir', dest='proxyDir', default='../generated/{target}-csharp/proxies', help='output directory for C# proxies')
 parser.add_argument('--wrapperdir', dest='wrapperDir', default='../generated/{target}-csharp/wrappers', help='output directory for C++ wrappers')
 parser.add_argument('--moduledir', dest='moduleDir', default='../generated/{target}-csharp/modules', help='output directory containing preprocessed Swig modules')
-parser.add_argument('--sourcedir', dest='sourceDir', default='../all/modules;../{target}/modules', help='input directories containing subdirectories of Swig wrappers')
+parser.add_argument('--sourcedir', dest='sourceDir', default='../all/modules;../extensions/modules;../{target}/modules', help='input directories containing subdirectories of Swig wrappers')
 parser.add_argument(dest='target', choices=['android', 'ios', 'winphone'], help='target platform')
 
 args = parser.parse_args()
@@ -531,7 +531,7 @@ if os.path.isdir(args.proxyDir):
   shutil.rmtree(args.proxyDir)
 
 for sourceDir in args.sourceDir.split(";"):
-  if not transformSwigPackages(args, sourceDir, args.moduleDir, ""):
+  if os.path.exists(sourceDir) and not transformSwigPackages(args, sourceDir, args.moduleDir, ""):
     sys.exit(-1)
 if not buildSwigPackages(args, args.moduleDir, ""):
   sys.exit(-1)

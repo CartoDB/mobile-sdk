@@ -113,7 +113,7 @@ def buildAndroidAAR(args):
   return False
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--profile', dest='profile', default='standard', choices=getProfiles().keys(), help='Build profile')
+parser.add_argument('--profile', dest='profile', default=getDefaultProfile(), choices=getProfiles().keys(), help='Build profile')
 parser.add_argument('--android-abi', dest='androidabi', default=['all'], choices=ANDROID_ABIS + ['all'], nargs='+', help='Android target ABIs')
 parser.add_argument('--android-ndk-path', dest='androidndkpath', default='auto', help='Android NDK path')
 parser.add_argument('--android-sdk-path', dest='androidsdkpath', default='auto', help='Android SDK path')

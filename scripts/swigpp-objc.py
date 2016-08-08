@@ -492,14 +492,14 @@ def buildPolymorphicReferences(args):
   return True
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--profile', dest='profile', default='standard', choices=getProfiles().keys(), help='Build profile')
+parser.add_argument('--profile', dest='profile', default=getDefaultProfile(), choices=getProfiles().keys(), help='Build profile')
 parser.add_argument('--swig', dest='swigExecutable', default='swig', help='path to Swig executable')
 parser.add_argument('--defines', dest='defines', default='', help='Defines for Swig')
-parser.add_argument('--cppdir', dest='cppDir', default='../all/native;../all/libs;../ios/native', help='directories containing C++ headers')
+parser.add_argument('--cppdir', dest='cppDir', default='../all/native;../extensions/native;../ios/native', help='directories containing C++ headers')
 parser.add_argument('--proxydir', dest='proxyDir', default='../generated/ios-objc/proxies', help='output directory for Objective C proxies')
 parser.add_argument('--wrapperdir', dest='wrapperDir', default='../generated/ios-objc/wrappers', help='output directory for C++ wrappers')
 parser.add_argument('--moduledir', dest='moduleDir', default='../generated/ios-objc/modules', help='output directory containing preprocessed Swig modules')
-parser.add_argument('--sourcedir', dest='sourceDir', default='../all/modules;../ios/modules', help='input directories containing subdirectories of Swig wrappers')
+parser.add_argument('--sourcedir', dest='sourceDir', default='../all/modules;../extensions/modules;../ios/modules', help='input directories containing subdirectories of Swig wrappers')
 
 args = parser.parse_args()
 args.defines += ';' + getProfiles()[args.profile].get('defines', '')
@@ -511,7 +511,7 @@ if os.path.isdir(args.moduleDir):
 if os.path.isdir(args.proxyDir):
   shutil.rmtree(args.proxyDir)
 for sourceDir in args.sourceDir.split(";"):
-  if not transformSwigPackages(args, sourceDir, args.moduleDir, ""):
+  if os.path.exists(sourceDir) and not transformSwigPackages(args, sourceDir, args.moduleDir, ""):
     sys.exit(-1)
 if not buildSwigPackages(args, args.moduleDir, ""):
   sys.exit(-1)

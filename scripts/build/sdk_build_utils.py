@@ -4,6 +4,7 @@ import sys
 import subprocess
 import argparse
 import shutil
+import json
 
 def makedirs(dir):
   try:
@@ -78,8 +79,14 @@ def getDistDir(target):
   makedirs(distDir)
   return distDir
 
+def getDefaultProfile():
+  if not os.path.exists('%s/../../extensions' % os.path.dirname(os.path.realpath(__file__))):
+    return 'free'
+  return 'standard'
+
 def getProfiles():
-  import json
+  if getDefaultProfile() == 'free':
+    return { 'free': {} }
   with open('%s/sdk_profiles.json' % os.path.dirname(os.path.realpath(__file__)), 'r') as f:
     profiles = json.loads(f.read())
     return { unicode(key).encode('utf-8') : val for key, val in profiles.items() }

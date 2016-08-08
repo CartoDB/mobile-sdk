@@ -71,7 +71,7 @@ def buildIOSFramework(args, archs):
   return True
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--profile', dest='profile', default='standard', choices=getProfiles().keys(), help='Build profile')
+parser.add_argument('--profile', dest='profile', default=getDefaultProfile(), choices=getProfiles().keys(), help='Build profile')
 parser.add_argument('--ios-arch', dest='iosarch', default=['all'], choices=IOS_ARCHS + ['all'], nargs='+', help='Windows phone target architectures')
 parser.add_argument('--defines', dest='defines', default='', help='Defines for compilation')
 parser.add_argument('--cmake', dest='cmake', default='cmake', help='CMake executable')
