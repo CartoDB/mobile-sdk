@@ -142,7 +142,7 @@ namespace carto {
 
     const int CartoOnlineTileDataSource::DEFAULT_CACHED_TILES = 8;
 
-    const std::string CartoOnlineTileDataSource::NUTITEQ_TILE_SERVICE_URL = "http://api.nutiteq.com/v2/";
+    const std::string CartoOnlineTileDataSource::NUTITEQ_TILE_SERVICE_URL = "http://api-staging.nutiteq.com/v2/";
 
     const std::string CartoOnlineTileDataSource::MAPZEN_TILE_SERVICE_URL = "http://vector.dev.mapzen.com/";
     
