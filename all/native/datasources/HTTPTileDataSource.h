@@ -10,6 +10,7 @@
 #include "TileDataSource.h"
 #include "network/HTTPClient.h"
 
+#include <random>
 #include <string>
 #include <map>
 #include <vector>
@@ -91,6 +92,7 @@ namespace carto {
         bool _tmsScheme;
         std::map<std::string, std::string> _headers;
         HTTPClient _httpClient;
+        mutable std::default_random_engine _randomGenerator;
         mutable std::mutex _mutex;
     };
     

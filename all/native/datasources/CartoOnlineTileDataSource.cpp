@@ -17,6 +17,7 @@ namespace carto {
         _httpClient(false),
         _tmsScheme(false),
         _tileURLs(),
+        _randomGenerator(),
         _mutex()
     {
         _maxZoom = (source.substr(0, 7) == "mapzen." ? 17 : 14);
@@ -41,7 +42,8 @@ namespace carto {
                 return std::shared_ptr<TileData>();
             }
         }
-        std::string tileURL = _tileURLs[rand() % _tileURLs.size()];
+        std::size_t randomIndex = std::uniform_int_distribution<std::size_t>(0, _tileURLs.size() - 1)(_randomGenerator);
+        std::string tileURL = _tileURLs[randomIndex];
 
         lock.unlock();
         tileData = loadOnlineTile(tileURL, mapTile);

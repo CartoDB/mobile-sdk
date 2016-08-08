@@ -6,7 +6,7 @@
 #include "ParserUtils.h"
 #include "SymbolizerContext.h"
 
-#include <cstdlib>
+#include <random>
 
 namespace carto { namespace mvt {
     void Symbolizer::setParameter(const std::string& name, const std::string& value) {
@@ -75,37 +75,45 @@ namespace carto { namespace mvt {
         _logger->write(Logger::Severity::WARNING, "Unsupported symbolizer parameter: " + name);
     }
 
+    int Symbolizer::random() {
+        static std::default_random_engine generator;
+        static std::mutex mutex;
+
+        std::lock_guard<std::mutex> lock(mutex);
+        return std::uniform_int_distribution<int>(0, 0x7fffffff)(generator);
+    }
+
     long long Symbolizer::getTextId(long long id, std::size_t hash) {
         if (id == 0) {
-            id = std::rand(); // if id is missing, generate random id
+            id = random(); // if id is missing, generate random id
         }
         return (id * 3 + 0) | (static_cast<long long>(hash & 0x7fffffff) << 32);
     }
 
     long long Symbolizer::getShieldId(long long id, std::size_t hash) {
         if (id == 0) {
-            id = std::rand(); // if id is missing, generate random id
+            id = random(); // if id is missing, generate random id
         }
         return (id * 3 + 1) | (static_cast<long long>(hash & 0x7fffffff) << 32);
     }
 
     long long Symbolizer::getBitmapId(long long id, const std::string& file) {
         if (id == 0) {
-            id = std::rand(); // if id is missing, generate random id
+            id = random(); // if id is missing, generate random id
         }
         std::size_t hash = std::hash<std::string>()(file);
         return (id * 3 + 2) | (static_cast<long long>(hash & 0x7fffffff) << 32);
     }
 
     long long Symbolizer::getMultiTextId(long long id, std::size_t hash) {
-        return (id * 3 + 0) | (static_cast<long long>(std::rand()) << 32); // randomize id generation, basically it means we will create a unique id each time
+        return (id * 3 + 0) | (static_cast<long long>(random()) << 32); // randomize id generation, basically it means we will create a unique id each time
     }
     
     long long Symbolizer::getMultiShieldId(long long id, std::size_t hash) {
-        return (id * 3 + 1) | (static_cast<long long>(std::rand()) << 32); // randomize id generation, basically it means we will create a unique id each time
+        return (id * 3 + 1) | (static_cast<long long>(random()) << 32); // randomize id generation, basically it means we will create a unique id each time
     }
 
     long long Symbolizer::getMultiBitmapId(long long id, const std::string& file) {
-        return (id * 3 + 2) | (static_cast<long long>(std::rand()) << 32); // randomize id generation, basically it means we will create a unique id each time
+        return (id * 3 + 2) | (static_cast<long long>(random()) << 32); // randomize id generation, basically it means we will create a unique id each time
     }
 } }

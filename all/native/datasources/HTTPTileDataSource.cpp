@@ -4,12 +4,17 @@
 #include "utils/NetworkUtils.h"
 #include "utils/GeneralUtils.h"
 
-#include <cstdlib>
-
 namespace carto {
 
     HTTPTileDataSource::HTTPTileDataSource(int minZoom, int maxZoom, const std::string& baseURL) :
-        TileDataSource(minZoom, maxZoom), _baseURL(baseURL), _subdomains({ "a", "b", "c", "d" }), _tmsScheme(false), _headers(), _httpClient(true), _mutex()
+        TileDataSource(minZoom, maxZoom),
+        _baseURL(baseURL),
+        _subdomains({ "a", "b", "c", "d" }),
+        _tmsScheme(false),
+        _headers(),
+        _httpClient(true),
+        _randomGenerator(),
+        _mutex()
     {
     }
     
@@ -100,16 +105,19 @@ namespace carto {
     
     std::string HTTPTileDataSource::buildTileURL(const std::string& baseURL, const MapTile& tile) const {
         bool tmsScheme = false;
-        std::vector<std::string> subdomains;
+        std::string subdomain;
         {
             std::lock_guard<std::mutex> lock(_mutex);
             tmsScheme = _tmsScheme;
-            subdomains = _subdomains;
+            if (!_subdomains.empty()) {
+                std::size_t randomIndex = std::uniform_int_distribution<std::size_t>(0, _subdomains.size() - 1)(_randomGenerator);
+                subdomain = _subdomains[randomIndex];
+            }
         }
 
         std::map<std::string, std::string> tagValues = buildTagValues(tmsScheme ? tile.getFlipped() : tile);
-        if (!subdomains.empty()) {
-            tagValues["s"] = _subdomains[rand() % _subdomains.size()];
+        if (!subdomain.empty()) {
+            tagValues["s"] = subdomain;
         }
    
         return GeneralUtils::ReplaceTags(baseURL, tagValues, "{", "}", true);

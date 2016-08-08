@@ -46,6 +46,8 @@ namespace carto { namespace mvt {
 
         virtual void bindParameter(const std::string& name, const std::string& value);
 
+        static int random();
+
         static long long getTextId(long long id, std::size_t hash);
         static long long getShieldId(long long id, std::size_t hash);
         static long long getBitmapId(long long id, const std::string& file);

@@ -10,6 +10,7 @@
 #include "TileDataSource.h"
 #include "network/HTTPClient.h"
 
+#include <random>
 #include <vector>
 
 #include <stdext/timed_lru_cache.h>
@@ -49,6 +50,7 @@ namespace carto {
 
         bool _tmsScheme;
         std::vector<std::string> _tileURLs;
+        std::default_random_engine _randomGenerator;
 
         mutable std::recursive_mutex _mutex;
     };
