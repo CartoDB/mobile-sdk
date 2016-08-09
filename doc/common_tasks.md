@@ -21,14 +21,76 @@ Note that Popup (callout, bubble) which is opened when you click on map is a map
 
 ## 1. Add a Marker
 
-<div id="tabs1">
-  <ul>
-    <li><a href="#i1"><span>iOS ObjC</span></a></li>
-    <li><a href="#a1"><span>Android Java</span></a></li>
-    <li><a href="#n1"><span>.NET C#</span></a></li>
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
   </ul>
-<div id="i1">
-<pre class="brush: objc">
+
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}
+
+  Projection proj = mapView.Options.BaseProjection;
+
+  // Initialize an local vector data source
+  LocalVectorDataSource vectorDataSource1 = new LocalVectorDataSource(proj);
+
+  // Initialize a vector layer with the previous data source
+  VectorLayer vectorLayer1 = new VectorLayer(vectorDataSource1);
+
+  // Add the previous vector layer to the map
+  mapView.Layers.Add(vectorLayer1);
+
+  // Set limited visible zoom range for the vector layer
+  vectorLayer1.VisibleZoomRange = new MapRange(10, 24);
+
+
+  // Create marker style
+  MarkerStyleBuilder markerStyleBuilder = new MarkerStyleBuilder();
+
+  markerStyleBuilder.setSize(30);
+  // Green colour as ARGB
+  markerStyleBuilder.setColor(new Color(0xFF00FF00));
+  MarkerStyle sharedMarkerStyle = markerStyleBuilder.buildStyle();
+
+  // Add marker
+  Marker marker1 = new Marker(proj.fromWgs84(new MapPos(24.646469, 59.426939)), sharedMarkerStyle);
+  marker1.setMetaDataElement("ClickText", "Marker nr 1");
+  vectorDataSource1.add(marker1);
+
+{% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+  
+  // Create marker style
+  MarkerStyleBuilder markerStyleBuilder = new MarkerStyleBuilder();
+
+  markerStyleBuilder.Size = 30;
+  MarkerStyle sharedMarkerStyle = markerStyleBuilder.BuildStyle();
+
+  // Add marker
+  Marker marker1 = new Marker(proj.FromWgs84(new MapPos(24.646469, 59.426939)), sharedMarkerStyle);
+  marker1.SetMetaDataElement("ClickText", "Marker nr 1");
+  vectorDataSource1.Add(marker1);
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
   // this was initialized before
   NTEPSG3857* proj = [[NTEPSG3857 alloc] init];
 
@@ -62,60 +124,17 @@ Note that Popup (callout, bubble) which is opened when you click on map is a map
   [marker1 setMetaDataElement:@"ClickText" element:@"Marker 1"];
   [vectorDataSource1 add:marker1];
 
-</pre>
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  COMING SOON...
+
+  {% endhighlight %}
+  </div>
 </div>
-<div id="a1">
-<pre class="brush: java">
-
-Projection proj = mapView.getOptions().getBaseProjection();
-
-// Initialize an local vector data source
-LocalVectorDataSource vectorDataSource1 = new LocalVectorDataSource(proj);
-
-// Initialize a vector layer with the previous data source
-VectorLayer vectorLayer1 = new VectorLayer(vectorDataSource1);
-
-// Add the previous vector layer to the map
-mapView.getLayers().add(vectorLayer1);
-
-// Set limited visible zoom range for the vector layer
-vectorLayer1.setVisibleZoomRange(new MapRange(10, 24));
-
-
-// Create marker style
-MarkerStyleBuilder markerStyleBuilder = new MarkerStyleBuilder();
-
-markerStyleBuilder.setSize(30);
-// Green colour as ARGB
-markerStyleBuilder.setColor(new Color(0xFF00FF00));
-MarkerStyle sharedMarkerStyle = markerStyleBuilder.buildStyle();
-
-// Add marker
-Marker marker1 = new Marker(proj.fromWgs84(new MapPos(24.646469, 59.426939)), sharedMarkerStyle);
-marker1.setMetaDataElement("ClickText", "Marker nr 1");
-vectorDataSource1.add(marker1);
-
-</pre>
-</div>
-<div id="n1">
-<pre class="brush: csharp">
-
-// Create marker style
-MarkerStyleBuilder markerStyleBuilder = new MarkerStyleBuilder();
-
-//markerStyleBuilder.setHideIfOverlapped(false);
-markerStyleBuilder.Size = 30;
-MarkerStyle sharedMarkerStyle = markerStyleBuilder.BuildStyle();
-
-// Add marker
-Marker marker1 = new Marker(proj.FromWgs84(new MapPos(24.646469, 59.426939)), sharedMarkerStyle);
-marker1.SetMetaDataElement("ClickText", "Marker nr 1");
-vectorDataSource1.Add(marker1);
-
-</pre>
-</div>
-</div>
-
 
 ![pin](https://dl.dropboxusercontent.com/u/3573333/public_web/developersite/pin.png)
 
