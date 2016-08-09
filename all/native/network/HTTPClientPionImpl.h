@@ -12,7 +12,7 @@
 #include <pion/http/response.hpp>
 #include <pion/tcp/connection.hpp>
 
-#include "HTTPClient.h"
+#include "network/HTTPClient.h"
 
 namespace carto {
 

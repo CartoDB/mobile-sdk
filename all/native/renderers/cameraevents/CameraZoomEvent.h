@@ -7,12 +7,12 @@
 #ifndef _CARTO_CAMERAZOOMEVENT_H_
 #define _CARTO_CAMERAZOOMEVENT_H_
 
-#include "CameraEvent.h"
 #include "core/MapPos.h"
+#include "renderers/cameraevents/CameraEvent.h"
 
 namespace carto {
 
-    class CameraZoomEvent: public CameraEvent {
+    class CameraZoomEvent : public CameraEvent {
     public:
         CameraZoomEvent();
         virtual ~CameraZoomEvent();

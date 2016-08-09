@@ -9,7 +9,7 @@
 
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT
 
-#include "NMLModelLODTreeDataSource.h"
+#include "datasources/NMLModelLODTreeDataSource.h"
 
 namespace sqlite3pp {
     class database;

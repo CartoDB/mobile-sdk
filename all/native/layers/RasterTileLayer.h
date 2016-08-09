@@ -7,10 +7,10 @@
 #ifndef _CARTO_RASTERTILELAYER_H_
 #define _CARTO_RASTERTILELAYER_H_
 
+#include "core/MapTile.h"
 #include "components/CancelableTask.h"
 #include "components/DirectorPtr.h"
 #include "components/Task.h"
-#include "core/MapTile.h"
 #include "layers/TileLayer.h"
 
 #include <atomic>

@@ -7,7 +7,7 @@
 #ifndef _CARTO_HTTPTILEDATASOURCE_H_
 #define _CARTO_HTTPTILEDATASOURCE_H_
 
-#include "TileDataSource.h"
+#include "datasources/TileDataSource.h"
 #include "network/HTTPClient.h"
 
 #include <random>

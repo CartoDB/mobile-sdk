@@ -7,9 +7,9 @@
 #ifndef _CARTO_CLUSTEREDVECTORLAYER_H_
 #define _CARTO_CLUSTEREDVECTORLAYER_H_
 
-#include "components/DirectorPtr.h"
 #include "core/MapPos.h"
 #include "core/MapTile.h"
+#include "components/DirectorPtr.h"
 #include "graphics/ViewState.h"
 #include "layers/VectorLayer.h"
 

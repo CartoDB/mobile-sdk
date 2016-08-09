@@ -7,8 +7,9 @@
 #ifndef _CARTO_FRUSTUM_H_
 #define _CARTO_FRUSTUM_H_
 
-#include <cglib/mat.h>
 #include <array>
+
+#include <cglib/mat.h>
 
 namespace carto {
     class MapBounds;

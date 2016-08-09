@@ -7,8 +7,8 @@
 #ifndef _CARTO_POPUP_H_
 #define _CARTO_POPUP_H_
 
-#include "vectorelements/Billboard.h"
 #include "core/ScreenPos.h"
+#include "vectorelements/Billboard.h"
 
 namespace carto {
     class Bitmap;

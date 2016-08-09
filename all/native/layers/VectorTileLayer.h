@@ -7,10 +7,10 @@
 #ifndef _CARTO_VECTORTILELAYER_H_
 #define _CARTO_VECTORTILELAYER_H_
 
-#include "layers/TileLayer.h"
+#include "core/MapTile.h"
 #include "components/CancelableTask.h"
 #include "components/Task.h"
-#include "core/MapTile.h"
+#include "layers/TileLayer.h"
 #include "vectortiles/VectorTileDecoder.h"
 
 #include <memory>

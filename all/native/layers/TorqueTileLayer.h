@@ -7,9 +7,9 @@
 #ifndef _CARTO_TORQUETILELAYER_H_
 #define _CARTO_TORQUETILELAYER_H_
 
-#include <memory>
-
 #include "layers/VectorTileLayer.h"
+
+#include <memory>
 
 namespace carto {
     class TorqueTileDecoder;

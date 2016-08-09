@@ -7,7 +7,7 @@
 #ifndef _CARTO_DIRECTORPTR_H_
 #define _CARTO_DIRECTORPTR_H_
 
-#include "Director.h"
+#include "components/Director.h"
 
 #include <memory>
 #include <mutex>

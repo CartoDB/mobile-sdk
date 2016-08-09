@@ -7,13 +7,13 @@
 #ifndef _CARTO_CAMERAPANEVENT_H_
 #define _CARTO_CAMERAPANEVENT_H_
 
-#include "CameraEvent.h"
 #include "core/MapPos.h"
 #include "core/MapVec.h"
+#include "renderers/cameraevents/CameraEvent.h"
 
 namespace carto {
 
-    class CameraPanEvent: public CameraEvent {
+    class CameraPanEvent : public CameraEvent {
     public:
         CameraPanEvent();
         virtual ~CameraPanEvent();
