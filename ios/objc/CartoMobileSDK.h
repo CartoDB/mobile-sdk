@@ -66,7 +66,7 @@
 #import "NTRoutingRequest.h"
 #import "NTRoutingResult.h"
 #import "NTRoutingService.h"
-#import "NTCartoOfflineRoutingService.h"
+#import "NTOSRMOfflineRoutingService.h"
 
 #import "NTBalloonPopupStyleBuilder.h"
 #import "NTBalloonPopupStyle.h"
@@ -168,6 +168,8 @@
 #ifdef _CARTO_GDAL_SUPPORT
 #import "NTOGRVectorDataSource.h"
 #import "NTGDALRasterTileDataSource.h"
+#import "NTStyleSelector.h"
+#import "NTStyleSelectorBuilder.h"
 #endif
 
 #endif
