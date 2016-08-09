@@ -10,7 +10,7 @@ This file is for reference purposes only. It is intended for tracking the Mobile
 * [Common App development tasks](common_tasks.md)
 * [CARTO Engine integration](mobile_engine.md)
 * [More advanced tasks](advanced.md)
-* [Extension features](extensions.md)
-* [Offline Packge listing](offline_packages.md)
+* [Extension features](proextensions.md)
+* [Offline Package listing](offline_packages.md)
 * [API Reference](api_reference.md)
  

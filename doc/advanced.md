@@ -99,6 +99,8 @@ Free to use. Source: <a href="http://www.thunderforest.com/transport/">Thunderfo
 
 * [OSM Wiki TMS page](http://wiki.openstreetmap.org/wiki/TMS)
 * [OSM Featured tiles](http://wiki.openstreetmap.org/wiki/Featured_tiles)
+
+
 # Clusters
 
 In many cases you may have so many Points of Interest (POIs) that these cannot be shown on map as individual markers - map view would be cluttered and eventually also slow or even run out of memory. One of the methods to resolve the issue would be to replace individual objects with *clusters* - Markers which show location of several objects. Often marker clusters shows number of objects which each marker includes.
