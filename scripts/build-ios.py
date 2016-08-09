@@ -1,9 +1,20 @@
 import os
+import re
 import shutil
 import argparse
 from build.sdk_build_utils import *
 
 IOS_ARCHS = ['i386', 'x86_64', 'armv7', 'arm64']
+
+def updateUmbrellaHeaderDefinitions(filename, args):
+  with open(filename, 'r') as f:
+    lines = f.readlines()
+    for i in range(0, len(lines)):
+      if re.search('^\s*#define\s+.*$', lines[i].rstrip('\n')):
+        break
+    lines = lines[:i+1] + ['\n'] + ['#define %s\n' % define for define in args.defines.split(';') if define] + lines[i+1:]
+  with open(filename, 'w') as f:
+    f.writelines(lines)
 
 def buildIOSLib(args, arch):
   platform = 'OS' if arch.startswith('arm') else 'SIMULATOR'
@@ -56,7 +67,9 @@ def buildIOSFramework(args, archs):
   if not makesymlink('%s/CartoMobileSDK.framework' % distDir, 'Versions/A/CartoMobileSDK', 'CartoMobileSDK'):
     return False
 
-  for dir in ['%s/all/native', '%s/ios/native', '%s/ios/objc', '%s/generated/ios-objc/proxies', '%s/libs-external/cglib']:
+  for dir in ['%s/all/native', '%s/extensions/native', '%s/ios/native', '%s/ios/objc', '%s/generated/ios-objc/proxies', '%s/libs-external/cglib']:
+    if not os.path.exists(dir % baseDir):
+      continue
     currentDir = os.getcwd()
     os.chdir(dir % baseDir)
     for dirpath, dirnames, filenames in os.walk('.'):
@@ -66,6 +79,8 @@ def buildIOSFramework(args, archs):
           if not (makedirs(destDir) and copyfile(os.path.join(dirpath, filename), '%s/%s' % (destDir, filename))):
             os.chdir(currentDir)
             return False
+          if filename == 'CartoMobileSDK.h':
+            updateUmbrellaHeaderDefinitions('%s/%s' % (destDir, filename), args)
     os.chdir(currentDir)
   print "Output available in:\n%s" % distDir
   return True

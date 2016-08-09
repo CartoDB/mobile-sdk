@@ -504,11 +504,11 @@ parser.add_argument('--profile', dest='profile', default=getDefaultProfile(), ch
 parser.add_argument('--swig', dest='swigExecutable', default='swig', help='path to Swig executable')
 parser.add_argument('--dll', dest='dllName', default='carto_mobile_sdk', help='name of the DLL (Android only)')
 parser.add_argument('--defines', dest='defines', default='', help='Defines for Swig')
-parser.add_argument('--cppdir', dest='cppDir', default='../all/native;../extensions/native;../{target}/native', help='directories containing C++ headers')
+parser.add_argument('--cppdir', dest='cppDir', default='../all/native;../extensions/all/native;../{target}/native', help='directories containing C++ headers')
 parser.add_argument('--proxydir', dest='proxyDir', default='../generated/{target}-csharp/proxies', help='output directory for C# proxies')
 parser.add_argument('--wrapperdir', dest='wrapperDir', default='../generated/{target}-csharp/wrappers', help='output directory for C++ wrappers')
 parser.add_argument('--moduledir', dest='moduleDir', default='../generated/{target}-csharp/modules', help='output directory containing preprocessed Swig modules')
-parser.add_argument('--sourcedir', dest='sourceDir', default='../all/modules;../extensions/modules;../{target}/modules', help='input directories containing subdirectories of Swig wrappers')
+parser.add_argument('--sourcedir', dest='sourceDir', default='../all/modules;../extensions/all/modules;../{target}/modules', help='input directories containing subdirectories of Swig wrappers')
 parser.add_argument(dest='target', choices=['android', 'ios', 'winphone'], help='target platform')
 
 args = parser.parse_args()

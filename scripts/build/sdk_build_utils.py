@@ -89,7 +89,7 @@ def getProfiles():
     return { 'free': {} }
   with open('%s/sdk_profiles.json' % os.path.dirname(os.path.realpath(__file__)), 'r') as f:
     profiles = json.loads(f.read())
-    return { unicode(key).encode('utf-8') : val for key, val in profiles.items() }
+    return { unicode(key).encode('utf-8') : val for key, val in profiles.items() if key != 'free' }
 
 def getVersion(buildnumber):
   try:

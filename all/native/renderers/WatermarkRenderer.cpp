@@ -13,6 +13,7 @@
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
 #ifdef _CARTO_LICENSEMANAGER_SUPPORT
+#include "components/LicenseManager.h"
 #include "assets/EvaluationWatermarkPNG.h"
 #include "assets/ExpiredWatermarkPNG.h"
 #include "assets/CartoWatermarkPNG.h"

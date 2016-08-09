@@ -52,6 +52,7 @@ set(ZLIB_INCLUDE_DIR "${SDK_EXTERNAL_LIBS_DIR}/zlib")
 set(PNG_INCLUDE_DIR "${SDK_EXTERNAL_LIBS_DIR}/png")
 
 include_directories(
+    "${SDK_EXT_SRC_DIR}"
     "${SDK_SRC_DIR}"
     "${SDK_CARTO_LIBS_DIR}/vt/src"
     "${SDK_CARTO_LIBS_DIR}/mapnikvt/src"
