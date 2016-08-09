@@ -4,3 +4,5 @@
 /prebuilt
 /libs-external
 *.pyc
+
+*DS_Store
