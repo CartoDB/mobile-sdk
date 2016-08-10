@@ -1147,311 +1147,347 @@ Once you have implemented and set *MapEventListener* interface for MapView, this
 
 Create new class called **MyMapEventListener** which implements MapEventListner interface.
 
-<div id="tabs1">
-  <ul>
-    <li><a href="#i1"><span>iOS ObjC</span></a></li>
-    <li><a href="#a1"><span>Android Java</span></a></li>
-    <li><a href="#n1"><span>.NET C#</span></a></li>
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
   </ul>
-<div id="i1">
-<pre class="brush: objc">
 
-// MyMapEventListener.h:
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}
 
-#import &lt;Nuti/Nuti.h&gt;
-
-@interface  MyMapEventListener : NTMapEventListener
--(void)onMapMoved;
--(void)onMapClicked:(NTMapClickInfo*)mapClickInfo;
--(void)onVectorElementClicked:(NTVectorElementsClickInfo*)vectorElementsClickInfo;
-@end
-
-
-// MyMapEventListener.mm:
-
-#import "MyMapEventListener.h"
-
-@interface  MyMapEventListener() {
-}
-@end;
-
-@implementation MyMapEventListener
-
--(void)onMapMoved
-{
- // called very often, even just console logging can lag map movement animation
- // NSLog(@"Map moved!");
-}
-
--(void)onMapClicked:(NTMapClickInfo*)mapClickInfo
-{
+  // imports omitted...
+  
+  /**
+   * A custom map event listener that displays information about map events and creates pop-ups.
+   */
+  public class MyMapEventListener extends MapEventListener {
+    private MapView mapView;
+    private LocalVectorDataSource vectorDataSource;
     
+    private BalloonPopup oldClickLabel;
     
-    // Check the type of the click
-    NSString* clickMsg;
-    if ([mapClickInfo getClickType] == NT_CLICK_TYPE_SINGLE)
-    {
-        clickMsg = @"Single map click!";
+    public MyMapEventListener(MapView mapView, LocalVectorDataSource vectorDataSource) {
+      this.mapView = mapView;
+      this.vectorDataSource = vectorDataSource;
     }
-    else if ([mapClickInfo getClickType] == NT_CLICK_TYPE_LONG)
-    {
-        clickMsg = @"Long map click!";
+
+    @Override
+    public void onMapMoved() {
+
+          final MapPos topLeft = mapView.screenToMap(new ScreenPos(0, 0));
+          final MapPos bottomRight = mapView.screenToMap(new ScreenPos(mapView.getWidth(), mapView.getHeight()));
+          Log.d(Const.LOG_TAG, mapView.getOptions().getBaseProjection().toWgs84(topLeft)
+                  + " " + mapView.getOptions().getBaseProjection().toWgs84(bottomRight));
+
     }
-    else if ([mapClickInfo getClickType] == NT_CLICK_TYPE_DOUBLE)
-    {
-        clickMsg = @"Double map click!";
+
+    @Override
+    public void onMapClicked(MapClickInfo mapClickInfo) {
+      Log.d(Const.LOG_TAG, "Map click!");
+      
+      // Remove old click label
+      if (oldClickLabel != null) {
+        vectorDataSource.remove(oldClickLabel);
+        oldClickLabel = null;
+      }
+      
+      BalloonPopupStyleBuilder styleBuilder = new BalloonPopupStyleBuilder();
+        // Make sure this label is shown on top all other labels
+        styleBuilder.setPlacementPriority(10);
+      
+      // Check the type of the click
+      String clickMsg = null;
+      if (mapClickInfo.getClickType() == ClickType.CLICK_TYPE_SINGLE) {
+        clickMsg = "Single map click!";
+      } else if (mapClickInfo.getClickType() == ClickType.CLICK_TYPE_LONG) {
+        clickMsg = "Long map click!";
+      } else if (mapClickInfo.getClickType() == ClickType.CLICK_TYPE_DOUBLE) {
+        clickMsg = "Double map click!";
+      } else if (mapClickInfo.getClickType() == ClickType.CLICK_TYPE_DUAL) {
+        clickMsg ="Dual map click!";
+      }
+    
+      MapPos clickPos = mapClickInfo.getClickPos();
+      MapPos wgs84Clickpos = mapView.getOptions().getBaseProjection().toWgs84(clickPos);
+      String msg = String.format(Locale.US, "%.4f, %.4f", wgs84Clickpos.getY(), wgs84Clickpos.getX());
+      BalloonPopup clickPopup = new BalloonPopup(mapClickInfo.getClickPos(),
+                             styleBuilder.buildStyle(),
+                                     clickMsg,
+                                     msg);
+      vectorDataSource.add(clickPopup);
+      oldClickLabel = clickPopup;
     }
-    else if ([mapClickInfo getClickType] == NT_CLICK_TYPE_DUAL)
+
+    @Override
+    public void onVectorElementClicked(VectorElementsClickInfo vectorElementsClickInfo) {
+      Log.d(Const.LOG_TAG, "Vector element click!");
+      
+      // Remove old click label
+      if (oldClickLabel != null) {
+        vectorDataSource.remove(oldClickLabel);
+        oldClickLabel = null;
+      }
+      
+      // Multiple vector elements can be clicked at the same time, we only care about the one
+      // closest to the camera
+      VectorElementClickInfo clickInfo = vectorElementsClickInfo.getVectorElementClickInfos().get(0);
+      
+      // Check the type of vector element
+      BalloonPopup clickPopup = null;
+      BalloonPopupStyleBuilder styleBuilder = new BalloonPopupStyleBuilder();
+        // Configure style
+        styleBuilder.setLeftMargins(new BalloonPopupMargins(0, 0, 0, 0));
+        styleBuilder.setTitleMargins(new BalloonPopupMargins(6, 3, 6, 3));
+        // Make sure this label is shown on top all other labels
+        styleBuilder.setPlacementPriority(10);
+
+      VectorElement vectorElement = clickInfo.getVectorElement();
+      String clickText = vectorElement.getMetaDataElement("ClickText");
+      if (clickText == null || clickText.length() == 0) {
+        return;
+      }
+
+      if (vectorElement instanceof Billboard) {
+        // If the element is billboard, attach the click label to the billboard element
+        Billboard billboard = (Billboard) vectorElement;
+        clickPopup = new BalloonPopup(billboard, 
+                        styleBuilder.buildStyle(),
+                                  clickText, 
+                                  "");
+      } else {
+        // for lines and polygons set label to click location
+        clickPopup = new BalloonPopup(clickInfo.getElementClickPos(),
+                        styleBuilder.buildStyle(),
+                                  clickText,
+                                  "");
+      }
+      vectorDataSource.add(clickPopup);
+      oldClickLabel = clickPopup;
+    }
+  }
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  public class MapListener : MapEventListener
+  {
+    private LocalVectorDataSource _dataSource;
+    private BalloonPopup _oldClickLabel;
+
+    public MapListener(LocalVectorDataSource dataSource)
     {
-        clickMsg = @"Dual map click!";
+      _dataSource = dataSource;
+    }
+
+    public override void OnMapClicked (MapClickInfo mapClickInfo)
+    {
+      // Remove old click label
+      if (_oldClickLabel != null) {
+        _dataSource.Remove(_oldClickLabel);
+        _oldClickLabel = null;
+      }
+    }
+
+    public override void OnMapMoved()
+    {
+    }
+
+    public override void OnVectorElementClicked(VectorElementsClickInfo vectorElementsClickInfo)
+    {
+      // A note about iOS: DISABLE 'Optimize PNG files for iOS' option in iOS build settings,
+      // otherwise icons can not be loaded using AssetUtils/Bitmap constructor as Xamarin converts
+      // PNGs to unsupported custom format.
+
+      // Remove old click label
+      if (_oldClickLabel != null) {
+        _dataSource.Remove(_oldClickLabel);
+        _oldClickLabel = null;
+      }
+
+      var clickInfo = vectorElementsClickInfo.VectorElementClickInfos[0];
+
+      var styleBuilder = new BalloonPopupStyleBuilder();
+      // Configure simple style
+      styleBuilder.LeftMargins = new BalloonPopupMargins (0, 3, 0, 6);
+      styleBuilder.RightMargins = new BalloonPopupMargins (0, 3, 0, 6);
+
+      // Make sure this label is shown on top all other labels
+      styleBuilder.PlacementPriority = 10;
+
+      var vectorElement = clickInfo.VectorElement;
+      var clickText = vectorElement.GetMetaDataElement("ClickText");
+
+      var clickPopup = new BalloonPopup(clickInfo.ElementClickPos, 
+        styleBuilder.BuildStyle(),
+        clickText, 
+        "");
+
+      _dataSource.Add(clickPopup);
+      _oldClickLabel = clickPopup;
+
+    }
+  }
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  #import &lt;CartoMobileSDK/CartoMobileSDK.h&lt;
+
+  /*
+   * A custom map event listener that displays information about map events and creates pop-ups.
+   */
+  @interface  MyMapEventListener : NTMapEventListener
+
+  -(void)setMapView:(NTMapView*)mapView vectorDataSource:(NTLocalVectorDataSource*)vectorDataSource;
+  -(void)onMapMoved;
+  -(void)onMapClicked:(NTMapClickInfo*)mapClickInfo;
+
+  @end
+
+  // MyMapEventListener.mm:
+
+  #import "MyMapEventListener.h"
+
+  @interface  MyMapEventListener() {
+  }
+  @end;
+
+  @implementation MyMapEventListener
+
+  -(void)onMapMoved
+  {
+   // called very often, even just console logging can lag map movement animation
+   // NSLog(@"Map moved!");
+  }
+
+  -(void)onMapClicked:(NTMapClickInfo*)mapClickInfo
+  {
+      // Check the type of the click
+      NSString* clickMsg;
+      if ([mapClickInfo getClickType] == NT_CLICK_TYPE_SINGLE)
+      {
+          clickMsg = @"Single map click!";
+      }
+      else if ([mapClickInfo getClickType] == NT_CLICK_TYPE_LONG)
+      {
+          clickMsg = @"Long map click!";
+      }
+      else if ([mapClickInfo getClickType] == NT_CLICK_TYPE_DOUBLE)
+      {
+          clickMsg = @"Double map click!";
+      }
+      else if ([mapClickInfo getClickType] == NT_CLICK_TYPE_DUAL)
+      {
+          clickMsg = @"Dual map click!";
+      }
+      
+      NTMapPos* clickPos = [mapClickInfo getClickPos];
+      NTMapPos* wgs84Clickpos = [[[_mapView getOptions] getBaseProjection] toWgs84:clickPos];
+      NSLog(@"%@ Location: %@", clickMsg, [NSString stringWithFormat:@"%f, %f", [wgs84Clickpos getY], [wgs84Clickpos getX]]);
+  }
+
+  -(void)onVectorElementClicked:(NTVectorElementsClickInfo*)vectorElementsClickInfo
+  {
+      NSLog(@"Vector element click!");
+      
+      // Multiple vector elements can be clicked at the same time, we only care about the one
+      // closest to the camera
+      NTVectorElementClickInfo* clickInfo = [[vectorElementsClickInfo getVectorElementClickInfos] get:0];    
+      
+      // Load metadata from the object
+      NTVectorElement* vectorElement = [clickInfo getVectorElement];
+    NSString* clickText = [vectorElement getMetaDataElement:@"ClickText"];
+    if (clickText == nil || [clickText length] == 0) {
+      return;
     }
     
-    NTMapPos* clickPos = [mapClickInfo getClickPos];
-    NTMapPos* wgs84Clickpos = [[[_mapView getOptions] getBaseProjection] toWgs84:clickPos];
-    NSLog(@"%@ Location: %@", clickMsg, [NSString stringWithFormat:@"%f, %f", [wgs84Clickpos getY], [wgs84Clickpos getX]]);
+    NSLog(@"Vector element clicked, metadata : '%@'", clickText);
+  }
 
-}
+  @end
 
--(void)onVectorElementClicked:(NTVectorElementsClickInfo*)vectorElementsClickInfo
-{
-    NSLog(@"Vector element click!");
-    
-    // Multiple vector elements can be clicked at the same time, we only care about the one
-    // closest to the camera
-    NTVectorElementClickInfo* clickInfo = [[vectorElementsClickInfo getVectorElementClickInfos] get:0];    
-    
-    // Load metadata from the object
-    NTVectorElement* vectorElement = [clickInfo getVectorElement];
-	NSString* clickText = [vectorElement getMetaDataElement:@"ClickText"];
-	if (clickText == nil || [clickText length] == 0) {
-		return;
-	}
-	
-  NSLog(@"Vector element clicked, metadata : '%@'", clickText);
+  {% endhighlight %}
+  </div>
 
-}
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
 
-@end
-</pre>
-</div>
-<div id="a1">
-<pre class="brush: java">
-// MyMapEventListener.java : 
-// imports omitted...
-/**
- * A custom map event listener that displays information about map events and creates pop-ups.
- */
-public class MyMapEventListener extends MapEventListener {
-	private MapView mapView;
-	private LocalVectorDataSource vectorDataSource;
-	
-	private BalloonPopup oldClickLabel;
-	
-	public MyMapEventListener(MapView mapView, LocalVectorDataSource vectorDataSource) {
-		this.mapView = mapView;
-		this.vectorDataSource = vectorDataSource;
-	}
+  COMING SOON...
 
-	@Override
-	public void onMapMoved() {
-
-        final MapPos topLeft = mapView.screenToMap(new ScreenPos(0, 0));
-        final MapPos bottomRight = mapView.screenToMap(new ScreenPos(mapView.getWidth(), mapView.getHeight()));
-        Log.d(Const.LOG_TAG, mapView.getOptions().getBaseProjection().toWgs84(topLeft)
-                + " " + mapView.getOptions().getBaseProjection().toWgs84(bottomRight));
-
-	}
-
-	@Override
-	public void onMapClicked(MapClickInfo mapClickInfo) {
-		Log.d(Const.LOG_TAG, "Map click!");
-		
-		// Remove old click label
-		if (oldClickLabel != null) {
-			vectorDataSource.remove(oldClickLabel);
-			oldClickLabel = null;
-		}
-		
-		BalloonPopupStyleBuilder styleBuilder = new BalloonPopupStyleBuilder();
-	    // Make sure this label is shown on top all other labels
-	    styleBuilder.setPlacementPriority(10);
-		
-		// Check the type of the click
-		String clickMsg = null;
-		if (mapClickInfo.getClickType() == ClickType.CLICK_TYPE_SINGLE) {
-			clickMsg = "Single map click!";
-		} else if (mapClickInfo.getClickType() == ClickType.CLICK_TYPE_LONG) {
-			clickMsg = "Long map click!";
-		} else if (mapClickInfo.getClickType() == ClickType.CLICK_TYPE_DOUBLE) {
-			clickMsg = "Double map click!";
-		} else if (mapClickInfo.getClickType() == ClickType.CLICK_TYPE_DUAL) {
-			clickMsg ="Dual map click!";
-		}
-	
-		MapPos clickPos = mapClickInfo.getClickPos();
-		MapPos wgs84Clickpos = mapView.getOptions().getBaseProjection().toWgs84(clickPos);
-		String msg = String.format(Locale.US, "%.4f, %.4f", wgs84Clickpos.getY(), wgs84Clickpos.getX());
-		BalloonPopup clickPopup = new BalloonPopup(mapClickInfo.getClickPos(),
-												   styleBuilder.buildStyle(),
-		                						   clickMsg,
-		                						   msg);
-		vectorDataSource.add(clickPopup);
-		oldClickLabel = clickPopup;
-	}
-
-	@Override
-	public void onVectorElementClicked(VectorElementsClickInfo vectorElementsClickInfo) {
-		Log.d(Const.LOG_TAG, "Vector element click!");
-		
-		// Remove old click label
-		if (oldClickLabel != null) {
-			vectorDataSource.remove(oldClickLabel);
-			oldClickLabel = null;
-		}
-		
-		// Multiple vector elements can be clicked at the same time, we only care about the one
-		// closest to the camera
-		VectorElementClickInfo clickInfo = vectorElementsClickInfo.getVectorElementClickInfos().get(0);
-		
-		// Check the type of vector element
-		BalloonPopup clickPopup = null;
-		BalloonPopupStyleBuilder styleBuilder = new BalloonPopupStyleBuilder();
-	    // Configure style
-	    styleBuilder.setLeftMargins(new BalloonPopupMargins(0, 0, 0, 0));
-	    styleBuilder.setTitleMargins(new BalloonPopupMargins(6, 3, 6, 3));
-	    // Make sure this label is shown on top all other labels
-	    styleBuilder.setPlacementPriority(10);
-
-		VectorElement vectorElement = clickInfo.getVectorElement();
-		String clickText = vectorElement.getMetaDataElement("ClickText");
-		if (clickText == null || clickText.length() == 0) {
-			return;
-		}
-
-		if (vectorElement instanceof Billboard) {
-			// If the element is billboard, attach the click label to the billboard element
-			Billboard billboard = (Billboard) vectorElement;
-			clickPopup = new BalloonPopup(billboard, 
-										  styleBuilder.buildStyle(),
-		                    			  clickText, 
-		                    			  "");
-		} else {
-			// for lines and polygons set label to click location
-			clickPopup = new BalloonPopup(clickInfo.getElementClickPos(),
-										  styleBuilder.buildStyle(),
-		                   				  clickText,
-		                    			  "");
-		}
-		vectorDataSource.add(clickPopup);
-		oldClickLabel = clickPopup;
-	}
-}
-
-</pre>
-</div>
-<div id="n1">
-<pre class="brush: csharp">
-// MapListener.cs :
-// using statements skipped
-
-namespace HelloMap
-{
-
-	public class MapListener : MapEventListener
-	{
-		private LocalVectorDataSource _dataSource;
-		private BalloonPopup _oldClickLabel;
-
-		public MapListener(LocalVectorDataSource dataSource)
-		{
-			_dataSource = dataSource;
-		}
-
-		public override void OnMapClicked (MapClickInfo mapClickInfo)
-		{
-			// Remove old click label
-			if (_oldClickLabel != null) {
-				_dataSource.Remove(_oldClickLabel);
-				_oldClickLabel = null;
-			}
-		}
-
-		public override void OnMapMoved()
-		{
-		}
-
-		public override void OnVectorElementClicked(VectorElementsClickInfo vectorElementsClickInfo)
-		{
-			// A note about iOS: DISABLE 'Optimize PNG files for iOS' option in iOS build settings,
-			// otherwise icons can not be loaded using AssetUtils/Bitmap constructor as Xamarin converts
-			// PNGs to unsupported custom format.
-
-			// Remove old click label
-			if (_oldClickLabel != null) {
-				_dataSource.Remove(_oldClickLabel);
-				_oldClickLabel = null;
-			}
-
-			var clickInfo = vectorElementsClickInfo.VectorElementClickInfos[0];
-
-			var styleBuilder = new BalloonPopupStyleBuilder();
-			// Configure simple style
-			styleBuilder.LeftMargins = new BalloonPopupMargins (0, 3, 0, 6);
-			styleBuilder.RightMargins = new BalloonPopupMargins (0, 3, 0, 6);
-
-			// Make sure this label is shown on top all other labels
-			styleBuilder.PlacementPriority = 10;
-
-			var vectorElement = clickInfo.VectorElement;
-			var clickText = vectorElement.GetMetaDataElement("ClickText");
-
-			var clickPopup = new BalloonPopup(clickInfo.ElementClickPos, 
-				styleBuilder.BuildStyle(),
-				clickText, 
-				"");
-
-			_dataSource.Add(clickPopup);
-			_oldClickLabel = clickPopup;
-
-		}
-	}
-}
-
-</pre>
-</div>
+  {% endhighlight %}
+  </div>
+  
 </div>
 
 ### 2. Initialize listener
 
-<div id="tabs2">
-  <ul>
-    <li><a href="#i2"><span>iOS ObjC</span></a></li>
-    <li><a href="#a2"><span>Android Java</span></a></li>
-    <li><a href="#n2"><span>.NET C#</span></a></li>
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
   </ul>
-<div id="i2">
-<pre class="brush: objc">
-// 1. Create a map event listener
-MyMapEventListener* mapListener = [[MyMapEventListener alloc] init];
-[self setMapEventListener:mapListener];
-	
-</pre>
-</div>
-<div id="a2">
-<pre class="brush: java">
- mapView.setMapEventListener(new MyMapEventListener(mapView, vectorDataSource));
 
-</pre>
-</div>
-<div id="n2">
-<pre class="brush: csharp">
- // Create and set map listener
- mapView.MapEventListener = new MapListener (dataSource);
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}
 
-</pre>
-</div>
-</div>
+  mapView.setMapEventListener(new MyMapEventListener(mapView, vectorDataSource));
 
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  MapView.MapEventListener = new MapListener (dataSource);
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  MyMapEventListener* mapListener = [[MyMapEventListener alloc] init];
+  [self setMapEventListener:mapListener];
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  COMING SOON...
+
+  {% endhighlight %}
+  </div>
+  
+</div>
 
 ## Show/hide labels for map clicks
 
@@ -1485,21 +1521,45 @@ For raster data it needs
 [MBTiles guide](/guides/mbtiles) with list of some tools and sources to
 generate them.
 
-<div id="tabs1">
-<ul>
-<li>
-<a href="#i1"><span>iOS ObjC</span></a></li>
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
+  </ul>
 
-<li>
-<a href="#a1"><span>Android Java</span></a></li>
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}
 
-<li>
-<a href="#n1"><span>.NET C\#</span></a></li>
+    MBTilesTileDataSource tileDataSource = new MBTilesTileDataSource(filePath);
+    TileLayer rasterLayer = new RasterTileLayer(tileDataSource);
 
-</ul>
-<div id="i1">
-``` {.brush: .objc}
-   // file-based local offline datasource
+    mapView.getLayers().add(rasterLayer);
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+  
+      var mbTilesLayer = new RasterTileLayer(new MBTilesTileDataSource(filePath));
+      MapView.Layers.Add(mbTilesLayer);
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
    NSString* fullpathVT = [[NSBundle mainBundle] pathForResource:@"MBTILESFILENAME" ofType:@"mbtiles"];
    NTTileDataSource* tileDataSource = [[NTMBTilesTileDataSource alloc] initWithPath: fullpathVT];
 
@@ -1508,34 +1568,20 @@ generate them.
 
    // Add the raster layer to the map
    [[mapView getLayers] add:rasterLayer];
-```
 
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  COMING SOON...
+
+  {% endhighlight %}
+  </div>
+  
 </div>
-<div id="a1">
-``` {.brush: .java}
 
-  // Create tile data source.
-  MBTilesTileDataSource tileDataSource = new MBTilesTileDataSource(filePath);
-
-  // Create layer and add to map
-  TileLayer rasterLayer = new RasterTileLayer(tileDataSource);
-
-  mapView.getLayers().add(rasterLayer);
-```
-
-</div>
-<div id="n1">
-``` {.brush: .csharp}
-
-// NB!: the path to file is platfrom-specific.
-
-var mbTilesLayer = new RasterTileLayer (new MBTilesTileDataSource (filePath));
-mapView.Layers.Add (mbTilesLayer);
-
-```
-
-</div>
-</div>
 **b) MBtiles as VectorTileLayer**
 
 For own packaged vector data you need Carto specific vector files
@@ -1558,47 +1604,31 @@ can use ones with sample projects, e.g. OSMBright with 3D buildings
 See [Vector Tile Styling](/guides/vector-styles) for details about
 styling.
 
-<div id="tabs2">
-<ul>
-<li>
-<a href="#i2"><span>iOS ObjC</span></a></li>
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
+  </ul>
 
-<li>
-<a href="#a2"><span>Android Java</span></a></li>
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}
 
-<li>
-<a href="#n2"><span>.NET C\#</span></a></li>
-
-</ul>
-<div id="i2">
-``` {.brush: .objc}
-  // 1. define file-based local offline datasource
-  NSString* fullpathVT = [[NSBundle mainBundle] pathForResource:@"estonia_ntvt" ofType:@"mbtiles"];
-  NTTileDataSource* tileDataSource = [[NTMBTilesTileDataSource alloc] initWithMinZoom:0 maxZoom:4 path: fullpathVT];
-
-  // 2. Load vector tile styleset
-  UnsignedCharVector *vectorTileStyleSetData = [NTAssetUtils loadBytes: @"osmbright.zip"];
-  NTMBVectorTileStyleSet *vectorTileStyleSet = [[NTMBVectorTileStyleSet alloc] initWithData:vectorTileStyleSetData];
-
-  // 3. Create vector tile decoder using the styleset
-  NTMBVectorTileDecoder *vectorTileDecoder = [[NTMBVectorTileDecoder alloc] initWithStyleSet:vectorTileStyleSet];
-
-  // 4. Create vector tile layer, using previously created data source and decoder
-  NTVectorTileLayer *vectorTileLayer = [[NTVectorTileLayer alloc] initWithDataSource:vectorTileDataSource decoder:vectorTileDecoder];
-
-  // 5. Add vector tile layer
-  [[mapView getLayers] add:vectorTileLayer];
-```
-
-</div>
-<div id="a2">
-``` {.brush: .java}
-  // 1. Create tile data source from mbtiles file
+    // 1. Create tile data source from mbtiles file
   MBTilesTileDataSource tileDataSource = new MBTilesTileDataSource("/sdcard/estonia_ntvt.mbtiles");
 
-  // 2. Load vector tile styleset
-  UnsignedCharVector styleBytes = AssetUtils.loadBytes("osmbright.zip");
-  MBVectorTileStyleSet vectorTileStyleSet = new MBVectorTileStyleSet(styleBytes);
+    // 2. Load vector tile styleset
+  BinaryData styleBytes = AssetUtils.loadAsset("osmbright.zip");
+  CompiledStyleSet vectorTileStyleSet = new CompiledStyleSet(new ZippedAssetPackage(styleBytes));
 
   // 3. Create vector tile decoder using the styleset
   VectorTileDecoder vectorTileDecoder = new MBVectorTileDecoder(vectorTileStyleSet);
@@ -1608,30 +1638,65 @@ styling.
 
   // 5. Add vector tile layer
   mapView.getLayers().add(vectorTileLayer);
-```
 
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+        // 1. Create tile data source from mbtiles file
+      var tileDataSource = new MBTilesTileDataSource("world_zoom5.mbtiles");
+
+      // 2. Load vector tile styleset
+      var styleBytes = AssetUtils.LoadAsset("nutiteq-dark.zip");
+      var vectorTileStyleSet = new CompiledStyleSet(new ZippedAssetPackage(styleBytes));
+
+      // 3. Create vector tile decoder using the styleset
+      var vectorTileDecoder = new MBVectorTileDecoder(vectorTileStyleSet);
+
+      // 4. Create vector tile layer, using previously created data source and decoder
+      var vectorTileLayer = new VectorTileLayer(tileDataSource, vectorTileDecoder);
+
+      // 5. Add vector tile layer
+      MapView.Layers.Add(vectorTileLayer);
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+    NSString* fullpathVT = [[NSBundle mainBundle] pathForResource:@"estonia_ntvt" ofType:@"mbtiles"];
+    NTTileDataSource* tileDataSource = [[NTMBTilesTileDataSource alloc] initWithMinZoom:0 maxZoom:4 path: fullpathVT];
+    
+    // 2. Load vector tile styleset
+    NTBinaryData *vectorTileStyleSetData = [NTAssetUtils loadAsset: @"osmbright.zip"];
+    NTZippedAssetPackage *package = [[NTZippedAssetPackage alloc] initWithZipData:vectorTileStyleSetData];
+    NTCompiledStyleSet *vectorTileStyleSet = [[NTCompiledStyleSet alloc] initWithAssetPackage:package];
+    
+    // 3. Create vector tile decoder using the styleset
+    NTMBVectorTileDecoder *vectorTileDecoder = [[NTMBVectorTileDecoder alloc] initWithCompiledStyleSet:vectorTileStyleSet];
+    
+    // 4. Create vector tile layer, using previously created data source and decoder
+    NTVectorTileLayer *layer = [[NTVectorTileLayer alloc] initWithDataSource:tileDataSource decoder:vectorTileDecoder];
+    
+    // 5. Add vector tile layer
+    [[mapView getLayers] add:layer];
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  COMING SOON...
+
+  {% endhighlight %}
+  </div>
+  
 </div>
-<div id="n2">
-``` {.brush: .csharp}
-// 1. Create tile data source from mbtiles file
-var tileDataSource = new MBTilesTileDataSource("/sdcard/mapxt/estonia_ntvt.mbtiles");
 
-// 2. Load vector tile styleset
-var styleBytes = AssetUtils.LoadBytes("osmbright.zip");
-var vectorTileStyleSet = new MBVectorTileStyleSet(styleBytes);
-
-// 3. Create vector tile decoder using the styleset
-var vectorTileDecoder = new MBVectorTileDecoder(vectorTileStyleSet);
-
-// 4. Create vector tile layer, using previously created data source and decoder
-var vectorTileLayer = new VectorTileLayer(tileDataSource, vectorTileDecoder);
-
-// 5. Add vector tile layer
-mapView.Layers.Add(vectorTileLayer);
-```
-
-</div>
-</div>
 ## 2. Online maps
 
 **HTTPTileDataSource** is also universal datasource for vector or raster
@@ -1646,42 +1711,66 @@ This is suitable as universial base map.
 For vector styling you use exactly same osmbright.zip file as for
 offline tiles, see above.
 
-<div id="tabs3">
-<ul>
-<li>
-<a href="#i3"><span>iOS ObjC</span></a></li>
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
+  </ul>
 
-<li>
-<a href="#a3"><span>Android Java</span></a></li>
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}
+  
+        BinaryData styleAsset = AssetUtils.loadAsset("nutibright-v2a.zip");
+        VectorTileLayer baseLayer = new CartoOnlineVectorTileLayer("nutiteq.osm", new ZippedAssetPackage(styleAsset));
 
-<li>
-<a href="#n3"><span>.NET C\#</span></a></li>
+        mapView.getLayers().add(baseLayer);
 
-</ul>
-<div id="i3">
-``` {.brush: .objc}
-NTVectorTileLayer* vectorTileLayer = [[NTCartoOnlineVectorTileLayer alloc] initWithStyleAssetName:@"osmbright.zip"];
-[[mapView getLayers] add:vectorTileLayer];
-```
+  {% endhighlight %}
+  </div>
 
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+      var styleAsset = AssetUtils.LoadAsset("nutibright-v2a.zip");
+      var baseLayer = new CartoOnlineVectorTileLayer("nutiteq.osm", new ZippedAssetPackage(styleAsset));
+      
+      MapView.Layers.Add(baseLayer);
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+    NTBinaryData* styleData = [NTAssetUtils loadAsset:@"nutibright-v3.zip"];
+    NTAssetPackage* assetPackage = [[NTZippedAssetPackage alloc] initWithZipData:styleData];
+    NTVectorTileLayer* vectorTileLayer = [[NTCartoOnlineVectorTileLayer alloc] initWithSource: @"nutiteq.osm" styleAssetPackage:assetPackage];
+
+    [[mapView getLayers] add:vectorTileLayer];
+  
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  COMING SOON...
+
+  {% endhighlight %}
+  </div>
+  
 </div>
-<div id="a3">
-``` {.brush: .java}
-// Create base layer. Use vector style from assets (osmbright.zip)
-VectorTileLayer baseLayer = new CartoOnlineVectorTileLayer("osmbright.zip");
-mapView.getLayers().add(baseLayer);
-```
 
-</div>
-<div id="n3">
-``` {.brush: .csharp}
-// Create base layer. Use vector style from assets (osmbright.zip)
-var baseLayer = new CartoOnlineVectorTileLayer("osmbright.zip");
-mapView.Layers.Add(baseLayer);
-```
-
-</div>
-</div>
 **b) Web (HTTP) tiles as VectorTileLayer**
 
 With Carto Starter, Pro or Enterprise plans you can use also other
@@ -1698,73 +1787,99 @@ instead.
 Following tags are supported in URL definition: **zoom, x, y, xflipped,
 yflipped, quadkey**.
 
-<div id="tabs4">
-<ul>
-<li>
-<a href="#i4"><span>iOS ObjC</span></a></li>
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
+  </ul>
 
-<li>
-<a href="#a4"><span>Android Java</span></a></li>
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}
 
-<li>
-<a href="#n4"><span>.NET C\#</span></a></li>
+  // 1. Define data source
+  TileDataSource tileDataSource = new HTTPTileDataSource(0, 14, "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN");
 
-</ul>
-<div id="i4">
-``` {.brush: .objc}
+  // 2. Load vector tile styleset
+  BinaryData styleBytes = AssetUtils.loadAsset("osmbright.zip");
+  CompiledStyleSet vectorTileStyleSet = new CompiledStyleSet(new ZippedAssetPackage(styleBytes));
 
-// 1. define data source
-NTTileDataSource* tileDataSource = [[NTHTTPTileDataSource alloc] initWithMinZoom:0 maxZoom:14 baseURL:@"http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN"];
+  // 3. Create vector tile decoder using the styleset
+  VectorTileDecoder vectorTileDecoder = new MBVectorTileDecoder(vectorTileStyleSet);
 
-// 2. Load vector tile styleset
-NTUnsignedCharVector *vectorTileStyleSetData = [NTAssetUtils loadBytes: @"osmbright.zip"];
-NTMBVectorTileStyleSet *vectorTileStyleSet = [[NTMBVectorTileStyleSet alloc] initWithData:vectorTileStyleSetData];
+  // 4. Create vector tile layer, using previously created data source and decoder
+  TileLayer vectorTileLayer = new VectorTileLayer(tileDataSource, vectorTileDecoder);
 
-// 3. Create vector tile decoder using the styleset
-NTMBVectorTileDecoder *vectorTileDecoder = [[NTMBVectorTileDecoder alloc] initWithStyleSet:vectorTileStyleSet];
+  // 5. Add vector tile layer
+  mapView.getLayers().add(vectorTileLayer);
 
-// 4. Create vector tile layer, using previously created data source and decoder
-NTVectorTileLayer *vectorTileLayer = [[NTVectorTileLayer alloc] initWithDataSource:tileDataSource decoder:vectorTileDecoder];
+  {% endhighlight %}
+  </div>
 
-// 5. Add vector tile layer
-[[mapView getLayers] add:vectorTileLayer];
-```
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
 
+      // 1. Define data source
+      var tileDataSource = new HTTPTileDataSource(0, 14, "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN");
+
+      // 2. Load vector tile styleset
+      var styleBytes = AssetUtils.LoadAsset("nutiteq-dark.zip");
+      var vectorTileStyleSet = new CompiledStyleSet(new ZippedAssetPackage(styleBytes));
+
+      // 3. Create vector tile decoder using the styleset
+      var vectorTileDecoder = new MBVectorTileDecoder(vectorTileStyleSet);
+
+      // 4. Create vector tile layer, using previously created data source and decoder
+      var vectorTileLayer = new VectorTileLayer(tileDataSource, vectorTileDecoder);
+
+      // 5. Add vector tile layer
+      MapView.Layers.Add(vectorTileLayer);
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+      // 1. define data source
+    NTTileDataSource* tileDataSource = [[NTHTTPTileDataSource alloc] initWithMinZoom:0 maxZoom:14 baseURL:@"http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN"];
+    
+    // 2. Load vector tile styleset
+    NTBinaryData *vectorTileStyleSetData = [NTAssetUtils loadAsset: @"osmbright.zip"];
+    NTZippedAssetPackage *package = [[NTZippedAssetPackage alloc] initWithZipData:vectorTileStyleSetData];
+    NTCompiledStyleSet *vectorTileStyleSet = [[NTCompiledStyleSet alloc] initWithAssetPackage:package];
+    
+    // 3. Create vector tile decoder using the styleset
+    NTMBVectorTileDecoder *vectorTileDecoder = [[NTMBVectorTileDecoder alloc] initWithCompiledStyleSet:vectorTileStyleSet];
+    
+    // 4. Create vector tile layer, using previously created data source and decoder
+    NTVectorTileLayer *vectorTileLayer = [[NTVectorTileLayer alloc] initWithDataSource:tileDataSource decoder:vectorTileDecoder];
+    
+    // 5. Add vector tile layer
+    [[mapView getLayers] add:vectorTileLayer];
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  COMING SOON...
+
+  {% endhighlight %}
+  </div>
+  
 </div>
-<div id="a4">
-``` {.brush: .java}
-// 1. define data source
-TileDataSource vectorTileDataSource = new HTTPTileDataSource(0, 14, "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN");
 
-// 2. Create style set
-MBVectorTileStyleSet vectorTileStyleSet = new MBVectorTileStyleSet(styleBytes);
-MBVectorTileDecoder vectorTileDecoder = new MBVectorTileDecoder(vectorTileStyleSet);
-
-// 3. Create layer and add to map
-
-TileLayer baseLayer = new VectorTileLayer(vectorTileDataSource, vectorTileDecoder);
-mapView.getLayers().add(baseLayer);
-```
-
-</div>
-<div id="n4">
-``` {.brush: .csharp}
-// 1. define data source
-var vectorTileDataSource = new HTTPTileDataSource(0, 14, "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN");
-
-// 2. Create style set
-var styleBytes = AssetUtils.LoadBytes("osmbright.zip");
-var vectorTileStyleSet = new MBVectorTileStyleSet(styleBytes);
-var vectorTileDecoder = new MBVectorTileDecoder(vectorTileStyleSet);
-
-// 3. Create layer and add to map
-
-var baseLayer = new VectorTileLayer(vectorTileDataSource, vectorTileDecoder);
-mapView.Layers.Add(baseLayer);
-```
-
-</div>
-</div>
 **b) Web (HTTP) tiles as RasterTileLayer**
 
 For online raster tiles you can use any common web tiles in PNG or JPG
@@ -1774,56 +1889,73 @@ list](/guides/raster-tile-sources) .
 Following tags are supported in URL definition: **zoom, x, y, xflipped,
 yflipped, quadkey**.
 
-<div id="tabs5">
-<ul>
-<li>
-<a href="#i5"><span>iOS ObjC</span></a></li>
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
+  </ul>
 
-<li>
-<a href="#a5"><span>Android Java</span></a></li>
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}
 
-<li>
-<a href="#n5"><span>.NET C\#</span></a></li>
+  
+        TileDataSource baseRasterTileDataSource = new HTTPTileDataSource(1, 19, "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US");
 
-</ul>
-<div id="i5">
-``` {.brush: .objc}
-// Initialize a OSM raster data source from MapQuest Open Tiles
-NTHTTPTileDataSource* baseRasterTileDataSource = [[NTHTTPTileDataSource alloc] initWithMinZoom:0 maxZoom:19 baseURL:@"http://otile1.mqcdn.com/tiles/1.0.0/osm/{zoom}/{x}/{y}.png"];
+        TileLayer baseLayer = new RasterTileLayer(baseRasterTileDataSource);
 
-// Initialize a raster layer with the previous data source
-NTRasterTileLayer* rasterLayer = [[NTRasterTileLayer alloc] initWithDataSource:baseRasterTileDataSource];
+        mapView.getLayers().add(baseLayer);
 
-// Add the previous raster layer to the map
-[[mapView getLayers] add:rasterLayer];
-```
+  {% endhighlight %}
+  </div>
 
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  
+      // Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
+      var baseRasterTileDataSource = new HTTPTileDataSource(1, 19, "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US");
+
+      // create layer and add to map
+      var baseLayer = new RasterTileLayer(baseRasterTileDataSource);
+      MapView.Layers.Add(baseLayer);
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  NTHTTPTileDataSource* baseRasterTileDataSource = [[NTHTTPTileDataSource alloc] initWithMinZoom:0 maxZoom:19 baseURL:@"http://otile1.mqcdn.com/tiles/1.0.0/osm/{zoom}/{x}/{y}.png"];
+    
+    // Initialize a raster layer with the previous data source
+    NTRasterTileLayer* rasterLayer = [[NTRasterTileLayer alloc] initWithDataSource:baseRasterTileDataSource];
+    
+    // Add the previous raster layer to the map
+    [[mapView getLayers] add:rasterLayer];
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  COMING SOON...
+
+  {% endhighlight %}
+  </div>
+  
 </div>
-<div id="a5">
-``` {.brush: .java}
 
-// Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
-TileDataSource baseRasterTileDataSource = new HTTPTileDataSource(1, 19, "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US");
-
-TileLayer baseLayer = new RasterTileLayer(baseRasterTileDataSource);
-
-mapView.getLayers().add(baseLayer);
-```
-
-</div>
-<div id="n5">
-``` {.brush: .csharp}
-
-// Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
-var baseRasterTileDataSource = new HTTPTileDataSource(1, 19, "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US");
-
-// create layer and add to map
-var baseLayer = new RasterTileLayer(baseRasterTileDataSource);
-mapView.Layers.Add(baseLayer);
-```
-
-</div>
-</div>
 ## 3. Application-defined vector overlay {#application-defined-vector-data}
 
 Carto SDK has in-memory datasources where application can add vector
