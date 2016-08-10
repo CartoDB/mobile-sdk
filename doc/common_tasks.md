@@ -1991,38 +1991,26 @@ in the database, then request to original data source is skipped. Can be
 used for both raster and vector tiles. The data source takes original
 source’s expires headers into account.
 
-<div id="tabs6">
-<ul>
-<li>
-<a href="#i6"><span>iOS ObjC</span></a></li>
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
+  </ul>
 
-<li>
-<a href="#a6"><span>Android Java</span></a></li>
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}
 
-<li>
-<a href="#n6"><span>.NET C\#</span></a></li>
-
-</ul>
-<div id="i6">
-``` {.brush: .objc}
-// Initialize a OSM raster data source from MapQuest Open Tiles
-NTHTTPTileDataSource* baseRasterTileDataSource = [[NTHTTPTileDataSource alloc] initWithMinZoom:0 maxZoom:19 baseURL:@"http://otile1.mqcdn.com/tiles/1.0.0/osm/{zoom}/{x}/{y}.png"];
-
-// Create persistent cache for the given data source  
-NTPersistentCacheTileDataSource* cachedRasterTileDataSource = [[NTPersistentCacheTileDataSource alloc] initWithDataSource:baseRasterTileDataSource databasePath:[NTAssetUtils calculateWritablePath:@"mycache.db"]];
-
-// Initialize a raster layer with the previous data source
-NTRasterTileLayer* rasterLayer = [[NTRasterTileLayer alloc] initWithDataSource:cachedRasterTileDataSource];
-
-// Add the previous raster layer to the map
-[[self.mapView getLayers] add:rasterLayer];
-```
-
-</div>
-<div id="a6">
-``` {.brush: .java}
-
-// Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
+  // Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
 TileDataSource baseRasterTileDataSource = new HTTPTileDataSource(1, 19, "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US");
 
 // Add persistent caching datasource, tiles will be stored locally on persistent storage
@@ -2032,28 +2020,55 @@ PersistentCacheTileDataSource cachedDataSource =
 // Create layer and add to map
 TileLayer baseLayer = new RasterTileLayer(cachedDataSource);
 mapView.getLayers().add(baseLayer);
-```
 
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  // Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
+  var baseRasterTileDataSource = new HTTPTileDataSource(1, 19, "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US");
+
+  // Add persistent caching datasource, tiles will be stored locally on persistent storage
+  // fileDir must be a directory where files can be written - this is platform-specific
+  var cachedDataSource = new PersistentCacheTileDataSource(baseRasterTileDataSource, fileDir+"/mapcache.db");
+
+  // create layer and add to map
+  var baseLayer = new RasterTileLayer(cachedDataSource);
+  MapView.Layers.Add(baseLayer);
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  // Initialize a OSM raster data source from MapQuest Open Tiles
+  NTHTTPTileDataSource* baseRasterTileDataSource = [[NTHTTPTileDataSource alloc] initWithMinZoom:0 maxZoom:19 baseURL:@"http://otile1.mqcdn.com/tiles/1.0.0/osm/{zoom}/{x}/{y}.png"];
+
+  // Create persistent cache for the given data source  
+  NTPersistentCacheTileDataSource* cachedRasterTileDataSource = [[NTPersistentCacheTileDataSource alloc] initWithDataSource:baseRasterTileDataSource databasePath:[NTAssetUtils calculateWritablePath:@"mycache.db"]];
+
+  // Initialize a raster layer with the previous data source
+  NTRasterTileLayer* rasterLayer = [[NTRasterTileLayer alloc] initWithDataSource:cachedRasterTileDataSource];
+
+  // Add the previous raster layer to the map
+  [[self.mapView getLayers] add:rasterLayer];
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  COMING SOON...
+
+  {% endhighlight %}
+  </div>
+  
 </div>
-<div id="n6">
-``` {.brush: .csharp}
 
-// Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
-var baseRasterTileDataSource = new HTTPTileDataSource(1, 19, "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US");
-
-// Add persistent caching datasource, tiles will be stored locally on persistent storage
-// fileDir must be a directory where files can be written - this is platform-specific
-var cachedDataSource = 
-  new PersistentCacheTileDataSource(baseRasterTileDataSource, fileDir+"/mapcache.db");
-
-
-// create layer and add to map
-var baseLayer = new RasterTileLayer(cachedDataSource);
-mapView.Layers.Add(baseLayer);
-```
-
-</div>
-</div>
 -   **CompressedCacheTileDataSource**
 
 An in-memory cache data source. Though layers also cache tiles, the
@@ -2158,341 +2173,406 @@ Following are steps to implement **single map package** downloading
 
 * **Initialize CartoPackageManager**
 
-<div id="tabs1">
-  <ul>
-    <li><a href="#i1"><span>iOS ObjC</span></a></li>
-    <li><a href="#a1"><span>Android Java</span></a></li>
-    <li><a href="#n1"><span>.NET C#</span></a></li>
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
   </ul>
-<div id="i1">
-<pre class="brush: objc">
-    // Register license, this must be done before PackageManager can be used!
-    [NTMapView registerLicense:"YOUR_LICENSE_HERE"];
 
-    // Create folder for package manager files. Package manager needs persistent writable folder.
-	NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask,YES);
-	NSString* appSupportDir = [paths objectAtIndex: 0];
-	NSString* packagesDir = [appSupportDir stringByAppendingString:@"packages"];
-	NSError *error;
-	[[NSFileManager defaultManager] createDirectoryAtPath:packagesDir withIntermediateDirectories:NO attributes:nil error:&error];
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}
 
-	// Create package manager and package manager listener
-	// we had defined packageManager and packageManagerListener already, as properties
-	// currently the only package data source is nutiteq.mbstreets, it has OpenStreetMap global data
-	_packageManager = [[NTCartoPackageManager alloc] initWithSource:@"nutiteq.mbstreets" dataFolder:packagesDir];
-    [_packageManager start];
-</pre>
-</div>
-<div id="a1">
-<pre class="brush: java">
- // Register license, this must be done before PackageManager can be used!
- MapView.registerLicense("YOUR_LICENSE_HERE", getApplicationContext());
-		
- // Create package manager
- File packageFolder = new File(getApplicationContext().getExternalFilesDir(null), "mappackages");
- if (!(packageFolder.mkdirs() || packageFolder.isDirectory())) {
-    Log.e(Const.LOG_TAG, "Could not create package folder!");
- }
- packageManager = new CartoPackageManager("nutiteq.mbstreets", packageFolder.getAbsolutePath());
- packageManager.start();
+          // Register license, this must be done before PackageManager can be used!
+        MapView.registerLicense("YOUR_LICENSE_HERE", getApplicationContext());
 
-</pre>
-</div>
-<div id="n1">
-<pre class="brush: csharp">
- // 1) Android ONLY: Register license, this must be done before PackageManager can be used!
- MapView.RegisterLicense("YOUR-NUTITEQ-LICENSE", ApplicationContext);
- 
- // Create/find folder for packages
- var packageFolder = new File (GetExternalFilesDir(null), "packages");
- if (!(packageFolder.Mkdirs() || packageFolder.IsDirectory)) {
-   Log.Fatal("Could not create package folder!");
- }
+        // Create package manager
+        File packageFolder = new File(getApplicationContext().getExternalFilesDir(null), "mappackages");
+        if (!(packageFolder.mkdirs() || packageFolder.isDirectory())) {
+            Log.e(Const.LOG_TAG, "Could not create package folder!");
+        }
+        CartoPackageManager packageManager = null;
+        try {
+            packageManager = new CartoPackageManager("nutiteq.mbstreets", packageFolder.getAbsolutePath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        packageManager.start();
 
+  {% endhighlight %}
+  </div>
 
- // 2) iOS ONLY: Register license, this must be done before PackageManager can be used!
- MapView.RegisterLicense("YOUR-NUTITEQ-LICENSE");
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
 
- // Find folder for packages
- var paths = NSSearchPath.GetDirectories (NSSearchPathDirectory.ApplicationSupportDirectory, NSSearchPathDomain.User);
- var packageFolder = paths [0] + "packages";
- NSFileManager.DefaultManager.CreateDirectory (packageFolder, true, null);
+      // 1) Android: Register license, this must be done before PackageManager can be used!
+      Carto.Ui.MapView.RegisterLicense("YOUR-NUTITEQ-LICENSE", ApplicationContext);
 
-// Following code is identical for all platforms        
+      // Create/find folder for packages
+      var packageFolder = new File(GetExternalFilesDir(null), "packages");
+      if (!(packageFolder.Mkdirs() || packageFolder.IsDirectory))
+      {
+        Log.Fatal("Could not create package folder!");
+      }
 
-// Create package manager
+      // 1) iOS: Register license, this must be done before PackageManager can be used!
+      Carto.Ui.MapView.RegisterLicense("YOUR-NUTITEQ-LICENSE");
 
-// define PackageManager listener, definition is in same class above
-var packageManager = new CartoPackageManager("nutiteq.mbstreets", packageFolder);
-packageManager.PackageManagerListener = new PackageListener(packageManager);
+      // Find folder for packages
+      var paths = NSSearchPath.GetDirectories(NSSearchPathDirectory.ApplicationSupportDirectory, NSSearchPathDomain.User);
+      var packageFolder = paths[0] + "packages";
+      NSFileManager.DefaultManager.CreateDirectory(packageFolder, true, null);
 
-// Download new package list only if it is older than 24h
-// Note: this is only needed if pre-made packages are used
-if (packageManager.ServerPackageListAge > 24 * 60 * 60) {
-  packageManager.StartPackageListDownload ();
-}
+      // Following code is identical for all platforms        
 
-// Start manager - mandatory
-packageManager.Start ();
+      // Create package manager
 
-</pre>
-</div>
+      // define PackageManager listener, definition is in same class above
+      var packageManager = new CartoPackageManager("nutiteq.mbstreets", packageFolder);
+      var downloadedPackage = "";
+      packageManager.PackageManagerListener = new PackageListener(packageManager, downloadedPackage);
+
+      // Download new package list only if it is older than 24h
+      // Note: this is only needed if pre-made packages are used
+      if (packageManager.ServerPackageListAge > 24 * 60 * 60)
+      {
+        packageManager.StartPackageListDownload();
+      }
+
+      // Start manager - mandatory
+      packageManager.Start();
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+      // Create folder for package manager files. Package manager needs persistent writable folder.
+    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask,YES);
+    NSString* appSupportDir = [paths objectAtIndex: 0];
+    NSString* packagesDir = [appSupportDir stringByAppendingString:@"packages"];
+    NSError *error;
+    [[NSFileManager defaultManager] createDirectoryAtPath:packagesDir withIntermediateDirectories:NO attributes:nil error:&error];
+    
+    // Create package manager and package manager listener
+    // we had defined packageManager and packageManagerListener already, as properties
+    // currently the only package data source is nutiteq.mbstreets, it has OpenStreetMap global data
+    NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"nutiteq.mbstreets" dataFolder:packagesDir];
+    [packageManager start];
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  COMING SOON...
+
+  {% endhighlight %}
+  </div>
+  
 </div>
 
 * **Implement and set PackageManagerListener** 
 
-<div id="tabs2">
-  <ul>
-    <li><a href="#i2"><span>iOS ObjC</span></a></li>
-    <li><a href="#a2"><span>Android Java</span></a></li>
-    <li><a href="#n2"><span>.NET C#</span></a></li>
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
   </ul>
-<div id="i2">
-<pre class="brush: objc">
 
-    // 1. define own listener object
-    
-/*
- * Package manager listener. Listener is notified about asynchronous events
- * about packages.
- */
-@interface PackageManagerListener : NTPackageManagerListener
-
-- (void)onPackageListUpdated;
-- (void)onPackageListFailed;
-- (void)onPackageUpdated:(NSString*)packageId version:(int)version;
-- (void)onPackageCancelled:(NSString*)packageId version:(int)version;
-- (void)onPackageFailed:(NSString*)packageId version:(int)version errorType:(NTPackageErrorType)errorType;
-- (void)onPackageStatusChanged:(NSString*)packageId version:(int)version status:(NTPackageStatus*)status;
-
-@property(readonly, atomic) NSHashTable* packageManagerControllers;
-
-@end
-
-
-    // 2. create listener implementation
-    
-    
-@implementation PackageManagerListener
-
-
-- (void)onPackageListUpdated
-{
-  // called when package list is downloaded
-  // now you can start downloading packages
- 
-}
-
-- (void)onPackageListFailed
-{
-  // called when package list download is failed (network connection)
-}
-
-- (void)onPackageUpdated:(NSString*)packageId version:(int)version
-{
-  // called when package is updated
-}
-
-- (void)onPackageCancelled:(NSString*)packageId version:(int)version
-{
-  // called when you called cancel package download
-}
-
-- (void)onPackageFailed:(NSString*)packageId version:(int)version errorType:(NTPackageErrorType)errorType
-{
- // error in package download
-}
-
-- (void)onPackageStatusChanged:(NSString*)packageId version:(int)version status:(NTPackageStatus*)status
-{
-  // a portion of package is downloaded. Update your progress bar here.
-}
-
-@end
-
-    // following to your Controller class:
-
-    // 3. create listener object instance
-	_packageManagerListener = [[PackageManagerListener alloc] init];
-
-	// 4. Register this controller with listener to receive notifications about events
-	[_packageManagerListener addPackageManagerController:self];
-
-	// 5. Attach package manager listener
-	[_packageManager setPackageManagerListener:_packageManagerListener];
-</pre>
-</div>
-<div id="a2">
-<pre class="brush: java">
-   packageManager.setPackageManagerListener(new PackageListener());
-   packageManager.startPackageListDownload();
-   
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}
    
    // PackageListener.java :
-	/**
-	 * Listener for package manager events.
-	 */
-	class PackageListener extends PackageManagerListener {
-		@Override
-		public void onPackageListUpdated() {
-		  // called when package list is downloaded
-		  // now you can start downloading packages
-		}
+   /**
+   * Listener for package manager events.
+   */
+  class PackageListener extends PackageManagerListener {
+    @Override
+    public void onPackageListUpdated() {
+      // called when package list is downloaded
+      // now you can start downloading packages
+    }
 
-		@Override
-		public void onPackageListFailed() {
-		  // Failed to download package list
-		}
+    @Override
+    public void onPackageListFailed() {
+      // Failed to download package list
+    }
 
-		@Override
-		public void onPackageStatusChanged(String id, int version, PackageStatus status) {
-		  // a portion of package is downloaded. Update your progress bar here.
-		}
+    @Override
+    public void onPackageStatusChanged(String id, int version, PackageStatus status) {
+      // a portion of package is downloaded. Update your progress bar here.
+    }
 
-		@Override
-		public void onPackageCancelled(String id, int version) {
-		  // called when you called cancel package download
-		}
+    @Override
+    public void onPackageCancelled(String id, int version) {
+      // called when you called cancel package download
+    }
 
-		@Override
-		public void onPackageUpdated(String id, int version) {
-		  // called when package is updated
-		}
+    @Override
+    public void onPackageUpdated(String id, int version) {
+      // called when package is updated
+    }
 
-		@Override
-		public void onPackageFailed(String id, int version, PackageErrorType errorType) {
-		  // Failed to download package " + id + "/" + version
-		}
-	}
-</pre>
+    @Override
+    public void onPackageFailed(String id, int version, PackageErrorType errorType) {
+      // Failed to download package " + id + "/" + version
+    }
+  }
+
+  // And the following to your activity:
+
+  packageManager.setPackageManagerListener(new PackageListener());
+  packageManager.startPackageListDownload();
+   
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  public class PackageListener : PackageManagerListener
+  {
+    private PackageManager _packageManager;
+
+    public PackageListener (PackageManager packageManager)
+    {
+      _packageManager = packageManager;
+    }
+
+    public override void OnPackageListUpdated ()
+    {
+      // called when package list is downloaded
+      // now you can start downloading packages
+      Log.Debug ("OnPackageListUpdated");
+
+      // to make sure that package list is updated, full package download is called here
+      if (_packageManager.GetLocalPackage ("EE") == null) {
+        _packageManager.StartPackageDownload ("EE");
+      }
+       
+    }
+
+    public override void OnPackageListFailed ()
+    {
+      Log.Debug ("OnPackageListFailed");
+      // Failed to download package list
+    }
+
+    public override void OnPackageStatusChanged (string id, int version, PackageStatus status)
+    {
+      // a portion of package is downloaded. Update your progress bar here.
+      // Notice that the view and SDK are in different threads, so data copy id needed
+      Log.Debug ("OnPackageStatusChanged " + id + " ver " + version + " progress " + status.Progress);
+    }
+
+    public override void OnPackageCancelled (string id, int version)
+    {
+      // called when you called cancel package download
+      Log.Debug ("OnPackageCancelled");
+    }
+
+    public override void OnPackageUpdated (string id, int version)
+    {
+      // called when package is updated
+      Log.Debug ("OnPackageUpdated");
+    }
+
+    public override void OnPackageFailed (string id, int version, PackageErrorType errorType)
+    {
+      // Failed to download package " + id + "/" + version
+      Log.Debug ("OnPackageFailed: " + errorType);
+    }
+  }
+
+    // And add the following to your activity/controller:
+
+    packageManager.PackageManagerListener = new PackageListener(packageManager);
+    if (packageManager.ServerPackageListAge > 24 * 60 * 60) {
+        packageManager.StartPackageListDownload ();
+    }
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  /*
+   * Package manager listener. Listener is notified about asynchronous events
+   * about packages.
+   */
+  @interface PackageManagerListener : NTPackageManagerListener
+
+  - (void)onPackageListUpdated;
+  - (void)onPackageListFailed;
+  - (void)onPackageUpdated:(NSString*)packageId version:(int)version;
+  - (void)onPackageCancelled:(NSString*)packageId version:(int)version;
+  - (void)onPackageFailed:(NSString*)packageId version:(int)version errorType:(NTPackageErrorType)errorType;
+  - (void)onPackageStatusChanged:(NSString*)packageId version:(int)version status:(NTPackageStatus*)status;
+
+  @property(readonly, atomic) NSHashTable* packageManagerControllers;
+
+  @end
+
+  // 2. create listener implementation
+
+  @implementation PackageManagerListener
+
+  - (void)onPackageListUpdated
+  {
+      // called when package list is downloaded
+      // now you can start downloading packages
+      
+  }
+
+  - (void)onPackageListFailed
+  {
+      // called when package list download is failed (network connection)
+  }
+
+  - (void)onPackageUpdated:(NSString*)packageId version:(int)version
+  {
+      // called when package is updated
+  }
+
+  - (void)onPackageCancelled:(NSString*)packageId version:(int)version
+  {
+      // called when you called cancel package download
+  }
+
+  - (void)onPackageFailed:(NSString*)packageId version:(int)version errorType:(NTPackageErrorType)errorType
+  {
+      // error in package download
+  }
+
+  - (void)onPackageStatusChanged:(NSString*)packageId version:(int)version status:(NTPackageStatus*)status
+  {
+      // a portion of package is downloaded. Update your progress bar here.
+  }
+
+  @end
+  
+  // And the following to your Controller class:
+
+    // 3. create listener object instance
+  _packageManagerListener = [[PackageManagerListener alloc] init];
+
+  // 4. Register this controller with listener to receive notifications about events
+  [_packageManagerListener addPackageManagerController:self];
+
+  // 5. Attach package manager listener
+  [_packageManager setPackageManagerListener:_packageManagerListener];
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  COMING SOON...
+
+  {% endhighlight %}
+  </div>
+  
 </div>
-<div id="n2">
-<pre class="brush: csharp">
-
-// to your main class:
-packageManager.PackageManagerListener = new PackageListener(packageManager);
-if (packageManager.ServerPackageListAge > 24 * 60 * 60) {
-		packageManager.StartPackageListDownload ();
-}
-
-// PackageListener.cs:
-
-using Carto.PackageManager;
-using Carto.Utils;
-
-namespace HelloMap
-{
-
-	public class PackageListener : PackageManagerListener
-	{
-		private PackageManager _packageManager;
-
-		public PackageListener (PackageManager packageManager)
-		{
-			_packageManager = packageManager;
-		}
-
-		public override void OnPackageListUpdated ()
-		{
-			// called when package list is downloaded
-			// now you can start downloading packages
-			Log.Debug ("OnPackageListUpdated");
-
-			// to make sure that package list is updated, full package download is called here
-			if (_packageManager.GetLocalPackage ("EE") == null) {
-				_packageManager.StartPackageDownload ("EE");
-			}
-			 
-		}
-
-		public override void OnPackageListFailed ()
-		{
-			Log.Debug ("OnPackageListFailed");
-			// Failed to download package list
-		}
-
-		public override void OnPackageStatusChanged (string id, int version, PackageStatus status)
-		{
-			// a portion of package is downloaded. Update your progress bar here.
-			// Notice that the view and SDK are in different threads, so data copy id needed
-			Log.Debug ("OnPackageStatusChanged " + id + " ver " + version + " progress " + status.Progress);
-		}
-
-		public override void OnPackageCancelled (string id, int version)
-		{
-			// called when you called cancel package download
-			Log.Debug ("OnPackageCancelled");
-		}
-
-		public override void OnPackageUpdated (string id, int version)
-		{
-			// called when package is updated
-			Log.Debug ("OnPackageUpdated");
-		}
-
-		public override void OnPackageFailed (string id, int version, PackageErrorType errorType)
-		{
-			// Failed to download package " + id + "/" + version
-			Log.Debug ("OnPackageFailed: " + errorType);
-		}
-	}
-}
-
-</pre>
-</div>
-</div>
-
 
 *  **Download of country package**
 
-Following starts download of map of Estonia. See [list of available packages](/guides/packages) for available countries. Generally packages are for ISO 2-letter administrative country codes, with two exceptions:
+The following starts download of map of Estonia. See [list of available packages](/guides/packages) for available countries. Generally packages are for ISO 2-letter administrative country codes, with two exceptions:
 
-* Some bigger countries: USA, Canada, Russia, Germany and France have one level  subdivision 
+* Some bigger countries: USA, Canada, Russia, Germany and France have one level of subdivision 
 * Some countries (UK, Spain) have are both options: whole country, and subdivisions
 
-
-<div id="tabs3">
-  <ul>
-    <li><a href="#i3"><span>iOS ObjC</span></a></li>
-    <li><a href="#a3"><span>Android Java</span></a></li>
-    <li><a href="#n3"><span>.NET C#</span></a></li>
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
   </ul>
-<div id="i3">
-<pre class="brush: objc">
-- (void)onPackageListUpdated
-{
-  // called when package list is downloaded
-  // now you can start downloading packages
- [_packageManager startPackageDownload:@"EE"];
-}
-</pre>
-</div>
-<div id="a3">
-<pre class="brush: java">
-@Override
-public void onPackageListUpdated() {
-  // called when package list is downloaded
-  // now you can start downloading packages
-  packageManager.startPackageDownload("EE");
-}
-</pre>
-</div>
-<div id="n3">
-<pre class="brush: csharp">
-public override void OnPackageListUpdated ()
-{
-	// called when package list is downloaded
-	// now you can start downloading packages
-	Log.Debug ("OnPackageListUpdated");
 
-	// to make sure that package list is updated, full package download is called here
-	if (_packageManager.GetLocalPackage ("EE") == null) {
-		_packageManager.StartPackageDownload ("EE");
-	}
- 
-}
-</pre>
-</div>
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}
+
+  @Override
+  public void onPackageListUpdated() {
+    // called when package list is downloaded
+    // now you can start downloading packages
+    packageManager.startPackageDownload("EE");
+  }
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  public override void OnPackageListUpdated ()
+  {
+    // called when package list is downloaded
+    // now you can start downloading packages
+    Log.Debug ("OnPackageListUpdated");
+
+    // to make sure that package list is updated, full package download is called here
+    if (_packageManager.GetLocalPackage ("EE") == null) {
+      _packageManager.StartPackageDownload ("EE");
+    }
+  }
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  - (void)onPackageListUpdated
+  {
+    // called when package list is downloaded
+    // now you can start downloading packages
+   [_packageManager startPackageDownload:@"EE"];
+  }
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  COMING SOON...
+
+  {% endhighlight %}
+  </div>
+  
 </div>
 
 *  **Download of bounding box**
@@ -2503,115 +2583,174 @@ Bouding box is defined in format **bbox(lonMin,latMin,lonMax,latMax)**. You can 
 
 This download does not require PackageList download, so you can start it right away when PackageManger is created.
 
-<div id="tabs5">
-  <ul>
-    <li><a href="#i5"><span>iOS ObjC</span></a></li>
-    <li><a href="#a5"><span>Android Java</span></a></li>
-    <li><a href="#n5"><span>.NET C#</span></a></li>
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
   </ul>
-<div id="i5">
-<pre class="brush: objc">
+
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}
+
+  // London (about 30MB)
+  String bbox = "bbox(-0.8164,51.2382,0.6406,51.7401)"; 
+  if (packageManager.getLocalPackage(bbox) == null) {
+    packageManager.startPackageDownload (bbox);
+  }
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  // London (about 30MB)
+  var bbox = "bbox(-0.8164,51.2382,0.6406,51.7401)"; 
+  if (packageManager.GetLocalPackage(bbox) == null) {
+    packageManager.StartPackageDownload (bbox);
+  }
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
   // get London greater area, near maximum area package size
  [_packageManager startPackageDownload:@"bbox(-0.8164,51.2383,0.6406,51.7402)"];
 
-</pre>
-</div>
-<div id="a5">
-<pre class="brush: java">
+  {% endhighlight %}
+  </div>
 
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
 
-// London (about 30MB)
-String bbox = "bbox(-0.8164,51.2382,0.6406,51.7401)"; 
-if (packageManager.getLocalPackage(bbox) == null) {
-	packageManager.startPackageDownload (bbox);
-}
-</pre>
-</div>
-<div id="n5">
-<pre class="brush: csharp">
+  COMING SOON...
 
-// London (about 30MB)
-var bbox = "bbox(-0.8164,51.2382,0.6406,51.7401)"; 
-if (packageManager.GetLocalPackage(bbox) == null) {
-	packageManager.StartPackageDownload (bbox);
-}
-</pre>
-</div>
+  {% endhighlight %}
+  </div>
+  
 </div>
 
 * **Add datasource with offline map**
 
 There is special Vector Tile Data Source: **PackageManagerTileDataSource** which needs to be used.
 
-<div id="tabs4">
-  <ul>
-    <li><a href="#i4"><span>iOS ObjC</span></a></li>
-    <li><a href="#a4"><span>Android Java</span></a></li>
-    <li><a href="#n4"><span>.NET C#</span></a></li>
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
   </ul>
-<div id="i4">
-<pre class="brush: objc">
-	// Load vector tile styleset
-	NSString* styleAssetName = @"osmbright.zip";
 
-	NTUnsignedCharVector *vectorTileStyleSetData = [NTAssetUtils LoadBytes:styleAssetName];
-	NTMBVectorTileStyleSet *vectorTileStyleSet = [[NTMBVectorTileStyleSet alloc] initWithData:vectorTileStyleSetData];
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}
 
-	// Create vector tile decoder using the styleset and update style parameters
-	NTMBVectorTileDecoder* vectorTileDecoder = [[NTMBVectorTileDecoder alloc] initWithStyleSet:vectorTileStyleSet];
-	[vectorTileDecoder setStyleStringParameter:@"lang" value:@"en"];
-	
-	// Optional: enable 3D elements
-    [self.vectorTileDecoder setStyleBoolParameter:@"buildings3d" value:YES];
-    [self.vectorTileDecoder setStyleStringParameter:@"markers3d" value:@"1"];
-		
-	// Create tile data source from PackageManager
-	NTTileDataSource* vectorTileDataSource = [[NTPackageManagerTileDataSource alloc] initWithPackageManager:_packageManager];
-	
-	// Create vector tile layer, using previously created data source and decoder
-	NTVectorTileLayer* baseLayer = [[NTVectorTileLayer alloc] initWithDataSource:vectorTileDataSource decoder:self.vectorTileDecoder];
+        // Create layer with vector styling
+        BinaryData styleBytes = AssetUtils.loadAsset("osmbright.zip");
+        ZippedAssetPackage assetPackage = new ZippedAssetPackage(styleBytes);
 
-	// Add vector tile layer as first layer
-	[[self getLayers] insert:0 layer:baseLayer];
-</pre>
-</div>
-<div id="a4">
-<pre class="brush: java">
- // Create layer with vector styling
-UnsignedCharVector styleBytes = AssetUtils.loadBytes("osmbright.zip");
-MBVectorTileDecoder vectorTileDecoder = null;
-if (styleBytes != null){
+        MBVectorTileDecoder vectorTileDecoder = null;
 
-// Create style set
-  MBVectorTileStyleSet vectorTileStyleSet = new MBVectorTileStyleSet(styleBytes);
-  vectorTileDecoder = new MBVectorTileDecoder(vectorTileStyleSet);
-}
+        if (styleBytes != null) {
+            // Create style set
+            CompiledStyleSet vectorTileStyleSet = new CompiledStyleSet(assetPackage);
+            vectorTileDecoder = new MBVectorTileDecoder(vectorTileStyleSet);
+        }
 
-// create offline datasource from Package Manager
-PackageManagerTileDataSource dataSource = new PackageManagerTileDataSource(packageManager);
-       
-VectorTileLayer baseLayer = new VectorTileLayer(vectorTileDataSource, vectorTileDecoder);
- 
-mapView.getLayers().add(baseLayer);
-</pre>
-</div>
-<div id="n4">
-<pre class="brush: csharp">
-// define styling for vector map
-UnsignedCharVector styleBytes = AssetUtils.LoadBytes("osmbright.zip");
-MBVectorTileDecoder vectorTileDecoder = null;
-if (styleBytes != null) {
-	// Create style set
-	MBVectorTileStyleSet vectorTileStyleSet = new MBVectorTileStyleSet (styleBytes);
-	vectorTileDecoder = new MBVectorTileDecoder (vectorTileStyleSet);
-} else {
-	Log.Error ("Failed to load style data");
-}
+        // Create offline datasource from Package Manager
+        PackageManagerTileDataSource dataSource = new PackageManagerTileDataSource(packageManager);
 
-var baseLayer = new VectorTileLayer(new PackageManagerTileDataSource(packageManager),vectorTileDecoder);
-mapView.Layers.Add(baseLayer);
-</pre>
-</div>
+        VectorTileLayer baseLayer = new VectorTileLayer(dataSource, vectorTileDecoder);
+
+        mapView.getLayers().add(baseLayer);
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+      // Define styling for vector map
+      BinaryData styleBytes = AssetUtils.LoadAsset("osmbright.zip");
+      ZippedAssetPackage assetPackage = new ZippedAssetPackage(styleBytes);
+
+      MBVectorTileDecoder vectorTileDecoder = null;
+
+      if (styleBytes != null)
+      {
+        // Create style set
+        CompiledStyleSet vectorTileStyleSet = new CompiledStyleSet(assetPackage);
+        vectorTileDecoder = new MBVectorTileDecoder(vectorTileStyleSet);
+      }
+      else {
+        Log.Error("Failed to load style data");
+      }
+
+      var baseLayer = new VectorTileLayer(new PackageManagerTileDataSource(packageManager), vectorTileDecoder);
+      MapView.Layers.Add(baseLayer);
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+    // Load vector tile styleset
+    NSString* styleAssetName = @"osmbright.zip";
+    
+    NTBinaryData *vectorTileStyleSetData = [NTAssetUtils loadAsset:styleAssetName];
+    NTZippedAssetPackage * package = [[NTZippedAssetPackage alloc]initWithZipData:vectorTileStyleSetData];
+    
+    NTCompiledStyleSet *vectorTileStyleSet = [[NTCompiledStyleSet alloc] initWithAssetPackage:package];
+    
+    // Create vector tile decoder using the styleset and update style parameters
+    NTMBVectorTileDecoder* vectorTileDecoder = [[NTMBVectorTileDecoder alloc] initWithCompiledStyleSet:vectorTileStyleSet];
+    [vectorTileDecoder setStyleParameter:@"lang" value:@"en"];
+    
+    // Optional: enable 3D elements
+    [vectorTileDecoder setStyleParameter:@"buildings3d" value:@"YES"];
+    [vectorTileDecoder setStyleParameter:@"markers3d" value:@"1"];
+    
+    // Create tile data source from PackageManager
+    NTTileDataSource* vectorTileDataSource = [[NTPackageManagerTileDataSource alloc] initWithPackageManager:_packageManager];
+    
+    // Create vector tile layer, using previously created data source and decoder
+    NTVectorTileLayer* baseLayer = [[NTVectorTileLayer alloc] initWithDataSource:vectorTileDataSource decoder:self.vectorTileDecoder];
+    
+    // Add vector tile layer as first layer
+    [[mapView getLayers] insert:0 layer:baseLayer];
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  COMING SOON...
+
+  {% endhighlight %}
+  </div>
+  
 </div>
 
 
