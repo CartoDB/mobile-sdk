@@ -7,8 +7,10 @@
 #ifndef _CARTO_ROUTING_ROUTEFINDER_H_
 #define _CARTO_ROUTING_ROUTEFINDER_H_
 
-#include "RoutingObjects.h"
-#include "RoutingGraph.h"
+#include "Query.h"
+#include "Instruction.h"
+#include "Result.h"
+#include "Graph.h"
 
 #include <queue>
 #include <map>
@@ -18,18 +20,18 @@
 namespace carto { namespace routing {
     class RouteFinder {
     public:
-        explicit RouteFinder(std::shared_ptr<RoutingGraph> graph) : _graph(std::move(graph)) { }
+        explicit RouteFinder(std::shared_ptr<Graph> graph) : _graph(std::move(graph)) { }
 
-        RoutingResult find(const RoutingQuery& query) const;
+        Result find(const Query& query) const;
 
     private:
         struct SearchNode {
-            RoutingGraph::NodeId nodeId;
-            RoutingGraph::NodeId prevNodeId;
+            Graph::NodeId nodeId;
+            Graph::NodeId prevNodeId;
             float weight = 0.0f;
 
             SearchNode() = default;
-            SearchNode(RoutingGraph::NodeId nodeId, RoutingGraph::NodeId prevNodeId, float weight) : nodeId(nodeId), prevNodeId(prevNodeId), weight(weight) { }
+            SearchNode(Graph::NodeId nodeId, Graph::NodeId prevNodeId, float weight) : nodeId(nodeId), prevNodeId(prevNodeId), weight(weight) { }
 
             bool operator < (const SearchNode& searchNode) const {
                 return weight > searchNode.weight;
@@ -37,19 +39,19 @@ namespace carto { namespace routing {
         };
 
         struct PathNode {
-            RoutingGraph::NodeId prevNodeId;
-            RoutingGraph::Edge edge;
-            RoutingGraph::NodeId nextNodeId;
+            Graph::NodeId prevNodeId;
+            Graph::Edge edge;
+            Graph::NodeId nextNodeId;
 
             PathNode() = default;
-            PathNode(RoutingGraph::NodeId prevNodeId, const RoutingGraph::Edge& edge, RoutingGraph::NodeId nextNodeId) : prevNodeId(prevNodeId), edge(edge), nextNodeId(nextNodeId) { }
+            PathNode(Graph::NodeId prevNodeId, const Graph::Edge& edge, Graph::NodeId nextNodeId) : prevNodeId(prevNodeId), edge(edge), nextNodeId(nextNodeId) { }
         };
 
         static double calculateGeometryLength(const std::vector<WGSPos>& geometry, double t0, double t1);
 
         static double calculateGreatCircleDistance(const WGSPos& p0, const WGSPos& p1);
 
-        const std::shared_ptr<RoutingGraph> _graph;
+        const std::shared_ptr<Graph> _graph;
     };
 } }
 

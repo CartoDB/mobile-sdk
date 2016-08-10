@@ -5,17 +5,20 @@
 #include "routing/RoutingProxy.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
-#include "routing/RouteFinder.h"
-#include "routing/RoutingGraph.h"
-#include "routing/RoutingObjects.h"
+
+#include <routing/Graph.h>
+#include <routing/Query.h>
+#include <routing/Result.h>
+#include <routing/Instruction.h>
+#include <routing/RouteFinder.h>
 
 namespace carto {
 
     OSRMOfflineRoutingService::OSRMOfflineRoutingService(const std::string& path) :
         _routeFinder()
     {
-        routing::RoutingGraph::Settings graphSettings;
-        auto graph = std::make_shared<routing::RoutingGraph>(graphSettings);
+        routing::Graph::Settings graphSettings;
+        auto graph = std::make_shared<routing::Graph>(graphSettings);
         try {
             if (!graph->import(path)) {
                 throw FileException("Failed to import routing graph", path);

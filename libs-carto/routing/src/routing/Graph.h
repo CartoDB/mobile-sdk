@@ -4,10 +4,10 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_ROUTING_ROUTINGGRAPH_H_
-#define _CARTO_ROUTING_ROUTINGGRAPH_H_
+#ifndef _CARTO_ROUTING_GRAPH_H_
+#define _CARTO_ROUTING_GRAPH_H_
 
-#include "RoutingObjects.h"
+#include "Base.h"
 
 #include <memory>
 #include <mutex>
@@ -22,7 +22,7 @@
 #include <stdext/bitstream.h>
 
 namespace carto { namespace routing {
-    class RoutingGraph {
+    class Graph {
     public:
         struct BlockId {
             int packageId = -1;
@@ -34,7 +34,7 @@ namespace carto { namespace routing {
             bool operator == (const BlockId& blockId) const { return packageId == blockId.packageId && blockIndex == blockId.blockIndex; }
             
             struct Hash {
-                std::size_t operator() (const RoutingGraph::BlockId& blockId) const { return blockId.packageId * 98317 ^ blockId.blockIndex; }
+                std::size_t operator() (const Graph::BlockId& blockId) const { return blockId.packageId * 98317 ^ blockId.blockIndex; }
             };
         };
         
@@ -48,7 +48,7 @@ namespace carto { namespace routing {
             bool operator == (const ElementId& elementId) const { return blockId == elementId.blockId && elementIndex == elementId.elementIndex; }
 
             struct Hash {
-                std::size_t operator() (const RoutingGraph::ElementId& elementId) const { return BlockId::Hash()(elementId.blockId) * 769 ^ elementId.elementIndex; }
+                std::size_t operator() (const Graph::ElementId& elementId) const { return BlockId::Hash()(elementId.blockId) * 769 ^ elementId.elementIndex; }
             };
         };
         
@@ -172,8 +172,8 @@ namespace carto { namespace routing {
             Settings() = default;
         };
 
-        RoutingGraph() = delete;
-        explicit RoutingGraph(const Settings& settings);
+        Graph() = delete;
+        explicit Graph(const Settings& settings);
         
         bool import(const std::string& fileName);
         bool import(const std::shared_ptr<std::ifstream>& file);

@@ -1,4 +1,4 @@
-#include "RoutingGraph.h"
+#include "Graph.h"
 
 #include <cstdint>
 #include <cstddef>
@@ -9,7 +9,7 @@
 #include <utf8.h>
 
 namespace carto { namespace routing {
-    RoutingGraph::RoutingGraph(const Settings& settings) :
+    Graph::Graph(const Settings& settings) :
         _packages(),
         _nodeBlockCache(settings.nodeBlockCacheSize),
         _geometryBlockCache(settings.geometryBlockCacheSize),
@@ -20,7 +20,7 @@ namespace carto { namespace routing {
     {
     }
     
-    bool RoutingGraph::import(const std::string& fileName) {
+    bool Graph::import(const std::string& fileName) {
         auto file = std::make_shared<std::ifstream>();
         file->exceptions(std::ifstream::failbit | std::ifstream::badbit);
 #ifdef _WIN32
@@ -33,7 +33,7 @@ namespace carto { namespace routing {
         return import(file);
     }
 
-    bool RoutingGraph::import(const std::shared_ptr<std::ifstream>& file) {
+    bool Graph::import(const std::shared_ptr<std::ifstream>& file) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
         Package package;
@@ -84,7 +84,7 @@ namespace carto { namespace routing {
         return true;
     }
 
-    RoutingGraph::NodePtr RoutingGraph::getNode(NodeId nodeId) const {
+    Graph::NodePtr Graph::getNode(NodeId nodeId) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
         std::shared_ptr<NodeBlock> nodeBlock;
@@ -95,7 +95,7 @@ namespace carto { namespace routing {
         return NodePtr(nodeBlock, nodeId.elementIndex);
     }
 
-    std::string RoutingGraph::getNodeName(const Node& node) const {
+    std::string Graph::getNodeName(const Node& node) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
         NameId nameId = node.nodeData.nameId;
@@ -107,7 +107,7 @@ namespace carto { namespace routing {
         return nameBlock->names.at(nameId.elementIndex);
     }
 
-    std::vector<WGSPos> RoutingGraph::getNodeGeometry(const Node& node) const {
+    std::vector<WGSPos> Graph::getNodeGeometry(const Node& node) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
         GeometryId geometryId = node.nodeData.geometryId;
@@ -128,7 +128,7 @@ namespace carto { namespace routing {
         return geometry;
     }
 
-    std::vector<RoutingGraph::NearestNode> RoutingGraph::findNearestNode(const WGSPos& pos) const {
+    std::vector<Graph::NearestNode> Graph::findNearestNode(const WGSPos& pos) const {
         static const double DIST_THRESHOLD = 1.01;
         
         std::lock_guard<std::recursive_mutex> lock(_mutex);
@@ -227,7 +227,7 @@ namespace carto { namespace routing {
         return bestNodes;
     }
     
-    std::shared_ptr<RoutingGraph::NodeBlock> RoutingGraph::loadNodeBlock(BlockId blockId) const {
+    std::shared_ptr<Graph::NodeBlock> Graph::loadNodeBlock(BlockId blockId) const {
         if (blockId.packageId == -1) {
             throw std::runtime_error("Bad package id");
         }
@@ -364,7 +364,7 @@ namespace carto { namespace routing {
         return nodeBlock;
     }
 
-    std::shared_ptr<RoutingGraph::GeometryBlock> RoutingGraph::loadGeometryBlock(BlockId blockId) const {
+    std::shared_ptr<Graph::GeometryBlock> Graph::loadGeometryBlock(BlockId blockId) const {
         if (blockId.packageId == -1) {
             throw std::runtime_error("Bad package id");
         }
@@ -414,7 +414,7 @@ namespace carto { namespace routing {
         return geometryBlock;
     }
 
-    std::shared_ptr<RoutingGraph::NameBlock> RoutingGraph::loadNameBlock(BlockId blockId) const {
+    std::shared_ptr<Graph::NameBlock> Graph::loadNameBlock(BlockId blockId) const {
         if (blockId.packageId == -1) {
             throw std::runtime_error("Bad package id");
         }
@@ -451,7 +451,7 @@ namespace carto { namespace routing {
         return nameBlock;
     }
     
-    std::shared_ptr<RoutingGraph::GlobalNodeBlock> RoutingGraph::loadGlobalNodeBlock(BlockId blockId) const {
+    std::shared_ptr<Graph::GlobalNodeBlock> Graph::loadGlobalNodeBlock(BlockId blockId) const {
         if (blockId.packageId == -1) {
             throw std::runtime_error("Bad package id");
         }
@@ -513,7 +513,7 @@ namespace carto { namespace routing {
         return globalNodeBlock;
     }
     
-    std::shared_ptr<RoutingGraph::RTreeNodeBlock> RoutingGraph::loadRTreeNodeBlock(BlockId blockId) const {
+    std::shared_ptr<Graph::RTreeNodeBlock> Graph::loadRTreeNodeBlock(BlockId blockId) const {
         if (blockId.packageId == -1) {
             throw std::runtime_error("Bad package id");
         }
@@ -577,7 +577,7 @@ namespace carto { namespace routing {
         return rtreeNodeBlock;
     }
     
-    RoutingGraph::NodeId RoutingGraph::resolveGlobalNodeId(GlobalNodeId globalNodeId) const {
+    Graph::NodeId Graph::resolveGlobalNodeId(GlobalNodeId globalNodeId) const {
         std::shared_ptr<GlobalNodeBlock> globalNodeBlock;
         if (!_globalNodeBlockCache.read(globalNodeId.blockId, globalNodeBlock)) {
             globalNodeBlock = loadGlobalNodeBlock(globalNodeId.blockId);
@@ -586,7 +586,7 @@ namespace carto { namespace routing {
         return globalNodeBlock->globalNodeIds.at(globalNodeId.elementIndex);
     }
 
-    RoutingGraph::RTreeNode RoutingGraph::loadRTreeNode(RTreeNodeId rtreeNodeId) const {
+    Graph::RTreeNode Graph::loadRTreeNode(RTreeNodeId rtreeNodeId) const {
         std::shared_ptr<RTreeNodeBlock> rtreeNodeBlock;
         if (!_rtreeNodeBlockCache.read(rtreeNodeId.blockId, rtreeNodeBlock)) {
             rtreeNodeBlock = loadRTreeNodeBlock(rtreeNodeId.blockId);
@@ -595,7 +595,7 @@ namespace carto { namespace routing {
         return rtreeNodeBlock->rtreeNodes.at(rtreeNodeId.elementIndex);
     }
     
-    WGSPos RoutingGraph::getClosestSegmentPoint(const WGSPos& pos, const WGSPos& p0, const WGSPos& p1) {
+    WGSPos Graph::getClosestSegmentPoint(const WGSPos& pos, const WGSPos& p0, const WGSPos& p1) {
         // TODO: questionable approximation, we should project all positions to EPSG3857 and the result back
         double lonFactor = std::cos((p0(0) + p1(0)) * 0.5 * DEG_TO_RAD);
         cglib::vec2<double> dp = p1 - p0;
@@ -611,7 +611,7 @@ namespace carto { namespace routing {
         return posProj;
     }
     
-    double RoutingGraph::getBBoxDistance(const WGSPos& pos, const WGSBounds& bbox) {
+    double Graph::getBBoxDistance(const WGSPos& pos, const WGSBounds& bbox) {
         // TODO: we do not handle -180/180 wrapping properly
         double lonFactor = std::cos(pos(0) * DEG_TO_RAD);
         double dist = std::max(bbox.min(0) - pos(0), pos(0) - bbox.max(0));
@@ -619,7 +619,7 @@ namespace carto { namespace routing {
         return dist;
     }
 
-    double RoutingGraph::getPointDistance(const WGSPos& pos0, const WGSPos& pos1) {
+    double Graph::getPointDistance(const WGSPos& pos0, const WGSPos& pos1) {
         // TODO: we do not handle -180/180 wrapping properly
         double lonFactor = std::cos((pos0(0) + pos1(0)) * 0.5 * DEG_TO_RAD);
         cglib::vec2<double> dp = pos1 - pos0;
@@ -627,21 +627,21 @@ namespace carto { namespace routing {
         return cglib::length(dp);
     }
 
-    int RoutingGraph::decodeZigZagValue(unsigned int val) {
+    int Graph::decodeZigZagValue(unsigned int val) {
         return ((val & 1) != 0 ? -static_cast<int>((val + 1) >> 1) : static_cast<int>(val >> 1));
     }
 
-    WGSPos RoutingGraph::fromPoint(const Point& point) {
+    WGSPos Graph::fromPoint(const Point& point) {
         return WGSPos(point.lat * COORDINATE_SCALE, point.lon * COORDINATE_SCALE);
     }
 
-    RoutingGraph::Point RoutingGraph::toPoint(const WGSPos& pos) {
+    Graph::Point Graph::toPoint(const WGSPos& pos) {
         return Point(static_cast<int>(pos(0) / COORDINATE_SCALE), static_cast<int>(pos(1) / COORDINATE_SCALE));
     }
     
-    const int RoutingGraph::VERSION = 0;
+    const int Graph::VERSION = 0;
 
-    const double RoutingGraph::COORDINATE_SCALE = 1.0e-6;
+    const double Graph::COORDINATE_SCALE = 1.0e-6;
 
-    const double RoutingGraph::DEG_TO_RAD = 0.017453292519943295769236907684886;
+    const double Graph::DEG_TO_RAD = 0.017453292519943295769236907684886;
 } }
