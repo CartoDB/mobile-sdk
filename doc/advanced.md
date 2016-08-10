@@ -5,13 +5,62 @@ With Carto Mobile **Pro and Enterprise plans** (not Lite) you can use any raster
 To use following tile sources use *HTTPTileDataSource*, and create *RasterTileLayer* using it. The DataSource constructor takes URL pattern which are given below, and requires also minimum and maximum zoom levels. For all above 0 is minimum zoom, and maximum varies from 14 to 19.
 
 ## Code sample
-<pre class="brush: java">
-  TileDataSource tileDataSource = new HTTPTileDataSource(
-  	0, 18, 
-    "http://your-url-with-placeholders-see-below");
-  RasterTileLayer layer = new RasterTileLayer(tileDataSource);
-  mapView.getLayers().add(layer);
-</pre>
+
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
+  </ul>
+
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}
+
+      String url = "http://your-url-with-placeholders-see-below";
+      TileDataSource tileDataSource = new HTTPTileDataSource(0, 18, url);
+      RasterTileLayer layer = new RasterTileLayer(tileDataSource);
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+		string url = "http://your-url-with-placeholders-see-below";
+		TileDataSource tileDataSource = new HTTPTileDataSource(0, 18, url);
+		RasterTileLayer layer = new RasterTileLayer(tileDataSource);
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+    NSString* url = @"http://your-url-with-placeholders-see-below";
+    NTHTTPTileDataSource *source = [[NTHTTPTileDataSource alloc]initWithMinZoom:0 maxZoom:18 baseURL:url];
+    NTRasterTileLayer *layer = [[NTRasterTileLayer alloc]initWithDataSource:source];
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  COMING SOON...
+
+  {% endhighlight %}
+  </div>
+  
+</div>
 
 ## <a href="https://carto.com/location-data-services/basemaps/">CARTO Positron tiles</a>
 <pre>http://a.basemaps.cartocdn.com/dark_all/{zoom}/{x}/{y}.png</pre>
@@ -122,70 +171,92 @@ Clusters are generated dynamically, based on VectorDataSource data, during loadi
 2. **ClusterElementBuilder** implementation, which defines single method **buildClusterElement**.
 
 ## 1. Define data and layer
-<div id="tabs1">
-  <ul>
-    <li><a href="#i1"><span>iOS ObjC</span></a></li>
-    <li><a href="#a1"><span>Android Java</span></a></li>
-    <li><a href="#n1"><span>.NET C#</span></a></li>
+
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
   </ul>
-<div id="i1">
-<pre class="brush: objc">
-// Initialize a local vector data source
-NTProjection* proj = [[self.mapView getOptions] getBaseProjection];
-NTLocalVectorDataSource* vectorDataSource = [[NTLocalVectorDataSource alloc] initWithProjection:proj];
 
-// Now create Marker objects and add them to vectorDataSource.
-// TODO: this depends on your app! See AdvancedMap for samples with JSON loading and random point generation
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}
 
-// Create element builder
-MyMarkerClusterElementBuilder* clusterElementBuilder = [[MyMarkerClusterElementBuilder alloc] init];
+        // Initialize a local vector data source
+        LocalVectorDataSource vectorDataSource1 = new LocalVectorDataSource(baseProjection);
 
-// Initialize a vector layer with the previous data source
-NTClusteredVectorLayer* vectorLayer = [[NTClusteredVectorLayer alloc] initWithDataSource:vectorDataSource clusterElementBuilder:clusterElementBuilder];
+		// Now create Marker objects and add them to vectorDataSource.
+		// TODO: this depends on your app! See AdvancedMap for samples with JSON loading and random point generation
 
-// Add the previous vector layer to the map
-[[self.mapView getLayers] add:vectorLayer];
+		// Initialize a vector layer with the previous data source
+        ClusteredVectorLayer vectorLayer1 = new ClusteredVectorLayer(vectorDataSource1, new MyClusterElementBuilder(this.getApplication()));
+        vectorLayer1.setMinimumClusterDistance(20);
 
-</pre>
+		// Add the previous vector layer to the map
+        mapView.getLayers().add(vectorLayer1);
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  			var proj = new EPSG3857();
+
+			// Create overlay layer for markers
+			var dataSource = new LocalVectorDataSource(proj);
+
+			// Now create Marker objects and add them to vectorDataSource.
+			// TODO: this depends on your app! See samples with JSON loading
+
+			var layer = new ClusteredVectorLayer(dataSource, new MyClusterElementBuilder());
+			layer.MinimumClusterDistance = 20; // in pixels
+
+			MapView.Layers.Add(layer);
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+      // Initialize a local vector data source
+    NTProjection* proj = [[mapView getOptions] getBaseProjection];
+    NTLocalVectorDataSource* vectorDataSource = [[NTLocalVectorDataSource alloc] initWithProjection:proj];
+    
+    // Now create Marker objects and add them to vectorDataSource.
+    // TODO: this depends on your app! See AdvancedMap for samples with JSON loading and random point generation
+    
+    // Create element builder
+    MyMarkerClusterElementBuilder* clusterElementBuilder = [[MyMarkerClusterElementBuilder alloc] init];
+    
+    // Initialize a vector layer with the previous data source
+    NTClusteredVectorLayer* vectorLayer = [[NTClusteredVectorLayer alloc] initWithDataSource:vectorDataSource clusterElementBuilder:clusterElementBuilder];
+    
+    // Add the previous vector layer to the map
+    [[mapView getLayers] add:vectorLayer];
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  COMING SOON...
+
+  {% endhighlight %}
+  </div>
+  
 </div>
-<div id="a1">
-<pre class="brush: java">
-
-// Initialize a local vector data source
-LocalVectorDataSource vectorDataSource1 = new LocalVectorDataSource(baseProjection);
-
-// Now create Marker objects and add them to vectorDataSource.
-// TODO: this depends on your app! See AdvancedMap for samples with JSON loading and random point generation
-
-// Initialize a vector layer with the previous data source
-ClusteredVectorLayer vectorLayer1 = new ClusteredVectorLayer(vectorDataSource1, new MyClusterElementBuilder(this.getApplication()));
-vectorLayer1.setMinimumClusterDistance(20);
-
-// Add the previous vector layer to the map
-mapView.getLayers().add(vectorLayer1);
-
-</pre>
-</div>
-<div id="n1">
-<pre class="brush: csharp">
-
-var proj = new EPSG3857 ();
-
-// Create overlay layer for markers
-var dataSource = new LocalVectorDataSource (proj);
-
-// Now create Marker objects and add them to vectorDataSource.
-// TODO: this depends on your app! See samples with JSON loading
-
-var overlayLayer = new ClusteredVectorLayer (dataSource, new MyClusterElementBuilder());
-overlayLayer.MinimumClusterDistance = 20; // in pixels
-mapView.Layers.Add (overlayLayer);
-
-</pre>
-</div>
-</div>
-
-
 
 
 ## 2. Define ClusterElementBuilder
@@ -194,132 +265,183 @@ Essentially Cluster Element Builder takes set of original markers (map objects) 
 
 What makes it more complicated is that in the ClusterElementBuilder we strongly suggest to reuse (cache) styles to reduce memory usage significantly. So marker style with specific number is only created once. Android and iOS samples use platform-specific graphics APIs to generate bitmap for the marker. .NET example just uses BalloonPopup, which is slower but works same across platforms.
 
-<div id="tabs2">
-  <ul>
-    <li><a href="#i2"><span>iOS ObjC</span></a></li>
-    <li><a href="#a2"><span>Android Java</span></a></li>
-    <li><a href="#n2"><span>.NET C#</span></a></li>
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
   </ul>
-<div id="i2">
-<pre class="brush: objc">
-@implementation MyMarkerClusterElementBuilder
 
--(NTVectorElement*)buildClusterElement:(NTMapPos *)mapPos elements:(NTVectorElementVector *)elements
-{
-    if (!self.markerStyles) {
-        self.markerStyles = [NSMutableDictionary new];
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}
+
+  private class MyClusterElementBuilder extends ClusterElementBuilder {
+
+        @SuppressLint("UseSparseArrays")
+        private Map< Integer, MarkerStyle > markerStyles = new HashMap< Integer, MarkerStyle >();
+        private android.graphics.Bitmap markerBitmap;
+
+        MyClusterElementBuilder(Application context) {
+            markerBitmap = android.graphics.Bitmap.createBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.marker_black));
+        }
+
+        @Override
+        public VectorElement buildClusterElement(MapPos pos, VectorElementVector elements) {
+            // Try to reuse existing marker styles
+            MarkerStyle style = markerStyles.get((int) elements.size());
+            
+            if (elements.size() == 1) {
+                style = ((Marker) elements.get(0)).getStyle();
+            }
+
+            if (style == null) {
+                android.graphics.Bitmap canvasBitmap = markerBitmap.copy(android.graphics.Bitmap.Config.ARGB_8888, true);
+                android.graphics.Canvas canvas = new android.graphics.Canvas(canvasBitmap);
+                android.graphics.Paint paint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+                
+                paint.setTextAlign(Paint.Align.CENTER);
+                paint.setTextSize(12);
+                paint.setColor(android.graphics.Color.argb(255, 0, 0, 0));
+                
+                canvas.drawText(Integer.toString((int) elements.size()), markerBitmap.getWidth() / 2, markerBitmap.getHeight() / 2 - 5, paint);
+                
+                MarkerStyleBuilder styleBuilder = new MarkerStyleBuilder();
+                styleBuilder.setBitmap(BitmapUtils.createBitmapFromAndroidBitmap(canvasBitmap));
+                styleBuilder.setSize(30);
+                styleBuilder.setPlacementPriority((int)-elements.size());
+                
+                style = styleBuilder.buildStyle();
+                
+                markerStyles.put((int) elements.size(), style);
+            }
+
+            // Create marker for the cluster
+            Marker marker = new Marker(pos, style);
+            return marker;
+        }
     }
-    NSString* styleKey = [NSString stringWithFormat:@"%d",(int)[elements size]];
-    if ([elements size] > 1000) {
-        styleKey = @">1K";
-    }
-    NTMarkerStyle* markerStyle = [self.markerStyles valueForKey:styleKey];
-    if ([elements size] == 1) {
-        markerStyle = [(NTMarker*)[elements get:0] getStyle];
-    }
-    if (!markerStyle) {
-        UIImage* image = [UIImage imageNamed:@"marker_black.png"];
-        UIGraphicsBeginImageContext(image.size);
-        [image drawAtPoint:CGPointMake(0, 0)];
-        CGRect rect = CGRectMake(0, 15, image.size.width, image.size.height);
-        [[UIColor blackColor] set];
-        NSMutableParagraphStyle *style = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
-        [style setAlignment:NSTextAlignmentCenter];
-        NSDictionary *attr = [NSDictionary dictionaryWithObject:style forKey:NSParagraphStyleAttributeName];
-        [styleKey drawInRect:CGRectIntegral(rect) withAttributes:attr];
-        UIImage* newImage = UIGraphicsGetImageFromCurrentImageContext();
-        UIGraphicsEndImageContext();
-        
-        NTBitmap* markerBitmap = [NTBitmapUtils createBitmapFromUIImage:newImage];
-        NTMarkerStyleBuilder* markerStyleBuilder = [[NTMarkerStyleBuilder alloc] init];
-        [markerStyleBuilder setBitmap:markerBitmap];
-        [markerStyleBuilder setSize:30];
-        //[markerStyleBuilder setHideIfOverlapped:NO];
-        [markerStyleBuilder setPlacementPriority:-(int)[elements size]];
-        markerStyle = [markerStyleBuilder buildStyle];
-        [self.markerStyles setValue:markerStyle forKey:styleKey];
-    }
-    
-    NTMarker* marker = [[NTMarker alloc] initWithPos:mapPos style:markerStyle];
-    [marker setMetaDataElement:@"elements" element:[@([elements size]) stringValue]];
-    return marker;
-}
 
-@end
+  {% endhighlight %}
+  </div>
 
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
 
-</pre>
-</div>
-<div id="a2">
-<pre class="brush: java">
-
-private static class MyClusterElementBuilder extends ClusterElementBuilder {
-		@SuppressLint("UseSparseArrays")
-		private Map < Integer, MarkerStyle >  markerStyles = new HashMap < Integer, MarkerStyle > ();
-		private android.graphics.Bitmap markerBitmap;
-		
-		MyClusterElementBuilder(Application context) {
-			markerBitmap = android.graphics.Bitmap.createBitmap(BitmapFactory.decodeResource(context.getResources(), R.drawable.marker_black));
-		}
-
-		@Override
-		public VectorElement buildClusterElement(MapPos pos, VectorElementVector elements) {
-			// Try to reuse existing marker styles
-			MarkerStyle style = markerStyles.get((int) elements.size());
-			if (elements.size() == 1) {
-				style = ((Marker) elements.get(0)).getStyle();
-			}
-			if (style == null) {
-				android.graphics.Bitmap canvasBitmap = markerBitmap.copy(android.graphics.Bitmap.Config.ARGB_8888, true);
-				android.graphics.Canvas canvas = new android.graphics.Canvas(canvasBitmap); 
-				android.graphics.Paint paint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
-				paint.setTextAlign(Align.CENTER);
-				paint.setTextSize(12);
-				paint.setColor(android.graphics.Color.argb(255, 0, 0, 0));
-				canvas.drawText(Integer.toString((int) elements.size()), markerBitmap.getWidth() / 2, markerBitmap.getHeight() / 2 - 5, paint);
-				MarkerStyleBuilder styleBuilder = new MarkerStyleBuilder();
-				styleBuilder.setBitmap(BitmapUtils.createBitmapFromAndroidBitmap(canvasBitmap));
-				styleBuilder.setSize(30);
-		        styleBuilder.setPlacementPriority((int)-elements.size());
-				style = styleBuilder.buildStyle();
-				markerStyles.put((int) elements.size(), style);
-			}
-
-			// Create marker for the cluster
-			Marker marker = new Marker(pos, style);
-			return marker;
-		}
-	}
-    
-
-</pre>
-</div>
-<div id="n2">
-<pre class="brush: csharp">
-
-class MyClusterElementBuilder : ClusterElementBuilder
+  	public class MyClusterElementBuilder : ClusterElementBuilder
 	{
 		BalloonPopupStyleBuilder balloonPopupStyleBuilder;
 
-		public MyClusterElementBuilder() {
+		public MyClusterElementBuilder()
+		{
 			balloonPopupStyleBuilder = new BalloonPopupStyleBuilder();
 			balloonPopupStyleBuilder.CornerRadius = 3;
-			balloonPopupStyleBuilder.TitleMargins = new BalloonPopupMargins (6, 6, 6, 6);
-			balloonPopupStyleBuilder.LeftColor = new Color(240,230,140,255);
+			balloonPopupStyleBuilder.TitleMargins = new BalloonPopupMargins(6, 6, 6, 6);
+			balloonPopupStyleBuilder.LeftColor = new Color(240, 230, 140, 255);
 		}
 
-		public override VectorElement BuildClusterElement(MapPos pos, VectorElementVector elements) {
-			var popup = new BalloonPopup(
-				pos,
-				balloonPopupStyleBuilder.BuildStyle(),
-				elements.Count.ToString(), "");
+		public override VectorElement BuildClusterElement(MapPos pos, VectorElementVector elements)
+		{
+			BalloonPopupStyle style = balloonPopupStyleBuilder.BuildStyle();
+			var popup = new BalloonPopup(pos, style, elements.Count.ToString(), "");
+
 			return popup;
 		}
-
 	}
 
-</pre>
-</div>
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  	// .h
+
+    @interface MyMarkerClusterElementBuilder : NTClusterElementBuilder
+
+	@property NSMutableDictionary* markerStyles;
+
+	@end
+	
+	// .m
+
+	@implementation MyMarkerClusterElementBuilder
+
+	-(NTVectorElement*)buildClusterElement:(NTMapPos *)mapPos elements:(NTVectorElementVector *)elements
+	{
+	    if (!self.markerStyles) {
+	        self.markerStyles = [NSMutableDictionary new];
+	    }
+	    
+	    NSString* styleKey = [NSString stringWithFormat:@"%d",(int)[elements size]];
+	    
+	    if ([elements size] > 1000) {
+	        styleKey = @">1K";
+	    }
+	    
+	    NTMarkerStyle* markerStyle = [self.markerStyles valueForKey:styleKey];
+	    
+	    if ([elements size] == 1) {
+	        markerStyle = [(NTMarker*)[elements get:0] getStyle];
+	    }
+	    
+	    if (!markerStyle) {
+	        
+	        UIImage* image = [UIImage imageNamed:@"marker_black.png"];
+	        UIGraphicsBeginImageContext(image.size);
+	        [image drawAtPoint:CGPointMake(0, 0)];
+	        
+	        CGRect rect = CGRectMake(0, 15, image.size.width, image.size.height);
+	        [[UIColor blackColor] set];
+	       
+	        NSMutableParagraphStyle *style = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
+	        [style setAlignment:NSTextAlignmentCenter];
+	        
+	        NSDictionary *attr = [NSDictionary dictionaryWithObject:style forKey:NSParagraphStyleAttributeName];
+	        [styleKey drawInRect:CGRectIntegral(rect) withAttributes:attr];
+	        UIImage* newImage = UIGraphicsGetImageFromCurrentImageContext();
+	        
+	        UIGraphicsEndImageContext();
+	        
+	        NTBitmap* markerBitmap = [NTBitmapUtils createBitmapFromUIImage:newImage];
+	        
+	        NTMarkerStyleBuilder* markerStyleBuilder = [[NTMarkerStyleBuilder alloc] init];
+	        [markerStyleBuilder setBitmap:markerBitmap];
+	        [markerStyleBuilder setSize:30];
+	        
+	        [markerStyleBuilder setPlacementPriority:-(int)[elements size]];
+	        markerStyle = [markerStyleBuilder buildStyle];
+	        
+	        [self.markerStyles setValue:markerStyle forKey:styleKey];
+	    }
+	    
+	    NTMarker* marker = [[NTMarker alloc] initWithPos:mapPos style:markerStyle];
+	    
+	    NTVariant* variant = [[NTVariant alloc] initWithString:[@([elements size]) stringValue]];
+	    [marker setMetaDataElement:@"elements" element:variant];
+	    
+	    return marker;
+	}
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  COMING SOON...
+
+  {% endhighlight %}
+  </div>
+  
 </div>
 
 
@@ -356,128 +478,151 @@ Key limitation with Carto standard SDK package is that **whole bitmap must fit t
 
 Following sample assumes that you have bitmap file **jefferson-building-ground-floor.jpg** in your application project: under *assets* in Android, anywhere in project in iOS. Here we use only one geographical coordinate, and we know size of the building and that it is exactly heading to north, so we can calculate other ground points with the code. Now four ground control points are set to the corners of the bitmap, which gives usually most accurate result. 
 
-<div id="tabs1">
-  <ul>
-    <li><a href="#i1"><span>iOS ObjC</span></a></li>
-    <li><a href="#a1"><span>Android Java</span></a></li>
-    <li><a href="#n1"><span>.NET C#</span></a></li>
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
   </ul>
-<div id="i1">
-<pre class="brush: objc">
-// Load ground overlay bitmap
-NTBitmap* overlayBitmap = [[NTBitmap alloc] initWithCompressedData:[NTAssetUtils loadBytes:@"jefferson-building-ground-floor.jpg"] pow2Padding:NO];
 
-// Create two vector containing geographical positions and corresponding raster image pixel coordinates
-NTMapPos* pos = [proj fromWgs84:[[NTMapPos alloc] initWithX:-77.004590 y:38.888702]];
-double sizeNS = 110, sizeWE = 100;
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}
 
-NTMapPosVector* mapPoses = [[NTMapPosVector alloc] init];
-[mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]-sizeWE y:[pos getY]+sizeNS]];
-[mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]+sizeWE y:[pos getY]+sizeNS]];
-[mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]+sizeWE y:[pos getY]-sizeNS]];
-[mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]-sizeWE y:[pos getY]-sizeNS]];
+    com.carto.graphics.Bitmap overlayBitmap = BitmapUtils.loadBitmapFromAssets("jefferson-building-ground-floor.jpg");
 
-NTScreenPosVector* bitmapPoses = [[NTScreenPosVector alloc] init];
-[bitmapPoses add:[[NTScreenPos alloc] initWithX:0 y:0]];
-[bitmapPoses add:[[NTScreenPos alloc] initWithX:0 y:[overlayBitmap getOrigHeight]]];
-[bitmapPoses add:[[NTScreenPos alloc] initWithX:[overlayBitmap getOrigWidth] y:[overlayBitmap getOrigHeight]]];
-[bitmapPoses add:[[NTScreenPos alloc] initWithX:[overlayBitmap getOrigWidth] y:0]];
+    // Create two vector containing geographical positions and corresponding raster image pixel coordinates
+    MapPos pos = proj.fromWgs84(new MapPos(-77.004590, 38.888702));
+    double sizeNS = 110, sizeWE = 100;
 
-// Create bitmap overlay raster tile data source
-NTBitmapOverlayRasterTileDataSource* rasterDataSource = [[NTBitmapOverlayRasterTileDataSource alloc] initWithMinZoom:0 maxZoom:20 bitmap:overlayBitmap projection:proj mapPoses:mapPoses bitmapPoses:bitmapPoses];
-NTRasterTileLayer* rasterLayer = [[NTRasterTileLayer alloc] initWithDataSource:rasterDataSource];
-[[self.mapView getLayers] add:rasterLayer];
+    MapPosVector mapPoses = new MapPosVector();
+    mapPoses.add(new MapPos(pos.getX()-sizeWE, pos.getY()+sizeNS));
+    mapPoses.add(new MapPos(pos.getX()+sizeWE, pos.getY()+sizeNS));
+    mapPoses.add(new MapPos(pos.getX()+sizeWE, pos.getY()-sizeNS));
+    mapPoses.add(new MapPos(pos.getX()-sizeWE, pos.getY()-sizeNS));
 
-// Apply zoom level bias to the raster layer.
-// By default, bitmaps are upsampled on high-DPI screens.
-// We will correct this by applying appropriate bias
-float zoomLevelBias = log([[self.mapView getOptions] getDPI] / 160.0f) / log(2);
-[rasterLayer setZoomLevelBias:zoomLevelBias * 0.75f];
-[rasterLayer setTileSubstitutionPolicy:NT_TILE_SUBSTITUTION_POLICY_VISIBLE];
+    ScreenPosVector bitmapPoses = new ScreenPosVector();
+    bitmapPoses.add(new ScreenPos(0, 0));
+    bitmapPoses.add(new ScreenPos(0, overlayBitmap.getHeight()));
+    bitmapPoses.add(new ScreenPos(overlayBitmap.getWidth(), overlayBitmap.getHeight()));
+    bitmapPoses.add(new ScreenPos(overlayBitmap.getWidth(), 0));
 
-[self.mapView setFocusPos:pos durationSeconds:0];
-[self.mapView setZoom:15.5f durationSeconds:0];
-</pre>
+    // Create bitmap overlay raster tile data source
+    BitmapOverlayRasterTileDataSource rasterDataSource = new BitmapOverlayRasterTileDataSource(0, 20, overlayBitmap, proj, mapPoses, bitmapPoses);
+    RasterTileLayer rasterLayer = new RasterTileLayer(rasterDataSource);
+    mapView.getLayers().add(rasterLayer);
+
+    // Apply zoom level bias to the raster layer.
+    // By default, bitmaps are upsampled on high-DPI screens.
+    // We will correct this by applying appropriate bias
+    float zoomLevelBias = (float) (Math.log(mapView.getOptions().getDPI() / 160.0f) / Math.log(2));
+    rasterLayer.setZoomLevelBias(zoomLevelBias * 0.75f);
+    rasterLayer.setTileSubstitutionPolicy(TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE);
+
+    mapView.setFocusPos(pos, 0);
+    mapView.setZoom(16f, 0);
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+	var overlayBitmap = BitmapUtils.LoadBitmapFromAssets("jefferson-building-ground-floor.jpg");
+
+	// Create two vector containing geographical positions and corresponding raster image pixel coordinates
+	var pos = proj.FromWgs84(new MapPos(-77.004590, 38.888702));
+	var sizeNS = 110;
+	var sizeWE = 100;
+
+	var mapPoses = new MapPosVector();
+	mapPoses.Add(new MapPos(pos.X - sizeWE, pos.Y + sizeNS));
+	mapPoses.Add(new MapPos(pos.X + sizeWE, pos.Y + sizeNS));
+	mapPoses.Add(new MapPos(pos.X + sizeWE, pos.Y - sizeNS));
+	mapPoses.Add(new MapPos(pos.X - sizeWE, pos.Y - sizeNS));
+
+	var bitmapPoses = new ScreenPosVector();
+	bitmapPoses.Add(new ScreenPos(0, 0));
+	bitmapPoses.Add(new ScreenPos(0, overlayBitmap.Height));
+	bitmapPoses.Add(new ScreenPos(overlayBitmap.Width, overlayBitmap.Height));
+	bitmapPoses.Add(new ScreenPos(overlayBitmap.Width, 0));
+
+	// Create bitmap overlay raster tile data source
+	var rasterDataSource = new BitmapOverlayRasterTileDataSource(0, 20, overlayBitmap, proj, mapPoses, bitmapPoses);
+	var rasterLayer = new RasterTileLayer(rasterDataSource);
+	MapView.Layers.Add(rasterLayer);
+
+	// Apply zoom level bias to the raster layer.
+	// By default, bitmaps are upsampled on high-DPI screens.
+	// We will correct this by applying appropriate bias
+	float zoomLevelBias = (float)(Math.Log(MapView.Options.DPI / 160.0f) / Math.Log(2));
+	rasterLayer.ZoomLevelBias = zoomLevelBias * 0.75f;
+	rasterLayer.TileSubstitutionPolicy = TileSubstitutionPolicy.TileSubstitutionPolicyVisible;
+
+	MapView.SetFocusPos(pos, 0);
+	MapView.SetZoom(16f, 0);
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  	// Load ground overlay bitmap
+    NTBitmap *overlayBitmap = [NTBitmapUtils loadBitmapFromAssets:@"jefferson-building-ground-floor.jpg"];
+    
+    // Create two vector containing geographical positions and corresponding raster image pixel coordinates
+    NTMapPos* pos = [proj fromWgs84:[[NTMapPos alloc] initWithX:-77.004590 y:38.888702]];
+    double sizeNS = 110, sizeWE = 100;
+    
+    NTMapPosVector* mapPoses = [[NTMapPosVector alloc] init];
+    [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]-sizeWE y:[pos getY]+sizeNS]];
+    [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]+sizeWE y:[pos getY]+sizeNS]];
+    [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]+sizeWE y:[pos getY]-sizeNS]];
+    [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]-sizeWE y:[pos getY]-sizeNS]];
+    
+    NTScreenPosVector* bitmapPoses = [[NTScreenPosVector alloc] init];
+    [bitmapPoses add:[[NTScreenPos alloc] initWithX:0 y:0]];
+    [bitmapPoses add:[[NTScreenPos alloc] initWithX:0 y:[overlayBitmap getHeight]]];
+    [bitmapPoses add:[[NTScreenPos alloc] initWithX:[overlayBitmap getWidth] y:[overlayBitmap getHeight]]];
+    [bitmapPoses add:[[NTScreenPos alloc] initWithX:[overlayBitmap getWidth] y:0]];
+    
+    // Create bitmap overlay raster tile data source
+    NTBitmapOverlayRasterTileDataSource* rasterDataSource = [[NTBitmapOverlayRasterTileDataSource alloc] initWithMinZoom:0 maxZoom:20 bitmap:overlayBitmap projection:proj mapPoses:mapPoses bitmapPoses:bitmapPoses];
+    NTRasterTileLayer* rasterLayer = [[NTRasterTileLayer alloc] initWithDataSource:rasterDataSource];
+    [[mapView getLayers] add:rasterLayer];
+    
+    // Apply zoom level bias to the raster layer.
+    // By default, bitmaps are upsampled on high-DPI screens.
+    // We will correct this by applying appropriate bias
+    float zoomLevelBias = log([[mapView getOptions] getDPI] / 160.0f) / log(2);
+    [rasterLayer setZoomLevelBias:zoomLevelBias * 0.75f];
+    [rasterLayer setTileSubstitutionPolicy:NT_TILE_SUBSTITUTION_POLICY_VISIBLE];
+    
+    [mapView setFocusPos:pos durationSeconds:0];
+    [mapView setZoom:16f durationSeconds:0];
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  COMING SOON...
+
+  {% endhighlight %}
+  </div>
+  
 </div>
-<div id="a1">
-<pre class="brush: java">
-Projection proj = mapView.getOptions().getBaseProjection();
 
-// Load ground overlay bitmap
-com.nutiteq.graphics.Bitmap overlayBitmap = new com.nutiteq.graphics.Bitmap(AssetUtils.loadBytes("jefferson-building-ground-floor.jpg"), false);
-
-// Create two vector containing geographical positions and corresponding raster image pixel coordinates
-MapPos pos = proj.fromWgs84(new MapPos(-77.004590, 38.888702));
-double sizeNS = 110, sizeWE = 100;
-
-MapPosVector mapPoses = new MapPosVector();
-mapPoses.add(new MapPos(pos.getX()-sizeWE, pos.getY()+sizeNS));
-mapPoses.add(new MapPos(pos.getX()+sizeWE, pos.getY()+sizeNS));
-mapPoses.add(new MapPos(pos.getX()+sizeWE, pos.getY()-sizeNS));
-mapPoses.add(new MapPos(pos.getX()-sizeWE, pos.getY()-sizeNS));
-
-ScreenPosVector bitmapPoses = new ScreenPosVector();
-bitmapPoses.add(new ScreenPos(0, 0));
-bitmapPoses.add(new ScreenPos(0, overlayBitmap.getOrigHeight()));
-bitmapPoses.add(new ScreenPos(overlayBitmap.getOrigWidth(), overlayBitmap.getOrigHeight()));
-bitmapPoses.add(new ScreenPos(overlayBitmap.getOrigWidth(), 0));
-
-// Create bitmap overlay raster tile data source
-BitmapOverlayRasterTileDataSource rasterDataSource = new BitmapOverlayRasterTileDataSource(0, 20, overlayBitmap, proj, mapPoses, bitmapPoses);
-RasterTileLayer rasterLayer = new RasterTileLayer(rasterDataSource);
-mapView.getLayers().add(rasterLayer);
-
-// Apply zoom level bias to the raster layer.
-// By default, bitmaps are upsampled on high-DPI screens.
-// We will correct this by applying appropriate bias
-float zoomLevelBias = (float) (Math.log(mapView.getOptions().getDPI() / 160.0f) / Math.log(2));
-rasterLayer.setZoomLevelBias(zoomLevelBias * 0.75f);
-rasterLayer.setTileSubstitutionPolicy(TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE);
-
-mapView.setFocusPos(pos, 0);
-mapView.setZoom(15.5f, 0);
-</pre>
-</div>
-<div id="n1">
-<pre class="brush: csharp">
-// Load ground overlay bitmap
-var overlayBitmap = new Bitmap (AssetUtils.LoadBytes("jefferson-building-ground-floor.jpg"), false);
-
-// Create two vector containing geographical positions and corresponding raster image pixel coordinates
-var pos = proj.FromWgs84(new MapPos(-77.004590, 38.888702));
-var sizeNS = 110;
-var sizeWE = 100;
-
-var mapPoses = new MapPosVector();
-mapPoses.Add(new MapPos(pos.X-sizeWE, pos.Y+sizeNS));
-mapPoses.Add(new MapPos(pos.X+sizeWE, pos.Y+sizeNS));
-mapPoses.Add(new MapPos(pos.X+sizeWE, pos.Y-sizeNS));
-mapPoses.Add(new MapPos(pos.X-sizeWE, pos.Y-sizeNS));
-
-var bitmapPoses = new ScreenPosVector();
-bitmapPoses.Add(new ScreenPos(0, 0));
-bitmapPoses.Add(new ScreenPos(0, overlayBitmap.OrigHeight));
-bitmapPoses.Add(new ScreenPos(overlayBitmap.OrigWidth, overlayBitmap.OrigHeight));
-bitmapPoses.Add(new ScreenPos(overlayBitmap.OrigWidth, 0));
-
-// Create bitmap overlay raster tile data source
-var rasterDataSource = new BitmapOverlayRasterTileDataSource(0, 20, overlayBitmap, proj, mapPoses, bitmapPoses);
-var rasterLayer = new RasterTileLayer(rasterDataSource);
-mapView.Layers.Add(rasterLayer);
-
-// Apply zoom level bias to the raster layer.
-// By default, bitmaps are upsampled on high-DPI screens.
-// We will correct this by applying appropriate bias
-float zoomLevelBias = (float) (Math.Log(mapView.Options.DPI / 160.0f) / Math.Log(2));
-rasterLayer.ZoomLevelBias = zoomLevelBias * 0.75f;
-rasterLayer.TileSubstitutionPolicy = TileSubstitutionPolicy.TileSubstitutionPolicyVisible;
-
-mapView.SetFocusPos(pos, 0);
-mapView.SetZoom(15.5f, 0);
-
-</pre>
-</div>
-</div>
 
 # Vector Styles
 
@@ -666,30 +811,54 @@ Online routing is quite simple: just create *CartoOnlineRoutingService* and call
 
 #### 1. Create service
 
-<div id="tabs4">
-  <ul>
-    <li><a href="#i4"><span>iOS ObjC</span></a></li>
-    <li><a href="#a4"><span>Android Java</span></a></li>
-    <li><a href="#n4"><span>.NET C#</span></a></li>
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
   </ul>
-<div id="i4">
-<pre class="brush: objc">
- // create  online routing service 
- _onlineRoutingService = [[NTCartoOnlineRoutingService alloc] initWithSource:@"nutiteq.osm.car"];
-</pre>
-</div>
-<div id="a4">
-<pre class="brush: java">
- // create  online routing service 
- onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
-</pre>
-</div>
-<div id="n4">
-<pre class="brush: csharp">
- // create  online routing service
- onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
-</pre>
-</div>
+
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}
+
+  onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  _onlineRoutingService = [[NTCartoOnlineRoutingService alloc] initWithSource:@"nutiteq.osm.car"];
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  COMING SOON...
+
+  {% endhighlight %}
+  </div>
+  
 </div>
 
 
@@ -700,28 +869,115 @@ Note that the **calculation request is expensive**. So use of separate thread is
 
 See our full sample to see how to show the instructions on the map, as Line and Markers.
 
-<div id="tabs5">
-  <ul>
-    <li><a href="#i5"><span>iOS ObjC</span></a></li>
-    <li><a href="#a5"><span>Android Java</span></a></li>
-    <li><a href="#n5"><span>.NET C#</span></a></li>
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
   </ul>
-<div id="i5">
-<pre class="brush: objc">
 
-     // set route start end end points
-     NTMapPosVector* poses = [[NTMapPosVector alloc] init];
-     [poses add:startPos];
-     [poses add:stopPos];
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}
+
+  AsyncTask<Void, Void, RoutingResult> task = new AsyncTask<Void, Void, RoutingResult>() {
+
+            protected RoutingResult doInBackground(Void... v) {
+                MapPosVector poses = new MapPosVector();
+                poses.add(startPos);
+                poses.add(stopPos);
+                RoutingRequest request = new RoutingRequest(baseProjection, poses);
+                RoutingResult result = onlineRoutingService.calculateRoute(request);
+
+                return result;
+            }
+
+            protected void onPostExecute(RoutingResult result) {
+                if (result == null) {
+                    Log.e(Const.LOG_TAG,"routing error");
+                    return;
+                }
+
+                String routeText = "The route is " + (int) (result.getTotalDistance() / 100) / 10f + "km (" + result.getTotalTime() + " s)";
+                Log.i(Const.LOG_TAG,routeText);
+
+                // get instruction details
+                RoutingInstructionVector instructions = result.getInstructions();
+
+                boolean first = true;
+				
+				// Remember: Put your operations back on the main thread to change the UI
+                
+                for (int i = 0; i < instructions.size(); i++) {
+                    RoutingInstruction instruction = instructions.get(i);
+                    Log.d(Const.LOG_TAG, instruction.toString());
+                }
+
+            }
+        };
+
+        task.execute();
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+		ThreadPool.QueueUserWorkItem(delegate
+		{
+			MapPosVector poses = new MapPosVector();
+			poses.Add(startPos);
+			poses.Add(stopPos);
+
+			RoutingRequest request = new RoutingRequest(baseProject, poses);
+			RoutingResult result = onlineRoutingService.CalculateRoute(request);
+
+			// get total route results
+			String routeText = "The route is " + (int)(result.TotalDistance / 100) / 10f + "km (" + result.TotalTime + " sec) ";
+			Log.Debug(routeText);
+
+			// get instructions, just log them
+			RoutingInstructionVector instructions = result.Instructions;
+			
+
+			// Remember: Put your operations back on the main thread to change the UI
+			for (int i = 0; i < instructions.Count; i++)
+			{
+				RoutingInstruction instruction = instructions[i];
+				Log.Debug(instruction.ToString());
+
+			}
+		});
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  	// Set route start end end points
+    NTMapPosVector* poses = [[NTMapPosVector alloc] init];
+    [poses add:startPos];
+    [poses add:stopPos];
     
-    NTRoutingRequest* request = [[NTRoutingRequest alloc] initWithProjection:[[self.mapView getOptions] getBaseProjection] points:poses];
-
-    // this calculation should be in background thread
+    NTRoutingRequest* request = [[NTRoutingRequest alloc] initWithProjection:[[mapView getOptions] getBaseProjection] points:poses];
+    
+    // This calculation should be in background thread
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         NTRoutingResult* route = [_onlineRoutingService calculateRoute:request];
-
-       // process results in main thread, so it can update UI
+        
+        // Process results in main thread, so it can update UI
         dispatch_async(dispatch_get_main_queue(), ^{
+            
             if (route == nil){
                 NSLog(@"route error");
                 return;
@@ -731,6 +987,8 @@ See our full sample to see how to show the instructions on the map, as Line and 
             [dateFormatter setDateFormat:@"HH:mm:ss"];
             [dateFormatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
             
+            double duration = 0.3;
+            
             NSString* routeDesc = [NSString stringWithFormat:@"Route: %0.3f m, travel %@. Calculation took %0.3f s", [route getTotalDistance]/1000.0,
                                    [dateFormatter stringFromDate: [NSDate dateWithTimeIntervalSince1970:[route getTotalTime]]],
                                    duration];
@@ -738,87 +996,28 @@ See our full sample to see how to show the instructions on the map, as Line and 
             NSLog(@"%@",routeDesc);
             
             // get instructions
-            for(int i=0; i &lt; [[route getInstructions] size];i++){
+            for(int i=0; i < [[route getInstructions] size];i++){
+                
                 NTRoutingInstruction *instruction =[[route getInstructions] get:i];
                 NSLog(@"%@",[instruction description]);
-
+                
             }
         });
     });
 
-</pre>
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  COMING SOON...
+
+  {% endhighlight %}
+  </div>
+  
 </div>
-<div id="a5">
-<pre class="brush: java">
 
-    AsyncTask&lt;Void, Void, RoutingResult&gt; task = new AsyncTask&lt;Void, Void, RoutingResult&gt;() {
-
-        protected RoutingResult doInBackground(Void... v) {
-                MapPosVector poses = new MapPosVector();
-                poses.add(startPos);
-                poses.add(stopPos);
-                RoutingRequest request = new RoutingRequest(mapView.getOptions().getBaseProjection(), poses);
-                RoutingResult result = onlineRoutingService.calculateRoute(request);
-
-                return result;
-            }
-
-            protected void onPostExecute(RoutingResult result) {
-            	if (result == null) {
-                 	Log.e(Const.LOG_TAG,"routing error");
-                    return;
-                }
-
-                String routeText = "The route is " + (int) (result.getTotalDistance() / 100) / 10f
-                        + "km (" + result.getTotalTime()
-                        + " s)";
-                Log.i(Const.LOG_TAG,routeText);
-
-                // get instruction details
-                RoutingInstructionVector instructions = result.getInstructions();
-                boolean first = true;
-                for (int i = 0; i &lt; instructions.size(); i++) {
-                	RoutingInstruction instruction = instructions.get(i);
-                        Log.d(Const.LOG_TAG, instruction.toString());
-                     }
-
-                }
-            }
-        };
-
-    	task.execute();
-
-
-</pre>
-</div>
-<div id="n5">
-<pre class="brush: csharp">
-
-    Task.Run (() => {
-		MapPosVector poses = new MapPosVector ();
-		poses.Add (startPos);
-		poses.Add (stopPos);
-		RoutingRequest request = new RoutingRequest (baseProjection, poses);
-		RoutingResult result = onlineRoutingService.CalculateRoute (request);
-				
-		// get total route results
-        String routeText = "The route is " + (int)(result.TotalDistance / 100) / 10f
-		              + "km (" + result.TotalTime
-		              + " sec) ";
-		Log.Debug(routeText);	
-				
-        // get instructions, just log them
-		RoutingInstructionVector instructions = result.Instructions;
-		for (int i = 0; i &lt; instructions.Count; i++) {
-			RoutingInstruction instruction = instructions [i];
-			Log.Debug(instruction.toString());
-
-		}
-	});
-
-</pre>
-</div>
-</div>
 
 ### Offline routing
 
@@ -829,16 +1028,61 @@ For offline routing you need to download routing packages, for this you use the 
 
 First you need to define folder where to keep the files (different from your map packages), and use *PackageManagerRoutingService* with the PackageManager to calculate the routes.
 
-<div id="tabs1">
-  <ul>
-    <li><a href="#i1"><span>iOS ObjC</span></a></li>
-    <li><a href="#a1"><span>Android Java</span></a></li>
-    <li><a href="#n1"><span>.NET C#</span></a></li>
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
   </ul>
-<div id="i1">
-<pre class="brush: objc">
 
-   // define PackageManger to download offline routing packages
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}
+
+        // Create PackageManager instance for dealing with offline packages
+        File packageFolder = new File(getApplicationContext().getExternalFilesDir(null), "routingpackages");
+        
+        if (!(packageFolder.mkdirs() || packageFolder.isDirectory())) {
+            Log.e(Const.LOG_TAG, "Could not create package folder!");
+        }
+
+        try {
+            packageManager = new CartoPackageManager("routing:nutiteq.osm.car", packageFolder.getAbsolutePath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+		// Create PackageManager instance for dealing with offline packages
+		var packageFolder = new File(GetExternalFilesDir(null), "routingpackages");
+
+		if (!(packageFolder.Mkdirs() || packageFolder.IsDirectory))
+		{
+			Log.Fatal("Could not create package folder!");
+		}
+
+		packageManager = new CartoPackageManager("routing:nutiteq.osm.car", packageFolder);
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+    // Define PackageManger to download offline routing packages
     // Create folder for package manager. Package manager needs persistent writable folder.
     NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask,YES);
     NSString* appSupportDir = [paths objectAtIndex: 0];
@@ -846,37 +1090,21 @@ First you need to define folder where to keep the files (different from your map
     NSError *error;
     [[NSFileManager defaultManager] createDirectoryAtPath:packagesDir withIntermediateDirectories:YES attributes:nil error:&error];
     
-    NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"routing:nutiteq.osm.car" dataFolder:packagesDir];
+    packageManager = [[NTCartoPackageManager alloc] initWithSource:@"routing:nutiteq.osm.car" dataFolder:packagesDir];
 
-</pre>
-</div>
-<div id="a1">
-<pre class="brush: java">
+  {% endhighlight %}
+  </div>
 
-    // create PackageManager instance for dealing with offline packages
-        File packageFolder = new File(getApplicationContext().getExternalFilesDir(null), "routingpackages");
-        if (!(packageFolder.mkdirs() || packageFolder.isDirectory())) {
-        	Log.e(Const.LOG_TAG, "Could not create package folder!");
-        }
-        packageManager = new CartoPackageManager("routing:nutiteq.osm.car", packageFolder.getAbsolutePath());
-        
-</pre>
-</div>
-<div id="n1">
-<pre class="brush: csharp">
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
 
-	// create PackageManager instance for dealing with offline packages
-	var packageFolder = new File (GetExternalFilesDir(null), "routingpackages");
-	if (!(packageFolder.Mkdirs() || packageFolder.IsDirectory)) {
-		Log.Fatal("Could not create package folder!");
-	}
+  COMING SOON...
 
-	packageManager = new CartoPackageManager("routing:nutiteq.osm.car", packageFolder.AbsolutePath);
-</pre>
-</div>
+  {% endhighlight %}
+  </div>
+  
 </div>
 
-	
 			
 #### 2. Use PackageManagerListener to get DownloadManager events
 
@@ -885,14 +1113,128 @@ Routing package download cannot be started immediately - SDK needs to get latest
 For this you need to write your own PackageManagerListener, and start offline download in the *onPackageListUpdated* method, where it is sure that package metadata is already downloaded and known.
 
 
-<div id="tabs2">
-  <ul>
-    <li><a href="#i2"><span>iOS ObjC</span></a></li>
-    <li><a href="#a2"><span>Android Java</span></a></li>
-    <li><a href="#n2"><span>.NET C#</span></a></li>
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
   </ul>
-<div id="i2">
-<pre class="brush: objc">
+
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}
+
+  public class RoutePackageManagerListener extends PackageManagerListener {
+    @Override
+    public void onPackageListUpdated() {
+        Log.d(Const.LOG_TAG, "Package list updated");
+        // Start download of package of Estonia
+        // see list of available ID-s: https://developer.nutiteq.com/guides/packages
+        // just append -routing to the ID-s
+        // You can download several packages, and route is found through all of them
+
+        packageManager.startPackageDownload("EE-routing");
+        packageManager.startPackageDownload("LV-routing");
+    }
+
+    @Override
+    public void onPackageListFailed() {
+        Log.e(Const.LOG_TAG, "Package list update failed");
+    }
+
+    @Override
+    public void onPackageStatusChanged(String id, int version, PackageStatus status)
+    {
+        // here you can monitor download process %
+    }
+
+    @Override
+    public void onPackageCancelled(String id, int version) {
+    }
+
+    @Override
+    public void onPackageUpdated(String id, int version) {
+        Log.d(Const.LOG_TAG, "Offline package updated: " + id);
+    }
+
+    @Override
+    public void onPackageFailed(String id, int version, PackageErrorType errorType) {
+        Log.e(Const.LOG_TAG, "Offline package update failed: " + id);
+    }
+  }
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+  	public class RoutePackageManagerListener : PackageManagerListener
+	{
+		PackageManager packageManager;
+
+		public RoutePackageManagerListener(PackageManager manager)
+		{
+			packageManager = manager;
+		}
+
+		public override void OnPackageListUpdated()
+		{
+			Log.Debug("Package list updated");
+			// We have packages all country/regions
+			// see list of available ID-s: https://developer.nutiteq.com/guides/packages
+			// just append -routing to the ID-s
+			// You can download several packages, and route is found through all of them
+
+			packageManager.StartPackageDownload("EE-routing");
+			packageManager.StartPackageDownload("LV-routing");
+		}
+
+		public override void OnPackageListFailed()
+		{
+			Log.Error("Package list update failed");
+		}
+
+		public override void OnPackageStatusChanged(String id, int version, PackageStatus status)
+		{
+			// here you can get progress of download
+		}
+
+		public override void OnPackageCancelled(String id, int version)
+		{
+		}
+
+		public override void OnPackageUpdated(String id, int version)
+		{
+			Log.Debug("Offline package updated: " + id);
+		}
+
+		public override void OnPackageFailed(String id, int version, PackageErrorType errorType)
+		{
+			Log.Error("Offline package download failed: " + id);
+		}
+	}
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+    @interface RoutePackageManagerListener : NTPackageManagerListener
+
+    @property NTPackageManager* _packageManager;
+	- (void)setPackageManager:(NTPackageManager*)manager;
+	
+	@end
 
 	@implementation RoutePackageManagerListener
 
@@ -904,8 +1246,8 @@ For this you need to write your own PackageManagerListener, and start offline do
 	    // just append -routing to the ID-s
 	    // You can download several packages, and route is found through all of them
 	    
-	     [_packageManager startPackageDownload: @"EE-routing"];
-	     [_packageManager startPackageDownload: @"LV-routing"];
+	    [self._packageManager startPackageDownload: @"EE-routing"];
+	    [self._packageManager startPackageDownload: @"LV-routing"];
 	}
 
 	- (void)onPackageListFailed
@@ -928,175 +1270,118 @@ For this you need to write your own PackageManagerListener, and start offline do
 
 	- (void)onPackageStatusChanged:(NSString*)packageId version:(int)version status:(NTPackageStatus*)status
 	{
-           // here you can get progress of download
+	    // here you can get progress of download
 	    NSLog(@"onPackageStatusChanged progress: %f", [status getProgress]);
+	}
+
+	- (void)setPackageManager:(NTPackageManager*)manager
+	{
+    	self._packageManager = manager;
 	}
 
 	@end
 
-</pre>
-</div>
-<div id="a2">
-<pre class="brush: java">
 
-    /**
-	 * Minimal for package manager events. Contains some empty methods.
-	 */
-	class RoutePackageManagerListener extends PackageManagerListener {
-    	@Override
-    	public void onPackageListUpdated() {
-		  Log.d(Const.LOG_TAG, "Package list updated");
-		  // Start download of package of Estonia
-		  // see list of available ID-s: https://developer.nutiteq.com/guides/packages
-		  // just append -routing to the ID-s
-	      // You can download several packages, and route is found through all of them
-	          
-          packageManager.startPackageDownload("EE-routing");
-          packageManager.startPackageDownload("LV-routing");
+  {% endhighlight %}
+  </div>
 
-        }
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
 
-        @Override
-		public void onPackageListFailed() {
-			Log.e(Const.LOG_TAG, "Package list update failed");
-		}
+  COMING SOON...
 
-		@Override
-		public void onPackageStatusChanged(String id, int version, PackageStatus status)  
-		{
-		  // here you can monitor download process %
-		}
-
-		@Override
-		public void onPackageCancelled(String id, int version) {
-		}
-
-     	@Override
-    	public void onPackageUpdated(String id, int version) {
-		  Log.d(Const.LOG_TAG, "Offline package updated: " + id);
-    	}
-
-		@Override
-		public void onPackageFailed(String id, int version, PackageErrorType errorType) {
-			Log.e(Const.LOG_TAG, "Offline package update failed: " + id);
-		}
-	}
-
-
-</pre>
-</div>
-<div id="n2">
-<pre class="brush: csharp">
-
-    /**
-	 * Listener for package manager events. Contains many empty methods.
-	 */
-	class RoutePackageManagerListener : PackageManagerListener {
-
-		private OfflineRouting controller;
-
-		public RoutingPackageListener(OfflineRouting controller){
-			this.controller = controller;
-		}
-
-		public override void OnPackageListUpdated() {
-			Log.Debug("Package list updated");
-		    // We have packages all country/regions
-		    // see list of available ID-s: https://developer.nutiteq.com/guides/packages
-		    // just append -routing to the ID-s
-		    // You can download several packages, and route is found through all of them
-
-			controller.packageManager.StartPackageDownload("EE-routing");
-			controller.packageManager.StartPackageDownload("LV-routing");
-		}
-
-		public override void OnPackageListFailed() {
-			Log.Error("Package list update failed");
-		}
-
-		public override void OnPackageStatusChanged(String id, int version, PackageStatus status) {
-		  // here you can get progress of download
-		}
-
-		public override void OnPackageCancelled(String id, int version) {
-		}
-
-		public override void OnPackageUpdated(String id, int version) {
-			Log.Debug("Offline package updated: " + id);
-		}
-
-		public override void OnPackageFailed(String id, int version, PackageErrorType errorType) {
-			Log.Error("Offline package download failed: " + id);
-		}
-	}
-
-</pre>
-</div>
+  {% endhighlight %}
+  </div>
+  
 </div>
 
 You may ask why here EE and LV (Estonia and Latvia) packages are used in the sample? It is not by chance - there are recent [tight personal links between these two countries](http://www.baltictimes.com/estonian_president_marries_latvian_cyber_defence_expert/), so offline routing has to go across borders.
 
-#### 3. Init instance of PackageManagerListener, start PackageManager and package list update
+#### 3. Initialize instance of PackageManagerListener, start PackageManager and package list update
 
 To link PackageManagerListener with PackageManager properly (and to have a fully working RoutingService as a result) you need to do following steps in the code. Note that we need to pass packageManager reference to the listener, otherwise the listener can not start downloads. This depends on platform and your app architecture.
 
-<div id="tabs3">
-  <ul>
-    <li><a href="#i3"><span>iOS ObjC</span></a></li>
-    <li><a href="#a3"><span>Android Java</span></a></li>
-    <li><a href="#n3"><span>.NET C#</span></a></li>
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
   </ul>
-<div id="i3">
-<pre class="brush: objc">
 
-     // 1. create routePackageManagerListener with your listener class
-     RoutePackageManagerListener* _packageManagerListener = [[RoutePackageManagerListener alloc] init];
-	[_packageManagerListener setPackageManager: packageManager];
-	
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}
+
+    // 1. Set listener, and start PackageManager
+    packageManager.setPackageManagerListener(new RoutePackageManagerListener());
+    packageManager.start();
+
+    // 2. Fetch list of available packages from server. Note that this is asynchronous operation and listener will be notified via onPackageListUpdated when this succeeds.
+    packageManager.startPackageListDownload();
+
+    // 3. Create offline routing service connected to package manager
+    offlineRoutingService = new PackageManagerRoutingService(packageManager);
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+	// 1. Create and set listener, and start PackageManager
+	packageManager.PackageManagerListener = new RoutePackageManagerListener(packageManager);
+	packageManager.Start();
+
+	// 2. Fetch list of available packages from server. 
+	// Note that this is asynchronous operation and the listener will be notified via OnPackageListUpdated when this succeeds.        
+	packageManager.StartPackageListDownload();
+
+	// 3. Create offline routing service connected to package manager
+	offlineRoutingService = new PackageManagerRoutingService(packageManager);
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
+
+    NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"routing:nutiteq.osm.car" dataFolder:packagesDir];
+    
+    // 1. Create routePackageManagerListener with your listener class
+    RoutePackageManagerListener* _packageManagerListener = [[RoutePackageManagerListener alloc] init];
+    [_packageManagerListener setPackageManager: packageManager];
+    
     // Attach package manager listener
     [packageManager setPackageManagerListener:_packageManagerListener];
-
-    // start PackageManager
+    
+    // Start PackageManager
     [packageManager start];
     
-    // 2. now start download of packageList. When download is done, then the 
-    // listener's OnPackageListUpdated() is called
+    // 2. Start download of packageList. When download is done, then the listener's onPackageListUpdated() is called
     [packageManager startPackageListDownload];
     
-    // 3. create offline routing service connected to package manager
+    // 3. Create offline routing service connected to package manager
     _offlineRoutingService = [[NTPackageManagerRoutingService alloc] initWithPackageManager:packageManager];
 
-</pre>
-</div>
-<div id="a3">
-<pre class="brush: java">
-        
-        // 1. set listener, and start PackageManager
-	    packageManager.setPackageManagerListener(new RoutePackageManagerListener());
-        packageManager.start();
-        
-        // 2. fetch list of available packages from server. Note that this is asynchronous operation and listener will be notified via onPackageListUpdated when this succeeds.        
-        packageManager.startPackageListDownload();
-        
-         // 3. create offline routing service connected to package manager
-        offlineRoutingService = new PackageManagerRoutingService(packageManager);
-        
-</pre>
-</div>
-<div id="n3">
-<pre class="brush: csharp">
+  {% endhighlight %}
+  </div>
 
-			// 1. create and set listener, and start PackageManager
-			packageManager.PackageManagerListener = new RoutingPackageListener(this);
-			packageManager.Start();
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}
 
-			// 2. fetch list of available packages from server. Note that this is asynchronous operation and listener will be notified via onPackageListUpdated when this succeeds.        
-			packageManager.StartPackageListDownload();
+  COMING SOON...
 
-			// 3. create offline routing service connected to package manager
-			offlineRoutingService = new PackageManagerRoutingService(packageManager);
-</pre>
-</div>
+  {% endhighlight %}
+  </div>
+  
 </div>
 
 #### 4. Do actual route calculation
