@@ -21,7 +21,7 @@
 #include <stdext/eiff_file.h>
 #include <stdext/bitstream.h>
 
-namespace carto { namespace Routing {
+namespace carto { namespace routing {
     class RoutingGraph {
     public:
         struct BlockId {
@@ -34,7 +34,7 @@ namespace carto { namespace Routing {
             bool operator == (const BlockId& blockId) const { return packageId == blockId.packageId && blockIndex == blockId.blockIndex; }
             
             struct Hash {
-                std::size_t operator() (const carto::Routing::RoutingGraph::BlockId& blockId) const { return blockId.packageId * 98317 ^ blockId.blockIndex; }
+                std::size_t operator() (const RoutingGraph::BlockId& blockId) const { return blockId.packageId * 98317 ^ blockId.blockIndex; }
             };
         };
         
@@ -48,7 +48,7 @@ namespace carto { namespace Routing {
             bool operator == (const ElementId& elementId) const { return blockId == elementId.blockId && elementIndex == elementId.elementIndex; }
 
             struct Hash {
-                std::size_t operator() (const carto::Routing::RoutingGraph::ElementId& elementId) const { return BlockId::Hash()(elementId.blockId) * 769 ^ elementId.elementIndex; }
+                std::size_t operator() (const RoutingGraph::ElementId& elementId) const { return BlockId::Hash()(elementId.blockId) * 769 ^ elementId.elementIndex; }
             };
         };
         

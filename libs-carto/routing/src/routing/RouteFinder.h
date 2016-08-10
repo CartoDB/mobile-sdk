@@ -15,7 +15,7 @@
 #include <vector>
 #include <stack>
 
-namespace carto { namespace Routing {
+namespace carto { namespace routing {
     class RouteFinder {
     public:
         explicit RouteFinder(std::shared_ptr<RoutingGraph> graph) : _graph(std::move(graph)) { }

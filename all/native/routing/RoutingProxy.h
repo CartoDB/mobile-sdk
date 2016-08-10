@@ -15,7 +15,7 @@
 #include <vector>
 
 namespace carto {
-    namespace Routing {
+    namespace routing {
         class RouteFinder;
     }
     
@@ -23,7 +23,7 @@ namespace carto {
 
     class RoutingProxy {
     public:
-        static std::shared_ptr<RoutingResult> CalculateRoute(const std::shared_ptr<Routing::RouteFinder>& routeFinder, const std::shared_ptr<RoutingRequest>& request);
+        static std::shared_ptr<RoutingResult> CalculateRoute(const std::shared_ptr<routing::RouteFinder>& routeFinder, const std::shared_ptr<RoutingRequest>& request);
         
         static std::shared_ptr<RoutingResult> CalculateRoute(HTTPClient& httpClient, const std::string& url, const std::shared_ptr<RoutingRequest>& request);
 

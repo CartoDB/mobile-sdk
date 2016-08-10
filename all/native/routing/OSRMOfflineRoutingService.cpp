@@ -14,8 +14,8 @@ namespace carto {
     OSRMOfflineRoutingService::OSRMOfflineRoutingService(const std::string& path) :
         _routeFinder()
     {
-        Routing::RoutingGraph::Settings graphSettings;
-        auto graph = std::make_shared<Routing::RoutingGraph>(graphSettings);
+        routing::RoutingGraph::Settings graphSettings;
+        auto graph = std::make_shared<routing::RoutingGraph>(graphSettings);
         try {
             if (!graph->import(path)) {
                 throw FileException("Failed to import routing graph", path);
@@ -23,7 +23,7 @@ namespace carto {
         } catch (const std::exception& ex) {
             throw GenericException("Exception while importing routing graph", ex.what());
         }
-        _routeFinder = std::make_shared<Routing::RouteFinder>(graph);
+        _routeFinder = std::make_shared<routing::RouteFinder>(graph);
     }
 
     OSRMOfflineRoutingService::~OSRMOfflineRoutingService() {

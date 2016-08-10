@@ -8,7 +8,7 @@
 
 #include <utf8.h>
 
-namespace carto { namespace Routing {
+namespace carto { namespace routing {
     RoutingGraph::RoutingGraph(const Settings& settings) :
         _packages(),
         _nodeBlockCache(settings.nodeBlockCacheSize),

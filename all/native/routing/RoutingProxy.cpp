@@ -19,19 +19,19 @@
 
 namespace carto {
 
-    std::shared_ptr<RoutingResult> RoutingProxy::CalculateRoute(const std::shared_ptr<Routing::RouteFinder>& routeFinder, const std::shared_ptr<RoutingRequest>& request) {
+    std::shared_ptr<RoutingResult> RoutingProxy::CalculateRoute(const std::shared_ptr<routing::RouteFinder>& routeFinder, const std::shared_ptr<RoutingRequest>& request) {
         std::shared_ptr<Projection> proj = request->getProjection();
         EPSG3857 epsg3857;
 
         std::size_t totalPoints = 0;
         std::size_t totalInstructions = 0;
-        std::vector<Routing::RoutingResult> results;
+        std::vector<routing::RoutingResult> results;
         for (std::size_t i = 1; i < request->getPoints().size(); i++) {
             MapPos p0 = proj->toWgs84(request->getPoints()[i - 1]);
             MapPos p1 = proj->toWgs84(request->getPoints()[i]);
-            Routing::RoutingQuery query(Routing::WGSPos(p0.getY(), p0.getX()), Routing::WGSPos(p1.getY(), p1.getX()));
-            Routing::RoutingResult result = routeFinder->find(query);
-            if (result.getStatus() == Routing::RoutingResult::Status::FAILED) {
+            routing::RoutingQuery query(routing::WGSPos(p0.getY(), p0.getX()), routing::WGSPos(p1.getY(), p1.getX()));
+            routing::RoutingResult result = routeFinder->find(query);
+            if (result.getStatus() == routing::RoutingResult::Status::FAILED) {
                 throw GenericException("Routing failed");
             }
             totalPoints += result.getGeometry().size();
@@ -46,18 +46,18 @@ namespace carto {
         std::vector<RoutingInstruction> instructions;
         instructions.reserve(totalInstructions);
         for (std::size_t i = 0; i < results.size(); i++) {
-            const Routing::RoutingResult& result = results[i];
+            const routing::RoutingResult& result = results[i];
             if (result.getInstructions().empty()) {
                 continue;
             }
 
             std::size_t pointIndex = points.size();
-            for (const Routing::WGSPos& pos : result.getGeometry()) {
+            for (const routing::WGSPos& pos : result.getGeometry()) {
                 points.push_back(proj->fromWgs84(MapPos(pos(1), pos(0))));
                 epsg3857Points.push_back(epsg3857.fromWgs84(MapPos(pos(1), pos(0))));
             }
 
-            for (const Routing::RoutingInstruction& instr : result.getInstructions()) {
+            for (const routing::RoutingInstruction& instr : result.getInstructions()) {
                 double distance = instr.getDistance();
                 double time = instr.getTime();
 
@@ -186,48 +186,48 @@ namespace carto {
     }
     
     bool RoutingProxy::TranslateInstructionCode(int instructionCode, RoutingAction::RoutingAction& action) {
-        switch (static_cast<Routing::RoutingInstruction::Type>(instructionCode)) {
-            case Routing::RoutingInstruction::Type::NO_TURN:
+        switch (static_cast<routing::RoutingInstruction::Type>(instructionCode)) {
+            case routing::RoutingInstruction::Type::NO_TURN:
                 action = RoutingAction::ROUTING_ACTION_NO_TURN;
                 break;
-            case Routing::RoutingInstruction::Type::GO_STRAIGHT:
+            case routing::RoutingInstruction::Type::GO_STRAIGHT:
                 action = RoutingAction::ROUTING_ACTION_GO_STRAIGHT;
                 break;
-            case Routing::RoutingInstruction::Type::TURN_SLIGHT_RIGHT:
-            case Routing::RoutingInstruction::Type::TURN_RIGHT:
-            case Routing::RoutingInstruction::Type::TURN_SHARP_RIGHT:
+            case routing::RoutingInstruction::Type::TURN_SLIGHT_RIGHT:
+            case routing::RoutingInstruction::Type::TURN_RIGHT:
+            case routing::RoutingInstruction::Type::TURN_SHARP_RIGHT:
                 action = RoutingAction::ROUTING_ACTION_TURN_RIGHT;
                 break;
-            case Routing::RoutingInstruction::Type::UTURN:
+            case routing::RoutingInstruction::Type::UTURN:
                 action = RoutingAction::ROUTING_ACTION_UTURN;
                 break;
-            case Routing::RoutingInstruction::Type::TURN_SLIGHT_LEFT:
-            case Routing::RoutingInstruction::Type::TURN_LEFT:
-            case Routing::RoutingInstruction::Type::TURN_SHARP_LEFT:
+            case routing::RoutingInstruction::Type::TURN_SLIGHT_LEFT:
+            case routing::RoutingInstruction::Type::TURN_LEFT:
+            case routing::RoutingInstruction::Type::TURN_SHARP_LEFT:
                 action = RoutingAction::ROUTING_ACTION_TURN_LEFT;
                 break;
-            case Routing::RoutingInstruction::Type::REACH_VIA_LOCATION:
+            case routing::RoutingInstruction::Type::REACH_VIA_LOCATION:
                 action = RoutingAction::ROUTING_ACTION_REACH_VIA_LOCATION;
                 break;
-            case Routing::RoutingInstruction::Type::HEAD_ON:
+            case routing::RoutingInstruction::Type::HEAD_ON:
                 action = RoutingAction::ROUTING_ACTION_HEAD_ON;
                 break;
-            case Routing::RoutingInstruction::Type::ENTER_ROUNDABOUT:
+            case routing::RoutingInstruction::Type::ENTER_ROUNDABOUT:
                 action = RoutingAction::ROUTING_ACTION_ENTER_ROUNDABOUT;
                 break;
-            case Routing::RoutingInstruction::Type::LEAVE_ROUNDABOUT:
+            case routing::RoutingInstruction::Type::LEAVE_ROUNDABOUT:
                 action = RoutingAction::ROUTING_ACTION_LEAVE_ROUNDABOUT;
                 break;
-            case Routing::RoutingInstruction::Type::STAY_ON_ROUNDABOUT:
+            case routing::RoutingInstruction::Type::STAY_ON_ROUNDABOUT:
                 action = RoutingAction::ROUTING_ACTION_STAY_ON_ROUNDABOUT;
                 break;
-            case Routing::RoutingInstruction::Type::ENTER_AGAINST_ALLOWED_DIRECTION:
+            case routing::RoutingInstruction::Type::ENTER_AGAINST_ALLOWED_DIRECTION:
                 action = RoutingAction::ROUTING_ACTION_ENTER_AGAINST_ALLOWED_DIRECTION;
                 break;
-            case Routing::RoutingInstruction::Type::LEAVE_AGAINST_ALLOWED_DIRECTION:
+            case routing::RoutingInstruction::Type::LEAVE_AGAINST_ALLOWED_DIRECTION:
                 action = RoutingAction::ROUTING_ACTION_LEAVE_AGAINST_ALLOWED_DIRECTION;
                 break;
-            case Routing::RoutingInstruction::Type::REACHED_YOUR_DESTINATION:
+            case routing::RoutingInstruction::Type::REACHED_YOUR_DESTINATION:
                 action = RoutingAction::ROUTING_ACTION_FINISH;
                 break;
             default:

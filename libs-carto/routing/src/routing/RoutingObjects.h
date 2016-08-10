@@ -19,7 +19,7 @@
 #include <cglib/vec.h>
 #include <cglib/bbox.h>
 
-namespace carto { namespace Routing {
+namespace carto { namespace routing {
     using WGSPos = cglib::vec2<double>;
     using WGSBounds = cglib::bbox2<double>;
 

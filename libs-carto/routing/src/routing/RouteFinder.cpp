@@ -1,6 +1,6 @@
 #include "RouteFinder.h"
 
-namespace carto { namespace Routing {
+namespace carto { namespace routing {
     RoutingResult RouteFinder::find(const RoutingQuery& query) const {
         std::array<std::vector<RoutingGraph::NearestNode>, 2> nearestNodes;
         std::array<std::priority_queue<SearchNode>, 2> heaps;
