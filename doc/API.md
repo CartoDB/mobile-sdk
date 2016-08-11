@@ -4,6 +4,7 @@ This file is for reference purposes only. It is intended for tracking the Mobile
 
 ## Documentation
 
+* [Mobile App API Keys](currently a local file in the Docs repo... still analyzing this but the following files from this repo are not actual code libraries? May need to add as local doc files instead?  Still scoping)
 * [Getting Started](getting_started.md)
 * [Downloads](downloads.md)
 * [Sample Apps](sampleapps.md)
