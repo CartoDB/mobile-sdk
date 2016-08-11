@@ -7,6 +7,7 @@ cd pcre
 cmake .
 make
 sudo make install
+export PATH=$PATH:/usr/local/bin
 cd ..
 ./autogen.sh
 ./configure --disable-ccache
