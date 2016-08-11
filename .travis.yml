@@ -10,13 +10,11 @@ matrix:
  include:
    - os: osx
 
-before_install:
+before_script:
   - source scripts/travis/cmake.sh
   - source scripts/travis/swig.sh
-
-install: true
-
-before_script:
+  - source scripts/travis/boost.sh
+  - source scripts/travis/externallibs.sh
   - source scripts/travis/link-dirs.sh
 
 script:
