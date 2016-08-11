@@ -14,6 +14,8 @@ before_install:
   - source scripts/travis/swig.sh
   - source scripts/travis/cmake.sh
 
+install: true
+
 before_script:
   - source scripts/travis/link-dirs.sh
 
