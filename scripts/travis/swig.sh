@@ -4,9 +4,11 @@ rm -rf mobile-swig
 git clone https://github.com/CartoDB/mobile-swig.git
 cd mobile-swig
 cd pcre
-cmake .
+aclocal
+automake
+./configure --prefix=$PWD/pcre-swig-install --disable-shared
 make
-sudo make install
+make install
 export PATH=$PATH:/usr/local/bin
 cd ..
 ./autogen.sh
