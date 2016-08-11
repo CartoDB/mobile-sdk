@@ -14,4 +14,4 @@ cd ..
 ./autogen.sh
 ./configure --disable-ccache
 make
-sudo make install
+sudo make install || true
