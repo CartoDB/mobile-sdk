@@ -100,27 +100,27 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="$baseDir\prebuilt\angle\Redist\CommonConfiguration\ARM\libEGL.dll">
+    <Content Include="$baseDir\libs-external\angle\prebuilt\Redist\CommonConfiguration\ARM\libEGL.dll">
       <Link>Redist\CommonConfiguration\ARM\libEGL.dll</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="$baseDir\prebuilt\angle\Redist\CommonConfiguration\ARM\libGLESv2.dll">
+    <Content Include="$baseDir\libs-external\angle\prebuilt\Redist\CommonConfiguration\ARM\libGLESv2.dll">
       <Link>Redist\CommonConfiguration\ARM\libGLESv2.dll</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="$baseDir\prebuilt\angle\Redist\CommonConfiguration\x64\libEGL.dll">
+    <Content Include="$baseDir\libs-external\angle\prebuilt\Redist\CommonConfiguration\x64\libEGL.dll">
       <Link>Redist\CommonConfiguration\x64\libEGL.dll</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="$baseDir\prebuilt\angle\Redist\CommonConfiguration\x64\libGLESv2.dll">
+    <Content Include="$baseDir\libs-external\angle\prebuilt\Redist\CommonConfiguration\x64\libGLESv2.dll">
       <Link>Redist\CommonConfiguration\x64\libGLESv2.dll</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="$baseDir\prebuilt\angle\Redist\CommonConfiguration\x86\libEGL.dll">
+    <Content Include="$baseDir\libs-external\angle\prebuilt\Redist\CommonConfiguration\x86\libEGL.dll">
       <Link>Redist\CommonConfiguration\x86\libEGL.dll</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="$baseDir\prebuilt\angle\Redist\CommonConfiguration\x86\libGLESv2.dll">
+    <Content Include="$baseDir\libs-external\angle\prebuilt\Redist\CommonConfiguration\x86\libGLESv2.dll">
       <Link>Redist\CommonConfiguration\x86\libGLESv2.dll</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>

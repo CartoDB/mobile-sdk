@@ -9,7 +9,7 @@ This is package to create Carto Mobile SDK Xamarin component for the store
  1. add samples to samples/folders (see yaml). Same as in github.com/CartoDB/mobile-dotnet-samples project
  2. update component.yaml - version number
  3. in same folder where is component.yaml run:
-  `mono ../../xamarin-component.exe package`
+  `mono xamarin-component.exe package`
 
  
 # Installing locally (for testing)
@@ -18,7 +18,7 @@ win:
   `xamarin-component.exe install CartoMobileSDK-1.0.0.xam`
 
 mac:
-  `mono ../../xamarin-component.exe install CartoMobileSDK-1.0.0.xam`
+  `mono xamarin-component.exe install CartoMobileSDK-1.0.0.xam`
 
 
 # References

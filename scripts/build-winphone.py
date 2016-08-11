@@ -44,7 +44,7 @@ def buildWinPhoneNativeDLL(args, arch):
     '-DCMAKE_GENERATOR_PLATFORM=%s' % platformArch,
     '-DCMAKE_BUILD_TYPE=%s' % args.nativeconfiguration,
     '-DWRAPPER_DIR=%s' % ('%s/generated/winphone-csharp/wrappers' % baseDir),
-    '-DANGLE_LIB_DIR=%s' % ('%s/prebuilt/angle/Lib/%s' % (baseDir, platformArch)),
+    '-DANGLE_LIB_DIR=%s' % ('%s/libs-external/angle/prebuilt/Lib/%s' % (baseDir, platformArch)),
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
     "-DSDK_PLATFORM='Windows Phone 10'",

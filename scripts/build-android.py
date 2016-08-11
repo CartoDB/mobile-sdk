@@ -71,7 +71,7 @@ def buildAndroidJAR(args):
   if not javac(args, buildDir,
     '-source', '1.6',
     '-target', '1.6',
-    '-bootclasspath', 'android/rt.jar',
+    '-bootclasspath', '%s/scripts/android/rt.jar' % baseDir,
     '-classpath', '%s/platforms/android-10/android.jar' % args.androidsdkpath,
     '-d', buildDir,
     *javaFiles
