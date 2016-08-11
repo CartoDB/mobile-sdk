@@ -1,4 +1,6 @@
 language: cpp
+dist: trusty
+sudo: required
 osx_image: xcode7.3
 branches:
   only:
@@ -14,7 +16,7 @@ before_install:
   - source scripts/travis/cmake.sh
 
 before_script:
-  - source scripts/travis/link_dirs.sh
+  - source scripts/travis/link-dirs.sh
 
 script:
   - cd scripts && python swigpp-objc.py
