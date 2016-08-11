@@ -11,8 +11,6 @@ matrix:
    - os: osx
 
 before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y libpcre3-dev
   - source scripts/travis/swig.sh
   - source scripts/travis/cmake.sh
 
