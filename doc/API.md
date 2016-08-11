@@ -5,7 +5,12 @@ This file is for reference purposes only. It is intended for tracking the Mobile
 ## Documentation
 
 * [Getting Started](getting_started.md)
+* [Downloads](downloads.md)
 * [Sample Apps](sampleapps.md)
-* [Mobile Features](mobile_features.md)
+* [Common App development tasks](common_tasks.md)
+* [CARTO Engine integration](carto.md)
+* [More advanced tasks](advanced.md)
+* [Extension features](proextensions.md)
+* [Offline Package listing](offline_packages.md)
 * [API Reference](api_reference.md)
  

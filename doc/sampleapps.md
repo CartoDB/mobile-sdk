@@ -8,10 +8,6 @@ https://developer.nutiteq.com/samples
 
 Following are running samples for various platforms we support for our native Mobile SDK.
 
-## Xamarin and Windows Phone Samples
-
-* [https://github.com/CartoDB/mobile-dotnet-samples](https://github.com/CartoDB/mobile-dotnet-samples)
-
 
 ## Android Samples
 
@@ -26,3 +22,7 @@ Following are running samples for various platforms we support for our native Mo
 * [https://github.com/CartoDB/mobile-ios-samples](https://github.com/CartoDB/mobile-ios-samples), see sample screenshot of what should appear:
 
     <img src="/img/layout/mobile/iOS_Simulator_Screen_Shot_26_Dec_2014_20.35.20-138b915be3632e5d.png" alt="iOS sample 1"/> <img src="/img/layout/mobile/iOS_Simulator_Screen_Shot_26_Dec_2014_20.41.57-201c02b53a916987.png" alt="iOS sample 2"/>
+
+## Xamarin and Windows Phone Samples
+
+* [https://github.com/CartoDB/mobile-dotnet-samples](https://github.com/CartoDB/mobile-dotnet-samples)

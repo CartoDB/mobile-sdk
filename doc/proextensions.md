@@ -5,7 +5,7 @@ https://developer.nutiteq.com/pro
 
 # Pro Extensions
 
-The CartoDB Enterprise account provides additional developer options for more advanced apps, such as: GIS, B2B, military, utility management and some other end-user apps. These advanced features are not included in the basic Mobile SDK package. Please [contact us](mailto:sales@cartodb.com) for a demo of the pro extension features, and for more information about Enterprise accounts.
+The CARTO Enterprise account provides additional developer options for more advanced apps, such as: GIS, B2B, military, utility management and some other end-user apps. These advanced features are not included in the basic Mobile SDK package. Please [contact us](mailto:sales@cartodb.com) for a demo of the pro extension features, and for more information about Enterprise accounts.
 
 ## GIS Extension
 
