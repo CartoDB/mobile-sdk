@@ -8,9 +8,6 @@ namespace carto {
 
     bool LicenseManager::registerLicense(const std::string& licenseKey, const std::shared_ptr<LicenseManagerListener>& listener) {
         Log::Info("LicenseManager::registerLicense: Public build, accepting any license!");
-        if (listener) {
-            listener->onLicenseUpdated(licenseKey);
-        }
         return true;
     }
 

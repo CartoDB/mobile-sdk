@@ -13,7 +13,6 @@
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
 #ifdef _CARTO_LICENSEMANAGER_SUPPORT
-#include "components/LicenseManager.h"
 #include "assets/EvaluationWatermarkPNG.h"
 #include "assets/ExpiredWatermarkPNG.h"
 #include "assets/CartoWatermarkPNG.h"
@@ -89,18 +88,18 @@ namespace carto {
     }
     
     void WatermarkRenderer::onDrawFrame(const ViewState& viewState) {
-#ifdef _CARTO_LICENSEMANAGER_SUPPORT
         bool limitedLicense = false;
         std::shared_ptr<Bitmap> watermarkBitmap;
-        std::string watermark = "evaluation";
-        LicenseManager::GetInstance().getParameter("watermark", watermark);
-        if (watermark == "custom") {
-            watermarkBitmap = _options.getWatermarkBitmap();
-        } else if (watermark == "carto" || watermark == "nutiteq") {
-            watermarkBitmap = GetCartoWatermarkBitmap();
-        } else if (watermark == "evaluation" || watermark == "development" || watermark == "expired") {
-            limitedLicense = true;
-            watermarkBitmap = (watermark == "expired" ? GetExpiredWatermarkBitmap() : GetEvaluationWatermarkBitmap());
+        std::string watermark;
+        if (LicenseManager::GetInstance().getParameter("watermark", watermark)) {
+            if (watermark == "custom") {
+                watermarkBitmap = _options.getWatermarkBitmap();
+            } else if (watermark == "carto" || watermark == "nutiteq") {
+                watermarkBitmap = GetCartoWatermarkBitmap();
+            } else if (watermark == "evaluation" || watermark == "development" || watermark == "expired") {
+                limitedLicense = true;
+                watermarkBitmap = (watermark == "expired" ? GetExpiredWatermarkBitmap() : GetEvaluationWatermarkBitmap());
+            }
         }
     
         bool watermarkChanged = false;
@@ -171,7 +170,6 @@ namespace carto {
         }
     
         GLContext::CheckGLError("WatermarkRenderer::onDrawFrame");
-#endif
     }
     
     void WatermarkRenderer::onSurfaceDestroyed() {
