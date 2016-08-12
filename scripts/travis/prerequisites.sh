@@ -1,5 +1,11 @@
+export DIR=`pwd`
 source scripts/travis/cmake.sh;
+cd $DIR;
 source scripts/travis/swig.sh;
+cd $DIR;
 source scripts/travis/boost.sh;
+cd $DIR;
 source scripts/travis/externallibs.sh;
-source scripts/travis/link-dirs.sh
+cd $DIR;
+source scripts/travis/link-dirs.sh;
+cd $DIR
