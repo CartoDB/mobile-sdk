@@ -11,8 +11,9 @@ matrix:
    - os: osx
 
 before_script:
-  - source scripts/travis/cmake.sh || source scripts/travis/swig.sh || source scripts/travis/boost.sh || source scripts/travis/externallibs.sh || source scripts/travis/link-dirs.sh
+  - source scripts/travis/prerequisites.sh
 
 script:
+  - ls -al
   - cd scripts && python swigpp-objc.py
   - cd scripts && python build-ios.py --ios-arch=arm64
