@@ -15,3 +15,4 @@ cd ..
 ./configure --disable-ccache
 make
 sudo make install || true
+cd ..

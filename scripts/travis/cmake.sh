@@ -7,3 +7,5 @@ cd cmake-3.5.2
 ./configure
 make
 sudo make install
+cd ..
+
