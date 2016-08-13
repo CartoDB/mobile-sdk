@@ -1,4 +1,3 @@
-language: cpp
 branches:
   only:
     - master
@@ -21,7 +20,7 @@ matrix:
    - os: linux
      sudo: required
      dist: trusty
-     language: android
+     language: cpp
 
 before_script:
   - source scripts/travis/prerequisites.sh
