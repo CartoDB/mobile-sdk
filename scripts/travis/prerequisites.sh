@@ -28,16 +28,16 @@ make
 sudo make install || true
 cd ..
 
+echo '---- Downloading and installing External libs ----'
+rm -rf mobile-external-libs
+git clone https://github.com/CartoDB/mobile-external-libs.git
+ln -sf ./mobile-external-libs/libs-external ./libs-external
+
 echo '---- Downloading and installing boost ----'
 curl -o boost_1_61_0.tar.gz -L https://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.tar.gz
 rm -r -f boost_1_61_0
 tar xpfz boost_1_61_0.tar.gz
 ln -sf ./boost_1_61_0 ./libs-external/boost
-
-echo '---- Downloading and installing External libs ----'
-rm -rf mobile-external-libs
-git clone https://github.com/CartoDB/mobile-external-libs.git
-ln -sf ./mobile-external-libs/libs-external ./libs-external
 
 if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
   echo '---- Downloading and installing Android NDK r12b ----'
