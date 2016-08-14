@@ -934,8 +934,7 @@ namespace carto { namespace vt {
     void GLTileRenderer::addRenderNode(RenderNode renderNode, std::multimap<int, RenderNode>& renderNodeMap) {
         const std::shared_ptr<const TileLayer>& layer = renderNode.layer;
         auto range = renderNodeMap.equal_range(layer->getLayerIndex());
-        auto it = range.first;
-        while (it != range.second) {
+        for (auto it = range.first; it != range.second; ) {
             RenderNode& baseRenderNode = (it++)->second;
             if (!renderNode.tileId.intersects(baseRenderNode.tileId)) {
                 continue;
@@ -947,11 +946,6 @@ namespace carto { namespace vt {
                 TileGeometry::Type type = layer->getGeometries().front()->getType();
                 TileGeometry::Type baseType = baseRenderNode.layer->getGeometries().front()->getType();
                 combine = (type == baseType);
-            }
-            else if (!layer->getBitmaps().empty() && !baseRenderNode.layer->getBitmaps().empty()) {
-                TileBitmap::Format format = layer->getBitmaps().front()->getFormat();
-                TileBitmap::Format baseFormat = baseRenderNode.layer->getBitmaps().front()->getFormat();
-                combine = (format == TileBitmap::Format::RGBA || baseFormat == TileBitmap::Format::RGBA);
             }
             
             // Combine layers, if possible
@@ -968,6 +962,7 @@ namespace carto { namespace vt {
         }
         
         // New/non-intersecting layer. Add it to render node map.
+        auto it = renderNodeMap.lower_bound(layer->getLayerIndex());
         renderNodeMap.insert(it, { layer->getLayerIndex(), renderNode });
     }
     
@@ -1086,7 +1081,7 @@ namespace carto { namespace vt {
                     setBlendState(geometry->getStyleParameters().compOp);
                     renderTileGeometry(renderNode.tileId, blendNode->tileId, renderNode.blend, opacity, geometry);
                 }
-                update = renderNode.blend < 1.0f || update;
+                update = renderNode.initialBlend < 1.0f || update;
 
                 if (blendGeometry) {
                     glBindFramebuffer(GL_FRAMEBUFFER, currentFBO);
@@ -1143,7 +1138,7 @@ namespace carto { namespace vt {
                     
                     renderTileGeometry(renderNode.tileId, blendNode->tileId, renderNode.blend, opacity, geometry);
                 }
-                update = renderNode.blend < 1.0f || update;
+                update = renderNode.initialBlend < 1.0f || update;
             }
         }
         
