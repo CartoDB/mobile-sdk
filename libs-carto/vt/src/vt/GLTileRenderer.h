@@ -62,9 +62,10 @@ namespace carto { namespace vt {
         struct RenderNode {
             TileId tileId;
             std::shared_ptr<const TileLayer> layer;
+            float initialBlend;
             float blend;
 
-            explicit RenderNode(const TileId& tileId, std::shared_ptr<const TileLayer> layer, float blend) : tileId(tileId), layer(std::move(layer)), blend(blend) { }
+            explicit RenderNode(const TileId& tileId, std::shared_ptr<const TileLayer> layer, float blend) : tileId(tileId), layer(std::move(layer)), initialBlend(blend), blend(blend) { }
         };
 
         struct LayerFBO {
@@ -115,7 +116,7 @@ namespace carto { namespace vt {
         float calculateBlendNodeOpacity(const BlendNode& blendNode, float blend) const;
         void updateBlendNode(BlendNode& blendNode, float dBlend);
         bool buildRenderNodes(const BlendNode& blendNode, float blend, std::multimap<int, RenderNode>& renderNodeMap);
-        void addRenderNode(const RenderNode& renderNode, std::multimap<int, RenderNode>& renderNodeMap);
+        void addRenderNode(RenderNode renderNode, std::multimap<int, RenderNode>& renderNodeMap);
         void updateLabels(const std::vector<std::shared_ptr<TileLabel>>& labels, float dOpacity);
 
         bool renderBlendNodes2D(const std::vector<std::shared_ptr<BlendNode>>& blendNodes);

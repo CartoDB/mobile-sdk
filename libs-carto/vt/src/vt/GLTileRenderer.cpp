@@ -665,7 +665,6 @@ namespace carto { namespace vt {
     bool GLTileRenderer::render2D() {
         std::lock_guard<std::mutex> lock(*_mutex);
         
-        
         // Bind screen FBO and clear it (if FBO enabled)
         GLint currentFBO = 0;
         if (_useFBO) {
@@ -932,40 +931,40 @@ namespace carto { namespace vt {
         return exists;
     }
     
-    void GLTileRenderer::addRenderNode(const RenderNode& renderNode, std::multimap<int, RenderNode>& renderNodeMap) {
+    void GLTileRenderer::addRenderNode(RenderNode renderNode, std::multimap<int, RenderNode>& renderNodeMap) {
         const std::shared_ptr<const TileLayer>& layer = renderNode.layer;
         auto range = renderNodeMap.equal_range(layer->getLayerIndex());
         auto it = range.first;
-
-        // Check if this is a raster tile; in that case blend the tile
-        if (layer->getGeometries().empty()) {
-            range.second = it;
-        }
-
-        for (; it != range.second; it++) {
-            RenderNode& baseRenderNode = it->second;
+        while (it != range.second) {
+            RenderNode& baseRenderNode = (it++)->second;
             if (!renderNode.tileId.intersects(baseRenderNode.tileId)) {
                 continue;
             }
 
-            TileGeometry::Type type = TileGeometry::Type::NONE;
-            if (layer->getGeometries().size() == 1) {
-                type = layer->getGeometries().front()->getType();
+            // Check if the layer should be combined with base layer
+            bool combine = false;
+            if (!layer->getGeometries().empty() && !baseRenderNode.layer->getGeometries().empty()) {
+                TileGeometry::Type type = layer->getGeometries().front()->getType();
+                TileGeometry::Type baseType = baseRenderNode.layer->getGeometries().front()->getType();
+                combine = (type == baseType);
+            }
+            else if (!layer->getBitmaps().empty() && !baseRenderNode.layer->getBitmaps().empty()) {
+                TileBitmap::Format format = layer->getBitmaps().front()->getFormat();
+                TileBitmap::Format baseFormat = baseRenderNode.layer->getBitmaps().front()->getFormat();
+                combine = (format == TileBitmap::Format::RGBA || baseFormat == TileBitmap::Format::RGBA);
             }
             
-            TileGeometry::Type baseType = TileGeometry::Type::NONE;
-            if (baseRenderNode.layer->getGeometries().size() == 1) {
-                baseType = baseRenderNode.layer->getGeometries().front()->getType();
+            // Combine layers, if possible
+            if (combine) {
+                if (baseRenderNode.tileId.zoom > renderNode.tileId.zoom) {
+                    renderNode.blend = std::max(renderNode.blend, std::min(renderNode.initialBlend + baseRenderNode.blend, 1.0f));
+                    it = renderNodeMap.erase(--it);
+                }
+                else {
+                    baseRenderNode.blend = std::max(baseRenderNode.blend, std::min(baseRenderNode.initialBlend + renderNode.blend, 1.0f));
+                    return;
+                }
             }
-            
-            // If layer appears or disappears and is of type polygon, add it to render node map. Otherwise "blend"
-            if (type != baseType && (type == TileGeometry::Type::NONE || type == TileGeometry::Type::POLYGON || type == TileGeometry::Type::POLYGON3D) && (baseType == TileGeometry::Type::NONE || baseType == TileGeometry::Type::POLYGON || baseType == TileGeometry::Type::POLYGON3D)) {
-                renderNodeMap.insert(++it, { layer->getLayerIndex(), renderNode });
-            }
-            else {
-                baseRenderNode.blend = std::min(baseRenderNode.blend + renderNode.blend, 1.0f);
-            }
-            return;
         }
         
         // New/non-intersecting layer. Add it to render node map.
