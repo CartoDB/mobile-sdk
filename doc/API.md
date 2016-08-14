@@ -4,14 +4,18 @@ This file is for reference purposes only. It is intended for tracking the Mobile
 
 ## Documentation
 
-* [Mobile App API Keys](currently a local file in the Docs repo... still analyzing this but the following files from this repo are not actual code libraries? May need to add as local doc files instead?  Still scoping)
-* [Getting Started](getting_started.md)
-* [Downloads](downloads.md)
+* [SDK Downloads](downloads.md)
+* [Mobile Platform Implementation](getting_started.md)
+* [Mobile Apps and API Keys](currently a local file in the Docs repo... still analyzing this but the following files from this repo are not actual code libraries? May need to add as local doc files instead?  Still scoping)
 * [Sample Apps](sampleapps.md)
-* [Common App development tasks](common_tasks.md)
-* [CARTO Engine integration](carto.md)
-* [More advanced tasks](advanced.md)
-* [Extension features](proextensions.md)
-* [Offline Package listing](offline_packages.md)
+* [Basic Map Components](common_tasks.md)
+* [Map Listener Events](listener.md)
+* [Managing Mobile Maps with CARTO APIs](carto.md)
+* [Advanced Map Features](advanced.md)
+* [Mobile Routing](routing.md)
+* [Offline Map Packages](offline_packages.md)
 * [API Reference](api_reference.md)
  
+Currently not being pulled into live docs: will be added for a future release
+
+* [Extension features](proextensions.md)

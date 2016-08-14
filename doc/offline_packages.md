@@ -1,32 +1,23 @@
-Offline Map packages
-====================
+# Offline Map Packages
 
-Following map packages can be downloaded from Carto map service for
-offline use. Your app needs to use **Package Manager** API to get the
-list, download and consume the packages.
+Offline map packages enable mobile maps to work without an Internet connection and are downloaded to your local mobile app. There are several map packages that can be downloaded from CARTO for offline use. Your must use the **Package Manager** API to download the packages. _Offline map packages are only available to certain account plans._ [Contact us](mailto:support@carto.com) if you have questions about your Mobile SDK plan.
 
-Package names:
+The following offline packages are available:
 
--   There is general convention to provide geographical hierarchy and
-    avoid too long lists and big packages:
-    **Continent/Sub-continent/Country/Country Region**
--   **Sub-continent** part is used only in Europe, Asia, Africa and
-    North America
--   **Country Region** division is used in US, Germany, UK, Spain,
-    Russia and Canada. Spain and UK are also available as
-    single package.
--   Names are available in following languages: **English (en), German
-    (de), French (fr), Italian (it), Chinese (zh), Spanish (es),
-    Russian (ru) and Estonian (et)**. These are same languages what we
-    currently support as map language. Contact us if you need
-    another language.
+-  **Continent/Sub-continent/Country/Country Region**, for general geographical hierarchies
 
-### Carto OpenStreetMap Packages
+-  **Sub-continent**, only used in Europe, Asia, Africa and North America
 
--   Use source ID: **nutiteq.osm** when initializing Package Manager
--   Map data: [OpenStreetMap](http://www.openstreetmap.org)
-    contributors, ODbL license.
+-  **Country Region** are used in US, Germany, UK, Spain, Russia and Canada. Spain and UK also have their own individual, offline packages
 
+-  **By Language** - offline packages are also available in following languages: **English (en), German, (de), French (fr), Italian (it), Chinese (zh), Spanish (es), Russian (ru) and Estonian (et)**. [Contact us](mailto:support@carto.com) if you need another language
+
+## CARTO OpenStreetMap Packages
+
+-  When initializing the Package Manager API, use `nutiteq.osm` as the source ID
+-  For map data, see the [OpenStreetMap](http://www.openstreetmap.org) contributors, ODbL license
+
+{% highlight javascript %}
 <script type="text/javascript">
 \$(document).ready(function() {\
 
@@ -61,4 +52,4 @@ name</th><th></th><th style="padding:5px;">ID</th><th></th><th style="padding:5p
 </script>
 <div id="packages">
 </div>
-
+{% endhighlight %}

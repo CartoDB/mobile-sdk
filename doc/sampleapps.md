@@ -1,13 +1,6 @@
-{% comment %}
-The original resource for this is in:
-https://developer.nutiteq.com/samples
-{% endcomment %}
-
-
 # Sample Mobile Apps
 
-Following are running samples for various platforms we support for our native Mobile SDK.
-
+Once you have installed the mobile dependencies and have installed the required libraries, the following sample mobile applications can be used to test apps on multiple mobile platforms. Some of these samples include some useful style files that you can use with your Mobile SDK projects.
 
 ## Android Samples
 
@@ -17,7 +10,7 @@ Following are running samples for various platforms we support for our native Mo
 
 <img src="http://zxing.org/w/chart?cht=qr&chs=230x230&chld=L&choe=UTF-8&chl=http%3A%2F%2Fgoo.gl%2F1hHPWW" alt="QR Code to download"/>
 
-## iOS Sample
+## iOS Samples
 
 * [https://github.com/CartoDB/mobile-ios-samples](https://github.com/CartoDB/mobile-ios-samples), see sample screenshot of what should appear:
 
