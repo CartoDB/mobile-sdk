@@ -1,5 +1,7 @@
 set -e
 
+rvm get head
+
 echo '---- Downloading and installing CMake ----'
 curl -o cmake-3.5.2.tar.gz -L https://cmake.org/files/v3.5/cmake-3.5.2.tar.gz
 rm -rf cmake-3.5.2
