@@ -1,7 +1,7 @@
 #include "MBVTFeatureDecoder.h"
 #include "Logger.h"
 
-#include "MBVTPackage/MBVTPackage.pb.h"
+#include "mbvtpackage/MBVTPackage.pb.h"
 
 #include <cstddef>
 #include <cstdlib>
