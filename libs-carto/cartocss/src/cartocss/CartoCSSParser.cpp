@@ -1,7 +1,7 @@
 #include "CartoCSSParser.h"
 #include "Expression.h"
 #include "Predicate.h"
-#include "Mapnikvt/CSSColorParser.h"
+#include "mapnikvt/CSSColorParser.h"
 
 #include <regex>
 
