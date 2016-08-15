@@ -1,169 +1,8 @@
-STILL BEING EDITED....
-
 # Advanced Map Features
 
-This section describes some of the advanced map features that are available for select account plans, such as [Raster Tiles](#raster-tile-sources), [Cluster](#cluster), [MBTiles](#mbtiles-for-map-data), [Ground Overlays](#ground-overlays), [Vector Styles](#vector-styles), and [Routing-offline and online](#routing-offline-and-online).
+This section describes some of the advanced map features that are available for select account plans, such as using [Clusters](#cluster) to display multiple points of interest as objects, [Ground Overlays](#ground-overlays) to project a bitmap image over a basemap, and using [Vector Styles](#vector-styles) for vector map tiles.
 
-## Raster Tile Sources
-
-Raster tiles can produce a faster loading map by rendering the map based on pixels of small images. With certain account plans, you can use use external raster map tiles with the Mobile SDK. You can also create your own custom raster tile map source. This section describes the raster tile features available in the Mobile SDK.
-
-In order to apply a raster tile source:
-
-- Use the `HTTPTileDataSource` API function as the tile source
-
-- Create `RasterTileLayer` to apply it
-
-### Code Sample
-
-The DataSource constructor uses the following URL patterns. It requires a minimum zoom level above `0`, and a maximum zoom level between `14 and 19`
-
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
-    </li>
-  </ul>
-
-  <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}
-
-      String url = "http://your-url-with-placeholders-see-below";
-      TileDataSource tileDataSource = new HTTPTileDataSource(0, 18, url);
-      RasterTileLayer layer = new RasterTileLayer(tileDataSource);
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-    string url = "http://your-url-with-placeholders-see-below";
-    TileDataSource tileDataSource = new HTTPTileDataSource(0, 18, url);
-    RasterTileLayer layer = new RasterTileLayer(tileDataSource);
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-    NSString* url = @"http://your-url-with-placeholders-see-below";
-    NTHTTPTileDataSource *source = [[NTHTTPTileDataSource alloc]initWithMinZoom:0 maxZoom:18 baseURL:url];
-    NTRasterTileLayer *layer = [[NTRasterTileLayer alloc]initWithDataSource:source];
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  COMING SOON...
-
-  {% endhighlight %}
-  </div>
-  
-</div>
-
-## <a href="https://carto.com/location-data-services/basemaps/">CARTO Positron tiles</a>
-<pre>http://a.basemaps.cartocdn.com/dark_all/{zoom}/{x}/{y}.png</pre>
-<img src="http://a.basemaps.cartocdn.com/light_all/17/65490/43588.png"/>
-
-Free.
-
-## <a href="https://carto.com/location-data-services/basemaps/">CARTO Dark Matter tiles</a>
-<pre>http://a.basemaps.cartocdn.com/dark_all/{zoom}/{x}/{y}.png</pre>
-<img src="http://a.basemaps.cartocdn.com/dark_all/17/65490/43588.png"/>
-
-Free.
-
-## <a href="http://www.osm.org">OpenStreetMap Mapnik tiles</a>
-<pre>http://a.tile.openstreetmap.org/{zoom}/{x}/{y}.png</pre>
-<img src="http://b.tile.openstreetmap.org/15/5241/12661.png"/>
-
-Free for limited use. See a description of the [_Tile usage policy_](http://wiki.openstreetmap.org/wiki/Tile_usage_policy).
-## <a href="http://www.mapbox.com">MapBox raster tiles</a>
-<pre>http://api.mapbox.com/v4/{mapid}/{zoom}/{x}/{y}.png?access_token=&lt;your access token&gt;</pre>
-<img src="http://api.tiles.mapbox.com/v3/nutiteq.map-f0sfyluv/17/65490/43588.png"/>
-
-See <a href=" https://www.mapbox.com/developers/api/maps/">MapBox API spec</a> for details and to create access token. <a href='http://mapbox.com/about/maps' target='_blank'>MapBox Terms & Feedback</a>. 
-
-## <a href="http://maps.stamen.com">Stamen Toner</a>
-<pre>http://a.tile.stamen.com/toner/{zoom}/{x}/{y}.png</pre>
-<img src="http://a.tile.stamen.com/toner/13/1310/3166.png"/>
-
-Please contact http://www.stamen.com
-## <a href="http://maps.stamen.com/#watercolor/12/37.7706/-122.3782">Stamen Watercolor</a>
-<pre>http://tile.stamen.com/watercolor/{zoom}/{x}/{y}.png</pre>
-<img src="http://tile.stamen.com/watercolor/12/654/1583.jpg"/>
-
-Please contact http://www.stamen.com
-## <a href="http://maps.stamen.com/#terrain/12/37.7706/-122.3782">Stamen Terrain</a> - US only
-<pre>http://tile.stamen.com/terrain/{zoom}/{x}/{y}.png</pre>
-<img src="http://tile.stamen.com/terrain/12/654/1583.jpg"/>
-
-Please contact http://www.stamen.com
-
-## Microsoft Bing Maps
-<pre>http://ecn.t3.tiles.virtualearth.net/tiles/r{quadkey}.png?g=1&mkt=en-US&shading=hill&n=z</pre>
-
-<img width="256" height="256" src="http://ecn.t3.tiles.virtualearth.net/tiles/r1202.png?g=1&mkt=en-US&shading=hill&n=z" alt=""/>
-
-<a href="http://www.microsoft.com/maps/product/terms.html">Commercial terms of Bing Maps API</a>. Must use <a href="http://msdn.microsoft.com/en-us/library/ff701716.aspx">Get Imagery Metadata Bing Service </a> to get supported URL parameters. 
-
-## Microsoft Bing Aerials
-<pre>http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=1&mkt=en-US</pre>
-
-<img width="256" height="256"  src="http://ecn.t3.tiles.virtualearth.net/tiles/a032010110123333.jpeg?g=1&mkt=en-US" alt=""/>
-
-<a href="http://www.microsoft.com/maps/product/terms.html">Commercial terms of Bing Maps API</a>. Must use <a href="http://msdn.microsoft.com/en-us/library/ff701716.aspx">Get Imagery Metadata Bing Service</a> to get supported URL parameters.
-
-## ESRI World Imagery (and other ESRI basemaps)
-<pre>http://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{zoom}/{y}/{x}</pre>
-
-<img width="256" height="256"  src="http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/16/24351/35037" alt=""/>
-
-<a href="http://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9">Terms and more info</a>. ArcGIS&trade; Developer service subscription is required.
-
-## OpenCycleMap
-
-<pre>http://a.tile.opencyclemap.org/cycle/{zoom}/{x}/{y}.png</pre>
-<img width="256" height="256"  src="http://b.tile.opencyclemap.org/cycle/13/4092/2719.png" alt=""/>
-
-© <a href="http://www.opencyclemap.org">OpenCycleMap</a>
-
-## OpenCycleMap Transport
-
-<pre>http://a.tile2.opencyclemap.org/transport/{zoom}/{x}/{y}.png</pre>
-<img width="256" height="256"  src="http://a.tile2.opencyclemap.org/transport/16/35209/21491.png" alt=""/>
-
-Free to use. Source: <a href="http://www.thunderforest.com/transport/">Thunderforest</a>
-
-## USGS Topo National Map (US Only)
-
-<pre>http://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/WMTS/tile/1.0.0/USGSTopo/default/GoogleMapsCompatible/{zoom}/{y}/{x}</pre>
-<img width="256" height="256"  src="http://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/WMTS/tile/1.0.0/USGSTopo/default/GoogleMapsCompatible/13/3162/1306" alt="USGS Topo"/>
-
-**Copyright**: USGS The National Map: National Boundaries Dataset, National Elevation Dataset, Geographic Names Information System, National Hydrography Dataset, National Land Cover Database, National Structures Dataset, and National Transportation Dataset; U.S. Census Bureau - TIGER/Line; HERE Road Data. <a href="http://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer">USGS MapServer</a>
-
-### Raster Tile References
-
-For general information about raster tiles and geospatial data, see the following Open Source Geospatial Foundation reference materials 
-
-- [OSM Wiki TMS page](http://wiki.openstreetmap.org/wiki/TMS)
-- [OSM Featured tiles](http://wiki.openstreetmap.org/wiki/Featured_tiles)
-
-
-# Clusters
+## Clusters
 
 When you have too many Points of Interest (POIs) that cannot be displayed as individual markers, it results in a cluttered map. It also effects the rendering performance of your map, and may even result in running out of memory. As an alternative, replace individual objects with *clusters*.
 
@@ -181,17 +20,17 @@ CARTO Mobile SDK has built-in cluster feature, which is highly customizable. You
 
   **Tip:** The cluster expand feature is useful for small clusters (containing up to four objects inside)
 
-## API Methods for Clusters
+### API Methods for Clusters
 
 Clusters are generated dynamically, based on `VectorDataSource` data that loads the map layer. If using an API, it works as a unique layer with the `ClusteredVectorLayer` method, and includes the following parameters in the a hierarchal order:
 
 1. Select the layer `DataSource`
 
-  In most cases,  the `LocalVectorDataSource` function contains all the elements to request the data. It is important that the DataSource displays all elements in a layer, and does not limit it to the current map visualization bbox (bounding box)
+    In most cases,  the `LocalVectorDataSource` function contains all the elements to request the data. It is important that the DataSource displays all elements in a layer, and does not limit it to the current map visualization bbox (bounding box)
 
 2. `ClusterElementBuilder` defines a single method `buildClusterElement`
 
-### Define data and layer
+### Define Cluster Data and Layer
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -212,31 +51,29 @@ Clusters are generated dynamically, based on `VectorDataSource` data that loads 
   <div class="Carousel-item js-Tabpanes-item is-active">
   {% highlight html %}
 
-        // 1. Initialize a local vector data source
-        LocalVectorDataSource vectorDataSource1 = new LocalVectorDataSource(baseProjection);
+// 1. Initialize a local vector data source
+      LocalVectorDataSource vectorDataSource1 = new LocalVectorDataSource(baseProjection);
 
-    // 2. Create Marker objects and add them to vectorDataSource
-    // **Note:** This depends on the _app type_ of your mobile app settings. See AdvancedMap for samples with JSON loading and random point generation
+// 2. Create Marker objects and add them to vectorDataSource
+      // **Note:** This depends on the _app type_ of your mobile app settings. See AdvancedMap for samples with JSON loading and random point generation
 
-    // 3. Initialize a vector layer with the previous data source
-        ClusteredVectorLayer vectorLayer1 = new ClusteredVectorLayer(vectorDataSource1, new MyClusterElementBuilder(this.getApplication()));
+// 3. Initialize a vector layer with the previous data source
+      ClusteredVectorLayer vectorLayer1 = new ClusteredVectorLayer(vectorDataSource1, new MyClusterElementBuilder(this.getApplication()));
         vectorLayer1.setMinimumClusterDistance(20);
 
-    // 4. Add the previous vector layer to the map
-        mapView.getLayers().add(vectorLayer1);
+// 4. Add the previous vector layer to the map
+      mapView.getLayers().add(vectorLayer1);
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
+  {% highlight html %}var proj = new EPSG3857();
 
-        var proj = new EPSG3857();
-
-      // 5. Create overlay layer for markers
+// 1. Create overlay layer for markers
       var dataSource = new LocalVectorDataSource(proj);
 
-      // 6. Create Marker objects and add them to vectorDataSource.
+// 2. Create Marker objects and add them to vectorDataSource.
       // **Note:** This depends on the _app type_ of your mobile app settings. See samples with JSON loading
 
       var layer = new ClusteredVectorLayer(dataSource, new MyClusterElementBuilder());
@@ -250,35 +87,32 @@ Clusters are generated dynamically, based on `VectorDataSource` data that loads 
   <div class="Carousel-item js-Tabpanes-item">
   {% highlight html %}
 
-      // 7. Initialize a local vector data source
-    NTProjection* proj = [[mapView getOptions] getBaseProjection];
-    NTLocalVectorDataSource* vectorDataSource = [[NTLocalVectorDataSource alloc] initWithProjection:proj];
+// 1. Initialize a local vector data source
+      NTProjection* proj = [[mapView getOptions] getBaseProjection];
+      NTLocalVectorDataSource* vectorDataSource = [[NTLocalVectorDataSource alloc] initWithProjection:proj];
     
-    // 8. Create Marker objects and add them to vectorDataSource.
-    // **Note:** This depends on the _app type_ of your mobile app settings. See AdvancedMap for samples with JSON loading and random point generation
+// 2. Create Marker objects and add them to vectorDataSource.
+      // **Note:** This depends on the _app type_ of your mobile app settings. See AdvancedMap for samples with JSON loading and random point generation
     
-    // 9. Create element builder
-    MyMarkerClusterElementBuilder* clusterElementBuilder = [[MyMarkerClusterElementBuilder alloc] init];
+// 3. Create element builder
+      MyMarkerClusterElementBuilder* clusterElementBuilder = [[MyMarkerClusterElementBuilder alloc] init];
     
-    // 10. Initialize a vector layer with the previous data source
-    NTClusteredVectorLayer* vectorLayer = [[NTClusteredVectorLayer alloc] initWithDataSource:vectorDataSource clusterElementBuilder:clusterElementBuilder];
+// 4. Initialize a vector layer with the previous data source
+      NTClusteredVectorLayer* vectorLayer = [[NTClusteredVectorLayer alloc] initWithDataSource:vectorDataSource clusterElementBuilder:clusterElementBuilder];
     
-    // 11. Add the previous vector layer to the map
-    [[mapView getLayers] add:vectorLayer];
+// 5. Add the previous vector layer to the map
+      [[mapView getLayers] add:vectorLayer];
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  COMING SOON...
+  {% highlight html %}COMING SOON...
 
   {% endhighlight %}
   </div>
   
 </div>
-
 
 ### Define ClusterElementBuilder
 
@@ -303,9 +137,7 @@ The Cluster Element Builder takes set of original markers (map objects) as input
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}
-
-  private class MyClusterElementBuilder extends ClusterElementBuilder {
+  {% highlight html %}private class MyClusterElementBuilder extends ClusterElementBuilder {
 
         @SuppressLint("UseSparseArrays")
         private Map< Integer, MarkerStyle > markerStyles = new HashMap< Integer, MarkerStyle >();
@@ -355,9 +187,7 @@ The Cluster Element Builder takes set of original markers (map objects) as input
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-    public class MyClusterElementBuilder : ClusterElementBuilder
+  {% highlight html %}public class MyClusterElementBuilder : ClusterElementBuilder
   {
     BalloonPopupStyleBuilder balloonPopupStyleBuilder;
 
@@ -456,15 +286,12 @@ The Cluster Element Builder takes set of original markers (map objects) as input
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  COMING SOON...
+  {% highlight html %}COMING SOON...
 
   {% endhighlight %}
   </div>
   
 </div>
-
 
 ## MBTiles for Map Data
 
@@ -476,7 +303,7 @@ The following tools enable you to create MBTile packages:
 
 - [MapTiler](http://www.maptiler.com/) is a utility to create MBTiles from raster geo files (GeoTIFF, JPG, ECW, and so on)
 
-* [TileMill](http://mapbox.com/tilemill/) is an open source generator of nice map packages for vector geo files, such as Shapefile or PosgGIS geo data
+* [TileMill](http://mapbox.com/tilemill/) is an open source generator of map packages for vector geo files, such as Shapefile or PosgGIS geo data
 - [MOBAC](http://mobac.sourceforge.net) is available to download from variety of free sources, such as Bing, OpenStreetMap, and so on. You can even load it from WMS with added configuration
 
 - [MBUtil](https://github.com/mapbox/mbutil) enables you to create mbtiles from/to TMS-style tile folders, created with different utilities, such as GDAL utility
@@ -487,7 +314,7 @@ The following tools enable you to create MBTile packages:
 
 The following vector map tools enable you to create MBTiles:
 
-- Nutiteq SDK bundled [Package Manager API](/guides/offline-maps) downloads country-wide, or bounding box based, map packages with **OpenStreetMap data**. These files are not directly visible, as Package Manager downloads the files, you only use the API.
+- Nutiteq SDK bundled [Package Manager API](/docs/carto-engine/mobile-sdk/offline-map-service/) downloads country-wide, or bounding box based, map packages with **OpenStreetMap data**. These files are not directly visible, as Package Manager downloads the files, you only use the API.
 
 _**Note:** If you need to create vector map files **from different sources, or with your own data** (e.g. Shapefiles), please contact [CARTO support](mailto:carto@support.com)._ Our Mobile Developers will provide you with a free converter toolchain for custom conversions.
 
@@ -517,7 +344,7 @@ The following requirements allow you to ground overlays with the Mobile SDK.
 
   **Tip:** For larger rasters, the SDK Extensions allow you to display any size bitmap, up to hundreds of megabytes. These bitmaps are read directly from common GIS raster formats (such as GeoTIFF, BSB, ECW, MrSID, JPEG2000, and so on). Additionally, the source data can be entered using different coordinate systems. Please [contact us](mailto:sales@carto.com) if you are interested in enabling SDK Extensions as part of your account.
 
-### Ground Overlay Code Samples
+### Code Samples
 
 This example uses only one geographical coordinate. The building size is known, and the building direction is facing north. This allows us to calculate other ground points with the code. Four ground control points are set to the corners of the bitmap, which typically returns the most accurate result. 
 
@@ -543,11 +370,9 @@ This example uses only one geographical coordinate. The building size is known, 
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}
+  {% highlight html %}com.carto.graphics.Bitmap overlayBitmap = BitmapUtils.loadBitmapFromAssets("jefferson-building-ground-floor.jpg");
 
-    com.carto.graphics.Bitmap overlayBitmap = BitmapUtils.loadBitmapFromAssets("jefferson-building-ground-floor.jpg");
-
-    // Create two vector containing geographical positions and corresponding raster image pixel coordinates
+// 1. Create two vector containing geographical positions and corresponding raster image pixel coordinates
     MapPos pos = proj.fromWgs84(new MapPos(-77.004590, 38.888702));
     double sizeNS = 110, sizeWE = 100;
 
@@ -563,14 +388,14 @@ This example uses only one geographical coordinate. The building size is known, 
     bitmapPoses.add(new ScreenPos(overlayBitmap.getWidth(), overlayBitmap.getHeight()));
     bitmapPoses.add(new ScreenPos(overlayBitmap.getWidth(), 0));
 
-    // 1. Create bitmap overlay raster tile data source
+// 2. Create bitmap overlay raster tile data source
     BitmapOverlayRasterTileDataSource rasterDataSource = new BitmapOverlayRasterTileDataSource(0, 20, overlayBitmap, proj, mapPoses, bitmapPoses);
     RasterTileLayer rasterLayer = new RasterTileLayer(rasterDataSource);
     mapView.getLayers().add(rasterLayer);
 
-    // 2. Apply zoom level bias to the raster layer
+// 3. Apply zoom level bias to the raster layer
     // - By default, bitmaps are upsampled on high-DPI screens
-    // 3. Correct this by applying appropriate bias
+// 4. Correct this by applying appropriate bias
     float zoomLevelBias = (float) (Math.log(mapView.getOptions().getDPI() / 160.0f) / Math.log(2));
     rasterLayer.setZoomLevelBias(zoomLevelBias * 0.75f);
     rasterLayer.setTileSubstitutionPolicy(TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE);
@@ -582,81 +407,40 @@ This example uses only one geographical coordinate. The building size is known, 
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
+  {% highlight html %}var overlayBitmap = BitmapUtils.LoadBitmapFromAssets("jefferson-building-ground-floor.jpg");
 
-  var overlayBitmap = BitmapUtils.LoadBitmapFromAssets("jefferson-building-ground-floor.jpg");
+// 1. Create two vector geographical positions, and corresponding raster image pixel coordinates
+      var pos = proj.FromWgs84(new MapPos(-77.004590, 38.888702));
+      var sizeNS = 110;
+      var sizeWE = 100;
 
-  // 4. Create two vector geographical positions, and corresponding raster image pixel coordinates
-  var pos = proj.FromWgs84(new MapPos(-77.004590, 38.888702));
-  var sizeNS = 110;
-  var sizeWE = 100;
+      var mapPoses = new MapPosVector();
+      mapPoses.Add(new MapPos(pos.X - sizeWE, pos.Y + sizeNS));
+      mapPoses.Add(new MapPos(pos.X + sizeWE, pos.Y + sizeNS));
+      mapPoses.Add(new MapPos(pos.X + sizeWE, pos.Y - sizeNS));
+      mapPoses.Add(new MapPos(pos.X - sizeWE, pos.Y - sizeNS));
 
-  var mapPoses = new MapPosVector();
-  mapPoses.Add(new MapPos(pos.X - sizeWE, pos.Y + sizeNS));
-  mapPoses.Add(new MapPos(pos.X + sizeWE, pos.Y + sizeNS));
-  mapPoses.Add(new MapPos(pos.X + sizeWE, pos.Y - sizeNS));
-  mapPoses.Add(new MapPos(pos.X - sizeWE, pos.Y - sizeNS));
+      var bitmapPoses = new ScreenPosVector();
+      bitmapPoses.Add(new ScreenPos(0, 0));
+      bitmapPoses.Add(new ScreenPos(0, overlayBitmap.Height));
+      bitmapPoses.Add(new ScreenPos(overlayBitmap.Width, overlayBitmap.Height));
+      bitmapPoses.Add(new ScreenPos(overlayBitmap.Width, 0));
 
-  var bitmapPoses = new ScreenPosVector();
-  bitmapPoses.Add(new ScreenPos(0, 0));
-  bitmapPoses.Add(new ScreenPos(0, overlayBitmap.Height));
-  bitmapPoses.Add(new ScreenPos(overlayBitmap.Width, overlayBitmap.Height));
-  bitmapPoses.Add(new ScreenPos(overlayBitmap.Width, 0));
+// 2. Create bitmap overlay raster tile data source
+      var rasterDataSource = new BitmapOverlayRasterTileDataSource(0, 20, overlayBitmap, proj, mapPoses, bitmapPoses);
+      var rasterLayer = new RasterTileLayer(rasterDataSource);
+      MapView.Layers.Add(rasterLayer);
 
-  // 5. Create bitmap overlay raster tile data source
-  var rasterDataSource = new BitmapOverlayRasterTileDataSource(0, 20, overlayBitmap, proj, mapPoses, bitmapPoses);
-  var rasterLayer = new RasterTileLayer(rasterDataSource);
-  MapView.Layers.Add(rasterLayer);
+// 3. Apply zoom level bias to the raster layer
+      // - By default, bitmaps are upsampled on high-DPI screens
 
-  // 6. Apply zoom level bias to the raster layer
-  // - By default, bitmaps are upsampled on high-DPI screens
-  // 7. Correct this by applying appropriate bias
-  float zoomLevelBias = (float)(Math.Log(MapView.Options.DPI / 160.0f) / Math.Log(2));
-  rasterLayer.ZoomLevelBias = zoomLevelBias * 0.75f;
-  rasterLayer.TileSubstitutionPolicy = TileSubstitutionPolicy.TileSubstitutionPolicyVisible;
+// 4. Correct this by applying appropriate bias
+      float zoomLevelBias = (float)(Math.Log(MapView.Options.DPI / 160.0f) / Math.Log(2));
+      rasterLayer.ZoomLevelBias = zoomLevelBias * 0.75f;
+      rasterLayer.TileSubstitutionPolicy = TileSubstitutionPolicy.TileSubstitutionPolicyVisible;
 
-  MapView.SetFocusPos(pos, 0);
-  MapView.SetZoom(16f, 0);
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-    // 8. Load ground overlay bitmap
-    NTBitmap *overlayBitmap = [NTBitmapUtils loadBitmapFromAssets:@"jefferson-building-ground-floor.jpg"];
-    
-    // 9. Create two vector geographical positions, and corresponding raster image pixel coordinates
-    NTMapPos* pos = [proj fromWgs84:[[NTMapPos alloc] initWithX:-77.004590 y:38.888702]];
-    double sizeNS = 110, sizeWE = 100;
-    
-    NTMapPosVector* mapPoses = [[NTMapPosVector alloc] init];
-    [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]-sizeWE y:[pos getY]+sizeNS]];
-    [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]+sizeWE y:[pos getY]+sizeNS]];
-    [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]+sizeWE y:[pos getY]-sizeNS]];
-    [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]-sizeWE y:[pos getY]-sizeNS]];
-    
-    NTScreenPosVector* bitmapPoses = [[NTScreenPosVector alloc] init];
-    [bitmapPoses add:[[NTScreenPos alloc] initWithX:0 y:0]];
-    [bitmapPoses add:[[NTScreenPos alloc] initWithX:0 y:[overlayBitmap getHeight]]];
-    [bitmapPoses add:[[NTScreenPos alloc] initWithX:[overlayBitmap getWidth] y:[overlayBitmap getHeight]]];
-    [bitmapPoses add:[[NTScreenPos alloc] initWithX:[overlayBitmap getWidth] y:0]];
-    
-    // 10. Create bitmap overlay raster tile data source
-    NTBitmapOverlayRasterTileDataSource* rasterDataSource = [[NTBitmapOverlayRasterTileDataSource alloc] initWithMinZoom:0 maxZoom:20 bitmap:overlayBitmap projection:proj mapPoses:mapPoses bitmapPoses:bitmapPoses];
-    NTRasterTileLayer* rasterLayer = [[NTRasterTileLayer alloc] initWithDataSource:rasterDataSource];
-    [[mapView getLayers] add:rasterLayer];
-    
-    // 11. Apply zoom level bias to the raster layer
-    // - By default, bitmaps are upsampled on high-DPI screens
-    // 12. Correct this by applying appropriate bias
-    float zoomLevelBias = log([[mapView getOptions] getDPI] / 160.0f) / log(2);
-    [rasterLayer setZoomLevelBias:zoomLevelBias * 0.75f];
-    [rasterLayer setTileSubstitutionPolicy:NT_TILE_SUBSTITUTION_POLICY_VISIBLE];
-    
-    [mapView setFocusPos:pos durationSeconds:0];
-    [mapView setZoom:16f durationSeconds:0];
+      MapView.SetFocusPos(pos, 0);
+      MapView.SetZoom(16f, 0);
 
   {% endhighlight %}
   </div>
@@ -664,31 +448,69 @@ This example uses only one geographical coordinate. The building size is known, 
   <div class="Carousel-item js-Tabpanes-item">
   {% highlight html %}
 
-  COMING SOON...
+// 1. Load ground overlay bitmap
+      NTBitmap *overlayBitmap = [NTBitmapUtils loadBitmapFromAssets:@"jefferson-building-ground-floor.jpg"];
+    
+// 2. Create two vector geographical positions, and corresponding raster image pixel coordinates
+      NTMapPos* pos = [proj fromWgs84:[[NTMapPos alloc] initWithX:-77.004590 y:38.888702]];
+      double sizeNS = 110, sizeWE = 100;
+    
+      NTMapPosVector* mapPoses = [[NTMapPosVector alloc] init];
+      [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]-sizeWE y:[pos getY]+sizeNS]];
+      [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]+sizeWE y:[pos getY]+sizeNS]];
+      [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]+sizeWE y:[pos getY]-sizeNS]];
+      [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]-sizeWE y:[pos getY]-sizeNS]];
+      
+      NTScreenPosVector* bitmapPoses = [[NTScreenPosVector alloc] init];
+      [bitmapPoses add:[[NTScreenPos alloc] initWithX:0 y:0]];
+      [bitmapPoses add:[[NTScreenPos alloc] initWithX:0 y:[overlayBitmap getHeight]]];
+      [bitmapPoses add:[[NTScreenPos alloc] initWithX:[overlayBitmap getWidth] y:[overlayBitmap getHeight]]];
+      [bitmapPoses add:[[NTScreenPos alloc] initWithX:[overlayBitmap getWidth] y:0]];
+    
+// 3. Create bitmap overlay raster tile data source
+      NTBitmapOverlayRasterTileDataSource* rasterDataSource = [[NTBitmapOverlayRasterTileDataSource alloc] initWithMinZoom:0 maxZoom:20 bitmap:overlayBitmap projection:proj mapPoses:mapPoses bitmapPoses:bitmapPoses];
+      NTRasterTileLayer* rasterLayer = [[NTRasterTileLayer alloc] initWithDataSource:rasterDataSource];
+      [[mapView getLayers] add:rasterLayer];
+    
+// 4. Apply zoom level bias to the raster layer
+      // - By default, bitmaps are upsampled on high-DPI screens
+
+// 5. Correct this by applying appropriate bias
+      float zoomLevelBias = log([[mapView getOptions] getDPI] / 160.0f) / log(2);
+      [rasterLayer setZoomLevelBias:zoomLevelBias * 0.75f];
+      [rasterLayer setTileSubstitutionPolicy:NT_TILE_SUBSTITUTION_POLICY_VISIBLE];
+      
+      [mapView setFocusPos:pos durationSeconds:0];
+      [mapView setZoom:16f durationSeconds:0];
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}COMING SOON...
 
   {% endhighlight %}
   </div>
   
 </div>
 
-
 ## Vector Styles
 
 Usage of vector-based base maps enables you to re-style maps according to your needs. You can set the colors, transparency, line styles (width, patterns, casings, endings), polygon patterns, icons, text placements, fonts and many other vector data parameters. 
 
-CARTO uses Mapnik (http://mapnik.org) XML style description language for customizing the visual style of vector tiles. Our styling is optimized for mobile and contain some unique style parameters, while ignoring some others. In general, you can reuse your existing Mapnik XML, or CartoCSS, styling files and tools (such as TileMill/Mapbox Studio).
+CARTO uses [Mapnik](http://mapnik.org) XML style description language for customizing the visual style of vector tiles. Our styling is optimized for mobile and contain some unique style parameters, while ignoring some others. In general, you can reuse your existing Mapnik XML, or CartoCSS, styling files and tools (such as TileMill/Mapbox Studio).
 
 Vector styling is applied in the mobile client, where the style files are bundled with the application installer. The application can change the styling anytime, without reloading vector map data. This enables your to download map data once, and change styling from "day mode" to "night mode" with no new downloads.
 
 CARTO map rendering implementation is intended for real-time rendering. As a result, several limitations apply.
 
-### Ready-made Styles
+### Prepackaged Vector Styles
 
-See [Mobile Styles](/mobileStyles) for pre-packaged styles used by CARTO. These are compatible with our vector tile sources.
+Prepackaged mobile styles used by CARTO. These are compatible with our vector tile sources.
 
 ### Mapnik Style Format
 
-Mapnik map style definition is a common file format for map styles, based on XML. It was originally created for Mapnik, but is used by other software, such as our Mobile SDK. File format specification is located in this [XMLConfigReference](https://github.com/mapnik/mapnik/wiki/XMLConfigReference) document. There are several ways you can apply these styles:
+Mapnik style definitions are a common file format for map styles, based on XML. It was originally created for Mapnik, but is used by other software, such as our Mobile SDK. The file format specifications are located in this [XMLConfigReference](https://github.com/mapnik/mapnik/wiki/XMLConfigReference) document. There are several ways you can apply these styles:
 
  1. Use CARTO provided styles
 
@@ -720,15 +542,15 @@ Please note the following limitations with Mapnik style formats.
 
 **Note:** The Mobile SDK does not implement 100% of the tags and features of Mapnik. This lists just a few of the Mapnik limitations, there are additional Mapnik XML features that are not standard. If you need some an unimplemented styling option, please [contact us](mailto:support@carto.com). 
 
-### Creating Style Package
+### Creating Vector Style Packages
 
 CARTO vector styles are distributed as zip-archives. All style-related files and folders must be placed into a single zip file.
 
 The most important part of the style is the style definition file, typically named _project.xml_. This file contains style descriptions for all layers, and usually references other files, such as fonts, icons, and pattern bitmaps (which should be placed in various subfolders).
 
-### Performance Hints 
+### Vector Style Performance 
 
-The following recommendations are suggested for the best performance with vector styles:
+When using vector styles, the following recommendations are suggested for optimal performance:
 
 - **Multiple symbolizers per layer may have very large performance hits**. If possible, move each symbolizer into separate layer
 
@@ -774,7 +596,7 @@ Mapnik `MarkersSymbolizer` and `TextSymbolizer` support additional values _nutib
 
 ### Supported Symbolizers and Parameters
 
-The following lists contains all supported symbolizers and parameters:
+The following lists contains all supported symbolizers and parameters for vector styles:
 
 - `PointSymbolizer`: file, opacity, allow-overlap, ignore-placement, transform
 
@@ -794,6 +616,6 @@ The following lists contains all supported symbolizers and parameters:
 
 - `ShieldSymbolizer`: name, face-name, fontset-name, placement, size, spacing, fill, opacity, halo-fill, halo-opacity, halo-radius, allow-overlap, minimum-distance, text-transform, orientation, dx, dy, wrap-width, wrap-before, character-spacing, line-spacing, horizontal-alignment, vertical-alignment, file, shield-dx, shield-dy, unlock-image
 
-### CartoCSS Extensions
+### CartoCSS Extensions for Vector Styles
 
-Metavariables and nutiparameters are also available as CartoCSS style extensions.
+`Metavariables` and `nutiparameters` are also available as CartoCSS style extensions.

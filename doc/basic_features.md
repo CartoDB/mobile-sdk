@@ -1,4 +1,4 @@
-# Basic Map Components
+# Basic Map Features
 
 This section describes the basic map components that are required when creating mobile apps with the SDK. The following key objects are required for each mobile app:
 
@@ -8,7 +8,7 @@ This section describes the basic map components that are required when creating 
 
       - **DataSource** (member of Layers) is an object created as a member of the Layer object, which defines where the data comes from. There are specific DataSource implementations which keep data in memory, load from a persistent file or on-line API
 
-    -  **Options** (member of MapView) is an object that provides methods for adjusting the map parameters
+    -  **Objects** (member of MapView) is an object that provides methods for adjusting the map parameters
 
 ## Layers
 
@@ -22,7 +22,7 @@ For mobile maps, each map layer is required to have a **DataSource**, which defi
 
 - `LocalVectorDataSource` stores data in memory and is used for adding vector objects to the map, per each user session
 
-**Tip:** For details about selecting the DataSource through the map listener events, see [DataSources](/docs/carto-engine/mobile-sdk/map-listener-events/#map-listener-events).
+**Tip:** For details about selecting different DataSources for your mobile map layers, see [DataSources](/docs/carto-engine/mobile-sdk/datasources).
 
 ### Basemap
 
@@ -102,16 +102,14 @@ Basemaps apply the map background required for rendering data. Basemaps are requ
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  COMING SOON...
+  {% highlight html %}COMING SOON...
 
   {% endhighlight %}
   </div>
     
 </div>
 
-## MapView Options
+## MapView Objects
 
 In following examples, **vector elements** (Markers, Points, Lines, Polygons, Texts and BalloonPopups) are added to a mobile map application. For each object, the styling is defined and objects are created based on given coordinates. These coordinates are store in the memory-based vector data source parameter, `LocalVectorDataSource`.
 
@@ -925,7 +923,7 @@ A BalloonPopup appears based on click event of an object. You can also add a def
 
 One special feature of the Mobile SDK is that you can add 3D objects (models) to a mobile map. For example, you can add small moving car or other decorative or informative elements.
 
-**Note:** 3D objects are added to the same `LocalVectorDataSource` as 2D objects. However, 3D objects are only supported using the *Nutiteq Markup Language* (**NML**) format, as it was created by our [mobile partner,  Nutiteq](https://carto.com/engine/mobile/). This custom format is optimized for the multi-resolution of 3D files on mobile apps. _For details about tuning the performance of 3D models, see [`LocalVectorDataSource` Performance](#localvectordatasource-performance)._
+**Note:** 3D objects are added to the same `LocalVectorDataSource` as 2D objects. However, 3D objects are only supported using the *Nutiteq Markup Language* (**NML**) format, as it was created by our [mobile partner, Nutiteq](https://carto.com/engine/mobile/). This custom format is optimized for the multi-resolution of 3D files on mobile apps. _For details about tuning the performance of 3D models, see [`LocalVectorDataSource` Performance](#localvectordatasource-performance)._
 
 The following procedure describes how to setup and add a 3D object to your mobile MapView:
 

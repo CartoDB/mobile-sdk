@@ -1,125 +1,107 @@
-NOT DONE YET
-
 # Mobile Routing
 
- SDK has now support for routing. Both online and offline routing (based on country-based routing packages from our server, similar to offline map packages) is supported
+Routing is the navigation from a defined start location to a defined end location. The calculated results are displayed as turn-by-turn directions on your map, based on the transportation mode that you specified. Routing functionality through the Mobile SDK includes [online routing](#online-routing), based on CARTOs online service, and [offline routing](#offline-routing), which requires that you install an offline data package on your local device.
 
+Mobile SDK supports the following routing features:
 
-
-Routing is the navigation from a defined start location to a defined end location. The calculated results are displayed as turn-by-turn directions on your map, based on the transportation mode that you specified. Routing functionality through the Mobile SDK includes [online routing] (based on CARTOs online service) and [offline routing], which require that you install a data packages stored on the device, and online routing using our online service.
-
-CARTO are available by using the available functions in the Data Services API.
-
-Mobile SDK includes routing functionality for both offline routing using special data packages stored on the device, and online routing using our online service.
-
-## Routing Functionality
-
-<img src = "/images/route.png" alt="Offline routing with CARTO" align="right">
-
-Mobile SDK provides the following routing features:
-
- - **Find the fastest route** from A to B
+ - Find the fastest route from A to B
  - Find the fastest route between X points, in a given order
- - Get the complete result **route geometry** and display it on the map
- - Set **instructions for actions** (turn left/right, u-turn, leave roundabout etc.)
- - Specify **instruction details**, such as the street name, turn angle, azimuth, distance and time for the next leg
+ - Get the complete result by route geometry and display it on the map
+ - Set instructions for navigation actions (turn left/right, u-turn, leave roundabout etc.)
+ - Specify instruction details, such as the street name, turn angle, azimuth, distance and time for the next leg
  - Plan for turn restrictions and one-way streets as part of the route
- - **Fast calculations* in new devices, approximately 200-300 ms is expected, even for long routes
- - **Multi-country route** calculation
+ - Fast calculations in new devices, approximately 200-300 ms is expected, even for long routes
+ - Multi-country route calculations
 
 ## Routing Limitations
 
-Routing is optimized for low memory usage and calculation speed, including very large road networks using *Contraction Hierarchy* representation and algorithms. As a result, this creates some expected limitations:
+Mobile Routing is optimized for low memory usage and calculation speed, including very large road networks using *Contraction Hierarchy* representation and algorithms. As a result, this creates some expected limitations:
 
-- Route profile is pre-calculated from the server and hardcoded in the data. For different profiles, such as driving or walking, download different map data packages to accomodate for offline routing
+- Route profile is precalculated from the server and hardcoded in the data. For different profiles, such as driving or walking, download different map data packages to accomodate for offline routing
+
 - There is no shortest or fastest choice in the calculation, this is pre-coded in the routing data
-- There are no alternative routes provided
-- There is no live data in routing, traffic or temporarily closed roads do not appear
 
-**Note:** Routing does not include live navigation features, such as following a GPS location, initiating automatic recalculations, or guided voice instructions. These features can be built on top of routing by your application.
+- There are no alternative routes provided
+
+- There is no live data in routing, traffic and temporarily closed roads do not appear
+
+**Note:** Routing does not include live navigation features, such as following a GPS location, initiating automatic recalculations, or guided voice instructions. However, these features can be built on top of routing by your device application.
 
 ## Offline Routing Packages
 
-Offline routing is based on special routing packages, similar to offline map packages. CARTO has prepared **world-wide offline route packages**, and the corresponding online service for most common profiles, using **osm.car** and **osm.foot** OpenStreetMap data as the map source.
+CARTO has created a customized routing package, similar to other offline map packages, that contain **world-wide offline route packages**. This routing package includes the corresponding online service for most common profiles, using **osm.car** and **osm.foot** OpenStreetMap data, as the map source.
 
-A list of country packages is the same as for offline maps, see https://developer.nutiteq.com/guides/packages for the full list.
+- The list of country packages for routing is the same as other offline maps. See [Offline Map Service ](/docs/carto-engine/mobile-sdk/offline-map-service/#offline-map-packages) for the full list of offline packages
 
-The download size of the offline routing package is 10-40% of corresponding offline map package. Car profile packages are considerably smaller than walking packages, for example.
+- The download size of the offline routing package is significantly larger (10-40% greater) than the size of the corresponding offline map package. Car profile packages are considerably smaller than walking packages
 
-For Enterprise accounts, offline routing packages include **HERE.com map data**. In many countries, especially outside Europe, offline routing packages contain more granular results. In addition, HERE includes address data. Please [contact us](mailto:sales@carto.com) if you are interested in Enterprise mobile features.
+- For Enterprise accounts, offline routing packages include **HERE.com map data**. In many countries, especially outside Europe, offline routing packages contain more granular results. In addition, HERE includes address data. Please [contact us](mailto:sales@carto.com) if you are interested in Enterprise mobile features
 
-## Applying Routing in your App
+## Apply Routing in your App
 
-### Ready-made sample code
-For minimal working implementation see our *advanced map* app code samples on different platforms:
+This section describes how to access prepackaged routing code from our Sample Apps, how how to apply routing in your mobile app.
 
-* iOS: https://github.com/nutiteq/hellomap3d-ios : [OfflineRoutingController.mm](https://github.com/nutiteq/hellomap3d-ios/blob/master/advancedmap3/advancedmap3/OfflineRoutingController.mm)
-* Android: https://github.com/nutiteq/hellomap3d-android : [OfflineRoutingActivity.java](https://github.com/nutiteq/hellomap3d-android/blob/master/com.nutiteq.advancedmap3/src/com/nutiteq/advancedmap3/OfflineRoutingActivity.java)
-* Xamarin (Android): https://github.com/nutiteq/hellomap3d-dotnet : [OfflineRouting.cs](https://github.com/nutiteq/hellomap3d-dotnet/blob/master/hellomap-android/OfflineRouting.cs)
+### Prepackaged Sample Code
 
-These samples work as following:
+For minimal routing implementation, use our sample app code for different mobile platforms. You can add this sample code to your mobile project.
 
-1. App downloads automatically several pre-coded offline route packages right after you start the sample. Estonia and Latvia are downloaded by default, but you can change the code easily to download any other country or state
-2. Long-click on map set route start point, second long-click sets end points. 
-3. When end-point is set, then route is automatically calculated
-4. Route is shown as a line on map, instructions are shown as markers.
+- iOS Platform:
+  
+  - [Sample App repository](https://github.com/nutiteq/hellomap3d-ios)
 
-Sample has some simplifications to keep code simpler:
+  - [`OfflineRoutingController.mm`](https://github.com/nutiteq/hellomap3d-ios/blob/master/advancedmap3/advancedmap3/OfflineRoutingController.mm) parameter
 
-* Background map is still on-line 
-* Online routing is used before download is not finished. So for offline routing wait for a minute, depending on your network speed. Download progress is not indicated in UI.
-* Make sure that route start and end points are within downloaded package areas, otherwise routing error occurs. Also, if the shortest route passes another country/area that is not downloaded, routing fails. 
-* if start and stop are in different countries/packages, then also in-between country packages must be downloaded to find multi-country route.
+- Android Platform: 
+
+  - [Sample App repository](https://github.com/nutiteq/hellomap3d-android)
+
+  - [`OfflineRoutingActivity.java`](https://github.com/nutiteq/hellomap3d-android/blob/master/com.nutiteq.advancedmap3/src/com/nutiteq/advancedmap3/OfflineRoutingActivity.java) parameter
+
+- Xamarin (Android): https://github.com/nutiteq/hellomap3d-dotnet : [OfflineRouting.cs](https://github.com/nutiteq/hellomap3d-dotnet/blob/master/hellomap-android/OfflineRouting.cs)
+
+ - [Sample App repository](https://github.com/nutiteq/hellomap3d-dotnet)
+
+-  [`OfflineRouting.cs`](https://github.com/nutiteq/hellomap3d-dotnet/blob/master/hellomap-android/OfflineRouting.cs) parameter
+
+### Example Procedure
+
+The following procedure describes how to apply the sample routing code in your mobile app project.
+
+1. Download the [sample code](#prepackaged-sample-code) to your mobile app project
+
+    The pre-coded, offline route packages are automatically loaded. 
+
+    **Tip:** For this example, Estonia and Latvia are downloaded by default. _You can easily change the code to download any other country or state._
+
+2. Press and hold (long-click) on map to set route start point. Long-click a second time to set the end point
+
+    **Tip:** See [Map Listener Events](/docs/carto-engine/mobile-sdk/map-listener-events/) for details about the `CLICK_TYPE_LONG` ClickType.
+
+3. Once the end-point is set, the route is automatically calculated
+
+4. The route is shown as a line on map, and the navigation instructions appear as markers
+
+See this video demonstration of how routing appears in a mobile app.
 
 <iframe width="420" height="315" src="https://www.youtube.com/embed/8u-DpOAt0zQ" frameborder="0" allowfullscreen></iframe>
 
+_Note the following simplifications applied within the sample code_ You may need to adjust your code accordingly if want to apply different options:
 
-## Step-by-step instructions
+- The background map is online 
 
-Following code samples demonstrate essential routing code. Linking this to UI and map graphics is up to your app, you can see our samples about one way how to do it. You may want to have more advanced logic, e.g. show instructions as textual list, what is not in our samples, customise UI etc.
+- Online routing is applied before any offline routing is completed. For offline routing, wait a few minutes until the download finishes. The download progress is not indicated in the app
 
+- To prevent routing errors, ensure the route start and end points are within the downloaded package areas. If the shortest route passes another country or area that is not downloaded, routing fails
 
-## Online routing
+- If the route start and route stop points are in located in different countries, you must also find and download each country package that will appear along the route
+
+The following _Online Routing_ and _Offline Routing_ procedures demonstrate the required routing code.
+
+## Online Routing
  
-Online routing is quite simple: just create *CartoOnlineRoutingService* and call the *calculateRoute* request to calculate route. As processing the request may take some time (online query), using a background thread/task is a good idea.
+Online routing requires that you create a simple call and request to calculate the route.
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Android Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">Xamarin</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
-    </li>
-  </ul>
-
-  <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}HERE GOES THE CODE SNIPPET{% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}HERE GOES THE CODE SNIPPET{% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}HERE GOES THE CODE SNIPPET{% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}HERE GOES THE CODE SNIPPET{% endhighlight %}
-  </div>
-</div>
-
-
-
-
-### 1. Create service
+1) Create the `CartoOnlineRoutingService` call
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -138,45 +120,36 @@ Online routing is quite simple: just create *CartoOnlineRoutingService* and call
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}
-
-  onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
+  {% highlight html %}onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
+  {% highlight html %}onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  _onlineRoutingService = [[NTCartoOnlineRoutingService alloc] initWithSource:@"nutiteq.osm.car"];
+  {% highlight html %}_onlineRoutingService = [[NTCartoOnlineRoutingService alloc] initWithSource:@"nutiteq.osm.car"];
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  COMING SOON...
+  {% highlight html %}COMING SOON...
 
   {% endhighlight %}
   </div>
   
 </div>
 
+2) Calculate the route with the `calculateRoute` request
 
-### 2. Calculate route
+Calculating routing requests are expensive (in quota consumption and in processing times). It is recommended to use a background task for more efficient performance. Otherwise, the original routing task can be blocked for a few seconds on slower mobile devices.
 
-Note that the **calculation request is expensive**. So use of separate thread is strongly suggested, as in the sample below.  Otherwise the main thread could be blocked for up to couple of seconds on slow devices.
-
-See our full sample to see how to show the instructions on the map, as Line and Markers.
+These code samples display how to show navigation instructions on the map, as indicated by line and markers.
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -195,9 +168,7 @@ See our full sample to see how to show the instructions on the map, as Line and 
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}
-
-  AsyncTask<Void, Void, RoutingResult> task = new AsyncTask<Void, Void, RoutingResult>() {
+  {% highlight html %}AsyncTask<Void, Void, RoutingResult> task = new AsyncTask<Void, Void, RoutingResult>() {
 
             protected RoutingResult doInBackground(Void... v) {
                 MapPosVector poses = new MapPosVector();
@@ -239,9 +210,7 @@ See our full sample to see how to show the instructions on the map, as Line and 
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-    ThreadPool.QueueUserWorkItem(delegate
+  {% highlight html %}ThreadPool.QueueUserWorkItem(delegate
     {
       MapPosVector poses = new MapPosVector();
       poses.Add(startPos);
@@ -318,24 +287,59 @@ See our full sample to see how to show the instructions on the map, as Line and 
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  COMING SOON...
+  {% highlight html %}COMING SOON...
 
   {% endhighlight %}
   </div>
   
 </div>
 
+**Tip:** As processing online queries may take some time, it is suggested to use a background task for more efficient performance. Use the following code to apply online routing to your application:
 
-## Offline routing
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem is-active">
+      <a href="#/0" class="js-Tabpanes-navLink">Android Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/1" class="js-Tabpanes-navLink">Xamarin</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem">
+      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    </li>
+  </ul>
 
+  <div class="Carousel-item js-Tabpanes-item is-active">
+  {% highlight html %}COMING SOON...{% endhighlight %}
+  </div>
 
-### 1. Create CartoPackageManager to prepare download of routing packages
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}COMING SOON...{% endhighlight %}
+  </div>
 
-For offline routing you need to download routing packages, for this you use the same *PackageManager* what is used for [offline map packages](offline-maps). The download process and listener events are the same, so see offline map package manual for some details. However, as it uses different packages (specified by *source*), you must create two instances if you need both offline map packages and routing packages.
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}COMING SOON...{% endhighlight %}
+  </div>
 
-First you need to define folder where to keep the files (different from your map packages), and use *PackageManagerRoutingService* with the PackageManager to calculate the routes.
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}COMING SOON...{% endhighlight %}
+  </div>
+</div>
+
+## Offline Routing
+
+Offline routing requires a more complicated preparation of your offline map packages, listener events, package initialization, and routing calculation parameters.
+
+1) Create CartoPackageManager to prepare download of routing packages
+
+For offline routing, you must download routing packages.  You can use the same *PackageManager* that is used for offline map packages. The download process and listener events are the same. See [Offline Map Service](/docs/carto-engine/mobile-sdk/offline-map-service/) for details. 
+
+**Note:** If you are using both offline map packages and routing packages, you must create two instances of the Package Manager, since offline routing uses different packages (as specified by the *DataSource*).
+
+- Define the folder where to store the routing files (which should be different from your map packages), and use *PackageManagerRoutingService* to calculate the routes
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -356,7 +360,7 @@ First you need to define folder where to keep the files (different from your map
   <div class="Carousel-item js-Tabpanes-item is-active">
   {% highlight html %}
 
-        // Create PackageManager instance for dealing with offline packages
+// Create PackageManager instance for dealing with offline packages
         File packageFolder = new File(getApplicationContext().getExternalFilesDir(null), "routingpackages");
         
         if (!(packageFolder.mkdirs() || packageFolder.isDirectory())) {
@@ -375,7 +379,7 @@ First you need to define folder where to keep the files (different from your map
   <div class="Carousel-item js-Tabpanes-item">
   {% highlight html %}
 
-    // Create PackageManager instance for dealing with offline packages
+// Create PackageManager instance for dealing with offline packages
     var packageFolder = new File(GetExternalFilesDir(null), "routingpackages");
 
     if (!(packageFolder.Mkdirs() || packageFolder.IsDirectory))
@@ -391,8 +395,8 @@ First you need to define folder where to keep the files (different from your map
   <div class="Carousel-item js-Tabpanes-item">
   {% highlight html %}
 
-    // Define PackageManger to download offline routing packages
-    // Create folder for package manager. Package manager needs persistent writable folder.
+// Define PackageManger to download offline routing packages
+// Create folder for package manager. Package manager needs persistent writable folder.
     NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask,YES);
     NSString* appSupportDir = [paths objectAtIndex: 0];
     NSString* packagesDir = [appSupportDir stringByAppendingString:@"/packages"];
@@ -413,14 +417,12 @@ First you need to define folder where to keep the files (different from your map
   </div>
   
 </div>
+ 
+2) Use PackageManagerListener to get DownloadManager events
 
-     
-### 2. Use PackageManagerListener to get DownloadManager events
+Routing package downloads cannot be started immediately, as the Mobile SDK needs to get latest definition of packages from CARTO online service. Once this list is received, `PackageManagerListener's .onPackageListUpdated()` is called.
 
-Routing package download cannot be started immediately - SDK needs to get latest definition of packages from CARTO online service. Once this list is received, PackageManagerListener's .onPackageListUpdated() is called. This similar to offline map packages - see [call flow diagram](/images/pm_flow.png)
-
-For this you need to write your own PackageManagerListener, and start offline download in the *onPackageListUpdated* method, where it is sure that package metadata is already downloaded and known.
-
+- Write your own PackageManagerListener, and start the offline download using the `onPackageListUpdated` method, which ensure that the package metadata is downloaded
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -439,14 +441,12 @@ For this you need to write your own PackageManagerListener, and start offline do
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}
-
-  public class RoutePackageManagerListener extends PackageManagerListener {
+  {% highlight html %}public class RoutePackageManagerListener extends PackageManagerListener {
     @Override
     public void onPackageListUpdated() {
         Log.d(Const.LOG_TAG, "Package list updated");
         // Start download of package of Estonia
-        // see list of available ID-s: https://developer.nutiteq.com/guides/packages
+        // see list of available ID-s: http://cartod.com/docs/carto-engine/mobile-sdk/offline-map-service/
         // just append -routing to the ID-s
         // You can download several packages, and route is found through all of them
 
@@ -484,9 +484,7 @@ For this you need to write your own PackageManagerListener, and start offline do
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-    public class RoutePackageManagerListener : PackageManagerListener
+  {% highlight html %}public class RoutePackageManagerListener : PackageManagerListener
   {
     PackageManager packageManager;
 
@@ -499,7 +497,7 @@ For this you need to write your own PackageManagerListener, and start offline do
     {
       Log.Debug("Package list updated");
       // We have packages all country/regions
-      // see list of available ID-s: https://developer.nutiteq.com/guides/packages
+      // see list of available ID-s: https://carto.com/carto-engine-mobile-sdk/offline-map-service
       // just append -routing to the ID-s
       // You can download several packages, and route is found through all of them
 
@@ -536,9 +534,7 @@ For this you need to write your own PackageManagerListener, and start offline do
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-    @interface RoutePackageManagerListener : NTPackageManagerListener
+  {% highlight html %}@interface RoutePackageManagerListener : NTPackageManagerListener
 
     @property NTPackageManager* _packageManager;
   - (void)setPackageManager:(NTPackageManager*)manager;
@@ -595,20 +591,20 @@ For this you need to write your own PackageManagerListener, and start offline do
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  COMING SOON...
+  {% highlight html %}COMING SOON...
 
   {% endhighlight %}
   </div>
   
 </div>
 
-You may ask why here EE and LV (Estonia and Latvia) packages are used in the sample? It is not by chance - there are recent [tight personal links between these two countries](http://www.baltictimes.com/estonian_president_marries_latvian_cyber_defence_expert/), so offline routing has to go across borders.
+**Note:** If you are wondering why these code samples include `EE` and `LV` (Estonia and Latvia) packages, there is a  multi-country route that is needed for offline routing. For example, see why [these countries might be linked](http://www.baltictimes.com/estonian_president_marries_latvian_cyber_defence_expert/). This shows that offline routing works across borders.
 
-### 3. Initialize instance of PackageManagerListener, start PackageManager and package list update
+3) Initialize instance of PackageManagerListener, start PackageManager and package list update
 
-To link PackageManagerListener with PackageManager properly (and to have a fully working RoutingService as a result) you need to do following steps in the code. Note that we need to pass packageManager reference to the listener, otherwise the listener can not start downloads. This depends on platform and your app architecture.
+To link PackageManagerListener with PackageManager (and to have a fully working RoutingService as a result), apply the following code. 
+
+- Pass the packageManager reference to the listener to start the downloads. This is also dependent on your mobile platform and your app architecture.
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -629,14 +625,14 @@ To link PackageManagerListener with PackageManager properly (and to have a fully
   <div class="Carousel-item js-Tabpanes-item is-active">
   {% highlight html %}
 
-    // 1. Set listener, and start PackageManager
+// 1. Set listener, and start PackageManager
     packageManager.setPackageManagerListener(new RoutePackageManagerListener());
     packageManager.start();
 
-    // 2. Fetch list of available packages from server. Note that this is asynchronous operation and listener will be notified via onPackageListUpdated when this succeeds.
+// 2. Fetch list of available packages from server. Note that this is asynchronous operation and listener will be notified via onPackageListUpdated when this succeeds.
     packageManager.startPackageListDownload();
 
-    // 3. Create offline routing service connected to package manager
+// 3. Create offline routing service connected to package manager
     offlineRoutingService = new PackageManagerRoutingService(packageManager);
 
   {% endhighlight %}
@@ -645,54 +641,58 @@ To link PackageManagerListener with PackageManager properly (and to have a fully
   <div class="Carousel-item js-Tabpanes-item">
   {% highlight html %}
 
-  // 1. Create and set listener, and start PackageManager
+// 1. Create and set listener, and start PackageManager
   packageManager.PackageManagerListener = new RoutePackageManagerListener(packageManager);
   packageManager.Start();
 
-  // 2. Fetch list of available packages from server. 
+// 2. Fetch list of available packages from server. 
   // Note that this is asynchronous operation and the listener will be notified via OnPackageListUpdated when this succeeds.        
   packageManager.StartPackageListDownload();
 
-  // 3. Create offline routing service connected to package manager
+// 3. Create offline routing service connected to package manager
   offlineRoutingService = new PackageManagerRoutingService(packageManager);
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-    NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"routing:nutiteq.osm.car" dataFolder:packagesDir];
+  {% highlight html %}NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"routing:nutiteq.osm.car" dataFolder:packagesDir];
     
-    // 1. Create routePackageManagerListener with your listener class
+// 1. Create routePackageManagerListener with your listener class
     RoutePackageManagerListener* _packageManagerListener = [[RoutePackageManagerListener alloc] init];
     [_packageManagerListener setPackageManager: packageManager];
     
-    // Attach package manager listener
+// Attach package manager listener
     [packageManager setPackageManagerListener:_packageManagerListener];
     
     // Start PackageManager
     [packageManager start];
     
-    // 2. Start download of packageList. When download is done, then the listener's onPackageListUpdated() is called
+// 2. Start download of packageList. When download is done, then the listener's onPackageListUpdated() is called
     [packageManager startPackageListDownload];
     
-    // 3. Create offline routing service connected to package manager
+// 3. Create offline routing service connected to package manager
     _offlineRoutingService = [[NTPackageManagerRoutingService alloc] initWithPackageManager:packageManager];
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  COMING SOON...
+  {% highlight html %}COMING SOON...
 
   {% endhighlight %}
   </div>
   
 </div>
 
-### 4. Do actual route calculation
+4) Calculate the Route
 
-All this preparation was needed to ensure that you have routing package downloaded and service is prepared. Actual routing is quite simple - you define *RoutingRequest* with at least 2 points, start routing with the service and read response as *RoutingResult*. In fact, it is exactly the same as in online routing chapter, just replace onlineRoutingService with offlineRoutingService, see example 2 above.
+Now that all routing packages are downloaded and routing service is ready, you can calculate routing.
+
+- Create the `CartoOfflineRoutingService` call
+
+   Define the *RoutingRequest* with at least two points. Start routing with the service and read response as *RoutingResult*.
+
+- Calculate the route with the `calculateRoute` request
+
+  **Note:** This step is identical to the [online routing calculation code](/docs/carto-engine/mobile-sdk/mobile-routing/#online-routing).

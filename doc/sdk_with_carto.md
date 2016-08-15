@@ -1,10 +1,10 @@
-# Managing Mobile Maps with CARTO APIs
+# SDK and other CARTO Tools
 
-You can automatically manage some features of your mobile maps by integrating with other CARTO APIs. This enables you to use the Mobile SDK as a high-level API, or define URL endpoints to manage mobile maps.
+You can use the CARTO APIs to define specific mobile features and rendering parameters. Additionally, you can use the CARTO Builder to publish mobile maps for integration with your mobile app.
 
-## Mobile SDK as Service
+## SDK and CARTO APIs
 
-By using the Mobile SDK as its own engine, you can automatically manage mobile map rendering from the mobile client. This involves some additional, unique Mobile SDK API parameters to be included with the CARTO Engine CARTO.js, Maps API, and SQL API requests.
+If you are using other CARTO Engines, you can automatically define mobile map feature for rendering directly from the client-side. This involves some additional, unique Mobile SDK API parameters to be included with the CARTO Engine CARTO.js, Maps API, and SQL API requests.
 
 1) Load a [CARTO.js](/docs/carto-engine/carto-js/) *viz.json* visualization for managing mobile layers
 
@@ -21,9 +21,9 @@ By using the Mobile SDK as its own engine, you can automatically manage mobile m
 
   `CartoSQLService` is a high-level interface for CARTO SQL Service. The mobile service can be used to query data from CARTO databases using explicit SQL queries
 
-## Manage Mobile Maps by Endpoint URLs
+## Loading Mobile Maps
 
-You can also manage mobile maps by defining mobile specific-features in the URL end-points for CARTO APIs. For example:
+You can also manage mobile rendering by defining how mobile features load with the CARTO APIs and with the CARTO Builder. For example:
 
 - To use **raster map tiles**, define the tile URL for RasterTileLayer
 
@@ -39,11 +39,9 @@ You can also manage mobile maps by defining mobile specific-features in the URL 
 
 - For point-geometry time-series visualizations, use the _Animated_ aggregation to define Torque maps. This provides animated rendering, and the Mobile SDK has a special layer `TorqueTileLayer` to define this. From an API standpoint, Torque uses the SQL API and CartoCSS styling, but Torque contains an additional [time control method](/docs/carto-engine/torque-js/)
 
-![CARTO integrations](https://carto.com/blog/img/posts/2016-03-31-nutiteq3/scheme.b36b8fa7.png)
+## Publish a Mobile Map
 
-## Publish a Mobile SDK Map
-
-This high-level workflow describes how to prepare your mobile data for rendering, using the Import API and CARTO.js.
+This high-level workflow describes how to prepare your mobile data for rendering, using the Import API and CARTO Builder.
 
 1) Upload your map data using the [Import API](/docs/carto-engine/import-api/)
 
@@ -53,7 +51,7 @@ This high-level workflow describes how to prepare your mobile data for rendering
 
 4) Select _CARTO Mobile SDK_ as the publish option
 
-  This publishing option provides a URL to the mobile viz.json file, which is required if you are using the CARTO Mobile SDK to publish custom maps for Android, iOS, and Windows platforms
+  This publishing option provides a URL to the mobile viz.json file, which is required if you are using the CARTO Mobile SDK to publish custom maps for Android, iOS, and Windows platforms.
 
   **Note:** [Widgets](/docs/carto-builder/interactive-map-widgets/#interactive-map-widgets) are currently not supported for the CARTO Mobile SDK format, but will be available in a future release.
 
@@ -122,40 +120,40 @@ In order to integrate your published mobile map into the app, you need a callbac
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-      {% highlight objectiveC %}@interface MyCartoVisBuilder : NTCartoVisBuilder
+	    {% highlight objectiveC %}@interface MyCartoVisBuilder : NTCartoVisBuilder
 
-    @property NTMapView* mapView;
+	  @property NTMapView* mapView;
 
-    @end
+	  @end
 
-    @implementation MyCartoVisBuilder
+	  @implementation MyCartoVisBuilder
 
-    // methods to set map center and zoom based on defined map
-    -(void)setCenter:(NTMapPos *)mapPos
-    {
-        [self.mapView setFocusPos:[[[self.mapView getOptions] getBaseProjection] fromWgs84:mapPos] durationSeconds:1.0f];
-    }
+	  // methods to set map center and zoom based on defined map
+	  -(void)setCenter:(NTMapPos *)mapPos
+	  {
+	      [self.mapView setFocusPos:[[[self.mapView getOptions] getBaseProjection] fromWgs84:mapPos] durationSeconds:1.0f];
+	  }
 
-    -(void)setZoom:(float)zoom
-    {
-        [self.mapView setZoom:zoom durationSeconds:1.0f];
-    }
+	  -(void)setZoom:(float)zoom
+	  {
+	      [self.mapView setZoom:zoom durationSeconds:1.0f];
+	  }
 
-    // Add a layer to the map view
-    -(void)addLayer:(NTLayer *)layer attributes:(NTVariant *)attributes
-    {
-        [[self.mapView getLayers] add:layer];
-    }
+	  // Add a layer to the map view
+	  -(void)addLayer:(NTLayer *)layer attributes:(NTVariant *)attributes
+	  {
+	      [[self.mapView getLayers] add:layer];
+	  }
 
-    // Add a layer to the map view - most important work
-    -(void)addLayer:(NTLayer *)layer attributes:(NTVariant *)attributes
-    {
-        [[self.mapView getLayers] add:layer];
-    }
+	  // Add a layer to the map view - most important work
+	  -(void)addLayer:(NTLayer *)layer attributes:(NTVariant *)attributes
+	  {
+	      [[self.mapView getLayers] add:layer];
+	  }
 
-    @end
+	  @end
 
-      {% endhighlight %}
+	    {% endhighlight %}
  
   </div>
     
@@ -228,7 +226,7 @@ In order to integrate your published mobile map into the app, you need a callbac
         [loader loadVis:visBuilder visURL:@"http://documentation.carto.com/api/v2/viz/2b13c956-e7c1-11e2-806b-5404a6a683d5/viz.json"];
         
     });
-      {% endhighlight %}
+	    {% endhighlight %}
  
   </div>
 </div>
@@ -239,7 +237,7 @@ In order to integrate your published mobile map into the app, you need a callbac
 
 ## SDK and CARTO API Samples
 
-The CARTO sample projects have number of working samples for all the mobile platforms:
+The CARTO [sample app](/docs/carto-engine/mobile-sdk/sample-apps/) projects contain a number of working samples for all the mobile platforms:
 
 - `CartoVisJsonActivity` load complete map configurations (from online viz.json)
 

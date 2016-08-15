@@ -175,7 +175,7 @@ If using iOS as the mobile platform, follow this implementation procedure.
 
   - From Navigator window, select **Identity Inspector**, change the first parameter (Custom Class) to **NTMapView** (from the default UIView).
 
-![](https://developer.nutiteq.com/images/xcode_storyboard.png)
+  <span class="wrap-border"><img src="{{ site.baseurl }}/img/layout/mobile/xcode_storyboard.jpg" alt="Xcode storyboard" /></span>
 
 4) Run the iOS app
 
@@ -500,4 +500,3 @@ dataSource.Add(marker);
 - **Listen events** (MapListener.cs) of clicks to map and map objects
 - **Add other objects**: Lines, Polygons, Points, Balloons (callouts). You can even add 3D objects and use customized Balloons.
 - **Download offline map packages** for country or smaller region
-- See [Guides](/guides) pages with dotnet samples tab for other actions
