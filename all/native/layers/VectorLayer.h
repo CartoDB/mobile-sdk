@@ -9,8 +9,8 @@
 
 #include "components/CancelableTask.h"
 #include "components/DirectorPtr.h"
-#include "datasources/VectorDataSource.h"
 #include "core/MapEnvelope.h"
+#include "datasources/VectorDataSource.h"
 #include "layers/Layer.h"
 
 #include <memory>

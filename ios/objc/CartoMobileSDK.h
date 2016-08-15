@@ -24,15 +24,9 @@
 #import "NTBitmapOverlayRasterTileDataSource.h"
 #import "NTHTTPTileDataSource.h"
 #import "NTMBTilesTileDataSource.h"
-#import "NTCartoOnlineTileDataSource.h"
-#import "NTPackageManagerTileDataSource.h"
-#import "NTOnlineNMLModelLODTreeDataSource.h"
-#import "NTSqliteNMLModelLODTreeDataSource.h"
 #import "NTMemoryCacheTileDataSource.h"
 #import "NTPersistentCacheTileDataSource.h"
 #import "NTLocalVectorDataSource.h"
-#import "NTOGRVectorDataSource.h"
-#import "NTGDALRasterTileDataSource.h"
 
 #import "NTFeature.h"
 #import "NTFeatureCollection.h"
@@ -47,10 +41,6 @@
 #import "NTDouglasPeuckerGeometrySimplifier.h"
 #import "NTGeoJSONGeometryReader.h"
 #import "NTGeoJSONGeometryWriter.h"
-#import "NTWKTGeometryReader.h"
-#import "NTWKTGeometryWriter.h"
-#import "NTWKBGeometryReader.h"
-#import "NTWKBGeometryWriter.h"
 
 #import "NTFrustum.h"
 #import "NTBitmap.h"
@@ -58,7 +48,6 @@
 #import "NTViewState.h"
 
 #import "NTSolidLayer.h"
-#import "NTNMLModelLODTreeLayer.h"
 #import "NTRasterTileLayer.h"
 #import "NTTileLoadListener.h"
 #import "NTUTFGridEventListener.h"
@@ -66,19 +55,10 @@
 #import "NTVectorLayer.h"
 #import "NTVectorTileLayer.h"
 #import "NTTorqueTileLayer.h"
-#import "NTCartoOnlineRasterTileLayer.h"
-#import "NTCartoOnlineVectorTileLayer.h"
-#import "NTEditableVectorLayer.h"
 #import "NTClusteredVectorLayer.h"
 #import "NTClusterElementBuilder.h"
 
 #import "NTEPSG3857.h"
-
-#import "NTPackageInfo.h"
-#import "NTPackageStatus.h"
-#import "NTPackageTileMask.h"
-#import "NTPackageManager.h"
-#import "NTCartoPackageManager.h"
 
 #import "NTCullState.h"
 
@@ -86,9 +66,7 @@
 #import "NTRoutingRequest.h"
 #import "NTRoutingResult.h"
 #import "NTRoutingService.h"
-#import "NTCartoOnlineRoutingService.h"
-#import "NTCartoOfflineRoutingService.h"
-#import "NTPackageManagerRoutingService.h"
+#import "NTOSRMOfflineRoutingService.h"
 
 #import "NTBalloonPopupStyleBuilder.h"
 #import "NTBalloonPopupStyle.h"
@@ -119,7 +97,6 @@
 #import "NTMapClickInfo.h"
 #import "NTMapEventListener.h"
 #import "NTVectorElementClickInfo.h"
-#import "NTVectorEditEventListener.h"
 
 #import "NTAssetUtils.h"
 #import "NTBitmapUtils.h"
@@ -151,5 +128,48 @@
 #import "NTCartoSQLService.h"
 #import "NTCartoVisLoader.h"
 #import "NTCartoVisBuilder.h"
+
+#ifdef _CARTO_LICENSEMANAGER_SUPPORT
+#import "NTCartoOnlineTileDataSource.h"
+#import "NTCartoOnlineRasterTileLayer.h"
+#import "NTCartoOnlineVectorTileLayer.h"
+#import "NTCartoOnlineRoutingService.h"
+#endif
+
+#ifdef _CARTO_PACKAGEMANAGER_SUPPORT
+#import "NTPackageManagerTileDataSource.h"
+#import "NTPackageManagerRoutingService.h"
+
+#import "NTPackageInfo.h"
+#import "NTPackageStatus.h"
+#import "NTPackageTileMask.h"
+#import "NTPackageManager.h"
+#import "NTCartoPackageManager.h"
+#endif
+
+#ifdef _CARTO_NMLMODELLODTREE_SUPPORT
+#import "NTOnlineNMLModelLODTreeDataSource.h"
+#import "NTSqliteNMLModelLODTreeDataSource.h"
+#import "NTNMLModelLODTreeLayer.h"
+#endif
+
+#ifdef _CARTO_EDITABLE_SUPPORT
+#import "NTEditableVectorLayer.h"
+#import "NTVectorEditEventListener.h"
+#endif
+
+#ifdef _CARTO_WKBT_SUPPORT
+#import "NTWKTGeometryReader.h"
+#import "NTWKTGeometryWriter.h"
+#import "NTWKBGeometryReader.h"
+#import "NTWKBGeometryWriter.h"
+#endif
+
+#ifdef _CARTO_GDAL_SUPPORT
+#import "NTOGRVectorDataSource.h"
+#import "NTGDALRasterTileDataSource.h"
+#import "NTStyleSelector.h"
+#import "NTStyleSelectorBuilder.h"
+#endif
 
 #endif

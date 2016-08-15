@@ -7,7 +7,7 @@
 #ifndef _CARTO_CANCELABLETHREADPOOL_H_
 #define _CARTO_CANCELABLETHREADPOOL_H_
 
-#include "CancelableTask.h"
+#include "components/CancelableTask.h"
 #include "components/ThreadWorker.h"
 
 #include <condition_variable>

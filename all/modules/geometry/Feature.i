@@ -14,7 +14,7 @@
 %include <std_vector.i>
 %include <cartoswig.i>
 
-%import "core/variant.i"
+%import "core/Variant.i"
 %import "geometry/Geometry.i"
 
 !shared_ptr(carto::Feature, geometry.Feature)

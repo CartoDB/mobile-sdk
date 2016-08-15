@@ -7,7 +7,7 @@
 #ifndef _CARTO_TORQUETILEDECODER_H_
 #define _CARTO_TORQUETILEDECODER_H_
 
-#include "VectorTileDecoder.h"
+#include "vectortiles/VectorTileDecoder.h"
 
 #include <memory>
 #include <mutex>

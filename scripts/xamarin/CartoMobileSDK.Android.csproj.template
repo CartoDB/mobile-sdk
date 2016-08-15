@@ -28,7 +28,8 @@
     <DocumentationFile>$distDir\Debug\CartoMobileSDK.Android.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>full</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>$distDir\Release</OutputPath>
     <ErrorReport>prompt</ErrorReport>

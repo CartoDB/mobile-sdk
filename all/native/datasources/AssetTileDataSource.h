@@ -7,7 +7,7 @@
 #ifndef _CARTO_ASSETTILEDATASOURCE_H_
 #define _CARTO_ASSETTILEDATASOURCE_H_
 
-#include "TileDataSource.h"
+#include "datasources/TileDataSource.h"
 
 #include <string>
 

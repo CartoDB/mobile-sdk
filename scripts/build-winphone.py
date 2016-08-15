@@ -44,7 +44,7 @@ def buildWinPhoneNativeDLL(args, arch):
     '-DCMAKE_GENERATOR_PLATFORM=%s' % platformArch,
     '-DCMAKE_BUILD_TYPE=%s' % args.nativeconfiguration,
     '-DWRAPPER_DIR=%s' % ('%s/generated/winphone-csharp/wrappers' % baseDir),
-    '-DANGLE_LIB_DIR=%s' % ('%s/prebuilt/angle/Lib/%s' % (baseDir, platformArch)),
+    '-DANGLE_LIB_DIR=%s' % ('%s/libs-external/angle/prebuilt/Lib/%s' % (baseDir, platformArch)),
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
     "-DSDK_PLATFORM='Windows Phone 10'",
@@ -100,7 +100,7 @@ def buildWinPhoneVSIX(args):
   return False
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--profile', dest='profile', default='standard', choices=getProfiles().keys(), help='Build profile')
+parser.add_argument('--profile', dest='profile', default=getDefaultProfile(), choices=getProfiles().keys(), help='Build profile')
 parser.add_argument('--winphone-arch', dest='winphonearch', default=['all'], choices=WINPHONE10_ARCHS + ['all'], nargs='+', help='Windows phone target architectures')
 parser.add_argument('--defines', dest='defines', default='', help='Defines for compilation')
 parser.add_argument('--msbuild', dest='msbuild', default='auto', help='WinPhone msbuild executable')

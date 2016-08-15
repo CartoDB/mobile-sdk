@@ -6,7 +6,7 @@
     <Description>Carto Mobile SDK is advanced maps component with flexible extendability. It suits best for advanced client apps for Geographical Information Systems (GIS) data display and editing, field survey, 3D visualization and also end-user apps which need offline maps, professional developer support and more customization options.</Description>
     <MoreInfo>https://www.cartodb.com/mobile/</MoreInfo>
     <License>License.md</License>
-    <Icon>NutiteqMapsSDK_128x128.png</Icon>
+    <Icon>carto128x128.png</Icon>
     <Tags>maps, carto, cartodb, offline</Tags>
   </Metadata>
   <Installation AllUsers="true" Scope="Global">

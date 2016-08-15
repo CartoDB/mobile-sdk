@@ -95,7 +95,10 @@ def buildXamarinDLL(args, target):
     '%s/CartoMobileSDK.%s.csproj' % (buildDir, target)
   ):
     return False
-  return makedirs(distDir) and copyfile('%s/bin/%s/CartoMobileSDK.%s.dll' % (buildDir, args.configuration, target), '%s/CartoMobileSDK.%s.dll' % (distDir, target))
+  return makedirs(distDir) and \
+    copyfile('%s/bin/%s/CartoMobileSDK.%s.dll' % (buildDir, args.configuration, target), '%s/CartoMobileSDK.%s.dll' % (distDir, target)) and \
+    copyfile('%s/bin/%s/CartoMobileSDK.%s.dll.mdb' % (buildDir, args.configuration, target), '%s/CartoMobileSDK.%s.dll.mdb' % (distDir, target)) and \
+    copyfile('%s/bin/%s/CartoMobileSDK.%s.xml' % (buildDir, args.configuration, target), '%s/CartoMobileSDK.%s.xml' % (distDir, target))
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--profile', dest='profile', default='standard', choices=getProfiles().keys(), help='Build profile')

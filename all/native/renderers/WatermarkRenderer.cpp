@@ -1,7 +1,4 @@
 #include "WatermarkRenderer.h"
-#include "assets/EvaluationWatermarkPNG.h"
-#include "assets/ExpiredWatermarkPNG.h"
-#include "assets/CartoWatermarkPNG.h"
 #include "components/Options.h"
 #include "components/LicenseManager.h"
 #include "graphics/Bitmap.h"
@@ -15,6 +12,9 @@
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
+#include "assets/EvaluationWatermarkPNG.h"
+#include "assets/ExpiredWatermarkPNG.h"
+#include "assets/CartoWatermarkPNG.h"
 
 #include <random>
 
@@ -88,21 +88,18 @@ namespace carto {
     void WatermarkRenderer::onDrawFrame(const ViewState& viewState) {
         bool limitedLicense = false;
         std::shared_ptr<Bitmap> watermarkBitmap;
-        switch (LicenseManager::GetInstance().getWatermarkType()) {
-            case LicenseManager::CUSTOM_WATERMARK:
+        std::string watermark;
+        if (LicenseManager::GetInstance().getParameter("watermark", watermark)) {
+            if (watermark == "custom") {
                 watermarkBitmap = _options.getWatermarkBitmap();
-                break;
-            case LicenseManager::EVALUATION_WATERMARK:
-                limitedLicense = true;
-                watermarkBitmap = GetEvaluationWatermarkBitmap();
-                break;
-            case LicenseManager::EXPIRED_WATERMARK:
-                limitedLicense = true;
-                watermarkBitmap = GetExpiredWatermarkBitmap();
-                break;
-            case LicenseManager::CARTO_WATERMARK:
+            } else if (watermark == "carto" || watermark == "nutiteq") {
                 watermarkBitmap = GetCartoWatermarkBitmap();
-                break;
+            } else if (watermark == "evaluation" || watermark == "development" || watermark == "expired") {
+                limitedLicense = true;
+                watermarkBitmap = (watermark == "expired" ? GetExpiredWatermarkBitmap() : GetEvaluationWatermarkBitmap());
+            } else {
+                Log::Error("WatermarkRenderer::onDrawFrame: Unsupported watermark type!");
+            }
         }
     
         bool watermarkChanged = false;

@@ -71,7 +71,7 @@ def buildAndroidJAR(args):
   if not javac(args, buildDir,
     '-source', '1.6',
     '-target', '1.6',
-    '-bootclasspath', 'android/rt.jar',
+    '-bootclasspath', '%s/scripts/android/rt.jar' % baseDir,
     '-classpath', '%s/platforms/android-10/android.jar' % args.androidsdkpath,
     '-d', buildDir,
     *javaFiles
@@ -113,7 +113,7 @@ def buildAndroidAAR(args):
   return False
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--profile', dest='profile', default='standard', choices=getProfiles().keys(), help='Build profile')
+parser.add_argument('--profile', dest='profile', default=getDefaultProfile(), choices=getProfiles().keys(), help='Build profile')
 parser.add_argument('--android-abi', dest='androidabi', default=['all'], choices=ANDROID_ABIS + ['all'], nargs='+', help='Android target ABIs')
 parser.add_argument('--android-ndk-path', dest='androidndkpath', default='auto', help='Android NDK path')
 parser.add_argument('--android-sdk-path', dest='androidsdkpath', default='auto', help='Android SDK path')

@@ -7,7 +7,7 @@
 #ifndef _CARTO_NMLMODELDRAWDATA_H_
 #define _CARTO_NMLMODELDRAWDATA_H_
 
-#include "VectorElementDrawData.h"
+#include "renderers/drawdatas/VectorElementDrawData.h"
 
 #include <memory>
 

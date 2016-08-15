@@ -7,10 +7,10 @@
 #ifndef _CARTO_BITMAPOVERLAYRASTERTILEDATASOURCE_H_
 #define _CARTO_BITMAPOVERLAYRASTERTILEDATASOURCE_H_
 
-#include "TileDataSource.h"
 #include "core/MapPos.h"
 #include "core/MapBounds.h"
 #include "core/ScreenPos.h"
+#include "datasources/TileDataSource.h"
 
 #include <cglib/mat.h>
 

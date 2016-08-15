@@ -7,14 +7,14 @@
 #ifndef _CARTO_TILEDATASOURCE_H_
 #define _CARTO_TILEDATASOURCE_H_
 
+#include "core/MapTile.h"
+#include "datasources/components/TileData.h"
+
 #include <atomic>
 #include <mutex>
 #include <memory>
 #include <vector>
 #include <map>
-
-#include "core/MapTile.h"
-#include "datasources/components/TileData.h"
 
 namespace carto {
     class Projection;

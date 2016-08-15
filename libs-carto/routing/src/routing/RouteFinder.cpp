@@ -1,19 +1,19 @@
 #include "RouteFinder.h"
 
-namespace carto { namespace Routing {
-    RoutingResult RouteFinder::find(const RoutingQuery& query) const {
-        std::array<std::vector<RoutingGraph::NearestNode>, 2> nearestNodes;
+namespace carto { namespace routing {
+    Result RouteFinder::find(const Query& query) const {
+        std::array<std::vector<Graph::NearestNode>, 2> nearestNodes;
         std::array<std::priority_queue<SearchNode>, 2> heaps;
-        std::unordered_map<RoutingGraph::NodeId, PathNode, RoutingGraph::NodeId::Hash> pathSuffixMap;
+        std::unordered_map<Graph::NodeId, PathNode, Graph::NodeId::Hash> pathSuffixMap;
         float minWeight = 0.0f;
         for (int i = 0; i < 2; i++) {
             nearestNodes[i] = _graph->findNearestNode(query.getPos(i));
             if (nearestNodes[i].empty()) {
-                return RoutingResult();
+                return Result();
             }
 
-            for (const RoutingGraph::NearestNode& nearestNode : nearestNodes[i]) {
-                RoutingGraph::NodePtr node = _graph->getNode(nearestNode.nodeId);
+            for (const Graph::NearestNode& nearestNode : nearestNodes[i]) {
+                Graph::NodePtr node = _graph->getNode(nearestNode.nodeId);
 
                 // Calculate end-point weights
                 float weight = (i == 0 ? -nearestNode.geometryRelPos : nearestNode.geometryRelPos) * node->nodeData.weight;
@@ -21,24 +21,24 @@ namespace carto { namespace Routing {
 
                 // Special case: we have already added same node but the node is inaccessible along the current direction
                 if (i == 1 && nearestNodes[0].size() == 1 && nearestNodes[1].size() == 1) {
-                    const RoutingGraph::NearestNode& otherNearestNode = nearestNodes[1 - i][0];
+                    const Graph::NearestNode& otherNearestNode = nearestNodes[1 - i][0];
                     if (nearestNode.nodeId == otherNearestNode.nodeId && nearestNode.geometryRelPos < otherNearestNode.geometryRelPos) {
                         // Add all backward edges "leading" to current node
                         for (auto edge = node->firstEdge; edge != node->lastEdge; edge++) {
                             if (edge->backward) {
-                                heaps[i].emplace(edge->targetNodeId, RoutingGraph::NodeId(), weight + edge->edgeData.weight);
+                                heaps[i].emplace(edge->targetNodeId, Graph::NodeId(), weight + edge->edgeData.weight);
                                 pathSuffixMap[edge->targetNodeId] = PathNode(edge->targetNodeId, *edge, nearestNode.nodeId);
                             }
                         }
 
                         // Here comes the tricky part: we must perform another spatial query to find INCOMING edges pointing to current edge
                         std::vector<WGSPos> geometry = _graph->getNodeGeometry(*node);
-                        std::vector<RoutingGraph::NearestNode> nearestNodes2 = _graph->findNearestNode(geometry.front());
-                        for (const RoutingGraph::NearestNode& nearestNode2 : nearestNodes2) {
-                            RoutingGraph::NodePtr node2 = _graph->getNode(nearestNode2.nodeId);
+                        std::vector<Graph::NearestNode> nearestNodes2 = _graph->findNearestNode(geometry.front());
+                        for (const Graph::NearestNode& nearestNode2 : nearestNodes2) {
+                            Graph::NodePtr node2 = _graph->getNode(nearestNode2.nodeId);
                             for (auto edge2 = node2->firstEdge; edge2 != node2->lastEdge; edge2++) {
                                 if (edge2->forward && edge2->targetNodeId == nearestNode.nodeId) {
-                                    heaps[i].emplace(nearestNode2.nodeId, RoutingGraph::NodeId(), weight + edge2->edgeData.weight);
+                                    heaps[i].emplace(nearestNode2.nodeId, Graph::NodeId(), weight + edge2->edgeData.weight);
                                     pathSuffixMap[nearestNode2.nodeId] = PathNode(nearestNode2.nodeId, *edge2, nearestNode.nodeId);
                                 }
                             }
@@ -49,14 +49,14 @@ namespace carto { namespace Routing {
                 }
 
                 // Add the node to heap, if other nodes were not already added
-                heaps[i].emplace(nearestNode.nodeId, RoutingGraph::NodeId(), weight);
+                heaps[i].emplace(nearestNode.nodeId, Graph::NodeId(), weight);
             }
         }
 
         // Apply bidirectional Dijkstra
-        RoutingGraph::NodeId bestNodeId;
+        Graph::NodeId bestNodeId;
         float bestWeight = std::numeric_limits<float>::infinity();
-        std::array<std::unordered_map<RoutingGraph::NodeId, SearchNode, RoutingGraph::NodeId::Hash>, 2> settledNodes;
+        std::array<std::unordered_map<Graph::NodeId, SearchNode, Graph::NodeId::Hash>, 2> settledNodes;
         for (int i = 0; !(heaps[0].empty() && heaps[1].empty()); i = 1 - i) {
             if (heaps[i].empty()) {
                 continue;
@@ -89,7 +89,7 @@ namespace carto { namespace Routing {
             settledNodes[i][searchNode.nodeId] = searchNode;
             
             // Stalling optimization. This implementation is not optimal, we should also look at non-settled heap nodes
-            RoutingGraph::NodePtr node = _graph->getNode(searchNode.nodeId);
+            Graph::NodePtr node = _graph->getNode(searchNode.nodeId);
             bool stall = false;
             for (auto edge = node->firstEdge; edge != node->lastEdge; edge++) {
                 if ((i == 0 && edge->backward) || (i != 0 && edge->forward)) {
@@ -126,18 +126,18 @@ namespace carto { namespace Routing {
 
         // Check that path was found
         if (bestNodeId.blockId.packageId == -1) {
-            return RoutingResult();
+            return Result();
         }
 
         // Unpack path
         std::array<std::vector<PathNode>, 2> paths;
         for (int i = 0; i < 2; i++) {
-            std::stack<std::pair<RoutingGraph::NodeId, RoutingGraph::NodeId>> stack;
-            RoutingGraph::NodeId nodeId = bestNodeId;
+            std::stack<std::pair<Graph::NodeId, Graph::NodeId>> stack;
+            Graph::NodeId nodeId = bestNodeId;
             while (true) {
                 auto it = settledNodes[i].find(nodeId);
                 assert(it != settledNodes[i].end());
-                RoutingGraph::NodeId prevNodeId = it->second.prevNodeId;
+                Graph::NodeId prevNodeId = it->second.prevNodeId;
                 if (prevNodeId.blockId.packageId == -1) {
                     break;
                 }
@@ -146,17 +146,17 @@ namespace carto { namespace Routing {
             }
 
             while (!stack.empty()) {
-                std::pair<RoutingGraph::NodeId, RoutingGraph::NodeId> nodeIds = stack.top();
+                std::pair<Graph::NodeId, Graph::NodeId> nodeIds = stack.top();
                 stack.pop();
 
-                RoutingGraph::NodePtr matchedNode;
-                const RoutingGraph::Edge* matchedEdge = nullptr;
+                Graph::NodePtr matchedNode;
+                const Graph::Edge* matchedEdge = nullptr;
 
                 // Find the edge between prevNodeId and nodeId. Do matching based on node ids.
-                RoutingGraph::NodeId prevNodeId = nodeIds.first;
-                RoutingGraph::NodeId nodeId = nodeIds.second;
+                Graph::NodeId prevNodeId = nodeIds.first;
+                Graph::NodeId nodeId = nodeIds.second;
                 for (int j = 0; j < 2 && !matchedEdge; j++) {
-                    RoutingGraph::NodePtr prevNode = _graph->getNode(prevNodeId);
+                    Graph::NodePtr prevNode = _graph->getNode(prevNodeId);
                     for (auto edge = prevNode->firstEdge; edge != prevNode->lastEdge; edge++) {
                         if (edge->targetNodeId == nodeId && ((j == i && edge->forward) || (j != i && edge->backward))) {
                             matchedNode = prevNode;
@@ -169,14 +169,14 @@ namespace carto { namespace Routing {
                 
                 // If the edge was not found, then we have a link between packages with different node encodings. Do slow matching, based on geometry, not node ids
                 for (int j = 0; j < 2 && !matchedEdge; j++) {
-                    RoutingGraph::NodePtr prevNode = _graph->getNode(prevNodeId);
-                    RoutingGraph::NodePtr node = _graph->getNode(nodeId);
+                    Graph::NodePtr prevNode = _graph->getNode(prevNodeId);
+                    Graph::NodePtr node = _graph->getNode(nodeId);
                     std::vector<WGSPos> nodeGeometry = _graph->getNodeGeometry(*node);
                     for (auto edge = prevNode->firstEdge; edge != prevNode->lastEdge; edge++) {
                         if (edge->targetNodeId.blockId.packageId == -1) {
                             continue;
                         }
-                        RoutingGraph::NodePtr targetNode = _graph->getNode(edge->targetNodeId);
+                        Graph::NodePtr targetNode = _graph->getNode(edge->targetNodeId);
                         std::vector<WGSPos> targetNodeGeometry = _graph->getNodeGeometry(*targetNode);
                         if (nodeGeometry == targetNodeGeometry && ((j == i && edge->forward) || (j != i && edge->backward))) {
                             matchedNode = prevNode;
@@ -191,7 +191,7 @@ namespace carto { namespace Routing {
                 if (matchedEdge) {
                     if (matchedEdge->contracted) {
                         if (matchedEdge->contractedNodeId.blockId.packageId == -1) {
-                            return RoutingResult(); // Contracted node is not available, packing failed
+                            return Result(); // Contracted node is not available, packing failed
                         }
                         stack.emplace(matchedEdge->contractedNodeId, nodeIds.second);
                         stack.emplace(nodeIds.first, matchedEdge->contractedNodeId);
@@ -200,7 +200,7 @@ namespace carto { namespace Routing {
                         paths[i].emplace_back(nodeIds.first, *matchedEdge, nodeIds.second);
                     }
                 } else {
-                    return RoutingResult(); // NOTE: this should not happen, unless the graph is broken
+                    return Result(); // NOTE: this should not happen, unless the graph is broken
                 }
             }
         }
@@ -212,11 +212,11 @@ namespace carto { namespace Routing {
             path.emplace_back(it->nextNodeId, it->edge, it->prevNodeId);
         }
         if (path.empty()) {
-            path.emplace(path.begin(), bestNodeId, RoutingGraph::Edge(), bestNodeId);
+            path.emplace(path.begin(), bestNodeId, Graph::Edge(), bestNodeId);
         }
         else {
-            RoutingGraph::NodeId firstNodeId = path.front().prevNodeId;
-            path.emplace(path.begin(), firstNodeId, RoutingGraph::Edge(), firstNodeId);
+            Graph::NodeId firstNodeId = path.front().prevNodeId;
+            path.emplace(path.begin(), firstNodeId, Graph::Edge(), firstNodeId);
         }
 
         auto finalNodeIt = pathSuffixMap.find(path.back().nextNodeId);
@@ -225,11 +225,11 @@ namespace carto { namespace Routing {
         }
 
         // Construct query result
-        std::vector<RoutingInstruction> instructions;
+        std::vector<Instruction> instructions;
         std::vector<WGSPos> routeVertices;
         for (std::size_t j = 0; j < path.size(); j++) {
-            RoutingGraph::NodeId nodeId = path[j].nextNodeId;
-            RoutingGraph::NodePtr node = _graph->getNode(nodeId);
+            Graph::NodeId nodeId = path[j].nextNodeId;
+            Graph::NodePtr node = _graph->getNode(nodeId);
             
             std::vector<WGSPos> geometry = _graph->getNodeGeometry(*node);
             std::pair<std::size_t, std::size_t> geometryIndex(0, geometry.size());
@@ -265,7 +265,7 @@ namespace carto { namespace Routing {
 
             // Initial route instruction/vertex
             if (firstNNIndex != std::numeric_limits<std::size_t>::max()) {
-                instructions.emplace_back(RoutingInstruction::Type::HEAD_ON, RoutingInstruction::TravelMode::DEFAULT, streetName, dist, time, routeVertices.size());
+                instructions.emplace_back(Instruction::Type::HEAD_ON, Instruction::TravelMode::DEFAULT, streetName, dist, time, routeVertices.size());
                 routeVertices.push_back(nearestNodes[0][firstNNIndex].nodePos);
             }
             
@@ -278,19 +278,19 @@ namespace carto { namespace Routing {
             std::size_t vertexIndex = routeVertices.size();
             routeVertices.insert(routeVertices.end(), geometry.begin() + geometryIndex.first, geometry.begin() + geometryIndex.second);
             if (j > 0) {
-                RoutingInstruction::Type type = static_cast<RoutingInstruction::Type>(path[j].edge.edgeData.turnInstruction);
-                RoutingInstruction::TravelMode travelMode = static_cast<RoutingInstruction::TravelMode>(node->nodeData.travelMode);
+                Instruction::Type type = static_cast<Instruction::Type>(path[j].edge.edgeData.turnInstruction);
+                Instruction::TravelMode travelMode = static_cast<Instruction::TravelMode>(node->nodeData.travelMode);
                 instructions.emplace_back(type, travelMode, streetName, dist, time, vertexIndex);
             }
 
             // Final instruction/vertex
             if (lastNNIndex != std::numeric_limits<std::size_t>::max()) {
-                instructions.emplace_back(RoutingInstruction::Type::REACHED_YOUR_DESTINATION, RoutingInstruction::TravelMode::DEFAULT, "", 0, 0, routeVertices.size());
+                instructions.emplace_back(Instruction::Type::REACHED_YOUR_DESTINATION, Instruction::TravelMode::DEFAULT, "", 0, 0, routeVertices.size());
                 routeVertices.push_back(nearestNodes[1][lastNNIndex].nodePos);
             }
         }
 
-        return RoutingResult(std::move(instructions), std::move(routeVertices));
+        return Result(std::move(instructions), std::move(routeVertices));
     }
 
     double RouteFinder::calculateGeometryLength(const std::vector<WGSPos>& geometry, double t0, double t1) {

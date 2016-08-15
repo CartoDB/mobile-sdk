@@ -23,6 +23,8 @@
     <DocumentationFile>$distDir\Debug\CartoMobileSDK.iOS.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>$distDir\Release</OutputPath>
     <ErrorReport>prompt</ErrorReport>

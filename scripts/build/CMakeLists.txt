@@ -44,6 +44,7 @@ endif(CMAKE_COMPILER_IS_GNUCXX)
 # Directories
 set(SDK_BASE_DIR "${PROJECT_SOURCE_DIR}/../..")
 set(SDK_SRC_DIR "${SDK_BASE_DIR}/all/native")
+set(SDK_EXT_SRC_DIR "${SDK_BASE_DIR}/extensions/all/native")
 set(SDK_CARTO_LIBS_DIR "${SDK_BASE_DIR}/libs-carto" )
 set(SDK_EXTERNAL_LIBS_DIR "${SDK_BASE_DIR}/libs-external")
 
@@ -51,6 +52,7 @@ set(ZLIB_INCLUDE_DIR "${SDK_EXTERNAL_LIBS_DIR}/zlib")
 set(PNG_INCLUDE_DIR "${SDK_EXTERNAL_LIBS_DIR}/png")
 
 include_directories(
+    "${SDK_EXT_SRC_DIR}"
     "${SDK_SRC_DIR}"
     "${SDK_CARTO_LIBS_DIR}/vt/src"
     "${SDK_CARTO_LIBS_DIR}/mapnikvt/src"
@@ -152,6 +154,10 @@ file(GLOB SDK_SRC_FILES
     "${SDK_SRC_DIR}/*/*/*.cpp"
     "${SDK_SRC_DIR}/*/*.h"
     "${SDK_SRC_DIR}/*/*/*.h"
+    "${SDK_EXT_SRC_DIR}/*/*.cpp"
+    "${SDK_EXT_SRC_DIR}/*/*/*.cpp"
+    "${SDK_EXT_SRC_DIR}/*/*.h"
+    "${SDK_EXT_SRC_DIR}/*/*/*.h"
 )
 if (WIN32 OR IOS OR ANDROID)
 list(REMOVE_ITEM SDK_SRC_FILES "${SDK_SRC_DIR}/network/HTTPClientPionImpl.cpp")

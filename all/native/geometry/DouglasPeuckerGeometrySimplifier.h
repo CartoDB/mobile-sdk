@@ -7,7 +7,7 @@
 #ifndef _CARTO_DOUGLASPEUCKERGEOMETRYSIMPLIFIER_H_
 #define _CARTO_DOUGLASPEUCKERGEOMETRYSIMPLIFIER_H_
 
-#include "GeometrySimplifier.h"
+#include "geometry/GeometrySimplifier.h"
 
 #include <vector>
 

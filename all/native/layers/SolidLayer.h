@@ -7,10 +7,10 @@
 #ifndef _CARTO_SOLIDLAYER_H_
 #define _CARTO_SOLIDLAYER_H_
 
+#include "core/MapEnvelope.h"
 #include "components/CancelableTask.h"
 #include "components/DirectorPtr.h"
 #include "datasources/VectorDataSource.h"
-#include "core/MapEnvelope.h"
 #include "graphics/Color.h"
 #include "layers/Layer.h"
 

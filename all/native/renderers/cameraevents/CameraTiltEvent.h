@@ -7,11 +7,11 @@
 #ifndef _CARTO_CAMERATILTEVENT_H_
 #define _CARTO_CAMERATILTEVENT_H_
 
-#include "CameraEvent.h"
+#include "renderers/cameraevents/CameraEvent.h"
 
 namespace carto {
 
-    class CameraTiltEvent: public CameraEvent {
+    class CameraTiltEvent : public CameraEvent {
     public:
         CameraTiltEvent();
         virtual ~CameraTiltEvent();
