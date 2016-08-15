@@ -2,6 +2,14 @@ branches:
   only:
     - master
 
+android:
+  components
+    - tools
+    - platform-tools
+    - build-tools-23.0.2
+    - android-10
+    - android-21
+
 matrix:
  include:
    - os: osx
@@ -13,14 +21,6 @@ matrix:
      sudo: required
      dist: trusty
      language: android
-     android:
-       components
-         - tools
-         - platform-tools
-         - build-tools-23.0.2
-         - android-10
-         - android-21
-
 
 before_script:
   - source scripts/travis/prerequisites.sh
