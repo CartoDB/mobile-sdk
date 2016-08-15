@@ -2,10 +2,18 @@ branches:
   only:
     - master
 
-os: osx
+android:
+  components
+    - tools
+    - platform-tools
+    - build-tools-23.0.2
+    - android-10
+    - android-21
+
+os: linux
 sudo: required
-language: cpp
-osx_image: xcode7.3
+dist: trusty
+language: android
 
 before_script:
   - source scripts/travis/prerequisites.sh

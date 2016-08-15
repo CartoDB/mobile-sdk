@@ -48,4 +48,5 @@ if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
   unzip -q android-ndk-r12b-linux-x86_64.zip
   rm android-ndk-r12b-linux-x86_64.zip
   export ANDROID_NDK_HOME=`pwd`/android-ndk-r12b;
+  export ANDROID_HOME=/usr/local/android-sdk
 fi
