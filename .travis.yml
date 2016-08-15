@@ -8,7 +8,7 @@ dist: trusty
 language: android
 
 android:
-  components
+  components:
     - tools
     - platform-tools
     - build-tools-23.0.2
