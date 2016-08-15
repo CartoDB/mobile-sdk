@@ -6,5 +6,5 @@ if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
 fi
 if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
   python swigpp-objc.py
-  python build-ios.py --ios-arch=arm64; # | egrep '^(/.+:[0-9+:[0-9]+:.(error|warning):|fatal|===)';
+  python build-ios.py --ios-arch=arm64 | egrep '^(/.+:[0-9+:[0-9]+:.(error|warning):|fatal|===)';
 fi
