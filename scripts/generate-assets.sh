@@ -8,10 +8,6 @@ xxd -i default-point.png > ../all/native/assets/DefaultPointPNG.h
 xxd -i default-polygon.png > ../all/native/assets/DefaultPolygonPNG.h
 xxd -i default-polygon-3d.png > ../all/native/assets/DefaultPolygon3DPNG.h
 xxd -i default-sky.png > ../all/native/assets/DefaultSkyPNG.h
-
-if [ -d "../extensions/assets" ]; then
-  cd ../extensions/assets
-  xxd -i evaluation-watermark.png | sed 's/unsigned/static unsigned/' > ../all/native/assets/EvaluationWatermarkPNG.h
-  xxd -i expired-watermark.png | sed 's/unsigned/static unsigned/' > ../all/native/assets/ExpiredWatermarkPNG.h
-  xxd -i carto-watermark.png | sed 's/unsigned/static unsigned/' > ../all/native/assets/CartoWatermarkPNG.h
-fi
+xxd -i evaluation-watermark.png | sed 's/unsigned/static unsigned/' > ../all/native/assets/EvaluationWatermarkPNG.h
+xxd -i expired-watermark.png | sed 's/unsigned/static unsigned/' > ../all/native/assets/ExpiredWatermarkPNG.h
+xxd -i carto-watermark.png | sed 's/unsigned/static unsigned/' > ../all/native/assets/CartoWatermarkPNG.h

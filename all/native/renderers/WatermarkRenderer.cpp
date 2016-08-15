@@ -12,11 +12,9 @@
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
-#ifdef _CARTO_LICENSEMANAGER_SUPPORT
 #include "assets/EvaluationWatermarkPNG.h"
 #include "assets/ExpiredWatermarkPNG.h"
 #include "assets/CartoWatermarkPNG.h"
-#endif
 
 #include <random>
 
@@ -99,6 +97,8 @@ namespace carto {
             } else if (watermark == "evaluation" || watermark == "development" || watermark == "expired") {
                 limitedLicense = true;
                 watermarkBitmap = (watermark == "expired" ? GetExpiredWatermarkBitmap() : GetEvaluationWatermarkBitmap());
+            } else {
+                Log::Error("WatermarkRenderer::onDrawFrame: Unsupported watermark type!");
             }
         }
     
@@ -202,29 +202,23 @@ namespace carto {
     }
         
     std::shared_ptr<Bitmap> WatermarkRenderer::GetEvaluationWatermarkBitmap() {
-#ifdef _CARTO_LICENSEMANAGER_SUPPORT
         if (!_EvaluationWatermarkBitmap) {
             _EvaluationWatermarkBitmap = Bitmap::CreateFromCompressed(evaluation_watermark_png, evaluation_watermark_png_len);
         }
-#endif
         return _EvaluationWatermarkBitmap;
     }
     
     std::shared_ptr<Bitmap> WatermarkRenderer::GetExpiredWatermarkBitmap() {
-#ifdef _CARTO_LICENSEMANAGER_SUPPORT
         if (!_ExpiredWatermarkBitmap) {
             _ExpiredWatermarkBitmap = Bitmap::CreateFromCompressed(expired_watermark_png, expired_watermark_png_len);
         }
-#endif
         return _ExpiredWatermarkBitmap;
     }
         
     std::shared_ptr<Bitmap> WatermarkRenderer::GetCartoWatermarkBitmap() {
-#ifdef _CARTO_LICENSEMANAGER_SUPPORT
         if (!_CartoWatermarkBitmap) {
             _CartoWatermarkBitmap = Bitmap::CreateFromCompressed(carto_watermark_png, carto_watermark_png_len);
         }
-#endif
         return _CartoWatermarkBitmap;
     }
         

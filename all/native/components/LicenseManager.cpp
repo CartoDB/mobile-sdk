@@ -12,6 +12,9 @@ namespace carto {
     }
 
     bool LicenseManager::getParameter(const std::string& name, std::string& value) const {
+        if (name == "watermark") {
+            return "carto";
+        }
         return false;
     }
     
