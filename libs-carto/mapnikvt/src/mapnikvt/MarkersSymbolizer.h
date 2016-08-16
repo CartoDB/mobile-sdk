@@ -30,7 +30,6 @@ namespace carto { namespace mvt {
 
         std::string _file;
         std::string _placement = "point";
-        bool _placementDefined = false;
         std::string _markerType;
         vt::Color _fill = vt::Color(0xff0000ff);
         float _fillOpacity = 1.0f;

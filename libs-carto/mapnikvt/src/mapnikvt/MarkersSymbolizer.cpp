@@ -14,12 +14,12 @@ namespace carto { namespace mvt {
 
         float fontScale = symbolizerContext.getSettings().getFontScale();
         vt::LabelOrientation placement = convertLabelPlacement(_placement);
-        if (!_placementDefined) {
-            if (_transformExpression) { // if rotation transform is explicitly defined, use point placement
-                if (containsRotationTransform(_transformExpression->evaluate(exprContext))) {
-                    placement = vt::LabelOrientation::POINT;
-                }
+        if (_transformExpression) { // if rotation transform is explicitly defined, use point placement
+            if (containsRotationTransform(_transformExpression->evaluate(exprContext))) {
+                placement = vt::LabelOrientation::POINT;
             }
+        }
+        if (_placement == "point") {
             if (_allowOverlap) { // if overlap is allowed, use point placement
                 placement = vt::LabelOrientation::POINT;
             }
@@ -187,7 +187,6 @@ namespace carto { namespace mvt {
         }
         else if (name == "placement") {
             bind(&_placement, parseStringExpression(value));
-            _placementDefined = true;
         }
         else if (name == "marker-type") {
             bind(&_markerType, parseStringExpression(value));
