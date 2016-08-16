@@ -5,7 +5,6 @@
 | Platforms    | Status |
 |:-------------|:-------|
 | Android, iOS | ![Build status](https://api.travis-ci.com/CartoDB/mobile-sdk.svg?token=uvhfAb9wpUzphV39sAwP&branch=master) |
-|
 
 ## Dependencies
 Get the prepackaged dependencies from github CartoDB/mobile-external-libs
