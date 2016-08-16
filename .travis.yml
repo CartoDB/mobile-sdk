@@ -3,7 +3,6 @@ branches:
     - master
 
 os: linux
-sudo: required
 dist: precise
 language: android
 
