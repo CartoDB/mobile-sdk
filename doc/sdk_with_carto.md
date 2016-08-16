@@ -11,7 +11,7 @@ If you are using other CARTO Engines, you can automatically define mobile map fe
   - `CartoVisLoader` is used to load and configure all corresponding layers
   - `CartoVisBuilder` is high level interface for loading VisJSON configurations. You can define which mobile layers are configured and visualized by default
 
-  **Tip:** For additional viz.json mobile map rendering, see [Displaying a Mobile Map from vis.json](#display-a-mobile-map-from-a-vizjson).
+  **Tip:** For additional viz.json mobile map rendering, see how to [Publish a Mobile Map](#publish-a-mobile-map).
 
 2) Integrate with the [Maps API](/docs/carto-engine/maps-api/) for anonymous or named maps
 
@@ -120,7 +120,7 @@ In order to integrate your published mobile map into the app, you need a callbac
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-	    {% highlight objectiveC %}@interface MyCartoVisBuilder : NTCartoVisBuilder
+	    {% highlight objc %}@interface MyCartoVisBuilder : NTCartoVisBuilder
 
 	  @property NTMapView* mapView;
 
@@ -209,7 +209,7 @@ In order to integrate your published mobile map into the app, you need a callbac
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight objectiveC %}dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+  {% highlight objc %}dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         // just make sure no other layers are on map
         [[mapView getLayers] clear];
         
@@ -233,11 +233,11 @@ In order to integrate your published mobile map into the app, you need a callbac
 
 6) Run your mobile app
 
-  If you are using assets from the [sample apps](/docs/carto-engine/mobile-sdk/sample-apps/) as part of your project, the following [map result](https://raw.githubusercontent.com/CartoDB/mobile-ios-samples/master/sample_viz_mobile.png) appears.
+  If you are using assets from the [sample apps](/docs/carto-engine/mobile-sdk/getting-started/#sample-apps) as part of your project, the following [map result](https://raw.githubusercontent.com/CartoDB/mobile-ios-samples/master/sample_viz_mobile.png) appears.
 
 ## SDK and CARTO API Samples
 
-The CARTO [sample app](/docs/carto-engine/mobile-sdk/sample-apps/) projects contain a number of working samples for all the mobile platforms:
+The CARTO [sample app](/docs/carto-engine/mobile-sdk/getting-started/#sample-apps) projects contain a number of working samples for all the mobile platforms:
 
 - `CartoVisJsonActivity` load complete map configurations (from online viz.json)
 

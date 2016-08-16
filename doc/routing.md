@@ -31,7 +31,7 @@ Mobile Routing is optimized for low memory usage and calculation speed, includin
 
 CARTO has created a customized routing package, similar to other offline map packages, that contain **world-wide offline route packages**. This routing package includes the corresponding online service for most common profiles, using **osm.car** and **osm.foot** OpenStreetMap data, as the map source.
 
-- The list of country packages for routing is the same as other offline maps. See [Offline Map Service ](/docs/carto-engine/mobile-sdk/offline-map-service/#offline-map-packages) for the full list of offline packages
+- The list of country packages for routing is the same as other offline maps. See [Offline Map Packages](/docs/carto-engine/mobile-sdk/offline-maps/#offline-map-packages) for the full list of offline packages
 
 - The download size of the offline routing package is significantly larger (10-40% greater) than the size of the corresponding offline map package. Car profile packages are considerably smaller than walking packages
 
@@ -57,11 +57,11 @@ For minimal routing implementation, use our sample app code for different mobile
 
   - [`OfflineRoutingActivity.java`](https://github.com/nutiteq/hellomap3d-android/blob/master/com.nutiteq.advancedmap3/src/com/nutiteq/advancedmap3/OfflineRoutingActivity.java) parameter
 
-- Xamarin (Android): https://github.com/nutiteq/hellomap3d-dotnet : [OfflineRouting.cs](https://github.com/nutiteq/hellomap3d-dotnet/blob/master/hellomap-android/OfflineRouting.cs)
+- Xamarin (Android):
 
- - [Sample App repository](https://github.com/nutiteq/hellomap3d-dotnet)
+  - [Sample App repository](https://github.com/nutiteq/hellomap3d-dotnet)
 
--  [`OfflineRouting.cs`](https://github.com/nutiteq/hellomap3d-dotnet/blob/master/hellomap-android/OfflineRouting.cs) parameter
+  -  [`OfflineRouting.cs`](https://github.com/nutiteq/hellomap3d-dotnet/blob/master/hellomap-android/OfflineRouting.cs) parameter
 
 ### Example Procedure
 
@@ -75,7 +75,7 @@ The following procedure describes how to apply the sample routing code in your m
 
 2. Press and hold (long-click) on map to set route start point. Long-click a second time to set the end point
 
-    **Tip:** See [Map Listener Events](/docs/carto-engine/mobile-sdk/map-listener-events/) for details about the `CLICK_TYPE_LONG` ClickType.
+    **Tip:** See [Listening to Events](/docs/carto-engine/mobile-sdk/developer-guide-to-sdk-features/#listening-to-events) for details about the `CLICK_TYPE_LONG` ClickType.
 
 3. Once the end-point is set, the route is automatically calculated
 
@@ -120,25 +120,25 @@ Online routing requires that you create a simple call and request to calculate t
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
+  {% highlight java %}onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
+  {% highlight c# %}onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}_onlineRoutingService = [[NTCartoOnlineRoutingService alloc] initWithSource:@"nutiteq.osm.car"];
+  {% highlight objc %}_onlineRoutingService = [[NTCartoOnlineRoutingService alloc] initWithSource:@"nutiteq.osm.car"];
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}COMING SOON...
+  {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
   </div>
@@ -168,7 +168,7 @@ These code samples display how to show navigation instructions on the map, as in
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}AsyncTask<Void, Void, RoutingResult> task = new AsyncTask<Void, Void, RoutingResult>() {
+  {% highlight java %}AsyncTask<Void, Void, RoutingResult> task = new AsyncTask<Void, Void, RoutingResult>() {
 
             protected RoutingResult doInBackground(Void... v) {
                 MapPosVector poses = new MapPosVector();
@@ -210,7 +210,7 @@ These code samples display how to show navigation instructions on the map, as in
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}ThreadPool.QueueUserWorkItem(delegate
+  {% highlight c# %}ThreadPool.QueueUserWorkItem(delegate
     {
       MapPosVector poses = new MapPosVector();
       poses.Add(startPos);
@@ -240,7 +240,7 @@ These code samples display how to show navigation instructions on the map, as in
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
+  {% highlight objc %}
 
     // Set route start end end points
     NTMapPosVector* poses = [[NTMapPosVector alloc] init];
@@ -287,7 +287,7 @@ These code samples display how to show navigation instructions on the map, as in
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}COMING SOON...
+  {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
   </div>
@@ -313,19 +313,19 @@ These code samples display how to show navigation instructions on the map, as in
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}COMING SOON...{% endhighlight %}
+  {% highlight java %}COMING SOON...{% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}COMING SOON...{% endhighlight %}
+  {% highlight xamarin %}COMING SOON...{% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}COMING SOON...{% endhighlight %}
+  {% highlight objc %}COMING SOON...{% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}COMING SOON...{% endhighlight %}
+  {% highlight swift %}COMING SOON...{% endhighlight %}
   </div>
 </div>
 
@@ -358,7 +358,7 @@ For offline routing, you must download routing packages.  You can use the same *
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}
+  {% highlight java %}
 
 // Create PackageManager instance for dealing with offline packages
         File packageFolder = new File(getApplicationContext().getExternalFilesDir(null), "routingpackages");
@@ -377,7 +377,7 @@ For offline routing, you must download routing packages.  You can use the same *
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
+  {% highlight c# %}
 
 // Create PackageManager instance for dealing with offline packages
     var packageFolder = new File(GetExternalFilesDir(null), "routingpackages");
@@ -393,7 +393,7 @@ For offline routing, you must download routing packages.  You can use the same *
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
+  {% highlight objc %}
 
 // Define PackageManger to download offline routing packages
 // Create folder for package manager. Package manager needs persistent writable folder.
@@ -409,9 +409,7 @@ For offline routing, you must download routing packages.  You can use the same *
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  COMING SOON...
+  {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
   </div>
@@ -441,7 +439,7 @@ Routing package downloads cannot be started immediately, as the Mobile SDK needs
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}public class RoutePackageManagerListener extends PackageManagerListener {
+  {% highlight java %}public class RoutePackageManagerListener extends PackageManagerListener {
     @Override
     public void onPackageListUpdated() {
         Log.d(Const.LOG_TAG, "Package list updated");
@@ -484,7 +482,7 @@ Routing package downloads cannot be started immediately, as the Mobile SDK needs
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}public class RoutePackageManagerListener : PackageManagerListener
+  {% highlight c# %}public class RoutePackageManagerListener : PackageManagerListener
   {
     PackageManager packageManager;
 
@@ -534,7 +532,7 @@ Routing package downloads cannot be started immediately, as the Mobile SDK needs
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}@interface RoutePackageManagerListener : NTPackageManagerListener
+  {% highlight objc %}@interface RoutePackageManagerListener : NTPackageManagerListener
 
     @property NTPackageManager* _packageManager;
   - (void)setPackageManager:(NTPackageManager*)manager;
@@ -591,7 +589,7 @@ Routing package downloads cannot be started immediately, as the Mobile SDK needs
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}COMING SOON...
+  {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
   </div>
@@ -623,40 +621,40 @@ To link PackageManagerListener with PackageManager (and to have a fully working 
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}
+  {% highlight java %}
 
 // 1. Set listener, and start PackageManager
-    packageManager.setPackageManagerListener(new RoutePackageManagerListener());
-    packageManager.start();
+      packageManager.setPackageManagerListener(new RoutePackageManagerListener());
+      packageManager.start();
 
 // 2. Fetch list of available packages from server. Note that this is asynchronous operation and listener will be notified via onPackageListUpdated when this succeeds.
     packageManager.startPackageListDownload();
 
 // 3. Create offline routing service connected to package manager
-    offlineRoutingService = new PackageManagerRoutingService(packageManager);
+      offlineRoutingService = new PackageManagerRoutingService(packageManager);
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
+  {% highlight c# %}
 
 // 1. Create and set listener, and start PackageManager
-  packageManager.PackageManagerListener = new RoutePackageManagerListener(packageManager);
-  packageManager.Start();
+      packageManager.PackageManagerListener = new RoutePackageManagerListener(packageManager);
+      packageManager.Start();
 
 // 2. Fetch list of available packages from server. 
-  // Note that this is asynchronous operation and the listener will be notified via OnPackageListUpdated when this succeeds.        
-  packageManager.StartPackageListDownload();
+      // Note that this is asynchronous operation and the listener will be notified via OnPackageListUpdated when this succeeds.        
+      packageManager.StartPackageListDownload();
 
 // 3. Create offline routing service connected to package manager
-  offlineRoutingService = new PackageManagerRoutingService(packageManager);
+      offlineRoutingService = new PackageManagerRoutingService(packageManager);
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"routing:nutiteq.osm.car" dataFolder:packagesDir];
+  {% highlight objc %}NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"routing:nutiteq.osm.car" dataFolder:packagesDir];
     
 // 1. Create routePackageManagerListener with your listener class
     RoutePackageManagerListener* _packageManagerListener = [[RoutePackageManagerListener alloc] init];
@@ -678,7 +676,7 @@ To link PackageManagerListener with PackageManager (and to have a fully working 
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}COMING SOON...
+  {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
   </div>

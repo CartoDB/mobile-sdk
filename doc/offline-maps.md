@@ -1,4 +1,4 @@
-# Offline Map Service
+# Offline Maps
 
 CARTO provides a service to download map packages in special vector formats for offline use. There is no direct URL to get these packages, instead we provide cross-platform API from within SDK: **Package Manager API**. Your application should use this API to download packages. The API provides the following features:
 
@@ -125,13 +125,13 @@ Use the following steps to implement **single map package** downloading:
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}
+  {% highlight java %}
 
 // 1. Register license, this must be done before PackageManager can be used!
-        MapView.registerLicense("YOUR_LICENSE_HERE", getApplicationContext());
+      MapView.registerLicense("YOUR_LICENSE_HERE", getApplicationContext());
 
 // 2. Create package manager
-        File packageFolder = new File(getApplicationContext().getExternalFilesDir(null), "mappackages");
+      File packageFolder = new File(getApplicationContext().getExternalFilesDir(null), "mappackages");
         if (!(packageFolder.mkdirs() || packageFolder.isDirectory())) {
             Log.e(Const.LOG_TAG, "Could not create package folder!");
         }
@@ -147,7 +147,7 @@ Use the following steps to implement **single map package** downloading:
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
+  {% highlight c# %}
 
 // Android: Register license, this must be done before PackageManager can be used!
       Carto.Ui.MapView.RegisterLicense("YOUR-NUTITEQ-LICENSE", ApplicationContext);
@@ -190,7 +190,7 @@ Use the following steps to implement **single map package** downloading:
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
+  {% highlight objc %}
 
 // Create folder for package manager files. Package manager needs persistent writable folder.
     NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask,YES);
@@ -209,7 +209,7 @@ Use the following steps to implement **single map package** downloading:
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}COMING SOON...
+  {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
   </div>
@@ -235,7 +235,7 @@ Use the following steps to implement **single map package** downloading:
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}
+  {% highlight java %}
    
 // PackageListener.java :
    /**
@@ -283,7 +283,7 @@ Use the following steps to implement **single map package** downloading:
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
+  {% highlight c# %}
 
   public class PackageListener : PackageManagerListener
   {
@@ -350,7 +350,7 @@ Use the following steps to implement **single map package** downloading:
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
+  {% highlight objc %}
 
   /*
    * Package manager listener. Listener is notified about asynchronous events
@@ -371,7 +371,7 @@ Use the following steps to implement **single map package** downloading:
 
   // 2. Create listener implementation
 
-  @implementation PackageManagerListener
+        @implementation PackageManagerListener
 
   - (void)onPackageListUpdated
   {
@@ -409,22 +409,20 @@ Use the following steps to implement **single map package** downloading:
   
   // And the following to your Controller class:
 
-    // 3. create listener object instance
-  _packageManagerListener = [[PackageManagerListener alloc] init];
+// 3. Create listener object instance
+      _packageManagerListener = [[PackageManagerListener alloc] init];
 
-  // 4. Register this controller with listener to receive notifications about events
-  [_packageManagerListener addPackageManagerController:self];
+// 4. Register this controller with listener to receive notifications about events
+      [_packageManagerListener addPackageManagerController:self];
 
-  // 5. Attach package manager listener
-  [_packageManager setPackageManagerListener:_packageManagerListener];
+// 5. Attach package manager listener
+      [_packageManager setPackageManagerListener:_packageManagerListener];
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  COMING SOON...
+  {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
   </div>
@@ -433,7 +431,7 @@ Use the following steps to implement **single map package** downloading:
 
 *  **Download of country package**
 
-The following starts download of map of Estonia. See [list of available packages](/docs/carto-engine/mobile-sdk/offline-map-service/#offline-map-packages) for available countries. Generally packages are for ISO 2-letter administrative country codes, with two exceptions:
+The following starts download of map of Estonia. See [list of available packages](#offline-map-packages) for available countries. Generally packages are for ISO 2-letter administrative country codes, with two exceptions:
 
 * Some bigger countries: USA, Canada, Russia, Germany and France have one level of subdivision 
 * Some countries (UK, Spain) have are both options: whole country, and subdivisions
@@ -455,7 +453,7 @@ The following starts download of map of Estonia. See [list of available packages
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}
+  {% highlight java %}
 
   @Override
   public void onPackageListUpdated() {
@@ -468,7 +466,7 @@ The following starts download of map of Estonia. See [list of available packages
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
+  {% highlight c# %}
 
   public override void OnPackageListUpdated ()
   {
@@ -486,7 +484,7 @@ The following starts download of map of Estonia. See [list of available packages
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
+  {% highlight objc %}
 
   - (void)onPackageListUpdated
   {
@@ -499,7 +497,7 @@ The following starts download of map of Estonia. See [list of available packages
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}COMING SOON...
+  {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
   </div>
@@ -531,7 +529,7 @@ Bounding box is defined using the following format **bbox(lonMin,latMin,lonMax,l
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}
+  {% highlight java %}
 
 // London (about 30MB)
   String bbox = "bbox(-0.8164,51.2382,0.6406,51.7401)"; 
@@ -543,7 +541,7 @@ Bounding box is defined using the following format **bbox(lonMin,latMin,lonMax,l
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
+  {% highlight c# %}
 
 // London (about 30MB)
   var bbox = "bbox(-0.8164,51.2382,0.6406,51.7401)"; 
@@ -555,7 +553,7 @@ Bounding box is defined using the following format **bbox(lonMin,latMin,lonMax,l
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
+  {% highlight objc %}
 
 // Get London greater area, near maximum area package size
  [_packageManager startPackageDownload:@"bbox(-0.8164,51.2383,0.6406,51.7402)"];
@@ -564,7 +562,7 @@ Bounding box is defined using the following format **bbox(lonMin,latMin,lonMax,l
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}COMING SOON...
+  {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
   </div>
@@ -592,7 +590,7 @@ This special Vector Tile Data Source must be used: **PackageManagerTileDataSourc
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}
+  {% highlight java %}
 
 // 1. Create layer with vector styling
         BinaryData styleBytes = AssetUtils.loadAsset("osmbright.zip");
@@ -617,7 +615,7 @@ This special Vector Tile Data Source must be used: **PackageManagerTileDataSourc
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
+  {% highlight c# %}
 
 // Define styling for vector map
       BinaryData styleBytes = AssetUtils.LoadAsset("osmbright.zip");
@@ -642,38 +640,38 @@ This special Vector Tile Data Source must be used: **PackageManagerTileDataSourc
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
+  {% highlight objc %}
 
 // 1. Load vector tile styleset
-    NSString* styleAssetName = @"osmbright.zip";
-    
-    NTBinaryData *vectorTileStyleSetData = [NTAssetUtils loadAsset:styleAssetName];
-    NTZippedAssetPackage * package = [[NTZippedAssetPackage alloc]initWithZipData:vectorTileStyleSetData];
-    
-    NTCompiledStyleSet *vectorTileStyleSet = [[NTCompiledStyleSet alloc] initWithAssetPackage:package];
+      NSString* styleAssetName = @"osmbright.zip";
+      
+      NTBinaryData *vectorTileStyleSetData = [NTAssetUtils loadAsset:styleAssetName];
+      NTZippedAssetPackage * package = [[NTZippedAssetPackage alloc]initWithZipData:vectorTileStyleSetData];
+      
+      NTCompiledStyleSet *vectorTileStyleSet = [[NTCompiledStyleSet alloc] initWithAssetPackage:package];
     
 // 2. Create vector tile decoder using the styleset and update style parameters
-    NTMBVectorTileDecoder* vectorTileDecoder = [[NTMBVectorTileDecoder alloc] initWithCompiledStyleSet:vectorTileStyleSet];
-    [vectorTileDecoder setStyleParameter:@"lang" value:@"en"];
-    
-    // Optional: enable 3D elements
-    [vectorTileDecoder setStyleParameter:@"buildings3d" value:@"YES"];
-    [vectorTileDecoder setStyleParameter:@"markers3d" value:@"1"];
+      NTMBVectorTileDecoder* vectorTileDecoder = [[NTMBVectorTileDecoder alloc] initWithCompiledStyleSet:vectorTileStyleSet];
+      [vectorTileDecoder setStyleParameter:@"lang" value:@"en"];
+      
+      // Optional: enable 3D elements
+      [vectorTileDecoder setStyleParameter:@"buildings3d" value:@"YES"];
+      [vectorTileDecoder setStyleParameter:@"markers3d" value:@"1"];
     
 // 3. Create tile data source from PackageManager
-    NTTileDataSource* vectorTileDataSource = [[NTPackageManagerTileDataSource alloc] initWithPackageManager:_packageManager];
+      NTTileDataSource* vectorTileDataSource = [[NTPackageManagerTileDataSource alloc] initWithPackageManager:_packageManager];
     
 // 4. Create vector tile layer, using previously created data source and decoder
-    NTVectorTileLayer* baseLayer = [[NTVectorTileLayer alloc] initWithDataSource:vectorTileDataSource decoder:self.vectorTileDecoder];
+      NTVectorTileLayer* baseLayer = [[NTVectorTileLayer alloc] initWithDataSource:vectorTileDataSource decoder:self.vectorTileDecoder];
     
 // 5. Add vector tile layer as first layer
-    [[mapView getLayers] insert:0 layer:baseLayer];
+      [[mapView getLayers] insert:0 layer:baseLayer];
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}COMING SOON...
+  {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
   </div>
