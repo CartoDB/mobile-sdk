@@ -7,6 +7,7 @@
 
 %{
 #include "styles/CompiledStyleSet.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 
@@ -21,6 +22,7 @@
 %attributestring(carto::CompiledStyleSet, std::string, StyleName, getStyleName)
 %attributestring(carto::CompiledStyleSet, std::string, StyleAssetName, getStyleAssetName)
 %attributestring(carto::CompiledStyleSet, std::shared_ptr<carto::AssetPackage>, AssetPackage, getAssetPackage)
+%std_exceptions(carto::CompiledStyleSet::CompiledStyleSet)
 !standard_equals(carto::CompiledStyleSet);
 
 %include "styles/CompiledStyleSet.h"
