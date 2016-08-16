@@ -1,8 +1,3 @@
-{% comment %}
-The original resource for this is in:
-https://developer.nutiteq.com/getting-started
-{% endcomment %}
-
 # Getting Started
 
 This getting started procedure describes how to create simple map applications for your mobile platform. It is recommended to familiarise yourself with the setup for the platform that you are using. You can then add basic and advanced map features, as specified in this high-level workflow for using the Mobile SDK. 

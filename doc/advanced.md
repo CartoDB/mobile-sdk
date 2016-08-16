@@ -1,176 +1,36 @@
-# Raster tile sources
+# Advanced Map Features
 
-With Carto Mobile **Pro and Enterprise plans** (not Lite) you can use any raster tile map source: your own, 3rd party etc. Here is collection of various raster map tile sources.
+This section describes some of the advanced map features that are available for select account plans, such as using [Clusters](#cluster) to display multiple points of interest as objects, [Ground Overlays](#ground-overlays) to project a bitmap image over a basemap, and using [Vector Styles](#vector-styles) for vector map tiles.
 
-To use following tile sources use *HTTPTileDataSource*, and create *RasterTileLayer* using it. The DataSource constructor takes URL pattern which are given below, and requires also minimum and maximum zoom levels. For all above 0 is minimum zoom, and maximum varies from 14 to 19.
+## Clusters
 
-## Code sample
+When you have too many Points of Interest (POIs) that cannot be displayed as individual markers, it results in a cluttered map. It also effects the rendering performance of your map, and may even result in running out of memory. As an alternative, replace individual objects with *clusters*.
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
-    </li>
-  </ul>
-
-  <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}
-
-      String url = "http://your-url-with-placeholders-see-below";
-      TileDataSource tileDataSource = new HTTPTileDataSource(0, 18, url);
-      RasterTileLayer layer = new RasterTileLayer(tileDataSource);
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-		string url = "http://your-url-with-placeholders-see-below";
-		TileDataSource tileDataSource = new HTTPTileDataSource(0, 18, url);
-		RasterTileLayer layer = new RasterTileLayer(tileDataSource);
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-    NSString* url = @"http://your-url-with-placeholders-see-below";
-    NTHTTPTileDataSource *source = [[NTHTTPTileDataSource alloc]initWithMinZoom:0 maxZoom:18 baseURL:url];
-    NTRasterTileLayer *layer = [[NTRasterTileLayer alloc]initWithDataSource:source];
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  COMING SOON...
-
-  {% endhighlight %}
-  </div>
-  
-</div>
-
-## <a href="https://carto.com/location-data-services/basemaps/">CARTO Positron tiles</a>
-<pre>http://a.basemaps.cartocdn.com/dark_all/{zoom}/{x}/{y}.png</pre>
-<img src="http://a.basemaps.cartocdn.com/light_all/17/65490/43588.png"/>
-
-Free.
-
-## <a href="https://carto.com/location-data-services/basemaps/">CARTO Dark Matter tiles</a>
-<pre>http://a.basemaps.cartocdn.com/dark_all/{zoom}/{x}/{y}.png</pre>
-<img src="http://a.basemaps.cartocdn.com/dark_all/17/65490/43588.png"/>
-
-Free.
-
-## <a href="http://www.osm.org">OpenStreetMap Mapnik tiles</a>
-<pre>http://a.tile.openstreetmap.org/{zoom}/{x}/{y}.png</pre>
-<img src="http://b.tile.openstreetmap.org/15/5241/12661.png"/>
-
-Free for limited use. See <a href="http://wiki.openstreetmap.org/wiki/Tile_usage_policy">tile usage policy</a>
-## <a href="http://www.mapbox.com">MapBox raster tiles</a>
-<pre>http://api.mapbox.com/v4/{mapid}/{zoom}/{x}/{y}.png?access_token=&lt;your access token&gt;</pre>
-<img src="http://api.tiles.mapbox.com/v3/nutiteq.map-f0sfyluv/17/65490/43588.png"/>
-
-See <a href=" https://www.mapbox.com/developers/api/maps/">MapBox API spec</a> for details and to create access token. <a href='http://mapbox.com/about/maps' target='_blank'>MapBox Terms & Feedback</a>. 
-
-## <a href="http://maps.stamen.com">Stamen Toner</a>
-<pre>http://a.tile.stamen.com/toner/{zoom}/{x}/{y}.png</pre>
-<img src="http://a.tile.stamen.com/toner/13/1310/3166.png"/>
-
-Please contact http://www.stamen.com
-## <a href="http://maps.stamen.com/#watercolor/12/37.7706/-122.3782">Stamen Watercolor</a>
-<pre>http://tile.stamen.com/watercolor/{zoom}/{x}/{y}.png</pre>
-<img src="http://tile.stamen.com/watercolor/12/654/1583.jpg"/>
-
-Please contact http://www.stamen.com
-## <a href="http://maps.stamen.com/#terrain/12/37.7706/-122.3782">Stamen Terrain</a> - US only
-<pre>http://tile.stamen.com/terrain/{zoom}/{x}/{y}.png</pre>
-<img src="http://tile.stamen.com/terrain/12/654/1583.jpg"/>
-
-Please contact http://www.stamen.com
-
-## Microsoft Bing Maps
-<pre>http://ecn.t3.tiles.virtualearth.net/tiles/r{quadkey}.png?g=1&mkt=en-US&shading=hill&n=z</pre>
-
-<img width="256" height="256" src="http://ecn.t3.tiles.virtualearth.net/tiles/r1202.png?g=1&mkt=en-US&shading=hill&n=z" alt=""/>
-
-<a href="http://www.microsoft.com/maps/product/terms.html">Commercial terms of Bing Maps API</a>. Must use <a href="http://msdn.microsoft.com/en-us/library/ff701716.aspx">Get Imagery Metadata Bing Service </a> to get supported URL parameters. 
-
-## Microsoft Bing Aerials
-<pre>http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=1&mkt=en-US</pre>
-
-<img width="256" height="256"  src="http://ecn.t3.tiles.virtualearth.net/tiles/a032010110123333.jpeg?g=1&mkt=en-US" alt=""/>
-
-<a href="http://www.microsoft.com/maps/product/terms.html">Commercial terms of Bing Maps API</a>. Must use <a href="http://msdn.microsoft.com/en-us/library/ff701716.aspx">Get Imagery Metadata Bing Service</a> to get supported URL parameters.
-
-## ESRI World Imagery (and other ESRI basemaps)
-<pre>http://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{zoom}/{y}/{x}</pre>
-
-<img width="256" height="256"  src="http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/16/24351/35037" alt=""/>
-
-<a href="http://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9">Terms and more info</a>. ArcGIS Developer service subscription is required (from $20/mo).
-
-## OpenCycleMap
-
-<pre>http://a.tile.opencyclemap.org/cycle/{zoom}/{x}/{y}.png</pre>
-<img width="256" height="256"  src="http://b.tile.opencyclemap.org/cycle/13/4092/2719.png" alt=""/>
-
-© <a href="http://www.opencyclemap.org">OpenCycleMap</a>
-
-## OpenCycleMap Transport
-
-<pre>http://a.tile2.opencyclemap.org/transport/{zoom}/{x}/{y}.png</pre>
-<img width="256" height="256"  src="http://a.tile2.opencyclemap.org/transport/16/35209/21491.png" alt=""/>
-
-Free to use. Source: <a href="http://www.thunderforest.com/transport/">Thunderforest</a>
-
-## USGS Topo National Map (US Only)
-
-<pre>http://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/WMTS/tile/1.0.0/USGSTopo/default/GoogleMapsCompatible/{zoom}/{y}/{x}</pre>
-<img width="256" height="256"  src="http://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/WMTS/tile/1.0.0/USGSTopo/default/GoogleMapsCompatible/13/3162/1306" alt="USGS Topo"/>
-
-**Copyright**: USGS The National Map: National Boundaries Dataset, National Elevation Dataset, Geographic Names Information System, National Hydrography Dataset, National Land Cover Database, National Structures Dataset, and National Transportation Dataset; U.S. Census Bureau - TIGER/Line; HERE Road Data. <a href="http://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer">USGS MapServer</a>
-
-### References
-
-
-* [OSM Wiki TMS page](http://wiki.openstreetmap.org/wiki/TMS)
-* [OSM Featured tiles](http://wiki.openstreetmap.org/wiki/Featured_tiles)
-
-
-# Clusters
-
-In many cases you may have so many Points of Interest (POIs) that these cannot be shown on map as individual markers - map view would be cluttered and eventually also slow or even run out of memory. One of the methods to resolve the issue would be to replace individual objects with *clusters* - Markers which show location of several objects. Often marker clusters shows number of objects which each marker includes.
+Clusters are markers which display a location of several objects, and typically indicate the number of markers within each object.
 
 ![Cluster sample](http://share.gifyoutube.com/vMPDzX.gif)
 
-Carto Mobile SDK has built-in cluster feature, which is highly customizable. You can define in you app code:
+CARTO Mobile SDK has built-in cluster feature, which is highly customizable. You can define the following options in your app code:
 
-* style for cluster objects
-* generate cluster object style dynamically, so it has e.g. number of objects in it
-* define minimum zoom level for clusters
-* set minimum distance between objects before it becomes cluster
-* decide action for clicking on marker - e.g. zoom in, or expand cluster right away (without zoom). The latter works for small clusters (up to 4 objects inside)
+- Styling the cluster objects
+- Dynamically generate cluster object styles. For example, automatically display the number of objects in each cluster
+- Define the minimum zoom level for clusters
+- Set the minimum distance between objects, before it becomes a cluster
+- Indicate the action when clicking on marker. For example, zoom in, or expand the cluster without zooming
 
+  **Tip:** The cluster expand feature is useful for small clusters (containing up to four objects inside)
 
-Clusters are generated dynamically, based on VectorDataSource data, during loading of the map view with the layer. From API point of view it works as a special Layer: *ClusteredVectorLayer*, and this creation of it you give two parameters:
+### API Methods for Clusters
 
-1. **DataSource** to be used. In most cases it would be *LocalVectorDataSource* which has already all the elements. It is important the the DataSource gives all elements of layer, not limiting it to current map view bounding box.
-2. **ClusterElementBuilder** implementation, which defines single method **buildClusterElement**.
+Clusters are generated dynamically, based on `VectorDataSource` data that loads the map layer. If using an API, it works as a unique layer with the `ClusteredVectorLayer` method, and includes the following parameters in the a hierarchal order:
 
-## 1. Define data and layer
+1. Select the layer `DataSource`
+
+    In most cases,  the `LocalVectorDataSource` function contains all the elements to request the data. It is important that the DataSource displays all elements in a layer, and does not limit it to the current map visualization bbox (bounding box)
+
+2. `ClusterElementBuilder` defines a single method `buildClusterElement`
+
+### Define Cluster Data and Layer
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -191,18 +51,35 @@ Clusters are generated dynamically, based on VectorDataSource data, during loadi
   <div class="Carousel-item js-Tabpanes-item is-active">
   {% highlight html %}
 
-        // Initialize a local vector data source
-        LocalVectorDataSource vectorDataSource1 = new LocalVectorDataSource(baseProjection);
+// 1. Initialize a local vector data source
+      LocalVectorDataSource vectorDataSource1 = new LocalVectorDataSource(baseProjection);
 
-		// Now create Marker objects and add them to vectorDataSource.
-		// TODO: this depends on your app! See AdvancedMap for samples with JSON loading and random point generation
+// 2. Create Marker objects and add them to vectorDataSource
+      // **Note:** This depends on the _app type_ of your mobile app settings. See AdvancedMap for samples with JSON loading and random point generation
 
-		// Initialize a vector layer with the previous data source
-        ClusteredVectorLayer vectorLayer1 = new ClusteredVectorLayer(vectorDataSource1, new MyClusterElementBuilder(this.getApplication()));
+// 3. Initialize a vector layer with the previous data source
+      ClusteredVectorLayer vectorLayer1 = new ClusteredVectorLayer(vectorDataSource1, new MyClusterElementBuilder(this.getApplication()));
         vectorLayer1.setMinimumClusterDistance(20);
 
-		// Add the previous vector layer to the map
-        mapView.getLayers().add(vectorLayer1);
+// 4. Add the previous vector layer to the map
+      mapView.getLayers().add(vectorLayer1);
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}var proj = new EPSG3857();
+
+// 1. Create overlay layer for markers
+      var dataSource = new LocalVectorDataSource(proj);
+
+// 2. Create Marker objects and add them to vectorDataSource.
+      // **Note:** This depends on the _app type_ of your mobile app settings. See samples with JSON loading
+
+      var layer = new ClusteredVectorLayer(dataSource, new MyClusterElementBuilder());
+      layer.MinimumClusterDistance = 20; // in pixels
+
+      MapView.Layers.Add(layer);
 
   {% endhighlight %}
   </div>
@@ -210,60 +87,38 @@ Clusters are generated dynamically, based on VectorDataSource data, during loadi
   <div class="Carousel-item js-Tabpanes-item">
   {% highlight html %}
 
-  			var proj = new EPSG3857();
-
-			// Create overlay layer for markers
-			var dataSource = new LocalVectorDataSource(proj);
-
-			// Now create Marker objects and add them to vectorDataSource.
-			// TODO: this depends on your app! See samples with JSON loading
-
-			var layer = new ClusteredVectorLayer(dataSource, new MyClusterElementBuilder());
-			layer.MinimumClusterDistance = 20; // in pixels
-
-			MapView.Layers.Add(layer);
+// 1. Initialize a local vector data source
+      NTProjection* proj = [[mapView getOptions] getBaseProjection];
+      NTLocalVectorDataSource* vectorDataSource = [[NTLocalVectorDataSource alloc] initWithProjection:proj];
+    
+// 2. Create Marker objects and add them to vectorDataSource.
+      // **Note:** This depends on the _app type_ of your mobile app settings. See AdvancedMap for samples with JSON loading and random point generation
+    
+// 3. Create element builder
+      MyMarkerClusterElementBuilder* clusterElementBuilder = [[MyMarkerClusterElementBuilder alloc] init];
+    
+// 4. Initialize a vector layer with the previous data source
+      NTClusteredVectorLayer* vectorLayer = [[NTClusteredVectorLayer alloc] initWithDataSource:vectorDataSource clusterElementBuilder:clusterElementBuilder];
+    
+// 5. Add the previous vector layer to the map
+      [[mapView getLayers] add:vectorLayer];
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-      // Initialize a local vector data source
-    NTProjection* proj = [[mapView getOptions] getBaseProjection];
-    NTLocalVectorDataSource* vectorDataSource = [[NTLocalVectorDataSource alloc] initWithProjection:proj];
-    
-    // Now create Marker objects and add them to vectorDataSource.
-    // TODO: this depends on your app! See AdvancedMap for samples with JSON loading and random point generation
-    
-    // Create element builder
-    MyMarkerClusterElementBuilder* clusterElementBuilder = [[MyMarkerClusterElementBuilder alloc] init];
-    
-    // Initialize a vector layer with the previous data source
-    NTClusteredVectorLayer* vectorLayer = [[NTClusteredVectorLayer alloc] initWithDataSource:vectorDataSource clusterElementBuilder:clusterElementBuilder];
-    
-    // Add the previous vector layer to the map
-    [[mapView getLayers] add:vectorLayer];
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  COMING SOON...
+  {% highlight html %}COMING SOON...
 
   {% endhighlight %}
   </div>
   
 </div>
 
+### Define ClusterElementBuilder
 
-## 2. Define ClusterElementBuilder
+The Cluster Element Builder takes set of original markers (map objects) as input, and returns one object (or another `VectorElement`, such as a Point or BalloonPopup) which dynamically replaces the original marker.
 
-Essentially Cluster Element Builder takes set of original markers (map objects) as input, and returns one Marker (or another VectorElement, like Point or BalloonPopup) which is dynamically replacing the original ones.
-
-What makes it more complicated is that in the ClusterElementBuilder we strongly suggest to reuse (cache) styles to reduce memory usage significantly. So marker style with specific number is only created once. Android and iOS samples use platform-specific graphics APIs to generate bitmap for the marker. .NET example just uses BalloonPopup, which is slower but works same across platforms.
+**Note:** It is highly recommended to reuse and cache styles to reduce memory usage. For example, a marker style with a specific number is only created once. Android and iOS samples use platform-specific graphic APIs to generate the bitmap for the marker. .NET example only uses BalloonPopup, which is slower but works the same across all platforms.
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -282,9 +137,7 @@ What makes it more complicated is that in the ClusterElementBuilder we strongly 
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}
-
-  private class MyClusterElementBuilder extends ClusterElementBuilder {
+  {% highlight html %}private class MyClusterElementBuilder extends ClusterElementBuilder {
 
         @SuppressLint("UseSparseArrays")
         private Map< Integer, MarkerStyle > markerStyles = new HashMap< Integer, MarkerStyle >();
@@ -296,7 +149,7 @@ What makes it more complicated is that in the ClusterElementBuilder we strongly 
 
         @Override
         public VectorElement buildClusterElement(MapPos pos, VectorElementVector elements) {
-            // Try to reuse existing marker styles
+            // 1. Reuse existing marker styles
             MarkerStyle style = markerStyles.get((int) elements.size());
             
             if (elements.size() == 1) {
@@ -324,7 +177,7 @@ What makes it more complicated is that in the ClusterElementBuilder we strongly 
                 markerStyles.put((int) elements.size(), style);
             }
 
-            // Create marker for the cluster
+            // 2. Create marker for the cluster
             Marker marker = new Marker(pos, style);
             return marker;
         }
@@ -334,28 +187,26 @@ What makes it more complicated is that in the ClusterElementBuilder we strongly 
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
+  {% highlight html %}public class MyClusterElementBuilder : ClusterElementBuilder
+  {
+    BalloonPopupStyleBuilder balloonPopupStyleBuilder;
 
-  	public class MyClusterElementBuilder : ClusterElementBuilder
-	{
-		BalloonPopupStyleBuilder balloonPopupStyleBuilder;
+    public MyClusterElementBuilder()
+    {
+      balloonPopupStyleBuilder = new BalloonPopupStyleBuilder();
+      balloonPopupStyleBuilder.CornerRadius = 3;
+      balloonPopupStyleBuilder.TitleMargins = new BalloonPopupMargins(6, 6, 6, 6);
+      balloonPopupStyleBuilder.LeftColor = new Color(240, 230, 140, 255);
+    }
 
-		public MyClusterElementBuilder()
-		{
-			balloonPopupStyleBuilder = new BalloonPopupStyleBuilder();
-			balloonPopupStyleBuilder.CornerRadius = 3;
-			balloonPopupStyleBuilder.TitleMargins = new BalloonPopupMargins(6, 6, 6, 6);
-			balloonPopupStyleBuilder.LeftColor = new Color(240, 230, 140, 255);
-		}
+    public override VectorElement BuildClusterElement(MapPos pos, VectorElementVector elements)
+    {
+      BalloonPopupStyle style = balloonPopupStyleBuilder.BuildStyle();
+      var popup = new BalloonPopup(pos, style, elements.Count.ToString(), "");
 
-		public override VectorElement BuildClusterElement(MapPos pos, VectorElementVector elements)
-		{
-			BalloonPopupStyle style = balloonPopupStyleBuilder.BuildStyle();
-			var popup = new BalloonPopup(pos, style, elements.Count.ToString(), "");
-
-			return popup;
-		}
-	}
+      return popup;
+    }
+  }
 
   {% endhighlight %}
   </div>
@@ -363,120 +214,144 @@ What makes it more complicated is that in the ClusterElementBuilder we strongly 
   <div class="Carousel-item js-Tabpanes-item">
   {% highlight html %}
 
-  	// .h
+    // .h
 
     @interface MyMarkerClusterElementBuilder : NTClusterElementBuilder
 
-	@property NSMutableDictionary* markerStyles;
+  @property NSMutableDictionary* markerStyles;
 
-	@end
-	
-	// .m
+  @end
+  
+  // .m
 
-	@implementation MyMarkerClusterElementBuilder
+  @implementation MyMarkerClusterElementBuilder
 
-	-(NTVectorElement*)buildClusterElement:(NTMapPos *)mapPos elements:(NTVectorElementVector *)elements
-	{
-	    if (!self.markerStyles) {
-	        self.markerStyles = [NSMutableDictionary new];
-	    }
-	    
-	    NSString* styleKey = [NSString stringWithFormat:@"%d",(int)[elements size]];
-	    
-	    if ([elements size] > 1000) {
-	        styleKey = @">1K";
-	    }
-	    
-	    NTMarkerStyle* markerStyle = [self.markerStyles valueForKey:styleKey];
-	    
-	    if ([elements size] == 1) {
-	        markerStyle = [(NTMarker*)[elements get:0] getStyle];
-	    }
-	    
-	    if (!markerStyle) {
-	        
-	        UIImage* image = [UIImage imageNamed:@"marker_black.png"];
-	        UIGraphicsBeginImageContext(image.size);
-	        [image drawAtPoint:CGPointMake(0, 0)];
-	        
-	        CGRect rect = CGRectMake(0, 15, image.size.width, image.size.height);
-	        [[UIColor blackColor] set];
-	       
-	        NSMutableParagraphStyle *style = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
-	        [style setAlignment:NSTextAlignmentCenter];
-	        
-	        NSDictionary *attr = [NSDictionary dictionaryWithObject:style forKey:NSParagraphStyleAttributeName];
-	        [styleKey drawInRect:CGRectIntegral(rect) withAttributes:attr];
-	        UIImage* newImage = UIGraphicsGetImageFromCurrentImageContext();
-	        
-	        UIGraphicsEndImageContext();
-	        
-	        NTBitmap* markerBitmap = [NTBitmapUtils createBitmapFromUIImage:newImage];
-	        
-	        NTMarkerStyleBuilder* markerStyleBuilder = [[NTMarkerStyleBuilder alloc] init];
-	        [markerStyleBuilder setBitmap:markerBitmap];
-	        [markerStyleBuilder setSize:30];
-	        
-	        [markerStyleBuilder setPlacementPriority:-(int)[elements size]];
-	        markerStyle = [markerStyleBuilder buildStyle];
-	        
-	        [self.markerStyles setValue:markerStyle forKey:styleKey];
-	    }
-	    
-	    NTMarker* marker = [[NTMarker alloc] initWithPos:mapPos style:markerStyle];
-	    
-	    NTVariant* variant = [[NTVariant alloc] initWithString:[@([elements size]) stringValue]];
-	    [marker setMetaDataElement:@"elements" element:variant];
-	    
-	    return marker;
-	}
+  -(NTVectorElement*)buildClusterElement:(NTMapPos *)mapPos elements:(NTVectorElementVector *)elements
+  {
+      if (!self.markerStyles) {
+          self.markerStyles = [NSMutableDictionary new];
+      }
+      
+      NSString* styleKey = [NSString stringWithFormat:@"%d",(int)[elements size]];
+      
+      if ([elements size] > 1000) {
+          styleKey = @">1K";
+      }
+      
+      NTMarkerStyle* markerStyle = [self.markerStyles valueForKey:styleKey];
+      
+      if ([elements size] == 1) {
+          markerStyle = [(NTMarker*)[elements get:0] getStyle];
+      }
+      
+      if (!markerStyle) {
+          
+          UIImage* image = [UIImage imageNamed:@"marker_black.png"];
+          UIGraphicsBeginImageContext(image.size);
+          [image drawAtPoint:CGPointMake(0, 0)];
+          
+          CGRect rect = CGRectMake(0, 15, image.size.width, image.size.height);
+          [[UIColor blackColor] set];
+         
+          NSMutableParagraphStyle *style = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
+          [style setAlignment:NSTextAlignmentCenter];
+          
+          NSDictionary *attr = [NSDictionary dictionaryWithObject:style forKey:NSParagraphStyleAttributeName];
+          [styleKey drawInRect:CGRectIntegral(rect) withAttributes:attr];
+          UIImage* newImage = UIGraphicsGetImageFromCurrentImageContext();
+          
+          UIGraphicsEndImageContext();
+          
+          NTBitmap* markerBitmap = [NTBitmapUtils createBitmapFromUIImage:newImage];
+          
+          NTMarkerStyleBuilder* markerStyleBuilder = [[NTMarkerStyleBuilder alloc] init];
+          [markerStyleBuilder setBitmap:markerBitmap];
+          [markerStyleBuilder setSize:30];
+          
+          [markerStyleBuilder setPlacementPriority:-(int)[elements size]];
+          markerStyle = [markerStyleBuilder buildStyle];
+          
+          [self.markerStyles setValue:markerStyle forKey:styleKey];
+      }
+      
+      NTMarker* marker = [[NTMarker alloc] initWithPos:mapPos style:markerStyle];
+      
+      NTVariant* variant = [[NTVariant alloc] initWithString:[@([elements size]) stringValue]];
+      [marker setMetaDataElement:@"elements" element:variant];
+      
+      return marker;
+  }
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  COMING SOON...
+  {% highlight html %}COMING SOON...
 
   {% endhighlight %}
   </div>
   
 </div>
 
+## MBTiles for Map Data
 
-# MBTiles map data
-[MBTiles](http://mapbox.com/developers/mbtiles/) support is included in Carto Mobile SDK. MBTiles uses SQLite database format, so you have just one file to be downloaded and managed. Following are some tools to create MBTiles packages:
+MBTiles contain the TileJSON formats that include basic map styling for Mapbox. [MBTiles](http://mapbox.com/developers/mbtiles/) support is included in CARTO Mobile SDK. MBTiles uses the SQLite database format, which only requires one file to be downloaded and managed.
 
-## a) Raster maps
+### Raster Maps
 
-* [MapTiler](http://www.maptiler.com/) is nice utility to create MBTiles from raster geo files (GeoTIFF, JPG, ECW etc), it is well worth small price to support the developer
-* [TileMill](http://mapbox.com/tilemill/) is open source generator of very nice map packages, if source is vector geo file, e.g. Shapefile or PosgGIS geo data.
-* [MOBAC](http://mobac.sourceforge.net) - download from variety of free sources (e.g. Bing, OpenStreetMap etc), can even load from WMS with added configuration
-* [MBUtil](https://github.com/mapbox/mbutil) enables to create mbtiles from/to TMS-style tile folders, created with e.g. GDAL utility
-* [Portable Basemap Server](https://geopbs.codeplex.com/) - free utility for Windows, loads data not only from various commercial servers and custom sources, but also from ESRI formats. Works mainly as WMTS server, but can create MBTiles as extra feature.
+The following tools enable you to create MBTile packages:
 
-## b) Vector maps
+- [MapTiler](http://www.maptiler.com/) is a utility to create MBTiles from raster geo files (GeoTIFF, JPG, ECW, and so on)
 
-* Nutiteq SDK bundled [Package Manager API](/guides/offline-maps) downloads country-wide or bounding box based map packages with **OpenStreetMap data**. These files are not directly visible, as Package Manager downlods the files, you only use the API.
-* If you need to create vector map files **from different sources or your own data** (e.g. Shapefiles), then please contact Carto support - we can provide you converter toolchain, and do free demo conversions.
+* [TileMill](http://mapbox.com/tilemill/) is an open source generator of map packages for vector geo files, such as Shapefile or PosgGIS geo data
+- [MOBAC](http://mobac.sourceforge.net) is available to download from variety of free sources, such as Bing, OpenStreetMap, and so on. You can even load it from WMS with added configuration
 
-# Ground Overlays
+- [MBUtil](https://github.com/mapbox/mbutil) enables you to create mbtiles from/to TMS-style tile folders, created with different utilities, such as GDAL utility
 
-Carto Mobile SDK since 3.1 supports *Ground Overlays* - bitmaps (PNG, JPG etc) which are put to map to your defined location. Most commonly this is used for **indoor floorplans**, but it can be used also for other cases.
+- [Portable Basemap Server](https://geopbs.codeplex.com/) is a free utility for Windows and loads data from various commercial servers and custom sources. It is also available in ESRI formats. It works mainly as WMTS server, but can create MBTiles as an extra feature
+
+### Vector Maps
+
+The following vector map tools enable you to create MBTiles:
+
+- Nutiteq SDK bundled [Package Manager API](/docs/carto-engine/mobile-sdk/offline-map-service/) downloads country-wide, or bounding box based, map packages with **OpenStreetMap data**. These files are not directly visible, as Package Manager downloads the files, you only use the API.
+
+_**Note:** If you need to create vector map files **from different sources, or with your own data** (e.g. Shapefiles), please contact [CARTO support](mailto:carto@support.com)._ Our Mobile Developers will provide you with a free converter toolchain for custom conversions.
+
+## Ground Overlays
+
+Ground overlays projects a bitmap (PNG, JPG) image of a defined coordinate over a basemap. For example, a ground overlay bitmap may be used to show an indoor floorplan over a building map.
 
 <img src = "/images/ground_overlay.png" alt = "Sample bitmap" width="550">
 
-Your bitmap must be have defined **geographical map coordinates**, and this is done using *Ground Control Points*. Currently we support exactly 3 or 4 points defined on bitmap and real world, with following rules:
+**Note:** Your bitmap must define **geographical map coordinates** with `Ground Control Points`. Currently, Mobile SDK supports three or four points on a bitmap image.
 
-* With 3 control points you set location, size and rotation of bitmap. This does *linear affine transformation*.
-* With 4 control points you can have *perspective transformation*.
-* If you have more control points in your data, then you should select 3/4 best ones, and use these.
-* Control points must be defined in app code. SDK does not read this automatically from source file metadata. So if you need GeoTIFF, ESRI World File, MapInfo TAB, Geospatial PDF or another already referenced data, then you will get this from GIS Extension (see below).
+### Ground Overlay Requirements
 
-Key limitation with Carto standard SDK package is that **whole bitmap must fit to device memory** (RAM), so maximum size could be something like 2000x2000 pixels or so, depending on target device. For larger rasters you can use **Carto Mobile SDK GIS Extension** which allows to show any size bitmaps, even hundreds of megabytes, and these are read directly from common GIS raster formats, e.g. GeoTIFF, BSB, ECW, MrSID, JPEG2000 etc, and source data can be in different coordinate systems. Please ask from sales@nutiteq.com if you need this.
+The following requirements allow you to ground overlays with the Mobile SDK.
 
-Following sample assumes that you have bitmap file **jefferson-building-ground-floor.jpg** in your application project: under *assets* in Android, anywhere in project in iOS. Here we use only one geographical coordinate, and we know size of the building and that it is exactly heading to north, so we can calculate other ground points with the code. Now four ground control points are set to the corners of the bitmap, which gives usually most accurate result. 
+- `linear affine transformation` enables you to set three control points to set the location, size, and rotation of the bitmap
+
+- `perspective transformation` enables you to control four control points for the bitmap
+
+-  If you have more control points in your data, it is suggested to choose three or four of your best ones and select those as your ground control settings
+
+- Control points must be defined in the app code. Mobile SDK does not automatically gather control points from the source file metadata
+
+  For example, if you need GeoTIFF, ESRI World File, MapInfo TAB, Geospatial PDF, or other referenced data, you will receive the following you will get this from GIS Extension (see below).
+
+- The **entire bitmap must fit to device memory** (RAM). Depending on the target device, the maximum size could vary. For example, the target device maximum size might be 2000x2000 pixels. 
+
+  **Tip:** For larger rasters, the SDK Extensions allow you to display any size bitmap, up to hundreds of megabytes. These bitmaps are read directly from common GIS raster formats (such as GeoTIFF, BSB, ECW, MrSID, JPEG2000, and so on). Additionally, the source data can be entered using different coordinate systems. Please [contact us](mailto:sales@carto.com) if you are interested in enabling SDK Extensions as part of your account.
+
+### Code Samples
+
+This example uses only one geographical coordinate. The building size is known, and the building direction is facing north. This allows us to calculate other ground points with the code. Four ground control points are set to the corners of the bitmap, which typically returns the most accurate result. 
+
+**Tip:** The following sample code assumes that you have the **jefferson-building-ground-floor.jpg** bitmap file as part of your application project.
+
+- For Android, this image is located under *assets*
+- In iOS, it can be located anywhere in your project
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -495,11 +370,9 @@ Following sample assumes that you have bitmap file **jefferson-building-ground-f
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}
+  {% highlight html %}com.carto.graphics.Bitmap overlayBitmap = BitmapUtils.loadBitmapFromAssets("jefferson-building-ground-floor.jpg");
 
-    com.carto.graphics.Bitmap overlayBitmap = BitmapUtils.loadBitmapFromAssets("jefferson-building-ground-floor.jpg");
-
-    // Create two vector containing geographical positions and corresponding raster image pixel coordinates
+// 1. Create two vector containing geographical positions and corresponding raster image pixel coordinates
     MapPos pos = proj.fromWgs84(new MapPos(-77.004590, 38.888702));
     double sizeNS = 110, sizeWE = 100;
 
@@ -515,14 +388,14 @@ Following sample assumes that you have bitmap file **jefferson-building-ground-f
     bitmapPoses.add(new ScreenPos(overlayBitmap.getWidth(), overlayBitmap.getHeight()));
     bitmapPoses.add(new ScreenPos(overlayBitmap.getWidth(), 0));
 
-    // Create bitmap overlay raster tile data source
+// 2. Create bitmap overlay raster tile data source
     BitmapOverlayRasterTileDataSource rasterDataSource = new BitmapOverlayRasterTileDataSource(0, 20, overlayBitmap, proj, mapPoses, bitmapPoses);
     RasterTileLayer rasterLayer = new RasterTileLayer(rasterDataSource);
     mapView.getLayers().add(rasterLayer);
 
-    // Apply zoom level bias to the raster layer.
-    // By default, bitmaps are upsampled on high-DPI screens.
-    // We will correct this by applying appropriate bias
+// 3. Apply zoom level bias to the raster layer
+    // - By default, bitmaps are upsampled on high-DPI screens
+// 4. Correct this by applying appropriate bias
     float zoomLevelBias = (float) (Math.log(mapView.getOptions().getDPI() / 160.0f) / Math.log(2));
     rasterLayer.setZoomLevelBias(zoomLevelBias * 0.75f);
     rasterLayer.setTileSubstitutionPolicy(TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE);
@@ -534,81 +407,40 @@ Following sample assumes that you have bitmap file **jefferson-building-ground-f
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
+  {% highlight html %}var overlayBitmap = BitmapUtils.LoadBitmapFromAssets("jefferson-building-ground-floor.jpg");
 
-	var overlayBitmap = BitmapUtils.LoadBitmapFromAssets("jefferson-building-ground-floor.jpg");
+// 1. Create two vector geographical positions, and corresponding raster image pixel coordinates
+      var pos = proj.FromWgs84(new MapPos(-77.004590, 38.888702));
+      var sizeNS = 110;
+      var sizeWE = 100;
 
-	// Create two vector containing geographical positions and corresponding raster image pixel coordinates
-	var pos = proj.FromWgs84(new MapPos(-77.004590, 38.888702));
-	var sizeNS = 110;
-	var sizeWE = 100;
+      var mapPoses = new MapPosVector();
+      mapPoses.Add(new MapPos(pos.X - sizeWE, pos.Y + sizeNS));
+      mapPoses.Add(new MapPos(pos.X + sizeWE, pos.Y + sizeNS));
+      mapPoses.Add(new MapPos(pos.X + sizeWE, pos.Y - sizeNS));
+      mapPoses.Add(new MapPos(pos.X - sizeWE, pos.Y - sizeNS));
 
-	var mapPoses = new MapPosVector();
-	mapPoses.Add(new MapPos(pos.X - sizeWE, pos.Y + sizeNS));
-	mapPoses.Add(new MapPos(pos.X + sizeWE, pos.Y + sizeNS));
-	mapPoses.Add(new MapPos(pos.X + sizeWE, pos.Y - sizeNS));
-	mapPoses.Add(new MapPos(pos.X - sizeWE, pos.Y - sizeNS));
+      var bitmapPoses = new ScreenPosVector();
+      bitmapPoses.Add(new ScreenPos(0, 0));
+      bitmapPoses.Add(new ScreenPos(0, overlayBitmap.Height));
+      bitmapPoses.Add(new ScreenPos(overlayBitmap.Width, overlayBitmap.Height));
+      bitmapPoses.Add(new ScreenPos(overlayBitmap.Width, 0));
 
-	var bitmapPoses = new ScreenPosVector();
-	bitmapPoses.Add(new ScreenPos(0, 0));
-	bitmapPoses.Add(new ScreenPos(0, overlayBitmap.Height));
-	bitmapPoses.Add(new ScreenPos(overlayBitmap.Width, overlayBitmap.Height));
-	bitmapPoses.Add(new ScreenPos(overlayBitmap.Width, 0));
+// 2. Create bitmap overlay raster tile data source
+      var rasterDataSource = new BitmapOverlayRasterTileDataSource(0, 20, overlayBitmap, proj, mapPoses, bitmapPoses);
+      var rasterLayer = new RasterTileLayer(rasterDataSource);
+      MapView.Layers.Add(rasterLayer);
 
-	// Create bitmap overlay raster tile data source
-	var rasterDataSource = new BitmapOverlayRasterTileDataSource(0, 20, overlayBitmap, proj, mapPoses, bitmapPoses);
-	var rasterLayer = new RasterTileLayer(rasterDataSource);
-	MapView.Layers.Add(rasterLayer);
+// 3. Apply zoom level bias to the raster layer
+      // - By default, bitmaps are upsampled on high-DPI screens
 
-	// Apply zoom level bias to the raster layer.
-	// By default, bitmaps are upsampled on high-DPI screens.
-	// We will correct this by applying appropriate bias
-	float zoomLevelBias = (float)(Math.Log(MapView.Options.DPI / 160.0f) / Math.Log(2));
-	rasterLayer.ZoomLevelBias = zoomLevelBias * 0.75f;
-	rasterLayer.TileSubstitutionPolicy = TileSubstitutionPolicy.TileSubstitutionPolicyVisible;
+// 4. Correct this by applying appropriate bias
+      float zoomLevelBias = (float)(Math.Log(MapView.Options.DPI / 160.0f) / Math.Log(2));
+      rasterLayer.ZoomLevelBias = zoomLevelBias * 0.75f;
+      rasterLayer.TileSubstitutionPolicy = TileSubstitutionPolicy.TileSubstitutionPolicyVisible;
 
-	MapView.SetFocusPos(pos, 0);
-	MapView.SetZoom(16f, 0);
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  	// Load ground overlay bitmap
-    NTBitmap *overlayBitmap = [NTBitmapUtils loadBitmapFromAssets:@"jefferson-building-ground-floor.jpg"];
-    
-    // Create two vector containing geographical positions and corresponding raster image pixel coordinates
-    NTMapPos* pos = [proj fromWgs84:[[NTMapPos alloc] initWithX:-77.004590 y:38.888702]];
-    double sizeNS = 110, sizeWE = 100;
-    
-    NTMapPosVector* mapPoses = [[NTMapPosVector alloc] init];
-    [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]-sizeWE y:[pos getY]+sizeNS]];
-    [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]+sizeWE y:[pos getY]+sizeNS]];
-    [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]+sizeWE y:[pos getY]-sizeNS]];
-    [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]-sizeWE y:[pos getY]-sizeNS]];
-    
-    NTScreenPosVector* bitmapPoses = [[NTScreenPosVector alloc] init];
-    [bitmapPoses add:[[NTScreenPos alloc] initWithX:0 y:0]];
-    [bitmapPoses add:[[NTScreenPos alloc] initWithX:0 y:[overlayBitmap getHeight]]];
-    [bitmapPoses add:[[NTScreenPos alloc] initWithX:[overlayBitmap getWidth] y:[overlayBitmap getHeight]]];
-    [bitmapPoses add:[[NTScreenPos alloc] initWithX:[overlayBitmap getWidth] y:0]];
-    
-    // Create bitmap overlay raster tile data source
-    NTBitmapOverlayRasterTileDataSource* rasterDataSource = [[NTBitmapOverlayRasterTileDataSource alloc] initWithMinZoom:0 maxZoom:20 bitmap:overlayBitmap projection:proj mapPoses:mapPoses bitmapPoses:bitmapPoses];
-    NTRasterTileLayer* rasterLayer = [[NTRasterTileLayer alloc] initWithDataSource:rasterDataSource];
-    [[mapView getLayers] add:rasterLayer];
-    
-    // Apply zoom level bias to the raster layer.
-    // By default, bitmaps are upsampled on high-DPI screens.
-    // We will correct this by applying appropriate bias
-    float zoomLevelBias = log([[mapView getOptions] getDPI] / 160.0f) / log(2);
-    [rasterLayer setZoomLevelBias:zoomLevelBias * 0.75f];
-    [rasterLayer setTileSubstitutionPolicy:NT_TILE_SUBSTITUTION_POLICY_VISIBLE];
-    
-    [mapView setFocusPos:pos durationSeconds:0];
-    [mapView setZoom:16f durationSeconds:0];
+      MapView.SetFocusPos(pos, 0);
+      MapView.SetZoom(16f, 0);
 
   {% endhighlight %}
   </div>
@@ -616,74 +448,129 @@ Following sample assumes that you have bitmap file **jefferson-building-ground-f
   <div class="Carousel-item js-Tabpanes-item">
   {% highlight html %}
 
-  COMING SOON...
+// 1. Load ground overlay bitmap
+      NTBitmap *overlayBitmap = [NTBitmapUtils loadBitmapFromAssets:@"jefferson-building-ground-floor.jpg"];
+    
+// 2. Create two vector geographical positions, and corresponding raster image pixel coordinates
+      NTMapPos* pos = [proj fromWgs84:[[NTMapPos alloc] initWithX:-77.004590 y:38.888702]];
+      double sizeNS = 110, sizeWE = 100;
+    
+      NTMapPosVector* mapPoses = [[NTMapPosVector alloc] init];
+      [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]-sizeWE y:[pos getY]+sizeNS]];
+      [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]+sizeWE y:[pos getY]+sizeNS]];
+      [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]+sizeWE y:[pos getY]-sizeNS]];
+      [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]-sizeWE y:[pos getY]-sizeNS]];
+      
+      NTScreenPosVector* bitmapPoses = [[NTScreenPosVector alloc] init];
+      [bitmapPoses add:[[NTScreenPos alloc] initWithX:0 y:0]];
+      [bitmapPoses add:[[NTScreenPos alloc] initWithX:0 y:[overlayBitmap getHeight]]];
+      [bitmapPoses add:[[NTScreenPos alloc] initWithX:[overlayBitmap getWidth] y:[overlayBitmap getHeight]]];
+      [bitmapPoses add:[[NTScreenPos alloc] initWithX:[overlayBitmap getWidth] y:0]];
+    
+// 3. Create bitmap overlay raster tile data source
+      NTBitmapOverlayRasterTileDataSource* rasterDataSource = [[NTBitmapOverlayRasterTileDataSource alloc] initWithMinZoom:0 maxZoom:20 bitmap:overlayBitmap projection:proj mapPoses:mapPoses bitmapPoses:bitmapPoses];
+      NTRasterTileLayer* rasterLayer = [[NTRasterTileLayer alloc] initWithDataSource:rasterDataSource];
+      [[mapView getLayers] add:rasterLayer];
+    
+// 4. Apply zoom level bias to the raster layer
+      // - By default, bitmaps are upsampled on high-DPI screens
+
+// 5. Correct this by applying appropriate bias
+      float zoomLevelBias = log([[mapView getOptions] getDPI] / 160.0f) / log(2);
+      [rasterLayer setZoomLevelBias:zoomLevelBias * 0.75f];
+      [rasterLayer setTileSubstitutionPolicy:NT_TILE_SUBSTITUTION_POLICY_VISIBLE];
+      
+      [mapView setFocusPos:pos durationSeconds:0];
+      [mapView setZoom:16f durationSeconds:0];
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight html %}COMING SOON...
 
   {% endhighlight %}
   </div>
   
 </div>
 
+## Vector Styles
 
-# Vector Styles
+Usage of vector-based base maps enables you to re-style maps according to your needs. You can set the colors, transparency, line styles (width, patterns, casings, endings), polygon patterns, icons, text placements, fonts and many other vector data parameters. 
 
-Usage of vector-based base map enables you to re-style map according to your needs: set colors, transparency, line styles (width, patterns, casings, endings), polygon patterns, icons, text placements, fonts and many other vector data parameters. Carto uses Mapnik (http://mapnik.org) XML style description language for customizing the visual style of vector tiles. Our styling is optimized for mobile, so we add some style parameters, and ignore some others, but generally you can mostly reuse your existing Mapnik XML or CartoCSS styling files and tools (like TileMill/Mapbox Studio).
+CARTO uses [Mapnik](http://mapnik.org) XML style description language for customizing the visual style of vector tiles. Our styling is optimized for mobile and contain some unique style parameters, while ignoring some others. In general, you can reuse your existing Mapnik XML, or CartoCSS, styling files and tools (such as TileMill/Mapbox Studio).
 
-Vector styling is applied in mobile client side, and the style files are usually bundled with application installer. Application can change the styling anytime without reloading vector map data, so you can download map data once, and change styling from "day mode" to "night mode" with no new downloads.
+Vector styling is applied in the mobile client, where the style files are bundled with the application installer. The application can change the styling anytime, without reloading vector map data. This enables your to download map data once, and change styling from "day mode" to "night mode" with no new downloads.
 
-Carto map rendering implementation is intended for real-time rendering and, as a result, several limitations apply.
+CARTO map rendering implementation is intended for real-time rendering. As a result, several limitations apply.
 
-### Ready-made styles
-See [Mobile Styles](/mobileStyles) page for ready-made styles by Carto. These are compatible with our vector tile sources.
+### Prepackaged Vector Styles
 
-### Mapnik style format
-Mapnik map style definition is a common file format for map styles, it is based on XML. It is originally done for Mapnik, but is used by other softwares like our Mobile SDK. File format specification is in [XMLConfigReference](https://github.com/mapnik/mapnik/wiki/XMLConfigReference) document. There are several ways you can use the styles, from simplest to most advanced:
+Prepackaged mobile styles used by CARTO. These are compatible with our vector tile sources.
 
- 1. Use Carto provided styles as they are
- 1. Modify style.xml inside sample style to tweak it
- 1. Create own style using some tool which edits Mapnik styles. Probably currently the best tool is free MapBox Studio, which uses CartoCSS as primary style definition. We don't use CartoCSS in Carto SDK, but Studio but can export also Mapnik XML styles. However, these style files needs a bit modification to be compatible with Carto SDK. 
+### Mapnik Style Format
 
-### Creating style package
+Mapnik style definitions are a common file format for map styles, based on XML. It was originally created for Mapnik, but is used by other software, such as our Mobile SDK. The file format specifications are located in this [XMLConfigReference](https://github.com/mapnik/mapnik/wiki/XMLConfigReference) document. There are several ways you can apply these styles:
 
-Carto vector styles are distributed as zip-archives. All style-related files/folders must be placed into a single zip file.
-The most important part of the style is a style definition file, usually named _project.xml_. This file contains style descriptions of all layers and it usually references other files, like fonts, icons, pattern bitmaps which should be placed in various subfolders.
+ 1. Use CARTO provided styles
 
-### Limitations/incompatibilities
+ 2. Modify the `style.xml`, located inside the sample style, with your own edits
 
-* There are no built-in fonts, fonts must be explicitly added to the project
+ 3. Create your own styles using a Mapnik editor tool
 
-* Loading SVG icons is not supported, such icons should be converted to PNG format (Mapnik provides _svg2png_ utility)
+    **Note:** It is recommended to use the free MapBox Studio tool, which uses CartoCSS for primary style definitions. While the Mobile SDK does not use CartoCSS styles, you can modify and export Mapnik XML styles to be compatible with the Mobile SDK. 
 
-* Original layer ordering is not always preserved, texts are always drawn on top of 2d geometry, 3d buildings are drawn on top of texts
+### Mapnik Limitations
 
-* Layer opacity works per element, not per layer as in Mapnik. For non-overlapping elements, the result will be same. For overlapping elements there are likely artifacts.
+Please note the following limitations with Mapnik style formats.
 
-* _comp-op_ feature is not supported (neither layer/symbolizer). Per symbolizer _comp-op_ support is under investigation
+- There are no built-in fonts, fonts must be explicitly added to the project
 
-* _line-join_ parameter is ignored, only _miter_ line join is used. 
+- Loading SVG icons is not supported, such icons should be converted to PNG format (Mapnik provides a _svg2png_ utility)
 
-* _GroupSymbolizer_ and _RasterSymbolizer_ are not supported, support is under investigation
+- Original layer ordering is not always preserved, texts are always drawn on top of 2D geometry. 3D buildings are drawn on top of texts
 
-* Text characters are rendered one by one. If characters overlap, halo of one character may cover glyph of another character. Workaround is to increase spacing or decrease halo radius.
+- Layer opacity works per element, not per layer as in Mapnik. For non-overlapping elements, the result will be same. For overlapping elements, there are likely artifacts
 
-* This list is not final. Mapnik XML is not official standard, and mostly due to performance penalty on the mobile Carto SDK does not implement 100% of the tags and features of Mapnik. If you need some of the not implemented styling options, please contact our support. 
+- `comp-op` feature is not supported (neither is `layer/symbolizer`)
 
-### Performance hints 
+- `line-join` parameter is ignored, only `miter line join` is used 
 
-* **Multiple symbolizers per layer may have very large performance hit**. If possible, move each symbolizer into separate layer.
+- `GroupSymbolizer` and `RasterSymbolizer` are currently not supported
 
-* _BuildingSymbolizer_ requires expensive OpenGL frame buffer read-back operation and may perform very poorly on some devices (original iPad Retina)
+- Text characters are rendered individually. If characters overlap, the halo of one character may cover glyph of another character. The suggested workaround is to increase spacing, or decrease the halo radius
 
-* It is best to keep all bitmaps with power-of-two dimensions, this increases performance.
+**Note:** The Mobile SDK does not implement 100% of the tags and features of Mapnik. This lists just a few of the Mapnik limitations, there are additional Mapnik XML features that are not standard. If you need some an unimplemented styling option, please [contact us](mailto:support@carto.com). 
 
-### Carto-specific extension to Mapnik XML style files
+### Creating Vector Style Packages
 
-#### _NutiParameters_
+CARTO vector styles are distributed as zip-archives. All style-related files and folders must be placed into a single zip file.
 
-_NutiParameters_ describe additional parameters that can be used in styles and controlled in the code (from _MBVectorTileDecoder_).
-Parameters are typed, have default values and can be used as variables within _nuti_ namespace in the style (for example, *[nuti::lang]*).
-Some parameters may have _ prefix in their name. Such variables are reserved and should not be updated directly by the application.
+The most important part of the style is the style definition file, typically named _project.xml_. This file contains style descriptions for all layers, and usually references other files, such as fonts, icons, and pattern bitmaps (which should be placed in various subfolders).
 
-Simple example of _NutiParameters_ section in style xml file:
+### Vector Style Performance 
+
+When using vector styles, the following recommendations are suggested for optimal performance:
+
+- **Multiple symbolizers per layer may have very large performance hits**. If possible, move each symbolizer into separate layer
+
+- `BuildingSymbolizer` requires an expensive OpenGL frame buffer read-back operation, and may perform very poorly on some devices (such as the original iPad Retina)
+
+- To increase performance, it is suggested to use power-of-two dimensions for bitmaps
+
+### SDK Extensions for Mapnik XML style files
+
+The following CARTO specific extensions are specific to Mapnik XML style files.
+
+#### NutiParameters
+
+_NutiParameters_ describe additional parameters that can be used in styles and controlled in the code (from `MBVectorTileDecoder`).
+
+- Parameters are typed, have default values and can be used as variables within _nuti_ namespace in the style (for example, *[nuti::lang]*)
+
+- Some parameters may have _ prefix in their name. Such variables are reserved and should not be updated directly by the application
+
+The following is a simple example of _NutiParameters_ section, located in the style xml file:
 
 `<NutiParameters>`
 `  <NutiParameter name="lang" type="string" value="en" />`
@@ -691,700 +578,44 @@ Simple example of _NutiParameters_ section in style xml file:
 
 #### Metavariables
 
-Metavariables add support for dynamic variable look up. Variable names may depend on other variables. For example, *[name_[nuti::lang]]*.
+Metavariables add support for dynamic variable look-up. Variable names may depend on other variables. For example, *[name_[nuti::lang]]*.
+
 If the value of *nuti::lang* is 'en', this metavariable expression would be equal to *[name_en]* expression.
 
-#### Conditional operator
+#### Conditional Operator
 
-Conditional operator ?: adds support for simple control flow management. It is similar to C language conditional operator and can be used in all 
-expressions. For example:
+Conditional operator ?: adds support for simple control flow management. It is similar to C language conditional operator and can be used in all expressions. For example:
 
 `[nuti::lang] == 'en' ? 'English' : 'Other'`
 
-#### 3D texts and markers
+#### 3D Texts and Markers
 
-Mapnik _MarkersSymbolizer_ and _TextSymbolizer_ support additional value _nutibillboard_ for _placement_ parameter. This will make texts and
-markers act as billboards (always facing the viewer) even when screen is tilted. This option can be used to give markers and texts more
-'3d-like' look. For example,
+Mapnik `MarkersSymbolizer` and `TextSymbolizer` support additional values _nutibillboard_ for _placement_ parameter. This enables texts and markers to act as billboards (always facing the viewer), even when screen is tilted. This option can be used to give markers and texts more '3D-like' appearance. For example,
 
 `<MarkersSymbolizer placement="nutibillboard" fill="#666666" file="icon/[maki]-12.svg" />`
 
-### Supported symbolizers and parameters
+### Supported Symbolizers and Parameters
 
-The following list contains all supported symbolizers and parameters, as of version 4.0.0:
+The following lists contains all supported symbolizers and parameters for vector styles:
 
-* PointSymbolizer: file, opacity, allow-overlap, ignore-placement, transform
+- `PointSymbolizer`: file, opacity, allow-overlap, ignore-placement, transform
 
-* BuildingSymbolizer: fill, fill-opacity, height, geometry-transform
+- `BuildingSymbolizer`: fill, fill-opacity, height, geometry-transform
 
-* LineSymbolizer: stroke, stroke-width, stroke-opacity, stroke-linejoin, stroke-linecap, stroke-dasharray, geometry-transform
+- `LineSymbolizer`: stroke, stroke-width, stroke-opacity, stroke-linejoin, stroke-linecap, stroke-dasharray, geometry-transform
 
-* LinePatternSymbolizer: file, fill, opacity, geometry-transform
+- `LinePatternSymbolizer`: file, fill, opacity, geometry-transform
 
-* PolygonSymbolizer: fill, fill-opacity, geometry-transform
+- `PolygonSymbolizer`: fill, fill-opacity, geometry-transform
 
-* PolygonPatternSymbolizer: file, fill, opacity, geometry-transform
+- `PolygonPatternSymbolizer`: file, fill, opacity, geometry-transform
 
-* MarkersSymbolizer: file, placement, marker-type, fill, opacity, width, height, spacing, allow-overlap, ignore-placement, transform
+- `MarkersSymbolizer`: file, placement, marker-type, fill, opacity, width, height, spacing, allow-overlap, ignore-placement, transform
 
-* TextSymbolizer: name, face-name, fontset-name, placement, size, spacing, fill, opacity, halo-fill, halo-opacity, halo-radius, allow-overlap, minimum-distance, text-transform, orientation, dx, dy, wrap-width, wrap-before, character-spacing, line-spacing, horizontal-alignment, vertical-alignment
+- `TextSymbolizer`: name, face-name, fontset-name, placement, size, spacing, fill, opacity, halo-fill, halo-opacity, halo-radius, allow-overlap, minimum-distance, text-transform, orientation, dx, dy, wrap-width, wrap-before, character-spacing, line-spacing, horizontal-alignment, vertical-alignment
 
-* ShieldSymbolizer: name, face-name, fontset-name, placement, size, spacing, fill, opacity, halo-fill, halo-opacity, halo-radius, allow-overlap, minimum-distance, text-transform, orientation, dx, dy, wrap-width, wrap-before, character-spacing, line-spacing, horizontal-alignment, vertical-alignment, file, shield-dx, shield-dy, unlock-image
+- `ShieldSymbolizer`: name, face-name, fontset-name, placement, size, spacing, fill, opacity, halo-fill, halo-opacity, halo-radius, allow-overlap, minimum-distance, text-transform, orientation, dx, dy, wrap-width, wrap-before, character-spacing, line-spacing, horizontal-alignment, vertical-alignment, file, shield-dx, shield-dy, unlock-image
 
-### CartoCSS extensions
+### CartoCSS Extensions for Vector Styles
 
-Same extensions: metavariables and nutiparameters are available for CartoCSS styles.
-
-# Routing - offline and online
-
-Carto SDK includes routing functionality starting from version 3.3.0. This includes both offline routing using special data packages stored on the device, and online routing using our online service.
-
-## Functionality
-
-<img src = "/images/route.png" alt="Offline routing with Carto" align="right">
-
-
-Carto SDK provides following routing features:
-
- * **find fastest route** from A to B
- * find fastest route between X points, in given order
- * get complete result **route geometry** to show it on map
- * get **instructions for actions** (turn left/right, u-turn, leave roundabout etc)
- * get **instruction details**: street name, turn angle, azimuth, distance and time for the next leg
- * takes into account turn restrictions and one-way streets
- * **fast calculation**: in new devices about 200-300 ms is expected, even for long routes.
- * **multi-country route** calculation
-
-### Limitations
-
-Initial public version is optimised for low memory usage and calculation speed (even for very large road networks by using *Contraction Hierarchy* representation and algorithms), but this creates also some limitations in flexibility:
-
-* route profile is pre-calculated in server side, and hardcoded in the data. For different profiles  (e.g. car, walking) you should download different map data packages if offline routing is needed.
-*  no shortest/fastest choice in calculation, this is precoded in the routing data
-*  no alternative routes
-*  no live data in routing - traffic, temporarily closed roads etc
-
-Note that initial routing feature does not include live navigation features, like following of GPS location, initiating automatic recalculations or giving voice instructions. This can be built on top of routing by your application.
-
-### Offline route packages
-
-Offline routing is based on special routing packages, similar to offline map packages. Carto has prepared **world-wide offline route packages** and corresponding online service for most common profiles: **osm.car** and **osm.foot** using OpenStreetMap as map data source. Other profiles will be added based on demand. List of country packages is the same as for offline maps, see https://developer.nutiteq.com/guides/packages for the full list.
-
-Download size of the offline routing package is about 10-40% of corresponding offline map package. Car profile packages are considerably smaller than walking packages, for example.
-
-For commercial / enterprise users we can also provide sets of offline routing packages using **HERE.com map data**. In many countries (especially outside Europe) this is cleaner, has more roads covered and provides higher quality results. In addition, HERE includes address data. Please contact Carto if you consider using this commercial map data in your app.
-
-## Using routing in your app
-
-### Ready-made sample code
-For minimal working implementation see our *advanced map* app code samples on different platforms:
-
-* iOS: https://github.com/nutiteq/hellomap3d-ios : [OfflineRoutingController.mm](https://github.com/nutiteq/hellomap3d-ios/blob/master/advancedmap3/advancedmap3/OfflineRoutingController.mm)
-* Android: https://github.com/nutiteq/hellomap3d-android : [OfflineRoutingActivity.java](https://github.com/nutiteq/hellomap3d-android/blob/master/com.nutiteq.advancedmap3/src/com/nutiteq/advancedmap3/OfflineRoutingActivity.java)
-* Xamarin (Android): https://github.com/nutiteq/hellomap3d-dotnet : [OfflineRouting.cs](https://github.com/nutiteq/hellomap3d-dotnet/blob/master/hellomap-android/OfflineRouting.cs)
-
-These samples work as following:
-
-1. App downloads automatically several pre-coded offline route packages right after you start the sample. Estonia and Latvia are downloaded by default, but you can change the code easily to download any other country or state
-2. Long-click on map set route start point, second long-click sets end points. 
-3. When end-point is set, then route is automatically calculated
-4. Route is shown as a line on map, instructions are shown as markers.
-
-Sample has some simplifications to keep code simpler:
-
-* Background map is still on-line 
-* Online routing is used before download is not finished. So for offline routing wait for a minute, depending on your network speed. Download progress is not indicated in UI.
-* Make sure that route start and end points are within downloaded package areas, otherwise routing error occurs. Also, if the shortest route passes another country/area that is not downloaded, routing fails. 
-* if start and stop are in different countries/packages, then also in-between country packages must be downloaded to find multi-country route.
-
-<iframe width="420" height="315" src="https://www.youtube.com/embed/8u-DpOAt0zQ" frameborder="0" allowfullscreen></iframe>
-
-
-## Step-by-step instructions
-
-Following code samples demonstrate essential routing code. Linking this to UI and map graphics is up to your app, you can see our samples about one way how to do it. You may want to have more advanced logic, e.g. show instructions as textual list, what is not in our samples, customise UI etc.
-
-
-### Online routing
- 
-Online routing is quite simple: just create *CartoOnlineRoutingService* and call the *calculateRoute* request to calculate route. As processing the request may take some time (online query), using a background thread/task is a good idea.
-
-#### 1. Create service
-
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
-    </li>
-  </ul>
-
-  <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}
-
-  onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  _onlineRoutingService = [[NTCartoOnlineRoutingService alloc] initWithSource:@"nutiteq.osm.car"];
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  COMING SOON...
-
-  {% endhighlight %}
-  </div>
-  
-</div>
-
-
-#### 2. Calculate route
-
-
-Note that the **calculation request is expensive**. So use of separate thread is strongly suggested, as in the sample below.  Otherwise the main thread could be blocked for up to couple of seconds on slow devices.
-
-See our full sample to see how to show the instructions on the map, as Line and Markers.
-
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
-    </li>
-  </ul>
-
-  <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}
-
-  AsyncTask<Void, Void, RoutingResult> task = new AsyncTask<Void, Void, RoutingResult>() {
-
-            protected RoutingResult doInBackground(Void... v) {
-                MapPosVector poses = new MapPosVector();
-                poses.add(startPos);
-                poses.add(stopPos);
-                RoutingRequest request = new RoutingRequest(baseProjection, poses);
-                RoutingResult result = onlineRoutingService.calculateRoute(request);
-
-                return result;
-            }
-
-            protected void onPostExecute(RoutingResult result) {
-                if (result == null) {
-                    Log.e(Const.LOG_TAG,"routing error");
-                    return;
-                }
-
-                String routeText = "The route is " + (int) (result.getTotalDistance() / 100) / 10f + "km (" + result.getTotalTime() + " s)";
-                Log.i(Const.LOG_TAG,routeText);
-
-                // get instruction details
-                RoutingInstructionVector instructions = result.getInstructions();
-
-                boolean first = true;
-				
-				// Remember: Put your operations back on the main thread to change the UI
-                
-                for (int i = 0; i < instructions.size(); i++) {
-                    RoutingInstruction instruction = instructions.get(i);
-                    Log.d(Const.LOG_TAG, instruction.toString());
-                }
-
-            }
-        };
-
-        task.execute();
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-		ThreadPool.QueueUserWorkItem(delegate
-		{
-			MapPosVector poses = new MapPosVector();
-			poses.Add(startPos);
-			poses.Add(stopPos);
-
-			RoutingRequest request = new RoutingRequest(baseProject, poses);
-			RoutingResult result = onlineRoutingService.CalculateRoute(request);
-
-			// get total route results
-			String routeText = "The route is " + (int)(result.TotalDistance / 100) / 10f + "km (" + result.TotalTime + " sec) ";
-			Log.Debug(routeText);
-
-			// get instructions, just log them
-			RoutingInstructionVector instructions = result.Instructions;
-			
-
-			// Remember: Put your operations back on the main thread to change the UI
-			for (int i = 0; i < instructions.Count; i++)
-			{
-				RoutingInstruction instruction = instructions[i];
-				Log.Debug(instruction.ToString());
-
-			}
-		});
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  	// Set route start end end points
-    NTMapPosVector* poses = [[NTMapPosVector alloc] init];
-    [poses add:startPos];
-    [poses add:stopPos];
-    
-    NTRoutingRequest* request = [[NTRoutingRequest alloc] initWithProjection:[[mapView getOptions] getBaseProjection] points:poses];
-    
-    // This calculation should be in background thread
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        NTRoutingResult* route = [_onlineRoutingService calculateRoute:request];
-        
-        // Process results in main thread, so it can update UI
-        dispatch_async(dispatch_get_main_queue(), ^{
-            
-            if (route == nil){
-                NSLog(@"route error");
-                return;
-            }
-            
-            NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
-            [dateFormatter setDateFormat:@"HH:mm:ss"];
-            [dateFormatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
-            
-            double duration = 0.3;
-            
-            NSString* routeDesc = [NSString stringWithFormat:@"Route: %0.3f m, travel %@. Calculation took %0.3f s", [route getTotalDistance]/1000.0,
-                                   [dateFormatter stringFromDate: [NSDate dateWithTimeIntervalSince1970:[route getTotalTime]]],
-                                   duration];
-            
-            NSLog(@"%@",routeDesc);
-            
-            // get instructions
-            for(int i=0; i < [[route getInstructions] size];i++){
-                
-                NTRoutingInstruction *instruction =[[route getInstructions] get:i];
-                NSLog(@"%@",[instruction description]);
-                
-            }
-        });
-    });
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  COMING SOON...
-
-  {% endhighlight %}
-  </div>
-  
-</div>
-
-
-### Offline routing
-
-
-#### 1. Create CartoPackageManager to prepare download of routing packages
-
-For offline routing you need to download routing packages, for this you use the same *PackageManager* what is used for [offline map packages](offline-maps). The download process and listener events are the same, so see offline map package manual for some details. However, as it uses different packages (specified by *source*), you must create two instances if you need both offline map packages and routing packages.
-
-First you need to define folder where to keep the files (different from your map packages), and use *PackageManagerRoutingService* with the PackageManager to calculate the routes.
-
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
-    </li>
-  </ul>
-
-  <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}
-
-        // Create PackageManager instance for dealing with offline packages
-        File packageFolder = new File(getApplicationContext().getExternalFilesDir(null), "routingpackages");
-        
-        if (!(packageFolder.mkdirs() || packageFolder.isDirectory())) {
-            Log.e(Const.LOG_TAG, "Could not create package folder!");
-        }
-
-        try {
-            packageManager = new CartoPackageManager("routing:nutiteq.osm.car", packageFolder.getAbsolutePath());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-		// Create PackageManager instance for dealing with offline packages
-		var packageFolder = new File(GetExternalFilesDir(null), "routingpackages");
-
-		if (!(packageFolder.Mkdirs() || packageFolder.IsDirectory))
-		{
-			Log.Fatal("Could not create package folder!");
-		}
-
-		packageManager = new CartoPackageManager("routing:nutiteq.osm.car", packageFolder);
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-    // Define PackageManger to download offline routing packages
-    // Create folder for package manager. Package manager needs persistent writable folder.
-    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask,YES);
-    NSString* appSupportDir = [paths objectAtIndex: 0];
-    NSString* packagesDir = [appSupportDir stringByAppendingString:@"/packages"];
-    NSError *error;
-    [[NSFileManager defaultManager] createDirectoryAtPath:packagesDir withIntermediateDirectories:YES attributes:nil error:&error];
-    
-    packageManager = [[NTCartoPackageManager alloc] initWithSource:@"routing:nutiteq.osm.car" dataFolder:packagesDir];
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  COMING SOON...
-
-  {% endhighlight %}
-  </div>
-  
-</div>
-
-			
-#### 2. Use PackageManagerListener to get DownloadManager events
-
-Routing package download cannot be started immediately - SDK needs to get latest definition of packages from Carto online service. Once this list is received, PackageManagerListener's .onPackageListUpdated() is called. This similar to offline map packages - see [call flow diagram](/images/pm_flow.png)
-
-For this you need to write your own PackageManagerListener, and start offline download in the *onPackageListUpdated* method, where it is sure that package metadata is already downloaded and known.
-
-
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
-    </li>
-  </ul>
-
-  <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}
-
-  public class RoutePackageManagerListener extends PackageManagerListener {
-    @Override
-    public void onPackageListUpdated() {
-        Log.d(Const.LOG_TAG, "Package list updated");
-        // Start download of package of Estonia
-        // see list of available ID-s: https://developer.nutiteq.com/guides/packages
-        // just append -routing to the ID-s
-        // You can download several packages, and route is found through all of them
-
-        packageManager.startPackageDownload("EE-routing");
-        packageManager.startPackageDownload("LV-routing");
-    }
-
-    @Override
-    public void onPackageListFailed() {
-        Log.e(Const.LOG_TAG, "Package list update failed");
-    }
-
-    @Override
-    public void onPackageStatusChanged(String id, int version, PackageStatus status)
-    {
-        // here you can monitor download process %
-    }
-
-    @Override
-    public void onPackageCancelled(String id, int version) {
-    }
-
-    @Override
-    public void onPackageUpdated(String id, int version) {
-        Log.d(Const.LOG_TAG, "Offline package updated: " + id);
-    }
-
-    @Override
-    public void onPackageFailed(String id, int version, PackageErrorType errorType) {
-        Log.e(Const.LOG_TAG, "Offline package update failed: " + id);
-    }
-  }
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  	public class RoutePackageManagerListener : PackageManagerListener
-	{
-		PackageManager packageManager;
-
-		public RoutePackageManagerListener(PackageManager manager)
-		{
-			packageManager = manager;
-		}
-
-		public override void OnPackageListUpdated()
-		{
-			Log.Debug("Package list updated");
-			// We have packages all country/regions
-			// see list of available ID-s: https://developer.nutiteq.com/guides/packages
-			// just append -routing to the ID-s
-			// You can download several packages, and route is found through all of them
-
-			packageManager.StartPackageDownload("EE-routing");
-			packageManager.StartPackageDownload("LV-routing");
-		}
-
-		public override void OnPackageListFailed()
-		{
-			Log.Error("Package list update failed");
-		}
-
-		public override void OnPackageStatusChanged(String id, int version, PackageStatus status)
-		{
-			// here you can get progress of download
-		}
-
-		public override void OnPackageCancelled(String id, int version)
-		{
-		}
-
-		public override void OnPackageUpdated(String id, int version)
-		{
-			Log.Debug("Offline package updated: " + id);
-		}
-
-		public override void OnPackageFailed(String id, int version, PackageErrorType errorType)
-		{
-			Log.Error("Offline package download failed: " + id);
-		}
-	}
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-    @interface RoutePackageManagerListener : NTPackageManagerListener
-
-    @property NTPackageManager* _packageManager;
-	- (void)setPackageManager:(NTPackageManager*)manager;
-	
-	@end
-
-	@implementation RoutePackageManagerListener
-
-	- (void)onPackageListUpdated
-	{
-	    NSLog(@"onPackageListUpdated");
-	    // We have packages all country/regions
-	    // see list of available ID-s: https://developer.nutiteq.com/guides/packages
-	    // just append -routing to the ID-s
-	    // You can download several packages, and route is found through all of them
-	    
-	    [self._packageManager startPackageDownload: @"EE-routing"];
-	    [self._packageManager startPackageDownload: @"LV-routing"];
-	}
-
-	- (void)onPackageListFailed
-	{
-	    NSLog(@"onPackageListFailed");
-	}
-
-	- (void)onPackageUpdated:(NSString*)packageId version:(int)version
-	{
-	}
-
-	- (void)onPackageCancelled:(NSString*)packageId version:(int)version
-	{
-	}
-
-	- (void)onPackageFailed:(NSString*)packageId version:(int)version errorType:(enum NTPackageErrorType)errorType
-	{
-	    NSLog(@"onPackageFailed");
-	}
-
-	- (void)onPackageStatusChanged:(NSString*)packageId version:(int)version status:(NTPackageStatus*)status
-	{
-	    // here you can get progress of download
-	    NSLog(@"onPackageStatusChanged progress: %f", [status getProgress]);
-	}
-
-	- (void)setPackageManager:(NTPackageManager*)manager
-	{
-    	self._packageManager = manager;
-	}
-
-	@end
-
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  COMING SOON...
-
-  {% endhighlight %}
-  </div>
-  
-</div>
-
-You may ask why here EE and LV (Estonia and Latvia) packages are used in the sample? It is not by chance - there are recent [tight personal links between these two countries](http://www.baltictimes.com/estonian_president_marries_latvian_cyber_defence_expert/), so offline routing has to go across borders.
-
-#### 3. Initialize instance of PackageManagerListener, start PackageManager and package list update
-
-To link PackageManagerListener with PackageManager properly (and to have a fully working RoutingService as a result) you need to do following steps in the code. Note that we need to pass packageManager reference to the listener, otherwise the listener can not start downloads. This depends on platform and your app architecture.
-
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
-    </li>
-  </ul>
-
-  <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight html %}
-
-    // 1. Set listener, and start PackageManager
-    packageManager.setPackageManagerListener(new RoutePackageManagerListener());
-    packageManager.start();
-
-    // 2. Fetch list of available packages from server. Note that this is asynchronous operation and listener will be notified via onPackageListUpdated when this succeeds.
-    packageManager.startPackageListDownload();
-
-    // 3. Create offline routing service connected to package manager
-    offlineRoutingService = new PackageManagerRoutingService(packageManager);
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-	// 1. Create and set listener, and start PackageManager
-	packageManager.PackageManagerListener = new RoutePackageManagerListener(packageManager);
-	packageManager.Start();
-
-	// 2. Fetch list of available packages from server. 
-	// Note that this is asynchronous operation and the listener will be notified via OnPackageListUpdated when this succeeds.        
-	packageManager.StartPackageListDownload();
-
-	// 3. Create offline routing service connected to package manager
-	offlineRoutingService = new PackageManagerRoutingService(packageManager);
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-    NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"routing:nutiteq.osm.car" dataFolder:packagesDir];
-    
-    // 1. Create routePackageManagerListener with your listener class
-    RoutePackageManagerListener* _packageManagerListener = [[RoutePackageManagerListener alloc] init];
-    [_packageManagerListener setPackageManager: packageManager];
-    
-    // Attach package manager listener
-    [packageManager setPackageManagerListener:_packageManagerListener];
-    
-    // Start PackageManager
-    [packageManager start];
-    
-    // 2. Start download of packageList. When download is done, then the listener's onPackageListUpdated() is called
-    [packageManager startPackageListDownload];
-    
-    // 3. Create offline routing service connected to package manager
-    _offlineRoutingService = [[NTPackageManagerRoutingService alloc] initWithPackageManager:packageManager];
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-
-  COMING SOON...
-
-  {% endhighlight %}
-  </div>
-  
-</div>
-
-#### 4. Do actual route calculation
-
-All this preparation was needed to ensure that you have routing package downloaded and service is prepared. Actual routing is quite simple - you define *RoutingRequest* with at least 2 points, start routing with the service and read response as *RoutingResult*. In fact, it is exactly the same as in online routing chapter, just replace onlineRoutingService with offlineRoutingService, see example 2 above.
-
+`Metavariables` and `nutiparameters` are also available as CartoCSS style extensions.
