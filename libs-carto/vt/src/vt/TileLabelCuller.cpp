@@ -82,11 +82,11 @@ namespace carto { namespace vt {
             }
         }
 
-        // Sort active labels by opacity
+        // Sort active labels by priority/opacity
         {
             std::lock_guard<std::mutex> lock(*_mutex);
             std::sort(validLabelList.begin(), validLabelList.end(), [](const std::shared_ptr<TileLabel>& label1, const std::shared_ptr<TileLabel>& label2) {
-                return std::pair<int, float>(label1->getPriority(), label1->getOpacity()) > std::pair<int, float>(label2->getPriority(), label2->getOpacity());
+                return std::pair<int, float>(-label1->getPriority(), label1->getOpacity()) > std::pair<int, float>(-label2->getPriority(), label2->getOpacity());
             });
         }
 
