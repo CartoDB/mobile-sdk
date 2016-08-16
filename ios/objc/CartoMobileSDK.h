@@ -23,7 +23,6 @@
 #import "NTAssetTileDataSource.h"
 #import "NTBitmapOverlayRasterTileDataSource.h"
 #import "NTHTTPTileDataSource.h"
-#import "NTMBTilesTileDataSource.h"
 #import "NTMemoryCacheTileDataSource.h"
 #import "NTPersistentCacheTileDataSource.h"
 #import "NTLocalVectorDataSource.h"
@@ -61,12 +60,6 @@
 #import "NTEPSG3857.h"
 
 #import "NTCullState.h"
-
-#import "NTRoutingInstruction.h"
-#import "NTRoutingRequest.h"
-#import "NTRoutingResult.h"
-#import "NTRoutingService.h"
-#import "NTOSRMOfflineRoutingService.h"
 
 #import "NTBalloonPopupStyleBuilder.h"
 #import "NTBalloonPopupStyle.h"
@@ -136,6 +129,10 @@
 #import "NTCartoOnlineRoutingService.h"
 #endif
 
+#ifdef _CARTO_OFFLINE_SUPPORT
+#import "NTMBTilesTileDataSource.h"
+#endif
+
 #ifdef _CARTO_PACKAGEMANAGER_SUPPORT
 #import "NTPackageManagerTileDataSource.h"
 #import "NTPackageManagerRoutingService.h"
@@ -145,6 +142,14 @@
 #import "NTPackageTileMask.h"
 #import "NTPackageManager.h"
 #import "NTCartoPackageManager.h"
+#endif
+
+#ifdef _CARTO_ROUTING_SUPPORT
+#import "NTRoutingInstruction.h"
+#import "NTRoutingRequest.h"
+#import "NTRoutingResult.h"
+#import "NTRoutingService.h"
+#import "NTOSRMOfflineRoutingService.h"
 #endif
 
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT
