@@ -116,7 +116,7 @@ namespace carto {
         else {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             _visibleCache.invalidate_all(std::chrono::steady_clock::now());
-            _preloadingCache.invalidate_all(std::chrono::steady_clock::now());
+            _preloadingCache.clear();
         }
         refresh();
     }
