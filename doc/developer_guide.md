@@ -854,7 +854,13 @@ This example uses only one geographical coordinate. The building size is known, 
 
 ## Vector Styles
 
-Usage of vector-based base maps enables you to re-style maps according to your needs. You can set the colors, transparency, line styles (width, patterns, casings, endings), polygon patterns, icons, text placements, fonts and many other vector data parameters. 
+The free mobile SDK package allows to select one of pre-defined and built-in base map styles when base map is created:
+
+ * CARTO_BASEMAP_STYLE_DEFAULT - general street map
+ * CARTO_BASEMAP_STYLE_DARK - CARTO Dark Matter style
+ * CARTO_BASEMAP_STYLE_GRAY - CARTO Positron style
+
+For the Enterprise package you can custommize base map styling. You can set the colors, transparency, line styles (width, patterns, casings, endings), polygon patterns, icons, text placements, fonts and many other vector data parameters. 
 
 CARTO uses [Mapnik](http://mapnik.org) XML style description language for customizing the visual style of vector tiles. Our styling is optimized for mobile and contain some unique style parameters, while ignoring some others. In general, you can reuse your existing Mapnik XML, or CartoCSS, styling files and tools (such as TileMill/Mapbox Studio).
 
@@ -862,9 +868,6 @@ Vector styling is applied in the mobile client, where the style files are bundle
 
 CARTO map rendering implementation is intended for real-time rendering. As a result, several limitations apply.
 
-### Prepackaged Vector Styles
-
-Prepackaged mobile styles used by CARTO. These are compatible with our vector tile sources.
 
 ### Mapnik Style Format
 
