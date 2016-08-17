@@ -84,10 +84,10 @@ In order to integrate your published mobile map into the app, you need a callbac
 <div class="js-TabPanes">
   <ul class="Tabs">
     <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
   </ul>
 
@@ -119,7 +119,7 @@ In order to integrate your published mobile map into the app, you need a callbac
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes">
       {% highlight objc %}@interface MyCartoVisBuilder : NTCartoVisBuilder
 
     @property NTMapView* mapView;
@@ -168,10 +168,10 @@ In order to integrate your published mobile map into the app, you need a callbac
 <div class="js-TabPanes">
   <ul class="Tabs">
     <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
   </ul>
 

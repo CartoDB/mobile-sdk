@@ -5,7 +5,8 @@ This file is for reference purposes only. It is intended for tracking the Mobile
 ## Documentation
 
 * [Getting Started](getting_started.md)
-* [SDK and other Mobile Tools](sdk_with_carto.md)
+* [SDK and other CARTO Tools](sdk_with_carto.md)
+* [Loading Data](loading_data.md)
 * [Developer Guide to SDK Features](developer_guide.md)
 * [Mobile Routing](routing.md)
 * [Offline Maps](offline_maps.md)

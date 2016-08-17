@@ -40,43 +40,7 @@ The following offline packages are available:
 
 -  When initializing the Package Manager API, use `nutiteq.osm` as the source ID
 -  For map data, see the [OpenStreetMap](http://www.openstreetmap.org) contributors, ODbL license
-
-{% highlight javascript %}
-<script type="text/javascript">
-\$(document).ready(function() {\
-
-\$.get(‘//d2izt4z5iclshv.cloudfront.net/mappackages/v1/nutiteq.osm/packages.json’,
-function(data) {
-
-var p\_name = ’’;\
- var obj = \$.parseJSON(data);\
- var sorted = \_.sortBy(obj.packages, function(item) {\
- return (\[item.metainfo.name\_en\]);\
- });
-
-p\_name =
-‘<table class="table table-striped table-bordered"><tr><th style="padding:5px;">Package
-name</th><th></th><th style="padding:5px;">ID</th><th></th><th style="padding:5px;">Size
-(MB)</th><th></th><th style="padding:5px;">Ver</th><th></th></tr>’;\
- \$.each(sorted, function () {\
- p\_name += “<tr>”;\
- p\_name *= ’<td style="padding:5px;">’* this.metainfo.name\_en +
-“<td/>”;\
- p\_name *= ’<td style="padding:5px;">’* this.id + “<td/>”;\
- p\_name *= ’<td style="padding:5px;">’*
-(this.size/(1024\*1024)).toFixed(1).replace(“.0”, “”) + “<td/>”;\
- p\_name *= ’<td style="padding:5px;">’* this.version + “<td/>”;\
- p\_name += “</tr>”;\
- });\
- p\_name += “</table>”;\
- \$(‘\#packages’).html(p\_name);\
- }, ‘text’);\
- });
-
-</script>
-<div id="packages">
-</div>
-{% endhighlight %}
+- The Package Name IDs are located through [Nutiteq OpenStreetMap Packages](https://developer.nutiteq.com/guides/packages)
 
 ### Offline Routing Packages
 
@@ -90,7 +54,7 @@ The Mobile SDK provides pre-packaged advanced map examples: [**PackageManagerAct
 
 The following flow diagram displays key events and messages between the app, Package Manager, and online service.
 
-![packagemanager flow](/images/pm_flow.png)
+<span class="wrap-border"><img src="/docs/img/layout/mobile/package_manager_flow.jpg" alt="Package Manager flow" /></span>
 
 ## Additional Events
 
@@ -111,16 +75,16 @@ Use the following steps to implement **single map package** downloading:
 <div class="js-TabPanes">
   <ul class="Tabs">
     <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
@@ -147,7 +111,7 @@ Use the following steps to implement **single map package** downloading:
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight c# %}
+  {% highlight csharp %}
 
 // Android: Register license, this must be done before PackageManager can be used!
       Carto.Ui.MapView.RegisterLicense("YOUR-NUTITEQ-LICENSE", ApplicationContext);
@@ -221,16 +185,16 @@ Use the following steps to implement **single map package** downloading:
 <div class="js-TabPanes">
   <ul class="Tabs">
     <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
@@ -283,7 +247,7 @@ Use the following steps to implement **single map package** downloading:
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight c# %}
+  {% highlight csharp %}
 
   public class PackageListener : PackageManagerListener
   {
@@ -439,16 +403,16 @@ The following starts download of map of Estonia. See [list of available packages
 <div class="js-TabPanes">
   <ul class="Tabs">
     <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
@@ -466,7 +430,7 @@ The following starts download of map of Estonia. See [list of available packages
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight c# %}
+  {% highlight csharp %}
 
   public override void OnPackageListUpdated ()
   {
@@ -515,16 +479,16 @@ Bounding box is defined using the following format **bbox(lonMin,latMin,lonMax,l
 <div class="js-TabPanes">
   <ul class="Tabs">
     <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
@@ -541,7 +505,7 @@ Bounding box is defined using the following format **bbox(lonMin,latMin,lonMax,l
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight c# %}
+  {% highlight csharp %}
 
 // London (about 30MB)
   var bbox = "bbox(-0.8164,51.2382,0.6406,51.7401)"; 
@@ -576,16 +540,16 @@ This special Vector Tile Data Source must be used: **PackageManagerTileDataSourc
 <div class="js-TabPanes">
   <ul class="Tabs">
     <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
@@ -615,7 +579,7 @@ This special Vector Tile Data Source must be used: **PackageManagerTileDataSourc
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight c# %}
+  {% highlight csharp %}
 
 // Define styling for vector map
       BinaryData styleBytes = AssetUtils.LoadAsset("osmbright.zip");

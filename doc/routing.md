@@ -106,16 +106,16 @@ Online routing requires that you create a simple call and request to calculate t
 <div class="js-TabPanes">
   <ul class="Tabs">
     <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
@@ -126,7 +126,7 @@ Online routing requires that you create a simple call and request to calculate t
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight c# %}onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
+  {% highlight csharp %}onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
 
   {% endhighlight %}
   </div>
@@ -154,16 +154,16 @@ These code samples display how to show navigation instructions on the map, as in
 <div class="js-TabPanes">
   <ul class="Tabs">
     <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
@@ -210,7 +210,7 @@ These code samples display how to show navigation instructions on the map, as in
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight c# %}ThreadPool.QueueUserWorkItem(delegate
+  {% highlight csharp %}ThreadPool.QueueUserWorkItem(delegate
     {
       MapPosVector poses = new MapPosVector();
       poses.Add(startPos);
@@ -305,10 +305,10 @@ These code samples display how to show navigation instructions on the map, as in
       <a href="#/1" class="js-Tabpanes-navLink">Xamarin</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
@@ -344,16 +344,16 @@ For offline routing, you must download routing packages.  You can use the same *
 <div class="js-TabPanes">
   <ul class="Tabs">
     <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
@@ -377,7 +377,7 @@ For offline routing, you must download routing packages.  You can use the same *
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight c# %}
+  {% highlight csharp %}
 
 // Create PackageManager instance for dealing with offline packages
     var packageFolder = new File(GetExternalFilesDir(null), "routingpackages");
@@ -425,16 +425,16 @@ Routing package downloads cannot be started immediately, as the Mobile SDK needs
 <div class="js-TabPanes">
   <ul class="Tabs">
     <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
@@ -482,7 +482,7 @@ Routing package downloads cannot be started immediately, as the Mobile SDK needs
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight c# %}public class RoutePackageManagerListener : PackageManagerListener
+  {% highlight csharp %}public class RoutePackageManagerListener : PackageManagerListener
   {
     PackageManager packageManager;
 
@@ -607,16 +607,16 @@ To link PackageManagerListener with PackageManager (and to have a fully working 
 <div class="js-TabPanes">
   <ul class="Tabs">
     <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
@@ -637,7 +637,7 @@ To link PackageManagerListener with PackageManager (and to have a fully working 
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight c# %}
+  {% highlight csharp %}
 
 // 1. Create and set listener, and start PackageManager
       packageManager.PackageManagerListener = new RoutePackageManagerListener(packageManager);

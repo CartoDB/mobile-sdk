@@ -8,7 +8,6 @@ The following workflow guides you through the process of getting started with th
 [4. Create your first mobile app with basic map features](#basic-map-features) |
 [5. Use our sample mobile apps to test your project, and re-use prepackaged styles](#sample-apps) | 
 
-
 ## Downloading the SDK
 
 To begin using the Mobile SDK, download the required SDK packages and libraries based on your mobile platform. _Some mobile platforms are only available for select account plans._ [Contact us](mailto:support@carto.com) if you have questions about Mobile SDK packages and what features are included.
@@ -232,32 +231,11 @@ Once your mobile apps are registered and you have your API Keys, it is recommend
 
 ### Android Implementation
 
-If using Android as the mobile platform, follow this implementation procedure. _Click the tabs to see the code for each step of the procedure._
+If using Android as the mobile platform, follow this implementation procedure.
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">1. Add build.gradle</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">2. Define Internet Permission</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">3. Define Application Layout</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">4. Find MapView Object</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/4" class="js-Tabpanes-navLink">5. Initialize Mobile Map</a>
-    </li>
-  </ul>
+1) Add the **[Android Studio](#android-samples)** `build.gradle` SDK files to your project
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight xml %}
-
-// 1. Add the Android Studio "build.gradle" SDK files to your project
-
+<pre class="brush: xml" >
 allprojects {
     repositories {
         mavenCentral()
@@ -273,27 +251,19 @@ allprojects {
 dependencies {
    compile 'com.carto:carto-mobile-sdk:4.0.0-snapshot@aar'
 }
+</pre>
+ 
+2) Define INTERNET permission for your AndroidManifest.xml
 
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight xml %}
-
-// 2. Define INTERNET permission for your AndroidManifest.xml
-
+{% highlight xml %}
 <uses-permission android:name="android.permission.INTERNET"/>
+{% endhighlight %}
 
-  {% endhighlight %}
-  </div>
+3) Define your application layout
 
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight xml %}
+  Define **main layout** as **res/layout/main.xml**, so that it contains `com.carto.ui.MapView` element:
 
-// 3. Define your application layout
-
-Define "main layout" as "res/layout/main.xml", so that it contains `com.carto.ui.MapView` element:
-
+{% highlight xml %}
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
@@ -306,41 +276,28 @@ Define "main layout" as "res/layout/main.xml", so that it contains `com.carto.ui
     android:layout_height="fill_parent" 
     />
 </LinearLayout>
+{% endhighlight %}
 
-  {% endhighlight %}
-  </div>
+4) Find the MapView object
 
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight java %}
+  Define the MapView type in your main activity class and load layout. This enables you to load the MapView from the layout. _The object itself was already created during the layout creation process, this step is specific to finding and referencing the MapView object in your request._
 
-// 4. Find the MapView object
-
-Define the MapView type in your main activity class and load layout. This enables you to load the MapView from the layout. _The object itself was already created during the layout creation process, this step is specific to finding and referencing the MapView object in your request._
-
-public class HelloMap3DActivity extends Activity {
+<pre class="brush: java">public class HelloMap3DActivity extends Activity {
     private MapView mapView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+</pre>
 
-  {% endhighlight %}
-  </div>
+5) Initialize the mobile map
 
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
+  The map object needs a default map source in order to initialize. There are several requirements for this to work properly.
 
-// 5.  Initialize the mobile map
+  - Replace `YOUR_LICENSE_KEY` with your [Mobile App API Key](#registering-you-mobile-app)
 
-The map object needs a default map source in order to initialize. There are several requirements for this to work properly.
-
-    /// 5a. Replace `YOUR_LICENSE_KEY` with your Mobile App API Key
-
-    /// 5b. Define the first layer of the map, which will be the basemap layer. This is a vector map layer, which requires that you load and define styles in the assets of this layer. You can also add other map layers once a basemap is configured
-  {% endhighlight %}
-  </div>
-</div>
+  - Define the first layer of the map, which will be the basemap layer. This is a vector map layer, which requires that you load and define styles in the assets of this layer. You can also add other map layers once a basemap is configured
 
 #### Example - Android Request
 
@@ -370,61 +327,37 @@ You can now start using the application on your phone and view your map.
 
 ### iOS Implementation
 
-If using iOS as the mobile platform, follow this implementation procedure. _Click the tabs to see the code for each step of the procedure._
+If using iOS as the mobile platform, follow this implementation procedure.
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">1. Create New Project</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">2. Modify Controller for MapView</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">3. Modify Storyboard</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">4. Run iOS app</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/4" class="js-Tabpanes-navLink">5. View MapView Object</a>
-    </li>
-  </ul>
+1) Create new project in Xcode and add Mobile SDK framework using Podfile
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight java %}Create new project in Xcode and add Mobile SDK framework using Podfile
+  -  Create a new ‘Single View application’ in your Xcode project
 
-// 1. Create a new ‘Single View application’ in your Xcode project
+  -  For the current beta version of the Mobile SDK: 
+      - Get SDK package latest dev build: [sdk4-ios-snapshot-latest.zip](https://nutifront.s3.amazonaws.com/sdk_snapshots/sdk4-ios-snapshot-latest.zip)
+      - Unzip it and copy *CartoMobileSDK.framework* to the Xcode project root folder
 
-// 2. CURRENT BETA VERSION OF MOBILE SDK - download the latest dev build of the SDK package:
+  - COMING SOON: Once the final version of Mobile SDK is released, you will have to create "Podfile" in your project folder with dependency [‘Carto-Mobile-SDK’](https://cocoapods.org/pods/Carto-Mobile-SDK). THIS IS NOT AVAILABLE YET
 
-    url "https://nutifront.s3.amazonaws.com/sdk_snapshots/sdk4-ios-snapshot-latest.zip"
+2)  Modify Controller for Map View
 
-// 3. Unzip the package and copy "CartoMobileSDK.framework" to the Xcode project root folder
+  - Extend ViewController and add MapView manipulation code into it. _Ensure it is Objective C++, not plain Objective C class_
 
-// COMING SOON: Once the final version of Mobile SDK is released, you will have to create "Podfile" in your project folder with dependency ‘Carto-Mobile-SDK’. THIS IS NOT AVAILABLE YET
+  - Rename `ViewController.m` (comes with template) to `ViewController.mm`, to avoid compilation issues
 
-    url "https://cocoapods.org/pods/Carto-Mobile-SDK"
+  -  Implement **ViewController.h** to extend **GLKViewController**, instead of
+    UIViewController
 
-  {% endhighlight %}
-  </div>
+  - You must replace `YOUR_LICENSE_KEY` with your [Mobile Apps and API Key](/docs/carto-engine/mobile-sdk/mobile-apps-and-api-keys/#mobile-apps-and-api-keys) in the code below
 
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight objc %}
-
-// 1. Extend ViewController and add MapView manipulation code into it. Ensure it is Objective C++, not plain Objective C class
-
-// 2. Rename `ViewController.m` (comes with template) to "ViewController.mm", to avoid compilation issues
-
-// 3. Implement "ViewController.h" to extend "GLKViewController", instead of UIViewController
-
-// 4. You must replace `YOUR_LICENSE_KEY` with your [Mobile Apps and API Key](/docs/carto-engine/mobile-sdk/mobile-apps-and-api-keys/#mobile-apps-and-api-keys) in the code below
-
+<pre class="brush: objc">
+<pre class="brush: objc">
 #import 
 
 @interface ViewController : GLKViewController
 
 @end
+</pre>
 
 #import "ViewController.h"
 #import 
@@ -446,62 +379,50 @@ If using iOS as the mobile platform, follow this implementation procedure. _Clic
   // 1. Add minimal map definition code 
 
   // 2. Ensure the storyboard has NTMapView connected as a view
-        NTMapView* mapView = (NTMapView*) self.view;
+  NTMapView* mapView = (NTMapView*) self.view;
 
   // 3. Create online vector tile layer, use style asset embedded in the project
-        NTVectorTileLayer* vectorTileLayer = [[NTCartoOnlineVectorTileLayer alloc] initWithSource: @"nutiteq.osm" styleAssetName:@"nutibright-v3.zip"];
+  NTVectorTileLayer* vectorTileLayer = [[NTCartoOnlineVectorTileLayer alloc] initWithSource: @"nutiteq.osm" styleAssetName:@"nutibright-v3.zip"];
 
   // 4. Add vector tile layer
-        [[mapView getLayers] add:vectorTileLayer];
+  [[mapView getLayers] add:vectorTileLayer];
 
 
 @end
 </pre>
 
-  {% endhighlight %}
-  </div>
+3) Modify storyboard to enable Map View
 
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}The default storyboard template uses UIView class, you must use NTMapView instead
+  _The default storyboard template uses UIView class, you must use NTMapView instead._
 
-Note: If you are using iPhone "Main\_iPhone.storyboard" or iPad "Main\_iPad.storyboard" files for iOS, you must repeat this step to change the default storyboard
+  **Note:** If you are using iPhone (**Main\_iPhone.storyboard**) or iPad (**Main\_iPad.storyboard**) files for iOS, you must repeat this step to change the default storyboard.
 
-// 1. Open Main.Storyboard, select *View Controller Scene / View Controller / View
+  -  Open Main.Storyboard, select *View Controller Scene -&gt; View Controller* -&gt; *View*
 
-// 2. From Navigator window, select "Identity Inspector"
+  - From Navigator window, select **Identity Inspector**, change the first parameter (Custom Class) to **NTMapView** (from the default UIView).
 
-// 3. Change the first parameter (Custom Class) to "NTMapView" (from the default UIView)
+  <span class="wrap-border"><img src="{{ site.baseurl }}/img/layout/mobile/xcode_storyboard.jpg" alt="Xcode storyboard" /></span>
 
-  {% endhighlight %}
-  </div>
+4) Run the iOS app
 
-<div class="Carousel-item js-Tabpanes-item">
-  {% highlight html %}
-The map should appear with the default world map provided by OpenStreetMap, as defined in your ViewController.
+  The map should appear with the default world map provided by OpenStreetMap, as defined in your ViewController. You can zoom, rotate, and tilt with these default settings.
 
-You can zoom, rotate, and tilt with these default settings.
-{% endhighlight %}
-  </div>
+5) View the **MapView** object method changes
 
-<div class="Carousel-item js-Tabpanes-item">
-  {% highlight objc %}
+<pre class="brush: objc">
 // 1. Set the base projection to be used for MapView, MapEventListener and Options methods
-    NTEPSG3857* proj = [[NTEPSG3857 alloc] init];
-    [[mapView getOptions] setBaseProjection:proj]; // Since EPSG3857 is the default base projection, this is not needed
+  NTEPSG3857* proj = [[NTEPSG3857 alloc] init];
+  [[mapView getOptions] setBaseProjection:proj]; // Since EPSG3857 is the default base projection, this is not needed
 
-// 2. General options
-    [[mapView getOptions] setRotatable:YES]; // allows the map to rotate (this is the default behavior)
-    [[mapView getOptions] setTileThreadPoolSize:2]; // use two threads to download tiles
+  // 2. General options
+  [[mapView getOptions] setRotatable:YES]; // allows the map to rotate (this is the default behavior)
+  [[mapView getOptions] setTileThreadPoolSize:2]; // use two threads to download tiles
 
-// 3.Set initial location and other parameters, _do not animate_
-    [mapView setFocusPos:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.650415 y:59.428773]]  durationSeconds:0];
-    [mapView setZoom:14 durationSeconds:0];
-    [mapView setRotation:0 durationSeconds:0];
-
-{% endhighlight %}
-  </div>
-
-</div>
+  // 3.Set initial location and other parameters, _do not animate_
+  [mapView setFocusPos:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.650415 y:59.428773]]  durationSeconds:0];
+  [mapView setZoom:14 durationSeconds:0];
+  [mapView setRotation:0 durationSeconds:0];
+</pre>
 
 ### Xamarin (Android and iOS) Implementation
 
@@ -522,28 +443,13 @@ If using Xamarin as the mobile platform, follow these implementation procedures 
 
     Almost all of the map related API code (such as adding layers and objects to map, handling interactions and clicks, etc.) can be shared for iOS and Android through one project!
 
-The following tabs describe the specific app integrations for the Xamarin platform. _Click the tabs to see the code for the implementation procedure._
+### Xarmin Forms Apps
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Xamarin Forms App</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">Android Native App</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Xamarin iOS App</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Xamarin Common Code</a>
-    </li>
-  </ul>
+Xamarin Forms (version 3.3.0 and higher) support *Native Controls*. If you add Mobile SDK apps for iOS and Android platforms, Xamarin Native Controls is available by default. See the blog, [_Embedding Native Controls into Xamarin.Forms_](https://blog.xamarin.com/embedding-native-controls-into-xamarin-forms) for details. 
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight csharp %}
-// Although you can share most of the Native Controls code, you must specify the platform when creating the project
+While you can share most of code using Native Controls, you just need to specify the platform when creating the project:
 
+<pre class="brush: csharp">
 #if __IOS__
  // 1. iOS specific code
             var mapView = new Carto.Ui.MapView();
@@ -553,28 +459,23 @@ The following tabs describe the specific app integrations for the Xamarin platfo
  // 2. Indicate the common code from both platforms
     var baseLayer = new Carto.Layers.CartoOnlineVectorTileLayer("carto.osm");
      mapView.Layers.Add(baseLayer);
+</pre>
 
-// Tip: Native Controls only works if you create or update `Form` in the code, using the xml definition will not work
+**Note:** Native Controls only work if you create or update `Form` in the code, using the xml definition will not work. This Xamrin development requirement is subject to change with each release. _Mobile SDK with Xamarin Forms is currently in being tested with Native apps._ Please [contact us](mailto:support@carto.com) if you have an issues.
 
-  {% endhighlight %}
+### Android Native App
 
-  Note: Xamarin Forms (version 3.3.0 and higher) support Native Controls. If you add Mobile SDK apps for iOS and Android platforms, Xamarin Native Controls is available by default. See this blog, https://blog.xamarin.com/embedding-native-controls-into-xamarin-forms, for details. 
+Follow these steps to add native apps to your Xamarin Android package.
 
-  </div>
+1) Add the nuget package [CartoMobileSDK](https://www.nuget.org/packages/CartoMobileSDK/) to your mobile app project
 
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight xml %}Follow these steps to add native apps to your Xamarin Android package.
+2) Copy **vector style file** (as *.zip* file) to your project *Assets* folder
 
-// 1. Add the nuget package "CartoMobileSDK" to your mobile app project
+  You can use the [sample app](#android-samples) resources for your assets. This is required for vector basemaps
 
-    url "https://www.nuget.org/packages/CartoMobileSDK/" 
+3) Add MapView to your application main layout
 
-// 2. Copy "vector style file" (as .zip file) to your project "Assets" folder. This is required for vector basemaps
-
-    Tip: You can use the Sample Apps from CARTO
-
-// 3. Add MapView to your application main layout
-
+```xml
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
@@ -585,11 +486,13 @@ The following tabs describe the specific app integrations for the Xamarin platfo
     android:layout_height="fill_parent" 
     />
 </LinearLayout>
+```
 
-// 4. Create MapView object, add a base layer
+4) Create MapView object, add a base layer
 
-    Load layout from a xml, and load the MapView from Layout. Or, create it with code. A definition of a base layer is enough for minimal map configuration.
+  Load layout from a xml, and load the MapView from Layout. Or, create it with code. A definition of a base layer is enough for minimal map configuration.
 
+{% highlight csharp %}
 using Carto.Ui;
 using Carto.Layers;
 using Carto.DataSources;
@@ -602,42 +505,41 @@ public class MainActivity : Activity
   {
     base.OnCreate ( bundle );
 
-    /// 4a. Register license BEFORE creating MapView (done in SetContentView)
+    // 1. Register license BEFORE creating MapView (done in SetContentView)
     MapView.registerLicense("YOUR_LICENSE_KEY", this);
 
-    /// 4b. Set our view from the "main" layout resource
+    /// 2. Set our view from the "main" layout resource
     SetContentView ( Resource.Layout.Main );
   
-    /// 4c. Get our map from the layout resource 
+    /// 3. Get our map from the layout resource 
     var mapView = FindViewById<MapView> ( Resource.Id.mapView );
 
-    /// 4d. Online vector base layer
+    /// 4. Online vector base layer
     var baseLayer = new CartoOnlineVectorTileLayer("osmbright.zip");
 
-    /// 4e. Set online base layer  
+    /// 5. Set online base layer  
     mapView.Layers.Add(baseLayer);
   }
+{% endhighlight %}
 
-  {% endhighlight %}
-  </div>
+### Xamarin iOS App
 
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight csharp %}Follow these steps to add apps to your Xamarin iOS package.
+Follow these steps to add apps to your Xamarin iOS package.
 
-// 1. Uncompress CARTO Xamarin iOS SDK package to your project
+1) Uncompress CARTO Xamarin iOS SDK package to your project
 
-    Note: All the .dll files should be located in the "Assemblies" folder
+  **Note:** All the .dll files should be located in the **Assemblies** folder
 
-// 2. Copy vector style file "osmbright.zip" to your project. This required for vector basemaps.
+2) **Copy vector style file** (*osmbright.zip*) to your project. You can get it from our Sample Apps. This is needed for vector basemap.
 
-    Tip: You can take osmbright.zip from the Sample Apps. 
+3) **Add Map object to app view**. When using Storyboards, use *OpenGL ES View Controller* (GLKit.GLKViewController) as a template for the map and replace *GLKView* with *MapView* as the underlying view class.
+In the example below, it is assumed that the outlet name of the map view is *Map*.
 
-// 3. Add Map object to app view. 
+4) **Initiate map, set base layer**
 
-    Note: With Storyboards, use "OpenGL ES View Controller" (GLKit.GLKViewController) as a template for the map and replace "GLKView" with "MapView" as the underlying view class. This example assumes that the outlet name of the map view is "Map".
+Add into MainViewController.cs:
 
-// 4. Initiate map and set base layer, add into MainViewController.cs:
-
+<pre class="brush: csharp">
 using Carto.Ui;
 using Carto.Layers;
 using Carto.DataSources;
@@ -671,39 +573,37 @@ public class MainViewController : GLKit.GLKViewController
     // This is VERY IMPORTANT as it stops battery drain when nothing changes on the screen!
     Paused = true;
   }
+</pre>
 
-  {% endhighlight %}
-  </div>
+### Xamarin Common Code
 
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight csharp %}The following common code works for both Xamarin Android and Xamarin iOS apps. This is useful if you are sharing code between projects.
+The following common code can be used for both Xamarin Android and Xamarin iOS apps. This is useful if you are sharing code between projects.
 
-// 1. Create a MapView
+1) Add a marker, based on defined coordinates
 
-// 2. Add a marker, based on defined coordinates
+  Add the following code after creating the [MapView](#xamarin-android-and-ios-implementation).
 
-  Note: You must have "Icon.png" as a bitmap, located in the Assets folder of your project
+  **Note:** You must have *Icon.png* that is a bitmap, located in the Assets folder of your project
 
-  /// 2a. Create overlay layer for markers
+<pre class="brush: csharp">
+  // 1. Create overlay layer for markers
   var proj = new EPSG3857();
   var dataSource = new LocalVectorDataSource (proj);
   var overlayLayer = new VectorLayer (dataSource);
   mapView.Layers.Add (overlayLayer);
 
-  /// 2b. Create Marker style
+  // 2. Create Marker style
   var markersStyleBuilder = new MarkerStyleBuilder ();
   markersStyleBuilder.Size = 20;
   UnsignedCharVector iconBytes = AssetUtils.LoadBytes("Icon.png");
   var bitmap = new Bitmap (iconBytes, true);
   markersStyleBuilder.Bitmap = bitmap;
 
-  /// Example Marker for London
+  // Example Marker for London
   var marker = new Marker (proj.FromWgs84(new MapPos(-0.8164,51.2383)), markersStyleBuilder.BuildStyle ());
   dataSource.Add (marker);
 
-  {% endhighlight %}
-  </div>
-</div>
+</pre>
 
 <br/><br/>**Tip:** See [mobile-dotnet-samples](https://github.com/CartoDB/mobile-dotnet-samples/) for other common map options for the Xamarin mobile platform, such as:
 
@@ -737,38 +637,21 @@ _**Note:** The mobile development team is still testing Windows Phone implementa
 
     **Tip:** .Net [sample app](#xamarin-and-windows-phone-samples) contains two solutions: one for Windows Phone and another for Xamarin, and they share one project _hellomap-shared_ with map-related code.
 
-The following tabs describe how to create a Windows Phone app and create a marker. _Click the tabs to see the code for the implementation procedure._
+#### Create a WP App
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Create a WP App</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">Add a Marker (WP)</a>
-    </li>
-  </ul>
+Follow these steps in order to create a Windows Phone (WP) mobile application.
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight csharp %}Follow these steps to create a Windows Phone (WP) mobile application
+1) Ensure you have the CARTO Visual Studio Extension installed, and your app project has Internet connection
 
-// 1. Ensure you have the CARTO Visual Studio Extension installed
+  In the *Solution Explorer References* section, add *Carto Maps SDK for Windows Phone*. You will find it from the Windows Phone 8.1 extensions. We do not have NuGet package yet, please [let us know](mailto:support@carto.com) if this is something that interests you.
 
-// 2. Ensure your app project has Internet connection
+2) Copy vector style file (*osmbright.zip*) to your project *Assets* folder, available from the [Sample Apps](#xamarin-and-windows-phone-samples). This is needed for vector basemaps
 
-// 3. In the "Solution Explorer References" section:
+3) Create MapView object, and add a base layer
 
-    - Add "Carto Maps SDK for Windows Phone"
-    You will find it from the Windows Phone 8.1 extensions
+You can create a MapView object with code. A definition of a base layer is enough for the minimal map configuration.
 
-// 4. Copy vector style file "osmbright.zip" to your project "Assets" folder. This is required for vector basemaps
-
-    Tip: You can take osmbright.zip from the Sample Apps. 
-
-// 5. Create MapView object, and add a base layer
-
-    You can create a MapView object with code. A definition of a base layer is enough for the minimal map configuration.
-
+<pre class="brush: csharp">
 using Carto.Core;
 using Carto.Graphics;
 using Carto.DataSources;
@@ -783,22 +666,22 @@ protected async override void OnLaunched(LaunchActivatedEventArgs e)
 {
   if (mapView == null)
   {
-        /// 5a. Register CARTO app license
+        // 1. Register CARTO app license
         var licenseOk = Carto.Ui.MapView.RegisterLicense("YOUR_LICENSE_KEY");
 
-        /// 5b. Create map view and initialize
+        // 2. Create map view and initialize
         mapView = new Carto.Ui.MapView();
 
-        /// 5c. Online vector base layer
+        // 3. Online vector base layer
         var baseLayer = new CartoOnlineVectorTileLayer("osmbright-v3.zip");
 
-        /// 5d. Set online base layer.
+        // 4. Set online base layer.
         // Note: assuming here that Map is an outlet added to the controller.
         mapView.Layers.Add(baseLayer);
         
   }
 
-// 6. Place the page in the current window and ensure that it is active
+  // Place the page in the current window and ensure that it is active.
   Windows.UI.Xaml.Window.Current.Content = mapView;
   Windows.UI.Xaml.Window.Current.Activate();
 }
@@ -806,36 +689,34 @@ protected async override void OnLaunched(LaunchActivatedEventArgs e)
 private Carto.Ui.MapView mapView; 
 
 ...
-  {% endhighlight %}
-  </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight csharp %}Create a map marker at a defined coordinate on a WP mobile app
+</pre>
 
-// 1. Create a MapView
+#### Add a Marker (WP)
 
-    Note: You must have an "Icon.png" as a bitmap in project Assets folder
+To create a map marker at a defined coordinate on a Windows Phone mobile app, add following code (after creating a [MapView](basic-map-features).
 
-// 2. Create overlay layer for markers
-    var proj = new EPSG3857();
-    var dataSource = new LocalVectorDataSource(proj);
-    var overlayLayer = new VectorLayer(dataSource);
-    mapView.Layers.Add(overlayLayer);
+**Note:** You must have an *Icon.png* bitmap, located in the Assets folder of your project
 
-// 3. Create Marker style
-    var markersStyleBuilder = new MarkerStyleBuilder();
-    markersStyleBuilder.Size = 20;
-    UnsignedCharVector iconBytes = AssetUtils.LoadBytes("Icon.png");
-    var bitmap = new Bitmap(iconBytes, true);
-    markersStyleBuilder.Bitmap = bitmap;
+<pre class="brush: csharp">
+// 1. Create overlay layer for markers
+var proj = new EPSG3857();
+var dataSource = new LocalVectorDataSource(proj);
+var overlayLayer = new VectorLayer(dataSource);
+mapView.Layers.Add(overlayLayer);
+
+// 2. Create Marker style
+var markersStyleBuilder = new MarkerStyleBuilder();
+markersStyleBuilder.Size = 20;
+UnsignedCharVector iconBytes = AssetUtils.LoadBytes("Icon.png");
+var bitmap = new Bitmap(iconBytes, true);
+markersStyleBuilder.Bitmap = bitmap;
 
 // Example Marker for London
-    var marker = new Marker(proj.FromWgs84(new MapPos(-0.8164, 51.2383)), markersStyleBuilder.BuildStyle());
-    dataSource.Add(marker);
+var marker = new Marker(proj.FromWgs84(new MapPos(-0.8164, 51.2383)), markersStyleBuilder.BuildStyle());
+dataSource.Add(marker);
 
-  {% endhighlight %}
-  </div>
-</div>
+</pre>
 
 <br></br>**Tip:** See [mobile-dotnet-samples](https://github.com/CartoDB/mobile-dotnet-samples/) sample project (solution: *hellomap-winphone.sln*) for other WP map actions, such as:
 
@@ -868,7 +749,7 @@ For mobile maps, each map layer is required to have a **DataSource**, which defi
 
 - `LocalVectorDataSource` stores data in memory and is used for adding vector objects to the map, per each user session
 
-**Tip:** For details about selecting different DataSources for your mobile map layers, see [Loading Mobile Data](/docs/carto-engine/mobile-sdk/developer-guide-to-sdk-features/#loading-mobile-data).
+**Tip:** For details about selecting different DataSources for your mobile map layers, see [Loading Mobile Data](/docs/carto-engine/mobile-sdk/loading-mobile-data/).
 
 ### Basemap
 
@@ -909,7 +790,7 @@ Basemaps apply the map background required for rendering data. Basemaps are requ
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight c# %}Projection proj = MapView.Options.BaseProjection;
+  {% highlight csharp %}Projection proj = MapView.Options.BaseProjection;
 
 // 1. Initialize an local vector data source
       LocalVectorDataSource vectorDataSource1 = new LocalVectorDataSource(proj);
@@ -1007,7 +888,7 @@ Add a marker and apply marker styling using the following code:
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight c# %}
+  {% highlight csharp %}
 
 // 1. Create marker style
       MarkerStyleBuilder markerStyleBuilder = new MarkerStyleBuilder();
@@ -1124,7 +1005,7 @@ Add a point and apply point styling using the following code:
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight c# %}
+  {% highlight csharp %}
 
 // 1. Set point position
       MapPos tallinn = proj.FromWgs84(new MapPos(24.646469, 59.426939));
@@ -1232,7 +1113,7 @@ Lines can be added to the same `vectorDataSource1`. Add a line and apply line st
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight c# %}
+  {% highlight csharp %}
 
 // 1. Create line style, and line poses
       var lineStyleBuilder = new LineStyleBuilder();
@@ -1376,7 +1257,7 @@ Add a polygon and apply polygon styling using the following code. The following 
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight c# %}
+  {% highlight csharp %}
 
 // 1. Create polygon style and poses
       PolygonStyleBuilder polygonStyleBuilder = new PolygonStyleBuilder();
@@ -1549,7 +1430,7 @@ Add text and apply text styling using the following code.
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight c# %}
+  {% highlight csharp %}
 
 // 1. Create text style
       TextStyleBuilder textStyleBuilder = new TextStyleBuilder();
@@ -1666,7 +1547,7 @@ A BalloonPopup appears based on click event of an object. You can also add a def
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight c# %}
+  {% highlight csharp %}
 
 // Android
       Bitmap androidInfoBitmap = BitmapFactory.DecodeResource(Resources, HelloMap.Resource.Drawable.info);
@@ -1815,7 +1696,7 @@ The following procedure describes how to setup and add a 3D object to your mobil
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight c# %}
+  {% highlight csharp %}
 
       var file = AssetUtils.LoadAsset("fcd_auto.nml");
 
@@ -1912,7 +1793,7 @@ The following code describes how to adjust the `LocalVectorDataSource` performan
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight c# %}
+  {% highlight csharp %}
 
 var vectorDataSource2 = new LocalVectorDataSource(proj, LocalSpatialIndexType.LocalSpatialIndexTypeKdtree);
 
@@ -1970,7 +1851,7 @@ All this is can be applied with just one line of code - as shown in the followin
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight c# %}vectorDataSource2.GeometrySimplifier = new DouglasPeuckerGeometrySimplifier(1.0f / 320.0f);
+  {% highlight csharp %}vectorDataSource2.GeometrySimplifier = new DouglasPeuckerGeometrySimplifier(1.0f / 320.0f);
 
   {% endhighlight %}
   </div>
