@@ -44,18 +44,18 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
     <li class="Tab js-Tabpanes-navItem--lang is-active">
       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
   // imports omitted...
@@ -172,7 +172,7 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight c# %}
 
   public class MapListener : MapEventListener
@@ -237,7 +237,7 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
   #import &lt;CartoMobileSDK/CartoMobileSDK.h&lt;
@@ -318,7 +318,7 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -335,37 +335,37 @@ Apply the following code to initialize listener events for map clicks.
     <li class="Tab js-Tabpanes-navItem--lang is-active">
       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}mapView.setMapEventListener(new MyMapEventListener(mapView, vectorDataSource));
 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight c# %}MapView.MapEventListener = new MapListener (dataSource);
 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}MyMapEventListener* mapListener = [[MyMapEventListener alloc] init];
   [self setMapEventListener:mapListener];
 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -420,18 +420,18 @@ Clusters are generated dynamically, based on `VectorDataSource` data that loads 
     <li class="Tab js-Tabpanes-navItem--lang is-active">
       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
 // 1. Initialize a local vector data source
@@ -450,7 +450,7 @@ Clusters are generated dynamically, based on `VectorDataSource` data that loads 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight c# %}var proj = new EPSG3857();
 
 // 1. Create overlay layer for markers
@@ -467,7 +467,7 @@ Clusters are generated dynamically, based on `VectorDataSource` data that loads 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
 // 1. Initialize a local vector data source
@@ -489,7 +489,7 @@ Clusters are generated dynamically, based on `VectorDataSource` data that loads 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -508,18 +508,18 @@ The Cluster Element Builder takes set of original markers (map objects) as input
     <li class="Tab js-Tabpanes-navItem--lang is-active">
       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}private class MyClusterElementBuilder extends ClusterElementBuilder {
 
         @SuppressLint("UseSparseArrays")
@@ -569,7 +569,7 @@ The Cluster Element Builder takes set of original markers (map objects) as input
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight c# %}public class MyClusterElementBuilder : ClusterElementBuilder
   {
     BalloonPopupStyleBuilder balloonPopupStyleBuilder;
@@ -594,7 +594,7 @@ The Cluster Element Builder takes set of original markers (map objects) as input
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
     // .h
@@ -668,7 +668,7 @@ The Cluster Element Builder takes set of original markers (map objects) as input
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -716,18 +716,18 @@ This example uses only one geographical coordinate. The building size is known, 
     <li class="Tab js-Tabpanes-navItem--lang is-active">
       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}com.carto.graphics.Bitmap overlayBitmap = BitmapUtils.loadBitmapFromAssets("jefferson-building-ground-floor.jpg");
 
 // 1. Create two vector containing geographical positions and corresponding raster image pixel coordinates
@@ -764,8 +764,8 @@ This example uses only one geographical coordinate. The building size is known, 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight c# %}var overlayBitmap = BitmapUtils.LoadBitmapFromAssets("jefferson-building-ground-floor.jpg");
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  {% highlight csharp %}var overlayBitmap = BitmapUtils.LoadBitmapFromAssets("jefferson-building-ground-floor.jpg");
 
 // 1. Create two vector geographical positions, and corresponding raster image pixel coordinates
       var pos = proj.FromWgs84(new MapPos(-77.004590, 38.888702));
@@ -803,7 +803,7 @@ This example uses only one geographical coordinate. The building size is known, 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
 // 1. Load ground overlay bitmap
@@ -844,7 +844,7 @@ This example uses only one geographical coordinate. The building size is known, 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}

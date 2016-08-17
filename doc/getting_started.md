@@ -348,7 +348,7 @@ If using iOS as the mobile platform, follow this implementation procedure.
   -  Implement **ViewController.h** to extend **GLKViewController**, instead of
     UIViewController
 
-  - You must replace `YOUR_LICENSE_KEY` with your [Mobile Apps and API Key](/docs/carto-engine/mobile-sdk/mobile-apps-and-api-keys/#mobile-apps-and-api-keys) in the code below
+  - You must replace `YOUR_LICENSE_KEY` with your [Mobile Apps and API Key](#registering-your-mobile-app) in the code below
 
 <pre class="brush: objc">
 <pre class="brush: objc">
@@ -401,7 +401,7 @@ If using iOS as the mobile platform, follow this implementation procedure.
 
   - From Navigator window, select **Identity Inspector**, change the first parameter (Custom Class) to **NTMapView** (from the default UIView).
 
-  <span class="wrap-border"><img src="{{ site.baseurl }}/img/layout/mobile/xcode_storyboard.jpg" alt="Xcode storyboard" /></span>
+  <span class="wrap-border"><img src="/docs/img/layout/mobile/xcode_storyboard.jpg" alt="Xcode storyboard" /></span>
 
 4) Run the iOS app
 
@@ -694,7 +694,7 @@ private Carto.Ui.MapView mapView;
 
 #### Add a Marker (WP)
 
-To create a map marker at a defined coordinate on a Windows Phone mobile app, add following code (after creating a [MapView](basic-map-features).
+To create a map marker at a defined coordinate on a Windows Phone mobile app, add following code (after creating a [MapView](#basic-map-features).
 
 **Note:** You must have an *Icon.png* bitmap, located in the Assets folder of your project
 
@@ -717,6 +717,7 @@ var marker = new Marker(proj.FromWgs84(new MapPos(-0.8164, 51.2383)), markersSty
 dataSource.Add(marker);
 
 </pre>
+</div>
 
 <br></br>**Tip:** See [mobile-dotnet-samples](https://github.com/CartoDB/mobile-dotnet-samples/) sample project (solution: *hellomap-winphone.sln*) for other WP map actions, such as:
 

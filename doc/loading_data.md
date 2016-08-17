@@ -14,21 +14,21 @@ For raster data, use [MBTiles](https://github.com/mapbox/mbtiles-spec) format fi
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
+     <li class="Tab js-Tabpanes-navItem--lang is-active">
       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}MBTilesTileDataSource tileDataSource = new MBTilesTileDataSource(filePath);
     TileLayer rasterLayer = new RasterTileLayer(tileDataSource);
 
@@ -37,14 +37,14 @@ For raster data, use [MBTiles](https://github.com/mapbox/mbtiles-spec) format fi
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}var mbTilesLayer = new RasterTileLayer(new MBTilesTileDataSource(filePath));
       MapView.Layers.Add(mbTilesLayer);
 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}NSString* fullpathVT = [[NSBundle mainBundle] pathForResource:@"MBTILESFILENAME" ofType:@"mbtiles"];
    NTTileDataSource* tileDataSource = [[NTMBTilesTileDataSource alloc] initWithPath: fullpathVT];
 
@@ -57,7 +57,7 @@ For raster data, use [MBTiles](https://github.com/mapbox/mbtiles-spec) format fi
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -79,21 +79,21 @@ Use the following code to use MBtiles for a vector layer:
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
 // 1. Create tile data source from mbtiles file
@@ -115,7 +115,7 @@ Use the following code to use MBtiles for a vector layer:
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 
 // 1. Create tile data source from mbtiles file
@@ -137,7 +137,7 @@ Use the following code to use MBtiles for a vector layer:
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}NSString* fullpathVT = [[NSBundle mainBundle] pathForResource:@"estonia_ntvt" ofType:@"mbtiles"];
     NTTileDataSource* tileDataSource = [[NTMBTilesTileDataSource alloc] initWithMinZoom:0 maxZoom:4 path: fullpathVT];
     
@@ -158,7 +158,7 @@ Use the following code to use MBtiles for a vector layer:
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -201,21 +201,21 @@ The Mobile SDK contains built-in vector tiles, as provided by CARTO maps as a se
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}BinaryData styleAsset = AssetUtils.loadAsset("nutibright-v2a.zip");
         VectorTileLayer baseLayer = new CartoOnlineVectorTileLayer("nutiteq.osm", new ZippedAssetPackage(styleAsset));
 
@@ -224,7 +224,7 @@ The Mobile SDK contains built-in vector tiles, as provided by CARTO maps as a se
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}var styleAsset = AssetUtils.LoadAsset("nutibright-v2a.zip");
       var baseLayer = new CartoOnlineVectorTileLayer("nutiteq.osm", new ZippedAssetPackage(styleAsset));
       
@@ -233,7 +233,7 @@ The Mobile SDK contains built-in vector tiles, as provided by CARTO maps as a se
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}NTBinaryData* styleData = [NTAssetUtils loadAsset:@"nutibright-v3.zip"];
     NTAssetPackage* assetPackage = [[NTZippedAssetPackage alloc] initWithZipData:styleData];
     NTVectorTileLayer* vectorTileLayer = [[NTCartoOnlineVectorTileLayer alloc] initWithSource: @"nutiteq.osm" styleAssetPackage:assetPackage];
@@ -243,7 +243,7 @@ The Mobile SDK contains built-in vector tiles, as provided by CARTO maps as a se
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -263,21 +263,21 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
 // 1. Define data source
@@ -299,7 +299,7 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 
 // 1. Define data source
@@ -321,7 +321,7 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
 // 1. Define data source
@@ -344,7 +344,7 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -361,21 +361,21 @@ yflipped, quadkey**.
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}TileDataSource baseRasterTileDataSource = new HTTPTileDataSource(1, 19, "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US");
 
         TileLayer baseLayer = new RasterTileLayer(baseRasterTileDataSource);
@@ -385,7 +385,7 @@ yflipped, quadkey**.
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 
 // 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
@@ -410,7 +410,7 @@ yflipped, quadkey**.
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -436,21 +436,21 @@ There are some DataSources which can use another DataSource as input, and apply 
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
 // 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
@@ -467,7 +467,7 @@ There are some DataSources which can use another DataSource as input, and apply 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 
 // 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
@@ -484,7 +484,7 @@ There are some DataSources which can use another DataSource as input, and apply 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
 // 1. Initialize a OSM raster data source from MapQuest Open Tiles
@@ -502,7 +502,7 @@ There are some DataSources which can use another DataSource as input, and apply 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -560,21 +560,21 @@ The DataSource constructor uses the following URL patterns. It requires a minimu
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}String url = "http://your-url-with-placeholders-see-below";
       TileDataSource tileDataSource = new HTTPTileDataSource(0, 18, url);
       RasterTileLayer layer = new RasterTileLayer(tileDataSource);
@@ -582,7 +582,7 @@ The DataSource constructor uses the following URL patterns. It requires a minimu
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}string url = "http://your-url-with-placeholders-see-below";
     TileDataSource tileDataSource = new HTTPTileDataSource(0, 18, url);
     RasterTileLayer layer = new RasterTileLayer(tileDataSource);
@@ -590,7 +590,7 @@ The DataSource constructor uses the following URL patterns. It requires a minimu
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}NSString* url = @"http://your-url-with-placeholders-see-below";
     NTHTTPTileDataSource *source = [[NTHTTPTileDataSource alloc]initWithMinZoom:0 maxZoom:18 baseURL:url];
     NTRasterTileLayer *layer = [[NTRasterTileLayer alloc]initWithDataSource:source];
@@ -598,7 +598,7 @@ The DataSource constructor uses the following URL patterns. It requires a minimu
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
