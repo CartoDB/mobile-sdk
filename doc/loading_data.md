@@ -2,7 +2,7 @@
 
 The following DataSources are available for the Mobile SDK, and are supported on all mobile platforms.
 
-**Note:** Some DataSources are more generic and can be used for different data types and map layers (vector or raster). Others can only be applied for specific layer types.
+**Note:** Some DataSources are more generic and can be used for different data types and map layers (vector or raster). Others can only be applied for specific layer types.Some DataSources may be not available for free or open source SDK versions, and require Enterprise package.
 
 ## Offline Maps from MBTiles
 
