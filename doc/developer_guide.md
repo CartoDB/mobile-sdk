@@ -854,20 +854,19 @@ This example uses only one geographical coordinate. The building size is known, 
 
 ## Vector Styles
 
-The free mobile SDK package allows to select one of pre-defined and built-in base map styles when base map is created:
+When you create a basemap, the Mobile SDK package enables you to select one of our pre-defined, built-in basemap styles:
 
  * CARTO_BASEMAP_STYLE_DEFAULT - general street map
  * CARTO_BASEMAP_STYLE_DARK - CARTO Dark Matter style
  * CARTO_BASEMAP_STYLE_GRAY - CARTO Positron style
 
-For the Enterprise package you can custommize base map styling. You can set the colors, transparency, line styles (width, patterns, casings, endings), polygon patterns, icons, text placements, fonts and many other vector data parameters. 
+For the Enterprise account plans,  you can customize basemap styling by setting the colors, transparency, line styles (width, patterns, casings, endings), polygon patterns, icons, text placements, fonts, and other vector data parameters. 
 
-CARTO uses [Mapnik](http://mapnik.org) XML style description language for customizing the visual style of vector tiles. Our styling is optimized for mobile and contain some unique style parameters, while ignoring some others. In general, you can reuse your existing Mapnik XML, or CartoCSS, styling files and tools (such as TileMill/Mapbox Studio).
+CARTO uses [Mapnik](http://mapnik.org) XML style description language for customizing the visual style of vector tiles. Our styling is optimized for mobile and contain some unique style parameters. In general, you can reuse your existing Mapnik XML, or CartoCSS, styling files and tools (such as TileMill/Mapbox Studio).
 
-Vector styling is applied in the mobile client, where the style files are bundled with the application installer. The application can change the styling anytime, without reloading vector map data. This enables your to download map data once, and change styling from "day mode" to "night mode" with no new downloads.
+Vector styling is applied in the mobile client, where the style files are bundled with the application installer. The application can change the styling anytime, without reloading vector map data. This enables you to download map data once, and change styling from "day mode" to "night mode" with no new downloads.
 
 CARTO map rendering implementation is intended for real-time rendering. As a result, several limitations apply.
-
 
 ### Mapnik Style Format
 

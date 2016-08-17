@@ -41,7 +41,7 @@ These SDK libraries are managed by CARTO and include all the required libraries 
   <div class="Carousel-item js-Tabpanes-item is-active">
   {% highlight groovy %}
 
-// 1. Add following to your project "build.gradle" file:
+// 1. Add the following to your project "build.gradle" file:
 
 allprojects {
     repositories {
@@ -55,7 +55,7 @@ allprojects {
     }
 }
 
-// 2. Add following to your module "build.gradle":
+// 2. Add the following to your module "build.gradle":
 
 dependencies {
     compile 'com.carto:carto-mobile-sdk:snapshot@aar'
@@ -67,7 +67,7 @@ dependencies {
   <div class="Carousel-item js-Tabpanes-item">
   {% highlight groovy %}
 
-// Download and install the iOS SDK package from
+// Download and install the iOS SDK package from from:
 
 url "https://nutifront.s3.amazonaws.com/sdk_snapshots/sdk4-ios-snapshot-latest.zip"
 
@@ -93,7 +93,7 @@ url "https://www.nuget.org/packages/CartoMobileSDK/"
   <div class="Carousel-item js-Tabpanes-item">
   {% highlight groovy %}
 
-// Windows Phone 10 SDK is not yet public - please contact mobile-support@carto.com if you are interested
+// Windows Phone 10 SDK is not yet public. Please contact mobile-support@carto.com if you are interested.
 
 {% endhighlight %}
 
@@ -112,7 +112,7 @@ _**Note:** The current version, 4.0.0, is a beta release. These zip files are su
 
 - Xamarin: there is no individual download package for Xamarin, download [nuget](https://www.nuget.org/packages/CartoMobileSDK/) instead
 
-- Windows Phone: please ask from mobile-support@carto.com if you are interested
+- Windows Phone: please [contact us](@mailto:mobile-support@carto.com) if you are interested
 
 ## Registering your Mobile App
 
@@ -227,11 +227,11 @@ Once a mobile application is saved, you cannot edit the Platform setting. As an 
 
 Once your mobile apps are registered and you have your API Keys, it is recommended to familiarize yourself with the setup for the platform that you are using. Some of these platforms contain unique map features that are only available based on the mobile platform. You can then use sample mobile apps and add basic and advanced map features.
 
-### Android minimal map
+### Android Implementation
 
 If using Android as the mobile platform, follow this implementation procedure.
 
-1) Add following to the `build.gradle` of your project:
+1) Add the following to the `build.gradle` of your project:
 
 {% highlight groovy %}
 allprojects {
@@ -300,7 +300,7 @@ dependencies {
 
   - Define the first layer of the map, which will be the basemap layer. This is a vector map layer, which requires that you load and define styles in the assets of this layer. You can also add other map layers once a basemap is configured
 
-#### Example - Android code
+#### Example - Android Code
 
 The following example shows the complete code for initializing your Android mobile map.
 
@@ -324,9 +324,9 @@ The following example shows the complete code for initializing your Android mobi
     }
 {% endhighlight %}
 
-You can now start using the application on your phone and view the default base map.
+You can now start using the application on your phone and view the default basemap.
 
-### iOS minimal map
+### iOS Implementation
 
 If using iOS as the mobile platform, follow this implementation procedure.
 
@@ -424,7 +424,7 @@ If using iOS as the mobile platform, follow this implementation procedure.
   [mapView setRotation:0 durationSeconds:0];
 {% endhighlight %}
 
-### Xamarin (Android and iOS) minimal map
+### Xamarin (Android and iOS) Implementation
 
 If using Xamarin as the mobile platform, follow these implementation procedures for Xamarin (Android) and Xamarin (iOS).
 
@@ -614,7 +614,7 @@ If using Windows Phone as the mobile platform, follow this implementation proced
 
 _**Note:** The mobile development team is still testing Windows Phone implementation with the Mobile SDK._ Please [contact us](mailto:support@carto.com) if you run into any issues.
 
-1. Install SDK VSIX pacakge (ask from mobile-support@carto.com now) from Windows
+1. Install SDK VSIX package for Windows (*Request this package from [CARTO Mobile support](mailto:mobile-support@carto.com))
 
     The following requirements are mandatory:
 
@@ -1371,7 +1371,7 @@ Add a polygon and apply polygon styling using the following code. The following 
   
 </div>
 
-#### Example Polygon on a Mobile app
+#### Example Polygon on a Mobile App
 
 ![polygon](https://dl.dropboxusercontent.com/u/3573333/public_web/developersite/polygon.png)
 

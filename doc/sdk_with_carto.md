@@ -1,6 +1,6 @@
-# SDK and CARTO Platform
+# SDK and other CARTO Tools
 
-You can use the CARTO APIs and platform to define maps and consume these directly on mobile apps via SDK. 
+You can use the CARTO APIs to define specific mobile features and rendering parameters. Additionally, you can use the CARTO Builder to publish mobile maps for integration with your mobile app
 
 ## SDK and CARTO APIs
 
@@ -19,9 +19,9 @@ If you are using other CARTO Engines, you can automatically define mobile map fe
 
 3) Integrate with the [SQL API](/docs/carto-engine/sql-api/) for accessing database
 
-  `CartoSQLService` is a high-level interface for CARTO SQL Service. The mobile service can be used to query data from CARTO databases using explicit SQL queries. Note that this can be used for public datasets only.
+  `CartoSQLService` is a high-level interface for the CARTO SQL Service. The mobile service can be used to query data from CARTO databases using explicit SQL queries. _Note that this is only available for Public datasets._
 
-## Loading CARTO Map data to Mobile
+## Loading CARTO Map Data to Mobile Apps
 
 You can also manage mobile rendering by defining how mobile features load with the CARTO APIs and with the CARTO Builder. For example:
 
@@ -57,7 +57,7 @@ This high-level workflow describes how to prepare your mobile data for rendering
 
 ### App Integration
 
-In order to integrate your published mobile map into the app, you need a callback-based asynchronous process to request the viz.json.
+In order to integrate your published mobile map into your app, you need a callback-based asynchronous process to request the viz.json.
 
 1)  The following requirements are needed for app integration of a published CARTO Mobile SDK map:
 
