@@ -5,12 +5,13 @@ This file is for reference purposes only. It is intended for tracking the Mobile
 ## Documentation
 
 * [Getting Started](getting_started.md)
-* [Downloads](downloads.md)
-* [Sample Apps](sampleapps.md)
-* [Common App development tasks](common_tasks.md)
-* [CARTO Engine integration](carto.md)
-* [More advanced tasks](advanced.md)
-* [Extension features](proextensions.md)
-* [Offline Package listing](offline_packages.md)
-* [API Reference](api_reference.md)
+* [SDK and other CARTO Tools](sdk_with_carto.md)
+* [Loading Data](loading_data.md)
+* [Developer Guide to SDK Features](developer_guide.md)
+* [Mobile Routing](routing.md)
+* [Offline Maps](offline_maps.md)
+* [API References](api_reference.md)
  
+Currently not being pulled into live docs: will be added for a future release
+
+* [Extension features](proextensions.md)
