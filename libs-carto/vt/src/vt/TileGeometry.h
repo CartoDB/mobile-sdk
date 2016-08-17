@@ -37,8 +37,9 @@ namespace carto { namespace vt {
             std::shared_ptr<const BitmapPattern> pattern;
             boost::optional<cglib::mat3x3<float>> transform;
             CompOp compOp;
+            PointOrientation pointOrientation;
 
-            StyleParameters() : parameterCount(0), colorTable(), opacityTable(), widthTable(), pattern(), transform(), compOp(CompOp::SRC_OVER) { }
+            StyleParameters() : parameterCount(0), colorTable(), opacityTable(), widthTable(), pattern(), transform(), compOp(CompOp::SRC_OVER), pointOrientation(PointOrientation::POINT) { }
         };
 
         struct GeometryLayoutParameters {

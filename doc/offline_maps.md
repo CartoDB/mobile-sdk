@@ -74,21 +74,21 @@ Use the following steps to implement **single map package** downloading:
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
+     <li class="Tab js-Tabpanes-navItem--lang is-active">
       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
        <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
 // 1. Register license, this must be done before PackageManager can be used!
@@ -110,7 +110,7 @@ Use the following steps to implement **single map package** downloading:
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 
 // Android: Register license, this must be done before PackageManager can be used!
@@ -153,7 +153,7 @@ Use the following steps to implement **single map package** downloading:
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
 // Create folder for package manager files. Package manager needs persistent writable folder.
@@ -172,7 +172,7 @@ Use the following steps to implement **single map package** downloading:
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -184,21 +184,21 @@ Use the following steps to implement **single map package** downloading:
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
        <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+ <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
    
 // PackageListener.java :
@@ -246,7 +246,7 @@ Use the following steps to implement **single map package** downloading:
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 
   public class PackageListener : PackageManagerListener
@@ -313,7 +313,7 @@ Use the following steps to implement **single map package** downloading:
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
   /*
@@ -385,7 +385,7 @@ Use the following steps to implement **single map package** downloading:
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -402,21 +402,21 @@ The following starts download of map of Estonia. See [list of available packages
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
        <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
   @Override
@@ -429,7 +429,7 @@ The following starts download of map of Estonia. See [list of available packages
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 
   public override void OnPackageListUpdated ()
@@ -447,7 +447,7 @@ The following starts download of map of Estonia. See [list of available packages
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
   - (void)onPackageListUpdated
@@ -460,7 +460,7 @@ The following starts download of map of Estonia. See [list of available packages
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -478,21 +478,21 @@ Bounding box is defined using the following format **bbox(lonMin,latMin,lonMax,l
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
+     <li class="Tab js-Tabpanes-navItem--lang is-active">
       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
        <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
 // London (about 30MB)
@@ -504,7 +504,7 @@ Bounding box is defined using the following format **bbox(lonMin,latMin,lonMax,l
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 
 // London (about 30MB)
@@ -516,7 +516,7 @@ Bounding box is defined using the following format **bbox(lonMin,latMin,lonMax,l
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
 // Get London greater area, near maximum area package size
@@ -525,7 +525,7 @@ Bounding box is defined using the following format **bbox(lonMin,latMin,lonMax,l
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -539,21 +539,21 @@ This special Vector Tile Data Source must be used: **PackageManagerTileDataSourc
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
        <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
 // 1. Create layer with vector styling
@@ -578,7 +578,7 @@ This special Vector Tile Data Source must be used: **PackageManagerTileDataSourc
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 
 // Define styling for vector map
@@ -603,7 +603,7 @@ This special Vector Tile Data Source must be used: **PackageManagerTileDataSourc
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
 // 1. Load vector tile styleset
@@ -634,7 +634,7 @@ This special Vector Tile Data Source must be used: **PackageManagerTileDataSourc
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}

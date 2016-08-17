@@ -57,7 +57,7 @@ namespace carto { namespace mvt {
         std::shared_ptr<const vt::FloatFunction> opacityFunc;
         ExpressionFunctionBinder<float>().bind(&opacityFunc, std::make_shared<ConstExpression>(Value(fillOpacity))).update(exprContext);
 
-        vt::PointStyle style(compOp, fillFunc, opacityFunc, widthFunc, symbolizerContext.getGlyphMap(), bitmap, boost::optional<cglib::mat3x3<float>>());
+        vt::PointStyle style(compOp, vt::PointOrientation::POINT, fillFunc, opacityFunc, widthFunc, symbolizerContext.getGlyphMap(), bitmap, boost::optional<cglib::mat3x3<float>>());
 
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
             if (auto pointGeometry = std::dynamic_pointer_cast<const PointGeometry>(featureCollection.getGeometry(index))) {
