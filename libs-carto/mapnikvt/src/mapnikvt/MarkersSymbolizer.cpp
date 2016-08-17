@@ -2,6 +2,7 @@
 #include "ParserUtils.h"
 #include "vt/BitmapCanvas.h"
 
+#include <boost/optional.hpp>
 #include <boost/lexical_cast.hpp>
 
 namespace carto { namespace mvt {
@@ -16,11 +17,6 @@ namespace carto { namespace mvt {
         vt::LabelOrientation placement = convertLabelPlacement(_placement);
         if (_transformExpression) { // if rotation transform is explicitly defined, use point placement
             if (containsRotationTransform(_transformExpression->evaluate(exprContext))) {
-                placement = vt::LabelOrientation::POINT;
-            }
-        }
-        if (_placement == "point") {
-            if (_allowOverlap) { // if overlap is allowed, use point placement
                 placement = vt::LabelOrientation::POINT;
             }
         }
@@ -87,31 +83,44 @@ namespace carto { namespace mvt {
             fillOpacity = 1.0f;
         }
 
+        boost::optional<vt::PointStyle> pointStyle;
+
         float bitmapSize = static_cast<float>(std::max(bitmap->width * bitmapScaleX, bitmap->height * bitmapScaleY));
-        vt::BitmapLabelStyle style(placement, vt::Color(0xffffffff) * fillOpacity, symbolizerContext.getFontManager()->getNullFont(), bitmap, _transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1)));
+        vt::BitmapLabelStyle labelStyle(placement, vt::Color(0xffffffff) * fillOpacity, symbolizerContext.getFontManager()->getNullFont(), bitmap, _transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1)));
         int groupId = (_allowOverlap ? -1 : 0);
 
-        std::unique_ptr<vt::PointStyle> pointStyle;
-        if (_allowOverlap && placement == vt::LabelOrientation::POINT) {
-            std::shared_ptr<const vt::FloatFunction> widthFunc;
-            ExpressionFunctionBinder<float>().bind(&widthFunc, std::make_shared<ConstExpression>(Value(_width))).update(exprContext);
-            std::shared_ptr<const vt::ColorFunction> fillFunc;
-            ExpressionFunctionBinder<vt::Color>().bind(&fillFunc, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), [this](const Value& val) -> vt::Color {
-                return convertColor(val);
-            }).update(exprContext);
-            std::shared_ptr<const vt::FloatFunction> opacityFunc;
-            ExpressionFunctionBinder<float>().bind(&opacityFunc, std::make_shared<ConstExpression>(Value(fillOpacity))).update(exprContext);
-
-            pointStyle = std::unique_ptr<vt::PointStyle>(new vt::PointStyle(compOp, fillFunc, opacityFunc, widthFunc, symbolizerContext.getGlyphMap(), bitmap, _transform));
-        }
-
         auto addPoints = [&](long long id, const std::vector<cglib::vec2<float>>& vertices) {
-            if (pointStyle) {
-                layerBuilder.addPoints(vertices, *pointStyle);
+            if (_allowOverlap) {
+                if (!pointStyle) {
+                    std::shared_ptr<const vt::FloatFunction> widthFunc;
+                    ExpressionFunctionBinder<float>().bind(&widthFunc, std::make_shared<ConstExpression>(Value(_width * fontScale))).update(exprContext);
+                    std::shared_ptr<const vt::ColorFunction> fillFunc;
+                    ExpressionFunctionBinder<vt::Color>().bind(&fillFunc, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), [this](const Value& val) -> vt::Color {
+                        return convertColor(val);
+                    }).update(exprContext);
+                    std::shared_ptr<const vt::FloatFunction> opacityFunc;
+                    ExpressionFunctionBinder<float>().bind(&opacityFunc, std::make_shared<ConstExpression>(Value(fillOpacity))).update(exprContext);
+
+                    vt::PointOrientation orientation;
+                    switch (placement) {
+                    case vt::LabelOrientation::BILLBOARD_2D:
+                        orientation = vt::PointOrientation::BILLBOARD_2D;
+                        break;
+                    case vt::LabelOrientation::BILLBOARD_3D:
+                        orientation = vt::PointOrientation::BILLBOARD_3D;
+                        break;
+                    default: // LabelOrientation::POINT, LabelOrientation::POINT_FLIPPING, LabelOrientation::LINE
+                        orientation = vt::PointOrientation::POINT;
+                        break;
+                    }
+
+                    pointStyle = vt::PointStyle(compOp, orientation, fillFunc, opacityFunc, widthFunc, symbolizerContext.getGlyphMap(), bitmap, _transform * cglib::scale3_matrix(cglib::vec3<float>(1.0f, (bitmap->height * bitmapScaleY) / (bitmap->width * bitmapScaleX), 1)));
+                }
+                layerBuilder.addPoints(vertices, pointStyle.get());
             }
             else {
                 for (const auto& vertex : vertices) {
-                    layerBuilder.addBitmapLabel(id, groupId, vertex, 0, style);
+                    layerBuilder.addBitmapLabel(id, groupId, vertex, 0, labelStyle);
                 }
             }
         };
@@ -129,7 +138,7 @@ namespace carto { namespace mvt {
                     for (const auto& vertices : lineGeometry->getVerticesList()) {
                         if (_spacing <= 0) {
                             long long id = getBitmapId(featureId, file);
-                            layerBuilder.addBitmapLabel(id, groupId, vertices, 0, style);
+                            layerBuilder.addBitmapLabel(id, groupId, vertices, 0, labelStyle);
                             continue;
                         }
 
@@ -152,11 +161,11 @@ namespace carto { namespace mvt {
                                     dirTransform(1, 0) = dir(1);
                                     dirTransform(1, 1) = dir(0);
 
-                                    style.placement = vt::LabelOrientation::POINT;
-                                    style.transform = dirTransform * _transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1));
+                                    labelStyle.placement = vt::LabelOrientation::POINT;
+                                    labelStyle.transform = dirTransform * _transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1));
 
                                     long long id = getMultiBitmapId(featureId, file);
-                                    layerBuilder.addBitmapLabel(id, groupId, pos, 0, style);
+                                    layerBuilder.addBitmapLabel(id, groupId, pos, 0, labelStyle);
                                 }
 
                                 linePos += _spacing + bitmapSize;

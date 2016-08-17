@@ -29,13 +29,14 @@ namespace carto { namespace vt {
             return;
         }
         
-        if (_builderParameters.type != TileGeometry::Type::POINT || _builderParameters.glyphMap != style.glyphMap || _styleParameters.transform != style.transform || _styleParameters.compOp != style.compOp || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
+        if (_builderParameters.type != TileGeometry::Type::POINT || _builderParameters.glyphMap != style.glyphMap || _styleParameters.transform != style.transform || _styleParameters.compOp != style.compOp || _styleParameters.pointOrientation != style.orientation || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
             appendGeometry();
         }
         _builderParameters.type = TileGeometry::Type::POINT;
         _builderParameters.glyphMap = style.glyphMap;
         _styleParameters.transform = style.transform;
         _styleParameters.compOp = style.compOp;
+        _styleParameters.pointOrientation = style.orientation;
         GlyphMap::GlyphId glyphId = style.glyphMap->loadBitmapGlyph(style.bitmap, 0);
         int styleIndex = _styleParameters.parameterCount;
         while (--styleIndex >= 0) {

@@ -123,8 +123,9 @@ namespace {
         #ifdef PATTERN
         uniform float uUVScale;
         #endif
-        uniform float uBinormalScale;
-        uniform float uHalfResolution;
+        uniform mat4 uTileMatrix;
+        uniform vec3 uXAxis;
+        uniform vec3 uYAxis;
         #ifdef TRANSFORM
         uniform mat3 uTransformMatrix;
         #endif
@@ -138,13 +139,11 @@ namespace {
 
         void main(void) {
             int styleIndex = int(aVertexAttribs[0]);
-            float width = uWidthTable[styleIndex] * uHalfResolution;
-            vec2 binormal = vec2(aVertexAttribs[1], aVertexAttribs[2]);
+            vec2 xy = vec2(aVertexAttribs[1], aVertexAttribs[2]) * uWidthTable[styleIndex];
         #ifdef TRANSFORM
-            vec3 pos = vec3(vec2(uTransformMatrix * vec3(aVertexPosition, 1.0)) + uBinormalScale * width * binormal, 0.0);
-        #else
-            vec3 pos = vec3(aVertexPosition + uBinormalScale * width * binormal, 0.0);
+            xy = vec2(uTransformMatrix * vec3(xy, 1.0));
         #endif
+            vec3 pos = vec3(uTileMatrix * vec4(aVertexPosition, 0.0, 1.0)) + xy[0] * uXAxis + xy[1] * uYAxis;
             vColor = uColorTable[styleIndex];
         #ifdef PATTERN
             vUV = uUVScale * aVertexUV;
@@ -1510,9 +1509,32 @@ namespace carto { namespace vt {
                 float width = 0.5f * (*styleParams.widthTable[i])(_viewState) * geometry->getGeometryScale() / geometry->getTileSize();
                 widths[i] = width;
             }
-            glUniform1f(glGetUniformLocation(shaderProgram, "uBinormalScale"), geometryLayoutParams.vertexScale / (_halfResolution * std::pow(2.0f, _zoom - tileId.zoom)));
             glUniform1fv(glGetUniformLocation(shaderProgram, "uWidthTable"), styleParams.parameterCount, widths.data());
-            glUniform1f(glGetUniformLocation(shaderProgram, "uHalfResolution"), _halfResolution);
+
+            cglib::vec3<float> xAxis, yAxis;
+            switch (styleParams.pointOrientation) {
+            case PointOrientation::BILLBOARD_2D:
+                xAxis = _viewState.orientation[0];
+                yAxis = cglib::vector_product(cglib::vec3<float>(0, 0, 1), xAxis);
+                break;
+            case PointOrientation::BILLBOARD_3D:
+                xAxis = _viewState.orientation[0];
+                yAxis = _viewState.orientation[1];
+                break;
+            case PointOrientation::POINT:
+                xAxis = cglib::vec3<float>(1, 0, 0);
+                yAxis = cglib::vec3<float>(0, 1, 0);
+                break;
+            }
+            xAxis = xAxis * _viewState.scale;
+            yAxis = -yAxis * _viewState.scale;
+            glUniform3fv(glGetUniformLocation(shaderProgram, "uXAxis"), 1, xAxis.data());
+            glUniform3fv(glGetUniformLocation(shaderProgram, "uYAxis"), 1, yAxis.data());
+
+            cglib::mat4x4<float> tileMatrix = cglib::mat4x4<float>::convert(cglib::translate4_matrix(-_viewState.origin) * calculateTileMatrix(tileId, 1.0f / geometryLayoutParams.vertexScale));
+            glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "uTileMatrix"), 1, GL_FALSE, tileMatrix.data());
+            cglib::mat4x4<float> mvpMatrix = cglib::mat4x4<float>::convert(_projectionMatrix * _labelMatrix);
+            glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "uMVPMatrix"), 1, GL_FALSE, mvpMatrix.data());
         }
         else if (geometry->getType() == TileGeometry::Type::LINE) {
             float gamma = 0.5f;

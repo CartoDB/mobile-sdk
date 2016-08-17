@@ -16,24 +16,17 @@
 namespace carto { namespace vt {
     class Color {
     public:
-        Color() {
-            _components[0] = _components[1] = _components[2] = _components[3] = 0;
-        }
+        Color() : _components{ 0, 0, 0, 0 } { }
         
-        explicit Color(unsigned int value) {
-            _components[0] = ((value >> 16) & 255) * (1.0f / 255.0f);
-            _components[1] = ((value >>  8) & 255) * (1.0f / 255.0f);
-            _components[2] = ((value >>  0) & 255) * (1.0f / 255.0f);
-            _components[3] = ((value >> 24) & 255) * (1.0f / 255.0f);
-        }
-        
-        explicit Color(float r, float g, float b, float a) {
-            _components[0] = r;
-            _components[1] = g;
-            _components[2] = b;
-            _components[3] = a;
-        }
+        explicit Color(float r, float g, float b, float a) : _components{ r, g, b, a } { }
 
+        explicit Color(unsigned int value) : _components{
+            ((value >> 16) & 255) * (1.0f / 255.0f),
+            ((value >>  8) & 255) * (1.0f / 255.0f),
+            ((value >>  0) & 255) * (1.0f / 255.0f),
+            ((value >> 24) & 255) * (1.0f / 255.0f)
+        } { }
+        
         float& operator [] (std::size_t i) {
             return _components[i];
         }
