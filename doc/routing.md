@@ -105,39 +105,39 @@ Online routing requires that you create a simple call and request to calculate t
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}_onlineRoutingService = [[NTCartoOnlineRoutingService alloc] initWithSource:@"nutiteq.osm.car"];
 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -153,21 +153,21 @@ These code samples display how to show navigation instructions on the map, as in
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}AsyncTask<Void, Void, RoutingResult> task = new AsyncTask<Void, Void, RoutingResult>() {
 
             protected RoutingResult doInBackground(Void... v) {
@@ -209,7 +209,7 @@ These code samples display how to show navigation instructions on the map, as in
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}ThreadPool.QueueUserWorkItem(delegate
     {
       MapPosVector poses = new MapPosVector();
@@ -239,7 +239,7 @@ These code samples display how to show navigation instructions on the map, as in
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
     // Set route start end end points
@@ -286,7 +286,7 @@ These code samples display how to show navigation instructions on the map, as in
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -298,33 +298,33 @@ These code samples display how to show navigation instructions on the map, as in
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
       <a href="#/0" class="js-Tabpanes-navLink">Android Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/1" class="js-Tabpanes-navLink">Xamarin</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}COMING SOON...{% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight xamarin %}COMING SOON...{% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}COMING SOON...{% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...{% endhighlight %}
   </div>
 </div>
@@ -343,21 +343,21 @@ For offline routing, you must download routing packages.  You can use the same *
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
 // Create PackageManager instance for dealing with offline packages
@@ -376,7 +376,7 @@ For offline routing, you must download routing packages.  You can use the same *
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 
 // Create PackageManager instance for dealing with offline packages
@@ -392,7 +392,7 @@ For offline routing, you must download routing packages.  You can use the same *
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
 // Define PackageManger to download offline routing packages
@@ -408,7 +408,7 @@ For offline routing, you must download routing packages.  You can use the same *
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -424,21 +424,21 @@ Routing package downloads cannot be started immediately, as the Mobile SDK needs
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}public class RoutePackageManagerListener extends PackageManagerListener {
     @Override
     public void onPackageListUpdated() {
@@ -481,7 +481,7 @@ Routing package downloads cannot be started immediately, as the Mobile SDK needs
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}public class RoutePackageManagerListener : PackageManagerListener
   {
     PackageManager packageManager;
@@ -531,7 +531,7 @@ Routing package downloads cannot be started immediately, as the Mobile SDK needs
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}@interface RoutePackageManagerListener : NTPackageManagerListener
 
     @property NTPackageManager* _packageManager;
@@ -588,7 +588,7 @@ Routing package downloads cannot be started immediately, as the Mobile SDK needs
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -606,21 +606,21 @@ To link PackageManagerListener with PackageManager (and to have a fully working 
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
 // 1. Set listener, and start PackageManager
@@ -636,7 +636,7 @@ To link PackageManagerListener with PackageManager (and to have a fully working 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 
 // 1. Create and set listener, and start PackageManager
@@ -653,7 +653,7 @@ To link PackageManagerListener with PackageManager (and to have a fully working 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"routing:nutiteq.osm.car" dataFolder:packagesDir];
     
 // 1. Create routePackageManagerListener with your listener class
@@ -675,7 +675,7 @@ To link PackageManagerListener with PackageManager (and to have a fully working 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}

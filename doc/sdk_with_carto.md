@@ -83,15 +83,15 @@ In order to integrate your published mobile map into the app, you need a callbac
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
        <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+      <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}private class MyCartoVisBuilder extends CartoVisBuilder {
 
         @Override
@@ -119,7 +119,7 @@ In order to integrate your published mobile map into the app, you need a callbac
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes">
+   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
       {% highlight objc %}@interface MyCartoVisBuilder : NTCartoVisBuilder
 
     @property NTMapView* mapView;
@@ -167,15 +167,15 @@ In order to integrate your published mobile map into the app, you need a callbac
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
+     <li class="Tab js-Tabpanes-navItem--lang is-active">
        <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
+    <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}private String visJSONURL = "http://documentation.carto.com/api/v2/viz/2b13c956-e7c1-11e2-806b-5404a6a683d5/viz.json";
 
   Thread thread = new Thread(new Runnable() {
@@ -208,7 +208,7 @@ In order to integrate your published mobile map into the app, you need a callbac
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         // just make sure no other layers are on map
         [[mapView getLayers] clear];
