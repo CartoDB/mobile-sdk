@@ -1,6 +1,6 @@
 # API Reference
 
-See the following API reference docs for the Mobile SDK, as managed by our [mobile partner](https://carto.com/engine/mobile/).
+See the following API reference docs for the Mobile SDK
 
-* [Android (Java) API](https://nutiteq.github.io/hellomap3d-android)
-* [iPhone and iPad (Objective C) API](https://nutiteq.github.io/hellomap3d-ios)
+* [Android (Java) API](http://cartodb.github.io/mobile-android-samples/)
+* [iPhone and iPad (Objective C) API](http://cartodb.github.io/mobile-ios-samples/)
