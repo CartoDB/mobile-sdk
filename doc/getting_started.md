@@ -125,13 +125,13 @@ The following procedure describes how to register mobiles apps under your accoun
 
 1. Access [Your API Keys](/docs/carto-editor/your-account/#api-key) from the CARTO Dashboard
 
-    <span class="wrap-border"><img src="{{ site.baseurl }}/img/layout/mobile/access_mobile_api_key.jpg" alt="Access mobile apps from API keys" /></span>
+    <span class="wrap-border"><img src="/docs/img/layout/mobile/access_mobile_api_key.jpg" alt="Access mobile apps from API keys" /></span>
 
     The API Key page opens, displaying options for _CARTO_ or _Mobile Apps_. 
 
 2. Click _Mobile apps_ to add mobile applications to your account
 
-    <span class="wrap-border"><img src="{{ site.baseurl }}/img/layout/mobile/no_registered_apps.jpg" alt="No registered mobile apps" /></span>
+    <span class="wrap-border"><img src="/docs/img/layout/mobile/no_registered_apps.jpg" alt="No registered mobile apps" /></span>
 
 3. Click _NEW APPLICATION_
 
@@ -139,7 +139,7 @@ The following procedure describes how to register mobiles apps under your accoun
 
 4. Enter options for the mobile application
  
-    <span class="wrap-border"><img src="{{ site.baseurl }}/img/layout/mobile/new_mobile_app_settings.jpg" alt="New mobile app settings" /></span>
+    <span class="wrap-border"><img src="/docs/img/layout/mobile/new_mobile_app_settings.jpg" alt="New mobile app settings" /></span>
 
     The following mobile application settings are available: 
 
@@ -148,7 +148,7 @@ The following procedure describes how to register mobiles apps under your accoun
     App icon | Select an icon to represent your mobile application in your account
     Name | An informative name of the mobile application in your account
     Description | A description about the mobile application in your account
-    Platform | Identifies the type of mobile app platform. Some options may not be available, based on your account plan<br/><br/>**Note:** Once a mobile application is saved, you cannot edit the Platform setting. As an alternative, you can [delete](#delete-a-mobile-app) the application and recreate it with new settings.<br/><br/>**Tip:** When you select a _Platform_, the _Application ID_ displays more details about what identifiers, or packages, are required.<br/><br/><img src="{{ site.baseurl }}/img/layout/mobile/platform_appid.jpg" alt="Platform App ID hint" /> 
+    Platform | Identifies the type of mobile app platform. Some options may not be available, based on your account plan<br/><br/>**Note:** Once a mobile application is saved, you cannot edit the Platform setting. As an alternative, you can [delete](#delete-a-mobile-app) the application and recreate it with new settings.<br/><br/>**Tip:** When you select a _Platform_, the _Application ID_ displays more details about what identifiers, or packages, are required.<br/><br/><img src="/docs/img/layout/mobile/platform_appid.jpg" alt="Platform App ID hint" /> 
     Application ID | The identification of the mobile app in the App store that is required for development with the Mobile SDK.<br/><br/>The following application ids identify the Platform selected:<br/><br/>- [**Android**](#android-implementation): requires the AndroidManifest.xml package<br/><br/>- [**iOS**](#ios-implementation): requires a Bundle identifier. You can find it in the project properties of your iOS package<br/><br/>- [**Xamarin Android**](#xamarin-android-and-ios-implementation): requires the AndroidManifest.xml package<br/><br/>- [**Xamarin iOS**](#xamarin-ios-app): requires a Bundle identifier. You can find it in the project properties of your Xamarin iOS package<br/><br/>- [**Windows Phone**](#windows-phone-implementation): Requires the package name from the Windows package.appmanifest 
     App type | Identifies the type of mobile application, which are subject to different quota limitations<br/><br/>- **Open**: Adds and counts mobile apps users towards global usage quotas, ranging from 10K to 500k users, depending on your account plan. This app type is open to the public and available in public app stores<br/><br/>- **Dev**: Select this app type when you are developing and testing your mobile app. Dev is available for all account plans and allows each mobile app to have up to five users. Dev apps do not appear in public app stores<br/><br/>_**Note:** Once you are satisfied with your mobile development, you can [promote a Dev app](#promoting-a-dev-app) to another app type._<br/><br/>- **Private**: Available for Enterprise accounts only, allows organizations to publish their apps internally and share quota limitations, up to 750 users. Private apps are not published to public app stores
  
@@ -162,7 +162,7 @@ Once your mobile apps are registered for your account, you can retrieve the API 
 
 1. From the _Mobile apps_ section of your API Keys, click a mobile application name
 
-    <span class="wrap-border"><img src="{{ site.baseurl }}/img/layout/mobile/registered_mobile_app.jpg" alt="Registered mobile apps" /></span>
+    <span class="wrap-border"><img src="/docs/img/layout/mobile/registered_mobile_app.jpg" alt="Registered mobile apps" /></span>
 
     The application settings appear, and include the license key and amount of quota for the application. 
 
@@ -170,7 +170,7 @@ Once your mobile apps are registered for your account, you can retrieve the API 
 
     The following example displays the API Keys section for a selected mobile application.  Note, the API Key in the example image is blurred out for privacy.
 
-    <span class="wrap-border"><img src="{{ site.baseurl }}/img/layout/mobile/example_settings.jpg" alt="Example of mobile app settings" /></span>
+    <span class="wrap-border"><img src="/docs/img/layout/mobile/example_settings.jpg" alt="Example of mobile app settings" /></span>
 
 3. Click the back navigation arrow, located next to the app name, to return Mobile apps section of your API Keys
 
@@ -198,7 +198,7 @@ A Dev mobile app enables you to develop and test your mobile application. Only a
 
 2. Click _Delete this application_ from the bottom of the app settings
 
-    <span class="wrap-border"><img src="{{ site.baseurl }}/img/layout/mobile/change_app_type.jpg" alt="Promote dev app to another app type" /></span>
+    <span class="wrap-border"><img src="/docs/img/layout/mobile/change_app_type.jpg" alt="Promote dev app to another app type" /></span>
 
 3. Click _SAVE CHANGES_
 
@@ -222,7 +222,7 @@ Once a mobile application is saved, you cannot edit the Platform setting. As an 
 
 2. Click _Delete this application_ from the bottom of the app settings
 
-    <span class="wrap-border"><img src="{{ site.baseurl }}/img/layout/mobile/delete_application.jpg" alt="Delete mobile app" /></span>
+    <span class="wrap-border"><img src="/docs/img/layout/mobile/delete_application.jpg" alt="Delete mobile app" /></span>
 
 3. Click the back navigation arrow, located next to the app name, to return Mobile apps section of your API Keys
 
@@ -876,21 +876,21 @@ Basemaps apply the map background required for rendering data. Basemaps are requ
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}Projection proj = mapView.getOptions().getBaseProjection();
 
 // 1. Initialize an local vector data source
@@ -908,7 +908,7 @@ Basemaps apply the map background required for rendering data. Basemaps are requ
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight c# %}Projection proj = MapView.Options.BaseProjection;
 
 // 1. Initialize an local vector data source
@@ -926,7 +926,7 @@ Basemaps apply the map background required for rendering data. Basemaps are requ
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
 // this was already initialized before
@@ -947,7 +947,7 @@ Basemaps apply the map background required for rendering data. Basemaps are requ
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -969,21 +969,21 @@ Add a marker and apply marker styling using the following code:
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
 // 1. Create marker style
@@ -1006,7 +1006,7 @@ Add a marker and apply marker styling using the following code:
 {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight c# %}
 
 // 1. Create marker style
@@ -1032,7 +1032,7 @@ Add a marker and apply marker styling using the following code:
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
 // 1. Create a marker style, we use default marker bitmap here
@@ -1060,7 +1060,7 @@ Add a marker and apply marker styling using the following code:
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -1085,21 +1085,21 @@ Add a point and apply point styling using the following code:
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
 // 1. Set marker position
@@ -1123,7 +1123,7 @@ Add a point and apply point styling using the following code:
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight c# %}
 
 // 1. Set point position
@@ -1147,7 +1147,7 @@ Add a point and apply point styling using the following code:
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
 // 1. Create style and position for the Point
@@ -1171,7 +1171,7 @@ Add a point and apply point styling using the following code:
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -1185,21 +1185,21 @@ Lines can be added to the same `vectorDataSource1`. Add a line and apply line st
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
 // 1. Create line style, and line poses
@@ -1231,7 +1231,7 @@ Lines can be added to the same `vectorDataSource1`. Add a line and apply line st
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight c# %}
 
 // 1. Create line style, and line poses
@@ -1261,7 +1261,7 @@ Lines can be added to the same `vectorDataSource1`. Add a line and apply line st
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
 // 1. Define line style
@@ -1292,7 +1292,7 @@ Lines can be added to the same `vectorDataSource1`. Add a line and apply line st
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -1310,21 +1310,21 @@ Add a polygon and apply polygon styling using the following code. The following 
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
 // 1. Create polygon style and poses
@@ -1375,7 +1375,7 @@ Add a polygon and apply polygon styling using the following code. The following 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight c# %}
 
 // 1. Create polygon style and poses
@@ -1430,7 +1430,7 @@ Add a polygon and apply polygon styling using the following code. The following 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
 // 1. Create polygon style
@@ -1486,7 +1486,7 @@ Add a polygon and apply polygon styling using the following code. The following 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -1510,21 +1510,21 @@ Add text and apply text styling using the following code.
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
 // 1. Create text style
@@ -1548,7 +1548,7 @@ Add text and apply text styling using the following code.
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight c# %}
 
 // 1. Create text style
@@ -1573,7 +1573,7 @@ Add text and apply text styling using the following code.
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
 // 4. Create text style
@@ -1599,7 +1599,7 @@ Add text and apply text styling using the following code.
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -1623,21 +1623,21 @@ A BalloonPopup appears based on click event of an object. You can also add a def
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
 // 1. Load bitmaps to show on the label
@@ -1665,7 +1665,7 @@ A BalloonPopup appears based on click event of an object. You can also add a def
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight c# %}
 
 // Android
@@ -1704,7 +1704,7 @@ A BalloonPopup appears based on click event of an object. You can also add a def
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
 // 1. Load styling bitmaps to show on the popups
@@ -1741,7 +1741,7 @@ A BalloonPopup appears based on click event of an object. You can also add a def
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -1775,21 +1775,21 @@ The following procedure describes how to setup and add a 3D object to your mobil
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
 // 1. Load NML model from a file
@@ -1814,7 +1814,7 @@ The following procedure describes how to setup and add a 3D object to your mobil
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight c# %}
 
       var file = AssetUtils.LoadAsset("fcd_auto.nml");
@@ -1839,7 +1839,7 @@ The following procedure describes how to setup and add a 3D object to your mobil
   {% endhighlight %}
   </div>
 
-<div class="Carousel-item js-Tabpanes-item">
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
 // 1. Load NML model from a file
@@ -1863,7 +1863,7 @@ The following procedure describes how to setup and add a 3D object to your mobil
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -1891,27 +1891,27 @@ The following code describes how to adjust the `LocalVectorDataSource` performan
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}LocalVectorDataSource vectorDataSource2 = new LocalVectorDataSource(proj, LocalSpatialIndexType.LOCAL_SPATIAL_INDEX_TYPE_KDTREE);
 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight c# %}
 
 var vectorDataSource2 = new LocalVectorDataSource(proj, LocalSpatialIndexType.LocalSpatialIndexTypeKdtree);
@@ -1919,7 +1919,7 @@ var vectorDataSource2 = new LocalVectorDataSource(proj, LocalSpatialIndexType.Lo
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}NTLocalVectorDataSource* vectorDataSource2 =
     [[NTLocalVectorDataSource alloc] initWithProjection:proj
                                        spatialIndexType: NTLocalSpatialIndexType::NT_LOCAL_SPATIAL_INDEX_TYPE_KDTREE];
@@ -1927,7 +1927,7 @@ var vectorDataSource2 = new LocalVectorDataSource(proj, LocalSpatialIndexType.Lo
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}
@@ -1949,40 +1949,40 @@ All this is can be applied with just one line of code - as shown in the followin
 
 <div class="js-TabPanes">
   <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">C#</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Objective-C</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Swift</a>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}vectorDataSource2.setGeometrySimplifier(new DouglasPeuckerGeometrySimplifier(1.0f / 320.0f));
 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight c# %}vectorDataSource2.GeometrySimplifier = new DouglasPeuckerGeometrySimplifier(1.0f / 320.0f);
 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}[vectorDataSource2 setGeometrySimplifier:
   [[NTDouglasPeuckerGeometrySimplifier alloc] initWithTolerance: 1.0f / 320.0f]];
 
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}COMING SOON...
 
   {% endhighlight %}

@@ -120,40 +120,40 @@ In order to integrate your published mobile map into the app, you need a callbac
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-	    {% highlight objc %}@interface MyCartoVisBuilder : NTCartoVisBuilder
+      {% highlight objc %}@interface MyCartoVisBuilder : NTCartoVisBuilder
 
-	  @property NTMapView* mapView;
+    @property NTMapView* mapView;
 
-	  @end
+    @end
 
-	  @implementation MyCartoVisBuilder
+    @implementation MyCartoVisBuilder
 
-	  // methods to set map center and zoom based on defined map
-	  -(void)setCenter:(NTMapPos *)mapPos
-	  {
-	      [self.mapView setFocusPos:[[[self.mapView getOptions] getBaseProjection] fromWgs84:mapPos] durationSeconds:1.0f];
-	  }
+    // methods to set map center and zoom based on defined map
+    -(void)setCenter:(NTMapPos *)mapPos
+    {
+        [self.mapView setFocusPos:[[[self.mapView getOptions] getBaseProjection] fromWgs84:mapPos] durationSeconds:1.0f];
+    }
 
-	  -(void)setZoom:(float)zoom
-	  {
-	      [self.mapView setZoom:zoom durationSeconds:1.0f];
-	  }
+    -(void)setZoom:(float)zoom
+    {
+        [self.mapView setZoom:zoom durationSeconds:1.0f];
+    }
 
-	  // Add a layer to the map view
-	  -(void)addLayer:(NTLayer *)layer attributes:(NTVariant *)attributes
-	  {
-	      [[self.mapView getLayers] add:layer];
-	  }
+    // Add a layer to the map view
+    -(void)addLayer:(NTLayer *)layer attributes:(NTVariant *)attributes
+    {
+        [[self.mapView getLayers] add:layer];
+    }
 
-	  // Add a layer to the map view - most important work
-	  -(void)addLayer:(NTLayer *)layer attributes:(NTVariant *)attributes
-	  {
-	      [[self.mapView getLayers] add:layer];
-	  }
+    // Add a layer to the map view - most important work
+    -(void)addLayer:(NTLayer *)layer attributes:(NTVariant *)attributes
+    {
+        [[self.mapView getLayers] add:layer];
+    }
 
-	  @end
+    @end
 
-	    {% endhighlight %}
+      {% endhighlight %}
  
   </div>
     
@@ -226,7 +226,7 @@ In order to integrate your published mobile map into the app, you need a callbac
         [loader loadVis:visBuilder visURL:@"http://documentation.carto.com/api/v2/viz/2b13c956-e7c1-11e2-806b-5404a6a683d5/viz.json"];
         
     });
-	    {% endhighlight %}
+      {% endhighlight %}
  
   </div>
 </div>
