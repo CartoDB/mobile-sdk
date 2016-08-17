@@ -710,23 +710,3 @@ Open source resource: <a href="http://www.thunderforest.com/transport/">Thunderf
 <img width="256" height="256"  src="http://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/WMTS/tile/1.0.0/USGSTopo/default/GoogleMapsCompatible/13/3162/1306" alt="USGS Topo"/>
 
 © USGS The National Map. The National Boundaries Dataset, National Elevation Dataset, Geographic Names Information System, National Hydrography Dataset, National Land Cover Database, National Structures Dataset, and National Transportation Dataset; U.S. Census Bureau - TIGER/Line; HERE Road Data. <a href="http://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer">USGS MapServer</a>
-
-
-// 5. Correct this by applying appropriate bias
-      float zoomLevelBias = log([[mapView getOptions] getDPI] / 160.0f) / log(2);
-      [rasterLayer setZoomLevelBias:zoomLevelBias * 0.75f];
-      [rasterLayer setTileSubstitutionPolicy:NT_TILE_SUBSTITUTION_POLICY_VISIBLE];
-      
-      [mapView setFocusPos:pos durationSeconds:0];
-      [mapView setZoom:16f durationSeconds:0];
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight swift %}COMING SOON...
-
-  {% endhighlight %}
-  </div>
-  
-</div>
