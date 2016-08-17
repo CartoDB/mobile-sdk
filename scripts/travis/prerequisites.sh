@@ -7,9 +7,10 @@ curl -o cmake-3.5.2.tar.gz -L https://cmake.org/files/v3.5/cmake-3.5.2.tar.gz
 rm -rf cmake-3.5.2
 tar xpfz cmake-3.5.2.tar.gz
 cd cmake-3.5.2
-./configure
+./configure --prefix=`pwd`/dist
 make
-sudo make install
+make install
+export PATH=$PWD/dist/bin:$PATH
 cd ..
 
 echo '---- Downloading and installing Swig ----'
@@ -22,12 +23,12 @@ automake
 ./configure --prefix=`pwd`/pcre-swig-install --disable-shared
 make
 make install
-export PATH=$PATH:/usr/local/bin
 cd ..
 ./autogen.sh
-./configure --disable-ccache
+./configure --disable-ccache --prefix=`pwd`/dist
 make
-sudo make install || true
+make install || true
+export PATH=$PWD/dist/bin:$PATH
 cd ..
 
 echo '---- Downloading and installing External libs ----'
@@ -48,5 +49,5 @@ if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
   unzip -q android-ndk-r12b-linux-x86_64.zip
   rm android-ndk-r12b-linux-x86_64.zip
   export ANDROID_NDK_HOME=`pwd`/android-ndk-r12b;
-  export ANDROID_HOME=/usr/local/android-sdk
+#  export ANDROID_HOME=/usr/local/android-sdk
 fi

@@ -61,7 +61,8 @@ namespace carto { namespace mvt {
                 if (placement == vt::LabelOrientation::LINE) {
                     for (const auto& vertices : lineGeometry->getVerticesList()) {
                         if (_spacing <= 0) {
-                            addLabel(getTextId(featureId, hash), placement, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices);
+                            long long id = getTextId(featureId, hash);
+                            addLabel(id, placement, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices);
                             continue;
                         }
 
@@ -77,7 +78,8 @@ namespace carto { namespace mvt {
                             while (linePos < lineLen) {
                                 cglib::vec2<float> pos = v0 + (v1 - v0) * (linePos / lineLen);
                                 if (std::min(pos(0), pos(1)) > 0.0f && std::max(pos(0), pos(1)) < 1.0f) {
-                                    addLabel(getMultiTextId(featureId, hash), placement, pos, vertices);
+                                    long long id = getMultiTextId(featureId, hash);
+                                    addLabel(id, placement, pos, vertices);
                                 }
 
                                 if (textSize < 0) {

@@ -213,7 +213,7 @@ namespace carto { namespace vt {
 
         std::vector<std::shared_ptr<TileLabel>> labelList;
         std::swap(labelList, _labelList);
-        std::for_each(labelList.begin(), labelList.end(), [layerIdx](const std::shared_ptr<TileLabel>& label) { label->setPriority(-layerIdx); });
+        std::for_each(labelList.begin(), labelList.end(), [layerIdx](const std::shared_ptr<TileLabel>& label) { label->setPriority(layerIdx); });
 
         return std::make_shared<TileLayer>(layerIdx, std::move(opacity), std::move(compOp), std::move(bitmapList), std::move(geometryList), std::move(labelList));
     }

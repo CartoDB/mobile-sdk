@@ -163,7 +163,7 @@ namespace carto {
         else {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             _visibleCache.invalidate_all(std::chrono::steady_clock::now());
-            _preloadingCache.invalidate_all(std::chrono::steady_clock::now());
+            _preloadingCache.clear();
         }
         refresh();
     }
@@ -340,7 +340,7 @@ namespace carto {
         
     void VectorTileLayer::TileDecoderListener::onDecoderChanged() {
         if (std::shared_ptr<VectorTileLayer> layer = _layer.lock()) {
-            layer->tilesChanged(true);
+            layer->tilesChanged(false);
         } else {
             Log::Error("VectorTileLayer::TileDecoderListener: Lost connection to layer");
         }

@@ -10,6 +10,8 @@ namespace carto { namespace mvt {
 
         updateBindings(exprContext);
 
+        vt::CompOp compOp = convertCompOp(_compOp);
+
         float fontScale = symbolizerContext.getSettings().getFontScale();
         vt::LabelOrientation placement = convertLabelPlacement(_placement);
         if (_transformExpression) { // if rotation transform is explicitly defined, use point placement
@@ -17,19 +19,22 @@ namespace carto { namespace mvt {
                 placement = vt::LabelOrientation::POINT;
             }
         }
+        if (_placement == "point") {
+            if (_allowOverlap) { // if overlap is allowed, use point placement
+                placement = vt::LabelOrientation::POINT;
+            }
+        }
 
         float bitmapScaleX = fontScale, bitmapScaleY = fontScale;
         std::shared_ptr<const vt::Bitmap> bitmap;
         std::string file = _file;
-        vt::Color fill = _fill * _fillOpacity;
-        vt::Color stroke = _stroke * _strokeOpacity;
+        float fillOpacity = _fillOpacity;
         if (!file.empty()) {
             bitmap = symbolizerContext.getBitmapManager()->loadBitmap(file);
             if (!bitmap) {
                 _logger->write(Logger::Severity::ERROR, "Failed to load marker bitmap " + file);
                 return;
             }
-            fill = vt::Color(0xffffffff) * _fillOpacity;
             if (_width > 0) {
                 bitmapScaleX = fontScale * _width / bitmap->width;
                 bitmapScaleY = (_height > 0 ? fontScale * _height / bitmap->height : bitmapScaleX);
@@ -39,6 +44,8 @@ namespace carto { namespace mvt {
             }
         }
         else {
+            vt::Color fill = _fill * _fillOpacity;
+            vt::Color stroke = _stroke * _strokeOpacity;
             if (_markerType == "ellipse" || (_markerType.empty() && placement != vt::LabelOrientation::LINE)) {
                 float width = DEFAULT_CIRCLE_SIZE, height = DEFAULT_CIRCLE_SIZE;
                 if (_width > 0) {
@@ -55,7 +62,6 @@ namespace carto { namespace mvt {
                     bitmap = makeEllipseBitmap(width * SUPERSAMPLING_FACTOR, height * SUPERSAMPLING_FACTOR, fill, std::abs(_strokeWidth) * SUPERSAMPLING_FACTOR, stroke);
                     symbolizerContext.getBitmapManager()->storeBitmap(file, bitmap);
                 }
-                fill = vt::Color(0xffffffff);
                 bitmapScaleX = width  * fontScale / bitmap->width;
                 bitmapScaleY = height * fontScale / bitmap->height;
             }
@@ -75,31 +81,55 @@ namespace carto { namespace mvt {
                     bitmap = makeArrowBitmap(width * SUPERSAMPLING_FACTOR, height * SUPERSAMPLING_FACTOR, fill, std::abs(_strokeWidth) * SUPERSAMPLING_FACTOR, stroke);
                     symbolizerContext.getBitmapManager()->storeBitmap(file, bitmap);
                 }
-                fill = vt::Color(0xffffffff);
                 bitmapScaleX = width  * fontScale / bitmap->width;
                 bitmapScaleY = height * fontScale / bitmap->height;
             }
+            fillOpacity = 1.0f;
         }
 
         float bitmapSize = static_cast<float>(std::max(bitmap->width * bitmapScaleX, bitmap->height * bitmapScaleY));
-        vt::BitmapLabelStyle style(placement, fill, symbolizerContext.getFontManager()->getNullFont(), bitmap, _transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1)));
+        vt::BitmapLabelStyle style(placement, vt::Color(0xffffffff) * fillOpacity, symbolizerContext.getFontManager()->getNullFont(), bitmap, _transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1)));
         int groupId = (_allowOverlap ? -1 : 0);
+
+        std::unique_ptr<vt::PointStyle> pointStyle;
+        if (_allowOverlap && placement == vt::LabelOrientation::POINT) {
+            std::shared_ptr<const vt::FloatFunction> widthFunc;
+            ExpressionFunctionBinder<float>().bind(&widthFunc, std::make_shared<ConstExpression>(Value(_width))).update(exprContext);
+            std::shared_ptr<const vt::ColorFunction> fillFunc;
+            ExpressionFunctionBinder<vt::Color>().bind(&fillFunc, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), [this](const Value& val) -> vt::Color {
+                return convertColor(val);
+            }).update(exprContext);
+            std::shared_ptr<const vt::FloatFunction> opacityFunc;
+            ExpressionFunctionBinder<float>().bind(&opacityFunc, std::make_shared<ConstExpression>(Value(fillOpacity))).update(exprContext);
+
+            pointStyle = std::unique_ptr<vt::PointStyle>(new vt::PointStyle(compOp, fillFunc, opacityFunc, widthFunc, symbolizerContext.getGlyphMap(), bitmap, _transform));
+        }
+
+        auto addPoints = [&](long long id, const std::vector<cglib::vec2<float>>& vertices) {
+            if (pointStyle) {
+                layerBuilder.addPoints(vertices, *pointStyle);
+            }
+            else {
+                for (const auto& vertex : vertices) {
+                    layerBuilder.addBitmapLabel(id, groupId, vertex, 0, style);
+                }
+            }
+        };
 
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
             long long featureId = featureCollection.getId(index);
             const std::shared_ptr<const Geometry>& geometry = featureCollection.getGeometry(index);
             
             if (auto pointGeometry = std::dynamic_pointer_cast<const PointGeometry>(geometry)) {
-                for (const auto& vertex : pointGeometry->getVertices()) {
-                    long long id = getBitmapId(featureId, file);
-                    layerBuilder.addBitmapLabel(id, groupId, vertex, 0, style);
-                }
+                long long id = getBitmapId(featureId, file);
+                addPoints(id, pointGeometry->getVertices());
             }
             else if (auto lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(geometry)) {
                 if (placement == vt::LabelOrientation::LINE) {
                     for (const auto& vertices : lineGeometry->getVerticesList()) {
                         if (_spacing <= 0) {
-                            layerBuilder.addBitmapLabel(getBitmapId(featureId, file), groupId, vertices, 0, style);
+                            long long id = getBitmapId(featureId, file);
+                            layerBuilder.addBitmapLabel(id, groupId, vertices, 0, style);
                             continue;
                         }
 
@@ -125,7 +155,8 @@ namespace carto { namespace mvt {
                                     style.placement = vt::LabelOrientation::POINT;
                                     style.transform = dirTransform * _transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1));
 
-                                    layerBuilder.addBitmapLabel(getMultiBitmapId(featureId, file), groupId, pos, 0, style);
+                                    long long id = getMultiBitmapId(featureId, file);
+                                    layerBuilder.addBitmapLabel(id, groupId, pos, 0, style);
                                 }
 
                                 linePos += _spacing + bitmapSize;
@@ -136,17 +167,13 @@ namespace carto { namespace mvt {
                     }
                 }
                 else {
-                    for (const auto& vertex : lineGeometry->getMidPoints()) {
-                        long long id = getBitmapId(featureId, file);
-                        layerBuilder.addBitmapLabel(id, groupId, vertex, 0, style);
-                    }
+                    long long id = getBitmapId(featureId, file);
+                    addPoints(id, lineGeometry->getMidPoints());
                 }
             }
             else if (auto polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(geometry)) {
-                for (const auto& vertex : polygonGeometry->getSurfacePoints()) {
-                    long long id = getBitmapId(featureId, file);
-                    layerBuilder.addBitmapLabel(id, groupId, vertex, 0, style);
-                }
+                long long id = getBitmapId(featureId, file);
+                addPoints(id, polygonGeometry->getSurfacePoints());
             }
             else {
                 _logger->write(Logger::Severity::WARNING, "Unsupported geometry for MarkersSymbolizer");
@@ -197,6 +224,9 @@ namespace carto { namespace mvt {
         else if (name == "transform") {
             _transformExpression = parseStringExpression(value);
             bind(&_transform, _transformExpression, &MarkersSymbolizer::convertTransform);
+        }
+        else if (name == "comp-op") {
+            bind(&_compOp, parseStringExpression(value));
         }
         else if (name == "opacity") { // binds to 2 parameters
             bind(&_fillOpacity, parseExpression(value));

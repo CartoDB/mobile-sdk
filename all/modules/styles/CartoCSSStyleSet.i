@@ -7,6 +7,7 @@
 
 %{
 #include "styles/CartoCSSStyleSet.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 
@@ -20,6 +21,7 @@
 
 %attributestring(carto::CartoCSSStyleSet, std::string, CartoCSS, getCartoCSS)
 %attributestring(carto::CartoCSSStyleSet, std::shared_ptr<carto::AssetPackage>, AssetPackage, getAssetPackage)
+%std_exceptions(carto::CartoCSSStyleSet::CartoCSSStyleSet)
 !standard_equals(carto::CartoCSSStyleSet);
 
 %include "styles/CartoCSSStyleSet.h"

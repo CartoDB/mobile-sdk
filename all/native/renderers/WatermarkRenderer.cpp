@@ -92,7 +92,7 @@ namespace carto {
         if (LicenseManager::GetInstance().getParameter("watermark", watermark)) {
             if (watermark == "custom") {
                 watermarkBitmap = _options.getWatermarkBitmap();
-            } else if (watermark == "carto" || watermark == "nutiteq") {
+            } else if (watermark == "carto" || watermark == "cartodb" || watermark == "nutiteq") {
                 watermarkBitmap = GetCartoWatermarkBitmap();
             } else if (watermark == "evaluation" || watermark == "development" || watermark == "expired") {
                 limitedLicense = true;

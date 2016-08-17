@@ -498,6 +498,16 @@ namespace carto { namespace vt {
         }
         _labels = std::move(labels);
         _bitmapLabelMap = std::move(bitmapLabelMap);
+
+        // Sort labels by priority. This is a hack implementation and is needed only for labels that 'are allowed' to overlap each other.
+        // The current implementation only does proper ordering within single bitmap atlas, but usually this is enough
+        for (int pass = 0; pass < 2; pass++) {
+            for (auto it = _bitmapLabelMap[pass]->begin(); it != _bitmapLabelMap[pass]->end(); it++) {
+                std::sort(it->second.begin(), it->second.end(), [](const std::shared_ptr<TileLabel>& label1, const std::shared_ptr<TileLabel>& label2) {
+                    return label1->getPriority() < label2->getPriority();
+                });
+            }
+        }
         
         // Build blend nodes for tiles
         auto blendNodes = std::make_shared<std::vector<std::shared_ptr<BlendNode>>>();
