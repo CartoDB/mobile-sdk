@@ -41,7 +41,7 @@ These SDK libraries are managed by CARTO and include all the required libraries 
   <div class="Carousel-item js-Tabpanes-item is-active">
   {% highlight groovy %}
 
-// 1. Download "project build.gradle" from the Android SDK package
+// 1. Add following to your project "build.gradle" file:
 
 allprojects {
     repositories {
@@ -55,7 +55,7 @@ allprojects {
     }
 }
 
-// 2. Add "module build.gradle" as part of your package
+// 2. Add following to your module "build.gradle":
 
 dependencies {
     compile 'com.carto:carto-mobile-sdk:snapshot@aar'
@@ -67,23 +67,11 @@ dependencies {
   <div class="Carousel-item js-Tabpanes-item">
   {% highlight groovy %}
 
-// Download and install the iOS SDK package
+// Download and install the iOS SDK package from
 
-    url "https://nutifront.s3.amazonaws.com/sdk_snapshots/sdk4-ios-snapshot-latest.zip"
+url "https://nutifront.s3.amazonaws.com/sdk_snapshots/sdk4-ios-snapshot-latest.zip"
 
-    // Note: There is currently no managed library for iOS, download the platform package instead. When the final Production version of Mobile SDK is released, the iOS managed library package will be available
-
-{% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight groovy %}
-
-// 1. Download nuget for the Xamarin SDK package
-
-    url "https://www.nuget.org/packages/CartoMobileSDK/"
-        
-// 2. To locate the downloaded package, ensure you enable "Show preview" in Xamarin Studio
+// Note: There is currently no managed library for iOS, download the platform package instead. When the final Production version of Mobile SDK is released, the iOS managed library package will be available
 
 {% endhighlight %}
   </div>
@@ -91,11 +79,21 @@ dependencies {
   <div class="Carousel-item js-Tabpanes-item">
   {% highlight groovy %}
 
-// Download and install the Visual Studio Extension Package to create a Windows Phone project
+// 1. To locate the downloaded package, ensure you enable "Show preview" in Xamarin Studio
 
-    url "https://msdn.microsoft.com/en-us/library/bb166441.aspxf"
 
-    // Note: There is currently no managed library for Windows Phone (WP), download the platform package instead. The mobile development team is still testing Windows Phone implementation with the Mobile SDK
+// 2. Download CartoMobileSDK nuget for the Xamarin SDK package
+
+url "https://www.nuget.org/packages/CartoMobileSDK/"
+
+
+{% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item">
+  {% highlight groovy %}
+
+// Windows Phone 10 SDK is not yet public - please contact mobile-support@carto.com if you are interested
 
 {% endhighlight %}
 
@@ -104,7 +102,7 @@ dependencies {
 
 ### Download Packages 
 
-The following links will download the platform specific package directly to your local Downloads folder, and includes Release Notes.
+The following links will download the platform specific package directly to your local Downloads folder:
 
 _**Note:** The current version, 4.0.0, is a beta release. These zip files are subject to frequent changes._
 
@@ -114,11 +112,11 @@ _**Note:** The current version, 4.0.0, is a beta release. These zip files are su
 
 - Xamarin: there is no individual download package for Xamarin, download [nuget](https://www.nuget.org/packages/CartoMobileSDK/) instead
 
-- Windows Phone: Install the [Visual Studio Extension Package](https://msdn.microsoft.com/en-us/library/bb166441.aspxf) from Windows and see the [Windows Phone implementation](/docs/carto-engine/mobile-sdk/mobile-platforms-implementation/#windows-phone-implementation) details
+- Windows Phone: please ask from mobile-support@carto.com if you are interested
 
 ## Registering your Mobile App
 
-You must register your mobile applications under your CARTO account settings. Once an app is added, you can retrieve the mobile app API Key and manage its settings.
+You must register your mobile applications under your CARTO.com account settings. Once an app is added, you can retrieve the mobile app API Key and manage its settings.
 
 The following procedure describes how to register mobiles apps under your account settings. While the number of mobile apps is unlimited, application quota consumption rules are enforced based on your account plan. [Contact us](mailto:sales@carto.com) if you have questions about your mobile account options.
 
@@ -229,29 +227,29 @@ Once a mobile application is saved, you cannot edit the Platform setting. As an 
 
 Once your mobile apps are registered and you have your API Keys, it is recommended to familiarize yourself with the setup for the platform that you are using. Some of these platforms contain unique map features that are only available based on the mobile platform. You can then use sample mobile apps and add basic and advanced map features.
 
-### Android Implementation
+### Android minimal map
 
 If using Android as the mobile platform, follow this implementation procedure.
 
-1) Add the **[Android Studio](#android-samples)** `build.gradle` SDK files to your project
+1) Add following to the `build.gradle` of your project:
 
-<pre class="brush: xml" >
+{% highlight groovy %}
 allprojects {
     repositories {
-        mavenCentral()
+        jcenter()
         maven {
-            url <a href="http://repository-nutiteq.forge.cloudbees.com/release/" target="_blank">"http://repository-nutiteq.forge.cloudbees.com/release/"</a>
+            url "http://repository-nutiteq.forge.cloudbees.com/release/"
         }
         maven {
-            url <a href="http://repository-nutiteq.forge.cloudbees.com/snapshot/" target="_blank">"http://repository-nutiteq.forge.cloudbees.com/snapshot/"</a>
+            url "http://repository-nutiteq.forge.cloudbees.com/snapshot/"
         }
     }
 }
 
 dependencies {
-   compile 'com.carto:carto-mobile-sdk:4.0.0-snapshot@aar'
+   compile 'com.carto:carto-mobile-sdk:snapshot@aar'
 }
-</pre>
+{% endhighlight %}
  
 2) Define INTERNET permission for your AndroidManifest.xml
 
@@ -282,14 +280,17 @@ dependencies {
 
   Define the MapView type in your main activity class and load layout. This enables you to load the MapView from the layout. _The object itself was already created during the layout creation process, this step is specific to finding and referencing the MapView object in your request._
 
-<pre class="brush: java">public class HelloMap3DActivity extends Activity {
+{% highlight java %}
+	public class HelloMap3DActivity extends Activity {
     private MapView mapView;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-</pre>
+		
+		mapView = (MapView) this.findViewById(R.id.mapView);
+{% endhighlight %}
 
 5) Initialize the mobile map
 
@@ -299,11 +300,11 @@ dependencies {
 
   - Define the first layer of the map, which will be the basemap layer. This is a vector map layer, which requires that you load and define styles in the assets of this layer. You can also add other map layers once a basemap is configured
 
-#### Example - Android Request
+#### Example - Android code
 
-The following example shows the complete request for initializing your Android mobile map.
+The following example shows the complete code for initializing your Android mobile map.
 
-<pre class="brush: java">
+{% highlight java %}
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -316,16 +317,16 @@ The following example shows the complete request for initializing your Android m
         mapView = (MapView) this.findViewById(R.id.mapView);
  
         // 3. Create basemap layer. Use vector style from assets
-        VectorTileLayer baseLayer = new CartoOnlineVectorTileLayer("nutiteq.osm");
+        CartoOnlineVectorTileLayer baseLayer = new CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_DEFAULT);
  
         // 4. Add layer to map
         mapView.getLayers().add(baseLayer);
     }
-</pre>
+{% endhighlight %}
 
-You can now start using the application on your phone and view your map.
+You can now start using the application on your phone and view the default base map.
 
-### iOS Implementation
+### iOS minimal map
 
 If using iOS as the mobile platform, follow this implementation procedure.
 
@@ -350,14 +351,12 @@ If using iOS as the mobile platform, follow this implementation procedure.
 
   - You must replace `YOUR_LICENSE_KEY` with your [Mobile Apps and API Key](/docs/carto-engine/mobile-sdk/mobile-apps-and-api-keys/#mobile-apps-and-api-keys) in the code below
 
-<pre class="brush: objc">
-<pre class="brush: objc">
+{% highlight objc %}
 #import 
 
 @interface ViewController : GLKViewController
 
 @end
-</pre>
 
 #import "ViewController.h"
 #import 
@@ -382,14 +381,14 @@ If using iOS as the mobile platform, follow this implementation procedure.
   NTMapView* mapView = (NTMapView*) self.view;
 
   // 3. Create online vector tile layer, use style asset embedded in the project
-  NTVectorTileLayer* vectorTileLayer = [[NTCartoOnlineVectorTileLayer alloc] initWithSource: @"nutiteq.osm" styleAssetName:@"nutibright-v3.zip"];
+  NTVectorTileLayer* vectorTileLayer = [[NTCartoOnlineVectorTileLayer alloc] initWithSource: @"nutiteq.osm"];
 
   // 4. Add vector tile layer
   [[mapView getLayers] add:vectorTileLayer];
 
 
 @end
-</pre>
+{% endhighlight %}
 
 3) Modify storyboard to enable Map View
 
@@ -409,7 +408,8 @@ If using iOS as the mobile platform, follow this implementation procedure.
 
 5) View the **MapView** object method changes
 
-<pre class="brush: objc">
+{% highlight objc %}
+
 // 1. Set the base projection to be used for MapView, MapEventListener and Options methods
   NTEPSG3857* proj = [[NTEPSG3857 alloc] init];
   [[mapView getOptions] setBaseProjection:proj]; // Since EPSG3857 is the default base projection, this is not needed
@@ -422,9 +422,9 @@ If using iOS as the mobile platform, follow this implementation procedure.
   [mapView setFocusPos:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.650415 y:59.428773]]  durationSeconds:0];
   [mapView setZoom:14 durationSeconds:0];
   [mapView setRotation:0 durationSeconds:0];
-</pre>
+{% endhighlight %}
 
-### Xamarin (Android and iOS) Implementation
+### Xamarin (Android and iOS) minimal map
 
 If using Xamarin as the mobile platform, follow these implementation procedures for Xamarin (Android) and Xamarin (iOS).
 
@@ -445,7 +445,7 @@ If using Xamarin as the mobile platform, follow these implementation procedures 
 
 ### Xarmin Forms Apps
 
-Xamarin Forms (version 3.3.0 and higher) support *Native Controls*. If you add Mobile SDK apps for iOS and Android platforms, Xamarin Native Controls is available by default. See the blog, [_Embedding Native Controls into Xamarin.Forms_](https://blog.xamarin.com/embedding-native-controls-into-xamarin-forms) for details. 
+Xamarin Forms (version 3.3.0 and higher) support *Native Controls*. If you add Mobile SDK apps for iOS and Android platforms, Xamarin Native Controls is available by default. See the blog [_Embedding Native Controls into Xamarin.Forms_](https://blog.xamarin.com/embedding-native-controls-into-xamarin-forms) for details. 
 
 While you can share most of code using Native Controls, you just need to specify the platform when creating the project:
 
@@ -457,7 +457,7 @@ While you can share most of code using Native Controls, you just need to specify
             stack.Children.Add(mapView);
 #endif
  // 2. Indicate the common code from both platforms
-    var baseLayer = new Carto.Layers.CartoOnlineVectorTileLayer("carto.osm");
+    var baseLayer = new Carto.Layers.CartoOnlineVectorTileLayer("nutiteq.osm");
      mapView.Layers.Add(baseLayer);
 </pre>
 
@@ -469,13 +469,9 @@ Follow these steps to add native apps to your Xamarin Android package.
 
 1) Add the nuget package [CartoMobileSDK](https://www.nuget.org/packages/CartoMobileSDK/) to your mobile app project
 
-2) Copy **vector style file** (as *.zip* file) to your project *Assets* folder
+2) Add MapView to your application main layout
 
-  You can use the [sample app](#android-samples) resources for your assets. This is required for vector basemaps
-
-3) Add MapView to your application main layout
-
-```xml
+{% highlight xml %} 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
@@ -486,9 +482,9 @@ Follow these steps to add native apps to your Xamarin Android package.
     android:layout_height="fill_parent" 
     />
 </LinearLayout>
-```
+{% endhighlight %}
 
-4) Create MapView object, add a base layer
+3) Create MapView object, add a base layer
 
   Load layout from a xml, and load the MapView from Layout. Or, create it with code. A definition of a base layer is enough for minimal map configuration.
 
@@ -515,7 +511,7 @@ public class MainActivity : Activity
     var mapView = FindViewById<MapView> ( Resource.Id.mapView );
 
     /// 4. Online vector base layer
-    var baseLayer = new CartoOnlineVectorTileLayer("osmbright.zip");
+    var baseLayer = new CartoOnlineVectorTileLayer("nutiteq.osm");
 
     /// 5. Set online base layer  
     mapView.Layers.Add(baseLayer);
@@ -539,7 +535,7 @@ In the example below, it is assumed that the outlet name of the map view is *Map
 
 Add into MainViewController.cs:
 
-<pre class="brush: csharp">
+{% highlight csharp %}
 using Carto.Ui;
 using Carto.Layers;
 using Carto.DataSources;
@@ -558,7 +554,7 @@ public class MainViewController : GLKit.GLKViewController
     MapView.RegisterLicense("YOUR_LICENSE_KEY");
 
     // Online vector base layer
-    var baseLayer = new CartoOnlineVectorTileLayer("osmbright.zip");
+    var baseLayer = new CartoOnlineVectorTileLayer("nutiteq.osm");
 
     // Set online base layer.
     // Note: assuming here that Map is an outlet added to the controller.
@@ -573,7 +569,7 @@ public class MainViewController : GLKit.GLKViewController
     // This is VERY IMPORTANT as it stops battery drain when nothing changes on the screen!
     Paused = true;
   }
-</pre>
+{% endhighlight %}
 
 ### Xamarin Common Code
 
@@ -585,7 +581,7 @@ The following common code can be used for both Xamarin Android and Xamarin iOS a
 
   **Note:** You must have *Icon.png* that is a bitmap, located in the Assets folder of your project
 
-<pre class="brush: csharp">
+{% highlight csharp %}
   // 1. Create overlay layer for markers
   var proj = new EPSG3857();
   var dataSource = new LocalVectorDataSource (proj);
@@ -603,7 +599,7 @@ The following common code can be used for both Xamarin Android and Xamarin iOS a
   var marker = new Marker (proj.FromWgs84(new MapPos(-0.8164,51.2383)), markersStyleBuilder.BuildStyle ());
   dataSource.Add (marker);
 
-</pre>
+{% endhighlight %}
 
 <br/><br/>**Tip:** See [mobile-dotnet-samples](https://github.com/CartoDB/mobile-dotnet-samples/) for other common map options for the Xamarin mobile platform, such as:
 
@@ -618,7 +614,7 @@ If using Windows Phone as the mobile platform, follow this implementation proced
 
 _**Note:** The mobile development team is still testing Windows Phone implementation with the Mobile SDK._ Please [contact us](mailto:support@carto.com) if you run into any issues.
 
-1. Install [Visual Studio Extension Package](https://msdn.microsoft.com/en-us/library/bb166441.aspxf) from Windows
+1. Install SDK VSIX pacakge (ask from mobile-support@carto.com now) from Windows
 
     The following requirements are mandatory:
 
@@ -1375,7 +1371,7 @@ Add a polygon and apply polygon styling using the following code. The following 
   
 </div>
 
-#### Example Polygon on a Mobile Map
+#### Example Polygon on a Mobile app
 
 ![polygon](https://dl.dropboxusercontent.com/u/3573333/public_web/developersite/polygon.png)
 
