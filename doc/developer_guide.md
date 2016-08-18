@@ -932,7 +932,7 @@ _NutiParameters_ describe additional parameters that can be used in styles and c
 
 The following is a simple example of _NutiParameters_ section, located in the style xml file:
 
-% highlight xml %} 
+{% highlight xml %} 
 `<NutiParameters>`
 `  <NutiParameter name="lang" type="string" value="en" />`
 `</NutiParameters>`
