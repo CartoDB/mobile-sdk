@@ -443,7 +443,51 @@ If using Xamarin as the mobile platform, follow these implementation procedures 
 
     Almost all of the map related API code (such as adding layers and objects to map, handling interactions and clicks, etc.) can be shared for iOS and Android through one project!
 
-### Xarmin Forms Apps
+The following sections describe the common code that can be shared, and the individual platform setup requirements for Xamarin options.
+
+[Xamarin Common Code for all Xamarin platforms](#xamarin-common-code)  | 
+[Xamarin Forms App](#xamarin-forms-apps) | 
+[Xamarin Android App](#xamarin-android-app) |
+[Xamarin iOS App](#xamarin-ios-app) |
+
+#### Xamarin Common Code
+
+The following common code can be used for both Xamarin Android and Xamarin iOS apps. This is useful if you are sharing code between projects.
+
+1) Add a marker, based on defined coordinates
+
+  Add the following code after creating the [MapView](#xamarin-android-and-ios-implementation).
+
+  **Note:** You must have *Icon.png* that is a bitmap, located in the Assets folder of your project
+
+{% highlight csharp %}
+  // 1. Create overlay layer for markers
+  var proj = new EPSG3857();
+  var dataSource = new LocalVectorDataSource (proj);
+  var overlayLayer = new VectorLayer (dataSource);
+  mapView.Layers.Add (overlayLayer);
+
+  // 2. Create Marker style
+  var markersStyleBuilder = new MarkerStyleBuilder ();
+  markersStyleBuilder.Size = 20;
+  UnsignedCharVector iconBytes = AssetUtils.LoadBytes("Icon.png");
+  var bitmap = new Bitmap (iconBytes, true);
+  markersStyleBuilder.Bitmap = bitmap;
+
+  // Example Marker for London
+  var marker = new Marker (proj.FromWgs84(new MapPos(-0.8164,51.2383)), markersStyleBuilder.BuildStyle ());
+  dataSource.Add (marker);
+
+{% endhighlight %}
+
+<br/><br/>**Tip:** See [mobile-dotnet-samples](https://github.com/CartoDB/mobile-dotnet-samples/) for other common map options for the Xamarin mobile platform, such as:
+
+- **Control map view** - set zoom, center, tilt etc.
+- **Listen events** (MapListener.cs) of clicks to map and map objects
+- **Add other objects**: Lines, Polygons, Points, Balloons (callouts). You can even add 3D objects and use customized Balloons
+- **Download offline map packages** for a country, or smaller region
+
+#### Xamarin Forms Apps
 
 Xamarin Forms (version 3.3.0 and higher) support *Native Controls*. If you add Mobile SDK apps for iOS and Android platforms, Xamarin Native Controls is available by default. See the blog [_Embedding Native Controls into Xamarin.Forms_](https://blog.xamarin.com/embedding-native-controls-into-xamarin-forms) for details. 
 
@@ -463,7 +507,7 @@ While you can share most of code using Native Controls, you just need to specify
 
 **Note:** Native Controls only work if you create or update `Form` in the code, using the xml definition will not work. This Xamrin development requirement is subject to change with each release. _Mobile SDK with Xamarin Forms is currently in being tested with Native apps._ Please [contact us](mailto:support@carto.com) if you have an issues.
 
-### Android Native App
+#### Xamarin Android App
 
 Follow these steps to add native apps to your Xamarin Android package.
 
@@ -518,7 +562,7 @@ public class MainActivity : Activity
   }
 {% endhighlight %}
 
-### Xamarin iOS App
+#### Xamarin iOS App
 
 Follow these steps to add apps to your Xamarin iOS package.
 
@@ -570,43 +614,6 @@ public class MainViewController : GLKit.GLKViewController
     Paused = true;
   }
 {% endhighlight %}
-
-### Xamarin Common Code
-
-The following common code can be used for both Xamarin Android and Xamarin iOS apps. This is useful if you are sharing code between projects.
-
-1) Add a marker, based on defined coordinates
-
-  Add the following code after creating the [MapView](#xamarin-android-and-ios-implementation).
-
-  **Note:** You must have *Icon.png* that is a bitmap, located in the Assets folder of your project
-
-{% highlight csharp %}
-  // 1. Create overlay layer for markers
-  var proj = new EPSG3857();
-  var dataSource = new LocalVectorDataSource (proj);
-  var overlayLayer = new VectorLayer (dataSource);
-  mapView.Layers.Add (overlayLayer);
-
-  // 2. Create Marker style
-  var markersStyleBuilder = new MarkerStyleBuilder ();
-  markersStyleBuilder.Size = 20;
-  UnsignedCharVector iconBytes = AssetUtils.LoadBytes("Icon.png");
-  var bitmap = new Bitmap (iconBytes, true);
-  markersStyleBuilder.Bitmap = bitmap;
-
-  // Example Marker for London
-  var marker = new Marker (proj.FromWgs84(new MapPos(-0.8164,51.2383)), markersStyleBuilder.BuildStyle ());
-  dataSource.Add (marker);
-
-{% endhighlight %}
-
-<br/><br/>**Tip:** See [mobile-dotnet-samples](https://github.com/CartoDB/mobile-dotnet-samples/) for other common map options for the Xamarin mobile platform, such as:
-
-- **Control map view** - set zoom, center, tilt etc.
-- **Listen events** (MapListener.cs) of clicks to map and map objects
-- **Add other objects**: Lines, Polygons, Points, Balloons (callouts). You can even add 3D objects and use customized Balloons
-- **Download offline map packages** for a country, or smaller region
 
 ### Windows Phone Implementation
 
@@ -713,9 +720,8 @@ var marker = new Marker(proj.FromWgs84(new MapPos(-0.8164, 51.2383)), markersSty
 dataSource.Add(marker);
 
 </pre>
-</div>
 
-<br></br>**Tip:** See [mobile-dotnet-samples](https://github.com/CartoDB/mobile-dotnet-samples/) sample project (solution: *hellomap-winphone.sln*) for other WP map actions, such as:
+**Tip:** See [mobile-dotnet-samples](https://github.com/CartoDB/mobile-dotnet-samples/) sample project (solution: *hellomap-winphone.sln*) for other WP map actions, such as:
 
 - **Control map view** - set zoom, center, tilt etc.
 - **Listen events** (MapListener.cs) of clicks to map and map objects

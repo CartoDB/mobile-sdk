@@ -926,21 +926,23 @@ The following CARTO specific extensions are specific to Mapnik XML style files.
 
 _NutiParameters_ describe additional parameters that can be used in styles and controlled in the code (from `MBVectorTileDecoder`).
 
-- Parameters are typed, have default values and can be used as variables within _nuti_ namespace in the style (for example, *[nuti::lang]*)
+- Parameters are typed, have default values and can be used as variables within _nuti_ namespace in the style (for example, `[nuti::lang]`)
 
 - Some parameters may have _ prefix in their name. Such variables are reserved and should not be updated directly by the application
 
 The following is a simple example of _NutiParameters_ section, located in the style xml file:
 
+% highlight xml %} 
 `<NutiParameters>`
 `  <NutiParameter name="lang" type="string" value="en" />`
 `</NutiParameters>`
+{% endhighlight %}
 
 #### Metavariables
 
-Metavariables add support for dynamic variable look-up. Variable names may depend on other variables. For example, *[name_[nuti::lang]]*.
+Metavariables add support for dynamic variable look-up. Variable names may depend on other variables. For example, `[name_[nuti::lang]]`.
 
-If the value of *nuti::lang* is 'en', this metavariable expression would be equal to *[name_en]* expression.
+If the value of `nuti::lang` is 'en', this metavariable expression would be equal to *[name_en]* expression.
 
 #### Conditional Operator
 
