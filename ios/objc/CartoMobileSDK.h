@@ -142,6 +142,8 @@
 #import "NTPackageTileMask.h"
 #import "NTPackageManager.h"
 #import "NTCartoPackageManager.h"
+
+#import "NTCartoOfflineVectorTileLayer.h"
 #endif
 
 #ifdef _CARTO_ROUTING_SUPPORT
