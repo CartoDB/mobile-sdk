@@ -10,6 +10,9 @@ DEFAULT_MSBUILD = "C:/Program Files (x86)/MSBuild/14.0/Bin/msbuild.exe"
 def msbuild(args, dir, *cmdArgs):
   return execute(args.msbuild, dir, *cmdArgs)
 
+def nuget(args, dir, *cmdArgs):
+  return execute(args.nuget, dir, *cmdArgs)
+
 def patchVcxprojFile(baseDir, fileName):
   with open(fileName, 'rb') as f:
     linesIn = f.readlines()
@@ -99,15 +102,50 @@ def buildWinPhoneVSIX(args):
     return True
   return False
 
+def buildWinPhoneNuget(args):
+  baseDir = getBaseDir()
+  buildDir = getBuildDir('winphone_nuget')
+  distDir = getDistDir('winphone10')
+  version = args.buildversion
+
+  with open('%s/scripts/winphone10/CartoMobileSDK.WinPhone.nuspec.template' % baseDir, 'r') as f:
+    nuspecFile = string.Template(f.read()).safe_substitute({ 'baseDir': baseDir, 'buildDir': buildDir, 'configuration': args.configuration, 'nativeConfiguration': args.nativeconfiguration, 'version': version })
+  with open('%s/CartoMobileSDK.WinPhone.nuspec' % buildDir, 'w') as f:
+    f.write(nuspecFile)
+
+  # A hack to generate non-arch dependent assembly, this is nuget peculiarity
+  if not copyfile('%s/../winphone_managed10-x86/bin/%s/CartoMobileSDK.WinPhone.dll' % (buildDir, args.configuration), '%s/CartoMobileSDK.WinPhone.dll' % buildDir):
+    return False
+  if not execute('corflags', buildDir,
+    '/32BITREQ-',
+    '%s/CartoMobileSDK.WinPhone.dll' % buildDir
+  ):
+    return False
+
+  if not nuget(args, buildDir,
+    'pack',
+    '%s/CartoMobileSDK.WinPhone.nuspec' % buildDir
+  ):
+    return False
+
+  if not copyfile('%s/CartoMobileSDK.WinPhone10.%s.nupkg' % (buildDir, version), '%s/CartoMobileSDK.WinPhone10.%s.nupkg' % (distDir, version)):
+    return False
+  print "Output available in:\n%s\n\nTo publish, use:\nnuget.exe push %s/CartoMobileSDK.WinPhone10.%s.nupkg -Source https://www.nuget.org/api/v2/package\n" % (distDir, distDir, version)
+  return True
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--profile', dest='profile', default=getDefaultProfile(), choices=getProfiles().keys(), help='Build profile')
 parser.add_argument('--winphone-arch', dest='winphonearch', default=['all'], choices=WINPHONE10_ARCHS + ['all'], nargs='+', help='Windows phone target architectures')
 parser.add_argument('--defines', dest='defines', default='', help='Defines for compilation')
 parser.add_argument('--msbuild', dest='msbuild', default='auto', help='WinPhone msbuild executable')
+parser.add_argument('--nuget', dest='nuget', default='nuget', help='nuget executable')
 parser.add_argument('--cmake', dest='cmake', default='cmake', help='CMake executable')
 parser.add_argument('--cmake-options', dest='cmakeoptions', default='', help='CMake options')
 parser.add_argument('--configuration', dest='configuration', default='Release', choices=['Release', 'Debug'], help='Configuration')
 parser.add_argument('--build-number', dest='buildnumber', default='', help='Build sequence number, goes to version str')
+parser.add_argument('--build-version', dest='buildversion', default='%s-devel' % SDK_VERSION, help='Build version, goes to distributions')
+parser.add_argument('--build-vsix', dest='buildvsix', default=False, action='store_true', help='Build VSIX package')
+parser.add_argument('--build-nuget', dest='buildnuget', default=False, action='store_true', help='Build Nuget package')
 
 args = parser.parse_args()
 if args.msbuild == 'auto':
@@ -123,5 +161,9 @@ for arch in args.winphonearch:
     exit(-1)
   if not buildWinPhoneManagedDLL(args, arch):
     exit(-1)
-if not buildWinPhoneVSIX(args):
-  exit(-1)
+if args.buildvsix:
+  if not buildWinPhoneVSIX(args):
+    exit(-1)
+if args.buildnuget:
+  if not buildWinPhoneNuget(args):
+    exit(-1)

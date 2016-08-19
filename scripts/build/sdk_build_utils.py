@@ -6,6 +6,8 @@ import argparse
 import shutil
 import json
 
+SDK_VERSION = '4.0.0'
+
 def makedirs(dir):
   try:
     if not os.path.exists(dir):
