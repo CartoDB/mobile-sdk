@@ -100,16 +100,41 @@ def buildXamarinDLL(args, target):
     copyfile('%s/bin/%s/CartoMobileSDK.%s.dll.mdb' % (buildDir, args.configuration, target), '%s/CartoMobileSDK.%s.dll.mdb' % (distDir, target)) and \
     copyfile('%s/bin/%s/CartoMobileSDK.%s.xml' % (buildDir, args.configuration, target), '%s/CartoMobileSDK.%s.xml' % (distDir, target))
 
+def buildXamarinNuget(args, target):
+  baseDir = getBaseDir()
+  buildDir = getBuildDir('xamarin_nuget')
+  distDir = getDistDir('xamarin')
+  version = args.buildversion
+
+  with open('%s/scripts/xamarin/CartoMobileSDK.%s.nuspec.template' % (baseDir, target), 'r') as f:
+    nuspecFile = string.Template(f.read()).safe_substitute({ 'baseDir': baseDir, 'buildDir': buildDir, 'configuration': args.configuration, 'nativeConfiguration': args.nativeconfiguration, 'version': version })
+  with open('%s/CartoMobileSDK.%s.nuspec' % (buildDir, target), 'w') as f:
+    f.write(nuspecFile)
+
+  if not nuget(args, buildDir,
+    'pack',
+    '%s/CartoMobileSDK.%s.nuspec' % (buildDir, target)
+  ):
+    return False
+
+  if not copyfile('%s/CartoMobileSDK.%s.%s.nupkg' % (buildDir, target, version), '%s/CartoMobileSDK.%s.%s.nupkg' % (distDir, target, version)):
+    return False
+  print "Output available in:\n%s\n\nTo publish, use:\nnuget push %s/CartoMobileSDK.%s.%s.nupkg -Source https://www.nuget.org/api/v2/package\n" % (distDir, distDir, target, version)
+  return True
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--profile', dest='profile', default='standard', choices=getProfiles().keys(), help='Build profile')
 parser.add_argument('--defines', dest='defines', default='', help='Defines for compilation')
 parser.add_argument('--xbuild', dest='xbuild', default='xbuild', help='Xamarin xbuild executable')
+parser.add_argument('--nuget', dest='nuget', default='nuget', help='nuget executable')
 parser.add_argument('--android-ndk-path', dest='androidndkpath', default='auto', help='Android NDK path')
 parser.add_argument('--android-sdk-path', dest='androidsdkpath', default='auto', help='Android SDK path')
 parser.add_argument('--cmake', dest='cmake', default='cmake', help='CMake executable')
 parser.add_argument('--cmake-options', dest='cmakeoptions', default='', help='CMake options')
 parser.add_argument('--configuration', dest='configuration', default='Release', choices=['Release', 'Debug'], help='Configuration')
 parser.add_argument('--build-number', dest='buildnumber', default='', help='Build sequence number, goes to version str')
+parser.add_argument('--build-version', dest='buildversion', default='%s-devel' % SDK_VERSION, help='Build version, goes to distributions')
+parser.add_argument('--build-nuget', dest='buildnuget', default=False, action='store_true', help='Build Nuget package')
 parser.add_argument(dest='target', choices=['android', 'ios'], help='Target platform')
 
 args = parser.parse_args()
@@ -131,17 +156,23 @@ args.defines += ';' + getProfiles()[args.profile].get('defines', '')
 args.defines += ';TARGET_XAMARIN'
 args.cmakeoptions += ';' + getProfiles()[args.profile].get('cmake-options', '')
 
+target = None
 if args.target == 'android':
+  target = 'Android'
   for abi in ANDROID_ABIS:
     if not buildAndroidSO(args, abi):
       exit(-1)
-  if not buildXamarinDLL(args, 'Android'):
-    exit(-1)
 elif args.target == 'ios':
+  target = 'iOS'
   for arch in IOS_ARCHS:
     if not buildIOSLib(args, arch):
       exit(-1)
   if not buildIOSFatLib(args, IOS_ARCHS):
     exit(-1)
-  if not buildXamarinDLL(args, 'iOS'):
+
+if not buildXamarinDLL(args, target):
+  exit(-1)
+
+if args.buildnuget:
+  if not buildXamarinNuget(args, target):
     exit(-1)
