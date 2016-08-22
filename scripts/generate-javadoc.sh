@@ -1,6 +1,6 @@
 #!/bin/bash 
 
-# Swig dir, if not specified use use without dir, the user might have the dir in it's env variable
+# Javadoc executable to use
 javadocExec="javadoc"
 
 # Set dirs
@@ -29,7 +29,7 @@ find ${tempDir} -name "*.java" > ${tempDir}/files
 # Execute JavaDoc
 rm -rf ${javadocDir}
 mkdir -p ${javadocDir}
-${javadocExec} -source 1.6 -d ${javadocDir} -doctitle "Carto Mobile SDK for Android" "@${tempDir}/files"
+${javadocExec} -source 1.6 -d ${javadocDir} -doctitle "CARTO Mobile SDK for Android" "@${tempDir}/files"
 
 # Finished
 echo "Done!"
