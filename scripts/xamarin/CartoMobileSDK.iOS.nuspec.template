@@ -3,7 +3,7 @@
     <metadata>
         <id>CartoMobileSDK.iOS</id>
         <title>CARTO Mobile SDK for Xamarin iOS</title>
-        <version>4.0.0-alphapreview1</version>
+        <version>$version</version>
         <authors>CARTO</authors>
         <iconUrl>https://cartodb-libs.global.ssl.fastly.net/cartodb.com/files/img/logo/carto-for-twitter.5f35eb94.png</iconUrl>
         <licenseUrl>https://carto.com/terms/</licenseUrl>
@@ -14,6 +14,6 @@
         <copyright>Copyright CartoDB, Inc.</copyright>
     </metadata>
     <files>
-        <file src="$baseDir\build\xamarin_ios\bin\$configuration\*.iOS.*" target="lib/Xamarin.iOS10" />
+        <file src="$baseDir/build/xamarin_ios/bin/$configuration/*.iOS.*" target="lib/Xamarin.iOS10" />
     </files>
 </package>

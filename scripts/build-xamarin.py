@@ -11,6 +11,9 @@ DEFAULT_XBUILD = 'xbuild'
 def xbuild(args, dir, *cmdArgs):
   return execute(args.xbuild, dir, *cmdArgs)
 	
+def nuget(args, dir, *cmdArgs):
+  return execute(args.nuget, dir, *cmdArgs)
+
 def buildAndroidSO(args, abi):
   version = getVersion(args.buildnumber) if args.configuration == 'Release' else 'Devel'
   baseDir = getBaseDir()
@@ -155,6 +158,7 @@ if args.androidndkpath == 'auto' and args.target == 'android':
 args.defines += ';' + getProfiles()[args.profile].get('defines', '')
 args.defines += ';TARGET_XAMARIN'
 args.cmakeoptions += ';' + getProfiles()[args.profile].get('cmake-options', '')
+args.nativeconfiguration = args.configuration
 
 target = None
 if args.target == 'android':
