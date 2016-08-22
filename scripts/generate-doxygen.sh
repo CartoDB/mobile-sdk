@@ -15,11 +15,7 @@ mkdir -p ${tempDir}
 cp -r ${baseDir}/generated/ios-objc/proxies/* ${tempDir}
 cp -r ${baseDir}/ios/objc/ui/MapView.h ${tempDir}
 find ${tempDir} -name "*NTBaseMapView.*" -exec rm {} \;
-find ${tempDir} -name "*NTMapTileQuadTreeNode.*" -exec rm {} \;
-find ${tempDir} -name "*NTQuadTreeNodeType.*" -exec rm {} \;
-find ${tempDir} -name "*NTQuadTreeRootType.*" -exec rm {} \;
 find ${tempDir} -name "*NTRedrawRequestListener.*" -exec rm {} \;
-find ${tempDir} -name "*NTGLUtils.*" -exec rm {} \;
 find ${tempDir} -name "*NTIOSUtils.*" -exec rm {} \;
 
 # Remove attributes unsupported by doxygen from source files
