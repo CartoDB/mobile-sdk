@@ -29,6 +29,12 @@ namespace carto { namespace mvt {
                 return Value(static_cast<long long>(_featureData->getGeometryType()));
             }
         }
+        if (name == "zoom") {
+            return Value(static_cast<long long>(_zoom));
+        }
+        if (name == "view::zoom") {
+            return Value(static_cast<double>(_zoom + 0.5)); // use 'average' zoom; this is only needed for expressions that are not evaluated at view-time
+        }
         if (name.compare(0, 6, "nuti::") == 0) {
             auto it = _nutiParameterValueMap.find(name.substr(6));
             if (it != _nutiParameterValueMap.end()) {
