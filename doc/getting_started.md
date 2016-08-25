@@ -10,7 +10,7 @@ The following workflow guides you through the process of getting started with th
 
 ## Downloading the SDK
 
-To begin using the Mobile SDK, download the required SDK packages and libraries based on your mobile platform. _Some mobile platforms are only available for select account plans._ [Contact us](mailto:support@carto.com) if you have questions about Mobile SDK packages and what features are included.
+To begin using the Mobile SDK, download the required SDK packages and libraries based on your mobile platform. [Contact us](mailto:support@carto.com) if you have questions about Mobile SDK packages and what features are included.
 
 There are multiple ways to download SDK packages:
 
@@ -116,9 +116,9 @@ _**Note:** The current version, 4.0.0, is a beta release. These zip files are su
 
 ## Registering your Mobile App
 
-You must register your mobile applications under your CARTO.com account settings. Once an app is added, you can retrieve the mobile app API Key and manage its settings.
+You must register your mobile applications under your CARTO.com account settings. Once an app is added, you can retrieve the mobile app License key, which needs to go to your app code.
 
-The following procedure describes how to register mobiles apps under your account settings. While the number of mobile apps is unlimited, application quota consumption rules are enforced based on your account plan. [Contact us](mailto:sales@carto.com) if you have questions about your mobile account options.
+The following procedure describes how to register mobile apps under your account settings. While the number of mobile apps is unlimited, application quota consumption rules are enforced based on your account plan. [Contact us](mailto:sales@carto.com) if you have questions about your mobile account options.
 
 1. Access [Your API Keys](/docs/carto-editor/your-account/#api-key) from the CARTO Dashboard
 
@@ -146,8 +146,8 @@ The following procedure describes how to register mobiles apps under your accoun
     Name | An informative name of the mobile application in your account
     Description | A description about the mobile application in your account
     Platform | Identifies the type of mobile app platform. Some options may not be available, based on your account plan<br/><br/>**Note:** Once a mobile application is saved, you cannot edit the Platform setting. As an alternative, you can [delete](#delete-a-mobile-app) the application and recreate it with new settings.<br/><br/>**Tip:** When you select a _Platform_, the _Application ID_ displays more details about what identifiers, or packages, are required.<br/><br/><img src="/docs/img/layout/mobile/platform_appid.jpg" alt="Platform App ID hint" /> 
-    Application ID | The identification of the mobile app in the App store that is required for development with the Mobile SDK.<br/><br/>The following application ids identify the Platform selected:<br/><br/>- [**Android**](#android-implementation): requires the AndroidManifest.xml package<br/><br/>- [**iOS**](#ios-implementation): requires a Bundle identifier. You can find it in the project properties of your iOS package<br/><br/>- [**Xamarin Android**](#xamarin-android-and-ios-implementation): requires the AndroidManifest.xml package<br/><br/>- [**Xamarin iOS**](#xamarin-ios-app): requires a Bundle identifier. You can find it in the project properties of your Xamarin iOS package<br/><br/>- [**Windows Phone**](#windows-phone-implementation): Requires the package name from the Windows package.appmanifest 
-    App type | Identifies the type of mobile application, which are subject to different quota limitations<br/><br/>- **Open**: Adds and counts mobile apps users towards global usage quotas, ranging from 10K to 500k users, depending on your account plan. This app type is open to the public and available in public app stores<br/><br/>- **Dev**: Select this app type when you are developing and testing your mobile app. Dev is available for all account plans and allows each mobile app to have up to five users. Dev apps do not appear in public app stores<br/><br/>_**Note:** Once you are satisfied with your mobile development, you can [promote a Dev app](#promoting-a-dev-app) to another app type._<br/><br/>- **Private**: Available for Enterprise accounts only, allows organizations to publish their apps internally and share quota limitations, up to 750 users. Private apps are not published to public app stores
+    Application ID | The identification of the mobile app in the App store that is required for development with the Mobile SDK.<br/><br/>The following application ids identify the Platform selected:<br/><br/>- [**Android**](#android-implementation): *package* from the AndroidManifest.xml file or *applicationId* in build.gradle<br/><br/>- [**iOS**](#ios-implementation): Bundle Identifier. You can find it in the project properties in Xcode<br/><br/>- [**Xamarin Android**](#xamarin-android-and-ios-implementation): *package* from the AndroidManifest.xml file<br/><br/>- [**Xamarin iOS**](#xamarin-ios-app): Bundle Identifier from the project Info.plist<br/><br/>- [**Windows Phone**](#windows-phone-implementation): UUID from the Windows package.appmanifest 
+    App type | Identifies the type of mobile application, which are subject to different quota limitations<br/><br/>- **Open**: This app type is open to the public and is available as free download in public app stores<br/><br/>- **Private**: Available for Enterprise accounts only, allows organizations to publish their apps internally and have paid app use cases. 
  
 5. Click _SAVE CHANGES_
 
@@ -179,35 +179,9 @@ Mobile App API Keys cannot be regenerated manually, but are automatically regene
 
 - If you [upgrade](/docs/carto-editor/your-account/#billing) your account plan that includes additional mobile features, the Mobile apps license key is automatically regenerated
 
-- If you change the _App type_ from **Dev** to Open or Private, the Mobile apps license key is regenerated
+- If you change the _App type_ the Mobile apps license key is regenerated
 
 You will receive a notification when mobile api keys are regenerated.
-
-### Promoting a Dev App
-
-A Dev mobile app enables you to develop and test your mobile application. Only a developer mobile app can be promoted to another app type through the Mobile apps settings.
-
-**Note:** Only the Dev app type can be promoted. You cannot change the mobile app type if it is Open or Private. As an alternative, you can delete the application and [recreate it](#registering-your-mobile-app) with the new app type.
-
-1. From the _Mobile apps_ section of your API Keys, click a mobile application name
-
-    The application settings appear. 
-
-2. Click _Delete this application_ from the bottom of the app settings
-
-    <span class="wrap-border"><img src="/docs/img/layout/mobile/change_app_type.jpg" alt="Promote dev app to another app type" /></span>
-
-3. Click _SAVE CHANGES_
-
-    A confirmation dialog appears and notifies you that the mobile app license key will also change.
-
-4. Click _CHANGE APPLICATION TYPE_
-
-    The selected mobile app settings refresh, and the license key is regenerated.
-
-5. Copy and paste the regenerated API Key, as needed for your mobile app
-
-6. Click the back navigation arrow, located next to the app name, to return Mobile apps section of your API Keys
 
 ### Delete a Mobile App
 
