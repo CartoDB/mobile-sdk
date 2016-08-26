@@ -175,8 +175,6 @@ Once your mobile apps are registered for your account, you can retrieve the API 
 
 Mobile App API Keys cannot be regenerated manually, but are automatically regenerated in the following scenarios.
 
-- If you [request a new API Key](/docs/carto-editor/your-account/#api-key) for your CARTO API's, the Mobile apps license key is also automatically regenerated
-
 - If you [upgrade](/docs/carto-editor/your-account/#billing) your account plan that includes additional mobile features, the Mobile apps license key is automatically regenerated
 
 - If you change the _App type_ the Mobile apps license key is regenerated
