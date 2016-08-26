@@ -7,7 +7,6 @@
 #ifndef _CARTO_MAPNIKVT_FEATURECOLLECTION_H_
 #define _CARTO_MAPNIKVT_FEATURECOLLECTION_H_
 
-#include "Value.h"
 #include "Geometry.h"
 #include "FeatureData.h"
 
@@ -15,8 +14,6 @@
 #include <list>
 #include <vector>
 #include <map>
-
-#include <cglib/vec.h>
 
 namespace carto { namespace mvt {
     class FeatureCollection {

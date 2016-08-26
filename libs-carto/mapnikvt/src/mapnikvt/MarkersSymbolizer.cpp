@@ -15,10 +15,14 @@ namespace carto { namespace mvt {
 
         float fontScale = symbolizerContext.getSettings().getFontScale();
         vt::LabelOrientation placement = convertLabelPlacement(_placement);
-        if (_transformExpression) { // if rotation transform is explicitly defined, use point placement
+        vt::LabelOrientation orientation = placement;
+        if (_transformExpression) { // if rotation transform is explicitly defined, use point orientation
             if (containsRotationTransform(_transformExpression->evaluate(exprContext))) {
-                placement = vt::LabelOrientation::POINT;
+                orientation = vt::LabelOrientation::POINT;
             }
+        }
+        if (placement == vt::LabelOrientation::LINE && _spacing > 0) {
+            orientation = vt::LabelOrientation::POINT; // we will apply custom rotation, thus use point orientation
         }
 
         float bitmapScaleX = fontScale, bitmapScaleY = fontScale;
@@ -83,64 +87,96 @@ namespace carto { namespace mvt {
             fillOpacity = 1.0f;
         }
 
-        boost::optional<vt::PointStyle> pointStyle;
-
         float bitmapSize = static_cast<float>(std::max(bitmap->width * bitmapScaleX, bitmap->height * bitmapScaleY));
-        vt::BitmapLabelStyle labelStyle(placement, vt::Color(0xffffffff) * fillOpacity, symbolizerContext.getFontManager()->getNullFont(), bitmap, _transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1)));
         int groupId = (_allowOverlap ? -1 : 0);
 
-        auto addPoints = [&](long long id, const std::vector<cglib::vec2<float>>& vertices) {
+        std::vector<std::pair<long long, vt::TileLayerBuilder::Vertex>> pointInfos;
+        std::vector<vt::TileLayerBuilder::BitmapLabelInfo> labelInfos;
+
+        auto addPoint = [&](long long id, const cglib::vec2<float>& vertex) {
             if (_allowOverlap) {
-                if (!pointStyle) {
-                    std::shared_ptr<const vt::FloatFunction> widthFunc;
-                    ExpressionFunctionBinder<float>().bind(&widthFunc, std::make_shared<ConstExpression>(Value(_width * fontScale))).update(exprContext);
-                    std::shared_ptr<const vt::ColorFunction> fillFunc;
-                    ExpressionFunctionBinder<vt::Color>().bind(&fillFunc, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), [this](const Value& val) -> vt::Color {
-                        return convertColor(val);
-                    }).update(exprContext);
-                    std::shared_ptr<const vt::FloatFunction> opacityFunc;
-                    ExpressionFunctionBinder<float>().bind(&opacityFunc, std::make_shared<ConstExpression>(Value(fillOpacity))).update(exprContext);
-
-                    vt::PointOrientation orientation;
-                    switch (placement) {
-                    case vt::LabelOrientation::BILLBOARD_2D:
-                        orientation = vt::PointOrientation::BILLBOARD_2D;
-                        break;
-                    case vt::LabelOrientation::BILLBOARD_3D:
-                        orientation = vt::PointOrientation::BILLBOARD_3D;
-                        break;
-                    default: // LabelOrientation::POINT, LabelOrientation::POINT_FLIPPING, LabelOrientation::LINE
-                        orientation = vt::PointOrientation::POINT;
-                        break;
-                    }
-
-                    pointStyle = vt::PointStyle(compOp, orientation, fillFunc, opacityFunc, widthFunc, symbolizerContext.getGlyphMap(), bitmap, _transform * cglib::scale3_matrix(cglib::vec3<float>(1.0f, (bitmap->height * bitmapScaleY) / (bitmap->width * bitmapScaleX), 1)));
-                }
-                layerBuilder.addPoints(vertices, pointStyle.get());
+                pointInfos.emplace_back(id, vertex);
             }
             else {
-                for (const auto& vertex : vertices) {
-                    layerBuilder.addBitmapLabel(id, groupId, vertex, 0, labelStyle);
+                labelInfos.push_back(vt::TileLayerBuilder::BitmapLabelInfo(id, groupId, vertex, 0));
+            }
+        };
+
+        auto flushPoints = [&](const cglib::mat3x3<float>& transform) {
+            if (_allowOverlap) {
+                std::shared_ptr<const vt::FloatFunction> widthFunc;
+                ExpressionFunctionBinder<float>().bind(&widthFunc, std::make_shared<ConstExpression>(Value(_width * fontScale))).update(exprContext);
+                std::shared_ptr<const vt::ColorFunction> fillFunc;
+                ExpressionFunctionBinder<vt::Color>().bind(&fillFunc, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), [this](const Value& val) -> vt::Color {
+                    return convertColor(val);
+                }).update(exprContext);
+                std::shared_ptr<const vt::FloatFunction> opacityFunc;
+                ExpressionFunctionBinder<float>().bind(&opacityFunc, std::make_shared<ConstExpression>(Value(fillOpacity))).update(exprContext);
+
+                vt::PointOrientation pointOrientation;
+                switch (orientation) {
+                case vt::LabelOrientation::BILLBOARD_2D:
+                    pointOrientation = vt::PointOrientation::BILLBOARD_2D;
+                    break;
+                case vt::LabelOrientation::BILLBOARD_3D:
+                    pointOrientation = vt::PointOrientation::BILLBOARD_3D;
+                    break;
+                default: // LabelOrientation::POINT, LabelOrientation::POINT_FLIPPING, LabelOrientation::LINE
+                    pointOrientation = vt::PointOrientation::POINT;
+                    break;
                 }
+
+                vt::PointStyle pointStyle(compOp, pointOrientation, fillFunc, opacityFunc, widthFunc, symbolizerContext.getGlyphMap(), bitmap, transform * cglib::scale3_matrix(cglib::vec3<float>(1.0f, (bitmap->height * bitmapScaleY) / (bitmap->width * bitmapScaleX), 1)));
+
+                std::size_t pointInfoIndex = 0;
+                layerBuilder.addPoints([&](long long& id, vt::TileLayerBuilder::Vertex& vertex) {
+                    if (pointInfoIndex >= pointInfos.size()) {
+                        return false;
+                    }
+                    id = pointInfos[pointInfoIndex].first;
+                    vertex = pointInfos[pointInfoIndex].second;
+                    pointInfoIndex++;
+                    return true;
+                }, pointStyle);
+                
+                pointInfos.clear();
+            }
+            else {
+                vt::BitmapLabelStyle style(orientation, vt::Color(0xffffffff) * fillOpacity, symbolizerContext.getFontManager()->getNullFont(), bitmap, transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1)));
+
+                std::size_t labelInfoIndex = 0;
+                layerBuilder.addBitmapLabels([&](vt::TileLayerBuilder::BitmapLabelInfo& labelInfo) {
+                    if (labelInfoIndex >= labelInfos.size()) {
+                        return false;
+                    }
+                    labelInfo = std::move(labelInfos[labelInfoIndex++]);
+                    return true;
+                }, style);
+                
+                labelInfos.clear();
             }
         };
 
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
             long long featureId = featureCollection.getId(index);
             const std::shared_ptr<const Geometry>& geometry = featureCollection.getGeometry(index);
-            
+
             if (auto pointGeometry = std::dynamic_pointer_cast<const PointGeometry>(geometry)) {
-                long long id = getBitmapId(featureId, file);
-                addPoints(id, pointGeometry->getVertices());
+                for (const auto& vertex : pointGeometry->getVertices()) {
+                    long long id = getBitmapId(featureId, file);
+                    addPoint(id, vertex);
+                }
             }
             else if (auto lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(geometry)) {
                 if (placement == vt::LabelOrientation::LINE) {
                     for (const auto& vertices : lineGeometry->getVerticesList()) {
                         if (_spacing <= 0) {
                             long long id = getBitmapId(featureId, file);
-                            layerBuilder.addBitmapLabel(id, groupId, vertices, 0, labelStyle);
+                            labelInfos.push_back(vt::TileLayerBuilder::BitmapLabelInfo(id, groupId, vertices, 0));
                             continue;
                         }
+
+                        flushPoints(_transform); // NOTE: we need to flush previous points at this point as we will recalculate transform, which is part of the style
 
                         float linePos = 0;
                         for (std::size_t i = 1; i < vertices.size(); i++) {
@@ -154,18 +190,16 @@ namespace carto { namespace mvt {
                             while (linePos < lineLen) {
                                 cglib::vec2<float> pos = v0 + (v1 - v0) * (linePos / lineLen);
                                 if (std::min(pos(0), pos(1)) > 0.0f && std::max(pos(0), pos(1)) < 1.0f) {
+                                    long long id = getMultiBitmapId(featureId, file);
+                                    addPoint(id, pos);
+
                                     cglib::vec2<float> dir = cglib::unit(v1 - v0);
                                     cglib::mat3x3<float> dirTransform = cglib::mat3x3<float>::identity();
                                     dirTransform(0, 0) = dir(0);
                                     dirTransform(0, 1) = -dir(1);
                                     dirTransform(1, 0) = dir(1);
                                     dirTransform(1, 1) = dir(0);
-
-                                    labelStyle.placement = vt::LabelOrientation::POINT;
-                                    labelStyle.transform = dirTransform * _transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1));
-
-                                    long long id = getMultiBitmapId(featureId, file);
-                                    layerBuilder.addBitmapLabel(id, groupId, pos, 0, labelStyle);
+                                    flushPoints(dirTransform * _transform); // NOTE: we should flush to be sure that the point will not get buffered
                                 }
 
                                 linePos += _spacing + bitmapSize;
@@ -176,18 +210,24 @@ namespace carto { namespace mvt {
                     }
                 }
                 else {
-                    long long id = getBitmapId(featureId, file);
-                    addPoints(id, lineGeometry->getMidPoints());
+                    for (const auto& vertex : lineGeometry->getMidPoints()) {
+                        long long id = getBitmapId(featureId, file);
+                        addPoint(id, vertex);
+                    }
                 }
             }
             else if (auto polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(geometry)) {
-                long long id = getBitmapId(featureId, file);
-                addPoints(id, polygonGeometry->getSurfacePoints());
+                for (const auto& vertex : polygonGeometry->getSurfacePoints()) {
+                    long long id = getBitmapId(featureId, file);
+                    addPoint(id, vertex);
+                }
             }
             else {
                 _logger->write(Logger::Severity::WARNING, "Unsupported geometry for MarkersSymbolizer");
             }
         }
+
+        flushPoints(_transform);
     }
 
     void MarkersSymbolizer::bindParameter(const std::string& name, const std::string& value) {

@@ -23,6 +23,8 @@
 #include <algorithm>
 #include <mutex>
 
+#include <cglib/ray.h>
+
 namespace carto { namespace vt {
     class GLTileRenderer {
     public:
@@ -36,7 +38,7 @@ namespace carto { namespace vt {
         void setBackgroundPattern(std::shared_ptr<const BitmapPattern> pattern);
         void setVisibleTiles(const std::map<TileId, std::shared_ptr<const Tile>>& tiles, bool blend);
         std::vector<std::shared_ptr<TileLabel>> getVisibleLabels() const;
-
+        
         void initializeRenderer();
         void resetRenderer();
         void deinitializeRenderer();
@@ -46,6 +48,8 @@ namespace carto { namespace vt {
         bool renderLabels(bool render2D, bool render3D);
         bool render3D();
         void endFrame();
+
+        bool findIntersectionId(const cglib::ray3<double>& ray, double& t, long long& id) const;
 
     private:
         using BitmapLabelMap = std::unordered_map<std::shared_ptr<const Bitmap>, std::vector<std::shared_ptr<TileLabel>>>;
@@ -118,6 +122,11 @@ namespace carto { namespace vt {
         bool buildRenderNodes(const BlendNode& blendNode, float blend, std::multimap<int, RenderNode>& renderNodeMap);
         void addRenderNode(RenderNode renderNode, std::multimap<int, RenderNode>& renderNodeMap);
         void updateLabels(const std::vector<std::shared_ptr<TileLabel>>& labels, float dOpacity);
+
+        bool findTileGeometryIntersectionId(const std::shared_ptr<TileGeometry>& geometry, const cglib::ray3<float>& ray, float& t, long long& id) const;
+        cglib::vec3<float> decodeVertex(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const;
+        cglib::vec3<float> decodePointOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const;
+        cglib::vec3<float> decodeLineBinormal(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const;
 
         bool renderBlendNodes2D(const std::vector<std::shared_ptr<BlendNode>>& blendNodes);
         bool renderBlendNodes3D(const std::vector<std::shared_ptr<BlendNode>>& blendNodes);

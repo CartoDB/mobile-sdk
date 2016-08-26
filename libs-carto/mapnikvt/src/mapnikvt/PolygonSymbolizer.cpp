@@ -11,14 +11,30 @@ namespace carto { namespace mvt {
         
         vt::PolygonStyle style(compOp, _fill, _fillOpacity, std::shared_ptr<vt::BitmapPattern>(), _geometryTransform);
 
-        for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
-            if (auto polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(featureCollection.getGeometry(index))) {
-                layerBuilder.addPolygons(polygonGeometry->getPolygonList(), style);
+        std::size_t featureIndex = 0;
+        std::size_t geometryIndex = 0;
+        std::shared_ptr<const PolygonGeometry> polygonGeometry;
+        layerBuilder.addPolygons([&](long long& id, vt::TileLayerBuilder::VerticesList& verticesList) {
+            while (true) {
+                if (polygonGeometry) {
+                    if (geometryIndex < polygonGeometry->getPolygonList().size()) {
+                        verticesList = polygonGeometry->getPolygonList()[geometryIndex++];
+                        return true;
+                    }
+                }
+
+                if (featureIndex >= featureCollection.getSize()) {
+                    break;
+                }
+                polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(featureCollection.getGeometry(featureIndex));
+                if (!polygonGeometry) {
+                    _logger->write(Logger::Severity::WARNING, "Unsupported geometry for PolygonSymbolizer");
+                }
+                featureIndex++;
+                geometryIndex = 0;
             }
-            else {
-                _logger->write(Logger::Severity::WARNING, "Unsupported geometry for PolygonSymbolizer");
-            }
-        }
+            return false;
+        }, style);
     }
 
     void PolygonSymbolizer::bindParameter(const std::string& name, const std::string& value) {

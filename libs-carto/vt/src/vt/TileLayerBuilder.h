@@ -18,6 +18,7 @@
 #include <memory>
 #include <vector>
 #include <list>
+#include <functional>
 
 #include <boost/variant.hpp>
 
@@ -32,17 +33,39 @@ namespace carto { namespace vt {
         using Vertices = std::vector<Vertex>;
         using VerticesList = std::vector<Vertices>;
 
+        struct BitmapLabelInfo {
+            long long id = 0;
+            long long groupId = 0;
+            boost::variant<Vertex, Vertices> position;
+            float minimumGroupDistance = 0;
+
+            BitmapLabelInfo() = default;
+            explicit BitmapLabelInfo(long long id, long long groupId, boost::variant<Vertex, Vertices> position, float minimumGroupDistance) : id(id), groupId(groupId), position(std::move(position)), minimumGroupDistance(minimumGroupDistance) { }
+        };
+
+        struct TextLabelInfo {
+            long long id = 0;
+            long long groupId = 0;
+            std::string text;
+            boost::optional<Vertex> position;
+            Vertices vertices;
+            float minimumGroupDistance = 0;
+
+            TextLabelInfo() = default;
+            explicit TextLabelInfo(long long id, long long groupId, std::string text, boost::optional<Vertex> position, Vertices vertices, float minimumGroupDistance) : id(id), groupId(groupId), text(std::move(text)), position(std::move(position)), vertices(std::move(vertices)), minimumGroupDistance(minimumGroupDistance) { }
+        };
+
         explicit TileLayerBuilder(float tileSize, float geomScale);
 
         void addBitmap(const std::shared_ptr<TileBitmap>& bitmap);
-        void addPoints(const Vertices& vertices, const PointStyle& style);
-        void addLines(const VerticesList& verticesList, const LineStyle& style);
-        void addPolygons(const std::list<VerticesList>& polygonList, const PolygonStyle& style);
-        void addPolygons3D(const std::list<VerticesList>& polygonList, float height, const Polygon3DStyle& style);
-        void addBitmapLabel(long long id, long long groupId, const boost::variant<Vertex, Vertices>& position, float minimumGroupDistance, const BitmapLabelStyle& style);
-        void addTextLabel(long long id, long long groupId, const std::string& text, const boost::optional<Vertex>& position, const Vertices& vertices, float minimumGroupDistance, const TextLabelStyle& style);
+        void addPoints(const std::function<bool(long long& id, Vertex& vertex)>& generator, const PointStyle& style);
+        void addLines(const std::function<bool(long long& id, Vertices& vertices)>& generator, const LineStyle& style);
+        void addPolygons(const std::function<bool(long long& id, VerticesList& verticesList)>& generator, const PolygonStyle& style);
+        void addPolygons3D(const std::function<bool(long long& id, VerticesList& verticesList)>& generator, float height, const Polygon3DStyle& style);
+        void addBitmapLabels(const std::function<bool(BitmapLabelInfo& labelInfo)>& generator, const BitmapLabelStyle& style);
+        void addTextLabels(const std::function<bool(TextLabelInfo& labelInfo)>& generator, const TextLabelStyle& style);
 
-        std::shared_ptr<TileLayer> build(int layerIdx, std::shared_ptr<FloatFunction> opacity, boost::optional<CompOp> compOp);
+        std::shared_ptr<TileLayer> build(std::string layerName, int layerIdx, std::shared_ptr<FloatFunction> opacity, boost::optional<CompOp> compOp);
 
     private:
         enum { RESERVED_VERTICES = 4096 };
@@ -58,7 +81,7 @@ namespace carto { namespace vt {
         };
 
         void appendGeometry();
-        void appendGeometry(float verticesScale, float binormalsScale, float texCoordsScale, const VertexArray<cglib::vec2<float>>& vertices, const VertexArray<cglib::vec2<float>>& texCoords, const VertexArray<cglib::vec2<float>>& binormals, const VertexArray<float>& heights, const VertexArray<cglib::vec4<char>>& attribs, const VertexArray<unsigned int>& indices, std::size_t offset, std::size_t count);
+        void appendGeometry(float verticesScale, float binormalsScale, float texCoordsScale, const VertexArray<cglib::vec2<float>>& vertices, const VertexArray<cglib::vec2<float>>& texCoords, const VertexArray<cglib::vec2<float>>& binormals, const VertexArray<float>& heights, const VertexArray<cglib::vec4<char>>& attribs, const VertexArray<unsigned int>& indices, const VertexArray<long long>& ids, std::size_t offset, std::size_t count);
         float calculateScale(VertexArray<cglib::vec2<float>>& values) const;
 
         bool tesselatePoint(const Vertex& vertex, char styleIndex, const Font::Glyph* glyph, const PointStyle& style);
@@ -78,6 +101,7 @@ namespace carto { namespace vt {
         VertexArray<float> _heights;
         VertexArray<cglib::vec4<char>> _attribs;
         VertexArray<unsigned int> _indices;
+        VertexArray<long long> _ids;
 
         std::vector<std::shared_ptr<TileBitmap>> _bitmapList;
         std::vector<std::shared_ptr<TileGeometry>> _geometryList;

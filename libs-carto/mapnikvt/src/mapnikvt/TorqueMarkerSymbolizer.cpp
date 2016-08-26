@@ -59,14 +59,30 @@ namespace carto { namespace mvt {
 
         vt::PointStyle style(compOp, vt::PointOrientation::POINT, fillFunc, opacityFunc, widthFunc, symbolizerContext.getGlyphMap(), bitmap, boost::optional<cglib::mat3x3<float>>());
 
-        for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
-            if (auto pointGeometry = std::dynamic_pointer_cast<const PointGeometry>(featureCollection.getGeometry(index))) {
-                layerBuilder.addPoints(pointGeometry->getVertices(), style);
+        std::size_t featureIndex = 0;
+        std::size_t geometryIndex = 0;
+        std::shared_ptr<const PointGeometry> pointGeometry;
+        layerBuilder.addPoints([&](long long& id, vt::TileLayerBuilder::Vertex& vertex) {
+            while (true) {
+                if (pointGeometry) {
+                    if (geometryIndex < pointGeometry->getVertices().size()) {
+                        vertex = pointGeometry->getVertices()[geometryIndex++];
+                        return true;
+                    }
+                }
+
+                if (featureIndex >= featureCollection.getSize()) {
+                    break;
+                }
+                pointGeometry = std::dynamic_pointer_cast<const PointGeometry>(featureCollection.getGeometry(featureIndex));
+                if (!pointGeometry) {
+                    _logger->write(Logger::Severity::WARNING, "Unsupported geometry for TorqueMarkerSymbolizer");
+                }
+                featureIndex++;
+                geometryIndex = 0;
             }
-            else {
-                _logger->write(Logger::Severity::WARNING, "Unsupported geometry for TorqueMarkerSymbolizer");
-            }
-        }
+            return false;
+        }, style);
     }
 
     void TorqueMarkerSymbolizer::bindParameter(const std::string& name, const std::string& value) {

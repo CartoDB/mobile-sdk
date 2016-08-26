@@ -20,9 +20,14 @@ namespace carto { namespace mvt {
 
         float fontScale = symbolizerContext.getSettings().getFontScale();
         float bitmapSize = static_cast<float>(std::max(backgroundBitmap->width, backgroundBitmap->height)) * fontScale;
+        vt::LabelOrientation placement = convertTextPlacement(_placement);
+        vt::LabelOrientation orientation = placement;
+        if (orientation == vt::LabelOrientation::LINE) {
+            orientation = vt::LabelOrientation::BILLBOARD_2D; // shields should be billboards, even when placed on a line
+        }
+
         std::string text = getTransformedText(_text);
         std::size_t hash = std::hash<std::string>()(text);
-        vt::LabelOrientation placement = convertTextPlacement(_placement);
         float minimumDistance = (_minimumDistance + bitmapSize) * std::pow(2.0f, -exprContext.getZoom()) / symbolizerContext.getSettings().getTileSize() * 2;
         long long groupId = (_allowOverlap ? -1 : 1); // use separate group from markers, markers use group 0
 
@@ -30,19 +35,17 @@ namespace carto { namespace mvt {
         vt::TextFormatter::Options shieldFormatterOptions = textFormatterOptions;
         shieldFormatterOptions.offset = cglib::vec2<float>(_shieldDx * fontScale, -_shieldDy * fontScale);
 
-        auto addLabel = [&](long long id, vt::LabelOrientation placement, const boost::optional<vt::TileLayerBuilder::Vertex>& position, const vt::TileLayerBuilder::Vertices& vertices) {
-            if (_unlockImage) {
-                cglib::vec2<float> backgroundOffset(-backgroundBitmap->width * fontScale * 0.5f + shieldFormatterOptions.offset(0), -backgroundBitmap->height * fontScale * 0.5f + shieldFormatterOptions.offset(1));
-                vt::TextLabelStyle textStyle(placement, textFormatterOptions, font, _orientation, fontScale, backgroundOffset, backgroundBitmap);
-                layerBuilder.addTextLabel(id, groupId, text, position, vertices, minimumDistance, textStyle);
-            }
-            else {
-                cglib::vec2<float> backgroundOffset(-backgroundBitmap->width * fontScale * 0.5f, -backgroundBitmap->height * fontScale * 0.5f);
-                vt::TextLabelStyle style(placement, shieldFormatterOptions, font, _orientation, fontScale, backgroundOffset, backgroundBitmap);
-                layerBuilder.addTextLabel(id, groupId, text, position, vertices, minimumDistance, style);
-            }
-        };
+        std::unique_ptr<vt::TextLabelStyle> style;
+        if (_unlockImage) {
+            cglib::vec2<float> backgroundOffset(-backgroundBitmap->width * fontScale * 0.5f + shieldFormatterOptions.offset(0), -backgroundBitmap->height * fontScale * 0.5f + shieldFormatterOptions.offset(1));
+            style.reset(new vt::TextLabelStyle(orientation, textFormatterOptions, font, _orientation, fontScale, backgroundOffset, backgroundBitmap));
+        }
+        else {
+            cglib::vec2<float> backgroundOffset(-backgroundBitmap->width * fontScale * 0.5f, -backgroundBitmap->height * fontScale * 0.5f);
+            style.reset(new vt::TextLabelStyle(orientation, shieldFormatterOptions, font, _orientation, fontScale, backgroundOffset, backgroundBitmap));
+        }
 
+        std::vector<vt::TileLayerBuilder::TextLabelInfo> labelInfos;
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
             long long featureId = featureCollection.getId(index);
             const std::shared_ptr<const Geometry>& geometry = featureCollection.getGeometry(index);
@@ -50,7 +53,7 @@ namespace carto { namespace mvt {
             if (auto pointGeometry = std::dynamic_pointer_cast<const PointGeometry>(geometry)) {
                 for (const auto& vertex : pointGeometry->getVertices()) {
                     long long id = getShieldId(featureId, hash);
-                    addLabel(id, placement, vertex, vt::TileLayerBuilder::Vertices());
+                    labelInfos.emplace_back(id, groupId, text, vertex, vt::TileLayerBuilder::Vertices(), minimumDistance);
                 }
             }
             else if (auto lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(geometry)) {
@@ -58,7 +61,7 @@ namespace carto { namespace mvt {
                     for (const auto& vertices : lineGeometry->getVerticesList()) {
                         if (_spacing <= 0) {
                             long long id = getShieldId(featureId, hash);
-                            addLabel(id, vt::LabelOrientation::BILLBOARD_2D, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices);
+                            labelInfos.emplace_back(id, groupId, text, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices, minimumDistance);
                             continue;
                         }
 
@@ -75,7 +78,7 @@ namespace carto { namespace mvt {
                                 cglib::vec2<float> pos = v0 + (v1 - v0) * (linePos / lineLen);
                                 if (std::min(pos(0), pos(1)) > 0.0f && std::max(pos(0), pos(1)) < 1.0f) {
                                     long long id = getMultiShieldId(featureId, hash);
-                                    addLabel(id, vt::LabelOrientation::BILLBOARD_2D, pos, vertices);
+                                    labelInfos.emplace_back(id, groupId, text, pos, vertices, minimumDistance);
                                 }
 
                                 linePos += _spacing + bitmapSize;
@@ -88,20 +91,29 @@ namespace carto { namespace mvt {
                 else {
                     for (const auto& vertices : lineGeometry->getVerticesList()) {
                         long long id = getShieldId(featureId, hash);
-                        addLabel(id, placement, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices);
+                        labelInfos.emplace_back(id, groupId, text, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices, minimumDistance);
                     }
                 }
             }
             else if (auto polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(geometry)) {
                 for (const auto& vertex : polygonGeometry->getSurfacePoints()) {
                     long long id = getShieldId(featureId, hash);
-                    addLabel(id, placement, vertex, vt::TileLayerBuilder::Vertices());
+                    labelInfos.emplace_back(id, groupId, text, vertex, vt::TileLayerBuilder::Vertices(), minimumDistance);
                 }
             }
             else {
                 _logger->write(Logger::Severity::WARNING, "Unsupported geometry for ShieldSymbolizer");
             }
         }
+
+        std::size_t labelInfoIndex = 0;
+        layerBuilder.addTextLabels([&](vt::TileLayerBuilder::TextLabelInfo& labelInfo) {
+            if (labelInfoIndex >= labelInfos.size()) {
+                return false;
+            }
+            labelInfo = std::move(labelInfos[labelInfoIndex++]);
+            return true;
+        }, *style);
     }
 
     void ShieldSymbolizer::bindParameter(const std::string& name, const std::string& value) {

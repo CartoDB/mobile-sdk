@@ -18,17 +18,20 @@ namespace carto { namespace vt {
         _heights.reserve(RESERVED_VERTICES);
         _attribs.reserve(RESERVED_VERTICES);
         _indices.reserve(RESERVED_VERTICES);
+        _ids.reserve(RESERVED_VERTICES);
     }
 
     void TileLayerBuilder::addBitmap(const std::shared_ptr<TileBitmap>& bitmap) {
         _bitmapList.push_back(bitmap);
     }
 
-    void TileLayerBuilder::addPoints(const Vertices& vertices, const PointStyle& style) {
-        if (vertices.empty()) {
+    void TileLayerBuilder::addPoints(const std::function<bool(long long& id, Vertex& vertex)>& generator, const PointStyle& style) {
+        long long id = 0;
+        cglib::vec2<float> vertex(0, 0);
+        if (!generator(id, vertex)) {
             return;
         }
-        
+
         if (_builderParameters.type != TileGeometry::Type::POINT || _builderParameters.glyphMap != style.glyphMap || _styleParameters.transform != style.transform || _styleParameters.compOp != style.compOp || _styleParameters.pointOrientation != style.orientation || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
             appendGeometry();
         }
@@ -51,16 +54,21 @@ namespace carto { namespace vt {
             _styleParameters.widthTable[styleIndex] = style.size;
             _builderParameters.pointGlyphIds[styleIndex] = glyphId;
         }
-        for (const Vertex& point : vertices) {
-            tesselatePoint(point, static_cast<char>(styleIndex), style.glyphMap->getGlyph(glyphId).get(), style);
-        }
+        
+        do {
+            std::size_t i0 = _indices.size();
+            tesselatePoint(vertex, static_cast<char>(styleIndex), style.glyphMap->getGlyph(glyphId).get(), style);
+            _ids.fill(id, _indices.size() - i0);
+        } while (generator(id, vertex));
     }
 
-    void TileLayerBuilder::addLines(const VerticesList& verticesList, const LineStyle& style) {
-        if (verticesList.empty()) {
+    void TileLayerBuilder::addLines(const std::function<bool(long long& id, Vertices& vertices)>& generator, const LineStyle& style) {
+        long long id = 0;
+        std::vector<cglib::vec2<float>> vertices;
+        if (!generator(id, vertices)) {
             return;
         }
-        
+
         if (_builderParameters.type != TileGeometry::Type::LINE || _builderParameters.strokeMap != style.strokeMap || _styleParameters.transform != style.transform || _styleParameters.compOp != style.compOp || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
             appendGeometry();
         }
@@ -83,13 +91,18 @@ namespace carto { namespace vt {
             _styleParameters.widthTable[styleIndex] = style.width;
             _builderParameters.lineStrokeIds[styleIndex] = strokeId;
         }
-        for (const Vertices& points : verticesList) {
-            tesselateLine(points, static_cast<char>(styleIndex), stroke.get(), style);
-        }
+        
+        do {
+            std::size_t i0 = _indices.size();
+            tesselateLine(vertices, static_cast<char>(styleIndex), stroke.get(), style);
+            _ids.fill(id, _indices.size() - i0);
+        } while (generator(id, vertices));
     }
 
-    void TileLayerBuilder::addPolygons(const std::list<VerticesList>& polygonList, const PolygonStyle& style) {
-        if (polygonList.empty()) {
+    void TileLayerBuilder::addPolygons(const std::function<bool(long long& id, VerticesList& verticesList)>& generator, const PolygonStyle& style) {
+        long long id = 0;
+        std::vector<std::vector<cglib::vec2<float>>> verticesList;
+        if (!generator(id, verticesList)) {
             return;
         }
 
@@ -111,16 +124,21 @@ namespace carto { namespace vt {
             _styleParameters.colorTable[styleIndex] = style.color;
             _styleParameters.opacityTable[styleIndex] = style.opacity;
         }
-        for (const VerticesList& verticesList : polygonList) {
+
+        do {
+            std::size_t i0 = _ids.size();
             tesselatePolygon(verticesList, static_cast<char>(styleIndex), style);
-        }
+            _ids.fill(id, _indices.size() - i0);
+        } while (generator(id, verticesList));
     }
 
-    void TileLayerBuilder::addPolygons3D(const std::list<VerticesList>& polygonList, float height, const Polygon3DStyle& style) {
-        if (polygonList.empty()) {
+    void TileLayerBuilder::addPolygons3D(const std::function<bool(long long& id, VerticesList& verticesList)>& generator, float height, const Polygon3DStyle& style) {
+        long long id = 0;
+        std::vector<std::vector<cglib::vec2<float>>> verticesList;
+        if (!generator(id, verticesList)) {
             return;
         }
-        
+
         if (_builderParameters.type != TileGeometry::Type::POLYGON3D || _styleParameters.transform != style.transform || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
             appendGeometry();
         }
@@ -137,74 +155,92 @@ namespace carto { namespace vt {
             _styleParameters.colorTable[styleIndex] = style.color;
             _styleParameters.opacityTable[styleIndex] = style.opacity;
         }
-        for (const VerticesList& verticesList : polygonList) {
+
+        do {
+            std::size_t i0 = _ids.size();
             tesselatePolygon3D(verticesList, height, static_cast<char>(styleIndex), style);
-        }
+            _ids.fill(id, _indices.size() - i0);
+        } while (generator(id, verticesList));
     }
 
-    void TileLayerBuilder::addBitmapLabel(long long id, long long groupId, const boost::variant<Vertex, Vertices>& position, float minimumGroupDistance, const BitmapLabelStyle& style) {
+    void TileLayerBuilder::addBitmapLabels(const std::function<bool(BitmapLabelInfo& labelInfo)>& generator, const BitmapLabelStyle& style) {
         if (!style.bitmap) {
             return;
         }
 
-        boost::optional<cglib::vec3<double>> labelPosition;
-        std::vector<cglib::vec3<double>> labelVertices;
-        if (auto vertex = boost::get<Vertex>(&position)) {
-            labelPosition = cglib::vec3<double>((*vertex)(0), (*vertex)(1), 0);
-        }
-        else if (auto vertices = boost::get<Vertices>(&position)) {
-            labelVertices.resize(vertices->size());
-            for (std::size_t i = 0; i < vertices->size(); i++) {
-                labelVertices[i] = cglib::vec3<double>((*vertices)[i](0), (*vertices)[i](1), 0);
-            }
-        }
-
         const std::unique_ptr<const Font::Glyph>& glyph = style.font->loadBitmapGlyph(style.bitmap);
-        if (glyph) {
-            std::vector<Font::Glyph> bitmapGlyphs = {
-                Font::Glyph(Font::CR_CODEPOINT, 0, 0, 0, 0, cglib::vec2<float>(0, 0), cglib::vec2<float>(0, 0), cglib::vec2<float>(-style.bitmap->width * 0.5f, -style.bitmap->height * 0.5f)),
-                *glyph
-            };
-            auto bitmapLabel = std::make_shared<TileLabel>(id, groupId, style.font, std::move(bitmapGlyphs), std::move(labelPosition), std::move(labelVertices), style.placement, style.transform, 1.0f / _tileSize, style.color);
-            bitmapLabel->setMinimumGroupDistance(_tileSize * minimumGroupDistance);
+        if (!glyph) {
+            return;
+        }
+        std::vector<Font::Glyph> bitmapGlyphs = {
+            Font::Glyph(Font::CR_CODEPOINT, 0, 0, 0, 0, cglib::vec2<float>(0, 0), cglib::vec2<float>(0, 0), cglib::vec2<float>(-style.bitmap->width * 0.5f, -style.bitmap->height * 0.5f)),
+            *glyph
+        };
+
+        while (true) {
+            BitmapLabelInfo labelInfo;
+            if (!generator(labelInfo)) {
+                break;
+            }
+
+            boost::optional<cglib::vec3<double>> labelPosition;
+            std::vector<cglib::vec3<double>> labelVertices;
+            if (auto vertex = boost::get<Vertex>(&labelInfo.position)) {
+                labelPosition = cglib::vec3<double>((*vertex)(0), (*vertex)(1), 0);
+            }
+            else if (auto vertices = boost::get<Vertices>(&labelInfo.position)) {
+                labelVertices.resize(vertices->size());
+                for (std::size_t i = 0; i < vertices->size(); i++) {
+                    labelVertices[i] = cglib::vec3<double>((*vertices)[i](0), (*vertices)[i](1), 0);
+                }
+            }
+
+            auto bitmapLabel = std::make_shared<TileLabel>(labelInfo.id, labelInfo.groupId, style.font, bitmapGlyphs, std::move(labelPosition), std::move(labelVertices), style.orientation, style.transform, 1.0f / _tileSize, style.color);
+            bitmapLabel->setMinimumGroupDistance(_tileSize * labelInfo.minimumGroupDistance);
             _labelList.push_back(std::move(bitmapLabel));
         }
     }
 
-    void TileLayerBuilder::addTextLabel(long long id, long long groupId, const std::string& text, const boost::optional<Vertex>& position, const Vertices& vertices, float minimumGroupDistance, const TextLabelStyle& style) {
-        if (text.empty() && !style.backgroundBitmap) {
-            return;
-        }
-
-        boost::optional<cglib::vec3<double>> labelPosition;
-        if (auto vertex = boost::get<Vertex>(&position)) {
-            labelPosition = cglib::vec3<double>((*vertex)(0), (*vertex)(1), 0);
-        }
-        std::vector<cglib::vec3<double>> labelVertices;
-        labelVertices.resize(vertices.size());
-        for (std::size_t i = 0; i < vertices.size(); i++) {
-            labelVertices[i] = cglib::vec3<double>(vertices[i](0), vertices[i](1), 0);
-        }
-
-        TextFormatter formatter(style.font);
-        std::vector<Font::Glyph> glyphs = formatter.format(text, style.formatterOptions);
-        if (style.backgroundBitmap) {
-            const std::unique_ptr<const Font::Glyph>& glyph = style.font->loadBitmapGlyph(style.backgroundBitmap);
-            if (glyph) {
-                glyphs.insert(glyphs.begin(), Font::Glyph(glyph->codePoint, glyph->x, glyph->y, glyph->width, glyph->height, glyph->size * style.backgroundScale, glyph->offset + style.backgroundOffset, glyph->advance));
-            }
-        }
-
+    void TileLayerBuilder::addTextLabels(const std::function<bool(TextLabelInfo& labelInfo)>& generator, const TextLabelStyle& style) {
         boost::optional<cglib::mat3x3<float>> transform;
         if (style.angle != 0) {
             transform = cglib::rotate3_matrix(cglib::vec3<float>(0, 0, -1), style.angle * boost::math::constants::pi<float>() / 180.0f);
         }
-        auto textLabel = std::make_shared<TileLabel>(id, groupId, style.font, std::move(glyphs), std::move(labelPosition), std::move(labelVertices), style.placement, transform, 1.0f / _tileSize, Color(0xffffffff));
-        textLabel->setMinimumGroupDistance(_tileSize * minimumGroupDistance);
-        _labelList.push_back(std::move(textLabel));
+
+        while (true) {
+            TextLabelInfo labelInfo;
+            if (!generator(labelInfo)) {
+                break;
+            }
+
+            if (!labelInfo.text.empty() || style.backgroundBitmap) {
+                TextFormatter formatter(style.font);
+                std::vector<Font::Glyph> glyphs = formatter.format(labelInfo.text, style.formatterOptions);
+                if (style.backgroundBitmap) {
+                    const std::unique_ptr<const Font::Glyph>& glyph = style.font->loadBitmapGlyph(style.backgroundBitmap);
+                    if (glyph) {
+                        glyphs.insert(glyphs.begin(), Font::Glyph(glyph->codePoint, glyph->x, glyph->y, glyph->width, glyph->height, glyph->size * style.backgroundScale, glyph->offset + style.backgroundOffset, glyph->advance));
+                    }
+                }
+
+                boost::optional<cglib::vec3<double>> labelPosition;
+                if (auto vertex = boost::get<Vertex>(&labelInfo.position)) {
+                    labelPosition = cglib::vec3<double>((*vertex)(0), (*vertex)(1), 0);
+                }
+                std::vector<cglib::vec3<double>> labelVertices;
+                labelVertices.reserve(labelInfo.vertices.size());
+                for (const Vertex& vertex : labelInfo.vertices) {
+                    labelVertices.emplace_back(vertex(0), vertex(1), 0);
+                }
+
+                auto textLabel = std::make_shared<TileLabel>(labelInfo.id, labelInfo.groupId, style.font, std::move(glyphs), std::move(labelPosition), std::move(labelVertices), style.orientation, transform, 1.0f / _tileSize, Color(0xffffffff));
+                textLabel->setMinimumGroupDistance(_tileSize * labelInfo.minimumGroupDistance);
+                _labelList.push_back(std::move(textLabel));
+            }
+        }
     }
 
-    std::shared_ptr<TileLayer> TileLayerBuilder::build(int layerIdx, std::shared_ptr<FloatFunction> opacity, boost::optional<CompOp> compOp) {
+    std::shared_ptr<TileLayer> TileLayerBuilder::build(std::string layerName, int layerIdx, std::shared_ptr<FloatFunction> opacity, boost::optional<CompOp> compOp) {
         std::vector<std::shared_ptr<TileBitmap>> bitmapList;
         std::swap(bitmapList, _bitmapList);
 
@@ -216,7 +252,7 @@ namespace carto { namespace vt {
         std::swap(labelList, _labelList);
         std::for_each(labelList.begin(), labelList.end(), [layerIdx](const std::shared_ptr<TileLabel>& label) { label->setPriority(layerIdx); });
 
-        return std::make_shared<TileLayer>(layerIdx, std::move(opacity), std::move(compOp), std::move(bitmapList), std::move(geometryList), std::move(labelList));
+        return std::make_shared<TileLayer>(std::move(layerName), layerIdx, std::move(opacity), std::move(compOp), std::move(bitmapList), std::move(geometryList), std::move(labelList));
     }
 
     void TileLayerBuilder::appendGeometry() {
@@ -257,7 +293,7 @@ namespace carto { namespace vt {
                 _binormals[i] = cglib::unit(cglib::transform_vector(_binormals[i], invTransTransform)) * cglib::length(_binormals[i]);
             }
         }
-        appendGeometry(calculateScale(_vertices), calculateScale(_binormals), calculateScale(_texCoords), _vertices, _texCoords, _binormals, _heights, _attribs, _indices, 0, _vertices.size());
+        appendGeometry(calculateScale(_vertices), calculateScale(_binormals), calculateScale(_texCoords), _vertices, _texCoords, _binormals, _heights, _attribs, _indices, _ids, 0, _vertices.size());
 
         _builderParameters = BuilderParameters();
         _styleParameters = TileGeometry::StyleParameters();
@@ -267,9 +303,10 @@ namespace carto { namespace vt {
         _heights.clear();
         _attribs.clear();
         _indices.clear();
+        _ids.clear();
     }
 
-    void TileLayerBuilder::appendGeometry(float verticesScale, float binormalsScale, float texCoordsScale, const VertexArray<cglib::vec2<float>>& vertices, const VertexArray<cglib::vec2<float>>& texCoords, const VertexArray<cglib::vec2<float>>& binormals, const VertexArray<float>& heights, const VertexArray<cglib::vec4<char>>& attribs, const VertexArray<unsigned int>& indices, std::size_t offset, std::size_t count) {
+    void TileLayerBuilder::appendGeometry(float verticesScale, float binormalsScale, float texCoordsScale, const VertexArray<cglib::vec2<float>>& vertices, const VertexArray<cglib::vec2<float>>& texCoords, const VertexArray<cglib::vec2<float>>& binormals, const VertexArray<float>& heights, const VertexArray<cglib::vec4<char>>& attribs, const VertexArray<unsigned int>& indices, const VertexArray<long long>& ids, std::size_t offset, std::size_t count) {
         if (count < 65536) {
             // Build geometry layout info
             TileGeometry::GeometryLayoutParameters geometryLayoutParameters;
@@ -345,7 +382,21 @@ namespace carto { namespace vt {
                 compressedIndices.append(static_cast<unsigned short>(index - offset));
             }
 
-            auto geometry = std::make_shared<TileGeometry>(_builderParameters.type, _tileSize, _geomScale, _styleParameters, geometryLayoutParameters, static_cast<unsigned int>(indices.size()), std::move(compressedVertexGeometry), std::move(compressedIndices));
+            // Compress ids
+            std::vector<std::pair<unsigned int, long long>> compressedIds;
+            if (!ids.empty()) {
+                std::size_t offset = 0;
+                for (std::size_t i = 1; i < ids.size(); i++) {
+                    if (ids[i] != ids[offset]) {
+                        compressedIds.emplace_back(static_cast<unsigned int>(i - offset), ids[offset]);
+                        offset = i;
+                    }
+                }
+                compressedIds.emplace_back(static_cast<unsigned int>(ids.size() - offset), ids[offset]);
+                compressedIds.shrink_to_fit();
+            }
+
+            auto geometry = std::make_shared<TileGeometry>(_builderParameters.type, _tileSize, _geomScale, _styleParameters, geometryLayoutParameters, std::move(compressedVertexGeometry), std::move(compressedIndices), std::move(compressedIds));
             _geometryList.push_back(std::move(geometry));
             return;
         }
@@ -368,11 +419,15 @@ namespace carto { namespace vt {
         // Do recursive splitting/appending of each subset
         VertexArray<unsigned int> indices1;
         indices1.copy(indices, 0, splitPos);
-        appendGeometry(verticesScale, binormalsScale, texCoordsScale, vertices, texCoords, binormals, heights, attribs, indices1, minIndex[0], maxIndex[0] - minIndex[0] + 1);
+        VertexArray<long long> ids1;
+        ids1.copy(ids, 0, splitPos);
+        appendGeometry(verticesScale, binormalsScale, texCoordsScale, vertices, texCoords, binormals, heights, attribs, indices1, ids1, minIndex[0], maxIndex[0] - minIndex[0] + 1);
 
         VertexArray<unsigned int> indices2;
         indices2.copy(indices, splitPos, indices.size() - splitPos);
-        appendGeometry(verticesScale, binormalsScale, texCoordsScale, vertices, texCoords, binormals, heights, attribs, indices2, minIndex[1], maxIndex[1] - minIndex[1] + 1);
+        VertexArray<long long> ids2;
+        ids2.copy(ids, splitPos, indices.size() - splitPos);
+        appendGeometry(verticesScale, binormalsScale, texCoordsScale, vertices, texCoords, binormals, heights, attribs, indices2, ids2, minIndex[1], maxIndex[1] - minIndex[1] + 1);
     }
 
     float TileLayerBuilder::calculateScale(VertexArray<cglib::vec2<float>>& values) const {

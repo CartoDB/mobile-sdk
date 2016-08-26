@@ -22,15 +22,20 @@
 namespace carto { namespace mvt {
     class MBVTFeatureDecoder::MBVTFeatureIterator : public carto::mvt::FeatureDecoder::FeatureIterator {
     public:
-        explicit MBVTFeatureIterator(const vector_tile::Tile& tile, const vector_tile::Tile::Layer& layer, const std::unordered_set<std::string>& fields, const cglib::mat3x3<float>& transform, const cglib::bbox2<float>& clipBox, float buffer, std::map<std::vector<int>, std::shared_ptr<FeatureData>>& featureDataCache) :
+        explicit MBVTFeatureIterator(const vector_tile::Tile& tile, const vector_tile::Tile::Layer& layer, const std::unordered_set<std::string>* fields, const cglib::mat3x3<float>& transform, const cglib::bbox2<float>& clipBox, float buffer, std::map<std::vector<int>, std::shared_ptr<FeatureData>>& featureDataCache) :
             _tile(tile), _layer(layer), _transform(transform), _clipBox(clipBox), _buffer(buffer), _featureDataCache(featureDataCache)
         {
             for (int i = 0; i < layer.keys_size(); i++) {
-                auto it = fields.find(layer.keys(i));
-                if (layer.keys(i) == "id") {
+                if (layer.keys(i) == "id" || layer.keys(i) == "cartodb_id") {
                     _idKey = i;
                 }
-                if (it != fields.end()) {
+                if (fields) {
+                    auto it = fields->find(layer.keys(i));
+                    if (it != fields->end()) {
+                        _fieldKeys.push_back(i);
+                    }
+                }
+                else {
                     _fieldKeys.push_back(i);
                 }
             }
@@ -318,6 +323,21 @@ namespace carto { namespace mvt {
         _buffer = buffer;
     }
 
+    std::shared_ptr<Feature> MBVTFeatureDecoder::findLayerFeature(const std::string& name, long long id) const {
+        auto layerIt = _layerMap.find(name);
+        if (layerIt == _layerMap.end()) {
+            return std::shared_ptr<Feature>();
+        }
+        const vector_tile::Tile::Layer& layer = _tile->layers(layerIt->second);
+        std::map<std::vector<int>, std::shared_ptr<FeatureData>> featureDataCache;
+        for (MBVTFeatureIterator it(*_tile, layer, nullptr, _transform, _clipBox, _buffer, featureDataCache); it.valid(); it.advance()) {
+            if (it.getFeatureId() == id) {
+                return std::make_shared<Feature>(it.getFeatureId(), it.getGeometry(), it.getFeatureData());
+            }
+        }
+        return std::shared_ptr<Feature>();
+    }
+
     std::shared_ptr<FeatureDecoder::FeatureIterator> MBVTFeatureDecoder::createLayerFeatureIterator(const std::string& name, const std::unordered_set<std::string>& fields) const {
         auto layerIt = _layerMap.find(name);
         if (layerIt == _layerMap.end()) {
@@ -328,7 +348,7 @@ namespace carto { namespace mvt {
         }
         const vector_tile::Tile::Layer& layer = _tile->layers(layerIt->second);
         std::map<std::vector<int>, std::shared_ptr<FeatureData>>& featureDataCache = _layerFeatureDataCache[name];
-        return std::make_shared<MBVTFeatureIterator>(*_tile, layer, fields, _transform, _clipBox, _buffer, featureDataCache);
+        return std::make_shared<MBVTFeatureIterator>(*_tile, layer, &fields, _transform, _clipBox, _buffer, featureDataCache);
     }
 
     bool MBVTFeatureDecoder::inflate(const std::vector<unsigned char>& in, std::vector<unsigned char>& out) {

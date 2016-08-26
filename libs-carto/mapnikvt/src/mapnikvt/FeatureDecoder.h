@@ -7,6 +7,7 @@
 #ifndef _CARTO_MAPNIKVT_FEATUREDECODER_H_
 #define _CARTO_MAPNIKVT_FEATUREDECODER_H_
 
+#include "Feature.h"
 #include "FeatureData.h"
 #include "Geometry.h"
 

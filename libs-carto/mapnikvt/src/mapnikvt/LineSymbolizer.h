@@ -21,6 +21,9 @@ namespace carto { namespace mvt {
         virtual void build(const FeatureCollection& featureCollection, const FeatureExpressionContext& exprContext, const SymbolizerContext& symbolizerContext, vt::TileLayerBuilder& layerBuilder) override;
 
     protected:
+        vt::LineCapMode convertLineCapMode(const std::string& lineCap) const;
+        vt::LineJoinMode convertLineJoinMode(const std::string& lineJoin) const;
+
         virtual void bindParameter(const std::string& name, const std::string& value) override;
 
         static std::shared_ptr<vt::BitmapPattern> createDashBitmapPattern(const std::vector<float>& strokeDashArray);

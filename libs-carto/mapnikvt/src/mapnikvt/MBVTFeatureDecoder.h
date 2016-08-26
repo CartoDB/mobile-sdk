@@ -32,6 +32,8 @@ namespace carto { namespace mvt {
         void setClipBox(const cglib::bbox2<float>& clipBox);
         void setBuffer(float buffer);
 
+        std::shared_ptr<Feature> findLayerFeature(const std::string& name, long long id) const;
+        
         std::shared_ptr<FeatureIterator> createLayerFeatureIterator(const std::string& name, const std::unordered_set<std::string>& fields) const;
 
     private:

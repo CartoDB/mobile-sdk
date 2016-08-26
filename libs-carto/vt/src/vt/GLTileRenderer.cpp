@@ -819,6 +819,40 @@ namespace carto { namespace vt {
             }
         }
     }
+
+    bool GLTileRenderer::findIntersectionId(const cglib::ray3<double>& ray, double& t, long long& id) const {
+        std::lock_guard<std::mutex> lock(*_mutex);
+
+        // Calculate intersection with z=0 plane
+        if (!cglib::intersect_plane(cglib::vec4<double>(0, 0, 1, 0), ray, &t)) {
+            return false;
+        }
+
+        // First find the intersecting tile. NOTE: we ignore building height information
+        bool found = false;
+        for (const std::shared_ptr<BlendNode>& blendNode : *_blendNodes) {
+            cglib::mat4x4<double> tileMatrix = calculateTileMatrix(blendNode->tileId);
+            cglib::vec3<double> localPos = cglib::transform_point(ray(t), cglib::inverse(tileMatrix));
+            if (localPos(0) >= 0 && localPos(0) <= 1 && localPos(1) >= 0 && localPos(1) <= 1) {
+                if (blendNode->tile) {
+                    tileMatrix = calculateTileMatrix(blendNode->tile->getTileId());
+                    localPos = cglib::transform_point(ray(t), cglib::inverse(tileMatrix));
+                    if (localPos(0) >= 0 && localPos(0) <= 1 && localPos(1) >= 0 && localPos(1) <= 1) {
+                        for (const std::shared_ptr<TileLayer>& layer : blendNode->tile->getLayers()) {
+                            for (const std::shared_ptr<TileGeometry>& geometry : layer->getGeometries()) {
+                                cglib::ray3<float> rayLocal = cglib::ray3<float>::convert(cglib::transform_ray(ray, cglib::inverse(tileMatrix)));
+                                float tLocal = 0;
+                                if (findTileGeometryIntersectionId(geometry, rayLocal, tLocal, id)) {
+                                    found = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return found;
+    }
     
     cglib::mat4x4<double> GLTileRenderer::calculateLocalViewMatrix(const cglib::mat4x4<double>& cameraMatrix) {
         cglib::mat4x4<double> mv = cameraMatrix;
@@ -987,6 +1021,67 @@ namespace carto { namespace vt {
         }
     }
     
+    bool GLTileRenderer::findTileGeometryIntersectionId(const std::shared_ptr<TileGeometry>& geometry, const cglib::ray3<float>& ray, float& t, long long& id) const {
+        for (std::size_t i = 0; i + 2 < geometry->getIndices().size(); i += 3) {
+            std::size_t index0 = geometry->getIndices()[i + 0];
+            std::size_t index1 = geometry->getIndices()[i + 1];
+            std::size_t index2 = geometry->getIndices()[i + 2];
+
+            cglib::vec3<float> p0 = decodeVertex(geometry, index0);
+            cglib::vec3<float> p1 = decodeVertex(geometry, index1);
+            cglib::vec3<float> p2 = decodeVertex(geometry, index2);
+
+            if (geometry->getType() == TileGeometry::Type::POINT) {
+                p0 += decodePointOffset(geometry, index0);
+                p1 += decodePointOffset(geometry, index1);
+                p2 += decodePointOffset(geometry, index2);
+            }
+            else if (geometry->getType() == TileGeometry::Type::LINE) {
+                p0 += decodeLineBinormal(geometry, index0);
+                p1 += decodeLineBinormal(geometry, index1);
+                p2 += decodeLineBinormal(geometry, index2);
+            }
+
+            if (cglib::intersect_triangle(p0, p1, p2, ray, &t)) {
+                std::size_t counter = i;
+                for (std::size_t j = 0; j < geometry->getIds().size(); j++) {
+                    if (geometry->getIds()[j].first < counter) {
+                        id = geometry->getIds()[j].second;
+                        return true;
+                    }
+                    counter -= geometry->getIds()[j].first;
+                }
+            }
+        }
+        return false;
+    }
+
+    cglib::vec3<float> GLTileRenderer::decodeVertex(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const {
+        const TileGeometry::GeometryLayoutParameters& geometryLayoutParams = geometry->getGeometryLayoutParameters();
+        std::size_t vertexOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.vertexOffset;
+        const short* vertexPtr = reinterpret_cast<const short*>(&geometry->getVertexGeometry()[vertexOffset]);
+        return cglib::vec3<float>(vertexPtr[0], vertexPtr[1], 0) * (1.0f / geometryLayoutParams.vertexScale);
+    }
+
+    cglib::vec3<float> GLTileRenderer::decodePointOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const {
+        // NOTE: we ignore the actual orientation currently. This is mostly ok, assuming roughly equal width/height of the point
+        const TileGeometry::GeometryLayoutParameters& geometryLayoutParams = geometry->getGeometryLayoutParameters();
+        std::size_t attribOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.attribsOffset;
+        const unsigned char* attribPtr = reinterpret_cast<const unsigned char*>(&geometry->getVertexGeometry()[attribOffset]);
+        float width = 0.5f * (*geometry->getStyleParameters().widthTable[attribPtr[0]])(_viewState) * geometry->getGeometryScale() / geometry->getTileSize();
+        return cglib::vec3<float>(attribPtr[1], attribPtr[2], 0) * width;
+    }
+
+    cglib::vec3<float> GLTileRenderer::decodeLineBinormal(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const {
+        const TileGeometry::GeometryLayoutParameters& geometryLayoutParams = geometry->getGeometryLayoutParameters();
+        std::size_t binormalOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.binormalOffset;
+        const short* binormalPtr = reinterpret_cast<const short*>(&geometry->getVertexGeometry()[binormalOffset]);
+        std::size_t attribOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.attribsOffset;
+        const unsigned char* attribPtr = reinterpret_cast<const unsigned char*>(&geometry->getVertexGeometry()[attribOffset]);
+        float width = 0.5f * (*geometry->getStyleParameters().widthTable[attribPtr[0]])(_viewState) * geometry->getGeometryScale() / geometry->getTileSize();
+        return cglib::vec3<float>(binormalPtr[0], binormalPtr[1], 0) * (width / geometryLayoutParams.binormalScale);
+    }
+
     bool GLTileRenderer::renderBlendNodes2D(const std::vector<std::shared_ptr<BlendNode>>& blendNodes) {
         GLint stencilBits = 0;
         if (_useStencil) {

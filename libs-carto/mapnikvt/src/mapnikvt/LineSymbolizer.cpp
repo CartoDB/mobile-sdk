@@ -12,26 +12,8 @@ namespace carto { namespace mvt {
 
         updateBindings(exprContext);
 
-        vt::LineJoinMode lineJoin = vt::LineJoinMode::MITER;
-        if (_strokeLinejoin == "round") {
-            lineJoin = vt::LineJoinMode::ROUND;
-        }
-        else if (_strokeLinejoin == "bevel") {
-            lineJoin = vt::LineJoinMode::BEVEL;
-        }
-        else if (_strokeLinejoin == "miter") {
-            lineJoin = vt::LineJoinMode::MITER;
-        }
-        vt::LineCapMode lineCap = vt::LineCapMode::NONE;
-        if (_strokeLinecap == "round") {
-            lineCap = vt::LineCapMode::ROUND;
-        }
-        else if (_strokeLinecap == "square") {
-            lineCap = vt::LineCapMode::SQUARE;
-        }
-        else if (_strokeLinecap == "butt") {
-            lineCap = vt::LineCapMode::NONE;
-        }
+        vt::LineJoinMode lineJoin = convertLineJoinMode(_strokeLinejoin);
+        vt::LineCapMode lineCap = convertLineCapMode(_strokeLinecap);
         vt::CompOp compOp = convertCompOp(_compOp);
         
         std::shared_ptr<const vt::BitmapPattern> strokePattern;
@@ -60,19 +42,71 @@ namespace carto { namespace mvt {
         
         vt::LineStyle style(compOp, lineJoin, lineCap, _stroke, _strokeOpacity, _strokeWidth, symbolizerContext.getStrokeMap(), strokePattern, _geometryTransform);
 
-        for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
-            if (auto lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(featureCollection.getGeometry(index))) {
-                layerBuilder.addLines(lineGeometry->getVerticesList(), style);
-            }
-            else if (auto polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(featureCollection.getGeometry(index))) {
-                for (const auto& verticesList : polygonGeometry->getPolygonList()) {
-                    layerBuilder.addLines(verticesList, style);
+        std::size_t featureIndex = 0;
+        std::size_t geometryIndex = 0;
+        std::size_t polygonIndex = 0;
+        std::shared_ptr<const LineGeometry> lineGeometry;
+        std::shared_ptr<const PolygonGeometry> polygonGeometry;
+        layerBuilder.addLines([&](long long& id, vt::TileLayerBuilder::Vertices& vertices) {
+            while (true) {
+                if (lineGeometry) {
+                    if (geometryIndex < lineGeometry->getVerticesList().size()) {
+                        vertices = lineGeometry->getVerticesList()[geometryIndex++];
+                        return true;
+                    }
                 }
+                if (polygonGeometry) {
+                    while (geometryIndex < polygonGeometry->getPolygonList().size()) {
+                        if (polygonIndex < polygonGeometry->getPolygonList()[geometryIndex].size()) {
+                            vertices = polygonGeometry->getPolygonList()[geometryIndex][polygonIndex++];
+                            return true;
+                        }
+                        geometryIndex++;
+                        polygonIndex = 0;
+                    }
+                }
+
+                if (featureIndex >= featureCollection.getSize()) {
+                    break;
+                }
+                lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(featureCollection.getGeometry(featureIndex));
+                polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(featureCollection.getGeometry(featureIndex));
+                if (!lineGeometry && !polygonGeometry) {
+                    _logger->write(Logger::Severity::WARNING, "Unsupported geometry for LineSymbolizer");
+                }
+                featureIndex++;
+                geometryIndex = 0;
             }
-            else {
-                _logger->write(Logger::Severity::WARNING, "Unsupported geometry for LineSymbolizer");
-            }
+            return false;
+        }, style);
+    }
+
+    vt::LineCapMode LineSymbolizer::convertLineCapMode(const std::string& lineCap) const {
+        if (lineCap == "round") {
+            return vt::LineCapMode::ROUND;
         }
+        else if (lineCap == "square") {
+            return vt::LineCapMode::SQUARE;
+        }
+        else if (lineCap == "butt") {
+            return vt::LineCapMode::NONE;
+        }
+        _logger->write(Logger::Severity::ERROR, std::string("Unsupported line cap mode: ") + lineCap);
+        return vt::LineCapMode::NONE;
+    }
+
+    vt::LineJoinMode LineSymbolizer::convertLineJoinMode(const std::string& lineJoin) const {
+        if (_strokeLinejoin == "round") {
+            return vt::LineJoinMode::ROUND;
+        }
+        else if (_strokeLinejoin == "bevel") {
+            return vt::LineJoinMode::BEVEL;
+        }
+        else if (_strokeLinejoin == "miter") {
+            return vt::LineJoinMode::MITER;
+        }
+        _logger->write(Logger::Severity::ERROR, std::string("Unsupported line join mode: ") + lineJoin);
+        return vt::LineJoinMode::MITER;
     }
 
     void LineSymbolizer::bindParameter(const std::string& name, const std::string& value) {
