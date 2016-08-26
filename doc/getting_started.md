@@ -116,7 +116,7 @@ _**Note:** The current version, 4.0.0, is a beta release. These zip files are su
 
 ## Registering your Mobile App
 
-You must register your mobile applications under your CARTO.com account settings. Once an app is added, you can retrieve the mobile app License key, which needs to go to your app code.
+You must register your mobile applications under your CARTO.com account settings. Once an app is added, you can retrieve the mobile app license key, which is needed for your app code.
 
 The following procedure describes how to register mobile apps under your account settings. While the number of mobile apps is unlimited, application quota consumption rules are enforced based on your account plan. [Contact us](mailto:sales@carto.com) if you have questions about your mobile account options.
 
