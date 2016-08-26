@@ -3,6 +3,10 @@
 #include "TorqueFeatureDecoder.h"
 
 namespace carto { namespace mvt {
+    std::string TorqueTileReader::getLayerName(const std::shared_ptr<const Layer>& layer) const {
+        return layer->getName();
+    }
+
     std::shared_ptr<FeatureDecoder::FeatureIterator> TorqueTileReader::createFeatureIterator(const std::shared_ptr<const Layer>& layer, const std::shared_ptr<const Style>& style, const FeatureExpressionContext& exprContext) const {
         int frameOffset = 0;
         if (auto torqueLayer = std::dynamic_pointer_cast<const TorqueLayer>(layer)) {

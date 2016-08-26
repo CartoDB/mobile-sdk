@@ -18,6 +18,8 @@ namespace carto { namespace mvt {
         explicit TorqueTileReader(std::shared_ptr<TorqueMap> map, int frame, bool loop, const SymbolizerContext& symbolizerContext, const TorqueFeatureDecoder& featureDecoder) : TileReader(std::move(map), symbolizerContext), _frame(frame), _loop(loop), _featureDecoder(featureDecoder) { }
 
     protected:
+        virtual std::string getLayerName(const std::shared_ptr<const Layer>& layer) const override;
+
         virtual std::shared_ptr<FeatureDecoder::FeatureIterator> createFeatureIterator(const std::shared_ptr<const Layer>& layer, const std::shared_ptr<const Style>& style, const FeatureExpressionContext& exprContext) const override;
 
     private:
