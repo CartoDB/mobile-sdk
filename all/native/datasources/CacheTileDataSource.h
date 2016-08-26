@@ -23,6 +23,12 @@ namespace carto {
         virtual int getMaxZoom() const;
         
         virtual void notifyTilesChanged(bool removeTiles);
+
+        /**
+         * Returns the original data source that the cache uses.
+         * @return The original data source.
+         */
+        std::shared_ptr<TileDataSource> getDataSource() const;
         
         /**
          * Clear the cache.
