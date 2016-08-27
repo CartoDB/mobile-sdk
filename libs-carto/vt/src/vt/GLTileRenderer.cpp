@@ -388,6 +388,12 @@ namespace carto { namespace vt {
         _subTileBlending = blend;
     }
     
+    void GLTileRenderer::setInteractionMode(bool enabled) {
+        std::lock_guard<std::mutex> lock(*_mutex);
+
+        _interactionEnabled = enabled;
+    }
+
     void GLTileRenderer::setFBOClearColor(const Color& clearColor) {
         std::lock_guard<std::mutex> lock(*_mutex);
         
@@ -1045,7 +1051,7 @@ namespace carto { namespace vt {
             if (cglib::intersect_triangle(p0, p1, p2, ray, &t)) {
                 std::size_t counter = i;
                 for (std::size_t j = 0; j < geometry->getIds().size(); j++) {
-                    if (geometry->getIds()[j].first < counter) {
+                    if (counter < geometry->getIds()[j].first) {
                         id = geometry->getIds()[j].second;
                         return true;
                     }
@@ -1542,7 +1548,9 @@ namespace carto { namespace vt {
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, compiledGeometry.indicesVBO);
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, geometry->getIndices().size() * sizeof(unsigned short), geometry->getIndices().data(), GL_STATIC_DRAW);
             
-            geometry->releaseVertexArrays();
+            if (!_interactionEnabled) {
+                geometry->releaseVertexArrays(); // if interaction is enabled, we must keep the vertex arrays. Otherwise optimize for lower memory usage
+            }
             
             _compiledTileGeometryMap[geometry] = compiledGeometry;
         }

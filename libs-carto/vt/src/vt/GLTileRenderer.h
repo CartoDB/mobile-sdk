@@ -33,6 +33,7 @@ namespace carto { namespace vt {
         void setViewState(const cglib::mat4x4<double>& projectionMatrix, const cglib::mat4x4<double>& cameraMatrix, float zoom, float aspectRatio, float resolution);
         void setLightDir(const cglib::vec3<float>& lightDir);
         void setSubTileBlending(bool blend);
+        void setInteractionMode(bool enabled);
         void setFBOClearColor(const Color& clearColor);
         void setBackgroundColor(const Color& backgroundColor);
         void setBackgroundPattern(std::shared_ptr<const BitmapPattern> pattern);
@@ -155,6 +156,7 @@ namespace carto { namespace vt {
         void deleteScreenFBO(ScreenFBO& screenFBO);
 
         bool _subTileBlending = false;
+        bool _interactionEnabled = false;
         Color _fboClearColor;
         Color _backgroundColor;
         std::shared_ptr<const BitmapPattern> _backgroundPattern;
