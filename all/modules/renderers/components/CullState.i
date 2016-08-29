@@ -23,6 +23,7 @@
 
 %attributeval(carto::CullState, carto::ViewState, ViewState, getViewState)
 %attributeval(carto::CullState, carto::MapEnvelope, Envelope, getEnvelope)
+%ignore carto::CullState::getEnvelope;
 !standard_equals(carto::CullState);
 
 %include "renderers/components/CullState.h"
