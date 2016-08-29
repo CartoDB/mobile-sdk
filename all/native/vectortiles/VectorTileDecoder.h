@@ -10,6 +10,7 @@
 #include "graphics/Color.h"
 
 #include <memory>
+#include <string>
 #include <mutex>
 #include <map>
 #include <vector>
@@ -22,7 +23,8 @@ namespace carto {
         class Tile;
         struct BitmapPattern;
     }
-    
+
+    class Feature;
     class BinaryData;
 
     /**
@@ -69,6 +71,16 @@ namespace carto {
          * @return Maximum supported zoom level.
          */
         virtual int getMaxZoom() const = 0;
+
+        /**
+         * Decoders the specified feature from the tile layer.
+         * @param id The id of the feature to decoder.
+         * @param layerName The layer name of the feature.
+         * @param frameNr The frame number to use.
+         * @param tileData The tile data to use.
+         * @return The feature, if found. Null if not found.
+         */
+        virtual std::shared_ptr<Feature> decodeLayerFeature(long long id, const std::string& layerName, int frameNr, const std::shared_ptr<BinaryData>& tileData) const = 0;
         
         /**
          * Loads the specified vector tile.

@@ -1,12 +1,17 @@
 #include "VectorTileLayer.h"
+#include "core/BinaryData.h"
 #include "components/Exceptions.h"
 #include "components/CancelableThreadPool.h"
 #include "datasources/TileDataSource.h"
+#include "layers/TileLoadListener.h"
+#include "layers/VectorTileEventListener.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/TileRenderer.h"
+#include "renderers/components/RayIntersectedElement.h"
 #include "renderers/drawdatas/TileDrawData.h"
 #include "utils/Log.h"
 #include "utils/Const.h"
+#include "ui/VectorTileClickInfo.h"
 #include "vectortiles/VectorTileDecoder.h"
 
 #include <vt/TileId.h>
@@ -20,6 +25,7 @@ namespace carto {
         _useDepth(true),
         _useStencil(true),
         _useTileMapMode(false),
+        _vectorTileEventListener(),
         _labelRenderOrder(VectorTileRenderOrder::VECTOR_TILE_RENDER_ORDER_LAYER),
         _buildingRenderOrder(VectorTileRenderOrder::VECTOR_TILE_RENDER_ORDER_LAST),
         _tileDecoder(decoder),
@@ -82,6 +88,15 @@ namespace carto {
             _buildingRenderOrder = renderOrder;
         }
         refresh();
+    }
+    
+    std::shared_ptr<VectorTileEventListener> VectorTileLayer::getVectorTileEventListener() const {
+        return _vectorTileEventListener.get();
+    }
+    
+    void VectorTileLayer::setVectorTileEventListener(const std::shared_ptr<VectorTileEventListener>& eventListener) {
+        _vectorTileEventListener.set(eventListener);
+        tilesChanged(false); // we must reload the tiles, we do not keep full element information if this is not required
     }
     
     bool VectorTileLayer::tileExists(const MapTile& tile, bool preloadingCache) const {
@@ -180,12 +195,12 @@ namespace carto {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
         long long closestTileId = getTileId(closestTile);
-        std::shared_ptr<VectorTileDecoder::TileMap> tileMap;
-        _visibleCache.read(closestTileId, tileMap);
-        if (!tileMap) {
-            _preloadingCache.read(closestTileId, tileMap);
+        TileInfo tileInfo;
+        _visibleCache.read(closestTileId, tileInfo);
+        if (!tileInfo.getTileMap()) {
+            _preloadingCache.read(closestTileId, tileInfo);
         }
-        if (tileMap) {
+        if (auto tileMap = tileInfo.getTileMap()) {
             auto it = tileMap->find(_useTileMapMode ? closestTile.getFrameNr() : 0);
             if (it != tileMap->end()) {
                 std::shared_ptr<const vt::Tile> vtTile = it->second;
@@ -265,6 +280,56 @@ namespace carto {
         return _tileDecoder->getMaxZoom(); // NOTE: datasource max zoom is handled differently
     }    
     
+    void VectorTileLayer::calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
+        DirectorPtr<VectorTileEventListener> eventListener = _vectorTileEventListener;
+
+        if (eventListener) {
+            std::vector<std::tuple<vt::TileId, std::string, double, long long> > hitResults;
+            _renderer->calculateRayIntersectedElements(ray, viewState, hitResults);
+            for (auto hitResult : hitResults) {
+                vt::TileId vtTileId = std::get<0>(hitResult);
+                std::string vtLayerName = std::get<1>(hitResult);
+                double t = std::get<2>(hitResult);
+                long long featureId = std::get<3>(hitResult);
+
+                std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+                MapTile mapTile(vtTileId.x, vtTileId.y, vtTileId.zoom, _frameNr);
+                MapPos mapPos = projection.fromInternal(MapPos(ray(t)(0), ray(t)(1), ray(t)(2)));
+
+                TileInfo tileInfo;
+                _visibleCache.peek(getTileId(mapTile), tileInfo);
+
+                if (std::shared_ptr<BinaryData> tileData = tileInfo.getTileData()) {
+                    std::shared_ptr<Feature> feature = _tileDecoder->decodeLayerFeature(featureId, vtLayerName, _frameNr, tileData);
+                    if (feature) {
+                        std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
+                        results.push_back(RayIntersectedElement(std::make_shared<std::pair<MapTile, std::shared_ptr<Feature> > >(mapTile, feature), thisLayer, mapPos, mapPos, 0));
+                    } else {
+                        Log::Warnf("VectorTileLayer::calculateRayIntersectedElements: Failed to decode feature %lld", featureId);
+                    }
+                } else {
+                    Log::Warn("VectorTileLayer::calculateRayIntersectedElements: Failed to find tile data");
+                }
+            }
+        }
+
+        TileLayer::calculateRayIntersectedElements(projection, ray, viewState, results);
+    }
+
+    bool VectorTileLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
+        DirectorPtr<VectorTileEventListener> eventListener = _vectorTileEventListener;
+
+        if (eventListener) {
+            if (std::shared_ptr<std::pair<MapTile, std::shared_ptr<Feature> > > elementInfo = intersectedElement.getElement<std::pair<MapTile, std::shared_ptr<Feature> > >()) {
+                auto clickInfo = std::make_shared<VectorTileClickInfo>(clickType, intersectedElement.getHitPos(), intersectedElement.getHitPos(), elementInfo->first, elementInfo->second, intersectedElement.getLayer());
+                return eventListener->onVectorTileClicked(clickInfo);
+            }
+        }
+
+        return TileLayer::processClick(clickType, intersectedElement, viewState);
+    }
+
     void VectorTileLayer::offsetLayerHorizontally(double offset) {
         _renderer->offsetLayerHorizontally(offset);
     }
@@ -296,6 +361,7 @@ namespace carto {
 
         _renderer->setLabelOrder(static_cast<int>(getLabelRenderOrder()));
         _renderer->setBuildingOrder(static_cast<int>(getBuildingRenderOrder()));
+        _renderer->setInteractionMode(_vectorTileEventListener.get() ? true : false);
         return _renderer->onDrawFrame(deltaSeconds, viewState);
     }
         
@@ -371,24 +437,22 @@ namespace carto {
             vt::TileId vtDataSourceTile(dataSourceTile.getZoom(), dataSourceTile.getX(), dataSourceTile.getY());
             std::shared_ptr<VectorTileDecoder::TileMap> tileMap = layer->_tileDecoder->decodeTile(vtDataSourceTile, vtTile, tileData->getData());
             if (tileMap) {
+                // Construct tile info - keep original data if interactivity is required
+                VectorTileLayer::TileInfo tileInfo(layer->_vectorTileEventListener.get() ? tileData->getData() : std::shared_ptr<BinaryData>(), tileMap);
+
                 // Store tile to cache, unless invalidated
                 if (!isInvalidated()) {
-                    std::size_t tileMapSize = EXTRA_TILE_FOOTPRINT;
-                    for (auto it = tileMap->begin(); it != tileMap->end(); it++) {
-                        tileMapSize += it->second->getResidentSize();
-                    }
-
                     long long tileId = layer->getTileId(_tile);
                     if (isPreloading()) {
                         std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
-                        layer->_preloadingCache.put(tileId, tileMap, tileMapSize);
+                        layer->_preloadingCache.put(tileId, tileInfo, tileInfo.getSize());
                         if (tileData->getMaxAge() >= 0) {
                             layer->_preloadingCache.invalidate(tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
                         }
                     }
                     else {
                         std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
-                        layer->_visibleCache.put(tileId, tileMap, tileMapSize);
+                        layer->_visibleCache.put(tileId, tileInfo, tileInfo.getSize());
                         if (tileData->getMaxAge() >= 0) {
                             layer->_visibleCache.invalidate(tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
                         }
@@ -424,6 +488,17 @@ namespace carto {
                 }
             }
         }
+    }
+
+    std::size_t VectorTileLayer::TileInfo::getSize() const {
+        std::size_t size = EXTRA_TILE_FOOTPRINT;
+        if (_tileData) {
+            size += _tileData->size();
+        }
+        for (auto it = _tileMap->begin(); it != _tileMap->end(); it++) {
+            size += it->second->getResidentSize();
+        }
+        return size;
     }
     
 }

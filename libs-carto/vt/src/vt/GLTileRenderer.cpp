@@ -3,6 +3,7 @@
 #include "BitmapManager.h"
 
 #include <cassert>
+#include <algorithm>
 
 namespace {
     static const std::string backgroundVsh = R"GLSL(
@@ -826,16 +827,17 @@ namespace carto { namespace vt {
         }
     }
 
-    bool GLTileRenderer::findIntersectionId(const cglib::ray3<double>& ray, double& t, long long& id) const {
+    bool GLTileRenderer::findIntersections(const cglib::ray3<double>& ray, std::vector<std::tuple<TileId, std::string, double, long long>>& results) const {
         std::lock_guard<std::mutex> lock(*_mutex);
 
         // Calculate intersection with z=0 plane
+        double t = 0;
         if (!cglib::intersect_plane(cglib::vec4<double>(0, 0, 1, 0), ray, &t)) {
             return false;
         }
 
         // First find the intersecting tile. NOTE: we ignore building height information
-        bool found = false;
+        std::size_t count = results.size();
         for (const std::shared_ptr<BlendNode>& blendNode : *_blendNodes) {
             cglib::mat4x4<double> tileMatrix = calculateTileMatrix(blendNode->tileId);
             cglib::vec3<double> localPos = cglib::transform_point(ray(t), cglib::inverse(tileMatrix));
@@ -847,9 +849,15 @@ namespace carto { namespace vt {
                         for (const std::shared_ptr<TileLayer>& layer : blendNode->tile->getLayers()) {
                             for (const std::shared_ptr<TileGeometry>& geometry : layer->getGeometries()) {
                                 cglib::ray3<float> rayLocal = cglib::ray3<float>::convert(cglib::transform_ray(ray, cglib::inverse(tileMatrix)));
-                                float tLocal = 0;
-                                if (findTileGeometryIntersectionId(geometry, rayLocal, tLocal, id)) {
-                                    found = true;
+
+                                std::vector<std::pair<float, long long>> resultsLocal;
+                                findTileGeometryIntersections(geometry, rayLocal, resultsLocal);
+
+                                for (std::pair<float, long long> resultLocal : resultsLocal) {
+                                    float tLocal = resultLocal.first;
+                                    long long id = resultLocal.second;
+                                    cglib::vec3<double> pos = cglib::transform_point(cglib::vec3<double>(rayLocal(tLocal)(0), rayLocal(tLocal)(1), 0), tileMatrix);
+                                    results.emplace_back(blendNode->tile->getTileId(), layer->getName(), cglib::dot_product(pos - ray.origin, ray.direction), id);
                                 }
                             }
                         }
@@ -857,7 +865,7 @@ namespace carto { namespace vt {
                 }
             }
         }
-        return found;
+        return results.size() > count;
     }
     
     cglib::mat4x4<double> GLTileRenderer::calculateLocalViewMatrix(const cglib::mat4x4<double>& cameraMatrix) {
@@ -1027,7 +1035,7 @@ namespace carto { namespace vt {
         }
     }
     
-    bool GLTileRenderer::findTileGeometryIntersectionId(const std::shared_ptr<TileGeometry>& geometry, const cglib::ray3<float>& ray, float& t, long long& id) const {
+    void GLTileRenderer::findTileGeometryIntersections(const std::shared_ptr<TileGeometry>& geometry, const cglib::ray3<float>& ray, std::vector<std::pair<float, long long>>& results) const {
         for (std::size_t i = 0; i + 2 < geometry->getIndices().size(); i += 3) {
             std::size_t index0 = geometry->getIndices()[i + 0];
             std::size_t index1 = geometry->getIndices()[i + 1];
@@ -1048,18 +1056,18 @@ namespace carto { namespace vt {
                 p2 += decodeLineBinormal(geometry, index2);
             }
 
+            float t = 0;
             if (cglib::intersect_triangle(p0, p1, p2, ray, &t)) {
                 std::size_t counter = i;
                 for (std::size_t j = 0; j < geometry->getIds().size(); j++) {
                     if (counter < geometry->getIds()[j].first) {
-                        id = geometry->getIds()[j].second;
-                        return true;
+                        results.emplace_back(t, geometry->getIds()[j].second);
+                        break;
                     }
                     counter -= geometry->getIds()[j].first;
                 }
             }
         }
-        return false;
     }
 
     cglib::vec3<float> GLTileRenderer::decodeVertex(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const {

@@ -13,13 +13,15 @@
 #include <memory>
 #include <mutex>
 #include <map>
+#include <tuple>
 #include <vector>
+
+#include <cglib/ray.h>
 
 #include <vt/TileId.h>
 #include <vt/Tile.h>
 
 namespace carto {
-    class MapPos;
     class Projection;
     class Shader;
     class ShaderManager;
@@ -36,6 +38,7 @@ namespace carto {
         TileRenderer(const std::weak_ptr<MapRenderer>& mapRenderer, bool useFBO, bool useDepth, bool useStencil);
         virtual ~TileRenderer();
     
+        void setInteractionMode(bool enabled);
         void setLabelOrder(int order);
         void setBuildingOrder(int order);
 
@@ -50,6 +53,8 @@ namespace carto {
         void setBackgroundPattern(const std::shared_ptr<const vt::BitmapPattern>& pattern);
         bool cullLabels(const ViewState& viewState);
         bool refreshTiles(const std::vector<std::shared_ptr<TileDrawData> >& drawDatas);
+
+        void calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<std::tuple<vt::TileId, std::string, double, long long> >& results) const;
     
     private:
         std::weak_ptr<MapRenderer> _mapRenderer;
@@ -58,6 +63,7 @@ namespace carto {
         bool _useFBO;
         bool _useDepth;
         bool _useStencil;
+        bool _interactionMode;
         int _labelOrder;
         int _buildingOrder;
         double _horizontalLayerOffset;

@@ -145,13 +145,13 @@ namespace carto {
     }
 
     bool NMLModelLODTreeLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
-        std::shared_ptr<NMLModelLODTree::Proxy> element = intersectedElement.getElement<NMLModelLODTree::Proxy>();
-
         DirectorPtr<NMLModelLODTreeEventListener> nmlModelLODTreeEventListener = _nmlModelLODTreeEventListener;
 
         if (nmlModelLODTreeEventListener) {
-            auto clickInfo = std::make_shared<NMLModelLODTreeClickInfo>(clickType, intersectedElement.getHitPos(), intersectedElement.getElementPos(), element->metaData, intersectedElement.getLayer());
-            return nmlModelLODTreeEventListener->onNMLModelLODTreeClicked(clickInfo);
+            if (std::shared_ptr<NMLModelLODTree::Proxy> element = intersectedElement.getElement<NMLModelLODTree::Proxy>()) {
+                auto clickInfo = std::make_shared<NMLModelLODTreeClickInfo>(clickType, intersectedElement.getHitPos(), intersectedElement.getElementPos(), element->metaData, intersectedElement.getLayer());
+                return nmlModelLODTreeEventListener->onNMLModelLODTreeClicked(clickInfo);
+            }
         }
 
         return clickType == ClickType::CLICK_TYPE_SINGLE || clickType == ClickType::CLICK_TYPE_LONG; // by default, disable 'click through' for single and long clicks
