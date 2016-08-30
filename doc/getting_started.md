@@ -146,7 +146,7 @@ The following procedure describes how to register mobile apps under your account
     Name | An informative name of the mobile application in your account
     Description | A description about the mobile application in your account
     Platform | Identifies the type of mobile app platform. Some options may not be available, based on your account plan<br/><br/>**Note:** Once a mobile application is saved, you cannot edit the Platform setting. As an alternative, you can [delete](#delete-a-mobile-app) the application and recreate it with new settings.<br/><br/>**Tip:** When you select a _Platform_, the _Application ID_ displays more details about what identifiers, or packages, are required.<br/><br/><img src="/docs/img/layout/mobile/platform_appid.jpg" alt="Platform App ID hint" /> 
-    Application ID | The identification of the mobile app in the App store that is required for development with the Mobile SDK.<br/><br/>The following application ids identify the Platform selected:<br/><br/>- [**Android**](#basic-android-map): *package* from the AndroidManifest.xml file or *applicationId* in build.gradle<br/><br/>- [**iOS**](#basic-ios-map): Bundle Identifier. You can find it in the project properties in Xcode<br/><br/>- [**Xamarin Android**](#xamarin-android-app): *package* from the AndroidManifest.xml file<br/><br/>- [**Xamarin iOS**](#xamarin-ios-app): Bundle Identifier from the project Info.plist<br/><br/>- [**Windows Phone**](#windows-phone-implementation): UUID from the Windows package.appmanifest 
+    Application ID | The identification of the mobile app in the App store that is required for development with the Mobile SDK.<br/><br/>The following application ids identify the Platform selected:<br/><br/>- [**Android**](#android-implementation): *package* from the AndroidManifest.xml file or *applicationId* in build.gradle<br/><br/>- [**iOS**](#ios-implementation): Bundle Identifier. You can find it in the project properties in Xcode<br/><br/>- [**Xamarin Android**](#xamarin-android-app): *package* from the AndroidManifest.xml file<br/><br/>- [**Xamarin iOS**](#xamarin-ios-app): Bundle Identifier from the project Info.plist<br/><br/>- [**Windows Phone**](#windows-phone-implementation): UUID from the Windows package.appmanifest 
     App type | Identifies the type of mobile application, which are subject to different quota limitations<br/><br/>- **Open**: This app type is open to the public and is available as free download in public app stores<br/><br/>- **Private**: Available for Enterprise accounts only, allows organizations to publish their apps internally and have paid app use cases. 
  
 5. Click _SAVE CHANGES_
@@ -201,7 +201,7 @@ Once a mobile application is saved, you cannot edit the Platform setting. As an 
 
 Once your mobile apps are registered and you have your API Keys, it is recommended to familiarize yourself with the setup for the platform that you are using. Some of these platforms contain unique map features that are only available based on the mobile platform. You can then use sample mobile apps and add basic and advanced map features.
 
-### Basic Android Map
+### Android Implementation
 
 If using Android as the mobile platform, follow this implementation procedure.
 
@@ -300,7 +300,7 @@ The following example shows the complete code for initializing your Android mobi
 
 You can now start using the application on your phone and view the default basemap.
 
-### Basic iOS Map
+### iOS Implementation
 
 If using iOS as the mobile platform, follow this implementation procedure.
 
@@ -398,7 +398,7 @@ If using iOS as the mobile platform, follow this implementation procedure.
   [mapView setRotation:0 durationSeconds:0];
 {% endhighlight %}
 
-### Basic Xamarin Maps
+### Xamarin (Android and iOS) Implementation
 
 If using Xamarin as the mobile platform, follow these implementation procedures for Xamarin (Android) and Xamarin (iOS).
 
