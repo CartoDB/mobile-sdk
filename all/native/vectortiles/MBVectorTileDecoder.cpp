@@ -1,6 +1,9 @@
 #include "MBVectorTileDecoder.h"
 #include "core/BinaryData.h"
+#include "core/Variant.h"
 #include "components/Exceptions.h"
+#include "geometry/Feature.h"
+#include "geometry/Geometry.h"
 #include "graphics/Bitmap.h"
 #include "styles/CompiledStyleSet.h"
 #include "styles/CartoCSSStyleSet.h"
@@ -23,6 +26,15 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+
+namespace {
+
+    struct ValueConverter : boost::static_visitor<carto::Variant> {
+        carto::Variant operator() (boost::blank) const { return carto::Variant(); }
+        template <typename T> carto::Variant operator() (T val) const { return carto::Variant(val); }
+    };
+
+}
 
 namespace carto {
     
@@ -256,6 +268,39 @@ namespace carto {
     
     int MBVectorTileDecoder::getMaxZoom() const {
         return Const::MAX_SUPPORTED_ZOOM_LEVEL;
+    }
+
+    std::shared_ptr<Feature> MBVectorTileDecoder::decodeLayerFeature(long long id, const std::string& layerName, int frameNr, const std::shared_ptr<BinaryData>& tileData) const {
+        if (!tileData) {
+            Log::Warn("MBVectorTileDecoder::decodeLayerFeature: Null tile data");
+            return std::shared_ptr<Feature>();
+        }
+        if (tileData->empty()) {
+            return std::shared_ptr<Feature>();
+        }
+
+        try {
+            mvt::MBVTFeatureDecoder decoder(*tileData->getDataPtr(), _logger);
+
+            std::shared_ptr<mvt::Feature> mvtFeature = decoder.findLayerFeature(layerName, id);
+            if (!mvtFeature) {
+                return std::shared_ptr<Feature>();
+            }
+
+            std::map<std::string, Variant> featureData;
+            if (std::shared_ptr<const mvt::FeatureData> mvtFeatureData = mvtFeature->getFeatureData()) {
+                for (const std::string& varName : mvtFeatureData->getVariableNames()) {
+                    mvt::Value mvtValue;
+                    mvtFeatureData->getVariable(varName, mvtValue);
+                    featureData[varName] = boost::apply_visitor(ValueConverter(), mvtValue);
+                }
+            }
+
+            return std::make_shared<Feature>(std::shared_ptr<Geometry>(), Variant(featureData));
+        } catch (const std::exception& ex) {
+            Log::Errorf("MBVectorTileDecoder::decodeLayerFeature: Exception while decoding: %s", ex.what());
+        }
+        return std::shared_ptr<Feature>();
     }
         
     std::shared_ptr<MBVectorTileDecoder::TileMap> MBVectorTileDecoder::decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const {

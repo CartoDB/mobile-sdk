@@ -12,6 +12,7 @@
 #include <string>
 #include <algorithm>
 #include <vector>
+#include <unordered_set>
 
 namespace carto { namespace mvt {
     class FeatureData {
@@ -23,6 +24,14 @@ namespace carto { namespace mvt {
         explicit FeatureData(GeometryType geomType, std::vector<std::pair<std::string, Value>> vars) : _geometryType(geomType), _variables(std::move(vars)) { }
 
         GeometryType getGeometryType() const { return _geometryType; }
+
+        std::unordered_set<std::string> getVariableNames() const {
+             std::unordered_set<std::string> names;
+             std::transform(_variables.begin(), _variables.end(), std::inserter(names, names.begin()), [](const std::pair<std::string, Value>& var) {
+                 return var.first;
+             });
+             return names;
+        }
 
         bool getVariable(const std::string& name, Value& value) const {
             auto it = std::find_if(_variables.begin(), _variables.end(), [name](const std::pair<std::string, Value>& var) { return var.first == name; });

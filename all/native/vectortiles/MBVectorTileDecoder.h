@@ -139,7 +139,9 @@ namespace carto {
         virtual int getMinZoom() const;
         
         virtual int getMaxZoom() const;
-    
+
+        virtual std::shared_ptr<Feature> decodeLayerFeature(long long id, const std::string& layerName, int frameNr, const std::shared_ptr<BinaryData>& tileData) const;
+
         virtual std::shared_ptr<TileMap> decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const;
     
     protected:

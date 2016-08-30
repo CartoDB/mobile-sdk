@@ -200,7 +200,7 @@ namespace carto {
         if (!tileInfo.getTileMap()) {
             _preloadingCache.read(closestTileId, tileInfo);
         }
-        if (auto tileMap = tileInfo.getTileMap()) {
+        if (std::shared_ptr<VectorTileDecoder::TileMap> tileMap = tileInfo.getTileMap()) {
             auto it = tileMap->find(_useTileMapMode ? closestTile.getFrameNr() : 0);
             if (it != tileMap->end()) {
                 std::shared_ptr<const vt::Tile> vtTile = it->second;
@@ -286,11 +286,11 @@ namespace carto {
         if (eventListener) {
             std::vector<std::tuple<vt::TileId, std::string, double, long long> > hitResults;
             _renderer->calculateRayIntersectedElements(ray, viewState, hitResults);
-            for (auto hitResult : hitResults) {
-                vt::TileId vtTileId = std::get<0>(hitResult);
-                std::string vtLayerName = std::get<1>(hitResult);
-                double t = std::get<2>(hitResult);
-                long long featureId = std::get<3>(hitResult);
+            for (auto it = hitResults.rbegin(); it != hitResults.rend(); it++) {
+                vt::TileId vtTileId = std::get<0>(*it);
+                std::string vtLayerName = std::get<1>(*it);
+                double t = std::get<2>(*it);
+                long long featureId = std::get<3>(*it);
 
                 std::lock_guard<std::recursive_mutex> lock(_mutex);
 
