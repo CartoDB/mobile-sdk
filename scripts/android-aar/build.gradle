@@ -23,7 +23,6 @@ android {
 	
 	sourceSets {
 	        main {
-				assets.srcDirs = ['../../assets/styles']
 				jniLibs.srcDir '../../dist/android/'
 	        }
 	}

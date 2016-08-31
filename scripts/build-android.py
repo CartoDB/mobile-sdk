@@ -91,7 +91,8 @@ def buildAndroidJAR(args):
     *classFiles
   ):
     return False
-  if makedirs(distDir) and copyfile('%s/carto-mobile-sdk.jar' % buildDir, '%s/carto-mobile-sdk.jar' % distDir):
+  if makedirs(distDir) and \
+     copyfile('%s/carto-mobile-sdk.jar' % buildDir, '%s/carto-mobile-sdk.jar' % distDir):
     print "Output available in:\n%s" % distDir
     return True
   return False
@@ -100,6 +101,7 @@ def buildAndroidAAR(args):
   baseDir = getBaseDir()
   buildDir = getBuildDir('android-aar')
   distDir = getDistDir('android')
+  version = args.buildversion
 
   if not gradle(args, '%s/scripts' % baseDir,
     '-p', 'android-aar',
@@ -107,7 +109,8 @@ def buildAndroidAAR(args):
     'assemble%s' % args.configuration
   ):
     return False
-  if makedirs(distDir) and copyfile('%s/outputs/aar/android-aar-%s.aar' % (buildDir, args.configuration.lower()), '%s/carto-mobile-sdk.aar' % distDir):
+  if makedirs(distDir) and \
+     copyfile('%s/outputs/aar/android-aar-%s.aar' % (buildDir, args.configuration.lower()), '%s/carto-mobile-sdk-%s.aar' % (distDir, version)):
     print "Output available in:\n%s" % distDir
     return True
   return False
@@ -122,10 +125,12 @@ parser.add_argument('--javac', dest='javac', default='javac', help='Java compile
 parser.add_argument('--jar', dest='jar', default='jar', help='Jar executable')
 parser.add_argument('--cmake', dest='cmake', default='cmake', help='CMake executable')
 parser.add_argument('--cmake-options', dest='cmakeoptions', default='', help='CMake options')
-parser.add_argument('--gradle', dest='gradle', default='', help='Gradle executable')
-parser.add_argument('--build-number', dest='buildnumber', default='', help='Build sequence number, goes to version str')
+parser.add_argument('--gradle', dest='gradle', default='gradle', help='Gradle executable')
 parser.add_argument('--compiler', dest='compiler', default='gcc-4.9', choices=['gcc-4.9', 'clang'], help='C++ compiler')
 parser.add_argument('--configuration', dest='configuration', default='Release', choices=['Release', 'Debug'], help='Configuration')
+parser.add_argument('--build-number', dest='buildnumber', default='', help='Build sequence number, goes to version str')
+parser.add_argument('--build-version', dest='buildversion', default='%s-devel' % SDK_VERSION, help='Build version, goes to distributions')
+parser.add_argument('--build-aar', dest='buildaar', default=False, action='store_true', help='Build Android .aar package')
 args = parser.parse_args()
 if 'all' in args.androidabi:
   args.androidabi = ANDROID_ABIS
@@ -148,6 +153,6 @@ for abi in args.androidabi:
 if not buildAndroidJAR(args):
   exit(-1)
 
-if args.gradle:
+if args.buildaar:
   if not buildAndroidAAR(args):
     exit(-1)

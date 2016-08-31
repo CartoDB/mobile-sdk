@@ -82,14 +82,15 @@ def getDistDir(target):
   return distDir
 
 def getDefaultProfile():
-  if not os.path.exists('%s/../../extensions' % os.path.dirname(os.path.realpath(__file__))):
-    return 'free'
   return 'standard'
 
 def getProfiles():
   if getDefaultProfile() == 'free':
     return { 'free': {} }
-  with open('%s/sdk_profiles.json' % os.path.dirname(os.path.realpath(__file__)), 'r') as f:
+  profilesFilename = '%s/sdk_profiles.json' % os.path.dirname(os.path.realpath(__file__))
+  if os.path.exists('%s/../../extensions' % os.path.dirname(os.path.realpath(__file__))):
+    profilesFilename = '%s/../../extensions/scripts/build/sdk_profiles.json' % os.path.dirname(os.path.realpath(__file__))
+  with open(profilesFilename, 'r') as f:
     profiles = json.loads(f.read())
     return { unicode(key).encode('utf-8') : val for key, val in profiles.items() if key != 'free' }
 
