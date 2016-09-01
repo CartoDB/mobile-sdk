@@ -845,6 +845,7 @@ namespace carto { namespace vt {
                 if (blendNode->tile) {
                     tileMatrix = calculateTileMatrix(blendNode->tile->getTileId());
                     localPos = cglib::transform_point(ray(t), cglib::inverse(tileMatrix));
+                    localPos(1) = 1 - localPos(1);
                     if (localPos(0) >= 0 && localPos(0) <= 1 && localPos(1) >= 0 && localPos(1) <= 1) {
                         for (const std::shared_ptr<TileLayer>& layer : blendNode->tile->getLayers()) {
                             for (const std::shared_ptr<TileGeometry>& geometry : layer->getGeometries()) {
@@ -857,7 +858,7 @@ namespace carto { namespace vt {
                                     float tLocal = resultLocal.first;
                                     long long id = resultLocal.second;
                                     cglib::vec3<double> pos = cglib::transform_point(cglib::vec3<double>(rayLocal(tLocal)(0), rayLocal(tLocal)(1), 0), tileMatrix);
-                                    results.emplace_back(blendNode->tile->getTileId(), layer->getName(), cglib::dot_product(pos - ray.origin, ray.direction), id);
+                                    results.emplace_back(blendNode->tile->getTileId(), layer->getName(), cglib::dot_product(pos - ray.origin, ray.direction) / cglib::dot_product(ray.direction, ray.direction), id);
                                 }
                             }
                         }
