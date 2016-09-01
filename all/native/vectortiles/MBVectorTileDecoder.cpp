@@ -4,6 +4,8 @@
 #include "components/Exceptions.h"
 #include "geometry/Feature.h"
 #include "geometry/Geometry.h"
+#include "geometry/PointGeometry.h"
+#include "geometry/MultiPointGeometry.h"
 #include "graphics/Bitmap.h"
 #include "styles/CompiledStyleSet.h"
 #include "styles/CartoCSSStyleSet.h"
@@ -33,6 +35,40 @@ namespace {
         carto::Variant operator() (boost::blank) const { return carto::Variant(); }
         template <typename T> carto::Variant operator() (T val) const { return carto::Variant(val); }
     };
+
+    carto::MapPos convertPoint(const cglib::vec2<float>& pos) {
+        return carto::MapPos(pos(0), pos(1), 0);
+    }
+
+    std::vector<carto::MapPos> convertPoints(const std::vector<cglib::vec2<float> >& poses) {
+        std::vector<carto::MapPos> points;
+        points.reserve(poses.size());
+        std::transform(poses.begin(), poses.end(), std::back_inserter(points), convertPoint);
+        return points;
+    }
+
+    std::vector<std::vector<carto::MapPos> > convertPointsList(const std::vector<std::vector<cglib::vec2<float> > >& posesList) {
+        std::vector<std::vector<carto::MapPos> > pointsList;
+        pointsList.reserve(posesList.size());
+        std::transform(posesList.begin(), posesList.end(), std::back_inserter(pointsList), convertPoints);
+        return pointsList;
+    }
+
+    std::shared_ptr<carto::Geometry> convertGeometry(const std::shared_ptr<const carto::mvt::Geometry>& mvtGeometry) {
+        if (auto mvtPoint = std::dynamic_pointer_cast<const carto::mvt::PointGeometry>(mvtGeometry)) {
+            std::vector<carto::MapPos> poses = convertPoints(mvtPoint->getVertices());
+            std::vector<std::shared_ptr<carto::PointGeometry> > points;
+            points.reserve(poses.size());
+            std::transform(poses.begin(), poses.end(), std::back_inserter(points), [](const carto::MapPos& pos) { return std::make_shared<carto::PointGeometry>(pos); });
+            if (points.size() == 1) {
+                return points.front();
+            }
+            else {
+                return std::make_shared<carto::MultiPointGeometry>(points);
+            }
+        }
+        return std::shared_ptr<carto::Geometry>();
+    }
 
 }
 
@@ -270,9 +306,9 @@ namespace carto {
         return Const::MAX_SUPPORTED_ZOOM_LEVEL;
     }
 
-    std::shared_ptr<Feature> MBVectorTileDecoder::decodeLayerFeature(long long id, const std::string& layerName, int frameNr, const std::shared_ptr<BinaryData>& tileData) const {
+    std::shared_ptr<Feature> MBVectorTileDecoder::decodeFeature(long long id, const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData) const {
         if (!tileData) {
-            Log::Warn("MBVectorTileDecoder::decodeLayerFeature: Null tile data");
+            Log::Warn("MBVectorTileDecoder::decodeFeature: Null tile data");
             return std::shared_ptr<Feature>();
         }
         if (tileData->empty()) {
@@ -282,7 +318,7 @@ namespace carto {
         try {
             mvt::MBVTFeatureDecoder decoder(*tileData->getDataPtr(), _logger);
 
-            std::shared_ptr<mvt::Feature> mvtFeature = decoder.findLayerFeature(layerName, id);
+            std::shared_ptr<mvt::Feature> mvtFeature = decoder.getFeature(id);
             if (!mvtFeature) {
                 return std::shared_ptr<Feature>();
             }
@@ -296,9 +332,9 @@ namespace carto {
                 }
             }
 
-            return std::make_shared<Feature>(std::shared_ptr<Geometry>(), Variant(featureData));
+            return std::make_shared<Feature>(convertGeometry(mvtFeature->getGeometry()), Variant(featureData));
         } catch (const std::exception& ex) {
-            Log::Errorf("MBVectorTileDecoder::decodeLayerFeature: Exception while decoding: %s", ex.what());
+            Log::Errorf("MBVectorTileDecoder::decodeFeature: Exception while decoding: %s", ex.what());
         }
         return std::shared_ptr<Feature>();
     }

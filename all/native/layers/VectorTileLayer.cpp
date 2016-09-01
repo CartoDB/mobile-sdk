@@ -284,13 +284,12 @@ namespace carto {
         DirectorPtr<VectorTileEventListener> eventListener = _vectorTileEventListener;
 
         if (eventListener) {
-            std::vector<std::tuple<vt::TileId, std::string, double, long long> > hitResults;
+            std::vector<std::tuple<vt::TileId, double, long long> > hitResults;
             _renderer->calculateRayIntersectedElements(ray, viewState, hitResults);
             for (auto it = hitResults.rbegin(); it != hitResults.rend(); it++) {
                 vt::TileId vtTileId = std::get<0>(*it);
-                std::string vtLayerName = std::get<1>(*it);
-                double t = std::get<2>(*it);
-                long long featureId = std::get<3>(*it);
+                double t = std::get<1>(*it);
+                long long id = std::get<2>(*it);
 
                 std::lock_guard<std::recursive_mutex> lock(_mutex);
 
@@ -301,12 +300,12 @@ namespace carto {
                 _visibleCache.peek(getTileId(mapTile), tileInfo);
 
                 if (std::shared_ptr<BinaryData> tileData = tileInfo.getTileData()) {
-                    std::shared_ptr<Feature> feature = _tileDecoder->decodeLayerFeature(featureId, vtLayerName, _frameNr, tileData);
+                    std::shared_ptr<Feature> feature = _tileDecoder->decodeFeature(id, vtTileId, tileData);
                     if (feature) {
                         std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
                         results.push_back(RayIntersectedElement(std::make_shared<std::pair<MapTile, std::shared_ptr<Feature> > >(mapTile, feature), thisLayer, mapPos, mapPos, 0));
                     } else {
-                        Log::Warnf("VectorTileLayer::calculateRayIntersectedElements: Failed to decode feature %lld", featureId);
+                        Log::Warnf("VectorTileLayer::calculateRayIntersectedElements: Failed to decode feature %lld", id);
                     }
                 } else {
                     Log::Warn("VectorTileLayer::calculateRayIntersectedElements: Failed to find tile data");

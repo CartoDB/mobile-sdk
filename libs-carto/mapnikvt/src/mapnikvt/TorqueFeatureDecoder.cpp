@@ -62,6 +62,10 @@ namespace carto { namespace mvt {
             }
         }
 
+        virtual long long getTileIndex() const override {
+            return _index0;
+        }
+
         virtual long long getFeatureId() const override {
             return 0;
         }

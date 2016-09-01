@@ -91,14 +91,14 @@ namespace carto { namespace mvt {
         int groupId = (_allowOverlap ? -1 : 0);
 
         std::vector<std::pair<long long, vt::TileLayerBuilder::Vertex>> pointInfos;
-        std::vector<vt::TileLayerBuilder::BitmapLabelInfo> labelInfos;
+        std::vector<std::pair<long long, vt::TileLayerBuilder::BitmapLabelInfo>> labelInfos;
 
-        auto addPoint = [&](long long id, const cglib::vec2<float>& vertex) {
+        auto addPoint = [&](long long localId, long long globalId, const cglib::vec2<float>& vertex) {
             if (_allowOverlap) {
-                pointInfos.emplace_back(id, vertex);
+                pointInfos.emplace_back(localId, vertex);
             }
             else {
-                labelInfos.push_back(vt::TileLayerBuilder::BitmapLabelInfo(id, groupId, vertex, 0));
+                labelInfos.emplace_back(localId, vt::TileLayerBuilder::BitmapLabelInfo(globalId, groupId, vertex, 0));
             }
         };
 
@@ -145,11 +145,13 @@ namespace carto { namespace mvt {
                 vt::BitmapLabelStyle style(orientation, vt::Color(0xffffffff) * fillOpacity, symbolizerContext.getFontManager()->getNullFont(), bitmap, transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1)));
 
                 std::size_t labelInfoIndex = 0;
-                layerBuilder.addBitmapLabels([&](vt::TileLayerBuilder::BitmapLabelInfo& labelInfo) {
+                layerBuilder.addBitmapLabels([&](long long& id, vt::TileLayerBuilder::BitmapLabelInfo& labelInfo) {
                     if (labelInfoIndex >= labelInfos.size()) {
                         return false;
                     }
-                    labelInfo = std::move(labelInfos[labelInfoIndex++]);
+                    id = labelInfos[labelInfoIndex].first;
+                    labelInfo = std::move(labelInfos[labelInfoIndex].second);
+                    labelInfoIndex++;
                     return true;
                 }, style);
                 
@@ -158,21 +160,20 @@ namespace carto { namespace mvt {
         };
 
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
-            long long featureId = featureCollection.getId(index);
+            long long localId = featureCollection.getLocalId(index);
+            long long globalId = featureCollection.getGlobalId(index);
             const std::shared_ptr<const Geometry>& geometry = featureCollection.getGeometry(index);
 
             if (auto pointGeometry = std::dynamic_pointer_cast<const PointGeometry>(geometry)) {
                 for (const auto& vertex : pointGeometry->getVertices()) {
-                    long long id = getBitmapId(featureId, file);
-                    addPoint(id, vertex);
+                    addPoint(localId, getBitmapId(globalId, file), vertex);
                 }
             }
             else if (auto lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(geometry)) {
                 if (placement == vt::LabelOrientation::LINE) {
                     for (const auto& vertices : lineGeometry->getVerticesList()) {
                         if (_spacing <= 0) {
-                            long long id = getBitmapId(featureId, file);
-                            labelInfos.push_back(vt::TileLayerBuilder::BitmapLabelInfo(id, groupId, vertices, 0));
+                            labelInfos.emplace_back(localId, vt::TileLayerBuilder::BitmapLabelInfo(getBitmapId(globalId, file), groupId, vertices, 0));
                             continue;
                         }
 
@@ -190,8 +191,7 @@ namespace carto { namespace mvt {
                             while (linePos < lineLen) {
                                 cglib::vec2<float> pos = v0 + (v1 - v0) * (linePos / lineLen);
                                 if (std::min(pos(0), pos(1)) > 0.0f && std::max(pos(0), pos(1)) < 1.0f) {
-                                    long long id = getMultiBitmapId(featureId, file);
-                                    addPoint(id, pos);
+                                    addPoint(localId, getMultiBitmapId(globalId, file), pos);
 
                                     cglib::vec2<float> dir = cglib::unit(v1 - v0);
                                     cglib::mat3x3<float> dirTransform = cglib::mat3x3<float>::identity();
@@ -211,15 +211,13 @@ namespace carto { namespace mvt {
                 }
                 else {
                     for (const auto& vertex : lineGeometry->getMidPoints()) {
-                        long long id = getBitmapId(featureId, file);
-                        addPoint(id, vertex);
+                        addPoint(localId, getBitmapId(globalId, file), vertex);
                     }
                 }
             }
             else if (auto polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(geometry)) {
                 for (const auto& vertex : polygonGeometry->getSurfacePoints()) {
-                    long long id = getBitmapId(featureId, file);
-                    addPoint(id, vertex);
+                    addPoint(localId, getBitmapId(globalId, file), vertex);
                 }
             }
             else {

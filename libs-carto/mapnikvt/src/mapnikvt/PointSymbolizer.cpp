@@ -44,19 +44,20 @@ namespace carto { namespace mvt {
 
         std::vector<std::pair<long long, vt::TileLayerBuilder::Vertex>> pointInfos;
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
+            long long localId = featureCollection.getLocalId(index);
             if (auto pointGeometry = std::dynamic_pointer_cast<const PointGeometry>(featureCollection.getGeometry(index))) {
                 for (const auto& vertex : pointGeometry->getVertices()) {
-                    pointInfos.emplace_back(featureCollection.getId(index), vertex);
+                    pointInfos.emplace_back(localId, vertex);
                 }
             }
             else if (auto lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(featureCollection.getGeometry(index))) {
                 for (const auto& vertex : lineGeometry->getMidPoints()) {
-                    pointInfos.emplace_back(featureCollection.getId(index), vertex);
+                    pointInfos.emplace_back(localId, vertex);
                 }
             }
             else if (auto polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(featureCollection.getGeometry(index))) {
                 for (const auto& vertex : polygonGeometry->getSurfacePoints()) {
-                    pointInfos.emplace_back(featureCollection.getId(index), vertex);
+                    pointInfos.emplace_back(localId, vertex);
                 }
             }
             else {

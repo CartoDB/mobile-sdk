@@ -238,7 +238,7 @@ namespace carto {
         return changed;
     }
 
-    void TileRenderer::calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<std::tuple<vt::TileId, std::string, double, long long> >& results) const {
+    void TileRenderer::calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<std::tuple<vt::TileId, double, long long> >& results) const {
         std::lock_guard<std::mutex> lock(_mutex);
 
         if (!_glRenderer) {

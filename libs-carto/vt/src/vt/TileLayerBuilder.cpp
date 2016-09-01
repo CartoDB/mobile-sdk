@@ -163,7 +163,7 @@ namespace carto { namespace vt {
         } while (generator(id, verticesList));
     }
 
-    void TileLayerBuilder::addBitmapLabels(const std::function<bool(BitmapLabelInfo& labelInfo)>& generator, const BitmapLabelStyle& style) {
+    void TileLayerBuilder::addBitmapLabels(const std::function<bool(long long& id, BitmapLabelInfo& labelInfo)>& generator, const BitmapLabelStyle& style) {
         if (!style.bitmap) {
             return;
         }
@@ -178,8 +178,9 @@ namespace carto { namespace vt {
         };
 
         while (true) {
+            long long id = 0;
             BitmapLabelInfo labelInfo;
-            if (!generator(labelInfo)) {
+            if (!generator(id, labelInfo)) {
                 break;
             }
 
@@ -201,15 +202,16 @@ namespace carto { namespace vt {
         }
     }
 
-    void TileLayerBuilder::addTextLabels(const std::function<bool(TextLabelInfo& labelInfo)>& generator, const TextLabelStyle& style) {
+    void TileLayerBuilder::addTextLabels(const std::function<bool(long long& id, TextLabelInfo& labelInfo)>& generator, const TextLabelStyle& style) {
         boost::optional<cglib::mat3x3<float>> transform;
         if (style.angle != 0) {
             transform = cglib::rotate3_matrix(cglib::vec3<float>(0, 0, -1), style.angle * boost::math::constants::pi<float>() / 180.0f);
         }
 
         while (true) {
+            long long id = 0;
             TextLabelInfo labelInfo;
-            if (!generator(labelInfo)) {
+            if (!generator(id, labelInfo)) {
                 break;
             }
 

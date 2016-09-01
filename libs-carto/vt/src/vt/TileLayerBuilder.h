@@ -62,8 +62,8 @@ namespace carto { namespace vt {
         void addLines(const std::function<bool(long long& id, Vertices& vertices)>& generator, const LineStyle& style);
         void addPolygons(const std::function<bool(long long& id, VerticesList& verticesList)>& generator, const PolygonStyle& style);
         void addPolygons3D(const std::function<bool(long long& id, VerticesList& verticesList)>& generator, float height, const Polygon3DStyle& style);
-        void addBitmapLabels(const std::function<bool(BitmapLabelInfo& labelInfo)>& generator, const BitmapLabelStyle& style);
-        void addTextLabels(const std::function<bool(TextLabelInfo& labelInfo)>& generator, const TextLabelStyle& style);
+        void addBitmapLabels(const std::function<bool(long long& id, BitmapLabelInfo& labelInfo)>& generator, const BitmapLabelStyle& style);
+        void addTextLabels(const std::function<bool(long long& id, TextLabelInfo& labelInfo)>& generator, const TextLabelStyle& style);
 
         std::shared_ptr<TileLayer> build(std::string layerName, int layerIdx, std::shared_ptr<FloatFunction> opacity, boost::optional<CompOp> compOp);
 

@@ -74,13 +74,12 @@ namespace carto {
 
         /**
          * Decoders the specified feature from the tile layer.
-         * @param id The id of the feature to decoder.
-         * @param layerName The layer name of the feature.
-         * @param frameNr The frame number to use.
+         * @param id The id of the feature to decode.
+         * @param tile The tile coordinates.
          * @param tileData The tile data to use.
          * @return The feature, if found. Null if not found.
          */
-        virtual std::shared_ptr<Feature> decodeLayerFeature(long long id, const std::string& layerName, int frameNr, const std::shared_ptr<BinaryData>& tileData) const = 0;
+        virtual std::shared_ptr<Feature> decodeFeature(long long id, const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData) const = 0;
         
         /**
          * Loads the specified vector tile.

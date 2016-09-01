@@ -44,23 +44,22 @@ namespace carto { namespace mvt {
 
         vt::TextLabelStyle style(placement, textFormatterOptions, font, _orientation, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::Bitmap>());
 
-        std::vector<vt::TileLayerBuilder::TextLabelInfo> labelInfos;
+        std::vector<std::pair<long long, vt::TileLayerBuilder::TextLabelInfo>> labelInfos;
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
-            long long featureId = featureCollection.getId(index);
+            long long localId = featureCollection.getLocalId(index);
+            long long globalId = featureCollection.getGlobalId(index);
             const std::shared_ptr<const Geometry>& geometry = featureCollection.getGeometry(index);
 
             if (auto pointGeometry = std::dynamic_pointer_cast<const PointGeometry>(geometry)) {
                 for (const auto& vertex : pointGeometry->getVertices()) {
-                    long long id = getTextId(featureId, hash);
-                    labelInfos.emplace_back(id, groupId, text, vertex, vt::TileLayerBuilder::Vertices(), minimumDistance);
+                    labelInfos.emplace_back(localId, vt::TileLayerBuilder::TextLabelInfo(getTextId(globalId, hash), groupId, text, vertex, vt::TileLayerBuilder::Vertices(), minimumDistance));
                 }
             }
             else if (auto lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(geometry)) {
                 if (placement == vt::LabelOrientation::LINE) {
                     for (const auto& vertices : lineGeometry->getVerticesList()) {
                         if (_spacing <= 0) {
-                            long long id = getTextId(featureId, hash);
-                            labelInfos.emplace_back(id, groupId, text, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices, minimumDistance);
+                            labelInfos.emplace_back(localId, vt::TileLayerBuilder::TextLabelInfo(getTextId(globalId, hash), groupId, text, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices, minimumDistance));
                             continue;
                         }
 
@@ -76,8 +75,7 @@ namespace carto { namespace mvt {
                             while (linePos < lineLen) {
                                 cglib::vec2<float> pos = v0 + (v1 - v0) * (linePos / lineLen);
                                 if (std::min(pos(0), pos(1)) > 0.0f && std::max(pos(0), pos(1)) < 1.0f) {
-                                    long long id = getMultiTextId(featureId, hash);
-                                    labelInfos.emplace_back(id, groupId, text, pos, vertices, minimumDistance);
+                                    labelInfos.emplace_back(localId, vt::TileLayerBuilder::TextLabelInfo(getMultiTextId(globalId, hash), groupId, text, pos, vertices, minimumDistance));
                                 }
 
                                 if (textSize < 0) {
@@ -92,15 +90,13 @@ namespace carto { namespace mvt {
                 }
                 else {
                     for (const auto& vertices : lineGeometry->getVerticesList()) {
-                        long long id = getTextId(featureId, hash);
-                        labelInfos.emplace_back(id, groupId, text, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices, minimumDistance);
+                        labelInfos.emplace_back(localId, vt::TileLayerBuilder::TextLabelInfo(getTextId(globalId, hash), groupId, text, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices, minimumDistance));
                     }
                 }
             }
             else if (auto polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(geometry)) {
                 for (const auto& vertex : polygonGeometry->getSurfacePoints()) {
-                    long long id = getTextId(featureId, hash);
-                    labelInfos.emplace_back(id, groupId, text, vertex, vt::TileLayerBuilder::Vertices(), minimumDistance);
+                    labelInfos.emplace_back(localId, vt::TileLayerBuilder::TextLabelInfo(getTextId(globalId, hash), groupId, text, vertex, vt::TileLayerBuilder::Vertices(), minimumDistance));
                 }
             }
             else {
@@ -109,11 +105,13 @@ namespace carto { namespace mvt {
         }
 
         std::size_t labelInfoIndex = 0;
-        layerBuilder.addTextLabels([&](vt::TileLayerBuilder::TextLabelInfo& labelInfo) {
+        layerBuilder.addTextLabels([&](long long& id, vt::TileLayerBuilder::TextLabelInfo& labelInfo) {
             if (labelInfoIndex >= labelInfos.size()) {
                 return false;
             }
-            labelInfo = std::move(labelInfos[labelInfoIndex++]);
+            id = labelInfos[labelInfoIndex].first;
+            labelInfo = std::move(labelInfos[labelInfoIndex].second);
+            labelInfoIndex++;
             return true;
         }, style);
     }

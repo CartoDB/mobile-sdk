@@ -18,9 +18,12 @@ namespace carto { namespace mvt {
             while (true) {
                 if (polygonGeometry) {
                     if (geometryIndex < polygonGeometry->getPolygonList().size()) {
+                        id = featureCollection.getLocalId(featureIndex);
                         verticesList = polygonGeometry->getPolygonList()[geometryIndex++];
                         return true;
                     }
+                    featureIndex++;
+                    geometryIndex = 0;
                 }
 
                 if (featureIndex >= featureCollection.getSize()) {
@@ -30,8 +33,6 @@ namespace carto { namespace mvt {
                 if (!polygonGeometry) {
                     _logger->write(Logger::Severity::WARNING, "Unsupported geometry for PolygonSymbolizer");
                 }
-                featureIndex++;
-                geometryIndex = 0;
             }
             return false;
         }, style);

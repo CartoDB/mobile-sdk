@@ -827,7 +827,7 @@ namespace carto { namespace vt {
         }
     }
 
-    bool GLTileRenderer::findIntersections(const cglib::ray3<double>& ray, std::vector<std::tuple<TileId, std::string, double, long long>>& results) const {
+    bool GLTileRenderer::findIntersections(const cglib::ray3<double>& ray, std::vector<std::tuple<TileId, double, long long>>& results) const {
         std::lock_guard<std::mutex> lock(*_mutex);
 
         // Calculate intersection with z=0 plane
@@ -858,7 +858,7 @@ namespace carto { namespace vt {
                                     float tLocal = resultLocal.first;
                                     long long id = resultLocal.second;
                                     cglib::vec3<double> pos = cglib::transform_point(cglib::vec3<double>(rayLocal(tLocal)(0), rayLocal(tLocal)(1), 0), tileMatrix);
-                                    results.emplace_back(blendNode->tile->getTileId(), layer->getName(), cglib::dot_product(pos - ray.origin, ray.direction) / cglib::dot_product(ray.direction, ray.direction), id);
+                                    results.emplace_back(blendNode->tile->getTileId(), cglib::dot_product(pos - ray.origin, ray.direction) / cglib::dot_product(ray.direction, ray.direction), id);
                                 }
                             }
                         }

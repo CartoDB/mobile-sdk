@@ -51,19 +51,25 @@ namespace carto { namespace mvt {
             while (true) {
                 if (lineGeometry) {
                     if (geometryIndex < lineGeometry->getVerticesList().size()) {
+                        id = featureCollection.getLocalId(featureIndex);
                         vertices = lineGeometry->getVerticesList()[geometryIndex++];
                         return true;
                     }
+                    featureIndex++;
+                    geometryIndex = 0;
                 }
                 if (polygonGeometry) {
                     while (geometryIndex < polygonGeometry->getPolygonList().size()) {
                         if (polygonIndex < polygonGeometry->getPolygonList()[geometryIndex].size()) {
+                            id = featureCollection.getLocalId(featureIndex);
                             vertices = polygonGeometry->getPolygonList()[geometryIndex][polygonIndex++];
                             return true;
                         }
                         geometryIndex++;
                         polygonIndex = 0;
                     }
+                    featureIndex++;
+                    geometryIndex = 0;
                 }
 
                 if (featureIndex >= featureCollection.getSize()) {
@@ -74,8 +80,6 @@ namespace carto { namespace mvt {
                 if (!lineGeometry && !polygonGeometry) {
                     _logger->write(Logger::Severity::WARNING, "Unsupported geometry for LineSymbolizer");
                 }
-                featureIndex++;
-                geometryIndex = 0;
             }
             return false;
         }, style);

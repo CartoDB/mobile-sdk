@@ -54,7 +54,7 @@ namespace carto {
         bool cullLabels(const ViewState& viewState);
         bool refreshTiles(const std::vector<std::shared_ptr<TileDrawData> >& drawDatas);
 
-        void calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<std::tuple<vt::TileId, std::string, double, long long> >& results) const;
+        void calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<std::tuple<vt::TileId, double, long long> >& results) const;
     
     private:
         std::weak_ptr<MapRenderer> _mapRenderer;

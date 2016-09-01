@@ -25,6 +25,13 @@ namespace carto { namespace mvt {
         explicit MBVTFeatureIterator(const vector_tile::Tile& tile, const vector_tile::Tile::Layer& layer, const std::unordered_set<std::string>* fields, const cglib::mat3x3<float>& transform, const cglib::bbox2<float>& clipBox, float buffer, std::map<std::vector<int>, std::shared_ptr<FeatureData>>& featureDataCache) :
             _tile(tile), _layer(layer), _transform(transform), _clipBox(clipBox), _buffer(buffer), _featureDataCache(featureDataCache)
         {
+            for (int i = 0; i < tile.layers_size(); i++) {
+                if (&tile.layers(i) == &layer) {
+                    _tileIndexBase = static_cast<long long>(i) << 32;
+                    break;
+                }
+            }
+
             for (int i = 0; i < layer.keys_size(); i++) {
                 if (layer.keys(i) == "id" || layer.keys(i) == "cartodb_id") {
                     _idKey = i;
@@ -41,12 +48,24 @@ namespace carto { namespace mvt {
             }
         }
 
+        bool advanceToIndex(long long tileIndex) {
+            if (tileIndex >= _tileIndexBase && tileIndex < _tileIndexBase + _layer.features_size()) {
+                _index = static_cast<std::size_t>(tileIndex - _tileIndexBase);
+                return true;
+            }
+            return false;
+        }
+
         virtual bool valid() const override {
             return _index < _layer.features_size();
         }
 
         virtual void advance() override {
             _index++;
+        }
+
+        virtual long long getTileIndex() const override {
+            return _tileIndexBase + _index;
         }
 
         virtual long long getFeatureId() const override {
@@ -277,6 +296,7 @@ namespace carto { namespace mvt {
 
         int _index = 0;
         int _idKey = -1;
+        long long _tileIndexBase = 0;
         std::vector<int> _fieldKeys;
         const vector_tile::Tile& _tile;
         const vector_tile::Tile::Layer& _layer;
@@ -323,16 +343,12 @@ namespace carto { namespace mvt {
         _buffer = buffer;
     }
 
-    std::shared_ptr<Feature> MBVTFeatureDecoder::findLayerFeature(const std::string& name, long long id) const {
-        auto layerIt = _layerMap.find(name);
-        if (layerIt == _layerMap.end()) {
-            return std::shared_ptr<Feature>();
-        }
-        const vector_tile::Tile::Layer& layer = _tile->layers(layerIt->second);
-        std::map<std::vector<int>, std::shared_ptr<FeatureData>> featureDataCache;
-        for (MBVTFeatureIterator it(*_tile, layer, nullptr, _transform, _clipBox, _buffer, featureDataCache); it.valid(); it.advance()) {
-            if (it.getFeatureId() == id) {
-                return std::make_shared<Feature>(it.getFeatureId(), it.getGeometry(), it.getFeatureData());
+    std::shared_ptr<Feature> MBVTFeatureDecoder::getFeature(long long tileIndex) const {
+        for (int i = 0; i < _tile->layers_size(); i++) {
+            std::map<std::vector<int>, std::shared_ptr<FeatureData>> featureDataCache;
+            MBVTFeatureIterator it(*_tile, _tile->layers(i), nullptr, _transform, _clipBox, _buffer, featureDataCache);
+            if (it.advanceToIndex(tileIndex)) {
+                 return std::make_shared<Feature>(it.getFeatureId(), it.getGeometry(), it.getFeatureData());
             }
         }
         return std::shared_ptr<Feature>();

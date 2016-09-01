@@ -50,7 +50,7 @@ namespace carto { namespace vt {
         bool render3D();
         void endFrame();
 
-        bool findIntersections(const cglib::ray3<double>& ray, std::vector<std::tuple<TileId, std::string, double, long long>>& results) const;
+        bool findIntersections(const cglib::ray3<double>& ray, std::vector<std::tuple<TileId, double, long long>>& results) const;
 
     private:
         using BitmapLabelMap = std::unordered_map<std::shared_ptr<const Bitmap>, std::vector<std::shared_ptr<TileLabel>>>;
