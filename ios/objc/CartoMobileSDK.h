@@ -51,6 +51,7 @@
 #import "NTTileLoadListener.h"
 #import "NTUTFGridEventListener.h"
 #import "NTVectorElementEventListener.h"
+#import "NTVectorTileEventListener.h"
 #import "NTVectorLayer.h"
 #import "NTVectorTileLayer.h"
 #import "NTTorqueTileLayer.h"
@@ -90,6 +91,7 @@
 #import "NTMapClickInfo.h"
 #import "NTMapEventListener.h"
 #import "NTVectorElementClickInfo.h"
+#import "NTVectorTileClickInfo.h"
 
 #import "NTAssetUtils.h"
 #import "NTBitmapUtils.h"
