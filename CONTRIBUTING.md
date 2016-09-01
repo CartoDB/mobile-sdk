@@ -23,11 +23,12 @@ After that, there are several rules you should follow when a new pull request is
 * assets - images and style files sources used for map rendering. Converted to c++ headers
 * doc - documentation, published in CARTO docs site
 * dotnet - .NET-specific C# proxy code
-* ios - iOS-specific proxies (Objective-C, C#, Swift) code, swig wrapper config and helpers
+* ios - iOS-specific proxies (Objective-C, C#) code, swig wrapper config and helpers
 * libs-carto - parts of SDK code which is used as internal library, have no dependencies to main SDK code and can be technically used as stand-alone code.
-* libs-carto/cartocss - CartoCSS parser
-* libs-carto/mapnikvt and vt - Mapnik Vector Tile reader and renderer
-* libs-carto/nml - Our specific 3D format and 3D tile format (NML) readers and renderers
-* libs-carto/routing - Offline routing using our specific route packages
-* scripts - scripts for building SDK, cmake and others
+* libs-carto/cartocss - CartoCSS parser, dependent on libs-carto/mapnikvt
+* libs-carto/mapnikvt - "Mapnik compatible" style interpreter and renderer. Dependent on libs-carto/vt.
+* libs-carto/vt - Low-level vector tile renderer
+* libs-carto/nml - Our specific 3D format (NML) and 3D Level-of-Detail 3D format (NML LOD Tree) readers and renderers
+* libs-carto/routing - Offline routing runtime using our specific route packages converted from OSRM
+* scripts - scripts for building SDK (using cmake, swig and other tools)
 * winphone - Windows Phone-specific C# proxies, swig config and native helpers

@@ -338,7 +338,7 @@ namespace carto {
             }
 
             if (_interactive) {
-                auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.grid" + urlTemplateSuffix);
+                auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.grid.json" + urlTemplateSuffix);
                 layer->setUTFGridDataSource(dataSource);
             }
             
