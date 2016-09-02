@@ -27,7 +27,7 @@ namespace carto { namespace mvt {
         {
             for (int i = 0; i < tile.layers_size(); i++) {
                 if (&tile.layers(i) == &layer) {
-                    _tileIndexBase = static_cast<long long>(i) << 32;
+                    _layerIndexBase = static_cast<long long>(i) << 32;
                     break;
                 }
             }
@@ -48,9 +48,9 @@ namespace carto { namespace mvt {
             }
         }
 
-        bool advanceToIndex(long long tileIndex) {
-            if (tileIndex >= _tileIndexBase && tileIndex < _tileIndexBase + _layer.features_size()) {
-                _index = static_cast<std::size_t>(tileIndex - _tileIndexBase);
+        bool findByLocalId(long long localId) {
+            if (localId >= _layerIndexBase && localId < _layerIndexBase + _layer.features_size()) {
+                _index = static_cast<std::size_t>(localId - _layerIndexBase);
                 return true;
             }
             return false;
@@ -64,11 +64,11 @@ namespace carto { namespace mvt {
             _index++;
         }
 
-        virtual long long getTileIndex() const override {
-            return _tileIndexBase + _index;
+        virtual long long getLocalId() const override {
+            return _layerIndexBase + _index;
         }
 
-        virtual long long getFeatureId() const override {
+        virtual long long getGlobalId() const override {
             const vector_tile::Tile::Feature& feature = _layer.features(_index);
             if (feature.id() != 0) {
                 return feature.id();
@@ -296,7 +296,7 @@ namespace carto { namespace mvt {
 
         int _index = 0;
         int _idKey = -1;
-        long long _tileIndexBase = 0;
+        long long _layerIndexBase = 0;
         std::vector<int> _fieldKeys;
         const vector_tile::Tile& _tile;
         const vector_tile::Tile::Layer& _layer;
@@ -343,12 +343,12 @@ namespace carto { namespace mvt {
         _buffer = buffer;
     }
 
-    std::shared_ptr<Feature> MBVTFeatureDecoder::getFeature(long long tileIndex) const {
+    std::shared_ptr<Feature> MBVTFeatureDecoder::getFeature(long long localId) const {
         for (int i = 0; i < _tile->layers_size(); i++) {
             std::map<std::vector<int>, std::shared_ptr<FeatureData>> featureDataCache;
             MBVTFeatureIterator it(*_tile, _tile->layers(i), nullptr, _transform, _clipBox, _buffer, featureDataCache);
-            if (it.advanceToIndex(tileIndex)) {
-                 return std::make_shared<Feature>(it.getFeatureId(), it.getGeometry(), it.getFeatureData());
+            if (it.findByLocalId(localId)) {
+                 return std::make_shared<Feature>(it.getGlobalId(), it.getGeometry(), it.getFeatureData());
             }
         }
         return std::shared_ptr<Feature>();

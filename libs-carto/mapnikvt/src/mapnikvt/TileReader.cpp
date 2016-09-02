@@ -92,7 +92,7 @@ namespace carto { namespace mvt {
                             currentSymbolizer = symbolizer;
                         }
 
-                        currentFeatureCollection.append(featureIt->getTileIndex(), featureIt->getFeatureId(), geometry);
+                        currentFeatureCollection.append(featureIt->getLocalId(), featureIt->getGlobalId(), geometry);
                     }
                 }
             }

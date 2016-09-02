@@ -250,14 +250,14 @@ namespace carto { namespace css {
     private:
         template <template <typename> class Op>
         struct CompareOp : boost::static_visitor<boost::tribool> {
-            boost::tribool operator()(boost::blank val1, boost::blank val2) { return Op<boost::blank>()(val1, val2); }
-            boost::tribool operator()(long long val1, long long val2) const { return Op<long long>()(val1, val2); }
-            boost::tribool operator()(long long val1, double val2) const { return Op<double>()(static_cast<double>(val1), val2); }
-            boost::tribool operator()(double val1, long long val2) const { return Op<double>()(val1, static_cast<double>(val2)); }
-            boost::tribool operator()(double val1, double val2) const { return Op<double>()(val1, val2); }
-            boost::tribool operator()(Color val1, Color val2) const { return Op<Color>()(val1, val2); }
-            boost::tribool operator()(const std::string& val1, const std::string& val2) const { return Op<std::string>()(val1, val2); }
-            template <typename S, typename T> boost::tribool operator()(S val1, T val2) const { return boost::indeterminate; }
+            boost::tribool operator() (boost::blank val1, boost::blank val2) { return Op<boost::blank>()(val1, val2); }
+            boost::tribool operator() (long long val1, long long val2) const { return Op<long long>()(val1, val2); }
+            boost::tribool operator() (long long val1, double val2) const { return Op<double>()(static_cast<double>(val1), val2); }
+            boost::tribool operator() (double val1, long long val2) const { return Op<double>()(val1, static_cast<double>(val2)); }
+            boost::tribool operator() (double val1, double val2) const { return Op<double>()(val1, val2); }
+            boost::tribool operator() (Color val1, Color val2) const { return Op<Color>()(val1, val2); }
+            boost::tribool operator() (const std::string& val1, const std::string& val2) const { return Op<std::string>()(val1, val2); }
+            template <typename S, typename T> boost::tribool operator() (S val1, T val2) const { return boost::indeterminate; }
         };
 
         static boost::tribool applyOp(Op op, const Value& val1, const Value& val2) {

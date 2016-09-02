@@ -62,11 +62,11 @@ namespace carto { namespace mvt {
             }
         }
 
-        virtual long long getTileIndex() const override {
+        virtual long long getLocalId() const override {
             return _index0;
         }
 
-        virtual long long getFeatureId() const override {
+        virtual long long getGlobalId() const override {
             return 0;
         }
 
