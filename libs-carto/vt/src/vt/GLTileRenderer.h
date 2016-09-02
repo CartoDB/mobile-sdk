@@ -119,10 +119,10 @@ namespace carto { namespace vt {
         cglib::bbox3<double> calculateTileBBox(const TileId& tileId) const;
 
         float calculateBlendNodeOpacity(const BlendNode& blendNode, float blend) const;
-        void updateBlendNode(BlendNode& blendNode, float dBlend);
-        bool buildRenderNodes(const BlendNode& blendNode, float blend, std::multimap<int, RenderNode>& renderNodeMap);
-        void addRenderNode(RenderNode renderNode, std::multimap<int, RenderNode>& renderNodeMap);
-        void updateLabels(const std::vector<std::shared_ptr<TileLabel>>& labels, float dOpacity);
+        void updateBlendNode(BlendNode& blendNode, float dBlend) const;
+        bool buildRenderNodes(const BlendNode& blendNode, float blend, std::multimap<int, RenderNode>& renderNodeMap) const;
+        void addRenderNode(RenderNode renderNode, std::multimap<int, RenderNode>& renderNodeMap) const;
+        void updateLabels(const std::vector<std::shared_ptr<TileLabel>>& labels, float dOpacity) const;
 
         void findTileGeometryIntersections(const std::shared_ptr<TileGeometry>& geometry, const cglib::ray3<float>& ray, std::vector<std::pair<float, long long>>& results) const;
         cglib::vec3<float> decodeVertex(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const;

@@ -839,29 +839,40 @@ namespace carto { namespace vt {
         // First find the intersecting tile. NOTE: we ignore building height information
         std::size_t count = results.size();
         for (const std::shared_ptr<BlendNode>& blendNode : *_blendNodes) {
+            std::multimap<int, RenderNode> renderNodeMap;
+            if (!buildRenderNodes(*blendNode, 1.0f, renderNodeMap)) {
+                continue;
+            }
+
+            // Check that the hit point is inside the blend node tile (used for clipping)
             cglib::mat4x4<double> tileMatrix = calculateTileMatrix(blendNode->tileId);
             cglib::vec3<double> localPos = cglib::transform_point(ray(t), cglib::inverse(tileMatrix));
-            if (localPos(0) >= 0 && localPos(0) <= 1 && localPos(1) >= 0 && localPos(1) <= 1) {
-                if (blendNode->tile) {
-                    tileMatrix = calculateTileMatrix(blendNode->tile->getTileId());
-                    localPos = cglib::transform_point(ray(t), cglib::inverse(tileMatrix));
-                    localPos(1) = 1 - localPos(1);
-                    if (localPos(0) >= 0 && localPos(0) <= 1 && localPos(1) >= 0 && localPos(1) <= 1) {
-                        for (const std::shared_ptr<TileLayer>& layer : blendNode->tile->getLayers()) {
-                            for (const std::shared_ptr<TileGeometry>& geometry : layer->getGeometries()) {
-                                cglib::ray3<float> rayLocal = cglib::ray3<float>::convert(cglib::transform_ray(ray, cglib::inverse(tileMatrix)));
+            if (!(localPos(0) >= 0 && localPos(0) <= 1 && localPos(1) >= 0 && localPos(1) <= 1)) {
+                continue;
+            }
 
-                                std::vector<std::pair<float, long long>> resultsLocal;
-                                findTileGeometryIntersections(geometry, rayLocal, resultsLocal);
+            for (auto it = renderNodeMap.begin(); it != renderNodeMap.end(); it++) {
+                const RenderNode& renderNode = it->second;
 
-                                for (std::pair<float, long long> resultLocal : resultsLocal) {
-                                    float tLocal = resultLocal.first;
-                                    long long id = resultLocal.second;
-                                    cglib::vec3<double> pos = cglib::transform_point(cglib::vec3<double>(rayLocal(tLocal)(0), rayLocal(tLocal)(1), 0), tileMatrix);
-                                    results.emplace_back(blendNode->tile->getTileId(), cglib::dot_product(pos - ray.origin, ray.direction) / cglib::dot_product(ray.direction, ray.direction), id);
-                                }
-                            }
-                        }
+                // Check that the hit point is inside the render node tile (actual tile we are performing intersection test)
+                tileMatrix = calculateTileMatrix(renderNode.tileId);
+                localPos = cglib::transform_point(ray(t), cglib::inverse(tileMatrix));
+                if (!(localPos(0) >= 0 && localPos(0) <= 1 && localPos(1) >= 0 && localPos(1) <= 1)) {
+                    continue;
+                }
+
+                // Test all geometry batches for intersections
+                for (const std::shared_ptr<TileGeometry>& geometry : renderNode.layer->getGeometries()) {
+                    cglib::ray3<float> rayLocal = cglib::ray3<float>::convert(cglib::transform_ray(ray, cglib::inverse(tileMatrix)));
+
+                    std::vector<std::pair<float, long long>> resultsLocal;
+                    findTileGeometryIntersections(geometry, rayLocal, resultsLocal);
+
+                    for (std::pair<float, long long> resultLocal : resultsLocal) {
+                        float tLocal = resultLocal.first;
+                        long long id = resultLocal.second;
+                        cglib::vec3<double> pos = cglib::transform_point(cglib::vec3<double>(rayLocal(tLocal)(0), rayLocal(tLocal)(1), 0), tileMatrix);
+                        results.emplace_back(blendNode->tile->getTileId(), cglib::dot_product(pos - ray.origin, ray.direction) / cglib::dot_product(ray.direction, ray.direction), id);
                     }
                 }
             }
@@ -939,7 +950,7 @@ namespace carto { namespace vt {
         return std::min(opacity, 1.0f);
     }
 
-    void GLTileRenderer::updateBlendNode(BlendNode& blendNode, float dBlend) {
+    void GLTileRenderer::updateBlendNode(BlendNode& blendNode, float dBlend) const {
         if (!_frustum.inside(calculateTileBBox(blendNode.tileId))) {
             blendNode.blend = 1.0f;
             return;
@@ -956,7 +967,7 @@ namespace carto { namespace vt {
         }
     }
     
-    bool GLTileRenderer::buildRenderNodes(const BlendNode& blendNode, float blend, std::multimap<int, RenderNode>& renderNodeMap) {
+    bool GLTileRenderer::buildRenderNodes(const BlendNode& blendNode, float blend, std::multimap<int, RenderNode>& renderNodeMap) const {
         if (!_frustum.inside(calculateTileBBox(blendNode.tileId))) {
             return false;
         }
@@ -989,7 +1000,7 @@ namespace carto { namespace vt {
         return exists;
     }
     
-    void GLTileRenderer::addRenderNode(RenderNode renderNode, std::multimap<int, RenderNode>& renderNodeMap) {
+    void GLTileRenderer::addRenderNode(RenderNode renderNode, std::multimap<int, RenderNode>& renderNodeMap) const {
         const std::shared_ptr<const TileLayer>& layer = renderNode.layer;
         auto range = renderNodeMap.equal_range(layer->getLayerIndex());
         for (auto it = range.first; it != range.second; ) {
@@ -1024,7 +1035,7 @@ namespace carto { namespace vt {
         renderNodeMap.insert(it, { layer->getLayerIndex(), renderNode });
     }
     
-    void GLTileRenderer::updateLabels(const std::vector<std::shared_ptr<TileLabel>>& labels, float dOpacity) {
+    void GLTileRenderer::updateLabels(const std::vector<std::shared_ptr<TileLabel>>& labels, float dOpacity) const {
         for (const std::shared_ptr<TileLabel>& label : labels) {
             if (!label->isValid()) {
                 continue;
@@ -1082,7 +1093,7 @@ namespace carto { namespace vt {
         // NOTE: we ignore the actual orientation currently. This is mostly ok, assuming roughly equal width/height of the point
         const TileGeometry::GeometryLayoutParameters& geometryLayoutParams = geometry->getGeometryLayoutParameters();
         std::size_t attribOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.attribsOffset;
-        const unsigned char* attribPtr = reinterpret_cast<const unsigned char*>(&geometry->getVertexGeometry()[attribOffset]);
+        const char* attribPtr = reinterpret_cast<const char*>(&geometry->getVertexGeometry()[attribOffset]);
         float width = 0.5f * (*geometry->getStyleParameters().widthTable[attribPtr[0]])(_viewState) * geometry->getGeometryScale() / geometry->getTileSize();
         return cglib::vec3<float>(attribPtr[1], attribPtr[2], 0) * width;
     }
@@ -1092,7 +1103,7 @@ namespace carto { namespace vt {
         std::size_t binormalOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.binormalOffset;
         const short* binormalPtr = reinterpret_cast<const short*>(&geometry->getVertexGeometry()[binormalOffset]);
         std::size_t attribOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.attribsOffset;
-        const unsigned char* attribPtr = reinterpret_cast<const unsigned char*>(&geometry->getVertexGeometry()[attribOffset]);
+        const char* attribPtr = reinterpret_cast<const char*>(&geometry->getVertexGeometry()[attribOffset]);
         float width = 0.5f * (*geometry->getStyleParameters().widthTable[attribPtr[0]])(_viewState) * geometry->getGeometryScale() / geometry->getTileSize();
         return cglib::vec3<float>(binormalPtr[0], binormalPtr[1], 0) * (width / geometryLayoutParams.binormalScale);
     }
