@@ -26,9 +26,10 @@
 namespace carto { namespace vt {
     class TileLabel {
     public:
-        explicit TileLabel(long long id, long long groupId, std::shared_ptr<const Font> font, std::vector<Font::Glyph> glyphs, boost::optional<cglib::vec3<double>> position, std::vector<cglib::vec3<double>> vertices, LabelOrientation orientation, const boost::optional<cglib::mat3x3<float>>& transform, float scale, const Color& color);
+        explicit TileLabel(long long localId, long long globalId, long long groupId, std::shared_ptr<const Font> font, std::vector<Font::Glyph> glyphs, boost::optional<cglib::vec3<double>> position, std::vector<cglib::vec3<double>> vertices, LabelOrientation orientation, const boost::optional<cglib::mat3x3<float>>& transform, float scale, const Color& color);
 
-        long long getId() const { return _id; }
+        long long getLocalId() const { return _localId; }
+        long long getGlobalId() const { return _globalId; }
         long long getGroupId() const { return _groupId; }
         bool isValid() const { return (bool) _placement; }
         const Color& getColor() const { return _color; }
@@ -101,7 +102,8 @@ namespace carto { namespace vt {
         std::shared_ptr<Placement> findClippedPointPlacement(const ViewState& viewState, const Vertices& vertices) const;
         std::shared_ptr<Placement> findClippedLinePlacement(const ViewState& viewState, const VerticesList& verticesList) const;
 
-        const long long _id;
+        const long long _localId;
+        const long long _globalId;
         const long long _groupId;
         const std::shared_ptr<const Font> _font;
         const std::vector<Font::Glyph> _glyphs;

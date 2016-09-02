@@ -196,7 +196,7 @@ namespace carto { namespace vt {
                 }
             }
 
-            auto bitmapLabel = std::make_shared<TileLabel>(labelInfo.id, labelInfo.groupId, style.font, bitmapGlyphs, std::move(labelPosition), std::move(labelVertices), style.orientation, style.transform, 1.0f / _tileSize, style.color);
+            auto bitmapLabel = std::make_shared<TileLabel>(id, labelInfo.id, labelInfo.groupId, style.font, bitmapGlyphs, std::move(labelPosition), std::move(labelVertices), style.orientation, style.transform, 1.0f / _tileSize, style.color);
             bitmapLabel->setMinimumGroupDistance(_tileSize * labelInfo.minimumGroupDistance);
             _labelList.push_back(std::move(bitmapLabel));
         }
@@ -235,7 +235,7 @@ namespace carto { namespace vt {
                     labelVertices.emplace_back(vertex(0), vertex(1), 0);
                 }
 
-                auto textLabel = std::make_shared<TileLabel>(labelInfo.id, labelInfo.groupId, style.font, std::move(glyphs), std::move(labelPosition), std::move(labelVertices), style.orientation, transform, 1.0f / _tileSize, Color(0xffffffff));
+                auto textLabel = std::make_shared<TileLabel>(id, labelInfo.id, labelInfo.groupId, style.font, std::move(glyphs), std::move(labelPosition), std::move(labelVertices), style.orientation, transform, 1.0f / _tileSize, Color(0xffffffff));
                 textLabel->setMinimumGroupDistance(_tileSize * labelInfo.minimumGroupDistance);
                 _labelList.push_back(std::move(textLabel));
             }

@@ -451,7 +451,7 @@ namespace carto { namespace vt {
             cglib::mat4x4<double> tileMatrix = calculateTileMatrix(tileIt->second->getTileId());
             for (const std::shared_ptr<TileLayer>& layer : tileIt->second->getLayers()) {
                 for (const std::shared_ptr<TileLabel>& label : layer->getLabels()) {
-                    std::pair<int, long long> labelId(layer->getLayerIndex(), label->getId());
+                    std::pair<int, long long> labelId(layer->getLayerIndex(), label->getGlobalId());
                     label->transformGeometry(tileMatrix);
                     auto newLabelIt = newLabelMap.find(labelId);
                     if (newLabelIt != newLabelMap.end()) {
@@ -877,6 +877,31 @@ namespace carto { namespace vt {
                 }
             }
         }
+
+        // Test for label intersections. The ordering may be mixed compared to actual rendering order, but this is non-issue if the labels are non-overlapping.
+        for (const std::shared_ptr<BlendNode>& blendNode : *_blendNodes) {
+            if (!blendNode->tile) {
+                continue;
+            }
+
+            for (const std::shared_ptr<const TileLayer>& layer : blendNode->tile->getLayers()) {
+                for (const std::shared_ptr<TileLabel>& label : layer->getLabels()) {
+                    if (!label->isActive() || !label->isVisible() || label->getOpacity() <= 0) {
+                        continue;
+                    }
+
+                    std::vector<std::pair<double, long long>> resultsLocal;
+                    findLabelIntersections(label, ray, resultsLocal);
+
+                    for (std::pair<double, long long> resultLocal : resultsLocal) {
+                        double t = resultLocal.first;
+                        long long id = resultLocal.second;
+                        results.emplace_back(blendNode->tile->getTileId(), t, id);
+                    }
+                }
+            }
+        }
+
         return results.size() > count;
     }
     
@@ -1079,6 +1104,25 @@ namespace carto { namespace vt {
                     counter -= geometry->getIds()[j].first;
                 }
             }
+        }
+    }
+
+    void GLTileRenderer::findLabelIntersections(const std::shared_ptr<TileLabel>& label, const cglib::ray3<double>& ray, std::vector<std::pair<double, long long>>& results) const {
+        std::array<cglib::vec3<float>, 4> envelope;
+        if (!label->calculateEnvelope(_viewState, envelope)) {
+            return;
+        }
+
+        std::array<cglib::vec3<double>, 4> p;
+        for (int i = 0; i < 4; i++) {
+            p[i] = _viewState.origin + cglib::vec3<double>::convert(envelope[i]);
+        }
+
+        double t = 0;
+        if (cglib::intersect_triangle(p[0], p[1], p[2], ray, &t) ||
+            cglib::intersect_triangle(p[0], p[2], p[3], ray, &t))
+        {
+             results.emplace_back(t, label->getLocalId());
         }
     }
 
