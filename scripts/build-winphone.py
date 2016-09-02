@@ -124,7 +124,8 @@ def buildWinPhoneNuget(args):
 
   if not nuget(args, buildDir,
     'pack',
-    '%s/CartoMobileSDK.WinPhone.nuspec' % buildDir
+    '%s/CartoMobileSDK.WinPhone.nuspec' % buildDir,
+    '-BasePath', '/'
   ):
     return False
 
