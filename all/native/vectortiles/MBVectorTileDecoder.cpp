@@ -1,4 +1,5 @@
 #include "MBVectorTileDecoder.h"
+#include "core/MapBounds.h"
 #include "core/BinaryData.h"
 #include "core/Variant.h"
 #include "components/Exceptions.h"
@@ -26,6 +27,8 @@
 #include <mapnikvt/MapParser.h>
 #include <cartocss/CartoCSSMapLoader.h>
 
+#include <functional>
+
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
@@ -36,27 +39,27 @@ namespace {
         template <typename T> carto::Variant operator() (T val) const { return carto::Variant(val); }
     };
 
-    carto::MapPos convertPoint(const cglib::vec2<float>& pos) {
-        return carto::MapPos(pos(0), pos(1), 0);
-    }
+    typedef std::function<carto::MapPos(const cglib::vec2<float>& pos)> PointConversionFunction;
 
-    std::vector<carto::MapPos> convertPoints(const std::vector<cglib::vec2<float> >& poses) {
+    std::vector<carto::MapPos> convertPoints(const PointConversionFunction& convertFn, const std::vector<cglib::vec2<float> >& poses) {
         std::vector<carto::MapPos> points;
         points.reserve(poses.size());
-        std::transform(poses.begin(), poses.end(), std::back_inserter(points), convertPoint);
+        std::transform(poses.begin(), poses.end(), std::back_inserter(points), convertFn);
         return points;
     }
 
-    std::vector<std::vector<carto::MapPos> > convertPointsList(const std::vector<std::vector<cglib::vec2<float> > >& posesList) {
+    std::vector<std::vector<carto::MapPos> > convertPointsList(const PointConversionFunction& convertFn, const std::vector<std::vector<cglib::vec2<float> > >& posesList) {
         std::vector<std::vector<carto::MapPos> > pointsList;
         pointsList.reserve(posesList.size());
-        std::transform(posesList.begin(), posesList.end(), std::back_inserter(pointsList), convertPoints);
+        std::transform(posesList.begin(), posesList.end(), std::back_inserter(pointsList), [&](const std::vector<cglib::vec2<float> >& poses) {
+            return convertPoints(convertFn, poses);
+        });
         return pointsList;
     }
 
-    std::shared_ptr<carto::Geometry> convertGeometry(const std::shared_ptr<const carto::mvt::Geometry>& mvtGeometry) {
+    std::shared_ptr<carto::Geometry> convertGeometry(const PointConversionFunction& convertFn, const std::shared_ptr<const carto::mvt::Geometry>& mvtGeometry) {
         if (auto mvtPoint = std::dynamic_pointer_cast<const carto::mvt::PointGeometry>(mvtGeometry)) {
-            std::vector<carto::MapPos> poses = convertPoints(mvtPoint->getVertices());
+            std::vector<carto::MapPos> poses = convertPoints(convertFn, mvtPoint->getVertices());
             std::vector<std::shared_ptr<carto::PointGeometry> > points;
             points.reserve(poses.size());
             std::transform(poses.begin(), poses.end(), std::back_inserter(points), [](const carto::MapPos& pos) { return std::make_shared<carto::PointGeometry>(pos); });
@@ -306,7 +309,7 @@ namespace carto {
         return Const::MAX_SUPPORTED_ZOOM_LEVEL;
     }
 
-    std::shared_ptr<Feature> MBVectorTileDecoder::decodeFeature(long long id, const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData) const {
+    std::shared_ptr<Feature> MBVectorTileDecoder::decodeFeature(long long id, const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const {
         if (!tileData) {
             Log::Warn("MBVectorTileDecoder::decodeFeature: Null tile data");
             return std::shared_ptr<Feature>();
@@ -332,7 +335,10 @@ namespace carto {
                 }
             }
 
-            return std::make_shared<Feature>(convertGeometry(mvtFeature->getGeometry()), Variant(featureData));
+            auto convertFn = [&tileBounds](const cglib::vec2<float>& pos) {
+                return MapPos(tileBounds.getMin().getX() + pos(0) * tileBounds.getDelta().getX(), tileBounds.getMin().getY() + pos(1) * tileBounds.getDelta().getY(), 0);
+            };
+            return std::make_shared<Feature>(convertGeometry(convertFn, mvtFeature->getGeometry()), Variant(featureData));
         } catch (const std::exception& ex) {
             Log::Errorf("MBVectorTileDecoder::decodeFeature: Exception while decoding: %s", ex.what());
         }
