@@ -1092,6 +1092,11 @@ namespace carto { namespace vt {
                 p1 += decodeLineBinormal(geometry, index1);
                 p2 += decodeLineBinormal(geometry, index2);
             }
+            else if (geometry->getType() == TileGeometry::Type::POLYGON3D) {
+                p0 += decodePolygon3DOffset(geometry, index0);
+                p1 += decodePolygon3DOffset(geometry, index1);
+                p2 += decodePolygon3DOffset(geometry, index2);
+            }
 
             float t = 0;
             if (cglib::intersect_triangle(p0, p1, p2, ray, &t)) {
@@ -1150,6 +1155,13 @@ namespace carto { namespace vt {
         const char* attribPtr = reinterpret_cast<const char*>(&geometry->getVertexGeometry()[attribOffset]);
         float width = 0.5f * (*geometry->getStyleParameters().widthTable[attribPtr[0]])(_viewState) * geometry->getGeometryScale() / geometry->getTileSize();
         return cglib::vec3<float>(binormalPtr[0], binormalPtr[1], 0) * (width / geometryLayoutParams.binormalScale);
+    }
+
+    cglib::vec3<float> GLTileRenderer::decodePolygon3DOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const {
+        const TileGeometry::GeometryLayoutParameters& geometryLayoutParams = geometry->getGeometryLayoutParameters();
+        std::size_t heightOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.heightOffset;
+        const float* heightPtr = reinterpret_cast<const float*>(&geometry->getVertexGeometry()[heightOffset]);
+        return cglib::vec3<float>(0, 0, *heightPtr);
     }
 
     bool GLTileRenderer::renderBlendNodes2D(const std::vector<std::shared_ptr<BlendNode>>& blendNodes) {
