@@ -7,6 +7,7 @@
 #ifndef _CARTO_VT_TILELABEL_H_
 #define _CARTO_VT_TILELABEL_H_
 
+#include "TileId.h"
 #include "Color.h"
 #include "Bitmap.h"
 #include "Font.h"
@@ -26,8 +27,9 @@
 namespace carto { namespace vt {
     class TileLabel {
     public:
-        explicit TileLabel(long long localId, long long globalId, long long groupId, std::shared_ptr<const Font> font, std::vector<Font::Glyph> glyphs, boost::optional<cglib::vec3<double>> position, std::vector<cglib::vec3<double>> vertices, LabelOrientation orientation, const boost::optional<cglib::mat3x3<float>>& transform, float scale, const Color& color);
+        explicit TileLabel(const TileId& tileId, long long localId, long long globalId, long long groupId, std::shared_ptr<const Font> font, std::vector<Font::Glyph> glyphs, boost::optional<cglib::vec3<double>> position, std::vector<cglib::vec3<double>> vertices, LabelOrientation orientation, const boost::optional<cglib::mat3x3<float>>& transform, float scale, const Color& color);
 
+        const TileId& getTileId() const { return _tileId; }
         long long getLocalId() const { return _localId; }
         long long getGlobalId() const { return _globalId; }
         long long getGroupId() const { return _groupId; }
@@ -102,6 +104,7 @@ namespace carto { namespace vt {
         std::shared_ptr<Placement> findClippedPointPlacement(const ViewState& viewState, const Vertices& vertices) const;
         std::shared_ptr<Placement> findClippedLinePlacement(const ViewState& viewState, const VerticesList& verticesList) const;
 
+        const TileId _tileId;
         const long long _localId;
         const long long _globalId;
         const long long _groupId;

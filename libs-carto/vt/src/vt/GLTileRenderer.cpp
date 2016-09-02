@@ -872,7 +872,7 @@ namespace carto { namespace vt {
                         float tLocal = resultLocal.first;
                         long long id = resultLocal.second;
                         cglib::vec3<double> pos = cglib::transform_point(cglib::vec3<double>(rayLocal(tLocal)(0), rayLocal(tLocal)(1), 0), tileMatrix);
-                        results.emplace_back(blendNode->tile->getTileId(), cglib::dot_product(pos - ray.origin, ray.direction) / cglib::dot_product(ray.direction, ray.direction), id);
+                        results.emplace_back(renderNode.tileId, cglib::dot_product(pos - ray.origin, ray.direction) / cglib::dot_product(ray.direction, ray.direction), id);
                     }
                 }
             }
@@ -890,13 +890,11 @@ namespace carto { namespace vt {
                         continue;
                     }
 
-                    std::vector<std::pair<double, long long>> resultsLocal;
+                    std::vector<double> resultsLocal;
                     findLabelIntersections(label, ray, resultsLocal);
 
-                    for (std::pair<double, long long> resultLocal : resultsLocal) {
-                        double t = resultLocal.first;
-                        long long id = resultLocal.second;
-                        results.emplace_back(blendNode->tile->getTileId(), t, id);
+                    for (double result : resultsLocal) {
+                        results.emplace_back(label->getTileId(), result, label->getLocalId());
                     }
                 }
             }
@@ -1112,7 +1110,7 @@ namespace carto { namespace vt {
         }
     }
 
-    void GLTileRenderer::findLabelIntersections(const std::shared_ptr<TileLabel>& label, const cglib::ray3<double>& ray, std::vector<std::pair<double, long long>>& results) const {
+    void GLTileRenderer::findLabelIntersections(const std::shared_ptr<TileLabel>& label, const cglib::ray3<double>& ray, std::vector<double>& results) const {
         std::array<cglib::vec3<float>, 4> envelope;
         if (!label->calculateEnvelope(_viewState, envelope)) {
             return;
@@ -1127,7 +1125,7 @@ namespace carto { namespace vt {
         if (cglib::intersect_triangle(p[0], p[1], p[2], ray, &t) ||
             cglib::intersect_triangle(p[0], p[2], p[3], ray, &t))
         {
-             results.emplace_back(t, label->getLocalId());
+             results.emplace_back(t);
         }
     }
 

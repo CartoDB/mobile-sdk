@@ -336,7 +336,7 @@ namespace carto {
             }
 
             auto convertFn = [&tileBounds](const cglib::vec2<float>& pos) {
-                return MapPos(tileBounds.getMin().getX() + pos(0) * tileBounds.getDelta().getX(), tileBounds.getMin().getY() + pos(1) * tileBounds.getDelta().getY(), 0);
+                return MapPos(tileBounds.getMin().getX() + pos(0) * tileBounds.getDelta().getX(), tileBounds.getMax().getY() - pos(1) * tileBounds.getDelta().getY(), 0);
             };
             return std::make_shared<Feature>(convertGeometry(convertFn, mvtFeature->getGeometry()), Variant(featureData));
         } catch (const std::exception& ex) {

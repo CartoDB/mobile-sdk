@@ -55,7 +55,7 @@ namespace carto { namespace vt {
             explicit TextLabelInfo(long long id, long long groupId, std::string text, boost::optional<Vertex> position, Vertices vertices, float minimumGroupDistance) : id(id), groupId(groupId), text(std::move(text)), position(std::move(position)), vertices(std::move(vertices)), minimumGroupDistance(minimumGroupDistance) { }
         };
 
-        explicit TileLayerBuilder(float tileSize, float geomScale);
+        explicit TileLayerBuilder(const TileId& tileId, float tileSize, float geomScale);
 
         void addBitmap(const std::shared_ptr<TileBitmap>& bitmap);
         void addPoints(const std::function<bool(long long& id, Vertex& vertex)>& generator, const PointStyle& style);
@@ -90,6 +90,7 @@ namespace carto { namespace vt {
         bool tesselateLine(const Vertices& points, char styleIndex, const StrokeMap::Stroke* stroke, const LineStyle& style);
         bool tesselateLineEndPoint(const Vertex& p0, float u0, float v0, float v1, int i0, const cglib::vec2<float>& tangent, const cglib::vec2<float>& binormal, char styleIndex, const LineStyle& style);
 
+        const TileId _tileId;
         const float _tileSize;
         const float _geomScale;
         BuilderParameters _builderParameters;

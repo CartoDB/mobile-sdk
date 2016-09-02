@@ -18,7 +18,7 @@ namespace carto { namespace mvt {
         FeatureExpressionContext exprContext;
         exprContext.setZoom(tileId.zoom + static_cast<int>(_symbolizerContext.getSettings().getZoomLevelBias()));
         exprContext.setNutiParameterValueMap(_symbolizerContext.getSettings().getNutiParameterValueMap());
-        vt::TileLayerBuilder tileLayerBuilder(_symbolizerContext.getSettings().getTileSize(), _symbolizerContext.getSettings().getGeometryScale());
+        vt::TileLayerBuilder tileLayerBuilder(tileId, _symbolizerContext.getSettings().getTileSize(), _symbolizerContext.getSettings().getGeometryScale());
 
         std::vector<std::shared_ptr<vt::TileLayer>> tileLayers;
         int layerIdx = 0;

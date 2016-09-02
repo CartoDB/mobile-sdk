@@ -300,7 +300,7 @@ namespace carto {
                 _visibleCache.peek(getTileId(mapTile), tileInfo);
 
                 if (std::shared_ptr<BinaryData> tileData = tileInfo.getTileData()) {
-                    std::shared_ptr<Feature> feature = _tileDecoder->decodeFeature(id, vtTileId, tileData, calculateMapTileBounds(mapTile));
+                    std::shared_ptr<Feature> feature = _tileDecoder->decodeFeature(id, vtTileId, tileData, calculateMapTileBounds(mapTile.getFlipped()));
                     if (feature) {
                         std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
                         results.push_back(RayIntersectedElement(std::make_shared<std::pair<MapTile, std::shared_ptr<Feature> > >(mapTile, feature), thisLayer, mapPos, mapPos, 0));

@@ -125,7 +125,7 @@ namespace carto { namespace vt {
         void updateLabels(const std::vector<std::shared_ptr<TileLabel>>& labels, float dOpacity) const;
 
         void findTileGeometryIntersections(const std::shared_ptr<TileGeometry>& geometry, const cglib::ray3<float>& ray, std::vector<std::pair<float, long long>>& results) const;
-        void findLabelIntersections(const std::shared_ptr<TileLabel>& label, const cglib::ray3<double>& ray, std::vector<std::pair<double, long long>>& results) const;
+        void findLabelIntersections(const std::shared_ptr<TileLabel>& label, const cglib::ray3<double>& ray, std::vector<double>& results) const;
         cglib::vec3<float> decodeVertex(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const;
         cglib::vec3<float> decodePointOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const;
         cglib::vec3<float> decodeLineBinormal(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const;
