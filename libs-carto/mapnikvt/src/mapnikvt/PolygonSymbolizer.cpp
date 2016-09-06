@@ -32,6 +32,7 @@ namespace carto { namespace mvt {
                 polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(featureCollection.getGeometry(featureIndex));
                 if (!polygonGeometry) {
                     _logger->write(Logger::Severity::WARNING, "Unsupported geometry for PolygonSymbolizer");
+                    featureIndex++;
                 }
             }
             return false;
