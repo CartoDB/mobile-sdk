@@ -46,7 +46,8 @@ namespace carto { namespace css {
                 if (variableMap.find(decl->getVariable()) == variableMap.end()) {
                     variableMap[decl->getVariable()] = decl->getExpression();
                 }
-            } else if (auto ruleSet = boost::get<RuleSet>(&element)) {
+            }
+            else if (auto ruleSet = boost::get<RuleSet>(&element)) {
                 buildPropertyList(*ruleSet, context, "", std::vector<std::shared_ptr<const Predicate>>(), propertyLists);
             }
         }
@@ -214,7 +215,8 @@ namespace carto { namespace css {
                     prop.expression = decl->getExpression();
                     prop.specificity = calculateSpecificity(selectorFilters, decl->getOrder());
                     properties.push_back(prop);
-                } else if (auto subRuleSet = boost::get<RuleSet>(&element)) {
+                }
+                else if (auto subRuleSet = boost::get<RuleSet>(&element)) {
                     // Recurse with subrule
                     buildPropertyList(*subRuleSet, context, selectorAttachment, selectorFilters, propertyLists);
                 }
@@ -245,11 +247,14 @@ namespace carto { namespace css {
         for (const std::shared_ptr<const Predicate>& pred : predicates) {
             if (std::dynamic_pointer_cast<const LayerPredicate>(pred)) {
                 layers++;
-            } else if (std::dynamic_pointer_cast<const ClassPredicate>(pred)) {
+            }
+            else if (std::dynamic_pointer_cast<const ClassPredicate>(pred)) {
                 classes++;
-            } else if (std::dynamic_pointer_cast<const AttachmentPredicate>(pred)) {
+            }
+            else if (std::dynamic_pointer_cast<const AttachmentPredicate>(pred)) {
                 // ignore
-            } else {
+            }
+            else {
                 filters++;
             }
         }

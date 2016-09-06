@@ -423,7 +423,8 @@ namespace carto { namespace css {
                 std::string exprStr;
                 if (auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(expr)) {
                     exprStr = boost::lexical_cast<std::string>(buildValue(constExpr->getValue()));
-                } else {
+                }
+                else {
                     exprStr = buildExpressionString(expr, stringExpr);
                 }
                 symbolizer->setParameter(name, exprStr);
