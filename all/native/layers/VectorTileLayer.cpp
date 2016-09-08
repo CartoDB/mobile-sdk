@@ -307,7 +307,7 @@ namespace carto {
                     _visibleCache.peek(getTileId(mapTile), tileInfo);
 
                     if (std::shared_ptr<BinaryData> tileData = tileInfo.getTileData()) {
-                        std::shared_ptr<Feature> feature = _tileDecoder->decodeFeature(id, vtTileId, tileData, calculateMapTileBounds(mapTile.getFlipped()));
+                        std::shared_ptr<Feature> feature = _tileDecoder->decodeFeature(id, vtTileId, tileData, tileInfo.getTileBounds());
                         if (feature) {
                             std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
                             results.push_back(RayIntersectedElement(std::make_shared<std::pair<MapTile, std::shared_ptr<Feature> > >(mapTile, feature), thisLayer, mapPos, mapPos, 0, pass > 0));
@@ -445,7 +445,7 @@ namespace carto {
             std::shared_ptr<VectorTileDecoder::TileMap> tileMap = layer->_tileDecoder->decodeTile(vtDataSourceTile, vtTile, tileData->getData());
             if (tileMap) {
                 // Construct tile info - keep original data if interactivity is required
-                VectorTileLayer::TileInfo tileInfo(layer->_vectorTileEventListener.get() ? tileData->getData() : std::shared_ptr<BinaryData>(), tileMap);
+                VectorTileLayer::TileInfo tileInfo(layer->calculateMapTileBounds(dataSourceTile.getFlipped()), layer->_vectorTileEventListener.get() ? tileData->getData() : std::shared_ptr<BinaryData>(), tileMap);
 
                 // Store tile to cache, unless invalidated
                 if (!isInvalidated()) {
