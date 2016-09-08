@@ -58,6 +58,8 @@ namespace carto {
         void calculateRayIntersectedElements3D(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<std::tuple<vt::TileId, double, long long> >& results) const;
     
     private:
+        const static int CLICK_RADIUS = 5;
+
         std::weak_ptr<MapRenderer> _mapRenderer;
         std::shared_ptr<vt::GLTileRenderer> _glRenderer;
         std::shared_ptr<std::mutex> _glRendererMutex;
