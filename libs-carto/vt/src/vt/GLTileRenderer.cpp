@@ -847,7 +847,7 @@ namespace carto { namespace vt {
             // Check that the hit point is inside the blend node tile (used for clipping)
             cglib::mat4x4<double> tileMatrix = calculateTileMatrix(blendNode->tileId);
             cglib::vec3<double> posLocal = cglib::transform_point(ray(t), cglib::inverse(tileMatrix));
-            double radiusLocal = cglib::length(cglib::proj_o(cglib::row_vector(tileMatrix, 0)));
+            double radiusLocal = radius / cglib::length(cglib::proj_o(cglib::row_vector(tileMatrix, 0)));
             if (!(posLocal(0) >= -radiusLocal && posLocal(0) <= 1 + radiusLocal && posLocal(1) >= -radiusLocal && posLocal(1) <= 1 + radiusLocal)) {
                 continue;
             }
@@ -858,7 +858,7 @@ namespace carto { namespace vt {
                 // Check that the hit point is inside the render node tile (actual tile we are performing intersection test)
                 tileMatrix = calculateTileMatrix(renderNode.tileId);
                 posLocal = cglib::transform_point(ray(t), cglib::inverse(tileMatrix));
-                radiusLocal = cglib::length(cglib::proj_o(cglib::row_vector(tileMatrix, 0)));
+                radiusLocal = radius / cglib::length(cglib::proj_o(cglib::row_vector(tileMatrix, 0)));
                 if (!(posLocal(0) >= -radiusLocal && posLocal(0) <= 1 + radiusLocal && posLocal(1) >= -radiusLocal && posLocal(1) <= 1 + radiusLocal)) {
                     continue;
                 }
