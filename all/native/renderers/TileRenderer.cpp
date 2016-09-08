@@ -245,24 +245,17 @@ namespace carto {
             return;
         }
 
-        std::size_t resultsCount = results.size();
-        for (int pass = 0; pass < 2; pass++) {
-            float radius = pass > 0 ? viewState.getUnitToDPCoef() * CLICK_RADIUS : 0;
+        float radius = viewState.getUnitToDPCoef() * CLICK_RADIUS;
 
-            _glRenderer->findGeometryIntersections(ray, results, radius, true, false);
-            if (_labelOrder == 0) {
-                _glRenderer->findLabelIntersections(ray, results, radius, true, false);
-            }
-            if (_buildingOrder == 0) {
-                _glRenderer->findGeometryIntersections(ray, results, radius, false, true);
-            }
-            if (_labelOrder == 0) {
-                _glRenderer->findLabelIntersections(ray, results, radius, false, true);
-            }
-
-            if (results.size() != resultsCount) {
-                break;
-            }
+        _glRenderer->findGeometryIntersections(ray, results, radius, true, false);
+        if (_labelOrder == 0) {
+            _glRenderer->findLabelIntersections(ray, results, radius, true, false);
+        }
+        if (_buildingOrder == 0) {
+            _glRenderer->findGeometryIntersections(ray, results, radius, false, true);
+        }
+        if (_labelOrder == 0) {
+            _glRenderer->findLabelIntersections(ray, results, radius, false, true);
         }
     }
         
@@ -273,23 +266,16 @@ namespace carto {
             return;
         }
 
-        std::size_t resultsCount = results.size();
-        for (int pass = 0; pass < 2; pass++) {
-            float radius = pass > 0 ? viewState.getUnitToDPCoef() * CLICK_RADIUS : 0;
+        float radius = viewState.getUnitToDPCoef() * CLICK_RADIUS;
 
-            if (_labelOrder == 1) {
-                _glRenderer->findLabelIntersections(ray, results, radius, true, false);
-            }
-            if (_buildingOrder == 1) {
-                _glRenderer->findGeometryIntersections(ray, results, radius, false, true);
-            }
-            if (_labelOrder == 1) {
-                _glRenderer->findLabelIntersections(ray, results, radius, false, true);
-            }
-
-            if (results.size() != resultsCount) {
-                break;
-            }
+        if (_labelOrder == 1) {
+            _glRenderer->findLabelIntersections(ray, results, radius, true, false);
+        }
+        if (_buildingOrder == 1) {
+            _glRenderer->findGeometryIntersections(ray, results, radius, false, true);
+        }
+        if (_labelOrder == 1) {
+            _glRenderer->findLabelIntersections(ray, results, radius, false, true);
         }
     }
         

@@ -1089,26 +1089,20 @@ namespace carto { namespace vt {
             cglib::vec3<float> p2 = decodeVertex(geometry, index2);
 
             if (geometry->getType() == TileGeometry::Type::POINT) {
-                cglib::vec3<float> dp0 = decodePointOffset(geometry, index0);
-                cglib::vec3<float> dp1 = decodePointOffset(geometry, index1);
-                cglib::vec3<float> dp2 = decodePointOffset(geometry, index2);
-                p0 += dp0 + cglib::sign(dp0) * radius;
-                p1 += dp1 + cglib::sign(dp1) * radius;
-                p2 += dp2 + cglib::sign(dp2) * radius;
+                p0 += extendOffset(decodePointOffset(geometry, index0), radius);
+                p1 += extendOffset(decodePointOffset(geometry, index1), radius);
+                p2 += extendOffset(decodePointOffset(geometry, index2), radius);
             }
             else if (geometry->getType() == TileGeometry::Type::LINE) {
-                cglib::vec3<float> dp0 = decodeLineBinormal(geometry, index0);
-                cglib::vec3<float> dp1 = decodeLineBinormal(geometry, index1);
-                cglib::vec3<float> dp2 = decodeLineBinormal(geometry, index2);
-                p0 += dp0 + cglib::sign(dp0) * radius;
-                p1 += dp1 + cglib::sign(dp1) * radius;
-                p2 += dp2 + cglib::sign(dp2) * radius;
+                p0 += extendOffset(decodeLineBinormal(geometry, index0), radius);
+                p1 += extendOffset(decodeLineBinormal(geometry, index1), radius);
+                p2 += extendOffset(decodeLineBinormal(geometry, index2), radius);
             }
             else if (geometry->getType() == TileGeometry::Type::POLYGON) {
                 cglib::vec3<float> center = (p0 + p1 + p2) * (1.0f / 3.0f);
-                p0 += cglib::sign(p0 - center) * radius;
-                p1 += cglib::sign(p1 - center) * radius;
-                p2 += cglib::sign(p2 - center) * radius;
+                p0 = center + extendOffset(p0 - center, radius);
+                p1 = center + extendOffset(p1 - center, radius);
+                p2 = center + extendOffset(p2 - center, radius);
             }
             else if (geometry->getType() == TileGeometry::Type::POLYGON3D) {
                 p0 += decodePolygon3DOffset(geometry, index0);
@@ -1130,24 +1124,30 @@ namespace carto { namespace vt {
         }
     }
 
-    bool GLTileRenderer::findLabelIntersection(const std::shared_ptr<TileLabel>& label, const cglib::ray3<double>& ray, double radius, double& result) const {
+    bool GLTileRenderer::findLabelIntersection(const std::shared_ptr<TileLabel>& label, const cglib::ray3<double>& ray, float radius, double& result) const {
         std::array<cglib::vec3<float>, 4> envelope;
         if (!label->calculateEnvelope(_viewState, envelope)) {
             return false;
         }
 
+        cglib::vec3<float> center = (envelope[0] + envelope[1] + envelope[2] + envelope[3]) * 0.25f;
+
         std::array<cglib::vec3<double>, 4> p;
         for (int i = 0; i < 4; i++) {
-            p[i] = _viewState.origin + cglib::vec3<double>::convert(envelope[i]);
-        }
-
-        cglib::vec3<double> center = (p[0] + p[1] + p[2] + p[3]) * (1.0 / 4.0);
-        for (int i = 0; i < 4; i++) {
-            p[i] += cglib::sign(p[i] - center) * radius;
+            cglib::vec3<float> dp = center + extendOffset(envelope[i] - center, radius);
+            p[i] = _viewState.origin + cglib::vec3<double>::convert(dp);
         }
 
         return cglib::intersect_triangle(p[0], p[1], p[2], ray, &result) ||
                cglib::intersect_triangle(p[0], p[2], p[3], ray, &result);
+    }
+
+    cglib::vec3<float> GLTileRenderer::extendOffset(const cglib::vec3<float>& offset, float radius) {
+        float len = cglib::length(offset);
+        if (len == 0) {
+            return offset;
+        }
+        return offset * (1.0f + radius / len);
     }
 
     cglib::vec3<float> GLTileRenderer::decodeVertex(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const {
