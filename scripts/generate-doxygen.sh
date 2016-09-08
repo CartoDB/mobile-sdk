@@ -13,7 +13,8 @@ distDir="${baseDir}/dist/ios"
 rm -rf ${tempDir}
 mkdir -p ${tempDir}
 cp -r ${baseDir}/generated/ios-objc/proxies/* ${tempDir}
-cp -r ${baseDir}/ios/objc/ui/MapView.h ${tempDir}
+cp -r ${baseDir}/ios/objc/ui/MapView.h ${tempDir}/NTMapView.h
+cp -r ${baseDir}/ios/objc/ui/MapView.mm ${tempDir}/NTMapView.mm
 find ${tempDir} -name "*NTBaseMapView.*" -exec rm {} \;
 find ${tempDir} -name "*NTRedrawRequestListener.*" -exec rm {} \;
 find ${tempDir} -name "*NTIOSUtils.*" -exec rm {} \;
