@@ -14,6 +14,7 @@
 #include <mutex>
 #include <map>
 #include <vector>
+#include <tuple>
 
 #include <cglib/mat.h>
 
@@ -34,7 +35,7 @@ namespace carto {
     class VectorTileDecoder {
     public:
         typedef std::map<int, std::shared_ptr<const vt::Tile> > TileMap;
-        typedef std::tuple<long long, std::string, std::shared_ptr<Feature>> TileFeature;
+        typedef std::tuple<long long, std::string, std::shared_ptr<Feature> > TileFeature;
 
         /**
          * Interface for monitoring decoder parameter change events.
