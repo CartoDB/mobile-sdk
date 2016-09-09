@@ -14,7 +14,7 @@ namespace carto {
         TileDataSource(),
         _source(source),
         _cache(DEFAULT_CACHED_TILES),
-        _httpClient(false),
+        _httpClient(Log::IsShowDebug()),
         _tmsScheme(false),
         _tileURLs(),
         _randomGenerator(),
@@ -64,16 +64,18 @@ namespace carto {
     }
 
     bool CartoOnlineTileDataSource::loadTileURLs() {
-        std::string baseURL = NUTITEQ_TILE_SERVICE_URL + NetworkUtils::URLEncode(_source) + "/1/tiles.json";
         std::map<std::string, std::string> params;
         params["appId"] = PlatformUtils::GetAppIdentifier();
         params["deviceId"] = PlatformUtils::GetDeviceId();
         params["platform"] = PlatformUtils::GetPlatformId();
         params["sdk_build"] = _CARTO_MOBILE_SDK_VERSION;
+
+        std::string baseURL = NUTITEQ_TILE_SERVICE_URL + NetworkUtils::URLEncode(_source) + "/1/tiles.json";
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
+        Log::Debugf("CartoOnlineTileDataSource::loadTileURLs: Loading %s", url.c_str());
 
         std::shared_ptr<BinaryData> responseData;
-        if (!NetworkUtils::GetHTTP(url, responseData, false)) {
+        if (!NetworkUtils::GetHTTP(url, responseData, Log::IsShowDebug())) {
             Log::Error("CartoOnlineTileDataSource: Failed to fetch tile source configuration");
             return false;
         }
@@ -120,6 +122,8 @@ namespace carto {
         Log::Infof("CartoOnlineTileDataSource::loadOnlineTile: Loading tile %d/%d/%d", mapTile.getZoom(), mapTile.getX(), mapTile.getY());
 
         std::string url = buildTileURL(tileURL, mapTile);
+        Log::Debugf("CartoOnlineTileDataSource::loadOnlineTile: Loading %s", url.c_str());
+
         std::map<std::string, std::string> requestHeaders;
         std::map<std::string, std::string> responseHeaders;
         std::shared_ptr<BinaryData> responseData;

@@ -43,7 +43,7 @@ namespace carto {
     
         Log::Debugf("OnlineNMLModelLODTreeDataSource: Request %s", url.c_str());
         std::shared_ptr<BinaryData> response;
-        if (!NetworkUtils::GetHTTP(url, response, false)) {
+        if (!NetworkUtils::GetHTTP(url, response, Log::IsShowDebug())) {
             Log::Error("OnlineNMLModelLODTreeDataSource: Failed to receive tile list.");
             return std::vector<MapTile>();
         }
@@ -85,7 +85,7 @@ namespace carto {
     
         Log::Debugf("OnlineNMLModelLODTreeDataSource: Request %s", url.c_str());
         std::shared_ptr<BinaryData> response;
-        if (!NetworkUtils::GetHTTP(url, response, false)) {
+        if (!NetworkUtils::GetHTTP(url, response, Log::IsShowDebug())) {
             Log::Error("OnlineNMLModelLODTreeDataSource: Failed to receive LOD tree.");
             return std::shared_ptr<NMLModelLODTree>();
         }
@@ -168,7 +168,7 @@ namespace carto {
     
         Log::Debugf("OnlineNMLModelLODTreeDataSource: Request %s", url.c_str());
         std::shared_ptr<BinaryData> response;
-        if (!NetworkUtils::GetHTTP(url, response, false)) {
+        if (!NetworkUtils::GetHTTP(url, response, Log::IsShowDebug())) {
             Log::Error("OnlineNMLModelLODTreeDataSource: Failed to receive mesh data.");
             return std::shared_ptr<nml::Mesh>();
         }
@@ -195,7 +195,7 @@ namespace carto {
     
         Log::Debugf("OnlineNMLModelLODTreeDataSource: Request %s", url.c_str());
         std::shared_ptr<BinaryData> response;
-        if (!NetworkUtils::GetHTTP(url, response, false)) {
+        if (!NetworkUtils::GetHTTP(url, response, Log::IsShowDebug())) {
             Log::Error("OnlineNMLModelLODTreeDataSource: Failed to receive texture data.");
             return std::shared_ptr<nml::Texture>();
         }

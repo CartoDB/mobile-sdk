@@ -187,7 +187,7 @@ namespace carto {
 
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-        HTTPClient client(false);
+        HTTPClient client(Log::IsShowDebug());
         std::shared_ptr<BinaryData> responseData;
         std::map<std::string, std::string> responseHeaders;
         if (client.get(visURL, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {

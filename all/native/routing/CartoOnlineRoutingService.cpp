@@ -41,8 +41,9 @@ namespace carto {
         //  params["platform"] = PlatformUtils::GetPlatformId();
         //  params["sdk_build"] = _CARTO_MOBILE_SDK_VERSION;
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
+        Log::Debugf("CartoOnlineRoutingService::calculateRoute: Loading %s", url.c_str());
 
-        HTTPClient httpClient(false);
+        HTTPClient httpClient(Log::IsShowDebug());
         return RoutingProxy::CalculateRoute(httpClient, url, request);
     }
 
