@@ -11,6 +11,7 @@
 %}
 
 %include <std_shared_ptr.i>
+%include <std_string.i>
 %include <cartoswig.i>
 
 %import "ui/ClickType.i"
@@ -25,7 +26,9 @@
 %attributeval(carto::VectorTileClickInfo, carto::MapPos, ClickPos, getClickPos)
 %attributeval(carto::VectorTileClickInfo, carto::MapPos, FeatureClickPos, getFeatureClickPos)
 %attributeval(carto::VectorTileClickInfo, carto::MapTile, MapTile, getMapTile)
+%attribute(carto::VectorTileClickInfo, long long, FeatureId, getFeatureId)
 !attributestring_polymorphic(carto::VectorTileClickInfo, geometry.Feature, Feature, getFeature)
+%attributestring(carto::VectorTileClickInfo, std::string, FeatureLayerName, getFeatureLayerName)
 !attributestring_polymorphic(carto::VectorTileClickInfo, layers.Layer, Layer, getLayer)
 !standard_equals(carto::VectorTileClickInfo);
 

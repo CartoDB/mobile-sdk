@@ -34,6 +34,7 @@ namespace carto {
     class VectorTileDecoder {
     public:
         typedef std::map<int, std::shared_ptr<const vt::Tile> > TileMap;
+        typedef std::tuple<long long, std::string, std::shared_ptr<Feature>> TileFeature;
 
         /**
          * Interface for monitoring decoder parameter change events.
@@ -81,7 +82,7 @@ namespace carto {
          * @param tileBounds The bounds for the tile (used for coordinate transformation).
          * @return The feature, if found. Null if not found.
          */
-        virtual std::shared_ptr<Feature> decodeFeature(long long id, const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const = 0;
+        virtual std::shared_ptr<TileFeature> decodeFeature(long long id, const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const = 0;
         
         /**
          * Loads the specified vector tile.

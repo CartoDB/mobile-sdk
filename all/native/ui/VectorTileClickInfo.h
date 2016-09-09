@@ -13,6 +13,7 @@
 #include "geometry/Feature.h"
 
 #include <memory>
+#include <string>
 
 namespace carto {
     class Layer;
@@ -28,10 +29,12 @@ namespace carto {
          * @param clickPos The click position in the coordinate system of the base projection.
          * @param featureClickPos The click position in the coordinate system of the base projection that corresponds to feature point.
          * @param mapTile The clicked tile id.
+         * @param featureId The id of the clicked feature.
          * @param feature The clicked feature.
+         * @param featureLayerName The layer name of the clicked feature.
          * @param layer The layer of the vector tile on which the click was performed.
          */
-        VectorTileClickInfo(ClickType::ClickType clickType, const MapPos& clickPos, const MapPos& featureClickPos, const MapTile& mapTile, const std::shared_ptr<Feature>& feature, const std::shared_ptr<Layer>& layer);
+        VectorTileClickInfo(ClickType::ClickType clickType, const MapPos& clickPos, const MapPos& featureClickPos, const MapTile& mapTile, long long featureId, const std::shared_ptr<Feature>& feature, const std::string& featureLayerName, const std::shared_ptr<Layer>& layer);
         virtual ~VectorTileClickInfo();
     
         /**
@@ -60,12 +63,25 @@ namespace carto {
          * @return The tile id of the clicked feature.
          */
         const MapTile& getMapTile() const;
+
+        /**
+         * Returns the id of the clicked feature.
+         * @return The id of the clicked feature.
+         */
+        long long getFeatureId() const;
     
         /**
          * Returns the clicked feature.
          * @return The feature on which the click was performed.
          */
         std::shared_ptr<Feature> getFeature() const;
+
+        /**
+         * Returns the name of the layer of the clicked feature.
+         * Note that this is the layer name in the tile, not the name of style layer.
+         * @return The name of the layer of the clicked feature.
+         */
+        const std::string& getFeatureLayerName() const;
 
         /**
          * Returns the layer of the vector tile.
@@ -79,7 +95,9 @@ namespace carto {
         MapPos _featureClickPos;
         MapTile _mapTile;
     
+        long long _featureId;
         std::shared_ptr<Feature> _feature;
+        std::string _featureLayerName;
         std::shared_ptr<Layer> _layer;
     };
     

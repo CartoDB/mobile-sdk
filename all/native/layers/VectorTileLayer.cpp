@@ -307,10 +307,11 @@ namespace carto {
                     _visibleCache.peek(getTileId(mapTile), tileInfo);
 
                     if (std::shared_ptr<BinaryData> tileData = tileInfo.getTileData()) {
-                        std::shared_ptr<Feature> feature = _tileDecoder->decodeFeature(id, vtTileId, tileData, tileInfo.getTileBounds());
-                        if (feature) {
+                        std::shared_ptr<VectorTileDecoder::TileFeature> tileFeature = _tileDecoder->decodeFeature(id, vtTileId, tileData, tileInfo.getTileBounds());
+                        if (tileFeature) {
+                            auto elementInfo = std::make_shared<std::pair<MapTile, VectorTileDecoder::TileFeature> >(mapTile, *tileFeature);
                             std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
-                            results.push_back(RayIntersectedElement(std::make_shared<std::pair<MapTile, std::shared_ptr<Feature> > >(mapTile, feature), thisLayer, mapPos, mapPos, 0, pass > 0));
+                            results.push_back(RayIntersectedElement(elementInfo, thisLayer, mapPos, mapPos, 0, pass > 0));
                         } else {
                             Log::Warnf("VectorTileLayer::calculateRayIntersectedElements: Failed to decode feature %lld", id);
                         }
@@ -328,8 +329,10 @@ namespace carto {
         DirectorPtr<VectorTileEventListener> eventListener = _vectorTileEventListener;
 
         if (eventListener) {
-            if (std::shared_ptr<std::pair<MapTile, std::shared_ptr<Feature> > > elementInfo = intersectedElement.getElement<std::pair<MapTile, std::shared_ptr<Feature> > >()) {
-                auto clickInfo = std::make_shared<VectorTileClickInfo>(clickType, intersectedElement.getHitPos(), intersectedElement.getHitPos(), elementInfo->first, elementInfo->second, intersectedElement.getLayer());
+            if (std::shared_ptr<std::pair<MapTile, VectorTileDecoder::TileFeature> > elementInfo = intersectedElement.getElement<std::pair<MapTile, VectorTileDecoder::TileFeature> >()) {
+                const MapTile& mapTile = elementInfo->first;
+                const VectorTileDecoder::TileFeature& tileFeature = elementInfo->second;
+                auto clickInfo = std::make_shared<VectorTileClickInfo>(clickType, intersectedElement.getHitPos(), intersectedElement.getHitPos(), mapTile, std::get<0>(tileFeature), std::get<2>(tileFeature), std::get<1>(tileFeature), intersectedElement.getLayer());
                 return eventListener->onVectorTileClicked(clickInfo);
             }
         }

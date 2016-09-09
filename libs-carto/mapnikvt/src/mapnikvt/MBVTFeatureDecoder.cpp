@@ -343,11 +343,12 @@ namespace carto { namespace mvt {
         _buffer = buffer;
     }
 
-    std::shared_ptr<Feature> MBVTFeatureDecoder::getFeature(long long tileIndex) const {
+    std::shared_ptr<Feature> MBVTFeatureDecoder::getFeature(long long tileIndex, std::string& layerName) const {
         for (int i = 0; i < _tile->layers_size(); i++) {
             std::map<std::vector<int>, std::shared_ptr<FeatureData>> featureDataCache;
             MBVTFeatureIterator it(*_tile, _tile->layers(i), nullptr, _transform, _clipBox, _buffer, featureDataCache);
             if (it.advanceToIndex(tileIndex)) {
+                 layerName = _tile->layers(i).name();
                  return std::make_shared<Feature>(it.getFeatureId(), it.getGeometry(), it.getFeatureData());
             }
         }
