@@ -53,14 +53,20 @@ namespace {
         {
             HRESULT hr = S_OK;
 
-            for (*pcbRead = 0; *pcbRead < cb; ++*pcbRead, ++m_buffSeekIndex) {
+            ULONG read = 0;
+            for (read = 0; read < cb; ++read, ++m_buffSeekIndex) {
                 if (m_buffSeekIndex == m_data.size()) {
                     hr = S_FALSE;
                     break;
                 }
 
-                static_cast<unsigned char*>(pv)[*pcbRead] = m_data[m_buffSeekIndex];
+                static_cast<unsigned char*>(pv)[read] = m_data[m_buffSeekIndex];
             }
+
+            if (pcbRead != NULL) {
+                *pcbRead = read;
+            }
+
             return hr;
         }
 
@@ -78,7 +84,7 @@ namespace {
                 return E_INVALIDARG;
             }
 
-            *pullSize = m_data.size();
+            *pullSize = m_data.size() - m_buffSeekIndex;
             return S_OK;
         }
 
@@ -241,9 +247,9 @@ namespace carto {
             throw NetworkException("Failed to initialize callback proxy", request.url);
         }
 
-        for (auto it = request.headers.begin(); it != request.headers.end(); it++) {
-            httpRequest2->SetRequestHeader(to_wstring(it->first).c_str(), to_wstring(it->second).c_str());
-        }
+        httpRequest2->SetProperty(XHR_PROP_NO_DEFAULT_HEADERS, XHR_CRED_PROMPT_NONE);
+        httpRequest2->SetProperty(XHR_PROP_NO_AUTH, XHR_AUTH_NONE);
+        httpRequest2->SetProperty(XHR_PROP_NO_DEFAULT_HEADERS, FALSE);
 
         hr = httpRequest2->Open(to_wstring(request.method).c_str(),
             to_wstring(request.url).c_str(),
@@ -255,6 +261,10 @@ namespace carto {
 
         if (FAILED(hr)) {
             throw NetworkException("Failed to open HTTP connection", request.url);
+        }
+
+        for (auto it = request.headers.begin(); it != request.headers.end(); it++) {
+            httpRequest2->SetRequestHeader(to_wstring(it->first).c_str(), to_wstring(it->second).c_str());
         }
 
         if (!request.contentType.empty()) {
