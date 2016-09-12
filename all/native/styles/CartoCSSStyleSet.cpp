@@ -5,7 +5,7 @@
 namespace carto {
     
     CartoCSSStyleSet::CartoCSSStyleSet(const std::string& cartoCSS) :
-        _cartoCSS(cartoCSS)
+        _cartoCSS(cartoCSS), _assetPackage()
     {
     }
 
