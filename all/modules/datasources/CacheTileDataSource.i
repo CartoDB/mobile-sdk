@@ -18,6 +18,7 @@
 
 !polymorphic_shared_ptr(carto::CacheTileDataSource, datasources.CacheTileDataSource)
 
+!attributestring_polymorphic(carto::CacheTileDataSource, datasources.TileDataSource, DataSource, getDataSource)
 %attribute(carto::CacheTileDataSource, std::size_t, Capacity, getCapacity, setCapacity)
 %std_exceptions(carto::CacheTileDataSource::CacheTileDataSource)
 

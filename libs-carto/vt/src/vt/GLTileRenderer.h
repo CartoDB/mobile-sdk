@@ -14,14 +14,16 @@
 #include "GLShaderManager.h"
 
 #include <memory>
+#include <tuple>
 #include <array>
 #include <vector>
 #include <map>
 #include <unordered_set>
 #include <unordered_map>
 #include <utility>
-#include <algorithm>
 #include <mutex>
+
+#include <cglib/ray.h>
 
 namespace carto { namespace vt {
     class GLTileRenderer {
@@ -31,21 +33,25 @@ namespace carto { namespace vt {
         void setViewState(const cglib::mat4x4<double>& projectionMatrix, const cglib::mat4x4<double>& cameraMatrix, float zoom, float aspectRatio, float resolution);
         void setLightDir(const cglib::vec3<float>& lightDir);
         void setSubTileBlending(bool blend);
+        void setInteractionMode(bool enabled);
         void setFBOClearColor(const Color& clearColor);
         void setBackgroundColor(const Color& backgroundColor);
         void setBackgroundPattern(std::shared_ptr<const BitmapPattern> pattern);
         void setVisibleTiles(const std::map<TileId, std::shared_ptr<const Tile>>& tiles, bool blend);
         std::vector<std::shared_ptr<TileLabel>> getVisibleLabels() const;
-
+        
         void initializeRenderer();
         void resetRenderer();
         void deinitializeRenderer();
 
         void startFrame(float dt);
-        bool render2D();
-        bool renderLabels(bool render2D, bool render3D);
-        bool render3D();
+        bool renderGeometry2D();
+        bool renderGeometry3D();
+        bool renderLabels(bool labels2D, bool labels3D);
         void endFrame();
+
+        bool findGeometryIntersections(const cglib::ray3<double>& ray, std::vector<std::tuple<TileId, double, long long>>& results, float radius, bool geom2D, bool geom3D) const;
+        bool findLabelIntersections(const cglib::ray3<double>& ray, std::vector<std::tuple<TileId, double, long long>>& results, float radius, bool labels2D, bool labels3D) const;
 
     private:
         using BitmapLabelMap = std::unordered_map<std::shared_ptr<const Bitmap>, std::vector<std::shared_ptr<TileLabel>>>;
@@ -114,10 +120,20 @@ namespace carto { namespace vt {
         cglib::bbox3<double> calculateTileBBox(const TileId& tileId) const;
 
         float calculateBlendNodeOpacity(const BlendNode& blendNode, float blend) const;
-        void updateBlendNode(BlendNode& blendNode, float dBlend);
-        bool buildRenderNodes(const BlendNode& blendNode, float blend, std::multimap<int, RenderNode>& renderNodeMap);
-        void addRenderNode(RenderNode renderNode, std::multimap<int, RenderNode>& renderNodeMap);
-        void updateLabels(const std::vector<std::shared_ptr<TileLabel>>& labels, float dOpacity);
+        void updateBlendNode(BlendNode& blendNode, float dBlend) const;
+        bool buildRenderNodes(const BlendNode& blendNode, float blend, std::multimap<int, RenderNode>& renderNodeMap) const;
+        void addRenderNode(RenderNode renderNode, std::multimap<int, RenderNode>& renderNodeMap) const;
+        void updateLabels(const std::vector<std::shared_ptr<TileLabel>>& labels, float dOpacity) const;
+
+        void findTileGeometryIntersections(const std::shared_ptr<TileGeometry>& geometry, const cglib::ray3<float>& ray, float radius, std::vector<std::pair<float, long long>>& results) const;
+        bool findLabelIntersection(const std::shared_ptr<TileLabel>& label, const cglib::ray3<double>& ray, float radius, double& result) const;
+
+        static cglib::vec3<float> extendOffset(const cglib::vec3<float>& offset, float radius);
+
+        cglib::vec3<float> decodeVertex(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const;
+        cglib::vec3<float> decodePointOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const;
+        cglib::vec3<float> decodeLineBinormal(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const;
+        cglib::vec3<float> decodePolygon3DOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const;
 
         bool renderBlendNodes2D(const std::vector<std::shared_ptr<BlendNode>>& blendNodes);
         bool renderBlendNodes3D(const std::vector<std::shared_ptr<BlendNode>>& blendNodes);
@@ -146,6 +162,7 @@ namespace carto { namespace vt {
         void deleteScreenFBO(ScreenFBO& screenFBO);
 
         bool _subTileBlending = false;
+        bool _interactionEnabled = false;
         Color _fboClearColor;
         Color _backgroundColor;
         std::shared_ptr<const BitmapPattern> _backgroundPattern;

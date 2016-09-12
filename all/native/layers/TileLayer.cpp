@@ -322,9 +322,10 @@ namespace carto {
         DirectorPtr<UTFGridEventListener> utfGridEventListener = _utfGridEventListener;
 
         if (utfGridEventListener) {
-            std::shared_ptr<Variant> elementInfo = intersectedElement.getElement<Variant>();
-            auto utfGridClickInfo = std::make_shared<UTFGridClickInfo>(clickType, intersectedElement.getHitPos(), *elementInfo, intersectedElement.getLayer());
-            return utfGridEventListener->onUTFGridClicked(utfGridClickInfo);
+            if (std::shared_ptr<Variant> elementInfo = intersectedElement.getElement<Variant>()) {
+                auto clickInfo = std::make_shared<UTFGridClickInfo>(clickType, intersectedElement.getHitPos(), *elementInfo, intersectedElement.getLayer());
+                return utfGridEventListener->onUTFGridClicked(clickInfo);
+            }
         }
 
         return clickType == ClickType::CLICK_TYPE_SINGLE || clickType == ClickType::CLICK_TYPE_LONG; // by default, disable 'click through' for single and long clicks

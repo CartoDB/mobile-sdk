@@ -9,14 +9,32 @@ namespace carto { namespace mvt {
 
         vt::Polygon3DStyle style(_fill, _fillOpacity, _geometryTransform);
 
-        for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
-            if (auto polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(featureCollection.getGeometry(index))) {
-                layerBuilder.addPolygons3D(polygonGeometry->getPolygonList(), _height * HEIGHT_SCALE, style);
+        std::size_t featureIndex = 0;
+        std::size_t geometryIndex = 0;
+        std::shared_ptr<const PolygonGeometry> polygonGeometry;
+        layerBuilder.addPolygons3D([&](long long& id, vt::TileLayerBuilder::VerticesList& verticesList) {
+            while (true) {
+                if (polygonGeometry) {
+                    if (geometryIndex < polygonGeometry->getPolygonList().size()) {
+                        id = featureCollection.getLocalId(featureIndex);
+                        verticesList = polygonGeometry->getPolygonList()[geometryIndex++];
+                        return true;
+                    }
+                    featureIndex++;
+                    geometryIndex = 0;
+                }
+
+                if (featureIndex >= featureCollection.getSize()) {
+                    break;
+                }
+                polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(featureCollection.getGeometry(featureIndex));
+                if (!polygonGeometry) {
+                    _logger->write(Logger::Severity::WARNING, "Unsupported geometry for BuildingSymbolizer");
+                    featureIndex++;
+                }
             }
-            else {
-                _logger->write(Logger::Severity::WARNING, "Unsupported geometry for BuildingSymbolizer");
-            }
-        }
+            return false;
+        }, _height * HEIGHT_SCALE, style);
     }
 
     void BuildingSymbolizer::bindParameter(const std::string& name, const std::string& value) {

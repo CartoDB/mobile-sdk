@@ -7,16 +7,13 @@
 #ifndef _CARTO_MAPNIKVT_FEATURECOLLECTION_H_
 #define _CARTO_MAPNIKVT_FEATURECOLLECTION_H_
 
-#include "Value.h"
 #include "Geometry.h"
 #include "FeatureData.h"
 
 #include <memory>
-#include <list>
+#include <tuple>
 #include <vector>
 #include <map>
-
-#include <cglib/vec.h>
 
 namespace carto { namespace mvt {
     class FeatureCollection {
@@ -24,27 +21,25 @@ namespace carto { namespace mvt {
         FeatureCollection() = default;
 
         void clear() {
-            _ids.clear();
-            _geometries.clear();
+            _features.clear();
         }
         
-        void append(long long id, std::shared_ptr<const Geometry> geometry) {
-            _ids.push_back(id);
-            _geometries.push_back(std::move(geometry));
+        void append(long long localId, long long globalId, std::shared_ptr<const Geometry> geometry) {
+            _features.emplace_back(localId, globalId, std::move(geometry));
         }
 
         void setFeatureData(std::shared_ptr<const FeatureData> featureData) {
             _featureData = std::move(featureData);
         }
 
-        std::size_t getSize() const { return _ids.size(); }
-        long long getId(std::size_t index) const { return _ids.at(index); }
-        const std::shared_ptr<const Geometry>& getGeometry(std::size_t index) const { return _geometries.at(index); }
+        std::size_t getSize() const { return _features.size(); }
+        long long getLocalId(std::size_t index) const { return std::get<0>(_features.at(index)); }
+        long long getGlobalId(std::size_t index) const { return std::get<1>(_features.at(index)); }
+        const std::shared_ptr<const Geometry>& getGeometry(std::size_t index) const { return std::get<2>(_features.at(index)); }
         const std::shared_ptr<const FeatureData>& getFeatureData() const { return _featureData; }
 
     private:
-        std::vector<long long> _ids;
-        std::vector<std::shared_ptr<const Geometry>> _geometries;
+        std::vector<std::tuple<long long, long long, std::shared_ptr<const Geometry>>> _features;
         std::shared_ptr<const FeatureData> _featureData;
     };
 } }

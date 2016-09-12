@@ -8,7 +8,9 @@
 #define _CARTO_VECTORTILELAYER_H_
 
 #include "core/MapTile.h"
+#include "core/MapBounds.h"
 #include "components/CancelableTask.h"
+#include "components/DirectorPtr.h"
 #include "components/Task.h"
 #include "layers/TileLayer.h"
 #include "vectortiles/VectorTileDecoder.h"
@@ -21,6 +23,7 @@
 namespace carto {
     class TileDrawData;
     class TileRenderer;
+    class VectorTileEventListener;
         
     namespace VectorTileRenderOrder {
         /**
@@ -100,6 +103,17 @@ namespace carto {
          */
         void setBuildingRenderOrder(VectorTileRenderOrder::VectorTileRenderOrder renderOrder);
     
+        /**
+         * Returns the vector tile event listener.
+         * @return The vector tile event listener.
+         */
+        std::shared_ptr<VectorTileEventListener> getVectorTileEventListener() const;
+        /**
+         * Sets the vector tile event listener.
+         * @param eventListener The vector tile event listener.
+         */
+        void setVectorTileEventListener(const std::shared_ptr<VectorTileEventListener>& eventListener);
+    
     protected:
         virtual bool tileExists(const MapTile& mapTile, bool preloadingCache) const;
         virtual bool tileValid(const MapTile& mapTile, bool preloadingCache) const;
@@ -115,6 +129,10 @@ namespace carto {
         virtual int getMinZoom() const;
         virtual int getMaxZoom() const;
         
+        virtual void calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray,
+            const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
+        virtual bool processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const;
+
         virtual void offsetLayerHorizontally(double offset);
         
         virtual void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
@@ -162,12 +180,31 @@ namespace carto {
             std::weak_ptr<TileRenderer> _renderer;
             ViewState _viewState;
         };
+
+        class TileInfo {
+        public:
+            TileInfo() : _tileBounds(), _tileData(), _tileMap() { }
+            TileInfo(const MapBounds& tileBounds, const std::shared_ptr<BinaryData>& tileData, const std::shared_ptr<VectorTileDecoder::TileMap>& tileMap) : _tileBounds(tileBounds), _tileData(tileData), _tileMap(tileMap) { }
+
+            const MapBounds& getTileBounds() const { return _tileBounds; }
+            const std::shared_ptr<BinaryData>& getTileData() const { return _tileData; }
+            const std::shared_ptr<VectorTileDecoder::TileMap>& getTileMap() const { return _tileMap; }
+
+            std::size_t getSize() const;
+
+        private:
+            MapBounds _tileBounds;
+            std::shared_ptr<BinaryData> _tileData;
+            std::shared_ptr<VectorTileDecoder::TileMap> _tileMap;
+        };
     
         static const int DEFAULT_CULL_DELAY = 200;
         static const int PRELOADING_PRIORITY_OFFSET = -2;
         static const int EXTRA_TILE_FOOTPRINT = 4096;
         static const int DEFAULT_PRELOADING_CACHE_SIZE = 10 * 1024 * 1024;
         
+        ThreadSafeDirectorPtr<VectorTileEventListener> _vectorTileEventListener;
+
         VectorTileRenderOrder::VectorTileRenderOrder _labelRenderOrder;
         VectorTileRenderOrder::VectorTileRenderOrder _buildingRenderOrder;
     
@@ -179,8 +216,8 @@ namespace carto {
     
         std::vector<std::shared_ptr<TileDrawData> > _tempDrawDatas;
 
-        cache::timed_lru_cache<long long, std::shared_ptr<VectorTileDecoder::TileMap> > _visibleCache;
-        cache::timed_lru_cache<long long, std::shared_ptr<VectorTileDecoder::TileMap> > _preloadingCache;
+        cache::timed_lru_cache<long long, TileInfo> _visibleCache;
+        cache::timed_lru_cache<long long, TileInfo> _preloadingCache;
     };
     
 }

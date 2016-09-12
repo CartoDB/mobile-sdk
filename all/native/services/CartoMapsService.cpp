@@ -2,6 +2,7 @@
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
 #include "datasources/HTTPTileDataSource.h"
+#include "datasources/MemoryCacheTileDataSource.h"
 #include "layers/Layer.h"
 #include "layers/RasterTileLayer.h"
 #include "layers/VectorTileLayer.h"
@@ -172,7 +173,7 @@ namespace carto {
         auto requestData = std::make_shared<BinaryData>(reinterpret_cast<const unsigned char*>(mapConfigJSON.data()), mapConfigJSON.size());
 
         // Do HTTP POST request
-        HTTPClient client(false);
+        HTTPClient client(Log::IsShowDebug());
         std::shared_ptr<BinaryData> responseData;
         std::map<std::string, std::string> responseHeaders;
         if (client.post(url, "application/json", requestData, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
@@ -206,7 +207,7 @@ namespace carto {
         auto requestData = std::make_shared<BinaryData>(reinterpret_cast<const unsigned char*>(paramsJSON.data()), paramsJSON.size());
 
         // Perform HTTP request
-        HTTPClient client(false);
+        HTTPClient client(Log::IsShowDebug());
         std::shared_ptr<BinaryData> responseData;
         std::map<std::string, std::string> responseHeaders;
         if (client.post(url, "application/json", requestData, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
@@ -301,7 +302,8 @@ namespace carto {
         // Create layer based on type and flags
         if (type == "torque") {
             if (!cartoCSS.empty()) {
-                auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.torque" + urlTemplateSuffix);
+                auto baseDataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.torque" + urlTemplateSuffix);
+                auto dataSource = std::make_shared<MemoryCacheTileDataSource>(baseDataSource); // in memory cache allows to change style quickly
                 auto styleSet = std::make_shared<CartoCSSStyleSet>(cartoCSS, _vectorTileAssetPackage);
                 auto torqueTileDecoder = std::make_shared<TorqueTileDecoder>(styleSet);
                 return std::make_shared<TorqueTileLayer>(dataSource, torqueTileDecoder);
@@ -317,12 +319,13 @@ namespace carto {
             
             if (_defaultVectorLayerMode) {
                 if (!layerId.empty() && !cartoCSS.empty()) {
-                    auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.mvt" + urlTemplateSuffix);
+                    auto baseDataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.mvt" + urlTemplateSuffix);
+                    auto dataSource = std::make_shared<MemoryCacheTileDataSource>(baseDataSource); // in memory cache allows to change style quickly
                     auto styleSet = std::make_shared<CartoCSSStyleSet>(cartoCSS, _vectorTileAssetPackage);
                     auto vectorTileDecoder = std::make_shared<MBVectorTileDecoder>(styleSet);
                     vectorTileDecoder->setCartoCSSLayerNamesIgnored(true); // all layer name filters should be ignored
                     vectorTileDecoder->setLayerNameOverride(layerId);
-                    return std::make_shared<VectorTileLayer>(dataSource, vectorTileDecoder);
+                    layer = std::make_shared<VectorTileLayer>(dataSource, vectorTileDecoder);
                 }
                 else {
                     Log::Warn("CartoMapsService::createLayer: No id/CartoCSS for layer, using raster tiles");
@@ -335,7 +338,7 @@ namespace carto {
             }
 
             if (_interactive) {
-                auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.grid" + urlTemplateSuffix);
+                auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.grid.json" + urlTemplateSuffix);
                 layer->setUTFGridDataSource(dataSource);
             }
             

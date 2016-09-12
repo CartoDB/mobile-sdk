@@ -428,7 +428,7 @@ The following common code can be used for both Xamarin Android and Xamarin iOS a
 
 1) Add a marker, based on defined coordinates
 
-  Add the following code after creating the [MapView](#xamarin-android-and-ios-implementation).
+  Add the following code after creating the [MapView](#basic-xamarin-maps).
 
   **Note:** You must have *Icon.png* that is a bitmap, located in the Assets folder of your project
 

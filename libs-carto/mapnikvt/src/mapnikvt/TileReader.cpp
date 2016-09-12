@@ -18,7 +18,7 @@ namespace carto { namespace mvt {
         FeatureExpressionContext exprContext;
         exprContext.setZoom(tileId.zoom + static_cast<int>(_symbolizerContext.getSettings().getZoomLevelBias()));
         exprContext.setNutiParameterValueMap(_symbolizerContext.getSettings().getNutiParameterValueMap());
-        vt::TileLayerBuilder tileLayerBuilder(_symbolizerContext.getSettings().getTileSize(), _symbolizerContext.getSettings().getGeometryScale());
+        vt::TileLayerBuilder tileLayerBuilder(tileId, _symbolizerContext.getSettings().getTileSize(), _symbolizerContext.getSettings().getGeometryScale());
 
         std::vector<std::shared_ptr<vt::TileLayer>> tileLayers;
         int layerIdx = 0;
@@ -46,7 +46,7 @@ namespace carto { namespace mvt {
                 std::shared_ptr<vt::FloatFunction> opacityFn = std::make_shared<vt::FloatFunction>([opacity](const vt::ViewState& viewState) { return opacity; });
 
                 int internalIdx = layerIdx * 65536 + static_cast<int>(layer->getStyleNames().size()) * 256 + styleIdx;
-                std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.build(internalIdx, opacityFn, compOp);
+                std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.build(getLayerName(layer), internalIdx, opacityFn, compOp);
                 if (!(tileLayer->getBitmaps().empty() && tileLayer->getLabels().empty() && tileLayer->getGeometries().empty() && !compOp)) {
                     tileLayers.push_back(tileLayer);
                 }
@@ -92,7 +92,7 @@ namespace carto { namespace mvt {
                             currentSymbolizer = symbolizer;
                         }
 
-                        currentFeatureCollection.append(featureIt->getFeatureId(), geometry);
+                        currentFeatureCollection.append(featureIt->getTileIndex(), featureIt->getFeatureId(), geometry);
                     }
                 }
             }

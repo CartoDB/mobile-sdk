@@ -1,6 +1,16 @@
 #include "MBVectorTileDecoder.h"
+#include "core/MapBounds.h"
 #include "core/BinaryData.h"
+#include "core/Variant.h"
 #include "components/Exceptions.h"
+#include "geometry/Feature.h"
+#include "geometry/Geometry.h"
+#include "geometry/PointGeometry.h"
+#include "geometry/LineGeometry.h"
+#include "geometry/PolygonGeometry.h"
+#include "geometry/MultiPointGeometry.h"
+#include "geometry/MultiLineGeometry.h"
+#include "geometry/MultiPolygonGeometry.h"
 #include "graphics/Bitmap.h"
 #include "styles/CompiledStyleSet.h"
 #include "styles/CartoCSSStyleSet.h"
@@ -21,8 +31,86 @@
 #include <mapnikvt/MapParser.h>
 #include <cartocss/CartoCSSMapLoader.h>
 
+#include <functional>
+
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+
+namespace {
+
+    struct ValueConverter : boost::static_visitor<carto::Variant> {
+        carto::Variant operator() (boost::blank) const { return carto::Variant(); }
+        template <typename T> carto::Variant operator() (T val) const { return carto::Variant(val); }
+    };
+
+    typedef std::function<carto::MapPos(const cglib::vec2<float>& pos)> PointConversionFunction;
+
+    std::vector<carto::MapPos> convertPoints(const PointConversionFunction& convertFn, const std::vector<cglib::vec2<float> >& poses) {
+        std::vector<carto::MapPos> points;
+        points.reserve(poses.size());
+        std::transform(poses.begin(), poses.end(), std::back_inserter(points), convertFn);
+        return points;
+    }
+
+    std::vector<std::vector<carto::MapPos> > convertPointsList(const PointConversionFunction& convertFn, const std::vector<std::vector<cglib::vec2<float> > >& posesList) {
+        std::vector<std::vector<carto::MapPos> > pointsList;
+        pointsList.reserve(posesList.size());
+        std::transform(posesList.begin(), posesList.end(), std::back_inserter(pointsList), [&](const std::vector<cglib::vec2<float> >& poses) {
+            return convertPoints(convertFn, poses);
+        });
+        return pointsList;
+    }
+
+    std::vector<std::vector<std::vector<carto::MapPos> > > convertPointsLists(const PointConversionFunction& convertFn, const std::vector<std::vector<std::vector<cglib::vec2<float> > > >& posesLists) {
+        std::vector<std::vector<std::vector<carto::MapPos> > > pointsLists;
+        pointsLists.reserve(posesLists.size());
+        std::transform(posesLists.begin(), posesLists.end(), std::back_inserter(pointsLists), [&](const std::vector<std::vector<cglib::vec2<float> > >& posesList) {
+            return convertPointsList(convertFn, posesList);
+        });
+        return pointsLists;
+    }
+
+    std::shared_ptr<carto::Geometry> convertGeometry(const PointConversionFunction& convertFn, const std::shared_ptr<const carto::mvt::Geometry>& mvtGeometry) {
+        if (auto mvtPoint = std::dynamic_pointer_cast<const carto::mvt::PointGeometry>(mvtGeometry)) {
+            std::vector<carto::MapPos> poses = convertPoints(convertFn, mvtPoint->getVertices());
+            std::vector<std::shared_ptr<carto::PointGeometry> > points;
+            points.reserve(poses.size());
+            std::transform(poses.begin(), poses.end(), std::back_inserter(points), [](const carto::MapPos& pos) { return std::make_shared<carto::PointGeometry>(pos); });
+            if (points.size() == 1) {
+                return points.front();
+            }
+            else {
+                return std::make_shared<carto::MultiPointGeometry>(points);
+            }
+        }
+        else if (auto mvtLine = std::dynamic_pointer_cast<const carto::mvt::LineGeometry>(mvtGeometry)) {
+            std::vector<std::vector<carto::MapPos>> posesList = convertPointsList(convertFn, mvtLine->getVerticesList());
+            std::vector<std::shared_ptr<carto::LineGeometry> > lines;
+            lines.reserve(posesList.size());
+            std::transform(posesList.begin(), posesList.end(), std::back_inserter(lines), [](const std::vector<carto::MapPos>& poses) { return std::make_shared<carto::LineGeometry>(poses); });
+            if (lines.size() == 1) {
+                return lines.front();
+            }
+            else {
+                return std::make_shared<carto::MultiLineGeometry>(lines);
+            }
+        }
+        else if (auto mvtPolygon = std::dynamic_pointer_cast<const carto::mvt::PolygonGeometry>(mvtGeometry)) {
+            std::vector<std::vector<std::vector<carto::MapPos> > > posesLists = convertPointsLists(convertFn, mvtPolygon->getPolygonList());
+            std::vector<std::shared_ptr<carto::PolygonGeometry> > polygons;
+            polygons.reserve(posesLists.size());
+            std::transform(posesLists.begin(), posesLists.end(), std::back_inserter(polygons), [](const std::vector<std::vector<carto::MapPos> >& posesList) { return std::make_shared<carto::PolygonGeometry>(posesList); });
+            if (polygons.size() == 1) {
+                return polygons.front();
+            }
+            else {
+                return std::make_shared<carto::MultiPolygonGeometry>(polygons);
+            }
+        }
+        return std::shared_ptr<carto::Geometry>();
+    }
+
+}
 
 namespace carto {
     
@@ -256,6 +344,44 @@ namespace carto {
     
     int MBVectorTileDecoder::getMaxZoom() const {
         return Const::MAX_SUPPORTED_ZOOM_LEVEL;
+    }
+
+    std::shared_ptr<MBVectorTileDecoder::TileFeature> MBVectorTileDecoder::decodeFeature(long long id, const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const {
+        if (!tileData) {
+            Log::Warn("MBVectorTileDecoder::decodeFeature: Null tile data");
+            return std::shared_ptr<TileFeature>();
+        }
+        if (tileData->empty()) {
+            return std::shared_ptr<TileFeature>();
+        }
+
+        try {
+            mvt::MBVTFeatureDecoder decoder(*tileData->getDataPtr(), _logger);
+
+            std::string mvtLayerName;
+            std::shared_ptr<mvt::Feature> mvtFeature = decoder.getFeature(id, mvtLayerName);
+            if (!mvtFeature) {
+                return std::shared_ptr<TileFeature>();
+            }
+
+            std::map<std::string, Variant> featureData;
+            if (std::shared_ptr<const mvt::FeatureData> mvtFeatureData = mvtFeature->getFeatureData()) {
+                for (const std::string& varName : mvtFeatureData->getVariableNames()) {
+                    mvt::Value mvtValue;
+                    mvtFeatureData->getVariable(varName, mvtValue);
+                    featureData[varName] = boost::apply_visitor(ValueConverter(), mvtValue);
+                }
+            }
+
+            auto convertFn = [&tileBounds](const cglib::vec2<float>& pos) {
+                return MapPos(tileBounds.getMin().getX() + pos(0) * tileBounds.getDelta().getX(), tileBounds.getMax().getY() - pos(1) * tileBounds.getDelta().getY(), 0);
+            };
+            auto feature = std::make_shared<Feature>(convertGeometry(convertFn, mvtFeature->getGeometry()), Variant(featureData));
+            return std::make_shared<TileFeature>(mvtFeature->getId(), mvtLayerName, feature);
+        } catch (const std::exception& ex) {
+            Log::Errorf("MBVectorTileDecoder::decodeFeature: Exception while decoding: %s", ex.what());
+        }
+        return std::shared_ptr<TileFeature>();
     }
         
     std::shared_ptr<MBVectorTileDecoder::TileMap> MBVectorTileDecoder::decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const {

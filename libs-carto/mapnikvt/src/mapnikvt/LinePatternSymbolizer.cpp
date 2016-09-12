@@ -19,19 +19,48 @@ namespace carto { namespace mvt {
 
         vt::LineStyle style(compOp, vt::LineJoinMode::MITER, vt::LineCapMode::NONE, _fill, _opacity, width, symbolizerContext.getStrokeMap(), pattern, _geometryTransform);
 
-        for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
-            if (auto lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(featureCollection.getGeometry(index))) {
-                layerBuilder.addLines(lineGeometry->getVerticesList(), style);
-            }
-            else if (auto polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(featureCollection.getGeometry(index))) {
-                for (const auto& verticesList : polygonGeometry->getPolygonList()) {
-                    layerBuilder.addLines(verticesList, style);
+        std::size_t featureIndex = 0;
+        std::size_t geometryIndex = 0;
+        std::size_t polygonIndex = 0;
+        std::shared_ptr<const LineGeometry> lineGeometry;
+        std::shared_ptr<const PolygonGeometry> polygonGeometry;
+        layerBuilder.addLines([&](long long& id, vt::TileLayerBuilder::Vertices& vertices) {
+            while (true) {
+                if (lineGeometry) {
+                    if (geometryIndex < lineGeometry->getVerticesList().size()) {
+                        id = featureCollection.getLocalId(featureIndex);
+                        vertices = lineGeometry->getVerticesList()[geometryIndex++];
+                        return true;
+                    }
+                    featureIndex++;
+                    geometryIndex = 0;
+                }
+                if (polygonGeometry) {
+                    while (geometryIndex < polygonGeometry->getPolygonList().size()) {
+                        if (polygonIndex < polygonGeometry->getPolygonList()[geometryIndex].size()) {
+                            id = featureCollection.getLocalId(featureIndex);
+                            vertices = polygonGeometry->getPolygonList()[geometryIndex][polygonIndex++];
+                            return true;
+                        }
+                        geometryIndex++;
+                        polygonIndex = 0;
+                    }
+                    featureIndex++;
+                    geometryIndex = 0;
+                }
+
+                if (featureIndex >= featureCollection.getSize()) {
+                    break;
+                }
+                lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(featureCollection.getGeometry(featureIndex));
+                polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(featureCollection.getGeometry(featureIndex));
+                if (!lineGeometry && !polygonGeometry) {
+                    _logger->write(Logger::Severity::WARNING, "Unsupported geometry for LinePatternSymbolizer");
+                    featureIndex++;
                 }
             }
-            else {
-                _logger->write(Logger::Severity::WARNING, "Unsupported geometry for LinePatternSymbolizer");
-            }
-        }
+            return false;
+        }, style);
     }
 
     void LinePatternSymbolizer::bindParameter(const std::string& name, const std::string& value) {

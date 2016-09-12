@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.carto"
-    android:versionCode="330"
-    android:versionName="3.3.0" >
+    package="com.carto" >
 
     <uses-sdk android:minSdkVersion="10"/>
 

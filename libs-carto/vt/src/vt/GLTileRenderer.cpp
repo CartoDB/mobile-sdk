@@ -3,6 +3,7 @@
 #include "BitmapManager.h"
 
 #include <cassert>
+#include <algorithm>
 
 namespace {
     static const std::string backgroundVsh = R"GLSL(
@@ -388,6 +389,12 @@ namespace carto { namespace vt {
         _subTileBlending = blend;
     }
     
+    void GLTileRenderer::setInteractionMode(bool enabled) {
+        std::lock_guard<std::mutex> lock(*_mutex);
+
+        _interactionEnabled = enabled;
+    }
+
     void GLTileRenderer::setFBOClearColor(const Color& clearColor) {
         std::lock_guard<std::mutex> lock(*_mutex);
         
@@ -444,7 +451,7 @@ namespace carto { namespace vt {
             cglib::mat4x4<double> tileMatrix = calculateTileMatrix(tileIt->second->getTileId());
             for (const std::shared_ptr<TileLayer>& layer : tileIt->second->getLayers()) {
                 for (const std::shared_ptr<TileLabel>& label : layer->getLabels()) {
-                    std::pair<int, long long> labelId(layer->getLayerIndex(), label->getId());
+                    std::pair<int, long long> labelId(layer->getLayerIndex(), label->getGlobalId());
                     label->transformGeometry(tileMatrix);
                     auto newLabelIt = newLabelMap.find(labelId);
                     if (newLabelIt != newLabelMap.end()) {
@@ -671,7 +678,7 @@ namespace carto { namespace vt {
         }
     }
     
-    bool GLTileRenderer::render2D() {
+    bool GLTileRenderer::renderGeometry2D() {
         std::lock_guard<std::mutex> lock(*_mutex);
         
         // Bind screen FBO and clear it (if FBO enabled)
@@ -728,38 +735,7 @@ namespace carto { namespace vt {
         return update;
     }
     
-    bool GLTileRenderer::renderLabels(bool render2D, bool render3D) {
-        std::lock_guard<std::mutex> lock(*_mutex);
-        
-        // Update GL state
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-        glDisable(GL_DEPTH_TEST);
-        glDepthMask(GL_FALSE);
-        glDisable(GL_STENCIL_TEST);
-        glStencilMask(0);
-        glDisable(GL_CULL_FACE);
-
-        // Label pass
-        bool update = false;
-        for (int pass = 0; pass < 2; pass++) {
-            if ((pass == 0 && render2D) || (pass == 1 && render3D)) {
-                for (const std::pair<std::shared_ptr<const Bitmap>, std::vector<std::shared_ptr<TileLabel>>>& bitmapLabels : *_renderBitmapLabelMap[pass]) {
-                    update = renderLabels(bitmapLabels.first, bitmapLabels.second) || update;
-                }
-            }
-        }
-        
-        // Restore GL state
-        glEnable(GL_DEPTH_TEST);
-        glDepthMask(GL_TRUE);
-        glStencilMask(255);
-        glEnable(GL_CULL_FACE);
-        
-        return update;
-    }
-    
-    bool GLTileRenderer::render3D() {
+    bool GLTileRenderer::renderGeometry3D() {
         std::lock_guard<std::mutex> lock(*_mutex);
         
         // Update GL state
@@ -775,6 +751,37 @@ namespace carto { namespace vt {
         
         // Restore GL state
         glEnable(GL_BLEND);
+        glStencilMask(255);
+        glEnable(GL_CULL_FACE);
+        
+        return update;
+    }
+    
+    bool GLTileRenderer::renderLabels(bool labels2D, bool labels3D) {
+        std::lock_guard<std::mutex> lock(*_mutex);
+        
+        // Update GL state
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        glDisable(GL_DEPTH_TEST);
+        glDepthMask(GL_FALSE);
+        glDisable(GL_STENCIL_TEST);
+        glStencilMask(0);
+        glDisable(GL_CULL_FACE);
+
+        // Label pass
+        bool update = false;
+        for (int pass = 0; pass < 2; pass++) {
+            if ((pass == 0 && labels2D) || (pass == 1 && labels3D)) {
+                for (const std::pair<std::shared_ptr<const Bitmap>, std::vector<std::shared_ptr<TileLabel>>>& bitmapLabels : *_renderBitmapLabelMap[pass]) {
+                    update = renderLabels(bitmapLabels.first, bitmapLabels.second) || update;
+                }
+            }
+        }
+        
+        // Restore GL state
+        glEnable(GL_DEPTH_TEST);
+        glDepthMask(GL_TRUE);
         glStencilMask(255);
         glEnable(GL_CULL_FACE);
         
@@ -818,6 +825,90 @@ namespace carto { namespace vt {
                 it++;
             }
         }
+    }
+
+    bool GLTileRenderer::findGeometryIntersections(const cglib::ray3<double>& ray, std::vector<std::tuple<TileId, double, long long>>& results, float radius, bool geom2D, bool geom3D) const {
+        std::lock_guard<std::mutex> lock(*_mutex);
+
+        // Calculate intersection with z=0 plane
+        double t = 0;
+        if (!cglib::intersect_plane(cglib::vec4<double>(0, 0, 1, 0), ray, &t)) {
+            return false;
+        }
+
+        // First find the intersecting tile. NOTE: we ignore building height information
+        std::size_t initialResults = results.size();
+        for (const std::shared_ptr<BlendNode>& blendNode : *_blendNodes) {
+            std::multimap<int, RenderNode> renderNodeMap;
+            if (!buildRenderNodes(*blendNode, 1.0f, renderNodeMap)) {
+                continue;
+            }
+
+            // Check that the hit point is inside the blend node tile (used for clipping)
+            cglib::mat4x4<double> tileMatrix = calculateTileMatrix(blendNode->tileId);
+            cglib::vec3<double> posLocal = cglib::transform_point(ray(t), cglib::inverse(tileMatrix));
+            double radiusLocal = radius / cglib::length(cglib::proj_o(cglib::row_vector(tileMatrix, 0)));
+            if (!(posLocal(0) >= -radiusLocal && posLocal(0) <= 1 + radiusLocal && posLocal(1) >= -radiusLocal && posLocal(1) <= 1 + radiusLocal)) {
+                continue;
+            }
+
+            for (auto it = renderNodeMap.begin(); it != renderNodeMap.end(); it++) {
+                const RenderNode& renderNode = it->second;
+
+                // Check that the hit point is inside the render node tile (actual tile we are performing intersection test)
+                tileMatrix = calculateTileMatrix(renderNode.tileId);
+                posLocal = cglib::transform_point(ray(t), cglib::inverse(tileMatrix));
+                radiusLocal = radius / cglib::length(cglib::proj_o(cglib::row_vector(tileMatrix, 0)));
+                if (!(posLocal(0) >= -radiusLocal && posLocal(0) <= 1 + radiusLocal && posLocal(1) >= -radiusLocal && posLocal(1) <= 1 + radiusLocal)) {
+                    continue;
+                }
+
+                // Test all geometry batches for intersections
+                for (const std::shared_ptr<TileGeometry>& geometry : renderNode.layer->getGeometries()) {
+                    bool polygon3D = geometry->getType() == TileGeometry::Type::POLYGON3D;
+                    if ((!polygon3D && geom2D) || (polygon3D && geom3D)) {
+                        cglib::ray3<float> rayLocal = cglib::ray3<float>::convert(cglib::transform_ray(ray, cglib::inverse(tileMatrix)));
+
+                        std::vector<std::pair<float, long long>> resultsLocal;
+                        findTileGeometryIntersections(geometry, rayLocal, static_cast<float>(radiusLocal), resultsLocal);
+
+                        for (std::pair<float, long long> resultLocal : resultsLocal) {
+                            float tLocal = resultLocal.first;
+                            long long id = resultLocal.second;
+                            cglib::vec3<double> pos = cglib::transform_point(cglib::vec3<double>(rayLocal(tLocal)(0), rayLocal(tLocal)(1), 0), tileMatrix);
+                            results.emplace_back(renderNode.tileId, cglib::dot_product(pos - ray.origin, ray.direction) / cglib::dot_product(ray.direction, ray.direction), id);
+                        }
+                    }
+                }
+            }
+        }
+
+        return results.size() > initialResults;
+    }
+    
+    bool GLTileRenderer::findLabelIntersections(const cglib::ray3<double>& ray, std::vector<std::tuple<TileId, double, long long>>& results, float radius, bool labels2D, bool labels3D) const {
+        std::lock_guard<std::mutex> lock(*_mutex);
+
+        // Test for label intersections. The ordering may be mixed compared to actual rendering order, but this is non-issue if the labels are non-overlapping.
+        std::size_t initialResults = results.size();
+        for (int pass = 0; pass < 2; pass++) {
+            if ((pass == 0 && labels2D) || (pass == 1 && labels3D)) {
+                for (const std::pair<std::shared_ptr<const Bitmap>, std::vector<std::shared_ptr<TileLabel>>>& bitmapLabels : *_renderBitmapLabelMap[pass]) {
+                    for (const std::shared_ptr<TileLabel>& label : bitmapLabels.second) {
+                        if (!label->isActive() || !label->isVisible() || label->getOpacity() <= 0) {
+                            continue;
+                        }
+
+                        double result = 0;
+                        if (findLabelIntersection(label, ray, radius, result)) {
+                            results.emplace_back(label->getTileId(), result, label->getLocalId());
+                        }
+                    }
+                }
+            }
+        }
+
+        return results.size() > initialResults;
     }
     
     cglib::mat4x4<double> GLTileRenderer::calculateLocalViewMatrix(const cglib::mat4x4<double>& cameraMatrix) {
@@ -890,7 +981,7 @@ namespace carto { namespace vt {
         return std::min(opacity, 1.0f);
     }
 
-    void GLTileRenderer::updateBlendNode(BlendNode& blendNode, float dBlend) {
+    void GLTileRenderer::updateBlendNode(BlendNode& blendNode, float dBlend) const {
         if (!_frustum.inside(calculateTileBBox(blendNode.tileId))) {
             blendNode.blend = 1.0f;
             return;
@@ -907,7 +998,7 @@ namespace carto { namespace vt {
         }
     }
     
-    bool GLTileRenderer::buildRenderNodes(const BlendNode& blendNode, float blend, std::multimap<int, RenderNode>& renderNodeMap) {
+    bool GLTileRenderer::buildRenderNodes(const BlendNode& blendNode, float blend, std::multimap<int, RenderNode>& renderNodeMap) const {
         if (!_frustum.inside(calculateTileBBox(blendNode.tileId))) {
             return false;
         }
@@ -940,7 +1031,7 @@ namespace carto { namespace vt {
         return exists;
     }
     
-    void GLTileRenderer::addRenderNode(RenderNode renderNode, std::multimap<int, RenderNode>& renderNodeMap) {
+    void GLTileRenderer::addRenderNode(RenderNode renderNode, std::multimap<int, RenderNode>& renderNodeMap) const {
         const std::shared_ptr<const TileLayer>& layer = renderNode.layer;
         auto range = renderNodeMap.equal_range(layer->getLayerIndex());
         for (auto it = range.first; it != range.second; ) {
@@ -975,7 +1066,7 @@ namespace carto { namespace vt {
         renderNodeMap.insert(it, { layer->getLayerIndex(), renderNode });
     }
     
-    void GLTileRenderer::updateLabels(const std::vector<std::shared_ptr<TileLabel>>& labels, float dOpacity) {
+    void GLTileRenderer::updateLabels(const std::vector<std::shared_ptr<TileLabel>>& labels, float dOpacity) const {
         for (const std::shared_ptr<TileLabel>& label : labels) {
             if (!label->isValid()) {
                 continue;
@@ -987,6 +1078,111 @@ namespace carto { namespace vt {
         }
     }
     
+    void GLTileRenderer::findTileGeometryIntersections(const std::shared_ptr<TileGeometry>& geometry, const cglib::ray3<float>& ray, float radius, std::vector<std::pair<float, long long>>& results) const {
+        for (std::size_t i = 0; i + 2 < geometry->getIndices().size(); i += 3) {
+            std::size_t index0 = geometry->getIndices()[i + 0];
+            std::size_t index1 = geometry->getIndices()[i + 1];
+            std::size_t index2 = geometry->getIndices()[i + 2];
+
+            cglib::vec3<float> p0 = decodeVertex(geometry, index0);
+            cglib::vec3<float> p1 = decodeVertex(geometry, index1);
+            cglib::vec3<float> p2 = decodeVertex(geometry, index2);
+
+            if (geometry->getType() == TileGeometry::Type::POINT) {
+                p0 += extendOffset(decodePointOffset(geometry, index0), radius);
+                p1 += extendOffset(decodePointOffset(geometry, index1), radius);
+                p2 += extendOffset(decodePointOffset(geometry, index2), radius);
+            }
+            else if (geometry->getType() == TileGeometry::Type::LINE) {
+                p0 += extendOffset(decodeLineBinormal(geometry, index0), radius);
+                p1 += extendOffset(decodeLineBinormal(geometry, index1), radius);
+                p2 += extendOffset(decodeLineBinormal(geometry, index2), radius);
+            }
+            else if (geometry->getType() == TileGeometry::Type::POLYGON) {
+                cglib::vec3<float> center = (p0 + p1 + p2) * (1.0f / 3.0f);
+                p0 = center + extendOffset(p0 - center, radius);
+                p1 = center + extendOffset(p1 - center, radius);
+                p2 = center + extendOffset(p2 - center, radius);
+            }
+            else if (geometry->getType() == TileGeometry::Type::POLYGON3D) {
+                p0 += decodePolygon3DOffset(geometry, index0);
+                p1 += decodePolygon3DOffset(geometry, index1);
+                p2 += decodePolygon3DOffset(geometry, index2);
+            }
+
+            float t = 0;
+            if (cglib::intersect_triangle(p0, p1, p2, ray, &t)) {
+                std::size_t counter = i;
+                for (std::size_t j = 0; j < geometry->getIds().size(); j++) {
+                    if (counter < geometry->getIds()[j].first) {
+                        results.emplace_back(t, geometry->getIds()[j].second);
+                        break;
+                    }
+                    counter -= geometry->getIds()[j].first;
+                }
+            }
+        }
+    }
+
+    bool GLTileRenderer::findLabelIntersection(const std::shared_ptr<TileLabel>& label, const cglib::ray3<double>& ray, float radius, double& result) const {
+        std::array<cglib::vec3<float>, 4> envelope;
+        if (!label->calculateEnvelope(_viewState, envelope)) {
+            return false;
+        }
+
+        cglib::vec3<float> center = (envelope[0] + envelope[1] + envelope[2] + envelope[3]) * 0.25f;
+
+        std::array<cglib::vec3<double>, 4> p;
+        for (int i = 0; i < 4; i++) {
+            cglib::vec3<float> dp = center + extendOffset(envelope[i] - center, radius);
+            p[i] = _viewState.origin + cglib::vec3<double>::convert(dp);
+        }
+
+        return cglib::intersect_triangle(p[0], p[1], p[2], ray, &result) ||
+               cglib::intersect_triangle(p[0], p[2], p[3], ray, &result);
+    }
+
+    cglib::vec3<float> GLTileRenderer::extendOffset(const cglib::vec3<float>& offset, float radius) {
+        float len = cglib::length(offset);
+        if (len == 0) {
+            return offset;
+        }
+        return offset * (1.0f + radius / len);
+    }
+
+    cglib::vec3<float> GLTileRenderer::decodeVertex(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const {
+        const TileGeometry::GeometryLayoutParameters& geometryLayoutParams = geometry->getGeometryLayoutParameters();
+        std::size_t vertexOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.vertexOffset;
+        const short* vertexPtr = reinterpret_cast<const short*>(&geometry->getVertexGeometry()[vertexOffset]);
+        return cglib::vec3<float>(vertexPtr[0], vertexPtr[1], 0) * (1.0f / geometryLayoutParams.vertexScale);
+    }
+
+    cglib::vec3<float> GLTileRenderer::decodePointOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const {
+        // NOTE: we ignore the actual orientation currently. This is mostly ok, assuming roughly equal width/height of the point
+        const TileGeometry::GeometryLayoutParameters& geometryLayoutParams = geometry->getGeometryLayoutParameters();
+        std::size_t attribOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.attribsOffset;
+        const char* attribPtr = reinterpret_cast<const char*>(&geometry->getVertexGeometry()[attribOffset]);
+        float width = 0.5f * (*geometry->getStyleParameters().widthTable[attribPtr[0]])(_viewState) * geometry->getGeometryScale() / geometry->getTileSize();
+        return cglib::vec3<float>(attribPtr[1], attribPtr[2], 0) * width;
+    }
+
+    cglib::vec3<float> GLTileRenderer::decodeLineBinormal(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const {
+        const TileGeometry::GeometryLayoutParameters& geometryLayoutParams = geometry->getGeometryLayoutParameters();
+        std::size_t binormalOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.binormalOffset;
+        const short* binormalPtr = reinterpret_cast<const short*>(&geometry->getVertexGeometry()[binormalOffset]);
+        std::size_t attribOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.attribsOffset;
+        const char* attribPtr = reinterpret_cast<const char*>(&geometry->getVertexGeometry()[attribOffset]);
+        float width = 0.5f * (*geometry->getStyleParameters().widthTable[attribPtr[0]])(_viewState) * geometry->getGeometryScale() / geometry->getTileSize();
+        return cglib::vec3<float>(binormalPtr[0], binormalPtr[1], 0) * (width / geometryLayoutParams.binormalScale);
+    }
+
+    cglib::vec3<float> GLTileRenderer::decodePolygon3DOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const {
+        const TileGeometry::GeometryLayoutParameters& geometryLayoutParams = geometry->getGeometryLayoutParameters();
+        std::size_t heightOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.heightOffset;
+        const float* heightPtr = reinterpret_cast<const float*>(&geometry->getVertexGeometry()[heightOffset]);
+        return cglib::vec3<float>(0, 0, *heightPtr);
+    }
+
     bool GLTileRenderer::renderBlendNodes2D(const std::vector<std::shared_ptr<BlendNode>>& blendNodes) {
         GLint stencilBits = 0;
         if (_useStencil) {
@@ -1447,7 +1643,9 @@ namespace carto { namespace vt {
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, compiledGeometry.indicesVBO);
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, geometry->getIndices().size() * sizeof(unsigned short), geometry->getIndices().data(), GL_STATIC_DRAW);
             
-            geometry->releaseVertexArrays();
+            if (!_interactionEnabled) {
+                geometry->releaseVertexArrays(); // if interaction is enabled, we must keep the vertex arrays. Otherwise optimize for lower memory usage
+            }
             
             _compiledTileGeometryMap[geometry] = compiledGeometry;
         }

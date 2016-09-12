@@ -96,17 +96,17 @@ namespace carto { namespace vt {
     };
 
     struct BitmapLabelStyle {
-        LabelOrientation placement;
+        LabelOrientation orientation;
         Color color;
         std::shared_ptr<Font> font;
         std::shared_ptr<const Bitmap> bitmap;
         cglib::mat3x3<float> transform;
 
-        explicit BitmapLabelStyle(LabelOrientation placement, const Color& color, std::shared_ptr<Font> font, std::shared_ptr<const Bitmap> bitmap, const cglib::mat3x3<float>& transform) : placement(placement), color(color), font(std::move(font)), bitmap(std::move(bitmap)), transform(transform) { }
+        explicit BitmapLabelStyle(LabelOrientation orientation, const Color& color, std::shared_ptr<Font> font, std::shared_ptr<const Bitmap> bitmap, const cglib::mat3x3<float>& transform) : orientation(orientation), color(color), font(std::move(font)), bitmap(std::move(bitmap)), transform(transform) { }
     };
 
     struct TextLabelStyle {
-        LabelOrientation placement;
+        LabelOrientation orientation;
         TextFormatter::Options formatterOptions;
         std::shared_ptr<Font> font;
         float angle;
@@ -114,7 +114,7 @@ namespace carto { namespace vt {
         cglib::vec2<float> backgroundOffset;
         std::shared_ptr<const Bitmap> backgroundBitmap;
 
-        explicit TextLabelStyle(LabelOrientation placement, const TextFormatter::Options& formatterOptions, std::shared_ptr<Font> font, float angle, float backgroundScale, const cglib::vec2<float>& backgroundOffset, std::shared_ptr<const Bitmap> backgroundBitmap) : placement(placement), formatterOptions(formatterOptions), font(std::move(font)), angle(angle), backgroundScale(backgroundScale), backgroundOffset(backgroundOffset), backgroundBitmap(std::move(backgroundBitmap)) { }
+        explicit TextLabelStyle(LabelOrientation orientation, const TextFormatter::Options& formatterOptions, std::shared_ptr<Font> font, float angle, float backgroundScale, const cglib::vec2<float>& backgroundOffset, std::shared_ptr<const Bitmap> backgroundBitmap) : orientation(orientation), formatterOptions(formatterOptions), font(std::move(font)), angle(angle), backgroundScale(backgroundScale), backgroundOffset(backgroundOffset), backgroundBitmap(std::move(backgroundBitmap)) { }
     };
 } }
 

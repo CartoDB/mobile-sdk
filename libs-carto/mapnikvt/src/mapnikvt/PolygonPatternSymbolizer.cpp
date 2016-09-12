@@ -16,14 +16,32 @@ namespace carto { namespace mvt {
         
         vt::PolygonStyle style(compOp, _fill, _opacity, pattern, _geometryTransform);
 
-        for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
-            if (auto polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(featureCollection.getGeometry(index))) {
-                layerBuilder.addPolygons(polygonGeometry->getPolygonList(), style);
+        std::size_t featureIndex = 0;
+        std::size_t geometryIndex = 0;
+        std::shared_ptr<const PolygonGeometry> polygonGeometry;
+        layerBuilder.addPolygons([&](long long& id, vt::TileLayerBuilder::VerticesList& verticesList) {
+            while (true) {
+                if (polygonGeometry) {
+                    if (geometryIndex < polygonGeometry->getPolygonList().size()) {
+                        id = featureCollection.getLocalId(featureIndex);
+                        verticesList = polygonGeometry->getPolygonList()[geometryIndex++];
+                        return true;
+                    }
+                    featureIndex++;
+                    geometryIndex = 0;
+                }
+
+                if (featureIndex >= featureCollection.getSize()) {
+                    break;
+                }
+                polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(featureCollection.getGeometry(featureIndex));
+                if (!polygonGeometry) {
+                    _logger->write(Logger::Severity::WARNING, "Unsupported geometry for PolygonPatternSymbolizer");
+                    featureIndex++;
+                }
             }
-            else {
-                _logger->write(Logger::Severity::WARNING, "Unsupported geometry for PolygonPatternSymbolizer");
-            }
-        }
+            return false;
+        }, style);
     }
 
     void PolygonPatternSymbolizer::bindParameter(const std::string& name, const std::string& value) {

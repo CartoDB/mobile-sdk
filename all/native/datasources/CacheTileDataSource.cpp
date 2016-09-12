@@ -35,6 +35,10 @@ namespace carto {
         clear();
         TileDataSource::notifyTilesChanged(removeTiles);
     }
+
+    std::shared_ptr<TileDataSource> CacheTileDataSource::getDataSource() const {
+        return _dataSource.get();
+    }
     
     CacheTileDataSource::DataSourceListener::DataSourceListener(CacheTileDataSource& cacheDataSource) :
         _cacheDataSource(cacheDataSource)

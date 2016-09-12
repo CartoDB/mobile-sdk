@@ -2,6 +2,7 @@
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
 #include "graphics/Bitmap.h"
+#include "datasources/CacheTileDataSource.h"
 #include "datasources/HTTPTileDataSource.h"
 #include "layers/Layer.h"
 #include "layers/SolidLayer.h"
@@ -186,7 +187,7 @@ namespace carto {
 
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-        HTTPClient client(false);
+        HTTPClient client(Log::IsShowDebug());
         std::shared_ptr<BinaryData> responseData;
         std::map<std::string, std::string> responseHeaders;
         if (client.get(visURL, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
@@ -307,8 +308,12 @@ namespace carto {
     void CartoVisLoader::configureLayerInteractivity(Layer& layer, const picojson::value& options) const {
         if (!options.is<picojson::null>()) {
             if (auto tileLayer = dynamic_cast<TileLayer*>(&layer)) {
-                if (auto dataSource = std::dynamic_pointer_cast<HTTPTileDataSource>(tileLayer->getDataSource())) {
-                    std::string baseURL = dataSource->getBaseURL();
+                std::shared_ptr<TileDataSource> dataSource = tileLayer->getDataSource();
+                while (auto cacheDataSource = std::dynamic_pointer_cast<CacheTileDataSource>(dataSource)) {
+                    dataSource = cacheDataSource->getDataSource();
+                }
+                if (auto httpDataSource = std::dynamic_pointer_cast<HTTPTileDataSource>(dataSource)) {
+                    std::string baseURL = httpDataSource->getBaseURL();
                     std::string::size_type pos = baseURL.rfind('.');
                     if (pos != std::string::npos) {
                         baseURL = baseURL.substr(0, pos);

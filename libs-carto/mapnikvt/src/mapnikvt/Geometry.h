@@ -50,7 +50,7 @@ namespace carto { namespace mvt {
     public:
         using Vertices = std::vector<cglib::vec2<float>>;
         using VerticesList = std::vector<Vertices>;
-        using PolygonList = std::list<VerticesList>;
+        using PolygonList = std::vector<VerticesList>;
 
         explicit PolygonGeometry(PolygonList polygonList) : _polygonList(std::move(polygonList)) { }
         

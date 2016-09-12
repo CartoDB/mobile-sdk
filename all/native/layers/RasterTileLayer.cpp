@@ -336,11 +336,11 @@ namespace carto {
             break;
         }
 
-        vt::TileLayerBuilder tileLayerBuilder(256.0f, 1.0f); // Note: the size/scale argument is ignored
-        tileLayerBuilder.addBitmap(tileBitmap);
-        std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.build(0, std::shared_ptr<vt::FloatFunction>(), boost::optional<vt::CompOp>());
-
         vt::TileId vtTile(tile.getZoom(), tile.getX(), tile.getY());
+        vt::TileLayerBuilder tileLayerBuilder(vtTile, 256.0f, 1.0f); // Note: the size/scale argument is ignored
+        tileLayerBuilder.addBitmap(tileBitmap);
+        std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.build("", 0, std::shared_ptr<vt::FloatFunction>(), boost::optional<vt::CompOp>());
+
         return std::make_shared<vt::Tile>(vtTile, std::vector<std::shared_ptr<vt::TileLayer> > { tileLayer });
     }
 

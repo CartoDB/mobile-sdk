@@ -40,6 +40,7 @@ namespace carto {
         _useFBO(useFBO),
         _useDepth(useDepth),
         _useStencil(useStencil),
+        _interactionMode(false),
         _labelOrder(0),
         _buildingOrder(1),
         _horizontalLayerOffset(0),
@@ -49,6 +50,11 @@ namespace carto {
     }
     
     TileRenderer::~TileRenderer() {
+    }
+    
+    void TileRenderer::setInteractionMode(bool enabled) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _interactionMode = enabled;
     }
     
     void TileRenderer::setLabelOrder(int order) {
@@ -98,15 +104,16 @@ namespace carto {
         cglib::mat4x4<double> modelViewMat = viewState.getModelviewMat();
         modelViewMat = modelViewMat * cglib::translate4_matrix(cglib::vec3<double>(_horizontalLayerOffset, 0, 0));
         _glRenderer->setViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution());
+        _glRenderer->setInteractionMode(_interactionMode);
         
         _glRenderer->startFrame(deltaSeconds * 3);
 
-        bool refresh = _glRenderer->render2D();
+        bool refresh = _glRenderer->renderGeometry2D();
         if (_labelOrder == 0) {
             refresh = _glRenderer->renderLabels(true, false) || refresh;
         }
         if (_buildingOrder == 0) {
-            refresh = _glRenderer->render3D() || refresh;
+            refresh = _glRenderer->renderGeometry3D() || refresh;
         }
         if (_labelOrder == 0) {
             refresh = _glRenderer->renderLabels(false, true) || refresh;
@@ -134,7 +141,7 @@ namespace carto {
             refresh = _glRenderer->renderLabels(true, false) || refresh;
         }
         if (_buildingOrder == 1) {
-            refresh = _glRenderer->render3D() || refresh;
+            refresh = _glRenderer->renderGeometry3D() || refresh;
         }
         if (_labelOrder == 1) {
             refresh = _glRenderer->renderLabels(false, true) || refresh;
@@ -229,6 +236,47 @@ namespace carto {
         }
         _horizontalLayerOffset = 0;
         return changed;
+    }
+
+    void TileRenderer::calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<std::tuple<vt::TileId, double, long long> >& results) const {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        if (!_glRenderer) {
+            return;
+        }
+
+        float radius = viewState.getUnitToDPCoef() * CLICK_RADIUS;
+
+        _glRenderer->findGeometryIntersections(ray, results, radius, true, false);
+        if (_labelOrder == 0) {
+            _glRenderer->findLabelIntersections(ray, results, radius, true, false);
+        }
+        if (_buildingOrder == 0) {
+            _glRenderer->findGeometryIntersections(ray, results, radius, false, true);
+        }
+        if (_labelOrder == 0) {
+            _glRenderer->findLabelIntersections(ray, results, radius, false, true);
+        }
+    }
+        
+    void TileRenderer::calculateRayIntersectedElements3D(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<std::tuple<vt::TileId, double, long long> >& results) const {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        if (!_glRenderer) {
+            return;
+        }
+
+        float radius = viewState.getUnitToDPCoef() * CLICK_RADIUS;
+
+        if (_labelOrder == 1) {
+            _glRenderer->findLabelIntersections(ray, results, radius, true, false);
+        }
+        if (_buildingOrder == 1) {
+            _glRenderer->findGeometryIntersections(ray, results, radius, false, true);
+        }
+        if (_labelOrder == 1) {
+            _glRenderer->findLabelIntersections(ray, results, radius, false, true);
+        }
     }
         
 }

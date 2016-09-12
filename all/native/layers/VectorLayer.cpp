@@ -70,8 +70,8 @@ namespace carto {
         return _vectorElementEventListener.get();
     }
     
-    void VectorLayer::setVectorElementEventListener(const std::shared_ptr<VectorElementEventListener>& vectorElementEventListener) {
-        _vectorElementEventListener.set(vectorElementEventListener);
+    void VectorLayer::setVectorElementEventListener(const std::shared_ptr<VectorElementEventListener>& eventListener) {
+        _vectorElementEventListener.set(eventListener);
     }
     
     bool VectorLayer::isUpdateInProgress() const {
@@ -198,29 +198,29 @@ namespace carto {
     }
 
     bool VectorLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
-        std::shared_ptr<VectorElement> element = intersectedElement.getElement<VectorElement>();
+        if (std::shared_ptr<VectorElement> element = intersectedElement.getElement<VectorElement>()) {
+            if (auto customPopup = std::dynamic_pointer_cast<CustomPopup>(element)) {
+                if (auto drawData = customPopup->getDrawData()) {
+                    std::vector<float> coordBuf(12);
+                    BillboardRenderer::CalculateBillboardCoords(*drawData, viewState, coordBuf, 0);
+                    
+                    MapPos topLeft = viewState.getCameraPos() + MapVec(coordBuf[0], coordBuf[1], coordBuf[2]);
+                    MapPos bottomLeft = viewState.getCameraPos() + MapVec(coordBuf[3], coordBuf[4], coordBuf[5]);
+                    MapPos topRight = viewState.getCameraPos() + MapVec(coordBuf[6], coordBuf[7], coordBuf[8]);
+                    MapVec delta = _dataSource->getProjection()->toInternal(intersectedElement.getHitPos()) - topLeft;
 
-        if (auto customPopup = std::dynamic_pointer_cast<CustomPopup>(element)) {
-            if (auto drawData = customPopup->getDrawData()) {
-                std::vector<float> coordBuf(12);
-                BillboardRenderer::CalculateBillboardCoords(*drawData, viewState, coordBuf, 0);
-                
-                MapPos topLeft = viewState.getCameraPos() + MapVec(coordBuf[0], coordBuf[1], coordBuf[2]);
-                MapPos bottomLeft = viewState.getCameraPos() + MapVec(coordBuf[3], coordBuf[4], coordBuf[5]);
-                MapPos topRight = viewState.getCameraPos() + MapVec(coordBuf[6], coordBuf[7], coordBuf[8]);
-                MapVec delta = _dataSource->getProjection()->toInternal(intersectedElement.getHitPos()) - topLeft;
-
-                float x = static_cast<float>(delta.dotProduct(topRight - topLeft) / (topRight - topLeft).lengthSqr());
-                float y = static_cast<float>(delta.dotProduct(bottomLeft - topLeft) / (bottomLeft - topLeft).lengthSqr());
-                return customPopup->processClick(clickType, intersectedElement.getHitPos(), ScreenPos(x, y));
+                    float x = static_cast<float>(delta.dotProduct(topRight - topLeft) / (topRight - topLeft).lengthSqr());
+                    float y = static_cast<float>(delta.dotProduct(bottomLeft - topLeft) / (bottomLeft - topLeft).lengthSqr());
+                    return customPopup->processClick(clickType, intersectedElement.getHitPos(), ScreenPos(x, y));
+                }
             }
-        }
 
-        DirectorPtr<VectorElementEventListener> vectorElementEventListener = _vectorElementEventListener;
+            DirectorPtr<VectorElementEventListener> vectorElementEventListener = _vectorElementEventListener;
 
-        if (vectorElementEventListener) {
-            auto vectorElementClickInfo = std::make_shared<VectorElementClickInfo>(clickType, intersectedElement.getHitPos(), intersectedElement.getElementPos(), element, intersectedElement.getLayer());
-            return vectorElementEventListener->onVectorElementClicked(vectorElementClickInfo);
+            if (vectorElementEventListener) {
+                auto vectorElementClickInfo = std::make_shared<VectorElementClickInfo>(clickType, intersectedElement.getHitPos(), intersectedElement.getElementPos(), element, intersectedElement.getLayer());
+                return vectorElementEventListener->onVectorElementClicked(vectorElementClickInfo);
+            }
         }
 
         return clickType == ClickType::CLICK_TYPE_SINGLE || clickType == ClickType::CLICK_TYPE_LONG; // by default, disable 'click through' for single and long clicks

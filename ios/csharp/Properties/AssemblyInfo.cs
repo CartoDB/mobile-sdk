@@ -19,7 +19,7 @@ using ObjCRuntime;
 // and "{Major}.{Minor}.{Build}.*" will update just the revision.
 
 [assembly: AssemblyVersion ("1.0.*")]
-[assembly: LinkWith("libcarto_mobile_sdk.a", LinkTarget.ArmV7|LinkTarget.ArmV7s|LinkTarget.Arm64|LinkTarget.Simulator|LinkTarget.Simulator64, ForceLoad=true, IsCxx=true, Frameworks="OpenGLES GLKit UIKit CoreGraphics CoreText Foundation")]
+[assembly: LinkWith("libcarto_mobile_sdk.a", LinkTarget.ArmV7|LinkTarget.ArmV7s|LinkTarget.Arm64|LinkTarget.Simulator|LinkTarget.Simulator64, ForceLoad=true, IsCxx=true, Frameworks="OpenGLES GLKit UIKit CoreGraphics CoreText CFNetwork Foundation")]
 
 // The following attributes are used to specify the signing key for the assembly,
 // if desired. See the Mono documentation for more information about signing.

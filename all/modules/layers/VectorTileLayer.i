@@ -3,7 +3,7 @@
 
 %module VectorTileLayer
 
-!proxy_imports(carto::VectorTileLayer, datasources.TileDataSource, datasources.components.TileData, layers.TileLayer, vectortiles.VectorTileDecoder)
+!proxy_imports(carto::VectorTileLayer, datasources.TileDataSource, datasources.components.TileData, layers.TileLayer, layers.VectorTileEventListener, vectortiles.VectorTileDecoder)
 
 %{
 #include "layers/VectorTileLayer.h"
@@ -15,6 +15,7 @@
 %include <cartoswig.i>
 
 %import "datasources/TileDataSource.i"
+%import "layers/VectorTileEventListener.i"
 %import "layers/TileLayer.i"
 %import "vectortiles/VectorTileDecoder.i"
 
@@ -24,6 +25,7 @@
 %attribute(carto::VectorTileLayer, VectorTileRenderOrder::VectorTileRenderOrder, LabelRenderOrder, getLabelRenderOrder, setLabelRenderOrder)
 %attribute(carto::VectorTileLayer, VectorTileRenderOrder::VectorTileRenderOrder, BuildingRenderOrder, getBuildingRenderOrder, setBuildingRenderOrder)
 !attributestring_polymorphic(carto::VectorTileLayer, vectortiles.VectorTileDecoder, TileDecoder, getTileDecoder)
+!attributestring_polymorphic(carto::VectorTileLayer, layers.VectorTileEventListener, VectorTileEventListener, getVectorTileEventListener, setVectorTileEventListener)
 %std_exceptions(carto::VectorTileLayer::VectorTileLayer)
 %ignore carto::VectorTileLayer::FetchTask;
 %ignore carto::VectorTileLayer::getMinZoom;

@@ -212,7 +212,7 @@ namespace carto {
         // Texture bounds
         float texCoordX = 1.0f;
         float texCoordY = 0.0f;
-        float texCoordYScale = 1.0f / (style.getStretchFactor() * _bitmap->getHeight());
+        float texCoordYScale = _bitmap->getWidth() / (style.getStretchFactor() * _bitmap->getHeight() * style.getWidth());
         bool useTexCoordY = _bitmap->getHeight() > 1;
 
         // Instead of calculating actual vertex positions calculate vertex origins and normals

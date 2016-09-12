@@ -109,14 +109,15 @@ def buildXamarinNuget(args, target):
   distDir = getDistDir('xamarin')
   version = args.buildversion
 
-  with open('%s/scripts/xamarin/CartoMobileSDK.%s.nuspec.template' % (baseDir, target), 'r') as f:
+  with open('%s/extensions/scripts/xamarin/CartoMobileSDK.%s.nuspec.template' % (baseDir, target), 'r') as f:
     nuspecFile = string.Template(f.read()).safe_substitute({ 'baseDir': baseDir, 'buildDir': buildDir, 'configuration': args.configuration, 'nativeConfiguration': args.nativeconfiguration, 'version': version })
   with open('%s/CartoMobileSDK.%s.nuspec' % (buildDir, target), 'w') as f:
     f.write(nuspecFile)
 
   if not nuget(args, buildDir,
     'pack',
-    '%s/CartoMobileSDK.%s.nuspec' % (buildDir, target)
+    '%s/CartoMobileSDK.%s.nuspec' % (buildDir, target),
+    '-BasePath', '/'
   ):
     return False
 

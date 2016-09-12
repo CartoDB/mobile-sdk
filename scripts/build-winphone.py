@@ -86,7 +86,7 @@ def buildWinPhoneVSIX(args):
   buildDir = getBuildDir('winphone_vsix10')
   distDir = getDistDir('winphone10')
 
-  with open('%s/scripts/winphone10/CartoMobileSDK.WinPhone.VSIX.csproj.template' % baseDir, 'r') as f:
+  with open('%s/extensions/scripts/winphone10/CartoMobileSDK.WinPhone.VSIX.csproj.template' % baseDir, 'r') as f:
     csProjFile = string.Template(f.read()).safe_substitute({ 'baseDir': baseDir, 'buildDir': buildDir, 'configuration': args.configuration, 'nativeConfiguration': args.nativeconfiguration })
   with open('%s/CartoMobileSDK.WinPhone.VSIX.csproj' % buildDir, 'w') as f:
     f.write(csProjFile)
@@ -108,7 +108,7 @@ def buildWinPhoneNuget(args):
   distDir = getDistDir('winphone10')
   version = args.buildversion
 
-  with open('%s/scripts/winphone10/CartoMobileSDK.WinPhone.nuspec.template' % baseDir, 'r') as f:
+  with open('%s/extensions/scripts/winphone10/CartoMobileSDK.WinPhone.nuspec.template' % baseDir, 'r') as f:
     nuspecFile = string.Template(f.read()).safe_substitute({ 'baseDir': baseDir, 'buildDir': buildDir, 'configuration': args.configuration, 'nativeConfiguration': args.nativeconfiguration, 'version': version })
   with open('%s/CartoMobileSDK.WinPhone.nuspec' % buildDir, 'w') as f:
     f.write(nuspecFile)
@@ -124,7 +124,8 @@ def buildWinPhoneNuget(args):
 
   if not nuget(args, buildDir,
     'pack',
-    '%s/CartoMobileSDK.WinPhone.nuspec' % buildDir
+    '%s/CartoMobileSDK.WinPhone.nuspec' % buildDir,
+    '-BasePath', '/'
   ):
     return False
 

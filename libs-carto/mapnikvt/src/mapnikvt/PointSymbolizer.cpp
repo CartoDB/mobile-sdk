@@ -8,8 +8,11 @@ namespace carto { namespace mvt {
 
         updateBindings(exprContext);
 
+        vt::CompOp compOp = convertCompOp(_compOp);
+
+        float fontScale = symbolizerContext.getSettings().getFontScale();
+        float bitmapScale = fontScale;
         std::string file = _file;
-        float bitmapScale = 1.0f;
         std::shared_ptr<const vt::Bitmap> bitmap;
         if (!file.empty()) {
             bitmap = symbolizerContext.getBitmapManager()->loadBitmap(file);
@@ -25,34 +28,53 @@ namespace carto { namespace mvt {
                 bitmap = createRectangleBitmap(RECTANGLE_SIZE);
                 symbolizerContext.getBitmapManager()->storeBitmap(file, bitmap);
             }
-            bitmapScale = 4.0f / RECTANGLE_SIZE;
+            bitmapScale = fontScale * 4.0f / RECTANGLE_SIZE;
         }
 
-        vt::BitmapLabelStyle style(vt::LabelOrientation::BILLBOARD_2D, _fill * _opacity, symbolizerContext.getFontManager()->getNullFont(), bitmap, _transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScale, bitmapScale, 1)));
+        std::shared_ptr<const vt::FloatFunction> widthFunc;
+        ExpressionFunctionBinder<float>().bind(&widthFunc, std::make_shared<ConstExpression>(Value(_width * fontScale))).update(exprContext);
+        std::shared_ptr<const vt::ColorFunction> fillFunc;
+        ExpressionFunctionBinder<vt::Color>().bind(&fillFunc, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), [this](const Value& val) -> vt::Color {
+            return convertColor(val);
+        }).update(exprContext);
+        std::shared_ptr<const vt::FloatFunction> opacityFunc;
+        ExpressionFunctionBinder<float>().bind(&opacityFunc, std::make_shared<ConstExpression>(Value(_opacity))).update(exprContext);
 
+        vt::PointStyle pointStyle(compOp, vt::PointOrientation::BILLBOARD_2D, fillFunc, opacityFunc, widthFunc, symbolizerContext.getGlyphMap(), bitmap, _transform * cglib::scale3_matrix(cglib::vec3<float>(1.0f, (bitmap->height * bitmapScale) / (bitmap->width * bitmapScale), 1)));
+
+        std::vector<std::pair<long long, vt::TileLayerBuilder::Vertex>> pointInfos;
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
+            long long localId = featureCollection.getLocalId(index);
             if (auto pointGeometry = std::dynamic_pointer_cast<const PointGeometry>(featureCollection.getGeometry(index))) {
                 for (const auto& vertex : pointGeometry->getVertices()) {
-                    long long id = getBitmapId(featureCollection.getId(index), file);
-                    layerBuilder.addBitmapLabel(id, 0, vertex, 0, style);
+                    pointInfos.emplace_back(localId, vertex);
                 }
             }
             else if (auto lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(featureCollection.getGeometry(index))) {
                 for (const auto& vertex : lineGeometry->getMidPoints()) {
-                    long long id = getBitmapId(featureCollection.getId(index), file);
-                    layerBuilder.addBitmapLabel(id, 0, vertex, 0, style);
+                    pointInfos.emplace_back(localId, vertex);
                 }
             }
             else if (auto polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(featureCollection.getGeometry(index))) {
                 for (const auto& vertex : polygonGeometry->getSurfacePoints()) {
-                    long long id = getBitmapId(featureCollection.getId(index), file);
-                    layerBuilder.addBitmapLabel(id, 0, vertex, 0, style);
+                    pointInfos.emplace_back(localId, vertex);
                 }
             }
             else {
                 _logger->write(Logger::Severity::WARNING, "Unsupported geometry for PointSymbolizer");
             }
         }
+
+        std::size_t pointInfoIndex = 0;
+        layerBuilder.addPoints([&](long long& id, vt::TileLayerBuilder::Vertex& vertex) {
+            if (pointInfoIndex >= pointInfos.size()) {
+                return false;
+            }
+            id = pointInfos[pointInfoIndex].first;
+            vertex = pointInfos[pointInfoIndex].second;
+            pointInfoIndex++;
+            return true;
+        }, pointStyle);
     }
 
     void PointSymbolizer::bindParameter(const std::string& name, const std::string& value) {
@@ -72,7 +94,7 @@ namespace carto { namespace mvt {
             bind(&_transform, parseStringExpression(value), &PointSymbolizer::convertTransform);
         }
         else {
-            Symbolizer::bindParameter(name, value);
+            GeometrySymbolizer::bindParameter(name, value);
         }
     }
 

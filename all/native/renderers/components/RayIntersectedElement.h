@@ -33,7 +33,10 @@ namespace carto {
 
         template <typename T>
         std::shared_ptr<T> getElement() const {
-            return boost::any_cast<std::shared_ptr<T> >(_element);
+            if (auto element = boost::any_cast<std::shared_ptr<T> >(&_element)) {
+                return *element;
+            }
+            return std::shared_ptr<T>();
         }
     
         const std::shared_ptr<Layer>& getLayer() const;

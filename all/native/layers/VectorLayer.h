@@ -67,9 +67,9 @@ namespace carto {
         std::shared_ptr<VectorElementEventListener> getVectorElementEventListener() const;
         /**
          * Sets the vector element event listener.
-         * @param vectorElementEventListener The vector element event listener.
+         * @param eventListener The vector element event listener.
          */
-        void setVectorElementEventListener(const std::shared_ptr<VectorElementEventListener>& vectorElementEventListener);
+        void setVectorElementEventListener(const std::shared_ptr<VectorElementEventListener>& eventListener);
     
         virtual bool isUpdateInProgress() const;
         

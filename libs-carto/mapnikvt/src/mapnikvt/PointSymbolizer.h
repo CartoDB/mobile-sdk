@@ -7,12 +7,12 @@
 #ifndef _CARTO_MAPNIKVT_POINTSYMBOLIZER_H_
 #define _CARTO_MAPNIKVT_POINTSYMBOLIZER_H_
 
-#include "Symbolizer.h"
+#include "GeometrySymbolizer.h"
 
 namespace carto { namespace mvt {
-    class PointSymbolizer : public Symbolizer {
+    class PointSymbolizer : public GeometrySymbolizer {
     public:
-        explicit PointSymbolizer(std::shared_ptr<Logger> logger) : Symbolizer(std::move(logger)) { }
+        explicit PointSymbolizer(std::shared_ptr<Logger> logger) : GeometrySymbolizer(std::move(logger)) { }
 
         virtual void build(const FeatureCollection& featureCollection, const FeatureExpressionContext& exprContext, const SymbolizerContext& symbolizerContext, vt::TileLayerBuilder& layerBuilder) override;
 

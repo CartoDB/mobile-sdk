@@ -51,7 +51,7 @@ namespace carto {
         url = NetworkUtils::BuildURLFromParameters(url, urlParams);
 
         // Perform HTTP request
-        HTTPClient client(false);
+        HTTPClient client(Log::IsShowDebug());
         std::shared_ptr<BinaryData> responseData;
         std::map<std::string, std::string> responseHeaders;
         if (client.get(url, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
