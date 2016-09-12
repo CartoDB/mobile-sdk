@@ -95,7 +95,7 @@ namespace {
 
     class HTTPCallbackProxy : public Microsoft::WRL::RuntimeClass<
         Microsoft::WRL::RuntimeClassFlags< Microsoft::WRL::RuntimeClassType::WinRtClassicComMix >,
-        IXMLHTTPRequest2Callback>
+        IXMLHTTPRequest3Callback>
     {
     public:
         typedef std::function<bool(int, const std::map<std::string, std::string>&)> HeadersFn;
@@ -159,9 +159,8 @@ namespace {
             IXMLHTTPRequest2 *pXHR,
             ISequentialStream *pResponseStream)
         {
-            std::vector<unsigned char> data;
             while (true) {
-                unsigned char buf[1024];
+                unsigned char buf[4096];
                 unsigned long bytesRead = 0;
                 HRESULT hr = pResponseStream->Read(buf, sizeof(buf), &bytesRead);
                 if (FAILED(hr)) {
@@ -173,12 +172,10 @@ namespace {
                     break;
                 }
 
-                data.insert(data.end(), &buf[0], &buf[bytesRead]);
-            }
-
-            if (!_dataFn(data.data(), data.size())) {
-                _finishFn(false);
-                return E_ABORT;
+                if (!_dataFn(&buf[0], bytesRead)) {
+                    _finishFn(false);
+                    return E_ABORT;
+                }
             }
             return S_OK;
         }
@@ -196,6 +193,25 @@ namespace {
             HRESULT hrError)
         {
             _finishFn(false);
+            return S_OK;
+        }
+
+        STDMETHODIMP OnClientCertificateRequested(
+            IXMLHTTPRequest3 *pXHR,
+            DWORD cIssuerList,
+            const WCHAR **rgpwszIssuerList
+        )
+        {
+            return E_NOTIMPL;
+        }
+
+        STDMETHODIMP OnServerCertificateReceived(
+            IXMLHTTPRequest3 *pXHR,
+            DWORD dwCertificateErrors,
+            DWORD cServerCertificateChain,
+            const XHR_CERT *rgServerCertificateChain
+        )
+        {
             return S_OK;
         }
 
@@ -230,10 +246,14 @@ namespace carto {
             throw NetworkException("Failed to create XMLHTTP object", request.url);
         }
 
-        Microsoft::WRL::ComPtr<IXMLHTTPRequest2> httpRequest2;
-        httpRequest2.Attach(static_cast<IXMLHTTPRequest2*>(mqi.pItf));
+        Microsoft::WRL::ComPtr<IXMLHTTPRequest3> httpRequest3;
+        httpRequest3.Attach(static_cast<IXMLHTTPRequest3*>(mqi.pItf));
 
-        std::shared_ptr<std::remove_pointer<::HANDLE>::type> resultEvent(::CreateEventExA(NULL, NULL, 0, EVENT_MODIFY_STATE | SYNCHRONIZE), &::CloseHandle);
+        HANDLE event = ::CreateEventExA(NULL, NULL, 0, EVENT_MODIFY_STATE | SYNCHRONIZE);
+        if (!event) {
+            throw NetworkException("Failed to create event", request.url);
+        }
+        std::shared_ptr<std::remove_pointer<::HANDLE>::type> resultEvent(event, &::CloseHandle);
 
         bool cancel = false;
         auto finishFn = [&](bool success) {
@@ -247,11 +267,12 @@ namespace carto {
             throw NetworkException("Failed to initialize callback proxy", request.url);
         }
 
-        httpRequest2->SetProperty(XHR_PROP_NO_DEFAULT_HEADERS, XHR_CRED_PROMPT_NONE);
-        httpRequest2->SetProperty(XHR_PROP_NO_AUTH, XHR_AUTH_NONE);
-        httpRequest2->SetProperty(XHR_PROP_NO_DEFAULT_HEADERS, FALSE);
+        httpRequest3->SetProperty(XHR_PROP_NO_DEFAULT_HEADERS, XHR_CRED_PROMPT_NONE);
+        httpRequest3->SetProperty(XHR_PROP_NO_AUTH, XHR_AUTH_NONE);
+        httpRequest3->SetProperty(XHR_PROP_NO_DEFAULT_HEADERS, FALSE);
+        httpRequest3->SetProperty(XHR_PROP_QUERY_STRING_UTF8, TRUE);
 
-        hr = httpRequest2->Open(to_wstring(request.method).c_str(),
+        hr = httpRequest3->Open(to_wstring(request.method).c_str(),
             to_wstring(request.url).c_str(),
             callbackProxy.Get(),
             nullptr,
@@ -264,7 +285,7 @@ namespace carto {
         }
 
         for (auto it = request.headers.begin(); it != request.headers.end(); it++) {
-            httpRequest2->SetRequestHeader(to_wstring(it->first).c_str(), to_wstring(it->second).c_str());
+            httpRequest3->SetRequestHeader(to_wstring(it->first).c_str(), to_wstring(it->second).c_str());
         }
 
         if (!request.contentType.empty()) {
@@ -274,10 +295,10 @@ namespace carto {
                 throw NetworkException("Failed to initialize HTTP POST stream", request.url);
             }
 
-            hr = httpRequest2->Send(postStream.Get(), request.body.size());
+            hr = httpRequest3->Send(postStream.Get(), request.body.size());
         }
         else {
-            hr = httpRequest2->Send(nullptr, 0);
+            hr = httpRequest3->Send(nullptr, 0);
         }
 
         if (FAILED(hr)) {
