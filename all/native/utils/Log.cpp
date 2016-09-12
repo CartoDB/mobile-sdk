@@ -35,6 +35,7 @@ namespace carto {
     
     static void OutputLog(LogType logType, const std::string& tag, const char* text) {
         OutputDebugStringA(text);
+        OutputDebugStringA("\n");
     }
 #endif
 
