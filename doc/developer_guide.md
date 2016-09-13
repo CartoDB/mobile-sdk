@@ -240,7 +240,7 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
-  #import &lt;CartoMobileSDK/CartoMobileSDK.h&lt;
+  #import <CartoMobileSDK/CartoMobileSDK.h>
 
   /*
    * A custom map event listener that displays information about map events and creates pop-ups.
