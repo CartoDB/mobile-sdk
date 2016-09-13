@@ -724,7 +724,7 @@ For mobile maps, each map layer is required to have a **DataSource**, which defi
 
 - `LocalVectorDataSource` stores data in memory and is used for adding vector objects to the map, per each user session
 
-**Tip:** For details about selecting different DataSources for your mobile map layers, see [Loading Mobile Data](/docs/carto-engine/mobile-sdk/loading-mobile-data/).
+**Tip:** For details about selecting different DataSources for your mobile map layers, see [Loading Map Data](/docs/carto-engine/mobile-sdk/loading-map-data/).
 
 ### Basemap
 
