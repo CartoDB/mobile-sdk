@@ -324,14 +324,14 @@ If using iOS as the mobile platform, follow this implementation procedure.
   - You must replace `YOUR_LICENSE_KEY` with your [Mobile Apps and API Key](#registering-your-mobile-app) in the code below
 
 {% highlight objc %}
-#import 
+#import  <GLKit/GLKit.h>
 
 @interface ViewController : GLKViewController
 
 @end
 
 #import "ViewController.h"
-#import 
+#import <CartoMobileSDK/CartoMobileSDK.h>
 
 @implementation ViewController
 
