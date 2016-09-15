@@ -81,10 +81,10 @@ url "https://nutifront.s3.amazonaws.com/sdk_snapshots/sdk4-ios-snapshot-latest.z
 
 // 1. To locate the downloaded package, ensure you enable "Show preview" in Xamarin Studio
 
-
 // 2. Download CartoMobileSDK nuget for the Xamarin SDK package
 
-url "https://www.nuget.org/packages/CartoMobileSDK/"
+url for Android: "https://www.nuget.org/packages/CartoMobileSDK.Android/"
+url for iOS: "https://www.nuget.org/packages/CartoMobileSDK.iOS/"
 
 
 {% endhighlight %}
@@ -93,7 +93,8 @@ url "https://www.nuget.org/packages/CartoMobileSDK/"
   <div class="Carousel-item js-Tabpanes-item">
   {% highlight groovy %}
 
-// Windows Phone 10 SDK is not yet public. Please contact mobile-support@carto.com if you are interested.
+Use NuGet package manager in Visual Studio:
+Search for "CartoMobileSDK.WinPhone10" or use url: "https://www.nuget.org/packages/CartoMobileSDK.WinPhone10"
 
 {% endhighlight %}
 
@@ -110,9 +111,9 @@ _**Note:** The current version, 4.0.0, is a beta release. These zip files are su
 
 - iOS: [sdk4-ios-snapshot-latest.zip](https://nutifront.s3.amazonaws.com/sdk_snapshots/sdk4-ios-snapshot-latest.zip)
 
-- Xamarin: there is no individual download package for Xamarin, download [nuget](https://www.nuget.org/packages/CartoMobileSDK/) instead
+- Xamarin: there is no individual download package for Xamarin, download [nuget for iOS Xamarin](https://www.nuget.org/packages/CartoMobileSDK.iOS) and/or [nuget for Android Xamarin](https://www.nuget.org/packages/CartoMobileSDK.Android) 
 
-- Windows Phone: please [contact us](@mailto:mobile-support@carto.com) if you are interested
+- Windows Phone: please use [NuGet package CartoMobileSDK.WinPhone10](https://www.nuget.org/packages/CartoMobileSDK.WinPhone10) if you are interested
 
 ## Registering your Mobile App
 
@@ -724,7 +725,7 @@ For mobile maps, each map layer is required to have a **DataSource**, which defi
 
 - `LocalVectorDataSource` stores data in memory and is used for adding vector objects to the map, per each user session
 
-**Tip:** For details about selecting different DataSources for your mobile map layers, see [Loading Mobile Data](/docs/carto-engine/mobile-sdk/loading-mobile-data/).
+**Tip:** For details about selecting different DataSources for your mobile map layers, see [Loading Map Data](/docs/carto-engine/mobile-sdk/loading-map-data/).
 
 ### Basemap
 

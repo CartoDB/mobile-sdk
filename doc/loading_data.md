@@ -1,4 +1,4 @@
-# Loading Mobile Data
+# Loading Map Data
 
 The following DataSources are available for the Mobile SDK, and are supported on all mobile platforms.
 
