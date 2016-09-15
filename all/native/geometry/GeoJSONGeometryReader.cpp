@@ -79,6 +79,9 @@ namespace carto {
             throw ParseException("Wrong JSON type for feature collection");
         }
 
+        if (!value.HasMember("type")) {
+            throw ParseException("Missing type information from feature collection");
+        }
         std::string type = value["type"].GetString();
         if (type != "FeatureCollection") {
              throw ParseException("Illegal type for the feature collection");
@@ -99,13 +102,19 @@ namespace carto {
             throw ParseException("Wrong JSON type for feature");
         }
 
+        if (!value.HasMember("type")) {
+            throw ParseException("Missing type information from feature");
+        }
         std::string type = value["type"].GetString();
         if (type != "Feature") {
              throw ParseException("Illegal type for the feature");
         }
 
         std::shared_ptr<Geometry> geometry = readGeometry(value["geometry"]);
-        Variant properties = readProperties(value["properties"]);
+        Variant properties;
+        if (value.HasMember("properties")) {
+            properties = readProperties(value["properties"]);
+        }
         return std::make_shared<Feature>(geometry, properties);
     }
 
@@ -114,6 +123,9 @@ namespace carto {
             throw ParseException("Wrong JSON type for geometry");
         }
 
+        if (!value.HasMember("type")) {
+            throw ParseException("Missing type information from geometry");
+        }
         std::string type = value["type"].GetString();
         if (type == "Point") {
             return std::make_shared<PointGeometry>(readPoint(value["coordinates"]));
