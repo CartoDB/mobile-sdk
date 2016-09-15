@@ -401,7 +401,7 @@ If using iOS as the mobile platform, follow this implementation procedure.
 
 If using Xamarin as the mobile platform, follow these implementation procedures for Xamarin (Android) and Xamarin (iOS).
 
-1. Add library as nuget [CartoMobileSDK](https://www.nuget.org/packages/CartoMobileSDK/) from the main repo, and add to your mobile app
+1. Add library as [nuget CartoMobileSDK.iOS](https://www.nuget.org/packages/CartoMobileSDK.iOS) and/or [nuget CartoMobileSDK.Android](https://www.nuget.org/packages/CartoMobileSDK.Android) from the main repo, and add to your mobile app. You may need to enable 
 
 2. [Register your mobile app](#registering-your-mobile-app) to get the API Key
 
