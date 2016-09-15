@@ -48,9 +48,9 @@ namespace carto { namespace mvt {
             }
         }
 
-        bool advanceToIndex(long long tileIndex) {
-            if (tileIndex >= _tileIndexBase && tileIndex < _tileIndexBase + _layer.features_size()) {
-                _index = static_cast<std::size_t>(tileIndex - _tileIndexBase);
+        bool findByLocalId(long long localId) {
+            if (localId >= _tileIndexBase && localId < _tileIndexBase + _layer.features_size()) {
+                _index = static_cast<std::size_t>(localId - _tileIndexBase);
                 return true;
             }
             return false;
@@ -64,11 +64,11 @@ namespace carto { namespace mvt {
             _index++;
         }
 
-        virtual long long getTileIndex() const override {
+        virtual long long getLocalId() const override {
             return _tileIndexBase + _index;
         }
 
-        virtual long long getFeatureId() const override {
+        virtual long long getGlobalId() const override {
             const vector_tile::Tile::Feature& feature = _layer.features(_index);
             if (feature.id() != 0) {
                 return feature.id();
@@ -343,13 +343,13 @@ namespace carto { namespace mvt {
         _buffer = buffer;
     }
 
-    std::shared_ptr<Feature> MBVTFeatureDecoder::getFeature(long long tileIndex, std::string& layerName) const {
+    std::shared_ptr<Feature> MBVTFeatureDecoder::getFeature(long long localId, std::string& layerName) const {
         for (int i = 0; i < _tile->layers_size(); i++) {
             std::map<std::vector<int>, std::shared_ptr<FeatureData>> featureDataCache;
             MBVTFeatureIterator it(*_tile, _tile->layers(i), nullptr, _transform, _clipBox, _buffer, featureDataCache);
-            if (it.advanceToIndex(tileIndex)) {
+            if (it.findByLocalId(localId)) {
                  layerName = _tile->layers(i).name();
-                 return std::make_shared<Feature>(it.getFeatureId(), it.getGeometry(), it.getFeatureData());
+                 return std::make_shared<Feature>(it.getGlobalId(), it.getGeometry(), it.getFeatureData());
             }
         }
         return std::shared_ptr<Feature>();

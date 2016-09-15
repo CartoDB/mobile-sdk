@@ -25,8 +25,8 @@ namespace carto { namespace mvt {
             virtual bool valid() const = 0;
             virtual void advance() = 0;
 
-            virtual long long getTileIndex() const = 0;
-            virtual long long getFeatureId() const = 0;
+            virtual long long getLocalId() const = 0;
+            virtual long long getGlobalId() const = 0;
             virtual std::shared_ptr<const FeatureData> getFeatureData() const = 0;
             virtual std::shared_ptr<const Geometry> getGeometry() const = 0;
         };
