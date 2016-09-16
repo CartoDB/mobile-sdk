@@ -17,15 +17,15 @@ After that, there are several rules you should follow when a new pull request is
 
 ## Directories
 
-* all/native - c++ sources for all platforms, main part of the SDK
+* all/native - C++ sources for all platforms, main part of the SDK
 * all/modules - Swig configuration files for all platforms
-* android - Android-specific proxies (Java, C#) code, Swig wrapper config and helpers
-* ios - iOS-specific proxies (Objective-C, C#) code, Swig wrapper config and helpers
-* winphone - Windows Phone-specific C# proxies, Swig config and native helpers
+* android - Android-specific (C++, Java, C#) code, Swig wrapper config and helpers
+* ios - iOS-specific (C++, Objective-C, C#) code, Swig wrapper config and helpers
+* winphone - Windows Phone-specific (C++, C#) code, Swig wrapper config and helpers
 * dotnet - generic C# code shared by Xamarin and Windows Phone builds
-* assets - images and style files sources used for map rendering. Converted to c++ headers
+* assets - images and style files sources used for map rendering. Converted to C++ headers
 * doc - documentation, published in CARTO docs site
-* scripts - scripts for building SDK (using CMake, Swig and other tools)
+* scripts - scripts for building SDK (using Python, CMake, Swig and other tools)
 * libs-carto - parts of SDK code which is used as internal library, have no dependencies to main SDK code and can be technically used as stand-alone code.
 * libs-carto/cartocss - CartoCSS parser, dependent on libs-carto/mapnikvt
 * libs-carto/mapnikvt - "Mapnik compatible" style parser and interpreter for vector tiles. Dependent on libs-carto/vt.
