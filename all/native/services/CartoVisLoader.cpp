@@ -143,6 +143,7 @@ namespace carto {
         _defaultVectorLayerMode(false),
         _strictMode(false),
         _vectorTileAssetPackage(),
+        _defaultUsername(),
         _mutex()
     {
     }
@@ -206,6 +207,16 @@ namespace carto {
             throw ParseException("Failed to parse visJSON configuration", result);
         }
 
+        // Set default username
+        std::string hostName = NetworkUtils::ParseURLHostName(visURL);
+        std::string::size_type hostSepPos = hostName.find('.');
+        if (hostSepPos != std::string::npos) {
+            _defaultUsername = hostName.substr(0, hostSepPos);
+        }
+        else {
+            _defaultUsername.clear();
+        }
+
         // Base options
         if (auto center = getMapPos(visJSON.get("center"))) {
             builder->setCenter(*center);
@@ -257,6 +268,9 @@ namespace carto {
     void CartoVisLoader::configureMapsService(CartoMapsService& mapsService, const picojson::value& options) const {
         if (auto userName = getString(options.get("user_name"))) {
             mapsService.setUsername(*userName);
+        }
+        else {
+            mapsService.setUsername(_defaultUsername);
         }
 
         if (auto mapsAPITemplate = getString(options.get("maps_api_template"))) {
@@ -348,8 +362,8 @@ namespace carto {
                 layerInfos.push_back(*layerInfo);
             }
         }
-        else if (type == "torque") {
-            if (auto layerInfo = createTorqueLayer(options, layerConfig.get("legend"))) {
+        else if (type == "torque" || type == "cartodb" || type == "carto") {
+            if (auto layerInfo = createCartoLayer(type, options, layerConfig.get("legend"))) {
                 layerInfos.push_back(*layerInfo);
             }
         }
@@ -443,7 +457,7 @@ namespace carto {
         return LayerInfo(solidLayer, attributes);
     }
 
-    boost::optional<CartoVisLoader::LayerInfo> CartoVisLoader::createTorqueLayer(const picojson::value& options, const picojson::value& legend) const {
+    boost::optional<CartoVisLoader::LayerInfo> CartoVisLoader::createCartoLayer(const std::string& type, const picojson::value& options, const picojson::value& legend) const {
         std::vector<std::shared_ptr<Layer> > layers;
 
         if (options.get("named_map").is<picojson::object>()) {
@@ -472,26 +486,39 @@ namespace carto {
         else {
             // Build map config for Maps service
             std::map<std::string, Variant> layerOptions;
-            layerOptions["table_name"] = Variant(*getString(options.get("table_name")));
-            if (auto query = getString(options.get("query"))) {
-                layerOptions["sql"] = Variant(*query);
+
+            if (auto tableName = getString(options.get("table_name"))) {
+                layerOptions["table_name"] = Variant(*tableName);
             }
+            else if (auto layerName = getString(options.get("layer_name"))) {
+                layerOptions["table_name"] = Variant(*layerName);
+            }
+
+            layerOptions["sql"] = Variant(std::string("SELECT * FROM ") + layerOptions["table_name"].getString());
             if (auto sql = getString(options.get("sql"))) {
                 layerOptions["sql"] = Variant(*sql);
             }
-            if (auto tileStyle = getString(options.get("tile_style"))) {
-                layerOptions["cartocss"] = Variant(*tileStyle);
+            else if (auto query = getString(options.get("query"))) {
+                layerOptions["sql"] = Variant(*query);
             }
+
             if (auto cartoCSS = getString(options.get("cartocss"))) {
                 layerOptions["cartocss"] = Variant(*cartoCSS);
             }
-            layerOptions["cartocss_version"] = Variant("2.1.1");
+            else if (auto tileStyle = getString(options.get("tile_style"))) {
+                layerOptions["cartocss"] = Variant(*tileStyle);
+            }
+            layerOptions["cartocss_version"] = Variant(std::string("2.1.1"));
             if (auto cartoCSSVersion = getString(options.get("cartocss_version"))) {
                 layerOptions["cartocss_version"] = Variant(*cartoCSSVersion);
             }
 
+            if (auto source = getString(options.get("source"))) {
+                layerOptions["source"] = Variant(*source);
+            }
+
             std::map<std::string, Variant> layerConfig;
-            layerConfig["type"] = Variant("torque");
+            layerConfig["type"] = Variant(type);
             layerConfig["options"] = Variant(layerOptions);
 
             std::map<std::string, Variant> mapConfig;
@@ -563,9 +590,6 @@ namespace carto {
                 if (layerConfig.contains("layer_name")) {
                     attributes["name"] = layerConfig.get("layer_name");
                 }
-                else if (options.contains("laye_name")) {
-                    attributes["name"] = options.get("layer_name");
-                }
                 layerAttributes[layer] = attributes;
             }
         }
@@ -629,9 +653,6 @@ namespace carto {
                 }
                 if (layerConfig.contains("layer_name")) {
                     attributes["name"] = layerConfig.get("layer_name");
-                }
-                else if (options.contains("laye_name")) {
-                    attributes["name"] = options.get("layer_name");
                 }
                 layerAttributes[layer] = attributes;
             }

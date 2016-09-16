@@ -105,13 +105,15 @@ namespace carto {
 
         boost::optional<LayerInfo> createTiledLayer(const picojson::value& options) const;
         boost::optional<LayerInfo> createBackgroundLayer(const picojson::value& options) const;
-        boost::optional<LayerInfo> createTorqueLayer(const picojson::value& options, const picojson::value& legend) const;
+        boost::optional<LayerInfo> createCartoLayer(const std::string& type, const picojson::value& options, const picojson::value& legend) const;
         std::vector<LayerInfo> createNamedLayers(const picojson::value& options) const;
         std::vector<LayerInfo> createLayerGroup(const picojson::value& options, const picojson::value& infoWindow) const;
 
         bool _defaultVectorLayerMode;
         bool _strictMode;
         std::shared_ptr<AssetPackage> _vectorTileAssetPackage;
+
+        mutable std::string _defaultUsername;
 
         mutable std::recursive_mutex _mutex;
     };
