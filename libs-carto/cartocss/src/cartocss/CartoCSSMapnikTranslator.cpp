@@ -59,7 +59,7 @@ namespace carto { namespace css {
             }
             auto it2 = std::find_if(propertyLists.begin(), propertyLists.end(), [&](const std::pair<std::string, std::list<CartoCSSCompiler::Property>>& propertyListElement) { return propertyListElement.first == symbolizerId; });
             if (it2 == propertyLists.end()) {
-                it2 = propertyLists.insert(it2, std::make_pair(symbolizerId, std::list<CartoCSSCompiler::Property>()));
+                it2 = propertyLists.insert(it2, { symbolizerId, std::list<CartoCSSCompiler::Property>() });
             }
             it2->second.push_back(it->second);
         }

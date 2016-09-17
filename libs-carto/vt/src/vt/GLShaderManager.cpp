@@ -9,7 +9,7 @@ namespace carto { namespace vt {
     }
 
     GLuint GLShaderManager::createProgram(const std::string& programName, const ShaderContext& context) {
-        auto it = _programMap.find(std::make_pair(programName, context));
+        auto it = _programMap.find({ programName, context });
         if (it != _programMap.end()) {
             return it->second;
         }
@@ -78,7 +78,7 @@ namespace carto { namespace vt {
             throw;
         }
 
-        _programMap[std::make_pair(programName, context)] = program;
+        _programMap[{ programName, context }] = program;
         return program;
     }
 
