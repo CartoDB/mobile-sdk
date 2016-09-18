@@ -47,7 +47,8 @@ namespace carto { namespace css {
         void compileLayer(const std::string& layerName, const StyleSheet& styleSheet, std::list<LayerAttachment>& layerAttachments) const;
         
     private:
-        struct FilteredProperty : Property {
+        struct FilteredProperty {
+            Property property;
             std::vector<std::shared_ptr<const Predicate>> filters;
         };
 
