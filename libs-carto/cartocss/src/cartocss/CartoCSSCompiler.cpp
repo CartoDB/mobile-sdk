@@ -212,7 +212,7 @@ namespace carto { namespace css {
                     FilteredProperty prop;
                     prop.property.field = decl->getField();
                     prop.property.expression = decl->getExpression();
-                    prop.property.specificity = calculateSpecificity(selectorFilters, decl->getOrder());
+                    prop.property.specificity = calculateRuleSpecificity(selectorFilters, decl->getOrder());
                     prop.filters = optimizedSelectorFilters;
                     properties.push_back(prop);
                 }
@@ -240,7 +240,7 @@ namespace carto { namespace css {
         return false;
     }
     
-    CartoCSSCompiler::Property::Specificity CartoCSSCompiler::calculateSpecificity(const std::vector<std::shared_ptr<const Predicate>>& predicates, int order) {
+    CartoCSSCompiler::RuleSpecificity CartoCSSCompiler::calculateRuleSpecificity(const std::vector<std::shared_ptr<const Predicate>>& predicates, int order) {
         int layers = 0;
         int classes = 0;
         int filters = 0;
