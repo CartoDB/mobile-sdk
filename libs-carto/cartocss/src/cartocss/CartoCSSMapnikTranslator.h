@@ -31,6 +31,7 @@ namespace carto { namespace css {
         };
 
         explicit CartoCSSMapnikTranslator(std::shared_ptr<mvt::Logger> logger) : _logger(std::move(logger)) { }
+        virtual ~CartoCSSMapnikTranslator() = default;
 
         virtual std::shared_ptr<mvt::Rule> buildRule(const CartoCSSCompiler::PropertySet& propertySet, const std::shared_ptr<mvt::Map>& map, int zoom) const;
 
