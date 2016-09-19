@@ -30,7 +30,7 @@ namespace carto { namespace vt {
         void process(const std::vector<std::shared_ptr<TileLabel>>& labelList);
 
     private:
-        enum { GRID_RESOLUTION = 16 };
+        constexpr static int GRID_RESOLUTION = 16;
 
         struct Record {
             cglib::bbox2<float> bounds;

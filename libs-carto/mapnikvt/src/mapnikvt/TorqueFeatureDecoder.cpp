@@ -62,11 +62,11 @@ namespace carto { namespace mvt {
             }
         }
 
-        virtual long long getTileIndex() const override {
+        virtual long long getLocalId() const override {
             return _index0;
         }
 
-        virtual long long getFeatureId() const override {
+        virtual long long getGlobalId() const override {
             return 0;
         }
 
@@ -77,9 +77,8 @@ namespace carto { namespace mvt {
                 return it->second;
             }
 
-            std::vector<std::pair<std::string, Value>> dataMap(1);
-            dataMap[0] = std::make_pair(std::string("value"), Value(element.value));
-            auto featureData = std::make_shared<FeatureData>(FeatureData::GeometryType::POINT_GEOMETRY, std::move(dataMap));
+            ;
+            auto featureData = std::make_shared<FeatureData>(FeatureData::GeometryType::POINT_GEOMETRY, std::vector<std::pair<std::string, Value>>{ { std::string("value"), Value(element.value) } });
             _featureDataCache.emplace(element.value, featureData);
             return featureData;
         }

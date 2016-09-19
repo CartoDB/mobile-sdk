@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 project(cartocss)
 
 if(WIN32)
-add_definitions("-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -DBOOST_VARIANT_DO_NOT_USE_VARIADIC_TEMPLATES")
+add_definitions("-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS")
 endif(WIN32)
 
 if(APPLE)

@@ -28,7 +28,8 @@ namespace carto { namespace mvt {
 
         static std::shared_ptr<vt::BitmapPattern> createDashBitmapPattern(const std::vector<float>& strokeDashArray);
 
-        enum { MIN_SUPERSAMPLING_FACTOR = 2, MAX_SUPERSAMPLING_FACTOR = 16 };
+        constexpr static int MIN_SUPERSAMPLING_FACTOR = 2;
+        constexpr static int MAX_SUPERSAMPLING_FACTOR = 16;
 
         std::shared_ptr<const vt::ColorFunction> _stroke; // vt::Color(0xff000000)
         std::shared_ptr<const vt::FloatFunction> _strokeWidth; // 1.0f

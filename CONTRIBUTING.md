@@ -17,18 +17,18 @@ After that, there are several rules you should follow when a new pull request is
 
 ## Directories
 
-* all/native - c++ sources for all platforms, main part of the SDK
-* all/modules - swig configuration files
-* android - Android-specific proxies (Java, C#) code, swig wrapper config and helpers
-* assets - images and style files sources used for map rendering. Converted to c++ headers
+* all/native - C++ sources for all platforms, main part of the SDK
+* all/modules - Swig configuration files for all platforms
+* android - Android-specific (C++, Java, C#) code, Swig wrapper config and helpers
+* ios - iOS-specific (C++, Objective-C, C#) code, Swig wrapper config and helpers
+* winphone - Windows Phone-specific (C++, C#) code, Swig wrapper config and helpers
+* dotnet - generic C# code shared by Xamarin and Windows Phone builds
+* assets - images and style files sources used for map rendering. Converted to C++ headers
 * doc - documentation, published in CARTO docs site
-* dotnet - .NET-specific C# proxy code
-* ios - iOS-specific proxies (Objective-C, C#) code, swig wrapper config and helpers
+* scripts - scripts for building SDK (using Python, CMake, Swig and other tools)
 * libs-carto - parts of SDK code which is used as internal library, have no dependencies to main SDK code and can be technically used as stand-alone code.
 * libs-carto/cartocss - CartoCSS parser, dependent on libs-carto/mapnikvt
-* libs-carto/mapnikvt - "Mapnik compatible" style interpreter and renderer. Dependent on libs-carto/vt.
+* libs-carto/mapnikvt - "Mapnik compatible" style parser and interpreter for vector tiles. Dependent on libs-carto/vt.
 * libs-carto/vt - Low-level vector tile renderer
 * libs-carto/nml - Our specific 3D format (NML) and 3D Level-of-Detail 3D format (NML LOD Tree) readers and renderers
 * libs-carto/routing - Offline routing runtime using our specific route packages converted from OSRM
-* scripts - scripts for building SDK (using cmake, swig and other tools)
-* winphone - Windows Phone-specific C# proxies, swig config and native helpers

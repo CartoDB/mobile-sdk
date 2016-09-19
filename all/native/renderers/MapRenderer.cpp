@@ -606,9 +606,11 @@ namespace carto {
             if (element1.is3D() != element2.is3D()) {
                 return element1.is3D() > element2.is3D();
             }
-            double deltaDistance = element1.getDistance(viewState.getCameraPos()) - element2.getDistance(viewState.getCameraPos());
-            if (deltaDistance != 0) {
-                return deltaDistance < 0;
+            if (element1.is3D()) {
+                double deltaDistance = element1.getDistance(viewState.getCameraPos()) - element2.getDistance(viewState.getCameraPos());
+                if (deltaDistance != 0) {
+                    return deltaDistance < 0;
+                }
             }
             return element1.getOrder() > element2.getOrder();
         };

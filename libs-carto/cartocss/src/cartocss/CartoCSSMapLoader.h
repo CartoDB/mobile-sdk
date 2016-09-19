@@ -34,6 +34,7 @@ namespace carto { namespace css {
         };
 
         explicit CartoCSSMapLoader(std::shared_ptr<AssetLoader> assetLoader, std::shared_ptr<mvt::Logger> logger) : _assetLoader(std::move(assetLoader)), _logger(std::move(logger)) { }
+        virtual ~CartoCSSMapLoader() = default;
 
         void setIgnoreLayerPredicates(bool ignore) { _ignoreLayerPredicates = ignore; }
 
@@ -62,7 +63,7 @@ namespace carto { namespace css {
             return false;
         }
 
-        enum { MAX_ZOOM = 24 };
+        constexpr static int MAX_ZOOM = 24;
 
         std::shared_ptr<mvt::Map> buildMap(const StyleSheet& styleSheet, const std::vector<std::string>& layerNames, const std::vector<mvt::NutiParameter>& nutiParameters) const;
         void loadMapSettings(const std::map<std::string, Value>& mapProperties, mvt::Map::Settings& mapSettings) const;

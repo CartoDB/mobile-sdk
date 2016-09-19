@@ -2,6 +2,7 @@
 
 #include "CartoOnlineRoutingService.h"
 #include "components/Exceptions.h"
+#include "components/LicenseManager.h"
 #include "projections/Projection.h"
 #include "routing/RoutingProxy.h"
 #include "network/HTTPClient.h"
@@ -35,14 +36,19 @@ namespace carto {
         }
 
         std::map<std::string, std::string> params;
-        // TODO: temporarly remove additional parameters from the query as OSRM barks at these
-        //  params["appId"] = PlatformUtils::GetAppIdentifier();
-        //  params["deviceId"] = PlatformUtils::GetDeviceId();
-        //  params["platform"] = PlatformUtils::GetPlatformId();
-        //  params["sdk_build"] = _CARTO_MOBILE_SDK_VERSION;
-        std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
+        params["appId"] = PlatformUtils::GetAppIdentifier();
+        params["deviceId"] = PlatformUtils::GetDeviceId();
+        params["platform"] = PlatformUtils::GetPlatformId();
+        params["sdk_build"] = _CARTO_MOBILE_SDK_VERSION;
+        std::string appToken;
+        if (LicenseManager::GetInstance().getParameter("appToken", appToken)) {
+            params["appToken"] = appToken;
+        }
 
-        HTTPClient httpClient(false);
+        std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
+        Log::Debugf("CartoOnlineRoutingService::calculateRoute: Loading %s", url.c_str());
+
+        HTTPClient httpClient(Log::IsShowDebug());
         return RoutingProxy::CalculateRoute(httpClient, url, request);
     }
 

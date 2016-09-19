@@ -24,9 +24,10 @@ namespace carto { namespace mvt {
         static std::shared_ptr<vt::Bitmap> makeEllipseBitmap(float width, float height, const vt::Color& color, float strokeWidth, const vt::Color& strokeColor);
         static std::shared_ptr<vt::Bitmap> makeArrowBitmap(float width, float height, const vt::Color& color, float strokeWidth, const vt::Color& strokeColor);
 
-        enum { DEFAULT_CIRCLE_SIZE = 10 };
-        enum { DEFAULT_ARROW_WIDTH = 28, DEFAULT_ARROW_HEIGHT = 14 };
-        enum { SUPERSAMPLING_FACTOR = 4 };
+        constexpr static int DEFAULT_CIRCLE_SIZE = 10;
+        constexpr static int DEFAULT_ARROW_WIDTH = 28;
+        constexpr static int DEFAULT_ARROW_HEIGHT = 14;
+        constexpr static int SUPERSAMPLING_FACTOR = 4;
 
         std::string _file;
         std::string _placement = "point";

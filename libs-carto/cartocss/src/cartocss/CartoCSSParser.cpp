@@ -99,22 +99,48 @@ namespace carto { namespace css {
                     ;
 
                 expression =
-                    term											[_val = _1]
-                    >> *( (qi::lit("+") >> term)					[_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::ADD, _val, _1)]
-                        | (qi::lit("-") >> term)					[_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::SUB, _val, _1)]
+                    term0                                           [_val = _1]
+                    >> -((qi::lit("?") > expression > ':' > expression) [_val = phx::bind(&makeConditionalExpression, _val, _1, _2)]
+                        )
+                    ;
+
+                term0 =
+                    term1                                           [_val = _1]
+                    >> *( (qi::lit("&&") > term1)                   [_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::AND, _val, _1)]
+                        | (qi::lit("||") > term1)                   [_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::OR,  _val, _1)]
+                        )
+                    ;
+
+                term1 =
+                    term2                                           [_val = _1]
+                    >> *( (qi::lit("=~") > term2)                   [_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::MATCH, _val, _1)]
+                        | (qi::lit("=")  > term2)                   [_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::EQ,  _val, _1)]
+                        | (qi::lit("!=") > term2)                   [_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::NEQ, _val, _1)]
+                        | (qi::lit("<=") > term2)                   [_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::LTE, _val, _1)]
+                        | (qi::lit("<")  > term2)                   [_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::LT,  _val, _1)]
+                        | (qi::lit(">=") > term2)                   [_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::GTE, _val, _1)]
+                        | (qi::lit(">")  > term2)                   [_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::GT,  _val, _1)]
+                        )
+                    ;
+
+                term2 =
+                    term3											[_val = _1]
+                    >> *( (qi::lit("+") > term3)					[_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::ADD, _val, _1)]
+                        | (qi::lit("-") > term3)					[_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::SUB, _val, _1)]
                         )
                     ;
                 
-                term =
+                term3 =
                     unary											[_val = _1]
-                    >> *( (qi::lit("*") >> unary)					[_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::MUL, _val, _1)]
-                        | (qi::lit("/") >> unary)					[_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::DIV, _val, _1)]
+                    >> *( (qi::lit("*") > unary)					[_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::MUL, _val, _1)]
+                        | (qi::lit("/") > unary)					[_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::DIV, _val, _1)]
                         )
                     ;
                 
                 unary =
                       factor										[_val = _1]
-                    | (qi::lit("-") >> unary)			            [_val = phx::bind(&makeUnaryExpression, UnaryExpression::Op::NEG, _1)]
+                    | (qi::lit("-") > unary)			            [_val = phx::bind(&makeUnaryExpression, UnaryExpression::Op::NEG, _1)]
+                    | (qi::lit("!") > unary)                       [_val = phx::bind(&makeUnaryExpression, UnaryExpression::Op::NOT, _1)]
                     ;
 
                 factor =
@@ -171,7 +197,7 @@ namespace carto { namespace css {
             qi::rule<Iterator, Color()> color;
             qi::rule<Iterator, Value()> number, constant;
             qi::rule<Iterator, std::string()> propid, blockid, fieldid, unescapedfieldid, varid, funcid;
-            qi::rule<Iterator, std::shared_ptr<const Expression>(), Skipper<Iterator> > expressionlist, expression, term, unary, factor;
+            qi::rule<Iterator, std::shared_ptr<const Expression>(), Skipper<Iterator> > expressionlist, expression, term0, term1, term2, term3, unary, factor;
             qi::rule<Iterator, OpPredicate::Op()> op;
             qi::rule<Iterator, std::shared_ptr<const Predicate>(), Skipper<Iterator> > predicate;
             qi::rule<Iterator, Selector(), Skipper<Iterator> > selector;
@@ -236,6 +262,10 @@ namespace carto { namespace css {
                 return std::make_shared<BinaryExpression>(op, expr1, expr2);
             }
             
+            static std::shared_ptr<const Expression> makeConditionalExpression(const std::shared_ptr<const Expression>& cond, const std::shared_ptr<const Expression>& expr1, const std::shared_ptr<const Expression>& expr2) {
+                return std::make_shared<ConditionalExpression>(cond, expr1, expr2);
+            }
+
             static std::shared_ptr<const Predicate> makeMapPredicate() {
                 return std::make_shared<MapPredicate>();
             }

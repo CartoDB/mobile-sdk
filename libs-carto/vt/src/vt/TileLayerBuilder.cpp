@@ -618,7 +618,7 @@ namespace carto { namespace vt {
     }
 
     bool TileLayerBuilder::tesselateLine(const Vertices& points, char styleIndex, const StrokeMap::Stroke* stroke, const LineStyle& style) {
-        static const float minMiterDot = -0.8f;
+        constexpr static float minMiterDot = -0.8f;
 
         if (points.size() < 2) {
             return false;

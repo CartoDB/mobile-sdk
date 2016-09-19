@@ -45,12 +45,13 @@ namespace carto { namespace vt {
         void deinitializeRenderer();
 
         void startFrame(float dt);
-        bool render2D();
-        bool renderLabels(bool render2D, bool render3D);
-        bool render3D();
+        bool renderGeometry2D();
+        bool renderGeometry3D();
+        bool renderLabels(bool labels2D, bool labels3D);
         void endFrame();
 
-        bool findIntersections(const cglib::ray3<double>& ray, std::vector<std::tuple<TileId, double, long long>>& results) const;
+        bool findGeometryIntersections(const cglib::ray3<double>& ray, std::vector<std::tuple<TileId, double, long long>>& results, float radius, bool geom2D, bool geom3D) const;
+        bool findLabelIntersections(const cglib::ray3<double>& ray, std::vector<std::tuple<TileId, double, long long>>& results, float radius, bool labels2D, bool labels3D) const;
 
     private:
         using BitmapLabelMap = std::unordered_map<std::shared_ptr<const Bitmap>, std::vector<std::shared_ptr<TileLabel>>>;
@@ -124,8 +125,11 @@ namespace carto { namespace vt {
         void addRenderNode(RenderNode renderNode, std::multimap<int, RenderNode>& renderNodeMap) const;
         void updateLabels(const std::vector<std::shared_ptr<TileLabel>>& labels, float dOpacity) const;
 
-        void findTileGeometryIntersections(const std::shared_ptr<TileGeometry>& geometry, const cglib::ray3<float>& ray, std::vector<std::pair<float, long long>>& results) const;
-        void findLabelIntersections(const std::shared_ptr<TileLabel>& label, const cglib::ray3<double>& ray, std::vector<double>& results) const;
+        void findTileGeometryIntersections(const std::shared_ptr<TileGeometry>& geometry, const cglib::ray3<float>& ray, float radius, std::vector<std::pair<float, long long>>& results) const;
+        bool findLabelIntersection(const std::shared_ptr<TileLabel>& label, const cglib::ray3<double>& ray, float radius, double& result) const;
+
+        static cglib::vec3<float> extendOffset(const cglib::vec3<float>& offset, float radius);
+
         cglib::vec3<float> decodeVertex(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const;
         cglib::vec3<float> decodePointOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const;
         cglib::vec3<float> decodeLineBinormal(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const;

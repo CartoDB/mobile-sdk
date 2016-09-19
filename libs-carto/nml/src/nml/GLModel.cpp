@@ -30,7 +30,7 @@ namespace carto { namespace nml {
             const Mesh& mesh = model.meshes(i);
             auto glMesh = std::make_shared<GLMesh>(model.meshes(i));
             meshMap[mesh.id()] = glMesh;
-            _meshMap[mesh.id()] = std::make_pair(glMesh, std::shared_ptr<MeshOp>());
+            _meshMap[mesh.id()] = { glMesh, std::shared_ptr<MeshOp>() };
         }
     
         // Create mesh instances
@@ -87,7 +87,7 @@ namespace carto { namespace nml {
             }
         }
     
-        _meshMap[id] = std::make_pair(mesh, meshOp);
+        _meshMap[id] = { mesh, meshOp };
         
         std::shared_ptr<GLMesh> finalMesh = mesh;
         if (meshOp) {

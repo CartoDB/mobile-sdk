@@ -21,12 +21,12 @@
 namespace carto { namespace css {
     class CartoCSSCompiler {
     public:
+        using RuleSpecificity = std::tuple<int, int, int, int>;
+
         struct Property {
-            using Specificity = std::tuple<int, int, int, int>;
-            
             std::string field;
             std::shared_ptr<const Expression> expression;
-            Specificity specificity;
+            RuleSpecificity specificity;
         };
 
         struct PropertySet {
@@ -47,7 +47,8 @@ namespace carto { namespace css {
         void compileLayer(const std::string& layerName, const StyleSheet& styleSheet, std::list<LayerAttachment>& layerAttachments) const;
         
     private:
-        struct FilteredProperty : Property {
+        struct FilteredProperty {
+            Property property;
             std::vector<std::shared_ptr<const Predicate>> filters;
         };
 
@@ -60,7 +61,7 @@ namespace carto { namespace css {
         
         static bool isRedundantPropertySet(std::list<PropertySet>::iterator begin, std::list<PropertySet>::iterator end, const PropertySet& propertySet);
         
-        static Property::Specificity calculateSpecificity(const std::vector<std::shared_ptr<const Predicate>>& predicates, int order);
+        static RuleSpecificity calculateRuleSpecificity(const std::vector<std::shared_ptr<const Predicate>>& predicates, int order);
         
         ExpressionContext _context;
 

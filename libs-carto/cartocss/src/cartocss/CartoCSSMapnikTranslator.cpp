@@ -59,7 +59,7 @@ namespace carto { namespace css {
             }
             auto it2 = std::find_if(propertyLists.begin(), propertyLists.end(), [&](const std::pair<std::string, std::list<CartoCSSCompiler::Property>>& propertyListElement) { return propertyListElement.first == symbolizerId; });
             if (it2 == propertyLists.end()) {
-                it2 = propertyLists.insert(it2, std::make_pair(symbolizerId, std::list<CartoCSSCompiler::Property>()));
+                it2 = propertyLists.insert(it2, { symbolizerId, std::list<CartoCSSCompiler::Property>() });
             }
             it2->second.push_back(it->second);
         }
@@ -207,6 +207,9 @@ namespace carto { namespace css {
             case UnaryExpression::Op::NEG:
                 op = "-";
                 break;
+            case UnaryExpression::Op::NOT:
+                op = "!";
+                break;
             default:
                 throw TranslatorException("Unsupported unary operator type");
             }
@@ -218,6 +221,33 @@ namespace carto { namespace css {
             std::string subExpr2Str = buildExpressionString(binaryExpr->getExpression2(), false);
             std::string op;
             switch (binaryExpr->getOp()) {
+            case BinaryExpression::Op::AND:
+                op = "&&";
+                break;
+            case BinaryExpression::Op::OR:
+                op = "||";
+                break;
+            case BinaryExpression::Op::EQ:
+                op = "==";
+                break;
+            case BinaryExpression::Op::NEQ:
+                op = "!=";
+                break;
+            case BinaryExpression::Op::LT:
+                op = "<";
+                break;
+            case BinaryExpression::Op::LTE:
+                op = "<=";
+                break;
+            case BinaryExpression::Op::GT:
+                op = ">";
+                break;
+            case BinaryExpression::Op::GTE:
+                op = ">=";
+                break;
+            case BinaryExpression::Op::MATCH:
+                op = ".match";
+                break;
             case BinaryExpression::Op::ADD:
                 op = "+";
                 break;
@@ -234,6 +264,13 @@ namespace carto { namespace css {
                 throw TranslatorException("Unsupported binary operator type");
             }
             std::string exprStr = "(" + subExpr1Str + ")" + op + "(" + subExpr2Str + ")";
+            return (stringExpr ? "{" : "") + exprStr + (stringExpr ? "}" : "");
+        }
+        else if (auto condExpr = std::dynamic_pointer_cast<const ConditionalExpression>(expr)) {
+            std::string condStr = buildExpressionString(condExpr->getCondition(), false);
+            std::string subExpr1Str = buildExpressionString(condExpr->getExpression1(), false);
+            std::string subExpr2Str = buildExpressionString(condExpr->getExpression2(), false);
+            std::string exprStr = "(" + condStr + ")" + " ? " + "(" + subExpr1Str + ")" + " : " + "(" + subExpr2Str + ")";
             return (stringExpr ? "{" : "") + exprStr + (stringExpr ? "}" : "");
         }
         else if (auto funcExpr = std::dynamic_pointer_cast<const FunctionExpression>(expr)) {
@@ -386,7 +423,8 @@ namespace carto { namespace css {
                 std::string exprStr;
                 if (auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(expr)) {
                     exprStr = boost::lexical_cast<std::string>(buildValue(constExpr->getValue()));
-                } else {
+                }
+                else {
                     exprStr = buildExpressionString(expr, stringExpr);
                 }
                 symbolizer->setParameter(name, exprStr);

@@ -21,7 +21,7 @@ namespace carto { namespace mvt {
 
         static std::shared_ptr<vt::Bitmap> createRectangleBitmap(float size);
 
-        enum { RECTANGLE_SIZE = 4 };
+        constexpr static int RECTANGLE_SIZE = 4;
 
         std::string _file;
         vt::Color _fill = vt::Color(0xff000000);

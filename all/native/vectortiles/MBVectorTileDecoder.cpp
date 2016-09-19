@@ -346,21 +346,22 @@ namespace carto {
         return Const::MAX_SUPPORTED_ZOOM_LEVEL;
     }
 
-    std::shared_ptr<Feature> MBVectorTileDecoder::decodeFeature(long long id, const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const {
+    std::shared_ptr<MBVectorTileDecoder::TileFeature> MBVectorTileDecoder::decodeFeature(long long id, const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const {
         if (!tileData) {
             Log::Warn("MBVectorTileDecoder::decodeFeature: Null tile data");
-            return std::shared_ptr<Feature>();
+            return std::shared_ptr<TileFeature>();
         }
         if (tileData->empty()) {
-            return std::shared_ptr<Feature>();
+            return std::shared_ptr<TileFeature>();
         }
 
         try {
             mvt::MBVTFeatureDecoder decoder(*tileData->getDataPtr(), _logger);
 
-            std::shared_ptr<mvt::Feature> mvtFeature = decoder.getFeature(id);
+            std::string mvtLayerName;
+            std::shared_ptr<mvt::Feature> mvtFeature = decoder.getFeature(id, mvtLayerName);
             if (!mvtFeature) {
-                return std::shared_ptr<Feature>();
+                return std::shared_ptr<TileFeature>();
             }
 
             std::map<std::string, Variant> featureData;
@@ -375,11 +376,12 @@ namespace carto {
             auto convertFn = [&tileBounds](const cglib::vec2<float>& pos) {
                 return MapPos(tileBounds.getMin().getX() + pos(0) * tileBounds.getDelta().getX(), tileBounds.getMax().getY() - pos(1) * tileBounds.getDelta().getY(), 0);
             };
-            return std::make_shared<Feature>(convertGeometry(convertFn, mvtFeature->getGeometry()), Variant(featureData));
+            auto feature = std::make_shared<Feature>(convertGeometry(convertFn, mvtFeature->getGeometry()), Variant(featureData));
+            return std::make_shared<TileFeature>(mvtFeature->getId(), mvtLayerName, feature);
         } catch (const std::exception& ex) {
             Log::Errorf("MBVectorTileDecoder::decodeFeature: Exception while decoding: %s", ex.what());
         }
-        return std::shared_ptr<Feature>();
+        return std::shared_ptr<TileFeature>();
     }
         
     std::shared_ptr<MBVectorTileDecoder::TileMap> MBVectorTileDecoder::decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const {

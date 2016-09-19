@@ -1488,7 +1488,7 @@ namespace carto {
     int PackageManager::downloadFile(const std::string& url, NetworkUtils::HandlerFn handler, std::uint64_t offset) {
         std::map<std::string, std::string> requestHeaders;
         std::map<std::string, std::string> responseHeaders;
-        return NetworkUtils::GetHTTP(url, requestHeaders, responseHeaders, handler, offset, false);
+        return NetworkUtils::GetHTTP(url, requestHeaders, responseHeaders, handler, offset, Log::IsShowDebug());
     }
 
     bool PackageManager::inflateData(const std::vector<unsigned char>& in, std::vector<unsigned char>& out) {

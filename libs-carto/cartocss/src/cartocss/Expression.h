@@ -8,6 +8,7 @@
 #define _CARTO_CARTOCSS_EXPRESSION_H_
 
 #include "Value.h"
+#include "mapnikvt/StringUtils.h"
 
 #include <memory>
 #include <string>
@@ -167,6 +168,7 @@ namespace carto { namespace css {
     class UnaryExpression : public Expression {
     public:
         enum class Op {
+            NOT,
             NEG
         };
 
@@ -192,15 +194,22 @@ namespace carto { namespace css {
         }
 
     private:
-        template <template <typename> class Op>
+        struct NotOp : boost::static_visitor<Value> {
+            Value operator() (bool val) const { return Value(!val); }
+            template <typename T> Value operator() (T val) const { throw std::runtime_error("Unexpected type in ! operator"); }
+        };
+        
+        template <template <typename> class OpImpl>
         struct ArithmeticOp : boost::static_visitor<Value> {
-            Value operator()(long long val) const { return Op<long long>()(val); }
-            Value operator()(double val) const { return Op<double>()(val); }
-            template <typename T> Value operator()(T val) const { throw std::runtime_error("Unexpected type in unary operator"); }
+            Value operator() (long long val) const { return Value(OpImpl<long long>()(val)); }
+            Value operator() (double val) const { return Value(OpImpl<double>()(val)); }
+            template <typename T> Value operator() (T val) const { throw std::runtime_error("Unexpected type in unary operator"); }
         };
 
         static Value applyOp(Op op, const Value& val) {
             switch (op) {
+            case Op::NOT:
+                return boost::apply_visitor(NotOp(), val);
             case Op::NEG:
                 return boost::apply_visitor(ArithmeticOp<std::negate>(), val);
             }
@@ -214,6 +223,15 @@ namespace carto { namespace css {
     class BinaryExpression : public Expression {
     public:
         enum class Op {
+            AND,
+            OR,
+            EQ,
+            NEQ,
+            LT,
+            LTE,
+            GT,
+            GTE,
+            MATCH,
             ADD,
             SUB,
             MUL,
@@ -259,51 +277,97 @@ namespace carto { namespace css {
         }
 
     private:
+        struct AndOp : boost::static_visitor<Value> {
+            Value operator() (bool val1, bool val2) const { return Value(val1 && val2); }
+            template <typename S, typename T> Value operator() (S val1, T val2) const { throw std::runtime_error("Unexpected types in binary && operator"); }
+        };
+
+        struct OrOp : boost::static_visitor<Value> {
+            Value operator() (bool val1, bool val2) const { return Value(val1 || val2); }
+            template <typename S, typename T> Value operator() (S val1, T val2) const { throw std::runtime_error("Unexpected types in binary || operator"); }
+        };
+
+        template <template <typename> class OpImpl, bool NullResult, bool MismatchResult>
+        struct CompOp : boost::static_visitor<Value> {
+            Value operator() (boost::blank, boost::blank) const { return Value(NullResult); }
+            Value operator() (bool val1, long long val2) const { return Value(OpImpl<long long>()(static_cast<long long>(val1), val2)); }
+            Value operator() (bool val1, double val2) const { return Value(OpImpl<double>()(static_cast<double>(val1), val2)); }
+            Value operator() (long long val1, bool val2) const { return Value(OpImpl<long long>()(val1, static_cast<long long>(val2))); }
+            Value operator() (long long val1, double val2) const { return Value(OpImpl<double>()(static_cast<double>(val1), val2)); }
+            Value operator() (double val1, bool val2) const { return Value(OpImpl<double>()(val1, static_cast<double>(val2))); }
+            Value operator() (double val1, long long val2) const { return Value(OpImpl<double>()(val1, static_cast<double>(val2))); }
+            template <typename T> Value operator() (T val1, T val2) const { return Value(OpImpl<T>()(val1, val2)); }
+            template <typename S, typename T> Value operator() (S val1, T val2) const { return Value(MismatchResult); }
+        };
+
+        struct MatchOp : boost::static_visitor<Value> {
+            Value operator() (const std::string& val1, const std::string& val2) const { return Value(mvt::regexMatch(val1, val2)); }
+            template <typename S, typename T> Value operator() (S val1, T val2) const { return Value(false); }
+        };
+
         struct AddOp : boost::static_visitor<Value> {
-            Value operator()(long long val1, long long val2) const { return Value(val1 + val2); }
-            Value operator()(long long val1, double val2) const { return Value(static_cast<double>(val1) + val2); }
-            Value operator()(double val1, long long val2) const { return Value(val1 + static_cast<double>(val2)); }
-            Value operator()(double val1, double val2) const { return Value(val1 + val2); }
-            Value operator()(Color val1, Color val2) const { return Value(val1 + val2); }
-            Value operator()(const std::string& val1, const std::string& val2) const { return Value(val1 + val2); }
-            template <typename S, typename T> Value operator()(S val1, T val2) const { throw std::runtime_error("Unexpected types in binary + operator"); }
+            Value operator() (long long val1, long long val2) const { return Value(val1 + val2); }
+            Value operator() (long long val1, double val2) const { return Value(static_cast<double>(val1) + val2); }
+            Value operator() (double val1, long long val2) const { return Value(val1 + static_cast<double>(val2)); }
+            Value operator() (double val1, double val2) const { return Value(val1 + val2); }
+            Value operator() (Color val1, Color val2) const { return Value(val1 + val2); }
+            Value operator() (const std::string& val1, const std::string& val2) const { return Value(val1 + val2); }
+            template <typename S, typename T> Value operator() (S val1, T val2) const { throw std::runtime_error("Unexpected types in binary + operator"); }
         };
 
         struct SubOp : boost::static_visitor<Value> {
-            Value operator()(long long val1, long long val2) const { return Value(val1 - val2); }
-            Value operator()(long long val1, double val2) const { return Value(static_cast<double>(val1) - val2); }
-            Value operator()(double val1, long long val2) const { return Value(val1 - static_cast<double>(val2)); }
-            Value operator()(double val1, double val2) const { return Value(val1 - val2); }
-            Value operator()(Color val1, Color val2) const { return Value(val1 - val2); }
-            template <typename S, typename T> Value operator()(S val1, T val2) const { throw std::runtime_error("Unexpected types in binary - operator"); }
+            Value operator() (long long val1, long long val2) const { return Value(val1 - val2); }
+            Value operator() (long long val1, double val2) const { return Value(static_cast<double>(val1) - val2); }
+            Value operator() (double val1, long long val2) const { return Value(val1 - static_cast<double>(val2)); }
+            Value operator() (double val1, double val2) const { return Value(val1 - val2); }
+            Value operator() (Color val1, Color val2) const { return Value(val1 - val2); }
+            template <typename S, typename T> Value operator() (S val1, T val2) const { throw std::runtime_error("Unexpected types in binary - operator"); }
         };
 
         struct MulOp : boost::static_visitor<Value> {
-            Value operator()(long long val1, long long val2) const { return Value(val1 * val2); }
-            Value operator()(long long val1, double val2) const { return Value(static_cast<double>(val1) * val2); }
-            Value operator()(double val1, long long val2) const { return Value(val1 * static_cast<double>(val2)); }
-            Value operator()(double val1, double val2) const { return Value(val1 * val2); }
-            Value operator()(Color val1, Color val2) const { return Value(val1 * val2); }
-            Value operator()(Color val1, long long val2) const { return Value(val1 * static_cast<float>(val2)); }
-            Value operator()(Color val1, double val2) const { return Value(val1 * static_cast<float>(val2)); }
-            Value operator()(long long val1, Color val2) const { return Value(static_cast<float>(val1) * val2); }
-            Value operator()(double val1, Color val2) const { return Value(static_cast<float>(val1) * val2); }
-            template <typename S, typename T> Value operator()(S val1, T val2) const { throw std::runtime_error("Unexpected types in binary * operator"); }
+            Value operator() (long long val1, long long val2) const { return Value(val1 * val2); }
+            Value operator() (long long val1, double val2) const { return Value(static_cast<double>(val1) * val2); }
+            Value operator() (double val1, long long val2) const { return Value(val1 * static_cast<double>(val2)); }
+            Value operator() (double val1, double val2) const { return Value(val1 * val2); }
+            Value operator() (Color val1, Color val2) const { return Value(val1 * val2); }
+            Value operator() (Color val1, long long val2) const { return Value(val1 * static_cast<float>(val2)); }
+            Value operator() (Color val1, double val2) const { return Value(val1 * static_cast<float>(val2)); }
+            Value operator() (long long val1, Color val2) const { return Value(static_cast<float>(val1) * val2); }
+            Value operator() (double val1, Color val2) const { return Value(static_cast<float>(val1) * val2); }
+            template <typename S, typename T> Value operator() (S val1, T val2) const { throw std::runtime_error("Unexpected types in binary * operator"); }
         };
 
         struct DivOp : boost::static_visitor<Value> {
-            Value operator()(long long val1, long long val2) const { if (val2 == 0) { throw std::runtime_error("Division with 0"); } return Value(val1 / val2); }
-            Value operator()(long long val1, double val2) const { return Value(static_cast<double>(val1) / val2); }
-            Value operator()(double val1, long long val2) const { return Value(val1 / static_cast<double>(val2)); }
-            Value operator()(double val1, double val2) const { return Value(val1 / val2); }
-            Value operator()(Color val1, Color val2) const { return Value(val1 / val2); }
-            Value operator()(Color val1, long long val2) const { return Value(val1 * (1.0f / static_cast<float>(val2))); }
-            Value operator()(Color val1, double val2) const { return Value(val1 * (1.0f / static_cast<float>(val2))); }
-            template <typename S, typename T> Value operator()(S val1, T val2) const { throw std::runtime_error("Unexpected types in binary / operator"); }
+            Value operator() (long long val1, long long val2) const { if (val2 == 0) { throw std::runtime_error("Division with 0"); } return Value(val1 / val2); }
+            Value operator() (long long val1, double val2) const { return Value(static_cast<double>(val1) / val2); }
+            Value operator() (double val1, long long val2) const { return Value(val1 / static_cast<double>(val2)); }
+            Value operator() (double val1, double val2) const { return Value(val1 / val2); }
+            Value operator() (Color val1, Color val2) const { return Value(val1 / val2); }
+            Value operator() (Color val1, long long val2) const { return Value(val1 * (1.0f / static_cast<float>(val2))); }
+            Value operator() (Color val1, double val2) const { return Value(val1 * (1.0f / static_cast<float>(val2))); }
+            template <typename S, typename T> Value operator() (S val1, T val2) const { throw std::runtime_error("Unexpected types in binary / operator"); }
         };
 
         static Value applyOp(Op op, const Value& val1, const Value& val2) {
             switch (op) {
+            case Op::AND:
+                return boost::apply_visitor(AndOp(), val1, val2);
+            case Op::OR:
+                return boost::apply_visitor(OrOp(), val1, val2);
+            case Op::EQ:
+                return boost::apply_visitor(CompOp<std::equal_to, true, false>(), val1, val2);
+            case Op::NEQ:
+                return boost::apply_visitor(CompOp<std::not_equal_to, false, true>(), val1, val2);
+            case Op::LT:
+                return boost::apply_visitor(CompOp<std::less, false, false>(), val1, val2);
+            case Op::LTE:
+                return boost::apply_visitor(CompOp<std::less_equal, true, false>(), val1, val2);
+            case Op::GT:
+                return boost::apply_visitor(CompOp<std::greater, false, false>(), val1, val2);
+            case Op::GTE:
+                return boost::apply_visitor(CompOp<std::greater_equal, true, false>(), val1, val2);
+            case Op::MATCH:
+                return boost::apply_visitor(MatchOp(), val1, val2);
             case Op::ADD:
                 if (auto str1 = boost::get<std::string>(&val1)) {
                     return *str1 + boost::lexical_cast<std::string>(val2);
@@ -323,6 +387,58 @@ namespace carto { namespace css {
         }
 
         Op _op;
+        std::shared_ptr<const Expression> _expr1;
+        std::shared_ptr<const Expression> _expr2;
+    };
+
+    class ConditionalExpression : public Expression {
+    public:
+        explicit ConditionalExpression(std::shared_ptr<const Expression> cond, std::shared_ptr<const Expression> expr1, std::shared_ptr<const Expression> expr2) : _cond(std::move(cond)), _expr1(std::move(expr1)), _expr2(std::move(expr2)) { }
+
+        const std::shared_ptr<const Expression>& getCondition() const { return _cond; }
+        const std::shared_ptr<const Expression>& getExpression1() const { return _expr1; }
+        const std::shared_ptr<const Expression>& getExpression2() const { return _expr2; }
+
+        virtual boost::variant<Value, std::shared_ptr<const Expression>> evaluate(const ExpressionContext& context) const override {
+            boost::variant<Value, std::shared_ptr<const Expression>> condResult = _cond->evaluate(context);
+            boost::variant<Value, std::shared_ptr<const Expression>> result1 = _expr1->evaluate(context);
+            boost::variant<Value, std::shared_ptr<const Expression>> result2 = _expr2->evaluate(context);
+
+            if (auto condVal = boost::get<Value>(&condResult)) {
+                if (auto cond = boost::get<bool>(condVal)) {
+                    return *cond ? result1 : result2;
+                }
+                else {
+                    throw std::runtime_error("Condition type error, expecting boolean");
+                }
+            }
+
+            std::shared_ptr<const Expression> expr1;
+            if (auto val1 = boost::get<Value>(&result1)) {
+                expr1 = std::make_shared<ConstExpression>(*val1);
+            }
+            else {
+                expr1 = boost::get<std::shared_ptr<const Expression>>(result1);
+            }
+            std::shared_ptr<const Expression> expr2;
+            if (auto val2 = boost::get<Value>(&result2)) {
+                expr2 = std::make_shared<ConstExpression>(*val2);
+            }
+            else {
+                expr2 = boost::get<std::shared_ptr<const Expression>>(result2);
+            }
+            return std::static_pointer_cast<const Expression>(std::make_shared<ConditionalExpression>(boost::get<std::shared_ptr<const Expression>>(condResult), std::move(expr1), std::move(expr2)));
+        }
+
+        virtual bool equals(const Expression& expr) const override {
+            if (auto condExpr = dynamic_cast<const ConditionalExpression*>(&expr)) {
+                return _cond->equals(*condExpr->_cond) && _expr1->equals(*condExpr->_expr1) && _expr2->equals(*condExpr->_expr2);
+            }
+            return false;
+        }
+
+    private:
+        std::shared_ptr<const Expression> _cond;
         std::shared_ptr<const Expression> _expr1;
         std::shared_ptr<const Expression> _expr2;
     };

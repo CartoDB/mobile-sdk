@@ -284,31 +284,40 @@ namespace carto {
         DirectorPtr<VectorTileEventListener> eventListener = _vectorTileEventListener;
 
         if (eventListener) {
-            std::vector<std::tuple<vt::TileId, double, long long> > hitResults;
-            _renderer->calculateRayIntersectedElements(ray, viewState, hitResults);
-            for (auto it = hitResults.rbegin(); it != hitResults.rend(); it++) {
-                vt::TileId vtTileId = std::get<0>(*it);
-                double t = std::get<1>(*it);
-                long long id = std::get<2>(*it);
 
-                std::lock_guard<std::recursive_mutex> lock(_mutex);
-
-                MapTile mapTile(vtTileId.x, vtTileId.y, vtTileId.zoom, _frameNr);
-                MapPos mapPos = projection.fromInternal(MapPos(ray(t)(0), ray(t)(1), ray(t)(2)));
-
-                TileInfo tileInfo;
-                _visibleCache.peek(getTileId(mapTile), tileInfo);
-
-                if (std::shared_ptr<BinaryData> tileData = tileInfo.getTileData()) {
-                    std::shared_ptr<Feature> feature = _tileDecoder->decodeFeature(id, vtTileId, tileData, calculateMapTileBounds(mapTile.getFlipped()));
-                    if (feature) {
-                        std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
-                        results.push_back(RayIntersectedElement(std::make_shared<std::pair<MapTile, std::shared_ptr<Feature> > >(mapTile, feature), thisLayer, mapPos, mapPos, 0));
-                    } else {
-                        Log::Warnf("VectorTileLayer::calculateRayIntersectedElements: Failed to decode feature %lld", id);
-                    }
+            for (int pass = 0; pass < 2; pass++) {
+                std::vector<std::tuple<vt::TileId, double, long long> > hitResults;
+                if (pass == 0) {
+                    _renderer->calculateRayIntersectedElements(ray, viewState, hitResults);
                 } else {
-                    Log::Warn("VectorTileLayer::calculateRayIntersectedElements: Failed to find tile data");
+                    _renderer->calculateRayIntersectedElements3D(ray, viewState, hitResults);
+                }
+
+                for (auto it = hitResults.rbegin(); it != hitResults.rend(); it++) {
+                    vt::TileId vtTileId = std::get<0>(*it);
+                    double t = std::get<1>(*it);
+                    long long id = std::get<2>(*it);
+
+                    std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+                    MapTile mapTile(vtTileId.x, vtTileId.y, vtTileId.zoom, _frameNr);
+                    MapPos mapPos = projection.fromInternal(MapPos(ray(t)(0), ray(t)(1), ray(t)(2)));
+
+                    TileInfo tileInfo;
+                    _visibleCache.peek(getTileId(mapTile), tileInfo);
+
+                    if (std::shared_ptr<BinaryData> tileData = tileInfo.getTileData()) {
+                        std::shared_ptr<VectorTileDecoder::TileFeature> tileFeature = _tileDecoder->decodeFeature(id, vtTileId, tileData, tileInfo.getTileBounds());
+                        if (tileFeature) {
+                            auto elementInfo = std::make_shared<std::pair<MapTile, VectorTileDecoder::TileFeature> >(mapTile, *tileFeature);
+                            std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
+                            results.push_back(RayIntersectedElement(elementInfo, thisLayer, mapPos, mapPos, 0, pass > 0));
+                        } else {
+                            Log::Warnf("VectorTileLayer::calculateRayIntersectedElements: Failed to decode feature %lld", id);
+                        }
+                    } else {
+                        Log::Warn("VectorTileLayer::calculateRayIntersectedElements: Failed to find tile data");
+                    }
                 }
             }
         }
@@ -320,8 +329,10 @@ namespace carto {
         DirectorPtr<VectorTileEventListener> eventListener = _vectorTileEventListener;
 
         if (eventListener) {
-            if (std::shared_ptr<std::pair<MapTile, std::shared_ptr<Feature> > > elementInfo = intersectedElement.getElement<std::pair<MapTile, std::shared_ptr<Feature> > >()) {
-                auto clickInfo = std::make_shared<VectorTileClickInfo>(clickType, intersectedElement.getHitPos(), intersectedElement.getHitPos(), elementInfo->first, elementInfo->second, intersectedElement.getLayer());
+            if (std::shared_ptr<std::pair<MapTile, VectorTileDecoder::TileFeature> > elementInfo = intersectedElement.getElement<std::pair<MapTile, VectorTileDecoder::TileFeature> >()) {
+                const MapTile& mapTile = elementInfo->first;
+                const VectorTileDecoder::TileFeature& tileFeature = elementInfo->second;
+                auto clickInfo = std::make_shared<VectorTileClickInfo>(clickType, intersectedElement.getHitPos(), intersectedElement.getHitPos(), mapTile, std::get<0>(tileFeature), std::get<2>(tileFeature), std::get<1>(tileFeature), intersectedElement.getLayer());
                 return eventListener->onVectorTileClicked(clickInfo);
             }
         }
@@ -437,7 +448,7 @@ namespace carto {
             std::shared_ptr<VectorTileDecoder::TileMap> tileMap = layer->_tileDecoder->decodeTile(vtDataSourceTile, vtTile, tileData->getData());
             if (tileMap) {
                 // Construct tile info - keep original data if interactivity is required
-                VectorTileLayer::TileInfo tileInfo(layer->_vectorTileEventListener.get() ? tileData->getData() : std::shared_ptr<BinaryData>(), tileMap);
+                VectorTileLayer::TileInfo tileInfo(layer->calculateMapTileBounds(dataSourceTile.getFlipped()), layer->_vectorTileEventListener.get() ? tileData->getData() : std::shared_ptr<BinaryData>(), tileMap);
 
                 // Store tile to cache, unless invalidated
                 if (!isInvalidated()) {

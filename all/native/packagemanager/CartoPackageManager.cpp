@@ -1,7 +1,9 @@
 #ifdef _CARTO_PACKAGEMANAGER_SUPPORT
 
 #include "CartoPackageManager.h"
+#include "components/LicenseManager.h"
 #include "projections/EPSG3857.h"
+#include "utils/GeneralUtils.h"
 #include "utils/NetworkUtils.h"
 #include "utils/PlatformUtils.h"
 #include "utils/Log.h"
@@ -94,9 +96,17 @@ namespace carto {
     }
     
     std::string CartoPackageManager::createPackageURL(const std::string& packageId, int version, const std::string& baseURL, bool downloaded) const {
+        std::map<std::string, std::string> tagValues;
+        std::string appToken;
+        if (LicenseManager::GetInstance().getParameter("appToken", appToken)) {
+            tagValues["key"] = appToken;
+        }
+ 
+        std::string url = GeneralUtils::ReplaceTags(baseURL, tagValues, "{", "}", true);
+
         std::map<std::string, std::string> params;
         params["update"] = (downloaded ? "1" : "0");
-        return NetworkUtils::BuildURLFromParameters(baseURL, params);
+        return NetworkUtils::BuildURLFromParameters(url, params);
     }
 
     std::shared_ptr<PackageInfo> CartoPackageManager::getCustomPackage(const std::string& packageId, int version) const {

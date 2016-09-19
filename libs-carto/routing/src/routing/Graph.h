@@ -246,6 +246,12 @@ namespace carto { namespace routing {
         static WGSPos fromPoint(const Point& point);
         static Point toPoint(const WGSPos& pos);
 
+        constexpr static int VERSION = 0;
+
+        constexpr static double COORDINATE_SCALE = 1.0e-6;
+
+        constexpr static double DEG_TO_RAD = 3.141592653589793 / 180.0;
+
         std::vector<Package> _packages;
 
         mutable cache::lru_cache<BlockId, std::shared_ptr<NodeBlock>, BlockId::Hash> _nodeBlockCache;
@@ -254,12 +260,6 @@ namespace carto { namespace routing {
         mutable cache::lru_cache<BlockId, std::shared_ptr<GlobalNodeBlock>, BlockId::Hash> _globalNodeBlockCache;
         mutable cache::lru_cache<BlockId, std::shared_ptr<RTreeNodeBlock>, BlockId::Hash> _rtreeNodeBlockCache;
         mutable std::recursive_mutex _mutex;
-        
-        static const int VERSION;
-
-        static const double COORDINATE_SCALE;
-        
-        static const double DEG_TO_RAD;
     };
 } }
 

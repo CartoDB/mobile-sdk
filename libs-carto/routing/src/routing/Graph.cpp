@@ -638,10 +638,4 @@ namespace carto { namespace routing {
     Graph::Point Graph::toPoint(const WGSPos& pos) {
         return Point(static_cast<int>(pos(0) / COORDINATE_SCALE), static_cast<int>(pos(1) / COORDINATE_SCALE));
     }
-    
-    const int Graph::VERSION = 0;
-
-    const double Graph::COORDINATE_SCALE = 1.0e-6;
-
-    const double Graph::DEG_TO_RAD = 0.017453292519943295769236907684886;
 } }

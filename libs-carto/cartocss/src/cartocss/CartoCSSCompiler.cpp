@@ -24,9 +24,9 @@ namespace carto { namespace css {
             if (propertyList.attachment.empty()) {
                 for (const FilteredProperty& prop : propertyList.properties) {
                     if (prop.filters.empty()) {
-                        boost::variant<Value, std::shared_ptr<const Expression>> propResult = prop.expression->evaluate(context.expressionContext);
+                        boost::variant<Value, std::shared_ptr<const Expression>> propResult = prop.property.expression->evaluate(context.expressionContext);
                         if (auto val = boost::get<Value>(&propResult)) {
-                            mapProperties[prop.field] = *val;
+                            mapProperties[prop.property.field] = *val;
                         }
                     }
                 }
@@ -46,44 +46,45 @@ namespace carto { namespace css {
                 if (variableMap.find(decl->getVariable()) == variableMap.end()) {
                     variableMap[decl->getVariable()] = decl->getExpression();
                 }
-            } else if (auto ruleSet = boost::get<RuleSet>(&element)) {
+            }
+            else if (auto ruleSet = boost::get<RuleSet>(&element)) {
                 buildPropertyList(*ruleSet, context, "", std::vector<std::shared_ptr<const Predicate>>(), propertyLists);
             }
         }
         
         for (FilteredPropertyList& propertyList : propertyLists) {
             // Sort the properties by decreasing specificity
-            propertyList.properties.sort([&](const Property& prop1, const Property& prop2) {
-                return prop1.specificity > prop2.specificity;
+            propertyList.properties.sort([&](const FilteredProperty& prop1, const FilteredProperty& prop2) {
+                return prop1.property.specificity > prop2.property.specificity;
             });
             
             // Build property set list
             std::list<PropertySet> propertySets;
             for (FilteredProperty prop : propertyList.properties) {
                 // Try to evaluate property expression, store the result as expression (even when constant)
-                boost::variant<Value, std::shared_ptr<const Expression>> propResult = prop.expression->evaluate(context.expressionContext);
+                boost::variant<Value, std::shared_ptr<const Expression>> propResult = prop.property.expression->evaluate(context.expressionContext);
                 if (auto val = boost::get<Value>(&propResult)) {
-                    prop.expression = std::make_shared<ConstExpression>(*val);
+                    prop.property.expression = std::make_shared<ConstExpression>(*val);
                 }
                 else {
-                    prop.expression = boost::get<std::shared_ptr<const Expression>>(propResult);
+                    prop.property.expression = boost::get<std::shared_ptr<const Expression>>(propResult);
                 }
                 
                 for (auto propertySetIt = propertySets.begin(); propertySetIt != propertySets.end(); propertySetIt++) {
                     // Check if this attribute is already set for given property set
-                    auto attributeIt = propertySetIt->properties.find(prop.field);
+                    auto attributeIt = propertySetIt->properties.find(prop.property.field);
                     if (attributeIt != propertySetIt->properties.end()) {
-                        if (attributeIt->second.specificity >= prop.specificity) {
+                        if (attributeIt->second.specificity >= prop.property.specificity) {
                             continue;
                         }
-                        if (attributeIt->second.expression->equals(*prop.expression)) {
+                        if (attributeIt->second.expression->equals(*prop.property.expression)) {
                             continue;
                         }
                     }
 
                     // Build new property set by setting the attribute and combining filters
                     PropertySet propertySet(*propertySetIt);
-                    propertySet.properties[prop.field] = prop;
+                    propertySet.properties[prop.property.field] = prop.property;
                     bool skip = false;
                     for (const std::shared_ptr<const Predicate>& propFilter : prop.filters) {
                         auto filterIt = propertySet.filters.begin();
@@ -121,7 +122,7 @@ namespace carto { namespace css {
 
                 // Add the property set
                 PropertySet propertySet;
-                propertySet.properties[prop.field] = prop;
+                propertySet.properties[prop.property.field] = prop.property;
                 propertySet.filters = prop.filters;
                 if (isRedundantPropertySet(propertySets.begin(), propertySets.end(), propertySet)) {
                     continue;
@@ -209,12 +210,13 @@ namespace carto { namespace css {
                     
                     // Add property
                     FilteredProperty prop;
+                    prop.property.field = decl->getField();
+                    prop.property.expression = decl->getExpression();
+                    prop.property.specificity = calculateRuleSpecificity(selectorFilters, decl->getOrder());
                     prop.filters = optimizedSelectorFilters;
-                    prop.field = decl->getField();
-                    prop.expression = decl->getExpression();
-                    prop.specificity = calculateSpecificity(selectorFilters, decl->getOrder());
                     properties.push_back(prop);
-                } else if (auto subRuleSet = boost::get<RuleSet>(&element)) {
+                }
+                else if (auto subRuleSet = boost::get<RuleSet>(&element)) {
                     // Recurse with subrule
                     buildPropertyList(*subRuleSet, context, selectorAttachment, selectorFilters, propertyLists);
                 }
@@ -238,18 +240,21 @@ namespace carto { namespace css {
         return false;
     }
     
-    CartoCSSCompiler::Property::Specificity CartoCSSCompiler::calculateSpecificity(const std::vector<std::shared_ptr<const Predicate>>& predicates, int order) {
+    CartoCSSCompiler::RuleSpecificity CartoCSSCompiler::calculateRuleSpecificity(const std::vector<std::shared_ptr<const Predicate>>& predicates, int order) {
         int layers = 0;
         int classes = 0;
         int filters = 0;
         for (const std::shared_ptr<const Predicate>& pred : predicates) {
             if (std::dynamic_pointer_cast<const LayerPredicate>(pred)) {
                 layers++;
-            } else if (std::dynamic_pointer_cast<const ClassPredicate>(pred)) {
+            }
+            else if (std::dynamic_pointer_cast<const ClassPredicate>(pred)) {
                 classes++;
-            } else if (std::dynamic_pointer_cast<const AttachmentPredicate>(pred)) {
+            }
+            else if (std::dynamic_pointer_cast<const AttachmentPredicate>(pred)) {
                 // ignore
-            } else {
+            }
+            else {
                 filters++;
             }
         }

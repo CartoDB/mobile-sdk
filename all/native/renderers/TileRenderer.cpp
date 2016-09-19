@@ -108,12 +108,12 @@ namespace carto {
         
         _glRenderer->startFrame(deltaSeconds * 3);
 
-        bool refresh = _glRenderer->render2D();
+        bool refresh = _glRenderer->renderGeometry2D();
         if (_labelOrder == 0) {
             refresh = _glRenderer->renderLabels(true, false) || refresh;
         }
         if (_buildingOrder == 0) {
-            refresh = _glRenderer->render3D() || refresh;
+            refresh = _glRenderer->renderGeometry3D() || refresh;
         }
         if (_labelOrder == 0) {
             refresh = _glRenderer->renderLabels(false, true) || refresh;
@@ -141,7 +141,7 @@ namespace carto {
             refresh = _glRenderer->renderLabels(true, false) || refresh;
         }
         if (_buildingOrder == 1) {
-            refresh = _glRenderer->render3D() || refresh;
+            refresh = _glRenderer->renderGeometry3D() || refresh;
         }
         if (_labelOrder == 1) {
             refresh = _glRenderer->renderLabels(false, true) || refresh;
@@ -245,7 +245,38 @@ namespace carto {
             return;
         }
 
-        _glRenderer->findIntersections(ray, results);
+        float radius = viewState.getUnitToDPCoef() * CLICK_RADIUS;
+
+        _glRenderer->findGeometryIntersections(ray, results, radius, true, false);
+        if (_labelOrder == 0) {
+            _glRenderer->findLabelIntersections(ray, results, radius, true, false);
+        }
+        if (_buildingOrder == 0) {
+            _glRenderer->findGeometryIntersections(ray, results, radius, false, true);
+        }
+        if (_labelOrder == 0) {
+            _glRenderer->findLabelIntersections(ray, results, radius, false, true);
+        }
+    }
+        
+    void TileRenderer::calculateRayIntersectedElements3D(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<std::tuple<vt::TileId, double, long long> >& results) const {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        if (!_glRenderer) {
+            return;
+        }
+
+        float radius = viewState.getUnitToDPCoef() * CLICK_RADIUS;
+
+        if (_labelOrder == 1) {
+            _glRenderer->findLabelIntersections(ray, results, radius, true, false);
+        }
+        if (_buildingOrder == 1) {
+            _glRenderer->findGeometryIntersections(ray, results, radius, false, true);
+        }
+        if (_labelOrder == 1) {
+            _glRenderer->findLabelIntersections(ray, results, radius, false, true);
+        }
     }
         
 }

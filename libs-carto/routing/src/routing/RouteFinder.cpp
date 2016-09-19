@@ -315,9 +315,6 @@ namespace carto { namespace routing {
     }
 
     double RouteFinder::calculateGreatCircleDistance(const WGSPos& p0, const WGSPos& p1) {
-        static const double DEG_TO_RAD = 0.017453292519943295769236907684886;
-        static const double EARTH_RADIUS = 6372797.560856;
-
         double lat1 = p0(0) * DEG_TO_RAD;
         double lng1 = p0(1) * DEG_TO_RAD;
         double lat2 = p1(0) * DEG_TO_RAD;

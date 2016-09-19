@@ -58,15 +58,15 @@ namespace carto { namespace mvt {
     template <typename V>
     class ExpressionFunctionBinder {
     public:
-        using Func = std::shared_ptr<const std::function<V(const vt::ViewState&)>>;
+        using FuncPtr = std::shared_ptr<const std::function<V(const vt::ViewState&)>>;
 
         ExpressionFunctionBinder() = default;
 
-        ExpressionFunctionBinder& bind(Func* field, const std::shared_ptr<const Expression>& expr) {
+        ExpressionFunctionBinder& bind(FuncPtr* field, const std::shared_ptr<const Expression>& expr) {
             return bind(field, expr, std::function<V(const Value&)>(ValueConverter<V>::convert));
         }
 
-        ExpressionFunctionBinder& bind(Func* field, const std::shared_ptr<const Expression>& expr, std::function<V(const Value&)> convertFn) {
+        ExpressionFunctionBinder& bind(FuncPtr* field, const std::shared_ptr<const Expression>& expr, std::function<V(const Value&)> convertFn) {
             if (auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(expr)) {
                 *field = buildFunction(expr, convertFn);
             }
@@ -92,13 +92,13 @@ namespace carto { namespace mvt {
             explicit Binding(std::shared_ptr<const Expression> expr, std::function<V(const Value&)> convertFn) : expr(std::move(expr)), convertFn(std::move(convertFn)) { }
         };
 
-        Func buildFunction(const std::shared_ptr<const Expression>& expr, const std::function<V(const Value&)>& convertFn) const {
+        FuncPtr buildFunction(const std::shared_ptr<const Expression>& expr, const std::function<V(const Value&)>& convertFn) const {
             for (auto it = _functionCache.begin(); it != _functionCache.end(); it++) {
                 if (it->first->equals(expr)) {
                     return it->second;
                 }
             }
-            std::shared_ptr<const std::function<V(const vt::ViewState&)>> func;
+            FuncPtr func;
             if (auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(expr)) {
                 V val = convertFn(constExpr->getConstant());
                 func = std::make_shared<const std::function<V(const vt::ViewState&)>>([val](const vt::ViewState& viewState) {
@@ -112,8 +112,8 @@ namespace carto { namespace mvt {
                     return convertFn(expr->evaluate(context));
                 });
             }
-            if (_functionCache.size() >= 32) { // 32 is a good fit is function depends on 'discrete zoom'
-                _functionCache.erase(_functionCache.begin()); // erase any element to keep cache compact
+            if (_functionCache.size() >= 32) { // 32 is a good fit if function depends on 'discrete zoom'
+                _functionCache.erase(_functionCache.begin()); // erase any element to keep the cache compact
             }
             _functionCache[expr] = func;
             return func;
@@ -138,8 +138,8 @@ namespace carto { namespace mvt {
             });
         }
 
-        std::map<Func*, Binding> _bindingMap;
-        mutable std::map<std::shared_ptr<const Expression>, Func> _functionCache;
+        std::map<FuncPtr*, Binding> _bindingMap;
+        mutable std::map<std::shared_ptr<const Expression>, FuncPtr> _functionCache;
     };
 } }
 

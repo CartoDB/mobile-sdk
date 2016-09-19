@@ -20,7 +20,7 @@ namespace carto { namespace mvt {
         virtual cglib::mat3x3<float> getMatrix() const = 0;
 
     protected:
-        const float DEG_TO_RAD = 3.14159265f / 180.0f;
+        constexpr static float DEG_TO_RAD = 3.14159265f / 180.0f;
     };
 
     class MatrixTransform : public Transform {

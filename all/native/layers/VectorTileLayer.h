@@ -8,6 +8,7 @@
 #define _CARTO_VECTORTILELAYER_H_
 
 #include "core/MapTile.h"
+#include "core/MapBounds.h"
 #include "components/CancelableTask.h"
 #include "components/DirectorPtr.h"
 #include "components/Task.h"
@@ -182,15 +183,17 @@ namespace carto {
 
         class TileInfo {
         public:
-            TileInfo() : _tileData(), _tileMap() { }
-            TileInfo(const std::shared_ptr<BinaryData>& tileData, const std::shared_ptr<VectorTileDecoder::TileMap>& tileMap) : _tileData(tileData), _tileMap(tileMap) { }
+            TileInfo() : _tileBounds(), _tileData(), _tileMap() { }
+            TileInfo(const MapBounds& tileBounds, const std::shared_ptr<BinaryData>& tileData, const std::shared_ptr<VectorTileDecoder::TileMap>& tileMap) : _tileBounds(tileBounds), _tileData(tileData), _tileMap(tileMap) { }
 
+            const MapBounds& getTileBounds() const { return _tileBounds; }
             const std::shared_ptr<BinaryData>& getTileData() const { return _tileData; }
             const std::shared_ptr<VectorTileDecoder::TileMap>& getTileMap() const { return _tileMap; }
 
             std::size_t getSize() const;
 
         private:
+            MapBounds _tileBounds;
             std::shared_ptr<BinaryData> _tileData;
             std::shared_ptr<VectorTileDecoder::TileMap> _tileMap;
         };

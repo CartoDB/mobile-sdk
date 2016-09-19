@@ -16,6 +16,9 @@
 @class NTMapRenderer;
 @class NTOptions;
 
+/**
+ * MapView is a view class supporting map rendering and interaction.
+ */
 __attribute__ ((visibility("default"))) @interface NTMapView : GLKView
 
 @property (readonly, assign, nonatomic) void* nativeMapView;
