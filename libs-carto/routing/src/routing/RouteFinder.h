@@ -25,6 +25,8 @@ namespace carto { namespace routing {
         Result find(const Query& query) const;
 
     private:
+        constexpr static double EARTH_RADIUS = 6372797.560856;
+
         struct SearchNode {
             Graph::NodeId nodeId;
             Graph::NodeId prevNodeId;
@@ -50,10 +52,6 @@ namespace carto { namespace routing {
         static double calculateGeometryLength(const std::vector<WGSPos>& geometry, double t0, double t1);
 
         static double calculateGreatCircleDistance(const WGSPos& p0, const WGSPos& p1);
-
-        constexpr static double DEG_TO_RAD = 3.141592653589793 / 180.0;
-
-        constexpr static double EARTH_RADIUS = 6372797.560856;
 
         const std::shared_ptr<Graph> _graph;
     };

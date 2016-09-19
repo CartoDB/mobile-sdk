@@ -43,6 +43,8 @@ namespace carto { namespace css {
         std::shared_ptr<mvt::Map> loadMapProject(const std::string& fileName) const;
 
     protected:
+        constexpr static int MAX_ZOOM = 24;
+
         struct AttachmentStyle {
             std::string attachment;
             int order = 0;
@@ -62,8 +64,6 @@ namespace carto { namespace css {
             }
             return false;
         }
-
-        constexpr static int MAX_ZOOM = 24;
 
         std::shared_ptr<mvt::Map> buildMap(const StyleSheet& styleSheet, const std::vector<std::string>& layerNames, const std::vector<mvt::NutiParameter>& nutiParameters) const;
         void loadMapSettings(const std::map<std::string, Value>& mapProperties, mvt::Map::Settings& mapSettings) const;

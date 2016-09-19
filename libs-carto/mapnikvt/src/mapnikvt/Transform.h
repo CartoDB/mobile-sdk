@@ -9,6 +9,8 @@
 
 #include <cmath>
 
+#include <boost/math/constants/constants.hpp>
+
 #include <cglib/vec.h>
 #include <cglib/mat.h>
 
@@ -18,9 +20,6 @@ namespace carto { namespace mvt {
         virtual ~Transform() = default;
 
         virtual cglib::mat3x3<float> getMatrix() const = 0;
-
-    protected:
-        constexpr static float DEG_TO_RAD = 3.14159265f / 180.0f;
     };
 
     class MatrixTransform : public Transform {
@@ -57,7 +56,7 @@ namespace carto { namespace mvt {
         float getAngle() const { return _angle; }
 
         virtual cglib::mat3x3<float> getMatrix() const override {
-            return cglib::translate3_matrix(cglib::expand(_pos, 1.0f)) * cglib::rotate3_matrix(cglib::vec3<float>(0, 0, 1), _angle * DEG_TO_RAD) * cglib::translate3_matrix(cglib::expand(-_pos, 1.0f));
+            return cglib::translate3_matrix(cglib::expand(_pos, 1.0f)) * cglib::rotate3_matrix(cglib::vec3<float>(0, 0, 1), _angle * boost::math::constants::pi<float>() / 180.0f) * cglib::translate3_matrix(cglib::expand(-_pos, 1.0f));
         }
 
     protected:
@@ -87,7 +86,7 @@ namespace carto { namespace mvt {
 
         virtual cglib::mat3x3<float> getMatrix() const override {
             cglib::mat3x3<float> m = cglib::mat3x3<float>::identity();
-            m(0, 1) = std::tan(_angle * DEG_TO_RAD);
+            m(0, 1) = std::tan(_angle * boost::math::constants::pi<float>() / 180.0f);
             return m;
         }
 
@@ -103,7 +102,7 @@ namespace carto { namespace mvt {
 
         virtual cglib::mat3x3<float> getMatrix() const override {
             cglib::mat3x3<float> m = cglib::mat3x3<float>::identity();
-            m(1, 0) = std::tan(_angle * DEG_TO_RAD);
+            m(1, 0) = std::tan(_angle * boost::math::constants::pi<float>() / 180.0f);
             return m;
         }
 

@@ -17,11 +17,11 @@ namespace carto { namespace mvt {
         virtual void build(const FeatureCollection& featureCollection, const FeatureExpressionContext& exprContext, const SymbolizerContext& symbolizerContext, vt::TileLayerBuilder& layerBuilder) override;
 
     protected:
+        constexpr static int RECTANGLE_SIZE = 4;
+
         virtual void bindParameter(const std::string& name, const std::string& value) override;
 
         static std::shared_ptr<vt::Bitmap> createRectangleBitmap(float size);
-
-        constexpr static int RECTANGLE_SIZE = 4;
 
         std::string _file;
         vt::Color _fill = vt::Color(0xff000000);

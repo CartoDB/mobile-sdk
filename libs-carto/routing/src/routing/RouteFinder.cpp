@@ -1,5 +1,7 @@
 #include "RouteFinder.h"
 
+#include <boost/math/constants/constants.hpp>
+
 namespace carto { namespace routing {
     Result RouteFinder::find(const Query& query) const {
         std::array<std::vector<Graph::NearestNode>, 2> nearestNodes;
@@ -315,10 +317,12 @@ namespace carto { namespace routing {
     }
 
     double RouteFinder::calculateGreatCircleDistance(const WGSPos& p0, const WGSPos& p1) {
-        double lat1 = p0(0) * DEG_TO_RAD;
-        double lng1 = p0(1) * DEG_TO_RAD;
-        double lat2 = p1(0) * DEG_TO_RAD;
-        double lng2 = p1(1) * DEG_TO_RAD;
+        const double degToRad = boost::math::constants::pi<double>() / 180.0;
+
+        double lat1 = p0(0) * degToRad;
+        double lng1 = p0(1) * degToRad;
+        double lat2 = p1(0) * degToRad;
+        double lng2 = p1(1) * degToRad;
 
         double dLng = lng1 - lng2;
         double dLat = lat1 - lat2;

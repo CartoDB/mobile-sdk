@@ -184,6 +184,10 @@ namespace carto { namespace routing {
         std::vector<NearestNode> findNearestNode(const WGSPos& pos) const;
 
     private:
+        constexpr static int VERSION = 0;
+
+        constexpr static double COORDINATE_SCALE = 1.0e-6;
+
         struct Package {
             int packageId = -1;
             std::string packageName;
@@ -245,12 +249,6 @@ namespace carto { namespace routing {
 
         static WGSPos fromPoint(const Point& point);
         static Point toPoint(const WGSPos& pos);
-
-        constexpr static int VERSION = 0;
-
-        constexpr static double COORDINATE_SCALE = 1.0e-6;
-
-        constexpr static double DEG_TO_RAD = 3.141592653589793 / 180.0;
 
         std::vector<Package> _packages;
 

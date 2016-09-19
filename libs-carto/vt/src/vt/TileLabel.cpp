@@ -532,9 +532,6 @@ namespace carto { namespace vt {
     }
 
     std::shared_ptr<TileLabel::Placement> TileLabel::findClippedLinePlacement(const ViewState& viewState, const VerticesList& verticesList) const {
-        constexpr static float extraPixels = 30.0f; // extra visible pixels required for placement
-        constexpr static float minSegmentDot = 0.866f; // minimum dot product between consecutive segments, to avoid very distorted placement. 0.886 is approx cos(30deg)
-
         // Split vertices list into relatively straight segments
         VerticesList splitVerticesList;
         for (const Vertices& vertices : verticesList) {
@@ -547,7 +544,7 @@ namespace carto { namespace vt {
                     continue;
                 }
                 cglib::vec3<double> edge = cglib::unit(delta);
-                if (i > 1 && cglib::dot_product(edge, lastEdge) < minSegmentDot) {
+                if (i > 1 && cglib::dot_product(edge, lastEdge) < MIN_SEGMENT_DOT) {
                     splitVerticesList.emplace_back(vertices.begin() + idx, vertices.begin() + i);
                     len = 0;
                     idx = i - 1;
@@ -559,7 +556,7 @@ namespace carto { namespace vt {
         }
 
         // Clip each vertex list against frustum, if resulting list is inside frustum, return its center
-        double bestLen = (_orientation == LabelOrientation::LINE ? (_bbox.size()(0) + extraPixels) * _scale * viewState.scale : 0);
+        double bestLen = (_orientation == LabelOrientation::LINE ? (_bbox.size()(0) + EXTRA_PLACEMENT_PIXELS) * _scale * viewState.scale : 0);
         std::shared_ptr<Placement> bestPlacement;
         for (const Vertices& vertices : splitVerticesList) {
             if (vertices.size() < 2) {

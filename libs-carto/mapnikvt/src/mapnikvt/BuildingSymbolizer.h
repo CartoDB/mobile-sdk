@@ -20,9 +20,9 @@ namespace carto { namespace mvt {
         virtual void build(const FeatureCollection& featureCollection, const FeatureExpressionContext& exprContext, const SymbolizerContext& symbolizerContext, vt::TileLayerBuilder& layerBuilder) override;
 
     protected:
-        virtual void bindParameter(const std::string& name, const std::string& value) override;
-
         constexpr static float HEIGHT_SCALE = static_cast<float>(0.5 / 20037508.34);
+
+        virtual void bindParameter(const std::string& name, const std::string& value) override;
 
         std::shared_ptr<const vt::ColorFunction> _fill; // vt::Color(0xff808080)
         std::shared_ptr<const vt::FloatFunction> _fillOpacity; // 1.0f

@@ -65,6 +65,9 @@ namespace carto { namespace vt {
         bool calculateVertexData(const ViewState& viewState, VertexArray<cglib::vec3<float>>& vertices, VertexArray<cglib::vec2<float>>& texCoords, VertexArray<unsigned short>& indices) const;
 
     private:
+        constexpr static float EXTRA_PLACEMENT_PIXELS = 30.0f; // extra visible pixels required for placement
+        constexpr static float MIN_SEGMENT_DOT = 0.866f; // minimum dot product between consecutive segments, to avoid very distorted placement. 0.886 is approx cos(30deg)
+
         using Vertex = cglib::vec3<double>;
         using Vertices = std::vector<Vertex>;
         using VerticesList = std::list<Vertices>;
