@@ -83,6 +83,7 @@ include_directories(
     "${SDK_EXTERNAL_LIBS_DIR}/tess2/include"
     "${SDK_EXTERNAL_LIBS_DIR}/utf8/source"
     "${SDK_EXTERNAL_LIBS_DIR}/webp/src"
+    "${SDK_EXTERNAL_LIBS_DIR}/valhalla/include"
     "${PNG_INCLUDE_DIR}"
 )
 
@@ -141,6 +142,7 @@ add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/sqlite" sqlite)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/sqlite3pp" sqlite3pp)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/tess2" tess2)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/webp" webp)
+add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/valhalla" valhalla)
 if(NOT IOS)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/zlib" zlib)
 endif(NOT IOS)
@@ -241,6 +243,7 @@ set(SDK_SRC_FILES
     "${harfbuzz_SRC_FILES}"
     "${sqlite3pp_SRC_FILES}"
     "${sqlite_SRC_FILES}"
+    "${valhalla_SRC_FILES}"
 )
 
 if(NOT IOS)
@@ -274,6 +277,7 @@ set(SDK_OBJECTS
     $<TARGET_OBJECTS:harfbuzz>
     $<TARGET_OBJECTS:sqlite3pp>
     $<TARGET_OBJECTS:sqlite>
+    $<TARGET_OBJECTS:valhalla>
 )
 
 if(NOT IOS)
