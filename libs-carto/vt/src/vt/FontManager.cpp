@@ -208,7 +208,8 @@ namespace carto { namespace vt {
         }
 
     private:
-        enum { TARGET_DPI = 60, RENDER_DPI = 90 };
+        constexpr static int TARGET_DPI = 60;
+        constexpr static int RENDER_DPI = 90;
 
         GlyphId addFreeTypeGlyph(FT_Face face, CodePoint codePoint) const {
             int error = FT_Load_Glyph(face, codePoint, FT_LOAD_DEFAULT);

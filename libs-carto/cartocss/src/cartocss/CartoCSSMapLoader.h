@@ -62,7 +62,7 @@ namespace carto { namespace css {
             return false;
         }
 
-        enum { MAX_ZOOM = 24 };
+        constexpr static int MAX_ZOOM = 24;
 
         std::shared_ptr<mvt::Map> buildMap(const StyleSheet& styleSheet, const std::vector<std::string>& layerNames, const std::vector<mvt::NutiParameter>& nutiParameters) const;
         void loadMapSettings(const std::map<std::string, Value>& mapProperties, mvt::Map::Settings& mapSettings) const;

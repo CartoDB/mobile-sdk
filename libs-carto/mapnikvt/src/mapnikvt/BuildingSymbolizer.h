@@ -22,7 +22,7 @@ namespace carto { namespace mvt {
     protected:
         virtual void bindParameter(const std::string& name, const std::string& value) override;
 
-        const float HEIGHT_SCALE = static_cast<float>(0.5 / 20037508.34);
+        constexpr static float HEIGHT_SCALE = static_cast<float>(0.5 / 20037508.34);
 
         std::shared_ptr<const vt::ColorFunction> _fill; // vt::Color(0xff808080)
         std::shared_ptr<const vt::FloatFunction> _fillOpacity; // 1.0f

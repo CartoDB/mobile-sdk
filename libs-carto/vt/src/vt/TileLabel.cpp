@@ -532,8 +532,8 @@ namespace carto { namespace vt {
     }
 
     std::shared_ptr<TileLabel::Placement> TileLabel::findClippedLinePlacement(const ViewState& viewState, const VerticesList& verticesList) const {
-        static const float extraPixels = 30.0f; // extra visible pixels required for placement
-        static const float minSegmentDot = 0.866f; // minimum dot product between consecutive segments, to avoid very distorted placement. 0.886 is approx cos(30deg)
+        constexpr static float extraPixels = 30.0f; // extra visible pixels required for placement
+        constexpr static float minSegmentDot = 0.866f; // minimum dot product between consecutive segments, to avoid very distorted placement. 0.886 is approx cos(30deg)
 
         // Split vertices list into relatively straight segments
         VerticesList splitVerticesList;

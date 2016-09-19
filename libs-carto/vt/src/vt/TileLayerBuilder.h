@@ -68,7 +68,7 @@ namespace carto { namespace vt {
         std::shared_ptr<TileLayer> build(std::string layerName, int layerIdx, std::shared_ptr<FloatFunction> opacity, boost::optional<CompOp> compOp);
 
     private:
-        enum { RESERVED_VERTICES = 4096 };
+        constexpr static int RESERVED_VERTICES = 4096;
 
         struct BuilderParameters {
             TileGeometry::Type type;
