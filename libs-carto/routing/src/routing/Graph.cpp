@@ -6,6 +6,8 @@
 #include <queue>
 #include <unordered_set>
 
+#include <boost/math/constants/constants.hpp>
+
 #include <utf8.h>
 
 namespace carto { namespace routing {
@@ -597,7 +599,7 @@ namespace carto { namespace routing {
     
     WGSPos Graph::getClosestSegmentPoint(const WGSPos& pos, const WGSPos& p0, const WGSPos& p1) {
         // TODO: questionable approximation, we should project all positions to EPSG3857 and the result back
-        double lonFactor = std::cos((p0(0) + p1(0)) * 0.5 * DEG_TO_RAD);
+        double lonFactor = std::cos((p0(0) + p1(0)) * 0.5 * boost::math::constants::pi<double>() / 180.0);
         cglib::vec2<double> dp = p1 - p0;
         dp(1) *= lonFactor;
         double len2 = cglib::dot_product(dp, dp);
@@ -613,7 +615,7 @@ namespace carto { namespace routing {
     
     double Graph::getBBoxDistance(const WGSPos& pos, const WGSBounds& bbox) {
         // TODO: we do not handle -180/180 wrapping properly
-        double lonFactor = std::cos(pos(0) * DEG_TO_RAD);
+        double lonFactor = std::cos(pos(0) * boost::math::constants::pi<double>() / 180.0);
         double dist = std::max(bbox.min(0) - pos(0), pos(0) - bbox.max(0));
         dist = std::max(dist, lonFactor * std::max(bbox.min(1) - pos(1), pos(1) - bbox.max(1)));
         return dist;
@@ -621,7 +623,7 @@ namespace carto { namespace routing {
 
     double Graph::getPointDistance(const WGSPos& pos0, const WGSPos& pos1) {
         // TODO: we do not handle -180/180 wrapping properly
-        double lonFactor = std::cos((pos0(0) + pos1(0)) * 0.5 * DEG_TO_RAD);
+        double lonFactor = std::cos((pos0(0) + pos1(0)) * 0.5 * boost::math::constants::pi<double>() / 180.0);
         cglib::vec2<double> dp = pos1 - pos0;
         dp(1) *= lonFactor;
         return cglib::length(dp);

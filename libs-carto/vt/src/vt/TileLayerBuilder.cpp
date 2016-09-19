@@ -618,8 +618,6 @@ namespace carto { namespace vt {
     }
 
     bool TileLayerBuilder::tesselateLine(const Vertices& points, char styleIndex, const StrokeMap::Stroke* stroke, const LineStyle& style) {
-        constexpr static float minMiterDot = -0.8f;
-
         if (points.size() < 2) {
             return false;
         }
@@ -662,7 +660,7 @@ namespace carto { namespace vt {
             cglib::vec2<float> binormal = cglib::vec2<float>(tangent(1), -tangent(0));
 
             float dot = cglib::dot_product(binormal, prevBinormal);
-            if (dot < minMiterDot) {
+            if (dot < MIN_MITER_DOT) {
                 cycle = endpoints = false;
             }
             else {
@@ -707,7 +705,7 @@ namespace carto { namespace vt {
             binormal = cglib::vec2<float>(tangent(1), -tangent(0));
 
             float dot = cglib::dot_product(binormal, prevBinormal);
-            if (dot < minMiterDot) {
+            if (dot < MIN_MITER_DOT) {
                 _vertices.append(p0, p0);
                 _texCoords.append(cglib::vec2<float>(u0, v0), cglib::vec2<float>(u0, v1));
                 _binormals.append(-prevBinormal, prevBinormal);
