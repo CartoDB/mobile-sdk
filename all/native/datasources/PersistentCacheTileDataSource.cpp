@@ -252,11 +252,15 @@ namespace carto {
     }
     
     std::shared_ptr<long long> PersistentCacheTileDataSource::createTileId(long long tileId) {
-        return std::shared_ptr<long long>(new long long(tileId), [=](long long* tileId) {
-            std::lock_guard<std::recursive_mutex> lock(_mutex); // probably not needed, as this gets called from already locked state
-            remove(*tileId);
-            delete tileId;
-        });
+        std::weak_ptr<PersistentCacheTileDataSource> cacheWeak(std::static_pointer_cast<PersistentCacheTileDataSource>(shared_from_this()));
+        auto tileIdDeleter = [cacheWeak](long long* tileIdPtr) {
+            std::unique_ptr<long long> tileId(tileIdPtr);
+            if (auto cache = cacheWeak.lock()) {
+                std::lock_guard<std::recursive_mutex> lock(cache->_mutex); // probably not needed, as this gets called from already locked state
+                cache->remove(*tileId);
+            }
+        };
+        return std::shared_ptr<long long>(new long long(tileId), tileIdDeleter);
     }
     
 }
