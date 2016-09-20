@@ -48,10 +48,6 @@ namespace carto { namespace vt {
             return cglib::vec4<float>(_components[0], _components[1], _components[2], _components[3]);
         }
 
-        cglib::vec4<float> rgbaPremultiplied() const {
-            return cglib::vec4<float>(_components[0] * _components[3], _components[1] * _components[3], _components[2] * _components[3], _components[3]);
-        }
-
         std::array<std::uint8_t, 4> rgba8() const {
             std::array<std::uint8_t, 4> components8;
             for (std::size_t i = 0; i < 4; i++) {

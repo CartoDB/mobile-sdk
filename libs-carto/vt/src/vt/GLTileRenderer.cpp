@@ -1378,9 +1378,8 @@ namespace carto { namespace vt {
             
             std::size_t verticesSize = _labelVertices.size();
             label->calculateVertexData(_viewState, _labelVertices, _labelTexCoords, _labelIndices);
-            Color color = label->getColor();
-            color[3] *= label->getOpacity();
-            _labelColors.fill(color.rgbaPremultiplied(), _labelVertices.size() - verticesSize);
+            Color color = label->getColor() * label->getOpacity();
+            _labelColors.fill(color.rgba(), _labelVertices.size() - verticesSize);
 
             if (_labelVertices.size() >= 32768) { // flush the batch if largest vertex index is getting 'close' to 64k limit
                 renderLabelBatch(bitmap);
@@ -1414,7 +1413,8 @@ namespace carto { namespace vt {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
         glUniform1i(glGetUniformLocation(shaderProgram, "uTexture"), 0);
-        glUniform4fv(glGetUniformLocation(shaderProgram, "uColor"), 1, Color(opacity, opacity, opacity, opacity).rgba().data());
+        Color color(opacity, opacity, opacity, opacity);
+        glUniform4fv(glGetUniformLocation(shaderProgram, "uColor"), 1, color.rgba().data());
         glUniform2f(glGetUniformLocation(shaderProgram, "uInvScreenSize"), 1.0f / _screenWidth, 1.0f / _screenHeight);
         
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -1468,7 +1468,8 @@ namespace carto { namespace vt {
         cglib::mat4x4<float> mvpMatrix = calculateTileMVPMatrix(tileId);
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "uMVPMatrix"), 1, GL_FALSE, mvpMatrix.data());
         
-        glUniform4fv(glGetUniformLocation(shaderProgram, "uColor"), 1, Color(0, 0, 0, 0).rgba().data());
+        Color color(0, 0, 0, 0);
+        glUniform4fv(glGetUniformLocation(shaderProgram, "uColor"), 1, color.rgba().data());
         glUniform1f(glGetUniformLocation(shaderProgram, "uOpacity"), 0);
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -1521,7 +1522,7 @@ namespace carto { namespace vt {
             glUniform1i(glGetUniformLocation(shaderProgram, "uPattern"), 0);
         }
 
-        glUniform4fv(glGetUniformLocation(shaderProgram, "uColor"), 1, _backgroundColor.rgbaPremultiplied().data());
+        glUniform4fv(glGetUniformLocation(shaderProgram, "uColor"), 1, _backgroundColor.rgba().data());
         glUniform1f(glGetUniformLocation(shaderProgram, "uOpacity"), opacity);
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -1696,9 +1697,8 @@ namespace carto { namespace vt {
 
         std::array<cglib::vec4<float>, TileGeometry::StyleParameters::MAX_PARAMETERS> colors;
         for (int i = 0; i < styleParams.parameterCount; i++) {
-            Color color = (*styleParams.colorTable[i])(_viewState);
-            color[3] *= blend * opacity * (*styleParams.opacityTable[i])(_viewState);
-            colors[i] = color.rgbaPremultiplied();
+            Color color = (*styleParams.colorTable[i])(_viewState) * (blend * opacity * (*styleParams.opacityTable[i])(_viewState));
+            colors[i] = color.rgba();
         }
         
         if (geometry->getType() == TileGeometry::Type::POINT) {
