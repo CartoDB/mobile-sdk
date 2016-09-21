@@ -208,13 +208,18 @@ namespace carto {
         }
 
         // Set default username
+        _defaultUsername.clear();
         std::string hostName = NetworkUtils::ParseURLHostName(visURL);
         std::string::size_type hostSepPos = hostName.find('.');
         if (hostSepPos != std::string::npos) {
             _defaultUsername = hostName.substr(0, hostSepPos);
         }
-        else {
-            _defaultUsername.clear();
+        std::string urlPath = NetworkUtils::ParseURLPath(visURL);
+        if (urlPath.substr(0, 3) == "/u/") {
+            std::string::size_type urlPathPos = urlPath.find('/', 3);
+            if (urlPathPos != std::string::npos) {
+                _defaultUsername = urlPath.substr(3, urlPathPos - 3);
+            }
         }
 
         // Base options
