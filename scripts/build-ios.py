@@ -85,6 +85,25 @@ def buildIOSFramework(args, archs):
   print "Output available in:\n%s" % distDir
   return True
 
+def buildIOSCocoapod(args):
+  baseDir = getBaseDir()
+  distDir = getDistDir('ios')
+  distName = 'sdk4-ios-%s.zip' % args.buildVersion
+  version = args.buildversion
+
+  with open('%s/extensions/scripts/ios-cocoapod/CartoMobileSDK.podspec.template' % baseDir, 'r') as f:
+    cocoapodFile = string.Template(f.read()).safe_substitute({ 'baseDir': baseDir, 'distDir': distDir, 'distName': distName, 'version': version })
+  with open('%s/CartoMobileSDK.podspec' % distDir, 'w') as f:
+    f.write(cocoapodFile)
+
+  try:
+    os.remove('%s/%s' % (distDir, distName))
+  except:
+    pass
+  if not execute('zip', distDir, '-r', distName, '*', '-x', 'sdk4-ios-*.zip'):
+    return False
+  print "Output available in:\n%s\n\nTo publish, use:\ncd %s\naws s3 cp %s s3://nutifront/%s\npod trunk push\n" % (distDir, distName, distName)
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--profile', dest='profile', default=getDefaultProfile(), choices=getProfiles().keys(), help='Build profile')
 parser.add_argument('--ios-arch', dest='iosarch', default=['all'], choices=IOS_ARCHS + ['all'], nargs='+', help='Windows phone target architectures')
@@ -93,6 +112,8 @@ parser.add_argument('--cmake', dest='cmake', default='cmake', help='CMake execut
 parser.add_argument('--cmake-options', dest='cmakeoptions', default='', help='CMake options')
 parser.add_argument('--configuration', dest='configuration', default='Release', choices=['Release', 'Debug'], help='Configuration')
 parser.add_argument('--build-number', dest='buildnumber', default='', help='Build sequence number, goes to version str')
+parser.add_argument('--build-version', dest='buildversion', default='%s-devel' % SDK_VERSION, help='Build version, goes to distributions')
+parser.add_argument('--build-cocoapod', dest='buildcocoapod', default=False, action='store_true', help='Build CocoaPod')
 
 args = parser.parse_args()
 if 'all' in args.iosarch:
@@ -106,3 +127,7 @@ for arch in args.iosarch:
 
 if not buildIOSFramework(args, args.iosarch):
   exit(-1)
+
+if args.buildcocoapod:
+  if not buildIOSCocoaPod(args):
+    exit(-1)
