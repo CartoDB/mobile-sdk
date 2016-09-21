@@ -2,6 +2,7 @@ import os
 import re
 import shutil
 import argparse
+import string
 from build.sdk_build_utils import *
 
 IOS_ARCHS = ['i386', 'x86_64', 'armv7', 'arm64']
@@ -88,8 +89,8 @@ def buildIOSFramework(args, archs):
 def buildIOSCocoapod(args):
   baseDir = getBaseDir()
   distDir = getDistDir('ios')
-  distName = 'sdk4-ios-%s.zip' % args.buildVersion
   version = args.buildversion
+  distName = 'sdk4-ios-%s.zip' % version
 
   with open('%s/extensions/scripts/ios-cocoapod/CartoMobileSDK.podspec.template' % baseDir, 'r') as f:
     cocoapodFile = string.Template(f.read()).safe_substitute({ 'baseDir': baseDir, 'distDir': distDir, 'distName': distName, 'version': version })
@@ -100,9 +101,9 @@ def buildIOSCocoapod(args):
     os.remove('%s/%s' % (distDir, distName))
   except:
     pass
-  if not execute('zip', distDir, '-r', distName, '*', '-x', 'sdk4-ios-*.zip'):
+  if not execute('zip', distDir, '-r', distName, 'CartoMobileSDK.framework'):
     return False
-  print "Output available in:\n%s\n\nTo publish, use:\ncd %s\naws s3 cp %s s3://nutifront/%s\npod trunk push\n" % (distDir, distName, distName)
+  print "Output available in:\n%s\n\nTo publish, use:\ncd %s\naws s3 cp %s s3://nutifront/sdk_snapshots/%s\npod trunk push\n" % (distDir, distDir, distName, distName)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--profile', dest='profile', default=getDefaultProfile(), choices=getProfiles().keys(), help='Build profile')
@@ -129,5 +130,5 @@ if not buildIOSFramework(args, args.iosarch):
   exit(-1)
 
 if args.buildcocoapod:
-  if not buildIOSCocoaPod(args):
+  if not buildIOSCocoapod(args):
     exit(-1)
