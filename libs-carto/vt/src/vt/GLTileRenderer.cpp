@@ -1212,11 +1212,11 @@ namespace carto { namespace vt {
             for (auto it = renderNodeMap.begin(); it != renderNodeMap.end(); it++) {
                 const RenderNode& renderNode = it->second;
                 
-                float layerOpacity = 1.0f, geometryOpacity = 1.0f;
+                float blendOpacity = 1.0f, geometryOpacity = 1.0f;
                 if (renderNode.layer->getOpacity()) {
                     float opacity = (*renderNode.layer->getOpacity())(_viewState);
                     if (renderNode.layer->getCompOp()) { // a 'useful' hack - we use real layer opacity only if comp-op is explicitly defined; otherwise we translate it into element opacity, which is in many cases close enough
-                        layerOpacity = opacity;
+                        blendOpacity = opacity;
                     } else {
                         geometryOpacity = opacity;
                     }
@@ -1300,7 +1300,7 @@ namespace carto { namespace vt {
                     }
 
                     setBlendState(renderNode.layer->getCompOp().get());
-                    blendTileTexture(renderNode.tileId, layerOpacity, _layerFBOs[layerFBOMap[renderNode.layer->getLayerIndex()]].colorTexture);
+                    blendTileTexture(renderNode.tileId, blendOpacity, _layerFBOs[layerFBOMap[renderNode.layer->getLayerIndex()]].colorTexture);
                 }
             }
         }
