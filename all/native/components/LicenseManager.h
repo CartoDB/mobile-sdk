@@ -24,6 +24,8 @@ namespace carto {
 
         bool getParameter(const std::string& name, std::string& value) const;
 
+        bool getPackageEncryptionKey(std::string& key) const;
+
         static LicenseManager& GetInstance();
         
     private:
