@@ -84,6 +84,7 @@ include_directories(
     "${SDK_EXTERNAL_LIBS_DIR}/utf8/source"
     "${SDK_EXTERNAL_LIBS_DIR}/webp/src"
     "${SDK_EXTERNAL_LIBS_DIR}/valhalla/include"
+    "${SDK_EXTERNAL_LIBS_DIR}/protobuf-2.5.0/src"
     "${PNG_INCLUDE_DIR}"
 )
 
