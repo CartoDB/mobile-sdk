@@ -1,6 +1,7 @@
 #ifdef _CARTO_PACKAGEMANAGER_SUPPORT
 
 #include "CartoPackageManager.h"
+#include "components/Exceptions.h"
 #include "components/LicenseManager.h"
 #include "projections/EPSG3857.h"
 #include "utils/GeneralUtils.h"
@@ -16,7 +17,7 @@
 namespace carto {
 
     CartoPackageManager::CartoPackageManager(const std::string& source, const std::string& dataFolder) :
-        PackageManager(GetPackageListURL(source), dataFolder, SERVER_ENC_KEY, GetLocalEncKey()), _source(source)
+        PackageManager(GetPackageListURL(source), dataFolder, GetServerEncKey(), GetLocalEncKey()), _source(source)
     {
         if (!PlatformUtils::ExcludeFolderFromBackup(dataFolder)) {
             Log::Warn("CartoPackageManager: Failed to change package manager directory attributes");
@@ -53,6 +54,14 @@ namespace carto {
         params["platform"] = PlatformUtils::GetPlatformId();
         params["sdk_build"] = _CARTO_MOBILE_SDK_VERSION;
         return NetworkUtils::BuildURLFromParameters(baseURL, params);
+    }
+
+    std::string CartoPackageManager::GetServerEncKey() {
+        std::string encKey;
+        if (!LicenseManager::GetInstance().getPackageEncryptionKey(encKey)) {
+            throw GenericException("Offline packages not supported");
+        }
+        return encKey;
     }
 
     std::string CartoPackageManager::GetLocalEncKey() {
@@ -163,8 +172,6 @@ namespace carto {
         }
         return std::shared_ptr<PackageInfo>();
     }
-
-    const std::string CartoPackageManager::SERVER_ENC_KEY = _CARTO_PACKAGEMANAGER_ENC_KEY;
 
     const std::string CartoPackageManager::MAP_PACKAGE_LIST_URL = "http://api-staging.nutiteq.com/v2/";
 

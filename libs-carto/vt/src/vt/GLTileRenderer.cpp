@@ -1212,9 +1212,14 @@ namespace carto { namespace vt {
             for (auto it = renderNodeMap.begin(); it != renderNodeMap.end(); it++) {
                 const RenderNode& renderNode = it->second;
                 
-                float opacity = 1.0f;
-                if (renderNode.layer->getCompOp() && renderNode.layer->getOpacity()) {
-                    opacity = (*renderNode.layer->getOpacity())(_viewState);
+                float blendOpacity = 1.0f, geometryOpacity = 1.0f;
+                if (renderNode.layer->getOpacity()) {
+                    float opacity = (*renderNode.layer->getOpacity())(_viewState);
+                    if (renderNode.layer->getCompOp()) { // a 'useful' hack - we use real layer opacity only if comp-op is explicitly defined; otherwise we translate it into element opacity, which is in many cases close enough
+                        blendOpacity = opacity;
+                    } else {
+                        geometryOpacity = opacity;
+                    }
                 }
 
                 GLint currentFBO = 0;
@@ -1252,7 +1257,7 @@ namespace carto { namespace vt {
                     setupFrameBuffer();
                     
                     setBlendState(CompOp::SRC_OVER);
-                    renderTileBitmap(renderNode.tileId, blendNode->tileId, renderNode.blend, opacity, bitmap);
+                    renderTileBitmap(renderNode.tileId, blendNode->tileId, renderNode.blend, geometryOpacity, bitmap);
                 }
                 
                 for (const std::shared_ptr<TileGeometry>& geometry : renderNode.layer->getGeometries()) {
@@ -1284,7 +1289,7 @@ namespace carto { namespace vt {
                     }
 
                     setBlendState(geometry->getStyleParameters().compOp);
-                    renderTileGeometry(renderNode.tileId, blendNode->tileId, renderNode.blend, opacity, geometry);
+                    renderTileGeometry(renderNode.tileId, blendNode->tileId, renderNode.blend, geometryOpacity, geometry);
                 }
                 update = renderNode.initialBlend < 1.0f || update;
 
@@ -1295,7 +1300,7 @@ namespace carto { namespace vt {
                     }
 
                     setBlendState(renderNode.layer->getCompOp().get());
-                    blendTileTexture(renderNode.tileId, opacity, _layerFBOs[layerFBOMap[renderNode.layer->getLayerIndex()]].colorTexture);
+                    blendTileTexture(renderNode.tileId, blendOpacity, _layerFBOs[layerFBOMap[renderNode.layer->getLayerIndex()]].colorTexture);
                 }
             }
         }

@@ -15,6 +15,14 @@ namespace carto {
         if (name == "watermark") {
             return "carto";
         }
+        if (name == "appToken") {
+            Log::Error("LicenseManager::getParameter: Public build, appToken not available!");
+        }
+        return false;
+    }
+
+    bool LicenseManager::getPackageEncryptionKey(std::string& key) const {
+        Log::Error("LicenseManager::getPackageEncryptionKey: Public build, offline packages not available!");
         return false;
     }
     

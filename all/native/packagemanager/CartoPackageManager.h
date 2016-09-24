@@ -34,6 +34,7 @@ namespace carto {
         
     protected:
         static std::string GetPackageListURL(const std::string& source);
+        static std::string GetServerEncKey();
         static std::string GetLocalEncKey();
         
         static bool CalculateBBoxTiles(const MapBounds& bounds, const Projection& proj, const PackageTileMask::Tile& tile, std::vector<PackageTileMask::Tile>& tiles);
@@ -43,8 +44,6 @@ namespace carto {
         virtual std::shared_ptr<PackageInfo> getCustomPackage(const std::string& packageId, int version) const;
         
     private:
-        static const std::string SERVER_ENC_KEY;
-
         static const std::string MAP_PACKAGE_LIST_URL;
 
         static const std::string ROUTING_PACKAGE_LIST_URL;

@@ -853,7 +853,7 @@ Add a marker and apply marker styling using the following code:
 
 // 2. Add marker
       Marker marker1 = new Marker(proj.fromWgs84(new MapPos(24.646469, 59.426939)), sharedMarkerStyle);
-      marker1.setMetaDataElement("ClickText", "Marker nr 1");
+      marker1.setMetaDataElement("ClickText", new Variant("Marker nr 1"));
       vectorDataSource1.add(marker1);
 
 // 3. Animate map to the marker
