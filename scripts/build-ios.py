@@ -91,7 +91,7 @@ def buildIOSCocoapod(args):
   distDir = getDistDir('ios')
   version = args.buildversion
   distName = 'sdk4-ios-%s.zip' % version
-
+  
   with open('%s/extensions/scripts/ios-cocoapod/CartoMobileSDK.podspec.template' % baseDir, 'r') as f:
     cocoapodFile = string.Template(f.read()).safe_substitute({ 'baseDir': baseDir, 'distDir': distDir, 'distName': distName, 'version': version })
   with open('%s/CartoMobileSDK.podspec' % distDir, 'w') as f:
