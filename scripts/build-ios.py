@@ -97,13 +97,13 @@ def buildIOSCocoapod(args):
   with open('%s/CartoMobileSDK.podspec' % distDir, 'w') as f:
     f.write(cocoapodFile)
 
-  try:
-    os.remove('%s/%s' % (distDir, distName))
-  except:
-    pass
-  if not execute('zip', distDir, '-y', '-r', distName, 'CartoMobileSDK.framework'):
-    return False
-  print "Output available in:\n%s\n\nTo publish, use:\ncd %s\naws s3 cp %s s3://nutifront/sdk_snapshots/%s\npod trunk push\n" % (distDir, distDir, distName, distName)
+  # try:
+  #   os.remove('%s/%s' % (distDir, distName))
+  # except:
+  #   pass
+  # if not execute('zip', distDir, '-y', '-r', distName, 'CartoMobileSDK.framework'):
+  #   return False
+  # print "Output available in:\n%s\n\nTo publish, use:\ncd %s\naws s3 cp %s s3://nutifront/sdk_snapshots/%s\npod trunk push\n" % (distDir, distDir, distName, distName)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--profile', dest='profile', default=getDefaultProfile(), choices=getProfiles().keys(), help='Build profile')
