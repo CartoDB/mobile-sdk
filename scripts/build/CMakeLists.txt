@@ -84,6 +84,7 @@ include_directories(
     "${SDK_EXTERNAL_LIBS_DIR}/utf8/source"
     "${SDK_EXTERNAL_LIBS_DIR}/webp/src"
     "${SDK_EXTERNAL_LIBS_DIR}/valhalla/include"
+    "${SDK_EXTERNAL_LIBS_DIR}/valhalla/include/valhalla" 
     "${SDK_EXTERNAL_LIBS_DIR}/protobuf-2.5.0/src"
     "${PNG_INCLUDE_DIR}"
 )
@@ -136,6 +137,7 @@ add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/harfbuzz" harfbuzz)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/jpeg" jpeg)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/miniz" miniz)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/png" png)
+add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/protobuf-2.5.0" protobuf)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/pugixml" pugixml)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/pvrt" pvrt)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/rg_etc1" rg_etc1)
@@ -234,6 +236,7 @@ set(SDK_SRC_FILES
     "${cryptopp_SRC_FILES}"
     "${rg_etc1_SRC_FILES}"
     "${pvrt_SRC_FILES}"
+    "${protobuf_SRC_FILES}"
     "${pugixml_SRC_FILES}"
     "${libtess2_SRC_FILES}"
     "${miniz_SRC_FILES}"
@@ -268,6 +271,7 @@ set(SDK_OBJECTS
     $<TARGET_OBJECTS:cryptopp>
     $<TARGET_OBJECTS:rg_etc1>
     $<TARGET_OBJECTS:pvrt>
+    $<TARGET_OBJECTS:protobuf>
     $<TARGET_OBJECTS:pugixml>
     $<TARGET_OBJECTS:libtess2>
     $<TARGET_OBJECTS:miniz>

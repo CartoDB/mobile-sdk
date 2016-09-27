@@ -154,6 +154,7 @@
 #import "NTRoutingResult.h"
 #import "NTRoutingService.h"
 #import "NTOSRMOfflineRoutingService.h"
+#import "NTValhallaOfflineRoutingService.h"
 #endif
 
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT
