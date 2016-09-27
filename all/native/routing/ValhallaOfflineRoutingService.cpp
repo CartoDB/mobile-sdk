@@ -8,7 +8,6 @@
 #include "routing/RoutingProxy.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
-#include "utils/AssetUtils.h"
 
 #include <vector>
 #include <functional>
@@ -52,43 +51,22 @@
 #include <valhalla/proto/tripdirections.pb.h>
 
 namespace valhalla { namespace thor {
-    enum ACTION_TYPE {
-        ROUTE = 0, VIAROUTE = 1, LOCATE = 2, ONE_TO_MANY = 3, MANY_TO_ONE = 4, MANY_TO_MANY = 5,
-        SOURCES_TO_TARGETS = 6, OPTIMIZED_ROUTE = 7, ISOCHRONE = 8, ATTRIBUTES = 9
-    };
 
     class thor_worker_t {
     public:
-        enum ACTION_TYPE {
-            ROUTE = 0, VIAROUTE = 1, LOCATE = 2, ONE_TO_MANY = 3, MANY_TO_ONE = 4, MANY_TO_MANY = 5,
-            SOURCES_TO_TARGETS = 6, OPTIMIZED_ROUTE = 7, ISOCHRONE = 8, ATTRIBUTES = 9
-        };
-        thor_worker_t(const std::string& path, const std::string& costing) : reader(make_reader_config(path)) {
-            factory.Register("pedestrian", sif::CreatePedestrianCost);
-            //!!! other
-            boost::property_tree::ptree config_costing;
-            cost = factory.Create(costing, config_costing);
-            mode = cost->travelmode();
-            mode_costing[static_cast<uint32_t>(mode)] = cost;
-        }
-        virtual ~thor_worker_t() {
-        }
+        thor_worker_t(const std::string& path, const std::string& costing);
+        virtual ~thor_worker_t();
 
-        std::list<valhalla::odin::TripPath> path_depart_at(const std::vector<valhalla::midgard::PointLL>& points, const std::string &costing, const boost::optional<int> &date_time_type);
+        std::list<valhalla::odin::TripPath> path_depart_at(const std::vector<valhalla::midgard::PointLL>& points, const boost::optional<int> &date_time_type);
 
     protected:
-
-        static boost::property_tree::ptree make_reader_config(const std::string& path) {
-            boost::property_tree::ptree config;
-            config.put("max_cache_size", 16 * 1024 * 1024);
-            config.put("tile_dir", path);
-            return config;
-        }
+        static boost::property_tree::ptree make_reader_config(const std::string& path);
 
         void update_origin(baldr::PathLocation& origin, bool prior_is_node, const baldr::GraphId& through_edge);
         void get_path(PathAlgorithm* path_algorithm, baldr::PathLocation& origin, baldr::PathLocation& destination, std::vector<thor::PathInfo>& path_edges);
         thor::PathAlgorithm* get_path_algorithm(const std::string& routetype, const baldr::PathLocation& origin, const baldr::PathLocation& destination);
 
+        std::string costing;
         valhalla::sif::TravelMode mode;
         boost::optional<std::string> jsonp;
         std::vector<baldr::Location> locations;
@@ -99,8 +77,9 @@ namespace valhalla { namespace thor {
         std::vector<baldr::PathLocation> correlated_t;
         sif::CostFactory<sif::DynamicCost> factory;
         sif::CostFactory<sif::DynamicCost>::cost_ptr_t cost;
-        valhalla::sif::cost_ptr_t mode_costing[4];    // TODO - max # of modes?
+        valhalla::sif::cost_ptr_t mode_costing[16];
         valhalla::baldr::GraphReader reader;
+
         // Path algorithms (TODO - perhaps use a map?))
         AStarPathAlgorithm astar;
         BidirectionalAStar bidir_astar;
@@ -109,6 +88,31 @@ namespace valhalla { namespace thor {
         float long_request;
         boost::optional<int> date_time_type;
     };
+
+    thor_worker_t::thor_worker_t(const std::string& path, const std::string& costing) : reader(make_reader_config(path)), costing(costing) {
+        factory.Register("auto", sif::CreateAutoCost);
+        factory.Register("auto_shorter", sif::CreateAutoShorterCost);
+        factory.Register("bus", sif::CreateBusCost);
+        factory.Register("bicycle", sif::CreateBicycleCost);
+        factory.Register("pedestrian", sif::CreatePedestrianCost);
+        factory.Register("truck", sif::CreateTruckCost);
+        factory.Register("transit", sif::CreateTransitCost);
+
+        boost::property_tree::ptree config_costing;
+        cost = factory.Create(costing, config_costing);
+        mode = cost->travelmode();
+        mode_costing[static_cast<uint32_t>(mode)] = cost;
+    }
+    
+    thor_worker_t::~thor_worker_t() {
+    }
+
+    boost::property_tree::ptree thor_worker_t::make_reader_config(const std::string& path) {
+        boost::property_tree::ptree config;
+        config.put("max_cache_size", 16 * 1024 * 1024);
+        config.put("tile_dir", path);
+        return config;
+    }
 
     thor::PathAlgorithm* thor_worker_t::get_path_algorithm(const std::string& routetype,
         const baldr::PathLocation& origin, const baldr::PathLocation& destination) {
@@ -218,13 +222,14 @@ namespace valhalla { namespace thor {
         }
     }
 
-    std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(const std::vector<valhalla::midgard::PointLL>& points, const std::string &costing, const boost::optional<int> &date_time_type) {
+    std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(const std::vector<valhalla::midgard::PointLL>& points, const boost::optional<int> &date_time_type) {
+        // Build correlated path locations
         std::vector<baldr::PathLocation> correlated;
+        correlated.reserve(points.size());
         for (const auto& point : points) {
             correlated.push_back(valhalla::loki::Search(point, reader, cost->GetEdgeFilter(), cost->GetNodeFilter()));
         }
 
-        //get time for start of request
         auto s = std::chrono::system_clock::now();
         bool prior_is_node = false;
         std::vector<baldr::PathLocation> through_loc;
@@ -332,12 +337,49 @@ namespace valhalla { namespace thor {
 
         return trippaths;
     }
+
+    const std::unordered_map<int, carto::RoutingAction::RoutingAction> maneuver_types = {
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kNone),             carto::RoutingAction::ROUTING_ACTION_NO_TURN },//NoTurn = 0,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kContinue),         carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kBecomes),          carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kRampStraight),     carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kStayStraight),     carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kMerge),            carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kFerryEnter),       carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kFerryExit),        carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kSlightRight),      carto::RoutingAction::ROUTING_ACTION_TURN_RIGHT },//TurnSlightRight,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kRight),            carto::RoutingAction::ROUTING_ACTION_TURN_RIGHT },//TurnRight,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kRampRight),        carto::RoutingAction::ROUTING_ACTION_TURN_RIGHT },//TurnRight,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kExitRight),        carto::RoutingAction::ROUTING_ACTION_TURN_RIGHT },//TurnRight,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kStayRight),        carto::RoutingAction::ROUTING_ACTION_TURN_RIGHT },//TurnRight,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kSharpRight),       carto::RoutingAction::ROUTING_ACTION_TURN_RIGHT },//TurnSharpRight,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kUturnLeft),        carto::RoutingAction::ROUTING_ACTION_UTURN },//UTurn,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kUturnRight),       carto::RoutingAction::ROUTING_ACTION_UTURN },//UTurn,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kSharpLeft),        carto::RoutingAction::ROUTING_ACTION_TURN_LEFT },//TurnSharpLeft,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kLeft),             carto::RoutingAction::ROUTING_ACTION_TURN_LEFT },//TurnLeft,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kRampLeft),         carto::RoutingAction::ROUTING_ACTION_TURN_LEFT },//TurnLeft,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kExitLeft),         carto::RoutingAction::ROUTING_ACTION_TURN_LEFT },//TurnLeft,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kStayLeft),         carto::RoutingAction::ROUTING_ACTION_TURN_LEFT },//TurnLeft,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kSlightLeft),       carto::RoutingAction::ROUTING_ACTION_TURN_LEFT },//TurnSlightLeft,
+        //{ static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_k),               carto::RoutingAction::ROUTING_ACTION_REACH_VIA_LOCATION },//ReachViaLocation,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kRoundaboutEnter),  carto::RoutingAction::ROUTING_ACTION_ENTER_ROUNDABOUT },//EnterRoundAbout,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kRoundaboutExit),   carto::RoutingAction::ROUTING_ACTION_LEAVE_ROUNDABOUT },//LeaveRoundAbout,
+        //{ static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_k),               carto::RoutingAction::ROUTING_ACTION_STAY_ON_ROUNDABOUT },//StayOnRoundAbout,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kStart),            carto::RoutingAction::ROUTING_ACTION_START_AT_END_OF_STREET },//StartAtEndOfStreet,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kStartRight),       carto::RoutingAction::ROUTING_ACTION_START_AT_END_OF_STREET },//StartAtEndOfStreet,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kStartLeft),        carto::RoutingAction::ROUTING_ACTION_START_AT_END_OF_STREET },//StartAtEndOfStreet,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kDestination),      carto::RoutingAction::ROUTING_ACTION_FINISH },//ReachedYourDestination,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kDestinationRight), carto::RoutingAction::ROUTING_ACTION_FINISH },//ReachedYourDestination,
+        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kDestinationLeft),  carto::RoutingAction::ROUTING_ACTION_FINISH },//ReachedYourDestination,
+        //{ static_cast<int>valhalla::odin::TripDirections_Maneuver_Type_k),                carto::RoutingAction::ROUTING_ACTION_ENTER_AGAINST_ALLOWED_DIRECTION, },//EnterAgainstAllowedDirection,
+        //{ static_cast<int>valhalla::odin::TripDirections_Maneuver_Type_k),                carto::RoutingAction::ROUTING_ACTION_LEAVE_AGAINST_ALLOWED_DIRECTION },//LeaveAgainstAllowedDirection
+    };
 } }
 
 namespace carto {
 
     ValhallaOfflineRoutingService::ValhallaOfflineRoutingService(const std::string& path) :
-        _path(path)
+        _path(path), _profile("pedestrian")
     {
     }
 
@@ -360,9 +402,8 @@ namespace carto {
                 points.emplace_back(static_cast<float>(posWgs84.getX()), static_cast<float>(posWgs84.getY()));
             }
             
-            std::string costing = "pedestrian";
-            valhalla::thor::thor_worker_t worker(_path, costing);
-            tripPaths = worker.path_depart_at(points, costing, boost::optional<int>());
+            valhalla::thor::thor_worker_t worker(_path, _profile);
+            tripPaths = worker.path_depart_at(points, boost::optional<int>());
         }
         catch (const std::exception& ex) {
             throw GenericException("Exception while calculating route", ex.what());
@@ -372,7 +413,7 @@ namespace carto {
         std::vector<MapPos> epsg3857Points;
         std::vector<RoutingInstruction> instructions;
 
-        for (auto& tripPath : tripPaths) {
+        for (valhalla::odin::TripPath& tripPath : tripPaths) {
             valhalla::odin::DirectionsOptions directionsOptions;
             valhalla::odin::DirectionsBuilder directions;
             valhalla::odin::TripDirections tripDirections;
@@ -380,20 +421,47 @@ namespace carto {
                 tripDirections = directions.Build(directionsOptions, tripPath);
 
                 std::vector<valhalla::midgard::PointLL> shape = valhalla::midgard::decode<std::vector<PointLL> >(tripDirections.shape());
+                points.reserve(points.size() + shape.size());
+                epsg3857Points.reserve(epsg3857Points.size() + shape.size());
 
-                std::size_t pointIndex = points.size();
                 for (int i = 0; i < tripDirections.maneuver_size(); i++) {
                     const valhalla::odin::TripDirections_Maneuver& maneuver = tripDirections.maneuver(i);
+                    auto it = valhalla::thor::maneuver_types.find(static_cast<int>(maneuver.type()));
+                    if (it == valhalla::thor::maneuver_types.end()) {
+                        Log::Warnf("ValhallaOfflineRoutingService::calculateRoute: Failed to translate type %d", static_cast<int>(maneuver.type()));
+                        continue;
+                    }
+
+                    std::size_t pointIndex = points.size();
                     for (int j = maneuver.begin_shape_index(); j <= maneuver.end_shape_index(); j++) {
                         const valhalla::midgard::PointLL& point = shape.at(j);
                         epsg3857Points.push_back(epsg3857.fromLatLong(point.lat(), point.lng()));
                         points.push_back(proj->fromLatLong(point.lat(), point.lng()));
                     }
+
+                    float turnAngle = 0;
+                    if (pointIndex > 0 && pointIndex + 1 < static_cast<int>(epsg3857Points.size())) {
+                        const MapPos& p0 = epsg3857Points.at(pointIndex - 1);
+                        const MapPos& p1 = epsg3857Points.at(pointIndex);
+                        const MapPos& p2 = epsg3857Points.at(pointIndex + 1);
+                        MapVec v1 = p1 - p0;
+                        MapVec v2 = p2 - p1;
+                        if (v1.length() > 0 && v2.length() > 0) {
+                            double dot = v1.dotProduct(v2) / v1.length() / v2.length();
+                            turnAngle = static_cast<float>(std::acos(std::max(-1.0, std::min(1.0, dot))) * Const::RAD_TO_DEG);
+                        }
+                    }
+
+                    instructions.emplace_back(
+                        it->second,
+                        pointIndex,
+                        maneuver.street_name_size() ? maneuver.street_name(0) : std::string(""),
+                        turnAngle,
+                        maneuver.begin_heading(),
+                        maneuver.length(),
+                        maneuver.time()
+                    );
                 }
-
-                RoutingAction::RoutingAction action = RoutingAction::ROUTING_ACTION_NO_TURN;
-
-                instructions.emplace_back(action, pointIndex, "", 0, 0, 0, 0);
             }
             catch (const std::exception& ex) {
                 throw GenericException("Exception while translating route", ex.what());
