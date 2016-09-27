@@ -458,7 +458,7 @@ namespace carto {
                         maneuver.street_name_size() ? maneuver.street_name(0) : std::string(""),
                         turnAngle,
                         maneuver.begin_heading(),
-                        maneuver.length(),
+                        maneuver.length() * 1000.0,
                         maneuver.time()
                     );
                 }
