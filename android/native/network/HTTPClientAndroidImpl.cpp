@@ -66,11 +66,13 @@ namespace carto {
         JNIUniqueGlobalRef<jclass> clazz;
         jmethodID constructor;
         jmethodID read;
+        jmethodID close;
 
         explicit BufferedInputStreamClass(JNIEnv* jenv) {
             clazz = JNIUniqueGlobalRef<jclass>(jenv->NewGlobalRef(jenv->FindClass("java/io/BufferedInputStream")));
             constructor = jenv->GetMethodID(clazz, "<init>", "(Ljava/io/InputStream;)V");
             read = jenv->GetMethodID(clazz, "read", "([B)I");
+            close = jenv->GetMethodID(clazz, "close", "()V");
         }
     };
     
@@ -211,31 +213,45 @@ namespace carto {
         
         jobject bufferedInputStream = jenv->NewObject(_BufferedInputStreamClass->clazz, _BufferedInputStreamClass->constructor, inputStream);
 
-        jbyte buf[4096];
-        jbyteArray jbuf = jenv->NewByteArray(sizeof(buf));
-        
-        for (std::uint64_t offset = 0; offset < contentLength && !cancel; ) {
-            jint numBytesRead = jenv->CallIntMethod(bufferedInputStream, _BufferedInputStreamClass->read, jbuf);
+        try {
+            jbyte buf[4096];
+            jbyteArray jbuf = jenv->NewByteArray(sizeof(buf));
+
+            for (std::uint64_t offset = 0; offset < contentLength && !cancel; ) {
+                jint numBytesRead = jenv->CallIntMethod(bufferedInputStream, _BufferedInputStreamClass->read, jbuf);
+                if (jenv->ExceptionCheck()) {
+                    jenv->ExceptionClear();
+                    throw NetworkException("Unable to read data", request.url);
+                }
+                if (numBytesRead < 0) {
+                    if (contentLength == std::numeric_limits<std::uint64_t>::max()) {
+                        break;
+                    }
+                    throw NetworkException("Unable to read full data", request.url);
+                }
+                jenv->GetByteArrayRegion(jbuf, 0, numBytesRead, buf);
+            
+                if (!dataFn(reinterpret_cast<const unsigned char*>(&buf[0]), numBytesRead)) {
+                    cancel = true;
+                }
+
+                offset += numBytesRead;
+            }
+        }
+        catch (...) {
+            jenv->CallVoidMethod(bufferedInputStream, _BufferedInputStreamClass->close);
             if (jenv->ExceptionCheck()) {
                 jenv->ExceptionClear();
-                throw NetworkException("Unable to read data", request.url);
             }
-            if (numBytesRead < 0) {
-                if (contentLength == std::numeric_limits<std::uint64_t>::max()) {
-                    break;
-                }
-                throw NetworkException("Unable to read full data", request.url);
-            }
-            jenv->GetByteArrayRegion(jbuf, 0, numBytesRead, buf);
-            
-            if (!dataFn(reinterpret_cast<const unsigned char*>(&buf[0]), numBytesRead)) {
-                cancel = true;
-            }
-
-            offset += numBytesRead;
+            jenv->CallVoidMethod(conn, _HttpURLConnectionClass->disconnect);
+            throw;
         }
         
         // Done
+        jenv->CallVoidMethod(bufferedInputStream, _BufferedInputStreamClass->close);
+        if (jenv->ExceptionCheck()) {
+            jenv->ExceptionClear();
+        }
         jenv->CallVoidMethod(conn, _HttpURLConnectionClass->disconnect);
         return !cancel;
     }
