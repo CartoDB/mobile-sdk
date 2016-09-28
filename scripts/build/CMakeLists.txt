@@ -85,7 +85,7 @@ include_directories(
     "${SDK_EXTERNAL_LIBS_DIR}/webp/src"
     "${SDK_EXTERNAL_LIBS_DIR}/valhalla/include"
     "${SDK_EXTERNAL_LIBS_DIR}/valhalla/include/valhalla" 
-    "${SDK_EXTERNAL_LIBS_DIR}/protobuf-2.5.0/src"
+    "${SDK_EXTERNAL_LIBS_DIR}/protobuf/src"
     "${PNG_INCLUDE_DIR}"
 )
 
@@ -137,7 +137,7 @@ add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/harfbuzz" harfbuzz)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/jpeg" jpeg)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/miniz" miniz)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/png" png)
-add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/protobuf-2.5.0" protobuf)
+add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/protobuf" protobuf)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/pugixml" pugixml)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/pvrt" pvrt)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/rg_etc1" rg_etc1)
