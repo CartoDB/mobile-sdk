@@ -29,6 +29,8 @@ namespace carto {
      * A high level interface for loading VisJSON configurations.
      * VisJSON defines full map visualizations, together with
      * base maps and interactive overlays.
+     * Caution! The class is highly EXPERIMENTAL and only works with limited
+     * number of v2 visualizations and with even fewer v3 visualizations!
      */
     class CartoVisLoader {
     public:
