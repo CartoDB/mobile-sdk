@@ -71,7 +71,7 @@ include_directories(
     "${SDK_EXTERNAL_LIBS_DIR}/miniz"
     "${SDK_EXTERNAL_LIBS_DIR}/pion/include"
     "${SDK_EXTERNAL_LIBS_DIR}/png"
-    "${SDK_EXTERNAL_LIBS_DIR}/protobuf"
+    "${SDK_EXTERNAL_LIBS_DIR}/pbf"
     "${SDK_EXTERNAL_LIBS_DIR}/pugixml/src"
     "${SDK_EXTERNAL_LIBS_DIR}/pvrt"
     "${SDK_EXTERNAL_LIBS_DIR}/rapidjson/include"
