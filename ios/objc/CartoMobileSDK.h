@@ -158,7 +158,7 @@
 
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT
 #import "NTOnlineNMLModelLODTreeDataSource.h"
-#import "NTSqliteNMLModelLODTreeDataSource.h"
+#import "NTOfflineNMLModelLODTreeDataSource.h"
 #import "NTNMLModelLODTreeLayer.h"
 #endif
 

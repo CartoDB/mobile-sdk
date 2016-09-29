@@ -1,6 +1,6 @@
 #if defined(_CARTO_NMLMODELLODTREE_SUPPORT) && defined(_CARTO_OFFLINE_SUPPORT)
 
-#include "SqliteNMLModelLODTreeDataSource.h"
+#include "OfflineNMLModelLODTreeDataSource.h"
 #include "components/Exceptions.h"
 #include "renderers/components/CullState.h"
 #include "projections/EPSG3857.h"
@@ -14,7 +14,7 @@
 
 namespace carto {
 
-    SqliteNMLModelLODTreeDataSource::SqliteNMLModelLODTreeDataSource(const std::string& fileName) :
+    OfflineNMLModelLODTreeDataSource::OfflineNMLModelLODTreeDataSource(const std::string& fileName) :
         NMLModelLODTreeDataSource(std::make_shared<EPSG3857>()),
         _db()
     {
@@ -26,10 +26,10 @@ namespace carto {
         }
     }
     
-    SqliteNMLModelLODTreeDataSource::~SqliteNMLModelLODTreeDataSource() {
+    OfflineNMLModelLODTreeDataSource::~OfflineNMLModelLODTreeDataSource() {
     }
     
-    std::vector<NMLModelLODTreeDataSource::MapTile> SqliteNMLModelLODTreeDataSource::loadMapTiles(const std::shared_ptr<CullState>& cullState) {
+    std::vector<NMLModelLODTreeDataSource::MapTile> OfflineNMLModelLODTreeDataSource::loadMapTiles(const std::shared_ptr<CullState>& cullState) {
         typedef cglib::vec3<double> Point;
         typedef cglib::frustum3<double> Frustum;
         typedef cglib::bbox3<double> BoundingBox;
@@ -81,11 +81,11 @@ namespace carto {
         return mapTiles;
     }
     
-    std::shared_ptr<NMLModelLODTree> SqliteNMLModelLODTreeDataSource::loadModelLODTree(const MapTile& mapTile) {
+    std::shared_ptr<NMLModelLODTree> OfflineNMLModelLODTreeDataSource::loadModelLODTree(const MapTile& mapTile) {
         std::lock_guard<std::mutex> lock(_mutex);
     
         if (!_db) {
-            Log::Error("SqliteNMLModelLODTreeDataSource::loadModelLODTree: Failed to load LOD tree, could not connect to database");
+            Log::Error("OfflineNMLModelLODTreeDataSource::loadModelLODTree: Failed to load LOD tree, could not connect to database");
             return std::shared_ptr<NMLModelLODTree>();
         }
     
@@ -142,7 +142,7 @@ namespace carto {
                 }
                 queryMeshBindings.finish();
             } catch (const sqlite3pp::database_error& ) {
-                Log::Error("SqliteNMLModelLODTreeDataSource: Mesh query failed. Legacy database without 'nmlmeshop' column?");
+                Log::Error("OfflineNMLModelLODTreeDataSource: Mesh query failed. Legacy database without 'nmlmeshop' column?");
             }
     
             sqlite3pp::query queryTexBindings(*_db, "SELECT node_id, local_id, texture_id, level FROM ModelLODTreeNodeTextures WHERE modellodtree_id=:modellodtree_id");
@@ -164,11 +164,11 @@ namespace carto {
         return std::shared_ptr<NMLModelLODTree>();
     }
     
-    std::shared_ptr<nml::Mesh> SqliteNMLModelLODTreeDataSource::loadMesh(long long meshId) {
+    std::shared_ptr<nml::Mesh> OfflineNMLModelLODTreeDataSource::loadMesh(long long meshId) {
         std::lock_guard<std::mutex> lock(_mutex);
     
         if (!_db) {
-            Log::Error("SqliteNMLModelLODTreeDataSource::loadMesh: Failed to load mesh, could not connect to database");
+            Log::Error("OfflineNMLModelLODTreeDataSource::loadMesh: Failed to load mesh, could not connect to database");
             return std::shared_ptr<nml::Mesh>();
         }
     
@@ -184,11 +184,11 @@ namespace carto {
         return std::shared_ptr<nml::Mesh>();
     }
     
-    std::shared_ptr<nml::Texture> SqliteNMLModelLODTreeDataSource::loadTexture(long long textureId, int level) {
+    std::shared_ptr<nml::Texture> OfflineNMLModelLODTreeDataSource::loadTexture(long long textureId, int level) {
         std::lock_guard<std::mutex> lock(_mutex);
     
         if (!_db) {
-            Log::Error("SqliteNMLModelLODTreeDataSource::loadTexture: Failed to load texture, could not connect to database");
+            Log::Error("OfflineNMLModelLODTreeDataSource::loadTexture: Failed to load texture, could not connect to database");
             return std::shared_ptr<nml::Texture>();
         }
     
