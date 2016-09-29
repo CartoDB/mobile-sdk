@@ -21,7 +21,7 @@ namespace carto {
          * Constructs a MultiLineGeometry object from the vector of lines.
          * @param geometries The vector of line geometries.
          */
-        MultiLineGeometry(const std::vector<std::shared_ptr<LineGeometry> >& geometries);
+        explicit MultiLineGeometry(const std::vector<std::shared_ptr<LineGeometry> >& geometries);
         virtual ~MultiLineGeometry();
         
         /**

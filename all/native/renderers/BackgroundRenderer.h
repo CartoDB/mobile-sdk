@@ -22,7 +22,7 @@ namespace carto {
     
     class BackgroundRenderer {
     public:
-        BackgroundRenderer(const Options& options);
+        explicit BackgroundRenderer(const Options& options);
         virtual ~BackgroundRenderer();
     
         void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);

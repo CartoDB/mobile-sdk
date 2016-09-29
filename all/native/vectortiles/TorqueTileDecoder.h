@@ -34,7 +34,7 @@ namespace carto {
          * @param styleSet The style set used by decoder.
          * @throws std::runtime_error If the decoder could not be created or there are issues with the style set.
          */
-        TorqueTileDecoder(const std::shared_ptr<CartoCSSStyleSet>& styleSet);
+        explicit TorqueTileDecoder(const std::shared_ptr<CartoCSSStyleSet>& styleSet);
         virtual ~TorqueTileDecoder();
 
         /**

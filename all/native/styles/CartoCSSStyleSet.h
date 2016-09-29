@@ -24,7 +24,7 @@ namespace carto {
          * Constructs a style from CartoCSS string.
          * @param cartoCSS The CartoCSS string defining point styling.
          */
-        CartoCSSStyleSet(const std::string& cartoCSS);
+        explicit CartoCSSStyleSet(const std::string& cartoCSS);
         /**
          * Constructs a style from CartoCSS string and asset data.
          * @param cartoCSS The CartoCSS string defining point styling.

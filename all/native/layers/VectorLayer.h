@@ -51,7 +51,7 @@ namespace carto {
          * Constructs a VectorLayer object from a data source.
          * @param dataSource The data source from which this layer loads data.
          */
-        VectorLayer(const std::shared_ptr<VectorDataSource>& dataSource);
+        explicit VectorLayer(const std::shared_ptr<VectorDataSource>& dataSource);
         virtual ~VectorLayer();
         
         /**

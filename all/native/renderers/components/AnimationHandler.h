@@ -18,7 +18,7 @@ namespace carto {
     
     class AnimationHandler {
     public:
-        AnimationHandler(MapRenderer& mapRenderer);
+        explicit AnimationHandler(MapRenderer& mapRenderer);
         virtual ~AnimationHandler();
     
         void calculate(const ViewState& viewState, float deltaSeconds);

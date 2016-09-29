@@ -32,7 +32,7 @@ namespace carto {
          * Constructs a new instance of the PackageManagerRoutingService given package manager instance.
          * @param packageManager The package manager instance to use.
          */
-        PackageManagerRoutingService(const std::shared_ptr<PackageManager>& packageManager);
+        explicit PackageManagerRoutingService(const std::shared_ptr<PackageManager>& packageManager);
         virtual ~PackageManagerRoutingService();
 
         virtual std::shared_ptr<RoutingResult> calculateRoute(const std::shared_ptr<RoutingRequest>& request) const;

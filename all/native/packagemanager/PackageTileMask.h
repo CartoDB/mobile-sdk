@@ -59,13 +59,13 @@ namespace carto {
          * Constructs a new package tile mask instance from encoded string.
          * @param stringValue The encoded tile mask of the package
          */
-        PackageTileMask(const std::string& stringValue);
+        explicit PackageTileMask(const std::string& stringValue);
 
         /**
          * Constructs a new package tile mask instance from a list of tiles.
          * @param tiles The list of tiles
          */
-        PackageTileMask(const std::vector<Tile>& tiles);
+        explicit PackageTileMask(const std::vector<Tile>& tiles);
 
         /**
          * Returns the encoded tile mask value. This should not be displayed to the user.

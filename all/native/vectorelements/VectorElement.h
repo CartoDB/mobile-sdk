@@ -98,7 +98,7 @@ namespace carto {
     protected:
         friend class VectorDataSource;
         
-        VectorElement(const std::shared_ptr<Geometry>& geometry);
+        explicit VectorElement(const std::shared_ptr<Geometry>& geometry);
         
         void attachToDataSource(const std::weak_ptr<VectorDataSource>& dataSource);
         void detachFromDataSource();

@@ -23,7 +23,7 @@ namespace carto {
          * Constructs a ZIP asset package from the archived binary data.
          * @param zipData The ZIP archive.
          */
-        ZippedAssetPackage(const std::shared_ptr<BinaryData>& zipData);
+        explicit ZippedAssetPackage(const std::shared_ptr<BinaryData>& zipData);
         virtual ~ZippedAssetPackage();
     
         virtual std::vector<std::string> getAssetNames() const;

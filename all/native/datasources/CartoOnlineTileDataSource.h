@@ -27,7 +27,7 @@ namespace carto {
          * Constructs a CartoOnlineTileDataSource object.
          * @param source Tile source id. For example "nutiteq.osm" for legacy tiles with old styles and "mapzen.osm" for latest MapZen tiles.
          */
-        CartoOnlineTileDataSource(const std::string& source);
+        explicit CartoOnlineTileDataSource(const std::string& source);
         virtual ~CartoOnlineTileDataSource();
 
         virtual std::shared_ptr<TileData> loadTile(const MapTile& mapTile);

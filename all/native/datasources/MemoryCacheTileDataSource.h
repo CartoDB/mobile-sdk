@@ -24,7 +24,7 @@ namespace carto {
          * Constructs a MemoryCacheTileDataSource object from tile data source.
          * @param dataSource The datasource to be cached.
          */
-        MemoryCacheTileDataSource(const std::shared_ptr<TileDataSource>& dataSource);
+        explicit MemoryCacheTileDataSource(const std::shared_ptr<TileDataSource>& dataSource);
         virtual ~MemoryCacheTileDataSource();
     
         virtual std::shared_ptr<TileData> loadTile(const MapTile& mapTile);

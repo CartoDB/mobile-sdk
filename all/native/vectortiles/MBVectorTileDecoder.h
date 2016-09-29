@@ -40,13 +40,13 @@ namespace carto {
          * @param compiledStyleSet The compiled style set for the tiles.
          * @throws std::runtime_error If the decoder could not be created or there are issues with the style set.
          */
-        MBVectorTileDecoder(const std::shared_ptr<CompiledStyleSet>& compiledStyleSet);
+        explicit MBVectorTileDecoder(const std::shared_ptr<CompiledStyleSet>& compiledStyleSet);
         /**
          * Constructs a decoder for MapBox vector tiles based on specified CartoCSS style set.
          * @param cartoCSSStyleSet The CartoCSS style set for the tiles.
          * @throws std::runtime_error If the decoder could not be created or there are issues with the style set.
          */
-        MBVectorTileDecoder(const std::shared_ptr<CartoCSSStyleSet>& cartoCSSStyleSet);
+        explicit MBVectorTileDecoder(const std::shared_ptr<CartoCSSStyleSet>& cartoCSSStyleSet);
         virtual ~MBVectorTileDecoder();
         
         /**
