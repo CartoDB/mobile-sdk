@@ -64,11 +64,6 @@ namespace carto {
             virtual void onElementsRemoved() = 0;
         };
     
-        /**
-         * Constructs an abstract UnculledVectorDataSource object.
-         * @param projection The projection used by this data source.
-         */
-        VectorDataSource(const std::shared_ptr<Projection>& projection);
         virtual ~VectorDataSource();
         
         /**
@@ -104,6 +99,12 @@ namespace carto {
     protected:
         friend class VectorElement;
     
+        /**
+         * Constructs an abstract VectorDataSource object.
+         * @param projection The projection used by this data source.
+         */
+        explicit VectorDataSource(const std::shared_ptr<Projection>& projection);
+
         float calculateGeometrySimplifierScale(const ViewState& viewState) const;
         
         virtual void notifyElementAdded(const std::shared_ptr<VectorElement>& element);
