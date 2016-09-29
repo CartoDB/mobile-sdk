@@ -15,7 +15,7 @@
 #include <cglib/frustum3.h>
 
 namespace carto { namespace vt {
-    struct ViewState {
+    struct ViewState final {
         float zoom;
         float scale;
         float aspect;

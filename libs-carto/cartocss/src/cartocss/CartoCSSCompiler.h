@@ -19,7 +19,7 @@
 #include <utility>
 
 namespace carto { namespace css {
-    class CartoCSSCompiler {
+    class CartoCSSCompiler final {
     public:
         using RuleSpecificity = std::tuple<int, int, int, int>;
 

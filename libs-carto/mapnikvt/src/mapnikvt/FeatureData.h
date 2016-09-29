@@ -15,7 +15,7 @@
 #include <unordered_set>
 
 namespace carto { namespace mvt {
-    class FeatureData {
+    class FeatureData final {
     public:
         enum class GeometryType {
             NULL_GEOMETRY = 0, POINT_GEOMETRY = 1, LINE_GEOMETRY = 2, POLYGON_GEOMETRY = 3

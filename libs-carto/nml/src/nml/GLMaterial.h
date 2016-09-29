@@ -19,9 +19,9 @@ namespace carto { namespace nml {
     class GLTexture;
     class GLShaderManager;
 
-    class GLMaterial {
+    class GLMaterial final {
     public:
-        GLMaterial(const Material& material, const std::map<std::string, std::shared_ptr<GLTexture>>& textureMap);
+        explicit GLMaterial(const Material& material, const std::map<std::string, std::shared_ptr<GLTexture>>& textureMap);
 
         void create(GLShaderManager& shaderManager);
         void dispose();

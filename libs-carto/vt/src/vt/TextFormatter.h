@@ -17,7 +17,7 @@
 #include <cglib/bbox.h>
 
 namespace carto { namespace vt {
-    class TextFormatter {
+    class TextFormatter final {
     public:
         struct Options {
             cglib::vec2<float> alignment;

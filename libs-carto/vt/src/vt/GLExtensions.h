@@ -18,7 +18,7 @@
 #endif
 
 namespace carto { namespace vt {
-    class GLExtensions {
+    class GLExtensions final {
     public:
         GLExtensions();
 

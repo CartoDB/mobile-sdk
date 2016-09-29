@@ -14,7 +14,7 @@
 #include <unordered_map>
 
 namespace carto { namespace vt {
-    class StrokeMap {
+    class StrokeMap final {
     public:
         using StrokeId = unsigned int;
         

@@ -11,7 +11,7 @@
 #include <string>
 
 namespace carto { namespace mvt {
-    class Parameter {
+    class Parameter final {
     public:
         explicit Parameter(std::string name, std::string value) : _name(std::move(name)), _value(std::move(value)) { }
 

@@ -12,7 +12,7 @@
 #include <array>
 
 namespace carto { namespace routing {
-    class Query {
+    class Query final {
     public:
         Query() = delete;
         explicit Query(const WGSPos& pos0, const WGSPos& pos1) : _points {{ pos0, pos1 }} { }

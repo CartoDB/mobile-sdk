@@ -22,7 +22,7 @@
 #include <cglib/mat.h>
 
 namespace carto { namespace vt {
-    class TileGeometry {
+    class TileGeometry final {
     public:
         enum class Type {
             NONE, POINT, LINE, POLYGON, POLYGON3D

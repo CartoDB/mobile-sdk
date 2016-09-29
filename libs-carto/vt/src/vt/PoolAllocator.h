@@ -11,7 +11,7 @@
 #include <algorithm>
 
 namespace carto { namespace vt {
-    class PoolAllocator {
+    class PoolAllocator final {
     public:
         PoolAllocator() : _first(nullptr) {
             void* buffer = std::malloc(DEFAULT_BLOCK_SIZE);

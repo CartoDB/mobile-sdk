@@ -18,10 +18,10 @@ namespace carto { namespace nml {
     class SubmeshOpList;
     class GLMesh;
 
-    class GLSubmesh {
+    class GLSubmesh final {
     public:
-        GLSubmesh(const Submesh& submesh);
-        GLSubmesh(const GLMesh& glMesh, const SubmeshOpList& submeshOpList);
+        explicit GLSubmesh(const Submesh& submesh);
+        explicit GLSubmesh(const GLMesh& glMesh, const SubmeshOpList& submeshOpList);
 
         void create();
         void dispose();

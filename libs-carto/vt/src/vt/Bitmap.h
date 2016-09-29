@@ -12,7 +12,7 @@
 #include <memory>
 
 namespace carto { namespace vt {
-    struct Bitmap {
+    struct Bitmap final {
         const int width;
         const int height;
         const std::vector<std::uint32_t> data;
@@ -20,7 +20,7 @@ namespace carto { namespace vt {
         explicit Bitmap(int width, int height, std::vector<std::uint32_t> data) : width(width), height(height), data(std::move(data)) { }
     };
 
-    struct BitmapPattern {
+    struct BitmapPattern final {
         const float widthScale;
         const float heightScale;
         const std::shared_ptr<const Bitmap> bitmap;

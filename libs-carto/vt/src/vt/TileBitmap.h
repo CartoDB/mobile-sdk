@@ -11,7 +11,7 @@
 #include <vector>
 
 namespace carto { namespace vt {
-    class TileBitmap {
+    class TileBitmap final {
     public:
         enum class Format {
             GRAYSCALE, RGB, RGBA

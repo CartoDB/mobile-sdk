@@ -17,7 +17,7 @@ namespace carto { namespace mvt {
     class Filter;
     class Symbolizer;
     
-    class Rule {
+    class Rule final {
     public:
         explicit Rule(std::string name, int minZoom, int maxZoom, std::shared_ptr<const Filter> filter, std::vector<std::shared_ptr<Symbolizer>> symbolizers) : _name(std::move(name)), _minZoom(minZoom), _maxZoom(maxZoom), _filter(std::move(filter)), _symbolizers(std::move(symbolizers)) { }
 

@@ -14,7 +14,7 @@
 #include <map>
 
 namespace carto { namespace mvt {
-    class NutiParameter {
+    class NutiParameter final {
     public:
         explicit NutiParameter(std::string name, Value defaultValue, std::map<std::string, Value> enumMap) : _name(std::move(name)), _defaultValue(std::move(defaultValue)), _enumMap(std::move(enumMap)) { }
 

@@ -13,7 +13,7 @@
 #include <string>
 
 namespace carto { namespace routing {
-    class Instruction {
+    class Instruction final {
     public:
         enum class Type : unsigned char {
             NO_TURN = 0,

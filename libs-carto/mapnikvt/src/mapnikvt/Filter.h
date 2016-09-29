@@ -12,7 +12,7 @@
 namespace carto { namespace mvt {
     class Predicate;
 
-    class Filter {
+    class Filter final {
     public:
         enum class Type {
             FILTER,

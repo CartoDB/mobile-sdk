@@ -16,7 +16,7 @@
 #include <map>
 
 namespace carto { namespace mvt {
-    class FeatureCollection {
+    class FeatureCollection final {
     public:
         FeatureCollection() = default;
 

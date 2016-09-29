@@ -14,7 +14,7 @@
 #include <numeric>
 
 namespace carto { namespace routing {
-    class Result {
+    class Result final {
     public:
         enum class Status {
             FAILED,

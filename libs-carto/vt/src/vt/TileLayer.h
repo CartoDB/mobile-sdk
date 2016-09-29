@@ -19,7 +19,7 @@
 #include <boost/optional.hpp>
 
 namespace carto { namespace vt {
-    class TileLayer {
+    class TileLayer final {
     public:
         explicit TileLayer(std::string name, int layerIdx, std::shared_ptr<FloatFunction> opacity, boost::optional<CompOp> compOp, std::vector<std::shared_ptr<TileBitmap>> bitmaps, std::vector<std::shared_ptr<TileGeometry>> geometries, std::vector<std::shared_ptr<TileLabel>> labels) : _name(name), _layerIdx(layerIdx), _opacity(std::move(opacity)), _compOp(std::move(compOp)), _bitmaps(std::move(bitmaps)), _geometries(std::move(geometries)), _labels(std::move(labels)) { }
 

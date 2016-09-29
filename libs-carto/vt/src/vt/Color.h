@@ -14,7 +14,7 @@
 #include <cglib/vec.h>
 
 namespace carto { namespace vt {
-    class Color {
+    class Color final {
     public:
         Color() : _components{ 0, 0, 0, 0 } { }
         

@@ -16,7 +16,7 @@
 #include <memory>
 
 namespace carto { namespace mvt {
-    class SymbolizerContext {
+    class SymbolizerContext final {
     public:
         struct Settings {
             explicit Settings(float tileSize, std::map<std::string, Value> nutiParameterValueMap);

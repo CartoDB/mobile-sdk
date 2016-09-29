@@ -17,7 +17,7 @@
 #include <cglib/vec.h>
 
 namespace carto { namespace vt {
-    class GlyphMap {
+    class GlyphMap final {
     public:
         using GlyphId = unsigned int;
         using CodePoint = unsigned int;

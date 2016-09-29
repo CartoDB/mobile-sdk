@@ -22,7 +22,7 @@
 #include <stdext/bitstream.h>
 
 namespace carto { namespace routing {
-    class Graph {
+    class Graph final {
     public:
         struct BlockId {
             int packageId = -1;

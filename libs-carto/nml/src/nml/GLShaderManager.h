@@ -15,8 +15,10 @@
 
 namespace carto { namespace nml {
 
-    class GLShaderManager {
+    class GLShaderManager final {
     public:
+        GLShaderManager() = default;
+
         GLuint createProgram(const std::string& vertexShader, const std::string& fragmentShader, const std::set<std::string>& defs);
 
         void resetPrograms();
