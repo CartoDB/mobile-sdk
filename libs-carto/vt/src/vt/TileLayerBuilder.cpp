@@ -469,7 +469,7 @@ namespace carto { namespace vt {
 
     bool TileLayerBuilder::tesselatePolygon(const VerticesList& verticesList, char styleIndex, const PolygonStyle& style) {
         if (!_tessPoolAllocator) {
-            _tessPoolAllocator = std::make_shared<PoolAllocator>();
+            _tessPoolAllocator = std::unique_ptr<PoolAllocator>(new PoolAllocator);
         }
 
         TESSalloc ma;
@@ -560,7 +560,7 @@ namespace carto { namespace vt {
         }
 
         if (!_tessPoolAllocator) {
-            _tessPoolAllocator = std::make_shared<PoolAllocator>();
+            _tessPoolAllocator = std::unique_ptr<PoolAllocator>(new PoolAllocator);
         }
 
         TESSalloc ma;
