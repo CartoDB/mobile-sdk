@@ -59,7 +59,7 @@ namespace carto { namespace vt {
         
         do {
             std::size_t i0 = _indices.size();
-            tesselatePoint(vertex, static_cast<char>(styleIndex), style.glyphMap->getGlyph(glyphId).get(), style);
+            tesselatePoint(vertex, static_cast<char>(styleIndex), style.glyphMap->getGlyph(glyphId), style);
             _ids.fill(id, _indices.size() - i0);
         } while (generator(id, vertex));
     }
@@ -170,7 +170,7 @@ namespace carto { namespace vt {
             return;
         }
 
-        const std::unique_ptr<const Font::Glyph>& glyph = style.font->loadBitmapGlyph(style.bitmap);
+        const Font::Glyph* glyph = style.font->loadBitmapGlyph(style.bitmap);
         if (!glyph) {
             return;
         }
@@ -221,7 +221,7 @@ namespace carto { namespace vt {
                 TextFormatter formatter(style.font);
                 std::vector<Font::Glyph> glyphs = formatter.format(labelInfo.text, style.formatterOptions);
                 if (style.backgroundBitmap) {
-                    const std::unique_ptr<const Font::Glyph>& glyph = style.font->loadBitmapGlyph(style.backgroundBitmap);
+                    const Font::Glyph* glyph = style.font->loadBitmapGlyph(style.backgroundBitmap);
                     if (glyph) {
                         glyphs.insert(glyphs.begin(), Font::Glyph(glyph->codePoint, glyph->x, glyph->y, glyph->width, glyph->height, glyph->size * style.backgroundScale, glyph->offset + style.backgroundOffset, glyph->advance));
                     }

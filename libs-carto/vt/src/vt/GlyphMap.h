@@ -37,7 +37,7 @@ namespace carto { namespace vt {
 
         explicit GlyphMap(int maxWidth, int maxHeight);
 
-        const std::unique_ptr<const Glyph>& getGlyph(GlyphId code) const;
+        const Glyph* getGlyph(GlyphId code) const;
         GlyphId loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap, CodePoint codePoint);
         GlyphId loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap, CodePoint codePoint, const cglib::vec2<float>& size, const cglib::vec2<float>& offset, const cglib::vec2<float>& advance);
         std::shared_ptr<const BitmapPattern> getBitmapPattern() const;

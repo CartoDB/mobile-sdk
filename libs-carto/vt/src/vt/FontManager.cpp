@@ -167,21 +167,19 @@ namespace carto { namespace vt {
                         }
                         it = _codePointGlyphMap.insert({ remappedCodePoint, glyphId }).first;
                     }
-                    const std::unique_ptr<const Glyph>& glyph = _glyphMap.getGlyph(it->second);
-                    if (!glyph) {
-                        continue;
-                    }
-                    glyphs.push_back(*glyph);
-                    if (i < posCount) {
-                        glyphs.back().offset += cglib::vec2<float>(pos[i].x_offset / 64.0f * _renderScale, pos[i].y_offset / 64.0f * _renderScale);
-                        glyphs.back().advance = cglib::vec2<float>(pos[i].x_advance / 64.0f * _renderScale, pos[i].y_advance / 64.0f * _renderScale);
+                    if (const Glyph* glyph = _glyphMap.getGlyph(it->second)) {
+                        glyphs.push_back(*glyph);
+                        if (i < posCount) {
+                            glyphs.back().offset += cglib::vec2<float>(pos[i].x_offset / 64.0f * _renderScale, pos[i].y_offset / 64.0f * _renderScale);
+                            glyphs.back().advance = cglib::vec2<float>(pos[i].x_advance / 64.0f * _renderScale, pos[i].y_advance / 64.0f * _renderScale);
+                        }
                     }
                 }
             }
             return glyphs;
         }
 
-        virtual const std::unique_ptr<const Glyph>& loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap) override {
+        virtual const Glyph* loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap) override {
             std::lock_guard<std::recursive_mutex> lock(_library->getMutex());
             if (!bitmap) {
                 return _glyphMap.getGlyph(_codePointGlyphMap[0]);

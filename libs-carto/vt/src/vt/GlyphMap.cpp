@@ -12,16 +12,14 @@ namespace carto { namespace vt {
         _glyphMap[0] = std::unique_ptr<Glyph>(new Glyph(0, 0, 0, 0, 0, cglib::vec2<float>(0, 0), cglib::vec2<float>(0, 0), cglib::vec2<float>(0, 0)));
     }
 
-    const std::unique_ptr<const GlyphMap::Glyph>& GlyphMap::getGlyph(GlyphId glyphId) const {
-        static std::unique_ptr<const Glyph> nullGlyph;
-
+    const GlyphMap::Glyph* GlyphMap::getGlyph(GlyphId glyphId) const {
         std::lock_guard<std::mutex> lock(_mutex);
         
         auto it = _glyphMap.find(glyphId);
         if (it == _glyphMap.end()) {
-            return nullGlyph;
+            return nullptr;
         }
-        return it->second;
+        return it->second.get();
     }
 
     GlyphMap::GlyphId GlyphMap::loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap, CodePoint codePoint) {
