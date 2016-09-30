@@ -128,7 +128,7 @@ namespace carto { namespace vt {
     }
 
     bool TileLabel::calculateEnvelope(const ViewState& viewState, std::array<cglib::vec3<float>, 4>& envelope) const {
-        std::shared_ptr<Placement> placement = getPlacement(viewState);
+        std::shared_ptr<const Placement> placement = getPlacement(viewState);
         if (!placement) {
             cglib::vec3<float> origin(0, 0, static_cast<float>(-viewState.origin(2)));
             for (int i = 0; i < 4; i++) {
@@ -183,7 +183,7 @@ namespace carto { namespace vt {
     }
 
     bool TileLabel::calculateVertexData(const ViewState& viewState, VertexArray<cglib::vec3<float>>& vertices, VertexArray<cglib::vec2<float>>& texCoords, VertexArray<unsigned short>& indices) const {
-        std::shared_ptr<Placement> placement = getPlacement(viewState);
+        std::shared_ptr<const Placement> placement = getPlacement(viewState);
         if (!placement) {
             return false;
         }
@@ -275,7 +275,7 @@ namespace carto { namespace vt {
         }
     }
 
-    bool TileLabel::buildLineVertexData(const std::shared_ptr<Placement>& placement, float scale, VertexArray<cglib::vec2<float>>& vertices, VertexArray<cglib::vec2<float>>& texCoords, VertexArray<unsigned short>& indices) const {
+    bool TileLabel::buildLineVertexData(const std::shared_ptr<const Placement>& placement, float scale, VertexArray<cglib::vec2<float>>& vertices, VertexArray<cglib::vec2<float>>& texCoords, VertexArray<unsigned short>& indices) const {
         std::size_t edgeIndex = placement->index;
         cglib::vec2<float> edgePos(0, 0);
         float edgeLen = cglib::length(placement->edges[edgeIndex].pos1 - edgePos) / scale;
@@ -379,7 +379,7 @@ namespace carto { namespace vt {
         return valid;
     }
 
-    void TileLabel::setupCoordinateSystem(const ViewState& viewState, const std::shared_ptr<Placement>& placement, cglib::vec3<float>& origin, cglib::vec3<float>& xAxis, cglib::vec3<float>& yAxis) const {
+    void TileLabel::setupCoordinateSystem(const ViewState& viewState, const std::shared_ptr<const Placement>& placement, cglib::vec3<float>& origin, cglib::vec3<float>& xAxis, cglib::vec3<float>& yAxis) const {
         origin = cglib::vec3<float>::convert(placement->pos - viewState.origin);
         switch (_orientation) {
         case LabelOrientation::BILLBOARD_2D:
@@ -413,23 +413,23 @@ namespace carto { namespace vt {
         }
     }
 
-    std::shared_ptr<TileLabel::Placement> TileLabel::getPlacement(const ViewState& viewState) const {
+    std::shared_ptr<const TileLabel::Placement> TileLabel::getPlacement(const ViewState& viewState) const {
         if (_orientation != LabelOrientation::LINE) {
             return _placement;
         }
         if (!_placement || _placement->edges.empty()) {
-            return std::shared_ptr<Placement>();
+            return std::shared_ptr<const Placement>();
         }
         if (cglib::dot_product(_placement->edges[_placement->index].xAxis, cglib::proj_o(viewState.orientation[0])) > 0) {
             return _placement;
         }
         if (!_flippedPlacement || _flippedPlacement->edges.empty()) {
-            return std::shared_ptr<Placement>();
+            return std::shared_ptr<const Placement>();
         }
         return _flippedPlacement;
     }
 
-    std::shared_ptr<TileLabel::Placement> TileLabel::reversePlacement(const std::shared_ptr<Placement>& placement) const {
+    std::shared_ptr<const TileLabel::Placement> TileLabel::reversePlacement(const std::shared_ptr<const Placement>& placement) const {
         if (!placement) {
             return placement;
         }
@@ -440,10 +440,10 @@ namespace carto { namespace vt {
             edge.xAxis = -edge.xAxis;
             edge.yAxis = -edge.yAxis;
         }
-        return std::make_shared<Placement>(std::move(flippedEdges), flippedEdges.size() - 1 - placement->index, placement->pos);
+        return std::make_shared<const Placement>(std::move(flippedEdges), flippedEdges.size() - 1 - placement->index, placement->pos);
     }
 
-    std::shared_ptr<TileLabel::Placement> TileLabel::findSnappedPointPlacement(const Vertex& position, const Vertices& vertices) const {
+    std::shared_ptr<const TileLabel::Placement> TileLabel::findSnappedPointPlacement(const Vertex& position, const Vertices& vertices) const {
         cglib::vec3<double> bestPos = position;
         double bestDist = std::numeric_limits<double>::infinity();
         for (const Vertex& vertex : vertices) {
@@ -457,10 +457,10 @@ namespace carto { namespace vt {
         if (_placement && _placement->pos == bestPos && _placement->edges.empty()) {
             return _placement;
         }
-        return std::make_shared<Placement>(std::vector<Placement::Edge>(), 0, bestPos);
+        return std::make_shared<const Placement>(std::vector<Placement::Edge>(), 0, bestPos);
     }
 
-    std::shared_ptr<TileLabel::Placement> TileLabel::findSnappedLinePlacement(const Vertex& position, const VerticesList& verticesList) const {
+    std::shared_ptr<const TileLabel::Placement> TileLabel::findSnappedLinePlacement(const Vertex& position, const VerticesList& verticesList) const {
         std::size_t bestIndex = 0;
         const Vertices* bestVertices = nullptr;
         cglib::vec3<double> bestPos = position;
@@ -485,7 +485,7 @@ namespace carto { namespace vt {
             }
         }
         if (!bestVertices) {
-            return std::shared_ptr<Placement>();
+            return std::shared_ptr<const Placement>();
         }
 
         std::vector<Placement::Edge> edges;
@@ -495,10 +495,10 @@ namespace carto { namespace vt {
         if (_placement && _placement->index == bestIndex && _placement->pos == bestPos && _placement->edges.size() == edges.size()) {
             return _placement;
         }
-        return std::make_shared<Placement>(std::move(edges), bestIndex, bestPos);
+        return std::make_shared<const Placement>(std::move(edges), bestIndex, bestPos);
     }
 
-    std::shared_ptr<TileLabel::Placement> TileLabel::findClippedPointPlacement(const ViewState& viewState, const Vertices& vertices) const {
+    std::shared_ptr<const TileLabel::Placement> TileLabel::findClippedPointPlacement(const ViewState& viewState, const Vertices& vertices) const {
         for (const Vertex& vertex : vertices) {
             // Check that text is visible, calculate text distance from all frustum planes
             bool inside = true;
@@ -525,13 +525,13 @@ namespace carto { namespace vt {
                 }
             }
             if (inside) {
-                return std::make_shared<Placement>(std::vector<Placement::Edge>(), 0, vertex);
+                return std::make_shared<const Placement>(std::vector<Placement::Edge>(), 0, vertex);
             }
         }
-        return std::shared_ptr<TileLabel::Placement>();
+        return std::shared_ptr<const Placement>();
     }
 
-    std::shared_ptr<TileLabel::Placement> TileLabel::findClippedLinePlacement(const ViewState& viewState, const VerticesList& verticesList) const {
+    std::shared_ptr<const TileLabel::Placement> TileLabel::findClippedLinePlacement(const ViewState& viewState, const VerticesList& verticesList) const {
         // Split vertices list into relatively straight segments
         VerticesList splitVerticesList;
         for (const Vertices& vertices : verticesList) {
@@ -557,7 +557,7 @@ namespace carto { namespace vt {
 
         // Clip each vertex list against frustum, if resulting list is inside frustum, return its center
         double bestLen = (_orientation == LabelOrientation::LINE ? (_bbox.size()(0) + EXTRA_PLACEMENT_PIXELS) * _scale * viewState.scale : 0);
-        std::shared_ptr<Placement> bestPlacement;
+        std::shared_ptr<const Placement> bestPlacement;
         for (const Vertices& vertices : splitVerticesList) {
             if (vertices.size() < 2) {
                 continue;
@@ -617,7 +617,7 @@ namespace carto { namespace vt {
                             for (std::size_t j = 1; j < vertices.size(); j++) {
                                 edges.emplace_back(vertices[j - 1], vertices[j], pos);
                             }
-                            bestPlacement = std::make_shared<Placement>(std::move(edges), i, pos);
+                            bestPlacement = std::make_shared<const Placement>(std::move(edges), i, pos);
                             bestLen = len;
                             break;
                         }

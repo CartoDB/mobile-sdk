@@ -110,7 +110,7 @@ namespace carto { namespace vt {
         std::vector<std::shared_ptr<TileGeometry>> _geometryList;
         std::vector<std::shared_ptr<TileLabel>> _labelList;
 
-        std::shared_ptr<PoolAllocator> _tessPoolAllocator;
+        std::unique_ptr<PoolAllocator> _tessPoolAllocator;
     };
 } }
 
