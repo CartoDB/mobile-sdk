@@ -16,7 +16,7 @@
 #include <map>
 
 namespace carto { namespace mvt {
-    class Feature {
+    class Feature final {
     public:
         Feature(long long id, std::shared_ptr<const Geometry> geometry, std::shared_ptr<const FeatureData> featureData) : _id(id), _geometry(geometry), _featureData(featureData) { }
 

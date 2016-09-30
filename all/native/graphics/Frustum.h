@@ -28,7 +28,7 @@ namespace carto {
          * Constructs a frustum from a modelview projection matrix.
          * @param mvpMatrix The modelview projection matrix.
          */
-        Frustum(const cglib::mat4x4<double>& mvpMatrix);
+        explicit Frustum(const cglib::mat4x4<double>& mvpMatrix);
     
         /**
          * Tests if a point is inside with the frustum.

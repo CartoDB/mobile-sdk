@@ -21,7 +21,7 @@
 #include <boost/variant.hpp>
 
 namespace carto { namespace css {
-    class Selector {
+    class Selector final {
     public:
         Selector() = default;
         explicit Selector(std::vector<std::shared_ptr<const Predicate>> predicates) : _predicates(std::move(predicates)) { }
@@ -32,7 +32,7 @@ namespace carto { namespace css {
         std::vector<std::shared_ptr<const Predicate>> _predicates; // all must match
     };
 
-    class PropertyDeclaration {
+    class PropertyDeclaration final {
     public:
         PropertyDeclaration() = default;
         explicit PropertyDeclaration(std::string field, std::shared_ptr<const Expression> expr, int order) : _field(std::move(field)), _expr(std::move(expr)), _order(order) { }
@@ -49,7 +49,7 @@ namespace carto { namespace css {
 
     class RuleSet;
 
-    class Block {
+    class Block final {
     public:
         using Element = boost::variant<PropertyDeclaration, RuleSet>;
 
@@ -62,7 +62,7 @@ namespace carto { namespace css {
         std::vector<Element> _elements;
     };
 
-    class RuleSet {
+    class RuleSet final {
     public:
         RuleSet() = default;
         explicit RuleSet(std::vector<Selector> selectors, Block block) : _selectors(std::move(selectors)), _block(std::move(block)) { }
@@ -75,7 +75,7 @@ namespace carto { namespace css {
         Block _block;
     };
 
-    class VariableDeclaration {
+    class VariableDeclaration final {
     public:
         VariableDeclaration() = default;
         explicit VariableDeclaration(std::string var, std::shared_ptr<const Expression> expr) : _var(std::move(var)), _expr(std::move(expr)) { }
@@ -88,7 +88,7 @@ namespace carto { namespace css {
         std::shared_ptr<const Expression> _expr;
     };
 
-    class StyleSheet {
+    class StyleSheet final {
     public:
         using Element = boost::variant<VariableDeclaration, RuleSet>;
 

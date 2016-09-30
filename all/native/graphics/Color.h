@@ -34,7 +34,7 @@ namespace carto {
          * Constructs a map color object from a 32-bit encoded integer. The format is expected to be ARGB.
          * @param color The color encoded into 32-bit integer as ARGB.
          */
-        Color(int color);
+        explicit Color(int color);
     
         /**
          * Checks for equality between this and another map color.

@@ -22,7 +22,7 @@
 #include <cglib/bbox.h>
 
 namespace carto { namespace vt {
-    class TileLabelCuller {
+    class TileLabelCuller final {
     public:
         explicit TileLabelCuller(std::shared_ptr<std::mutex> mutex, float scale);
 

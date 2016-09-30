@@ -14,7 +14,7 @@
 #include <cmath>
 
 namespace carto { namespace css {
-    struct Color : private std::array<float, 4> {
+    struct Color final : private std::array<float, 4> {
         Color() : array() { }
 
         using array::begin;

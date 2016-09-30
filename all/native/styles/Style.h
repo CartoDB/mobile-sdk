@@ -25,7 +25,7 @@ namespace carto {
         const Color& getColor() const;
     
     protected:
-        Style(const Color& color);
+        explicit Style(const Color& color);
     
         Color _color;
     };

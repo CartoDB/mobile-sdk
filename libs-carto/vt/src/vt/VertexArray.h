@@ -12,7 +12,7 @@
 
 namespace carto { namespace vt {
     template <typename T>
-    class VertexArray {
+    class VertexArray final {
     public:
         VertexArray() : _begin(nullptr), _end(nullptr), _reserved(0) { }
 

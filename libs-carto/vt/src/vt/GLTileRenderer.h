@@ -26,7 +26,7 @@
 #include <cglib/ray.h>
 
 namespace carto { namespace vt {
-    class GLTileRenderer {
+    class GLTileRenderer final {
     public:
         explicit GLTileRenderer(std::shared_ptr<std::mutex> mutex, std::shared_ptr<GLExtensions> glExtensions, float scale, bool useFBO, bool useDepth, bool useStencil);
 

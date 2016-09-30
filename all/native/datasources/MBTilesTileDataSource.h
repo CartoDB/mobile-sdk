@@ -51,7 +51,7 @@ namespace carto {
          * @param path The path to the local Sqlite database file.
          * @throws std::exception If the the file could not be opened.
          */
-        MBTilesTileDataSource(const std::string& path);
+        explicit MBTilesTileDataSource(const std::string& path);
         
         /**
          * Constructs a MBTilesTileDataSource object. TMS tile scheme is used.

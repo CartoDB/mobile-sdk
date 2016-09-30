@@ -11,7 +11,7 @@
 #include <functional>
 
 namespace carto { namespace vt {
-    struct TileId {
+    struct TileId final {
         int zoom;
         int x;
         int y;

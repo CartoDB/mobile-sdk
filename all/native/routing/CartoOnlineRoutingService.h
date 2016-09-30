@@ -26,7 +26,7 @@ namespace carto {
          * Constructs a new CartoOnlineRoutingService instance given service source.
          * @param source The source id of the service.
          */
-        CartoOnlineRoutingService(const std::string& source);
+        explicit CartoOnlineRoutingService(const std::string& source);
         virtual ~CartoOnlineRoutingService();
 
         virtual std::shared_ptr<RoutingResult> calculateRoute(const std::shared_ptr<RoutingRequest>& request) const;

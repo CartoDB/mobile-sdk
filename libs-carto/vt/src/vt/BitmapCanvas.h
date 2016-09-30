@@ -15,7 +15,7 @@
 #include <memory>
 
 namespace carto { namespace vt {
-    class BitmapCanvas {
+    class BitmapCanvas final {
     public:
         explicit BitmapCanvas(int width, int height);
 

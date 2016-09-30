@@ -48,7 +48,7 @@ namespace carto {
          * Constructs an LocalVectorDataSource object with no spatial index.
          * @param projection The projection used by this data source.
          */
-        LocalVectorDataSource(const std::shared_ptr<Projection>& projection);
+        explicit LocalVectorDataSource(const std::shared_ptr<Projection>& projection);
         /**
          * Constructs an LocalVectorDataSource object with specified spatial index.
          * @param projection The projection used by this data source.

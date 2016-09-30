@@ -21,7 +21,7 @@ namespace carto {
          * Constructs a MultiPolygonGeometry from the vector of polygons.
          * @param geometries The vector of polygon geometries.
          */
-        MultiPolygonGeometry(const std::vector<std::shared_ptr<PolygonGeometry> >& geometries);
+        explicit MultiPolygonGeometry(const std::vector<std::shared_ptr<PolygonGeometry> >& geometries);
         virtual ~MultiPolygonGeometry();
         
         /**

@@ -23,9 +23,9 @@ namespace carto { namespace nml {
     class GLTexture;
     class GLShaderManager;
 
-    class GLModel {
+    class GLModel final {
     public:
-        GLModel(const Model& model);
+        explicit GLModel(const Model& model);
             
         void create(GLShaderManager& shaderManager);
         void dispose();

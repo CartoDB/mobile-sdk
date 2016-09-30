@@ -105,6 +105,7 @@ def buildIOSCocoapod(args, buildpackage):
     if not execute('zip', distDir, '-y', '-r', distName, 'CartoMobileSDK.framework'):
       return False
     print "Output available in:\n%s\n\nTo publish, use:\ncd %s\naws s3 cp %s s3://nutifront/sdk_snapshots/%s\npod trunk push\n" % (distDir, distDir, distName, distName)
+  return True
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--profile', dest='profile', default=getDefaultProfile(), choices=getProfiles().keys(), help='Build profile')

@@ -25,7 +25,7 @@
 #include <boost/optional.hpp>
 
 namespace carto { namespace vt {
-    class TileLabel {
+    class TileLabel final {
     public:
         explicit TileLabel(const TileId& tileId, long long localId, long long globalId, long long groupId, std::shared_ptr<const Font> font, std::vector<Font::Glyph> glyphs, boost::optional<cglib::vec3<double>> position, std::vector<cglib::vec3<double>> vertices, LabelOrientation orientation, const boost::optional<cglib::mat3x3<float>>& transform, float scale, const Color& color);
 

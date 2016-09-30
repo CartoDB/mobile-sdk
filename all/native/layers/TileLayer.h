@@ -222,7 +222,7 @@ namespace carto {
             bool _invalidated;
         };
         
-        TileLayer(const std::shared_ptr<TileDataSource>& dataSource);
+        explicit TileLayer(const std::shared_ptr<TileDataSource>& dataSource);
 
         virtual void loadData(const std::shared_ptr<CullState>& cullState);
 

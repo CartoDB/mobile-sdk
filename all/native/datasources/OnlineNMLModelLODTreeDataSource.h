@@ -23,7 +23,7 @@ namespace carto {
          * Constructs an OnlineNMLModelLODTreeDataSource object.
          * @param serviceURL The service connection point.
          */
-        OnlineNMLModelLODTreeDataSource(const std::string& serviceURL);
+        explicit OnlineNMLModelLODTreeDataSource(const std::string& serviceURL);
         virtual ~OnlineNMLModelLODTreeDataSource();
     
         virtual std::vector<MapTile> loadMapTiles(const std::shared_ptr<CullState>& cullState);

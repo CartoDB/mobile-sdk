@@ -25,7 +25,7 @@ namespace carto {
     
     class WatermarkRenderer {
     public:
-        WatermarkRenderer(const Options& options);
+        explicit WatermarkRenderer(const Options& options);
         virtual ~WatermarkRenderer();
     
         void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);

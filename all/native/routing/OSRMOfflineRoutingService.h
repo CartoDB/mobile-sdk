@@ -30,7 +30,7 @@ namespace carto {
          * @param path The full path to the database file.
          * @throws std::runtime_error If the database file could not be opened or read.
          */
-        OSRMOfflineRoutingService(const std::string& path);
+        explicit OSRMOfflineRoutingService(const std::string& path);
         virtual ~OSRMOfflineRoutingService();
 
         virtual std::shared_ptr<RoutingResult> calculateRoute(const std::shared_ptr<RoutingRequest>& request) const;

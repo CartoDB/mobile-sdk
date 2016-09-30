@@ -34,12 +34,12 @@ namespace carto {
          * Constructs a SolidLayer object from a color.
          * @param color The color for the layer.
          */
-        SolidLayer(const Color& color);
+        explicit SolidLayer(const Color& color);
         /**
          * Constructs a SolidLayer object from a bitmap.
          * @param bitmap The bitmap for the layer.
          */
-        SolidLayer(const std::shared_ptr<Bitmap>& bitmap);
+        explicit SolidLayer(const std::shared_ptr<Bitmap>& bitmap);
         virtual ~SolidLayer();
         
         /**

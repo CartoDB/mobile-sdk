@@ -17,9 +17,9 @@ namespace carto { namespace nml {
     class Texture;
     class Sampler;
 
-    class GLTexture {
+    class GLTexture final {
     public:
-        GLTexture(std::shared_ptr<Texture> texture);
+        explicit GLTexture(std::shared_ptr<Texture> texture);
 
         void create();
         void dispose();

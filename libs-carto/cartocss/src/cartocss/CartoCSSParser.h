@@ -20,7 +20,7 @@
 #include <stdexcept>
 
 namespace carto { namespace css {
-    class CartoCSSParser {
+    class CartoCSSParser final {
     public:
         struct ParserError : std::runtime_error {
             explicit ParserError(const std::string& msg) : runtime_error(msg), _pos(0, 0) { }

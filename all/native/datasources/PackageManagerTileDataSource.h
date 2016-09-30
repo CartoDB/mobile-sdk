@@ -26,7 +26,7 @@ class PackageManager;
          * Constructs a PackageManagerTileDataSource object.
          * @param packageManager The package manager that is used to retrieve requested tiles.
          */
-        PackageManagerTileDataSource(const std::shared_ptr<PackageManager>& packageManager);
+        explicit PackageManagerTileDataSource(const std::shared_ptr<PackageManager>& packageManager);
         virtual ~PackageManagerTileDataSource();
 
         /**

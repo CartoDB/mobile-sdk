@@ -31,12 +31,12 @@ namespace carto {
          * Constructs a MapEnvelope object using map bounds.
          * @param bounds The bounds for the envelope.
          */
-        MapEnvelope(const MapBounds& bounds);
+        explicit MapEnvelope(const MapBounds& bounds);
         /**
          * Constructs a MapEnvelope object from a convex bounding polygon.
          * @param convexHull The list of convex hull points.
          */
-        MapEnvelope(const std::vector<MapPos>& convexHull);
+        explicit MapEnvelope(const std::vector<MapPos>& convexHull);
         virtual ~MapEnvelope();
     
         /**

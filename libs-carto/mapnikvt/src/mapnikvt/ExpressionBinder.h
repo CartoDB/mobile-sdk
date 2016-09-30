@@ -18,7 +18,7 @@
 
 namespace carto { namespace mvt {
     template <typename V>
-    class ExpressionBinder {
+    class ExpressionBinder final {
     public:
         ExpressionBinder() = default;
 
@@ -56,7 +56,7 @@ namespace carto { namespace mvt {
     };
 
     template <typename V>
-    class ExpressionFunctionBinder {
+    class ExpressionFunctionBinder final {
     public:
         using FuncPtr = std::shared_ptr<const std::function<V(const vt::ViewState&)>>;
 

@@ -26,7 +26,7 @@ namespace carto {
          * Constructs a BinaryData object from a byte vector.
          * @param data The byte vector.
          */
-        BinaryData(std::vector<unsigned char> data);
+        explicit BinaryData(std::vector<unsigned char> data);
         /**
          * Constructs a BinaryData object from a raw byte array.
          * @param data The byte vector.

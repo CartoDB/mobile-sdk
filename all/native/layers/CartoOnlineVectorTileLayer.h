@@ -25,7 +25,7 @@ namespace carto {
          * Constructs a CartoOnlineVectorTileLayer object from a specificed base map style.
          * @param style The style to use for the layer.
          */
-        CartoOnlineVectorTileLayer(CartoBaseMapStyle::CartoBaseMapStyle style);
+        explicit CartoOnlineVectorTileLayer(CartoBaseMapStyle::CartoBaseMapStyle style);
         /**
          * Constructs a CartoOnlineVectorTileLayer object from a source name and style asset package.
          * Style asset package defines visual style of the map and must be compatible with the source.

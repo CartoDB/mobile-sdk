@@ -24,7 +24,7 @@ namespace carto {
          * Constructs a CartoOnlineRasterrTileLayer object from a source name.
          * @param source The tile source name.
          */
-        CartoOnlineRasterTileLayer(const std::string& source);
+        explicit CartoOnlineRasterTileLayer(const std::string& source);
         virtual ~CartoOnlineRasterTileLayer();
         
     private:

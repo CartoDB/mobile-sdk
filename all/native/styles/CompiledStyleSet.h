@@ -25,7 +25,7 @@ namespace carto {
          * If the asset package contains multiple styles (XML or JSON files), the first one (based on lexicographical order) from the root folder is chosen as the current style.
          * @param assetPackage The asset package containing compiled style set data and style definition.
          */
-        CompiledStyleSet(const std::shared_ptr<AssetPackage>& assetPackage);
+        explicit CompiledStyleSet(const std::shared_ptr<AssetPackage>& assetPackage);
         /**
          * Constructs a style from the given asset package and explicit style name.
          * @param assetPackage The asset package containing compiled style set data and style definition.

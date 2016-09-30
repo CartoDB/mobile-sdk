@@ -21,7 +21,7 @@ namespace carto {
     
     class ClickHandlerWorker : public ThreadWorker {
     public:
-        ClickHandlerWorker(const std::shared_ptr<Options>& options);
+        explicit ClickHandlerWorker(const std::shared_ptr<Options>& options);
         virtual ~ClickHandlerWorker();
         
         void setComponents(const std::weak_ptr<TouchHandler>& touchHandler, const std::shared_ptr<ClickHandlerWorker>& worker);

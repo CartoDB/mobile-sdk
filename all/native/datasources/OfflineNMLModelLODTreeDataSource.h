@@ -4,8 +4,8 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_SQLITENMLMODELLODTREEDATASOURCE_H_
-#define _CARTO_SQLITENMLMODELLODTREEDATASOURCE_H_
+#ifndef _CARTO_OFFLINENMLMODELLODTREEDATASOURCE_H_
+#define _CARTO_OFFLINENMLMODELLODTREEDATASOURCE_H_
 
 #if defined(_CARTO_NMLMODELLODTREE_SUPPORT) && defined(_CARTO_OFFLINE_SUPPORT)
 
@@ -21,15 +21,15 @@ namespace carto {
      * A sqlite database based data source for NML model LOD trees. The database must be created using
      * custom toolkit from Carto that supports several input formats like KMZ or GeoJSON.
      */
-    class SqliteNMLModelLODTreeDataSource : public NMLModelLODTreeDataSource {
+    class OfflineNMLModelLODTreeDataSource : public NMLModelLODTreeDataSource {
     public:
         /**
-         * Constructs a SqliteNMLModelLODTreeDataSource object.
+         * Constructs a OfflineNMLModelLODTreeDataSource object.
          * @param fileName The file name of the sqlite database file.
          * @throws std::exception If the file could not be opened.
          */
-        SqliteNMLModelLODTreeDataSource(const std::string& fileName);
-        virtual ~SqliteNMLModelLODTreeDataSource();
+        explicit OfflineNMLModelLODTreeDataSource(const std::string& fileName);
+        virtual ~OfflineNMLModelLODTreeDataSource();
 
         virtual std::vector<MapTile> loadMapTiles(const std::shared_ptr<CullState>& cullState);
         virtual std::shared_ptr<NMLModelLODTree> loadModelLODTree(const MapTile& mapTile);

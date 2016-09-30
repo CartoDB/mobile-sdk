@@ -45,7 +45,7 @@ namespace carto {
          * Constructs a NMLModelLODTreeLayer object from a data source.
          * @param dataSource The data source from which this layer loads data.
          */
-        NMLModelLODTreeLayer(const std::shared_ptr<NMLModelLODTreeDataSource>& dataSource);
+        explicit NMLModelLODTreeLayer(const std::shared_ptr<NMLModelLODTreeDataSource>& dataSource);
         virtual ~NMLModelLODTreeLayer();
     
         /**

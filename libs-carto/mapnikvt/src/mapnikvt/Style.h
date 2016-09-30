@@ -20,7 +20,7 @@ namespace carto { namespace mvt {
     class Expression;
     class Rule;
     
-    class Style {
+    class Style final {
     public:
         enum class FilterMode {
             ALL,

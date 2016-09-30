@@ -73,7 +73,7 @@ namespace carto {
         virtual std::shared_ptr<nml::Texture> loadTexture(long long textureId, int level) = 0;
     
     protected:
-        NMLModelLODTreeDataSource(const std::shared_ptr<Projection>& projection);
+        explicit NMLModelLODTreeDataSource(const std::shared_ptr<Projection>& projection);
     
         std::shared_ptr<Projection> _projection;
     
