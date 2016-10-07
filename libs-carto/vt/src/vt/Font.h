@@ -41,7 +41,7 @@ namespace carto { namespace vt {
 
         virtual const Metrics& getMetrics() const = 0;
         virtual std::vector<Glyph> shapeGlyphs(const std::uint32_t* utf32Text, std::size_t size, bool rtl) const = 0;
-        virtual const std::unique_ptr<const Glyph>& loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap) = 0;
+        virtual const Glyph* loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap) = 0;
         virtual std::shared_ptr<const BitmapPattern> getBitmapPattern() const = 0;
     };
 } }

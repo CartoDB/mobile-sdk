@@ -89,23 +89,23 @@ namespace carto { namespace vt {
                 }
             };
             
-            std::vector<Edge> edges;
-            std::size_t index;
-            cglib::vec3<double> pos;
+            const std::vector<Edge> edges;
+            const std::size_t index;
+            const cglib::vec3<double> pos;
             
             explicit Placement(std::vector<Edge> edges, std::size_t index, const cglib::vec3<double>& pos) : edges(std::move(edges)), index(index), pos(pos) { }
         };
         
-        void setupCoordinateSystem(const ViewState& viewState, const std::shared_ptr<Placement>& placement, cglib::vec3<float>& origin, cglib::vec3<float>& xAxis, cglib::vec3<float>& yAxis) const;
+        void setupCoordinateSystem(const ViewState& viewState, const std::shared_ptr<const Placement>& placement, cglib::vec3<float>& origin, cglib::vec3<float>& xAxis, cglib::vec3<float>& yAxis) const;
         void buildPointVertexData(VertexArray<cglib::vec2<float>>& vertices, VertexArray<cglib::vec2<float>>& texCoords, VertexArray<unsigned short>& indices) const;
-        bool buildLineVertexData(const std::shared_ptr<Placement>& placement, float scale, VertexArray<cglib::vec2<float>>& vertices, VertexArray<cglib::vec2<float>>& texCoords, VertexArray<unsigned short>& indices) const;
+        bool buildLineVertexData(const std::shared_ptr<const Placement>& placement, float scale, VertexArray<cglib::vec2<float>>& vertices, VertexArray<cglib::vec2<float>>& texCoords, VertexArray<unsigned short>& indices) const;
 
-        std::shared_ptr<Placement> getPlacement(const ViewState& viewState) const;
-        std::shared_ptr<Placement> reversePlacement(const std::shared_ptr<Placement>& placement) const;
-        std::shared_ptr<Placement> findSnappedPointPlacement(const Vertex& position, const Vertices& vertices) const;
-        std::shared_ptr<Placement> findSnappedLinePlacement(const Vertex& position, const VerticesList& verticesList) const;
-        std::shared_ptr<Placement> findClippedPointPlacement(const ViewState& viewState, const Vertices& vertices) const;
-        std::shared_ptr<Placement> findClippedLinePlacement(const ViewState& viewState, const VerticesList& verticesList) const;
+        std::shared_ptr<const Placement> getPlacement(const ViewState& viewState) const;
+        std::shared_ptr<const Placement> reversePlacement(const std::shared_ptr<const Placement>& placement) const;
+        std::shared_ptr<const Placement> findSnappedPointPlacement(const Vertex& position, const Vertices& vertices) const;
+        std::shared_ptr<const Placement> findSnappedLinePlacement(const Vertex& position, const VerticesList& verticesList) const;
+        std::shared_ptr<const Placement> findClippedPointPlacement(const ViewState& viewState, const Vertices& vertices) const;
+        std::shared_ptr<const Placement> findClippedLinePlacement(const ViewState& viewState, const VerticesList& verticesList) const;
 
         const TileId _tileId;
         const long long _localId;
@@ -130,13 +130,13 @@ namespace carto { namespace vt {
         bool _visible = false;
         bool _active = false;
 
-        std::shared_ptr<Placement> _placement;
-        std::shared_ptr<Placement> _flippedPlacement;
+        std::shared_ptr<const Placement> _placement;
+        std::shared_ptr<const Placement> _flippedPlacement;
 
         mutable bool _cachedValid = false;
         mutable float _cachedScale = 0;
         mutable cglib::vec3<double> _cachedOrigin;
-        mutable std::shared_ptr<Placement> _cachedPlacement;
+        mutable std::shared_ptr<const Placement> _cachedPlacement;
         mutable VertexArray<cglib::vec2<float>> _cachedVertices;
         mutable VertexArray<cglib::vec2<float>> _cachedTexCoords;
         mutable VertexArray<unsigned short> _cachedIndices;
