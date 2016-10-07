@@ -1,4 +1,5 @@
 #include "MBVectorTileDecoder.h"
+#include "core/MapTile.h"
 #include "core/MapBounds.h"
 #include "core/BinaryData.h"
 #include "core/Variant.h"
@@ -426,7 +427,7 @@ namespace carto {
             mvt::MBVTFeatureDecoder decoder(*tileData->getDataPtr(), _logger);
             decoder.setTransform(calculateTileTransform(tile, targetTile));
             decoder.setBuffer(buffer);
-            decoder.setFeatureIdOverride(featureIdOverride);
+            decoder.setGlobalIdOverride(featureIdOverride, MapTile(tile.x, tile.y, tile.zoom, 0).getTileId());
             
             mvt::MBVTTileReader reader(map, *symbolizerContext, decoder);
             reader.setLayerNameOverride(layerNameOverride);
