@@ -323,6 +323,7 @@ namespace carto {
                     auto dataSource = std::make_shared<MemoryCacheTileDataSource>(baseDataSource); // in memory cache allows to change style quickly
                     auto styleSet = std::make_shared<CartoCSSStyleSet>(cartoCSS, _vectorTileAssetPackage);
                     auto vectorTileDecoder = std::make_shared<MBVectorTileDecoder>(styleSet);
+                    vectorTileDecoder->setFeatureIdOverride(true); // Carto uses tile-local ids for features
                     vectorTileDecoder->setCartoCSSLayerNamesIgnored(true); // all layer name filters should be ignored
                     vectorTileDecoder->setLayerNameOverride(layerId);
                     layer = std::make_shared<VectorTileLayer>(dataSource, vectorTileDecoder);
