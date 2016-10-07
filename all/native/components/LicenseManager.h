@@ -22,7 +22,7 @@ namespace carto {
 
         bool registerLicense(const std::string& licenseKey, const std::shared_ptr<LicenseManagerListener>& listener);
 
-        bool getParameter(const std::string& name, std::string& value) const;
+        bool getParameter(const std::string& name, std::string& value, bool wait = false) const;
 
         bool getPackageEncryptionKey(std::string& key) const;
 

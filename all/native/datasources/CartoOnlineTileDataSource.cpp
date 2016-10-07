@@ -62,7 +62,7 @@ namespace carto {
     std::string CartoOnlineTileDataSource::buildTileURL(const std::string& baseURL, const MapTile& tile) const {
         std::map<std::string, std::string> tagValues = buildTagValues(_tmsScheme ? tile.getFlipped() : tile);
         std::string appToken;
-        if (LicenseManager::GetInstance().getParameter("appToken", appToken)) {
+        if (LicenseManager::GetInstance().getParameter("appToken", appToken, true)) {
             tagValues["key"] = appToken;
         }
         return GeneralUtils::ReplaceTags(baseURL, tagValues, "{", "}", true);
