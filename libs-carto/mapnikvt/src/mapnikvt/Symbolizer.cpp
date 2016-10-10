@@ -76,8 +76,8 @@ namespace carto { namespace mvt {
     }
 
     long long Symbolizer::generateId() {
-        static std::atomic<long long> counter = ATOMIC_VAR_INIT(0x4000000LL);
-        return counter++;
+        static std::atomic<int> counter = ATOMIC_VAR_INIT(0); // must use 32-bit atomic due to libc/Android limitations
+        return 0x4000000LL + counter++;
     }
 
     long long Symbolizer::getTextId(long long id, std::size_t hash) {
