@@ -268,7 +268,9 @@ namespace carto {
             urls.insert(_cdnURLs.begin(), _cdnURLs.end());
             auto it = urls.find(proto);
             if (it != urls.end()) {
-                url = it->first + "://" + it->second + "/" + _username;
+                if (!it->second.empty()) {
+                    url = it->first + "://" + it->second + "/" + _username;
+                }
             }
         }
 
@@ -379,6 +381,9 @@ namespace carto {
             std::string layerId;
             if (layerInfo.get("id").is<std::string>()) {
                 layerId = layerInfo.get("id").get<std::string>();
+            }
+            else {
+                layerId = boost::lexical_cast<std::string>(it - layersInfo.begin()); // use implicit id
             }
             
             // Read CDN URLs
