@@ -15,6 +15,7 @@ namespace carto { namespace mvt {
             width = height = _width;
         }
 
+        float bitmapScaleX = 1, bitmapScaleY = 1;
         std::shared_ptr<const vt::Bitmap> bitmap;
         float fillOpacity = _fillOpacity;
         if (!_file.empty()) {
@@ -45,6 +46,8 @@ namespace carto { namespace mvt {
                     symbolizerContext.getBitmapManager()->storeBitmap(file, bitmap);
                 }
             }
+            bitmapScaleX = static_cast<float>(width)  / bitmap->width;
+            bitmapScaleY = static_cast<float>(height) / bitmap->height;
             fillOpacity = 1.0f;
         }
 
@@ -55,7 +58,7 @@ namespace carto { namespace mvt {
         std::shared_ptr<const vt::FloatFunction> opacityFunc;
         ExpressionFunctionBinder<float>().bind(&opacityFunc, std::make_shared<ConstExpression>(Value(fillOpacity))).update(exprContext);
 
-        vt::PointStyle style(compOp, vt::PointOrientation::POINT, fillFunc, opacityFunc, symbolizerContext.getGlyphMap(), bitmap, boost::optional<cglib::mat3x3<float>>());
+        vt::PointStyle style(compOp, vt::PointOrientation::POINT, fillFunc, opacityFunc, symbolizerContext.getGlyphMap(), bitmap, cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1)));
 
         std::size_t featureIndex = 0;
         std::size_t geometryIndex = 0;
