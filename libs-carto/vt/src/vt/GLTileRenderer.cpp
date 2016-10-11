@@ -1100,7 +1100,7 @@ namespace carto { namespace vt {
 
     void GLTileRenderer::findTileGeometryIntersections(const TileId& tileId, const std::shared_ptr<TileGeometry>& geometry, const cglib::ray3<float>& ray, float radius, std::vector<std::pair<float, long long>>& results) const {
         cglib::vec3<float> xAxis, yAxis;
-        setupPointCoordinateSystem(geometry->getStyleParameters().pointOrientation, tileId, geometry->getGeometryLayoutParameters().vertexScale, xAxis, yAxis);
+        setupPointCoordinateSystem(geometry->getStyleParameters().pointOrientation, tileId, 1.0f, xAxis, yAxis);
 
         for (std::size_t i = 0; i + 2 < geometry->getIndices().size(); i += 3) {
             std::size_t index0 = geometry->getIndices()[i + 0];
