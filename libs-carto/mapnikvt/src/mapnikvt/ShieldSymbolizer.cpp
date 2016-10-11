@@ -18,6 +18,8 @@ namespace carto { namespace mvt {
             return;
         }
 
+        vt::CompOp compOp = vt::CompOp::SRC_OVER;
+
         float fontScale = symbolizerContext.getSettings().getFontScale();
         float bitmapSize = static_cast<float>(std::max(backgroundBitmap->width, backgroundBitmap->height)) * fontScale;
         vt::LabelOrientation placement = convertTextPlacement(_placement);
@@ -28,90 +30,87 @@ namespace carto { namespace mvt {
 
         std::string text = getTransformedText(_text);
         std::size_t hash = std::hash<std::string>()(text);
-        float minimumDistance = (_minimumDistance + bitmapSize) * std::pow(2.0f, -exprContext.getZoom()) / symbolizerContext.getSettings().getTileSize() * 2;
-        long long groupId = (_allowOverlap ? -1 : 1); // use separate group from markers, markers use group 0
-
         vt::TextFormatter::Options textFormatterOptions = getFormatterOptions(symbolizerContext);
         vt::TextFormatter::Options shieldFormatterOptions = textFormatterOptions;
         shieldFormatterOptions.offset = cglib::vec2<float>(_shieldDx * fontScale, -_shieldDy * fontScale);
 
-        std::unique_ptr<vt::TextLabelStyle> style;
-        if (_unlockImage) {
-            cglib::vec2<float> backgroundOffset(-backgroundBitmap->width * fontScale * 0.5f + shieldFormatterOptions.offset(0), -backgroundBitmap->height * fontScale * 0.5f + shieldFormatterOptions.offset(1));
-            style.reset(new vt::TextLabelStyle(orientation, textFormatterOptions, font, _orientation, fontScale, backgroundOffset, backgroundBitmap));
-        }
-        else {
-            cglib::vec2<float> backgroundOffset(-backgroundBitmap->width * fontScale * 0.5f, -backgroundBitmap->height * fontScale * 0.5f);
-            style.reset(new vt::TextLabelStyle(orientation, shieldFormatterOptions, font, _orientation, fontScale, backgroundOffset, backgroundBitmap));
-        }
+        float minimumDistance = (_minimumDistance + bitmapSize) * std::pow(2.0f, -exprContext.getZoom()) / symbolizerContext.getSettings().getTileSize() * 2;
+        long long groupId = (_allowOverlap ? -1 : 1); // use separate group from markers, markers use group 0
 
+        std::vector<std::pair<long long, vt::TileLayerBuilder::Vertex>> shieldInfos;
         std::vector<std::pair<long long, vt::TileLayerBuilder::TextLabelInfo>> labelInfos;
-        for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
-            long long localId = featureCollection.getLocalId(index);
-            long long globalId = featureCollection.getGlobalId(index);
-            const std::shared_ptr<const Geometry>& geometry = featureCollection.getGeometry(index);
 
-            if (auto pointGeometry = std::dynamic_pointer_cast<const PointGeometry>(geometry)) {
-                for (const auto& vertex : pointGeometry->getVertices()) {
-                    labelInfos.emplace_back(localId, vt::TileLayerBuilder::TextLabelInfo(getShieldId(globalId, hash), groupId, text, vertex, vt::TileLayerBuilder::Vertices(), minimumDistance));
+        auto addShield = [&](long long localId, long long globalId, const boost::optional<vt::TileLayerBuilder::Vertex>& vertex, const vt::TileLayerBuilder::Vertices& vertices) {
+            if (_allowOverlap) {
+                if (vertex) {
+                    shieldInfos.emplace_back(localId, *vertex);
                 }
-            }
-            else if (auto lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(geometry)) {
-                if (placement == vt::LabelOrientation::LINE) {
-                    for (const auto& vertices : lineGeometry->getVerticesList()) {
-                        if (_spacing <= 0) {
-                            labelInfos.emplace_back(localId, vt::TileLayerBuilder::TextLabelInfo(getShieldId(globalId, hash), groupId, text, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices, minimumDistance));
-                            continue;
-                        }
-
-                        float linePos = 0;
-                        for (std::size_t i = 1; i < vertices.size(); i++) {
-                            const cglib::vec2<float>& v0 = vertices[i - 1];
-                            const cglib::vec2<float>& v1 = vertices[i];
-
-                            float lineLen = cglib::length(v1 - v0) * symbolizerContext.getSettings().getTileSize();
-                            if (i == 1) {
-                                linePos = std::min(lineLen, _spacing) * 0.5f;
-                            }
-                            while (linePos < lineLen) {
-                                cglib::vec2<float> pos = v0 + (v1 - v0) * (linePos / lineLen);
-                                if (std::min(pos(0), pos(1)) > 0.0f && std::max(pos(0), pos(1)) < 1.0f) {
-                                    labelInfos.emplace_back(localId, vt::TileLayerBuilder::TextLabelInfo(getMultiShieldId(globalId, hash), groupId, text, pos, vertices, minimumDistance));
-                                }
-
-                                linePos += _spacing + bitmapSize;
-                            }
-
-                            linePos -= lineLen;
-                        }
-                    }
-                }
-                else {
-                    for (const auto& vertices : lineGeometry->getVerticesList()) {
-                        labelInfos.emplace_back(localId, vt::TileLayerBuilder::TextLabelInfo(getShieldId(globalId, hash), groupId, text, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices, minimumDistance));
-                    }
-                }
-            }
-            else if (auto polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(geometry)) {
-                for (const auto& vertex : polygonGeometry->getSurfacePoints()) {
-                    labelInfos.emplace_back(localId, vt::TileLayerBuilder::TextLabelInfo(getShieldId(globalId, hash), groupId, text, vertex, vt::TileLayerBuilder::Vertices(), minimumDistance));
+                else if (!vertices.empty()) {
+                    shieldInfos.emplace_back(localId, vertices.front());
                 }
             }
             else {
-                _logger->write(Logger::Severity::WARNING, "Unsupported geometry for ShieldSymbolizer");
+                labelInfos.emplace_back(localId, vt::TileLayerBuilder::TextLabelInfo(getShieldId(globalId, hash), groupId, text, vertex, vertices, minimumDistance));
             }
-        }
+        };
 
-        std::size_t labelInfoIndex = 0;
-        layerBuilder.addTextLabels([&](long long& id, vt::TileLayerBuilder::TextLabelInfo& labelInfo) {
-            if (labelInfoIndex >= labelInfos.size()) {
-                return false;
+        auto flushShields = [&](const cglib::mat3x3<float>& transform) {
+            cglib::vec2<float> backgroundOffset;
+            const vt::TextFormatter::Options* formatterOptions;
+            if (_unlockImage) {
+                backgroundOffset = cglib::vec2<float>(-backgroundBitmap->width * fontScale * 0.5f + shieldFormatterOptions.offset(0), -backgroundBitmap->height * fontScale * 0.5f + shieldFormatterOptions.offset(1));
+                formatterOptions = &textFormatterOptions;
             }
-            id = labelInfos[labelInfoIndex].first;
-            labelInfo = std::move(labelInfos[labelInfoIndex].second);
-            labelInfoIndex++;
-            return true;
-        }, *style);
+            else {
+                backgroundOffset = cglib::vec2<float>(-backgroundBitmap->width * fontScale * 0.5f, -backgroundBitmap->height * fontScale * 0.5f);
+                formatterOptions = &shieldFormatterOptions;
+            }
+
+            if (_allowOverlap) {
+                std::shared_ptr<const vt::ColorFunction> fillFunc;
+                ExpressionFunctionBinder<vt::Color>().bind(&fillFunc, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), [this](const Value& val) -> vt::Color {
+                    return convertColor(val);
+                }).update(exprContext);
+                std::shared_ptr<const vt::FloatFunction> opacityFunc;
+                ExpressionFunctionBinder<float>().bind(&opacityFunc, std::make_shared<ConstExpression>(Value(1.0f))).update(exprContext);
+
+                vt::TextStyle style(compOp, convertLabelToPointOrientation(orientation), fillFunc, opacityFunc, *formatterOptions, font, _orientation, fontScale, backgroundOffset, backgroundBitmap, transform);
+
+                std::size_t textInfoIndex = 0;
+                layerBuilder.addTexts([&](long long& id, vt::TileLayerBuilder::Vertex& vertex, std::string& txt) {
+                    if (textInfoIndex >= shieldInfos.size()) {
+                        return false;
+                    }
+                    id = shieldInfos[textInfoIndex].first;
+                    vertex = shieldInfos[textInfoIndex].second;
+                    txt = text;
+                    textInfoIndex++;
+                    return true;
+                }, style);
+
+                shieldInfos.clear();
+            }
+            else {
+                vt::TextLabelStyle style(placement, *formatterOptions, font, _orientation, fontScale, backgroundOffset, backgroundBitmap);
+
+                std::size_t labelInfoIndex = 0;
+                layerBuilder.addTextLabels([&](long long& id, vt::TileLayerBuilder::TextLabelInfo& labelInfo) {
+                    if (labelInfoIndex >= labelInfos.size()) {
+                        return false;
+                    }
+                    id = labelInfos[labelInfoIndex].first;
+                    labelInfo = std::move(labelInfos[labelInfoIndex].second);
+                    labelInfoIndex++;
+                    return true;
+                }, style);
+
+                labelInfos.clear();
+            }
+        };
+
+        buildFeatureCollection(featureCollection, symbolizerContext, placement, bitmapSize, addShield);
+
+        flushShields(cglib::mat3x3<float>::identity());
     }
 
     void ShieldSymbolizer::bindParameter(const std::string& name, const std::string& value) {

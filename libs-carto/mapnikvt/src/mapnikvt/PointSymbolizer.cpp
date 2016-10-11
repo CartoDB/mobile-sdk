@@ -31,8 +31,6 @@ namespace carto { namespace mvt {
             bitmapScale = fontScale * 4.0f / RECTANGLE_SIZE;
         }
 
-        std::shared_ptr<const vt::FloatFunction> widthFunc;
-        ExpressionFunctionBinder<float>().bind(&widthFunc, std::make_shared<ConstExpression>(Value(_width * fontScale))).update(exprContext);
         std::shared_ptr<const vt::ColorFunction> fillFunc;
         ExpressionFunctionBinder<vt::Color>().bind(&fillFunc, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), [this](const Value& val) -> vt::Color {
             return convertColor(val);
@@ -40,7 +38,7 @@ namespace carto { namespace mvt {
         std::shared_ptr<const vt::FloatFunction> opacityFunc;
         ExpressionFunctionBinder<float>().bind(&opacityFunc, std::make_shared<ConstExpression>(Value(_opacity))).update(exprContext);
 
-        vt::PointStyle pointStyle(compOp, vt::PointOrientation::BILLBOARD_2D, fillFunc, opacityFunc, widthFunc, symbolizerContext.getGlyphMap(), bitmap, _transform * cglib::scale3_matrix(cglib::vec3<float>(1.0f, (bitmap->height * bitmapScale) / (bitmap->width * bitmapScale), 1)));
+        vt::PointStyle pointStyle(compOp, vt::PointOrientation::BILLBOARD_2D, fillFunc, opacityFunc, symbolizerContext.getGlyphMap(), bitmap, _transform * cglib::scale3_matrix(cglib::vec3<float>(1.0f, (bitmap->height * bitmapScale) / (bitmap->width * bitmapScale), 1)));
 
         std::vector<std::pair<long long, vt::TileLayerBuilder::Vertex>> pointInfos;
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {

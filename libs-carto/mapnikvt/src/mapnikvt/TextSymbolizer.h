@@ -12,6 +12,7 @@
 #include "Expression.h"
 
 #include <vector>
+#include <functional>
 
 namespace carto { namespace mvt {
     class TextSymbolizer : public Symbolizer {
@@ -31,6 +32,8 @@ namespace carto { namespace mvt {
         cglib::bbox2<float> calculateTextSize(const std::shared_ptr<vt::Font>& font, const std::string& text, const vt::TextFormatter::Options& formatterOptions) const;
         vt::TextFormatter::Options getFormatterOptions(const SymbolizerContext& symbolizerContext) const;
         vt::LabelOrientation convertTextPlacement(const std::string& orientation) const;
+
+        void buildFeatureCollection(const FeatureCollection& featureCollection, const SymbolizerContext& symbolizerContext, vt::LabelOrientation placement, float textSize, const std::function<void(long long localId, long long globalId, const boost::optional<vt::TileLayerBuilder::Vertex>& vertex, const vt::TileLayerBuilder::Vertices& vertices)>& addText);
 
         const std::vector<std::shared_ptr<FontSet>> _fontSets;
         std::shared_ptr<Expression> _textExpression;

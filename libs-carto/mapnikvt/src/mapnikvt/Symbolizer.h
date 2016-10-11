@@ -39,6 +39,7 @@ namespace carto { namespace mvt {
 
         vt::CompOp convertCompOp(const std::string& compOp) const;
         vt::LabelOrientation convertLabelPlacement(const std::string& orientation) const;
+        vt::PointOrientation convertLabelToPointOrientation(vt::LabelOrientation orientation) const;
 
         vt::Color convertColor(const Value& val) const;
         cglib::mat3x3<float> convertTransform(const Value& val) const;
@@ -51,9 +52,6 @@ namespace carto { namespace mvt {
         static long long getTextId(long long id, std::size_t hash);
         static long long getShieldId(long long id, std::size_t hash);
         static long long getBitmapId(long long id, const std::string& file);
-        static long long getMultiTextId(long long id, std::size_t hash);
-        static long long getMultiShieldId(long long id, std::size_t hash);
-        static long long getMultiBitmapId(long long id, const std::string& file);
 
         template <typename V>
         void bind(V* field, const std::shared_ptr<const Expression>& expr) {

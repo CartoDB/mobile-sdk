@@ -48,8 +48,6 @@ namespace carto { namespace mvt {
             fillOpacity = 1.0f;
         }
 
-        std::shared_ptr<const vt::FloatFunction> widthFunc;
-        ExpressionFunctionBinder<float>().bind(&widthFunc, std::make_shared<ConstExpression>(Value(width))).update(exprContext);
         std::shared_ptr<const vt::ColorFunction> fillFunc;
         ExpressionFunctionBinder<vt::Color>().bind(&fillFunc, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), [this](const Value& val) -> vt::Color {
             return convertColor(val);
@@ -57,7 +55,7 @@ namespace carto { namespace mvt {
         std::shared_ptr<const vt::FloatFunction> opacityFunc;
         ExpressionFunctionBinder<float>().bind(&opacityFunc, std::make_shared<ConstExpression>(Value(fillOpacity))).update(exprContext);
 
-        vt::PointStyle style(compOp, vt::PointOrientation::POINT, fillFunc, opacityFunc, widthFunc, symbolizerContext.getGlyphMap(), bitmap, boost::optional<cglib::mat3x3<float>>());
+        vt::PointStyle style(compOp, vt::PointOrientation::POINT, fillFunc, opacityFunc, symbolizerContext.getGlyphMap(), bitmap, boost::optional<cglib::mat3x3<float>>());
 
         std::size_t featureIndex = 0;
         std::size_t geometryIndex = 0;

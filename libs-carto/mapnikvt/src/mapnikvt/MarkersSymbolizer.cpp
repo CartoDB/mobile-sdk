@@ -93,19 +93,24 @@ namespace carto { namespace mvt {
         std::vector<std::pair<long long, vt::TileLayerBuilder::Vertex>> pointInfos;
         std::vector<std::pair<long long, vt::TileLayerBuilder::BitmapLabelInfo>> labelInfos;
 
-        auto addPoint = [&](long long localId, long long globalId, const cglib::vec2<float>& vertex) {
+        auto addPoint = [&](long long localId, long long globalId, const boost::variant<vt::TileLayerBuilder::Vertex, vt::TileLayerBuilder::Vertices>& position) {
             if (_allowOverlap) {
-                pointInfos.emplace_back(localId, vertex);
+                if (auto vertex = boost::get<vt::TileLayerBuilder::Vertex>(&position)) {
+                    pointInfos.emplace_back(localId, *vertex);
+                }
+                else if (auto vertices = boost::get<vt::TileLayerBuilder::Vertices>(&position)) {
+                    if (!vertices->empty()) {
+                        pointInfos.emplace_back(localId, vertices->front());
+                    }
+                }
             }
             else {
-                labelInfos.emplace_back(localId, vt::TileLayerBuilder::BitmapLabelInfo(globalId, groupId, vertex, 0));
+                labelInfos.emplace_back(localId, vt::TileLayerBuilder::BitmapLabelInfo(getBitmapId(globalId, file), groupId, position, 0));
             }
         };
 
         auto flushPoints = [&](const cglib::mat3x3<float>& transform) {
             if (_allowOverlap) {
-                std::shared_ptr<const vt::FloatFunction> widthFunc;
-                ExpressionFunctionBinder<float>().bind(&widthFunc, std::make_shared<ConstExpression>(Value(_width * fontScale))).update(exprContext);
                 std::shared_ptr<const vt::ColorFunction> fillFunc;
                 ExpressionFunctionBinder<vt::Color>().bind(&fillFunc, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), [this](const Value& val) -> vt::Color {
                     return convertColor(val);
@@ -113,20 +118,7 @@ namespace carto { namespace mvt {
                 std::shared_ptr<const vt::FloatFunction> opacityFunc;
                 ExpressionFunctionBinder<float>().bind(&opacityFunc, std::make_shared<ConstExpression>(Value(fillOpacity))).update(exprContext);
 
-                vt::PointOrientation pointOrientation;
-                switch (orientation) {
-                case vt::LabelOrientation::BILLBOARD_2D:
-                    pointOrientation = vt::PointOrientation::BILLBOARD_2D;
-                    break;
-                case vt::LabelOrientation::BILLBOARD_3D:
-                    pointOrientation = vt::PointOrientation::BILLBOARD_3D;
-                    break;
-                default: // LabelOrientation::POINT, LabelOrientation::POINT_FLIPPING, LabelOrientation::LINE
-                    pointOrientation = vt::PointOrientation::POINT;
-                    break;
-                }
-
-                vt::PointStyle pointStyle(compOp, pointOrientation, fillFunc, opacityFunc, widthFunc, symbolizerContext.getGlyphMap(), bitmap, transform * cglib::scale3_matrix(cglib::vec3<float>(1.0f, (bitmap->height * bitmapScaleY) / (bitmap->width * bitmapScaleX), 1)));
+                vt::PointStyle style(compOp, convertLabelToPointOrientation(orientation), fillFunc, opacityFunc, symbolizerContext.getGlyphMap(), bitmap, transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1)));
 
                 std::size_t pointInfoIndex = 0;
                 layerBuilder.addPoints([&](long long& id, vt::TileLayerBuilder::Vertex& vertex) {
@@ -137,7 +129,7 @@ namespace carto { namespace mvt {
                     vertex = pointInfos[pointInfoIndex].second;
                     pointInfoIndex++;
                     return true;
-                }, pointStyle);
+                }, style);
                 
                 pointInfos.clear();
             }
@@ -166,14 +158,14 @@ namespace carto { namespace mvt {
 
             if (auto pointGeometry = std::dynamic_pointer_cast<const PointGeometry>(geometry)) {
                 for (const auto& vertex : pointGeometry->getVertices()) {
-                    addPoint(localId, getBitmapId(globalId, file), vertex);
+                    addPoint(localId, globalId, vertex);
                 }
             }
             else if (auto lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(geometry)) {
                 if (placement == vt::LabelOrientation::LINE) {
                     for (const auto& vertices : lineGeometry->getVerticesList()) {
                         if (_spacing <= 0) {
-                            labelInfos.emplace_back(localId, vt::TileLayerBuilder::BitmapLabelInfo(getBitmapId(globalId, file), groupId, vertices, 0));
+                            addPoint(localId, globalId, vertices);
                             continue;
                         }
 
@@ -191,7 +183,7 @@ namespace carto { namespace mvt {
                             while (linePos < lineLen) {
                                 cglib::vec2<float> pos = v0 + (v1 - v0) * (linePos / lineLen);
                                 if (std::min(pos(0), pos(1)) > 0.0f && std::max(pos(0), pos(1)) < 1.0f) {
-                                    addPoint(localId, getMultiBitmapId(globalId, file), pos);
+                                    addPoint(localId, 0, pos);
 
                                     cglib::vec2<float> dir = cglib::unit(v1 - v0);
                                     cglib::mat3x3<float> dirTransform = cglib::mat3x3<float>::identity();
@@ -211,13 +203,13 @@ namespace carto { namespace mvt {
                 }
                 else {
                     for (const auto& vertex : lineGeometry->getMidPoints()) {
-                        addPoint(localId, getBitmapId(globalId, file), vertex);
+                        addPoint(localId, globalId, vertex);
                     }
                 }
             }
             else if (auto polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(geometry)) {
                 for (const auto& vertex : polygonGeometry->getSurfacePoints()) {
-                    addPoint(localId, getBitmapId(globalId, file), vertex);
+                    addPoint(localId, globalId, vertex);
                 }
             }
             else {

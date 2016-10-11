@@ -55,12 +55,27 @@ namespace carto { namespace vt {
         PointOrientation orientation;
         std::shared_ptr<const ColorFunction> color;
         std::shared_ptr<const FloatFunction> opacity;
-        std::shared_ptr<const FloatFunction> size;
         std::shared_ptr<GlyphMap> glyphMap;
         std::shared_ptr<const Bitmap> bitmap;
         boost::optional<cglib::mat3x3<float>> transform;
 
-        explicit PointStyle(CompOp compOp, PointOrientation orientation, std::shared_ptr<const ColorFunction> color, std::shared_ptr<const FloatFunction> opacity, std::shared_ptr<const FloatFunction> size, std::shared_ptr<GlyphMap> glyphMap, std::shared_ptr<const Bitmap> bitmap, const boost::optional<cglib::mat3x3<float>>& transform) : compOp(compOp), orientation(orientation), color(std::move(color)), opacity(std::move(opacity)), size(std::move(size)), glyphMap(std::move(glyphMap)), bitmap(std::move(bitmap)), transform(transform) { }
+        explicit PointStyle(CompOp compOp, PointOrientation orientation, std::shared_ptr<const ColorFunction> color, std::shared_ptr<const FloatFunction> opacity, std::shared_ptr<GlyphMap> glyphMap, std::shared_ptr<const Bitmap> bitmap, const boost::optional<cglib::mat3x3<float>>& transform) : compOp(compOp), orientation(orientation), color(std::move(color)), opacity(std::move(opacity)), glyphMap(std::move(glyphMap)), bitmap(std::move(bitmap)), transform(transform) { }
+    };
+
+    struct TextStyle final {
+        CompOp compOp;
+        PointOrientation orientation;
+        std::shared_ptr<const ColorFunction> color;
+        std::shared_ptr<const FloatFunction> opacity;
+        TextFormatter::Options formatterOptions;
+        std::shared_ptr<Font> font;
+        float angle;
+        float backgroundScale;
+        cglib::vec2<float> backgroundOffset;
+        std::shared_ptr<const Bitmap> backgroundBitmap;
+        boost::optional<cglib::mat3x3<float>> transform;
+
+        explicit TextStyle(CompOp compOp, PointOrientation orientation, std::shared_ptr<const ColorFunction> color, std::shared_ptr<const FloatFunction> opacity, TextFormatter::Options formatterOptions, std::shared_ptr<Font> font, float angle, float backgroundScale, const cglib::vec2<float>& backgroundOffset, std::shared_ptr<const Bitmap> backgroundBitmap, const boost::optional<cglib::mat3x3<float>>& transform) : compOp(compOp), orientation(orientation), color(std::move(color)), opacity(std::move(opacity)), formatterOptions(formatterOptions), font(std::move(font)), angle(angle), backgroundScale(backgroundScale), backgroundOffset(backgroundOffset), backgroundBitmap(std::move(backgroundBitmap)), transform(transform) { }
     };
 
     struct LineStyle final {

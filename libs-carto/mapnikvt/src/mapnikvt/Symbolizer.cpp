@@ -42,6 +42,17 @@ namespace carto { namespace mvt {
         }
     }
 
+    vt::PointOrientation Symbolizer::convertLabelToPointOrientation(vt::LabelOrientation orientation) const {
+        switch (orientation) {
+        case vt::LabelOrientation::BILLBOARD_2D:
+            return vt::PointOrientation::BILLBOARD_2D;
+        case vt::LabelOrientation::BILLBOARD_3D:
+            return vt::PointOrientation::BILLBOARD_3D;
+        default: // LabelOrientation::POINT, LabelOrientation::POINT_FLIPPING, LabelOrientation::LINE
+            return vt::PointOrientation::POINT;
+        }
+    }
+
     vt::Color Symbolizer::convertColor(const Value& val) const {
         try {
             return parseColor(boost::lexical_cast<std::string>(val));
@@ -76,8 +87,8 @@ namespace carto { namespace mvt {
     }
 
     long long Symbolizer::generateId() {
-        static std::atomic<int> counter = ATOMIC_VAR_INIT(0); // must use 32-bit atomic due to libc/Android limitations
-        return 0x4000000LL + counter++;
+        static std::atomic<int> counter = ATOMIC_VAR_INIT(0);
+        return 0x4000000LL | counter++;
     }
 
     long long Symbolizer::getTextId(long long id, std::size_t hash) {
@@ -100,17 +111,5 @@ namespace carto { namespace mvt {
         }
         std::size_t hash = std::hash<std::string>()(file);
         return (id * 3 + 2) | (static_cast<long long>(hash & 0x7fffffff) << 32);
-    }
-
-    long long Symbolizer::getMultiTextId(long long id, std::size_t hash) {
-        return generateId(); // we will create a unique id each time
-    }
-    
-    long long Symbolizer::getMultiShieldId(long long id, std::size_t hash) {
-        return generateId(); // we will create a unique id each time
-    }
-
-    long long Symbolizer::getMultiBitmapId(long long id, const std::string& file) {
-        return generateId(); // we will create a unique id each time
     }
 } }
