@@ -96,6 +96,7 @@
 #import "NTAssetUtils.h"
 #import "NTBitmapUtils.h"
 #import "NTLog.h"
+#import "NTLogEventListener.h"
 
 #import "NTBalloonPopup.h"
 #import "NTCustomPopup.h"

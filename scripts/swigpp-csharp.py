@@ -259,14 +259,14 @@ def transformSwigFile(sourcePath, outPath, headerDirs):
       line = '%%rename%s' % match.group(2)
 
     # Polymorphic read-write attribute
-    match = re.search('^\s*!attributestring_polymorphic\s*[(]([^,]*),([^,]*),([^,]*),([^,]*),([^)]*)[)].*', line)
+    match = re.search('^\s*!(static|)attributestring_polymorphic\s*[(]([^,]*),([^,]*),([^,]*),([^,]*),([^)]*)[)].*', line)
     if match:
-      className = match.group(1).strip()
-      csNamespace = 'Carto.%s' % getNamespace(match.group(2).strip())
-      csClass = match.group(2).strip().split(".")[-1]
-      attrName = match.group(3).strip()
+      className = match.group(2).strip()
+      csNamespace = 'Carto.%s' % getNamespace(match.group(3).strip())
+      csClass = match.group(3).strip().split(".")[-1]
+      attrName = match.group(4).strip()
       modifier = method_modifiers.get("%s::%s" % (className, attrName), "public")
-      args = { 'CLASSNAME': match.group(1).strip(), 'TYPE': csClass, 'NAMESPACE': csNamespace, 'NAME': attrName, 'GETTER': match.group(4).strip(), 'SETTER': match.group(5).strip(), 'MODIFIER': modifier }
+      args = { 'CLASSNAME': match.group(2).strip(), 'TYPE': csClass, 'NAMESPACE': csNamespace, 'NAME': attrName, 'GETTER': match.group(5).strip(), 'SETTER': match.group(6).strip(), 'MODIFIER': '%s %s' % (match.group(1), modifier) }
       code = class_code.get(className, [])
       code += applyTemplate(POLYMORPHIC_RW_ATTRIBUTE_CODE_TEMPLATE, args)
       class_code[className] = code
@@ -274,14 +274,14 @@ def transformSwigFile(sourcePath, outPath, headerDirs):
       continue
 
     # Polymorphic read-only attribute
-    match = re.search('^\s*!attributestring_polymorphic\s*[(]([^,]*),([^,]*),([^,]*),([^)]*)[)].*', line)
+    match = re.search('^\s*!(static|)attributestring_polymorphic\s*[(]([^,]*),([^,]*),([^,]*),([^)]*)[)].*', line)
     if match:
-      className = match.group(1).strip()
-      csNamespace = 'Carto.%s' % getNamespace(match.group(2).strip())
-      csClass = match.group(2).strip().split(".")[-1]
-      attrName = match.group(3).strip()
+      className = match.group(2).strip()
+      csNamespace = 'Carto.%s' % getNamespace(match.group(3).strip())
+      csClass = match.group(3).strip().split(".")[-1]
+      attrName = match.group(4).strip()
       modifier = method_modifiers.get("%s::%s" % (className, attrName), "public")
-      args = { 'CLASSNAME': match.group(1).strip(), 'TYPE': csClass, 'NAMESPACE': csNamespace, 'NAME': attrName, 'GETTER': match.group(4).strip(), 'MODIFIER': modifier }
+      args = { 'CLASSNAME': match.group(2).strip(), 'TYPE': csClass, 'NAMESPACE': csNamespace, 'NAME': attrName, 'GETTER': match.group(5).strip(), 'MODIFIER': '%s %s' % (match.group(1), modifier) }
       code = class_code.get(className, [])
       code += applyTemplate(POLYMORPHIC_RO_ATTRIBUTE_CODE_TEMPLATE, args)
       class_code[className] = code
