@@ -3,12 +3,16 @@
 
 %module Log
 
+!proxy_imports(carto::Log, utils.LogEventListener)
+
 %{
 #include "utils/Log.h"
 %}
 
 %include <std_string.i>
 %include <cartoswig.i>
+
+%import "utils/LogEventListener.i"
 
 %staticattribute(carto::Log, bool, ShowError, IsShowError, SetShowError)
 %staticattribute(carto::Log, bool, ShowWarn, IsShowWarn, SetShowWarn)
