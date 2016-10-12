@@ -325,14 +325,14 @@ If using iOS as the mobile platform, follow this implementation procedure.
   - You must replace `YOUR_LICENSE_KEY` with your [Mobile Apps and API Key](#registering-your-mobile-app) in the code below
 
 {% highlight objc %}
-#import 
+#import  <GLKit/GLKit.h>
 
 @interface ViewController : GLKViewController
 
 @end
 
 #import "ViewController.h"
-#import 
+#import <CartoMobileSDK/CartoMobileSDK.h>
 
 @implementation ViewController
 
@@ -1732,7 +1732,7 @@ The following procedure describes how to setup and add a 3D object to your mobil
 
 ![3d animated](https://developer.nutiteq.com/images/animated3d.gif)
 
-#### `LocalVectorDataSource` Performance
+#### LocalVectorDataSource Performance
 
 You can define the `spatialIndexType` of the `LocalVectorDataSource` to improve the performance of how a 3D model loads, by defining a spatial index to the DataSource. By default, no spatial index is defined. The following rules apply:
 
