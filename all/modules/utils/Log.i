@@ -19,6 +19,7 @@
 %staticattribute(carto::Log, bool, ShowInfo, IsShowInfo, SetShowInfo)
 %staticattribute(carto::Log, bool, ShowDebug, IsShowDebug, SetShowDebug)
 %staticattributestring(carto::Log, std::string, Tag, GetTag, SetTag)
+!staticattributestring_polymorphic(carto::Log, utils.LogEventListener, LogEventListener, GetLogEventListener, SetLogEventListener)
 %ignore carto::Log::Fatalf;
 %ignore carto::Log::Errorf;
 %ignore carto::Log::Warnf;
