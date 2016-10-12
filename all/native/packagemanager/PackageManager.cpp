@@ -65,7 +65,7 @@ namespace carto {
         std::string packageDbFileName = "packages_v1.sqlite";
         try {
             _localDb = std::make_shared<sqlite3pp::database>(createLocalFilePath(packageDbFileName).c_str());
-            initializeDb(*_localDb, _serverEncKey + _localEncKey);
+            InitializeDb(*_localDb, _serverEncKey + _localEncKey);
         }
         catch (const std::exception& ex) {
             Log::Errorf("PackageManager: Error while constructing PackageManager: %s, trying to remove", ex.what());
@@ -73,7 +73,7 @@ namespace carto {
             utf8_filesystem::unlink(packageDbFileName.c_str());
             try {
                 _localDb = std::make_shared<sqlite3pp::database>(createLocalFilePath(packageDbFileName).c_str());
-                initializeDb(*_localDb, _serverEncKey + _localEncKey);
+                InitializeDb(*_localDb, _serverEncKey + _localEncKey);
             }
             catch (const std::exception& ex) {
                 throw FileException("Failed to create/open package manager database", packageDbFileName);
@@ -614,7 +614,7 @@ namespace carto {
                 Log::Info("PackageManager: Retrying package list download");
             }
 
-            int errorCode = downloadFile(createPackageListURL(_packageListURL), [this, &packageListData, taskId](std::uint64_t offset, std::uint64_t length, const unsigned char* buf, std::size_t size) {
+            int errorCode = DownloadFile(createPackageListURL(_packageListURL), [this, &packageListData, taskId](std::uint64_t offset, std::uint64_t length, const unsigned char* buf, std::size_t size) {
                 if (isTaskCancelled(taskId)) {
                     return false;
                 }
@@ -645,7 +645,7 @@ namespace carto {
 
         // Test if the data is gzipped, in that case inflate
         std::vector<unsigned char> packageListDataTemp;
-        if (inflateData(packageListData, packageListDataTemp)) {
+        if (InflateData(packageListData, packageListDataTemp)) {
             std::swap(packageListData, packageListDataTemp);
         }
 
@@ -829,7 +829,7 @@ namespace carto {
                     updateTaskStatus(taskId, PackageAction::PACKAGE_ACTION_DOWNLOADING, static_cast<float>(fileOffset) / static_cast<float>(fileSize));
                 }
 
-                int errorCode = downloadFile(createPackageURL(task.packageId, task.packageVersion, task.packageLocation, downloaded), [this, fp, taskId, packageFileName, &fileOffset, fileSize](std::uint64_t offset, std::uint64_t length, const unsigned char* buf, std::size_t size) {
+                int errorCode = DownloadFile(createPackageURL(task.packageId, task.packageVersion, task.packageLocation, downloaded), [this, fp, taskId, packageFileName, &fileOffset, fileSize](std::uint64_t offset, std::uint64_t length, const unsigned char* buf, std::size_t size) {
                     if (isTaskCancelled(taskId)) {
                         return false;
                     }
@@ -1060,7 +1060,7 @@ namespace carto {
 
             // Create new sqlite decryption function. First check if the database is crypted.
             std::string encKey = _serverEncKey;
-            bool encrypted = checkDbEncryption(*packageDb, _serverEncKey + _localEncKey); // NOTE: this is a hack - though tiles are actually encrypted with server key only, with check that local key is included in the hash also
+            bool encrypted = CheckDbEncryption(*packageDb, _serverEncKey + _localEncKey); // NOTE: this is a hack - though tiles are actually encrypted with server key only, with check that local key is included in the hash also
             std::shared_ptr<sqlite3pp::ext::function> decryptFunc = std::make_shared<sqlite3pp::ext::function>(*packageDb);
             decryptFunc->create("tile_decrypt", [encrypted, encKey](sqlite3pp::ext::context& ctx) {
                 const unsigned char* encData = reinterpret_cast<const unsigned char*>(ctx.get<const void*>(0));
@@ -1070,7 +1070,7 @@ namespace carto {
                 int y = ctx.get<int>(3);
                 std::vector<unsigned char> encVector(encData, encData + encSize);
                 if (encrypted) {
-                    decryptTile(encVector, zoom, x, y, encKey);
+                    DecryptTile(encVector, zoom, x, y, encKey);
                 }
                 ctx.result(encVector.empty() ? nullptr : &encVector[0], static_cast<int>(encVector.size()), false);
             }, 4);
@@ -1098,9 +1098,9 @@ namespace carto {
         if (packageType == PackageType::PACKAGE_TYPE_MAP) {
             // Thus we will simply include local encryption key in the hash and keep original tiles.
             sqlite3pp::database packageDb(packageFileName.c_str());
-            bool encrypted = checkDbEncryption(packageDb, _serverEncKey);
+            bool encrypted = CheckDbEncryption(packageDb, _serverEncKey);
             if (encrypted) {
-                updateDbEncryption(packageDb, _serverEncKey + _localEncKey);
+                UpdateDbEncryption(packageDb, _serverEncKey + _localEncKey);
             }
         } else if (packageType == PackageType::PACKAGE_TYPE_ROUTING) {
             // We do not currently encrypt routing packages.
@@ -1343,7 +1343,7 @@ namespace carto {
         _serverPackageCache.clear();
     }
 
-    void PackageManager::initializeDb(sqlite3pp::database& db, const std::string& encKey) {
+    void PackageManager::InitializeDb(sqlite3pp::database& db, const std::string& encKey) {
         db.execute("PRAGMA encoding='UTF-8'");
         db.execute(R"SQL(
                 CREATE TABLE IF NOT EXISTS packages (
@@ -1356,7 +1356,7 @@ namespace carto {
                     metainfo TEXT NOT NULL,
                     valid INTEGER NOT NULL DEFAULT 0
                     ))SQL");
-        addDbField(db, "packages", "package_type", "INTEGER NOT NULL DEFAULT 0");
+        AddDbField(db, "packages", "package_type", "INTEGER NOT NULL DEFAULT 0");
         db.execute(R"SQL(
                 CREATE TABLE IF NOT EXISTS metadata(
                     name TEXT,
@@ -1371,18 +1371,18 @@ namespace carto {
         }
         if (dbHash.empty()) {
             if (!encKey.empty()) {
-                std::string sha1 = calculateKeyHash(encKey);
+                std::string sha1 = CalculateKeyHash(encKey);
                 sqlite3pp::command command(db, "INSERT INTO metadata(name, value) VALUES('nutikeysha1', :hash)");
                 command.bind(":hash", sha1.c_str());
                 command.execute();
             }
         }
         else {
-            checkDbEncryption(db, encKey);
+            CheckDbEncryption(db, encKey);
         }
     }
 
-    bool PackageManager::addDbField(sqlite3pp::database& db, const std::string& table, const std::string& field, const std::string& def) {
+    bool PackageManager::AddDbField(sqlite3pp::database& db, const std::string& table, const std::string& field, const std::string& def) {
         sqlite3pp::query query(db, ("PRAGMA table_info(" + table + ")").c_str());
         for (auto qit = query.begin(); qit != query.end(); qit++) {
             if (qit->get<const char *>(1) == field) {
@@ -1393,14 +1393,14 @@ namespace carto {
         return true;
     }
 
-    bool PackageManager::checkDbEncryption(sqlite3pp::database& db, const std::string& encKey) {
+    bool PackageManager::CheckDbEncryption(sqlite3pp::database& db, const std::string& encKey) {
         sqlite3pp::query query(db, "SELECT value FROM metadata WHERE name='nutikeysha1'");
         for (auto qit = query.begin(); qit != query.end(); qit++) {
             if (encKey.empty()) {
                 throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM, "Package database is encrypted and needs encryption key");
             }
             std::string sha1 = qit->get<const char*>(0);
-            if (sha1 != calculateKeyHash(encKey)) {
+            if (sha1 != CalculateKeyHash(encKey)) {
                 throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM, "Package encryption keys do not match");
             }
             return true;
@@ -1408,13 +1408,13 @@ namespace carto {
         return false;
     }
 
-    void PackageManager::updateDbEncryption(sqlite3pp::database& db, const std::string& encKey) {
+    void PackageManager::UpdateDbEncryption(sqlite3pp::database& db, const std::string& encKey) {
         sqlite3pp::transaction xct(db);
         {
             sqlite3pp::command command(db, "DELETE FROM metadata WHERE name='nutikeysha1'");
             command.execute();
             if (!encKey.empty()) {
-                std::string sha1 = calculateKeyHash(encKey);
+                std::string sha1 = CalculateKeyHash(encKey);
                 sqlite3pp::command command2(db, "INSERT INTO metadata(name, value) VALUES('nutikeysha1', :hash)");
                 command2.bind(":hash", sha1.c_str());
                 command2.execute();
@@ -1423,7 +1423,7 @@ namespace carto {
         }
     }
     
-    std::string PackageManager::calculateKeyHash(const std::string& encKey) {
+    std::string PackageManager::CalculateKeyHash(const std::string& encKey) {
         CryptoPP::SHA1 hash;
         unsigned char digest[CryptoPP::SHA1::DIGESTSIZE];
         hash.CalculateDigest(digest, reinterpret_cast<const unsigned char*>(encKey.c_str()), encKey.size());
@@ -1435,14 +1435,14 @@ namespace carto {
         return sha1;
     }
 
-    void PackageManager::encryptTile(std::vector<unsigned char>& data, int zoom, int x, int y, const std::string& encKey) {
+    void PackageManager::EncryptTile(std::vector<unsigned char>& data, int zoom, int x, int y, const std::string& encKey) {
         if (data.empty()) {
             return;
         }
         
         unsigned char iv[CryptoPP::RC5::BLOCKSIZE];
         unsigned char k[CryptoPP::RC5::DEFAULT_KEYLENGTH];
-        setCipherKeyIV(k, iv, zoom, x, y, encKey);
+        SetCipherKeyIV(k, iv, zoom, x, y, encKey);
         CryptoPP::CBC_Mode<CryptoPP::RC5>::Encryption enc;
         enc.SetKeyWithIV(k, sizeof(k), iv);
         std::string cipherText;
@@ -1453,14 +1453,14 @@ namespace carto {
         data.assign(reinterpret_cast<const unsigned char*>(cipherText.data()), reinterpret_cast<const unsigned char*>(cipherText.data() + cipherText.size()));
     }
     
-    void PackageManager::decryptTile(std::vector<unsigned char>& data, int zoom, int x, int y, const std::string& encKey) {
+    void PackageManager::DecryptTile(std::vector<unsigned char>& data, int zoom, int x, int y, const std::string& encKey) {
         if (data.empty()) {
             return;
         }
         
         unsigned char iv[CryptoPP::RC5::BLOCKSIZE];
         unsigned char k[CryptoPP::RC5::DEFAULT_KEYLENGTH];
-        setCipherKeyIV(k, iv, zoom, x, y, encKey);
+        SetCipherKeyIV(k, iv, zoom, x, y, encKey);
         CryptoPP::CBC_Mode<CryptoPP::RC5>::Decryption dec;
         dec.SetKeyWithIV(k, sizeof(k), iv);
         std::string plainText;
@@ -1471,7 +1471,7 @@ namespace carto {
         data.assign(reinterpret_cast<const unsigned char*>(plainText.data()), reinterpret_cast<const unsigned char*>(plainText.data() + plainText.size()));
     }
 
-    void PackageManager::setCipherKeyIV(unsigned char* k, unsigned char* iv, int zoom, int x, int y, const std::string& encKey) {
+    void PackageManager::SetCipherKeyIV(unsigned char* k, unsigned char* iv, int zoom, int x, int y, const std::string& encKey) {
         std::fill(iv, iv + CryptoPP::RC5::BLOCKSIZE, 0);
         iv[0 % CryptoPP::RC5::BLOCKSIZE] ^= static_cast<unsigned char>(zoom);
         iv[1 % CryptoPP::RC5::BLOCKSIZE] ^= 0;
@@ -1485,13 +1485,13 @@ namespace carto {
         std::copy(encKey.begin(), encKey.begin() + std::min(encKey.size(), static_cast<std::size_t>(CryptoPP::RC5::DEFAULT_KEYLENGTH)), k);
     }
 
-    int PackageManager::downloadFile(const std::string& url, NetworkUtils::HandlerFn handler, std::uint64_t offset) {
+    int PackageManager::DownloadFile(const std::string& url, NetworkUtils::HandlerFn handler, std::uint64_t offset) {
         std::map<std::string, std::string> requestHeaders;
         std::map<std::string, std::string> responseHeaders;
         return NetworkUtils::GetHTTP(url, requestHeaders, responseHeaders, handler, offset, Log::IsShowDebug());
     }
 
-    bool PackageManager::inflateData(const std::vector<unsigned char>& in, std::vector<unsigned char>& out) {
+    bool PackageManager::InflateData(const std::vector<unsigned char>& in, std::vector<unsigned char>& out) {
         if (in.size() < 14) {
             return false;
         }
@@ -1568,7 +1568,7 @@ namespace carto {
                     package_version INTEGER,
                     package_location TEXT
                 ))SQL");
-        addDbField(*_localDb, "manager_tasks", "package_type", "INTEGER DEFAULT 0");
+        AddDbField(*_localDb, "manager_tasks", "package_type", "INTEGER DEFAULT 0");
         _localDb->execute("CREATE INDEX IF NOT EXISTS manager_tasks_package_id ON manager_tasks(package_id)");
     }
 
