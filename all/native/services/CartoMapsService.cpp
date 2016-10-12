@@ -320,18 +320,18 @@ namespace carto {
             std::shared_ptr<TileLayer> layer;
             
             if (_defaultVectorLayerMode) {
-                if (!layerId.empty() && !cartoCSS.empty()) {
+                if (!cartoCSS.empty()) {
                     auto baseDataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.mvt" + urlTemplateSuffix);
                     auto dataSource = std::make_shared<MemoryCacheTileDataSource>(baseDataSource); // in memory cache allows to change style quickly
                     auto styleSet = std::make_shared<CartoCSSStyleSet>(cartoCSS, _vectorTileAssetPackage);
                     auto vectorTileDecoder = std::make_shared<MBVectorTileDecoder>(styleSet);
                     vectorTileDecoder->setFeatureIdOverride(true); // Carto uses tile-local ids for features
                     vectorTileDecoder->setCartoCSSLayerNamesIgnored(true); // all layer name filters should be ignored
-                    vectorTileDecoder->setLayerNameOverride(layerId);
+                    vectorTileDecoder->setLayerNameOverride(layerId.empty() ? "layer0" : layerId);
                     layer = std::make_shared<VectorTileLayer>(dataSource, vectorTileDecoder);
                 }
                 else {
-                    Log::Warn("CartoMapsService::createLayer: No id/CartoCSS for layer, using raster tiles");
+                    Log::Warn("CartoMapsService::createLayer: No CartoCSS for layer, using raster tiles");
                 }
             }
             
@@ -381,9 +381,6 @@ namespace carto {
             std::string layerId;
             if (layerInfo.get("id").is<std::string>()) {
                 layerId = layerInfo.get("id").get<std::string>();
-            }
-            else {
-                layerId = boost::lexical_cast<std::string>(it - layersInfo.begin()); // use implicit id
             }
             
             // Read CDN URLs
