@@ -1,6 +1,6 @@
 # SDK and other CARTO Tools
 
-_For select account plans_, you can connect to the CARTO Engine APIs via Mobile SDK, to retrieve map visualizations and table data from your CARTO account. [Contact us](mailto:sales@carto.com) for questions about your account plan and enabling this feature.
+For select account plans, you can connect to the CARTO Engine APIs via Mobile SDK, to retrieve map visualizations and table data from your CARTO account. _API access is not available for free users._ [Contact us](mailto:sales@carto.com) for questions about your account plan and enabling this feature.
 
 ## SDK and CARTO APIs
 
