@@ -1,6 +1,6 @@
 # SDK and other CARTO Tools
 
-You can use the CARTO APIs to define specific mobile features and rendering parameters. Additionally, you can use the CARTO Builder to publish mobile maps for integration with your mobile app
+_For select account plans_, you can connect to the CARTO Engine APIs via Mobile SDK, to retrieve map visualizations and table data from your CARTO account. [Contact us](mailto:sales@carto.com) for questions about your account plan and enabling this feature.
 
 ## SDK and CARTO APIs
 
