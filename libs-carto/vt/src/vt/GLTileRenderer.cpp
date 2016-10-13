@@ -117,6 +117,7 @@ namespace {
 
     static const std::string pointVsh = R"GLSL(
         attribute vec2 aVertexPosition;
+        attribute vec2 aVertexBinormal;
         #ifdef PATTERN
         attribute vec2 aVertexUV;
         #endif
@@ -124,7 +125,7 @@ namespace {
         #ifdef PATTERN
         uniform float uUVScale;
         #endif
-        uniform mat4 uTileMatrix;
+        uniform float uBinormalScale;
         uniform vec3 uXAxis;
         uniform vec3 uYAxis;
         #ifdef TRANSFORM
@@ -132,7 +133,6 @@ namespace {
         #endif
         uniform mat4 uMVPMatrix;
         uniform vec4 uColorTable[16];
-        uniform float uWidthTable[16];
         varying lowp vec4 vColor;
         #ifdef PATTERN
         varying vec2 vUV;
@@ -140,11 +140,11 @@ namespace {
 
         void main(void) {
             int styleIndex = int(aVertexAttribs[0]);
-            vec2 xy = vec2(aVertexAttribs[1], aVertexAttribs[2]) * uWidthTable[styleIndex];
+            vec2 xy = aVertexBinormal * uBinormalScale;
         #ifdef TRANSFORM
             xy = vec2(uTransformMatrix * vec3(xy, 1.0));
         #endif
-            vec3 pos = vec3(uTileMatrix * vec4(aVertexPosition, 0.0, 1.0)) + xy[0] * uXAxis + xy[1] * uYAxis;
+            vec3 pos = vec3(aVertexPosition, 0.0) + xy[0] * uXAxis + xy[1] * uYAxis;
             vColor = uColorTable[styleIndex];
         #ifdef PATTERN
             vUV = uUVScale * aVertexUV;
@@ -499,7 +499,7 @@ namespace carto { namespace vt {
         for (auto labelIt = _labelMap.begin(); labelIt != _labelMap.end(); labelIt++) {
             const std::shared_ptr<TileLabel>& label = labelIt->second;
             int pass = (label->getOrientation() == LabelOrientation::BILLBOARD_3D ? 1 : 0);
-            (*bitmapLabelMap[pass])[label->getFont()->getBitmapPattern()->bitmap].push_back(label);
+            (*bitmapLabelMap[pass])[label->getFont()->getGlyphMap()->getBitmapPattern()->bitmap].push_back(label);
             labels.push_back(label);
         }
         _labels = std::move(labels);
@@ -870,7 +870,7 @@ namespace carto { namespace vt {
                         cglib::ray3<float> rayLocal = cglib::ray3<float>::convert(cglib::transform_ray(ray, cglib::inverse(tileMatrix)));
 
                         std::vector<std::pair<float, long long>> resultsLocal;
-                        findTileGeometryIntersections(geometry, rayLocal, static_cast<float>(radiusLocal), resultsLocal);
+                        findTileGeometryIntersections(renderNode.tileId, geometry, rayLocal, static_cast<float>(radiusLocal), resultsLocal);
 
                         for (std::pair<float, long long> resultLocal : resultsLocal) {
                             float tLocal = resultLocal.first;
@@ -972,7 +972,7 @@ namespace carto { namespace vt {
     cglib::bbox3<double> GLTileRenderer::calculateTileBBox(const TileId& tileId) const {
         return cglib::transform_bbox(cglib::bbox3<double>(cglib::vec3<double>(0, 0, 0), cglib::vec3<double>(1, 1, 0)), calculateTileMatrix(tileId));
     }
-    
+
     float GLTileRenderer::calculateBlendNodeOpacity(const BlendNode& blendNode, float blend) const {
         float opacity = blend * blendNode.blend;
         for (const std::shared_ptr<BlendNode>& childBlendNode : blendNode.childNodes) {
@@ -1078,7 +1078,30 @@ namespace carto { namespace vt {
         }
     }
     
-    void GLTileRenderer::findTileGeometryIntersections(const std::shared_ptr<TileGeometry>& geometry, const cglib::ray3<float>& ray, float radius, std::vector<std::pair<float, long long>>& results) const {
+    void GLTileRenderer::setupPointCoordinateSystem(PointOrientation orientation, const TileId& tileId, float vertexScale, cglib::vec3<float>& xAxis, cglib::vec3<float>& yAxis) const {
+        switch (orientation) {
+        case PointOrientation::BILLBOARD_2D:
+            xAxis = _viewState.orientation[0];
+            yAxis = cglib::vector_product(cglib::vec3<float>(0, 0, 1), xAxis);
+            break;
+        case PointOrientation::BILLBOARD_3D:
+            xAxis = _viewState.orientation[0];
+            yAxis = _viewState.orientation[1];
+            break;
+        case PointOrientation::POINT:
+            xAxis = cglib::vec3<float>(1, 0, 0);
+            yAxis = cglib::vec3<float>(0, 1, 0);
+            break;
+        }
+        cglib::mat4x4<float> invTileMatrix = cglib::mat4x4<float>::convert(cglib::inverse(calculateTileMatrix(tileId, 1.0f / vertexScale)));
+        xAxis = cglib::transform_vector(xAxis * _viewState.scale, invTileMatrix);
+        yAxis = cglib::transform_vector(yAxis * _viewState.scale, invTileMatrix);
+    }
+
+    void GLTileRenderer::findTileGeometryIntersections(const TileId& tileId, const std::shared_ptr<TileGeometry>& geometry, const cglib::ray3<float>& ray, float radius, std::vector<std::pair<float, long long>>& results) const {
+        cglib::vec3<float> xAxis, yAxis;
+        setupPointCoordinateSystem(geometry->getStyleParameters().pointOrientation, tileId, 1.0f, xAxis, yAxis);
+
         for (std::size_t i = 0; i + 2 < geometry->getIndices().size(); i += 3) {
             std::size_t index0 = geometry->getIndices()[i + 0];
             std::size_t index1 = geometry->getIndices()[i + 1];
@@ -1089,9 +1112,9 @@ namespace carto { namespace vt {
             cglib::vec3<float> p2 = decodeVertex(geometry, index2);
 
             if (geometry->getType() == TileGeometry::Type::POINT) {
-                p0 += extendOffset(decodePointOffset(geometry, index0), radius);
-                p1 += extendOffset(decodePointOffset(geometry, index1), radius);
-                p2 += extendOffset(decodePointOffset(geometry, index2), radius);
+                p0 += extendOffset(decodePointOffset(geometry, index0, xAxis, yAxis), radius);
+                p1 += extendOffset(decodePointOffset(geometry, index1, xAxis, yAxis), radius);
+                p2 += extendOffset(decodePointOffset(geometry, index2, xAxis, yAxis), radius);
             }
             else if (geometry->getType() == TileGeometry::Type::LINE) {
                 p0 += extendOffset(decodeLineBinormal(geometry, index0), radius);
@@ -1157,13 +1180,12 @@ namespace carto { namespace vt {
         return cglib::vec3<float>(vertexPtr[0], vertexPtr[1], 0) * (1.0f / geometryLayoutParams.vertexScale);
     }
 
-    cglib::vec3<float> GLTileRenderer::decodePointOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const {
-        // NOTE: we ignore the actual orientation currently. This is mostly ok, assuming roughly equal width/height of the point
+    cglib::vec3<float> GLTileRenderer::decodePointOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index, const cglib::vec3<float>& xAxis, const cglib::vec3<float>& yAxis) const {
         const TileGeometry::GeometryLayoutParameters& geometryLayoutParams = geometry->getGeometryLayoutParameters();
-        std::size_t attribOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.attribsOffset;
-        const char* attribPtr = reinterpret_cast<const char*>(&geometry->getVertexGeometry()[attribOffset]);
-        float width = 0.5f * (*geometry->getStyleParameters().widthTable[attribPtr[0]])(_viewState) * geometry->getGeometryScale() / geometry->getTileSize();
-        return cglib::vec3<float>(attribPtr[1], attribPtr[2], 0) * width;
+        std::size_t binormalOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.binormalOffset;
+        const short* binormalPtr = reinterpret_cast<const short*>(&geometry->getVertexGeometry()[binormalOffset]);
+        cglib::vec2<float> xy = cglib::vec2<float>(binormalPtr[0], binormalPtr[1]) * (geometry->getGeometryScale() / geometry->getTileSize() / geometryLayoutParams.binormalScale);
+        return xAxis * xy(0) + yAxis * xy(1);
     }
 
     cglib::vec3<float> GLTileRenderer::decodeLineBinormal(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const {
@@ -1707,37 +1729,12 @@ namespace carto { namespace vt {
         }
         
         if (geometry->getType() == TileGeometry::Type::POINT) {
-            std::array<float, TileGeometry::StyleParameters::MAX_PARAMETERS> widths;
-            for (int i = 0; i < styleParams.parameterCount; i++) {
-                float width = 0.5f * (*styleParams.widthTable[i])(_viewState) * geometry->getGeometryScale() / geometry->getTileSize();
-                widths[i] = width;
-            }
-            glUniform1fv(glGetUniformLocation(shaderProgram, "uWidthTable"), styleParams.parameterCount, widths.data());
-
             cglib::vec3<float> xAxis, yAxis;
-            switch (styleParams.pointOrientation) {
-            case PointOrientation::BILLBOARD_2D:
-                xAxis = _viewState.orientation[0];
-                yAxis = cglib::vector_product(cglib::vec3<float>(0, 0, 1), xAxis);
-                break;
-            case PointOrientation::BILLBOARD_3D:
-                xAxis = _viewState.orientation[0];
-                yAxis = _viewState.orientation[1];
-                break;
-            case PointOrientation::POINT:
-                xAxis = cglib::vec3<float>(1, 0, 0);
-                yAxis = cglib::vec3<float>(0, 1, 0);
-                break;
-            }
-            xAxis = xAxis * _viewState.scale;
-            yAxis = -yAxis * _viewState.scale;
+            setupPointCoordinateSystem(styleParams.pointOrientation, tileId, geometryLayoutParams.vertexScale, xAxis, yAxis);
+            
+            glUniform1f(glGetUniformLocation(shaderProgram, "uBinormalScale"), geometry->getGeometryScale() / geometry->getTileSize() / geometryLayoutParams.binormalScale);
             glUniform3fv(glGetUniformLocation(shaderProgram, "uXAxis"), 1, xAxis.data());
             glUniform3fv(glGetUniformLocation(shaderProgram, "uYAxis"), 1, yAxis.data());
-
-            cglib::mat4x4<float> tileMatrix = cglib::mat4x4<float>::convert(cglib::translate4_matrix(-_viewState.origin) * calculateTileMatrix(tileId, 1.0f / geometryLayoutParams.vertexScale));
-            glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "uTileMatrix"), 1, GL_FALSE, tileMatrix.data());
-            cglib::mat4x4<float> mvpMatrix = cglib::mat4x4<float>::convert(_projectionMatrix * _labelMatrix);
-            glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "uMVPMatrix"), 1, GL_FALSE, mvpMatrix.data());
         }
         else if (geometry->getType() == TileGeometry::Type::LINE) {
             float gamma = 0.5f;
@@ -1751,6 +1748,7 @@ namespace carto { namespace vt {
                 }
                 widths[i] = width;
             }
+            
             glUniform1f(glGetUniformLocation(shaderProgram, "uBinormalScale"), geometryLayoutParams.vertexScale / (_halfResolution * geometryLayoutParams.binormalScale * std::pow(2.0f, _zoom - tileId.zoom)));
             glUniform1fv(glGetUniformLocation(shaderProgram, "uWidthTable"), styleParams.parameterCount, widths.data());
             glUniform1f(glGetUniformLocation(shaderProgram, "uHalfResolution"), _halfResolution);
