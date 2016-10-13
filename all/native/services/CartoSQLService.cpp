@@ -43,8 +43,8 @@ namespace carto {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
         // Build URL
-        std::string url = _apiTemplate;
-        url += "/api/v2/sql";
+        std::map<std::string, std::string> tagValues = { { "user", _username },{ "username", _username } };
+        std::string url = GeneralUtils::ReplaceTags(_apiTemplate, tagValues, "{", "}", false) + "/api/v2/sql";
 
         std::map<std::string, std::string> urlParams;
         urlParams["q"] = sql;
