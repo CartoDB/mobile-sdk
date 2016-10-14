@@ -1,6 +1,6 @@
 # Offline Maps
 
-CARTO provides a service to download map packages in special vector formats for offline use. There is no direct URL to get these packages, instead we provide cross-platform API from within SDK: **Package Manager API**. Your application should use this API to download packages. The API provides the following features:
+For Enterprise accounts with offline feature activated map packages, CARTO provides a service to download map packages in special vector formats for offline use. There is no direct URL to get these packages, instead we provide cross-platform API from within SDK: **Package Manager API**. Your application should use this API to download packages. The API provides the following features:
 
 * Listing of available packages (countries), get IDs and metadata of specific packages
 * Start package download
@@ -92,7 +92,7 @@ Use the following steps to implement **single map package** downloading:
   {% highlight java %}
 
 // 1. Register license, this must be done before PackageManager can be used!
-      MapView.registerLicense("YOUR_LICENSE_HERE", getApplicationContext());
+      MapView.registerLicense("YOUR_LICENSE_KEY", getApplicationContext());
 
 // 2. Create package manager
       File packageFolder = new File(getApplicationContext().getExternalFilesDir(null), "mappackages");
