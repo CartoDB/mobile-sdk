@@ -62,7 +62,7 @@ namespace carto {
     std::string CartoOnlineTileDataSource::buildTileURL(const std::string& baseURL, const MapTile& tile) const {
         std::map<std::string, std::string> tagValues = buildTagValues(_tmsScheme ? tile.getFlipped() : tile);
         std::string appToken;
-        if (LicenseManager::GetInstance().getParameter("appToken", appToken)) {
+        if (LicenseManager::GetInstance().getParameter("appToken", appToken, true)) {
             tagValues["key"] = appToken;
         }
         return GeneralUtils::ReplaceTags(baseURL, tagValues, "{", "}", true);
@@ -75,7 +75,7 @@ namespace carto {
         params["platform"] = PlatformUtils::GetPlatformId();
         params["sdk_build"] = _CARTO_MOBILE_SDK_VERSION;
 
-        std::string baseURL = NUTITEQ_TILE_SERVICE_URL + NetworkUtils::URLEncode(_source) + "/1/tiles.json";
+        std::string baseURL = TILE_SERVICE_URL + NetworkUtils::URLEncode(_source) + "/1/tiles.json";
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
         Log::Debugf("CartoOnlineTileDataSource::loadTileURLs: Loading %s", url.c_str());
 
@@ -151,8 +151,6 @@ namespace carto {
 
     const int CartoOnlineTileDataSource::DEFAULT_CACHED_TILES = 8;
 
-    const std::string CartoOnlineTileDataSource::NUTITEQ_TILE_SERVICE_URL = "http://api-staging.nutiteq.com/v2/";
-
-    const std::string CartoOnlineTileDataSource::MAPZEN_TILE_SERVICE_URL = "http://vector.dev.mapzen.com/";
+    const std::string CartoOnlineTileDataSource::TILE_SERVICE_URL = "http://api.nutiteq.com/v2/";
     
 }

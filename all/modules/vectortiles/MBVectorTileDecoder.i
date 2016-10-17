@@ -26,6 +26,7 @@
 %attributestring(carto::MBVectorTileDecoder, std::shared_ptr<carto::CompiledStyleSet>, CompiledStyle, getCompiledStyleSet, setCompiledStyleSet)
 %attributestring(carto::MBVectorTileDecoder, std::shared_ptr<carto::CartoCSSStyleSet>, CartoCSSStyle, getCartoCSSStyleSet, setCartoCSSStyleSet)
 %attribute(carto::MBVectorTileDecoder, float, Buffering, getBuffering, setBuffering)
+%attribute(carto::MBVectorTileDecoder, bool, FeatureIdOverride, isFeatureIdOverride, setFeatureIdOverride)
 %attribute(carto::MBVectorTileDecoder, bool, CartoCSSLayerNamesIgnored, isCartoCSSLayerNamesIgnored, setCartoCSSLayerNamesIgnored)
 %attributestring(carto::MBVectorTileDecoder, std::string, LayerNameOverride, getLayerNameOverride, setLayerNameOverride)
 %std_exceptions(carto::MBVectorTileDecoder::MBVectorTileDecoder)

@@ -56,7 +56,7 @@ namespace carto { namespace vt {
 
     class FontManagerFont : public Font {
     public:
-        explicit FontManagerFont(const std::shared_ptr<FontManagerLibrary>& library, int maxGlyphMapWidth, int maxGlyphMapHeight, const std::vector<unsigned char>* data, const FontManager::Parameters& params) : _parameters(params), _library(library), _renderScale(static_cast<float>(TARGET_DPI) / static_cast<float>(RENDER_DPI)), _glyphMap(maxGlyphMapWidth, maxGlyphMapHeight), _face(nullptr), _font(nullptr), _metrics(0, 0, 0) {
+        explicit FontManagerFont(const std::shared_ptr<FontManagerLibrary>& library, int maxGlyphMapWidth, int maxGlyphMapHeight, const std::vector<unsigned char>* data, const FontManager::Parameters& params) : _parameters(params), _library(library), _renderScale(static_cast<float>(TARGET_DPI) / static_cast<float>(RENDER_DPI)), _glyphMap(std::make_shared<GlyphMap>(maxGlyphMapWidth, maxGlyphMapHeight)), _face(nullptr), _font(nullptr), _metrics(0, 0, 0) {
             std::lock_guard<std::recursive_mutex> lock(_library->getMutex());
 
             // Load FreeType font
@@ -167,7 +167,7 @@ namespace carto { namespace vt {
                         }
                         it = _codePointGlyphMap.insert({ remappedCodePoint, glyphId }).first;
                     }
-                    if (const Glyph* glyph = _glyphMap.getGlyph(it->second)) {
+                    if (const Glyph* glyph = _glyphMap->getGlyph(it->second)) {
                         glyphs.push_back(*glyph);
                         if (i < posCount) {
                             glyphs.back().offset += cglib::vec2<float>(pos[i].x_offset / 64.0f * _renderScale, pos[i].y_offset / 64.0f * _renderScale);
@@ -182,27 +182,27 @@ namespace carto { namespace vt {
         virtual const Glyph* loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap) override {
             std::lock_guard<std::recursive_mutex> lock(_library->getMutex());
             if (!bitmap) {
-                return _glyphMap.getGlyph(_codePointGlyphMap[0]);
+                return _glyphMap->getGlyph(_codePointGlyphMap[0]);
             }
 
             // Try to use cached glyph
             auto it = _bitmapGlyphMap.find(bitmap);
             if (it != _bitmapGlyphMap.end()) {
-                return _glyphMap.getGlyph(_codePointGlyphMap[it->second]);
+                return _glyphMap->getGlyph(_codePointGlyphMap[it->second]);
             }
 
             // Must load/render new glyph
             CodePoint codePoint = static_cast<CodePoint>(_bitmapGlyphMap.size() + BITMAP_CODEPOINTS);
-            GlyphId glyphId = _glyphMap.loadBitmapGlyph(bitmap, codePoint);
+            GlyphId glyphId = _glyphMap->loadBitmapGlyph(bitmap, codePoint);
             _codePointGlyphMap[codePoint] = glyphId;
 
             // Cache the generated glyph
             _bitmapGlyphMap[bitmap] = codePoint;
-            return _glyphMap.getGlyph(glyphId);
+            return _glyphMap->getGlyph(glyphId);
         }
 
-        virtual std::shared_ptr<const BitmapPattern> getBitmapPattern() const override {
-            return _glyphMap.getBitmapPattern();
+        virtual std::shared_ptr<const GlyphMap> getGlyphMap() const override {
+            return _glyphMap;
         }
 
     private:
@@ -285,7 +285,7 @@ namespace carto { namespace vt {
             cglib::vec2<float> size(static_cast<float>(width), static_cast<float>(height));
             cglib::vec2<float> offset(static_cast<float>(left), static_cast<float>(top - height));
             cglib::vec2<float> advance(face->glyph->advance.x / 64.0f, face->glyph->advance.y / 64.0f);
-            return _glyphMap.loadBitmapGlyph(glyphBitmap, codePoint, size * _renderScale, offset * _renderScale, advance * _renderScale);
+            return _glyphMap->loadBitmapGlyph(glyphBitmap, codePoint, size * _renderScale, offset * _renderScale, advance * _renderScale);
         }
 
         void blendFreeTypeBitmap(std::vector<std::uint32_t>& buffer, std::size_t width, FT_Bitmap* bitmap, const Color& color, int x0, int y0) const {
@@ -311,7 +311,7 @@ namespace carto { namespace vt {
         const std::shared_ptr<FontManagerLibrary> _library;
         const float _renderScale;
         std::array<std::uint8_t, 256> _gammaTable;
-        mutable GlyphMap _glyphMap;
+        std::shared_ptr<GlyphMap> _glyphMap;
         mutable std::unordered_map<CodePoint, GlyphId> _codePointGlyphMap;
         std::unordered_map<std::shared_ptr<const Bitmap>, CodePoint> _bitmapGlyphMap;
         FT_Face _face;

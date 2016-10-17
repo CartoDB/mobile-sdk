@@ -59,6 +59,7 @@ namespace carto { namespace vt {
 
         void addBitmap(const std::shared_ptr<TileBitmap>& bitmap);
         void addPoints(const std::function<bool(long long& id, Vertex& vertex)>& generator, const PointStyle& style);
+        void addTexts(const std::function<bool(long long& id, Vertex& vertex, std::string& text)>& generator, const TextStyle& style);
         void addLines(const std::function<bool(long long& id, Vertices& vertices)>& generator, const LineStyle& style);
         void addPolygons(const std::function<bool(long long& id, VerticesList& verticesList)>& generator, const PolygonStyle& style);
         void addPolygons3D(const std::function<bool(long long& id, VerticesList& verticesList)>& generator, float height, const Polygon3DStyle& style);
@@ -75,18 +76,17 @@ namespace carto { namespace vt {
         struct BuilderParameters {
             TileGeometry::Type type;
             std::array<StrokeMap::StrokeId, TileGeometry::StyleParameters::MAX_PARAMETERS> lineStrokeIds;
-            std::array<Font::CodePoint, TileGeometry::StyleParameters::MAX_PARAMETERS> pointGlyphIds;
-            std::shared_ptr<StrokeMap> strokeMap;
-            std::shared_ptr<GlyphMap> glyphMap;
+            std::shared_ptr<const StrokeMap> strokeMap;
+            std::shared_ptr<const GlyphMap> glyphMap;
 
-            BuilderParameters() : type(TileGeometry::Type::NONE), lineStrokeIds(), pointGlyphIds(), strokeMap(), glyphMap() { }
+            BuilderParameters() : type(TileGeometry::Type::NONE), lineStrokeIds(), strokeMap(), glyphMap() { }
         };
 
         void appendGeometry();
         void appendGeometry(float verticesScale, float binormalsScale, float texCoordsScale, const VertexArray<cglib::vec2<float>>& vertices, const VertexArray<cglib::vec2<float>>& texCoords, const VertexArray<cglib::vec2<float>>& binormals, const VertexArray<float>& heights, const VertexArray<cglib::vec4<char>>& attribs, const VertexArray<unsigned int>& indices, const VertexArray<long long>& ids, std::size_t offset, std::size_t count);
         float calculateScale(VertexArray<cglib::vec2<float>>& values) const;
 
-        bool tesselatePoint(const Vertex& vertex, char styleIndex, const Font::Glyph* glyph, const PointStyle& style);
+        bool tesselateGlyph(const Vertex& vertex, char styleIndex, const cglib::vec2<float>& pen, const Font::Glyph* glyph);
         bool tesselatePolygon(const VerticesList& verticesList, char styleIndex, const PolygonStyle& style);
         bool tesselatePolygon3D(const VerticesList& verticesList, float height, char styleIndex, const Polygon3DStyle& style);
         bool tesselateLine(const Vertices& points, char styleIndex, const StrokeMap::Stroke* stroke, const LineStyle& style);

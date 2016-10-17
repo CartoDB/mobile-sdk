@@ -173,11 +173,11 @@ namespace carto {
         return std::shared_ptr<PackageInfo>();
     }
 
-    const std::string CartoPackageManager::MAP_PACKAGE_LIST_URL = "http://api-staging.nutiteq.com/v2/";
+    const std::string CartoPackageManager::MAP_PACKAGE_LIST_URL = "http://api.nutiteq.com/v2/";
 
-    const std::string CartoPackageManager::ROUTING_PACKAGE_LIST_URL = "http://api-staging.nutiteq.com/v2/";
+    const std::string CartoPackageManager::ROUTING_PACKAGE_LIST_URL = "http://api.nutiteq.com/v2/";
 
-    const std::string CartoPackageManager::CUSTOM_BBOX_PACKAGE_URL = "http://api-staging.nutiteq.com/v2/";
+    const std::string CartoPackageManager::CUSTOM_BBOX_PACKAGE_URL = "http://api.nutiteq.com/v2/";
     
 }
 

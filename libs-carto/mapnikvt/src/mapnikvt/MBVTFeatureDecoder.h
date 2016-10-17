@@ -31,6 +31,7 @@ namespace carto { namespace mvt {
         void setTransform(const cglib::mat3x3<float>& transform);
         void setClipBox(const cglib::bbox2<float>& clipBox);
         void setBuffer(float buffer);
+        void setGlobalIdOverride(bool globalIdOverride, long long tileIdOffset = 0);
 
         std::shared_ptr<Feature> getFeature(long long localId, std::string& layerName) const;
         
@@ -42,8 +43,10 @@ namespace carto { namespace mvt {
         static bool inflate(const std::vector<unsigned char>& in, std::vector<unsigned char>& out);
         
         cglib::mat3x3<float> _transform;
-        float _buffer;
         cglib::bbox2<float> _clipBox;
+        float _buffer;
+        bool _globalIdOverride;
+        long long _tileIdOffset;
         std::shared_ptr<vector_tile::Tile> _tile;
         std::map<std::string, int> _layerMap;
         mutable std::map<std::string, std::map<std::vector<int>, std::shared_ptr<FeatureData>>> _layerFeatureDataCache;

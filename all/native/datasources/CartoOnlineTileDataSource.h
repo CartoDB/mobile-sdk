@@ -41,8 +41,7 @@ namespace carto {
 
         static const int DEFAULT_CACHED_TILES;
 
-        static const std::string NUTITEQ_TILE_SERVICE_URL;
-        static const std::string MAPZEN_TILE_SERVICE_URL;
+        static const std::string TILE_SERVICE_URL;
 
         const std::string _source;
         cache::timed_lru_cache<long long, std::shared_ptr<TileData> > _cache;

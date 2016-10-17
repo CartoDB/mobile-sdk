@@ -240,7 +240,7 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
-  #import &lt;CartoMobileSDK/CartoMobileSDK.h&lt;
+  #import <CartoMobileSDK/CartoMobileSDK.h>
 
   /*
    * A custom map event listener that displays information about map events and creates pop-ups.
@@ -860,7 +860,7 @@ When you create a basemap, the Mobile SDK package enables you to select one of o
  * CARTO_BASEMAP_STYLE_DARK - CARTO Dark Matter style
  * CARTO_BASEMAP_STYLE_GRAY - CARTO Positron style
 
-For the Enterprise account plans,  you can customize basemap styling by setting the colors, transparency, line styles (width, patterns, casings, endings), polygon patterns, icons, text placements, fonts, and other vector data parameters. 
+You can customize basemap styling by setting the colors, transparency, line styles (width, patterns, casings, endings), polygon patterns, icons, text placements, fonts, and other vector data parameters. 
 
 CARTO uses [Mapnik](http://mapnik.org) XML style description language for customizing the visual style of vector tiles. Our styling is optimized for mobile and contain some unique style parameters. In general, you can reuse your existing Mapnik XML, or CartoCSS, styling files and tools (such as TileMill/Mapbox Studio).
 

@@ -45,7 +45,7 @@ namespace carto { namespace vt {
         GlyphMap::GlyphId glyphId = style.glyphMap->loadBitmapGlyph(style.bitmap, 0);
         int styleIndex = _styleParameters.parameterCount;
         while (--styleIndex >= 0) {
-            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.opacityTable[styleIndex] == style.opacity &&_styleParameters.widthTable[styleIndex] == style.size && _builderParameters.pointGlyphIds[styleIndex] == glyphId) {
+            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.opacityTable[styleIndex] == style.opacity) {
                 break;
             }
         }
@@ -53,15 +53,72 @@ namespace carto { namespace vt {
             styleIndex = _styleParameters.parameterCount++;
             _styleParameters.colorTable[styleIndex] = style.color;
             _styleParameters.opacityTable[styleIndex] = style.opacity;
-            _styleParameters.widthTable[styleIndex] = style.size;
-            _builderParameters.pointGlyphIds[styleIndex] = glyphId;
         }
         
         do {
             std::size_t i0 = _indices.size();
-            tesselatePoint(vertex, static_cast<char>(styleIndex), style.glyphMap->getGlyph(glyphId), style);
+            cglib::vec2<float> pen(0, 0);
+            const GlyphMap::Glyph* glyph = style.glyphMap->getGlyph(glyphId);
+            if (glyph) {
+                pen = -glyph->size * 0.5f;
+            }
+            tesselateGlyph(vertex, static_cast<char>(styleIndex), pen, glyph);
             _ids.fill(id, _indices.size() - i0);
         } while (generator(id, vertex));
+    }
+
+    void TileLayerBuilder::addTexts(const std::function<bool(long long& id, Vertex& vertex, std::string& text)>& generator, const TextStyle& style) {
+        long long id = 0;
+        cglib::vec2<float> vertex(0, 0);
+        std::string text;
+        if (!generator(id, vertex, text)) {
+            return;
+        }
+
+        if (_builderParameters.type != TileGeometry::Type::POINT || _builderParameters.glyphMap != style.font->getGlyphMap() || _styleParameters.transform != style.transform || _styleParameters.compOp != style.compOp || _styleParameters.pointOrientation != style.orientation || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
+            appendGeometry();
+        }
+        _builderParameters.type = TileGeometry::Type::POINT;
+        _builderParameters.glyphMap = style.font->getGlyphMap();
+        _styleParameters.transform = style.transform;
+        _styleParameters.compOp = style.compOp;
+        _styleParameters.pointOrientation = style.orientation;
+        int styleIndex = _styleParameters.parameterCount;
+        while (--styleIndex >= 0) {
+            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.opacityTable[styleIndex] == style.opacity) {
+                break;
+            }
+        }
+        if (styleIndex < 0) {
+            styleIndex = _styleParameters.parameterCount++;
+            _styleParameters.colorTable[styleIndex] = style.color;
+            _styleParameters.opacityTable[styleIndex] = style.opacity;
+        }
+
+        do {
+            std::size_t i0 = _indices.size();
+            TextFormatter formatter(style.font);
+            std::vector<Font::Glyph> glyphs = formatter.format(text, style.formatterOptions);
+            if (style.backgroundBitmap) {
+                const Font::Glyph* glyph = style.font->loadBitmapGlyph(style.backgroundBitmap);
+                if (glyph) {
+                    glyphs.insert(glyphs.begin(), Font::Glyph(glyph->codePoint, glyph->x, glyph->y, glyph->width, glyph->height, glyph->size * style.backgroundScale, glyph->offset + style.backgroundOffset, glyph->advance));
+                }
+            }
+            cglib::vec2<float> pen(0, 0);
+            for (Font::Glyph& glyph : glyphs) {
+                if (glyph.codePoint == Font::CR_CODEPOINT) {
+                    pen = cglib::vec2<float>(0, 0);
+                }
+                else {
+                    tesselateGlyph(vertex, static_cast<char>(styleIndex), pen, &glyph);
+                }
+
+                pen += glyph.advance;
+            }
+            _ids.fill(id, _indices.size() - i0);
+        } while (generator(id, vertex, text));
+
     }
 
     void TileLayerBuilder::addLines(const std::function<bool(long long& id, Vertices& vertices)>& generator, const LineStyle& style) {
@@ -277,15 +334,12 @@ namespace carto { namespace vt {
         }
         if (_builderParameters.glyphMap) {
             // If glyph map is used, normalize U, V coordinates according to actual pattern bitmap dimensions
-            bool glyphUsed = std::any_of(_builderParameters.pointGlyphIds.begin(), _builderParameters.pointGlyphIds.begin() + _styleParameters.parameterCount, [](GlyphMap::GlyphId glyphId) { return glyphId != 0; });
-            if (glyphUsed) {
-                _styleParameters.pattern = _builderParameters.glyphMap->getBitmapPattern();
-                float uScale = 1.0f / _styleParameters.pattern->bitmap->width;
-                float vScale = 1.0f / _styleParameters.pattern->bitmap->height;
-                for (std::size_t i = 0; i < _texCoords.size(); i++) {
-                    _texCoords[i](0) *= uScale;
-                    _texCoords[i](1) *= vScale;
-                }
+            _styleParameters.pattern = _builderParameters.glyphMap->getBitmapPattern();
+            float uScale = 1.0f / _styleParameters.pattern->bitmap->width;
+            float vScale = 1.0f / _styleParameters.pattern->bitmap->height;
+            for (std::size_t i = 0; i < _texCoords.size(); i++) {
+                _texCoords[i](0) *= uScale;
+                _texCoords[i](1) *= vScale;
             }
         }
         if (!_styleParameters.pattern) {
@@ -449,21 +503,25 @@ namespace carto { namespace vt {
         return scale;
     }
 
-    bool TileLayerBuilder::tesselatePoint(const Vertex& point, char styleIndex, const Font::Glyph* glyph, const PointStyle& style) {
+    bool TileLayerBuilder::tesselateGlyph(const Vertex& vertex, char styleIndex, const cglib::vec2<float>& pen, const Font::Glyph* glyph) {
         float u0 = 0, v0 = 0, u1 = 0, v1 = 0;
+        cglib::vec2<float> p0 = pen, p3 = pen;
         if (glyph) {
-            u0 = static_cast<float>(glyph->x);
+            u0 = static_cast<float>(glyph->x); // NOTE: u,v coordinates will be normalized when the layer is built
             v0 = static_cast<float>(glyph->y);
             u1 = static_cast<float>(glyph->x + glyph->width);
             v1 = static_cast<float>(glyph->y + glyph->height);
+            p0 += glyph->offset;
+            p3 += glyph->offset + glyph->size;
         }
-        _vertices.append(point, point, point, point);
-        _texCoords.append(cglib::vec2<float>(u0, v0), cglib::vec2<float>(u1, v0), cglib::vec2<float>(u1, v1), cglib::vec2<float>(u0, v1));
-        _attribs.append(cglib::vec4<char>(styleIndex, -1, -1, 0), cglib::vec4<char>(styleIndex, 1, -1, 0), cglib::vec4<char>(styleIndex, 1, 1, 0), cglib::vec4<char>(styleIndex, -1, 1, 0));
+        _vertices.append(vertex, vertex, vertex, vertex);
+        _texCoords.append(cglib::vec2<float>(u0, v1), cglib::vec2<float>(u1, v1), cglib::vec2<float>(u1, v0), cglib::vec2<float>(u0, v0));
+        _binormals.append(p0, cglib::vec2<float>(p3(0), p0(1)), p3, cglib::vec2<float>(p0(0), p3(1)));
+        _attribs.append(cglib::vec4<char>(styleIndex, 0, 0, 0), cglib::vec4<char>(styleIndex, 0, 0, 0), cglib::vec4<char>(styleIndex, 0, 0, 0), cglib::vec4<char>(styleIndex, 0, 0, 0));
 
         int i0 = static_cast<int>(_vertices.size()) - 4;
-        _indices.append(i0 + 0, i0 + 1, i0 + 3);
-        _indices.append(i0 + 1, i0 + 2, i0 + 3);
+        _indices.append(i0 + 0, i0 + 1, i0 + 2);
+        _indices.append(i0 + 0, i0 + 2, i0 + 3);
         return true;
     }
 

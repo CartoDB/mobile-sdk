@@ -1,10 +1,12 @@
-# Carto Mobile SDK readme
+# Carto Mobile SDK 
 
 ## Current build status
 
 | Platforms    | Status |
 |:-------------|:-------|
 | Android, iOS | ![Build status](https://api.travis-ci.com/CartoDB/mobile-sdk.svg?token=uvhfAb9wpUzphV39sAwP&branch=master) |
+
+# Building
 
 ## Dependencies
 Get the prepackaged dependencies from github CartoDB/mobile-external-libs
@@ -25,7 +27,7 @@ iOS build requires XCode 7.3 or later.
 
 Windows Phone build requires Visual Studio 2015 AND Visual Studio 2015 SDK.
 
-## Building
+## Building process
 
 Be patient - full build will take 1+ hours. You can speed it up by limiting architectures and platforms where it is built.
 
@@ -39,32 +41,38 @@ ln -s ../mobile-external-libs/libs-external/
 cd mobile-sdk/scripts
 ```
 
-# Android build 
+## Android build 
 ```
 python swigpp-java.py --profile standard
 python build-android.py --profile standard --javac /Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Commands/javac
 ```
 
-# iOS build:
+## iOS build:
 ```
 python swigpp-objc.py --profile standard
 python build-ios.py --profile standard
 ```
 
-# Xamarin Android build:
+## Xamarin Android build:
 ```
 python swigpp-csharp.py --profile standard android
 python build-xamarin.py --profile standard android
 ```
 
-# Xamarin iOS build:
+## Xamarin iOS build:
 ```
 python swigpp-csharp.py --profile standard ios
 python build-xamarin.py --profile standard ios
 ```
 
-# Windows Phone build
+## Windows Phone build
 ```
 python swigpp-csharp.py --profile standard winphone
 python build-winphone.py --profile standard
 ```
+# Usage
+
+* Developer docs: https://carto.com/docs/carto-engine/mobile-sdk/
+* Android sample app: https://github.com/CartoDB/mobile-android-samples
+* iOS sample app: https://github.com/CartoDB/mobile-ios-samples
+* .NET (Xamarin and Windows 10) sample app: https://github.com/CartoDB/mobile-dotnet-samples

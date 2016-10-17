@@ -32,88 +32,81 @@ namespace carto { namespace mvt {
             return;
         }
 
-        float fontScale = symbolizerContext.getSettings().getFontScale();
-        float textSize = -1;
+        vt::CompOp compOp = vt::CompOp::SRC_OVER;
+
         std::string text = getTransformedText(_text);
         std::size_t hash = std::hash<std::string>()(text);
-        vt::LabelOrientation placement = convertTextPlacement(_placement);
-        float minimumDistance = _minimumDistance * std::pow(2.0f, -exprContext.getZoom());
-        long long groupId = (_allowOverlap ? -1 : (minimumDistance > 0 ? (hash & 0x7fffffff) : 0));
-
         vt::TextFormatter::Options textFormatterOptions = getFormatterOptions(symbolizerContext);
 
-        vt::TextLabelStyle style(placement, textFormatterOptions, font, _orientation, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::Bitmap>());
+        float fontScale = symbolizerContext.getSettings().getFontScale();
+        vt::LabelOrientation placement = convertTextPlacement(_placement);
+        float minimumDistance = _minimumDistance * std::pow(2.0f, -exprContext.getZoom());
+        float textSize = (placement == vt::LabelOrientation::LINE ? calculateTextSize(font, text, textFormatterOptions).size()(0) : 0);
+        long long groupId = (_allowOverlap ? -1 : (minimumDistance > 0 ? (hash & 0x7fffffff) : 0));
 
+        std::vector<std::pair<long long, vt::TileLayerBuilder::Vertex>> textInfos;
         std::vector<std::pair<long long, vt::TileLayerBuilder::TextLabelInfo>> labelInfos;
-        for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
-            long long localId = featureCollection.getLocalId(index);
-            long long globalId = featureCollection.getGlobalId(index);
-            const std::shared_ptr<const Geometry>& geometry = featureCollection.getGeometry(index);
 
-            if (auto pointGeometry = std::dynamic_pointer_cast<const PointGeometry>(geometry)) {
-                for (const auto& vertex : pointGeometry->getVertices()) {
-                    labelInfos.emplace_back(localId, vt::TileLayerBuilder::TextLabelInfo(getTextId(globalId, hash), groupId, text, vertex, vt::TileLayerBuilder::Vertices(), minimumDistance));
+        auto addText = [&](long long localId, long long globalId, const boost::optional<vt::TileLayerBuilder::Vertex>& vertex, const vt::TileLayerBuilder::Vertices& vertices) {
+            if (_allowOverlap) {
+                if (vertex) {
+                    textInfos.emplace_back(localId, *vertex);
                 }
-            }
-            else if (auto lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(geometry)) {
-                if (placement == vt::LabelOrientation::LINE) {
-                    for (const auto& vertices : lineGeometry->getVerticesList()) {
-                        if (_spacing <= 0) {
-                            labelInfos.emplace_back(localId, vt::TileLayerBuilder::TextLabelInfo(getTextId(globalId, hash), groupId, text, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices, minimumDistance));
-                            continue;
-                        }
-
-                        float linePos = 0;
-                        for (std::size_t i = 1; i < vertices.size(); i++) {
-                            const cglib::vec2<float>& v0 = vertices[i - 1];
-                            const cglib::vec2<float>& v1 = vertices[i];
-
-                            float lineLen = cglib::length(v1 - v0) * symbolizerContext.getSettings().getTileSize();
-                            if (i == 1) {
-                                linePos = std::min(lineLen, _spacing) * 0.5f;
-                            }
-                            while (linePos < lineLen) {
-                                cglib::vec2<float> pos = v0 + (v1 - v0) * (linePos / lineLen);
-                                if (std::min(pos(0), pos(1)) > 0.0f && std::max(pos(0), pos(1)) < 1.0f) {
-                                    labelInfos.emplace_back(localId, vt::TileLayerBuilder::TextLabelInfo(getMultiTextId(globalId, hash), groupId, text, pos, vertices, minimumDistance));
-                                }
-
-                                if (textSize < 0) {
-                                    textSize = calculateTextSize(font, text, textFormatterOptions).size()(0);
-                                }
-                                linePos += _spacing + textSize;
-                            }
-
-                            linePos -= lineLen;
-                        }
-                    }
-                }
-                else {
-                    for (const auto& vertices : lineGeometry->getVerticesList()) {
-                        labelInfos.emplace_back(localId, vt::TileLayerBuilder::TextLabelInfo(getTextId(globalId, hash), groupId, text, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices, minimumDistance));
-                    }
-                }
-            }
-            else if (auto polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(geometry)) {
-                for (const auto& vertex : polygonGeometry->getSurfacePoints()) {
-                    labelInfos.emplace_back(localId, vt::TileLayerBuilder::TextLabelInfo(getTextId(globalId, hash), groupId, text, vertex, vt::TileLayerBuilder::Vertices(), minimumDistance));
+                else if (!vertices.empty()) {
+                    textInfos.emplace_back(localId, vertices.front());
                 }
             }
             else {
-                _logger->write(Logger::Severity::WARNING, "Unsupported geometry for TextSymbolizer");
+                labelInfos.emplace_back(localId, vt::TileLayerBuilder::TextLabelInfo(getTextId(globalId, hash), groupId, text, vertex, vertices, minimumDistance));
             }
-        }
+        };
 
-        std::size_t labelInfoIndex = 0;
-        layerBuilder.addTextLabels([&](long long& id, vt::TileLayerBuilder::TextLabelInfo& labelInfo) {
-            if (labelInfoIndex >= labelInfos.size()) {
-                return false;
+        auto flushTexts = [&](const cglib::mat3x3<float>& transform) {
+            if (_allowOverlap) {
+                std::shared_ptr<const vt::ColorFunction> fillFunc;
+                ExpressionFunctionBinder<vt::Color>().bind(&fillFunc, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), [this](const Value& val) -> vt::Color {
+                    return convertColor(val);
+                }).update(exprContext);
+                std::shared_ptr<const vt::FloatFunction> opacityFunc;
+                ExpressionFunctionBinder<float>().bind(&opacityFunc, std::make_shared<ConstExpression>(Value(1.0f))).update(exprContext);
+
+                vt::TextStyle style(compOp, convertLabelToPointOrientation(placement), fillFunc, opacityFunc, textFormatterOptions, font, _orientation, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::Bitmap>(), transform);
+
+                std::size_t textInfoIndex = 0;
+                layerBuilder.addTexts([&](long long& id, vt::TileLayerBuilder::Vertex& vertex, std::string& txt) {
+                    if (textInfoIndex >= textInfos.size()) {
+                        return false;
+                    }
+                    id = textInfos[textInfoIndex].first;
+                    vertex = textInfos[textInfoIndex].second;
+                    txt = text;
+                    textInfoIndex++;
+                    return true;
+                }, style);
+
+                textInfos.clear();
             }
-            id = labelInfos[labelInfoIndex].first;
-            labelInfo = std::move(labelInfos[labelInfoIndex].second);
-            labelInfoIndex++;
-            return true;
-        }, style);
+            else {
+                vt::TextLabelStyle style(placement, textFormatterOptions, font, _orientation, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::Bitmap>());
+
+                std::size_t labelInfoIndex = 0;
+                layerBuilder.addTextLabels([&](long long& id, vt::TileLayerBuilder::TextLabelInfo& labelInfo) {
+                    if (labelInfoIndex >= labelInfos.size()) {
+                        return false;
+                    }
+                    id = labelInfos[labelInfoIndex].first;
+                    labelInfo = std::move(labelInfos[labelInfoIndex].second);
+                    labelInfoIndex++;
+                    return true;
+                }, style);
+
+                labelInfos.clear();
+            }
+        };
+
+        buildFeatureCollection(featureCollection, symbolizerContext, placement, textSize, addText);
+
+        flushTexts(cglib::mat3x3<float>::identity());
     }
 
     void TextSymbolizer::bindParameter(const std::string& name, const std::string& value) {
@@ -295,5 +288,63 @@ namespace carto { namespace mvt {
             }
         }
         return placement;
+    }
+
+    void TextSymbolizer::buildFeatureCollection(const FeatureCollection& featureCollection, const SymbolizerContext& symbolizerContext, vt::LabelOrientation placement, float textSize, const std::function<void(long long localId, long long globalId, const boost::optional<vt::TileLayerBuilder::Vertex>& vertex, const vt::TileLayerBuilder::Vertices& vertices)>& addText) {
+        for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
+            long long localId = featureCollection.getLocalId(index);
+            long long globalId = featureCollection.getGlobalId(index);
+            const std::shared_ptr<const Geometry>& geometry = featureCollection.getGeometry(index);
+
+            if (auto pointGeometry = std::dynamic_pointer_cast<const PointGeometry>(geometry)) {
+                for (const auto& vertex : pointGeometry->getVertices()) {
+                    addText(localId, globalId, vertex, vt::TileLayerBuilder::Vertices());
+                }
+            }
+            else if (auto lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(geometry)) {
+                if (placement == vt::LabelOrientation::LINE) {
+                    for (const auto& vertices : lineGeometry->getVerticesList()) {
+                        if (_spacing <= 0) {
+                            addText(localId, globalId, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices);
+                            continue;
+                        }
+
+                        float linePos = 0;
+                        for (std::size_t i = 1; i < vertices.size(); i++) {
+                            const cglib::vec2<float>& v0 = vertices[i - 1];
+                            const cglib::vec2<float>& v1 = vertices[i];
+
+                            float lineLen = cglib::length(v1 - v0) * symbolizerContext.getSettings().getTileSize();
+                            if (i == 1) {
+                                linePos = std::min(lineLen, _spacing) * 0.5f;
+                            }
+                            while (linePos < lineLen) {
+                                cglib::vec2<float> pos = v0 + (v1 - v0) * (linePos / lineLen);
+                                if (std::min(pos(0), pos(1)) > 0.0f && std::max(pos(0), pos(1)) < 1.0f) {
+                                    addText(localId, 0, pos, vertices);
+                                }
+
+                                linePos += _spacing + textSize;
+                            }
+
+                            linePos -= lineLen;
+                        }
+                    }
+                }
+                else {
+                    for (const auto& vertices : lineGeometry->getVerticesList()) {
+                        addText(localId, globalId, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices);
+                    }
+                }
+            }
+            else if (auto polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(geometry)) {
+                for (const auto& vertex : polygonGeometry->getSurfacePoints()) {
+                    addText(localId, globalId, vertex, vt::TileLayerBuilder::Vertices());
+                }
+            }
+            else {
+                _logger->write(Logger::Severity::WARNING, "Unsupported geometry for TextSymbolizer/ShieldSymbolizer");
+            }
+        }
     }
 } }

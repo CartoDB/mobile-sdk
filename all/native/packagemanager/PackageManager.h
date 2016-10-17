@@ -297,19 +297,19 @@ namespace carto {
         std::string loadPackageListJson(const std::string& jsonFileName) const;
         void savePackageListJson(const std::string& jsonFileName, const std::string& json) const;
 
-        static void initializeDb(sqlite3pp::database& db, const std::string& encKey);
-        static bool addDbField(sqlite3pp::database& db, const std::string& table, const std::string& field, const std::string& def);
-        static bool checkDbEncryption(sqlite3pp::database& db, const std::string& encKey);
-        static void updateDbEncryption(sqlite3pp::database& db, const std::string& encKey);
+        static void InitializeDb(sqlite3pp::database& db, const std::string& encKey);
+        static bool AddDbField(sqlite3pp::database& db, const std::string& table, const std::string& field, const std::string& def);
+        static bool CheckDbEncryption(sqlite3pp::database& db, const std::string& encKey);
+        static void UpdateDbEncryption(sqlite3pp::database& db, const std::string& encKey);
         
-        static std::string calculateKeyHash(const std::string& encKey);
+        static std::string CalculateKeyHash(const std::string& encKey);
 
-        static void encryptTile(std::vector<unsigned char>& data, int zoom, int x, int y, const std::string& encKey);
-        static void decryptTile(std::vector<unsigned char>& data, int zoom, int x, int y, const std::string& encKey);
-        static void setCipherKeyIV(unsigned char* k, unsigned char* iv, int zoom, int x, int y, const std::string& encKey);
+        static void EncryptTile(std::vector<unsigned char>& data, int zoom, int x, int y, const std::string& encKey);
+        static void DecryptTile(std::vector<unsigned char>& data, int zoom, int x, int y, const std::string& encKey);
+        static void SetCipherKeyIV(unsigned char* k, unsigned char* iv, int zoom, int x, int y, const std::string& encKey);
 
-        static int downloadFile(const std::string& url, NetworkUtils::HandlerFn handler, std::uint64_t offset = 0);
-        static bool inflateData(const std::vector<unsigned char>& in, std::vector<unsigned char>& out);
+        static int DownloadFile(const std::string& url, NetworkUtils::HandlerFn handler, std::uint64_t offset = 0);
+        static bool InflateData(const std::vector<unsigned char>& in, std::vector<unsigned char>& out);
 
         const std::string _packageListURL;
         const std::string _packageListFileName;

@@ -7,12 +7,16 @@
 #ifndef _CARTO_LOG_H_
 #define _CARTO_LOG_H_
 
+#include "components/DirectorPtr.h"
+
 #include <mutex>
 #include <string>
+#include <memory>
 
 #include <tinyformat.h>
 
 namespace carto {
+    class LogEventListener;
 
     /**
      * A diagnostic log for various SDK events.
@@ -72,30 +76,41 @@ namespace carto {
         static void SetTag(const std::string& tag);
 
         /**
-         * Logs specified fatal error message and terminates.
-         * @param text The text to log.
+         * Returns the current log listener.
+         * @return The current log event listener.
          */
-        static void Fatal(const char* text);
+        static std::shared_ptr<LogEventListener> GetLogEventListener();
+        /**
+         * Sets the log listener that can be used to intercept log messages.
+         * @param listener The log event listener.
+         */
+        static void SetLogEventListener(const std::shared_ptr<LogEventListener>& listener);
+
+        /**
+         * Logs specified fatal error message and terminates.
+         * @param message The message to log.
+         */
+        static void Fatal(const char* message);
         /**
          * Logs specified error message (if error logging is enabled).
-         * @param text The text to log.
+         * @param message The message to log.
          */
-        static void Error(const char* text);
+        static void Error(const char* message);
         /**
          * Logs specified warning message (if warning logging is enabled).
-         * @param text The text to log.
+         * @param message The message to log.
          */
-        static void Warn(const char* text);
+        static void Warn(const char* message);
         /**
          * Logs specified info message (if info logging is enabled).
-         * @param text The text to log.
+         * @param message The message to log.
          */
-        static void Info(const char* text);
+        static void Info(const char* message);
         /**
          * Logs specified debug message (if debug logging is enabled).
-         * @param text The text to log.
+         * @param message The message to log.
          */
-        static void Debug(const char* text);
+        static void Debug(const char* message);
 
 #ifndef SWIG
         template <typename... Args>
@@ -138,6 +153,8 @@ namespace carto {
         static bool _ShowDebug;
 
         static std::string _Tag;
+
+        static DirectorPtr<LogEventListener> _LogEventListener;
 
         static std::mutex _Mutex;
     };

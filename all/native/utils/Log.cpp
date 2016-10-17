@@ -1,4 +1,5 @@
-#include "utils/Log.h"
+#include "Log.h"
+#include "utils/LogEventListener.h"
 
 #ifdef __ANDROID__
 #include <android/log.h>
@@ -89,29 +90,72 @@ namespace carto {
         _Tag = tag;
     }
 
-    void Log::Fatal(const char* text) {
-        std::lock_guard<std::mutex> lock(_Mutex);
-        OutputLog(LOG_TYPE_FATAL, _Tag, text);
+    std::shared_ptr<LogEventListener> Log::GetLogEventListener() {
+        return _LogEventListener.get();
+    }
+    
+    void Log::SetLogEventListener(const std::shared_ptr<LogEventListener>& listener) {
+        _LogEventListener.set(listener);
     }
 
-    void Log::Error(const char* text) {
+    void Log::Fatal(const char* message) {
+        DirectorPtr<LogEventListener> logEventListener = _LogEventListener;
+        if (logEventListener) {
+            if (!logEventListener->onFatalEvent(message)) {
+                return;
+            }
+        }
+
         std::lock_guard<std::mutex> lock(_Mutex);
-        OutputLog(LOG_TYPE_ERROR, _Tag, text);
+        OutputLog(LOG_TYPE_FATAL, _Tag, message);
     }
 
-    void Log::Warn(const char* text) {
+    void Log::Error(const char* message) {
+        DirectorPtr<LogEventListener> logEventListener = _LogEventListener;
+        if (logEventListener) {
+            if (!logEventListener->onErrorEvent(message)) {
+                return;
+            }
+        }
+
         std::lock_guard<std::mutex> lock(_Mutex);
-        OutputLog(LOG_TYPE_WARNING, _Tag, text);
+        OutputLog(LOG_TYPE_ERROR, _Tag, message);
     }
 
-    void Log::Info(const char* text) {
+    void Log::Warn(const char* message) {
+        DirectorPtr<LogEventListener> logEventListener = _LogEventListener;
+        if (logEventListener) {
+            if (!logEventListener->onWarnEvent(message)) {
+                return;
+            }
+        }
+
         std::lock_guard<std::mutex> lock(_Mutex);
-        OutputLog(LOG_TYPE_INFO, _Tag, text);
+        OutputLog(LOG_TYPE_WARNING, _Tag, message);
     }
 
-    void Log::Debug(const char* text) {
+    void Log::Info(const char* message) {
+        DirectorPtr<LogEventListener> logEventListener = _LogEventListener;
+        if (logEventListener) {
+            if (!logEventListener->onInfoEvent(message)) {
+                return;
+            }
+        }
+
         std::lock_guard<std::mutex> lock(_Mutex);
-        OutputLog(LOG_TYPE_DEBUG, _Tag, text);
+        OutputLog(LOG_TYPE_INFO, _Tag, message);
+    }
+
+    void Log::Debug(const char* message) {
+        DirectorPtr<LogEventListener> logEventListener = _LogEventListener;
+        if (logEventListener) {
+            if (!logEventListener->onDebugEvent(message)) {
+                return;
+            }
+        }
+
+        std::lock_guard<std::mutex> lock(_Mutex);
+        OutputLog(LOG_TYPE_DEBUG, _Tag, message);
     }
 
     Log::Log() {
@@ -123,6 +167,8 @@ namespace carto {
     bool Log::_ShowDebug = true;
 
     std::string Log::_Tag = "carto-mobile-sdk";
+
+    DirectorPtr<LogEventListener> Log::_LogEventListener;
 
     std::mutex Log::_Mutex;
 

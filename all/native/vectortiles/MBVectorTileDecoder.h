@@ -103,10 +103,21 @@ namespace carto {
          */
         float getBuffering() const;
         /**
-         * Sets tile buffering factor. This is intended for special tile sources like MapZen.
+         * Sets the tile buffering factor. This is intended for special tile sources like MapZen.
          * @param buffer The amount of buffering to use. It is based on normalized tile coordinates (tile width=1.0), so 1.0/64.0 is a sensible value. The default is 0.
          */
         void setBuffering(float buffer);
+
+        /**
+         * Returns the value of feature id override flag. This is intended for cases when feature ids in tile are not globally unique.
+         * @return The value of feature id override flag.
+         */
+        bool isFeatureIdOverride() const;
+        /**
+         * Sets the value of feature id override flag. This is intended for cases when feature ids in tile are not globally unique.
+         * @param idOverride The value of the flag.
+         */
+        void setFeatureIdOverride(bool idOverride);
 
         /**
          * Returns the value CartoCSS 'layer name ignore' flag.
@@ -152,6 +163,7 @@ namespace carto {
         static const int GLYPHMAP_SIZE;
         
         float _buffer;
+        bool _featureIdOverride;
         bool _cartoCSSLayerNamesIgnored;
         std::string _layerNameOverride;
         std::shared_ptr<mvt::Logger> _logger;
