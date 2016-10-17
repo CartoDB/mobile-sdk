@@ -35,7 +35,7 @@ CARTO has created a customized routing package, similar to other offline map pac
 
 - The download size of the offline routing package is significantly larger (10-40% greater) than the size of the corresponding offline map package. Car profile packages are considerably smaller than walking packages
 
-- For Enterprise accounts, offline routing packages include **HERE.com map data**. In many countries, especially outside Europe, offline routing packages contain more granular results. In addition, HERE includes address data. Please [contact us](mailto:sales@carto.com) if you are interested in Enterprise mobile features
+- For Enterprise accounts, offline routing packages can include an extra agreement to include **HERE.com map data**. In many countries, especially outside Europe, offline routing packages contain more granular results. In addition, HERE includes address data. Please [contact us](mailto:sales@carto.com) if you are interested in extra Enterprise mobile features
 
 ## Apply Routing in your App
 
