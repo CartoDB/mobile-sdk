@@ -1,5 +1,7 @@
 #include "CartoSQLService.h"
 #include "core/BinaryData.h"
+#include "geometry/FeatureCollection.h"
+#include "geometry/GeoJSONGeometryReader.h"
 #include "components/Exceptions.h"
 #include "network/HTTPClient.h"
 #include "utils/GeneralUtils.h"
@@ -40,15 +42,32 @@ namespace carto {
     }
 
     Variant CartoSQLService::queryData(const std::string& sql) const {
+        std::map<std::string, std::string> urlParams;
+        urlParams["q"] = sql;
+        std::string result = executeQuery(urlParams);
+
+        // Parse result
+        return Variant::FromString(result);
+    }
+
+    std::shared_ptr<FeatureCollection> CartoSQLService::queryFeatures(const std::string& sql) const {
+        std::map<std::string, std::string> urlParams;
+        urlParams["q"] = sql;
+        urlParams["format"] = "GeoJSON";
+        std::string result = executeQuery(urlParams);
+
+        // Parse result
+        GeoJSONGeometryReader reader;
+        return reader.readFeatureCollection(result);
+    }
+
+    std::string CartoSQLService::executeQuery(const std::map<std::string, std::string>& urlParams) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
         // Build URL
         std::map<std::string, std::string> tagValues = { { "user", _username },{ "username", _username } };
-        std::string url = GeneralUtils::ReplaceTags(_apiTemplate, tagValues, "{", "}", false) + "/api/v2/sql";
-
-        std::map<std::string, std::string> urlParams;
-        urlParams["q"] = sql;
-        url = NetworkUtils::BuildURLFromParameters(url, urlParams);
+        std::string baseURL = GeneralUtils::ReplaceTags(_apiTemplate, tagValues, "{", "}", false) + "/api/v2/sql";
+        std::string url = NetworkUtils::BuildURLFromParameters(baseURL, urlParams);
 
         // Perform HTTP request
         HTTPClient client(Log::IsShowDebug());
@@ -62,9 +81,8 @@ namespace carto {
             throw GenericException("Failed to execute query", result);
         }
 
-        // Parse result
         std::string result(reinterpret_cast<const char*>(responseData->data()), responseData->size());
-        return Variant::FromString(result);
+        return result;
     }
 
     const std::string CartoSQLService::DEFAULT_API_TEMPLATE = "http://{user}.cartodb.com";

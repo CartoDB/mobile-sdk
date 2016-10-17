@@ -14,6 +14,7 @@
 #include <string>
 
 namespace carto {
+    class FeatureCollection;
 
     /**
      * A high-level interface for Carto SQL Service.
@@ -52,7 +53,7 @@ namespace carto {
         void setAPITemplate(const std::string& apiTemplate);
 
         /**
-         * Connects to the online service and performs the specified query
+         * Connects to the online service and performs the specified query,
          * The resulting JSON is deserialized into a Variant that is returned.
          * @param sql The SQL query to use.
          * @return The query result. If query fails, null variant is returned.
@@ -60,7 +61,18 @@ namespace carto {
          */
         Variant queryData(const std::string& sql) const;
 
+        /**
+         * Connects to the online service and performs the specified query.
+         * The resulting JSON is deserialized into a FeatureCollection that is returned.
+         * @param sql The SQL query to use.
+         * @return The query result as feature collection. If query fails, null feature collection is returned.
+         * @throws std::runtime_error If IO error occured during the operation.
+         */
+        std::shared_ptr<FeatureCollection> queryFeatures(const std::string& sql) const;
+
     private:
+        std::string executeQuery(const std::map<std::string, std::string>& urlParams) const;
+
         static const std::string DEFAULT_API_TEMPLATE;
 
         std::string _username;
