@@ -27,6 +27,7 @@
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/geojson.h>
+#include <valhalla/baldr/graphtilezipstorage.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/directededge.h>
 #include <valhalla/loki/search.h>
@@ -89,7 +90,7 @@ namespace valhalla { namespace thor {
         boost::optional<int> date_time_type;
     };
 
-    thor_worker_t::thor_worker_t(const std::string& path, const std::string& costing) : reader(make_reader_config(path)), costing(costing) {
+    thor_worker_t::thor_worker_t(const std::string& path, const std::string& costing) : reader(std::make_shared<baldr::GraphTileZipStorage>(path), make_reader_config(path)), costing(costing) {
         factory.Register("auto", sif::CreateAutoCost);
         factory.Register("auto_shorter", sif::CreateAutoShorterCost);
         factory.Register("bus", sif::CreateBusCost);
