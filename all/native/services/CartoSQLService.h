@@ -15,6 +15,7 @@
 
 namespace carto {
     class FeatureCollection;
+    class Projection;
 
     /**
      * A high-level interface for Carto SQL Service.
@@ -65,10 +66,11 @@ namespace carto {
          * Connects to the online service and performs the specified query.
          * The resulting JSON is deserialized into a FeatureCollection that is returned.
          * @param sql The SQL query to use.
+         * @param proj The projection to use for transforming feature coordinates. Can be null for WGS84 coordinates.
          * @return The query result as feature collection. If query fails, null feature collection is returned.
          * @throws std::runtime_error If IO error occured during the operation.
          */
-        std::shared_ptr<FeatureCollection> queryFeatures(const std::string& sql) const;
+        std::shared_ptr<FeatureCollection> queryFeatures(const std::string& sql, const std::shared_ptr<Projection>& proj) const;
 
     private:
         std::string executeQuery(const std::map<std::string, std::string>& urlParams) const;

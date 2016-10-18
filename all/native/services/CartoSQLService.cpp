@@ -3,6 +3,7 @@
 #include "geometry/FeatureCollection.h"
 #include "geometry/GeoJSONGeometryReader.h"
 #include "components/Exceptions.h"
+#include "projections/Projection.h"
 #include "network/HTTPClient.h"
 #include "utils/GeneralUtils.h"
 #include "utils/NetworkUtils.h"
@@ -50,7 +51,7 @@ namespace carto {
         return Variant::FromString(result);
     }
 
-    std::shared_ptr<FeatureCollection> CartoSQLService::queryFeatures(const std::string& sql) const {
+    std::shared_ptr<FeatureCollection> CartoSQLService::queryFeatures(const std::string& sql, const std::shared_ptr<Projection>& proj) const {
         std::map<std::string, std::string> urlParams;
         urlParams["q"] = sql;
         urlParams["format"] = "GeoJSON";
@@ -58,6 +59,7 @@ namespace carto {
 
         // Parse result
         GeoJSONGeometryReader reader;
+        reader.setTargetProjection(proj);
         return reader.readFeatureCollection(result);
     }
 
