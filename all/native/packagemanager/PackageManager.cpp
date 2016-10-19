@@ -829,7 +829,11 @@ namespace carto {
                     updateTaskStatus(taskId, PackageAction::PACKAGE_ACTION_DOWNLOADING, static_cast<float>(fileOffset) / static_cast<float>(fileSize));
                 }
 
-                int errorCode = DownloadFile(createPackageURL(task.packageId, task.packageVersion, task.packageLocation, downloaded), [this, fp, taskId, packageFileName, &fileOffset, fileSize](std::uint64_t offset, std::uint64_t length, const unsigned char* buf, std::size_t size) {
+                std::string packageURL = createPackageURL(task.packageId, task.packageVersion, task.packageLocation, downloaded);
+                if (packageURL.empty()) {
+                    throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_NO_OFFLINE_PLAN, "Offline packages not available");
+                }
+                int errorCode = DownloadFile(packageURL, [this, fp, taskId, packageFileName, &fileOffset, fileSize](std::uint64_t offset, std::uint64_t length, const unsigned char* buf, std::size_t size) {
                     if (isTaskCancelled(taskId)) {
                         return false;
                     }
