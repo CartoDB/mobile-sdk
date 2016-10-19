@@ -22,6 +22,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
+#include <valhalla/config.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/pointll.h>
