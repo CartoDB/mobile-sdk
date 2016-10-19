@@ -3,7 +3,7 @@
 
 %module CartoSQLService
 
-!proxy_imports(carto::CartoSQLService, core.Variant, geometry.FeatureCollection)
+!proxy_imports(carto::CartoSQLService, core.Variant, geometry.FeatureCollection, projections.Projection)
 
 %{
 #include "services/CartoSQLService.h"
@@ -18,6 +18,7 @@
 
 %import "core/Variant.i"
 %import "geometry/FeatureCollection.i"
+%import "projections/Projection.i"
 
 !shared_ptr(carto::CartoSQLService, services.CartoSQLService)
 
