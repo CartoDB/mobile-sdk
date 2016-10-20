@@ -4,7 +4,7 @@
 
 | Platforms    | Status |
 |:-------------|:-------|
-| Android, iOS | ![Build status](https://api.travis-ci.com/CartoDB/mobile-sdk.svg?token=uvhfAb9wpUzphV39sAwP&branch=master) |
+| Android, iOS |  [![Build Status](https://travis-ci.org/CartoDB/mobile-sdk.svg?branch=master)](https://travis-ci.org/CartoDB/mobile-sdk)|
 
 # Building
 
