@@ -6,7 +6,6 @@
 #include "components/Exceptions.h"
 #include "projections/Projection.h"
 #include "utils/Log.h"
-#include "utils/Utils.h"
 
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>

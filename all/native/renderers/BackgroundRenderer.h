@@ -52,10 +52,10 @@ namespace carto {
         float _skyCoords[SKY_VERTEX_COUNT * 3];
     
         std::shared_ptr<Shader> _shader;
-        GLuint _u_tex;
-        GLuint _u_mvpMat;
         GLuint _a_coord;
         GLuint _a_texCoord;
+        GLuint _u_tex;
+        GLuint _u_mvpMat;
 
         std::shared_ptr<TextureManager> _textureManager;
     
