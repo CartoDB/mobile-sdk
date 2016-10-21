@@ -178,6 +178,10 @@ namespace carto {
         
         // Read response header
         jint responseCode = jenv->CallIntMethod(conn, _HttpURLConnectionClass->getResponseCode);
+        if (jenv->ExceptionCheck()) {
+            jenv->ExceptionClear();
+            throw NetworkException("Unable to read response code", request.url);
+        }
         std::map<std::string, std::string> headers;
         for (int i = 0; true; i++) {
             jstring key = (jstring)jenv->CallObjectMethod(conn, _HttpURLConnectionClass->getHeaderFieldKey, (jint)i);
@@ -209,6 +213,10 @@ namespace carto {
         if (jenv->ExceptionCheck()) {
             jenv->ExceptionClear();
             inputStream = jenv->CallObjectMethod(conn, _HttpURLConnectionClass->getErrorStream);
+            if (jenv->ExceptionCheck()) {
+                jenv->ExceptionClear();
+                throw NetworkException("Unable to get input stream", request.url);
+            }
         }
         
         jobject bufferedInputStream = jenv->NewObject(_BufferedInputStreamClass->clazz, _BufferedInputStreamClass->constructor, inputStream);
