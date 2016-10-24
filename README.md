@@ -8,6 +8,12 @@
 
 # Building
 
+*We strongly suggest to use the precompiled SDK versions that can be found in
+the samples below (in 'Usage' section).* The precompiled libraries include 
+support for CARTO online services (basemaps, offline map packages, routing, etc).
+Also, getting all the SDK dependencies resolved and waiting for the build
+to complete can be very time-consuming.
+
 ## Dependencies
 Get the prepackaged dependencies from github **mobile-external-libs** repository (https://github.com/CartoDB/mobile-external-libs). Add links to external-libs/prebuilt at the project root directory level.
 
