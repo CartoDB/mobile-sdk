@@ -1,6 +1,7 @@
 #include "Options.h"
 #include "assets/DefaultBackgroundPNG.h"
 #include "assets/DefaultSkyPNG.h"
+#include "assets/CartoWatermarkPNG.h"
 #include "components/Exceptions.h"
 #include "components/CancelableThreadPool.h"
 #include "graphics/Bitmap.h"
@@ -31,7 +32,7 @@ namespace carto {
         _skyBitmap(GetDefaultSkyBitmap()),
         _watermarkAlignmentX(-1),
         _watermarkAlignmentY(-1),
-        _watermarkBitmap(),
+        _watermarkBitmap(GetDefaultWatermarkBitmap()),
         _watermarkPadding(4, 4),
         _watermarkScale(1.0f),
         _userInput(true),
@@ -614,6 +615,14 @@ namespace carto {
         return _DefaultSkyBitmap;
     }
         
+    std::shared_ptr<Bitmap> Options::GetDefaultWatermarkBitmap() {
+        std::lock_guard<std::mutex> lock(_Mutex);
+        if (!_DefaultWatermarkBitmap) {
+            _DefaultWatermarkBitmap = Bitmap::CreateFromCompressed(carto_watermark_png, carto_watermark_png_len);
+        }
+        return _DefaultWatermarkBitmap;
+    }
+    
     void Options::notifyOptionChanged(const std::string& optionName) {
         std::vector<std::shared_ptr<OnChangeListener> > onChangeListeners;
         {
@@ -638,5 +647,6 @@ namespace carto {
     std::mutex Options::_Mutex;
     std::shared_ptr<Bitmap> Options::_DefaultBackgroundBitmap;
     std::shared_ptr<Bitmap> Options::_DefaultSkyBitmap;
+    std::shared_ptr<Bitmap> Options::_DefaultWatermarkBitmap;
     
 }
