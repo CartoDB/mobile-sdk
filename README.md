@@ -1,5 +1,12 @@
 # Carto Mobile SDK 
 
+Carto Mobile SDK is a multi-platform mobile
+mapping SDK written mostly in C++11 with bindings to numerous languages
+(Java/C# for Android, ObjectiveC/C# for iOS and C# for Windows Phone).
+
+This project contains the core part of the SDK, for samples, look at
+the ['Usage' section](#usage).
+
 ## Current build status
 
 | Platforms    | Status |
@@ -9,7 +16,7 @@
 # Building
 
 **We strongly suggest to use the precompiled SDK versions that can be found in
-the samples below (in 'Usage' section).** The precompiled libraries include 
+the samples below (in ['Usage' section](#usage)).** The precompiled libraries include 
 support for CARTO online services (basemaps, offline map packages, routing, etc).
 Also, getting all the SDK dependencies resolved and waiting for the build
 to complete can be very time-consuming.
@@ -46,7 +53,7 @@ cd mobile-sdk/scripts
 ## Android build 
 ```
 python swigpp-java.py --profile standard
-python build-android.py --profile standard --javac /Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Commands/javac
+python build-android.py --profile standard
 ```
 
 ## iOS build:
