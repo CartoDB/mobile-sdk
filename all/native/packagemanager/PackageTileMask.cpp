@@ -84,7 +84,7 @@ namespace carto {
     }
 
     PackageTileStatus::PackageTileStatus PackageTileMask::getTileStatus(const MapTile& mapTile) const {
-        int zoom = mapTile.getZoom(), x = mapTile.getX(), y = (1 << mapTile.getZoom()) - 1 - mapTile.getY();
+        int zoom = mapTile.getZoom(), x = mapTile.getX(), y = mapTile.getY();
         std::shared_ptr<TileNode> node = findTileNode(Tile(zoom, x, y));
         if (!node) {
             return PackageTileStatus::PACKAGE_TILE_STATUS_MISSING;
