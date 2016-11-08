@@ -27,23 +27,49 @@ namespace carto { namespace css {
             std::string field;
             std::shared_ptr<const Expression> expression;
             RuleSpecificity specificity;
+
+            bool operator == (const Property& other) const {
+                return field == other.field && expression == other.expression && specificity == other.specificity;
+            }
+
+            bool operator != (const Property& other) const {
+                return !(*this == other);
+            }
         };
 
         struct PropertySet {
             std::vector<std::shared_ptr<const Predicate>> filters;
             std::map<std::string, Property> properties;
+
+            bool operator == (const PropertySet& other) const {
+                return filters == other.filters && properties == other.properties;
+            }
+
+            bool operator != (const PropertySet& other) const {
+                return !(*this == other);
+            }
         };
 
         struct LayerAttachment {
             std::string attachment;
             int order = 0;
             std::list<PropertySet> propertySets;
+
+            bool operator == (const LayerAttachment& other) const {
+                return attachment == other.attachment && order == other.order && propertySets == other.propertySets;
+            }
+
+            bool operator != (const LayerAttachment& other) const {
+                return !(*this == other);
+            }
         };
-        
-        explicit CartoCSSCompiler(const ExpressionContext& context, bool ignoreLayerPredicates) : _context(context), _ignoreLayerPredicates(ignoreLayerPredicates) { }
+
+        CartoCSSCompiler() = default;
+
+        void setContext(const ExpressionContext& context) { _context = context; }
+        void setIgnoreLayerPredicates(bool ignoreLayerPredicates) { _ignoreLayerPredicates = ignoreLayerPredicates; }
 
         void compileMap(const StyleSheet& styleSheet, std::map<std::string, Value>& mapProperties) const;
-        
         void compileLayer(const std::string& layerName, const StyleSheet& styleSheet, std::list<LayerAttachment>& layerAttachments) const;
         
     private:
@@ -62,10 +88,12 @@ namespace carto { namespace css {
         static bool isRedundantPropertySet(std::list<PropertySet>::iterator begin, std::list<PropertySet>::iterator end, const PropertySet& propertySet);
         
         static RuleSpecificity calculateRuleSpecificity(const std::vector<std::shared_ptr<const Predicate>>& predicates, int order);
-        
-        ExpressionContext _context;
 
-        bool _ignoreLayerPredicates;
+        ExpressionContext _context;
+        bool _ignoreLayerPredicates = false;
+
+        mutable std::map<Value, std::shared_ptr<const Expression>> _constCache;
+        mutable std::map<std::shared_ptr<const Expression>, std::shared_ptr<const Expression>> _exprCache;
     };
 } }
 

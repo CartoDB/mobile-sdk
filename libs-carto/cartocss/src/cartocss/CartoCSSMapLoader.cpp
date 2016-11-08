@@ -154,9 +154,7 @@ namespace carto { namespace css {
         mvt::Map::Settings mapSettings;
         {
             try {
-                ExpressionContext context;
-
-                CartoCSSCompiler compiler(context, false);
+                CartoCSSCompiler compiler;
                 std::map<std::string, Value> mapProperties;
                 compiler.compileMap(styleSheet, mapProperties);
 
@@ -172,26 +170,36 @@ namespace carto { namespace css {
         map->setNutiParameters(nutiParameters);
 
         // Layers
+        CartoCSSCompiler compiler;
         CartoCSSMapnikTranslator translator(_logger);
         for (const std::string& layerName : layerNames) {
             std::map<std::string, AttachmentStyle> attachmentStyleMap;
+            int minZoom = 0;
+            std::list<CartoCSSCompiler::LayerAttachment> prevLayerAttachments;
             for (int zoom = 0; zoom < MAX_ZOOM; zoom++) {
                 try {
                     ExpressionContext context;
                     std::map<std::string, Value> predefinedFieldMap;
                     context.predefinedFieldMap = &predefinedFieldMap;
                     (*context.predefinedFieldMap)["zoom"] = Value(static_cast<long long>(zoom));
+                    compiler.setContext(context);
+                    compiler.setIgnoreLayerPredicates(_ignoreLayerPredicates);
 
-                    CartoCSSCompiler compiler(context, _ignoreLayerPredicates);
                     std::list<CartoCSSCompiler::LayerAttachment> layerAttachments;
                     compiler.compileLayer(layerName, styleSheet, layerAttachments);
 
-                    buildAttachmentStyleMap(translator, map, zoom, layerAttachments, attachmentStyleMap);
+                    if (zoom > 0 && layerAttachments != prevLayerAttachments) {
+                        buildAttachmentStyleMap(translator, map, minZoom, zoom, prevLayerAttachments, attachmentStyleMap);
+                        minZoom = zoom;
+                    }
+                    prevLayerAttachments = std::move(layerAttachments);
                 }
                 catch (const std::exception& ex) {
                     throw LoaderException(std::string("Error while building zoom ") + boost::lexical_cast<std::string>(zoom) + " properties: " + ex.what());
                 }
             }
+            buildAttachmentStyleMap(translator, map, minZoom, MAX_ZOOM, prevLayerAttachments, attachmentStyleMap);
+
             if (attachmentStyleMap.empty()) {
                 continue;
             }
@@ -219,7 +227,7 @@ namespace carto { namespace css {
         getMapProperty(mapProperties, "font-directory", mapSettings.fontDirectory);
     }
 
-    void CartoCSSMapLoader::buildAttachmentStyleMap(const CartoCSSMapnikTranslator& translator, const std::shared_ptr<mvt::Map>& map, int zoom, const std::list<CartoCSSCompiler::LayerAttachment>& layerAttachments, std::map<std::string, AttachmentStyle>& attachmentStyleMap) const {
+    void CartoCSSMapLoader::buildAttachmentStyleMap(const CartoCSSMapnikTranslator& translator, const std::shared_ptr<mvt::Map>& map, int minZoom, int maxZoom, const std::list<CartoCSSCompiler::LayerAttachment>& layerAttachments, std::map<std::string, AttachmentStyle>& attachmentStyleMap) const {
         for (const CartoCSSCompiler::LayerAttachment& layerAttachment : layerAttachments) {
             if (attachmentStyleMap.find(layerAttachment.attachment) == attachmentStyleMap.end()) {
                 attachmentStyleMap[layerAttachment.attachment].attachment = layerAttachment.attachment;
@@ -229,7 +237,7 @@ namespace carto { namespace css {
             AttachmentStyle& attachmentStyle = attachmentStyleMap[layerAttachment.attachment];
             attachmentStyle.order = std::min(attachmentStyle.order, layerAttachment.order);
             for (const CartoCSSCompiler::PropertySet& propertySet : layerAttachment.propertySets) {
-                std::shared_ptr<mvt::Rule> rule = translator.buildRule(propertySet, map, zoom);
+                std::shared_ptr<mvt::Rule> rule = translator.buildRule(propertySet, map, minZoom, maxZoom);
                 if (rule) {
                     attachmentStyle.rules.push_back(rule);
                 }

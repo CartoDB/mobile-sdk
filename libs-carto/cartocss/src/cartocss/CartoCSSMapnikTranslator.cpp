@@ -33,7 +33,7 @@ namespace carto { namespace css {
         mvt::Value operator() (const std::vector<Value>& val) const { return mvt::Value(boost::lexical_cast<std::string>(val)); }
     };
 
-    std::shared_ptr<mvt::Rule> CartoCSSMapnikTranslator::buildRule(const CartoCSSCompiler::PropertySet& propertySet, const std::shared_ptr<mvt::Map>& map, int zoom) const {
+    std::shared_ptr<mvt::Rule> CartoCSSMapnikTranslator::buildRule(const CartoCSSCompiler::PropertySet& propertySet, const std::shared_ptr<mvt::Map>& map, int minZoom, int maxZoom) const {
         std::shared_ptr<mvt::Predicate> mapnikFilterPred;
         for (const std::shared_ptr<const Predicate>& pred : propertySet.filters) {
             std::shared_ptr<mvt::Predicate> mapnikPred = buildPredicate(pred);
@@ -67,15 +67,15 @@ namespace carto { namespace css {
         for (const std::pair<std::string, std::list<CartoCSSCompiler::Property>>& propertyListElement : propertyLists) {
             std::string symbolizerId = propertyListElement.first;
             std::string symbolizerType = symbolizerId.substr(symbolizerId.rfind('/') + 1);
-            std::shared_ptr<mvt::Symbolizer> mapnikSymbolizer = buildSymbolizer(symbolizerType, propertyListElement.second, map, zoom);
+            std::shared_ptr<mvt::Symbolizer> mapnikSymbolizer = buildSymbolizer(symbolizerType, propertyListElement.second, map);
             if (mapnikSymbolizer) {
                 mapnikSymbolizers.push_back(mapnikSymbolizer);
             }
         }
-        return std::make_shared<mvt::Rule>("auto", zoom, zoom + 1, mapnikFilter, mapnikSymbolizers);
+        return std::make_shared<mvt::Rule>("auto", minZoom, maxZoom, mapnikFilter, mapnikSymbolizers);
     }
 
-    std::shared_ptr<mvt::Symbolizer> CartoCSSMapnikTranslator::buildSymbolizer(const std::string& symbolizerType, const std::list<CartoCSSCompiler::Property>& properties, const std::shared_ptr<mvt::Map>& map, int zoom) const {
+    std::shared_ptr<mvt::Symbolizer> CartoCSSMapnikTranslator::buildSymbolizer(const std::string& symbolizerType, const std::list<CartoCSSCompiler::Property>& properties, const std::shared_ptr<mvt::Map>& map) const {
         std::shared_ptr<mvt::Symbolizer> mapnikSymbolizer;
         if (symbolizerType == "line") {
             mapnikSymbolizer = std::make_shared<mvt::LineSymbolizer>(_logger);

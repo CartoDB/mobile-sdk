@@ -68,9 +68,7 @@ namespace carto { namespace css {
         mvt::TorqueMap::TorqueSettings torqueSettings;
         {
             try {
-                ExpressionContext context;
-
-                CartoCSSCompiler compiler(context, false);
+                CartoCSSCompiler compiler;
                 std::map<std::string, Value> mapProperties;
                 compiler.compileMap(styleSheet, mapProperties);
 
@@ -84,11 +82,14 @@ namespace carto { namespace css {
         auto map = std::make_shared<mvt::TorqueMap>(mapSettings, torqueSettings);
 
         // Layers
+        CartoCSSCompiler compiler;
         TorqueCartoCSSMapnikTranslator translator(_logger);
         for (const std::string& layerName : layerNames) {
             for (auto frameOffsetIt = frameOffsets.rbegin(); frameOffsetIt != frameOffsets.rend(); frameOffsetIt++) {
                 int frameOffset = *frameOffsetIt;
                 std::map<std::string, AttachmentStyle> attachmentStyleMap;
+                int minZoom = 0;
+                std::list<CartoCSSCompiler::LayerAttachment> prevLayerAttachments;
                 for (int zoom = 0; zoom < MAX_ZOOM; zoom++) {
                     try {
                         ExpressionContext context;
@@ -96,17 +97,24 @@ namespace carto { namespace css {
                         context.predefinedFieldMap = &predefinedFieldMap;
                         (*context.predefinedFieldMap)["zoom"] = Value(static_cast<long long>(zoom));
                         (*context.predefinedFieldMap)["frame-offset"] = Value(static_cast<long long>(frameOffset));
+                        compiler.setContext(context);
+                        compiler.setIgnoreLayerPredicates(_ignoreLayerPredicates);
 
-                        CartoCSSCompiler compiler(context, _ignoreLayerPredicates);
                         std::list<CartoCSSCompiler::LayerAttachment> layerAttachments;
                         compiler.compileLayer(layerName, styleSheet, layerAttachments);
 
-                        buildAttachmentStyleMap(translator, map, zoom, layerAttachments, attachmentStyleMap);
+                        if (zoom > 0 && layerAttachments != prevLayerAttachments) {
+                            buildAttachmentStyleMap(translator, map, minZoom, zoom, prevLayerAttachments, attachmentStyleMap);
+                            minZoom = zoom;
+                        }
+                        prevLayerAttachments = std::move(layerAttachments);
                     }
                     catch (const std::exception& ex) {
                         throw LoaderException(std::string("Error while building zoom ") + boost::lexical_cast<std::string>(zoom) + " properties: " + ex.what());
                     }
                 }
+                buildAttachmentStyleMap(translator, map, minZoom, MAX_ZOOM, prevLayerAttachments, attachmentStyleMap);
+
                 if (attachmentStyleMap.empty()) {
                     continue;
                 }

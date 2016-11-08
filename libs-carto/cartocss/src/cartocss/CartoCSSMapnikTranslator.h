@@ -33,9 +33,9 @@ namespace carto { namespace css {
         explicit CartoCSSMapnikTranslator(std::shared_ptr<mvt::Logger> logger) : _logger(std::move(logger)) { }
         virtual ~CartoCSSMapnikTranslator() = default;
 
-        virtual std::shared_ptr<mvt::Rule> buildRule(const CartoCSSCompiler::PropertySet& propertySet, const std::shared_ptr<mvt::Map>& map, int zoom) const;
+        virtual std::shared_ptr<mvt::Rule> buildRule(const CartoCSSCompiler::PropertySet& propertySet, const std::shared_ptr<mvt::Map>& map, int minZoom, int maxZoom) const;
 
-        virtual std::shared_ptr<mvt::Symbolizer> buildSymbolizer(const std::string& symbolizerType, const std::list<CartoCSSCompiler::Property>& properties, const std::shared_ptr<mvt::Map>& map, int zoom) const;
+        virtual std::shared_ptr<mvt::Symbolizer> buildSymbolizer(const std::string& symbolizerType, const std::list<CartoCSSCompiler::Property>& properties, const std::shared_ptr<mvt::Map>& map) const;
 
         virtual std::string buildExpressionString(const std::shared_ptr<const Expression>& expr, bool stringExpr) const;
 
@@ -54,11 +54,11 @@ namespace carto { namespace css {
 
         virtual void setSymbolizerParameter(const std::shared_ptr<mvt::Symbolizer>& symbolizer, const std::string& name, const std::shared_ptr<const Expression>& expr, bool stringExpr) const;
 
-        std::shared_ptr<mvt::Logger> _logger;
+        const std::shared_ptr<mvt::Logger> _logger;
 
     private:
         struct ValueBuilder;
-        
+
         static const std::vector<std::string> _symbolizerList;
         static const std::unordered_set<std::string> _symbolizerNonStringProperties;
         static const std::unordered_map<std::string, std::string> _symbolizerPropertyMap;

@@ -64,10 +64,22 @@ namespace carto { namespace css {
                 // Try to evaluate property expression, store the result as expression (even when constant)
                 boost::variant<Value, std::shared_ptr<const Expression>> propResult = prop.property.expression->evaluate(context.expressionContext);
                 if (auto val = boost::get<Value>(&propResult)) {
-                    prop.property.expression = std::make_shared<ConstExpression>(*val);
+                    auto it = _constCache.find(*val);
+                    if (it != _constCache.end()) {
+                        prop.property.expression = it->second;
+                    }
+                    else {
+                        prop.property.expression = _constCache[*val] = std::make_shared<ConstExpression>(*val);
+                    }
                 }
-                else {
-                    prop.property.expression = boost::get<std::shared_ptr<const Expression>>(propResult);
+                else if (auto expr = boost::get<std::shared_ptr<const Expression>>(propResult)) {
+                    auto it = _exprCache.find(prop.property.expression);
+                    if (it != _exprCache.end() && expr->equals(*it->second)) {
+                        prop.property.expression = it->second;
+                    }
+                    else {
+                        prop.property.expression = _exprCache[prop.property.expression] = expr;
+                    }
                 }
                 
                 for (auto propertySetIt = propertySets.begin(); propertySetIt != propertySets.end(); propertySetIt++) {

@@ -67,12 +67,13 @@ namespace carto { namespace css {
 
         std::shared_ptr<mvt::Map> buildMap(const StyleSheet& styleSheet, const std::vector<std::string>& layerNames, const std::vector<mvt::NutiParameter>& nutiParameters) const;
         void loadMapSettings(const std::map<std::string, Value>& mapProperties, mvt::Map::Settings& mapSettings) const;
-        void buildAttachmentStyleMap(const CartoCSSMapnikTranslator& translator, const std::shared_ptr<mvt::Map>& map, int zoom, const std::list<CartoCSSCompiler::LayerAttachment>& layerAttachments, std::map<std::string, AttachmentStyle>& attachmentStyleMap) const;
+        void buildAttachmentStyleMap(const CartoCSSMapnikTranslator& translator, const std::shared_ptr<mvt::Map>& map, int minZoom, int maxZoom, const std::list<CartoCSSCompiler::LayerAttachment>& layerAttachments, std::map<std::string, AttachmentStyle>& attachmentStyleMap) const;
         std::vector<AttachmentStyle> getSortedAttachmentStyles(const std::map<std::string, AttachmentStyle>& attachmentStyleMap) const;
 
+        const std::shared_ptr<AssetLoader> _assetLoader;
+        const std::shared_ptr<mvt::Logger> _logger;
+
         bool _ignoreLayerPredicates = false;
-        std::shared_ptr<AssetLoader> _assetLoader;
-        std::shared_ptr<mvt::Logger> _logger;
     };
 } }
 

@@ -230,7 +230,7 @@ namespace carto { namespace css {
 
             static bool makeIdentifier(std::string& ident, char head, const std::vector<char>& tail) {
                 ident = std::string(1, head) + std::string(tail.begin(), tail.end());
-                return ident != "true" && ident != "false" && ident != "url";
+                return ident != "url";
             }
             
             static std::shared_ptr<const Expression> makeConstExpression(Value value) {
