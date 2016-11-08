@@ -91,7 +91,7 @@ namespace carto { namespace css {
                 fieldid = qi::lexeme[+(qi::char_("_a-zA-Z0-9-") | nonascii_)];
                 unescapedfieldid = qi::lexeme[+(qi::print - '[' - ']')];
                 varid = qi::lexeme[+(qi::char_("_a-zA-Z0-9-") | nonascii_)];
-                funcid = (nmstart_ > *nmchar_) [_pass = phx::bind(&makeIdentifier, _val, _1, _2)];
+                funcid = (nmstart_ > *nmchar_) [_pass = phx::bind(&makeFunctionIdentifier, _val, _1, _2)];
 
                 expressionlist =
                       (expression >> (',' > (expression % ',')))    [_val = phx::bind(&makeListExpression, _1, _2)]
@@ -228,9 +228,9 @@ namespace carto { namespace css {
                 return true;
             }
 
-            static bool makeIdentifier(std::string& ident, char head, const std::vector<char>& tail) {
+            static bool makeFunctionIdentifier(std::string& ident, char head, const std::vector<char>& tail) {
                 ident = std::string(1, head) + std::string(tail.begin(), tail.end());
-                return ident != "url";
+                return ident != "url"; // 'url' is a special-built in type specifier, so do not accept it as a function
             }
             
             static std::shared_ptr<const Expression> makeConstExpression(Value value) {
