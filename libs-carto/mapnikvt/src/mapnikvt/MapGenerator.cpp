@@ -118,7 +118,8 @@ namespace carto { namespace mvt {
 
                 for (auto it3 = rule.getSymbolizers().begin(); it3 != rule.getSymbolizers().end(); it3++) {
                     const Symbolizer& symbolizer = **it3;
-                    _symbolizerGenerator->generateSymbolizer(symbolizer, ruleNode.append_child());
+                    pugi::xml_node symbolizerNode = ruleNode.append_child();
+                    _symbolizerGenerator->generateSymbolizer(symbolizer, symbolizerNode);
                 }
             }
         }
