@@ -21,7 +21,7 @@ namespace carto { namespace mvt {
         explicit SymbolizerGenerator(std::shared_ptr<Logger> logger) : _logger(std::move(logger)) { }
         virtual ~SymbolizerGenerator() = default;
 
-        virtual std::shared_ptr<pugi::xml_node> generateSymbolizer(const Symbolizer& symbolizer) const;
+        virtual void generateSymbolizer(const Symbolizer& symbolizer, pugi::xml_node& symbolizerNode) const;
 
     protected:
         const std::shared_ptr<Logger> _logger;
