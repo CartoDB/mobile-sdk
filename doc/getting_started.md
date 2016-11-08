@@ -2,11 +2,20 @@
 
 The following workflow guides you through the process of getting started with the Mobile SDK.
 
+[Prerequisites](#prerequisites)
 [1. Download the SDK by managed libraries, or by individual packages](#downloading-the-sdk) | 
 [2. Register your mobile app to get your API Key](#registering-your-mobile-app) | 
 [3. Create your mobile project, based on the platform of your device](#creating-your-project) |
 [4. Create your first mobile app with basic map features](#basic-map-features) |
 [5. Use our sample mobile apps to test your project, and re-use prepackaged styles](#sample-apps) | 
+
+### Prerequisites
+
+You must have account access to develop location apps with CARTO Engine.
+
+- View our [pricing page](https://carto.com/pricing/) for details about which accounts include the Mobile SDK
+
+- Access to Mobile SDK features are managed by CARTO. If you cannot reproduce any of the steps in this Getting Started section, [contact us](mailto:sales@carto.com) to ensure that you have account access, and that the Mobile SDK features are enabled for your account
 
 ## Downloading the SDK
 
@@ -118,6 +127,8 @@ _**Note:** The current version, 4.0.0, is a beta release. These zip files are su
 ## Registering your Mobile App
 
 You must register your mobile applications under your CARTO.com account settings. Once an app is added, you can retrieve the mobile app license key, which is needed for your app code.
+
+_If these options are not visible from your account settings, [contact us](mailto:sales@carto.com) to ensure that Mobile SDK features are enabled for your account._
 
 The following procedure describes how to register mobile apps under your account settings. While the number of mobile apps is unlimited, application quota consumption rules are enforced based on your account plan. [Contact us](mailto:sales@carto.com) if you have questions about your mobile account options.
 
