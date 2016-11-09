@@ -926,7 +926,7 @@ Add a marker and apply marker styling using the following code:
 
 #### Example Marker on a Mobile Map
 
-![pin](https://dl.dropboxusercontent.com/u/3573333/public_web/developersite/pin.png)
+![pin](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/pin.png)
 
 ### Add a Point
 
@@ -1159,7 +1159,7 @@ Lines can be added to the same `vectorDataSource1`. Add a line and apply line st
 
 #### Example Line on a Mobile Map
 
-![line](https://dl.dropboxusercontent.com/u/3573333/public_web/developersite/line.png)
+![line](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/line.png)
 
 ### Add a Polygon
 
@@ -1353,7 +1353,7 @@ Add a polygon and apply polygon styling using the following code. The following 
 
 #### Example Polygon on a Mobile App
 
-![polygon](https://dl.dropboxusercontent.com/u/3573333/public_web/developersite/polygon.png)
+![polygon](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/polygon.png)
 
 ### Add Text
 
@@ -1466,7 +1466,7 @@ Add text and apply text styling using the following code.
 
 #### Example Text on a Mobile Map
 
-![text](https://dl.dropboxusercontent.com/u/3573333/public_web/developersite/text.png)
+![text](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/text.png)
 
 ### Add a BalloonPopup
 
@@ -1608,7 +1608,7 @@ A BalloonPopup appears based on click event of an object. You can also add a def
 
 #### Example BalloonPopup on a Mobile Map
 
-![popup](https://dl.dropboxusercontent.com/u/3573333/public_web/developersite/popup.png)
+![popup](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/popup.png)
 
 ### Add 3D Model Objects
 
