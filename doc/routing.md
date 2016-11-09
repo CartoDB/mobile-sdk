@@ -47,21 +47,21 @@ For minimal routing implementation, use our sample app code for different mobile
 
 - iOS Platform:
   
-  - [Sample App repository](https://github.com/nutiteq/hellomap3d-ios)
+  - [Sample app repository](https://github.com/CartoDB/mobile-ios-samples)
 
-  - [`OfflineRoutingController.mm`](https://github.com/nutiteq/hellomap3d-ios/blob/master/advancedmap3/advancedmap3/OfflineRoutingController.mm) parameter
+  - [`OfflineRoutingController.mm`](https://github.com/CartoDB/mobile-ios-samples/blob/master/AdvancedMap.Objective-C/AdvancedMap/OfflineRoutingController.mm) parameter
 
 - Android Platform: 
 
-  - [Sample App repository](https://github.com/nutiteq/hellomap3d-android)
+  - [Sample app repository](https://github.com/CartoDB/mobile-android-samples)
 
-  - [`OfflineRoutingActivity.java`](https://github.com/nutiteq/hellomap3d-android/blob/master/com.nutiteq.advancedmap3/src/com/nutiteq/advancedmap3/OfflineRoutingActivity.java) parameter
+  - [`OfflineRoutingActivity.java`](https://github.com/CartoDB/mobile-android-samples/blob/master/AdvancedMapAndroid/app/src/main/java/com/carto/advancedmap/sections/other/OfflineRoutingActivity.java) parameter
 
-- Xamarin (Android):
+- Xamarin (Android, iOS):
 
-  - [Sample App repository](https://github.com/nutiteq/hellomap3d-dotnet)
+  - [Sample app repository](https://github.com/CartoDB/mobile-dotnet-samples)
 
-  -  [`OfflineRouting.cs`](https://github.com/nutiteq/hellomap3d-dotnet/blob/master/hellomap-android/OfflineRouting.cs) parameter
+  - [`OfflineRouting.cs`](https://github.com/CartoDB/mobile-dotnet-samples/blob/master/AdvancedMap.Droid/Sections/Other/OfflineRoutingActivity.cs) parameter
 
 ### Example Procedure
 
