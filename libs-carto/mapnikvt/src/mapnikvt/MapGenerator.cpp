@@ -95,23 +95,23 @@ namespace carto { namespace mvt {
                 pugi::xml_node ruleNode = styleNode.append_child("Rule");
                 ruleNode.append_attribute("name").set_value(rule.getName().c_str());
                 
-                ruleNode.append_child("MinScaleDenominator").append_child(pugi::node_pcdata).set_value(boost::lexical_cast<std::string>(zoom2ScaleDenominator(rule.getMaxZoom())).c_str());
-                ruleNode.append_child("MaxScaleDenominator").append_child(pugi::node_pcdata).set_value(boost::lexical_cast<std::string>(zoom2ScaleDenominator(rule.getMinZoom())).c_str());
+                ruleNode.append_child("MinScaleDenominator").append_child(pugi::node_pcdata).set_value(boost::lexical_cast<std::string>(zoom2ScaleDenominator(rule.getMaxZoom() - 1)).c_str());
+                ruleNode.append_child("MaxScaleDenominator").append_child(pugi::node_pcdata).set_value(boost::lexical_cast<std::string>(zoom2ScaleDenominator(rule.getMinZoom() - 1)).c_str());
                 
                 if (std::shared_ptr<const Filter> filter = rule.getFilter()) {
-                    pugi::xml_node filterNode;
-                    switch (filter->getType()) {
-                    case Filter::Type::FILTER:
-                        filterNode = ruleNode.append_child("Filter");
-                        break;
-                    case Filter::Type::ELSEFILTER:
-                        filterNode = ruleNode.append_child("ElseFilter");
-                        break;
-                    case Filter::Type::ALSOFILTER:
-                        filterNode = ruleNode.append_child("AlsoFilter");
-                        break;
-                    }
                     if (std::shared_ptr<const Predicate> pred = filter->getPredicate()) {
+                        pugi::xml_node filterNode;
+                        switch (filter->getType()) {
+                        case Filter::Type::FILTER:
+                            filterNode = ruleNode.append_child("Filter");
+                            break;
+                        case Filter::Type::ELSEFILTER:
+                            filterNode = ruleNode.append_child("ElseFilter");
+                            break;
+                        case Filter::Type::ALSOFILTER:
+                            filterNode = ruleNode.append_child("AlsoFilter");
+                            break;
+                        }
                         filterNode.append_child(pugi::node_pcdata).set_value(generateExpressionString(std::make_shared<PredicateExpression>(pred)).c_str());
                     }
                 }

@@ -51,7 +51,7 @@ namespace carto { namespace mvt {
             symbolizerNode.append_attribute(it->first.c_str()).set_value(it->second.c_str());
         }
         if (expr) {
-            symbolizerNode.set_value(generateExpressionString(expr).c_str());
+            symbolizerNode.append_child(pugi::node_pcdata).set_value(generateExpressionString(expr).c_str());
         }
     }
 } }
