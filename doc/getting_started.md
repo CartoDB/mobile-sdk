@@ -1730,7 +1730,7 @@ The following procedure describes how to setup and add a 3D object to your mobil
 
 #### Example 3D Model Object on a Mobile Map
 
-![3d animated](https://developer.nutiteq.com/images/animated3d.gif)
+![3d animated](https://github.com/CartoDB/mobile-ios-samples/blob/gh-pages/carto-mobile-sdk-animated.gif?raw=true)
 
 #### LocalVectorDataSource Performance
 
