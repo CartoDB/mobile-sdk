@@ -228,7 +228,7 @@ namespace carto { namespace css {
                 op = "||";
                 break;
             case BinaryExpression::Op::EQ:
-                op = "==";
+                op = "=";
                 break;
             case BinaryExpression::Op::NEQ:
                 op = "!=";

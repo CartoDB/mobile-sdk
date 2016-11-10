@@ -48,7 +48,7 @@ See [Mobile Routing](/docs/carto-engine/mobile-sdk/mobile-routing/) for details 
 
 ## Example code - complex scenario
 
-The Mobile SDK provides pre-packaged advanced map examples: [**PackageManagerActivity**](https://github.com/nutiteq/hellomap3d-android/blob/master/com.nutiteq.advancedmap3/src/com/nutiteq/advancedmap3/PackageManagerActivity.java) for Android, and [**PackageMapController**](https://github.com/nutiteq/hellomap3d-ios/blob/master/advancedmap3/advancedmap3/PackageManagerController.mm) for iOS. You can list all packages and select the example to view the map.
+The Mobile SDK provides pre-packaged advanced map examples: [**PackageManagerActivity**](https://github.com/CartoDB/mobile-android-samples/blob/master/AdvancedMapAndroid/app/src/main/java/com/carto/advancedmap/sections/offlinemap/packagemanager/PackageManagerActivity.java) for Android, and [**PackageMapController**](https://github.com/CartoDB/mobile-ios-samples/blob/master/AdvancedMap.Objective-C/AdvancedMap/PackageManagerController.mm) for iOS. You can list all packages and select the example to view the map.
 
 ## Event Diagram
 
@@ -114,7 +114,7 @@ Use the following steps to implement **single map package** downloading:
   {% highlight csharp %}
 
 // Android: Register license, this must be done before PackageManager can be used!
-      Carto.Ui.MapView.RegisterLicense("YOUR-NUTITEQ-LICENSE", ApplicationContext);
+      Carto.Ui.MapView.RegisterLicense("YOUR-CARTO-LICENSE", ApplicationContext);
 
       // Create/find folder for packages
       var packageFolder = new File(GetExternalFilesDir(null), "packages");
@@ -124,7 +124,7 @@ Use the following steps to implement **single map package** downloading:
       }
 
 // iOS: Register license, this must be done before PackageManager can be used!
-      Carto.Ui.MapView.RegisterLicense("YOUR-NUTITEQ-LICENSE");
+      Carto.Ui.MapView.RegisterLicense("YOUR-CARTO-LICENSE");
 
       // Find folder for packages
       var paths = NSSearchPath.GetDirectories(NSSearchPathDirectory.ApplicationSupportDirectory, NSSearchPathDomain.User);
