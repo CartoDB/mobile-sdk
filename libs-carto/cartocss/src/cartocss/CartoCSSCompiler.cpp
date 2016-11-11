@@ -4,22 +4,15 @@
 
 namespace carto { namespace css {
     void CartoCSSCompiler::compileMap(const StyleSheet& styleSheet, std::map<std::string, Value>& mapProperties) const {
+        // Build flat property lists
         std::map<std::string, std::shared_ptr<const Expression>> variableMap;
         PredicateContext context;
         context.expressionContext = _context;
         context.expressionContext.variableMap = &variableMap;
         std::list<FilteredPropertyList> propertyLists;
-        for (const StyleSheet::Element& element : styleSheet.getElements()) {
-            if (auto decl = boost::get<VariableDeclaration>(&element)) {
-                if (variableMap.find(decl->getVariable()) == variableMap.end()) {
-                    variableMap[decl->getVariable()] = decl->getExpression();
-                }
-            }
-            else if (auto ruleSet = boost::get<RuleSet>(&element)) {
-                buildPropertyList(*ruleSet, context, "", std::vector<std::shared_ptr<const Predicate>>(), propertyLists);
-            }
-        }
+        buildPropertyLists(styleSheet, context, propertyLists);
 
+        // Gather map properties from property lists
         for (const FilteredPropertyList& propertyList : propertyLists) {
             if (propertyList.attachment.empty()) {
                 for (const FilteredProperty& prop : propertyList.properties) {
@@ -35,124 +28,58 @@ namespace carto { namespace css {
     }
     
     void CartoCSSCompiler::compileLayer(const std::string& layerName, const StyleSheet& styleSheet, std::list<LayerAttachment>& layerAttachments) const {
+        // Build flat property lists
         std::map<std::string, std::shared_ptr<const Expression>> variableMap;
         PredicateContext context;
         context.layerName = layerName;
         context.expressionContext = _context;
         context.expressionContext.variableMap = &variableMap;
         std::list<FilteredPropertyList> propertyLists;
-        for (const StyleSheet::Element& element : styleSheet.getElements()) {
-            if (auto decl = boost::get<VariableDeclaration>(&element)) {
-                if (variableMap.find(decl->getVariable()) == variableMap.end()) {
-                    variableMap[decl->getVariable()] = decl->getExpression();
-                }
-            }
-            else if (auto ruleSet = boost::get<RuleSet>(&element)) {
-                buildPropertyList(*ruleSet, context, "", std::vector<std::shared_ptr<const Predicate>>(), propertyLists);
-            }
-        }
-        
+        buildPropertyLists(styleSheet, context, propertyLists);
+
+        // Sort and evaluate property list
         for (FilteredPropertyList& propertyList : propertyLists) {
             // Sort the properties by decreasing specificity
             propertyList.properties.sort([&](const FilteredProperty& prop1, const FilteredProperty& prop2) {
                 return prop1.property.specificity > prop2.property.specificity;
             });
-            
+
             // Build property set list
-            std::list<PropertySet> propertySets;
-            for (FilteredProperty prop : propertyList.properties) {
+            for (FilteredProperty& prop : propertyList.properties) {
                 // Try to evaluate property expression, store the result as expression (even when constant)
                 boost::variant<Value, std::shared_ptr<const Expression>> propResult = prop.property.expression->evaluate(context.expressionContext);
                 if (auto val = boost::get<Value>(&propResult)) {
-                    auto it = _constCache.find(*val);
-                    if (it != _constCache.end()) {
-                        prop.property.expression = it->second;
-                    }
-                    else {
-                        prop.property.expression = _constCache[*val] = std::make_shared<ConstExpression>(*val);
-                    }
+                    prop.property.expression = std::make_shared<ConstExpression>(*val);
                 }
                 else if (auto expr = boost::get<std::shared_ptr<const Expression>>(propResult)) {
-                    auto it = _exprCache.find(prop.property.expression);
-                    if (it != _exprCache.end() && expr->equals(*it->second)) {
-                        prop.property.expression = it->second;
-                    }
-                    else {
-                        prop.property.expression = _exprCache[prop.property.expression] = expr;
-                    }
-                }
-                
-                for (auto propertySetIt = propertySets.begin(); propertySetIt != propertySets.end(); propertySetIt++) {
-                    // Check if this attribute is already set for given property set
-                    auto attributeIt = propertySetIt->properties.find(prop.property.field);
-                    if (attributeIt != propertySetIt->properties.end()) {
-                        if (attributeIt->second.specificity >= prop.property.specificity) {
-                            continue;
-                        }
-                        if (attributeIt->second.expression->equals(*prop.property.expression)) {
-                            continue;
-                        }
-                    }
-
-                    // Build new property set by setting the attribute and combining filters
-                    PropertySet propertySet(*propertySetIt);
-                    propertySet.properties[prop.property.field] = prop.property;
-                    bool skip = false;
-                    for (const std::shared_ptr<const Predicate>& propFilter : prop.filters) {
-                        auto filterIt = propertySet.filters.begin();
-                        for (; filterIt != propertySet.filters.end(); filterIt++) {
-                            // If the filter contains existing filter, then done
-                            if (propFilter == *filterIt || propFilter->contains(*filterIt)) {
-                                break;
-                            }
-
-                            // Not possible to satisfy both filters? Skip this combination in that case
-                            if (!propFilter->intersects(*filterIt)) {
-                                skip = true;
-                                break;
-                            }
-                        }
-                        if (filterIt == propertySet.filters.end()) {
-                            propertySet.filters.push_back(propFilter);
-                        }
-                    }
-                    if (skip) {
-                        continue;
-                    }
-
-                    // If filters did not change, replace existing filter otherwise we must insert the new filter and keep old one
-                    if (isRedundantPropertySet(propertySets.begin(), propertySetIt, propertySet)) {
-                        continue;
-                    }
-                    if (propertySet.filters == propertySetIt->filters) {
-                        *propertySetIt = propertySet;
-                    }
-                    else {
-                        propertySets.insert(propertySetIt, propertySet);
-                    }
-                }
-
-                // Add the property set
-                PropertySet propertySet;
-                propertySet.properties[prop.property.field] = prop.property;
-                propertySet.filters = prop.filters;
-                if (isRedundantPropertySet(propertySets.begin(), propertySets.end(), propertySet)) {
-                    continue;
-                }
-                propertySets.push_back(std::move(propertySet));
-            }
-            
-            // Add layer attachment
-            LayerAttachment layerAttachment;
-            layerAttachment.attachment = propertyList.attachment;
-            layerAttachment.order = std::numeric_limits<int>::max();
-            for (const PropertySet& propertySet : propertySets) {
-                for (const std::pair<std::string, Property>& namedProp : propertySet.properties) {
-                    layerAttachment.order = std::min(layerAttachment.order, std::get<3>(namedProp.second.specificity));
+                    prop.property.expression = expr;
                 }
             }
-            layerAttachment.propertySets = propertySets;
-            layerAttachments.push_back(std::move(layerAttachment));
+        }
+
+        // Check if we can reuse existing result
+        if (propertyLists != _cachedPropertyLists) {
+            _cachedLayerAttachments.clear();
+            for (const FilteredPropertyList& propertyList : propertyLists) {
+                buildLayerAttachment(propertyList, _cachedLayerAttachments);
+            }
+            _cachedPropertyLists = std::move(propertyLists);
+        }
+
+        // Store result from the cache
+        layerAttachments.insert(layerAttachments.end(), _cachedLayerAttachments.begin(), _cachedLayerAttachments.end());
+    }
+
+    void CartoCSSCompiler::buildPropertyLists(const StyleSheet& styleSheet, PredicateContext& context, std::list<FilteredPropertyList>& propertyLists) const {
+        for (const StyleSheet::Element& element : styleSheet.getElements()) {
+            if (auto decl = boost::get<VariableDeclaration>(&element)) {
+                if (context.expressionContext.variableMap->find(decl->getVariable()) == context.expressionContext.variableMap->end()) {
+                    (*context.expressionContext.variableMap)[decl->getVariable()] = decl->getExpression();
+                }
+            }
+            else if (auto ruleSet = boost::get<RuleSet>(&element)) {
+                buildPropertyList(*ruleSet, context, "", std::vector<std::shared_ptr<const Predicate>>(), propertyLists);
+            }
         }
     }
     
@@ -234,6 +161,82 @@ namespace carto { namespace css {
                 }
             }
         }
+    }
+
+    void CartoCSSCompiler::buildLayerAttachment(const FilteredPropertyList& propertyList, std::list<LayerAttachment>& layerAttachments) const {
+        std::list<PropertySet> propertySets;
+        for (const FilteredProperty& prop : propertyList.properties) {
+            for (auto propertySetIt = propertySets.begin(); propertySetIt != propertySets.end(); propertySetIt++) {
+                // Check if this attribute is already set for given property set
+                auto attributeIt = propertySetIt->properties.find(prop.property.field);
+                if (attributeIt != propertySetIt->properties.end()) {
+                    if (attributeIt->second.specificity >= prop.property.specificity) {
+                        continue;
+                    }
+                    if (attributeIt->second.expression->equals(*prop.property.expression)) {
+                        continue;
+                    }
+                }
+
+                // Build new property set by setting the attribute and combining filters
+                PropertySet propertySet(*propertySetIt);
+                propertySet.properties[prop.property.field] = prop.property;
+                bool skip = false;
+                for (const std::shared_ptr<const Predicate>& propFilter : prop.filters) {
+                    auto filterIt = propertySet.filters.begin();
+                    for (; filterIt != propertySet.filters.end(); filterIt++) {
+                        // If the filter contains existing filter, then done
+                        if (propFilter == *filterIt || propFilter->contains(*filterIt)) {
+                            break;
+                        }
+
+                        // Not possible to satisfy both filters? Skip this combination in that case
+                        if (!propFilter->intersects(*filterIt)) {
+                            skip = true;
+                            break;
+                        }
+                    }
+                    if (filterIt == propertySet.filters.end()) {
+                        propertySet.filters.push_back(propFilter);
+                    }
+                }
+                if (skip) {
+                    continue;
+                }
+
+                // If filters did not change, replace existing filter otherwise we must insert the new filter and keep old one
+                if (isRedundantPropertySet(propertySets.begin(), propertySetIt, propertySet)) {
+                    continue;
+                }
+                if (propertySet.filters == propertySetIt->filters) {
+                    *propertySetIt = propertySet;
+                }
+                else {
+                    propertySets.insert(propertySetIt, propertySet);
+                }
+            }
+
+            // Add the property set
+            PropertySet propertySet;
+            propertySet.properties[prop.property.field] = prop.property;
+            propertySet.filters = prop.filters;
+            if (isRedundantPropertySet(propertySets.begin(), propertySets.end(), propertySet)) {
+                continue;
+            }
+            propertySets.push_back(std::move(propertySet));
+        }
+
+        // Add layer attachment
+        LayerAttachment layerAttachment;
+        layerAttachment.attachment = propertyList.attachment;
+        layerAttachment.order = std::numeric_limits<int>::max();
+        for (const PropertySet& propertySet : propertySets) {
+            for (const std::pair<std::string, Property>& namedProp : propertySet.properties) {
+                layerAttachment.order = std::min(layerAttachment.order, std::get<3>(namedProp.second.specificity));
+            }
+        }
+        layerAttachment.propertySets = propertySets;
+        layerAttachments.push_back(std::move(layerAttachment));
     }
     
     bool CartoCSSCompiler::isRedundantPropertySet(std::list<PropertySet>::iterator begin, std::list<PropertySet>::iterator end, const PropertySet& propertySet) {

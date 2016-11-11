@@ -29,7 +29,7 @@ namespace carto { namespace css {
             RuleSpecificity specificity;
 
             bool operator == (const Property& other) const {
-                return field == other.field && expression == other.expression && specificity == other.specificity;
+                return field == other.field && expression->equals(*other.expression) && specificity == other.specificity;
             }
 
             bool operator != (const Property& other) const {
@@ -76,14 +76,32 @@ namespace carto { namespace css {
         struct FilteredProperty {
             Property property;
             std::vector<std::shared_ptr<const Predicate>> filters;
+
+            bool operator == (const FilteredProperty& other) const {
+                return property == other.property && filters == other.filters;
+            }
+
+            bool operator != (const FilteredProperty& other) const {
+                return !(*this == other);
+            }
         };
 
         struct FilteredPropertyList {
             std::string attachment;
             std::list<FilteredProperty> properties;
+
+            bool operator == (const FilteredPropertyList& other) const {
+                return attachment == other.attachment && properties == other.properties;
+            }
+
+            bool operator != (const FilteredPropertyList& other) const {
+                return !(*this == other);
+            }
         };
 
+        void buildPropertyLists(const StyleSheet& styleSheet, PredicateContext& context, std::list<FilteredPropertyList>& propertyLists) const;
         void buildPropertyList(const RuleSet& ruleSet, const PredicateContext& context, const std::string& attachment, const std::vector<std::shared_ptr<const Predicate>>& filters, std::list<FilteredPropertyList>& propertyLists) const;
+        void buildLayerAttachment(const FilteredPropertyList& propertyList, std::list<LayerAttachment>& layerAttachments) const;
         
         static bool isRedundantPropertySet(std::list<PropertySet>::iterator begin, std::list<PropertySet>::iterator end, const PropertySet& propertySet);
         
@@ -92,8 +110,8 @@ namespace carto { namespace css {
         ExpressionContext _context;
         bool _ignoreLayerPredicates = false;
 
-        mutable std::map<Value, std::shared_ptr<const Expression>> _constCache;
-        mutable std::map<std::shared_ptr<const Expression>, std::shared_ptr<const Expression>> _exprCache;
+        mutable std::list<FilteredPropertyList> _cachedPropertyLists;
+        mutable std::list<LayerAttachment> _cachedLayerAttachments;
     };
 } }
 
