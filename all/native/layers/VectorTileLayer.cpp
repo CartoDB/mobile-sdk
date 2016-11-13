@@ -468,6 +468,22 @@ namespace carto {
                         }
                     }
                 }
+                
+                // Debug tile performance issues
+                if (Log::IsShowDebug()) {
+                    int maxDrawCallCount = 0;
+                    for (auto it = tileMap->begin(); it != tileMap->end(); it++) {
+                        int drawCallCount = 0;
+                        for (const std::shared_ptr<vt::TileLayer>& vtLayer : it->second->getLayers()) {
+                            drawCallCount += static_cast<int>(vtLayer->getBitmaps().size() + vtLayer->getGeometries().size());
+                        }
+                        maxDrawCallCount = std::max(maxDrawCallCount, drawCallCount);
+                    }
+                    if (maxDrawCallCount >= 20) {
+                        Log::Debugf("VectorTileLayer::FetchTask: Tile requires %d draw calls", maxDrawCallCount);
+                    }
+                }
+                
                 refresh = true; // NOTE: need to refresh even when invalidated
             } else {
                 Log::Error("VectorTileLayer::FetchTask: Failed to decode tile");
