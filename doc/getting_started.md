@@ -128,25 +128,29 @@ _**Note:** The current version, 4.0.0, is a beta release. These zip files are su
 
 You must register your mobile applications under your CARTO.com account settings. Once an app is added, you can retrieve the mobile app license key, which is needed for your app code.
 
-_If these options are not visible from your account settings, [contact us](mailto:sales@carto.com) to ensure that Mobile SDK features are enabled for your account._
-
 The following procedure describes how to register mobile apps under your account settings. While the number of mobile apps is unlimited, application quota consumption rules are enforced based on your account plan. [Contact us](mailto:sales@carto.com) if you have questions about your mobile account options.
 
-1. Access [Your API Keys](/docs/carto-editor/your-account/#api-key) from the CARTO Dashboard
+1. Access your [Account settings](https://carto.com/docs/carto-editor/your-account/#how-to-access-your-account-options) from the CARTO Dashboard
 
     <span class="wrap-border"><img src="/docs/img/layout/mobile/access_mobile_api_key.jpg" alt="Access mobile apps from API keys" /></span>
 
-    The API Key page opens, displaying options for _CARTO_ or _Mobile Apps_. 
+    Your profile information appears API Key page opens, displaying options for _CARTO_ or _Mobile Apps_. 
 
-2. Click _Mobile apps_ to add mobile applications to your account
+2. Click _API keys_
+
+   The API key page opens, displaying options for _CARTO_ or _Mobile Apps_.
+
+3. Click _Mobile apps_ to add mobile applications to your account
+
+   _**Note:** If this option is not visible from your account settings, [contact us](mailto:sales@carto.com) to ensure that Mobile SDK features are enabled for your account._
 
     <span class="wrap-border"><img src="/docs/img/layout/mobile/no_registered_apps.jpg" alt="No registered mobile apps" /></span>
 
-3. Click _NEW APPLICATION_
+4. Click _NEW APPLICATION_
 
     The new application settings appear.
 
-4. Enter options for the mobile application
+5. Enter options for the mobile application
  
     <span class="wrap-border"><img src="/docs/img/layout/mobile/new_mobile_app_settings.jpg" alt="New mobile app settings" /></span>
 
@@ -161,7 +165,7 @@ The following procedure describes how to register mobile apps under your account
     Application ID | The identification of the mobile app in the App store that is required for development with the Mobile SDK.<br/><br/>The following application ids identify the Platform selected:<br/><br/>- [**Android**](#android-implementation): *package* from the AndroidManifest.xml file or *applicationId* in build.gradle<br/><br/>- [**iOS**](#ios-implementation): Bundle Identifier. You can find it in the project properties in Xcode<br/><br/>- [**Xamarin Android**](#xamarin-android-and-ios-implementation): *package* from the AndroidManifest.xml file<br/><br/>- [**Xamarin iOS**](#xamarin-ios-app): Bundle Identifier from the project Info.plist<br/><br/>- [**Windows Phone**](#windows-phone-implementation): UUID from the Windows package.appmanifest 
     App type | Identifies the type of mobile application, which are subject to different quota limitations<br/><br/>- **Open**: This app type is open to the public and is available as free download in public app stores<br/><br/>- **Private**: Available for Enterprise accounts only, allows organizations to publish their apps internally and have paid app use cases. 
  
-5. Click _SAVE CHANGES_
+6. Click _SAVE CHANGES_
 
     The Mobile apps page refreshes, displaying the added mobile application and the features enabled. 
 
@@ -937,7 +941,7 @@ Add a marker and apply marker styling using the following code:
 
 #### Example Marker on a Mobile Map
 
-![pin](https://dl.dropboxusercontent.com/u/3573333/public_web/developersite/pin.png)
+![pin](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/pin.png)
 
 ### Add a Point
 
@@ -1170,7 +1174,7 @@ Lines can be added to the same `vectorDataSource1`. Add a line and apply line st
 
 #### Example Line on a Mobile Map
 
-![line](https://dl.dropboxusercontent.com/u/3573333/public_web/developersite/line.png)
+![line](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/line.png)
 
 ### Add a Polygon
 
@@ -1364,7 +1368,7 @@ Add a polygon and apply polygon styling using the following code. The following 
 
 #### Example Polygon on a Mobile App
 
-![polygon](https://dl.dropboxusercontent.com/u/3573333/public_web/developersite/polygon.png)
+![polygon](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/polygon.png)
 
 ### Add Text
 
@@ -1477,7 +1481,7 @@ Add text and apply text styling using the following code.
 
 #### Example Text on a Mobile Map
 
-![text](https://dl.dropboxusercontent.com/u/3573333/public_web/developersite/text.png)
+![text](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/text.png)
 
 ### Add a BalloonPopup
 
@@ -1619,7 +1623,7 @@ A BalloonPopup appears based on click event of an object. You can also add a def
 
 #### Example BalloonPopup on a Mobile Map
 
-![popup](https://dl.dropboxusercontent.com/u/3573333/public_web/developersite/popup.png)
+![popup](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/popup.png)
 
 ### Add 3D Model Objects
 
@@ -1741,7 +1745,7 @@ The following procedure describes how to setup and add a 3D object to your mobil
 
 #### Example 3D Model Object on a Mobile Map
 
-![3d animated](https://developer.nutiteq.com/images/animated3d.gif)
+![3d animated](https://github.com/CartoDB/mobile-ios-samples/blob/gh-pages/carto-mobile-sdk-animated.gif?raw=true)
 
 #### LocalVectorDataSource Performance
 
