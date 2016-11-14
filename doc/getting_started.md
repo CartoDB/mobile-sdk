@@ -134,7 +134,7 @@ The following procedure describes how to register mobile apps under your account
 
     <span class="wrap-border"><img src="/docs/img/layout/mobile/access_mobile_api_key.jpg" alt="Access mobile apps from API keys" /></span>
 
-    Your profile information appears API Key page opens, displaying options for _CARTO_ or _Mobile Apps_. 
+    Your profile information appears. 
 
 2. Click _API keys_
 
