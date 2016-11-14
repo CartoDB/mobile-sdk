@@ -2,7 +2,7 @@
 
 The following workflow guides you through the process of getting started with the Mobile SDK.
 
-[Prerequisites](#prerequisites)
+[Prerequisites](#prerequisites) | 
 [1. Download the SDK by managed libraries, or by individual packages](#downloading-the-sdk) | 
 [2. Register your mobile app to get your API Key](#registering-your-mobile-app) | 
 [3. Create your mobile project, based on the platform of your device](#creating-your-project) |
