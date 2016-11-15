@@ -895,7 +895,7 @@ namespace carto { namespace vt {
             if ((pass == 0 && labels2D) || (pass == 1 && labels3D)) {
                 for (const std::pair<std::shared_ptr<const Bitmap>, std::vector<std::shared_ptr<TileLabel>>>& bitmapLabels : *_renderBitmapLabelMap[pass]) {
                     for (const std::shared_ptr<TileLabel>& label : bitmapLabels.second) {
-                        if (!label->isActive() || !label->isVisible() || label->getOpacity() <= 0) {
+                        if (!label->isValid() || !label->isVisible() || !label->isActive() || label->getOpacity() <= 0) {
                             continue;
                         }
 
