@@ -372,10 +372,22 @@ namespace carto {
         }
 
         try {
-            mvt::MBVTFeatureDecoder decoder(*tileData->getDataPtr(), _logger);
+            std::shared_ptr<mvt::MBVTFeatureDecoder> decoder;
+            {
+                std::unique_lock<std::mutex> lock(_mutex);
+                if (_cachedFeatureDecoder.first != tileData) {
+                    lock.unlock();
+                    decoder = std::make_shared<mvt::MBVTFeatureDecoder>(*tileData->getDataPtr(), _logger);
+                    lock.lock();
+                    _cachedFeatureDecoder = std::make_pair(tileData, decoder);
+                }
+                else {
+                    decoder = _cachedFeatureDecoder.second;
+                }
+            }
 
             std::string mvtLayerName;
-            std::shared_ptr<mvt::Feature> mvtFeature = decoder.getFeature(id, mvtLayerName);
+            std::shared_ptr<mvt::Feature> mvtFeature = decoder->getFeature(id, mvtLayerName);
             if (!mvtFeature) {
                 return std::shared_ptr<TileFeature>();
             }
