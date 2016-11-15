@@ -110,8 +110,7 @@ namespace carto { namespace css {
         ExpressionContext _context;
         bool _ignoreLayerPredicates = false;
 
-        mutable std::list<FilteredPropertyList> _cachedPropertyLists;
-        mutable std::list<LayerAttachment> _cachedLayerAttachments;
+        mutable std::pair<std::list<FilteredPropertyList>, std::list<LayerAttachment>> _cachedLayerAttachments;
     };
 } }
 

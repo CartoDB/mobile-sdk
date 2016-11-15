@@ -58,16 +58,16 @@ namespace carto { namespace css {
         }
 
         // Check if we can reuse existing result
-        if (propertyLists != _cachedPropertyLists) {
-            _cachedLayerAttachments.clear();
+        if (propertyLists != _cachedLayerAttachments.first) {
+            std::list<LayerAttachment> layerAttachmentList;
             for (const FilteredPropertyList& propertyList : propertyLists) {
-                buildLayerAttachment(propertyList, _cachedLayerAttachments);
+                buildLayerAttachment(propertyList, layerAttachmentList);
             }
-            _cachedPropertyLists = std::move(propertyLists);
+            _cachedLayerAttachments = { std::move(propertyLists), std::move(layerAttachmentList) };
         }
 
         // Store result from the cache
-        layerAttachments.insert(layerAttachments.end(), _cachedLayerAttachments.begin(), _cachedLayerAttachments.end());
+        layerAttachments.insert(layerAttachments.end(), _cachedLayerAttachments.second.begin(), _cachedLayerAttachments.second.end());
     }
 
     void CartoCSSCompiler::buildPropertyLists(const StyleSheet& styleSheet, PredicateContext& context, std::list<FilteredPropertyList>& propertyLists) const {
