@@ -692,11 +692,11 @@ The following requirements allow you to ground overlays with the Mobile SDK.
 
 - `perspective transformation` enables you to control four control points for the bitmap
 
--  If you have more control points in your data, it is suggested to choose three or four of your best ones and select those as your ground control settings
+-  If you have more control points in your data, it is suggested to choose three or four of your best ones, and select those as your ground control settings
 
 - Control points must be defined in the app code. Mobile SDK does not automatically gather control points from the source file metadata
 
-  For example, if you need GeoTIFF, ESRI World File, MapInfo TAB, Geospatial PDF, or other referenced data, you will receive the following you will get this from GIS Extension (see below).
+  For example, if you need GeoTIFF, ESRI World File, MapInfo TAB, Geospatial PDF, or other referenced data, you will get this from the GIS Extension (see below).
 
 - The **entire bitmap must fit to device memory** (RAM). Depending on the target device, the maximum size could vary. For example, the target device maximum size might be 2000x2000 pixels. 
 
