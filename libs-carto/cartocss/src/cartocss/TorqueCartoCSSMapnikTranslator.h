@@ -14,7 +14,7 @@ namespace carto { namespace css {
     public:
         explicit TorqueCartoCSSMapnikTranslator(std::shared_ptr<mvt::Logger> logger) : CartoCSSMapnikTranslator(std::move(logger)) { }
 
-        virtual std::shared_ptr<mvt::Symbolizer> buildSymbolizer(const std::string& symbolizerType, const std::list<CartoCSSCompiler::Property>& properties, const std::shared_ptr<mvt::Map>& map, int zoom) const override;
+        virtual std::shared_ptr<mvt::Symbolizer> buildSymbolizer(const std::string& symbolizerType, const std::list<CartoCSSCompiler::Property>& properties, const std::shared_ptr<mvt::Map>& map) const override;
 
     protected:
         virtual std::string getPropertySymbolizerId(const std::string& propertyName) const override;

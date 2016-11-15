@@ -27,45 +27,91 @@ namespace carto { namespace css {
             std::string field;
             std::shared_ptr<const Expression> expression;
             RuleSpecificity specificity;
+
+            bool operator == (const Property& other) const {
+                return field == other.field && expression->equals(*other.expression) && specificity == other.specificity;
+            }
+
+            bool operator != (const Property& other) const {
+                return !(*this == other);
+            }
         };
 
         struct PropertySet {
             std::vector<std::shared_ptr<const Predicate>> filters;
             std::map<std::string, Property> properties;
+
+            bool operator == (const PropertySet& other) const {
+                return filters == other.filters && properties == other.properties;
+            }
+
+            bool operator != (const PropertySet& other) const {
+                return !(*this == other);
+            }
         };
 
         struct LayerAttachment {
             std::string attachment;
             int order = 0;
             std::list<PropertySet> propertySets;
+
+            bool operator == (const LayerAttachment& other) const {
+                return attachment == other.attachment && order == other.order && propertySets == other.propertySets;
+            }
+
+            bool operator != (const LayerAttachment& other) const {
+                return !(*this == other);
+            }
         };
-        
-        explicit CartoCSSCompiler(const ExpressionContext& context, bool ignoreLayerPredicates) : _context(context), _ignoreLayerPredicates(ignoreLayerPredicates) { }
+
+        CartoCSSCompiler() = default;
+
+        void setContext(const ExpressionContext& context) { _context = context; }
+        void setIgnoreLayerPredicates(bool ignoreLayerPredicates) { _ignoreLayerPredicates = ignoreLayerPredicates; }
 
         void compileMap(const StyleSheet& styleSheet, std::map<std::string, Value>& mapProperties) const;
-        
         void compileLayer(const std::string& layerName, const StyleSheet& styleSheet, std::list<LayerAttachment>& layerAttachments) const;
         
     private:
         struct FilteredProperty {
             Property property;
             std::vector<std::shared_ptr<const Predicate>> filters;
+
+            bool operator == (const FilteredProperty& other) const {
+                return property == other.property && filters == other.filters;
+            }
+
+            bool operator != (const FilteredProperty& other) const {
+                return !(*this == other);
+            }
         };
 
         struct FilteredPropertyList {
             std::string attachment;
             std::list<FilteredProperty> properties;
+
+            bool operator == (const FilteredPropertyList& other) const {
+                return attachment == other.attachment && properties == other.properties;
+            }
+
+            bool operator != (const FilteredPropertyList& other) const {
+                return !(*this == other);
+            }
         };
 
+        void buildPropertyLists(const StyleSheet& styleSheet, PredicateContext& context, std::list<FilteredPropertyList>& propertyLists) const;
         void buildPropertyList(const RuleSet& ruleSet, const PredicateContext& context, const std::string& attachment, const std::vector<std::shared_ptr<const Predicate>>& filters, std::list<FilteredPropertyList>& propertyLists) const;
+        void buildLayerAttachment(const FilteredPropertyList& propertyList, std::list<LayerAttachment>& layerAttachments) const;
         
         static bool isRedundantPropertySet(std::list<PropertySet>::iterator begin, std::list<PropertySet>::iterator end, const PropertySet& propertySet);
         
         static RuleSpecificity calculateRuleSpecificity(const std::vector<std::shared_ptr<const Predicate>>& predicates, int order);
-        
-        ExpressionContext _context;
 
-        bool _ignoreLayerPredicates;
+        ExpressionContext _context;
+        bool _ignoreLayerPredicates = false;
+
+        mutable std::list<FilteredPropertyList> _cachedPropertyLists;
+        mutable std::list<LayerAttachment> _cachedLayerAttachments;
     };
 } }
 

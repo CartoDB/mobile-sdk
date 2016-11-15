@@ -2,7 +2,7 @@
 #include "mapnikvt/TorqueMarkerSymbolizer.h"
 
 namespace carto { namespace css {
-    std::shared_ptr<mvt::Symbolizer> TorqueCartoCSSMapnikTranslator::buildSymbolizer(const std::string& symbolizerType, const std::list<CartoCSSCompiler::Property>& properties, const std::shared_ptr<mvt::Map>& map, int zoom) const {
+    std::shared_ptr<mvt::Symbolizer> TorqueCartoCSSMapnikTranslator::buildSymbolizer(const std::string& symbolizerType, const std::list<CartoCSSCompiler::Property>& properties, const std::shared_ptr<mvt::Map>& map) const {
         if (symbolizerType != "marker") {
             _logger->write(mvt::Logger::Severity::ERROR, "Unsupported Torque symbolizer type: " + symbolizerType);
             return std::shared_ptr<mvt::Symbolizer>();
