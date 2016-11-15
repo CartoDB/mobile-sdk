@@ -152,7 +152,6 @@ namespace carto {
     }
 
     std::shared_ptr<BinaryData> PackageManager::loadTile(const MapTile& mapTile) const {
-        int zoom = mapTile.getZoom(), x = mapTile.getX(), y = (1 << mapTile.getZoom()) - 1 - mapTile.getY();
         try {
             // Try all packages, check if the tile is in the package tile mask. Start with the last package (the most recently downloaded)
             std::lock_guard<std::recursive_mutex> lock(_mutex);
@@ -166,9 +165,9 @@ namespace carto {
                         if (std::shared_ptr<sqlite3pp::database> packageDb = getLocalPackageDb(packageInfo)) {
                             // Try to load the tile (this could fail, as tile masks may not be complete to the last zoom level)
                             sqlite3pp::query query(*packageDb, "SELECT tile_decrypt(tile_data, zoom_level, tile_column, tile_row) FROM tiles WHERE zoom_level=:zoom AND tile_column=:x AND tile_row=:y");
-                            query.bind(":zoom", zoom);
-                            query.bind(":x", x);
-                            query.bind(":y", y);
+                            query.bind(":zoom", mapTile.getZoom());
+                            query.bind(":x", mapTile.getX());
+                            query.bind(":y", mapTile.getY());
                             for (auto qit = query.begin(); qit != query.end(); qit++) {
                                 Log::Infof("PackageManager::loadTile: Using package %s", packageInfo->getPackageId().c_str());
                                 const unsigned char* dataPtr = reinterpret_cast<const unsigned char*>(qit->get<const void*>(0));
