@@ -86,3 +86,9 @@ python build-winphone.py --profile standard
 * Android sample app: https://github.com/CartoDB/mobile-android-samples
 * iOS sample app: https://github.com/CartoDB/mobile-ios-samples
 * .NET (Xamarin and Windows 10) sample app: https://github.com/CartoDB/mobile-dotnet-samples
+
+# Support, Questions?
+
+* Post to CARTO developer group: https://groups.google.com/forum/#!forum/cartodb
+* Post an issue to this project, submit a Pull Request
+* Commercial support options: sales@carto.com
