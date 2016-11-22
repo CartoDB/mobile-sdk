@@ -24,6 +24,9 @@ def jar(args, dir, *cmdArgs):
 def gradle(args, dir, *cmdArgs):
   return execute(args.gradle, dir, *cmdArgs)
 
+def zip(args, dir, *cmdArgs):
+  return execute(args.zip, dir, *cmdArgs)
+
 def buildAndroidSO(args, abi):
   version = getVersion(args.buildnumber) if args.configuration == 'Release' else 'Devel'
   baseDir = getBaseDir()
@@ -111,6 +114,7 @@ def buildAndroidAAR(args):
     return False
   if makedirs(distDir) and \
      copyfile('%s/outputs/aar/android-aar-%s.aar' % (buildDir, args.configuration.lower()), '%s/carto-mobile-sdk-%s.aar' % (distDir, version)):
+    zip(args, '%s/scripts/android-aar/src/main' % baseDir, '%s/carto-mobile-sdk-%s.aar' % (distDir, version), 'R.txt')
     print "Output available in:\n%s" % distDir
     return True
   return False
@@ -123,6 +127,7 @@ parser.add_argument('--android-sdk-path', dest='androidsdkpath', default='auto',
 parser.add_argument('--defines', dest='defines', default='', help='Defines for compilation')
 parser.add_argument('--javac', dest='javac', default='javac', help='Java compiler executable')
 parser.add_argument('--jar', dest='jar', default='jar', help='Jar executable')
+parser.add_argument('--zip', dest='zip', default='zip', help='Zip executable')
 parser.add_argument('--cmake', dest='cmake', default='cmake', help='CMake executable')
 parser.add_argument('--cmake-options', dest='cmakeoptions', default='', help='CMake options')
 parser.add_argument('--gradle', dest='gradle', default='gradle', help='Gradle executable')
