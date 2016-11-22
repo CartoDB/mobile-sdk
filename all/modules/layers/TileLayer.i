@@ -28,6 +28,8 @@
 %attribute(carto::TileLayer, bool, SynchronizedRefresh, isSynchronizedRefresh, setSynchronizedRefresh)
 %attribute(carto::TileLayer, carto::TileSubstitutionPolicy::TileSubstitutionPolicy, TileSubstitutionPolicy, getTileSubstitutionPolicy, setTileSubstitutionPolicy)
 %attribute(carto::TileLayer, float, ZoomLevelBias, getZoomLevelBias, setZoomLevelBias)
+%attribute(carto::TileLayer, int, MaxOverzoomLevel, getMaxOverzoomLevel, setMaxOverzoomLevel)
+%attribute(carto::TileLayer, int, MaxUnderzoomLevel, getMaxUnderzoomLevel, setMaxUnderzoomLevel)
 !attributestring_polymorphic(carto::TileLayer, datasources.TileDataSource, DataSource, getDataSource)
 !attributestring_polymorphic(carto::TileLayer, datasources.TileDataSource, UTFGridDataSource, getUTFGridDataSource, setUTFGridDataSource)
 !attributestring_polymorphic(carto::TileLayer, layers.TileLoadListener, TileLoadListener, getTileLoadListener, setTileLoadListener)
