@@ -14,9 +14,7 @@
 
 #include <boost/lexical_cast.hpp>
 
-#define MINIZ_HEADER_FILE_ONLY
-#define MINIZ_NO_ZLIB_COMPATIBLE_NAMES
-#include <miniz.c>
+#include <miniz.h>
 
 namespace carto {
 
@@ -52,7 +50,7 @@ namespace carto {
         int gzipDataSize = gzipStream.readInt();
         std::vector<unsigned char> gzipData = gzipStream.readBytes(gzipDataSize);
         std::vector<unsigned char> data;
-        if (!inflate(gzipData, data)) {
+        if (!miniz::inflate(gzipData.data(), gzipData.size(), data)) {
             Log::Error("OnlineNMLModelLODTreeDataSource: Failed to decompress tile list data.");
             return std::vector<MapTile>();
         }
@@ -94,7 +92,7 @@ namespace carto {
         int gzipDataSize = gzipStream.readInt();
         std::vector<unsigned char> gzipData = gzipStream.readBytes(gzipDataSize);
         std::vector<unsigned char> data;
-        if (!inflate(gzipData, data)) {
+        if (!miniz::inflate(gzipData.data(), gzipData.size(), data)) {
             Log::Error("OnlineNMLModelLODTreeDataSource: Failed to decompress LOD tree.");
             return std::shared_ptr<NMLModelLODTree>();
         }
@@ -178,7 +176,7 @@ namespace carto {
         int gzipDataSize = gzipStream.readInt();
         std::vector<unsigned char> gzipData = gzipStream.readBytes(gzipDataSize);
         std::vector<unsigned char> data;
-        if (!inflate(gzipData, data)) {
+        if (!miniz::inflate(gzipData.data(), gzipData.size(), data)) {
             Log::Error("OnlineNMLModelLODTreeDataSource: Failed to decompress mesh data.");
             return std::shared_ptr<nml::Mesh>();
         }
@@ -205,74 +203,13 @@ namespace carto {
         int gzipDataSize = gzipStream.readInt();
         std::vector<unsigned char> gzipData = gzipStream.readBytes(gzipDataSize);
         std::vector<unsigned char> data;
-        if (!inflate(gzipData, data)) {
+        if (!miniz::inflate(gzipData.data(), gzipData.size(), data)) {
             Log::Error("OnlineNMLModelLODTreeDataSource: Failed to decompress texture data.");
             return std::shared_ptr<nml::Texture>();
         }
     
         std::shared_ptr<nml::Texture> texture = std::make_shared<nml::Texture>(protobuf::message(data.size() > 0 ? &data[0] : nullptr, data.size()));
         return texture;
-    }
-    
-    bool OnlineNMLModelLODTreeDataSource::inflate(const std::vector<unsigned char>& in, std::vector<unsigned char>& out) {
-        if (in.size() < 14) {
-            return false;
-        }
-    
-        std::size_t offset = 0;
-        if (in[0] != 0x1f || in[1] != 0x8b) {
-            return false;
-        }
-        if (in[2] != 8) {
-            return false;
-        }
-        int flags = in[3];
-        offset += 10;
-        if (flags & (1 << 2)) { // FEXTRA
-            int n = static_cast<int>(in[offset + 0]) | (static_cast<int>(in[offset + 1]) << 8);
-            offset += n + 2;
-        }
-        if (flags & (1 << 3)) { // FNAME
-            while (offset < in.size()) {
-                if (in[offset++] == 0) {
-                    break;
-                }
-            }
-        }
-        if (flags & (1 << 4)) { // FCOMMENT
-            while (offset < in.size()) {
-                if (in[offset++] == 0) {
-                    break;
-                }
-            }
-        }
-        if (flags & (1 << 1)) { // FCRC
-            offset += 2;
-        }
-    
-        unsigned char buf[4096];
-        ::mz_stream infstream;
-        std::memset(&infstream, 0, sizeof(infstream));
-        infstream.zalloc = NULL;
-        infstream.zfree = NULL;
-        infstream.opaque = NULL;
-        int err = MZ_OK;
-        infstream.avail_in = static_cast<unsigned int>(in.size() - offset - 4); // size of input
-        infstream.next_in = reinterpret_cast<const unsigned char *>(&in[offset]); // input char array
-        infstream.avail_out = sizeof(buf); // size of output
-        infstream.next_out = buf; // output char array
-        ::mz_inflateInit2(&infstream, -MZ_DEFAULT_WINDOW_BITS);
-        do {
-            infstream.avail_out = sizeof(buf); // size of output
-            infstream.next_out = buf; // output char array
-            err = ::mz_inflate(&infstream, infstream.avail_in > 0 ? MZ_NO_FLUSH : MZ_FINISH);
-            if (err != MZ_OK && err != MZ_STREAM_END) {
-                break;
-            }
-            out.insert(out.end(), buf, buf + sizeof(buf) - infstream.avail_out);
-        } while (err != MZ_STREAM_END);
-        ::mz_inflateEnd(&infstream);
-        return err == MZ_OK || err == MZ_STREAM_END;
     }
     
     OnlineNMLModelLODTreeDataSource::DataInputStream::DataInputStream(const std::vector<unsigned char>& data) : _data(data), _offset(0)

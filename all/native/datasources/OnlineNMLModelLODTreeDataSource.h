@@ -49,8 +49,6 @@ namespace carto {
             std::size_t _offset;
         };
     
-        static bool inflate(const std::vector<unsigned char>& in, std::vector<unsigned char>& out);
-    
         std::string _serviceURL;
     };
     

@@ -16,9 +16,7 @@
 #include <algorithm>
 #include <limits>
 
-#define MINIZ_HEADER_FILE_ONLY
-#define MINIZ_NO_ZLIB_COMPATIBLE_NAMES
-#include <miniz.c>
+#include <miniz.h>
 
 namespace carto { namespace mvt {
     class MBVTFeatureDecoder::MBVTFeatureIterator : public carto::mvt::FeatureDecoder::FeatureIterator {
@@ -51,7 +49,7 @@ namespace carto { namespace mvt {
 
         bool findByLocalId(long long localId) {
             if (localId >= _layerIndexOffset && localId < _layerIndexOffset + _layer.features_size()) {
-                _index = static_cast<std::size_t>(localId - _layerIndexOffset);
+                _index = static_cast<int>(localId - _layerIndexOffset);
                 return true;
             }
             return false;
@@ -320,10 +318,10 @@ namespace carto { namespace mvt {
     MBVTFeatureDecoder::MBVTFeatureDecoder(const std::vector<unsigned char>& data, std::shared_ptr<Logger> logger) :
         _transform(cglib::mat3x3<float>::identity()), _clipBox(cglib::vec2<float>(-0.1f, -0.1f), cglib::vec2<float>(1.1f, 1.1f)), _buffer(0), _globalIdOverride(false), _tileIdOffset(0), _tile(), _layerMap(), _logger(std::move(logger))
     {
-        std::vector<unsigned char> pbfData;
-        pbfData.reserve(data.size() * 3);
-        if (inflate(data, pbfData)) {
-            protobuf::message tileMsg(pbfData.data(), pbfData.size());
+        std::vector<unsigned char> uncompressedData;
+        uncompressedData.reserve(data.size());
+        if (miniz::inflate(data.data(), data.size(), uncompressedData)) {
+            protobuf::message tileMsg(uncompressedData.data(), uncompressedData.size());
             _tile = std::make_shared<vector_tile::Tile>(tileMsg);
         }
         else {
@@ -382,66 +380,5 @@ namespace carto { namespace mvt {
         const vector_tile::Tile::Layer& layer = _tile->layers(layerIt->second);
         std::map<std::vector<int>, std::shared_ptr<FeatureData>>& featureDataCache = _layerFeatureDataCache[name];
         return std::make_shared<MBVTFeatureIterator>(*_tile, layer, &fields, _transform, _clipBox, _buffer, _globalIdOverride, _tileIdOffset, featureDataCache);
-    }
-
-    bool MBVTFeatureDecoder::inflate(const std::vector<unsigned char>& in, std::vector<unsigned char>& out) {
-        if (in.size() < 14) {
-            return false;
-        }
-
-        std::size_t offset = 0;
-        if (in[0] != 0x1f || in[1] != 0x8b) {
-            return false;
-        }
-        if (in[2] != 8) {
-            return false;
-        }
-        int flags = in[3];
-        offset += 10;
-        if (flags & (1 << 2)) { // FEXTRA
-            int n = static_cast<int>(in[offset + 0]) | (static_cast<int>(in[offset + 1]) << 8);
-            offset += n + 2;
-        }
-        if (flags & (1 << 3)) { // FNAME
-            while (offset < in.size()) {
-                if (in[offset++] == 0) {
-                    break;
-                }
-            }
-        }
-        if (flags & (1 << 4)) { // FCOMMENT
-            while (offset < in.size()) {
-                if (in[offset++] == 0) {
-                    break;
-                }
-            }
-        }
-        if (flags & (1 << 1)) { // FCRC
-            offset += 2;
-        }
-
-        unsigned char buf[4096];
-        ::mz_stream infstream;
-        std::memset(&infstream, 0, sizeof(infstream));
-        infstream.zalloc = NULL;
-        infstream.zfree = NULL;
-        infstream.opaque = NULL;
-        int err = MZ_OK;
-        infstream.avail_in = static_cast<unsigned int>(in.size() - offset - 4); // size of input
-        infstream.next_in = reinterpret_cast<const unsigned char *>(&in[offset]); // input char array
-        infstream.avail_out = sizeof(buf); // size of output
-        infstream.next_out = buf; // output char array
-        ::mz_inflateInit2(&infstream, -MZ_DEFAULT_WINDOW_BITS);
-        do {
-            infstream.avail_out = sizeof(buf); // size of output
-            infstream.next_out = buf; // output char array
-            err = ::mz_inflate(&infstream, infstream.avail_in > 0 ? MZ_NO_FLUSH : MZ_FINISH);
-            if (err != MZ_OK && err != MZ_STREAM_END) {
-                break;
-            }
-            out.insert(out.end(), buf, buf + sizeof(buf) - infstream.avail_out);
-        } while (err != MZ_STREAM_END);
-        ::mz_inflateEnd(&infstream);
-        return err == MZ_OK || err == MZ_STREAM_END;
     }
 } }

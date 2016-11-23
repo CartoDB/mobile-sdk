@@ -40,8 +40,6 @@ namespace carto { namespace mvt {
     private:
         class MBVTFeatureIterator;
 
-        static bool inflate(const std::vector<unsigned char>& in, std::vector<unsigned char>& out);
-        
         cglib::mat3x3<float> _transform;
         cglib::bbox2<float> _clipBox;
         float _buffer;
