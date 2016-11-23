@@ -1,29 +1,38 @@
 # Carto Mobile SDK 
 
+Carto Mobile SDK is a multi-platform mobile
+mapping SDK written mostly in C++11 with bindings to numerous languages
+(Java/C# for Android, ObjectiveC/C# for iOS and C# for Windows Phone).
+
+This project contains the core part of the SDK, for samples, look at
+the ['Usage' section](#usage).
+
 ## Current build status
 
 | Platforms    | Status |
 |:-------------|:-------|
-| Android, iOS | ![Build status](https://api.travis-ci.com/CartoDB/mobile-sdk.svg?token=uvhfAb9wpUzphV39sAwP&branch=master) |
+| Android, iOS |  [![Build Status](https://travis-ci.org/CartoDB/mobile-sdk.svg?branch=master)](https://travis-ci.org/CartoDB/mobile-sdk)|
 
 # Building
 
+**We strongly suggest to use the precompiled SDK versions that can be found in
+the samples below (in ['Usage' section](#usage)).** The precompiled libraries include 
+support for CARTO online services (basemaps, offline map packages, routing, etc).
+Also, getting all the SDK dependencies resolved and waiting for the build
+to complete can be very time-consuming.
+
 ## Dependencies
-Get the prepackaged dependencies from github CartoDB/mobile-external-libs
-repository (https://github.com/CartoDB/mobile-external-libs). Add links
-to external-libs/prebuilt at the project root directory level.
+Get the prepackaged dependencies from github **mobile-external-libs** repository (https://github.com/CartoDB/mobile-external-libs). Add links to external-libs/prebuilt at the project root directory level.
 
-In addition, boost library should be downloaded and configured as described
-in mobile-external-libs documentation.
+In addition, **boost** library sources should be downloaded from boost.org and configured as described in mobile-external-libs documentation.
 
-Special swig version (swig-2.0.11-nutiteq branch) is needed for generating 
-language-specific wrappers, this can be downloaded from https://github.com/CartoDB/swig
+Special **swig** version (swig-2.0.11-nutiteq branch) is needed for generating language-specific wrappers, this can be downloaded from https://github.com/CartoDB/swig. Clone it and compile it using usual `./configure;make` routine. Make sure build script refers to this one.
 
-Python 2.7.x is used for build scripts
+**Python 2.7.x** is used for build scripts
 
-Android build requires Android SDK and Android NDK r11 or later.
+Android build requires **Android SDK** and **Android NDK r11** or later.
 
-iOS build requires XCode 7.3 or later.
+iOS build requires **XCode 7.3** or later.
 
 Windows Phone build requires Visual Studio 2015 AND Visual Studio 2015 SDK.
 
@@ -44,7 +53,7 @@ cd mobile-sdk/scripts
 ## Android build 
 ```
 python swigpp-java.py --profile standard
-python build-android.py --profile standard --javac /Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Commands/javac
+python build-android.py --profile standard
 ```
 
 ## iOS build:
@@ -70,9 +79,16 @@ python build-xamarin.py --profile standard ios
 python swigpp-csharp.py --profile standard winphone
 python build-winphone.py --profile standard
 ```
+
 # Usage
 
 * Developer docs: https://carto.com/docs/carto-engine/mobile-sdk/
 * Android sample app: https://github.com/CartoDB/mobile-android-samples
 * iOS sample app: https://github.com/CartoDB/mobile-ios-samples
 * .NET (Xamarin and Windows 10) sample app: https://github.com/CartoDB/mobile-dotnet-samples
+
+# Support, Questions?
+
+* Post to CARTO developer group: https://groups.google.com/forum/#!forum/cartodb
+* Post an issue to this project, submit a Pull Request
+* Commercial support options: sales@carto.com

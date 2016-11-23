@@ -22,6 +22,7 @@
 namespace carto {
     namespace mvt {
         class Map;
+        class MBVTFeatureDecoder;
         class SymbolizerContext;
         class Logger;
     }
@@ -172,6 +173,8 @@ namespace carto {
         std::shared_ptr<const vt::BitmapPattern> _backgroundPattern;
         std::shared_ptr<mvt::SymbolizerContext> _symbolizerContext;
         boost::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> > _styleSet;
+
+        mutable std::pair<std::shared_ptr<BinaryData>, std::shared_ptr<mvt::MBVTFeatureDecoder> > _cachedFeatureDecoder;
     
         mutable std::mutex _mutex;
     };

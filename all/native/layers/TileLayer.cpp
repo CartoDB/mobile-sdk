@@ -93,6 +93,32 @@ namespace carto {
         refresh();
     }
     
+    int TileLayer::getMaxOverzoomLevel() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _maxOverzoomLevel;
+    }
+    
+    void TileLayer::setMaxOverzoomLevel(int overzoomLevel) {
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _maxOverzoomLevel = overzoomLevel;
+        }
+        refresh();
+    }
+    
+    int TileLayer::getMaxUnderzoomLevel() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _maxUnderzoomLevel;
+    }
+    
+    void TileLayer::setMaxUnderzoomLevel(int underzoomLevel) {
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _maxUnderzoomLevel = underzoomLevel;
+        }
+        refresh();
+    }
+    
     MapTile TileLayer::calculateMapTile(const MapPos& mapPos, int zoom) const {
         double tileWidth = _dataSource->getProjection()->getBounds().getDelta().getX() / (1 << zoom);
         double tileHeight = _dataSource->getProjection()->getBounds().getDelta().getY() / (1 << zoom);
@@ -171,6 +197,8 @@ namespace carto {
         _preloading(false),
         _substitutionPolicy(TileSubstitutionPolicy::TILE_SUBSTITUTION_POLICY_ALL),
         _zoomLevelBias(0.0f),
+        _maxOverzoomLevel(MAX_PARENT_SEARCH_DEPTH),
+        _maxUnderzoomLevel(MAX_CHILD_SEARCH_DEPTH),
         _visibleTiles(),
         _preloadingTiles(),
         _utfGridTiles()
@@ -447,11 +475,11 @@ namespace carto {
                 } else {
                     // Check cache for parent tile
                     if (tile.getZoom() > 0) {
-                        foundSubstitute = findParentTile(visTile, tile, MAX_PARENT_SEARCH_DEPTH, preloadingCache, preloadingTiles);
+                        foundSubstitute = findParentTile(visTile, tile, getMaxOverzoomLevel(), preloadingCache, preloadingTiles);
                     }
                     if (!foundSubstitute) {
                         // Didn't find parent tile, check cache for children tiles
-                        foundSubstitute = findChildTiles(visTile, tile, MAX_CHILD_SEARCH_DEPTH, preloadingCache, preloadingTiles) > 0;
+                        foundSubstitute = findChildTiles(visTile, tile, getMaxUnderzoomLevel(), preloadingCache, preloadingTiles) > 0;
                     }
                 }
                 if (foundSubstitute) {

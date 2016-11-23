@@ -35,15 +35,17 @@ namespace carto {
             baseURL += "&loc=" + boost::lexical_cast<std::string>(wgsPos.getY()) + "," + boost::lexical_cast<std::string>(wgsPos.getX());
         }
 
+        std::string appToken;
+        if (!LicenseManager::GetInstance().getParameter("appToken", appToken)) {
+            throw GenericException("Service not available (license issue?)");
+        }
+
         std::map<std::string, std::string> params;
         params["appId"] = PlatformUtils::GetAppIdentifier();
         params["deviceId"] = PlatformUtils::GetDeviceId();
         params["platform"] = PlatformUtils::GetPlatformId();
         params["sdk_build"] = _CARTO_MOBILE_SDK_VERSION;
-        std::string appToken;
-        if (LicenseManager::GetInstance().getParameter("appToken", appToken)) {
-            params["appToken"] = appToken;
-        }
+        params["appToken"] = appToken;
 
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
         Log::Debugf("CartoOnlineRoutingService::calculateRoute: Loading %s", url.c_str());

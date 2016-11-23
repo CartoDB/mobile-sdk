@@ -20,13 +20,13 @@ android {
         versionCode 1
         versionName "1.0"
     }
-	
-	sourceSets {
-	        main {
-				jniLibs.srcDir '../../dist/android/'
-	        }
-	}
-	
+
+    sourceSets {
+        main {
+            jniLibs.srcDir '../../dist/android/'
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false

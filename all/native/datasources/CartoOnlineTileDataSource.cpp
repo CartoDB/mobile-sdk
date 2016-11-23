@@ -21,7 +21,7 @@ namespace carto {
         _randomGenerator(),
         _mutex()
     {
-        _maxZoom = (source.substr(0, 7) == "mapzen." ? 17 : 14);
+        _maxZoom = (isMapZenSource() ? 17 : 14);
     }
     
     CartoOnlineTileDataSource::~CartoOnlineTileDataSource() {
@@ -59,12 +59,18 @@ namespace carto {
         return tileData;
     }
 
+    bool CartoOnlineTileDataSource::isMapZenSource() const {
+        return _source.substr(0, 7) == "mapzen.";
+    }
+
     std::string CartoOnlineTileDataSource::buildTileURL(const std::string& baseURL, const MapTile& tile) const {
-        std::map<std::string, std::string> tagValues = buildTagValues(_tmsScheme ? tile.getFlipped() : tile);
         std::string appToken;
-        if (LicenseManager::GetInstance().getParameter("appToken", appToken, true)) {
-            tagValues["key"] = appToken;
+        if (!LicenseManager::GetInstance().getParameter("appToken", appToken, true)) {
+            return std::string();
         }
+
+        std::map<std::string, std::string> tagValues = buildTagValues(_tmsScheme ? tile.getFlipped() : tile);
+        tagValues["key"] = appToken;
         return GeneralUtils::ReplaceTags(baseURL, tagValues, "{", "}", true);
     }
 
@@ -127,6 +133,10 @@ namespace carto {
         Log::Infof("CartoOnlineTileDataSource::loadOnlineTile: Loading tile %d/%d/%d", mapTile.getZoom(), mapTile.getX(), mapTile.getY());
 
         std::string url = buildTileURL(tileURL, mapTile);
+        if (url.empty()) {
+            Log::Error("CartoOnlineTileDataSource::loadOnlineTile: Online service not available (license issue?)");
+            return std::shared_ptr<TileData>();
+        }
         Log::Debugf("CartoOnlineTileDataSource::loadOnlineTile: Loading %s", url.c_str());
 
         std::map<std::string, std::string> requestHeaders;
@@ -143,7 +153,7 @@ namespace carto {
         }
         int maxAge = NetworkUtils::GetMaxAgeHTTPHeader(responseHeaders);
         auto tileData = std::make_shared<TileData>(responseData);
-        if (maxAge >= 0) {
+        if (maxAge >= 0 && !isMapZenSource()) { // set max age header but only for non-mapzen sources as mapzen always sets max-age to 0
             tileData->setMaxAge(maxAge * 1000);
         }
         return tileData;

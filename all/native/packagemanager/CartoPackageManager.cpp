@@ -105,12 +105,13 @@ namespace carto {
     }
     
     std::string CartoPackageManager::createPackageURL(const std::string& packageId, int version, const std::string& baseURL, bool downloaded) const {
-        std::map<std::string, std::string> tagValues;
         std::string appToken;
-        if (LicenseManager::GetInstance().getParameter("appToken", appToken)) {
-            tagValues["key"] = appToken;
+        if (!LicenseManager::GetInstance().getParameter("appToken", appToken)) {
+            return std::string(); // invalid URL
         }
  
+        std::map<std::string, std::string> tagValues;
+        tagValues["key"] = appToken;
         std::string url = GeneralUtils::ReplaceTags(baseURL, tagValues, "{", "}", true);
 
         std::map<std::string, std::string> params;

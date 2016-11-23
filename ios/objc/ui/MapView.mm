@@ -17,7 +17,7 @@ static BOOL MapViewCreated = NO;
 @interface NTMapView() <GLKViewDelegate> { }
 
 @property (strong, nonatomic) NTBaseMapView* baseMapView;
-@property (assign, nonatomic) BOOL contextCreated;
+@property (strong, nonatomic) EAGLContext* viewContext;
 @property (assign, nonatomic) float scale;
 
 @property (strong, nonatomic) UITouch* pointer1;
@@ -82,20 +82,19 @@ static const int NATIVE_NO_COORDINATE = -1;
 }
 
 -(void)initGL {
-    self.context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
-    if (!self.context) {
-        carto::Log::Fatal("MapView::viewDidLoad: Failed to create OpenGL ES 2.0 context");
+    _viewContext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+    if (!_viewContext) {
+        carto::Log::Fatal("MapView::initGL: Failed to create OpenGL ES 2.0 context");
     }
-    _contextCreated = YES;
 
-    self.context = self.context;
+    self.context = _viewContext;
     self.drawableColorFormat = GLKViewDrawableColorFormatRGBA8888;
     self.drawableDepthFormat = GLKViewDrawableDepthFormat24;
     self.drawableMultisample = GLKViewDrawableMultisampleNone;
     self.drawableStencilFormat = GLKViewDrawableStencilFormat8;
     self.multipleTouchEnabled = YES;
     
-    [EAGLContext setCurrentContext:self.context];
+    [EAGLContext setCurrentContext:_viewContext];
     [_baseMapView onSurfaceCreated];
     [_baseMapView onSurfaceChanged:(int)(self.bounds.size.width * _scale) height:(int)(self.bounds.size.height * _scale)];
     
@@ -104,27 +103,36 @@ static const int NATIVE_NO_COORDINATE = -1;
 
 -(void)layoutSubviews {
     [super layoutSubviews];
-    if (_contextCreated) {
-        [EAGLContext setCurrentContext:self.context];
+    if (_viewContext) {
+        [EAGLContext setCurrentContext:_viewContext];
         [_baseMapView onSurfaceChanged:(int)(self.bounds.size.width * _scale) height:(int)(self.bounds.size.height * _scale)];
         [self setNeedsDisplay];
     }
 }
 
 -(void)glkView:(GLKView *)view drawInRect:(CGRect)rect {
-    if (_contextCreated) {
-        [EAGLContext setCurrentContext:self.context];
+    if (_viewContext) {
+        EAGLContext* context = [EAGLContext currentContext];
+        if (context != _viewContext) {
+            [EAGLContext setCurrentContext:_viewContext];
+        }
         [_baseMapView onDrawFrame];
+        if (context != _viewContext) {
+            [EAGLContext setCurrentContext:context];
+        }
     }
 }
 
 -(void)dealloc {
-    if (_contextCreated && [EAGLContext currentContext] == self.context) {
-        [EAGLContext setCurrentContext:nil];
+    if (_viewContext) {
+        [_baseMapView onSurfaceDestroyed];
+        if ([EAGLContext currentContext] == _viewContext) {
+            [EAGLContext setCurrentContext:nil];
+        }
         [_baseMapView setRedrawRequestListener:nil];
         _nativeMapView = nil;
         _baseMapView = nil;
-        //self.context = nil;
+        _viewContext = nil;
     }
 }
 

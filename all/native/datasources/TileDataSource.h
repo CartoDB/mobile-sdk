@@ -59,6 +59,7 @@ namespace carto {
         
         /**
          * Loads the specified tile.
+         * Note: the tile coordinate system used here is vertically flipped relative to layer tile coordinate system.
          * @param tile The tile to load.
          * @return The tile data. If the tile is not available, null may be returned.
          */

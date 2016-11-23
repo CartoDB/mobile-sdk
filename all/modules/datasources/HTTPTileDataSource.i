@@ -25,6 +25,7 @@
 %attributestring(carto::HTTPTileDataSource, std::string, BaseURL, getBaseURL, setBaseURL)
 %attributeval(carto::HTTPTileDataSource, %arg(std::vector<std::string>), Subdomains, getSubdomains, setSubdomains)
 %attribute(carto::HTTPTileDataSource, bool, TMSScheme, isTMSScheme, setTMSScheme)
+%attribute(carto::HTTPTileDataSource, bool, MaxAgeHeaderCheck, isMaxAgeHeaderCheck, setMaxAgeHeaderCheck)
 %attributeval(carto::HTTPTileDataSource, %arg(std::map<std::string, std::string>), HTTPHeaders, getHTTPHeaders, setHTTPHeaders)
 
 %feature("director") carto::HTTPTileDataSource;

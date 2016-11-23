@@ -45,15 +45,15 @@ This high-level workflow describes how to prepare your mobile data for rendering
 
 1) Upload your map data using the [Import API](/docs/carto-engine/import-api/)
 
-2) Create a map with the [CARTO Builder](/docs/carto-builder/)
+2) Create a map with the [CARTO Builder](https://carto.com/learn/guides)
 
-3) Click _SHARE_ to [publish your map](/docs/carto-builder/publishing-and-sharing-maps/#publish-options)
+3) Click _SHARE_ to publish your map
 
 4) Select _CARTO Mobile SDK_ as the publish option
 
   This publishing option provides a URL to the mobile viz.json file, which is required if you are using the CARTO Mobile SDK to publish custom maps for Android, iOS, and Windows platforms.
 
-  **Note:** [Widgets](/docs/carto-builder/interactive-map-widgets/#interactive-map-widgets) are currently not supported for the CARTO Mobile SDK format, but will be available in a future release.
+  **Note:** [Widgets](https://carto.com/learn/guides/widgets/exploring-widgets) are currently not supported for the CARTO Mobile SDK format, but will be available in a future release.
 
 ### App Integration
 

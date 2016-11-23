@@ -33,6 +33,8 @@ namespace carto {
         virtual std::shared_ptr<TileData> loadTile(const MapTile& mapTile);
         
     protected:
+        bool isMapZenSource() const;
+
         std::string buildTileURL(const std::string& baseURL, const MapTile& tile) const;
 
         bool loadTileURLs();

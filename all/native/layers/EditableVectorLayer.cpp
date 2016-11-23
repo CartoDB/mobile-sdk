@@ -303,14 +303,14 @@ namespace carto {
                 std::vector<RayIntersectedElement> results;
                 layer->_overlayRenderer->calculateRayIntersectedElements(layer, ray, mapRenderer->getViewState(), results);
                 if (!results.empty()) {
-                    VectorElementDragResult::VectorElementDragResult result = VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_IGNORE;
+                    VectorElementDragResult::VectorElementDragResult dragResult = VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_IGNORE;
                     if (vectorEditEventListener) {
                         auto dragInfo = std::make_shared<VectorElementDragInfo>(selectedElement, VectorElementDragMode::VECTOR_ELEMENT_DRAG_MODE_VERTEX, screenPos1, mapPos1);
-                        result = vectorEditEventListener->onDragStart(dragInfo);
+                        dragResult = vectorEditEventListener->onDragStart(dragInfo);
                     }
                     layer->_overlayDragMode = VectorElementDragMode::VECTOR_ELEMENT_DRAG_MODE_VERTEX;
                     layer->_overlayDragPoint = std::static_pointer_cast<Point>(results.front().getElement<VectorElement>());
-                    switch (result) {
+                    switch (dragResult) {
                         case VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_IGNORE:
                             layer->_overlayDragPoint.reset();
                             break;
@@ -334,15 +334,15 @@ namespace carto {
                         continue;
                     }
                     
-                    VectorElementDragResult::VectorElementDragResult result = VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_IGNORE;
+                    VectorElementDragResult::VectorElementDragResult dragResult = VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_IGNORE;
                     if (vectorEditEventListener) {
                         auto dragInfo = std::make_shared<VectorElementDragInfo>(selectedElement, VectorElementDragMode::VECTOR_ELEMENT_DRAG_MODE_ELEMENT, screenPos1, mapPos1);
-                        result = vectorEditEventListener->onDragStart(dragInfo);
+                        dragResult = vectorEditEventListener->onDragStart(dragInfo);
                     }
                     layer->_overlayDragMode = VectorElementDragMode::VECTOR_ELEMENT_DRAG_MODE_ELEMENT;
                     layer->_overlayDragGeometry = selectedElement->getGeometry();
                     layer->_overlayDragGeometryPos = layer->_dataSource->getProjection()->fromInternal(touchPos);
-                    switch (result) {
+                    switch (dragResult) {
                         case VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_IGNORE:
                             layer->_overlayDragGeometry.reset();
                             break;
@@ -367,13 +367,13 @@ namespace carto {
                 }
 
                 MapPos mapPos1 = layer->_dataSource->getProjection()->fromInternal(mapRenderer->screenToWorld(screenPos1));
-                VectorElementDragResult::VectorElementDragResult result = VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_IGNORE;
+                VectorElementDragResult::VectorElementDragResult dragResult = VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_IGNORE;
                 if (vectorEditEventListener) {
                     auto dragInfo = std::make_shared<VectorElementDragInfo>(selectedElement, layer->_overlayDragMode, screenPos1, mapPos1);
-                    result = vectorEditEventListener->onDragMove(dragInfo);
+                    dragResult = vectorEditEventListener->onDragMove(dragInfo);
                 }
 
-                switch (result) {
+                switch (dragResult) {
                     case VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_IGNORE:
                         break;
                     case VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_STOP:
@@ -410,15 +410,15 @@ namespace carto {
                 }
 
                 MapPos mapPos1 = layer->_dataSource->getProjection()->fromInternal(mapRenderer->screenToWorld(screenPos1));
-                VectorElementDragResult::VectorElementDragResult result = VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_IGNORE;
+                VectorElementDragResult::VectorElementDragResult dragResult = VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_IGNORE;
                 if (vectorEditEventListener) {
                     auto dragInfo = std::make_shared<VectorElementDragInfo>(selectedElement, layer->_overlayDragMode, screenPos1, mapPos1);
-                    result = vectorEditEventListener->onDragEnd(dragInfo);
+                    dragResult = vectorEditEventListener->onDragEnd(dragInfo);
                 }
                 layer->_overlayDragStarted = false;
                 layer->_overlayDragPoint.reset();
                 layer->_overlayDragGeometry.reset();
-                switch (result) {
+                switch (dragResult) {
                     case VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_IGNORE:
                         layer->refresh();
                         break;

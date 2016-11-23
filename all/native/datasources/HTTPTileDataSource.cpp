@@ -11,6 +11,7 @@ namespace carto {
         _baseURL(baseURL),
         _subdomains({ "a", "b", "c", "d" }),
         _tmsScheme(false),
+        _maxAgeHeaderCheck(false),
         _headers(),
         _httpClient(true),
         _randomGenerator(),
@@ -60,6 +61,19 @@ namespace carto {
         notifyTilesChanged(false);
     }
     
+    bool HTTPTileDataSource::isMaxAgeHeaderCheck() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _maxAgeHeaderCheck;
+    }
+    
+    void HTTPTileDataSource::setMaxAgeHeaderCheck(bool maxAgeCheck) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            _maxAgeHeaderCheck = maxAgeCheck;
+        }
+        notifyTilesChanged(false);
+    }
+    
     std::map<std::string, std::string> HTTPTileDataSource::getHTTPHeaders() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _headers;
@@ -76,10 +90,12 @@ namespace carto {
     std::shared_ptr<TileData> HTTPTileDataSource::loadTile(const MapTile& mapTile) {
         std::string baseURL;
         std::map<std::string, std::string> headers;
+        bool maxAgeHeaderCheck;
         {
             std::lock_guard<std::mutex> lock(_mutex);
             baseURL = _baseURL;
             headers = _headers;
+            maxAgeHeaderCheck = _maxAgeHeaderCheck;
         }
         std::string url = buildTileURL(baseURL, mapTile);
         Log::Infof("HTTPTileDataSource::loadTile: Loading %s", url.c_str());
@@ -96,9 +112,11 @@ namespace carto {
             return std::shared_ptr<TileData>();
         }
         auto tileData = std::make_shared<TileData>(responseData);
-        int maxAge = NetworkUtils::GetMaxAgeHTTPHeader(responseHeaders);
-        if (maxAge >= 0) {
-            tileData->setMaxAge(maxAge * 1000);
+        if (maxAgeHeaderCheck) {
+            int maxAge = NetworkUtils::GetMaxAgeHTTPHeader(responseHeaders);
+            if (maxAge >= 0) {
+                tileData->setMaxAge(maxAge * 1000);
+            }
         }
         return tileData;
     }

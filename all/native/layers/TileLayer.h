@@ -129,11 +129,39 @@ namespace carto {
          */
         float getZoomLevelBias() const;
         /**
-         * Sets the zoom level bias for this layer. Higher zoom level bias forces SDK to use more detailed tiles for given view compared to lower zoom bias.
+         * Sets the zoom level bias for this layer.
+         * Higher zoom level bias forces SDK to use more detailed tiles for given view compared to lower zoom bias.
          * The default bias is 0.
          * @param bias The new bias value, both positive and negative fractional values are supported.
          */
         void setZoomLevelBias(float bias);
+        
+        /**
+         * Gets the current maximum overzoom level for this layer.
+         * @return The current maximum overzoom level for this layer.
+         */
+        int getMaxOverzoomLevel() const;
+        /**
+         * Sets the maximum overzoom level for this layer.
+         * If a tile for the given zoom level Z is not available, SDK will try to use tiles with zoom levels Z-1, ..., Z-MaxOverzoomLevel.
+         * The default is 6.
+         * @param overzoomLevel The new maximum overzoom value.
+         */
+        void setMaxOverzoomLevel(int overzoomLevel);
+        
+        /**
+         * Gets the current maximum underzoom level for this layer.
+         * @return The current maximum underzoom level for this layer.
+         */
+        int getMaxUnderzoomLevel() const;
+
+        /**
+         * Sets the maximum underzoom level for this layer.
+         * If a tile for the given zoom level Z is not available, SDK will try to use tiles with zoom levels Z-1, ..., Z-MaxOverzoomLevel and then Z+1, ..., Z+MaxUnderzoomLevel.
+         * The default is 3.
+         * @param underzoomLevel The new maximum underzoom value.
+         */
+        void setMaxUnderzoomLevel(int underzoomLevel);
         
         /**
          * Calculates the tile corresponding to given geographical coordinates and zoom level.
@@ -272,6 +300,8 @@ namespace carto {
         TileSubstitutionPolicy::TileSubstitutionPolicy _substitutionPolicy;
     
         float _zoomLevelBias;
+        int _maxOverzoomLevel;
+        int _maxUnderzoomLevel;
     
     private:
         void calculateVisibleTiles(const std::shared_ptr<CullState>& cullState);

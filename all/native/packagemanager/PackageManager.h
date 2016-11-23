@@ -149,14 +149,14 @@ namespace carto {
         /**
          * Returns the specified local package.
          * @param packageId The id of the package.
-         * @return The specified local package or null if it can not be found in the package list.
+         * @return The specified local package or null if it can not be found in the local package list. Note that if the package is being downloaded, null is returned.
          */
         std::shared_ptr<PackageInfo> getLocalPackage(const std::string& packageId) const;
         /**
          * Returns the status of the specified package.
          * @param packageId The id of the package.
          * @param version The version of the package. Use -1 for the latest version.
-         * @return The status of the package or null if it is not yet downloaded or downloading.
+         * @return The status of the package or null if it is not yet downloaded. If the package is currently being downloaded, its status is returned.
          */
         std::shared_ptr<PackageStatus> getLocalPackageStatus(const std::string& packageId, int version) const;
 

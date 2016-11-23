@@ -33,7 +33,7 @@ namespace carto {
     std::shared_ptr<TileData> PackageManagerTileDataSource::loadTile(const MapTile& mapTile) {
         Log::Infof("PackageManagerTileDataSource::loadTile: Loading %s", mapTile.toString().c_str());
         try {
-            std::shared_ptr<BinaryData> data = _packageManager->loadTile(mapTile);
+            std::shared_ptr<BinaryData> data = _packageManager->loadTile(mapTile.getFlipped());
             std::shared_ptr<TileData> tileData = std::make_shared<TileData>(data);
             if (!data) {
                 if (mapTile.getZoom() > getMinZoom()) {

@@ -84,6 +84,8 @@ namespace carto { namespace mvt {
     }
 
     std::shared_ptr<Expression> parseExpression(const std::string& str) {
+        constexpr static int MAX_CACHE_SIZE = 1024;
+
         static std::mutex exprCacheMutex;
         static std::unordered_map<std::string, std::shared_ptr<Expression>> exprCache;
 
@@ -105,11 +107,16 @@ namespace carto { namespace mvt {
             throw ParserException("Could not parse to the end of expression, error at position " + boost::lexical_cast<std::string>(it - str.begin()), str);
         }
 
+        if (exprCache.size() >= MAX_CACHE_SIZE) {
+            exprCache.erase(exprCache.begin());
+        }
         exprCache[str] = expr;
         return expr;
     }
 
     std::shared_ptr<Expression> parseStringExpression(const std::string& str) {
+        constexpr static int MAX_CACHE_SIZE = 1024;
+
         static std::mutex exprCacheMutex;
         static std::unordered_map<std::string, std::shared_ptr<Expression>> exprCache;
 
@@ -131,6 +138,9 @@ namespace carto { namespace mvt {
             throw ParserException("Could not parse to the end of string expression, error at position " + boost::lexical_cast<std::string>(it - str.begin()), str);
         }
 
+        if (exprCache.size() >= MAX_CACHE_SIZE) {
+            exprCache.erase(exprCache.begin());
+        }
         exprCache[str] = expr;
         return expr;
     }

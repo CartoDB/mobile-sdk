@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.carto" >
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.carto">
 
-    <uses-sdk android:minSdkVersion="10"/>
+    <uses-sdk android:minSdkVersion="10" />
+    <uses-feature android:glEsVersion="0x00020000" android:required="true" />
 
 </manifest>

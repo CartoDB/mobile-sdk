@@ -69,6 +69,19 @@ namespace carto {
          * @param tmsScheme True is TMS tiling scheme should be used. False is XYZ should be used.
          */
         void setTMSScheme(bool tmsScheme);
+
+        /**
+         * Returns true/false based on whether the max-age header check is used.
+         * If this is enabled, SDK will automatically refresh the tiles when tiles have expired.
+         * @return True if max-age header check is used. False otherwise.
+         */
+        bool isMaxAgeHeaderCheck() const;
+        /**
+         * Enables/disables the max-age header check.
+         * If this is enabled, SDK will automatically refresh the tiles when tiles have expired. The default is disabled.
+         * @param maxAgeCheck True if the check should be enabled, false otherwise.
+         */
+        void setMaxAgeHeaderCheck(bool maxAgeCheck);
         
         /**
          * Returns the current set of HTTP headers used. Initially this set is empty and can be changed with setHTTPHeaders.
@@ -90,6 +103,7 @@ namespace carto {
         std::string _baseURL;
         std::vector<std::string> _subdomains;
         bool _tmsScheme;
+        bool _maxAgeHeaderCheck;
         std::map<std::string, std::string> _headers;
         HTTPClient _httpClient;
         mutable std::default_random_engine _randomGenerator;
