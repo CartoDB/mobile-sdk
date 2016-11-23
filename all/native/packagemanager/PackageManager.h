@@ -309,7 +309,6 @@ namespace carto {
         static void SetCipherKeyIV(unsigned char* k, unsigned char* iv, int zoom, int x, int y, const std::string& encKey);
 
         static int DownloadFile(const std::string& url, NetworkUtils::HandlerFn handler, std::uint64_t offset = 0);
-        static bool InflateData(const std::vector<unsigned char>& in, std::vector<unsigned char>& out);
 
         const std::string _packageListURL;
         const std::string _packageListFileName;

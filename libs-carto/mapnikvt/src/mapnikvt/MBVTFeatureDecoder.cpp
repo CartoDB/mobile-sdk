@@ -16,7 +16,7 @@
 #include <algorithm>
 #include <limits>
 
-#include <miniz.h>
+#include <stdext/miniz.h>
 
 namespace carto { namespace mvt {
     class MBVTFeatureDecoder::MBVTFeatureIterator : public carto::mvt::FeatureDecoder::FeatureIterator {
@@ -320,7 +320,7 @@ namespace carto { namespace mvt {
     {
         std::vector<unsigned char> uncompressedData;
         uncompressedData.reserve(data.size());
-        if (miniz::inflate(data.data(), data.size(), uncompressedData)) {
+        if (miniz::inflate_gzip(data.data(), data.size(), uncompressedData)) {
             protobuf::message tileMsg(uncompressedData.data(), uncompressedData.size());
             _tile = std::make_shared<vector_tile::Tile>(tileMsg);
         }
