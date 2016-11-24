@@ -128,7 +128,7 @@ namespace carto { namespace vt {
 
         void setupPointCoordinateSystem(PointOrientation orientation, const TileId& tileId, float vertexScale, cglib::vec3<float>& xAxis, cglib::vec3<float>& yAxis) const;
 
-        void findTileGeometryIntersections(const TileId& tileId, const std::shared_ptr<TileGeometry>& geometry, const cglib::ray3<float>& ray, float radius, std::vector<std::pair<float, long long>>& results) const;
+        void findTileGeometryIntersections(const TileId& tileId, const std::shared_ptr<TileGeometry>& geometry, const cglib::ray3<double>& ray, float radius, std::vector<std::pair<double, long long>>& results) const;
         bool findLabelIntersection(const std::shared_ptr<TileLabel>& label, const cglib::ray3<double>& ray, float radius, double& result) const;
 
         static cglib::vec3<float> extendOffset(const cglib::vec3<float>& offset, float radius);

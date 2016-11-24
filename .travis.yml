@@ -14,9 +14,9 @@ matrix:
      osx_image: xcode7.3
      language: cpp
 
-   - os: linux
-     dist: precise
-     language: android
+#   - os: linux
+#     dist: precise
+#     language: android
 
 before_script:
   - source scripts/travis/prerequisites.sh

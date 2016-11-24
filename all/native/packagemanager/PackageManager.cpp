@@ -13,6 +13,7 @@
 #include <time.h>
 
 #include <stdext/utf8_filesystem.h>
+#include <stdext/miniz.h>
 
 #include <sqlite3pp.h>
 #include <sqlite3ppext.h>
@@ -27,9 +28,6 @@
 #include <modes.h>
 #include <filters.h>
 #include <hex.h>
-
-#define MINIZ_HEADER_FILE_ONLY
-#include <miniz.c>
 
 namespace {
     std::shared_ptr<carto::PackageMetaInfo> createPackageMetaInfo(const rapidjson::Value& value) {
@@ -644,7 +642,7 @@ namespace carto {
 
         // Test if the data is gzipped, in that case inflate
         std::vector<unsigned char> packageListDataTemp;
-        if (InflateData(packageListData, packageListDataTemp)) {
+        if (miniz::inflate_gzip(packageListData.data(), packageListData.size(), packageListDataTemp)) {
             std::swap(packageListData, packageListDataTemp);
         }
 
@@ -1492,67 +1490,6 @@ namespace carto {
         std::map<std::string, std::string> requestHeaders;
         std::map<std::string, std::string> responseHeaders;
         return NetworkUtils::GetHTTP(url, requestHeaders, responseHeaders, handler, offset, Log::IsShowDebug());
-    }
-
-    bool PackageManager::InflateData(const std::vector<unsigned char>& in, std::vector<unsigned char>& out) {
-        if (in.size() < 14) {
-            return false;
-        }
-
-        std::size_t offset = 0;
-        if (in[0] != 0x1f || in[1] != 0x8b) {
-            return false;
-        }
-        if (in[2] != 8) {
-            return false;
-        }
-        int flags = in[3];
-        offset += 10;
-        if (flags & (1 << 2)) { // FEXTRA
-            int n = static_cast<int>(in[offset + 0]) | (static_cast<int>(in[offset + 1]) << 8);
-            offset += n + 2;
-        }
-        if (flags & (1 << 3)) { // FNAME
-            while (offset < in.size()) {
-                if (in[offset++] == 0) {
-                    break;
-                }
-            }
-        }
-        if (flags & (1 << 4)) { // FCOMMENT
-            while (offset < in.size()) {
-                if (in[offset++] == 0) {
-                    break;
-                }
-            }
-        }
-        if (flags & (1 << 1)) { // FCRC
-            offset += 2;
-        }
-
-        unsigned char buf[4096];
-        ::mz_stream infstream;
-        std::memset(&infstream, 0, sizeof(infstream));
-        infstream.zalloc = Z_NULL;
-        infstream.zfree = Z_NULL;
-        infstream.opaque = Z_NULL;
-        int err = Z_OK;
-        infstream.avail_in = static_cast<unsigned int>(in.size() - offset - 4); // size of input
-        infstream.next_in = reinterpret_cast<const unsigned char*>(&in[offset]); // input char array
-        infstream.avail_out = sizeof(buf); // size of output
-        infstream.next_out = buf; // output char array
-        ::mz_inflateInit2(&infstream, -MZ_DEFAULT_WINDOW_BITS);
-        do {
-            infstream.avail_out = sizeof(buf); // size of output
-            infstream.next_out = buf; // output char array
-            err = ::mz_inflate(&infstream, infstream.avail_in > 0 ? MZ_NO_FLUSH : MZ_FINISH);
-            if (err != MZ_OK && err != MZ_STREAM_END) {
-                break;
-            }
-            out.insert(out.end(), buf, buf + sizeof(buf) - infstream.avail_out);
-        } while (err != MZ_STREAM_END);
-        ::mz_inflateEnd(&infstream);
-        return err == MZ_OK || err == MZ_STREAM_END;
     }
 
     PackageManager::PersistentTaskQueue::PersistentTaskQueue(const std::string& dbFileName) {

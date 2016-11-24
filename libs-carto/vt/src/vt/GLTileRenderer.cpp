@@ -844,38 +844,52 @@ namespace carto { namespace vt {
                 continue;
             }
 
-            // Check that the hit point is inside the blend node tile (used for clipping)
-            cglib::mat4x4<double> tileMatrix = calculateTileMatrix(blendNode->tileId);
-            cglib::vec3<double> posLocal = cglib::transform_point(ray(t), cglib::inverse(tileMatrix));
-            double radiusLocal = radius / cglib::length(cglib::proj_o(cglib::row_vector(tileMatrix, 0)));
-            if (!(posLocal(0) >= -radiusLocal && posLocal(0) <= 1 + radiusLocal && posLocal(1) >= -radiusLocal && posLocal(1) <= 1 + radiusLocal)) {
-                continue;
-            }
-
             for (auto it = renderNodeMap.begin(); it != renderNodeMap.end(); it++) {
                 const RenderNode& renderNode = it->second;
+                cglib::mat4x4<double> tileMatrix = calculateTileMatrix(renderNode.tileId);
+                cglib::mat4x4<double> invTileMatrix = cglib::inverse(tileMatrix);
+                double radiusTile = radius / cglib::length(cglib::proj_o(cglib::row_vector(tileMatrix, 0)));
 
-                // Check that the hit point is inside the render node tile (actual tile we are performing intersection test)
-                tileMatrix = calculateTileMatrix(renderNode.tileId);
-                posLocal = cglib::transform_point(ray(t), cglib::inverse(tileMatrix));
-                radiusLocal = radius / cglib::length(cglib::proj_o(cglib::row_vector(tileMatrix, 0)));
-                if (!(posLocal(0) >= -radiusLocal && posLocal(0) <= 1 + radiusLocal && posLocal(1) >= -radiusLocal && posLocal(1) <= 1 + radiusLocal)) {
-                    continue;
+                cglib::mat4x4<double> tileToClipMatrix = cglib::mat4x4<double>::identity();
+                if (blendNode->tileId.zoom > renderNode.tileId.zoom) {
+                    tileToClipMatrix = cglib::inverse(calculateTileMatrix(blendNode->tileId)) * tileMatrix;
                 }
+                cglib::vec3<double> pos2DClip = cglib::transform_point(ray(t), tileToClipMatrix * invTileMatrix);
 
                 // Test all geometry batches for intersections
                 for (const std::shared_ptr<TileGeometry>& geometry : renderNode.layer->getGeometries()) {
                     bool polygon3D = geometry->getType() == TileGeometry::Type::POLYGON3D;
+
+                    // Clipping test with early out in case of 2D geometry
+                    if (!polygon3D) {
+                        if (!(pos2DClip(0) >= 0 && pos2DClip(0) <= 1 && pos2DClip(1) >= 0 && pos2DClip(1) <= 1)) {
+                            continue;
+                        }
+                    }
+
                     if ((!polygon3D && geom2D) || (polygon3D && geom3D)) {
-                        cglib::ray3<float> rayLocal = cglib::ray3<float>::convert(cglib::transform_ray(ray, cglib::inverse(tileMatrix)));
+                        cglib::ray3<double> rayTile = cglib::transform_ray(ray, invTileMatrix);
 
-                        std::vector<std::pair<float, long long>> resultsLocal;
-                        findTileGeometryIntersections(renderNode.tileId, geometry, rayLocal, static_cast<float>(radiusLocal), resultsLocal);
+                        std::vector<std::pair<double, long long>> resultsTile;
+                        findTileGeometryIntersections(renderNode.tileId, geometry, rayTile, static_cast<float>(radiusTile), resultsTile);
 
-                        for (std::pair<float, long long> resultLocal : resultsLocal) {
-                            float tLocal = resultLocal.first;
-                            long long id = resultLocal.second;
-                            cglib::vec3<double> pos = cglib::transform_point(cglib::vec3<double>(rayLocal(tLocal)(0), rayLocal(tLocal)(1), 0), tileMatrix);
+                        for (std::pair<double, long long> resultTile : resultsTile) {
+                            long long id = resultTile.second;
+                            cglib::vec3<double> posTile = rayTile(resultTile.first);
+                            if (!polygon3D) {
+                                posTile(2) = 0; // fix numerical precision issues
+                            }
+
+                            // Clipping test with 3D geometry, must do it after intersection calculation as the Z can be non-zero
+                            if (polygon3D) {
+                                cglib::vec3<double> pos3DClip = cglib::transform_point(posTile, tileToClipMatrix);
+                                if (!(pos3DClip(0) >= 0 && pos3DClip(0) <= 1 && pos3DClip(1) >= 0 && pos3DClip(1) <= 1)) {
+                                    continue;
+                                }
+                            }
+
+                            // Store the result
+                            cglib::vec3<double> pos = cglib::transform_point(posTile, tileMatrix);
                             results.emplace_back(renderNode.tileId, cglib::dot_product(pos - ray.origin, ray.direction) / cglib::dot_product(ray.direction, ray.direction), id);
                         }
                     }
@@ -1098,7 +1112,7 @@ namespace carto { namespace vt {
         yAxis = cglib::transform_vector(yAxis * _viewState.scale, invTileMatrix);
     }
 
-    void GLTileRenderer::findTileGeometryIntersections(const TileId& tileId, const std::shared_ptr<TileGeometry>& geometry, const cglib::ray3<float>& ray, float radius, std::vector<std::pair<float, long long>>& results) const {
+    void GLTileRenderer::findTileGeometryIntersections(const TileId& tileId, const std::shared_ptr<TileGeometry>& geometry, const cglib::ray3<double>& ray, float radius, std::vector<std::pair<double, long long>>& results) const {
         cglib::vec3<float> xAxis, yAxis;
         setupPointCoordinateSystem(geometry->getStyleParameters().pointOrientation, tileId, 1.0f, xAxis, yAxis);
 
@@ -1133,8 +1147,8 @@ namespace carto { namespace vt {
                 p2 += decodePolygon3DOffset(geometry, index2);
             }
 
-            float t = 0;
-            if (cglib::intersect_triangle(p0, p1, p2, ray, &t)) {
+            double t = 0;
+            if (cglib::intersect_triangle(cglib::vec3<double>::convert(p0), cglib::vec3<double>::convert(p1), cglib::vec3<double>::convert(p2), ray, &t)) {
                 std::size_t counter = i;
                 for (std::size_t j = 0; j < geometry->getIds().size(); j++) {
                     if (counter < geometry->getIds()[j].first) {
