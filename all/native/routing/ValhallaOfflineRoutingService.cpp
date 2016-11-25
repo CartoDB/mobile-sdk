@@ -25,6 +25,7 @@
 #include <valhalla/config.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/constants.h>
+#include <valhalla/midgard/encoded.h>
 #include <valhalla/midgard/pointll.h>
 #include <valhalla/baldr/json.h>
 #include <valhalla/baldr/geojson.h>
@@ -102,7 +103,7 @@ namespace valhalla { namespace thor {
 
         boost::property_tree::ptree config_costing;
         cost = factory.Create(costing, config_costing);
-        mode = cost->travelmode();
+        mode = cost->travel_mode();
         mode_costing[static_cast<uint32_t>(mode)] = cost;
     }
     
@@ -163,15 +164,6 @@ namespace valhalla { namespace thor {
                 midgard::logging::Log("#_passes::2", " [ANALYTICS] ");
                 path_edges = path_algorithm->GetBestPath(origin, destination,
                     reader, mode_costing, mode);
-
-                // 3rd pass (only for A*)
-                if (path_edges.size() == 0 && using_astar) {
-                    path_algorithm->Clear();
-                    cost->DisableHighwayTransitions();
-                    midgard::logging::Log("#_passes::3", " [ANALYTICS] ");
-                    path_edges = path_algorithm->GetBestPath(origin, destination,
-                        reader, mode_costing, mode);
-                }
             }
         }
     }
@@ -302,7 +294,7 @@ namespace valhalla { namespace thor {
             if (destination.stoptype_ == baldr::Location::StopType::BREAK ||
                 path_location == --correlated.cend()) {
                 // Form output information based on path edges
-                auto trip_path = thor::TripPathBuilder::Build(reader, path_edges,
+                auto trip_path = thor::TripPathBuilder::Build(reader, mode_costing, path_edges,
                     last_break_origin, destination, through_loc);
 
                 if (date_time_type) {
@@ -422,7 +414,7 @@ namespace carto {
             try {
                 tripDirections = directions.Build(directionsOptions, tripPath);
 
-                std::vector<valhalla::midgard::PointLL> shape = valhalla::midgard::decode<std::vector<PointLL> >(tripDirections.shape());
+                std::vector<valhalla::midgard::PointLL> shape = valhalla::midgard::decode7<std::vector<PointLL> >(tripDirections.shape());
                 points.reserve(points.size() + shape.size());
                 epsg3857Points.reserve(epsg3857Points.size() + shape.size());
 
