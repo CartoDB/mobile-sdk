@@ -95,7 +95,7 @@ namespace carto {
         picojson::value config;
         std::string err = picojson::parse(config, result);
         if (!err.empty()) {
-            Log::Error("CartoOnlineTileDataSource: Failed to parse tile source configuration");
+            Log::Errorf("CartoOnlineTileDataSource: Failed to parse tile source configuration: %s", err.c_str());
             return false;
         }
 
