@@ -18,6 +18,7 @@ static BOOL MapViewCreated = NO;
 
 @property (strong, nonatomic) NTBaseMapView* baseMapView;
 @property (strong, nonatomic) EAGLContext* viewContext;
+@property (assign, nonatomic) BOOL active;
 @property (assign, nonatomic) float scale;
 
 @property (strong, nonatomic) UITouch* pointer1;
@@ -65,6 +66,11 @@ static const int NATIVE_NO_COORDINATE = -1;
 -(void)initBase {
     self.delegate = self;
 
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillResignActive) name:UIApplicationWillResignActiveNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillBecomeActive) name:UIApplicationWillEnterForegroundNotification object:nil];
+
+    _active = YES;
+
     _scale = 1;
     if ([[UIScreen mainScreen] respondsToSelector:@selector(scale)]) {
         _scale = [[UIScreen mainScreen] scale];
@@ -111,7 +117,7 @@ static const int NATIVE_NO_COORDINATE = -1;
 }
 
 -(void)glkView:(GLKView *)view drawInRect:(CGRect)rect {
-    if (_viewContext) {
+    if (_viewContext && _active) {
         EAGLContext* context = [EAGLContext currentContext];
         if (context != _viewContext) {
             [EAGLContext setCurrentContext:_viewContext];
@@ -134,6 +140,16 @@ static const int NATIVE_NO_COORDINATE = -1;
         _baseMapView = nil;
         _viewContext = nil;
     }
+}
+
+-(void)appWillResignActive {
+    carto::Log::Info("appWillResignActive");
+    _active = NO;
+}
+
+-(void)appWillBecomeActive {
+    carto::Log::Info("appWillBecomeActive");
+    _active = YES;
 }
 
 -(void)transformScreenCoord: (CGPoint*)screenCoord {
