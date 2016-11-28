@@ -140,6 +140,9 @@ static const int NATIVE_NO_COORDINATE = -1;
         _baseMapView = nil;
         _viewContext = nil;
     }
+
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillResignActiveNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillEnterForegroundNotification object:nil];
 }
 
 -(void)appWillResignActive {
