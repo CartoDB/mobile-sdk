@@ -87,6 +87,6 @@ namespace carto {
         return result;
     }
 
-    const std::string CartoSQLService::DEFAULT_API_TEMPLATE = "http://{user}.cartodb.com";
+    const std::string CartoSQLService::DEFAULT_API_TEMPLATE = "http://{user}.carto.com";
 
 }

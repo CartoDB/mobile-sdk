@@ -420,6 +420,6 @@ namespace carto {
         return layers;
     }
 
-    const std::string CartoMapsService::DEFAULT_API_TEMPLATE = "http://{user}.cartodb.com";
+    const std::string CartoMapsService::DEFAULT_API_TEMPLATE = "http://{user}.carto.com";
 
 }

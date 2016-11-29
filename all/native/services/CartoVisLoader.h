@@ -111,6 +111,9 @@ namespace carto {
         std::vector<LayerInfo> createNamedLayers(const picojson::value& options) const;
         std::vector<LayerInfo> createLayerGroup(const picojson::value& options, const picojson::value& infoWindow) const;
 
+        static const std::string DEFAULT_TILER_PROTOCOL;
+        static const std::string DEFAULT_TILER_DOMAIN;
+
         bool _defaultVectorLayerMode;
         bool _strictMode;
         std::shared_ptr<AssetPackage> _vectorTileAssetPackage;

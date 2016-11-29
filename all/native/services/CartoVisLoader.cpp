@@ -292,11 +292,11 @@ namespace carto {
             mapsService.setLayerFilter(filterList);
         }
 
-        std::string tilerProtocol = "http";
+        std::string tilerProtocol = DEFAULT_TILER_PROTOCOL;
         if (auto tilerProtocolOpt = getString(options.get("tiler_protocol"))) {
             tilerProtocol = *tilerProtocolOpt;
         }
-        std::string tilerDomain = "cartodb.com";
+        std::string tilerDomain = DEFAULT_TILER_DOMAIN;
         if (auto tilerDomainOpt = getString(options.get("tiler_domain"))) {
             tilerDomain = *tilerDomainOpt;
         }
@@ -670,5 +670,8 @@ namespace carto {
         }
         return layerInfos;
     }
+
+    const std::string CartoVisLoader::DEFAULT_TILER_PROTOCOL = "http";
+    const std::string CartoVisLoader::DEFAULT_TILER_DOMAIN = "carto.com";
 
 }
