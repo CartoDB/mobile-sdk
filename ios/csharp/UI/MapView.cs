@@ -17,8 +17,11 @@
     /// </summary>
     [Foundation.Register("MapView")]
     public partial class MapView : GLKView {
-        private bool _contextCreated = false;
+        private EAGLContext _viewContext;
+        private bool _active = false;
         private float _scale = 1;
+        private NSObject _willResignActiveNotificationObserver;
+        private NSObject _didBecomeActiveNotificationObserver;
 
         private UITouch _pointer1 = null;
         private UITouch _pointer2 = null;
@@ -69,22 +72,29 @@
         }
 
         private void InitBase() {
+            this.Delegate = new MapViewGLKViewDelegate();
+
+            _willResignActiveNotificationObserver = NSNotificationCenter.DefaultCenter.AddObserver(UIApplication.WillResignActiveNotification, OnAppWillResignActive, null);
+            _didBecomeActiveNotificationObserver = NSNotificationCenter.DefaultCenter.AddObserver(UIApplication.DidBecomeActiveNotification, OnAppDidBecomeActive, null);
+
+            _active = true;
+
             _scale = (float) UIScreen.MainScreen.Scale;
             _baseMapView = new BaseMapView();
             _baseMapView.SetRedrawRequestListener(new MapRedrawRequestListener(this));
             _baseMapView.GetOptions().DPI = 160 * _scale;
 
             DispatchQueue.MainQueue.DispatchAsync (
-                new System.Action (InitGL)
+                new System.Action(InitGL)
             );
         }
 
         private void InitGL() {
-            Context = new EAGLContext(EAGLRenderingAPI.OpenGLES2);
-            if (Context == null) {
+            _viewContext = new EAGLContext(EAGLRenderingAPI.OpenGLES2);
+            if (_viewContext == null) {
                 Log.Fatal("MapView.InitGL: Failed to create OpenGLES 2.0 context");
             }
-            _contextCreated = true;
+            this.Context = _viewContext;
 
             DrawableColorFormat = GLKViewDrawableColorFormat.RGBA8888;
             DrawableDepthFormat = GLKViewDrawableDepthFormat.Format24;
@@ -92,29 +102,47 @@
             DrawableStencilFormat = GLKViewDrawableStencilFormat.Format8;
             MultipleTouchEnabled = true;
 
-            EAGLContext.SetCurrentContext(Context);
+            EAGLContext.SetCurrentContext(_viewContext);
             _baseMapView.OnSurfaceCreated();
             _baseMapView.OnSurfaceChanged((int) (Bounds.Size.Width * _scale), (int) (Bounds.Size.Height * _scale));
-
-            this.Delegate = new MapViewGLKViewDelegate();
 
             SetNeedsDisplay();
         }
 
         private void OnDraw() {
-            if (_contextCreated) {
-                EAGLContext.SetCurrentContext(Context);
+            if (_viewContext != null && _active) {
+                EAGLContext context = EAGLContext.CurrentContext;
+                if (context != _viewContext) {
+                    EAGLContext.SetCurrentContext(_viewContext);
+                }
                 _baseMapView.OnDrawFrame();
+                if (context != _viewContext) {
+                    EAGLContext.SetCurrentContext(context);
+                }
             }
         }
 
+        private void OnAppWillResignActive(NSNotification notification) {
+            _active = false;
+        }
+
+        private void OnAppDidBecomeActive(NSNotification notification) {
+            _active = true;
+        }
+
         protected override void Dispose(bool disposing) {
-            if (_contextCreated && EAGLContext.CurrentContext == Context) {
-                EAGLContext.SetCurrentContext(null);
+            if (_viewContext != null) {
+                _baseMapView.OnSurfaceDestroyed();
+                if (EAGLContext.CurrentContext == _viewContext) {
+                    EAGLContext.SetCurrentContext(null);
+                }
                 _baseMapView.SetRedrawRequestListener(null);
                 _baseMapView = null;
-                Context = null;
+                _viewContext = null;
             }
+
+            NSNotificationCenter.DefaultCenter.RemoveObserver(_willResignActiveNotificationObserver);
+            NSNotificationCenter.DefaultCenter.RemoveObserver(_didBecomeActiveNotificationObserver);
 
             base.Dispose(disposing);
         }
@@ -122,8 +150,8 @@
         public override void LayoutSubviews() {
             base.LayoutSubviews();
 
-            if (_contextCreated) {
-                EAGLContext.SetCurrentContext(Context);
+            if (_viewContext != null) {
+                EAGLContext.SetCurrentContext(_viewContext);
                 _baseMapView.OnSurfaceChanged((int) (Bounds.Size.Width * _scale), (int) (Bounds.Size.Height * _scale));
                 SetNeedsDisplay();
             }
