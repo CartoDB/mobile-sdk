@@ -192,6 +192,18 @@ namespace carto {
             throw ParseException("Failed to parse map configuration response", result);
         }
 
+        // Check for errors and log them
+        if (mapInfo.get("errors").is<picojson::array>()) {
+            const picojson::array& errorsInfo = mapInfo.get("errors").get<picojson::array>();
+            for (auto it = errorsInfo.begin(); it != errorsInfo.end(); it++) {
+                Log::Errorf("CartoMapsService::createLayers: %s", it->get<std::string>().c_str());
+            }
+            if (!errorsInfo.empty()) {
+                std::string firstError = errorsInfo.front().get<std::string>();
+                throw GenericException("Errors when trying to instantiate named map", firstError);
+            }
+        }
+
         // Create layers
         return createLayers(mapInfo);
     }
