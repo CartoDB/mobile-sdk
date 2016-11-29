@@ -67,7 +67,7 @@ static const int NATIVE_NO_COORDINATE = -1;
     self.delegate = self;
 
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillResignActive) name:UIApplicationWillResignActiveNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillBecomeActive) name:UIApplicationWillEnterForegroundNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidBecomeActive) name:UIApplicationDidBecomeActiveNotification object:nil];
 
     _active = YES;
 
@@ -142,7 +142,7 @@ static const int NATIVE_NO_COORDINATE = -1;
     }
 
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillResignActiveNotification object:nil];
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillEnterForegroundNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidBecomeActiveNotification object:nil];
 }
 
 -(void)appWillResignActive {
@@ -150,8 +150,8 @@ static const int NATIVE_NO_COORDINATE = -1;
     _active = NO;
 }
 
--(void)appWillBecomeActive {
-    carto::Log::Info("appWillBecomeActive");
+-(void)appDidBecomeActive {
+    carto::Log::Info("appDidBecomeActive");
     _active = YES;
 }
 
