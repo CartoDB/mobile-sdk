@@ -38,6 +38,7 @@ namespace carto {
 
         CFUniquePtr<CFReadStreamRef> requestStream(CFReadStreamCreateForHTTPRequest(kCFAllocatorDefault, cfRequest));
         CFReadStreamSetProperty(requestStream, kCFStreamPropertyHTTPShouldAutoredirect, kCFBooleanTrue);
+        CFReadStreamSetProperty(requestStream, kCFStreamPropertyHTTPAttemptPersistentConnection, kCFBooleanTrue);
         if (!CFReadStreamOpen(requestStream)) {
             throw NetworkException("Failed to open HTTP stream", request.url);
         }
