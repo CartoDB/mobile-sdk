@@ -376,19 +376,10 @@ namespace carto {
             }
         }
         
-        // Sort tiles by distance to the camera
-        auto distanceComparator = [&](const MapTile& tile1, const MapTile& tile2) {
-            MapPos center1 = calculateInternalTileBounds(tile1).getCenter();
-            MapPos center2 = calculateInternalTileBounds(tile2).getCenter();
-            double dist1 = (center1 - cullState->getViewState().getCameraPos()).length();
-            double dist2 = (center2 - cullState->getViewState().getCameraPos()).length();
-            return dist1 < dist2;
-        };
-
-        std::sort(_visibleTiles.begin(), _visibleTiles.end(), distanceComparator);
-        std::sort(_preloadingTiles.begin(), _preloadingTiles.end(), distanceComparator);
+        sortTiles(_visibleTiles, cullState->getViewState(), false);
+        sortTiles(_preloadingTiles, cullState->getViewState(), true);
     }
-    
+
     void TileLayer::calculateVisibleTilesRecursive(const std::shared_ptr<CullState>& cullState, const MapTile& tile) {
         const ViewState& viewState = cullState->getViewState();
         const Frustum& visibleFrustum = viewState.getFrustum();
@@ -431,6 +422,44 @@ namespace carto {
                 _preloadingTiles.push_back(tile);
             }
         }
+    }
+    
+    void TileLayer::sortTiles(std::vector<MapTile>& tiles, const ViewState& viewState, bool preloadingTiles) {
+        typedef std::pair<std::tuple<int, int, double>, MapTile> TaggedMapTile;
+
+        // Create tagged tile list. Store parent/child substitution level and distance from camera center
+        std::vector<TaggedMapTile> taggedTiles;
+        taggedTiles.reserve(tiles.size());
+        for (const MapTile& mapTile : tiles) {
+            int parentSubstLevel = 0;
+            MapTile parentTile = mapTile.getParent();
+            if (tileExists(parentTile, preloadingTiles) || tileExists(parentTile, !preloadingTiles)) {
+                parentSubstLevel = 1;
+            }
+            int childSubstLevel = 0;
+            for (int n = 0; n < 4; n++) {
+                MapTile subTile = mapTile.getChild(n);
+                if (tileExists(subTile, preloadingTiles) || tileExists(subTile, !preloadingTiles)) {
+                    childSubstLevel = 1;
+                    break;
+                }
+            }
+
+            MapPos center = calculateInternalTileBounds(mapTile).getCenter();
+            double dist = (center - viewState.getCameraPos()).length();
+
+            taggedTiles.emplace_back(std::make_tuple(parentSubstLevel, childSubstLevel, dist), mapTile);
+        }
+
+        // Sort tiles
+        std::sort(taggedTiles.begin(), taggedTiles.end(), [](const TaggedMapTile& tile1, const TaggedMapTile& tile2) {
+            return tile1.first < tile2.first;
+        });
+
+        // Copy sorted tiles back
+        std::transform(taggedTiles.begin(), taggedTiles.end(), tiles.begin(), [](const TaggedMapTile& tile) {
+            return tile.second;
+        });
     }
     
     void TileLayer::findTiles(const std::vector<MapTile>& visTiles, bool preloadingTiles) {
