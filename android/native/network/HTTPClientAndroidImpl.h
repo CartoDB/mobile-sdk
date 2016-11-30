@@ -20,12 +20,12 @@ namespace carto {
     private:
         struct URLClass;
         struct HttpURLConnectionClass;
-        struct BufferedInputStreamClass;
+        struct InputStreamClass;
         struct OutputStreamClass;
         
         static std::unique_ptr<URLClass> _URLClass;
         static std::unique_ptr<HttpURLConnectionClass> _HttpURLConnectionClass;
-        static std::unique_ptr<BufferedInputStreamClass> _BufferedInputStreamClass;
+        static std::unique_ptr<InputStreamClass> _InputStreamClass;
         static std::unique_ptr<OutputStreamClass> _OutputStreamClass;
         static std::mutex _Mutex;
 

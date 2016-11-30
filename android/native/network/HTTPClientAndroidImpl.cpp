@@ -62,15 +62,13 @@ namespace carto {
         }
     };
     
-    struct HTTPClient::AndroidImpl::BufferedInputStreamClass {
+    struct HTTPClient::AndroidImpl::InputStreamClass {
         JNIUniqueGlobalRef<jclass> clazz;
-        jmethodID constructor;
         jmethodID read;
         jmethodID close;
 
-        explicit BufferedInputStreamClass(JNIEnv* jenv) {
-            clazz = JNIUniqueGlobalRef<jclass>(jenv->NewGlobalRef(jenv->FindClass("java/io/BufferedInputStream")));
-            constructor = jenv->GetMethodID(clazz, "<init>", "(Ljava/io/InputStream;)V");
+        explicit InputStreamClass(JNIEnv* jenv) {
+            clazz = JNIUniqueGlobalRef<jclass>(jenv->NewGlobalRef(jenv->FindClass("java/io/InputStream")));
             read = jenv->GetMethodID(clazz, "read", "([B)I");
             close = jenv->GetMethodID(clazz, "close", "()V");
         }
@@ -109,8 +107,8 @@ namespace carto {
             if (!_HttpURLConnectionClass) {
                 _HttpURLConnectionClass = std::unique_ptr<HttpURLConnectionClass>(new HttpURLConnectionClass(jenv));
             }
-            if (!_BufferedInputStreamClass) {
-                _BufferedInputStreamClass = std::unique_ptr<BufferedInputStreamClass>(new BufferedInputStreamClass(jenv));
+            if (!_InputStreamClass) {
+                _InputStreamClass = std::unique_ptr<InputStreamClass>(new InputStreamClass(jenv));
             }
             if (!_OutputStreamClass) {
                 _OutputStreamClass = std::unique_ptr<OutputStreamClass>(new OutputStreamClass(jenv));
@@ -168,7 +166,7 @@ namespace carto {
                 throw NetworkException("Unable to write data", request.url);
             }
         }
-        
+
         // Connect
         jenv->CallVoidMethod(conn, _HttpURLConnectionClass->connect);
         if (jenv->ExceptionCheck()) {
@@ -208,7 +206,7 @@ namespace carto {
             contentLength = boost::lexical_cast<std::uint64_t>(it->second);
         }
         
-        // Create BufferedInputStream for data
+        // Get input stream
         jobject inputStream = jenv->CallObjectMethod(conn, _HttpURLConnectionClass->getInputStream);
         if (jenv->ExceptionCheck()) {
             jenv->ExceptionClear();
@@ -219,20 +217,20 @@ namespace carto {
             }
         }
         
-        jobject bufferedInputStream = jenv->NewObject(_BufferedInputStreamClass->clazz, _BufferedInputStreamClass->constructor, inputStream);
-
         try {
             jbyte buf[4096];
             jbyteArray jbuf = jenv->NewByteArray(sizeof(buf));
 
-            for (std::uint64_t offset = 0; offset < contentLength && !cancel; ) {
-                jint numBytesRead = jenv->CallIntMethod(bufferedInputStream, _BufferedInputStreamClass->read, jbuf);
+            std::uint64_t readOffset = 0;
+            while (!cancel) {
+                jint numBytesRead = jenv->CallIntMethod(inputStream, _InputStreamClass->read, jbuf);
+
                 if (jenv->ExceptionCheck()) {
                     jenv->ExceptionClear();
                     throw NetworkException("Unable to read data", request.url);
                 }
                 if (numBytesRead < 0) {
-                    if (contentLength == std::numeric_limits<std::uint64_t>::max()) {
+                    if (readOffset >= contentLength || contentLength == std::numeric_limits<std::uint64_t>::max()) {
                         break;
                     }
                     throw NetworkException("Unable to read full data", request.url);
@@ -243,11 +241,11 @@ namespace carto {
                     cancel = true;
                 }
 
-                offset += numBytesRead;
+                readOffset += numBytesRead;
             }
         }
         catch (...) {
-            jenv->CallVoidMethod(bufferedInputStream, _BufferedInputStreamClass->close);
+            jenv->CallVoidMethod(inputStream, _InputStreamClass->close);
             if (jenv->ExceptionCheck()) {
                 jenv->ExceptionClear();
             }
@@ -256,17 +254,23 @@ namespace carto {
         }
         
         // Done
-        jenv->CallVoidMethod(bufferedInputStream, _BufferedInputStreamClass->close);
+        jenv->CallVoidMethod(inputStream, _InputStreamClass->close);
         if (jenv->ExceptionCheck()) {
             jenv->ExceptionClear();
         }
-        jenv->CallVoidMethod(conn, _HttpURLConnectionClass->disconnect);
-        return !cancel;
+
+        // If cancelled, explicitly disconnect
+        if (cancel) {
+            jenv->CallVoidMethod(conn, _HttpURLConnectionClass->disconnect);
+            return false;
+        }
+
+        return true;
     }
     
     std::unique_ptr<HTTPClient::AndroidImpl::URLClass> HTTPClient::AndroidImpl::_URLClass;
     std::unique_ptr<HTTPClient::AndroidImpl::HttpURLConnectionClass> HTTPClient::AndroidImpl::_HttpURLConnectionClass;
-    std::unique_ptr<HTTPClient::AndroidImpl::BufferedInputStreamClass> HTTPClient::AndroidImpl::_BufferedInputStreamClass;
+    std::unique_ptr<HTTPClient::AndroidImpl::InputStreamClass> HTTPClient::AndroidImpl::_InputStreamClass;
     std::unique_ptr<HTTPClient::AndroidImpl::OutputStreamClass> HTTPClient::AndroidImpl::_OutputStreamClass;
     
     std::mutex HTTPClient::AndroidImpl::_Mutex;
