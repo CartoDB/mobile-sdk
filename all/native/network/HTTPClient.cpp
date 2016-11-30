@@ -139,9 +139,6 @@ namespace carto {
         };
 
         if (!_impl->makeRequest(request, headersFn, dataFn)) {
-            if (response.statusCode == 206 && contentOffset != offset) {
-                throw OutOfRangeException("Content range mismatch");
-            }
             return -1; // request was cancelled
         }
 
