@@ -2,6 +2,7 @@
 #include "components/Options.h"
 #include "graphics/ViewState.h"
 #include "utils/Const.h"
+#include "utils/Log.h"
 #include "utils/GeneralUtils.h"
 
 namespace carto {
@@ -50,6 +51,7 @@ namespace carto {
     
     void CameraRotationEvent::setTargetPos(const MapPos& targetPos) {
         _targetPos = targetPos;
+        _targetPos.setZ(0);
         _useTarget = true;
     }
     

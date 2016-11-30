@@ -49,6 +49,7 @@ namespace carto {
     
     void CameraZoomEvent::setTargetPos(const MapPos& targetPos) {
         _targetPos = targetPos;
+        _targetPos.setZ(0);
         _useTarget = true;
     }
     
