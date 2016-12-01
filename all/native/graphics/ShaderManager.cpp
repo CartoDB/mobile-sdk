@@ -36,7 +36,9 @@ namespace carto {
 
         auto it = _shaderMap.find(&source);
         if (it != _shaderMap.end()) {
-            return it->second;
+            if (auto shader = it->second.lock()) {
+                return shader;
+            }
         }
 
         std::shared_ptr<Shader> shader(new Shader(shared_from_this(), source), [this](Shader* shader) { deleteShader(shader); });
@@ -47,7 +49,7 @@ namespace carto {
     }
     
     void ShaderManager::processShaders() {
-        std::vector<std::shared_ptr<Shader> > createQueue;
+        std::vector<std::weak_ptr<Shader> > createQueue;
         {
             std::lock_guard<std::mutex> lock(_mutex);
 
@@ -66,8 +68,10 @@ namespace carto {
             }
             _deleteProgIdQueue.clear();
 
-            for (const std::shared_ptr<Shader>& shader : _createQueue) {
-                shader->load();
+            for (const std::weak_ptr<Shader>& shaderWeak : _createQueue) {
+                if (auto shader = shaderWeak.lock()) {
+                    shader->load();
+                }
             }
             std::swap(createQueue, _createQueue); // release the shaders only after lock is released
         }
@@ -91,6 +95,7 @@ namespace carto {
                     _deleteProgIdQueue.push_back(shader->_progId);
                 }
             }
+            delete shader;
         }
     }
 

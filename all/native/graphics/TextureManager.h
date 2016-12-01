@@ -33,7 +33,7 @@ namespace carto {
         void deleteTexture(Texture* texture);
 
         std::thread::id _glThreadId;
-        std::vector<std::shared_ptr<Texture> > _createQueue;
+        std::vector<std::weak_ptr<Texture> > _createQueue;
         std::vector<GLuint> _deleteTexIdQueue;
         mutable std::mutex _mutex;
     };
