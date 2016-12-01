@@ -88,31 +88,22 @@ namespace carto {
             }
         }
 
-        // Read Content-Length
-        std::uint64_t contentLength = std::numeric_limits<std::uint64_t>::max();
-        auto it = headers.find("Content-Length");
-        if (it != headers.end()) {
-            contentLength = boost::lexical_cast<std::uint64_t>(it->second);
-        }
-
         // Read message body
-        for (std::uint64_t offset = numBytesRead; offset < contentLength && !cancel; ) {
+        std::uint64_t readOffset = numBytesRead;
+        while (!cancel) {
             numBytesRead = CFReadStreamRead(requestStream, buf, sizeof(buf));
             if (numBytesRead < 0) {
                 throw NetworkException("Failed to read data", request.url);
             }
             else if (numBytesRead == 0) {
-                if (contentLength == std::numeric_limits<std::uint64_t>::max()) {
-                    break;
-                }
-                throw NetworkException("Failed to read full data", request.url);
+                break;
             }
 
             if (!dataFn(static_cast<const unsigned char*>(&buf[0]), numBytesRead)) {
                 cancel = true;
             }
 
-            offset += numBytesRead;
+            readOffset += numBytesRead;
         }
 
         // Done

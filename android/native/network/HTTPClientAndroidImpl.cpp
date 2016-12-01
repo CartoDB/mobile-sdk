@@ -199,13 +199,6 @@ namespace carto {
             cancel = true;
         }
 
-        // Read Content-Length
-        std::uint64_t contentLength = std::numeric_limits<std::uint64_t>::max();
-        auto it = headers.find("Content-Length");
-        if (it != headers.end()) {
-            contentLength = boost::lexical_cast<std::uint64_t>(it->second);
-        }
-        
         // Get input stream
         jobject inputStream = jenv->CallObjectMethod(conn, _HttpURLConnectionClass->getInputStream);
         if (jenv->ExceptionCheck()) {
@@ -230,10 +223,7 @@ namespace carto {
                     throw NetworkException("Unable to read data", request.url);
                 }
                 if (numBytesRead < 0) {
-                    if (readOffset >= contentLength || contentLength == std::numeric_limits<std::uint64_t>::max()) {
-                        break;
-                    }
-                    throw NetworkException("Unable to read full data", request.url);
+                    break;
                 }
                 jenv->GetByteArrayRegion(jbuf, 0, numBytesRead, buf);
             
