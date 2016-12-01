@@ -55,379 +55,271 @@ This high-level workflow describes how to prepare your mobile data for rendering
 
   **Note:** [Widgets](https://carto.com/learn/guides/widgets/exploring-widgets) are currently not supported for the CARTO Mobile SDK format, but will be available in a future release.
 
-### App Integration
+## App Integration
 
-#### Maps API
+### Maps API
 
 reference: https://carto.com/docs/carto-engine/maps-api/
 
 CARTO Mobile SDK also supports Maps API: anonymous maps and named maps. Anonymous maps allow you to instantiate a map given SQL and CartoCSS. Named Maps are essentially the same as Anonymous Maps except the MapConfig is stored on the server, and the map is given a unique name.
 
-  ##### Building an anonymous map config (SQL and CartoCSS)
+#### Building an anonymous map config (SQL and CartoCSS)
 
-  <div class="js-TabPanes">
-  
-    <ul class="Tabs">
-      <li class="Tab js-Tabpanes-navItem--lang is-active">
-        <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-      </li>
-      <li class="Tab js-Tabpanes-navItem--lang">
-        <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-      </li>
-      <li class="Tab js-Tabpanes-navItem--lang">
-        <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-      </li>
-    </ul>
+<div class="js-TabPanes">
 
-    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-    {% highlight java %}
+<ul class="Tabs">
+  <li class="Tab js-Tabpanes-navItem--lang is-active">
+    <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+  </li>
+</ul>
 
-        // Define server config
-        JSONObject configJson = new JSONObject();
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+{% highlight java %}
 
-        try {
-            // You need to change these according to your DB
-            String sql = "select * from table_46g";
-            String cartoCss = "#table_46g {raster-opacity: 0.5;}";
+    // Define server config
+    JSONObject configJson = new JSONObject();
 
-            // You probably do not need to change much of below
-            configJson.put("version", "1.2.0");
+    try {
+        // You need to change these according to your DB
+        String sql = "select * from table_46g";
+        String cartoCss = "#table_46g {raster-opacity: 0.5;}";
 
-            JSONArray layersArrayJson = new JSONArray();
-            JSONObject layersJson = new JSONObject();
-            layersJson.put("type", "cartodb");
+        // You probably do not need to change much of below
+        configJson.put("version", "1.2.0");
 
-            JSONObject optionsJson = new JSONObject();
-            optionsJson.put("sql", sql);
-            optionsJson.put("cartocss", cartoCss);
-            optionsJson.put("cartocss_version", "2.3.0");
-            optionsJson.put("geom_column", "the_raster_webmercator");
-            optionsJson.put("geom_type", "raster");
-            
-            layersJson.put("options", optionsJson);
-            layersArrayJson.put(layersJson);
-            configJson.put("layers", layersArrayJson);
+        JSONArray layersArrayJson = new JSONArray();
+        JSONObject layersJson = new JSONObject();
+        layersJson.put("type", "cartodb");
 
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        JSONObject optionsJson = new JSONObject();
+        optionsJson.put("sql", sql);
+        optionsJson.put("cartocss", cartoCss);
+        optionsJson.put("cartocss_version", "2.3.0");
+        optionsJson.put("geom_column", "the_raster_webmercator");
+        optionsJson.put("geom_type", "raster");
+        
+        layersJson.put("options", optionsJson);
+        layersArrayJson.put(layersJson);
+        configJson.put("layers", layersArrayJson);
 
-        final String config = configJson.toString();
-
-    {% endhighlight %}
-    </div>
-
-    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-    {% highlight csharp %}
-
-    // You need to change these according to your DB
-    string sql = "select * from table_46g";
-    string cartoCSS = "#table_46g {raster-opacity: 0.5;}";
-
-    string config = JsonUtils.GetRasterLayerConfigJson(sql, cartoCSS).ToString();
-
-    public static JsonValue GetRasterLayerConfigJson(string sql, string cartoCSS)
-    {
-      JsonObject configJson = new JsonObject();
-
-      configJson.Add("version", "1.2.0");
-
-      JsonArray layersArrayJson = new JsonArray();
-      JsonObject layersJson = new JsonObject();
-
-      layersJson.Add("type", "cartodb");
-
-      JsonObject optionsJson = new JsonObject();
-
-      optionsJson.Add("sql", sql);
-      optionsJson.Add("cartocss", cartoCSS);
-      optionsJson.Add("cartocss_version", "2.3.0");
-      optionsJson.Add("geom_column", "the_raster_webmercator");
-      optionsJson.Add("geom_type", "raster");
-
-      layersJson.Add("options", optionsJson);
-
-      layersArrayJson.Add(layersJson);
-
-      configJson.Add("layers", layersArrayJson);
-
-      return configJson;
+    } catch (JSONException e) {
+        e.printStackTrace();
     }
 
-    {% endhighlight %}
-    </div>
+    final String config = configJson.toString();
 
-    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-    {% highlight objc %}
+{% endhighlight %}
+</div>
 
-    self.sql = @"select * from table_46g";
-    self.cartoCSS = @"#table_46g {raster-opacity: 0.5;}";
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+{% highlight csharp %}
 
-    - (NSString*) getConfig
-    {
-      NSDictionary* options = @{
-                                @"sql": self.sql,
-                                @"cartocss": self.cartoCSS,
-                                @"cartocss_version": @"2.3.0",
-                                @"geom_column": @"the_raster_webmercator",
-                                @"geom_type": @"raster",
-                                };
-      
-      NSMutableArray* layersArray = [[NSMutableArray alloc]init];
-      NSDictionary* layers = @{ @"options": options, @"type": @"cartodb" };
+// You need to change these according to your DB
+string sql = "select * from table_46g";
+string cartoCSS = "#table_46g {raster-opacity: 0.5;}";
 
-      [layersArray addObject:layers];
-      
-      NSDictionary* json = @{ @"layers": layersArray, @"version": @"1.2.0" };
-      
-      NSError *error;
-      NSData* data = [NSJSONSerialization dataWithJSONObject:json options:0 error:&error];
-      
-      return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    }
+string config = JsonUtils.GetRasterLayerConfigJson(sql, cartoCSS).ToString();
 
-    {% endhighlight %} 
-    </div>
-  </div>
+public static JsonValue GetRasterLayerConfigJson(string sql, string cartoCSS)
+{
+  JsonObject configJson = new JsonObject();
 
-    Using Carto Maps service class to configure layers. Note that this must be done in a separate thread on Android, as Maps API requires connecting to server which is not allowed in main thread.
+  configJson.Add("version", "1.2.0");
 
-    The following code snippet is for querying data from an anonymous raster table. Change the default vector layer mode to true if you are using a vector table.
+  JsonArray layersArrayJson = new JsonArray();
+  JsonObject layersJson = new JsonObject();
 
-    <div class="js-TabPanes">
+  layersJson.Add("type", "cartodb");
+
+  JsonObject optionsJson = new JsonObject();
+
+  optionsJson.Add("sql", sql);
+  optionsJson.Add("cartocss", cartoCSS);
+  optionsJson.Add("cartocss_version", "2.3.0");
+  optionsJson.Add("geom_column", "the_raster_webmercator");
+  optionsJson.Add("geom_type", "raster");
+
+  layersJson.Add("options", optionsJson);
+
+  layersArrayJson.Add(layersJson);
+
+  configJson.Add("layers", layersArrayJson);
+
+  return configJson;
+}
+
+{% endhighlight %}
+</div>
+
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+{% highlight objc %}
+
+self.sql = @"select * from table_46g";
+self.cartoCSS = @"#table_46g {raster-opacity: 0.5;}";
+
+- (NSString*) getConfig
+{
+  NSDictionary* options = @{
+                            @"sql": self.sql,
+                            @"cartocss": self.cartoCSS,
+                            @"cartocss_version": @"2.3.0",
+                            @"geom_column": @"the_raster_webmercator",
+                            @"geom_type": @"raster",
+                            };
   
-    <ul class="Tabs">
-      <li class="Tab js-Tabpanes-navItem--lang is-active">
-        <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-      </li>
-      <li class="Tab js-Tabpanes-navItem--lang">
-        <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-      </li>
-      <li class="Tab js-Tabpanes-navItem--lang">
-        <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-      </li>
-    </ul>
+  NSMutableArray* layersArray = [[NSMutableArray alloc]init];
+  NSDictionary* layers = @{ @"options": options, @"type": @"cartodb" };
 
-    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-    {% highlight java %}
+  [layersArray addObject:layers];
+  
+  NSDictionary* json = @{ @"layers": layersArray, @"version": @"1.2.0" };
+  
+  NSError *error;
+  NSData* data = [NSJSONSerialization dataWithJSONObject:json options:0 error:&error];
+  
+  return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+}
 
-        Thread serviceThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
+{% endhighlight %} 
+</div>
+</div>
 
-                CartoMapsService mapsService = new CartoMapsService();
-                mapsService.setUsername("nutiteq");
-                mapsService.setDefaultVectorLayerMode(false);
+Using Carto Maps service class to configure layers. Note that this must be done in a separate thread on Android, as Maps API requires connecting to server which is not allowed in main thread.
 
-                try {
-                    LayerVector layers = mapsService.buildMap(Variant.fromString(config));
-                    for (int i = 0; i < layers.size(); i++) {
-                        mapView.getLayers().add(layers.get(i));
-                    }
-                }
-                catch (IOException e) {
-                    Log.e("EXCEPTION", "Exception: " + e);
+The following code snippet is for querying data from an anonymous raster table. Change the default vector layer mode to true if you are using a vector table.
+
+<div class="js-TabPanes">
+
+<ul class="Tabs">
+  <li class="Tab js-Tabpanes-navItem--lang is-active">
+    <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+  </li>
+</ul>
+
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+{% highlight java %}
+
+    Thread serviceThread = new Thread(new Runnable() {
+        @Override
+        public void run() {
+
+            CartoMapsService mapsService = new CartoMapsService();
+            mapsService.setUsername("nutiteq");
+            mapsService.setDefaultVectorLayerMode(false);
+
+            try {
+                LayerVector layers = mapsService.buildMap(Variant.fromString(config));
+                for (int i = 0; i < layers.size(); i++) {
+                    mapView.getLayers().add(layers.get(i));
                 }
             }
-        });
-
-        serviceThread.start();
-
-    {% endhighlight %}
-    </div>
-
-    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-    {% highlight csharp %}
-
-      CartoMapsService mapsService = new CartoMapsService();
-      mapsService.Username = "nutiteq";
-      mapsService.DefaultVectorLayerMode = false;
-
-      System.Threading.Tasks.Task.Run(delegate
-      {
-        try
-        {
-          LayerVector layers = mapsService.BuildMap(Variant.FromString(config));
-          for (int i = 0; i < layers.Count; i++)
-          {
-            MapView.Layers.Add(layers[i]);
-          }
-        }
-        catch (IOException e)
-        {
-          Carto.Utils.Log.Debug("EXCEPTION: Exception: " + e);
-        }
-      });
-
-    {% endhighlight %}
-    </div>
-
-    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-    {% highlight objc %}
-
-    NTCartoMapsService* mapsService = [[NTCartoMapsService alloc] init];
-    [mapsService setUsername:@"nutiteq"];
-    [mapsService setDefaultVectorLayerMode:NO];
-    
-    NTVariant* variant = [NTVariant fromString:[self getConfig]];
-    NTLayerVector *layers = [mapsService buildMap:variant];
-    
-    for (int i = 0; i < [layers size]; i++) {
-        NTLayer* layer = [layers get:i];
-        [[self.mapView getLayers]add:layer];
-    }
-
-    {% endhighlight %}
-    </div>
-  </div>
-
-  ##### If you have the name of a map, you can use that to query data, instead of providing the SQL or CartoCSS
-
-  <div class="js-TabPanes">
-  
-    <ul class="Tabs">
-      <li class="Tab js-Tabpanes-navItem--lang is-active">
-        <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-      </li>
-      <li class="Tab js-Tabpanes-navItem--lang">
-        <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-      </li>
-      <li class="Tab js-Tabpanes-navItem--lang">
-        <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-      </li>
-    </ul>
-
-    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-    {% highlight java %}
-
-        final CartoMapsService service = new CartoMapsService();
-
-        // Use raster layers, not vector
-        service.setDefaultVectorLayerMode(true);
-
-        service.setUsername("nutiteq");
-
-        final String name = "tpl_69f3eebe_33b6_11e6_8634_0e5db1731f59";
-
-        // Be sure to make network queries on another thread
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-
-                    LayerVector layers = service.buildNamedMap(name, new StringVariantMap());
-
-                    for (int i = 0; i < layers.size(); i++) {
-                        Layer layer = layers.get(i);
-                        mapView.getLayers().add(layer);
-                    }
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+            catch (IOException e) {
+                Log.e("EXCEPTION", "Exception: " + e);
             }
-        });
-
-        thread.start();
-
-    {% endhighlight %}
-    </div>
-
-    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-    {% highlight csharp %}
-
-
-    MapView.ConfigureNamedVectorLayers("tpl_69f3eebe_33b6_11e6_8634_0e5db1731f59");
-
-    public static void ConfigureNamedVectorLayers(this MapView map, string name)
-    {
-      System.Threading.Tasks.Task.Run(delegate
-      {
-        CartoMapsService service = new CartoMapsService();
-        service.Username = "nutiteq";
-
-        // Use VectorLayers
-        service.DefaultVectorLayerMode = true;
-
-        LayerVector layers = service.BuildNamedMap(name, new StringVariantMap());
-
-        for (int i = 0; i < layers.Count; i++)
-        {
-          map.Layers.Add(layers[i]);
         }
-      });
+    });
+
+    serviceThread.start();
+
+{% endhighlight %}
+</div>
+
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+{% highlight csharp %}
+
+  CartoMapsService mapsService = new CartoMapsService();
+  mapsService.Username = "nutiteq";
+  mapsService.DefaultVectorLayerMode = false;
+
+  System.Threading.Tasks.Task.Run(delegate
+  {
+    try
+    {
+      LayerVector layers = mapsService.BuildMap(Variant.FromString(config));
+      for (int i = 0; i < layers.Count; i++)
+      {
+        MapView.Layers.Add(layers[i]);
+      }
     }
-
-    {% endhighlight %}
-    </div>
-
-    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-    {% highlight objc %}
-
-    NTCartoMapsService* mapsService = [[NTCartoMapsService alloc] init];
-    
-    [mapsService setUsername:@"nutiteq"];
-    
-    // Use raster layers, not vector layers
-    [mapsService setDefaultVectorLayerMode:YES];
-    
-    NTLayerVector *layers = [mapsService buildNamedMap:@"tpl_69f3eebe_33b6_11e6_8634_0e5db1731f59" templateParams: [[NTStringVariantMap alloc] init]];
-    
-    for (int i = 0; i < [layers size]; i++) {
-        NTLayer* layer = [layers get:i];
-        [[self.mapView getLayers]add:layer];
+    catch (IOException e)
+    {
+      Carto.Utils.Log.Debug("EXCEPTION: Exception: " + e);
     }
+  });
 
-    {% endhighlight %}
-    </div>
-      
-  </div>
+{% endhighlight %}
+</div>
 
-#### SQL API
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+{% highlight objc %}
 
-reference: https://carto.com/docs/carto-engine/sql-api/
+NTCartoMapsService* mapsService = [[NTCartoMapsService alloc] init];
+[mapsService setUsername:@"nutiteq"];
+[mapsService setDefaultVectorLayerMode:NO];
 
-  
-  CARTO’s SQL API allows you to interact with your tables and data inside CARTO, as if you were running SQL statements against a normal database. You can use the SQL API to insert, update or delete data (i.e., insert a new column with a latitude and longitude data) or to select data from public tables in order to use it on your website or application (i.e., display the 10 closest records to a particular location).
+NTVariant* variant = [NTVariant fromString:[self getConfig]];
+NTLayerVector *layers = [mapsService buildMap:variant];
 
-  ##### Using CARTO SQL Service class to make a query
+for (int i = 0; i < [layers size]; i++) {
+    NTLayer* layer = [layers get:i];
+    [[self.mapView getLayers]add:layer];
+}
 
-  <div class="js-TabPanes">
-  
-    <ul class="Tabs">
-      <li class="Tab js-Tabpanes-navItem--lang is-active">
-        <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-      </li>
-      <li class="Tab js-Tabpanes-navItem--lang">
-        <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-      </li>
-      <li class="Tab js-Tabpanes-navItem--lang">
-        <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-      </li>
-    </ul>
+{% endhighlight %}
+</div>
+</div>
 
-    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-    {% highlight java %}
+##### If you have the name of a map, you can use that to query data, instead of providing the SQL or CartoCSS
 
-    static final String query = "SELECT * FROM cities15000 WHERE population > 100000";
+<div class="js-TabPanes">
 
-    final CartoSQLService service = new CartoSQLService();
+<ul class="Tabs">
+  <li class="Tab js-Tabpanes-navItem--lang is-active">
+    <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+  </li>
+</ul>
+
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+{% highlight java %}
+
+    final CartoMapsService service = new CartoMapsService();
+
+    // Use raster layers, not vector
+    service.setDefaultVectorLayerMode(true);
+
     service.setUsername("nutiteq");
+
+    final String name = "tpl_69f3eebe_33b6_11e6_8634_0e5db1731f59";
 
     // Be sure to make network queries on another thread
     Thread thread = new Thread(new Runnable() {
         @Override
         public void run() {
             try {
-                features = service.queryFeatures(query, baseProjection);
 
-                for (int i = 0; i < features.getFeatureCount(); i++) {
+                LayerVector layers = service.buildNamedMap(name, new StringVariantMap());
 
-                    // This data set features point geometry,
-                    // however, it can also be LineGeometry or PolygonGeometry
-
-                    PointGeometry geometry = (PointGeometry)features.getFeature(i).getGeometry();
-                    source.add(new Point(geometry, getPointStyle()));
+                for (int i = 0; i < layers.size(); i++) {
+                    Layer layer = layers.get(i);
+                    mapView.getLayers().add(layer);
                 }
 
             } catch (IOException e) {
@@ -438,89 +330,197 @@ reference: https://carto.com/docs/carto-engine/sql-api/
 
     thread.start();
 
-    {% endhighlight %}
-    </div>
+{% endhighlight %}
+</div>
 
-    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-    {% highlight csharp %}
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+{% highlight csharp %}
 
-    const string query = "SELECT * FROM cities15000 WHERE population > 100000";
 
-    CartoSQLService service = new CartoSQLService();
+MapView.ConfigureNamedVectorLayers("tpl_69f3eebe_33b6_11e6_8634_0e5db1731f59");
+
+public static void ConfigureNamedVectorLayers(this MapView map, string name)
+{
+  System.Threading.Tasks.Task.Run(delegate
+  {
+    CartoMapsService service = new CartoMapsService();
     service.Username = "nutiteq";
 
-    PointStyleBuilder builder = new PointStyleBuilder
-    {
-      Color = new Carto.Graphics.Color(255, 0, 0, 255),
-      Size = 1
-    };
+    // Use VectorLayers
+    service.DefaultVectorLayerMode = true;
 
-    MapView.QueryFeatures(service, source, builder.BuildStyle(), query);
+    LayerVector layers = service.BuildNamedMap(name, new StringVariantMap());
 
-    // Extension Method in a static class (shared code)
-    public static void QueryFeatures(this MapView map, CartoSQLService service, LocalVectorDataSource source, PointStyle style, string query)
+    for (int i = 0; i < layers.Count; i++)
     {
-      System.Threading.Tasks.Task.Run(delegate
+      map.Layers.Add(layers[i]);
+    }
+  });
+}
+
+{% endhighlight %}
+</div>
+
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+{% highlight objc %}
+
+NTCartoMapsService* mapsService = [[NTCartoMapsService alloc] init];
+
+[mapsService setUsername:@"nutiteq"];
+
+// Use raster layers, not vector layers
+[mapsService setDefaultVectorLayerMode:YES];
+
+NTLayerVector *layers = [mapsService buildNamedMap:@"tpl_69f3eebe_33b6_11e6_8634_0e5db1731f59" templateParams: [[NTStringVariantMap alloc] init]];
+
+for (int i = 0; i < [layers size]; i++) {
+    NTLayer* layer = [layers get:i];
+    [[self.mapView getLayers]add:layer];
+}
+
+{% endhighlight %}
+</div>
+  
+</div>
+
+### SQL API
+
+reference: https://carto.com/docs/carto-engine/sql-api/
+
+
+CARTO’s SQL API allows you to interact with your tables and data inside CARTO, as if you were running SQL statements against a normal database. You can use the SQL API to insert, update or delete data (i.e., insert a new column with a latitude and longitude data) or to select data from public tables in order to use it on your website or application (i.e., display the 10 closest records to a particular location).
+
+#### Using CARTO SQL Service class to make a query
+
+<div class="js-TabPanes">
+
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+    </li>
+  </ul>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  {% highlight java %}
+
+  static final String query = "SELECT * FROM cities15000 WHERE population > 100000";
+
+  final CartoSQLService service = new CartoSQLService();
+  service.setUsername("nutiteq");
+
+  // Be sure to make network queries on another thread
+  Thread thread = new Thread(new Runnable() {
+      @Override
+      public void run() {
+          try {
+              features = service.queryFeatures(query, baseProjection);
+
+              for (int i = 0; i < features.getFeatureCount(); i++) {
+
+                  // This data set features point geometry,
+                  // however, it can also be LineGeometry or PolygonGeometry
+
+                  PointGeometry geometry = (PointGeometry)features.getFeature(i).getGeometry();
+                  source.add(new Point(geometry, getPointStyle()));
+              }
+
+          } catch (IOException e) {
+              e.printStackTrace();
+          }
+      }
+  });
+
+  thread.start();
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  {% highlight csharp %}
+
+  const string query = "SELECT * FROM cities15000 WHERE population > 100000";
+
+  CartoSQLService service = new CartoSQLService();
+  service.Username = "nutiteq";
+
+  PointStyleBuilder builder = new PointStyleBuilder
+  {
+    Color = new Carto.Graphics.Color(255, 0, 0, 255),
+    Size = 1
+  };
+
+  MapView.QueryFeatures(service, source, builder.BuildStyle(), query);
+
+  // Extension Method in a static class (shared code)
+  public static void QueryFeatures(this MapView map, CartoSQLService service, LocalVectorDataSource source, PointStyle style, string query)
+  {
+    System.Threading.Tasks.Task.Run(delegate
+    {
+      FeatureCollection features = service.QueryFeatures(query, map.Options.BaseProjection);
+
+      for (int i = 0; i < features.FeatureCount; i++)
       {
-        FeatureCollection features = service.QueryFeatures(query, map.Options.BaseProjection);
+        Feature feature = features.GetFeature(i);
 
-        for (int i = 0; i < features.FeatureCount; i++)
-        {
-          Feature feature = features.GetFeature(i);
+        // This data set features point geometry,
+        // however, it can also be LineGeometry or PolygonGeometry
+        PointGeometry geometry = (PointGeometry)feature.Geometry;
+
+        var point = new Point(geometry, style);
+        source.Add(point);
+      }
+
+    }); 
+  }
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  {% highlight objc %}
+
+  // Only get cities with over 100k, else it'll be too many
+  NSString *sql = @"SELECT * FROM cities15000 WHERE population > 100000";
+  
+  // Initialize CartoSQL service, set a username
+  NTCartoSQLService *service = [[NTCartoSQLService alloc] init];
+  [service setUsername:@"nutiteq"];
+  
+  NTPointStyleBuilder *builder = [[NTPointStyleBuilder alloc]init];
+  NTColor *color = [[NTColor alloc] initWithR:255 g:0 b:0 a:255];
+  [builder setColor:color];
+  [builder setSize:1];
+
+  NTPointStyle *style = [builder buildStyle];
+  
+  dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0ul);
+  
+  // Set on background thread for "animated" point appear
+  dispatch_async(queue, ^{
+      NTFeatureCollection *features = [service queryFeatures:sql proj:self.projection];
+  
+      for (int i = 0; i < [features getFeatureCount]; i++) {
 
           // This data set features point geometry,
           // however, it can also be LineGeometry or PolygonGeometry
-          PointGeometry geometry = (PointGeometry)feature.Geometry;
+          NTPointGeometry *geometry = (NTPointGeometry *)[[features getFeature:i] getGeometry];
+      
+          NTPoint *point = [[NTPoint alloc] initWithGeometry:geometry style:style];
+          [self.source add:point];
+      }
+  });
 
-          var point = new Point(geometry, style);
-          source.Add(point);
-        }
-
-      }); 
-    }
-
-    {% endhighlight %}
-    </div>
-
-    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-    {% highlight objc %}
-
-    // Only get cities with over 100k, else it'll be too many
-    NSString *sql = @"SELECT * FROM cities15000 WHERE population > 100000";
-    
-    // Initialize CartoSQL service, set a username
-    NTCartoSQLService *service = [[NTCartoSQLService alloc] init];
-    [service setUsername:@"nutiteq"];
-    
-    NTPointStyleBuilder *builder = [[NTPointStyleBuilder alloc]init];
-    NTColor *color = [[NTColor alloc] initWithR:255 g:0 b:0 a:255];
-    [builder setColor:color];
-    [builder setSize:1];
-
-    NTPointStyle *style = [builder buildStyle];
-    
-    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0ul);
-    
-    // Set on background thread for "animated" point appear
-    dispatch_async(queue, ^{
-        NTFeatureCollection *features = [service queryFeatures:sql proj:self.projection];
-    
-        for (int i = 0; i < [features getFeatureCount]; i++) {
-
-            // This data set features point geometry,
-            // however, it can also be LineGeometry or PolygonGeometry
-            NTPointGeometry *geometry = (NTPointGeometry *)[[features getFeature:i] getGeometry];
-        
-            NTPoint *point = [[NTPoint alloc] initWithGeometry:geometry style:style];
-            [self.source add:point];
-        }
-    });
-
-    {% endhighlight %}
-    </div>
+  {% endhighlight %}
   </div>
+</div>
 
-#### CARTO.js API
+### CARTO.js API
 
 reference: https://carto.com/docs/carto-engine/carto-js/
 
@@ -627,8 +627,6 @@ Warning! viz.json API is in development and experimental. Use at your own risk.
   </div>
     
 </div>
-
-
 
 5) Load the CARTO visualization
 
