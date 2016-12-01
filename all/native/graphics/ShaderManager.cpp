@@ -42,7 +42,7 @@ namespace carto {
         }
 
         std::shared_ptr<Shader> shader(new Shader(shared_from_this(), source), [this](Shader* shader) { deleteShader(shader); });
-        _shaderMap.insert({ &source, shader });
+        _shaderMap[&source] = shader;
 
         _createQueue.push_back(shader);
         return shader;
