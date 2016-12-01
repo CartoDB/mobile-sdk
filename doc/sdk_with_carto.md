@@ -57,189 +57,13 @@ This high-level workflow describes how to prepare your mobile data for rendering
 
 ### App Integration
 
-In order to integrate your published mobile map into your app, you need a callback-based asynchronous process to request the viz.json.
+#### Maps API
 
-1)  The following requirements are needed for app integration of a published CARTO Mobile SDK map:
+reference: https://carto.com/docs/carto-engine/maps-api/
 
-  - Online API is requested and will run in another thread
+CARTO Mobile SDK also supports Maps API: anonymous maps and named maps. Anonymous maps allow you to instantiate a map given SQL and CartoCSS. Named Maps are essentially the same as Anonymous Maps except the MapConfig is stored on the server, and the map is given a unique name.
 
-  - In certain cases, you will need to customize how layers are added in mobile compared to how they appear on the desktop version of a map
-
-  - Some viz.json elements, such as Overlays (Legend, Copyright, and so on) are not handled by Mobile SDK so your mobile app gets the data using a different callback method, which can then be added as elements according to your app design requirements
-
-2) If you published a map through a CARTO API, you can load it to a mobile app. Use `CartoVisBuilder` interface to implement this callback
-
-  **Note:** This type of request must run in another thread, as it relies on an online connections.
-
-  `CartoVisBuilder` works as a parser for visualization, so if you define callbacks for key elements of visualization to implement key data in the viz.json (such as adding map layers), you may want to set the map center and zoom level
-
-  This enables you to control which aspects of your mobile map are rendered. You can change some layer interpretation aspects for mobile, as it may be required for the mobile map to appear differently. 
-
-3) Ensure your mobile app has all CARTO fonts installed in your mobile project folder
-
-  **Tip** You can download [carto-fonts.zip](https://github.com/CartoDB/mobile-ios-samples/raw/master/AdvancedMap/Assets/carto-fonts.zip) from our iOs sample project. Note that these assets are not needed if your map does not contains any text.
-
-4) The typical (minimal) request for `_CartoVisBuilder_` implementation requires the following, which you can append from your main ViewController.mm
-
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-      <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-  </ul>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}private class MyCartoVisBuilder extends CartoVisBuilder {
-
-        @Override
-        public void setCenter(MapPos mapPos) {
-            mapView.setFocusPos(mapView.getOptions().getBaseProjection().fromWgs84(mapPos), 1.0f);
-        }
-
-        @Override
-        public void setZoom(float zoom) {
-            mapView.setZoom(zoom, 1.0f);
-        }
-
-        @Override
-        public void setDescription(Variant variant) {
-            // Get JSON for remaining elements, like Overlays, Wizards, metadata etc.
-            // Variant is a JSON-like general structure in CARTO Mobile SDK
-        }
-
-        @Override
-        public void addLayer(Layer layer, Variant attributes) {
-            // Add the layer to the map view, ignore attributes here
-            mapView.getLayers().add(layer);
-        }
-    }
-  {% endhighlight %}
-  </div>
-
-   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-      {% highlight objc %}@interface MyCartoVisBuilder : NTCartoVisBuilder
-
-    @property NTMapView* mapView;
-
-    @end
-
-    @implementation MyCartoVisBuilder
-
-    // methods to set map center and zoom based on defined map
-    -(void)setCenter:(NTMapPos *)mapPos
-    {
-        [self.mapView setFocusPos:[[[self.mapView getOptions] getBaseProjection] fromWgs84:mapPos] durationSeconds:1.0f];
-    }
-
-    -(void)setZoom:(float)zoom
-    {
-        [self.mapView setZoom:zoom durationSeconds:1.0f];
-    }
-
-    // Add a layer to the map view
-    -(void)addLayer:(NTLayer *)layer attributes:(NTVariant *)attributes
-    {
-        [[self.mapView getLayers] add:layer];
-    }
-
-    // Add a layer to the map view - most important work
-    -(void)addLayer:(NTLayer *)layer attributes:(NTVariant *)attributes
-    {
-        [[self.mapView getLayers] add:layer];
-    }
-
-    @end
-
-      {% endhighlight %}
- 
-  </div>
-    
-</div>
-
-
-
-5) Load the CARTO visualization
-
-  As it uses an online connection, ensure it runs on a background thread:
-
-<div class="js-TabPanes">
-  <ul class="Tabs">
-     <li class="Tab js-Tabpanes-navItem--lang is-active">
-       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-  </ul>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}private String visJSONURL = "http://documentation.carto.com/api/v2/viz/2b13c956-e7c1-11e2-806b-5404a6a683d5/viz.json";
-
-  Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                mapView.getLayers().clear();
-
-                // Create overlay layer for popups
-                Projection proj = mapView.getOptions().getBaseProjection();
-                LocalVectorDataSource dataSource = new LocalVectorDataSource(proj);
-                VectorLayer vectorLayer = new VectorLayer(dataSource);
-
-                // Create VIS loader
-                CartoVisLoader loader = new CartoVisLoader();
-                loader.setDefaultVectorLayerMode(true);
-                MyCartoVisBuilder visBuilder = new MyCartoVisBuilder(vectorLayer);
-                try {
-                    loader.loadVis(visBuilder, visJSONURL);
-                }
-                catch (IOException e) {
-                    Log.e(Const.LOG_TAG, "Exception: " + e);
-                }
-
-                // Add the created popup overlay layer on top of all visJSON layers
-                mapView.getLayers().add(vectorLayer);
-            }
-        });
-        thread.start(); 
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        // just make sure no other layers are on map
-        [[mapView getLayers] clear];
-        
-        // Create VIS loader
-        NTCartoVisLoader* loader = [[NTCartoVisLoader alloc] init];
-        
-        // Load fonts package, this has all fonts you may need.
-        [loader setVectorTileAssetPackage:[[NTZippedAssetPackage alloc] initWithZipData:[NTAssetUtils loadAsset:@"carto-fonts.zip"]]];
-        [loader setDefaultVectorLayerMode:YES];
-        MyCartoVisBuilder* visBuilder = [[MyCartoVisBuilder alloc] init];
-        visBuilder.mapView = mapView;
-
-        // Use your Map URL in next line, you get it from Share Map page. Here is a basic working sample:
-        [loader loadVis:visBuilder visURL:@"http://documentation.carto.com/api/v2/viz/2b13c956-e7c1-11e2-806b-5404a6a683d5/viz.json"];
-        
-    });
-      {% endhighlight %}
- 
-  </div>
-</div>
-
-6) Run your mobile app
-
-  If you are using assets from the [sample apps](/docs/carto-engine/mobile-sdk/getting-started/#sample-apps) as part of your project, the following [map result](https://raw.githubusercontent.com/CartoDB/mobile-ios-samples/master/sample_viz_mobile.png) appears.
-
-7) Using Maps API
-  
-  CARTO Mobile SDK also supports Maps API: anonymous maps and named maps. Anonymous maps allow you to instantiate a map given SQL and CartoCSS. Named Maps are essentially the same as Anonymous Maps except the MapConfig is stored on the server, and the map is given a unique name.
-
-  Building an anonymous map config (SQL and CartoCSS)
+  ##### Building an anonymous map config (SQL and CartoCSS)
 
   <div class="js-TabPanes">
   
@@ -457,7 +281,7 @@ In order to integrate your published mobile map into your app, you need a callba
     </div>
   </div>
 
-  If you have the name of a map, you can use that to query data, instead of providing the SQL or CartoCSS
+  ##### If you have the name of a map, you can use that to query data, instead of providing the SQL or CartoCSS
 
   <div class="js-TabPanes">
   
@@ -559,11 +383,14 @@ In order to integrate your published mobile map into your app, you need a callba
       
   </div>
 
-8) Using SQL API
+#### SQL API
+
+reference: https://carto.com/docs/carto-engine/sql-api/
+
   
   CARTO’s SQL API allows you to interact with your tables and data inside CARTO, as if you were running SQL statements against a normal database. You can use the SQL API to insert, update or delete data (i.e., insert a new column with a latitude and longitude data) or to select data from public tables in order to use it on your website or application (i.e., display the 10 closest records to a particular location).
 
-  Using CARTO SQL Service class to make a query
+  ##### Using CARTO SQL Service class to make a query
 
   <div class="js-TabPanes">
   
@@ -693,6 +520,191 @@ In order to integrate your published mobile map into your app, you need a callba
     </div>
   </div>
 
+#### CARTO.js API
+
+reference: https://carto.com/docs/carto-engine/carto-js/
+
+In order to integrate your published mobile map into your app, you need a callback-based asynchronous process to request the viz.json.
+
+Warning! viz.json API is in development and experimental. Use at your own risk.
+
+1)  The following requirements are needed for app integration of a published CARTO Mobile SDK map:
+
+  - Online API is requested and will run in another thread
+
+  - In certain cases, you will need to customize how layers are added in mobile compared to how they appear on the desktop version of a map
+
+  - Some viz.json elements, such as Overlays (Legend, Copyright, and so on) are not handled by Mobile SDK so your mobile app gets the data using a different callback method, which can then be added as elements according to your app design requirements
+
+2) If you published a map through a CARTO API, you can load it to a mobile app. Use `CartoVisBuilder` interface to implement this callback
+
+  **Note:** This type of request must run in another thread, as it relies on an online connections.
+
+  `CartoVisBuilder` works as a parser for visualization, so if you define callbacks for key elements of visualization to implement key data in the viz.json (such as adding map layers), you may want to set the map center and zoom level
+
+  This enables you to control which aspects of your mobile map are rendered. You can change some layer interpretation aspects for mobile, as it may be required for the mobile map to appear differently. 
+
+3) Ensure your mobile app has all CARTO fonts installed in your mobile project folder
+
+  **Tip** You can download [carto-fonts.zip](https://github.com/CartoDB/mobile-ios-samples/raw/master/AdvancedMap/Assets/carto-fonts.zip) from our iOs sample project. Note that these assets are not needed if your map does not contains any text.
+
+4) The typical (minimal) request for `_CartoVisBuilder_` implementation requires the following, which you can append from your main ViewController.mm
+
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
+       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+    </li>
+      <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+    </li>
+  </ul>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  {% highlight java %}private class MyCartoVisBuilder extends CartoVisBuilder {
+
+        @Override
+        public void setCenter(MapPos mapPos) {
+            mapView.setFocusPos(mapView.getOptions().getBaseProjection().fromWgs84(mapPos), 1.0f);
+        }
+
+        @Override
+        public void setZoom(float zoom) {
+            mapView.setZoom(zoom, 1.0f);
+        }
+
+        @Override
+        public void setDescription(Variant variant) {
+            // Get JSON for remaining elements, like Overlays, Wizards, metadata etc.
+            // Variant is a JSON-like general structure in CARTO Mobile SDK
+        }
+
+        @Override
+        public void addLayer(Layer layer, Variant attributes) {
+            // Add the layer to the map view, ignore attributes here
+            mapView.getLayers().add(layer);
+        }
+    }
+  {% endhighlight %}
+  </div>
+
+   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+      {% highlight objc %}@interface MyCartoVisBuilder : NTCartoVisBuilder
+
+    @property NTMapView* mapView;
+
+    @end
+
+    @implementation MyCartoVisBuilder
+
+    // methods to set map center and zoom based on defined map
+    -(void)setCenter:(NTMapPos *)mapPos
+    {
+        [self.mapView setFocusPos:[[[self.mapView getOptions] getBaseProjection] fromWgs84:mapPos] durationSeconds:1.0f];
+    }
+
+    -(void)setZoom:(float)zoom
+    {
+        [self.mapView setZoom:zoom durationSeconds:1.0f];
+    }
+
+    // Add a layer to the map view
+    -(void)addLayer:(NTLayer *)layer attributes:(NTVariant *)attributes
+    {
+        [[self.mapView getLayers] add:layer];
+    }
+
+    // Add a layer to the map view - most important work
+    -(void)addLayer:(NTLayer *)layer attributes:(NTVariant *)attributes
+    {
+        [[self.mapView getLayers] add:layer];
+    }
+
+    @end
+
+      {% endhighlight %}
+ 
+  </div>
+    
+</div>
+
+
+
+5) Load the CARTO visualization
+
+  As it uses an online connection, ensure it runs on a background thread:
+
+<div class="js-TabPanes">
+  <ul class="Tabs">
+     <li class="Tab js-Tabpanes-navItem--lang is-active">
+       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+    </li>
+  </ul>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  {% highlight java %}private String visJSONURL = "http://documentation.carto.com/api/v2/viz/2b13c956-e7c1-11e2-806b-5404a6a683d5/viz.json";
+
+  Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                mapView.getLayers().clear();
+
+                // Create overlay layer for popups
+                Projection proj = mapView.getOptions().getBaseProjection();
+                LocalVectorDataSource dataSource = new LocalVectorDataSource(proj);
+                VectorLayer vectorLayer = new VectorLayer(dataSource);
+
+                // Create VIS loader
+                CartoVisLoader loader = new CartoVisLoader();
+                loader.setDefaultVectorLayerMode(true);
+                MyCartoVisBuilder visBuilder = new MyCartoVisBuilder(vectorLayer);
+                try {
+                    loader.loadVis(visBuilder, visJSONURL);
+                }
+                catch (IOException e) {
+                    Log.e(Const.LOG_TAG, "Exception: " + e);
+                }
+
+                // Add the created popup overlay layer on top of all visJSON layers
+                mapView.getLayers().add(vectorLayer);
+            }
+        });
+        thread.start(); 
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  {% highlight objc %}dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        // just make sure no other layers are on map
+        [[mapView getLayers] clear];
+        
+        // Create VIS loader
+        NTCartoVisLoader* loader = [[NTCartoVisLoader alloc] init];
+        
+        // Load fonts package, this has all fonts you may need.
+        [loader setVectorTileAssetPackage:[[NTZippedAssetPackage alloc] initWithZipData:[NTAssetUtils loadAsset:@"carto-fonts.zip"]]];
+        [loader setDefaultVectorLayerMode:YES];
+        MyCartoVisBuilder* visBuilder = [[MyCartoVisBuilder alloc] init];
+        visBuilder.mapView = mapView;
+
+        // Use your Map URL in next line, you get it from Share Map page. Here is a basic working sample:
+        [loader loadVis:visBuilder visURL:@"http://documentation.carto.com/api/v2/viz/2b13c956-e7c1-11e2-806b-5404a6a683d5/viz.json"];
+        
+    });
+      {% endhighlight %}
+ 
+  </div>
+</div>
+
+6) Run your mobile app
+
+  If you are using assets from the [sample apps](/docs/carto-engine/mobile-sdk/getting-started/#sample-apps) as part of your project, the following [map result](https://raw.githubusercontent.com/CartoDB/mobile-ios-samples/master/sample_viz_mobile.png) appears.
+
+
 ## SDK and CARTO API Samples
 
 The CARTO [sample app](/docs/carto-engine/mobile-sdk/getting-started/#sample-apps) projects contain a number of working samples for all the mobile platforms:
@@ -708,7 +720,6 @@ The CARTO [sample app](/docs/carto-engine/mobile-sdk/getting-started/#sample-app
 - `CartoVectorTileActivity` for vector tiles with CartoCSS styling 
 
 - `CartoRasterTileActivity` for raster tiles with CartoCSS styling 
-
 
 
 
