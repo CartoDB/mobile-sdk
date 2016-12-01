@@ -65,131 +65,6 @@ CARTO Mobile SDK also supports Maps API: anonymous maps and named maps. Anonymou
 
 #### Building an anonymous map config (SQL and CartoCSS)
 
-<div class="js-TabPanes">
-
-<ul class="Tabs">
-  <li class="Tab js-Tabpanes-navItem--lang is-active">
-    <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-  </li>
-  <li class="Tab js-Tabpanes-navItem--lang">
-    <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-  </li>
-  <li class="Tab js-Tabpanes-navItem--lang">
-    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-  </li>
-</ul>
-
-<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-{% highlight java %}
-
-    // Define server config
-    JSONObject configJson = new JSONObject();
-
-    try {
-        // You need to change these according to your DB
-        String sql = "select * from table_46g";
-        String cartoCss = "#table_46g {raster-opacity: 0.5;}";
-
-        // You probably do not need to change much of below
-        configJson.put("version", "1.2.0");
-
-        JSONArray layersArrayJson = new JSONArray();
-        JSONObject layersJson = new JSONObject();
-        layersJson.put("type", "cartodb");
-
-        JSONObject optionsJson = new JSONObject();
-        optionsJson.put("sql", sql);
-        optionsJson.put("cartocss", cartoCss);
-        optionsJson.put("cartocss_version", "2.3.0");
-        optionsJson.put("geom_column", "the_raster_webmercator");
-        optionsJson.put("geom_type", "raster");
-        
-        layersJson.put("options", optionsJson);
-        layersArrayJson.put(layersJson);
-        configJson.put("layers", layersArrayJson);
-
-    } catch (JSONException e) {
-        e.printStackTrace();
-    }
-
-    final String config = configJson.toString();
-
-{% endhighlight %}
-</div>
-
-<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-{% highlight csharp %}
-
-// You need to change these according to your DB
-string sql = "select * from table_46g";
-string cartoCSS = "#table_46g {raster-opacity: 0.5;}";
-
-string config = JsonUtils.GetRasterLayerConfigJson(sql, cartoCSS).ToString();
-
-public static JsonValue GetRasterLayerConfigJson(string sql, string cartoCSS)
-{
-  JsonObject configJson = new JsonObject();
-
-  configJson.Add("version", "1.2.0");
-
-  JsonArray layersArrayJson = new JsonArray();
-  JsonObject layersJson = new JsonObject();
-
-  layersJson.Add("type", "cartodb");
-
-  JsonObject optionsJson = new JsonObject();
-
-  optionsJson.Add("sql", sql);
-  optionsJson.Add("cartocss", cartoCSS);
-  optionsJson.Add("cartocss_version", "2.3.0");
-  optionsJson.Add("geom_column", "the_raster_webmercator");
-  optionsJson.Add("geom_type", "raster");
-
-  layersJson.Add("options", optionsJson);
-
-  layersArrayJson.Add(layersJson);
-
-  configJson.Add("layers", layersArrayJson);
-
-  return configJson;
-}
-
-{% endhighlight %}
-</div>
-
-<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-{% highlight objc %}
-
-self.sql = @"select * from table_46g";
-self.cartoCSS = @"#table_46g {raster-opacity: 0.5;}";
-
-- (NSString*) getConfig
-{
-  NSDictionary* options = @{
-                            @"sql": self.sql,
-                            @"cartocss": self.cartoCSS,
-                            @"cartocss_version": @"2.3.0",
-                            @"geom_column": @"the_raster_webmercator",
-                            @"geom_type": @"raster",
-                            };
-  
-  NSMutableArray* layersArray = [[NSMutableArray alloc]init];
-  NSDictionary* layers = @{ @"options": options, @"type": @"cartodb" };
-
-  [layersArray addObject:layers];
-  
-  NSDictionary* json = @{ @"layers": layersArray, @"version": @"1.2.0" };
-  
-  NSError *error;
-  NSData* data = [NSJSONSerialization dataWithJSONObject:json options:0 error:&error];
-  
-  return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-}
-
-{% endhighlight %} 
-</div>
-</div>
-
 Using Carto Maps service class to configure layers. Note that this must be done in a separate thread on Android, as Maps API requires connecting to server which is not allowed in main thread.
 
 The following snippet sets up the config (SQL and CartoCSS) we're going to use in our query
@@ -524,7 +399,7 @@ serviceThread.start();
         NTLayer* layer = [layers get:i];
         [[self.mapView getLayers]add:layer];
     }
-    
+
 {% endhighlight %}
 </div>
 </div>
