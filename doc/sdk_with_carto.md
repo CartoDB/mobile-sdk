@@ -192,7 +192,7 @@ self.cartoCSS = @"#table_46g {raster-opacity: 0.5;}";
 
 Using Carto Maps service class to configure layers. Note that this must be done in a separate thread on Android, as Maps API requires connecting to server which is not allowed in main thread.
 
-The following code snippet is for querying data from an anonymous raster table. Change the default vector layer mode to true if you are using a vector table.
+The following snippet sets up the config (SQL and CartoCSS) we're going to use in our query
 
 <div class="js-TabPanes">
 
@@ -211,13 +211,246 @@ The following code snippet is for querying data from an anonymous raster table. 
 <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
 {% highlight java %}
 
-    Thread serviceThread = new Thread(new Runnable() {
-        @Override
-        public void run() {
+    private String getConfigJson() {
 
-            CartoMapsService mapsService = new CartoMapsService();
-            mapsService.setUsername("nutiteq");
-            mapsService.setDefaultVectorLayerMode(false);
+        // Define server config
+        JSONObject configJson = new JSONObject();
+
+        try {
+            // You need to change these according to your DB
+            String sql = "select * from stations_1";
+            String statTag = "3c6f224a-c6ad-11e5-b17e-0e98b61680bf";
+            String[] columns = new String[] { "name", "status", "slot" };
+            String cartoCSS = "#stations_1{" +
+                    "marker-fill-opacity:0.9;marker-line-color:#FFF;" +
+                    "marker-line-width:2;marker-line-opacity:1;marker-placement:point;" +
+                    "marker-type:ellipse;marker-width:10;marker-allow-overlap:true;}\n" +
+                    "" +
+                    "#stations_1[status = 'In Service']{marker-fill:#0F3B82;}\n" +
+                    "#stations_1[status = 'Not In Service']{marker-fill:#aaaaaa;}\n" +
+                    "#stations_1[field_9 = 200]{marker-width:80.0;}\n" +
+                    "#stations_1[field_9 <= 49]{marker-width:25.0;}\n" +
+                    "#stations_1[field_9 <= 38]{marker-width:22.8;}\n" +
+                    "#stations_1[field_9 <= 34]{marker-width:20.6;}\n" +
+                    "#stations_1[field_9 <= 29]{marker-width:18.3;}\n" +
+                    "#stations_1[field_9 <= 25]{marker-width:16.1;}\n" +
+                    "#stations_1[field_9 <= 20.5]{marker-width:13.9;}\n" +
+                    "#stations_1[field_9 <= 16]{marker-width:11.7;}\n" +
+                    "#stations_1[field_9 <= 12]{marker-width:9.4;}\n" +
+                    "#stations_1[field_9 <= 8]{marker-width:7.2;}\n" +
+                    "#stations_1[field_9 <= 4]{marker-width:5.0;}";
+
+            // You probably do not need to change much of below
+            configJson.put("version", "1.0.1");
+            configJson.put("stat_tag", statTag);
+
+            JSONArray layersArrayJson = new JSONArray();
+            JSONObject layersJson = new JSONObject();
+            layersJson.put("type", "cartodb");
+
+            JSONObject optionsJson = new JSONObject();
+            optionsJson.put("sql", sql);
+            optionsJson.put("cartocss", cartoCSS);
+            optionsJson.put("cartocss_version", "2.1.1");
+
+            JSONArray interactivityJson = new JSONArray();
+            interactivityJson.put("cartodb_id");
+
+            optionsJson.put("interactivity", interactivityJson);
+
+            JSONObject attributesJson = new JSONObject();
+            attributesJson.put("id", "cartodb_id");
+
+            JSONArray columnsJson = new JSONArray();
+
+            for (String col : columns) {
+                columnsJson.put(col);
+            }
+
+            attributesJson.put("columns", columnsJson);
+            optionsJson.put("attributes", attributesJson);
+            layersJson.put("options", optionsJson);
+            layersArrayJson.put(layersJson);
+            configJson.put("layers", layersArrayJson);
+
+        } catch (JSONException e) {
+            return  null;
+        }
+
+        return configJson.toString();
+    }
+
+{% endhighlight %}
+</div>
+
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+{% highlight csharp %}
+
+    static string CartoCSS
+    {
+      get
+      {
+        return "#stations_1{" +
+              "marker-fill-opacity:0.9;" +
+              "marker-line-color:#FFF;" +
+              "marker-line-width:2;" +
+              "marker-line-opacity:1;" +
+              "marker-placement:point;" +
+              "marker-type:ellipse;" +
+              "marker-width:10;" +
+              "marker-allow-overlap:true;" +
+            "}" +
+            "#stations_1[status = 'In Service']{marker-fill:#0F3B82;}" +
+            "#stations_1[status = 'Not In Service']{marker-fill:#aaaaaa;}" +
+            "#stations_1[field_9 = 200]{marker-width:80.0;}" +
+            "#stations_1[field_9 <= 49]{marker-width:25.0;}" +
+            "#stations_1[field_9 <= 38]{marker-width:22.8;}" +
+            "#stations_1[field_9 <= 34]{marker-width:20.6;}" +
+            "#stations_1[field_9 <= 29]{marker-width:18.3;}" +
+            "#stations_1[field_9 <= 25]{marker-width:16.1;}" +
+            "#stations_1[field_9 <= 20.5]{marker-width:13.9;}" +
+            "#stations_1[field_9 <= 16]{marker-width:11.7;}" +
+            "#stations_1[field_9 <= 12]{marker-width:9.4;}" +
+            "#stations_1[field_9 <= 8]{marker-width:7.2;}" +
+            "#stations_1[field_9 <= 4]{marker-width:5.0;}";
+      }
+    }
+
+    public static JsonValue VectorLayerConfigJson
+    {
+      get
+      {
+        JsonObject json = new JsonObject();
+
+        json.Add("version", "1.0.1");
+        json.Add("stat_tag", "3c6f224a-c6ad-11e5-b17e-0e98b61680bf");
+
+        JsonArray layerArray = new JsonArray();
+        JsonObject layerJson = new JsonObject();
+
+        layerJson.Add("type", "cartodb");
+
+        JsonObject optionJson = new JsonObject();
+
+        optionJson.Add("sql", "select * from stations_1");
+        optionJson.Add("cartocss", CartoCSS);
+        optionJson.Add("cartocss_version", "2.1.1");
+
+        JsonArray interactivityJson = new JsonArray();
+        interactivityJson.Add("cartodb_id");
+
+        optionJson.Add("interactivity", interactivityJson);
+
+        JsonObject attributesJson = new JsonObject();
+        attributesJson.Add("id", "cartodb_id");
+
+        JsonArray columnJson = new JsonArray { "name", "field_9", "slot" };
+
+        attributesJson.Add("columns", columnJson);
+        optionJson.Add("attributes", attributesJson);
+        layerJson.Add("options", optionJson);
+        layerArray.Add(layerJson);
+
+        json.Add("layers", layerArray);
+
+        return json;
+      }
+    }
+
+{% endhighlight %}
+</div>
+
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+{% highlight objc %}
+
+- (NSString*) getConfig
+{
+    NSDictionary* options = @{
+                              @"sql": @"select * from stations_1",
+                              @"cartocss": [self getCartoCSS],
+                              @"cartocss_version": @"2.1.1",
+                              @"interactivity": [self getInteractivityJson],
+                              @"attributes": [self getAttributesJson]
+                              };
+
+    NSMutableArray *layerArray = [[NSMutableArray alloc]init];
+    NSDictionary *layerJson = @{ @"options": options, @"type": @"cartodb" };
+    
+    [layerArray addObject:layerJson];
+    
+    NSDictionary *json = @{
+                           @"version": @"1.0.1",
+                           @"stat_tag": @"3c6f224a-c6ad-11e5-b17e-0e98b61680bf",
+                           @"layers": layerArray
+                           };
+    
+    NSError *error;
+    NSData *data = [NSJSONSerialization dataWithJSONObject:json options:0 error:&error];
+    
+    return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+}
+
+-(NSString *) getCartoCSS
+{
+    NSString *base = @"#stations_1 { marker-fill-opacity:0.9; marker-line-color:#FFF; marker-line-width:2; marker-line-opacity:1; marker-placement:point; marker-type:ellipse; marker-width:10; marker-allow-overlap:true; }";
+    
+    NSString *attributes = @"#stations_1[status = 'In Service'] { marker-fill:#0F3B82; } #stations_1[status = 'Not In Service'] { marker-fill:#aaaaaa; } #stations_1[field_9 = 200] { marker-width:80.0; } #stations_1[field_9 <= 49] { marker-width:25.0; } #stations_1[field_9 <= 38] { marker-width:22.8; } #stations_1[field_9 <= 34] { marker-width:20.6; } #stations_1[field_9 <= 29] { marker-width:18.3; } #stations_1[field_9 <= 25] { marker-width:16.1; } #stations_1[field_9 <= 20.5] { marker-width:13.9; } #stations_1[field_9 <= 16] { marker-width:11.7; } #stations_1[field_9 <= 12] { marker-width:9.4; } #stations_1[field_9 <= 8] { marker-width:7.2; } #stations_1[field_9 <= 4] { marker-width:5.0; } ";
+    
+    return [base stringByAppendingString:attributes];
+}
+
+-(NSMutableArray *) getInteractivityJson
+{
+    NSMutableArray *array = [[NSMutableArray alloc]init];
+    [array addObject:@"cartodb_id"];
+    return array;
+}
+
+-(NSDictionary *) getAttributesJson
+{
+    NSMutableArray *columns = [[NSMutableArray alloc]init];
+    [columns addObject:@"name"];
+    [columns addObject:@"field_9"];
+    [columns addObject:@"slot"];
+    
+    return @{ @"id": @"cartodb_id", @"columns": columns };
+}
+
+{% endhighlight %}
+</div>
+</div>
+
+Now it's time for our actual query. The nextsnippet is for querying data from an anonymous vector table (change the default vector layer mode to false if you are using a raster table).
+
+<div class="js-TabPanes">
+
+<ul class="Tabs">
+  <li class="Tab js-Tabpanes-navItem--lang is-active">
+    <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+  </li>
+</ul>
+
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+{% highlight java %}
+
+final String config = getConfigJson();
+
+// Use the Maps service to configure layers.
+// Note that this must be done in a separate thread on Android,
+// as Maps API requires connecting to server, which is not allowed in main thread.
+Thread serviceThread = new Thread(new Runnable() {
+  @Override
+  public void run() {
+
+    CartoMapsService mapsService = new CartoMapsService();
+    mapsService.setUsername("nutiteq");
+    mapsService.setDefaultVectorLayerMode(true); // use vector layers
 
             try {
                 LayerVector layers = mapsService.buildMap(Variant.fromString(config));
@@ -228,10 +461,10 @@ The following code snippet is for querying data from an anonymous raster table. 
             catch (IOException e) {
                 Log.e("EXCEPTION", "Exception: " + e);
             }
-        }
-    });
+  }
+});
 
-    serviceThread.start();
+serviceThread.start();
 
 {% endhighlight %}
 </div>
@@ -239,25 +472,35 @@ The following code snippet is for querying data from an anonymous raster table. 
 <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
 {% highlight csharp %}
 
-  CartoMapsService mapsService = new CartoMapsService();
-  mapsService.Username = "nutiteq";
-  mapsService.DefaultVectorLayerMode = false;
+      JsonValue config = JsonUtils.VectorLayerConfigJson;
 
-  System.Threading.Tasks.Task.Run(delegate
-  {
-    try
-    {
-      LayerVector layers = mapsService.BuildMap(Variant.FromString(config));
-      for (int i = 0; i < layers.Count; i++)
+      MapView.ConfigureAnonymousVectorLayers(config);
+
+      // Extension method in static class
+      public static void ConfigureAnonymousVectorLayers(this MapView map, JsonValue config)
       {
-        MapView.Layers.Add(layers[i]);
+        // Use the Maps service to configure layers. 
+        // Note that this must be done in a separate thread on Android, 
+        // as Maps API requires connecting to server which is not nice to do in main thread.
+
+        System.Threading.Tasks.Task.Run(delegate
+        {
+          CartoMapsService service = new CartoMapsService();
+          service.Username = "nutiteq";
+
+          // Use VectorLayers
+          service.DefaultVectorLayerMode = true;
+          service.Interactive = true;
+
+          LayerVector layers = service.BuildMap(Variant.FromString(config.ToString()));
+
+          for (int i = 0; i < layers.Count; i++)
+          {
+            map.Layers.Add(layers[i]);
+          }
+        });
       }
-    }
-    catch (IOException e)
-    {
-      Carto.Utils.Log.Debug("EXCEPTION: Exception: " + e);
-    }
-  });
+
 
 {% endhighlight %}
 </div>
@@ -265,18 +508,23 @@ The following code snippet is for querying data from an anonymous raster table. 
 <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
 {% highlight objc %}
 
-NTCartoMapsService* mapsService = [[NTCartoMapsService alloc] init];
-[mapsService setUsername:@"nutiteq"];
-[mapsService setDefaultVectorLayerMode:NO];
-
-NTVariant* variant = [NTVariant fromString:[self getConfig]];
-NTLayerVector *layers = [mapsService buildMap:variant];
-
-for (int i = 0; i < [layers size]; i++) {
-    NTLayer* layer = [layers get:i];
-    [[self.mapView getLayers]add:layer];
-}
-
+    NTCartoMapsService* mapsService = [[NTCartoMapsService alloc] init];
+    
+    [mapsService setUsername:@"nutiteq"];
+    
+    // Use vector layers, not raster layers
+    [mapsService setDefaultVectorLayerMode:TRUE];
+    [mapsService setInteractive:TRUE];
+    
+    NTVariant* variant = [NTVariant fromString:[self getConfig]];
+    NTLayerVector *layers = [mapsService buildMap:variant];
+    
+    for (int i = 0; i < [layers size]; i++) {
+        
+        NTLayer* layer = [layers get:i];
+        [[self.mapView getLayers]add:layer];
+    }
+    
 {% endhighlight %}
 </div>
 </div>
