@@ -59,7 +59,7 @@ This high-level workflow describes how to prepare your mobile data for rendering
 
 ### Maps API
 
-reference: https://carto.com/docs/carto-engine/maps-api/
+Reference: https://carto.com/docs/carto-engine/maps-api/
 
 CARTO Mobile SDK also supports Maps API: anonymous maps and named maps. Anonymous maps allow you to instantiate a map given SQL and CartoCSS. Named Maps are essentially the same as Anonymous Maps except the MapConfig is stored on the server, and the map is given a unique name.
 
@@ -281,7 +281,7 @@ for (int i = 0; i < [layers size]; i++) {
 </div>
 </div>
 
-##### If you have the name of a map, you can use that to query data, instead of providing the SQL or CartoCSS
+#### If you have the name of a map, you can use that to query data, instead of providing the SQL or CartoCSS
 
 <div class="js-TabPanes">
 
@@ -385,7 +385,7 @@ for (int i = 0; i < [layers size]; i++) {
 
 ### SQL API
 
-reference: https://carto.com/docs/carto-engine/sql-api/
+Reference: https://carto.com/docs/carto-engine/sql-api/
 
 
 CARTO’s SQL API allows you to interact with your tables and data inside CARTO, as if you were running SQL statements against a normal database. You can use the SQL API to insert, update or delete data (i.e., insert a new column with a latitude and longitude data) or to select data from public tables in order to use it on your website or application (i.e., display the 10 closest records to a particular location).
@@ -522,7 +522,7 @@ CARTO’s SQL API allows you to interact with your tables and data inside CARTO,
 
 ### CARTO.js API
 
-reference: https://carto.com/docs/carto-engine/carto-js/
+Reference: https://carto.com/docs/carto-engine/carto-js/
 
 In order to integrate your published mobile map into your app, you need a callback-based asynchronous process to request the viz.json.
 
