@@ -196,7 +196,7 @@ namespace carto {
         if (mapInfo.get("errors").is<picojson::array>()) {
             const picojson::array& errorsInfo = mapInfo.get("errors").get<picojson::array>();
             for (auto it = errorsInfo.begin(); it != errorsInfo.end(); it++) {
-                Log::Errorf("CartoMapsService::createLayers: %s", it->get<std::string>().c_str());
+                Log::Errorf("CartoMapsService::buildMap: %s", it->get<std::string>().c_str());
             }
             if (!errorsInfo.empty()) {
                 std::string firstError = errorsInfo.front().get<std::string>();
