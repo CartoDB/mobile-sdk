@@ -2,25 +2,6 @@
 
 For select account plans, you can connect to the CARTO Engine APIs via Mobile SDK, to retrieve map visualizations and table data from your CARTO account. _API access is not available for free users._ [Contact us](mailto:sales@carto.com) for questions about your account plan and enabling this feature.
 
-## SDK and CARTO APIs
-
-If you are using other CARTO Engines, you can automatically define mobile map feature for rendering directly from the client-side. This involves some additional, unique Mobile SDK API parameters to be included with the CARTO Engine CARTO.js, Maps API, and SQL API requests.
-
-1) Load a [CARTO.js](/docs/carto-engine/carto-js/) *viz.json* visualization for managing mobile layers
-
-  - `CartoVisLoader` is used to load and configure all corresponding layers
-  - `CartoVisBuilder` is high level interface for loading VisJSON configurations. You can define which mobile layers are configured and visualized by default
-
-  **Tip:** For additional viz.json mobile map rendering, see how to [Publish a Mobile Map](#publish-a-mobile-map).
-
-2) Integrate with the [Maps API](/docs/carto-engine/maps-api/) for anonymous or named maps
-
-  `CartoMapsService` is a mobile service that can be used to automatically configure layers using anonymous map configurations, or by using parametrized named maps
-
-3) Integrate with the [SQL API](/docs/carto-engine/sql-api/) for accessing database
-
-  `CartoSQLService` is a high-level interface for the CARTO SQL Service. The mobile service can be used to query data from CARTO databases using explicit SQL queries. _Note that this is only available for Public datasets._
-
 ## Loading CARTO Map Data to Mobile Apps
 
 You can also manage mobile rendering by defining how mobile features load with the CARTO APIs and with the CARTO Builder. For example:
@@ -55,9 +36,24 @@ This high-level workflow describes how to prepare your mobile data for rendering
 
   **Note:** [Widgets](https://carto.com/learn/guides/widgets/exploring-widgets) are currently not supported for the CARTO Mobile SDK format, but will be available in a future release.
 
-## App Integration
+## SDK and CARTO APIs
 
-You can use the following CARTO APIs for managing your mobile app.
+If you are using other CARTO Engines, you can automatically define mobile map feature for rendering directly from the client-side. This involves some additional, unique Mobile SDK API parameters to be included with the CARTO Engine CARTO.js, Maps API, and SQL API requests.
+
+1) Load a [CARTO.js](/docs/carto-engine/carto-js/) *viz.json* visualization for managing mobile layers
+
+  - `CartoVisLoader` is used to load and configure all corresponding layers
+  - `CartoVisBuilder` is high level interface for loading VisJSON configurations. You can define which mobile layers are configured and visualized by default
+
+  **Tip:** For additional viz.json mobile map rendering, see how to [Publish a Mobile Map](#publish-a-mobile-map).
+
+2) Integrate with the [Maps API](/docs/carto-engine/maps-api/) for anonymous or named maps
+
+  `CartoMapsService` is a mobile service that can be used to automatically configure layers using anonymous map configurations, or by using parametrized named maps
+
+3) Integrate with the [SQL API](/docs/carto-engine/sql-api/) for accessing database
+
+  `CartoSQLService` is a high-level interface for the CARTO SQL Service. The mobile service can be used to query data from CARTO databases using explicit SQL queries. _Note that this is only available for Public datasets._
 
 ### Maps API
 
@@ -644,11 +640,11 @@ CARTO’s [SQL API](https://carto.com/docs/carto-engine/sql-api/) allows you to 
 
 In order to integrate your published mobile map into your app, you need a callback-based asynchronous process to request the viz.json with [CARTO.js](https://carto.com/docs/carto-engine/carto-js/.)
 
-**Warning!** The current version of CARTO.js is still in development. Use at your own risk.
+**Warning!** The current version of CARTO.js is not compatible with Builder, and is still in development. An updated CARTO.js library is being developed to support CARTO Builder functionality, and will be available soon. 
 
 1)  The following requirements are needed for app integration of a published CARTO Mobile SDK map:
 
-  - Online API is requested and will run in another thread
+  - A network request is run using a single background thread, and will run in a new thread to load data
 
   - In certain cases, you will need to customize how layers are added in mobile, compared to how they appear on the desktop version of a map
 
