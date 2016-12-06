@@ -57,17 +57,17 @@ This high-level workflow describes how to prepare your mobile data for rendering
 
 ## App Integration
 
+You can use the following CARTO APIs for managing your mobile app.
+
 ### Maps API
 
-Reference: https://carto.com/docs/carto-engine/maps-api/
+CARTO Mobile SDK supports [Maps API](https://carto.com/docs/carto-engine/maps-api/) integration for Anonymous Maps and Named Maps. Anonymous maps allow you to instantiate a map given SQL and CartoCSS. Named Maps are essentially the same as Anonymous Maps except the MapConfig is stored on the server, and the map is given a unique name.
 
-CARTO Mobile SDK also supports Maps API: anonymous maps and named maps. Anonymous maps allow you to instantiate a map given SQL and CartoCSS. Named Maps are essentially the same as Anonymous Maps except the MapConfig is stored on the server, and the map is given a unique name.
+#### Building an Anonymous map config (SQL and CartoCSS)
 
-#### Building an anonymous map config (SQL and CartoCSS)
+Use CARTO Maps service class to configure layers. Note that this must be done in a separate thread on Android, as Maps API requires connecting to server, which is not allowed in the main thread.
 
-Using Carto Maps service class to configure layers. Note that this must be done in a separate thread on Android, as Maps API requires connecting to server which is not allowed in main thread.
-
-The following snippet sets up the config (SQL and CartoCSS) we're going to use in our query
+The following snippet sets up the config (SQL and CartoCSS) we are going to use in our query
 
 <div class="js-TabPanes">
 
@@ -92,7 +92,7 @@ The following snippet sets up the config (SQL and CartoCSS) we're going to use i
         JSONObject configJson = new JSONObject();
 
         try {
-            // You need to change these according to your DB
+            // Change these according to your DB
             String sql = "select * from stations_1";
             String statTag = "3c6f224a-c6ad-11e5-b17e-0e98b61680bf";
             String[] columns = new String[] { "name", "status", "slot" };
@@ -115,7 +115,7 @@ The following snippet sets up the config (SQL and CartoCSS) we're going to use i
                     "#stations_1[field_9 <= 8]{marker-width:7.2;}\n" +
                     "#stations_1[field_9 <= 4]{marker-width:5.0;}";
 
-            // You probably do not need to change much of below
+            // You may not need to change much of these standards
             configJson.put("version", "1.0.1");
             configJson.put("stat_tag", statTag);
 
@@ -295,7 +295,7 @@ The following snippet sets up the config (SQL and CartoCSS) we're going to use i
 </div>
 </div>
 
-Now it's time for our actual query. The nextsnippet is for querying data from an anonymous vector table (change the default vector layer mode to false if you are using a raster table).
+Now that the config is set up, you can apply the actual query. This snippet is for querying data from an anonymous vector table (change the default vector layer mode to false if you are using a raster table).
 
 <div class="js-TabPanes">
 
@@ -356,7 +356,7 @@ serviceThread.start();
       {
         // Use the Maps service to configure layers. 
         // Note that this must be done in a separate thread on Android, 
-        // as Maps API requires connecting to server which is not nice to do in main thread.
+        // as Maps API requires connecting to server, which cannot be done in the main thread.
 
         System.Threading.Tasks.Task.Run(delegate
         {
@@ -404,7 +404,7 @@ serviceThread.start();
 </div>
 </div>
 
-#### If you have the name of a map, you can use that to query data, instead of providing the SQL or CartoCSS
+#### If you have the name of a map, use that to query data, instead of providing the SQL or CartoCSS
 
 <div class="js-TabPanes">
 
@@ -508,10 +508,7 @@ for (int i = 0; i < [layers size]; i++) {
 
 ### SQL API
 
-Reference: https://carto.com/docs/carto-engine/sql-api/
-
-
-CARTO’s SQL API allows you to interact with your tables and data inside CARTO, as if you were running SQL statements against a normal database. You can use the SQL API to insert, update or delete data (i.e., insert a new column with a latitude and longitude data) or to select data from public tables in order to use it on your website or application (i.e., display the 10 closest records to a particular location).
+CARTO’s [SQL API](https://carto.com/docs/carto-engine/sql-api/) allows you to interact with your tables and data inside CARTO, as if you were running SQL statements against a normal database. You can use the SQL API to insert, update or delete data (i.e., insert a new column with a latitude and longitude data) or to select data from public tables in order to use it on your website or application (i.e., display the 10 closest records to a particular location).
 
 #### Using CARTO SQL Service class to make a query
 
@@ -608,7 +605,7 @@ CARTO’s SQL API allows you to interact with your tables and data inside CARTO,
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
-  // Only get cities with over 100k, else it'll be too many
+  // Only get cities with over 100k, or else it will be too many results
   NSString *sql = @"SELECT * FROM cities15000 WHERE population > 100000";
   
   // Initialize CartoSQL service, set a username
@@ -645,25 +642,23 @@ CARTO’s SQL API allows you to interact with your tables and data inside CARTO,
 
 ### CARTO.js API
 
-Reference: https://carto.com/docs/carto-engine/carto-js/
+In order to integrate your published mobile map into your app, you need a callback-based asynchronous process to request the viz.json with [CARTO.js](https://carto.com/docs/carto-engine/carto-js/.)
 
-In order to integrate your published mobile map into your app, you need a callback-based asynchronous process to request the viz.json.
-
-Warning! viz.json API is in development and experimental. Use at your own risk.
+**Warning!** The current version of CARTO.js is still in development. Use at your own risk.
 
 1)  The following requirements are needed for app integration of a published CARTO Mobile SDK map:
 
   - Online API is requested and will run in another thread
 
-  - In certain cases, you will need to customize how layers are added in mobile compared to how they appear on the desktop version of a map
+  - In certain cases, you will need to customize how layers are added in mobile, compared to how they appear on the desktop version of a map
 
-  - Some viz.json elements, such as Overlays (Legend, Copyright, and so on) are not handled by Mobile SDK so your mobile app gets the data using a different callback method, which can then be added as elements according to your app design requirements
+  - Some viz.json elements, such as Overlays (Legend, Copyright, and so on) are not handled by Mobile SDK. Your mobile app gets data using a different callback method, which can be added as elements, according to your app design requirements
 
-2) If you published a map through a CARTO API, you can load it to a mobile app. Use `CartoVisBuilder` interface to implement this callback
+2) If you published a map through any of the CARTO Engines, you can load it to a mobile app. Use `CartoVisBuilder` interface to implement this callback
 
-  **Note:** This type of request must run in another thread, as it relies on an online connections.
+  **Note:** This type of request must run in another thread, as it relies on an online connection.
 
-  `CartoVisBuilder` works as a parser for visualization, so if you define callbacks for key elements of visualization to implement key data in the viz.json (such as adding map layers), you may want to set the map center and zoom level
+  `CartoVisBuilder` works as a parser for visualization. If you define callbacks for key elements of the visualization to implement key data in the viz.json (such as adding map layers), you may want to set the map center and zoom level
 
   This enables you to control which aspects of your mobile map are rendered. You can change some layer interpretation aspects for mobile, as it may be required for the mobile map to appear differently. 
 
@@ -720,7 +715,7 @@ Warning! viz.json API is in development and experimental. Use at your own risk.
 
     @implementation MyCartoVisBuilder
 
-    // methods to set map center and zoom based on defined map
+    // Methods to set map center and zoom based on defined map
     -(void)setCenter:(NTMapPos *)mapPos
     {
         [self.mapView setFocusPos:[[[self.mapView getOptions] getBaseProjection] fromWgs84:mapPos] durationSeconds:1.0f];
@@ -773,7 +768,7 @@ Warning! viz.json API is in development and experimental. Use at your own risk.
             public void run() {
                 mapView.getLayers().clear();
 
-                // Create overlay layer for popups
+                // Create overlay layer for pop-ups
                 Projection proj = mapView.getOptions().getBaseProjection();
                 LocalVectorDataSource dataSource = new LocalVectorDataSource(proj);
                 VectorLayer vectorLayer = new VectorLayer(dataSource);
@@ -789,7 +784,7 @@ Warning! viz.json API is in development and experimental. Use at your own risk.
                     Log.e(Const.LOG_TAG, "Exception: " + e);
                 }
 
-                // Add the created popup overlay layer on top of all visJSON layers
+                // Add the created pop-up overlay layer on top of all visJSON layers
                 mapView.getLayers().add(vectorLayer);
             }
         });
@@ -812,7 +807,7 @@ Warning! viz.json API is in development and experimental. Use at your own risk.
         MyCartoVisBuilder* visBuilder = [[MyCartoVisBuilder alloc] init];
         visBuilder.mapView = mapView;
 
-        // Use your Map URL in next line, you get it from Share Map page. Here is a basic working sample:
+        // Use your Map URL in next line, you get it from the SHARE map publishing options, as shown in the following basic example:
         [loader loadVis:visBuilder visURL:@"http://documentation.carto.com/api/v2/viz/2b13c956-e7c1-11e2-806b-5404a6a683d5/viz.json"];
         
     });
@@ -841,7 +836,3 @@ The CARTO [sample app](/docs/carto-engine/mobile-sdk/getting-started/#sample-app
 - `CartoVectorTileActivity` for vector tiles with CartoCSS styling 
 
 - `CartoRasterTileActivity` for raster tiles with CartoCSS styling 
-
-
-
-
