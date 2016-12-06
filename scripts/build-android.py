@@ -72,6 +72,7 @@ def buildAndroidJAR(args):
       javaFiles.append(os.path.join(dirpath, filename))
 
   if not javac(args, buildDir,
+    '-g:vars',
     '-source', '1.6',
     '-target', '1.6',
     '-bootclasspath', '%s/scripts/android/rt.jar' % baseDir,
