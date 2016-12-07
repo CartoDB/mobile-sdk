@@ -22,7 +22,6 @@
 
 namespace carto {
     class TileDrawData;
-    class TileRenderer;
     class VectorTileEventListener;
         
     namespace VectorTileRenderOrder {
@@ -197,7 +196,7 @@ namespace carto {
             std::shared_ptr<BinaryData> _tileData;
             std::shared_ptr<VectorTileDecoder::TileMap> _tileMap;
         };
-    
+
         static const int DEFAULT_CULL_DELAY = 200;
         static const int PRELOADING_PRIORITY_OFFSET = -2;
         static const int EXTRA_TILE_FOOTPRINT = 4096;
@@ -208,11 +207,10 @@ namespace carto {
         VectorTileRenderOrder::VectorTileRenderOrder _labelRenderOrder;
         VectorTileRenderOrder::VectorTileRenderOrder _buildingRenderOrder;
     
-        std::shared_ptr<VectorTileDecoder> _tileDecoder;
+        const std::shared_ptr<VectorTileDecoder> _tileDecoder;
         std::shared_ptr<TileDecoderListener> _tileDecoderListener;
 
         std::shared_ptr<CancelableThreadPool> _labelCullThreadPool;
-        std::shared_ptr<TileRenderer> _renderer;
     
         std::vector<std::shared_ptr<TileDrawData> > _tempDrawDatas;
 

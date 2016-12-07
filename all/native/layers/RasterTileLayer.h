@@ -21,7 +21,6 @@
 
 namespace carto {
     class TileDrawData;
-    class TileRenderer;
     namespace vt {
         class Tile;
     }
@@ -97,8 +96,6 @@ namespace carto {
         static const int PRELOADING_PRIORITY_OFFSET = -2;
         static const int EXTRA_TILE_FOOTPRINT = 4096;
         static const int DEFAULT_PRELOADING_CACHE_SIZE = 10 * 1024 * 1024;
-        
-        std::shared_ptr<TileRenderer> _renderer;
         
         std::vector<std::shared_ptr<TileDrawData> > _tempDrawDatas;
         
