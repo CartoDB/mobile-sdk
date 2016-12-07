@@ -15,6 +15,8 @@
 #include "graphics/Bitmap.h"
 #include "styles/CompiledStyleSet.h"
 #include "styles/CartoCSSStyleSet.h"
+#include "vectortiles/utils/GeometryConverter.h"
+#include "vectortiles/utils/ValueConverter.h"
 #include "vectortiles/utils/MapnikVTLogger.h"
 #include "vectortiles/utils/VTBitmapLoader.h"
 #include "vectortiles/utils/CartoCSSAssetLoader.h"
@@ -37,95 +39,19 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
-namespace {
-
-    struct ValueConverter : boost::static_visitor<carto::Variant> {
-        carto::Variant operator() (boost::blank) const { return carto::Variant(); }
-        template <typename T> carto::Variant operator() (T val) const { return carto::Variant(val); }
-    };
-
-    typedef std::function<carto::MapPos(const cglib::vec2<float>& pos)> PointConversionFunction;
-
-    std::vector<carto::MapPos> convertPoints(const PointConversionFunction& convertFn, const std::vector<cglib::vec2<float> >& poses) {
-        std::vector<carto::MapPos> points;
-        points.reserve(poses.size());
-        std::transform(poses.begin(), poses.end(), std::back_inserter(points), convertFn);
-        return points;
-    }
-
-    std::vector<std::vector<carto::MapPos> > convertPointsList(const PointConversionFunction& convertFn, const std::vector<std::vector<cglib::vec2<float> > >& posesList) {
-        std::vector<std::vector<carto::MapPos> > pointsList;
-        pointsList.reserve(posesList.size());
-        std::transform(posesList.begin(), posesList.end(), std::back_inserter(pointsList), [&](const std::vector<cglib::vec2<float> >& poses) {
-            return convertPoints(convertFn, poses);
-        });
-        return pointsList;
-    }
-
-    std::vector<std::vector<std::vector<carto::MapPos> > > convertPointsLists(const PointConversionFunction& convertFn, const std::vector<std::vector<std::vector<cglib::vec2<float> > > >& posesLists) {
-        std::vector<std::vector<std::vector<carto::MapPos> > > pointsLists;
-        pointsLists.reserve(posesLists.size());
-        std::transform(posesLists.begin(), posesLists.end(), std::back_inserter(pointsLists), [&](const std::vector<std::vector<cglib::vec2<float> > >& posesList) {
-            return convertPointsList(convertFn, posesList);
-        });
-        return pointsLists;
-    }
-
-    std::shared_ptr<carto::Geometry> convertGeometry(const PointConversionFunction& convertFn, const std::shared_ptr<const carto::mvt::Geometry>& mvtGeometry) {
-        if (auto mvtPoint = std::dynamic_pointer_cast<const carto::mvt::PointGeometry>(mvtGeometry)) {
-            std::vector<carto::MapPos> poses = convertPoints(convertFn, mvtPoint->getVertices());
-            std::vector<std::shared_ptr<carto::PointGeometry> > points;
-            points.reserve(poses.size());
-            std::transform(poses.begin(), poses.end(), std::back_inserter(points), [](const carto::MapPos& pos) { return std::make_shared<carto::PointGeometry>(pos); });
-            if (points.size() == 1) {
-                return points.front();
-            }
-            else {
-                return std::make_shared<carto::MultiPointGeometry>(points);
-            }
-        }
-        else if (auto mvtLine = std::dynamic_pointer_cast<const carto::mvt::LineGeometry>(mvtGeometry)) {
-            std::vector<std::vector<carto::MapPos>> posesList = convertPointsList(convertFn, mvtLine->getVerticesList());
-            std::vector<std::shared_ptr<carto::LineGeometry> > lines;
-            lines.reserve(posesList.size());
-            std::transform(posesList.begin(), posesList.end(), std::back_inserter(lines), [](const std::vector<carto::MapPos>& poses) { return std::make_shared<carto::LineGeometry>(poses); });
-            if (lines.size() == 1) {
-                return lines.front();
-            }
-            else {
-                return std::make_shared<carto::MultiLineGeometry>(lines);
-            }
-        }
-        else if (auto mvtPolygon = std::dynamic_pointer_cast<const carto::mvt::PolygonGeometry>(mvtGeometry)) {
-            std::vector<std::vector<std::vector<carto::MapPos> > > posesLists = convertPointsLists(convertFn, mvtPolygon->getPolygonList());
-            std::vector<std::shared_ptr<carto::PolygonGeometry> > polygons;
-            polygons.reserve(posesLists.size());
-            std::transform(posesLists.begin(), posesLists.end(), std::back_inserter(polygons), [](const std::vector<std::vector<carto::MapPos> >& posesList) { return std::make_shared<carto::PolygonGeometry>(posesList); });
-            if (polygons.size() == 1) {
-                return polygons.front();
-            }
-            else {
-                return std::make_shared<carto::MultiPolygonGeometry>(polygons);
-            }
-        }
-        return std::shared_ptr<carto::Geometry>();
-    }
-
-}
-
 namespace carto {
     
     MBVectorTileDecoder::MBVectorTileDecoder(const std::shared_ptr<CompiledStyleSet>& compiledStyleSet) :
+        _logger(std::make_shared<MapnikVTLogger>("MBVectorTileDecoder")),
         _buffer(0),
         _featureIdOverride(false),
         _cartoCSSLayerNamesIgnored(false),
         _layerNameOverride(),
-        _logger(std::make_shared<MapnikVTLogger>("MBVectorTileDecoder")),
+        _styleSet(),
         _map(),
         _parameterValueMap(),
         _backgroundPattern(),
-        _symbolizerContext(),
-        _styleSet(compiledStyleSet)
+        _symbolizerContext()
     {
         if (!compiledStyleSet) {
             throw NullArgumentException("Null compiledStyleSet");
@@ -135,16 +61,16 @@ namespace carto {
     }
     
     MBVectorTileDecoder::MBVectorTileDecoder(const std::shared_ptr<CartoCSSStyleSet>& cartoCSSStyleSet) :
+        _logger(std::make_shared<MapnikVTLogger>("MBVectorTileDecoder")),
         _buffer(0),
         _featureIdOverride(false),
         _cartoCSSLayerNamesIgnored(false),
         _layerNameOverride(),
-        _logger(std::make_shared<MapnikVTLogger>("MBVectorTileDecoder")),
+        _styleSet(),
         _map(),
         _parameterValueMap(),
         _backgroundPattern(),
-        _symbolizerContext(),
-        _styleSet(cartoCSSStyleSet)
+        _symbolizerContext()
     {
         if (!cartoCSSStyleSet) {
             throw NullArgumentException("Null cartoCSSStyleSet");
@@ -169,7 +95,10 @@ namespace carto {
             throw NullArgumentException("Null styleSet");
         }
 
-        updateCurrentStyle(styleSet);
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            updateCurrentStyle(styleSet);
+        }
         notifyDecoderChanged();
     }
 
@@ -187,7 +116,10 @@ namespace carto {
             throw NullArgumentException("Null styleSet");
         }
 
-        updateCurrentStyle(styleSet);
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            updateCurrentStyle(styleSet);
+        }
         notifyDecoderChanged();
     }
 
@@ -456,8 +388,6 @@ namespace carto {
     }
 
     void MBVectorTileDecoder::updateCurrentStyle(const boost::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> >& styleSet) {
-        std::lock_guard<std::mutex> lock(_mutex);
-
         std::string styleAssetName;
         std::shared_ptr<AssetPackage> styleSetData;
         std::shared_ptr<mvt::Map> map;

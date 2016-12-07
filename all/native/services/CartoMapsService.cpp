@@ -8,7 +8,7 @@
 #include "layers/VectorTileLayer.h"
 #include "layers/TorqueTileLayer.h"
 #include "styles/CartoCSSStyleSet.h"
-#include "vectortiles/MBVectorTileDecoder.h"
+#include "vectortiles/CartoVectorTileDecoder.h"
 #include "vectortiles/TorqueTileDecoder.h"
 #include "utils/AssetPackage.h"
 #include "utils/GeneralUtils.h"
@@ -333,13 +333,13 @@ namespace carto {
             
             if (_defaultVectorLayerMode) {
                 if (!cartoCSS.empty()) {
+                    std::vector<std::string> layerIds;
+                    layerIds.push_back(layerId);
+                    std::map<std::string, std::string> layerStyles;
+                    layerStyles[layerId] = cartoCSS;
+                    auto vectorTileDecoder = std::make_shared<CartoVectorTileDecoder>(layerIds, layerStyles, _vectorTileAssetPackage);
                     auto baseDataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.mvt" + urlTemplateSuffix);
                     auto dataSource = std::make_shared<MemoryCacheTileDataSource>(baseDataSource); // in memory cache allows to change style quickly
-                    auto styleSet = std::make_shared<CartoCSSStyleSet>(cartoCSS, _vectorTileAssetPackage);
-                    auto vectorTileDecoder = std::make_shared<MBVectorTileDecoder>(styleSet);
-                    vectorTileDecoder->setFeatureIdOverride(true); // Carto uses tile-local ids for features
-                    vectorTileDecoder->setCartoCSSLayerNamesIgnored(true); // all layer name filters should be ignored
-                    vectorTileDecoder->setLayerNameOverride(layerId.empty() ? "layer0" : layerId);
                     layer = std::make_shared<VectorTileLayer>(dataSource, vectorTileDecoder);
                 }
                 else {

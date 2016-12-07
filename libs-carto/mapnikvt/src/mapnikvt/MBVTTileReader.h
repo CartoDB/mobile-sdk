@@ -18,6 +18,7 @@ namespace carto { namespace mvt {
         explicit MBVTTileReader(std::shared_ptr<Map> map, const SymbolizerContext& symbolizerContext, const MBVTFeatureDecoder& featureDecoder) : TileReader(std::move(map), symbolizerContext), _featureDecoder(featureDecoder) { }
 
         void setLayerNameOverride(const std::string& name);
+        void setLayerFilter(const std::string& layerId);
 
     protected:
         virtual std::string getLayerName(const std::shared_ptr<const Layer>& layer) const override;
@@ -26,6 +27,7 @@ namespace carto { namespace mvt {
 
         const MBVTFeatureDecoder& _featureDecoder;
         std::string _layerNameOverride;
+        std::string _layerFilter;
     };
 } }
 
