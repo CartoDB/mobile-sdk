@@ -13,7 +13,6 @@
 #include "geometry/MultiLineGeometry.h"
 #include "geometry/MultiPolygonGeometry.h"
 #include "graphics/Bitmap.h"
-#include "styles/CompiledStyleSet.h"
 #include "styles/CartoCSSStyleSet.h"
 #include "vectortiles/utils/MapnikVTLogger.h"
 #include "vectortiles/utils/GeometryConverter.h"
@@ -41,38 +40,18 @@
 
 namespace carto {
     
-    CartoVectorTileDecoder::CartoVectorTileDecoder(const std::vector<std::string>& layerIds, const std::map<std::string, std::string>& layerStyles, const std::shared_ptr<AssetPackage>& assetPackage) :
+    CartoVectorTileDecoder::CartoVectorTileDecoder(const std::vector<std::string>& layerIds, const std::map<std::string, std::shared_ptr<CartoCSSStyleSet> >& layerStyleSets) :
         _logger(std::make_shared<MapnikVTLogger>("CartoVectorTileDecoder")),
-        _assetPackage(assetPackage),
         _layerIds(layerIds),
-        _layerStyles(),
+        _layerStyleSets(),
         _layerMaps(),
+        _layerSymbolizerContexts(),
+        _assetPackageSymbolizerContexts(),
         _backgroundColor(),
-        _backgroundPattern(),
-        _symbolizerContext()
+        _backgroundPattern()
     {
-        mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, std::map<std::string, mvt::Value>());
-        auto fontManager = std::make_shared<vt::FontManager>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
-        auto bitmapLoader = std::make_shared<VTBitmapLoader>("", assetPackage);
-        auto bitmapManager = std::make_shared<vt::BitmapManager>(bitmapLoader);
-        auto strokeMap = std::make_shared<vt::StrokeMap>(STROKEMAP_SIZE);
-        auto glyphMap = std::make_shared<vt::GlyphMap>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
-        _symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
-
-        if (assetPackage) {
-            std::string fontPrefix = FileUtils::NormalizePath("fonts/");
-
-            for (const std::string& assetName : assetPackage->getAssetNames()) {
-                if (assetName.size() > fontPrefix.size() && assetName.substr(0, fontPrefix.size()) == fontPrefix) {
-                    if (std::shared_ptr<BinaryData> fontData = assetPackage->loadAsset(assetName)) {
-                        fontManager->loadFontData(*fontData->getDataPtr());
-                    }
-                }
-            }
-        }
-
-        for (auto it = layerStyles.begin(); it != layerStyles.end(); it++) {
-            updateLayerStyle(it->first, it->second);
+        for (auto it = layerStyleSets.begin(); it != layerStyleSets.end(); it++) {
+            updateLayerStyleSet(it->first, it->second);
         }
     }
     
@@ -83,24 +62,24 @@ namespace carto {
         return _layerIds;
     }
 
-    std::string CartoVectorTileDecoder::getLayerStyle(const std::string& layerId) const {
+    std::shared_ptr<CartoCSSStyleSet> CartoVectorTileDecoder::getLayerStyleSet(const std::string& layerId) const {
         std::lock_guard<std::mutex> lock(_mutex);
 
-        auto it = _layerStyles.find(layerId);
-        if (it == _layerStyles.end()) {
+        auto it = _layerStyleSets.find(layerId);
+        if (it == _layerStyleSets.end()) {
             throw OutOfRangeException("Invalid layer id");
         }
         return it->second;
     }
     
-    void CartoVectorTileDecoder::setLayerStyle(const std::string& layerId, const std::string& cartoCSS) {
+    void CartoVectorTileDecoder::setLayerStyleSet(const std::string& layerId, const std::shared_ptr<CartoCSSStyleSet>& styleSet) {
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            auto it = _layerStyles.find(layerId);
-            if (it == _layerStyles.end()) {
+            auto it = _layerStyleSets.find(layerId);
+            if (it == _layerStyleSets.end()) {
                 throw OutOfRangeException("Invalid layer id");
             }
-            updateLayerStyle(layerId, cartoCSS);
+            updateLayerStyleSet(layerId, styleSet);
         }
         notifyDecoderChanged();
     }
@@ -183,11 +162,11 @@ namespace carto {
         }
 
         std::map<std::string, std::shared_ptr<mvt::Map> > layerMaps;
-        std::shared_ptr<mvt::SymbolizerContext> symbolizerContext;
+        std::map<std::string, std::shared_ptr<mvt::SymbolizerContext> > layerSymbolizerContexts;
         {
             std::lock_guard<std::mutex> lock(_mutex);
             layerMaps = _layerMaps;
-            symbolizerContext = _symbolizerContext;
+            layerSymbolizerContexts = _layerSymbolizerContexts;
         }
     
         try {
@@ -197,7 +176,7 @@ namespace carto {
 
             std::vector<std::shared_ptr<vt::Tile> > tiles(_layerIds.size());
             for (auto it = layerMaps.begin(); it != layerMaps.end(); it++) {
-                mvt::MBVTTileReader reader(it->second, *symbolizerContext, decoder);
+                mvt::MBVTTileReader reader(it->second, *layerSymbolizerContexts[it->first], decoder);
                 reader.setLayerNameOverride(it->first);
                 if (std::shared_ptr<vt::Tile> tile = reader.readTile(targetTile)) {
                     std::size_t index = std::distance(_layerIds.begin(), std::find(_layerIds.begin(), _layerIds.end(), it->first));
@@ -223,13 +202,41 @@ namespace carto {
         return std::shared_ptr<TileMap>();
     }
 
-    void CartoVectorTileDecoder::updateLayerStyle(const std::string& layerId, const std::string& cartoCSS) {
+    void CartoVectorTileDecoder::updateLayerStyleSet(const std::string& layerId, const std::shared_ptr<CartoCSSStyleSet>& styleSet) {
+        if (!styleSet) {
+            throw NullArgumentException("Null styleset");
+        }
+
+        std::shared_ptr<AssetPackage> assetPackage = styleSet->getAssetPackage();
+        std::shared_ptr<mvt::SymbolizerContext>& symbolizerContext = _assetPackageSymbolizerContexts[assetPackage];
+        if (!symbolizerContext) {
+            mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, std::map<std::string, mvt::Value>());
+            auto fontManager = std::make_shared<vt::FontManager>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
+            auto bitmapLoader = std::make_shared<VTBitmapLoader>("", assetPackage);
+            auto bitmapManager = std::make_shared<vt::BitmapManager>(bitmapLoader);
+            auto strokeMap = std::make_shared<vt::StrokeMap>(STROKEMAP_SIZE);
+            auto glyphMap = std::make_shared<vt::GlyphMap>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
+            symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
+
+            if (assetPackage) {
+                std::string fontPrefix = FileUtils::NormalizePath("fonts/");
+
+                for (const std::string& assetName : assetPackage->getAssetNames()) {
+                    if (assetName.size() > fontPrefix.size() && assetName.substr(0, fontPrefix.size()) == fontPrefix) {
+                        if (std::shared_ptr<BinaryData> fontData = assetPackage->loadAsset(assetName)) {
+                            fontManager->loadFontData(*fontData->getDataPtr());
+                        }
+                    }
+                }
+            }
+        }
+
         std::shared_ptr<mvt::Map> map;
         try {
-            auto assetLoader = std::make_shared<CartoCSSAssetLoader>("", _assetPackage);
+            auto assetLoader = std::make_shared<CartoCSSAssetLoader>("", assetPackage);
             css::CartoCSSMapLoader mapLoader(assetLoader, _logger);
             mapLoader.setIgnoreLayerPredicates(true);
-            map = mapLoader.loadMap(cartoCSS);
+            map = mapLoader.loadMap(styleSet->getCartoCSS());
         }
         catch (const std::exception& ex) {
             throw ParseException("CartoCSS style parsing failed", ex.what());
@@ -240,15 +247,16 @@ namespace carto {
 
             std::shared_ptr<const vt::BitmapPattern> backgroundPattern;
             if (!map->getSettings().backgroundImage.empty()) {
-                auto bitmapLoader = std::make_shared<VTBitmapLoader>("", _assetPackage);
+                auto bitmapLoader = std::make_shared<VTBitmapLoader>("", assetPackage);
                 auto bitmapManager = std::make_shared<vt::BitmapManager>(bitmapLoader);
                 backgroundPattern = bitmapManager->loadBitmapPattern(map->getSettings().backgroundImage, 1.0f, 1.0f);
             }
             _backgroundPattern = backgroundPattern;
         }
 
-        _layerStyles[layerId] = cartoCSS;
+        _layerStyleSets[layerId] = styleSet;
         _layerMaps[layerId] = map;
+        _layerSymbolizerContexts[layerId] = symbolizerContext;
     }
     
     const int CartoVectorTileDecoder::DEFAULT_TILE_SIZE = 256;

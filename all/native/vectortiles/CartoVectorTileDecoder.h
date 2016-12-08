@@ -26,6 +26,7 @@ namespace carto {
     }
 
     class AssetPackage;
+    class CartoCSSStyleSet;
     
     /**
      * Decoder for Carto vector tiles in MapBox format.
@@ -35,11 +36,10 @@ namespace carto {
         /**
          * Constructs a decoder for Carto vector tiles based on specified CartoCSS style set.
          * @param layerIds The list of layer ids.
-         * @param layerStyles The CartoCSS style sets for the layer.
-         * @param assetPackage The asset package to use. Can be null.
+         * @param layerStyleSets The CartoCSS style sets for the layers.
          * @throws std::runtime_error If the decoder could not be created or there are issues with the style set.
          */
-        explicit CartoVectorTileDecoder(const std::vector<std::string>& layerIds, const std::map<std::string, std::string>& layerStyles, const std::shared_ptr<AssetPackage>& assetPackage);
+        explicit CartoVectorTileDecoder(const std::vector<std::string>& layerIds, const std::map<std::string, std::shared_ptr<CartoCSSStyleSet> >& layerStyleSets);
         virtual ~CartoVectorTileDecoder();
 
         /**
@@ -49,20 +49,20 @@ namespace carto {
         std::vector<std::string> getLayerIds() const;
 
         /**
-         * Returns the current CartoCSS used by the decoder for the specified layer.
+         * Returns the CartoCSS style set used by the decoder for the specified layer.
          * @param layerId The layer index to use.
          * @return The given layer CartoCSS style.
          * @throws std::out_of_range If the layer id is not valid.
          */
-        std::string getLayerStyle(const std::string& layerId) const;
+        std::shared_ptr<CartoCSSStyleSet> getLayerStyleSet(const std::string& layerId) const;
         /**
-         * Sets the current CartoCSS style set used by the decoder for the specified layer.
+         * Sets the CartoCSS style set used by the decoder for the specified layer.
          * @param layerId The layer name to use.
-         * @param cartoCSS The new style set to use.
+         * @param styleSet The new style set to use.
          * @throws std::runtime_error If the decoder could not be updated or there are issues with the CartoCSS.
          * @throws std::out_of_range If the layer id is not valid.
          */
-        void setLayerStyle(const std::string& layerId, const std::string& cartoCSS);
+        void setLayerStyleSet(const std::string& layerId, const std::shared_ptr<CartoCSSStyleSet>& styleSet);
 
         virtual Color getBackgroundColor() const;
     
@@ -77,20 +77,20 @@ namespace carto {
         virtual std::shared_ptr<TileMap> decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const;
     
     protected:
-        void updateLayerStyle(const std::string& layerId, const std::string& cartoCSS);
+        void updateLayerStyleSet(const std::string& layerId, const std::shared_ptr<CartoCSSStyleSet>& styleSet);
 
         static const int DEFAULT_TILE_SIZE;
         static const int STROKEMAP_SIZE;
         static const int GLYPHMAP_SIZE;
         
         const std::shared_ptr<mvt::Logger> _logger;
-        const std::shared_ptr<AssetPackage> _assetPackage;
         const std::vector<std::string> _layerIds;
-        std::map<std::string, std::string> _layerStyles;
+        std::map<std::string, std::shared_ptr<CartoCSSStyleSet> > _layerStyleSets;
         std::map<std::string, std::shared_ptr<mvt::Map> > _layerMaps;
+        std::map<std::string, std::shared_ptr<mvt::SymbolizerContext> > _layerSymbolizerContexts;
+        std::map<std::shared_ptr<AssetPackage>, std::shared_ptr<mvt::SymbolizerContext> > _assetPackageSymbolizerContexts;
         Color _backgroundColor;
         std::shared_ptr<const vt::BitmapPattern> _backgroundPattern;
-        std::shared_ptr<mvt::SymbolizerContext> _symbolizerContext;
 
         mutable std::pair<std::shared_ptr<BinaryData>, std::shared_ptr<mvt::MBVTFeatureDecoder> > _cachedFeatureDecoder;
     

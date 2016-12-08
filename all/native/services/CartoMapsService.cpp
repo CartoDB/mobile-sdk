@@ -321,12 +321,12 @@ namespace carto {
             
                 if (_defaultVectorLayerMode) {
                     std::vector<std::string> layerIds;
-                    std::map<std::string, std::string> layerStyles;
-                    for (std::size_t i = 0; i < layerInfos.size(); i++) {
-                        layerIds.push_back(layerInfos[i].id);
-                        layerStyles[layerInfos[i].id] = layerInfos[i].cartoCSS;
+                    std::map<std::string, std::shared_ptr<CartoCSSStyleSet> > layerStyleSets;
+                    for (const LayerInfo& layerInfo : layerInfos) {
+                        layerIds.push_back(layerInfo.id);
+                        layerStyleSets[layerInfo.id] = std::make_shared<CartoCSSStyleSet>(layerInfo.cartoCSS, _vectorTileAssetPackage);
                     }
-                    auto vectorTileDecoder = std::make_shared<CartoVectorTileDecoder>(layerIds, layerStyles, _vectorTileAssetPackage);
+                    auto vectorTileDecoder = std::make_shared<CartoVectorTileDecoder>(layerIds, layerStyleSets);
                     auto baseDataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.mvt" + urlTemplateSuffix);
                     auto dataSource = std::make_shared<MemoryCacheTileDataSource>(baseDataSource); // in memory cache allows to change style quickly
                     tileLayer = std::make_shared<VectorTileLayer>(dataSource, vectorTileDecoder);

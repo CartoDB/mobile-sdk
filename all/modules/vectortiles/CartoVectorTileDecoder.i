@@ -3,7 +3,7 @@
 
 %module CartoVectorTileDecoder
 
-!proxy_imports(carto::CartoVectorTileDecoder, core.BinaryData, core.stringVector, core.StringMap, graphics.Color, utils.AssetPackage, vectortiles.VectorTileDecoder)
+!proxy_imports(carto::CartoVectorTileDecoder, core.BinaryData, core.stringVector, core.StringMap, graphics.Color, styles.CartoCSSStyleSet, vectortiles.VectorTileDecoder)
 
 %{
 #include "vectortiles/CartoVectorTileDecoder.h"
@@ -16,8 +16,8 @@
 %include <cartoswig.i>
 
 %import "core/BinaryData.i"
-%import "core/StringMap.i"
 %import "core/StringVector.i"
+%import "styles/CartoCSSStyleSet.i"
 %import "vectortiles/VectorTileDecoder.i"
 
 !polymorphic_shared_ptr(carto::CartoVectorTileDecoder, vectortiles.CartoVectorTileDecoder)
@@ -26,6 +26,7 @@
 %std_exceptions(carto::CartoVectorTileDecoder::CartoVectorTileDecoder)
 %std_exceptions(carto::CartoVectorTileDecoder::getLayerStyle)
 %std_exceptions(carto::CartoVectorTileDecoder::setLayerStyle)
+%ignore carto::CartoVectorTileDecoder::CartoVectorTileDecoder;
 %ignore carto::CartoVectorTileDecoder::decodeFeature;
 %ignore carto::CartoVectorTileDecoder::decodeTile;
 %ignore carto::CartoVectorTileDecoder::getBackgroundColor;
