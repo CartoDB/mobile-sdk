@@ -289,123 +289,122 @@ namespace carto {
         return url;
     }
 
-    std::shared_ptr<Layer> CartoMapsService::createLayer(int layerIndex, const std::string& layerGroupId, const std::string& type, const std::string& layerId, const std::string& cartoCSS, const std::map<std::string, std::string>& cdnURLs) const {
-        // Check layer indices filter
-        if (!_layerIndices.empty()) {
-            if (std::find(_layerIndices.begin(), _layerIndices.end(), layerIndex) == _layerIndices.end()) {
-                return std::shared_ptr<Layer>();
-            }
+    std::shared_ptr<Layer> CartoMapsService::createLayerGroup(const std::string& layerGroupId, const std::string& type, const std::vector<LayerInfo>& layerInfos, const std::map<std::string, std::string>& cdnURLs) const {
+        if (layerInfos.empty()) {
+            return std::shared_ptr<Layer>();
         }
 
-        // Check layer type filter
-        if (!_layerFilter.empty()) {
-            if (std::find(_layerFilter.begin(), _layerFilter.end(), type) == _layerFilter.end()) {
-                return std::shared_ptr<Layer>();
+        try {
+            // Data source parameters
+            int minZoom = 0;
+            int maxZoom = Const::MAX_SUPPORTED_ZOOM_LEVEL;
+
+            std::string urlTemplateBase = getTilerURL(cdnURLs);
+            urlTemplateBase += "/api/v1/map/" + layerGroupId;
+            for (std::size_t i = 0; i < layerInfos.size(); i++) {
+                urlTemplateBase += (i == 0 ? "/" : ",") + boost::lexical_cast<std::string>(layerInfos[i].index);
             }
-        }
+            std::string urlTemplateSuffix;
 
-        // Data source parameters
-        int minZoom = 0;
-        int maxZoom = Const::MAX_SUPPORTED_ZOOM_LEVEL;
-
-        std::string urlTemplateBase = getTilerURL(cdnURLs);
-        urlTemplateBase += "/api/v1/map/" + layerGroupId;
-        urlTemplateBase += "/" + boost::lexical_cast<std::string>(layerIndex);
-        std::string urlTemplateSuffix;
-
-        // Create layer based on type and flags
-        if (type == "torque") {
-            if (!cartoCSS.empty()) {
+            // Create layer based on type and flags
+            if (type == "torque") {
+                std::string cartoCSS = layerInfos.front().cartoCSS;
                 auto baseDataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.torque" + urlTemplateSuffix);
                 auto dataSource = std::make_shared<MemoryCacheTileDataSource>(baseDataSource); // in memory cache allows to change style quickly
                 auto styleSet = std::make_shared<CartoCSSStyleSet>(cartoCSS, _vectorTileAssetPackage);
                 auto torqueTileDecoder = std::make_shared<TorqueTileDecoder>(styleSet);
                 return std::make_shared<TorqueTileLayer>(dataSource, torqueTileDecoder);
             }
-            else {
-                Log::Warn("CartoMapsService::createLayer: No CartoCSS for Torque layer, ignoring layer");
-                return std::shared_ptr<Layer>();
-            }
-        }
 
-        if (type == "mapnik" || type == "cartodb") {
-            std::shared_ptr<TileLayer> layer;
+            if (type == "mapnik" || type == "cartodb") {
+                std::shared_ptr<TileLayer> tileLayer;
             
-            if (_defaultVectorLayerMode) {
-                if (!cartoCSS.empty()) {
+                if (_defaultVectorLayerMode) {
                     std::vector<std::string> layerIds;
-                    layerIds.push_back(layerId);
                     std::map<std::string, std::string> layerStyles;
-                    layerStyles[layerId] = cartoCSS;
+                    for (std::size_t i = 0; i < layerInfos.size(); i++) {
+                        layerIds.push_back(layerInfos[i].id);
+                        layerStyles[layerInfos[i].id] = layerInfos[i].cartoCSS;
+                    }
                     auto vectorTileDecoder = std::make_shared<CartoVectorTileDecoder>(layerIds, layerStyles, _vectorTileAssetPackage);
                     auto baseDataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.mvt" + urlTemplateSuffix);
                     auto dataSource = std::make_shared<MemoryCacheTileDataSource>(baseDataSource); // in memory cache allows to change style quickly
-                    layer = std::make_shared<VectorTileLayer>(dataSource, vectorTileDecoder);
+                    tileLayer = std::make_shared<VectorTileLayer>(dataSource, vectorTileDecoder);
                 }
                 else {
-                    Log::Warn("CartoMapsService::createLayer: No CartoCSS for layer, using raster tiles");
+                    auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.png" + urlTemplateSuffix);
+                    tileLayer = std::make_shared<RasterTileLayer>(dataSource);
                 }
-            }
+
+                if (_interactive) {
+                    auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.grid.json" + urlTemplateSuffix);
+                    tileLayer->setUTFGridDataSource(dataSource);
+                }
             
-            if (!layer) {
-                auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.png" + urlTemplateSuffix);
-                layer = std::make_shared<RasterTileLayer>(dataSource);
+                return tileLayer;
             }
 
-            if (_interactive) {
-                auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.grid.json" + urlTemplateSuffix);
-                layer->setUTFGridDataSource(dataSource);
-            }
-            
-            return layer;
+            auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.png" + urlTemplateSuffix);
+            return std::make_shared<RasterTileLayer>(dataSource);
         }
-
-        auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.png" + urlTemplateSuffix);
-        return std::make_shared<RasterTileLayer>(dataSource);
+        catch (const std::exception& ex) {
+            if (_strictMode) {
+                throw ex;
+            }
+            Log::Errorf("CartoMapsService::createLayerGroup: Exception while creating layer: %s", ex.what());
+            return std::shared_ptr<Layer>();
+        }
     }
 
     std::vector<std::shared_ptr<Layer> > CartoMapsService::createLayers(const picojson::value& mapInfo) const {
         std::vector<std::shared_ptr<Layer> > layers;
 
+        // Read layergroup id
         if (!mapInfo.get("layergroupid").is<std::string>()) {
             Log::Warn("CartoMapsService::createLayers: No layergroupid in response");
             return layers;
         }
         std::string layerGroupId = mapInfo.get("layergroupid").get<std::string>();
 
+        // Read metadata
         const picojson::value& metadata = mapInfo.get("metadata");
         if (!metadata.is<picojson::object>()) {
             Log::Warn("CartoMapsService::createLayers: No metadata in response");
             return layers;
         }
 
+        // Read layers
         if (!metadata.get("layers").is<picojson::array>()) {
             Log::Warn("CartoMapsService::createLayers: No layers info in response");
             return layers;
         }
         const picojson::array& layersInfo = metadata.get("layers").get<picojson::array>();
-
+        
+        // Read CDN URLs
+        std::map<std::string, std::string> cdnURLs;
+        if (mapInfo.get("cdn_url").is<picojson::object>()) {
+            const picojson::object& cdnURLsObject = mapInfo.get("cdn_url").get<picojson::object>();
+            for (auto it = cdnURLsObject.begin(); it != cdnURLsObject.end(); it++) {
+                if (it->second.is<std::string>()) {
+                    cdnURLs[it->first] = it->second.get<std::string>();
+                }
+            }
+        }
+        
+        // Create layers. For similar layer types, group as many as possible
+        std::string layerType;
+        std::vector<LayerInfo> layerInfos;
         for (auto it = layersInfo.begin(); it != layersInfo.end(); it++) {
             const picojson::value& layerInfo = *it;
 
             // Read layer type and id
+            int index = static_cast<int>(it - layersInfo.begin());
             std::string type = layerInfo.get("type").get<std::string>();
-            std::string layerId;
+            std::string id;
             if (layerInfo.get("id").is<std::string>()) {
-                layerId = layerInfo.get("id").get<std::string>();
+                id = layerInfo.get("id").get<std::string>();
             }
             
-            // Read CDN URLs
-            std::map<std::string, std::string> cdnURLs;
-            if (mapInfo.get("cdn_url").is<picojson::object>()) {
-                const picojson::object& cdnURLsObject = mapInfo.get("cdn_url").get<picojson::object>();
-                for (auto it = cdnURLsObject.begin(); it != cdnURLsObject.end(); it++) {
-                    if (it->second.is<std::string>()) {
-                        cdnURLs[it->first] = it->second.get<std::string>();
-                    }
-                }
-            }
-
             // Read CartoCSS
             std::string cartoCSS;
             if (layerInfo.get("meta").is<picojson::object>()) {
@@ -414,19 +413,37 @@ namespace carto {
                     cartoCSS = metaValue.get("cartocss").get<std::string>();
                 }
             }
-
-            int layerIndex = static_cast<int>(it - layersInfo.begin());
-            try {
-                if (std::shared_ptr<Layer> layer = createLayer(layerIndex, layerGroupId, type, layerId, cartoCSS, cdnURLs)) {
+            
+            // Create previously gathered layers if type has changed (or Torque layer)
+            if (type != layerType || type == "torque") {
+                if (std::shared_ptr<Layer> layer = createLayerGroup(layerGroupId, layerType, layerInfos, cdnURLs)) {
                     layers.push_back(layer);
                 }
+                layerType = type;
+                layerInfos.clear();
             }
-            catch (const std::exception& ex) {
-                if (_strictMode) {
-                    throw ex;
+            
+            // Check layer indices filter
+            if (!_layerIndices.empty()) {
+                if (std::find(_layerIndices.begin(), _layerIndices.end(), index) == _layerIndices.end()) {
+                    continue;
                 }
-                Log::Errorf("CartoMapsService::createLayers: Exception while creating layer: %s", ex.what());
             }
+            
+            // Check layer type filter
+            if (!_layerFilter.empty()) {
+                if (std::find(_layerFilter.begin(), _layerFilter.end(), type) == _layerFilter.end()) {
+                    continue;
+                }
+            }
+            
+            // Add layer info
+            layerInfos.emplace_back(index, id, cartoCSS);
+        }
+        
+        // Create remaining grouped layers
+        if (std::shared_ptr<Layer> layer = createLayerGroup(layerGroupId, layerType, layerInfos, cdnURLs)) {
+            layers.push_back(layer);
         }
 
         return layers;
