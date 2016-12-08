@@ -301,7 +301,7 @@ namespace carto { namespace vt {
         }
     }
 
-    std::shared_ptr<TileLayer> TileLayerBuilder::build(std::string layerName, int layerIdx, std::shared_ptr<FloatFunction> opacity, boost::optional<CompOp> compOp) {
+    std::shared_ptr<TileLayer> TileLayerBuilder::build(int layerIdx, std::shared_ptr<FloatFunction> opacity, boost::optional<CompOp> compOp) {
         std::vector<std::shared_ptr<TileBitmap>> bitmapList;
         std::swap(bitmapList, _bitmapList);
 
@@ -313,7 +313,7 @@ namespace carto { namespace vt {
         std::swap(labelList, _labelList);
         std::for_each(labelList.begin(), labelList.end(), [layerIdx](const std::shared_ptr<TileLabel>& label) { label->setPriority(layerIdx); });
 
-        return std::make_shared<TileLayer>(std::move(layerName), layerIdx, std::move(opacity), std::move(compOp), std::move(bitmapList), std::move(geometryList), std::move(labelList));
+        return std::make_shared<TileLayer>(layerIdx, std::move(opacity), std::move(compOp), std::move(bitmapList), std::move(geometryList), std::move(labelList));
     }
 
     void TileLayerBuilder::appendGeometry() {

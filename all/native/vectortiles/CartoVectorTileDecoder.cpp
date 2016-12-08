@@ -198,7 +198,7 @@ namespace carto {
             std::vector<std::shared_ptr<vt::Tile> > tiles(_layerIds.size());
             for (auto it = layerMaps.begin(); it != layerMaps.end(); it++) {
                 mvt::MBVTTileReader reader(it->second, *symbolizerContext, decoder);
-                reader.setLayerFilter(it->first);
+                reader.setLayerNameOverride(it->first);
                 if (std::shared_ptr<vt::Tile> tile = reader.readTile(targetTile)) {
                     std::size_t index = std::distance(_layerIds.begin(), std::find(_layerIds.begin(), _layerIds.end(), it->first));
                     if (index < tiles.size()) {
