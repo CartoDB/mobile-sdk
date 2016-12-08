@@ -31,7 +31,6 @@ namespace carto {
         _tileDecoder(decoder),
         _tileDecoderListener(),
         _labelCullThreadPool(std::make_shared<CancelableThreadPool>()),
-        _renderer(),
         _tempDrawDatas(),
         _visibleCache(128 * 1024 * 1024), // NOTE: the limit should never be reached in normal cases
         _preloadingCache(DEFAULT_PRELOADING_CACHE_SIZE)
@@ -244,9 +243,9 @@ namespace carto {
         // Update renderer if needed, run culler
         bool refresh = false;
         bool cull = false;
-        if (_renderer) {
+        if (auto renderer = getRenderer()) {
             if (!(_synchronizedRefresh && _fetchingTiles.getVisibleCount() > 0)) {
-                if (_renderer->refreshTiles(_tempDrawDatas)) {
+                if (renderer->refreshTiles(_tempDrawDatas)) {
                     refresh = true;
                     cull = true;
                 }
@@ -259,7 +258,7 @@ namespace carto {
     
         if (cull) {
             _labelCullThreadPool->cancelAll();
-            std::shared_ptr<CancelableTask> task = std::make_shared<LabelCullTask>(std::static_pointer_cast<VectorTileLayer>(shared_from_this()), _renderer, cullState->getViewState());
+            std::shared_ptr<CancelableTask> task = std::make_shared<LabelCullTask>(std::static_pointer_cast<VectorTileLayer>(shared_from_this()), getRenderer(), cullState->getViewState());
             _labelCullThreadPool->execute(task);
         }
     
@@ -275,7 +274,7 @@ namespace carto {
     int VectorTileLayer::getMinZoom() const {
         return std::max(_dataSource->getMinZoom(), _tileDecoder->getMinZoom());
     }
-        
+    
     int VectorTileLayer::getMaxZoom() const {
         return _tileDecoder->getMaxZoom(); // NOTE: datasource max zoom is handled differently
     }    
@@ -284,13 +283,14 @@ namespace carto {
         DirectorPtr<VectorTileEventListener> eventListener = _vectorTileEventListener;
 
         if (eventListener) {
-
             for (int pass = 0; pass < 2; pass++) {
                 std::vector<std::tuple<vt::TileId, double, long long> > hitResults;
-                if (pass == 0) {
-                    _renderer->calculateRayIntersectedElements(ray, viewState, hitResults);
-                } else {
-                    _renderer->calculateRayIntersectedElements3D(ray, viewState, hitResults);
+                if (auto renderer = getRenderer()) {
+                    if (pass == 0) {
+                        renderer->calculateRayIntersectedElements(ray, viewState, hitResults);
+                    } else {
+                        renderer->calculateRayIntersectedElements3D(ray, viewState, hitResults);
+                    }
                 }
 
                 for (auto it = hitResults.rbegin(); it != hitResults.rend(); it++) {
@@ -341,15 +341,18 @@ namespace carto {
     }
 
     void VectorTileLayer::offsetLayerHorizontally(double offset) {
-        _renderer->offsetLayerHorizontally(offset);
+        if (auto renderer = getRenderer()) {
+            renderer->offsetLayerHorizontally(offset);
+        }
     }
     
     void VectorTileLayer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
         Layer::onSurfaceCreated(shaderManager, textureManager);
-    
-        if (_renderer) {
-            _renderer->onSurfaceDestroyed();
-            _renderer.reset();
+
+        // Reset renderer    
+        if (auto renderer = getRenderer()) {
+            renderer->onSurfaceDestroyed();
+            setRenderer(std::shared_ptr<TileRenderer>());
     
             // Clear all tile caches - renderer may cache/release tile info, so old tiles are potentially unusable at this point
             std::lock_guard<std::recursive_mutex> lock(_mutex);
@@ -358,31 +361,41 @@ namespace carto {
         }
     
         // Create new rendererer, simply drop old one (if exists)
-        _renderer = std::make_shared<TileRenderer>(_mapRenderer, _useFBO, _useDepth, _useStencil);
-        _renderer->onSurfaceCreated(shaderManager, textureManager);
-        _renderer->setBackgroundColor(_tileDecoder->getBackgroundColor());
+        auto renderer = std::make_shared<TileRenderer>(_mapRenderer, _useFBO, _useDepth, _useStencil);
+        renderer->onSurfaceCreated(shaderManager, textureManager);
+        renderer->setBackgroundColor(_tileDecoder->getBackgroundColor());
         if (_tileDecoder->getBackgroundPattern()) {
-            _renderer->setBackgroundPattern(_tileDecoder->getBackgroundPattern());
+            renderer->setBackgroundPattern(_tileDecoder->getBackgroundPattern());
         }
+        setRenderer(renderer);
     }
     
     bool VectorTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
         updateTileLoadListener();
 
-        _renderer->setLabelOrder(static_cast<int>(getLabelRenderOrder()));
-        _renderer->setBuildingOrder(static_cast<int>(getBuildingRenderOrder()));
-        _renderer->setInteractionMode(_vectorTileEventListener.get() ? true : false);
-        return _renderer->onDrawFrame(deltaSeconds, viewState);
+        if (auto renderer = getRenderer()) {
+            renderer->setLabelOrder(static_cast<int>(getLabelRenderOrder()));
+            renderer->setBuildingOrder(static_cast<int>(getBuildingRenderOrder()));
+            renderer->setInteractionMode(_vectorTileEventListener.get() ? true : false);
+            return renderer->onDrawFrame(deltaSeconds, viewState);
+        }
+        return false;
     }
         
     bool VectorTileLayer::onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
-        return _renderer->onDrawFrame3D(deltaSeconds, viewState);
+        if (auto renderer = getRenderer()) {
+            return renderer->onDrawFrame3D(deltaSeconds, viewState);
+        }
+        return false;
     }
     
     void VectorTileLayer::onSurfaceDestroyed() {
-        _renderer->onSurfaceDestroyed();
-        _renderer.reset();
-        
+        // Reset renderer
+        if (auto renderer = getRenderer()) {
+            renderer->onSurfaceDestroyed();
+            setRenderer(std::shared_ptr<TileRenderer>());
+        }
+
         // Clear all tile caches - renderer may cache/release tile info, so old tiles are potentially unusable at this point
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);

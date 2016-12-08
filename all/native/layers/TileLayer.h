@@ -22,6 +22,7 @@
 namespace carto {
     class CancelableTask;
     class CullState;
+    class TileRenderer;
     class TileLoadListener;
     class UTFGridTile;
     class UTFGridEventListener;
@@ -274,6 +275,9 @@ namespace carto {
 
         MapBounds calculateInternalTileBounds(const MapTile& mapTile) const;
 
+        std::shared_ptr<TileRenderer> getRenderer() const;
+        void setRenderer(const std::shared_ptr<TileRenderer>& renderer);
+
         static const float DISCRETE_ZOOM_LEVEL_BIAS;
 
         std::atomic<bool> _synchronizedRefresh;
@@ -321,6 +325,7 @@ namespace carto {
         std::vector<MapTile> _visibleTiles;
         std::vector<MapTile> _preloadingTiles;
         std::unordered_map<MapTile, std::shared_ptr<UTFGridTile> > _utfGridTiles;
+        std::shared_ptr<TileRenderer> _renderer;
     };
     
 }

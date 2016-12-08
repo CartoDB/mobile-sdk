@@ -16,7 +16,6 @@ namespace carto {
 
     RasterTileLayer::RasterTileLayer(const std::shared_ptr<TileDataSource>& dataSource) :
         TileLayer(dataSource),
-        _renderer(),
         _tempDrawDatas(),
         _visibleCache(128 * 1024 * 1024), // limit should be never reached during normal use cases
         _preloadingCache(DEFAULT_PRELOADING_CACHE_SIZE)
@@ -169,9 +168,9 @@ namespace carto {
         
         // Update renderer if needed, run culler
         bool refresh = false;
-        if (_renderer) {
+        if (auto renderer = getRenderer()) {
             if (!(_synchronizedRefresh && _fetchingTiles.getVisibleCount() > 0)) {
-                if (_renderer->refreshTiles(_tempDrawDatas)) {
+                if (renderer->refreshTiles(_tempDrawDatas)) {
                     refresh = true;
                 }
             }
@@ -195,15 +194,18 @@ namespace carto {
     }
         
     void RasterTileLayer::offsetLayerHorizontally(double offset) {
-        _renderer->offsetLayerHorizontally(offset);
+        if (auto renderer = getRenderer()) {
+            renderer->offsetLayerHorizontally(offset);
+        }
     }
     
     void RasterTileLayer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
         Layer::onSurfaceCreated(shaderManager, textureManager);
 
-        if (_renderer) {
-            _renderer->onSurfaceDestroyed();
-            _renderer.reset();
+        // Reset renderer
+        if (auto renderer = getRenderer()) {
+            renderer->onSurfaceDestroyed();
+            setRenderer(std::shared_ptr<TileRenderer>());
     
             // Clear all tile caches - renderer may cache/release tile info, so old tiles are potentially unusable at this point
             std::lock_guard<std::recursive_mutex> lock(_mutex);
@@ -212,23 +214,33 @@ namespace carto {
         }
     
         // Create new rendererer, simply drop old one (if exists)
-        _renderer = std::make_shared<TileRenderer>(_mapRenderer, false, false, false);
-        _renderer->onSurfaceCreated(shaderManager, textureManager);
+        auto renderer = std::make_shared<TileRenderer>(_mapRenderer, false, false, false);
+        renderer->onSurfaceCreated(shaderManager, textureManager);
+        setRenderer(renderer);
     }
     
     bool RasterTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
         updateTileLoadListener();
 
-        return _renderer->onDrawFrame(deltaSeconds, viewState);
+        if (auto renderer = getRenderer()) {
+            return renderer->onDrawFrame(deltaSeconds, viewState);
+        }
+        return false;
     }
     
     bool RasterTileLayer::onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
-        return _renderer->onDrawFrame3D(deltaSeconds, viewState);
+        if (auto renderer = getRenderer()) {
+            return renderer->onDrawFrame3D(deltaSeconds, viewState);
+        }
+        return false;
     }
 
     void RasterTileLayer::onSurfaceDestroyed() {
-        _renderer->onSurfaceDestroyed();
-        _renderer.reset();
+        // Reset renderer
+        if (auto renderer = getRenderer()) {
+            renderer->onSurfaceDestroyed();
+            setRenderer(std::shared_ptr<TileRenderer>());
+        }
         
         // Clear all tile caches - renderer may cache/release tile info, so old tiles are potentially unusable at this point
         {

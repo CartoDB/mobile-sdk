@@ -434,13 +434,30 @@ namespace carto {
         glPixelStorei(GL_PACK_ALIGNMENT, 1);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
+        // Reset shader manager
+        if (_shaderManager) {
+            _shaderManager->setGLThreadId(std::thread::id());
+        }
         _shaderManager = std::make_shared<ShaderManager>();
         _shaderManager->setGLThreadId(std::this_thread::get_id());
+
+        // Reset texture manager
+        if (_textureManager) {
+            _textureManager->setGLThreadId(std::thread::id());
+        }
         _textureManager = std::make_shared<TextureManager>();
         _textureManager->setGLThreadId(std::this_thread::get_id());
 
+        // Reset style cache
         _styleCache = std::make_shared<StyleTextureCache>(_textureManager, STYLE_TEXTURE_CACHE_SIZE);
 
+        // Drop all thread callbacks, as context is invalidated
+        {
+            std::lock_guard<std::mutex> lock(_renderThreadCallbacksMutex);
+            _renderThreadCallbacks.clear();
+        }
+
+        // Notify renderers about the event
         _backgroundRenderer.onSurfaceCreated(_shaderManager, _textureManager);
         _watermarkRenderer.onSurfaceCreated(_shaderManager, _textureManager);
     

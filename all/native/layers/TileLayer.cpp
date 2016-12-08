@@ -9,6 +9,7 @@
 #include "renderers/components/CullState.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/MapRenderer.h"
+#include "renderers/TileRenderer.h"
 #include "projections/Projection.h"
 #include "ui/UTFGridClickInfo.h"
 #include "utils/Const.h"
@@ -201,7 +202,8 @@ namespace carto {
         _maxUnderzoomLevel(MAX_CHILD_SEARCH_DEPTH),
         _visibleTiles(),
         _preloadingTiles(),
-        _utfGridTiles()
+        _utfGridTiles(),
+        _renderer()
     {
         if (!dataSource) {
             throw NullArgumentException("Null dataSource");
@@ -562,6 +564,16 @@ namespace carto {
         MapPos tilePos0 = _dataSource->getProjection()->toInternal(tileBoundsProj.getMin());
         MapPos tilePos1 = _dataSource->getProjection()->toInternal(tileBoundsProj.getMax());
         return MapBounds(MapPos(std::min(tilePos0.getX(), tilePos1.getX()), std::min(-tilePos0.getY(), -tilePos1.getY())), MapPos(std::max(tilePos0.getX(), tilePos1.getX()), std::max(-tilePos0.getY(), -tilePos1.getY())));
+    }
+
+    std::shared_ptr<TileRenderer> TileLayer::getRenderer() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _renderer;
+    }
+
+    void TileLayer::setRenderer(const std::shared_ptr<TileRenderer>& renderer) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _renderer = renderer;
     }
 
     TileLayer::FetchTaskBase::FetchTaskBase(const std::shared_ptr<TileLayer>& layer, const MapTile& tile, bool preloadingTile) :

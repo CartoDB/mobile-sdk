@@ -76,10 +76,13 @@ namespace carto {
 
     bool CartoOnlineTileDataSource::loadTileURLs() {
         std::map<std::string, std::string> params;
-        params["appId"] = PlatformUtils::GetAppIdentifier();
         params["deviceId"] = PlatformUtils::GetDeviceId();
         params["platform"] = PlatformUtils::GetPlatformId();
         params["sdk_build"] = _CARTO_MOBILE_SDK_VERSION;
+        std::string appToken;
+        if (LicenseManager::GetInstance().getParameter("appToken", appToken, true)) {
+            params["appToken"] = appToken;
+        }
 
         std::string baseURL = TILE_SERVICE_URL + NetworkUtils::URLEncode(_source) + "/1/tiles.json";
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
