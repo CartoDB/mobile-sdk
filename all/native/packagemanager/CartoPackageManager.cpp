@@ -157,10 +157,13 @@ namespace carto {
             std::string baseURL = CUSTOM_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(id) + "/custom/" + NetworkUtils::URLEncode(tileMask->getStringValue()) + ".mbtiles";
 
             std::map<std::string, std::string> params;
-            params["appId"] = PlatformUtils::GetAppIdentifier();
             params["deviceId"] = PlatformUtils::GetDeviceId();
             params["platform"] = PlatformUtils::GetPlatformId();
             params["sdk_build"] = _CARTO_MOBILE_SDK_VERSION;
+            std::string appToken;
+            if (LicenseManager::GetInstance().getParameter("appToken", appToken, true)) {
+                params["appToken"] = appToken;
+            }
             std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
 
             auto packageInfo = std::make_shared<PackageInfo>(
@@ -177,12 +180,12 @@ namespace carto {
         return std::shared_ptr<PackageInfo>();
     }
 
-    const std::string CartoPackageManager::MAP_PACKAGE_LIST_URL = "http://api.nutiteq.com/v2/";
+    const std::string CartoPackageManager::MAP_PACKAGE_LIST_URL = "http://api.nutiteq.com/mappackages/v2/";
 
-    const std::string CartoPackageManager::ROUTING_PACKAGE_LIST_URL = "http://api.nutiteq.com/v2/";
+    const std::string CartoPackageManager::ROUTING_PACKAGE_LIST_URL = "http://api.nutiteq.com/routepackages/v2/";
 
     const std::string CartoPackageManager::CUSTOM_BBOX_PACKAGE_URL = "http://api.nutiteq.com/v2/";
-    
+
 }
 
 #endif

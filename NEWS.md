@@ -1,7 +1,9 @@
-4.0.0RC1
+CARTO Mobile SDK 4.0.0
 -------------------
 
-CARTO Mobile SDK is built on top of Nutiteq SDK 3.3, but includes over 100 API related improvements, performance updates and fixes. The new API is not compatible with Nutiteq SDK 3.3, but most apps can be converted relatively quickly and most changes are only related to class/module naming. For example, 'Nutiteq' is replaced with 'Carto' in most cases in the API (com.nutiteq.layers module is now com.carto.layers, NutiteqPackageManager is now replaced with CartoPackageManager). Existing tile source names like "nutiteq.osm" still continue to work.
+CARTO Mobile SDK is built on top of [*Nutiteq Maps SDK 3.3*](http://developer.nutiteq.com), and includes over 100 API related improvements, performance updates and fixes. The new API is not compatible with Nutiteq SDK 3.3, but most apps can be converted relatively quickly and most changes are only related to class/module naming. See [Upgrading from Nutiteq SDK](https://github.com/CartoDB/mobile-sdk/wiki/Upgrading-from-Nutiteq) for more details.
+
+Release notes for next releases can be found from [Releases section](https://github.com/CartoDB/mobile-sdk/releases).
 
 ### New features and improvements:
 * New 'services' module that gives integration with CARTO online services (Maps services, SQL API, high level VisJSON map configuration)
