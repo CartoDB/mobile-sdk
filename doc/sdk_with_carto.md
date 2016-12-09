@@ -636,7 +636,7 @@ CARTO’s [SQL API](https://carto.com/docs/carto-engine/sql-api/) allows you to 
   </div>
 </div>
 
-### CARTO.js API
+### CARTO.js
 
 In order to integrate your published mobile map into your app, you need a callback-based asynchronous process to request the viz.json with [CARTO.js](https://carto.com/docs/carto-engine/carto-js/.)
 
