@@ -50,25 +50,11 @@ These SDK libraries are managed by CARTO and include all the required libraries 
   <div class="Carousel-item js-Tabpanes-item is-active">
   {% highlight groovy %}
 
-// 1. Add the following to your project "build.gradle" file:
-
-allprojects {
-    repositories {
-        jcenter()
-        maven {
-            url "http://repository-nutiteq.forge.cloudbees.com/release/"
-        }
-        maven {
-            url "http://repository-nutiteq.forge.cloudbees.com/snapshot/"
-        }
-    }
-}
-
-// 2. Add the following to your module "build.gradle":
-
-dependencies {
-    compile 'com.carto:carto-mobile-sdk:snapshot@aar'
-}
+  // CARTO Mobile SDK is uploaded to jcenter, you only need to add a single line into the dependencies section.
+  // But be sure you don't remove jcenter() from the list of repositories
+  dependencies {
+      compile 'com.carto:carto-mobile-sdk:4.0.0-rc.2@aar'
+  }
 
   {% endhighlight %}
   </div>
