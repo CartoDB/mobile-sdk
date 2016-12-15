@@ -66,8 +66,8 @@ static const int NATIVE_NO_COORDINATE = -1;
 -(void)initBase {
     self.delegate = self;
 
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillResignActive) name:UIApplicationWillResignActiveNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidBecomeActive) name:UIApplicationDidBecomeActiveNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appDidEnterBackground) name:UIApplicationDidEnterBackgroundNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(appWillEnterForeground) name:UIApplicationWillEnterForegroundNotification object:nil];
 
     _active = YES;
 
@@ -141,17 +141,27 @@ static const int NATIVE_NO_COORDINATE = -1;
         _viewContext = nil;
     }
 
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillResignActiveNotification object:nil];
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidBecomeActiveNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillEnterForegroundNotification object:nil];
 }
 
--(void)appWillResignActive {
-    carto::Log::Info("appWillResignActive");
+-(void)appDidEnterBackground {
+    carto::Log::Info("MapView::appDidEnterBackground");
     _active = NO;
+    if (_viewContext) {
+        EAGLContext* context = [EAGLContext currentContext];
+        if (context != _viewContext) {
+            [EAGLContext setCurrentContext:_viewContext];
+        }
+        glFinish();
+        if (context != _viewContext) {
+            [EAGLContext setCurrentContext:context];
+        }
+    }
 }
 
--(void)appDidBecomeActive {
-    carto::Log::Info("appDidBecomeActive");
+-(void)appWillEnterForeground {
+    carto::Log::Info("MapView::appWillEnterForeground");
     _active = YES;
 }
 
