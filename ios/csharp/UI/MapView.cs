@@ -20,8 +20,8 @@
         private EAGLContext _viewContext;
         private bool _active = false;
         private float _scale = 1;
-        private NSObject _willResignActiveNotificationObserver;
-        private NSObject _didBecomeActiveNotificationObserver;
+        private NSObject _didEnterBackgroundNotificationObserver;
+        private NSObject _willEnterForegroundNotificationObserver;
 
         private UITouch _pointer1 = null;
         private UITouch _pointer2 = null;
@@ -74,8 +74,8 @@
         private void InitBase() {
             this.Delegate = new MapViewGLKViewDelegate();
 
-            _willResignActiveNotificationObserver = NSNotificationCenter.DefaultCenter.AddObserver(UIApplication.WillResignActiveNotification, OnAppWillResignActive, null);
-            _didBecomeActiveNotificationObserver = NSNotificationCenter.DefaultCenter.AddObserver(UIApplication.DidBecomeActiveNotification, OnAppDidBecomeActive, null);
+            _didEnterBackgroundNotificationObserver = NSNotificationCenter.DefaultCenter.AddObserver(UIApplication.DidEnterBackgroundNotification, OnAppDidEnterBackground, null);
+            _willEnterForegroundNotificationObserver = NSNotificationCenter.DefaultCenter.AddObserver(UIApplication.WillEnterForegroundNotification, OnAppWillEnterForeground, null);
 
             _active = true;
 
@@ -122,11 +122,11 @@
             }
         }
 
-        private void OnAppWillResignActive(NSNotification notification) {
+        private void OnAppDidEnterBackground(NSNotification notification) {
             _active = false;
         }
 
-        private void OnAppDidBecomeActive(NSNotification notification) {
+        private void OnAppWillEnterForeground(NSNotification notification) {
             _active = true;
         }
 
@@ -141,8 +141,8 @@
                 _viewContext = null;
             }
 
-            NSNotificationCenter.DefaultCenter.RemoveObserver(_willResignActiveNotificationObserver);
-            NSNotificationCenter.DefaultCenter.RemoveObserver(_didBecomeActiveNotificationObserver);
+            NSNotificationCenter.DefaultCenter.RemoveObserver(_didEnterBackgroundNotificationObserver);
+            NSNotificationCenter.DefaultCenter.RemoveObserver(_willEnterForegroundNotificationObserver);
 
             base.Dispose(disposing);
         }
