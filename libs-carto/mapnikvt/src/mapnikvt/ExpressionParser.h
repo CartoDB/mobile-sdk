@@ -167,7 +167,7 @@ namespace carto { namespace mvt {
                 if (auto predExpr = std::dynamic_pointer_cast<const PredicateExpression>(expr)) {
                     exprPred = predExpr->getPredicate();
                 } else {
-                    exprPred = std::make_shared<const ExpressionPredicate>(expr);
+                    exprPred = std::make_shared<ExpressionPredicate>(expr);
                 }
                 return std::make_shared<PredicateExpression>(std::make_shared<NotPredicate>(exprPred));
             }
