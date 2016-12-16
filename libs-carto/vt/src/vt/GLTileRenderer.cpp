@@ -699,6 +699,7 @@ namespace carto { namespace vt {
         // Update GL state
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendEquation(GL_FUNC_ADD);
         glDisable(GL_DEPTH_TEST);
         glDepthMask(GL_FALSE);
         if (_useStencil) {
@@ -714,8 +715,8 @@ namespace carto { namespace vt {
         bool update = renderBlendNodes2D(*_renderBlendNodes);
         
         // Restore GL state
-        glBlendEquation(GL_FUNC_ADD);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendEquation(GL_FUNC_ADD);
         glEnable(GL_DEPTH_TEST);
         glDepthMask(GL_TRUE);
         glDisable(GL_STENCIL_TEST);
@@ -763,6 +764,7 @@ namespace carto { namespace vt {
         // Update GL state
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendEquation(GL_FUNC_ADD);
         glDisable(GL_DEPTH_TEST);
         glDepthMask(GL_FALSE);
         glDisable(GL_STENCIL_TEST);
@@ -1396,6 +1398,7 @@ namespace carto { namespace vt {
             glDepthMask(GL_FALSE);
             glEnable(GL_BLEND);
             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendEquation(GL_FUNC_ADD);
 
             blendScreenTexture(1.0f, _overlayFBO.colorTexture);
 
@@ -1923,8 +1926,8 @@ namespace carto { namespace vt {
         };
         auto it = compOpBlendStates.find(compOp);
         if (it != compOpBlendStates.end()) {
-            glBlendEquation(it->second.blendEquation);
             glBlendFunc(it->second.blendFuncSrc, it->second.blendFuncDst);
+            glBlendEquation(it->second.blendEquation);
         }
     }
 
