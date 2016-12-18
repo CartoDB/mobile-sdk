@@ -91,6 +91,18 @@ namespace carto { namespace vt {
             ScreenFBO() : colorTexture(0), depthStencilRB(0), fbo(0), depthStencilAttachments() { }
         };
 
+        struct TileVBO {
+            GLuint vbo;
+
+            TileVBO() : vbo(0) { }
+        };
+
+        struct ScreenVBO {
+            GLuint vbo;
+
+            ScreenVBO() : vbo(0) { }
+        };
+
         struct CompiledBitmap {
             GLuint texture;
 
@@ -103,6 +115,15 @@ namespace carto { namespace vt {
             GLuint geometryVAO;
 
             CompiledGeometry() : vertexGeometryVBO(0), indicesVBO(0), geometryVAO(0) { }
+        };
+
+        struct CompiledLabelBatch {
+            GLuint vertexGeometryVBO;
+            GLuint vertexUVVBO;
+            GLuint vertexColorVBO;
+            GLuint vertexIndicesVBO;
+
+            CompiledLabelBatch() : vertexGeometryVBO(0), vertexUVVBO(0), vertexColorVBO(0), vertexIndicesVBO(0) { }
         };
 
         struct LabelHash {
@@ -163,6 +184,10 @@ namespace carto { namespace vt {
         void deleteLayerFBO(LayerFBO& layerFBO);
         ScreenFBO createScreenFBO(bool useDepth, bool useStencil);
         void deleteScreenFBO(ScreenFBO& screenFBO);
+        TileVBO createTileVBO();
+        void deleteTileVBO(TileVBO& tileVBO);
+        ScreenVBO createScreenVBO();
+        void deleteScreenVBO(ScreenVBO& screenVBO);
 
         bool _subTileBlending = false;
         bool _interactionEnabled = false;
@@ -176,6 +201,8 @@ namespace carto { namespace vt {
         std::vector<LayerFBO> _layerFBOs;
         ScreenFBO _screenFBO;
         ScreenFBO _overlayFBO;
+        TileVBO _tileVBO;
+        ScreenVBO _screenVBO;
 
         cglib::vec3<float> _lightDir;
         cglib::mat4x4<double> _projectionMatrix;
@@ -202,6 +229,8 @@ namespace carto { namespace vt {
         std::unordered_map<std::shared_ptr<const Bitmap>, CompiledBitmap> _compiledBitmapMap;
         std::unordered_map<std::shared_ptr<const TileBitmap>, CompiledBitmap> _compiledTileBitmapMap;
         std::unordered_map<std::shared_ptr<const TileGeometry>, CompiledGeometry> _compiledTileGeometryMap;
+        std::map<int, CompiledLabelBatch> _compiledLabelBatches;
+        int _labelBatchCounter = 0;
 
         const float _scale;
         const bool _useFBO;
