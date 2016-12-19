@@ -3,7 +3,7 @@
 
 %module CartoVectorTileDecoder
 
-!proxy_imports(carto::CartoVectorTileDecoder, core.BinaryData, core.stringVector, core.StringMap, graphics.Color, styles.CartoCSSStyleSet, vectortiles.VectorTileDecoder)
+!proxy_imports(carto::CartoVectorTileDecoder, core.BinaryData, core.StringVector, core.StringMap, graphics.Color, styles.CartoCSSStyleSet, vectortiles.VectorTileDecoder)
 
 %{
 #include "vectortiles/CartoVectorTileDecoder.h"
