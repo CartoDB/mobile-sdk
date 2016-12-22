@@ -38,9 +38,9 @@ The following offline packages are available:
 
 ### CARTO OpenStreetMap Packages
 
--  When initializing the Package Manager API, use `nutiteq.osm` as the source ID
--  For map data, see the [OpenStreetMap](http://www.openstreetmap.org) contributors, ODbL license
-- The Package Name IDs are in [List of Offline Packages wiki page](https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages)
+- When initializing the Package Manager API, use `nutiteq.osm` as the source ID
+- For map data, see the [OpenStreetMap](http://www.openstreetmap.org) contributors, ODbL license
+- For Package Name IDs, view the [list of offline map packages](https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages)
 
 ### Offline Routing Packages
 
