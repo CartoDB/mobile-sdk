@@ -526,7 +526,18 @@ namespace carto { namespace vt {
                     break;
                 }
                 if (blend && blendNode->tileId.intersects(oldBlendNode->tileId)) {
-                    if (_subTileBlending) {
+                    bool subTileBlending = _subTileBlending;
+
+                    // Disable subtile blending if alpha channel is used on the tile
+                    for (const std::shared_ptr<TileLayer>& layer : blendNode->tile->getLayers()) {
+                        for (const std::shared_ptr<TileBitmap>& bitmap : layer->getBitmaps()) {
+                            if (bitmap->getFormat() == TileBitmap::Format::RGBA) {
+                                subTileBlending = false;
+                            }
+                        }
+                    }
+
+                    if (subTileBlending) {
                         blendNode->childNodes.push_back(oldBlendNode);
                         oldBlendNode->blend = calculateBlendNodeOpacity(*oldBlendNode, 1.0f); // this is an optimization, to reduce extensive blending subtrees
                         oldBlendNode->childNodes.clear();
