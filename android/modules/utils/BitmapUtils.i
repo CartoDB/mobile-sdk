@@ -29,7 +29,7 @@
 %typemap(javaout) jobject { return $jnicall; }
 %typemap(csout, excode=SWIGEXCODE) jobject {
     var jbitmap = $imcall; $excode;
-    return Java.Lang.Object.GetObject<Android.Graphics.Bitmap>(jbitmap, Android.Runtime.JniHandleOwnership.TransferLocalRef);
+    return Java.Lang.Object.GetObject<Android.Graphics.Bitmap>(jbitmap, Android.Runtime.JniHandleOwnership.DoNotTransfer);
 }
 
 %typemap(jni) jobject "jobject"

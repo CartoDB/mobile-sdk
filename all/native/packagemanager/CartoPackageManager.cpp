@@ -154,7 +154,7 @@ namespace carto {
             }
 
             auto tileMask = std::make_shared<PackageTileMask>(tiles);
-            std::string baseURL = CUSTOM_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(id) + "/custom/" + NetworkUtils::URLEncode(tileMask->getStringValue()) + ".mbtiles";
+            std::string baseURL = CUSTOM_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(id) + "/custom/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".mbtiles";
 
             std::map<std::string, std::string> params;
             params["deviceId"] = PlatformUtils::GetDeviceId();

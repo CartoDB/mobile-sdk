@@ -26,6 +26,7 @@
 %attributestring(carto::PackageTileMask, std::string, StringValue, getStringValue)
 %attribute(carto::PackageTileMask, int, MaxZoomLevel, getMaxZoomLevel)
 %ignore carto::PackageTileMask::Tile;
+%ignore carto::PackageTileMask::getURLSafeStringValue;
 %ignore carto::PackageTileMask::PackageTileMask;
 !standard_equals(carto::PackageTileMask);
 

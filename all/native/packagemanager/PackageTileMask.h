@@ -71,9 +71,13 @@ namespace carto {
          * Returns the encoded tile mask value. This should not be displayed to the user.
          * @return The tile mask of the package
          */
-        const std::string& getStringValue() const {
-            return _stringValue;
-        }
+        const std::string& getStringValue() const;
+
+        /**
+         * Returns the URL-safe tile mask value. This is intended for internal usage.
+         * @return The URL-safe tile mask value.
+         */
+        std::string getURLSafeStringValue() const;
         
         /**
          * Returns maximum zoom level encoded in this tilemask.
