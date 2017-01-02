@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <memory>
+#include <mutex>
 
 #include <stdext/lru_cache.h>
 
@@ -102,6 +104,7 @@ namespace carto { namespace geocoding {
 		mutable long long _populationQueryCounter = 0;
 		mutable long long _nameRankCounter = 0;
 		sqlite3pp::database& _db;
+		mutable std::recursive_mutex _mutex;
 	};
 } }
 

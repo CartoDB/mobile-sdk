@@ -12,6 +12,8 @@
 
 namespace carto { namespace geocoding {
 	boost::optional<Address> RevGeocoder::findAddress(double lng, double lat) const {
+		std::lock_guard<std::recursive_mutex> lock(_mutex);
+
 		if (_bounds) {
 			// TODO: -180/180 wrapping
 			cglib::vec2<double> lngLatMeters = wgs84Meters({ lng, lat });
@@ -48,8 +50,6 @@ namespace carto { namespace geocoding {
 	}
 
 	std::vector<QuadIndex::Feature> RevGeocoder::findFeatures(const std::vector<long long>& quadIndices) const {
-		std::lock_guard<std::recursive_mutex> lock(_mutex);
-
 		std::string sql = "SELECT rowid, geometry, housenums FROM entities WHERE quadindex in (";
 		for (std::size_t i = 0; i < quadIndices.size(); i++) {
 			if (i > 0) {

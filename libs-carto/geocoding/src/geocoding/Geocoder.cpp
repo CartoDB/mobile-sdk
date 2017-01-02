@@ -17,6 +17,8 @@ namespace {
 
 namespace carto { namespace geocoding {
 	std::vector<Address> Geocoder::findAddresses(const std::string& queryString) const {
+		std::lock_guard<std::recursive_mutex> lock(_mutex);
+
 		std::string safeQueryString = boost::replace_all_copy(boost::replace_all_copy(queryString, "'", ""), "%", "");
 
 		Query query;
