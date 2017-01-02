@@ -21,7 +21,6 @@
 !shared_ptr(carto::GeocodingRequest, geocoding.GeocodingRequest)
 
 %attributestring(carto::GeocodingRequest, std::string, Query, getQuery)
-%std_exceptions(carto::GeocodingRequest::GeocodingRequest)
 !standard_equals(carto::GeocodingRequest);
 !custom_tostring(carto::GeocodingRequest);
 

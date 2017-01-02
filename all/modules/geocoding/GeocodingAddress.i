@@ -25,7 +25,6 @@
 %attributestring(carto::GeocodingAddress, std::string, Street, getStreet)
 %attributestring(carto::GeocodingAddress, std::string, HouseNumber, getHouseNumber)
 %attributestring(carto::GeocodingAddress, std::string, Name, getName)
-%std_exceptions(carto::GeocodingAddress::GeocodingAddress)
 !custom_tostring(carto::GeocodingAddress);
 
 %include "geocoding/GeocodingAddress.h"

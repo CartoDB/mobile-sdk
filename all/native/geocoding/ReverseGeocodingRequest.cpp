@@ -1,6 +1,7 @@
 #ifdef _CARTO_GEOCODING_SUPPORT
 
 #include "ReverseGeocodingRequest.h"
+#include "core/Exceptions.h"
 #include "projection/Projection.h"
 
 namespace carto {
@@ -9,6 +10,9 @@ namespace carto {
         _point(point),
         _projection(projection)
     {
+        if (!projection) {
+            throw NullArgumentException("Null projection");
+        }
     }
 
     ReverseGeocodingRequest::~ReverseGeocodingRequest() {
@@ -23,7 +27,7 @@ namespace carto {
     }
 
     std::string ReverseGeocodingRequest::toString() const {
-        return "ReverseGeocodingRequest [point='" + _point.toString() + "']";
+        return "ReverseGeocodingRequest [point=" + _point.toString() + "]";
     }
     
 }
