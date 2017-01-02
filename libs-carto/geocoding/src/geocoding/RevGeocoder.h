@@ -45,7 +45,7 @@ namespace carto { namespace geocoding {
 		mutable cache::lru_cache<std::string, std::vector<QuadIndex::Feature>> _queryCache;
 		boost::optional<cglib::bbox2<double>> _bounds;
 		sqlite3pp::database& _db;
-	        mutable std::recursive_mutex _mutex;
+		mutable std::recursive_mutex _mutex;
 	};
 } }
 
