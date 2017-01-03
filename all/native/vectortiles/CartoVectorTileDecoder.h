@@ -11,6 +11,7 @@
 
 #include <memory>
 #include <mutex>
+#include <set>
 #include <map>
 #include <vector>
 #include <string>
@@ -49,8 +50,21 @@ namespace carto {
         std::vector<std::string> getLayerIds() const;
 
         /**
+         * Returns the visibility of the specified layer.
+         * @param layerId The layer name to use.
+         * @return True if the layer is visible, false otherwise.
+         */
+        bool isLayerVisible(const std::string& layerId) const;
+        /**
+         * Sets the visibility of the specified layer.
+         * @param layerId The layer name to use.
+         * @param visible True if the layer should be visible, false if hidden.
+         */
+        void setLayerVisible(const std::string& layerId, bool visible);
+
+        /**
          * Returns the CartoCSS style set used by the decoder for the specified layer.
-         * @param layerId The layer index to use.
+         * @param layerId The layer name to use.
          * @return The given layer CartoCSS style.
          * @throws std::out_of_range If the layer id is not valid.
          */
@@ -85,6 +99,7 @@ namespace carto {
         
         const std::shared_ptr<mvt::Logger> _logger;
         const std::vector<std::string> _layerIds;
+        std::set<std::string> _layerInvisibleSet;
         std::map<std::string, std::shared_ptr<CartoCSSStyleSet> > _layerStyleSets;
         std::map<std::string, std::shared_ptr<mvt::Map> > _layerMaps;
         std::map<std::string, std::shared_ptr<mvt::SymbolizerContext> > _layerSymbolizerContexts;

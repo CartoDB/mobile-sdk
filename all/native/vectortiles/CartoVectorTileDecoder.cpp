@@ -43,6 +43,7 @@ namespace carto {
     CartoVectorTileDecoder::CartoVectorTileDecoder(const std::vector<std::string>& layerIds, const std::map<std::string, std::shared_ptr<CartoCSSStyleSet> >& layerStyleSets) :
         _logger(std::make_shared<MapnikVTLogger>("CartoVectorTileDecoder")),
         _layerIds(layerIds),
+        _layerInvisibleSet(),
         _layerStyleSets(),
         _layerMaps(),
         _layerSymbolizerContexts(),
@@ -60,6 +61,33 @@ namespace carto {
 
     std::vector<std::string> CartoVectorTileDecoder::getLayerIds() const {
         return _layerIds;
+    }
+
+    bool CartoVectorTileDecoder::isLayerVisible(const std::string& layerId) const {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        auto it = _layerStyleSets.find(layerId);
+        if (it == _layerStyleSets.end()) {
+            throw OutOfRangeException("Invalid layer id");
+        }
+        return _layerInvisibleSet.count(layerId) == 0;
+    }
+
+    void CartoVectorTileDecoder::setLayerVisible(const std::string& layerId, bool visible) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+
+            auto it = _layerStyleSets.find(layerId);
+            if (it == _layerStyleSets.end()) {
+                throw OutOfRangeException("Invalid layer id");
+            }
+            if (visible) {
+                _layerInvisibleSet.erase(layerId);
+            } else {
+                _layerInvisibleSet.insert(layerId);
+            }
+        }
+        notifyDecoderChanged();
     }
 
     std::shared_ptr<CartoCSSStyleSet> CartoVectorTileDecoder::getLayerStyleSet(const std::string& layerId) const {
@@ -161,10 +189,12 @@ namespace carto {
             return std::shared_ptr<TileMap>();
         }
 
+        std::set<std::string> layerInvisibleSet;
         std::map<std::string, std::shared_ptr<mvt::Map> > layerMaps;
         std::map<std::string, std::shared_ptr<mvt::SymbolizerContext> > layerSymbolizerContexts;
         {
             std::lock_guard<std::mutex> lock(_mutex);
+            layerInvisibleSet = _layerInvisibleSet;
             layerMaps = _layerMaps;
             layerSymbolizerContexts = _layerSymbolizerContexts;
         }
@@ -176,6 +206,9 @@ namespace carto {
 
             std::vector<std::shared_ptr<vt::Tile> > tiles(_layerIds.size());
             for (auto it = layerMaps.begin(); it != layerMaps.end(); it++) {
+                if (layerInvisibleSet.count(it->first) > 0) {
+                    continue;
+                }
                 mvt::MBVTTileReader reader(it->second, *layerSymbolizerContexts[it->first], decoder);
                 reader.setLayerNameOverride(it->first);
                 if (std::shared_ptr<vt::Tile> tile = reader.readTile(targetTile)) {
