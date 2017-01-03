@@ -14,6 +14,10 @@
 
 #include <memory>
 
+namespace sqlite3pp {
+    class database;
+}
+
 namespace carto {
     namespace geocoding {
         class Geocoder;
@@ -21,13 +25,14 @@ namespace carto {
 
     class OSMOfflineGeocodingService : public GeocodingService {
     public:
-        explicit OSMOfflineGeocodingService(const std::shared_ptr<Projection>& projection);
+        OSMOfflineGeocodingService(const std::shared_ptr<Projection>& projection, const std::string& path);
         virtual ~OSMOfflineGeocodingService();
 
         virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const;
 
     protected:
         std::shared_ptr<Projection> _projection;
+        std::shared_ptr<sqlite3pp::database> _database;
         std::shared_ptr<geocoding::Geocoder> _geocoder;
     };
     

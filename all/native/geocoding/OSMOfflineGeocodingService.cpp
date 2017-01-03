@@ -1,19 +1,41 @@
 #if defined(_CARTO_GEOCODING_SUPPORT) && defined(_CARTO_OFFLINE_SUPPORT)
 
-#include "geocoding/OSMOfflineGeocodingService.h"
+#include "OSMOfflineGeocodingService.h"
+#include "components/Exceptions.h"
+#include "geocoding/GeocodingProxy.h"
 
 #include <geocoding/Geocoder.h>
 
+#include <sqlite3pp.h>
+
 namespace carto {
 
-    OSMOfflineGeocodingService::OSMOfflineGeocodingService(const std::shared_ptr<Projection>& proj) : _projection(proj) {
+    OSMOfflineGeocodingService::OSMOfflineGeocodingService(const std::shared_ptr<Projection>& projection, const std::string& path) :
+        _projection(projection),
+        _database(),
+        _geocoder()
+    {
+        if (!projection) {
+            throw NullArgumentException("Null projection");
+        }
+
+        try {
+            _database = std::make_shared<sqlite3pp::database>(path.c_str());
+            _geocoder = std::make_shared<geocoding::Geocoder>(*_database);
+        } catch (const std::exception& ex) {
+            throw FileException("Failed to import geocoding database", path);
+        }
     }
 
     OSMOfflineGeocodingService::~OSMOfflineGeocodingService() {
     }
 
     std::vector<std::shared_ptr<GeocodingResult> > OSMOfflineGeocodingService::calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const {
-        return std::vector<std::shared_ptr<GeocodingResult> >();
+        if (!request) {
+            throw NullArgumentException("Null request");
+        }
+
+        return GeocodingProxy::CalculateAddresses(_geocoder, _projection, request);
     }
     
 }
