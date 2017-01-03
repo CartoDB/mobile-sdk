@@ -8,7 +8,7 @@
 
 #if defined(_CARTO_GEOCODING_SUPPORT) && defined(_CARTO_OFFLINE_SUPPORT)
 
-!proxy_imports(carto::OSMOfflineReverseGeocodingService, geocoding.ReverseGeocodingService, geocoding.ReverseGeocodingRequest, geocoding.GeocodingResult)
+!proxy_imports(carto::OSMOfflineReverseGeocodingService, geocoding.ReverseGeocodingService, geocoding.ReverseGeocodingRequest, geocoding.GeocodingResult, projections.Projection)
 
 %{
 #include "geocoding/OSMOfflineReverseGeocodingService.h"

@@ -9,10 +9,11 @@
 
 #ifdef _CARTO_GEOCODING_SUPPORT
 
-#include "routing/GeocodingRequest.h"
-#include "routing/GeocodingResult.h"
+#include "geocoding/GeocodingRequest.h"
+#include "geocoding/GeocodingResult.h"
 
 #include <memory>
+#include <vector>
 
 namespace carto {
 
@@ -20,7 +21,7 @@ namespace carto {
     public:
         virtual ~GeocodingService();
 
-        virtual std::vector<GeocodingResult> calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const = 0;
+        virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const = 0;
 
     protected:
         /**

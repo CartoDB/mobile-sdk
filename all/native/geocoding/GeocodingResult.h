@@ -19,7 +19,7 @@ namespace carto {
 
     class GeocodingResult {
     public:
-        GeocodingResult(const std::shared_ptr<Projection>& projection, long long id, const GeocodingAddress& address, const std::shared_ptr<Geometry>& geometry);
+        GeocodingResult(const std::shared_ptr<Projection>& projection, long long id, const GeocodingAddress& address, float rank, const std::shared_ptr<Geometry>& geometry);
         virtual ~GeocodingResult();
 
         long long getId() const;

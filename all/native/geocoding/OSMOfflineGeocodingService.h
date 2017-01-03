@@ -10,6 +10,7 @@
 #if defined(_CARTO_GEOCODING_SUPPORT) && defined(_CARTO_OFFLINE_SUPPORT)
 
 #include "geocoding/GeocodingService.h"
+#include "projections/Projection.h"
 
 #include <memory>
 
@@ -20,12 +21,13 @@ namespace carto {
 
     class OSMOfflineGeocodingService : public GeocodingService {
     public:
-        explicit OSMOfflineGeocodingService(const std::shared_ptr<Projection>& proj);
+        explicit OSMOfflineGeocodingService(const std::shared_ptr<Projection>& projection);
         virtual ~OSMOfflineGeocodingService();
 
-        virtual std::vector<GeocodingResult> calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const;
+        virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const;
 
     protected:
+        std::shared_ptr<Projection> _projection;
         std::shared_ptr<geocoding::Geocoder> _geocoder;
     };
     

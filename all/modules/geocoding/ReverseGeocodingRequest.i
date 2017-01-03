@@ -7,7 +7,7 @@
 
 #ifdef _CARTO_GEOCODING_SUPPORT
 
-!proxy_imports(carto::ReverseGeocodingRequest)
+!proxy_imports(carto::ReverseGeocodingRequest, core.MapPos, projections.Projection)
 
 %{
 #include "geocoding/ReverseGeocodingRequest.h"
@@ -19,7 +19,7 @@
 %include <cartoswig.i>
 
 %import "core/MapPos.i"
-%import "projection/Projection.i"
+%import "projections/Projection.i"
 
 !shared_ptr(carto::ReverseGeocodingRequest, geocoding.ReverseGeocodingRequest)
 

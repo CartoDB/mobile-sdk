@@ -1,22 +1,25 @@
 #ifdef _CARTO_GEOCODING_SUPPORT
 
 #include "GeocodingResult.h"
-#include "core/Exceptions.h"
+#include "components/Exceptions.h"
 #include "geometry/Geometry.h"
-#include "projection/Projection.h"
+#include "projections/Projection.h"
 
 #include <iomanip>
 #include <sstream>
 
 namespace carto {
 
-    GeocodingResult::GeocodingResult(const std::shared_ptr<Projection>& projection, long long id, const GeocodingAddress& address, const std::shared_ptr<Geometry>& geometry) :
+    GeocodingResult::GeocodingResult(const std::shared_ptr<Projection>& projection, long long id, const GeocodingAddress& address, float rank, const std::shared_ptr<Geometry>& geometry) :
         _id(id),
         _address(address),
         _rank(rank),
         _geometry(geometry),
         _projection(projection)
     {
+        if (!geometry) {
+            throw NullArgumentException("Null geometry");
+        }
         if (!projection) {
             throw NullArgumentException("Null projection");
         }
@@ -42,7 +45,7 @@ namespace carto {
     }
 
     const std::shared_ptr<Projection>& GeocodingResult::getProjection() const {
-        return _geometry;
+        return _projection;
     }
 
     std::string GeocodingResult::toString() const {

@@ -13,6 +13,7 @@
 #include "geocoding/GeocodingAddress.h"
 %}
 
+%include <std_string.i>
 %include <cartoswig.i>
 
 !value_type(carto::GeocodingAddress, geocoding.GeocodingAddress)

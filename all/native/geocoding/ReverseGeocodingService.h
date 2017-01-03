@@ -9,10 +9,11 @@
 
 #ifdef _CARTO_GEOCODING_SUPPORT
 
-#include "routing/ReverseGeocodingRequest.h"
-#include "routing/GeocodingResult.h"
+#include "geocoding/ReverseGeocodingRequest.h"
+#include "geocoding/GeocodingResult.h"
 
 #include <memory>
+#include <vector>
 
 namespace carto {
 
@@ -20,7 +21,7 @@ namespace carto {
     public:
         virtual ~ReverseGeocodingService();
 
-        virtual std::vector<GeocodingResult> calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const = 0;
+        virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const = 0;
 
     protected:
         /**

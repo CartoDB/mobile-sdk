@@ -1,8 +1,8 @@
 #ifdef _CARTO_GEOCODING_SUPPORT
 
 #include "ReverseGeocodingRequest.h"
-#include "core/Exceptions.h"
-#include "projection/Projection.h"
+#include "components/Exceptions.h"
+#include "projections/Projection.h"
 
 namespace carto {
 

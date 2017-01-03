@@ -12,8 +12,8 @@ namespace carto {
     OSMOfflineReverseGeocodingService::~OSMOfflineReverseGeocodingService() {
     }
 
-    std::vector<GeocodingResult> OSMOfflineReverseGeocodingService::calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const {
-        return std::vector<GeocodingResult>();
+    std::vector<std::shared_ptr<GeocodingResult> > OSMOfflineReverseGeocodingService::calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const {
+        return std::vector<std::shared_ptr<GeocodingResult> >();
     }
     
 }
