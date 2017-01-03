@@ -117,6 +117,7 @@
 #import "NTCompiledStyleSet.h"
 #import "NTCartoCSSStyleSet.h"
 #import "NTVectorTileDecoder.h"
+#import "NTCartoVectorTileDecoder.h"
 #import "NTMBVectorTileDecoder.h"
 #import "NTTorqueTileDecoder.h"
 

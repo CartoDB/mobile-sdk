@@ -1932,8 +1932,9 @@ namespace carto { namespace vt {
             { CompOp::PLUS,     { GL_FUNC_ADD, GL_ONE, GL_ONE } },
             { CompOp::MINUS,    { GL_FUNC_REVERSE_SUBTRACT, GL_ONE, GL_ONE } },
             { CompOp::MULTIPLY, { GL_FUNC_ADD, GL_DST_COLOR, GL_ZERO } },
+            { CompOp::SCREEN,   { GL_FUNC_ADD, GL_ONE, GL_ONE_MINUS_SRC_COLOR } },
             { CompOp::DARKEN,   { GL_MIN_EXT,  GL_ONE, GL_ONE } },
-            { CompOp::LIGHTEN,  { GL_MAX_EXT,  GL_ONE, GL_ONE } },
+            { CompOp::LIGHTEN,  { GL_MAX_EXT,  GL_ONE, GL_ONE } }
         };
         auto it = compOpBlendStates.find(compOp);
         if (it != compOpBlendStates.end()) {

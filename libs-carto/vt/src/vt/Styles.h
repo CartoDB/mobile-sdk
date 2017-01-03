@@ -30,7 +30,7 @@ namespace carto { namespace vt {
     enum class CompOp {
         SRC, SRC_OVER, SRC_IN, SRC_ATOP, 
         DST, DST_OVER, DST_IN, DST_ATOP,
-        ZERO, PLUS, MINUS, MULTIPLY,
+        ZERO, PLUS, MINUS, MULTIPLY, SCREEN,
         DARKEN, LIGHTEN
     };
     
