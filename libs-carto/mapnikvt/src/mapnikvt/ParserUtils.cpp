@@ -42,6 +42,7 @@ namespace carto { namespace mvt {
             { "plus",     vt::CompOp::PLUS },
             { "minus",    vt::CompOp::MINUS },
             { "multiply", vt::CompOp::MULTIPLY },
+            { "screen",   vt::CompOp::SCREEN },
             { "darken",   vt::CompOp::DARKEN },
             { "lighten",  vt::CompOp::LIGHTEN }
         };
