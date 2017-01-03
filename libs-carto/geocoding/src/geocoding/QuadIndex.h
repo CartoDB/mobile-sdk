@@ -61,13 +61,13 @@ namespace carto { namespace geocoding {
 		static std::tuple<int, int, int> calculatePointTile(double xm, double ym, int zoom) {
 			double d = consts::EARTH_RADIUS * consts::PI;
 			double s = 2 * d / (1 << zoom);
-			return { zoom, static_cast<int>(std::floor((xm + d) / s)), static_cast<int>(std::floor((ym + d) / s)) };
+			return std::tuple<int, int, int> { zoom, static_cast<int>(std::floor((xm + d) / s)), static_cast<int>(std::floor((ym + d) / s)) };
 		}
 
 		static std::tuple<double, double, double, double> calculateTileBounds(int zoom, int xt, int yt) {
 			double d = consts::EARTH_RADIUS * consts::PI;
 			double s = 2 * d / (1 << zoom);
-			return { xt * s - d, yt * s - d, xt * s - d + s, yt * s - d + s };
+			return std::tuple<double, double, double, double> { xt * s - d, yt * s - d, xt * s - d + s, yt * s - d + s };
 		}
 
 		static long long calculateTileQuadIndex(int zoom, int xt, int yt) {

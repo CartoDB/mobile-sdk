@@ -15,13 +15,13 @@
 #include <boost/algorithm/string/classification.hpp>
 
 namespace carto { namespace geocoding {
-	inline std::vector<cglib::vec2<double>> decodePolyLine(const std::string& str, std::size_t pos = 0) {
+	inline std::vector<cglib::vec2<double>> decodePolyLine(const std::string& str) {
 		std::vector<cglib::vec2<double>> points;
 		points.reserve(str.size() / 4 + 16);
 
 		int index = 0;
 		int prev[2] = { 0, 0 };
-		while (pos < str.size()) {
+		for (std::size_t pos = 0; pos < str.size(); ) {
 			int val = 0, shift = 0, result = 0;
 			do {
 				if (pos >= str.size()) {
@@ -47,12 +47,13 @@ namespace carto { namespace geocoding {
 		}
 
 		char type = str.front();
+		std::string payload = str.substr(1);
 		if (type == '0') {
-			std::vector<cglib::vec2<double>> points = decodePolyLine(str, 1);
+			std::vector<cglib::vec2<double>> points = decodePolyLine(payload);
 			return std::make_shared<PointGeometry>(points.front());
 		}
 		else if (type == '1') {
-			std::vector<cglib::vec2<double>> points = decodePolyLine(str, 1);
+			std::vector<cglib::vec2<double>> points = decodePolyLine(payload);
 			std::vector<std::shared_ptr<Geometry>> geoms;
 			geoms.reserve(points.size());
 			for (const cglib::vec2<double>& point : points) {
@@ -61,12 +62,12 @@ namespace carto { namespace geocoding {
 			return std::make_shared<MultiGeometry>(std::move(geoms));
 		}
 		else if (type == '2') {
-			std::vector<cglib::vec2<double>> points = decodePolyLine(str, 1);
+			std::vector<cglib::vec2<double>> points = decodePolyLine(payload);
 			return std::make_shared<LineGeometry>(std::move(points));
 		}
 		else if (type == '3') {
 			std::vector<std::string> parts;
-			boost::split(parts, str.substr(1), boost::is_any_of(","), boost::token_compress_off);
+			boost::split(parts, payload, boost::is_any_of(","), boost::token_compress_off);
 			std::vector<std::shared_ptr<Geometry>> geoms;
 			geoms.reserve(parts.size());
 			for (const std::string& part : parts) {
@@ -77,7 +78,7 @@ namespace carto { namespace geocoding {
 		}
 		else if (type == '4') {
 			std::vector<std::vector<cglib::vec2<double>>> pointLists;
-			for (auto it = boost::make_split_iterator(str.substr(1), boost::token_finder(boost::is_any_of(";"))); it != boost::split_iterator<std::string::iterator>(); it++) {
+			for (auto it = boost::make_split_iterator(payload, boost::token_finder(boost::is_any_of(";"))); it != boost::split_iterator<std::string::iterator>(); it++) {
 				std::vector<cglib::vec2<double>> points = decodePolyLine(boost::copy_range<std::string>(*it));
 				pointLists.push_back(std::move(points));
 			}
@@ -87,7 +88,7 @@ namespace carto { namespace geocoding {
 		}
 		else if (type == '5') {
 			std::vector<std::string> parts;
-			boost::split(parts, str.substr(1), boost::is_any_of(","), boost::token_compress_off);
+			boost::split(parts, payload, boost::is_any_of(","), boost::token_compress_off);
 			std::vector<std::shared_ptr<Geometry>> geoms;
 			geoms.reserve(parts.size());
 			for (const std::string& part : parts) {

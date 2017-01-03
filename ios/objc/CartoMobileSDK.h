@@ -149,6 +149,17 @@
 #import "NTCartoOfflineVectorTileLayer.h"
 #endif
 
+#ifdef _CARTO_GEOCODING_SUPPORT
+#import "NTGeocodingAddress.h"
+#import "NTGeocodingRequest.h"
+#import "NTGeocodingResult.h"
+#import "NTGeocodingService.h"
+#import "NTOSMOfflineGeocodingService.h"
+#import "NTReverseGeocodingRequest.h"
+#import "NTReverseGeocodingService.h"
+#import "NTOSMOfflineReverseGeocodingService.h"
+#endif
+
 #ifdef _CARTO_ROUTING_SUPPORT
 #import "NTRoutingInstruction.h"
 #import "NTRoutingRequest.h"
@@ -183,4 +194,3 @@
 #endif
 
 #endif
- 

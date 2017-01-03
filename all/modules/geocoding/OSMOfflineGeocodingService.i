@@ -8,7 +8,7 @@
 
 #if defined(_CARTO_GEOCODING_SUPPORT) && defined(_CARTO_OFFLINE_SUPPORT)
 
-!proxy_imports(carto::OSMOfflineGeocodingService, geocoding.GeocodingService, geocoding.GeocodingRequest, geocoding.GeocodingResult, projections.Projections)
+!proxy_imports(carto::OSMOfflineGeocodingService, geocoding.GeocodingService, geocoding.GeocodingRequest, geocoding.GeocodingResult, projections.Projection)
 
 %{
 #include "geocoding/OSMOfflineGeocodingService.h"
