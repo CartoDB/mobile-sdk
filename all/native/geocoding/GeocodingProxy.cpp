@@ -43,7 +43,7 @@ namespace carto {
 
     std::shared_ptr<Geometry> GeocodingProxy::TranslateGeometry(const std::shared_ptr<Projection>& proj, const std::shared_ptr<geocoding::Geometry>& geom) {
         auto translatePoint = [&proj](const cglib::vec2<double>& point) -> MapPos {
-            return proj->fromWgs84(MapPos(point(0), point(1)));
+            return proj->fromWgs84(MapPos(point(1), point(0)));
         };
         auto translateRing = [&translatePoint](const std::vector<cglib::vec2<double> >& points) -> std::vector<MapPos> {
             std::vector<MapPos> poses;
