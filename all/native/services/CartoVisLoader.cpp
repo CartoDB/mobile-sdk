@@ -7,9 +7,11 @@
 #include "layers/Layer.h"
 #include "layers/SolidLayer.h"
 #include "layers/RasterTileLayer.h"
+#include "layers/VectorTileLayer.h"
 #include "network/HTTPClient.h"
 #include "services/CartoMapsService.h"
 #include "services/CartoVisBuilder.h"
+#include "vectortiles/CartoVectorTileDecoder.h"
 #include "utils/AssetPackage.h"
 #include "utils/NetworkUtils.h"
 #include "utils/Const.h"
@@ -574,14 +576,50 @@ namespace carto {
         std::map<std::shared_ptr<Layer>, picojson::object> layerAttributes;
         if (namedMap.get("layers").is<picojson::array>()) {
             const picojson::array& layerConfigs = namedMap.get("layers").get<picojson::array>();
-            for (std::size_t i = 0; i < layerConfigs.size() && i < layers.size(); i++) {
-                const std::shared_ptr<Layer>& layer = layers[i];
+            for (std::size_t i = 0; i < layerConfigs.size(); i++) {
                 const picojson::value& layerConfig = layerConfigs[i];
-                
-                configureLayerInteractivity(*layer, layerConfig.get("interactivity"));
+                std::string layerId = *getString(layerConfig.get("id"));
+
+                std::shared_ptr<Layer> layer;
+                int subLayerIndex = -1;
+                {
+                    std::size_t remainder = i;
+                    for (std::size_t j = 0; j < layers.size(); j++) {
+                        if (auto vectorTileLayer = std::dynamic_pointer_cast<VectorTileLayer>(layers[j])) {
+                            if (auto cartoVectorTileDecoder = std::dynamic_pointer_cast<CartoVectorTileDecoder>(vectorTileLayer->getTileDecoder())) {
+                                if (remainder < cartoVectorTileDecoder->getLayerIds().size()) {
+                                    subLayerIndex = remainder;
+                                    layer = vectorTileLayer;
+                                    break;
+                                }
+                                remainder -= cartoVectorTileDecoder->getLayerIds().size();
+                                continue;
+                            }
+                        }
+                        if (remainder == 0) {
+                            layer = layers[j];
+                            break;
+                        }
+                        remainder--;
+                    }
+                }
+                if (!layer) {
+                    break;
+                }
+
+                if (subLayerIndex < 0) {
+                    configureLayerInteractivity(*layer, layerConfig.get("interactivity"));
+                }
 
                 if (auto visible = getBool(layerConfig.get("visible"))) {
-                    layer->setVisible(*visible);
+                    if (subLayerIndex < 0) {
+                        layer->setVisible(*visible);
+                    }
+                    else {
+                        auto vectorTileLayer = std::dynamic_pointer_cast<VectorTileLayer>(layer);
+                        auto cartoVectorTileDecoder = std::dynamic_pointer_cast<CartoVectorTileDecoder>(vectorTileLayer->getTileDecoder());
+                        cartoVectorTileDecoder->setLayerVisible(layerId, *visible);
+                    }
                 }
                 
                 picojson::object attributes;
@@ -595,7 +633,17 @@ namespace carto {
                 if (layerConfig.contains("layer_name")) {
                     attributes["name"] = layerConfig.get("layer_name");
                 }
-                layerAttributes[layer] = attributes;
+                if (subLayerIndex < 0) {
+                    layerAttributes[layer] = attributes;
+                }
+                else {
+                    picojson::array groupAttributes;
+                    if (layerAttributes[layer]["sublayers"].is<picojson::array>()) {
+                        groupAttributes = layerAttributes[layer]["sublayers"].get<picojson::array>();
+                    }
+                    groupAttributes.push_back(picojson::value(attributes));
+                    layerAttributes[layer]["sublayers"] = picojson::value(groupAttributes);
+                }
             }
         }
 
