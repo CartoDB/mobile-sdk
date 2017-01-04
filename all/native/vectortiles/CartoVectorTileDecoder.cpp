@@ -209,20 +209,24 @@ namespace carto {
                 if (layerInvisibleSet.count(it->first) > 0) {
                     continue;
                 }
+
+                std::size_t index = std::distance(_layerIds.begin(), std::find(_layerIds.begin(), _layerIds.end(), it->first));
+                if (index >= tiles.size()) {
+                    continue;
+                }
+
                 mvt::MBVTTileReader reader(it->second, *layerSymbolizerContexts[it->first], decoder);
                 reader.setLayerNameOverride(it->first);
-                if (std::shared_ptr<vt::Tile> tile = reader.readTile(targetTile)) {
-                    std::size_t index = std::distance(_layerIds.begin(), std::find(_layerIds.begin(), _layerIds.end(), it->first));
-                    if (index < tiles.size()) {
-                        tiles.push_back(tile);
-                    }
-                }
+                tiles[index] = reader.readTile(targetTile);
             }
 
             std::vector<std::shared_ptr<vt::TileLayer> > tileLayers;
-            for (const std::shared_ptr<vt::Tile>& tile : tiles) {
-                if (tile) {
-                    tileLayers.insert(tileLayers.end(), tile->getLayers().begin(), tile->getLayers().end());
+            for (std::size_t i = 0; i < tiles.size(); i++) {
+                if (std::shared_ptr<vt::Tile> tile = tiles[i]) {
+                    for (const std::shared_ptr<vt::TileLayer>& tileLayer : tile->getLayers()) {
+                        int layerIdx = static_cast<int>(i * 65536) + tileLayer->getLayerIndex();
+                        tileLayers.push_back(std::make_shared<vt::TileLayer>(layerIdx, tileLayer->getOpacity(), tileLayer->getCompOp(), tileLayer->getBitmaps(), tileLayer->getGeometries(), tileLayer->getLabels()));
+                    }
                 }
             }
 
