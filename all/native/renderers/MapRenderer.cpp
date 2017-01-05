@@ -25,6 +25,8 @@
 #include "utils/Log.h"
 #include "utils/ThreadUtils.h"
 
+#include <algorithm>
+
 namespace carto {
 
     MapRenderer::MapRenderer(const std::shared_ptr<Layers>& layers,
@@ -342,6 +344,12 @@ namespace carto {
             MapRange zoomRange(_options->getZoomRange());
             float zoom = _options->getZoomRange().getMin();
             float zoomStep = zoomRange.length() * 0.5f;
+            if (std::all_of(points.begin(), points.end(), [&points](const MapPos& pos) {
+                return pos == points.front();
+            })) {
+                zoom = oldZoom;
+                zoomStep = 0;
+            }
 
             // Hack: if view size is zero (view size not known), use given screen bounds for view dimensions
             ViewState viewState(_viewState);
