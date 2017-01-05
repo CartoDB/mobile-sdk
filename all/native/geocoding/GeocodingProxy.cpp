@@ -65,7 +65,7 @@ namespace carto {
             for (const std::vector<cglib::vec2<double>>& points : polygonGeom->getHoles()) {
                 holes.push_back(translateRing(points));
             }
-            return std::make_shared<PolygonGeometry>(translateRing(lineGeom->getPoints()), holes);
+            return std::make_shared<PolygonGeometry>(translateRing(polygonGeom->getPoints()), holes);
         }
         else if (auto multiGeom = std::dynamic_pointer_cast<geocoding::MultiGeometry>(geom)) {
             std::vector<std::shared_ptr<Geometry> > geometries;
