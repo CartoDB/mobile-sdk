@@ -13,18 +13,21 @@
 #include <string>
 
 namespace carto {
+    class Projection;
 
     class GeocodingRequest {
     public:
-        GeocodingRequest(const std::string& query);
+        GeocodingRequest(const std::shared_ptr<Projection>& projection, const std::string& query);
         virtual ~GeocodingRequest();
 
         const std::string& getQuery() const;
+        const std::shared_ptr<Projection>& getProjection() const;
         
         std::string toString() const;
 
     private:
         std::string _query;
+        std::shared_ptr<Projection> _projection;
     };
     
 }

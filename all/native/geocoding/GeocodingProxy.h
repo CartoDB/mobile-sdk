@@ -27,9 +27,9 @@ namespace carto {
     
     class GeocodingProxy {
     public:
-        static std::vector<std::shared_ptr<GeocodingResult> > CalculateAddresses(const std::shared_ptr<geocoding::Geocoder>& geocoder, const std::shared_ptr<Projection>& proj, const std::shared_ptr<GeocodingRequest>& request);
+        static std::vector<std::shared_ptr<GeocodingResult> > CalculateAddresses(const std::shared_ptr<geocoding::Geocoder>& geocoder, const std::shared_ptr<GeocodingRequest>& request);
 
-        static std::vector<std::shared_ptr<GeocodingResult> > CalculateAddresses(const std::shared_ptr<geocoding::RevGeocoder>& revGeocoder, const std::shared_ptr<Projection>& proj, const std::shared_ptr<ReverseGeocodingRequest>& request);
+        static std::vector<std::shared_ptr<GeocodingResult> > CalculateAddresses(const std::shared_ptr<geocoding::RevGeocoder>& revGeocoder, const std::shared_ptr<ReverseGeocodingRequest>& request);
 
     private:
         GeocodingProxy();

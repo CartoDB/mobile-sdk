@@ -13,23 +13,23 @@
 
 namespace carto {
 
-    std::vector<std::shared_ptr<GeocodingResult> > GeocodingProxy::CalculateAddresses(const std::shared_ptr<geocoding::Geocoder>& geocoder, const std::shared_ptr<Projection>& proj, const std::shared_ptr<GeocodingRequest>& request) {
+    std::vector<std::shared_ptr<GeocodingResult> > GeocodingProxy::CalculateAddresses(const std::shared_ptr<geocoding::Geocoder>& geocoder, const std::shared_ptr<GeocodingRequest>& request) {
         std::vector<geocoding::Address> addrs = geocoder->findAddresses(request->getQuery());
 
         std::vector<std::shared_ptr<GeocodingResult> > results;
         for (const geocoding::Address& addr : addrs) {
-            results.push_back(TranslateAddress(proj, addr));
+            results.push_back(TranslateAddress(request->getProjection(), addr));
         }
         return results;
     }
 
-    std::vector<std::shared_ptr<GeocodingResult> > GeocodingProxy::CalculateAddresses(const std::shared_ptr<geocoding::RevGeocoder>& revGeocoder, const std::shared_ptr<Projection>& proj, const std::shared_ptr<ReverseGeocodingRequest>& request) {
+    std::vector<std::shared_ptr<GeocodingResult> > GeocodingProxy::CalculateAddresses(const std::shared_ptr<geocoding::RevGeocoder>& revGeocoder, const std::shared_ptr<ReverseGeocodingRequest>& request) {
         MapPos pos = request->getProjection()->toWgs84(request->getPoint());
         boost::optional<geocoding::Address> addr = revGeocoder->findAddress(pos.getX(), pos.getY());
 
         std::vector<std::shared_ptr<GeocodingResult> > results;
         if (addr) {
-            results.push_back(TranslateAddress(proj, *addr));
+            results.push_back(TranslateAddress(request->getProjection(), *addr));
         }
         return results;
     }

@@ -10,15 +10,10 @@
 
 namespace carto {
 
-    OSMOfflineGeocodingService::OSMOfflineGeocodingService(const std::shared_ptr<Projection>& projection, const std::string& path) :
-        _projection(projection),
+    OSMOfflineGeocodingService::OSMOfflineGeocodingService(const std::string& path) :
         _database(),
         _geocoder()
     {
-        if (!projection) {
-            throw NullArgumentException("Null projection");
-        }
-
         try {
             _database = std::make_shared<sqlite3pp::database>(path.c_str());
             _geocoder = std::make_shared<geocoding::Geocoder>(*_database);
@@ -43,7 +38,7 @@ namespace carto {
             throw NullArgumentException("Null request");
         }
 
-        return GeocodingProxy::CalculateAddresses(_geocoder, _projection, request);
+        return GeocodingProxy::CalculateAddresses(_geocoder, request);
     }
     
 }

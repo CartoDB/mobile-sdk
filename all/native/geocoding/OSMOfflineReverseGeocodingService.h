@@ -10,7 +10,6 @@
 #if defined(_CARTO_GEOCODING_SUPPORT) && defined(_CARTO_OFFLINE_SUPPORT)
 
 #include "geocoding/ReverseGeocodingService.h"
-#include "projections/Projection.h"
 
 #include <memory>
 
@@ -25,7 +24,7 @@ namespace carto {
 
     class OSMOfflineReverseGeocodingService : public ReverseGeocodingService {
     public:
-        OSMOfflineReverseGeocodingService(const std::shared_ptr<Projection>& projection, const std::string& path);
+        explicit OSMOfflineReverseGeocodingService(const std::string& path);
         virtual ~OSMOfflineReverseGeocodingService();
 
         float getSearchRadius() const;
@@ -34,7 +33,6 @@ namespace carto {
         virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const;
 
     protected:
-        std::shared_ptr<Projection> _projection;
         std::shared_ptr<sqlite3pp::database> _database;
         std::shared_ptr<geocoding::RevGeocoder> _revGeocoder;
     };

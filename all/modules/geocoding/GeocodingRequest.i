@@ -7,7 +7,7 @@
 
 #ifdef _CARTO_GEOCODING_SUPPORT
 
-!proxy_imports(carto::GeocodingRequest)
+!proxy_imports(carto::GeocodingRequest, projections.Projection)
 
 %{
 #include "geocoding/GeocodingRequest.h"
@@ -19,9 +19,13 @@
 %include <std_shared_ptr.i>
 %include <cartoswig.i>
 
+%import "projections/Projection.i"
+
 !shared_ptr(carto::GeocodingRequest, geocoding.GeocodingRequest)
 
 %attributestring(carto::GeocodingRequest, std::string, Query, getQuery)
+%attributestring(carto::GeocodingRequest, std::shared_ptr<carto::Projection>, Projection, getProjection)
+%std_exceptions(carto::GeocodingRequest::GeocodingRequest)
 !standard_equals(carto::GeocodingRequest);
 !custom_tostring(carto::GeocodingRequest);
 
