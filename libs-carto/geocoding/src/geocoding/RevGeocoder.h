@@ -37,7 +37,7 @@ namespace carto { namespace geocoding {
 	private:
 		boost::optional<cglib::bbox2<double>> findBounds() const;
 
-		std::vector<QuadIndex::Feature> findFeatures(const std::vector<long long>& quadIndices) const;
+		std::vector<QuadIndex::Feature> findFeatures(const std::vector<long long>& quadIndices, const PointConverter& converter) const;
 
 		static constexpr std::size_t QUERY_CACHE_SIZE = 64;
 		

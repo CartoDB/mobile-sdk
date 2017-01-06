@@ -36,7 +36,7 @@ namespace carto { namespace geocoding {
 			postcode = findField("postcode", qit->get<long long>(7));
 			name = (qit->get<const char*>(8) ? qit->get<const char*>(8) : "");
 			if (const char* encodedGeometry = qit->get<const char*>(9)) {
-				geometry = decodeGeometry(encodedGeometry);
+				geometry = decodeGeometry(encodedGeometry, [](const cglib::vec2<double>& pos) { return pos; });
 			}
 			else {
 				geometry.reset();

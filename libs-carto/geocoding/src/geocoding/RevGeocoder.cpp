@@ -18,13 +18,14 @@ namespace carto { namespace geocoding {
 			// TODO: -180/180 wrapping
 			cglib::vec2<double> lngLatMeters = wgs84Meters({ lng, lat });
 			cglib::vec2<double> point = _bounds->nearest_point({ lng, lat });
-			double dist = cglib::length(cglib::vec2<double>(lngLatMeters(0) * (point(0) - lng), lngLatMeters(1) * (point(1) - lat)));
+			cglib::vec2<double> diff = point - cglib::vec2<double>(lng, lat);
+			double dist = cglib::length(cglib::vec2<double>(diff(0) * lngLatMeters(0), diff(1) * lngLatMeters(1)));
 			if (dist > _radius) {
 				return boost::optional<Address>();
 			}
 		}
 
-		QuadIndex index(std::bind(&RevGeocoder::findFeatures, this, std::placeholders::_1));
+		QuadIndex index(std::bind(&RevGeocoder::findFeatures, this, std::placeholders::_1, std::placeholders::_2));
 		std::vector<QuadIndex::Result> results = index.findGeometries(lng, lat, _radius);
 		if (results.empty()) {
 			return boost::optional<Address>();
@@ -49,7 +50,7 @@ namespace carto { namespace geocoding {
 		return boost::optional<cglib::bbox2<double>>();
 	}
 
-	std::vector<QuadIndex::Feature> RevGeocoder::findFeatures(const std::vector<long long>& quadIndices) const {
+	std::vector<QuadIndex::Feature> RevGeocoder::findFeatures(const std::vector<long long>& quadIndices, const PointConverter& converter) const {
 		std::string sql = "SELECT rowid, geometry, housenums FROM entities WHERE quadindex in (";
 		for (std::size_t i = 0; i < quadIndices.size(); i++) {
 			if (i > 0) {
@@ -68,7 +69,7 @@ namespace carto { namespace geocoding {
 		for (auto qit = query.begin(); qit != query.end(); qit++) {
 			long long rowId = qit->get<long long>(0);
 			const char* encodedGeometry = qit->get<const char*>(1);
-			std::shared_ptr<Geometry> geometry = decodeGeometry(encodedGeometry);
+			std::shared_ptr<Geometry> geometry = decodeGeometry(encodedGeometry, converter);
 			if (const char* houseNums = qit->get<const char*>(1)) {
 				if (auto multiGeometry = std::dynamic_pointer_cast<MultiGeometry>(geometry)) {
 					for (std::size_t i = 0; i < multiGeometry->getGeometries().size(); i++) {

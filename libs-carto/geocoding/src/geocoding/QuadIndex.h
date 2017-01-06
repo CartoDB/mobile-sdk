@@ -8,6 +8,7 @@
 #define _CARTO_GEOCODING_QUADINDEX_H_
 
 #include "Geometry.h"
+#include "GeometryDecoder.h"
 #include "ProjUtils.h"
 
 #include <tuple>
@@ -21,11 +22,10 @@ namespace carto { namespace geocoding {
 		using Result = std::pair<long long, double>;
 		using Feature = std::pair<long long, std::shared_ptr<Geometry>>;
 
-		explicit QuadIndex(std::function<std::vector<Feature>(const std::vector<long long>&)> queryFeatures) : _queryFeatures(std::move(queryFeatures)) { }
+		explicit QuadIndex(std::function<std::vector<Feature>(const std::vector<long long>&, const PointConverter&)> queryFeatures) : _queryFeatures(std::move(queryFeatures)) { }
 
 		std::vector<Result> findGeometries(double lng, double lat, float radius) const {
 			cglib::vec2<double> mercatorPos = wgs84ToWebMercator({ lng, lat });
-			cglib::vec2<double> lngLatMeters = wgs84Meters({ lng, lat });
 			cglib::vec2<double> mercatorMeters = webMercatorMeters({ lng, lat });
 
 			std::vector<Result> results;
@@ -39,11 +39,14 @@ namespace carto { namespace geocoding {
 					}
 				}
 
-				std::vector<Feature> features = _queryFeatures(quadIndices);
+				std::vector<Feature> features = _queryFeatures(quadIndices, [](const cglib::vec2<double>& pos) {
+					return wgs84ToWebMercator(pos);
+				});
 				for (const Feature& feature : features) {
 					// TODO: -180/180 wrapping
-					cglib::vec2<double> point = feature.second->calculateNearestPoint({ lat, lng });
-					double dist = cglib::length(cglib::vec2<double>(lngLatMeters(1) * (point(0) - lat), lngLatMeters(0) * (point(1) - lng)));
+					cglib::vec2<double> point = feature.second->calculateNearestPoint(mercatorPos);
+					cglib::vec2<double> diff = point - mercatorPos;
+					double dist = cglib::length(cglib::vec2<double>(diff(0) * mercatorMeters(0), diff(1) * mercatorMeters(1)));
 					if (dist <= radius) {
 						results.emplace_back(feature.first, dist);
 					}
@@ -74,7 +77,7 @@ namespace carto { namespace geocoding {
 			return zoom + (((static_cast<long long>(yt) << zoom) + static_cast<long long>(xt)) << LEVEL_BITS);
 		}
 
-		const std::function<std::vector<Feature>(const std::vector<long long>&)> _queryFeatures;
+		const std::function<std::vector<Feature>(const std::vector<long long>&, const PointConverter&)> _queryFeatures;
 
 		static constexpr int MAX_LEVEL = 18;
 		static constexpr int LEVEL_BITS = 5;
