@@ -28,6 +28,9 @@ namespace carto {
         OSMOfflineReverseGeocodingService(const std::shared_ptr<Projection>& projection, const std::string& path);
         virtual ~OSMOfflineReverseGeocodingService();
 
+        float getSearchRadius() const;
+        void setSearchRadius(float radius);
+
         virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const;
 
     protected:

@@ -30,7 +30,8 @@ namespace carto { namespace geocoding {
 	public:
 		explicit RevGeocoder(sqlite3pp::database& db) : _queryCache(QUERY_CACHE_SIZE), _db(db) { _bounds = findBounds(); }
 
-		void setRadius(float radius) { _radius = radius; }
+		float getRadius() const;
+		void setRadius(float radius);
 
 		boost::optional<Address> findAddress(double lng, double lat) const;
 

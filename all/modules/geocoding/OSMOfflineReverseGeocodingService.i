@@ -25,6 +25,7 @@
 
 !polymorphic_shared_ptr(carto::OSMOfflineReverseGeocodingService, geocoding.OSMOfflineReverseGeocodingService)
 
+%attribute(carto::OSMOfflineReverseGeocodingService, float, SearchRadius, getSearchRadius, setSearchRadius)
 %std_io_exceptions(carto::OSMOfflineReverseGeocodingService::calculateAddresses)
 
 %feature("director") carto::OSMOfflineReverseGeocodingService;

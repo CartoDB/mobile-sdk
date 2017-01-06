@@ -11,6 +11,16 @@
 #include <sqlite3pp.h>
 
 namespace carto { namespace geocoding {
+	float RevGeocoder::getRadius() const {
+		std::lock_guard<std::recursive_mutex> lock(_mutex);
+		return _radius;
+	}
+
+	void RevGeocoder::setRadius(float radius) {
+		std::lock_guard<std::recursive_mutex> lock(_mutex);
+		_radius = radius;
+	}
+
 	boost::optional<Address> RevGeocoder::findAddress(double lng, double lat) const {
 		std::lock_guard<std::recursive_mutex> lock(_mutex);
 
