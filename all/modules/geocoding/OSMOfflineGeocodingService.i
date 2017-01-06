@@ -25,6 +25,7 @@
 
 !polymorphic_shared_ptr(carto::OSMOfflineGeocodingService, geocoding.OSMOfflineGeocodingService)
 
+%attribute(carto::OSMOfflineGeocodingService, bool, Autocomplete, isAutocomplete, setAutocomplete)
 %std_io_exceptions(carto::OSMOfflineGeocodingService::calculateAddresses)
 
 %feature("director") carto::OSMOfflineGeocodingService;

@@ -28,6 +28,9 @@ namespace carto {
         OSMOfflineGeocodingService(const std::shared_ptr<Projection>& projection, const std::string& path);
         virtual ~OSMOfflineGeocodingService();
 
+        bool isAutocomplete() const;
+        void setAutocomplete(bool autocomplete);
+
         virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const;
 
     protected:

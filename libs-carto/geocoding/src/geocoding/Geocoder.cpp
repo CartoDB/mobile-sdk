@@ -16,6 +16,16 @@ namespace {
 }
 
 namespace carto { namespace geocoding {
+	bool Geocoder::getAutocomplete() const {
+		std::lock_guard<std::recursive_mutex> lock(_mutex);
+		return _autocomplete;
+	}
+
+	void Geocoder::setAutocomplete(bool autocomplete) {
+		std::lock_guard<std::recursive_mutex> lock(_mutex);
+		 _autocomplete = autocomplete;
+	}
+
 	std::vector<Address> Geocoder::findAddresses(const std::string& queryString) const {
 		std::lock_guard<std::recursive_mutex> lock(_mutex);
 

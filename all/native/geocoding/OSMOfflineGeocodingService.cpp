@@ -30,6 +30,14 @@ namespace carto {
     OSMOfflineGeocodingService::~OSMOfflineGeocodingService() {
     }
 
+    bool OSMOfflineGeocodingService::isAutocomplete() const {
+        return _geocoder->getAutocomplete();
+    }
+
+    void OSMOfflineGeocodingService::setAutocomplete(bool autocomplete) {
+        return _geocoder->setAutocomplete(autocomplete);
+    }
+
     std::vector<std::shared_ptr<GeocodingResult> > OSMOfflineGeocodingService::calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const {
         if (!request) {
             throw NullArgumentException("Null request");

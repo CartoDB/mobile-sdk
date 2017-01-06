@@ -29,7 +29,8 @@ namespace carto { namespace geocoding {
 	public:
 		explicit Geocoder(sqlite3pp::database& db) : _addressCache(ADDRESS_CACHE_SIZE), _populationCache(POPULATION_CACHE_SIZE), _nameRankCache(NAME_RANK_CACHE_SIZE), _tokenIDFCache(TOKEN_IDF_CACHE_SIZE), _emptyEntityQueryCache(EMPTY_ENTITY_QUERY_CACHE_SIZE), _nameQueryCache(NAME_QUERY_CACHE_SIZE), _db(db) { }
 
-		void setAutocomplete(bool autocomplete) { _autocomplete = autocomplete; }
+		bool getAutocomplete() const;
+		void setAutocomplete(bool autocomplete);
 
 		std::vector<Address> findAddresses(const std::string& queryString) const;
 
