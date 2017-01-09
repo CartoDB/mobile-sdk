@@ -39,6 +39,14 @@ namespace carto {
         CFUniquePtr<CFReadStreamRef> requestStream(CFReadStreamCreateForHTTPRequest(kCFAllocatorDefault, cfRequest));
         CFReadStreamSetProperty(requestStream, kCFStreamPropertyHTTPShouldAutoredirect, kCFBooleanTrue);
         CFReadStreamSetProperty(requestStream, kCFStreamPropertyHTTPAttemptPersistentConnection, kCFBooleanTrue);
+
+#ifdef _CARTO_IGNORE_SSL_CERTS
+        CFTypeRef sslKeys[1] = { kCFStreamSSLValidatesCertificateChain };
+        CFTypeRef sslValues[1] = { kCFBooleanFalse };
+        CFUniquePtr<CFDictionaryRef> sslDict(CFDictionaryCreate(NULL, (const void**)sslKeys, (const void**)sslValues, 1, &kCFCopyStringDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
+        CFReadStreamSetProperty(requestStream, kCFStreamPropertySSLSettings, sslDict);
+#endif
+
         if (!CFReadStreamOpen(requestStream)) {
             throw NetworkException("Failed to open HTTP stream", request.url);
         }
