@@ -190,10 +190,10 @@ namespace carto { namespace geocoding {
 			}
 		}
 
-		sqlFilters.insert(sqlFilters.end(), sqlNullFilters.begin(), sqlNullFilters.end());
 		if (sqlFilters.empty()) {
-			sqlFilters.push_back("1=1");
+			return;
 		}
+		sqlFilters.insert(sqlFilters.end(), sqlNullFilters.begin(), sqlNullFilters.end());
 
 		std::string sql = "SELECT rowid, housenums, name, country_id, region_id, county_id, locality_id, neighbourhood_id, street_id, postcode_id FROM entities WHERE ";
 		for (std::size_t i = 0; i < sqlFilters.size(); i++) {
