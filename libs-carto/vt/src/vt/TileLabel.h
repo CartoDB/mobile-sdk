@@ -34,6 +34,7 @@ namespace carto { namespace vt {
         long long getGlobalId() const { return _globalId; }
         long long getGroupId() const { return _groupId; }
         bool isValid() const { return (bool) _placement; }
+        float getScale() const { return _scale; }
         const Color& getColor() const { return _color; }
 
         int getPriority() const { return _priority; }
