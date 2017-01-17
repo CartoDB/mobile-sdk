@@ -8,6 +8,7 @@
 #define _CARTO_GEOCODING_ADDRESS_H_
 
 #include "Geometry.h"
+#include "GeometryReader.h"
 
 #include <memory>
 #include <string>
@@ -17,7 +18,7 @@ namespace sqlite3pp {
 }
 
 namespace carto { namespace geocoding {
-	struct Address {
+	struct Address final {
 		long long id = 0;
 		std::string country;
 		std::string region;
@@ -30,7 +31,9 @@ namespace carto { namespace geocoding {
 		std::string name;
 		std::shared_ptr<Geometry> geometry;
 
-		bool loadFromDB(sqlite3pp::database& db, long long encodedRowId);
+		bool loadFromDB(sqlite3pp::database& db, long long encodedRowId, const std::string& language, const PointConverter& converter);
+
+		bool merge(const Address& address);
 
 		std::string toString() const;
 	};

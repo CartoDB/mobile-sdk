@@ -1,5 +1,5 @@
 #include "RevGeocoder.h"
-#include "GeometryDecoder.h"
+#include "FeatureReader.h"
 #include "ProjUtils.h"
 
 #include <functional>
@@ -21,6 +21,16 @@ namespace carto { namespace geocoding {
 		_radius = radius;
 	}
 
+	std::string RevGeocoder::getLanguage() const {
+		std::lock_guard<std::recursive_mutex> lock(_mutex);
+		return _language;
+	}
+
+	void RevGeocoder::setLanguage(const std::string& language) {
+		std::lock_guard<std::recursive_mutex> lock(_mutex);
+		_language = language;
+	}
+
 	boost::optional<Address> RevGeocoder::findAddress(double lng, double lat) const {
 		std::lock_guard<std::recursive_mutex> lock(_mutex);
 
@@ -35,15 +45,29 @@ namespace carto { namespace geocoding {
 			}
 		}
 
-		QuadIndex index(std::bind(&RevGeocoder::findFeatures, this, std::placeholders::_1, std::placeholders::_2));
+		QuadIndex index(std::bind(&RevGeocoder::findGeometryInfo, this, std::placeholders::_1, std::placeholders::_2));
 		std::vector<QuadIndex::Result> results = index.findGeometries(lng, lat, _radius);
 		if (results.empty()) {
 			return boost::optional<Address>();
 		}
 
 		Address address;
-		address.loadFromDB(_db, results.front().first);
+		address.loadFromDB(_db, results.front().first, _language, [this](const cglib::vec2<double>& pos) {
+			return _origin + pos;
+		});
 		return address;
+	}
+
+	cglib::vec2<double> RevGeocoder::findOrigin() const {
+		sqlite3pp::query query(_db, "SELECT value FROM metadata WHERE name='origin'");
+		for (auto qit = query.begin(); qit != query.end(); qit++) {
+			std::string value = qit->get<const char*>(0);
+
+			std::vector<std::string> origin;
+			boost::split(origin, value, boost::is_any_of(","), boost::token_compress_off);
+			return cglib::vec2<double>(boost::lexical_cast<double>(origin.at(0)), boost::lexical_cast<double>(origin.at(1)));
+		}
+		return cglib::vec2<double>(0, 0);
 	}
 
 	boost::optional<cglib::bbox2<double>> RevGeocoder::findBounds() const {
@@ -60,40 +84,40 @@ namespace carto { namespace geocoding {
 		return boost::optional<cglib::bbox2<double>>();
 	}
 
-	std::vector<QuadIndex::Feature> RevGeocoder::findFeatures(const std::vector<long long>& quadIndices, const PointConverter& converter) const {
-		std::string sql = "SELECT rowid, geometry, housenums FROM entities WHERE quadindex in (";
+	std::vector<QuadIndex::GeometryInfo> RevGeocoder::findGeometryInfo(const std::vector<long long>& quadIndices, const PointConverter& converter) const {
+		std::string sql = "SELECT rowid, geometry FROM entities WHERE quadindex in (";
 		for (std::size_t i = 0; i < quadIndices.size(); i++) {
 			if (i > 0) {
 				sql += ", ";
 			}
 			sql += boost::lexical_cast<std::string>(quadIndices[i]);
 		}
-		sql += ") AND (housenums IS NOT NULL OR name IS NOT NULL)";
+		sql += ") AND (housenumbers IS NOT NULL OR name_id IS NOT NULL)";
 
-		std::vector<QuadIndex::Feature> features;
-		if (_queryCache.read(sql, features)) {
-			return features;
+		std::vector<QuadIndex::GeometryInfo> geomInfos;
+		if (_queryCache.read(sql, geomInfos)) {
+			return geomInfos;
 		}
 
 		sqlite3pp::query query(_db, sql.c_str());
 		for (auto qit = query.begin(); qit != query.end(); qit++) {
-			long long rowId = qit->get<long long>(0);
-			const char* encodedGeometry = qit->get<const char*>(1);
-			std::shared_ptr<Geometry> geometry = decodeGeometry(encodedGeometry, converter);
-			if (const char* houseNums = qit->get<const char*>(1)) {
-				if (auto multiGeometry = std::dynamic_pointer_cast<MultiGeometry>(geometry)) {
-					for (std::size_t i = 0; i < multiGeometry->getGeometries().size(); i++) {
-						features.emplace_back((rowId << 32) | (i + 1), multiGeometry->getGeometries()[i]);
+			auto rowId = qit->get<unsigned int>(0);
+			if (auto encodedGeometry = qit->get<const void*>(1)) {
+				EncodingStream stream(encodedGeometry, qit->column_bytes(1));
+				FeatureReader reader(stream, [this, &converter](const cglib::vec2<double>& pos) {
+					return converter(_origin + pos);
+				});
+				for (unsigned int elementIndex = 1; !stream.eof(); elementIndex++) {
+					Feature feature = reader.readFeature();
+					if (std::shared_ptr<Geometry> geometry = feature.getGeometry()) {
+						long long encodedRowId = (static_cast<long long>(elementIndex) << 32) | rowId;
+						geomInfos.emplace_back(encodedRowId, geometry);
 					}
-					geometry.reset();
 				}
-			}
-			if (geometry) {
-				features.emplace_back((rowId << 32) | 0, geometry);
 			}
 		}
 
-		_queryCache.put(sql, features);
-		return features;
+		_queryCache.put(sql, geomInfos);
+		return geomInfos;
 	}
 } }

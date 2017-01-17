@@ -18,7 +18,7 @@
 
 namespace carto { namespace geocoding {
 	template <typename T>
-	class StringMatcher {
+	class StringMatcher final {
 	public:
 		explicit StringMatcher(std::function<float(const T&)> idf) : _idf(std::move(idf)) { }
 

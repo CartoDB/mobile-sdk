@@ -15,7 +15,7 @@
 
 namespace carto { namespace geocoding {
 	template <typename T>
-	class TokenList {
+	class TokenList final {
 	public:
 		using CharType = typename T::value_type;
 
@@ -87,7 +87,7 @@ namespace carto { namespace geocoding {
 				}
 			}
 			std::sort(results.begin(), results.end(), [](const Span& span1, const Span& span2) {
-				return span1.count > span2.count;
+				return std::tie(span1.count, span1.index) > std::tie(span2.count, span2.index);
 			});
 			return results;
 		}

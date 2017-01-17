@@ -8,7 +8,7 @@
 #define _CARTO_GEOCODING_QUADINDEX_H_
 
 #include "Geometry.h"
-#include "GeometryDecoder.h"
+#include "GeometryReader.h"
 #include "ProjUtils.h"
 
 #include <tuple>
@@ -20,9 +20,10 @@ namespace carto { namespace geocoding {
 	class QuadIndex {
 	public:
 		using Result = std::pair<long long, double>;
-		using Feature = std::pair<long long, std::shared_ptr<Geometry>>;
+		using GeometryInfo = std::pair<long long, std::shared_ptr<Geometry>>;
+		using GeometryInfoFinder = std::function<std::vector<GeometryInfo>(const std::vector<long long>&, const PointConverter&)>;
 
-		explicit QuadIndex(std::function<std::vector<Feature>(const std::vector<long long>&, const PointConverter&)> queryFeatures) : _queryFeatures(std::move(queryFeatures)) { }
+		explicit QuadIndex(const GeometryInfoFinder& geomInfoFinder) : _geometryInfoFinder(geomInfoFinder) { }
 
 		std::vector<Result> findGeometries(double lng, double lat, float radius) const {
 			cglib::vec2<double> mercatorPos = wgs84ToWebMercator({ lng, lat });
@@ -39,16 +40,16 @@ namespace carto { namespace geocoding {
 					}
 				}
 
-				std::vector<Feature> features = _queryFeatures(quadIndices, [](const cglib::vec2<double>& pos) {
+				std::vector<GeometryInfo> geomInfos = _geometryInfoFinder(quadIndices, [](const cglib::vec2<double>& pos) {
 					return wgs84ToWebMercator(pos);
 				});
-				for (const Feature& feature : features) {
+				for (const GeometryInfo& geomInfo : geomInfos) {
 					// TODO: -180/180 wrapping
-					cglib::vec2<double> point = feature.second->calculateNearestPoint(mercatorPos);
+					cglib::vec2<double> point = geomInfo.second->calculateNearestPoint(mercatorPos);
 					cglib::vec2<double> diff = point - mercatorPos;
 					double dist = cglib::length(cglib::vec2<double>(diff(0) * mercatorMeters(0), diff(1) * mercatorMeters(1)));
 					if (dist <= radius) {
-						results.emplace_back(feature.first, dist);
+						results.emplace_back(geomInfo.first, dist);
 					}
 				}
 			}
@@ -77,10 +78,10 @@ namespace carto { namespace geocoding {
 			return zoom + (((static_cast<long long>(yt) << zoom) + static_cast<long long>(xt)) << LEVEL_BITS);
 		}
 
-		const std::function<std::vector<Feature>(const std::vector<long long>&, const PointConverter&)> _queryFeatures;
-
 		static constexpr int MAX_LEVEL = 18;
 		static constexpr int LEVEL_BITS = 5;
+
+		const GeometryInfoFinder _geometryInfoFinder;
 	};
 } }
 
