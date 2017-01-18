@@ -76,13 +76,25 @@ namespace carto {
         std::shared_ptr<BinaryData> responseData;
         std::map<std::string, std::string> responseHeaders;
         if (client.get(url, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
-            std::string result;
+            std::string error = "Invalid HTTP response code";
             if (responseData) {
-                result = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+                std::string result = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+                picojson::value resultInfo;
+                picojson::parse(resultInfo, result);
+                if (resultInfo.get("error").is<picojson::array>()) {
+                    const picojson::array& errorInfo = resultInfo.get("error").get<picojson::array>();
+                    for (auto it = errorInfo.begin(); it != errorInfo.end(); it++) {
+                        Log::Errorf("CartoSQLService::executeQuery: %s", it->get<std::string>().c_str());
+                    }
+                    if (!errorInfo.empty()) {
+                        error = errorInfo.front().get<std::string>();
+                    }
+                }
             }
-            throw GenericException("Failed to execute query", result);
+            throw GenericException("Failed to execute query", error);
         }
 
+        // Return the result as string
         std::string result(reinterpret_cast<const char*>(responseData->data()), responseData->size());
         return result;
     }
