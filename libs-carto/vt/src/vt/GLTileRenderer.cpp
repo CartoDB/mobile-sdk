@@ -882,8 +882,6 @@ namespace carto { namespace vt {
                 const RenderNode& renderNode = it->second;
                 cglib::mat4x4<double> tileMatrix = calculateTileMatrix(renderNode.tileId);
                 cglib::mat4x4<double> invTileMatrix = cglib::inverse(tileMatrix);
-                double radiusTile = radius / cglib::length(cglib::proj_o(cglib::row_vector(tileMatrix, 0)));
-
                 cglib::mat4x4<double> tileToClipMatrix = cglib::mat4x4<double>::identity();
                 if (blendNode->tileId.zoom > renderNode.tileId.zoom) {
                     tileToClipMatrix = cglib::inverse(calculateTileMatrix(blendNode->tileId)) * tileMatrix;
@@ -905,7 +903,7 @@ namespace carto { namespace vt {
                         cglib::ray3<double> rayTile = cglib::transform_ray(ray, invTileMatrix);
 
                         std::vector<std::pair<double, long long>> resultsTile;
-                        findTileGeometryIntersections(renderNode.tileId, geometry, rayTile, static_cast<float>(radiusTile), resultsTile);
+                        findTileGeometryIntersections(renderNode.tileId, geometry, rayTile, static_cast<float>(radius), resultsTile);
 
                         for (std::pair<double, long long> resultTile : resultsTile) {
                             long long id = resultTile.second;
@@ -1160,20 +1158,17 @@ namespace carto { namespace vt {
             cglib::vec3<float> p2 = decodeVertex(geometry, index2);
 
             if (geometry->getType() == TileGeometry::Type::POINT) {
-                p0 += extendOffset(decodePointOffset(geometry, index0, xAxis, yAxis), radius);
-                p1 += extendOffset(decodePointOffset(geometry, index1, xAxis, yAxis), radius);
-                p2 += extendOffset(decodePointOffset(geometry, index2, xAxis, yAxis), radius);
+                p0 += decodePointOffset(geometry, index0, xAxis, yAxis, radius);
+                p1 += decodePointOffset(geometry, index1, xAxis, yAxis, radius);
+                p2 += decodePointOffset(geometry, index2, xAxis, yAxis, radius);
             }
             else if (geometry->getType() == TileGeometry::Type::LINE) {
-                p0 += extendOffset(decodeLineBinormal(geometry, index0), radius);
-                p1 += extendOffset(decodeLineBinormal(geometry, index1), radius);
-                p2 += extendOffset(decodeLineBinormal(geometry, index2), radius);
+                p0 += decodeLineOffset(geometry, index0, radius);
+                p1 += decodeLineOffset(geometry, index1, radius);
+                p2 += decodeLineOffset(geometry, index2, radius);
             }
             else if (geometry->getType() == TileGeometry::Type::POLYGON) {
-                cglib::vec3<float> center = (p0 + p1 + p2) * (1.0f / 3.0f);
-                p0 = center + extendOffset(p0 - center, radius);
-                p1 = center + extendOffset(p1 - center, radius);
-                p2 = center + extendOffset(p2 - center, radius);
+                // do not extend
             }
             else if (geometry->getType() == TileGeometry::Type::POLYGON3D) {
                 p0 += decodePolygon3DOffset(geometry, index0);
@@ -1205,20 +1200,15 @@ namespace carto { namespace vt {
 
         std::array<cglib::vec3<double>, 4> p;
         for (int i = 0; i < 4; i++) {
-            cglib::vec3<float> dp = center + extendOffset(envelope[i] - center, radius);
-            p[i] = _viewState.origin + cglib::vec3<double>::convert(dp);
+            cglib::vec3<float> offset = envelope[i] - center;
+            if (cglib::length(offset) > 0) {
+                offset = offset * (1.0f + radius * label->getScale() / cglib::length(offset));
+            }
+            p[i] = _viewState.origin + cglib::vec3<double>::convert(center + offset);
         }
 
         return cglib::intersect_triangle(p[0], p[1], p[2], ray, &result) ||
                cglib::intersect_triangle(p[0], p[2], p[3], ray, &result);
-    }
-
-    cglib::vec3<float> GLTileRenderer::extendOffset(const cglib::vec3<float>& offset, float radius) {
-        float len = cglib::length(offset);
-        if (len == 0) {
-            return offset;
-        }
-        return offset * (1.0f + radius / len);
     }
 
     cglib::vec3<float> GLTileRenderer::decodeVertex(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const {
@@ -1228,22 +1218,28 @@ namespace carto { namespace vt {
         return cglib::vec3<float>(vertexPtr[0], vertexPtr[1], 0) * (1.0f / geometryLayoutParams.vertexScale);
     }
 
-    cglib::vec3<float> GLTileRenderer::decodePointOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index, const cglib::vec3<float>& xAxis, const cglib::vec3<float>& yAxis) const {
+    cglib::vec3<float> GLTileRenderer::decodePointOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index, const cglib::vec3<float>& xAxis, const cglib::vec3<float>& yAxis, float radius) const {
         const TileGeometry::GeometryLayoutParameters& geometryLayoutParams = geometry->getGeometryLayoutParameters();
         std::size_t binormalOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.binormalOffset;
         const short* binormalPtr = reinterpret_cast<const short*>(&geometry->getVertexGeometry()[binormalOffset]);
-        cglib::vec2<float> xy = cglib::vec2<float>(binormalPtr[0], binormalPtr[1]) * (geometry->getGeometryScale() / geometry->getTileSize() / geometryLayoutParams.binormalScale);
-        return xAxis * xy(0) + yAxis * xy(1);
+        cglib::vec3<float> xy = cglib::vec3<float>(binormalPtr[0], binormalPtr[1], 0) * (1.0f / geometryLayoutParams.binormalScale);
+        if (geometry->getStyleParameters().transform) {
+            xy = cglib::transform(xy, geometry->getStyleParameters().transform.get());
+        }
+        if (cglib::length(xy) != 0) {
+            xy = xy * (1.0f + radius / cglib::length(xy));
+        }
+        return (xAxis * xy(0) + yAxis * xy(1)) * (geometry->getGeometryScale() / geometry->getTileSize());
     }
 
-    cglib::vec3<float> GLTileRenderer::decodeLineBinormal(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const {
+    cglib::vec3<float> GLTileRenderer::decodeLineOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index, float radius) const {
         const TileGeometry::GeometryLayoutParameters& geometryLayoutParams = geometry->getGeometryLayoutParameters();
         std::size_t binormalOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.binormalOffset;
         const short* binormalPtr = reinterpret_cast<const short*>(&geometry->getVertexGeometry()[binormalOffset]);
         std::size_t attribOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.attribsOffset;
         const char* attribPtr = reinterpret_cast<const char*>(&geometry->getVertexGeometry()[attribOffset]);
-        float width = 0.5f * (*geometry->getStyleParameters().widthTable[attribPtr[0]])(_viewState) * geometry->getGeometryScale() / geometry->getTileSize();
-        return cglib::vec3<float>(binormalPtr[0], binormalPtr[1], 0) * (width / geometryLayoutParams.binormalScale);
+        float width = 0.5f * (*geometry->getStyleParameters().widthTable[attribPtr[0]])(_viewState) + radius;
+        return cglib::vec3<float>(binormalPtr[0], binormalPtr[1], 0) * (width * geometry->getGeometryScale() / geometry->getTileSize() / geometryLayoutParams.binormalScale);
     }
 
     cglib::vec3<float> GLTileRenderer::decodePolygon3DOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const {
@@ -2000,8 +1996,9 @@ namespace carto { namespace vt {
             { CompOp::PLUS,     { GL_FUNC_ADD, GL_ONE, GL_ONE } },
             { CompOp::MINUS,    { GL_FUNC_REVERSE_SUBTRACT, GL_ONE, GL_ONE } },
             { CompOp::MULTIPLY, { GL_FUNC_ADD, GL_DST_COLOR, GL_ZERO } },
+            { CompOp::SCREEN,   { GL_FUNC_ADD, GL_ONE, GL_ONE_MINUS_SRC_COLOR } },
             { CompOp::DARKEN,   { GL_MIN_EXT,  GL_ONE, GL_ONE } },
-            { CompOp::LIGHTEN,  { GL_MAX_EXT,  GL_ONE, GL_ONE } },
+            { CompOp::LIGHTEN,  { GL_MAX_EXT,  GL_ONE, GL_ONE } }
         };
         auto it = compOpBlendStates.find(compOp);
         if (it != compOpBlendStates.end()) {

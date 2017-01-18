@@ -24,6 +24,8 @@
 
 %attributeval(carto::CartoVectorTileDecoder, %arg(std::vector<std::string>), LayerIds, getLayerIds)
 %std_exceptions(carto::CartoVectorTileDecoder::CartoVectorTileDecoder)
+%std_exceptions(carto::CartoVectorTileDecoder::isLayerVisible)
+%std_exceptions(carto::CartoVectorTileDecoder::setLayerVisible)
 %std_exceptions(carto::CartoVectorTileDecoder::getLayerStyle)
 %std_exceptions(carto::CartoVectorTileDecoder::setLayerStyle)
 %ignore carto::CartoVectorTileDecoder::CartoVectorTileDecoder;
