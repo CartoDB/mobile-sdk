@@ -123,7 +123,7 @@ namespace {
         #endif
         attribute vec4 aVertexAttribs;
         #ifdef PATTERN
-        uniform float uUVScale;
+        uniform vec2 uUVScale;
         #endif
         uniform float uBinormalScale;
         uniform vec3 uXAxis;
@@ -181,8 +181,7 @@ namespace {
         #endif
         attribute vec4 aVertexAttribs;
         #ifdef PATTERN
-        uniform float uUVScale;
-        uniform float uZoomScale;
+        uniform vec2 uUVScale;
         #endif
         uniform float uBinormalScale;
         uniform float uHalfResolution;
@@ -204,6 +203,7 @@ namespace {
             int styleIndex = int(aVertexAttribs[0]);
             float width = uWidthTable[styleIndex] * uHalfResolution;
             float roundedWidth = width + 1.0;
+            float gamma = uGamma * aVertexAttribs[3];
         #ifdef TRANSFORM
             vec3 pos = vec3(vec2(uTransformMatrix * vec3(aVertexPosition, 1.0)) + uBinormalScale * roundedWidth * aVertexBinormal, 0.0);
         #else
@@ -211,10 +211,10 @@ namespace {
         #endif
             vColor = uColorTable[styleIndex];
         #ifdef PATTERN
-            vUV = vec2(uZoomScale * uUVScale * aVertexUV.x, uUVScale * aVertexUV.y);
+            vUV = uUVScale * aVertexUV;
         #endif
-            vDist = vec2(aVertexAttribs[1], aVertexAttribs[2]) * (roundedWidth * uGamma);
-            vWidth = (width - 1.0) * uGamma;
+            vDist = vec2(aVertexAttribs[1], aVertexAttribs[2]) * (roundedWidth * gamma);
+            vWidth = (width - 1.0) * gamma;
             gl_Position = uMVPMatrix * vec4(pos, 1.0);
         }
     )GLSL";
@@ -249,8 +249,7 @@ namespace {
         #endif
         attribute vec4 aVertexAttribs;
         #ifdef PATTERN
-        uniform float uUVScale;
-        uniform float uZoomScale;
+        uniform vec2 uUVScale;
         #endif
         #ifdef TRANSFORM
         uniform mat3 uTransformMatrix;
@@ -271,7 +270,7 @@ namespace {
         #endif
             vColor = uColorTable[styleIndex];
         #ifdef PATTERN
-            vUV = uZoomScale * uUVScale * aVertexUV;
+            vUV = uUVScale * aVertexUV;
         #endif
             gl_Position = uMVPMatrix * vec4(pos, 1.0);
         }
@@ -1680,8 +1679,8 @@ namespace carto { namespace vt {
         float s = 1.0f / (1 << (std::max(tileId.zoom, targetTileId.zoom) - tileId.zoom));
         float x = (targetTileId.x & deltaMask) * s;
         float y = (targetTileId.y & deltaMask) * s;
-        glUniform2fv(glGetUniformLocation(shaderProgram, "uUVScale"), 1, cglib::vec2<float>(s, s).data());
-        glUniform2fv(glGetUniformLocation(shaderProgram, "uUVOffset"), 1, cglib::vec2<float>(x, y).data());
+        glUniform2f(glGetUniformLocation(shaderProgram, "uUVScale"), s, s);
+        glUniform2f(glGetUniformLocation(shaderProgram, "uUVOffset"), x, y);
 
         glUniform1f(glGetUniformLocation(shaderProgram, "uOpacity"), blend * opacity);
 
@@ -1746,8 +1745,9 @@ namespace carto { namespace vt {
         }
         
         if (styleParams.pattern) {
-            glUniform1f(glGetUniformLocation(shaderProgram, "uUVScale"), 1.0f / (geometryLayoutParams.texCoordScale * styleParams.pattern->widthScale));
-            glUniform1f(glGetUniformLocation(shaderProgram, "uZoomScale"), std::pow(2.0f, static_cast<int>(_zoom) - tileId.zoom));
+            float zoomScale = std::pow(2.0f, static_cast<int>(_zoom) - tileId.zoom);
+            float coordScale = 1.0f / (geometryLayoutParams.texCoordScale * styleParams.pattern->widthScale);
+            glUniform2f(glGetUniformLocation(shaderProgram, "uUVScale"), zoomScale * coordScale, (geometry->getType() == TileGeometry::Type::LINE ? 1.0f : zoomScale) * coordScale);
             
             CompiledBitmap compiledBitmap;
             auto itBitmap = _compiledBitmapMap.find(styleParams.pattern->bitmap);
@@ -1807,7 +1807,7 @@ namespace carto { namespace vt {
             for (int i = 0; i < styleParams.parameterCount; i++) {
                 float width = 0.5f * (*styleParams.widthTable[i])(_viewState) * geometry->getGeometryScale() / geometry->getTileSize();
                 float pixelWidth = 2.0f * _halfResolution * width;
-                if (pixelWidth < 1.0f) {
+                if (pixelWidth > 0.0f && pixelWidth < 1.0f) {
                     colors[i] = colors[i] * pixelWidth; // should do gamma correction here, but simple implementation gives closer results to Mapnik
                     width = 1.0f / (2.0f * _halfResolution);
                 }
