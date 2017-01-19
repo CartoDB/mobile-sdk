@@ -1747,7 +1747,14 @@ namespace carto { namespace vt {
         if (styleParams.pattern) {
             float zoomScale = std::pow(2.0f, static_cast<int>(_zoom) - tileId.zoom);
             float coordScale = 1.0f / (geometryLayoutParams.texCoordScale * styleParams.pattern->widthScale);
-            glUniform2f(glGetUniformLocation(shaderProgram, "uUVScale"), zoomScale * coordScale, (geometry->getType() == TileGeometry::Type::LINE ? 1.0f : zoomScale) * coordScale);
+            cglib::vec2<float> uvScale(coordScale, coordScale);
+            if (geometry->getType() == TileGeometry::Type::LINE) {
+                uvScale(0) *= zoomScale;
+            }
+            else if (geometry->getType() == TileGeometry::Type::POLYGON) {
+                uvScale *= zoomScale;
+            }
+            glUniform2fv(glGetUniformLocation(shaderProgram, "uUVScale"), 1, uvScale.data());
             
             CompiledBitmap compiledBitmap;
             auto itBitmap = _compiledBitmapMap.find(styleParams.pattern->bitmap);
