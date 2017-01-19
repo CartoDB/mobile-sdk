@@ -316,6 +316,7 @@ namespace carto { namespace geocoding {
 			populationRank *= getPopulationRank("locality",      qit->get<long long>(6));
 			populationRank *= getPopulationRank("neighbourhood", qit->get<long long>(7));
 			populationRank *= getPopulationRank("street",        qit->get<long long>(8));
+			populationRank *= (qit->get<long long>(10) != 0 ? POI_POPULATION_PENALTY : 1.0f);
 
 			// Do location based ranking
 			float locationRank = 1.0f;
@@ -386,10 +387,10 @@ namespace carto { namespace geocoding {
 	std::vector<Geocoder::Query> Geocoder::bindQueryResults(const Query& query, const std::string& type, long long Query::* field) const {
 		std::vector<Query> subQueries;
 		for (const TokenList<std::string>::Span& span : query.tokenList.enumerate()) {
-			const std::string& name = query.tokenList.tokens(span);
+			std::string name = query.tokenList.tokens(span);
 
 			std::string sql = "SELECT DISTINCT tt.id, tn.name, tn.lang FROM tokens t, " + type + "tokens tt, " + type + "names tn WHERE tt.id=tn.id AND t.id=tt.token_id AND (tn.lang=tt.lang OR (tn.lang IS NULL AND tt.lang IS NULL)) AND ";
-			std::string::const_iterator nameIt = name.begin();
+			std::string::iterator nameIt = name.begin();
 			if (nameIt != name.end()) {
 				utf8::next(nameIt, name.end());
 			}
@@ -398,6 +399,9 @@ namespace carto { namespace geocoding {
 			}
 			if (!query.forceExact && nameIt != name.end()) {
 				sql += "t.token LIKE '" + escapeSQLValue(std::string(name.begin(), nameIt)) + "%' COLLATE NOCASE";
+			}
+			else if (!name.empty() && name.back() == '%') {
+				sql += "t.token LIKE '" + escapeSQLValue(name) + "' COLLATE NOCASE";
 			}
 			else {
 				sql += "t.token='" + escapeSQLValue(name) + "' COLLATE NOCASE";
@@ -452,6 +456,11 @@ namespace carto { namespace geocoding {
 	std::vector<Geocoder::Query> Geocoder::bindQueryNames(const Query& query, const std::string& type, std::string Query::* field) const {
 		std::vector<Query> subQueries;
 		for (const TokenList<std::string>::Span& span : query.tokenList.enumerate()) {
+			std::string name = query.tokenList.tokens(span);
+			if (!name.empty() && name.back() == '%') {
+				continue;
+			}
+
 			Query subQuery(query);
 			subQuery.*field = query.tokenList.tokens(span);
 			subQuery.tokenList.mark(span, type);

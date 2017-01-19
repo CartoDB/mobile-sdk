@@ -108,6 +108,7 @@ namespace carto { namespace geocoding {
 		static constexpr float MIN_RANK = 0.1f;
 		static constexpr float MAX_RANK_RATIO = 0.5f;
 		static constexpr float EXTRA_FIELD_PENALTY = 0.95f;
+		static constexpr float POI_POPULATION_PENALTY = 0.95f;
 		static constexpr int MAX_ENTITY_QUERIES = 100;
 		static constexpr std::size_t MAX_RESULTS = 100;
 		static constexpr std::size_t MIN_AUTOCOMPLETE_SIZE = 3;
