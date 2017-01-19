@@ -180,7 +180,7 @@ namespace carto { namespace geocoding {
 			}
 		}
 
-		static constexpr double PRECISION = 1.0e5;
+		static constexpr double PRECISION = 1.0e6;
 
 		EncodingStream& _stream;
 		PointConverter _pointConverter;
