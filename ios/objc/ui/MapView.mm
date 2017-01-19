@@ -163,6 +163,8 @@ static const int NATIVE_NO_COORDINATE = -1;
 -(void)appWillEnterForeground {
     carto::Log::Info("MapView::appWillEnterForeground");
     _active = YES;
+
+    [self setNeedsDisplay];
 }
 
 -(void)transformScreenCoord: (CGPoint*)screenCoord {
