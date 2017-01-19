@@ -34,6 +34,7 @@ namespace carto { namespace vt {
         long long getGlobalId() const { return _globalId; }
         long long getGroupId() const { return _groupId; }
         bool isValid() const { return (bool) _placement; }
+        float getScale() const { return _scale; }
         const Color& getColor() const { return _color; }
 
         int getPriority() const { return _priority; }
@@ -66,7 +67,8 @@ namespace carto { namespace vt {
 
     private:
         constexpr static float EXTRA_PLACEMENT_PIXELS = 30.0f; // extra visible pixels required for placement
-        constexpr static float MIN_SEGMENT_DOT = 0.866f; // minimum dot product between consecutive segments, to avoid very distorted placement. 0.886 is approx cos(30deg)
+        constexpr static float MAX_SINGLE_SEGMENT_ANGLE = 1.0472f; // maximum angle between consecutive segments, in radians
+        constexpr static float MAX_SUMMED_SEGMENT_ANGLE = 2.0944f; // maximum sum of segment angles, in radians
 
         using Vertex = cglib::vec3<double>;
         using Vertices = std::vector<Vertex>;

@@ -245,7 +245,7 @@ namespace carto {
             return;
         }
 
-        float radius = viewState.getUnitToDPCoef() * CLICK_RADIUS;
+        float radius = CLICK_RADIUS; // NOTE: the value will be automatically multiplied with DPI factor
 
         _glRenderer->findGeometryIntersections(ray, results, radius, true, false);
         if (_labelOrder == 0) {

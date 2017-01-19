@@ -48,11 +48,11 @@ namespace carto { namespace mvt {
             vt::Color stroke = _stroke * _strokeOpacity;
             if (_markerType == "ellipse" || (_markerType.empty() && placement != vt::LabelOrientation::LINE)) {
                 float width = DEFAULT_CIRCLE_SIZE, height = DEFAULT_CIRCLE_SIZE;
-                if (_width > 0) {
+                if (_width >= 0) { // NOTE: special case, if accept 0 as a valid width value
                     width = _width;
-                    height = (_height > 0 ? _height : width);
+                    height = (_height >= 0 ? _height : width);
                 }
-                else if (_height > 0) {
+                else if (_height >= 0) { // NOTE: special case, accept 0 as a valid height value
                     height = _height;
                     width = height;
                 }
