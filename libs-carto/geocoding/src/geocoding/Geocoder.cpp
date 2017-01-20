@@ -388,8 +388,6 @@ namespace carto { namespace geocoding {
 		std::vector<Query> subQueries;
 		for (const TokenList<std::string>::Span& span : query.tokenList.enumerate()) {
 			std::string name = query.tokenList.tokens(span);
-
-			std::string sql = "SELECT DISTINCT tt.id, tn.name, tn.lang FROM tokens t, " + type + "tokens tt, " + type + "names tn WHERE tt.id=tn.id AND t.id=tt.token_id AND (tn.lang=tt.lang OR (tn.lang IS NULL AND tt.lang IS NULL)) AND ";
 			std::string::iterator nameIt = name.begin();
 			if (nameIt != name.end()) {
 				utf8::next(nameIt, name.end());
@@ -397,6 +395,9 @@ namespace carto { namespace geocoding {
 			if (nameIt != name.end()) {
 				utf8::next(nameIt, name.end());
 			}
+
+			// Get token ids first
+			std::string sql = "SELECT t.id FROM tokens t WHERE ";
 			if (!query.forceExact && nameIt != name.end()) {
 				sql += "t.token LIKE '" + escapeSQLValue(std::string(name.begin(), nameIt)) + "%' COLLATE NOCASE";
 			}
@@ -406,6 +407,29 @@ namespace carto { namespace geocoding {
 			else {
 				sql += "t.token='" + escapeSQLValue(name) + "' COLLATE NOCASE";
 			}
+			
+			std::vector<long long> tokenIds;
+			if (!_tokenQueryCache.read(sql, tokenIds)) {
+				sqlite3pp::query sqlQuery(_db, sql.c_str());
+
+				for (auto qit = sqlQuery.begin(); qit != sqlQuery.end(); qit++) {
+					auto id = qit->get<long long>(0);
+					tokenIds.push_back(id);
+				}
+
+				_tokenQueryCounter++;
+				_tokenQueryCache.put(sql, tokenIds);
+			}
+			if (tokenIds.empty()) {
+				continue;
+			}
+
+			// Now select names based on token ids
+			sql = "SELECT DISTINCT tt.id, tn.name, tn.lang FROM " + type + "tokens tt, " + type + "names tn WHERE tt.id=tn.id AND (tn.lang=tt.lang OR (tn.lang IS NULL AND tt.lang IS NULL)) AND tt.token_id IN (";
+			for (std::size_t i = 0; i < tokenIds.size(); i++) {
+				sql += (i > 0 ? "," : "") + boost::lexical_cast<std::string>(tokenIds[i]);
+			}
+			sql += ")";
 
 			std::unordered_map<long long, Ranking> resultRankings;
 			if (!_nameQueryCache.read(sql, resultRankings)) {
@@ -436,6 +460,7 @@ namespace carto { namespace geocoding {
 				_nameQueryCache.put(sql, resultRankings);
 			}
 
+			// Build subqueries
 			for (const std::pair<long long, Ranking>& resultRanking : resultRankings) {
 				Query subQuery(query);
 				subQuery.*field = resultRanking.first;
@@ -580,7 +605,7 @@ namespace carto { namespace geocoding {
 			for (auto qit = sqlQuery.begin(); qit != sqlQuery.end(); qit++) {
 				idf = static_cast<float>(qit->get<double>(0));
 			}
-			_tokenQueryCounter++;
+			_tokenIDFQueryCounter++;
 			_tokenIDFCache.put(token, idf);
 		}
 		return idf;

@@ -30,7 +30,7 @@ namespace sqlite3pp {
 namespace carto { namespace geocoding {
 	class Geocoder final {
 	public:
-		explicit Geocoder(sqlite3pp::database& db) : _addressCache(ADDRESS_CACHE_SIZE), _populationCache(POPULATION_CACHE_SIZE), _nameRankCache(NAME_RANK_CACHE_SIZE), _tokenIDFCache(TOKEN_IDF_CACHE_SIZE), _emptyEntityQueryCache(EMPTY_ENTITY_QUERY_CACHE_SIZE), _nameQueryCache(NAME_QUERY_CACHE_SIZE), _db(db) { _origin = findOrigin(); _houseNumberRegex = findHouseNumberRegex(); }
+		explicit Geocoder(sqlite3pp::database& db) : _addressCache(ADDRESS_CACHE_SIZE), _populationCache(POPULATION_CACHE_SIZE), _nameRankCache(NAME_RANK_CACHE_SIZE), _tokenIDFCache(TOKEN_IDF_CACHE_SIZE), _emptyEntityQueryCache(EMPTY_ENTITY_QUERY_CACHE_SIZE), _nameQueryCache(NAME_QUERY_CACHE_SIZE), _tokenQueryCache(TOKEN_QUERY_CACHE_SIZE), _db(db) { _origin = findOrigin(); _houseNumberRegex = findHouseNumberRegex(); }
 
 		bool getAutocomplete() const;
 		void setAutocomplete(bool autocomplete);
@@ -109,14 +109,15 @@ namespace carto { namespace geocoding {
 		static constexpr float MAX_RANK_RATIO = 0.5f;
 		static constexpr float EXTRA_FIELD_PENALTY = 0.95f;
 		static constexpr float POI_POPULATION_PENALTY = 0.95f;
-		static constexpr int MAX_ENTITY_QUERIES = 100;
-		static constexpr std::size_t MAX_RESULTS = 100;
+		static constexpr unsigned int MAX_ENTITY_QUERIES = 100;
+		static constexpr unsigned int MAX_RESULTS = 100;
 		static constexpr std::size_t MIN_AUTOCOMPLETE_SIZE = 3;
 		static constexpr std::size_t ADDRESS_CACHE_SIZE = 1024;
 		static constexpr std::size_t POPULATION_CACHE_SIZE = 1024;
 		static constexpr std::size_t NAME_RANK_CACHE_SIZE = 1024;
 		static constexpr std::size_t TOKEN_IDF_CACHE_SIZE = 512;
 		static constexpr std::size_t NAME_QUERY_CACHE_SIZE = 512;
+		static constexpr std::size_t TOKEN_QUERY_CACHE_SIZE = 512;
 		static constexpr std::size_t EMPTY_ENTITY_QUERY_CACHE_SIZE = 8192;
 
 		bool _autocomplete = false;
@@ -130,10 +131,12 @@ namespace carto { namespace geocoding {
 		mutable cache::lru_cache<std::string, float> _tokenIDFCache;
 		mutable cache::lru_cache<std::string, bool> _emptyEntityQueryCache;
 		mutable cache::lru_cache<std::string, std::unordered_map<long long, Ranking>> _nameQueryCache;
+		mutable cache::lru_cache<std::string, std::vector<long long>> _tokenQueryCache;
 		mutable long long _previousEntityQueryCounter = 0;;
 		mutable long long _entityQueryCounter = 0;
 		mutable long long _nameQueryCounter = 0;
 		mutable long long _tokenQueryCounter = 0;
+		mutable long long _tokenIDFQueryCounter = 0;
 		mutable long long _populationQueryCounter = 0;
 		mutable long long _nameRankCounter = 0;
 
