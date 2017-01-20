@@ -86,7 +86,15 @@ namespace carto { namespace geocoding {
 			};
 			auto getCost = [&](std::size_t i1, std::size_t i2) -> float {
 				if (i1 >= words1.size() || i2 >= words2.size()) {
-					return i1 >= words1.size() && i2 >= words2.size() ? 0.0f : skipCost;
+					if (i1 >= words1.size() && i2 >= words2.size()) {
+						return 0.0f;
+					}
+					else if (i1 >= words1.size()) {
+						return (words2.size() - i2) * skipCost;
+					}
+					else {
+						return (words1.size() - i1) * skipCost;
+					}
 				}
 				return costTable[i1 * words2.size() + i2];
 			};

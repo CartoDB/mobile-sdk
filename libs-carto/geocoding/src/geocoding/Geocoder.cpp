@@ -600,7 +600,7 @@ namespace carto { namespace geocoding {
 		float idf = 1.0f;
 		std::string token = toUtf8String(unitoken);
 		if (!_tokenIDFCache.read(token, idf)) {
-			sqlite3pp::query sqlQuery(_db, "SELECT idf FROM tokens WHERE token=:token");
+			sqlite3pp::query sqlQuery(_db, "SELECT idf FROM tokens WHERE token=:token COLLATE NOCASE");
 			sqlQuery.bind(":token", token.c_str());
 			for (auto qit = sqlQuery.begin(); qit != sqlQuery.end(); qit++) {
 				idf = static_cast<float>(qit->get<double>(0));
