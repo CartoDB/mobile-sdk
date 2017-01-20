@@ -42,7 +42,7 @@ namespace carto { namespace geocoding {
 		cglib::vec2<double> findOrigin() const;
 		boost::optional<cglib::bbox2<double>> findBounds() const;
 
-		std::vector<QuadIndex::GeometryInfo> findGeometryInfo(const std::vector<long long>& quadIndices, const PointConverter& converter) const;
+		std::vector<QuadIndex::GeometryInfo> findGeometryInfo(const std::vector<std::uint64_t>& quadIndices, const PointConverter& converter) const;
 
 		static constexpr std::size_t QUERY_CACHE_SIZE = 64;
 		

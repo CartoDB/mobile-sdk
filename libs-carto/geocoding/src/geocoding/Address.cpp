@@ -8,8 +8,8 @@
 #include <sqlite3pp.h>
 
 namespace carto { namespace geocoding {
-	bool Address::loadFromDB(sqlite3pp::database& db, long long encodedRowId, const std::string& language, const PointConverter& converter) {
-		auto findField = [&db, &language](const std::string& type, long long id) -> std::string {
+	bool Address::loadFromDB(sqlite3pp::database& db, std::uint64_t encodedRowId, const std::string& language, const PointConverter& converter) {
+		auto findField = [&db, &language](const std::string& type, std::uint64_t id) -> std::string {
 			if (id == 0) {
 				return std::string();
 			}
@@ -39,14 +39,14 @@ namespace carto { namespace geocoding {
 		query.bind(":rowId", rowId);
 
 		for (auto qit = query.begin(); qit != query.end(); qit++) {
-			country       = findField("country",       qit->get<long long>(0));
-			region        = findField("region",        qit->get<long long>(1));
-			county        = findField("county",        qit->get<long long>(2));
-			locality      = findField("locality",      qit->get<long long>(3));
-			neighbourhood = findField("neighbourhood", qit->get<long long>(4));
-			street        = findField("street",        qit->get<long long>(5));
-			postcode      = findField("postcode",      qit->get<long long>(6));
-			name          = findField("name",          qit->get<long long>(7));
+			country       = findField("country",       qit->get<std::uint64_t>(0));
+			region        = findField("region",        qit->get<std::uint64_t>(1));
+			county        = findField("county",        qit->get<std::uint64_t>(2));
+			locality      = findField("locality",      qit->get<std::uint64_t>(3));
+			neighbourhood = findField("neighbourhood", qit->get<std::uint64_t>(4));
+			street        = findField("street",        qit->get<std::uint64_t>(5));
+			postcode      = findField("postcode",      qit->get<std::uint64_t>(6));
+			name          = findField("name",          qit->get<std::uint64_t>(7));
 
 			id = 0;
 			geometry.reset();
@@ -62,7 +62,7 @@ namespace carto { namespace geocoding {
 					geometry = feature.getGeometry();
 				}
 				else {
-					std::vector<long long> ids;
+					std::vector<std::uint64_t> ids;
 					std::vector<std::shared_ptr<Geometry>> geometries;
 					while (!stream.eof()) {
 						Feature feature = reader.readFeature();

@@ -15,13 +15,14 @@
 #include <cmath>
 #include <vector>
 #include <functional>
+#include <cstdint>
 
 namespace carto { namespace geocoding {
 	class QuadIndex {
 	public:
-		using Result = std::pair<long long, double>;
-		using GeometryInfo = std::pair<long long, std::shared_ptr<Geometry>>;
-		using GeometryInfoFinder = std::function<std::vector<GeometryInfo>(const std::vector<long long>&, const PointConverter&)>;
+		using Result = std::pair<std::uint64_t, double>;
+		using GeometryInfo = std::pair<std::uint64_t, std::shared_ptr<Geometry>>;
+		using GeometryInfoFinder = std::function<std::vector<GeometryInfo>(const std::vector<std::uint64_t>&, const PointConverter&)>;
 
 		explicit QuadIndex(const GeometryInfoFinder& geomInfoFinder) : _geometryInfoFinder(geomInfoFinder) { }
 
@@ -33,7 +34,7 @@ namespace carto { namespace geocoding {
 			for (int level = MAX_LEVEL; level >= 0; level--) {
 				auto tile0 = calculatePointTile(mercatorPos(0) - radius / mercatorMeters(0), mercatorPos(1) - radius / mercatorMeters(1), level);
 				auto tile1 = calculatePointTile(mercatorPos(0) + radius / mercatorMeters(0), mercatorPos(1) + radius / mercatorMeters(1), level);
-				std::vector<long long> quadIndices;
+				std::vector<std::uint64_t> quadIndices;
 				for (int yt = std::get<2>(tile0); yt <= std::get<2>(tile1); yt++) {
 					for (int xt = std::get<1>(tile0); xt <= std::get<1>(tile1); xt++) {
 						quadIndices.push_back(calculateTileQuadIndex(level, xt, yt));
@@ -74,8 +75,8 @@ namespace carto { namespace geocoding {
 			return std::tuple<double, double, double, double> { xt * s - d, yt * s - d, xt * s - d + s, yt * s - d + s };
 		}
 
-		static long long calculateTileQuadIndex(int zoom, int xt, int yt) {
-			return zoom + (((static_cast<long long>(yt) << zoom) + static_cast<long long>(xt)) << LEVEL_BITS);
+		static std::uint64_t calculateTileQuadIndex(int zoom, int xt, int yt) {
+			return zoom + (((static_cast<std::uint64_t>(yt) << zoom) + static_cast<std::uint64_t>(xt)) << LEVEL_BITS);
 		}
 
 		static constexpr int MAX_LEVEL = 18;

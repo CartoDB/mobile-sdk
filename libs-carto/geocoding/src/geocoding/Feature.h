@@ -10,17 +10,18 @@
 #include "Geometry.h"
 
 #include <memory>
+#include <cstdint>
 
 namespace carto { namespace geocoding {
 	class Feature final {
 	public:
-		explicit Feature(long long id, const std::shared_ptr<Geometry>& geom) : _id(id), _geometry(geom) { }
+		explicit Feature(std::uint64_t id, const std::shared_ptr<Geometry>& geom) : _id(id), _geometry(geom) { }
 
-		long long getId() const { return _id; }
+		std::uint64_t getId() const { return _id; }
 		const std::shared_ptr<Geometry>& getGeometry() const { return _geometry; }
 
 	private:
-		long long _id;
+		std::uint64_t _id;
 		std::shared_ptr<Geometry> _geometry;
 	};
 } }

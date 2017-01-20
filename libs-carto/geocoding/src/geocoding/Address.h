@@ -12,6 +12,7 @@
 
 #include <memory>
 #include <string>
+#include <cstdint>
 
 namespace sqlite3pp {
 	class database;
@@ -19,7 +20,7 @@ namespace sqlite3pp {
 
 namespace carto { namespace geocoding {
 	struct Address final {
-		long long id = 0;
+		std::uint64_t id = 0;
 		std::string country;
 		std::string region;
 		std::string county;
@@ -31,7 +32,7 @@ namespace carto { namespace geocoding {
 		std::string name;
 		std::shared_ptr<Geometry> geometry;
 
-		bool loadFromDB(sqlite3pp::database& db, long long encodedRowId, const std::string& language, const PointConverter& converter);
+		bool loadFromDB(sqlite3pp::database& db, std::uint64_t encodedRowId, const std::string& language, const PointConverter& converter);
 
 		bool merge(const Address& address);
 

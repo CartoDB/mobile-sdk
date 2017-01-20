@@ -56,14 +56,14 @@ namespace carto { namespace geocoding {
 		
 		struct Query {
 			TokenList<std::string> tokenList;
-			long long countryId = 0;
-			long long regionId = 0;
-			long long countyId = 0;
-			long long localityId = 0;
-			long long neighbourhoodId = 0;
-			long long streetId = 0;
-			long long postcodeId = 0;
-			long long nameId = 0;
+			std::uint64_t countryId = 0;
+			std::uint64_t regionId = 0;
+			std::uint64_t countyId = 0;
+			std::uint64_t localityId = 0;
+			std::uint64_t neighbourhoodId = 0;
+			std::uint64_t streetId = 0;
+			std::uint64_t postcodeId = 0;
+			std::uint64_t nameId = 0;
 			std::string houseNumber;
 			Ranking ranking;
 			int pass = 0;
@@ -72,7 +72,7 @@ namespace carto { namespace geocoding {
 		
 		struct Result {
 			Query query;
-			long long encodedRowId = 0;
+			std::uint64_t encodedRowId = 0;
 			std::size_t unmatchedTokens = 0;
 			Ranking ranking;
 		};
@@ -88,7 +88,7 @@ namespace carto { namespace geocoding {
 		void resolveNames(const Query& query, std::vector<Result>& results) const;
 		void resolveAddress(const Query& query, std::vector<Result>& results) const;
 
-		std::vector<Query> bindQueryResults(const Query& query, const std::string& type, long long Query::* field) const;
+		std::vector<Query> bindQueryResults(const Query& query, const std::string& type, std::uint64_t Query::* field) const;
 		std::vector<Query> bindQueryNames(const Query& query, const std::string& type, std::string Query::* field) const;
 
 		bool testQuery(const Query& query) const;
@@ -100,7 +100,7 @@ namespace carto { namespace geocoding {
 		float calculateLangRank(const std::string& lang) const;
 
 		float getTokenRank(const unistring& unitoken) const;
-		float getPopulationRank(const std::string& type, long long id) const;
+		float getPopulationRank(const std::string& type, std::uint64_t id) const;
 
 		cglib::vec2<double> findOrigin() const;
 		boost::optional<std::regex> findHouseNumberRegex() const;
@@ -125,20 +125,20 @@ namespace carto { namespace geocoding {
 		boost::optional<cglib::vec2<double>> _location;
 		float _locationRadius = 100000; // default is 100km
 
-		mutable cache::lru_cache<long long, Address> _addressCache;
-		mutable cache::lru_cache<std::string, long long> _populationCache;
+		mutable cache::lru_cache<std::uint64_t, Address> _addressCache;
+		mutable cache::lru_cache<std::string, std::uint64_t> _populationCache;
 		mutable cache::lru_cache<std::string, float> _nameRankCache;
 		mutable cache::lru_cache<std::string, float> _tokenIDFCache;
 		mutable cache::lru_cache<std::string, bool> _emptyEntityQueryCache;
-		mutable cache::lru_cache<std::string, std::unordered_map<long long, Ranking>> _nameQueryCache;
-		mutable cache::lru_cache<std::string, std::vector<long long>> _tokenQueryCache;
-		mutable long long _previousEntityQueryCounter = 0;;
-		mutable long long _entityQueryCounter = 0;
-		mutable long long _nameQueryCounter = 0;
-		mutable long long _tokenQueryCounter = 0;
-		mutable long long _tokenIDFQueryCounter = 0;
-		mutable long long _populationQueryCounter = 0;
-		mutable long long _nameRankCounter = 0;
+		mutable cache::lru_cache<std::string, std::unordered_map<std::uint64_t, Ranking>> _nameQueryCache;
+		mutable cache::lru_cache<std::string, std::vector<std::uint64_t>> _tokenQueryCache;
+		mutable std::uint64_t _previousEntityQueryCounter = 0;;
+		mutable std::uint64_t _entityQueryCounter = 0;
+		mutable std::uint64_t _nameQueryCounter = 0;
+		mutable std::uint64_t _tokenQueryCounter = 0;
+		mutable std::uint64_t _tokenIDFQueryCounter = 0;
+		mutable std::uint64_t _populationQueryCounter = 0;
+		mutable std::uint64_t _nameRankCounter = 0;
 
 		cglib::vec2<double> _origin;
 		boost::optional<std::regex> _houseNumberRegex;

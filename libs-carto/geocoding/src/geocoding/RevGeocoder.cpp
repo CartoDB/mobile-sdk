@@ -84,7 +84,7 @@ namespace carto { namespace geocoding {
 		return boost::optional<cglib::bbox2<double>>();
 	}
 
-	std::vector<QuadIndex::GeometryInfo> RevGeocoder::findGeometryInfo(const std::vector<long long>& quadIndices, const PointConverter& converter) const {
+	std::vector<QuadIndex::GeometryInfo> RevGeocoder::findGeometryInfo(const std::vector<std::uint64_t>& quadIndices, const PointConverter& converter) const {
 		std::string sql = "SELECT rowid, geometry FROM entities WHERE quadindex in (";
 		for (std::size_t i = 0; i < quadIndices.size(); i++) {
 			if (i > 0) {
@@ -110,7 +110,7 @@ namespace carto { namespace geocoding {
 				for (unsigned int elementIndex = 1; !stream.eof(); elementIndex++) {
 					Feature feature = reader.readFeature();
 					if (std::shared_ptr<Geometry> geometry = feature.getGeometry()) {
-						long long encodedRowId = (static_cast<long long>(elementIndex) << 32) | rowId;
+						std::uint64_t encodedRowId = (static_cast<std::uint64_t>(elementIndex) << 32) | rowId;
 						geomInfos.emplace_back(encodedRowId, geometry);
 					}
 				}
