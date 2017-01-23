@@ -4,19 +4,17 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_GEOCODINGADDRESS_H_
-#define _CARTO_GEOCODINGADDRESS_H_
-
-#ifdef _CARTO_GEOCODING_SUPPORT
+#ifndef _CARTO_ADDRESS_H_
+#define _CARTO_ADDRESS_H_
 
 #include <string>
 #include <vector>
 
 namespace carto {
-    class GeocodingAddress {
+    class Address {
     public:
-        GeocodingAddress(const std::string& country, const std::string& region, const std::string& county, const std::string& locality, const std::string& neighbourhood, const std::string& street, const std::string& houseNumber, const std::string& name, const std::vector<std::string>& categories);
-        virtual ~GeocodingAddress();
+        Address(const std::string& country, const std::string& region, const std::string& county, const std::string& locality, const std::string& neighbourhood, const std::string& street, const std::string& houseNumber, const std::string& name, const std::vector<std::string>& categories);
+        virtual ~Address();
 
         const std::string& getCountry() const;
         const std::string& getRegion() const;
@@ -44,7 +42,5 @@ namespace carto {
     };
     
 }
-
-#endif
 
 #endif

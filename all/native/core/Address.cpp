@@ -1,12 +1,10 @@
-#ifdef _CARTO_GEOCODING_SUPPORT
-
-#include "GeocodingAddress.h"
+#include "Address.h"
 
 #include <sstream>
 
 namespace carto {
 
-    GeocodingAddress::GeocodingAddress(const std::string& country, const std::string& region, const std::string& county, const std::string& locality, const std::string& neighbourhood, const std::string& street, const std::string& houseNumber, const std::string& name, const std::vector<std::string>& categories) :
+    Address::Address(const std::string& country, const std::string& region, const std::string& county, const std::string& locality, const std::string& neighbourhood, const std::string& street, const std::string& houseNumber, const std::string& name, const std::vector<std::string>& categories) :
         _country(country),
         _region(region),
         _county(county),
@@ -19,46 +17,46 @@ namespace carto {
     {
     }
 
-    GeocodingAddress::~GeocodingAddress() {
+    Address::~Address() {
     }
 
-    const std::string& GeocodingAddress::getCountry() const {
+    const std::string& Address::getCountry() const {
         return _country;
     }
 
-    const std::string& GeocodingAddress::getRegion() const {
+    const std::string& Address::getRegion() const {
         return _region;
     }
 
-    const std::string& GeocodingAddress::getCounty() const {
+    const std::string& Address::getCounty() const {
         return _county;
     }
 
-    const std::string& GeocodingAddress::getLocality() const {
+    const std::string& Address::getLocality() const {
         return _locality;
     }
 
-    const std::string& GeocodingAddress::getNeighbourhood() const {
+    const std::string& Address::getNeighbourhood() const {
         return _neighbourhood;
     }
 
-    const std::string& GeocodingAddress::getStreet() const {
+    const std::string& Address::getStreet() const {
         return _street;
     }
 
-    const std::string& GeocodingAddress::getHouseNumber() const {
+    const std::string& Address::getHouseNumber() const {
         return _houseNumber;
     }
 
-    const std::string& GeocodingAddress::getName() const {
+    const std::string& Address::getName() const {
         return _name;
     }
 
-    const std::vector<std::string>& GeocodingAddress::getCategories() const {
+    const std::vector<std::string>& Address::getCategories() const {
         return _categories;
     }
 
-    std::string GeocodingAddress::toString() const {
+    std::string Address::toString() const {
         std::vector<std::pair<std::string, std::string> > items {
             { "country",       _country       },
             { "region",        _region        },
@@ -70,7 +68,7 @@ namespace carto {
             { "name",          _name          }
         };
         std::stringstream ss;
-        ss << "GeocodingAddress [";
+        ss << "Address [";
         bool empty = true;
         for (const std::pair<std::string, std::string>& item : items) {
             if (!item.second.empty()) {
@@ -89,5 +87,3 @@ namespace carto {
     }
     
 }
-
-#endif
