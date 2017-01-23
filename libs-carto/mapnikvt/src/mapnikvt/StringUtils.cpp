@@ -1,5 +1,6 @@
 #include "StringUtils.h"
 
+#include <cstdint>
 #include <utility>
 #include <algorithm>
 #include <regex>
@@ -7,7 +8,7 @@
 #include <utf8.h>
 
 namespace {
-    std::pair<unsigned int, unsigned int> upperToLower[] = {
+    std::pair<std::uint32_t, std::uint32_t> upperToLower[] = {
             { 0x0041, 0x0061 }, { 0x0042, 0x0062 }, { 0x0043, 0x0063 }, { 0x0044, 0x0064 },
             { 0x0045, 0x0065 }, { 0x0046, 0x0066 }, { 0x0047, 0x0067 }, { 0x0048, 0x0068 },
             { 0x0049, 0x0069 }, { 0x004a, 0x006a }, { 0x004b, 0x006b }, { 0x004c, 0x006c },
@@ -247,7 +248,7 @@ namespace {
             { 0xff39, 0xff59 }, { 0xff3a, 0xff5a },
     };
 
-    std::pair<unsigned int, unsigned int> lowerToUpper[] = {
+    std::pair<std::uint32_t, std::uint32_t> lowerToUpper[] = {
             { 0x0061, 0x0041 }, { 0x0062, 0x0042 }, { 0x0063, 0x0043 }, { 0x0064, 0x0044 },
             { 0x0065, 0x0045 }, { 0x0066, 0x0046 }, { 0x0067, 0x0047 }, { 0x0068, 0x0048 },
             { 0x0069, 0x0049 }, { 0x006a, 0x004a }, { 0x006b, 0x004b }, { 0x006c, 0x004c },
@@ -487,47 +488,49 @@ namespace {
             { 0xff59, 0xff39 }, { 0xff5a, 0xff3a },
     };
 
-    unsigned int translate(unsigned int c, const std::pair<unsigned int, unsigned int>* table, std::size_t count) {
+    std::uint32_t translate(std::uint32_t c, const std::pair<std::uint32_t, std::uint32_t>* table, std::size_t count) {
         auto begin = table;
         auto end = table + count;
-        auto it = std::upper_bound(begin, end, std::pair<unsigned int, unsigned int>(c, 0U));
+        auto it = std::upper_bound(begin, end, std::pair<std::uint32_t, std::uint32_t>(c, 0U));
         return it == end ? c : (it->first != c ? c : it->second);
     }
+
+    using unistring = std::basic_string<std::uint32_t>;
 }
 
 namespace carto { namespace mvt {
     std::size_t stringLength(const std::string& str) {
-        std::basic_string<unsigned int> wstr;
-        utf8::utf8to32(str.begin(), str.end(), std::back_inserter(wstr));
-        return wstr.size();
+        unistring unistr;
+        utf8::utf8to32(str.begin(), str.end(), std::back_inserter(unistr));
+        return unistr.size();
     }
 
     std::string toUpper(const std::string& str) {
-        std::basic_string<unsigned int> wstr;
-        utf8::utf8to32(str.begin(), str.end(), std::back_inserter(wstr));
-        std::transform(wstr.begin(), wstr.end(), wstr.begin(), [](unsigned int c) { return translate(c, lowerToUpper, sizeof(lowerToUpper) / sizeof(lowerToUpper[0])); });
+        unistring unistr;
+        utf8::utf8to32(str.begin(), str.end(), std::back_inserter(unistr));
+        std::transform(unistr.begin(), unistr.end(), unistr.begin(), [](std::uint32_t c) { return translate(c, lowerToUpper, sizeof(lowerToUpper) / sizeof(lowerToUpper[0])); });
         std::string result;
-        utf8::utf32to8(wstr.begin(), wstr.end(), std::back_inserter(result));
+        utf8::utf32to8(unistr.begin(), unistr.end(), std::back_inserter(result));
         return result;
     }
 
     std::string toLower(const std::string& str) {
-        std::basic_string<unsigned int> wstr;
-        utf8::utf8to32(str.begin(), str.end(), std::back_inserter(wstr));
-        std::transform(wstr.begin(), wstr.end(), wstr.begin(), [](unsigned int c) { return translate(c, upperToLower, sizeof(upperToLower) / sizeof(upperToLower[0])); });
+        unistring unistr;
+        utf8::utf8to32(str.begin(), str.end(), std::back_inserter(unistr));
+        std::transform(unistr.begin(), unistr.end(), unistr.begin(), [](std::uint32_t c) { return translate(c, upperToLower, sizeof(upperToLower) / sizeof(upperToLower[0])); });
         std::string result;
-        utf8::utf32to8(wstr.begin(), wstr.end(), std::back_inserter(result));
+        utf8::utf32to8(unistr.begin(), unistr.end(), std::back_inserter(result));
         return result;
     }
 
     std::string capitalize(const std::string& str) {
-        std::basic_string<unsigned int> wstr;
-        utf8::utf8to32(str.begin(), str.end(), std::back_inserter(wstr));
-        if (!wstr.empty()) {
-            wstr[0] = translate(wstr[0], lowerToUpper, sizeof(lowerToUpper) / sizeof(lowerToUpper[0]));
+        unistring unistr;
+        utf8::utf8to32(str.begin(), str.end(), std::back_inserter(unistr));
+        if (!unistr.empty()) {
+            unistr[0] = translate(unistr[0], lowerToUpper, sizeof(lowerToUpper) / sizeof(lowerToUpper[0]));
         }
         std::string result;
-        utf8::utf32to8(wstr.begin(), wstr.end(), std::back_inserter(result));
+        utf8::utf32to8(unistr.begin(), unistr.end(), std::back_inserter(result));
         return result;
     }
 

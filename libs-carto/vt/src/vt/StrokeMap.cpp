@@ -6,7 +6,7 @@ namespace carto { namespace vt {
         _width(width), _height(0), _strokeMap(), _bitmapStrokeMap(), _bitmapPattern(), _mutex()
     {
         int height = 1;
-        std::vector<std::uint32_t> data(width * 1, static_cast<std::uint32_t>(-1));
+        std::vector<std::uint32_t> data(width * 1, 0xffffffffU);
 
         _strokeMap[0] = std::unique_ptr<Stroke>(new Stroke(65536.0f, 0, height));
         _bitmapPattern = std::make_shared<BitmapPattern>(1.0f, 1.0f, std::make_shared<Bitmap>(width, 1, std::move(data)));
@@ -61,13 +61,13 @@ namespace carto { namespace vt {
 
         int height = _height + scaledBitmap->height;
         int pow2Height = 1;
-        while (pow2Height < height) { pow2Height *= 2; }
-        std::vector<std::uint32_t> data(_width * pow2Height);
+        while (pow2Height <= height) { pow2Height *= 2; } // ensure that extra white line is always included
+        std::vector<std::uint32_t> data(_width * pow2Height, 0xffffffffU);
         std::copy(sourceBitmap->data.begin(), sourceBitmap->data.begin() + _width * _height, data.begin());
         std::copy(scaledBitmap->data.begin(), scaledBitmap->data.end(), data.begin() + _width * _height);
 
         StrokeId strokeId = static_cast<StrokeId>(_strokeMap.size());
-        _strokeMap[strokeId] = std::unique_ptr<Stroke>(new Stroke(bitmapPattern->widthScale * patternWidth, _height, height));
+        _strokeMap[strokeId] = std::unique_ptr<Stroke>(new Stroke(bitmapPattern->widthScale, _height, height));
         _bitmapStrokeMap[bitmapPattern] = strokeId;
         _bitmapPattern = std::make_shared<BitmapPattern>(1.0f, 1.0f, std::make_shared<Bitmap>(_width, pow2Height, std::move(data)));
         _height = height;
