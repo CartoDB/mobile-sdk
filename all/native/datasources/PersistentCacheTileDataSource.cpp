@@ -41,6 +41,10 @@ namespace carto {
         if (!_database) {
             Log::Error("PersistentCacheTileDataSource::loadTile: Could not connect to the database, loading tile without caching");
         }
+
+        if (_cache.empty()) {
+            loadTileInfo();
+        }
         
         std::shared_ptr<TileData> tileData;
 
@@ -140,24 +144,8 @@ namespace carto {
             _database.reset();
             return;
         }
-        
-        // Get tile ids and sizes ordered by the timestamp from the database
-        try {
-            sqlite3pp::query query(*_database, "SELECT tileId, LENGTH(compressed) FROM persistent_cache ORDER BY time ASC");
-            for (auto it = query.begin(); it != query.end(); ++it) {
-                long long tileId = (*it).get<uint64_t>(0);
-                int tileSize = (*it).get<int>(1);
-                if (_cache.capacity() < _cache.size() + tileSize) {
-                    _cache.resize(_cache.size() + tileSize); // if cache size is not configured yet, just increase the capacity until everything can be loaded
-                }
-                _cache.put(tileId, createTileId(tileId), tileSize);
-            }
-            query.finish();
-        } catch (const std::exception& e) {
-            Log::Errorf("PersistentCacheTileDataSource::openDatabase: Failed to query tile set from the database: %s", e.what());
-        }
     }
-    
+
     void PersistentCacheTileDataSource::closeDatabase() {
         if (!_database) {
             return;
@@ -174,6 +162,25 @@ namespace carto {
         }
 
         _cache.clear(); // NOTE: as the database is closed at this point, elements are not removed
+    }
+    
+    void PersistentCacheTileDataSource::loadTileInfo() {
+        if (!_database) {
+            return;
+        }
+
+        // Get tile ids and sizes ordered by the timestamp from the database
+        try {
+            sqlite3pp::query query(*_database, "SELECT tileId, LENGTH(compressed) FROM persistent_cache ORDER BY time ASC");
+            for (auto it = query.begin(); it != query.end(); ++it) {
+                long long tileId = (*it).get<uint64_t>(0);
+                int tileSize = (*it).get<int>(1);
+                _cache.put(tileId, createTileId(tileId), tileSize);
+            }
+            query.finish();
+        } catch (const std::exception& e) {
+            Log::Errorf("PersistentCacheTileDataSource::loadTileInfo: Failed to query tile set from the database: %s", e.what());
+        }
     }
     
     std::shared_ptr<TileData> PersistentCacheTileDataSource::get(long long tileId) {
