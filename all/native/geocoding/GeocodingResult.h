@@ -14,18 +14,17 @@
 #include <memory>
 
 namespace carto {
-    class Geometry;
+    class FeatureCollection;
     class Projection;
 
     class GeocodingResult {
     public:
-        GeocodingResult(const std::shared_ptr<Projection>& projection, long long id, const GeocodingAddress& address, float rank, const std::shared_ptr<Geometry>& geometry);
+        GeocodingResult(const std::shared_ptr<Projection>& projection, const GeocodingAddress& address, float rank, const std::shared_ptr<FeatureCollection>& featureCollection);
         virtual ~GeocodingResult();
 
-        long long getId() const;
         const GeocodingAddress& getAddress() const;
         float getRank() const;
-        const std::shared_ptr<Geometry>& getGeometry() const;
+        const std::shared_ptr<FeatureCollection>& getFeatureCollection() const;
 
         /**
          * Returns the projection of the geometry in the result.
@@ -36,10 +35,9 @@ namespace carto {
         std::string toString() const;
         
     private:
-        long long _id;
         GeocodingAddress _address;
         float _rank;
-        std::shared_ptr<Geometry> _geometry;
+        std::shared_ptr<FeatureCollection> _featureCollection;
         std::shared_ptr<Projection> _projection;
     };
     

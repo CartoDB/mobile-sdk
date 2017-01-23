@@ -36,7 +36,7 @@ namespace carto { namespace geocoding {
 		std::string getLanguage() const;
 		void setLanguage(const std::string& language);
 
-		boost::optional<Address> findAddress(double lng, double lat) const;
+		std::vector<std::pair<Address, float>> findAddresses(double lng, double lat) const;
 
 	private:
 		cglib::vec2<double> findOrigin() const;
@@ -46,8 +46,8 @@ namespace carto { namespace geocoding {
 
 		static constexpr std::size_t QUERY_CACHE_SIZE = 64;
 		
-		float _radius = 100.0f;
-		std::string _language;
+		float _radius = 100.0f; // default search radius is 100m
+		std::string _language; // use local language by default
 
 		mutable cache::lru_cache<std::string, std::vector<QuadIndex::GeometryInfo>> _queryCache;
 

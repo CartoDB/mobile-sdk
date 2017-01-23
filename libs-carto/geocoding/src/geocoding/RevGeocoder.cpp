@@ -31,7 +31,7 @@ namespace carto { namespace geocoding {
 		_language = language;
 	}
 
-	boost::optional<Address> RevGeocoder::findAddress(double lng, double lat) const {
+	std::vector<std::pair<Address, float>> RevGeocoder::findAddresses(double lng, double lat) const {
 		std::lock_guard<std::recursive_mutex> lock(_mutex);
 
 		if (_bounds) {
@@ -41,21 +41,25 @@ namespace carto { namespace geocoding {
 			cglib::vec2<double> diff = point - cglib::vec2<double>(lng, lat);
 			double dist = cglib::length(cglib::vec2<double>(diff(0) * lngLatMeters(0), diff(1) * lngLatMeters(1)));
 			if (dist > _radius) {
-				return boost::optional<Address>();
+				return std::vector<std::pair<Address, float>>();
 			}
 		}
 
 		QuadIndex index(std::bind(&RevGeocoder::findGeometryInfo, this, std::placeholders::_1, std::placeholders::_2));
 		std::vector<QuadIndex::Result> results = index.findGeometries(lng, lat, _radius);
-		if (results.empty()) {
-			return boost::optional<Address>();
-		}
 
-		Address address;
-		address.loadFromDB(_db, results.front().first, _language, [this](const cglib::vec2<double>& pos) {
-			return _origin + pos;
-		});
-		return address;
+		std::vector<std::pair<Address, float>> addresses;
+		for (const QuadIndex::Result& result : results) {
+			float rank = 1.0f - static_cast<float>(result.second) / _radius;
+			if (rank > 0) {
+				Address address;
+				address.loadFromDB(_db, result.first, _language, [this](const cglib::vec2<double>& pos) {
+					return _origin + pos;
+				});
+				addresses.emplace_back(address, rank);
+			}
+		}
+		return addresses;
 	}
 
 	cglib::vec2<double> RevGeocoder::findOrigin() const {

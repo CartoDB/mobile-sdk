@@ -3,11 +3,10 @@
 #include "GeocodingAddress.h"
 
 #include <sstream>
-#include <vector>
 
 namespace carto {
 
-    GeocodingAddress::GeocodingAddress(const std::string& country, const std::string& region, const std::string& county, const std::string& locality, const std::string& neighbourhood, const std::string& street, const std::string& houseNumber, const std::string& name) :
+    GeocodingAddress::GeocodingAddress(const std::string& country, const std::string& region, const std::string& county, const std::string& locality, const std::string& neighbourhood, const std::string& street, const std::string& houseNumber, const std::string& name, const std::vector<std::string>& categories) :
         _country(country),
         _region(region),
         _county(county),
@@ -15,7 +14,8 @@ namespace carto {
         _neighbourhood(neighbourhood),
         _street(street),
         _houseNumber(houseNumber),
-        _name(name)
+        _name(name),
+        _categories(categories)
     {
     }
 
@@ -54,6 +54,10 @@ namespace carto {
         return _name;
     }
 
+    const std::vector<std::string>& GeocodingAddress::getCategories() const {
+        return _categories;
+    }
+
     std::string GeocodingAddress::toString() const {
         std::vector<std::pair<std::string, std::string> > items {
             { "country",       _country       },
@@ -72,6 +76,12 @@ namespace carto {
             if (!item.second.empty()) {
                 ss << (empty ? "" : ", ") << item.first << "=" << item.second;
                 empty = false;
+            }
+        }
+        if (!_categories.empty()) {
+            ss << (empty ? "" : ", ") << "categories=";
+            for (std::size_t i = 0; i < _categories.size(); i++) {
+                ss << (i == 0 ? "" : ";") << _categories[i];
             }
         }
         ss << "]";

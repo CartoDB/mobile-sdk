@@ -7,12 +7,14 @@
 #ifndef _CARTO_GEOCODING_ADDRESS_H_
 #define _CARTO_GEOCODING_ADDRESS_H_
 
-#include "Geometry.h"
-#include "GeometryReader.h"
+#include "Feature.h"
+#include "FeatureReader.h"
 
+#include <cstdint>
 #include <memory>
 #include <string>
-#include <cstdint>
+#include <vector>
+#include <set>
 
 namespace sqlite3pp {
 	class database;
@@ -20,7 +22,6 @@ namespace sqlite3pp {
 
 namespace carto { namespace geocoding {
 	struct Address final {
-		std::uint64_t id = 0;
 		std::string country;
 		std::string region;
 		std::string county;
@@ -30,7 +31,8 @@ namespace carto { namespace geocoding {
 		std::string postcode;
 		std::string houseNumber;
 		std::string name;
-		std::shared_ptr<Geometry> geometry;
+		std::vector<Feature> features;
+		std::set<std::string> categories;
 
 		bool loadFromDB(sqlite3pp::database& db, std::uint64_t encodedRowId, const std::string& language, const PointConverter& converter);
 

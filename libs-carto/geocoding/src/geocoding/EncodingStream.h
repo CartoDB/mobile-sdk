@@ -20,7 +20,7 @@ namespace carto { namespace geocoding {
 		bool eof() const { return _offset >= _size; }
 
 		template <typename T>
-		T decodeNumber() {
+		T readNumber() {
 			long long num = 0;
 			while (true) {
 				if (_offset >= _size) {
@@ -38,23 +38,23 @@ namespace carto { namespace geocoding {
 		}
 
 		template <typename T>
-		T decodeDeltaNumber() {
-			long long num = _prevNum + decodeNumber<long long>();
+		T readDeltaNumber() {
+			long long num = _prevNum + readNumber<long long>();
 			_prevNum = num;
 			return static_cast<T>(num);
 		}
 
-		cglib::vec2<double> decodeDeltaCoord(double scale) {
-			long long x = _prevX + decodeNumber<long long>();
-			long long y = _prevY + decodeNumber<long long>();
+		cglib::vec2<double> readDeltaCoord(double scale) {
+			long long x = _prevX + readNumber<long long>();
+			long long y = _prevY + readNumber<long long>();
 			_prevX = x;
 			_prevY = y;
 			return { static_cast<double>(x) * scale, static_cast<double>(y) * scale };
 		}
 
-		std::string decodeString() {
+		std::string readString() {
 			std::size_t offset = _offset;
-			std::size_t len = decodeNumber<std::size_t>();
+			std::size_t len = readNumber<std::size_t>();
 			if (offset + len > _size) {
 				throw std::runtime_error("Offset out of bounds");
 			}

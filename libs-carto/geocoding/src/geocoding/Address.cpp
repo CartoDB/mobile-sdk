@@ -48,8 +48,7 @@ namespace carto { namespace geocoding {
 			postcode      = findField("postcode",      qit->get<std::uint64_t>(6));
 			name          = findField("name",          qit->get<std::uint64_t>(7));
 
-			id = 0;
-			geometry.reset();
+			features.clear();
 			if (auto encodedGeometry = qit->get<const void *>(8)) {
 				EncodingStream stream(encodedGeometry, qit->column_bytes(8));
 				FeatureReader reader(stream, converter);
@@ -57,25 +56,11 @@ namespace carto { namespace geocoding {
 					for (unsigned int i = 1; i < elementIndex; i++) {
 						reader.readFeature();
 					}
-					Feature feature = reader.readFeature();
-					id = feature.getId();
-					geometry = feature.getGeometry();
+					features.push_back(reader.readFeature());
 				}
 				else {
-					std::vector<std::uint64_t> ids;
-					std::vector<std::shared_ptr<Geometry>> geometries;
 					while (!stream.eof()) {
-						Feature feature = reader.readFeature();
-						ids.push_back(feature.getId());
-						geometries.push_back(feature.getGeometry());
-					}
-					if (geometries.size() != 1) {
-						id = 0;
-						geometry = std::make_shared<MultiGeometry>(geometries);
-					}
-					else {
-						id = ids.front();
-						geometry = geometries.front();
+						features.push_back(reader.readFeature());
 					}
 				}
 			}
@@ -91,6 +76,15 @@ namespace carto { namespace geocoding {
 					houseNumber = (houseNumberVector.size() == 1 ? houseNumberVector.front() : std::string());
 				}
 			}
+
+				
+			categories.clear();
+			sqlite3pp::query query2(db, "SELECT c.category FROM entitycategories ec, categories c WHERE ec.entity_rowid=:rowId AND ec.category_id=c.id");
+			query2.bind(":rowId", rowId);
+			for (auto qit2 = query2.begin(); qit2 != query2.end(); qit2++) {
+				categories.insert(qit2->get<const char*>(0));
+			}
+
 			return true;
 		}
 		return false;
@@ -98,25 +92,13 @@ namespace carto { namespace geocoding {
 
 	bool Address::merge(const Address& address) {
 		if (address.country == country && address.region == region && address.county == county && address.locality == locality && address.neighbourhood == neighbourhood && address.street == street && address.name == name && address.houseNumber.empty() == houseNumber.empty()) {
-			if (address.id != id) {
-				id = 0;
-			}
 			if (!houseNumber.empty()) {
 				houseNumber += "," + address.houseNumber;
 			}
-			if (!geometry) {
-				geometry = address.geometry;
-			}
-			else if (address.geometry) {
-				std::vector<std::shared_ptr<Geometry>> geometries = { address.geometry };
-				if (auto multiGeometry = std::dynamic_pointer_cast<MultiGeometry>(geometry)) {
-					geometries.insert(geometries.end(), multiGeometry->getGeometries().begin(), multiGeometry->getGeometries().end());
-				}
-				else {
-					geometries.push_back(geometry);
-				}
-				geometry = std::make_shared<MultiGeometry>(std::move(geometries));
-			}
+
+			features.insert(features.end(), address.features.begin(), address.features.end());
+			categories.insert(address.categories.begin(), address.categories.end());
+
 			return true;
 		}
 		return false;

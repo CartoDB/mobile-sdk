@@ -44,7 +44,7 @@ namespace carto { namespace geocoding {
 		float getLocationRadius() const;
 		void setLocationRadius(float radius);
 
-		std::vector<Address> findAddresses(const std::string& queryString) const;
+		std::vector<std::pair<Address, float>> findAddresses(const std::string& queryString) const;
 
 	private:
 		struct Ranking {
@@ -120,9 +120,9 @@ namespace carto { namespace geocoding {
 		static constexpr std::size_t TOKEN_QUERY_CACHE_SIZE = 512;
 		static constexpr std::size_t EMPTY_ENTITY_QUERY_CACHE_SIZE = 8192;
 
-		bool _autocomplete = false;
-		std::string _language;
-		boost::optional<cglib::vec2<double>> _location;
+		bool _autocomplete = false; // no autocomplete by default
+		std::string _language; // use local language by default
+		boost::optional<cglib::vec2<double>> _location; // no location by default
 		float _locationRadius = 100000; // default is 100km
 
 		mutable cache::lru_cache<std::uint64_t, Address> _addressCache;

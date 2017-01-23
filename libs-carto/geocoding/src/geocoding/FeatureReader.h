@@ -20,10 +20,11 @@ namespace carto { namespace geocoding {
 		explicit FeatureReader(EncodingStream& stream, const PointConverter& converter) : _stream(stream), _geometryReader(stream, converter) { }
 
 		Feature readFeature() {
-			std::uint64_t id = _stream.decodeDeltaNumber<std::uint64_t>();
+			std::uint64_t id = _stream.readDeltaNumber<std::uint64_t>();
 			std::shared_ptr<Geometry> geometry = _geometryReader.readGeometry();
-			std::string extra = _stream.decodeString();
-			return Feature(id, geometry);
+			std::string extra = _stream.readString(); // TODO: drop
+			std::map<std::string, Value> properties; // TODO: read
+			return Feature(id, std::move(geometry), std::move(properties));
 		}
 
 	private:

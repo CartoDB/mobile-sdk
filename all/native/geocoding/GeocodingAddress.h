@@ -10,11 +10,12 @@
 #ifdef _CARTO_GEOCODING_SUPPORT
 
 #include <string>
+#include <vector>
 
 namespace carto {
     class GeocodingAddress {
     public:
-        GeocodingAddress(const std::string& country, const std::string& region, const std::string& county, const std::string& locality, const std::string& neighbourhood, const std::string& street, const std::string& houseNumber, const std::string& name);
+        GeocodingAddress(const std::string& country, const std::string& region, const std::string& county, const std::string& locality, const std::string& neighbourhood, const std::string& street, const std::string& houseNumber, const std::string& name, const std::vector<std::string>& categories);
         virtual ~GeocodingAddress();
 
         const std::string& getCountry() const;
@@ -25,6 +26,8 @@ namespace carto {
         const std::string& getStreet() const;
         const std::string& getHouseNumber() const;
         const std::string& getName() const;
+
+        const std::vector<std::string>& getCategories() const;
 
         std::string toString() const;
         
@@ -37,6 +40,7 @@ namespace carto {
         std::string _street;
         std::string _houseNumber;
         std::string _name;
+        std::vector<std::string> _categories;
     };
     
 }

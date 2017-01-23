@@ -17,13 +17,16 @@
 
 namespace carto {
     namespace geocoding {
-        class Address;
+        struct Address;
         class Geometry;
+        class Feature;
         class Geocoder;
         class RevGeocoder;
     }
 
     class Geometry;
+    class Feature;
+    class FeatureCollection;
     
     class GeocodingProxy {
     public:
@@ -34,7 +37,9 @@ namespace carto {
     private:
         GeocodingProxy();
 
-        static std::shared_ptr<GeocodingResult> TranslateAddress(const std::shared_ptr<Projection>& proj, const geocoding::Address& addr);
+        static std::shared_ptr<GeocodingResult> TranslateAddress(const std::shared_ptr<Projection>& proj, const geocoding::Address& addr, float rank);
+
+        static std::shared_ptr<Feature> TranslateFeature(const std::shared_ptr<Projection>& proj, const geocoding::Feature& feature);
 
         static std::shared_ptr<Geometry> TranslateGeometry(const std::shared_ptr<Projection>& proj, const std::shared_ptr<geocoding::Geometry>& geom);
     };

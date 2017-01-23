@@ -7,7 +7,7 @@
 
 #ifdef _CARTO_GEOCODING_SUPPORT
 
-!proxy_imports(carto::GeocodingResult, geocoding.GeocodingAddress, geometry.Geometry, projections.Projection)
+!proxy_imports(carto::GeocodingResult, geocoding.GeocodingAddress, geometry.FeatureCollection, projections.Projection)
 
 %{
 #include "geocoding/GeocodingResult.h"
@@ -20,15 +20,14 @@
 %include <cartoswig.i>
 
 %import "geocoding/GeocodingAddress.i"
-%import "geometry/Geometry.i"
+%import "geometry/FeatureCollection.i"
 %import "projections/Projection.i"
 
 !shared_ptr(carto::GeocodingResult, geocoding.GeocodingResult)
 
 %attributestring(carto::GeocodingResult, std::shared_ptr<carto::Projection>, Projection, getProjection)
-%attributestring(carto::GeocodingResult, std::shared_ptr<carto::Geometry>, Geometry, getGeometry)
+%attributestring(carto::GeocodingResult, std::shared_ptr<carto::FeatureCollection>, FeatureCollection, getFeatureCollection)
 %attributeval(carto::GeocodingResult, carto::GeocodingAddress, Address, getAddress)
-%attribute(carto::GeocodingResult, long long, Id, getId)
 %attribute(carto::GeocodingResult, float, Rank, getRank)
 %std_exceptions(carto::GeocodingResult::GeocodingResult)
 !standard_equals(carto::GeocodingResult);

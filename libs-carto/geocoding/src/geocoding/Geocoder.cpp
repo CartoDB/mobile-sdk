@@ -61,7 +61,7 @@ namespace carto { namespace geocoding {
 		_locationRadius = radius;
 	}
 
-	std::vector<Address> Geocoder::findAddresses(const std::string& queryString) const {
+	std::vector<std::pair<Address, float>> Geocoder::findAddresses(const std::string& queryString) const {
 		std::lock_guard<std::recursive_mutex> lock(_mutex);
 
 		std::string safeQueryString = boost::replace_all_copy(boost::replace_all_copy(queryString, "%", ""), "_", "");
@@ -94,8 +94,7 @@ namespace carto { namespace geocoding {
 		}
 
 		// Create address data from the results by merging consecutive results, if possible
-		std::vector<Address> addresses;
-		float lastRank = -1;
+		std::vector<std::pair<Address, float>> addresses;
 		for (const Result& result : results) {
 			if (addresses.size() >= MAX_RESULTS) {
 				break;
@@ -109,13 +108,12 @@ namespace carto { namespace geocoding {
 				_addressCache.put(result.encodedRowId, address);
 			}
 
-			if (!addresses.empty() && result.ranking.rank() == lastRank) {
-				if (addresses.back().merge(address)) {
+			if (!addresses.empty() && result.ranking.rank() == addresses.back().second) {
+				if (addresses.back().first.merge(address)) {
 					continue;
 				}
 			}
-			addresses.push_back(std::move(address));
-			lastRank = result.ranking.rank();
+			addresses.emplace_back(address, result.ranking.rank());
 		}
 		return addresses;
 	}
