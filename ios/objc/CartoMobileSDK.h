@@ -10,6 +10,7 @@
 #import "NTOptions.h"
 #import "NTLayers.h"
 
+#import "NTAddress.h"
 #import "NTMapBounds.h"
 #import "NTMapEnvelope.h"
 #import "NTMapPos.h"
@@ -19,6 +20,7 @@
 #import "NTMapTile.h"
 #import "NTMapVec.h"
 #import "NTTileData.h"
+#import "NTVariant.h"
 
 #import "NTAssetTileDataSource.h"
 #import "NTBitmapOverlayRasterTileDataSource.h"
@@ -151,7 +153,6 @@
 #endif
 
 #ifdef _CARTO_GEOCODING_SUPPORT
-#import "NTGeocodingAddress.h"
 #import "NTGeocodingRequest.h"
 #import "NTGeocodingResult.h"
 #import "NTGeocodingService.h"
