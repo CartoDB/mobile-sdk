@@ -155,7 +155,7 @@ namespace carto { namespace geocoding {
 		float rating(const WordVector& query, const WordVector& candidates) const {
 			AlignmentVector alignment;
 			alignWords(query, candidates, alignment);
-			return 0.75f * ratingQ(query, candidates, alignment) + 0.25f * ratingC(query, candidates, alignment);
+			return Q_RATING_WEIGHT * ratingQ(query, candidates, alignment) + (1.0f - Q_RATING_WEIGHT) * ratingC(query, candidates, alignment);
 		}
 
 		static WordVector splitString(T str) {
@@ -166,6 +166,8 @@ namespace carto { namespace geocoding {
 			boost::split(tokens, str, boost::is_any_of(whitespace), boost::token_compress_on);
 			return tokens;
 		}
+
+		static constexpr float Q_RATING_WEIGHT = 0.75f;
 
 		int _maxDist = std::numeric_limits<int>::max();
 		float _percentageCost = 1.0f;

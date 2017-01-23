@@ -11,11 +11,11 @@
 #include "GeometryReader.h"
 #include "ProjUtils.h"
 
-#include <tuple>
+#include <cstdint>
 #include <cmath>
+#include <tuple>
 #include <vector>
 #include <functional>
-#include <cstdint>
 
 namespace carto { namespace geocoding {
 	class QuadIndex {
