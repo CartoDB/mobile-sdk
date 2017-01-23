@@ -72,6 +72,7 @@ namespace carto {
 
         void openDatabase(const std::string& databasePath);
         void closeDatabase();
+        void loadTileInfo();
         
         std::shared_ptr<TileData> get(long long tileId);
         void store(long long tileId, const std::shared_ptr<TileData>& tileData);
