@@ -30,6 +30,11 @@ namespace sqlite3pp {
 namespace carto { namespace geocoding {
 	class Geocoder final {
 	public:
+		struct Options {
+			boost::optional<cglib::vec2<double>> location; // default is no location bias
+			float locationRadius = 100000; // default is 100km
+		};
+		
 		explicit Geocoder(sqlite3pp::database& db) : _addressCache(ADDRESS_CACHE_SIZE), _populationCache(POPULATION_CACHE_SIZE), _nameRankCache(NAME_RANK_CACHE_SIZE), _tokenIDFCache(TOKEN_IDF_CACHE_SIZE), _emptyEntityQueryCache(EMPTY_ENTITY_QUERY_CACHE_SIZE), _nameQueryCache(NAME_QUERY_CACHE_SIZE), _tokenQueryCache(TOKEN_QUERY_CACHE_SIZE), _db(db) { _origin = findOrigin(); _houseNumberRegex = findHouseNumberRegex(); }
 
 		bool getAutocomplete() const;
@@ -38,13 +43,7 @@ namespace carto { namespace geocoding {
 		std::string getLanguage() const;
 		void setLanguage(const std::string& language);
 
-		boost::optional<cglib::vec2<double>> getLocation() const;
-		void setLocation(const boost::optional<cglib::vec2<double>>& location);
-
-		float getLocationRadius() const;
-		void setLocationRadius(float radius);
-
-		std::vector<std::pair<Address, float>> findAddresses(const std::string& queryString) const;
+		std::vector<std::pair<Address, float>> findAddresses(const std::string& queryString, const Options& options) const;
 
 	private:
 		struct Ranking {
@@ -55,6 +54,7 @@ namespace carto { namespace geocoding {
 		};
 		
 		struct Query {
+			Options options;
 			TokenList<std::string> tokenList;
 			std::uint64_t countryId = 0;
 			std::uint64_t regionId = 0;
@@ -122,8 +122,6 @@ namespace carto { namespace geocoding {
 
 		bool _autocomplete = false; // no autocomplete by default
 		std::string _language; // use local language by default
-		boost::optional<cglib::vec2<double>> _location; // no location by default
-		float _locationRadius = 100000; // default is 100km
 
 		mutable cache::lru_cache<std::uint64_t, Address> _addressCache;
 		mutable cache::lru_cache<std::string, std::uint64_t> _populationCache;

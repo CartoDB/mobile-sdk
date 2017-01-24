@@ -41,32 +41,13 @@ namespace carto { namespace geocoding {
 		_language = language;
 	}
 
-	boost::optional<cglib::vec2<double>> Geocoder::getLocation() const {
-		std::lock_guard<std::recursive_mutex> lock(_mutex);
-		return _location;
-	}
-	
-	void Geocoder::setLocation(const boost::optional<cglib::vec2<double>>& location) {
-		std::lock_guard<std::recursive_mutex> lock(_mutex);
-		_location = location;
-	}
-
-	float Geocoder::getLocationRadius() const {
-		std::lock_guard<std::recursive_mutex> lock(_mutex);
-		return _locationRadius;
-	}
-	
-	void Geocoder::setLocationRadius(float radius) {
-		std::lock_guard<std::recursive_mutex> lock(_mutex);
-		_locationRadius = radius;
-	}
-
-	std::vector<std::pair<Address, float>> Geocoder::findAddresses(const std::string& queryString) const {
+	std::vector<std::pair<Address, float>> Geocoder::findAddresses(const std::string& queryString, const Options& options) const {
 		std::lock_guard<std::recursive_mutex> lock(_mutex);
 
 		std::string safeQueryString = boost::replace_all_copy(boost::replace_all_copy(queryString, "%", ""), "_", "");
 
 		Query query;
+		query.options = options;
 		query.tokenList = TokenList<std::string>::build(safeQueryString);
 		if (_autocomplete && !safeQueryString.empty()) {
 			char lastChar = safeQueryString.back();
@@ -318,17 +299,17 @@ namespace carto { namespace geocoding {
 
 			// Do location based ranking
 			float locationRank = 1.0f;
-			if (_location) {
+			if (query.options.location) {
 				if (auto encodedFeatures = qit->get<const void*>(2)) {
 					EncodingStream stream(encodedFeatures, qit->column_bytes(2));
 					FeatureReader reader(stream, mercatorConverter);
-					float minDist = _locationRadius;
+					float minDist = query.options.locationRadius;
 					for (unsigned int currentIndex = 1; !stream.eof(); currentIndex++) {
 						for (const Feature& feature : reader.readFeatureCollection()) {
 							if (std::shared_ptr<Geometry> geometry = feature.getGeometry()) {
 								if (!elementIndex || elementIndex == currentIndex) {
-									cglib::vec2<double> mercatorMeters = webMercatorMeters(*_location);
-									cglib::vec2<double> mercatorLocation = wgs84ToWebMercator(*_location);
+									cglib::vec2<double> mercatorMeters = webMercatorMeters(*query.options.location);
+									cglib::vec2<double> mercatorLocation = wgs84ToWebMercator(*query.options.location);
 									cglib::vec2<double> point = geometry->calculateNearestPoint(mercatorLocation);
 									cglib::vec2<double> diff = point - mercatorLocation;
 									float dist = static_cast<float>(cglib::length(cglib::vec2<double>(diff(0) * mercatorMeters(0), diff(1) * mercatorMeters(1))));
