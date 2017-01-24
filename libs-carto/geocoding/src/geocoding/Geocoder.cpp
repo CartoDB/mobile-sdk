@@ -101,11 +101,11 @@ namespace carto { namespace geocoding {
 			}
 
 			Address address;
-			if (!_addressCache.read(result.encodedRowId, address)) {
-				address.loadFromDB(_db, result.encodedRowId, _language, [this](const cglib::vec2<double>& pos) {
+			if (!_addressCache.read(result.encodedId, address)) {
+				address.loadFromDB(_db, result.encodedId, _language, [this](const cglib::vec2<double>& pos) {
 					return _origin + pos;
 				});
-				_addressCache.put(result.encodedRowId, address);
+				_addressCache.put(result.encodedId, address);
 			}
 
 			if (!addresses.empty() && result.ranking.rank() == addresses.back().second) {
@@ -256,7 +256,7 @@ namespace carto { namespace geocoding {
 			return;
 		}
 
-		std::string sql = "SELECT rowid, housenumbers, geometry, country_id, region_id, county_id, locality_id, neighbourhood_id, street_id, postcode_id, name_id FROM entities WHERE ";
+		std::string sql = "SELECT id, housenumbers, features, country_id, region_id, county_id, locality_id, neighbourhood_id, street_id, postcode_id, name_id FROM entities WHERE ";
 		for (std::size_t i = 0; i < sqlFilters.size(); i++) {
 			if (i > 0) {
 				sql += " AND ";
@@ -275,7 +275,7 @@ namespace carto { namespace geocoding {
 
 		sqlite3pp::query sqlQuery(_db, sql.c_str());
 		for (auto qit = sqlQuery.begin(); qit != sqlQuery.end(); qit++) {
-			unsigned int rowId = qit->get<unsigned int>(0);
+			unsigned int entityId = qit->get<unsigned int>(0);
 			unsigned int elementIndex = 0;
 
 			// Match house number
@@ -319,20 +319,21 @@ namespace carto { namespace geocoding {
 			// Do location based ranking
 			float locationRank = 1.0f;
 			if (_location) {
-				if (auto encodedGeometry = qit->get<const void*>(2)) {
-					EncodingStream stream(encodedGeometry, qit->column_bytes(2));
+				if (auto encodedFeatures = qit->get<const void*>(2)) {
+					EncodingStream stream(encodedFeatures, qit->column_bytes(2));
 					FeatureReader reader(stream, mercatorConverter);
 					float minDist = _locationRadius;
-					for (unsigned int i = 1; !stream.eof(); i++) {
-						Feature feature = reader.readFeature();
-						if (std::shared_ptr<Geometry> geometry = feature.getGeometry()) {
-							if (!elementIndex || elementIndex == i) {
-								cglib::vec2<double> mercatorMeters = webMercatorMeters(*_location);
-								cglib::vec2<double> mercatorLocation = wgs84ToWebMercator(*_location);
-								cglib::vec2<double> point = geometry->calculateNearestPoint(mercatorLocation);
-								cglib::vec2<double> diff = point - mercatorLocation;
-								float dist = static_cast<float>(cglib::length(cglib::vec2<double>(diff(0) * mercatorMeters(0), diff(1) * mercatorMeters(1))));
-								minDist = std::min(minDist, dist);
+					for (unsigned int currentIndex = 1; !stream.eof(); currentIndex++) {
+						for (const Feature& feature : reader.readFeatureCollection()) {
+							if (std::shared_ptr<Geometry> geometry = feature.getGeometry()) {
+								if (!elementIndex || elementIndex == currentIndex) {
+									cglib::vec2<double> mercatorMeters = webMercatorMeters(*_location);
+									cglib::vec2<double> mercatorLocation = wgs84ToWebMercator(*_location);
+									cglib::vec2<double> point = geometry->calculateNearestPoint(mercatorLocation);
+									cglib::vec2<double> diff = point - mercatorLocation;
+									float dist = static_cast<float>(cglib::length(cglib::vec2<double>(diff(0) * mercatorMeters(0), diff(1) * mercatorMeters(1))));
+									minDist = std::min(minDist, dist);
+								}
 							}
 						}
 					}
@@ -343,7 +344,7 @@ namespace carto { namespace geocoding {
 			// Build the result
 			Result result;
 			result.query = query;
-			result.encodedRowId = (static_cast<std::uint64_t>(elementIndex) << 32) | rowId;
+			result.encodedId = (static_cast<std::uint64_t>(elementIndex) << 32) | entityId;
 			result.unmatchedTokens = query.tokenList.size();
 			result.ranking = query.ranking;
 			result.ranking.matchRank *= matchRank;
@@ -352,7 +353,7 @@ namespace carto { namespace geocoding {
 
 			// Check if the same result is already stored
 			auto resultIt = std::find_if(results.begin(), results.end(), [&result](const Result& result2) {
-				return result.encodedRowId == result2.encodedRowId;
+				return result.encodedId == result2.encodedId;
 			});
 			if (resultIt != results.end()) {
 				if (resultIt->unmatchedTokens <= result.unmatchedTokens && resultIt->ranking.rank() >= result.ranking.rank()) {

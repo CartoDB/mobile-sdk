@@ -89,7 +89,7 @@ namespace carto { namespace geocoding {
 	}
 
 	std::vector<QuadIndex::GeometryInfo> RevGeocoder::findGeometryInfo(const std::vector<std::uint64_t>& quadIndices, const PointConverter& converter) const {
-		std::string sql = "SELECT rowid, geometry FROM entities WHERE quadindex in (";
+		std::string sql = "SELECT id, features FROM entities WHERE quadindex in (";
 		for (std::size_t i = 0; i < quadIndices.size(); i++) {
 			if (i > 0) {
 				sql += ", ";
@@ -105,17 +105,26 @@ namespace carto { namespace geocoding {
 
 		sqlite3pp::query query(_db, sql.c_str());
 		for (auto qit = query.begin(); qit != query.end(); qit++) {
-			auto rowId = qit->get<unsigned int>(0);
-			if (auto encodedGeometry = qit->get<const void*>(1)) {
-				EncodingStream stream(encodedGeometry, qit->column_bytes(1));
+			auto entityId = qit->get<unsigned int>(0);
+			if (auto encodedFeatures = qit->get<const void*>(1)) {
+				EncodingStream stream(encodedFeatures, qit->column_bytes(1));
 				FeatureReader reader(stream, [this, &converter](const cglib::vec2<double>& pos) {
 					return converter(_origin + pos);
 				});
 				for (unsigned int elementIndex = 1; !stream.eof(); elementIndex++) {
-					Feature feature = reader.readFeature();
-					if (std::shared_ptr<Geometry> geometry = feature.getGeometry()) {
-						std::uint64_t encodedRowId = (static_cast<std::uint64_t>(elementIndex) << 32) | rowId;
-						geomInfos.emplace_back(encodedRowId, geometry);
+					std::uint64_t encodedId = (static_cast<std::uint64_t>(elementIndex) << 32) | entityId;
+
+					std::vector<std::shared_ptr<Geometry>> geometries;
+					for (const Feature& feature : reader.readFeatureCollection()) {
+						if (std::shared_ptr<Geometry> geometry = feature.getGeometry()) {
+							geometries.push_back(geometry);
+						}
+					}
+					if (geometries.size() == 1) {
+						geomInfos.emplace_back(encodedId, geometries.front());
+					}
+					else if (!geometries.empty()) {
+						geomInfos.emplace_back(encodedId, std::make_shared<MultiGeometry>(std::move(geometries)));
 					}
 				}
 			}

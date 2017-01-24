@@ -72,7 +72,7 @@ namespace carto { namespace geocoding {
 		
 		struct Result {
 			Query query;
-			std::uint64_t encodedRowId = 0;
+			std::uint64_t encodedId = 0;
 			std::size_t unmatchedTokens = 0;
 			Ranking ranking;
 		};

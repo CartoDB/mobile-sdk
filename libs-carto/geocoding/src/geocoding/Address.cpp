@@ -8,7 +8,7 @@
 #include <sqlite3pp.h>
 
 namespace carto { namespace geocoding {
-	bool Address::loadFromDB(sqlite3pp::database& db, std::uint64_t encodedRowId, const std::string& language, const PointConverter& converter) {
+	bool Address::loadFromDB(sqlite3pp::database& db, std::uint64_t encodedId, const std::string& language, const PointConverter& converter) {
 		auto findField = [&db, &language](const std::string& type, std::uint64_t id) -> std::string {
 			if (id == 0) {
 				return std::string();
@@ -32,11 +32,11 @@ namespace carto { namespace geocoding {
 			return defaultValue;
 		};
 
-		unsigned int rowId = static_cast<unsigned int>(encodedRowId & 0xffffffffU);
-		unsigned int elementIndex = static_cast<unsigned int>(encodedRowId >> 32);
+		unsigned int entityId = static_cast<unsigned int>(encodedId & 0xffffffffU);
+		unsigned int elementIndex = static_cast<unsigned int>(encodedId >> 32);
 		
-		sqlite3pp::query query(db, "SELECT country_id, region_id, county_id, locality_id, neighbourhood_id, street_id, postcode_id, name_id, geometry, housenumbers FROM entities WHERE rowid=:rowId");
-		query.bind(":rowId", rowId);
+		sqlite3pp::query query(db, "SELECT country_id, region_id, county_id, locality_id, neighbourhood_id, street_id, postcode_id, name_id, features, housenumbers FROM entities WHERE id=:id");
+		query.bind(":id", entityId);
 
 		for (auto qit = query.begin(); qit != query.end(); qit++) {
 			country       = findField("country",       qit->get<std::uint64_t>(0));
@@ -49,18 +49,20 @@ namespace carto { namespace geocoding {
 			name          = findField("name",          qit->get<std::uint64_t>(7));
 
 			features.clear();
-			if (auto encodedGeometry = qit->get<const void *>(8)) {
-				EncodingStream stream(encodedGeometry, qit->column_bytes(8));
+			if (auto encodedFeatures = qit->get<const void *>(8)) {
+				EncodingStream stream(encodedFeatures, qit->column_bytes(8));
 				FeatureReader reader(stream, converter);
 				if (elementIndex) {
 					for (unsigned int i = 1; i < elementIndex; i++) {
-						reader.readFeature();
+						reader.readFeatureCollection();
 					}
-					features.push_back(reader.readFeature());
+					std::vector<Feature> featureCollection = reader.readFeatureCollection();
+					features.insert(features.end(), featureCollection.begin(), featureCollection.end());
 				}
 				else {
 					while (!stream.eof()) {
-						features.push_back(reader.readFeature());
+						std::vector<Feature> featureCollection = reader.readFeatureCollection();
+						features.insert(features.end(), featureCollection.begin(), featureCollection.end());
 					}
 				}
 			}
@@ -79,8 +81,8 @@ namespace carto { namespace geocoding {
 
 				
 			categories.clear();
-			sqlite3pp::query query2(db, "SELECT c.category FROM entitycategories ec, categories c WHERE ec.entity_rowid=:rowId AND ec.category_id=c.id");
-			query2.bind(":rowId", rowId);
+			sqlite3pp::query query2(db, "SELECT c.category FROM entitycategories ec, categories c WHERE ec.entity_id=:id AND ec.category_id=c.id");
+			query2.bind(":id", entityId);
 			for (auto qit2 = query2.begin(); qit2 != query2.end(); qit2++) {
 				categories.insert(qit2->get<const char*>(0));
 			}

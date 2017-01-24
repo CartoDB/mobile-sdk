@@ -52,6 +52,17 @@ namespace carto { namespace geocoding {
 			return { static_cast<double>(x) * scale, static_cast<double>(y) * scale };
 		}
 
+		float readFloat() {
+			if (_offset + 4 > _size) {
+				throw std::runtime_error("Offset out of bounds");
+			}
+			std::uint32_t val = 0;
+			for (int i = 0; i < 4; i++) {
+				val = (val << 8) | _data[_offset++];
+			}
+			return *reinterpret_cast<float*>(&val);
+		}
+
 		std::string readString() {
 			std::size_t offset = _offset;
 			std::size_t len = readNumber<std::size_t>();

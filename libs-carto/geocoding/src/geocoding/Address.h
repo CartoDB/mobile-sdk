@@ -34,7 +34,7 @@ namespace carto { namespace geocoding {
 		std::vector<Feature> features;
 		std::set<std::string> categories;
 
-		bool loadFromDB(sqlite3pp::database& db, std::uint64_t encodedRowId, const std::string& language, const PointConverter& converter);
+		bool loadFromDB(sqlite3pp::database& db, std::uint64_t encodedId, const std::string& language, const PointConverter& converter);
 
 		bool merge(const Address& address);
 
