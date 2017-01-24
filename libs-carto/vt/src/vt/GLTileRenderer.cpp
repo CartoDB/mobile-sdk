@@ -1214,16 +1214,20 @@ namespace carto { namespace vt {
         const TileGeometry::GeometryLayoutParameters& geometryLayoutParams = geometry->getGeometryLayoutParameters();
         std::size_t vertexOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.vertexOffset;
         const short* vertexPtr = reinterpret_cast<const short*>(&geometry->getVertexGeometry()[vertexOffset]);
-        return cglib::vec3<float>(vertexPtr[0], vertexPtr[1], 0) * (1.0f / geometryLayoutParams.vertexScale);
+        cglib::vec2<float> pos = cglib::vec2<float>(vertexPtr[0], vertexPtr[1]) * (1.0f / geometryLayoutParams.vertexScale);
+        if (geometry->getStyleParameters().transform && geometry->getType() != TileGeometry::Type::POINT) {
+            pos = cglib::transform_point(pos, geometry->getStyleParameters().transform.get());
+        }
+        return cglib::vec3<float>(pos(0), pos(1), 0);
     }
 
     cglib::vec3<float> GLTileRenderer::decodePointOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index, const cglib::vec3<float>& xAxis, const cglib::vec3<float>& yAxis, float radius) const {
         const TileGeometry::GeometryLayoutParameters& geometryLayoutParams = geometry->getGeometryLayoutParameters();
         std::size_t binormalOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.binormalOffset;
         const short* binormalPtr = reinterpret_cast<const short*>(&geometry->getVertexGeometry()[binormalOffset]);
-        cglib::vec3<float> xy = cglib::vec3<float>(binormalPtr[0], binormalPtr[1], 0) * (1.0f / geometryLayoutParams.binormalScale);
+        cglib::vec2<float> xy = cglib::vec2<float>(binormalPtr[0], binormalPtr[1]) * (1.0f / geometryLayoutParams.binormalScale);
         if (geometry->getStyleParameters().transform) {
-            xy = cglib::transform(xy, geometry->getStyleParameters().transform.get());
+            xy = cglib::transform_point(xy, geometry->getStyleParameters().transform.get());
         }
         if (cglib::length(xy) != 0) {
             xy = xy * (1.0f + radius / cglib::length(xy));
