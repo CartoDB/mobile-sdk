@@ -23,7 +23,7 @@
 
 !shared_ptr(carto::ReverseGeocodingRequest, geocoding.ReverseGeocodingRequest)
 
-%attributeval(carto::ReverseGeocodingRequest, carto::MapPos, Point, getPoint)
+%attributeval(carto::ReverseGeocodingRequest, carto::MapPos, Location, getLocation)
 %attributestring(carto::ReverseGeocodingRequest, std::shared_ptr<carto::Projection>, Projection, getProjection)
 %std_exceptions(carto::ReverseGeocodingRequest::ReverseGeocodingRequest)
 !standard_equals(carto::ReverseGeocodingRequest);

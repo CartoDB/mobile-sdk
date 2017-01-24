@@ -18,16 +18,16 @@ namespace carto {
 
     class ReverseGeocodingRequest {
     public:
-        ReverseGeocodingRequest(const std::shared_ptr<Projection>& projection, const MapPos& point);
+        ReverseGeocodingRequest(const std::shared_ptr<Projection>& projection, const MapPos& location);
         virtual ~ReverseGeocodingRequest();
 
-        const MapPos& getPoint() const;
+        const MapPos& getLocation() const;
         const std::shared_ptr<Projection>& getProjection() const;
         
         std::string toString() const;
 
     private:
-        MapPos _point;
+        MapPos _location;
         std::shared_ptr<Projection> _projection;
     };
     

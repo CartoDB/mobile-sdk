@@ -6,8 +6,8 @@
 
 namespace carto {
 
-    ReverseGeocodingRequest::ReverseGeocodingRequest(const std::shared_ptr<Projection>& projection, const MapPos& point) :
-        _point(point),
+    ReverseGeocodingRequest::ReverseGeocodingRequest(const std::shared_ptr<Projection>& projection, const MapPos& location) :
+        _location(location),
         _projection(projection)
     {
         if (!projection) {
@@ -18,8 +18,8 @@ namespace carto {
     ReverseGeocodingRequest::~ReverseGeocodingRequest() {
     }
 
-    const MapPos& ReverseGeocodingRequest::getPoint() const {
-        return _point;
+    const MapPos& ReverseGeocodingRequest::getLocation() const {
+        return _location;
     }
 
     const std::shared_ptr<Projection>& ReverseGeocodingRequest::getProjection() const {
@@ -27,7 +27,7 @@ namespace carto {
     }
 
     std::string ReverseGeocodingRequest::toString() const {
-        return "ReverseGeocodingRequest [point=" + _point.toString() + "]";
+        return "ReverseGeocodingRequest [location=" + _location.toString() + "]";
     }
     
 }

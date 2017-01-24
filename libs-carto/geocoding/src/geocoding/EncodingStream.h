@@ -78,9 +78,9 @@ namespace carto { namespace geocoding {
 		long long _prevX = 0;
 		long long _prevY = 0;
 
+		const unsigned char* _data = nullptr;
 		std::size_t _offset = 0;
 		std::size_t _size = 0;
-		const unsigned char* _data = nullptr;
 	};
 } }
 

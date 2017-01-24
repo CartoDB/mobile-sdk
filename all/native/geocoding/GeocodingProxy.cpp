@@ -14,6 +14,7 @@
 #include <geocoding/Geocoder.h>
 #include <geocoding/RevGeocoder.h>
 
+#include <cmath>
 #include <functional>
 
 namespace {
@@ -28,7 +29,14 @@ namespace {
 namespace carto {
 
     std::vector<std::shared_ptr<GeocodingResult> > GeocodingProxy::CalculateAddresses(const std::shared_ptr<geocoding::Geocoder>& geocoder, const std::shared_ptr<GeocodingRequest>& request) {
-        std::vector<std::pair<geocoding::Address, float> > addrs = geocoder->findAddresses(request->getQuery());
+        geocoding::Geocoder::Options options;
+        MapPos pos = request->getLocation();
+        if (!std::isnan(pos.getX()) && !std::isnan(pos.getY())) {
+            MapPos posWgs84 = request->getProjection()->toWgs84(pos);
+            options.location = cglib::vec2<double>(posWgs84.getX(), posWgs84.getY());
+            options.locationRadius = request->getLocationRadius();
+        }
+        std::vector<std::pair<geocoding::Address, float> > addrs = geocoder->findAddresses(request->getQuery(), options);
 
         std::vector<std::shared_ptr<GeocodingResult> > results;
         for (const std::pair<geocoding::Address, float>& addr : addrs) {
@@ -38,8 +46,8 @@ namespace carto {
     }
 
     std::vector<std::shared_ptr<GeocodingResult> > GeocodingProxy::CalculateAddresses(const std::shared_ptr<geocoding::RevGeocoder>& revGeocoder, const std::shared_ptr<ReverseGeocodingRequest>& request) {
-        MapPos pos = request->getProjection()->toWgs84(request->getPoint());
-        std::vector<std::pair<geocoding::Address, float> > addrs = revGeocoder->findAddresses(pos.getX(), pos.getY());
+        MapPos posWgs84 = request->getProjection()->toWgs84(request->getLocation());
+        std::vector<std::pair<geocoding::Address, float> > addrs = revGeocoder->findAddresses(posWgs84.getX(), posWgs84.getY());
 
         std::vector<std::shared_ptr<GeocodingResult> > results;
         for (const std::pair<geocoding::Address, float>& addr : addrs) {

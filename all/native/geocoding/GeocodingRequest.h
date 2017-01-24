@@ -10,7 +10,10 @@
 #ifdef _CARTO_GEOCODING_SUPPORT
 
 #include <memory>
+#include <mutex>
 #include <string>
+
+#include "core/MapPos.h"
 
 namespace carto {
     class Projection;
@@ -22,12 +25,24 @@ namespace carto {
 
         const std::string& getQuery() const;
         const std::shared_ptr<Projection>& getProjection() const;
+
+        MapPos getLocation() const;
+        void setLocation(const MapPos& pos);
+
+        float getLocationRadius() const;
+        void setLocationRadius(float radius);
         
         std::string toString() const;
 
     private:
+        static const int DEFAULT_LOCATION_RADIUS = 100000; // in meters
+
         std::string _query;
         std::shared_ptr<Projection> _projection;
+        MapPos _location;
+        float _locationRadius;
+
+        mutable std::mutex _mutex;
     };
     
 }
