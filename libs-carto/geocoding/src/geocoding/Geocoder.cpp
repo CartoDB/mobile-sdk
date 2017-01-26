@@ -48,14 +48,7 @@ namespace carto { namespace geocoding {
 
 		Query query;
 		query.options = options;
-		query.tokenList = TokenList<std::string>::build(safeQueryString);
-		if (_autocomplete && !safeQueryString.empty()) {
-			char lastChar = safeQueryString.back();
-			const std::string& lastToken = query.tokenList.at(query.tokenList.size() - 1).first;
-			if (lastToken.size() >= MIN_AUTOCOMPLETE_SIZE && !TokenList<std::string>::isSeparator(lastChar) && !TokenList<std::string>::isSpace(lastChar)) {
-				query.tokenList = TokenList<std::string>::build(safeQueryString + "%");
-			}
-		}
+		query.tokenList = TokenList<std::string>::build(_autocomplete ? safeQueryString + "%" : safeQueryString);
 		
 		// Resolve the query into results
 		std::vector<Result> results;
@@ -368,6 +361,10 @@ namespace carto { namespace geocoding {
 		std::vector<Query> subQueries;
 		for (const TokenList<std::string>::Span& span : query.tokenList.enumerate()) {
 			std::string name = query.tokenList.tokens(span);
+			if (name.size() > 0 && name.size() <= MIN_AUTOCOMPLETE_SIZE && name.back() == '%') {
+				name = name.substr(0, name.size() - 1); // too short name, skip autocomplete
+			}
+
 			std::string::iterator nameIt = name.begin();
 			if (nameIt != name.end()) {
 				utf8::next(nameIt, name.end());
@@ -462,8 +459,8 @@ namespace carto { namespace geocoding {
 		std::vector<Query> subQueries;
 		for (const TokenList<std::string>::Span& span : query.tokenList.enumerate()) {
 			std::string name = query.tokenList.tokens(span);
-			if (!name.empty() && name.back() == '%') {
-				continue;
+			if (name.size() > 0 && name.back() == '%') {
+				name = name.substr(0, name.size() - 1); // we do not support autocomplete for 'exact' matching
 			}
 
 			Query subQuery(query);
