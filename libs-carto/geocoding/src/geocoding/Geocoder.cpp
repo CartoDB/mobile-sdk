@@ -312,7 +312,9 @@ namespace carto { namespace geocoding {
 							}
 						}
 					}
-					locationRank *= std::exp(-minDist) * (1 - MIN_RANK) + MIN_RANK;
+
+                    double c = -std::log(MIN_LOCATION_RANK) / query.options.locationRadius;
+					locationRank *= std::exp(-minDist * c);
 				}
 			}
 

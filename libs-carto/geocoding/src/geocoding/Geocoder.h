@@ -106,6 +106,7 @@ namespace carto { namespace geocoding {
 		boost::optional<std::regex> findHouseNumberRegex() const;
 
 		static constexpr float MIN_RANK = 0.1f;
+		static constexpr float MIN_LOCATION_RANK = 0.2f; // should be larger than MIN_RANK
 		static constexpr float MAX_RANK_RATIO = 0.5f;
 		static constexpr float EXTRA_FIELD_PENALTY = 0.95f;
 		static constexpr float POI_POPULATION_PENALTY = 0.95f;
