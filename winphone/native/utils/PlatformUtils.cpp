@@ -61,10 +61,11 @@ namespace carto {
     std::string PlatformUtils::GetAppIdentifier() {
         std::wstring wid;
         try {
-            wid = Windows::ApplicationModel::Store::CurrentApp::AppId.ToString()->Data();
+            Windows::ApplicationModel::PackageId^ packageId = Windows::ApplicationModel::Package::Current->Id;
+            wid = packageId->Name->Data();
         }
         catch (Platform::Exception^ e) {
-           Log::Error("PlatformUtils::GetAppIdentifier: Exception while reading AppId");
+           Log::Error("PlatformUtils::GetAppIdentifier: Exception while reading PackageId");
         }
         std::string id;
         utf8::utf16to8(wid.begin(), wid.end(), std::back_inserter(id));
@@ -77,7 +78,7 @@ namespace carto {
         return GetDeviceId() + GetAppIdentifier();
     }
     
-    bool PlatformUtils::ExcludeFolderFromBackup(const std::string &folder) {
+    bool PlatformUtils::ExcludeFolderFromBackup(const std::string& folder) {
         // This is iOS-specific method, simply ignore it on Windows Phone
         return true;
     }
