@@ -37,12 +37,13 @@ namespace carto { namespace geocoding {
 		using AlignmentVector = std::vector<std::pair<std::size_t, std::size_t>>;
 
 		float levenshtein(const T& s1, const T& s2) const {
-			std::vector<float> distances(s1.size() + 1);
+			std::vector<float> distances(s1.size() + 1), distances_(s1.size() + 1);
 			for (std::size_t i = 0; i < distances.size(); i++) {
 				distances[i] = static_cast<float>(i);
 			}
 			for (std::size_t i2 = 0; i2 < s2.size(); i2++) {
-				std::vector<float> distances_ = { static_cast<float>(i2 + 1) };
+				distances_.clear();
+				distances_.push_back(static_cast<float>(i2 + 1));
 				for (std::size_t i1 = 0; i1 < s1.size(); i1++) {
 					if (s1[i1] == s2[i2]) {
 						distances_.push_back(distances[i1]);

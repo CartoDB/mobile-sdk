@@ -51,7 +51,7 @@ namespace carto { namespace geocoding {
 	class LineGeometry : public Geometry {
 	public:
 		explicit LineGeometry(std::vector<Point> points) : _points(std::move(points)), _bounds(Bounds::smallest()) {
-			_bounds.add(points.begin(), points.end());
+			_bounds.add(_points.begin(), _points.end());
 		}
 
 		const std::vector<Point>& getPoints() const {
@@ -91,8 +91,8 @@ namespace carto { namespace geocoding {
 	class PolygonGeometry : public Geometry {
 	public:
 		explicit PolygonGeometry(std::vector<Point> points, std::vector<std::vector<Point>> holes) : _points(std::move(points)), _holes(std::move(holes)), _bounds(Bounds::smallest()) {
-			_bounds.add(points.begin(), points.end());
-			for (const std::vector<Point>& hole : holes) {
+			_bounds.add(_points.begin(), _points.end());
+			for (const std::vector<Point>& hole : _holes) {
 				_bounds.add(hole.begin(), hole.end());
 			}
 		}
@@ -164,7 +164,7 @@ namespace carto { namespace geocoding {
 	class MultiGeometry : public Geometry {
 	public:
 		explicit MultiGeometry(std::vector<std::shared_ptr<Geometry>> geoms) : _geometries(std::move(geoms)), _bounds(Bounds::smallest()) {
-			for (const std::shared_ptr<Geometry>& geom : geoms) {
+			for (const std::shared_ptr<Geometry>& geom : _geometries) {
 				_bounds.add(geom->getBounds());
 			}
 		}
