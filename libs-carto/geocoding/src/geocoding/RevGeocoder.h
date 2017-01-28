@@ -50,6 +50,8 @@ namespace carto { namespace geocoding {
 		std::string _language; // use local language by default
 
 		mutable cache::lru_cache<std::string, std::vector<QuadIndex::GeometryInfo>> _queryCache;
+		mutable std::uint64_t _previousEntityQueryCounter = 0;;
+		mutable std::uint64_t _entityQueryCounter = 0;
 
 		cglib::vec2<double> _origin;
 		boost::optional<cglib::bbox2<double>> _bounds;

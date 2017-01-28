@@ -46,11 +46,16 @@ namespace carto { namespace geocoding {
 				});
 				for (const GeometryInfo& geomInfo : geomInfos) {
 					// TODO: -180/180 wrapping
-					cglib::vec2<double> point = geomInfo.second->calculateNearestPoint(mercatorPos);
-					cglib::vec2<double> diff = point - mercatorPos;
-					double dist = cglib::length(cglib::vec2<double>(diff(0) * mercatorMeters(0), diff(1) * mercatorMeters(1)));
-					if (dist <= radius) {
-						results.emplace_back(geomInfo.first, dist);
+					cglib::vec2<double> boundsPoint = geomInfo.second->getBounds().nearest_point(mercatorPos);
+					cglib::vec2<double> boundsDiff = boundsPoint - mercatorPos;
+					double boundsDist = cglib::length(cglib::vec2<double>(boundsDiff(0) * mercatorMeters(0), boundsDiff(1) * mercatorMeters(1)));
+					if (boundsDist <= radius) {
+						cglib::vec2<double> point = geomInfo.second->calculateNearestPoint(mercatorPos);
+						cglib::vec2<double> diff = point - mercatorPos;
+						double dist = cglib::length(cglib::vec2<double>(diff(0) * mercatorMeters(0), diff(1) * mercatorMeters(1)));
+						if (dist <= radius) {
+							results.emplace_back(geomInfo.first, dist);
+						}
 					}
 				}
 			}

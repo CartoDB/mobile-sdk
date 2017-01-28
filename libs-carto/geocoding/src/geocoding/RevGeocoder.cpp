@@ -45,6 +45,7 @@ namespace carto { namespace geocoding {
 			}
 		}
 
+		_previousEntityQueryCounter = _entityQueryCounter;
 		QuadIndex index(std::bind(&RevGeocoder::findGeometryInfo, this, std::placeholders::_1, std::placeholders::_2));
 		std::vector<QuadIndex::Result> results = index.findGeometries(lng, lat, _radius);
 
@@ -130,6 +131,7 @@ namespace carto { namespace geocoding {
 			}
 		}
 
+		_entityQueryCounter++;
 		_queryCache.put(sql, geomInfos);
 		return geomInfos;
 	}
