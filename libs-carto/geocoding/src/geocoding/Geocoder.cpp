@@ -45,11 +45,16 @@ namespace carto { namespace geocoding {
 		std::lock_guard<std::recursive_mutex> lock(_mutex);
 
 		std::string safeQueryString = boost::replace_all_copy(boost::replace_all_copy(queryString, "%", ""), "_", "");
-        boost::trim(safeQueryString);
+		boost::trim(safeQueryString);
+
+		bool autocomplete = _autocomplete && safeQueryString.size() >= MIN_AUTOCOMPLETE_SIZE;
+		if (!safeQueryString.empty() && TokenList<std::string>::isSeparator(safeQueryString.back())) {
+			autocomplete = false;
+		}
 
 		Query query;
 		query.options = options;
-		query.tokenList = TokenList<std::string>::build(_autocomplete && safeQueryString.size() >= MIN_AUTOCOMPLETE_SIZE ? safeQueryString + "%" : safeQueryString);
+		query.tokenList = TokenList<std::string>::build(autocomplete ? safeQueryString + "%" : safeQueryString);
 		
 		// Resolve the query into results
 		std::vector<Result> results;
@@ -313,7 +318,7 @@ namespace carto { namespace geocoding {
 						}
 					}
 
-                    double c = -std::log(MIN_LOCATION_RANK) / query.options.locationRadius;
+					float c = -std::log(MIN_LOCATION_RANK) / query.options.locationRadius;
 					locationRank *= std::exp(-minDist * c);
 				}
 			}
