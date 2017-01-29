@@ -29,6 +29,7 @@ namespace carto { namespace geocoding {
 	void RevGeocoder::setLanguage(const std::string& language) {
 		std::lock_guard<std::recursive_mutex> lock(_mutex);
 		_language = language;
+		_addressCache.clear();
 	}
 
 	std::vector<std::pair<Address, float>> RevGeocoder::findAddresses(double lng, double lat) const {
@@ -54,9 +55,12 @@ namespace carto { namespace geocoding {
 			float rank = 1.0f - static_cast<float>(result.second) / _radius;
 			if (rank > 0) {
 				Address address;
-				address.loadFromDB(_db, result.first, _language, [this](const cglib::vec2<double>& pos) {
-					return _origin + pos;
-				});
+				if (!_addressCache.read(result.first, address)) {
+					address.loadFromDB(_db, result.first, _language, [this](const cglib::vec2<double>& pos) {
+						return _origin + pos;
+					});
+					_addressCache.put(result.first, address);
+				}
 				addresses.emplace_back(address, rank);
 			}
 		}

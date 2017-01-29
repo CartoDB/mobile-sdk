@@ -39,6 +39,7 @@ namespace carto { namespace geocoding {
 	void Geocoder::setLanguage(const std::string& language) {
 		std::lock_guard<std::recursive_mutex> lock(_mutex);
 		_language = language;
+		_addressCache.clear();
 	}
 
 	std::vector<std::pair<Address, float>> Geocoder::findAddresses(const std::string& queryString, const Options& options) const {

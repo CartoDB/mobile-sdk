@@ -28,7 +28,7 @@ namespace sqlite3pp {
 namespace carto { namespace geocoding {
 	class RevGeocoder final {
 	public:
-		explicit RevGeocoder(sqlite3pp::database& db) : _queryCache(QUERY_CACHE_SIZE), _db(db) { _bounds = findBounds(); _origin = findOrigin(); }
+		explicit RevGeocoder(sqlite3pp::database& db) : _addressCache(ADDRESS_CACHE_SIZE), _queryCache(QUERY_CACHE_SIZE), _db(db) { _bounds = findBounds(); _origin = findOrigin(); }
 
 		float getRadius() const;
 		void setRadius(float radius);
@@ -44,11 +44,13 @@ namespace carto { namespace geocoding {
 
 		std::vector<QuadIndex::GeometryInfo> findGeometryInfo(const std::vector<std::uint64_t>& quadIndices, const PointConverter& converter) const;
 
+		static constexpr std::size_t ADDRESS_CACHE_SIZE = 1024;
 		static constexpr std::size_t QUERY_CACHE_SIZE = 64;
 		
 		float _radius = 100.0f; // default search radius is 100m
 		std::string _language; // use local language by default
 
+		mutable cache::lru_cache<std::uint64_t, Address> _addressCache;
 		mutable cache::lru_cache<std::string, std::vector<QuadIndex::GeometryInfo>> _queryCache;
 		mutable std::uint64_t _previousEntityQueryCounter = 0;;
 		mutable std::uint64_t _entityQueryCounter = 0;
