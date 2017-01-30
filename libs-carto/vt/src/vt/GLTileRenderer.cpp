@@ -1200,7 +1200,7 @@ namespace carto { namespace vt {
         std::array<cglib::vec3<double>, 4> p;
         for (int i = 0; i < 4; i++) {
             cglib::vec3<float> offset = envelope[i] - center;
-            if (cglib::length(offset) > 0) {
+            if (cglib::length(offset) != 0) {
                 offset = offset * (1.0f + radius * label->getScale() / cglib::length(offset));
             }
             p[i] = _viewState.origin + cglib::vec3<double>::convert(center + offset);
@@ -1241,7 +1241,10 @@ namespace carto { namespace vt {
         const short* binormalPtr = reinterpret_cast<const short*>(&geometry->getVertexGeometry()[binormalOffset]);
         std::size_t attribOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.attribsOffset;
         const char* attribPtr = reinterpret_cast<const char*>(&geometry->getVertexGeometry()[attribOffset]);
-        float width = 0.5f * (*geometry->getStyleParameters().widthTable[attribPtr[0]])(_viewState) + radius;
+        float width = 0.5f * std::abs((*geometry->getStyleParameters().widthTable[attribPtr[0]])(_viewState));
+        if (width > 0) {
+            width += radius;
+        }
         return cglib::vec3<float>(binormalPtr[0], binormalPtr[1], 0) * (width * geometry->getGeometryScale() / geometry->getTileSize() / geometryLayoutParams.binormalScale);
     }
 
@@ -1816,7 +1819,7 @@ namespace carto { namespace vt {
             float gamma = 0.5f;
             std::array<float, TileGeometry::StyleParameters::MAX_PARAMETERS> widths;
             for (int i = 0; i < styleParams.parameterCount; i++) {
-                float width = 0.5f * (*styleParams.widthTable[i])(_viewState) * geometry->getGeometryScale() / geometry->getTileSize();
+                float width = 0.5f * std::abs((*styleParams.widthTable[i])(_viewState)) * geometry->getGeometryScale() / geometry->getTileSize();
                 float pixelWidth = 2.0f * _halfResolution * width;
                 if (pixelWidth > 0.0f && pixelWidth < 1.0f) {
                     colors[i] = colors[i] * pixelWidth; // should do gamma correction here, but simple implementation gives closer results to Mapnik
