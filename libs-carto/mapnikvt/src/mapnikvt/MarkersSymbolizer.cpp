@@ -48,12 +48,12 @@ namespace carto { namespace mvt {
             vt::Color stroke = _stroke * _strokeOpacity;
             if (_markerType == "ellipse" || (_markerType.empty() && placement != vt::LabelOrientation::LINE)) {
                 float width = DEFAULT_CIRCLE_SIZE, height = DEFAULT_CIRCLE_SIZE;
-                if (_width >= 0) { // NOTE: special case, if accept 0 as a valid width value
-                    width = _width;
-                    height = (_height >= 0 ? _height : width);
+                if (_widthDefined) { // NOTE: special case, if accept all values
+                    width = std::abs(_width);
+                    height = (_heightDefined ? std::abs(_height) : width);
                 }
-                else if (_height >= 0) { // NOTE: special case, accept 0 as a valid height value
-                    height = _height;
+                else if (_heightDefined) { // NOTE: special case, accept all values
+                    height = std::abs(_height);
                     width = height;
                 }
                 file = "__default_marker_ellipse_" + boost::lexical_cast<std::string>(width) + "_" + boost::lexical_cast<std::string>(height) + "_" + boost::lexical_cast<std::string>(fill.value()) + "_" + boost::lexical_cast<std::string>(_strokeWidth) + "_" + boost::lexical_cast<std::string>(stroke.value()) + ".bmp";
@@ -238,9 +238,11 @@ namespace carto { namespace mvt {
         }
         else if (name == "width") {
             bind(&_width, parseExpression(value));
+            _widthDefined = true;
         }
         else if (name == "height") {
             bind(&_height, parseExpression(value));
+            _heightDefined = true;
         }
         else if (name == "stroke") {
             bind(&_stroke, parseStringExpression(value), &MarkersSymbolizer::convertColor);
