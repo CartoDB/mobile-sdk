@@ -417,33 +417,39 @@ namespace carto { namespace geocoding {
 			}
 			sql += ")";
 
-			std::unordered_map<std::uint64_t, Ranking> resultRankings;
-			if (!_nameQueryCache.read(sql, resultRankings)) {
+			std::vector<Name> names;
+			if (!_nameQueryCache.read(sql, names)) {
 				sqlite3pp::query sqlQuery(_db, sql.c_str());
 
 				for (auto qit = sqlQuery.begin(); qit != sqlQuery.end(); qit++) {
-					auto id = qit->get<std::uint64_t>(0);
-					auto realName = qit->get<const char*>(1);
-					auto lang = qit->get<const char*>(2);
-					float nameRank = calculateNameRank(name, realName);
-					if (nameRank == 0) {
-						continue;
-					}
-					float langRank = calculateLangRank(lang ? std::string(lang) : std::string());
-					Ranking ranking;
-					ranking.matchRank = nameRank * langRank;
-					ranking.populationRank = 1.0f;
-					if (resultRankings.find(id) == resultRankings.end()) {
-						resultRankings[id] = ranking;
-					}
-					else {
-						resultRankings[id].matchRank = std::max(resultRankings[id].matchRank, ranking.matchRank);
-						resultRankings[id].populationRank = std::max(resultRankings[id].populationRank, ranking.populationRank);
-					}
+					Name name;
+					name.id = qit->get<std::uint64_t>(0);
+					name.name = qit->get<const char*>(1);
+					name.lang = qit->get<const char*>(2) ? qit->get<const char*>(2) : "";
+					names.push_back(name);
 				}
-
+                
 				_nameQueryCounter++;
-				_nameQueryCache.put(sql, resultRankings);
+				_nameQueryCache.put(sql, names);
+			}
+            
+			std::unordered_map<std::uint64_t, Ranking> resultRankings;
+			for (const Name& realName : names) {
+				float nameRank = calculateNameRank(name, realName.name);
+				if (nameRank == 0) {
+					continue;
+				}
+				float langRank = calculateLangRank(realName.lang);
+				Ranking ranking;
+				ranking.matchRank = nameRank * langRank;
+				ranking.populationRank = 1.0f;
+				if (resultRankings.find(realName.id) == resultRankings.end()) {
+					resultRankings[realName.id] = ranking;
+				}
+				else {
+					resultRankings[realName.id].matchRank = std::max(resultRankings[realName.id].matchRank, ranking.matchRank);
+					resultRankings[realName.id].populationRank = std::max(resultRankings[realName.id].populationRank, ranking.populationRank);
+				}
 			}
 
 			// Build subqueries

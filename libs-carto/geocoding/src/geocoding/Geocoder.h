@@ -46,6 +46,12 @@ namespace carto { namespace geocoding {
 		std::vector<std::pair<Address, float>> findAddresses(const std::string& queryString, const Options& options) const;
 
 	private:
+		struct Name {
+			std::uint64_t id = 0;
+			std::string name;
+			std::string lang;
+		};
+
 		struct Ranking {
 			float matchRank = 1.0f;
 			float populationRank = 1.0f;
@@ -129,7 +135,7 @@ namespace carto { namespace geocoding {
 		mutable cache::lru_cache<std::string, float> _nameRankCache;
 		mutable cache::lru_cache<std::string, float> _tokenIDFCache;
 		mutable cache::lru_cache<std::string, bool> _emptyEntityQueryCache;
-		mutable cache::lru_cache<std::string, std::unordered_map<std::uint64_t, Ranking>> _nameQueryCache;
+		mutable cache::lru_cache<std::string, std::vector<Name>> _nameQueryCache;
 		mutable cache::lru_cache<std::string, std::vector<std::uint64_t>> _tokenQueryCache;
 		mutable std::uint64_t _previousEntityQueryCounter = 0;;
 		mutable std::uint64_t _entityQueryCounter = 0;
