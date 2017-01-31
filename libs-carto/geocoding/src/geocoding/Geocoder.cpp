@@ -52,10 +52,14 @@ namespace carto { namespace geocoding {
 		if (!safeQueryString.empty() && TokenList<std::string>::isSeparator(safeQueryString.back())) {
 			autocomplete = false;
 		}
+		if (autocomplete) {
+			// Tricky, do not use autocomplete if the query ends with space. Otherwise append % sign that has special meaning
+			safeQueryString += (boost::trim_right_copy(queryString) != queryString ? " " : "%");
+		}
 
 		Query query;
 		query.options = options;
-		query.tokenList = TokenList<std::string>::build(autocomplete ? safeQueryString + "%" : safeQueryString);
+		query.tokenList = TokenList<std::string>::build(safeQueryString);
 		
 		// Resolve the query into results
 		std::vector<Result> results;
@@ -435,7 +439,7 @@ namespace carto { namespace geocoding {
             
 			std::unordered_map<std::uint64_t, Ranking> resultRankings;
 			for (const Name& realName : names) {
-				float nameRank = calculateNameRank(name, realName.name);
+				float nameRank = calculateNameRank(realName.name, name);
 				if (nameRank == 0) {
 					continue;
 				}
@@ -568,13 +572,16 @@ namespace carto { namespace geocoding {
 		return true;
 	}
 
-	float Geocoder::calculateNameRank(const std::string& name, const std::string& token) const {
+	float Geocoder::calculateNameRank(const std::string& name, const std::string& queryName) const {
 		float rank = 1.0f;
-		std::string key = name + std::string(1, 0) + token;
+		std::string key = name + std::string(1, 0) + queryName;
 		if (!_nameRankCache.read(key, rank)) {
 			StringMatcher<unistring> matcher(std::bind(&Geocoder::getTokenRank, this, std::placeholders::_1));
-			matcher.setMaxDist(2);
-			rank = matcher.calculateRating(toLower(toUniString(name)), toLower(toUniString(token)));
+			matcher.setMaxDist(MAX_STRINGMATCH_DIST);
+			if (_autocomplete) {
+				matcher.setPercentageCost(AUTOCOMPLETE_EXTRA_CHAR_PENALTY);
+			}
+			rank = matcher.calculateRating(toLower(toUniString(queryName)), toLower(toUniString(name)));
 			_nameRankCounter++;
 			_nameRankCache.put(key, rank);
 		}

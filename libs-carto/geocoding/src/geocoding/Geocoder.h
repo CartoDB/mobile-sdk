@@ -102,7 +102,7 @@ namespace carto { namespace geocoding {
 
 		std::vector<std::string> buildQueryFilters(const Query& query, bool nullFilters) const;
 
-		float calculateNameRank(const std::string& name, const std::string& token) const;
+		float calculateNameRank(const std::string& name, const std::string& queryName) const;
 		float calculateLangRank(const std::string& lang) const;
 
 		float getTokenRank(const unistring& unitoken) const;
@@ -116,6 +116,8 @@ namespace carto { namespace geocoding {
 		static constexpr float MAX_RANK_RATIO = 0.5f;
 		static constexpr float EXTRA_FIELD_PENALTY = 0.95f;
 		static constexpr float POI_POPULATION_PENALTY = 0.95f;
+		static constexpr float AUTOCOMPLETE_EXTRA_CHAR_PENALTY = 0.1f;
+		static constexpr unsigned int MAX_STRINGMATCH_DIST = 2;
 		static constexpr unsigned int MAX_ENTITY_QUERIES = 100;
 		static constexpr unsigned int MAX_RESULTS = 100;
 		static constexpr std::size_t MIN_AUTOCOMPLETE_SIZE = 3;
