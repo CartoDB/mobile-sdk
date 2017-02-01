@@ -1646,7 +1646,7 @@ namespace carto { namespace vt {
         CompiledBitmap compiledTileBitmap;
         auto it = _compiledTileBitmapMap.find(bitmap);
         if (it == _compiledTileBitmapMap.end()) {
-            // Use a different strategy is the bitmap is not of POT dimensions, simply do not create the mipmaps
+            // Use a different strategy if the bitmap is not of POT dimensions, simply do not create the mipmaps
             bool pow2Size = (bitmap->getWidth() & (bitmap->getWidth() - 1)) == 0 && (bitmap->getHeight() & (bitmap->getHeight() - 1)) == 0;
 
             compiledTileBitmap.texture = createTexture();

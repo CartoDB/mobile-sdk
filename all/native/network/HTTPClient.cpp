@@ -31,7 +31,7 @@ namespace carto {
     {
     }
 
-    int HTTPClient::get(const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, std::shared_ptr<BinaryData>& responseData) const {
+    int HTTPClient::get(const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, std::shared_ptr<BinaryData>& responseData, int* statusCode) const {
         Request request("GET", url);
         request.headers.insert(requestHeaders.begin(), requestHeaders.end());
         if (request.headers.count("Accept") == 0) {
@@ -52,6 +52,9 @@ namespace carto {
         int code = makeRequest(request, response, handlerFn, 0);
         responseHeaders.insert(response.headers.begin(), response.headers.end());
         responseData = std::make_shared<BinaryData>(std::move(content));
+        if (statusCode) {
+            *statusCode = response.statusCode;
+        }
         return code;
     }
 
