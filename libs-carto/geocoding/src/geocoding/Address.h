@@ -17,29 +17,29 @@
 #include <set>
 
 namespace sqlite3pp {
-	class database;
+    class database;
 }
 
 namespace carto { namespace geocoding {
-	struct Address final {
-		std::string country;
-		std::string region;
-		std::string county;
-		std::string locality;
-		std::string neighbourhood;
-		std::string street;
-		std::string postcode;
-		std::string houseNumber;
-		std::string name;
-		std::vector<Feature> features;
-		std::set<std::string> categories;
+    struct Address final {
+        std::string country;
+        std::string region;
+        std::string county;
+        std::string locality;
+        std::string neighbourhood;
+        std::string street;
+        std::string postcode;
+        std::string houseNumber;
+        std::string name;
+        std::vector<Feature> features;
+        std::set<std::string> categories;
 
-		bool loadFromDB(sqlite3pp::database& db, std::uint64_t encodedId, const std::string& language, const PointConverter& converter);
+        bool loadFromDB(sqlite3pp::database& db, std::uint64_t encodedId, const std::string& language, const PointConverter& converter);
 
-		bool merge(const Address& address);
+        bool merge(const Address& address);
 
-		std::string toString() const;
-	};
+        std::string toString() const;
+    };
 } }
 
 #endif

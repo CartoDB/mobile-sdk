@@ -7,7 +7,9 @@
 #include <utf8.h>
 
 namespace {
-    std::pair<std::uint32_t, std::uint32_t> upperToLower[] = {
+    using carto::geocoding::unichar_t;
+    
+    std::pair<unichar_t, unichar_t> upperToLower[] = {
             { 0x0041, 0x0061 }, { 0x0042, 0x0062 }, { 0x0043, 0x0063 }, { 0x0044, 0x0064 },
             { 0x0045, 0x0065 }, { 0x0046, 0x0066 }, { 0x0047, 0x0067 }, { 0x0048, 0x0068 },
             { 0x0049, 0x0069 }, { 0x004a, 0x006a }, { 0x004b, 0x006b }, { 0x004c, 0x006c },
@@ -247,7 +249,7 @@ namespace {
             { 0xff39, 0xff59 }, { 0xff3a, 0xff5a },
     };
 
-    std::pair<std::uint32_t, std::uint32_t> lowerToUpper[] = {
+    std::pair<unichar_t, unichar_t> lowerToUpper[] = {
             { 0x0061, 0x0041 }, { 0x0062, 0x0042 }, { 0x0063, 0x0043 }, { 0x0064, 0x0044 },
             { 0x0065, 0x0045 }, { 0x0066, 0x0046 }, { 0x0067, 0x0047 }, { 0x0068, 0x0048 },
             { 0x0069, 0x0049 }, { 0x006a, 0x004a }, { 0x006b, 0x004b }, { 0x006c, 0x004c },
@@ -487,10 +489,10 @@ namespace {
             { 0xff59, 0xff39 }, { 0xff5a, 0xff3a },
     };
 
-    std::uint32_t translate(std::uint32_t c, const std::pair<std::uint32_t, std::uint32_t>* table, std::size_t count) {
+    unichar_t translate(unichar_t c, const std::pair<unichar_t, unichar_t>* table, std::size_t count) {
         auto begin = table;
         auto end = table + count;
-        auto it = std::upper_bound(begin, end, std::pair<std::uint32_t, std::uint32_t>(c, 0U));
+        auto it = std::upper_bound(begin, end, std::pair<unichar_t, unichar_t>(c, 0U));
         return it == end ? c : (it->first != c ? c : it->second);
     }
 }
@@ -510,13 +512,13 @@ namespace carto { namespace geocoding {
 
     unistring toUpper(const unistring& str) {
         unistring result = str;
-        std::transform(result.begin(), result.end(), result.begin(), [](std::uint32_t c) { return translate(c, lowerToUpper, sizeof(lowerToUpper) / sizeof(lowerToUpper[0])); });
+        std::transform(result.begin(), result.end(), result.begin(), [](unichar_t c) { return translate(c, lowerToUpper, sizeof(lowerToUpper) / sizeof(lowerToUpper[0])); });
         return result;
     }
 
     unistring toLower(const unistring& str) {
         unistring result = str;
-        std::transform(result.begin(), result.end(), result.begin(), [](std::uint32_t c) { return translate(c, upperToLower, sizeof(upperToLower) / sizeof(upperToLower[0])); });
+        std::transform(result.begin(), result.end(), result.begin(), [](unichar_t c) { return translate(c, upperToLower, sizeof(upperToLower) / sizeof(upperToLower[0])); });
         return result;
     }
 } }

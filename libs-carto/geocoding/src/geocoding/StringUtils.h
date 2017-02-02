@@ -10,13 +10,14 @@
 #include <string>
 
 namespace carto { namespace geocoding {
-	using unistring = std::basic_string<std::uint32_t>;
+    using unichar_t = std::uint32_t;
+    using unistring = std::basic_string<unichar_t>;
 
-	unistring toUniString(const std::string& utf8str);
-	std::string toUtf8String(const unistring& unistr);
+    unistring toUniString(const std::string& utf8str);
+    std::string toUtf8String(const unistring& unistr);
     
-	unistring toLower(const unistring& str);
-	unistring toUpper(const unistring& str);
+    unistring toLower(const unistring& str);
+    unistring toUpper(const unistring& str);
 } }
 
 #endif
