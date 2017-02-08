@@ -98,7 +98,7 @@ def getVersion(buildnumber):
   try:
     lastCommit = "None"
     gitLog = subprocess.Popen(["git", "describe"], stdout=subprocess.PIPE).communicate()[0]
-    lastCommit = gitLog
+    lastCommit = gitLog.strip()
 
     branch = "None"
     gitBranches = subprocess.Popen(["git", "branch"], stdout=subprocess.PIPE).communicate()[0]
