@@ -36,6 +36,9 @@ namespace carto { namespace geocoding {
         std::string getLanguage() const;
         void setLanguage(const std::string& language);
 
+        bool isFilterEnabled(Address::Type type) const;
+        void setFilterEnabled(Address::Type type, bool enabled);
+
         std::vector<std::pair<Address, float>> findAddresses(double lng, double lat) const;
 
     private:
@@ -49,6 +52,7 @@ namespace carto { namespace geocoding {
         
         float _radius = 100.0f; // default search radius is 100m
         std::string _language; // use local language by default
+        std::vector<Address::Type> _enabledFilters = { Address::Type::ADDRESS, Address::Type::POI }; // filters enabled
 
         mutable cache::lru_cache<std::uint64_t, Address> _addressCache;
         mutable cache::lru_cache<std::string, std::vector<QuadIndex::GeometryInfo>> _queryCache;

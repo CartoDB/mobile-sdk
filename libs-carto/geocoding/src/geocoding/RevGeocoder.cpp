@@ -32,6 +32,22 @@ namespace carto { namespace geocoding {
         _addressCache.clear();
     }
 
+    bool RevGeocoder::isFilterEnabled(Address::Type type) const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return std::find(_enabledFilters.begin(), _enabledFilters.end(), type) != _enabledFilters.end();
+    }
+    
+    void RevGeocoder::setFilterEnabled(Address::Type type, bool enabled) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        auto it = std::find(_enabledFilters.begin(), _enabledFilters.end(), type);
+        if (enabled && it == _enabledFilters.end()) {
+            _enabledFilters.push_back(type);
+        }
+        else if (!enabled && it != _enabledFilters.end()) {
+            _enabledFilters.erase(it);
+        }
+    }
+
     std::vector<std::pair<Address, float>> RevGeocoder::findAddresses(double lng, double lat) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
@@ -96,12 +112,12 @@ namespace carto { namespace geocoding {
     std::vector<QuadIndex::GeometryInfo> RevGeocoder::findGeometryInfo(const std::vector<std::uint64_t>& quadIndices, const PointConverter& converter) const {
         std::string sql = "SELECT id, features FROM entities WHERE quadindex in (";
         for (std::size_t i = 0; i < quadIndices.size(); i++) {
-            if (i > 0) {
-                sql += ", ";
-            }
-            sql += boost::lexical_cast<std::string>(quadIndices[i]);
+            sql += (i > 0 ? "," : "") + boost::lexical_cast<std::string>(quadIndices[i]);
         }
-        sql += ") AND (housenumbers IS NOT NULL OR name_id IS NOT NULL)";
+        sql += ")";
+        if (!_enabledFilters.empty()) {
+            sql += " AND (" + Address::buildTypeFilter(_enabledFilters) + ")";
+        }
 
         std::vector<QuadIndex::GeometryInfo> geomInfos;
         if (_queryCache.read(sql, geomInfos)) {
