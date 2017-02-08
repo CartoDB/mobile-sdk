@@ -46,6 +46,15 @@ namespace carto { namespace geocoding {
         std::vector<std::pair<Address, float>> findAddresses(const std::string& queryString, const Options& options) const;
 
     private:
+        enum class TokenType {
+            NONE, COUNTRY, REGION, COUNTY, LOCALITY, NEIGHBOURHOOD, STREET, POSTCODE, NAME, HOUSENUMBER
+        };
+
+        struct Token {
+            std::uint64_t id = 0;
+            float idf = 0.0f;
+        };
+        
         struct Name {
             std::uint64_t id = 0;
             std::string name;
@@ -61,7 +70,7 @@ namespace carto { namespace geocoding {
         
         struct Query {
             Options options;
-            TokenList<std::string> tokenList;
+            TokenList<std::string, TokenType> tokenList;
             std::uint64_t countryId = 0;
             std::uint64_t regionId = 0;
             std::uint64_t countyId = 0;
@@ -72,7 +81,6 @@ namespace carto { namespace geocoding {
             std::uint64_t nameId = 0;
             std::string houseNumber;
             Ranking ranking;
-            int pass = 0;
             bool forceExact = true;
         };
         
@@ -94,19 +102,21 @@ namespace carto { namespace geocoding {
         void resolveNames(const Query& query, std::vector<Result>& results) const;
         void resolveAddress(const Query& query, std::vector<Result>& results) const;
 
-        std::vector<Query> bindQueryResults(const Query& query, const std::string& type, std::uint64_t Query::* field) const;
-        std::vector<Query> bindQueryNames(const Query& query, const std::string& type, std::string Query::* field) const;
+        std::vector<Query> bindQueryResults(const Query& query, TokenType type, std::uint64_t Query::* field) const;
+        std::vector<Query> bindQueryNames(const Query& query, TokenType type, std::string Query::* field) const;
 
         bool testQuery(const Query& query) const;
         bool testQueryRank(const Query& query, std::vector<Result>& results) const;
 
+        std::vector<Name> matchTokenNames(const std::vector<std::string>& tokenStrings, TokenType type, bool exactMatch) const;
+        
         std::vector<std::string> buildQueryFilters(const Query& query, bool nullFilters) const;
 
         float calculateNameRank(const std::string& name, const std::string& queryName) const;
         float calculateLangRank(const std::string& lang) const;
 
         float getTokenRank(const unistring& unitoken) const;
-        float getPopulationRank(const std::string& type, std::uint64_t id) const;
+        float getPopulationRank(TokenType type, std::uint64_t id) const;
 
         cglib::vec2<double> findOrigin() const;
         boost::optional<std::regex> findHouseNumberRegex() const;
@@ -140,7 +150,7 @@ namespace carto { namespace geocoding {
         mutable cache::lru_cache<std::string, float> _tokenIDFCache;
         mutable cache::lru_cache<std::string, bool> _emptyEntityQueryCache;
         mutable cache::lru_cache<std::string, std::vector<Name>> _nameQueryCache;
-        mutable cache::lru_cache<std::string, std::vector<std::uint64_t>> _tokenQueryCache;
+        mutable cache::lru_cache<std::string, std::vector<Token>> _tokenQueryCache;
         mutable std::uint64_t _previousEntityQueryCounter = 0;;
         mutable std::uint64_t _entityQueryCounter = 0;
         mutable std::uint64_t _nameQueryCounter = 0;

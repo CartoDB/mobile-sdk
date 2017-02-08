@@ -9,15 +9,15 @@
 
 namespace carto { namespace geocoding {
     bool Address::loadFromDB(sqlite3pp::database& db, std::uint64_t encodedId, const std::string& language, const PointConverter& converter) {
-        auto findField = [&db, &language](const std::string& type, std::uint64_t id) -> std::string {
+        auto loadName = [&db, &language](std::uint64_t id) -> std::string {
             if (id == 0) {
                 return std::string();
             }
             
-            std::string sql = "SELECT name, lang FROM " + type + "names WHERE id=:id";
+            std::string sql = "SELECT name, lang FROM names WHERE id=:id";
             sqlite3pp::query query(db, sql.c_str());
             query.bind(":id", id);
-            
+
             std::string defaultValue;
             for (auto qit = query.begin(); qit != query.end(); qit++) {
                 auto value = qit->get<const char*>(0);
@@ -39,14 +39,14 @@ namespace carto { namespace geocoding {
         query.bind(":id", entityId);
 
         for (auto qit = query.begin(); qit != query.end(); qit++) {
-            country       = findField("country",       qit->get<std::uint64_t>(0));
-            region        = findField("region",        qit->get<std::uint64_t>(1));
-            county        = findField("county",        qit->get<std::uint64_t>(2));
-            locality      = findField("locality",      qit->get<std::uint64_t>(3));
-            neighbourhood = findField("neighbourhood", qit->get<std::uint64_t>(4));
-            street        = findField("street",        qit->get<std::uint64_t>(5));
-            postcode      = findField("postcode",      qit->get<std::uint64_t>(6));
-            name          = findField("name",          qit->get<std::uint64_t>(7));
+            country       = loadName(qit->get<std::uint64_t>(0));
+            region        = loadName(qit->get<std::uint64_t>(1));
+            county        = loadName(qit->get<std::uint64_t>(2));
+            locality      = loadName(qit->get<std::uint64_t>(3));
+            neighbourhood = loadName(qit->get<std::uint64_t>(4));
+            street        = loadName(qit->get<std::uint64_t>(5));
+            postcode      = loadName(qit->get<std::uint64_t>(6));
+            name          = loadName(qit->get<std::uint64_t>(7));
 
             features.clear();
             if (auto encodedFeatures = qit->get<const void *>(8)) {

@@ -14,10 +14,10 @@
 #include <algorithm>
 
 namespace carto { namespace geocoding {
-    template <typename T>
+    template <typename StringType, typename TagType>
     class TokenList final {
     public:
-        using CharType = typename T::value_type;
+        using CharType = typename StringType::value_type;
 
         struct Span {
             int index;
@@ -28,32 +28,29 @@ namespace carto { namespace geocoding {
 
         std::size_t size() const { return _tokens.size(); }
 
-        const std::pair<T, int>& at(std::size_t i) const { return _tokens.at(i); }
+        const std::pair<StringType, int>& at(std::size_t i) const { return _tokens.at(i); }
 
-        T tokens(const Span& span) const {
-            T name;
+        std::vector<StringType> tokens(const Span& span) const {
+            std::vector<StringType> tokens;
             for (auto it = _tokens.begin(); it != _tokens.end(); it++) {
                 if (it->second >= span.index && it->second < span.index + span.count) {
-                    if (!name.empty()) {
-                        name.append(1, ' ');
-                    }
-                    name += it->first;
+                    tokens.push_back(it->first);
                 }
             }
-            return name;
+            return tokens;
         }
 
-        T type(int index) const {
-            for (const std::pair<T, Span>& tokenType : _tokenTypes) {
+        TagType type(int index) const {
+            for (const std::pair<TagType, Span>& tokenType : _tokenTypes) {
                 if (index >= tokenType.second.index && index < tokenType.second.index + tokenType.second.count) {
                     return tokenType.first;
                 }
             }
-            return T();
+            return TagType();
         }
 
-        Span span(const T& type) const {
-            for (const std::pair<T, Span>& tokenType : _tokenTypes) {
+        Span span(const TagType& type) const {
+            for (const std::pair<TagType, Span>& tokenType : _tokenTypes) {
                 if (tokenType.first == type) {
                     return tokenType.second;
                 }
@@ -61,7 +58,7 @@ namespace carto { namespace geocoding {
             return Span { -1, 0 };
         }
 
-        void mark(const Span& span, const T& type) {
+        void mark(const Span& span, const TagType& type) {
             for (auto it = _tokens.begin(); it != _tokens.end(); ) {
                 if (it->second >= span.index && it->second < span.index + span.count) {
                     it = _tokens.erase(it);
@@ -92,9 +89,9 @@ namespace carto { namespace geocoding {
             return results;
         }
 
-        static TokenList build(const T& text) {
-            std::vector<std::pair<T, int>> tokens;
-            std::vector<std::pair<T, Span>> tokenTypes;
+        static TokenList build(const StringType& text) {
+            std::vector<std::pair<StringType, int>> tokens;
+            std::vector<std::pair<TagType, Span>> tokenTypes;
             int count = 0;
             std::size_t i0 = 0, i1 = 0;
             while (i1 < text.size()) {
@@ -116,7 +113,7 @@ namespace carto { namespace geocoding {
                         i1++;
                     }
                     if (stop) {
-                        tokenTypes.emplace_back(T(), Span { count, 1 });
+                        tokenTypes.emplace_back(TagType(), Span { count, 1 });
                         count++;
                     }
                     i0 = i1;
@@ -128,7 +125,7 @@ namespace carto { namespace geocoding {
             if (i1 > i0) {
                 tokens.emplace_back(text.substr(i0, i1 - i0), count);
             }
-            return TokenList{ tokens, tokenTypes };
+            return TokenList { tokens, tokenTypes };
         }
 
         static bool isSpace(CharType c) {
@@ -140,10 +137,10 @@ namespace carto { namespace geocoding {
         }
         
     private:
-        explicit TokenList(std::vector<std::pair<T, int>> tokens, std::vector<std::pair<T, Span>> tokenTypes) : _tokens(std::move(tokens)), _tokenTypes(std::move(tokenTypes)) { }
+        explicit TokenList(std::vector<std::pair<StringType, int>> tokens, std::vector<std::pair<TagType, Span>> tokenTypes) : _tokens(std::move(tokens)), _tokenTypes(std::move(tokenTypes)) { }
 
-        std::vector<std::pair<T, int>> _tokens;
-        std::vector<std::pair<T, Span>> _tokenTypes;
+        std::vector<std::pair<StringType, int>> _tokens;
+        std::vector<std::pair<TagType, Span>> _tokenTypes;
     };
 } }
 
