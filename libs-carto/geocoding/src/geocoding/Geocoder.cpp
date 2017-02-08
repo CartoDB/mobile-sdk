@@ -41,6 +41,23 @@ namespace carto { namespace geocoding {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _language = language;
         _addressCache.clear();
+        _nameQueryCache.clear();
+    }
+
+    bool Geocoder::isFilterEnabled(Address::Type type) const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return std::find(_enabledFilters.begin(), _enabledFilters.end(), type) != _enabledFilters.end();
+    }
+
+    void Geocoder::setFilterEnabled(Address::Type type, bool enabled) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        auto it = std::find(_enabledFilters.begin(), _enabledFilters.end(), type);
+        if (enabled && it == _enabledFilters.end()) {
+            _enabledFilters.push_back(type);
+        }
+        else if (!enabled && it != _enabledFilters.end()) {
+            _enabledFilters.erase(it);
+        }
     }
 
     std::vector<std::pair<Address, float>> Geocoder::findAddresses(const std::string& queryString, const Options& options) const {
@@ -72,7 +89,6 @@ namespace carto { namespace geocoding {
             query = results.front().query;
         }
         if (query.tokenList.size() == 1) {
-            results.clear();
             query.ranking = Ranking();
             query.forceExact = false;
             resolvePostcode(query, results);
@@ -243,10 +259,7 @@ namespace carto { namespace geocoding {
 
         std::string sql = "SELECT id, housenumbers, features, country_id, region_id, county_id, locality_id, neighbourhood_id, street_id, postcode_id, name_id FROM entities WHERE ";
         for (std::size_t i = 0; i < sqlFilters.size(); i++) {
-            if (i > 0) {
-                sql += " AND ";
-            }
-            sql += "(" + sqlFilters[i] + ")";
+            sql += (i > 0 ? " AND (" : "(") + sqlFilters[i] + ")";
         }
 
         bool state = false;
@@ -446,10 +459,7 @@ namespace carto { namespace geocoding {
 
         std::string sql = "SELECT 1 FROM entities WHERE ";
         for (std::size_t i = 0; i < sqlFilters.size(); i++) {
-            if (i > 0) {
-                sql += " AND ";
-            }
-            sql += "(" + sqlFilters[i] + ")";
+            sql += (i > 0 ? " AND (" : "(") + sqlFilters[i] + ")";
         }
         sql += " LIMIT 1";
 
@@ -528,7 +538,7 @@ namespace carto { namespace geocoding {
 
             if (tokens.empty()) {
                 return std::vector<Name>(); // fast out
-            }
+                }
             tokensList.push_back(tokens);
         }
 
@@ -544,23 +554,23 @@ namespace carto { namespace geocoding {
             for (std::size_t i = 0; i < tokens.size(); i++) {
                 sql += (i > 0 ? "," : "") + boost::lexical_cast<std::string>(tokens[i].id);
             }
-            sql += ") AND n.class=" + boost::lexical_cast<std::string>(static_cast<int>(type)) + " ORDER BY id ASC";
+                sql += ") AND n.class=" + boost::lexical_cast<std::string>(static_cast<int>(type)) + " ORDER BY id ASC";
 
             std::vector<Name> names;
-            if (!_nameQueryCache.read(sql, names)) {
-                sqlite3pp::query sqlQuery(_db, sql.c_str());
+                if (!_nameQueryCache.read(sql, names)) {
+                    sqlite3pp::query sqlQuery(_db, sql.c_str());
 
-                for (auto qit = sqlQuery.begin(); qit != sqlQuery.end(); qit++) {
-                    Name name;
-                    name.id = qit->get<std::uint64_t>(0);
-                    name.name = qit->get<const char*>(1);
-                    name.lang = qit->get<const char*>(2) ? qit->get<const char*>(2) : "";
-                    names.push_back(name);
+                    for (auto qit = sqlQuery.begin(); qit != sqlQuery.end(); qit++) {
+                        Name name;
+                        name.id = qit->get<std::uint64_t>(0);
+                        name.name = qit->get<const char*>(1);
+                        name.lang = qit->get<const char*>(2) ? qit->get<const char*>(2) : "";
+                        names.push_back(name);
+                    }
+
+                    _nameQueryCounter++;
+                    _nameQueryCache.put(sql, names);
                 }
-
-                _nameQueryCounter++;
-                _nameQueryCache.put(sql, names);
-            }
 
             // Calculate union
             if (namesUnion.empty()) {
@@ -619,6 +629,9 @@ namespace carto { namespace geocoding {
         }
         else if (nullFilters) {
             sqlFilters.push_back("housenumbers IS NULL");
+        }
+        if (!_enabledFilters.empty()) {
+            sqlFilters.push_back(Address::buildTypeFilter(_enabledFilters));
         }
         return sqlFilters;
     }

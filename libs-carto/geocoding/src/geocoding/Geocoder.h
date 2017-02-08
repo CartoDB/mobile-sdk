@@ -43,6 +43,9 @@ namespace carto { namespace geocoding {
         std::string getLanguage() const;
         void setLanguage(const std::string& language);
 
+        bool isFilterEnabled(Address::Type type) const;
+        void setFilterEnabled(Address::Type type, bool enabled);
+        
         std::vector<std::pair<Address, float>> findAddresses(const std::string& queryString, const Options& options) const;
 
     private:
@@ -143,6 +146,7 @@ namespace carto { namespace geocoding {
 
         bool _autocomplete = false; // no autocomplete by default
         std::string _language; // use local language by default
+        std::vector<Address::Type> _enabledFilters = { }; // filters enabled, empty list means 'all enabled'
 
         mutable cache::lru_cache<std::uint64_t, Address> _addressCache;
         mutable cache::lru_cache<std::string, std::uint64_t> _populationCache;
