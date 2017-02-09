@@ -31,6 +31,10 @@ namespace carto {
     {
     }
 
+    int HTTPClient::setTimeout(int milliseconds) {
+        _impl->setTimeout(milliseconds);
+    }
+
     int HTTPClient::get(const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, std::shared_ptr<BinaryData>& responseData, int* statusCode) const {
         Request request("GET", url);
         request.headers.insert(requestHeaders.begin(), requestHeaders.end());

@@ -226,8 +226,12 @@ namespace {
 namespace carto {
 
     HTTPClient::WinSockImpl::WinSockImpl(bool log) :
-        _log(log)
+        _log(log), _timeout(-1)
     {
+    }
+
+    void HTTPClient::WinSockImpl::setTimeout(int milliseconds) {
+        _timeout = milliseconds;
     }
 
     bool HTTPClient::WinSockImpl::makeRequest(const HTTPClient::Request& request, HeadersFn headersFn, DataFn dataFn) const {
@@ -271,6 +275,9 @@ namespace carto {
         httpRequest3->SetProperty(XHR_PROP_NO_AUTH, XHR_AUTH_NONE);
         httpRequest3->SetProperty(XHR_PROP_NO_DEFAULT_HEADERS, FALSE);
         httpRequest3->SetProperty(XHR_PROP_QUERY_STRING_UTF8, TRUE);
+        if (_timeout > 0) {
+            httpRequest3->SetProperty(XHR_PROP_TIMEOUT, _timeout);
+        }
 
         hr = httpRequest3->Open(to_wstring(request.method).c_str(),
             to_wstring(request.url).c_str(),
