@@ -33,6 +33,8 @@ namespace carto {
         jmethodID setAllowUserInteraction;
         jmethodID setInstanceFollowRedirects;
         jmethodID setRequestProperty;
+        jmethodID setConnectTimeout;
+        jmethodID setReadTimeout;
         jmethodID connect;
         jmethodID disconnect;
         jmethodID getResponseCode;
@@ -51,6 +53,8 @@ namespace carto {
             setAllowUserInteraction = jenv->GetMethodID(clazz, "setAllowUserInteraction", "(Z)V");
             setInstanceFollowRedirects = jenv->GetMethodID(clazz, "setInstanceFollowRedirects", "(Z)V");
             setRequestProperty = jenv->GetMethodID(clazz, "setRequestProperty", "(Ljava/lang/String;Ljava/lang/String;)V");
+            setConnectTimeout = jenv->GetMethodID(clazz, "setConnectTimeout", "(I)V");
+            setReadTimeout = jenv->GetMethodID(clazz, "setReadTimeout", "(I)V");
             connect = jenv->GetMethodID(clazz, "connect", "()V");
             disconnect = jenv->GetMethodID(clazz, "disconnect", "()V");
             getResponseCode = jenv->GetMethodID(clazz, "getResponseCode", "()I");
@@ -87,8 +91,12 @@ namespace carto {
     };
     
     HTTPClient::AndroidImpl::AndroidImpl(bool log) :
-        _log(log)
+        _log(log), _timeout(-1)
     {
+    }
+
+    void HTTPClient::AndroidImpl::setTimeout(int milliseconds) {
+        _timeout = milliseconds;
     }
     
     bool HTTPClient::AndroidImpl::makeRequest(const HTTPClient::Request& request, HeadersFn headersFn, DataFn dataFn) const {
@@ -121,7 +129,7 @@ namespace carto {
             jenv->ExceptionClear();
             throw NetworkException("Invalid URL", request.url);
         }
-        
+
         // Open HTTP connection
         jobject conn = jenv->CallObjectMethod(url, _URLClass->openConnection);
         if (jenv->ExceptionCheck()) {
@@ -136,7 +144,11 @@ namespace carto {
         jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setUseCaches, (jboolean)false);
         jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setAllowUserInteraction, (jboolean)false);
         jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setAllowUserInteraction, (jboolean)true);
-
+        if (_timeout > 0) {
+            jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setConnectTimeout, _timeout);
+            jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setReadTimeout, _timeout);
+        }
+        
         // Set request headers
         for (auto it = request.headers.begin(); it != request.headers.end(); it++) {
             jstring key = jenv->NewStringUTF(it->first.c_str());

@@ -15,6 +15,7 @@ namespace carto {
     public:
         explicit AndroidImpl(bool log);
 
+        virtual void setTimeout(int milliseconds);
         virtual bool makeRequest(const HTTPClient::Request& request, HeadersFn headersFn, DataFn dataFn) const;
 
     private:
@@ -30,6 +31,7 @@ namespace carto {
         static std::mutex _Mutex;
 
         bool _log;
+        int _timeout;
     };
 
 }
