@@ -30,6 +30,15 @@ namespace carto { namespace geocoding {
 
         const std::pair<StringType, int>& at(std::size_t i) const { return _tokens.at(i); }
 
+        StringType name(TagType type) const {
+            for (const std::pair<TagType, StringType>& tokenNames : _tokenNames) {
+                if (tokenNames.first == type) {
+                    return tokenNames.second;
+                }
+            }
+            return StringType();
+        }
+
         std::vector<StringType> tokens(const Span& span) const {
             std::vector<StringType> tokens;
             for (auto it = _tokens.begin(); it != _tokens.end(); it++) {
@@ -49,7 +58,7 @@ namespace carto { namespace geocoding {
             return TagType();
         }
 
-        Span span(const TagType& type) const {
+        Span span(TagType type) const {
             for (const std::pair<TagType, Span>& tokenType : _tokenTypes) {
                 if (tokenType.first == type) {
                     return tokenType.second;
@@ -58,9 +67,14 @@ namespace carto { namespace geocoding {
             return Span { -1, 0 };
         }
 
-        void mark(const Span& span, const TagType& type) {
+        void mark(const Span& span, TagType type) {
+            StringType name;
             for (auto it = _tokens.begin(); it != _tokens.end(); ) {
                 if (it->second >= span.index && it->second < span.index + span.count) {
+                    if (!name.empty()) {
+                        name.append(1, ' ');
+                    }
+                    name += it->first;
                     it = _tokens.erase(it);
                 }
                 else {
@@ -68,6 +82,7 @@ namespace carto { namespace geocoding {
                 }
             }
             _tokenTypes.emplace_back(type, span);
+            _tokenNames.emplace_back(type, name);
         }
 
         std::vector<Span> enumerate() const {
@@ -141,6 +156,7 @@ namespace carto { namespace geocoding {
 
         std::vector<std::pair<StringType, int>> _tokens;
         std::vector<std::pair<TagType, Span>> _tokenTypes;
+        std::vector<std::pair<TagType, StringType>> _tokenNames;
     };
 } }
 

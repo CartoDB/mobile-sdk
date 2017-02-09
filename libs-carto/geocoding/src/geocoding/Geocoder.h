@@ -35,7 +35,7 @@ namespace carto { namespace geocoding {
             float locationRadius = 100000; // default is 100km
         };
         
-        explicit Geocoder(sqlite3pp::database& db) : _addressCache(ADDRESS_CACHE_SIZE), _populationCache(POPULATION_CACHE_SIZE), _nameRankCache(NAME_RANK_CACHE_SIZE), _tokenIDFCache(TOKEN_IDF_CACHE_SIZE), _emptyEntityQueryCache(EMPTY_ENTITY_QUERY_CACHE_SIZE), _nameQueryCache(NAME_QUERY_CACHE_SIZE), _tokenQueryCache(TOKEN_QUERY_CACHE_SIZE), _db(db) { _origin = findOrigin(); _houseNumberRegex = findHouseNumberRegex(); _translationTable = findTranslationTable(); }
+        explicit Geocoder(sqlite3pp::database& db) : _addressCache(ADDRESS_CACHE_SIZE), _populationCache(POPULATION_CACHE_SIZE), _nameRankCache(NAME_RANK_CACHE_SIZE), _tokenIDFCache(TOKEN_IDF_CACHE_SIZE), _emptyEntityQueryCache(EMPTY_ENTITY_QUERY_CACHE_SIZE), _nameQueryCache(NAME_QUERY_CACHE_SIZE), _tokenQueryCache(TOKEN_QUERY_CACHE_SIZE), _db(db) { _origin = getOrigin(); _houseNumberRegex = getHouseNumberRegex(); _translationTable = getTranslationTable(); }
 
         bool getAutocomplete() const;
         void setAutocomplete(bool autocomplete);
@@ -83,7 +83,6 @@ namespace carto { namespace geocoding {
             std::uint64_t postcodeId = 0;
             std::uint64_t nameId = 0;
             std::string houseNumber;
-            Ranking ranking;
             bool forceExact = true;
         };
         
@@ -105,25 +104,21 @@ namespace carto { namespace geocoding {
         void resolveNames(const Query& query, std::vector<Result>& results) const;
         void resolveAddress(const Query& query, std::vector<Result>& results) const;
 
+        bool testQuery(const Query& query, bool check) const;
+
+        std::vector<std::string> buildQueryFilters(const Query& query, bool nullFilters) const;
         std::vector<Query> bindQueryResults(const Query& query, TokenType type, std::uint64_t Query::* field) const;
         std::vector<Query> bindQueryNames(const Query& query, TokenType type, std::string Query::* field) const;
-
-        bool testQuery(const Query& query) const;
-        bool testQueryRank(const Query& query, std::vector<Result>& results) const;
-
         std::vector<Name> matchTokenNames(const std::vector<std::string>& tokenStrings, TokenType type, bool exactMatch) const;
         
-        std::vector<std::string> buildQueryFilters(const Query& query, bool nullFilters) const;
-
         float calculateNameRank(const std::string& name, const std::string& queryName) const;
-        float calculateLangRank(const std::string& lang) const;
+        float calculateMatchRank(TokenType type, std::uint64_t matchId, std::uint64_t dbId, const TokenList<std::string, TokenType>& tokenList) const;
+        float calculatePopulationRank(TokenType type, std::uint64_t id) const;
 
         float getTokenRank(const unistring& unitoken) const;
-        float getPopulationRank(TokenType type, std::uint64_t id) const;
-
-        cglib::vec2<double> findOrigin() const;
-        boost::optional<std::regex> findHouseNumberRegex() const;
-        std::unordered_map<unichar_t, unistring> findTranslationTable() const;
+        cglib::vec2<double> getOrigin() const;
+        boost::optional<std::regex> getHouseNumberRegex() const;
+        std::unordered_map<unichar_t, unistring> getTranslationTable() const;
 
         static constexpr float MIN_RANK = 0.1f;
         static constexpr float MIN_LOCATION_RANK = 0.2f; // should be larger than MIN_RANK
@@ -133,7 +128,7 @@ namespace carto { namespace geocoding {
         static constexpr float TRANSLATION_EXTRA_PENALTY = 0.1f;
         static constexpr float AUTOCOMPLETE_EXTRA_CHAR_PENALTY = 0.1f;
         static constexpr unsigned int MAX_STRINGMATCH_DIST = 2;
-        static constexpr unsigned int MAX_ENTITY_QUERIES = 100;
+        static constexpr unsigned int MAX_ADDRESS_LOOKUPS = 200;
         static constexpr unsigned int MAX_RESULTS = 100;
         static constexpr std::size_t MIN_AUTOCOMPLETE_SIZE = 3;
         static constexpr std::size_t ADDRESS_CACHE_SIZE = 1024;
@@ -155,7 +150,7 @@ namespace carto { namespace geocoding {
         mutable cache::lru_cache<std::string, bool> _emptyEntityQueryCache;
         mutable cache::lru_cache<std::string, std::vector<Name>> _nameQueryCache;
         mutable cache::lru_cache<std::string, std::vector<Token>> _tokenQueryCache;
-        mutable std::uint64_t _previousEntityQueryCounter = 0;;
+        mutable std::uint64_t _addressLookupCounter = 0;
         mutable std::uint64_t _entityQueryCounter = 0;
         mutable std::uint64_t _nameQueryCounter = 0;
         mutable std::uint64_t _tokenQueryCounter = 0;
