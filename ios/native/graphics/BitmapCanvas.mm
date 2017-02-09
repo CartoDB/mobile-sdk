@@ -81,7 +81,7 @@ namespace carto {
         CGFloat components[] = { color.getR() / 255.0f, color.getG() / 255.0f, color.getB() / 255.0f, color.getA() / 255.0f };
         CFUniquePtr<CGColorRef> baseColor(CGColorCreate(_state->_colorSpace, components), CGColorRelease);
         _state->_color = CFUniquePtr<CGColorRef>(CGColorCreateCopyWithAlpha(baseColor, color.getA() / 255.0f), CGColorRelease);
- 	}
+    }
 
     void BitmapCanvas::setStrokeWidth(float width) {
         _state->_strokeWidth = width;
@@ -105,6 +105,10 @@ namespace carto {
     }
 
     void BitmapCanvas::drawText(std::string text, const ScreenPos& pos, int maxWidth, bool breakLines) {
+        if (text.empty()) {
+            return;
+        }
+
         CGContextRef context = _state->_context;
         CGContextSaveGState(context);
         
@@ -176,7 +180,6 @@ namespace carto {
     }
 
     void BitmapCanvas::drawRoundRect(const ScreenBounds& rect, float radius) {
-
         float minX = rect.getMin().getX(), minY = rect.getMin().getY();
         float maxX = rect.getMax().getX(), maxY = rect.getMax().getY();
         float midX = (minX + maxX) * 0.5f, midY = (minY + maxY) * 0.5f;
@@ -190,15 +193,15 @@ namespace carto {
         CGContextClosePath(context);
         
         switch (_state->_drawMode) {
-            case STROKE:
-                CGContextSetLineWidth(context, _state->_strokeWidth);
-                CGContextSetStrokeColorWithColor(context, _state->_color);
-                CGContextDrawPath(context, kCGPathStroke);
-                break;
-            case FILL:
-                CGContextSetFillColorWithColor(context, _state->_color);
-                CGContextDrawPath(context, kCGPathFill);
-                break;
+        case STROKE:
+            CGContextSetLineWidth(context, _state->_strokeWidth);
+            CGContextSetStrokeColorWithColor(context, _state->_color);
+            CGContextDrawPath(context, kCGPathStroke);
+            break;
+        case FILL:
+            CGContextSetFillColorWithColor(context, _state->_color);
+            CGContextDrawPath(context, kCGPathFill);
+            break;
         }
     }
     
@@ -245,6 +248,10 @@ namespace carto {
     }
 
     ScreenBounds BitmapCanvas::measureTextSize(std::string text, int maxWidth, bool breakLines) {
+        if (text.empty()) {
+            return ScreenBounds(ScreenPos(0, 0), ScreenPos(0, 0));
+        }
+
         CFUniquePtr<CFAttributedStringRef> attString(_state->createCFAttributedString(text));
         CFUniquePtr<CTFramesetterRef> framesetter(CTFramesetterCreateWithAttributedString(attString));
         CGSize frameSize = measureFramesetter(framesetter, _state->_font, maxWidth, breakLines);

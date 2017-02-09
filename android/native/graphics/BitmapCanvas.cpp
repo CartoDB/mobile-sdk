@@ -285,6 +285,10 @@ namespace carto {
     }
 
     void BitmapCanvas::drawText(std::string text, const ScreenPos& pos, int maxWidth, bool breakLines) {
+        if (text.empty()) {
+            return;
+        }
+
         JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
         AndroidUtils::JNILocalFrame jframe(jenv, 32, "BitmapCanvas::drawText");
         if (!jframe.isValid()) {
@@ -363,6 +367,10 @@ namespace carto {
     }
 
     ScreenBounds BitmapCanvas::measureTextSize(std::string text, int maxWidth, bool breakLines) {
+        if (text.empty()) {
+            return ScreenBounds(ScreenPos(0, 0), ScreenPos(0, 0));
+        }
+
         JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
         AndroidUtils::JNILocalFrame jframe(jenv, 32, "BitmapCanvas::measureTextSize");
         if (!jframe.isValid()) {
