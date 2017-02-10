@@ -13,7 +13,7 @@
 #include <time.h>
 
 #include <stdext/utf8_filesystem.h>
-#include <stdext/miniz.h>
+#include <stdext/zlib.h>
 
 #include <sqlite3pp.h>
 #include <sqlite3ppext.h>
@@ -160,9 +160,10 @@ namespace carto {
                 }
                 if (std::shared_ptr<PackageTileMask> tileMask = packageInfo->getTileMask()) {
                     if (tileMask->getTileStatus(mapTile) != PackageTileStatus::PACKAGE_TILE_STATUS_MISSING) {
-                        if (std::shared_ptr<sqlite3pp::database> packageDb = getLocalPackageDb(packageInfo)) {
+                        PackageDatabase packageDatabase = getLocalPackageDatabase(packageInfo);
+                        if (packageDatabase.packageDb) {
                             // Try to load the tile (this could fail, as tile masks may not be complete to the last zoom level)
-                            sqlite3pp::query query(*packageDb, "SELECT tile_decrypt(tile_data, zoom_level, tile_column, tile_row) FROM tiles WHERE zoom_level=:zoom AND tile_column=:x AND tile_row=:y");
+                            sqlite3pp::query query(*packageDatabase.packageDb, "SELECT tile_decrypt(tile_data, zoom_level, tile_column, tile_row) FROM tiles WHERE zoom_level=:zoom AND tile_column=:x AND tile_row=:y");
                             query.bind(":zoom", mapTile.getZoom());
                             query.bind(":x", mapTile.getX());
                             query.bind(":y", mapTile.getY());
@@ -170,7 +171,13 @@ namespace carto {
                                 Log::Infof("PackageManager::loadTile: Using package %s", packageInfo->getPackageId().c_str());
                                 const unsigned char* dataPtr = reinterpret_cast<const unsigned char*>(qit->get<const void*>(0));
                                 std::size_t dataSize = qit->column_bytes(0);
-                                return std::make_shared<BinaryData>(dataPtr, dataSize);
+                                std::vector<unsigned char> data(dataPtr, dataPtr + dataSize);
+                                if (packageDatabase.sharedDictionary) {
+                                    std::vector<unsigned char> uncompressedData;
+                                    zlib::inflate_gzip(data.data(), data.size(), packageDatabase.sharedDictionary->data(), packageDatabase.sharedDictionary->size(), uncompressedData);
+                                    std::swap(data, uncompressedData);
+                                }
+                                return std::make_shared<BinaryData>(std::move(data));
                             }
                         }
                     }
@@ -642,7 +649,7 @@ namespace carto {
 
         // Test if the data is gzipped, in that case inflate
         std::vector<unsigned char> packageListDataTemp;
-        if (miniz::inflate_gzip(packageListData.data(), packageListData.size(), packageListDataTemp)) {
+        if (zlib::inflate_gzip(packageListData.data(), packageListData.size(), packageListDataTemp)) {
             std::swap(packageListData, packageListDataTemp);
         }
 
@@ -989,6 +996,71 @@ namespace carto {
         return true;
     }
 
+    PackageManager::PackageDatabase PackageManager::getLocalPackageDatabase(const std::shared_ptr<PackageInfo>& packageInfo) const {
+        const int MAX_OPEN_PACKAGES = 4;
+
+        // Try to find already open package from the cache
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        for (std::size_t i = 0; i < _localPackageDatabaseCache.size(); i++) {
+            if (_localPackageDatabaseCache[i].packageId == packageInfo->getPackageId()) {
+                PackageDatabase packageDatabase = _localPackageDatabaseCache[i];
+                if (i > 0) {
+                    _localPackageDatabaseCache.erase(_localPackageDatabaseCache.begin() + i);
+                    _localPackageDatabaseCache.insert(_localPackageDatabaseCache.begin(), packageDatabase);
+                }
+                return packageDatabase;
+            }
+        }
+        
+        // Must open new database instance
+        std::string packageFileName = createLocalFilePath(createPackageFileName(packageInfo->getPackageId(), packageInfo->getPackageType(), packageInfo->getVersion()).c_str());
+        try {
+            std::shared_ptr<sqlite3pp::database> packageDb = std::make_shared<sqlite3pp::database>(packageFileName.c_str());
+
+            // Create new sqlite decryption function. First check if the database is crypted.
+            std::string encKey = _serverEncKey;
+            bool encrypted = CheckDbEncryption(*packageDb, _serverEncKey + _localEncKey); // NOTE: this is a hack - though tiles are actually encrypted with server key only, with check that local key is included in the hash also
+            std::shared_ptr<sqlite3pp::ext::function> decryptFunc = std::make_shared<sqlite3pp::ext::function>(*packageDb);
+            decryptFunc->create("tile_decrypt", [encrypted, encKey](sqlite3pp::ext::context& ctx) {
+                const unsigned char* encData = reinterpret_cast<const unsigned char*>(ctx.get<const void*>(0));
+                std::size_t encSize = ctx.args_bytes(0);
+                int zoom = ctx.get<int>(1);
+                int x = ctx.get<int>(2);
+                int y = ctx.get<int>(3);
+                std::vector<unsigned char> encVector(encData, encData + encSize);
+                if (encrypted) {
+                    DecryptTile(encVector, zoom, x, y, encKey);
+                }
+                ctx.result(encVector.empty() ? nullptr : &encVector[0], static_cast<int>(encVector.size()), false);
+            }, 4);
+            if (_localPackageDatabaseCache.size() >= MAX_OPEN_PACKAGES) {
+                _localPackageDatabaseCache.pop_back();
+            }
+
+            // Try to load shared dictionary
+            std::shared_ptr<BinaryData> sharedDictionary;
+            sqlite3pp::query query(*packageDb, "SELECT value FROM metadata WHERE name='shared_zlib_dict'");
+            for (auto qit = query.begin(); qit != query.end(); qit++) {
+                const unsigned char* dataPtr = reinterpret_cast<const unsigned char*>(qit->get<const void*>(0));
+                std::size_t dataSize = qit->column_bytes(0);
+                sharedDictionary = std::make_shared<BinaryData>(dataPtr, dataSize);
+            }
+
+            // Save new package database instance
+            PackageDatabase packageDatabase;
+            packageDatabase.packageId = packageInfo->getPackageId();
+            packageDatabase.packageDb = packageDb;
+            packageDatabase.decryptFunc = decryptFunc;
+            packageDatabase.sharedDictionary = sharedDictionary;
+            _localPackageDatabaseCache.insert(_localPackageDatabaseCache.begin(), packageDatabase);
+            return packageDatabase;
+        }
+        catch (const std::exception& ex) {
+            Log::Errorf("PackageManager::getLocalPackageDb: %s", ex.what());
+        }
+        return PackageDatabase();
+    }
+
     void PackageManager::syncLocalPackages() {
         if (!_localDb) {
             return;
@@ -1027,7 +1099,7 @@ namespace carto {
 
             // Update packages, clear db cache
             std::swap(_localPackages, packages);
-            _localPackageDbCache.clear();
+            _localPackageDatabaseCache.clear();
             for (auto it = _localPackageFileCache.begin(); it != _localPackageFileCache.end(); it++) {
                 it->second->close();
             }
@@ -1036,61 +1108,6 @@ namespace carto {
         catch (const std::exception& ex) {
             Log::Errorf("PackageManager::syncLocalPackages: %s", ex.what());
         }
-    }
-
-    std::shared_ptr<sqlite3pp::database> PackageManager::getLocalPackageDb(const std::shared_ptr<PackageInfo>& packageInfo) const {
-        const int MAX_OPEN_PACKAGES = 4;
-
-        // Try to find already open package from the cache
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        for (std::size_t i = 0; i < _localPackageDbCache.size(); i++) {
-            if (_localPackageDbCache[i].packageId == packageInfo->getPackageId()) {
-                PackageDatabase packageDatabase = _localPackageDbCache[i];
-                if (i > 0) {
-                    _localPackageDbCache.erase(_localPackageDbCache.begin() + i);
-                    _localPackageDbCache.insert(_localPackageDbCache.begin(), packageDatabase);
-                }
-                return packageDatabase.packageDb;
-            }
-        }
-        
-        // Must open new database instance
-        std::string packageFileName = createLocalFilePath(createPackageFileName(packageInfo->getPackageId(), packageInfo->getPackageType(), packageInfo->getVersion()).c_str());
-        try {
-            std::shared_ptr<sqlite3pp::database> packageDb = std::make_shared<sqlite3pp::database>(packageFileName.c_str());
-
-            // Create new sqlite decryption function. First check if the database is crypted.
-            std::string encKey = _serverEncKey;
-            bool encrypted = CheckDbEncryption(*packageDb, _serverEncKey + _localEncKey); // NOTE: this is a hack - though tiles are actually encrypted with server key only, with check that local key is included in the hash also
-            std::shared_ptr<sqlite3pp::ext::function> decryptFunc = std::make_shared<sqlite3pp::ext::function>(*packageDb);
-            decryptFunc->create("tile_decrypt", [encrypted, encKey](sqlite3pp::ext::context& ctx) {
-                const unsigned char* encData = reinterpret_cast<const unsigned char*>(ctx.get<const void*>(0));
-                std::size_t encSize = ctx.args_bytes(0);
-                int zoom = ctx.get<int>(1);
-                int x = ctx.get<int>(2);
-                int y = ctx.get<int>(3);
-                std::vector<unsigned char> encVector(encData, encData + encSize);
-                if (encrypted) {
-                    DecryptTile(encVector, zoom, x, y, encKey);
-                }
-                ctx.result(encVector.empty() ? nullptr : &encVector[0], static_cast<int>(encVector.size()), false);
-            }, 4);
-            if (_localPackageDbCache.size() >= MAX_OPEN_PACKAGES) {
-                _localPackageDbCache.pop_back();
-            }
-
-            // Save new package database instance
-            PackageDatabase packageDatabase;
-            packageDatabase.packageId = packageInfo->getPackageId();
-            packageDatabase.packageDb = packageDb;
-            packageDatabase.decryptFunc = decryptFunc;
-            _localPackageDbCache.insert(_localPackageDbCache.begin(), packageDatabase);
-            return packageDb;
-        }
-        catch (const std::exception& ex) {
-            Log::Errorf("PackageManager::getLocalPackageDb: %s", ex.what());
-        }
-        return std::shared_ptr<sqlite3pp::database>();
     }
 
     void PackageManager::importLocalPackage(int id, int taskId, const std::string& packageId, PackageType::PackageType packageType, const std::string& packageFileName) {
