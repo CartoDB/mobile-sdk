@@ -236,6 +236,7 @@ namespace carto {
             std::string packageId;
             std::shared_ptr<sqlite3pp::database> packageDb;
             std::shared_ptr<sqlite3pp::ext::function> decryptFunc;
+            std::shared_ptr<BinaryData> sharedDictionary;
         };
 
         class PersistentTaskQueue {
@@ -281,8 +282,8 @@ namespace carto {
         bool downloadPackage(int taskId);
         bool removePackage(int taskId);
         
+        PackageDatabase getLocalPackageDatabase(const std::shared_ptr<PackageInfo>& packageInfo) const;
         void syncLocalPackages();
-        std::shared_ptr<sqlite3pp::database> getLocalPackageDb(const std::shared_ptr<PackageInfo>& packageInfo) const;
         void importLocalPackage(int id, int taskId, const std::string& packageId, PackageType::PackageType packageType, const std::string& packageFileName);
         void deleteLocalPackage(int id);
 
@@ -315,7 +316,7 @@ namespace carto {
         const std::string _dataFolder;
         const std::string _serverEncKey;
         const std::string _localEncKey;
-        mutable std::vector<PackageDatabase> _localPackageDbCache;
+        mutable std::vector<PackageDatabase> _localPackageDatabaseCache;
         mutable std::map<std::string, std::shared_ptr<std::ifstream> > _localPackageFileCache;
         mutable std::vector<std::shared_ptr<PackageInfo> > _serverPackageCache;
         std::vector<std::shared_ptr<PackageInfo> > _localPackages;
