@@ -10,6 +10,7 @@
 #ifdef _CARTO_GDAL_SUPPORT
 
 #include "core/MapBounds.h"
+#include "core/Variant.h"
 #include "datasources/VectorDataSource.h"
 #include "datasources/OGRVectorDataBase.h"
 
@@ -23,9 +24,11 @@ class OGRSpatialReference;
 class OGRCoordinateTransformation;
 
 namespace carto {
+    class Geometry;
+    class GeometrySimplifier;
     class StyleSelector;
     class ViewState;
-    class GeometrySimplifier;
+    class VectorElement;
     
     namespace OGRFieldType {
         /**
@@ -211,7 +214,7 @@ namespace carto {
         
         std::shared_ptr<Geometry> createGeometry(const OGRGeometry* poGeometry) const;
         
-        std::shared_ptr<VectorElement> createVectorElement(const ViewState& viewState, const std::shared_ptr<Geometry>& geometry, const std::map<std::string, std::string>& metaData) const;
+        std::shared_ptr<VectorElement> createVectorElement(const ViewState& viewState, const std::shared_ptr<Geometry>& geometry, const std::map<std::string, Variant>& metaData) const;
         
         std::shared_ptr<OGRGeometry> createOGRGeometry(const std::shared_ptr<Geometry>& geometry) const;
 

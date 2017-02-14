@@ -14,9 +14,28 @@
 #include <algorithm>
 #include <numeric>
 
+namespace {
+
+    boost::variant<double, std::string> convertVariant(const carto::Variant& variant) {
+        switch (variant.getType()) {
+        case carto::VariantType::VARIANT_TYPE_STRING:
+            return variant.getString();
+        case carto::VariantType::VARIANT_TYPE_BOOL:
+            return static_cast<double>(variant.getBool());
+        case carto::VariantType::VARIANT_TYPE_INTEGER:
+            return static_cast<double>(variant.getLong());
+        case carto::VariantType::VARIANT_TYPE_DOUBLE:
+            return variant.getDouble();
+        default:
+            return std::string();
+        }
+    }
+
+}
+
 namespace carto {
 
-    StyleSelectorContext::StyleSelectorContext(const ViewState& viewState, const std::shared_ptr<Geometry>& geometry, const std::map<std::string, std::string>& metaData) :
+    StyleSelectorContext::StyleSelectorContext(const ViewState& viewState, const std::shared_ptr<Geometry>& geometry, const std::map<std::string, Variant>& metaData) :
         _viewState(viewState), _geometry(geometry), _metaData(metaData)
     {
     }
@@ -29,14 +48,14 @@ namespace carto {
         return _geometry;
     }
         
-    const std::map<std::string, std::string>& StyleSelectorContext::getMetaData() const {
+    const std::map<std::string, Variant>& StyleSelectorContext::getMetaData() const {
         return _metaData;
     }
 
     bool StyleSelectorContext::getVariable(const std::string& name, boost::variant<double, std::string>& value) const {
         auto it = _metaData.find(name);
         if (it != _metaData.end()) {
-            value = it->second;
+            value = convertVariant(it->second);
             return true;
         }
 
