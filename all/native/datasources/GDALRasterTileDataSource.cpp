@@ -101,7 +101,7 @@ namespace carto {
     {
         _poDataset = (GDALDataset*)GDALOpen(fileName.c_str(), GA_ReadOnly);
         if (!_poDataset) {
-            throw FileExeption("Failed to open file", fileName);
+            throw FileException("Failed to open file", fileName);
         }
 
         _width = _poDataset->GetRasterXSize();
@@ -130,7 +130,7 @@ namespace carto {
     {
         _poDataset = (GDALDataset*)GDALOpen(fileName.c_str(), GA_ReadOnly);
         if (!_poDataset) {
-            throw FileExeption("Failed to open file", fileName);
+            throw FileException("Failed to open file", fileName);
         }
         
         _width = _poDataset->GetRasterXSize();
@@ -298,7 +298,7 @@ namespace carto {
         }
 
         // Build bitmap, "compress" (serialize) to internal format
-        Bitmap bitmap(data.data(), _tileSize, _tileSize, ColorFormat::COLOR_FORMAT_RGBA, 4 * _tileSize, false);
+        Bitmap bitmap(data.data(), _tileSize, _tileSize, ColorFormat::COLOR_FORMAT_RGBA, 4 * _tileSize);
         return std::make_shared<TileData>(bitmap.compressToInternal());
     }
 
