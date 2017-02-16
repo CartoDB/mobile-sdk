@@ -518,6 +518,7 @@ namespace carto { namespace css {
         { "text-line-spacing", "line-spacing" },
         { "text-horizontal-alignment", "horizontal-alignment" },
         { "text-vertical-alignment", "vertical-alignment" },
+        { "text-comp-op", "comp-op" },
 
         { "shield-name", "" },
         { "shield-face-name", "" },
@@ -547,6 +548,7 @@ namespace carto { namespace css {
         { "shield-line-spacing", "line-spacing" },
         { "shield-horizontal-alignment", "horizontal-alignment" },
         { "shield-vertical-alignment", "vertical-alignment" },
+        { "shield-comp-op", "comp-op" },
 
         { "marker-file", "file" },
         { "marker-placement", "placement" },
@@ -569,5 +571,6 @@ namespace carto { namespace css {
         { "building-fill-opacity", "fill-opacity" },
         { "building-height", "height" },
         { "building-geometry-transform", "geometry-transform" }
+        // NOTE: comp-op not supported for building symbolizer
     };
 } }

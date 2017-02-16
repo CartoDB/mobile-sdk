@@ -61,6 +61,7 @@ namespace carto { namespace mvt {
         float _lineSpacing = 0.0f;
         std::string _horizontalAlignment = "auto";
         std::string _verticalAlignment = "auto";
+        std::string _compOp = "src-over";
     };
 } }
 

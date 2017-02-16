@@ -32,7 +32,7 @@ namespace carto { namespace mvt {
             return;
         }
 
-        vt::CompOp compOp = vt::CompOp::SRC_OVER;
+        vt::CompOp compOp = convertCompOp(_compOp);
 
         std::string text = getTransformedText(_text);
         std::size_t hash = std::hash<std::string>()(text);
@@ -185,6 +185,9 @@ namespace carto { namespace mvt {
         }
         else if (name == "vertical-alignment") {
             bind(&_verticalAlignment, parseStringExpression(value));
+        }
+        else if (name == "comp-op") {
+            bind(&_compOp, parseStringExpression(value));
         }
         else {
             Symbolizer::bindParameter(name, value);

@@ -18,7 +18,7 @@ namespace carto { namespace mvt {
             return;
         }
 
-        vt::CompOp compOp = vt::CompOp::SRC_OVER;
+        vt::CompOp compOp = convertCompOp(_compOp);
 
         float fontScale = symbolizerContext.getSettings().getFontScale();
         float bitmapSize = static_cast<float>(std::max(backgroundBitmap->width, backgroundBitmap->height)) * fontScale;
