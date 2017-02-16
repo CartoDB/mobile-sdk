@@ -146,7 +146,7 @@ namespace carto {
         /**
          * Returns the element of array at specified position.
          * @param idx The index of the array element to return (starting from 0).
-         * @return The array element at specified position or null if the element does not exist or the variant is not an array.
+         * @return The array element at specified position or null type if the element does not exist or the variant is not an array.
          */
         Variant getArrayElement(int idx) const;
 
@@ -158,7 +158,7 @@ namespace carto {
         /**
          * Returns the element of object with the specified key.
          * @param key The key of the object element to return.
-         * @return The object element with the specified key or null if the element does not exist or the variant is not an object.
+         * @return The object element with the specified key or null type if the element does not exist or the variant is not an object.
          */
         Variant getObjectElement(const std::string& key) const;
 
