@@ -7,6 +7,7 @@
 #ifndef _CARTO_GEOCODING_TOKENLIST_H_
 #define _CARTO_GEOCODING_TOKENLIST_H_
 
+#include <cstdint>
 #include <string>
 #include <set>
 #include <vector>
@@ -14,7 +15,7 @@
 #include <algorithm>
 
 namespace carto { namespace geocoding {
-    template <typename StringType, typename TagType>
+    template <typename StringType, typename TokenType, typename TagType>
     class TokenList final {
     public:
         using CharType = typename StringType::value_type;
@@ -26,95 +27,147 @@ namespace carto { namespace geocoding {
         
         TokenList() = default;
 
-        std::size_t size() const { return _tokens.size(); }
+        int size() const { return static_cast<int>(_tokens.size()); }
 
-        const std::pair<StringType, int>& at(std::size_t i) const { return _tokens.at(i); }
+        int unmatchedTokens() const { return static_cast<int>(std::count_if(_tokens.begin(), _tokens.end(), [](const Token& token) { return !token.value.empty() && token.assignedType == TokenType(); })); }
 
-        StringType name(TagType type) const {
-            for (const std::pair<TagType, StringType>& tokenNames : _tokenNames) {
-                if (tokenNames.first == type) {
-                    return tokenNames.second;
-                }
-            }
-            return StringType();
+        void setTag(int index, const TagType& tag) {
+            _tokens.at(index).tag = tag;
         }
 
-        std::vector<StringType> tokens(const Span& span) const {
-            std::vector<StringType> tokens;
-            for (auto it = _tokens.begin(); it != _tokens.end(); it++) {
-                if (it->second >= span.index && it->second < span.index + span.count) {
-                    tokens.push_back(it->first);
-                }
-            }
-            return tokens;
+        const TagType& tag(int index) const {
+            return _tokens.at(index).tag;
         }
 
-        TagType type(int index) const {
-            for (const std::pair<TagType, Span>& tokenType : _tokenTypes) {
-                if (index >= tokenType.second.index && index < tokenType.second.index + tokenType.second.count) {
-                    return tokenType.first;
-                }
-            }
-            return TagType();
+        void markValidType(int index, TokenType type) {
+            std::uint64_t tokenMask = static_cast<std::uint64_t>(1) << static_cast<int>(type);
+            _tokens.at(index).validTypes |= tokenMask;
         }
 
-        Span span(TagType type) const {
-            for (const std::pair<TagType, Span>& tokenType : _tokenTypes) {
-                if (tokenType.first == type) {
-                    return tokenType.second;
+        void assignType(const Span& span, TokenType type) {
+            std::uint64_t tokenMask = static_cast<std::uint64_t>(1) << static_cast<int>(type);
+            for (std::size_t i = span.index; i < span.index + span.count; i++) {
+                _tokens.at(i).assignedType = type;
+                _tokens.at(i).validTypes = 0;
+            }
+            for (std::size_t i = 0; i < _tokens.size(); i++) {
+                _tokens.at(i).validTypes &= ~tokenMask;
+            }
+        }
+
+        StringType name(TokenType type) const {
+            StringType name;
+            for (const Token& token : _tokens) {
+                if (token.assignedType == type) {
+                    name += (name.empty() ? "" : " ") + token.value;
+                }
+            }
+            return name;
+        }
+
+        Span span(TokenType type) const {
+            for (std::size_t i = 0; i < _tokens.size(); i++) {
+                if (_tokens[i].assignedType == type) {
+                    std::size_t j = i + 1;
+                    while (j < _tokens.size()) {
+                        if (_tokens[j].assignedType != type) {
+                            break;
+                        }
+                        j++;
+                    }
+                    return Span { static_cast<int>(i), static_cast<int>(j - i) };
                 }
             }
             return Span { -1, 0 };
         }
 
-        void mark(const Span& span, TagType type) {
-            StringType name;
-            for (auto it = _tokens.begin(); it != _tokens.end(); ) {
-                if (it->second >= span.index && it->second < span.index + span.count) {
-                    if (!name.empty()) {
-                        name.append(1, ' ');
-                    }
-                    name += it->first;
-                    it = _tokens.erase(it);
-                }
-                else {
-                    it++;
-                }
+        std::vector<StringType> tokens(const Span& span) const {
+            std::vector<StringType> tokens;
+            tokens.reserve(span.count);
+            for (std::size_t i = span.index; i < span.index + span.count; i++) {
+                tokens.push_back(_tokens.at(i).value);
             }
-            _tokenTypes.emplace_back(type, span);
-            _tokenNames.emplace_back(type, name);
+            return tokens;
         }
 
-        std::vector<Span> enumerate() const {
-            std::vector<Span> results;
-            for (std::size_t i = 0; i < _tokens.size(); i++) {
-                for (std::size_t j = i + 1; j <= _tokens.size(); j++) {
-                    int count = static_cast<int>(j - i);
-                    results.push_back({ _tokens[i].second, count });
-                    if (j < _tokens.size()) {
-                        if (_tokens[j].second != _tokens[i].second + count) {
-                            break;
+        std::vector<TagType> tags(const Span& span) const {
+            std::vector<TagType> tags;
+            tags.reserve(span.count);
+            for (std::size_t i = span.index; i < span.index + span.count; i++) {
+                tags.push_back(_tokens.at(i).tag);
+            }
+            return tags;
+        }
+
+        std::vector<Span> enumerate(const std::vector<TokenType>& validTypes, TokenType& type) const {
+            int bestClassCount = 0, bestMultiClassCount = std::numeric_limits<int>::max();
+            for (std::size_t i = 0; i < validTypes.size(); i++) {
+                std::uint64_t tokenMask = static_cast<std::uint64_t>(1) << static_cast<int>(validTypes[i]);
+                int classCount = 0, multiClassCount = 0;
+                for (std::size_t k = 0; k < _tokens.size(); k++) {
+                    if (_tokens[k].validTypes & tokenMask) {
+                        classCount += 1;
+                        for (std::uint64_t validTypes = _tokens[k].validTypes & ~tokenMask; validTypes != 0; validTypes >>= 1) {
+                            multiClassCount += validTypes & 1;
                         }
                     }
                 }
+                if (classCount > 0 && std::make_pair(multiClassCount, -classCount) < std::make_pair(bestMultiClassCount, -bestClassCount)) {
+                    type = validTypes[i];
+                    bestClassCount = classCount;
+                    bestMultiClassCount = multiClassCount;
+                }
             }
-            std::sort(results.begin(), results.end(), [](const Span& span1, const Span& span2) {
-                return std::tie(span1.count, span1.index) > std::tie(span2.count, span2.index);
-            });
+            if (bestClassCount == 0) {
+                type = TokenType();
+                return std::vector<Span>();
+            }
+
+            std::uint64_t tokenMask = static_cast<std::uint64_t>(1) << static_cast<int>(type);
+            std::vector<Span> results;
+            for (std::size_t j = _tokens.size(); j > 0; j--) {
+                for (std::size_t i = 0; i < j; i++) {
+                    bool valid = true;
+                    for (std::size_t k = 0; k < _tokens.size(); k++) {
+                        if (k >= i && k < j) {
+                            if (_tokens[k].assignedType != TokenType() || !(_tokens[k].validTypes & tokenMask)) {
+                                valid = false;
+                            }
+                        }
+                        else {
+                            if (_tokens[k].validTypes == tokenMask) {
+                                valid = false;
+                            }
+                        }
+                    }
+                    if (valid) {
+                        results.emplace_back(Span { static_cast<int>(i), static_cast<int>(j - i) });
+                    }
+                }
+            }
+            
+            bool skip = false;
+            for (std::size_t k = 0; k < _tokens.size(); k++) {
+                if (_tokens[k].validTypes == tokenMask) {
+                    skip = true;
+                    break;
+                }
+            }
+            if (!skip) {
+                results.emplace_back(Span { -1, 0 });
+            }
             return results;
         }
 
         static TokenList build(const StringType& text) {
-            std::vector<std::pair<StringType, int>> tokens;
-            std::vector<std::pair<TagType, Span>> tokenTypes;
+            std::vector<Token> tokens;
             int count = 0;
             std::size_t i0 = 0, i1 = 0;
             while (i1 < text.size()) {
                 CharType c = text[i1];
                 if (isSpace(c) || isSeparator(c)) {
                     if (i1 > i0) {
-                        tokens.emplace_back(text.substr(i0, i1 - i0), count);
-                        count++;
+                        tokens.push_back(Token(text.substr(i0, i1 - i0)));
                     }
                     bool stop = false;
                     while (i1 < text.size()) {
@@ -128,8 +181,7 @@ namespace carto { namespace geocoding {
                         i1++;
                     }
                     if (stop) {
-                        tokenTypes.emplace_back(TagType(), Span { count, 1 });
-                        count++;
+                        tokens.push_back(Token(StringType()));
                     }
                     i0 = i1;
                 }
@@ -138,9 +190,9 @@ namespace carto { namespace geocoding {
                 }
             }
             if (i1 > i0) {
-                tokens.emplace_back(text.substr(i0, i1 - i0), count);
+                tokens.push_back(Token(text.substr(i0, i1 - i0)));
             }
-            return TokenList { tokens, tokenTypes };
+            return TokenList(tokens);
         }
 
         static bool isSpace(CharType c) {
@@ -152,11 +204,18 @@ namespace carto { namespace geocoding {
         }
         
     private:
-        explicit TokenList(std::vector<std::pair<StringType, int>> tokens, std::vector<std::pair<TagType, Span>> tokenTypes) : _tokens(std::move(tokens)), _tokenTypes(std::move(tokenTypes)) { }
+        struct Token {
+            StringType value;
+            TagType tag = TagType();
+            TokenType assignedType = TokenType();
+            std::uint64_t validTypes = 0;
 
-        std::vector<std::pair<StringType, int>> _tokens;
-        std::vector<std::pair<TagType, Span>> _tokenTypes;
-        std::vector<std::pair<TagType, StringType>> _tokenNames;
+            explicit Token(StringType value) : value(std::move(value)) { }
+        };
+
+        explicit TokenList(std::vector<Token> tokens) : _tokens(std::move(tokens)) { }
+
+        std::vector<Token> _tokens;
     };
 } }
 
