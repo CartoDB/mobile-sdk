@@ -17,9 +17,8 @@ namespace carto {
     MBTilesTileDataSource::MBTilesTileDataSource(const std::string& path) :
         TileDataSource(), _scheme(MBTilesScheme::MBTILES_SCHEME_TMS), _db(), _mutex()
     {
-        try {
-            _db.reset(new sqlite3pp::database(path.c_str()));
-        } catch (...) {
+        _db.reset(new sqlite3pp::database());
+        if (_db->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
             throw FileException("Failed to open database file", path);
         }
 
@@ -38,9 +37,8 @@ namespace carto {
     MBTilesTileDataSource::MBTilesTileDataSource(int minZoom, int maxZoom, const std::string& path) :
         TileDataSource(minZoom, maxZoom), _scheme(MBTilesScheme::MBTILES_SCHEME_TMS), _db(), _mutex()
     {
-        try {
-            _db.reset(new sqlite3pp::database(path.c_str()));
-        } catch (...) {
+        _db.reset(new sqlite3pp::database());
+        if (_db->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
             throw FileException("Failed to open database file", path);
         }
     }
@@ -48,9 +46,8 @@ namespace carto {
     MBTilesTileDataSource::MBTilesTileDataSource(int minZoom, int maxZoom, const std::string& path, MBTilesScheme::MBTilesScheme scheme) :
         TileDataSource(minZoom, maxZoom), _scheme(scheme), _db(), _mutex()
     {
-        try {
-            _db.reset(new sqlite3pp::database(path.c_str()));
-        } catch (...) {
+        _db.reset(new sqlite3pp::database());
+        if (_db->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
             throw FileException("Failed to open database file", path);
         }
     }
