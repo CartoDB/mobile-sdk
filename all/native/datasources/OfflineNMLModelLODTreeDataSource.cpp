@@ -14,16 +14,15 @@
 
 namespace carto {
 
-    OfflineNMLModelLODTreeDataSource::OfflineNMLModelLODTreeDataSource(const std::string& fileName) :
+    OfflineNMLModelLODTreeDataSource::OfflineNMLModelLODTreeDataSource(const std::string& path) :
         NMLModelLODTreeDataSource(std::make_shared<EPSG3857>()),
         _db()
     {
-        try {
-            _db.reset(new sqlite3pp::database(fileName.c_str()));
-            _db->execute("PRAGMA encoding='UTF-8'");
-        } catch (const std::exception& e) {
-            throw FileException("Failed to open database", fileName);
+        _db.reset(new sqlite3pp::database());
+        if (_db->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
+            throw FileException("Failed to open database", path);
         }
+        _db->execute("PRAGMA encoding='UTF-8'");
     }
     
     OfflineNMLModelLODTreeDataSource::~OfflineNMLModelLODTreeDataSource() {
