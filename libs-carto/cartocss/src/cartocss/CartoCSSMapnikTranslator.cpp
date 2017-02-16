@@ -492,6 +492,7 @@ namespace carto { namespace css {
         { "point-allow-overlap", "allow-overlap" },
         { "point-ignore-placement", "ignore-placement" },
         { "point-transform", "transform" },
+        { "point-comp-op", "comp-op" },
 
         { "text-name", "" },
         { "text-face-name", "" },
@@ -562,6 +563,7 @@ namespace carto { namespace css {
         { "marker-allow-overlap", "allow-overlap" },
         { "marker-ignore-placement", "ignore-placement" },
         { "marker-transform", "transform" },
+        { "marker-comp-op", "comp-op" },
 
         { "building-fill", "fill" },
         { "building-fill-opacity", "fill-opacity" },
