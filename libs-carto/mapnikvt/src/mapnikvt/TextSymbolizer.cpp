@@ -63,12 +63,8 @@ namespace carto { namespace mvt {
 
         auto flushTexts = [&](const cglib::mat3x3<float>& transform) {
             if (_allowOverlap) {
-                std::shared_ptr<const vt::ColorFunction> fillFunc;
-                ExpressionFunctionBinder<vt::Color>().bind(&fillFunc, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), [this](const Value& val) -> vt::Color {
-                    return convertColor(val);
-                }).update(exprContext);
-                std::shared_ptr<const vt::FloatFunction> opacityFunc;
-                ExpressionFunctionBinder<float>().bind(&opacityFunc, std::make_shared<ConstExpression>(Value(1.0f))).update(exprContext);
+                std::shared_ptr<const vt::ColorFunction> fillFunc = createColorFunction("#ffffff");
+                std::shared_ptr<const vt::FloatFunction> opacityFunc = createFloatFunction(1.0f);
 
                 vt::TextStyle style(compOp, convertLabelToPointOrientation(placement), fillFunc, opacityFunc, textFormatterOptions, font, _orientation, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::Bitmap>(), transform);
 

@@ -31,12 +31,8 @@ namespace carto { namespace mvt {
             bitmapScale = fontScale * 4.0f / RECTANGLE_SIZE;
         }
 
-        std::shared_ptr<const vt::ColorFunction> fillFunc;
-        ExpressionFunctionBinder<vt::Color>().bind(&fillFunc, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), [this](const Value& val) -> vt::Color {
-            return convertColor(val);
-        }).update(exprContext);
-        std::shared_ptr<const vt::FloatFunction> opacityFunc;
-        ExpressionFunctionBinder<float>().bind(&opacityFunc, std::make_shared<ConstExpression>(Value(_opacity))).update(exprContext);
+        std::shared_ptr<const vt::ColorFunction> fillFunc = createColorFunction("#ffffff");
+        std::shared_ptr<const vt::FloatFunction> opacityFunc = createFloatFunction(_opacity);
 
         vt::PointStyle pointStyle(compOp, vt::PointOrientation::BILLBOARD_2D, fillFunc, opacityFunc, symbolizerContext.getGlyphMap(), bitmap, _transform * cglib::scale3_matrix(cglib::vec3<float>(1.0f, (bitmap->height * bitmapScale) / (bitmap->width * bitmapScale), 1)));
 

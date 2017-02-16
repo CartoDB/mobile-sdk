@@ -14,10 +14,9 @@ namespace carto { namespace mvt {
         
         vt::CompOp compOp = convertCompOp(_compOp);
 
-        std::shared_ptr<const vt::FloatFunction> width;
-        ExpressionFunctionBinder<float>().bind(&width, std::make_shared<ConstExpression>(Value(pattern->bitmap->height * 0.375f))).update(exprContext);
+        std::shared_ptr<const vt::FloatFunction> widthFunc = createFloatFunction(pattern->bitmap->height * 0.375f);
 
-        vt::LineStyle style(compOp, vt::LineJoinMode::MITER, vt::LineCapMode::NONE, _fill, _opacity, width, symbolizerContext.getStrokeMap(), pattern, _geometryTransform);
+        vt::LineStyle style(compOp, vt::LineJoinMode::MITER, vt::LineCapMode::NONE, _fill, _opacity, widthFunc, symbolizerContext.getStrokeMap(), pattern, _geometryTransform);
 
         std::size_t featureIndex = 0;
         std::size_t geometryIndex = 0;

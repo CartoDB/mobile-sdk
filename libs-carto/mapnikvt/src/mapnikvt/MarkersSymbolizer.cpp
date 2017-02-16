@@ -111,12 +111,8 @@ namespace carto { namespace mvt {
 
         auto flushPoints = [&](const cglib::mat3x3<float>& transform) {
             if (_allowOverlap) {
-                std::shared_ptr<const vt::ColorFunction> fillFunc;
-                ExpressionFunctionBinder<vt::Color>().bind(&fillFunc, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), [this](const Value& val) -> vt::Color {
-                    return convertColor(val);
-                }).update(exprContext);
-                std::shared_ptr<const vt::FloatFunction> opacityFunc;
-                ExpressionFunctionBinder<float>().bind(&opacityFunc, std::make_shared<ConstExpression>(Value(fillOpacity))).update(exprContext);
+                std::shared_ptr<const vt::ColorFunction> fillFunc = createColorFunction("#ffffff");
+                std::shared_ptr<const vt::FloatFunction> opacityFunc = createFloatFunction(fillOpacity);
 
                 vt::PointStyle style(compOp, convertLabelToPointOrientation(orientation), fillFunc, opacityFunc, symbolizerContext.getGlyphMap(), bitmap, transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1)));
 

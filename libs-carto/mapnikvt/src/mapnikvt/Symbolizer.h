@@ -53,6 +53,9 @@ namespace carto { namespace mvt {
         static long long getShieldId(long long id, std::size_t hash);
         static long long getBitmapId(long long id, const std::string& file);
 
+        static std::shared_ptr<const vt::FloatFunction> createFloatFunction(float value);
+        static std::shared_ptr<const vt::ColorFunction> createColorFunction(const std::string& value);
+
         template <typename V>
         void bind(V* field, const std::shared_ptr<const Expression>& expr) {
             bindParameter(field, expr, std::function<V(const Value&)>(ValueConverter<V>::convert));
