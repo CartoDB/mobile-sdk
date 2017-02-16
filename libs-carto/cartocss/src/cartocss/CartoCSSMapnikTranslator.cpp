@@ -485,7 +485,7 @@ namespace carto { namespace css {
         { "polygon-pattern-fill", "fill" },
         { "polygon-pattern-opacity", "opacity" },
         { "polygon-pattern-geometry-transform", "geometry-transform" },
-        { "polygon-pattern-op", "comp-op" },
+        { "polygon-pattern-comp-op", "comp-op" },
 
         { "point-file", "file" },
         { "point-opacity", "opacity" },
