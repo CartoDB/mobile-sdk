@@ -32,7 +32,7 @@ namespace carto {
         _tileDecoderListener(),
         _labelCullThreadPool(std::make_shared<CancelableThreadPool>()),
         _tempDrawDatas(),
-        _visibleCache(128 * 1024 * 1024), // NOTE: the limit should never be reached in normal cases
+        _visibleCache(DEFAULT_VISIBLE_CACHE_SIZE),
         _preloadingCache(DEFAULT_PRELOADING_CACHE_SIZE)
     {
         if (!decoder) {

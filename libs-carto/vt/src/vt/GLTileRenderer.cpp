@@ -2009,10 +2009,10 @@ namespace carto { namespace vt {
             { CompOp::ZERO,     { GL_FUNC_ADD, GL_ZERO, GL_ZERO } },
             { CompOp::PLUS,     { GL_FUNC_ADD, GL_ONE, GL_ONE } },
             { CompOp::MINUS,    { GL_FUNC_REVERSE_SUBTRACT, GL_ONE, GL_ONE } },
-            { CompOp::MULTIPLY, { GL_FUNC_ADD, GL_DST_COLOR, GL_ZERO } },
+            { CompOp::MULTIPLY, { GL_FUNC_ADD, GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA } },
             { CompOp::SCREEN,   { GL_FUNC_ADD, GL_ONE, GL_ONE_MINUS_SRC_COLOR } },
-            { CompOp::DARKEN,   { GL_MIN_EXT,  GL_ONE, GL_ONE } },
-            { CompOp::LIGHTEN,  { GL_MAX_EXT,  GL_ONE, GL_ONE } }
+            { CompOp::DARKEN,   { GL_MIN_EXT,  GL_ONE, GL_ONE } }, // NOTE: wrong if alpha channel is used
+            { CompOp::LIGHTEN,  { GL_MAX_EXT,  GL_ONE, GL_ONE } }  // NOTE: wrong if alpha channel is used 
         };
         auto it = compOpBlendStates.find(compOp);
         if (it != compOpBlendStates.end()) {
