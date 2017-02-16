@@ -15,7 +15,10 @@ namespace carto {
         _revGeocoder()
     {
         try {
-            _database = std::make_shared<sqlite3pp::database>(path.c_str());
+            _database = std::make_shared<sqlite3pp::database>();
+            if (_database->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
+                throw sqlite3pp::database_error("Can not connect to database");
+            }
             _revGeocoder = std::make_shared<geocoding::RevGeocoder>(*_database);
         } catch (const std::exception& ex) {
             throw FileException("Failed to import geocoding database", path);
