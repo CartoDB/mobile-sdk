@@ -200,6 +200,7 @@ namespace carto {
         static const int DEFAULT_CULL_DELAY = 200;
         static const int PRELOADING_PRIORITY_OFFSET = -2;
         static const int EXTRA_TILE_FOOTPRINT = 4096;
+        static const int DEFAULT_VISIBLE_CACHE_SIZE = 256 * 1024 * 1024; // NOTE: the limit should never be reached in normal cases
         static const int DEFAULT_PRELOADING_CACHE_SIZE = 10 * 1024 * 1024;
         
         ThreadSafeDirectorPtr<VectorTileEventListener> _vectorTileEventListener;
