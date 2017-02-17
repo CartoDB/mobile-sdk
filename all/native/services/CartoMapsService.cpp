@@ -309,7 +309,7 @@ namespace carto {
             // Create layer based on type and flags
             if (type == "torque") {
                 std::string cartoCSS = layerInfos.front().cartoCSS;
-                auto baseDataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.torque" + urlTemplateSuffix);
+                auto baseDataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.torque.json" + urlTemplateSuffix);
                 auto dataSource = std::make_shared<MemoryCacheTileDataSource>(baseDataSource); // in memory cache allows to change style quickly
                 auto styleSet = std::make_shared<CartoCSSStyleSet>(cartoCSS, _vectorTileAssetPackage);
                 auto torqueTileDecoder = std::make_shared<TorqueTileDecoder>(styleSet);
