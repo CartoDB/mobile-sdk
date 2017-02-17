@@ -44,7 +44,7 @@ namespace carto {
     }
     
     std::shared_ptr<PolygonGeometry> Polygon3D::getGeometry() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return std::static_pointer_cast<PolygonGeometry>(_geometry);
     }
     
@@ -54,7 +54,7 @@ namespace carto {
         }
 
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _geometry = geometry;
         }
         notifyElementChanged();
@@ -66,7 +66,7 @@ namespace carto {
         
     void Polygon3D::setPoses(const std::vector<MapPos>& poses) {
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _geometry = std::make_shared<PolygonGeometry>(poses, std::static_pointer_cast<PolygonGeometry>(_geometry)->getHoles());
         }
         notifyElementChanged();
@@ -78,27 +78,27 @@ namespace carto {
     
     void Polygon3D::setHoles(const std::vector<std::vector<MapPos> >& holes) {
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _geometry = std::make_shared<PolygonGeometry>(std::static_pointer_cast<PolygonGeometry>(_geometry)->getPoses(), holes);
         }
         notifyElementChanged();
     }
     
     float Polygon3D::getHeight() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _height;
     }
     
     void Polygon3D::setHeight(float height) {
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _height = height;
         }
         notifyElementChanged();
     }
     
     std::shared_ptr<Polygon3DStyle> Polygon3D::getStyle() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _style;
     }
     
@@ -108,19 +108,19 @@ namespace carto {
         }
 
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _style = style;
         }
         notifyElementChanged();
     }
         
     std::shared_ptr<Polygon3DDrawData> Polygon3D::getDrawData() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _drawData;
     }
     
     void Polygon3D::setDrawData(const std::shared_ptr<Polygon3DDrawData>& drawData) {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         _drawData = drawData;
     }
     
