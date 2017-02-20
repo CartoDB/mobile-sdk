@@ -17,8 +17,7 @@ namespace carto {
     {
     }
 
-    Text::Text(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<TextStyle>& style,
-                         const std::string& text) :
+    Text::Text(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<TextStyle>& style, const std::string& text) :
     	Label(geometry, style),
     	_style(style),
     	_text(text)
@@ -36,7 +35,7 @@ namespace carto {
     }
         
     std::shared_ptr<Bitmap> Text::drawBitmap(float dpToPX) const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
 
         // Scale with DPI, if necessary
         if (_style->isScaleWithDPI()) {
@@ -79,20 +78,20 @@ namespace carto {
     }
         
     std::string Text::getText() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _text;
     }
 
     void Text::setText(const std::string& text) {
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _text = text;
         }
         notifyElementChanged();
     }
         
     std::shared_ptr<TextStyle> Text::getStyle() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _style;
     }
 
@@ -102,7 +101,7 @@ namespace carto {
         }
 
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _style = style;
         }
         Label::setStyle(style);

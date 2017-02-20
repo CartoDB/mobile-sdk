@@ -121,12 +121,14 @@ namespace carto {
         virtual void tilesChanged(bool removeTiles);
 
         virtual long long getTileId(const MapTile& mapTile) const;
+        virtual std::shared_ptr<VectorTileDecoder::TileMap> getTileMap(long long tileId) const;
 
         virtual void calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile);
         virtual void refreshDrawData(const std::shared_ptr<CullState>& cullState);
     
         virtual int getMinZoom() const;
         virtual int getMaxZoom() const;
+        virtual std::vector<long long> getVisibleTileIds() const;
         
         virtual void calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray,
             const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
@@ -212,7 +214,8 @@ namespace carto {
         std::shared_ptr<TileDecoderListener> _tileDecoderListener;
 
         std::shared_ptr<CancelableThreadPool> _labelCullThreadPool;
-    
+
+        std::vector<long long> _visibleTileIds;
         std::vector<std::shared_ptr<TileDrawData> > _tempDrawDatas;
 
         cache::timed_lru_cache<long long, TileInfo> _visibleCache;

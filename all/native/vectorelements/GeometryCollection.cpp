@@ -22,7 +22,7 @@ namespace carto {
     }
 
     std::shared_ptr<MultiGeometry> GeometryCollection::getGeometry() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return std::static_pointer_cast<MultiGeometry>(_geometry);
     }
 
@@ -32,14 +32,14 @@ namespace carto {
         }
 
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _geometry = geometry;
         }
         notifyElementChanged();
     }
 
     std::shared_ptr<GeometryCollectionStyle> GeometryCollection::getStyle() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _style;
     }
 
@@ -49,19 +49,19 @@ namespace carto {
         }
 
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _style = style;
         }
         notifyElementChanged();
     }
 
     std::shared_ptr<GeometryCollectionDrawData> GeometryCollection::getDrawData() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _drawData;
     }
 
     void GeometryCollection::setDrawData(const std::shared_ptr<GeometryCollectionDrawData>& drawData) {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         _drawData = drawData;
     }
 

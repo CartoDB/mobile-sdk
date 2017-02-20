@@ -31,6 +31,7 @@ namespace carto {
         _tileDecoder(decoder),
         _tileDecoderListener(),
         _labelCullThreadPool(std::make_shared<CancelableThreadPool>()),
+        _visibleTileIds(),
         _tempDrawDatas(),
         _visibleCache(DEFAULT_VISIBLE_CACHE_SIZE),
         _preloadingCache(DEFAULT_PRELOADING_CACHE_SIZE)
@@ -189,6 +190,18 @@ namespace carto {
             return mapTile.getTileId();
         }
     }
+
+    std::shared_ptr<VectorTileDecoder::TileMap> VectorTileLayer::getTileMap(long long tileId) const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        TileInfo tileInfo;
+        if (_visibleCache.peek(tileId, tileInfo)) {
+            return tileInfo.getTileMap();
+        }
+        if (_preloadingCache.peek(tileId, tileInfo)) {
+            return tileInfo.getTileMap();
+        }
+        return std::shared_ptr<VectorTileDecoder::TileMap>();
+    }
     
     void VectorTileLayer::calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
@@ -267,8 +280,15 @@ namespace carto {
                 mapRenderer->requestRedraw();
             }
         }
-        
-        _tempDrawDatas.clear();
+
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _visibleTileIds.clear();
+            for (const std::shared_ptr<TileDrawData>& drawData : _tempDrawDatas) {
+                _visibleTileIds.push_back(drawData->getTileId());
+            }
+            _tempDrawDatas.clear();
+        }
     }
     
     int VectorTileLayer::getMinZoom() const {
@@ -279,6 +299,11 @@ namespace carto {
         return _tileDecoder->getMaxZoom(); // NOTE: datasource max zoom is handled differently
     }    
     
+    std::vector<long long> VectorTileLayer::getVisibleTileIds() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _visibleTileIds;
+    }
+
     void VectorTileLayer::calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
         DirectorPtr<VectorTileEventListener> eventListener = _vectorTileEventListener;
 

@@ -19,6 +19,7 @@
 #include "vectorelements/Polygon.h"
 #include "vectorelements/Marker.h"
 #include "vectorelements/Text.h"
+#include "vectorelements/BalloonPopup.h"
 #include "vectorelements/GeometryCollection.h"
 #include "renderers/components/CullState.h"
 #include "styles/StyleSelector.h"
@@ -29,6 +30,7 @@
 #include "styles/PolygonStyle.h"
 #include "styles/MarkerStyle.h"
 #include "styles/TextStyle.h"
+#include "styles/BalloonPopupStyle.h"
 #include "styles/GeometryCollectionStyle.h"
 #include "styles/GeometryCollectionStyleBuilder.h"
 #include "projections/EPSG3857.h"
@@ -699,6 +701,8 @@ namespace carto {
             return std::make_shared<Marker>(geometry, markerStyle);
         } else if (auto textStyle = std::dynamic_pointer_cast<TextStyle>(style)) {
             return std::make_shared<Text>(geometry, textStyle, ""); // NOTE: we assume that textStyle uses textField property
+        } else if (auto balloonPopupStyle = std::dynamic_pointer_cast<BalloonPopupStyle>(style)) {
+            return std::make_shared<BalloonPopup>(geometry, balloonPopupStyle, "", ""); // NOTE: we assume that balloonPopupStyle uses titleField/descriptionField property
         } else if (auto geomCollectionStyle = std::dynamic_pointer_cast<GeometryCollectionStyle>(style)) {
             if (auto multiGeometry = std::dynamic_pointer_cast<MultiGeometry>(geometry)) {
                 return std::make_shared<GeometryCollection>(multiGeometry, geomCollectionStyle);

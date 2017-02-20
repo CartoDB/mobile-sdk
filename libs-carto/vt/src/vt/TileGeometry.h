@@ -79,6 +79,19 @@ namespace carto { namespace vt {
             _ids.shrink_to_fit();
         }
 
+        std::size_t getFeatureCount() const {
+            switch (_type) {
+            case Type::POINT:
+            case Type::LINE:
+                return _indicesCount / 6;
+            case Type::POLYGON:
+            case Type::POLYGON3D:
+                return _indicesCount / 3;
+            default:
+                return 0;
+            }
+        }
+
         std::size_t getResidentSize() const {
             return 16 + _vertexGeometry.size() * sizeof(unsigned char) + _indices.size() * sizeof(unsigned short) + _ids.size() * sizeof(std::pair<unsigned int, long long>);
         }
