@@ -80,6 +80,7 @@ namespace carto {
         
         virtual int getMinZoom() const;
         virtual int getMaxZoom() const;
+        virtual std::vector<long long> getVisibleTileIds() const;
         
         virtual void offsetLayerHorizontally(double offset);
         
@@ -97,6 +98,7 @@ namespace carto {
         static const int EXTRA_TILE_FOOTPRINT = 4096;
         static const int DEFAULT_PRELOADING_CACHE_SIZE = 10 * 1024 * 1024;
         
+        std::vector<long long> _visibleTileIds;
         std::vector<std::shared_ptr<TileDrawData> > _tempDrawDatas;
         
         cache::timed_lru_cache<long long, std::shared_ptr<const vt::Tile> > _visibleCache;

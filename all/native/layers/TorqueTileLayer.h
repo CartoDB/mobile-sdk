@@ -26,6 +26,14 @@ namespace carto {
          */
         TorqueTileLayer(const std::shared_ptr<TileDataSource>& dataSource, const std::shared_ptr<TorqueTileDecoder>& decoder);
         virtual ~TorqueTileLayer();
+
+        /**
+         * Counts and returns the number of visible features (points) at the specified frame.
+         * Note that this number depends on the view settings and may depend on the state of tiles. If not all tiles are loaded, the results could be off.
+         * @param frameNr The frame number to use.
+         * @return The number of visible feature at the specified frame. If the frame is missing, 0 is returned.
+         */
+        int countVisibleFeatures(int frameNr) const;
     };
 }
 

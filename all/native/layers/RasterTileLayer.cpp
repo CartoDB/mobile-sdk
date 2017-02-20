@@ -16,6 +16,7 @@ namespace carto {
 
     RasterTileLayer::RasterTileLayer(const std::shared_ptr<TileDataSource>& dataSource) :
         TileLayer(dataSource),
+        _visibleTileIds(),
         _tempDrawDatas(),
         _visibleCache(128 * 1024 * 1024), // limit should be never reached during normal use cases
         _preloadingCache(DEFAULT_PRELOADING_CACHE_SIZE)
@@ -181,8 +182,15 @@ namespace carto {
                 mapRenderer->requestRedraw();
             }
         }
-        
-        _tempDrawDatas.clear();
+
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _visibleTileIds.clear();
+            for (const std::shared_ptr<TileDrawData>& drawData : _tempDrawDatas) {
+                _visibleTileIds.push_back(drawData->getTileId());
+            }
+            _tempDrawDatas.clear();
+        }
     }
     
     int RasterTileLayer::getMinZoom() const {
@@ -191,6 +199,11 @@ namespace carto {
     
     int RasterTileLayer::getMaxZoom() const {
         return _dataSource->getMaxZoom();
+    }
+
+    std::vector<long long> RasterTileLayer::getVisibleTileIds() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _visibleTileIds;
     }
         
     void RasterTileLayer::offsetLayerHorizontally(double offset) {

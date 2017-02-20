@@ -31,6 +31,12 @@ namespace carto { namespace vt {
         const std::vector<std::shared_ptr<TileGeometry>>& getGeometries() const { return _geometries; }
         const std::vector<std::shared_ptr<TileLabel>>& getLabels() const { return _labels; }
 
+        std::size_t getFeatureCount() const {
+            std::size_t featureCount = std::accumulate(_geometries.begin(), _geometries.end(), static_cast<std::size_t>(0), [](std::size_t count, const std::shared_ptr<TileGeometry>& geometry) { return count + geometry->getFeatureCount(); });
+            featureCount += _labels.size();
+            return featureCount;
+        }
+
         std::size_t getResidentSize() const {
             std::size_t bitmapSize = std::accumulate(_bitmaps.begin(), _bitmaps.end(), static_cast<std::size_t>(0), [](std::size_t size, const std::shared_ptr<TileBitmap>& bitmap) { return size + bitmap->getResidentSize(); });
             std::size_t geometriesSize = std::accumulate(_geometries.begin(), _geometries.end(), static_cast<std::size_t>(0), [](std::size_t size, const std::shared_ptr<TileGeometry>& geometry) { return size + geometry->getResidentSize(); });
