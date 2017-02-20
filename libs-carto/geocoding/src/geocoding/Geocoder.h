@@ -62,6 +62,8 @@ namespace carto { namespace geocoding {
             std::uint64_t id = 0;
             std::string name;
             std::string lang;
+            std::uint64_t xmask = 0;
+            std::uint64_t ymask = 0;
             float idf = 1.0f;
         };
 
@@ -86,6 +88,8 @@ namespace carto { namespace geocoding {
             std::vector<std::uint64_t> postcodeId;
             std::vector<std::uint64_t> nameId;
             std::string houseNumber;
+            std::uint64_t xmask = std::numeric_limits<std::uint64_t>::max();
+            std::uint64_t ymask = std::numeric_limits<std::uint64_t>::max();
             int unmatchedTokens() const { return tokenList.unmatchedTokens(); }
         };
         
@@ -102,7 +106,7 @@ namespace carto { namespace geocoding {
 
         std::vector<Name> matchTokenNames(TokenType type, const std::vector<std::vector<Token>>& tokensList, const std::vector<std::string>& tokenStrings) const;
         
-        std::vector<std::string> buildQueryFilters(const Query& query, bool nullFilters) const;
+        std::vector<std::string> buildQueryFilters(const Query& query) const;
         
         bool bindQueryIdField(Query& query, TokenType type, std::vector<std::uint64_t> Query::* field, const TokenListType::Span& span) const;
         bool bindQueryStringField(Query& query, TokenType type, std::string Query::* field, const TokenListType::Span& span) const;

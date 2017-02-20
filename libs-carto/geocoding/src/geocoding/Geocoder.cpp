@@ -232,7 +232,7 @@ namespace carto { namespace geocoding {
     }
 
     void Geocoder::resolveAddress(const Query& query, std::vector<Result>& results) const {
-        std::vector<std::string> sqlFilters = buildQueryFilters(query, true);
+        std::vector<std::string> sqlFilters = buildQueryFilters(query);
         if (sqlFilters.empty()) {
             return;
         }
@@ -260,7 +260,7 @@ namespace carto { namespace geocoding {
                         return toLower(toUniString(houseNumber)) == toLower(toUniString(query.houseNumber));
                     });
                     if (it == houseNumberVector.end()) {
-                        continue; // only possible if COLLATE/toLower work differently
+                        continue;
                     }
                     elementIndex = static_cast<unsigned int>(it - houseNumberVector.begin()) + 1;
                 }
@@ -371,7 +371,7 @@ namespace carto { namespace geocoding {
         for (const std::vector<Token>& tokens : tokensList) {
             std::map<std::uint64_t, Name> names;
             for (std::size_t i = 0; i < tokens.size(); i++) {
-                std::string sql = "SELECT DISTINCT n.id, n.name, n.lang FROM names n, nametokens nt WHERE nt.name_id=n.id AND (n.lang IS NULL OR n.lang='" + escapeSQLValue(_language) + "') AND nt.token_id=" + boost::lexical_cast<std::string>(tokens[i].id) + " AND n.class=" + boost::lexical_cast<std::string>(static_cast<int>(type)) + " ORDER BY id ASC";
+                std::string sql = "SELECT DISTINCT n.id, n.name, n.lang, n.xmask, n.ymask FROM names n, nametokens nt WHERE nt.name_id=n.id AND (n.lang IS NULL OR n.lang='" + escapeSQLValue(_language) + "') AND nt.token_id=" + boost::lexical_cast<std::string>(tokens[i].id) + " AND n.class=" + boost::lexical_cast<std::string>(static_cast<int>(type)) + " ORDER BY id ASC";
 
                 std::vector<Name> tokenNames;
                 if (!_nameQueryCache.read(sql, tokenNames)) {
@@ -382,6 +382,8 @@ namespace carto { namespace geocoding {
                         name.id = qit->get<std::uint64_t>(0);
                         name.name = qit->get<const char*>(1);
                         name.lang = qit->get<const char*>(2) ? qit->get<const char*>(2) : "";
+                        name.xmask = qit->get<std::uint64_t>(3);
+                        name.ymask = qit->get<std::uint64_t>(4);
                         name.idf = tokens[i].idf;
                         tokenNames.push_back(name);
                     }
@@ -434,7 +436,7 @@ namespace carto { namespace geocoding {
         return names;
     }
 
-    std::vector<std::string> Geocoder::buildQueryFilters(const Query& query, bool nullFilters) const {
+    std::vector<std::string> Geocoder::buildQueryFilters(const Query& query) const {
         static const std::vector<std::pair<std::string, std::vector<std::uint64_t> Query::*>> namedFields = {
             { "name_id",          &Query::nameId },
             { "postcode_id",      &Query::postcodeId },
@@ -458,17 +460,11 @@ namespace carto { namespace geocoding {
                 sqlFilters.push_back(columnName + " IN (" + values + ")");
                 nonNullField = true;
             }
-            else if (nullFilters && !nonNullField && columnName != "name_id" && columnName != "postcode_id") {
+            else if (!nonNullField && columnName != "name_id" && columnName != "postcode_id") {
                 sqlFilters.push_back(columnName + " IS NULL");
             }
         }
-        if (!query.houseNumber.empty()) {
-            std::string houseNumber = boost::replace_all_copy(query.houseNumber, "|", " ");
-            sqlFilters.push_back("('|' || housenumbers || '|') LIKE '%|" + escapeSQLValue(houseNumber) + "|%' COLLATE NOCASE");
-        }
-        else if (nullFilters) {
-            sqlFilters.push_back("housenumbers IS NULL");
-        }
+        sqlFilters.push_back(!query.houseNumber.empty() ? "housenumbers IS NOT NULL" : "housenumbers IS NULL");
         if (!_enabledFilters.empty()) {
             sqlFilters.push_back(Address::buildTypeFilter(_enabledFilters));
         }
@@ -485,10 +481,18 @@ namespace carto { namespace geocoding {
         if (span.count > 0) {
             std::vector<std::vector<Token>> tokensList = query.tokenList.tags(span);
             std::vector<Name> names = matchTokenNames(type, tokensList, tokenStrings);
+            std::uint64_t xmask = 0;
+            std::uint64_t ymask = 0;
             for (const Name& name : names) {
-                (query.*field).push_back(name.id);
+                if ((query.xmask & name.xmask) != 0 && (query.ymask & name.ymask) != 0) {
+                    xmask |= name.xmask;
+                    ymask |= name.ymask;
+                    (query.*field).push_back(name.id);
+                }
             }
-            return !names.empty();
+            query.xmask &= xmask;
+            query.ymask &= ymask;
+            return query.xmask != 0 && query.ymask != 0;
         }
         return true;
     }
