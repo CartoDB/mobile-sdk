@@ -12,6 +12,7 @@
 %}
 
 %include <std_string.i>
+%include <std_map.i>
 %include <std_shared_ptr.i>
 %include <cartoswig.i>
 
@@ -25,5 +26,7 @@
 !standard_equals(carto::CartoCSSStyleSet);
 
 %include "styles/CartoCSSStyleSet.h"
+
+!value_template(std::map<std::string, std::shared_ptr<carto::CartoCSSStyleSet> >, styles.StringCartoCSSStyleSetMap);
 
 #endif
