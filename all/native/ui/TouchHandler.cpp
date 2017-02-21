@@ -98,6 +98,7 @@ namespace carto {
                 }
                 break;
             case SINGLE_POINTER_PAN:
+            case SINGLE_POINTER_ZOOM:
                 startDualPointer(screenPos1, screenPos2);
                 break;
             default:
@@ -121,6 +122,9 @@ namespace carto {
                         singlePointerPan(screenPos1);
                     }
                 }
+                break;
+            case SINGLE_POINTER_ZOOM:
+                singlePointerZoom(screenPos1);
                 break;
             case DUAL_POINTER_GUESS:
                 dualPointerGuess(screenPos1, screenPos2);
@@ -177,6 +181,22 @@ namespace carto {
                         _mapRenderer->getKineticEventHandler().startRotation();
                         _mapRenderer->getKineticEventHandler().startZoom();
                     }
+                }
+                break;
+            }
+            case SINGLE_POINTER_ZOOM: {
+                {
+                    std::lock_guard<std::mutex> lock(_mutex);
+                    _gestureMode = SINGLE_POINTER_CLICK_GUESS;
+                    if (screenPos1 == _prevScreenPos1) {
+                        CameraZoomEvent cameraZoomTargetEvent;
+                        cameraZoomTargetEvent.setZoomDelta(1.0f);
+                        cameraZoomTargetEvent.setTargetPos(_mapRenderer->screenToWorld(screenPos1));
+                        _mapRenderer->calculateCameraEvent(cameraZoomTargetEvent, ZOOM_GESTURE_ANIMATION_DURATION.count() / 1000.0f, true);
+                    }
+                }
+                if (_noDualPointerYet) {
+                    _mapRenderer->getKineticEventHandler().startZoom();
                 }
                 break;
             }
@@ -293,6 +313,21 @@ namespace carto {
         _prevScreenPos1 = screenPos;
     }
     
+    void TouchHandler::singlePointerZoom(const ScreenPos& screenPos) {
+        if (_options->isUserInput()) {
+            _mapRenderer->getAnimationHandler().stopPan();
+            _mapRenderer->getAnimationHandler().stopRotation();
+            _mapRenderer->getAnimationHandler().stopTilt();
+            _mapRenderer->getAnimationHandler().stopZoom();
+            
+            float delta = INCHES_TO_ZOOM_DELTA * (screenPos.getY() - _prevScreenPos1.getY()) / _options->getDPI();
+            CameraZoomEvent cameraEvent;
+            cameraEvent.setZoomDelta(delta);
+            _mapRenderer->calculateCameraEvent(cameraEvent, 0, true);
+        }
+        _prevScreenPos1 = screenPos;
+    }
+    
     void TouchHandler::dualPointerGuess(const ScreenPos& screenPos1, const ScreenPos& screenPos2) {
         // If the pointers' y coordinates differ too much it's the general case or rotation
         float dpi = _options->getDPI();
@@ -364,7 +399,7 @@ namespace carto {
             _mapRenderer->getAnimationHandler().stopTilt();
             _mapRenderer->getAnimationHandler().stopZoom();
             
-            float scale = INCHES_TO_VIEW_ANGLE / _options->getDPI();
+            float scale = INCHES_TO_TILT_DELTA / _options->getDPI();
             if (_options->isTiltGestureReversed()) {
                 scale = -scale;
             }
@@ -426,7 +461,7 @@ namespace carto {
         _prevScreenPos2 = screenPos2;
     }
     
-    void TouchHandler::click(const ScreenPos& screenPos) const {
+    void TouchHandler::click(const ScreenPos& screenPos) {
         if (!_options->isUserInput()) {
             return;
         }
@@ -455,7 +490,7 @@ namespace carto {
         handleClick(ClickType::CLICK_TYPE_LONG, _mapRenderer->screenToWorld(screenPos));
     }
     
-    void TouchHandler::doubleClick(const ScreenPos& screenPos) const {
+    void TouchHandler::doubleClick(const ScreenPos& screenPos) {
         if (!_options->isUserInput()) {
             return;
         }
@@ -466,16 +501,14 @@ namespace carto {
         _mapRenderer->getAnimationHandler().stopZoom();
 
         if (_options->isZoomGestures()) {
-            CameraZoomEvent cameraZoomTargetEvent;
-            cameraZoomTargetEvent.setZoomDelta(1.0f);
-            cameraZoomTargetEvent.setTargetPos(_mapRenderer->screenToWorld(screenPos));
-            _mapRenderer->calculateCameraEvent(cameraZoomTargetEvent, ZOOM_GESTURE_ANIMATION_DURATION.count() / 1000.0f, true);
+            _prevScreenPos1 = screenPos;
+            _gestureMode = SINGLE_POINTER_ZOOM;
         } else {
             handleClick(ClickType::CLICK_TYPE_DOUBLE, _mapRenderer->screenToWorld(screenPos));
         }
     }
     
-    void TouchHandler::dualClick(const ScreenPos& screenPos1, const ScreenPos& screenPos2) const {
+    void TouchHandler::dualClick(const ScreenPos& screenPos1, const ScreenPos& screenPos2) {
         if (!_options->isUserInput()) {
             return;
         }
@@ -496,7 +529,7 @@ namespace carto {
         }
     }
     
-    void TouchHandler::handleClick(ClickType::ClickType clickType, const MapPos& targetPos) const {
+    void TouchHandler::handleClick(ClickType::ClickType clickType, const MapPos& targetPos) {
         ViewState viewState;
         std::vector<RayIntersectedElement> results;
         _mapRenderer->calculateRayIntersectedElements(targetPos, viewState, results);
@@ -590,7 +623,9 @@ namespace carto {
     const float TouchHandler::ROTATION_FACTOR_THRESHOLD = 0.75f; // make rotation harder to trigger compared to scaling
     const float TouchHandler::ROTATION_SCALING_FACTOR_THRESHOLD_STICKY = 3.0f;
     
-    const float TouchHandler::INCHES_TO_VIEW_ANGLE =  32.0f;
+    const float TouchHandler::INCHES_TO_TILT_DELTA = 32.0f;
+
+    const float TouchHandler::INCHES_TO_ZOOM_DELTA = 1.0f;
         
     const std::chrono::milliseconds TouchHandler::DUAL_KINETIC_HOLD_DURATION = std::chrono::milliseconds(100);
 

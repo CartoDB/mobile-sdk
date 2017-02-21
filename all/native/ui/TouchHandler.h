@@ -54,10 +54,10 @@ namespace carto {
         
         void onTouchEvent(int action, const ScreenPos& screenPos1, const ScreenPos& screenPos2);
     
-        void click(const ScreenPos& screenPos) const;
+        void click(const ScreenPos& screenPos);
         void longClick(const ScreenPos& screenPos);
-        void doubleClick(const ScreenPos& screenPos) const;
-        void dualClick(const ScreenPos& screenPos1, const ScreenPos& screenPos2) const;
+        void doubleClick(const ScreenPos& screenPos);
+        void dualClick(const ScreenPos& screenPos1, const ScreenPos& screenPos2);
         void startSinglePointer(const ScreenPos& screenPos);
         void startDualPointer(const ScreenPos& screenPos1, const ScreenPos& screenPos2);
 
@@ -68,6 +68,8 @@ namespace carto {
         friend class BaseMapView;
     
     private:
+        enum GestureMode { SINGLE_POINTER_CLICK_GUESS, DUAL_POINTER_CLICK_GUESS, SINGLE_POINTER_PAN, SINGLE_POINTER_ZOOM, DUAL_POINTER_GUESS, DUAL_POINTER_TILT, DUAL_POINTER_ROTATE, DUAL_POINTER_SCALE, DUAL_POINTER_FREE };
+    
         class MapRendererListener : public MapRenderer::OnChangeListener {
         public:
             MapRendererListener(const std::shared_ptr<TouchHandler>& touchHandler);
@@ -86,13 +88,12 @@ namespace carto {
         float calculateRotatingScalingFactor(const ScreenPos& screenPos1, const ScreenPos& screenPos2) const;
 
         void singlePointerPan(const ScreenPos& screenPos);
+        void singlePointerZoom(const ScreenPos& screenPos);
         void dualPointerGuess(const ScreenPos& screenPos1, const ScreenPos& screenPos2);
         void dualPointerTilt(const ScreenPos& screenPos);
         void dualPointerPan(const ScreenPos& screenPos1, const ScreenPos& screenPos2, bool rotate, bool scale);
 
-        void handleClick(ClickType::ClickType clickType, const MapPos& targetPos) const;
-    
-        enum GestureMode { SINGLE_POINTER_CLICK_GUESS, DUAL_POINTER_CLICK_GUESS, SINGLE_POINTER_PAN, DUAL_POINTER_GUESS, DUAL_POINTER_TILT, DUAL_POINTER_ROTATE, DUAL_POINTER_SCALE, DUAL_POINTER_FREE };
+        void handleClick(ClickType::ClickType clickType, const MapPos& targetPos);
     
         static const float GUESS_MAX_DELTA_Y_INCHES;
         static const float GUESS_MIN_SWIPE_LENGTH_SAME_INCHES;
@@ -108,7 +109,10 @@ namespace carto {
         static const float ROTATION_SCALING_FACTOR_THRESHOLD_STICKY;
     
         // Determines how the finger sliding distance will be converted to tilt angle
-        static const float INCHES_TO_VIEW_ANGLE;
+        static const float INCHES_TO_TILT_DELTA;
+
+        // Determines how finger sliding distance will be converted to zoom delta
+        static const float INCHES_TO_ZOOM_DELTA;
         
         // Determines how long it takes to cancel kinetic zoom and rotation after one
         // pointer is lifted but the other one is not
