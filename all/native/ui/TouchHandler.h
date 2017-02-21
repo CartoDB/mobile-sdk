@@ -92,14 +92,7 @@ namespace carto {
 
         void handleClick(ClickType::ClickType clickType, const MapPos& targetPos) const;
     
-        static const int SINGLE_POINTER_CLICK_GUESS = 0;
-        static const int DUAL_POINTER_CLICK_GUESS = 1;
-        static const int SINGLE_POINTER_PAN = 2;
-        static const int DUAL_POINTER_GUESS = 3;
-        static const int DUAL_POINTER_TILT = 4;
-        static const int DUAL_POINTER_ROTATE = 5;
-        static const int DUAL_POINTER_SCALE = 6;
-        static const int DUAL_POINTER_FREE = 7;
+        enum GestureMode { SINGLE_POINTER_CLICK_GUESS, DUAL_POINTER_CLICK_GUESS, SINGLE_POINTER_PAN, DUAL_POINTER_GUESS, DUAL_POINTER_TILT, DUAL_POINTER_ROTATE, DUAL_POINTER_SCALE, DUAL_POINTER_FREE };
     
         static const float GUESS_MAX_DELTA_Y_INCHES;
         static const float GUESS_MIN_SWIPE_LENGTH_SAME_INCHES;
@@ -124,11 +117,14 @@ namespace carto {
         // Determines how long to hold panning after one pointer is lifted
         static const std::chrono::milliseconds DUAL_STOP_HOLD_DURATION;
     
+        // Determines how long zoom-in/out animations take
+        static const std::chrono::milliseconds ZOOM_GESTURE_ANIMATION_DURATION;
+
         // Map panning type, 0 = fast, accurate (finger stays exactly in the same
         // place), 1 = slow, inaccurate
         static const float PANNING_FACTOR;
     
-        int _panningMode;
+        GestureMode _gestureMode;
         
         ScreenPos _prevScreenPos1;
         ScreenPos _prevScreenPos2;

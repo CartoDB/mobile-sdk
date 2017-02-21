@@ -267,6 +267,17 @@ namespace carto {
          * @param reversed True if Google Maps compatible mode should be used. False otherwise (default).
          */
         void setTiltGestureReversed(bool reversed);
+
+        /**
+         * Returns the state of zoom gestures. Zoom gestures allow to use double click and dual click to zoom in/out of the map.
+         * @return True if zoom gestures are enabled. False otherwise.
+         */
+        bool isZoomGestures() const;
+        /**
+         * Sets the zoom gestures flag. By default, zoom gestures are not enabled.
+         * @param enabled True if zoom gestured should be enabled, false otherwise.
+         */
+        void setZoomGestures(bool enabled);
     
         /**
          * Returns the number of threads used by the envelope task pool.
@@ -567,6 +578,8 @@ namespace carto {
         bool _seamlessPanning;
 
         bool _tiltGestureReversed;
+
+        bool _zoomGestures;
     
         std::shared_ptr<Bitmap> _backgroundBitmap;
         std::shared_ptr<Bitmap> _skyBitmap;
