@@ -1,6 +1,7 @@
 #include "Geocoder.h"
 #include "FeatureReader.h"
 #include "ProjUtils.h"
+#include "AddressInterpolator.h"
 
 #include <functional>
 #include <algorithm>
@@ -92,10 +93,14 @@ namespace carto { namespace geocoding {
         
         // Resolve addresses
         std::vector<Result> results;
-        for (const Query& query : candidates) {
+        for (Query& query : candidates) {
+            if (!optimizeQuery(query)) {
+                continue;
+            }
+            
             // If we already have a match that resolves more tokens, skip following queries
             if (!results.empty()) {
-                if (results.front().unmatchedTokens() < query.unmatchedTokens()) {
+                if (results.front().unmatchedTokens < query.unmatchedTokens()) {
                     break;
                 }
             }
@@ -182,7 +187,7 @@ namespace carto { namespace geocoding {
 
     void Geocoder::matchTokens(const Query& query, std::vector<Query>& candidates) const {
         std::vector<TokenType> validTypes = { TokenType::COUNTRY, TokenType::REGION, TokenType::COUNTY, TokenType::LOCALITY, TokenType::NEIGHBOURHOOD, TokenType::STREET, TokenType::POSTCODE, TokenType::NAME };
-        if (!query.streetId.empty()) {
+        if (!query.streets.empty()) {
             validTypes.push_back(TokenType::HOUSENUMBER);
         }
         
@@ -198,28 +203,28 @@ namespace carto { namespace geocoding {
             bool valid = true;
             switch (type) {
             case TokenType::COUNTRY:
-                valid = bindQueryIdField(subQuery, type, &Query::countryId, span);
+                valid = bindQueryNameField(subQuery, type, &Query::countries, span);
                 break;
             case TokenType::REGION:
-                valid = bindQueryIdField(subQuery, type, &Query::regionId, span);
+                valid = bindQueryNameField(subQuery, type, &Query::regions, span);
                 break;
             case TokenType::COUNTY:
-                valid = bindQueryIdField(subQuery, type, &Query::countyId, span);
+                valid = bindQueryNameField(subQuery, type, &Query::counties, span);
                 break;
             case TokenType::LOCALITY:
-                valid = bindQueryIdField(subQuery, type, &Query::localityId, span);
+                valid = bindQueryNameField(subQuery, type, &Query::localities, span);
                 break;
             case TokenType::NEIGHBOURHOOD:
-                valid = bindQueryIdField(subQuery, type, &Query::neighbourhoodId, span);
+                valid = bindQueryNameField(subQuery, type, &Query::neighbourhoods, span);
                 break;
             case TokenType::STREET:
-                valid = bindQueryIdField(subQuery, type, &Query::streetId, span);
+                valid = bindQueryNameField(subQuery, type, &Query::streets, span);
                 break;
             case TokenType::POSTCODE:
-                valid = bindQueryIdField(subQuery, type, &Query::postcodeId, span);
+                valid = bindQueryNameField(subQuery, type, &Query::postcodes, span);
                 break;
             case TokenType::NAME:
-                valid = bindQueryIdField(subQuery, type, &Query::nameId, span);
+                valid = bindQueryNameField(subQuery, type, &Query::names, span);
                 break;
             case TokenType::HOUSENUMBER:
                 valid = bindQueryStringField(subQuery, type, &Query::houseNumber, span);
@@ -252,17 +257,14 @@ namespace carto { namespace geocoding {
             unsigned int elementIndex = 0;
 
             // Match house number
+            auto houseNumbers = qit->get<const char*>(1);
             if (!query.houseNumber.empty()) {
-                if (auto houseNumbers = qit->get<const char*>(1)) {
-                    std::vector<std::string> houseNumberVector;
-                    boost::split(houseNumberVector, houseNumbers, boost::is_any_of("|"), boost::token_compress_off);
-                    auto it = std::find_if(houseNumberVector.begin(), houseNumberVector.end(), [&query](const std::string& houseNumber) {
-                        return toLower(toUniString(houseNumber)) == toLower(toUniString(query.houseNumber));
-                    });
-                    if (it == houseNumberVector.end()) {
+                if (houseNumbers) {
+                    AddressInterpolator interpolator(houseNumbers);
+                    elementIndex = interpolator.findAddress(query.houseNumber) + 1; // if not found, interpolator returns -1
+                    if (!elementIndex) {
                         continue;
                     }
-                    elementIndex = static_cast<unsigned int>(it - houseNumberVector.begin()) + 1;
                 }
                 else {
                     continue;
@@ -271,14 +273,14 @@ namespace carto { namespace geocoding {
 
             // Do field match ranking and population ranking
             float matchRank = 1.0f;
-            matchRank *= calculateMatchRank(TokenType::COUNTRY,       query.countryId,       qit->get<std::uint64_t>(3), query.tokenList);
-            matchRank *= calculateMatchRank(TokenType::REGION,        query.regionId,        qit->get<std::uint64_t>(4), query.tokenList);
-            matchRank *= calculateMatchRank(TokenType::COUNTY,        query.countyId,        qit->get<std::uint64_t>(5), query.tokenList);
-            matchRank *= calculateMatchRank(TokenType::LOCALITY,      query.localityId,      qit->get<std::uint64_t>(6), query.tokenList);
-            matchRank *= calculateMatchRank(TokenType::NEIGHBOURHOOD, query.neighbourhoodId, qit->get<std::uint64_t>(7), query.tokenList);
-            matchRank *= calculateMatchRank(TokenType::STREET,        query.streetId,        qit->get<std::uint64_t>(8), query.tokenList);
-            matchRank *= calculateMatchRank(TokenType::POSTCODE,      query.postcodeId,      qit->get<std::uint64_t>(9), query.tokenList);
-            matchRank *= calculateMatchRank(TokenType::NAME,          query.nameId,          qit->get<std::uint64_t>(10), query.tokenList);
+            matchRank *= calculateMatchRank(TokenType::COUNTRY,       query.countries,       qit->get<std::uint64_t>(3), query.tokenList);
+            matchRank *= calculateMatchRank(TokenType::REGION,        query.regions,        qit->get<std::uint64_t>(4), query.tokenList);
+            matchRank *= calculateMatchRank(TokenType::COUNTY,        query.counties,        qit->get<std::uint64_t>(5), query.tokenList);
+            matchRank *= calculateMatchRank(TokenType::LOCALITY,      query.localities,      qit->get<std::uint64_t>(6), query.tokenList);
+            matchRank *= calculateMatchRank(TokenType::NEIGHBOURHOOD, query.neighbourhoods, qit->get<std::uint64_t>(7), query.tokenList);
+            matchRank *= calculateMatchRank(TokenType::STREET,        query.streets,        qit->get<std::uint64_t>(8), query.tokenList);
+            matchRank *= calculateMatchRank(TokenType::POSTCODE,      query.postcodes,      qit->get<std::uint64_t>(9), query.tokenList);
+            matchRank *= calculateMatchRank(TokenType::NAME,          query.names,          qit->get<std::uint64_t>(10), query.tokenList);
 
             float populationRank = 1.0f;
             populationRank *= calculatePopulationRank(TokenType::COUNTRY,       qit->get<std::uint64_t>(3));
@@ -292,35 +294,39 @@ namespace carto { namespace geocoding {
             // Do location based ranking
             float locationRank = 1.0f;
             if (query.options.location) {
-                if (auto encodedFeatures = qit->get<const void*>(2)) {
-                    EncodingStream stream(encodedFeatures, qit->column_bytes(2));
-                    FeatureReader reader(stream, mercatorConverter);
-                    float minDist = query.options.locationRadius;
-                    for (unsigned int currentIndex = 1; !stream.eof(); currentIndex++) {
-                        for (const Feature& feature : reader.readFeatureCollection()) {
-                            if (std::shared_ptr<Geometry> geometry = feature.getGeometry()) {
-                                if (!elementIndex || elementIndex == currentIndex) {
-                                    cglib::vec2<double> mercatorMeters = webMercatorMeters(*query.options.location);
-                                    cglib::vec2<double> mercatorLocation = wgs84ToWebMercator(*query.options.location);
-                                    cglib::vec2<double> point = geometry->calculateNearestPoint(mercatorLocation);
-                                    cglib::vec2<double> diff = point - mercatorLocation;
-                                    float dist = static_cast<float>(cglib::length(cglib::vec2<double>(diff(0) * mercatorMeters(0), diff(1) * mercatorMeters(1))));
-                                    minDist = std::min(minDist, dist);
-                                }
-                            }
-                        }
-                    }
+                EncodingStream stream(qit->get<const void*>(2), qit->column_bytes(2));
+                FeatureReader reader(stream, mercatorConverter);
 
-                    float c = -std::log(MIN_LOCATION_RANK) / query.options.locationRadius;
-                    locationRank *= std::exp(-minDist * c);
+                std::vector<Feature> features;
+                if (elementIndex) {
+                    AddressInterpolator interpolator(houseNumbers);
+                    features = interpolator.enumerateAddresses(reader).at(elementIndex - 1).second;
                 }
+                else {
+                    features = reader.readFeatureCollection();
+                }
+
+                float minDist = query.options.locationRadius;
+                for (const Feature& feature : features) {
+                    if (std::shared_ptr<Geometry> geometry = feature.getGeometry()) {
+                        cglib::vec2<double> mercatorMeters = webMercatorMeters(*query.options.location);
+                        cglib::vec2<double> mercatorLocation = wgs84ToWebMercator(*query.options.location);
+                        cglib::vec2<double> point = geometry->calculateNearestPoint(mercatorLocation);
+                        cglib::vec2<double> diff = point - mercatorLocation;
+                        float dist = static_cast<float>(cglib::length(cglib::vec2<double>(diff(0) * mercatorMeters(0), diff(1) * mercatorMeters(1))));
+                        minDist = std::min(minDist, dist);
+                    }
+                }
+
+                float c = -std::log(MIN_LOCATION_RANK) / query.options.locationRadius;
+                locationRank *= std::exp(-minDist * c);
             }
 
             // Build the result
             Result result;
-            result.query = query;
             result.encodedId = (static_cast<std::uint64_t>(elementIndex) << 32) | entityId;
-            result.ranking.matchRank = matchRank * std::pow(UNMATCHED_FIELD_PENALTY, static_cast<float>(result.unmatchedTokens()));
+            result.unmatchedTokens = query.unmatchedTokens();
+            result.ranking.matchRank = matchRank * std::pow(UNMATCHED_FIELD_PENALTY, static_cast<float>(result.unmatchedTokens));
             result.ranking.populationRank = populationRank;
             result.ranking.locationRank = locationRank;
 
@@ -437,25 +443,25 @@ namespace carto { namespace geocoding {
     }
 
     std::vector<std::string> Geocoder::buildQueryFilters(const Query& query) const {
-        static const std::vector<std::pair<std::string, std::vector<std::uint64_t> Query::*>> namedFields = {
-            { "name_id",          &Query::nameId },
-            { "postcode_id",      &Query::postcodeId },
-            { "street_id",        &Query::streetId },
-            { "neighbourhood_id", &Query::neighbourhoodId },
-            { "locality_id",      &Query::localityId },
-            { "county_id",        &Query::countyId },
-            { "region_id",        &Query::regionId },
-            { "country_id",       &Query::countryId }
+        static const std::vector<std::pair<std::string, std::vector<Name> Query::*>> namedFields = {
+            { "name_id",          &Query::names },
+            { "postcode_id",      &Query::postcodes },
+            { "street_id",        &Query::streets },
+            { "neighbourhood_id", &Query::neighbourhoods },
+            { "locality_id",      &Query::localities },
+            { "county_id",        &Query::counties },
+            { "region_id",        &Query::regions },
+            { "country_id",       &Query::countries }
         };
 
         bool nonNullField = false;
         std::vector<std::string> sqlFilters;
-        for (const std::pair<std::string, std::vector<std::uint64_t> Query::*>& namedField : namedFields) {
+        for (const std::pair<std::string, std::vector<Name> Query::*>& namedField : namedFields) {
             std::string columnName = namedField.first;
             if (!(query.*namedField.second).empty()) {
                 std::string values;
-                for (std::uint64_t id : query.*namedField.second) {
-                    values += (values.empty() ? "" : ",") + boost::lexical_cast<std::string>(id);
+                for (const Name& name : query.*namedField.second) {
+                    values += (values.empty() ? "" : ",") + boost::lexical_cast<std::string>(name.id);
                 }
                 sqlFilters.push_back(columnName + " IN (" + values + ")");
                 nonNullField = true;
@@ -471,7 +477,58 @@ namespace carto { namespace geocoding {
         return sqlFilters;
     }
 
-    bool Geocoder::bindQueryIdField(Query& query, TokenType type, std::vector<std::uint64_t> Query::* field, const TokenListType::Span& span) const {
+    bool Geocoder::optimizeQuery(Query& query) const {
+        static const std::vector<std::vector<Name> Query::*> namedFields = {
+            &Query::names,
+            &Query::postcodes,
+            &Query::streets,
+            &Query::neighbourhoods,
+            &Query::localities,
+            &Query::counties,
+            &Query::regions,
+            &Query::countries
+        };
+
+        bool progress = true;
+        while (progress) {
+            progress = false;
+
+            for (std::size_t i = 0; i < namedFields.size(); i++) {
+                std::uint64_t xmask = std::numeric_limits<std::uint64_t>::max();
+                std::uint64_t ymask = std::numeric_limits<std::uint64_t>::max();
+                for (std::size_t j = 0; j < namedFields.size(); j++) {
+                    if (i != j && !(query.*namedFields[j]).empty()) {
+                        std::uint64_t xmask2 = 0;
+                        std::uint64_t ymask2 = 0;
+                        for (const Name& name : query.*namedFields[j]) {
+                            xmask2 |= name.xmask;
+                            ymask2 |= name.ymask;
+                        }
+                        xmask &= xmask2;
+                        ymask &= ymask2;
+                    }
+                }
+
+                if (!(query.*namedFields[i]).empty()) {
+                    for (auto it = (query.*namedFields[i]).begin(); it != (query.*namedFields[i]).end(); ) {
+                        if (!(it->xmask & xmask) || !(it->ymask & ymask)) {
+                            it = (query.*namedFields[i]).erase(it);
+                            progress = true;
+                        }
+                        else {
+                            it++;
+                        }
+                    }
+                    if ((query.*namedFields[i]).empty()) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    bool Geocoder::bindQueryNameField(Query& query, TokenType type, std::vector<Name> Query::* field, const TokenListType::Span& span) const {
         std::vector<std::string> tokenStrings = query.tokenList.tokens(span);
         if (!tokenStrings.empty() && !tokenStrings.back().empty() && tokenStrings.back().size() <= MIN_AUTOCOMPLETE_SIZE && tokenStrings.back().back() == '%') {
             tokenStrings.back().pop_back(); // too short name, skip autocomplete
@@ -481,18 +538,10 @@ namespace carto { namespace geocoding {
         if (span.count > 0) {
             std::vector<std::vector<Token>> tokensList = query.tokenList.tags(span);
             std::vector<Name> names = matchTokenNames(type, tokensList, tokenStrings);
-            std::uint64_t xmask = 0;
-            std::uint64_t ymask = 0;
             for (const Name& name : names) {
-                if ((query.xmask & name.xmask) != 0 && (query.ymask & name.ymask) != 0) {
-                    xmask |= name.xmask;
-                    ymask |= name.ymask;
-                    (query.*field).push_back(name.id);
-                }
+                (query.*field).push_back(name);
             }
-            query.xmask &= xmask;
-            query.ymask &= ymask;
-            return query.xmask != 0 && query.ymask != 0;
+            return !names.empty();
         }
         return true;
     }
@@ -533,8 +582,8 @@ namespace carto { namespace geocoding {
         return rank;
     }
 
-    float Geocoder::calculateMatchRank(TokenType type, const std::vector<std::uint64_t>& matchIds, std::uint64_t dbId, const TokenListType& tokenList) const {
-        if (std::find(matchIds.begin(), matchIds.end(), dbId) != matchIds.end()) {
+    float Geocoder::calculateMatchRank(TokenType type, const std::vector<Name>& matchNames, std::uint64_t dbId, const TokenListType& tokenList) const {
+        if (std::find_if(matchNames.begin(), matchNames.end(), [dbId](const Name& name) { return name.id == dbId; }) != matchNames.end()) {
             std::string sql = "SELECT DISTINCT n.id, n.name, n.lang FROM names n WHERE n.id=" + boost::lexical_cast<std::string>(dbId) + " AND (n.lang IS NULL OR n.lang='" + escapeSQLValue(_language) + "') AND n.class=" + boost::lexical_cast<std::string>(static_cast<int>(type));
 
             std::vector<Name> names;

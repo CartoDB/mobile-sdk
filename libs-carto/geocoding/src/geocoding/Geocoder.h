@@ -79,25 +79,22 @@ namespace carto { namespace geocoding {
         struct Query {
             Options options;
             TokenListType tokenList;
-            std::vector<std::uint64_t> countryId;
-            std::vector<std::uint64_t> regionId;
-            std::vector<std::uint64_t> countyId;
-            std::vector<std::uint64_t> localityId;
-            std::vector<std::uint64_t> neighbourhoodId;
-            std::vector<std::uint64_t> streetId;
-            std::vector<std::uint64_t> postcodeId;
-            std::vector<std::uint64_t> nameId;
+            std::vector<Name> countries;
+            std::vector<Name> regions;
+            std::vector<Name> counties;
+            std::vector<Name> localities;
+            std::vector<Name> neighbourhoods;
+            std::vector<Name> streets;
+            std::vector<Name> postcodes;
+            std::vector<Name> names;
             std::string houseNumber;
-            std::uint64_t xmask = std::numeric_limits<std::uint64_t>::max();
-            std::uint64_t ymask = std::numeric_limits<std::uint64_t>::max();
             int unmatchedTokens() const { return tokenList.unmatchedTokens(); }
         };
         
         struct Result {
-            Query query;
             std::uint64_t encodedId = 0;
+            int unmatchedTokens = 0;
             Ranking ranking;
-            int unmatchedTokens() const { return query.tokenList.unmatchedTokens(); }
         };
 
         void classifyTokens(TokenListType& tokenList) const;
@@ -108,11 +105,12 @@ namespace carto { namespace geocoding {
         
         std::vector<std::string> buildQueryFilters(const Query& query) const;
         
-        bool bindQueryIdField(Query& query, TokenType type, std::vector<std::uint64_t> Query::* field, const TokenListType::Span& span) const;
+        bool optimizeQuery(Query& query) const;
+        bool bindQueryNameField(Query& query, TokenType type, std::vector<Name> Query::* field, const TokenListType::Span& span) const;
         bool bindQueryStringField(Query& query, TokenType type, std::string Query::* field, const TokenListType::Span& span) const;
         
         float calculateNameRank(const std::string& name, const std::string& queryName) const;
-        float calculateMatchRank(TokenType type, const std::vector<std::uint64_t>& matchIds, std::uint64_t dbId, const TokenListType& tokenList) const;
+        float calculateMatchRank(TokenType type, const std::vector<Name>& matchNames, std::uint64_t dbId, const TokenListType& tokenList) const;
         float calculatePopulationRank(TokenType type, std::uint64_t id) const;
 
         float getTokenRank(const unistring& unitoken) const;

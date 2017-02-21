@@ -1,4 +1,5 @@
 #include "Address.h"
+#include "AddressInterpolator.h"
 #include "FeatureReader.h"
 #include "StringUtils.h"
 
@@ -85,37 +86,25 @@ namespace carto { namespace geocoding {
             postcode      = loadName(qit->get<std::uint64_t>(6));
             name          = loadName(qit->get<std::uint64_t>(7));
 
-            // Load features
-            features.clear();
-            if (auto encodedFeatures = qit->get<const void *>(8)) {
-                EncodingStream stream(encodedFeatures, qit->column_bytes(8));
-                FeatureReader reader(stream, converter);
-                if (elementIndex) {
-                    for (unsigned int i = 1; i < elementIndex; i++) {
-                        reader.readFeatureCollection();
-                    }
-                    std::vector<Feature> featureCollection = reader.readFeatureCollection();
-                    features.insert(features.end(), featureCollection.begin(), featureCollection.end());
-                }
-                else {
-                    while (!stream.eof()) {
-                        std::vector<Feature> featureCollection = reader.readFeatureCollection();
-                        features.insert(features.end(), featureCollection.begin(), featureCollection.end());
-                    }
-                }
-            }
+            // Feature reader
+            EncodingStream stream(qit->get<const void *>(8), qit->column_bytes(8));
+            FeatureReader reader(stream, converter);
 
             // Decode house number
-            houseNumber.clear();
-            if (auto houseNumbers = qit->get<const char*>(9)) {
-                std::vector<std::string> houseNumberVector;
-                boost::split(houseNumberVector, houseNumbers, boost::is_any_of("|"), boost::token_compress_off);
-                if (elementIndex) {
-                    houseNumber = houseNumberVector.at(elementIndex - 1);
+            if (elementIndex) {
+                if (auto houseNumbers = qit->get<const char*>(9)) {
+                    AddressInterpolator interpolator(houseNumbers);
+                    std::pair<std::string, std::vector<Feature>> result = interpolator.enumerateAddresses(reader).at(elementIndex - 1);
+                    houseNumber = result.first;
+                    features = result.second;
                 }
                 else {
-                    houseNumber = (houseNumberVector.size() == 1 ? houseNumberVector.front() : std::string());
+                    return false;
                 }
+            }
+            else {
+                houseNumber.clear();
+                features = reader.readFeatureCollection();
             }
 
             // Load categories    

@@ -1,6 +1,7 @@
 #include "RevGeocoder.h"
 #include "FeatureReader.h"
 #include "ProjUtils.h"
+#include "AddressInterpolator.h"
 
 #include <functional>
 
@@ -110,7 +111,7 @@ namespace carto { namespace geocoding {
     }
 
     std::vector<QuadIndex::GeometryInfo> RevGeocoder::findGeometryInfo(const std::vector<std::uint64_t>& quadIndices, const PointConverter& converter) const {
-        std::string sql = "SELECT id, features FROM entities WHERE quadindex in (";
+        std::string sql = "SELECT id, features, housenumbers FROM entities WHERE quadindex in (";
         for (std::size_t i = 0; i < quadIndices.size(); i++) {
             sql += (i > 0 ? "," : "") + boost::lexical_cast<std::string>(quadIndices[i]);
         }
@@ -127,27 +128,34 @@ namespace carto { namespace geocoding {
         sqlite3pp::query query(_db, sql.c_str());
         for (auto qit = query.begin(); qit != query.end(); qit++) {
             auto entityId = qit->get<unsigned int>(0);
-            if (auto encodedFeatures = qit->get<const void*>(1)) {
-                EncodingStream stream(encodedFeatures, qit->column_bytes(1));
-                FeatureReader reader(stream, [this, &converter](const cglib::vec2<double>& pos) {
-                    return converter(_origin + pos);
-                });
-                for (unsigned int elementIndex = 1; !stream.eof(); elementIndex++) {
-                    std::uint64_t encodedId = (static_cast<std::uint64_t>(elementIndex) << 32) | entityId;
 
+            EncodingStream stream(qit->get<const void*>(1), qit->column_bytes(1));
+            FeatureReader reader(stream, [this, &converter](const cglib::vec2<double>& pos) {
+                return converter(_origin + pos);
+            });
+
+            if (auto houseNumbers = qit->get<const char*>(2)) {
+                AddressInterpolator interpolator(houseNumbers);
+                std::vector<std::pair<std::string, std::vector<Feature>>> results = interpolator.enumerateAddresses(reader);
+                for (std::size_t i = 0; i < results.size(); i++) {
+                    std::uint64_t encodedId = (static_cast<std::uint64_t>(i + 1) << 32) | entityId;
                     std::vector<std::shared_ptr<Geometry>> geometries;
-                    for (const Feature& feature : reader.readFeatureCollection()) {
-                        if (std::shared_ptr<Geometry> geometry = feature.getGeometry()) {
-                            geometries.push_back(geometry);
+                    for (const Feature& feature : results[i].second) {
+                        if (feature.getGeometry()) {
+                            geometries.push_back(feature.getGeometry());
                         }
                     }
-                    if (geometries.size() == 1) {
-                        geomInfos.emplace_back(encodedId, geometries.front());
-                    }
-                    else if (!geometries.empty()) {
-                        geomInfos.emplace_back(encodedId, std::make_shared<MultiGeometry>(std::move(geometries)));
+                    geomInfos.emplace_back(encodedId, std::make_shared<MultiGeometry>(std::move(geometries)));
+                }
+            }
+            else {
+                std::vector<std::shared_ptr<Geometry>> geometries;
+                for (const Feature& feature : reader.readFeatureCollection()) {
+                    if (feature.getGeometry()) {
+                        geometries.push_back(feature.getGeometry());
                     }
                 }
+                geomInfos.emplace_back(entityId, std::make_shared<MultiGeometry>(std::move(geometries)));
             }
         }
 
