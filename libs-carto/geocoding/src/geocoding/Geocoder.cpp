@@ -86,25 +86,24 @@ namespace carto { namespace geocoding {
         std::vector<Query> candidates;
         matchTokens(query, candidates);
 
-        // Sort by unmatched tokens
-        std::sort(candidates.begin(), candidates.end(), [](const Query& query1, const Query& query2) {
-            return query1.unmatchedTokens() < query2.unmatchedTokens();
-        });
+        // Group by unmatched tokens
+        std::map<int, std::vector<Query>> candidateGroupMap;
+        for (const Query& query : candidates) {
+            candidateGroupMap[query.unmatchedTokens()].push_back(query);
+        }
         
-        // Resolve addresses
+        // Resolve addresses in groups
         std::vector<Result> results;
-        for (Query& query : candidates) {
-            if (!optimizeQuery(query)) {
-                continue;
-            }
-            
-            // If we already have a match that resolves more tokens, skip following queries
+        for (auto it = candidateGroupMap.begin(); it != candidateGroupMap.end(); it++) {
             if (!results.empty()) {
-                if (results.front().unmatchedTokens < query.unmatchedTokens()) {
-                    break;
+                break;
+            }
+
+            for (Query& query : it->second) {
+                if (optimizeQuery(query)) {
+                    resolveAddress(query, results);
                 }
             }
-            resolveAddress(query, results);
         }
 
         // Create address data from the results by merging consecutive results, if possible
