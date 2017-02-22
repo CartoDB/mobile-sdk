@@ -10,6 +10,11 @@ namespace carto {
     {
     }
 
+    CartoOnlineVectorTileLayer::CartoOnlineVectorTileLayer(const std::string& source, CartoBaseMapStyle::CartoBaseMapStyle style) :
+        CartoVectorTileLayer(std::make_shared<CartoOnlineTileDataSource>(source), style)
+    {
+    }
+
     CartoOnlineVectorTileLayer::CartoOnlineVectorTileLayer(const std::string& source, const std::shared_ptr<AssetPackage>& styleAssetPackage) :
         CartoVectorTileLayer(std::make_shared<CartoOnlineTileDataSource>(source), styleAssetPackage)
     {
