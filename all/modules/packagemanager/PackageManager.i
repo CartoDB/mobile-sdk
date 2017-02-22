@@ -8,7 +8,7 @@
 
 #ifdef _CARTO_PACKAGEMANAGER_SUPPORT
 
-!proxy_imports(carto::PackageManager, packagemanager.PackageInfo, packagemanager.PackageMetaInfo, packagemanager.PackageStatus, packagemanager.PackageManagerListener, packagemanager.PackageInfoVector)
+!proxy_imports(carto::PackageManager, core.MapPos, core.MapBounds, packagemanager.PackageInfo, packagemanager.PackageMetaInfo, packagemanager.PackageStatus, packagemanager.PackageManagerListener, packagemanager.PackageInfoVector, projections.Projection)
 
 %{
 #include "packagemanager/PackageManager.h"
@@ -20,10 +20,13 @@
 %include <std_shared_ptr.i>
 %include <cartoswig.i>
 
+%import "core/MapPos.i"
+%import "core/MapBounds.i"
 %import "packagemanager/PackageInfo.i"
 %import "packagemanager/PackageMetaInfo.i"
 %import "packagemanager/PackageStatus.i"
 %import "packagemanager/PackageManagerListener.i"
+%import "projections/Projection.i"
 
 using std::uint64_t;
 

@@ -9,6 +9,8 @@
 
 #ifdef _CARTO_PACKAGEMANAGER_SUPPORT
 
+#include "core/MapPos.h"
+#include "core/MapBounds.h"
 #include "core/MapTile.h"
 #include "components/DirectorPtr.h"
 #include "packagemanager/PackageInfo.h"
@@ -36,6 +38,7 @@ namespace sqlite3pp {
 
 namespace carto {
     class BinaryData;
+    class Projection;
 
     /**
      * Base class for offline map package manager. Package manager supports downloading/removing packages.
@@ -159,6 +162,23 @@ namespace carto {
          * @return The status of the package or null if it is not yet downloaded. If the package is currently being downloaded, its status is returned.
          */
         std::shared_ptr<PackageStatus> getLocalPackageStatus(const std::string& packageId, int version) const;
+
+        /**
+         * Suggests packages for given map position. Note that in order this to work, local package list must be available first.
+         * @param mapPos The map position.
+         * @param projection The projection for the map position.
+         * @return The sorted list of suggested packages (from the best to the worst). The list may contain downloaded packages.
+         */
+        std::vector<std::shared_ptr<PackageInfo> > suggestPackages(const MapPos& mapPos, const std::shared_ptr<Projection>& projection) const;
+
+        /**
+         * Tests if the specified map area at specified zoom level is downloaded.
+         * @param mapBounds The area bounding box.
+         * @param zoom The zoom level to check.
+         * @param projection The projection for the bounding box.
+         * @return True if all required tiles are downloaded and available. False otherwise.
+         */
+        bool isAreaDownloaded(const MapBounds& mapBounds, int zoom, const std::shared_ptr<Projection>& projection) const;
 
         /**
          * Starts downloading package list asynchronously. When this task finishes, listener is called and server package list is updated.
@@ -308,6 +328,8 @@ namespace carto {
         static void EncryptTile(std::vector<unsigned char>& data, int zoom, int x, int y, const std::string& encKey);
         static void DecryptTile(std::vector<unsigned char>& data, int zoom, int x, int y, const std::string& encKey);
         static void SetCipherKeyIV(unsigned char* k, unsigned char* iv, int zoom, int x, int y, const std::string& encKey);
+
+        static MapTile CalculateMapTile(const MapPos& mapPos, int zoom, const std::shared_ptr<Projection>& proj);
 
         static int DownloadFile(const std::string& url, NetworkUtils::HandlerFn handler, std::uint64_t offset = 0);
 
