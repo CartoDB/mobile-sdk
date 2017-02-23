@@ -3,7 +3,7 @@
 
 %module BillboardStyleBuilder
 
-!proxy_imports(carto::BillboardStyleBuilder, styles.StyleBuilder)
+!proxy_imports(carto::BillboardStyleBuilder, styles.AnimationStyles, styles.StyleBuilder)
 
 %{
 #include "styles/BillboardStyleBuilder.h"
@@ -15,6 +15,7 @@
 
 %import "styles/BillboardStyle.i"
 %import "styles/StyleBuilder.i"
+%import "styles/AnimationStyle.i"
 
 !polymorphic_shared_ptr(carto::BillboardStyleBuilder, styles.BillboardStyleBuilder)
 
@@ -26,6 +27,7 @@
 %attribute(carto::BillboardStyleBuilder, float, AttachAnchorPointY, getAttachAnchorPointY, setAttachAnchorPointY)
 %attribute(carto::BillboardStyleBuilder, float, HorizontalOffset, getHorizontalOffset, setHorizontalOffset)
 %attribute(carto::BillboardStyleBuilder, float, VerticalOffset, getVerticalOffset, setVerticalOffset)
+%attributestring(carto::BillboardStyleBuilder, std::shared_ptr<carto::AnimationStyle>, AnimationStyle, getAnimationStyle, setAnimationStyle)
 !objc_rename(setAttachAnchorPointX) carto::BillboardStyleBuilder::setAttachAnchorPoint(float, float);
 
 %include "styles/BillboardStyleBuilder.h"
