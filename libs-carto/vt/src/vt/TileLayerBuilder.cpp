@@ -99,6 +99,7 @@ namespace carto { namespace vt {
 
         do {
             std::size_t i0 = _indices.size();
+            std::size_t i1 = _binormals.size();
             TextFormatter formatter(style.font);
             std::vector<Font::Glyph> glyphs = formatter.format(text, style.formatterOptions);
             if (style.backgroundBitmap) {
@@ -119,6 +120,13 @@ namespace carto { namespace vt {
                 pen += glyph.advance;
             }
             _ids.fill(id, _indices.size() - i0);
+
+            if (style.angle != 0) {
+                cglib::mat3x3<float> transform = cglib::rotate3_matrix(cglib::vec3<float>(0, 0, 1), style.angle * boost::math::constants::pi<float>() / 180.0f);
+                for (std::size_t i = i1; i < _binormals.size(); i++) {
+                    _binormals[i] = cglib::transform_vector(_binormals[i], transform); // NOTE: no need to use special inv/transposed matrix
+                }
+            }
         } while (generator(id, vertex, text));
     }
 
