@@ -31,7 +31,7 @@ namespace carto {
     {
     }
 
-    int HTTPClient::setTimeout(int milliseconds) {
+    void HTTPClient::setTimeout(int milliseconds) {
         _impl->setTimeout(milliseconds);
     }
 
