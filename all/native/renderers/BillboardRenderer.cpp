@@ -19,10 +19,16 @@
 
 #include <cglib/mat.h>
 
+namespace {
+    float springCurve(float t) {
+        return -0.5f * std::exp(-6 * t) * (-2.0f * std::exp(6 * t) + std::sin(12 * t) + 2 * cos(12 * t));
+    }
+}
+
 namespace carto {
     
     void BillboardRenderer::CalculateBillboardCoords(const BillboardDrawData& drawData, const ViewState& viewState,
-                                                     std::vector<float>& coordBuf, int drawDataIndex)
+                                                     std::vector<float>& coordBuf, int drawDataIndex, float sizeScale)
     {
         const MapPos& cameraPos = viewState.getCameraPos();
         cglib::vec3<float> translate = cglib::vec3<float>::convert(drawData.getPos() - cglib::vec3<double>(cameraPos.getX(), cameraPos.getY(), cameraPos.getZ()));
@@ -35,6 +41,8 @@ namespace carto {
             float y = coords[i](1);
             
             float scale = drawData.isScaleWithDPI() ? viewState.getUnitToDPCoef() : viewState.getUnitToPXCoef();
+            scale *= sizeScale;
+
             // Calculate scaling
             switch (drawData.getScalingMode()) {
                 case BillboardScaling::BILLBOARD_SCALING_WORLD_SIZE:
@@ -115,17 +123,28 @@ namespace carto {
         _u_tex = _shader->getUniformLoc("u_tex");
     }
     
-    void BillboardRenderer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState)
-    {
+    bool BillboardRenderer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
     
         // Billboards can't be rendered in layer order, they have to be sorted globally and drawn from back to front
+        bool refresh = false;
         for (const std::shared_ptr<Billboard>& element : _elements) {
             std::shared_ptr<BillboardDrawData> drawData = element->getDrawData();
+
+            // Update animation state
+            float transition = drawData->getTransition();
+            float step = (drawData->isHideIfOverlapped() && drawData->isOverlapping() ? -1.0f : 1.0f);
+            if ((transition < 1 && step > 0) || (transition > 0 && step < 0)) {
+                drawData->setTransition(transition + step * (transition == 0 ? 0.01f : deltaSeconds * 2));
+                refresh = true;
+            }
+
+            // Add the draw data to the sorter
             if (calculateBaseBillboardDrawData(drawData, viewState)) {
                 billboardSorter.add(drawData);
             }
         }
+        return refresh;
     }
     
     void BillboardRenderer::onDrawFrameSorted(float deltaSeconds,
@@ -288,13 +307,13 @@ namespace carto {
                 drawDataIndex = 0;
             }
             
-            // Overlapping billboards should be hidden
-            if (drawData->isHideIfOverlapped() && drawData->isOverlapping()) {
+            // If invisible, skip further steps
+            if (drawData->getTransition() == 0) {
                 continue;
             }
             
             // Calculate coordinates
-            CalculateBillboardCoords(*drawData, viewState, coordBuf, drawDataIndex);
+            CalculateBillboardCoords(*drawData, viewState, coordBuf, drawDataIndex, springCurve(drawData->getTransition()));
             
             // Billboards with ground orientation (like some texts) have to be flipped to readable
             bool flip = false;

@@ -56,6 +56,10 @@ namespace carto {
         // These two methods may be called from multiple threads at the same time
         bool isOverlapping() const;
         void setOverlapping(bool overlapping);
+
+        // These two methods may be called from multiple threads at the same time
+        float getTransition() const;
+        void setTransition(float transition);
     
         float getPlacementPriority() const;
     
@@ -120,6 +124,8 @@ namespace carto {
         bool _causesOverlap;
         bool _hideIfOverlapped;
         std::atomic<bool> _overlapping;
+
+        std::atomic<float> _transition;
         
         int _placementPriority;
     
