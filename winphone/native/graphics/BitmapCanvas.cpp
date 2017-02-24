@@ -196,7 +196,7 @@ namespace carto {
 
     void BitmapCanvas::drawText(std::string text, const ScreenPos& pos, int maxWidth, bool breakLines) {
         if (text.empty()) {
-            return ScreenBounds(ScreenPos(0, 0), ScreenPos(0, 0));
+            return;
         }
 
         if (_state->_d2dContext && _state->_dwriteFactory && _state->_d2dBrush && _state->_dwriteTextFormat) {

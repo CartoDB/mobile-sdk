@@ -70,7 +70,7 @@ namespace carto { namespace mvt {
                 std::shared_ptr<const vt::ColorFunction> fillFunc = createColorFunction("#ffffff");
                 std::shared_ptr<const vt::FloatFunction> opacityFunc = createFloatFunction(1.0f);
 
-                vt::TextStyle style(compOp, convertLabelToPointOrientation(orientation), fillFunc, opacityFunc, *formatterOptions, font, _orientation, fontScale, backgroundOffset, backgroundBitmap, transform);
+                vt::TextStyle style(compOp, convertLabelToPointOrientation(orientation), fillFunc, opacityFunc, *formatterOptions, font, _orientationAngle, fontScale, backgroundOffset, backgroundBitmap, transform);
 
                 std::size_t textInfoIndex = 0;
                 layerBuilder.addTexts([&](long long& id, vt::TileLayerBuilder::Vertex& vertex, std::string& txt) {
@@ -87,7 +87,7 @@ namespace carto { namespace mvt {
                 shieldInfos.clear();
             }
             else {
-                vt::TextLabelStyle style(placement, *formatterOptions, font, _orientation, fontScale, backgroundOffset, backgroundBitmap);
+                vt::TextLabelStyle style(placement, *formatterOptions, font, _orientationAngle, fontScale, backgroundOffset, backgroundBitmap);
 
                 std::size_t labelInfoIndex = 0;
                 layerBuilder.addTextLabels([&](long long& id, vt::TileLayerBuilder::TextLabelInfo& labelInfo) {

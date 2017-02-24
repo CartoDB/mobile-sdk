@@ -20,16 +20,8 @@ namespace carto { namespace vt {
                 pen = cglib::vec2<float>(0, 0);
             }
             else {
-                if (_transform) {
-                    _bbox.add(cglib::transform_point_affine(pen + glyph.offset, _transform.get()));
-                    _bbox.add(cglib::transform_point_affine(pen + glyph.offset + cglib::vec2<float>(glyph.size(0), 0), _transform.get()));
-                    _bbox.add(cglib::transform_point_affine(pen + glyph.offset + glyph.size, _transform.get()));
-                    _bbox.add(cglib::transform_point_affine(pen + glyph.offset + cglib::vec2<float>(0, glyph.size(1)), _transform.get()));
-                }
-                else {
-                    _bbox.add(pen + glyph.offset);
-                    _bbox.add(pen + glyph.offset + glyph.size);
-                }
+                _bbox.add(pen + glyph.offset);
+                _bbox.add(pen + glyph.offset + glyph.size);
             }
 
             pen += glyph.advance;
@@ -174,10 +166,22 @@ namespace carto { namespace vt {
         }
         else {
             // Use bounding box for envelope
-            envelope[0] = origin + (xAxis * _bbox.min(0) + yAxis * _bbox.min(1)) * scale;
-            envelope[1] = origin + (xAxis * _bbox.max(0) + yAxis * _bbox.min(1)) * scale;
-            envelope[2] = origin + (xAxis * _bbox.max(0) + yAxis * _bbox.max(1)) * scale;
-            envelope[3] = origin + (xAxis * _bbox.min(0) + yAxis * _bbox.max(1)) * scale;
+            if (_transform) {
+                cglib::vec2<float> p00 = cglib::transform_point_affine(cglib::vec2<float>(_bbox.min(0), _bbox.min(1)), _transform.get());
+                cglib::vec2<float> p01 = cglib::transform_point_affine(cglib::vec2<float>(_bbox.min(0), _bbox.max(1)), _transform.get());
+                cglib::vec2<float> p10 = cglib::transform_point_affine(cglib::vec2<float>(_bbox.max(0), _bbox.min(1)), _transform.get());
+                cglib::vec2<float> p11 = cglib::transform_point_affine(cglib::vec2<float>(_bbox.max(0), _bbox.max(1)), _transform.get());
+                envelope[0] = origin + (xAxis * p00(0) + yAxis * p00(1)) * scale;
+                envelope[1] = origin + (xAxis * p10(0) + yAxis * p10(1)) * scale;
+                envelope[2] = origin + (xAxis * p11(0) + yAxis * p11(1)) * scale;
+                envelope[3] = origin + (xAxis * p01(0) + yAxis * p01(1)) * scale;
+            }
+            else {
+                envelope[0] = origin + (xAxis * _bbox.min(0) + yAxis * _bbox.min(1)) * scale;
+                envelope[1] = origin + (xAxis * _bbox.max(0) + yAxis * _bbox.min(1)) * scale;
+                envelope[2] = origin + (xAxis * _bbox.max(0) + yAxis * _bbox.max(1)) * scale;
+                envelope[3] = origin + (xAxis * _bbox.min(0) + yAxis * _bbox.max(1)) * scale;
+            }
             return true;
         }
     }
@@ -538,6 +542,11 @@ namespace carto { namespace vt {
     }
 
     std::shared_ptr<const TileLabel::Placement> TileLabel::findClippedPointPlacement(const ViewState& viewState, const Vertices& vertices) const {
+        cglib::bbox2<float> bbox = _bbox;
+        if (_transform) {
+            bbox = cglib::transform_bbox(bbox, _transform.get());
+        }
+        
         for (const Vertex& vertex : vertices) {
             // Check that text is visible, calculate text distance from all frustum planes
             bool inside = true;
@@ -545,16 +554,16 @@ namespace carto { namespace vt {
                 float size = 0;
                 switch (plane) {
                 case 2:
-                    size = -_bbox.min(1);
+                    size = -bbox.min(1);
                     break;
                 case 3:
-                    size = _bbox.max(1);
+                    size = bbox.max(1);
                     break;
                 case 4:
-                    size = _bbox.max(0) / viewState.aspect;
+                    size = bbox.max(0) / viewState.aspect;
                     break;
                 case 5:
-                    size = -_bbox.min(0) / viewState.aspect;
+                    size = -bbox.min(0) / viewState.aspect;
                     break;
                 }
                 double dist = viewState.frustum.plane_distance(plane, vertex);
