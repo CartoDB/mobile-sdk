@@ -66,7 +66,7 @@ namespace carto { namespace mvt {
                 std::shared_ptr<const vt::ColorFunction> fillFunc = createColorFunction("#ffffff");
                 std::shared_ptr<const vt::FloatFunction> opacityFunc = createFloatFunction(1.0f);
 
-                vt::TextStyle style(compOp, convertLabelToPointOrientation(placement), fillFunc, opacityFunc, textFormatterOptions, font, _orientation, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::Bitmap>(), transform);
+                vt::TextStyle style(compOp, convertLabelToPointOrientation(placement), fillFunc, opacityFunc, textFormatterOptions, font, _orientationAngle, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::Bitmap>(), transform);
 
                 std::size_t textInfoIndex = 0;
                 layerBuilder.addTexts([&](long long& id, vt::TileLayerBuilder::Vertex& vertex, std::string& txt) {
@@ -83,7 +83,7 @@ namespace carto { namespace mvt {
                 textInfos.clear();
             }
             else {
-                vt::TextLabelStyle style(placement, textFormatterOptions, font, _orientation, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::Bitmap>());
+                vt::TextLabelStyle style(placement, textFormatterOptions, font, _orientationAngle, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::Bitmap>());
 
                 std::size_t labelInfoIndex = 0;
                 layerBuilder.addTextLabels([&](long long& id, vt::TileLayerBuilder::TextLabelInfo& labelInfo) {
@@ -152,7 +152,7 @@ namespace carto { namespace mvt {
             bind(&_textTransform, parseStringExpression(value));
         }
         else if (name == "orientation") {
-            bind(&_orientation, parseExpression(value));
+            bind(&_orientationAngle, parseExpression(value));
             _orientationDefined = true;
         }
         else if (name == "dx") {
