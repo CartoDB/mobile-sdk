@@ -3,7 +3,7 @@
 
 %module BillboardStyleBuilder
 
-!proxy_imports(carto::BillboardStyleBuilder, styles.AnimationStyles, styles.StyleBuilder)
+!proxy_imports(carto::BillboardStyleBuilder, styles.AnimationStyle, styles.StyleBuilder)
 
 %{
 #include "styles/BillboardStyleBuilder.h"

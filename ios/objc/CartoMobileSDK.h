@@ -62,6 +62,8 @@
 
 #import "NTCullState.h"
 
+#import "NTAnimationStyleBuilder.h"
+#import "NTAnimationStyle.h"
 #import "NTBalloonPopupStyleBuilder.h"
 #import "NTBalloonPopupStyle.h"
 #import "NTLabelStyleBuilder.h"

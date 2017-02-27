@@ -12,6 +12,7 @@
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/components/StyleTextureCache.h"
 #include "renderers/components/BillboardSorter.h"
+#include "styles/AnimationStyle.h"
 #include "styles/BillboardStyle.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
@@ -22,6 +23,18 @@
 namespace {
     float springCurve(float t) {
         return -0.5f * std::exp(-6 * t) * (-2.0f * std::exp(6 * t) + std::sin(12 * t) + 2 * cos(12 * t));
+    }
+
+    float calculateTransition(carto::AnimationType::AnimationType animType, float transition) {
+        switch (animType) {
+        case carto::AnimationType::ANIMATION_TYPE_NONE:
+            return 1.0f;
+        case carto::AnimationType::ANIMATION_TYPE_SPRING:
+            return springCurve(transition);
+        // TODO: other cases
+        default:
+            return transition;
+        }
     }
 }
 
@@ -132,11 +145,15 @@ namespace carto {
             std::shared_ptr<BillboardDrawData> drawData = element->getDrawData();
 
             // Update animation state
-            float transition = drawData->getTransition();
-            float step = (drawData->isHideIfOverlapped() && drawData->isOverlapping() ? -1.0f : 1.0f);
-            if ((transition < 1 && step > 0) || (transition > 0 && step < 0)) {
-                drawData->setTransition(transition + step * (transition == 0 ? 0.01f : deltaSeconds * 2));
-                refresh = true;
+            if (auto animStyle = drawData->getAnimationStyle()) {
+                float transition = drawData->getTransition();
+                float step = (drawData->isHideIfOverlapped() && drawData->isOverlapping() ? -1.0f : 1.0f);
+                if ((transition < 1 && step > 0) || (transition > 0 && step < 0)) {
+                    drawData->setTransition(transition + step * (transition == 0 ? 0.01f : deltaSeconds * animStyle->getRelativeSpeed()));
+                    refresh = true;
+                }
+            } else {
+                drawData->setTransition(drawData->isHideIfOverlapped() && drawData->isOverlapping() ? 0.0f : 1.0f);
             }
 
             // Add the draw data to the sorter
@@ -295,6 +312,9 @@ namespace carto {
         GLuint drawDataIndex = 0;
         for (std::size_t i = 0; i < drawDataBuffer.size(); i++) {
             const std::shared_ptr<BillboardDrawData>& drawData = drawDataBuffer[i];
+
+            // Alpha value
+            int alpha = std::min(256, static_cast<int>(256 * calculateTransition(drawData->getAnimationStyle() ? drawData->getAnimationStyle()->getFadeAnimationType() : AnimationType::ANIMATION_TYPE_NONE, drawData->getTransition())));
             
             // Check for possible overflow in the buffers
             if ((drawDataIndex + 1) * 6 > GLContext::MAX_VERTEXBUFFER_SIZE) {
@@ -313,7 +333,8 @@ namespace carto {
             }
             
             // Calculate coordinates
-            CalculateBillboardCoords(*drawData, viewState, coordBuf, drawDataIndex, springCurve(drawData->getTransition()));
+            float relativeSize = calculateTransition(drawData->getAnimationStyle() ? drawData->getAnimationStyle()->getSizeAnimationType() : AnimationType::ANIMATION_TYPE_NONE, drawData->getTransition());
+            CalculateBillboardCoords(*drawData, viewState, coordBuf, drawDataIndex, relativeSize);
             
             // Billboards with ground orientation (like some texts) have to be flipped to readable
             bool flip = false;
@@ -348,10 +369,10 @@ namespace carto {
             const Color& color = drawData->getColor();
             int colorIndex = drawDataIndex * 4 * 4;
             for (int i = 0; i < 16; i += 4) {
-                colorBuf[colorIndex + i + 0] = color.getR();
-                colorBuf[colorIndex + i + 1] = color.getG();
-                colorBuf[colorIndex + i + 2] = color.getB();
-                colorBuf[colorIndex + i + 3] = color.getA();
+                colorBuf[colorIndex + i + 0] = static_cast<unsigned char>((color.getR() * alpha) >> 8);
+                colorBuf[colorIndex + i + 1] = static_cast<unsigned char>((color.getG() * alpha) >> 8);
+                colorBuf[colorIndex + i + 2] = static_cast<unsigned char>((color.getB() * alpha) >> 8);
+                colorBuf[colorIndex + i + 3] = static_cast<unsigned char>((color.getA() * alpha) >> 8);
             }
             
             // Calculate indices

@@ -20,6 +20,7 @@ namespace carto {
     class Billboard;
     class BillboardRenderer;
     class BillboardStyle;
+    class AnimationStyle;
     class Projection;
     
     class BillboardDrawData : public VectorElementDrawData {
@@ -38,6 +39,7 @@ namespace carto {
         const std::weak_ptr<Billboard>& getBaseBillboard() const;
     
         std::shared_ptr<Bitmap> getBitmap() const;
+        std::shared_ptr<AnimationStyle> getAnimationStyle() const;
     
         const cglib::vec2<float>* getCoords() const;
     
@@ -109,6 +111,7 @@ namespace carto {
         std::weak_ptr<Billboard> _baseBillboard;
     
         std::shared_ptr<Bitmap> _bitmap;
+        std::shared_ptr<AnimationStyle> _animationStyle;
     
         cglib::vec2<float> _coords[4];
     

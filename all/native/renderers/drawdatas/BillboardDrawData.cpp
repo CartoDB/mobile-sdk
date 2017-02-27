@@ -46,6 +46,10 @@ namespace carto {
         return _bitmap;
     }
     
+    std::shared_ptr<AnimationStyle> BillboardDrawData::getAnimationStyle() const {
+        return _animationStyle;
+    }
+    
     const cglib::vec2<float>* BillboardDrawData::getCoords() const {
         return _coords;
     }
@@ -170,6 +174,7 @@ namespace carto {
         _billboard(std::static_pointer_cast<Billboard>(const_cast<Billboard&>(billboard).shared_from_this())),
         _baseBillboard(billboard.getBaseBillboard()),
         _bitmap(bitmap),
+        _animationStyle(style.getAnimationStyle()),
         _coords(),
         _flippable(flippable),
         _horizontalOffset(style.getHorizontalOffset()),
