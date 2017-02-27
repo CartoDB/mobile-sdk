@@ -20,24 +20,6 @@
 
 #include <cglib/mat.h>
 
-namespace {
-    float springCurve(float t) {
-        return -0.5f * std::exp(-6 * t) * (-2.0f * std::exp(6 * t) + std::sin(12 * t) + 2 * cos(12 * t));
-    }
-
-    float calculateTransition(carto::AnimationType::AnimationType animType, float transition) {
-        switch (animType) {
-        case carto::AnimationType::ANIMATION_TYPE_NONE:
-            return 1.0f;
-        case carto::AnimationType::ANIMATION_TYPE_SPRING:
-            return springCurve(transition);
-        // TODO: other cases
-        default:
-            return transition;
-        }
-    }
-}
-
 namespace carto {
     
     void BillboardRenderer::CalculateBillboardCoords(const BillboardDrawData& drawData, const ViewState& viewState,
@@ -314,7 +296,7 @@ namespace carto {
             const std::shared_ptr<BillboardDrawData>& drawData = drawDataBuffer[i];
 
             // Alpha value
-            int alpha = std::min(256, static_cast<int>(256 * calculateTransition(drawData->getAnimationStyle() ? drawData->getAnimationStyle()->getFadeAnimationType() : AnimationType::ANIMATION_TYPE_NONE, drawData->getTransition())));
+            int alpha = std::min(256, static_cast<int>(256 * AnimationStyle::CalculateTransition(drawData->getAnimationStyle() ? drawData->getAnimationStyle()->getFadeAnimationType() : AnimationType::ANIMATION_TYPE_NONE, drawData->getTransition())));
             
             // Check for possible overflow in the buffers
             if ((drawDataIndex + 1) * 6 > GLContext::MAX_VERTEXBUFFER_SIZE) {
@@ -333,7 +315,7 @@ namespace carto {
             }
             
             // Calculate coordinates
-            float relativeSize = calculateTransition(drawData->getAnimationStyle() ? drawData->getAnimationStyle()->getSizeAnimationType() : AnimationType::ANIMATION_TYPE_NONE, drawData->getTransition());
+            float relativeSize = AnimationStyle::CalculateTransition(drawData->getAnimationStyle() ? drawData->getAnimationStyle()->getSizeAnimationType() : AnimationType::ANIMATION_TYPE_NONE, drawData->getTransition());
             CalculateBillboardCoords(*drawData, viewState, coordBuf, drawDataIndex, relativeSize);
             
             // Billboards with ground orientation (like some texts) have to be flipped to readable

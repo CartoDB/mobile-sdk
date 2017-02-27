@@ -62,6 +62,14 @@ namespace carto {
          * @return The type of the size-related animation.
          */
         AnimationType::AnimationType getSizeAnimationType() const;
+
+        /**
+         * Returns animation transition value based on animation type.
+         * @param animType Type of the animation.
+         * @param t The input value between 0..1.
+         * @return The transition value, always non-negative.
+         */
+        static float CalculateTransition(AnimationType::AnimationType animType, float t);
         
     protected:
         float _relativeSpeed;
