@@ -197,40 +197,51 @@ namespace carto { namespace geocoding {
             return;
         }
         
+        // Try to match as long span as possible
+        bool found = false;
         for (const TokenListType::Span& span : spans) {
             Query subQuery = query;
-            bool valid = true;
-            switch (type) {
-            case TokenType::COUNTRY:
-                valid = bindQueryNameField(subQuery, type, &Query::countries, span);
-                break;
-            case TokenType::REGION:
-                valid = bindQueryNameField(subQuery, type, &Query::regions, span);
-                break;
-            case TokenType::COUNTY:
-                valid = bindQueryNameField(subQuery, type, &Query::counties, span);
-                break;
-            case TokenType::LOCALITY:
-                valid = bindQueryNameField(subQuery, type, &Query::localities, span);
-                break;
-            case TokenType::NEIGHBOURHOOD:
-                valid = bindQueryNameField(subQuery, type, &Query::neighbourhoods, span);
-                break;
-            case TokenType::STREET:
-                valid = bindQueryNameField(subQuery, type, &Query::streets, span);
-                break;
-            case TokenType::POSTCODE:
-                valid = bindQueryNameField(subQuery, type, &Query::postcodes, span);
-                break;
-            case TokenType::NAME:
-                valid = bindQueryNameField(subQuery, type, &Query::names, span);
-                break;
-            case TokenType::HOUSENUMBER:
-                valid = bindQueryStringField(subQuery, type, &Query::houseNumber, span);
-                break;
+            subQuery.tokenList.assignType(span, type);
+            if (!subQuery.tokenList.valid()) {
+                continue;
             }
+
+            bool valid = (span.count == 0);
+            if (!found && !valid) {
+                switch (type) {
+                case TokenType::COUNTRY:
+                    valid = bindQueryNameField(subQuery, type, &Query::countries, span);
+                    break;
+                case TokenType::REGION:
+                   valid = bindQueryNameField(subQuery, type, &Query::regions, span);
+                    break;
+                case TokenType::COUNTY:
+                    valid = bindQueryNameField(subQuery, type, &Query::counties, span);
+                    break;
+                case TokenType::LOCALITY:
+                    valid = bindQueryNameField(subQuery, type, &Query::localities, span);
+                    break;
+                case TokenType::NEIGHBOURHOOD:
+                    valid = bindQueryNameField(subQuery, type, &Query::neighbourhoods, span);
+                    break;
+                case TokenType::STREET:
+                    valid = bindQueryNameField(subQuery, type, &Query::streets, span);
+                    break;
+                case TokenType::POSTCODE:
+                    valid = bindQueryNameField(subQuery, type, &Query::postcodes, span);
+                    break;
+                case TokenType::NAME:
+                    valid = bindQueryNameField(subQuery, type, &Query::names, span);
+                    break;
+                case TokenType::HOUSENUMBER:
+                    valid = bindQueryStringField(subQuery, type, &Query::houseNumber, span);
+                    break;
+                }
+            }
+
             if (valid) {
                 matchTokens(subQuery, candidates);
+                found = true;
             }
         }
     }
@@ -533,16 +544,12 @@ namespace carto { namespace geocoding {
             tokenStrings.back().pop_back(); // too short name, skip autocomplete
         }
 
-        query.tokenList.assignType(span, type);
-        if (span.count > 0) {
-            std::vector<std::vector<Token>> tokensList = query.tokenList.tags(span);
-            std::vector<Name> names = matchTokenNames(type, tokensList, tokenStrings);
-            for (const Name& name : names) {
-                (query.*field).push_back(name);
-            }
-            return !names.empty();
+        std::vector<std::vector<Token>> tokensList = query.tokenList.tags(span);
+        std::vector<Name> names = matchTokenNames(type, tokensList, tokenStrings);
+        for (const Name& name : names) {
+            (query.*field).push_back(name);
         }
-        return true;
+        return !names.empty();
     }
 
     bool Geocoder::bindQueryStringField(Query& query, TokenType type, std::string Query::* field, const TokenListType::Span& span) const {
@@ -551,13 +558,10 @@ namespace carto { namespace geocoding {
             tokenStrings.back().pop_back(); // we do not support autocomplete for 'exact' matching
         }
 
-        query.tokenList.assignType(span, type);
-        if (span.count > 0) {
-            if (type == TokenType::HOUSENUMBER) {
-                TokenListType::Span streetSpan = query.tokenList.span(TokenType::STREET);
-                if (!(streetSpan.index == span.index + span.count || streetSpan.index + streetSpan.count == span.index)) {
-                    return false;
-                }
+        if (type == TokenType::HOUSENUMBER) {
+            TokenListType::Span streetSpan = query.tokenList.span(TokenType::STREET);
+            if (!(streetSpan.index == span.index + span.count || streetSpan.index + streetSpan.count == span.index)) {
+                return false;
             }
         }
         query.*field = boost::algorithm::join(tokenStrings, " ");
