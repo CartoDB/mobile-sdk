@@ -133,7 +133,7 @@ namespace carto { namespace geocoding {
 
     void Geocoder::classifyTokens(TokenListType& tokenList) const {
         for (int i = 0; i < tokenList.size(); i++) {
-            std::string tokenValue = tokenList.tokens(TokenListType::Span{ i, 1 }).front();
+            std::string tokenValue = tokenList.tokens(TokenListType::Span(i, 1)).front();
 
             // Do token translation, actual tokens are normalized relative to real names using translation table
             unistring token;
@@ -559,8 +559,7 @@ namespace carto { namespace geocoding {
         }
 
         if (type == TokenType::HOUSENUMBER) {
-            TokenListType::Span streetSpan = query.tokenList.span(TokenType::STREET);
-            if (!(streetSpan.index == span.index + span.count || streetSpan.index + streetSpan.count == span.index)) {
+            if (query.tokenList.prevType(span) != TokenType::STREET && query.tokenList.nextType(span) != TokenType::STREET) {
                 return false;
             }
         }

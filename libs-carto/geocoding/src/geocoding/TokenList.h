@@ -31,7 +31,9 @@ namespace carto { namespace geocoding {
 
         int size() const { return static_cast<int>(_tokens.size()); }
 
-        int unmatchedTokens() const { return static_cast<int>(std::count_if(_tokens.begin(), _tokens.end(), [](const Token& token) { return !token.value.empty() && token.assignedType == TokenType(); })); }
+        int unmatchedTokens() const {
+            return static_cast<int>(std::count_if(_tokens.begin(), _tokens.end(), [](const Token& token) { return !token.value.empty() && token.assignedType == TokenType(); }));
+        }
 
         void setTag(int index, const TagType& tag) {
             _tokens.at(index).tag = tag;
@@ -57,6 +59,32 @@ namespace carto { namespace geocoding {
             }
         }
 
+        TokenType prevType(const Span& span) const {
+            if (span.index < 0) {
+                return TokenType();
+            }
+
+            for (std::size_t i = span.index; i > 0; i--) {
+                if (!_tokens[i - 1].value.empty()) {
+                    return _tokens[i - 1].assignedType;
+                }
+            }
+            return TokenType();
+        }
+
+        TokenType nextType(const Span& span) const {
+            if (span.index < 0) {
+                return TokenType();
+            }
+
+            for (std::size_t i = span.index + span.count; i < _tokens.size(); i++) {
+                if (!_tokens[i].value.empty()) {
+                    return _tokens[i].assignedType;
+                }
+            }
+            return TokenType();
+        }
+
         StringType name(TokenType type) const {
             StringType name;
             for (const Token& token : _tokens) {
@@ -65,22 +93,6 @@ namespace carto { namespace geocoding {
                 }
             }
             return name;
-        }
-
-        Span span(TokenType type) const {
-            for (std::size_t i = 0; i < _tokens.size(); i++) {
-                if (_tokens[i].assignedType == type) {
-                    std::size_t j = i + 1;
-                    while (j < _tokens.size()) {
-                        if (_tokens[j].assignedType != type) {
-                            break;
-                        }
-                        j++;
-                    }
-                    return Span(static_cast<int>(i), static_cast<int>(j - i));
-                }
-            }
-            return Span(-1, 0);
         }
 
         std::vector<StringType> tokens(const Span& span) const {
@@ -114,16 +126,17 @@ namespace carto { namespace geocoding {
             }
 
             for (std::uint64_t tokenMask = 1; tokenMask <= maskUnion; tokenMask <<= 1) {
-                std::size_t minIndex = _tokens.size(), maxIndex = 0, count = 0;
+                std::size_t minIndex = _tokens.size(), maxIndex = 0;
                 for (std::size_t i = 0; i < _tokens.size(); i++) {
                     if (_tokens[i].validTypes == tokenMask) {
                         minIndex = std::min(minIndex, i);
                         maxIndex = std::max(maxIndex, i);
-                        count++;
                     }
                 }
-                if (count > 0 && minIndex + count != maxIndex + 1) {
-                    return false;
+                for (std::size_t i = minIndex; i <= maxIndex; i++) {
+                    if (!(_tokens[i].validTypes & tokenMask)) {
+                        return false;
+                    }
                 }
             }
             return true;
