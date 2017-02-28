@@ -19,23 +19,49 @@ namespace carto {
      */
     class AnimationStyleBuilder {
     public:
-        // TODO: doc
+        /**
+         * Constructs an AnimationStyleBuilder object with all parameters set to defaults.
+         */
         AnimationStyleBuilder();
         virtual ~AnimationStyleBuilder();
     
-        // TODO: doc
+        /**
+         * Returns the relative speed of the animation.
+         * @return The relative speed of the animation (1.0 corresponds to the default speed).
+         */
         float getRelativeSpeed() const;
+        /**
+         * Sets the relative speed of the animation.
+         * @param relativeSpeed The new relative speed of the animation.
+         */
         void setRelativeSpeed(float relativeSpeed);
 
-        // TODO: doc
+        /**
+         * Returns the fade animation type.
+         * @return The type of the fade animation.
+         */
         AnimationType::AnimationType getFadeAnimationType() const;
+        /**
+         * Sets the fade animation type.
+         * @param animType The new type of the fade animation.
+         */
         void setFadeAnimationType(AnimationType::AnimationType animType);
 
-        // TODO: doc
+        /**
+         * Returns the size-related animation type.
+         * @return The type of the size-related animation.
+         */
         AnimationType::AnimationType getSizeAnimationType() const;
+        /**
+         * Sets the size-related animation type.
+         * @param animType The new type of the size-related animation.
+         */
         void setSizeAnimationType(AnimationType::AnimationType animType);
 
-        // TODO: doc
+        /**
+         * Builds a new instance of the AnimationStyle object using previously set parameters.
+         * @return A new AnimationStyle object.
+         */
         std::shared_ptr<AnimationStyle> buildStyle() const;
     
     protected:

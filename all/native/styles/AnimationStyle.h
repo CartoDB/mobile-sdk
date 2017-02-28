@@ -42,12 +42,19 @@ namespace carto {
      */
     class AnimationStyle {
     public:
+        /**
+         * Constructs an AnimationStyle object from various parameters. Instantiating the object directly is
+         * not recommended, AnimationStyleBuilder should be used instead.
+         * @param relativeSpeed The relative speed of the animation. 1.0 is the default.
+         * @param fadeAnimationType The fade/blending animation type.
+         * @param sizeAnimationType The element size animation type.
+         */
         AnimationStyle(float relativeSpeed, AnimationType::AnimationType fadeAnimationType, AnimationType::AnimationType sizeAnimationType);
         virtual ~AnimationStyle();
     
         /**
          * Returns the relative speed of the animation.
-         * @return The relative speed of the animation (1.0.
+         * @return The relative speed of the animation (1.0 corresponds to the default speed).
          */
         float getRelativeSpeed() const;
 
@@ -65,11 +72,11 @@ namespace carto {
 
         /**
          * Returns animation transition value based on animation type.
-         * @param animType Type of the animation.
+         * @param animationType Type of the animation.
          * @param t The input value between 0..1.
-         * @return The transition value, always non-negative.
+         * @return The transition value, always non-negative. For t=1, it is always 1. 
          */
-        static float CalculateTransition(AnimationType::AnimationType animType, float t);
+        static float CalculateTransition(AnimationType::AnimationType animationType, float t);
         
     protected:
         float _relativeSpeed;

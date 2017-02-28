@@ -24,8 +24,8 @@ namespace carto {
         return _sizeAnimationType;
     }
 
-    float AnimationStyle::CalculateTransition(AnimationType::AnimationType animType, float t) {
-        switch (animType) {
+    float AnimationStyle::CalculateTransition(AnimationType::AnimationType animationType, float t) {
+        switch (animationType) {
         case AnimationType::ANIMATION_TYPE_STEP:
             return t >= 0.5f ? 1.0f : 0.0f;
         case AnimationType::ANIMATION_TYPE_LINEAR:

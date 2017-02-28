@@ -112,7 +112,10 @@ namespace carto {
          */
         bool isScaleWithDPI() const;
 
-        // TODO: doc
+        /**
+         * Returns the animation style of the billboard.
+         * @return The animation style of the billboard. Can be null if animations are not used.
+         */
         std::shared_ptr<AnimationStyle> getAnimationStyle() const;
         
     protected:
