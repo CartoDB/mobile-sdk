@@ -122,11 +122,11 @@ namespace carto {
         _cameraPlaneZoomDistance = cameraPlaneZoomDistance;
     }
     
-    int BillboardDrawData::getScreenBottomDistance() const {
+    double BillboardDrawData::getScreenBottomDistance() const {
         return _screenBottomDistance;
     }
     
-    void BillboardDrawData::setScreenBottomDistance(int screenBottomDistance) {
+    void BillboardDrawData::setScreenBottomDistance(double screenBottomDistance) {
         _screenBottomDistance = screenBottomDistance;
     }
     

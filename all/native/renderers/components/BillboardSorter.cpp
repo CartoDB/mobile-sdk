@@ -52,7 +52,7 @@ namespace carto {
             if (!_sort3D) {
                 // If in 2D, calculate distance from the bottom of the screen
                 double dist = GeomUtils::DistanceFromLine(MapPos(pos(0), pos(1), pos(2)), bottomLeft, bottomRight);
-                drawData->setScreenBottomDistance(static_cast<int>(dist));
+                drawData->setScreenBottomDistance(dist);
             }
         }
     

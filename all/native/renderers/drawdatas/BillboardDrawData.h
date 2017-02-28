@@ -73,8 +73,8 @@ namespace carto {
         double getCameraPlaneZoomDistance() const;
         void setCameraPlaneZoomDistance(double cameraPlaneDistance);
     
-        int getScreenBottomDistance() const;
-        void setScreenBottomDistance(int screenBottomDistance);
+        double getScreenBottomDistance() const;
+        void setScreenBottomDistance(double screenBottomDistance);
     
         BillboardRenderer* getRenderer() const;
         void setRenderer(BillboardRenderer& renderer);
@@ -134,7 +134,7 @@ namespace carto {
         float _size;
     
         double _cameraPlaneZoomDistance;
-        int _screenBottomDistance;
+        double _screenBottomDistance;
     
         BillboardRenderer* _renderer;
     };
