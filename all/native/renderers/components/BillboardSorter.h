@@ -28,11 +28,7 @@ namespace carto {
         const std::vector<std::shared_ptr<BillboardDrawData> >& getSortedBillboardDrawDatas() const;
     
     private:
-        bool distanceComparator(const std::shared_ptr<BillboardDrawData>& drawData1, const std::shared_ptr<BillboardDrawData>& drawData2) const;
-    
         std::vector<std::shared_ptr<BillboardDrawData> > _billboardDrawDatas;
-    
-        bool _sort3D;
     };
     
 }
