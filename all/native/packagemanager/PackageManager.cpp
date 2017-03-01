@@ -1157,7 +1157,6 @@ namespace carto {
             // Get package file name
             sqlite3pp::query query(*_localDb, "SELECT package_id, package_type, version FROM packages WHERE id=:id");
             query.bind(":id", id);
-            std::string packageFileName;
             PackageType::PackageType packageType = PackageType::PACKAGE_TYPE_MAP;
             for (auto qit = query.begin(); qit != query.end(); qit++) {
                 std::string packageId = qit->get<const char*>(0);
