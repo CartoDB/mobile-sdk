@@ -15,8 +15,6 @@
 
 namespace carto {
 
-class PackageManager;
-
     /**
      * A tile data source that loads tiles from package manager.
      */
@@ -42,7 +40,7 @@ class PackageManager;
         public:
             PackageManagerListener(PackageManagerTileDataSource& dataSource);
         		
-            virtual void onTilesChanged();
+            virtual void onPackagesChanged();
         		
         private:
             PackageManagerTileDataSource& _dataSource;

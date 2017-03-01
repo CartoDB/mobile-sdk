@@ -57,7 +57,7 @@ namespace carto {
     {
     }
         
-    void PackageManagerTileDataSource::PackageManagerListener::onTilesChanged() {
+    void PackageManagerTileDataSource::PackageManagerListener::onPackagesChanged() {
         _dataSource.notifyTilesChanged(false);
     }
 

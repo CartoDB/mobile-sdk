@@ -54,7 +54,7 @@ namespace carto {
         public:
             virtual ~OnChangeListener() { }
 
-            virtual void onTilesChanged() = 0;
+            virtual void onPackagesChanged() = 0;
         };
 
         /**

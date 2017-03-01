@@ -27,9 +27,14 @@ namespace carto {
         if (!packageManager) {
             throw NullArgumentException("Null packageManager");
         }
+
+        _packageManagerListener = std::make_shared<PackageManagerListener>(*this);
+        _packageManager->registerOnChangeListener(_packageManagerListener);
     }
 
     PackageManagerRoutingService::~PackageManagerRoutingService() {
+        _packageManager->unregisterOnChangeListener(_packageManagerListener);
+        _packageManager.reset();
     }
 
     std::shared_ptr<RoutingResult> PackageManagerRoutingService::calculateRoute(const std::shared_ptr<RoutingRequest>& request) const {
@@ -71,6 +76,17 @@ namespace carto {
         return result;
     }
             
+    PackageManagerRoutingService::PackageManagerListener::PackageManagerListener(PackageManagerRoutingService& service) :
+        _service(service)
+    {
+    }
+        
+    void PackageManagerRoutingService::PackageManagerListener::onPackagesChanged() {
+        std::lock_guard<std::mutex> lock(_service._mutex);
+        _service._cachedPackageFileMap.clear();
+        _service._cachedRouteFinder.reset();
+    }
+
 }
 
 #endif

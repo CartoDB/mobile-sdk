@@ -1144,6 +1144,13 @@ namespace carto {
     }
 
     void PackageManager::deleteLocalPackage(int id) {
+        std::vector<std::shared_ptr<OnChangeListener> > onChangeListeners;
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            onChangeListeners = _onChangeListeners;
+        }
+
+        std::string packageFileName;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
 
@@ -1167,10 +1174,15 @@ namespace carto {
             sqlite3pp::command command(*_localDb, "DELETE FROM packages WHERE id=:id");
             command.bind(":id", id);
             command.execute();
-            
-            // Delete file
-            utf8_filesystem::unlink(packageFileName.c_str());
         }
+
+        // Notify that packages have changed before actually deleting the file
+        for (const std::shared_ptr<OnChangeListener>& onChangeListener : onChangeListeners) {
+            onChangeListener->onPackagesChanged();
+        }
+
+        // Delete file
+        utf8_filesystem::unlink(packageFileName.c_str());
 
         // Sync
         syncLocalPackages();
@@ -1227,7 +1239,7 @@ namespace carto {
         _taskQueue->deleteTask(taskId);
 
         for (const std::shared_ptr<OnChangeListener>& onChangeListener : onChangeListeners) {
-            onChangeListener->onTilesChanged();
+            onChangeListener->onPackagesChanged();
         }
 
         DirectorPtr<PackageManagerListener> packageManagerListener = _packageManagerListener;
