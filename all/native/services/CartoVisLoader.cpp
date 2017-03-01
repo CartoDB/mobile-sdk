@@ -571,11 +571,37 @@ namespace carto {
             mapsService.setStatTag(*statTag);
         }
         std::vector<std::shared_ptr<Layer> > layers = mapsService.buildNamedMap(name, params);
+        return createLayerInfos(layers, options, namedMap);
+    }
 
+    std::vector<CartoVisLoader::LayerInfo> CartoVisLoader::createLayerGroup(const picojson::value& options, const picojson::value& infoWindow) const {
+        picojson::value layerDefinition = options.get("layer_definition");
+        
+        // Manually reset layer definition
+        layerDefinition.get("version") = picojson::value(std::string("1.5.0"));
+
+        // Translate layer types
+        picojson::array& layersOption = layerDefinition.get("layers").get<picojson::array>();
+        for (picojson::value& layerOption : layersOption) {
+            std::string type = boost::to_lower_copy(layerOption.get("type").get<std::string>());
+            if (type == "cartodb") {
+                type = "mapnik";
+            }
+            layerOption.get("type").get<std::string>() = type;
+        }
+
+        // Configue Maps service and get the layers
+        CartoMapsService mapsService;
+        configureMapsService(mapsService, options);
+        std::vector<std::shared_ptr<Layer> > layers = mapsService.buildMap(Variant::FromPicoJSON(layerDefinition));
+        return createLayerInfos(layers, options, layerDefinition);
+    }
+
+    std::vector<CartoVisLoader::LayerInfo> CartoVisLoader::createLayerInfos(const std::vector<std::shared_ptr<Layer> >& layers, const picojson::value& options, const picojson::value& layerDefinition) const {
         // Create layer attributes
         std::map<std::shared_ptr<Layer>, picojson::object> layerAttributes;
-        if (namedMap.get("layers").is<picojson::array>()) {
-            const picojson::array& layerConfigs = namedMap.get("layers").get<picojson::array>();
+        if (layerDefinition.get("layers").is<picojson::array>()) {
+            const picojson::array& layerConfigs = layerDefinition.get("layers").get<picojson::array>();
             for (std::size_t i = 0; i < layerConfigs.size(); i++) {
                 const picojson::value& layerConfig = layerConfigs[i];
                 std::string layerId = *getString(layerConfig.get("id"));
@@ -644,70 +670,6 @@ namespace carto {
                     groupAttributes.push_back(picojson::value(attributes));
                     layerAttributes[layer]["sublayers"] = picojson::value(groupAttributes);
                 }
-            }
-        }
-
-        // Create layer info list
-        std::vector<LayerInfo> layerInfos;
-        for (const std::shared_ptr<Layer>& layer : layers) {
-            layerInfos.push_back(LayerInfo(layer, layerAttributes[layer]));
-        }
-        return layerInfos;
-    }
-
-    std::vector<CartoVisLoader::LayerInfo> CartoVisLoader::createLayerGroup(const picojson::value& options, const picojson::value& infoWindow) const {
-        picojson::value layerDefinition = options.get("layer_definition");
-        
-        // Manually reset layer definition
-        layerDefinition.get("version") = picojson::value(std::string("1.5.0"));
-
-        // Translate layer types
-        picojson::array& layersOption = layerDefinition.get("layers").get<picojson::array>();
-        for (picojson::value& layerOption : layersOption) {
-            std::string type = boost::to_lower_copy(layerOption.get("type").get<std::string>());
-            if (type == "cartodb") {
-                type = "mapnik";
-            }
-            layerOption.get("type").get<std::string>() = type;
-        }
-
-        // Configue Maps service and get the layers
-        CartoMapsService mapsService;
-        configureMapsService(mapsService, options);
-        std::vector<std::shared_ptr<Layer> > layers = mapsService.buildMap(Variant::FromPicoJSON(layerDefinition));
-
-        // Create attributes for the layers
-        std::map<std::shared_ptr<Layer>, picojson::object> layerAttributes;
-        if (layerDefinition.get("layers").is<picojson::array>()) {
-            const picojson::array& layerConfigs = layerDefinition.get("layers").get<picojson::array>();
-            for (std::size_t i = 0; i < layerConfigs.size() && i < layers.size(); i++) {
-                const std::shared_ptr<Layer>& layer = layers[i];
-                const picojson::value& layerConfig = layerConfigs[i];
-                
-                const picojson::value& layerConfigOptions = layerConfig.get("options");
-                if (layerConfigOptions.is<picojson::object>()) {
-                    configureLayerInteractivity(*layer, layerConfigOptions.get("interactivity"));
-                }
-
-                if (auto visible = getBool(layerConfig.get("visible"))) {
-                    layer->setVisible(*visible);
-                }
-                
-                picojson::object attributes;
-                readLayerAttributes(attributes, options);
-                if (!infoWindow.is<picojson::null>()) {
-                    attributes["infowindow"] = infoWindow;
-                }
-                if (layerConfig.contains("infowindow")) {
-                    attributes["infowindow"] = layerConfig.get("infowindow");
-                }
-                if (layerConfig.contains("legend")) {
-                    attributes["legend"] = layerConfig.get("legend");
-                }
-                if (layerConfig.contains("layer_name")) {
-                    attributes["name"] = layerConfig.get("layer_name");
-                }
-                layerAttributes[layer] = attributes;
             }
         }
 
