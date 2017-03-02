@@ -310,7 +310,7 @@ namespace carto {
     
     private:
         void calculateVisibleTiles(const std::shared_ptr<CullState>& cullState);
-        void calculateVisibleTilesRecursive(const std::shared_ptr<CullState>& cullState, const MapTile& mapTile);
+        void calculateVisibleTilesRecursive(const std::shared_ptr<CullState>& cullState, const MapTile& mapTile, const MapBounds& dataExtent);
 
         void sortTiles(std::vector<MapTile>& tiles, const ViewState& viewState, bool preloadingTiles);
         void findTiles(const std::vector<MapTile>& visTiles, bool preloadingTiles);

@@ -367,13 +367,13 @@ namespace carto {
         _preloadingTiles.clear();
         
         // Recursively calculate visible tiles
-        calculateVisibleTilesRecursive(cullState, MapTile(0, 0, 0, _frameNr));
+        calculateVisibleTilesRecursive(cullState, MapTile(0, 0, 0, _frameNr), _dataSource->getDataExtent());
         if (auto options = _options.lock()) {
             if (options->isSeamlessPanning()) {
                 // Additional visibility testing has to be done if seamless panning is enabled
                 for (int i = 1; i <= 5; i++) {
-                    calculateVisibleTilesRecursive(cullState, MapTile(-i, 0, 0, _frameNr));
-                    calculateVisibleTilesRecursive(cullState, MapTile( i, 0, 0, _frameNr));
+                    calculateVisibleTilesRecursive(cullState, MapTile(-i, 0, 0, _frameNr), _dataSource->getDataExtent());
+                    calculateVisibleTilesRecursive(cullState, MapTile( i, 0, 0, _frameNr), _dataSource->getDataExtent());
                 }
             }
         }
@@ -382,11 +382,17 @@ namespace carto {
         sortTiles(_preloadingTiles, cullState->getViewState(), true);
     }
 
-    void TileLayer::calculateVisibleTilesRecursive(const std::shared_ptr<CullState>& cullState, const MapTile& tile) {
+    void TileLayer::calculateVisibleTilesRecursive(const std::shared_ptr<CullState>& cullState, const MapTile& tile, const MapBounds& dataExtent) {
         const ViewState& viewState = cullState->getViewState();
         const Frustum& visibleFrustum = viewState.getFrustum();
         
         if (tile.getZoom() > Const::MAX_SUPPORTED_ZOOM_LEVEL) {
+            return;
+        }
+
+        int tileMask = (1 << tile.getZoom()) - 1;
+        MapTile flippedTile(tile.getX() & tileMask, tileMask - (tile.getY() & tileMask), tile.getZoom(), 0);
+        if (!calculateMapTileBounds(flippedTile).intersects(dataExtent)) {
             return;
         }
         
@@ -414,7 +420,7 @@ namespace carto {
         if (subDivide) {
             // The tile is too coarse, keep subdividing
             for (int n = 0; n < 4; n++) {
-                calculateVisibleTilesRecursive(cullState, tile.getChild(n));
+                calculateVisibleTilesRecursive(cullState, tile.getChild(n), dataExtent);
             }
         } else {
             // Add the tile to visible tiles, sort by the distnace to the camera
