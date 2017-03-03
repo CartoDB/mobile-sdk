@@ -49,8 +49,9 @@ namespace carto {
 
         std::shared_ptr<PackageManager> _packageManager;
 
-        mutable std::map<std::string, std::shared_ptr<std::ifstream> > _cachedPackageFileMap;
+        mutable std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<std::ifstream> > _cachedPackageFileMap;
         mutable std::shared_ptr<routing::RouteFinder> _cachedRouteFinder;
+
         mutable std::mutex _mutex;
 
     private:
