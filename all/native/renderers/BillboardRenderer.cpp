@@ -131,7 +131,7 @@ namespace carto {
                 float transition = drawData->getTransition();
                 float step = (drawData->isHideIfOverlapped() && drawData->isOverlapping() ? -1.0f : 1.0f);
                 if ((transition < 1 && step > 0) || (transition > 0 && step < 0)) {
-                    drawData->setTransition(transition + step * (transition == 0 ? 0.01f : deltaSeconds * animStyle->getRelativeSpeed()));
+                    drawData->setTransition(transition + step * (transition == 0 || transition == 1 ? 0.01f : deltaSeconds) * animStyle->getRelativeSpeed());
                     refresh = true;
                 }
             } else {
