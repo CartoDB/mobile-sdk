@@ -38,8 +38,13 @@ namespace carto {
         }
     }
 
-    PackageType::PackageType PackageHandlerFactory::DetectPackageType(const std::string& fileName) {
-        auto fileNameEndsWith = [&fileName](const std::string& ext) {
+    PackageType::PackageType PackageHandlerFactory::DetectPackageType(const std::string& url) {
+        auto fileNameEndsWith = [&url](const std::string& ext) {
+            std::string fileName = url;
+            std::string::size_type pos = fileName.find('?');
+            if (pos != std::string::npos) {
+                fileName = fileName.substr(0, pos);
+            }
             return fileName.size() >= ext.size() && fileName.substr(fileName.size() - ext.size()) == ext;
         };
 
@@ -49,7 +54,7 @@ namespace carto {
         else if (fileNameEndsWith(".nutigraph")) {
             return PackageType::PACKAGE_TYPE_ROUTING;
         }
-        Log::Warnf("PackageHandlerFactory::DetectPackageType: Unexpected package file: %s", fileName.c_str());
+        Log::Warnf("PackageHandlerFactory::DetectPackageType: Unexpected package extension: %s", url.c_str());
         return PackageType::PACKAGE_TYPE_MAP; // sensible default
     }
 

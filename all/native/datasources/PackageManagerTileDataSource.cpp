@@ -37,8 +37,10 @@ namespace carto {
     std::shared_ptr<TileData> PackageManagerTileDataSource::loadTile(const MapTile& mapTile) {
         Log::Infof("PackageManagerTileDataSource::loadTile: Loading %s", mapTile.toString().c_str());
         try {
+            MapTile mapTileFlipped = mapTile.getFlipped();
+
             std::shared_ptr<BinaryData> data;
-            _packageManager->accessLocalPackages([this, &mapTile, &data](const std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<PackageHandler> >& packageHandlerMap) {
+            _packageManager->accessLocalPackages([this, mapTileFlipped, &data](const std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<PackageHandler> >& packageHandlerMap) {
                 std::lock_guard<std::mutex> lock(_mutex);
 
                 // Fast path: try already open packages
@@ -46,12 +48,12 @@ namespace carto {
                     const std::shared_ptr<PackageInfo>& packageInfo = it->first;
                     std::shared_ptr<PackageTileMask> tileMask = packageInfo->getTileMask();
                     if (tileMask) {
-                        if (tileMask->getTileStatus(mapTile) == PackageTileStatus::PACKAGE_TILE_STATUS_MISSING) {
+                        if (tileMask->getTileStatus(mapTileFlipped) == PackageTileStatus::PACKAGE_TILE_STATUS_MISSING) {
                             continue;
                         }
                     }
 
-                    data = it->second->loadTile(mapTile);
+                    data = it->second->loadTile(mapTileFlipped);
                     if (data || tileMask) {
                         if (it != _cachedOpenPackageHandlers.begin()) {
                             std::swap(*_cachedOpenPackageHandlers.begin(), *it);
@@ -66,13 +68,13 @@ namespace carto {
                         const std::shared_ptr<PackageInfo>& packageInfo = it->first;
                         std::shared_ptr<PackageTileMask> tileMask = packageInfo->getTileMask();
                         if (tileMask) {
-                            if (tileMask->getTileStatus(mapTile) == PackageTileStatus::PACKAGE_TILE_STATUS_MISSING) {
+                            if (tileMask->getTileStatus(mapTileFlipped) == PackageTileStatus::PACKAGE_TILE_STATUS_MISSING) {
                                 continue;
                             }
                         }
 
                         mapHandler->openDatabase();
-                        data = mapHandler->loadTile(mapTile);
+                        data = mapHandler->loadTile(mapTileFlipped);
                         if (data || tileMask) {
                             _cachedOpenPackageHandlers.insert(_cachedOpenPackageHandlers.begin(), std::make_pair(packageInfo, mapHandler));
                             if (_cachedOpenPackageHandlers.size() > MAX_OPEN_PACKAGES) {
@@ -87,7 +89,7 @@ namespace carto {
 
             std::shared_ptr<TileData> tileData = std::make_shared<TileData>(data);
             if (!data) {
-                if (mapTile.getZoom() > getMinZoom()) {
+                if (mapTileFlipped.getZoom() > getMinZoom()) {
                     Log::Infof("PackageManagerTileDataSource::loadTile: Tile data doesn't exist in the database, redirecting to parent");
                     tileData->setReplaceWithParent(true);
                 } else {

@@ -24,7 +24,7 @@ namespace carto {
     
         static std::string GetPackageTypeExtension(PackageType::PackageType packageType);
 
-        static PackageType::PackageType DetectPackageType(const std::string& fileName);
+        static PackageType::PackageType DetectPackageType(const std::string& url);
 
     private:
         const std::string _serverEncKey;
