@@ -44,8 +44,8 @@ namespace carto { namespace mvt {
             }
         }
         else {
-            vt::Color fill = _fill * _fillOpacity;
-            vt::Color stroke = _stroke * _strokeOpacity;
+            vt::Color fill = vt::Color::fromColorOpacity(_fill, _fillOpacity);
+            vt::Color stroke = vt::Color::fromColorOpacity(_stroke, _strokeOpacity);
             if (_markerType == "ellipse" || (_markerType.empty() && placement != vt::LabelOrientation::LINE)) {
                 float width = DEFAULT_CIRCLE_SIZE, height = DEFAULT_CIRCLE_SIZE;
                 if (_widthDefined) { // NOTE: special case, if accept all values
@@ -130,7 +130,7 @@ namespace carto { namespace mvt {
                 pointInfos.clear();
             }
             else {
-                vt::BitmapLabelStyle style(orientation, vt::Color(0xffffffff) * fillOpacity, symbolizerContext.getFontManager()->getNullFont(), bitmap, transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1)));
+                vt::BitmapLabelStyle style(orientation, vt::Color::fromColorOpacity(vt::Color(0xffffffff), fillOpacity), symbolizerContext.getFontManager()->getNullFont(), bitmap, transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1)));
 
                 std::size_t labelInfoIndex = 0;
                 layerBuilder.addBitmapLabels([&](long long& id, vt::TileLayerBuilder::BitmapLabelInfo& labelInfo) {

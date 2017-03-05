@@ -210,7 +210,7 @@ namespace carto { namespace mvt {
         std::shared_ptr<vt::Font> font;
         float fontScale = symbolizerContext.getSettings().getFontScale();
         if (!_faceName.empty()) {
-            vt::FontManager::Parameters fontParams(_size * fontScale, _fill * _opacity, _haloRadius * fontScale, _haloFill * _haloOpacity, std::shared_ptr<vt::Font>());
+            vt::FontManager::Parameters fontParams(_size * fontScale, vt::Color::fromColorOpacity(_fill, _opacity), _haloRadius * fontScale, vt::Color::fromColorOpacity(_haloFill, _haloOpacity), std::shared_ptr<vt::Font>());
             font = symbolizerContext.getFontManager()->getFont(_faceName, fontParams);
         }
         else if (!_fontSetName.empty()) {
@@ -219,7 +219,7 @@ namespace carto { namespace mvt {
                     const std::vector<std::string>& faceNames = fontSet->getFaceNames();
                     for (auto it = faceNames.rbegin(); it != faceNames.rend(); it++) {
                         const std::string& faceName = *it;
-                        vt::FontManager::Parameters fontParams(_size * fontScale, _fill * _opacity, _haloRadius * fontScale, _haloFill * _haloOpacity, font);
+                        vt::FontManager::Parameters fontParams(_size * fontScale, vt::Color::fromColorOpacity(_fill, _opacity), _haloRadius * fontScale, vt::Color::fromColorOpacity(_haloFill, _haloOpacity), font);
                         std::shared_ptr<vt::Font> mainFont = symbolizerContext.getFontManager()->getFont(faceName, fontParams);
                         if (mainFont) {
                             font = mainFont;

@@ -28,8 +28,8 @@ namespace carto { namespace mvt {
             height = bitmap->height;
         }
         else {
-            vt::Color fill = _fill * _fillOpacity;
-            vt::Color stroke = _stroke * _strokeOpacity;
+            vt::Color fill = vt::Color::fromColorOpacity(_fill, _fillOpacity);
+            vt::Color stroke = vt::Color::fromColorOpacity(_stroke, _strokeOpacity);
             if (_markerType == "rectangle") {
                 std::string file = "__torque_marker_rectangle_" + boost::lexical_cast<std::string>(width) + "_" + boost::lexical_cast<std::string>(height) + "_" + boost::lexical_cast<std::string>(fill.value()) + "_" + boost::lexical_cast<std::string>(_strokeWidth) + "_" + boost::lexical_cast<std::string>(stroke.value()) + ".bmp";
                 bitmap = symbolizerContext.getBitmapManager()->getBitmap(file);

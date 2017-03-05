@@ -1456,7 +1456,7 @@ namespace carto { namespace vt {
             
             std::size_t verticesSize = _labelVertices.size();
             label->calculateVertexData(_viewState, _labelVertices, _labelTexCoords, _labelIndices);
-            Color color = label->getColor() * label->getOpacity();
+            Color color = Color::fromColorOpacity(label->getColor(), label->getOpacity());
             _labelColors.fill(color.rgba(), _labelVertices.size() - verticesSize);
 
             if (_labelVertices.size() >= 32768) { // flush the batch if largest vertex index is getting 'close' to 64k limit
@@ -1803,7 +1803,7 @@ namespace carto { namespace vt {
 
         std::array<cglib::vec4<float>, TileGeometry::StyleParameters::MAX_PARAMETERS> colors;
         for (int i = 0; i < styleParams.parameterCount; i++) {
-            Color color = (*styleParams.colorTable[i])(_viewState) * (blend * opacity * (*styleParams.opacityTable[i])(_viewState));
+            Color color = Color::fromColorOpacity((*styleParams.colorTable[i])(_viewState) * blend, opacity * (*styleParams.opacityTable[i])(_viewState));
             colors[i] = color.rgba();
         }
         
