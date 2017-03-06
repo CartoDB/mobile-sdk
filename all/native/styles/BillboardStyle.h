@@ -9,7 +9,10 @@
 
 #include "styles/Style.h"
 
+#include <memory>
+
 namespace carto {
+	class AnimationStyle;
 
     namespace BillboardOrientation {
         /**
@@ -108,6 +111,12 @@ namespace carto {
          * @return True if this billboard's size will be scaled using the screen dot's per inch parameter.
          */
         bool isScaleWithDPI() const;
+
+        /**
+         * Returns the animation style of the billboard.
+         * @return The animation style of the billboard. Can be null if animations are not used.
+         */
+        std::shared_ptr<AnimationStyle> getAnimationStyle() const;
         
     protected:
         BillboardStyle(const Color& color,
@@ -118,7 +127,8 @@ namespace carto {
                        float horizontalOffset,
                        float verticalOffset,
                        int placementPriority,
-                       bool scaleWithDPI);
+                       bool scaleWithDPI,
+					   const std::shared_ptr<AnimationStyle>& animStyle);
 
         float _attachAnchorPointX;
         float _attachAnchorPointY;
@@ -132,6 +142,8 @@ namespace carto {
         int _placementPriority;
         
         bool _scaleWithDPI;
+
+        std::shared_ptr<AnimationStyle> _animationStyle;
     };
     
 }

@@ -1,4 +1,5 @@
 #include "BillboardStyleBuilder.h"
+#include "AnimationStyle.h"
 
 namespace carto {
 
@@ -90,6 +91,16 @@ namespace carto {
         std::lock_guard<std::mutex> lock(_mutex);
         _scaleWithDPI = scaleWithDPI;
     }
+
+    std::shared_ptr<AnimationStyle> BillboardStyleBuilder::getAnimationStyle() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _animationStyle;
+    }
+    
+    void BillboardStyleBuilder::setAnimationStyle(const std::shared_ptr<AnimationStyle>& animStyle) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _animationStyle = animStyle;
+    }
     
     BillboardStyleBuilder::BillboardStyleBuilder() :
         StyleBuilder(),
@@ -100,7 +111,8 @@ namespace carto {
         _horizontalOffset(0),
         _verticalOffset(0),
         _placementPriority(0),
-        _scaleWithDPI(true)
+        _scaleWithDPI(true),
+        _animationStyle()
     {
     }
     

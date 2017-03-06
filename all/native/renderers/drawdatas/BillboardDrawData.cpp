@@ -46,6 +46,10 @@ namespace carto {
         return _bitmap;
     }
     
+    std::shared_ptr<AnimationStyle> BillboardDrawData::getAnimationStyle() const {
+        return _animationStyle;
+    }
+    
     const cglib::vec2<float>* BillboardDrawData::getCoords() const {
         return _coords;
     }
@@ -84,6 +88,14 @@ namespace carto {
         
     void BillboardDrawData::setOverlapping(bool overlapping) {
         _overlapping = overlapping;
+    }
+
+    float BillboardDrawData::getTransition() const {
+        return _transition;
+    }
+
+    void BillboardDrawData::setTransition(float transition) {
+        _transition = std::max(0.0f, std::min(1.0f, transition));
     }
     
     float BillboardDrawData::getPlacementPriority() const {
@@ -162,6 +174,7 @@ namespace carto {
         _billboard(std::static_pointer_cast<Billboard>(const_cast<Billboard&>(billboard).shared_from_this())),
         _baseBillboard(billboard.getBaseBillboard()),
         _bitmap(bitmap),
+        _animationStyle(style.getAnimationStyle()),
         _coords(),
         _flippable(flippable),
         _horizontalOffset(style.getHorizontalOffset()),
@@ -171,6 +184,7 @@ namespace carto {
         _causesOverlap(style.isCausesOverlap()),
         _hideIfOverlapped(style.isHideIfOverlapped()),
         _overlapping(style.isHideIfOverlapped() ? true : false),
+        _transition(0.0f),
         _placementPriority(style.getPlacementPriority()),
         _pos(),
         _rotation(billboard.getRotation()),
@@ -184,6 +198,10 @@ namespace carto {
         if (billboard.getGeometry()) {
             MapPos posInternal = projection.toInternal(billboard.getGeometry()->getCenterPos());
             _pos = cglib::vec3<double>(posInternal.getX(), posInternal.getY(), posInternal.getZ());
+        }
+
+        if (auto drawData = billboard.getDrawData()) {
+            _transition = drawData->_transition.load();
         }
 
         // If size was given in meters, calculate the approximate internal size

@@ -31,6 +31,7 @@ namespace carto {
          * @param verticalOffset The vertical offset for the label.
          * @param placementPriority The placement priority for the label.
          * @param scaleWithDPI The scale with DPI flag for the label.
+         * @param animStyle The animation style to use for the label.
          * @param anchorPointX The horizontal anchor point for the label.
          * @param anchorPointY The vertical anchor point for the label.
          * @param flippable The fliappble flag for the label.
@@ -46,6 +47,7 @@ namespace carto {
                    float verticalOffset,
                    int placementPriority,
                    bool scaleWithDPI,
+                   const std::shared_ptr<AnimationStyle>& animStyle,
                    float anchorPointX,
                    float anchorPointY,
                    bool flippable,

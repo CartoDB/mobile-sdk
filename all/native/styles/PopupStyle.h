@@ -30,7 +30,8 @@ namespace carto {
          * @param horizontalOffset The horizontal offset for the popup.
          * @param verticalOffset The vertical offset for the popup.
          * @param placementPriority The placement priority for the popup.
-         * @param scaleWithDPI The scale with DPI flag for the label.
+         * @param scaleWithDPI The scale with DPI flag for the popup.
+         * @param animStyle The animation style for the popup.
          */
         PopupStyle(const Color& color,
                    float attachAnchorPointX,
@@ -40,7 +41,8 @@ namespace carto {
                    float horizontalOffset,
                    float verticalOffset,
                    int placementPriority,
-                   bool scaleWithDPI);
+                   bool scaleWithDPI,
+                   const std::shared_ptr<AnimationStyle>& animStyle);
         virtual ~PopupStyle();
     };
     

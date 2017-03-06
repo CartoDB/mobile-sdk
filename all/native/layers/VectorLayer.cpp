@@ -164,14 +164,15 @@ namespace carto {
                                   StyleTextureCache& styleCache,
                                   const ViewState& viewState)
     {
-        _billboardRenderer->onDrawFrame(deltaSeconds, billboardSorter, styleCache, viewState);
+        bool refresh = false;
+        refresh = _billboardRenderer->onDrawFrame(deltaSeconds, billboardSorter, styleCache, viewState) || refresh;
         _geometryCollectionRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
         _lineRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
         _pointRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
         _polygonRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
         _polygon3DRenderer->onDrawFrame(deltaSeconds, viewState);
         _nmlModelRenderer->onDrawFrame(deltaSeconds, viewState);
-        return false;
+        return refresh;
     }
     
     void VectorLayer::onSurfaceDestroyed(){

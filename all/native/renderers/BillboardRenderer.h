@@ -35,7 +35,7 @@ namespace carto {
     class BillboardRenderer {
     public:
         static void CalculateBillboardCoords(const BillboardDrawData& drawData, const ViewState& viewState,
-                                             std::vector<float>& coordBuf, int drawDataIndex);
+                                             std::vector<float>& coordBuf, int drawDataIndex, float sizeScale = 1.0f);
         
         BillboardRenderer();
         virtual ~BillboardRenderer();
@@ -43,7 +43,7 @@ namespace carto {
         virtual void offsetLayerHorizontally(double offset);
     
         void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
-        void onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
+        bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
         void onDrawFrameSorted(float deltaSeconds, const std::vector<std::shared_ptr<BillboardDrawData> >& billboardDrawDatas, StyleTextureCache& styleCache, const ViewState& viewState);
         void onSurfaceDestroyed();
     

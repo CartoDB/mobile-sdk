@@ -23,7 +23,8 @@ namespace carto {
                                                           _horizontalOffset,
                                                           _verticalOffset,
                                                           _placementPriority,
-                                                          _scaleWithDPI));
+                                                          _scaleWithDPI,
+                                                          _animationStyle));
     }
         
 }
