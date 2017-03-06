@@ -17,6 +17,7 @@
 namespace carto {
 
     OSRMOfflineRoutingService::OSRMOfflineRoutingService(const std::string& path) :
+        RoutingService(),
         _routeFinder()
     {
         routing::Graph::Settings graphSettings;

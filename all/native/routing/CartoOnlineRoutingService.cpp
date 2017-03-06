@@ -15,6 +15,7 @@
 namespace carto {
 
     CartoOnlineRoutingService::CartoOnlineRoutingService(const std::string& source) :
+        RoutingService(),
         _source(source)
     {
     }

@@ -9,6 +9,7 @@
 
 #if defined(_CARTO_ROUTING_SUPPORT) && defined(_CARTO_PACKAGEMANAGER_SUPPORT)
 
+#include "packagemanager/PackageManager.h"
 #include "routing/RoutingService.h"
 
 #include <memory>
@@ -20,8 +21,6 @@ namespace carto {
     namespace routing {
         class RouteFinder;
     }
-
-    class PackageManager;
 
     /**
      * A routing service that uses routing packages from package manager.
@@ -38,11 +37,25 @@ namespace carto {
         virtual std::shared_ptr<RoutingResult> calculateRoute(const std::shared_ptr<RoutingRequest>& request) const;
 
     protected:
+        class PackageManagerListener : public PackageManager::OnChangeListener {
+        public:
+            PackageManagerListener(PackageManagerRoutingService& service);
+        		
+            virtual void onPackagesChanged();
+        		
+        private:
+            PackageManagerRoutingService& _service;
+        };
+
         std::shared_ptr<PackageManager> _packageManager;
 
-        mutable std::map<std::string, std::shared_ptr<std::ifstream> > _cachedPackageFileMap;
+        mutable std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<std::ifstream> > _cachedPackageFileMap;
         mutable std::shared_ptr<routing::RouteFinder> _cachedRouteFinder;
+
         mutable std::mutex _mutex;
+
+    private:
+        std::shared_ptr<PackageManagerListener> _packageManagerListener;
     };
     
 }
