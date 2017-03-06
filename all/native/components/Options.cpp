@@ -28,6 +28,7 @@ namespace carto {
         _pivotMode(PivotMode::PIVOT_MODE_TOUCHPOINT),
         _seamlessPanning(true),
         _tiltGestureReversed(false),
+        _zoomGestures(false),
         _backgroundBitmap(GetDefaultBackgroundBitmap()),
         _skyBitmap(GetDefaultSkyBitmap()),
         _watermarkAlignmentX(-1),
@@ -264,6 +265,22 @@ namespace carto {
             _tiltGestureReversed = reversed;
         }
         notifyOptionChanged("TiltGestureReversed");
+    }
+        
+    bool Options::isZoomGestures() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _zoomGestures;
+    }
+    
+    void Options::setZoomGestures(bool enabled) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            if (_zoomGestures == enabled) {
+                return;
+            }
+            _zoomGestures = enabled;
+        }
+        notifyOptionChanged("ZoomGestures");
     }
         
     int Options::getEnvelopeThreadPoolSize() const {
