@@ -20,6 +20,10 @@ namespace carto {
     int TileDataSource::getMaxZoom() const {
         return _maxZoom;
     }
+
+    MapBounds TileDataSource::getDataExtent() const {
+        return _projection->getBounds();
+    }
     
     std::shared_ptr<Projection> TileDataSource::getProjection() const {
         return _projection;

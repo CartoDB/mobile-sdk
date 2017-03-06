@@ -8,6 +8,7 @@
 #define _CARTO_TILEDATASOURCE_H_
 
 #include "core/MapTile.h"
+#include "core/MapBounds.h"
 #include "datasources/components/TileData.h"
 
 #include <atomic>
@@ -51,6 +52,14 @@ namespace carto {
          * @return The maximum zoom level supported (exclusive).
          */
         virtual int getMaxZoom() const;
+
+        /**
+         * Returns the extent of the tiles in this data source.
+         * The bounds are in coordinate system of the projection of the data source.
+         * @return The extent of the data source.
+         */
+        virtual MapBounds getDataExtent() const;
+
         /**
          * Returns the projection of this tile source.
          * @return The projection of this tile source.
