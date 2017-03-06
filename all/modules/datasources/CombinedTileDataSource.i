@@ -3,7 +3,7 @@
 
 %module(directors="1") CombinedTileDataSource
 
-!proxy_imports(carto::CombinedTileDataSource, core.MapTile, core.StringMap, datasources.TileDataSource, datasources.components.TileData)
+!proxy_imports(carto::CombinedTileDataSource, core.MapTile, core.MapBounds, core.StringMap, datasources.TileDataSource, datasources.components.TileData)
 
 %{
 #include "datasources/CombinedTileDataSource.h"

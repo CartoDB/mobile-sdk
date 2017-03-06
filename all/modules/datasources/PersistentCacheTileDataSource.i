@@ -3,7 +3,7 @@
 
 %module(directors="1") PersistentCacheTileDataSource
 
-!proxy_imports(carto::PersistentCacheTileDataSource, core.MapTile, core.StringMap, datasources.CacheTileDataSource, datasources.components.TileData)
+!proxy_imports(carto::PersistentCacheTileDataSource, core.MapTile, core.MapBounds, core.StringMap, datasources.CacheTileDataSource, datasources.components.TileData)
 
 %{
 #include "datasources/PersistentCacheTileDataSource.h"
