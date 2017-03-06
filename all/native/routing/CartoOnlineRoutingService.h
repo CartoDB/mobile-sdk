@@ -34,7 +34,7 @@ namespace carto {
     protected:
         static const std::string ROUTING_SERVICE_URL;
 
-        std::string _source;
+        const std::string _source;
     };
     
 }

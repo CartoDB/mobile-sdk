@@ -4,6 +4,7 @@
 #include "components/Exceptions.h"
 #include "packagemanager/PackageManager.h"
 #include "packagemanager/PackageInfo.h"
+#include "packagemanager/handlers/RoutingPackageHandler.h"
 #include "projections/Projection.h"
 #include "projections/EPSG3857.h"
 #include "routing/RoutingProxy.h"
@@ -19,6 +20,7 @@
 namespace carto {
 
     PackageManagerRoutingService::PackageManagerRoutingService(const std::shared_ptr<PackageManager>& packageManager) :
+        RoutingService(),
         _packageManager(packageManager),
         _cachedPackageFileMap(),
         _cachedRouteFinder(),
@@ -42,38 +44,42 @@ namespace carto {
             throw NullArgumentException("Null request");
         }
 
-        // Find all routing packages
-        std::vector<std::string> packageIds;
-        for (const std::shared_ptr<PackageInfo>& localPackage : _packageManager->getLocalPackages()) {
-            if (localPackage->getPackageType() == PackageType::PACKAGE_TYPE_ROUTING) {
-                packageIds.push_back(localPackage->getPackageId());
+        // Build router via package manager
+        std::shared_ptr<routing::RouteFinder> routeFinder;
+        _packageManager->accessLocalPackages([this, &routeFinder](const std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<PackageHandler> >& packageHandlerMap) {
+            // Build map of routing packages and graph files
+            std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<std::ifstream> > packageFileMap;
+            for (auto it = packageHandlerMap.begin(); it != packageHandlerMap.end(); it++) {
+                if (auto routingHandler = std::dynamic_pointer_cast<RoutingPackageHandler>(it->second)) {
+                    if (std::shared_ptr<std::ifstream> graphFile = routingHandler->getGraphFile()) {
+                        packageFileMap[it->first] = graphFile;
+                    }
+                }
             }
-        }
 
-        // Call router via package manager
-        std::shared_ptr<RoutingResult> result;
-        _packageManager->accessPackageFiles(packageIds, [this, request, &result](const std::map<std::string, std::shared_ptr<std::ifstream> >& packageFileMap) {
+            // Now check if we have already a cached route finder for the files. If not, create new instance.
             std::lock_guard<std::mutex> lock(_mutex);
-            if (packageFileMap != _cachedPackageFileMap || !_cachedRouteFinder) {
+            if (!_cachedRouteFinder || packageFileMap != _cachedPackageFileMap) {
                 routing::Graph::Settings graphSettings;
                 auto graph = std::make_shared<routing::Graph>(graphSettings);
                 for (auto it = packageFileMap.begin(); it != packageFileMap.end(); it++) {
                     try {
                         if (!graph->import(it->second)) {
-                            throw FileException("Failed to import graph " + it->first, "");
+                            throw FileException("Failed to import graph " + it->first->getPackageId(), "");
                         }
                     }
                     catch (const std::exception& ex) {
-                        throw GenericException("Exception while importing graph" + it->first, ex.what());
+                        throw GenericException("Exception while importing graph" + it->first->getPackageId(), ex.what());
                     }
                 }
                 _cachedPackageFileMap = packageFileMap;
                 _cachedRouteFinder = std::make_shared<routing::RouteFinder>(graph);
             }
 
-            result = RoutingProxy::CalculateRoute(_cachedRouteFinder, request);
+            routeFinder = _cachedRouteFinder;
         });
-        return result;
+
+        return RoutingProxy::CalculateRoute(routeFinder, request);
     }
             
     PackageManagerRoutingService::PackageManagerListener::PackageManagerListener(PackageManagerRoutingService& service) :

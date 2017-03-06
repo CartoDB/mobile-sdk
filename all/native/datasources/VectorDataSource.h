@@ -116,7 +116,7 @@ namespace carto {
         virtual void attachElement(const std::shared_ptr<VectorElement>& element);
         virtual void detachElement(const std::shared_ptr<VectorElement>& element);
 
-        std::shared_ptr<Projection> _projection;
+        const std::shared_ptr<Projection> _projection;
     
     private:
         std::shared_ptr<std::vector<std::shared_ptr<OnChangeListener> > > _onChangeListeners;

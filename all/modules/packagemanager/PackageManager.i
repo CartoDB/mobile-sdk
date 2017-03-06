@@ -39,12 +39,10 @@ using std::uint64_t;
 !attributestring_polymorphic(carto::PackageManager, packagemanager.PackageManagerListener, PackageManagerListener, getPackageManagerListener, setPackageManagerListener)
 %std_io_exceptions(carto::PackageManager::PackageManager)
 %ignore carto::PackageManager::PackageManager(const std::string&, const std::string&, const std::string&, const std::string&, const std::shared_ptr<Logger>&);
-%ignore carto::PackageManager::Logger;
 %ignore carto::PackageManager::OnChangeListener;
 %ignore carto::PackageManager::registerOnChangeListener;
 %ignore carto::PackageManager::unregisterOnChangeListener;
-%ignore carto::PackageManager::loadTile;
-%ignore carto::PackageManager::accessPackageFiles;
+%ignore carto::PackageManager::accessLocalPackages;
 !standard_equals(carto::PackageManager);
 
 %include "packagemanager/PackageManager.h"
