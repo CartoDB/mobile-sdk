@@ -3,6 +3,8 @@
 #include "PackageManager.h"
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
+#include "projections/Projection.h"
+#include "projections/EPSG3857.h"
 #include "utils/Log.h"
 
 #include <cstdint>
@@ -373,6 +375,89 @@ namespace carto {
 
         // No local package, no task => no status
         return std::shared_ptr<PackageStatus>();
+    }
+
+    std::vector<std::shared_ptr<PackageInfo> > PackageManager::suggestPackages(const MapPos& mapPos, const std::shared_ptr<Projection>& projection) const {
+        if (!_localDb) {
+            return std::vector<std::shared_ptr<PackageInfo> >();
+        }
+
+        if (!projection) {
+            throw NullArgumentException("Null projection");
+        }
+
+        // Detect zoom level from tile masks
+        int zoom = 0;
+        for (const std::shared_ptr<PackageInfo>& packageInfo : getServerPackages()) {
+            zoom = std::max(zoom, packageInfo->getTileMask()->getMaxZoomLevel());
+        }
+
+        // Calculate map tile from the map position
+        MapTile mapTile = CalculateMapTile(mapPos, zoom, projection);
+
+        // Find tile statuses from all packages. Keep only packages where the tile exists
+        std::vector<std::pair<std::shared_ptr<PackageInfo>, PackageTileStatus::PackageTileStatus> > packageTileStatuses;
+        while (true) {
+            for (const std::shared_ptr<PackageInfo>& packageInfo : getServerPackages()) {
+                PackageTileStatus::PackageTileStatus status = packageInfo->getTileMask()->getTileStatus(mapTile);
+                if (status != PackageTileStatus::PACKAGE_TILE_STATUS_MISSING) {
+                    packageTileStatuses.emplace_back(packageInfo, packageInfo->getTileMask()->getTileStatus(mapTile));
+                }
+            }
+            if (!packageTileStatuses.empty() || mapTile.getZoom() == 0) {
+                break;
+            }
+
+            mapTile = mapTile.getParent();
+        }
+
+        // Sort packages based on tile status and package size
+        std::sort(packageTileStatuses.begin(), packageTileStatuses.end(), [](const std::pair<std::shared_ptr<PackageInfo>, PackageTileStatus::PackageTileStatus>& package1, const std::pair<std::shared_ptr<PackageInfo>, PackageTileStatus::PackageTileStatus>& package2) {
+            if (package1.second != package2.second) {
+                return package1.second == PackageTileStatus::PACKAGE_TILE_STATUS_FULL;
+            }
+            return package1.first->getSize() < package2.first->getSize();
+        });
+
+        // Return the packages
+        std::vector<std::shared_ptr<PackageInfo> > packageInfos;
+        std::transform(packageTileStatuses.begin(), packageTileStatuses.end(), std::back_inserter(packageInfos), [](const std::pair<std::shared_ptr<PackageInfo>, PackageTileStatus::PackageTileStatus>& package) {
+            return package.first;
+        });
+        return packageInfos;
+    }
+
+    bool PackageManager::isAreaDownloaded(const MapBounds& mapBounds, int zoom, const std::shared_ptr<Projection>& projection) const {
+        if (!_localDb) {
+            return false;
+        }
+
+        if (!projection) {
+            throw NullArgumentException("Null projection");
+        }
+
+        // Get local packages
+        std::vector<std::shared_ptr<PackageInfo> > localPackages = getLocalPackages();
+
+        // Calculate tile extents
+        MapTile mapTile1 = CalculateMapTile(mapBounds.getMin(), zoom, projection);
+        MapTile mapTile2 = CalculateMapTile(mapBounds.getMax(), zoom, projection);
+        for (int y = std::min(mapTile1.getY(), mapTile2.getY()); y <= std::max(mapTile1.getY(), mapTile2.getY()); y++) {
+            for (int x = std::min(mapTile1.getX(), mapTile2.getX()); x <= std::max(mapTile1.getX(), mapTile2.getX()); x++) {
+                bool found = false;
+                for (std::size_t i = 0; i < localPackages.size(); i++) {
+                    if (localPackages[i]->getTileMask()->getTileStatus(MapTile(x, y, zoom, 0)) == PackageTileStatus::PACKAGE_TILE_STATUS_FULL) {
+                        std::rotate(localPackages.begin(), localPackages.begin() + 1, localPackages.begin() + i);
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     bool PackageManager::startPackageListDownload() {
@@ -1512,6 +1597,16 @@ namespace carto {
         iv[7 % CryptoPP::RC5::BLOCKSIZE] ^= static_cast<unsigned char>((y >> 16) & 255);
         std::fill(k, k + CryptoPP::RC5::DEFAULT_KEYLENGTH, 0);
         std::copy(encKey.begin(), encKey.begin() + std::min(encKey.size(), static_cast<std::size_t>(CryptoPP::RC5::DEFAULT_KEYLENGTH)), k);
+    }
+
+    MapTile PackageManager::CalculateMapTile(const MapPos& mapPos, int zoom, const std::shared_ptr<Projection>& proj) {
+        EPSG3857 epsg3857;
+        double tileWidth = epsg3857.getBounds().getDelta().getX() / (1 << zoom);
+        double tileHeight = epsg3857.getBounds().getDelta().getY() / (1 << zoom);
+        MapVec mapVec = epsg3857.fromWgs84(proj->toWgs84(mapPos)) - epsg3857.getBounds().getMin();
+        int x = static_cast<int>(std::floor(mapVec.getX() / tileWidth));
+        int y = static_cast<int>(std::floor(mapVec.getY() / tileHeight));
+        return MapTile(x, y, zoom, 0);
     }
 
     int PackageManager::DownloadFile(const std::string& url, NetworkUtils::HandlerFn handler, std::uint64_t offset) {
