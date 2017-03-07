@@ -10,6 +10,7 @@
 #import "NTOptions.h"
 #import "NTLayers.h"
 
+#import "NTAddress.h"
 #import "NTMapBounds.h"
 #import "NTMapEnvelope.h"
 #import "NTMapPos.h"
@@ -19,6 +20,7 @@
 #import "NTMapTile.h"
 #import "NTMapVec.h"
 #import "NTTileData.h"
+#import "NTVariant.h"
 
 #import "NTAssetTileDataSource.h"
 #import "NTBitmapOverlayRasterTileDataSource.h"
@@ -152,6 +154,18 @@
 #import "NTCartoOfflineVectorTileLayer.h"
 #endif
 
+#ifdef _CARTO_GEOCODING_SUPPORT
+#import "NTGeocodingRequest.h"
+#import "NTGeocodingResult.h"
+#import "NTReverseGeocodingRequest.h"
+#import "NTGeocodingService.h"
+#import "NTReverseGeocodingService.h"
+#import "NTPackageManagerGeocodingService.h"
+#import "NTPackageManagerReverseGeocodingService.h"
+#import "NTOSMOfflineGeocodingService.h"
+#import "NTOSMOfflineReverseGeocodingService.h"
+#endif
+
 #ifdef _CARTO_ROUTING_SUPPORT
 #import "NTRoutingInstruction.h"
 #import "NTRoutingRequest.h"
@@ -186,4 +200,3 @@
 #endif
 
 #endif
- 

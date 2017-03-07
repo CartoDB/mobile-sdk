@@ -2,7 +2,6 @@
 
 #include "PackageManagerRoutingService.h"
 #include "components/Exceptions.h"
-#include "packagemanager/PackageManager.h"
 #include "packagemanager/PackageInfo.h"
 #include "packagemanager/handlers/RoutingPackageHandler.h"
 #include "projections/Projection.h"
@@ -44,9 +43,9 @@ namespace carto {
             throw NullArgumentException("Null request");
         }
 
-        // Build router via package manager
-        std::shared_ptr<routing::RouteFinder> routeFinder;
-        _packageManager->accessLocalPackages([this, &routeFinder](const std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<PackageHandler> >& packageHandlerMap) {
+        // Do routing via package manager, so that all packages are locked during routing
+        std::shared_ptr<RoutingResult> result;
+        _packageManager->accessLocalPackages([this, &result, &request](const std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<PackageHandler> >& packageHandlerMap) {
             // Build map of routing packages and graph files
             std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<std::ifstream> > packageFileMap;
             for (auto it = packageHandlerMap.begin(); it != packageHandlerMap.end(); it++) {
@@ -69,17 +68,17 @@ namespace carto {
                         }
                     }
                     catch (const std::exception& ex) {
-                        throw GenericException("Exception while importing graph" + it->first->getPackageId(), ex.what());
+                        throw GenericException("Exception while importing graph " + it->first->getPackageId(), ex.what());
                     }
                 }
                 _cachedPackageFileMap = packageFileMap;
                 _cachedRouteFinder = std::make_shared<routing::RouteFinder>(graph);
             }
 
-            routeFinder = _cachedRouteFinder;
+            result = RoutingProxy::CalculateRoute(_cachedRouteFinder, request);
         });
 
-        return RoutingProxy::CalculateRoute(routeFinder, request);
+        return result;
     }
             
     PackageManagerRoutingService::PackageManagerListener::PackageManagerListener(PackageManagerRoutingService& service) :

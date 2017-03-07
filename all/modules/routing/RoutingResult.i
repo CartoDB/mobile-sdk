@@ -31,6 +31,7 @@
 %attribute(carto::RoutingResult, double, TotalTime, getTotalTime)
 %std_exceptions(carto::RoutingResult::RoutingResult)
 !standard_equals(carto::RoutingResult);
+!custom_tostring(carto::RoutingResult);
 
 %include "routing/RoutingResult.h"
 

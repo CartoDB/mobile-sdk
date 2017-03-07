@@ -1,6 +1,7 @@
 #include "PackageHandlerFactory.h"
 #include "packagemanager/handlers/MapPackageHandler.h"
 #include "packagemanager/handlers/RoutingPackageHandler.h"
+#include "packagemanager/handlers/GeocodingPackageHandler.h"
 #include "utils/Log.h"
 
 namespace carto {
@@ -20,6 +21,8 @@ namespace carto {
             return std::make_shared<MapPackageHandler>(filePath, _serverEncKey, _localEncKey);
         case PackageType::PACKAGE_TYPE_ROUTING:
             return std::make_shared<RoutingPackageHandler>(filePath);
+        case PackageType::PACKAGE_TYPE_GEOCODING:
+            return std::make_shared<GeocodingPackageHandler>(filePath);
         default:
             Log::Warnf("PackageHandlerFactory::CreatePackageHandler: Unsupported package type");
             return std::shared_ptr<PackageHandler>();
@@ -32,6 +35,8 @@ namespace carto {
             return ".mbtiles";
         case PackageType::PACKAGE_TYPE_ROUTING:
             return ".nutigraph";
+        case PackageType::PACKAGE_TYPE_GEOCODING:
+            return ".nutigeodb";
         default:
             Log::Warnf("PackageHandlerFactory::GetPackageTypeExtension: Unsupported package type");
             return "";
@@ -48,11 +53,14 @@ namespace carto {
             return fileName.size() >= ext.size() && fileName.substr(fileName.size() - ext.size()) == ext;
         };
 
-        if (fileNameEndsWith(".mbtiles")) {
+        if (fileNameEndsWith(GetPackageTypeExtension(PackageType::PACKAGE_TYPE_MAP))) {
             return PackageType::PACKAGE_TYPE_MAP;
         }
-        else if (fileNameEndsWith(".nutigraph")) {
+        else if (fileNameEndsWith(GetPackageTypeExtension(PackageType::PACKAGE_TYPE_ROUTING))) {
             return PackageType::PACKAGE_TYPE_ROUTING;
+        }
+        else if (fileNameEndsWith(GetPackageTypeExtension(PackageType::PACKAGE_TYPE_GEOCODING))) {
+            return PackageType::PACKAGE_TYPE_GEOCODING;
         }
         Log::Warnf("PackageHandlerFactory::DetectPackageType: Unexpected package extension: %s", url.c_str());
         return PackageType::PACKAGE_TYPE_MAP; // sensible default
