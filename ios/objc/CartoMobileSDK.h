@@ -155,10 +155,12 @@
 #ifdef _CARTO_GEOCODING_SUPPORT
 #import "NTGeocodingRequest.h"
 #import "NTGeocodingResult.h"
-#import "NTGeocodingService.h"
-#import "NTOSMOfflineGeocodingService.h"
 #import "NTReverseGeocodingRequest.h"
+#import "NTGeocodingService.h"
 #import "NTReverseGeocodingService.h"
+#import "NTPackageManagerGeocodingService.h"
+#import "NTPackageManagerReverseGeocodingService.h"
+#import "NTOSMOfflineGeocodingService.h"
 #import "NTOSMOfflineReverseGeocodingService.h"
 #endif
 
