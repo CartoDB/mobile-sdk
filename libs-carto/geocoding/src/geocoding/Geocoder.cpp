@@ -21,6 +21,17 @@ namespace {
 }
 
 namespace carto { namespace geocoding {
+    bool Geocoder::import(const std::shared_ptr<sqlite3pp::database>& db) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+		Database database;
+        database.id = "db" + boost::lexical_cast<std::string>(_databases.size());
+        database.db = db;
+        database.translationTable = getTranslationTable(*db);
+        database.origin = getOrigin(*db);
+        _databases.push_back(database);
+        return true;
+    }
+    
     bool Geocoder::getAutocomplete() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _autocomplete;
@@ -75,23 +86,26 @@ namespace carto { namespace geocoding {
             safeQueryString += (boost::trim_right_copy(queryString) != queryString ? " " : "%");
         }
 
-        Query query;
-        query.options = options;
-        query.tokenList = TokenListType::build(safeQueryString);
-
-        // Classify tokens
-        classifyTokens(query.tokenList);
-
-        // Find candidates by matching tokens
-        std::vector<Query> candidates;
-        matchTokens(query, candidates);
-
-        // Group by unmatched tokens
         std::map<int, std::vector<Query>> candidateGroupMap;
-        for (const Query& query : candidates) {
-            candidateGroupMap[query.unmatchedTokens()].push_back(query);
+        for (const Database& database : _databases) {
+            Query query;
+            query.database = &database;
+            query.options = options;
+            query.tokenList = TokenListType::build(safeQueryString);
+
+            // Classify tokens
+            classifyTokens(database, query.tokenList);
+
+            // Find candidates by matching tokens
+            std::vector<Query> candidates;
+            matchTokens(query, candidates);
+
+            // Group by unmatched tokens
+            for (const Query& query : candidates) {
+                candidateGroupMap[query.unmatchedTokens()].push_back(query);
+            }
         }
-        
+
         // Resolve addresses in groups
         std::vector<Result> results;
         for (auto it = candidateGroupMap.begin(); it != candidateGroupMap.end(); it++) {
@@ -114,11 +128,12 @@ namespace carto { namespace geocoding {
             }
 
             Address address;
-            if (!_addressCache.read(result.encodedId, address)) {
-                address.loadFromDB(_db, result.encodedId, _language, [this](const cglib::vec2<double>& pos) {
-                    return _origin + pos;
+            std::string addrKey = result.database->id + "_" + boost::lexical_cast<std::string>(result.encodedId);
+            if (!_addressCache.read(addrKey, address)) {
+                address.loadFromDB(*result.database->db, result.encodedId, _language, [&result](const cglib::vec2<double>& pos) {
+                    return result.database->origin + pos;
                 });
-                _addressCache.put(result.encodedId, address);
+                _addressCache.put(addrKey, address);
             }
 
             if (!addresses.empty() && result.ranking.rank() == addresses.back().second) {
@@ -131,15 +146,15 @@ namespace carto { namespace geocoding {
         return addresses;
     }
 
-    void Geocoder::classifyTokens(TokenListType& tokenList) const {
+    void Geocoder::classifyTokens(const Database& database, TokenListType& tokenList) const {
         for (int i = 0; i < tokenList.size(); i++) {
             std::string tokenValue = tokenList.tokens(TokenListType::Span(i, 1)).front();
 
             // Do token translation, actual tokens are normalized relative to real names using translation table
             unistring token;
             for (unichar_t c : toUniString(tokenValue)) {
-                auto it = _translationTable.find(c);
-                if (it != _translationTable.end()) {
+                auto it = database.translationTable.find(c);
+                if (it != database.translationTable.end()) {
                     token += it->second;
                 }
                 else {
@@ -160,7 +175,7 @@ namespace carto { namespace geocoding {
                     else {
                         sql += "token='" + escapeSQLValue(toUtf8String(token)) + "' COLLATE NOCASE";
                     }
-                    sqlite3pp::query sqlQuery(_db, sql.c_str());
+                    sqlite3pp::query sqlQuery(*database.db, sql.c_str());
 
                     std::vector<Token> tokens;
                     for (auto qit = sqlQuery.begin(); qit != sqlQuery.end(); qit++) {
@@ -247,6 +262,7 @@ namespace carto { namespace geocoding {
     }
 
     void Geocoder::resolveAddress(const Query& query, std::vector<Result>& results) const {
+        const Database& database = *query.database;
         std::vector<std::string> sqlFilters = buildQueryFilters(query);
         if (sqlFilters.empty()) {
             return;
@@ -257,11 +273,11 @@ namespace carto { namespace geocoding {
             sql += (i > 0 ? " AND (" : "(") + sqlFilters[i] + ")";
         }
 
-        auto mercatorConverter = [this](const cglib::vec2<double>& pos) {
-            return wgs84ToWebMercator(_origin + pos);
+        auto mercatorConverter = [&database](const cglib::vec2<double>& pos) {
+            return wgs84ToWebMercator(database.origin + pos);
         };
 
-        sqlite3pp::query sqlQuery(_db, sql.c_str());
+        sqlite3pp::query sqlQuery(*database.db, sql.c_str());
         for (auto qit = sqlQuery.begin(); qit != sqlQuery.end(); qit++) {
             unsigned int entityId = qit->get<unsigned int>(0);
             unsigned int elementIndex = 0;
@@ -283,22 +299,22 @@ namespace carto { namespace geocoding {
 
             // Do field match ranking and population ranking
             float matchRank = 1.0f;
-            matchRank *= calculateMatchRank(TokenType::COUNTRY,       query.countries,       qit->get<std::uint64_t>(3), query.tokenList);
-            matchRank *= calculateMatchRank(TokenType::REGION,        query.regions,        qit->get<std::uint64_t>(4), query.tokenList);
-            matchRank *= calculateMatchRank(TokenType::COUNTY,        query.counties,        qit->get<std::uint64_t>(5), query.tokenList);
-            matchRank *= calculateMatchRank(TokenType::LOCALITY,      query.localities,      qit->get<std::uint64_t>(6), query.tokenList);
-            matchRank *= calculateMatchRank(TokenType::NEIGHBOURHOOD, query.neighbourhoods, qit->get<std::uint64_t>(7), query.tokenList);
-            matchRank *= calculateMatchRank(TokenType::STREET,        query.streets,        qit->get<std::uint64_t>(8), query.tokenList);
-            matchRank *= calculateMatchRank(TokenType::POSTCODE,      query.postcodes,      qit->get<std::uint64_t>(9), query.tokenList);
-            matchRank *= calculateMatchRank(TokenType::NAME,          query.names,          qit->get<std::uint64_t>(10), query.tokenList);
+            matchRank *= calculateMatchRank(database, TokenType::COUNTRY,       query.countries,      qit->get<std::uint64_t>(3), query.tokenList);
+            matchRank *= calculateMatchRank(database, TokenType::REGION,        query.regions,        qit->get<std::uint64_t>(4), query.tokenList);
+            matchRank *= calculateMatchRank(database, TokenType::COUNTY,        query.counties,       qit->get<std::uint64_t>(5), query.tokenList);
+            matchRank *= calculateMatchRank(database, TokenType::LOCALITY,      query.localities,     qit->get<std::uint64_t>(6), query.tokenList);
+            matchRank *= calculateMatchRank(database, TokenType::NEIGHBOURHOOD, query.neighbourhoods, qit->get<std::uint64_t>(7), query.tokenList);
+            matchRank *= calculateMatchRank(database, TokenType::STREET,        query.streets,        qit->get<std::uint64_t>(8), query.tokenList);
+            matchRank *= calculateMatchRank(database, TokenType::POSTCODE,      query.postcodes,      qit->get<std::uint64_t>(9), query.tokenList);
+            matchRank *= calculateMatchRank(database, TokenType::NAME,          query.names,          qit->get<std::uint64_t>(10), query.tokenList);
 
             float populationRank = 1.0f;
-            populationRank *= calculatePopulationRank(TokenType::COUNTRY,       qit->get<std::uint64_t>(3));
-            populationRank *= calculatePopulationRank(TokenType::REGION,        qit->get<std::uint64_t>(4));
-            populationRank *= calculatePopulationRank(TokenType::COUNTY,        qit->get<std::uint64_t>(5));
-            populationRank *= calculatePopulationRank(TokenType::LOCALITY,      qit->get<std::uint64_t>(6));
-            populationRank *= calculatePopulationRank(TokenType::NEIGHBOURHOOD, qit->get<std::uint64_t>(7));
-            populationRank *= calculatePopulationRank(TokenType::STREET,        qit->get<std::uint64_t>(8));
+            populationRank *= calculatePopulationRank(database, TokenType::COUNTRY,       qit->get<std::uint64_t>(3));
+            populationRank *= calculatePopulationRank(database, TokenType::REGION,        qit->get<std::uint64_t>(4));
+            populationRank *= calculatePopulationRank(database, TokenType::COUNTY,        qit->get<std::uint64_t>(5));
+            populationRank *= calculatePopulationRank(database, TokenType::LOCALITY,      qit->get<std::uint64_t>(6));
+            populationRank *= calculatePopulationRank(database, TokenType::NEIGHBOURHOOD, qit->get<std::uint64_t>(7));
+            populationRank *= calculatePopulationRank(database, TokenType::STREET,        qit->get<std::uint64_t>(8));
             populationRank *= (qit->get<std::uint64_t>(10) != 0 ? POI_POPULATION_PENALTY : 1.0f);
 
             // Do location based ranking
@@ -334,6 +350,7 @@ namespace carto { namespace geocoding {
 
             // Build the result
             Result result;
+            result.database = query.database;
             result.encodedId = (static_cast<std::uint64_t>(elementIndex) << 32) | entityId;
             result.unmatchedTokens = query.unmatchedTokens();
             result.ranking.matchRank = matchRank * std::pow(UNMATCHED_FIELD_PENALTY, static_cast<float>(result.unmatchedTokens));
@@ -369,14 +386,14 @@ namespace carto { namespace geocoding {
         _entityQueryCounter++;
     }
 
-    std::vector<Geocoder::Name> Geocoder::matchTokenNames(TokenType type, const std::vector<std::vector<Token>>& tokensList, const std::vector<std::string>& tokenStrings) const {
-        std::string key(1, static_cast<char>(type));
+    std::vector<Geocoder::Name> Geocoder::matchTokenNames(const Database& database, TokenType type, const std::vector<std::vector<Token>>& tokensList, const std::vector<std::string>& tokenStrings) const {
+        std::string nameKey = database.id + "_" + std::string(1, static_cast<char>(type));
         for (const std::string& tokenString : tokenStrings) {
-            key += tokenString + std::string(1, 0);
+            nameKey += tokenString + std::string(1, 0);
         }
 
         std::vector<Name> names;
-        if (_nameMatchCache.read(key, names)) {
+        if (_nameMatchCache.read(nameKey, names)) {
             return names;
         }
 
@@ -390,8 +407,9 @@ namespace carto { namespace geocoding {
                 std::string sql = "SELECT DISTINCT n.id, n.name, n.lang, n.xmask, n.ymask FROM names n, nametokens nt WHERE nt.name_id=n.id AND (n.lang IS NULL OR n.lang='" + escapeSQLValue(_language) + "') AND nt.token_id=" + boost::lexical_cast<std::string>(tokens[i].id) + " AND n.class=" + boost::lexical_cast<std::string>(static_cast<int>(type)) + " ORDER BY id ASC";
 
                 std::vector<Name> tokenNames;
-                if (!_nameQueryCache.read(sql, tokenNames)) {
-                    sqlite3pp::query sqlQuery(_db, sql.c_str());
+                std::string queryKey = database.id + "_" + sql;
+                if (!_nameQueryCache.read(queryKey, tokenNames)) {
+                    sqlite3pp::query sqlQuery(*database.db, sql.c_str());
 
                     for (auto qit = sqlQuery.begin(); qit != sqlQuery.end(); qit++) {
                         Name name;
@@ -405,7 +423,7 @@ namespace carto { namespace geocoding {
                     }
 
                     _nameQueryCounter++;
-                    _nameQueryCache.put(sql, tokenNames);
+                    _nameQueryCache.put(queryKey, tokenNames);
                 }
 
                 for (const Name& name : tokenNames) {
@@ -436,7 +454,7 @@ namespace carto { namespace geocoding {
             }
 
             if (namesUnion.empty()) {
-                _nameMatchCache.put(key, std::vector<Name>());
+                _nameMatchCache.put(nameKey, std::vector<Name>());
                 return std::vector<Name>(); // fast out
             }
         }
@@ -448,7 +466,7 @@ namespace carto { namespace geocoding {
             }
         }
 
-        _nameMatchCache.put(key, names);
+        _nameMatchCache.put(nameKey, names);
         return names;
     }
 
@@ -545,7 +563,7 @@ namespace carto { namespace geocoding {
         }
 
         std::vector<std::vector<Token>> tokensList = query.tokenList.tags(span);
-        std::vector<Name> names = matchTokenNames(type, tokensList, tokenStrings);
+        std::vector<Name> names = matchTokenNames(*query.database, type, tokensList, tokenStrings);
         for (const Name& name : names) {
             (query.*field).push_back(name);
         }
@@ -567,30 +585,31 @@ namespace carto { namespace geocoding {
         return true;
     }
 
-    float Geocoder::calculateNameRank(const std::string& name, const std::string& queryName) const {
+    float Geocoder::calculateNameRank(const Database& database, const std::string& name, const std::string& queryName) const {
         float rank = 1.0f;
-        std::string key = name + std::string(1, 0) + queryName;
-        if (!_nameRankCache.read(key, rank)) {
-            StringMatcher<unistring> matcher(std::bind(&Geocoder::getTokenRank, this, std::placeholders::_1));
+        std::string nameKey = database.id + std::string(1, 0) + name + std::string(1, 0) + queryName;
+        if (!_nameRankCache.read(nameKey, rank)) {
+            StringMatcher<unistring> matcher(std::bind(&Geocoder::getTokenRank, this, std::cref(database), std::placeholders::_1));
             matcher.setMaxDist(MAX_STRINGMATCH_DIST);
-            matcher.setTranslationTable(_translationTable, TRANSLATION_EXTRA_PENALTY);
+            matcher.setTranslationTable(database.translationTable, TRANSLATION_EXTRA_PENALTY);
             if (_autocomplete) {
                 matcher.setWildcardChar('%', AUTOCOMPLETE_EXTRA_CHAR_PENALTY);
             }
             rank = matcher.calculateRating(toLower(toUniString(queryName)), toLower(toUniString(name)));
             _nameRankCounter++;
-            _nameRankCache.put(key, rank);
+            _nameRankCache.put(nameKey, rank);
         }
         return rank;
     }
 
-    float Geocoder::calculateMatchRank(TokenType type, const std::vector<Name>& matchNames, std::uint64_t dbId, const TokenListType& tokenList) const {
+    float Geocoder::calculateMatchRank(const Database& database, TokenType type, const std::vector<Name>& matchNames, std::uint64_t dbId, const TokenListType& tokenList) const {
         if (std::find_if(matchNames.begin(), matchNames.end(), [dbId](const Name& name) { return name.id == dbId; }) != matchNames.end()) {
             std::string sql = "SELECT DISTINCT n.id, n.name, n.lang FROM names n WHERE n.id=" + boost::lexical_cast<std::string>(dbId) + " AND (n.lang IS NULL OR n.lang='" + escapeSQLValue(_language) + "') AND n.class=" + boost::lexical_cast<std::string>(static_cast<int>(type));
 
             std::vector<Name> names;
-            if (!_nameQueryCache.read(sql, names)) {
-                sqlite3pp::query sqlQuery(_db, sql.c_str());
+            std::string queryKey = database.id + "_" + sql;
+            if (!_nameQueryCache.read(queryKey, names)) {
+                sqlite3pp::query sqlQuery(*database.db, sql.c_str());
 
                 for (auto qit = sqlQuery.begin(); qit != sqlQuery.end(); qit++) {
                     Name name;
@@ -601,13 +620,13 @@ namespace carto { namespace geocoding {
                 }
 
                 _nameQueryCounter++;
-                _nameQueryCache.put(sql, names);
+                _nameQueryCache.put(queryKey, names);
             }
 
             float maxRank = 0.0f;
             for (const Name& name : names) {
                 std::string queryName = tokenList.name(type);
-                float rank = calculateNameRank(name.name, queryName);
+                float rank = calculateNameRank(database, name.name, queryName);
                 maxRank = std::max(maxRank, rank);
             }
             return maxRank;
@@ -615,7 +634,7 @@ namespace carto { namespace geocoding {
         return dbId ? EXTRA_FIELD_PENALTY : 1.0f;
     }
 
-    float Geocoder::calculatePopulationRank(TokenType type, std::uint64_t id) const {
+    float Geocoder::calculatePopulationRank(const Database& database, TokenType type, std::uint64_t id) const {
         static const std::unordered_map<int, std::uint64_t> extraPopulation = {
             { static_cast<int>(TokenType::STREET),             10 },
             { static_cast<int>(TokenType::NEIGHBOURHOOD),     100 },
@@ -635,34 +654,38 @@ namespace carto { namespace geocoding {
         }
         std::uint64_t population = 0;
         std::string sql = "SELECT population FROM nameattrs WHERE name_id=" + boost::lexical_cast<std::string>(id);
-        if (!_populationCache.read(sql, population)) {
-            sqlite3pp::query sqlQuery(_db, sql.c_str());
+        
+        std::string queryKey = database.id + "_" + sql;
+        if (!_populationQueryCache.read(queryKey, population)) {
+            sqlite3pp::query sqlQuery(*database.db, sql.c_str());
             for (auto qit = sqlQuery.begin(); qit != sqlQuery.end(); qit++) {
                 population = qit->get<std::uint64_t>(0);
             }
             _populationQueryCounter++;
-            _populationCache.put(sql, population);
+            _populationQueryCache.put(queryKey, population);
         }
         return 1.0f - 1.0f / (population + it->second);
     }
 
-    float Geocoder::getTokenRank(const unistring& unitoken) const {
+    float Geocoder::getTokenRank(const Database& database, const unistring& unitoken) const {
         float idf = 1.0f;
         std::string token = toUtf8String(unitoken);
-        if (!_tokenIDFCache.read(token, idf)) {
-            sqlite3pp::query sqlQuery(_db, "SELECT idf FROM tokens WHERE token=:token COLLATE NOCASE");
+        std::string tokenKey = database.id + std::string(1, 0) + token;
+        if (!_tokenIDFQueryCache.read(tokenKey, idf)) {
+            std::string sql = "SELECT idf FROM tokens WHERE token=:token COLLATE NOCASE";
+            sqlite3pp::query sqlQuery(*database.db, sql.c_str());
             sqlQuery.bind(":token", token.c_str());
             for (auto qit = sqlQuery.begin(); qit != sqlQuery.end(); qit++) {
                 idf = static_cast<float>(qit->get<double>(0));
             }
             _tokenIDFQueryCounter++;
-            _tokenIDFCache.put(token, idf);
+            _tokenIDFQueryCache.put(tokenKey, idf);
         }
         return idf;
     }
 
-    cglib::vec2<double> Geocoder::getOrigin() const {
-        sqlite3pp::query query(_db, "SELECT value FROM metadata WHERE name='origin'");
+    cglib::vec2<double> Geocoder::getOrigin(sqlite3pp::database& db) {
+        sqlite3pp::query query(db, "SELECT value FROM metadata WHERE name='origin'");
         for (auto qit = query.begin(); qit != query.end(); qit++) {
             std::string value = qit->get<const char*>(0);
 
@@ -673,8 +696,8 @@ namespace carto { namespace geocoding {
         return cglib::vec2<double>(0, 0);
     }
 
-    std::unordered_map<unichar_t, unistring> Geocoder::getTranslationTable() const {
-        sqlite3pp::query query(_db, "SELECT value FROM metadata WHERE name='translation_table'");
+    std::unordered_map<unichar_t, unistring> Geocoder::getTranslationTable(sqlite3pp::database& db) {
+        sqlite3pp::query query(db, "SELECT value FROM metadata WHERE name='translation_table'");
         for (auto qit = query.begin(); qit != query.end(); qit++) {
             std::string value = qit->get<const char*>(0);
 

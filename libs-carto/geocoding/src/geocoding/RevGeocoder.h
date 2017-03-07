@@ -28,7 +28,9 @@ namespace sqlite3pp {
 namespace carto { namespace geocoding {
     class RevGeocoder final {
     public:
-        explicit RevGeocoder(sqlite3pp::database& db) : _addressCache(ADDRESS_CACHE_SIZE), _queryCache(QUERY_CACHE_SIZE), _db(db) { _bounds = findBounds(); _origin = findOrigin(); }
+        RevGeocoder() : _addressCache(ADDRESS_CACHE_SIZE), _queryCache(QUERY_CACHE_SIZE) { }
+        
+        bool import(const std::shared_ptr<sqlite3pp::database>& db);
 
         float getRadius() const;
         void setRadius(float radius);
@@ -42,10 +44,17 @@ namespace carto { namespace geocoding {
         std::vector<std::pair<Address, float>> findAddresses(double lng, double lat) const;
 
     private:
-        cglib::vec2<double> findOrigin() const;
-        boost::optional<cglib::bbox2<double>> findBounds() const;
+        struct Database {
+            std::string id;
+            std::shared_ptr<sqlite3pp::database> db;
+            cglib::vec2<double> origin;
+            boost::optional<cglib::bbox2<double>> bounds;
+        };
+        
+        std::vector<QuadIndex::GeometryInfo> findGeometryInfo(const Database& database, const std::vector<std::uint64_t>& quadIndices, const PointConverter& converter) const;
 
-        std::vector<QuadIndex::GeometryInfo> findGeometryInfo(const std::vector<std::uint64_t>& quadIndices, const PointConverter& converter) const;
+        static cglib::vec2<double> getOrigin(sqlite3pp::database& db);
+        static boost::optional<cglib::bbox2<double>> getBounds(sqlite3pp::database& db);
 
         static constexpr std::size_t ADDRESS_CACHE_SIZE = 1024;
         static constexpr std::size_t QUERY_CACHE_SIZE = 64;
@@ -54,14 +63,12 @@ namespace carto { namespace geocoding {
         std::string _language; // use local language by default
         std::vector<Address::Type> _enabledFilters = { Address::Type::ADDRESS, Address::Type::POI }; // filters enabled
 
-        mutable cache::lru_cache<std::uint64_t, Address> _addressCache;
+        mutable cache::lru_cache<std::string, Address> _addressCache;
         mutable cache::lru_cache<std::string, std::vector<QuadIndex::GeometryInfo>> _queryCache;
         mutable std::uint64_t _previousEntityQueryCounter = 0;;
         mutable std::uint64_t _entityQueryCounter = 0;
 
-        cglib::vec2<double> _origin;
-        boost::optional<cglib::bbox2<double>> _bounds;
-        sqlite3pp::database& _db;
+        std::vector<Database> _databases;
         mutable std::recursive_mutex _mutex;
     };
 } }

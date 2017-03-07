@@ -13,10 +13,6 @@
 
 #include <memory>
 
-namespace sqlite3pp {
-    class database;
-}
-
 namespace carto {
     namespace geocoding {
         class RevGeocoder;
@@ -33,7 +29,6 @@ namespace carto {
         virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const;
 
     protected:
-        std::shared_ptr<sqlite3pp::database> _database;
         std::shared_ptr<geocoding::RevGeocoder> _revGeocoder;
     };
     
