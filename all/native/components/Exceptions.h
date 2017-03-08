@@ -29,7 +29,11 @@ namespace carto {
 
     class ParseException : public std::runtime_error {
     public:
-        explicit ParseException(const std::string& msg, const std::string& str = std::string(), int position = -1) : runtime_error(msg), _string(str), _position(position) { }
+        explicit ParseException(const std::string& msg, const std::string& str = std::string(), int pos = -1) : runtime_error(pos >= 0 && pos < static_cast<int>(str.size()) ? msg + ": " + str.substr(0, pos) + " ---> " + str.substr(pos) : msg), _message(msg), _string(str), _position(pos) { }
+
+        const std::string& getMessage() const {
+            return _message;
+        }
 
         const std::string& getString() const {
             return _string;
@@ -40,6 +44,7 @@ namespace carto {
         }
 
     private:
+        std::string _message;
         std::string _string;
         int _position;
     };      
@@ -51,37 +56,52 @@ namespace carto {
 
     class FileException : public std::runtime_error {
     public:
-        explicit FileException(const std::string& msg, const std::string& fileName) : runtime_error(msg), _fileName(fileName) { }
+        explicit FileException(const std::string& msg, const std::string& fileName) : runtime_error(fileName.empty() ? msg : msg + ": " + fileName), _message(msg), _fileName(fileName) { }
+
+        const std::string& getMessage() const {
+            return _message;
+        }
 
         const std::string& getFileName() const {
             return _fileName;
         }
 
     private:
+        std::string _message;
         std::string _fileName;
     };
 
     class NetworkException : public std::runtime_error {
     public:
-        explicit NetworkException(const std::string& msg, const std::string& details = std::string()) : runtime_error(msg), _details(details) { }
+        explicit NetworkException(const std::string& msg, const std::string& details = std::string()) : runtime_error(details.empty() ? msg : msg + ": " + details), _message(msg), _details(details) { }
+
+        const std::string& getMessage() const {
+            return _message;
+        }
 
         const std::string& getDetails() const {
             return _details;
         }
 
     private:
+        std::string _message;
         std::string _details;
     };
 
     class GenericException : public std::runtime_error {
     public:
-        explicit GenericException(const std::string& msg, const std::string& details = std::string()) : runtime_error(msg), _details(details) { }
+        explicit GenericException(const std::string& msg, const std::string& details = std::string()) : runtime_error(details.empty() ? msg : msg + ": " + details), _message(msg), _details(details) { }
+
+        const std::string& getMessage() const {
+            return _message;
+        }
 
         const std::string& getDetails() const {
             return _details;
         }
 
     private:
+        std::string _message;
         std::string _details;
     };
 
