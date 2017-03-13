@@ -3,7 +3,7 @@
 
 %module RasterTileLayer
 
-!proxy_imports(carto::RasterTileLayer, datasources.TileDataSource, layers.TileLayer)
+!proxy_imports(carto::RasterTileLayer, datasources.TileDataSource, layers.TileLayer, layers.RasterTileEventListener)
 
 %{
 #include "layers/RasterTileLayer.h"
@@ -15,11 +15,13 @@
 %include <cartoswig.i>
 
 %import "datasources/TileDataSource.i"
+%import "layers/RasterTileEventListener.i"
 %import "layers/TileLayer.i"
 
 !polymorphic_shared_ptr(carto::RasterTileLayer, layers.RasterTileLayer)
 
 %attribute(carto::RasterTileLayer, std::size_t, TextureCacheCapacity, getTextureCacheCapacity, setTextureCacheCapacity)
+!attributestring_polymorphic(carto::RasterTileLayer, layers.RasterTileEventListener, RasterTileEventListener, getRasterTileEventListener, setRasterTileEventListener)
 %std_exceptions(carto::RasterTileLayer::RasterTileLayer)
 %ignore carto::RasterTileLayer::FetchTask;
 %ignore carto::RasterTileLayer::getMinZoom;

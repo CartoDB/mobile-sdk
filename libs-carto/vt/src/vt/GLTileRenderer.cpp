@@ -1672,6 +1672,10 @@ namespace carto { namespace vt {
                 glGenerateMipmap(GL_TEXTURE_2D);
             }
 
+            if (!_interactionEnabled) {
+                bitmap->releaseBitmap(); // if interaction is enabled, keep the original bitmap
+            }
+
             _compiledTileBitmapMap[bitmap] = compiledTileBitmap;
         }
         else {

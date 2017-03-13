@@ -3,7 +3,6 @@
 #include "components/Exceptions.h"
 #include "components/CancelableThreadPool.h"
 #include "datasources/TileDataSource.h"
-#include "layers/TileLoadListener.h"
 #include "layers/VectorTileEventListener.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/TileRenderer.h"
