@@ -955,6 +955,49 @@ namespace carto { namespace vt {
 
         return results.size() > initialResults;
     }
+
+    bool GLTileRenderer::findBitmapIntersections(const cglib::ray3<double>& ray, std::vector<std::tuple<TileId, double, TileBitmap, cglib::vec2<float>>>& results) const {
+        std::lock_guard<std::mutex> lock(*_mutex);
+
+        // Calculate intersection with z=0 plane
+        double t = 0;
+        if (!cglib::intersect_plane(cglib::vec4<double>(0, 0, 1, 0), ray, &t)) {
+            return false;
+        }
+
+        // First find the intersecting tile. NOTE: we ignore building height information
+        std::size_t initialResults = results.size();
+        for (const std::shared_ptr<BlendNode>& blendNode : *_blendNodes) {
+            std::multimap<int, RenderNode> renderNodeMap;
+            if (!buildRenderNodes(*blendNode, 1.0f, renderNodeMap)) {
+                continue;
+            }
+
+            for (auto it = renderNodeMap.begin(); it != renderNodeMap.end(); it++) {
+                const RenderNode& renderNode = it->second;
+                cglib::mat4x4<double> tileMatrix = calculateTileMatrix(renderNode.tileId);
+                cglib::mat4x4<double> invTileMatrix = cglib::inverse(tileMatrix);
+                cglib::mat4x4<double> tileToClipMatrix = cglib::mat4x4<double>::identity();
+                if (blendNode->tileId.zoom > renderNode.tileId.zoom) {
+                    tileToClipMatrix = cglib::inverse(calculateTileMatrix(blendNode->tileId)) * tileMatrix;
+                }
+                cglib::vec3<double> pos2DClip = cglib::transform_point(ray(t), tileToClipMatrix * invTileMatrix);
+
+                // Clipping test
+                cglib::vec2<float> tilePos(static_cast<float>(pos2DClip(0)), static_cast<float>(pos2DClip(1)));
+                if (!(tilePos(0) >= 0 && tilePos(0) <= 1 && tilePos(1) >= 0 && tilePos(1) <= 1)) {
+                    continue;
+                }
+
+                // Store all bitmaps
+                for (const std::shared_ptr<TileBitmap>& bitmap : renderNode.layer->getBitmaps()) {
+                    results.emplace_back(renderNode.tileId, cglib::dot_product(ray(t) - ray.origin, ray.direction) / cglib::dot_product(ray.direction, ray.direction), *bitmap, tilePos);
+                }
+            }
+        }
+
+        return results.size() > initialResults;
+    }
     
     cglib::mat4x4<double> GLTileRenderer::calculateLocalViewMatrix(const cglib::mat4x4<double>& cameraMatrix) {
         cglib::mat4x4<double> mv = cameraMatrix;

@@ -8,9 +8,9 @@
 #include "renderers/TileRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/drawdatas/TileDrawData.h"
+#include "ui/VectorTileClickInfo.h"
 #include "utils/Log.h"
 #include "utils/Const.h"
-#include "ui/VectorTileClickInfo.h"
 #include "vectortiles/VectorTileDecoder.h"
 
 #include <vt/TileId.h>
