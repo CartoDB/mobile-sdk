@@ -86,6 +86,21 @@ namespace carto {
         ViewState getViewState() const;
     
         /**
+         * Calculates the map position corresponding to a screen position, using the specified view state.
+         * @param screenPos The screen position.
+         * @param viewState The view state to use.
+         * @return The calculated map position in base projection coordinate system.
+         */
+        MapPos screenToMap(const ScreenPos& screenPos, const ViewState& viewState);
+        /**
+         * Calculates the screen position corresponding to a map position, using the specified view state.
+         * @param mapPos The map position in base projection coordinate system.
+         * @param viewState The view state to use.
+         * @return The calculated screen position.
+         */
+        ScreenPos mapToScreen(const MapPos& mapPos, const ViewState& viewState);
+
+        /**
          * Requests the renderer to refresh the view.
          * Note that there is normally no need to do this manually,
          * SDK automatically redraws the view when needed.
@@ -185,8 +200,8 @@ namespace carto {
         AnimationHandler _animationHandler;
         KineticEventHandler _kineticEventHandler;
         
-        std::shared_ptr<Layers> _layers;
-        std::shared_ptr<Options> _options;
+        const std::shared_ptr<Layers> _layers;
+        const std::shared_ptr<Options> _options;
         
         bool _surfaceChanged;
         mutable std::atomic<bool> _redrawPending;

@@ -111,6 +111,14 @@ namespace carto {
         return viewState;
     }
         
+    MapPos MapRenderer::screenToMap(const ScreenPos& screenPos, const ViewState& viewState) {
+        return _options->getBaseProjection()->fromInternal(screenToWorld(screenPos, viewState));
+    }
+
+    ScreenPos MapRenderer::mapToScreen(const MapPos& mapPos, const ViewState& viewState) {
+        return worldToScreen(_options->getBaseProjection()->toInternal(mapPos), viewState);
+    }
+
     void MapRenderer::requestRedraw() const {
         DirectorPtr<RedrawRequestListener> redrawRequestListener = _redrawRequestListener;
 

@@ -254,11 +254,11 @@ namespace carto {
     }
         
     MapPos BaseMapView::screenToMap(const ScreenPos& screenPos) {
-        return _options->getBaseProjection()->fromInternal(_mapRenderer->screenToWorld(screenPos, _mapRenderer->getViewState()));
+        return _mapRenderer->screenToMap(screenPos, _mapRenderer->getViewState());
     }
     
     ScreenPos BaseMapView::mapToScreen(const MapPos& mapPos) {
-        return _mapRenderer->worldToScreen(_options->getBaseProjection()->toInternal(mapPos), _mapRenderer->getViewState());
+        return _mapRenderer->mapToScreen(mapPos, _mapRenderer->getViewState());
     }
     
     void BaseMapView::cancelAllTasks() {
