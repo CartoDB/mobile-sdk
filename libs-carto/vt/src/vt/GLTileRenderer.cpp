@@ -984,14 +984,14 @@ namespace carto { namespace vt {
                 cglib::vec3<double> pos2DClip = cglib::transform_point(ray(t), tileToClipMatrix * invTileMatrix);
 
                 // Clipping test
-                cglib::vec2<float> tilePos(static_cast<float>(pos2DClip(0)), static_cast<float>(pos2DClip(1)));
-                if (!(tilePos(0) >= 0 && tilePos(0) <= 1 && tilePos(1) >= 0 && tilePos(1) <= 1)) {
+                if (!(pos2DClip(0) >= 0 && pos2DClip(0) <= 1 && pos2DClip(1) >= 0 && pos2DClip(1) <= 1)) {
                     continue;
                 }
 
                 // Store all bitmaps
+                cglib::vec3<double> posTile = cglib::transform_point(ray(t), invTileMatrix);
                 for (const std::shared_ptr<TileBitmap>& bitmap : renderNode.layer->getBitmaps()) {
-                    results.emplace_back(renderNode.tileId, cglib::dot_product(ray(t) - ray.origin, ray.direction) / cglib::dot_product(ray.direction, ray.direction), *bitmap, tilePos);
+                    results.emplace_back(renderNode.tileId, cglib::dot_product(ray(t) - ray.origin, ray.direction) / cglib::dot_product(ray.direction, ray.direction), *bitmap, cglib::vec2<float>(static_cast<float>(posTile(0)), static_cast<float>(posTile(1))));
                 }
             }
         }

@@ -24,7 +24,7 @@ namespace {
 
     std::array<std::uint8_t, 4> readTileBitmapColor(const carto::vt::TileBitmap& bitmap, int x, int y) {
         x = std::max(0, std::min(x, bitmap.getWidth() - 1));
-        y = std::max(0, std::min(y, bitmap.getHeight() - 1));
+        y = bitmap.getHeight() - 1 - std::max(0, std::min(y, bitmap.getHeight() - 1));
 
         switch (bitmap.getFormat()) {
         case carto::vt::TileBitmap::Format::GRAYSCALE: {
@@ -288,11 +288,11 @@ namespace carto {
 
                 float x = tilePos(0) * tileBitmap.getWidth();
                 float y = tilePos(1) * tileBitmap.getHeight();
-                std::array<std::uint8_t, 4> interpolatedComponents = readTileBitmapColor(tileBitmap, x, y);
+                std::array<std::uint8_t, 4> interpolatedComponents = readTileBitmapColor(tileBitmap, x - 0.5f, y - 0.5f);
                 Color interpolatedColor(interpolatedComponents[0], interpolatedComponents[1], interpolatedComponents[2], interpolatedComponents[3]);
 
-                int nx = static_cast<int>(std::floor(x + 0.5f));
-                int ny = static_cast<int>(std::floor(y + 0.5f));
+                int nx = static_cast<int>(std::floor(x));
+                int ny = static_cast<int>(std::floor(y));
                 std::array<std::uint8_t, 4> nearestComponents = readTileBitmapColor(tileBitmap, nx, ny);
                 Color nearestColor(nearestComponents[0], nearestComponents[1], nearestComponents[2], nearestComponents[3]);
 
