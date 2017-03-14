@@ -87,11 +87,11 @@ namespace carto {
 
         float calculateRotatingScalingFactor(const ScreenPos& screenPos1, const ScreenPos& screenPos2) const;
 
-        void singlePointerPan(const ScreenPos& screenPos);
-        void singlePointerZoom(const ScreenPos& screenPos);
-        void dualPointerGuess(const ScreenPos& screenPos1, const ScreenPos& screenPos2);
-        void dualPointerTilt(const ScreenPos& screenPos);
-        void dualPointerPan(const ScreenPos& screenPos1, const ScreenPos& screenPos2, bool rotate, bool scale);
+        void singlePointerPan(const ScreenPos& screenPos, const ViewState& viewState);
+        void singlePointerZoom(const ScreenPos& screenPos, const ViewState& viewState);
+        void dualPointerGuess(const ScreenPos& screenPos1, const ScreenPos& screenPos2, const ViewState& viewState);
+        void dualPointerTilt(const ScreenPos& screenPos, const ViewState& viewState);
+        void dualPointerPan(const ScreenPos& screenPos1, const ScreenPos& screenPos2, bool rotate, bool scale, const ViewState& viewState);
 
         void handleClick(ClickType::ClickType clickType, const MapPos& targetPos);
     

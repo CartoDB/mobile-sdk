@@ -424,14 +424,14 @@ namespace carto {
         calculateCameraEvent(cameraZoomEvent, durationSeconds, false);
     }
     
-    MapPos MapRenderer::screenToWorld(const ScreenPos& screenPos) const {
+    MapPos MapRenderer::screenToWorld(const ScreenPos& screenPos, const ViewState& viewState) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _viewState.screenToWorldPlane(screenPos, _options);
+        return viewState.screenToWorldPlane(screenPos, _options);
     }
     
-    ScreenPos MapRenderer::worldToScreen(const MapPos& worldPos) const {
+    ScreenPos MapRenderer::worldToScreen(const MapPos& worldPos, const ViewState& viewState) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _viewState.worldToScreen(worldPos, *_options);
+        return viewState.worldToScreen(worldPos, *_options);
     }
     
     void MapRenderer::onSurfaceCreated() {

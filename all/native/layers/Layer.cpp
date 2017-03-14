@@ -1,4 +1,5 @@
 #include "Layer.h"
+#include "graphics/ViewState.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "utils/Const.h"
@@ -74,16 +75,13 @@ namespace carto {
         }
     }
 
-    void Layer::simulateClick(ClickType::ClickType clickType, const ScreenPos& screenPos) {
+    void Layer::simulateClick(ClickType::ClickType clickType, const ScreenPos& screenPos, const ViewState& viewState) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-        auto mapRenderer = _mapRenderer.lock();
         auto options = _options.lock();
-        if (!mapRenderer || !options) {
+        if (!options) {
             return;
         }
-
-        ViewState viewState = mapRenderer->getViewState();
         std::shared_ptr<Projection> projection = options->getBaseProjection();
 
         MapPos worldPos = viewState.screenToWorldPlane(screenPos, options);

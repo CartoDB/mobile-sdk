@@ -112,8 +112,9 @@ namespace carto {
          * Simulate click on this layer. This may trigger any event listeners attached to the layer.
          * @param clickType The type of the click.
          * @param screenPos The screen position for the simulated click.
+         * @param viewState The view state to use.
          */
-        virtual void simulateClick(ClickType::ClickType clickType, const ScreenPos& screenPos);
+        virtual void simulateClick(ClickType::ClickType clickType, const ScreenPos& screenPos, const ViewState& viewState);
     
     protected:
         friend class Layers;
