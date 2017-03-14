@@ -1,5 +1,6 @@
 #include "Layer.h"
 #include "renderers/MapRenderer.h"
+#include "renderers/components/RayIntersectedElement.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 
@@ -70,6 +71,51 @@ namespace carto {
         const std::shared_ptr<CullState>& cullState = getLastCullState();
         if (cullState) {
             loadData(cullState);
+        }
+    }
+
+    void Layer::simulateClick(ClickType::ClickType clickType, const ScreenPos& screenPos) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+        auto mapRenderer = _mapRenderer.lock();
+        auto options = _options.lock();
+        if (!mapRenderer || !options) {
+            return;
+        }
+
+        ViewState viewState = mapRenderer->getViewState();
+        std::shared_ptr<Projection> projection = options->getBaseProjection();
+
+        MapPos worldPos = viewState.screenToWorldPlane(screenPos, options);
+        MapPos rayOrigin = viewState.getCameraPos();
+        MapVec rayDir = worldPos - viewState.getCameraPos();
+        cglib::ray3<double> ray(cglib::vec3<double>(rayOrigin.getX(), rayOrigin.getY(), rayOrigin.getZ()), cglib::vec3<double>(rayDir.getX(), rayDir.getY(), rayDir.getZ()));
+
+        // Calculate intersections
+        std::vector<RayIntersectedElement> results;
+        calculateRayIntersectedElements(*projection, ray, viewState, results);
+
+        // Sort the results
+        auto distanceComparator = [&viewState](const RayIntersectedElement& element1, const RayIntersectedElement& element2) -> bool {
+            if (element1.is3D() != element2.is3D()) {
+                return element1.is3D() > element2.is3D();
+            }
+            if (element1.is3D()) {
+                double deltaDistance = element1.getDistance(viewState.getCameraPos()) - element2.getDistance(viewState.getCameraPos());
+                if (deltaDistance != 0) {
+                    return deltaDistance < 0;
+                }
+            }
+            return element1.getOrder() > element2.getOrder();
+        };
+
+        std::sort(results.begin(), results.end(), distanceComparator);
+
+        // Send click events
+        for (const RayIntersectedElement& intersectedElement : results) {
+            if (intersectedElement.getLayer()->processClick(clickType, intersectedElement, viewState)) {
+                return;
+            }
         }
     }
     

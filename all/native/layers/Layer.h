@@ -7,6 +7,7 @@
 #ifndef _CARTO_LAYER_H_
 #define _CARTO_LAYER_H_
 
+#include "core/ScreenPos.h"
 #include "core/MapRange.h"
 #include "renderers/components/StyleTextureCache.h"
 #include "renderers/components/CullState.h"
@@ -106,6 +107,13 @@ namespace carto {
          * changes.
          */
         virtual void refresh();
+
+        /**
+         * Simulate click on this layer. This may trigger any event listeners attached to the layer.
+         * @param clickType The type of the click.
+         * @param screenPos The screen position for the simulated click.
+         */
+        virtual void simulateClick(ClickType::ClickType clickType, const ScreenPos& screenPos);
     
     protected:
         friend class Layers;

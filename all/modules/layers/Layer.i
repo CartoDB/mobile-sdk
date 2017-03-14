@@ -5,7 +5,7 @@
 
 %module Layer
 
-!proxy_imports(carto::Layer, core.MapRange, renderers.components.CullState)
+!proxy_imports(carto::Layer, core.MapRange, core.ScreenPos, ui.ClickType, renderers.components.CullState)
 
 %{
 #include "layers/Layer.h"
@@ -16,6 +16,7 @@
 %include <cartoswig.i>
 
 %import "core/MapRange.i"
+%import "core/ScreenPos.i"
 %import "renderers/components/CullState.i"
 %import "ui/ClickType.i"
 
