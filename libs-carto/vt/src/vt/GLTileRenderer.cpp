@@ -1710,7 +1710,7 @@ namespace carto { namespace vt {
                 format = GL_RGBA;
                 break;
             }
-            glTexImage2D(GL_TEXTURE_2D, 0, format, bitmap->getWidth(), bitmap->getHeight(), 0, format, GL_UNSIGNED_BYTE, bitmap->getData().data());
+            glTexImage2D(GL_TEXTURE_2D, 0, format, bitmap->getWidth(), bitmap->getHeight(), 0, format, GL_UNSIGNED_BYTE, bitmap->getData().empty() ? NULL : bitmap->getData().data());
             if (pow2Size) {
                 glGenerateMipmap(GL_TEXTURE_2D);
             }
