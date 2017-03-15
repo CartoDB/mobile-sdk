@@ -38,7 +38,7 @@ namespace carto {
         _styleCache(),
         _cullWorker(std::make_shared<CullWorker>()),
         _cullThread(),
-        _backgroundRenderer(*options),
+        _backgroundRenderer(*options, *layers),
         _watermarkRenderer(*options),
         _billboardSorter(),
         _billboardDrawDataBuffer(),

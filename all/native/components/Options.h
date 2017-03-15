@@ -543,12 +543,8 @@ namespace carto {
         void unregisterOnChangeListener(const std::shared_ptr<OnChangeListener>& listener);
 
     private:
-        static std::shared_ptr<Bitmap> GetDefaultBackgroundBitmap();
-        static std::shared_ptr<Bitmap> GetDefaultSkyBitmap();
         static std::shared_ptr<Bitmap> GetDefaultWatermarkBitmap();
     
-        static std::shared_ptr<Bitmap> _DefaultBackgroundBitmap;
-        static std::shared_ptr<Bitmap> _DefaultSkyBitmap;
         static std::shared_ptr<Bitmap> _DefaultWatermarkBitmap;
         
         static std::mutex _Mutex;

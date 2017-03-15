@@ -2,6 +2,7 @@
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
 #include "components/CancelableThreadPool.h"
+#include "graphics/utils/BackgroundBitmapGenerator.h"
 #include "datasources/TileDataSource.h"
 #include "layers/VectorTileEventListener.h"
 #include "renderers/MapRenderer.h"
@@ -29,6 +30,8 @@ namespace carto {
         _buildingRenderOrder(VectorTileRenderOrder::VECTOR_TILE_RENDER_ORDER_LAST),
         _tileDecoder(decoder),
         _tileDecoderListener(),
+        _backgroundColor(),
+        _backgroundBitmap(),
         _labelCullThreadPool(std::make_shared<CancelableThreadPool>()),
         _visibleTileIds(),
         _tempDrawDatas(),
@@ -388,8 +391,8 @@ namespace carto {
         auto renderer = std::make_shared<TileRenderer>(_mapRenderer, _useFBO, _useDepth, _useStencil);
         renderer->onSurfaceCreated(shaderManager, textureManager);
         renderer->setBackgroundColor(_tileDecoder->getBackgroundColor());
-        if (_tileDecoder->getBackgroundPattern()) {
-            renderer->setBackgroundPattern(_tileDecoder->getBackgroundPattern());
+        if (auto pattern = _tileDecoder->getBackgroundPattern()) {
+            renderer->setBackgroundPattern(pattern);
         }
         setRenderer(renderer);
     }
@@ -430,6 +433,17 @@ namespace carto {
         Layer::onSurfaceDestroyed();
     }
     
+    std::shared_ptr<Bitmap> VectorTileLayer::getBackgroundBitmap() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+        Color backgroundColor = _tileDecoder->getBackgroundColor();
+        if (backgroundColor != _backgroundColor || !_backgroundBitmap) {
+            _backgroundBitmap = BackgroundBitmapGenerator(BACKGROUND_SIZE, BACKGROUND_SIZE).generateBitmap(backgroundColor);
+            _backgroundColor = backgroundColor;
+        }
+        return _backgroundBitmap;
+    }
+
     void VectorTileLayer::registerDataSourceListener() {
         _tileDecoderListener = std::make_shared<TileDecoderListener>(std::static_pointer_cast<VectorTileLayer>(shared_from_this()));
         _tileDecoder->registerOnChangeListener(_tileDecoderListener);

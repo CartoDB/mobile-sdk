@@ -1,4 +1,7 @@
 #include "Layer.h"
+#include "assets/DefaultBackgroundPNG.h"
+#include "assets/DefaultSkyPNG.h"
+#include "graphics/Bitmap.h"
 #include "graphics/ViewState.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
@@ -28,7 +31,7 @@ namespace carto {
         _cullDelay = cullDelay;
     }
         
-    bool Layer::isSurfaceCreated() {
+    bool Layer::isSurfaceCreated() const {
         return _surfaceCreated;
     }
     
@@ -172,4 +175,25 @@ namespace carto {
         _surfaceCreated = false;
     }
     
+    std::shared_ptr<Bitmap> Layer::getBackgroundBitmap() const {
+        std::lock_guard<std::mutex> lock(_Mutex);
+        if (!_DefaultBackgroundBitmap) {
+            _DefaultBackgroundBitmap = Bitmap::CreateFromCompressed(default_background_png, default_background_png_len);
+        }
+        return _DefaultBackgroundBitmap;
+    }
+
+    std::shared_ptr<Bitmap> Layer::getSkyBitmap() const {
+        std::lock_guard<std::mutex> lock(_Mutex);
+        if (!_DefaultSkyBitmap) {
+            _DefaultSkyBitmap = Bitmap::CreateFromCompressed(default_sky_png, default_sky_png_len);
+        }
+        return _DefaultSkyBitmap;
+    }
+
+    std::shared_ptr<Bitmap> Layer::_DefaultBackgroundBitmap;
+    std::shared_ptr<Bitmap> Layer::_DefaultSkyBitmap;
+
+    std::mutex Layer::_Mutex;
+
 }

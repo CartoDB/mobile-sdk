@@ -21,15 +21,16 @@
 #include <cglib/ray.h>
 
 namespace carto {
+    class Bitmap;
     class BillboardSorter;
     class DataSource;
     class Layers;
     class MapPos;
-    class MapRenderer;
-    class TouchHandler;
     class MapVec;
+    class MapRenderer;
     class ShaderManager;
     class TextureManager;
+    class TouchHandler;
     class CancelableThreadPool;
     class RayIntersectedElement;
     class ViewState;
@@ -119,6 +120,7 @@ namespace carto {
     protected:
         friend class Layers;
         friend class MapRenderer;
+        friend class BackgroundRenderer;
         friend class TouchHandler;
     
         Layer();
@@ -134,12 +136,15 @@ namespace carto {
         virtual void loadData(const std::shared_ptr<CullState>& cullState) = 0;
         
         virtual void offsetLayerHorizontally(double offset) = 0;
-        
-        bool isSurfaceCreated();
+
+        virtual bool isSurfaceCreated() const;
         virtual void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
         virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) = 0;
         virtual bool onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
         virtual void onSurfaceDestroyed();
+        
+        virtual std::shared_ptr<Bitmap> getBackgroundBitmap() const;
+        virtual std::shared_ptr<Bitmap> getSkyBitmap() const;
         
         virtual void calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray,
                                                      const ViewState& viewState, std::vector<RayIntersectedElement>& results) const = 0;
@@ -168,6 +173,11 @@ namespace carto {
 
     private:
         static const int DEFAULT_CULL_DELAY = 400;
+
+        static std::shared_ptr<Bitmap> _DefaultBackgroundBitmap;
+        static std::shared_ptr<Bitmap> _DefaultSkyBitmap;
+
+        static std::mutex _Mutex;
 
         bool _surfaceCreated;
     };
