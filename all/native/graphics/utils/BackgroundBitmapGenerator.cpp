@@ -12,28 +12,29 @@ namespace carto {
     }
 
     std::shared_ptr<Bitmap> BackgroundBitmapGenerator::generateBitmap(const Color& backgroundColor, const Color& dotColor) const {
-        std::vector<unsigned char> data(_width * _height * 4);
+        int size = _blockSize * _blockCount;
+        std::vector<unsigned char> data(size * size * 4);
 
-        unsigned char bgComponents[4] = { backgroundColor.getR(), backgroundColor.getG(), backgroundColor.getB(), backgroundColor.getA() };
+        unsigned char bgComponents[4] = { backgroundColor.getR(), backgroundColor.getG(), backgroundColor.getB(), 255 };
         for (std::size_t i = 0; i < data.size(); i++) {
             data[i] = bgComponents[i % 4];
         }
 
-        for (unsigned int i = 0; i < _width; i += 2) {
-            data[i * 4 + 0] = dotColor.getR();
-            data[i * 4 + 1] = dotColor.getG();
-            data[i * 4 + 2] = dotColor.getB();
-            data[i * 4 + 3] = dotColor.getA();
+        for (int i = 0; i < _blockCount; i++) {
+            for (int j = 0; j < size; j += 2) {
+                std::size_t i0 = i * size * _blockSize + j;
+                data[i0 * 4 + 0] = dotColor.getR();
+                data[i0 * 4 + 1] = dotColor.getG();
+                data[i0 * 4 + 2] = dotColor.getB();
+
+                std::size_t i1 = i * _blockSize + j * size;
+                data[i1 * 4 + 0] = dotColor.getR();
+                data[i1 * 4 + 1] = dotColor.getG();
+                data[i1 * 4 + 2] = dotColor.getB();
+            }
         }
 
-        for (unsigned int i = 0; i < _height; i += 2) {
-            data[i * _width * 4 + 0] = dotColor.getR();
-            data[i * _width * 4 + 1] = dotColor.getG();
-            data[i * _width * 4 + 2] = dotColor.getB();
-            data[i * _width * 4 + 3] = dotColor.getA();
-        }
-
-        return std::make_shared<Bitmap>(data.data(), _width, _height, ColorFormat::COLOR_FORMAT_RGBA, 4 * _width);
+        return std::make_shared<Bitmap>(data.data(), size, size, ColorFormat::COLOR_FORMAT_RGBA, 4 * size);
     }
 
 }

@@ -17,16 +17,16 @@ namespace carto {
      */
     class BackgroundBitmapGenerator {
     public:
-        BackgroundBitmapGenerator(unsigned int width, unsigned int height) : _width(width), _height(height) { }
+        BackgroundBitmapGenerator(int blockSize, int blockCount) : _blockSize(blockSize), _blockCount(blockCount) { }
 
         std::shared_ptr<Bitmap> generateBitmap(const Color& backgroundColor) const;
         std::shared_ptr<Bitmap> generateBitmap(const Color& backgroundColor, const Color& dotColor) const;
 
     private:
-        static const int DEFAULT_CONTRAST_DIFF = 50;
+        static const int DEFAULT_CONTRAST_DIFF = 40;
 
-        const unsigned int _width;
-        const unsigned int _height;
+        const int _blockSize;
+        const int _blockCount;
     };
 
 }

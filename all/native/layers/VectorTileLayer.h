@@ -201,7 +201,8 @@ namespace carto {
             std::shared_ptr<VectorTileDecoder::TileMap> _tileMap;
         };
 
-        static const int BACKGROUND_SIZE = 16;
+        static const int BACKGROUND_BLOCK_SIZE = 16;
+        static const int BACKGROUND_BLOCK_COUNT = 16;
         static const int DEFAULT_CULL_DELAY = 200;
         static const int PRELOADING_PRIORITY_OFFSET = -2;
         static const int EXTRA_TILE_FOOTPRINT = 4096;

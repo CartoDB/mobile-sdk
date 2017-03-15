@@ -93,6 +93,7 @@ namespace carto {
         virtual void onSurfaceDestroyed();
         
         virtual std::shared_ptr<Bitmap> getBackgroundBitmap() const;
+        virtual std::shared_ptr<Bitmap> getSkyBitmap() const;
 
         virtual void calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray,
                                                      const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;

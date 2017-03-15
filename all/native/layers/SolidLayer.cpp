@@ -105,6 +105,10 @@ namespace carto {
         return std::shared_ptr<Bitmap>();
     }
     
+    std::shared_ptr<Bitmap> SolidLayer::getSkyBitmap() const {
+        return std::shared_ptr<Bitmap>();
+    }
+    
     void SolidLayer::calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
     }
 

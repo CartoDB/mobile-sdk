@@ -438,7 +438,7 @@ namespace carto {
 
         Color backgroundColor = _tileDecoder->getBackgroundColor();
         if (backgroundColor != _backgroundColor || !_backgroundBitmap) {
-            _backgroundBitmap = BackgroundBitmapGenerator(BACKGROUND_SIZE, BACKGROUND_SIZE).generateBitmap(backgroundColor);
+            _backgroundBitmap = BackgroundBitmapGenerator(BACKGROUND_BLOCK_SIZE, BACKGROUND_BLOCK_COUNT).generateBitmap(backgroundColor);
             _backgroundColor = backgroundColor;
         }
         return _backgroundBitmap;
