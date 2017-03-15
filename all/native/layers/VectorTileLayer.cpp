@@ -3,6 +3,7 @@
 #include "components/Exceptions.h"
 #include "components/CancelableThreadPool.h"
 #include "graphics/utils/BackgroundBitmapGenerator.h"
+#include "graphics/utils/SkyBitmapGenerator.h"
 #include "datasources/TileDataSource.h"
 #include "layers/VectorTileEventListener.h"
 #include "renderers/MapRenderer.h"
@@ -32,6 +33,8 @@ namespace carto {
         _tileDecoderListener(),
         _backgroundColor(),
         _backgroundBitmap(),
+        _skyColor(),
+        _skyBitmap(),
         _labelCullThreadPool(std::make_shared<CancelableThreadPool>()),
         _visibleTileIds(),
         _tempDrawDatas(),
@@ -442,6 +445,17 @@ namespace carto {
             _backgroundColor = backgroundColor;
         }
         return _backgroundBitmap;
+    }
+
+    std::shared_ptr<Bitmap> VectorTileLayer::getSkyBitmap() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+        Color backgroundColor = _tileDecoder->getBackgroundColor();
+        if (backgroundColor != _skyColor || !_skyBitmap) {
+            _skyBitmap = SkyBitmapGenerator(SKY_WIDTH, SKY_HEIGHT, SKY_GRADIENT_SIZE, SKY_GRADIENT_OFFSET).generateBitmap(backgroundColor);
+            _skyColor = backgroundColor;
+        }
+        return _skyBitmap;
     }
 
     void VectorTileLayer::registerDataSourceListener() {
