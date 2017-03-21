@@ -305,6 +305,13 @@ namespace carto {
                 urlTemplateBase += (i == 0 ? "/" : ",") + boost::lexical_cast<std::string>(layerInfos[i].index);
             }
             std::string urlTemplateSuffix;
+            if (!_authTokens.empty()) {
+                std::multimap<std::string, std::string> urlParams;
+                for (const std::string& authToken : _authTokens) {
+                    urlParams.insert({ _authTokens.size() == 1 ? "auth_token" : "auth_token[]", authToken });
+                }
+                urlTemplateSuffix = NetworkUtils::BuildURLFromParameters("", urlParams);
+            }
 
             // Create layer based on type and flags
             if (type == "torque") {
