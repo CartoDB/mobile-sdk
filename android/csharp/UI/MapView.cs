@@ -15,7 +15,6 @@ namespace Carto.Ui {
         private static AssetManager _assetManager;
         private MapRedrawRequestListener _redrawRequestListener;
         private BaseMapViewRenderer _baseMapViewRenderer;
-        private ConfigChooser _configChooser;		
         private int _pointer1Id = InvalidPointerId;
         private int _pointer2Id = InvalidPointerId;
 
@@ -76,8 +75,6 @@ namespace Carto.Ui {
             // Create base map renderer and EGL configuration chooser
             _baseMapViewRenderer = new BaseMapViewRenderer(_baseMapView);
 
-            _configChooser = new ConfigChooser();
-
             try {
                 System.Reflection.PropertyInfo prop = typeof(GLSurfaceView).GetProperty("PreserveEGLContextOnPause");
                 prop.SetValue(this, true);
@@ -86,44 +83,42 @@ namespace Carto.Ui {
             }
 
             SetEGLContextClientVersion(2);
-            SetEGLConfigChooser(_configChooser);
+            SetEGLConfigChooser(new ConfigChooser());
             SetRenderer(_baseMapViewRenderer);
             RenderMode = Rendermode.WhenDirty;
         }
         
         ~MapView() {
-            Dispose(true);
+            Dispose(false);
         }
 
         protected override void Dispose(bool disposing) {
-            lock (this) {
-                // Detach objects
-                if (_baseMapViewRenderer != null) {
-                    _baseMapViewRenderer.Detach();
-                }
-                if (_redrawRequestListener != null) {
-                    _redrawRequestListener.Detach();
-                }
-                if (_baseMapView != null) {
-                    _baseMapView.SetRedrawRequestListener(null);
-                }
+            if (disposing) {
+                lock (this) {
+                    // Detach objects
+                    if (_baseMapViewRenderer != null) {
+                        _baseMapViewRenderer.Detach();
+                    }
+                    if (_redrawRequestListener != null) {
+                        _redrawRequestListener.Detach();
+                    }
+                    if (_baseMapView != null) {
+                        _baseMapView.SetRedrawRequestListener(null);
+                    }
 
-                // Dispose objects
-                if (_configChooser != null) {
-                    _configChooser.Dispose();
-                    _configChooser = null;
-                }
-                if (_baseMapViewRenderer != null) {
-                    _baseMapViewRenderer.Dispose(); // allow the Java object to be collected later
-                    _baseMapViewRenderer = null;
-                }
-                if (_baseMapView != null) {
-                    _baseMapView.Dispose();
-                    _baseMapView = null;
-                }
-                if (_redrawRequestListener != null) {
-                    _redrawRequestListener.Dispose();
-                    _redrawRequestListener = null;
+                    // Dispose objects
+                    if (_baseMapViewRenderer != null) {
+                        _baseMapViewRenderer.Dispose(); // allow the Java object to be collected later
+                        _baseMapViewRenderer = null;
+                    }
+                    if (_baseMapView != null) {
+                        _baseMapView.Dispose();
+                        _baseMapView = null;
+                    }
+                    if (_redrawRequestListener != null) {
+                        _redrawRequestListener.Dispose();
+                        _redrawRequestListener = null;
+                    }
                 }
             }
             base.Dispose(disposing);

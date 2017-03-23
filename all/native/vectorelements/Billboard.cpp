@@ -10,7 +10,7 @@ namespace carto {
     }
     
     std::shared_ptr<Billboard> Billboard::getBaseBillboard() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _baseBillboard;
     }
     
@@ -20,7 +20,7 @@ namespace carto {
         }
 
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             for (std::shared_ptr<Billboard> billboard = baseBillboard; billboard; billboard = billboard->getBaseBillboard()) {
                 if (billboard.get() == this) {
                     throw InvalidArgumentException("Cycling loop when setting baseBillboard");
@@ -34,7 +34,7 @@ namespace carto {
     }
         
     MapBounds Billboard::getBounds() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         std::shared_ptr<Geometry> geometry = _geometry;
         if (!geometry) {
             std::shared_ptr<Billboard> baseBillboard = _baseBillboard;
@@ -47,7 +47,7 @@ namespace carto {
     }
     
     std::shared_ptr<Geometry> Billboard::getRootGeometry() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         std::shared_ptr<Geometry> geometry = _geometry;
         if (!geometry) {
             std::shared_ptr<Billboard> baseBillboard = _baseBillboard;
@@ -60,7 +60,7 @@ namespace carto {
     }
 
     std::shared_ptr<Geometry> Billboard::getGeometry() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _geometry;
     }
     
@@ -70,7 +70,7 @@ namespace carto {
         }
    
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _geometry = geometry;
             _baseBillboard.reset();
         }
@@ -79,7 +79,7 @@ namespace carto {
         
     void Billboard::setPos(const MapPos& pos) {
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _geometry = std::make_shared<PointGeometry>(pos);
             _baseBillboard.reset();
         }
@@ -87,13 +87,13 @@ namespace carto {
     }
     
     float Billboard::getRotation() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _rotation;
     }
     
     void Billboard::setRotation(float rotation) {
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _rotation = rotation;
         }
         notifyElementChanged();
@@ -127,12 +127,12 @@ namespace carto {
     }
         
     std::shared_ptr<BillboardDrawData> Billboard::getDrawData() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _drawData;
     }
     
     void Billboard::setDrawData(const std::shared_ptr<BillboardDrawData>& drawData) {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         if (_drawData) {
             drawData->setOverlapping(_drawData->isOverlapping());
         }

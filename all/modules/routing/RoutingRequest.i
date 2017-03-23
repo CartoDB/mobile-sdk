@@ -27,6 +27,7 @@
 %attributeval(carto::RoutingRequest, std::vector<carto::MapPos>, Points, getPoints)
 %std_exceptions(carto::RoutingRequest::RoutingRequest)
 !standard_equals(carto::RoutingRequest);
+!custom_tostring(carto::RoutingRequest);
 
 %include "routing/RoutingRequest.h"
 

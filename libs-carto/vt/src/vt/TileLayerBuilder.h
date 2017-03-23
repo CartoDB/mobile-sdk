@@ -66,7 +66,7 @@ namespace carto { namespace vt {
         void addBitmapLabels(const std::function<bool(long long& id, BitmapLabelInfo& labelInfo)>& generator, const BitmapLabelStyle& style);
         void addTextLabels(const std::function<bool(long long& id, TextLabelInfo& labelInfo)>& generator, const TextLabelStyle& style);
 
-        std::shared_ptr<TileLayer> build(std::string layerName, int layerIdx, std::shared_ptr<FloatFunction> opacity, boost::optional<CompOp> compOp);
+        std::shared_ptr<TileLayer> build(int layerIdx, std::shared_ptr<FloatFunction> opacity, boost::optional<CompOp> compOp);
 
     private:
         constexpr static int RESERVED_VERTICES = 4096;
@@ -110,6 +110,7 @@ namespace carto { namespace vt {
         std::vector<std::shared_ptr<TileGeometry>> _geometryList;
         std::vector<std::shared_ptr<TileLabel>> _labelList;
 
+		std::shared_ptr<FloatFunction> _nullWidth;
         std::unique_ptr<PoolAllocator> _tessPoolAllocator;
     };
 } }

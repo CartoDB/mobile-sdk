@@ -31,7 +31,7 @@ namespace carto {
     }
     
     std::shared_ptr<PointGeometry> Point::getGeometry() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return std::static_pointer_cast<PointGeometry>(_geometry);
     }
     
@@ -41,7 +41,7 @@ namespace carto {
         }
 
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _geometry = geometry;
         }
         notifyElementChanged();
@@ -53,14 +53,14 @@ namespace carto {
         
     void Point::setPos(const MapPos& pos) {
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _geometry = std::make_shared<PointGeometry>(pos);
         }
         notifyElementChanged();
     }
     
     std::shared_ptr<PointStyle> Point::getStyle() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _style;
     }
     
@@ -70,19 +70,19 @@ namespace carto {
         }
 
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _style = style;
         }
         notifyElementChanged();
     }
         
     std::shared_ptr<PointDrawData> Point::getDrawData() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _drawData;
     }
     
     void Point::setDrawData(const std::shared_ptr<PointDrawData>& drawData) {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         _drawData = drawData;
     }
     

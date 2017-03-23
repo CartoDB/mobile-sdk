@@ -24,7 +24,6 @@
 
 !polymorphic_shared_ptr(carto::MBTilesTileDataSource, datasources.MBTilesTileDataSource)
 
-%attributeval(carto::MBTilesTileDataSource, carto::MapBounds, DataExtent, getDataExtent)
 %std_io_exceptions(carto::MBTilesTileDataSource::MBTilesTileDataSource)
 
 %feature("director") carto::MBTilesTileDataSource;

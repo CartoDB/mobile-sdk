@@ -7,6 +7,7 @@
 #include "SymbolizerContext.h"
 
 #include <atomic>
+#include <unordered_map>
 
 namespace carto { namespace mvt {
     void Symbolizer::setParameter(const std::string& name, const std::string& value) {
@@ -112,4 +113,52 @@ namespace carto { namespace mvt {
         std::size_t hash = std::hash<std::string>()(file);
         return (id * 3 + 2) | (static_cast<long long>(hash & 0x7fffffff) << 32);
     }
+
+    std::shared_ptr<const vt::FloatFunction> Symbolizer::createFloatFunction(float value) {
+        constexpr static int MAX_CACHE_SIZE = 1024;
+
+        static std::mutex functionCacheMutex;
+        static std::unordered_map<float, std::shared_ptr<const vt::FloatFunction>> functionCache;
+
+        std::lock_guard<std::mutex> lock(functionCacheMutex);
+        auto it = functionCache.find(value);
+        if (it != functionCache.end()) {
+            return it->second;
+        }
+
+        auto func = std::make_shared<vt::FloatFunction>([value](const vt::ViewState&) {
+            return value;
+        });
+
+        if (functionCache.size() >= MAX_CACHE_SIZE) {
+            functionCache.erase(functionCache.begin());
+        }
+        functionCache[value] = func;
+        return func;
+    }
+    
+    std::shared_ptr<const vt::ColorFunction> Symbolizer::createColorFunction(const std::string& value) {
+        constexpr static int MAX_CACHE_SIZE = 1024;
+
+        static std::mutex functionCacheMutex;
+        static std::unordered_map<std::string, std::shared_ptr<const vt::ColorFunction>> functionCache;
+
+        std::lock_guard<std::mutex> lock(functionCacheMutex);
+        auto it = functionCache.find(value);
+        if (it != functionCache.end()) {
+            return it->second;
+        }
+
+        vt::Color color = parseColor(value);
+        auto func = std::make_shared<vt::ColorFunction>([color](const vt::ViewState&) {
+            return color;
+        });
+
+        if (functionCache.size() >= MAX_CACHE_SIZE) {
+            functionCache.erase(functionCache.begin());
+        }
+        functionCache[value] = func;
+        return func;
+    }
+
 } }

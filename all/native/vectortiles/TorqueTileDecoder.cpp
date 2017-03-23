@@ -20,6 +20,7 @@
 namespace carto {
     
     TorqueTileDecoder::TorqueTileDecoder(const std::shared_ptr<CartoCSSStyleSet>& styleSet) :
+        _logger(std::make_shared<MapnikVTLogger>("TorqueTileDecoder")),
         _resolution(256),
         _map(),
         _symbolizerContext(),
@@ -51,7 +52,10 @@ namespace carto {
             throw NullArgumentException("Null styleSet");
         }
 
-        updateCurrentStyle(styleSet);
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            updateCurrentStyle(styleSet);
+        }
         notifyDecoderChanged();
     }
 
@@ -110,8 +114,7 @@ namespace carto {
         }
     
         try {
-            auto logger = std::make_shared<MapnikVTLogger>("TorqueTileDecoder");
-            mvt::TorqueFeatureDecoder decoder(*tileData->getDataPtr(), resolution, logger);
+            mvt::TorqueFeatureDecoder decoder(*tileData->getDataPtr(), resolution, _logger);
             decoder.setTransform(calculateTileTransform(tile, targetTile));
 
             auto tileMap = std::make_shared<TileMap>();
@@ -129,13 +132,10 @@ namespace carto {
     }
 
     void TorqueTileDecoder::updateCurrentStyle(const std::shared_ptr<CartoCSSStyleSet>& styleSet) {
-        std::lock_guard<std::mutex> lock(_mutex);
-
         std::shared_ptr<mvt::TorqueMap> map;
         try {
-            auto logger = std::make_shared<MapnikVTLogger>("TorqueTileDecoder");
             auto assetLoader = std::make_shared<CartoCSSAssetLoader>("", std::shared_ptr<AssetPackage>());
-            css::TorqueCartoCSSMapLoader mapLoader(assetLoader, logger);
+            css::TorqueCartoCSSMapLoader mapLoader(assetLoader, _logger);
             mapLoader.setIgnoreLayerPredicates(true);
             map = mapLoader.loadMap(styleSet->getCartoCSS());
         }

@@ -27,6 +27,12 @@ namespace carto {
          */
         explicit CartoOnlineVectorTileLayer(CartoBaseMapStyle::CartoBaseMapStyle style);
         /**
+         * Constructs a CartoOnlineVectorTileLayer object from a source name and specified base map style.
+         * @param source The tile source name. Currently only 'nutiteq' sources can be used with this constructor.
+         * @param style The style to use for the layer.
+         */
+        CartoOnlineVectorTileLayer(const std::string& source, CartoBaseMapStyle::CartoBaseMapStyle style);
+        /**
          * Constructs a CartoOnlineVectorTileLayer object from a source name and style asset package.
          * Style asset package defines visual style of the map and must be compatible with the source.
          * @param source The tile source name. The legacy source is "nutiteq.osm", new source is "mapzen.osm" but this requires different style asset package.

@@ -21,7 +21,7 @@
 namespace carto { namespace mvt {
     class MBVTFeatureDecoder::MBVTFeatureIterator : public carto::mvt::FeatureDecoder::FeatureIterator {
     public:
-        explicit MBVTFeatureIterator(const vector_tile::Tile& tile, const vector_tile::Tile::Layer& layer, const std::unordered_set<std::string>* fields, const cglib::mat3x3<float>& transform, const cglib::bbox2<float>& clipBox, float buffer, bool globalIdOverride, long tileIdOffset, std::map<std::vector<int>, std::shared_ptr<FeatureData>>& featureDataCache) :
+        explicit MBVTFeatureIterator(const vector_tile::Tile& tile, const vector_tile::Tile::Layer& layer, const std::unordered_set<std::string>* fields, const cglib::mat3x3<float>& transform, const cglib::bbox2<float>& clipBox, float buffer, bool globalIdOverride, long long tileIdOffset, std::map<std::vector<int>, std::shared_ptr<FeatureData>>& featureDataCache) :
             _tile(tile), _layer(layer), _transform(transform), _clipBox(clipBox), _buffer(buffer), _globalIdOverride(globalIdOverride), _tileIdOffset(tileIdOffset), _featureDataCache(featureDataCache)
         {
             for (int i = 0; i < tile.layers_size(); i++) {
@@ -319,7 +319,6 @@ namespace carto { namespace mvt {
         _transform(cglib::mat3x3<float>::identity()), _clipBox(cglib::vec2<float>(-0.1f, -0.1f), cglib::vec2<float>(1.1f, 1.1f)), _buffer(0), _globalIdOverride(false), _tileIdOffset(0), _tile(), _layerMap(), _logger(std::move(logger))
     {
         std::vector<unsigned char> uncompressedData;
-        uncompressedData.reserve(data.size());
         if (miniz::inflate_gzip(data.data(), data.size(), uncompressedData)) {
             protobuf::message tileMsg(uncompressedData.data(), uncompressedData.size());
             _tile = std::make_shared<vector_tile::Tile>(tileMsg);

@@ -42,33 +42,33 @@ namespace carto {
     }
         
     float Popup::getAnchorPointX() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _anchorPointX;
     }
     
     void Popup::setAnchorPointX(float anchorPointX) {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         _anchorPointX = anchorPointX;
     }
     
     float Popup::getAnchorPointY() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _anchorPointY;
     }
     
     void Popup::setAnchorPointY(float anchorPointY) {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         _anchorPointY = anchorPointY;
     }
     
     void Popup::setAnchorPoint(float anchorPointX, float anchorPointY) {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         _anchorPointX = anchorPointX;
         _anchorPointY = anchorPointY;
     }
     
     std::shared_ptr<PopupStyle> Popup::getStyle() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _style;
     }
     
@@ -78,7 +78,7 @@ namespace carto {
         }
 
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _style = style;
         }
         notifyElementChanged();

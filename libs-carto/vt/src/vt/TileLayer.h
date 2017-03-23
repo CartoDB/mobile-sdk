@@ -21,9 +21,8 @@
 namespace carto { namespace vt {
     class TileLayer final {
     public:
-        explicit TileLayer(std::string name, int layerIdx, std::shared_ptr<FloatFunction> opacity, boost::optional<CompOp> compOp, std::vector<std::shared_ptr<TileBitmap>> bitmaps, std::vector<std::shared_ptr<TileGeometry>> geometries, std::vector<std::shared_ptr<TileLabel>> labels) : _name(name), _layerIdx(layerIdx), _opacity(std::move(opacity)), _compOp(std::move(compOp)), _bitmaps(std::move(bitmaps)), _geometries(std::move(geometries)), _labels(std::move(labels)) { }
+        explicit TileLayer(int layerIdx, std::shared_ptr<FloatFunction> opacity, boost::optional<CompOp> compOp, std::vector<std::shared_ptr<TileBitmap>> bitmaps, std::vector<std::shared_ptr<TileGeometry>> geometries, std::vector<std::shared_ptr<TileLabel>> labels) : _layerIdx(layerIdx), _opacity(std::move(opacity)), _compOp(std::move(compOp)), _bitmaps(std::move(bitmaps)), _geometries(std::move(geometries)), _labels(std::move(labels)) { }
 
-        const std::string& getName() const { return _name; }
         int getLayerIndex() const { return _layerIdx; }
         std::shared_ptr<FloatFunction> getOpacity() const { return _opacity; }
         boost::optional<CompOp> getCompOp() const { return _compOp; }
@@ -31,6 +30,12 @@ namespace carto { namespace vt {
         const std::vector<std::shared_ptr<TileBitmap>>& getBitmaps() const { return _bitmaps; }
         const std::vector<std::shared_ptr<TileGeometry>>& getGeometries() const { return _geometries; }
         const std::vector<std::shared_ptr<TileLabel>>& getLabels() const { return _labels; }
+
+        std::size_t getFeatureCount() const {
+            std::size_t featureCount = std::accumulate(_geometries.begin(), _geometries.end(), static_cast<std::size_t>(0), [](std::size_t count, const std::shared_ptr<TileGeometry>& geometry) { return count + geometry->getFeatureCount(); });
+            featureCount += _labels.size();
+            return featureCount;
+        }
 
         std::size_t getResidentSize() const {
             std::size_t bitmapSize = std::accumulate(_bitmaps.begin(), _bitmaps.end(), static_cast<std::size_t>(0), [](std::size_t size, const std::shared_ptr<TileBitmap>& bitmap) { return size + bitmap->getResidentSize(); });
@@ -40,7 +45,6 @@ namespace carto { namespace vt {
         }
 
     private:
-        const std::string _name;
         const int _layerIdx;
         const std::shared_ptr<FloatFunction> _opacity;
         const boost::optional<CompOp> _compOp;

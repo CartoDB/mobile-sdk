@@ -13,6 +13,7 @@
 #include <memory>
 
 namespace carto {
+	class AnimationStyle;
 
     /**
      * A base class for BillboardStyleBuilder subclasses.
@@ -137,6 +138,17 @@ namespace carto {
          * @param scaleWithDPI The new state of the scale with DPI flag.
          */
         void setScaleWithDPI(bool scaleWithDPI);
+
+        /**
+         * Returns the animation style of the billboard.
+         * @return The animation style of the billboard. Can be null if animations are not used.
+         */
+        std::shared_ptr<AnimationStyle> getAnimationStyle() const;
+        /**
+         * Sets the animation style of the billboard.
+         * @param animStyle The new animation style of the billboard. Can be null if animations are not needed (the default).
+         */
+        void setAnimationStyle(const std::shared_ptr<AnimationStyle>& animStyle);
     
     protected:
         BillboardStyleBuilder();
@@ -153,6 +165,8 @@ namespace carto {
         int _placementPriority;
         
         bool _scaleWithDPI;
+
+        std::shared_ptr<AnimationStyle> _animationStyle;
     };
     
 }

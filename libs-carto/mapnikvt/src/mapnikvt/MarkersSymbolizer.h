@@ -35,7 +35,9 @@ namespace carto { namespace mvt {
         vt::Color _fill = vt::Color(0xff0000ff);
         float _fillOpacity = 1.0f;
         float _width = -1.0f;
+        bool _widthDefined = false;
         float _height = -1.0f;
+        bool _heightDefined = false;
         vt::Color _stroke = vt::Color(0xff000000);
         float _strokeOpacity = 1.0f;
         float _strokeWidth = 0.5f;

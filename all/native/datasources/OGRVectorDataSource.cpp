@@ -19,6 +19,7 @@
 #include "vectorelements/Polygon.h"
 #include "vectorelements/Marker.h"
 #include "vectorelements/Text.h"
+#include "vectorelements/BalloonPopup.h"
 #include "vectorelements/GeometryCollection.h"
 #include "renderers/components/CullState.h"
 #include "styles/StyleSelector.h"
@@ -29,6 +30,7 @@
 #include "styles/PolygonStyle.h"
 #include "styles/MarkerStyle.h"
 #include "styles/TextStyle.h"
+#include "styles/BalloonPopupStyle.h"
 #include "styles/GeometryCollectionStyle.h"
 #include "styles/GeometryCollectionStyleBuilder.h"
 #include "projections/EPSG3857.h"
@@ -140,7 +142,7 @@ namespace carto {
             _poLayer = _dataBase->_poLayers[layerIndex];
             _poLayerSpatialRef = std::make_shared<LayerSpatialReference>(_poLayer, projection);
         } else {
-            throw IndexRangeException("Invalid layer index");
+            throw OutOfRangeException("Invalid layer index");
         }
     }
     
@@ -494,13 +496,12 @@ namespace carto {
                 for (int i = 0; i < poFDefn->GetFieldCount(); i++) {
                     OGRFieldDefn* poFieldDefn = poFeature->GetFieldDefnRef(i);
                     Variant value;
-                    switch (poFieldDefn->getType()) {
+                    switch (poFieldDefn->GetType()) {
                         case OFTInteger:
-                        case OFTInteger64:
-                            value = Variant(poFeature->GetFieldAsInteger64());
+                            value = Variant(static_cast<long long>(poFeature->GetFieldAsInteger(i)));
                             break;
                         case OFTReal:
-                            value = Variant(poFeature->GetFieldAsDouble());
+                            value = Variant(poFeature->GetFieldAsDouble(i));
                             break;
                         default: {
                             const char* strValue = poFeature->GetFieldAsString(i);
@@ -669,7 +670,7 @@ namespace carto {
         return geometry;
     }
     
-    std::shared_ptr<VectorElement> OGRVectorDataSource::createVectorElement(const ViewState& viewState, const std::shared_ptr<Geometry>& geometry, const std::map<std::string, std::string>& metaData) const {
+    std::shared_ptr<VectorElement> OGRVectorDataSource::createVectorElement(const ViewState& viewState, const std::shared_ptr<Geometry>& geometry, const std::map<std::string, Variant>& metaData) const {
         StyleSelectorContext context(viewState, geometry, metaData);
         std::shared_ptr<Style> style = _styleSelector->getStyle(context);
         if (auto polygonStyle = std::dynamic_pointer_cast<PolygonStyle>(style)) {
@@ -700,6 +701,8 @@ namespace carto {
             return std::make_shared<Marker>(geometry, markerStyle);
         } else if (auto textStyle = std::dynamic_pointer_cast<TextStyle>(style)) {
             return std::make_shared<Text>(geometry, textStyle, ""); // NOTE: we assume that textStyle uses textField property
+        } else if (auto balloonPopupStyle = std::dynamic_pointer_cast<BalloonPopupStyle>(style)) {
+            return std::make_shared<BalloonPopup>(geometry, balloonPopupStyle, "", ""); // NOTE: we assume that balloonPopupStyle uses titleField/descriptionField property
         } else if (auto geomCollectionStyle = std::dynamic_pointer_cast<GeometryCollectionStyle>(style)) {
             if (auto multiGeometry = std::dynamic_pointer_cast<MultiGeometry>(geometry)) {
                 return std::make_shared<GeometryCollection>(multiGeometry, geomCollectionStyle);
@@ -781,12 +784,9 @@ namespace carto {
                 }
 
                 OGRFieldDefn* poFieldDefn = poFeature->GetFieldDefnRef(i);
-                switch (poFieldDefn->getType()) {
+                switch (poFieldDefn->GetType()) {
                     case OFTInteger:
                         poFeature->SetField(i, static_cast<int>(value.getLong()));
-                        break;
-                    case OFTInteger64:
-                        poFeature->SetField(i, value.getLong());
                         break;
                     case OFTReal:
                         poFeature->SetField(i, value.getDouble());

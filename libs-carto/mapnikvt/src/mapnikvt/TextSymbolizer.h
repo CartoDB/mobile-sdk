@@ -49,7 +49,7 @@ namespace carto { namespace mvt {
         vt::Color _haloFill = vt::Color(0xffffffff);
         float _haloOpacity = 1.0f;
         float _haloRadius = 0.0f;
-        float _orientation = 0.0f;
+        float _orientationAngle = 0.0f;
         bool _orientationDefined = false;
         float _dx = 0.0f;
         float _dy = 0.0f;
@@ -61,6 +61,7 @@ namespace carto { namespace mvt {
         float _lineSpacing = 0.0f;
         std::string _horizontalAlignment = "auto";
         std::string _verticalAlignment = "auto";
+        std::string _compOp = "src-over";
     };
 } }
 

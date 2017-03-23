@@ -274,6 +274,7 @@ namespace carto {
                                                                         _verticalOffset,
                                                                         _placementPriority,
                                                                         _scaleWithDPI,
+                                                                        _animationStyle,
                                                                         _cornerRadius,
                                                                         _leftColor,
                                                                         _leftImage,

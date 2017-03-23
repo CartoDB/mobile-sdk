@@ -123,7 +123,7 @@ namespace {
         #endif
         attribute vec4 aVertexAttribs;
         #ifdef PATTERN
-        uniform float uUVScale;
+        uniform vec2 uUVScale;
         #endif
         uniform float uBinormalScale;
         uniform vec3 uXAxis;
@@ -181,8 +181,7 @@ namespace {
         #endif
         attribute vec4 aVertexAttribs;
         #ifdef PATTERN
-        uniform float uUVScale;
-        uniform float uZoomScale;
+        uniform vec2 uUVScale;
         #endif
         uniform float uBinormalScale;
         uniform float uHalfResolution;
@@ -204,6 +203,7 @@ namespace {
             int styleIndex = int(aVertexAttribs[0]);
             float width = uWidthTable[styleIndex] * uHalfResolution;
             float roundedWidth = width + 1.0;
+            float gamma = uGamma * aVertexAttribs[3];
         #ifdef TRANSFORM
             vec3 pos = vec3(vec2(uTransformMatrix * vec3(aVertexPosition, 1.0)) + uBinormalScale * roundedWidth * aVertexBinormal, 0.0);
         #else
@@ -211,10 +211,10 @@ namespace {
         #endif
             vColor = uColorTable[styleIndex];
         #ifdef PATTERN
-            vUV = vec2(uZoomScale * uUVScale * aVertexUV.x, uUVScale * aVertexUV.y);
+            vUV = uUVScale * aVertexUV;
         #endif
-            vDist = vec2(aVertexAttribs[1], aVertexAttribs[2]) * (roundedWidth * uGamma);
-            vWidth = (width - 1.0) * uGamma;
+            vDist = vec2(aVertexAttribs[1], aVertexAttribs[2]) * (roundedWidth * gamma);
+            vWidth = (width - 1.0) * gamma;
             gl_Position = uMVPMatrix * vec4(pos, 1.0);
         }
     )GLSL";
@@ -249,8 +249,7 @@ namespace {
         #endif
         attribute vec4 aVertexAttribs;
         #ifdef PATTERN
-        uniform float uUVScale;
-        uniform float uZoomScale;
+        uniform vec2 uUVScale;
         #endif
         #ifdef TRANSFORM
         uniform mat3 uTransformMatrix;
@@ -271,7 +270,7 @@ namespace {
         #endif
             vColor = uColorTable[styleIndex];
         #ifdef PATTERN
-            vUV = uZoomScale * uUVScale * aVertexUV;
+            vUV = uUVScale * aVertexUV;
         #endif
             gl_Position = uMVPMatrix * vec4(pos, 1.0);
         }
@@ -526,7 +525,18 @@ namespace carto { namespace vt {
                     break;
                 }
                 if (blend && blendNode->tileId.intersects(oldBlendNode->tileId)) {
-                    if (_subTileBlending) {
+                    bool subTileBlending = _subTileBlending;
+
+                    // Disable subtile blending if alpha channel is used on the tile
+                    for (const std::shared_ptr<TileLayer>& layer : blendNode->tile->getLayers()) {
+                        for (const std::shared_ptr<TileBitmap>& bitmap : layer->getBitmaps()) {
+                            if (bitmap->getFormat() == TileBitmap::Format::RGBA) {
+                                subTileBlending = false;
+                            }
+                        }
+                    }
+
+                    if (subTileBlending) {
                         blendNode->childNodes.push_back(oldBlendNode);
                         oldBlendNode->blend = calculateBlendNodeOpacity(*oldBlendNode, 1.0f); // this is an optimization, to reduce extensive blending subtrees
                         oldBlendNode->childNodes.clear();
@@ -588,9 +598,12 @@ namespace carto { namespace vt {
         _compiledBitmapMap.clear();
         _compiledTileBitmapMap.clear();
         _compiledTileGeometryMap.clear();
+        _compiledLabelBatches.clear();
         _layerFBOs.clear();
         _screenFBO = ScreenFBO();
         _overlayFBO = ScreenFBO();
+        _tileVBO = TileVBO();
+        _screenVBO = ScreenVBO();
 
         // Reset shader programs
         _shaderManager.resetPrograms();
@@ -618,6 +631,15 @@ namespace carto { namespace vt {
             deleteBuffer(it->second.indicesVBO);
         }
         _compiledTileGeometryMap.clear();
+
+        // Release compiled label batches (VBOs)
+        for (auto it = _compiledLabelBatches.begin(); it != _compiledLabelBatches.end(); it++) {
+            deleteBuffer(it->second.vertexGeometryVBO);
+            deleteBuffer(it->second.vertexUVVBO);
+            deleteBuffer(it->second.vertexColorVBO);
+            deleteBuffer(it->second.vertexIndicesVBO);
+        }
+        _compiledLabelBatches.clear();
         
         // Release FBOs
         for (auto it = _layerFBOs.begin(); it != _layerFBOs.end(); it++) {
@@ -628,6 +650,10 @@ namespace carto { namespace vt {
         // Release screen and overlay FBOs
         deleteScreenFBO(_screenFBO);
         deleteScreenFBO(_overlayFBO);
+
+        // Release tile and screen VBOs
+        deleteTileVBO(_tileVBO);
+        deleteScreenVBO(_screenVBO);
 
         // Release shader programs
         _shaderManager.deletePrograms();
@@ -676,6 +702,9 @@ namespace carto { namespace vt {
             deleteScreenFBO(_screenFBO);
             deleteScreenFBO(_overlayFBO);
         }
+
+        // Reset label batch counter
+        _labelBatchCounter = 0;
     }
     
     bool GLTileRenderer::renderGeometry2D() {
@@ -699,6 +728,7 @@ namespace carto { namespace vt {
         // Update GL state
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendEquation(GL_FUNC_ADD);
         glDisable(GL_DEPTH_TEST);
         glDepthMask(GL_FALSE);
         if (_useStencil) {
@@ -714,8 +744,8 @@ namespace carto { namespace vt {
         bool update = renderBlendNodes2D(*_renderBlendNodes);
         
         // Restore GL state
-        glBlendEquation(GL_FUNC_ADD);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendEquation(GL_FUNC_ADD);
         glEnable(GL_DEPTH_TEST);
         glDepthMask(GL_TRUE);
         glDisable(GL_STENCIL_TEST);
@@ -763,6 +793,7 @@ namespace carto { namespace vt {
         // Update GL state
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendEquation(GL_FUNC_ADD);
         glDisable(GL_DEPTH_TEST);
         glDepthMask(GL_FALSE);
         glDisable(GL_STENCIL_TEST);
@@ -825,6 +856,8 @@ namespace carto { namespace vt {
                 it++;
             }
         }
+
+        // Note: we do not release unused label batches. These are unlinkely very big and can be reused later
     }
 
     bool GLTileRenderer::findGeometryIntersections(const cglib::ray3<double>& ray, std::vector<std::tuple<TileId, double, long long>>& results, float radius, bool geom2D, bool geom3D) const {
@@ -848,8 +881,6 @@ namespace carto { namespace vt {
                 const RenderNode& renderNode = it->second;
                 cglib::mat4x4<double> tileMatrix = calculateTileMatrix(renderNode.tileId);
                 cglib::mat4x4<double> invTileMatrix = cglib::inverse(tileMatrix);
-                double radiusTile = radius / cglib::length(cglib::proj_o(cglib::row_vector(tileMatrix, 0)));
-
                 cglib::mat4x4<double> tileToClipMatrix = cglib::mat4x4<double>::identity();
                 if (blendNode->tileId.zoom > renderNode.tileId.zoom) {
                     tileToClipMatrix = cglib::inverse(calculateTileMatrix(blendNode->tileId)) * tileMatrix;
@@ -871,7 +902,7 @@ namespace carto { namespace vt {
                         cglib::ray3<double> rayTile = cglib::transform_ray(ray, invTileMatrix);
 
                         std::vector<std::pair<double, long long>> resultsTile;
-                        findTileGeometryIntersections(renderNode.tileId, geometry, rayTile, static_cast<float>(radiusTile), resultsTile);
+                        findTileGeometryIntersections(renderNode.tileId, geometry, rayTile, static_cast<float>(radius), resultsTile);
 
                         for (std::pair<double, long long> resultTile : resultsTile) {
                             long long id = resultTile.second;
@@ -918,6 +949,49 @@ namespace carto { namespace vt {
                             results.emplace_back(label->getTileId(), result, label->getLocalId());
                         }
                     }
+                }
+            }
+        }
+
+        return results.size() > initialResults;
+    }
+
+    bool GLTileRenderer::findBitmapIntersections(const cglib::ray3<double>& ray, std::vector<std::tuple<TileId, double, TileBitmap, cglib::vec2<float>>>& results) const {
+        std::lock_guard<std::mutex> lock(*_mutex);
+
+        // Calculate intersection with z=0 plane
+        double t = 0;
+        if (!cglib::intersect_plane(cglib::vec4<double>(0, 0, 1, 0), ray, &t)) {
+            return false;
+        }
+
+        // First find the intersecting tile. NOTE: we ignore building height information
+        std::size_t initialResults = results.size();
+        for (const std::shared_ptr<BlendNode>& blendNode : *_blendNodes) {
+            std::multimap<int, RenderNode> renderNodeMap;
+            if (!buildRenderNodes(*blendNode, 1.0f, renderNodeMap)) {
+                continue;
+            }
+
+            for (auto it = renderNodeMap.begin(); it != renderNodeMap.end(); it++) {
+                const RenderNode& renderNode = it->second;
+                cglib::mat4x4<double> tileMatrix = calculateTileMatrix(renderNode.tileId);
+                cglib::mat4x4<double> invTileMatrix = cglib::inverse(tileMatrix);
+                cglib::mat4x4<double> tileToClipMatrix = cglib::mat4x4<double>::identity();
+                if (blendNode->tileId.zoom > renderNode.tileId.zoom) {
+                    tileToClipMatrix = cglib::inverse(calculateTileMatrix(blendNode->tileId)) * tileMatrix;
+                }
+                cglib::vec3<double> pos2DClip = cglib::transform_point(ray(t), tileToClipMatrix * invTileMatrix);
+
+                // Clipping test
+                if (!(pos2DClip(0) >= 0 && pos2DClip(0) <= 1 && pos2DClip(1) >= 0 && pos2DClip(1) <= 1)) {
+                    continue;
+                }
+
+                // Store all bitmaps
+                cglib::vec3<double> posTile = cglib::transform_point(ray(t), invTileMatrix);
+                for (const std::shared_ptr<TileBitmap>& bitmap : renderNode.layer->getBitmaps()) {
+                    results.emplace_back(renderNode.tileId, cglib::dot_product(ray(t) - ray.origin, ray.direction) / cglib::dot_product(ray.direction, ray.direction), *bitmap, cglib::vec2<float>(static_cast<float>(posTile(0)), static_cast<float>(posTile(1))));
                 }
             }
         }
@@ -1126,20 +1200,17 @@ namespace carto { namespace vt {
             cglib::vec3<float> p2 = decodeVertex(geometry, index2);
 
             if (geometry->getType() == TileGeometry::Type::POINT) {
-                p0 += extendOffset(decodePointOffset(geometry, index0, xAxis, yAxis), radius);
-                p1 += extendOffset(decodePointOffset(geometry, index1, xAxis, yAxis), radius);
-                p2 += extendOffset(decodePointOffset(geometry, index2, xAxis, yAxis), radius);
+                p0 += decodePointOffset(geometry, index0, xAxis, yAxis, radius);
+                p1 += decodePointOffset(geometry, index1, xAxis, yAxis, radius);
+                p2 += decodePointOffset(geometry, index2, xAxis, yAxis, radius);
             }
             else if (geometry->getType() == TileGeometry::Type::LINE) {
-                p0 += extendOffset(decodeLineBinormal(geometry, index0), radius);
-                p1 += extendOffset(decodeLineBinormal(geometry, index1), radius);
-                p2 += extendOffset(decodeLineBinormal(geometry, index2), radius);
+                p0 += decodeLineOffset(geometry, index0, radius);
+                p1 += decodeLineOffset(geometry, index1, radius);
+                p2 += decodeLineOffset(geometry, index2, radius);
             }
             else if (geometry->getType() == TileGeometry::Type::POLYGON) {
-                cglib::vec3<float> center = (p0 + p1 + p2) * (1.0f / 3.0f);
-                p0 = center + extendOffset(p0 - center, radius);
-                p1 = center + extendOffset(p1 - center, radius);
-                p2 = center + extendOffset(p2 - center, radius);
+                // do not extend
             }
             else if (geometry->getType() == TileGeometry::Type::POLYGON3D) {
                 p0 += decodePolygon3DOffset(geometry, index0);
@@ -1171,45 +1242,53 @@ namespace carto { namespace vt {
 
         std::array<cglib::vec3<double>, 4> p;
         for (int i = 0; i < 4; i++) {
-            cglib::vec3<float> dp = center + extendOffset(envelope[i] - center, radius);
-            p[i] = _viewState.origin + cglib::vec3<double>::convert(dp);
+            cglib::vec3<float> offset = envelope[i] - center;
+            if (cglib::length(offset) != 0) {
+                offset = offset * (1.0f + radius * label->getScale() / cglib::length(offset));
+            }
+            p[i] = _viewState.origin + cglib::vec3<double>::convert(center + offset);
         }
 
         return cglib::intersect_triangle(p[0], p[1], p[2], ray, &result) ||
                cglib::intersect_triangle(p[0], p[2], p[3], ray, &result);
     }
 
-    cglib::vec3<float> GLTileRenderer::extendOffset(const cglib::vec3<float>& offset, float radius) {
-        float len = cglib::length(offset);
-        if (len == 0) {
-            return offset;
-        }
-        return offset * (1.0f + radius / len);
-    }
-
     cglib::vec3<float> GLTileRenderer::decodeVertex(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const {
         const TileGeometry::GeometryLayoutParameters& geometryLayoutParams = geometry->getGeometryLayoutParameters();
         std::size_t vertexOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.vertexOffset;
         const short* vertexPtr = reinterpret_cast<const short*>(&geometry->getVertexGeometry()[vertexOffset]);
-        return cglib::vec3<float>(vertexPtr[0], vertexPtr[1], 0) * (1.0f / geometryLayoutParams.vertexScale);
+        cglib::vec2<float> pos = cglib::vec2<float>(vertexPtr[0], vertexPtr[1]) * (1.0f / geometryLayoutParams.vertexScale);
+        if (geometry->getStyleParameters().transform && geometry->getType() != TileGeometry::Type::POINT) {
+            pos = cglib::transform_point(pos, geometry->getStyleParameters().transform.get());
+        }
+        return cglib::vec3<float>(pos(0), pos(1), 0);
     }
 
-    cglib::vec3<float> GLTileRenderer::decodePointOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index, const cglib::vec3<float>& xAxis, const cglib::vec3<float>& yAxis) const {
+    cglib::vec3<float> GLTileRenderer::decodePointOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index, const cglib::vec3<float>& xAxis, const cglib::vec3<float>& yAxis, float radius) const {
         const TileGeometry::GeometryLayoutParameters& geometryLayoutParams = geometry->getGeometryLayoutParameters();
         std::size_t binormalOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.binormalOffset;
         const short* binormalPtr = reinterpret_cast<const short*>(&geometry->getVertexGeometry()[binormalOffset]);
-        cglib::vec2<float> xy = cglib::vec2<float>(binormalPtr[0], binormalPtr[1]) * (geometry->getGeometryScale() / geometry->getTileSize() / geometryLayoutParams.binormalScale);
-        return xAxis * xy(0) + yAxis * xy(1);
+        cglib::vec2<float> xy = cglib::vec2<float>(binormalPtr[0], binormalPtr[1]) * (1.0f / geometryLayoutParams.binormalScale);
+        if (geometry->getStyleParameters().transform) {
+            xy = cglib::transform_point(xy, geometry->getStyleParameters().transform.get());
+        }
+        if (cglib::length(xy) != 0) {
+            xy = xy * (1.0f + radius / cglib::length(xy));
+        }
+        return (xAxis * xy(0) + yAxis * xy(1)) * (geometry->getGeometryScale() / geometry->getTileSize());
     }
 
-    cglib::vec3<float> GLTileRenderer::decodeLineBinormal(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const {
+    cglib::vec3<float> GLTileRenderer::decodeLineOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index, float radius) const {
         const TileGeometry::GeometryLayoutParameters& geometryLayoutParams = geometry->getGeometryLayoutParameters();
         std::size_t binormalOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.binormalOffset;
         const short* binormalPtr = reinterpret_cast<const short*>(&geometry->getVertexGeometry()[binormalOffset]);
         std::size_t attribOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.attribsOffset;
         const char* attribPtr = reinterpret_cast<const char*>(&geometry->getVertexGeometry()[attribOffset]);
-        float width = 0.5f * (*geometry->getStyleParameters().widthTable[attribPtr[0]])(_viewState) * geometry->getGeometryScale() / geometry->getTileSize();
-        return cglib::vec3<float>(binormalPtr[0], binormalPtr[1], 0) * (width / geometryLayoutParams.binormalScale);
+        float width = 0.5f * std::abs((*geometry->getStyleParameters().widthTable[attribPtr[0]])(_viewState));
+        if (width > 0) {
+            width += radius;
+        }
+        return cglib::vec3<float>(binormalPtr[0], binormalPtr[1], 0) * (width * geometry->getGeometryScale() / geometry->getTileSize() / geometryLayoutParams.binormalScale);
     }
 
     cglib::vec3<float> GLTileRenderer::decodePolygon3DOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const {
@@ -1396,6 +1475,7 @@ namespace carto { namespace vt {
             glDepthMask(GL_FALSE);
             glEnable(GL_BLEND);
             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendEquation(GL_FUNC_ADD);
 
             blendScreenTexture(1.0f, _overlayFBO.colorTexture);
 
@@ -1419,7 +1499,7 @@ namespace carto { namespace vt {
             
             std::size_t verticesSize = _labelVertices.size();
             label->calculateVertexData(_viewState, _labelVertices, _labelTexCoords, _labelIndices);
-            Color color = label->getColor() * label->getOpacity();
+            Color color = Color::fromColorOpacity(label->getColor(), label->getOpacity());
             _labelColors.fill(color.rgba(), _labelVertices.size() - verticesSize);
 
             if (_labelVertices.size() >= 32768) { // flush the batch if largest vertex index is getting 'close' to 64k limit
@@ -1435,8 +1515,6 @@ namespace carto { namespace vt {
     }
     
     void GLTileRenderer::blendScreenTexture(float opacity, GLuint texture) {
-        static const GLfloat screenVertices[8] = { -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f };
-        
         if (opacity <= 0) {
             return;
         }
@@ -1445,7 +1523,11 @@ namespace carto { namespace vt {
         glUseProgram(shaderProgram);
         checkGLError();
         
-        glVertexAttribPointer(glGetAttribLocation(shaderProgram, "aVertexPosition"), 2, GL_FLOAT, GL_FALSE, 0, &screenVertices[0]);
+        if (_screenVBO.vbo == 0) {
+            _screenVBO = createScreenVBO();
+        }
+        glBindBuffer(GL_ARRAY_BUFFER, _screenVBO.vbo);
+        glVertexAttribPointer(glGetAttribLocation(shaderProgram, "aVertexPosition"), 2, GL_FLOAT, GL_FALSE, 0, 0);
         glEnableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexPosition"));
         
         cglib::mat4x4<float> mvpMatrix = cglib::mat4x4<float>::identity();
@@ -1463,11 +1545,11 @@ namespace carto { namespace vt {
         glBindTexture(GL_TEXTURE_2D, 0);
         
         glDisableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexPosition"));
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
     void GLTileRenderer::blendTileTexture(const TileId& tileId, float opacity, GLuint texture) {
-        static const GLfloat tileVertices[8] = { 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f };
-
         if (opacity <= 0) {
             return;
         }
@@ -1476,7 +1558,11 @@ namespace carto { namespace vt {
         glUseProgram(shaderProgram);
         checkGLError();
 
-        glVertexAttribPointer(glGetAttribLocation(shaderProgram, "aVertexPosition"), 2, GL_FLOAT, GL_FALSE, 0, &tileVertices[0]);
+        if (_tileVBO.vbo == 0) {
+            _tileVBO = createTileVBO();
+        }
+        glBindBuffer(GL_ARRAY_BUFFER, _tileVBO.vbo);
+        glVertexAttribPointer(glGetAttribLocation(shaderProgram, "aVertexPosition"), 2, GL_FLOAT, GL_FALSE, 0, 0);
         glEnableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexPosition"));
 
         cglib::mat4x4<float> mvpMatrix = calculateTileMVPMatrix(tileId);
@@ -1494,16 +1580,20 @@ namespace carto { namespace vt {
         glBindTexture(GL_TEXTURE_2D, 0);
 
         glDisableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexPosition"));
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
     
     void GLTileRenderer::renderTileMask(const TileId& tileId) {
-        static const GLfloat tileVertices[8] = { 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f };
-
         GLuint shaderProgram = _shaderManager.createProgram("background", _patternTransformContext[0][0]);
         glUseProgram(shaderProgram);
         checkGLError();
         
-        glVertexAttribPointer(glGetAttribLocation(shaderProgram, "aVertexPosition"), 2, GL_FLOAT, GL_FALSE, 0, &tileVertices[0]);
+        if (_tileVBO.vbo == 0) {
+            _tileVBO = createTileVBO();
+        }
+        glBindBuffer(GL_ARRAY_BUFFER, _tileVBO.vbo);
+        glVertexAttribPointer(glGetAttribLocation(shaderProgram, "aVertexPosition"), 2, GL_FLOAT, GL_FALSE, 0, 0);
         glEnableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexPosition"));
         
         cglib::mat4x4<float> mvpMatrix = calculateTileMVPMatrix(tileId);
@@ -1516,11 +1606,11 @@ namespace carto { namespace vt {
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         
         glDisableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexPosition"));
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
     
     void GLTileRenderer::renderTileBackground(const TileId& tileId, float opacity) {
-        static const GLfloat tileVertices[8] = { 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f };
-
         if (opacity <= 0) {
             return;
         }
@@ -1532,7 +1622,11 @@ namespace carto { namespace vt {
         glUseProgram(shaderProgram);
         checkGLError();
         
-        glVertexAttribPointer(glGetAttribLocation(shaderProgram, "aVertexPosition"), 2, GL_FLOAT, GL_FALSE, 0, &tileVertices[0]);
+        if (_tileVBO.vbo == 0) {
+            _tileVBO = createTileVBO();
+        }
+        glBindBuffer(GL_ARRAY_BUFFER, _tileVBO.vbo);
+        glVertexAttribPointer(glGetAttribLocation(shaderProgram, "aVertexPosition"), 2, GL_FLOAT, GL_FALSE, 0, 0);
         glEnableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexPosition"));
         
         cglib::mat4x4<float> mvpMatrix = calculateTileMVPMatrix(tileId);
@@ -1569,11 +1663,11 @@ namespace carto { namespace vt {
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         
         glDisableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexPosition"));
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
     void GLTileRenderer::renderTileBitmap(const TileId& tileId, const TileId& targetTileId, float blend, float opacity, const std::shared_ptr<TileBitmap>& bitmap) {
-        static const GLfloat tileVertices[8] = { 1.0f, 0.0f, 1.0f, 1.0f,0.0f, 0.0f, 0.0f, 1.0f };
-
         if (blend * opacity <= 0) {
             return;
         }
@@ -1582,7 +1676,11 @@ namespace carto { namespace vt {
         glUseProgram(shaderProgram);
         checkGLError();
 
-        glVertexAttribPointer(glGetAttribLocation(shaderProgram, "aVertexPosition"), 2, GL_FLOAT, GL_FALSE, 0, &tileVertices[0]);
+        if (_tileVBO.vbo == 0) {
+            _tileVBO = createTileVBO();
+        }
+        glBindBuffer(GL_ARRAY_BUFFER, _tileVBO.vbo);
+        glVertexAttribPointer(glGetAttribLocation(shaderProgram, "aVertexPosition"), 2, GL_FLOAT, GL_FALSE, 0, 0);
         glEnableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexPosition"));
 
         cglib::mat4x4<float> mvpMatrix = calculateTileMVPMatrix(targetTileId.zoom > tileId.zoom ? targetTileId : tileId);
@@ -1591,7 +1689,7 @@ namespace carto { namespace vt {
         CompiledBitmap compiledTileBitmap;
         auto it = _compiledTileBitmapMap.find(bitmap);
         if (it == _compiledTileBitmapMap.end()) {
-            // Use a different strategy is the bitmap is not of POT dimensions, simply do not create the mipmaps
+            // Use a different strategy if the bitmap is not of POT dimensions, simply do not create the mipmaps
             bool pow2Size = (bitmap->getWidth() & (bitmap->getWidth() - 1)) == 0 && (bitmap->getHeight() & (bitmap->getHeight() - 1)) == 0;
 
             compiledTileBitmap.texture = createTexture();
@@ -1612,9 +1710,13 @@ namespace carto { namespace vt {
                 format = GL_RGBA;
                 break;
             }
-            glTexImage2D(GL_TEXTURE_2D, 0, format, bitmap->getWidth(), bitmap->getHeight(), 0, format, GL_UNSIGNED_BYTE, bitmap->getData().data());
+            glTexImage2D(GL_TEXTURE_2D, 0, format, bitmap->getWidth(), bitmap->getHeight(), 0, format, GL_UNSIGNED_BYTE, bitmap->getData().empty() ? NULL : bitmap->getData().data());
             if (pow2Size) {
                 glGenerateMipmap(GL_TEXTURE_2D);
+            }
+
+            if (!_interactionEnabled) {
+                bitmap->releaseBitmap(); // if interaction is enabled, keep the original bitmap
             }
 
             _compiledTileBitmapMap[bitmap] = compiledTileBitmap;
@@ -1631,14 +1733,16 @@ namespace carto { namespace vt {
         float s = 1.0f / (1 << (std::max(tileId.zoom, targetTileId.zoom) - tileId.zoom));
         float x = (targetTileId.x & deltaMask) * s;
         float y = (targetTileId.y & deltaMask) * s;
-        glUniform2fv(glGetUniformLocation(shaderProgram, "uUVScale"), 1, cglib::vec2<float>(s, s).data());
-        glUniform2fv(glGetUniformLocation(shaderProgram, "uUVOffset"), 1, cglib::vec2<float>(x, y).data());
+        glUniform2f(glGetUniformLocation(shaderProgram, "uUVScale"), s, s);
+        glUniform2f(glGetUniformLocation(shaderProgram, "uUVOffset"), x, y);
 
         glUniform1f(glGetUniformLocation(shaderProgram, "uOpacity"), blend * opacity);
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
         glDisableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexPosition"));
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 
     void GLTileRenderer::renderTileGeometry(const TileId& tileId, const TileId& targetTileId, float blend, float opacity, const std::shared_ptr<TileGeometry>& geometry) {
@@ -1695,8 +1799,16 @@ namespace carto { namespace vt {
         }
         
         if (styleParams.pattern) {
-            glUniform1f(glGetUniformLocation(shaderProgram, "uUVScale"), 1.0f / (geometryLayoutParams.texCoordScale * styleParams.pattern->widthScale));
-            glUniform1f(glGetUniformLocation(shaderProgram, "uZoomScale"), std::pow(2.0f, static_cast<int>(_zoom) - tileId.zoom));
+            float zoomScale = std::pow(2.0f, static_cast<int>(_zoom) - tileId.zoom);
+            float coordScale = 1.0f / (geometryLayoutParams.texCoordScale * styleParams.pattern->widthScale);
+            cglib::vec2<float> uvScale(coordScale, coordScale);
+            if (geometry->getType() == TileGeometry::Type::LINE) {
+                uvScale(0) *= zoomScale;
+            }
+            else if (geometry->getType() == TileGeometry::Type::POLYGON) {
+                uvScale *= zoomScale;
+            }
+            glUniform2fv(glGetUniformLocation(shaderProgram, "uUVScale"), 1, uvScale.data());
             
             CompiledBitmap compiledBitmap;
             auto itBitmap = _compiledBitmapMap.find(styleParams.pattern->bitmap);
@@ -1738,7 +1850,7 @@ namespace carto { namespace vt {
 
         std::array<cglib::vec4<float>, TileGeometry::StyleParameters::MAX_PARAMETERS> colors;
         for (int i = 0; i < styleParams.parameterCount; i++) {
-            Color color = (*styleParams.colorTable[i])(_viewState) * (blend * opacity * (*styleParams.opacityTable[i])(_viewState));
+            Color color = Color::fromColorOpacity((*styleParams.colorTable[i])(_viewState) * blend, opacity * (*styleParams.opacityTable[i])(_viewState));
             colors[i] = color.rgba();
         }
         
@@ -1754,9 +1866,9 @@ namespace carto { namespace vt {
             float gamma = 0.5f;
             std::array<float, TileGeometry::StyleParameters::MAX_PARAMETERS> widths;
             for (int i = 0; i < styleParams.parameterCount; i++) {
-                float width = 0.5f * (*styleParams.widthTable[i])(_viewState) * geometry->getGeometryScale() / geometry->getTileSize();
+                float width = 0.5f * std::abs((*styleParams.widthTable[i])(_viewState)) * geometry->getGeometryScale() / geometry->getTileSize();
                 float pixelWidth = 2.0f * _halfResolution * width;
-                if (pixelWidth < 1.0f) {
+                if (pixelWidth > 0.0f && pixelWidth < 1.0f) {
                     colors[i] = colors[i] * pixelWidth; // should do gamma correction here, but simple implementation gives closer results to Mapnik
                     width = 1.0f / (2.0f * _halfResolution);
                 }
@@ -1839,25 +1951,24 @@ namespace carto { namespace vt {
             return;
         }
 
-        GLuint shaderProgram = _shaderManager.createProgram("label", _patternTransformContext[0][0]);
-        glUseProgram(shaderProgram);
-        checkGLError();
+        CompiledLabelBatch compiledLabelBatch;
+        auto itBatch = _compiledLabelBatches.find(_labelBatchCounter);
+        if (itBatch == _compiledLabelBatches.end()) {
+            compiledLabelBatch.vertexGeometryVBO = createBuffer();
+            compiledLabelBatch.vertexUVVBO = createBuffer();
+            compiledLabelBatch.vertexColorVBO = createBuffer();
+            compiledLabelBatch.vertexIndicesVBO = createBuffer();
 
-        cglib::mat4x4<float> mvpMatrix = cglib::mat4x4<float>::convert(_projectionMatrix * _labelMatrix);
-        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "uMVPMatrix"), 1, GL_FALSE, mvpMatrix.data());
-
-        glVertexAttribPointer(glGetAttribLocation(shaderProgram, "aVertexPosition"), 3, GL_FLOAT, GL_FALSE, 0, _labelVertices.data());
-        glEnableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexPosition"));
-
-        glVertexAttribPointer(glGetAttribLocation(shaderProgram, "aVertexUV"), 2, GL_FLOAT, GL_FALSE, 0, _labelTexCoords.data());
-        glEnableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexUV"));
-
-        glVertexAttribPointer(glGetAttribLocation(shaderProgram, "aVertexColor"), 4, GL_FLOAT, GL_FALSE, 0, _labelColors.data());
-        glEnableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexColor"));
+            _compiledLabelBatches[_labelBatchCounter] = compiledLabelBatch;
+        }
+        else {
+            compiledLabelBatch = itBatch->second;
+        }
+        _labelBatchCounter++;
 
         CompiledBitmap compiledBitmap;
-        auto it = _compiledBitmapMap.find(bitmap);
-        if (it == _compiledBitmapMap.end()) {
+        auto itBitmap = _compiledBitmapMap.find(bitmap);
+        if (itBitmap == _compiledBitmapMap.end()) {
             compiledBitmap.texture = createTexture();
             glBindTexture(GL_TEXTURE_2D, compiledBitmap.texture);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -1877,21 +1988,49 @@ namespace carto { namespace vt {
             _compiledBitmapMap[bitmap] = compiledBitmap;
         }
         else {
-            compiledBitmap = it->second;
+            compiledBitmap = itBitmap->second;
         }
+
+        GLuint shaderProgram = _shaderManager.createProgram("label", _patternTransformContext[0][0]);
+        glUseProgram(shaderProgram);
+        checkGLError();
+
+        cglib::mat4x4<float> mvpMatrix = cglib::mat4x4<float>::convert(_projectionMatrix * _labelMatrix);
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "uMVPMatrix"), 1, GL_FALSE, mvpMatrix.data());
+
+        glBindBuffer(GL_ARRAY_BUFFER, compiledLabelBatch.vertexGeometryVBO);
+        glBufferData(GL_ARRAY_BUFFER, _labelVertices.size() * 3 * sizeof(float), _labelVertices.data(), GL_DYNAMIC_DRAW);
+        glVertexAttribPointer(glGetAttribLocation(shaderProgram, "aVertexPosition"), 3, GL_FLOAT, GL_FALSE, 0, 0);
+        glEnableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexPosition"));
+
+        glBindBuffer(GL_ARRAY_BUFFER, compiledLabelBatch.vertexUVVBO);
+        glBufferData(GL_ARRAY_BUFFER, _labelTexCoords.size() * 2 * sizeof(float), _labelTexCoords.data(), GL_DYNAMIC_DRAW);
+        glVertexAttribPointer(glGetAttribLocation(shaderProgram, "aVertexUV"), 2, GL_FLOAT, GL_FALSE, 0, 0);
+        glEnableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexUV"));
+
+        glBindBuffer(GL_ARRAY_BUFFER, compiledLabelBatch.vertexColorVBO);
+        glBufferData(GL_ARRAY_BUFFER, _labelColors.size() * 4 * sizeof(float), _labelColors.data(), GL_DYNAMIC_DRAW);
+        glVertexAttribPointer(glGetAttribLocation(shaderProgram, "aVertexColor"), 4, GL_FLOAT, GL_FALSE, 0, 0);
+        glEnableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexColor"));
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, compiledLabelBatch.vertexIndicesVBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, _labelIndices.size() * sizeof(unsigned short), _labelIndices.data(), GL_DYNAMIC_DRAW);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, compiledBitmap.texture);
         glUniform1i(glGetUniformLocation(shaderProgram, "uBitmap"), 0);
         glUniform2f(glGetUniformLocation(shaderProgram, "uUVScale"), 1.0f / bitmap->width, 1.0f / bitmap->height);
 
-        glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(_labelIndices.size()), GL_UNSIGNED_SHORT, _labelIndices.data());
+        glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(_labelIndices.size()), GL_UNSIGNED_SHORT, 0);
 
         glDisableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexColor"));
 
         glDisableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexUV"));
 
         glDisableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexPosition"));
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         _labelVertices.clear();
         _labelTexCoords.clear();
@@ -1917,14 +2056,15 @@ namespace carto { namespace vt {
             { CompOp::ZERO,     { GL_FUNC_ADD, GL_ZERO, GL_ZERO } },
             { CompOp::PLUS,     { GL_FUNC_ADD, GL_ONE, GL_ONE } },
             { CompOp::MINUS,    { GL_FUNC_REVERSE_SUBTRACT, GL_ONE, GL_ONE } },
-            { CompOp::MULTIPLY, { GL_FUNC_ADD, GL_DST_COLOR, GL_ZERO } },
+            { CompOp::MULTIPLY, { GL_FUNC_ADD, GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA } },
+            { CompOp::SCREEN,   { GL_FUNC_ADD, GL_ONE, GL_ONE_MINUS_SRC_COLOR } },
             { CompOp::DARKEN,   { GL_MIN_EXT,  GL_ONE, GL_ONE } },
-            { CompOp::LIGHTEN,  { GL_MAX_EXT,  GL_ONE, GL_ONE } },
+            { CompOp::LIGHTEN,  { GL_MAX_EXT,  GL_ONE, GL_ONE } }
         };
         auto it = compOpBlendStates.find(compOp);
         if (it != compOpBlendStates.end()) {
-            glBlendEquation(it->second.blendEquation);
             glBlendFunc(it->second.blendFuncSrc, it->second.blendFuncDst);
+            glBlendEquation(it->second.blendEquation);
         }
     }
 
@@ -2082,5 +2222,33 @@ namespace carto { namespace vt {
             screenFBO.depthStencilRB = 0;
         }
         deleteTexture(screenFBO.colorTexture);
+    }
+
+    GLTileRenderer::TileVBO GLTileRenderer::createTileVBO() {
+        static const float tileVertices[8] = { 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f };
+
+        TileVBO tileVBO;
+        tileVBO.vbo = createBuffer();
+        glBindBuffer(GL_ARRAY_BUFFER, tileVBO.vbo);
+        glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), tileVertices, GL_STATIC_DRAW);
+        return tileVBO;
+    }
+
+    void GLTileRenderer::deleteTileVBO(TileVBO& tileVBO) {
+        deleteBuffer(tileVBO.vbo);
+    }
+
+    GLTileRenderer::ScreenVBO GLTileRenderer::createScreenVBO() {
+        static const float screenVertices[8] = { -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f };
+
+        ScreenVBO screenVBO;
+        screenVBO.vbo = createBuffer();
+        glBindBuffer(GL_ARRAY_BUFFER, screenVBO.vbo);
+        glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), screenVertices, GL_STATIC_DRAW);
+        return screenVBO;
+    }
+
+    void GLTileRenderer::deleteScreenVBO(ScreenVBO& screenVBO) {
+        deleteBuffer(screenVBO.vbo);
     }
 } }

@@ -17,10 +17,12 @@ namespace carto {
     public:
         explicit CFImpl(bool log);
 
+        virtual void setTimeout(int milliseconds);
         virtual bool makeRequest(const HTTPClient::Request& request, HeadersFn headersFn, DataFn dataFn) const;
 
     private:
         bool _log;
+        int _timeout;
     };
 
 }

@@ -25,6 +25,8 @@
 #include "utils/Log.h"
 #include "utils/ThreadUtils.h"
 
+#include <algorithm>
+
 namespace carto {
 
     MapRenderer::MapRenderer(const std::shared_ptr<Layers>& layers,
@@ -36,7 +38,7 @@ namespace carto {
         _styleCache(),
         _cullWorker(std::make_shared<CullWorker>()),
         _cullThread(),
-        _backgroundRenderer(*options),
+        _backgroundRenderer(*options, *layers),
         _watermarkRenderer(*options),
         _billboardSorter(),
         _billboardDrawDataBuffer(),
@@ -109,6 +111,14 @@ namespace carto {
         return viewState;
     }
         
+    MapPos MapRenderer::screenToMap(const ScreenPos& screenPos, const ViewState& viewState) {
+        return _options->getBaseProjection()->fromInternal(screenToWorld(screenPos, viewState));
+    }
+
+    ScreenPos MapRenderer::mapToScreen(const MapPos& mapPos, const ViewState& viewState) {
+        return worldToScreen(_options->getBaseProjection()->toInternal(mapPos), viewState);
+    }
+
     void MapRenderer::requestRedraw() const {
         DirectorPtr<RedrawRequestListener> redrawRequestListener = _redrawRequestListener;
 
@@ -342,6 +352,12 @@ namespace carto {
             MapRange zoomRange(_options->getZoomRange());
             float zoom = _options->getZoomRange().getMin();
             float zoomStep = zoomRange.length() * 0.5f;
+            if (std::all_of(points.begin(), points.end(), [&points](const MapPos& pos) {
+                return pos == points.front();
+            })) {
+                zoom = oldZoom;
+                zoomStep = 0;
+            }
 
             // Hack: if view size is zero (view size not known), use given screen bounds for view dimensions
             ViewState viewState(_viewState);
@@ -416,14 +432,14 @@ namespace carto {
         calculateCameraEvent(cameraZoomEvent, durationSeconds, false);
     }
     
-    MapPos MapRenderer::screenToWorld(const ScreenPos& screenPos) const {
+    MapPos MapRenderer::screenToWorld(const ScreenPos& screenPos, const ViewState& viewState) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _viewState.screenToWorldPlane(screenPos, _options);
+        return viewState.screenToWorldPlane(screenPos, _options);
     }
     
-    ScreenPos MapRenderer::worldToScreen(const MapPos& worldPos) const {
+    ScreenPos MapRenderer::worldToScreen(const MapPos& worldPos, const ViewState& viewState) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _viewState.worldToScreen(worldPos, *_options);
+        return viewState.worldToScreen(worldPos, *_options);
     }
     
     void MapRenderer::onSurfaceCreated() {
@@ -434,13 +450,30 @@ namespace carto {
         glPixelStorei(GL_PACK_ALIGNMENT, 1);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
+        // Reset shader manager
+        if (_shaderManager) {
+            _shaderManager->setGLThreadId(std::thread::id());
+        }
         _shaderManager = std::make_shared<ShaderManager>();
         _shaderManager->setGLThreadId(std::this_thread::get_id());
+
+        // Reset texture manager
+        if (_textureManager) {
+            _textureManager->setGLThreadId(std::thread::id());
+        }
         _textureManager = std::make_shared<TextureManager>();
         _textureManager->setGLThreadId(std::this_thread::get_id());
 
+        // Reset style cache
         _styleCache = std::make_shared<StyleTextureCache>(_textureManager, STYLE_TEXTURE_CACHE_SIZE);
 
+        // Drop all thread callbacks, as context is invalidated
+        {
+            std::lock_guard<std::mutex> lock(_renderThreadCallbacksMutex);
+            _renderThreadCallbacks.clear();
+        }
+
+        // Notify renderers about the event
         _backgroundRenderer.onSurfaceCreated(_shaderManager, _textureManager);
         _watermarkRenderer.onSurfaceCreated(_shaderManager, _textureManager);
     

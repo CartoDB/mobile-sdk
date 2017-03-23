@@ -9,6 +9,8 @@
 
 #ifdef _CARTO_PACKAGEMANAGER_SUPPORT
 
+#include "core/MapPos.h"
+#include "core/MapBounds.h"
 #include "core/MapTile.h"
 #include "components/DirectorPtr.h"
 #include "packagemanager/PackageInfo.h"
@@ -25,7 +27,6 @@
 #include <mutex>
 #include <condition_variable>
 #include <thread>
-#include <fstream>
 
 namespace sqlite3pp {
     class database;
@@ -36,6 +37,8 @@ namespace sqlite3pp {
 
 namespace carto {
     class BinaryData;
+    class Projection;
+    class PackageHandler;
 
     /**
      * Base class for offline map package manager. Package manager supports downloading/removing packages.
@@ -54,7 +57,7 @@ namespace carto {
         public:
             virtual ~OnChangeListener() { }
 
-            virtual void onTilesChanged() = 0;
+            virtual void onPackagesChanged() = 0;
         };
 
         /**
@@ -104,20 +107,6 @@ namespace carto {
         void stop(bool wait);
 
         /**
-         * Returns the tile at specified coordinates.
-         * @param mapTile The tile to load.
-         * @return The corresponding tile data or null if tile was not found.
-         */
-        std::shared_ptr<BinaryData> loadTile(const MapTile& mapTile) const;
-        
-        /**
-         * Locks specified local packages and calls specified handler callback with open handles to the files.
-         * @param packageIds The package ids.
-         * @param callback The callback function.
-         */
-        void accessPackageFiles(const std::vector<std::string>& packageIds, std::function<void(const std::map<std::string, std::shared_ptr<std::ifstream> >&)> callback) const;
-
-        /**
          * Returns the list of available server packages.
          * Note that the list must be retrieved from the server first, using startPackageListDownload.
          * @return The list of available server packages.
@@ -159,6 +148,29 @@ namespace carto {
          * @return The status of the package or null if it is not yet downloaded. If the package is currently being downloaded, its status is returned.
          */
         std::shared_ptr<PackageStatus> getLocalPackageStatus(const std::string& packageId, int version) const;
+
+        /**
+         * Locks local packages and calls specified handler callback.
+         * @param callback The callback function.
+         */
+        void accessLocalPackages(const std::function<void(const std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<PackageHandler> >&)>& callback) const;
+
+        /**
+         * Suggests packages for given map position. Note that in order this to work, local package list must be available first.
+         * @param mapPos The map position.
+         * @param projection The projection for the map position.
+         * @return The sorted list of suggested packages (from the best to the worst). The list may contain downloaded packages.
+         */
+        std::vector<std::shared_ptr<PackageInfo> > suggestPackages(const MapPos& mapPos, const std::shared_ptr<Projection>& projection) const;
+
+        /**
+         * Tests if the specified map area at specified zoom level is downloaded.
+         * @param mapBounds The area bounding box.
+         * @param zoom The zoom level to check.
+         * @param projection The projection for the bounding box.
+         * @return True if all required tiles are downloaded and available. False otherwise.
+         */
+        bool isAreaDownloaded(const MapBounds& mapBounds, int zoom, const std::shared_ptr<Projection>& projection) const;
 
         /**
          * Starts downloading package list asynchronously. When this task finishes, listener is called and server package list is updated.
@@ -232,12 +244,6 @@ namespace carto {
             std::string packageLocation;
         };
 
-        struct PackageDatabase {
-            std::string packageId;
-            std::shared_ptr<sqlite3pp::database> packageDb;
-            std::shared_ptr<sqlite3pp::ext::function> decryptFunc;
-        };
-
         class PersistentTaskQueue {
         public:
             PersistentTaskQueue(const std::string& dbFileName);
@@ -282,7 +288,6 @@ namespace carto {
         bool removePackage(int taskId);
         
         void syncLocalPackages();
-        std::shared_ptr<sqlite3pp::database> getLocalPackageDb(const std::shared_ptr<PackageInfo>& packageInfo) const;
         void importLocalPackage(int id, int taskId, const std::string& packageId, PackageType::PackageType packageType, const std::string& packageFileName);
         void deleteLocalPackage(int id);
 
@@ -298,15 +303,10 @@ namespace carto {
         void savePackageListJson(const std::string& jsonFileName, const std::string& json) const;
 
         static void InitializeDb(sqlite3pp::database& db, const std::string& encKey);
-        static bool AddDbField(sqlite3pp::database& db, const std::string& table, const std::string& field, const std::string& def);
         static bool CheckDbEncryption(sqlite3pp::database& db, const std::string& encKey);
-        static void UpdateDbEncryption(sqlite3pp::database& db, const std::string& encKey);
-        
         static std::string CalculateKeyHash(const std::string& encKey);
 
-        static void EncryptTile(std::vector<unsigned char>& data, int zoom, int x, int y, const std::string& encKey);
-        static void DecryptTile(std::vector<unsigned char>& data, int zoom, int x, int y, const std::string& encKey);
-        static void SetCipherKeyIV(unsigned char* k, unsigned char* iv, int zoom, int x, int y, const std::string& encKey);
+        static MapTile CalculateMapTile(const MapPos& mapPos, int zoom, const std::shared_ptr<Projection>& proj);
 
         static int DownloadFile(const std::string& url, NetworkUtils::HandlerFn handler, std::uint64_t offset = 0);
 
@@ -315,21 +315,23 @@ namespace carto {
         const std::string _dataFolder;
         const std::string _serverEncKey;
         const std::string _localEncKey;
-        mutable std::vector<PackageDatabase> _localPackageDbCache;
-        mutable std::map<std::string, std::shared_ptr<std::ifstream> > _localPackageFileCache;
-        mutable std::vector<std::shared_ptr<PackageInfo> > _serverPackageCache;
+
         std::vector<std::shared_ptr<PackageInfo> > _localPackages;
         std::shared_ptr<sqlite3pp::database> _localDb;
         std::shared_ptr<PersistentTaskQueue> _taskQueue;
         std::condition_variable_any _taskQueueCondition; // notified when new tasks are available
         std::shared_ptr<std::thread> _packageManagerThread;
         std::vector<std::shared_ptr<OnChangeListener> > _onChangeListeners;
-        bool _stopped = true;
-        int _prevTaskId = -1;
-        PackageAction::PackageAction _prevAction = PackageAction::PACKAGE_ACTION_WAITING;
-        int _prevRoundedProgress = 0;
+        bool _stopped;
+
+        int _prevTaskId;
+        PackageAction::PackageAction _prevAction;
+        int _prevRoundedProgress;
 
         ThreadSafeDirectorPtr<PackageManagerListener> _packageManagerListener;
+
+        mutable std::shared_ptr<std::vector<std::shared_ptr<PackageInfo> > > _serverPackageCache;
+        mutable std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<PackageHandler> > _packageHandlerCache;
 
         mutable std::recursive_mutex _mutex; // guards all state
     };

@@ -20,16 +20,8 @@ namespace carto { namespace vt {
                 pen = cglib::vec2<float>(0, 0);
             }
             else {
-                if (_transform) {
-                    _bbox.add(cglib::transform_point_affine(pen + glyph.offset, _transform.get()));
-                    _bbox.add(cglib::transform_point_affine(pen + glyph.offset + cglib::vec2<float>(glyph.size(0), 0), _transform.get()));
-                    _bbox.add(cglib::transform_point_affine(pen + glyph.offset + glyph.size, _transform.get()));
-                    _bbox.add(cglib::transform_point_affine(pen + glyph.offset + cglib::vec2<float>(0, glyph.size(1)), _transform.get()));
-                }
-                else {
-                    _bbox.add(pen + glyph.offset);
-                    _bbox.add(pen + glyph.offset + glyph.size);
-                }
+                _bbox.add(pen + glyph.offset);
+                _bbox.add(pen + glyph.offset + glyph.size);
             }
 
             pen += glyph.advance;
@@ -174,10 +166,22 @@ namespace carto { namespace vt {
         }
         else {
             // Use bounding box for envelope
-            envelope[0] = origin + (xAxis * _bbox.min(0) + yAxis * _bbox.min(1)) * scale;
-            envelope[1] = origin + (xAxis * _bbox.max(0) + yAxis * _bbox.min(1)) * scale;
-            envelope[2] = origin + (xAxis * _bbox.max(0) + yAxis * _bbox.max(1)) * scale;
-            envelope[3] = origin + (xAxis * _bbox.min(0) + yAxis * _bbox.max(1)) * scale;
+            if (_transform) {
+                cglib::vec2<float> p00 = cglib::transform_point_affine(cglib::vec2<float>(_bbox.min(0), _bbox.min(1)), _transform.get());
+                cglib::vec2<float> p01 = cglib::transform_point_affine(cglib::vec2<float>(_bbox.min(0), _bbox.max(1)), _transform.get());
+                cglib::vec2<float> p10 = cglib::transform_point_affine(cglib::vec2<float>(_bbox.max(0), _bbox.min(1)), _transform.get());
+                cglib::vec2<float> p11 = cglib::transform_point_affine(cglib::vec2<float>(_bbox.max(0), _bbox.max(1)), _transform.get());
+                envelope[0] = origin + (xAxis * p00(0) + yAxis * p00(1)) * scale;
+                envelope[1] = origin + (xAxis * p10(0) + yAxis * p10(1)) * scale;
+                envelope[2] = origin + (xAxis * p11(0) + yAxis * p11(1)) * scale;
+                envelope[3] = origin + (xAxis * p01(0) + yAxis * p01(1)) * scale;
+            }
+            else {
+                envelope[0] = origin + (xAxis * _bbox.min(0) + yAxis * _bbox.min(1)) * scale;
+                envelope[1] = origin + (xAxis * _bbox.max(0) + yAxis * _bbox.min(1)) * scale;
+                envelope[2] = origin + (xAxis * _bbox.max(0) + yAxis * _bbox.max(1)) * scale;
+                envelope[3] = origin + (xAxis * _bbox.min(0) + yAxis * _bbox.max(1)) * scale;
+            }
             return true;
         }
     }
@@ -466,6 +470,7 @@ namespace carto { namespace vt {
         cglib::vec3<double> bestPos = position;
         double bestDist = std::numeric_limits<double>::infinity();
         for (const Vertices& vertices : verticesList) {
+            // Try to find a closest point on vertices to the given position
             for (std::size_t j = 1; j < vertices.size(); j++) {
                 cglib::vec3<double> edgeVec = vertices[j] - vertices[j - 1];
                 double edgeLen2 = cglib::dot_product(edgeVec, edgeVec);
@@ -492,6 +497,44 @@ namespace carto { namespace vt {
         for (std::size_t j = 1; j < bestVertices->size(); j++) {
             edges.emplace_back((*bestVertices)[j - 1], (*bestVertices)[j], bestPos);
         }
+
+        // Postprocess edges, keep only relatively straight parts, to avoid distorted texts
+        float summedAngle = 0;
+        for (std::size_t j0 = bestIndex, j1 = bestIndex + 1; true; ) {
+            bool r0 = false;
+            if (j0 > 0) {
+                cglib::vec2<float> edgeVec1 = edges[j0 - 1].pos1 - edges[j0 - 1].pos0;
+                cglib::vec2<float> edgeVec2 = edges[j0].pos1 - edges[j0].pos0;
+                float cos = cglib::dot_product(cglib::unit(edgeVec1), cglib::unit(edgeVec2));
+                float angle = std::acos(std::min(1.0f, std::max(-1.0f, cos)));
+                if (angle < MAX_SINGLE_SEGMENT_ANGLE && angle + summedAngle < MAX_SUMMED_SEGMENT_ANGLE) {
+                    summedAngle += angle;
+                    j0--;
+                    r0 = true;
+                }
+            }
+
+            bool r1 = false;
+            if (j1 < edges.size()) {
+                cglib::vec2<float> edgeVec1 = edges[j1 - 1].pos1 - edges[j1 - 1].pos0;
+                cglib::vec2<float> edgeVec2 = edges[j1].pos1 - edges[j1].pos0;
+                float cos = cglib::dot_product(cglib::unit(edgeVec1), cglib::unit(edgeVec2));
+                float angle = std::acos(std::min(1.0f, std::max(-1.0f, cos)));
+                if (angle < MAX_SINGLE_SEGMENT_ANGLE && angle + summedAngle < MAX_SUMMED_SEGMENT_ANGLE) {
+                    summedAngle += angle;
+                    j1++;
+                    r1 = true;
+                }
+            }
+
+            if (!r0 && !r1) {
+                edges = std::vector<Placement::Edge>(edges.begin() + j0, edges.begin() + j1);
+                bestIndex -= j0;
+                break;
+            }
+        }
+
+        // If the placement did not change, return original object. Otherwise create new.
         if (_placement && _placement->index == bestIndex && _placement->pos == bestPos && _placement->edges.size() == edges.size()) {
             return _placement;
         }
@@ -499,6 +542,11 @@ namespace carto { namespace vt {
     }
 
     std::shared_ptr<const TileLabel::Placement> TileLabel::findClippedPointPlacement(const ViewState& viewState, const Vertices& vertices) const {
+        cglib::bbox2<float> bbox = _bbox;
+        if (_transform) {
+            bbox = cglib::transform_bbox(bbox, _transform.get());
+        }
+        
         for (const Vertex& vertex : vertices) {
             // Check that text is visible, calculate text distance from all frustum planes
             bool inside = true;
@@ -506,16 +554,16 @@ namespace carto { namespace vt {
                 float size = 0;
                 switch (plane) {
                 case 2:
-                    size = -_bbox.min(1);
+                    size = -bbox.min(1);
                     break;
                 case 3:
-                    size = _bbox.max(1);
+                    size = bbox.max(1);
                     break;
                 case 4:
-                    size = _bbox.max(0) / viewState.aspect;
+                    size = bbox.max(0) / viewState.aspect;
                     break;
                 case 5:
-                    size = -_bbox.min(0) / viewState.aspect;
+                    size = -bbox.min(0) / viewState.aspect;
                     break;
                 }
                 double dist = viewState.frustum.plane_distance(plane, vertex);
@@ -535,24 +583,24 @@ namespace carto { namespace vt {
         // Split vertices list into relatively straight segments
         VerticesList splitVerticesList;
         for (const Vertices& vertices : verticesList) {
-            double len = 0;
-            std::size_t idx = 0;
-            cglib::vec3<double> lastEdge(0, 0, 0);
+            std::size_t i0 = 0;
+            float summedAngle = 0;
+            cglib::vec3<double> lastEdgeVec(0, 0, 0);
             for (std::size_t i = 1; i < vertices.size(); i++) {
-                cglib::vec3<double> delta = vertices[i] - vertices[i - 1];
-                if (delta == cglib::vec3<double>::zero()) {
-                    continue;
+                cglib::vec3<double> edgeVec = cglib::unit(vertices[i] - vertices[i - 1]);
+                if (lastEdgeVec != cglib::vec3<double>::zero()) {
+                    float cos = static_cast<float>(cglib::dot_product(edgeVec, lastEdgeVec));
+                    float angle = std::acos(std::min(1.0f, std::max(-1.0f, cos)));
+                    summedAngle += angle;
+                    if (angle > MAX_SINGLE_SEGMENT_ANGLE || summedAngle > MAX_SUMMED_SEGMENT_ANGLE) {
+                        splitVerticesList.emplace_back(vertices.begin() + i0, vertices.begin() + i);
+                        i0 = i - 1;
+                        summedAngle = 0;
+                    }
                 }
-                cglib::vec3<double> edge = cglib::unit(delta);
-                if (i > 1 && cglib::dot_product(edge, lastEdge) < MIN_SEGMENT_DOT) {
-                    splitVerticesList.emplace_back(vertices.begin() + idx, vertices.begin() + i);
-                    len = 0;
-                    idx = i - 1;
-                }
-                len += cglib::length(delta);
-                lastEdge = edge;
+                lastEdgeVec = edgeVec;
             }
-            splitVerticesList.emplace_back(vertices.begin() + idx, vertices.end());
+            splitVerticesList.emplace_back(vertices.begin() + i0, vertices.end());
         }
 
         // Clip each vertex list against frustum, if resulting list is inside frustum, return its center

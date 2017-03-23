@@ -38,10 +38,12 @@ namespace carto { namespace mvt {
             { "dst-over", vt::CompOp::DST_OVER },
             { "dst-in",   vt::CompOp::DST_IN },
             { "dst-atop", vt::CompOp::DST_ATOP },
+            { "clear",    vt::CompOp::ZERO },
             { "zero",     vt::CompOp::ZERO },
             { "plus",     vt::CompOp::PLUS },
             { "minus",    vt::CompOp::MINUS },
             { "multiply", vt::CompOp::MULTIPLY },
+            { "screen",   vt::CompOp::SCREEN },
             { "darken",   vt::CompOp::DARKEN },
             { "lighten",  vt::CompOp::LIGHTEN }
         };

@@ -7,9 +7,11 @@
 #include "layers/Layer.h"
 #include "layers/SolidLayer.h"
 #include "layers/RasterTileLayer.h"
+#include "layers/VectorTileLayer.h"
 #include "network/HTTPClient.h"
 #include "services/CartoMapsService.h"
 #include "services/CartoVisBuilder.h"
+#include "vectortiles/CartoVectorTileDecoder.h"
 #include "utils/AssetPackage.h"
 #include "utils/NetworkUtils.h"
 #include "utils/Const.h"
@@ -292,11 +294,11 @@ namespace carto {
             mapsService.setLayerFilter(filterList);
         }
 
-        std::string tilerProtocol = "http";
+        std::string tilerProtocol = DEFAULT_TILER_PROTOCOL;
         if (auto tilerProtocolOpt = getString(options.get("tiler_protocol"))) {
             tilerProtocol = *tilerProtocolOpt;
         }
-        std::string tilerDomain = "cartodb.com";
+        std::string tilerDomain = DEFAULT_TILER_DOMAIN;
         if (auto tilerDomainOpt = getString(options.get("tiler_domain"))) {
             tilerDomain = *tilerDomainOpt;
         }
@@ -569,42 +571,7 @@ namespace carto {
             mapsService.setStatTag(*statTag);
         }
         std::vector<std::shared_ptr<Layer> > layers = mapsService.buildNamedMap(name, params);
-
-        // Create layer attributes
-        std::map<std::shared_ptr<Layer>, picojson::object> layerAttributes;
-        if (namedMap.get("layers").is<picojson::array>()) {
-            const picojson::array& layerConfigs = namedMap.get("layers").get<picojson::array>();
-            for (std::size_t i = 0; i < layerConfigs.size() && i < layers.size(); i++) {
-                const std::shared_ptr<Layer>& layer = layers[i];
-                const picojson::value& layerConfig = layerConfigs[i];
-                
-                configureLayerInteractivity(*layer, layerConfig.get("interactivity"));
-
-                if (auto visible = getBool(layerConfig.get("visible"))) {
-                    layer->setVisible(*visible);
-                }
-                
-                picojson::object attributes;
-                readLayerAttributes(attributes, options);
-                if (layerConfig.contains("infowindow")) {
-                    attributes["infowindow"] = layerConfig.get("infowindow");
-                }
-                if (layerConfig.contains("legend")) {
-                    attributes["legend"] = layerConfig.get("legend");
-                }
-                if (layerConfig.contains("layer_name")) {
-                    attributes["name"] = layerConfig.get("layer_name");
-                }
-                layerAttributes[layer] = attributes;
-            }
-        }
-
-        // Create layer info list
-        std::vector<LayerInfo> layerInfos;
-        for (const std::shared_ptr<Layer>& layer : layers) {
-            layerInfos.push_back(LayerInfo(layer, layerAttributes[layer]));
-        }
-        return layerInfos;
+        return createLayerInfos(layers, options, namedMap);
     }
 
     std::vector<CartoVisLoader::LayerInfo> CartoVisLoader::createLayerGroup(const picojson::value& options, const picojson::value& infoWindow) const {
@@ -627,29 +594,62 @@ namespace carto {
         CartoMapsService mapsService;
         configureMapsService(mapsService, options);
         std::vector<std::shared_ptr<Layer> > layers = mapsService.buildMap(Variant::FromPicoJSON(layerDefinition));
+        return createLayerInfos(layers, options, layerDefinition);
+    }
 
-        // Create attributes for the layers
+    std::vector<CartoVisLoader::LayerInfo> CartoVisLoader::createLayerInfos(const std::vector<std::shared_ptr<Layer> >& layers, const picojson::value& options, const picojson::value& layerDefinition) const {
+        // Create layer attributes
         std::map<std::shared_ptr<Layer>, picojson::object> layerAttributes;
         if (layerDefinition.get("layers").is<picojson::array>()) {
             const picojson::array& layerConfigs = layerDefinition.get("layers").get<picojson::array>();
-            for (std::size_t i = 0; i < layerConfigs.size() && i < layers.size(); i++) {
-                const std::shared_ptr<Layer>& layer = layers[i];
+            for (std::size_t i = 0; i < layerConfigs.size(); i++) {
                 const picojson::value& layerConfig = layerConfigs[i];
-                
-                const picojson::value& layerConfigOptions = layerConfig.get("options");
-                if (layerConfigOptions.is<picojson::object>()) {
-                    configureLayerInteractivity(*layer, layerConfigOptions.get("interactivity"));
+                std::string layerId = *getString(layerConfig.get("id"));
+
+                std::shared_ptr<Layer> layer;
+                int subLayerIndex = -1;
+                {
+                    std::size_t remainder = i;
+                    for (std::size_t j = 0; j < layers.size(); j++) {
+                        if (auto vectorTileLayer = std::dynamic_pointer_cast<VectorTileLayer>(layers[j])) {
+                            if (auto cartoVectorTileDecoder = std::dynamic_pointer_cast<CartoVectorTileDecoder>(vectorTileLayer->getTileDecoder())) {
+                                if (remainder < cartoVectorTileDecoder->getLayerIds().size()) {
+                                    subLayerIndex = remainder;
+                                    layer = vectorTileLayer;
+                                    break;
+                                }
+                                remainder -= cartoVectorTileDecoder->getLayerIds().size();
+                                continue;
+                            }
+                        }
+                        if (remainder == 0) {
+                            layer = layers[j];
+                            break;
+                        }
+                        remainder--;
+                    }
+                }
+                if (!layer) {
+                    break;
+                }
+
+                if (subLayerIndex < 0) {
+                    configureLayerInteractivity(*layer, layerConfig.get("interactivity"));
                 }
 
                 if (auto visible = getBool(layerConfig.get("visible"))) {
-                    layer->setVisible(*visible);
+                    if (subLayerIndex < 0) {
+                        layer->setVisible(*visible);
+                    }
+                    else {
+                        auto vectorTileLayer = std::dynamic_pointer_cast<VectorTileLayer>(layer);
+                        auto cartoVectorTileDecoder = std::dynamic_pointer_cast<CartoVectorTileDecoder>(vectorTileLayer->getTileDecoder());
+                        cartoVectorTileDecoder->setLayerVisible(layerId, *visible);
+                    }
                 }
                 
                 picojson::object attributes;
                 readLayerAttributes(attributes, options);
-                if (!infoWindow.is<picojson::null>()) {
-                    attributes["infowindow"] = infoWindow;
-                }
                 if (layerConfig.contains("infowindow")) {
                     attributes["infowindow"] = layerConfig.get("infowindow");
                 }
@@ -659,7 +659,17 @@ namespace carto {
                 if (layerConfig.contains("layer_name")) {
                     attributes["name"] = layerConfig.get("layer_name");
                 }
-                layerAttributes[layer] = attributes;
+                if (subLayerIndex < 0) {
+                    layerAttributes[layer] = attributes;
+                }
+                else {
+                    picojson::array groupAttributes;
+                    if (layerAttributes[layer]["sublayers"].is<picojson::array>()) {
+                        groupAttributes = layerAttributes[layer]["sublayers"].get<picojson::array>();
+                    }
+                    groupAttributes.push_back(picojson::value(attributes));
+                    layerAttributes[layer]["sublayers"] = picojson::value(groupAttributes);
+                }
             }
         }
 
@@ -670,5 +680,8 @@ namespace carto {
         }
         return layerInfos;
     }
+
+    const std::string CartoVisLoader::DEFAULT_TILER_PROTOCOL = "http";
+    const std::string CartoVisLoader::DEFAULT_TILER_DOMAIN = "carto.com";
 
 }

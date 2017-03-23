@@ -76,10 +76,13 @@ namespace carto {
 
     bool CartoOnlineTileDataSource::loadTileURLs() {
         std::map<std::string, std::string> params;
-        params["appId"] = PlatformUtils::GetAppIdentifier();
         params["deviceId"] = PlatformUtils::GetDeviceId();
         params["platform"] = PlatformUtils::GetPlatformId();
         params["sdk_build"] = _CARTO_MOBILE_SDK_VERSION;
+        std::string appToken;
+        if (LicenseManager::GetInstance().getParameter("appToken", appToken, true)) {
+            params["appToken"] = appToken;
+        }
 
         std::string baseURL = TILE_SERVICE_URL + NetworkUtils::URLEncode(_source) + "/1/tiles.json";
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
@@ -95,7 +98,7 @@ namespace carto {
         picojson::value config;
         std::string err = picojson::parse(config, result);
         if (!err.empty()) {
-            Log::Error("CartoOnlineTileDataSource: Failed to parse tile source configuration");
+            Log::Errorf("CartoOnlineTileDataSource: Failed to parse tile source configuration: %s", err.c_str());
             return false;
         }
 
@@ -142,8 +145,9 @@ namespace carto {
         std::map<std::string, std::string> requestHeaders;
         std::map<std::string, std::string> responseHeaders;
         std::shared_ptr<BinaryData> responseData;
+        int statusCode = -1;
         try {
-            if (_httpClient.get(url, requestHeaders, responseHeaders, responseData) != 0) {
+            if (_httpClient.get(url, requestHeaders, responseHeaders, responseData, &statusCode) != 0) {
                 Log::Errorf("CartoOnlineTileDataSource::loadOnlineTile: Failed to load tile %d/%d/%d", mapTile.getZoom(), mapTile.getX(), mapTile.getY());
                 return std::shared_ptr<TileData>();
             }
@@ -154,7 +158,12 @@ namespace carto {
         int maxAge = NetworkUtils::GetMaxAgeHTTPHeader(responseHeaders);
         auto tileData = std::make_shared<TileData>(responseData);
         if (maxAge >= 0 && !isMapZenSource()) { // set max age header but only for non-mapzen sources as mapzen always sets max-age to 0
+            Log::Infof("CartoOnlineTileDataSource::loadOnlineTile: Setting tile %d/%d/%d maxage=%d", mapTile.getZoom(), mapTile.getX(), mapTile.getY(), maxAge);
             tileData->setMaxAge(maxAge * 1000);
+        }
+        if (statusCode == 204) { // special case - empty tile, replace with parent tile
+            Log::Infof("CartoOnlineTileDataSource::loadOnlineTile: Replacing tile %d/%d/%d with parent", mapTile.getZoom(), mapTile.getX(), mapTile.getY());
+            tileData->setReplaceWithParent(true);
         }
         return tileData;
     }

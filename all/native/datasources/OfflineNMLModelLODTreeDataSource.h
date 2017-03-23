@@ -25,10 +25,10 @@ namespace carto {
     public:
         /**
          * Constructs a OfflineNMLModelLODTreeDataSource object.
-         * @param fileName The file name of the sqlite database file.
+         * @param path The path to the sqlite database file.
          * @throws std::exception If the file could not be opened.
          */
-        explicit OfflineNMLModelLODTreeDataSource(const std::string& fileName);
+        explicit OfflineNMLModelLODTreeDataSource(const std::string& path);
         virtual ~OfflineNMLModelLODTreeDataSource();
 
         virtual std::vector<MapTile> loadMapTiles(const std::shared_ptr<CullState>& cullState);

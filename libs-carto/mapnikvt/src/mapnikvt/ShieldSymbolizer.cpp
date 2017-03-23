@@ -18,7 +18,7 @@ namespace carto { namespace mvt {
             return;
         }
 
-        vt::CompOp compOp = vt::CompOp::SRC_OVER;
+        vt::CompOp compOp = convertCompOp(_compOp);
 
         float fontScale = symbolizerContext.getSettings().getFontScale();
         float bitmapSize = static_cast<float>(std::max(backgroundBitmap->width, backgroundBitmap->height)) * fontScale;
@@ -67,14 +67,10 @@ namespace carto { namespace mvt {
             }
 
             if (_allowOverlap) {
-                std::shared_ptr<const vt::ColorFunction> fillFunc;
-                ExpressionFunctionBinder<vt::Color>().bind(&fillFunc, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), [this](const Value& val) -> vt::Color {
-                    return convertColor(val);
-                }).update(exprContext);
-                std::shared_ptr<const vt::FloatFunction> opacityFunc;
-                ExpressionFunctionBinder<float>().bind(&opacityFunc, std::make_shared<ConstExpression>(Value(1.0f))).update(exprContext);
+                std::shared_ptr<const vt::ColorFunction> fillFunc = createColorFunction("#ffffff");
+                std::shared_ptr<const vt::FloatFunction> opacityFunc = createFloatFunction(1.0f);
 
-                vt::TextStyle style(compOp, convertLabelToPointOrientation(orientation), fillFunc, opacityFunc, *formatterOptions, font, _orientation, fontScale, backgroundOffset, backgroundBitmap, transform);
+                vt::TextStyle style(compOp, convertLabelToPointOrientation(orientation), fillFunc, opacityFunc, *formatterOptions, font, _orientationAngle, fontScale, backgroundOffset, backgroundBitmap, transform);
 
                 std::size_t textInfoIndex = 0;
                 layerBuilder.addTexts([&](long long& id, vt::TileLayerBuilder::Vertex& vertex, std::string& txt) {
@@ -91,7 +87,7 @@ namespace carto { namespace mvt {
                 shieldInfos.clear();
             }
             else {
-                vt::TextLabelStyle style(placement, *formatterOptions, font, _orientation, fontScale, backgroundOffset, backgroundBitmap);
+                vt::TextLabelStyle style(placement, *formatterOptions, font, _orientationAngle, fontScale, backgroundOffset, backgroundBitmap);
 
                 std::size_t labelInfoIndex = 0;
                 layerBuilder.addTextLabels([&](long long& id, vt::TileLayerBuilder::TextLabelInfo& labelInfo) {

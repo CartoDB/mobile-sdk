@@ -22,6 +22,7 @@
 namespace carto {
     class CancelableTask;
     class CullState;
+    class TileRenderer;
     class TileLoadListener;
     class UTFGridTile;
     class UTFGridEventListener;
@@ -267,12 +268,16 @@ namespace carto {
         
         virtual int getMinZoom() const = 0;
         virtual int getMaxZoom() const = 0;
+        virtual std::vector<long long> getVisibleTileIds() const = 0;
         
         virtual void calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray,
             const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
         virtual bool processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const;
 
         MapBounds calculateInternalTileBounds(const MapTile& mapTile) const;
+
+        std::shared_ptr<TileRenderer> getRenderer() const;
+        void setRenderer(const std::shared_ptr<TileRenderer>& renderer);
 
         static const float DISCRETE_ZOOM_LEVEL_BIAS;
 
@@ -305,8 +310,9 @@ namespace carto {
     
     private:
         void calculateVisibleTiles(const std::shared_ptr<CullState>& cullState);
-        void calculateVisibleTilesRecursive(const std::shared_ptr<CullState>& cullState, const MapTile& mapTile);
-        
+        void calculateVisibleTilesRecursive(const std::shared_ptr<CullState>& cullState, const MapTile& mapTile, const MapBounds& dataExtent);
+
+        void sortTiles(std::vector<MapTile>& tiles, const ViewState& viewState, bool preloadingTiles);
         void findTiles(const std::vector<MapTile>& visTiles, bool preloadingTiles);
         bool findParentTile(const MapTile& visTile, const MapTile& tile, int depth, bool preloadingCache, bool preloadingTile);
         int findChildTiles(const MapTile& visTile, const MapTile& tile, int depth, bool preloadingCache, bool preloadingTile);
@@ -320,6 +326,7 @@ namespace carto {
         std::vector<MapTile> _visibleTiles;
         std::vector<MapTile> _preloadingTiles;
         std::unordered_map<MapTile, std::shared_ptr<UTFGridTile> > _utfGridTiles;
+        std::shared_ptr<TileRenderer> _renderer;
     };
     
 }

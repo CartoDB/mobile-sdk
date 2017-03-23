@@ -107,7 +107,7 @@ namespace carto {
     
         std::shared_ptr<Geometry> _geometry;
     
-        mutable std::mutex _mutex;
+        mutable std::recursive_mutex _mutex;
 
     private:
         long long _id;

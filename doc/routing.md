@@ -55,13 +55,13 @@ For minimal routing implementation, use our sample app code for different mobile
 
   - [Sample app repository](https://github.com/CartoDB/mobile-android-samples)
 
-  - [`OfflineRoutingActivity.java`](https://github.com/CartoDB/mobile-android-samples/blob/master/AdvancedMapAndroid/app/src/main/java/com/carto/advancedmap/sections/other/OfflineRoutingActivity.java) parameter
+  - [`OfflineRoutingActivity.java`](https://github.com/CartoDB/mobile-android-samples/blob/master/AdvancedMapAndroid/app/src/main/java/com/carto/advancedmap/sections/routing/offline/OfflineRoutingActivity.java) parameter
 
 - Xamarin (Android, iOS):
 
   - [Sample app repository](https://github.com/CartoDB/mobile-dotnet-samples)
 
-  - [`OfflineRouting.cs`](https://github.com/CartoDB/mobile-dotnet-samples/blob/master/AdvancedMap.Droid/Sections/Other/OfflineRoutingActivity.cs) parameter
+  - [`OfflineRouting.cs`](https://github.com/CartoDB/mobile-dotnet-samples/blob/master/AdvancedMap.Droid/Sections/Routing/OfflineRouting/OfflineRoutingActivity.cs) parameter
 
 ### Example Procedure
 

@@ -9,6 +9,8 @@
 
 #ifdef _CARTO_GDAL_SUPPORT
 
+#include "core/Variant.h"
+
 #include <memory>
 #include <string>
 #include <map>
@@ -31,7 +33,7 @@ namespace carto {
          * @param geometry The geometry element
          * @param metaData The meta data associated with the geometry
          */
-        StyleSelectorContext(const ViewState& viewState, const std::shared_ptr<Geometry>& geometry, const std::map<std::string, std::string>& metaData);
+        StyleSelectorContext(const ViewState& viewState, const std::shared_ptr<Geometry>& geometry, const std::map<std::string, Variant>& metaData);
 
         /**
          * Returns the view state associated with the context.
@@ -47,7 +49,7 @@ namespace carto {
          * Returns the meta data associated with the context.
          * @return The meta data of the context
          */
-        const std::map<std::string, std::string>& getMetaData() const;
+        const std::map<std::string, Variant>& getMetaData() const;
 
         /**
          * Tries to find variable value based on its name.
@@ -63,7 +65,7 @@ namespace carto {
 
         const ViewState& _viewState;
         const std::shared_ptr<Geometry>& _geometry;
-        const std::map<std::string, std::string>& _metaData;
+        const std::map<std::string, Variant>& _metaData;
     };
 }
 

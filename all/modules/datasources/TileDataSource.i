@@ -6,7 +6,7 @@
 
 %module(directors="1") TileDataSource
 
-!proxy_imports(carto::TileDataSource, core.MapTile, core.StringMap, datasources.components.TileData, projections.Projection)
+!proxy_imports(carto::TileDataSource, core.MapTile, core.MapBounds, core.StringMap, datasources.components.TileData, projections.Projection)
 
 %{
 #include "datasources/TileDataSource.h"
@@ -19,6 +19,7 @@
 %include <cartoswig.i>
 
 %import "core/MapTile.i"
+%import "core/MapBounds.i"
 %import "core/StringMap.i"
 %import "datasources/components/TileData.i"
 %import "projections/Projection.i"
@@ -28,6 +29,7 @@
 
 %attribute(carto::TileDataSource, int, MinZoom, getMinZoom)
 %attribute(carto::TileDataSource, int, MaxZoom, getMaxZoom)
+%attributeval(carto::TileDataSource, carto::MapBounds, DataExtent, getDataExtent)
 !attributestring_polymorphic(carto::TileDataSource, projections.Projection, Projection, getProjection)
 %ignore carto::TileDataSource::OnChangeListener;
 %ignore carto::TileDataSource::registerOnChangeListener;

@@ -23,7 +23,7 @@ To begin using the Mobile SDK, download the required SDK packages and libraries 
 
 There are multiple ways to download SDK packages:
 
-- Use the Managed library package based on your platform (this is the suggested method for managing SDK features, and also contains some default style files)
+- Use the Managed library package based on your platform - this is the **suggested method** for managing SDK features, and also contains some default style files
 
 - Download specific versions of SDK packages as zip files, and add them to you projects
 
@@ -34,41 +34,27 @@ These SDK libraries are managed by CARTO and include all the required libraries 
 <div class="js-TabPanes">
   <ul class="Tabs">
     <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Android SDK</a>
+      <a href="#/0" class="js-Tabpanes-navLink">Android</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">iOS SDK</a>
+      <a href="#/1" class="js-Tabpanes-navLink">iOS</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Xamarin SDK</a>
+      <a href="#/2" class="js-Tabpanes-navLink">Xamarin</a>
     </li>
     <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Windows Phone SDK</a>
+      <a href="#/3" class="js-Tabpanes-navLink">Windows Phone 10</a>
     </li>
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item is-active">
   {% highlight groovy %}
 
-// 1. Add the following to your project "build.gradle" file:
-
-allprojects {
-    repositories {
-        jcenter()
-        maven {
-            url "http://repository-nutiteq.forge.cloudbees.com/release/"
-        }
-        maven {
-            url "http://repository-nutiteq.forge.cloudbees.com/snapshot/"
-        }
-    }
-}
-
-// 2. Add the following to your module "build.gradle":
-
-dependencies {
-    compile 'com.carto:carto-mobile-sdk:snapshot@aar'
-}
+  // Add to your build.gradle file:
+  
+  dependencies {
+      compile 'com.carto:carto-mobile-sdk:4.0.0@aar'
+  }
 
   {% endhighlight %}
   </div>
@@ -76,11 +62,9 @@ dependencies {
   <div class="Carousel-item js-Tabpanes-item">
   {% highlight groovy %}
 
-// Download and install the iOS SDK package from from:
+// Add to your CocoaPods Podfile:
 
-url "https://nutifront.s3.amazonaws.com/sdk_snapshots/sdk4-ios-snapshot-latest.zip"
-
-// Note: There is currently no managed library for iOS, download the platform package instead. When the final Production version of Mobile SDK is released, the iOS managed library package will be available
+pod 'CartoMobileSDK', '4.0.0'
 
 {% endhighlight %}
   </div>
@@ -88,9 +72,7 @@ url "https://nutifront.s3.amazonaws.com/sdk_snapshots/sdk4-ios-snapshot-latest.z
   <div class="Carousel-item js-Tabpanes-item">
   {% highlight groovy %}
 
-// 1. To locate the downloaded package, ensure you enable "Show preview" in Xamarin Studio
-
-// 2. Download CartoMobileSDK nuget for the Xamarin SDK package
+// Download CartoMobileSDK.Android or CartoMobileSDK.iOS nuget for the Xamarin SDK package
 
 url for Android: "https://www.nuget.org/packages/CartoMobileSDK.Android/"
 url for iOS: "https://www.nuget.org/packages/CartoMobileSDK.iOS/"
@@ -112,17 +94,7 @@ Search for "CartoMobileSDK.WinPhone10" or use url: "https://www.nuget.org/packag
 
 ### Download Packages 
 
-The following links will download the platform specific package directly to your local Downloads folder:
-
-_**Note:** The current version, 4.0.0, is a beta release. These zip files are subject to frequent changes._
-
-- Android: [sdk4-android-snapshot-latest.zip](https://nutifront.s3.amazonaws.com/sdk_snapshots/sdk4-android-snapshot-latest.zip)
-
-- iOS: [sdk4-ios-snapshot-latest.zip](https://nutifront.s3.amazonaws.com/sdk_snapshots/sdk4-ios-snapshot-latest.zip)
-
-- Xamarin: there is no individual download package for Xamarin, download [nuget for iOS Xamarin](https://www.nuget.org/packages/CartoMobileSDK.iOS) and/or [nuget for Android Xamarin](https://www.nuget.org/packages/CartoMobileSDK.Android) 
-
-- Windows Phone: please use [NuGet package CartoMobileSDK.WinPhone10](https://www.nuget.org/packages/CartoMobileSDK.WinPhone10) if you are interested
+If you do not want to use package manager, you can download SDK from the Github project releases page: https://github.com/CartoDB/mobile-sdk/releases
 
 ## Registering your Mobile App
 

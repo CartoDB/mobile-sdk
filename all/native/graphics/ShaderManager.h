@@ -35,8 +35,8 @@ namespace carto {
         void deleteShader(Shader* texture);
 
         std::thread::id _glThreadId;
-        std::unordered_map<const ShaderSource*, std::shared_ptr<Shader> > _shaderMap;
-        std::vector<std::shared_ptr<Shader> > _createQueue;
+        std::unordered_map<const ShaderSource*, std::weak_ptr<Shader> > _shaderMap;
+        std::vector<std::weak_ptr<Shader> > _createQueue;
         std::vector<GLuint> _deleteProgIdQueue;
         std::vector<GLuint> _deleteShaderIdQueue;
         mutable std::mutex _mutex;

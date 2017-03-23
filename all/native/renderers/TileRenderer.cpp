@@ -245,7 +245,7 @@ namespace carto {
             return;
         }
 
-        float radius = viewState.getUnitToDPCoef() * CLICK_RADIUS;
+        float radius = CLICK_RADIUS; // NOTE: the value will be automatically multiplied with DPI factor
 
         _glRenderer->findGeometryIntersections(ray, results, radius, true, false);
         if (_labelOrder == 0) {
@@ -259,6 +259,16 @@ namespace carto {
         }
     }
         
+    void TileRenderer::calculateRayIntersectedBitmaps(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<std::tuple<vt::TileId, double, vt::TileBitmap, cglib::vec2<float> > >& results) const {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        if (!_glRenderer) {
+            return;
+        }
+
+        _glRenderer->findBitmapIntersections(ray, results);
+    }
+
     void TileRenderer::calculateRayIntersectedElements3D(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<std::tuple<vt::TileId, double, long long> >& results) const {
         std::lock_guard<std::mutex> lock(_mutex);
 

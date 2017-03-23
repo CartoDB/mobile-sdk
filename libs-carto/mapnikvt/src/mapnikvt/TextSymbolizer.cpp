@@ -32,7 +32,7 @@ namespace carto { namespace mvt {
             return;
         }
 
-        vt::CompOp compOp = vt::CompOp::SRC_OVER;
+        vt::CompOp compOp = convertCompOp(_compOp);
 
         std::string text = getTransformedText(_text);
         std::size_t hash = std::hash<std::string>()(text);
@@ -63,14 +63,10 @@ namespace carto { namespace mvt {
 
         auto flushTexts = [&](const cglib::mat3x3<float>& transform) {
             if (_allowOverlap) {
-                std::shared_ptr<const vt::ColorFunction> fillFunc;
-                ExpressionFunctionBinder<vt::Color>().bind(&fillFunc, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), [this](const Value& val) -> vt::Color {
-                    return convertColor(val);
-                }).update(exprContext);
-                std::shared_ptr<const vt::FloatFunction> opacityFunc;
-                ExpressionFunctionBinder<float>().bind(&opacityFunc, std::make_shared<ConstExpression>(Value(1.0f))).update(exprContext);
+                std::shared_ptr<const vt::ColorFunction> fillFunc = createColorFunction("#ffffff");
+                std::shared_ptr<const vt::FloatFunction> opacityFunc = createFloatFunction(1.0f);
 
-                vt::TextStyle style(compOp, convertLabelToPointOrientation(placement), fillFunc, opacityFunc, textFormatterOptions, font, _orientation, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::Bitmap>(), transform);
+                vt::TextStyle style(compOp, convertLabelToPointOrientation(placement), fillFunc, opacityFunc, textFormatterOptions, font, _orientationAngle, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::Bitmap>(), transform);
 
                 std::size_t textInfoIndex = 0;
                 layerBuilder.addTexts([&](long long& id, vt::TileLayerBuilder::Vertex& vertex, std::string& txt) {
@@ -87,7 +83,7 @@ namespace carto { namespace mvt {
                 textInfos.clear();
             }
             else {
-                vt::TextLabelStyle style(placement, textFormatterOptions, font, _orientation, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::Bitmap>());
+                vt::TextLabelStyle style(placement, textFormatterOptions, font, _orientationAngle, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::Bitmap>());
 
                 std::size_t labelInfoIndex = 0;
                 layerBuilder.addTextLabels([&](long long& id, vt::TileLayerBuilder::TextLabelInfo& labelInfo) {
@@ -156,7 +152,7 @@ namespace carto { namespace mvt {
             bind(&_textTransform, parseStringExpression(value));
         }
         else if (name == "orientation") {
-            bind(&_orientation, parseExpression(value));
+            bind(&_orientationAngle, parseExpression(value));
             _orientationDefined = true;
         }
         else if (name == "dx") {
@@ -186,6 +182,9 @@ namespace carto { namespace mvt {
         else if (name == "vertical-alignment") {
             bind(&_verticalAlignment, parseStringExpression(value));
         }
+        else if (name == "comp-op") {
+            bind(&_compOp, parseStringExpression(value));
+        }
         else {
             Symbolizer::bindParameter(name, value);
         }
@@ -211,7 +210,7 @@ namespace carto { namespace mvt {
         std::shared_ptr<vt::Font> font;
         float fontScale = symbolizerContext.getSettings().getFontScale();
         if (!_faceName.empty()) {
-            vt::FontManager::Parameters fontParams(_size * fontScale, _fill * _opacity, _haloRadius * fontScale, _haloFill * _haloOpacity, std::shared_ptr<vt::Font>());
+            vt::FontManager::Parameters fontParams(_size * fontScale, vt::Color::fromColorOpacity(_fill, _opacity), _haloRadius * fontScale, vt::Color::fromColorOpacity(_haloFill, _haloOpacity), std::shared_ptr<vt::Font>());
             font = symbolizerContext.getFontManager()->getFont(_faceName, fontParams);
         }
         else if (!_fontSetName.empty()) {
@@ -220,7 +219,7 @@ namespace carto { namespace mvt {
                     const std::vector<std::string>& faceNames = fontSet->getFaceNames();
                     for (auto it = faceNames.rbegin(); it != faceNames.rend(); it++) {
                         const std::string& faceName = *it;
-                        vt::FontManager::Parameters fontParams(_size * fontScale, _fill * _opacity, _haloRadius * fontScale, _haloFill * _haloOpacity, font);
+                        vt::FontManager::Parameters fontParams(_size * fontScale, vt::Color::fromColorOpacity(_fill, _opacity), _haloRadius * fontScale, vt::Color::fromColorOpacity(_haloFill, _haloOpacity), font);
                         std::shared_ptr<vt::Font> mainFont = symbolizerContext.getFontManager()->getFont(faceName, fontParams);
                         if (mainFont) {
                             font = mainFont;

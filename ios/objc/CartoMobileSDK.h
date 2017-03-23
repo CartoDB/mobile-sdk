@@ -10,6 +10,7 @@
 #import "NTOptions.h"
 #import "NTLayers.h"
 
+#import "NTAddress.h"
 #import "NTMapBounds.h"
 #import "NTMapEnvelope.h"
 #import "NTMapPos.h"
@@ -19,6 +20,7 @@
 #import "NTMapTile.h"
 #import "NTMapVec.h"
 #import "NTTileData.h"
+#import "NTVariant.h"
 
 #import "NTAssetTileDataSource.h"
 #import "NTBitmapOverlayRasterTileDataSource.h"
@@ -47,12 +49,13 @@
 #import "NTViewState.h"
 
 #import "NTSolidLayer.h"
+#import "NTRasterTileEventListener.h"
 #import "NTRasterTileLayer.h"
 #import "NTTileLoadListener.h"
 #import "NTUTFGridEventListener.h"
 #import "NTVectorElementEventListener.h"
-#import "NTVectorTileEventListener.h"
 #import "NTVectorLayer.h"
+#import "NTVectorTileEventListener.h"
 #import "NTVectorTileLayer.h"
 #import "NTTorqueTileLayer.h"
 #import "NTClusteredVectorLayer.h"
@@ -62,6 +65,8 @@
 
 #import "NTCullState.h"
 
+#import "NTAnimationStyleBuilder.h"
+#import "NTAnimationStyle.h"
 #import "NTBalloonPopupStyleBuilder.h"
 #import "NTBalloonPopupStyle.h"
 #import "NTLabelStyleBuilder.h"
@@ -90,8 +95,9 @@
 #import "ui/MapView.h"
 #import "NTMapClickInfo.h"
 #import "NTMapEventListener.h"
-#import "NTVectorElementClickInfo.h"
+#import "NTRasterTileClickInfo.h"
 #import "NTVectorTileClickInfo.h"
+#import "NTVectorElementClickInfo.h"
 
 #import "NTAssetUtils.h"
 #import "NTBitmapUtils.h"
@@ -117,6 +123,7 @@
 #import "NTCompiledStyleSet.h"
 #import "NTCartoCSSStyleSet.h"
 #import "NTVectorTileDecoder.h"
+#import "NTCartoVectorTileDecoder.h"
 #import "NTMBVectorTileDecoder.h"
 #import "NTTorqueTileDecoder.h"
 
@@ -147,6 +154,18 @@
 #import "NTCartoPackageManager.h"
 
 #import "NTCartoOfflineVectorTileLayer.h"
+#endif
+
+#ifdef _CARTO_GEOCODING_SUPPORT
+#import "NTGeocodingRequest.h"
+#import "NTGeocodingResult.h"
+#import "NTReverseGeocodingRequest.h"
+#import "NTGeocodingService.h"
+#import "NTReverseGeocodingService.h"
+#import "NTPackageManagerGeocodingService.h"
+#import "NTPackageManagerReverseGeocodingService.h"
+#import "NTOSMOfflineGeocodingService.h"
+#import "NTOSMOfflineReverseGeocodingService.h"
 #endif
 
 #ifdef _CARTO_ROUTING_SUPPORT
@@ -184,4 +203,3 @@
 #endif
 
 #endif
- 

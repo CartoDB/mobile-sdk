@@ -13,8 +13,12 @@
 namespace carto {
 
     HTTPClient::CFImpl::CFImpl(bool log) :
-        _log(log)
+        _log(log), _timeout(-1)
     {
+    }
+
+    void HTTPClient::CFImpl::setTimeout(int milliseconds) {
+        _timeout = milliseconds;
     }
 
     bool HTTPClient::CFImpl::makeRequest(const HTTPClient::Request& request, HeadersFn headersFn, DataFn dataFn) const {
@@ -36,17 +40,38 @@ namespace carto {
             CFHTTPMessageSetBody(cfRequest, data);
         }
 
+        // Configure connection parameters
         CFUniquePtr<CFReadStreamRef> requestStream(CFReadStreamCreateForHTTPRequest(kCFAllocatorDefault, cfRequest));
         CFReadStreamSetProperty(requestStream, kCFStreamPropertyHTTPShouldAutoredirect, kCFBooleanTrue);
+        CFReadStreamSetProperty(requestStream, kCFStreamPropertyHTTPAttemptPersistentConnection, kCFBooleanTrue);
+
+#ifdef _CARTO_IGNORE_SSL_CERTS
+        CFTypeRef sslKeys[1] = { kCFStreamSSLValidatesCertificateChain };
+        CFTypeRef sslValues[1] = { kCFBooleanFalse };
+        CFUniquePtr<CFDictionaryRef> sslDict(CFDictionaryCreate(NULL, (const void**)sslKeys, (const void**)sslValues, 1, &kCFCopyStringDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
+        CFReadStreamSetProperty(requestStream, kCFStreamPropertySSLSettings, sslDict);
+#endif
+
         if (!CFReadStreamOpen(requestStream)) {
             throw NetworkException("Failed to open HTTP stream", request.url);
         }
 
         // Read initial block of the message. This is needed to parse the headers
         UInt8 buf[4096];
-        CFIndex numBytesRead = CFReadStreamRead(requestStream, buf, sizeof(buf));
-        if (numBytesRead < 0) {
-            throw NetworkException("Failed to read response", request.url);
+        CFIndex numBytesRead = 0;
+        CFAbsoluteTime startTime = CFAbsoluteTimeGetCurrent();
+        while (true) {
+            if (_timeout <= 0 || CFReadStreamHasBytesAvailable(requestStream)) {
+                numBytesRead = CFReadStreamRead(requestStream, buf, sizeof(buf));
+                if (numBytesRead < 0) {
+                    throw NetworkException("Failed to read response", request.url);
+                }
+                break;
+            }
+            if ((CFAbsoluteTimeGetCurrent() - startTime) * 1000 > _timeout) {
+                throw NetworkException("Response timeout", request.url);
+            }
+            sleep(0);
         }
 
         // Get response
@@ -87,31 +112,22 @@ namespace carto {
             }
         }
 
-        // Read Content-Length
-        std::uint64_t contentLength = std::numeric_limits<std::uint64_t>::max();
-        auto it = headers.find("Content-Length");
-        if (it != headers.end()) {
-            contentLength = boost::lexical_cast<std::uint64_t>(it->second);
-        }
-
         // Read message body
-        for (std::uint64_t offset = numBytesRead; offset < contentLength && !cancel; ) {
+        std::uint64_t readOffset = numBytesRead;
+        while (!cancel) {
             numBytesRead = CFReadStreamRead(requestStream, buf, sizeof(buf));
             if (numBytesRead < 0) {
                 throw NetworkException("Failed to read data", request.url);
             }
             else if (numBytesRead == 0) {
-                if (contentLength == std::numeric_limits<std::uint64_t>::max()) {
-                    break;
-                }
-                throw NetworkException("Failed to read full data", request.url);
+                break;
             }
 
             if (!dataFn(static_cast<const unsigned char*>(&buf[0]), numBytesRead)) {
                 cancel = true;
             }
 
-            offset += numBytesRead;
+            readOffset += numBytesRead;
         }
 
         // Done

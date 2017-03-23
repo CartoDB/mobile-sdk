@@ -2,16 +2,17 @@
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
 #include "components/CancelableThreadPool.h"
+#include "graphics/utils/BackgroundBitmapGenerator.h"
+#include "graphics/utils/SkyBitmapGenerator.h"
 #include "datasources/TileDataSource.h"
-#include "layers/TileLoadListener.h"
 #include "layers/VectorTileEventListener.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/TileRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/drawdatas/TileDrawData.h"
+#include "ui/VectorTileClickInfo.h"
 #include "utils/Log.h"
 #include "utils/Const.h"
-#include "ui/VectorTileClickInfo.h"
 #include "vectortiles/VectorTileDecoder.h"
 
 #include <vt/TileId.h>
@@ -30,10 +31,14 @@ namespace carto {
         _buildingRenderOrder(VectorTileRenderOrder::VECTOR_TILE_RENDER_ORDER_LAST),
         _tileDecoder(decoder),
         _tileDecoderListener(),
+        _backgroundColor(),
+        _backgroundBitmap(),
+        _skyColor(),
+        _skyBitmap(),
         _labelCullThreadPool(std::make_shared<CancelableThreadPool>()),
-        _renderer(),
+        _visibleTileIds(),
         _tempDrawDatas(),
-        _visibleCache(128 * 1024 * 1024), // NOTE: the limit should never be reached in normal cases
+        _visibleCache(DEFAULT_VISIBLE_CACHE_SIZE),
         _preloadingCache(DEFAULT_PRELOADING_CACHE_SIZE)
     {
         if (!decoder) {
@@ -190,6 +195,18 @@ namespace carto {
             return mapTile.getTileId();
         }
     }
+
+    std::shared_ptr<VectorTileDecoder::TileMap> VectorTileLayer::getTileMap(long long tileId) const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        TileInfo tileInfo;
+        if (_visibleCache.peek(tileId, tileInfo)) {
+            return tileInfo.getTileMap();
+        }
+        if (_preloadingCache.peek(tileId, tileInfo)) {
+            return tileInfo.getTileMap();
+        }
+        return std::shared_ptr<VectorTileDecoder::TileMap>();
+    }
     
     void VectorTileLayer::calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
@@ -244,9 +261,9 @@ namespace carto {
         // Update renderer if needed, run culler
         bool refresh = false;
         bool cull = false;
-        if (_renderer) {
+        if (auto renderer = getRenderer()) {
             if (!(_synchronizedRefresh && _fetchingTiles.getVisibleCount() > 0)) {
-                if (_renderer->refreshTiles(_tempDrawDatas)) {
+                if (renderer->refreshTiles(_tempDrawDatas)) {
                     refresh = true;
                     cull = true;
                 }
@@ -259,7 +276,7 @@ namespace carto {
     
         if (cull) {
             _labelCullThreadPool->cancelAll();
-            std::shared_ptr<CancelableTask> task = std::make_shared<LabelCullTask>(std::static_pointer_cast<VectorTileLayer>(shared_from_this()), _renderer, cullState->getViewState());
+            std::shared_ptr<CancelableTask> task = std::make_shared<LabelCullTask>(std::static_pointer_cast<VectorTileLayer>(shared_from_this()), getRenderer(), cullState->getViewState());
             _labelCullThreadPool->execute(task);
         }
     
@@ -268,29 +285,42 @@ namespace carto {
                 mapRenderer->requestRedraw();
             }
         }
-        
-        _tempDrawDatas.clear();
+
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _visibleTileIds.clear();
+            for (const std::shared_ptr<TileDrawData>& drawData : _tempDrawDatas) {
+                _visibleTileIds.push_back(drawData->getTileId());
+            }
+            _tempDrawDatas.clear();
+        }
     }
     
     int VectorTileLayer::getMinZoom() const {
         return std::max(_dataSource->getMinZoom(), _tileDecoder->getMinZoom());
     }
-        
+    
     int VectorTileLayer::getMaxZoom() const {
         return _tileDecoder->getMaxZoom(); // NOTE: datasource max zoom is handled differently
     }    
     
+    std::vector<long long> VectorTileLayer::getVisibleTileIds() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _visibleTileIds;
+    }
+
     void VectorTileLayer::calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
         DirectorPtr<VectorTileEventListener> eventListener = _vectorTileEventListener;
 
         if (eventListener) {
-
             for (int pass = 0; pass < 2; pass++) {
                 std::vector<std::tuple<vt::TileId, double, long long> > hitResults;
-                if (pass == 0) {
-                    _renderer->calculateRayIntersectedElements(ray, viewState, hitResults);
-                } else {
-                    _renderer->calculateRayIntersectedElements3D(ray, viewState, hitResults);
+                if (auto renderer = getRenderer()) {
+                    if (pass == 0) {
+                        renderer->calculateRayIntersectedElements(ray, viewState, hitResults);
+                    } else {
+                        renderer->calculateRayIntersectedElements3D(ray, viewState, hitResults);
+                    }
                 }
 
                 for (auto it = hitResults.rbegin(); it != hitResults.rend(); it++) {
@@ -341,15 +371,18 @@ namespace carto {
     }
 
     void VectorTileLayer::offsetLayerHorizontally(double offset) {
-        _renderer->offsetLayerHorizontally(offset);
+        if (auto renderer = getRenderer()) {
+            renderer->offsetLayerHorizontally(offset);
+        }
     }
     
     void VectorTileLayer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
         Layer::onSurfaceCreated(shaderManager, textureManager);
-    
-        if (_renderer) {
-            _renderer->onSurfaceDestroyed();
-            _renderer.reset();
+
+        // Reset renderer    
+        if (auto renderer = getRenderer()) {
+            renderer->onSurfaceDestroyed();
+            setRenderer(std::shared_ptr<TileRenderer>());
     
             // Clear all tile caches - renderer may cache/release tile info, so old tiles are potentially unusable at this point
             std::lock_guard<std::recursive_mutex> lock(_mutex);
@@ -358,31 +391,41 @@ namespace carto {
         }
     
         // Create new rendererer, simply drop old one (if exists)
-        _renderer = std::make_shared<TileRenderer>(_mapRenderer, _useFBO, _useDepth, _useStencil);
-        _renderer->onSurfaceCreated(shaderManager, textureManager);
-        _renderer->setBackgroundColor(_tileDecoder->getBackgroundColor());
-        if (_tileDecoder->getBackgroundPattern()) {
-            _renderer->setBackgroundPattern(_tileDecoder->getBackgroundPattern());
+        auto renderer = std::make_shared<TileRenderer>(_mapRenderer, _useFBO, _useDepth, _useStencil);
+        renderer->onSurfaceCreated(shaderManager, textureManager);
+        renderer->setBackgroundColor(_tileDecoder->getBackgroundColor());
+        if (auto pattern = _tileDecoder->getBackgroundPattern()) {
+            renderer->setBackgroundPattern(pattern);
         }
+        setRenderer(renderer);
     }
     
     bool VectorTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
         updateTileLoadListener();
 
-        _renderer->setLabelOrder(static_cast<int>(getLabelRenderOrder()));
-        _renderer->setBuildingOrder(static_cast<int>(getBuildingRenderOrder()));
-        _renderer->setInteractionMode(_vectorTileEventListener.get() ? true : false);
-        return _renderer->onDrawFrame(deltaSeconds, viewState);
+        if (auto renderer = getRenderer()) {
+            renderer->setLabelOrder(static_cast<int>(getLabelRenderOrder()));
+            renderer->setBuildingOrder(static_cast<int>(getBuildingRenderOrder()));
+            renderer->setInteractionMode(_vectorTileEventListener.get() ? true : false);
+            return renderer->onDrawFrame(deltaSeconds, viewState);
+        }
+        return false;
     }
         
     bool VectorTileLayer::onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
-        return _renderer->onDrawFrame3D(deltaSeconds, viewState);
+        if (auto renderer = getRenderer()) {
+            return renderer->onDrawFrame3D(deltaSeconds, viewState);
+        }
+        return false;
     }
     
     void VectorTileLayer::onSurfaceDestroyed() {
-        _renderer->onSurfaceDestroyed();
-        _renderer.reset();
-        
+        // Reset renderer
+        if (auto renderer = getRenderer()) {
+            renderer->onSurfaceDestroyed();
+            setRenderer(std::shared_ptr<TileRenderer>());
+        }
+
         // Clear all tile caches - renderer may cache/release tile info, so old tiles are potentially unusable at this point
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
@@ -393,6 +436,28 @@ namespace carto {
         Layer::onSurfaceDestroyed();
     }
     
+    std::shared_ptr<Bitmap> VectorTileLayer::getBackgroundBitmap() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+        Color backgroundColor = _tileDecoder->getBackgroundColor();
+        if (backgroundColor != _backgroundColor || !_backgroundBitmap) {
+            _backgroundBitmap = BackgroundBitmapGenerator(BACKGROUND_BLOCK_SIZE, BACKGROUND_BLOCK_COUNT).generateBitmap(backgroundColor);
+            _backgroundColor = backgroundColor;
+        }
+        return _backgroundBitmap;
+    }
+
+    std::shared_ptr<Bitmap> VectorTileLayer::getSkyBitmap() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+        Color backgroundColor = _tileDecoder->getBackgroundColor();
+        if (backgroundColor != _skyColor || !_skyBitmap) {
+            _skyBitmap = SkyBitmapGenerator(SKY_WIDTH, SKY_HEIGHT, SKY_GRADIENT_SIZE, SKY_GRADIENT_OFFSET).generateBitmap(backgroundColor);
+            _skyColor = backgroundColor;
+        }
+        return _skyBitmap;
+    }
+
     void VectorTileLayer::registerDataSourceListener() {
         _tileDecoderListener = std::make_shared<TileDecoderListener>(std::static_pointer_cast<VectorTileLayer>(shared_from_this()));
         _tileDecoder->registerOnChangeListener(_tileDecoderListener);

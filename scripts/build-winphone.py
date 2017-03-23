@@ -41,7 +41,7 @@ def buildWinPhoneNativeDLL(args, arch):
   options = ["-D%s" % option for option in args.cmakeoptions.split(';') if option]
 
   if not cmake(args, buildDir, options + [
-    '-G', 'Visual Studio 14 2015',
+    '-G', 'Visual Studio 15 2017',
     '-DCMAKE_SYSTEM_NAME=WindowsStore',
     '-DCMAKE_SYSTEM_VERSION=10.0',
     '-DCMAKE_GENERATOR_PLATFORM=%s' % platformArch,

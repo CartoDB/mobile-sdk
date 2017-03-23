@@ -7,6 +7,7 @@
 #include "geometry/LineGeometry.h"
 #include "geometry/PolygonGeometry.h"
 #include "geometry/MultiGeometry.h"
+#include "graphics/ViewState.h"
 #include "layers/VectorEditEventListener.h"
 #include "renderers/BillboardRenderer.h"
 #include "renderers/LineRenderer.h"
@@ -283,6 +284,7 @@ namespace carto {
         if (!mapRenderer) {
             return false;
         }
+        ViewState viewState = mapRenderer->getViewState();
 
         std::shared_ptr<VectorElement> selectedElement = layer->getSelectedVectorElement();
         if (!selectedElement) {
@@ -294,8 +296,8 @@ namespace carto {
         switch (action) {
         case TouchHandler::ACTION_POINTER_1_DOWN:
             {
-                MapPos mapPos1 = layer->_dataSource->getProjection()->fromInternal(mapRenderer->screenToWorld(screenPos1));
-                MapPos touchPos = mapRenderer->screenToWorld(screenPos1);
+                MapPos mapPos1 = layer->_dataSource->getProjection()->fromInternal(mapRenderer->screenToWorld(screenPos1, viewState));
+                MapPos touchPos = mapRenderer->screenToWorld(screenPos1, viewState);
                 MapPos rayOrigin = mapRenderer->getCameraPos();
                 MapVec rayDir = touchPos - mapRenderer->getCameraPos();
                 cglib::ray3<double> ray(cglib::vec3<double>(rayOrigin.getX(), rayOrigin.getY(), rayOrigin.getZ()), cglib::vec3<double>(rayDir.getX(), rayDir.getY(), rayDir.getZ()));
@@ -366,7 +368,7 @@ namespace carto {
                     return false;
                 }
 
-                MapPos mapPos1 = layer->_dataSource->getProjection()->fromInternal(mapRenderer->screenToWorld(screenPos1));
+                MapPos mapPos1 = layer->_dataSource->getProjection()->fromInternal(mapRenderer->screenToWorld(screenPos1, viewState));
                 VectorElementDragResult::VectorElementDragResult dragResult = VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_IGNORE;
                 if (vectorEditEventListener) {
                     auto dragInfo = std::make_shared<VectorElementDragInfo>(selectedElement, layer->_overlayDragMode, screenPos1, mapPos1);
@@ -409,7 +411,7 @@ namespace carto {
                     return false;
                 }
 
-                MapPos mapPos1 = layer->_dataSource->getProjection()->fromInternal(mapRenderer->screenToWorld(screenPos1));
+                MapPos mapPos1 = layer->_dataSource->getProjection()->fromInternal(mapRenderer->screenToWorld(screenPos1, viewState));
                 VectorElementDragResult::VectorElementDragResult dragResult = VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_IGNORE;
                 if (vectorEditEventListener) {
                     auto dragInfo = std::make_shared<VectorElementDragInfo>(selectedElement, layer->_overlayDragMode, screenPos1, mapPos1);

@@ -89,7 +89,7 @@ namespace carto {
     }
         
     MapBounds NMLModel::getBounds() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _bounds;
     }
     
@@ -99,7 +99,7 @@ namespace carto {
         }
 
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _geometry = geometry;
         }
         notifyElementChanged();
@@ -107,32 +107,32 @@ namespace carto {
     
     void NMLModel::setPos(const MapPos& pos) {
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _geometry = std::make_shared<PointGeometry>(pos);
         }
         notifyElementChanged();
     }
         
     cglib::mat4x4<float> NMLModel::getLocalMat() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         cglib::mat4x4<float> rotateMat = cglib::rotate4_matrix(cglib::vec3<float>((float) _rotationAxis.getX(), (float) _rotationAxis.getY(), (float) _rotationAxis.getZ()), _rotationAngle * static_cast<float>(Const::DEG_TO_RAD));
         cglib::mat4x4<float> scaleMat = cglib::scale4_matrix(cglib::vec3<float>(_scale, _scale, _scale));
         return rotateMat * scaleMat;
     }
     
     float NMLModel::getRotationAngle() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _rotationAngle;
     }
     
     MapVec NMLModel::getRotationAxis() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _rotationAxis;
     }
     
     void NMLModel::setRotation(const MapVec& axis, float angle) {
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _rotationAxis = axis;
             _rotationAngle = angle;
         }
@@ -140,13 +140,13 @@ namespace carto {
     }
     
     float NMLModel::getScale() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _scale;
     }
     
     void NMLModel::setScale(float scale) {
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _scale = scale;
         }
         notifyElementChanged();
@@ -157,12 +157,12 @@ namespace carto {
     }
     
     std::shared_ptr<NMLModelDrawData> NMLModel::getDrawData() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _drawData;
     }
     
     void NMLModel::setDrawData(const std::shared_ptr<NMLModelDrawData>& drawData) {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         _drawData = drawData;
     }
     

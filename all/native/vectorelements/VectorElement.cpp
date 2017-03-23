@@ -10,43 +10,43 @@ namespace carto {
     }
     
     MapBounds VectorElement::getBounds() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _geometry->getBounds();
     }
     
     std::shared_ptr<Geometry> VectorElement::getGeometry() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _geometry;
     }
     
     long long VectorElement::getId() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _id;
     }
     
     void VectorElement::setId(long long id) {
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _id = id;
         }
         notifyElementChanged();
     }
     
     std::map<std::string, Variant> VectorElement::getMetaData() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _metaData;
     }
         
     void VectorElement::setMetaData(const std::map<std::string, Variant>& metaData) {
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _metaData = metaData;
         }
         notifyElementChanged();
     }
     
     Variant VectorElement::getMetaDataElement(const std::string& key) const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         auto it = _metaData.find(key);
         if (it == _metaData.end()) {
             return Variant();
@@ -56,20 +56,20 @@ namespace carto {
     
     void VectorElement::setMetaDataElement(const std::string& key, const Variant& element) {
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _metaData[key] = element;
         }
         notifyElementChanged();
     }
     
     bool VectorElement::isVisible() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _visible;
     }
     
     void VectorElement::setVisible(bool visible) {
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _visible = visible;
         }
         notifyElementChanged();
@@ -78,7 +78,7 @@ namespace carto {
     void VectorElement::notifyElementChanged() {
         std::shared_ptr<VectorDataSource> dataSource;
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             dataSource = _dataSource.lock();;
         }
         if (dataSource) {
@@ -97,7 +97,7 @@ namespace carto {
     }
         
     void VectorElement::attachToDataSource(const std::weak_ptr<VectorDataSource>& dataSource) {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         if (_dataSource.lock() && dataSource.lock()) {
             Log::Error("VectorElement::attachToDataSource: Vector element is already attached to a data source");
             return;
@@ -106,7 +106,7 @@ namespace carto {
     }
     
     void VectorElement::detachFromDataSource() {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         _dataSource.reset();
     }
     

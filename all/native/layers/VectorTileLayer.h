@@ -22,7 +22,6 @@
 
 namespace carto {
     class TileDrawData;
-    class TileRenderer;
     class VectorTileEventListener;
         
     namespace VectorTileRenderOrder {
@@ -122,12 +121,14 @@ namespace carto {
         virtual void tilesChanged(bool removeTiles);
 
         virtual long long getTileId(const MapTile& mapTile) const;
+        virtual std::shared_ptr<VectorTileDecoder::TileMap> getTileMap(long long tileId) const;
 
         virtual void calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile);
         virtual void refreshDrawData(const std::shared_ptr<CullState>& cullState);
     
         virtual int getMinZoom() const;
         virtual int getMaxZoom() const;
+        virtual std::vector<long long> getVisibleTileIds() const;
         
         virtual void calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray,
             const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
@@ -140,6 +141,9 @@ namespace carto {
         virtual bool onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
         virtual void onSurfaceDestroyed();
         
+        virtual std::shared_ptr<Bitmap> getBackgroundBitmap() const;
+        virtual std::shared_ptr<Bitmap> getSkyBitmap() const;
+
         virtual void registerDataSourceListener();
         virtual void unregisterDataSourceListener();
 
@@ -197,10 +201,17 @@ namespace carto {
             std::shared_ptr<BinaryData> _tileData;
             std::shared_ptr<VectorTileDecoder::TileMap> _tileMap;
         };
-    
+
+        static const int BACKGROUND_BLOCK_SIZE = 16;
+        static const int BACKGROUND_BLOCK_COUNT = 16;
+        static const int SKY_WIDTH = 512;
+        static const int SKY_HEIGHT = 128;
+        static const int SKY_GRADIENT_SIZE = 6;
+        static const int SKY_GRADIENT_OFFSET = 1;
         static const int DEFAULT_CULL_DELAY = 200;
         static const int PRELOADING_PRIORITY_OFFSET = -2;
         static const int EXTRA_TILE_FOOTPRINT = 4096;
+        static const int DEFAULT_VISIBLE_CACHE_SIZE = 512 * 1024 * 1024; // NOTE: the limit should never be reached in normal cases
         static const int DEFAULT_PRELOADING_CACHE_SIZE = 10 * 1024 * 1024;
         
         ThreadSafeDirectorPtr<VectorTileEventListener> _vectorTileEventListener;
@@ -208,12 +219,17 @@ namespace carto {
         VectorTileRenderOrder::VectorTileRenderOrder _labelRenderOrder;
         VectorTileRenderOrder::VectorTileRenderOrder _buildingRenderOrder;
     
-        std::shared_ptr<VectorTileDecoder> _tileDecoder;
+        const std::shared_ptr<VectorTileDecoder> _tileDecoder;
         std::shared_ptr<TileDecoderListener> _tileDecoderListener;
 
+        mutable Color _backgroundColor;
+        mutable std::shared_ptr<Bitmap> _backgroundBitmap;
+        mutable Color _skyColor;
+        mutable std::shared_ptr<Bitmap> _skyBitmap;
+
         std::shared_ptr<CancelableThreadPool> _labelCullThreadPool;
-        std::shared_ptr<TileRenderer> _renderer;
-    
+
+        std::vector<long long> _visibleTileIds;
         std::vector<std::shared_ptr<TileDrawData> > _tempDrawDatas;
 
         cache::timed_lru_cache<long long, TileInfo> _visibleCache;

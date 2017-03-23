@@ -47,7 +47,7 @@ namespace carto {
         
     std::shared_ptr<Bitmap> BalloonPopup::drawBitmap(const ScreenPos& anchorScreenPos,
                                                      float screenWidth, float screenHeight, float dpToPX) {
-        std::unique_lock<std::mutex> lock(_mutex);
+        std::unique_lock<std::recursive_mutex> lock(_mutex);
         
         float pxToDP = 1 / dpToPX;
         if (_style->isScaleWithDPI()) {
@@ -278,33 +278,33 @@ namespace carto {
     }
        
     std::string BalloonPopup::getTitle() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _title;
     }
         
     void BalloonPopup::setTitle(const std::string& title) {
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _title = title;
         }
         notifyElementChanged();
     }
         
     std::string BalloonPopup::getDescription() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _desc;
     }
 
     void BalloonPopup::setDescription(const std::string& desc) {
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _desc = desc;
         }
         notifyElementChanged();
     }
         
     std::shared_ptr<BalloonPopupStyle> BalloonPopup::getStyle() const {
-        std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _style;
     }
 
@@ -314,7 +314,7 @@ namespace carto {
         }
 
         {
-            std::lock_guard<std::mutex> lock(_mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
             _style = style;
         }
         Popup::setStyle(style);

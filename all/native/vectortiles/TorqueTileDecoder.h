@@ -20,6 +20,7 @@ namespace carto {
     namespace mvt {
         class TorqueMap;
         class SymbolizerContext;
+        class Logger;
     }
 
     class CartoCSSStyleSet;
@@ -84,6 +85,7 @@ namespace carto {
         static const int DEFAULT_TILE_SIZE;
         static const int GLYPHMAP_SIZE;
 
+        const std::shared_ptr<mvt::Logger> _logger;
         int _resolution;
         std::shared_ptr<mvt::TorqueMap> _map;
         std::shared_ptr<mvt::SymbolizerContext> _symbolizerContext;

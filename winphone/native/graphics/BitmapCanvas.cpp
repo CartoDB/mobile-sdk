@@ -195,6 +195,10 @@ namespace carto {
     }
 
     void BitmapCanvas::drawText(std::string text, const ScreenPos& pos, int maxWidth, bool breakLines) {
+        if (text.empty()) {
+            return;
+        }
+
         if (_state->_d2dContext && _state->_dwriteFactory && _state->_d2dBrush && _state->_dwriteTextFormat) {
             ComPtr<IDWriteTextLayout> dwriteTextLayout;
             HRESULT hr = _state->createDWriteTextLayout(text, maxWidth, breakLines, &dwriteTextLayout);
@@ -283,6 +287,10 @@ namespace carto {
     }
 
     ScreenBounds BitmapCanvas::measureTextSize(std::string text, int maxWidth, bool breakLines) {
+        if (text.empty()) {
+            return ScreenBounds(ScreenPos(0, 0), ScreenPos(0, 0));
+        }
+
         if (_state->_dwriteFactory && _state->_dwriteTextFormat) {
             ComPtr<IDWriteTextLayout> dwriteTextLayout;
             HRESULT hr = _state->createDWriteTextLayout(text, maxWidth, breakLines, &dwriteTextLayout);

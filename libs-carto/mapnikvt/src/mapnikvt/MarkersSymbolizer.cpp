@@ -44,16 +44,16 @@ namespace carto { namespace mvt {
             }
         }
         else {
-            vt::Color fill = _fill * _fillOpacity;
-            vt::Color stroke = _stroke * _strokeOpacity;
+            vt::Color fill = vt::Color::fromColorOpacity(_fill, _fillOpacity);
+            vt::Color stroke = vt::Color::fromColorOpacity(_stroke, _strokeOpacity);
             if (_markerType == "ellipse" || (_markerType.empty() && placement != vt::LabelOrientation::LINE)) {
                 float width = DEFAULT_CIRCLE_SIZE, height = DEFAULT_CIRCLE_SIZE;
-                if (_width > 0) {
-                    width = _width;
-                    height = (_height > 0 ? _height : width);
+                if (_widthDefined) { // NOTE: special case, if accept all values
+                    width = std::abs(_width);
+                    height = (_heightDefined ? std::abs(_height) : width);
                 }
-                else if (_height > 0) {
-                    height = _height;
+                else if (_heightDefined) { // NOTE: special case, accept all values
+                    height = std::abs(_height);
                     width = height;
                 }
                 file = "__default_marker_ellipse_" + boost::lexical_cast<std::string>(width) + "_" + boost::lexical_cast<std::string>(height) + "_" + boost::lexical_cast<std::string>(fill.value()) + "_" + boost::lexical_cast<std::string>(_strokeWidth) + "_" + boost::lexical_cast<std::string>(stroke.value()) + ".bmp";
@@ -111,12 +111,8 @@ namespace carto { namespace mvt {
 
         auto flushPoints = [&](const cglib::mat3x3<float>& transform) {
             if (_allowOverlap) {
-                std::shared_ptr<const vt::ColorFunction> fillFunc;
-                ExpressionFunctionBinder<vt::Color>().bind(&fillFunc, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), [this](const Value& val) -> vt::Color {
-                    return convertColor(val);
-                }).update(exprContext);
-                std::shared_ptr<const vt::FloatFunction> opacityFunc;
-                ExpressionFunctionBinder<float>().bind(&opacityFunc, std::make_shared<ConstExpression>(Value(fillOpacity))).update(exprContext);
+                std::shared_ptr<const vt::ColorFunction> fillFunc = createColorFunction("#ffffff");
+                std::shared_ptr<const vt::FloatFunction> opacityFunc = createFloatFunction(fillOpacity);
 
                 vt::PointStyle style(compOp, convertLabelToPointOrientation(orientation), fillFunc, opacityFunc, symbolizerContext.getGlyphMap(), bitmap, transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1)));
 
@@ -134,7 +130,7 @@ namespace carto { namespace mvt {
                 pointInfos.clear();
             }
             else {
-                vt::BitmapLabelStyle style(orientation, vt::Color(0xffffffff) * fillOpacity, symbolizerContext.getFontManager()->getNullFont(), bitmap, transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1)));
+                vt::BitmapLabelStyle style(orientation, vt::Color::fromColorOpacity(vt::Color(0xffffffff), fillOpacity), symbolizerContext.getFontManager()->getNullFont(), bitmap, transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1)));
 
                 std::size_t labelInfoIndex = 0;
                 layerBuilder.addBitmapLabels([&](long long& id, vt::TileLayerBuilder::BitmapLabelInfo& labelInfo) {
@@ -238,9 +234,11 @@ namespace carto { namespace mvt {
         }
         else if (name == "width") {
             bind(&_width, parseExpression(value));
+            _widthDefined = true;
         }
         else if (name == "height") {
             bind(&_height, parseExpression(value));
+            _heightDefined = true;
         }
         else if (name == "stroke") {
             bind(&_stroke, parseStringExpression(value), &MarkersSymbolizer::convertColor);

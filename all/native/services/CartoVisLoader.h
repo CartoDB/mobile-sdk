@@ -110,6 +110,10 @@ namespace carto {
         boost::optional<LayerInfo> createCartoLayer(const std::string& type, const picojson::value& options, const picojson::value& legend) const;
         std::vector<LayerInfo> createNamedLayers(const picojson::value& options) const;
         std::vector<LayerInfo> createLayerGroup(const picojson::value& options, const picojson::value& infoWindow) const;
+        std::vector<LayerInfo> createLayerInfos(const std::vector<std::shared_ptr<Layer> >& layers, const picojson::value& options, const picojson::value& layerDefinition) const;
+
+        static const std::string DEFAULT_TILER_PROTOCOL;
+        static const std::string DEFAULT_TILER_DOMAIN;
 
         bool _defaultVectorLayerMode;
         bool _strictMode;

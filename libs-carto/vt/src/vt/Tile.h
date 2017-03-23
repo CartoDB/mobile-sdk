@@ -22,6 +22,10 @@ namespace carto { namespace vt {
         const TileId& getTileId() const { return _tileId; }
         const std::vector<std::shared_ptr<TileLayer>>& getLayers() const { return _layers; }
 
+        std::size_t getFeatureCount() const {
+            return std::accumulate(_layers.begin(), _layers.end(), static_cast<std::size_t>(0), [](std::size_t count, const std::shared_ptr<TileLayer>& layer) { return count + layer->getFeatureCount(); });
+        }
+
         std::size_t getResidentSize() const {
             std::size_t layersSize = std::accumulate(_layers.begin(), _layers.end(), static_cast<std::size_t>(0), [](std::size_t size, const std::shared_ptr<TileLayer>& layer) { return size + layer->getResidentSize(); });
             return 16 + layersSize;

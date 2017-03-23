@@ -32,6 +32,7 @@ namespace carto {
     
     void CameraPanEvent::setPosDelta(const MapVec& posDelta) {
         _posDelta = posDelta;
+        _posDelta.setZ(0);
         _useDelta = true;
     }
     

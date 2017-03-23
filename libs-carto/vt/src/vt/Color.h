@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include <algorithm>
+#include <utility>
 #include <array>
 
 #include <cglib/vec.h>
@@ -55,6 +56,16 @@ namespace carto { namespace vt {
                 components8[i] = static_cast<std::uint8_t>(c * 255.0f + 0.5f);
             }
             return components8;
+        }
+
+        static Color fromColorOpacity(const Color& baseColor, float opacity) {
+            Color color = baseColor;
+            if (opacity < 1.0f) {
+                for (std::size_t i = 0; i < 4; i++) {
+                    color._components[i] *= std::max(opacity, 0.0f);
+                }
+            }
+            return color;
         }
 
     private:

@@ -37,7 +37,7 @@ namespace carto {
     }
 
     void TextureManager::processTextures() {
-        std::vector<std::shared_ptr<Texture> > createQueue;
+        std::vector<std::weak_ptr<Texture> > createQueue;
         {
             std::lock_guard<std::mutex> lock(_mutex);
 
@@ -51,8 +51,10 @@ namespace carto {
                 _deleteTexIdQueue.clear();
             }
 
-            for (const std::shared_ptr<Texture>& texture : _createQueue) {
-                texture->load();
+            for (const std::weak_ptr<Texture>& textureWeak : _createQueue) {
+                if (auto texture = textureWeak.lock()) {
+                    texture->load();
+                }
             }
             std::swap(createQueue, _createQueue); // release the textures only after lock is released
         }
@@ -70,6 +72,7 @@ namespace carto {
                     _deleteTexIdQueue.push_back(texture->_texId);
                 }
             }
+            delete texture;
         }
     }
 

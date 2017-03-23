@@ -15,11 +15,13 @@
 namespace carto {
 
     MBTilesTileDataSource::MBTilesTileDataSource(const std::string& path) :
-        TileDataSource(), _scheme(MBTilesScheme::MBTILES_SCHEME_TMS), _db(), _mutex()
+        TileDataSource(),
+        _scheme(MBTilesScheme::MBTILES_SCHEME_TMS),
+        _db(new sqlite3pp::database()),
+        _cachedDataExtent(),
+        _mutex()
     {
-        try {
-            _db.reset(new sqlite3pp::database(path.c_str()));
-        } catch (...) {
+        if (_db->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
             throw FileException("Failed to open database file", path);
         }
 
@@ -36,21 +38,25 @@ namespace carto {
     }
 
     MBTilesTileDataSource::MBTilesTileDataSource(int minZoom, int maxZoom, const std::string& path) :
-        TileDataSource(minZoom, maxZoom), _scheme(MBTilesScheme::MBTILES_SCHEME_TMS), _db(), _mutex()
+        TileDataSource(minZoom, maxZoom),
+        _scheme(MBTilesScheme::MBTILES_SCHEME_TMS),
+        _db(new sqlite3pp::database()),
+        _cachedDataExtent(),
+        _mutex()
     {
-        try {
-            _db.reset(new sqlite3pp::database(path.c_str()));
-        } catch (...) {
+        if (_db->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
             throw FileException("Failed to open database file", path);
         }
     }
     
     MBTilesTileDataSource::MBTilesTileDataSource(int minZoom, int maxZoom, const std::string& path, MBTilesScheme::MBTilesScheme scheme) :
-        TileDataSource(minZoom, maxZoom), _scheme(scheme), _db(), _mutex()
+        TileDataSource(minZoom, maxZoom),
+        _scheme(scheme),
+        _db(new sqlite3pp::database()),
+        _cachedDataExtent(),
+        _mutex()
     {
-        try {
-            _db.reset(new sqlite3pp::database(path.c_str()));
-        } catch (...) {
+        if (_db->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
             throw FileException("Failed to open database file", path);
         }
     }
@@ -96,6 +102,11 @@ namespace carto {
             Log::Error("MBTilesTileDataSource::getDataExtent: Not connected to the database.");
             return MapBounds();
         }
+
+        // Try to reuse cached value
+        if (_cachedDataExtent) {
+            return *_cachedDataExtent;
+        }
         
         // As a first step, try to use meta data
         sqlite3pp::query query(*_db, "SELECT value FROM metadata WHERE name='bounds'");
@@ -113,10 +124,11 @@ namespace carto {
                 mapBounds.expandToContain(_projection->fromWgs84(MapPos(x1, y0)));
                 mapBounds.expandToContain(_projection->fromWgs84(MapPos(x1, y1)));
                 mapBounds.expandToContain(_projection->fromWgs84(MapPos(x0, y1)));
+                _cachedDataExtent.reset(new MapBounds(mapBounds));
                 return mapBounds;
             }
         }
-        
+
         // Meta data not available, use tiles at last zoom level
         MapBounds mapBounds;
         try {
@@ -145,8 +157,10 @@ namespace carto {
             }
         } catch (const std::exception& e) {
             Log::Errorf("MBTilesTileDataSource::getDataExtent: Failed to query tile data from the database: %s.", e.what());
+            _cachedDataExtent.reset(new MapBounds());
             return MapBounds();
         }
+        _cachedDataExtent.reset(new MapBounds(mapBounds));
         return mapBounds;
     }
     

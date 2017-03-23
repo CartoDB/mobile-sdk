@@ -1,6 +1,4 @@
 #include "Options.h"
-#include "assets/DefaultBackgroundPNG.h"
-#include "assets/DefaultSkyPNG.h"
 #include "assets/CartoWatermarkPNG.h"
 #include "components/Exceptions.h"
 #include "components/CancelableThreadPool.h"
@@ -28,8 +26,9 @@ namespace carto {
         _pivotMode(PivotMode::PIVOT_MODE_TOUCHPOINT),
         _seamlessPanning(true),
         _tiltGestureReversed(false),
-        _backgroundBitmap(GetDefaultBackgroundBitmap()),
-        _skyBitmap(GetDefaultSkyBitmap()),
+        _zoomGestures(false),
+        _backgroundBitmap(),
+        _skyBitmap(),
         _watermarkAlignmentX(-1),
         _watermarkAlignmentY(-1),
         _watermarkBitmap(GetDefaultWatermarkBitmap()),
@@ -264,6 +263,22 @@ namespace carto {
             _tiltGestureReversed = reversed;
         }
         notifyOptionChanged("TiltGestureReversed");
+    }
+        
+    bool Options::isZoomGestures() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _zoomGestures;
+    }
+    
+    void Options::setZoomGestures(bool enabled) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            if (_zoomGestures == enabled) {
+                return;
+            }
+            _zoomGestures = enabled;
+        }
+        notifyOptionChanged("ZoomGestures");
     }
         
     int Options::getEnvelopeThreadPoolSize() const {
@@ -599,22 +614,6 @@ namespace carto {
         notifyOptionChanged("BaseProjection");
     }
     
-    std::shared_ptr<Bitmap> Options::GetDefaultBackgroundBitmap() {
-        std::lock_guard<std::mutex> lock(_Mutex);
-        if (!_DefaultBackgroundBitmap) {
-            _DefaultBackgroundBitmap = Bitmap::CreateFromCompressed(default_background_png, default_background_png_len);
-        }
-        return _DefaultBackgroundBitmap;
-    }
-    
-    std::shared_ptr<Bitmap> Options::GetDefaultSkyBitmap() {
-        std::lock_guard<std::mutex> lock(_Mutex);
-        if (!_DefaultSkyBitmap) {
-            _DefaultSkyBitmap = Bitmap::CreateFromCompressed(default_sky_png, default_sky_png_len);
-        }
-        return _DefaultSkyBitmap;
-    }
-        
     std::shared_ptr<Bitmap> Options::GetDefaultWatermarkBitmap() {
         std::lock_guard<std::mutex> lock(_Mutex);
         if (!_DefaultWatermarkBitmap) {
@@ -644,9 +643,8 @@ namespace carto {
         _onChangeListeners.erase(std::remove(_onChangeListeners.begin(), _onChangeListeners.end(), listener), _onChangeListeners.end());
     }
     
-    std::mutex Options::_Mutex;
-    std::shared_ptr<Bitmap> Options::_DefaultBackgroundBitmap;
-    std::shared_ptr<Bitmap> Options::_DefaultSkyBitmap;
     std::shared_ptr<Bitmap> Options::_DefaultWatermarkBitmap;
+
+    std::mutex Options::_Mutex;
     
 }

@@ -28,8 +28,8 @@ namespace carto { namespace mvt {
             height = bitmap->height;
         }
         else {
-            vt::Color fill = _fill * _fillOpacity;
-            vt::Color stroke = _stroke * _strokeOpacity;
+            vt::Color fill = vt::Color::fromColorOpacity(_fill, _fillOpacity);
+            vt::Color stroke = vt::Color::fromColorOpacity(_stroke, _strokeOpacity);
             if (_markerType == "rectangle") {
                 std::string file = "__torque_marker_rectangle_" + boost::lexical_cast<std::string>(width) + "_" + boost::lexical_cast<std::string>(height) + "_" + boost::lexical_cast<std::string>(fill.value()) + "_" + boost::lexical_cast<std::string>(_strokeWidth) + "_" + boost::lexical_cast<std::string>(stroke.value()) + ".bmp";
                 bitmap = symbolizerContext.getBitmapManager()->getBitmap(file);
@@ -51,12 +51,8 @@ namespace carto { namespace mvt {
             fillOpacity = 1.0f;
         }
 
-        std::shared_ptr<const vt::ColorFunction> fillFunc;
-        ExpressionFunctionBinder<vt::Color>().bind(&fillFunc, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), [this](const Value& val) -> vt::Color {
-            return convertColor(val);
-        }).update(exprContext);
-        std::shared_ptr<const vt::FloatFunction> opacityFunc;
-        ExpressionFunctionBinder<float>().bind(&opacityFunc, std::make_shared<ConstExpression>(Value(fillOpacity))).update(exprContext);
+        std::shared_ptr<const vt::ColorFunction> fillFunc = createColorFunction("#ffffff");
+        std::shared_ptr<const vt::FloatFunction> opacityFunc = createFloatFunction(fillOpacity);
 
         vt::PointStyle style(compOp, vt::PointOrientation::POINT, fillFunc, opacityFunc, symbolizerContext.getGlyphMap(), bitmap, cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1)));
 

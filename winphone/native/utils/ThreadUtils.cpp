@@ -8,7 +8,7 @@ namespace carto {
 
     void ThreadUtils::SetThreadPriority(ThreadPriority::ThreadPriority priority) {
         // Not really supported on Windows Phone
-        ::SetThreadPriority(GetCurrentThread(), static_cast<int>(priority) * THREAD_PRIORITY_HIGHEST / static_cast<int>(ThreadPriority::MAXIMUM));
+        ::SetThreadPriority(::GetCurrentThread(), static_cast<int>(priority) * THREAD_PRIORITY_HIGHEST / static_cast<int>(ThreadPriority::MAXIMUM));
     }
 
     ThreadUtils::ThreadUtils() {

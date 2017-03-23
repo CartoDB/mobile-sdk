@@ -21,6 +21,8 @@ namespace carto { namespace vt {
         _attribs.reserve(RESERVED_VERTICES);
         _indices.reserve(RESERVED_VERTICES);
         _ids.reserve(RESERVED_VERTICES);
+
+        _nullWidth = std::make_shared<FloatFunction>([](const ViewState& viewState) { return 0.0f; });
     }
 
     void TileLayerBuilder::addBitmap(const std::shared_ptr<TileBitmap>& bitmap) {
@@ -97,6 +99,7 @@ namespace carto { namespace vt {
 
         do {
             std::size_t i0 = _indices.size();
+            std::size_t i1 = _binormals.size();
             TextFormatter formatter(style.font);
             std::vector<Font::Glyph> glyphs = formatter.format(text, style.formatterOptions);
             if (style.backgroundBitmap) {
@@ -117,8 +120,14 @@ namespace carto { namespace vt {
                 pen += glyph.advance;
             }
             _ids.fill(id, _indices.size() - i0);
-        } while (generator(id, vertex, text));
 
+            if (style.angle != 0) {
+                cglib::mat3x3<float> transform = cglib::rotate3_matrix(cglib::vec3<float>(0, 0, 1), style.angle * boost::math::constants::pi<float>() / 180.0f);
+                for (std::size_t i = i1; i < _binormals.size(); i++) {
+                    _binormals[i] = cglib::transform_vector(_binormals[i], transform); // NOTE: no need to use special inv/transposed matrix
+                }
+            }
+        } while (generator(id, vertex, text));
     }
 
     void TileLayerBuilder::addLines(const std::function<bool(long long& id, Vertices& vertices)>& generator, const LineStyle& style) {
@@ -128,7 +137,10 @@ namespace carto { namespace vt {
             return;
         }
 
-        if (_builderParameters.type != TileGeometry::Type::LINE || _builderParameters.strokeMap != style.strokeMap || _styleParameters.transform != style.transform || _styleParameters.compOp != style.compOp || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
+        if ((_builderParameters.strokeMap && _builderParameters.strokeMap != style.strokeMap) || _styleParameters.transform != style.transform || _styleParameters.compOp != style.compOp || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
+            appendGeometry();
+        }
+        else if (!(_builderParameters.type == TileGeometry::Type::LINE || (_builderParameters.type == TileGeometry::Type::POLYGON && !_styleParameters.pattern && !_styleParameters.transform))) { // we can use also line drawing shader but ONLY if pattern/transform is not used for polygons (pattern can be used for lines)
             appendGeometry();
         }
         _builderParameters.type = TileGeometry::Type::LINE;
@@ -153,6 +165,7 @@ namespace carto { namespace vt {
         
         do {
             std::size_t i0 = _indices.size();
+            _binormals.fill(cglib::vec2<float>(0, 0), _vertices.size() - _binormals.size()); // needed if previously only polygons were used
             tesselateLine(vertices, static_cast<char>(styleIndex), stroke.get(), style);
             _ids.fill(id, _indices.size() - i0);
         } while (generator(id, vertices));
@@ -165,16 +178,23 @@ namespace carto { namespace vt {
             return;
         }
 
-        if (_builderParameters.type != TileGeometry::Type::POLYGON || _styleParameters.pattern != style.pattern || _styleParameters.transform != style.transform || _styleParameters.compOp != style.compOp || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
+        TileGeometry::Type type = TileGeometry::Type::POLYGON;
+        if (_styleParameters.pattern != style.pattern || _styleParameters.transform != style.transform || _styleParameters.compOp != style.compOp || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
             appendGeometry();
         }
-        _builderParameters.type = TileGeometry::Type::POLYGON;
+        else if (!(_builderParameters.type == TileGeometry::Type::POLYGON || (_builderParameters.type == TileGeometry::Type::LINE && !style.pattern && !style.transform))) { // we can use also line drawing shader but ONLY if pattern/transform is not used for polygons (pattern can be used for lines)
+            appendGeometry();
+        }
+        else {
+            type = _builderParameters.type;
+        }
+        _builderParameters.type = type;
         _styleParameters.pattern = style.pattern;
         _styleParameters.transform = style.transform;
         _styleParameters.compOp = style.compOp;
         int styleIndex = _styleParameters.parameterCount;
         while (--styleIndex >= 0) {
-            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.opacityTable[styleIndex] == style.opacity) {
+            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.opacityTable[styleIndex] == style.opacity && _styleParameters.widthTable[styleIndex] == _nullWidth && _builderParameters.lineStrokeIds[styleIndex] == 0) {
                 break;
             }
         }
@@ -182,12 +202,17 @@ namespace carto { namespace vt {
             styleIndex = _styleParameters.parameterCount++;
             _styleParameters.colorTable[styleIndex] = style.color;
             _styleParameters.opacityTable[styleIndex] = style.opacity;
+            _styleParameters.widthTable[styleIndex] = _nullWidth; // fill width information when we need to use line shader with polygons
+            _builderParameters.lineStrokeIds[styleIndex] = 0; // fill stroke information when we need to use line shader with polygons
         }
 
         do {
             std::size_t i0 = _ids.size();
             tesselatePolygon(verticesList, static_cast<char>(styleIndex), style);
             _ids.fill(id, _indices.size() - i0);
+            if (type == TileGeometry::Type::LINE) {
+                _binormals.fill(cglib::vec2<float>(0, 0), _vertices.size() - _binormals.size()); // use zero binormals if using 'lines'
+            }
         } while (generator(id, verticesList));
     }
 
@@ -301,7 +326,7 @@ namespace carto { namespace vt {
         }
     }
 
-    std::shared_ptr<TileLayer> TileLayerBuilder::build(std::string layerName, int layerIdx, std::shared_ptr<FloatFunction> opacity, boost::optional<CompOp> compOp) {
+    std::shared_ptr<TileLayer> TileLayerBuilder::build(int layerIdx, std::shared_ptr<FloatFunction> opacity, boost::optional<CompOp> compOp) {
         std::vector<std::shared_ptr<TileBitmap>> bitmapList;
         std::swap(bitmapList, _bitmapList);
 
@@ -313,7 +338,7 @@ namespace carto { namespace vt {
         std::swap(labelList, _labelList);
         std::for_each(labelList.begin(), labelList.end(), [layerIdx](const std::shared_ptr<TileLabel>& label) { label->setPriority(layerIdx); });
 
-        return std::make_shared<TileLayer>(std::move(layerName), layerIdx, std::move(opacity), std::move(compOp), std::move(bitmapList), std::move(geometryList), std::move(labelList));
+        return std::make_shared<TileLayer>(layerIdx, std::move(opacity), std::move(compOp), std::move(bitmapList), std::move(geometryList), std::move(labelList));
     }
 
     void TileLayerBuilder::appendGeometry() {
@@ -322,19 +347,17 @@ namespace carto { namespace vt {
         }
 
         if (_builderParameters.strokeMap) {
-            // If stroking is used, normalize V coordinates according to actual pattern bitmap height
             bool strokeUsed = std::any_of(_builderParameters.lineStrokeIds.begin(), _builderParameters.lineStrokeIds.begin() + _styleParameters.parameterCount, [](StrokeMap::StrokeId strokeId) { return strokeId != 0; });
             if (strokeUsed) {
                 _styleParameters.pattern = _builderParameters.strokeMap->getBitmapPattern();
-                float vScale = 1.0f / _styleParameters.pattern->bitmap->height;
-                for (std::size_t i = 0; i < _texCoords.size(); i++) {
-                    _texCoords[i](1) *= vScale;
-                }
             }
         }
-        if (_builderParameters.glyphMap) {
-            // If glyph map is used, normalize U, V coordinates according to actual pattern bitmap dimensions
+        else if (_builderParameters.glyphMap) {
             _styleParameters.pattern = _builderParameters.glyphMap->getBitmapPattern();
+        }
+
+        if (_styleParameters.pattern) {
+            // Normalize U, V coordinates according to actual pattern bitmap dimensions
             float uScale = 1.0f / _styleParameters.pattern->bitmap->width;
             float vScale = 1.0f / _styleParameters.pattern->bitmap->height;
             for (std::size_t i = 0; i < _texCoords.size(); i++) {
@@ -342,9 +365,10 @@ namespace carto { namespace vt {
                 _texCoords[i](1) *= vScale;
             }
         }
-        if (!_styleParameters.pattern) {
+        else {
             _texCoords.clear();
         }
+
         if (_styleParameters.transform) {
             cglib::mat3x3<float> invTransTransform = cglib::transpose(cglib::inverse(_styleParameters.transform.get()));
             for (std::size_t i = 0; i < _binormals.size(); i++) {
@@ -557,14 +581,14 @@ namespace carto { namespace vt {
 
         float du_dx = 0.0f, dv_dy = 0.0f;
         if (style.pattern) {
-            du_dx = _tileSize / (style.pattern->bitmap->width * style.pattern->widthScale);
-            dv_dy = _tileSize / (style.pattern->bitmap->height * style.pattern->heightScale);
+            du_dx = _tileSize / style.pattern->widthScale;
+            dv_dy = _tileSize / style.pattern->heightScale;
         }
 
         int offset = static_cast<int>(_vertices.size());
         for (int i = 0; i < vertexCount; i++) {
             cglib::vec2<float> p(static_cast<float>(coords[i * 2 + 0]), static_cast<float>(coords[i * 2 + 1]));
-            cglib::vec2<float> uv(p(0) * du_dx, p(1) * dv_dy);
+            cglib::vec2<float> uv(p(0) * du_dx + 0.5f, p(1) * dv_dy + 0.5f);
 
             _vertices.append(p);
             _texCoords.append(uv);
@@ -745,7 +769,7 @@ namespace carto { namespace vt {
             _vertices.append(p0, p0);
             _texCoords.append(cglib::vec2<float>(u0, v0), cglib::vec2<float>(u0, v1));
             _binormals.append(cycle ? -knotBinormal : -binormal, cycle ? knotBinormal : binormal);
-            _attribs.append(cglib::vec4<char>(styleIndex, 0, 1, 0), cglib::vec4<char>(styleIndex, 0, -1, 0));
+            _attribs.append(cglib::vec4<char>(styleIndex, 0, 1, 1), cglib::vec4<char>(styleIndex, 0, -1, 1));
         }
 
         while (++i < points.size()) {
@@ -767,7 +791,7 @@ namespace carto { namespace vt {
                 _vertices.append(p0, p0);
                 _texCoords.append(cglib::vec2<float>(u0, v0), cglib::vec2<float>(u0, v1));
                 _binormals.append(-prevBinormal, prevBinormal);
-                _attribs.append(cglib::vec4<char>(styleIndex, 0, 1, 0), cglib::vec4<char>(styleIndex, 0, -1, 0));
+                _attribs.append(cglib::vec4<char>(styleIndex, 0, 1, 1), cglib::vec4<char>(styleIndex, 0, -1, 1));
 
                 int i0 = static_cast<int>(_vertices.size()) - 4;
                 _indices.append(i0 + 0, i0 + 1, i0 + 2);
@@ -776,7 +800,7 @@ namespace carto { namespace vt {
                 _vertices.append(p0, p0);
                 _texCoords.append(cglib::vec2<float>(u0, v0), cglib::vec2<float>(u0, v1));
                 _binormals.append(-binormal, binormal);
-                _attribs.append(cglib::vec4<char>(styleIndex, 0, 1, 0), cglib::vec4<char>(styleIndex, 0, -1, 0));
+                _attribs.append(cglib::vec4<char>(styleIndex, 0, 1, 1), cglib::vec4<char>(styleIndex, 0, -1, 1));
             }
             else {
                 cglib::vec2<float> lerpedBinormal = cglib::unit(binormal + prevBinormal) * (1 / std::sqrt((1 + dot) / 2));
@@ -784,7 +808,7 @@ namespace carto { namespace vt {
                 _vertices.append(p0, p0);
                 _texCoords.append(cglib::vec2<float>(u0, v0), cglib::vec2<float>(u0, v1));
                 _binormals.append(-lerpedBinormal, lerpedBinormal);
-                _attribs.append(cglib::vec4<char>(styleIndex, 0, 1, 0), cglib::vec4<char>(styleIndex, 0, -1, 0));
+                _attribs.append(cglib::vec4<char>(styleIndex, 0, 1, 1), cglib::vec4<char>(styleIndex, 0, -1, 1));
 
                 int i0 = static_cast<int>(_vertices.size()) - 4;
                 _indices.append(i0 + 0, i0 + 1, i0 + 2);
@@ -799,7 +823,7 @@ namespace carto { namespace vt {
             _vertices.append(p0, p0);
             _texCoords.append(cglib::vec2<float>(u0, v0), cglib::vec2<float>(u0, v1));
             _binormals.append(cycle ? -knotBinormal : -binormal, cycle ? knotBinormal : binormal);
-            _attribs.append(cglib::vec4<char>(styleIndex, 0, 1, 0), cglib::vec4<char>(styleIndex, 0, -1, 0));
+            _attribs.append(cglib::vec4<char>(styleIndex, 0, 1, 1), cglib::vec4<char>(styleIndex, 0, -1, 1));
 
             int i0 = static_cast<int>(_vertices.size()) - 4;
             _indices.append(i0 + 0, i0 + 1, i0 + 2);
@@ -816,7 +840,7 @@ namespace carto { namespace vt {
         _vertices.append(p0, p0);
         _texCoords.append(cglib::vec2<float>(u0, v0), cglib::vec2<float>(u0, v1));
         _binormals.append(tangent - binormal, tangent + binormal);
-        _attribs.append(cglib::vec4<char>(styleIndex, 1, 1, 0), cglib::vec4<char>(styleIndex, 1, -1, 0));
+        _attribs.append(cglib::vec4<char>(styleIndex, 1, 1, 1), cglib::vec4<char>(styleIndex, 1, -1, 1));
                 
         int i2 = static_cast<int>(_vertices.size()) - 2;
         _indices.append(i0 + 0, i0 + 1, i2 + 0);

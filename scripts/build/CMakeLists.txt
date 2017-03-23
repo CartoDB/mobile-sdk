@@ -29,7 +29,7 @@ endif()
 # C++ compiler flags
 add_definitions("${SDK_CPP_DEFINES} -D_CARTO_MOBILE_SDK_PLATFORM=\"\\\"${SDK_PLATFORM}\\\"\" -D_CARTO_MOBILE_SDK_VERSION=\"\\\"${SDK_VERSION}\\\"\" -DHAVE_OT -DHAVE_UCDN -DHB_NO_MT -DFT2_BUILD_LIBRARY -DUSE_STD_REGEX -DBOOST_ALL_NO_LIB")
 if(WIN32)
-add_definitions("-DNOMINMAX -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -DBOOST_VARIANT_DO_NOT_USE_VARIADIC_TEMPLATES -DBOOST_MSVC_ENABLE_2014_JUN_CTP -DRAPIDJSON_ENDIAN=RAPIDJSON_LITTLEENDIAN -DSQLITE_OS_WINRT -DSQLITE_OMIT_WAL -DNO_OS_DEPENDENCE -DGL_GLEXT_PROTOTYPES")
+add_definitions("-DNOMINMAX -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -DRAPIDJSON_ENDIAN=RAPIDJSON_LITTLEENDIAN -DSQLITE_OS_WINRT -DSQLITE_OMIT_WAL -DNO_OS_DEPENDENCE -DGL_GLEXT_PROTOTYPES")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /WINMD /NODEFAULTLIB:vccorlib /NODEFAULTLIB:msvcrt vccorlib.lib msvcrt.lib")
 endif(WIN32)
 
@@ -59,6 +59,7 @@ include_directories(
     "${SDK_CARTO_LIBS_DIR}/cartocss/src"
     "${SDK_CARTO_LIBS_DIR}/nml/src"
     "${SDK_CARTO_LIBS_DIR}/routing/src"
+    "${SDK_CARTO_LIBS_DIR}/geocoding/src"
     "${SDK_EXTERNAL_LIBS_DIR}/boost"
     "${SDK_EXTERNAL_LIBS_DIR}/asio"
     "${SDK_EXTERNAL_LIBS_DIR}/cglib"
@@ -130,6 +131,7 @@ add_subdirectory("${SDK_CARTO_LIBS_DIR}/mapnikvt" mapnikvt)
 add_subdirectory("${SDK_CARTO_LIBS_DIR}/cartocss" cartocss)
 add_subdirectory("${SDK_CARTO_LIBS_DIR}/nml" nml)
 add_subdirectory("${SDK_CARTO_LIBS_DIR}/routing" routing)
+add_subdirectory("${SDK_CARTO_LIBS_DIR}/geocoding" geocoding)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/bidi" bidi)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/cryptopp" cryptopp)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/freetype" freetype)
@@ -232,6 +234,7 @@ set(SDK_SRC_FILES
     "${cartocss_SRC_FILES}"
     "${nml_SRC_FILES}"
     "${routing_SRC_FILES}"
+    "${geocoding_SRC_FILES}"
     "${bidi_SRC_FILES}"
     "${cryptopp_SRC_FILES}"
     "${rg_etc1_SRC_FILES}"
@@ -267,6 +270,7 @@ set(SDK_OBJECTS
     $<TARGET_OBJECTS:cartocss>
     $<TARGET_OBJECTS:nml>
     $<TARGET_OBJECTS:routing>
+    $<TARGET_OBJECTS:geocoding>
     $<TARGET_OBJECTS:bidi>
     $<TARGET_OBJECTS:cryptopp>
     $<TARGET_OBJECTS:rg_etc1>

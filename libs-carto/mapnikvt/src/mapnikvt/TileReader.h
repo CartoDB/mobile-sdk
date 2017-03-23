@@ -40,8 +40,6 @@ namespace carto { namespace mvt {
 
         std::vector<std::shared_ptr<Symbolizer>> findFeatureSymbolizers(const std::shared_ptr<const Style>& style, FeatureExpressionContext& exprContext) const;
 
-        virtual std::string getLayerName(const std::shared_ptr<const Layer>& layer) const = 0;
-        
         virtual std::shared_ptr<FeatureDecoder::FeatureIterator> createFeatureIterator(const std::shared_ptr<const Layer>& layer, const std::shared_ptr<const Style>& style, const FeatureExpressionContext& exprContext) const = 0;
 
         const std::shared_ptr<const Map> _map;

@@ -52,6 +52,7 @@ namespace carto { namespace vt {
 
         bool findGeometryIntersections(const cglib::ray3<double>& ray, std::vector<std::tuple<TileId, double, long long>>& results, float radius, bool geom2D, bool geom3D) const;
         bool findLabelIntersections(const cglib::ray3<double>& ray, std::vector<std::tuple<TileId, double, long long>>& results, float radius, bool labels2D, bool labels3D) const;
+        bool findBitmapIntersections(const cglib::ray3<double>& ray, std::vector<std::tuple<TileId, double, TileBitmap, cglib::vec2<float>>>& results) const;
 
     private:
         using BitmapLabelMap = std::unordered_map<std::shared_ptr<const Bitmap>, std::vector<std::shared_ptr<TileLabel>>>;
@@ -91,6 +92,18 @@ namespace carto { namespace vt {
             ScreenFBO() : colorTexture(0), depthStencilRB(0), fbo(0), depthStencilAttachments() { }
         };
 
+        struct TileVBO {
+            GLuint vbo;
+
+            TileVBO() : vbo(0) { }
+        };
+
+        struct ScreenVBO {
+            GLuint vbo;
+
+            ScreenVBO() : vbo(0) { }
+        };
+
         struct CompiledBitmap {
             GLuint texture;
 
@@ -103,6 +116,15 @@ namespace carto { namespace vt {
             GLuint geometryVAO;
 
             CompiledGeometry() : vertexGeometryVBO(0), indicesVBO(0), geometryVAO(0) { }
+        };
+
+        struct CompiledLabelBatch {
+            GLuint vertexGeometryVBO;
+            GLuint vertexUVVBO;
+            GLuint vertexColorVBO;
+            GLuint vertexIndicesVBO;
+
+            CompiledLabelBatch() : vertexGeometryVBO(0), vertexUVVBO(0), vertexColorVBO(0), vertexIndicesVBO(0) { }
         };
 
         struct LabelHash {
@@ -131,11 +153,9 @@ namespace carto { namespace vt {
         void findTileGeometryIntersections(const TileId& tileId, const std::shared_ptr<TileGeometry>& geometry, const cglib::ray3<double>& ray, float radius, std::vector<std::pair<double, long long>>& results) const;
         bool findLabelIntersection(const std::shared_ptr<TileLabel>& label, const cglib::ray3<double>& ray, float radius, double& result) const;
 
-        static cglib::vec3<float> extendOffset(const cglib::vec3<float>& offset, float radius);
-
         cglib::vec3<float> decodeVertex(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const;
-        cglib::vec3<float> decodePointOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index, const cglib::vec3<float>& xAxis, const cglib::vec3<float>& yAxis) const;
-        cglib::vec3<float> decodeLineBinormal(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const;
+        cglib::vec3<float> decodePointOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index, const cglib::vec3<float>& xAxis, const cglib::vec3<float>& yAxis, float radius) const;
+        cglib::vec3<float> decodeLineOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index, float radius) const;
         cglib::vec3<float> decodePolygon3DOffset(const std::shared_ptr<TileGeometry>& geometry, std::size_t index) const;
 
         bool renderBlendNodes2D(const std::vector<std::shared_ptr<BlendNode>>& blendNodes);
@@ -163,6 +183,10 @@ namespace carto { namespace vt {
         void deleteLayerFBO(LayerFBO& layerFBO);
         ScreenFBO createScreenFBO(bool useDepth, bool useStencil);
         void deleteScreenFBO(ScreenFBO& screenFBO);
+        TileVBO createTileVBO();
+        void deleteTileVBO(TileVBO& tileVBO);
+        ScreenVBO createScreenVBO();
+        void deleteScreenVBO(ScreenVBO& screenVBO);
 
         bool _subTileBlending = false;
         bool _interactionEnabled = false;
@@ -176,6 +200,8 @@ namespace carto { namespace vt {
         std::vector<LayerFBO> _layerFBOs;
         ScreenFBO _screenFBO;
         ScreenFBO _overlayFBO;
+        TileVBO _tileVBO;
+        ScreenVBO _screenVBO;
 
         cglib::vec3<float> _lightDir;
         cglib::mat4x4<double> _projectionMatrix;
@@ -202,6 +228,8 @@ namespace carto { namespace vt {
         std::unordered_map<std::shared_ptr<const Bitmap>, CompiledBitmap> _compiledBitmapMap;
         std::unordered_map<std::shared_ptr<const TileBitmap>, CompiledBitmap> _compiledTileBitmapMap;
         std::unordered_map<std::shared_ptr<const TileGeometry>, CompiledGeometry> _compiledTileGeometryMap;
+        std::map<int, CompiledLabelBatch> _compiledLabelBatches;
+        int _labelBatchCounter = 0;
 
         const float _scale;
         const bool _useFBO;

@@ -13,9 +13,12 @@
 #include "datasources/TileDataSource.h"
 #include "packagemanager/PackageManager.h"
 
-namespace carto {
+#include <memory>
+#include <mutex>
+#include <vector>
 
-class PackageManager;
+namespace carto {
+    class MapPackageHandler;
 
     /**
      * A tile data source that loads tiles from package manager.
@@ -42,13 +45,19 @@ class PackageManager;
         public:
             PackageManagerListener(PackageManagerTileDataSource& dataSource);
         		
-            virtual void onTilesChanged();
+            virtual void onPackagesChanged();
         		
         private:
             PackageManagerTileDataSource& _dataSource;
         };
 
+        static const int MAX_OPEN_PACKAGES = 4;
+
         std::shared_ptr<PackageManager> _packageManager;
+
+        mutable std::vector<std::pair<std::shared_ptr<PackageInfo>, std::shared_ptr<MapPackageHandler> > > _cachedOpenPackageHandlers;
+
+        mutable std::mutex _mutex;
 
     private:
         std::shared_ptr<PackageManagerListener> _packageManagerListener;

@@ -198,11 +198,19 @@ namespace carto {
         std::vector<std::shared_ptr<Layer> > buildNamedMap(const std::string& templateId, const std::map<std::string, Variant>& templateParams) const;
 
     private:
+        struct LayerInfo {
+            int index;
+            std::string id;
+            std::string cartoCSS;
+
+            LayerInfo(int index, const std::string& id, const std::string& cartoCSS) : index(index), id(id), cartoCSS(cartoCSS) { }
+        };
+
         std::string getServiceURL(const std::string& path) const;
 
         std::string getTilerURL(const std::map<std::string, std::string>& cdnURLs) const;
 
-        std::shared_ptr<Layer> createLayer(int layerIndex, const std::string& layerGroupId, const std::string& type, const std::string& layerId, const std::string& cartoCSS, const std::map<std::string, std::string>& cdnURLs) const;
+        std::shared_ptr<Layer> createLayerGroup(const std::string& layerGroupId, const std::string& type, const std::vector<LayerInfo>& layerInfos, const std::map<std::string, std::string>& cdnURLs) const;
 
         std::vector<std::shared_ptr<Layer> > createLayers(const picojson::value& mapInfo) const;
 

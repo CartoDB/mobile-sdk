@@ -24,7 +24,9 @@ namespace carto {
 
         explicit HTTPClient(bool log);
 
-        int get(const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, std::shared_ptr<BinaryData>& responseData) const;
+        void setTimeout(int milliseconds);
+
+        int get(const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, std::shared_ptr<BinaryData>& responseData, int* statusCode = 0) const;
         int get(const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, HandlerFn handlerFn, std::uint64_t offset) const;
         int post(const std::string& url, const std::string& contentType, const std::shared_ptr<BinaryData>& requestData, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, std::shared_ptr<BinaryData>& responseData);
 
@@ -67,7 +69,8 @@ namespace carto {
             typedef std::function<bool(const unsigned char*, std::size_t)> DataFn;
 
             virtual ~Impl();
-            
+
+            virtual void setTimeout(int milliseconds) = 0;
             virtual bool makeRequest(const HTTPClient::Request& request, HeadersFn headersFn, DataFn dataFn) const = 0;
         };
 

@@ -3,7 +3,7 @@
 
 %module(directors="1") HTTPTileDataSource
 
-!proxy_imports(carto::HTTPTileDataSource, core.MapTile, core.StringVector, core.StringMap, datasources.TileDataSource, datasources.components.TileData)
+!proxy_imports(carto::HTTPTileDataSource, core.MapTile, core.MapBounds, core.StringVector, core.StringMap, datasources.TileDataSource, datasources.components.TileData)
 
 %{
 #include "datasources/HTTPTileDataSource.h"
