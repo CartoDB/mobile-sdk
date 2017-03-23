@@ -57,6 +57,7 @@ namespace carto { namespace geocoding {
 
         struct Token {
             std::uint64_t id = 0;
+			std::uint64_t namemask = 0;
             float idf = 0.0f;
         };
         

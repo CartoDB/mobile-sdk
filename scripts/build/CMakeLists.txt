@@ -37,6 +37,11 @@ if(IOS)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -ftemplate-depth=1024") 
 endif(IOS)
 
+if(ANDROID)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fstack-protector") 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector") 
+endif(ANDROID)
+
 if(CMAKE_COMPILER_IS_GNUCXX)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -ftemplate-depth=1024") 
 endif(CMAKE_COMPILER_IS_GNUCXX)

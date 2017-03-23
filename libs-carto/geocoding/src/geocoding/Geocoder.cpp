@@ -165,7 +165,7 @@ namespace carto { namespace geocoding {
             // Build token info list for the token
             if (!token.empty()) {
                 for (int pass = 0; pass < 2; pass++) {
-                    std::string sql = "SELECT id, idf, classes FROM tokens WHERE ";
+                    std::string sql = "SELECT id, idf, namemask, classes FROM tokens WHERE ";
                     if (pass == 1 && token.size() >= 2) {
                         sql += "token LIKE '" + escapeSQLValue(toUtf8String(token.substr(0, 2))) + "%' COLLATE NOCASE ORDER BY idf ASC LIMIT 10";
                     }
@@ -182,9 +182,10 @@ namespace carto { namespace geocoding {
                         Token token;
                         token.id = qit->get<std::uint64_t>(0);
                         token.idf = static_cast<float>(qit->get<double>(1));
+						token.namemask = qit->get<std::uint64_t>(2);
                         tokens.push_back(token);
                         for (int n = 0; n < 32; n++) {
-                            if (qit->get<int>(2) & (1 << n)) {
+                            if (qit->get<int>(3) & (1 << n)) {
                                 TokenType tokenType = static_cast<TokenType>(n);
                                 tokenList.markValidType(i, tokenType);
                             }
@@ -220,6 +221,21 @@ namespace carto { namespace geocoding {
             if (!subQuery.tokenList.valid()) {
                 continue;
             }
+
+			if (type != TokenType::HOUSENUMBER) {
+				std::uint64_t namemask = std::numeric_limits<std::uint64_t>::max();
+				std::vector<std::vector<Token>> tokensList = query.tokenList.tags(span);
+				for (const std::vector<Token>& tokens : tokensList) {
+					std::uint64_t namemask2 = 0;
+					for (const Token& token : tokens) {
+						namemask2 |= token.namemask;
+					}
+					namemask &= namemask2;
+				}
+				if (!namemask) {
+					continue;
+				}
+			}
 
             bool valid = (span.count == 0);
             if (!found && !valid) {

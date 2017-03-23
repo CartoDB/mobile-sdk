@@ -21,6 +21,8 @@
 #import "NTMapVec.h"
 #import "NTTileData.h"
 #import "NTVariant.h"
+#import "NTVariantArrayBuilder.h"
+#import "NTVariantObjectBuilder.h"
 
 #import "NTAssetTileDataSource.h"
 #import "NTBitmapOverlayRasterTileDataSource.h"

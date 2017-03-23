@@ -53,7 +53,7 @@ These SDK libraries are managed by CARTO and include all the required libraries 
   // Add to your build.gradle file:
   
   dependencies {
-      compile 'com.carto:carto-mobile-sdk:4.0.0@aar'
+      compile 'com.carto:carto-mobile-sdk:4.0.1@aar'
   }
 
   {% endhighlight %}
@@ -64,7 +64,7 @@ These SDK libraries are managed by CARTO and include all the required libraries 
 
 // Add to your CocoaPods Podfile:
 
-pod 'CartoMobileSDK', '4.0.0'
+pod 'CartoMobileSDK', '4.0.1'
 
 {% endhighlight %}
   </div>

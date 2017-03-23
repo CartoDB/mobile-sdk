@@ -48,6 +48,9 @@ namespace carto {
         std::shared_ptr<MapRenderer> mapRenderer;
         {
             std::lock_guard<std::mutex> lock(_mutex);
+            if (!layer) {
+                throw NullArgumentException("Null layer");
+            }
             if (index < 0 || static_cast<std::size_t>(index) >= _layers.size()) {
                 throw OutOfRangeException("Layer index out of range");
             }
@@ -69,6 +72,10 @@ namespace carto {
         {
             std::lock_guard<std::mutex> lock(_mutex);
             for (const std::shared_ptr<Layer>& layer : _layers) {
+                if (!layer) {
+                    throw NullArgumentException("Null layer");
+                }
+
                 if (std::find(layers.begin(), layers.end(), layer) == layers.end()) {
                     layer->setComponents(std::shared_ptr<CancelableThreadPool>(), std::shared_ptr<CancelableThreadPool>(), std::shared_ptr<Options>(), std::weak_ptr<MapRenderer>(), std::weak_ptr<TouchHandler>());
                 }
@@ -94,9 +101,13 @@ namespace carto {
         std::shared_ptr<MapRenderer> mapRenderer;
         {
             std::lock_guard<std::mutex> lock(_mutex);
+            if (!layer) {
+                throw NullArgumentException("Null layer");
+            }
             if (index < 0 || static_cast<std::size_t>(index) > _layers.size()) {
                 throw OutOfRangeException("Layer index out of range");
             }
+
             layer->setComponents(_envelopeThreadPool, _tileThreadPool, _options, _mapRenderer, _touchHandler);
             _layers.insert(_layers.begin() + index, layer);
 
@@ -119,6 +130,10 @@ namespace carto {
         {
             std::lock_guard<std::mutex> lock(_mutex);
             for (const std::shared_ptr<Layer>& layer : layers) {
+                if (!layer) {
+                    throw NullArgumentException("Null layer");
+                }
+
                 layer->setComponents(_envelopeThreadPool, _tileThreadPool, _options, _mapRenderer, _touchHandler);
                 _layers.push_back(layer);
             }
@@ -145,6 +160,10 @@ namespace carto {
         {
             std::lock_guard<std::mutex> lock(_mutex);
             for (const std::shared_ptr<Layer>& layer : layers) {
+                if (!layer) {
+                    throw NullArgumentException("Null layer");
+                }
+
                 auto it = std::remove(_layers.begin(), _layers.end(), layer);
                 if (it == _layers.end()) {
                     removedAll = false;
