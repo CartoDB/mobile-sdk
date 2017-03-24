@@ -221,12 +221,13 @@ namespace valhalla { namespace thor {
         std::vector<baldr::PathLocation> correlated;
         correlated.reserve(points.size());
         for (const auto& point : points) {
-            correlated.push_back(valhalla::loki::Search(point, reader, cost->GetEdgeFilter(), cost->GetNodeFilter()));
+            auto projections = valhalla::loki::Search(std::vector<valhalla::baldr::Location> { point }, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
+            correlated.push_back(projections.at(point));
         }
 
         auto s = std::chrono::system_clock::now();
         bool prior_is_node = false;
-        std::vector<baldr::PathLocation> through_loc;
+        std::list<baldr::PathLocation> through_loc;
         baldr::GraphId through_edge;
         std::vector<thor::PathInfo> path_edges;
         std::string origin_date_time, dest_date_time;
@@ -293,9 +294,14 @@ namespace valhalla { namespace thor {
             // location is a BREAK or if this is the last location
             if (destination.stoptype_ == baldr::Location::StopType::BREAK ||
                 path_location == --correlated.cend()) {
+
+                // Create controller for default route attributes
+                TripPathController controller;
+
                 // Form output information based on path edges
-                auto trip_path = thor::TripPathBuilder::Build(reader, mode_costing, path_edges,
-                    last_break_origin, destination, through_loc);
+                auto trip_path = thor::TripPathBuilder::Build(controller, reader, mode_costing, 
+                    path_edges,
+                    last_break_origin, destination, through_loc, nullptr);
 
                 if (date_time_type) {
                     origin_date_time = *last_break_origin.date_time_;
