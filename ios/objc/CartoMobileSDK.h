@@ -147,7 +147,13 @@
 
 #ifdef _CARTO_PACKAGEMANAGER_SUPPORT
 #import "NTPackageManagerTileDataSource.h"
+
+#ifdef _CARTO_ROUTING_SUPPORT
 #import "NTPackageManagerRoutingService.h"
+#endif
+#ifdef _CARTO_VALHALLA_ROUTING_SUPPORT
+#import "NTPackageManagerValhallaRoutingService.h"
+#endif
 
 #import "NTPackageInfo.h"
 #import "NTPackageStatus.h"
@@ -176,6 +182,9 @@
 #import "NTRoutingResult.h"
 #import "NTRoutingService.h"
 #import "NTOSRMOfflineRoutingService.h"
+#endif
+
+#ifdef _CARTO_VALHALLA_ROUTING_SUPPORT
 #import "NTValhallaOfflineRoutingService.h"
 #endif
 
