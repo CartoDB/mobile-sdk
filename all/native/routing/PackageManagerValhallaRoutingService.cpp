@@ -21,6 +21,7 @@ namespace carto {
     PackageManagerValhallaRoutingService::PackageManagerValhallaRoutingService(const std::shared_ptr<PackageManager>& packageManager) :
         RoutingService(),
         _packageManager(packageManager),
+        _profile("pedestrian"),
         _cachedPackageDatabases(),
         _mutex()
     {
