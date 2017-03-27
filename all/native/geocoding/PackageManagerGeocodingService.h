@@ -44,7 +44,7 @@ namespace carto {
             PackageManagerGeocodingService& _service;
         };
 
-        std::shared_ptr<PackageManager> _packageManager;
+        const std::shared_ptr<PackageManager> _packageManager;
         bool _autocomplete;
 
         mutable std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<sqlite3pp::database> > _cachedPackageDatabaseMap;

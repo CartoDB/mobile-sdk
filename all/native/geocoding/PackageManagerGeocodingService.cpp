@@ -29,7 +29,7 @@ namespace carto {
 
     PackageManagerGeocodingService::~PackageManagerGeocodingService() {
         _packageManager->unregisterOnChangeListener(_packageManagerListener);
-        _packageManager.reset();
+        _packageManagerListener.reset();
     }
 
     bool PackageManagerGeocodingService::isAutocomplete() const {

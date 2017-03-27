@@ -35,7 +35,7 @@ namespace carto {
 
     PackageManagerRoutingService::~PackageManagerRoutingService() {
         _packageManager->unregisterOnChangeListener(_packageManagerListener);
-        _packageManager.reset();
+        _packageManagerListener.reset();
     }
 
     std::shared_ptr<RoutingResult> PackageManagerRoutingService::calculateRoute(const std::shared_ptr<RoutingRequest>& request) const {

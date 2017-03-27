@@ -27,7 +27,7 @@ namespace carto {
 
     PackageManagerTileDataSource::~PackageManagerTileDataSource() {
         _packageManager->unregisterOnChangeListener(_packageManagerListener);
-        _packageManager.reset();
+        _packageManagerListener.reset();
     }
 
     std::shared_ptr<PackageManager> PackageManagerTileDataSource::getPackageManager() const {

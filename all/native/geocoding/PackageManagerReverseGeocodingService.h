@@ -44,7 +44,7 @@ namespace carto {
             PackageManagerReverseGeocodingService& _service;
         };
 
-        std::shared_ptr<PackageManager> _packageManager;
+        const std::shared_ptr<PackageManager> _packageManager;
         float _searchRadius;
 
         mutable std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<sqlite3pp::database> > _cachedPackageDatabaseMap;

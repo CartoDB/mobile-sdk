@@ -53,7 +53,7 @@ namespace carto {
 
         static const int MAX_OPEN_PACKAGES = 4;
 
-        std::shared_ptr<PackageManager> _packageManager;
+        const std::shared_ptr<PackageManager> _packageManager;
 
         mutable std::vector<std::pair<std::shared_ptr<PackageInfo>, std::shared_ptr<MapPackageHandler> > > _cachedOpenPackageHandlers;
 

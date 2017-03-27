@@ -29,7 +29,7 @@ namespace carto {
 
     PackageManagerReverseGeocodingService::~PackageManagerReverseGeocodingService() {
         _packageManager->unregisterOnChangeListener(_packageManagerListener);
-        _packageManager.reset();
+        _packageManagerListener.reset();
     }
 
     float PackageManagerReverseGeocodingService::getSearchRadius() const {
