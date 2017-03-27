@@ -15,7 +15,7 @@ namespace carto {
     }
     
     void GLContext::LoadExtensions() {
-        const char* extensions = reinterpret_cast<const char *>(glGetString(GL_EXTENSIONS));
+        const char* extensions = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
         if (!extensions) {
             return;
         }

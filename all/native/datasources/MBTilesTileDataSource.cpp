@@ -174,7 +174,7 @@ namespace carto {
         
         try {
             // Make the query and check for database error
-            sqlite3pp::query query(*_db, "SELECT LENGTH(tile_data), tile_data FROM tiles WHERE zoom_level=:zoom AND tile_column=:x AND tile_row=:y");
+            sqlite3pp::query query(*_db, "SELECT tile_data FROM tiles WHERE zoom_level=:zoom AND tile_column=:x AND tile_row=:y");
             query.bind(":zoom", mapTile.getZoom());
             query.bind(":x", mapTile.getX());
             query.bind(":y", _scheme == MBTilesScheme::MBTILES_SCHEME_XYZ ? mapTile.getY() : (1 << (mapTile.getZoom())) - 1 - mapTile.getY());
@@ -192,8 +192,8 @@ namespace carto {
                 return tileData;
             }
             
-            std::size_t dataSize = (*it).get<int>(0);
-            const unsigned char* dataPtr = static_cast<const unsigned char*>((*it).get<const void*>(1));
+            std::size_t dataSize = (*it).column_bytes(0);
+            const unsigned char* dataPtr = static_cast<const unsigned char*>((*it).get<const void*>(0));
             auto data = std::make_shared<BinaryData>(dataPtr, dataSize);
             query.finish();
     

@@ -55,9 +55,9 @@ namespace carto {
         query.bind(":y1", bounds.getMax().getY());
         query.bind(":width", _projection->getBounds().getDelta().getX());
         for (auto qit = query.begin(); qit != query.end(); qit++) {
-            long long mapTileId = (*qit).get<uint64_t>(0);
+            long long mapTileId = (*qit).get<std::uint64_t>(0);
             
-            long long modelLODTreeId = (*qit).get<uint64_t>(1);
+            long long modelLODTreeId = (*qit).get<std::uint64_t>(1);
             double mapPosX = (*qit).get<double>(2);
             double mapPosY = (*qit).get<double>(3);
             double mapPosZ = (*qit).get<double>(4);
@@ -88,16 +88,16 @@ namespace carto {
             return std::shared_ptr<NMLModelLODTree>();
         }
     
-        sqlite3pp::query query(*_db, "SELECT id, LENGTH(nmlmodellodtree), nmlmodellodtree FROM ModelLODTrees WHERE id=:id");
-        query.bind(":id", static_cast<uint64_t>(mapTile.modelLODTreeId));
+        sqlite3pp::query query(*_db, "SELECT id, nmlmodellodtree FROM ModelLODTrees WHERE id=:id");
+        query.bind(":id", static_cast<std::uint64_t>(mapTile.modelLODTreeId));
         for (auto qit = query.begin(); qit != query.end(); qit++) {
-            long long modelLODTreeId = (*qit).get<uint64_t>(0);
-            std::size_t nmlModelLODTreeSize = (*qit).get<uint32_t>(1);
-            const void * nmlModelLODTreeData = (*qit).get<const void *>(2);
+            long long modelLODTreeId = (*qit).get<std::uint64_t>(0);
+            std::size_t nmlModelLODTreeSize = (*qit).column_bytes(1);
+            const void* nmlModelLODTreeData = (*qit).get<const void*>(1);
             std::shared_ptr<nml::ModelLODTree> sourceModelLODTree = std::make_shared<nml::ModelLODTree>(protobuf::message(nmlModelLODTreeData, nmlModelLODTreeSize));
     
             sqlite3pp::query queryProxyBindings(*_db, "SELECT * FROM ModelInfo WHERE modellodtree_id=:modellodtree_id");
-            queryProxyBindings.bind(":modellodtree_id", static_cast<uint64_t>(modelLODTreeId));
+            queryProxyBindings.bind(":modellodtree_id", static_cast<std::uint64_t>(modelLODTreeId));
             NMLModelLODTree::ProxyMap proxyMap;
             for (auto qitProxyBindings = queryProxyBindings.begin(); qitProxyBindings != queryProxyBindings.end(); qitProxyBindings++) {
                 int modelId = -1;
@@ -114,7 +114,7 @@ namespace carto {
                     } else if (columnName == "groundheight") {
                         mapPos.setZ((*qitProxyBindings).get<double>(i));
                     } else if (columnName != "modellodtree_id" && columnName != "global_id") {
-                        metaData[columnName] = (*qitProxyBindings).get<const char *>(i);
+                        metaData[columnName] = (*qitProxyBindings).get<const char*>(i);
                     }
                 }
     
@@ -124,14 +124,14 @@ namespace carto {
     
             NMLModelLODTree::MeshBindingsMap meshBindingsMap;
             try {
-                sqlite3pp::query queryMeshBindings(*_db, "SELECT node_id, local_id, mesh_id, LENGTH(nmlmeshop), nmlmeshop FROM ModelLODTreeNodeMeshes WHERE modellodtree_id=:modellodtree_id");
-                queryMeshBindings.bind(":modellodtree_id", static_cast<uint64_t>(modelLODTreeId));
+                sqlite3pp::query queryMeshBindings(*_db, "SELECT node_id, local_id, mesh_id, nmlmeshop FROM ModelLODTreeNodeMeshes WHERE modellodtree_id=:modellodtree_id");
+                queryMeshBindings.bind(":modellodtree_id", static_cast<std::uint64_t>(modelLODTreeId));
                 for (auto qitMeshBindings = queryMeshBindings.begin(); qitMeshBindings != queryMeshBindings.end(); qitMeshBindings++) {
-                    int nodeId = (*qitMeshBindings).get<uint32_t>(0);
-                    std::string localId = (*qitMeshBindings).get<const char *>(1);
-                    long long meshId = (*qitMeshBindings).get<uint64_t>(2);
-                    std::size_t nmlMeshOpSize = (*qitMeshBindings).get<uint32_t>(3);
-                    const void * nmlMeshOpData = (*qitMeshBindings).get<const void *>(4);
+                    int nodeId = (*qitMeshBindings).get<std::uint32_t>(0);
+                    std::string localId = (*qitMeshBindings).get<const char*>(1);
+                    long long meshId = (*qitMeshBindings).get<std::uint64_t>(2);
+                    std::size_t nmlMeshOpSize = (*qitMeshBindings).column_bytes(3);
+                    const void* nmlMeshOpData = (*qitMeshBindings).get<const void*>(3);
                     if (nmlMeshOpSize > 0) {
                         std::shared_ptr<nml::MeshOp> meshOp = std::make_shared<nml::MeshOp>(protobuf::message(nmlMeshOpData, nmlMeshOpSize));
                         meshBindingsMap[nodeId].push_back(NMLModelLODTree::MeshBinding(meshId, localId, meshOp));
@@ -145,13 +145,13 @@ namespace carto {
             }
     
             sqlite3pp::query queryTexBindings(*_db, "SELECT node_id, local_id, texture_id, level FROM ModelLODTreeNodeTextures WHERE modellodtree_id=:modellodtree_id");
-            queryTexBindings.bind(":modellodtree_id", static_cast<uint64_t>(modelLODTreeId));
+            queryTexBindings.bind(":modellodtree_id", static_cast<std::uint64_t>(modelLODTreeId));
             NMLModelLODTree::TextureBindingsMap textureBindingsMap;
             for (auto qitTexBindings = queryTexBindings.begin(); qitTexBindings != queryTexBindings.end(); qitTexBindings++) {
-                int nodeId = (*qitTexBindings).get<uint32_t>(0);
-                std::string localId = (*qitTexBindings).get<const char *>(1);
-                long long textureId = (*qitTexBindings).get<uint64_t>(2);
-                int level = (*qitTexBindings).get<uint32_t>(3);
+                int nodeId = (*qitTexBindings).get<std::uint32_t>(0);
+                std::string localId = (*qitTexBindings).get<const char*>(1);
+                long long textureId = (*qitTexBindings).get<std::uint64_t>(2);
+                int level = (*qitTexBindings).get<std::uint32_t>(3);
                 textureBindingsMap[nodeId].push_back(NMLModelLODTree::TextureBinding(textureId, level, localId));
             }
             queryTexBindings.finish();
@@ -171,11 +171,11 @@ namespace carto {
             return std::shared_ptr<nml::Mesh>();
         }
     
-        sqlite3pp::query query(*_db, "SELECT LENGTH(nmlmesh), nmlmesh FROM Meshes WHERE id=:source_id");
-        query.bind(":source_id", static_cast<uint64_t>(meshId));
+        sqlite3pp::query query(*_db, "SELECT nmlmesh FROM Meshes WHERE id=:source_id");
+        query.bind(":source_id", static_cast<std::uint64_t>(meshId));
         for (auto qit = query.begin(); qit != query.end(); qit++) {
-            std::size_t nmlMeshSize = (*qit).get<uint32_t>(0);
-            const void * nmlMeshData = (*qit).get<const void *>(1);
+            std::size_t nmlMeshSize = (*qit).column_bytes(0);
+            const void* nmlMeshData = (*qit).get<const void*>(0);
             std::shared_ptr<nml::Mesh> mesh = std::make_shared<nml::Mesh>(protobuf::message(nmlMeshData, nmlMeshSize));
             return mesh;
         }
@@ -191,12 +191,12 @@ namespace carto {
             return std::shared_ptr<nml::Texture>();
         }
     
-        sqlite3pp::query query(*_db, "SELECT LENGTH(nmltexture), nmltexture FROM Textures WHERE id=:source_id AND textures.level=:level ORDER BY textures.level ASC");
-        query.bind(":source_id", static_cast<uint64_t>(textureId));
+        sqlite3pp::query query(*_db, "SELECT nmltexture FROM Textures WHERE id=:source_id AND textures.level=:level ORDER BY textures.level ASC");
+        query.bind(":source_id", static_cast<std::uint64_t>(textureId));
         query.bind(":level", level);
         for (auto qit = query.begin(); qit != query.end(); qit++) {
-            std::size_t nmlTextureSize = (*qit).get<uint32_t>(0);
-            const void * nmlTextureData = (*qit).get<const void *>(1);
+            std::size_t nmlTextureSize = (*qit).column_bytes(0);
+            const void* nmlTextureData = (*qit).get<const void*>(0);
             std::shared_ptr<nml::Texture> texture = std::make_shared<nml::Texture>(protobuf::message(nmlTextureData, nmlTextureSize));
             return texture;
         }

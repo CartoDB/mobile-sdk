@@ -173,8 +173,8 @@ namespace carto {
         try {
             sqlite3pp::query query(*_database, "SELECT tileId, LENGTH(compressed) FROM persistent_cache ORDER BY time ASC");
             for (auto it = query.begin(); it != query.end(); ++it) {
-                long long tileId = (*it).get<uint64_t>(0);
-                int tileSize = (*it).get<int>(1);
+                long long tileId = (*it).get<std::uint64_t>(0);
+                std::size_t tileSize = static_cast<std::size_t>((*it).get<std::uint64_t>(1));
                 _cache.put(tileId, createTileId(tileId), tileSize);
             }
             query.finish();
@@ -190,8 +190,8 @@ namespace carto {
     
         try {
             // Get the tile from the database
-            sqlite3pp::query query(*_database, "SELECT compressed, LENGTH(compressed), expirationTime FROM persistent_cache WHERE tileId=:tileId");
-            query.bind(":tileId", static_cast<uint64_t>(tileId));
+            sqlite3pp::query query(*_database, "SELECT compressed, expirationTime FROM persistent_cache WHERE tileId=:tileId");
+            query.bind(":tileId", static_cast<std::uint64_t>(tileId));
             auto qit = query.begin();
             if (qit == query.end()) {
                 // No data exists for this tile in the database
@@ -200,9 +200,9 @@ namespace carto {
             }
             
             // Construct TileData from the blob returned from the database
+            std::size_t dataSize = (*qit).column_bytes(0);
             const unsigned char* dataPtr = static_cast<const unsigned char*>((*qit).get<const void*>(0));
-            std::size_t dataSize = (*qit).get<int>(1);
-            long long expirationTime = (*qit).get<std::uint64_t>(2);
+            long long expirationTime = (*qit).get<std::uint64_t>(1);
             auto data = std::make_shared<BinaryData>(dataPtr, dataSize);
             query.finish();
             
@@ -232,10 +232,10 @@ namespace carto {
         // Add tile to the database
         try {
             sqlite3pp::command command(*_database, "INSERT OR REPLACE INTO persistent_cache(tileId, compressed, time, expirationTime) VALUES (:tileId, :compressed, :time, :expirationTime)");
-            command.bind(":tileId", static_cast<uint64_t>(tileId));
+            command.bind(":tileId", static_cast<std::uint64_t>(tileId));
             command.bind(":compressed", tileData->getData()->data(), static_cast<unsigned int>(tileData->getData()->size()));
-            command.bind(":time", static_cast<uint64_t>(time));
-            command.bind(":expirationTime", static_cast<uint64_t>(expirationTime));
+            command.bind(":time", static_cast<std::uint64_t>(time));
+            command.bind(":expirationTime", static_cast<std::uint64_t>(expirationTime));
             command.execute();
             command.finish();
         } catch (const std::exception& e) {
@@ -250,7 +250,7 @@ namespace carto {
         
         try {
             sqlite3pp::command command(*_database, "DELETE FROM persistent_cache WHERE tileId=:tileId");
-            command.bind(":tileId", static_cast<uint64_t>(tileId));
+            command.bind(":tileId", static_cast<std::uint64_t>(tileId));
             command.execute();
             command.finish();
         } catch (const std::exception& e) {
