@@ -7,6 +7,8 @@
 #ifndef _CARTO_MAPPACKAGEHANDLER_H_
 #define _CARTO_MAPPACKAGEHANDLER_H_
 
+#if defined(_CARTO_PACKAGEMANAGER_SUPPORT)
+
 #include "core/MapTile.h"
 #include "packagemanager/handlers/PackageHandler.h"
 
@@ -47,11 +49,13 @@ namespace carto {
         const std::string _serverEncKey;
         const std::string _localEncKey;
 
-        std::shared_ptr<sqlite3pp::database> _packageDb;
-        std::shared_ptr<sqlite3pp::ext::function> _decryptFunc;
-        std::shared_ptr<BinaryData> _sharedDictionary;
+        std::unique_ptr<sqlite3pp::database> _packageDb;
+        std::unique_ptr<sqlite3pp::ext::function> _decryptFunc;
+        std::unique_ptr<BinaryData> _sharedDictionary;
     };
     
 }
+
+#endif
 
 #endif

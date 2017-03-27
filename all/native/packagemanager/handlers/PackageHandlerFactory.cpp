@@ -1,7 +1,10 @@
+#if defined(_CARTO_PACKAGEMANAGER_SUPPORT)
+
 #include "PackageHandlerFactory.h"
 #include "packagemanager/handlers/MapPackageHandler.h"
 #include "packagemanager/handlers/RoutingPackageHandler.h"
 #include "packagemanager/handlers/GeocodingPackageHandler.h"
+#include "packagemanager/handlers/ValhallaRoutingPackageHandler.h"
 #include "utils/Log.h"
 
 namespace carto {
@@ -19,10 +22,18 @@ namespace carto {
         switch (packageType) {
         case PackageType::PACKAGE_TYPE_MAP:
             return std::make_shared<MapPackageHandler>(filePath, _serverEncKey, _localEncKey);
+#if defined(_CARTO_ROUTING_SUPPORT)
         case PackageType::PACKAGE_TYPE_ROUTING:
             return std::make_shared<RoutingPackageHandler>(filePath);
+#endif
+#if defined(_CARTO_GEOCODING_SUPPORT)
         case PackageType::PACKAGE_TYPE_GEOCODING:
             return std::make_shared<GeocodingPackageHandler>(filePath);
+#endif
+#if defined(_CARTO_VALHALLA_ROUTING_SUPPORT)
+        case PackageType::PACKAGE_TYPE_VALHALLA_ROUTING:
+            return std::make_shared<ValhallaRoutingPackageHandler>(filePath);
+#endif
         default:
             Log::Warnf("PackageHandlerFactory::CreatePackageHandler: Unsupported package type");
             return std::shared_ptr<PackageHandler>();
@@ -37,6 +48,8 @@ namespace carto {
             return ".nutigraph";
         case PackageType::PACKAGE_TYPE_GEOCODING:
             return ".nutigeodb";
+        case PackageType::PACKAGE_TYPE_VALHALLA_ROUTING:
+            return ".vtiles";
         default:
             Log::Warnf("PackageHandlerFactory::GetPackageTypeExtension: Unsupported package type");
             return "";
@@ -62,8 +75,13 @@ namespace carto {
         else if (fileNameEndsWith(GetPackageTypeExtension(PackageType::PACKAGE_TYPE_GEOCODING))) {
             return PackageType::PACKAGE_TYPE_GEOCODING;
         }
+        else if (fileNameEndsWith(GetPackageTypeExtension(PackageType::PACKAGE_TYPE_VALHALLA_ROUTING))) {
+            return PackageType::PACKAGE_TYPE_VALHALLA_ROUTING;
+        }
         Log::Warnf("PackageHandlerFactory::DetectPackageType: Unexpected package extension: %s", url.c_str());
         return PackageType::PACKAGE_TYPE_MAP; // sensible default
     }
 
 }
+
+#endif

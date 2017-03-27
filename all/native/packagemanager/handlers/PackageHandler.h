@@ -7,6 +7,8 @@
 #ifndef _CARTO_PACKAGEHANDLER_H_
 #define _CARTO_PACKAGEHANDLER_H_
 
+#if defined(_CARTO_PACKAGEMANAGER_SUPPORT)
+
 #include <memory>
 #include <mutex>
 #include <string>
@@ -31,5 +33,7 @@ namespace carto {
     };
     
 }
+
+#endif
 
 #endif

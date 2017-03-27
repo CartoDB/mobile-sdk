@@ -7,6 +7,8 @@
 #ifndef _CARTO_PACKAGEHANDLERFACTORY_H_
 #define _CARTO_PACKAGEHANDLERFACTORY_H_
 
+#if defined(_CARTO_PACKAGEMANAGER_SUPPORT)
+
 #include "packagemanager/PackageInfo.h"
 
 #include <memory>
@@ -32,5 +34,7 @@ namespace carto {
     };
     
 }
+
+#endif
 
 #endif

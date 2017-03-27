@@ -7,6 +7,8 @@
 #ifndef _CARTO_GEOCODINGPACKAGEHANDLER_H_
 #define _CARTO_GEOCODINGPACKAGEHANDLER_H_
 
+#if defined(_CARTO_GEOCODING_SUPPORT) && defined(_CARTO_PACKAGEMANAGER_SUPPORT)
+
 #include "packagemanager/handlers/PackageHandler.h"
 
 namespace sqlite3pp {
@@ -31,5 +33,7 @@ namespace carto {
     };
     
 }
+
+#endif
 
 #endif

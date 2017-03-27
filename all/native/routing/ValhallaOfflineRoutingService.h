@@ -7,12 +7,17 @@
 #ifndef _CARTO_VALHALLAOFFLINEROUTINGSERVICE_H_
 #define _CARTO_VALHALLAOFFLINEROUTINGSERVICE_H_
 
-#if defined(_CARTO_ROUTING_SUPPORT) && defined(_CARTO_OFFLINE_SUPPORT)
+#if defined(_CARTO_VALHALLA_ROUTING_SUPPORT) && defined(_CARTO_OFFLINE_SUPPORT)
 
 #include "routing/RoutingService.h"
 
 #include <memory>
+#include <mutex>
 #include <string>
+
+namespace sqlite3pp {
+    class database;
+}
 
 namespace carto {
 
@@ -29,11 +34,23 @@ namespace carto {
         ValhallaOfflineRoutingService(const std::string& path);
         virtual ~ValhallaOfflineRoutingService();
 
+        /**
+         * Returns the current routing profile.
+         * @return The current routing profile. Can be either "car", "auto", "auto_shorter", "bus", "bicycle", "pedestrian" or "truck". The default is "pedestrian".
+         */
+        std::string getProfile() const;
+        /**
+         * Sets the current routing profile.
+         * @profile The new profile. Can be either "car", "auto", "auto_shorter", "bus", "bicycle", "pedestrian" or "truck".
+         */
+        void setProfile(const std::string& profile);
+
         virtual std::shared_ptr<RoutingResult> calculateRoute(const std::shared_ptr<RoutingRequest>& request) const;
 
     private:
-        const std::string _path;
-        const std::string _profile;
+        std::shared_ptr<sqlite3pp::database> _database;
+        std::string _profile;
+        mutable std::mutex _mutex;
     };
     
 }

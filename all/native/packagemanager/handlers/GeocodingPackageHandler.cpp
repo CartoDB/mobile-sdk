@@ -1,3 +1,5 @@
+#if defined(_CARTO_GEOCODING_SUPPORT) && defined(_CARTO_PACKAGEMANAGER_SUPPORT)
+
 #include "GeocodingPackageHandler.h"
 #include "packagemanager/PackageTileMask.h"
 #include "utils/Log.h"
@@ -36,3 +38,5 @@ namespace carto {
     }
 
 }
+
+#endif

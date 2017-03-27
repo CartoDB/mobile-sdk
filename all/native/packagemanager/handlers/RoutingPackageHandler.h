@@ -7,6 +7,8 @@
 #ifndef _CARTO_ROUTINGPACKAGEHANDLER_H_
 #define _CARTO_ROUTINGPACKAGEHANDLER_H_
 
+#if defined(_CARTO_ROUTING_SUPPORT) && defined(_CARTO_PACKAGEMANAGER_SUPPORT)
+
 #include "packagemanager/handlers/PackageHandler.h"
 
 #include <fstream>
@@ -29,5 +31,7 @@ namespace carto {
     };
     
 }
+
+#endif
 
 #endif

@@ -1,3 +1,5 @@
+#if defined(_CARTO_PACKAGEMANAGER_SUPPORT)
+
 #include "MapPackageHandler.h"
 #include "core/BinaryData.h"
 #include "packagemanager/PackageTileMask.h"
@@ -38,7 +40,7 @@ namespace carto {
 
         try {
             // Open package database
-            _packageDb = std::make_shared<sqlite3pp::database>();
+            _packageDb.reset(new sqlite3pp::database());
             if (_packageDb->connect_v2(_fileName.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
                 Log::Errorf("MapPackageHandler::openDatabase: Failed to open database %s", _fileName.c_str());
                 return;
@@ -47,7 +49,7 @@ namespace carto {
             // Create new sqlite decryption function. First check if the database is crypted.
             std::string encKey = _serverEncKey;
             bool encrypted = CheckDbEncryption(*_packageDb, _serverEncKey + _localEncKey); // NOTE: this is a hack - though tiles are actually encrypted with server key only, with check that local key is included in the hash also
-            _decryptFunc = std::make_shared<sqlite3pp::ext::function>(*_packageDb);
+            _decryptFunc.reset(new sqlite3pp::ext::function(*_packageDb));
             _decryptFunc->create("tile_decrypt", [encrypted, encKey](sqlite3pp::ext::context& ctx) {
                 const unsigned char* encData = reinterpret_cast<const unsigned char*>(ctx.get<const void*>(0));
                 std::size_t encSize = ctx.args_bytes(0);
@@ -66,7 +68,7 @@ namespace carto {
             for (auto qit = query.begin(); qit != query.end(); qit++) {
                 const unsigned char* dataPtr = reinterpret_cast<const unsigned char*>(qit->get<const void*>(0));
                 std::size_t dataSize = qit->column_bytes(0);
-                _sharedDictionary = std::make_shared<BinaryData>(dataPtr, dataSize);
+                _sharedDictionary.reset(new BinaryData(dataPtr, dataSize));
             }
         }
         catch (const std::exception& ex) {
@@ -236,3 +238,5 @@ namespace carto {
     }
 
 }
+
+#endif
