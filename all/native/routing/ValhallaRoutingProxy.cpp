@@ -410,7 +410,7 @@ namespace carto {
             try {
                 tripDirections = directions.Build(directionsOptions, tripPath);
 
-                std::vector<valhalla::midgard::PointLL> shape = valhalla::midgard::decode7<std::vector<PointLL> >(tripDirections.shape());
+                std::vector<valhalla::midgard::PointLL> shape = valhalla::midgard::decode<std::vector<PointLL> >(tripDirections.shape());
                 points.reserve(points.size() + shape.size());
                 epsg3857Points.reserve(epsg3857Points.size() + shape.size());
 
