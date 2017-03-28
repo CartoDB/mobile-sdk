@@ -242,12 +242,12 @@ namespace carto {
     
     float OnlineNMLModelLODTreeDataSource::DataInputStream::readFloat() {
         int value = readInt();
-        return *reinterpret_cast<float *>(&value);
+        return *reinterpret_cast<float*>(&value);
     }
     
     double OnlineNMLModelLODTreeDataSource::DataInputStream::readDouble() {
         long long value = readLongLong();
-        return *reinterpret_cast<double *>(&value);
+        return *reinterpret_cast<double*>(&value);
     }
     
     std::string OnlineNMLModelLODTreeDataSource::DataInputStream::readString() {
@@ -259,7 +259,7 @@ namespace carto {
         }
         std::size_t offset = _offset;
         _offset += length;
-        return std::string(reinterpret_cast<const char *>(_data.data() + offset), reinterpret_cast<const char *>(_data.data() + _offset));
+        return std::string(reinterpret_cast<const char*>(_data.data() + offset), reinterpret_cast<const char*>(_data.data() + _offset));
     }
     
     std::vector<unsigned char> OnlineNMLModelLODTreeDataSource::DataInputStream::readBytes(std::size_t size) {
