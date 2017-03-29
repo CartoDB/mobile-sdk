@@ -259,9 +259,6 @@ namespace carto {
                     int tileMask = (1 << visTile.getZoom()) - 1;
                     MapTile tile(visTile.getX() & tileMask, visTile.getY() & tileMask, visTile.getZoom(), visTile.getFrameNr());
                     fetchTile(tile.getParent(), true, false);
-                    if (visTile.getZoom() > 1) {
-                        fetchTile(tile.getParent().getParent(), true, false);
-                    }
                 }
             }
         }
@@ -643,7 +640,7 @@ namespace carto {
         
         bool refresh = false;
         try {
-            refresh = loadTile(layer);
+            refresh = loadTile(layer) && !_preloadingTile;
             if (refresh) {
                 loadUTFGridTile(layer);
             }
@@ -710,7 +707,7 @@ namespace carto {
 
     const float TileLayer::DISCRETE_ZOOM_LEVEL_BIAS = 0.001f;
 
-    const float TileLayer::PRELOADING_TILE_SCALE = 2.0f;
+    const float TileLayer::PRELOADING_TILE_SCALE = 1.5f;
     const float TileLayer::SUBDIVISION_THRESHOLD = Const::WORLD_SIZE;
     
 }

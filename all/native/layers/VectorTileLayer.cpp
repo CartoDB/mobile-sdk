@@ -134,13 +134,18 @@ namespace carto {
 
         if (!invalidated) {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
-            if (preloadingTile && _preloadingCache.exists(tileId) && _preloadingCache.valid(tileId)) {
-                _preloadingCache.get(tileId);
+            if (_preloadingCache.exists(tileId) && _preloadingCache.valid(tileId)) {
+                if (!preloadingTile) {
+                    _preloadingCache.move(tileId, _visibleCache); // move to visible cache, just in case the element gets trashed
+                }
+                else {
+                    _preloadingCache.get(tileId);
+                }
                 return;
             }
-    
-            if (!preloadingTile && _visibleCache.exists(tileId) && _visibleCache.valid(tileId)) {
-                _visibleCache.get(tileId);
+
+            if (_visibleCache.exists(tileId) && _visibleCache.valid(tileId)) {
+                _visibleCache.get(tileId); // do not move to preloading, it will be moved at later stage
                 return;
             }
         }
