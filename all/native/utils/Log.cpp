@@ -119,7 +119,9 @@ namespace carto {
         }
 
         std::lock_guard<std::mutex> lock(_Mutex);
-        OutputLog(LOG_TYPE_ERROR, _Tag, message);
+        if (_ShowError) {
+            OutputLog(LOG_TYPE_ERROR, _Tag, message);
+        }
     }
 
     void Log::Warn(const char* message) {
@@ -131,7 +133,9 @@ namespace carto {
         }
 
         std::lock_guard<std::mutex> lock(_Mutex);
-        OutputLog(LOG_TYPE_WARNING, _Tag, message);
+        if (_ShowWarn) {
+            OutputLog(LOG_TYPE_WARNING, _Tag, message);
+        }
     }
 
     void Log::Info(const char* message) {
@@ -143,7 +147,9 @@ namespace carto {
         }
 
         std::lock_guard<std::mutex> lock(_Mutex);
-        OutputLog(LOG_TYPE_INFO, _Tag, message);
+        if (_ShowInfo) {
+            OutputLog(LOG_TYPE_INFO, _Tag, message);
+        }
     }
 
     void Log::Debug(const char* message) {
@@ -155,7 +161,9 @@ namespace carto {
         }
 
         std::lock_guard<std::mutex> lock(_Mutex);
-        OutputLog(LOG_TYPE_DEBUG, _Tag, message);
+        if (_ShowDebug) {
+            OutputLog(LOG_TYPE_DEBUG, _Tag, message);
+        }
     }
 
     Log::Log() {
@@ -164,7 +172,7 @@ namespace carto {
     bool Log::_ShowError = true;
     bool Log::_ShowWarn = true;
     bool Log::_ShowInfo = true;
-    bool Log::_ShowDebug = true;
+    bool Log::_ShowDebug = false;
 
     std::string Log::_Tag = "carto-mobile-sdk";
 
