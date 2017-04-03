@@ -304,6 +304,18 @@ namespace carto {
         void setTileThreadPoolSize(int poolSize);
     
         /**
+         * Returns the clear color used by the renderer before drawing anything else.
+         * By default, this is white. It should be set to (0, 0, 0, 0) if transparent MapView is needed.
+         * @return The clear color.
+         */
+        Color getClearColor() const;
+        /**
+         * Sets the clear color of the renderer.
+         * @param color The new clear color.
+         */
+        void setClearColor(const Color& color);
+        
+        /**
          * Returns the background bitmap. May be null.
          * @return The background bitmap.
          */
@@ -578,6 +590,8 @@ namespace carto {
         bool _tiltGestureReversed;
 
         bool _zoomGestures;
+
+        Color _clearColor;
     
         std::shared_ptr<Bitmap> _backgroundBitmap;
         std::shared_ptr<Bitmap> _skyBitmap;

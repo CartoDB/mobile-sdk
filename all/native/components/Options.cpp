@@ -31,6 +31,7 @@ namespace carto {
         _seamlessPanning(true),
         _tiltGestureReversed(false),
         _zoomGestures(false),
+        _clearColor(1, 1, 1, 1),
         _backgroundBitmap(GetDefaultBackgroundBitmap()),
         _skyBitmap(GetDefaultSkyBitmap()),
         _watermarkAlignmentX(-1),
@@ -317,11 +318,27 @@ namespace carto {
         notifyOptionChanged("TileThreadPoolSize");
     }
     
+    Color Options::getClearColor() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _clearColor;
+    }
+
+    void Options::setClearColor(const Color& color) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            if (_clearColor == color) {
+                return;
+            }
+            _clearColor = color;
+        }
+        notifyOptionChanged("ClearColor");
+    }
+    
     std::shared_ptr<Bitmap> Options::getBackgroundBitmap() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _backgroundBitmap;
     }
-    
+
     void Options::setBackgroundBitmap(const std::shared_ptr<Bitmap>& backgroundBitmap) {
         {
             std::lock_guard<std::mutex> lock(_mutex);

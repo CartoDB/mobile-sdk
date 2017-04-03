@@ -703,7 +703,8 @@ namespace carto {
     
     void MapRenderer::setUpGLState() const {
         // Set clear color
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        Color clearColor = _options->getClearColor();
+        glClearColor(clearColor.getR() / 255.0f, clearColor.getG() / 255.0f, clearColor.getB() / 255.0f, clearColor.getA() / 255.0f);
     
         // Enable backface culling
         glEnable(GL_CULL_FACE);

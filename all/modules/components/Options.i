@@ -48,6 +48,7 @@
 %attribute(carto::Options, carto::ProjectionMode::ProjectionMode, ProjectionMode, getProjectionMode, setProjectionMode)
 %attribute(carto::Options, carto::PanningMode::PanningMode, PanningMode, getPanningMode, setPanningMode)
 %attribute(carto::Options, carto::PivotMode::PivotMode, PivotMode, getPivotMode, setPivotMode)
+%attributeval(carto::Options, carto::Color, ClearColor, getClearColor, setClearColor)
 %attributestring(carto::Options, std::shared_ptr<carto::Bitmap>, BackgroundBitmap, getBackgroundBitmap, setBackgroundBitmap)
 %attributestring(carto::Options, std::shared_ptr<carto::Bitmap>, SkyBitmap, getSkyBitmap, setSkyBitmap)
 %attribute(carto::Options, int, EnvelopeThreadPoolSize, getEnvelopeThreadPoolSize, setEnvelopeThreadPoolSize)
