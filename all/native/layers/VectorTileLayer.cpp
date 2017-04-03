@@ -555,7 +555,7 @@ namespace carto {
                 }
                 
                 refresh = true; // NOTE: need to refresh even when invalidated
-            } else {
+            } else if (!tileData->getData()->empty()) {
                 Log::Error("VectorTileLayer::FetchTask: Failed to decode tile");
             }
             break;
