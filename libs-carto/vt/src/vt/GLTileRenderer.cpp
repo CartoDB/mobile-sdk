@@ -1794,7 +1794,10 @@ namespace carto { namespace vt {
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "uMVPMatrix"), 1, GL_FALSE, mvpMatrix.data());
         
         if (styleParams.transform) {
-            float transformScale = geometryLayoutParams.vertexScale * std::pow(2.0f, tileId.zoom - _zoom) / geometry->getTileSize();
+            float transformScale = 1.0f / geometry->getTileSize();
+            if (geometry->getType() != TileGeometry::Type::POINT) {
+                transformScale *= geometryLayoutParams.vertexScale * std::pow(2.0f, tileId.zoom - _zoom);
+            }
             cglib::mat3x3<float> transformMatrix = styleParams.transform.get();
             transformMatrix(0, 2) *= transformScale;
             transformMatrix(1, 2) *= transformScale;

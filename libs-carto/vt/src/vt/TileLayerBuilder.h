@@ -82,9 +82,11 @@ namespace carto { namespace vt {
             BuilderParameters() : type(TileGeometry::Type::NONE), lineStrokeIds(), strokeMap(), glyphMap() { }
         };
 
+        static float calculateScale(VertexArray<cglib::vec2<float>>& values);
+        static boost::optional<cglib::mat3x3<float>> flipTransform(const boost::optional<cglib::mat3x3<float>>& transform);
+
         void appendGeometry();
         void appendGeometry(float verticesScale, float binormalsScale, float texCoordsScale, const VertexArray<cglib::vec2<float>>& vertices, const VertexArray<cglib::vec2<float>>& texCoords, const VertexArray<cglib::vec2<float>>& binormals, const VertexArray<float>& heights, const VertexArray<cglib::vec4<char>>& attribs, const VertexArray<unsigned int>& indices, const VertexArray<long long>& ids, std::size_t offset, std::size_t count);
-        float calculateScale(VertexArray<cglib::vec2<float>>& values) const;
 
         bool tesselateGlyph(const Vertex& vertex, char styleIndex, const cglib::vec2<float>& pen, const Font::Glyph* glyph);
         bool tesselatePolygon(const VerticesList& verticesList, char styleIndex, const PolygonStyle& style);
@@ -110,7 +112,7 @@ namespace carto { namespace vt {
         std::vector<std::shared_ptr<TileGeometry>> _geometryList;
         std::vector<std::shared_ptr<TileLabel>> _labelList;
 
-		std::shared_ptr<FloatFunction> _nullWidth;
+        std::shared_ptr<FloatFunction> _nullWidth;
         std::unique_ptr<PoolAllocator> _tessPoolAllocator;
     };
 } }
