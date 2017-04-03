@@ -12,9 +12,6 @@
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
-#include "assets/EvaluationWatermarkPNG.h"
-#include "assets/ExpiredWatermarkPNG.h"
-#include "assets/CartoWatermarkPNG.h"
 
 #include <random>
 
@@ -93,10 +90,10 @@ namespace carto {
             if (watermark == "custom") {
                 watermarkBitmap = _options.getWatermarkBitmap();
             } else if (watermark == "carto" || watermark == "cartodb" || watermark == "nutiteq") {
-                watermarkBitmap = GetCartoWatermarkBitmap();
+                watermarkBitmap = Options::GetCartoWatermarkBitmap();
             } else if (watermark == "evaluation" || watermark == "development" || watermark == "expired") {
                 limitedLicense = true;
-                watermarkBitmap = (watermark == "expired" ? GetExpiredWatermarkBitmap() : GetEvaluationWatermarkBitmap());
+                watermarkBitmap = (watermark == "expired" ? Options::GetExpiredWatermarkBitmap() : Options::GetEvaluationWatermarkBitmap());
             } else {
                 Log::Error("WatermarkRenderer::onDrawFrame: Unsupported watermark type!");
             }
@@ -201,29 +198,4 @@ namespace carto {
         glDisableVertexAttribArray(_a_texCoord);
     }
         
-    std::shared_ptr<Bitmap> WatermarkRenderer::GetEvaluationWatermarkBitmap() {
-        if (!_EvaluationWatermarkBitmap) {
-            _EvaluationWatermarkBitmap = Bitmap::CreateFromCompressed(evaluation_watermark_png, evaluation_watermark_png_len);
-        }
-        return _EvaluationWatermarkBitmap;
-    }
-    
-    std::shared_ptr<Bitmap> WatermarkRenderer::GetExpiredWatermarkBitmap() {
-        if (!_ExpiredWatermarkBitmap) {
-            _ExpiredWatermarkBitmap = Bitmap::CreateFromCompressed(expired_watermark_png, expired_watermark_png_len);
-        }
-        return _ExpiredWatermarkBitmap;
-    }
-        
-    std::shared_ptr<Bitmap> WatermarkRenderer::GetCartoWatermarkBitmap() {
-        if (!_CartoWatermarkBitmap) {
-            _CartoWatermarkBitmap = Bitmap::CreateFromCompressed(carto_watermark_png, carto_watermark_png_len);
-        }
-        return _CartoWatermarkBitmap;
-    }
-        
-    std::shared_ptr<Bitmap> WatermarkRenderer::_EvaluationWatermarkBitmap;
-    std::shared_ptr<Bitmap> WatermarkRenderer::_ExpiredWatermarkBitmap;
-    std::shared_ptr<Bitmap> WatermarkRenderer::_CartoWatermarkBitmap;
-    
 }

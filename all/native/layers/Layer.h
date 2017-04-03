@@ -174,11 +174,6 @@ namespace carto {
     private:
         static const int DEFAULT_CULL_DELAY = 400;
 
-        static std::shared_ptr<Bitmap> _DefaultBackgroundBitmap;
-        static std::shared_ptr<Bitmap> _DefaultSkyBitmap;
-
-        static std::mutex _Mutex;
-
         bool _surfaceCreated;
     };
     

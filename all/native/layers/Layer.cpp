@@ -1,6 +1,5 @@
 #include "Layer.h"
-#include "assets/DefaultBackgroundPNG.h"
-#include "assets/DefaultSkyPNG.h"
+#include "components/Options.h"
 #include "graphics/Bitmap.h"
 #include "graphics/ViewState.h"
 #include "renderers/MapRenderer.h"
@@ -176,24 +175,11 @@ namespace carto {
     }
     
     std::shared_ptr<Bitmap> Layer::getBackgroundBitmap() const {
-        std::lock_guard<std::mutex> lock(_Mutex);
-        if (!_DefaultBackgroundBitmap) {
-            _DefaultBackgroundBitmap = Bitmap::CreateFromCompressed(default_background_png, default_background_png_len);
-        }
-        return _DefaultBackgroundBitmap;
+        return Options::GetDefaultBackgroundBitmap();
     }
 
     std::shared_ptr<Bitmap> Layer::getSkyBitmap() const {
-        std::lock_guard<std::mutex> lock(_Mutex);
-        if (!_DefaultSkyBitmap) {
-            _DefaultSkyBitmap = Bitmap::CreateFromCompressed(default_sky_png, default_sky_png_len);
-        }
-        return _DefaultSkyBitmap;
+        return Options::GetDefaultSkyBitmap();
     }
-
-    std::shared_ptr<Bitmap> Layer::_DefaultBackgroundBitmap;
-    std::shared_ptr<Bitmap> Layer::_DefaultSkyBitmap;
-
-    std::mutex Layer::_Mutex;
 
 }

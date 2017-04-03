@@ -304,9 +304,9 @@ namespace carto {
         void setTileThreadPoolSize(int poolSize);
     
         /**
-        * Returns the background bitmap. May be null.
-        * @return The background bitmap.
-        */
+         * Returns the background bitmap. May be null.
+         * @return The background bitmap.
+         */
         std::shared_ptr<Bitmap> getBackgroundBitmap() const;
         /**
          * Sets the background bitmap. The purpose of the background bitmap is to fill out the empty space when there's
@@ -335,7 +335,7 @@ namespace carto {
          * @param skyBitmap The new sky bitmap.
          */
         void setSkyBitmap(const std::shared_ptr<Bitmap>& skyBitmap);
-        
+
         /**
          * Returns the horizontal alignment of the watermark.
          * @return The horizontal alignment of the watermark.
@@ -542,13 +542,15 @@ namespace carto {
          */
         void unregisterOnChangeListener(const std::shared_ptr<OnChangeListener>& listener);
 
+        static std::shared_ptr<Bitmap> GetDefaultBackgroundBitmap();
+
+        static std::shared_ptr<Bitmap> GetDefaultSkyBitmap();
+
+        static std::shared_ptr<Bitmap> GetCartoWatermarkBitmap();
+        static std::shared_ptr<Bitmap> GetEvaluationWatermarkBitmap();
+        static std::shared_ptr<Bitmap> GetExpiredWatermarkBitmap();
+
     private:
-        static std::shared_ptr<Bitmap> GetDefaultWatermarkBitmap();
-    
-        static std::shared_ptr<Bitmap> _DefaultWatermarkBitmap;
-        
-        static std::mutex _Mutex;
-        
         void notifyOptionChanged(const std::string& optionName);
         
         Color _ambientLightColor;
@@ -607,6 +609,15 @@ namespace carto {
 
         std::vector<std::shared_ptr<OnChangeListener> > _onChangeListeners;
         mutable std::mutex _onChangeListenersMutex;
+
+        static std::shared_ptr<Bitmap> _DefaultBackgroundBitmap;
+        static std::shared_ptr<Bitmap> _DefaultSkyBitmap;
+        
+        static std::shared_ptr<Bitmap> _CartoWatermarkBitmap;
+        static std::shared_ptr<Bitmap> _EvaluationWatermarkBitmap;
+        static std::shared_ptr<Bitmap> _ExpiredWatermarkBitmap;
+        
+        static std::mutex _Mutex;
     };
     
 }

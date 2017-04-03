@@ -58,7 +58,7 @@ namespace carto {
         std::vector<std::shared_ptr<Layer> > layers = _layers.getAll();
 
         std::shared_ptr<Bitmap> backgroundBitmap = _options.getBackgroundBitmap();
-        if (!backgroundBitmap) {
+        if (backgroundBitmap == Options::GetDefaultBackgroundBitmap()) {
             if (!layers.empty()) {
                 backgroundBitmap = layers.front()->getBackgroundBitmap();
             }
@@ -73,7 +73,7 @@ namespace carto {
         }
     
         std::shared_ptr<Bitmap> skyBitmap = _options.getSkyBitmap();
-        if (!skyBitmap) {
+        if (skyBitmap == Options::GetDefaultSkyBitmap()) {
             if (!layers.empty()) {
                 skyBitmap = layers.front()->getSkyBitmap();
             }

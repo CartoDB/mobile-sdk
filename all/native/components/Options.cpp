@@ -1,5 +1,9 @@
 #include "Options.h"
+#include "assets/DefaultBackgroundPNG.h"
+#include "assets/DefaultSkyPNG.h"
 #include "assets/CartoWatermarkPNG.h"
+#include "assets/EvaluationWatermarkPNG.h"
+#include "assets/ExpiredWatermarkPNG.h"
 #include "components/Exceptions.h"
 #include "components/CancelableThreadPool.h"
 #include "graphics/Bitmap.h"
@@ -27,11 +31,11 @@ namespace carto {
         _seamlessPanning(true),
         _tiltGestureReversed(false),
         _zoomGestures(false),
-        _backgroundBitmap(),
-        _skyBitmap(),
+        _backgroundBitmap(GetDefaultBackgroundBitmap()),
+        _skyBitmap(GetDefaultSkyBitmap()),
         _watermarkAlignmentX(-1),
         _watermarkAlignmentY(-1),
-        _watermarkBitmap(GetDefaultWatermarkBitmap()),
+        _watermarkBitmap(GetCartoWatermarkBitmap()),
         _watermarkPadding(4, 4),
         _watermarkScale(1.0f),
         _userInput(true),
@@ -614,14 +618,56 @@ namespace carto {
         notifyOptionChanged("BaseProjection");
     }
     
-    std::shared_ptr<Bitmap> Options::GetDefaultWatermarkBitmap() {
-        std::lock_guard<std::mutex> lock(_Mutex);
-        if (!_DefaultWatermarkBitmap) {
-            _DefaultWatermarkBitmap = Bitmap::CreateFromCompressed(carto_watermark_png, carto_watermark_png_len);
-        }
-        return _DefaultWatermarkBitmap;
+    void Options::registerOnChangeListener(const std::shared_ptr<OnChangeListener>& listener) {
+        std::lock_guard<std::mutex> lock(_onChangeListenersMutex);
+        _onChangeListeners.push_back(listener);
+    }
+
+    void Options::unregisterOnChangeListener(const std::shared_ptr<OnChangeListener>& listener) {
+        std::lock_guard<std::mutex> lock(_onChangeListenersMutex);
+        _onChangeListeners.erase(std::remove(_onChangeListeners.begin(), _onChangeListeners.end(), listener), _onChangeListeners.end());
     }
     
+    std::shared_ptr<Bitmap> Options::GetDefaultBackgroundBitmap() {
+        std::lock_guard<std::mutex> lock(_Mutex);
+        if (!_DefaultBackgroundBitmap) {
+            _DefaultBackgroundBitmap = Bitmap::CreateFromCompressed(default_background_png, default_background_png_len);
+        }
+        return _DefaultBackgroundBitmap;
+    }
+
+    std::shared_ptr<Bitmap> Options::GetDefaultSkyBitmap() {
+        std::lock_guard<std::mutex> lock(_Mutex);
+        if (!_DefaultSkyBitmap) {
+            _DefaultSkyBitmap = Bitmap::CreateFromCompressed(default_sky_png, default_sky_png_len);
+        }
+        return _DefaultSkyBitmap;
+    }
+
+    std::shared_ptr<Bitmap> Options::GetCartoWatermarkBitmap() {
+        std::lock_guard<std::mutex> lock(_Mutex);
+        if (!_CartoWatermarkBitmap) {
+            _CartoWatermarkBitmap = Bitmap::CreateFromCompressed(carto_watermark_png, carto_watermark_png_len);
+        }
+        return _CartoWatermarkBitmap;
+    }
+        
+    std::shared_ptr<Bitmap> Options::GetEvaluationWatermarkBitmap() {
+        std::lock_guard<std::mutex> lock(_Mutex);
+        if (!_EvaluationWatermarkBitmap) {
+            _EvaluationWatermarkBitmap = Bitmap::CreateFromCompressed(evaluation_watermark_png, evaluation_watermark_png_len);
+        }
+        return _EvaluationWatermarkBitmap;
+    }
+    
+    std::shared_ptr<Bitmap> Options::GetExpiredWatermarkBitmap() {
+        std::lock_guard<std::mutex> lock(_Mutex);
+        if (!_ExpiredWatermarkBitmap) {
+            _ExpiredWatermarkBitmap = Bitmap::CreateFromCompressed(expired_watermark_png, expired_watermark_png_len);
+        }
+        return _ExpiredWatermarkBitmap;
+    }
+        
     void Options::notifyOptionChanged(const std::string& optionName) {
         std::vector<std::shared_ptr<OnChangeListener> > onChangeListeners;
         {
@@ -633,18 +679,13 @@ namespace carto {
         }
     }
 
-    void Options::registerOnChangeListener(const std::shared_ptr<OnChangeListener>& listener) {
-        std::lock_guard<std::mutex> lock(_onChangeListenersMutex);
-        _onChangeListeners.push_back(listener);
-    }
+    std::shared_ptr<Bitmap> Options::_DefaultBackgroundBitmap;
+    std::shared_ptr<Bitmap> Options::_DefaultSkyBitmap;
 
-    void Options::unregisterOnChangeListener(const std::shared_ptr<OnChangeListener>& listener) {
-        std::lock_guard<std::mutex> lock(_onChangeListenersMutex);
-        _onChangeListeners.erase(std::remove(_onChangeListeners.begin(), _onChangeListeners.end(), listener), _onChangeListeners.end());
-    }
+    std::shared_ptr<Bitmap> Options::_CartoWatermarkBitmap;
+    std::shared_ptr<Bitmap> Options::_EvaluationWatermarkBitmap;
+    std::shared_ptr<Bitmap> Options::_ExpiredWatermarkBitmap;
     
-    std::shared_ptr<Bitmap> Options::_DefaultWatermarkBitmap;
-
     std::mutex Options::_Mutex;
     
 }

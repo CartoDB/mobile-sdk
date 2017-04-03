@@ -34,14 +34,6 @@ namespace carto {
         void onSurfaceDestroyed();
     
     protected:
-        static std::shared_ptr<Bitmap> GetEvaluationWatermarkBitmap();
-        static std::shared_ptr<Bitmap> GetExpiredWatermarkBitmap();
-        static std::shared_ptr<Bitmap> GetCartoWatermarkBitmap();
-        
-        static std::shared_ptr<Bitmap> _EvaluationWatermarkBitmap;
-        static std::shared_ptr<Bitmap> _ExpiredWatermarkBitmap;
-        static std::shared_ptr<Bitmap> _CartoWatermarkBitmap;
-        
         enum { FIXED_WATERMARK_PADDING_X = 4 };
         enum { FIXED_WATERMARK_PADDING_Y = 4 };
         

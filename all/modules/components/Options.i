@@ -68,6 +68,11 @@
 %ignore carto::Options::OnChangeListener;
 %ignore carto::Options::registerOnChangeListener;
 %ignore carto::Options::unregisterOnChangeListener;
+%ignore carto::Options::GetDefaultBackgroundBitmap;
+%ignore carto::Options::GetDefaultSkyBitmap;
+%ignore carto::Options::GetCartoWatermarkBitmap;
+%ignore carto::Options::GetEvaluationWatermarkBitmap;
+%ignore carto::Options::GetExpiredWatermarkBitmap;
 !standard_equals(carto::Options);
 
 %include "components/Options.h"
