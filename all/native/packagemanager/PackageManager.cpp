@@ -406,7 +406,7 @@ namespace carto {
                 bool found = false;
                 for (std::size_t i = 0; i < localPackages.size(); i++) {
                     if (localPackages[i]->getTileMask()->getTileStatus(MapTile(x, y, zoom, 0)) == PackageTileStatus::PACKAGE_TILE_STATUS_FULL) {
-                        std::rotate(localPackages.begin(), localPackages.begin() + 1, localPackages.begin() + i);
+                        std::rotate(localPackages.begin(), localPackages.begin() + i, localPackages.begin() + i + 1);
                         found = true;
                         break;
                     }
