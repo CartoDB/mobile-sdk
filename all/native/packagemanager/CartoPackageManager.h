@@ -44,11 +44,22 @@ namespace carto {
         virtual std::shared_ptr<PackageInfo> getCustomPackage(const std::string& packageId, int version) const;
         
     private:
+        struct PackageSource {
+            std::string type;
+            std::string id;
+
+            PackageSource(const std::string& type, const std::string& id) : type(type), id(id) { }
+        };
+
+        static PackageSource ResolveSource(const std::string& source);
+
         static const std::string MAP_PACKAGE_LIST_URL;
 
         static const std::string ROUTING_PACKAGE_LIST_URL;
 
-        static const std::string CUSTOM_BBOX_PACKAGE_URL;
+        static const std::string CUSTOM_MAP_BBOX_PACKAGE_URL;
+
+        static const std::string CUSTOM_ROUTING_BBOX_PACKAGE_URL;
 
         static const int MAX_CUSTOM_BBOX_PACKAGE_TILES = 100000;
         static const int MAX_CUSTOM_BBOX_PACKAGE_TILEMASK_ZOOM = 12;

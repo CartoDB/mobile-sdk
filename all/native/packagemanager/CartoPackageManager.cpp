@@ -28,23 +28,17 @@ namespace carto {
     }
 
     std::string CartoPackageManager::GetPackageListURL(const std::string& source) {
-        std::string type = "map";
-        std::string id = source;
-        std::string::size_type pos = source.find(':');
-        if (pos != std::string::npos) {
-            type = source.substr(0, pos);
-            id = source.substr(pos + 1);
-        }
+        PackageSource packageSource = ResolveSource(source);
 
         std::string baseURL;
-        if (type == "map") {
-            baseURL = MAP_PACKAGE_LIST_URL + NetworkUtils::URLEncode(id) + "/1/packages.json";
+        if (packageSource.type == "map") {
+            baseURL = MAP_PACKAGE_LIST_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/packages.json";
         }
-        else if (type == "routing") {
-            baseURL = ROUTING_PACKAGE_LIST_URL + NetworkUtils::URLEncode(id) + "/1/packages.json";
+        else if (packageSource.type == "routing") {
+            baseURL = ROUTING_PACKAGE_LIST_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/packages.json";
         }
         else {
-            Log::Errorf("CartoPackageManager: Illegal package type: %s", type.c_str());
+            Log::Errorf("CartoPackageManager: Illegal package type: %s", packageSource.type.c_str());
             return "";
         }
 
@@ -127,11 +121,7 @@ namespace carto {
         
         std::match_results<std::string::const_iterator> results;
         if (std::regex_match(packageId, results, re)) {
-            std::string id = _source;
-            std::string::size_type pos = _source.find(':');
-            if (pos != std::string::npos) {
-                id = _source.substr(pos + 1);
-            }
+            PackageSource packageSource = ResolveSource(_source);
 
             EPSG3857 proj;
             MapBounds bounds;
@@ -154,7 +144,18 @@ namespace carto {
             }
 
             auto tileMask = std::make_shared<PackageTileMask>(tiles);
-            std::string baseURL = CUSTOM_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(id) + "/custom/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".mbtiles";
+
+            std::string baseURL;
+            if (packageSource.type == "map") {
+                baseURL = CUSTOM_MAP_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(packageSource.id) + "/custom/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".mbtiles";
+            }
+            else if (packageSource.type == "routing") {
+                baseURL = CUSTOM_ROUTING_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/custom/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".mbtiles";
+            }
+            else {
+                Log::Errorf("CartoPackageManager: Illegal package type: %s", packageSource.type.c_str());
+                return std::shared_ptr<PackageInfo>();
+            }
 
             std::map<std::string, std::string> params;
             params["deviceId"] = PlatformUtils::GetDeviceId();
@@ -180,11 +181,23 @@ namespace carto {
         return std::shared_ptr<PackageInfo>();
     }
 
+    CartoPackageManager::PackageSource CartoPackageManager::ResolveSource(const std::string& source) {
+        PackageSource packageSource("map", source);
+        std::string::size_type pos = source.find(':');
+        if (pos != std::string::npos) {
+            packageSource.type = source.substr(0, pos);
+            packageSource.id = source.substr(pos + 1);
+        }
+        return packageSource;
+    }
+
     const std::string CartoPackageManager::MAP_PACKAGE_LIST_URL = "http://api.nutiteq.com/mappackages/v2/";
 
     const std::string CartoPackageManager::ROUTING_PACKAGE_LIST_URL = "http://api.nutiteq.com/routepackages/v2/";
 
-    const std::string CartoPackageManager::CUSTOM_BBOX_PACKAGE_URL = "http://api.nutiteq.com/v2/";
+    const std::string CartoPackageManager::CUSTOM_MAP_BBOX_PACKAGE_URL = "http://api.nutiteq.com/v2/";
+
+    const std::string CartoPackageManager::CUSTOM_ROUTING_BBOX_PACKAGE_URL = "http://he1.nutiteq.com/routing/v2/";
 
 }
 
