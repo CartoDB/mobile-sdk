@@ -16,6 +16,8 @@
 #include <stdext/timed_lru_cache.h>
 
 namespace carto {
+    class BinaryData;
+    class PackageTileMask;
     
     /**
      * An online tile data source that connects to Carto tile server.
@@ -33,6 +35,13 @@ namespace carto {
         virtual std::shared_ptr<TileData> loadTile(const MapTile& mapTile);
         
     protected:
+        struct TileMask {
+            bool inclusive = true;
+            int maxZoom = -1;
+            std::shared_ptr<PackageTileMask> tileMask;
+            std::shared_ptr<BinaryData> tileData;
+        };
+
         bool isMapZenSource() const;
 
         std::string buildTileURL(const std::string& baseURL, const MapTile& tile) const;
@@ -41,16 +50,18 @@ namespace carto {
 
         std::shared_ptr<TileData> loadOnlineTile(const std::string& url, const MapTile& mapTile);
 
-        static const int DEFAULT_CACHED_TILES;
-
+        static const int CARTO_MAX_ZOOM = 14;
+        static const int MAPZEN_MAX_ZOOM = 17;
+        static const int MAX_CACHED_TILES = 8;
         static const std::string TILE_SERVICE_URL;
 
         const std::string _source;
-        cache::timed_lru_cache<long long, std::shared_ptr<TileData> > _cache;
+        mutable cache::timed_lru_cache<long long, std::shared_ptr<TileData> > _cache;
         HTTPClient _httpClient;
 
         bool _tmsScheme;
         std::vector<std::string> _tileURLs;
+        std::vector<TileMask> _tileMasks;
         std::default_random_engine _randomGenerator;
 
         mutable std::recursive_mutex _mutex;
