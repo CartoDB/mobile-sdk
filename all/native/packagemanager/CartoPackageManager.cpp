@@ -146,11 +146,14 @@ namespace carto {
             auto tileMask = std::make_shared<PackageTileMask>(tiles);
 
             std::string baseURL;
+            PackageType::PackageType packageType = PackageType::PACKAGE_TYPE_MAP;
             if (packageSource.type == "map") {
                 baseURL = CUSTOM_MAP_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(packageSource.id) + "/custom/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".mbtiles";
+                packageType = PackageType::PACKAGE_TYPE_MAP;
             }
             else if (packageSource.type == "routing") {
                 baseURL = CUSTOM_ROUTING_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/custom/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".mbtiles";
+                packageType = PackageType::PACKAGE_TYPE_VALHALLA_ROUTING;
             }
             else {
                 Log::Errorf("CartoPackageManager: Illegal package type: %s", packageSource.type.c_str());
@@ -169,7 +172,7 @@ namespace carto {
 
             auto packageInfo = std::make_shared<PackageInfo>(
                 packageId,
-                PackageType::PACKAGE_TYPE_MAP,
+                packageType,
                 version,
                 0,
                 url,
