@@ -202,7 +202,7 @@ namespace carto {
                     }
                     std::shared_ptr<PackageTileMask> tileMask;
                     if (jsonPackageInfo.HasMember("tile_mask")) {
-                        tileMask = std::make_shared<PackageTileMask>(jsonPackageInfo["tile_mask"].GetString());
+                        tileMask = std::make_shared<PackageTileMask>(jsonPackageInfo["tile_mask"].GetString(), DEFAULT_TILEMASK_ZOOMLEVEL);
                     }
                     auto packageInfo = std::make_shared<PackageInfo>(
                         packageId,
@@ -1042,7 +1042,7 @@ namespace carto {
             for (auto qit = query.begin(); qit != query.end(); qit++) {
                 std::shared_ptr<PackageTileMask> tileMask;
                 if (strlen(qit->get<const char*>(5)) != 0) {
-                    tileMask = std::make_shared<PackageTileMask>(qit->get<const char*>(5));
+                    tileMask = std::make_shared<PackageTileMask>(qit->get<const char*>(5), DEFAULT_TILEMASK_ZOOMLEVEL);
                 }
                 std::shared_ptr<PackageMetaInfo> metaInfo;
                 if (strlen(qit->get<const char*>(6)) != 0) {
