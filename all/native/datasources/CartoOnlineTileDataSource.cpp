@@ -109,11 +109,16 @@ namespace carto {
 
         std::shared_ptr<BinaryData> responseData;
         if (!NetworkUtils::GetHTTP(url, responseData, Log::IsShowDebug())) {
-            Log::Error("CartoOnlineTileDataSource: Failed to fetch tile source configuration");
-            return false;
+            Log::Warnf("CartoOnlineTileDataSource: Failed to fetch tile source configuration"); // NOTE: we may have error messages, thus do not return from here
         }
 
-        std::string result(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+        std::string result;
+        if (responseData) {
+            result = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+        } else {
+            Log::Error("CartoOnlineTileDataSource: Empty response");
+            return false;
+        }
         picojson::value config;
         std::string err = picojson::parse(config, result);
         if (!err.empty()) {
@@ -121,14 +126,22 @@ namespace carto {
             return false;
         }
 
+        if (config.get("errors").is<picojson::array>()) {
+            for (const picojson::value& error : config.get("errors").get<picojson::array>()) {
+                if (error.get("message").is<std::string>()) {
+                    Log::Errorf("CartoOnlineTileDataSource: Error: %s", error.get("message").get<std::string>().c_str());
+                }
+            }
+        }
+
         _tileURLs.clear();
         if (!config.get("tiles").is<picojson::array>()) {
             Log::Error("CartoOnlineTileDataSource: Tile URLs missing from configuration");
             return false;
         }
-        for (const picojson::value& val : config.get("tiles").get<picojson::array>()) {
-            if (val.is<std::string>()) {
-                _tileURLs.push_back(val.get<std::string>());
+        for (const picojson::value& tileURL : config.get("tiles").get<picojson::array>()) {
+            if (tileURL.is<std::string>()) {
+                _tileURLs.push_back(tileURL.get<std::string>());
             }
         }
 
