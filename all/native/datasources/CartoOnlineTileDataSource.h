@@ -37,7 +37,6 @@ namespace carto {
     protected:
         struct TileMask {
             bool inclusive = true;
-            int maxZoom = -1;
             std::shared_ptr<PackageTileMask> tileMask;
             std::shared_ptr<BinaryData> tileData;
         };
