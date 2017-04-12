@@ -55,9 +55,7 @@ namespace carto {
 
                     data = it->second->loadTile(mapTileFlipped);
                     if (data || tileMask) {
-                        if (it != _cachedOpenPackageHandlers.begin()) {
-                            std::swap(*_cachedOpenPackageHandlers.begin(), *it);
-                        }
+                        std::rotate(_cachedOpenPackageHandlers.begin(), it, it + 1);
                         return;
                     }
                 }

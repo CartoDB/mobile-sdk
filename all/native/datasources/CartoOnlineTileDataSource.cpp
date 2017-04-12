@@ -2,6 +2,7 @@
 #include "core/BinaryData.h"
 #include "core/MapTile.h"
 #include "components/LicenseManager.h"
+#include "packagemanager/PackageTileMask.h"
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
 #include "utils/PlatformUtils.h"
@@ -9,19 +10,22 @@
 
 #include <picojson/picojson.h>
 
+#include <stdext/base64.h>
+
 namespace carto {
     
     CartoOnlineTileDataSource::CartoOnlineTileDataSource(const std::string& source) :
         TileDataSource(),
         _source(source),
-        _cache(DEFAULT_CACHED_TILES),
+        _cache(MAX_CACHED_TILES),
         _httpClient(Log::IsShowDebug()),
         _tmsScheme(false),
         _tileURLs(),
+        _tileMasks(),
         _randomGenerator(),
         _mutex()
     {
-        _maxZoom = (isMapZenSource() ? 17 : 14);
+        _maxZoom = (isMapZenSource() ? MAPZEN_MAX_ZOOM : CARTO_MAX_ZOOM);
     }
     
     CartoOnlineTileDataSource::~CartoOnlineTileDataSource() {
@@ -30,6 +34,7 @@ namespace carto {
     std::shared_ptr<TileData> CartoOnlineTileDataSource::loadTile(const MapTile& mapTile) {
         std::unique_lock<std::recursive_mutex> lock(_mutex);
 
+        // Check if the tile is in cache
         std::shared_ptr<TileData> tileData;
         if (_cache.read(mapTile.getTileId(), tileData)) {
             if (tileData->getMaxAge() != 0) {
@@ -38,18 +43,31 @@ namespace carto {
             _cache.remove(mapTile.getTileId());
         }
 
+        // Reload tile service URLs, if needed
         if (_tileURLs.empty()) {
             if (!loadTileURLs()) {
                 return std::shared_ptr<TileData>();
             }
         }
+
+        // Check tilemasks - perhaps we can ignore server query alltogether
+        for (const TileMask& tileMask : _tileMasks) {
+            bool inside = tileMask.tileMask->getTileStatus(mapTile) == PackageTileStatus::PACKAGE_TILE_STATUS_FULL;
+            if (tileMask.inclusive == inside) {
+                return std::make_shared<TileData>(tileMask.tileData);
+            }
+        }
+
+        // Select tile URL randomly
         std::size_t randomIndex = std::uniform_int_distribution<std::size_t>(0, _tileURLs.size() - 1)(_randomGenerator);
         std::string tileURL = _tileURLs[randomIndex];
 
+        // Fetch online tile, allow parallel tile fetching
         lock.unlock();
         tileData = loadOnlineTile(tileURL, mapTile);
         lock.lock();
-        
+
+        // Store the tile in local cache
         if (tileData) {
             if (tileData->getMaxAge() != 0 && tileData->getData() && !tileData->isReplaceWithParent()) {
                 _cache.put(mapTile.getTileId(), tileData, 1);
@@ -93,7 +111,7 @@ namespace carto {
             Log::Error("CartoOnlineTileDataSource: Failed to fetch tile source configuration");
             return false;
         }
-           
+
         std::string result(reinterpret_cast<const char*>(responseData->data()), responseData->size());
         picojson::value config;
         std::string err = picojson::parse(config, result);
@@ -102,6 +120,7 @@ namespace carto {
             return false;
         }
 
+        _tileURLs.clear();
         if (!config.get("tiles").is<picojson::array>()) {
             Log::Error("CartoOnlineTileDataSource: Tile URLs missing from configuration");
             return false;
@@ -127,6 +146,20 @@ namespace carto {
             if (maxZoom != _maxZoom) {
                 _maxZoom = maxZoom;
                 notifyTilesChanged(false);
+            }
+        }
+
+        _tileMasks.clear();
+        if (config.get("tilemasks").is<picojson::array>()) {
+            for (const picojson::value& tileMaskConfig : config.get("tilemasks").get<picojson::array>()) {
+                TileMask tileMask;
+                if (tileMaskConfig.get("type").is<std::string>()) {
+                    tileMask.inclusive = tileMaskConfig.get("type").get<std::string>() != "exclude";
+                }
+                tileMask.tileMask = std::make_shared<PackageTileMask>(tileMaskConfig.get("tilemask").get<std::string>(), _maxZoom.load());
+                std::string tileData = tileMaskConfig.get("tile").get<std::string>();
+                tileMask.tileData = std::make_shared<BinaryData>(base64::decode_base64<unsigned char>(tileData.data(), tileData.size()));
+                _tileMasks.push_back(tileMask);
             }
         }
         return !_tileURLs.empty();
@@ -167,8 +200,6 @@ namespace carto {
         }
         return tileData;
     }
-
-    const int CartoOnlineTileDataSource::DEFAULT_CACHED_TILES = 8;
 
     const std::string CartoOnlineTileDataSource::TILE_SERVICE_URL = "http://api.nutiteq.com/v2/";
     
