@@ -159,7 +159,7 @@ namespace carto {
                 if (tileMaskConfig.get("maxZoom").is<std::int64_t>()) {
                     tileMask.maxZoom = static_cast<int>(tileMaskConfig.get("maxZoom").get<std::int64_t>());
                 }
-                tileMask.tileMask = std::make_shared<PackageTileMask>(tileMaskConfig.get("tilemask").get<std::string>(), tileMask.maxZoom >= 0 ? tileMask.maxZoom : _maxZoom);
+                tileMask.tileMask = std::make_shared<PackageTileMask>(tileMaskConfig.get("tilemask").get<std::string>(), tileMask.maxZoom >= 0 ? tileMask.maxZoom : _maxZoom.load());
                 std::string tileData = tileMaskConfig.get("tile").get<std::string>();
                 tileMask.tileData = std::make_shared<BinaryData>(base64::decode_base64<unsigned char>(tileData.data(), tileData.size()));
                 _tileMasks.push_back(tileMask);
