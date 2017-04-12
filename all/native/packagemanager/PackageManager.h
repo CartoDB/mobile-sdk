@@ -310,7 +310,7 @@ namespace carto {
 
         static int DownloadFile(const std::string& url, NetworkUtils::HandlerFn handler, std::uint64_t offset = 0);
 
-        static const int DEFAULT_TILEMASK_ZOOMLEVEL = 14;
+        static const int DEFAULT_TILEMASK_ZOOMLEVEL;
 
         const std::string _packageListURL;
         const std::string _packageListFileName;

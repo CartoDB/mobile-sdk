@@ -52,7 +52,7 @@ namespace carto {
 
         // Check tilemasks - perhaps we can ignore server query alltogether
         for (const TileMask& tileMask : _tileMasks) {
-            bool inside = tileMask.tileMask->getTileStatus(mapTile.getFlipped()) == PackageTileStatus::PACKAGE_TILE_STATUS_FULL;
+            bool inside = tileMask.tileMask->getTileStatus(mapTile) == PackageTileStatus::PACKAGE_TILE_STATUS_FULL;
             if (tileMask.inclusive == inside) {
                 return std::make_shared<TileData>(tileMask.tileData);
             }
@@ -111,7 +111,7 @@ namespace carto {
             Log::Error("CartoOnlineTileDataSource: Failed to fetch tile source configuration");
             return false;
         }
-           
+
         std::string result(reinterpret_cast<const char*>(responseData->data()), responseData->size());
         picojson::value config;
         std::string err = picojson::parse(config, result);
@@ -156,10 +156,7 @@ namespace carto {
                 if (tileMaskConfig.get("type").is<std::string>()) {
                     tileMask.inclusive = tileMaskConfig.get("type").get<std::string>() != "exclude";
                 }
-                if (tileMaskConfig.get("maxZoom").is<std::int64_t>()) {
-                    tileMask.maxZoom = static_cast<int>(tileMaskConfig.get("maxZoom").get<std::int64_t>());
-                }
-                tileMask.tileMask = std::make_shared<PackageTileMask>(tileMaskConfig.get("tilemask").get<std::string>(), tileMask.maxZoom >= 0 ? tileMask.maxZoom : _maxZoom.load());
+                tileMask.tileMask = std::make_shared<PackageTileMask>(tileMaskConfig.get("tilemask").get<std::string>(), _maxZoom.load());
                 std::string tileData = tileMaskConfig.get("tile").get<std::string>();
                 tileMask.tileData = std::make_shared<BinaryData>(base64::decode_base64<unsigned char>(tileData.data(), tileData.size()));
                 _tileMasks.push_back(tileMask);

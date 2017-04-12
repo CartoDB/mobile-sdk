@@ -1530,6 +1530,7 @@ namespace carto {
         command.execute();
     }
 
+    const int PackageManager::DEFAULT_TILEMASK_ZOOMLEVEL = 14;
 }
 
 #endif
