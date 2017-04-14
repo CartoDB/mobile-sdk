@@ -45,19 +45,25 @@ namespace carto {
     }
 
     void Layers::set(int index, const std::shared_ptr<Layer>& layer) {
+        if (!layer) {
+            throw NullArgumentException("Null layer");
+        }
+
         std::shared_ptr<MapRenderer> mapRenderer;
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            if (!layer) {
-                throw NullArgumentException("Null layer");
-            }
             if (index < 0 || static_cast<std::size_t>(index) >= _layers.size()) {
                 throw OutOfRangeException("Layer index out of range");
             }
 
-            _layers[index]->setComponents(std::shared_ptr<CancelableThreadPool>(), std::shared_ptr<CancelableThreadPool>(), std::shared_ptr<Options>(), std::weak_ptr<MapRenderer>(), std::weak_ptr<TouchHandler>());
-            layer->setComponents(_envelopeThreadPool, _tileThreadPool, _options, _mapRenderer, _touchHandler);
+            std::shared_ptr<Layer> oldLayer = _layers[index];
+            if (std::find(_layers.begin(), _layers.end(), layer) == _layers.end()) {
+                layer->setComponents(_envelopeThreadPool, _tileThreadPool, _options, _mapRenderer, _touchHandler);
+            }
             _layers[index] = layer;
+            if (std::find(_layers.begin(), _layers.end(), oldLayer) == _layers.end()) {
+                oldLayer->setComponents(std::shared_ptr<CancelableThreadPool>(), std::shared_ptr<CancelableThreadPool>(), std::shared_ptr<Options>(), std::weak_ptr<MapRenderer>(), std::weak_ptr<TouchHandler>());
+            }
         
             mapRenderer = _mapRenderer.lock();
         }
@@ -68,24 +74,27 @@ namespace carto {
     }
     
     void Layers::setAll(const std::vector<std::shared_ptr<Layer> >& layers) {
+        if (!std::all_of(layers.begin(), layers.end(), [](const std::shared_ptr<Layer>& layer) -> bool {
+            return layer.get();
+        })) {
+            throw NullArgumentException("Null layer");
+        }
+
         std::shared_ptr<MapRenderer> mapRenderer;
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            for (const std::shared_ptr<Layer>& layer : _layers) {
-                if (!layer) {
-                    throw NullArgumentException("Null layer");
-                }
-
-                if (std::find(layers.begin(), layers.end(), layer) == layers.end()) {
-                    layer->setComponents(std::shared_ptr<CancelableThreadPool>(), std::shared_ptr<CancelableThreadPool>(), std::shared_ptr<Options>(), std::weak_ptr<MapRenderer>(), std::weak_ptr<TouchHandler>());
-                }
-            }
+            std::vector<std::shared_ptr<Layer> > oldLayers = _layers;
             for (const std::shared_ptr<Layer>& layer : layers) {
                 if (std::find(_layers.begin(), _layers.end(), layer) == _layers.end()) {
                     layer->setComponents(_envelopeThreadPool, _tileThreadPool, _options, _mapRenderer, _touchHandler);
                 }
             }
             _layers = layers;
+            for (const std::shared_ptr<Layer>& oldLayer : oldLayers) {
+                if (std::find(_layers.begin(), _layers.end(), oldLayer) == _layers.end()) {
+                    oldLayer->setComponents(std::shared_ptr<CancelableThreadPool>(), std::shared_ptr<CancelableThreadPool>(), std::shared_ptr<Options>(), std::weak_ptr<MapRenderer>(), std::weak_ptr<TouchHandler>());
+                }
+            }
 
             mapRenderer = _mapRenderer.lock();
         }
@@ -98,17 +107,20 @@ namespace carto {
     }
     
     void Layers::insert(int index, const std::shared_ptr<Layer>& layer) {
+        if (!layer) {
+            throw NullArgumentException("Null layer");
+        }
+
         std::shared_ptr<MapRenderer> mapRenderer;
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            if (!layer) {
-                throw NullArgumentException("Null layer");
-            }
             if (index < 0 || static_cast<std::size_t>(index) > _layers.size()) {
                 throw OutOfRangeException("Layer index out of range");
             }
 
-            layer->setComponents(_envelopeThreadPool, _tileThreadPool, _options, _mapRenderer, _touchHandler);
+            if (std::find(_layers.begin(), _layers.end(), layer) == _layers.end()) {
+                layer->setComponents(_envelopeThreadPool, _tileThreadPool, _options, _mapRenderer, _touchHandler);
+            }
             _layers.insert(_layers.begin() + index, layer);
 
             mapRenderer = _mapRenderer.lock();
@@ -126,15 +138,19 @@ namespace carto {
     }
 
     void Layers::addAll(const std::vector<std::shared_ptr<Layer> >& layers) {
+        if (!std::all_of(layers.begin(), layers.end(), [](const std::shared_ptr<Layer>& layer) -> bool {
+            return layer.get();
+        })) {
+            throw NullArgumentException("Null layer");
+        }
+
         std::shared_ptr<MapRenderer> mapRenderer;
         {
             std::lock_guard<std::mutex> lock(_mutex);
             for (const std::shared_ptr<Layer>& layer : layers) {
-                if (!layer) {
-                    throw NullArgumentException("Null layer");
+                if (std::find(_layers.begin(), _layers.end(), layer) == _layers.end()) {
+                    layer->setComponents(_envelopeThreadPool, _tileThreadPool, _options, _mapRenderer, _touchHandler);
                 }
-
-                layer->setComponents(_envelopeThreadPool, _tileThreadPool, _options, _mapRenderer, _touchHandler);
                 _layers.push_back(layer);
             }
         
@@ -155,22 +171,26 @@ namespace carto {
     }
     
     bool Layers::removeAll(const std::vector<std::shared_ptr<Layer> >& layers) {
+        if (!std::all_of(layers.begin(), layers.end(), [](const std::shared_ptr<Layer>& layer) -> bool {
+            return layer.get();
+        })) {
+            throw NullArgumentException("Null layer");
+        }
+
         bool removedAll = true;
         std::shared_ptr<MapRenderer> mapRenderer;
         {
             std::lock_guard<std::mutex> lock(_mutex);
             for (const std::shared_ptr<Layer>& layer : layers) {
-                if (!layer) {
-                    throw NullArgumentException("Null layer");
-                }
-
                 auto it = std::remove(_layers.begin(), _layers.end(), layer);
                 if (it == _layers.end()) {
                     removedAll = false;
                     continue;
                 }
                 _layers.erase(it, _layers.end());
-                layer->setComponents(std::shared_ptr<CancelableThreadPool>(), std::shared_ptr<CancelableThreadPool>(), std::shared_ptr<Options>(), std::weak_ptr<MapRenderer>(), std::weak_ptr<TouchHandler>());
+                if (std::find(_layers.begin(), _layers.end(), layer) == _layers.end()) {
+                    layer->setComponents(std::shared_ptr<CancelableThreadPool>(), std::shared_ptr<CancelableThreadPool>(), std::shared_ptr<Options>(), std::weak_ptr<MapRenderer>(), std::weak_ptr<TouchHandler>());
+                }
             }
 
             mapRenderer = _mapRenderer.lock();

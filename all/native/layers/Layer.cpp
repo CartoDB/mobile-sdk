@@ -1,4 +1,5 @@
 #include "Layer.h"
+#include "components/Exceptions.h"
 #include "components/Options.h"
 #include "graphics/Bitmap.h"
 #include "graphics/ViewState.h"
@@ -138,10 +139,17 @@ namespace carto {
                               const std::shared_ptr<CancelableThreadPool>& tileThreadPool,
                               const std::weak_ptr<Options>& options,
                               const std::weak_ptr<MapRenderer>& mapRenderer,
-                              const std::weak_ptr<TouchHandler>& touchHandler) {
+                              const std::weak_ptr<TouchHandler>& touchHandler)
+    {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        if (mapRenderer.lock() == _mapRenderer.lock()) {
+            return;
+        } else if (mapRenderer.lock() && _mapRenderer.lock()) {
+            throw InvalidArgumentException("Layer already attached to a different renderer");
+        }
+
         // This method is called only when the layer is added/removed from Layers object,
         // access to these threadpools is thread safe
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
         _envelopeThreadPool = envelopeThreadPool;
         _tileThreadPool = tileThreadPool;
         _mapRenderer = mapRenderer;
@@ -150,7 +158,7 @@ namespace carto {
     
         // Let the datasource know, that this layer is using it / not using it anymore, so it can
         // notify this layer when the data changes
-        if (envelopeThreadPool && tileThreadPool && options.lock() && mapRenderer.lock()) {
+        if (mapRenderer.lock()) {
             registerDataSourceListener();
         } else {
             unregisterDataSourceListener();
