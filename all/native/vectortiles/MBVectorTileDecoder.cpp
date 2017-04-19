@@ -490,6 +490,8 @@ namespace carto {
         _backgroundPattern = backgroundPattern;
         _symbolizerContext = symbolizerContext;
         _styleSet = styleSet;
+        _cachedFeatureDecoder.first.reset();
+        _cachedFeatureDecoder.second.reset();
     }
     
     const int MBVectorTileDecoder::DEFAULT_TILE_SIZE = 256;

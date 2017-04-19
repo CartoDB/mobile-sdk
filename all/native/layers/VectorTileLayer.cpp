@@ -388,10 +388,6 @@ namespace carto {
         // Create new rendererer, simply drop old one (if exists)
         auto renderer = std::make_shared<TileRenderer>(_mapRenderer, _useFBO, _useDepth, _useStencil);
         renderer->onSurfaceCreated(shaderManager, textureManager);
-        renderer->setBackgroundColor(_tileDecoder->getBackgroundColor());
-        if (_tileDecoder->getBackgroundPattern()) {
-            renderer->setBackgroundPattern(_tileDecoder->getBackgroundPattern());
-        }
         setRenderer(renderer);
     }
     
@@ -399,6 +395,10 @@ namespace carto {
         updateTileLoadListener();
 
         if (auto renderer = getRenderer()) {
+            renderer->setBackgroundColor(_tileDecoder->getBackgroundColor());
+            if (auto backgroundPattern = _tileDecoder->getBackgroundPattern()) {
+                renderer->setBackgroundPattern(backgroundPattern);
+            }
             renderer->setLabelOrder(static_cast<int>(getLabelRenderOrder()));
             renderer->setBuildingOrder(static_cast<int>(getBuildingRenderOrder()));
             renderer->setInteractionMode(_vectorTileEventListener.get() ? true : false);
