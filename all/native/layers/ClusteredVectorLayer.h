@@ -8,12 +8,12 @@
 #define _CARTO_CLUSTEREDVECTORLAYER_H_
 
 #include "core/MapPos.h"
-#include "core/MapTile.h"
 #include "components/DirectorPtr.h"
 #include "graphics/ViewState.h"
 #include "layers/VectorLayer.h"
 
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <list>
 #include <memory>

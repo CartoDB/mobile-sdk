@@ -1,6 +1,5 @@
 #include "layers/ClusteredVectorLayer.h"
 #include "core/MapPos.h"
-#include "core/MapTile.h"
 #include "components/Exceptions.h"
 #include "geometry/Geometry.h"
 #include "geometry/PointGeometry.h"
@@ -162,7 +161,7 @@ namespace carto {
     {
     }
 
-    bool ClusteredVectorLayer::ClusterFetchTask::loadElements(const std::shared_ptr<CullState> &cullState) {
+    bool ClusteredVectorLayer::ClusterFetchTask::loadElements(const std::shared_ptr<CullState>& cullState) {
         std::shared_ptr<ClusteredVectorLayer> layer = std::static_pointer_cast<ClusteredVectorLayer>(_layer.lock());
 
         if (auto options = layer->_options.lock()) {
@@ -539,7 +538,7 @@ namespace carto {
         return true;
     }
 
-    MapPos ClusteredVectorLayer::createExpandedElementPos(RenderState &renderState) const {
+    MapPos ClusteredVectorLayer::createExpandedElementPos(RenderState& renderState) const {
         MapPos mapPos = _dataSource->getProjection()->toInternal(renderState.expandedCluster->transitionPos);
         double angle = Const::PI * 2 * renderState.totalExpanded++ / renderState.expandedCluster->elements.size();
         double dist = renderState.expandedCluster->expandPx * renderState.pixelMeasure;
