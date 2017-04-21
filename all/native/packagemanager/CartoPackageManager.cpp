@@ -130,6 +130,10 @@ namespace carto {
                 double minLat = boost::lexical_cast<double>(std::string(results[2].first, results[2].second));
                 double maxLon = boost::lexical_cast<double>(std::string(results[3].first, results[3].second));
                 double maxLat = boost::lexical_cast<double>(std::string(results[4].first, results[4].second));
+                if (minLon >= maxLon || minLat >= maxLat) {
+                    Log::Warning("CartoPackageManager: Empty bounding box");
+                    return std::shared_ptr<PackageInfo>();
+                }
                 bounds = MapBounds(proj.fromLatLong(minLat, minLon), proj.fromLatLong(maxLat, maxLon));
             }
             catch (const boost::bad_lexical_cast&) {
