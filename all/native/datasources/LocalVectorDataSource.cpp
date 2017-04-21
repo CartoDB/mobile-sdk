@@ -110,6 +110,7 @@ namespace carto {
             
             // Rebuild spatial index, create list of added and removed elements
             _spatialIndex->clear();
+            _spatialIndex->reserve(elements.size());
             for (const std::shared_ptr<VectorElement>& element : elements) {
                 const MapBounds& bounds = element->getBounds();
                 MapBounds internalBounds(_projection->toInternal(bounds.getMin()), _projection->toInternal(bounds.getMax()));
@@ -164,6 +165,7 @@ namespace carto {
 
         {
             std::lock_guard<std::mutex> lock(_mutex);
+            _spatialIndex->reserve(_spatialIndex->size() + elements.size());
             for (const std::shared_ptr<VectorElement>& element : elements) {
                 element->setId(_elementId);
                 const MapBounds& bounds = element->getBounds();
