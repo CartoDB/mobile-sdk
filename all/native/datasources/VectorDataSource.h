@@ -113,6 +113,7 @@ namespace carto {
         virtual void notifyElementsAdded(const std::vector<std::shared_ptr<VectorElement> >& elements);
         virtual void notifyElementsRemoved(const std::vector<std::shared_ptr<VectorElement> >& elements);
 
+        virtual std::shared_ptr<VectorDataSource> getElementDataSource(const std::shared_ptr<VectorElement>& element) const;
         virtual void attachElement(const std::shared_ptr<VectorElement>& element);
         virtual void detachElement(const std::shared_ptr<VectorElement>& element);
 

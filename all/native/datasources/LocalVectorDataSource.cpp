@@ -95,6 +95,11 @@ namespace carto {
             if (!element) {
                 throw NullArgumentException("Null element");
             }
+            if (auto dataSource = getElementDataSource(element)) {
+                if (dataSource != shared_from_this()) {
+                    throw InvalidArgumentException("Element already attached to a different datasource");
+                }
+            }
         }
 
         std::vector<std::shared_ptr<VectorElement> > elementsAdded, elementsRemoved;
@@ -132,6 +137,9 @@ namespace carto {
         if (!element) {
             throw NullArgumentException("Null element");
         }
+        if (getElementDataSource(element)) {
+            throw InvalidArgumentException("Element already attached to a datasource");
+        }
 
         {
             std::lock_guard<std::mutex> lock(_mutex);
@@ -148,6 +156,9 @@ namespace carto {
         for (const std::shared_ptr<VectorElement>& element : elements) {
             if (!element) {
                 throw NullArgumentException("Null element");
+            }
+            if (getElementDataSource(element)) {
+                throw InvalidArgumentException("Element already attached to a datasource");
             }
         }
 
@@ -170,6 +181,11 @@ namespace carto {
         if (!element) {
             throw NullArgumentException("Null element");
         }
+        if (auto dataSource = getElementDataSource(element)) {
+            if (dataSource != shared_from_this()) {
+                throw InvalidArgumentException("Element attached to a different datasource");
+            }
+        }
 
         bool removed = false;
         {
@@ -188,6 +204,11 @@ namespace carto {
         for (const std::shared_ptr<VectorElement>& element : elements) {
             if (!element) {
                 throw NullArgumentException("Null element");
+            }
+            if (auto dataSource = getElementDataSource(element)) {
+                if (dataSource != shared_from_this()) {
+                    throw InvalidArgumentException("Element attached to a different datasource");
+                }
             }
         }
 

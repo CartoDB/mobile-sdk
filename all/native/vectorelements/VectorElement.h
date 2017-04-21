@@ -100,6 +100,7 @@ namespace carto {
         
         explicit VectorElement(const std::shared_ptr<Geometry>& geometry);
         
+        std::shared_ptr<VectorDataSource> getDataSource() const;
         void attachToDataSource(const std::weak_ptr<VectorDataSource>& dataSource);
         void detachFromDataSource();
     

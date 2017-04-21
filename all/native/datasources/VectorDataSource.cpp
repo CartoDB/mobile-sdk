@@ -125,6 +125,10 @@ namespace carto {
             listener->onElementsRemoved();
         }
     }
+
+    std::shared_ptr<VectorDataSource> VectorDataSource::getElementDataSource(const std::shared_ptr<VectorElement>& element) const {
+        return element->getDataSource();
+    }
     
     void VectorDataSource::attachElement(const std::shared_ptr<VectorElement>& element) {
         element->attachToDataSource(shared_from_this());

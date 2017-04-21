@@ -243,6 +243,9 @@ namespace carto {
         if (!element) {
             throw NullArgumentException("Null element");
         }
+        if (getElementDataSource(element)) {
+            throw InvalidArgumentException("Element already attached to a datasource");
+        }
 
         {
             std::lock_guard<std::mutex> lock(_dataBase->_mutex);
@@ -261,6 +264,11 @@ namespace carto {
     bool OGRVectorDataSource::remove(const std::shared_ptr<VectorElement>& element) {
         if (!element) {
             throw NullArgumentException("Null element");
+        }
+        if (auto dataSource = getElementDataSource(element)) {
+            if (dataSource != shared_from_this()) {
+                throw InvalidArgumentException("Element attached to a different datasource");
+            }
         }
 
         {
