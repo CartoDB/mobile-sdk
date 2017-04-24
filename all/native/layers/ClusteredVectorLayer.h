@@ -119,6 +119,7 @@ namespace carto {
         float _maxClusterZoom;
         float _dpiScale;
         std::shared_ptr<std::vector<Cluster> > _clusters;
+        int _singletonClusterCount;
         int _rootClusterIdx;
         std::vector<int> _renderClusterIdxs;
         bool _refreshRootCluster;
@@ -130,7 +131,7 @@ namespace carto {
 
         virtual std::shared_ptr<CancelableTask> createFetchTask(const std::shared_ptr<CullState>& cullState);
 
-        int createClusters(const std::vector<std::shared_ptr<VectorElement> >& vectorElements, std::vector<Cluster>& clusters) const;
+        void rebuildClusters(const std::vector<std::shared_ptr<VectorElement> >& vectorElements);
         int createSingletonCluster(const std::shared_ptr<VectorElement>& element, std::vector<Cluster>& clusters) const;
         int createMergedCluster(int clusterIdx1, int clusterIdx2, std::vector<Cluster>& clusters) const;
         std::vector<int> mergeClusters(std::vector<int>::iterator clustersBegin, std::vector<int>::iterator clustersEnd, std::vector<Cluster>& clusters, std::size_t maxClusters) const;

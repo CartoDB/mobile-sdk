@@ -35,6 +35,7 @@ namespace carto {
         _maxClusterZoom(Const::MAX_SUPPORTED_ZOOM_LEVEL),
         _dpiScale(1),
         _clusters(),
+        _singletonClusterCount(0),
         _rootClusterIdx(-1),
         _renderClusterIdxs(),
         _refreshRootCluster(true),
@@ -182,42 +183,67 @@ namespace carto {
             layer->_refreshRootCluster = false;
         }
         if (refresh) {
-            auto clusters = std::make_shared<std::vector<Cluster> >();
-            clusters->reserve(vectorElements.size() * 2);
-            int rootClusterIdx = layer->createClusters(vectorElements, *clusters);
-
-            {
-                std::lock_guard<std::mutex> lock(layer->_clusterMutex);
-                std::swap(clusters, layer->_clusters);
-                layer->_rootClusterIdx = rootClusterIdx;
-                layer->_renderClusterIdxs.clear();
-            }
+            layer->rebuildClusters(vectorElements);
         }
         return false;
     }
 
-    int ClusteredVectorLayer::createClusters(const std::vector<std::shared_ptr<VectorElement> >& vectorElements, std::vector<Cluster>& clusters) const {
-        if (vectorElements.empty()) {
-            return -1;
-        }
-
-        // Create singleton clusters
-        std::vector<int> clusterIdxs;
-        clusterIdxs.reserve(vectorElements.size());
-        for (const std::shared_ptr<VectorElement>& element : vectorElements) {
-            int clusterIdx = createSingletonCluster(element, clusters);
-            if (clusterIdx != -1) {
-                clusterIdxs.push_back(clusterIdx);
+    void ClusteredVectorLayer::rebuildClusters(const std::vector<std::shared_ptr<VectorElement> >& vectorElements) {
+        auto clusters = std::make_shared<std::vector<Cluster> >();
+        clusters->reserve(vectorElements.size() * 2);
+        int singletonClusterCount = 0;
+        int rootClusterIdx = -1;
+        if (!vectorElements.empty()) {
+            // Create singleton clusters
+            std::vector<int> clusterIdxs;
+            clusterIdxs.reserve(vectorElements.size());
+            for (const std::shared_ptr<VectorElement>& element : vectorElements) {
+                int clusterIdx = createSingletonCluster(element, *clusters);
+                if (clusterIdx != -1) {
+                    clusterIdxs.push_back(clusterIdx);
+                }
             }
+            singletonClusterCount = static_cast<int>(clusters->size());
+
+            // Check if we must recalculate clustering
+            {
+                std::lock_guard<std::mutex> lock(_clusterMutex);
+
+                if (_singletonClusterCount == singletonClusterCount) {
+                    bool changed = false;
+                    for (int i = 0; i < singletonClusterCount; i++) {
+                        if ((*_clusters)[i].vectorElement != (*clusters)[i].vectorElement ||
+                            (*_clusters)[i].staticPos != (*clusters)[i].staticPos)
+                        {
+                            changed = true;
+                            break;
+                        }
+                    }
+                    if (!changed) {
+                        // Reset cluster elements as styles/attributes may have changed
+                        for (Cluster& cluster : *_clusters) {
+                            cluster.clusterElement.reset();
+                        }
+                        return;
+                    }
+                }
+            }
+
+            // Rebuild clusters, by doing bottom-up merging into a single cluster
+            rootClusterIdx = mergeClusters(clusterIdxs.begin(), clusterIdxs.end(), *clusters, 1).front();
         }
 
-        // Merge into a single cluster
-        return mergeClusters(clusterIdxs.begin(), clusterIdxs.end(), clusters, 1).front();
+        // Synchronize cluster data
+        std::lock_guard<std::mutex> lock(_clusterMutex);
+        std::swap(clusters, _clusters);
+        std::swap(singletonClusterCount, _singletonClusterCount);
+        std::swap(rootClusterIdx, _rootClusterIdx);
+        _renderClusterIdxs.clear();
     }
 
     int ClusteredVectorLayer::createSingletonCluster(const std::shared_ptr<VectorElement>& element, std::vector<Cluster>& clusters) const {
         MapPos mapPos;
-        if (!GetVectorElementPos(element, mapPos)) {
+        if (!element->isVisible() || !GetVectorElementPos(element, mapPos)) {
             return -1;
         }
         
