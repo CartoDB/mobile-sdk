@@ -122,7 +122,7 @@ def buildAndroidAAR(args):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--profile', dest='profile', default=getDefaultProfile(), choices=getProfiles().keys(), help='Build profile')
-parser.add_argument('--android-abi', dest='androidabi', default=['all'], choices=ANDROID_ABIS + ['all'], nargs='+', help='Android target ABIs')
+parser.add_argument('--android-abi', dest='androidabi', default=[], choices=ANDROID_ABIS + ['all'], action='append', help='Android target ABIs')
 parser.add_argument('--android-ndk-path', dest='androidndkpath', default='auto', help='Android NDK path')
 parser.add_argument('--android-sdk-path', dest='androidsdkpath', default='auto', help='Android SDK path')
 parser.add_argument('--defines', dest='defines', default='', help='Defines for compilation')
@@ -138,7 +138,7 @@ parser.add_argument('--build-number', dest='buildnumber', default='', help='Buil
 parser.add_argument('--build-version', dest='buildversion', default='%s-devel' % SDK_VERSION, help='Build version, goes to distributions')
 parser.add_argument('--build-aar', dest='buildaar', default=False, action='store_true', help='Build Android .aar package')
 args = parser.parse_args()
-if 'all' in args.androidabi:
+if 'all' in args.androidabi or args.androidabi == []:
   args.androidabi = ANDROID_ABIS
 if args.androidsdkpath == 'auto':
   args.androidsdkpath = os.environ.get('ANDROID_HOME', None)

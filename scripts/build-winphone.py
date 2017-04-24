@@ -136,7 +136,7 @@ def buildWinPhoneNuget(args):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--profile', dest='profile', default=getDefaultProfile(), choices=getProfiles().keys(), help='Build profile')
-parser.add_argument('--winphone-arch', dest='winphonearch', default=['all'], choices=WINPHONE10_ARCHS + ['all'], nargs='+', help='Windows phone target architectures')
+parser.add_argument('--winphone-arch', dest='winphonearch', default=[], choices=WINPHONE10_ARCHS + ['all'], action='append', help='Windows phone target architectures')
 parser.add_argument('--defines', dest='defines', default='', help='Defines for compilation')
 parser.add_argument('--msbuild', dest='msbuild', default='auto', help='WinPhone msbuild executable')
 parser.add_argument('--nuget', dest='nuget', default='nuget', help='nuget executable')
@@ -151,7 +151,7 @@ parser.add_argument('--build-nuget', dest='buildnuget', default=False, action='s
 args = parser.parse_args()
 if args.msbuild == 'auto':
   args.msbuild = DEFAULT_MSBUILD
-if 'all' in args.winphonearch:
+if 'all' in args.winphonearch or args.winphonearch == []:
   args.winphonearch = WINPHONE10_ARCHS
 args.defines += ';' + getProfiles()[args.profile].get('defines', '')
 args.cmakeoptions += ';' + getProfiles()[args.profile].get('cmake-options', '')
