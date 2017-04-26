@@ -64,6 +64,7 @@ namespace carto {
             }, 4);
 
             // Try to load shared dictionary
+            _sharedDictionary.reset();
             sqlite3pp::query query(*_packageDb, "SELECT value FROM metadata WHERE name='shared_zlib_dict'");
             for (auto qit = query.begin(); qit != query.end(); qit++) {
                 const unsigned char* dataPtr = reinterpret_cast<const unsigned char*>(qit->get<const void*>(0));
@@ -101,7 +102,10 @@ namespace carto {
                 std::vector<unsigned char> data(dataPtr, dataPtr + dataSize);
                 if (_sharedDictionary) {
                     std::vector<unsigned char> uncompressedData;
-                    zlib::inflate_gzip(data.data(), data.size(), _sharedDictionary->data(), _sharedDictionary->size(), uncompressedData);
+                    if (!zlib::inflate_raw(data.data(), data.size(), _sharedDictionary->data(), _sharedDictionary->size(), uncompressedData)) {
+                        Log::Warnf("MapPackageHandler::loadTile: Failed to decompress tile with shared dictionary");
+                        return std::shared_ptr<BinaryData>();
+                    }
                     std::swap(data, uncompressedData);
                 }
                 return std::make_shared<BinaryData>(std::move(data));
