@@ -52,7 +52,7 @@ namespace carto {
 
         // Check tilemasks - perhaps we can ignore server query alltogether
         for (const TileMask& tileMask : _tileMasks) {
-            bool inside = tileMask.tileMask->getTileStatus(mapTile) == PackageTileStatus::PACKAGE_TILE_STATUS_FULL;
+            bool inside = tileMask.tileMask->getTileStatus(mapTile.getFlipped()) == PackageTileStatus::PACKAGE_TILE_STATUS_FULL;
             if (tileMask.inclusive == inside) {
                 Log::Infof("CartoOnlineTileDataSource::loadTile: Using tilemask tile %d/%d/%d", mapTile.getZoom(), mapTile.getX(), mapTile.getY());
                 return std::make_shared<TileData>(tileMask.tileData);
