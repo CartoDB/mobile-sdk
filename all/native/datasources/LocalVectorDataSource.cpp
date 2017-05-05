@@ -1,6 +1,8 @@
 #include "LocalVectorDataSource.h"
 #include "components/Exceptions.h"
 #include "geometry/Geometry.h"
+#include "geometry/Feature.h"
+#include "geometry/FeatureCollection.h"
 #include "geometry/PointGeometry.h"
 #include "geometry/LineGeometry.h"
 #include "geometry/PolygonGeometry.h"
@@ -8,9 +10,22 @@
 #include "geometry/GeometrySimplifier.h"
 #include "geometry/utils/KDTreeSpatialIndex.h"
 #include "geometry/utils/NullSpatialIndex.h"
+#include "styles/PointStyle.h"
+#include "styles/LineStyle.h"
+#include "styles/PolygonStyle.h"
+#include "styles/MarkerStyle.h"
+#include "styles/TextStyle.h"
+#include "styles/BalloonPopupStyle.h"
+#include "styles/GeometryCollectionStyle.h"
+#include "styles/GeometryCollectionStyleBuilder.h"
+#include "vectorelements/GeometryCollection.h"
 #include "vectorelements/Point.h"
 #include "vectorelements/Line.h"
 #include "vectorelements/Polygon.h"
+#include "vectorelements/Marker.h"
+#include "vectorelements/Text.h"
+#include "vectorelements/BalloonPopup.h"
+#include "vectorelements/GeometryCollection.h"
 #include "vectorelements/Polygon3D.h"
 #include "vectorelements/GeometryCollection.h"
 #include "renderers/components/CullState.h"
@@ -243,6 +258,42 @@ namespace carto {
         }
         notifyElementsChanged();
     }
+
+    std::shared_ptr<FeatureCollection> LocalVectorDataSource::getFeatureCollection() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        std::vector<std::shared_ptr<Feature> > features;
+        for (const std::shared_ptr<VectorElement>& element : _spatialIndex->getAll()) {
+            auto feature = std::make_shared<Feature>(element->getGeometry(), Variant(element->getMetaData()));
+            features.push_back(feature);
+        }
+        return std::make_shared<FeatureCollection>(features);
+    }
+
+    void LocalVectorDataSource::addFeatureCollection(const std::shared_ptr<FeatureCollection>& featureCollection, const std::shared_ptr<Style>& style) {
+        if (!featureCollection) {
+            throw NullArgumentException("Null featureCollection");
+        }
+        if (!style) {
+            throw NullArgumentException("Null style");
+        }
+
+        std::vector<std::shared_ptr<VectorElement> > elements;
+        for (int i = 0; i < featureCollection->getFeatureCount(); i++) {
+            std::shared_ptr<Feature> feature = featureCollection->getFeature(i);
+            if (std::shared_ptr<VectorElement> element = createElement(feature->getGeometry(), style)) {
+                const Variant& properties = feature->getProperties();
+                if (properties.getType() == VariantType::VARIANT_TYPE_OBJECT) {
+                    std::map<std::string, Variant> metaData;
+                    for (std::string key : properties.getObjectKeys()) {
+                        metaData[key] = properties.getObjectElement(key);
+                    }
+                    element->setMetaData(metaData);
+                }
+                elements.push_back(element);
+            }
+        }
+        addAll(elements);
+    }
     
     MapBounds LocalVectorDataSource::getDataExtent() const {
         std::lock_guard<std::mutex> lock(_mutex);
@@ -256,6 +307,58 @@ namespace carto {
             mapBounds.expandToContain(MapPos(p0.getX(), p1.getY()));
         }
         return mapBounds;
+    }
+    
+    void LocalVectorDataSource::notifyElementChanged(const std::shared_ptr<VectorElement>& element) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            if (!(std::dynamic_pointer_cast<NullSpatialIndex<std::shared_ptr<VectorElement> > >(_spatialIndex))) {
+                _spatialIndex->remove(element);
+                const MapBounds& bounds = element->getBounds();
+                MapBounds internalBounds(_projection->toInternal(bounds.getMin()), _projection->toInternal(bounds.getMax()));
+                _spatialIndex->insert(internalBounds, element);
+            }
+        }
+        VectorDataSource::notifyElementChanged(element);
+    }
+    
+    std::shared_ptr<VectorElement> LocalVectorDataSource::createElement(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<Style>& style) const {
+        if (auto polygonStyle = std::dynamic_pointer_cast<PolygonStyle>(style)) {
+            if (auto polygonGeometry = std::dynamic_pointer_cast<PolygonGeometry>(geometry)) {
+                return std::make_shared<Polygon>(polygonGeometry, polygonStyle);
+            } else if (auto multiGeometry = std::dynamic_pointer_cast<MultiGeometry>(geometry)) {
+                GeometryCollectionStyleBuilder builder;
+                builder.setPolygonStyle(polygonStyle);
+                return std::make_shared<GeometryCollection>(multiGeometry, builder.buildStyle());
+            }
+        } else if (auto lineStyle = std::dynamic_pointer_cast<LineStyle>(style)) {
+            if (auto lineGeometry = std::dynamic_pointer_cast<LineGeometry>(geometry)) {
+                return std::make_shared<Line>(lineGeometry, lineStyle);
+            } else if (auto multiGeometry = std::dynamic_pointer_cast<MultiGeometry>(geometry)) {
+                GeometryCollectionStyleBuilder builder;
+                builder.setLineStyle(lineStyle);
+                return std::make_shared<GeometryCollection>(multiGeometry, builder.buildStyle());
+            }
+        } else if (auto pointStyle = std::dynamic_pointer_cast<PointStyle>(style)) {
+            if (auto pointGeometry = std::dynamic_pointer_cast<PointGeometry>(geometry)) {
+                return std::make_shared<Point>(pointGeometry, pointStyle);
+            } else if (auto multiGeometry = std::dynamic_pointer_cast<MultiGeometry>(geometry)) {
+                GeometryCollectionStyleBuilder builder;
+                builder.setPointStyle(pointStyle);
+                return std::make_shared<GeometryCollection>(multiGeometry, builder.buildStyle());
+            }
+        } else if (auto markerStyle = std::dynamic_pointer_cast<MarkerStyle>(style)) {
+            return std::make_shared<Marker>(geometry, markerStyle);
+        } else if (auto textStyle = std::dynamic_pointer_cast<TextStyle>(style)) {
+            return std::make_shared<Text>(geometry, textStyle, ""); // NOTE: we assume that textStyle uses textField property
+        } else if (auto balloonPopupStyle = std::dynamic_pointer_cast<BalloonPopupStyle>(style)) {
+            return std::make_shared<BalloonPopup>(geometry, balloonPopupStyle, "", ""); // NOTE: we assume that balloonPopupStyle uses titleField/descriptionField property
+        } else if (auto geomCollectionStyle = std::dynamic_pointer_cast<GeometryCollectionStyle>(style)) {
+            if (auto multiGeometry = std::dynamic_pointer_cast<MultiGeometry>(geometry)) {
+                return std::make_shared<GeometryCollection>(multiGeometry, geomCollectionStyle);
+            }
+        }
+        return std::shared_ptr<VectorElement>();
     }
     
     std::shared_ptr<VectorElement> LocalVectorDataSource::simplifyElement(const std::shared_ptr<VectorElement>& element, float scale) const {
@@ -304,17 +407,4 @@ namespace carto {
         return simplifiedElement;
     }
 
-    void LocalVectorDataSource::notifyElementChanged(const std::shared_ptr<VectorElement>& element) {
-        {
-            std::lock_guard<std::mutex> lock(_mutex);
-            if (!(std::dynamic_pointer_cast<NullSpatialIndex<std::shared_ptr<VectorElement> > >(_spatialIndex))) {
-                _spatialIndex->remove(element);
-                const MapBounds& bounds = element->getBounds();
-                MapBounds internalBounds(_projection->toInternal(bounds.getMin()), _projection->toInternal(bounds.getMax()));
-                _spatialIndex->insert(internalBounds, element);
-            }
-        }
-        VectorDataSource::notifyElementChanged(element);
-    }
-    
 }
