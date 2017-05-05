@@ -38,7 +38,7 @@ namespace carto {
 
     MapBounds CombinedTileDataSource::getDataExtent() const {
         MapBounds bounds = _dataSource1->getDataExtent();
-        bounds.expandToContains(_dataSource2->getDataExtent());
+        bounds.expandToContain(_dataSource2->getDataExtent());
         return bounds;
     }
     
