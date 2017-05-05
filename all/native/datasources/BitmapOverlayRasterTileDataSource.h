@@ -8,7 +8,6 @@
 #define _CARTO_BITMAPOVERLAYRASTERTILEDATASOURCE_H_
 
 #include "core/MapPos.h"
-#include "core/MapBounds.h"
 #include "core/ScreenPos.h"
 #include "datasources/TileDataSource.h"
 

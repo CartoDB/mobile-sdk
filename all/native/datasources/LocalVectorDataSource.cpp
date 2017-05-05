@@ -66,28 +66,6 @@ namespace carto {
     LocalVectorDataSource::~LocalVectorDataSource() {
     }
     
-    std::shared_ptr<VectorData> LocalVectorDataSource::loadElements(const std::shared_ptr<CullState>& cullState) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        std::vector<std::shared_ptr<VectorElement> > elements = _spatialIndex->query(cullState->getViewState().getFrustum());
-        
-        // If geometry simplifier is specified, create new vector elements with simplified geometry
-        if (_geometrySimplifier) {
-            float simplifierScale = calculateGeometrySimplifierScale(cullState->getViewState());
-
-            std::vector<std::shared_ptr<VectorElement> > simplifiedElements;
-            simplifiedElements.reserve(elements.size());
-            for (const std::shared_ptr<VectorElement>& element : elements) {
-                std::shared_ptr<VectorElement> simplifiedElement = simplifyElement(element, simplifierScale);
-                if (simplifiedElement) {
-                    simplifiedElements.emplace_back(std::move(simplifiedElement));
-                }
-            }
-            std::swap(elements, simplifiedElements);
-        }
-
-        return std::make_shared<VectorData>(elements);
-    }
-
     void LocalVectorDataSource::clear() {
         std::vector<std::shared_ptr<VectorElement> > removedElements;
         {
@@ -309,6 +287,28 @@ namespace carto {
         return mapBounds;
     }
     
+    std::shared_ptr<VectorData> LocalVectorDataSource::loadElements(const std::shared_ptr<CullState>& cullState) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        std::vector<std::shared_ptr<VectorElement> > elements = _spatialIndex->query(cullState->getViewState().getFrustum());
+        
+        // If geometry simplifier is specified, create new vector elements with simplified geometry
+        if (_geometrySimplifier) {
+            float simplifierScale = calculateGeometrySimplifierScale(cullState->getViewState());
+
+            std::vector<std::shared_ptr<VectorElement> > simplifiedElements;
+            simplifiedElements.reserve(elements.size());
+            for (const std::shared_ptr<VectorElement>& element : elements) {
+                std::shared_ptr<VectorElement> simplifiedElement = simplifyElement(element, simplifierScale);
+                if (simplifiedElement) {
+                    simplifiedElements.emplace_back(std::move(simplifiedElement));
+                }
+            }
+            std::swap(elements, simplifiedElements);
+        }
+
+        return std::make_shared<VectorData>(elements);
+    }
+
     void LocalVectorDataSource::notifyElementChanged(const std::shared_ptr<VectorElement>& element) {
         {
             std::lock_guard<std::mutex> lock(_mutex);

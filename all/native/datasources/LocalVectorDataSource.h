@@ -7,7 +7,6 @@
 #ifndef _CARTO_LOCALVECTORDATASOURCE_H_
 #define _CARTO_LOCALVECTORDATASOURCE_H_
 
-#include "core/MapBounds.h"
 #include "datasources/VectorDataSource.h"
 #include "geometry/utils/SpatialIndex.h"
 
@@ -60,8 +59,6 @@ namespace carto {
         LocalVectorDataSource(const std::shared_ptr<Projection>& projection, LocalSpatialIndexType::LocalSpatialIndexType spatialIndexType);
         virtual ~LocalVectorDataSource();
         
-        virtual std::shared_ptr<VectorData> loadElements(const std::shared_ptr<CullState>& cullState);
-
         /**
          * Clear the data source by removing all elements.
          */
@@ -119,12 +116,6 @@ namespace carto {
         void setGeometrySimplifier(const std::shared_ptr<GeometrySimplifier>& simplifier);
         
         /**
-         * Returns the extent of this data source. Extent is the minimal bounding box encompassing all the elements.
-         * @return The minimal bounding box for the elements.
-         */
-        MapBounds getDataExtent() const;
-
-        /**
          * Returns the elements of this data source as a feature collection. The feature collection can be then serialized as a GeoJSON, for example.
          * @return The feature collection containing all data source elements.
          */
@@ -135,6 +126,10 @@ namespace carto {
          * @param style The geometry collection style to use. Only elements compatible with style are created.
          */
         void addFeatureCollection(const std::shared_ptr<FeatureCollection>& featureCollection, const std::shared_ptr<Style>& style);
+
+        virtual MapBounds getDataExtent() const;
+
+        virtual std::shared_ptr<VectorData> loadElements(const std::shared_ptr<CullState>& cullState);
 
     protected:
         virtual void notifyElementChanged(const std::shared_ptr<VectorElement>& element);

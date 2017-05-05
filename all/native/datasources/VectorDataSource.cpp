@@ -21,6 +21,10 @@ namespace carto {
     VectorDataSource::~VectorDataSource() {
     }
         
+    MapBounds VectorDataSource::getDataExtent() const {
+        return _projection->getBounds();
+    }
+    
     std::shared_ptr<Projection> VectorDataSource::getProjection() const {
         return _projection;
     }

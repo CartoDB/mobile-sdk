@@ -9,7 +9,6 @@
 
 #ifdef _CARTO_GDAL_SUPPORT
 
-#include "core/MapBounds.h"
 #include "datasources/TileDataSource.h"
 
 #include <cglib/vec.h>

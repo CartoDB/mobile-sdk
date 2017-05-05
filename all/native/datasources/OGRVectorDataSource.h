@@ -9,7 +9,6 @@
 
 #ifdef _CARTO_GDAL_SUPPORT
 
-#include "core/MapBounds.h"
 #include "core/Variant.h"
 #include "datasources/VectorDataSource.h"
 #include "datasources/OGRVectorDataBase.h"
@@ -116,12 +115,6 @@ namespace carto {
         void setGeometrySimplifier(const std::shared_ptr<GeometrySimplifier>& simplifier);
         
         /**
-         * Returns the extent of this data source. Extent is the minimal bounding box encompassing all the elements.
-         * @return The minimal bounding box for the elements.
-         */
-        MapBounds getDataExtent() const;
-        
-        /**
          * Returns the total feature count for this data source.
          * @return The feature count for the data source.
          */
@@ -184,8 +177,6 @@ namespace carto {
          */
         bool deleteField(int index);
         
-        virtual std::shared_ptr<VectorData> loadElements(const std::shared_ptr<CullState>& cullState);
-
         /**
          * Tests the data source capability.
          * @param capability The name of the capability (for example, "CreateFeature", "DeleteFeature", etc)
@@ -206,6 +197,10 @@ namespace carto {
          */
         static std::string GetConfigOption(const std::string& name);
         
+        virtual MapBounds getDataExtent() const;
+        
+        virtual std::shared_ptr<VectorData> loadElements(const std::shared_ptr<CullState>& cullState);
+
     protected:
         virtual void notifyElementChanged(const std::shared_ptr<VectorElement>& element);        
         

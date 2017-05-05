@@ -24,7 +24,6 @@
 
 %feature("director") carto::LocalVectorDataSource;
 
-%attributeval(carto::LocalVectorDataSource, carto::MapBounds, DataExtent, getDataExtent)
 !attributestring_polymorphic(carto::LocalVectorDataSource, geometry.GeometrySimplifier, GeometrySimplifier, getGeometrySimplifier, setGeometrySimplifier)
 %std_exceptions(carto::LocalVectorDataSource::LocalVectorDataSource)
 %std_exceptions(carto::LocalVectorDataSource::setAll)

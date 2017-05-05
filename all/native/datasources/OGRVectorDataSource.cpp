@@ -175,23 +175,6 @@ namespace carto {
         notifyElementsChanged();
     }
 
-    MapBounds OGRVectorDataSource::getDataExtent() const {
-        std::lock_guard<std::mutex> lock(_dataBase->_mutex);
-
-        if (!_poLayer) {
-            return MapBounds();
-        }
-
-        MapBounds mapBounds;
-        OGREnvelope oEnvelope;
-        _poLayer->GetExtent(&oEnvelope);
-        mapBounds.expandToContain(_poLayerSpatialRef->transform(oEnvelope.MinX, oEnvelope.MinY, 0));
-        mapBounds.expandToContain(_poLayerSpatialRef->transform(oEnvelope.MaxX, oEnvelope.MinY, 0));
-        mapBounds.expandToContain(_poLayerSpatialRef->transform(oEnvelope.MaxX, oEnvelope.MaxY, 0));
-        mapBounds.expandToContain(_poLayerSpatialRef->transform(oEnvelope.MinX, oEnvelope.MaxY, 0));
-        return mapBounds;
-    }
-    
     int OGRVectorDataSource::getFeatureCount() const {
         std::lock_guard<std::mutex> lock(_dataBase->_mutex);
         
@@ -466,6 +449,40 @@ namespace carto {
         return true;
     }
 
+    bool OGRVectorDataSource::testCapability(const std::string& capability) const {
+        std::lock_guard<std::mutex> lock(_dataBase->_mutex);
+        return _poLayer->TestCapability(capability.c_str()) != 0;
+    }
+
+    void OGRVectorDataSource::SetConfigOption(const std::string& name, const std::string& value) {
+        CPLSetConfigOption(name.c_str(), value.c_str());
+    }
+    
+    std::string OGRVectorDataSource::GetConfigOption(const std::string& name) {
+        const char* value = CPLGetConfigOption(name.c_str(), nullptr);
+        if (!value) {
+            return std::string();
+        }
+        return value;
+    }
+    
+    MapBounds OGRVectorDataSource::getDataExtent() const {
+        std::lock_guard<std::mutex> lock(_dataBase->_mutex);
+
+        if (!_poLayer) {
+            return MapBounds();
+        }
+
+        MapBounds mapBounds;
+        OGREnvelope oEnvelope;
+        _poLayer->GetExtent(&oEnvelope);
+        mapBounds.expandToContain(_poLayerSpatialRef->transform(oEnvelope.MinX, oEnvelope.MinY, 0));
+        mapBounds.expandToContain(_poLayerSpatialRef->transform(oEnvelope.MaxX, oEnvelope.MinY, 0));
+        mapBounds.expandToContain(_poLayerSpatialRef->transform(oEnvelope.MaxX, oEnvelope.MaxY, 0));
+        mapBounds.expandToContain(_poLayerSpatialRef->transform(oEnvelope.MinX, oEnvelope.MaxY, 0));
+        return mapBounds;
+    }
+    
     std::shared_ptr<VectorData> OGRVectorDataSource::loadElements(const std::shared_ptr<CullState>& cullState) {
         std::lock_guard<std::mutex> lock(_dataBase->_mutex);
         
@@ -556,29 +573,12 @@ namespace carto {
         return std::make_shared<VectorData>(elements);
     }
 
-    bool OGRVectorDataSource::testCapability(const std::string& capability) const {
-        std::lock_guard<std::mutex> lock(_dataBase->_mutex);
-        return _poLayer->TestCapability(capability.c_str()) != 0;
-    }
-
     void OGRVectorDataSource::notifyElementChanged(const std::shared_ptr<VectorElement>& element) {
         {
             std::lock_guard<std::mutex> lock(_dataBase->_mutex);
             _localElements[element->getId()] = element;
         }
         VectorDataSource::notifyElementChanged(element);
-    }
-    
-    void OGRVectorDataSource::SetConfigOption(const std::string& name, const std::string& value) {
-        CPLSetConfigOption(name.c_str(), value.c_str());
-    }
-    
-    std::string OGRVectorDataSource::GetConfigOption(const std::string& name) {
-        const char* value = CPLGetConfigOption(name.c_str(), nullptr);
-        if (!value) {
-            return std::string();
-        }
-        return value;
     }
     
     std::shared_ptr<Geometry> OGRVectorDataSource::createGeometry(const OGRGeometry* poGeometry) const {
