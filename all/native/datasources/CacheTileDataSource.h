@@ -22,6 +22,8 @@ namespace carto {
         virtual int getMinZoom() const;
         virtual int getMaxZoom() const;
         
+        virtual MapBounds getDataExtent() const;
+
         virtual void notifyTilesChanged(bool removeTiles);
 
         /**

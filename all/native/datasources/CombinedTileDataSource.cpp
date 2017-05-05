@@ -29,11 +29,17 @@ namespace carto {
     }
 
     int CombinedTileDataSource::getMinZoom() const {
-        return _dataSource1 ? _dataSource1->getMinZoom() : 0;
+        return _dataSource1->getMinZoom();
     }
 
     int CombinedTileDataSource::getMaxZoom() const {
-        return _dataSource2 ? _dataSource2->getMaxZoom() : 0;
+        return _dataSource2->getMaxZoom();
+    }
+
+    MapBounds CombinedTileDataSource::getDataExtent() const {
+        MapBounds bounds = _dataSource1->getDataExtent();
+        bounds.expandToContains(_dataSource2->getDataExtent());
+        return bounds;
     }
     
     std::shared_ptr<TileData> CombinedTileDataSource::loadTile(const MapTile& mapTile) {
