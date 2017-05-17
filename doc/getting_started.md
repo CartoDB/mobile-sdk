@@ -94,7 +94,7 @@ Search for "CartoMobileSDK.WinPhone10" or use url: "https://www.nuget.org/packag
 
 ### Download Packages 
 
-If you do not want to use package manager, you can download SDK from the Github project releases page: https://github.com/CartoDB/mobile-sdk/releases
+If you do not want to use package manager, you can download SDK from the [Github mobile-sdk project releases page]( https://github.com/CartoDB/mobile-sdk/releases)
 
 ## Registering your Mobile App
 
