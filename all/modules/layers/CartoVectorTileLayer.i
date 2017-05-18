@@ -3,7 +3,7 @@
 
 %module CartoVectorTileLayer
 
-!proxy_imports(carto::CartoVectorTileLayer, datasources.TileDataSource, layers.VectorTileLayer, utils.AssetPackage)
+!proxy_imports(carto::CartoVectorTileLayer, datasources.TileDataSource, layers.VectorTileLayer, utils.AssetPackage, vectortiles.VectorTileDecoder)
 
 %{
 #include "layers/CartoVectorTileLayer.h"
@@ -17,14 +17,17 @@
 %import "layers/VectorTileLayer.i"
 %import "datasources/TileDataSource.i"
 %import "utils/AssetPackage.i"
+%import "vectortiles/VectorTileDecoder.i"
 
 !polymorphic_shared_ptr(carto::CartoVectorTileLayer, layers.CartoVectorTileLayer)
 
 %attributestring(carto::CartoVectorTileLayer, std::string, Language, getLanguage, setLanguage)
 #ifdef _CARTO_CUSTOM_BASEMAP_SUPPORT
 %std_exceptions(carto::CartoVectorTileLayer::CartoVectorTileLayer(const std::shared_ptr<carto::TileDataSource>&, const std::shared_ptr<carto::AssetPackage>&))
+%std_exceptions(carto::CartoVectorTileLayer::CreateTileDecoder(const std::shared_ptr<AssetPackage>&))
 #else
 %ignore carto::CartoVectorTileLayer::CartoVectorTileLayer(const std::shared_ptr<carto::TileDataSource>&, const std::shared_ptr<carto::AssetPackage>&);
+%ignore carto::CartoVectorTileLayer::CreateTileDecoder(const std::shared_ptr<AssetPackage>&);
 #endif
 
 %include "layers/CartoVectorTileLayer.h"

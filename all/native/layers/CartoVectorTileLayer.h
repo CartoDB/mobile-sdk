@@ -47,7 +47,7 @@ namespace carto {
          */
         CartoVectorTileLayer(const std::shared_ptr<TileDataSource>& dataSource, CartoBaseMapStyle::CartoBaseMapStyle style);
         /**
-         * Constructs a CartoVectorTileLayer object from a source name and style asset package.
+         * Constructs a CartoVectorTileLayer object from a source name and a style asset package.
          * Style asset package defines visual style of the map and must be compatible with the source.
          * @param dataSource The data source from which this layer loads data.
          * @param styleAssetPackage The style asset package (usually a zipped file or an asset)
@@ -65,10 +65,18 @@ namespace carto {
          * @param lang The new language to use. The default is local language (empty string).
          */
         void setLanguage(const std::string& lang);
-        
-    private:
-        static std::shared_ptr<VectorTileDecoder> CreateTileDecoder(CartoBaseMapStyle::CartoBaseMapStyle style);
 
+        /**
+         * Creates a new tile decoder from a specified base map style.
+         * @param style The style to use for the layer.
+         * @return The new vector tile decoder configured for the style.
+         */
+        static std::shared_ptr<VectorTileDecoder> CreateTileDecoder(CartoBaseMapStyle::CartoBaseMapStyle style);
+        /**
+         * Creates a new tile decoder from a style asset package.
+         * @param styleAssetPackage The style asset package (usually a zipped file or an asset)
+         * @return The new vector tile decoder configured for the style.
+         */
         static std::shared_ptr<VectorTileDecoder> CreateTileDecoder(const std::shared_ptr<AssetPackage>& styleAssetPackage);
     };
     
