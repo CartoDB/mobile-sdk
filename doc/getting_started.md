@@ -53,7 +53,7 @@ These SDK libraries are managed by CARTO and include all the required libraries 
   // Add to your build.gradle file:
   
   dependencies {
-      compile 'com.carto:carto-mobile-sdk:4.0.0@aar'
+      compile 'com.carto:carto-mobile-sdk:4.0.1@aar'
   }
 
   {% endhighlight %}
@@ -64,7 +64,7 @@ These SDK libraries are managed by CARTO and include all the required libraries 
 
 // Add to your CocoaPods Podfile:
 
-pod 'CartoMobileSDK', '4.0.0'
+pod 'CartoMobileSDK', '4.0.1'
 
 {% endhighlight %}
   </div>
@@ -94,7 +94,7 @@ Search for "CartoMobileSDK.WinPhone10" or use url: "https://www.nuget.org/packag
 
 ### Download Packages 
 
-If you do not want to use package manager, you can download SDK from the Github project releases page: https://github.com/CartoDB/mobile-sdk/releases
+If you do not want to use package manager, you can download SDK from the [Github mobile-sdk project releases page]( https://github.com/CartoDB/mobile-sdk/releases)
 
 ## Registering your Mobile App
 
@@ -194,21 +194,9 @@ If using Android as the mobile platform, follow this implementation procedure.
 1) Add the following to the `build.gradle` of your project:
 
 {% highlight groovy %}
-allprojects {
-    repositories {
-        jcenter()
-        maven {
-            url "http://repository-nutiteq.forge.cloudbees.com/release/"
-        }
-        maven {
-            url "http://repository-nutiteq.forge.cloudbees.com/snapshot/"
-        }
-    }
-}
-
-dependencies {
-   compile 'com.carto:carto-mobile-sdk:snapshot@aar'
-}
+  dependencies {
+      compile 'com.carto:carto-mobile-sdk:4.0.1@aar'
+  }
 {% endhighlight %}
  
 2) Define INTERNET permission for your AndroidManifest.xml
@@ -294,11 +282,15 @@ If using iOS as the mobile platform, follow this implementation procedure.
 
   -  Create a new ‘Single View application’ in your Xcode project
 
-  -  For the current beta version of the Mobile SDK: 
-      - Get SDK package latest dev build: [sdk4-ios-snapshot-latest.zip](https://nutifront.s3.amazonaws.com/sdk_snapshots/sdk4-ios-snapshot-latest.zip)
-      - Unzip it and copy *CartoMobileSDK.framework* to the Xcode project root folder
+  -  Get current version of CARTO Mobile SDK using CocoaPod: 
 
-  - COMING SOON: Once the final version of Mobile SDK is released, you will have to create "Podfile" in your project folder with dependency [‘Carto-Mobile-SDK’](https://cocoapods.org/pods/Carto-Mobile-SDK). THIS IS NOT AVAILABLE YET
+{% highlight groovy %}
+
+// Add to your CocoaPods Podfile:
+
+pod 'CartoMobileSDK', '4.0.1'
+
+{% endhighlight %}
 
 2)  Modify Controller for Map View
 
@@ -388,7 +380,7 @@ If using iOS as the mobile platform, follow this implementation procedure.
 
 If using Xamarin as the mobile platform, follow these implementation procedures for Xamarin (Android) and Xamarin (iOS).
 
-1. Add library as nuget [CartoMobileSDK](https://www.nuget.org/packages/CartoMobileSDK/) from the main repo, and add to your mobile app
+1. Add library as [nuget CartoMobileSDK.iOS](https://www.nuget.org/packages/CartoMobileSDK.iOS) and/or [nuget CartoMobileSDK.Android](https://www.nuget.org/packages/CartoMobileSDK.Android) from the main repo, and add to your mobile app. 
 
 2. [Register your mobile app](#registering-your-mobile-app) to get the API Key
 
@@ -579,7 +571,7 @@ public class MainViewController : GLKit.GLKViewController
 
 If using Windows Phone as the mobile platform, follow this implementation procedure.
 
-_**Note:** The mobile development team is still testing Windows Phone implementation with the Mobile SDK._ Please [contact us](mailto:support@carto.com) if you run into any issues.
+_**Note:** The  Windows Phone 10 implementation of the Mobile SDK is experimental._ Please [contact us](mailto:support@carto.com) if you run into any issues.
 
 1. Install SDK VSIX package for Windows (*Request this package from [CARTO Mobile support](mailto:mobile-support@carto.com))
 
@@ -608,7 +600,7 @@ Follow these steps in order to create a Windows Phone (WP) mobile application.
 
   In the *Solution Explorer References* section, add *Carto Maps SDK for Windows Phone*. You will find it from the Windows Phone 8.1 extensions. We do not have NuGet package yet, please [let us know](mailto:support@carto.com) if this is something that interests you.
 
-2) Copy vector style file (*osmbright.zip*) to your project *Assets* folder, available from the [Sample Apps](#xamarin-and-windows-phone-samples). This is needed for vector basemaps
+2) Copy vector style file .zip to your project *Assets* folder, available from the [Sample Apps](#xamarin-and-windows-phone-samples). This is needed for vector basemaps
 
 3) Create MapView object, and add a base layer
 

@@ -35,13 +35,14 @@ namespace carto { namespace vt {
         if (!generator(id, vertex)) {
             return;
         }
+        boost::optional<cglib::mat3x3<float>> transform = flipTransform(style.transform);
 
-        if (_builderParameters.type != TileGeometry::Type::POINT || _builderParameters.glyphMap != style.glyphMap || _styleParameters.transform != style.transform || _styleParameters.compOp != style.compOp || _styleParameters.pointOrientation != style.orientation || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
+        if (_builderParameters.type != TileGeometry::Type::POINT || _builderParameters.glyphMap != style.glyphMap || _styleParameters.transform != transform || _styleParameters.compOp != style.compOp || _styleParameters.pointOrientation != style.orientation || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
             appendGeometry();
         }
         _builderParameters.type = TileGeometry::Type::POINT;
         _builderParameters.glyphMap = style.glyphMap;
-        _styleParameters.transform = style.transform;
+        _styleParameters.transform = transform;
         _styleParameters.compOp = style.compOp;
         _styleParameters.pointOrientation = style.orientation;
         GlyphMap::GlyphId glyphId = style.glyphMap->loadBitmapGlyph(style.bitmap, 0);
@@ -76,13 +77,14 @@ namespace carto { namespace vt {
         if (!generator(id, vertex, text)) {
             return;
         }
+        boost::optional<cglib::mat3x3<float>> transform = flipTransform(style.transform);
 
-        if (_builderParameters.type != TileGeometry::Type::POINT || _builderParameters.glyphMap != style.font->getGlyphMap() || _styleParameters.transform != style.transform || _styleParameters.compOp != style.compOp || _styleParameters.pointOrientation != style.orientation || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
+        if (_builderParameters.type != TileGeometry::Type::POINT || _builderParameters.glyphMap != style.font->getGlyphMap() || _styleParameters.transform != transform || _styleParameters.compOp != style.compOp || _styleParameters.pointOrientation != style.orientation || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
             appendGeometry();
         }
         _builderParameters.type = TileGeometry::Type::POINT;
         _builderParameters.glyphMap = style.font->getGlyphMap();
-        _styleParameters.transform = style.transform;
+        _styleParameters.transform = transform;
         _styleParameters.compOp = style.compOp;
         _styleParameters.pointOrientation = style.orientation;
         int styleIndex = _styleParameters.parameterCount;
@@ -252,6 +254,8 @@ namespace carto { namespace vt {
             return;
         }
 
+        boost::optional<cglib::mat3x3<float>> transform = flipTransform(style.transform);
+
         const Font::Glyph* glyph = style.font->loadBitmapGlyph(style.bitmap);
         if (!glyph) {
             return;
@@ -280,7 +284,7 @@ namespace carto { namespace vt {
                 }
             }
 
-            auto bitmapLabel = std::make_shared<TileLabel>(_tileId, id, labelInfo.id, labelInfo.groupId, style.font, bitmapGlyphs, std::move(labelPosition), std::move(labelVertices), style.orientation, style.transform, 1.0f / _tileSize, style.color);
+            auto bitmapLabel = std::make_shared<TileLabel>(_tileId, id, labelInfo.id, labelInfo.groupId, style.font, bitmapGlyphs, std::move(labelPosition), std::move(labelVertices), style.orientation, transform, 1.0f / _tileSize, style.color);
             bitmapLabel->setMinimumGroupDistance(_tileSize * labelInfo.minimumGroupDistance);
             _labelList.push_back(std::move(bitmapLabel));
         }
@@ -289,7 +293,7 @@ namespace carto { namespace vt {
     void TileLayerBuilder::addTextLabels(const std::function<bool(long long& id, TextLabelInfo& labelInfo)>& generator, const TextLabelStyle& style) {
         boost::optional<cglib::mat3x3<float>> transform;
         if (style.angle != 0) {
-            transform = cglib::rotate3_matrix(cglib::vec3<float>(0, 0, -1), style.angle * boost::math::constants::pi<float>() / 180.0f);
+            transform = cglib::rotate3_matrix(cglib::vec3<float>(0, 0, 1), style.angle * boost::math::constants::pi<float>() / 180.0f);
         }
 
         while (true) {
@@ -341,6 +345,28 @@ namespace carto { namespace vt {
         return std::make_shared<TileLayer>(layerIdx, std::move(opacity), std::move(compOp), std::move(bitmapList), std::move(geometryList), std::move(labelList));
     }
 
+    float TileLayerBuilder::calculateScale(VertexArray<cglib::vec2<float>>& values) {
+        float maxValue = 0.0f;
+        for (const cglib::vec2<float>& value : values) {
+            maxValue = std::max(maxValue, std::max(std::abs(value(0)), std::abs(value(1))));
+        }
+        float scale = 32768.0f;
+        while (scale > 1.0f / 65536.0f) {
+            if (maxValue * scale <= 32767.0f) {
+                break;
+            }
+            scale *= 0.5f;
+        }
+        return scale;
+    }
+
+    boost::optional<cglib::mat3x3<float>> TileLayerBuilder::flipTransform(const boost::optional<cglib::mat3x3<float>>& transform) {
+        if (!transform) {
+            return transform;
+        }
+        return cglib::scale3_matrix(cglib::vec3<float>(1, -1, 1)) * transform.get() * cglib::scale3_matrix(cglib::vec3<float>(1, -1, 1));
+    }
+
     void TileLayerBuilder::appendGeometry() {
         if (_builderParameters.type == TileGeometry::Type::NONE) {
             return;
@@ -369,7 +395,7 @@ namespace carto { namespace vt {
             _texCoords.clear();
         }
 
-        if (_styleParameters.transform) {
+        if (_styleParameters.transform && _builderParameters.type != TileGeometry::Type::POINT) {
             cglib::mat3x3<float> invTransTransform = cglib::transpose(cglib::inverse(_styleParameters.transform.get()));
             for (std::size_t i = 0; i < _binormals.size(); i++) {
                 _binormals[i] = cglib::unit(cglib::transform_vector(_binormals[i], invTransTransform)) * cglib::length(_binormals[i]);
@@ -510,21 +536,6 @@ namespace carto { namespace vt {
         VertexArray<long long> ids2;
         ids2.copy(ids, splitPos, indices.size() - splitPos);
         appendGeometry(verticesScale, binormalsScale, texCoordsScale, vertices, texCoords, binormals, heights, attribs, indices2, ids2, minIndex[1], maxIndex[1] - minIndex[1] + 1);
-    }
-
-    float TileLayerBuilder::calculateScale(VertexArray<cglib::vec2<float>>& values) const {
-        float maxValue = 0.0f;
-        for (const cglib::vec2<float>& value : values) {
-            maxValue = std::max(maxValue, std::max(std::abs(value(0)), std::abs(value(1))));
-        }
-        float scale = 32768.0f;
-        while (scale > 1.0f / 65536.0f) {
-            if (maxValue * scale <= 32767.0f) {
-                break;
-            }
-            scale *= 0.5f;
-        }
-        return scale;
     }
 
     bool TileLayerBuilder::tesselateGlyph(const Vertex& vertex, char styleIndex, const cglib::vec2<float>& pen, const Font::Glyph* glyph) {

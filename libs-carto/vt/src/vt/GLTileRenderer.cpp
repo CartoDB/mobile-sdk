@@ -1226,11 +1226,11 @@ namespace carto { namespace vt {
         std::size_t binormalOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.binormalOffset;
         const short* binormalPtr = reinterpret_cast<const short*>(&geometry->getVertexGeometry()[binormalOffset]);
         cglib::vec2<float> xy = cglib::vec2<float>(binormalPtr[0], binormalPtr[1]) * (1.0f / geometryLayoutParams.binormalScale);
-        if (geometry->getStyleParameters().transform) {
-            xy = cglib::transform_point(xy, geometry->getStyleParameters().transform.get());
-        }
         if (cglib::length(xy) != 0) {
             xy = xy * (1.0f + radius / cglib::length(xy));
+        }
+        if (geometry->getStyleParameters().transform) {
+            xy = cglib::transform_point(xy, geometry->getStyleParameters().transform.get());
         }
         return (xAxis * xy(0) + yAxis * xy(1)) * (geometry->getGeometryScale() / geometry->getTileSize());
     }
@@ -1794,7 +1794,10 @@ namespace carto { namespace vt {
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "uMVPMatrix"), 1, GL_FALSE, mvpMatrix.data());
         
         if (styleParams.transform) {
-            float transformScale = geometryLayoutParams.vertexScale * std::pow(2.0f, tileId.zoom - _zoom) / geometry->getTileSize();
+            float transformScale = 1.0f / geometry->getTileSize();
+            if (geometry->getType() != TileGeometry::Type::POINT) {
+                transformScale *= geometryLayoutParams.vertexScale * std::pow(2.0f, tileId.zoom - _zoom);
+            }
             cglib::mat3x3<float> transformMatrix = styleParams.transform.get();
             transformMatrix(0, 2) *= transformScale;
             transformMatrix(1, 2) *= transformScale;

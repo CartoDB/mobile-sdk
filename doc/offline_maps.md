@@ -101,7 +101,7 @@ Use the following steps to implement **single map package** downloading:
         }
         CartoPackageManager packageManager = null;
         try {
-            packageManager = new CartoPackageManager("nutiteq.mbstreets", packageFolder.getAbsolutePath());
+            packageManager = new CartoPackageManager("nutiteq.osm", packageFolder.getAbsolutePath());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -136,7 +136,7 @@ Use the following steps to implement **single map package** downloading:
       // Create package manager
 
       // Define PackageManager listener, definition is in same class above
-      var packageManager = new CartoPackageManager("nutiteq.mbstreets", packageFolder);
+      var packageManager = new CartoPackageManager("nutiteq.osm", packageFolder);
       var downloadedPackage = "";
       packageManager.PackageManagerListener = new PackageListener(packageManager, downloadedPackage);
 
@@ -165,8 +165,8 @@ Use the following steps to implement **single map package** downloading:
     
 // Create package manager and package manager listener
     // we had defined packageManager and packageManagerListener already, as properties
-    // currently the only package data source is nutiteq.mbstreets, it has OpenStreetMap global data
-    NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"nutiteq.mbstreets" dataFolder:packagesDir];
+    // currently the only package data source is nutiteq.osm, it has OpenStreetMap global data
+    NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"nutiteq.osm" dataFolder:packagesDir];
     [packageManager start];
 
   {% endhighlight %}

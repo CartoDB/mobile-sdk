@@ -15,8 +15,6 @@
 #include "renderers/components/BillboardSorter.h"
 #include "renderers/components/KineticEventHandler.h"
 #include "renderers/WatermarkRenderer.h"
-#include "renderers/workers/BillboardPlacementWorker.h"
-#include "renderers/workers/CullWorker.h"
 
 #include <atomic>
 #include <chrono>
@@ -43,6 +41,9 @@ namespace carto {
     class RayIntersectedElement;
     class Options;
     class ThreadWorker;
+    class CullWorker;
+    class BillboardPlacementWorker;
+    class RedrawWorker;
     class ShaderManager;
     class TextureManager;
 
@@ -169,6 +170,10 @@ namespace carto {
     
         std::shared_ptr<CullWorker> _cullWorker;
         std::thread _cullThread;
+#ifdef TARGET_XAMARIN
+        std::shared_ptr<RedrawWorker> _redrawWorker;
+        std::thread _redrawThread;
+#endif
         
         std::shared_ptr<OptionsListener> _optionsListener;
         

@@ -7,13 +7,6 @@ namespace carto { namespace vt {
     TileLabel::TileLabel(const TileId& tileId, long long localId, long long globalId, long long groupId, std::shared_ptr<const Font> font, std::vector<Font::Glyph> glyphs, boost::optional<cglib::vec3<double>> position, std::vector<cglib::vec3<double>> vertices, LabelOrientation orientation, const boost::optional<cglib::mat3x3<float>>& transform, float scale, const Color& color) :
         _tileId(tileId), _localId(localId), _globalId(globalId), _groupId(groupId), _font(std::move(font)), _glyphs(std::move(glyphs)), _orientation(orientation), _originalPosition(std::move(position)), _originalVertices(std::move(vertices)), _scale(scale), _color(color), _transform(transform)
     {
-        if (_transform) {
-            _transform.get()(1, 0) = -_transform.get()(1, 0);
-            _transform.get()(0, 1) = -_transform.get()(0, 1);
-            _transform.get()(1, 2) = -_transform.get()(1, 2);
-            _transform.get()(2, 1) = -_transform.get()(2, 1);
-        }
-        
         cglib::vec2<float> pen = cglib::vec2<float>(0, 0);
         for (const Font::Glyph& glyph : _glyphs) {
             if (glyph.codePoint == Font::CR_CODEPOINT) {
