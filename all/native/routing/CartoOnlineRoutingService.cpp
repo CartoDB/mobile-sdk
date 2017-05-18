@@ -36,7 +36,7 @@ namespace carto {
         }
 
         std::string appToken;
-        if (!LicenseManager::GetInstance().getParameter("appToken", appToken)) {
+        if (!LicenseManager::GetInstance().getParameter("appToken", appToken, false)) {
             throw GenericException("Service not available (license issue?)");
         }
 

@@ -53,7 +53,7 @@ namespace carto {
         params["platform"] = PlatformUtils::GetPlatformId();
         params["sdk_build"] = _CARTO_MOBILE_SDK_VERSION;
         std::string appToken;
-        if (LicenseManager::GetInstance().getParameter("appToken", appToken, true)) {
+        if (LicenseManager::GetInstance().getParameter("appToken", appToken, false)) {
             params["appToken"] = appToken;
         }
         return NetworkUtils::BuildURLFromParameters(baseURL, params);
@@ -109,7 +109,7 @@ namespace carto {
     
     std::string CartoPackageManager::createPackageURL(const std::string& packageId, int version, const std::string& baseURL, bool downloaded) const {
         std::string appToken;
-        if (!LicenseManager::GetInstance().getParameter("appToken", appToken)) {
+        if (!LicenseManager::GetInstance().getParameter("appToken", appToken, false)) {
             return std::string(); // invalid URL
         }
  
@@ -161,7 +161,7 @@ namespace carto {
             params["platform"] = PlatformUtils::GetPlatformId();
             params["sdk_build"] = _CARTO_MOBILE_SDK_VERSION;
             std::string appToken;
-            if (LicenseManager::GetInstance().getParameter("appToken", appToken, true)) {
+            if (LicenseManager::GetInstance().getParameter("appToken", appToken, false)) {
                 params["appToken"] = appToken;
             }
             std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
