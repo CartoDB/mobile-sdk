@@ -84,7 +84,7 @@ namespace carto {
 
     std::string CartoOnlineTileDataSource::buildTileURL(const std::string& baseURL, const MapTile& tile) const {
         std::string appToken;
-        if (!LicenseManager::GetInstance().getParameter("appToken", appToken, true)) {
+        if (!LicenseManager::GetInstance().getParameter("appToken", appToken, false)) {
             return std::string();
         }
 
@@ -99,7 +99,7 @@ namespace carto {
         params["platform"] = PlatformUtils::GetPlatformId();
         params["sdk_build"] = _CARTO_MOBILE_SDK_VERSION;
         std::string appToken;
-        if (LicenseManager::GetInstance().getParameter("appToken", appToken, true)) {
+        if (LicenseManager::GetInstance().getParameter("appToken", appToken, false)) {
             params["appToken"] = appToken;
         }
 
