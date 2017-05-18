@@ -32,7 +32,7 @@ namespace carto {
 
         std::string baseURL;
         if (packageSource.type == "map") {
-            baseURL = MAP_PACKAGE_LIST_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/packages.json";
+            baseURL = MAP_PACKAGE_LIST_URL + NetworkUtils::URLEncode(packageSource.id) + "/2/packages.json";
         }
         else if (packageSource.type == "routing") {
             baseURL = ROUTING_PACKAGE_LIST_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/packages.json";
