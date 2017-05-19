@@ -45,6 +45,7 @@ namespace carto {
                 and_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["and"]];
                 not_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["not"]];
                 null_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["null"]];
+                regexp_like_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["regexp_like"]];
 
                 string =
                     '\'' >> *(unesc_char | "\\x" >> qi::hex | (qi::print - '\'')) >> '\'';
@@ -60,11 +61,11 @@ namespace carto {
                     ;
 
                 expression =
-                    term1 [_val = _1] >> *((("||" | or_kw) >> term1) [_val = phx::bind(&OrExpression::create, _val, _1)])
+                    term1 [_val = _1] >> *((("||" | or_kw) > term1) [_val = phx::bind(&OrExpression::create, _val, _1)])
                     ;
 
                 term1 =
-                    term2 [_val = _1] >> *((("&&" | and_kw) >> term1) [_val = phx::bind(&AndExpression::create, _val, _1)])
+                    term2 [_val = _1] >> *((("&&" | and_kw) > term1) [_val = phx::bind(&AndExpression::create, _val, _1)])
                     ;
 
                 term2 =
@@ -74,16 +75,17 @@ namespace carto {
 
                 term3 =
                       predicate [_val = _1]
-                    | ('(' >> expression >> ')') [_val = _1]
+                    | (regexp_like_kw >> '(' > operand > ',' > operand > ')')  [_val = phx::bind(&BinaryPredicateExpression<RegexpLikePredicate>::create, _1, _2)]
+                    | ('(' >> expression > ')') [_val = _1]
                     ;
 
                 predicate =
-                      (operand >> "<=" >> operand) [_val = phx::bind(&BinaryPredicateExpression<LtePredicate>::create, _1, _2)]
-                    | (operand >> ">=" >> operand) [_val = phx::bind(&BinaryPredicateExpression<GtePredicate>::create, _1, _2)]
-                    | (operand >> "<"  >> operand) [_val = phx::bind(&BinaryPredicateExpression<LtPredicate>::create, _1, _2)]
-                    | (operand >> ">"  >> operand) [_val = phx::bind(&BinaryPredicateExpression<GtPredicate>::create, _1, _2)]
-                    | (operand >> (qi::lit("==") | qi::lit("=") ) >> operand) [_val = phx::bind(&BinaryPredicateExpression<EqPredicate>::create, _1, _2)]
-                    | (operand >> (qi::lit("<>") | qi::lit("!=")) >> operand) [_val = phx::bind(&BinaryPredicateExpression<NeqPredicate>::create, _1, _2)]
+                      (operand >> "<=" > operand) [_val = phx::bind(&BinaryPredicateExpression<LtePredicate>::create, _1, _2)]
+                    | (operand >> ">=" > operand) [_val = phx::bind(&BinaryPredicateExpression<GtePredicate>::create, _1, _2)]
+                    | (operand >> "<"  > operand) [_val = phx::bind(&BinaryPredicateExpression<LtPredicate>::create, _1, _2)]
+                    | (operand >> ">"  > operand) [_val = phx::bind(&BinaryPredicateExpression<GtPredicate>::create, _1, _2)]
+                    | (operand >> (qi::lit("==") | qi::lit("=") ) > operand) [_val = phx::bind(&BinaryPredicateExpression<EqPredicate>::create, _1, _2)]
+                    | (operand >> (qi::lit("<>") | qi::lit("!=")) > operand) [_val = phx::bind(&BinaryPredicateExpression<NeqPredicate>::create, _1, _2)]
                     | (operand >> is_kw >> null_kw)           [_val = phx::bind(&UnaryPredicateExpression<IsNullPredicate>::create, _1)]
                     | (operand >> is_kw >> not_kw >> null_kw) [_val = phx::bind(&UnaryPredicateExpression<IsNotNullPredicate>::create, _1)]
                     ;
@@ -95,7 +97,7 @@ namespace carto {
             }
 
             qi::symbols<char const, char const> unesc_char;
-            qi::rule<Iterator, qi::unused_type()> is_kw, or_kw, and_kw, not_kw, null_kw;
+            qi::rule<Iterator, qi::unused_type()> is_kw, or_kw, and_kw, not_kw, null_kw, regexp_like_kw;
             qi::rule<Iterator, std::string()> string;
             qi::rule<Iterator, Value()> value;
             qi::rule<Iterator, std::string()> identifier;

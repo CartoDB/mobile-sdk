@@ -13,9 +13,12 @@
 #include "styles/StyleSelectorExpression.h"
 
 #include <limits>
+#include <regex>
 
 #include <boost/variant.hpp>
 #include <boost/lexical_cast.hpp>
+
+#include <utf8.h>
 
 namespace carto {
     namespace StyleSelectorExpressionImpl {
@@ -35,6 +38,28 @@ namespace carto {
 
         struct IsNotNullPredicate {
             bool operator() (const Value& val) const { return val.which() != NULL_VALUE; }
+        };
+
+        struct RegexpLikePredicate {
+            bool operator() (const Value& val1, const Value& val2) const {
+                if (val1.which() == NULL_VALUE || val2.which() == NULL_VALUE) {
+                    return false;
+                }
+                std::string str;
+                try {
+                    str = (val1.which() == STRING_VALUE ? boost::get<std::string>(val1) : boost::lexical_cast<std::string>(val1));
+                } catch (const boost::bad_lexical_cast&) { return false; }
+                std::string re;
+                try {
+                    re = (val2.which() == STRING_VALUE ? boost::get<std::string>(val2) : boost::lexical_cast<std::string>(val2));
+                } catch (const boost::bad_lexical_cast&) { return false; }
+                std::wstring wre;
+                utf8::utf8to32(re.begin(), re.end(), std::back_inserter(wre));
+                std::wstring wstr;
+                utf8::utf8to32(str.begin(), str.end(), std::back_inserter(wstr));
+                std::wregex regex(wre);
+                return std::regex_match(wstr, regex);
+            }
         };
 
         template <template <typename T> class Op>
