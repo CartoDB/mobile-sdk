@@ -53,8 +53,8 @@ namespace carto {
         void setId(long long id);
     
         /**
-         * Returns a modifiable meta data map. Users may add their data as key-value pairs.
-         * @return The modifiable meta data map of this vector element.
+         * Returns a copy of the meta data map. The changes you make to this map are NOT reflected in the actual meta data of the element.
+         * @return A copy of the meta data map.
          */
         std::map<std::string, Variant> getMetaData() const;
         /**
