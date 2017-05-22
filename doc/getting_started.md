@@ -1668,12 +1668,15 @@ Add text and apply text styling using the following code.
     <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
-// 1. Create text style
+	 // 1. Create text style
       TextStyleBuilder textStyleBuilder = new TextStyleBuilder();
       textStyleBuilder.setColor(new Color(0xFFFF0000));
       textStyleBuilder.setOrientationMode(BillboardOrientation.BILLBOARD_ORIENTATION_FACE_CAMERA);
@@ -1681,13 +1684,13 @@ Add text and apply text styling using the following code.
       // This enables higher resolution texts for retina devices, but consumes more memory and is slower
       textStyleBuilder.setScaleWithDPI(false);
 
-// 2. Add text
+	 // 2. Add text
       MapPos position = proj.fromWgs84(new MapPos(24.653302, 59.422269));
       Text textpopup1 = new Text(position, textStyleBuilder.buildStyle(), "Face camera text");
-      textpopup1.setMetaDataElement("ClickText", "Text nr 1");
+      textpopup1.setMetaDataElement("ClickText", new Variant("Text nr 1"));
       vectorDataSource1.add(textpopup1);
   
-// 3. Animate zoom to position
+	 // 3. Animate zoom to position
       mapView.setFocusPos(position, 1);
       mapView.setZoom(13, 1);
 
@@ -1697,7 +1700,7 @@ Add text and apply text styling using the following code.
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 
-// 1. Create text style
+	 // 1. Create text style
       TextStyleBuilder textStyleBuilder = new TextStyleBuilder();
       textStyleBuilder.setColor(new Color(0xFFFF0000));
       textStyleBuilder.setOrientationMode(BillboardOrientation.BILLBOARD_ORIENTATION_FACE_CAMERA);
@@ -1705,14 +1708,14 @@ Add text and apply text styling using the following code.
       // This enables higher resolution texts for retina devices, but consumes more memory and is slower
       textStyleBuilder.setScaleWithDPI(false);
 
-// 2. Add text
+	 // 2. Add text
       MapPos position = proj.fromWgs84(new MapPos(24.653302, 59.422269));
       Text textpopup1 = new Text(position, textStyleBuilder.buildStyle(), "Face camera text");
       textpopup1.setMetaDataElement("ClickText", new Variant("Text nr 1"));
   
       vectorDataSource1.add(textpopup1);
 
-// 3. Animate zoom to position
+	 // 3. Animate zoom to position
       MapView.SetFocusPos(position, 1);
       MapView.SetZoom(13, 1);
 
@@ -1722,7 +1725,7 @@ Add text and apply text styling using the following code.
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
-// 4. Create text style
+	 // 1. Create text style
       NTTextStyleBuilder* textStyleBuilder = [[NTTextStyleBuilder alloc] init];
       [textStyleBuilder setColor:[[NTColor alloc] initWithColor:0xFFFF0000]];
       [textStyleBuilder setOrientationMode:NT_BILLBOARD_ORIENTATION_FACE_CAMERA];
@@ -1731,14 +1734,14 @@ Add text and apply text styling using the following code.
       // but consumes more memory and is slower if you have many texts on map
       [textStyleBuilder setScaleWithDPI:false];
 
-// 5. Define text location and add to datasource
+	 // 2. Define text location and add to datasource
       NTMapPos* pos = [proj fromWgs84:[[NTMapPos alloc] initWithX:24.653302 y:59.422269]];
-      NTText* text1 = [[NTText alloc] initWithPos:pos style:[textStyleBuilder buildStyle] text:@"Face camera text"];
-  
+      NTText* text1 = [[NTText alloc] initWithPos:pos style:[textStyleBuilder buildStyle] text:@"Face camera text"];  
       [text1 setMetaDataElement:@"ClickText" element:[[NTVariant alloc] initWithString:@"Text 1"]];
 
       [vectorDataSource1 add:text1];
-
+	  
+	  // 3. Animate zoom to position
       [self.mapView setFocusPos:pos  durationSeconds:0]
       [self.mapView setZoom:13 durationSeconds:1];
 
@@ -1746,11 +1749,53 @@ Add text and apply text styling using the following code.
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}COMING SOON...
+  {% highlight swift %}
+
+        // 1. Create text style
+        let textStyleBuilder = NTTextStyleBuilder()
+        textStyleBuilder?.setColor(NTColor(r: 255, g: 0, b: 0, a: 255))
+        textStyleBuilder?.setOrientationMode(NTBillboardOrientation.BILLBOARD_ORIENTATION_FACE_CAMERA)
+        
+        // This enables higher resolution texts for retina devices, but consumes more memory and is slower
+        textStyleBuilder?.setScaleWithDPI(false)
+        
+        // 2. Add text
+        let position = projection?.fromWgs84(NTMapPos(x: 24.653302, y: 59.422269))
+        let style = textStyleBuilder?.buildStyle()
+        let textpopup1 = NTText(pos: position, style: style, text: "Face camera text")
+        textpopup1?.setMetaData("ClickText", element: NTVariant(string: "Text nr 1"))
+        
+        source?.add(textpopup1)
+        
+        // 3. Animate zoom to position
+        mapView?.setFocus(position, durationSeconds: 1)
+        mapView?.setZoom(13, durationSeconds: 1)
 
   {% endhighlight %}
   </div>
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  {% highlight kotlin %}
   
+	   // 1. Create text style
+        val textStyleBuilder = TextStyleBuilder()
+        textStyleBuilder.color = Color(0xFFFF0000.toInt())
+        textStyleBuilder.orientationMode = BillboardOrientation.BILLBOARD_ORIENTATION_FACE_CAMERA
+
+        // This enables higher resolution texts for retina devices, but consumes more memory and is slower
+        textStyleBuilder.isScaleWithDPI = false
+
+        // 2. Add text
+        val position = projection?.fromWgs84(MapPos(24.653302, 59.422269))
+        val textpopup1 = Text(position, textStyleBuilder.buildStyle(), "Face camera text")
+        textpopup1.setMetaDataElement("ClickText", Variant("Text nr 1"))
+        source?.add(textpopup1)
+
+        // 3. Animate zoom to position
+        mapView?.setFocusPos(position, 1F)
+        mapView?.setZoom(13F, 1F)
+
+  {% endhighlight %}
+  </div>  
 </div>
 
 #### Example Text on a Mobile Map
@@ -1781,16 +1826,19 @@ A BalloonPopup appears based on click event of an object. You can also add a def
     <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
+        <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
-// 1. Load bitmaps to show on the label
+	 // 1. Load bitmaps to show on the label
       Bitmap infoImage = BitmapFactory.decodeResource(getResources(), R.drawable.info);
       Bitmap arrowImage = BitmapFactory.decodeResource(getResources(), R.drawable.arrow);
 
-// 2. Add popup
+	 // 2. Add popup
       BalloonPopupStyleBuilder builder = new BalloonPopupStyleBuilder();
       builder.setCornerRadius(20);
       builder.setLeftMargins(new BalloonPopupMargins(6, 6, 6, 6));
@@ -1801,12 +1849,12 @@ A BalloonPopup appears based on click event of an object. You can also add a def
 
       MapPos position = proj.fromWgs84(new MapPos(24.655662, 59.425521));
       BalloonPopup popup = new BalloonPopup(position, builder.buildStyle(), "Popup with pos", "Images, round");
-        popup.setMetaDataElement("ClickText", new Variant("Popup caption nr 1"));
+      popup.setMetaDataElement("ClickText", new Variant("Popup caption nr 1"));
 
-        vectorDataSource1.add(popup);
+      vectorDataSource1.add(popup);
 
-        mapView.setFocusPos(position, 1);
-        mapView.setZoom(13, 1);
+      mapView.setFocusPos(position, 1);
+      mapView.setZoom(13, 1);
 
   {% endhighlight %}
   </div>
@@ -1814,14 +1862,14 @@ A BalloonPopup appears based on click event of an object. You can also add a def
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 
-// Android
+	 // Android
       Bitmap androidInfoBitmap = BitmapFactory.DecodeResource(Resources, HelloMap.Resource.Drawable.info);
       Carto.Graphics.Bitmap infoBitmap = BitmapUtils.CreateBitmapFromAndroidBitmap(androidInfoBitmap);
 
       Bitmap androidArrowBitmap = BitmapFactory.DecodeResource(Resources, HelloMap.Resource.Drawable.arrow);
       Carto.Graphics.Bitmap arrowBitmap = BitmapUtils.CreateBitmapFromAndroidBitmap(androidArrowBitmap);
 
-// iOS
+	 // iOS
       var infoBitmap = BitmapUtils.CreateBitmapFromUIImage(UIImage.FromFile("info.png"));
       var arrowBitmap = BitmapUtils.CreateBitmapFromUIImage(UIImage.FromFile("arrow.png"));
 
@@ -1853,11 +1901,11 @@ A BalloonPopup appears based on click event of an object. You can also add a def
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
-// 1. Load styling bitmaps to show on the popups
+	 // 1. Load styling bitmaps to show on the popups
       UIImage* infoImage = [UIImage imageNamed:@"info.png"];
       UIImage* arrowImage = [UIImage imageNamed:@"arrow.png"];
   
-// 2. Create style for the BalloonPopup
+	 // 2. Create style for the BalloonPopup
       NTBalloonPopupStyleBuilder* balloonPopupStyleBuilder = [[NTBalloonPopupStyleBuilder alloc] init];
       [balloonPopupStyleBuilder setCornerRadius:20];
       [balloonPopupStyleBuilder setLeftMargins:[[NTBalloonPopupMargins alloc] initWithLeft:6 top:6 right:6 bottom:6]];
@@ -1868,10 +1916,10 @@ A BalloonPopup appears based on click event of an object. You can also add a def
     // Higher priority ensures that baloon is visible when overlaps with other billboards
   [balloonPopupStyleBuilder setPlacementPriority:1];
  
-// 3. Sefine location
+	 // 3. Sefine location
       NTMapPos* pos = [proj fromWgs84:[[NTMapPos alloc] initWithX:24.655662 y:59.425521]];
 
-// 4. Create BalloonPopup and add to datasource
+	 // 4. Create BalloonPopup and add to datasource
       NTBalloonPopup* popup1 = [[NTBalloonPopup alloc] initWithPos:pos
                                style:[balloonPopupStyleBuilder buildStyle]
                                title:@"Popup with pos"
@@ -1888,11 +1936,64 @@ A BalloonPopup appears based on click event of an object. You can also add a def
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}COMING SOON...
+  {% highlight swift %}
+
+        // 1. Load bitmaps to show on the label
+        let infoImage = NTBitmapUtils.createBitmap(from: UIImage(named: "info.png"));
+        let arrowImage = NTBitmapUtils.createBitmap(from: UIImage(named: "arrow.png"));
+        
+        // 2. Add popup
+        let builder = NTBalloonPopupStyleBuilder()
+        builder?.setCornerRadius(20)
+        builder?.setLeftMargins(NTBalloonPopupMargins(left: 6, top: 6, right: 6, bottom: 6))
+        builder?.setLeftImage(infoImage)
+        builder?.setRightImage(arrowImage)
+        builder?.setRightMargins(NTBalloonPopupMargins(left: 2, top: 6, right: 12, bottom: 6))
+        builder?.setPlacementPriority(1)
+        
+        
+        let position = projection?.fromWgs84(NTMapPos(x: 24.655662, y: 59.425521))
+        let style = builder?.buildStyle()
+        let popup = NTBalloonPopup(pos: position, style: style, title: "Popup with pos", desc: "Images, round")
+        
+        popup?.setMetaData("ClickText", element: NTVariant(string: "Popup caption nr 1"))
+        
+        source?.add(popup)
+        
+        mapView?.setFocus(position, durationSeconds: 1)
+        mapView?.setZoom(13, durationSeconds: 1)
 
   {% endhighlight %}
   </div>
   
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  {% highlight kotlin %}
+
+        // 1. Load bitmaps to show on the label
+        val infoImage = BitmapFactory.decodeResource(resources, R.drawable.info)
+        val arrowImage = BitmapFactory.decodeResource(resources, R.drawable.arrow)
+
+        // 2. Add popup
+        val builder = BalloonPopupStyleBuilder()
+        builder.cornerRadius = 20
+        builder.leftMargins = BalloonPopupMargins(6, 6, 6, 6)
+        builder.leftImage = BitmapUtils.createBitmapFromAndroidBitmap(infoImage)
+        builder.rightImage = BitmapUtils.createBitmapFromAndroidBitmap(arrowImage)
+        builder.rightMargins = BalloonPopupMargins(2, 6, 12, 6)
+        builder.placementPriority = 1
+
+        val position = projection?.fromWgs84(MapPos(24.655662, 59.425521))
+        val popup = BalloonPopup(position, builder.buildStyle(), "Popup with pos", "Images, round")
+        popup.setMetaDataElement("ClickText", Variant("Popup caption nr 1"))
+
+        source?.add(popup)
+
+        mapView?.setFocusPos(position, 1F)
+        mapView?.setZoom(13F, 1F)
+
+  {% endhighlight %}
+  </div>
+    
 </div>
 
 #### Example BalloonPopup on a Mobile Map
@@ -1933,25 +2034,28 @@ The following procedure describes how to setup and add a 3D object to your mobil
     <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
-// 1. Load NML model from a file
+	 // 1. Load NML model from a file
       UnsignedCharVector modelFile = AssetUtils.loadBytes("fcd_auto.nml");
 
-// 2. Set location for model, and create NMLModel object with this
+	 // 2. Set location for model, and create NMLModel object with this
       MapPos modelPos = baseProjection.fromWgs84(new MapPos(24.646469, 59.423939));
       NMLModel model = new NMLModel(modelPos, modelFile);
 
-// 3. Adjust the size- oversize it by 20*, just to make it more visible (optional)
+	 // 3. Adjust the size- oversize it by 20*, just to make it more visible (optional)
       model.setScale(20);
 
-// 4. Add metadata for click handling (optional)
+	 // 4. Add metadata for click handling (optional)
       model.setMetaDataElement("ClickText", new Variant("Single model"));
 
-// 5. Add it to normal datasource
+	 // 5. Add it to normal datasource
       vectorDataSource1.add(model);
 
       mapView.setFocusPos(position, 1);
@@ -1965,20 +2069,20 @@ The following procedure describes how to setup and add a 3D object to your mobil
 
       var file = AssetUtils.LoadAsset("fcd_auto.nml");
 
-// 1. Set location for model, and create NMLModel object with this
+	 // 1. Set location for model, and create NMLModel object with this
       var position = proj.FromWgs84(new MapPos(24.646469, 59.423939));
       var model = new NMLModel(position, file);
 
-// 2. Adjust the size- oversize it by 20x, just to make it more visible (optional)
+	 // 2. Adjust the size- oversize it by 20x, just to make it more visible (optional)
       model.Scale = 20;
 
-// 3. Add metadata for click handling (optional)
+	 // 3. Add metadata for click handling (optional)
       model.SetMetaDataElement("ClickText", new Variant("Single model"));
 
-// 4. Add it to normal datasource
+	 // 4. Add it to normal datasource
       vectorDataSource1.Add(model);
 
-// 5. Animate zoom to position
+	 // 5. Animate zoom to position
       MapView.SetFocusPos(position, 1);
       MapView.SetZoom(15, 1);
 
@@ -1988,17 +2092,17 @@ The following procedure describes how to setup and add a 3D object to your mobil
 <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
-// 1. Load NML model from a file
+	 // 1. Load NML model from a file
       NTUnsignedCharVector* modelData = [NTAssetUtils loadBytes:@"fcd_auto.nml"];
     
-// 2. Set location for model, and create NMLModel object with this
+	 // 2. Set location for model, and create NMLModel object with this
       NTMapPos* pos = [proj fromWgs84:[[NTMapPos alloc] initWithX:24.646469 y:59.424939]];
       NTNMLModel* model = [[NTNMLModel alloc] initWithPos:pos sourceModelData:modelData];
     
-// 3. Add metadata for click handling (optional)
+	 // 3. Add metadata for click handling (optional)
       [model setMetaDataElement:@"ClickText" element:[[NTVariant alloc] initWithString:@"My nice car"]];    
   
-// 4. Adjust the size- oversize it by 20*, just to make it more visible (optional)
+	 // 4. Adjust the size- oversize it by 20*, just to make it more visible (optional)
       [model setScale:20];
 
       [vectorDataSource1 add:model];
@@ -2010,11 +2114,55 @@ The following procedure describes how to setup and add a 3D object to your mobil
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}COMING SOON...
+  {% highlight swift %}
+
+        // 1. Load NML model from a file (be sure it's targeted by your application)
+        let modelFile = NTAssetUtils.loadAsset("fcd_auto.nml")
+        
+        // 2. Set location for model, and create NMLModel object with this
+        let modelPos = projection?.fromWgs84(NTMapPos(x: 24.646469, y: 59.423939))
+        let model = NTNMLModel(pos: modelPos, sourceModelData: modelFile)
+        
+        // 3. Adjust the size- oversize it by 20*, just to make it more visible (optional)
+        model?.setScale(20)
+        
+        // 4. Add metadata for click handling (optional)
+        model?.setMetaData("ClickText", element: NTVariant(string: "Single model"))
+        
+        // 5. Add it to normal datasource
+        source?.add(model)
+        
+        mapView?.setFocus(modelPos, durationSeconds: 1)
+        mapView?.setZoom(15, durationSeconds: 1)
 
   {% endhighlight %}
   </div>
-  
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  {% highlight kotlin %}
+
+        // 1. Load NML model from a file
+        val modelFile = AssetUtils.loadAsset("fcd_auto.nml")
+
+        // 2. Set location for model, and create NMLModel object with this
+        val modelPos = projection?.fromWgs84(MapPos(24.646469, 59.423939))
+        val model = NMLModel(modelPos, modelFile);
+
+        // 3. Adjust the size- oversize it by 20*, just to make it more visible (optional)
+        model.scale = 20F
+
+        // 4. Add metadata for click handling (optional)
+        model.setMetaDataElement("ClickText", Variant("Single model"))
+
+        // 5. Add it to normal datasource
+        source?.add(model)
+
+        mapView?.setFocusPos(modelPos, 1F)
+        mapView?.setZoom(15F, 1F)
+
+  {% endhighlight %}
+  </div>
+    
 </div>
 
 #### Example 3D Model Object on a Mobile Map
@@ -2049,10 +2197,15 @@ The following code describes how to adjust the `LocalVectorDataSource` performan
     <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}LocalVectorDataSource vectorDataSource2 = new LocalVectorDataSource(proj, LocalSpatialIndexType.LOCAL_SPATIAL_INDEX_TYPE_KDTREE);
+  {% highlight java %}
+  
+     LocalVectorDataSource vectorDataSource2 = new LocalVectorDataSource(proj, LocalSpatialIndexType.LOCAL_SPATIAL_INDEX_TYPE_KDTREE);
 
   {% endhighlight %}
   </div>
@@ -2060,21 +2213,30 @@ The following code describes how to adjust the `LocalVectorDataSource` performan
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 
-var vectorDataSource2 = new LocalVectorDataSource(proj, LocalSpatialIndexType.LocalSpatialIndexTypeKdtree);
+	var vectorDataSource2 = new LocalVectorDataSource(proj, LocalSpatialIndexType.LocalSpatialIndexTypeKdtree);
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}NTLocalVectorDataSource* vectorDataSource2 =
-    [[NTLocalVectorDataSource alloc] initWithProjection:proj
+	[[NTLocalVectorDataSource alloc] initWithProjection:proj
                                        spatialIndexType: NTLocalSpatialIndexType::NT_LOCAL_SPATIAL_INDEX_TYPE_KDTREE];
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}COMING SOON...
+  {% highlight swift %}
+
+	let vectorDataSource2 = NTLocalVectorDataSource(projection: projection, spatialIndexType: NTLocalSpatialIndexType.LOCAL_SPATIAL_INDEX_TYPE_KDTREE)
+
+  {% endhighlight %}
+  
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  {% highlight kotlin %}
+
+	val vectorDataSource2 = LocalVectorDataSource(projection, LocalSpatialIndexType.LOCAL_SPATIAL_INDEX_TYPE_KDTREE)
 
   {% endhighlight %}
   </div>
@@ -2107,33 +2269,52 @@ All this is can be applied with just one line of code - as shown in the followin
     <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}vectorDataSource2.setGeometrySimplifier(new DouglasPeuckerGeometrySimplifier(1.0f / 320.0f));
+  {% highlight java %}
+  
+  	vectorDataSource2.setGeometrySimplifier(new DouglasPeuckerGeometrySimplifier(1.0f / 320.0f));
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight csharp %}vectorDataSource2.GeometrySimplifier = new DouglasPeuckerGeometrySimplifier(1.0f / 320.0f);
+  {% highlight csharp %}
+  
+  	vectorDataSource2.GeometrySimplifier = new DouglasPeuckerGeometrySimplifier(1.0f / 320.0f);
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}[vectorDataSource2 setGeometrySimplifier:
+  {% highlight objc %}
+  
+  	[vectorDataSource2 setGeometrySimplifier:
   [[NTDouglasPeuckerGeometrySimplifier alloc] initWithTolerance: 1.0f / 320.0f]];
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}COMING SOON...
+  {% highlight swift %}
+  
+	vectorDataSource2?.setGeometrySimplifier(NTDouglasPeuckerGeometrySimplifier(tolerance: 1.0 / 320.0))
 
   {% endhighlight %}
   </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  {% highlight kotlin %}
   
+	vectorDataSource2.geometrySimplifier = DouglasPeuckerGeometrySimplifier(1.0f / 320.0f)
+
+  {% endhighlight %}
+  </div>
+    
 </div>
 
 The automatic simplification renders a GPU tasks faster with some additional computation (CPU). For aggressive simplification, you will notice a decrease in the of line quality, so use is sparingly.
