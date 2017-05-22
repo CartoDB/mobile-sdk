@@ -86,69 +86,65 @@ Use the following steps to implement **single map package** downloading:
     <li class="Tab js-Tabpanes-navItem--lang">
        <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>    
   </ul>
 
    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
-
-// 1. Register license, this must be done before PackageManager can be used!
-      MapView.registerLicense("YOUR_LICENSE_KEY", getApplicationContext());
-
-// 2. Create package manager
-      File packageFolder = new File(getApplicationContext().getExternalFilesDir(null), "mappackages");
-        if (!(packageFolder.mkdirs() || packageFolder.isDirectory())) {
-            Log.e(Const.LOG_TAG, "Could not create package folder!");
-        }
-        CartoPackageManager packageManager = null;
-        try {
-            packageManager = new CartoPackageManager("nutiteq.osm", packageFolder.getAbsolutePath());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        packageManager.start();
+	
+	// Create package manager
+	File packageFolder = new File(getApplicationContext().getExternalFilesDir(null), "mappackages");
+	if (!(packageFolder.mkdirs() || packageFolder.isDirectory())) {
+	    Log.e(Const.LOG_TAG, "Could not create package folder!");
+	}
+	CartoPackageManager packageManager = null;
+	try {
+	    packageManager = new CartoPackageManager("nutiteq.osm", packageFolder.getAbsolutePath());
+	} catch (IOException e) {
+	    e.printStackTrace();
+	}
+	packageManager.start();
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
-
-// Android: Register license, this must be done before PackageManager can be used!
-      Carto.Ui.MapView.RegisterLicense("YOUR-CARTO-LICENSE", ApplicationContext);
-
-      // Create/find folder for packages
-      var packageFolder = new File(GetExternalFilesDir(null), "packages");
-      if (!(packageFolder.Mkdirs() || packageFolder.IsDirectory))
-      {
-        Log.Fatal("Could not create package folder!");
-      }
-
-// iOS: Register license, this must be done before PackageManager can be used!
-      Carto.Ui.MapView.RegisterLicense("YOUR-CARTO-LICENSE");
-
-      // Find folder for packages
-      var paths = NSSearchPath.GetDirectories(NSSearchPathDirectory.ApplicationSupportDirectory, NSSearchPathDomain.User);
-      var packageFolder = paths[0] + "packages";
-      NSFileManager.DefaultManager.CreateDirectory(packageFolder, true, null);
-
-// Following code is identical for all platforms        
-
-      // Create package manager
-
-      // Define PackageManager listener, definition is in same class above
-      var packageManager = new CartoPackageManager("nutiteq.osm", packageFolder);
-      var downloadedPackage = "";
-      packageManager.PackageManagerListener = new PackageListener(packageManager, downloadedPackage);
-
-      // Download new package list only if it is older than 24h
-      // Note: this is only needed if pre-made packages are used
-      if (packageManager.ServerPackageListAge > 24 * 60 * 60)
-      {
-        packageManager.StartPackageListDownload();
-      }
-
-      // Start manager - mandatory
-      packageManager.Start();
+	 
+	/* Droid */
+	// Create/find folder for packages
+	var packageFolder = new File(GetExternalFilesDir(null), "packages");
+	if (!(packageFolder.Mkdirs() || packageFolder.IsDirectory))
+	{
+		Log.Fatal("Could not create package folder!");
+	}
+	  
+	/* iOS */
+	// Find folder for packages
+	var paths = NSSearchPath.GetDirectories(NSSearchPathDirectory.ApplicationSupportDirectory, NSSearchPathDomain.User);
+	var packageFolder = paths[0] + "packages";
+	NSFileManager.DefaultManager.CreateDirectory(packageFolder, true, null);
+	
+	// Following code is identical for all platforms        
+	
+	// Create package manager
+	
+	// Define PackageManager listener, definition is in same class above
+	var packageManager = new CartoPackageManager("nutiteq.osm", packageFolder);
+	var downloadedPackage = "";
+	packageManager.PackageManagerListener = new PackageListener(packageManager, downloadedPackage);
+	
+	// Download new package list only if it is older than 24h
+	// Note: this is only needed if pre-made packages are used
+	if (packageManager.ServerPackageListAge > 24 * 60 * 60)
+	{
+		packageManager.StartPackageListDownload();
+	}
+	
+	// Start manager - mandatory
+	packageManager.Start();
 
   {% endhighlight %}
   </div>
@@ -156,28 +152,66 @@ Use the following steps to implement **single map package** downloading:
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
-// Create folder for package manager files. Package manager needs persistent writable folder.
-    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask,YES);
-    NSString* appSupportDir = [paths objectAtIndex: 0];
-    NSString* packagesDir = [appSupportDir stringByAppendingString:@"packages"];
-    NSError *error;
-    [[NSFileManager defaultManager] createDirectoryAtPath:packagesDir withIntermediateDirectories:NO attributes:nil error:&error];
-    
-// Create package manager and package manager listener
-    // we had defined packageManager and packageManagerListener already, as properties
-    // currently the only package data source is nutiteq.osm, it has OpenStreetMap global data
-    NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"nutiteq.osm" dataFolder:packagesDir];
-    [packageManager start];
+	// Create folder for package manager files. Package manager needs persistent writable folder.
+	NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask,YES);
+	NSString* appSupportDir = [paths objectAtIndex: 0];
+	NSString* packagesDir = [appSupportDir stringByAppendingString:@"packages"];
+	NSError *error;
+	[[NSFileManager defaultManager] createDirectoryAtPath:packagesDir withIntermediateDirectories:NO attributes:nil error:&error];
+	    
+	// Create package manager and package manager listener
+	// we had defined packageManager and packageManagerListener already, as properties
+	// currently the only package data source is nutiteq.osm, it has OpenStreetMap global data
+	NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"nutiteq.osm" dataFolder:packagesDir];
+	[packageManager start];
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}COMING SOON...
+  {% highlight swift %}
+
+        // Create package manager
+        let searchDirectory = FileManager.SearchPathDirectory.applicationSupportDirectory
+        let domainMask = FileManager.SearchPathDomainMask.userDomainMask
+        
+        let folder = NSSearchPathForDirectoriesInDomains(searchDirectory, domainMask, true).last!
+        
+        // Create folder if it doesn't exist, else it'll throw IOException
+        do {
+            try FileManager.default.createDirectory(atPath: folder, withIntermediateDirectories: true, attributes: nil)
+        } catch {
+            // Errorhandling
+        }
+        
+        let packageManager = NTCartoPackageManager(source: "nutiteq.osm", dataFolder: folder)
+        
+        packageManager?.start()
+        
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  {% highlight kotlin %}
+
+	   // Create package manager
+        val packageFolder = File(applicationContext.getExternalFilesDir(null), "mappackages")
+        if (!(packageFolder.mkdirs() || packageFolder.isDirectory())) {
+            print("Unable to create package folder!")
+
+        }
+        var packageManager: CartoPackageManager? = null
+        try {
+            packageManager = CartoPackageManager("nutiteq.osm", packageFolder.getAbsolutePath())
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+
+        packageManager!!.start()
 
   {% endhighlight %}
   </div>
-  
+    
 </div>
 
 * **Implement and set PackageManagerListener** 
