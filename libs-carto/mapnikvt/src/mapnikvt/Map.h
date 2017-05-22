@@ -26,6 +26,7 @@ namespace carto { namespace mvt {
             vt::Color backgroundColor = vt::Color(0x00000000);
             std::string backgroundImage;
             std::string fontDirectory = "fonts";
+            float bufferSize = -1.0f;
         };
         
         explicit Map(const Settings& settings) : _settings(settings) { }

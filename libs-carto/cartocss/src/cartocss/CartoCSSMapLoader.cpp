@@ -225,6 +225,7 @@ namespace carto { namespace css {
         }
         getMapProperty(mapProperties, "background-image", mapSettings.backgroundImage);
         getMapProperty(mapProperties, "font-directory", mapSettings.fontDirectory);
+        getMapProperty(mapProperties, "buffer-size", mapSettings.bufferSize);
     }
 
     void CartoCSSMapLoader::buildAttachmentStyleMap(const CartoCSSMapnikTranslator& translator, const std::shared_ptr<mvt::Map>& map, int minZoom, int maxZoom, const std::list<CartoCSSCompiler::LayerAttachment>& layerAttachments, std::map<std::string, AttachmentStyle>& attachmentStyleMap) const {
