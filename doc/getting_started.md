@@ -229,15 +229,18 @@ If using Android as the mobile platform, follow this implementation procedure.
   Define the MapView type in your main activity class and load layout. This enables you to load the MapView from the layout. _The object itself was already created during the layout creation process, this step is specific to finding and referencing the MapView object in your request._
 
 {% highlight java %}
-	public class HelloMap3DActivity extends Activity {
-    private MapView mapView;
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
-		
-		mapView = (MapView) this.findViewById(R.id.mapView);
+	public class HelloMap3DActivity extends Activity {
+    	private MapView mapView;
+
+	    @Override
+	    public void onCreate(Bundle savedInstanceState) {
+	        super.onCreate(savedInstanceState);
+	        setContentView(R.layout.main);
+			
+			mapView = (MapView) this.findViewById(R.id.mapView);
+		}
+	}
 {% endhighlight %}
 
 5) Initialize the mobile map
@@ -724,6 +727,9 @@ Basemaps apply the map background required for rendering data. Basemaps are requ
     <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>    
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
@@ -784,11 +790,43 @@ Basemaps apply the map background required for rendering data. Basemaps are requ
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}COMING SOON...
+  {% highlight swift %}
+  	    // MapView initialization in code: initialize and set it as view
+        let mapView = NTMapView();
+        view = mapView;
+        
+        // Get base projection from mapView
+        let projection = mapView?.getOptions().getBaseProjection();
+        // Create a local vector data source
+        let source = NTLocalVectorDataSource(projection: projection);
+        // Initialize layer
+        let layer = NTVectorLayer(dataSource: source);
+        // Add layer
+        mapView?.getLayers().add(layer);
 
   {% endhighlight %}
   </div>
-    
+  
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  {% highlight kotlin %}
+
+        // Initialize MapView in code
+        val mapView = MapView(this)
+        // Looks like a compile-time exception, but do not worry, it's fine :)
+        setContentView(mapView)
+
+        // Get base projection from mapView
+        val projection = mapView.options.baseProjection
+        // Create a local vector data source
+        val source = LocalVectorDataSource(projection)
+        // Initialize layer
+        val layer = VectorLayer(source)
+        
+        mapView.layers.add(layer)
+
+  {% endhighlight %}
+  </div>
+      
 </div>
 
 ### MapView Objects
@@ -817,12 +855,15 @@ Add a marker and apply marker styling using the following code:
     <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
-// 1. Create marker style
+	 // 1. Create marker style
       MarkerStyleBuilder markerStyleBuilder = new MarkerStyleBuilder();
       markerStyleBuilder.setSize(30);
       // Green colour as ARGB
@@ -830,12 +871,12 @@ Add a marker and apply marker styling using the following code:
 
       MarkerStyle sharedMarkerStyle = markerStyleBuilder.buildStyle();
 
-// 2. Add marker
+	 // 2. Add marker
       Marker marker1 = new Marker(proj.fromWgs84(new MapPos(24.646469, 59.426939)), sharedMarkerStyle);
       marker1.setMetaDataElement("ClickText", new Variant("Marker nr 1"));
       vectorDataSource1.add(marker1);
 
-// 3. Animate map to the marker
+	 // 3. Animate map to the marker
       mapView.setFocusPos(tallinn, 1);
       mapView.setZoom(12, 1);
 
@@ -845,21 +886,21 @@ Add a marker and apply marker styling using the following code:
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 
-// 1. Create marker style
+	 // 1. Create marker style
       MarkerStyleBuilder markerStyleBuilder = new MarkerStyleBuilder();
       markerStyleBuilder.Size = 30;
 
-// 2. Build style
+	 // 2. Build style
       MarkerStyle sharedMarkerStyle = markerStyleBuilder.BuildStyle();
 
-// 3. Set marker position
+      // 3. Set marker position
       MapPos tallinn = proj.FromWgs84(new MapPos(24.646469, 59.426939));
 
-// 4. Add marker
+	 // 4. Add marker
       Marker marker1 = new Marker(tallinn, sharedMarkerStyle);
       marker1.SetMetaDataElement("ClickText", new Variant("Marker nr 1"));
 
-// 5. Animate map to the marker
+	 // 5. Animate map to the marker
       MapView.SetFocusPos(tallinn, 1);
       MapView.SetZoom(12, 1);
 
@@ -871,7 +912,7 @@ Add a marker and apply marker styling using the following code:
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
-// 1. Create a marker style, we use default marker bitmap here
+	 // 1. Create a marker style, we use default marker bitmap here
       NTMarkerStyleBuilder* markerStyleBuilder = [[NTMarkerStyleBuilder alloc] init];
       // Styles use dpi-independent units, no need to adjust it for retina
      [markerStyleBuilder setSize:30];
@@ -879,13 +920,13 @@ Add a marker and apply marker styling using the following code:
       [markerStyleBuilder setColor:[[NTColor alloc] initWithColor:0xFF00FF00]]; 
       NTMarkerStyle* sharedMarkerStyle = [markerStyleBuilder buildStyle];
 
-// 2. Define position and metadata for marker. Two important notes:
+	 // 2. Define position and metadata for marker. Two important notes:
       // (1) Position in latitude/longitude has to be converted using projection
       // (2) X is longitude, Y is latitude !
       NTMapPos* pos = [proj fromWgs84:[[NTMapPos alloc] initWithX:24.651488 y:59.423581]];
       NTMarker* marker1 = [[NTMarker alloc] initWithPos:pos style:sharedMarkerStyle];
   
-// 3. The defined metadata will be used later for Popups
+	 // 3. The defined metadata will be used later for Popups
       [marker1 setMetaDataElement:@"ClickText" element:[[NTVariant alloc] initWithString:@"Marker 1"]];
   
       [vectorDataSource1 add:marker1];
@@ -897,10 +938,59 @@ Add a marker and apply marker styling using the following code:
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}COMING SOON...
+  {% highlight swift %}
+  
+          let builder = NTMarkerStyleBuilder();
+        builder?.setSize(30);
+        let red = NTColor.init(r: 255, g: 0, b: 0, a: 255);
+        builder?.setColor(red);
+        
+        // Create a marker style, we use default marker bitmap here
+        let style = builder?.buildStyle();
+        
+        // 1. Position in latitude/longitude has to be converted using projection
+        // 2. X is longitude, Y is latitude
+        let position = projection?.fromWgs84(NTMapPos(x: 24.651488, y: 59.423581));
+        
+        let marker = NTMarker(pos: position, style: style);
+        
+        // The defined metadata will be used later for Popups
+        marker?.setMetaData("ClickText", element: NTVariant(string: "Marker"));
+        
+        source?.add(marker);
+        
+        mapView?.setFocus(position, durationSeconds: 0);
+        mapView?.setZoom(12, durationSeconds: 1);
 
   {% endhighlight %}
   </div>
+  
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  {% highlight kotlin %}
+  
+        val builder = MarkerStyleBuilder()
+        builder.size = 30F
+        val red = Color(255, 0, 0, 255)
+        builder.color = red
+
+        val style = builder.buildStyle()
+
+        // 1. Position in latitude/longitude has to be converted using projection
+        // 2. X is longitude, Y is latitude
+        val position = projection.fromWgs84(MapPos(24.651488, 59.423581))
+
+        val marker = Marker (position, style)
+
+        // The defined metadata will be used later for Popups
+        marker.setMetaDataElement("ClickText", Variant("Marker"))
+        source.add(marker)
+
+        mapView.setFocusPos(position, 0F)
+        mapView.setZoom(12F, 1F)
+
+  {% endhighlight %}
+  </div>
+    
 </div>
 
 #### Example Marker on a Mobile Map
@@ -933,26 +1023,29 @@ Add a point and apply point styling using the following code:
     <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
-// 1. Set marker position
+	 // 1. Set marker position
       MapPos tallinn = proj.FromWgs84(new MapPos(24.646469, 59.426939));
 
-// 2. Create style and position for the Point
+	 // 2. Create style and position for the Point
       PointStyleBuilder pointStyleBuilder = new PointStyleBuilder();
       pointStyleBuilder.setColor(new Color(0xFF00FF00));
       pointStyleBuilder.setSize(16);
 
-// 3. Create Point, add to datasource with metadata
+ 	 // 3. Create Point, add to datasource with metadata
       Point point1 = new Point(tallinn, pointStyleBuilder.buildStyle());
       point1.setMetaDataElement("ClickText", "Point nr 1");
 
       vectorDataSource1.add(point1);
   
-// 4. Animate map to the point
+	 // 4. Animate map to the point
       mapView.setFocusPos(tallinn, 1);
       mapView.setZoom(12, 1);
   
@@ -962,21 +1055,21 @@ Add a point and apply point styling using the following code:
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 
-// 1. Set point position
+	 // 1. Set point position
       MapPos tallinn = proj.FromWgs84(new MapPos(24.646469, 59.426939));
 
-// 2. Create style and position for the Point
+	 // 2. Create style and position for the Point
       var pointStyleBuilder = new PointStyleBuilder();
       pointStyleBuilder.Color = new Color(0, 255, 0, 255);
       pointStyleBuilder.Size = 16;
 
-// 3. Create Point, add to datasource with metadata
+ 	 // 3. Create Point, add to datasource with metadata
       Point point1 = new Point(tallinn, pointStyleBuilder.BuildStyle());
       point1.SetMetaDataElement("ClickText", new Variant("Point nr 1"));
 
       vectorDataSource1.Add(point1);
 
-// 4. Animate map to the point
+	 // 4. Animate map to the point
       MapView.SetFocusPos(tallinn, 1);
       MapView.SetZoom(12, 1);
 
@@ -986,17 +1079,17 @@ Add a point and apply point styling using the following code:
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
-// 1. Create style and position for the Point
+	 // 1. Create style and position for the Point
       NTPointStyleBuilder* pointStyleBuilder = [[NTPointStyleBuilder alloc] init];
 
-      //color is defined as ARGB integer, i.e. following is opaque green
-      //you can not use UIColor (or any other ObjectiveC specific class) in Carto mobile SDK
+      // Color is defined as ARGB integer, i.e. following is opaque green
+      // You can not use UIColor (or any other ObjectiveC specific class) in Carto mobile SDK
      
       [pointStyleBuilder setColor:[[NTColor alloc] initWithColor:0xFF00FF00]];
       [pointStyleBuilder setSize:16];
       NTMapPos* pos = [proj fromWgs84:[[NTMapPos alloc] initWithX:24.651488 y:59.423581]];
 
-// 2. Create Point, add to datasource with metadata
+	 // 2. Create Point, add to datasource with metadata
       NTPoint* point1 = [[NTPoint alloc] initWithPos:pos style:[pointStyleBuilder buildStyle]];
       [point1 setMetaDataElement:@"ClickText" element:[[NTVariant alloc] initWithString:@"Point 1"]];
       [vectorDataSource1 add:point1];
@@ -1008,7 +1101,8 @@ Add a point and apply point styling using the following code:
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}COMING SOON...
+  {% highlight swift %}
+  COMING SOON...
 
   {% endhighlight %}
   </div>
