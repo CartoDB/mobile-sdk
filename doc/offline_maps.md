@@ -230,119 +230,122 @@ Use the following steps to implement **single map package** downloading:
     <li class="Tab js-Tabpanes-navItem--lang">
        <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
   </ul>
 
  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
    
-// PackageListener.java :
-   /**
-   * Listener for package manager events.
-   */
-  class PackageListener extends PackageManagerListener {
-    @Override
-    public void onPackageListUpdated() {
-      // called when package list is downloaded
-      // now you can start downloading packages
-    }
-
-    @Override
-    public void onPackageListFailed() {
-      // Failed to download package list
-    }
-
-    @Override
-    public void onPackageStatusChanged(String id, int version, PackageStatus status) {
-      // a portion of package is downloaded. Update your progress bar here.
-    }
-
-    @Override
-    public void onPackageCancelled(String id, int version) {
-      // called when you called cancel package download
-    }
-
-    @Override
-    public void onPackageUpdated(String id, int version) {
-      // called when package is updated
-    }
-
-    @Override
-    public void onPackageFailed(String id, int version, PackageErrorType errorType) {
-      // Failed to download package " + id + "/" + version
-    }
-  }
-
-// Add the following to your activity:
-
-  packageManager.setPackageManagerListener(new PackageListener());
-  packageManager.startPackageListDownload();
+	// PackageListener.java:
+	
+	/*
+	 * Listener for package manager events.
+	 */
+	class PackageListener extends PackageManagerListener {
+	@Override
+	public void onPackageListUpdated() {
+	  // called when package list is downloaded
+	  // now you can start downloading packages
+	}
+	
+	@Override
+	public void onPackageListFailed() {
+	  // Failed to download package list
+	}
+	
+	@Override
+	public void onPackageStatusChanged(String id, int version, PackageStatus status) {
+	  // a portion of package is downloaded. Update your progress bar here.
+	}
+	
+	@Override
+	public void onPackageCancelled(String id, int version) {
+	  // called when you called cancel package download
+	}
+	
+	@Override
+	public void onPackageUpdated(String id, int version) {
+	  // called when package is updated
+	}
+	
+	@Override
+	public void onPackageFailed(String id, int version, PackageErrorType errorType) {
+	  // Failed to download package " + id + "/" + version
+	}
+	}
+	
+	// Add the following to your activity:
+	
+	packageManager.setPackageManagerListener(new PackageListener());
+	packageManager.startPackageListDownload();
    
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight csharp %}
+	  {% highlight csharp %}
+	
+	public class PackageListener : PackageManagerListener
+	{
+		private PackageManager _packageManager;
+		
+		public PackageListener (PackageManager packageManager)
+		{
+			_packageManager = packageManager;
+		}
+		
+		public override void OnPackageListUpdated ()
+		{
+			// called when package list is downloaded
+			// now you can start downloading packages
+			Log.Debug ("OnPackageListUpdated");
+				
+			// to make sure that package list is updated, full package download is called here
+			if (_packageManager.GetLocalPackage ("EE") == null) {
+				_packageManager.StartPackageDownload ("EE");
+			}
+		}
+		
+		public override void OnPackageListFailed ()
+		{
+			Log.Debug ("OnPackageListFailed");
+			// Failed to download package list
+		}
+		
+		public override void OnPackageStatusChanged (string id, int version, PackageStatus status)
+		{
+			// a portion of package is downloaded. Update your progress bar here.
+			// Notice that the view and SDK are in different threads, so data copy id needed
+			Log.Debug ("OnPackageStatusChanged " + id + " ver " + version + " progress " + status.Progress);
+		}
+		
+		public override void OnPackageCancelled (string id, int version)
+		{
+			// called when you called cancel package download
+			Log.Debug ("OnPackageCancelled");
+		}
+		
+		public override void OnPackageUpdated (string id, int version)
+		{
+			// called when package is updated
+			Log.Debug ("OnPackageUpdated");
+		}
+		
+		public override void OnPackageFailed (string id, int version, PackageErrorType errorType)
+		{
+			// Failed to download package " + id + "/" + version
+			Log.Debug ("OnPackageFailed: " + errorType);
+		}
+	}
 
-  public class PackageListener : PackageManagerListener
-  {
-    private PackageManager _packageManager;
+	// Add the following to your activity/controller:
 
-    public PackageListener (PackageManager packageManager)
-    {
-      _packageManager = packageManager;
-    }
-
-    public override void OnPackageListUpdated ()
-    {
-      // called when package list is downloaded
-      // now you can start downloading packages
-      Log.Debug ("OnPackageListUpdated");
-
-      // to make sure that package list is updated, full package download is called here
-      if (_packageManager.GetLocalPackage ("EE") == null) {
-        _packageManager.StartPackageDownload ("EE");
-      }
-       
-    }
-
-    public override void OnPackageListFailed ()
-    {
-      Log.Debug ("OnPackageListFailed");
-      // Failed to download package list
-    }
-
-    public override void OnPackageStatusChanged (string id, int version, PackageStatus status)
-    {
-      // a portion of package is downloaded. Update your progress bar here.
-      // Notice that the view and SDK are in different threads, so data copy id needed
-      Log.Debug ("OnPackageStatusChanged " + id + " ver " + version + " progress " + status.Progress);
-    }
-
-    public override void OnPackageCancelled (string id, int version)
-    {
-      // called when you called cancel package download
-      Log.Debug ("OnPackageCancelled");
-    }
-
-    public override void OnPackageUpdated (string id, int version)
-    {
-      // called when package is updated
-      Log.Debug ("OnPackageUpdated");
-    }
-
-    public override void OnPackageFailed (string id, int version, PackageErrorType errorType)
-    {
-      // Failed to download package " + id + "/" + version
-      Log.Debug ("OnPackageFailed: " + errorType);
-    }
-  }
-
-// Add the following to your activity/controller:
-
-    packageManager.PackageManagerListener = new PackageListener(packageManager);
-    if (packageManager.ServerPackageListAge > 24 * 60 * 60) {
-        packageManager.StartPackageListDownload ();
-    }
+	packageManager.PackageManagerListener = new PackageListener(packageManager);
+	if (packageManager.ServerPackageListAge > 24 * 60 * 60) {
+		packageManager.StartPackageListDownload ();
+	}
 
   {% endhighlight %}
   </div>
@@ -405,26 +408,116 @@ Use the following steps to implement **single map package** downloading:
 
   @end
   
-  // And the following to your Controller class:
+	  // And the following to your Controller class:
 
-// 3. Create listener object instance
+	 // 3. Create listener object instance
       _packageManagerListener = [[PackageManagerListener alloc] init];
 
-// 4. Register this controller with listener to receive notifications about events
+	 // 4. Register this controller with listener to receive notifications about events
       [_packageManagerListener addPackageManagerController:self];
 
-// 5. Attach package manager listener
+	 // 5. Attach package manager listener
       [_packageManager setPackageManagerListener:_packageManagerListener];
 
   {% endhighlight %}
+  
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}COMING SOON...
+  {% highlight swift %}
+  
+	// Create a listener class:
+	public class PackageListener : NTPackageManagerListener {
+	    
+		var manager: NTCartoPackageManager?
+		    
+		convenience init(manager: NTCartoPackageManager?) {
+		    self.init();
+		    self.manager = manager
+		}
+		    
+		public override func onPackageListUpdated() {
+		    
+		    // To make sure that package list is updated, full package download is called here
+		    
+		    // If Estonia package does not exist, start download
+		    if (self.manager?.getLocalPackage ("EE") == nil) {
+		        self.manager?.startPackageDownload ("EE")
+		    }
+		}
+		    
+		public override func onPackageListFailed() {
+		    
+		}
+		    
+		public override func onPackageUpdated(_ arg1: String!, version: Int32) {
+		    // Called when a single package ("EE" in our case) is updated
+		}
+		    
+		public override func onPackageStatusChanged(_ arg1: String!, version: Int32, status: NTPackageStatus!) {
+		    // Called when a single package's status (e.g. download percentage) is changed
+		}
+		override public func onPackageCancelled(_ arg1: String!, version: Int32) {
+		    
+		}
+		
+		public override func onPackageFailed(_ arg1: String!, version: Int32, errorType: NTPackageErrorType) {
+		    
+		}
+	}
+	
+	// And the following to your Controller class:
+	packageManager?.setPackageManagerListener(PackageListener(manager: packageManager))
+	packageManager?.startPackageListDownload()
 
   {% endhighlight %}
   </div>
-  
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  {% highlight kotlin %}
+
+	// Create a listener class:
+	class PackageListener() : PackageManagerListener() {
+	
+	    var manager: CartoPackageManager? = null
+	
+	    constructor(manager: CartoPackageManager) : this() {
+	        this.manager = manager
+	    }
+	
+	    override fun onPackageListUpdated() {
+
+	    }
+	
+	    override fun onPackageListFailed() {
+	
+	    }
+	
+	    override fun onPackageUpdated(id: String?, version: Int) {
+			// Called when a single package ("EE" in our case) is updated
+	    }
+	
+	    override fun onPackageStatusChanged(id: String?, version: Int, status: PackageStatus?) {
+			// Called when a single package's status (e.g. download percentage) is changed
+	    }
+	
+	    override fun onPackageCancelled(id: String?, version: Int) {
+	
+	    }
+	
+	    override fun onPackageFailed(id: String?, version: Int, errorType: PackageErrorType?) {
+	
+	    }
+	}
+	
+	// Initialize and attach that listener in your activity
+	packageManager.packageManagerListener = PackageListener(packageManager);
+	// Start package list download
+	packageManager.startPackageListDownload ()
+
+  {% endhighlight %}
+  </div>
+    
 </div>
 
 *  **Download of country package**
@@ -447,6 +540,9 @@ The following starts download of map of Estonia. See [list of available packages
     </li>
     <li class="Tab js-Tabpanes-navItem--lang">
        <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
     </li>
   </ul>
 
@@ -495,11 +591,32 @@ The following starts download of map of Estonia. See [list of available packages
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}COMING SOON...
+  {% highlight swift %}
+          
+        // To make sure that package list is updated, full package download is called here
+        
+        // If Estonia package does not exist, start download
+        if (self.manager?.getLocalPackage ("EE") == nil) {
+            self.manager?.startPackageDownload ("EE")
+        }
 
   {% endhighlight %}
   </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  {% highlight kotlin %}
   
+  	        // To make sure that package list is updated, full package download is called here
+	
+	        // If Estonia package does not exist, start download
+	        if (this.manager?.getLocalPackage ("EE") == null) {
+	            this.manager?.startPackageDownload ("EE")
+	        }
+
+  {% endhighlight %}
+  </div>  
+  	
+
 </div>
 
 *  **Download of bounding box**
@@ -524,16 +641,19 @@ Bounding box is defined using the following format **bbox(lonMin,latMin,lonMax,l
     <li class="Tab js-Tabpanes-navItem--lang">
        <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
-// London (about 30MB)
-  String bbox = "bbox(-0.8164,51.2382,0.6406,51.7401)"; 
-  if (packageManager.getLocalPackage(bbox) == null) {
-    packageManager.startPackageDownload (bbox);
-  }
+	// London (about 30MB)
+	String bbox = "bbox(-0.8164,51.2382,0.6406,51.7401)"; 
+	if (packageManager.getLocalPackage(bbox) == null) {
+		packageManager.startPackageDownload (bbox);
+	}
 
   {% endhighlight %}
   </div>
@@ -541,11 +661,11 @@ Bounding box is defined using the following format **bbox(lonMin,latMin,lonMax,l
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 
-// London (about 30MB)
-  var bbox = "bbox(-0.8164,51.2382,0.6406,51.7401)"; 
-  if (packageManager.GetLocalPackage(bbox) == null) {
-    packageManager.StartPackageDownload (bbox);
-  }
+	// London (about 30MB)
+	var bbox = "bbox(-0.8164,51.2382,0.6406,51.7401)"; 
+	if (packageManager.GetLocalPackage(bbox) == null) {
+		packageManager.StartPackageDownload (bbox);
+	}
 
   {% endhighlight %}
   </div>
@@ -553,18 +673,36 @@ Bounding box is defined using the following format **bbox(lonMin,latMin,lonMax,l
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
-// Get London greater area, near maximum area package size
- [_packageManager startPackageDownload:@"bbox(-0.8164,51.2383,0.6406,51.7402)"];
+	// Get London greater area (approx 30MB), near maximum area package size
+	[_packageManager startPackageDownload:@"bbox(-0.8164,51.2383,0.6406,51.7402)"];
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}COMING SOON...
+  {% highlight swift %}
+  
+	   // London (about 30MB)
+        let bbox = "bbox(-0.8164,51.2382,0.6406,51.7401)"
+        if (packageManager?.getLocalPackage(bbox) == nil) {
+            packageManager?.startPackageDownload (bbox)
+        }
 
   {% endhighlight %}
   </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  {% highlight kotlin %}
   
+        // London (about 30MB)
+        val bbox = "bbox(-0.8164,51.2382,0.6406,51.7401)"
+        if (packageManager.getLocalPackage(bbox) == null) {
+            packageManager.startPackageDownload (bbox)
+        }
+
+  {% endhighlight %}
+  </div>
+    
 </div>
 
 * **Add datasource with offline map**
@@ -585,12 +723,15 @@ This special Vector Tile Data Source must be used: **PackageManagerTileDataSourc
     <li class="Tab js-Tabpanes-navItem--lang">
        <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
-// 1. Create layer with vector styling
+	   // 1. Create layer with vector styling
         BinaryData styleBytes = AssetUtils.loadAsset("osmbright.zip");
         ZippedAssetPackage assetPackage = new ZippedAssetPackage(styleBytes);
 
@@ -602,7 +743,7 @@ This special Vector Tile Data Source must be used: **PackageManagerTileDataSourc
             vectorTileDecoder = new MBVectorTileDecoder(vectorTileStyleSet);
         }
 
-// 2. Create offline datasource from Package Manager
+	   // 2. Create offline datasource from Package Manager
         PackageManagerTileDataSource dataSource = new PackageManagerTileDataSource(packageManager);
 
         VectorTileLayer baseLayer = new VectorTileLayer(dataSource, vectorTileDecoder);
@@ -615,7 +756,7 @@ This special Vector Tile Data Source must be used: **PackageManagerTileDataSourc
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 
-// Define styling for vector map
+	 // Define styling for vector map
       BinaryData styleBytes = AssetUtils.LoadAsset("osmbright.zip");
       ZippedAssetPackage assetPackage = new ZippedAssetPackage(styleBytes);
 
@@ -640,7 +781,7 @@ This special Vector Tile Data Source must be used: **PackageManagerTileDataSourc
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
-// 1. Load vector tile styleset
+	 // 1. Load vector tile styleset
       NSString* styleAssetName = @"osmbright.zip";
       
       NTBinaryData *vectorTileStyleSetData = [NTAssetUtils loadAsset:styleAssetName];
@@ -648,7 +789,7 @@ This special Vector Tile Data Source must be used: **PackageManagerTileDataSourc
       
       NTCompiledStyleSet *vectorTileStyleSet = [[NTCompiledStyleSet alloc] initWithAssetPackage:package];
     
-// 2. Create vector tile decoder using the styleset and update style parameters
+	 // 2. Create vector tile decoder using the styleset and update style parameters
       NTMBVectorTileDecoder* vectorTileDecoder = [[NTMBVectorTileDecoder alloc] initWithCompiledStyleSet:vectorTileStyleSet];
       [vectorTileDecoder setStyleParameter:@"lang" value:@"en"];
       
@@ -656,24 +797,67 @@ This special Vector Tile Data Source must be used: **PackageManagerTileDataSourc
       [vectorTileDecoder setStyleParameter:@"buildings3d" value:@"YES"];
       [vectorTileDecoder setStyleParameter:@"markers3d" value:@"1"];
     
-// 3. Create tile data source from PackageManager
+	 // 3. Create tile data source from PackageManager
       NTTileDataSource* vectorTileDataSource = [[NTPackageManagerTileDataSource alloc] initWithPackageManager:_packageManager];
     
-// 4. Create vector tile layer, using previously created data source and decoder
+	 // 4. Create vector tile layer, using previously created data source and decoder
       NTVectorTileLayer* baseLayer = [[NTVectorTileLayer alloc] initWithDataSource:vectorTileDataSource decoder:self.vectorTileDecoder];
     
-// 5. Add vector tile layer as first layer
+	 // 5. Add vector tile layer as first layer
       [[mapView getLayers] insert:0 layer:baseLayer];
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}COMING SOON...
+  {% highlight swift %}
+  
+        // 1. Create layer with vector styling
+        let styleBytes = NTAssetUtils.loadAsset("osmbright.zip")
+        let assetPackage = NTZippedAssetPackage(zip: styleBytes)
+        
+        var vectorTileDecoder: NTMBVectorTileDecoder?
+        
+        if (styleBytes != nil) {
+            // Create style set
+            let vectorTileStyleSet = NTCompiledStyleSet(assetPackage: assetPackage)
+            vectorTileDecoder = NTMBVectorTileDecoder(compiledStyleSet: vectorTileStyleSet);
+        }
+        
+        // 2. Create offline datasource from Package Manager
+        let dataSource = NTPackageManagerTileDataSource(packageManager: packageManager);
+        
+        let baseLayer = NTVectorTileLayer(dataSource: dataSource, decoder: vectorTileDecoder)
+        self.mapView?.getLayers().add(baseLayer)
 
   {% endhighlight %}
   </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  {% highlight kotlin %}
   
+        // 1. Create layer with vector styling
+        val styleBytes = AssetUtils.loadAsset("osmbright.zip")
+        val assetPackage = ZippedAssetPackage(styleBytes)
+
+        var vectorTileDecoder: MBVectorTileDecoder? = null
+
+        if (styleBytes != null) {
+            // Create style set
+            val vectorTileStyleSet = CompiledStyleSet(assetPackage)
+            vectorTileDecoder = MBVectorTileDecoder(vectorTileStyleSet);
+        }
+
+        // 2. Create offline datasource from Package Manager
+        val dataSource = PackageManagerTileDataSource(packageManager);
+
+        val baseLayer = VectorTileLayer(dataSource, vectorTileDecoder);
+
+        mapView?.layers?.add(baseLayer)
+
+  {% endhighlight %}
+  </div>
+    
 </div>
 
 ## Updating Packages
