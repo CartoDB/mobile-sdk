@@ -228,6 +228,8 @@ If using Android as the mobile platform, follow this implementation procedure.
 
   Define the MapView type in your main activity class and load layout. This enables you to load the MapView from the layout. _The object itself was already created during the layout creation process, this step is specific to finding and referencing the MapView object in your request._
 
+#### Java
+
 {% highlight java %}
 
 	public class HelloMap3DActivity extends Activity {
@@ -243,6 +245,27 @@ If using Android as the mobile platform, follow this implementation procedure.
 	}
 {% endhighlight %}
 
+#### Kotlin
+
+{% highlight kotlin %}
+
+class MainActivity : AppCompatActivity() {
+    val LICENSE = "<YOUR-LICENSE-KEY"
+
+    var mapView: MapView? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.main);
+
+        MapView.registerLicense(LICENSE, this)
+
+	   mapView = findViewById(R.id.mapView) as MapView
+
+    }
+    
+{% endhighlight %}
+
 5) Initialize the mobile map
 
   The map object needs a default map source in order to initialize. There are several requirements for this to work properly.
@@ -251,28 +274,31 @@ If using Android as the mobile platform, follow this implementation procedure.
 
   - Define the first layer of the map, which will be the basemap layer. This is a vector map layer, which requires that you load and define styles in the assets of this layer. You can also add other map layers once a basemap is configured
 
-#### Example - Android Code
+#### Example 
 
 The following example shows the complete code for initializing your Android mobile map.
 
-{% highlight java %}
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
+#### Java
 
-        // 1. Register and replace your Mobile API license key. This must be done before using MapView!
-        MapView.registerLicense("YOUR_LICENSE_KEY", getApplicationContext());
- 
-        // 2. Create map view 
-        mapView = (MapView) this.findViewById(R.id.mapView);
- 
-        // 3. Create basemap layer. Use vector style from assets
-        CartoOnlineVectorTileLayer baseLayer = new CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_DEFAULT);
- 
-        // 4. Add layer to map
-        mapView.getLayers().add(baseLayer);
-    }
+	{% highlight java %}
+	
+	// Create basemap layer with bundled style
+	CartoOnlineVectorTileLayer baseLayer = new CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_DEFAULT);
+	 
+	// Add layer to map
+	mapView.getLayers().add(baseLayer);
+
+{% endhighlight %}
+
+#### Kotlin
+
+{% highlight kotlin %}
+	   
+	// Create basemap layer with bundled style
+	val layer = CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_DEFAULT)
+	// Add layer to map
+	mapView?.layers?.add(layer)
+
 {% endhighlight %}
 
 You can now start using the application on your phone and view the default basemap.
