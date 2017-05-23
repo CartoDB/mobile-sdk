@@ -18,6 +18,7 @@ namespace carto {
         _cache(DEFAULT_CAPACITY),
         _mutex()
     {
+        _downloadThreadPool->setPoolSize(1);
         openDatabase(databasePath);
     }
     
@@ -37,8 +38,8 @@ namespace carto {
         _cacheOnlyMode = enabled;
     }
 
-    void PersistentCacheTileDataSource::startDownloadArea(const MapBounds& mapBounds, int minZoom, int maxZoom, const std::shared_ptr<TileDownloadListener>& listener) {
-        auto task = std::make_shared<DownloadTask>(std::static_pointer_cast<PersistentCacheTileDataSource>(shared_from_this()), mapBounds, minZoom, maxZoom, listener);
+    void PersistentCacheTileDataSource::startDownloadArea(const MapBounds& mapBounds, int minZoom, int maxZoom, const std::shared_ptr<TileDownloadListener>& tileDownloadListener) {
+        auto task = std::make_shared<DownloadTask>(std::static_pointer_cast<PersistentCacheTileDataSource>(shared_from_this()), mapBounds, minZoom, maxZoom, tileDownloadListener);
         _downloadThreadPool->execute(task, 0);
     }
 
@@ -313,7 +314,7 @@ namespace carto {
             tileCount += dx * dy;
         }
 
-        Log::Infof("PersisentCacheTileDataSource:: DownloadTask: Starting to download %d tiles", static_cast<int>(tileCount));
+        Log::Infof("PersistentCacheTileDataSource:: DownloadTask: Starting to download %d tiles", static_cast<int>(tileCount));
 
         std::uint64_t tileIndex = 0;
         for (int zoom = minZoom; zoom <= maxZoom; zoom++) {
@@ -336,7 +337,7 @@ namespace carto {
                     MapTile mapTile(x, y, zoom, 0);
                     std::shared_ptr<TileData> tileData;
                     if (auto dataSource = _dataSource.lock()) {
-                        tileData = dataSource->loadTile(mapTile);
+                        tileData = dataSource->loadTile(mapTile.getFlipped());
                     } else {
                         return;
                     }
@@ -354,7 +355,7 @@ namespace carto {
             _downloadListener->onDownloadComplete();
         }
 
-        Log::Info("PersisentCacheTileDataSource:: DownloadTask: Finished downloading");
+        Log::Info("PersistentCacheTileDataSource:: DownloadTask: Finished downloading");
     }
 
 }

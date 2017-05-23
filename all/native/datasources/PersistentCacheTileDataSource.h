@@ -64,9 +64,9 @@ namespace carto {
          * @param mapBounds The bounds of the area to download. The coordinate system of the bounds must be the same as specified in the data source projection.
          * @param minZoom The minimum zoom of the tiles to load.
          * @param maxZoom The maximum zoom of the tiles to load.
-         * @param listener The tile loading listener to use that will receive download related callbacks.
+         * @param tileDownloadListener The tile download listener to use that will receive download related callbacks.
          */
-        void startDownloadArea(const MapBounds& mapBounds, int minZoom, int maxZoom, const std::shared_ptr<TileDownloadListener>& listener);
+        void startDownloadArea(const MapBounds& mapBounds, int minZoom, int maxZoom, const std::shared_ptr<TileDownloadListener>& tileDownloadListener);
         /**
          * Stops all background downloader processes.
          */
