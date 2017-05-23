@@ -30,6 +30,7 @@
 #import "NTMemoryCacheTileDataSource.h"
 #import "NTPersistentCacheTileDataSource.h"
 #import "NTLocalVectorDataSource.h"
+#import "NTTileDownloadListener.h"
 
 #import "NTFeature.h"
 #import "NTFeatureCollection.h"

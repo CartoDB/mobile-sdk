@@ -13,7 +13,7 @@
 #include "projections/Projection.h"
 #include "ui/UTFGridClickInfo.h"
 #include "utils/Const.h"
-#include "utils/GeomUtils.h"
+#include "utils/TileUtils.h"
 #include "utils/Log.h"
 
 namespace carto {
@@ -121,25 +121,15 @@ namespace carto {
     }
     
     MapTile TileLayer::calculateMapTile(const MapPos& mapPos, int zoom) const {
-        double tileWidth = _dataSource->getProjection()->getBounds().getDelta().getX() / (1 << zoom);
-        double tileHeight = _dataSource->getProjection()->getBounds().getDelta().getY() / (1 << zoom);
-        MapVec mapVec = mapPos - _dataSource->getProjection()->getBounds().getMin();
-        int x = static_cast<int>(std::floor(mapVec.getX() / tileWidth));
-        int y = static_cast<int>(std::floor(mapVec.getY() / tileHeight));
-        return MapTile(x, y, zoom, 0);
+        return TileUtils::CalculateMapTile(mapPos, zoom, _dataSource->getProjection());
     }
     
     MapPos TileLayer::calculateMapTileOrigin(const MapTile& mapTile) const {
-        double tileWidth = _dataSource->getProjection()->getBounds().getDelta().getX() / (1 << mapTile.getZoom());
-        double tileHeight = _dataSource->getProjection()->getBounds().getDelta().getY() / (1 << mapTile.getZoom());
-        MapVec mapVec(mapTile.getX() * tileWidth, mapTile.getY() * tileHeight);
-        return _dataSource->getProjection()->getBounds().getMin() + mapVec;
+        return TileUtils::CalculateMapTileOrigin(mapTile, _dataSource->getProjection());
     }
 
     MapBounds TileLayer::calculateMapTileBounds(const MapTile& mapTile) const {
-        MapPos pos0 = calculateMapTileOrigin(mapTile);
-        MapPos pos1 = calculateMapTileOrigin(MapTile(mapTile.getX() + 1, mapTile.getY() + 1, mapTile.getZoom(), mapTile.getFrameNr()));
-        return MapBounds(pos0, pos1);
+        return TileUtils::CalculateMapTileBounds(mapTile, _dataSource->getProjection());
     }
     
     void TileLayer::clearTileCaches(bool all) {
