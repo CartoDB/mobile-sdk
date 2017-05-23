@@ -29,6 +29,7 @@
 %attributeval(carto::CartoMapsService, %arg(std::vector<std::string>), AuthTokens, getAuthTokens, setAuthTokens)
 %attribute(carto::CartoMapsService, bool, Interactive, isInteractive, setInteractive)
 %attribute(carto::CartoMapsService, bool, DefaultVectorLayerMode, isDefaultVectorLayerMode, setDefaultVectorLayerMode)
+%attribute(carto::CartoMapsService, float, VectorTileBufferSize, getVectorTileBufferSize, setVectorTileBufferSize)
 %attribute(carto::CartoMapsService, bool, StrictMode, isStrictMode, setStrictMode)
 %attributestring(carto::CartoMapsService, std::shared_ptr<carto::AssetPackage>, VectorTileAssetPackage, getVectorTileAssetPackage, setVectorTileAssetPackage)
 %std_io_exceptions(carto::CartoMapsService::buildMap)
