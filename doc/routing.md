@@ -117,32 +117,52 @@ Online routing requires that you create a simple call and request to calculate t
     <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
   </ul>
 
+
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
+  {% highlight java %}
+  
+	CartoOnlineRoutingService onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight csharp %}onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
+  {% highlight csharp %}
+  
+	var onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
 
   {% endhighlight %}
   </div>
 
    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}_onlineRoutingService = [[NTCartoOnlineRoutingService alloc] initWithSource:@"nutiteq.osm.car"];
+  {% highlight objc %}
+  
+  	NTCartoOnlineRoutingService* _onlineRoutingService = [[NTCartoOnlineRoutingService alloc] initWithSource:@"nutiteq.osm.car"];
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}COMING SOON...
+  {% highlight swift %}
+  
+	let onlineRoutingService = NTCartoOnlineRoutingService(source: "nutiteq.osm.car");
 
   {% endhighlight %}
   </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  {% highlight kotlin %}
   
+	val onlineRoutingService = CartoOnlineRoutingService("nutiteq.osm.car");
+
+  {% endhighlight %}
+  </div>
+    
 </div>
 
 2) Calculate the route with the `calculateRoute` request
@@ -165,10 +185,15 @@ These code samples display how to show navigation instructions on the map, as in
     <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}AsyncTask<Void, Void, RoutingResult> task = new AsyncTask<Void, Void, RoutingResult>() {
+  {% highlight java %}
+  
+  AsyncTask<Void, Void, RoutingResult> task = new AsyncTask<Void, Void, RoutingResult>() {
 
             protected RoutingResult doInBackground(Void... v) {
                 MapPosVector poses = new MapPosVector();
@@ -210,7 +235,9 @@ These code samples display how to show navigation instructions on the map, as in
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight csharp %}ThreadPool.QueueUserWorkItem(delegate
+  {% highlight csharp %}
+  
+    ThreadPool.QueueUserWorkItem(delegate
     {
       MapPosVector poses = new MapPosVector();
       poses.Add(startPos);
@@ -287,11 +314,72 @@ These code samples display how to show navigation instructions on the map, as in
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}COMING SOON...
+  {% highlight swift %}
+  
+        // Sample positions, from from Tallinn (Estonia) to Tartu (Estonia)
+        let startPos = projection?.fromWgs84(NTMapPos(x: 24.7536, y: 59.4370))
+        let stopPos = projection?.fromWgs84(NTMapPos(x: 26.7290, y: 58.3776))
+        
+        // This calculation should be in background thread
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let poses = NTMapPosVector()
+            poses?.add(startPos)
+            poses?.add(stopPos)
+            
+            let request = NTRoutingRequest(projection: projection, points: poses)
+            let result = onlineRoutingService?.calculateRoute(request)
+            
+            let km = ((result?.getTotalDistance())! / 100) / 10
+            let seconds = result?.getTotalTime()
+            let routeText = "The route is \(km) km ( \(seconds) s)"
+            
+            print("RouteText: " + routeText)
+            
+            // Get instruction details
+            let instructions = result?.getInstructions()
+            
+            for i in 0..<Int((instructions?.size())!) {
+                let instruction = instructions?.get(Int32(i))
+            }
+        }
 
   {% endhighlight %}
   </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  {% highlight kotlin %}
   
+        // Sample positions, from from Tallinn (Estonia) to Tartu (Estonia)
+        val startPos = projection?.fromWgs84(MapPos(24.7536, 59.4370))
+        val stopPos = projection?.fromWgs84(MapPos(26.7290, 58.3776))
+
+        // Remember: Put your operations back on the main thread to change the UI
+        // Note:
+        // doAsync requires anko coroutines dependency
+        // compile "org.jetbrains.anko:anko-sdk25-coroutines:$anko_version"
+        doAsync {
+
+            val poses = MapPosVector()
+            poses.add(startPos)
+            poses.add(stopPos)
+
+            val request = RoutingRequest(projection, poses)
+            val result = onlineRoutingService.calculateRoute(request)
+
+            val routeText = "The route is " + (result.totalDistance / 100) / 10f + "km (" + result.totalTime + " s)"
+            println("RouteText: " + routeText)
+            // get instruction details
+            val instructions = result.instructions
+
+            for (i in 0..instructions.size()) {
+                val instruction = instructions.get(i.toInt())
+            }
+        }
+
+  {% endhighlight %}
+  </div>
+    
 </div>
 
 **Tip:** As processing online queries may take some time, it is suggested to use a background task for more efficient performance. Use the following code to apply online routing to your application:
@@ -310,7 +398,11 @@ These code samples display how to show navigation instructions on the map, as in
     <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
   </ul>
+
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}COMING SOON...{% endhighlight %}
