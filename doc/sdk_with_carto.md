@@ -77,6 +77,12 @@ The following snippet sets up the config (SQL and CartoCSS) we are going to use 
   <li class="Tab js-Tabpanes-navItem--lang">
     <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
   </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+  </li>
 </ul>
 
 <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
@@ -289,6 +295,21 @@ The following snippet sets up the config (SQL and CartoCSS) we are going to use 
 
 {% endhighlight %}
 </div>
+
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+{% highlight swift %}
+
+
+{% endhighlight %}
+</div>
+
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+{% highlight kotlin %}
+
+
+{% endhighlight %}
+</div>
+
 </div>
 
 Now that the config is set up, you can apply the actual query. This snippet is for querying data from an anonymous vector table (change the default vector layer mode to false if you are using a raster table).
@@ -304,6 +325,12 @@ Now that the config is set up, you can apply the actual query. This snippet is f
   </li>
   <li class="Tab js-Tabpanes-navItem--lang">
     <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
   </li>
 </ul>
 
@@ -398,6 +425,21 @@ serviceThread.start();
 
 {% endhighlight %}
 </div>
+
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+{% highlight swift %}
+
+
+{% endhighlight %}
+</div>
+
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+{% highlight kotlin %}
+
+
+{% endhighlight %}
+</div>
+
 </div>
 
 #### If you have the name of a map, use that to query data, instead of providing the SQL or CartoCSS
@@ -413,6 +455,12 @@ serviceThread.start();
   </li>
   <li class="Tab js-Tabpanes-navItem--lang">
     <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
   </li>
 </ul>
 
@@ -499,7 +547,21 @@ for (int i = 0; i < [layers size]; i++) {
 
 {% endhighlight %}
 </div>
-  
+
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+{% highlight swift %}
+
+
+{% endhighlight %}
+</div>
+
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+{% highlight kotlin %}
+
+
+{% endhighlight %}
+</div>
+
 </div>
 
 ### SQL API
@@ -510,17 +572,23 @@ CARTO’s [SQL API](https://carto.com/docs/carto-engine/sql-api/) allows you to 
 
 <div class="js-TabPanes">
 
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-  </ul>
+<ul class="Tabs">
+  <li class="Tab js-Tabpanes-navItem--lang is-active">
+    <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+  </li>
+</ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
@@ -634,6 +702,21 @@ CARTO’s [SQL API](https://carto.com/docs/carto-engine/sql-api/) allows you to 
 
   {% endhighlight %}
   </div>
+  
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+{% highlight swift %}
+
+
+{% endhighlight %}
+</div>
+
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+{% highlight kotlin %}
+
+
+{% endhighlight %}
+</div>
+
 </div>
 
 ### CARTO.js
@@ -664,18 +747,28 @@ In order to integrate your published mobile map into your app, you need a callba
 
 4) The typical (minimal) request for `_CartoVisBuilder_` implementation requires the following, which you can append from your main ViewController.mm
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-      <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-  </ul>
+<ul class="Tabs">
+  <li class="Tab js-Tabpanes-navItem--lang is-active">
+    <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+  </li>
+</ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}private class MyCartoVisBuilder extends CartoVisBuilder {
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+{% highlight java %}
+  
+  private class MyCartoVisBuilder extends CartoVisBuilder {
 
         @Override
         public void setCenter(MapPos mapPos) {
@@ -699,11 +792,21 @@ In order to integrate your published mobile map into your app, you need a callba
             mapView.getLayers().add(layer);
         }
     }
-  {% endhighlight %}
-  </div>
+    
+{% endhighlight %}
+</div>
 
-   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-      {% highlight objc %}@interface MyCartoVisBuilder : NTCartoVisBuilder
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+{% highlight csharp %}
+
+
+{% endhighlight %}
+</div>
+
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+{% highlight objc %}
+     
+    @interface MyCartoVisBuilder : NTCartoVisBuilder
 
     @property NTMapView* mapView;
 
@@ -736,28 +839,51 @@ In order to integrate your published mobile map into your app, you need a callba
 
     @end
 
-      {% endhighlight %}
- 
-  </div>
-    
+{% endhighlight %}
+</div>
+
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+{% highlight swift %}
+
+
+{% endhighlight %}
+</div>
+
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+{% highlight kotlin %}
+
+
+{% endhighlight %}
+</div>
+
 </div>
 
 5) Load the CARTO visualization
 
   As it uses an online connection, ensure it runs on a background thread:
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-     <li class="Tab js-Tabpanes-navItem--lang is-active">
-       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-  </ul>
+<ul class="Tabs">
+  <li class="Tab js-Tabpanes-navItem--lang is-active">
+    <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+  </li>
+  <li class="Tab js-Tabpanes-navItem--lang">
+    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+  </li>
+</ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}private String visJSONURL = "http://documentation.carto.com/api/v2/viz/2b13c956-e7c1-11e2-806b-5404a6a683d5/viz.json";
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+{% highlight java %}
+  
+  private String visJSONURL = "http://documentation.carto.com/api/v2/viz/2b13c956-e7c1-11e2-806b-5404a6a683d5/viz.json";
 
   Thread thread = new Thread(new Runnable() {
             @Override
@@ -786,11 +912,20 @@ In order to integrate your published mobile map into your app, you need a callba
         });
         thread.start(); 
 
-  {% endhighlight %}
-  </div>
+{% endhighlight %}
+</div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+{% highlight csharp %}
+
+
+{% endhighlight %}
+</div>
+
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+{% highlight objc %}
+  
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         // just make sure no other layers are on map
         [[mapView getLayers] clear];
         
@@ -807,9 +942,24 @@ In order to integrate your published mobile map into your app, you need a callba
         [loader loadVis:visBuilder visURL:@"http://documentation.carto.com/api/v2/viz/2b13c956-e7c1-11e2-806b-5404a6a683d5/viz.json"];
         
     });
-      {% endhighlight %}
- 
-  </div>
+    
+{% endhighlight %}
+</div>
+  
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+{% highlight swift %}
+
+
+{% endhighlight %}
+</div>
+
+<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+{% highlight kotlin %}
+
+
+{% endhighlight %}
+</div>
+
 </div>
 
 6) Run your mobile app
