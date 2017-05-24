@@ -781,7 +781,7 @@ This special Vector Tile Data Source must be used: **PackageManagerTileDataSourc
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
-	 // 1. Load vector tile styleset
+	 // 1. Load vector tile style set
       NSString* styleAssetName = @"osmbright.zip";
       
       NTBinaryData *vectorTileStyleSetData = [NTAssetUtils loadAsset:styleAssetName];
@@ -789,7 +789,7 @@ This special Vector Tile Data Source must be used: **PackageManagerTileDataSourc
       
       NTCompiledStyleSet *vectorTileStyleSet = [[NTCompiledStyleSet alloc] initWithAssetPackage:package];
     
-	 // 2. Create vector tile decoder using the styleset and update style parameters
+	 // 2. Create vector tile decoder using the style set and update style parameters
       NTMBVectorTileDecoder* vectorTileDecoder = [[NTMBVectorTileDecoder alloc] initWithCompiledStyleSet:vectorTileStyleSet];
       [vectorTileDecoder setStyleParameter:@"lang" value:@"en"];
       

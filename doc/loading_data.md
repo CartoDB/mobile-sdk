@@ -127,11 +127,11 @@ Use the following code to use MBtiles for a vector layer:
 	 // 1. Create tile data source from mbtiles file
       MBTilesTileDataSource tileDataSource = new MBTilesTileDataSource("/sdcard/estonia_ntvt.mbtiles");
 
-	 // 2. Load vector tile styleset
+	 // 2. Load vector tile style set
       BinaryData styleBytes = AssetUtils.loadAsset("osmbright.zip");
       CompiledStyleSet vectorTileStyleSet = new CompiledStyleSet(new ZippedAssetPackage(styleBytes));
 
-	 // 3. Create vector tile decoder using the styleset
+	 // 3. Create vector tile decoder using the style set
       VectorTileDecoder vectorTileDecoder = new MBVectorTileDecoder(vectorTileStyleSet);
 
 	 // 4. Create vector tile layer, using previously created data source and decoder
@@ -149,11 +149,11 @@ Use the following code to use MBtiles for a vector layer:
 	 // 1. Create tile data source from mbtiles file
       var tileDataSource = new MBTilesTileDataSource("world_zoom5.mbtiles");
 
-	 // 2. Load vector tile styleset
+	 // 2. Load vector tile style set
       var styleBytes = AssetUtils.LoadAsset("nutiteq-dark.zip");
       var vectorTileStyleSet = new CompiledStyleSet(new ZippedAssetPackage(styleBytes));
 
-	 // 3. Create vector tile decoder using the styleset
+	 // 3. Create vector tile decoder using the style set
       var vectorTileDecoder = new MBVectorTileDecoder(vectorTileStyleSet);
 
 	 // 4. Create vector tile layer, using previously created data source and decoder
@@ -171,12 +171,12 @@ Use the following code to use MBtiles for a vector layer:
 	NSString* fullpathVT = [[NSBundle mainBundle] pathForResource:@"estonia_ntvt" ofType:@"mbtiles"];
 	NTTileDataSource* tileDataSource = [[NTMBTilesTileDataSource alloc] initWithMinZoom:0 maxZoom:4 path: fullpathVT];
     
-	// 1. Load vector tile styleset
+	// 1. Load vector tile style set
 	NTBinaryData *vectorTileStyleSetData = [NTAssetUtils loadAsset: @"osmbright.zip"];
 	NTZippedAssetPackage *package = [[NTZippedAssetPackage alloc] initWithZipData:vectorTileStyleSetData];
 	NTCompiledStyleSet *vectorTileStyleSet = [[NTCompiledStyleSet alloc] initWithAssetPackage:package];
     
-	// 2. Create vector tile decoder using the styleset
+	// 2. Create vector tile decoder using the style set
 	NTMBVectorTileDecoder *vectorTileDecoder = [[NTMBVectorTileDecoder alloc] initWithCompiledStyleSet:vectorTileStyleSet];
     
 	// 3. Create vector tile layer, using previously created data source and decoder
@@ -195,11 +195,11 @@ Use the following code to use MBtiles for a vector layer:
         let path = Bundle.main.path(forResource: "estonia_ntvt", ofType: "mbtiles")
         let tileDataSource = NTMBTilesTileDataSource(path: path)
         
-        // 2. Load vector tile styleset
+        // 2. Load vector tile style set
         let styleBytes = NTAssetUtils.loadAsset("osmbright.zip")
         let vectorTileStyleSet = NTCompiledStyleSet(assetPackage: NTZippedAssetPackage(zip: styleBytes))
         
-        // 3. Create vector tile decoder using the styleset
+        // 3. Create vector tile decoder using the style set
         let vectorTileDecoder = NTMBVectorTileDecoder(compiledStyleSet: vectorTileStyleSet)
         
         // 4. Create vector tile layer, using previously created data source and decoder
@@ -218,11 +218,11 @@ Use the following code to use MBtiles for a vector layer:
         val path = Environment.getExternalStorageDirectory().path + "/estonia_ntvt.mbtiles"
         val tileDataSource = MBTilesTileDataSource(path)
 
-        // 2. Load vector tile styleset
+        // 2. Load vector tile style set
         val styleBytes = AssetUtils.loadAsset("osmbright.zip")
         val vectorTileStyleSet = CompiledStyleSet(ZippedAssetPackage(styleBytes))
 
-        // 3. Create vector tile decoder using the styleset
+        // 3. Create vector tile decoder using the style set
         val vectorTileDecoder = MBVectorTileDecoder(vectorTileStyleSet)
 
         // 4. Create vector tile layer, using previously created data source and decoder
@@ -370,11 +370,11 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
 	// 1. Define data source
   	TileDataSource tileDataSource = new HTTPTileDataSource(0, 14, "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN");
 
-	// 2. Load vector tile styleset
+	// 2. Load vector tile style set
  	BinaryData styleBytes = AssetUtils.loadAsset("osmbright.zip");
      CompiledStyleSet vectorTileStyleSet = new CompiledStyleSet(new ZippedAssetPackage(styleBytes));
 
-	// 3. Create vector tile decoder using the styleset
+	// 3. Create vector tile decoder using the style set
      VectorTileDecoder vectorTileDecoder = new MBVectorTileDecoder(vectorTileStyleSet);
 
 	// 4. Create vector tile layer, using previously created data source and decoder
@@ -392,11 +392,11 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
 	// 1. Define data source
      var tileDataSource = new HTTPTileDataSource(0, 14, "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN");
 
-	// 2. Load vector tile styleset
+	// 2. Load vector tile style set
      var styleBytes = AssetUtils.LoadAsset("nutiteq-dark.zip");
      var vectorTileStyleSet = new CompiledStyleSet(new ZippedAssetPackage(styleBytes));
 
-	// 3. Create vector tile decoder using the styleset
+	// 3. Create vector tile decoder using the style set
      var vectorTileDecoder = new MBVectorTileDecoder(vectorTileStyleSet);
 
 	// 4. Create vector tile layer, using previously created data source and decoder
@@ -414,12 +414,12 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
 	// 1. Define data source
 	NTTileDataSource* tileDataSource = [[NTHTTPTileDataSource alloc] initWithMinZoom:0 maxZoom:14 baseURL:@"http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN"];
 	    
-	// 2. Load vector tile styleset
+	// 2. Load vector tile style set
 	NTBinaryData *vectorTileStyleSetData = [NTAssetUtils loadAsset: @"osmbright.zip"];
 	NTZippedAssetPackage *package = [[NTZippedAssetPackage alloc] initWithZipData:vectorTileStyleSetData];
 	NTCompiledStyleSet *vectorTileStyleSet = [[NTCompiledStyleSet alloc] initWithAssetPackage:package];
 	    
-	// 3. Create vector tile decoder using the styleset
+	// 3. Create vector tile decoder using the style set
 	NTMBVectorTileDecoder *vectorTileDecoder = [[NTMBVectorTileDecoder alloc] initWithCompiledStyleSet:vectorTileStyleSet];
 	    
 	// 4. Create vector tile layer, using previously created data source and decoder
@@ -438,11 +438,11 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
 	let url = "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN"
 	let tileDataSource = NTHTTPTileDataSource(minZoom: 0, maxZoom: 14, baseURL: url)
 	    
-	// 2. Load vector tile styleset
+	// 2. Load vector tile style set
 	let styleBytes = NTAssetUtils.loadAsset("osmbright.zip")
 	let vectorTileStyleSet = NTCompiledStyleSet(assetPackage: NTZippedAssetPackage(zip: styleBytes))
 	    
-	// 3. Create vector tile decoder using the styleset
+	// 3. Create vector tile decoder using the style set
 	let vectorTileDecoder = NTMBVectorTileDecoder(compiledStyleSet: vectorTileStyleSet)
 	    
 	// 4. Create vector tile layer, using previously created data source and decoder
@@ -461,11 +461,11 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
 	val url = "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN"
 	val tileDataSource = HTTPTileDataSource(0, 14, url)
 	
-	// 2. Load vector tile styleset
+	// 2. Load vector tile style set
 	val styleBytes = AssetUtils.loadAsset("osmbright.zip")
 	val vectorTileStyleSet = CompiledStyleSet(ZippedAssetPackage(styleBytes))
 	
-	// 3. Create vector tile decoder using the styleset
+	// 3. Create vector tile decoder using the style set
 	val vectorTileDecoder = MBVectorTileDecoder(vectorTileStyleSet)
 	
 	// 4. Create vector tile layer, using previously created data source and decoder

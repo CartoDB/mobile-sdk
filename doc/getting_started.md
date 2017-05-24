@@ -935,7 +935,7 @@ Add a marker and apply marker styling using the following code:
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
-	 // 1. Create a marker style, we use default marker bitmap here
+	 // 1. Create a marker style, using default marker bitmap here
       NTMarkerStyleBuilder* markerStyleBuilder = [[NTMarkerStyleBuilder alloc] init];
       // Styles use dpi-independent units, no need to adjust it for retina
      [markerStyleBuilder setSize:30];
@@ -1106,7 +1106,7 @@ Add a point and apply point styling using the following code:
       NTPointStyleBuilder* pointStyleBuilder = [[NTPointStyleBuilder alloc] init];
 
       // Color is defined as ARGB integer, i.e. following is opaque green
-      // You can not use UIColor (or any other ObjectiveC specific class) in Carto mobile SDK
+	 // You can not use UIColor (or any other UIKit-specific class) in CARTO Mobile SDK
      
       [pointStyleBuilder setColor:[[NTColor alloc] initWithColor:0xFF00FF00]];
       [pointStyleBuilder setSize:16];
@@ -1509,8 +1509,8 @@ Add a polygon and apply polygon styling using the following code. The following 
       [polygonStyleBuilder setLineStyle:[lineStyleBuilder buildStyle]];
 
 	 // 2. Define polygon coordinates
-	 // First define outline as MapPosVector, which is array of MapPos
-	 // We cannot use Objective C objects, like NSArray in CARTO mobile SDK, 
+	 // First define outline as MapPosVector, which is an array of MapPos
+	 // We cannot use Objective C objects, like NSArray in CARTO Mobile SDK, 
 	 // so there are special objects for collections
       MapPosVector* polygonPoses = [[MapPosVector alloc] init];
       NTMapPos* initial = [proj fromWgs84:[[NTMapPos alloc] initWithX:24.650930 y:59.421659]];
@@ -1942,7 +1942,7 @@ A BalloonPopup appears based on click event of an object. You can also add a def
     // Higher priority ensures that baloon is visible when overlaps with other billboards
   [balloonPopupStyleBuilder setPlacementPriority:1];
  
-	 // 3. Sefine location
+	 // 3. Define location
       NTMapPos* pos = [proj fromWgs84:[[NTMapPos alloc] initWithX:24.655662 y:59.425521]];
 
 	 // 4. Create BalloonPopup and add to datasource
@@ -2038,7 +2038,7 @@ The following procedure describes how to setup and add a 3D object to your mobil
 
     **Tip:** You can retrieve some free samples from [Nutiteq's NHL sample page](https://github.com/nutiteq/hellomap3d/wiki/NML-model-samples).
 
-    If you have own model as Collada DAE (or KMZ) format, then you would need **Carto Mobile 3D converter tools** to convert it to NML, so it can be used in mobile. Please [contact us](mailto:sales@carto.com) for more information.
+    If you have own model as Collada DAE (or KMZ) format, then you would need **CARTO Mobile 3D converter tools** to convert it to NML, so it can be used in mobile. Please [contact us](mailto:sales@carto.com) for more information.
 
 2. Adjust the file size of the 3D object for rendering
 
