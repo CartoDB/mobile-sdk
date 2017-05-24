@@ -299,6 +299,51 @@ The following snippet sets up the config (SQL and CartoCSS) we are going to use 
 <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
 {% highlight swift %}
 
+public func getConfig() -> String? {
+    
+    let options = NSDictionary(dictionaryLiteral:
+        ("sql","select * from stations_1"),
+        ("cartocss", getCartoCSS()),
+        ("cartocss_version", "2.1.1"),
+        ("interactivity", getInteractivityJson()),
+        ("attributes", getAttributesJson())
+    )
+    
+    let layerArray = NSMutableArray()
+    let layerJson = NSDictionary(dictionaryLiteral: ("options", options), ("type", "cartodb"))
+    
+    layerArray.add(layerJson)
+    
+    let json = NSDictionary(dictionaryLiteral:
+        ("version", "1.0.1"),
+        ("stat_tag", "3c6f224a-c6ad-11e5-b17e-0e98b61680bf"),
+        ("layers", layerArray)
+    );
+    
+    if let theJSONData = try? JSONSerialization.data(withJSONObject: json, options: []) {
+        return String(data: theJSONData, encoding: .ascii)
+    }
+    
+    return nil
+}
+
+public func getCartoCSS() -> String {
+    
+    let base = "#stations_1 { marker-fill-opacity:0.9; marker-line-color:#FFF; marker-line-width:2; marker-line-opacity:1; marker-placement:point; marker-type:ellipse; marker-width:10; marker-allow-overlap:true; }"
+    
+    let attributes = "#stations_1[status = 'In Service'] { marker-fill:#0F3B82; } #stations_1[status = 'Not In Service'] { marker-fill:#aaaaaa; } #stations_1[field_9 = 200] { marker-width:80.0; } #stations_1[field_9 <= 49] { marker-width:25.0; } #stations_1[field_9 <= 38] { marker-width:22.8; } #stations_1[field_9 <= 34] { marker-width:20.6; } #stations_1[field_9 <= 29] { marker-width:18.3; } #stations_1[field_9 <= 25] { marker-width:16.1; } #stations_1[field_9 <= 20.5] { marker-width:13.9; } #stations_1[field_9 <= 16] { marker-width:11.7; } #stations_1[field_9 <= 12] { marker-width:9.4; } #stations_1[field_9 <= 8] { marker-width:7.2; } #stations_1[field_9 <= 4] { marker-width:5.0; } "
+    
+    return base + attributes;
+}
+
+public func getInteractivityJson() -> NSMutableArray {
+    return NSMutableArray(array: ["cartodb_id"])
+}
+
+public func getAttributesJson() -> NSDictionary {
+    let columns = NSMutableArray(array: ["name", "field_9", "slot"])
+    return NSDictionary(dictionaryLiteral: ("id", "cartodb_id"), ("columns", columns))
+}
 
 {% endhighlight %}
 </div>
@@ -306,6 +351,75 @@ The following snippet sets up the config (SQL and CartoCSS) we are going to use 
 <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
 {% highlight kotlin %}
 
+     fun getConfigJson(): String? {
+
+        // Define server config
+        val configJson = JSONObject()
+
+        try {
+            // Change these according to your DB
+            val sql = "select * from stations_1"
+            val statTag = "3c6f224a-c6ad-11e5-b17e-0e98b61680bf"
+            val columns = arrayOf("name", "status", "slot")
+
+            val cartoCSS = "#stations_1{" +
+                    "marker-fill-opacity:0.9;marker-line-color:#FFF;" +
+                    "marker-line-width:2;marker-line-opacity:1;marker-placement:point;" +
+                    "marker-type:ellipse;marker-width:10;marker-allow-overlap:true;}\n" +
+                    "" +
+                    "#stations_1[status = 'In Service']{marker-fill:#0F3B82;}\n" +
+                    "#stations_1[status = 'Not In Service']{marker-fill:#aaaaaa;}\n" +
+                    "#stations_1[field_9 = 200]{marker-width:80.0;}\n" +
+                    "#stations_1[field_9 <= 49]{marker-width:25.0;}\n" +
+                    "#stations_1[field_9 <= 38]{marker-width:22.8;}\n" +
+                    "#stations_1[field_9 <= 34]{marker-width:20.6;}\n" +
+                    "#stations_1[field_9 <= 29]{marker-width:18.3;}\n" +
+                    "#stations_1[field_9 <= 25]{marker-width:16.1;}\n" +
+                    "#stations_1[field_9 <= 20.5]{marker-width:13.9;}\n" +
+                    "#stations_1[field_9 <= 16]{marker-width:11.7;}\n" +
+                    "#stations_1[field_9 <= 12]{marker-width:9.4;}\n" +
+                    "#stations_1[field_9 <= 8]{marker-width:7.2;}\n" +
+                    "#stations_1[field_9 <= 4]{marker-width:5.0;}";
+
+            // You may not need to change much of these standards
+            configJson.put("version", "1.0.1")
+            configJson.put("stat_tag", statTag)
+
+            val layersArrayJson = JSONArray()
+            val layersJson = JSONObject()
+            layersJson.put("type", "cartodb")
+
+            val optionsJson = JSONObject()
+            optionsJson.put("sql", sql)
+            optionsJson.put("cartocss", cartoCSS)
+            optionsJson.put("cartocss_version", "2.1.1")
+
+            val interactivityJson = JSONArray()
+            interactivityJson.put("cartodb_id")
+
+            optionsJson.put("interactivity", interactivityJson)
+
+            val attributesJson = JSONObject()
+            attributesJson.put("id", "cartodb_id")
+
+            val columnsJson = JSONArray()
+
+            for (i in 0..columns.size - 1) {
+                columnsJson.put(columns[i])
+            }
+
+            attributesJson.put("columns", columnsJson)
+            optionsJson.put("attributes", attributesJson)
+            layersJson.put("options", optionsJson)
+            layersArrayJson.put(layersJson)
+            configJson.put("layers", layersArrayJson)
+
+        } catch (e: JSONException) {
+            return null
+        }
+
+        return configJson.toString()
+    }
 
 {% endhighlight %}
 </div>
@@ -429,6 +543,22 @@ serviceThread.start();
 <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
 {% highlight swift %}
 
+        let config = getConfig()
+        
+        // This calculation should be in background thread
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let mapsService = NTCartoMapsService()
+            mapsService?.setUsername("nutiteq")
+            mapsService?.setDefaultVectorLayerMode(true) // use vector layers
+            
+            let layers = mapsService?.buildMap(NTVariant.fromString(config))
+
+            let count = Int((layers?.size())!)
+            for i in 0..<count {
+                self.mapView?.getLayers()?.add(layers!.get(Int32(i)))
+            }
+        }
 
 {% endhighlight %}
 </div>
@@ -436,6 +566,32 @@ serviceThread.start();
 <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
 {% highlight kotlin %}
 
+        val config = getConfigJson()
+
+        // Use the Maps service to configure layers.
+        // Note that this must be done in a separate thread on Android,
+        // as Maps API requires connecting to server, which is not allowed in main thread.
+
+        // Remember: Put your operations back on the main thread to change the UI
+        // Note:
+        // doAsync requires anko coroutines dependency
+        // compile "org.jetbrains.anko:anko-sdk25-coroutines:$anko_version"
+        doAsync {
+
+            val mapsService = CartoMapsService()
+            mapsService.username = "nutiteq"
+            mapsService.isDefaultVectorLayerMode = true // use vector layers
+
+            try {
+                val layers = mapsService.buildMap(Variant.fromString(config))
+                for (i in 0..layers.size() - 1) {
+                    mapView?.layers?.add(layers.get(i.toInt()))
+                }
+
+            } catch (e: IOException) {
+                println("Exception: " + e.message)
+            }
+        }
 
 {% endhighlight %}
 </div>
@@ -469,7 +625,7 @@ serviceThread.start();
 
     final CartoMapsService service = new CartoMapsService();
 
-    // Use raster layers, not vector
+    // Use raster vector layers
     service.setDefaultVectorLayerMode(true);
 
     service.setUsername("nutiteq");
@@ -506,6 +662,7 @@ serviceThread.start();
 
 MapView.ConfigureNamedVectorLayers("tpl_69f3eebe_33b6_11e6_8634_0e5db1731f59");
 
+// Extension method
 public static void ConfigureNamedVectorLayers(this MapView map, string name)
 {
   System.Threading.Tasks.Task.Run(delegate
@@ -535,7 +692,7 @@ NTCartoMapsService* mapsService = [[NTCartoMapsService alloc] init];
 
 [mapsService setUsername:@"nutiteq"];
 
-// Use raster layers, not vector layers
+// Use raster vector layers
 [mapsService setDefaultVectorLayerMode:YES];
 
 NTLayerVector *layers = [mapsService buildNamedMap:@"tpl_69f3eebe_33b6_11e6_8634_0e5db1731f59" templateParams: [[NTStringVariantMap alloc] init]];
@@ -551,6 +708,26 @@ for (int i = 0; i < [layers size]; i++) {
 <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
 {% highlight swift %}
 
+        let service = NTCartoMapsService()
+        
+        // Use vector layers
+        service?.setDefaultVectorLayerMode(true)
+        
+        service?.setUsername("nutiteq")
+        
+        let name = "tpl_69f3eebe_33b6_11e6_8634_0e5db1731f59"
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let layers = service?.buildNamedMap(name, templateParams: NTStringVariantMap())
+            
+            let count = Int((layers?.size())!)
+                
+            for i in 0..<count {
+                let layer = layers?.get(Int32(i))
+                self.mapView?.getLayers()?.add(layer)
+            }
+        }
 
 {% endhighlight %}
 </div>
@@ -558,6 +735,34 @@ for (int i = 0; i < [layers size]; i++) {
 <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
 {% highlight kotlin %}
 
+        val service = CartoMapsService()
+	    
+        // Use raster vector layers
+        service.isDefaultVectorLayerMode = true
+
+        service.username = "nutiteq"
+
+        val name = "tpl_69f3eebe_33b6_11e6_8634_0e5db1731f59"
+
+        // Be sure to make network queries on another thread
+    
+        // Remember: Put your operations back on the main thread to change the UI
+        // Note:
+        // doAsync requires anko coroutines dependency
+        // compile "org.jetbrains.anko:anko-sdk25-coroutines:$anko_version"
+        doAsync {
+            try {
+                val layers = service.buildNamedMap(name, StringVariantMap())
+
+                for (i in 0..layers.size() - 1) {
+                    val layer = layers.get(i.toInt())
+                    mapView?.layers?.add(layer)
+                }
+
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
 
 {% endhighlight %}
 </div>
@@ -706,6 +911,34 @@ CARTO’s [SQL API](https://carto.com/docs/carto-engine/sql-api/) allows you to 
 <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
 {% highlight swift %}
 
+        let query = "SELECT * FROM cities15000 WHERE population > 100000"
+        
+        let service = NTCartoSQLService()
+        service?.setUsername("nutiteq")
+        
+        let builder = NTPointStyleBuilder()
+        builder?.setSize(1.0)
+        builder?.setColor(NTColor(r: 255, g: 0, b: 0, a: 255))
+        let style = builder?.buildStyle()
+        
+        let source = NTLocalVectorDataSource(projection: projection);
+        
+        // Networking should be placed on a background thread
+        // Remember: Put your operations back on the main thread to change the UI
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let features = service?.queryFeatures(query, proj: projection)
+            
+            let count = Int((features?.getFeatureCount())!)
+            for i in 0..<count {
+                
+                // This data set features point geometry,
+                // however, it can also be LineGeometry or PolygonGeometry
+                
+                let geometry = features?.getFeature(Int32(i)).getGeometry() as! NTPointGeometry
+                source?.add(NTPoint (geometry: geometry, style: style))
+            }
+        }
 
 {% endhighlight %}
 </div>
@@ -713,6 +946,38 @@ CARTO’s [SQL API](https://carto.com/docs/carto-engine/sql-api/) allows you to 
 <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
 {% highlight kotlin %}
 
+        val query = "SELECT * FROM cities15000 WHERE population > 100000"
+
+        val service = CartoSQLService()
+        service.username = "nutiteq"
+
+        val builder = PointStyleBuilder()
+        builder.size = 1F
+        builder.color = Color(255, 0, 0, 255)
+        val style = builder.buildStyle()
+
+	   // Remember: Put your operations back on the main thread to change the UI
+	   // Note:
+	   // doAsync requires anko coroutines dependency
+	   // compile "org.jetbrains.anko:anko-sdk25-coroutines:$anko_version"
+        doAsync {
+
+            try {
+                val features = service.queryFeatures(query, projection)
+
+                for (i in 0..features.featureCount - 1) {
+
+                    // This data set features point geometry,
+                    // however, it can also be LineGeometry or PolygonGeometry
+
+                    val geometry = features.getFeature(i).geometry as PointGeometry
+                    source?.add(Point (geometry, style))
+                }
+
+            } catch (e: IOException) {
+
+            }
+        }
 
 {% endhighlight %}
 </div>
@@ -799,6 +1064,32 @@ In order to integrate your published mobile map into your app, you need a callba
 <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
 {% highlight csharp %}
 
+	public class MyCartoVisBuilder : CartoVisBuilder
+	{
+		MapView mapView;
+
+		public BasicCartoVisBuilder(MapView mapView)
+		{
+			this.mapView = mapView;
+		}
+
+		public override void SetCenter(MapPos mapPos)
+		{
+            // Translate position from WGS84 to Mercator first
+			mapView.SetFocusPos(mapView.Options.BaseProjection.FromWgs84(mapPos), 1.0f);
+		}
+
+		public override void SetZoom(float zoom)
+		{
+			mapView.SetZoom(zoom, 1.0f);
+		}
+
+		public override void AddLayer(Layer layer, Variant attributes)
+		{
+			// Add the layer to the map view
+			mapView.Layers.Add(layer);
+		}
+	}
 
 {% endhighlight %}
 </div>
@@ -845,6 +1136,35 @@ In order to integrate your published mobile map into your app, you need a callba
 <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
 {% highlight swift %}
 
+public class MyCartoVisBuilder : NTCartoVisBuilder {
+    
+    var mapView: NTMapView?
+    
+    convenience init(mapView: NTMapView) {
+        self.init()
+        self.mapView = mapView
+    }
+    
+	override public func setCenter(_ mapPos: NTMapPos!) {
+        
+        // Translate position to Mercator projection
+        let position = mapView?.getOptions().getBaseProjection().fromWgs84(mapPos)
+        mapView?.setFocus(position, durationSeconds: 1.0)
+    }
+    
+    public override func setZoom(_ zoom: Float) {
+        mapView?.setZoom(zoom, durationSeconds: 1.0)
+    }
+
+    public override func setDescription(_ descriptionInfo: NTVariant!) {
+        // Get JSON for remaining elements, like Overlays, Wizards, metadata etc.
+        // Variant is a JSON-like general structure in CARTO Mobile SDK
+    }
+    
+    public override func add(_ layer: NTLayer!, attributes: NTVariant!) {
+        mapView?.getLayers()?.add(layer)
+    }
+}
 
 {% endhighlight %}
 </div>
@@ -852,6 +1172,25 @@ In order to integrate your published mobile map into your app, you need a callba
 <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
 {% highlight kotlin %}
 
+   class MyCartoVisBuilder(val mapView: MapView) : CartoVisBuilder() {
+
+        override fun setCenter(mapPos: MapPos?) {
+            mapView.setFocusPos(mapView.options.baseProjection.fromWgs84(mapPos), 1.0f)
+        }
+
+        override fun setZoom(zoom: Float) {
+            mapView.setZoom(zoom, 1.0f)
+        }
+
+        override fun setDescription(descriptionInfo: Variant?) {
+            // Get JSON for remaining elements, like Overlays, Wizards, metadata etc.
+            // Variant is a JSON-like general structure in CARTO Mobile SDK
+        }
+
+        override fun addLayer(layer: Layer?, attributes: Variant?) {
+            mapView.layers?.add(layer)
+        }
+    }
 
 {% endhighlight %}
 </div>
@@ -918,6 +1257,27 @@ In order to integrate your published mobile map into your app, you need a callba
 <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
 {% highlight csharp %}
 
+            var url = "http://documentation.carto.com/api/v2/viz/2b13c956-e7c1-11e2-806b-5404a6a683d5/viz.json";
+
+            var source = new LocalVectorDataSource(MapView.Options.BaseProjection);
+            var layer = new VectorLayer(source);
+
+            var loader = new CartoVisLoader();
+            loader.DefaultVectorLayerMode = true;
+
+            // Build the vis on a background thread
+            System.Threading.Tasks.Task.Run(delegate
+            {
+                var builder = new BasicCartoVisBuilder(MapView);
+
+                loader.LoadVis(builder, url);
+
+                // Add layer (update ui) on the main thread
+                InvokeOnMainThread(delegate
+                {
+                    MapView.Layers.Add(layer);
+                });
+            });
 
 {% endhighlight %}
 </div>
@@ -949,6 +1309,27 @@ In order to integrate your published mobile map into your app, you need a callba
 <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
 {% highlight swift %}
 
+        let url = "http://documentation.carto.com/api/v2/viz/2b13c956-e7c1-11e2-806b-5404a6a683d5/viz.json"
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            self.mapView?.getLayers().clear()
+            
+            // Create overlay layer for pop-ups
+            let dataSource = NTLocalVectorDataSource(projection: projection)
+            let vectorLayer = NTVectorLayer(dataSource: dataSource)
+            
+            // Create VIS loader
+            let loader = NTCartoVisLoader()
+            loader?.setDefaultVectorLayerMode(true)
+            
+            let visBuilder = MyCartoVisBuilder(mapView: self.mapView!)
+            
+            loader?.loadVis(visBuilder, visURL: url)
+            
+            // Add the created pop-up overlay layer on top of all visJSON layers
+            self.mapView?.getLayers()?.add(vectorLayer)
+        }
 
 {% endhighlight %}
 </div>
@@ -956,6 +1337,34 @@ In order to integrate your published mobile map into your app, you need a callba
 <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
 {% highlight kotlin %}
 
+        val url = "http://documentation.carto.com/api/v2/viz/2b13c956-e7c1-11e2-806b-5404a6a683d5/viz.json"
+
+        // Remember: Put your operations back on the main thread to change the UI
+        // Note:
+        // doAsync requires anko coroutines dependency
+        // compile "org.jetbrains.anko:anko-sdk25-coroutines:$anko_version"
+        doAsync {
+            mapView?.layers!!.clear()
+
+            // Create overlay layer for pop-ups
+            val dataSource = LocalVectorDataSource(projection)
+            val vectorLayer = VectorLayer(dataSource)
+
+            // Create VIS loader
+            val loader = CartoVisLoader()
+            loader.isDefaultVectorLayerMode = true
+
+            val visBuilder = MyCartoVisBuilder(mapView!!)
+
+            try {
+                loader.loadVis(visBuilder, url)
+            } catch (e: IOException) {
+
+            }
+
+            // Add the created pop-up overlay layer on top of all visJSON layers
+            mapView?.layers?.add(vectorLayer)
+        }
 
 {% endhighlight %}
 </div>
