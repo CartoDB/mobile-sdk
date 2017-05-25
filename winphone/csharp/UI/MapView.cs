@@ -8,6 +8,11 @@
     /// MapView is a Windows Phone specific view class supporting map rendering and interaction.
     /// </summary>
     public partial class MapView : Windows.UI.Xaml.Controls.UserControl, Windows.UI.Xaml.Markup.IComponentConnector {
+        private struct PointerState {
+            public uint pointerId;
+            public Windows.UI.Input.PointerPoint pointerPoint;
+        };
+
         EGLContextWrapper _eglContext;
         bool _contentLoaded;
         System.Collections.Generic.List<PointerState> _pointerStates = new System.Collections.Generic.List<PointerState>();
@@ -47,9 +52,6 @@
 
             Windows.UI.Core.CoreWindow window = Windows.UI.Xaml.Window.Current.CoreWindow;
             window.VisibilityChanged += new Windows.Foundation.TypedEventHandler<Windows.UI.Core.CoreWindow, Windows.UI.Core.VisibilityChangedEventArgs > (OnVisibilityChanged);
-            window.PointerPressed += new Windows.Foundation.TypedEventHandler<Windows.UI.Core.CoreWindow, Windows.UI.Core.PointerEventArgs > (OnPointerPressed);
-            window.PointerMoved += new Windows.Foundation.TypedEventHandler<Windows.UI.Core.CoreWindow, Windows.UI.Core.PointerEventArgs > (OnPointerMoved);
-            window.PointerReleased += new Windows.Foundation.TypedEventHandler<Windows.UI.Core.CoreWindow, Windows.UI.Core.PointerEventArgs > (OnPointerReleased);
 
             _swapChainPanel.SizeChanged += new Windows.UI.Xaml.SizeChangedEventHandler(OnSwapChainPanelSizeChanged);
             _swapChainPanelSize = new Windows.Foundation.Size(_swapChainPanel.RenderSize.Width, _swapChainPanel.RenderSize.Height);
@@ -86,11 +88,6 @@
             _swapChainEvent.Set();
         }
 
-        private struct PointerState {
-            public uint pointerId;
-            public Windows.UI.Input.PointerPoint pointerPoint;
-        };
-
         void OnPageLoaded(object sender, Windows.UI.Xaml.RoutedEventArgs args) {
             // The SwapChainPanel has been created and arranged in the page layout, so EGL can be initialized.
             CreateRenderSurface();
@@ -105,39 +102,45 @@
             }
         }
 
-        void OnPointerPressed(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.PointerEventArgs args) {
+        protected override void OnPointerPressed(Windows.UI.Xaml.Input.PointerRoutedEventArgs args) {
+            Windows.UI.Input.PointerPoint currentPoint = args.GetCurrentPoint(this);
             for (int i = 0; i < _pointerStates.Count; i++) {
-                if (_pointerStates[i].pointerId == args.CurrentPoint.PointerId) {
+                if (_pointerStates[i].pointerId == currentPoint.PointerId) {
                     _pointerStates.RemoveAt(i);
                     break;
                 }
             }
             PointerState state;
-            state.pointerId = args.CurrentPoint.PointerId;
-            state.pointerPoint = args.CurrentPoint;
+            state.pointerId = currentPoint.PointerId;
+            state.pointerPoint = currentPoint;
             _pointerStates.Add(state);
             UpdateInputCoordinates(_pointerStates.Count > 1 ? NativeActionPointer2Down : NativeActionPointer1Down);
+            args.Handled = true;
         }
 
-        void OnPointerMoved(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.PointerEventArgs args) {
+        protected override void OnPointerMoved(Windows.UI.Xaml.Input.PointerRoutedEventArgs args) {
+            Windows.UI.Input.PointerPoint currentPoint = args.GetCurrentPoint(this);
             for (int i = 0; i < _pointerStates.Count; i++) {
                 PointerState state = _pointerStates[i];
-                if (state.pointerId == args.CurrentPoint.PointerId) {
-                    state.pointerPoint = args.CurrentPoint;
+                if (state.pointerId == currentPoint.PointerId) {
+                    state.pointerPoint = currentPoint;
                     _pointerStates[i] = state;
                     UpdateInputCoordinates(NativeActionMove);
+                    args.Handled = true;
                     break;
                 }
             }
         }
 
-        void OnPointerReleased(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.PointerEventArgs args) {
+        protected override void OnPointerReleased(Windows.UI.Xaml.Input.PointerRoutedEventArgs args) {
+            Windows.UI.Input.PointerPoint currentPoint = args.GetCurrentPoint(this);
             for (int i = 0; i < _pointerStates.Count; i++) {
                 PointerState state = _pointerStates[i];
-                if (state.pointerId == args.CurrentPoint.PointerId) {
-                    state.pointerPoint = args.CurrentPoint;
+                if (state.pointerId == currentPoint.PointerId) {
+                    state.pointerPoint = currentPoint;
                     UpdateInputCoordinates(i == 0 ? NativeActionPointer1Up : NativeActionPointer2Up);
                     _pointerStates.RemoveAt(i);
+                    args.Handled = true;
                     break;
                 }
             }
