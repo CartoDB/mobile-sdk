@@ -834,7 +834,7 @@ Basemaps apply the map background required for rendering data. Basemaps are requ
   </div>
   
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-  {% highlight kotlin %}
+  {% highlight swift %}
 
         mapView = MapView(this)
         setContentView(mapView)
