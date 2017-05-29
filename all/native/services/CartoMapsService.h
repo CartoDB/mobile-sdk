@@ -161,7 +161,7 @@ namespace carto {
          */
         float getVectorTileBufferSize() const;
         /**
-         * Sets the current vector tile buffer size. This affects only anonymous maps, for named maps this must be defined with map instantiation.
+         * Sets the current vector tile buffer size.
          * This can be used to tweak/improve performance or fix rendering artifacts.
          * The lower values make tiles smaller and improve performance but may create rendering artifacts.
          * The default value is 64 and should be good fit for most visualizations.

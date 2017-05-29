@@ -230,7 +230,11 @@ namespace carto {
         std::string url = getServiceURL("/api/v1/map/named/" + NetworkUtils::URLEncode(templateId));
 
         // Create request data by serializing parameters
-        std::string paramsJSON = Variant(templateParams).toString();
+        picojson::object bufferSizeObject;
+        bufferSizeObject["mvt"] = picojson::value(_vectorTileBufferSize);
+        picojson::object paramsObject = Variant(templateParams).toPicoJSON().get<picojson::object>();
+        paramsObject["buffersize"] = picojson::value(bufferSizeObject);
+        std::string paramsJSON = picojson::value(paramsObject).serialize();
         auto requestData = std::make_shared<BinaryData>(reinterpret_cast<const unsigned char*>(paramsJSON.data()), paramsJSON.size());
 
         // Perform HTTP request
