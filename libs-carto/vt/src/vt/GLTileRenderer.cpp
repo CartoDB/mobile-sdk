@@ -1871,7 +1871,7 @@ namespace carto { namespace vt {
             for (int i = 0; i < styleParams.parameterCount; i++) {
                 float width = 0.5f * std::abs((*styleParams.widthTable[i])(_viewState)) * geometry->getGeometryScale() / geometry->getTileSize();
                 float pixelWidth = 2.0f * _halfResolution * width;
-                if (pixelWidth > 0.0f && pixelWidth < 1.0f) {
+                if (pixelWidth < 1.0f) {
                     colors[i] = colors[i] * pixelWidth; // should do gamma correction here, but simple implementation gives closer results to Mapnik
                     width = 1.0f / (2.0f * _halfResolution);
                 }
