@@ -31,6 +31,10 @@ namespace carto {
         return _dataSource->getMaxZoom();
     }
 
+    MapBounds CacheTileDataSource::getDataExtent() const {
+        return _dataSource->getDataExtent();
+    }
+
     void CacheTileDataSource::notifyTilesChanged(bool removeTiles) {
         clear();
         TileDataSource::notifyTilesChanged(removeTiles);

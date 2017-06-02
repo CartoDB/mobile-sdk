@@ -39,6 +39,20 @@ namespace carto { namespace geocoding {
             return static_cast<int>(std::count_if(_tokens.begin(), _tokens.end(), [validTypeMask](const Token& token) { return !token.value.empty() && token.assignedType == TokenType() && (token.validTypeMask & validTypeMask) == 0; }));
         }
 
+		std::vector<std::pair<TokenType, StringType>> assignment() const {
+			std::vector<std::pair<TokenType, StringType>> types;
+			types.reserve(_tokens.size());
+			for (const Token& token : _tokens) {
+				if (token.assignedType != TokenType()) {
+					types.emplace_back(token.assignedType, token.value);
+				}
+			}
+			std::stable_sort(types.begin(), types.end(), [](const std::pair<TokenType, StringType>& t1, const std::pair<TokenType, StringType>& t2) {
+				return static_cast<int>(t1.first) < static_cast<int>(t2.first);
+			});
+			return types;
+		}
+
         void setTag(int index, const TagType& tag) {
             _tokens.at(index).tag = tag;
         }
@@ -145,95 +159,65 @@ namespace carto { namespace geocoding {
             return true;
         }
 
-        void enumerateSpans(std::uint32_t validTypeMask, std::uint32_t strictTypeMask, TokenType& type, std::vector<Span>& spans) const {
-            type = TokenType();
-            float maxIdf = -std::numeric_limits<float>::infinity();
-            for (std::size_t k = 0; k < _tokens.size(); k++) {
-                if (_tokens[k].idf > maxIdf) {
-                    std::uint32_t typeMask = _tokens[k].validTypeMask & validTypeMask;
-                    if (typeMask != 0) {
-                        for (int i = 0; i < 32; i++) {
-                            if ((typeMask & (static_cast<std::uint32_t>(1) << i)) != 0) {
-                                type = static_cast<TokenType>(i);
-                                maxIdf = _tokens[k].idf;
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            if (type == TokenType()) {
-                return;
-            }
+        void enumerateSpans(std::uint32_t validTypeMask, std::uint32_t strictTypeMask, const std::function<bool(const std::vector<std::pair<TokenType, Span>>&)>& callback) const {
+			for (std::size_t size = _tokens.size(); size > 0; size--) {
+				std::vector<std::pair<TokenType, Span>> spans;
+				for (std::size_t j = _tokens.size(); j >= size; j--) {
+					std::size_t i = j - size;
+					std::uint32_t typeMask = validTypeMask;
+					for (std::size_t k = i; k < j; k++) {
+						if (_tokens[k].assignedType != TokenType()) {
+							typeMask = 0;
+						}
+						typeMask &= _tokens[k].validTypeMask;
+					}
+					for (std::size_t k = 0; k < i; k++) {
+						if (_tokens[k].validTypeMask == typeMask) {
+							//typeMask = 0;
+						}
+					}
+					for (std::size_t k = j; k < _tokens.size(); k++) {
+						if (_tokens[k].validTypeMask == typeMask) {
+							//typeMask = 0;
+						}
+					}
 
-            std::uint32_t typeMask = static_cast<std::uint32_t>(1) << static_cast<int>(type);
-            for (std::size_t j = _tokens.size(); j > 0; j--) {
-                for (std::size_t i = 0; i < j; i++) {
-                    bool valid = true;
-                    for (std::size_t k = 0; k < _tokens.size(); k++) {
-                        if (k >= i && k < j) {
-                            if (_tokens[k].assignedType != TokenType() || !(_tokens[k].validTypeMask & typeMask)) {
-                                valid = false;
-                            }
-                        }
-                        else {
-                            if (_tokens[k].validTypeMask == typeMask) {
-                                valid = false;
-                            }
-                        }
-                        if (!valid) {
-                            break;
-                        }
-                    }
-                    if (valid) {
-                        Span span(static_cast<int>(i), static_cast<int>(j - i));
-                        if ((typeMask & strictTypeMask) == 0) {
-                            for (std::size_t k = 0; k < spans.size(); k++) {
-                                if (spans[k].count == span.count) {
-                                    bool match = true;
-                                    for (int offset = 0; offset < span.count; offset++) {
-                                        if (_tokens[span.index + offset].value != _tokens[spans[k].index + offset].value) {
-                                            match = false;
-                                            break;
-                                        }
-                                    }
-                                    if (match) {
-                                        valid = false;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                        if (valid) {
-                            spans.push_back(span);
-                        }
-                    }
-                }
-            }
+					if (typeMask) {
+						Span span(static_cast<int>(i), static_cast<int>(j - i));
+						/*
+						if ((typeMask & strictTypeMask) == 0) {
+						for (std::size_t k = 0; k < spans.size(); k++) {
+						bool match = true;
+						for (int offset = 0; offset < span.count; offset++) {
+						if (_tokens[span.index + offset].first != _tokens[spans[k].second.index + offset].first || _tokens[span.index + offset].value != _tokens[spans[k].second.index + offset].value) {
+						match = false;
+						break;
+						}
+						}
+						if (match) {
+						typeMask = 0;
+						break;
+						}
+						}
+						}
+						*/
+						for (int type = 0; static_cast<std::uint32_t>(1 << type) <= typeMask; type++) {
+							if (typeMask & (1 << type)) {
+								spans.emplace_back(static_cast<TokenType>(type), span);
+							}
+						}
+					}
+				}
+				if (!spans.empty()) {
+					if (!callback(spans)) {
+						return;
+					}
+				}
+			}
 
-            std::sort(spans.begin(), spans.end(), [this](const Span& span1, const Span& span2) {
-                if (span1.count == span2.count) {
-                    int count1 = 0, count2 = 0;
-                    for (int offset = 0; offset < span1.count; offset++) {
-                        count1 += bitCount(_tokens[span1.index + offset].validTypeMask);
-                        count2 += bitCount(_tokens[span2.index + offset].validTypeMask);
-                    }
-                    return count1 < count2;
-                }
-                return span1.count > span2.count;
-            });
-            
-            bool skip = false;
-            for (std::size_t k = 0; k < _tokens.size(); k++) {
-                if (_tokens[k].validTypeMask == typeMask) {
-                    skip = true;
-                    break;
-                }
-            }
-            if (!skip) {
-                spans.emplace_back(Span(-1, 0));
-            }
-        }
+			std::vector<std::pair<TokenType, Span>> spans = { { TokenType(), Span(-1, 0) } };
+			callback(spans);
+		}
 
         static TaggedTokenList build(const StringType& text) {
             std::vector<Token> tokens;

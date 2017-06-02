@@ -37,7 +37,7 @@ namespace carto { namespace geocoding {
             float locationRadius = 100000; // default is 100km
         };
 
-        Geocoder() : _addressCache(ADDRESS_CACHE_SIZE), _entityCache(ENTITY_CACHE_SIZE), _nameCache(NAME_CACHE_SIZE), _nameRankCache(NAME_RANK_CACHE_SIZE), _nameMatchCache(NAME_MATCH_CACHE_SIZE) { }
+        Geocoder() : _addressCache(ADDRESS_CACHE_SIZE), _entityCache(ENTITY_CACHE_SIZE), _nameCache(NAME_CACHE_SIZE), _tokenCache(TOKEN_CACHE_SIZE), _nameRankCache(NAME_RANK_CACHE_SIZE), _nameMatchCache(NAME_MATCH_CACHE_SIZE) { }
 
         static void prepare(sqlite3pp::database& db);
 
@@ -204,11 +204,11 @@ namespace carto { namespace geocoding {
         };
 
         void matchTokens(Query& query, int pass, TokenList& tokenList) const;
-        void matchQuery(Query& query, const Options& options, std::vector<Result>& results) const;
+        void matchQuery(Query& query, const Options& options, std::set<std::vector<std::pair<FieldType, std::string>>>& assignments, std::vector<Result>& results) const;
         void matchNames(const Query& query, FieldType type, const std::vector<std::vector<Token>>& tokensList, const std::string& matchName, std::shared_ptr<std::vector<NameRank>>& nameRanks) const;
         void resolveQuery(const Query& query, const Options& options, std::vector<Result>& results) const;
 
-        float calculateNameRank(const Query& query, const std::string& name, const std::string& queryName, const std::map<unistring, float>& tokenIDFMap) const;
+        float calculateNameRank(const Query& query, const std::string& name, const std::string& queryName, const std::vector<std::pair<std::string, float>>& tokenIDFs) const;
         
         std::vector<std::string> buildQueryFilters(const Query& query) const;
 
@@ -224,11 +224,13 @@ namespace carto { namespace geocoding {
         static unistring getTranslatedToken(const unistring& token, const std::unordered_map<unichar_t, unistring>& translationTable);
 
         static constexpr float ENTITY_BLOOM_FILTER_FP_PROB = 0.01f;
-        static constexpr float MIN_RANK = 0.1f;
+		static constexpr float ENTITY_BLOOM_FILTER_MAX_SIZE = 16384 * 1024;
         static constexpr float MIN_LOCATION_RANK = 0.2f; // should be larger than MIN_RANK
-        static constexpr float MAX_RANK_RATIO = 0.5f;
+		static constexpr float MIN_RANK_THRESHOLD = 0.1f;
+		static constexpr float MAX_RANK_RATIO = 0.5f;
         static constexpr float MIN_MATCH_THRESHOLD = 0.55f;
-        static constexpr float MIN_IDF_THRESHOLD = 0.25f;
+		static constexpr float MAX_MATCH_RATIO = 0.85f;
+		static constexpr float MIN_IDF_THRESHOLD = 0.25f;
         static constexpr float EXTRA_FIELD_PENALTY = 0.9f;
         static constexpr float UNMATCHED_FIELD_PENALTY = 0.5f;
         static constexpr float POI_POPULATION_PENALTY = 0.99f;
@@ -241,8 +243,9 @@ namespace carto { namespace geocoding {
         static constexpr std::size_t ADDRESS_CACHE_SIZE = 1024;
         static constexpr std::size_t ENTITY_CACHE_SIZE = 128;
         static constexpr std::size_t NAME_CACHE_SIZE = 128;
-        static constexpr std::size_t NAME_RANK_CACHE_SIZE = 128;
-        static constexpr std::size_t NAME_MATCH_CACHE_SIZE = 1024;
+		static constexpr std::size_t TOKEN_CACHE_SIZE = 128;
+		static constexpr std::size_t NAME_RANK_CACHE_SIZE = 128;
+        static constexpr std::size_t NAME_MATCH_CACHE_SIZE = 4096;
         
         bool _autocomplete = false; // no autocomplete by default
         std::string _language; // use local language by default
@@ -251,14 +254,17 @@ namespace carto { namespace geocoding {
         mutable cache::lru_cache<std::string, Address> _addressCache;
         mutable cache::lru_cache<std::string, std::vector<EntityRow>> _entityCache;
         mutable cache::lru_cache<std::string, std::vector<std::shared_ptr<Name>>> _nameCache;
-        mutable cache::lru_cache<std::string, std::shared_ptr<std::vector<NameRank>>> _nameRankCache;
+		mutable cache::lru_cache<std::string, std::vector<Token>> _tokenCache;
+		mutable cache::lru_cache<std::string, std::shared_ptr<std::vector<NameRank>>> _nameRankCache;
         mutable cache::lru_cache<std::string, float> _nameMatchCache;
         mutable std::uint64_t _addressQueryCounter = 0;
         mutable std::uint64_t _entityQueryCounter = 0;
         mutable std::uint64_t _missingEntityQueryCounter = 0;
         mutable std::uint64_t _nameQueryCounter = 0;
+		mutable std::uint64_t _tokenQueryCounter = 0;
         mutable std::uint64_t _nameRankCounter = 0;
         mutable std::uint64_t _nameMatchCounter = 0;
+		mutable std::uint64_t _bloomTestCounter = 0;
 
         mutable std::vector<std::shared_ptr<Database>> _databases;
         mutable std::recursive_mutex _mutex;

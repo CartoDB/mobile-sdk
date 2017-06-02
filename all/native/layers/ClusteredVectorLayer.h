@@ -8,12 +8,12 @@
 #define _CARTO_CLUSTEREDVECTORLAYER_H_
 
 #include "core/MapPos.h"
-#include "core/MapTile.h"
 #include "components/DirectorPtr.h"
 #include "graphics/ViewState.h"
 #include "layers/VectorLayer.h"
 
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <list>
 #include <memory>
@@ -70,6 +70,17 @@ namespace carto {
         void setMaximumClusterZoom(float maxZoom);
 
         /**
+         * Returns the cluster animation flag value.
+         * @return True if animation is enabled, false otherwise.
+         */
+        bool isAnimatedClusters() const;
+        /**
+         * Enables or disables the animation of clusters. By default animations are enabled.
+         * @param animated The animated flag.
+         */
+        void setAnimatedClusters(bool animated);
+
+        /**
          * Expands or shrinks the given cluster element. In expanded state,
          * all elements of the cluster are placed at specified distance from the cluster center.
          * @param clusterElement The cluster element to expand or shrink.
@@ -87,18 +98,20 @@ namespace carto {
             MapPos staticPos;
             MapPos transitionPos;
             MapBounds mapBoundsInternal;
-            std::unordered_set<std::shared_ptr<VectorElement> > elements;
+            int elementCount;
             std::shared_ptr<VectorElement> clusterElement;
-            std::weak_ptr<Cluster> parentCluster;
-            std::shared_ptr<Cluster> subClusters[2];
+            std::shared_ptr<VectorElement> vectorElement;
+            int parentClusterIdx;
+            int childClusterIdx[2];
         };
 
         struct RenderState {
             double pixelMeasure;
             int totalExpanded;
-            std::shared_ptr<Cluster> expandedCluster;
-            std::unordered_set<std::shared_ptr<Cluster> > visibleClusterSet;
-            std::unordered_map<std::shared_ptr<Cluster>, std::vector<std::shared_ptr<Cluster> > > visibleChildClusterMap;
+            int expandedClusterIdx;
+            std::shared_ptr<std::vector<Cluster> > clusters;
+            std::unordered_set<int> visibleIdxSet;
+            std::unordered_map<int, std::vector<int> > visibleChildIdxMap;
         };
 
         class ClusterFetchTask : public VectorLayer::FetchTask {
@@ -115,11 +128,14 @@ namespace carto {
 
         float _minClusterDistance;
         float _maxClusterZoom;
+        bool _animatedClusters;
         float _dpiScale;
-        std::shared_ptr<Cluster> _rootCluster;
+        std::shared_ptr<std::vector<Cluster> > _clusters;
+        int _singletonClusterCount;
+        int _rootClusterIdx;
+        std::vector<int> _renderClusterIdxs;
         bool _refreshRootCluster;
-        std::vector<std::shared_ptr<Cluster> > _renderClusters;
-        mutable std::mutex _clusterMutex; // for _clusterDistance, _dpiScale, _rootCluster, _refreshRootCluster, _renderClusters
+        mutable std::mutex _clusterMutex; // for _minClusterDistance, _maxClusterZoom, _dpiScale, _rootClusterIdx, _refreshRootCluster, _renderClusters, _renderClusterIdxs
 
         virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
 
@@ -127,17 +143,18 @@ namespace carto {
 
         virtual std::shared_ptr<CancelableTask> createFetchTask(const std::shared_ptr<CullState>& cullState);
 
-        std::shared_ptr<Cluster> createClusters(const std::vector<std::shared_ptr<VectorElement> >& vectorElements) const;
-        std::vector<std::shared_ptr<Cluster> > mergeClusters(std::vector<std::shared_ptr<Cluster> >::iterator clustersBegin, std::vector<std::shared_ptr<Cluster> >::iterator clustersEnd, std::size_t maxClusters) const;
-        std::shared_ptr<Cluster> createSingletonCluster(const std::shared_ptr<VectorElement>& element) const;
-        std::shared_ptr<Cluster> createMergedCluster(const std::shared_ptr<Cluster>& cluster1, const std::shared_ptr<Cluster>& cluster2) const;
+        void rebuildClusters(const std::vector<std::shared_ptr<VectorElement> >& vectorElements);
+        int createSingletonCluster(const std::shared_ptr<VectorElement>& element, std::vector<Cluster>& clusters) const;
+        int createMergedCluster(int clusterIdx1, int clusterIdx2, std::vector<Cluster>& clusters) const;
+        std::vector<int> mergeClusters(std::vector<int>::iterator clustersBegin, std::vector<int>::iterator clustersEnd, std::vector<Cluster>& clusters, std::size_t maxClusters) const;
 
         bool renderClusters(const ViewState& viewState, float deltaSeconds);
-        bool renderCluster(const std::shared_ptr<Cluster>& cluster, const ViewState& viewState, RenderState& renderState, float deltaSeconds);
-        bool animateCluster(const std::shared_ptr<Cluster>& cluster, RenderState& renderState, float deltaSeconds);
-        bool moveCluster(const std::shared_ptr<Cluster>& cluster, const MapPos& targetPos, const RenderState& renderState, float deltaSeconds);
+        bool renderCluster(int clusterIdx, const ViewState& viewState, RenderState& renderState, float deltaSeconds);
+        bool animateCluster(int clusterIdx, RenderState& renderState, float deltaSeconds);
+        bool moveCluster(int clusterIdx, const MapPos& targetPos, const RenderState& renderState, float deltaSeconds);
         MapPos createExpandedElementPos(RenderState& renderState) const;
 
+        static void StoreVectorElements(int clusterIdx, const std::vector<Cluster>& clusters, std::vector<std::shared_ptr<VectorElement> >& elements);
         static bool GetVectorElementPos(const std::shared_ptr<VectorElement>& vectorElement, MapPos& pos);
         static bool SetVectorElementPos(const std::shared_ptr<VectorElement>& vectorElement, const MapPos& pos);
     };

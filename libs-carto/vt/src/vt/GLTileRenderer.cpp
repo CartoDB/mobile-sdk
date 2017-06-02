@@ -173,7 +173,7 @@ namespace {
         }
     )GLSL";
 
-    static const std::string lineVsh = R"GLSL(
+	static const std::string lineVsh = R"GLSL(
         attribute vec2 aVertexPosition;
         attribute vec2 aVertexBinormal;
         #ifdef PATTERN
@@ -202,7 +202,7 @@ namespace {
         void main(void) {
             int styleIndex = int(aVertexAttribs[0]);
             float width = uWidthTable[styleIndex] * uHalfResolution;
-            float roundedWidth = width + 1.0;
+            float roundedWidth = width + float(width > 0.0);
             float gamma = uGamma * aVertexAttribs[3];
         #ifdef TRANSFORM
             vec3 pos = vec3(vec2(uTransformMatrix * vec3(aVertexPosition, 1.0)) + uBinormalScale * roundedWidth * aVertexBinormal, 0.0);
@@ -1873,7 +1873,7 @@ namespace carto { namespace vt {
                 float pixelWidth = 2.0f * _halfResolution * width;
                 if (pixelWidth > 0.0f && pixelWidth < 1.0f) {
                     colors[i] = colors[i] * pixelWidth; // should do gamma correction here, but simple implementation gives closer results to Mapnik
-                    width = 1.0f / (2.0f * _halfResolution);
+                    width = (pixelWidth > 0.0f ? 1.0f / (2.0f * _halfResolution) : 0.0f);
                 }
                 widths[i] = width;
             }

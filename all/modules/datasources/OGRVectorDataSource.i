@@ -29,7 +29,6 @@
 
 %feature("director") carto::OGRVectorDataSource;
 
-%attributeval(carto::OGRVectorDataSource, carto::MapBounds, DataExtent, getDataExtent)
 %attribute(carto::OGRVectorDataSource, int, FeatureCount, getFeatureCount)
 %attribute(carto::OGRVectorDataSource, OGRGeometryType::OGRGeometryType, GeometryType, getGeometryType)
 %attributeval(carto::OGRVectorDataSource, std::vector<std::string>, FieldNames, getFieldNames)

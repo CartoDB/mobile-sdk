@@ -18,6 +18,16 @@ VALUE_TYPE_TEMPLATE = """
 %typemap(javadirectorin) const $CLASSNAME$& "new $TYPE$($jniinput, true)"
 %typemap(javaout) const $CLASSNAME$& { return new $TYPE$($jnicall, true); }
 %typemap(javadirectorout) const $CLASSNAME$& "$TYPE$.getCPtr($javacall)"
+
+%extend $CLASSNAME$ {
+  /**
+   * Returns the raw pointer to the object. This is used internally by the SDK.
+   * @return The internal pointer of the object.
+   */
+  jlong swigGetRawPtr() const {
+    return reinterpret_cast<jlong>($self);
+  }
+}
 """
 
 SHARED_PTR_TEMPLATE = """
@@ -25,6 +35,16 @@ SHARED_PTR_TEMPLATE = """
 
 %typemap(directorin, descriptor="$DESCRIPTOR$") std::shared_ptr< $CLASSNAME$ > "*($&1_ltype*)&$input = new $1_ltype(*$1);"
 %typemap(directorin, descriptor="$DESCRIPTOR$") std::shared_ptr< $CLASSNAME$ >& "*($&1_ltype)&$input = new $*1_ltype($1);"
+
+%extend $CLASSNAME$ {
+  /**
+   * Returns the raw pointer to the object. This is used internally by the SDK.
+   * @return The internal pointer of the object.
+   */
+  jlong swigGetRawPtr() const {
+    return reinterpret_cast<jlong>($self);
+  }
+}
 """
 
 POLYMORPHIC_SHARED_PTR_TEMPLATE = SHARED_PTR_TEMPLATE + """
@@ -119,7 +139,7 @@ STANDARD_EQUALS_CODE_TEMPLATE = """
    */
   public boolean equals(Object obj) {
     if (obj instanceof $javaclassname) {
-      return (($javaclassname)obj).swigCPtr == swigCPtr;
+      return (($javaclassname)obj).swigGetRawPtr() == swigGetRawPtr();
     }
     return false;
   }
@@ -129,7 +149,7 @@ STANDARD_EQUALS_CODE_TEMPLATE = """
    * @return The hash value of this object.
    */
   public int hashCode() {
-    return (int)swigCPtr;
+    return (int)swigGetRawPtr();
   }
 """
 

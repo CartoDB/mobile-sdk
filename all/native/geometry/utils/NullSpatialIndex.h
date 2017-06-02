@@ -17,8 +17,10 @@ namespace carto {
     class NullSpatialIndex : public SpatialIndex<T> {
     public:
         NullSpatialIndex();
+        virtual ~NullSpatialIndex() { }
         
         virtual std::size_t size() const;
+        virtual void reserve(std::size_t size);
         
         virtual void clear();
         virtual void insert(const MapBounds& bounds, const T& object);
@@ -42,6 +44,11 @@ namespace carto {
     template<typename T>
     std::size_t NullSpatialIndex<T>::size() const {
         return _objects.size();
+    }
+    
+    template<typename T>
+    void NullSpatialIndex<T>::reserve(std::size_t size) {
+        _objects.reserve(size);
     }
     
     template<typename T>

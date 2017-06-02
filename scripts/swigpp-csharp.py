@@ -26,10 +26,30 @@ VALUE_TYPE_TEMPLATE = """
 %typemap(csdirectorin) const $CLASSNAME$& "new $TYPE$($iminput, true)"
 %typemap(csout, excode=SWIGEXCODE) const $CLASSNAME$& { $TYPE$ ret = new $TYPE$($imcall, true); $excode; return ret; }
 %typemap(csdirectorout) const $CLASSNAME$& "$TYPE$.getCPtr($cscall).Handle"
+
+%extend $CLASSNAME$ {
+  /**
+   * Returns the raw pointer to the object. This is used internally by the SDK.
+   * @return The internal pointer of the object.
+   */
+  long long SwigGetRawPtr() const {
+    return reinterpret_cast<long long>($self);
+  }
+}
 """
 
 SHARED_PTR_TEMPLATE = """
 %shared_ptr($CLASSNAME$)
+
+%extend $CLASSNAME$ {
+  /**
+   * Returns the raw pointer to the object. This is used internally by the SDK.
+   * @return The internal pointer of the object.
+   */
+  long long SwigGetRawPtr() const {
+    return reinterpret_cast<long long>($self);
+  }
+}
 """
 
 POLYMORPHIC_SHARED_PTR_TEMPLATE = SHARED_PTR_TEMPLATE + """
@@ -140,7 +160,7 @@ STANDARD_EQUALS_CODE_TEMPLATE = """
   /// <returns>True when objects are equal, false otherwise.</returns>
   public override bool Equals(object obj) {
     if (obj is $csclassname) {
-      return (($csclassname)obj).swigCPtr.Handle == swigCPtr.Handle;
+      return (($csclassname)obj).SwigGetRawPtr() == SwigGetRawPtr();
     }
     return false;
   }
@@ -150,7 +170,7 @@ STANDARD_EQUALS_CODE_TEMPLATE = """
   /// </summary>
   /// <returns>The hash value of this object.</returns>
   public override int GetHashCode() {
-    return (int)swigCPtr.Handle;
+    return (int)SwigGetRawPtr();
   }
 """
 

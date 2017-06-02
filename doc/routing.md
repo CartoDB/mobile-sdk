@@ -117,32 +117,52 @@ Online routing requires that you create a simple call and request to calculate t
     <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
   </ul>
 
+
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
+  {% highlight java %}
+  
+	CartoOnlineRoutingService onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight csharp %}onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
+  {% highlight csharp %}
+  
+	var onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
 
   {% endhighlight %}
   </div>
 
    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}_onlineRoutingService = [[NTCartoOnlineRoutingService alloc] initWithSource:@"nutiteq.osm.car"];
+  {% highlight objc %}
+  
+  	NTCartoOnlineRoutingService* _onlineRoutingService = [[NTCartoOnlineRoutingService alloc] initWithSource:@"nutiteq.osm.car"];
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}COMING SOON...
+  {% highlight swift %}
+  
+	let onlineRoutingService = NTCartoOnlineRoutingService(source: "nutiteq.osm.car");
 
   {% endhighlight %}
   </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  {% highlight kotlin %}
   
+	val onlineRoutingService = CartoOnlineRoutingService("nutiteq.osm.car");
+
+  {% endhighlight %}
+  </div>
+    
 </div>
 
 2) Calculate the route with the `calculateRoute` request
@@ -165,10 +185,15 @@ These code samples display how to show navigation instructions on the map, as in
     <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}AsyncTask<Void, Void, RoutingResult> task = new AsyncTask<Void, Void, RoutingResult>() {
+  {% highlight java %}
+  
+  AsyncTask<Void, Void, RoutingResult> task = new AsyncTask<Void, Void, RoutingResult>() {
 
             protected RoutingResult doInBackground(Void... v) {
                 MapPosVector poses = new MapPosVector();
@@ -210,7 +235,9 @@ These code samples display how to show navigation instructions on the map, as in
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight csharp %}ThreadPool.QueueUserWorkItem(delegate
+  {% highlight csharp %}
+  
+    ThreadPool.QueueUserWorkItem(delegate
     {
       MapPosVector poses = new MapPosVector();
       poses.Add(startPos);
@@ -287,46 +314,72 @@ These code samples display how to show navigation instructions on the map, as in
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}COMING SOON...
+  {% highlight swift %}
+  
+        // Sample positions, from from Tallinn (Estonia) to Tartu (Estonia)
+        let startPos = projection?.fromWgs84(NTMapPos(x: 24.7536, y: 59.4370))
+        let stopPos = projection?.fromWgs84(NTMapPos(x: 26.7290, y: 58.3776))
+        
+        // This calculation should be in background thread
+        DispatchQueue.global(qos: .userInitiated).async {
+            
+            let poses = NTMapPosVector()
+            poses?.add(startPos)
+            poses?.add(stopPos)
+            
+            let request = NTRoutingRequest(projection: projection, points: poses)
+            let result = onlineRoutingService?.calculateRoute(request)
+            
+            let km = ((result?.getTotalDistance())! / 100) / 10
+            let seconds = result?.getTotalTime()
+            let routeText = "The route is \(km) km ( \(seconds) s)"
+            
+            print("RouteText: " + routeText)
+            
+            // Get instruction details
+            let instructions = result?.getInstructions()
+            
+            for i in 0..<Int((instructions?.size())!) {
+                let instruction = instructions?.get(Int32(i))
+            }
+        }
 
   {% endhighlight %}
   </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  {% highlight kotlin %}
   
-</div>
+        // Sample positions, from from Tallinn (Estonia) to Tartu (Estonia)
+        val startPos = projection?.fromWgs84(MapPos(24.7536, 59.4370))
+        val stopPos = projection?.fromWgs84(MapPos(26.7290, 58.3776))
 
-**Tip:** As processing online queries may take some time, it is suggested to use a background task for more efficient performance. Use the following code to apply online routing to your application:
+        // Remember: Put your operations back on the main thread to change the UI
+        // Note:
+        // doAsync requires anko coroutines dependency
+        // compile "org.jetbrains.anko:anko-sdk25-coroutines:$anko_version"
+        doAsync {
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Android Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink">Xamarin</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-  </ul>
+            val poses = MapPosVector()
+            poses.add(startPos)
+            poses.add(stopPos)
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}COMING SOON...{% endhighlight %}
+            val request = RoutingRequest(projection, poses)
+            val result = onlineRoutingService.calculateRoute(request)
+
+            val routeText = "The route is " + (result.totalDistance / 100) / 10f + "km (" + result.totalTime + " s)"
+            println("RouteText: " + routeText)
+            // get instruction details
+            val instructions = result.instructions
+
+            for (i in 0..instructions.size()) {
+                val instruction = instructions.get(i.toInt())
+            }
+        }
+
+  {% endhighlight %}
   </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight xamarin %}COMING SOON...{% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}COMING SOON...{% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}COMING SOON...{% endhighlight %}
-  </div>
+    
 </div>
 
 ## Offline Routing
@@ -355,39 +408,42 @@ For offline routing, you must download routing packages.  You can use the same *
     <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
   </ul>
 
    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
-// Create PackageManager instance for dealing with offline packages
-        File packageFolder = new File(getApplicationContext().getExternalFilesDir(null), "routingpackages");
-        
-        if (!(packageFolder.mkdirs() || packageFolder.isDirectory())) {
-            Log.e(Const.LOG_TAG, "Could not create package folder!");
-        }
-
-        try {
-            packageManager = new CartoPackageManager("routing:nutiteq.osm.car", packageFolder.getAbsolutePath());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+	// Create PackageManager instance for dealing with offline packages
+	File packageFolder = new File(getApplicationContext().getExternalFilesDir(null), "routingpackages");
+	    
+	if (!(packageFolder.mkdirs() || packageFolder.isDirectory())) {
+	    Log.e(Const.LOG_TAG, "Could not create package folder!");
+	}
+	
+	try {
+	    packageManager = new CartoPackageManager("routing:nutiteq.osm.car", packageFolder.getAbsolutePath());
+	} catch (IOException e) {
+	    e.printStackTrace();
+	}
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
-
-// Create PackageManager instance for dealing with offline packages
-    var packageFolder = new File(GetExternalFilesDir(null), "routingpackages");
-
-    if (!(packageFolder.Mkdirs() || packageFolder.IsDirectory))
-    {
-      Log.Fatal("Could not create package folder!");
-    }
-
-    packageManager = new CartoPackageManager("routing:nutiteq.osm.car", packageFolder);
+	
+	// Create PackageManager instance for dealing with offline packages
+	var packageFolder = new File(GetExternalFilesDir(null), "routingpackages");
+	
+	if (!(packageFolder.Mkdirs() || packageFolder.IsDirectory))
+	{
+		Log.Fatal("Could not create package folder!");
+	}
+	
+	packageManager = new CartoPackageManager("routing:nutiteq.osm.car", packageFolder);
 
   {% endhighlight %}
   </div>
@@ -395,21 +451,53 @@ For offline routing, you must download routing packages.  You can use the same *
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
-// Define PackageManger to download offline routing packages
-// Create folder for package manager. Package manager needs persistent writable folder.
-    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask,YES);
-    NSString* appSupportDir = [paths objectAtIndex: 0];
-    NSString* packagesDir = [appSupportDir stringByAppendingString:@"/packages"];
-    NSError *error;
-    [[NSFileManager defaultManager] createDirectoryAtPath:packagesDir withIntermediateDirectories:YES attributes:nil error:&error];
-    
-    packageManager = [[NTCartoPackageManager alloc] initWithSource:@"routing:nutiteq.osm.car" dataFolder:packagesDir];
+	// Define PackageManger to download offline routing packages
+	// Create folder for package manager. Package manager needs persistent writable folder.
+	NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask,YES);
+	NSString* appSupportDir = [paths objectAtIndex: 0];
+	NSString* packagesDir = [appSupportDir stringByAppendingString:@"/packages"];
+	NSError *error;
+	[[NSFileManager defaultManager] createDirectoryAtPath:packagesDir withIntermediateDirectories:YES attributes:nil error:&error];
+	    
+	packageManager = [[NTCartoPackageManager alloc] initWithSource:@"routing:nutiteq.osm.car" dataFolder:packagesDir];
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}COMING SOON...
+  {% highlight swift %}
+  
+        // Define PackageManger to download offline routing packages
+        // Create folder for package manager. Package manager needs persistent writable folder.
+        let packageFolder = NTAssetUtils.calculateWritablePath("routingpackages")
+        
+        do {
+            try FileManager.default.createDirectory(atPath: packageFolder!, withIntermediateDirectories: false, attributes: nil)
+        } catch let error as NSError {
+            print(error.localizedDescription);
+        }
+        
+        // Create PackageManager instance for dealing with offline packages
+        var packageManager =  NTCartoPackageManager(source: "routing:nutiteq.osm.car", dataFolder: packageFolder)
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  {% highlight kotlin %}
+  
+        // Create PackageManager instance for dealing with offline packages
+        val packageFolder = File(applicationContext.getExternalFilesDir(null), "routingpackages")
+
+        if (!(packageFolder.mkdirs() || packageFolder.isDirectory())) {
+            println("Could not create package folder!")
+        }
+
+        var packageManager = try {
+            CartoPackageManager("routing:nutiteq.osm.car", packageFolder.absolutePath)
+        } catch (e: IOException) {
+            null
+        }
 
   {% endhighlight %}
   </div>
@@ -436,16 +524,20 @@ Routing package downloads cannot be started immediately, as the Mobile SDK needs
     <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}public class RoutePackageManagerListener extends PackageManagerListener {
+  {% highlight java %}
+  
+  public class RoutePackageManagerListener extends PackageManagerListener {
     @Override
     public void onPackageListUpdated() {
         Log.d(Const.LOG_TAG, "Package list updated");
         // Start download of package of Estonia
-        // see list of available ID-s: http://cartod.com/docs/carto-engine/mobile-sdk/offline-map-service/
-        // just append -routing to the ID-s
+        // see list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
         // You can download several packages, and route is found through all of them
 
         packageManager.startPackageDownload("EE-routing");
@@ -482,7 +574,9 @@ Routing package downloads cannot be started immediately, as the Mobile SDK needs
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight csharp %}public class RoutePackageManagerListener : PackageManagerListener
+  {% highlight csharp %}
+  
+  public class RoutePackageManagerListener : PackageManagerListener
   {
     PackageManager packageManager;
 
@@ -495,8 +589,7 @@ Routing package downloads cannot be started immediately, as the Mobile SDK needs
     {
       Log.Debug("Package list updated");
       // We have packages all country/regions
-      // see list of available ID-s: https://carto.com/carto-engine-mobile-sdk/offline-map-service
-      // just append -routing to the ID-s
+      // see list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
       // You can download several packages, and route is found through all of them
 
       packageManager.StartPackageDownload("EE-routing");
@@ -532,7 +625,9 @@ Routing package downloads cannot be started immediately, as the Mobile SDK needs
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}@interface RoutePackageManagerListener : NTPackageManagerListener
+  {% highlight objc %}
+  
+  @interface RoutePackageManagerListener : NTPackageManagerListener
 
     @property NTPackageManager* _packageManager;
   - (void)setPackageManager:(NTPackageManager*)manager;
@@ -545,8 +640,7 @@ Routing package downloads cannot be started immediately, as the Mobile SDK needs
   {
       NSLog(@"onPackageListUpdated");
       // We have packages all country/regions
-      // see list of available ID-s: https://developer.nutiteq.com/guides/packages
-      // just append -routing to the ID-s
+      // see list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
       // You can download several packages, and route is found through all of them
       
       [self._packageManager startPackageDownload: @"EE-routing"];
@@ -589,11 +683,91 @@ Routing package downloads cannot be started immediately, as the Mobile SDK needs
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}COMING SOON...
+  {% highlight swift %}
+  
+public class RoutePackageManagerListener : NTPackageManagerListener {
+    
+    var packageManager: NTCartoPackageManager?
+    
+    convenience init(packageManager: NTCartoPackageManager) {
+        self.init()
+        self.packageManager = packageManager
+    }
+    
+    public override func onPackageListUpdated() {
+        
+        // Start download of package of Estonia & Latvia
+        // see list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
+        // just append -routing to the ID-s
+        // You can download several packages, and route is found through all of them
+        
+        self.packageManager?.startPackageDownload("EE-routing");
+        self.packageManager?.startPackageDownload("LV-routing");
+    }
+    
+    public override func onPackageListFailed() {
+        
+    }
+    
+    public override func onPackageStatusChanged(_ arg1: String!, version: Int32, status: NTPackageStatus!) {
+        // Here you can monitor download process %
+    }
+    public override func onPackageUpdated(_ arg1: String!, version: Int32) {
+        
+    }
+    
+    public override func onPackageCancelled(_ arg1: String!, version: Int32) {
+        
+    }
+    
+    public override func onPackageFailed(_ arg1: String!, version: Int32, errorType: NTPackageErrorType) {
+        
+    }
+}
 
   {% endhighlight %}
   </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  {% highlight kotlin %}
   
+    class RoutePackageManagerListener(val packageManager: CartoPackageManager) : PackageManagerListener() {
+
+        override fun onPackageListUpdated() {
+
+            // Start download of package of Estonia & Latvia
+            // see list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
+            // just append -routing to the ID-s
+            // You can download several packages, and route is found through all of them
+
+            packageManager.startPackageDownload("EE-routing");
+            packageManager.startPackageDownload("LV-routing");
+        }
+
+        override fun onPackageListFailed() {
+
+        }
+
+        override fun onPackageStatusChanged(id: String?, version: Int, status: PackageStatus?) {
+            // Here you can monitor download process %
+        }
+
+        override fun onPackageUpdated(id: String?, version: Int) {
+
+        }
+
+        override fun onPackageCancelled(id: String?, version: Int) {
+
+        }
+
+        override fun onPackageFailed(id: String?, version: Int, errorType: PackageErrorType?) {
+
+        }
+    }
+
+  {% endhighlight %}
+  </div>
+    
 </div>
 
 **Note:** If you are wondering why these code samples include `EE` and `LV` (Estonia and Latvia) packages, there is a  multi-country route that is needed for offline routing. For example, see why [these countries might be linked](http://www.baltictimes.com/estonian_president_marries_latvian_cyber_defence_expert/). This shows that offline routing works across borders.
@@ -618,20 +792,23 @@ To link PackageManagerListener with PackageManager (and to have a fully working 
     <li class="Tab js-Tabpanes-navItem--lang">
       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
     </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
-// 1. Set listener, and start PackageManager
-      packageManager.setPackageManagerListener(new RoutePackageManagerListener());
-      packageManager.start();
+	// 1. Set listener, and start PackageManager
+     packageManager.setPackageManagerListener(new RoutePackageManagerListener());
+     packageManager.start();
 
-// 2. Fetch list of available packages from server. Note that this is asynchronous operation and listener will be notified via onPackageListUpdated when this succeeds.
-    packageManager.startPackageListDownload();
+	// 2. Fetch list of available packages from server. Note that this is asynchronous operation and listener will be notified via onPackageListUpdated when this succeeds.
+     packageManager.startPackageListDownload();
 
-// 3. Create offline routing service connected to package manager
-      offlineRoutingService = new PackageManagerRoutingService(packageManager);
+	// 3. Create offline routing service connected to package manager
+     offlineRoutingService = new PackageManagerRoutingService(packageManager);
 
   {% endhighlight %}
   </div>
@@ -639,48 +816,83 @@ To link PackageManagerListener with PackageManager (and to have a fully working 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 
-// 1. Create and set listener, and start PackageManager
-      packageManager.PackageManagerListener = new RoutePackageManagerListener(packageManager);
-      packageManager.Start();
+	// 1. Create and set listener, and start PackageManager
+     packageManager.PackageManagerListener = new RoutePackageManagerListener(packageManager);
+     packageManager.Start();
 
-// 2. Fetch list of available packages from server. 
-      // Note that this is asynchronous operation and the listener will be notified via OnPackageListUpdated when this succeeds.        
-      packageManager.StartPackageListDownload();
+	// 2. Fetch list of available packages from server. 
+     // Note that this is asynchronous operation and the listener will be notified via OnPackageListUpdated when this succeeds.        
+     packageManager.StartPackageListDownload();
 
-// 3. Create offline routing service connected to package manager
-      offlineRoutingService = new PackageManagerRoutingService(packageManager);
+	// 3. Create offline routing service connected to package manager
+     offlineRoutingService = new PackageManagerRoutingService(packageManager);
 
   {% endhighlight %}
   </div>
 
    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"routing:nutiteq.osm.car" dataFolder:packagesDir];
-    
-// 1. Create routePackageManagerListener with your listener class
-    RoutePackageManagerListener* _packageManagerListener = [[RoutePackageManagerListener alloc] init];
-    [_packageManagerListener setPackageManager: packageManager];
-    
-// Attach package manager listener
-    [packageManager setPackageManagerListener:_packageManagerListener];
-    
-    // Start PackageManager
-    [packageManager start];
-    
-// 2. Start download of packageList. When download is done, then the listener's onPackageListUpdated() is called
-    [packageManager startPackageListDownload];
-    
-// 3. Create offline routing service connected to package manager
-    _offlineRoutingService = [[NTPackageManagerRoutingService alloc] initWithPackageManager:packageManager];
+  {% highlight objc %}
+  
+	NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"routing:nutiteq.osm.car" dataFolder:packagesDir];
+	    
+	// 1. Create routePackageManagerListener with your listener class
+	RoutePackageManagerListener* _packageManagerListener = [[RoutePackageManagerListener alloc] init];
+	[_packageManagerListener setPackageManager: packageManager];
+	    
+	// Attach package manager listener
+	[packageManager setPackageManagerListener:_packageManagerListener];
+	    
+	// Start PackageManager
+	[packageManager start];
+	    
+	// 2. Start download of packageList. When download is done, then the listener's onPackageListUpdated() is called
+	[packageManager startPackageListDownload];
+	    
+	// 3. Create offline routing service connected to package manager
+	_offlineRoutingService = [[NTPackageManagerRoutingService alloc] initWithPackageManager:packageManager];
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}COMING SOON...
+  {% highlight swift %}
+  
+        // Create PackageManager instance for dealing with offline packages
+        var packageManager =  NTCartoPackageManager(source: "routing:nutiteq.osm.car", dataFolder: packageFolder)
+        
+        // 1. Set listener, and start PackageManager
+        packageManager?.setPackageManagerListener(RoutePackageManagerListener(packageManager: packageManager!))
+        packageManager?.start()
+        
+        // 2. Fetch list of available packages from server.
+        // Note that this is asynchronous operation
+        // and listener will be notified via onPackageListUpdated when this succeeds.
+        packageManager?.startPackageListDownload()
+        
+        // 3. Create offline routing service connected to package manager
+        let offlineRoutingService = NTPackageManagerRoutingService(packageManager: packageManager)
 
   {% endhighlight %}
   </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  {% highlight kotlin %}
   
+        // 1. Set listener, and start PackageManager
+        packageManager?.packageManagerListener = RoutePackageManagerListener(packageManager!!)
+        packageManager.start()
+
+        // 2. Fetch list of available packages from server. 
+        // Note that this is asynchronous operation 
+        // and listener will be notified via onPackageListUpdated when this succeeds.
+        packageManager.startPackageListDownload()
+
+        // 3. Create offline routing service connected to package manager
+        val offlineRoutingService = PackageManagerRoutingService(packageManager)
+
+  {% endhighlight %}
+  </div>
+    
 </div>
 
 4) Calculate the Route

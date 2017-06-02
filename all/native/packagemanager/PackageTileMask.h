@@ -30,6 +30,7 @@ namespace carto {
             PACKAGE_TILE_STATUS_MISSING,
             /**
              * Tile is part of the package, but package does not fully cover it.
+             * This value is no longer used, thus this is deprecated.
              */
             PACKAGE_TILE_STATUS_PARTIAL,
             /**
@@ -57,19 +58,26 @@ namespace carto {
 
         /**
          * Constructs a new package tile mask instance from encoded string.
-         * @param stringValue The encoded tile mask of the package
+         * @param stringValue The encoded tile mask of the package.
          */
         explicit PackageTileMask(const std::string& stringValue);
 
         /**
+         * Constructs a new package tile mask instance from encoded string and maximum zoom level.
+         * @param stringValue The encoded tile mask of the package
+         * @param maxZoom The maximum zoom level for the tiles.
+         */
+        PackageTileMask(const std::string& stringValue, int maxZoom);
+
+        /**
          * Constructs a new package tile mask instance from a list of tiles.
-         * @param tiles The list of tiles
+         * @param tiles The list of tiles.
          */
         explicit PackageTileMask(const std::vector<Tile>& tiles);
 
         /**
          * Returns the encoded tile mask value. This should not be displayed to the user.
-         * @return The tile mask of the package
+         * @return The tile mask of the package.
          */
         const std::string& getStringValue() const;
 
@@ -122,6 +130,7 @@ namespace carto {
 
         std::string _stringValue;
         std::shared_ptr<TileNode> _rootNode;
+        int _maxZoomLevel;
     };
 }
 

@@ -30,7 +30,7 @@ namespace carto {
         CullWorker();
         virtual ~CullWorker();
         
-        void setComponents(const std::weak_ptr<MapRenderer>& mapRenderer, const std::shared_ptr<CullWorker>& cullWorker);
+        void setComponents(const std::weak_ptr<MapRenderer>& mapRenderer, const std::shared_ptr<CullWorker>& worker);
     
         void init(const std::shared_ptr<Layer>& layer, int delayTime);
         

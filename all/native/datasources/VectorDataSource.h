@@ -7,6 +7,7 @@
 #ifndef _CARTO_VECTORDATASOURCE_H_
 #define _CARTO_VECTORDATASOURCE_H_
 
+#include "core/MapBounds.h"
 #include "datasources/components/VectorData.h"
 
 #include <memory>
@@ -67,6 +68,13 @@ namespace carto {
         virtual ~VectorDataSource();
         
         /**
+         * Returns the extent of the data of this data source.
+         * The bounds are in coordinate system of the projection of the data source.
+         * @return The extent of the data source.
+         */
+        virtual MapBounds getDataExtent() const;
+
+        /**
          * Returns the projection used by this data source.
          * @return The projection used by this data source.
          */
@@ -113,6 +121,7 @@ namespace carto {
         virtual void notifyElementsAdded(const std::vector<std::shared_ptr<VectorElement> >& elements);
         virtual void notifyElementsRemoved(const std::vector<std::shared_ptr<VectorElement> >& elements);
 
+        virtual std::shared_ptr<VectorDataSource> getElementDataSource(const std::shared_ptr<VectorElement>& element) const;
         virtual void attachElement(const std::shared_ptr<VectorElement>& element);
         virtual void detachElement(const std::shared_ptr<VectorElement>& element);
 

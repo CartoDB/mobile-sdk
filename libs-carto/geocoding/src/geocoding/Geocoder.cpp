@@ -33,8 +33,9 @@ namespace carto { namespace geocoding {
             rowCount = static_cast<std::size_t>(qit2->get<std::uint64_t>(0));
         }
 
-        std::size_t filterBitCount = static_cast<std::size_t>(std::ceil((rowCount * 16 * std::log(ENTITY_BLOOM_FILTER_FP_PROB)) / std::log(1.0 / (std::pow(2.0, std::log(2.0)))))) / (8 * sizeof(EntityFilter::bitset_type::block_type)) * (8 * sizeof(EntityFilter::bitset_type::block_type));
-        EntityFilter entityFilter(filterBitCount);
+        std::uint64_t filterBitCount = static_cast<std::uint64_t>(std::ceil((rowCount * 16 * std::log(ENTITY_BLOOM_FILTER_FP_PROB)) / std::log(1.0 / (std::pow(2.0, std::log(2.0)))))) / (8 * sizeof(EntityFilter::bitset_type::block_type)) * (8 * sizeof(EntityFilter::bitset_type::block_type));
+		filterBitCount = std::min(filterBitCount, static_cast<std::uint64_t>(ENTITY_BLOOM_FILTER_MAX_SIZE) * 8);
+        EntityFilter entityFilter(static_cast<std::uint64_t>(filterBitCount));
         sqlite3pp::query query(db, "SELECT IFNULL(country_id, 0), IFNULL(region_id, 0), IFNULL(county_id, 0), IFNULL(locality_id, 0), IFNULL(neighbourhood_id, 0), IFNULL(street_id, 0), IFNULL(name_id, 0) FROM entities");
         for (auto qit = query.begin(); qit != query.end(); qit++) {
             EntityKey key;
@@ -156,7 +157,8 @@ namespace carto { namespace geocoding {
                 query.database = database;
                 query.tokenList = TokenList::build(safeQueryString);
                 matchTokens(query, pass, query.tokenList);
-                matchQuery(query, options, results);
+                std::set<std::vector<std::pair<FieldType, std::string>>> assignments;
+                matchQuery(query, options, assignments, results);
             }
             if (!results.empty()) {
                 break;
@@ -218,25 +220,37 @@ namespace carto { namespace geocoding {
                 else {
                     sql += "token='" + escapeSQLValue(toUtf8String(translatedToken)) + "'";
                 }
-                sqlite3pp::query sqlQuery(*query.database->db, sql.c_str());
 
-                std::vector<Token> tokens;
-                std::uint32_t validTypeMask = 0;
-                float minIDF = std::numeric_limits<float>::infinity();
-                for (auto qit = sqlQuery.begin(); qit != sqlQuery.end(); qit++) {
-                    Token token;
-                    token.id = qit->get<std::uint64_t>(0);
-                    token.token = qit->get<const char*>(1);
-                    token.typeMask = qit->get<std::uint32_t>(2);
-                    token.idf = static_cast<float>(qit->get<double>(3));
+				std::string tokenKey = query.database->id + std::string(1, 0) + sql;
+				std::vector<Token> tokens;
+				if (!_tokenCache.read(tokenKey, tokens)) {
+					sqlite3pp::query sqlQuery(*query.database->db, sql.c_str());
+
+					for (auto qit = sqlQuery.begin(); qit != sqlQuery.end(); qit++) {
+						Token token;
+						token.id = qit->get<std::uint64_t>(0);
+						token.token = qit->get<const char*>(1);
+						token.typeMask = qit->get<std::uint32_t>(2);
+						token.idf = static_cast<float>(qit->get<double>(3));
+						tokens.push_back(std::move(token));
+					}
+
+					_tokenQueryCounter++;
+					_tokenCache.put(tokenKey, tokens);
+				}
                     
-                    std::map<unistring, float> tokenIDFMap;
-                    tokenIDFMap[toUniString(token.token)] = token.idf;
-                    if (calculateNameRank(query, token.token, toUtf8String(translatedToken), tokenIDFMap) >= MIN_MATCH_THRESHOLD) {
-                        tokens.push_back(std::move(token));
-                        minIDF = std::min(minIDF, token.idf);
-                        validTypeMask |= token.typeMask;
-                    }
+				std::uint32_t validTypeMask = 0;
+				float minIDF = std::numeric_limits<float>::infinity();
+				for (auto it = tokens.begin(); it != tokens.end(); ) {
+					std::vector<std::pair<std::string, float>> tokenIDFs = { { it->token, it->idf } };
+                    if (calculateNameRank(query, it->token, toUtf8String(translatedToken), tokenIDFs) >= MIN_MATCH_THRESHOLD) {
+                        minIDF = std::min(minIDF, it->idf);
+                        validTypeMask |= it->typeMask;
+						it++;
+					}
+					else {
+						it = tokens.erase(it);
+					}
                 }
                 tokenList.setTag(i, tokens);
                 tokenList.setIDF(i, minIDF);
@@ -245,13 +259,14 @@ namespace carto { namespace geocoding {
         }
     }
 
-    void Geocoder::matchQuery(Query& query, const Options& options, std::vector<Result>& results) const {
+    void Geocoder::matchQuery(Query& query, const Options& options, std::set<std::vector<std::pair<FieldType, std::string>>>& assignments, std::vector<Result>& results) const {
         if (!results.empty()) {
             if (results.front().unmatchedTokens < query.tokenList.unmatchedInvalidTokens()) {
                 return;
             }
         }
-        
+		assignments.insert(query.tokenList.assignment());
+
         // Enumerate token list
         std::uint32_t validTypeMask = (1 << static_cast<int>(FieldType::COUNTRY)) | (1 << static_cast<int>(FieldType::REGION)) | (1 << static_cast<int>(FieldType::COUNTY)) | (1 << static_cast<int>(FieldType::LOCALITY)) | (1 << static_cast<int>(FieldType::NEIGHBOURHOOD)) | (1 << static_cast<int>(FieldType::STREET)) | (1 << static_cast<int>(FieldType::NAME));
         std::uint32_t strictTypeMask = (1 << static_cast<int>(FieldType::STREET)) | (1 << static_cast<int>(FieldType::NAME));
@@ -262,81 +277,119 @@ namespace carto { namespace geocoding {
             validTypeMask |= 1 << static_cast<int>(FieldType::POSTCODE);
         }
         
-        FieldType type = FieldType::NONE;
-        std::vector<TokenList::Span> spans;
-        query.tokenList.enumerateSpans(validTypeMask, strictTypeMask, type, spans);
-        if (type == FieldType::NONE) {
-            resolveQuery(query, options, results);
-            return;
-        }
-        
-        // Resolve/bind enumerated tokens to subqueries and recurse
-        std::vector<TokenList::Span> validSpans;
-        for (const TokenList::Span& span : spans) {
-            if (span.count > 0) {
-                bool skip = false;
-                for (const TokenList::Span& validSpan : validSpans) {
-                    if (span.index >= validSpan.index && span.index + span.count <= validSpan.index + validSpan.count) {
-                        skip = true;
-                        break;
-                    }
-                }
-                if (skip) {
-                    continue;
-                }
-            }
+		query.tokenList.enumerateSpans(validTypeMask, strictTypeMask, [&](const std::vector<std::pair<FieldType, TokenList::Span>>& spans) -> bool {
+			std::vector<Query> subQueries;
+			for (std::size_t i = 0; i < spans.size(); i++) {
+				FieldType type = spans[i].first;
+				const TokenList::Span& span = spans[i].second;
+				if (type == FieldType::NONE) {
+					if (!results.empty()) {
+						if (results.front().unmatchedTokens < query.tokenList.unmatchedTokens()) {
+							break;
+						}
+					}
+					resolveQuery(query, options, results);
+					break;
+				}
 
-            Query subQuery = query;
-            subQuery.tokenList.assignType(span, type);
-            if (!subQuery.tokenList.valid()) {
-                continue;
-            }
+				Query subQuery = query;
+				subQuery.tokenList.assignType(span, type);
+				if (!subQuery.tokenList.valid()) {
+					continue;
+				}
+				if (assignments.find(subQuery.tokenList.assignment()) != assignments.end()) {
+					continue;
+				}
 
-            bool valid = true;
-            if (span.count > 0) {
-                switch (type) {
-                case FieldType::HOUSENUMBER:
-                    valid = bindQueryStringField(subQuery, type, &Query::houseNumber, span);
-                    break;
-                default:
-                    valid = bindQueryNameField(subQuery, type, Query::getField(type), span);
-                    break;
-                }
+				bool valid = true;
+				if (span.count > 0) {
+					switch (type) {
+					case FieldType::HOUSENUMBER:
+						valid = bindQueryStringField(subQuery, type, &Query::houseNumber, span);
+						break;
+					default:
+						valid = bindQueryNameField(subQuery, type, Query::getField(type), span);
+						break;
+					}
 
-                if (valid) {
-                    valid = filterQuery(subQuery, results);
-                    if (valid) {
-                        validSpans.push_back(span);
-                    }
-                }
-            }
+					if (valid) {
+						valid = filterQuery(subQuery, results);
+					}
+				}
 
-            if (valid) {
-                matchQuery(subQuery, options, results);
-            }
-        }
+				if (valid) {
+					subQueries.push_back(subQuery);
+				}
+			}
+
+			std::sort(subQueries.begin(), subQueries.end(), [](const Query& subQuery1, const Query& subQuery2) {
+				return subQuery1.bestRank(FieldType::NONE, 0) > subQuery2.bestRank(FieldType::NONE, 0);
+			});
+				
+			if (!subQueries.empty()) {
+				float bestRank = 0.0f;
+				for (Query& subQuery : subQueries) {
+					if (subQuery.bestRank(FieldType::NONE, 0) < bestRank) {
+						break;
+					}
+					std::size_t count = results.size();
+					matchQuery(subQuery, options, assignments, results);
+					if (results.size() > count) {
+						bestRank = subQuery.bestRank(FieldType::NONE, 0);
+					}
+				}
+				return results.empty();// || results.front().matchRank < 1;
+			}
+			return true;
+		});
     }
 
-    void Geocoder::matchNames(const Query& query, FieldType type, const std::vector<std::vector<Token>>& tokensList, const std::string& matchName, std::shared_ptr<std::vector<Geocoder::NameRank>>& nameRanks) const {
-        std::string nameKey = query.database->id + std::string(1, 0) + static_cast<char>(type) + std::string(1, 0) + matchName;
+    void Geocoder::matchNames(const Query& query, FieldType type, const std::vector<std::vector<Token>>& tokensList, const std::string& matchName, std::shared_ptr<std::vector<Geocoder::NameRank>>& nameRanks1) const {
+		/*
+		float nameIDF = 0.0f;
+		for (const std::vector<Token>& tokens : tokensList) {
+			auto it = std::min_element(tokens.begin(), tokens.end(), [](const Token& token1, const Token& token2) { return token1.idf > token2.idf; });
+			nameIDF += it->idf;
+		}
+		if (nameIDF < MIN_IDF_THRESHOLD) {
+			nameRanks1 = std::make_shared<std::vector<NameRank>>();
+			return;
+		}
+		*/
+
+        std::string nameKey = query.database->id + std::string(1, 0) + /*static_cast<char>(type) + std::string(1, 0) + */matchName;
         for (const std::vector<Token>& tokens : tokensList) {
             nameKey += std::string(1, 0);
             for (const Token& token : tokens) {
                 nameKey += boost::lexical_cast<std::string>(token.id) + ";";
             }
         }
+		std::shared_ptr<std::vector<Geocoder::NameRank>> nameRanks;
         if (!_nameRankCache.read(nameKey, nameRanks)) {
-            // Select names based on tokens
-            std::vector<std::vector<std::shared_ptr<Name>>> namesList;
-            for (const std::vector<Token>& tokens : tokensList) {
-                std::string sql = "SELECT DISTINCT n.id, n.name, n.lang, n.type FROM names n, nametokens nt WHERE nt.name_id=n.id AND (n.lang IS NULL OR n.lang='" + escapeSQLValue(_language) + "') AND nt.token_id IN (";
+			std::vector<std::vector<Token>> sortedTokensList = tokensList;
+			for (std::vector<Token>& tokens : sortedTokensList) {
+				std::sort(tokens.begin(), tokens.end(), [](const Token& token1, const Token& token2) { return token1.idf < token2.idf; });
+			}
+			std::sort(sortedTokensList.begin(), sortedTokensList.end(), [](const std::vector<Token>& tokens1, const std::vector<Token>& tokens2) { return tokens1.front().idf > tokens2.front().idf; });
+            
+			// Select names based on tokens
+			boost::optional<std::vector<std::shared_ptr<Name>>> optNames;
+            for (const std::vector<Token>& tokens : sortedTokensList) {
+				std::string sql = "SELECT DISTINCT n.id, n.name, n.lang, n.type FROM names n, nametokens nt WHERE nt.name_id=n.id AND (n.lang IS NULL OR n.lang='" + escapeSQLValue(_language) + "') AND nt.token_id IN (";
                 for (std::size_t i = 0; i < tokens.size(); i++) {
-                    sql += (i > 0 ? "," : "") + boost::lexical_cast<std::string>(tokens[i].id);
+					sql += (i > 0 ? "," : "") + boost::lexical_cast<std::string>(tokens[i].id);
                 }
-                sql += ") ORDER BY id ASC";
+				sql += ")";
+				if (optNames) {
+					sql += " AND n.id IN (";
+					for (std::size_t j = 0; j < (*optNames).size(); j++) {
+						sql += (j > 0 ? "," : "") + boost::lexical_cast<std::string>((*optNames)[j]->id);
+					}
+					sql += ")";
+				}
 
-                std::vector<std::shared_ptr<Name>> names;
                 std::string queryKey = query.database->id + std::string(1, 0) + sql;
+				std::vector<std::shared_ptr<Name>> names;
                 if (!_nameCache.read(queryKey, names)) {
                     sqlite3pp::query sqlQuery(*query.database->db, sql.c_str());
 
@@ -347,13 +400,15 @@ namespace carto { namespace geocoding {
                         name->lang = qit->get<const char*>(2) ? qit->get<const char*>(2) : "";
                         name->type = static_cast<FieldType>(qit->get<int>(3));
 
-                        std::string sql2 = "SELECT t.token, t.idf FROM tokens t, nametokens nt WHERE t.id=nt.token_id AND nt.name_id=" + boost::lexical_cast<std::string>(name->id);
-                        sqlite3pp::query sqlQuery2(*query.database->db, sql2.c_str());
-                        for (auto qit2 = sqlQuery2.begin(); qit2 != sqlQuery2.end(); qit2++) {
-                            std::string nameToken = qit2->get<const char*>(0);
-                            float idf = static_cast<float>(qit2->get<double>(1));
-                            name->tokenIDFs.emplace_back(nameToken, idf);
-                        }
+						/*
+						std::string sql2 = "SELECT t.token, t.idf FROM tokens t, nametokens nt WHERE t.id=nt.token_id AND nt.name_id=" + boost::lexical_cast<std::string>(name->id);
+						sqlite3pp::query sqlQuery2(*query.database->db, sql2.c_str());
+						for (auto qit2 = sqlQuery2.begin(); qit2 != sqlQuery2.end(); qit2++) {
+							std::string nameToken = qit2->get<const char*>(0);
+							float idf = static_cast<float>(qit2->get<double>(1));
+							name->tokenIDFs.emplace_back(nameToken, idf);
+						}
+						*/
 
                         names.push_back(std::move(name));
                     }
@@ -362,54 +417,44 @@ namespace carto { namespace geocoding {
                     _nameCache.put(queryKey, names);
                 }
 
-                namesList.push_back(std::move(names));
+				optNames = names;
+				if (names.empty()) {
+					break;
+				}
             }
 
             // Match names, use binary search for fast merging
-            nameRanks = std::make_shared<std::vector<NameRank>>();
-            if (!namesList.empty()) {
-                std::sort(namesList.begin(), namesList.end(), [](const std::vector<std::shared_ptr<Name>>& names1, const std::vector<std::shared_ptr<Name>>& names2) {
-                    return names1.size() < names2.size();
-                });
-
-                for (std::size_t i = 0; i < namesList[0].size(); i++) {
-                    std::map<unistring, float> tokenIDFMap;
-                    bool match = namesList[0][i]->type == type;
-                    float idf = 0;
-                    for (const std::pair<std::string, float>& tokenIDF : namesList[0][i]->tokenIDFs) {
-                        tokenIDFMap[toUniString(tokenIDF.first)] = tokenIDF.second;
-                        idf += tokenIDF.second;
-                    }
-                    for (std::size_t j = 1; j < namesList.size(); j++) {
-                        auto it = std::lower_bound(namesList[j].begin(), namesList[j].end(), namesList[0][i], [](const std::shared_ptr<Name>& name1, const std::shared_ptr<Name>& name2) {
-                            return name1->id < name2->id;
-                        });
-                        if (it == namesList[j].end() || (*it)->id != namesList[0][i]->id) {
-                            match = false;
-                            break;
-                        }
-                        for (const std::pair<std::string, float>& tokenIDF : (*it)->tokenIDFs) {
-                            tokenIDFMap[toUniString(tokenIDF.first)] = tokenIDF.second;
-                            idf += tokenIDF.second;
-                        }
-                    }
-                    if (match && idf >= MIN_IDF_THRESHOLD) {
-                        float rank = calculateNameRank(query, namesList[0][i]->name, matchName, tokenIDFMap);
-                        if (rank >= MIN_MATCH_THRESHOLD) {
-                            nameRanks->push_back(NameRank { namesList[0][i], rank });
-                        }
-                    }
+			nameRanks = std::make_shared<std::vector<NameRank>>();
+			if (optNames) {
+				for (const std::shared_ptr<Name>& name : *optNames) {
+					float rank = calculateNameRank(query, name->name, matchName, name->tokenIDFs);
+					if (rank >= MIN_MATCH_THRESHOLD) {
+						nameRanks->push_back(NameRank { name, rank });
+					}
                 }
-            }
 
-            // Sort the results by decreasing ranks
-            std::sort(nameRanks->begin(), nameRanks->end(), [](const NameRank& nameRank1, const NameRank& nameRank2) {
-                return nameRank1.rank > nameRank2.rank;
-            });
+				// Sort the results by decreasing ranks
+				std::sort(nameRanks->begin(), nameRanks->end(), [](const NameRank& nameRank1, const NameRank& nameRank2) {
+					return nameRank1.rank > nameRank2.rank;
+				});
+				for (std::size_t i = 1; i < nameRanks->size(); i++) {
+					if (nameRanks->at(i).rank < nameRanks->front().rank * MAX_MATCH_RATIO) {
+						nameRanks->erase(nameRanks->begin() + i, nameRanks->end());
+						break;
+					}
+				}
+			}
 
             _nameRankCounter++;
             _nameRankCache.put(nameKey, nameRanks);
         }
+
+		nameRanks1 = std::make_shared<std::vector<NameRank>>();
+		for (const NameRank& nameRank : *nameRanks) {
+			if (nameRank.name->type == type) {
+				nameRanks1->push_back(nameRank);
+			}
+		}
     }
 
     void Geocoder::resolveQuery(const Query& query, const Options& options, std::vector<Result>& results) const {
@@ -512,7 +557,7 @@ namespace carto { namespace geocoding {
             }
 
             // Early out test
-            if (result.totalRank() < MIN_RANK) {
+            if (result.totalRank() < MIN_RANK_THRESHOLD) {
                 continue;
             }
 
@@ -536,7 +581,7 @@ namespace carto { namespace geocoding {
 
                 // Drop results that have too low rankings
                 while (!results.empty()) {
-                    if (results.front().totalRank() * MAX_RANK_RATIO <= results.back().totalRank() && results.back().totalRank() >= MIN_RANK) {
+                    if (results.front().totalRank() * MAX_RANK_RATIO <= results.back().totalRank() && results.back().totalRank() >= MIN_RANK_THRESHOLD) {
                         break;
                     }
                     results.pop_back();
@@ -545,14 +590,16 @@ namespace carto { namespace geocoding {
         }
     }
 
-    float Geocoder::calculateNameRank(const Query& query, const std::string& name, const std::string& queryName, const std::map<unistring, float>& tokenIDFMap) const {
+    float Geocoder::calculateNameRank(const Query& query, const std::string& name, const std::string& queryName, const std::vector<std::pair<std::string, float>>& tokenIDFs) const {
         float rank = 1.0f;
         std::string nameKey = query.database->id + std::string(1, 0) + name + std::string(1, 0) + queryName;
         if (!_nameMatchCache.read(nameKey, rank)) {
-            auto getTokenRank = [&tokenIDFMap, &query](const unistring& token) {
-                unistring translatedToken = getTranslatedToken(token, query.database->translationTable);
-                auto it = tokenIDFMap.find(translatedToken);
-                if (it != tokenIDFMap.end()) {
+            auto getTokenRank = [&tokenIDFs, &query](const unistring& token) {
+                std::string translatedToken = toUtf8String(getTranslatedToken(token, query.database->translationTable));
+				auto it = std::find_if(tokenIDFs.begin(), tokenIDFs.end(), [&translatedToken](const std::pair<std::string, float>& tokenIDF) {
+					return tokenIDF.first == translatedToken;
+				});
+                if (it != tokenIDFs.end()) {
                     return it->second;
                 }
                 return 1.0f;
@@ -640,21 +687,25 @@ namespace carto { namespace geocoding {
     }
 
     bool Geocoder::filterQuery(Query& query, const std::vector<Result>& results) const {
-        float bestRank = (results.empty() ? 0.0f : results.front().totalRank());
+		static constexpr std::size_t THRESHOLD = 64;
+		
+		_bloomTestCounter++;
+        
+		float bestRank = (results.empty() ? 0.0f : results.front().totalRank());
         float worstRank = (results.empty() ? 0.0f : results.back().totalRank());
         for (int i = static_cast<int>(FieldType::COUNTRY); i < static_cast<int>(FieldType::HOUSENUMBER); i++) {
             FieldType type = static_cast<FieldType>(i);
             std::shared_ptr<std::vector<NameRank>> Query::* field = query.getField(type);
             if (query.*field) {
                 float rank = !(query.*field)->empty() ? query.bestRank(type, 0) : 0.0f;
-                if ((rank < MIN_RANK) || (rank < bestRank * MAX_RANK_RATIO) || (rank < worstRank && results.size() >= MAX_RESULTS)) {
+                if ((rank < MIN_RANK_THRESHOLD) || (rank < bestRank * MAX_RANK_RATIO) || (rank < worstRank && results.size() >= MAX_RESULTS)) {
                     return false;
                 }
 
                 bool copy = false;
                 while (!(query.*field)->empty()) {
                     float rank = query.bestRank(type, (query.*field)->size() - 1);
-                    if (!(rank < MIN_RANK) && !(rank < bestRank * MAX_RANK_RATIO) && !(rank < worstRank && results.size() >= MAX_RESULTS)) {
+                    if (!(rank < MIN_RANK_THRESHOLD) && !(rank < bestRank * MAX_RANK_RATIO) && !(rank < worstRank && results.size() >= MAX_RESULTS)) {
                         break;
                     }
                     if (!copy) {
@@ -671,14 +722,14 @@ namespace carto { namespace geocoding {
 
         auto iterateKeys = [](const std::shared_ptr<std::vector<NameRank>>& names) -> const std::vector<NameRank>& {
             static const std::vector<NameRank> nullNames = { NameRank { std::make_shared<Name>(), 1.0f } };
-            if (!names) {
+            if (!names || names->size() > THRESHOLD) {
                 return nullNames;
             }
             return *names;
         };
 
         auto filterKeys = [](std::shared_ptr<std::vector<NameRank>>& names, const std::unordered_set<uint64_t>& ids) -> bool {
-            if (!names) {
+            if (!names || names->size() > THRESHOLD) {
                 return true;
             }
             std::shared_ptr<std::vector<NameRank>> filteredNames;

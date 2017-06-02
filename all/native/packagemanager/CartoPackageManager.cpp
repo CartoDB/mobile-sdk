@@ -32,7 +32,7 @@ namespace carto {
 
         std::string baseURL;
         if (packageSource.type == "map") {
-            baseURL = MAP_PACKAGE_LIST_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/packages.json";
+            baseURL = MAP_PACKAGE_LIST_URL + NetworkUtils::URLEncode(packageSource.id) + "/2/packages.json";
         }
         else if (packageSource.type == "routing") {
             baseURL = ROUTING_PACKAGE_LIST_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/packages.json";
@@ -47,7 +47,7 @@ namespace carto {
         params["platform"] = PlatformUtils::GetPlatformId();
         params["sdk_build"] = _CARTO_MOBILE_SDK_VERSION;
         std::string appToken;
-        if (LicenseManager::GetInstance().getParameter("appToken", appToken, true)) {
+        if (LicenseManager::GetInstance().getParameter("appToken", appToken, false)) {
             params["appToken"] = appToken;
         }
         return NetworkUtils::BuildURLFromParameters(baseURL, params);
@@ -103,7 +103,7 @@ namespace carto {
     
     std::string CartoPackageManager::createPackageURL(const std::string& packageId, int version, const std::string& baseURL, bool downloaded) const {
         std::string appToken;
-        if (!LicenseManager::GetInstance().getParameter("appToken", appToken)) {
+        if (!LicenseManager::GetInstance().getParameter("appToken", appToken, false)) {
             return std::string(); // invalid URL
         }
  
@@ -130,6 +130,10 @@ namespace carto {
                 double minLat = boost::lexical_cast<double>(std::string(results[2].first, results[2].second));
                 double maxLon = boost::lexical_cast<double>(std::string(results[3].first, results[3].second));
                 double maxLat = boost::lexical_cast<double>(std::string(results[4].first, results[4].second));
+                if (minLon >= maxLon || minLat >= maxLat) {
+                    Log::Warn("CartoPackageManager: Empty bounding box");
+                    return std::shared_ptr<PackageInfo>();
+                }
                 bounds = MapBounds(proj.fromLatLong(minLat, minLon), proj.fromLatLong(maxLat, maxLon));
             }
             catch (const boost::bad_lexical_cast&) {
@@ -146,11 +150,14 @@ namespace carto {
             auto tileMask = std::make_shared<PackageTileMask>(tiles);
 
             std::string baseURL;
+            PackageType::PackageType packageType = PackageType::PACKAGE_TYPE_MAP;
             if (packageSource.type == "map") {
                 baseURL = CUSTOM_MAP_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(packageSource.id) + "/custom/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".mbtiles";
+                packageType = PackageType::PACKAGE_TYPE_MAP;
             }
             else if (packageSource.type == "routing") {
                 baseURL = CUSTOM_ROUTING_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/custom/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".mbtiles";
+                packageType = PackageType::PACKAGE_TYPE_VALHALLA_ROUTING;
             }
             else {
                 Log::Errorf("CartoPackageManager: Illegal package type: %s", packageSource.type.c_str());
@@ -162,14 +169,14 @@ namespace carto {
             params["platform"] = PlatformUtils::GetPlatformId();
             params["sdk_build"] = _CARTO_MOBILE_SDK_VERSION;
             std::string appToken;
-            if (LicenseManager::GetInstance().getParameter("appToken", appToken, true)) {
+            if (LicenseManager::GetInstance().getParameter("appToken", appToken, false)) {
                 params["appToken"] = appToken;
             }
             std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
 
             auto packageInfo = std::make_shared<PackageInfo>(
                 packageId,
-                PackageType::PACKAGE_TYPE_MAP,
+                packageType,
                 version,
                 0,
                 url,

@@ -224,6 +224,9 @@ namespace valhalla { namespace thor {
         correlated.reserve(points.size());
         for (const auto& point : points) {
             auto projections = valhalla::loki::Search(std::vector<valhalla::baldr::Location> { point }, reader, cost->GetEdgeFilter(), cost->GetNodeFilter());
+            if (projections.find(point) == projections.end()) {
+                throw std::runtime_error("Failed to locate route endpoint in routing graph");
+            }
             correlated.push_back(projections.at(point));
         }
 

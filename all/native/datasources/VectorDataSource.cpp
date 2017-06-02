@@ -21,6 +21,10 @@ namespace carto {
     VectorDataSource::~VectorDataSource() {
     }
         
+    MapBounds VectorDataSource::getDataExtent() const {
+        return _projection->getBounds();
+    }
+    
     std::shared_ptr<Projection> VectorDataSource::getProjection() const {
         return _projection;
     }
@@ -124,6 +128,10 @@ namespace carto {
         for (const std::shared_ptr<OnChangeListener>& listener : *onChangeListeners) {
             listener->onElementsRemoved();
         }
+    }
+
+    std::shared_ptr<VectorDataSource> VectorDataSource::getElementDataSource(const std::shared_ptr<VectorElement>& element) const {
+        return element->getDataSource();
     }
     
     void VectorDataSource::attachElement(const std::shared_ptr<VectorElement>& element) {
