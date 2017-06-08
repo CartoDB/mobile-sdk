@@ -98,7 +98,7 @@ namespace carto { namespace vt {
 
     class FontManagerFont : public Font {
     public:
-        explicit FontManagerFont(const std::shared_ptr<FontManagerLibrary>& library, const std::shared_ptr<GlyphMap>& glyphMap, const std::vector<unsigned char>* data, const FontManager::Parameters& params) : _parameters(params), _library(library), _glyphMap(glyphMap), _face(nullptr), _font(nullptr), _metrics(0, 0, 0) {
+        explicit FontManagerFont(const std::shared_ptr<FontManagerLibrary>& library, const std::shared_ptr<GlyphMap>& glyphMap, const std::vector<unsigned char>* data, const FontManager::Parameters& params) : _parameters(params), _library(library), _glyphMap(glyphMap), _face(nullptr), _font(nullptr), _metrics(0, 0, 0, 0) {
             std::lock_guard<std::recursive_mutex> lock(_library->getMutex());
 
             // Load FreeType font
@@ -111,9 +111,10 @@ namespace carto { namespace vt {
 
             // Create HarfBuzz font
             if (_face) {
-				_metrics.ascent = _face->size->metrics.ascender / 64.0f * _parameters.size / RENDER_SIZE * 1.25f;
-				_metrics.descent = _face->size->metrics.descender / 64.0f * _parameters.size / RENDER_SIZE * 1.25f;
-				_metrics.height = _face->size->metrics.height / 64.0f * _parameters.size / RENDER_SIZE * 1.25f;
+				_metrics.ascent = _face->size->metrics.ascender / 64.0f * _parameters.size / RENDER_SIZE / FONT_SCALE;
+				_metrics.descent = _face->size->metrics.descender / 64.0f * _parameters.size / RENDER_SIZE / FONT_SCALE;
+				_metrics.height = _face->size->metrics.height / 64.0f * _parameters.size / RENDER_SIZE / FONT_SCALE;
+				_metrics.sdfScale = 2.0f / _metrics.height;
 
                 _font = hb_ft_font_create(_face, nullptr);
                 if (_font) {
@@ -270,13 +271,13 @@ namespace carto { namespace vt {
 			std::vector<std::uint32_t> glyphBitmapData(sdf.width() * sdf.height());
 			for (int y = 0; y < sdf.height(); y++) {
 				for (int x = 0; x < sdf.width(); x++) {
-					float c = std::max(0.0f, std::min(255.0f, sdf(x, sdf.height() - 1 - y) * 32.0f + 127.5f));
+					float c = std::max(0.0f, std::min(255.0f, (sdf(x, sdf.height() - 1 - y) - 0.5f) * 32.0f + 127.5f));
 					std::uint32_t val = static_cast<std::uint8_t>(c);
 					glyphBitmapData[x + y * sdf.width()] = (val << 24) | (val << 16) | (val << 8) | val;
 				}
 			}
 			std::shared_ptr<Bitmap> glyphBitmap = std::make_shared<Bitmap>(sdf.width(), sdf.height(), std::move(glyphBitmapData));
-			return _glyphMap->loadBitmapGlyph(glyphBitmap, true, cglib::vec2<float>(RENDER_PADDING - xOffset, -yOffset));
+			return _glyphMap->loadBitmapGlyph(glyphBitmap, true, cglib::vec2<float>(-RENDER_PADDING - xOffset, RENDER_PADDING - yOffset));
 		}
 
         const FontManager::Parameters _parameters;

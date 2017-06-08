@@ -30,8 +30,9 @@ namespace carto { namespace vt {
             float ascent;
             float descent;
             float height;
+			float sdfScale;
 
-            explicit Metrics(float ascent, float descent, float height) : ascent(ascent), descent(descent), height(height) { }
+            explicit Metrics(float ascent, float descent, float height, float sdfScale) : ascent(ascent), descent(descent), height(height), sdfScale(sdfScale) { }
         };
 
 		struct Glyph {

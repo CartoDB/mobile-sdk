@@ -248,18 +248,18 @@ namespace carto { namespace vt {
 		Color color = Color::fromColorOpacity(_color, _opacity);
 		colors.fill(color.rgba(), _cachedVertices.size());
 
-		float c = 1.85f / _font->getMetrics().height;
-		float d = c * 3;
-		if (0.5f - c - d <= 0) {
-			d = 0.5f - c;
+		float sdfScale = _font->getMetrics().sdfScale;
+		float haloScale = sdfScale * 3;
+		if (0.5f - sdfScale - haloScale <= 0) {
+			haloScale = 0.5f - sdfScale;
 		}
 		attribs.copy(_cachedAttribs, 0, _cachedAttribs.size());
 		for (cglib::vec4<float>* it = attribs.end() - _cachedAttribs.size(); it != attribs.end(); it++) {
-			*it = cglib::vec4<float>(0.5f - c - d, 0.5f / c, 0, (*it)(3));
+			*it = cglib::vec4<float>(0.5f - sdfScale - haloScale, 0.5f / sdfScale, 0, (*it)(3));
 		}
 		attribs.copy(_cachedAttribs, 0, _cachedAttribs.size());
 		for (cglib::vec4<float>* it = attribs.end() - _cachedAttribs.size(); it != attribs.end(); it++) {
-			*it = cglib::vec4<float>(0.5f - c, 0.5f / c, 0, (*it)(3) > 0.5f ? 1.0f : 0.0f);
+			*it = cglib::vec4<float>(0.5f - sdfScale, 0.5f / sdfScale, 0, (*it)(3) > 0.5f ? 1.0f : 0.0f);
 		}
 		return _cachedValid;
 	}
