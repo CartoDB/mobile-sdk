@@ -87,7 +87,7 @@ namespace carto { namespace mvt {
                 shieldInfos.clear();
             }
             else {
-                vt::TextLabelStyle style(placement, *formatterOptions, font, _orientationAngle, fontScale, backgroundOffset, backgroundBitmap);
+                vt::TextLabelStyle style(placement, *formatterOptions, vt::Color::fromColorOpacity(_fill, _opacity), vt::Color::fromColorOpacity(_haloFill, _haloOpacity), font, _orientationAngle, fontScale, backgroundOffset, backgroundBitmap);
 
                 std::size_t labelInfoIndex = 0;
                 layerBuilder.addTextLabels([&](long long& id, vt::TileLayerBuilder::TextLabelInfo& labelInfo) {

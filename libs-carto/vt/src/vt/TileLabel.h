@@ -27,7 +27,7 @@
 namespace carto { namespace vt {
     class TileLabel final {
     public:
-        explicit TileLabel(const TileId& tileId, long long localId, long long globalId, long long groupId, std::shared_ptr<const Font> font, std::vector<Font::Glyph> glyphs, boost::optional<cglib::vec3<double>> position, std::vector<cglib::vec3<double>> vertices, LabelOrientation orientation, const boost::optional<cglib::mat3x3<float>>& transform, float scale, const Color& color);
+        explicit TileLabel(const TileId& tileId, long long localId, long long globalId, long long groupId, std::shared_ptr<const Font> font, std::vector<Font::Glyph> glyphs, boost::optional<cglib::vec3<double>> position, std::vector<cglib::vec3<double>> vertices, LabelOrientation orientation, const boost::optional<cglib::mat3x3<float>>& transform, float scale, const Color& color, const Color& haloColor);
 
         const TileId& getTileId() const { return _tileId; }
         long long getLocalId() const { return _localId; }
@@ -35,7 +35,6 @@ namespace carto { namespace vt {
         long long getGroupId() const { return _groupId; }
         bool isValid() const { return (bool) _placement; }
         float getScale() const { return _scale; }
-        const Color& getColor() const { return _color; }
 
         int getPriority() const { return _priority; }
         void setPriority(int priority) { _priority = priority; }
@@ -63,7 +62,7 @@ namespace carto { namespace vt {
 
         bool calculateCenter(cglib::vec3<double>& pos) const;
         bool calculateEnvelope(const ViewState& viewState, std::array<cglib::vec3<float>, 4>& envelope) const;
-        bool calculateVertexData(const ViewState& viewState, VertexArray<cglib::vec3<float>>& vertices, VertexArray<cglib::vec2<float>>& texCoords, VertexArray<unsigned short>& indices) const;
+        bool calculateVertexData(const ViewState& viewState, VertexArray<cglib::vec3<float>>& vertices, VertexArray<cglib::vec2<float>>& texCoords, VertexArray<cglib::vec4<float>>& colors, VertexArray<cglib::vec4<float>>& attribs, VertexArray<unsigned short>& indices) const;
 
     private:
         constexpr static float EXTRA_PLACEMENT_PIXELS = 30.0f; // extra visible pixels required for placement
@@ -99,8 +98,8 @@ namespace carto { namespace vt {
         };
         
         void setupCoordinateSystem(const ViewState& viewState, const std::shared_ptr<const Placement>& placement, cglib::vec3<float>& origin, cglib::vec3<float>& xAxis, cglib::vec3<float>& yAxis) const;
-        void buildPointVertexData(VertexArray<cglib::vec2<float>>& vertices, VertexArray<cglib::vec2<float>>& texCoords, VertexArray<unsigned short>& indices) const;
-        bool buildLineVertexData(const std::shared_ptr<const Placement>& placement, float scale, VertexArray<cglib::vec2<float>>& vertices, VertexArray<cglib::vec2<float>>& texCoords, VertexArray<unsigned short>& indices) const;
+        void buildPointVertexData(VertexArray<cglib::vec2<float>>& vertices, VertexArray<cglib::vec2<float>>& texCoords, VertexArray<cglib::vec4<float>>& attribs, VertexArray<unsigned short>& indices) const;
+        bool buildLineVertexData(const std::shared_ptr<const Placement>& placement, float scale, VertexArray<cglib::vec2<float>>& vertices, VertexArray<cglib::vec2<float>>& texCoords, VertexArray<cglib::vec4<float>>& attribs, VertexArray<unsigned short>& indices) const;
 
         std::shared_ptr<const Placement> getPlacement(const ViewState& viewState) const;
         std::shared_ptr<const Placement> reversePlacement(const std::shared_ptr<const Placement>& placement) const;
@@ -120,6 +119,7 @@ namespace carto { namespace vt {
         const Vertices _originalVertices;
         const float _scale;
         const Color _color;
+		const Color _haloColor;
 
         boost::optional<cglib::mat3x3<float>> _transform;
         Vertices _transformedPositions;
@@ -137,11 +137,11 @@ namespace carto { namespace vt {
 
         mutable bool _cachedValid = false;
         mutable float _cachedScale = 0;
-        mutable cglib::vec3<double> _cachedOrigin;
         mutable std::shared_ptr<const Placement> _cachedPlacement;
         mutable VertexArray<cglib::vec2<float>> _cachedVertices;
         mutable VertexArray<cglib::vec2<float>> _cachedTexCoords;
-        mutable VertexArray<unsigned short> _cachedIndices;
+		mutable VertexArray<cglib::vec4<float>> _cachedAttribs;
+		mutable VertexArray<unsigned short> _cachedIndices;
     };
 } }
 

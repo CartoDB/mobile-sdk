@@ -2,8 +2,8 @@
 #include "BitmapManager.h"
 
 namespace carto { namespace vt {
-    StrokeMap::StrokeMap(int width) :
-        _width(width), _height(0), _strokeMap(), _bitmapStrokeMap(), _bitmapPattern(), _mutex()
+    StrokeMap::StrokeMap(int width, int maxHeight) :
+        _width(width), _maxHeight(maxHeight), _height(0), _strokeMap(), _bitmapStrokeMap(), _bitmapPattern(), _mutex()
     {
         int height = 1;
         std::vector<std::uint32_t> data(width * 1, 0xffffffffU);
@@ -18,16 +18,14 @@ namespace carto { namespace vt {
         return _bitmapPattern->bitmap->width;
     }
 
-    const std::unique_ptr<const StrokeMap::Stroke>& StrokeMap::getStroke(StrokeId strokeId) const {
-        static std::unique_ptr<const Stroke> nullStroke;
-
+    const StrokeMap::Stroke* StrokeMap::getStroke(StrokeId strokeId) const {
         std::lock_guard<std::mutex> lock(_mutex);
         
         auto it = _strokeMap.find(strokeId);
         if (it == _strokeMap.end()) {
-            return nullStroke;
+			return nullptr;
         }
-        return it->second;
+        return it->second.get();
     }
     
     StrokeMap::StrokeId StrokeMap::loadBitmapPattern(const std::shared_ptr<const BitmapPattern>& bitmapPattern) {
@@ -60,6 +58,10 @@ namespace carto { namespace vt {
         std::shared_ptr<const Bitmap> scaledBitmap = BitmapManager::scale(std::make_shared<Bitmap>(patternWidth, patternHeight, std::move(patternData)), _width, patternHeight);
 
         int height = _height + scaledBitmap->height;
+		if (height > _maxHeight) {
+			return 0;
+		}
+
         int pow2Height = 1;
         while (pow2Height <= height) { pow2Height *= 2; } // ensure that extra white line is always included
         std::vector<std::uint32_t> data(_width * pow2Height, 0xffffffffU);

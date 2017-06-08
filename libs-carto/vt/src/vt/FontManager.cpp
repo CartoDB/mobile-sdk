@@ -19,8 +19,50 @@
 #include <hb.h>
 #include <hb-ft.h>
 
+#include <msdfgen.h>
+
 extern "C" {
-    hb_unicode_funcs_t *hb_ucdn_get_unicode_funcs(void);
+    hb_unicode_funcs_t* hb_ucdn_get_unicode_funcs(void);
+}
+
+namespace {
+	struct FtContext {
+		msdfgen::Point2 position;
+		msdfgen::Shape* shape;
+		msdfgen::Contour* contour;
+	};
+
+	inline msdfgen::Point2 ftPoint2(const FT_Vector& vector) {
+		return msdfgen::Point2(vector.x / 64.0, vector.y / 64.0);
+	}
+
+	int ftMoveTo(const FT_Vector* to, void* user) {
+		FtContext* context = reinterpret_cast<FtContext*>(user);
+		context->contour = &context->shape->addContour();
+		context->position = ftPoint2(*to);
+		return 0;
+	}
+
+	int ftLineTo(const FT_Vector* to, void* user) {
+		FtContext* context = reinterpret_cast<FtContext*>(user);
+		context->contour->addEdge(new msdfgen::LinearSegment(context->position, ftPoint2(*to)));
+		context->position = ftPoint2(*to);
+		return 0;
+	}
+
+	int ftConicTo(const FT_Vector* control, const FT_Vector* to, void* user) {
+		FtContext* context = reinterpret_cast<FtContext*>(user);
+		context->contour->addEdge(new msdfgen::QuadraticSegment(context->position, ftPoint2(*control), ftPoint2(*to)));
+		context->position = ftPoint2(*to);
+		return 0;
+	}
+
+	int ftCubicTo(const FT_Vector* control1, const FT_Vector* control2, const FT_Vector* to, void* user) {
+		FtContext* context = reinterpret_cast<FtContext*>(user);
+		context->contour->addEdge(new msdfgen::CubicSegment(context->position, ftPoint2(*control1), ftPoint2(*control2), ftPoint2(*to)));
+		context->position = ftPoint2(*to);
+		return 0;
+	}
 }
 
 namespace carto { namespace vt {
@@ -56,22 +98,22 @@ namespace carto { namespace vt {
 
     class FontManagerFont : public Font {
     public:
-        explicit FontManagerFont(const std::shared_ptr<FontManagerLibrary>& library, int maxGlyphMapWidth, int maxGlyphMapHeight, const std::vector<unsigned char>* data, const FontManager::Parameters& params) : _parameters(params), _library(library), _renderScale(static_cast<float>(TARGET_DPI) / static_cast<float>(RENDER_DPI)), _glyphMap(std::make_shared<GlyphMap>(maxGlyphMapWidth, maxGlyphMapHeight)), _face(nullptr), _font(nullptr), _metrics(0, 0, 0) {
+        explicit FontManagerFont(const std::shared_ptr<FontManagerLibrary>& library, const std::shared_ptr<GlyphMap>& glyphMap, const std::vector<unsigned char>* data, const FontManager::Parameters& params) : _parameters(params), _library(library), _glyphMap(glyphMap), _face(nullptr), _font(nullptr), _metrics(0, 0, 0) {
             std::lock_guard<std::recursive_mutex> lock(_library->getMutex());
 
             // Load FreeType font
             if (data) {
                 int error = FT_New_Memory_Face(_library->getLibrary(), data->data(), data->size(), 0, &_face);
                 if (error == 0) {
-                    error = FT_Set_Char_Size(_face, 0, static_cast<int>(std::floor(params.size * 64.0f)), RENDER_DPI, RENDER_DPI);
+                    error = FT_Set_Char_Size(_face, 0, static_cast<int>(RENDER_SIZE * 64.0f), 0, 0);
                 }
             }
 
             // Create HarfBuzz font
             if (_face) {
-                _metrics.ascent = _face->size->metrics.ascender / 64.0f * _renderScale;
-                _metrics.descent = _face->size->metrics.descender / 64.0f * _renderScale;
-                _metrics.height = _face->size->metrics.height / 64.0f * _renderScale;
+				_metrics.ascent = _face->size->metrics.ascender / 64.0f * _parameters.size / RENDER_SIZE * 1.25f;
+				_metrics.descent = _face->size->metrics.descender / 64.0f * _parameters.size / RENDER_SIZE * 1.25f;
+				_metrics.height = _face->size->metrics.height / 64.0f * _parameters.size / RENDER_SIZE * 1.25f;
 
                 _font = hb_ft_font_create(_face, nullptr);
                 if (_font) {
@@ -83,11 +125,6 @@ namespace carto { namespace vt {
             _buffer = hb_buffer_create();
             if (_buffer) {
                 hb_buffer_set_unicode_funcs(_buffer, hb_ucdn_get_unicode_funcs());
-            }
-    
-            // Initialize gamma correction table
-            for (std::size_t i = 0; i < _gammaTable.size(); i++) {
-                _gammaTable[i] = static_cast<std::uint8_t>(255.0f * std::pow(i / 255.0f, 1.0f));
             }
         }
 
@@ -161,17 +198,21 @@ namespace carto { namespace vt {
                     CodePoint remappedCodePoint = info[i].codepoint | (fontId << 24);
                     auto it = _codePointGlyphMap.find(remappedCodePoint);
                     if (it == _codePointGlyphMap.end()) {
-                        GlyphId glyphId = addFreeTypeGlyph(font->_face, info[i].codepoint);
+                        GlyphMap::GlyphId glyphId = addFreeTypeGlyph(font->_face, info[i].codepoint);
                         if (!glyphId) {
                             continue;
                         }
                         it = _codePointGlyphMap.insert({ remappedCodePoint, glyphId }).first;
                     }
-                    if (const Glyph* glyph = _glyphMap->getGlyph(it->second)) {
-                        glyphs.push_back(*glyph);
+                    if (const GlyphMap::Glyph* baseGlyph = _glyphMap->getGlyph(it->second)) {
+						cglib::vec2<float> size(static_cast<float>(baseGlyph->width), static_cast<float>(baseGlyph->height));
+						cglib::vec2<float> offset(baseGlyph->origin(0), baseGlyph->origin(1) + _face->size->metrics.descender / RENDER_SIZE / 64.0f);
+						float fontScale = FONT_SCALE * _parameters.size / RENDER_SIZE;
+						Glyph glyph(info[i].codepoint, *baseGlyph, size * fontScale, offset * fontScale, cglib::vec2<float>(0, 0));
+						glyphs.push_back(glyph);
                         if (i < posCount) {
-                            glyphs.back().offset += cglib::vec2<float>(pos[i].x_offset / 64.0f * _renderScale, pos[i].y_offset / 64.0f * _renderScale);
-                            glyphs.back().advance = cglib::vec2<float>(pos[i].x_advance / 64.0f * _renderScale, pos[i].y_advance / 64.0f * _renderScale);
+                            glyphs.back().offset += cglib::vec2<float>(pos[i].x_offset / 64.0f, pos[i].y_offset / 64.0f) * fontScale;
+							glyphs.back().advance = cglib::vec2<float>(pos[i].x_advance / 64.0f, pos[i].y_advance / 64.0f) * fontScale;
                         }
                     }
                 }
@@ -179,141 +220,69 @@ namespace carto { namespace vt {
             return glyphs;
         }
 
-        virtual const Glyph* loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap) override {
-            std::lock_guard<std::recursive_mutex> lock(_library->getMutex());
-            if (!bitmap) {
-                return _glyphMap->getGlyph(_codePointGlyphMap[0]);
-            }
-
-            // Try to use cached glyph
-            auto it = _bitmapGlyphMap.find(bitmap);
-            if (it != _bitmapGlyphMap.end()) {
-                return _glyphMap->getGlyph(_codePointGlyphMap[it->second]);
-            }
-
-            // Must load/render new glyph
-            CodePoint codePoint = static_cast<CodePoint>(_bitmapGlyphMap.size() + BITMAP_CODEPOINTS);
-            GlyphId glyphId = _glyphMap->loadBitmapGlyph(bitmap, codePoint);
-            _codePointGlyphMap[codePoint] = glyphId;
-
-            // Cache the generated glyph
-            _bitmapGlyphMap[bitmap] = codePoint;
-            return _glyphMap->getGlyph(glyphId);
-        }
-
-        virtual std::shared_ptr<const GlyphMap> getGlyphMap() const override {
+        virtual std::shared_ptr<GlyphMap> getGlyphMap() const override {
             return _glyphMap;
         }
 
     private:
-        constexpr static int TARGET_DPI = 60;
-        constexpr static int RENDER_DPI = 120;
+		constexpr static int RENDER_SIZE = 24;
+		constexpr static int RENDER_PADDING = 3;
+		constexpr static float FONT_SCALE = 0.85f;
 
-        GlyphId addFreeTypeGlyph(FT_Face face, CodePoint codePoint) const {
-            int error = FT_Load_Glyph(face, codePoint, FT_LOAD_DEFAULT);
-            if (error != 0) {
-                return 0;
-            }
+		GlyphMap::GlyphId addFreeTypeGlyph(FT_Face face, CodePoint codePoint) const {
+			FT_Error error = FT_Load_Glyph(face, codePoint, FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING);
+			if (error != 0) {
+				return 0;
+			}
+			
+			msdfgen::Shape shape;
+			shape.contours.clear();
+			shape.inverseYAxis = false;
 
-            FT_Bitmap* haloBitmap = nullptr;
-            int haloBitmapLeft = 0;
-            int haloBitmapTop = 0;
+			FtContext context = {};
+			context.shape = &shape;
+			context.contour = 0;
+			
+			FT_Outline_Funcs ftFunctions;
+			ftFunctions.move_to = &ftMoveTo;
+			ftFunctions.line_to = &ftLineTo;
+			ftFunctions.conic_to = &ftConicTo;
+			ftFunctions.cubic_to = &ftCubicTo;
+			ftFunctions.shift = 0;
+			ftFunctions.delta = 0;
+			error = FT_Outline_Decompose(&face->glyph->outline, &ftFunctions, &context);
+			if (error != 0) {
+				return 0;
+			}
 
-            std::shared_ptr<FT_GlyphRec_> ft_glyphPtr;
-            if (_parameters.haloSize > 0) {
-                FT_Stroker stroker;
-                error = FT_Stroker_New(_library->getLibrary(), &stroker);
-                if (error == 0) {
-                    FT_Stroker_Set(stroker, static_cast<int>(_parameters.haloSize * 64.0f / _renderScale), FT_STROKER_LINECAP_ROUND, FT_STROKER_LINEJOIN_ROUND, 0);
-                    FT_Glyph ft_glyph;
-                    error = FT_Get_Glyph(face->glyph, &ft_glyph);
-                    if (error == 0) {
-                        error = FT_Glyph_Stroke(&ft_glyph, stroker, 1);
-                        if (error == 0) {
-                            error = FT_Glyph_To_Bitmap(&ft_glyph, FT_RENDER_MODE_NORMAL, 0, 1);
-                        }
-                        if (error == 0) {
-                            FT_BitmapGlyph ft_bitmap_glyph = reinterpret_cast<FT_BitmapGlyph>(ft_glyph);
-                            haloBitmap = &ft_bitmap_glyph->bitmap;
-                            haloBitmapLeft = ft_bitmap_glyph->left;
-                            haloBitmapTop = ft_bitmap_glyph->top;
-                        }
-                        ft_glyphPtr.reset(ft_glyph, FT_Done_Glyph); // delay the glyph destruction, we will need its contents
-                    }
-                    FT_Stroker_Done(stroker);
-                }
-            }
+			if (face->glyph->metrics.width == 0) {
+				std::shared_ptr<Bitmap> glyphBitmap = std::make_shared<Bitmap>(0, 0, std::vector<std::uint32_t>());
+				return _glyphMap->loadBitmapGlyph(glyphBitmap, true, cglib::vec2<float>(0, 0));
+			}
 
-            error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
-            if (error != 0) {
-                return 0;
-            }
+			float width = std::ceil(face->glyph->metrics.width / 64.0f);
+			float height = std::ceil(face->glyph->metrics.height / 64.0f);
+			float xOffset = std::ceil(-face->glyph->metrics.horiBearingX / 64.0f);
+			float yOffset = std::ceil((face->glyph->metrics.height - face->glyph->metrics.horiBearingY) / 64.0f);
+			msdfgen::Bitmap<float> sdf(static_cast<int>(width) + 2 * RENDER_PADDING, static_cast<int>(height) + 2 * RENDER_PADDING);
+			msdfgen::generateSDF(sdf, shape, 1, msdfgen::Vector2(1, 1), msdfgen::Vector2(RENDER_PADDING + xOffset, RENDER_PADDING + yOffset));
 
-            FT_Bitmap* baseBitmap = &face->glyph->bitmap;
-            int baseBitmapLeft = face->glyph->bitmap_left;
-            int baseBitmapTop = face->glyph->bitmap_top;
-
-            int left = baseBitmapLeft;
-            int top = baseBitmapTop;
-            int width = baseBitmap->width;
-            int height = baseBitmap->rows;
-            if (haloBitmap) {
-                int haloBitmapRight = haloBitmapLeft + haloBitmap->width;
-                int baseBitmapRight = baseBitmapLeft + baseBitmap->width;
-                int haloBitmapBottom = haloBitmapTop - static_cast<int>(haloBitmap->rows);
-                int baseBitmapBottom = baseBitmapTop - static_cast<int>(baseBitmap->rows);
-                if (haloBitmapLeft <= baseBitmapLeft && haloBitmapTop >= baseBitmapTop && haloBitmapRight >= baseBitmapRight && haloBitmapBottom <= baseBitmapBottom) {
-                    left = haloBitmapLeft;
-                    top = haloBitmapTop;
-                    width = haloBitmap->width;
-                    height = haloBitmap->rows;
-                } else {
-                    haloBitmap = nullptr;
-                }
-            }
-
-            std::vector<std::uint32_t> glyphBitmapData(width * height);
-            if (haloBitmap) {
-                blendFreeTypeBitmap(glyphBitmapData, width, haloBitmap, _parameters.haloColor, 0, 0);
-                blendFreeTypeBitmap(glyphBitmapData, width, baseBitmap, _parameters.color, baseBitmapLeft - haloBitmapLeft, -baseBitmapTop + haloBitmapTop);
-            }
-            else {
-                blendFreeTypeBitmap(glyphBitmapData, width, baseBitmap, _parameters.color, 0, 0);
-            }
-            std::shared_ptr<Bitmap> glyphBitmap = std::make_shared<Bitmap>(width, height, std::move(glyphBitmapData));
-
-            cglib::vec2<float> size(static_cast<float>(width), static_cast<float>(height));
-            cglib::vec2<float> offset(static_cast<float>(left), static_cast<float>(top - height));
-            cglib::vec2<float> advance(face->glyph->advance.x / 64.0f, face->glyph->advance.y / 64.0f);
-            return _glyphMap->loadBitmapGlyph(glyphBitmap, codePoint, size * _renderScale, offset * _renderScale, advance * _renderScale);
-        }
-
-        void blendFreeTypeBitmap(std::vector<std::uint32_t>& buffer, std::size_t width, FT_Bitmap* bitmap, const Color& color, int x0, int y0) const {
-            std::array<std::uint8_t, 4> glyphColor = color.rgba8();
-            for (unsigned int y = 0; y < bitmap->rows; y++) {
-                for (unsigned int x = 0; x < bitmap->width; x++) {
-                    int alpha = bitmap->buffer[y * std::abs(bitmap->pitch) + x];
-                    if (alpha == 0) {
-                        continue;
-                    }
-                    alpha = _gammaTable[alpha];
-                    std::uint8_t* bufferColor = reinterpret_cast<std::uint8_t*>(&buffer[(y0 + y) * width + x0 + x]);
-                    for (int c = 0; c < 4; c++) {
-                        int comp1 = glyphColor[c] * (alpha + 1);
-                        int comp2 = bufferColor[c] * (255 - alpha);
-                        bufferColor[c] = static_cast<std::uint8_t>((comp1 + comp2) >> 8);
-                    }
-                }
-            }
-        }
+			std::vector<std::uint32_t> glyphBitmapData(sdf.width() * sdf.height());
+			for (int y = 0; y < sdf.height(); y++) {
+				for (int x = 0; x < sdf.width(); x++) {
+					float c = std::max(0.0f, std::min(255.0f, sdf(x, sdf.height() - 1 - y) * 32.0f + 127.5f));
+					std::uint32_t val = static_cast<std::uint8_t>(c);
+					glyphBitmapData[x + y * sdf.width()] = (val << 24) | (val << 16) | (val << 8) | val;
+				}
+			}
+			std::shared_ptr<Bitmap> glyphBitmap = std::make_shared<Bitmap>(sdf.width(), sdf.height(), std::move(glyphBitmapData));
+			return _glyphMap->loadBitmapGlyph(glyphBitmap, true, cglib::vec2<float>(RENDER_PADDING - xOffset, -yOffset));
+		}
 
         const FontManager::Parameters _parameters;
         const std::shared_ptr<FontManagerLibrary> _library;
-        const float _renderScale;
-        std::array<std::uint8_t, 256> _gammaTable;
         std::shared_ptr<GlyphMap> _glyphMap;
-        mutable std::unordered_map<CodePoint, GlyphId> _codePointGlyphMap;
-        std::unordered_map<std::shared_ptr<const Bitmap>, CodePoint> _bitmapGlyphMap;
+        mutable std::unordered_map<CodePoint, GlyphMap::GlyphId> _codePointGlyphMap;
         FT_Face _face;
         hb_font_t* _font;
         hb_buffer_t* _buffer;
@@ -385,7 +354,7 @@ namespace carto { namespace vt {
             auto fontIt = _fontMap.find(name);
             if (fontIt != _fontMap.end()) {
                 for (const std::shared_ptr<FontManagerFont>& font : fontIt->second) {
-                    if (font->getParameters().size == parameters.size && font->getParameters().color == parameters.color && font->getParameters().haloSize == parameters.haloSize && font->getParameters().haloColor == parameters.haloColor && font->getParameters().baseFont == parameters.baseFont) {
+                    if (font->getParameters().size == parameters.size && font->getParameters().baseFont == parameters.baseFont) {
                         return font;
                     }
                 }
@@ -397,8 +366,14 @@ namespace carto { namespace vt {
                 return std::shared_ptr<Font>();
             }
 
+			// Get existing glyph map or create new one
+			auto glyphMapIt = _glyphMapMap.find(name);
+			if (glyphMapIt == _glyphMapMap.end()) {
+				glyphMapIt = _glyphMapMap.emplace(name, std::make_shared<GlyphMap>(_maxGlyphMapWidth, _maxGlyphMapHeight)).first;
+			}
+
             // Create new font
-            auto font = std::make_shared<FontManagerFont>(_library, _maxGlyphMapWidth, _maxGlyphMapHeight, &fontDataIt->second, parameters);
+            auto font = std::make_shared<FontManagerFont>(_library, glyphMapIt->second, &fontDataIt->second, parameters);
 
             // Preload often-used characters
             std::vector<std::uint32_t> glyphPreloadTable;
@@ -416,7 +391,7 @@ namespace carto { namespace vt {
             std::lock_guard<std::mutex> lock(_mutex);
 
             if (!_nullFont) {
-                _nullFont = std::make_shared<FontManagerFont>(_library, _maxGlyphMapWidth, _maxGlyphMapHeight, nullptr, Parameters(0, vt::Color(), 0, vt::Color(), std::shared_ptr<Font>()));
+                _nullFont = std::make_shared<FontManagerFont>(_library, std::make_shared<GlyphMap>(_maxGlyphMapWidth, _maxGlyphMapHeight), nullptr, Parameters(0, std::shared_ptr<Font>()));
             }
             return _nullFont;
         }
@@ -456,6 +431,7 @@ namespace carto { namespace vt {
         std::map<std::string, std::vector<unsigned char>> _fontDataMap;
         std::shared_ptr<FontManagerLibrary> _library;
         mutable std::map<std::string, std::vector<std::shared_ptr<FontManagerFont>>> _fontMap;
+		mutable std::map<std::string, std::shared_ptr<GlyphMap>> _glyphMapMap;
         mutable std::shared_ptr<Font> _nullFont;
         mutable std::mutex _mutex;
     };

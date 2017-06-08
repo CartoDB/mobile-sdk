@@ -88,30 +88,39 @@ namespace {
         }
     )GLSL";
 
-    static const std::string labelVsh = R"GLSL(
+	static const std::string labelVsh = R"GLSL(
         attribute vec3 aVertexPosition;
         attribute vec2 aVertexUV;
         attribute vec4 aVertexColor;
+        attribute vec4 aVertexAttribs;
         uniform mat4 uMVPMatrix;
         uniform vec2 uUVScale;
         varying lowp vec4 vColor;
         varying vec2 vUV;
+		varying vec4 vAttribs;
 
         void main(void) {
             vColor = aVertexColor;
             vUV = uUVScale * aVertexUV;
+			vAttribs = aVertexAttribs;
             gl_Position = uMVPMatrix * vec4(aVertexPosition, 1.0);
         }
     )GLSL";
 
-    static const std::string labelFsh = R"GLSL(
+	static const std::string labelFsh = R"GLSL(
         precision mediump float;
         uniform sampler2D uBitmap;
         varying lowp vec4 vColor;
-        varying vec2 vUV;
+        varying highp vec2 vUV;
+        varying highp vec4 vAttribs;
 
         void main(void) {
-            gl_FragColor = texture2D(uBitmap, vUV) * vColor;
+			vec4 color = texture2D(uBitmap, vUV);
+			if (vAttribs[3] > 0.0) {
+				gl_FragColor = clamp((color.r - vAttribs[0]) * vAttribs[1], 0.0, 1.0) * vColor;
+			} else if (vAttribs[3] > -0.5) {
+				gl_FragColor = color * vColor.a;
+			}
         }
     )GLSL";
 
@@ -637,7 +646,8 @@ namespace carto { namespace vt {
             deleteBuffer(it->second.vertexGeometryVBO);
             deleteBuffer(it->second.vertexUVVBO);
             deleteBuffer(it->second.vertexColorVBO);
-            deleteBuffer(it->second.vertexIndicesVBO);
+			deleteBuffer(it->second.vertexAttribsVBO);
+			deleteBuffer(it->second.vertexIndicesVBO);
         }
         _compiledLabelBatches.clear();
         
@@ -1497,10 +1507,7 @@ namespace carto { namespace vt {
                 continue;
             }
             
-            std::size_t verticesSize = _labelVertices.size();
-            label->calculateVertexData(_viewState, _labelVertices, _labelTexCoords, _labelIndices);
-            Color color = Color::fromColorOpacity(label->getColor(), label->getOpacity());
-            _labelColors.fill(color.rgba(), _labelVertices.size() - verticesSize);
+            label->calculateVertexData(_viewState, _labelVertices, _labelTexCoords, _labelColors, _labelAttribs, _labelIndices);
 
             if (_labelVertices.size() >= 32768) { // flush the batch if largest vertex index is getting 'close' to 64k limit
                 renderLabelBatch(bitmap);
@@ -1960,7 +1967,8 @@ namespace carto { namespace vt {
             compiledLabelBatch.vertexGeometryVBO = createBuffer();
             compiledLabelBatch.vertexUVVBO = createBuffer();
             compiledLabelBatch.vertexColorVBO = createBuffer();
-            compiledLabelBatch.vertexIndicesVBO = createBuffer();
+			compiledLabelBatch.vertexAttribsVBO = createBuffer();
+			compiledLabelBatch.vertexIndicesVBO = createBuffer();
 
             _compiledLabelBatches[_labelBatchCounter] = compiledLabelBatch;
         }
@@ -2016,7 +2024,12 @@ namespace carto { namespace vt {
         glVertexAttribPointer(glGetAttribLocation(shaderProgram, "aVertexColor"), 4, GL_FLOAT, GL_FALSE, 0, 0);
         glEnableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexColor"));
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, compiledLabelBatch.vertexIndicesVBO);
+		glBindBuffer(GL_ARRAY_BUFFER, compiledLabelBatch.vertexAttribsVBO);
+		glBufferData(GL_ARRAY_BUFFER, _labelAttribs.size() * 4 * sizeof(float), _labelAttribs.data(), GL_DYNAMIC_DRAW);
+		glVertexAttribPointer(glGetAttribLocation(shaderProgram, "aVertexAttribs"), 4, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexAttribs"));
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, compiledLabelBatch.vertexIndicesVBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, _labelIndices.size() * sizeof(unsigned short), _labelIndices.data(), GL_DYNAMIC_DRAW);
 
         glActiveTexture(GL_TEXTURE0);
@@ -2026,7 +2039,9 @@ namespace carto { namespace vt {
 
         glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(_labelIndices.size()), GL_UNSIGNED_SHORT, 0);
 
-        glDisableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexColor"));
+		glDisableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexAttribs"));
+		
+		glDisableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexColor"));
 
         glDisableVertexAttribArray(glGetAttribLocation(shaderProgram, "aVertexUV"));
 
@@ -2038,6 +2053,7 @@ namespace carto { namespace vt {
         _labelVertices.clear();
         _labelTexCoords.clear();
         _labelColors.clear();
+		_labelAttribs.clear();
         _labelIndices.clear();
     }
 

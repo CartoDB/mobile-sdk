@@ -21,13 +21,10 @@ namespace carto { namespace vt {
     public:
         enum {
             SPACE_CODEPOINT   = 0xffff0000,
-            CR_CODEPOINT      = 0xffff0001,
-            BITMAP_CODEPOINTS = 0xffff0002
+            CR_CODEPOINT      = 0xffff0001
         };
 
-        using Glyph = GlyphMap::Glyph;
-        using GlyphId = GlyphMap::GlyphId;
-        using CodePoint = GlyphMap::CodePoint;
+		using CodePoint = unsigned int;
 
         struct Metrics {
             float ascent;
@@ -37,12 +34,21 @@ namespace carto { namespace vt {
             explicit Metrics(float ascent, float descent, float height) : ascent(ascent), descent(descent), height(height) { }
         };
 
+		struct Glyph {
+			CodePoint codePoint;
+			GlyphMap::Glyph baseGlyph;
+			cglib::vec2<float> size;
+			cglib::vec2<float> offset;
+			cglib::vec2<float> advance;
+
+			explicit Glyph(CodePoint codePoint, const GlyphMap::Glyph& baseGlyph, const cglib::vec2<float>& size, const cglib::vec2<float>& offset, const cglib::vec2<float>& advance) : codePoint(codePoint), baseGlyph(baseGlyph), size(size), offset(offset), advance(advance) { }
+		};
+
         virtual ~Font() = default;
 
         virtual const Metrics& getMetrics() const = 0;
         virtual std::vector<Glyph> shapeGlyphs(const std::uint32_t* utf32Text, std::size_t size, bool rtl) const = 0;
-        virtual const Glyph* loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap) = 0;
-        virtual std::shared_ptr<const GlyphMap> getGlyphMap() const = 0;
+        virtual std::shared_ptr<GlyphMap> getGlyphMap() const = 0;
     };
 } }
 

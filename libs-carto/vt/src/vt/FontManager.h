@@ -19,12 +19,9 @@ namespace carto { namespace vt {
     public:
         struct Parameters {
             const float size;
-            const Color color;
-            const float haloSize;
-            const Color haloColor;
             const std::shared_ptr<Font> baseFont;
 
-            explicit Parameters(float size, const Color& color, float haloSize, const Color& haloColor, std::shared_ptr<Font> baseFont) : size(size), color(color), haloSize(haloSize), haloColor(haloColor), baseFont(std::move(baseFont)) { }
+            explicit Parameters(float size, std::shared_ptr<Font> baseFont) : size(size), baseFont(std::move(baseFont)) { }
         };
 
         explicit FontManager(int maxGlyphMapWidth, int maxGlyphMapHeight);

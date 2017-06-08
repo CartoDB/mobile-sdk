@@ -31,7 +31,7 @@ namespace carto { namespace vt {
         for (const Line& line : lines) {
             float xoff = -textBBox.max(0) * (options.alignment(0) + 1.0f) * 0.5f + (textBBox.size()(0) - line.bbox.size()(0)) * 0.5f;
             float yoff = (textBBox.min(1) - _font->getMetrics().descent) * (-options.alignment(1) + 1.0f) * 0.5f + (line.bbox.min(1) - textBBox.min(1));
-            glyphs.emplace_back(Font::Glyph(Font::CR_CODEPOINT, 0, 0, 0, 0, cglib::vec2<float>(0, 0), cglib::vec2<float>(0, 0), cglib::vec2<float>(xoff, yoff) + options.offset));
+            glyphs.emplace_back(Font::Glyph(Font::CR_CODEPOINT, GlyphMap::Glyph(false, 0, 0, 0, 0, cglib::vec2<float>(0, 0)), cglib::vec2<float>(0, 0), cglib::vec2<float>(0, 0), cglib::vec2<float>(xoff, yoff) + options.offset));
             glyphs.insert(glyphs.end(), line.glyphs.begin(), line.glyphs.end());
         }
 
@@ -77,7 +77,7 @@ namespace carto { namespace vt {
                         if (glyph.advance(0) > 0 && glyph.advance(1) == 0) {
                             glyph.advance(0) += options.characterSpacing;
                         }
-                        if (glyph.width == 0) {
+                        if (glyph.baseGlyph.width == 0) {
                             glyph.codePoint = Font::SPACE_CODEPOINT;
                         }
 

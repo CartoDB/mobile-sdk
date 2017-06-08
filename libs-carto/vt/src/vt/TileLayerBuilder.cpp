@@ -45,7 +45,7 @@ namespace carto { namespace vt {
         _styleParameters.transform = transform;
         _styleParameters.compOp = style.compOp;
         _styleParameters.pointOrientation = style.orientation;
-        GlyphMap::GlyphId glyphId = style.glyphMap->loadBitmapGlyph(style.bitmap, 0);
+        GlyphMap::GlyphId glyphId = style.glyphMap->loadBitmapGlyph(style.bitmap, false);
         int styleIndex = _styleParameters.parameterCount;
         while (--styleIndex >= 0) {
             if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.opacityTable[styleIndex] == style.opacity) {
@@ -63,9 +63,9 @@ namespace carto { namespace vt {
             cglib::vec2<float> pen(0, 0);
             const GlyphMap::Glyph* glyph = style.glyphMap->getGlyph(glyphId);
             if (glyph) {
-                pen = -glyph->size * 0.5f;
+                pen = -cglib::vec2<float>(glyph->width, glyph->height) * 0.5f;
             }
-            tesselateGlyph(vertex, static_cast<char>(styleIndex), pen, glyph);
+            tesselateGlyph(vertex, static_cast<char>(styleIndex), pen, cglib::vec2<float>(glyph->width, glyph->height), glyph);
             _ids.fill(id, _indices.size() - i0);
         } while (generator(id, vertex));
     }
@@ -105,9 +105,9 @@ namespace carto { namespace vt {
             TextFormatter formatter(style.font);
             std::vector<Font::Glyph> glyphs = formatter.format(text, style.formatterOptions);
             if (style.backgroundBitmap) {
-                const Font::Glyph* glyph = style.font->loadBitmapGlyph(style.backgroundBitmap);
-                if (glyph) {
-                    glyphs.insert(glyphs.begin(), Font::Glyph(glyph->codePoint, glyph->x, glyph->y, glyph->width, glyph->height, glyph->size * style.backgroundScale, glyph->offset + style.backgroundOffset, glyph->advance));
+                const GlyphMap::Glyph* baseGlyph = style.font->getGlyphMap()->getGlyph(style.font->getGlyphMap()->loadBitmapGlyph(style.backgroundBitmap, false));
+                if (baseGlyph) {
+					glyphs.insert(glyphs.begin(), Font::Glyph(0, *baseGlyph, cglib::vec2<float>(baseGlyph->width, baseGlyph->height) * style.backgroundScale, style.backgroundOffset, cglib::vec2<float>(baseGlyph->width, 0)));
                 }
             }
             cglib::vec2<float> pen(0, 0);
@@ -116,7 +116,7 @@ namespace carto { namespace vt {
                     pen = cglib::vec2<float>(0, 0);
                 }
                 else {
-                    tesselateGlyph(vertex, static_cast<char>(styleIndex), pen, &glyph);
+                    tesselateGlyph(vertex, static_cast<char>(styleIndex), pen + glyph.offset, glyph.size, &glyph.baseGlyph);
                 }
 
                 pen += glyph.advance;
@@ -150,7 +150,7 @@ namespace carto { namespace vt {
         _styleParameters.transform = style.transform;
         _styleParameters.compOp = style.compOp;
         StrokeMap::StrokeId strokeId = (style.strokePattern ? style.strokeMap->loadBitmapPattern(style.strokePattern) : 0);
-        const std::unique_ptr<const StrokeMap::Stroke>& stroke = style.strokeMap->getStroke(strokeId);
+        const StrokeMap::Stroke* stroke = style.strokeMap->getStroke(strokeId);
         int styleIndex = _styleParameters.parameterCount;
         while (--styleIndex >= 0) {
             if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.opacityTable[styleIndex] == style.opacity && _styleParameters.widthTable[styleIndex] == style.width && _builderParameters.lineStrokeIds[styleIndex] == strokeId) {
@@ -168,7 +168,7 @@ namespace carto { namespace vt {
         do {
             std::size_t i0 = _indices.size();
             _binormals.fill(cglib::vec2<float>(0, 0), _vertices.size() - _binormals.size()); // needed if previously only polygons were used
-            tesselateLine(vertices, static_cast<char>(styleIndex), stroke.get(), style);
+            tesselateLine(vertices, static_cast<char>(styleIndex), stroke, style);
             _ids.fill(id, _indices.size() - i0);
         } while (generator(id, vertices));
     }
@@ -256,13 +256,13 @@ namespace carto { namespace vt {
 
         boost::optional<cglib::mat3x3<float>> transform = flipTransform(style.transform);
 
-        const Font::Glyph* glyph = style.font->loadBitmapGlyph(style.bitmap);
-        if (!glyph) {
+        const GlyphMap::Glyph* baseGlyph = style.font->getGlyphMap()->getGlyph(style.font->getGlyphMap()->loadBitmapGlyph(style.bitmap, false));
+        if (!baseGlyph) {
             return;
         }
         std::vector<Font::Glyph> bitmapGlyphs = {
-            Font::Glyph(Font::CR_CODEPOINT, 0, 0, 0, 0, cglib::vec2<float>(0, 0), cglib::vec2<float>(0, 0), cglib::vec2<float>(-style.bitmap->width * 0.5f, -style.bitmap->height * 0.5f)),
-            *glyph
+            Font::Glyph(Font::CR_CODEPOINT, GlyphMap::Glyph(false, 0, 0, 0, 0, cglib::vec2<float>(0, 0)), cglib::vec2<float>(0, 0), cglib::vec2<float>(0, 0), cglib::vec2<float>(-style.bitmap->width * 0.5f, -style.bitmap->height * 0.5f)),
+			Font::Glyph(0, *baseGlyph, cglib::vec2<float>(baseGlyph->width, baseGlyph->height), cglib::vec2<float>(0, 0), cglib::vec2<float>(baseGlyph->width, 0))
         };
 
         while (true) {
@@ -284,7 +284,7 @@ namespace carto { namespace vt {
                 }
             }
 
-            auto bitmapLabel = std::make_shared<TileLabel>(_tileId, id, labelInfo.id, labelInfo.groupId, style.font, bitmapGlyphs, std::move(labelPosition), std::move(labelVertices), style.orientation, transform, 1.0f / _tileSize, style.color);
+            auto bitmapLabel = std::make_shared<TileLabel>(_tileId, id, labelInfo.id, labelInfo.groupId, style.font, bitmapGlyphs, std::move(labelPosition), std::move(labelVertices), style.orientation, transform, 1.0f / _tileSize, style.color, vt::Color());
             bitmapLabel->setMinimumGroupDistance(_tileSize * labelInfo.minimumGroupDistance);
             _labelList.push_back(std::move(bitmapLabel));
         }
@@ -307,9 +307,9 @@ namespace carto { namespace vt {
                 TextFormatter formatter(style.font);
                 std::vector<Font::Glyph> glyphs = formatter.format(labelInfo.text, style.formatterOptions);
                 if (style.backgroundBitmap) {
-                    const Font::Glyph* glyph = style.font->loadBitmapGlyph(style.backgroundBitmap);
-                    if (glyph) {
-                        glyphs.insert(glyphs.begin(), Font::Glyph(glyph->codePoint, glyph->x, glyph->y, glyph->width, glyph->height, glyph->size * style.backgroundScale, glyph->offset + style.backgroundOffset, glyph->advance));
+                    const GlyphMap::Glyph* baseGlyph = style.font->getGlyphMap()->getGlyph(style.font->getGlyphMap()->loadBitmapGlyph(style.backgroundBitmap, false));
+                    if (baseGlyph) {
+                        glyphs.insert(glyphs.begin(), Font::Glyph(0, *baseGlyph, cglib::vec2<float>(baseGlyph->width, baseGlyph->height) * style.backgroundScale, style.backgroundOffset, cglib::vec2<float>(baseGlyph->width, 0)));
                     }
                 }
 
@@ -323,7 +323,7 @@ namespace carto { namespace vt {
                     labelVertices.emplace_back(vertex(0), vertex(1), 0);
                 }
 
-                auto textLabel = std::make_shared<TileLabel>(_tileId, id, labelInfo.id, labelInfo.groupId, style.font, std::move(glyphs), std::move(labelPosition), std::move(labelVertices), style.orientation, transform, 1.0f / _tileSize, Color(0xffffffff));
+                auto textLabel = std::make_shared<TileLabel>(_tileId, id, labelInfo.id, labelInfo.groupId, style.font, std::move(glyphs), std::move(labelPosition), std::move(labelVertices), style.orientation, transform, 1.0f / _tileSize, style.color, style.haloColor);
                 textLabel->setMinimumGroupDistance(_tileSize * labelInfo.minimumGroupDistance);
                 _labelList.push_back(std::move(textLabel));
             }
@@ -538,16 +538,14 @@ namespace carto { namespace vt {
         appendGeometry(verticesScale, binormalsScale, texCoordsScale, vertices, texCoords, binormals, heights, attribs, indices2, ids2, minIndex[1], maxIndex[1] - minIndex[1] + 1);
     }
 
-    bool TileLayerBuilder::tesselateGlyph(const Vertex& vertex, char styleIndex, const cglib::vec2<float>& pen, const Font::Glyph* glyph) {
+    bool TileLayerBuilder::tesselateGlyph(const Vertex& vertex, char styleIndex, const cglib::vec2<float>& pen, const cglib::vec2<float>& size, const GlyphMap::Glyph* glyph) {
         float u0 = 0, v0 = 0, u1 = 0, v1 = 0;
-        cglib::vec2<float> p0 = pen, p3 = pen;
+        cglib::vec2<float> p0 = pen, p3 = pen + size;
         if (glyph) {
             u0 = static_cast<float>(glyph->x); // NOTE: u,v coordinates will be normalized when the layer is built
             v0 = static_cast<float>(glyph->y);
             u1 = static_cast<float>(glyph->x + glyph->width);
             v1 = static_cast<float>(glyph->y + glyph->height);
-            p0 += glyph->offset;
-            p3 += glyph->offset + glyph->size;
         }
         _vertices.append(vertex, vertex, vertex, vertex);
         _texCoords.append(cglib::vec2<float>(u0, v1), cglib::vec2<float>(u1, v1), cglib::vec2<float>(u1, v0), cglib::vec2<float>(u0, v0));
