@@ -29,18 +29,18 @@ namespace {
         switch (bitmap.getFormat()) {
         case carto::vt::TileBitmap::Format::GRAYSCALE: {
                 std::uint8_t val = bitmap.getData()[y * bitmap.getWidth() + x];
-                return std::array<std::uint8_t, 4> { val, val, val, 255 };
+                return std::array<std::uint8_t, 4> { { val, val, val, 255 } };
             }
         case carto::vt::TileBitmap::Format::RGB: {
                 const std::uint8_t* valPtr = &bitmap.getData()[(y * bitmap.getWidth() + x) * 3];
-                return std::array<std::uint8_t, 4> { valPtr[0], valPtr[1], valPtr[2], 255 };
+                return std::array<std::uint8_t, 4> { { valPtr[0], valPtr[1], valPtr[2], 255 } };
             }
         case carto::vt::TileBitmap::Format::RGBA: {
                 const std::uint8_t* valPtr = &bitmap.getData()[(y * bitmap.getWidth() + x) * 4];
-                return std::array<std::uint8_t, 4> { valPtr[0], valPtr[1], valPtr[2], valPtr[3] };
+                return std::array<std::uint8_t, 4> { { valPtr[0], valPtr[1], valPtr[2], valPtr[3] } };
             }
         }
-        return std::array<std::uint8_t, 4> { 0, 0, 0, 0 };
+        return std::array<std::uint8_t, 4> { { 0, 0, 0, 0 } };
     }
 
     std::array<std::uint8_t, 4> readTileBitmapColor(const carto::vt::TileBitmap& bitmap, float x, float y) {
@@ -56,7 +56,7 @@ namespace {
                 }
             }
         }
-        return std::array<std::uint8_t, 4> { static_cast<std::uint8_t>(result[0]), static_cast<std::uint8_t>(result[1]), static_cast<std::uint8_t>(result[2]), static_cast<std::uint8_t>(result[3]) };
+        return std::array<std::uint8_t, 4> { { static_cast<std::uint8_t>(result[0]), static_cast<std::uint8_t>(result[1]), static_cast<std::uint8_t>(result[2]), static_cast<std::uint8_t>(result[3]) } };
     }
 
 }
