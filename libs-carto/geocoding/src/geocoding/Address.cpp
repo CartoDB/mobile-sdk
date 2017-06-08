@@ -40,7 +40,11 @@ namespace carto { namespace geocoding {
             }
             else {
                 houseNumber.clear();
-                features = featureReader.readFeatureCollection();
+                features.clear();
+                while (!featureStream.eof()) {
+                    std::vector<Feature> featureCollection = featureReader.readFeatureCollection();
+                    features.insert(features.end(), featureCollection.begin(), featureCollection.end());
+                }
             }
 
             // Load names
