@@ -27,7 +27,7 @@
 namespace carto { namespace vt {
     class TileLabel final {
     public:
-        explicit TileLabel(const TileId& tileId, long long localId, long long globalId, long long groupId, std::shared_ptr<const Font> font, std::vector<Font::Glyph> glyphs, boost::optional<cglib::vec3<double>> position, std::vector<cglib::vec3<double>> vertices, LabelOrientation orientation, const boost::optional<cglib::mat3x3<float>>& transform, float scale, const Color& color, const Color& haloColor);
+        explicit TileLabel(const TileId& tileId, long long localId, long long globalId, long long groupId, std::shared_ptr<const Font> font, std::vector<Font::Glyph> glyphs, boost::optional<cglib::vec3<double>> position, std::vector<cglib::vec3<double>> vertices, LabelOrientation orientation, const boost::optional<cglib::mat3x3<float>>& transform, float scale, const Color& color, const Color& haloColor, float haloRadius);
 
         const TileId& getTileId() const { return _tileId; }
         long long getLocalId() const { return _localId; }
@@ -119,7 +119,8 @@ namespace carto { namespace vt {
         const Vertices _originalVertices;
         const float _scale;
         const Color _color;
-		const Color _haloColor;
+        const Color _haloColor;
+        const float _haloRadius;
 
         boost::optional<cglib::mat3x3<float>> _transform;
         Vertices _transformedPositions;
@@ -140,8 +141,8 @@ namespace carto { namespace vt {
         mutable std::shared_ptr<const Placement> _cachedPlacement;
         mutable VertexArray<cglib::vec2<float>> _cachedVertices;
         mutable VertexArray<cglib::vec2<float>> _cachedTexCoords;
-		mutable VertexArray<cglib::vec4<float>> _cachedAttribs;
-		mutable VertexArray<unsigned short> _cachedIndices;
+        mutable VertexArray<cglib::vec4<float>> _cachedAttribs;
+        mutable VertexArray<unsigned short> _cachedIndices;
     };
 } }
 

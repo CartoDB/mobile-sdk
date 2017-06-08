@@ -123,15 +123,16 @@ namespace carto { namespace vt {
     struct TextLabelStyle final {
         LabelOrientation orientation;
         TextFormatter::Options formatterOptions;
-		Color color;
-		Color haloColor;
-		std::shared_ptr<Font> font;
+        Color color;
+        Color haloColor;
+        float haloRadius;
+        std::shared_ptr<Font> font;
         float angle;
         float backgroundScale;
         cglib::vec2<float> backgroundOffset;
         std::shared_ptr<const Bitmap> backgroundBitmap;
 
-        explicit TextLabelStyle(LabelOrientation orientation, const TextFormatter::Options& formatterOptions, const Color& color, const Color& haloColor, std::shared_ptr<Font> font, float angle, float backgroundScale, const cglib::vec2<float>& backgroundOffset, std::shared_ptr<const Bitmap> backgroundBitmap) : orientation(orientation), formatterOptions(formatterOptions), font(std::move(font)), color(color), haloColor(haloColor), angle(angle), backgroundScale(backgroundScale), backgroundOffset(backgroundOffset), backgroundBitmap(std::move(backgroundBitmap)) { }
+        explicit TextLabelStyle(LabelOrientation orientation, const TextFormatter::Options& formatterOptions, const Color& color, const Color& haloColor, float haloRadius, std::shared_ptr<Font> font, float angle, float backgroundScale, const cglib::vec2<float>& backgroundOffset, std::shared_ptr<const Bitmap> backgroundBitmap) : orientation(orientation), formatterOptions(formatterOptions), font(std::move(font)), color(color), haloColor(haloColor), haloRadius(haloRadius), angle(angle), backgroundScale(backgroundScale), backgroundOffset(backgroundOffset), backgroundBitmap(std::move(backgroundBitmap)) { }
     };
 } }
 

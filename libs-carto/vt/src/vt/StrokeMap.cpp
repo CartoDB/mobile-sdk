@@ -23,7 +23,7 @@ namespace carto { namespace vt {
         
         auto it = _strokeMap.find(strokeId);
         if (it == _strokeMap.end()) {
-			return nullptr;
+            return nullptr;
         }
         return it->second.get();
     }
@@ -58,9 +58,9 @@ namespace carto { namespace vt {
         std::shared_ptr<const Bitmap> scaledBitmap = BitmapManager::scale(std::make_shared<Bitmap>(patternWidth, patternHeight, std::move(patternData)), _width, patternHeight);
 
         int height = _height + scaledBitmap->height;
-		if (height > _maxHeight) {
-			return 0;
-		}
+        if (height > _maxHeight) {
+            return 0;
+        }
 
         int pow2Height = 1;
         while (pow2Height <= height) { pow2Height *= 2; } // ensure that extra white line is always included

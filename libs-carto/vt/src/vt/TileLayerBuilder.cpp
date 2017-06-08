@@ -107,7 +107,7 @@ namespace carto { namespace vt {
             if (style.backgroundBitmap) {
                 const GlyphMap::Glyph* baseGlyph = style.font->getGlyphMap()->getGlyph(style.font->getGlyphMap()->loadBitmapGlyph(style.backgroundBitmap, false));
                 if (baseGlyph) {
-					glyphs.insert(glyphs.begin(), Font::Glyph(0, *baseGlyph, cglib::vec2<float>(baseGlyph->width, baseGlyph->height) * style.backgroundScale, style.backgroundOffset, cglib::vec2<float>(baseGlyph->width, 0)));
+                    glyphs.insert(glyphs.begin(), Font::Glyph(0, *baseGlyph, cglib::vec2<float>(baseGlyph->width, baseGlyph->height) * style.backgroundScale, style.backgroundOffset, cglib::vec2<float>(baseGlyph->width, 0)));
                 }
             }
             cglib::vec2<float> pen(0, 0);
@@ -262,7 +262,7 @@ namespace carto { namespace vt {
         }
         std::vector<Font::Glyph> bitmapGlyphs = {
             Font::Glyph(Font::CR_CODEPOINT, GlyphMap::Glyph(false, 0, 0, 0, 0, cglib::vec2<float>(0, 0)), cglib::vec2<float>(0, 0), cglib::vec2<float>(0, 0), cglib::vec2<float>(-style.bitmap->width * 0.5f, -style.bitmap->height * 0.5f)),
-			Font::Glyph(0, *baseGlyph, cglib::vec2<float>(baseGlyph->width, baseGlyph->height), cglib::vec2<float>(0, 0), cglib::vec2<float>(baseGlyph->width, 0))
+            Font::Glyph(0, *baseGlyph, cglib::vec2<float>(baseGlyph->width, baseGlyph->height), cglib::vec2<float>(0, 0), cglib::vec2<float>(baseGlyph->width, 0))
         };
 
         while (true) {
@@ -284,7 +284,7 @@ namespace carto { namespace vt {
                 }
             }
 
-            auto bitmapLabel = std::make_shared<TileLabel>(_tileId, id, labelInfo.id, labelInfo.groupId, style.font, bitmapGlyphs, std::move(labelPosition), std::move(labelVertices), style.orientation, transform, 1.0f / _tileSize, style.color, vt::Color());
+            auto bitmapLabel = std::make_shared<TileLabel>(_tileId, id, labelInfo.id, labelInfo.groupId, style.font, bitmapGlyphs, std::move(labelPosition), std::move(labelVertices), style.orientation, transform, 1.0f / _tileSize, style.color, vt::Color(), 0.0f);
             bitmapLabel->setMinimumGroupDistance(_tileSize * labelInfo.minimumGroupDistance);
             _labelList.push_back(std::move(bitmapLabel));
         }
@@ -323,7 +323,7 @@ namespace carto { namespace vt {
                     labelVertices.emplace_back(vertex(0), vertex(1), 0);
                 }
 
-                auto textLabel = std::make_shared<TileLabel>(_tileId, id, labelInfo.id, labelInfo.groupId, style.font, std::move(glyphs), std::move(labelPosition), std::move(labelVertices), style.orientation, transform, 1.0f / _tileSize, style.color, style.haloColor);
+                auto textLabel = std::make_shared<TileLabel>(_tileId, id, labelInfo.id, labelInfo.groupId, style.font, std::move(glyphs), std::move(labelPosition), std::move(labelVertices), style.orientation, transform, 1.0f / _tileSize, style.color, style.haloColor, style.haloRadius);
                 textLabel->setMinimumGroupDistance(_tileSize * labelInfo.minimumGroupDistance);
                 _labelList.push_back(std::move(textLabel));
             }

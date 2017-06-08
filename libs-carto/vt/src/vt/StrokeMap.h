@@ -35,8 +35,8 @@ namespace carto { namespace vt {
 
     private:
         const int _width;
-		const int _maxHeight;
-		int _height;
+        const int _maxHeight;
+        int _height;
         std::unordered_map<StrokeId, std::unique_ptr<const Stroke>> _strokeMap;
         std::unordered_map<std::shared_ptr<const BitmapPattern>, StrokeId> _bitmapStrokeMap;
         std::shared_ptr<BitmapPattern> _bitmapPattern;

@@ -83,7 +83,7 @@ namespace carto { namespace mvt {
                 textInfos.clear();
             }
             else {
-                vt::TextLabelStyle style(placement, textFormatterOptions, vt::Color::fromColorOpacity(_fill, _opacity), vt::Color::fromColorOpacity(_haloFill, _haloOpacity), font, _orientationAngle, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::Bitmap>());
+                vt::TextLabelStyle style(placement, textFormatterOptions, vt::Color::fromColorOpacity(_fill, _opacity), vt::Color::fromColorOpacity(_haloFill, _haloOpacity), _haloRadius * fontScale, font, _orientationAngle, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::Bitmap>());
 
                 std::size_t labelInfoIndex = 0;
                 layerBuilder.addTextLabels([&](long long& id, vt::TileLayerBuilder::TextLabelInfo& labelInfo) {

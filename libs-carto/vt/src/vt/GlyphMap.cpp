@@ -22,16 +22,16 @@ namespace carto { namespace vt {
         return it->second.get();
     }
 
-	GlyphMap::GlyphId GlyphMap::loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap, bool sdf) {
-		if (!bitmap) {
-			return 0;
-		}
+    GlyphMap::GlyphId GlyphMap::loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap, bool sdf) {
+        if (!bitmap) {
+            return 0;
+        }
 
-		cglib::vec2<float> origin(bitmap->width * 0.5f, bitmap->height * 0.5f);
-		return loadBitmapGlyph(bitmap, sdf, origin);
-	}
-	
-	GlyphMap::GlyphId GlyphMap::loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap, bool sdf, const cglib::vec2<float>& origin) {
+        cglib::vec2<float> origin(bitmap->width * 0.5f, bitmap->height * 0.5f);
+        return loadBitmapGlyph(bitmap, sdf, origin);
+    }
+    
+    GlyphMap::GlyphId GlyphMap::loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap, bool sdf, const cglib::vec2<float>& origin) {
         std::lock_guard<std::mutex> lock(_mutex);
 
         if (!bitmap) {

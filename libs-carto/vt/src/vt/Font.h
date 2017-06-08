@@ -20,30 +20,30 @@ namespace carto { namespace vt {
     class Font {
     public:
         enum {
-            SPACE_CODEPOINT   = 0xffff0000,
-            CR_CODEPOINT      = 0xffff0001
+            SPACE_CODEPOINT = 0xffff0000,
+            CR_CODEPOINT    = 0xffff0001
         };
 
-		using CodePoint = unsigned int;
+        using CodePoint = unsigned int;
 
         struct Metrics {
             float ascent;
             float descent;
             float height;
-			float sdfScale;
+            float sdfScale;
 
             explicit Metrics(float ascent, float descent, float height, float sdfScale) : ascent(ascent), descent(descent), height(height), sdfScale(sdfScale) { }
         };
 
-		struct Glyph {
-			CodePoint codePoint;
-			GlyphMap::Glyph baseGlyph;
-			cglib::vec2<float> size;
-			cglib::vec2<float> offset;
-			cglib::vec2<float> advance;
+        struct Glyph {
+            CodePoint codePoint;
+            GlyphMap::Glyph baseGlyph;
+            cglib::vec2<float> size;
+            cglib::vec2<float> offset;
+            cglib::vec2<float> advance;
 
-			explicit Glyph(CodePoint codePoint, const GlyphMap::Glyph& baseGlyph, const cglib::vec2<float>& size, const cglib::vec2<float>& offset, const cglib::vec2<float>& advance) : codePoint(codePoint), baseGlyph(baseGlyph), size(size), offset(offset), advance(advance) { }
-		};
+            explicit Glyph(CodePoint codePoint, const GlyphMap::Glyph& baseGlyph, const cglib::vec2<float>& size, const cglib::vec2<float>& offset, const cglib::vec2<float>& advance) : codePoint(codePoint), baseGlyph(baseGlyph), size(size), offset(offset), advance(advance) { }
+        };
 
         virtual ~Font() = default;
 

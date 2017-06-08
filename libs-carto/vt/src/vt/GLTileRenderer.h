@@ -122,7 +122,7 @@ namespace carto { namespace vt {
             GLuint vertexGeometryVBO;
             GLuint vertexUVVBO;
             GLuint vertexColorVBO;
-			GLuint vertexAttribsVBO;
+            GLuint vertexAttribsVBO;
             GLuint vertexIndicesVBO;
 
             CompiledLabelBatch() : vertexGeometryVBO(0), vertexUVVBO(0), vertexColorVBO(0), vertexAttribsVBO(0), vertexIndicesVBO(0) { }
@@ -214,8 +214,8 @@ namespace carto { namespace vt {
         VertexArray<cglib::vec3<float>> _labelVertices;
         VertexArray<cglib::vec2<float>> _labelTexCoords;
         VertexArray<cglib::vec4<float>> _labelColors;
-		VertexArray<cglib::vec4<float>> _labelAttribs;
-		VertexArray<unsigned short> _labelIndices;
+        VertexArray<cglib::vec4<float>> _labelAttribs;
+        VertexArray<unsigned short> _labelIndices;
         float _zoom = 0;
         float _halfResolution = 0;
         int _screenWidth = 0;
