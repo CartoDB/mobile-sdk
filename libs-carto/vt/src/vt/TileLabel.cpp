@@ -232,7 +232,7 @@ namespace carto { namespace vt {
             Color haloColor = Color::fromColorOpacity(_haloColor, _opacity);
             colors.fill(haloColor.rgba(), _cachedVertices.size());
 
-            float haloSDF = 0.5f - std::min(sdfScale + sdfScale * _haloRadius * 3, 0.5f);
+            float haloSDF = 0.5f - std::min(sdfScale + sdfScale * _haloRadius * HALO_RADIUS_SCALE, 0.5f);
             attribs.copy(_cachedAttribs, 0, _cachedAttribs.size());
             for (cglib::vec4<float>* it = attribs.end() - _cachedAttribs.size(); it != attribs.end(); it++) {
                 *it = cglib::vec4<float>(haloSDF, 0.5f / sdfScale, 0, (*it)(3));

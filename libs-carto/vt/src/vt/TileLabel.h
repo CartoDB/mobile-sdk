@@ -66,6 +66,7 @@ namespace carto { namespace vt {
 
     private:
         constexpr static float EXTRA_PLACEMENT_PIXELS = 30.0f; // extra visible pixels required for placement
+        constexpr static float HALO_RADIUS_SCALE = 2.5f; // the scaling factor for halo radius
         constexpr static float MAX_SINGLE_SEGMENT_ANGLE = 1.0472f; // maximum angle between consecutive segments, in radians
         constexpr static float MAX_SUMMED_SEGMENT_ANGLE = 2.0944f; // maximum sum of segment angles, in radians
 
