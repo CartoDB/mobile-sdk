@@ -77,7 +77,10 @@ namespace carto { namespace css {
 
     std::shared_ptr<mvt::Symbolizer> CartoCSSMapnikTranslator::buildSymbolizer(const std::string& symbolizerType, const std::list<CartoCSSCompiler::Property>& properties, const std::shared_ptr<mvt::Map>& map) const {
         std::shared_ptr<mvt::Symbolizer> mapnikSymbolizer;
-        if (symbolizerType == "line") {
+        if (symbolizerType == "point") {
+            mapnikSymbolizer = std::make_shared<mvt::PointSymbolizer>(_logger);
+        }
+        else if (symbolizerType == "line") {
             mapnikSymbolizer = std::make_shared<mvt::LineSymbolizer>(_logger);
         }
         else if (symbolizerType == "line-pattern") {
