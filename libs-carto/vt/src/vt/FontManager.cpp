@@ -253,6 +253,7 @@ namespace carto { namespace vt {
                 return _glyphMap->loadBitmapGlyph(glyphBitmap, true, cglib::vec2<float>(0, 0));
             }
 
+            bool revert = FT_Outline_Get_Orientation(&face->glyph->outline) == FT_ORIENTATION_POSTSCRIPT;
             float width = std::ceil(face->glyph->metrics.width / 64.0f);
             float height = std::ceil(face->glyph->metrics.height / 64.0f);
             float xOffset = std::ceil(-face->glyph->metrics.horiBearingX / 64.0f);
@@ -263,7 +264,8 @@ namespace carto { namespace vt {
             std::vector<std::uint32_t> glyphBitmapData(sdf.width() * sdf.height());
             for (int y = 0; y < sdf.height(); y++) {
                 for (int x = 0; x < sdf.width(); x++) {
-                    std::uint32_t val = static_cast<std::uint8_t>(std::max(0.0f, std::min(255.0f, (sdf(x, sdf.height() - 1 - y) - 0.5f) * (128.0f / BITMAP_SDF_SCALE) + 127.5f)));
+                    float dist = sdf(x, sdf.height() - 1 - y) - 0.5f;
+                    std::uint32_t val = static_cast<std::uint8_t>(std::max(0.0f, std::min(255.0f, (revert ? -dist : dist) * (128.0f / BITMAP_SDF_SCALE) + 127.5f)));
                     glyphBitmapData[x + y * sdf.width()] = (val << 24) | (val << 16) | (val << 8) | val;
                 }
             }
