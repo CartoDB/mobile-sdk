@@ -96,6 +96,10 @@ namespace carto {
         _touchHandler->onTouchEvent(event, ScreenPos(x1, y1), ScreenPos(x2, y2));
     }
     
+    void BaseMapView::onWheelEvent(int delta, float x, float y) {
+        _touchHandler->onWheelEvent(delta, ScreenPos(x, y));
+    }
+    
     MapPos BaseMapView::getFocusPos() const {
         return _options->getBaseProjection()->fromInternal(_mapRenderer->getFocusPos());
     }

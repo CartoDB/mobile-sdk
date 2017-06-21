@@ -154,6 +154,15 @@
             args.Handled = true;
         }
 
+        protected override void OnPointerWheelChanged(Windows.UI.Xaml.Input.PointerRoutedEventArgs args) {
+            Windows.UI.Input.PointerPoint currentPoint = args.GetCurrentPoint(this);
+            int delta = currentPoint.Properties.MouseWheelDelta / 120;
+            if (delta != 0) {
+                _baseMapView.OnWheelEvent(delta, (float)ConvertDipsToPixels(currentPoint.Position.X), (float)ConvertDipsToPixels(currentPoint.Position.Y));
+                args.Handled = true;
+            }
+        }
+
         void OnSwapChainPanelSizeChanged(object sender, Windows.UI.Xaml.SizeChangedEventArgs args) {
             lock (_swapChainPanelSizeLock) {
                 _swapChainPanelSize = new Windows.Foundation.Size(args.NewSize.Width, args.NewSize.Height);
