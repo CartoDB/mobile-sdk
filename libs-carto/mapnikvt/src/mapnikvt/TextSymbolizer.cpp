@@ -46,6 +46,8 @@ namespace carto { namespace mvt {
 
         std::shared_ptr<const vt::ColorFunction> fill = _functionBuilder.createColorOpacityFunction(_fill, _opacity);
         std::shared_ptr<const vt::ColorFunction> haloFill = _functionBuilder.createColorOpacityFunction(_haloFill, _haloOpacity);
+        std::shared_ptr<const vt::FloatFunction> size = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _size);
+        std::shared_ptr<const vt::FloatFunction> haloRadius = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _haloRadius);
 
         std::vector<std::pair<long long, vt::TileLayerBuilder::Vertex>> textInfos;
         std::vector<std::pair<long long, vt::TileLayerBuilder::TextLabelInfo>> labelInfos;
@@ -66,7 +68,7 @@ namespace carto { namespace mvt {
 
         auto flushTexts = [&](const cglib::mat3x3<float>& transform) {
             if (_allowOverlap) {
-                vt::TextStyle style(compOp, convertLabelToPointOrientation(placement), fill, _size, haloFill, _haloRadius, _orientationAngle, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::BitmapImage>(), transform);
+                vt::TextStyle style(compOp, convertLabelToPointOrientation(placement), fill, size, haloFill, haloRadius, _orientationAngle, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::BitmapImage>(), transform);
 
                 std::size_t textInfoIndex = 0;
                 layerBuilder.addTexts([&](long long& id, vt::TileLayerBuilder::Vertex& vertex, std::string& txt) {
@@ -83,7 +85,7 @@ namespace carto { namespace mvt {
                 textInfos.clear();
             }
             else {
-                vt::TextLabelStyle style(placement, fill, _size, haloFill, _haloRadius, _orientationAngle, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::BitmapImage>());
+                vt::TextLabelStyle style(placement, fill, size, haloFill, haloRadius, _orientationAngle, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::BitmapImage>());
 
                 std::size_t labelInfoIndex = 0;
                 layerBuilder.addTextLabels([&](long long& id, vt::TileLayerBuilder::TextLabelInfo& labelInfo) {

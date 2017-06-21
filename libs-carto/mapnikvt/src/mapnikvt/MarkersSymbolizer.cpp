@@ -101,10 +101,10 @@ namespace carto { namespace mvt {
             fillOpacity = 1.0f;
         }
 
-        std::shared_ptr<const vt::ColorFunction> fill = _functionBuilder.createColorFunction(vt::Color::fromColorOpacity(vt::Color(1, 1, 1, 1), fillOpacity));
+        float bitmapSize = static_cast<float>(std::max(_widthStatic * fontScale * bitmapScaleX, _heightStatic * fontScale));
+        long long groupId = (_allowOverlap ? -1 : 0);
 
-        float bitmapSize = static_cast<float>(std::max(bitmapImage->bitmap->width * bitmapScaleX, bitmapImage->bitmap->height * bitmapScaleY));
-        int groupId = (_allowOverlap ? -1 : 0);
+        std::shared_ptr<const vt::ColorFunction> fill = _functionBuilder.createColorFunction(vt::Color::fromColorOpacity(vt::Color(1, 1, 1, 1), fillOpacity));
 
         std::vector<std::pair<long long, vt::TileLayerBuilder::Vertex>> pointInfos;
         std::vector<std::pair<long long, vt::TileLayerBuilder::BitmapLabelInfo>> labelInfos;
