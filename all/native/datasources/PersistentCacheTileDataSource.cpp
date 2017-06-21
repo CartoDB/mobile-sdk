@@ -93,6 +93,11 @@ namespace carto {
         return tileData;
     }
 
+    bool PersistentCacheTileDataSource::isOpen() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return (bool) _database;
+    }
+
     void PersistentCacheTileDataSource::close() {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         closeDatabase();
@@ -298,6 +303,10 @@ namespace carto {
         int minZoom = _minZoom;
         int maxZoom = _maxZoom;
         if (auto dataSource = _dataSource.lock()) {
+            if (!dataSource->isOpen()) {
+                Log::Warn("PersistentCacheTileDataSource:: DownloadTask: Database is not open, skipping download");
+                return;
+            }
             projection = dataSource->getProjection();
             minZoom = std::max(minZoom, dataSource->getMinZoom());
             maxZoom = std::min(maxZoom, dataSource->getMaxZoom());

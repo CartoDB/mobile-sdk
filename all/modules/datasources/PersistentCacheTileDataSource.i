@@ -21,6 +21,7 @@
 !polymorphic_shared_ptr(carto::PersistentCacheTileDataSource, datasources.PersistentCacheTileDataSource)
 
 %attribute(carto::PersistentCacheTileDataSource, bool, CacheOnlyMode, isCacheOnlyMode, setCacheOnlyMode)
+%attribute(carto::PersistentCacheTileDataSource, bool, Open, isOpen)
 %std_exceptions(carto::PersistentCacheTileDataSource::PersistentCacheTileDataSource)
 %std_exceptions(carto::PersistentCacheTileDataSource::startDownloadArea)
 

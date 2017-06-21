@@ -41,8 +41,7 @@ namespace carto {
          * Returns the tile cache capacity.
          * @return The tile cache capacity in bytes.
          */
-        virtual std::size_t getCapacity() const = 0;
-        
+        virtual std::size_t getCapacity() const = 0;        
         /**
          * Sets the cache capacity.
          * @param capacityInBytes The new tile cache capacity in bytes.
