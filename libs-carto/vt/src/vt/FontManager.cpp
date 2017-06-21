@@ -259,7 +259,7 @@ namespace carto { namespace vt {
             float xOffset = std::ceil(-face->glyph->metrics.horiBearingX / 64.0f);
             float yOffset = std::ceil((face->glyph->metrics.height - face->glyph->metrics.horiBearingY) / 64.0f);
             msdfgen::Bitmap<float> sdf(static_cast<int>(width) + 2 * RENDER_PADDING, static_cast<int>(height) + 2 * RENDER_PADDING);
-            msdfgen::generateSDF_legacy(sdf, shape, 1, msdfgen::Vector2(1, 1), msdfgen::Vector2(RENDER_PADDING + xOffset, RENDER_PADDING + yOffset));
+            msdfgen::generateSDF_legacy(sdf, shape, 1, msdfgen::Vector2(1, 1), msdfgen::Vector2(RENDER_PADDING + xOffset, RENDER_PADDING + yOffset), RENDER_PADDING + 1.0);
 
             std::vector<std::uint32_t> glyphBitmapData(sdf.width() * sdf.height());
             for (int y = 0; y < sdf.height(); y++) {
