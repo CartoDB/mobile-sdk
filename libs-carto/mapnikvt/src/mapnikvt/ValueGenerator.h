@@ -49,7 +49,7 @@ namespace carto { namespace mvt {
                     ;
             }
 
-            karma::symbols<char, const char *> esc_char;
+            karma::symbols<char, const char*> esc_char;
             karma::rule<OutputIterator, std::string()> string;
             karma::rule<OutputIterator, Value()> value;
 
