@@ -53,6 +53,10 @@ namespace carto { namespace mvt {
         }
 
         std::shared_ptr<const vt::FloatFunction> createChainedFloatFunction(const std::string& name, const std::function<float(float)>& func, const std::shared_ptr<const vt::FloatFunction>& baseFunc) const {
+            if (!baseFunc) {
+                return baseFunc;
+            }
+            
             auto it = _chainedFloatFunctionCache.find(std::make_pair(name, baseFunc));
             if (it != _chainedFloatFunctionCache.end()) {
                 return it->second;
