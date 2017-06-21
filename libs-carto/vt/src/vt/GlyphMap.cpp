@@ -22,16 +22,16 @@ namespace carto { namespace vt {
         return it->second.get();
     }
 
-    GlyphMap::GlyphId GlyphMap::loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap, bool sdf) {
+    GlyphMap::GlyphId GlyphMap::loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap, bool sdfMode) {
         if (!bitmap) {
             return 0;
         }
 
         cglib::vec2<float> origin(bitmap->width * 0.5f, bitmap->height * 0.5f);
-        return loadBitmapGlyph(bitmap, sdf, origin);
+        return loadBitmapGlyph(bitmap, sdfMode, origin);
     }
     
-    GlyphMap::GlyphId GlyphMap::loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap, bool sdf, const cglib::vec2<float>& origin) {
+    GlyphMap::GlyphId GlyphMap::loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap, bool sdfMode, const cglib::vec2<float>& origin) {
         std::lock_guard<std::mutex> lock(_mutex);
 
         if (!bitmap) {
@@ -66,7 +66,7 @@ namespace carto { namespace vt {
         }
 
         GlyphId glyphId = static_cast<GlyphId>(_glyphMap.size());
-        _glyphMap[glyphId] = std::unique_ptr<const Glyph>(new Glyph(sdf, _buildState.x0 + 1, _buildState.y0 + 1, bitmap->width, bitmap->height, origin));
+        _glyphMap[glyphId] = std::unique_ptr<const Glyph>(new Glyph(sdfMode, _buildState.x0 + 1, _buildState.y0 + 1, bitmap->width, bitmap->height, origin));
         _bitmapGlyphMap[bitmap] = glyphId;
 
         _buildState.x0 += bitmap->width + 2;

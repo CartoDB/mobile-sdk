@@ -41,11 +41,11 @@ namespace carto { namespace mvt {
                     '\'' << *(esc_char | karma::print | "\\x" << karma::hex) << '\'';
 
                 value =
-                      karma::lit("null")		[_pass = phx::bind(&isNullValue, _val)]
-                    | karma::bool_				[_pass = phx::bind(&getBoolValue, _val, _1)]
-                    | karma::long_long			[_pass = phx::bind(&getLongValue, _val, _1)]
-                    | karma::double_			[_pass = phx::bind(&getDoubleValue, _val, _1)]
-                    | string					[_pass = phx::bind(&getStringValue, _val, _1)]
+                      karma::lit("null")        [_pass = phx::bind(&isNullValue, _val)]
+                    | karma::bool_                [_pass = phx::bind(&getBoolValue, _val, _1)]
+                    | karma::long_long            [_pass = phx::bind(&getLongValue, _val, _1)]
+                    | karma::double_            [_pass = phx::bind(&getDoubleValue, _val, _1)]
+                    | string                    [_pass = phx::bind(&getStringValue, _val, _1)]
                     ;
             }
 

@@ -98,7 +98,7 @@ namespace carto { namespace vt {
 
     class FontManagerFont : public Font {
     public:
-        explicit FontManagerFont(const std::shared_ptr<FontManagerLibrary>& library, const std::shared_ptr<GlyphMap>& glyphMap, const std::vector<unsigned char>* data, const FontManager::Parameters& params) : _parameters(params), _library(library), _glyphMap(glyphMap), _face(nullptr), _font(nullptr), _metrics(0, 0, 0, 0) {
+        explicit FontManagerFont(const std::shared_ptr<FontManagerLibrary>& library, const std::shared_ptr<GlyphMap>& glyphMap, const std::vector<unsigned char>* data, const std::shared_ptr<Font>& baseFont) : _library(library), _baseFont(baseFont), _glyphMap(glyphMap), _face(nullptr), _font(nullptr) {
             std::lock_guard<std::recursive_mutex> lock(_library->getMutex());
 
             // Load FreeType font
@@ -111,11 +111,6 @@ namespace carto { namespace vt {
 
             // Create HarfBuzz font
             if (_face) {
-                _metrics.ascent = _face->size->metrics.ascender / 64.0f * _parameters.size / RENDER_SIZE;
-                _metrics.descent = _face->size->metrics.descender / 64.0f * _parameters.size / RENDER_SIZE;
-                _metrics.height = _face->size->metrics.height / 64.0f * _parameters.size / RENDER_SIZE;
-                _metrics.sdfScale = 1.0f / _parameters.size;
-
                 _font = hb_ft_font_create(_face, nullptr);
                 if (_font) {
                     hb_ft_font_set_funcs(_font);
@@ -148,15 +143,14 @@ namespace carto { namespace vt {
             }
         }
 
-        const FontManager::Parameters& getParameters() const {
-            return _parameters;
+        virtual Metrics getMetrics(float size) const override {
+            float ascent = _face->size->metrics.ascender / 64.0f * size / RENDER_SIZE;
+            float descent = _face->size->metrics.descender / 64.0f * size / RENDER_SIZE;
+            float height = _face->size->metrics.height / 64.0f * size / RENDER_SIZE;
+            return Metrics(ascent, descent, height);
         }
 
-        virtual const Metrics& getMetrics() const override {
-            return _metrics;
-        }
-
-        virtual std::vector<Glyph> shapeGlyphs(const std::uint32_t* utf32Text, std::size_t size, bool rtl) const override {
+        virtual std::vector<Glyph> shapeGlyphs(const std::uint32_t* utf32Text, std::size_t len, float size, bool rtl) const override {
             std::lock_guard<std::recursive_mutex> lock(_library->getMutex());
 
             // Find first font that covers all the characters. If not possible, use the last
@@ -166,7 +160,7 @@ namespace carto { namespace vt {
                 if (currentFont->_font) {
                     font = currentFont;
                     hb_buffer_clear_contents(_buffer);
-                    hb_buffer_add_utf32(_buffer, utf32Text, static_cast<unsigned int>(size), 0, static_cast<unsigned int>(size));
+                    hb_buffer_add_utf32(_buffer, utf32Text, static_cast<unsigned int>(len), 0, static_cast<unsigned int>(len));
                     hb_buffer_set_direction(_buffer, rtl ? HB_DIRECTION_RTL : HB_DIRECTION_LTR);
                     hb_buffer_guess_segment_properties(_buffer);
                     hb_shape(font->_font, _buffer, nullptr, 0);
@@ -179,7 +173,7 @@ namespace carto { namespace vt {
                     }
                 }
 
-                currentFont = dynamic_cast<const FontManagerFont*>(currentFont->_parameters.baseFont.get());
+                currentFont = dynamic_cast<const FontManagerFont*>(currentFont->_baseFont.get());
             }
             if (!font) {
                 return std::vector<Glyph>();
@@ -206,13 +200,13 @@ namespace carto { namespace vt {
                         it = _codePointGlyphMap.insert({ remappedCodePoint, glyphId }).first;
                     }
                     if (const GlyphMap::Glyph* baseGlyph = _glyphMap->getGlyph(it->second)) {
-                        float fontScale = _parameters.size / RENDER_SIZE;
-                        cglib::vec2<float> size(static_cast<float>(baseGlyph->width), static_cast<float>(baseGlyph->height));
-                        Glyph glyph(info[i].codepoint, *baseGlyph, size * fontScale, baseGlyph->origin * fontScale, cglib::vec2<float>(0, 0));
+                        float glyphScale = size / RENDER_SIZE;
+                        cglib::vec2<float> glyphSize(static_cast<float>(baseGlyph->width), static_cast<float>(baseGlyph->height));
+                        Glyph glyph(info[i].codepoint, *baseGlyph, glyphSize * glyphScale, baseGlyph->origin * glyphScale, cglib::vec2<float>(0, 0));
                         glyphs.push_back(glyph);
                         if (i < posCount) {
-                            glyphs.back().offset += cglib::vec2<float>(pos[i].x_offset / 64.0f, pos[i].y_offset / 64.0f) * fontScale;
-                            glyphs.back().advance = cglib::vec2<float>(pos[i].x_advance / 64.0f, pos[i].y_advance / 64.0f) * fontScale;
+                            glyphs.back().offset += cglib::vec2<float>(pos[i].x_offset / 64.0f, pos[i].y_offset / 64.0f) * glyphScale;
+                            glyphs.back().advance = cglib::vec2<float>(pos[i].x_advance / 64.0f, pos[i].y_advance / 64.0f) * glyphScale;
                         }
                     }
                 }
@@ -269,8 +263,7 @@ namespace carto { namespace vt {
             std::vector<std::uint32_t> glyphBitmapData(sdf.width() * sdf.height());
             for (int y = 0; y < sdf.height(); y++) {
                 for (int x = 0; x < sdf.width(); x++) {
-                    float c = std::max(0.0f, std::min(255.0f, (sdf(x, sdf.height() - 1 - y) - 0.5f) * 32.0f + 127.5f));
-                    std::uint32_t val = static_cast<std::uint8_t>(c);
+                    std::uint32_t val = static_cast<std::uint8_t>(std::max(0.0f, std::min(255.0f, (sdf(x, sdf.height() - 1 - y) - 0.5f) * (128.0f / BITMAP_SDF_SCALE) + 127.5f)));
                     glyphBitmapData[x + y * sdf.width()] = (val << 24) | (val << 16) | (val << 8) | val;
                 }
             }
@@ -278,14 +271,13 @@ namespace carto { namespace vt {
             return _glyphMap->loadBitmapGlyph(glyphBitmap, true, cglib::vec2<float>(-RENDER_PADDING - xOffset, -RENDER_PADDING - yOffset));
         }
 
-        const FontManager::Parameters _parameters;
         const std::shared_ptr<FontManagerLibrary> _library;
+        const std::shared_ptr<Font> _baseFont;
         std::shared_ptr<GlyphMap> _glyphMap;
         mutable std::unordered_map<CodePoint, GlyphMap::GlyphId> _codePointGlyphMap;
         FT_Face _face;
         hb_font_t* _font;
         hb_buffer_t* _buffer;
-        Metrics _metrics;
     };
 
     class FontManager::Impl {
@@ -346,17 +338,13 @@ namespace carto { namespace vt {
             FT_Done_Face(face);
         }
 
-        std::shared_ptr<Font> getFont(const std::string& name, const Parameters& parameters) const {
+        std::shared_ptr<Font> getFont(const std::string& name, const std::shared_ptr<Font>& baseFont) const {
             std::lock_guard<std::mutex> lock(_mutex);
 
             // Try to use already cached font
-            auto fontIt = _fontMap.find(name);
+            auto fontIt = _fontMap.find(std::make_pair(name, baseFont));
             if (fontIt != _fontMap.end()) {
-                for (const std::shared_ptr<FontManagerFont>& font : fontIt->second) {
-                    if (font->getParameters().size == parameters.size && font->getParameters().baseFont == parameters.baseFont) {
-                        return font;
-                    }
-                }
+                return fontIt->second;
             }
 
             // Check if we have font corresponding to the name
@@ -372,27 +360,18 @@ namespace carto { namespace vt {
             }
 
             // Create new font
-            auto font = std::make_shared<FontManagerFont>(_library, glyphMapIt->second, &fontDataIt->second, parameters);
+            auto font = std::make_shared<FontManagerFont>(_library, glyphMapIt->second, &fontDataIt->second, baseFont);
 
             // Preload often-used characters
             std::vector<std::uint32_t> glyphPreloadTable;
             std::for_each(_glyphPreloadTable.begin(), _glyphPreloadTable.end(), [&glyphPreloadTable](char c) { glyphPreloadTable.push_back(c); });
             for (std::size_t i = 0; i < glyphPreloadTable.size(); i++) {
-                font->shapeGlyphs(&glyphPreloadTable[i], 1, false);
+                font->shapeGlyphs(&glyphPreloadTable[i], 1, 1.0f, false);
             }
 
             // Cache the font
-            _fontMap[name].push_back(font);
+            _fontMap[std::make_pair(name, baseFont)] = font;
             return font;
-        }
-
-        std::shared_ptr<Font> getNullFont() const {
-            std::lock_guard<std::mutex> lock(_mutex);
-
-            if (!_nullFont) {
-                _nullFont = std::make_shared<FontManagerFont>(_library, std::make_shared<GlyphMap>(_maxGlyphMapWidth, _maxGlyphMapHeight), nullptr, Parameters(0, std::shared_ptr<Font>()));
-            }
-            return _nullFont;
         }
 
     private:
@@ -429,7 +408,7 @@ namespace carto { namespace vt {
         const int _maxGlyphMapHeight;
         std::map<std::string, std::vector<unsigned char>> _fontDataMap;
         std::shared_ptr<FontManagerLibrary> _library;
-        mutable std::map<std::string, std::vector<std::shared_ptr<FontManagerFont>>> _fontMap;
+        mutable std::map<std::pair<std::string, std::shared_ptr<Font>>, std::shared_ptr<FontManagerFont>> _fontMap;
         mutable std::map<std::string, std::shared_ptr<GlyphMap>> _glyphMapMap;
         mutable std::shared_ptr<Font> _nullFont;
         mutable std::mutex _mutex;
@@ -445,11 +424,7 @@ namespace carto { namespace vt {
         _impl->loadFontData(data);
     }
 
-    std::shared_ptr<Font> FontManager::getFont(const std::string& name, const Parameters& parameters) const {
-        return _impl->getFont(name, parameters);
-    }
-
-    std::shared_ptr<Font> FontManager::getNullFont() const {
-        return _impl->getNullFont();
+    std::shared_ptr<Font> FontManager::getFont(const std::string& name, const std::shared_ptr<Font>& baseFont) const {
+        return _impl->getFont(name, baseFont);
     }
 } }

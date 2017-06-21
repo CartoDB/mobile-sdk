@@ -9,32 +9,31 @@ namespace carto { namespace mvt {
         updateBindings(exprContext);
 
         vt::CompOp compOp = convertCompOp(_compOp);
-
+        
         float fontScale = symbolizerContext.getSettings().getFontScale();
-        float bitmapScale = fontScale;
+
         std::string file = _file;
-        std::shared_ptr<const vt::Bitmap> bitmap;
+        std::shared_ptr<const vt::BitmapImage> bitmapImage;
         if (!file.empty()) {
-            bitmap = symbolizerContext.getBitmapManager()->loadBitmap(file);
-            if (!bitmap) {
+            bitmapImage = symbolizerContext.getBitmapManager()->loadBitmapImage(file, false);
+            if (!bitmapImage) {
                 _logger->write(Logger::Severity::ERROR, "Failed to load point bitmap " + _file);
                 return;
             }
         }
         else {
             file = "__default_point.bmp";
-            bitmap = symbolizerContext.getBitmapManager()->getBitmap(file);
-            if (!bitmap) {
-                bitmap = createRectangleBitmap(RECTANGLE_SIZE);
-                symbolizerContext.getBitmapManager()->storeBitmap(file, bitmap);
+            bitmapImage = symbolizerContext.getBitmapManager()->getBitmapImage(file);
+            if (!bitmapImage) {
+                bitmapImage = makeRectangleBitmap(RECTANGLE_SIZE);
+                symbolizerContext.getBitmapManager()->storeBitmapImage(file, bitmapImage);
             }
-            bitmapScale = fontScale * 4.0f / RECTANGLE_SIZE;
         }
 
-        std::shared_ptr<const vt::ColorFunction> fillFunc = createColorFunction("#ffffff");
-        std::shared_ptr<const vt::FloatFunction> opacityFunc = createFloatFunction(_opacity);
+        std::shared_ptr<const vt::FloatFunction> size = _functionBuilder.createFloatFunction(fontScale);
+        std::shared_ptr<const vt::ColorFunction> fill = _functionBuilder.createColorOpacityFunction(_functionBuilder.createColorFunction(vt::Color(1, 1, 1, 1)), _opacity);
 
-        vt::PointStyle pointStyle(compOp, vt::PointOrientation::BILLBOARD_2D, fillFunc, opacityFunc, symbolizerContext.getGlyphMap(), bitmap, _transform * cglib::scale3_matrix(cglib::vec3<float>(1.0f, (bitmap->height * bitmapScale) / (bitmap->width * bitmapScale), 1)));
+        vt::PointStyle pointStyle(compOp, vt::PointOrientation::BILLBOARD_2D, fill, size, bitmapImage, _transform);
 
         std::vector<std::pair<long long, vt::TileLayerBuilder::Vertex>> pointInfos;
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
@@ -68,7 +67,7 @@ namespace carto { namespace mvt {
             vertex = pointInfos[pointInfoIndex].second;
             pointInfoIndex++;
             return true;
-        }, pointStyle);
+        }, pointStyle, symbolizerContext.getGlyphMap());
     }
 
     void PointSymbolizer::bindParameter(const std::string& name, const std::string& value) {
@@ -92,10 +91,11 @@ namespace carto { namespace mvt {
         }
     }
 
-    std::shared_ptr<vt::Bitmap> PointSymbolizer::createRectangleBitmap(float size) {
+    std::shared_ptr<vt::BitmapImage> PointSymbolizer::makeRectangleBitmap(float size) {
         int canvasSize = static_cast<int>(std::ceil(size));
-        vt::BitmapCanvas canvas(canvasSize, canvasSize);
+        vt::BitmapCanvas canvas(canvasSize, canvasSize, false);
+        canvas.setColor(vt::Color(0, 0, 0, 1));
         canvas.drawRectangle(0, 0, size, size);
-        return canvas.buildBitmap();
+        return canvas.buildBitmapImage();
     }
 } }

@@ -8,8 +8,10 @@ namespace carto { namespace mvt {
         updateBindings(exprContext);
 
         vt::CompOp compOp = convertCompOp(_compOp);
+
+        std::shared_ptr<const vt::ColorFunction> fill = _functionBuilder.createColorOpacityFunction(_fill, _fillOpacity);
         
-        vt::PolygonStyle style(compOp, _fill, _fillOpacity, std::shared_ptr<vt::BitmapPattern>(), _geometryTransform);
+        vt::PolygonStyle style(compOp, fill, std::shared_ptr<vt::BitmapPattern>(), _geometryTransform);
 
         std::size_t featureIndex = 0;
         std::size_t geometryIndex = 0;

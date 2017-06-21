@@ -11,6 +11,7 @@
 #include "Expression.h"
 #include "ExpressionContext.h"
 #include "ExpressionBinder.h"
+#include "FunctionBuilder.h"
 #include "ParserUtils.h"
 #include "SymbolizerContext.h"
 #include "Logger.h"
@@ -52,9 +53,6 @@ namespace carto { namespace mvt {
         static long long getTextId(long long id, std::size_t hash);
         static long long getShieldId(long long id, std::size_t hash);
         static long long getBitmapId(long long id, const std::string& file);
-
-        static std::shared_ptr<const vt::FloatFunction> createFloatFunction(float value);
-        static std::shared_ptr<const vt::ColorFunction> createColorFunction(const std::string& value);
 
         template <typename V>
         void bind(V* field, const std::shared_ptr<const Expression>& expr) {
@@ -122,6 +120,8 @@ namespace carto { namespace mvt {
 
         mutable std::mutex _mutex; // guards internal state as bindings may update it
 
+        FunctionBuilder _functionBuilder;
+        
         std::shared_ptr<Logger> _logger;
 
     private:
@@ -170,7 +170,7 @@ namespace carto { namespace mvt {
         ExpressionBinder<boost::optional<cglib::mat<float, 3, cglib::float_traits<float>>>> _optionalMatrixBinder;
         ExpressionFunctionBinder<float> _floatFunctionBinder;
         ExpressionFunctionBinder<vt::Color> _colorFunctionBinder;
-        
+
         std::map<std::string, std::string> _parameterMap;
         
         std::vector<std::shared_ptr<const Expression>> _parameterExprs;

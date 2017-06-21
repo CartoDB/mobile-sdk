@@ -29,7 +29,7 @@ namespace carto { namespace vt {
         _bitmapList.push_back(bitmap);
     }
 
-    void TileLayerBuilder::addPoints(const std::function<bool(long long& id, Vertex& vertex)>& generator, const PointStyle& style) {
+    void TileLayerBuilder::addPoints(const std::function<bool(long long& id, Vertex& vertex)>& generator, const PointStyle& style, const std::shared_ptr<GlyphMap>& glyphMap) {
         long long id = 0;
         cglib::vec2<float> vertex(0, 0);
         if (!generator(id, vertex)) {
@@ -37,31 +37,32 @@ namespace carto { namespace vt {
         }
         boost::optional<cglib::mat3x3<float>> transform = flipTransform(style.transform);
 
-        if (_builderParameters.type != TileGeometry::Type::POINT || _builderParameters.glyphMap != style.glyphMap || _styleParameters.transform != transform || _styleParameters.compOp != style.compOp || _styleParameters.pointOrientation != style.orientation || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
+        if (_builderParameters.type != TileGeometry::Type::POINT || _builderParameters.glyphMap != glyphMap || _styleParameters.transform != transform || _styleParameters.compOp != style.compOp || _styleParameters.pointOrientation != style.orientation || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
             appendGeometry();
         }
         _builderParameters.type = TileGeometry::Type::POINT;
-        _builderParameters.glyphMap = style.glyphMap;
+        _builderParameters.glyphMap = glyphMap;
         _styleParameters.transform = transform;
         _styleParameters.compOp = style.compOp;
         _styleParameters.pointOrientation = style.orientation;
-        GlyphMap::GlyphId glyphId = style.glyphMap->loadBitmapGlyph(style.bitmap, false);
+        GlyphMap::GlyphId glyphId = glyphMap->loadBitmapGlyph(style.pointImage->bitmap, style.pointImage->sdfMode);
         int styleIndex = _styleParameters.parameterCount;
         while (--styleIndex >= 0) {
-            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.opacityTable[styleIndex] == style.opacity) {
+            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.widthTable[styleIndex] == style.size && !_styleParameters.strokeWidthTable[styleIndex]) {
                 break;
             }
         }
         if (styleIndex < 0) {
             styleIndex = _styleParameters.parameterCount++;
             _styleParameters.colorTable[styleIndex] = style.color;
-            _styleParameters.opacityTable[styleIndex] = style.opacity;
+            _styleParameters.widthTable[styleIndex] = style.size;
+            _styleParameters.strokeWidthTable[styleIndex] = std::shared_ptr<const vt::FloatFunction>();
         }
         
         do {
             std::size_t i0 = _indices.size();
             cglib::vec2<float> pen(0, 0);
-            const GlyphMap::Glyph* glyph = style.glyphMap->getGlyph(glyphId);
+            const GlyphMap::Glyph* glyph = glyphMap->getGlyph(glyphId);
             if (glyph) {
                 pen = -cglib::vec2<float>(glyph->width, glyph->height) * 0.5f;
             }
@@ -70,56 +71,78 @@ namespace carto { namespace vt {
         } while (generator(id, vertex));
     }
 
-    void TileLayerBuilder::addTexts(const std::function<bool(long long& id, Vertex& vertex, std::string& text)>& generator, const TextStyle& style) {
+    void TileLayerBuilder::addTexts(const std::function<bool(long long& id, Vertex& vertex, std::string& text)>& generator, const TextStyle& style, const TextFormatter& formatter) {
         long long id = 0;
         cglib::vec2<float> vertex(0, 0);
         std::string text;
         if (!generator(id, vertex, text)) {
             return;
         }
+        
+        const std::shared_ptr<Font>& font = formatter.getFont();
         boost::optional<cglib::mat3x3<float>> transform = flipTransform(style.transform);
 
-        if (_builderParameters.type != TileGeometry::Type::POINT || _builderParameters.glyphMap != style.font->getGlyphMap() || _styleParameters.transform != transform || _styleParameters.compOp != style.compOp || _styleParameters.pointOrientation != style.orientation || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
+        if (_builderParameters.type != TileGeometry::Type::POINT || _builderParameters.glyphMap != font->getGlyphMap() || _styleParameters.transform != transform || _styleParameters.compOp != style.compOp || _styleParameters.pointOrientation != style.orientation || _styleParameters.parameterCount + 2 > TileGeometry::StyleParameters::MAX_PARAMETERS) {
             appendGeometry();
         }
         _builderParameters.type = TileGeometry::Type::POINT;
-        _builderParameters.glyphMap = style.font->getGlyphMap();
+        _builderParameters.glyphMap = font->getGlyphMap();
         _styleParameters.transform = transform;
         _styleParameters.compOp = style.compOp;
         _styleParameters.pointOrientation = style.orientation;
         int styleIndex = _styleParameters.parameterCount;
         while (--styleIndex >= 0) {
-            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.opacityTable[styleIndex] == style.opacity) {
+            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.widthTable[styleIndex] == style.size && !_styleParameters.strokeWidthTable[styleIndex]) {
                 break;
             }
         }
         if (styleIndex < 0) {
             styleIndex = _styleParameters.parameterCount++;
             _styleParameters.colorTable[styleIndex] = style.color;
-            _styleParameters.opacityTable[styleIndex] = style.opacity;
+            _styleParameters.widthTable[styleIndex] = style.size;
+            _styleParameters.strokeWidthTable[styleIndex] = std::shared_ptr<const vt::FloatFunction>();
+        }
+
+        int haloStyleIndex = -1;
+        if (style.haloRadius) {
+            for (haloStyleIndex = _styleParameters.parameterCount; --haloStyleIndex >= 0; ) {
+                if (_styleParameters.colorTable[haloStyleIndex] == style.haloColor && _styleParameters.widthTable[haloStyleIndex] == style.size && _styleParameters.strokeWidthTable[haloStyleIndex] == style.haloRadius) {
+                    break;
+                }
+            }
+            if (haloStyleIndex < 0) {
+                haloStyleIndex = _styleParameters.parameterCount++;
+                _styleParameters.colorTable[haloStyleIndex] = style.haloColor;
+                _styleParameters.widthTable[haloStyleIndex] = style.size;
+                _styleParameters.strokeWidthTable[haloStyleIndex] = style.haloRadius;
+            }
         }
 
         do {
             std::size_t i0 = _indices.size();
             std::size_t i1 = _binormals.size();
-            TextFormatter formatter(style.font);
-            std::vector<Font::Glyph> glyphs = formatter.format(text, style.formatterOptions);
-            if (style.backgroundBitmap) {
-                const GlyphMap::Glyph* baseGlyph = style.font->getGlyphMap()->getGlyph(style.font->getGlyphMap()->loadBitmapGlyph(style.backgroundBitmap, false));
+            std::vector<Font::Glyph> glyphs = formatter.format(text, 1.0f);
+            if (style.backgroundImage) {
+                const GlyphMap::Glyph* baseGlyph = font->getGlyphMap()->getGlyph(font->getGlyphMap()->loadBitmapGlyph(style.backgroundImage->bitmap, style.backgroundImage->sdfMode));
                 if (baseGlyph) {
-                    glyphs.insert(glyphs.begin(), Font::Glyph(0, *baseGlyph, cglib::vec2<float>(baseGlyph->width, baseGlyph->height) * style.backgroundScale, style.backgroundOffset, cglib::vec2<float>(baseGlyph->width, 0)));
+                    float fontSize = formatter.getFontSize();
+                    Font::Glyph glyph(0, *baseGlyph, cglib::vec2<float>(baseGlyph->width, baseGlyph->height) * (style.backgroundScale / fontSize), style.backgroundOffset * (1.0f / fontSize), cglib::vec2<float>(baseGlyph->width / fontSize, 0));
+                    tesselateGlyph(vertex, styleIndex, glyph.offset, glyph.size, &glyph.baseGlyph);
                 }
             }
-            cglib::vec2<float> pen(0, 0);
-            for (Font::Glyph& glyph : glyphs) {
-                if (glyph.codePoint == Font::CR_CODEPOINT) {
-                    pen = cglib::vec2<float>(0, 0);
-                }
-                else {
-                    tesselateGlyph(vertex, static_cast<char>(styleIndex), pen + glyph.offset, glyph.size, &glyph.baseGlyph);
-                }
 
-                pen += glyph.advance;
+            for (int pass = (haloStyleIndex >= 0 ? 0 : 1); pass < 2; pass++) {
+                cglib::vec2<float> pen(0, 0);
+                for (Font::Glyph& glyph : glyphs) {
+                    if (glyph.codePoint == Font::CR_CODEPOINT) {
+                        pen = cglib::vec2<float>(0, 0);
+                    }
+                    else {
+                        tesselateGlyph(vertex, static_cast<char>(pass == 0 ? haloStyleIndex : styleIndex), pen + glyph.offset, glyph.size, &glyph.baseGlyph);
+                    }
+
+                    pen += glyph.advance;
+                }
             }
             _ids.fill(id, _indices.size() - i0);
 
@@ -132,35 +155,34 @@ namespace carto { namespace vt {
         } while (generator(id, vertex, text));
     }
 
-    void TileLayerBuilder::addLines(const std::function<bool(long long& id, Vertices& vertices)>& generator, const LineStyle& style) {
+    void TileLayerBuilder::addLines(const std::function<bool(long long& id, Vertices& vertices)>& generator, const LineStyle& style, const std::shared_ptr<StrokeMap>& strokeMap) {
         long long id = 0;
         std::vector<cglib::vec2<float>> vertices;
         if (!generator(id, vertices)) {
             return;
         }
 
-        if ((_builderParameters.strokeMap && _builderParameters.strokeMap != style.strokeMap) || _styleParameters.transform != style.transform || _styleParameters.compOp != style.compOp || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
+        if ((_builderParameters.strokeMap && _builderParameters.strokeMap != strokeMap) || _styleParameters.transform != style.transform || _styleParameters.compOp != style.compOp || _styleParameters.parameterCount >= TileGeometry::StyleParameters::MAX_PARAMETERS) {
             appendGeometry();
         }
         else if (!(_builderParameters.type == TileGeometry::Type::LINE || (_builderParameters.type == TileGeometry::Type::POLYGON && !_styleParameters.pattern && !_styleParameters.transform))) { // we can use also line drawing shader but ONLY if pattern/transform is not used for polygons (pattern can be used for lines)
             appendGeometry();
         }
         _builderParameters.type = TileGeometry::Type::LINE;
-        _builderParameters.strokeMap = style.strokeMap;
+        _builderParameters.strokeMap = strokeMap;
         _styleParameters.transform = style.transform;
         _styleParameters.compOp = style.compOp;
-        StrokeMap::StrokeId strokeId = (style.strokePattern ? style.strokeMap->loadBitmapPattern(style.strokePattern) : 0);
-        const StrokeMap::Stroke* stroke = style.strokeMap->getStroke(strokeId);
+        StrokeMap::StrokeId strokeId = (style.strokePattern ? strokeMap->loadBitmapPattern(style.strokePattern) : 0);
+        const StrokeMap::Stroke* stroke = strokeMap->getStroke(strokeId);
         int styleIndex = _styleParameters.parameterCount;
         while (--styleIndex >= 0) {
-            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.opacityTable[styleIndex] == style.opacity && _styleParameters.widthTable[styleIndex] == style.width && _builderParameters.lineStrokeIds[styleIndex] == strokeId) {
+            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.widthTable[styleIndex] == style.width && _builderParameters.lineStrokeIds[styleIndex] == strokeId) {
                 break;
             }
         }
         if (styleIndex < 0) {
             styleIndex = _styleParameters.parameterCount++;
             _styleParameters.colorTable[styleIndex] = style.color;
-            _styleParameters.opacityTable[styleIndex] = style.opacity;
             _styleParameters.widthTable[styleIndex] = style.width;
             _builderParameters.lineStrokeIds[styleIndex] = strokeId;
         }
@@ -196,14 +218,13 @@ namespace carto { namespace vt {
         _styleParameters.compOp = style.compOp;
         int styleIndex = _styleParameters.parameterCount;
         while (--styleIndex >= 0) {
-            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.opacityTable[styleIndex] == style.opacity && _styleParameters.widthTable[styleIndex] == _nullWidth && _builderParameters.lineStrokeIds[styleIndex] == 0) {
+            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.widthTable[styleIndex] == _nullWidth && _builderParameters.lineStrokeIds[styleIndex] == 0) {
                 break;
             }
         }
         if (styleIndex < 0) {
             styleIndex = _styleParameters.parameterCount++;
             _styleParameters.colorTable[styleIndex] = style.color;
-            _styleParameters.opacityTable[styleIndex] = style.opacity;
             _styleParameters.widthTable[styleIndex] = _nullWidth; // fill width information when we need to use line shader with polygons
             _builderParameters.lineStrokeIds[styleIndex] = 0; // fill stroke information when we need to use line shader with polygons
         }
@@ -232,14 +253,13 @@ namespace carto { namespace vt {
         _styleParameters.transform = style.transform;
         int styleIndex = _styleParameters.parameterCount;
         while (--styleIndex >= 0) {
-            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.opacityTable[styleIndex] == style.opacity) {
+            if (_styleParameters.colorTable[styleIndex] == style.color) {
                 break;
             }
         }
         if (styleIndex < 0) {
             styleIndex = _styleParameters.parameterCount++;
             _styleParameters.colorTable[styleIndex] = style.color;
-            _styleParameters.opacityTable[styleIndex] = style.opacity;
         }
 
         do {
@@ -249,22 +269,27 @@ namespace carto { namespace vt {
         } while (generator(id, verticesList));
     }
 
-    void TileLayerBuilder::addBitmapLabels(const std::function<bool(long long& id, BitmapLabelInfo& labelInfo)>& generator, const BitmapLabelStyle& style) {
-        if (!style.bitmap) {
+    void TileLayerBuilder::addBitmapLabels(const std::function<bool(long long& id, BitmapLabelInfo& labelInfo)>& generator, const BitmapLabelStyle& style, const std::shared_ptr<GlyphMap>& glyphMap) {
+        if (!style.image) {
             return;
         }
 
         boost::optional<cglib::mat3x3<float>> transform = flipTransform(style.transform);
 
-        const GlyphMap::Glyph* baseGlyph = style.font->getGlyphMap()->getGlyph(style.font->getGlyphMap()->loadBitmapGlyph(style.bitmap, false));
+        const GlyphMap::Glyph* baseGlyph = glyphMap->getGlyph(glyphMap->loadBitmapGlyph(style.image->bitmap, style.image->sdfMode));
         if (!baseGlyph) {
             return;
         }
         std::vector<Font::Glyph> bitmapGlyphs = {
-            Font::Glyph(Font::CR_CODEPOINT, GlyphMap::Glyph(false, 0, 0, 0, 0, cglib::vec2<float>(0, 0)), cglib::vec2<float>(0, 0), cglib::vec2<float>(0, 0), cglib::vec2<float>(-style.bitmap->width * 0.5f, -style.bitmap->height * 0.5f)),
+            Font::Glyph(Font::CR_CODEPOINT, GlyphMap::Glyph(false, 0, 0, 0, 0, cglib::vec2<float>(0, 0)), cglib::vec2<float>(0, 0), cglib::vec2<float>(0, 0), cglib::vec2<float>(-style.image->bitmap->width * 0.5f, -style.image->bitmap->height * 0.5f)),
             Font::Glyph(0, *baseGlyph, cglib::vec2<float>(baseGlyph->width, baseGlyph->height), cglib::vec2<float>(0, 0), cglib::vec2<float>(baseGlyph->width, 0))
         };
 
+        float scale = 1.0f / _tileSize;
+        if (!_labelStyle || _labelStyle->orientation != style.orientation || _labelStyle->color != style.color || _labelStyle->size != style.size || _labelStyle->haloColor || _labelStyle->haloRadius || _labelStyle->scale != scale || _labelStyle->ascent != 0.0f || _labelStyle->transform != transform || _labelStyle->glyphMap != glyphMap) {
+            _labelStyle = std::make_shared<TileLabel::LabelStyle>(style.orientation, style.color, style.size, std::shared_ptr<const ColorFunction>(), std::shared_ptr<const FloatFunction>(), 1.0f / _tileSize, 0.0f, transform, glyphMap);
+        }
+        
         while (true) {
             long long id = 0;
             BitmapLabelInfo labelInfo;
@@ -284,16 +309,23 @@ namespace carto { namespace vt {
                 }
             }
 
-            auto bitmapLabel = std::make_shared<TileLabel>(_tileId, id, labelInfo.id, labelInfo.groupId, style.font, bitmapGlyphs, std::move(labelPosition), std::move(labelVertices), style.orientation, transform, 1.0f / _tileSize, style.color, vt::Color(), 0.0f);
+            auto bitmapLabel = std::make_shared<TileLabel>(_tileId, id, labelInfo.id, labelInfo.groupId, std::move(bitmapGlyphs), std::move(labelPosition), std::move(labelVertices), _labelStyle);
             bitmapLabel->setMinimumGroupDistance(_tileSize * labelInfo.minimumGroupDistance);
             _labelList.push_back(std::move(bitmapLabel));
         }
     }
 
-    void TileLayerBuilder::addTextLabels(const std::function<bool(long long& id, TextLabelInfo& labelInfo)>& generator, const TextLabelStyle& style) {
+    void TileLayerBuilder::addTextLabels(const std::function<bool(long long& id, TextLabelInfo& labelInfo)>& generator, const TextLabelStyle& style, const TextFormatter& formatter) {
         boost::optional<cglib::mat3x3<float>> transform;
         if (style.angle != 0) {
             transform = cglib::rotate3_matrix(cglib::vec3<float>(0, 0, 1), style.angle * boost::math::constants::pi<float>() / 180.0f);
+        }
+
+        const std::shared_ptr<Font>& font = formatter.getFont();
+        float scale = 1.0f / _tileSize;
+        float ascent = formatter.getFont()->getMetrics(1.0f).ascent;
+        if (!_labelStyle || _labelStyle->orientation != style.orientation || _labelStyle->color != style.color || _labelStyle->size != style.size || _labelStyle->haloColor != style.haloColor || _labelStyle->haloRadius != style.haloRadius || _labelStyle->scale != scale || _labelStyle->ascent != ascent || _labelStyle->transform != transform || _labelStyle->glyphMap != font->getGlyphMap()) {
+            _labelStyle = std::make_shared<TileLabel::LabelStyle>(style.orientation, style.color, style.size, style.haloColor, style.haloRadius, scale, ascent, transform, font->getGlyphMap());
         }
 
         while (true) {
@@ -303,13 +335,13 @@ namespace carto { namespace vt {
                 break;
             }
 
-            if (!labelInfo.text.empty() || style.backgroundBitmap) {
-                TextFormatter formatter(style.font);
-                std::vector<Font::Glyph> glyphs = formatter.format(labelInfo.text, style.formatterOptions);
-                if (style.backgroundBitmap) {
-                    const GlyphMap::Glyph* baseGlyph = style.font->getGlyphMap()->getGlyph(style.font->getGlyphMap()->loadBitmapGlyph(style.backgroundBitmap, false));
+            if (!labelInfo.text.empty() || style.backgroundImage) {
+                std::vector<Font::Glyph> glyphs = formatter.format(labelInfo.text, 1.0f);
+                if (style.backgroundImage) {
+                    const GlyphMap::Glyph* baseGlyph = font->getGlyphMap()->getGlyph(font->getGlyphMap()->loadBitmapGlyph(style.backgroundImage->bitmap, style.backgroundImage->sdfMode));
                     if (baseGlyph) {
-                        glyphs.insert(glyphs.begin(), Font::Glyph(0, *baseGlyph, cglib::vec2<float>(baseGlyph->width, baseGlyph->height) * style.backgroundScale, style.backgroundOffset, cglib::vec2<float>(baseGlyph->width, 0)));
+                        float fontSize = formatter.getFontSize();
+                        glyphs.insert(glyphs.begin(), Font::Glyph(0, *baseGlyph, cglib::vec2<float>(baseGlyph->width, baseGlyph->height) * (style.backgroundScale / fontSize), style.backgroundOffset * (1.0f / fontSize), cglib::vec2<float>(baseGlyph->width / fontSize, 0)));
                     }
                 }
 
@@ -323,14 +355,14 @@ namespace carto { namespace vt {
                     labelVertices.emplace_back(vertex(0), vertex(1), 0);
                 }
 
-                auto textLabel = std::make_shared<TileLabel>(_tileId, id, labelInfo.id, labelInfo.groupId, style.font, std::move(glyphs), std::move(labelPosition), std::move(labelVertices), style.orientation, transform, 1.0f / _tileSize, style.color, style.haloColor, style.haloRadius);
+                auto textLabel = std::make_shared<TileLabel>(_tileId, id, labelInfo.id, labelInfo.groupId, std::move(glyphs), std::move(labelPosition), std::move(labelVertices), _labelStyle);
                 textLabel->setMinimumGroupDistance(_tileSize * labelInfo.minimumGroupDistance);
                 _labelList.push_back(std::move(textLabel));
             }
         }
     }
 
-    std::shared_ptr<TileLayer> TileLayerBuilder::build(int layerIdx, std::shared_ptr<FloatFunction> opacity, boost::optional<CompOp> compOp) {
+    std::shared_ptr<TileLayer> TileLayerBuilder::build(int layerIdx, std::shared_ptr<const FloatFunction> opacity, boost::optional<CompOp> compOp) {
         std::vector<std::shared_ptr<TileBitmap>> bitmapList;
         std::swap(bitmapList, _bitmapList);
 
@@ -541,16 +573,18 @@ namespace carto { namespace vt {
     bool TileLayerBuilder::tesselateGlyph(const Vertex& vertex, char styleIndex, const cglib::vec2<float>& pen, const cglib::vec2<float>& size, const GlyphMap::Glyph* glyph) {
         float u0 = 0, v0 = 0, u1 = 0, v1 = 0;
         cglib::vec2<float> p0 = pen, p3 = pen + size;
+        cglib::vec4<char> attrib(styleIndex, 0, 0, 0);
         if (glyph) {
             u0 = static_cast<float>(glyph->x); // NOTE: u,v coordinates will be normalized when the layer is built
             v0 = static_cast<float>(glyph->y);
             u1 = static_cast<float>(glyph->x + glyph->width);
             v1 = static_cast<float>(glyph->y + glyph->height);
+            attrib(1) = (glyph->sdfMode ? -1.0f : 1.0f);
         }
         _vertices.append(vertex, vertex, vertex, vertex);
         _texCoords.append(cglib::vec2<float>(u0, v1), cglib::vec2<float>(u1, v1), cglib::vec2<float>(u1, v0), cglib::vec2<float>(u0, v0));
         _binormals.append(p0, cglib::vec2<float>(p3(0), p0(1)), p3, cglib::vec2<float>(p0(0), p3(1)));
-        _attribs.append(cglib::vec4<char>(styleIndex, 0, 0, 0), cglib::vec4<char>(styleIndex, 0, 0, 0), cglib::vec4<char>(styleIndex, 0, 0, 0), cglib::vec4<char>(styleIndex, 0, 0, 0));
+        _attribs.append(attrib, attrib, attrib, attrib);
 
         int i0 = static_cast<int>(_vertices.size()) - 4;
         _indices.append(i0 + 0, i0 + 1, i0 + 2);

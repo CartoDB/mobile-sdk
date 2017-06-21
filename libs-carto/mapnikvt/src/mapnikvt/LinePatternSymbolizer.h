@@ -14,13 +14,14 @@ namespace carto { namespace mvt {
     public:
         explicit LinePatternSymbolizer(std::shared_ptr<Logger> logger) : GeometrySymbolizer(std::move(logger)) {
             bind(&_fill, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), &LinePatternSymbolizer::convertColor);
-            bind(&_opacity, std::make_shared<ConstExpression>(Value(1.0f)));
         }
 
         virtual void build(const FeatureCollection& featureCollection, const FeatureExpressionContext& exprContext, const SymbolizerContext& symbolizerContext, vt::TileLayerBuilder& layerBuilder) override;
 
     protected:
-        virtual void bindParameter(const std::string& name, const std::string& value) override;
+        constexpr static float PATTERN_SCALE = 0.375f;
+		
+		virtual void bindParameter(const std::string& name, const std::string& value) override;
 
         std::string _file;
         std::shared_ptr<const vt::ColorFunction> _fill; // vt::Color(0xffffffff)

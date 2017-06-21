@@ -30,9 +30,13 @@ namespace carto { namespace vt {
             explicit Options(const cglib::vec2<float>& alignment, const cglib::vec2<float>& offset, bool wrapBefore, float wrapWidth, float characterSpacing, float lineSpacing) : alignment(alignment), offset(offset), wrapBefore(wrapBefore), wrapWidth(wrapWidth), characterSpacing(characterSpacing), lineSpacing(lineSpacing) { }
         };
 
-        explicit TextFormatter(const std::shared_ptr<Font>& font);
+        explicit TextFormatter(std::shared_ptr<Font> font, float fontSize, const Options& options);
 
-        std::vector<Font::Glyph> format(const std::string& text, const Options& options) const;
+        const std::shared_ptr<Font>& getFont() const { return _font; }
+        float getFontSize() const { return _fontSize; }
+        const Options& getOptions() const { return _options; }
+
+        std::vector<Font::Glyph> format(const std::string& text, float fontSize) const;
 
     private:
         struct Line {
@@ -42,9 +46,12 @@ namespace carto { namespace vt {
             Line() : bbox(cglib::bbox2<float>::smallest()), glyphs() { }
         };
 
-        std::vector<Line> splitLines(const std::string& text, const Options& options) const;
+        std::vector<Line> splitLines(const std::string& text) const;
 
-        std::shared_ptr<Font> _font;
+        const std::shared_ptr<Font> _font;
+        const Font::Metrics _metrics;
+        const float _fontSize;
+        const Options _options;
     };
 } }
 

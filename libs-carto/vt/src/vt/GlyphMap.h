@@ -22,21 +22,21 @@ namespace carto { namespace vt {
         using GlyphId = unsigned int;
         
         struct Glyph {
-            bool sdf;
+            bool sdfMode;
             int x;
             int y;
             int width;
             int height;
             cglib::vec2<float> origin;
 
-            explicit Glyph(bool sdf, int x, int y, int width, int height, const cglib::vec2<float>& origin) : sdf(sdf), x(x), y(y), width(width), height(height), origin(origin) { }
+            explicit Glyph(bool sdfMode, int x, int y, int width, int height, const cglib::vec2<float>& origin) : sdfMode(sdfMode), x(x), y(y), width(width), height(height), origin(origin) { }
         };
 
         explicit GlyphMap(int maxWidth, int maxHeight);
 
         const Glyph* getGlyph(GlyphId code) const;
-        GlyphId loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap, bool sdf);
-        GlyphId loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap, bool sdf, const cglib::vec2<float>& origin);
+        GlyphId loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap, bool sdfMode);
+        GlyphId loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap, bool sdfMode, const cglib::vec2<float>& origin);
         std::shared_ptr<const BitmapPattern> getBitmapPattern() const;
 
     private:
