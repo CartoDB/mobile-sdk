@@ -145,7 +145,7 @@ namespace carto { namespace vt {
         };
 
         constexpr static float TEXT_SHARPNESS_FACTOR = 4.0f;
-        constexpr static float HALO_RADIUS_SCALE = 2.0f; // the scaling factor for halo radius
+        constexpr static float HALO_RADIUS_SCALE = 2.5f; // the scaling factor for halo radius
 
         static cglib::mat4x4<double> calculateLocalViewMatrix(const cglib::mat4x4<double>& cameraMatrix);
 
