@@ -270,7 +270,7 @@ namespace carto { namespace vt {
                 }
             }
             std::shared_ptr<Bitmap> glyphBitmap = std::make_shared<Bitmap>(sdf.width(), sdf.height(), std::move(glyphBitmapData));
-            return _glyphMap->loadBitmapGlyph(glyphBitmap, true, cglib::vec2<float>(-RENDER_PADDING - xOffset, -RENDER_PADDING - yOffset));
+            return _glyphMap->loadBitmapGlyph(glyphBitmap, true, cglib::vec2<float>(-xOffset, -RENDER_PADDING - yOffset));
         }
 
         const std::shared_ptr<FontManagerLibrary> _library;
