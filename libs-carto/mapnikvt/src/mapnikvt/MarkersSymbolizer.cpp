@@ -25,7 +25,7 @@ namespace carto { namespace mvt {
             orientation = vt::LabelOrientation::POINT; // we will apply custom rotation, thus use point orientation
         }
 
-        std::shared_ptr<const vt::FloatFunction> width = _width, height = _height;
+        std::shared_ptr<const vt::FloatFunction> size;
         float bitmapScaleX = fontScale, bitmapScaleY = fontScale;
         std::shared_ptr<const vt::BitmapImage> bitmapImage;
         std::string file = _file;
@@ -37,24 +37,22 @@ namespace carto { namespace mvt {
                 return;
             }
             
-            if (width && _widthStatic > 0) {
-                bitmapScaleX = bitmapScaleX / bitmapImage->bitmap->width;
-                if (height && _heightStatic > 0) {
-                    bitmapScaleY = _heightStatic / _widthStatic * bitmapScaleY / bitmapImage->bitmap->height;
+            if (_width && _widthStatic > 0) {
+                if (_height && _heightStatic > 0) {
+                    bitmapScaleY *= _heightStatic / _widthStatic;
                 }
                 else {
-                    bitmapScaleY = bitmapScaleX;
+                    bitmapScaleY *= static_cast<float>(bitmapImage->bitmap->height) / bitmapImage->bitmap->width;
                 }
-                height = width;
+                size = _width;
             }
-            else if (height && _heightStatic > 0) {
-                bitmapScaleX = bitmapScaleY = bitmapScaleY / bitmapImage->bitmap->height;
-                width = height;
+            else if (_height && _heightStatic > 0) {
+                bitmapScaleX *= static_cast<float>(bitmapImage->bitmap->width) / bitmapImage->bitmap->height;
+                size = _height;
             }
             else {
-                bitmapScaleY = bitmapScaleX = bitmapScaleX / bitmapImage->bitmap->width;
-                width = _functionBuilder.createFloatFunction(bitmapImage->bitmap->width);
-                height = width;
+                bitmapScaleY *= static_cast<float>(bitmapImage->bitmap->height) / bitmapImage->bitmap->width;
+                size = _functionBuilder.createFloatFunction(bitmapImage->bitmap->width);
             }
         }
         else {
@@ -62,23 +60,25 @@ namespace carto { namespace mvt {
             vt::Color stroke = vt::Color::fromColorOpacity(_stroke, _strokeOpacity);
             bool ellipse = _markerType == "ellipse" || (_markerType.empty() && placement != vt::LabelOrientation::LINE);
             float bitmapWidth = (ellipse ? DEFAULT_CIRCLE_SIZE : DEFAULT_ARROW_WIDTH), bitmapHeight = (ellipse ? DEFAULT_CIRCLE_SIZE : DEFAULT_ARROW_HEIGHT);
-            if (width) { // NOTE: special case, if accept all values
-                bitmapHeight = (height ? _heightStatic : bitmapHeight * _widthStatic / bitmapWidth);
+            if (_width) { // NOTE: special case, if accept all values
+                bitmapHeight = (_height ? _heightStatic : _widthStatic * bitmapHeight / bitmapWidth);
                 bitmapWidth = _widthStatic;
-                bitmapScaleY = bitmapScaleX = bitmapScaleX / bitmapWidth;
-                height = width;
+                bitmapScaleY *= bitmapHeight / bitmapWidth;
+                size = _width;
             }
-            else if (height) { // NOTE: special case, accept all values
-                bitmapWidth = bitmapWidth * _heightStatic / bitmapHeight;
+            else if (_height) { // NOTE: special case, accept all values
+                bitmapWidth = _heightStatic * bitmapWidth / bitmapHeight;
                 bitmapHeight = _heightStatic;
-                bitmapScaleX = bitmapScaleY = bitmapScaleY / bitmapHeight;
-                width = height;
+                bitmapScaleX *= bitmapWidth / bitmapHeight;
+                size = _height;
             }
             else {
-                bitmapScaleX = bitmapScaleY = bitmapScaleX / bitmapWidth;
-                width = _functionBuilder.createFloatFunction(bitmapWidth);
-                height = width;
+                bitmapScaleY *= bitmapHeight / bitmapWidth;
+                size = _functionBuilder.createFloatFunction(bitmapWidth);
             }
+            bitmapWidth = std::min(bitmapWidth, static_cast<float>(MAX_BITMAP_SIZE));
+            bitmapHeight = std::min(bitmapHeight, static_cast<float>(MAX_BITMAP_SIZE));
+            
             if (ellipse) {
                 file = "__default_marker_ellipse_" + boost::lexical_cast<std::string>(bitmapWidth) + "_" + boost::lexical_cast<std::string>(bitmapHeight) + "_" + boost::lexical_cast<std::string>(fill.value()) + "_" + boost::lexical_cast<std::string>(_strokeWidthStatic) + "_" + boost::lexical_cast<std::string>(stroke.value()) + ".bmp";
                 bitmapImage = symbolizerContext.getBitmapManager()->getBitmapImage(file);
@@ -96,12 +96,10 @@ namespace carto { namespace mvt {
                 }
             }
 
-            bitmapScaleX /= SUPERSAMPLING_FACTOR;
-            bitmapScaleY /= SUPERSAMPLING_FACTOR;
             fillOpacity = 1.0f;
         }
 
-        float bitmapSize = static_cast<float>(std::max(_widthStatic * fontScale * bitmapScaleX, _heightStatic * fontScale));
+        float bitmapSize = static_cast<float>(std::max(_widthStatic * fontScale, _heightStatic * fontScale));
         long long groupId = (_allowOverlap ? -1 : 0);
 
         std::shared_ptr<const vt::ColorFunction> fill = _functionBuilder.createColorFunction(vt::Color::fromColorOpacity(vt::Color(1, 1, 1, 1), fillOpacity));
@@ -127,7 +125,7 @@ namespace carto { namespace mvt {
 
         auto flushPoints = [&](const cglib::mat3x3<float>& transform) {
             if (_allowOverlap) {
-                vt::PointStyle style(compOp, convertLabelToPointOrientation(orientation), fill, width, bitmapImage, transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1)));
+                vt::PointStyle style(compOp, convertLabelToPointOrientation(orientation), fill, size, bitmapImage, transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX / bitmapImage->bitmap->width, bitmapScaleY / bitmapImage->bitmap->height, 1)));
 
                 std::size_t pointInfoIndex = 0;
                 layerBuilder.addPoints([&](long long& id, vt::TileLayerBuilder::Vertex& vertex) {
@@ -143,7 +141,7 @@ namespace carto { namespace mvt {
                 pointInfos.clear();
             }
             else {
-                vt::BitmapLabelStyle style(orientation, fill, width, bitmapImage, transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1)));
+                vt::BitmapLabelStyle style(orientation, fill, size, bitmapImage, transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX / bitmapImage->bitmap->width, bitmapScaleY / bitmapImage->bitmap->height, 1)));
 
                 std::size_t labelInfoIndex = 0;
                 layerBuilder.addBitmapLabels([&](long long& id, vt::TileLayerBuilder::BitmapLabelInfo& labelInfo) {

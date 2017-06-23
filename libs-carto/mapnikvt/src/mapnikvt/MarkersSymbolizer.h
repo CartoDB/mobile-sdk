@@ -23,6 +23,7 @@ namespace carto { namespace mvt {
         constexpr static int DEFAULT_ARROW_WIDTH = 28;
         constexpr static int DEFAULT_ARROW_HEIGHT = 14;
         constexpr static int SUPERSAMPLING_FACTOR = 4;
+        constexpr static int MAX_BITMAP_SIZE = 64;
 
         virtual void bindParameter(const std::string& name, const std::string& value) override;
 
