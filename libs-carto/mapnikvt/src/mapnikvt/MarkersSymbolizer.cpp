@@ -76,6 +76,8 @@ namespace carto { namespace mvt {
                 bitmapScaleY *= bitmapHeight / bitmapWidth;
                 size = _functionBuilder.createFloatFunction(bitmapWidth);
             }
+            bitmapScaleX *= (_strokeWidthStatic + bitmapWidth) / bitmapWidth;
+            bitmapScaleY *= (_strokeWidthStatic + bitmapHeight) / bitmapHeight;
             bitmapWidth = std::min(bitmapWidth, static_cast<float>(MAX_BITMAP_SIZE));
             bitmapHeight = std::min(bitmapHeight, static_cast<float>(MAX_BITMAP_SIZE));
             
@@ -308,26 +310,26 @@ namespace carto { namespace mvt {
         float x0 = canvasWidth * 0.5f, y0 = canvasHeight * 0.5f;
         if (strokeWidth > 0) {
             canvas.setColor(strokeColor);
-            canvas.drawEllipse(x0, y0, (width + strokeWidth * 0.5f) * 0.5f, (height + strokeWidth * 0.5f) * 0.5f);
+            canvas.drawEllipse(x0, y0, (width + strokeWidth) * 0.5f, (height + strokeWidth) * 0.5f);
         }
         canvas.setColor(color);
-        canvas.drawEllipse(x0, y0, (width - strokeWidth * 0.5f) * 0.5f, (height - strokeWidth * 0.5f) * 0.5f);
+        canvas.drawEllipse(x0, y0, (width - strokeWidth) * 0.5f, (height - strokeWidth) * 0.5f);
         return canvas.buildBitmapImage();
     }
 
     std::shared_ptr<vt::BitmapImage> MarkersSymbolizer::makeArrowBitmap(float width, float height, const vt::Color& color, float strokeWidth, const vt::Color& strokeColor) {
         int canvasWidth = static_cast<int>(std::ceil(width + strokeWidth));
         int canvasHeight = static_cast<int>(std::ceil(height + strokeWidth));
-        float x0 = strokeWidth * 0.5f, x1 = std::ceil(width - height * 0.5f), y1 = height * 1 / 3, y2 = height * 2 / 3;
+        float x0 = 0, x1 = std::ceil(canvasWidth - canvasHeight * 0.5f), y1 = canvasHeight * 1.0f / 3.0f, y2 = canvasHeight * 2.0f / 3.0f;
         vt::BitmapCanvas canvas(canvasWidth, canvasHeight, false);
         if (strokeWidth > 0) {
             canvas.setColor(strokeColor);
-            canvas.drawRectangle(0, y1 - strokeWidth * 0.5f, x1, y2 + strokeWidth * 0.5f);
-            canvas.drawTriangle(x1 - strokeWidth * 0.5f, 0, x1 - strokeWidth * 0.5f, height, width, height * 0.5f);
+            canvas.drawRectangle(x0, y1 - strokeWidth, x1 - strokeWidth, y2 + strokeWidth);
+            canvas.drawTriangle(x1 - strokeWidth, 0, x1 - strokeWidth, canvasHeight, canvasWidth, canvasHeight * 0.5f);
         }
         canvas.setColor(color);
-        canvas.drawRectangle(x0, y1, x1, y2);
-        canvas.drawTriangle(x1, strokeWidth, x1, height - strokeWidth * 0.5f, width - strokeWidth * 0.5f, height * 0.5f);
+        canvas.drawRectangle(x0 + strokeWidth, y1 + strokeWidth * 0.5f, x1, y2 - strokeWidth * 0.5f);
+        canvas.drawTriangle(x1, strokeWidth * 2 * std::sqrt(2.0f), x1, canvasHeight - strokeWidth * 2 * std::sqrt(2.0f), canvasWidth - strokeWidth * 2, canvasHeight * 0.5f);
         return canvas.buildBitmapImage();
     }
 } }
