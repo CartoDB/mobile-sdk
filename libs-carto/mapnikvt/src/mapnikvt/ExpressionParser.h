@@ -65,8 +65,8 @@ namespace carto { namespace mvt {
 
                 stringExpression =
                     ( (string                                        [_val = phx::bind(&makeStringExpression, _1)])
-                    | ('[' > stringExpression  > ']')	             [_val = phx::bind(&makeVariableExpression, _1)]
-            		| ('{' > qi::skip(encoding::space_type())[expression > '}']) [_val = _1]
+                    | ('[' > stringExpression  > ']')                [_val = phx::bind(&makeVariableExpression, _1)]
+                    | ('{' > qi::skip(encoding::space_type())[expression > '}']) [_val = _1]
                     )
                     > -(stringExpression                             [_val = phx::bind(&makeBinaryExpression<ConcatenateOperator>, _val, _1)])
                     ;
@@ -76,20 +76,20 @@ namespace carto { namespace mvt {
                     ;
 
                 expression =
-                    term0											 [_val = _1]
+                    term0                                            [_val = _1]
                     >> -( (qi::lit('?') > expression > ':' > expression) [_val = phx::bind(&makeTertiaryExpression<ConditionalOperator>, _val, _1, _2)]
                         )
                     ;
 
                 term0 =
-                    term1											 [_val = _1]
-                    >> *( ((qi::lit("&&") | and_kw) > term1)		 [_val = phx::bind(&makeAndPredicate, _val, _1)]
-                        | ((qi::lit("||") | or_kw) > term1)		     [_val = phx::bind(&makeOrPredicate,  _val, _1)]
+                    term1                                            [_val = _1]
+                    >> *( ((qi::lit("&&") | and_kw) > term1)         [_val = phx::bind(&makeAndPredicate, _val, _1)]
+                        | ((qi::lit("||") | or_kw) > term1)          [_val = phx::bind(&makeOrPredicate,  _val, _1)]
                         )
                     ;
 
                 term1 =
-                    term2											 [_val = _1]
+                    term2                                            [_val = _1]
                     >> *( ((qi::lit("<>") | "!=" | neq_kw) > term2)  [_val = phx::bind(&makeComparisonPredicate<NEQOperator>, _val, _1)]
                         | ((qi::lit("<=") | le_kw        ) > term2)  [_val = phx::bind(&makeComparisonPredicate<LTEOperator>, _val, _1)]
                         | ((qi::lit(">=") | ge_kw        ) > term2)  [_val = phx::bind(&makeComparisonPredicate<GTEOperator>, _val, _1)]
@@ -100,32 +100,32 @@ namespace carto { namespace mvt {
                     ;
 
                 term2 =
-                    term3											  [_val = _1]
-                    >> *( (qi::lit("+") > term3)					  [_val = phx::bind(&makeBinaryExpression<AddOperator>, _val, _1)]
-                        | (qi::lit("-") > term3)					  [_val = phx::bind(&makeBinaryExpression<SubOperator>, _val, _1)]
+                    term3                                            [_val = _1]
+                    >> *( (qi::lit("+") > term3)                     [_val = phx::bind(&makeBinaryExpression<AddOperator>, _val, _1)]
+                        | (qi::lit("-") > term3)                     [_val = phx::bind(&makeBinaryExpression<SubOperator>, _val, _1)]
                         )
                     ;
 
                 term3 =
-                    unary											  [_val = _1]
-                    >> *( (qi::lit("*") > unary)					  [_val = phx::bind(&makeBinaryExpression<MulOperator>, _val, _1)]
-                        | (qi::lit("/") > unary)					  [_val = phx::bind(&makeBinaryExpression<DivOperator>, _val, _1)]
-                        | (qi::lit("%") > unary)					  [_val = phx::bind(&makeBinaryExpression<ModOperator>, _val, _1)]
+                    unary                                            [_val = _1]
+                    >> *( (qi::lit("*") > unary)                     [_val = phx::bind(&makeBinaryExpression<MulOperator>, _val, _1)]
+                        | (qi::lit("/") > unary)                     [_val = phx::bind(&makeBinaryExpression<DivOperator>, _val, _1)]
+                        | (qi::lit("%") > unary)                     [_val = phx::bind(&makeBinaryExpression<ModOperator>, _val, _1)]
                         )
                     ;
 
                 unary =
-                        postfix										  [_val = _1]
-                    |  (qi::lit('-')            > unary)			  [_val = phx::bind(&makeUnaryExpression<NegOperator>, _1)]
-                    | ((qi::lit('!') || not_kw) > unary)			  [_val = phx::bind(&makeNotPredicate, _1)]
+                        postfix                                      [_val = _1]
+                    |  (qi::lit('-')            > unary)             [_val = phx::bind(&makeUnaryExpression<NegOperator>, _1)]
+                    | ((qi::lit('!') || not_kw) > unary)             [_val = phx::bind(&makeNotPredicate, _1)]
                     ;
 
                 postfix =
-                    factor											  [_val = _1]
-                    >> *('.' >> ( length_kw                           [_val = phx::bind(&makeUnaryExpression<LengthOperator>, _val)]
-                                | uppercase_kw                        [_val = phx::bind(&makeUnaryExpression<UpperCaseOperator>, _val)]
-                                | lowercase_kw                        [_val = phx::bind(&makeUnaryExpression<LowerCaseOperator>, _val)]
-                                | capitalize_kw                       [_val = phx::bind(&makeUnaryExpression<CapitalizeOperator>, _val)]
+                    factor                                           [_val = _1]
+                    >> *('.' >> ( length_kw                          [_val = phx::bind(&makeUnaryExpression<LengthOperator>, _val)]
+                                | uppercase_kw                       [_val = phx::bind(&makeUnaryExpression<UpperCaseOperator>, _val)]
+                                | lowercase_kw                       [_val = phx::bind(&makeUnaryExpression<LowerCaseOperator>, _val)]
+                                | capitalize_kw                      [_val = phx::bind(&makeUnaryExpression<CapitalizeOperator>, _val)]
                                 | (concat_kw  >> ('(' > expression > ')')) [_val = phx::bind(&makeBinaryExpression<ConcatenateOperator>, _val, _1)]
                                 | (match_kw >> ('(' > expression > ')')) [_val = phx::bind(&makeComparisonPredicate<MatchOperator>, _val, _1)]
                                 | (replace_kw >> ('(' > expression > ',' > expression > ')')) [_val = phx::bind(&makeTertiaryExpression<ReplaceOperator>, _val, _1, _2)]
@@ -134,12 +134,12 @@ namespace carto { namespace mvt {
                     ;
 
                 factor =
-                      constant										  [_val = phx::bind(&makeConstExpression, _1)]
+                      constant                                       [_val = phx::bind(&makeConstExpression, _1)]
                     | (step_kw   >> '(' > expression > ',' > (constant % ',') > ')') [_val = phx::bind(&makeInterpolateExpression, InterpolateExpression::Method::STEP, _1, _2)]
                     | (linear_kw >> '(' > expression > ',' > (constant % ',') > ')') [_val = phx::bind(&makeInterpolateExpression, InterpolateExpression::Method::LINEAR, _1, _2)]
                     | (cubic_kw  >> '(' > expression > ',' > (constant % ',') > ')') [_val = phx::bind(&makeInterpolateExpression, InterpolateExpression::Method::CUBIC, _1, _2)]
-                    | ('[' > stringExpression > ']')				  [_val = phx::bind(&makeVariableExpression, _1)]
-                    | ('(' > expression > ')')				    	  [_val = _1]
+                    | ('[' > stringExpression > ']')                 [_val = phx::bind(&makeVariableExpression, _1)]
+                    | ('(' > expression > ')')                       [_val = _1]
                     ;
             }
 

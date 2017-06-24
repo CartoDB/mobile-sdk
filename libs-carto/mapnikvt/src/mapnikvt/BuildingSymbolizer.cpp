@@ -7,7 +7,9 @@ namespace carto { namespace mvt {
 
         updateBindings(exprContext);
 
-        vt::Polygon3DStyle style(_fill, _fillOpacity, _geometryTransform);
+        std::shared_ptr<const vt::ColorFunction> fill = _functionBuilder.createColorOpacityFunction(_fill, _fillOpacity);
+        
+        vt::Polygon3DStyle style(fill, _geometryTransform);
 
         std::size_t featureIndex = 0;
         std::size_t geometryIndex = 0;

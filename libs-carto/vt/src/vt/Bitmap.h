@@ -12,6 +12,8 @@
 #include <memory>
 
 namespace carto { namespace vt {
+    constexpr static float BITMAP_SDF_SCALE = 16.0f;
+
     struct Bitmap final {
         const int width;
         const int height;
@@ -20,12 +22,19 @@ namespace carto { namespace vt {
         explicit Bitmap(int width, int height, std::vector<std::uint32_t> data) : width(width), height(height), data(std::move(data)) { }
     };
 
+    struct BitmapImage final {
+        const bool sdfMode;
+        const std::shared_ptr<const Bitmap> bitmap;
+
+        explicit BitmapImage(bool sdfMode, std::shared_ptr<const Bitmap> bitmap) : sdfMode(sdfMode), bitmap(bitmap) { }
+    };
+
     struct BitmapPattern final {
         const float widthScale;
         const float heightScale;
         const std::shared_ptr<const Bitmap> bitmap;
 
-        explicit BitmapPattern(float widthScale, float heightScale, std::shared_ptr<Bitmap> bitmap) : widthScale(widthScale), heightScale(heightScale), bitmap(std::move(bitmap)) { }
+        explicit BitmapPattern(float widthScale, float heightScale, std::shared_ptr<const Bitmap> bitmap) : widthScale(widthScale), heightScale(heightScale), bitmap(std::move(bitmap)) { }
     };
 } }
 

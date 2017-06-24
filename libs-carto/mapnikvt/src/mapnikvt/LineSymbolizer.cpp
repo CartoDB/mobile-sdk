@@ -39,8 +39,10 @@ namespace carto { namespace mvt {
                 symbolizerContext.getBitmapManager()->storeBitmapPattern(file, strokePattern);
             }
         }
+
+        std::shared_ptr<const vt::ColorFunction> stroke = _functionBuilder.createColorOpacityFunction(_stroke, _strokeOpacity);
         
-        vt::LineStyle style(compOp, lineJoin, lineCap, _stroke, _strokeOpacity, _strokeWidth, symbolizerContext.getStrokeMap(), strokePattern, _geometryTransform);
+        vt::LineStyle style(compOp, lineJoin, lineCap, stroke, _strokeWidth, strokePattern, _geometryTransform);
 
         std::size_t featureIndex = 0;
         std::size_t geometryIndex = 0;
@@ -83,7 +85,31 @@ namespace carto { namespace mvt {
                 }
             }
             return false;
-        }, style);
+        }, style, symbolizerContext.getStrokeMap());
+    }
+
+    void LineSymbolizer::bindParameter(const std::string& name, const std::string& value) {
+        if (name == "stroke") {
+            bind(&_stroke, parseStringExpression(value), &LineSymbolizer::convertColor);
+        }
+        else if (name == "stroke-width") {
+            bind(&_strokeWidth, parseExpression(value));
+        }
+        else if (name == "stroke-opacity") {
+            bind(&_strokeOpacity, parseExpression(value));
+        }
+        else if (name == "stroke-linejoin") {
+            bind(&_strokeLinejoin, parseStringExpression(value));
+        }
+        else if (name == "stroke-linecap") {
+            bind(&_strokeLinecap, parseStringExpression(value));
+        }
+        else if (name == "stroke-dasharray") {
+            bind(&_strokeDashArray, parseStringExpression(value));
+        }
+        else {
+            GeometrySymbolizer::bindParameter(name, value);
+        }
     }
 
     vt::LineCapMode LineSymbolizer::convertLineCapMode(const std::string& lineCap) const {
@@ -114,30 +140,6 @@ namespace carto { namespace mvt {
         return vt::LineJoinMode::MITER;
     }
 
-    void LineSymbolizer::bindParameter(const std::string& name, const std::string& value) {
-        if (name == "stroke") {
-            bind(&_stroke, parseStringExpression(value), &LineSymbolizer::convertColor);
-        }
-        else if (name == "stroke-width") {
-            bind(&_strokeWidth, parseExpression(value));
-        }
-        else if (name == "stroke-opacity") {
-            bind(&_strokeOpacity, parseExpression(value));
-        }
-        else if (name == "stroke-linejoin") {
-            bind(&_strokeLinejoin, parseStringExpression(value));
-        }
-        else if (name == "stroke-linecap") {
-            bind(&_strokeLinecap, parseStringExpression(value));
-        }
-        else if (name == "stroke-dasharray") {
-            bind(&_strokeDashArray, parseStringExpression(value));
-        }
-        else {
-            GeometrySymbolizer::bindParameter(name, value);
-        }
-    }
-
     std::shared_ptr<vt::BitmapPattern> LineSymbolizer::createDashBitmapPattern(const std::vector<float>& strokeDashArray) {
         float size = 0;
         int superSample = MIN_SUPERSAMPLING_FACTOR;
@@ -159,7 +161,7 @@ namespace carto { namespace mvt {
             pow2Size *= 2;
         }
 
-        vt::BitmapCanvas canvas(pow2Size, 1);
+        vt::BitmapCanvas canvas(pow2Size, 1, false);
         float pos = 0;
         for (std::size_t n = 0; n < strokeDashArray.size(); n++) {
             float dash = strokeDashArray[n];
@@ -170,6 +172,6 @@ namespace carto { namespace mvt {
             }
             pos += dash;
         }
-        return std::make_shared<vt::BitmapPattern>(0.75f * size / pow2Size, 1.0f, canvas.buildBitmap());
+        return std::make_shared<vt::BitmapPattern>(0.75f * size / pow2Size, 1.0f, canvas.buildBitmapImage()->bitmap);
     }
 } }

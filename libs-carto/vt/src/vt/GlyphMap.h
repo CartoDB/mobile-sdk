@@ -20,26 +20,23 @@ namespace carto { namespace vt {
     class GlyphMap final {
     public:
         using GlyphId = unsigned int;
-        using CodePoint = unsigned int;
         
         struct Glyph {
-            CodePoint codePoint;
+            bool sdfMode;
             int x;
             int y;
             int width;
             int height;
-            cglib::vec2<float> size;
-            cglib::vec2<float> offset;
-            cglib::vec2<float> advance;
+            cglib::vec2<float> origin;
 
-            explicit Glyph(CodePoint codePoint, int x, int y, int width, int height, const cglib::vec2<float>& size, const cglib::vec2<float>& offset, const cglib::vec2<float>& advance) : codePoint(codePoint), x(x), y(y), width(width), height(height), size(size), offset(offset), advance(advance) { }
+            explicit Glyph(bool sdfMode, int x, int y, int width, int height, const cglib::vec2<float>& origin) : sdfMode(sdfMode), x(x), y(y), width(width), height(height), origin(origin) { }
         };
 
         explicit GlyphMap(int maxWidth, int maxHeight);
 
         const Glyph* getGlyph(GlyphId code) const;
-        GlyphId loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap, CodePoint codePoint);
-        GlyphId loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap, CodePoint codePoint, const cglib::vec2<float>& size, const cglib::vec2<float>& offset, const cglib::vec2<float>& advance);
+        GlyphId loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap, bool sdfMode);
+        GlyphId loadBitmapGlyph(const std::shared_ptr<const Bitmap>& bitmap, bool sdfMode, const cglib::vec2<float>& origin);
         std::shared_ptr<const BitmapPattern> getBitmapPattern() const;
 
     private:

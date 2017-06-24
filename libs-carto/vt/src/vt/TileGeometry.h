@@ -33,14 +33,14 @@ namespace carto { namespace vt {
 
             int parameterCount;
             std::array<std::shared_ptr<const ColorFunction>, MAX_PARAMETERS> colorTable;
-            std::array<std::shared_ptr<const FloatFunction>, MAX_PARAMETERS> opacityTable;
             std::array<std::shared_ptr<const FloatFunction>, MAX_PARAMETERS> widthTable;
+            std::array<std::shared_ptr<const FloatFunction>, MAX_PARAMETERS> strokeWidthTable;
             std::shared_ptr<const BitmapPattern> pattern;
             boost::optional<cglib::mat3x3<float>> transform;
             CompOp compOp;
             PointOrientation pointOrientation;
 
-            StyleParameters() : parameterCount(0), colorTable(), opacityTable(), widthTable(), pattern(), transform(), compOp(CompOp::SRC_OVER), pointOrientation(PointOrientation::POINT) { }
+            StyleParameters() : parameterCount(0), colorTable(), widthTable(), strokeWidthTable(), pattern(), transform(), compOp(CompOp::SRC_OVER), pointOrientation(PointOrientation::POINT) { }
         };
 
         struct GeometryLayoutParameters {

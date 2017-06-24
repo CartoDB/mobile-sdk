@@ -17,22 +17,11 @@
 namespace carto { namespace vt {
     class FontManager {
     public:
-        struct Parameters {
-            const float size;
-            const Color color;
-            const float haloSize;
-            const Color haloColor;
-            const std::shared_ptr<Font> baseFont;
-
-            explicit Parameters(float size, const Color& color, float haloSize, const Color& haloColor, std::shared_ptr<Font> baseFont) : size(size), color(color), haloSize(haloSize), haloColor(haloColor), baseFont(std::move(baseFont)) { }
-        };
-
         explicit FontManager(int maxGlyphMapWidth, int maxGlyphMapHeight);
         virtual ~FontManager();
 
         void loadFontData(const std::vector<unsigned char>& data);
-        std::shared_ptr<Font> getFont(const std::string& name, const Parameters& parameters) const;
-        std::shared_ptr<Font> getNullFont() const;
+        std::shared_ptr<Font> getFont(const std::string& name, const std::shared_ptr<Font>& baseFont) const;
 
     private:
         class Impl;

@@ -43,10 +43,10 @@ namespace carto { namespace mvt {
                 }
                 
                 float opacity = style->getOpacity();
-                std::shared_ptr<vt::FloatFunction> opacityFn = std::make_shared<vt::FloatFunction>([opacity](const vt::ViewState& viewState) { return opacity; });
+                std::shared_ptr<const vt::FloatFunction> opacityFunc = std::make_shared<vt::FloatFunction>([opacity](const vt::ViewState& viewState) { return opacity; });
 
                 int internalIdx = layerIdx * 65536 + static_cast<int>(layer->getStyleNames().size()) * 256 + styleIdx;
-                std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.build(internalIdx, opacityFn, compOp);
+                std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.build(internalIdx, opacityFunc, compOp);
                 if (!(tileLayer->getBitmaps().empty() && tileLayer->getLabels().empty() && tileLayer->getGeometries().empty() && !compOp)) {
                     tileLayers.push_back(tileLayer);
                 }
