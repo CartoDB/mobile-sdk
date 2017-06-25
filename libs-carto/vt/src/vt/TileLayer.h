@@ -46,8 +46,8 @@ namespace carto { namespace vt {
 
     private:
         const int _layerIdx;
-        const std::shared_ptr<const FloatFunction> _opacityFunc;
         const boost::optional<CompOp> _compOp;
+        const std::shared_ptr<const FloatFunction> _opacityFunc;
         const std::vector<std::shared_ptr<TileBitmap>> _bitmaps;
         const std::vector<std::shared_ptr<TileGeometry>> _geometries;
         const std::vector<std::shared_ptr<TileLabel>> _labels;
