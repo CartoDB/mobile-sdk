@@ -18,9 +18,9 @@ namespace carto { namespace mvt {
     class TextSymbolizer : public Symbolizer {
     public:
         explicit TextSymbolizer(std::vector<std::shared_ptr<FontSet>> fontSets, std::shared_ptr<Logger> logger) : Symbolizer(std::move(logger)), _fontSets(std::move(fontSets)) {
-            bind(&_size, std::make_shared<ConstExpression>(Value(_sizeStatic)));
-            bind(&_fill, std::make_shared<ConstExpression>(Value(std::string("#000000"))), &TextSymbolizer::convertColor);
-            bind(&_haloFill, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), &TextSymbolizer::convertColor);
+            bind(&_sizeFunc, std::make_shared<ConstExpression>(Value(_sizeStatic)));
+            bind(&_fillFunc, std::make_shared<ConstExpression>(Value(std::string("#000000"))), &TextSymbolizer::convertColor);
+            bind(&_haloFillFunc, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), &TextSymbolizer::convertColor);
         }
 
         void setTextExpression(std::shared_ptr<Expression> textExpression);
@@ -46,14 +46,14 @@ namespace carto { namespace mvt {
         std::string _faceName;
         std::string _fontSetName;
         std::string _placement = "point";
+        std::shared_ptr<const vt::FloatFunction> _sizeFunc; // 10.0f
         float _sizeStatic = 10.0f;
-        std::shared_ptr<const vt::FloatFunction> _size; // 10.0f
         float _spacing = 0.0f;
-        std::shared_ptr<const vt::ColorFunction> _fill; // vt::Color(0xff000000)
-        std::shared_ptr<const vt::FloatFunction> _opacity; // 1.0f
-        std::shared_ptr<const vt::ColorFunction> _haloFill; // vt::Color(0xffffffff)
-        std::shared_ptr<const vt::FloatFunction> _haloOpacity; // 1.0f
-        std::shared_ptr<const vt::FloatFunction> _haloRadius; // 0.0f
+        std::shared_ptr<const vt::ColorFunction> _fillFunc; // vt::Color(0xff000000)
+        std::shared_ptr<const vt::FloatFunction> _opacityFunc; // 1.0f
+        std::shared_ptr<const vt::ColorFunction> _haloFillFunc; // vt::Color(0xffffffff)
+        std::shared_ptr<const vt::FloatFunction> _haloOpacityFunc; // 1.0f
+        std::shared_ptr<const vt::FloatFunction> _haloRadiusFunc; // 0.0f
         float _orientationAngle = 0.0f;
         bool _orientationDefined = false;
         float _dx = 0.0f;

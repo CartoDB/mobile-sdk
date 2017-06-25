@@ -1304,7 +1304,7 @@ namespace carto { namespace vt {
         const short* binormalPtr = reinterpret_cast<const short*>(&geometry->getVertexGeometry()[binormalOffset]);
         std::size_t attribOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.attribsOffset;
         const char* attribPtr = reinterpret_cast<const char*>(&geometry->getVertexGeometry()[attribOffset]);
-        float size = 0.5f * std::abs((*geometry->getStyleParameters().widthTable[attribPtr[0]])(_viewState));
+        float size = 0.5f * std::abs((*geometry->getStyleParameters().widthFuncs[attribPtr[0]])(_viewState));
         if (size > 0) {
             size += radius;
         }
@@ -1324,7 +1324,7 @@ namespace carto { namespace vt {
         const short* binormalPtr = reinterpret_cast<const short*>(&geometry->getVertexGeometry()[binormalOffset]);
         std::size_t attribOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.attribsOffset;
         const char* attribPtr = reinterpret_cast<const char*>(&geometry->getVertexGeometry()[attribOffset]);
-        float width = 0.5f * std::abs((*geometry->getStyleParameters().widthTable[attribPtr[0]])(_viewState));
+        float width = 0.5f * std::abs((*geometry->getStyleParameters().widthFuncs[attribPtr[0]])(_viewState));
         if (width > 0) {
             width += radius;
         }
@@ -1368,8 +1368,8 @@ namespace carto { namespace vt {
                 const RenderNode& renderNode = it->second;
                 
                 float blendOpacity = 1.0f, geometryOpacity = 1.0f;
-                if (renderNode.layer->getOpacity()) {
-                    float opacity = (*renderNode.layer->getOpacity())(_viewState);
+                if (renderNode.layer->getOpacityFunc()) {
+                    float opacity = (*renderNode.layer->getOpacityFunc())(_viewState);
                     if (renderNode.layer->getCompOp()) { // a 'useful' hack - we use real layer opacity only if comp-op is explicitly defined; otherwise we translate it into element opacity, which is in many cases close enough
                         blendOpacity = opacity;
                     } else {
@@ -1477,8 +1477,8 @@ namespace carto { namespace vt {
                 const RenderNode& renderNode = it->second;
 
                 float opacity = 1.0f;
-                if (renderNode.layer->getCompOp() && renderNode.layer->getOpacity()) {
-                    opacity = (*renderNode.layer->getOpacity())(_viewState);
+                if (renderNode.layer->getCompOp() && renderNode.layer->getOpacityFunc()) {
+                    opacity = (*renderNode.layer->getOpacityFunc())(_viewState);
                 }
 
                 for (const std::shared_ptr<TileGeometry>& geometry : renderNode.layer->getGeometries()) {
@@ -1545,12 +1545,12 @@ namespace carto { namespace vt {
                 --styleIndex;
             }
             else {
-                cglib::vec4<float> color = (*labelStyle->color)(_viewState).rgba();
-                float size = (*labelStyle->size)(_viewState);
-                cglib::vec4<float> haloColor = labelStyle->haloColor ? (*labelStyle->haloColor)(_viewState).rgba() : cglib::vec4<float>::zero();
-                float haloRadius = labelStyle->haloRadius ? (*labelStyle->haloRadius)(_viewState) * HALO_RADIUS_SCALE : 0;
+                cglib::vec4<float> color = (*labelStyle->colorFunc)(_viewState).rgba();
+                float size = (*labelStyle->sizeFunc)(_viewState);
+                cglib::vec4<float> haloColor = labelStyle->haloColorFunc ? (*labelStyle->haloColorFunc)(_viewState).rgba() : cglib::vec4<float>::zero();
+                float haloRadius = labelStyle->haloRadiusFunc ? (*labelStyle->haloRadiusFunc)(_viewState) * HALO_RADIUS_SCALE : 0;
                 while (--styleIndex >= 0) {
-                    if (labelStyle->haloRadius) {
+                    if (labelStyle->haloRadiusFunc) {
                         if (styleIndex >= 1 && labelBatchParams.colorTable[styleIndex] == haloColor && labelBatchParams.widthTable[styleIndex] == size && labelBatchParams.strokeWidthTable[styleIndex] == haloRadius) {
                             if (labelBatchParams.colorTable[styleIndex - 1] == color && labelBatchParams.widthTable[styleIndex - 1] == size && labelBatchParams.strokeWidthTable[styleIndex - 1] == 0) {
                                 break;
@@ -1572,7 +1572,7 @@ namespace carto { namespace vt {
                     labelBatchParams.colorTable[styleIndex] = color;
                     labelBatchParams.widthTable[styleIndex] = size;
                     labelBatchParams.strokeWidthTable[styleIndex] = 0;
-                    if (labelStyle->haloRadius) {
+                    if (labelStyle->haloRadiusFunc) {
                         styleIndex = labelBatchParams.parameterCount++;
                         labelBatchParams.colorTable[styleIndex] = haloColor;
                         labelBatchParams.widthTable[styleIndex] = size;
@@ -1582,7 +1582,7 @@ namespace carto { namespace vt {
                 _lastLabelStyle = labelStyle;
             }
 
-            if (labelStyle->haloRadius) {
+            if (labelStyle->haloRadiusFunc) {
                 std::size_t vertexOffset = _labelVertices.size();
                 std::size_t indexOffset = _labelIndices.size();
                 label->calculateVertexData(_viewState, styleIndex, _labelVertices, _labelTexCoords, _labelAttribs, _labelIndices);
@@ -1954,7 +1954,7 @@ namespace carto { namespace vt {
 
         std::array<cglib::vec4<float>, TileGeometry::StyleParameters::MAX_PARAMETERS> colors;
         for (int i = 0; i < styleParams.parameterCount; i++) {
-            Color color = Color::fromColorOpacity((*styleParams.colorTable[i])(_viewState) * blend, opacity);
+            Color color = Color::fromColorOpacity((*styleParams.colorFuncs[i])(_viewState) * blend, opacity);
             colors[i] = color.rgba();
         }
         
@@ -1964,13 +1964,13 @@ namespace carto { namespace vt {
             
             std::array<float, TileGeometry::StyleParameters::MAX_PARAMETERS> widths, strokeWidths;
             for (int i = 0; i < styleParams.parameterCount; i++) {
-                float width = std::max(0.0f, (*styleParams.widthTable[i])(_viewState)) * geometry->getGeometryScale() / geometry->getTileSize();
+                float width = std::max(0.0f, (*styleParams.widthFuncs[i])(_viewState)) * geometry->getGeometryScale() / geometry->getTileSize();
                 if (width <= 0) {
                     colors[i] = cglib::vec4<float>(0, 0, 0, 0);
                 }
                 widths[i] = width;
 
-                float strokeWidth = styleParams.strokeWidthTable[i] ? (*styleParams.strokeWidthTable[i])(_viewState) * HALO_RADIUS_SCALE : 0.0f;
+                float strokeWidth = styleParams.strokeWidthFuncs[i] ? (*styleParams.strokeWidthFuncs[i])(_viewState) * HALO_RADIUS_SCALE : 0.0f;
                 strokeWidths[i] = strokeWidth;
             }
             
@@ -1985,7 +1985,7 @@ namespace carto { namespace vt {
             float gamma = 0.5f;
             std::array<float, TileGeometry::StyleParameters::MAX_PARAMETERS> widths;
             for (int i = 0; i < styleParams.parameterCount; i++) {
-                float width = 0.5f * std::abs((*styleParams.widthTable[i])(_viewState)) * geometry->getGeometryScale() / geometry->getTileSize();
+                float width = 0.5f * std::abs((*styleParams.widthFuncs[i])(_viewState)) * geometry->getGeometryScale() / geometry->getTileSize();
                 float pixelWidth = 2.0f * _halfResolution * width;
                 if (pixelWidth > 0.0f && pixelWidth < 1.0f) {
                     colors[i] = colors[i] * pixelWidth; // should do gamma correction here, but simple implementation gives closer results to Mapnik

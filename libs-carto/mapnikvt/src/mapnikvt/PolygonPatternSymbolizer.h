@@ -13,19 +13,19 @@ namespace carto { namespace mvt {
     class PolygonPatternSymbolizer : public GeometrySymbolizer {
     public:
         explicit PolygonPatternSymbolizer(std::shared_ptr<Logger> logger) : GeometrySymbolizer(std::move(logger)) {
-            bind(&_fill, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), &PolygonPatternSymbolizer::convertColor);
+            bind(&_fillFunc, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), &PolygonPatternSymbolizer::convertColor);
         }
 
         virtual void build(const FeatureCollection& featureCollection, const FeatureExpressionContext& exprContext, const SymbolizerContext& symbolizerContext, vt::TileLayerBuilder& layerBuilder) override;
 
     protected:
         constexpr static float PATTERN_SCALE = 0.75f;
-		
-		virtual void bindParameter(const std::string& name, const std::string& value) override;
+
+        virtual void bindParameter(const std::string& name, const std::string& value) override;
 
         std::string _file;
-        std::shared_ptr<const vt::ColorFunction> _fill; // vt::Color(0xffffffff)
-        std::shared_ptr<const vt::FloatFunction> _opacity; // 1.0f
+        std::shared_ptr<const vt::ColorFunction> _fillFunc; // vt::Color(0xffffffff)
+        std::shared_ptr<const vt::FloatFunction> _opacityFunc; // 1.0f
     };
 } }
 

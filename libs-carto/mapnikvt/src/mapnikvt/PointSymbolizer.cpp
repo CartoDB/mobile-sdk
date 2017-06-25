@@ -30,10 +30,10 @@ namespace carto { namespace mvt {
             }
         }
 
-        std::shared_ptr<const vt::FloatFunction> size = _functionBuilder.createFloatFunction(fontScale);
-        std::shared_ptr<const vt::ColorFunction> fill = _functionBuilder.createColorOpacityFunction(_functionBuilder.createColorFunction(vt::Color(1, 1, 1, 1)), _opacity);
+        std::shared_ptr<const vt::FloatFunction> sizeFunc = _functionBuilder.createFloatFunction(fontScale);
+        std::shared_ptr<const vt::ColorFunction> fillFunc = _functionBuilder.createColorOpacityFunction(_functionBuilder.createColorFunction(vt::Color(1, 1, 1, 1)), _opacityFunc);
 
-        vt::PointStyle pointStyle(compOp, vt::PointOrientation::BILLBOARD_2D, fill, size, bitmapImage, _transform);
+        vt::PointStyle pointStyle(compOp, vt::PointOrientation::BILLBOARD_2D, fillFunc, sizeFunc, bitmapImage, _transform);
 
         std::vector<std::pair<long long, vt::TileLayerBuilder::Vertex>> pointInfos;
         for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
@@ -75,7 +75,7 @@ namespace carto { namespace mvt {
             bind(&_file, parseStringExpression(value));
         }
         else if (name == "opacity") {
-            bind(&_opacity, parseExpression(value));
+            bind(&_opacityFunc, parseExpression(value));
         }
         else if (name == "allow-overlap") {
             bind(&_allowOverlap, parseExpression(value));

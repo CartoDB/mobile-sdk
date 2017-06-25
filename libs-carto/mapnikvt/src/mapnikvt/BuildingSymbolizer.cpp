@@ -7,9 +7,9 @@ namespace carto { namespace mvt {
 
         updateBindings(exprContext);
 
-        std::shared_ptr<const vt::ColorFunction> fill = _functionBuilder.createColorOpacityFunction(_fill, _fillOpacity);
+        std::shared_ptr<const vt::ColorFunction> fillFunc = _functionBuilder.createColorOpacityFunction(_fillFunc, _fillOpacityFunc);
         
-        vt::Polygon3DStyle style(fill, _geometryTransform);
+        vt::Polygon3DStyle style(fillFunc, _geometryTransform);
 
         std::size_t featureIndex = 0;
         std::size_t geometryIndex = 0;
@@ -41,10 +41,10 @@ namespace carto { namespace mvt {
 
     void BuildingSymbolizer::bindParameter(const std::string& name, const std::string& value) {
         if (name == "fill") {
-            bind(&_fill, parseStringExpression(value), &BuildingSymbolizer::convertColor);
+            bind(&_fillFunc, parseStringExpression(value), &BuildingSymbolizer::convertColor);
         }
         else if (name == "fill-opacity") {
-            bind(&_fillOpacity, parseExpression(value));
+            bind(&_fillOpacityFunc, parseExpression(value));
         }
         else if (name == "height") {
             bind(&_height, parseExpression(value));

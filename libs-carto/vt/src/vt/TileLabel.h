@@ -29,16 +29,16 @@ namespace carto { namespace vt {
     public:
         struct LabelStyle {
             LabelOrientation orientation;
-            std::shared_ptr<const ColorFunction> color;
-            std::shared_ptr<const FloatFunction> size;
-            std::shared_ptr<const ColorFunction> haloColor;
-            std::shared_ptr<const FloatFunction> haloRadius;
+            std::shared_ptr<const ColorFunction> colorFunc;
+            std::shared_ptr<const FloatFunction> sizeFunc;
+            std::shared_ptr<const ColorFunction> haloColorFunc;
+            std::shared_ptr<const FloatFunction> haloRadiusFunc;
             float scale;
             float ascent;
             boost::optional<cglib::mat3x3<float>> transform;
             std::shared_ptr<const GlyphMap> glyphMap;
 
-            explicit LabelStyle(LabelOrientation orientation, std::shared_ptr<const ColorFunction> color, std::shared_ptr<const FloatFunction> size, std::shared_ptr<const ColorFunction> haloColor, std::shared_ptr<const FloatFunction> haloRadius, float scale, float ascent, const boost::optional<cglib::mat3x3<float>>& transform, std::shared_ptr<const GlyphMap> glyphMap) : orientation(orientation), color(std::move(color)), size(std::move(size)), haloColor(std::move(haloColor)), haloRadius(std::move(haloRadius)), scale(scale), ascent(ascent), transform(transform), glyphMap(std::move(glyphMap)) { }
+            explicit LabelStyle(LabelOrientation orientation, std::shared_ptr<const ColorFunction> colorFunc, std::shared_ptr<const FloatFunction> sizeFunc, std::shared_ptr<const ColorFunction> haloColorFunc, std::shared_ptr<const FloatFunction> haloRadiusFunc, float scale, float ascent, const boost::optional<cglib::mat3x3<float>>& transform, std::shared_ptr<const GlyphMap> glyphMap) : orientation(orientation), colorFunc(std::move(colorFunc)), sizeFunc(std::move(sizeFunc)), haloColorFunc(std::move(haloColorFunc)), haloRadiusFunc(std::move(haloRadiusFunc)), scale(scale), ascent(ascent), transform(transform), glyphMap(std::move(glyphMap)) { }
         };
         
         explicit TileLabel(const TileId& tileId, long long localId, long long globalId, long long groupId, std::vector<Font::Glyph> glyphs, boost::optional<cglib::vec3<double>> position, std::vector<cglib::vec3<double>> vertices, std::shared_ptr<const LabelStyle> style);

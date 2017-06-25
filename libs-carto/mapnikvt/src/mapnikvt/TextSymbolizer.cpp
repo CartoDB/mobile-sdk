@@ -44,10 +44,10 @@ namespace carto { namespace mvt {
         float textSize = (placement == vt::LabelOrientation::LINE ? calculateTextSize(font, text, formatter).size()(0) : 0);
         long long groupId = (_allowOverlap ? -1 : (minimumDistance > 0 ? (hash & 0x7fffffff) : 0));
 
-        std::shared_ptr<const vt::ColorFunction> fill = _functionBuilder.createColorOpacityFunction(_fill, _opacity);
-        std::shared_ptr<const vt::ColorFunction> haloFill = _functionBuilder.createColorOpacityFunction(_haloFill, _haloOpacity);
-        std::shared_ptr<const vt::FloatFunction> size = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _size);
-        std::shared_ptr<const vt::FloatFunction> haloRadius = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _haloRadius);
+        std::shared_ptr<const vt::ColorFunction> fillFunc = _functionBuilder.createColorOpacityFunction(_fillFunc, _opacityFunc);
+        std::shared_ptr<const vt::FloatFunction> sizeFunc = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _sizeFunc);
+        std::shared_ptr<const vt::ColorFunction> haloFillFunc = _functionBuilder.createColorOpacityFunction(_haloFillFunc, _haloOpacityFunc);
+        std::shared_ptr<const vt::FloatFunction> haloRadiusFunc = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _haloRadiusFunc);
 
         std::vector<std::pair<long long, vt::TileLayerBuilder::Vertex>> textInfos;
         std::vector<std::pair<long long, vt::TileLayerBuilder::TextLabelInfo>> labelInfos;
@@ -68,7 +68,7 @@ namespace carto { namespace mvt {
 
         auto flushTexts = [&](const cglib::mat3x3<float>& transform) {
             if (_allowOverlap) {
-                vt::TextStyle style(compOp, convertLabelToPointOrientation(placement), fill, size, haloFill, haloRadius, _orientationAngle, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::BitmapImage>(), transform);
+                vt::TextStyle style(compOp, convertLabelToPointOrientation(placement), fillFunc, sizeFunc, haloFillFunc, haloRadiusFunc, _orientationAngle, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::BitmapImage>(), transform);
 
                 std::size_t textInfoIndex = 0;
                 layerBuilder.addTexts([&](long long& id, vt::TileLayerBuilder::Vertex& vertex, std::string& txt) {
@@ -85,7 +85,7 @@ namespace carto { namespace mvt {
                 textInfos.clear();
             }
             else {
-                vt::TextLabelStyle style(placement, fill, size, haloFill, haloRadius, _orientationAngle, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::BitmapImage>());
+                vt::TextLabelStyle style(placement, fillFunc, sizeFunc, haloFillFunc, haloRadiusFunc, _orientationAngle, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::BitmapImage>());
 
                 std::size_t labelInfoIndex = 0;
                 layerBuilder.addTextLabels([&](long long& id, vt::TileLayerBuilder::TextLabelInfo& labelInfo) {
@@ -121,26 +121,26 @@ namespace carto { namespace mvt {
             bind(&_placement, parseStringExpression(value));
         }
         else if (name == "size") {
-            bind(&_size, parseExpression(value));
+            bind(&_sizeFunc, parseExpression(value));
             bind(&_sizeStatic, parseExpression(value));
         }
         else if (name == "spacing") {
             bind(&_spacing, parseExpression(value));
         }
         else if (name == "fill") {
-            bind(&_fill, parseStringExpression(value), &TextSymbolizer::convertColor);
+            bind(&_fillFunc, parseStringExpression(value), &TextSymbolizer::convertColor);
         }
         else if (name == "opacity") {
-            bind(&_opacity, parseExpression(value));
+            bind(&_opacityFunc, parseExpression(value));
         }
         else if (name == "halo-fill") {
-            bind(&_haloFill, parseStringExpression(value), &TextSymbolizer::convertColor);
+            bind(&_haloFillFunc, parseStringExpression(value), &TextSymbolizer::convertColor);
         }
         else if (name == "halo-opacity") {
-            bind(&_haloOpacity, parseExpression(value));
+            bind(&_haloOpacityFunc, parseExpression(value));
         }
         else if (name == "halo-radius") {
-            bind(&_haloRadius, parseExpression(value));
+            bind(&_haloRadiusFunc, parseExpression(value));
         }
         else if (name == "halo-rasterizer") {
             // just ignore this

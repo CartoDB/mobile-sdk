@@ -35,10 +35,10 @@ namespace carto { namespace mvt {
         shieldFormatterOptions.offset = cglib::vec2<float>(_shieldDx * fontScale, -_shieldDy * fontScale);
         vt::TextFormatter shieldFormatter(font, _sizeStatic, shieldFormatterOptions);
 
-        std::shared_ptr<const vt::ColorFunction> fill = _functionBuilder.createColorOpacityFunction(_fill, _opacity);
-        std::shared_ptr<const vt::ColorFunction> haloFill = _functionBuilder.createColorOpacityFunction(_haloFill, _haloOpacity);
-        std::shared_ptr<const vt::FloatFunction> size = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _size);
-        std::shared_ptr<const vt::FloatFunction> haloRadius = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _haloRadius);
+        std::shared_ptr<const vt::ColorFunction> fillFunc = _functionBuilder.createColorOpacityFunction(_fillFunc, _opacityFunc);
+        std::shared_ptr<const vt::FloatFunction> sizeFunc = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _sizeFunc);
+        std::shared_ptr<const vt::ColorFunction> haloFillFunc = _functionBuilder.createColorOpacityFunction(_haloFillFunc, _haloOpacityFunc);
+        std::shared_ptr<const vt::FloatFunction> haloRadiusFunc = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _haloRadiusFunc);
 
         float minimumDistance = (_minimumDistance + bitmapSize) * std::pow(2.0f, -exprContext.getZoom()) / symbolizerContext.getSettings().getTileSize() * 2;
         long long groupId = (_allowOverlap ? -1 : 1); // use separate group from markers, markers use group 0
@@ -73,7 +73,7 @@ namespace carto { namespace mvt {
             }
 
             if (_allowOverlap) {
-                vt::TextStyle style(compOp, convertLabelToPointOrientation(orientation), fill, size, haloFill, haloRadius, _orientationAngle, fontScale, backgroundOffset, backgroundBitmap, transform);
+                vt::TextStyle style(compOp, convertLabelToPointOrientation(orientation), fillFunc, sizeFunc, haloFillFunc, haloRadiusFunc, _orientationAngle, fontScale, backgroundOffset, backgroundBitmap, transform);
 
                 std::size_t textInfoIndex = 0;
                 layerBuilder.addTexts([&](long long& id, vt::TileLayerBuilder::Vertex& vertex, std::string& txt) {
@@ -90,7 +90,7 @@ namespace carto { namespace mvt {
                 shieldInfos.clear();
             }
             else {
-                vt::TextLabelStyle style(placement, fill, size, haloFill, haloRadius, _orientationAngle, fontScale, backgroundOffset, backgroundBitmap);
+                vt::TextLabelStyle style(placement, fillFunc, sizeFunc, haloFillFunc, haloRadiusFunc, _orientationAngle, fontScale, backgroundOffset, backgroundBitmap);
 
                 std::size_t labelInfoIndex = 0;
                 layerBuilder.addTextLabels([&](long long& id, vt::TileLayerBuilder::TextLabelInfo& labelInfo) {

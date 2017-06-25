@@ -52,11 +52,8 @@ namespace carto { namespace vt {
     }
 
     void BitmapCanvas::drawRectangle(float x0, float y0, float x1, float y1) {
-        if (x0 > x1) {
-            std::swap(x0, x1);
-        }
-        if (y0 > y1) {
-            std::swap(y0, y1);
+        if (x0 >= x1 || y0 >= y1) {
+            return;
         }
         for (int y = 0; y < _height; y++) {
             float yd0 = 0.5f + y + 0.5f - y0;
@@ -106,6 +103,9 @@ namespace carto { namespace vt {
     }
     
     void BitmapCanvas::drawEllipse(float x0, float y0, float rx, float ry) {
+        if (rx <= 0 || ry <= 0) {
+            return;
+        }
         float rscale = std::min(rx, ry);
         float xscale = 1.0f / rx;
         float yscale = 1.0f / ry;
