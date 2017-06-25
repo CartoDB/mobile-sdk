@@ -22,7 +22,7 @@ namespace carto { namespace vt {
         _indices.reserve(RESERVED_VERTICES);
         _ids.reserve(RESERVED_VERTICES);
 
-        _nullWidth = std::make_shared<FloatFunction>([](const ViewState& viewState) { return 0.0f; });
+        _nullWidthFunc = std::make_shared<FloatFunction>([](const ViewState& viewState) { return 0.0f; });
     }
 
     void TileLayerBuilder::addBitmap(const std::shared_ptr<TileBitmap>& bitmap) {
@@ -48,15 +48,15 @@ namespace carto { namespace vt {
         GlyphMap::GlyphId glyphId = glyphMap->loadBitmapGlyph(style.pointImage->bitmap, style.pointImage->sdfMode);
         int styleIndex = _styleParameters.parameterCount;
         while (--styleIndex >= 0) {
-            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.widthTable[styleIndex] == style.size && !_styleParameters.strokeWidthTable[styleIndex]) {
+            if (_styleParameters.colorFuncs[styleIndex] == style.colorFunc && _styleParameters.widthFuncs[styleIndex] == style.sizeFunc && !_styleParameters.strokeWidthFuncs[styleIndex]) {
                 break;
             }
         }
         if (styleIndex < 0) {
             styleIndex = _styleParameters.parameterCount++;
-            _styleParameters.colorTable[styleIndex] = style.color;
-            _styleParameters.widthTable[styleIndex] = style.size;
-            _styleParameters.strokeWidthTable[styleIndex] = std::shared_ptr<const vt::FloatFunction>();
+            _styleParameters.colorFuncs[styleIndex] = style.colorFunc;
+            _styleParameters.widthFuncs[styleIndex] = style.sizeFunc;
+            _styleParameters.strokeWidthFuncs[styleIndex] = std::shared_ptr<const FloatFunction>();
         }
         
         do {
@@ -92,29 +92,29 @@ namespace carto { namespace vt {
         _styleParameters.pointOrientation = style.orientation;
         int styleIndex = _styleParameters.parameterCount;
         while (--styleIndex >= 0) {
-            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.widthTable[styleIndex] == style.size && !_styleParameters.strokeWidthTable[styleIndex]) {
+            if (_styleParameters.colorFuncs[styleIndex] == style.colorFunc && _styleParameters.widthFuncs[styleIndex] == style.sizeFunc && !_styleParameters.strokeWidthFuncs[styleIndex]) {
                 break;
             }
         }
         if (styleIndex < 0) {
             styleIndex = _styleParameters.parameterCount++;
-            _styleParameters.colorTable[styleIndex] = style.color;
-            _styleParameters.widthTable[styleIndex] = style.size;
-            _styleParameters.strokeWidthTable[styleIndex] = std::shared_ptr<const vt::FloatFunction>();
+            _styleParameters.colorFuncs[styleIndex] = style.colorFunc;
+            _styleParameters.widthFuncs[styleIndex] = style.sizeFunc;
+            _styleParameters.strokeWidthFuncs[styleIndex] = std::shared_ptr<const FloatFunction>();
         }
 
         int haloStyleIndex = -1;
-        if (style.haloRadius) {
+        if (style.haloRadiusFunc) {
             for (haloStyleIndex = _styleParameters.parameterCount; --haloStyleIndex >= 0; ) {
-                if (_styleParameters.colorTable[haloStyleIndex] == style.haloColor && _styleParameters.widthTable[haloStyleIndex] == style.size && _styleParameters.strokeWidthTable[haloStyleIndex] == style.haloRadius) {
+                if (_styleParameters.colorFuncs[haloStyleIndex] == style.haloColorFunc && _styleParameters.widthFuncs[haloStyleIndex] == style.sizeFunc && _styleParameters.strokeWidthFuncs[haloStyleIndex] == style.haloRadiusFunc) {
                     break;
                 }
             }
             if (haloStyleIndex < 0) {
                 haloStyleIndex = _styleParameters.parameterCount++;
-                _styleParameters.colorTable[haloStyleIndex] = style.haloColor;
-                _styleParameters.widthTable[haloStyleIndex] = style.size;
-                _styleParameters.strokeWidthTable[haloStyleIndex] = style.haloRadius;
+                _styleParameters.colorFuncs[haloStyleIndex] = style.haloColorFunc;
+                _styleParameters.widthFuncs[haloStyleIndex] = style.sizeFunc;
+                _styleParameters.strokeWidthFuncs[haloStyleIndex] = style.haloRadiusFunc;
             }
         }
 
@@ -176,14 +176,14 @@ namespace carto { namespace vt {
         const StrokeMap::Stroke* stroke = strokeMap->getStroke(strokeId);
         int styleIndex = _styleParameters.parameterCount;
         while (--styleIndex >= 0) {
-            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.widthTable[styleIndex] == style.width && _builderParameters.lineStrokeIds[styleIndex] == strokeId) {
+            if (_styleParameters.colorFuncs[styleIndex] == style.colorFunc && _styleParameters.widthFuncs[styleIndex] == style.widthFunc && _builderParameters.lineStrokeIds[styleIndex] == strokeId) {
                 break;
             }
         }
         if (styleIndex < 0) {
             styleIndex = _styleParameters.parameterCount++;
-            _styleParameters.colorTable[styleIndex] = style.color;
-            _styleParameters.widthTable[styleIndex] = style.width;
+            _styleParameters.colorFuncs[styleIndex] = style.colorFunc;
+            _styleParameters.widthFuncs[styleIndex] = style.widthFunc;
             _builderParameters.lineStrokeIds[styleIndex] = strokeId;
         }
         
@@ -218,14 +218,14 @@ namespace carto { namespace vt {
         _styleParameters.compOp = style.compOp;
         int styleIndex = _styleParameters.parameterCount;
         while (--styleIndex >= 0) {
-            if (_styleParameters.colorTable[styleIndex] == style.color && _styleParameters.widthTable[styleIndex] == _nullWidth && _builderParameters.lineStrokeIds[styleIndex] == 0) {
+            if (_styleParameters.colorFuncs[styleIndex] == style.colorFunc && _styleParameters.widthFuncs[styleIndex] == _nullWidthFunc && _builderParameters.lineStrokeIds[styleIndex] == 0) {
                 break;
             }
         }
         if (styleIndex < 0) {
             styleIndex = _styleParameters.parameterCount++;
-            _styleParameters.colorTable[styleIndex] = style.color;
-            _styleParameters.widthTable[styleIndex] = _nullWidth; // fill width information when we need to use line shader with polygons
+            _styleParameters.colorFuncs[styleIndex] = style.colorFunc;
+            _styleParameters.widthFuncs[styleIndex] = _nullWidthFunc; // fill width information when we need to use line shader with polygons
             _builderParameters.lineStrokeIds[styleIndex] = 0; // fill stroke information when we need to use line shader with polygons
         }
 
@@ -253,13 +253,13 @@ namespace carto { namespace vt {
         _styleParameters.transform = style.transform;
         int styleIndex = _styleParameters.parameterCount;
         while (--styleIndex >= 0) {
-            if (_styleParameters.colorTable[styleIndex] == style.color) {
+            if (_styleParameters.colorFuncs[styleIndex] == style.colorFunc) {
                 break;
             }
         }
         if (styleIndex < 0) {
             styleIndex = _styleParameters.parameterCount++;
-            _styleParameters.colorTable[styleIndex] = style.color;
+            _styleParameters.colorFuncs[styleIndex] = style.colorFunc;
         }
 
         do {
@@ -286,8 +286,8 @@ namespace carto { namespace vt {
         };
 
         float scale = 1.0f / _tileSize;
-        if (!_labelStyle || _labelStyle->orientation != style.orientation || _labelStyle->color != style.color || _labelStyle->size != style.size || _labelStyle->haloColor || _labelStyle->haloRadius || _labelStyle->scale != scale || _labelStyle->ascent != 0.0f || _labelStyle->transform != transform || _labelStyle->glyphMap != glyphMap) {
-            _labelStyle = std::make_shared<TileLabel::LabelStyle>(style.orientation, style.color, style.size, std::shared_ptr<const ColorFunction>(), std::shared_ptr<const FloatFunction>(), 1.0f / _tileSize, 0.0f, transform, glyphMap);
+        if (!_labelStyle || _labelStyle->orientation != style.orientation || _labelStyle->colorFunc != style.colorFunc || _labelStyle->sizeFunc != style.sizeFunc || _labelStyle->haloColorFunc || _labelStyle->haloRadiusFunc || _labelStyle->scale != scale || _labelStyle->ascent != 0.0f || _labelStyle->transform != transform || _labelStyle->glyphMap != glyphMap) {
+            _labelStyle = std::make_shared<TileLabel::LabelStyle>(style.orientation, style.colorFunc, style.sizeFunc, std::shared_ptr<const ColorFunction>(), std::shared_ptr<const FloatFunction>(), 1.0f / _tileSize, 0.0f, transform, glyphMap);
         }
         
         while (true) {
@@ -324,8 +324,8 @@ namespace carto { namespace vt {
         const std::shared_ptr<Font>& font = formatter.getFont();
         float scale = 1.0f / _tileSize;
         float ascent = formatter.getFont()->getMetrics(1.0f).ascent;
-        if (!_labelStyle || _labelStyle->orientation != style.orientation || _labelStyle->color != style.color || _labelStyle->size != style.size || _labelStyle->haloColor != style.haloColor || _labelStyle->haloRadius != style.haloRadius || _labelStyle->scale != scale || _labelStyle->ascent != ascent || _labelStyle->transform != transform || _labelStyle->glyphMap != font->getGlyphMap()) {
-            _labelStyle = std::make_shared<TileLabel::LabelStyle>(style.orientation, style.color, style.size, style.haloColor, style.haloRadius, scale, ascent, transform, font->getGlyphMap());
+        if (!_labelStyle || _labelStyle->orientation != style.orientation || _labelStyle->colorFunc != style.colorFunc || _labelStyle->sizeFunc != style.sizeFunc || _labelStyle->haloColorFunc != style.haloColorFunc || _labelStyle->haloRadiusFunc != style.haloRadiusFunc || _labelStyle->scale != scale || _labelStyle->ascent != ascent || _labelStyle->transform != transform || _labelStyle->glyphMap != font->getGlyphMap()) {
+            _labelStyle = std::make_shared<TileLabel::LabelStyle>(style.orientation, style.colorFunc, style.sizeFunc, style.haloColorFunc, style.haloRadiusFunc, scale, ascent, transform, font->getGlyphMap());
         }
 
         while (true) {
@@ -362,7 +362,7 @@ namespace carto { namespace vt {
         }
     }
 
-    std::shared_ptr<TileLayer> TileLayerBuilder::build(int layerIdx, std::shared_ptr<const FloatFunction> opacity, boost::optional<CompOp> compOp) {
+    std::shared_ptr<TileLayer> TileLayerBuilder::build(int layerIdx, boost::optional<CompOp> compOp, std::shared_ptr<const FloatFunction> opacityFunc) {
         std::vector<std::shared_ptr<TileBitmap>> bitmapList;
         std::swap(bitmapList, _bitmapList);
 
@@ -374,7 +374,7 @@ namespace carto { namespace vt {
         std::swap(labelList, _labelList);
         std::for_each(labelList.begin(), labelList.end(), [layerIdx](const std::shared_ptr<TileLabel>& label) { label->setPriority(layerIdx); });
 
-        return std::make_shared<TileLayer>(layerIdx, std::move(opacity), std::move(compOp), std::move(bitmapList), std::move(geometryList), std::move(labelList));
+        return std::make_shared<TileLayer>(layerIdx, std::move(compOp), std::move(opacityFunc), std::move(bitmapList), std::move(geometryList), std::move(labelList));
     }
 
     float TileLayerBuilder::calculateScale(VertexArray<cglib::vec2<float>>& values) {
@@ -579,7 +579,7 @@ namespace carto { namespace vt {
             v0 = static_cast<float>(glyph->y);
             u1 = static_cast<float>(glyph->x + glyph->width);
             v1 = static_cast<float>(glyph->y + glyph->height);
-            attrib(1) = (glyph->sdfMode ? -1.0f : 1.0f);
+            attrib(1) = (glyph->sdfMode ? -1 : 1);
         }
         _vertices.append(vertex, vertex, vertex, vertex);
         _texCoords.append(cglib::vec2<float>(u0, v1), cglib::vec2<float>(u1, v1), cglib::vec2<float>(u1, v0), cglib::vec2<float>(u0, v0));

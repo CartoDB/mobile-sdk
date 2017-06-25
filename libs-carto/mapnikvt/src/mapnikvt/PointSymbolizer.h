@@ -24,7 +24,7 @@ namespace carto { namespace mvt {
         static std::shared_ptr<vt::BitmapImage> makeRectangleBitmap(float size);
 
         std::string _file;
-        std::shared_ptr<const vt::FloatFunction> _opacity; // 1.0f
+        std::shared_ptr<const vt::FloatFunction> _opacityFunc; // 1.0f
         bool _allowOverlap = false;
         bool _ignorePlacement = false;
         cglib::mat3x3<float> _transform = cglib::mat3x3<float>::identity();

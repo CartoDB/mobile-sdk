@@ -53,80 +53,80 @@ namespace carto { namespace vt {
     struct PointStyle final {
         CompOp compOp;
         PointOrientation orientation;
-        std::shared_ptr<const ColorFunction> color;
-        std::shared_ptr<const FloatFunction> size;
+        std::shared_ptr<const ColorFunction> colorFunc;
+        std::shared_ptr<const FloatFunction> sizeFunc;
         std::shared_ptr<const BitmapImage> pointImage;
         boost::optional<cglib::mat3x3<float>> transform;
 
-        explicit PointStyle(CompOp compOp, PointOrientation orientation, std::shared_ptr<const ColorFunction> color, std::shared_ptr<const FloatFunction> size, std::shared_ptr<const BitmapImage> pointImage, const boost::optional<cglib::mat3x3<float>>& transform) : compOp(compOp), orientation(orientation), color(std::move(color)), size(std::move(size)), pointImage(std::move(pointImage)), transform(transform) { }
+        explicit PointStyle(CompOp compOp, PointOrientation orientation, std::shared_ptr<const ColorFunction> colorFunc, std::shared_ptr<const FloatFunction> sizeFunc, std::shared_ptr<const BitmapImage> pointImage, const boost::optional<cglib::mat3x3<float>>& transform) : compOp(compOp), orientation(orientation), colorFunc(std::move(colorFunc)), sizeFunc(std::move(sizeFunc)), pointImage(std::move(pointImage)), transform(transform) { }
     };
 
     struct TextStyle final {
         CompOp compOp;
         PointOrientation orientation;
-        std::shared_ptr<const ColorFunction> color;
-        std::shared_ptr<const FloatFunction> size;
-        std::shared_ptr<const ColorFunction> haloColor;
-        std::shared_ptr<const FloatFunction> haloRadius;
+        std::shared_ptr<const ColorFunction> colorFunc;
+        std::shared_ptr<const FloatFunction> sizeFunc;
+        std::shared_ptr<const ColorFunction> haloColorFunc;
+        std::shared_ptr<const FloatFunction> haloRadiusFunc;
         float angle;
         float backgroundScale;
         cglib::vec2<float> backgroundOffset;
         std::shared_ptr<const BitmapImage> backgroundImage;
         boost::optional<cglib::mat3x3<float>> transform;
 
-        explicit TextStyle(CompOp compOp, PointOrientation orientation, std::shared_ptr<const ColorFunction> color, std::shared_ptr<const FloatFunction> size, std::shared_ptr<const ColorFunction> haloColor, std::shared_ptr<const FloatFunction> haloRadius, float angle, float backgroundScale, const cglib::vec2<float>& backgroundOffset, std::shared_ptr<const BitmapImage> backgroundImage, const boost::optional<cglib::mat3x3<float>>& transform) : compOp(compOp), orientation(orientation), color(std::move(color)), size(std::move(size)), haloColor(std::move(haloColor)), haloRadius(std::move(haloRadius)), angle(angle), backgroundScale(backgroundScale), backgroundOffset(backgroundOffset), backgroundImage(std::move(backgroundImage)), transform(transform) { }
+        explicit TextStyle(CompOp compOp, PointOrientation orientation, std::shared_ptr<const ColorFunction> colorFunc, std::shared_ptr<const FloatFunction> sizeFunc, std::shared_ptr<const ColorFunction> haloColorFunc, std::shared_ptr<const FloatFunction> haloRadiusFunc, float angle, float backgroundScale, const cglib::vec2<float>& backgroundOffset, std::shared_ptr<const BitmapImage> backgroundImage, const boost::optional<cglib::mat3x3<float>>& transform) : compOp(compOp), orientation(orientation), colorFunc(std::move(colorFunc)), sizeFunc(std::move(sizeFunc)), haloColorFunc(std::move(haloColorFunc)), haloRadiusFunc(std::move(haloRadiusFunc)), angle(angle), backgroundScale(backgroundScale), backgroundOffset(backgroundOffset), backgroundImage(std::move(backgroundImage)), transform(transform) { }
     };
 
     struct LineStyle final {
         CompOp compOp;
         LineJoinMode joinMode;
         LineCapMode capMode;
-        std::shared_ptr<const ColorFunction> color;
-        std::shared_ptr<const FloatFunction> width;
+        std::shared_ptr<const ColorFunction> colorFunc;
+        std::shared_ptr<const FloatFunction> widthFunc;
         std::shared_ptr<const BitmapPattern> strokePattern;
         boost::optional<cglib::mat3x3<float>> transform;
 
-        explicit LineStyle(CompOp compOp, LineJoinMode joinMode, LineCapMode capMode, std::shared_ptr<const ColorFunction> color, std::shared_ptr<const FloatFunction> width, std::shared_ptr<const BitmapPattern> strokePattern, const boost::optional<cglib::mat3x3<float>>& transform) : compOp(compOp), joinMode(joinMode), capMode(capMode), color(std::move(color)), width(std::move(width)), strokePattern(std::move(strokePattern)), transform(transform) { }
+        explicit LineStyle(CompOp compOp, LineJoinMode joinMode, LineCapMode capMode, std::shared_ptr<const ColorFunction> colorFunc, std::shared_ptr<const FloatFunction> widthFunc, std::shared_ptr<const BitmapPattern> strokePattern, const boost::optional<cglib::mat3x3<float>>& transform) : compOp(compOp), joinMode(joinMode), capMode(capMode), colorFunc(std::move(colorFunc)), widthFunc(std::move(widthFunc)), strokePattern(std::move(strokePattern)), transform(transform) { }
     };
 
     struct PolygonStyle final {
         CompOp compOp;
-        std::shared_ptr<const ColorFunction> color;
+        std::shared_ptr<const ColorFunction> colorFunc;
         std::shared_ptr<const BitmapPattern> pattern;
         boost::optional<cglib::mat3x3<float>> transform;
 
-        explicit PolygonStyle(CompOp compOp, std::shared_ptr<const ColorFunction> color, std::shared_ptr<const BitmapPattern> pattern, const boost::optional<cglib::mat3x3<float>>& transform) : compOp(compOp), color(std::move(color)), pattern(std::move(pattern)), transform(transform) { }
+        explicit PolygonStyle(CompOp compOp, std::shared_ptr<const ColorFunction> colorFunc, std::shared_ptr<const BitmapPattern> pattern, const boost::optional<cglib::mat3x3<float>>& transform) : compOp(compOp), colorFunc(std::move(colorFunc)), pattern(std::move(pattern)), transform(transform) { }
     };
 
     struct Polygon3DStyle final {
-        std::shared_ptr<const ColorFunction> color;
+        std::shared_ptr<const ColorFunction> colorFunc;
         boost::optional<cglib::mat3x3<float>> transform;
 
-        explicit Polygon3DStyle(std::shared_ptr<const ColorFunction> color, const boost::optional<cglib::mat3x3<float>>& transform) : color(std::move(color)), transform(transform) { }
+        explicit Polygon3DStyle(std::shared_ptr<const ColorFunction> colorFunc, const boost::optional<cglib::mat3x3<float>>& transform) : colorFunc(std::move(colorFunc)), transform(transform) { }
     };
 
     struct BitmapLabelStyle final {
         LabelOrientation orientation;
-        std::shared_ptr<const ColorFunction> color;
-        std::shared_ptr<const FloatFunction> size;
+        std::shared_ptr<const ColorFunction> colorFunc;
+        std::shared_ptr<const FloatFunction> sizeFunc;
         std::shared_ptr<const BitmapImage> image;
         cglib::mat3x3<float> transform;
 
-        explicit BitmapLabelStyle(LabelOrientation orientation, std::shared_ptr<const ColorFunction> color, std::shared_ptr<const FloatFunction> size, std::shared_ptr<const BitmapImage> image, const cglib::mat3x3<float>& transform) : orientation(orientation), color(std::move(color)), size(std::move(size)), image(std::move(image)), transform(transform){ }
+        explicit BitmapLabelStyle(LabelOrientation orientation, std::shared_ptr<const ColorFunction> colorFunc, std::shared_ptr<const FloatFunction> sizeFunc, std::shared_ptr<const BitmapImage> image, const cglib::mat3x3<float>& transform) : orientation(orientation), colorFunc(std::move(colorFunc)), sizeFunc(std::move(sizeFunc)), image(std::move(image)), transform(transform){ }
     };
 
     struct TextLabelStyle final {
         LabelOrientation orientation;
-        std::shared_ptr<const ColorFunction> color;
-        std::shared_ptr<const FloatFunction> size;
-        std::shared_ptr<const ColorFunction> haloColor;
-        std::shared_ptr<const FloatFunction> haloRadius;
+        std::shared_ptr<const ColorFunction> colorFunc;
+        std::shared_ptr<const FloatFunction> sizeFunc;
+        std::shared_ptr<const ColorFunction> haloColorFunc;
+        std::shared_ptr<const FloatFunction> haloRadiusFunc;
         float angle;
         float backgroundScale;
         cglib::vec2<float> backgroundOffset;
         std::shared_ptr<const BitmapImage> backgroundImage;
 
-        explicit TextLabelStyle(LabelOrientation orientation, std::shared_ptr<const ColorFunction> color, std::shared_ptr<const FloatFunction> size, std::shared_ptr<const ColorFunction> haloColor, std::shared_ptr<const FloatFunction> haloRadius, float angle, float backgroundScale, const cglib::vec2<float>& backgroundOffset, std::shared_ptr<const BitmapImage> backgroundImage) : orientation(orientation), color(std::move(color)), size(std::move(size)), haloColor(std::move(haloColor)), haloRadius(std::move(haloRadius)), angle(angle), backgroundScale(backgroundScale), backgroundOffset(backgroundOffset), backgroundImage(std::move(backgroundImage)) { }
+        explicit TextLabelStyle(LabelOrientation orientation, std::shared_ptr<const ColorFunction> colorFunc, std::shared_ptr<const FloatFunction> sizeFunc, std::shared_ptr<const ColorFunction> haloColorFunc, std::shared_ptr<const FloatFunction> haloRadiusFunc, float angle, float backgroundScale, const cglib::vec2<float>& backgroundOffset, std::shared_ptr<const BitmapImage> backgroundImage) : orientation(orientation), colorFunc(std::move(colorFunc)), sizeFunc(std::move(sizeFunc)), haloColorFunc(std::move(haloColorFunc)), haloRadiusFunc(std::move(haloRadiusFunc)), angle(angle), backgroundScale(backgroundScale), backgroundOffset(backgroundOffset), backgroundImage(std::move(backgroundImage)) { }
     };
 } }
 

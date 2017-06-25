@@ -119,7 +119,7 @@ namespace carto { namespace vt {
 
     bool TileLabel::calculateEnvelope(const ViewState& viewState, std::array<cglib::vec3<float>, 4>& envelope) const {
         std::shared_ptr<const Placement> placement = getPlacement(viewState);
-        float scale = (*_style->size)(viewState) * viewState.zoomScale * _style->scale;
+        float scale = (*_style->sizeFunc)(viewState) * viewState.zoomScale * _style->scale;
         if (!placement || scale <= 0) {
             cglib::vec3<float> origin(0, 0, static_cast<float>(-viewState.origin(2)));
             for (int i = 0; i < 4; i++) {
@@ -189,7 +189,7 @@ namespace carto { namespace vt {
 
     bool TileLabel::calculateVertexData(const ViewState& viewState, int styleIndex, VertexArray<cglib::vec3<float>>& vertices, VertexArray<cglib::vec2<short>>& texCoords, VertexArray<cglib::vec4<char>>& attribs, VertexArray<unsigned short>& indices) const {
         std::shared_ptr<const Placement> placement = getPlacement(viewState);
-        float scale = (*_style->size)(viewState) * viewState.zoomScale * _style->scale;
+        float scale = (*_style->sizeFunc)(viewState) * viewState.zoomScale * _style->scale;
         if (!placement || scale <= 0) {
             return false;
         }

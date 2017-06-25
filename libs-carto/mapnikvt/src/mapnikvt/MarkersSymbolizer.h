@@ -13,7 +13,7 @@ namespace carto { namespace mvt {
     class MarkersSymbolizer : public Symbolizer {
     public:
         explicit MarkersSymbolizer(std::shared_ptr<Logger> logger) : Symbolizer(std::move(logger)) {
-            bind(&_strokeWidth, std::make_shared<ConstExpression>(Value(_strokeWidthStatic)));
+            bind(&_strokeWidthFunc, std::make_shared<ConstExpression>(Value(_strokeWidthStatic)));
         }
 
         virtual void build(const FeatureCollection& featureCollection, const FeatureExpressionContext& exprContext, const SymbolizerContext& symbolizerContext, vt::TileLayerBuilder& layerBuilder) override;
@@ -37,14 +37,14 @@ namespace carto { namespace mvt {
         std::string _markerType;
         vt::Color _fill = vt::Color(0xff0000ff);
         float _fillOpacity = 1.0f;
-        std::shared_ptr<const vt::FloatFunction> _width; // undefined
+        std::shared_ptr<const vt::FloatFunction> _widthFunc; // undefined
         float _widthStatic = 0;
-        std::shared_ptr<const vt::FloatFunction> _height; // undefined
+        std::shared_ptr<const vt::FloatFunction> _heightFunc; // undefined
         float _heightStatic = 0;
         vt::Color _stroke = vt::Color(0xff000000);
         float _strokeOpacity = 1.0f;
+        std::shared_ptr<const vt::FloatFunction> _strokeWidthFunc; // 0.5f
         float _strokeWidthStatic = 0.5f;
-        std::shared_ptr<const vt::FloatFunction> _strokeWidth; // 0.5f
         float _spacing = 100.0f;
         bool _allowOverlap = false;
         bool _ignorePlacement = false;

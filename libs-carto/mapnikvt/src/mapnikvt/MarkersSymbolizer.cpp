@@ -25,7 +25,7 @@ namespace carto { namespace mvt {
             orientation = vt::LabelOrientation::POINT; // we will apply custom rotation, thus use point orientation
         }
 
-        std::shared_ptr<const vt::FloatFunction> size;
+        std::shared_ptr<const vt::FloatFunction> sizeFunc;
         float bitmapScaleX = fontScale, bitmapScaleY = fontScale;
         std::shared_ptr<const vt::BitmapImage> bitmapImage;
         std::string file = _file;
@@ -37,22 +37,22 @@ namespace carto { namespace mvt {
                 return;
             }
             
-            if (_width && _widthStatic > 0) {
-                if (_height && _heightStatic > 0) {
+            if (_widthFunc && _widthStatic > 0) {
+                if (_heightFunc && _heightStatic > 0) {
                     bitmapScaleY *= _heightStatic / _widthStatic;
                 }
                 else {
                     bitmapScaleY *= static_cast<float>(bitmapImage->bitmap->height) / bitmapImage->bitmap->width;
                 }
-                size = _width;
+                sizeFunc = _widthFunc;
             }
-            else if (_height && _heightStatic > 0) {
+            else if (_heightFunc && _heightStatic > 0) {
                 bitmapScaleX *= static_cast<float>(bitmapImage->bitmap->width) / bitmapImage->bitmap->height;
-                size = _height;
+                sizeFunc = _heightFunc;
             }
             else {
                 bitmapScaleY *= static_cast<float>(bitmapImage->bitmap->height) / bitmapImage->bitmap->width;
-                size = _functionBuilder.createFloatFunction(bitmapImage->bitmap->width);
+                sizeFunc = _functionBuilder.createFloatFunction(bitmapImage->bitmap->width);
             }
         }
         else {
@@ -60,21 +60,21 @@ namespace carto { namespace mvt {
             vt::Color stroke = vt::Color::fromColorOpacity(_stroke, _strokeOpacity);
             bool ellipse = _markerType == "ellipse" || (_markerType.empty() && placement != vt::LabelOrientation::LINE);
             float bitmapWidth = (ellipse ? DEFAULT_CIRCLE_SIZE : DEFAULT_ARROW_WIDTH), bitmapHeight = (ellipse ? DEFAULT_CIRCLE_SIZE : DEFAULT_ARROW_HEIGHT);
-            if (_width) { // NOTE: special case, if accept all values
-                bitmapHeight = (_height ? _heightStatic : _widthStatic * bitmapHeight / bitmapWidth);
+            if (_widthFunc) { // NOTE: special case, if accept all values
+                bitmapHeight = (_heightFunc ? _heightStatic : _widthStatic * bitmapHeight / bitmapWidth);
                 bitmapWidth = _widthStatic;
                 bitmapScaleY *= bitmapHeight / bitmapWidth;
-                size = _width;
+                sizeFunc = _widthFunc;
             }
-            else if (_height) { // NOTE: special case, accept all values
+            else if (_heightFunc) { // NOTE: special case, accept all values
                 bitmapWidth = _heightStatic * bitmapWidth / bitmapHeight;
                 bitmapHeight = _heightStatic;
                 bitmapScaleX *= bitmapWidth / bitmapHeight;
-                size = _height;
+                sizeFunc = _heightFunc;
             }
             else {
                 bitmapScaleY *= bitmapHeight / bitmapWidth;
-                size = _functionBuilder.createFloatFunction(bitmapWidth);
+                sizeFunc = _functionBuilder.createFloatFunction(bitmapWidth);
             }
             bitmapScaleX *= (_strokeWidthStatic + bitmapWidth) / bitmapWidth;
             bitmapScaleY *= (_strokeWidthStatic + bitmapHeight) / bitmapHeight;
@@ -104,7 +104,7 @@ namespace carto { namespace mvt {
         float bitmapSize = static_cast<float>(std::max(_widthStatic * fontScale, _heightStatic * fontScale));
         long long groupId = (_allowOverlap ? -1 : 0);
 
-        std::shared_ptr<const vt::ColorFunction> fill = _functionBuilder.createColorFunction(vt::Color::fromColorOpacity(vt::Color(1, 1, 1, 1), fillOpacity));
+        std::shared_ptr<const vt::ColorFunction> fillFunc = _functionBuilder.createColorFunction(vt::Color::fromColorOpacity(vt::Color(1, 1, 1, 1), fillOpacity));
 
         std::vector<std::pair<long long, vt::TileLayerBuilder::Vertex>> pointInfos;
         std::vector<std::pair<long long, vt::TileLayerBuilder::BitmapLabelInfo>> labelInfos;
@@ -127,7 +127,7 @@ namespace carto { namespace mvt {
 
         auto flushPoints = [&](const cglib::mat3x3<float>& transform) {
             if (_allowOverlap) {
-                vt::PointStyle style(compOp, convertLabelToPointOrientation(orientation), fill, size, bitmapImage, transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX / bitmapImage->bitmap->width, bitmapScaleY / bitmapImage->bitmap->height, 1)));
+                vt::PointStyle style(compOp, convertLabelToPointOrientation(orientation), fillFunc, sizeFunc, bitmapImage, transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX / bitmapImage->bitmap->width, bitmapScaleY / bitmapImage->bitmap->height, 1)));
 
                 std::size_t pointInfoIndex = 0;
                 layerBuilder.addPoints([&](long long& id, vt::TileLayerBuilder::Vertex& vertex) {
@@ -143,7 +143,7 @@ namespace carto { namespace mvt {
                 pointInfos.clear();
             }
             else {
-                vt::BitmapLabelStyle style(orientation, fill, size, bitmapImage, transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX / bitmapImage->bitmap->width, bitmapScaleY / bitmapImage->bitmap->height, 1)));
+                vt::BitmapLabelStyle style(orientation, fillFunc, sizeFunc, bitmapImage, transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX / bitmapImage->bitmap->width, bitmapScaleY / bitmapImage->bitmap->height, 1)));
 
                 std::size_t labelInfoIndex = 0;
                 layerBuilder.addBitmapLabels([&](long long& id, vt::TileLayerBuilder::BitmapLabelInfo& labelInfo) {
@@ -246,11 +246,11 @@ namespace carto { namespace mvt {
             bind(&_fillOpacity, parseExpression(value));
         }
         else if (name == "width") {
-            bind(&_width, parseExpression(value));
+            bind(&_widthFunc, parseExpression(value));
             bind(&_widthStatic, parseExpression(value));
         }
         else if (name == "height") {
-            bind(&_height, parseExpression(value));
+            bind(&_heightFunc, parseExpression(value));
             bind(&_heightStatic, parseExpression(value));
         }
         else if (name == "stroke") {
@@ -260,7 +260,7 @@ namespace carto { namespace mvt {
             bind(&_strokeOpacity, parseExpression(value));
         }
         else if (name == "stroke-width") {
-            bind(&_strokeWidth, parseExpression(value));
+            bind(&_strokeWidthFunc, parseExpression(value));
             bind(&_strokeWidthStatic, parseExpression(value));
         }
         else if (name == "spacing") {

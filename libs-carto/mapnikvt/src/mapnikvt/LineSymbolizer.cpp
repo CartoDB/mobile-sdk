@@ -40,9 +40,9 @@ namespace carto { namespace mvt {
             }
         }
 
-        std::shared_ptr<const vt::ColorFunction> stroke = _functionBuilder.createColorOpacityFunction(_stroke, _strokeOpacity);
+        std::shared_ptr<const vt::ColorFunction> strokeFunc = _functionBuilder.createColorOpacityFunction(_strokeFunc, _strokeOpacityFunc);
         
-        vt::LineStyle style(compOp, lineJoin, lineCap, stroke, _strokeWidth, strokePattern, _geometryTransform);
+        vt::LineStyle style(compOp, lineJoin, lineCap, strokeFunc, _strokeWidthFunc, strokePattern, _geometryTransform);
 
         std::size_t featureIndex = 0;
         std::size_t geometryIndex = 0;
@@ -90,13 +90,13 @@ namespace carto { namespace mvt {
 
     void LineSymbolizer::bindParameter(const std::string& name, const std::string& value) {
         if (name == "stroke") {
-            bind(&_stroke, parseStringExpression(value), &LineSymbolizer::convertColor);
+            bind(&_strokeFunc, parseStringExpression(value), &LineSymbolizer::convertColor);
         }
         else if (name == "stroke-width") {
-            bind(&_strokeWidth, parseExpression(value));
+            bind(&_strokeWidthFunc, parseExpression(value));
         }
         else if (name == "stroke-opacity") {
-            bind(&_strokeOpacity, parseExpression(value));
+            bind(&_strokeOpacityFunc, parseExpression(value));
         }
         else if (name == "stroke-linejoin") {
             bind(&_strokeLinejoin, parseStringExpression(value));
