@@ -7,6 +7,9 @@
 #ifndef _CARTO_PERSISTENTCACHETILEDATASOURCE_H_
 #define _CARTO_PERSISTENTCACHETILEDATASOURCE_H_
 
+#include "core/MapBounds.h"
+#include "components/CancelableThreadPool.h"
+#include "components/DirectorPtr.h"
 #include "datasources/CacheTileDataSource.h"
 
 #include <string>
@@ -18,6 +21,7 @@ namespace sqlite3pp {
 }
 
 namespace carto {
+    class TileDownloadListener;
 
     /**
      * A tile data source that loads tiles from another tile data source
@@ -54,10 +58,31 @@ namespace carto {
         void setCacheOnlyMode(bool enabled);
 
         /**
-         * Close the cache database. The datasource will still work afterwards,
+         * Starts downloading the specified area. The area will be stored in the cache.
+         * Note that is the area is too big or cache is already filled, subsequent downloaded tiles
+         * may push existing tile out of the cache.
+         * @param mapBounds The bounds of the area to download. The coordinate system of the bounds must be the same as specified in the data source projection.
+         * @param minZoom The minimum zoom of the tiles to load.
+         * @param maxZoom The maximum zoom of the tiles to load.
+         * @param tileDownloadListener The tile download listener to use that will receive download related callbacks.
+         */
+        void startDownloadArea(const MapBounds& mapBounds, int minZoom, int maxZoom, const std::shared_ptr<TileDownloadListener>& tileDownloadListener);
+        /**
+         * Stops all background downloader processes.
+         */
+        void stopAllDownloads();
+
+        /**
+         * Returns the status of the cache database.
+         * @return True if the persistent cache database is open and working, false otherwise.
+         */
+        bool isOpen() const;
+
+        /**
+         * Closes the cache database. The datasource will still work afterwards,
          * but all requests will be directed to the original datasource.
          */
-        virtual void close();
+        void close();
 
         virtual std::shared_ptr<TileData> loadTile(const MapTile& mapTile);
         
@@ -68,11 +93,27 @@ namespace carto {
         virtual void setCapacity(std::size_t capacityInBytes);
 
     protected:
+        class DownloadTask : public CancelableTask {
+        public:
+            DownloadTask(const std::shared_ptr<PersistentCacheTileDataSource>& dataSource, const MapBounds& mapBounds, int minZoom, int maxZoom, const std::shared_ptr<TileDownloadListener>& listener);
+            
+            virtual void run();
+    
+        private:
+            std::weak_ptr<PersistentCacheTileDataSource> _dataSource;
+            MapBounds _mapBounds;
+            int _minZoom;
+            int _maxZoom;
+            DirectorPtr<TileDownloadListener> _downloadListener;
+        };
+
         static const int DEFAULT_CAPACITY = 50 * 1024 * 1024;
 
         void openDatabase(const std::string& databasePath);
         void closeDatabase();
         void loadTileInfo();
+
+        void downloadArea(const MapBounds& mapBounds, int minZoom, int maxZoom, const std::shared_ptr<TileDownloadListener>& listener);
         
         std::shared_ptr<TileData> get(long long tileId);
         void store(long long tileId, const std::shared_ptr<TileData>& tileData);
@@ -83,6 +124,8 @@ namespace carto {
         std::unique_ptr<sqlite3pp::database> _database;
         
         bool _cacheOnlyMode;
+
+        std::shared_ptr<CancelableThreadPool> _downloadThreadPool;
         
         cache::timed_lru_cache<long long, std::shared_ptr<long long> > _cache;
         mutable std::recursive_mutex _mutex;

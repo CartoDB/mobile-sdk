@@ -42,11 +42,11 @@ namespace carto { namespace mvt {
                     '\'' >> *(unesc_char | "\\x" >> octet_ | (qi::char_ - '\'')) >> '\'';
 
                 value =
-                      null_kw				[_val = phx::construct<Value>()]
-                    | qi::bool_				[_val = phx::construct<Value>(_1)]
+                      null_kw                [_val = phx::construct<Value>()]
+                    | qi::bool_                [_val = phx::construct<Value>(_1)]
                     | qi::real_parser<double, qi::strict_real_policies<double>>() [_val = phx::construct<Value>(_1)]
-                    | qi::long_long			[_val = phx::construct<Value>(_1)]
-                    | string				[_val = phx::construct<Value>(_1)]
+                    | qi::long_long            [_val = phx::construct<Value>(_1)]
+                    | string                [_val = phx::construct<Value>(_1)]
                     ;
             }
 

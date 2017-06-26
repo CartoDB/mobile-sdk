@@ -146,7 +146,7 @@ namespace carto {
         auto bitmapLoader = std::make_shared<VTBitmapLoader>("", std::shared_ptr<AssetPackage>());
         auto fontManager = std::make_shared<vt::FontManager>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
         auto bitmapManager = std::make_shared<vt::BitmapManager>(bitmapLoader);
-        auto strokeMap = std::make_shared<vt::StrokeMap>(1);
+        auto strokeMap = std::make_shared<vt::StrokeMap>(1, 1);
         auto glyphMap = std::make_shared<vt::GlyphMap>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
         mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, std::map<std::string, mvt::Value>());
         auto symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);

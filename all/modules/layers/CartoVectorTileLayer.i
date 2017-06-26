@@ -23,12 +23,14 @@
 
 %attributestring(carto::CartoVectorTileLayer, std::string, Language, getLanguage, setLanguage)
 #ifdef _CARTO_CUSTOM_BASEMAP_SUPPORT
-%std_exceptions(carto::CartoVectorTileLayer::CartoVectorTileLayer(const std::shared_ptr<carto::TileDataSource>&, const std::shared_ptr<carto::AssetPackage>&))
+%std_exceptions(carto::CartoVectorTileLayer::CartoVectorTileLayer(const std::shared_ptr<TileDataSource>&, const std::shared_ptr<AssetPackage>&))
 %std_exceptions(carto::CartoVectorTileLayer::CreateTileDecoder(const std::shared_ptr<AssetPackage>&))
+!objc_rename(createTileDecoderFromAssetPackage) carto::CartoVectorTileLayer::CreateTileDecoder(const std::shared_ptr<AssetPackage>&);
 #else
-%ignore carto::CartoVectorTileLayer::CartoVectorTileLayer(const std::shared_ptr<carto::TileDataSource>&, const std::shared_ptr<carto::AssetPackage>&);
+%ignore carto::CartoVectorTileLayer::CartoVectorTileLayer(const std::shared_ptr<TileDataSource>&, const std::shared_ptr<AssetPackage>&);
 %ignore carto::CartoVectorTileLayer::CreateTileDecoder(const std::shared_ptr<AssetPackage>&);
 #endif
+!objc_rename(createTileDecoderFromStyle) carto::CartoVectorTileLayer::CreateTileDecoder(CartoBaseMapStyle::CartoBaseMapStyle style);
 
 %include "layers/CartoVectorTileLayer.h"
 

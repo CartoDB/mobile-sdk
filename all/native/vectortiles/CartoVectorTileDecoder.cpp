@@ -225,7 +225,7 @@ namespace carto {
                 if (std::shared_ptr<vt::Tile> tile = tiles[i]) {
                     for (const std::shared_ptr<vt::TileLayer>& tileLayer : tile->getLayers()) {
                         int layerIdx = static_cast<int>(i * 65536) + tileLayer->getLayerIndex();
-                        tileLayers.push_back(std::make_shared<vt::TileLayer>(layerIdx, tileLayer->getOpacity(), tileLayer->getCompOp(), tileLayer->getBitmaps(), tileLayer->getGeometries(), tileLayer->getLabels()));
+                        tileLayers.push_back(std::make_shared<vt::TileLayer>(layerIdx, tileLayer->getCompOp(), tileLayer->getOpacityFunc(), tileLayer->getBitmaps(), tileLayer->getGeometries(), tileLayer->getLabels()));
                     }
                 }
             }
@@ -251,7 +251,7 @@ namespace carto {
             auto fontManager = std::make_shared<vt::FontManager>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
             auto bitmapLoader = std::make_shared<VTBitmapLoader>("", assetPackage);
             auto bitmapManager = std::make_shared<vt::BitmapManager>(bitmapLoader);
-            auto strokeMap = std::make_shared<vt::StrokeMap>(STROKEMAP_SIZE);
+            auto strokeMap = std::make_shared<vt::StrokeMap>(STROKEMAP_SIZE, STROKEMAP_SIZE);
             auto glyphMap = std::make_shared<vt::GlyphMap>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
             symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
 

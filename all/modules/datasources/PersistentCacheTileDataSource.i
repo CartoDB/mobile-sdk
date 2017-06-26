@@ -3,7 +3,7 @@
 
 %module(directors="1") PersistentCacheTileDataSource
 
-!proxy_imports(carto::PersistentCacheTileDataSource, core.MapTile, core.MapBounds, core.StringMap, datasources.CacheTileDataSource, datasources.components.TileData)
+!proxy_imports(carto::PersistentCacheTileDataSource, core.MapBounds, core.MapTile, core.MapBounds, core.StringMap, datasources.CacheTileDataSource, datasources.TileDownloadListener, datasources.components.TileData)
 
 %{
 #include "datasources/PersistentCacheTileDataSource.h"
@@ -16,11 +16,14 @@
 %include <cartoswig.i>
 
 %import "datasources/CacheTileDataSource.i"
+%import "datasources/TileDownloadListener.i"
 
 !polymorphic_shared_ptr(carto::PersistentCacheTileDataSource, datasources.PersistentCacheTileDataSource)
 
 %attribute(carto::PersistentCacheTileDataSource, bool, CacheOnlyMode, isCacheOnlyMode, setCacheOnlyMode)
+%attribute(carto::PersistentCacheTileDataSource, bool, Open, isOpen)
 %std_exceptions(carto::PersistentCacheTileDataSource::PersistentCacheTileDataSource)
+%std_exceptions(carto::PersistentCacheTileDataSource::startDownloadArea)
 
 %feature("director") carto::PersistentCacheTileDataSource;
 

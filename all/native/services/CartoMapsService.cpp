@@ -33,6 +33,7 @@ namespace carto {
         _authTokens(),
         _cdnURLs(),
         _defaultVectorLayerMode(false),
+        _vectorTileBufferSize(64.0f),
         _strictMode(false),
         _vectorTileAssetPackage(),
         _mutex()
@@ -142,6 +143,16 @@ namespace carto {
         _defaultVectorLayerMode = vectorLayerMode;
     }
 
+    float CartoMapsService::getVectorTileBufferSize() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _vectorTileBufferSize;
+    }
+
+    void CartoMapsService::setVectorTileBufferSize(float bufferSize) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _vectorTileBufferSize = bufferSize;
+    }
+
     bool CartoMapsService::isStrictMode() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _strictMode;
@@ -169,7 +180,11 @@ namespace carto {
         std::string url = getServiceURL("/api/v1/map");
 
         // Create request data
-        std::string mapConfigJSON = mapConfig.toString();
+        picojson::object bufferSizeObject;
+        bufferSizeObject["mvt"] = picojson::value(_vectorTileBufferSize);
+        picojson::object mapConfigObject = mapConfig.toPicoJSON().get<picojson::object>();
+        mapConfigObject["buffersize"] = picojson::value(bufferSizeObject);
+        std::string mapConfigJSON = picojson::value(mapConfigObject).serialize();
         auto requestData = std::make_shared<BinaryData>(reinterpret_cast<const unsigned char*>(mapConfigJSON.data()), mapConfigJSON.size());
 
         // Do HTTP POST request
@@ -215,7 +230,11 @@ namespace carto {
         std::string url = getServiceURL("/api/v1/map/named/" + NetworkUtils::URLEncode(templateId));
 
         // Create request data by serializing parameters
-        std::string paramsJSON = Variant(templateParams).toString();
+        picojson::object bufferSizeObject;
+        bufferSizeObject["mvt"] = picojson::value(_vectorTileBufferSize);
+        picojson::object paramsObject = Variant(templateParams).toPicoJSON().get<picojson::object>();
+        paramsObject["buffersize"] = picojson::value(bufferSizeObject);
+        std::string paramsJSON = picojson::value(paramsObject).serialize();
         auto requestData = std::make_shared<BinaryData>(reinterpret_cast<const unsigned char*>(paramsJSON.data()), paramsJSON.size());
 
         // Perform HTTP request

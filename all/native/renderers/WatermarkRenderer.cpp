@@ -86,7 +86,7 @@ namespace carto {
         bool limitedLicense = false;
         std::shared_ptr<Bitmap> watermarkBitmap;
         std::string watermark;
-        if (LicenseManager::GetInstance().getParameter("watermark", watermark)) {
+        if (LicenseManager::GetInstance().getParameter("watermark", watermark, false)) {
             if (watermark == "custom") {
                 watermarkBitmap = _options.getWatermarkBitmap();
             } else if (watermark == "carto" || watermark == "cartodb" || watermark == "nutiteq") {

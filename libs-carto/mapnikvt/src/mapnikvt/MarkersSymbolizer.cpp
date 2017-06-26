@@ -25,70 +25,86 @@ namespace carto { namespace mvt {
             orientation = vt::LabelOrientation::POINT; // we will apply custom rotation, thus use point orientation
         }
 
+        std::shared_ptr<const vt::FloatFunction> sizeFunc;
         float bitmapScaleX = fontScale, bitmapScaleY = fontScale;
-        std::shared_ptr<const vt::Bitmap> bitmap;
+        std::shared_ptr<const vt::BitmapImage> bitmapImage;
         std::string file = _file;
         float fillOpacity = _fillOpacity;
         if (!file.empty()) {
-            bitmap = symbolizerContext.getBitmapManager()->loadBitmap(file);
-            if (!bitmap) {
+            bitmapImage = symbolizerContext.getBitmapManager()->loadBitmapImage(file, false);
+            if (!bitmapImage) {
                 _logger->write(Logger::Severity::ERROR, "Failed to load marker bitmap " + file);
                 return;
             }
-            if (_width > 0) {
-                bitmapScaleX = fontScale * _width / bitmap->width;
-                bitmapScaleY = (_height > 0 ? fontScale * _height / bitmap->height : bitmapScaleX);
+            
+            if (_widthFunc && _widthStatic > 0) {
+                if (_heightFunc && _heightStatic > 0) {
+                    bitmapScaleY *= _heightStatic / _widthStatic;
+                }
+                else {
+                    bitmapScaleY *= static_cast<float>(bitmapImage->bitmap->height) / bitmapImage->bitmap->width;
+                }
+                sizeFunc = _widthFunc;
             }
-            else if (_height > 0) {
-                bitmapScaleX = bitmapScaleY = fontScale * _height / bitmap->height;
+            else if (_heightFunc && _heightStatic > 0) {
+                bitmapScaleX *= static_cast<float>(bitmapImage->bitmap->width) / bitmapImage->bitmap->height;
+                sizeFunc = _heightFunc;
+            }
+            else {
+                bitmapScaleY *= static_cast<float>(bitmapImage->bitmap->height) / bitmapImage->bitmap->width;
+                sizeFunc = _functionBuilder.createFloatFunction(bitmapImage->bitmap->width);
             }
         }
         else {
             vt::Color fill = vt::Color::fromColorOpacity(_fill, _fillOpacity);
             vt::Color stroke = vt::Color::fromColorOpacity(_stroke, _strokeOpacity);
-            if (_markerType == "ellipse" || (_markerType.empty() && placement != vt::LabelOrientation::LINE)) {
-                float width = DEFAULT_CIRCLE_SIZE, height = DEFAULT_CIRCLE_SIZE;
-                if (_widthDefined) { // NOTE: special case, if accept all values
-                    width = std::abs(_width);
-                    height = (_heightDefined ? std::abs(_height) : width);
-                }
-                else if (_heightDefined) { // NOTE: special case, accept all values
-                    height = std::abs(_height);
-                    width = height;
-                }
-                file = "__default_marker_ellipse_" + boost::lexical_cast<std::string>(width) + "_" + boost::lexical_cast<std::string>(height) + "_" + boost::lexical_cast<std::string>(fill.value()) + "_" + boost::lexical_cast<std::string>(_strokeWidth) + "_" + boost::lexical_cast<std::string>(stroke.value()) + ".bmp";
-                bitmap = symbolizerContext.getBitmapManager()->getBitmap(file);
-                if (!bitmap) {
-                    bitmap = makeEllipseBitmap(width * SUPERSAMPLING_FACTOR, height * SUPERSAMPLING_FACTOR, fill, std::abs(_strokeWidth) * SUPERSAMPLING_FACTOR, stroke);
-                    symbolizerContext.getBitmapManager()->storeBitmap(file, bitmap);
-                }
-                bitmapScaleX = width  * fontScale / bitmap->width;
-                bitmapScaleY = height * fontScale / bitmap->height;
+            bool ellipse = _markerType == "ellipse" || (_markerType.empty() && placement != vt::LabelOrientation::LINE);
+            float bitmapWidth = (ellipse ? DEFAULT_CIRCLE_SIZE : DEFAULT_ARROW_WIDTH), bitmapHeight = (ellipse ? DEFAULT_CIRCLE_SIZE : DEFAULT_ARROW_HEIGHT);
+            if (_widthFunc) { // NOTE: special case, if accept all values
+                bitmapHeight = (_heightFunc ? _heightStatic : _widthStatic * bitmapHeight / bitmapWidth);
+                bitmapWidth = _widthStatic;
+                bitmapScaleY *= bitmapHeight / bitmapWidth;
+                sizeFunc = _widthFunc;
+            }
+            else if (_heightFunc) { // NOTE: special case, accept all values
+                bitmapWidth = _heightStatic * bitmapWidth / bitmapHeight;
+                bitmapHeight = _heightStatic;
+                bitmapScaleX *= bitmapWidth / bitmapHeight;
+                sizeFunc = _heightFunc;
             }
             else {
-                float width = DEFAULT_ARROW_WIDTH, height = DEFAULT_ARROW_HEIGHT;
-                if (_width > 0) {
-                    width = _width;
-                    height = (_height > 0 ? _height : DEFAULT_ARROW_HEIGHT * width / DEFAULT_ARROW_WIDTH);
-                }
-                else if (_height > 0) {
-                    height = _height;
-                    width = DEFAULT_ARROW_WIDTH * height / DEFAULT_ARROW_HEIGHT;
-                }
-                file = "__default_marker_arrow_" + boost::lexical_cast<std::string>(width) + "_" + boost::lexical_cast<std::string>(height) + "_" + boost::lexical_cast<std::string>(fill.value()) + "_" + boost::lexical_cast<std::string>(_strokeWidth) + "_" + boost::lexical_cast<std::string>(stroke.value()) + ".bmp";
-                bitmap = symbolizerContext.getBitmapManager()->getBitmap(file);
-                if (!bitmap) {
-                    bitmap = makeArrowBitmap(width * SUPERSAMPLING_FACTOR, height * SUPERSAMPLING_FACTOR, fill, std::abs(_strokeWidth) * SUPERSAMPLING_FACTOR, stroke);
-                    symbolizerContext.getBitmapManager()->storeBitmap(file, bitmap);
-                }
-                bitmapScaleX = width  * fontScale / bitmap->width;
-                bitmapScaleY = height * fontScale / bitmap->height;
+                bitmapScaleY *= bitmapHeight / bitmapWidth;
+                sizeFunc = _functionBuilder.createFloatFunction(bitmapWidth);
             }
+            bitmapScaleX *= (_strokeWidthStatic + bitmapWidth) / bitmapWidth;
+            bitmapScaleY *= (_strokeWidthStatic + bitmapHeight) / bitmapHeight;
+            bitmapWidth = std::min(bitmapWidth, static_cast<float>(MAX_BITMAP_SIZE));
+            bitmapHeight = std::min(bitmapHeight, static_cast<float>(MAX_BITMAP_SIZE));
+            
+            if (ellipse) {
+                file = "__default_marker_ellipse_" + boost::lexical_cast<std::string>(bitmapWidth) + "_" + boost::lexical_cast<std::string>(bitmapHeight) + "_" + boost::lexical_cast<std::string>(fill.value()) + "_" + boost::lexical_cast<std::string>(_strokeWidthStatic) + "_" + boost::lexical_cast<std::string>(stroke.value()) + ".bmp";
+                bitmapImage = symbolizerContext.getBitmapManager()->getBitmapImage(file);
+                if (!bitmapImage) {
+                    bitmapImage = makeEllipseBitmap(bitmapWidth * SUPERSAMPLING_FACTOR, bitmapHeight * SUPERSAMPLING_FACTOR, fill, std::abs(_strokeWidthStatic) * SUPERSAMPLING_FACTOR, stroke);
+                    symbolizerContext.getBitmapManager()->storeBitmapImage(file, bitmapImage);
+                }
+            }
+            else {
+                file = "__default_marker_arrow_" + boost::lexical_cast<std::string>(bitmapWidth) + "_" + boost::lexical_cast<std::string>(bitmapHeight) + "_" + boost::lexical_cast<std::string>(fill.value()) + "_" + boost::lexical_cast<std::string>(_strokeWidthStatic) + "_" + boost::lexical_cast<std::string>(stroke.value()) + ".bmp";
+                bitmapImage = symbolizerContext.getBitmapManager()->getBitmapImage(file);
+                if (!bitmapImage) {
+                    bitmapImage = makeArrowBitmap(bitmapWidth * SUPERSAMPLING_FACTOR, bitmapHeight * SUPERSAMPLING_FACTOR, fill, std::abs(_strokeWidthStatic) * SUPERSAMPLING_FACTOR, stroke);
+                    symbolizerContext.getBitmapManager()->storeBitmapImage(file, bitmapImage);
+                }
+            }
+
             fillOpacity = 1.0f;
         }
 
-        float bitmapSize = static_cast<float>(std::max(bitmap->width * bitmapScaleX, bitmap->height * bitmapScaleY));
-        int groupId = (_allowOverlap ? -1 : 0);
+        float bitmapSize = static_cast<float>(std::max(_widthStatic * fontScale, _heightStatic * fontScale));
+        long long groupId = (_allowOverlap ? -1 : 0);
+
+        std::shared_ptr<const vt::ColorFunction> fillFunc = _functionBuilder.createColorFunction(vt::Color::fromColorOpacity(vt::Color(1, 1, 1, 1), fillOpacity));
 
         std::vector<std::pair<long long, vt::TileLayerBuilder::Vertex>> pointInfos;
         std::vector<std::pair<long long, vt::TileLayerBuilder::BitmapLabelInfo>> labelInfos;
@@ -111,10 +127,7 @@ namespace carto { namespace mvt {
 
         auto flushPoints = [&](const cglib::mat3x3<float>& transform) {
             if (_allowOverlap) {
-                std::shared_ptr<const vt::ColorFunction> fillFunc = createColorFunction("#ffffff");
-                std::shared_ptr<const vt::FloatFunction> opacityFunc = createFloatFunction(fillOpacity);
-
-                vt::PointStyle style(compOp, convertLabelToPointOrientation(orientation), fillFunc, opacityFunc, symbolizerContext.getGlyphMap(), bitmap, transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1)));
+                vt::PointStyle style(compOp, convertLabelToPointOrientation(orientation), fillFunc, sizeFunc, bitmapImage, transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX / bitmapImage->bitmap->width, bitmapScaleY / bitmapImage->bitmap->height, 1)));
 
                 std::size_t pointInfoIndex = 0;
                 layerBuilder.addPoints([&](long long& id, vt::TileLayerBuilder::Vertex& vertex) {
@@ -125,12 +138,12 @@ namespace carto { namespace mvt {
                     vertex = pointInfos[pointInfoIndex].second;
                     pointInfoIndex++;
                     return true;
-                }, style);
+                }, style, symbolizerContext.getGlyphMap());
                 
                 pointInfos.clear();
             }
             else {
-                vt::BitmapLabelStyle style(orientation, vt::Color::fromColorOpacity(vt::Color(0xffffffff), fillOpacity), symbolizerContext.getFontManager()->getNullFont(), bitmap, transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1)));
+                vt::BitmapLabelStyle style(orientation, fillFunc, sizeFunc, bitmapImage, transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX / bitmapImage->bitmap->width, bitmapScaleY / bitmapImage->bitmap->height, 1)));
 
                 std::size_t labelInfoIndex = 0;
                 layerBuilder.addBitmapLabels([&](long long& id, vt::TileLayerBuilder::BitmapLabelInfo& labelInfo) {
@@ -141,7 +154,7 @@ namespace carto { namespace mvt {
                     labelInfo = std::move(labelInfos[labelInfoIndex].second);
                     labelInfoIndex++;
                     return true;
-                }, style);
+                }, style, symbolizerContext.getGlyphMap());
                 
                 labelInfos.clear();
             }
@@ -233,12 +246,12 @@ namespace carto { namespace mvt {
             bind(&_fillOpacity, parseExpression(value));
         }
         else if (name == "width") {
-            bind(&_width, parseExpression(value));
-            _widthDefined = true;
+            bind(&_widthFunc, parseExpression(value));
+            bind(&_widthStatic, parseExpression(value));
         }
         else if (name == "height") {
-            bind(&_height, parseExpression(value));
-            _heightDefined = true;
+            bind(&_heightFunc, parseExpression(value));
+            bind(&_heightStatic, parseExpression(value));
         }
         else if (name == "stroke") {
             bind(&_stroke, parseStringExpression(value), &MarkersSymbolizer::convertColor);
@@ -247,7 +260,8 @@ namespace carto { namespace mvt {
             bind(&_strokeOpacity, parseExpression(value));
         }
         else if (name == "stroke-width") {
-            bind(&_strokeWidth, parseExpression(value));
+            bind(&_strokeWidthFunc, parseExpression(value));
+            bind(&_strokeWidthStatic, parseExpression(value));
         }
         else if (name == "spacing") {
             bind(&_spacing, parseExpression(value));
@@ -289,33 +303,33 @@ namespace carto { namespace mvt {
         }
     }
 
-    std::shared_ptr<vt::Bitmap> MarkersSymbolizer::makeEllipseBitmap(float width, float height, const vt::Color& color, float strokeWidth, const vt::Color& strokeColor) {
+    std::shared_ptr<vt::BitmapImage> MarkersSymbolizer::makeEllipseBitmap(float width, float height, const vt::Color& color, float strokeWidth, const vt::Color& strokeColor) {
         int canvasWidth = static_cast<int>(std::ceil(width + strokeWidth));
         int canvasHeight = static_cast<int>(std::ceil(height + strokeWidth));
-        vt::BitmapCanvas canvas(canvasWidth, canvasHeight);
+        vt::BitmapCanvas canvas(canvasWidth, canvasHeight, false);
         float x0 = canvasWidth * 0.5f, y0 = canvasHeight * 0.5f;
         if (strokeWidth > 0) {
             canvas.setColor(strokeColor);
-            canvas.drawEllipse(x0, y0, (width + strokeWidth * 0.5f) * 0.5f, (height + strokeWidth * 0.5f) * 0.5f);
+            canvas.drawEllipse(x0, y0, (width + strokeWidth) * 0.5f, (height + strokeWidth) * 0.5f);
         }
         canvas.setColor(color);
-        canvas.drawEllipse(x0, y0, (width - strokeWidth * 0.5f) * 0.5f, (height - strokeWidth * 0.5f) * 0.5f);
-        return canvas.buildBitmap();
+        canvas.drawEllipse(x0, y0, (width - strokeWidth) * 0.5f, (height - strokeWidth) * 0.5f);
+        return canvas.buildBitmapImage();
     }
 
-    std::shared_ptr<vt::Bitmap> MarkersSymbolizer::makeArrowBitmap(float width, float height, const vt::Color& color, float strokeWidth, const vt::Color& strokeColor) {
+    std::shared_ptr<vt::BitmapImage> MarkersSymbolizer::makeArrowBitmap(float width, float height, const vt::Color& color, float strokeWidth, const vt::Color& strokeColor) {
         int canvasWidth = static_cast<int>(std::ceil(width + strokeWidth));
         int canvasHeight = static_cast<int>(std::ceil(height + strokeWidth));
-        float x0 = strokeWidth * 0.5f, x1 = std::ceil(width - height * 0.5f), y1 = height * 1 / 3, y2 = height * 2 / 3;
-        vt::BitmapCanvas canvas(canvasWidth, canvasHeight);
+        float x0 = 0, x1 = std::ceil(canvasWidth - canvasHeight * 0.5f), y1 = canvasHeight * 1.0f / 3.0f, y2 = canvasHeight * 2.0f / 3.0f;
+        vt::BitmapCanvas canvas(canvasWidth, canvasHeight, false);
         if (strokeWidth > 0) {
             canvas.setColor(strokeColor);
-            canvas.drawRectangle(0, y1 - strokeWidth * 0.5f, x1, y2 + strokeWidth * 0.5f);
-            canvas.drawTriangle(x1 - strokeWidth * 0.5f, 0, x1 - strokeWidth * 0.5f, height, width, height * 0.5f);
+            canvas.drawRectangle(x0, y1 - strokeWidth, x1 - strokeWidth, y2 + strokeWidth);
+            canvas.drawTriangle(x1 - strokeWidth, 0, x1 - strokeWidth, canvasHeight, canvasWidth, canvasHeight * 0.5f);
         }
         canvas.setColor(color);
-        canvas.drawRectangle(x0, y1, x1, y2);
-        canvas.drawTriangle(x1, strokeWidth, x1, height - strokeWidth * 0.5f, width - strokeWidth * 0.5f, height * 0.5f);
-        return canvas.buildBitmap();
+        canvas.drawRectangle(x0 + strokeWidth, y1 + strokeWidth * 0.5f, x1, y2 - strokeWidth * 0.5f);
+        canvas.drawTriangle(x1, strokeWidth * 2 * std::sqrt(2.0f), x1, canvasHeight - strokeWidth * 2 * std::sqrt(2.0f), canvasWidth - strokeWidth * 2, canvasHeight * 0.5f);
+        return canvas.buildBitmapImage();
     }
 } }

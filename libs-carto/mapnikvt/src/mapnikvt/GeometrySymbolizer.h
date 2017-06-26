@@ -11,18 +11,16 @@
 
 #include <boost/optional.hpp>
 
-namespace carto {
-    namespace mvt {
-        class GeometrySymbolizer : public Symbolizer {
-        protected:
-            explicit GeometrySymbolizer(std::shared_ptr<Logger> logger) : Symbolizer(std::move(logger)) { }
+namespace carto { namespace mvt {
+    class GeometrySymbolizer : public Symbolizer {
+    protected:
+        explicit GeometrySymbolizer(std::shared_ptr<Logger> logger) : Symbolizer(std::move(logger)) { }
             
-            virtual void bindParameter(const std::string& name, const std::string& value) override;
+        virtual void bindParameter(const std::string& name, const std::string& value) override;
             
-            boost::optional<cglib::mat3x3<float>> _geometryTransform;
-            std::string _compOp = "src-over";
-        };
-    }
-}
+        boost::optional<cglib::mat3x3<float>> _geometryTransform;
+        std::string _compOp = "src-over";
+    };
+} }
 
 #endif

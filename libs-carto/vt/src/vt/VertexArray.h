@@ -52,19 +52,14 @@ namespace carto { namespace vt {
         }
 
         void shrink_to_fit() {
-            if (empty()) {
-                delete[] _begin;
-                _begin = _end = nullptr;
-                _reserved = 0;
-            } 
-            else {
-                reserve(0);
+            if (_reserved > 0) {
+                reserve_extra(0, 1);
             }
         }
 
         void append(const T& val) {
             if (_reserved < 1) {
-                reserve(1);
+                reserve_extra(1, 2);
             }
             _end[0] = val;
             _end++;
@@ -73,7 +68,7 @@ namespace carto { namespace vt {
 
         void append(const T& val1, const T& val2) {
             if (_reserved < 2) {
-                reserve(2);
+                reserve_extra(2, 2);
             }
             _end[0] = val1;
             _end[1] = val2;
@@ -83,7 +78,7 @@ namespace carto { namespace vt {
 
         void append(const T& val1, const T& val2, const T& val3) {
             if (_reserved < 3) {
-                reserve(3);
+                reserve_extra(3, 2);
             }
             _end[0] = val1;
             _end[1] = val2;
@@ -94,7 +89,7 @@ namespace carto { namespace vt {
 
         void append(const T& val1, const T& val2, const T& val3, const T& val4) {
             if (_reserved < 4) {
-                reserve(4);
+                reserve_extra(4, 2);
             }
             _end[0] = val1;
             _end[1] = val2;
@@ -106,20 +101,20 @@ namespace carto { namespace vt {
 
         void copy(const VertexArray<T>& other, std::size_t offset, std::size_t size) {
             if (_reserved < size) {
-                reserve(size);
+                reserve_extra(size, empty() ? 1 : 2);
             }
             std::copy(other._begin + offset, other._begin + offset + size, _end);
             _end += size;
             _reserved -= size;
         }
 
-        void fill(const T& val, std::size_t n) {
-            if (_reserved < n) {
-                reserve(n);
+        void fill(const T& val, std::size_t size) {
+            if (_reserved < size) {
+                reserve_extra(size, empty() ? 1 : 2);
             }
-            std::fill(_end, _end + n, val);
-            _end += n;
-            _reserved -= n;
+            std::fill(_end, _end + size, val);
+            _end += size;
+            _reserved -= size;
         }
 
         void alignTo(std::size_t alignment) {
@@ -129,13 +124,7 @@ namespace carto { namespace vt {
         }
 
         void reserve(std::size_t count) {
-            std::size_t size = (_end - _begin) * 2 + count * 4;
-            T* begin = new T[size];
-            std::copy(_begin, _end, begin);
-            delete[] _begin;
-            _reserved = size - (_end - _begin);
-            _end = begin + (_end - _begin);
-            _begin = begin;
+            reserve_extra(count, 1);
         }
 
         T& operator[] (std::size_t n) {
@@ -156,6 +145,19 @@ namespace carto { namespace vt {
         VertexArray<T>& operator = (const VertexArray<T>&) = delete;
 
     private:
+        void reserve_extra(std::size_t count, unsigned int multiplier) {
+            std::size_t size = (_end - _begin + count) * multiplier;
+            T* begin = nullptr;
+            if (size > 0) {
+                begin = new T[size];
+                std::copy(_begin, _end, begin);
+            }
+            delete[] _begin;
+            _reserved = size - (_end - _begin);
+            _end = begin + (_end - _begin);
+            _begin = begin;
+        }
+
         T* _begin;
         T* _end;
         std::size_t _reserved; // number of elements reserved after _end

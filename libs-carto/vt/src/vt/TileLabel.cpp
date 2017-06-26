@@ -4,9 +4,14 @@
 #include <map>
 
 namespace carto { namespace vt {
-    TileLabel::TileLabel(const TileId& tileId, long long localId, long long globalId, long long groupId, std::shared_ptr<const Font> font, std::vector<Font::Glyph> glyphs, boost::optional<cglib::vec3<double>> position, std::vector<cglib::vec3<double>> vertices, LabelOrientation orientation, const boost::optional<cglib::mat3x3<float>>& transform, float scale, const Color& color) :
-        _tileId(tileId), _localId(localId), _globalId(globalId), _groupId(groupId), _font(std::move(font)), _glyphs(std::move(glyphs)), _orientation(orientation), _originalPosition(std::move(position)), _originalVertices(std::move(vertices)), _scale(scale), _color(color), _transform(transform)
+    TileLabel::TileLabel(const TileId& tileId, long long localId, long long globalId, long long groupId, std::vector<Font::Glyph> glyphs, boost::optional<cglib::vec3<double>> position, std::vector<cglib::vec3<double>> vertices, std::shared_ptr<const LabelStyle> style) :
+        _tileId(tileId), _localId(localId), _globalId(globalId), _groupId(groupId), _glyphs(std::move(glyphs)), _originalPosition(std::move(position)), _originalVertices(std::move(vertices)), _style(std::move(style))
     {
+        _cachedVertices.reserve(_glyphs.size() * 4);
+        _cachedTexCoords.reserve(_glyphs.size() * 4);
+        _cachedAttribs.reserve(_glyphs.size() * 4);
+        _cachedIndices.reserve(_glyphs.size() * 6);
+        
         cglib::vec2<float> pen = cglib::vec2<float>(0, 0);
         for (const Font::Glyph& glyph : _glyphs) {
             if (glyph.codePoint == Font::CR_CODEPOINT) {
@@ -114,7 +119,8 @@ namespace carto { namespace vt {
 
     bool TileLabel::calculateEnvelope(const ViewState& viewState, std::array<cglib::vec3<float>, 4>& envelope) const {
         std::shared_ptr<const Placement> placement = getPlacement(viewState);
-        if (!placement) {
+        float scale = (*_style->sizeFunc)(viewState) * viewState.zoomScale * _style->scale;
+        if (!placement || scale <= 0) {
             cglib::vec3<float> origin(0, 0, static_cast<float>(-viewState.origin(2)));
             for (int i = 0; i < 4; i++) {
                 envelope[i] = origin;
@@ -122,19 +128,18 @@ namespace carto { namespace vt {
             return false;
         }
 
-        float scale = _scale * viewState.scale;
         cglib::vec3<float> origin, xAxis, yAxis;
         setupCoordinateSystem(viewState, placement, origin, xAxis, yAxis);
 
-        if (_orientation == LabelOrientation::LINE) {
+        if (_style->orientation == LabelOrientation::LINE) {
             // For line orientation, we have to calculate vertex data and then project vertices to the principal axes
-            if (viewState.scale != _cachedScale || placement != _cachedPlacement) {
+            if (scale != _cachedScale || placement != _cachedPlacement) {
                 _cachedVertices.clear();
                 _cachedTexCoords.clear();
+                _cachedAttribs.clear();
                 _cachedIndices.clear();
-                _cachedValid = buildLineVertexData(placement, scale, _cachedVertices, _cachedTexCoords, _cachedIndices);
-                _cachedScale = viewState.scale;
-                _cachedOrigin = viewState.origin;
+                _cachedValid = buildLineVertexData(placement, scale, _cachedVertices, _cachedTexCoords, _cachedAttribs, _cachedIndices);
+                _cachedScale = scale;
                 _cachedPlacement = placement;
             }
 
@@ -158,86 +163,90 @@ namespace carto { namespace vt {
             return _cachedValid;
         }
         else {
+            xAxis *= scale;
+            yAxis *= scale;
+
             // Use bounding box for envelope
-            if (_transform) {
-                cglib::vec2<float> p00 = cglib::transform_point_affine(cglib::vec2<float>(_bbox.min(0), _bbox.min(1)), _transform.get());
-                cglib::vec2<float> p01 = cglib::transform_point_affine(cglib::vec2<float>(_bbox.min(0), _bbox.max(1)), _transform.get());
-                cglib::vec2<float> p10 = cglib::transform_point_affine(cglib::vec2<float>(_bbox.max(0), _bbox.min(1)), _transform.get());
-                cglib::vec2<float> p11 = cglib::transform_point_affine(cglib::vec2<float>(_bbox.max(0), _bbox.max(1)), _transform.get());
-                envelope[0] = origin + (xAxis * p00(0) + yAxis * p00(1)) * scale;
-                envelope[1] = origin + (xAxis * p10(0) + yAxis * p10(1)) * scale;
-                envelope[2] = origin + (xAxis * p11(0) + yAxis * p11(1)) * scale;
-                envelope[3] = origin + (xAxis * p01(0) + yAxis * p01(1)) * scale;
+            if (_style->transform) {
+                cglib::vec2<float> p00 = cglib::transform_point_affine(cglib::vec2<float>(_bbox.min(0), _bbox.min(1)), _style->transform.get());
+                cglib::vec2<float> p01 = cglib::transform_point_affine(cglib::vec2<float>(_bbox.min(0), _bbox.max(1)), _style->transform.get());
+                cglib::vec2<float> p10 = cglib::transform_point_affine(cglib::vec2<float>(_bbox.max(0), _bbox.min(1)), _style->transform.get());
+                cglib::vec2<float> p11 = cglib::transform_point_affine(cglib::vec2<float>(_bbox.max(0), _bbox.max(1)), _style->transform.get());
+                envelope[0] = origin + xAxis * p00(0) + yAxis * p00(1);
+                envelope[1] = origin + xAxis * p10(0) + yAxis * p10(1);
+                envelope[2] = origin + xAxis * p11(0) + yAxis * p11(1);
+                envelope[3] = origin + xAxis * p01(0) + yAxis * p01(1);
             }
             else {
-                envelope[0] = origin + (xAxis * _bbox.min(0) + yAxis * _bbox.min(1)) * scale;
-                envelope[1] = origin + (xAxis * _bbox.max(0) + yAxis * _bbox.min(1)) * scale;
-                envelope[2] = origin + (xAxis * _bbox.max(0) + yAxis * _bbox.max(1)) * scale;
-                envelope[3] = origin + (xAxis * _bbox.min(0) + yAxis * _bbox.max(1)) * scale;
+                envelope[0] = origin + xAxis * _bbox.min(0) + yAxis * _bbox.min(1);
+                envelope[1] = origin + xAxis * _bbox.max(0) + yAxis * _bbox.min(1);
+                envelope[2] = origin + xAxis * _bbox.max(0) + yAxis * _bbox.max(1);
+                envelope[3] = origin + xAxis * _bbox.min(0) + yAxis * _bbox.max(1);
             }
             return true;
         }
     }
 
-    bool TileLabel::calculateVertexData(const ViewState& viewState, VertexArray<cglib::vec3<float>>& vertices, VertexArray<cglib::vec2<float>>& texCoords, VertexArray<unsigned short>& indices) const {
+    bool TileLabel::calculateVertexData(const ViewState& viewState, int styleIndex, VertexArray<cglib::vec3<float>>& vertices, VertexArray<cglib::vec2<short>>& texCoords, VertexArray<cglib::vec4<char>>& attribs, VertexArray<unsigned short>& indices) const {
         std::shared_ptr<const Placement> placement = getPlacement(viewState);
-        if (!placement) {
+        float scale = (*_style->sizeFunc)(viewState) * viewState.zoomScale * _style->scale;
+        if (!placement || scale <= 0) {
             return false;
         }
 
-        float scale = _scale * viewState.scale;
-        cglib::vec3<float> origin, xAxis, yAxis;
-        setupCoordinateSystem(viewState, placement, origin, xAxis, yAxis);
-
-        if (_orientation == LabelOrientation::LINE) {
+        // Build vertex data cache
+        unsigned short offset = static_cast<unsigned short>(vertices.size());
+        if (_style->orientation == LabelOrientation::LINE) {
             // Check if cached vertex data can be used
-            if (viewState.scale != _cachedScale || placement != _cachedPlacement) {
+            if (scale != _cachedScale || placement != _cachedPlacement) {
                 _cachedVertices.clear();
                 _cachedTexCoords.clear();
+                _cachedAttribs.clear();
                 _cachedIndices.clear();
-                _cachedValid = buildLineVertexData(placement, scale, _cachedVertices, _cachedTexCoords, _cachedIndices);
-                _cachedScale = viewState.scale;
-                _cachedOrigin = viewState.origin;
+                _cachedValid = buildLineVertexData(placement, scale, _cachedVertices, _cachedTexCoords, _cachedAttribs, _cachedIndices);
+                _cachedScale = scale;
                 _cachedPlacement = placement;
             }
 
-            // Copy cached data, transform vertices
-            indices.copy(_cachedIndices, 0, _cachedIndices.size());
-            texCoords.copy(_cachedTexCoords, 0, _cachedTexCoords.size());
-            unsigned short offset = static_cast<unsigned short>(vertices.size());
-            for (unsigned short* it = indices.end() - _cachedIndices.size(); it != indices.end(); it++) {
-                *it += offset;
+            cglib::vec3<float> origin = cglib::vec3<float>::convert(placement->pos - viewState.origin);
+            for (const cglib::vec2<float>& vertex : _cachedVertices) {
+                vertices.append(origin + cglib::vec3<float>(vertex(0), vertex(1), 0));
             }
-            for (const cglib::vec2<float>* it = _cachedVertices.begin(); it != _cachedVertices.end(); it++) {
-                vertices.append(origin + cglib::vec3<float>((*it)(0), (*it)(1), 0));
-            }
-            return _cachedValid;
         }
         else {
             // If no cached data, recalculate and cache it
             if (!_cachedValid) {
                 _cachedVertices.clear();
                 _cachedTexCoords.clear();
+                _cachedAttribs.clear();
                 _cachedIndices.clear();
-                buildPointVertexData(_cachedVertices, _cachedTexCoords, _cachedIndices);
+                buildPointVertexData(_cachedVertices, _cachedTexCoords, _cachedAttribs, _cachedIndices);
                 _cachedValid = true;
             }
 
-            // Copy texcoords, copy and offset indices, transform cached vertices from local coordinate system to target coordinate system
-            indices.copy(_cachedIndices, 0, _cachedIndices.size());
-            texCoords.copy(_cachedTexCoords, 0, _cachedTexCoords.size());
-            unsigned short offset = static_cast<unsigned short>(vertices.size());
-            for (unsigned short* it = indices.end() - _cachedIndices.size(); it != indices.end(); it++) {
-                *it += offset;
+            cglib::vec3<float> origin, xAxis, yAxis;
+            setupCoordinateSystem(viewState, placement, origin, xAxis, yAxis);
+            for (const cglib::vec2<float>& vertex : _cachedVertices) {
+                vertices.append(origin + xAxis * (vertex(0) * scale) + yAxis * (vertex(1) * scale));
             }
-            for (const cglib::vec2<float>* it = _cachedVertices.begin(); it != _cachedVertices.end(); it++) {
-                vertices.append(origin + (xAxis * (*it)(0) + yAxis * (*it)(1)) * scale);
-            }
-            return true;
         }
+
+        texCoords.copy(_cachedTexCoords, 0, _cachedTexCoords.size());
+
+        attribs.copy(_cachedAttribs, 0, _cachedAttribs.size());
+        for (cglib::vec4<char>* it = attribs.end() - _cachedAttribs.size(); it != attribs.end(); it++) {
+            *it = cglib::vec4<char>(static_cast<int>(styleIndex), (*it)(1), static_cast<char>(_opacity * 127.0f), 0);
+        }
+
+        indices.copy(_cachedIndices, 0, _cachedIndices.size());
+        for (unsigned short* it = indices.end() - _cachedIndices.size(); it != indices.end(); it++) {
+            *it += offset;
+        }
+
+        return _cachedValid;
     }
 
-    void TileLabel::buildPointVertexData(VertexArray<cglib::vec2<float>>& vertices, VertexArray<cglib::vec2<float>>& texCoords, VertexArray<unsigned short>& indices) const {
+    void TileLabel::buildPointVertexData(VertexArray<cglib::vec2<float>>& vertices, VertexArray<cglib::vec2<short>>& texCoords, VertexArray<cglib::vec4<char>>& attribs, VertexArray<unsigned short>& indices) const {
         cglib::vec2<float> pen(0, 0);
         for (const Font::Glyph& glyph : _glyphs) {
             // If carriage return, reposition pen and state to the initial position
@@ -249,15 +258,18 @@ namespace carto { namespace vt {
                 indices.append(i0 + 0, i0 + 1, i0 + 2);
                 indices.append(i0 + 0, i0 + 2, i0 + 3);
 
-                float u0 = static_cast<float>(glyph.x), u1 = static_cast<float>(glyph.x + glyph.width);
-                float v0 = static_cast<float>(glyph.y), v1 = static_cast<float>(glyph.y + glyph.height);
-                texCoords.append(cglib::vec2<float>(u0, v1), cglib::vec2<float>(u1, v1), cglib::vec2<float>(u1, v0), cglib::vec2<float>(u0, v0));
+                short u0 = static_cast<short>(glyph.baseGlyph.x), u1 = static_cast<short>(glyph.baseGlyph.x + glyph.baseGlyph.width);
+                short v0 = static_cast<short>(glyph.baseGlyph.y), v1 = static_cast<short>(glyph.baseGlyph.y + glyph.baseGlyph.height);
+                texCoords.append(cglib::vec2<short>(u0, v1), cglib::vec2<short>(u1, v1), cglib::vec2<short>(u1, v0), cglib::vec2<short>(u0, v0));
 
-                if (_transform) {
-                    cglib::vec2<float> p0 = cglib::transform_point_affine(pen + glyph.offset, _transform.get());
-                    cglib::vec2<float> p1 = cglib::transform_point_affine(pen + glyph.offset + cglib::vec2<float>(glyph.size(0), 0), _transform.get());
-                    cglib::vec2<float> p2 = cglib::transform_point_affine(pen + glyph.offset + glyph.size, _transform.get());
-                    cglib::vec2<float> p3 = cglib::transform_point_affine(pen + glyph.offset + cglib::vec2<float>(0, glyph.size(1)), _transform.get());
+                cglib::vec4<char> attrib(0, glyph.baseGlyph.sdfMode ? -1 : 1, 0, 0);
+                attribs.append(attrib, attrib, attrib, attrib);
+
+                if (_style->transform) {
+                    cglib::vec2<float> p0 = cglib::transform_point_affine(pen + glyph.offset, _style->transform.get());
+                    cglib::vec2<float> p1 = cglib::transform_point_affine(pen + glyph.offset + cglib::vec2<float>(glyph.size(0), 0), _style->transform.get());
+                    cglib::vec2<float> p2 = cglib::transform_point_affine(pen + glyph.offset + glyph.size, _style->transform.get());
+                    cglib::vec2<float> p3 = cglib::transform_point_affine(pen + glyph.offset + cglib::vec2<float>(0, glyph.size(1)), _style->transform.get());
                     vertices.append(p0, p1, p2, p3);
                 }
                 else {
@@ -272,7 +284,7 @@ namespace carto { namespace vt {
         }
     }
 
-    bool TileLabel::buildLineVertexData(const std::shared_ptr<const Placement>& placement, float scale, VertexArray<cglib::vec2<float>>& vertices, VertexArray<cglib::vec2<float>>& texCoords, VertexArray<unsigned short>& indices) const {
+    bool TileLabel::buildLineVertexData(const std::shared_ptr<const Placement>& placement, float scale, VertexArray<cglib::vec2<float>>& vertices, VertexArray<cglib::vec2<short>>& texCoords, VertexArray<cglib::vec4<char>>& attribs, VertexArray<unsigned short>& indices) const {
         std::size_t edgeIndex = placement->index;
         cglib::vec2<float> edgePos(0, 0);
         float edgeLen = cglib::length(placement->edges[edgeIndex].pos1 - edgePos) / scale;
@@ -293,17 +305,20 @@ namespace carto { namespace vt {
                 indices.append(i0 + 0, i0 + 1, i0 + 2);
                 indices.append(i0 + 0, i0 + 2, i0 + 3);
 
-                float u0 = static_cast<float>(glyph.x), u1 = static_cast<float>(glyph.x + glyph.width);
-                float v0 = static_cast<float>(glyph.y), v1 = static_cast<float>(glyph.y + glyph.height);
-                texCoords.append(cglib::vec2<float>(u0, v1), cglib::vec2<float>(u1, v1), cglib::vec2<float>(u1, v0), cglib::vec2<float>(u0, v0));
+                short u0 = static_cast<short>(glyph.baseGlyph.x), u1 = static_cast<short>(glyph.baseGlyph.x + glyph.baseGlyph.width);
+                short v0 = static_cast<short>(glyph.baseGlyph.y), v1 = static_cast<short>(glyph.baseGlyph.y + glyph.baseGlyph.height);
+                texCoords.append(cglib::vec2<short>(u0, v1), cglib::vec2<short>(u1, v1), cglib::vec2<short>(u1, v0), cglib::vec2<short>(u0, v0));
 
+                cglib::vec4<char> attrib(0, glyph.baseGlyph.sdfMode ? -1 : 1, 0, 0);
+                attribs.append(attrib, attrib, attrib, attrib);
+                
                 const cglib::vec2<float>& xAxis = placement->edges[edgeIndex].xAxis;
                 const cglib::vec2<float>& yAxis = placement->edges[edgeIndex].yAxis;
-                if (_transform) {
-                    cglib::vec2<float> p0 = cglib::transform_point_affine(pen + glyph.offset, _transform.get()) * scale;
-                    cglib::vec2<float> p1 = cglib::transform_point_affine(pen + glyph.offset + cglib::vec2<float>(glyph.size(0), 0), _transform.get()) * scale;
-                    cglib::vec2<float> p2 = cglib::transform_point_affine(pen + glyph.offset + glyph.size, _transform.get()) * scale;
-                    cglib::vec2<float> p3 = cglib::transform_point_affine(pen + glyph.offset + cglib::vec2<float>(0, glyph.size(1)), _transform.get()) * scale;
+                if (_style->transform) {
+                    cglib::vec2<float> p0 = cglib::transform_point_affine(pen + glyph.offset, _style->transform.get()) * scale;
+                    cglib::vec2<float> p1 = cglib::transform_point_affine(pen + glyph.offset + cglib::vec2<float>(glyph.size(0), 0), _style->transform.get()) * scale;
+                    cglib::vec2<float> p2 = cglib::transform_point_affine(pen + glyph.offset + glyph.size, _style->transform.get()) * scale;
+                    cglib::vec2<float> p3 = cglib::transform_point_affine(pen + glyph.offset + cglib::vec2<float>(0, glyph.size(1)), _style->transform.get()) * scale;
                     vertices.append(edgePos + xAxis * p0(0) + yAxis * p0(1), edgePos + xAxis * p1(0) + yAxis * p1(1), edgePos + xAxis * p2(0) + yAxis * p2(1), edgePos + xAxis * p3(0) + yAxis * p3(1));
                 }
                 else {
@@ -341,7 +356,7 @@ namespace carto { namespace vt {
                     if (edgeDir < 0) {
                         float cos = cglib::dot_product(edges[edgeIndex].xAxis, edges[edgeIndex + 1].xAxis);
                         float sin = cglib::dot_product(edges[edgeIndex].xAxis, edges[edgeIndex + 1].yAxis);
-                        pen(0) = cos * pen(0) - sin * (sin < 0 ? pen(1) + _font->getMetrics().ascent * 0.5f : 0);
+                        pen(0) = cos * pen(0) - sin * (sin < 0 ? pen(1) + _style->ascent * 0.5f : 0);
                     }
                 }
 
@@ -365,7 +380,7 @@ namespace carto { namespace vt {
                     if (edgeDir > 0) {
                         float cos = cglib::dot_product(edges[edgeIndex - 1].xAxis, edges[edgeIndex].xAxis);
                         float sin = cglib::dot_product(edges[edgeIndex - 1].xAxis, edges[edgeIndex].yAxis);
-                        pen(0) = cos * pen(0) + sin * (sin > 0 ? pen(1) + _font->getMetrics().ascent * 0.5f : 0);
+                        pen(0) = cos * pen(0) + sin * (sin > 0 ? pen(1) + _style->ascent * 0.5f : 0);
                     }
                 }
 
@@ -378,7 +393,7 @@ namespace carto { namespace vt {
 
     void TileLabel::setupCoordinateSystem(const ViewState& viewState, const std::shared_ptr<const Placement>& placement, cglib::vec3<float>& origin, cglib::vec3<float>& xAxis, cglib::vec3<float>& yAxis) const {
         origin = cglib::vec3<float>::convert(placement->pos - viewState.origin);
-        switch (_orientation) {
+        switch (_style->orientation) {
         case LabelOrientation::BILLBOARD_2D:
             xAxis = viewState.orientation[0];
             yAxis = cglib::vector_product(cglib::vec3<float>(0, 0, 1), xAxis);
@@ -392,8 +407,8 @@ namespace carto { namespace vt {
             yAxis = cglib::vec3<float>(0, 1, 0);
             break;
         case LabelOrientation::POINT_FLIPPING:
-            if (_transform) {
-                const cglib::mat3x3<float>& m = _transform.get();
+            if (_style->transform) {
+                const cglib::mat3x3<float>& m = _style->transform.get();
                 float s = (cglib::dot_product(cglib::vec3<float>(m(0, 0), m(1, 0), m(2, 0)), viewState.orientation[0]) < 0 ? -1.0f : 1.0f);
                 xAxis = cglib::vec3<float>(s, 0, 0);
                 yAxis = cglib::vec3<float>(0, s, 0);
@@ -411,7 +426,7 @@ namespace carto { namespace vt {
     }
 
     std::shared_ptr<const TileLabel::Placement> TileLabel::getPlacement(const ViewState& viewState) const {
-        if (_orientation != LabelOrientation::LINE) {
+        if (_style->orientation != LabelOrientation::LINE) {
             return _placement;
         }
         if (!_placement || _placement->edges.empty()) {
@@ -536,8 +551,8 @@ namespace carto { namespace vt {
 
     std::shared_ptr<const TileLabel::Placement> TileLabel::findClippedPointPlacement(const ViewState& viewState, const Vertices& vertices) const {
         cglib::bbox2<float> bbox = _bbox;
-        if (_transform) {
-            bbox = cglib::transform_bbox(bbox, _transform.get());
+        if (_style->transform) {
+            bbox = cglib::transform_bbox(bbox, _style->transform.get());
         }
         
         for (const Vertex& vertex : vertices) {
@@ -560,7 +575,7 @@ namespace carto { namespace vt {
                     break;
                 }
                 double dist = viewState.frustum.plane_distance(plane, vertex);
-                if (dist < -size * _scale * viewState.scale) {
+                if (dist < -size * _style->scale * viewState.zoomScale) {
                     inside = false;
                     break;
                 }
@@ -597,7 +612,7 @@ namespace carto { namespace vt {
         }
 
         // Clip each vertex list against frustum, if resulting list is inside frustum, return its center
-        double bestLen = (_orientation == LabelOrientation::LINE ? (_bbox.size()(0) + EXTRA_PLACEMENT_PIXELS) * _scale * viewState.scale : 0);
+        double bestLen = (_style->orientation == LabelOrientation::LINE ? (_bbox.size()(0) + EXTRA_PLACEMENT_PIXELS) * _style->scale * viewState.zoomScale : 0);
         std::shared_ptr<const Placement> bestPlacement;
         for (const Vertices& vertices : splitVerticesList) {
             if (vertices.size() < 2) {

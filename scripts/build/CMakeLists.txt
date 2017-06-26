@@ -73,6 +73,7 @@ include_directories(
     "${SDK_EXTERNAL_LIBS_DIR}/cryptopp"
     "${SDK_EXTERNAL_LIBS_DIR}/freetype/include"
     "${SDK_EXTERNAL_LIBS_DIR}/harfbuzz/src"
+    "${SDK_EXTERNAL_LIBS_DIR}/msdfgen"
     "${SDK_EXTERNAL_LIBS_DIR}/bidi"
     "${SDK_EXTERNAL_LIBS_DIR}/jpeg"
     "${SDK_EXTERNAL_LIBS_DIR}/miniz"
@@ -142,6 +143,7 @@ add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/bidi" bidi)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/cryptopp" cryptopp)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/freetype" freetype)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/harfbuzz" harfbuzz)
+add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/msdfgen" msdfgen)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/jpeg" jpeg)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/miniz" miniz)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/png" png)
@@ -254,6 +256,7 @@ set(SDK_SRC_FILES
     "${webp_SRC_FILES}"
     "${freetype_SRC_FILES}"
     "${harfbuzz_SRC_FILES}"
+    "${msdfgen_SRC_FILES}"
     "${sqlite3pp_SRC_FILES}"
     "${sqlite_SRC_FILES}"
     "${valhalla_SRC_FILES}"
@@ -290,6 +293,7 @@ set(SDK_OBJECTS
     $<TARGET_OBJECTS:webp>
     $<TARGET_OBJECTS:freetype>
     $<TARGET_OBJECTS:harfbuzz>
+    $<TARGET_OBJECTS:msdfgen>
     $<TARGET_OBJECTS:sqlite3pp>
     $<TARGET_OBJECTS:sqlite>
     $<TARGET_OBJECTS:valhalla>

@@ -26,15 +26,16 @@ namespace carto { namespace vt {
             explicit Stroke(float scale, int y0, int y1) : scale(scale), y0(y0), y1(y1) { }
         };
 
-        explicit StrokeMap(int width);
+        explicit StrokeMap(int width, int maxHeight);
 
         int getWidth() const;
-        const std::unique_ptr<const Stroke>& getStroke(StrokeId strokeId) const;
+        const Stroke* getStroke(StrokeId strokeId) const;
         StrokeId loadBitmapPattern(const std::shared_ptr<const BitmapPattern>& bitmapPattern);
         std::shared_ptr<const BitmapPattern> getBitmapPattern() const;
 
     private:
         const int _width;
+        const int _maxHeight;
         int _height;
         std::unordered_map<StrokeId, std::unique_ptr<const Stroke>> _strokeMap;
         std::unordered_map<std::shared_ptr<const BitmapPattern>, StrokeId> _bitmapStrokeMap;

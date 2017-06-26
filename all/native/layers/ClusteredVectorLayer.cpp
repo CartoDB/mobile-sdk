@@ -33,6 +33,7 @@ namespace carto {
         _clusterElementBuilder(clusterElementBuilder),
         _minClusterDistance(100),
         _maxClusterZoom(Const::MAX_SUPPORTED_ZOOM_LEVEL),
+        _animatedClusters(true),
         _dpiScale(1),
         _clusters(),
         _singletonClusterCount(0),
@@ -93,6 +94,16 @@ namespace carto {
         if (mapRenderer) {
             mapRenderer->requestRedraw();
         }
+    }
+
+    bool ClusteredVectorLayer::isAnimatedClusters() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _animatedClusters;
+    }
+
+    void ClusteredVectorLayer::setAnimatedClusters(bool animated) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _animatedClusters = animated; // NOTE: no need to refresh
     }
     
     bool ClusteredVectorLayer::expandCluster(const std::shared_ptr<VectorElement>& clusterElement, float px) {
@@ -470,8 +481,7 @@ namespace carto {
             std::shared_ptr<VectorElement> element;
             if ((cluster.elementCount == 1 && cluster.transitionPos == cluster.staticPos)) {
                 element = cluster.vectorElement;
-            }
-            else {
+            } else {
                 if (!cluster.clusterElement) {
                     std::vector<std::shared_ptr<VectorElement> > elements;
                     elements.reserve(cluster.elementCount);
@@ -604,15 +614,22 @@ namespace carto {
         }
         Cluster& cluster = (*renderState.clusters)[clusterIdx];
 
-        MapVec deltaPos(_dataSource->getProjection()->toInternal(targetPos) - _dataSource->getProjection()->toInternal(cluster.transitionPos));
-        if (deltaPos.length() <= renderState.pixelMeasure * 0.25) {
+        bool animated = _animatedClusters;
+        if (animated) {
+            MapVec deltaPos(_dataSource->getProjection()->toInternal(targetPos) - _dataSource->getProjection()->toInternal(cluster.transitionPos));
+            if (deltaPos.length() <= renderState.pixelMeasure * 0.25) {
+                animated = false;
+            }
+        }
+
+        if (animated) {
+            for (float t = 0; t < 0.05f && t < deltaSeconds; t += 0.0015f) {
+                cluster.transitionPos = MapPos(cluster.transitionPos.getX() * 0.99 + targetPos.getX() * 0.01, cluster.transitionPos.getY() * 0.99 + targetPos.getY() * 0.01);
+            }
+        } else {
             cluster.transitionPos = targetPos;
-            return false;
         }
-        for (float t = 0; t < 0.05f && t < deltaSeconds; t += 0.0015f) {
-            cluster.transitionPos = MapPos(cluster.transitionPos.getX() * 0.99 + targetPos.getX() * 0.01, cluster.transitionPos.getY() * 0.99 + targetPos.getY() * 0.01);
-        }
-        return true;
+        return animated;
     }
 
     MapPos ClusteredVectorLayer::createExpandedElementPos(RenderState& renderState) const {

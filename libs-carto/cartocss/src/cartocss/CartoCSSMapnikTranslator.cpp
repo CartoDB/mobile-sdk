@@ -77,7 +77,10 @@ namespace carto { namespace css {
 
     std::shared_ptr<mvt::Symbolizer> CartoCSSMapnikTranslator::buildSymbolizer(const std::string& symbolizerType, const std::list<CartoCSSCompiler::Property>& properties, const std::shared_ptr<mvt::Map>& map) const {
         std::shared_ptr<mvt::Symbolizer> mapnikSymbolizer;
-        if (symbolizerType == "line") {
+        if (symbolizerType == "point") {
+            mapnikSymbolizer = std::make_shared<mvt::PointSymbolizer>(_logger);
+        }
+        else if (symbolizerType == "line") {
             mapnikSymbolizer = std::make_shared<mvt::LineSymbolizer>(_logger);
         }
         else if (symbolizerType == "line-pattern") {
@@ -530,14 +533,14 @@ namespace carto { namespace css {
         { "shield-size", "size" },
         { "shield-spacing", "spacing" },
         { "shield-fill", "fill" },
-        { "shield-opacity", "opacity" },
+        { "shield-text-opacity", "opacity" },
         { "shield-halo-fill", "halo-fill" },
         { "shield-halo-opacity", "halo-opacity" },
         { "shield-halo-radius", "halo-radius" },
         { "shield-halo-rasterizer", "halo-rasterizer" },
         { "shield-allow-overlap", "allow-overlap" },
         { "shield-min-distance", "minimum-distance" },
-        { "shield-transform", "text-transform" },
+        { "shield-text-transform", "text-transform" },
         { "shield-orientation", "orientation" },
         { "shield-text-dx", "dx" },
         { "shield-text-dy", "dy" },

@@ -49,7 +49,7 @@ namespace {
 
 namespace carto { namespace vt {
     TileLabelCuller::TileLabelCuller(std::shared_ptr<std::mutex> mutex, float scale) :
-        _mvpMatrix(cglib::mat4x4<float>::identity()), _viewState(cglib::mat4x4<double>::identity(), cglib::mat4x4<double>::identity(), 0, 1, scale), _scale(scale), _mutex(std::move(mutex))
+        _mvpMatrix(cglib::mat4x4<float>::identity()), _viewState(cglib::mat4x4<double>::identity(), cglib::mat4x4<double>::identity(), 0, 1, 1, scale), _scale(scale), _mutex(std::move(mutex))
     {
     }
 
@@ -57,7 +57,7 @@ namespace carto { namespace vt {
         std::lock_guard<std::mutex> lock(*_mutex);
 
         _mvpMatrix = cglib::mat4x4<float>::convert(projectionMatrix * calculateLocalViewMatrix(cameraMatrix));
-        _viewState = ViewState(projectionMatrix, cameraMatrix, zoom, aspectRatio, _scale);
+        _viewState = ViewState(projectionMatrix, cameraMatrix, zoom, aspectRatio, resolution, _scale);
         _resolution = resolution;
     }
 

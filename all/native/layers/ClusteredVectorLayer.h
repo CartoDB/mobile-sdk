@@ -70,6 +70,17 @@ namespace carto {
         void setMaximumClusterZoom(float maxZoom);
 
         /**
+         * Returns the cluster animation flag value.
+         * @return True if animation is enabled, false otherwise.
+         */
+        bool isAnimatedClusters() const;
+        /**
+         * Enables or disables the animation of clusters. By default animations are enabled.
+         * @param animated The animated flag.
+         */
+        void setAnimatedClusters(bool animated);
+
+        /**
          * Expands or shrinks the given cluster element. In expanded state,
          * all elements of the cluster are placed at specified distance from the cluster center.
          * @param clusterElement The cluster element to expand or shrink.
@@ -117,6 +128,7 @@ namespace carto {
 
         float _minClusterDistance;
         float _maxClusterZoom;
+        bool _animatedClusters;
         float _dpiScale;
         std::shared_ptr<std::vector<Cluster> > _clusters;
         int _singletonClusterCount;

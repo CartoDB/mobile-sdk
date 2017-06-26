@@ -8,8 +8,10 @@ namespace carto { namespace mvt {
         updateBindings(exprContext);
 
         vt::CompOp compOp = convertCompOp(_compOp);
+
+        std::shared_ptr<const vt::ColorFunction> fillFunc = _functionBuilder.createColorOpacityFunction(_fillFunc, _fillOpacityFunc);
         
-        vt::PolygonStyle style(compOp, _fill, _fillOpacity, std::shared_ptr<vt::BitmapPattern>(), _geometryTransform);
+        vt::PolygonStyle style(compOp, fillFunc, std::shared_ptr<vt::BitmapPattern>(), _geometryTransform);
 
         std::size_t featureIndex = 0;
         std::size_t geometryIndex = 0;
@@ -41,10 +43,10 @@ namespace carto { namespace mvt {
 
     void PolygonSymbolizer::bindParameter(const std::string& name, const std::string& value) {
         if (name == "fill") {
-            bind(&_fill, parseStringExpression(value), &PolygonSymbolizer::convertColor);
+            bind(&_fillFunc, parseStringExpression(value), &PolygonSymbolizer::convertColor);
         }
         else if (name == "fill-opacity") {
-            bind(&_fillOpacity, parseExpression(value));
+            bind(&_fillOpacityFunc, parseExpression(value));
         }
         else {
             GeometrySymbolizer::bindParameter(name, value);
