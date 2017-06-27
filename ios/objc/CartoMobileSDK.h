@@ -177,6 +177,11 @@
 #import "NTOSMOfflineReverseGeocodingService.h"
 #endif
 
+#ifdef _CARTO_SEARCH_SUPPORT
+#import "NTSearchRequest.h"
+#import "NTFeatureCollectionSearchService.h"
+#endif
+
 #ifdef _CARTO_ROUTING_SUPPORT
 #import "NTRoutingInstruction.h"
 #import "NTRoutingRequest.h"
