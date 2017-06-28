@@ -31,6 +31,7 @@ namespace carto {
     ClusteredVectorLayer::ClusteredVectorLayer(const std::shared_ptr<LocalVectorDataSource>& dataSource, const std::shared_ptr<ClusterElementBuilder>& clusterElementBuilder) :
         VectorLayer(dataSource),
         _clusterElementBuilder(clusterElementBuilder),
+        _clusterBuilderMode(),
         _minClusterDistance(100),
         _maxClusterZoom(Const::MAX_SUPPORTED_ZOOM_LEVEL),
         _animatedClusters(true),
@@ -45,6 +46,8 @@ namespace carto {
         if (!clusterElementBuilder) {
             throw NullArgumentException("Null clusterElementBuilder");
         }
+
+        _clusterBuilderMode = clusterElementBuilder->getBuilderMode();
     }
 
     ClusteredVectorLayer::~ClusteredVectorLayer() {
@@ -483,10 +486,14 @@ namespace carto {
                 element = cluster.vectorElement;
             } else {
                 if (!cluster.clusterElement) {
-                    std::vector<std::shared_ptr<VectorElement> > elements;
-                    elements.reserve(cluster.elementCount);
-                    StoreVectorElements(clusterIdx, *renderState.clusters, elements);
-                    cluster.clusterElement = _clusterElementBuilder->buildClusterElement(cluster.transitionPos, elements); // NOTE: prone to deadlock, but no better way
+                    if (_clusterBuilderMode == ClusterBuilderMode::CLUSTER_BUILDER_MODE_ELEMENT_COUNT && cluster.elementCount > 1) {
+                        cluster.clusterElement = _clusterElementBuilder->buildClusterElement(cluster.transitionPos, cluster.elementCount); // NOTE: prone to deadlock, but no better way
+                    } else {
+                        std::vector<std::shared_ptr<VectorElement> > elements;
+                        elements.reserve(cluster.elementCount);
+                        StoreVectorElements(clusterIdx, *renderState.clusters, elements);
+                        cluster.clusterElement = _clusterElementBuilder->buildClusterElement(cluster.transitionPos, elements); // NOTE: prone to deadlock, but no better way
+                    }
                 }
                 element = cluster.clusterElement;
             }
