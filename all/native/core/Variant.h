@@ -156,6 +156,12 @@ namespace carto {
          */
         std::vector<std::string> getObjectKeys() const;
         /**
+         * Returns true if object elements contains the specified key.
+         * @param key The key of the object element to check.
+         * @return True if the specified exists in the object. If the element is not an object or the key does not exist, false is returned.
+         */
+        bool containsObjectKey(const std::string& key) const;
+        /**
          * Returns the element of object with the specified key.
          * @param key The key of the object element to return.
          * @return The object element with the specified key or null type if the element does not exist or the variant is not an object.

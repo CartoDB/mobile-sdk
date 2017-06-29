@@ -143,6 +143,14 @@ namespace carto {
         }
         return keys;
     }
+
+    bool Variant::containsObjectKey(const std::string& key) const {
+        const picojson::value& val = toPicoJSON();
+        if (val.is<picojson::value::object>()) {
+            return val.contains(key);
+        }
+        return false;
+    }
     
     Variant Variant::getObjectElement(const std::string& key) const {
         const picojson::value& val = toPicoJSON();
