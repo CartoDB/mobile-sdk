@@ -33,8 +33,9 @@ namespace carto { namespace mvt {
         void setBuffer(float buffer);
         void setGlobalIdOverride(bool globalIdOverride, long long tileIdOffset = 0);
 
+        std::vector<std::string> getLayerNames() const;
         std::shared_ptr<Feature> getFeature(long long localId, std::string& layerName) const;
-        
+        std::shared_ptr<FeatureIterator> createLayerFeatureIterator(const std::string& name) const;
         std::shared_ptr<FeatureIterator> createLayerFeatureIterator(const std::string& name, const std::unordered_set<std::string>& fields) const;
 
     private:
