@@ -22,19 +22,19 @@ namespace carto {
          * Constructs a PolygonGeometry objects from an outer ring.
          * @param poses The list of map positions defining the outer ring.
          */
-        explicit PolygonGeometry(const std::vector<MapPos>& poses);
+        explicit PolygonGeometry(std::vector<MapPos> poses);
         /**
          * Constructs a PolygonGeometry objects from an outer ring and list of inner rings (holes).
          * @param poses The list of map positions defining the outer ring.
          * @param holes The list of map position lists defining the inner rings.
          */
-        PolygonGeometry(const std::vector<MapPos>& poses, const std::vector<std::vector<MapPos> >& holes);
+        PolygonGeometry(std::vector<MapPos> poses, std::vector<std::vector<MapPos> > holes);
         /**
          * Constructs a PolygonGeometry objects from a list of rings.
          * It is assumed the the first ring is outer ring and all other rings are inner rings.
          * @param rings The list of map position lists defining the rings
          */
-        explicit PolygonGeometry(const std::vector<std::vector<MapPos> >& rings);
+        explicit PolygonGeometry(std::vector<std::vector<MapPos> > rings);
         virtual ~PolygonGeometry();
         
         virtual MapPos getCenterPos() const;
