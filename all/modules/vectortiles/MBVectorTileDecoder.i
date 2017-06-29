@@ -39,6 +39,7 @@
 %ignore carto::MBVectorTileDecoder::getLayerNameOverride;
 %ignore carto::MBVectorTileDecoder::setLayerNameOverride;
 %ignore carto::MBVectorTileDecoder::decodeFeature;
+%ignore carto::MBVectorTileDecoder::decodeFeatures;
 %ignore carto::MBVectorTileDecoder::decodeTile;
 %ignore carto::MBVectorTileDecoder::getBackgroundColor;
 %ignore carto::MBVectorTileDecoder::getBackgroundPattern;

@@ -179,7 +179,57 @@ namespace carto {
         }
         return std::shared_ptr<TileFeature>();
     }
-        
+
+    std::vector<std::shared_ptr<CartoVectorTileDecoder::TileFeature> > CartoVectorTileDecoder::decodeFeatures(const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const {
+        if (!tileData) {
+            Log::Warn("CartoVectorTileDecoder::decodeFeatures: Null tile data");
+            return std::vector<std::shared_ptr<TileFeature> >();
+        }
+        if (tileData->empty()) {
+            return std::vector<std::shared_ptr<TileFeature> >();
+        }
+
+        std::vector<std::shared_ptr<TileFeature> > tileFeatures;
+        try {
+            std::shared_ptr<mvt::MBVTFeatureDecoder> decoder;
+            {
+                std::unique_lock<std::mutex> lock(_mutex);
+                if (_cachedFeatureDecoder.first != tileData) {
+                    lock.unlock();
+                    decoder = std::make_shared<mvt::MBVTFeatureDecoder>(*tileData->getDataPtr(), _logger);
+                    lock.lock();
+                    _cachedFeatureDecoder = std::make_pair(tileData, decoder);
+                }
+                else {
+                    decoder = _cachedFeatureDecoder.second;
+                }
+            }
+
+            for (const std::string& mvtLayerName : decoder->getLayerNames()) {
+                std::shared_ptr<mvt::FeatureDecoder::FeatureIterator> mvtIt = decoder->createLayerFeatureIterator(mvtLayerName);
+
+                std::map<std::string, Variant> featureData;
+                if (std::shared_ptr<const mvt::FeatureData> mvtFeatureData = mvtIt->getFeatureData()) {
+                    for (const std::string& varName : mvtFeatureData->getVariableNames()) {
+                        mvt::Value mvtValue;
+                        mvtFeatureData->getVariable(varName, mvtValue);
+                        featureData[varName] = boost::apply_visitor(ValueConverter(), mvtValue);
+                    }
+                }
+
+                auto convertFn = [&tileBounds](const cglib::vec2<float>& pos) {
+                    return MapPos(tileBounds.getMin().getX() + pos(0) * tileBounds.getDelta().getX(), tileBounds.getMax().getY() - pos(1) * tileBounds.getDelta().getY(), 0);
+                };
+
+                auto feature = std::make_shared<Feature>(convertGeometry(convertFn, mvtIt->getGeometry()), Variant(featureData));
+                tileFeatures.push_back(std::make_shared<TileFeature>(mvtIt->getGlobalId(), mvtLayerName, feature));
+            }
+        } catch (const std::exception& ex) {
+            Log::Errorf("CartoVectorTileDecoder::decodeFeatures: Exception while decoding: %s", ex.what());
+        }
+        return tileFeatures;
+    }
+
     std::shared_ptr<CartoVectorTileDecoder::TileMap> CartoVectorTileDecoder::decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const {
         if (!tileData) {
             Log::Warn("CartoVectorTileDecoder::decodeTile: Null tile data");
@@ -295,7 +345,7 @@ namespace carto {
         _layerMaps[layerId] = map;
         _layerSymbolizerContexts[layerId] = symbolizerContext;
     }
-    
+
     const int CartoVectorTileDecoder::DEFAULT_TILE_SIZE = 256;
     const int CartoVectorTileDecoder::STROKEMAP_SIZE = 512;
     const int CartoVectorTileDecoder::GLYPHMAP_SIZE = 2048;

@@ -76,7 +76,7 @@ namespace carto {
         virtual int getMaxZoom() const = 0;
 
         /**
-         * Decoders the specified feature from the tile layer.
+         * Decodes the specified feature from the tile.
          * @param id The id of the feature to decode.
          * @param tile The tile coordinates.
          * @param tileData The tile data to use.
@@ -85,6 +85,15 @@ namespace carto {
          */
         virtual std::shared_ptr<TileFeature> decodeFeature(long long id, const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const = 0;
         
+        /**
+         * Decodes all features from the tile.
+         * @param tile The tile coordinates.
+         * @param tileData The tile data to use.
+         * @param tileBounds The bounds for the tile (used for coordinate transformation).
+         * @return The list of tile features
+         */
+        virtual std::vector<std::shared_ptr<TileFeature> > decodeFeatures(const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const = 0;
+
         /**
          * Loads the specified vector tile.
          * @param tile The id of the tile to load.
