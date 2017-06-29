@@ -58,7 +58,7 @@ namespace carto {
          * @param value The corresponding value, used as an output parameter
          * @return True if variable name was matched and its value was assigned to value parameter, false otherwise.
          */
-        bool getVariable(const std::string& name, Variant& value) const;
+        virtual bool getVariable(const std::string& name, Variant& value) const;
 
     private:
         static std::string GetGeometryType(const std::shared_ptr<Geometry>& geometry);

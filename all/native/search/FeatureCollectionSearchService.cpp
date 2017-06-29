@@ -7,6 +7,9 @@
 #include "geometry/PointGeometry.h"
 #include "geometry/LineGeometry.h"
 #include "geometry/PolygonGeometry.h"
+#include "geometry/MultiPointGeometry.h"
+#include "geometry/MultiLineGeometry.h"
+#include "geometry/MultiPolygonGeometry.h"
 #include "geometry/MultiGeometry.h"
 #include "geometry/Feature.h"
 #include "geometry/FeatureCollection.h"
@@ -26,6 +29,8 @@
 
 #include <limits>
 #include <regex>
+#include <algorithm>
+#include <numeric>
 
 namespace {
 
@@ -142,9 +147,20 @@ namespace {
 
     class SearchQueryContext : public carto::QueryContext {
     public:
-        explicit SearchQueryContext(const carto::Variant& variant) : _variant(variant) { }
+        explicit SearchQueryContext(const std::shared_ptr<carto::Geometry>& geometry, const carto::Variant& variant) : _geometry(geometry), _variant(variant) { }
+        virtual ~SearchQueryContext() { }
 
         virtual bool getVariable(const std::string& name, carto::Variant& value) const {
+            if (name == "geometry::type") {
+                value = carto::Variant(GetGeometryType(_geometry));
+                return true;
+            }
+
+            if (name == "geometry::vertices") {
+                value = carto::Variant(static_cast<long long>(GetGeometryVerticesCount(_geometry)));
+                return true;
+            }
+
             switch (_variant.getType()) {
             case carto::VariantType::VARIANT_TYPE_OBJECT:
                 if (_variant.containsObjectKey(name)) {
@@ -164,6 +180,45 @@ namespace {
         }
 
     private:
+        static std::string GetGeometryType(const std::shared_ptr<carto::Geometry> &geometry) {
+            if (std::dynamic_pointer_cast<carto::PointGeometry>(geometry)) {
+                return "point";
+            } else if (std::dynamic_pointer_cast<carto::LineGeometry>(geometry)) {
+                return "linestring";
+            } else if (std::dynamic_pointer_cast<carto::PolygonGeometry>(geometry)) {
+                return "polygon";
+            } else if (std::dynamic_pointer_cast<carto::MultiPointGeometry>(geometry)) {
+                return "multipoint";
+            } else if (std::dynamic_pointer_cast<carto::MultiLineGeometry>(geometry)) {
+                return "multilinestring";
+            } else if (std::dynamic_pointer_cast<carto::MultiPolygonGeometry>(geometry)) {
+                return "multipolygon";
+            } else if (std::dynamic_pointer_cast<carto::MultiGeometry>(geometry)) {
+                return "multigeometry";
+            } else if (std::dynamic_pointer_cast<carto::Geometry>(geometry)) {
+                return "geometry";
+            }
+            return "unknown";
+        }
+        
+        static std::size_t GetGeometryVerticesCount(const std::shared_ptr<carto::Geometry>& geometry) {
+            if (std::dynamic_pointer_cast<carto::PointGeometry>(geometry)) {
+                return 1;
+            } else if (auto lineGeometry = std::dynamic_pointer_cast<carto::LineGeometry>(geometry)) {
+                return lineGeometry->getPoses().size();
+            } else if (auto polygonGeometry = std::dynamic_pointer_cast<carto::PolygonGeometry>(geometry)) {
+                return std::accumulate(polygonGeometry->getHoles().begin(), polygonGeometry->getHoles().end(), polygonGeometry->getPoses().size(), [](std::size_t size, const std::vector<carto::MapPos>& ring) { return size + ring.size(); });
+            } else if (auto multiGeometry = std::dynamic_pointer_cast<carto::MultiGeometry>(geometry)) {
+                std::size_t count = 0;
+                for (int i = 0; i < multiGeometry->getGeometryCount(); i++) {
+                    count += GetGeometryVerticesCount(multiGeometry->getGeometry(i));
+                }
+                return count;
+            }
+            return 0;
+        }
+
+        const std::shared_ptr<carto::Geometry>& _geometry;
         const carto::Variant& _variant;
     };
 
@@ -234,7 +289,7 @@ namespace carto {
             }
 
             if (expr) {
-                SearchQueryContext context(feature->getProperties());
+                SearchQueryContext context(feature->getGeometry(), feature->getProperties());
                 if (!expr->evaluate(context)) {
                     continue;
                 }
