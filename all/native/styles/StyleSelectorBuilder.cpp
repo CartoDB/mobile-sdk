@@ -3,8 +3,8 @@
 #include "StyleSelectorBuilder.h"
 #include "StyleSelector.h"
 #include "StyleSelectorRule.h"
-#include "StyleSelectorExpression.h"
-#include "StyleSelectorExpressionParser.h"
+#include "search/query/QueryExpression.h"
+#include "search/query/QueryExpressionParser.h"
 #include "utils/Log.h"
 
 namespace carto {
@@ -20,22 +20,12 @@ namespace carto {
     }
     
     void StyleSelectorBuilder::addRule(const std::string& expr, const std::shared_ptr<Style>& style) {
-        std::string::const_iterator it = expr.begin();
-        std::string::const_iterator end = expr.end();
-        StyleSelectorExpressionImpl::encoding::space_type space;
-        std::shared_ptr<StyleSelectorExpression> ruleExpr;
-        bool result = boost::spirit::qi::phrase_parse(it, end, StyleSelectorExpressionParser<std::string::const_iterator>(), space, ruleExpr);
-        if (!result) {
-            Log::Error("StyleSelectorBuilder: Failed to parse filter expression.");
-        } else if (it != expr.end()) {
-            Log::Error("StyleSelectorBuilder: Could not parse to the end of filter expression.");
-        } else {
-            _rules.emplace_back(std::make_shared<StyleSelectorRule>(ruleExpr, style));
-        }
+        std::shared_ptr<QueryExpression> queryExpr = QueryExpressionParser::parse(expr);
+        _rules.emplace_back(std::make_shared<StyleSelectorRule>(queryExpr, style));
     }
     
     void StyleSelectorBuilder::addRule(const std::shared_ptr<Style>& style) {
-        _rules.emplace_back(std::make_shared<StyleSelectorRule>(std::shared_ptr<StyleSelectorExpression>(), style));
+        _rules.emplace_back(std::make_shared<StyleSelectorRule>(std::shared_ptr<QueryExpression>(), style));
     }
     
     std::shared_ptr<StyleSelector> StyleSelectorBuilder::buildSelector() const {

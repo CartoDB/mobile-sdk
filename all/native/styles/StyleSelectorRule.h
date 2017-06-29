@@ -13,7 +13,7 @@
 
 namespace carto {
     class Style;
-    class StyleSelectorExpression;
+    class QueryExpression;
 
     /**
      * Style selector rule. Rule is a combination of the optional filter and style.
@@ -26,14 +26,14 @@ namespace carto {
          * @param expr The filter expression. Can be null pointer.
          * @param style The style of the rule.
          */
-        StyleSelectorRule(const std::shared_ptr<StyleSelectorExpression>& expr, const std::shared_ptr<Style>& style);
+        StyleSelectorRule(const std::shared_ptr<QueryExpression>& expr, const std::shared_ptr<Style>& style);
         virtual ~StyleSelectorRule();
 
         /**
          * Returns filter expression of this rule. Result can be null pointer.
          * @return The filter expression or null, if none is specified.
          */
-        const std::shared_ptr<StyleSelectorExpression>& getExpression() const;
+        const std::shared_ptr<QueryExpression>& getExpression() const;
         /**
          * Returns the style associated with this rule.
          * @return The style.
@@ -41,8 +41,8 @@ namespace carto {
         const std::shared_ptr<Style>& getStyle() const;
 
     private:
-        std::shared_ptr<StyleSelectorExpression> _expression;
-        std::shared_ptr<Style> _style;
+        const std::shared_ptr<QueryExpression> _expression;
+        const std::shared_ptr<Style> _style;
     };
 }
 

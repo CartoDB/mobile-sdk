@@ -4,32 +4,28 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_STYLESELECTOREXPRESSION_H_
-#define _CARTO_STYLESELECTOREXPRESSION_H_
-
-#ifdef _CARTO_GDAL_SUPPORT
+#ifndef _CARTO_QUERYEXPRESSION_H_
+#define _CARTO_QUERYEXPRESSION_H_
 
 #include <memory>
 
 namespace carto {
-    class StyleSelectorContext;
+    class QueryContext;
 
     /**
-     * Style selector filter expression.
+     * Query filter expression.
      */
-    class StyleSelectorExpression {
+    class QueryExpression {
     public:
-        virtual ~StyleSelectorExpression() { }
+        virtual ~QueryExpression() { }
 
         /**
          * Evaluates filter expression given context.
          * @param context The context to use for evaluation
          * @return True or false, depending on the context.
          */
-        virtual bool evaluate(const StyleSelectorContext& context) const = 0;
+        virtual bool evaluate(const QueryContext& context) const = 0;
     };
 }
-
-#endif
 
 #endif

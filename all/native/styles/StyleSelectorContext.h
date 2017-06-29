@@ -9,7 +9,7 @@
 
 #ifdef _CARTO_GDAL_SUPPORT
 
-#include "core/Variant.h"
+#include "search/query/QueryContext.h"
 
 #include <memory>
 #include <string>
@@ -24,7 +24,7 @@ namespace carto {
     /**
      * Style selector context for evaluating rules.
      */
-    class StyleSelectorContext {
+    class StyleSelectorContext : public QueryContext {
     public:
         /**
          * Constructs a new context based on view state, geometry and meta data (variables).
@@ -34,6 +34,7 @@ namespace carto {
          * @param metaData The meta data associated with the geometry
          */
         StyleSelectorContext(const ViewState& viewState, const std::shared_ptr<Geometry>& geometry, const std::map<std::string, Variant>& metaData);
+        virtual ~StyleSelectorContext();
 
         /**
          * Returns the view state associated with the context.
@@ -57,7 +58,7 @@ namespace carto {
          * @param value The corresponding value, used as an output parameter
          * @return True if variable name was matched and its value was assigned to value parameter, false otherwise.
          */
-        bool getVariable(const std::string& name, boost::variant<double, std::string>& value) const;
+        bool getVariable(const std::string& name, Variant& value) const;
 
     private:
         static std::string GetGeometryType(const std::shared_ptr<Geometry>& geometry);

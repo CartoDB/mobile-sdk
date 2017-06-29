@@ -37,7 +37,7 @@ namespace carto {
         const std::shared_ptr<Style>& getStyle(const StyleSelectorContext& context) const;
 
     protected:
-        std::vector<std::shared_ptr<StyleSelectorRule> > _rules;
+        const std::vector<std::shared_ptr<StyleSelectorRule> > _rules;
     };
 }
 

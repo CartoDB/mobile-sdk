@@ -10,6 +10,8 @@
 #include "geometry/MultiGeometry.h"
 #include "geometry/Feature.h"
 #include "geometry/FeatureCollection.h"
+#include "search/query/QueryContext.h"
+#include "search/query/QueryExpressionParser.h"
 #include "projections/Projection.h"
 #include "projections/EPSG3857.h"
 #include "utils/Const.h"
@@ -138,6 +140,33 @@ namespace {
         return false;
     }
 
+    class SearchQueryContext : public carto::QueryContext {
+    public:
+        explicit SearchQueryContext(const carto::Variant& variant) : _variant(variant) { }
+
+        virtual bool getVariable(const std::string& name, carto::Variant& value) const {
+            switch (_variant.getType()) {
+            case carto::VariantType::VARIANT_TYPE_OBJECT:
+                if (_variant.containsObjectKey(name)) {
+                    value = _variant.getObjectElement(name);
+                    return true;
+                }
+                return false;
+            case carto::VariantType::VARIANT_TYPE_ARRAY:
+                return false;
+            default:
+                if (name == "value") {
+                    value = _variant;
+                    return true;
+                }
+                return false;
+            }
+        }
+
+    private:
+        const carto::Variant& _variant;
+    };
+
 }
 
 namespace carto {
@@ -189,7 +218,10 @@ namespace carto {
             searchRadius = request->getSearchRadius() / std::cos(centerPos.getY() * Const::DEG_TO_RAD);
         }
 
-        // TODO: convert StyleSelectorExpression to QueryPredicate
+        std::shared_ptr<QueryExpression> expr;
+        if (!request->getFilterExpression().empty()) {
+            expr = QueryExpressionParser::parse(request->getFilterExpression());
+        }
 
         std::vector<std::shared_ptr<Feature> > features;
         for (int i = 0; i < _featureCollection->getFeatureCount(); i++) {
@@ -201,13 +233,18 @@ namespace carto {
                 }
             }
 
+            if (expr) {
+                SearchQueryContext context(feature->getProperties());
+                if (!expr->evaluate(context)) {
+                    continue;
+                }
+            }
+
             if (geometry) {
                 if (calculateDistance(convertToEPSG3857(feature->getGeometry(), _projection), geometry) > searchRadius) {
                     continue;
                 }
             }
-
-            // TODO: filterExpression
 
             features.push_back(feature);
         }

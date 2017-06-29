@@ -4,13 +4,11 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_STYLESELECTOREXPRESSIONIMPL_H_
-#define _CARTO_STYLESELECTOREXPRESSIONIMPL_H_
+#ifndef _CARTO_QUERYEXPRESSIONIMPL_H_
+#define _CARTO_QUERYEXPRESSIONIMPL_H_
 
-#ifdef _CARTO_GDAL_SUPPORT
-
-#include "styles/StyleSelectorContext.h"
-#include "styles/StyleSelectorExpression.h"
+#include "search/query/QueryContext.h"
+#include "search/query/QueryExpression.h"
 
 #include <limits>
 #include <regex>
@@ -21,77 +19,123 @@
 #include <utf8.h>
 
 namespace carto {
-    namespace StyleSelectorExpressionImpl {
-        enum {
-            NULL_VALUE = 0, DOUBLE_VALUE = 1, STRING_VALUE = 2
-        };
+    namespace queryexpressionimpl {
+        using Value = Variant;
 
-        using Value = boost::variant<boost::blank, double, std::string>;
+        using Expression = QueryExpression;
 
-        using Expression = StyleSelectorExpression;
-
-        using Context = StyleSelectorContext;
+        using Context = QueryContext;
 
         struct IsNullPredicate {
-            bool operator() (const Value& val) const { return val.which() == NULL_VALUE; }
+            bool operator() (const Value& val) const { return val.getType() == VariantType::VARIANT_TYPE_NULL; }
         };
 
         struct IsNotNullPredicate {
-            bool operator() (const Value& val) const { return val.which() != NULL_VALUE; }
+            bool operator() (const Value& val) const { return val.getType() != VariantType::VARIANT_TYPE_NULL; }
         };
 
         struct RegexpLikePredicate {
             bool operator() (const Value& val1, const Value& val2) const {
-                if (val1.which() == NULL_VALUE || val2.which() == NULL_VALUE) {
+                switch (val1.getType()) {
+                case VariantType::VARIANT_TYPE_NULL:
+                case VariantType::VARIANT_TYPE_ARRAY:
+                case VariantType::VARIANT_TYPE_OBJECT:
                     return false;
+                default:
+                    break;
                 }
-                std::string str;
-                try {
-                    str = (val1.which() == STRING_VALUE ? boost::get<std::string>(val1) : boost::lexical_cast<std::string>(val1));
-                } catch (const boost::bad_lexical_cast&) { return false; }
-                std::string re;
-                try {
-                    re = (val2.which() == STRING_VALUE ? boost::get<std::string>(val2) : boost::lexical_cast<std::string>(val2));
-                } catch (const boost::bad_lexical_cast&) { return false; }
-                std::wstring wre;
-                utf8::utf8to32(re.begin(), re.end(), std::back_inserter(wre));
+                std::string str = val1.getString();
                 std::wstring wstr;
                 utf8::utf8to32(str.begin(), str.end(), std::back_inserter(wstr));
-                std::wregex regex(wre);
-                return std::regex_match(wstr, regex);
+
+                switch (val2.getType()) {
+                case VariantType::VARIANT_TYPE_NULL:
+                case VariantType::VARIANT_TYPE_ARRAY:
+                case VariantType::VARIANT_TYPE_OBJECT:
+                    return false;
+                default:
+                    break;
+                }
+                std::string re = val2.getString();
+                std::wstring wre;
+                utf8::utf8to32(re.begin(), re.end(), std::back_inserter(wre));
+
+                return std::regex_match(wstr, std::wregex(wre));
+            }
+        };
+
+        struct EqPredicate {
+            bool operator() (const Value& val1, const Value& val2) const {
+                if (val1.getType() == VariantType::VARIANT_TYPE_NULL || val2.getType() == VariantType::VARIANT_TYPE_NULL) {
+                    return false;
+                }
+                return val1.toPicoJSON() == val2.toPicoJSON();
+            }
+        };
+
+        struct NeqPredicate {
+            bool operator() (const Value& val1, const Value& val2) const {
+                if (val1.getType() == VariantType::VARIANT_TYPE_NULL || val2.getType() == VariantType::VARIANT_TYPE_NULL) {
+                    return false;
+                }
+                return val1.toPicoJSON() != val2.toPicoJSON();
             }
         };
 
         template <template <typename T> class Op>
         struct ComparisonPredicate {
             bool operator() (const Value& val1, const Value& val2) const {
-                if (val1.which() == NULL_VALUE || val2.which() == NULL_VALUE) {
+                switch (val1.getType()) {
+                case VariantType::VARIANT_TYPE_NULL:
+                case VariantType::VARIANT_TYPE_ARRAY:
+                case VariantType::VARIANT_TYPE_OBJECT:
                     return false;
+                default:
+                    break;
                 }
-                if (val1.which() == STRING_VALUE && val2.which() == STRING_VALUE) {
-                    return Op<std::string>()(boost::get<std::string>(val1), boost::get<std::string>(val2));
+
+                switch (val2.getType()) {
+                case VariantType::VARIANT_TYPE_NULL:
+                case VariantType::VARIANT_TYPE_ARRAY:
+                case VariantType::VARIANT_TYPE_OBJECT:
+                    return false;
+                default:
+                    break;
                 }
-                if (val1.which() == DOUBLE_VALUE && val2.which() == DOUBLE_VALUE) {
-                    return Op<double>()(boost::get<double>(val1), boost::get<double>(val2));
+
+                const picojson::value& v1 = val1.toPicoJSON();
+                const picojson::value& v2 = val2.toPicoJSON();
+                if (v1.is<bool>() && v2.is<bool>()) {
+                    return Op<bool>()(v1.get<bool>(), v2.get<bool>());
                 }
-                double num1 = std::numeric_limits<double>::quiet_NaN();
-                try {
-                    num1 = (val1.which() == STRING_VALUE ? boost::lexical_cast<double>(val1) : boost::get<double>(val1));
-                } catch (const boost::bad_lexical_cast&) { }
-                double num2 = std::numeric_limits<double>::quiet_NaN();
-                try {
-                    num2 = (val2.which() == STRING_VALUE ? boost::lexical_cast<double>(val2) : boost::get<double>(val2));
-                } catch (const boost::bad_lexical_cast&) { }
-                return Op<double>()(num1, num2);
+                if (v1.is<double>() && v2.is<double>()) { // NOTE: works for integers also
+                    if (v1.is<std::int64_t>() && v2.is<std::int64_t>()) {
+                        return Op<std::int64_t>()(v1.get<std::int64_t>(), v2.get<std::int64_t>());
+                    }
+                    return Op<double>()(v1.get<double>(), v2.get<double>());
+                }
+                if (v1.is<std::string>() && v2.is<std::string>()) {
+                    return Op<std::string>()(v1.get<std::string>(), v2.get<std::string>());
+                }
+                return false;
             }
         };
 
-        using EqPredicate = ComparisonPredicate<std::equal_to>;
-        using NeqPredicate = ComparisonPredicate<std::not_equal_to>;
+
         using GtPredicate = ComparisonPredicate<std::greater>;
-        using GtePredicate = ComparisonPredicate<std::greater_equal>;
         using LtPredicate = ComparisonPredicate<std::less>;
-        using LtePredicate = ComparisonPredicate<std::less_equal>;
+
+        struct GtePredicate {
+            bool operator() (const Value& val1, const Value& val2) const {
+                return EqPredicate()(val1, val2) || GtPredicate()(val1, val2);
+            }
+        };
+
+        struct LtePredicate {
+            bool operator() (const Value& val1, const Value& val2) const {
+                return EqPredicate()(val1, val2) || LtPredicate()(val1, val2);
+            }
+        };
 
         struct Operand {
             virtual ~Operand() = default;
@@ -108,7 +152,7 @@ namespace carto {
 
         struct VariableOperand : public Operand {
             VariableOperand(const std::string& name) : _name(name) { }
-            virtual Value evaluate(const Context& context) const { boost::variant<double, std::string> value; if (!context.getVariable(_name, value)) return Value(); return Value(value); }
+            virtual Value evaluate(const Context& context) const { Variant value; if (!context.getVariable(_name, value)) return Value(); return value; }
             static std::shared_ptr<VariableOperand> create(const std::string& name) { return std::make_shared<VariableOperand>(name); }
         private:
             std::string _name;
@@ -159,7 +203,5 @@ namespace carto {
         };
     }
 }
-
-#endif
 
 #endif

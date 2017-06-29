@@ -1,16 +1,8 @@
-/*
- * Copyright (c) 2016 CartoDB. All rights reserved.
- * Copying and using this code is allowed only according
- * to license terms, as given in https://cartodb.com/terms/
- */
-
-#ifndef _CARTO_STYLESELECTOREXPRESSIONPARSER_H_
-#define _CARTO_STYLESELECTOREXPRESSIONPARSER_H_
-
-#ifdef _CARTO_GDAL_SUPPORT
-
-#include "styles/StyleSelectorExpression.h"
-#include "styles/StyleSelectorExpressionImpl.h"
+#include "QueryExpressionParser.h"
+#include "components/Exceptions.h"
+#include "search/query/QueryExpression.h"
+#include "search/query/QueryExpressionImpl.h"
+#include "utils/Log.h"
 
 #include <memory>
 #include <functional>
@@ -23,14 +15,14 @@
 #include <boost/spirit/include/phoenix_operator.hpp>
 
 namespace carto {
-    namespace StyleSelectorExpressionImpl {
+    namespace queryexpressionimpl {
         namespace phx = boost::phoenix;
         namespace qi = boost::spirit::qi;
         namespace repo = boost::spirit::repository::qi;
         namespace encoding = boost::spirit::iso8859_1;
     
         template <typename Iterator>
-        struct Grammar : qi::grammar<Iterator, std::shared_ptr<StyleSelectorExpression>(), encoding::space_type> {
+        struct Grammar : qi::grammar<Iterator, std::shared_ptr<QueryExpression>(), encoding::space_type> {
             Grammar() : Grammar::base_type(expression) {
                 using qi::_val;
                 using qi::_1;
@@ -45,15 +37,20 @@ namespace carto {
                 and_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["and"]];
                 not_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["not"]];
                 null_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["null"]];
+                false_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["false"]];
+                true_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["true"]];
                 regexp_like_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["regexp_like"]];
 
                 string =
                     '\'' >> *(unesc_char | "\\x" >> qi::hex | (qi::print - '\'')) >> '\'';
 
                 value =
-                      null_kw     [_val = phx::construct<Value>()]
-                    | qi::double_ [_val = phx::construct<Value>(_1)]
-                    | string      [_val = phx::construct<Value>(_1)]
+                      null_kw       [_val = phx::construct<Value>()]
+                    | false_kw      [_val = phx::construct<Value>(false)]
+                    | true_kw       [_val = phx::construct<Value>(true)]
+                    | qi::long_long [_val = phx::construct<Value>(_1)]
+                    | qi::double_   [_val = phx::construct<Value>(_1)]
+                    | string        [_val = phx::construct<Value>(_1)]
                     ;
 
                 identifier %=
@@ -97,7 +94,7 @@ namespace carto {
             }
 
             qi::symbols<char const, char const> unesc_char;
-            qi::rule<Iterator, qi::unused_type()> is_kw, or_kw, and_kw, not_kw, null_kw, regexp_like_kw;
+            qi::rule<Iterator, qi::unused_type()> is_kw, or_kw, and_kw, not_kw, null_kw, false_kw, true_kw, regexp_like_kw;
             qi::rule<Iterator, std::string()> string;
             qi::rule<Iterator, Value()> value;
             qi::rule<Iterator, std::string()> identifier;
@@ -106,9 +103,23 @@ namespace carto {
         };
     }
 
-    template <typename Iterator> using StyleSelectorExpressionParser = StyleSelectorExpressionImpl::Grammar<Iterator>;
+    std::shared_ptr<QueryExpression> QueryExpressionParser::parse(const std::string& expr) {
+        std::string::const_iterator it = expr.begin();
+        std::string::const_iterator end = expr.end();
+        queryexpressionimpl::encoding::space_type space;
+        std::shared_ptr<QueryExpression> queryExpr;
+        bool result = boost::spirit::qi::phrase_parse(it, end, queryexpressionimpl::Grammar<std::string::const_iterator>(), space, queryExpr);
+        if (!result) {
+            Log::Error("QueryExpressionParser::parse: Failed to parse query expression");
+            throw ParseException("Failed to parse query expression", expr);
+        } else if (it != expr.end()) {
+            Log::Error("QueryExpressionParser::parse: Could not parse to the end of query expression");
+            throw ParseException("Could not parse to the end of query expression", expr);
+        }
+        return queryExpr;
+    }
+
+    QueryExpressionParser::QueryExpressionParser() {
+    }
+
 }
-
-#endif
-
-#endif
