@@ -5,11 +5,10 @@
 
 namespace carto {
 
-    PolygonGeometry::PolygonGeometry(const std::vector<MapPos>& poses) :
+    PolygonGeometry::PolygonGeometry(std::vector<MapPos> poses) :
         Geometry(),
         _rings()
     {
-        _rings.push_back(poses);
         if (poses.size() < 3) {
             Log::Error("PolygonGeometry::PolygonGeometry: Polygon requires at least 3 vertices");
         }
@@ -18,24 +17,26 @@ namespace carto {
         for (const MapPos& pos : poses) {
             _bounds.expandToContain(pos);
         }
+
+        _rings.push_back(std::move(poses));
     }
     
-    PolygonGeometry::PolygonGeometry(const std::vector<MapPos>& poses, const std::vector<std::vector<MapPos> >& holes) :
+    PolygonGeometry::PolygonGeometry(std::vector<MapPos> poses, std::vector<std::vector<MapPos> > holes) :
         Geometry(),
         _rings()
     {
-        _rings.push_back(poses);
-        _rings.insert(_rings.end(), holes.begin(), holes.end());
         if (poses.size() < 3) {
             Log::Error("PolygonGeometry::PolygonGeometry: Polygon requires at least 3 vertices");
         }
-    
-        for (const std::vector<MapPos>& ring : holes) {
+        _rings.push_back(std::move(poses));
+
+        for (std::vector<MapPos>& ring : holes) {
             if (ring.size() < 3) {
                 Log::Error("PolygonGeometry::PolygonGeometry: All polygon holes require at least 3 vertices");
             }
+            _rings.push_back(std::move(ring));
         }
-    
+
         // Calculate bounding box
         for (const std::vector<MapPos>& ring : _rings) {
             for (const MapPos& pos : ring) {
@@ -44,11 +45,11 @@ namespace carto {
         }
     }
     
-    PolygonGeometry::PolygonGeometry(const std::vector<std::vector<MapPos> >& rings) :
+    PolygonGeometry::PolygonGeometry(std::vector<std::vector<MapPos> > rings) :
         Geometry(),
-        _rings(rings)
+        _rings(std::move(rings))
     {
-        for (const std::vector<MapPos>& ring : rings) {
+        for (const std::vector<MapPos>& ring : _rings) {
             if (ring.size() < 3) {
                 Log::Error("PolygonGeometry::PolygonGeometry: All polygon rings require at least 3 vertices");
             }

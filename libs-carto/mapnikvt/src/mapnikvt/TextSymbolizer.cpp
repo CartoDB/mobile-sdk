@@ -36,13 +36,18 @@ namespace carto { namespace mvt {
 
         std::string text = getTransformedText(_text);
         std::size_t hash = std::hash<std::string>()(text);
-        vt::TextFormatter::Options textFormatterOptions = getFormatterOptions(symbolizerContext);
+        vt::TextFormatter formatter(font, _sizeStatic, getFormatterOptions(symbolizerContext));
 
         float fontScale = symbolizerContext.getSettings().getFontScale();
         vt::LabelOrientation placement = convertTextPlacement(_placement);
         float minimumDistance = _minimumDistance * std::pow(2.0f, -exprContext.getZoom());
-        float textSize = (placement == vt::LabelOrientation::LINE ? calculateTextSize(font, text, textFormatterOptions).size()(0) : 0);
+        float textSize = (placement == vt::LabelOrientation::LINE ? calculateTextSize(font, text, formatter).size()(0) : 0);
         long long groupId = (_allowOverlap ? -1 : (minimumDistance > 0 ? (hash & 0x7fffffff) : 0));
+
+        std::shared_ptr<const vt::ColorFunction> fillFunc = _functionBuilder.createColorOpacityFunction(_fillFunc, _opacityFunc);
+        std::shared_ptr<const vt::FloatFunction> sizeFunc = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _sizeFunc);
+        std::shared_ptr<const vt::ColorFunction> haloFillFunc = _functionBuilder.createColorOpacityFunction(_haloFillFunc, _haloOpacityFunc);
+        std::shared_ptr<const vt::FloatFunction> haloRadiusFunc = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _haloRadiusFunc);
 
         std::vector<std::pair<long long, vt::TileLayerBuilder::Vertex>> textInfos;
         std::vector<std::pair<long long, vt::TileLayerBuilder::TextLabelInfo>> labelInfos;
@@ -63,10 +68,7 @@ namespace carto { namespace mvt {
 
         auto flushTexts = [&](const cglib::mat3x3<float>& transform) {
             if (_allowOverlap) {
-                std::shared_ptr<const vt::ColorFunction> fillFunc = createColorFunction("#ffffff");
-                std::shared_ptr<const vt::FloatFunction> opacityFunc = createFloatFunction(1.0f);
-
-                vt::TextStyle style(compOp, convertLabelToPointOrientation(placement), fillFunc, opacityFunc, textFormatterOptions, font, _orientationAngle, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::Bitmap>(), transform);
+                vt::TextStyle style(compOp, convertLabelToPointOrientation(placement), fillFunc, sizeFunc, haloFillFunc, haloRadiusFunc, _orientationAngle, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::BitmapImage>(), transform);
 
                 std::size_t textInfoIndex = 0;
                 layerBuilder.addTexts([&](long long& id, vt::TileLayerBuilder::Vertex& vertex, std::string& txt) {
@@ -78,12 +80,12 @@ namespace carto { namespace mvt {
                     txt = text;
                     textInfoIndex++;
                     return true;
-                }, style);
+                }, style, formatter);
 
                 textInfos.clear();
             }
             else {
-                vt::TextLabelStyle style(placement, textFormatterOptions, font, _orientationAngle, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::Bitmap>());
+                vt::TextLabelStyle style(placement, fillFunc, sizeFunc, haloFillFunc, haloRadiusFunc, _orientationAngle, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::BitmapImage>());
 
                 std::size_t labelInfoIndex = 0;
                 layerBuilder.addTextLabels([&](long long& id, vt::TileLayerBuilder::TextLabelInfo& labelInfo) {
@@ -94,7 +96,7 @@ namespace carto { namespace mvt {
                     labelInfo = std::move(labelInfos[labelInfoIndex].second);
                     labelInfoIndex++;
                     return true;
-                }, style);
+                }, style, formatter);
 
                 labelInfos.clear();
             }
@@ -119,25 +121,26 @@ namespace carto { namespace mvt {
             bind(&_placement, parseStringExpression(value));
         }
         else if (name == "size") {
-            bind(&_size, parseExpression(value));
+            bind(&_sizeFunc, parseExpression(value));
+            bind(&_sizeStatic, parseExpression(value));
         }
         else if (name == "spacing") {
             bind(&_spacing, parseExpression(value));
         }
         else if (name == "fill") {
-            bind(&_fill, parseStringExpression(value), &TextSymbolizer::convertColor);
+            bind(&_fillFunc, parseStringExpression(value), &TextSymbolizer::convertColor);
         }
         else if (name == "opacity") {
-            bind(&_opacity, parseExpression(value));
+            bind(&_opacityFunc, parseExpression(value));
         }
         else if (name == "halo-fill") {
-            bind(&_haloFill, parseStringExpression(value), &TextSymbolizer::convertColor);
+            bind(&_haloFillFunc, parseStringExpression(value), &TextSymbolizer::convertColor);
         }
         else if (name == "halo-opacity") {
-            bind(&_haloOpacity, parseExpression(value));
+            bind(&_haloOpacityFunc, parseExpression(value));
         }
         else if (name == "halo-radius") {
-            bind(&_haloRadius, parseExpression(value));
+            bind(&_haloRadiusFunc, parseExpression(value));
         }
         else if (name == "halo-rasterizer") {
             // just ignore this
@@ -208,10 +211,8 @@ namespace carto { namespace mvt {
 
     std::shared_ptr<vt::Font> TextSymbolizer::getFont(const SymbolizerContext& symbolizerContext) const {
         std::shared_ptr<vt::Font> font;
-        float fontScale = symbolizerContext.getSettings().getFontScale();
         if (!_faceName.empty()) {
-            vt::FontManager::Parameters fontParams(_size * fontScale, vt::Color::fromColorOpacity(_fill, _opacity), _haloRadius * fontScale, vt::Color::fromColorOpacity(_haloFill, _haloOpacity), std::shared_ptr<vt::Font>());
-            font = symbolizerContext.getFontManager()->getFont(_faceName, fontParams);
+            font = symbolizerContext.getFontManager()->getFont(_faceName, std::shared_ptr<vt::Font>());
         }
         else if (!_fontSetName.empty()) {
             for (const std::shared_ptr<FontSet>& fontSet : _fontSets) {
@@ -219,8 +220,7 @@ namespace carto { namespace mvt {
                     const std::vector<std::string>& faceNames = fontSet->getFaceNames();
                     for (auto it = faceNames.rbegin(); it != faceNames.rend(); it++) {
                         const std::string& faceName = *it;
-                        vt::FontManager::Parameters fontParams(_size * fontScale, vt::Color::fromColorOpacity(_fill, _opacity), _haloRadius * fontScale, vt::Color::fromColorOpacity(_haloFill, _haloOpacity), font);
-                        std::shared_ptr<vt::Font> mainFont = symbolizerContext.getFontManager()->getFont(faceName, fontParams);
+                        std::shared_ptr<vt::Font> mainFont = symbolizerContext.getFontManager()->getFont(faceName, font);
                         if (mainFont) {
                             font = mainFont;
                         }
@@ -232,9 +232,8 @@ namespace carto { namespace mvt {
         return font;
     }
 
-    cglib::bbox2<float> TextSymbolizer::calculateTextSize(const std::shared_ptr<vt::Font>& font, const std::string& text, const vt::TextFormatter::Options& formatterOptions) const {
-        vt::TextFormatter formatter(font);
-        std::vector<vt::Font::Glyph> glyphs = formatter.format(text, formatterOptions);
+    cglib::bbox2<float> TextSymbolizer::calculateTextSize(const std::shared_ptr<vt::Font>& font, const std::string& text, const vt::TextFormatter& formatter) const {
+        std::vector<vt::Font::Glyph> glyphs = formatter.format(text, formatter.getFontSize());
         cglib::bbox2<float> bbox = cglib::bbox2<float>::smallest();
         cglib::vec2<float> pen = cglib::vec2<float>(0, 0);
         for (const vt::Font::Glyph& glyph : glyphs) {

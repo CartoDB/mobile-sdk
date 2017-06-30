@@ -2258,7 +2258,9 @@ The following code describes how to adjust the `LocalVectorDataSource` performan
 	let vectorDataSource2 = NTLocalVectorDataSource(projection: projection, spatialIndexType: NTLocalSpatialIndexType.LOCAL_SPATIAL_INDEX_TYPE_KDTREE)
 
   {% endhighlight %}
-  
+  </div>
+
+
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
   {% highlight kotlin %}
 
@@ -2266,6 +2268,7 @@ The following code describes how to adjust the `LocalVectorDataSource` performan
 
   {% endhighlight %}
   </div>
+  
 </div>
 
 <br/><br/>**Note:** If you have **very complex lines or polygons**, this creates objects with high numbers (more than hundreds of points per object) of vertexes. For example, the GPS traces for long periods of time, recording a point every second or so. 

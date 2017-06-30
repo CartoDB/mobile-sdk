@@ -21,11 +21,11 @@
 namespace carto { namespace vt {
     class TileLayer final {
     public:
-        explicit TileLayer(int layerIdx, std::shared_ptr<FloatFunction> opacity, boost::optional<CompOp> compOp, std::vector<std::shared_ptr<TileBitmap>> bitmaps, std::vector<std::shared_ptr<TileGeometry>> geometries, std::vector<std::shared_ptr<TileLabel>> labels) : _layerIdx(layerIdx), _opacity(std::move(opacity)), _compOp(std::move(compOp)), _bitmaps(std::move(bitmaps)), _geometries(std::move(geometries)), _labels(std::move(labels)) { }
+        explicit TileLayer(int layerIdx, boost::optional<CompOp> compOp, std::shared_ptr<const FloatFunction> opacityFunc, std::vector<std::shared_ptr<TileBitmap>> bitmaps, std::vector<std::shared_ptr<TileGeometry>> geometries, std::vector<std::shared_ptr<TileLabel>> labels) : _layerIdx(layerIdx), _compOp(std::move(compOp)), _opacityFunc(std::move(opacityFunc)), _bitmaps(std::move(bitmaps)), _geometries(std::move(geometries)), _labels(std::move(labels)) { }
 
         int getLayerIndex() const { return _layerIdx; }
-        std::shared_ptr<FloatFunction> getOpacity() const { return _opacity; }
         boost::optional<CompOp> getCompOp() const { return _compOp; }
+        std::shared_ptr<const FloatFunction> getOpacityFunc() const { return _opacityFunc; }
 
         const std::vector<std::shared_ptr<TileBitmap>>& getBitmaps() const { return _bitmaps; }
         const std::vector<std::shared_ptr<TileGeometry>>& getGeometries() const { return _geometries; }
@@ -46,8 +46,8 @@ namespace carto { namespace vt {
 
     private:
         const int _layerIdx;
-        const std::shared_ptr<FloatFunction> _opacity;
         const boost::optional<CompOp> _compOp;
+        const std::shared_ptr<const FloatFunction> _opacityFunc;
         const std::vector<std::shared_ptr<TileBitmap>> _bitmaps;
         const std::vector<std::shared_ptr<TileGeometry>> _geometries;
         const std::vector<std::shared_ptr<TileLabel>> _labels;

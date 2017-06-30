@@ -149,9 +149,6 @@
           "System.Numerics.Vectors.WindowsRuntime": "[4.0.0, )",
           "System.Reflection.Context": "[4.0.0, )",
           "System.Runtime.InteropServices.WindowsRuntime": "[4.0.0, )",
-          "System.Runtime.Serialization.Json": "[4.0.0, )",
-          "System.Runtime.Serialization.Primitives": "[4.0.10, )",
-          "System.Runtime.Serialization.Xml": "[4.0.10, )",
           "System.Runtime.WindowsRuntime": "[4.0.10, )",
           "System.Runtime.WindowsRuntime.UI.Xaml": "[4.0.0, )",
           "System.ServiceModel.Duplex": "[4.0.0, )",
@@ -915,8 +912,6 @@
           "System.Runtime": "[4.0.20, )",
           "System.Runtime.Extensions": "[4.0.10, )",
           "System.Runtime.InteropServices": "[4.0.20, )",
-          "System.Runtime.Serialization.Primitives": "[4.0.10, )",
-          "System.Runtime.Serialization.Xml": "[4.0.10, )",
           "System.Runtime.WindowsRuntime": "[4.0.10, )",
           "System.Security.Claims": "[4.0.0, )",
           "System.Security.Principal": "[4.0.0, )",
@@ -1138,41 +1133,6 @@
         },
         "runtime": {
           "lib/netcore50/System.Runtime.Numerics.dll": {}
-        }
-      },
-      "System.Runtime.Serialization.Json/4.0.0": {
-        "dependencies": {
-          "System.Private.DataContractSerialization": "[4.0.0, )"
-        },
-        "compile": {
-          "ref/netcore50/System.Runtime.Serialization.Json.dll": {}
-        },
-        "runtime": {
-          "lib/netcore50/System.Runtime.Serialization.Json.dll": {}
-        }
-      },
-      "System.Runtime.Serialization.Primitives/4.0.10": {
-        "dependencies": {
-          "System.Resources.ResourceManager": "[4.0.0, )",
-          "System.Runtime": "[4.0.20, )"
-        },
-        "compile": {
-          "ref/dotnet/System.Runtime.Serialization.Primitives.dll": {}
-        },
-        "runtime": {
-          "lib/dotnet/System.Runtime.Serialization.Primitives.dll": {}
-        }
-      },
-      "System.Runtime.Serialization.Xml/4.0.10": {
-        "dependencies": {
-          "System.Private.DataContractSerialization": "[4.0.0, )",
-          "System.Runtime.Serialization.Primitives": "[4.0.10, )"
-        },
-        "compile": {
-          "ref/dotnet/System.Runtime.Serialization.Xml.dll": {}
-        },
-        "runtime": {
-          "lib/netcore50/System.Runtime.Serialization.Xml.dll": {}
         }
       },
       "System.Runtime.WindowsRuntime/4.0.10": {
@@ -1727,9 +1687,6 @@
           "System.Numerics.Vectors.WindowsRuntime": "[4.0.0, )",
           "System.Reflection.Context": "[4.0.0, )",
           "System.Runtime.InteropServices.WindowsRuntime": "[4.0.0, )",
-          "System.Runtime.Serialization.Json": "[4.0.0, )",
-          "System.Runtime.Serialization.Primitives": "[4.0.10, )",
-          "System.Runtime.Serialization.Xml": "[4.0.10, )",
           "System.Runtime.WindowsRuntime": "[4.0.10, )",
           "System.Runtime.WindowsRuntime.UI.Xaml": "[4.0.0, )",
           "System.ServiceModel.Duplex": "[4.0.0, )",
@@ -2765,41 +2722,6 @@
           "lib/netcore50/System.Runtime.Numerics.dll": {}
         }
       },
-      "System.Runtime.Serialization.Json/4.0.0": {
-        "dependencies": {
-          "System.Private.DataContractSerialization": "[4.0.0, )"
-        },
-        "compile": {
-          "ref/netcore50/System.Runtime.Serialization.Json.dll": {}
-        },
-        "runtime": {
-          "lib/netcore50/System.Runtime.Serialization.Json.dll": {}
-        }
-      },
-      "System.Runtime.Serialization.Primitives/4.0.10": {
-        "dependencies": {
-          "System.Resources.ResourceManager": "[4.0.0, )",
-          "System.Runtime": "[4.0.20, )"
-        },
-        "compile": {
-          "ref/dotnet/System.Runtime.Serialization.Primitives.dll": {}
-        },
-        "runtime": {
-          "lib/dotnet/System.Runtime.Serialization.Primitives.dll": {}
-        }
-      },
-      "System.Runtime.Serialization.Xml/4.0.10": {
-        "dependencies": {
-          "System.Private.DataContractSerialization": "[4.0.0, )",
-          "System.Runtime.Serialization.Primitives": "[4.0.10, )"
-        },
-        "compile": {
-          "ref/dotnet/System.Runtime.Serialization.Xml.dll": {}
-        },
-        "runtime": {
-          "lib/netcore50/System.Runtime.Serialization.Xml.dll": {}
-        }
-      },
       "System.Runtime.WindowsRuntime/4.0.10": {
         "dependencies": {
           "System.Diagnostics.Debug": "[4.0.10, )",
@@ -3338,9 +3260,6 @@
           "System.Numerics.Vectors.WindowsRuntime": "[4.0.0, )",
           "System.Reflection.Context": "[4.0.0, )",
           "System.Runtime.InteropServices.WindowsRuntime": "[4.0.0, )",
-          "System.Runtime.Serialization.Json": "[4.0.0, )",
-          "System.Runtime.Serialization.Primitives": "[4.0.10, )",
-          "System.Runtime.Serialization.Xml": "[4.0.10, )",
           "System.Runtime.WindowsRuntime": "[4.0.10, )",
           "System.Runtime.WindowsRuntime.UI.Xaml": "[4.0.0, )",
           "System.ServiceModel.Duplex": "[4.0.0, )",
@@ -4362,41 +4281,6 @@
           "lib/netcore50/System.Runtime.Numerics.dll": {}
         }
       },
-      "System.Runtime.Serialization.Json/4.0.0": {
-        "dependencies": {
-          "System.Private.DataContractSerialization": "[4.0.0, )"
-        },
-        "compile": {
-          "ref/netcore50/System.Runtime.Serialization.Json.dll": {}
-        },
-        "runtime": {
-          "runtimes/win8-aot/lib/netcore50/System.Runtime.Serialization.Json.dll": {}
-        }
-      },
-      "System.Runtime.Serialization.Primitives/4.0.10": {
-        "dependencies": {
-          "System.Resources.ResourceManager": "[4.0.0, )",
-          "System.Runtime": "[4.0.20, )"
-        },
-        "compile": {
-          "ref/dotnet/System.Runtime.Serialization.Primitives.dll": {}
-        },
-        "runtime": {
-          "lib/dotnet/System.Runtime.Serialization.Primitives.dll": {}
-        }
-      },
-      "System.Runtime.Serialization.Xml/4.0.10": {
-        "dependencies": {
-          "System.Private.DataContractSerialization": "[4.0.0, )",
-          "System.Runtime.Serialization.Primitives": "[4.0.10, )"
-        },
-        "compile": {
-          "ref/dotnet/System.Runtime.Serialization.Xml.dll": {}
-        },
-        "runtime": {
-          "runtimes/win8-aot/lib/netcore50/System.Runtime.Serialization.Xml.dll": {}
-        }
-      },
       "System.Runtime.WindowsRuntime/4.0.10": {
         "dependencies": {
           "System.Diagnostics.Debug": "[4.0.10, )",
@@ -4949,9 +4833,6 @@
           "System.Numerics.Vectors.WindowsRuntime": "[4.0.0, )",
           "System.Reflection.Context": "[4.0.0, )",
           "System.Runtime.InteropServices.WindowsRuntime": "[4.0.0, )",
-          "System.Runtime.Serialization.Json": "[4.0.0, )",
-          "System.Runtime.Serialization.Primitives": "[4.0.10, )",
-          "System.Runtime.Serialization.Xml": "[4.0.10, )",
           "System.Runtime.WindowsRuntime": "[4.0.10, )",
           "System.Runtime.WindowsRuntime.UI.Xaml": "[4.0.0, )",
           "System.ServiceModel.Duplex": "[4.0.0, )",
@@ -5992,41 +5873,6 @@
           "lib/netcore50/System.Runtime.Numerics.dll": {}
         }
       },
-      "System.Runtime.Serialization.Json/4.0.0": {
-        "dependencies": {
-          "System.Private.DataContractSerialization": "[4.0.0, )"
-        },
-        "compile": {
-          "ref/netcore50/System.Runtime.Serialization.Json.dll": {}
-        },
-        "runtime": {
-          "lib/netcore50/System.Runtime.Serialization.Json.dll": {}
-        }
-      },
-      "System.Runtime.Serialization.Primitives/4.0.10": {
-        "dependencies": {
-          "System.Resources.ResourceManager": "[4.0.0, )",
-          "System.Runtime": "[4.0.20, )"
-        },
-        "compile": {
-          "ref/dotnet/System.Runtime.Serialization.Primitives.dll": {}
-        },
-        "runtime": {
-          "lib/dotnet/System.Runtime.Serialization.Primitives.dll": {}
-        }
-      },
-      "System.Runtime.Serialization.Xml/4.0.10": {
-        "dependencies": {
-          "System.Private.DataContractSerialization": "[4.0.0, )",
-          "System.Runtime.Serialization.Primitives": "[4.0.10, )"
-        },
-        "compile": {
-          "ref/dotnet/System.Runtime.Serialization.Xml.dll": {}
-        },
-        "runtime": {
-          "lib/netcore50/System.Runtime.Serialization.Xml.dll": {}
-        }
-      },
       "System.Runtime.WindowsRuntime/4.0.10": {
         "dependencies": {
           "System.Diagnostics.Debug": "[4.0.10, )",
@@ -6565,9 +6411,6 @@
           "System.Numerics.Vectors.WindowsRuntime": "[4.0.0, )",
           "System.Reflection.Context": "[4.0.0, )",
           "System.Runtime.InteropServices.WindowsRuntime": "[4.0.0, )",
-          "System.Runtime.Serialization.Json": "[4.0.0, )",
-          "System.Runtime.Serialization.Primitives": "[4.0.10, )",
-          "System.Runtime.Serialization.Xml": "[4.0.10, )",
           "System.Runtime.WindowsRuntime": "[4.0.10, )",
           "System.Runtime.WindowsRuntime.UI.Xaml": "[4.0.0, )",
           "System.ServiceModel.Duplex": "[4.0.0, )",
@@ -7589,41 +7432,6 @@
           "lib/netcore50/System.Runtime.Numerics.dll": {}
         }
       },
-      "System.Runtime.Serialization.Json/4.0.0": {
-        "dependencies": {
-          "System.Private.DataContractSerialization": "[4.0.0, )"
-        },
-        "compile": {
-          "ref/netcore50/System.Runtime.Serialization.Json.dll": {}
-        },
-        "runtime": {
-          "runtimes/win8-aot/lib/netcore50/System.Runtime.Serialization.Json.dll": {}
-        }
-      },
-      "System.Runtime.Serialization.Primitives/4.0.10": {
-        "dependencies": {
-          "System.Resources.ResourceManager": "[4.0.0, )",
-          "System.Runtime": "[4.0.20, )"
-        },
-        "compile": {
-          "ref/dotnet/System.Runtime.Serialization.Primitives.dll": {}
-        },
-        "runtime": {
-          "lib/dotnet/System.Runtime.Serialization.Primitives.dll": {}
-        }
-      },
-      "System.Runtime.Serialization.Xml/4.0.10": {
-        "dependencies": {
-          "System.Private.DataContractSerialization": "[4.0.0, )",
-          "System.Runtime.Serialization.Primitives": "[4.0.10, )"
-        },
-        "compile": {
-          "ref/dotnet/System.Runtime.Serialization.Xml.dll": {}
-        },
-        "runtime": {
-          "runtimes/win8-aot/lib/netcore50/System.Runtime.Serialization.Xml.dll": {}
-        }
-      },
       "System.Runtime.WindowsRuntime/4.0.10": {
         "dependencies": {
           "System.Diagnostics.Debug": "[4.0.10, )",
@@ -8176,9 +7984,6 @@
           "System.Numerics.Vectors.WindowsRuntime": "[4.0.0, )",
           "System.Reflection.Context": "[4.0.0, )",
           "System.Runtime.InteropServices.WindowsRuntime": "[4.0.0, )",
-          "System.Runtime.Serialization.Json": "[4.0.0, )",
-          "System.Runtime.Serialization.Primitives": "[4.0.10, )",
-          "System.Runtime.Serialization.Xml": "[4.0.10, )",
           "System.Runtime.WindowsRuntime": "[4.0.10, )",
           "System.Runtime.WindowsRuntime.UI.Xaml": "[4.0.0, )",
           "System.ServiceModel.Duplex": "[4.0.0, )",
@@ -8952,8 +8757,6 @@
           "System.Runtime": "[4.0.20, )",
           "System.Runtime.Extensions": "[4.0.10, )",
           "System.Runtime.InteropServices": "[4.0.20, )",
-          "System.Runtime.Serialization.Primitives": "[4.0.10, )",
-          "System.Runtime.Serialization.Xml": "[4.0.10, )",
           "System.Runtime.WindowsRuntime": "[4.0.10, )",
           "System.Security.Claims": "[4.0.0, )",
           "System.Security.Principal": "[4.0.0, )",
@@ -9217,41 +9020,6 @@
         },
         "runtime": {
           "lib/netcore50/System.Runtime.Numerics.dll": {}
-        }
-      },
-      "System.Runtime.Serialization.Json/4.0.0": {
-        "dependencies": {
-          "System.Private.DataContractSerialization": "[4.0.0, )"
-        },
-        "compile": {
-          "ref/netcore50/System.Runtime.Serialization.Json.dll": {}
-        },
-        "runtime": {
-          "lib/netcore50/System.Runtime.Serialization.Json.dll": {}
-        }
-      },
-      "System.Runtime.Serialization.Primitives/4.0.10": {
-        "dependencies": {
-          "System.Resources.ResourceManager": "[4.0.0, )",
-          "System.Runtime": "[4.0.20, )"
-        },
-        "compile": {
-          "ref/dotnet/System.Runtime.Serialization.Primitives.dll": {}
-        },
-        "runtime": {
-          "lib/dotnet/System.Runtime.Serialization.Primitives.dll": {}
-        }
-      },
-      "System.Runtime.Serialization.Xml/4.0.10": {
-        "dependencies": {
-          "System.Private.DataContractSerialization": "[4.0.0, )",
-          "System.Runtime.Serialization.Primitives": "[4.0.10, )"
-        },
-        "compile": {
-          "ref/dotnet/System.Runtime.Serialization.Xml.dll": {}
-        },
-        "runtime": {
-          "lib/netcore50/System.Runtime.Serialization.Xml.dll": {}
         }
       },
       "System.Runtime.WindowsRuntime/4.0.10": {
@@ -9792,9 +9560,6 @@
           "System.Numerics.Vectors.WindowsRuntime": "[4.0.0, )",
           "System.Reflection.Context": "[4.0.0, )",
           "System.Runtime.InteropServices.WindowsRuntime": "[4.0.0, )",
-          "System.Runtime.Serialization.Json": "[4.0.0, )",
-          "System.Runtime.Serialization.Primitives": "[4.0.10, )",
-          "System.Runtime.Serialization.Xml": "[4.0.10, )",
           "System.Runtime.WindowsRuntime": "[4.0.10, )",
           "System.Runtime.WindowsRuntime.UI.Xaml": "[4.0.0, )",
           "System.ServiceModel.Duplex": "[4.0.0, )",
@@ -10563,8 +10328,6 @@
           "System.Runtime": "[4.0.20, )",
           "System.Runtime.Extensions": "[4.0.10, )",
           "System.Runtime.InteropServices": "[4.0.20, )",
-          "System.Runtime.Serialization.Primitives": "[4.0.10, )",
-          "System.Runtime.Serialization.Xml": "[4.0.10, )",
           "System.Runtime.WindowsRuntime": "[4.0.10, )",
           "System.Security.Claims": "[4.0.0, )",
           "System.Security.Principal": "[4.0.0, )",
@@ -10814,41 +10577,6 @@
         },
         "runtime": {
           "lib/netcore50/System.Runtime.Numerics.dll": {}
-        }
-      },
-      "System.Runtime.Serialization.Json/4.0.0": {
-        "dependencies": {
-          "System.Private.DataContractSerialization": "[4.0.0, )"
-        },
-        "compile": {
-          "ref/netcore50/System.Runtime.Serialization.Json.dll": {}
-        },
-        "runtime": {
-          "runtimes/win8-aot/lib/netcore50/System.Runtime.Serialization.Json.dll": {}
-        }
-      },
-      "System.Runtime.Serialization.Primitives/4.0.10": {
-        "dependencies": {
-          "System.Resources.ResourceManager": "[4.0.0, )",
-          "System.Runtime": "[4.0.20, )"
-        },
-        "compile": {
-          "ref/dotnet/System.Runtime.Serialization.Primitives.dll": {}
-        },
-        "runtime": {
-          "lib/dotnet/System.Runtime.Serialization.Primitives.dll": {}
-        }
-      },
-      "System.Runtime.Serialization.Xml/4.0.10": {
-        "dependencies": {
-          "System.Private.DataContractSerialization": "[4.0.0, )",
-          "System.Runtime.Serialization.Primitives": "[4.0.10, )"
-        },
-        "compile": {
-          "ref/dotnet/System.Runtime.Serialization.Xml.dll": {}
-        },
-        "runtime": {
-          "runtimes/win8-aot/lib/netcore50/System.Runtime.Serialization.Xml.dll": {}
         }
       },
       "System.Runtime.WindowsRuntime/4.0.10": {

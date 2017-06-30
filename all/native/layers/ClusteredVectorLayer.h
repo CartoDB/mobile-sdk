@@ -11,6 +11,7 @@
 #include "components/DirectorPtr.h"
 #include "graphics/ViewState.h"
 #include "layers/VectorLayer.h"
+#include "layers/ClusterElementBuilder.h"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -23,7 +24,6 @@
 namespace carto {
     class VectorElement;
     class LocalVectorDataSource;
-    class ClusterElementBuilder;
 
     /**
      * A vector layer that supports clustering point-type features.
@@ -125,6 +125,7 @@ namespace carto {
         static const std::size_t THRESHOLD = 100;
 
         const DirectorPtr<ClusterElementBuilder> _clusterElementBuilder;
+        ClusterBuilderMode::ClusterBuilderMode _clusterBuilderMode;
 
         float _minClusterDistance;
         float _maxClusterZoom;

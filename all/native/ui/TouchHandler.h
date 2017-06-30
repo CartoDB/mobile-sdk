@@ -53,6 +53,7 @@ namespace carto {
         void setMapEventListener(const std::shared_ptr<MapEventListener>& mapEventListener);
         
         void onTouchEvent(int action, const ScreenPos& screenPos1, const ScreenPos& screenPos2);
+        void onWheelEvent(int delta, const ScreenPos& screenPos);
     
         void click(const ScreenPos& screenPos);
         void longClick(const ScreenPos& screenPos);
@@ -108,6 +109,9 @@ namespace carto {
         static const float SCALING_FACTOR_THRESHOLD;
         static const float ROTATION_SCALING_FACTOR_THRESHOLD_STICKY;
     
+        // Determines how the finger sliding distance will be converted to tilt angle
+        static const float WHEEL_TICK_TO_ZOOM_DELTA;
+
         // Determines how the finger sliding distance will be converted to tilt angle
         static const float INCHES_TO_TILT_DELTA;
 

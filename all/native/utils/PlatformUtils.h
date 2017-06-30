@@ -40,6 +40,8 @@ namespace carto {
 
         static std::string GetAppDeviceId();
 
+        static std::string GetSDKVersion();
+
         static bool ExcludeFolderFromBackup(const std::string& folder);
         
     private:

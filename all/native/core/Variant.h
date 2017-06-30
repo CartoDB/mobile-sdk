@@ -193,7 +193,7 @@ namespace carto {
          * @param val The PicoJSON value to use.
          * @return The corresponding Variant object.
          */
-        static Variant FromPicoJSON(const picojson::value& val);
+        static Variant FromPicoJSON(picojson::value val);
 
     private:
         picojson::value _value;

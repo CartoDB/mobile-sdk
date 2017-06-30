@@ -124,31 +124,31 @@ namespace carto { namespace css {
                     ;
 
                 term2 =
-                    term3											[_val = _1]
-                    >> *( (qi::lit("+") > term3)					[_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::ADD, _val, _1)]
-                        | (qi::lit("-") > term3)					[_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::SUB, _val, _1)]
+                    term3                                           [_val = _1]
+                    >> *( (qi::lit("+") > term3)                    [_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::ADD, _val, _1)]
+                        | (qi::lit("-") > term3)                    [_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::SUB, _val, _1)]
                         )
                     ;
                 
                 term3 =
-                    unary											[_val = _1]
-                    >> *( (qi::lit("*") > unary)					[_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::MUL, _val, _1)]
-                        | (qi::lit("/") > unary)					[_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::DIV, _val, _1)]
+                    unary                                           [_val = _1]
+                    >> *( (qi::lit("*") > unary)                    [_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::MUL, _val, _1)]
+                        | (qi::lit("/") > unary)                    [_val = phx::bind(&makeBinaryExpression, BinaryExpression::Op::DIV, _val, _1)]
                         )
                     ;
                 
                 unary =
-                      factor										[_val = _1]
-                    | (qi::lit("-") > unary)			            [_val = phx::bind(&makeUnaryExpression, UnaryExpression::Op::NEG, _1)]
-                    | (qi::lit("!") > unary)                       [_val = phx::bind(&makeUnaryExpression, UnaryExpression::Op::NOT, _1)]
+                      factor                                        [_val = _1]
+                    | (qi::lit("-") > unary)                        [_val = phx::bind(&makeUnaryExpression, UnaryExpression::Op::NEG, _1)]
+                    | (qi::lit("!") > unary)                        [_val = phx::bind(&makeUnaryExpression, UnaryExpression::Op::NOT, _1)]
                     ;
 
                 factor =
-                      ('@' > varid)					                [_val = phx::bind(&makeFieldVarExpression, false, _1)]
+                      ('@' > varid)                                 [_val = phx::bind(&makeFieldVarExpression, false, _1)]
                     | ('[' > unescapedfieldid > ']')                [_val = phx::bind(&makeFieldVarExpression, true, _1)]
                     | (funcid >> ('(' > (expression % ',') > ')'))  [_val = phx::bind(&makeFunctionExpression, _1, _2)]
-                    | ('(' > expressionlist > ')')					[_val = _1]
-                    | constant									    [_val = phx::bind(&makeConstExpression, _1)]
+                    | ('(' > expressionlist > ')')                  [_val = _1]
+                    | constant                                      [_val = phx::bind(&makeConstExpression, _1)]
                     ;
                 
                 op =

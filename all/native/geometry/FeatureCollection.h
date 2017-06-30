@@ -23,7 +23,7 @@ namespace carto {
          * Constructs a FeatureCollection from a vector of features.
          * @param features The features for the collection.
          */
-        explicit FeatureCollection(const std::vector<std::shared_ptr<Feature> >& features);
+        explicit FeatureCollection(std::vector<std::shared_ptr<Feature> > features);
         virtual ~FeatureCollection();
 
         /**
@@ -40,7 +40,7 @@ namespace carto {
         std::shared_ptr<Feature> getFeature(int index) const;
 
     protected:
-        std::vector<std::shared_ptr<Feature> > _features;
+        const std::vector<std::shared_ptr<Feature> > _features;
     };
 
 }

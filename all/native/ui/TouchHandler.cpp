@@ -252,6 +252,23 @@ namespace carto {
             checkMapStable();
         }
     }
+
+    void TouchHandler::onWheelEvent(int delta, const ScreenPos& screenPos) {
+        if (_options->isUserInput()) {
+            _mapRenderer->getAnimationHandler().stopPan();
+            _mapRenderer->getAnimationHandler().stopRotation();
+            _mapRenderer->getAnimationHandler().stopTilt();
+            _mapRenderer->getAnimationHandler().stopZoom();
+            
+            ViewState viewState = _mapRenderer->getViewState();
+            MapPos targetPos(_mapRenderer->screenToWorld(screenPos, viewState));
+
+            CameraZoomEvent cameraZoomTargetEvent;
+            cameraZoomTargetEvent.setZoomDelta(delta * WHEEL_TICK_TO_ZOOM_DELTA);
+            cameraZoomTargetEvent.setTargetPos(targetPos);
+            _mapRenderer->calculateCameraEvent(cameraZoomTargetEvent, 0, true);
+        }
+    }
     
     void TouchHandler::checkMapStable() {
         bool stable = false;
@@ -620,6 +637,8 @@ namespace carto {
     const float TouchHandler::SCALING_FACTOR_THRESHOLD = 0.5f;
     const float TouchHandler::ROTATION_FACTOR_THRESHOLD = 0.75f; // make rotation harder to trigger compared to scaling
     const float TouchHandler::ROTATION_SCALING_FACTOR_THRESHOLD_STICKY = 3.0f;
+
+    const float TouchHandler::WHEEL_TICK_TO_ZOOM_DELTA = 0.25f;
     
     const float TouchHandler::INCHES_TO_TILT_DELTA = 32.0f;
 

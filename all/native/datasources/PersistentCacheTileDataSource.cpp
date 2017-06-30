@@ -93,6 +93,11 @@ namespace carto {
         return tileData;
     }
 
+    bool PersistentCacheTileDataSource::isOpen() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return (bool) _database;
+    }
+
     void PersistentCacheTileDataSource::close() {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         closeDatabase();
@@ -298,6 +303,10 @@ namespace carto {
         int minZoom = _minZoom;
         int maxZoom = _maxZoom;
         if (auto dataSource = _dataSource.lock()) {
+            if (!dataSource->isOpen()) {
+                Log::Warn("PersistentCacheTileDataSource:: DownloadTask: Database is not open, skipping download");
+                return;
+            }
             projection = dataSource->getProjection();
             minZoom = std::max(minZoom, dataSource->getMinZoom());
             maxZoom = std::min(maxZoom, dataSource->getMaxZoom());
@@ -315,6 +324,10 @@ namespace carto {
         }
 
         Log::Infof("PersistentCacheTileDataSource:: DownloadTask: Starting to download %d tiles", static_cast<int>(tileCount));
+
+        if (_downloadListener) {
+            _downloadListener->onDownloadStarting(static_cast<int>(tileCount));
+        }
 
         std::uint64_t tileIndex = 0;
         for (int zoom = minZoom; zoom <= maxZoom; zoom++) {
@@ -352,7 +365,7 @@ namespace carto {
 
         if (tileIndex == tileCount && _downloadListener) {
             _downloadListener->onDownloadProgress(100.0f);
-            _downloadListener->onDownloadComplete();
+            _downloadListener->onDownloadCompleted();
         }
 
         Log::Info("PersistentCacheTileDataSource:: DownloadTask: Finished downloading");

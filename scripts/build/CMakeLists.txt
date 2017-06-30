@@ -27,7 +27,7 @@ set(SDK_LIBRARY_TYPE STATIC)
 endif()
 
 # C++ compiler flags
-add_definitions("${SDK_CPP_DEFINES} -D_CARTO_MOBILE_SDK_PLATFORM=\"\\\"${SDK_PLATFORM}\\\"\" -D_CARTO_MOBILE_SDK_VERSION=\"\\\"${SDK_VERSION}\\\"\" -DHAVE_OT -DHAVE_UCDN -DHB_NO_MT -DFT2_BUILD_LIBRARY -DUSE_STD_REGEX -DBOOST_ALL_NO_LIB")
+add_definitions("${SDK_CPP_DEFINES} -DHAVE_OT -DHAVE_UCDN -DHB_NO_MT -DFT2_BUILD_LIBRARY -DUSE_STD_REGEX -DBOOST_ALL_NO_LIB")
 if(WIN32)
 add_definitions("-DNOMINMAX -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -DRAPIDJSON_HAS_CXX11_RVALUE_REFS=1 -DRAPIDJSON_HAS_STDSTRING=1 -DRAPIDJSON_ENDIAN=RAPIDJSON_LITTLEENDIAN -DSQLITE_OS_WINRT -DSQLITE_OMIT_WAL -DNO_OS_DEPENDENCE -DGL_GLEXT_PROTOTYPES")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /WINMD /NODEFAULTLIB:vccorlib /NODEFAULTLIB:msvcrt vccorlib.lib msvcrt.lib")
@@ -73,6 +73,7 @@ include_directories(
     "${SDK_EXTERNAL_LIBS_DIR}/cryptopp"
     "${SDK_EXTERNAL_LIBS_DIR}/freetype/include"
     "${SDK_EXTERNAL_LIBS_DIR}/harfbuzz/src"
+    "${SDK_EXTERNAL_LIBS_DIR}/msdfgen"
     "${SDK_EXTERNAL_LIBS_DIR}/bidi"
     "${SDK_EXTERNAL_LIBS_DIR}/jpeg"
     "${SDK_EXTERNAL_LIBS_DIR}/miniz"
@@ -142,6 +143,7 @@ add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/bidi" bidi)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/cryptopp" cryptopp)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/freetype" freetype)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/harfbuzz" harfbuzz)
+add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/msdfgen" msdfgen)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/jpeg" jpeg)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/miniz" miniz)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/png" png)
@@ -172,6 +174,7 @@ file(GLOB SDK_SRC_FILES
     "${SDK_EXT_SRC_DIR}/*/*.h"
     "${SDK_EXT_SRC_DIR}/*/*/*.h"
 )
+set_source_files_properties("${SDK_SRC_DIR}/../../all/native/utils/PlatformUtils.cpp" PROPERTIES COMPILE_FLAGS "-D_CARTO_MOBILE_SDK_PLATFORM=\"\\\"${SDK_PLATFORM}\\\"\" -D_CARTO_MOBILE_SDK_VERSION=\"\\\"${SDK_VERSION}\\\"\"")
 if (WIN32 OR IOS OR ANDROID)
 list(REMOVE_ITEM SDK_SRC_FILES "${SDK_SRC_DIR}/network/HTTPClientPionImpl.cpp")
 endif()
@@ -254,6 +257,7 @@ set(SDK_SRC_FILES
     "${webp_SRC_FILES}"
     "${freetype_SRC_FILES}"
     "${harfbuzz_SRC_FILES}"
+    "${msdfgen_SRC_FILES}"
     "${sqlite3pp_SRC_FILES}"
     "${sqlite_SRC_FILES}"
     "${valhalla_SRC_FILES}"
@@ -290,6 +294,7 @@ set(SDK_OBJECTS
     $<TARGET_OBJECTS:webp>
     $<TARGET_OBJECTS:freetype>
     $<TARGET_OBJECTS:harfbuzz>
+    $<TARGET_OBJECTS:msdfgen>
     $<TARGET_OBJECTS:sqlite3pp>
     $<TARGET_OBJECTS:sqlite>
     $<TARGET_OBJECTS:valhalla>

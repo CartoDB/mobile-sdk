@@ -44,7 +44,7 @@ namespace carto {
         enum BillboardScaling {
             /**
              * Billboard has a constant world space size. Zooming causes the billboard
-             to get smaller or bigger on the screen.
+             * to get smaller or bigger on the screen.
              */
             BILLBOARD_SCALING_WORLD_SIZE,
             /**

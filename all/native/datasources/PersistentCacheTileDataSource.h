@@ -73,10 +73,16 @@ namespace carto {
         void stopAllDownloads();
 
         /**
-         * Close the cache database. The datasource will still work afterwards,
+         * Returns the status of the cache database.
+         * @return True if the persistent cache database is open and working, false otherwise.
+         */
+        bool isOpen() const;
+
+        /**
+         * Closes the cache database. The datasource will still work afterwards,
          * but all requests will be directed to the original datasource.
          */
-        virtual void close();
+        void close();
 
         virtual std::shared_ptr<TileData> loadTile(const MapTile& mapTile);
         

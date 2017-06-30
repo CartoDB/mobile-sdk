@@ -23,7 +23,7 @@ namespace carto {
          * Constructs a VectorData object from a list of vector elements.
          * @param elements The list of vector elements.
          */
-        VectorData(const std::vector<std::shared_ptr<VectorElement> >& elements);
+        VectorData(std::vector<std::shared_ptr<VectorElement> > elements);
         virtual ~VectorData();
         
         /**

@@ -5,9 +5,9 @@
 
 namespace carto {
 
-    LineGeometry::LineGeometry(const std::vector<MapPos>& poses) :
+    LineGeometry::LineGeometry(std::vector<MapPos> poses) :
         Geometry(),
-        _poses(poses)
+        _poses(std::move(poses))
     {
         if (_poses.size() < 2) {
             Log::Error("LineGeometry::LineGeometry: Line requires at least 2 vertices");

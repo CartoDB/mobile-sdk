@@ -31,15 +31,11 @@ namespace carto {
     }
 
     std::string BaseMapView::GetSDKVersion() {
-        std::string platformId = PlatformUtils::GetPlatformId();
-        std::string deviceOS = PlatformUtils::GetDeviceOS();
-        std::string deviceType = PlatformUtils::GetDeviceType();
-
         std::stringstream ss;
-        ss << "Build: " << platformId << "-" << _CARTO_MOBILE_SDK_VERSION;
+        ss << "Build: " << PlatformUtils::GetPlatformId() << "-" << PlatformUtils::GetSDKVersion();
         ss << ", time: " << __DATE__ << " " << __TIME__;
-        ss << ", device type: " << deviceType;
-        ss << ", device OS: " << deviceOS;
+        ss << ", device type: " << PlatformUtils::GetDeviceType();
+        ss << ", device OS: " << PlatformUtils::GetDeviceOS();
         return ss.str();
     }
     
@@ -94,6 +90,10 @@ namespace carto {
     
     void BaseMapView::onInputEvent(int event, float x1, float y1, float x2, float y2) {
         _touchHandler->onTouchEvent(event, ScreenPos(x1, y1), ScreenPos(x2, y2));
+    }
+    
+    void BaseMapView::onWheelEvent(int delta, float x, float y) {
+        _touchHandler->onWheelEvent(delta, ScreenPos(x, y));
     }
     
     MapPos BaseMapView::getFocusPos() const {

@@ -175,12 +175,14 @@ namespace carto {
         if (!err.empty()) {
             throw ParseException(err, str);
         }
-        return FromPicoJSON(val);
+        Variant var;
+        var._value = std::move(val);
+        return var;
     }
 
-    Variant Variant::FromPicoJSON(const picojson::value& val) {
+    Variant Variant::FromPicoJSON(picojson::value val) {
         Variant var;
-        var._value = val;
+        var._value = std::move(val);
         return var;
     }
 

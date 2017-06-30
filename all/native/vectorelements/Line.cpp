@@ -19,8 +19,8 @@ namespace carto {
         }
     }
         
-    Line::Line(const std::vector<MapPos>& poses, const std::shared_ptr<LineStyle>& style) :
-        VectorElement(std::make_shared<LineGeometry>(poses)),
+    Line::Line(std::vector<MapPos> poses, const std::shared_ptr<LineStyle>& style) :
+        VectorElement(std::make_shared<LineGeometry>(std::move(poses))),
         _style(style)
     {
         if (!style) {

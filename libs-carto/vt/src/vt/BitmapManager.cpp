@@ -6,34 +6,37 @@ namespace carto { namespace vt {
     BitmapManager::BitmapManager(const std::shared_ptr<BitmapLoader>& loader) : _bitmapLoader(loader) {
     }
 
-    std::shared_ptr<const Bitmap> BitmapManager::getBitmap(const std::string& fileName) const {
+    std::shared_ptr<const BitmapImage> BitmapManager::getBitmapImage(const std::string& fileName) const {
         std::lock_guard<std::mutex> lock(_mutex);
 
-        auto it = _bitmapMap.find(fileName);
-        if (it != _bitmapMap.end()) {
+        auto it = _bitmapImageMap.find(fileName);
+        if (it != _bitmapImageMap.end()) {
             return it->second;
         }
 
-        return std::shared_ptr<Bitmap>();
+        return std::shared_ptr<BitmapImage>();
     }
 
-    std::shared_ptr<const Bitmap> BitmapManager::loadBitmap(const std::string& fileName) {
+    std::shared_ptr<const BitmapImage> BitmapManager::loadBitmapImage(const std::string& fileName, bool sdfMode) {
         std::lock_guard<std::mutex> lock(_mutex);
 
-        auto it = _bitmapMap.find(fileName);
-        if (it != _bitmapMap.end()) {
+        auto it = _bitmapImageMap.find(fileName);
+        if (it != _bitmapImageMap.end()) {
             return it->second;
         }
 
-        std::shared_ptr<Bitmap> bitmap = _bitmapLoader->load(fileName);
-        _bitmapMap[fileName] = bitmap;
-        return bitmap;
+        std::shared_ptr<BitmapImage> bitmapImage;
+        if (std::shared_ptr<Bitmap> bitmap = _bitmapLoader->load(fileName)) {
+            bitmapImage = std::make_shared<BitmapImage>(sdfMode, bitmap);
+        }
+        _bitmapImageMap[fileName] = bitmapImage;
+        return bitmapImage;
     }
 
-    void BitmapManager::storeBitmap(const std::string& fileName, const std::shared_ptr<const Bitmap>& bitmap) {
+    void BitmapManager::storeBitmapImage(const std::string& fileName, const std::shared_ptr<const BitmapImage>& bitmapImage) {
         std::lock_guard<std::mutex> lock(_mutex);
 
-        _bitmapMap[fileName] = bitmap;
+        _bitmapImageMap[fileName] = bitmapImage;
     }
 
     std::shared_ptr<const BitmapPattern> BitmapManager::getBitmapPattern(const std::string& fileName) const {

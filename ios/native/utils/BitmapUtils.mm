@@ -62,7 +62,7 @@ namespace carto {
             CGColorSpaceGetColorTable(colorSpace, colorTable.data());
         }
         
-        if (bytesPerComponent != 1) {
+        if (bytesPerComponent != 1 && bytesPerComponent != 2) {
             Log::Errorf("BitmapUtils::CreateBitmapFromUImage: Failed to create Bitmap, unsupported bytes per component parameter: %u", bytesPerComponent);
             return std::shared_ptr<Bitmap>();
         }
@@ -70,7 +70,7 @@ namespace carto {
         const unsigned int* rgbaRemap = RGBA_REMAP;
         ColorFormat::ColorFormat colorFormat = ColorFormat::COLOR_FORMAT_RGBA;
         bool premultiplyAlpha = false;
-        switch (bytesPerPixel) {
+        switch (bytesPerPixel / bytesPerComponent) {
             case 4:
                 switch(info & kCGBitmapAlphaInfoMask) {
                     case kCGImageAlphaPremultipliedFirst:
@@ -115,6 +115,19 @@ namespace carto {
         CGDataProviderRef provider = CGImageGetDataProvider(cgImage);
         CFDataRef data = CGDataProviderCopyData(provider);
         const unsigned char* bytes = CFDataGetBytePtr(data);
+
+        // Convert data to 8 bit per component, if 16 bit per component
+        std::vector<unsigned char> bytes8Bit;
+        if (bytesPerComponent == 2) {
+            bytes8Bit.resize(width * height * bytesPerPixel / 2);
+            for (std::size_t i = 0; i < width * height * bytesPerPixel / 2; i++) {
+                bytes8Bit[i] = static_cast<unsigned char>(*reinterpret_cast<const unsigned short*>(&bytes[i * 2]) >> 8);
+            }
+            bytes = bytes8Bit.data();
+            bytesPerComponent /= 2;
+            bytesPerRow /= 2;
+            bytesPerPixel /= 2;
+        }
     	
         std::shared_ptr<Bitmap> bitmap;
         if (!premultiplyAlpha && rgbaRemap == RGBA_REMAP) {

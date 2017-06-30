@@ -107,13 +107,15 @@
             for (int i = 0; i < _pointerStates.Count; i++) {
                 if (_pointerStates[i].pointerId == currentPoint.PointerId) {
                     _pointerStates.RemoveAt(i);
-                    break;
                 }
+            }
+            if (_pointerStates.Count >= 2) {
+                Log.Warn("MapView.OnPointerPressed: More than 2 pointers active");
             }
             PointerState state;
             state.pointerId = currentPoint.PointerId;
             state.pointerPoint = currentPoint;
-            _pointerStates.Add(state);
+            _pointerStates.Insert(0, state);
             UpdateInputCoordinates(_pointerStates.Count > 1 ? NativeActionPointer2Down : NativeActionPointer1Down);
             args.Handled = true;
         }
@@ -143,6 +145,21 @@
                     args.Handled = true;
                     break;
                 }
+            }
+        }
+
+        protected override void OnPointerCanceled(Windows.UI.Xaml.Input.PointerRoutedEventArgs args) {
+            _pointerStates.Clear();
+            UpdateInputCoordinates(NativeActionCancel);
+            args.Handled = true;
+        }
+
+        protected override void OnPointerWheelChanged(Windows.UI.Xaml.Input.PointerRoutedEventArgs args) {
+            Windows.UI.Input.PointerPoint currentPoint = args.GetCurrentPoint(this);
+            int delta = currentPoint.Properties.MouseWheelDelta / 120;
+            if (delta != 0) {
+                _baseMapView.OnWheelEvent(delta, (float)ConvertDipsToPixels(currentPoint.Position.X), (float)ConvertDipsToPixels(currentPoint.Position.Y));
+                args.Handled = true;
             }
         }
 

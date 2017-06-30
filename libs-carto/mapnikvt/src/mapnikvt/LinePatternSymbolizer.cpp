@@ -14,9 +14,10 @@ namespace carto { namespace mvt {
         
         vt::CompOp compOp = convertCompOp(_compOp);
 
-        std::shared_ptr<const vt::FloatFunction> widthFunc = createFloatFunction(pattern->bitmap->height * 0.375f);
+        std::shared_ptr<const vt::FloatFunction> widthFunc = _functionBuilder.createFloatFunction(pattern->bitmap->height * PATTERN_SCALE);
+        std::shared_ptr<const vt::ColorFunction> fillFunc = _functionBuilder.createColorOpacityFunction(_fillFunc, _opacityFunc);
 
-        vt::LineStyle style(compOp, vt::LineJoinMode::MITER, vt::LineCapMode::NONE, _fill, _opacity, widthFunc, symbolizerContext.getStrokeMap(), pattern, _geometryTransform);
+        vt::LineStyle style(compOp, vt::LineJoinMode::MITER, vt::LineCapMode::NONE, fillFunc, widthFunc, pattern, _geometryTransform);
 
         std::size_t featureIndex = 0;
         std::size_t geometryIndex = 0;
@@ -59,7 +60,7 @@ namespace carto { namespace mvt {
                 }
             }
             return false;
-        }, style);
+        }, style, symbolizerContext.getStrokeMap());
     }
 
     void LinePatternSymbolizer::bindParameter(const std::string& name, const std::string& value) {
@@ -67,10 +68,10 @@ namespace carto { namespace mvt {
             bind(&_file, parseStringExpression(value));
         }
         else if (name == "fill") {
-            bind(&_fill, parseStringExpression(value), &LinePatternSymbolizer::convertColor);
+            bind(&_fillFunc, parseStringExpression(value), &LinePatternSymbolizer::convertColor);
         }
         else if (name == "opacity") {
-            bind(&_opacity, parseExpression(value));
+            bind(&_opacityFunc, parseExpression(value));
         }
         else {
             GeometrySymbolizer::bindParameter(name, value);
