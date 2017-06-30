@@ -34,10 +34,10 @@
 
 namespace {
 
-    typedef boost::geometry::model::d2::point_xy<double> PointType;
-    typedef boost::geometry::model::linestring<PointType> LinestringType;
-    typedef boost::geometry::model::polygon<PointType> PolygonType;
-    typedef boost::variant<PointType, LinestringType, PolygonType> GeometryType;
+    typedef boost::geometry::model::d2::point_xy<double> BoostPointType;
+    typedef boost::geometry::model::linestring<BoostPointType> BoostLinestringType;
+    typedef boost::geometry::model::polygon<BoostPointType> BoostPolygonType;
+    typedef boost::variant<BoostPointType, BoostLinestringType, BoostPolygonType> BoostGeometryType;
 
     std::shared_ptr<carto::Geometry> convertToEPSG3857(const std::shared_ptr<carto::Geometry>& geometry, const std::shared_ptr<carto::Projection>& proj) {
         if (std::dynamic_pointer_cast<carto::EPSG3857>(proj)) {
@@ -69,22 +69,22 @@ namespace {
         }
     }
 
-    GeometryType convertToBoostGeometry(const std::shared_ptr<carto::Geometry>& geometry) {
+    BoostGeometryType convertToBoostGeometry(const std::shared_ptr<carto::Geometry>& geometry) {
         if (auto pointGeometry = std::dynamic_pointer_cast<carto::PointGeometry>(geometry)) {
             carto::MapPos mapPos = pointGeometry->getPos();
-            PointType boostPoint(mapPos.getX(), mapPos.getY());
+            BoostPointType boostPoint(mapPos.getX(), mapPos.getY());
             return boostPoint;
         } else if (auto lineGeometry = std::dynamic_pointer_cast<carto::LineGeometry>(geometry)) {
             const std::vector<carto::MapPos>& mapPoses = lineGeometry->getPoses();
-            LinestringType boostLinestring;
-            std::for_each(mapPoses.begin(), mapPoses.end(), [&boostLinestring](const carto::MapPos& mapPos) { boostLinestring.push_back(PointType(mapPos.getX(), mapPos.getY())); });
+            BoostLinestringType boostLinestring;
+            std::for_each(mapPoses.begin(), mapPoses.end(), [&boostLinestring](const carto::MapPos& mapPos) { boostLinestring.push_back(BoostPointType(mapPos.getX(), mapPos.getY())); });
             return boostLinestring;
         } else if (auto polygonGeometry = std::dynamic_pointer_cast<carto::PolygonGeometry>(geometry)) {
             const std::vector<std::vector<carto::MapPos> >& rings = polygonGeometry->getRings();
-            PolygonType boostPolygon;
+            BoostPolygonType boostPolygon;
             for (std::size_t i = 0; i < rings.size(); i++) {
-                PolygonType::ring_type boostRing;
-                std::for_each(rings[i].begin(), rings[i].end(), [&boostRing](const carto::MapPos& mapPos) { boostRing.push_back(PointType(mapPos.getX(), mapPos.getY())); });
+                BoostPolygonType::ring_type boostRing;
+                std::for_each(rings[i].begin(), rings[i].end(), [&boostRing](const carto::MapPos& mapPos) { boostRing.push_back(BoostPointType(mapPos.getX(), mapPos.getY())); });
                 if (i == 0) {
                     boostPolygon.outer() = std::move(boostRing);
                 } else {
