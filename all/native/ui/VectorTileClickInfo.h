@@ -11,6 +11,7 @@
 #include "core/MapTile.h"
 #include "ui/ClickType.h"
 #include "geometry/Feature.h"
+#include "vectortiles/VectorTileFeature.h"
 
 #include <memory>
 #include <string>
@@ -29,12 +30,10 @@ namespace carto {
          * @param clickPos The click position in the coordinate system of the base projection.
          * @param featureClickPos The click position in the coordinate system of the base projection that corresponds to feature point.
          * @param mapTile The clicked tile id.
-         * @param featureId The id of the clicked feature.
-         * @param feature The clicked feature.
-         * @param featureLayerName The layer name of the clicked feature.
-         * @param layer The layer of the vector tile on which the click was performed.
+         * @param vectorTileFeature The clicked vector tile feature.
+         * @param layer The layer on which the click was performed.
          */
-        VectorTileClickInfo(ClickType::ClickType clickType, const MapPos& clickPos, const MapPos& featureClickPos, const MapTile& mapTile, long long featureId, const std::shared_ptr<Feature>& feature, const std::string& featureLayerName, const std::shared_ptr<Layer>& layer);
+        VectorTileClickInfo(ClickType::ClickType clickType, const MapPos& clickPos, const MapPos& featureClickPos, const MapTile& mapTile, const std::shared_ptr<VectorTileFeature>& vectorTileFeature, const std::shared_ptr<Layer>& layer);
         virtual ~VectorTileClickInfo();
     
         /**
@@ -63,6 +62,12 @@ namespace carto {
          * @return The tile id of the clicked feature.
          */
         const MapTile& getMapTile() const;
+
+        /**
+         * Returns the clicked feature.
+         * @return The feature on which the click was performed.
+         */
+        std::shared_ptr<VectorTileFeature> getVectorTileFeature() const;
 
         /**
          * Returns the id of the clicked feature.
@@ -94,10 +99,7 @@ namespace carto {
         MapPos _clickPos;
         MapPos _featureClickPos;
         MapTile _mapTile;
-    
-        long long _featureId;
-        std::shared_ptr<Feature> _feature;
-        std::string _featureLayerName;
+        std::shared_ptr<VectorTileFeature> _vectorTileFeature;
         std::shared_ptr<Layer> _layer;
     };
     
