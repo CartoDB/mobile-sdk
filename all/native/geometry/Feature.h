@@ -15,7 +15,7 @@ namespace carto {
     class Geometry;
 
     /**
-     * A feature consisting of geometry and properties
+     * A feature consisting of geometry and properties.
      */
     class Feature {
     public:
