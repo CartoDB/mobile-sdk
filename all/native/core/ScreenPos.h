@@ -54,13 +54,13 @@ namespace carto {
          * @param n The index of the requested coordinate.
          * @return The n-th coordinate of this position.
          */
-        float operator[](std::size_t n) const;
+        float operator [](std::size_t n) const;
         /**
          * Returns a modifiable n-th coordinate of this position.
          * @param n The index of the requested coordinate.
          * @return The modifiable n-th coordinate of this position.
          */
-        float& operator[](std::size_t n);
+        float& operator [](std::size_t n);
         
         /**
          * Sets the x and y coordinates of this position.
@@ -74,13 +74,13 @@ namespace carto {
          * @param p The other screen position.
          * @return True if equal.
          */
-        bool operator==(const ScreenPos& p) const;
+        bool operator ==(const ScreenPos& p) const;
         /**
          * Checks for inequality between this and another screen position.
          * @param p The other screen position.
          * @return True if not equal.
          */
-        bool operator!=(const ScreenPos& p) const;
+        bool operator !=(const ScreenPos& p) const;
         
         /**
          * Returns the hash value of this object.

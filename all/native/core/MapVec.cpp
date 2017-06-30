@@ -46,7 +46,7 @@ namespace carto {
         _z = z;
     }
 
-    double MapVec::operator[](std::size_t n) const {
+    double MapVec::operator [](std::size_t n) const {
         switch (n) {
         case 0:
             return _x;
@@ -58,7 +58,7 @@ namespace carto {
         throw OutOfRangeException("MapVec::operator[]");
     }
 
-    double& MapVec::operator[](std::size_t n) {
+    double& MapVec::operator [](std::size_t n) {
         switch (n) {
         case 0:
             return _x;
@@ -81,55 +81,55 @@ namespace carto {
         _z = z;
     }
 
-    bool MapVec::operator==(const MapVec& v) const {
+    bool MapVec::operator ==(const MapVec& v) const {
         return _x == v._x && _y == v._y && _z == v._z;
     }
 
-    bool MapVec::operator!=(const MapVec& v) const {
-        return !(operator==(v));
+    bool MapVec::operator !=(const MapVec& v) const {
+        return !(*this == v);
     }
     
-    MapVec& MapVec::operator+=(const MapVec& v) {
+    MapVec& MapVec::operator +=(const MapVec& v) {
         _x += v.getX();
         _y += v.getY();
         _z += v.getZ();
         return *this;
     }
     
-    MapVec& MapVec::operator-=(const MapVec& v) {
+    MapVec& MapVec::operator -=(const MapVec& v) {
         _x -= v.getX();
         _y -= v.getY();
         _z -= v.getZ();
         return *this;
     }
     
-    MapVec& MapVec::operator*=(double multiplier) {
+    MapVec& MapVec::operator *=(double multiplier) {
         _x *= multiplier;
         _y *= multiplier;
         _z *= multiplier;
         return *this;
     }
     
-    MapVec& MapVec::operator/=(double divider) {
+    MapVec& MapVec::operator /=(double divider) {
         _x /= divider;
         _y /= divider;
         _z /= divider;
         return *this;
     }
     
-    MapVec MapVec::operator+(const MapVec& v) const {
+    MapVec MapVec::operator +(const MapVec& v) const {
         return MapVec(_x + v._x, _y + v._y, _z + v._z);
     }
     
-    MapVec MapVec::operator-(const MapVec& v) const {
+    MapVec MapVec::operator -(const MapVec& v) const {
         return MapVec(_x - v._x, _y - v._y, _z - v._z);
     }
     
-    MapVec MapVec::operator*(double multiplier) const {
+    MapVec MapVec::operator *(double multiplier) const {
         return MapVec(_x * multiplier, _y * multiplier, _z * multiplier);
     }
     
-    MapVec MapVec::operator/(double divider) const {
+    MapVec MapVec::operator /(double divider) const {
         return MapVec(_x / divider, _y / divider, _z / divider);
     }
     

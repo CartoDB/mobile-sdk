@@ -32,20 +32,19 @@ namespace carto {
          * @param max The maximum position.
          */
         ScreenBounds(const ScreenPos& min, const ScreenPos& max);
-        virtual ~ScreenBounds();
         
         /**
          * Checks for equality between this and another screen bounds object.
          * @param ScreenBounds The other screen bounds object.
          * @return True if equal.
          */
-        bool operator==(const ScreenBounds& ScreenBounds) const;
+        bool operator ==(const ScreenBounds& ScreenBounds) const;
         /**
          * Checks for inequality between this and another screen bounds object.
          * @param ScreenBounds The other screen bounds object.
          * @return True if not equal.
          */
-        bool operator!=(const ScreenBounds& ScreenBounds) const;
+        bool operator !=(const ScreenBounds& ScreenBounds) const;
         
         /**
          * Sets the minimum and maximum screen positions of this screen bounds object. If a coordinate of the

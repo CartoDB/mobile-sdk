@@ -27,7 +27,7 @@ namespace carto {
     }
     
     bool MapRange::operator !=(const MapRange& mapRange) const {
-        return !(operator==(mapRange));
+        return !(*this == mapRange);
     }
     
     float MapRange::getMin() const {
