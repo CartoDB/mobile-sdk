@@ -22,11 +22,15 @@ namespace sqlite3pp {
 
 namespace carto { namespace geocoding {
     struct Address final {
-        enum class Type {
-            NONE, COUNTRY, REGION, COUNTY, LOCALITY, NEIGHBOURHOOD, STREET, ADDRESS, POI
+        enum class EntityType {
+            NONE, COUNTRY, REGION, COUNTY, LOCALITY, NEIGHBOURHOOD, STREET, RESERVED1, POI, ADDRESS
         };
         
-        Type type;
+        enum class FieldType {
+            NONE, COUNTRY, REGION, COUNTY, LOCALITY, NEIGHBOURHOOD, STREET, POSTCODE, NAME, HOUSENUMBER
+        };
+
+        EntityType type;
         std::string country;
         std::string region;
         std::string county;
@@ -38,8 +42,6 @@ namespace carto { namespace geocoding {
         std::string name;
         std::vector<Feature> features;
         std::set<std::string> categories;
-
-        static std::string buildTypeFilter(const std::vector<Type>& types);
 
         bool loadFromDB(sqlite3pp::database& db, std::uint64_t encodedId, const std::string& language, const PointConverter& converter);
 

@@ -70,7 +70,7 @@ namespace carto { namespace geocoding {
                 throw std::runtime_error("Offset out of bounds");
             }
             _offset += len;
-            return std::string(reinterpret_cast<const char*>(_data), len);
+            return std::string(reinterpret_cast<const char*>(_data + _offset - len), len);
         }
 
     private:

@@ -32,26 +32,35 @@ namespace carto { namespace geocoding {
         int size() const { return static_cast<int>(_tokens.size()); }
 
         int unmatchedTokens() const {
-            return static_cast<int>(std::count_if(_tokens.begin(), _tokens.end(), [](const Token& token) { return !token.value.empty() && token.assignedType == TokenType(); }));
+            return static_cast<int>(std::count_if(_tokens.begin(), _tokens.end(), [](const Token& token) { return !token.value.empty() && token.assignedTypeMask == 0; }));
         }
 
-        int unmatchedInvalidTokens(std::uint32_t validTypeMask = std::numeric_limits<std::uint32_t>::max()) const {
-            return static_cast<int>(std::count_if(_tokens.begin(), _tokens.end(), [validTypeMask](const Token& token) { return !token.value.empty() && token.assignedType == TokenType() && (token.validTypeMask & validTypeMask) == 0; }));
+        int unmatchedInvalidTokens() const {
+            std::uint32_t validTypeMask = std::numeric_limits<std::uint32_t>::max();
+            for (std::size_t i = 0; i < _tokens.size(); i++) {
+                if (_tokens[i].assignedTypeMask != 0) {
+                    if (bitCount(_tokens[i].assignedTypeMask) == 1) {
+                        validTypeMask = validTypeMask & ~_tokens[i].assignedTypeMask;
+                    }
+                }
+            }
+            
+            return static_cast<int>(std::count_if(_tokens.begin(), _tokens.end(), [validTypeMask](const Token& token) { return !token.value.empty() && token.assignedTypeMask == 0 && (token.validTypeMask & validTypeMask) == 0; }));
         }
 
-		std::vector<std::pair<TokenType, StringType>> assignment() const {
-			std::vector<std::pair<TokenType, StringType>> types;
-			types.reserve(_tokens.size());
-			for (const Token& token : _tokens) {
-				if (token.assignedType != TokenType()) {
-					types.emplace_back(token.assignedType, token.value);
-				}
-			}
-			std::stable_sort(types.begin(), types.end(), [](const std::pair<TokenType, StringType>& t1, const std::pair<TokenType, StringType>& t2) {
-				return static_cast<int>(t1.first) < static_cast<int>(t2.first);
-			});
-			return types;
-		}
+        std::vector<std::pair<std::uint32_t, StringType>> assignment() const {
+            std::vector<std::pair<std::uint32_t, StringType>> types;
+            types.reserve(_tokens.size());
+            for (const Token& token : _tokens) {
+                if (token.assignedTypeMask != 0) {
+                    types.emplace_back(token.assignedTypeMask, token.value);
+                }
+            }
+            std::stable_sort(types.begin(), types.end(), [](const std::pair<std::uint32_t, StringType>& t1, const std::pair<std::uint32_t, StringType>& t2) {
+                return t1 < t2;
+            });
+            return types;
+        }
 
         void setTag(int index, const TagType& tag) {
             _tokens.at(index).tag = tag;
@@ -61,45 +70,15 @@ namespace carto { namespace geocoding {
             _tokens.at(index).idf = idf;
         }
 
-        void setValidTypeMask(int index, std::uint32_t validTypeMask) {
-            _tokens.at(index).validTypeMask = validTypeMask;
+        void setValidTypeMask(int index, std::uint32_t typeMask) {
+            _tokens.at(index).validTypeMask = typeMask;
         }
 
-        void assignType(const Span& span, TokenType type) {
-            std::uint32_t typeMask = static_cast<std::uint32_t>(1) << static_cast<int>(type);
+        void assignTypeMask(const Span& span, std::uint32_t typeMask) {
             for (std::size_t i = span.index; i < span.index + span.count; i++) {
-                _tokens.at(i).assignedType = type;
+                _tokens.at(i).assignedTypeMask = _tokens.at(i).validTypeMask & typeMask;
                 _tokens.at(i).validTypeMask = 0;
             }
-            for (std::size_t i = 0; i < _tokens.size(); i++) {
-                _tokens.at(i).validTypeMask &= ~typeMask;
-            }
-        }
-
-        TokenType prevType(const Span& span) const {
-            if (span.index < 0) {
-                return TokenType();
-            }
-
-            for (std::size_t i = span.index; i > 0; i--) {
-                if (!_tokens[i - 1].value.empty()) {
-                    return _tokens[i - 1].assignedType;
-                }
-            }
-            return TokenType();
-        }
-
-        TokenType nextType(const Span& span) const {
-            if (span.index < 0) {
-                return TokenType();
-            }
-
-            for (std::size_t i = span.index + span.count; i < _tokens.size(); i++) {
-                if (!_tokens[i].value.empty()) {
-                    return _tokens[i].assignedType;
-                }
-            }
-            return TokenType();
         }
 
         StringType name(TokenType type) const {
@@ -130,94 +109,45 @@ namespace carto { namespace geocoding {
             return tags;
         }
 
-        bool valid() const {
-            if (std::count_if(_tokens.begin(), _tokens.end(), [](const Token& token) {
-                return !token.value.empty() && token.assignedType == TokenType() && token.validTypeMask == 0;
-            }) != 0) {
-                return false;
-            }
-
-            std::uint32_t validTypeMaskUnion = 0;
+        void enumerateSpans(const std::function<bool(std::uint32_t, const Span&)>& callback) const {
+            std::uint32_t validTypeMask = std::numeric_limits<std::uint32_t>::max();
             for (std::size_t i = 0; i < _tokens.size(); i++) {
-                validTypeMaskUnion |= _tokens[i].validTypeMask;
+                if (_tokens[i].assignedTypeMask != 0) {
+                    if (bitCount(_tokens[i].assignedTypeMask) == 1) {
+                        validTypeMask = validTypeMask & ~_tokens[i].assignedTypeMask;
+                    }
+                }
             }
+            
+            for (std::size_t size = _tokens.size(); size > 0; size--) {
+                std::vector<std::pair<std::uint32_t, Span>> spans;
+                for (std::size_t j = _tokens.size(); j >= size; j--) {
+                    std::size_t i = j - size;
+                    std::uint32_t typeMask = validTypeMask;
+                    for (std::size_t k = i; k < j; k++) {
+                        if (_tokens[k].assignedTypeMask != 0) {
+                            typeMask = 0;
+                        }
+                        typeMask &= _tokens[k].validTypeMask;
+                    }
 
-            for (std::uint32_t typeMask = 1; typeMask <= validTypeMaskUnion; typeMask <<= 1) {
-                std::size_t minIndex = _tokens.size(), maxIndex = 0;
-                for (std::size_t i = 0; i < _tokens.size(); i++) {
-                    if (_tokens[i].validTypeMask == typeMask) {
-                        minIndex = std::min(minIndex, i);
-                        maxIndex = std::max(maxIndex, i);
+                    if (typeMask) {
+                        Span span(static_cast<int>(i), static_cast<int>(j - i));
+                        spans.emplace_back(typeMask, span);
                     }
                 }
-                for (std::size_t i = minIndex; i <= maxIndex; i++) {
-                    if (!(_tokens[i].validTypeMask & typeMask)) {
-                        return false;
+                
+                std::sort(spans.begin(), spans.end(), [](const std::pair<std::uint32_t, Span>& span1, const std::pair<std::uint32_t, Span>& span2) {
+                    return bitCount(span1.first) < bitCount(span2.first);
+                });
+                
+                for (const std::pair<std::uint32_t, Span>& span : spans) {
+                    if (!callback(span.first, span.second)) {
+                        return;
                     }
                 }
             }
-            return true;
         }
-
-        void enumerateSpans(std::uint32_t validTypeMask, std::uint32_t strictTypeMask, const std::function<bool(const std::vector<std::pair<TokenType, Span>>&)>& callback) const {
-			for (std::size_t size = _tokens.size(); size > 0; size--) {
-				std::vector<std::pair<TokenType, Span>> spans;
-				for (std::size_t j = _tokens.size(); j >= size; j--) {
-					std::size_t i = j - size;
-					std::uint32_t typeMask = validTypeMask;
-					for (std::size_t k = i; k < j; k++) {
-						if (_tokens[k].assignedType != TokenType()) {
-							typeMask = 0;
-						}
-						typeMask &= _tokens[k].validTypeMask;
-					}
-					for (std::size_t k = 0; k < i; k++) {
-						if (_tokens[k].validTypeMask == typeMask) {
-							//typeMask = 0;
-						}
-					}
-					for (std::size_t k = j; k < _tokens.size(); k++) {
-						if (_tokens[k].validTypeMask == typeMask) {
-							//typeMask = 0;
-						}
-					}
-
-					if (typeMask) {
-						Span span(static_cast<int>(i), static_cast<int>(j - i));
-						/*
-						if ((typeMask & strictTypeMask) == 0) {
-						for (std::size_t k = 0; k < spans.size(); k++) {
-						bool match = true;
-						for (int offset = 0; offset < span.count; offset++) {
-						if (_tokens[span.index + offset].first != _tokens[spans[k].second.index + offset].first || _tokens[span.index + offset].value != _tokens[spans[k].second.index + offset].value) {
-						match = false;
-						break;
-						}
-						}
-						if (match) {
-						typeMask = 0;
-						break;
-						}
-						}
-						}
-						*/
-						for (int type = 0; static_cast<std::uint32_t>(1 << type) <= typeMask; type++) {
-							if (typeMask & (1 << type)) {
-								spans.emplace_back(static_cast<TokenType>(type), span);
-							}
-						}
-					}
-				}
-				if (!spans.empty()) {
-					if (!callback(spans)) {
-						return;
-					}
-				}
-			}
-
-			std::vector<std::pair<TokenType, Span>> spans = { { TokenType(), Span(-1, 0) } };
-			callback(spans);
-		}
 
         static TaggedTokenList build(const StringType& text) {
             std::vector<Token> tokens;
@@ -266,7 +196,7 @@ namespace carto { namespace geocoding {
         struct Token {
             StringType value;
             TagType tag = TagType();
-            TokenType assignedType = TokenType();
+            std::uint32_t assignedTypeMask = 0; // todo: use bool assigned instead
             std::uint32_t validTypeMask = 0;
             float idf = 1.0f;
 
