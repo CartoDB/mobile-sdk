@@ -24,7 +24,7 @@ namespace carto {
          * @param geometry The geometry of the feature.
          * @param properties The properties of the feature.
          */
-        Feature(std::shared_ptr<Geometry> geometry, Variant properties);
+        Feature(const std::shared_ptr<Geometry>& geometry, Variant properties);
         virtual ~Feature();
         
         /**

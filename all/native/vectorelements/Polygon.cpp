@@ -19,8 +19,8 @@ namespace carto {
         }
     }
         
-    Polygon::Polygon(const std::vector<MapPos>& poses, const std::shared_ptr<PolygonStyle>& style)  :
-        VectorElement(std::make_shared<PolygonGeometry>(poses)),
+    Polygon::Polygon(std::vector<MapPos> poses, const std::shared_ptr<PolygonStyle>& style)  :
+        VectorElement(std::make_shared<PolygonGeometry>(std::move(poses))),
         _style(style)
     {
         if (!style) {
@@ -28,9 +28,9 @@ namespace carto {
         }
     }
     
-    Polygon::Polygon(const std::vector<MapPos>& poses, const std::vector<std::vector<MapPos> >& holes,
+    Polygon::Polygon(std::vector<MapPos> poses, std::vector<std::vector<MapPos> > holes,
                      const std::shared_ptr<PolygonStyle>& style)  :
-        VectorElement(std::make_shared<PolygonGeometry>(poses, holes)),
+        VectorElement(std::make_shared<PolygonGeometry>(std::move(poses), std::move(holes))),
         _style(style)
     {
         if (!style) {
