@@ -149,6 +149,10 @@ namespace carto {
     void BillboardDrawData::setRenderer(BillboardRenderer& renderer) {
         _renderer = &renderer;
     }
+
+    float BillboardDrawData::getClickScale() const {
+        return 1.0f;
+    }
     
     void BillboardDrawData::offsetHorizontally(double offset) {
         _pos(0) += offset;

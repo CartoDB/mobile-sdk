@@ -13,6 +13,7 @@ namespace carto {
         _bitmap(GetDefaultBitmap()),
         _orientationMode(BillboardOrientation::BILLBOARD_ORIENTATION_FACE_CAMERA),
         _scalingMode(BillboardScaling::BILLBOARD_SCALING_CONST_SCREEN_SIZE),
+        _clickSize(-1),
         _size(-1)
     {
     }
@@ -80,7 +81,17 @@ namespace carto {
         _scalingMode = scalingMode;
     }
         
-    float  MarkerStyleBuilder::getSize() const {
+    float MarkerStyleBuilder::getClickSize() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _clickSize;
+    }
+
+    void MarkerStyleBuilder::setClickSize(float clickSize) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _clickSize = clickSize;
+    }
+
+    float MarkerStyleBuilder::getSize() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _size;
     }
@@ -107,6 +118,7 @@ namespace carto {
                                                             _bitmap,
                                                             _orientationMode,
                                                             _scalingMode,
+                                                            _clickSize,
                                                             _size));
     }
     

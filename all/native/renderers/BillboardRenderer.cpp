@@ -246,7 +246,7 @@ namespace carto {
                 continue;
             }
     
-            CalculateBillboardCoords(*drawData, viewState, coordBuf, 0);
+            CalculateBillboardCoords(*drawData, viewState, coordBuf, 0, drawData->getClickScale());
             cglib::vec3<double> originShift(viewState.getCameraPos().getX(), viewState.getCameraPos().getY(), viewState.getCameraPos().getZ());
             cglib::vec3<double> topLeft = cglib::vec3<double>(coordBuf[0], coordBuf[1], coordBuf[2]) + originShift;
             cglib::vec3<double> bottomLeft = cglib::vec3<double>(coordBuf[3], coordBuf[4], coordBuf[5]) + originShift;
