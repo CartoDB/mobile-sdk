@@ -21,6 +21,11 @@ namespace carto {
         virtual ~TileDownloadListener() { }
     
         /**
+         * Listener method that is called before download has actually started to report the total tile count.
+         * @param tileCount The number of tiles that will be downloaded (if not already in the cache).
+         */
+        virtual void onDownloadStarting(int tileCount) { }
+        /**
          * Listener method that is called to report about download progress.
          * @param progress The progress of the download, from 0 to 100.
          */
@@ -28,7 +33,7 @@ namespace carto {
         /**
          * Listener method that is called when downloading has finished.
          */
-        virtual void onDownloadComplete() { }
+        virtual void onDownloadCompleted() { }
         /**
          * Listener method that is called when a tile download fails.
          * @param tile The tile that could not be downloaded.

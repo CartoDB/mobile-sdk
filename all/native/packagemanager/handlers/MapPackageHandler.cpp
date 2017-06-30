@@ -2,6 +2,7 @@
 
 #include "MapPackageHandler.h"
 #include "core/BinaryData.h"
+#include "components/Exceptions.h"
 #include "packagemanager/PackageTileMask.h"
 #include "utils/Log.h"
 
@@ -153,11 +154,11 @@ namespace carto {
         sqlite3pp::query query(db, "SELECT value FROM metadata WHERE name='nutikeysha1'");
         for (auto qit = query.begin(); qit != query.end(); qit++) {
             if (encKey.empty()) {
-                throw std::runtime_error("Package database is encrypted and needs encryption key");
+                throw GenericException("Package database is encrypted and needs encryption key");
             }
             std::string sha1 = qit->get<const char*>(0);
             if (sha1 != CalculateKeyHash(encKey)) {
-                throw std::runtime_error("Package encryption keys do not match");
+                throw GenericException("Package encryption keys do not match");
             }
             return true;
         }

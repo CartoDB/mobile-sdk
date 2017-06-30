@@ -5,7 +5,6 @@
 #include "packagemanager/PackageInfo.h"
 #include "packagemanager/handlers/ValhallaRoutingPackageHandler.h"
 #include "projections/Projection.h"
-#include "projections/EPSG3857.h"
 #include "routing/ValhallaRoutingProxy.h"
 #include "utils/Const.h"
 #include "utils/Log.h"

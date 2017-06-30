@@ -97,7 +97,7 @@ namespace carto {
         std::map<std::string, std::string> params;
         params["deviceId"] = PlatformUtils::GetDeviceId();
         params["platform"] = PlatformUtils::GetPlatformId();
-        params["sdk_build"] = _CARTO_MOBILE_SDK_VERSION;
+        params["sdk_build"] = PlatformUtils::GetSDKVersion();
         std::string appToken;
         if (LicenseManager::GetInstance().getParameter("appToken", appToken, false)) {
             params["appToken"] = appToken;

@@ -3,9 +3,9 @@
 
 namespace carto {
 
-    Feature::Feature(const std::shared_ptr<Geometry>& geometry, const Variant& properties) :
-        _geometry(geometry),
-        _properties(properties)
+    Feature::Feature(std::shared_ptr<Geometry> geometry, Variant properties) :
+        _geometry(std::move(geometry)),
+        _properties(std::move(properties))
     {
     }
     

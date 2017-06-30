@@ -325,6 +325,10 @@ namespace carto {
 
         Log::Infof("PersistentCacheTileDataSource:: DownloadTask: Starting to download %d tiles", static_cast<int>(tileCount));
 
+        if (_downloadListener) {
+            _downloadListener->onDownloadStarting(static_cast<int>(tileCount));
+        }
+
         std::uint64_t tileIndex = 0;
         for (int zoom = minZoom; zoom <= maxZoom; zoom++) {
             MapTile mapTile1 = TileUtils::CalculateMapTile(_mapBounds.getMin(), zoom, projection);
@@ -361,7 +365,7 @@ namespace carto {
 
         if (tileIndex == tileCount && _downloadListener) {
             _downloadListener->onDownloadProgress(100.0f);
-            _downloadListener->onDownloadComplete();
+            _downloadListener->onDownloadCompleted();
         }
 
         Log::Info("PersistentCacheTileDataSource:: DownloadTask: Finished downloading");
