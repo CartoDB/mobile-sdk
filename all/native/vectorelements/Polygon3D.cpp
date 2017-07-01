@@ -19,8 +19,8 @@ namespace carto {
         }
     }
         
-    Polygon3D::Polygon3D(const std::vector<MapPos>& poses, const std::shared_ptr<Polygon3DStyle>& style, float height) :
-        VectorElement(std::make_shared<PolygonGeometry>(poses)),
+    Polygon3D::Polygon3D(std::vector<MapPos> poses, const std::shared_ptr<Polygon3DStyle>& style, float height) :
+        VectorElement(std::make_shared<PolygonGeometry>(std::move(poses))),
         _height(height),
         _style(style)
     {
@@ -29,9 +29,9 @@ namespace carto {
         }
     }
     
-    Polygon3D::Polygon3D(const std::vector<MapPos>& poses, const std::vector<std::vector<MapPos> >& holes,
-                     const std::shared_ptr<Polygon3DStyle>& style, float height) :
-        VectorElement(std::make_shared<PolygonGeometry>(poses, holes)),
+    Polygon3D::Polygon3D(std::vector<MapPos> poses, std::vector<std::vector<MapPos> > holes,
+                         const std::shared_ptr<Polygon3DStyle>& style, float height) :
+        VectorElement(std::make_shared<PolygonGeometry>(std::move(poses), std::move(holes))),
         _height(height),
         _style(style)
     {

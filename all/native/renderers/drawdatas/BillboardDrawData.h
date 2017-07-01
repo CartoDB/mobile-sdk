@@ -85,6 +85,8 @@ namespace carto {
         BillboardRenderer* getRenderer() const;
         void setRenderer(BillboardRenderer& renderer);
     
+        virtual float getClickScale() const;
+    
         virtual void offsetHorizontally(double offset);
     
     protected:

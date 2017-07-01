@@ -19,6 +19,7 @@
 !polymorphic_shared_ptr(carto::MarkerStyle, styles.MarkerStyle)
 
 %attribute(carto::MarkerStyle, float, Size, getSize)
+%attribute(carto::MarkerStyle, float, ClickSize, getClickSize)
 %attribute(carto::MarkerStyle, carto::BillboardOrientation::BillboardOrientation, OrientationMode, getOrientationMode)
 %attribute(carto::MarkerStyle, carto::BillboardScaling::BillboardScaling, ScalingMode, getScalingMode)
 %attribute(carto::MarkerStyle, float, AnchorPointX, getAnchorPointX)

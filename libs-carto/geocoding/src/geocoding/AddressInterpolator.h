@@ -10,21 +10,19 @@
 #include "Feature.h"
 #include "FeatureReader.h"
 
-#include <string>
+#include <cstdint>
 #include <vector>
 
 namespace carto { namespace geocoding {
     class AddressInterpolator final {
     public:
-        explicit AddressInterpolator(const std::string& houseNumberPatterns);
+        explicit AddressInterpolator(EncodingStream& houseNumberStream);
 
-        int findAddress(const std::string& houseNumber) const;
-        std::vector<std::pair<std::string, std::vector<Feature>>> enumerateAddresses(FeatureReader& featureReader) const;
+        int findAddress(std::uint64_t id) const;
+        std::vector<std::pair<std::uint64_t, std::vector<Feature>>> enumerateAddresses(FeatureReader& featureReader) const;
 
     private:
-        static std::vector<std::string> enumerateHouseNumbers(const std::string& houseNumberPattern);
-
-        std::vector<std::string> _houseNumberPatterns;
+        std::vector<std::uint64_t> _houseNumbers;
     };
 } }
 

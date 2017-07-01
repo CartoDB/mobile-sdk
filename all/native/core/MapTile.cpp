@@ -22,7 +22,7 @@ namespace carto {
     }
     
     bool MapTile::operator !=(const MapTile& tile) const {
-        return !(operator==(tile));
+        return !(*this == tile);
     }
     
     int MapTile::getX() const {

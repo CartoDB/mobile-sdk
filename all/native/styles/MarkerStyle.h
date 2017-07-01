@@ -37,6 +37,7 @@ namespace carto {
          * @param bitmap The bitmap for the marker.
          * @param orientationMode The orientation mode for the marker.
          * @param scalingMode The scaling mode for the marker.
+         * @param clickSize The click size of the marker. If -1, then marker size is used.
          * @param size The size for the marker.
          */
         MarkerStyle(const Color& color,
@@ -54,6 +55,7 @@ namespace carto {
                     const std::shared_ptr<Bitmap>& bitmap,
                     BillboardOrientation::BillboardOrientation orientationMode,
                     BillboardScaling::BillboardScaling scalingMode,
+                    float clickSize,
                     float size);
         virtual ~MarkerStyle();
     
@@ -87,6 +89,12 @@ namespace carto {
         BillboardScaling::BillboardScaling getScalingMode() const;
         
         /**
+         * Returns the click size of the marker.
+         * @return The click size of the marker, units depend on the scaling mode. If -1, then marker size is used.
+         */
+        float getClickSize() const;
+    
+        /**
          * Returns the size of the marker.
          * @return The size of the marker, units depend on the scaling mode.
          */
@@ -102,6 +110,8 @@ namespace carto {
         
         BillboardScaling::BillboardScaling _scalingMode;
         
+        float _clickSize;
+
         float _size;
     };
     

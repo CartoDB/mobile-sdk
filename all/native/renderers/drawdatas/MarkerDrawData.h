@@ -17,6 +17,11 @@ namespace carto {
     public:
         MarkerDrawData(const Marker& marker, const MarkerStyle& style, const Projection& projection);
         virtual ~MarkerDrawData();
+
+        virtual float getClickScale() const;
+
+    private:
+        float _clickScale;
     };
     
 }

@@ -47,7 +47,7 @@ namespace carto {
         _z = z;
     }
 
-    double MapPos::operator[](std::size_t n) const {
+    double MapPos::operator [](std::size_t n) const {
         switch (n) {
         case 0:
             return _x;
@@ -59,7 +59,7 @@ namespace carto {
         throw OutOfRangeException("MapPos::operator[]");
     }
 
-    double& MapPos::operator[](std::size_t n) {
+    double& MapPos::operator [](std::size_t n) {
         switch (n) {
         case 0:
             return _x;
@@ -82,38 +82,38 @@ namespace carto {
         _z = z;
     }
 
-    MapPos& MapPos::operator+=(const MapVec& v) {
+    MapPos& MapPos::operator +=(const MapVec& v) {
         _x += v.getX();
         _y += v.getY();
         _z += v.getZ();
         return *this;
     }
     
-    MapPos& MapPos::operator-=(const MapVec& v) {
+    MapPos& MapPos::operator -=(const MapVec& v) {
         _x -= v.getX();
         _y -= v.getY();
         _z -= v.getZ();
         return *this;
     }
     
-    MapPos MapPos::operator+(const MapVec& v) const {
+    MapPos MapPos::operator +(const MapVec& v) const {
         return MapPos(_x + v.getX(), _y + v.getY(), _z + v.getZ());
     }
     
-    MapPos MapPos::operator-(const MapVec& v) const {
+    MapPos MapPos::operator -(const MapVec& v) const {
         return MapPos(_x - v.getX(), _y - v.getY(), _z - v.getZ());
     }
     
-    MapVec MapPos::operator-(const MapPos& p) const {
+    MapVec MapPos::operator -(const MapPos& p) const {
         return MapVec(_x - p.getX(), _y - p.getY(), _z - p.getZ());
     }
     
-    bool MapPos::operator==(const MapPos& p) const {
+    bool MapPos::operator ==(const MapPos& p) const {
         return _x == p._x && _y == p._y && _z == p._z;
     }
 
-    bool MapPos::operator!=(const MapPos& p) const {
-        return !(operator==(p));
+    bool MapPos::operator !=(const MapPos& p) const {
+        return !(*this == p);
     }
     
     int MapPos::hash() const {

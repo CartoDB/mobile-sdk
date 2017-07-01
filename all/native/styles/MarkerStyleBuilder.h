@@ -91,6 +91,19 @@ namespace carto {
         void setScalingMode(BillboardScaling::BillboardScaling scalingMode);
         
         /**
+         * Returns the size of the marker used for click detection.
+         * @return The size of the marker used for click detection.
+         */
+        float getClickSize() const;
+        /**
+         * Sets the size for the marker that will be used for click detection.
+         * Units are screen density independent pixels (DP or DIP). If set to -1 the click size will be
+         * calculated automatically. The default is -1.
+         * @param size The new point size in dp.
+         */
+        void setClickSize(float size);
+
+        /**
          * Returns the size of the marker.
          * @return The size of the marker, units depend on the scaling mode.
          */
@@ -125,7 +138,9 @@ namespace carto {
         BillboardOrientation::BillboardOrientation _orientationMode;
         
         BillboardScaling::BillboardScaling _scalingMode;
-        
+
+        float _clickSize;        
+
         float _size;
     };
     

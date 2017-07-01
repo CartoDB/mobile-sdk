@@ -17,6 +17,7 @@ namespace carto {
                              const std::shared_ptr<Bitmap>& bitmap,
                              BillboardOrientation::BillboardOrientation orientationMode,
                              BillboardScaling::BillboardScaling scalingMode,
+                             float clickSize,
                              float size) :
         BillboardStyle(color,
                        attachAnchorPointX,
@@ -33,6 +34,7 @@ namespace carto {
         _bitmap(bitmap),
         _orientationMode(orientationMode),
         _scalingMode(scalingMode),
+        _clickSize(clickSize),
         _size(size)
     {
     }
@@ -58,6 +60,10 @@ namespace carto {
     
     BillboardScaling::BillboardScaling MarkerStyle::getScalingMode() const {
         return _scalingMode;
+    }
+    
+    float MarkerStyle::getClickSize() const {
+        return _clickSize;
     }
     
     float MarkerStyle::getSize() const {

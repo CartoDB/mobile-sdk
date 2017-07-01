@@ -103,13 +103,13 @@ namespace carto {
          * @param var The other variant object.
          * @return True if equal.
          */
-        bool operator == (const Variant& var) const;
+        bool operator ==(const Variant& var) const;
         /**
          * Checks for inequality between this and another value object.
          * @param value The other variant object.
          * @return True if not equal.
          */
-        bool operator != (const Variant& var) const;
+        bool operator !=(const Variant& var) const;
         
         /**
          * Returns the type of this variant.

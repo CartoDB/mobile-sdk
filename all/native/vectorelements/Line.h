@@ -33,7 +33,7 @@ namespace carto {
          * @param poses The vector of map positions that defines the location of this line.
          * @param style The style that defines what this line looks like.
          */
-        Line(const std::vector<MapPos>& poses, const std::shared_ptr<LineStyle>& style);
+        Line(std::vector<MapPos> poses, const std::shared_ptr<LineStyle>& style);
         virtual ~Line();
     
         std::shared_ptr<LineGeometry> getGeometry() const;

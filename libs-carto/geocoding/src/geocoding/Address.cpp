@@ -3,99 +3,35 @@
 #include "FeatureReader.h"
 #include "StringUtils.h"
 
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/classification.hpp>
-
 #include <sqlite3pp.h>
 
 namespace carto { namespace geocoding {
-    std::string Address::buildTypeFilter(const std::vector<Type>& enabledTypes) {
-        auto isEnabled = [&enabledTypes](Type type) {
-            return std::find(enabledTypes.begin(), enabledTypes.end(), type) != enabledTypes.end();
-        };
-
-        std::vector<std::string> sqlFilters;
-        if (isEnabled(Address::Type::POI)) {
-            sqlFilters.push_back("name_id IS NOT NULL");
-        }
-        if (isEnabled(Address::Type::ADDRESS)) {
-            sqlFilters.push_back("housenumbers IS NOT NULL AND name_id IS NULL");
-        }
-        if (isEnabled(Address::Type::STREET)) {
-            sqlFilters.push_back("street_id IS NOT NULL AND housenumbers IS NULL AND name_id IS NULL");
-        }
-        if (isEnabled(Address::Type::NEIGHBOURHOOD)) {
-            sqlFilters.push_back("neighbourhood_id IS NOT NULL AND street_id IS NULL AND housenumbers IS NULL AND name_id IS NULL");
-        }
-        if (isEnabled(Address::Type::LOCALITY)) {
-            sqlFilters.push_back("locality_id IS NOT NULL AND neighbourhood_id IS NULL AND street_id IS NULL AND housenumbers IS NULL AND name_id IS NULL");
-        }
-        if (isEnabled(Address::Type::COUNTY)) {
-            sqlFilters.push_back("county_id IS NOT NULL AND locality_id IS NULL AND neighbourhood_id IS NULL AND street_id IS NULL AND housenumbers IS NULL AND name_id IS NULL");
-        }
-        if (isEnabled(Address::Type::REGION)) {
-            sqlFilters.push_back("region_id IS NOT NULL AND county_id IS NULL AND locality_id IS NULL AND neighbourhood_id IS NULL AND street_id IS NULL AND housenumbers IS NULL AND name_id IS NULL");
-        }
-        if (isEnabled(Address::Type::COUNTRY)) {
-            sqlFilters.push_back("country_id IS NOT NULL AND region_id IS NULL AND county_id IS NULL AND locality_id IS NULL AND neighbourhood_id IS NULL AND street_id IS NULL AND housenumbers IS NULL AND name_id IS NULL");
-        }
-
-        std::string sqlFilter;
-        for (std::size_t i = 0; i < sqlFilters.size(); i++) {
-            sqlFilter += (i > 0 ? " OR (" : "(") + sqlFilters[i] + ")";
-        }
-        return sqlFilter;
-    }
-    
     bool Address::loadFromDB(sqlite3pp::database& db, std::uint64_t encodedId, const std::string& language, const PointConverter& converter) {
-        auto loadName = [&db, &language](std::uint64_t id) -> std::string {
-            if (id == 0) {
-                return std::string();
-            }
-            
-            sqlite3pp::query query(db, "SELECT name, lang FROM names WHERE id=:id");
-            query.bind(":id", id);
-
-            std::string defaultValue;
-            for (auto qit = query.begin(); qit != query.end(); qit++) {
-                auto value = qit->get<const char*>(0);
-                auto lang = qit->get<const char*>(1);
-                if (!lang) {
-                    defaultValue = value;
-                }
-                else if (lang == language) {
-                    return value;
-                }
-            }
-            return defaultValue;
-        };
-
         unsigned int entityId = static_cast<unsigned int>(encodedId & 0xffffffffU);
         unsigned int elementIndex = static_cast<unsigned int>(encodedId >> 32);
         
-        sqlite3pp::query query(db, "SELECT country_id, region_id, county_id, locality_id, neighbourhood_id, street_id, postcode_id, name_id, features, housenumbers FROM entities WHERE id=:id");
+        sqlite3pp::query query(db, "SELECT type, features, housenumbers FROM entities WHERE id=:id");
         query.bind(":id", entityId);
-
         for (auto qit = query.begin(); qit != query.end(); qit++) {
-            country       = loadName(qit->get<std::uint64_t>(0));
-            region        = loadName(qit->get<std::uint64_t>(1));
-            county        = loadName(qit->get<std::uint64_t>(2));
-            locality      = loadName(qit->get<std::uint64_t>(3));
-            neighbourhood = loadName(qit->get<std::uint64_t>(4));
-            street        = loadName(qit->get<std::uint64_t>(5));
-            postcode      = loadName(qit->get<std::uint64_t>(6));
-            name          = loadName(qit->get<std::uint64_t>(7));
+            type = static_cast<EntityType>(qit->get<int>(0));
 
             // Feature reader
-            EncodingStream stream(qit->get<const void *>(8), qit->column_bytes(8));
-            FeatureReader reader(stream, converter);
+            EncodingStream featureStream(qit->get<const void*>(1), qit->column_bytes(1));
+            FeatureReader featureReader(featureStream, converter);
 
             // Decode house number
             if (elementIndex) {
-                if (auto houseNumbers = qit->get<const char*>(9)) {
-                    AddressInterpolator interpolator(houseNumbers);
-                    std::pair<std::string, std::vector<Feature>> result = interpolator.enumerateAddresses(reader).at(elementIndex - 1);
-                    houseNumber = result.first;
+                if (qit->get<const void*>(2)) {
+                    EncodingStream houseNumberStream(qit->get<const void*>(2), qit->column_bytes(2));
+                    AddressInterpolator interpolator(houseNumberStream);
+                    
+                    std::pair<std::uint64_t, std::vector<Feature>> result = interpolator.enumerateAddresses(featureReader).at(elementIndex - 1);
+                    sqlite3pp::query query1(db, "SELECT n.name FROM names n WHERE n.id=:id AND (n.lang IS NULL or n.lang=:lang) ORDER BY n.lang ASC");
+                    query1.bind(":id", result.first);
+                    query1.bind(":lang", language.c_str());
+                    for (auto qit1 = query1.begin(); qit1 != query1.end(); qit1++) {
+                        houseNumber = qit1->get<const char*>(0);
+                    }
                     features = result.second;
                 }
                 else {
@@ -104,7 +40,45 @@ namespace carto { namespace geocoding {
             }
             else {
                 houseNumber.clear();
-                features = reader.readFeatureCollection();
+                features.clear();
+                while (!featureStream.eof()) {
+                    std::vector<Feature> featureCollection = featureReader.readFeatureCollection();
+                    features.insert(features.end(), featureCollection.begin(), featureCollection.end());
+                }
+            }
+
+            // Load names
+            sqlite3pp::query query1(db, "SELECT n.name, n.type FROM entitynames en, names n WHERE en.entity_id=:id AND en.name_id=n.id AND (n.lang IS NULL or n.lang=:lang) ORDER BY n.lang ASC");
+            query1.bind(":id", entityId);
+            query1.bind(":lang", language.c_str());
+            for (auto qit1 = query1.begin(); qit1 != query1.end(); qit1++) {
+                std::string value = qit1->get<const char*>(0);
+                switch (static_cast<FieldType>(qit1->get<int>(1))) {
+                case FieldType::COUNTRY:
+                    country = value;
+                    break;
+                case FieldType::REGION:
+                    region = value;
+                    break;
+                case FieldType::COUNTY:
+                    county = value;
+                    break;
+                case FieldType::LOCALITY:
+                    locality = value;
+                    break;
+                case FieldType::NEIGHBOURHOOD:
+                    neighbourhood = value;
+                    break;
+                case FieldType::STREET:
+                    street = value;
+                    break;
+                case FieldType::POSTCODE:
+                    postcode = value;
+                    break;
+                case FieldType::NAME:
+                    name = value;
+                    break;
+                }
             }
 
             // Load categories    
@@ -113,33 +87,6 @@ namespace carto { namespace geocoding {
             query2.bind(":id", entityId);
             for (auto qit2 = query2.begin(); qit2 != query2.end(); qit2++) {
                 categories.insert(qit2->get<const char*>(0));
-            }
-
-            // Detect type
-            type = Type::NONE;
-            if (!name.empty()) {
-                type = Type::POI;
-            }
-            else if (!houseNumber.empty()) {
-                type = Type::ADDRESS;
-            }
-            else if (!street.empty()) {
-                type = Type::STREET;
-            }
-            else if (!neighbourhood.empty()) {
-                type = Type::NEIGHBOURHOOD;
-            }
-            else if (!locality.empty()) {
-                type = Type::LOCALITY;
-            }
-            else if (!county.empty()) {
-                type = Type::COUNTY;
-            }
-            else if (!region.empty()) {
-                type = Type::REGION;
-            }
-            else if (!country.empty()) {
-                type = Type::COUNTRY;
             }
             return true;
         }

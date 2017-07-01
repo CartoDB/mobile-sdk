@@ -20,15 +20,12 @@ namespace carto {
     {
     }
     
-    ScreenBounds::~ScreenBounds() {
-    }
-    
-    bool ScreenBounds::operator==(const ScreenBounds& bounds) const {
+    bool ScreenBounds::operator ==(const ScreenBounds& bounds) const {
         return _min == bounds._min && _max == bounds._max;
     }
     
-    bool ScreenBounds::operator!=(const ScreenBounds& bounds) const {
-        return !operator==(bounds);
+    bool ScreenBounds::operator !=(const ScreenBounds& bounds) const {
+        return !(*this == bounds);
     }
     
     void ScreenBounds::setBounds(const ScreenPos& min, const ScreenPos& max) {

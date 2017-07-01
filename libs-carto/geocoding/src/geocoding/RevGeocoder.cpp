@@ -14,7 +14,7 @@
 namespace carto { namespace geocoding {
     bool RevGeocoder::import(const std::shared_ptr<sqlite3pp::database>& db) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-		Database database;
+        Database database;
         database.id = "db" + boost::lexical_cast<std::string>(_databases.size());
         database.db = db;
         database.bounds = getBounds(*db);
@@ -44,12 +44,12 @@ namespace carto { namespace geocoding {
         _addressCache.clear();
     }
 
-    bool RevGeocoder::isFilterEnabled(Address::Type type) const {
+    bool RevGeocoder::isFilterEnabled(Address::EntityType type) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         return std::find(_enabledFilters.begin(), _enabledFilters.end(), type) != _enabledFilters.end();
     }
     
-    void RevGeocoder::setFilterEnabled(Address::Type type, bool enabled) {
+    void RevGeocoder::setFilterEnabled(Address::EntityType type, bool enabled) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         auto it = std::find(_enabledFilters.begin(), _enabledFilters.end(), type);
         if (enabled && it == _enabledFilters.end()) {
@@ -105,7 +105,11 @@ namespace carto { namespace geocoding {
         }
         sql += ")";
         if (!_enabledFilters.empty()) {
-            sql += " AND (" + Address::buildTypeFilter(_enabledFilters) + ")";
+            std::string values;
+            for (const Address::EntityType type : _enabledFilters) {
+                values += (values.empty() ? "" : ",") + boost::lexical_cast<std::string>(static_cast<int>(type));
+            }
+            sql += " AND (type IN (" + values + "))";
         }
 
         std::vector<QuadIndex::GeometryInfo> geomInfos;
@@ -118,16 +122,18 @@ namespace carto { namespace geocoding {
         for (auto qit = query.begin(); qit != query.end(); qit++) {
             auto entityId = qit->get<unsigned int>(0);
 
-            EncodingStream stream(qit->get<const void*>(1), qit->column_bytes(1));
-            FeatureReader reader(stream, [&database, &converter](const cglib::vec2<double>& pos) {
+            EncodingStream featureStream(qit->get<const void*>(1), qit->column_bytes(1));
+            FeatureReader featureReader(featureStream, [&database, &converter](const cglib::vec2<double>& pos) {
                 return converter(database.origin + pos);
             });
 
-            if (auto houseNumbers = qit->get<const char*>(2)) {
-                AddressInterpolator interpolator(houseNumbers);
-                std::vector<std::pair<std::string, std::vector<Feature>>> results = interpolator.enumerateAddresses(reader);
+            if (qit->get<const void*>(2)) {
+                EncodingStream houseNumberStream(qit->get<const void*>(2), qit->column_bytes(2));
+                AddressInterpolator interpolator(houseNumberStream);
+
+                std::vector<std::pair<std::uint64_t, std::vector<Feature>>> results = interpolator.enumerateAddresses(featureReader);
                 for (std::size_t i = 0; i < results.size(); i++) {
-                    std::uint64_t encodedId = (static_cast<std::uint64_t>(i + 1) << 32) | entityId;
+                    std::uint64_t encodedId = (results[i].first ? static_cast<std::uint64_t>(i + 1) << 32 : 0) | entityId;
                     std::vector<std::shared_ptr<Geometry>> geometries;
                     for (const Feature& feature : results[i].second) {
                         if (feature.getGeometry()) {
@@ -139,7 +145,7 @@ namespace carto { namespace geocoding {
             }
             else {
                 std::vector<std::shared_ptr<Geometry>> geometries;
-                for (const Feature& feature : reader.readFeatureCollection()) {
+                for (const Feature& feature : featureReader.readFeatureCollection()) {
                     if (feature.getGeometry()) {
                         geometries.push_back(feature.getGeometry());
                     }

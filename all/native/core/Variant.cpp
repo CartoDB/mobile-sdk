@@ -54,11 +54,11 @@ namespace carto {
         _value = picojson::value(valObj);
     }
 
-    bool Variant::operator == (const Variant& var) const {
+    bool Variant::operator ==(const Variant& var) const {
         return toPicoJSON() == var.toPicoJSON();
     }
 
-    bool Variant::operator != (const Variant& var) const {
+    bool Variant::operator !=(const Variant& var) const {
         return !(*this == var);
     }
 
