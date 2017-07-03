@@ -5,7 +5,7 @@
 #include "graphics/Texture.h"
 #include "graphics/TextureManager.h"
 #include "graphics/ViewState.h"
-#include "graphics/shaders/RegularShaderSource.h"
+#include "graphics/shaders/ConstColorShaderSource.h"
 #include "graphics/utils/GLContext.h"
 #include "layers/VectorLayer.h"
 #include "renderers/drawdatas/LineDrawData.h"
@@ -29,13 +29,10 @@ namespace carto {
         _colorBuf(),
         _coordBuf(),
         _indexBuf(),
-        _texCoordBuf(),
         _shader(),
         _a_color(0),
         _a_coord(0),
-        _a_texCoord(0),
         _u_mvpMat(0),
-        _u_tex(0),
         _mutex()
     {
     }
@@ -55,15 +52,13 @@ namespace carto {
     }
     
     void PolygonRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        _shader = shaderManager->createShader(regular_shader_source);
+        _shader = shaderManager->createShader(constcolor_shader_source);
     
         // Get shader variables locations
         glUseProgram(_shader->getProgId());
         _a_color = _shader->getAttribLoc("a_color");
         _a_coord = _shader->getAttribLoc("a_coord");
-        _a_texCoord = _shader->getAttribLoc("a_texCoord");
         _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
-        _u_tex = _shader->getUniformLoc("u_tex");
 
         _lineRenderer.onSurfaceCreated(shaderManager, textureManager);
     }
@@ -249,15 +244,12 @@ namespace carto {
     void PolygonRenderer::bind(const ViewState &viewState) {
         // Prepare for drawing
         glUseProgram(_shader->getProgId());
-        // Colors, Coords, texCoords
+        // Colors, Coords
         glEnableVertexAttribArray(_a_color);
         glEnableVertexAttribArray(_a_coord);
-        glDisableVertexAttribArray(_a_texCoord);
         // Matrix
         const cglib::mat4x4<float>& mvpMat = viewState.getRTEModelviewProjectionMat();
         glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, mvpMat.data());
-        // Texture
-        glUniform1i(_u_tex, 0);
     }
     
     void PolygonRenderer::unbind() {
@@ -305,14 +297,6 @@ namespace carto {
             return;
         }
 
-        // Texture
-        std::shared_ptr<Bitmap> bitmap = _drawDataBuffer.front()->getBitmap();
-        std::shared_ptr<Texture> texture = styleCache.get(bitmap);
-        if (!texture) {
-            texture = styleCache.create(bitmap, true, true);
-        }
-        glBindTexture(GL_TEXTURE_2D, texture->getTexId());
-        
         // Build buffers and draw
         BuildAndDrawBuffers(_a_color, _a_coord, _colorBuf, _coordBuf, _indexBuf, _drawDataBuffer, styleCache, viewState);
         
