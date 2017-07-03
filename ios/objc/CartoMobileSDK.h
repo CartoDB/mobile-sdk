@@ -129,6 +129,8 @@
 #import "NTCartoVectorTileDecoder.h"
 #import "NTMBVectorTileDecoder.h"
 #import "NTTorqueTileDecoder.h"
+#import "NTVectorTileFeature.h"
+#import "NTVectorTileFeatureCollection.h"
 
 #import "NTCartoMapsService.h"
 #import "NTCartoSQLService.h"
@@ -180,6 +182,7 @@
 #ifdef _CARTO_SEARCH_SUPPORT
 #import "NTSearchRequest.h"
 #import "NTFeatureCollectionSearchService.h"
+#import "NTVectorTileSearchService.h"
 #endif
 
 #ifdef _CARTO_ROUTING_SUPPORT

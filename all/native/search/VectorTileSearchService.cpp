@@ -87,8 +87,7 @@ namespace carto {
             for (int y = std::min(mapTile1.getY(), mapTile2.getY()); y <= std::max(mapTile1.getY(), mapTile2.getY()); y++) {
                 for (int x = std::min(mapTile1.getX(), mapTile2.getX()); x <= std::max(mapTile1.getX(), mapTile2.getX()); x++) {
                     MapTile mapTile(x, y, zoom, 0);
-                    std::shared_ptr<TileData> tileData = _dataSource->loadTile(mapTile.getFlipped());
-                    if (tileData) {
+                    if (std::shared_ptr<TileData> tileData = _dataSource->loadTile(mapTile.getFlipped())) {
                         MapBounds tileBounds = TileUtils::CalculateMapTileBounds(mapTile, _dataSource->getProjection());
                         if (std::shared_ptr<VectorTileFeatureCollection> featureCollection = _tileDecoder->decodeFeatures(vt::TileId(zoom, x, y), tileData->getData(), tileBounds)) {
                             for (int i = 0; i < featureCollection->getFeatureCount(); i++) {

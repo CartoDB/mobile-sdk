@@ -321,8 +321,13 @@ namespace carto {
             }
 
             std::string mvtLayerName;
-            std::shared_ptr<mvt::Feature> mvtFeature = decoder->getFeature(id, mvtLayerName);
+            std::shared_ptr<const mvt::Feature> mvtFeature = decoder->getFeature(id, mvtLayerName);
             if (!mvtFeature) {
+                return std::shared_ptr<VectorTileFeature>();
+            }
+
+            std::shared_ptr<const mvt::Geometry> mvtGeometry = mvtFeature->getGeometry();
+            if (!mvtGeometry) {
                 return std::shared_ptr<VectorTileFeature>();
             }
 
@@ -339,7 +344,7 @@ namespace carto {
                 return MapPos(tileBounds.getMin().getX() + pos(0) * tileBounds.getDelta().getX(), tileBounds.getMax().getY() - pos(1) * tileBounds.getDelta().getY(), 0);
             };
 
-            return std::make_shared<VectorTileFeature>(mvtFeature->getId(), mvtLayerName, convertGeometry(convertFn, mvtFeature->getGeometry()), Variant(featureData));
+            return std::make_shared<VectorTileFeature>(mvtFeature->getId(), mvtLayerName, convertGeometry(convertFn, mvtGeometry), Variant(featureData));
         } catch (const std::exception& ex) {
             Log::Errorf("MBVectorTileDecoder::decodeFeature: Exception while decoding: %s", ex.what());
         }
@@ -372,23 +377,28 @@ namespace carto {
             }
 
             for (const std::string& mvtLayerName : decoder->getLayerNames()) {
-                std::shared_ptr<mvt::FeatureDecoder::FeatureIterator> mvtIt = decoder->createLayerFeatureIterator(mvtLayerName);
-
-                std::map<std::string, Variant> featureData;
-                if (std::shared_ptr<const mvt::FeatureData> mvtFeatureData = mvtIt->getFeatureData()) {
-                    for (const std::string& varName : mvtFeatureData->getVariableNames()) {
-                        mvt::Value mvtValue;
-                        mvtFeatureData->getVariable(varName, mvtValue);
-                        featureData[varName] = boost::apply_visitor(ValueConverter(), mvtValue);
+                for (std::shared_ptr<mvt::FeatureDecoder::FeatureIterator> mvtIt = decoder->createLayerFeatureIterator(mvtLayerName); mvtIt->valid(); mvtIt->advance()) {
+                    std::shared_ptr<const mvt::Geometry> mvtGeometry = mvtIt->getGeometry();
+                    if (!mvtGeometry) {
+                        continue;
                     }
+
+                    std::map<std::string, Variant> featureData;
+                    if (std::shared_ptr<const mvt::FeatureData> mvtFeatureData = mvtIt->getFeatureData()) {
+                        for (const std::string& varName : mvtFeatureData->getVariableNames()) {
+                            mvt::Value mvtValue;
+                            mvtFeatureData->getVariable(varName, mvtValue);
+                            featureData[varName] = boost::apply_visitor(ValueConverter(), mvtValue);
+                        }
+                    }
+
+                    auto convertFn = [&tileBounds](const cglib::vec2<float>& pos) {
+                        return MapPos(tileBounds.getMin().getX() + pos(0) * tileBounds.getDelta().getX(), tileBounds.getMax().getY() - pos(1) * tileBounds.getDelta().getY(), 0);
+                    };
+
+                    auto feature = std::make_shared<VectorTileFeature>(mvtIt->getGlobalId(), mvtLayerName, convertGeometry(convertFn, mvtGeometry), Variant(featureData));
+                    tileFeatures.push_back(feature);
                 }
-
-                auto convertFn = [&tileBounds](const cglib::vec2<float>& pos) {
-                    return MapPos(tileBounds.getMin().getX() + pos(0) * tileBounds.getDelta().getX(), tileBounds.getMax().getY() - pos(1) * tileBounds.getDelta().getY(), 0);
-                };
-
-                auto feature = std::make_shared<VectorTileFeature>(mvtIt->getGlobalId(), mvtLayerName, convertGeometry(convertFn, mvtIt->getGeometry()), Variant(featureData));
-                tileFeatures.push_back(feature);
             }
         } catch (const std::exception& ex) {
             Log::Errorf("MBVectorTileDecoder::decodeFeatures: Exception while decoding: %s", ex.what());
