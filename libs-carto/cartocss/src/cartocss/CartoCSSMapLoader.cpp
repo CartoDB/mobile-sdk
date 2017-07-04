@@ -209,6 +209,7 @@ namespace carto { namespace css {
             for (const AttachmentStyle& attachmentStyle : attachmentStyles) {
                 std::string styleName = layerName + attachmentStyle.attachment;
                 auto style = std::make_shared<mvt::Style>(styleName, attachmentStyle.opacity, attachmentStyle.compOp, mvt::Style::FilterMode::FIRST, attachmentStyle.rules);
+                style->optimizeRules();
                 map->addStyle(style);
                 styleNames.push_back(styleName);
             }

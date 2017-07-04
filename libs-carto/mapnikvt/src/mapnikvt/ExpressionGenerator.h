@@ -128,6 +128,13 @@ namespace carto { namespace mvt {
             karma::rule<OutputIterator, std::shared_ptr<const Predicate>(), encoding::space_type> predicate;
 
         private:
+            static std::shared_ptr<const Expression> makePredicateExpression(const std::shared_ptr<const Predicate>& pred) {
+                if (auto exprPred = std::dynamic_pointer_cast<const ExpressionPredicate>(pred)) {
+                    return exprPred->getExpression();
+                }
+                return std::make_shared<PredicateExpression>(pred);
+            }
+
             static bool getString(const std::shared_ptr<const Expression>& expr, std::string& str) {
                 if (auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(expr)) {
                     Value val = constExpr->getConstant();
@@ -174,7 +181,7 @@ namespace carto { namespace mvt {
             static bool getNotPredicate(const std::shared_ptr<const Expression>& expr, std::shared_ptr<const Expression>& expr1) {
                 if (auto predExpr = std::dynamic_pointer_cast<const PredicateExpression>(expr)) {
                     if (auto notPred = std::dynamic_pointer_cast<const NotPredicate>(predExpr->getPredicate())) {
-                        expr1 = std::make_shared<PredicateExpression>(notPred->getPredicate());
+                        expr1 = makePredicateExpression(notPred->getPredicate());
                         return true;
                     }
                 }
@@ -184,8 +191,8 @@ namespace carto { namespace mvt {
             static bool getOrPredicate(const std::shared_ptr<const Expression>& expr, std::shared_ptr<const Expression>& expr1, std::shared_ptr<const Expression>& expr2) {
                 if (auto predExpr = std::dynamic_pointer_cast<const PredicateExpression>(expr)) {
                     if (auto orPred = std::dynamic_pointer_cast<const OrPredicate>(predExpr->getPredicate())) {
-                        expr1 = std::make_shared<PredicateExpression>(orPred->getPredicate1());
-                        expr2 = std::make_shared<PredicateExpression>(orPred->getPredicate2());
+                        expr1 = makePredicateExpression(orPred->getPredicate1());
+                        expr2 = makePredicateExpression(orPred->getPredicate2());
                         return true;
                     }
                 }
@@ -195,8 +202,8 @@ namespace carto { namespace mvt {
             static bool getAndPredicate(const std::shared_ptr<const Expression>& expr, std::shared_ptr<const Expression>& expr1, std::shared_ptr<const Expression>& expr2) {
                 if (auto predExpr = std::dynamic_pointer_cast<const PredicateExpression>(expr)) {
                     if (auto andPred = std::dynamic_pointer_cast<const AndPredicate>(predExpr->getPredicate())) {
-                        expr1 = std::make_shared<PredicateExpression>(andPred->getPredicate1());
-                        expr2 = std::make_shared<PredicateExpression>(andPred->getPredicate2());
+                        expr1 = makePredicateExpression(andPred->getPredicate1());
+                        expr2 = makePredicateExpression(andPred->getPredicate2());
                         return true;
                     }
                 }
