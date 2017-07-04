@@ -6,13 +6,8 @@
 namespace carto {
     
     MultiLineGeometry::MultiLineGeometry(const std::vector<std::shared_ptr<LineGeometry> >& geometries) :
-        MultiGeometry(std::vector<std::shared_ptr<Geometry> >())
+        MultiGeometry(geometries.begin(), geometries.end())
     {
-        _geometries.reserve(geometries.size());
-        for (const std::shared_ptr<LineGeometry>& geometry : geometries) {
-            _geometries.push_back(geometry);
-            _bounds.expandToContain(geometry->getBounds());
-        }
     }
     
     MultiLineGeometry::~MultiLineGeometry() {
