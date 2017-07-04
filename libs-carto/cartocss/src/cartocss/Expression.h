@@ -463,11 +463,9 @@ namespace carto { namespace css {
                 }
             }
             if (vals.size() == _args.size()) {
-                try {
-                    return applyFunc(_func, vals);
-                }
-                catch (const std::exception&) {
-                    // if unknown function, keep it as expression
+                Value result = applyFunc(_func, vals);
+                if (result != Value()) {
+                    return result;
                 }
             }
             std::vector<std::shared_ptr<const Expression>> exprs;
@@ -557,7 +555,7 @@ namespace carto { namespace css {
                 Color color = Color::fade(getColor(vals[0]), -getFloat(vals[1]));
                 return Value(color);
             }
-            throw std::runtime_error("Unsupported function/arity: " + func);
+            return Value();
         }
 
         std::string _func;
