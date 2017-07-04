@@ -10,8 +10,7 @@
 #include "core/MapPos.h"
 #include "core/MapTile.h"
 #include "ui/ClickType.h"
-#include "geometry/Feature.h"
-#include "vectortiles/VectorTileFeature.h"
+#include "geometry/VectorTileFeature.h"
 
 #include <memory>
 #include <string>
@@ -29,11 +28,10 @@ namespace carto {
          * @param clickType The click type (SINGLE, DUAL, etc)
          * @param clickPos The click position in the coordinate system of the base projection.
          * @param featureClickPos The click position in the coordinate system of the base projection that corresponds to feature point.
-         * @param mapTile The clicked tile id.
-         * @param vectorTileFeature The clicked vector tile feature.
+         * @param feature The clicked vector tile feature.
          * @param layer The layer on which the click was performed.
          */
-        VectorTileClickInfo(ClickType::ClickType clickType, const MapPos& clickPos, const MapPos& featureClickPos, const MapTile& mapTile, const std::shared_ptr<VectorTileFeature>& vectorTileFeature, const std::shared_ptr<Layer>& layer);
+        VectorTileClickInfo(ClickType::ClickType clickType, const MapPos& clickPos, const MapPos& featureClickPos, const std::shared_ptr<VectorTileFeature>& feature, const std::shared_ptr<Layer>& layer);
         virtual ~VectorTileClickInfo();
     
         /**
@@ -64,12 +62,6 @@ namespace carto {
         const MapTile& getMapTile() const;
 
         /**
-         * Returns the clicked feature.
-         * @return The feature on which the click was performed.
-         */
-        std::shared_ptr<VectorTileFeature> getVectorTileFeature() const;
-
-        /**
          * Returns the id of the clicked feature.
          * @return The id of the clicked feature.
          */
@@ -79,7 +71,7 @@ namespace carto {
          * Returns the clicked feature.
          * @return The feature on which the click was performed.
          */
-        std::shared_ptr<Feature> getFeature() const;
+        std::shared_ptr<VectorTileFeature> getFeature() const;
 
         /**
          * Returns the name of the layer of the clicked feature.
@@ -98,8 +90,7 @@ namespace carto {
         ClickType::ClickType _clickType;
         MapPos _clickPos;
         MapPos _featureClickPos;
-        MapTile _mapTile;
-        std::shared_ptr<VectorTileFeature> _vectorTileFeature;
+        std::shared_ptr<VectorTileFeature> _feature;
         std::shared_ptr<Layer> _layer;
     };
     

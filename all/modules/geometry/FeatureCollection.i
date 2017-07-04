@@ -16,7 +16,7 @@
 
 %import "geometry/Feature.i"
 
-!shared_ptr(carto::FeatureCollection, geometry.FeatureCollection)
+!polymorphic_shared_ptr(carto::FeatureCollection, geometry.FeatureCollection)
 
 %attribute(carto::FeatureCollection, int, FeatureCount, getFeatureCount)
 %std_exceptions(carto::FeatureCollection::getFeature)

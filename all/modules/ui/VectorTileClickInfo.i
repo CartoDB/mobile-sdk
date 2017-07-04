@@ -3,7 +3,7 @@
 
 %module VectorTileClickInfo
 
-!proxy_imports(carto::VectorTileClickInfo, core.MapPos, core.MapTile, geometry.Feature, layers.Layer, ui.ClickType, vectortiles.VectorTileFeature)
+!proxy_imports(carto::VectorTileClickInfo, core.MapPos, core.MapTile, geometry.VectorTileFeature, layers.Layer, ui.ClickType)
 
 %{
 #include "ui/VectorTileClickInfo.h"
@@ -17,9 +17,8 @@
 %import "ui/ClickType.i"
 %import "core/MapPos.i"
 %import "core/MapTile.i"
-%import "geometry/Feature.i"
+%import "geometry/VectorTileFeature.i"
 %import "layers/Layer.i"
-%import "vectortiles/VectorTileFeature.i"
 
 !shared_ptr(carto::VectorTileClickInfo, ui.VectorTileClickInfo)
 
@@ -28,8 +27,7 @@
 %attributeval(carto::VectorTileClickInfo, carto::MapPos, FeatureClickPos, getFeatureClickPos)
 %attributeval(carto::VectorTileClickInfo, carto::MapTile, MapTile, getMapTile)
 %attribute(carto::VectorTileClickInfo, long long, FeatureId, getFeatureId)
-%attributestring(carto::VectorTileClickInfo, std::shared_ptr<carto::VectorTileFeature>, VectorTileFeature, getVectorTileFeature)
-%attributestring(carto::VectorTileClickInfo, std::shared_ptr<carto::Feature>, Feature, getFeature)
+%attributestring(carto::VectorTileClickInfo, std::shared_ptr<carto::VectorTileFeature>, Feature, getFeature)
 %attributestring(carto::VectorTileClickInfo, std::string, FeatureLayerName, getFeatureLayerName)
 !attributestring_polymorphic(carto::VectorTileClickInfo, layers.Layer, Layer, getLayer)
 !standard_equals(carto::VectorTileClickInfo);

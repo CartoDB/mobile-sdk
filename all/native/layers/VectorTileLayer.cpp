@@ -2,6 +2,7 @@
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
 #include "components/CancelableThreadPool.h"
+#include "geometry/VectorTileFeature.h"
 #include "graphics/utils/BackgroundBitmapGenerator.h"
 #include "graphics/utils/SkyBitmapGenerator.h"
 #include "datasources/TileDataSource.h"
@@ -14,7 +15,6 @@
 #include "utils/Log.h"
 #include "utils/Const.h"
 #include "vectortiles/VectorTileDecoder.h"
-#include "vectortiles/VectorTileFeature.h"
 
 #include <vt/TileId.h>
 #include <vt/Tile.h>
@@ -343,11 +343,9 @@ namespace carto {
                     _visibleCache.peek(getTileId(mapTile), tileInfo);
 
                     if (std::shared_ptr<BinaryData> tileData = tileInfo.getTileData()) {
-                        std::shared_ptr<VectorTileFeature> tileFeature = _tileDecoder->decodeFeature(id, vtTileId, tileData, tileInfo.getTileBounds());
-                        if (tileFeature) {
-                            auto elementInfo = std::make_shared<std::pair<MapTile, std::shared_ptr<VectorTileFeature> > >(mapTile, tileFeature);
+                        if (std::shared_ptr<VectorTileFeature> tileFeature = _tileDecoder->decodeFeature(id, vtTileId, tileData, tileInfo.getTileBounds())) {
                             std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
-                            results.push_back(RayIntersectedElement(elementInfo, thisLayer, mapPos, mapPos, 0, pass > 0));
+                            results.push_back(RayIntersectedElement(tileFeature, thisLayer, mapPos, mapPos, 0, pass > 0));
                         } else {
                             Log::Warnf("VectorTileLayer::calculateRayIntersectedElements: Failed to decode feature %lld", id);
                         }
@@ -365,10 +363,8 @@ namespace carto {
         DirectorPtr<VectorTileEventListener> eventListener = _vectorTileEventListener;
 
         if (eventListener) {
-            if (std::shared_ptr<std::pair<MapTile, std::shared_ptr<VectorTileFeature> > > elementInfo = intersectedElement.getElement<std::pair<MapTile, std::shared_ptr<VectorTileFeature> > >()) {
-                const MapTile& mapTile = elementInfo->first;
-                const std::shared_ptr<VectorTileFeature>& tileFeature = elementInfo->second;
-                auto clickInfo = std::make_shared<VectorTileClickInfo>(clickType, intersectedElement.getHitPos(), intersectedElement.getHitPos(), mapTile, tileFeature, intersectedElement.getLayer());
+            if (std::shared_ptr<VectorTileFeature> tileFeature = intersectedElement.getElement<VectorTileFeature>()) {
+                auto clickInfo = std::make_shared<VectorTileClickInfo>(clickType, intersectedElement.getHitPos(), intersectedElement.getHitPos(), tileFeature, intersectedElement.getLayer());
                 return eventListener->onVectorTileClicked(clickInfo);
             }
         }

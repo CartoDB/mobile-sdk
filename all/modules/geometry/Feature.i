@@ -17,7 +17,7 @@
 %import "core/Variant.i"
 %import "geometry/Geometry.i"
 
-!shared_ptr(carto::Feature, geometry.Feature)
+!polymorphic_shared_ptr(carto::Feature, geometry.Feature)
 !value_type(std::vector<std::shared_ptr<carto::Feature> >, geometry.FeatureVector)
 
 !attributestring_polymorphic(carto::Feature, geometry.Geometry, Geometry, getGeometry)

@@ -7,27 +7,28 @@
 #ifndef _CARTO_VECTORTILEFEATURE_H_
 #define _CARTO_VECTORTILEFEATURE_H_
 
-#include "core/Variant.h"
+#include "core/MapTile.h"
+#include "geometry/Feature.h"
 
 #include <string>
 #include <memory>
 
 namespace carto {
-    class Geometry;
 
     /**
      * A vector tile feature consisting of id, layer, geometry and properties.
      */
-    class VectorTileFeature {
+    class VectorTileFeature : public Feature {
     public:
         /**
          * Constructs a VectorTileFeature object from id, layer name, geometry and properties.
          * @param id The id of the feature.
+         * @param mapTile The map tile of this feature
          * @param layerName The name of the layer of the feature.
          * @param geometry The geometry of the feature.
          * @param properties The properties of the feature.
          */
-        VectorTileFeature(long long id, const std::string& layerName, const std::shared_ptr<Geometry>& geometry, Variant properties);
+        VectorTileFeature(long long id, const MapTile& mapTile, const std::string& layerName, const std::shared_ptr<Geometry>& geometry, Variant properties);
         virtual ~VectorTileFeature();
 
         /**
@@ -37,28 +38,21 @@ namespace carto {
         long long getId() const;
 
         /**
+         * Returns the map tile of the feature.
+         * @return The map tile of the feature.
+         */
+        const MapTile& getMapTile() const;
+
+        /**
          * Returns the layer name of the feature.
          * @return The layer name of the feature.
          */
         const std::string& getLayerName() const;
         
-        /**
-         * Returns the geometry of the feature.
-         * @return The geometry of the feature.
-         */
-        const std::shared_ptr<Geometry>& getGeometry() const;
-    
-        /**
-         * Returns the properties of the feature.
-         * @return The properties of the feature.
-         */
-        const Variant& getProperties() const;
-    
     protected:
         const long long _id;
+        const MapTile _mapTile;
         const std::string _layerName;
-        const std::shared_ptr<Geometry> _geometry;
-        const Variant _properties;
     };
     
 }

@@ -8,7 +8,7 @@
 
 #ifdef _CARTO_SEARCH_SUPPORT
 
-!proxy_imports(carto::VectorTileSearchService, search.SearchRequest, datasources.TileDataSource, vectortiles.VectorTileFeatureCollection, vectortiles.VectorTileDecoder, projections.Projection)
+!proxy_imports(carto::VectorTileSearchService, search.SearchRequest, datasources.TileDataSource, geometry.VectorTileFeatureCollection, vectortiles.VectorTileDecoder, projections.Projection)
 
 %{
 #include "search/VectorTileSearchService.h"
@@ -19,10 +19,10 @@
 %include <std_shared_ptr.i>
 %include <cartoswig.i>
 
+%import "geometry/VectorTileFeatureCollection.i"
 %import "search/SearchRequest.i"
 %import "datasources/TileDataSource.i"
 %import "vectortiles/VectorTileDecoder.i"
-%import "vectortiles/VectorTileFeatureCollection.i"
 %import "projections/Projection.i"
 
 !polymorphic_shared_ptr(carto::VectorTileSearchService, search.VectorTileSearchService)

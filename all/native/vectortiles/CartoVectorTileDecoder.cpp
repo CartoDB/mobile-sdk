@@ -12,10 +12,10 @@
 #include "geometry/MultiPointGeometry.h"
 #include "geometry/MultiLineGeometry.h"
 #include "geometry/MultiPolygonGeometry.h"
+#include "geometry/VectorTileFeature.h"
+#include "geometry/VectorTileFeatureCollection.h"
 #include "graphics/Bitmap.h"
 #include "styles/CartoCSSStyleSet.h"
-#include "vectortiles/VectorTileFeature.h"
-#include "vectortiles/VectorTileFeatureCollection.h"
 #include "vectortiles/utils/MapnikVTLogger.h"
 #include "vectortiles/utils/GeometryConverter.h"
 #include "vectortiles/utils/ValueConverter.h"
@@ -180,7 +180,7 @@ namespace carto {
                 return MapPos(tileBounds.getMin().getX() + pos(0) * tileBounds.getDelta().getX(), tileBounds.getMax().getY() - pos(1) * tileBounds.getDelta().getY(), 0);
             };
 
-            return std::make_shared<VectorTileFeature>(mvtFeature->getId(), mvtLayerName, convertGeometry(convertFn, mvtGeometry), Variant(featureData));
+            return std::make_shared<VectorTileFeature>(mvtFeature->getId(), MapTile(tile.x, tile.y, tile.zoom, 0), mvtLayerName, convertGeometry(convertFn, mvtGeometry), Variant(featureData));
         } catch (const std::exception& ex) {
             Log::Errorf("CartoVectorTileDecoder::decodeFeature: Exception while decoding: %s", ex.what());
         }
@@ -232,7 +232,7 @@ namespace carto {
                         return MapPos(tileBounds.getMin().getX() + pos(0) * tileBounds.getDelta().getX(), tileBounds.getMax().getY() - pos(1) * tileBounds.getDelta().getY(), 0);
                     };
 
-                    auto feature = std::make_shared<VectorTileFeature>(mvtIt->getGlobalId(), mvtLayerName, convertGeometry(convertFn, mvtGeometry), Variant(featureData));
+                    auto feature = std::make_shared<VectorTileFeature>(mvtIt->getGlobalId(), MapTile(tile.x, tile.y, tile.zoom, 0), mvtLayerName, convertGeometry(convertFn, mvtGeometry), Variant(featureData));
                     tileFeatures.push_back(feature);
                 }
             }

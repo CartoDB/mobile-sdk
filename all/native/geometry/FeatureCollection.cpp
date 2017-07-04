@@ -1,6 +1,5 @@
 #include "FeatureCollection.h"
 #include "components/Exceptions.h"
-#include "utils/Log.h"
 
 namespace carto {
 
