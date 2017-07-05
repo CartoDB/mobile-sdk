@@ -28,7 +28,7 @@ namespace carto {
         case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_VOYAGER:
         case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_POSITRON:
         case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_DARKMATTER:
-            return std::make_shared<CartoOnlineTileDataSource>("carto-omt.osm");
+            return std::make_shared<CartoOnlineTileDataSource>("carto.streets");
         default:
             return std::make_shared<CartoOnlineTileDataSource>("nutiteq.osm");
         }

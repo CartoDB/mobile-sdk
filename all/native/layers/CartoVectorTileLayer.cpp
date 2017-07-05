@@ -47,15 +47,15 @@ namespace carto {
             styleName = "nutiteq_grey";
             break;
         case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_VOYAGER:
-            styleAsset = std::make_shared<BinaryData>(cartostyles_v1_zip, cartostyles_v1_len);
+            styleAsset = std::make_shared<BinaryData>(cartostyles_v1_zip, cartostyles_v1_zip_len);
             styleName = "voyager";
             break;
         case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_POSITRON:
-            styleAsset = std::make_shared<BinaryData>(cartostyles_v1_zip, cartostyles_v1_len);
+            styleAsset = std::make_shared<BinaryData>(cartostyles_v1_zip, cartostyles_v1_zip_len);
             styleName = "positron";
             break;
         case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_DARKMATTER:
-            styleAsset = std::make_shared<BinaryData>(cartostyles_v1_zip, cartostyles_v1_len);
+            styleAsset = std::make_shared<BinaryData>(cartostyles_v1_zip, cartostyles_v1_zip_len);
             styleName = "darkmatter";
             break;
         default:
