@@ -98,7 +98,7 @@ For packaged vector data, you will need CARTO specific vector files packages (NT
 
 The Mobile SDK provides a built-in download service thorough the **Package Manager** to retrieve map packages for a country, or smaller region. For details, see [Offline Map Packages](/docs/carto-engine/mobile-sdk/offline-maps/#offline-map-packages).
 
-**Note:** Vector maps always need proper **style definitions**. You can find compatible stylesheet files from our sample app projects (OSMBright with 3D buildings [osmbright.zip](/docs/carto-engine/mobile-sdk/getting-started/#sample-apps)), which contains **Mapnik XML styling** with resources (fonts, images) included. 
+**Note:** Vector maps always need proper **style definitions**. Fortunately, we bundle three basic styles with the SDK (bright, default, gray).
 
 Use the following code to use MBtiles for a vector layer: 
 
@@ -124,43 +124,42 @@ Use the following code to use MBtiles for a vector layer:
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
-	 // 1. Create tile data source from mbtiles file
-      MBTilesTileDataSource tileDataSource = new MBTilesTileDataSource("/sdcard/estonia_ntvt.mbtiles");
+    // Initialize base layer with a bundled styles
+    CartoOnlineVectorTileLayer baseLayer = new CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_GRAY);
 
-	 // 2. Load vector tile style set
-      BinaryData styleBytes = AssetUtils.loadAsset("osmbright.zip");
-      CompiledStyleSet vectorTileStyleSet = new CompiledStyleSet(new ZippedAssetPackage(styleBytes));
+    // Use the style for your own vector tile datasource (online, offline etc),
+    MBTilesTileDataSource tileDataSource = null;
+    try {
+        tileDataSource = new MBTilesTileDataSource("estonia_ntvt.mbtiles");
+    } catch (IOException e) {
+        // Handle exception
+    }
 
-	 // 3. Create vector tile decoder using the style set
-      VectorTileDecoder vectorTileDecoder = new MBVectorTileDecoder(vectorTileStyleSet);
+    // Initialize offline layer & Grab vector tile layer from our base layer
+    VectorTileLayer offlineLayer = new VectorTileLayer(tileDataSource, baseLayer.getTileDecoder());
 
-	 // 4. Create vector tile layer, using previously created data source and decoder
-      TileLayer vectorTileLayer = new VectorTileLayer(tileDataSource, vectorTileDecoder);
-
-	 // 5. Add vector tile layer
-      mapView.getLayers().add(vectorTileLayer);
+    mapView.getLayers().add(baseLayer);
+    mapView.getLayers().add(offlineLayer);
 
   {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight csharp %}
+{% highlight csharp %}
 
-	 // 1. Create tile data source from mbtiles file
-      var tileDataSource = new MBTilesTileDataSource("world_zoom5.mbtiles");
+    var mapView = new MapView();
 
-	 // 2. Load vector tile style set
-      var styleBytes = AssetUtils.LoadAsset("nutiteq-dark.zip");
-      var vectorTileStyleSet = new CompiledStyleSet(new ZippedAssetPackage(styleBytes));
+    // Initialize base layer with a bundled styles
+    var baseLayer = new CartoOnlineVectorTileLayer(CartoBaseMapStyle.CartoBasemapStyleGray);
 
-	 // 3. Create vector tile decoder using the style set
-      var vectorTileDecoder = new MBVectorTileDecoder(vectorTileStyleSet);
+    // Use the style for your own vector tile datasource (online, offline etc),
+    var tileDataSource = new MBTilesTileDataSource("estonia_ntvt.mbtiles");
 
-	 // 4. Create vector tile layer, using previously created data source and decoder
-      var vectorTileLayer = new VectorTileLayer(tileDataSource, vectorTileDecoder);
+    // Initialize offline layer & Grab vector tile layer from our base layer
+    var offlineLayer = new VectorTileLayer(tileDataSource, baseLayer.TileDecoder);
 
-	 // 5. Add vector tile layer
-      MapView.Layers.Add(vectorTileLayer);
+    mapView.Layers.Add(baseLayer);
+    mapView.Layers.Add(offlineLayer);
 
   {% endhighlight %}
   </div>
@@ -168,22 +167,16 @@ Use the following code to use MBtiles for a vector layer:
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
   
-	NSString* fullpathVT = [[NSBundle mainBundle] pathForResource:@"estonia_ntvt" ofType:@"mbtiles"];
-	NTTileDataSource* tileDataSource = [[NTMBTilesTileDataSource alloc] initWithMinZoom:0 maxZoom:4 path: fullpathVT];
+    // Use the style for your own vector tile datasource (online, offline etc),
+    NSString *path = [[NSBundle mainBundle] pathForResource:@"estonia_ntvt" ofType:@"mbtiles"];
+    NTMBTilesTileDataSource *tileDataSource = [[NTMBTilesTileDataSource alloc] initWithPath:path];
     
-	// 1. Load vector tile style set
-	NTBinaryData *vectorTileStyleSetData = [NTAssetUtils loadAsset: @"osmbright.zip"];
-	NTZippedAssetPackage *package = [[NTZippedAssetPackage alloc] initWithZipData:vectorTileStyleSetData];
-	NTCompiledStyleSet *vectorTileStyleSet = [[NTCompiledStyleSet alloc] initWithAssetPackage:package];
+    // Initialize offline layer & Grab vector tile layer from our base layer
+    NTMBVectorTileDecoder *decoder = [baseLayer getTileDecoder];
+    NTVectorTileLayer *offlineLayer = [[NTVectorTileLayer alloc] initWithDataSource:tileDataSource decoder:decoder];
     
-	// 2. Create vector tile decoder using the style set
-	NTMBVectorTileDecoder *vectorTileDecoder = [[NTMBVectorTileDecoder alloc] initWithCompiledStyleSet:vectorTileStyleSet];
-    
-	// 3. Create vector tile layer, using previously created data source and decoder
-	NTVectorTileLayer *layer = [[NTVectorTileLayer alloc] initWithDataSource:tileDataSource decoder:vectorTileDecoder];
-    
-	// 4. Add vector tile layer
-	[[mapView getLayers] add:layer];
+    [[mapView getLayers] add:baseLayer];
+    [[mapView getLayers] add:offlineLayer];
 
   {% endhighlight %}
   </div>
@@ -191,22 +184,17 @@ Use the following code to use MBtiles for a vector layer:
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}
   
-        // 1. Create tile data source from mbtiles file
-        let path = Bundle.main.path(forResource: "estonia_ntvt", ofType: "mbtiles")
-        let tileDataSource = NTMBTilesTileDataSource(path: path)
+        // Initialize base layer with a bundled styles
+        let baseLayer = NTCartoOnlineVectorTileLayer(style: NTCartoBaseMapStyle.CARTO_BASEMAP_STYLE_GRAY)
         
-        // 2. Load vector tile style set
-        let styleBytes = NTAssetUtils.loadAsset("osmbright.zip")
-        let vectorTileStyleSet = NTCompiledStyleSet(assetPackage: NTZippedAssetPackage(zip: styleBytes))
+        // Use the style for your own vector tile datasource (online, offline etc),
+        let tileDataSource = NTMBTilesTileDataSource(path: Bundle.main.path(forResource: "estonia_ntvt", ofType: "mbtiles"))
         
-        // 3. Create vector tile decoder using the style set
-        let vectorTileDecoder = NTMBVectorTileDecoder(compiledStyleSet: vectorTileStyleSet)
+        // Initialize offline layer & Grab vector tile layer from our base layer
+        let offlineLayer = NTVectorTileLayer(tileDataSource, baseLayer?.getTileDecoder())
         
-        // 4. Create vector tile layer, using previously created data source and decoder
-        let vectorTileLayer = NTVectorTileLayer(dataSource: tileDataSource, decoder: vectorTileDecoder)
-        
-        // 5. Add vector tile layer
-        mapView?.getLayers()?.add(vectorTileLayer)
+        mapView?.layers?.add(baseLayer)
+        mapView?.layers?.add(offlineLayer)
 
   {% endhighlight %}
   </div>
@@ -214,22 +202,17 @@ Use the following code to use MBtiles for a vector layer:
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
   {% highlight kotlin %}
   
-        // 1. Create tile data source from mbtiles file
-        val path = Environment.getExternalStorageDirectory().path + "/estonia_ntvt.mbtiles"
-        val tileDataSource = MBTilesTileDataSource(path)
+        // Initialize base layer with a bundled styles
+        val baseLayer = CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_GRAY)
+        
+        // Use the style for your own vector tile datasource (online, offline etc),
+        val tileDataSource = MBTilesTileDataSource("/sdcard/estonia_ntvt.mbtiles")
+        
+        // Initialize offline layer & Grab vector tile layer from our base layer
+        val offlineLayer = VectorTileLayer(tileDataSource, baseLayer.tileDecoder)
 
-        // 2. Load vector tile style set
-        val styleBytes = AssetUtils.loadAsset("osmbright.zip")
-        val vectorTileStyleSet = CompiledStyleSet(ZippedAssetPackage(styleBytes))
-
-        // 3. Create vector tile decoder using the style set
-        val vectorTileDecoder = MBVectorTileDecoder(vectorTileStyleSet)
-
-        // 4. Create vector tile layer, using previously created data source and decoder
-        val vectorTileLayer = VectorTileLayer(tileDataSource, vectorTileDecoder)
-
-        // 5. Add vector tile layer
-        mapView?.layers?.add(vectorTileLayer)
+        mapView?.layers?.add(baseLayer)
+        mapView?.layers?.add(offlineLayer)
 
   {% endhighlight %}
   </div>
