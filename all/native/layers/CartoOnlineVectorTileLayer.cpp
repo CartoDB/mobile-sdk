@@ -6,7 +6,7 @@
 namespace carto {
     
     CartoOnlineVectorTileLayer::CartoOnlineVectorTileLayer(CartoBaseMapStyle::CartoBaseMapStyle style) :
-        CartoVectorTileLayer(std::make_shared<CartoOnlineTileDataSource>("nutiteq.osm"), style)
+        CartoVectorTileLayer(CreateDataSource(style), style)
     {
     }
 
@@ -21,6 +21,17 @@ namespace carto {
     }
     
     CartoOnlineVectorTileLayer::~CartoOnlineVectorTileLayer() {
+    }
+
+    std::shared_ptr<TileDataSource> CartoOnlineVectorTileLayer::CreateDataSource(CartoBaseMapStyle::CartoBaseMapStyle style) {
+        switch (style) {
+        case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_VOYAGER:
+        case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_POSITRON:
+        case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_DARKMATTER:
+            return std::make_shared<CartoOnlineTileDataSource>("carto-omt.osm");
+        default:
+            return std::make_shared<CartoOnlineTileDataSource>("nutiteq.osm");
+        }
     }
     
 }

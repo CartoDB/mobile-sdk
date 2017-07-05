@@ -31,7 +31,19 @@ namespace carto {
             /**
              * The gray style.
              */
-            CARTO_BASEMAP_STYLE_GRAY
+            CARTO_BASEMAP_STYLE_GRAY,
+            /**
+             * The Voyager style. Replacement for older 'bright' style.
+             */
+            CARTO_BASEMAP_STYLE_VOYAGER,
+            /**
+             * The Positron style.
+             */
+            CARTO_BASEMAP_STYLE_POSITRON,
+            /**
+             * The Darkmatter style.
+             */
+            CARTO_BASEMAP_STYLE_DARKMATTER
         };
     }
 
@@ -67,16 +79,13 @@ namespace carto {
         void setLanguage(const std::string& lang);
 
         /**
-         * Creates a new tile decoder from a specified base map style.
-         * @param style The style to use for the layer.
+         * Creates a new tile decoder from the specified base map style.
+         * @param style The style to use for the decoder.
          * @return The new vector tile decoder configured for the style.
          */
         static std::shared_ptr<VectorTileDecoder> CreateTileDecoder(CartoBaseMapStyle::CartoBaseMapStyle style);
-        /**
-         * Creates a new tile decoder from a style asset package.
-         * @param styleAssetPackage The style asset package (usually a zipped file or an asset)
-         * @return The new vector tile decoder configured for the style.
-         */
+
+    private:
         static std::shared_ptr<VectorTileDecoder> CreateTileDecoder(const std::shared_ptr<AssetPackage>& styleAssetPackage);
     };
     

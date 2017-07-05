@@ -12,3 +12,4 @@ xxd -i evaluation-watermark.png | sed 's/unsigned/static unsigned/' > ../all/nat
 xxd -i expired-watermark.png | sed 's/unsigned/static unsigned/' > ../all/native/assets/ExpiredWatermarkPNG.h
 xxd -i carto-watermark.png | sed 's/unsigned/static unsigned/' > ../all/native/assets/CartoWatermarkPNG.h
 xxd -i nutibright-v3.zip | sed 's/unsigned/static unsigned/' > ../all/native/assets/NutibrightV3ZIP.h
+xxd -i cartostyles-v1.zip | sed 's/unsigned/static unsigned/' > ../all/native/assets/CartoStylesV1ZIP.h
