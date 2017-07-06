@@ -25,7 +25,7 @@ namespace carto {
     class VectorElementSearchService {
     public:
         /**
-         * Constructs a VectorElementSearchService for given vector data source.
+         * Constructs a VectorElementSearchService for the given vector data source.
          * @param dataSource The vector data source to search from.
          */
         explicit VectorElementSearchService(const std::shared_ptr<VectorDataSource>& dataSource);
