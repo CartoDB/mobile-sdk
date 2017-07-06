@@ -4,8 +4,7 @@
 namespace carto {
     
     VectorData::VectorData(std::vector<std::shared_ptr<VectorElement> > elements) :
-        _elements(std::move(elements)),
-        _mutex()
+        _elements(std::move(elements))
     {
     }
 

@@ -3,8 +3,8 @@
 namespace carto {
 
     MapClickInfo::MapClickInfo(ClickType::ClickType clickType, const MapPos& clickPos) :
-            _clickType(clickType),
-            _clickPos(clickPos)
+        _clickType(clickType),
+        _clickPos(clickPos)
     {
     }
     

@@ -6,13 +6,13 @@
 
 namespace carto {
 
-    MultiGeometry::MultiGeometry(const std::vector<std::shared_ptr<Geometry> >& geometries) :
+    MultiGeometry::MultiGeometry(std::vector<std::shared_ptr<Geometry> > geometries) :
         Geometry(),
-        _geometries(geometries)
+        _geometries(std::move(geometries))
     {
-        std::for_each(geometries.begin(), geometries.end(), [this](const std::shared_ptr<Geometry>& geometry) {
+        for (const std::shared_ptr<Geometry>& geometry : _geometries) {
             _bounds.expandToContain(geometry->getBounds());
-        });
+        }
     }
 
     MultiGeometry::~MultiGeometry() {
@@ -24,9 +24,9 @@ namespace carto {
         }
 
         MapVec centerPos(0, 0);
-        std::for_each(_geometries.begin(), _geometries.end(), [&centerPos](const std::shared_ptr<Geometry>& geometry) {
+        for (const std::shared_ptr<Geometry>& geometry : _geometries) {
             centerPos += MapVec(geometry->getCenterPos() - MapPos(0, 0));
-        });
+        }
         return MapPos(0, 0) + centerPos / static_cast<double>(_geometries.size());
     }
 

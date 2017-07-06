@@ -6,13 +6,8 @@
 namespace carto {
     
     MultiPolygonGeometry::MultiPolygonGeometry(const std::vector<std::shared_ptr<PolygonGeometry> >& geometries) :
-        MultiGeometry(std::vector<std::shared_ptr<Geometry> >())
+        MultiGeometry(geometries.begin(), geometries.end())
     {
-        _geometries.reserve(geometries.size());
-        for (const std::shared_ptr<PolygonGeometry>& geometry : geometries) {
-            _geometries.push_back(geometry);
-            _bounds.expandToContain(geometry->getBounds());
-        }
     }
     
     MultiPolygonGeometry::~MultiPolygonGeometry() {

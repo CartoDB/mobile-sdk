@@ -8,7 +8,6 @@
 #define _CARTO_VECTORDATA_H_
 
 #include <memory>
-#include <mutex>
 #include <vector>
 
 namespace carto {
@@ -34,7 +33,6 @@ namespace carto {
         
     private:
         const std::vector<std::shared_ptr<VectorElement> > _elements;
-        mutable std::mutex _mutex;
     };
 
 }

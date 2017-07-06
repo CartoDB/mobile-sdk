@@ -1,10 +1,11 @@
 #ifdef _CARTO_GDAL_SUPPORT
 
 #include "StyleSelectorRule.h"
+#include "search/query/QueryExpression.h"
 
 namespace carto {
 
-    StyleSelectorRule::StyleSelectorRule(const std::shared_ptr<StyleSelectorExpression>& expr, const std::shared_ptr<Style>& style) :
+    StyleSelectorRule::StyleSelectorRule(const std::shared_ptr<QueryExpression>& expr, const std::shared_ptr<Style>& style) :
         _expression(expr), _style(style)
     {
     }
@@ -12,7 +13,7 @@ namespace carto {
     StyleSelectorRule::~StyleSelectorRule() {
     }
 
-    const std::shared_ptr<StyleSelectorExpression>& StyleSelectorRule::getExpression() const {
+    const std::shared_ptr<QueryExpression>& StyleSelectorRule::getExpression() const {
         return _expression;
     }
     

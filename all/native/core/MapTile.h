@@ -19,6 +19,10 @@ namespace carto {
     class MapTile {
     public:
         /**
+         * Constructs an empty MapTile object.
+         */
+        MapTile();
+        /**
          * Constructs a MapTile object based on coordinates, zoom level and frame number.
          * @param x The x coordinate of the tile.
          * @param y The y coordinate of the tile.

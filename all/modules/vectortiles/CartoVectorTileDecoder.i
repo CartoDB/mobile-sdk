@@ -29,6 +29,7 @@
 %std_exceptions(carto::CartoVectorTileDecoder::getLayerStyle)
 %std_exceptions(carto::CartoVectorTileDecoder::setLayerStyle)
 %ignore carto::CartoVectorTileDecoder::decodeFeature;
+%ignore carto::CartoVectorTileDecoder::decodeFeatures;
 %ignore carto::CartoVectorTileDecoder::decodeTile;
 %ignore carto::CartoVectorTileDecoder::getBackgroundColor;
 %ignore carto::CartoVectorTileDecoder::getBackgroundPattern;

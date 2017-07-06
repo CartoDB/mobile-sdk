@@ -89,9 +89,14 @@ namespace carto {
         return Const::MAX_SUPPORTED_ZOOM_LEVEL;
     }
         
-    std::shared_ptr<TorqueTileDecoder::TileFeature> TorqueTileDecoder::decodeFeature(long long id, const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const {
+    std::shared_ptr<VectorTileFeature> TorqueTileDecoder::decodeFeature(long long id, const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const {
         Log::Warn("TorqueTileDecoder::decodeFeature: Not implemented");
-        return std::shared_ptr<TileFeature>();
+        return std::shared_ptr<VectorTileFeature>();
+    }
+
+    std::shared_ptr<VectorTileFeatureCollection> TorqueTileDecoder::decodeFeatures(const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const {
+        Log::Warn("TorqueTileDecoder::decodeFeatures: Not implemented");
+        return std::shared_ptr<VectorTileFeatureCollection>();
     }
 
     std::shared_ptr<TorqueTileDecoder::TileMap> TorqueTileDecoder::decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const {

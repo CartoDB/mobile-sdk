@@ -40,6 +40,10 @@ namespace carto {
         std::shared_ptr<Feature> getFeature(int index) const;
 
     protected:
+        template <typename It>
+        FeatureCollection(It begin, It end) : _features(begin, end) {
+        }
+
         const std::vector<std::shared_ptr<Feature> > _features;
     };
 

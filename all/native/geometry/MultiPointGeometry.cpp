@@ -6,13 +6,8 @@
 namespace carto {
 
     MultiPointGeometry::MultiPointGeometry(const std::vector<std::shared_ptr<PointGeometry> >& geometries) :
-        MultiGeometry(std::vector<std::shared_ptr<Geometry> >())
+        MultiGeometry(geometries.begin(), geometries.end())
     {
-        _geometries.reserve(geometries.size());
-        for (const std::shared_ptr<PointGeometry>& geometry : geometries) {
-            _geometries.push_back(geometry);
-            _bounds.expandToContain(geometry->getBounds());
-        }
     }
 
     MultiPointGeometry::~MultiPointGeometry() {

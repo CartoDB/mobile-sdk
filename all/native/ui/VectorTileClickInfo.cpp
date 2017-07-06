@@ -2,18 +2,13 @@
 
 namespace carto {
 
-    VectorTileClickInfo::VectorTileClickInfo(ClickType::ClickType clickType, const MapPos& clickPos, const MapPos& featureClickPos, const MapTile& mapTile,
-                                                   long long featureId,
-                                                   const std::shared_ptr<Feature>& feature,
-                                                   const std::string& featureLayerName,
-                                                   const std::shared_ptr<Layer>& layer) :
+    VectorTileClickInfo::VectorTileClickInfo(ClickType::ClickType clickType, const MapPos& clickPos, const MapPos& featureClickPos,
+                                             const std::shared_ptr<VectorTileFeature>& feature,
+                                             const std::shared_ptr<Layer>& layer) :
         _clickType(clickType),
         _clickPos(clickPos),
         _featureClickPos(featureClickPos),
-        _mapTile(mapTile),
-        _featureId(featureId),
         _feature(feature),
-        _featureLayerName(featureLayerName),
         _layer(layer)
     {
     }
@@ -34,19 +29,19 @@ namespace carto {
     }
     
     const MapTile& VectorTileClickInfo::getMapTile() const {
-        return _mapTile;
+        return _feature->getMapTile();
     }
 
     long long VectorTileClickInfo::getFeatureId() const {
-        return _featureId;
+        return _feature->getId();
     }
     
-    std::shared_ptr<Feature> VectorTileClickInfo::getFeature() const {
+    std::shared_ptr<VectorTileFeature> VectorTileClickInfo::getFeature() const {
         return _feature;
     }
     
     const std::string& VectorTileClickInfo::getFeatureLayerName() const {
-        return _featureLayerName;
+        return _feature->getLayerName();
     }
     
     std::shared_ptr<Layer> VectorTileClickInfo::getLayer() const {

@@ -14,8 +14,6 @@
 #include <map>
 #include <string>
 
-#include <mapnikvt/Value.h>
-
 namespace carto {
     namespace mvt {
         class TorqueMap;
@@ -75,7 +73,9 @@ namespace carto {
 
         virtual int getMaxZoom() const;
 
-        virtual std::shared_ptr<TileFeature> decodeFeature(long long id, const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const;
+        virtual std::shared_ptr<VectorTileFeature> decodeFeature(long long id, const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const;
+
+        virtual std::shared_ptr<VectorTileFeatureCollection> decodeFeatures(const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const;
 
         virtual std::shared_ptr<TileMap> decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const;
 
