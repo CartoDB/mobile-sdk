@@ -182,6 +182,7 @@
 #ifdef _CARTO_SEARCH_SUPPORT
 #import "NTSearchRequest.h"
 #import "NTFeatureCollectionSearchService.h"
+#import "NTVectorElementSearchService.h"
 #import "NTVectorTileSearchService.h"
 #endif
 
