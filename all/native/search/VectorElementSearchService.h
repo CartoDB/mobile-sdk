@@ -4,8 +4,8 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_VECTORDATASOURCESEARCHSERVICE_H_
-#define _CARTO_VECTORDATASOURCESEARCHSERVICE_H_
+#ifndef _CARTO_VECTORELEMENTSEARCHSERVICE_H_
+#define _CARTO_VECTORELEMENTSEARCHSERVICE_H_
 
 #ifdef _CARTO_SEARCH_SUPPORT
 
@@ -19,10 +19,10 @@ namespace carto {
     class VectorElement;
     class VectorDataSource;
 
-    class VectorDataSourceSearchService {
+    class VectorElementSearchService {
     public:
-        VectorDataSourceSearchService(const std::shared_ptr<VectorDataSource>& dataSource);
-        virtual ~VectorDataSourceSearchService();
+        VectorElementSearchService(const std::shared_ptr<VectorDataSource>& dataSource);
+        virtual ~VectorElementSearchService();
 
         const std::shared_ptr<VectorDataSource>& getDataSource() const;
 

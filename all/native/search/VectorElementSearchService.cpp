@@ -1,6 +1,6 @@
 #ifdef _CARTO_SEARCH_SUPPORT
 
-#include "VectorDataSourceSearchService.h"
+#include "VectorElementSearchService.h"
 #include "core/MapEnvelope.h"
 #include "components/Exceptions.h"
 #include "datasources/VectorDataSource.h"
@@ -14,7 +14,7 @@
 
 namespace carto {
 
-    VectorDataSourceSearchService::VectorDataSourceSearchService(const std::shared_ptr<VectorDataSource>& dataSource) :
+    VectorElementSearchService::VectorElementSearchService(const std::shared_ptr<VectorDataSource>& dataSource) :
         _dataSource(dataSource)
     {
         if (!dataSource) {
@@ -22,14 +22,14 @@ namespace carto {
         }
     }
 
-    VectorDataSourceSearchService::~VectorDataSourceSearchService() {
+    VectorElementSearchService::~VectorElementSearchService() {
     }
 
-    const std::shared_ptr<VectorDataSource>& VectorDataSourceSearchService::getDataSource() const {
+    const std::shared_ptr<VectorDataSource>& VectorElementSearchService::getDataSource() const {
         return _dataSource;
     }
 
-    std::vector<std::shared_ptr<VectorElement> > VectorDataSourceSearchService::findElements(const std::shared_ptr<SearchRequest>& request) const {
+    std::vector<std::shared_ptr<VectorElement> > VectorElementSearchService::findElements(const std::shared_ptr<SearchRequest>& request) const {
         if (!request) {
             throw NullArgumentException("Null request");
         }
