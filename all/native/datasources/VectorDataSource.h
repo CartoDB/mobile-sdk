@@ -11,6 +11,7 @@
 #include "datasources/components/VectorData.h"
 
 #include <memory>
+#include <mutex>
 #include <vector>
 
 namespace carto {
