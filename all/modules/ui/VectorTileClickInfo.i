@@ -30,6 +30,7 @@
 !attributestring_polymorphic(carto::VectorTileClickInfo, geometry.Feature, Feature, getFeature)
 %attributestring(carto::VectorTileClickInfo, std::string, FeatureLayerName, getFeatureLayerName)
 !attributestring_polymorphic(carto::VectorTileClickInfo, layers.Layer, Layer, getLayer)
+%ignore carto::VectorTileClickInfo::VectorTileClickInfo;
 !standard_equals(carto::VectorTileClickInfo);
 
 %include "ui/VectorTileClickInfo.h"

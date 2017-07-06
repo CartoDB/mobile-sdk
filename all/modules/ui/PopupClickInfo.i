@@ -24,6 +24,7 @@
 %attributeval(carto::PopupClickInfo, carto::MapPos, ClickPos, getClickPos)
 %attributeval(carto::PopupClickInfo, carto::ScreenPos, ElementClickPos, getElementClickPos)
 !attributestring_polymorphic(carto::PopupClickInfo, vectorelements.Popup, Popup, getPopup)
+%ignore carto::PopupClickInfo::PopupClickInfo;
 !standard_equals(carto::PopupClickInfo);
 
 %include "ui/PopupClickInfo.h"

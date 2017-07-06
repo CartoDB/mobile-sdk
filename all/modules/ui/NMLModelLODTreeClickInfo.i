@@ -28,6 +28,7 @@
 %attributeval(carto::NMLModelLODTreeClickInfo, carto::MapPos, ElementClickPos, getElementClickPos)
 %attributeval(carto::NMLModelLODTreeClickInfo, %arg(std::map<std::string, std::string>), MetaData, getMetaData)
 !attributestring_polymorphic(carto::NMLModelLODTreeClickInfo, layers.Layer, Layer, getLayer)
+%ignore carto::NMLModelLODTreeClickInfo::NMLModelLODTreeClickInfo;
 !standard_equals(carto::NMLModelLODTreeClickInfo);
 
 %include "ui/NMLModelLODTreeClickInfo.h"

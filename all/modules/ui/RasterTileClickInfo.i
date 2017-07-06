@@ -28,6 +28,7 @@
 %attributeval(carto::RasterTileClickInfo, carto::Color, NearestColor, getNearestColor)
 %attributeval(carto::RasterTileClickInfo, carto::Color, InterpolatedColor, getInterpolatedColor)
 !attributestring_polymorphic(carto::RasterTileClickInfo, layers.Layer, Layer, getLayer)
+%ignore carto::RasterTileClickInfo::RasterTileClickInfo;
 !standard_equals(carto::RasterTileClickInfo);
 
 %include "ui/RasterTileClickInfo.h"
