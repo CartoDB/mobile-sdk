@@ -30,6 +30,8 @@ namespace carto {
 
         const MapBounds& getSearchBounds() const;
 
+        bool testBounds(const MapBounds& bounds, const std::shared_ptr<Projection>& proj) const;
+
         bool testElement(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<Projection>& proj, const Variant& var) const;
 
     protected:

@@ -80,23 +80,31 @@ namespace carto {
             maxZoom = std::min(maxZoom, _maxZoom);
         }
 
-        std::vector<std::shared_ptr<VectorTileFeature> > features;
+        std::vector<MapTile> mapTiles;
         for (int zoom = minZoom; zoom <= maxZoom; zoom++) {
             MapTile mapTile1 = TileUtils::CalculateMapTile(searchBounds.getMin(), zoom, _dataSource->getProjection());
             MapTile mapTile2 = TileUtils::CalculateMapTile(searchBounds.getMax(), zoom, _dataSource->getProjection());
             for (int y = std::min(mapTile1.getY(), mapTile2.getY()); y <= std::max(mapTile1.getY(), mapTile2.getY()); y++) {
                 for (int x = std::min(mapTile1.getX(), mapTile2.getX()); x <= std::max(mapTile1.getX(), mapTile2.getX()); x++) {
                     MapTile mapTile(x, y, zoom, 0);
-                    if (std::shared_ptr<TileData> tileData = _dataSource->loadTile(mapTile.getFlipped())) {
-                        MapBounds tileBounds = TileUtils::CalculateMapTileBounds(mapTile, _dataSource->getProjection());
-                        if (std::shared_ptr<VectorTileFeatureCollection> featureCollection = _tileDecoder->decodeFeatures(vt::TileId(zoom, x, y), tileData->getData(), tileBounds)) {
-                            for (int i = 0; i < featureCollection->getFeatureCount(); i++) {
-                                const std::shared_ptr<VectorTileFeature>& feature = featureCollection->getFeature(i);
 
-                                if (proxy.testElement(feature->getGeometry(), _dataSource->getProjection(), feature->getProperties())) {
-                                    features.push_back(feature);
-                                }
-                            }
+                    if (proxy.testBounds(TileUtils::CalculateMapTileBounds(mapTile, _dataSource->getProjection()), _dataSource->getProjection())) {
+                        mapTiles.push_back(mapTile);
+                    }
+                }
+            }
+        }
+
+        std::vector<std::shared_ptr<VectorTileFeature> > features;
+        for (const MapTile& mapTile : mapTiles) {
+            if (std::shared_ptr<TileData> tileData = _dataSource->loadTile(mapTile.getFlipped())) {
+                MapBounds tileBounds = TileUtils::CalculateMapTileBounds(mapTile, _dataSource->getProjection());
+                if (std::shared_ptr<VectorTileFeatureCollection> featureCollection = _tileDecoder->decodeFeatures(vt::TileId(mapTile.getZoom(), mapTile.getX(), mapTile.getY()), tileData->getData(), tileBounds)) {
+                    for (int i = 0; i < featureCollection->getFeatureCount(); i++) {
+                        const std::shared_ptr<VectorTileFeature>& feature = featureCollection->getFeature(i);
+
+                        if (proxy.testElement(feature->getGeometry(), _dataSource->getProjection(), feature->getProperties())) {
+                            features.push_back(feature);
                         }
                     }
                 }

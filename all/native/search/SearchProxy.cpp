@@ -270,6 +270,22 @@ namespace carto {
         return _searchBounds;
     }
 
+    bool SearchProxy::testBounds(const MapBounds& bounds, const std::shared_ptr<Projection>& proj) const {
+        if (_geometry) {
+            std::vector<MapPos> points(4);
+            points[0] = bounds.getMin();
+            points[1] = MapPos(bounds.getMin().getX(), bounds.getMax().getY());
+            points[2] = bounds.getMax();
+            points[3] = MapPos(bounds.getMax().getX(), bounds.getMin().getY());
+            auto geometry = std::make_shared<PolygonGeometry>(std::move(points));
+            if (calculateDistance(convertToEPSG3857(geometry, proj), _geometry) > _searchRadius) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     bool SearchProxy::testElement(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<Projection>& proj, const Variant& var) const {
         if (_re) {
             if (!matchRegexFilter(var, *_re)) {
