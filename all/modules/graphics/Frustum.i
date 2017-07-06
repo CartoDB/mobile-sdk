@@ -16,7 +16,7 @@
 
 !value_type(carto::Frustum, graphics.Frustum)
 
-%ignore carto::Frustum::Frustum(const cglib::mat4x4<double>&);
+%ignore carto::Frustum::Frustum;
 !standard_equals(carto::Frustum);
 
 %include "graphics/Frustum.h"
