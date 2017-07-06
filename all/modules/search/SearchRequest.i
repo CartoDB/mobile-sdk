@@ -24,12 +24,11 @@
 
 !shared_ptr(carto::SearchRequest, search.SearchRequest)
 
-%attributestring(carto::SearchRequest, std::shared_ptr<carto::Projection>, Projection, getProjection)
 %attributestring(carto::SearchRequest, std::string, FilterExpression, getFilterExpression, setFilterExpression)
 %attributestring(carto::SearchRequest, std::string, RegexFilter, getRegexFilter, setRegexFilter)
 %attributestring(carto::SearchRequest, std::shared_ptr<carto::Geometry>, Geometry, getGeometry, setGeometry)
+%attributestring(carto::SearchRequest, std::shared_ptr<carto::Projection>, Projection, getProjection, setProjection)
 %attribute(carto::SearchRequest, float, SearchRadius, getSearchRadius, setSearchRadius)
-%std_exceptions(carto::SearchRequest::SearchRequest)
 !standard_equals(carto::SearchRequest);
 !custom_tostring(carto::SearchRequest);
 

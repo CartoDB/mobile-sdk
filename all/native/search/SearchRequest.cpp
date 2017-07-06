@@ -10,24 +10,17 @@
 
 namespace carto {
 
-    SearchRequest::SearchRequest(const std::shared_ptr<Projection>& projection) :
-        _projection(projection),
+    SearchRequest::SearchRequest() :
         _filterExpr(),
         _regexFilter(),
         _geometry(),
+        _projection(),
         _searchRadius(DEFAULT_SEARCH_RADIUS),
         _mutex()
     {
-        if (!projection) {
-            throw NullArgumentException("Null projection");
-        }
     }
 
     SearchRequest::~SearchRequest() {
-    }
-
-    const std::shared_ptr<Projection>& SearchRequest::getProjection() const {
-         return _projection;
     }
 
     std::string SearchRequest::getFilterExpression() const {
@@ -58,6 +51,16 @@ namespace carto {
     void SearchRequest::setGeometry(const std::shared_ptr<Geometry>& geometry) {
         std::lock_guard<std::mutex> lock(_mutex);
         _geometry = geometry;
+    }
+
+    std::shared_ptr<Projection> SearchRequest::getProjection() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _projection;
+    }
+
+    void SearchRequest::setProjection(const std::shared_ptr<Projection>& projection) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _projection = projection;
     }
 
     float SearchRequest::getSearchRadius() const {

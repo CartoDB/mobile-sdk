@@ -285,6 +285,9 @@ namespace carto {
         }
 
         if (request->getGeometry()) {
+            if (!request->getProjection()) {
+                throw NullArgumentException("Null projection while geometry is not null");
+            }
             MapPos centerPos = request->getProjection()->toWgs84(request->getGeometry()->getCenterPos());
             _geometry = convertToEPSG3857(request->getGeometry(), request->getProjection());
             MapBounds geometryBounds = _geometry->getBounds();

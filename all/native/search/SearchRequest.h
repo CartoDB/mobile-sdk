@@ -19,10 +19,8 @@ namespace carto {
 
     class SearchRequest {
     public:
-        explicit SearchRequest(const std::shared_ptr<Projection>& projection);
+        SearchRequest();
         virtual ~SearchRequest();
-
-        const std::shared_ptr<Projection>& getProjection() const;
 
         std::string getFilterExpression() const;
         void setFilterExpression(const std::string& expr);
@@ -33,6 +31,9 @@ namespace carto {
         std::shared_ptr<Geometry> getGeometry() const;
         void setGeometry(const std::shared_ptr<Geometry>& geometry);
 
+        std::shared_ptr<Projection> getProjection() const;
+        void setProjection(const std::shared_ptr<Projection>& projection);
+
         float getSearchRadius() const;
         void setSearchRadius(float radius);
 
@@ -41,10 +42,10 @@ namespace carto {
     private:
         static const int DEFAULT_SEARCH_RADIUS = 0; // in meters
 
-        const std::shared_ptr<Projection> _projection;
         std::string _filterExpr;
         std::string _regexFilter;
         std::shared_ptr<Geometry> _geometry;
+        std::shared_ptr<Projection> _projection;
         float _searchRadius;
 
         mutable std::mutex _mutex;
