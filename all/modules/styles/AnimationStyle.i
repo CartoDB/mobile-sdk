@@ -19,6 +19,7 @@
 %attribute(carto::AnimationStyle, float, RelativeSpeed, getRelativeSpeed)
 %attribute(carto::AnimationStyle, carto::AnimationType::AnimationType, FadeAnimationType, getFadeAnimationType)
 %attribute(carto::AnimationStyle, carto::AnimationType::AnimationType, SizeAnimationType, getSizeAnimationType)
+%ignore carto::AnimationStyle::AnimationStyle;
 %ignore carto::AnimationStyle::CalculateTransition;
 !standard_equals(carto::AnimationStyle);
 

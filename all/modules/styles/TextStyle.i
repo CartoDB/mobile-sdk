@@ -23,6 +23,7 @@
 %attribute(carto::TextStyle, int, FontSize, getFontSize)
 %attributeval(carto::TextStyle, carto::Color, StrokeColor, getStrokeColor)
 %attribute(carto::TextStyle, float, StrokeWidth, getStrokeWidth)
+%ignore carto::TextStyle::TextStyle;
 
 %include "styles/TextStyle.h"
 

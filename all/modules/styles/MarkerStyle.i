@@ -25,6 +25,7 @@
 %attribute(carto::MarkerStyle, float, AnchorPointX, getAnchorPointX)
 %attribute(carto::MarkerStyle, float, AnchorPointY, getAnchorPointY)
 %attributestring(carto::MarkerStyle, std::shared_ptr<carto::Bitmap>, Bitmap, getBitmap)
+%ignore carto::MarkerStyle::MarkerStyle;
 
 %include "styles/MarkerStyle.h"
 

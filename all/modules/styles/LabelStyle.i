@@ -23,6 +23,7 @@
 %attribute(carto::LabelStyle, bool, Flippable, isFlippable)
 %attribute(carto::LabelStyle, float, AnchorPointX, getAnchorPointX)
 %attribute(carto::LabelStyle, float, AnchorPointY, getAnchorPointY)
+%ignore carto::LabelStyle::LabelStyle;
 
 %include "styles/LabelStyle.h"
 

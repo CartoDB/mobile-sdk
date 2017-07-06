@@ -41,6 +41,7 @@
 %attribute(carto::BalloonPopupStyle, int, StrokeWidth, getStrokeWidth)
 %attribute(carto::BalloonPopupStyle, int, TriangleWidth, getTriangleWidth)
 %attribute(carto::BalloonPopupStyle, int, TriangleHeight, getTriangleHeight)
+%ignore carto::BalloonPopupStyle::BalloonPopupStyle;
 
 %include "styles/BalloonPopupStyle.h"
 

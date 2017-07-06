@@ -18,6 +18,8 @@
 
 !polymorphic_shared_ptr(carto::PopupStyle, styles.PopupStyle)
 
+%ignore carto::PopupStyle::PopupStyle;
+
 %include "styles/PopupStyle.h"
 
 #endif

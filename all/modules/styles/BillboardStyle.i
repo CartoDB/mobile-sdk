@@ -27,6 +27,7 @@
 %attribute(carto::BillboardStyle, float, HorizontalOffset, getHorizontalOffset)
 %attribute(carto::BillboardStyle, float, VerticalOffset, getVerticalOffset)
 %attributestring(carto::BillboardStyle, std::shared_ptr<carto::AnimationStyle>, AnimationStyle, getAnimationStyle)
+%ignore carto::BillboardStyle::BillboardStyle;
 
 %include "styles/BillboardStyle.h"
 
