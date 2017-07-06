@@ -70,7 +70,7 @@ namespace carto {
             throw NullArgumentException("Null request");
         }
 
-        SearchProxy proxy(request, _dataSource->getDataExtent());
+        SearchProxy proxy(request, _dataSource->getDataExtent(), _dataSource->getProjection());
         MapBounds searchBounds = proxy.getSearchBounds();
         int minZoom = _dataSource->getMinZoom();
         int maxZoom = _dataSource->getMaxZoom();
@@ -87,7 +87,7 @@ namespace carto {
             for (int y = std::min(mapTile1.getY(), mapTile2.getY()); y <= std::max(mapTile1.getY(), mapTile2.getY()); y++) {
                 for (int x = std::min(mapTile1.getX(), mapTile2.getX()); x <= std::max(mapTile1.getX(), mapTile2.getX()); x++) {
                     MapTile mapTile(x, y, zoom, 0);
-                    if (proxy.testBounds(TileUtils::CalculateMapTileBounds(mapTile, _dataSource->getProjection()), _dataSource->getProjection())) {
+                    if (proxy.testBounds(TileUtils::CalculateMapTileBounds(mapTile, _dataSource->getProjection()))) {
                         mapTiles.push_back(mapTile);
                     }
                 }
@@ -101,7 +101,7 @@ namespace carto {
                 if (std::shared_ptr<VectorTileFeatureCollection> featureCollection = _tileDecoder->decodeFeatures(vt::TileId(mapTile.getZoom(), mapTile.getX(), mapTile.getY()), tileData->getData(), tileBounds)) {
                     for (int i = 0; i < featureCollection->getFeatureCount(); i++) {
                         const std::shared_ptr<VectorTileFeature>& feature = featureCollection->getFeature(i);
-                        if (proxy.testElement(feature->getGeometry(), _dataSource->getProjection(), &feature->getLayerName(), feature->getProperties())) {
+                        if (proxy.testElement(feature->getGeometry(), &feature->getLayerName(), feature->getProperties())) {
                             features.push_back(feature);
                         }
                     }

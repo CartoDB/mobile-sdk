@@ -40,13 +40,13 @@ namespace carto {
             throw NullArgumentException("Null request");
         }
 
-        SearchProxy proxy(request, EPSG3857().getBounds());
+        SearchProxy proxy(request, _projection->getBounds(), _projection);
 
         std::vector<std::shared_ptr<Feature> > features;
         for (int i = 0; i < _featureCollection->getFeatureCount(); i++) {
             const std::shared_ptr<Feature>& feature = _featureCollection->getFeature(i);
 
-            if (proxy.testElement(feature->getGeometry(), _projection, nullptr, feature->getProperties())) {
+            if (proxy.testElement(feature->getGeometry(), nullptr, feature->getProperties())) {
                 features.push_back(feature);
             }
         }

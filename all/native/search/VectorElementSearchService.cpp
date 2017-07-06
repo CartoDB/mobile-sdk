@@ -34,7 +34,7 @@ namespace carto {
             throw NullArgumentException("Null request");
         }
 
-        SearchProxy proxy(request, _dataSource->getDataExtent());
+        SearchProxy proxy(request, _dataSource->getDataExtent(), _dataSource->getProjection());
         MapBounds searchBounds = proxy.getSearchBounds();
         auto cullState = std::make_shared<CullState>(MapEnvelope(searchBounds), ViewState());
 
@@ -43,7 +43,7 @@ namespace carto {
             for (std::size_t i = 0; i < vectorData->getElements().size(); i++) {
                 const std::shared_ptr<VectorElement>& element = vectorData->getElements()[i];
 
-                if (proxy.testElement(element->getGeometry(), _dataSource->getProjection(), nullptr, Variant(element->getMetaData()))) {
+                if (proxy.testElement(element->getGeometry(), nullptr, Variant(element->getMetaData()))) {
                     elements.push_back(element);
                 }
             }

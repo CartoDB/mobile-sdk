@@ -26,19 +26,20 @@ namespace carto {
 
     class SearchProxy {
     public:
-        SearchProxy(const std::shared_ptr<SearchRequest>& request, const MapBounds& mapBounds);
+        SearchProxy(const std::shared_ptr<SearchRequest>& request, const MapBounds& mapBounds, const std::shared_ptr<Projection>& proj);
 
         const MapBounds& getSearchBounds() const;
 
-        bool testBounds(const MapBounds& bounds, const std::shared_ptr<Projection>& proj) const;
+        bool testBounds(const MapBounds& bounds) const;
 
-        bool testElement(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<Projection>& proj, const std::string* layerName, const Variant& var) const;
+        bool testElement(const std::shared_ptr<Geometry>& geometry, const std::string* layerName, const Variant& var) const;
 
     protected:
         std::shared_ptr<SearchRequest> _request;
         std::shared_ptr<Geometry> _geometry;
         MapBounds _searchBounds;
         double _searchRadius;
+        std::shared_ptr<Projection> _projection;
         std::shared_ptr<QueryExpression> _expr;
         boost::optional<std::regex> _re;
     };

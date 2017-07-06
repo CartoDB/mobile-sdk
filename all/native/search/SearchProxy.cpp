@@ -37,6 +37,23 @@ namespace {
     typedef boost::geometry::model::polygon<BoostPointType> BoostPolygonType;
     typedef boost::variant<BoostPointType, BoostLinestringType, BoostPolygonType> BoostGeometryType;
 
+    carto::MapBounds convertToEPSG3857(const carto::MapBounds& mapBounds, const std::shared_ptr<carto::Projection>& proj) {
+        if (std::dynamic_pointer_cast<carto::EPSG3857>(proj)) {
+            return mapBounds;
+        }
+
+        carto::MapPos mapPos0 = mapBounds.getMin();
+        carto::MapPos mapPos1 = mapBounds.getMax();
+
+        carto::EPSG3857 epsg3857;
+        carto::MapBounds epsg3857Bounds;
+        epsg3857Bounds.expandToContain(epsg3857.fromWgs84(proj->toWgs84(mapPos0)));
+        epsg3857Bounds.expandToContain(epsg3857.fromWgs84(proj->toWgs84(carto::MapPos(mapPos0.getX(), mapPos1.getY()))));
+        epsg3857Bounds.expandToContain(epsg3857.fromWgs84(proj->toWgs84(mapPos1)));
+        epsg3857Bounds.expandToContain(epsg3857.fromWgs84(proj->toWgs84(carto::MapPos(mapPos1.getX(), mapPos0.getY()))));
+        return epsg3857Bounds;
+    }
+
     std::shared_ptr<carto::Geometry> convertToEPSG3857(const std::shared_ptr<carto::Geometry>& geometry, const std::shared_ptr<carto::Projection>& proj) {
         if (std::dynamic_pointer_cast<carto::EPSG3857>(proj)) {
             return geometry;
@@ -231,16 +248,20 @@ namespace {
 
 namespace carto {
 
-    SearchProxy::SearchProxy(const std::shared_ptr<SearchRequest>& request, const MapBounds& mapBounds) :
+    SearchProxy::SearchProxy(const std::shared_ptr<SearchRequest>& request, const MapBounds& mapBounds, const std::shared_ptr<Projection>& proj) :
         _request(request),
         _geometry(),
-        _searchBounds(mapBounds),
+        _searchBounds(),
         _searchRadius(0),
+        _projection(proj),
         _expr(),
         _re()
     {
         if (!request) {
             throw NullArgumentException("Null request");
+        }
+        if (!proj) {
+            throw NullArgumentException("Null proj");
         }
 
         if (!request->getRegexFilter().empty()) {
@@ -269,6 +290,8 @@ namespace carto {
             MapBounds geometryBounds = _geometry->getBounds();
             _searchRadius = request->getSearchRadius() / std::cos(centerPos.getY() * Const::DEG_TO_RAD);
             _searchBounds = MapBounds(geometryBounds.getMin() - MapVec(_searchRadius, _searchRadius), geometryBounds.getMax() + MapVec(_searchRadius, _searchRadius));
+        } else {
+            _searchBounds = convertToEPSG3857(mapBounds, proj);
         }
     }
 
@@ -276,7 +299,7 @@ namespace carto {
         return _searchBounds;
     }
 
-    bool SearchProxy::testBounds(const MapBounds& bounds, const std::shared_ptr<Projection>& proj) const {
+    bool SearchProxy::testBounds(const MapBounds& bounds) const {
         if (_geometry) {
             std::vector<MapPos> points(4);
             points[0] = bounds.getMin();
@@ -284,7 +307,7 @@ namespace carto {
             points[2] = bounds.getMax();
             points[3] = MapPos(bounds.getMax().getX(), bounds.getMin().getY());
             auto geometry = std::make_shared<PolygonGeometry>(std::move(points));
-            if (calculateDistance(convertToEPSG3857(geometry, proj), _geometry) > _searchRadius) {
+            if (calculateDistance(convertToEPSG3857(geometry, _projection), _geometry) > _searchRadius) {
                 return false;
             }
         }
@@ -292,7 +315,7 @@ namespace carto {
         return true;
     }
 
-    bool SearchProxy::testElement(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<Projection>& proj, const std::string* layerName, const Variant& var) const {
+    bool SearchProxy::testElement(const std::shared_ptr<Geometry>& geometry, const std::string* layerName, const Variant& var) const {
         if (_re) {
             if (!matchRegexFilter(var, *_re)) {
                 return false;
@@ -300,14 +323,14 @@ namespace carto {
         }
 
         if (_expr) {
-            SearchQueryContext context(geometry, proj, layerName, var);
+            SearchQueryContext context(geometry, _projection, layerName, var);
             if (!_expr->evaluate(context)) {
                 return false;
             }
         }
 
         if (_geometry) {
-            if (calculateDistance(convertToEPSG3857(geometry, proj), _geometry) > _searchRadius) {
+            if (calculateDistance(convertToEPSG3857(geometry, _projection), _geometry) > _searchRadius) {
                 return false;
             }
         }
