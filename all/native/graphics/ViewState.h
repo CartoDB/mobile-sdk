@@ -123,7 +123,7 @@ namespace carto {
         void setZoom(float zoom);
         /**
          * Returns the number 2 lifted to the power of the zoom level: pow(2, zoom level).
-         * @return pow(2, zoomLevel).
+         * @return pow(2, zoom level).
          */
         float get2PowZoom() const;
         /**

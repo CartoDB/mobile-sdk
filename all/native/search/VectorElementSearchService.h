@@ -19,13 +19,29 @@ namespace carto {
     class VectorElement;
     class VectorDataSource;
 
+    /**
+     * A search service for finding vector elements from the specified vector data source.
+     */
     class VectorElementSearchService {
     public:
-        VectorElementSearchService(const std::shared_ptr<VectorDataSource>& dataSource);
+        /**
+         * Constructs a VectorElementSearchService for given vector data source.
+         * @param dataSource The vector data source to search from.
+         */
+        explicit VectorElementSearchService(const std::shared_ptr<VectorDataSource>& dataSource);
         virtual ~VectorElementSearchService();
 
+        /**
+         * Returns the vector data source of the search service.
+         * @return The vector data source of the search service.
+         */
         const std::shared_ptr<VectorDataSource>& getDataSource() const;
 
+        /**
+         * Searches for the vector elements specified by search request from the data source bound to the service.
+         * @param request The search request containing search filters.
+         * @return The resulting list of vector elements matching the request.
+        */
         virtual std::vector<std::shared_ptr<VectorElement> > findElements(const std::shared_ptr<SearchRequest>& request) const;
 
     protected:
