@@ -46,7 +46,7 @@ namespace carto {
         for (int i = 0; i < _featureCollection->getFeatureCount(); i++) {
             const std::shared_ptr<Feature>& feature = _featureCollection->getFeature(i);
 
-            if (proxy.testElement(feature->getGeometry(), _projection, feature->getProperties())) {
+            if (proxy.testElement(feature->getGeometry(), _projection, nullptr, feature->getProperties())) {
                 features.push_back(feature);
             }
         }

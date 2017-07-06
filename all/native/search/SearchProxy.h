@@ -32,7 +32,7 @@ namespace carto {
 
         bool testBounds(const MapBounds& bounds, const std::shared_ptr<Projection>& proj) const;
 
-        bool testElement(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<Projection>& proj, const Variant& var) const;
+        bool testElement(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<Projection>& proj, const std::string* layerName, const Variant& var) const;
 
     protected:
         std::shared_ptr<SearchRequest> _request;

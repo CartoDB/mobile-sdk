@@ -145,10 +145,15 @@ namespace {
 
     class SearchQueryContext : public carto::QueryContext {
     public:
-        explicit SearchQueryContext(const std::shared_ptr<carto::Geometry>& geometry, const std::shared_ptr<carto::Projection>& proj, const carto::Variant& var) : _geometry(geometry), _projection(proj), _variant(var) { }
+        explicit SearchQueryContext(const std::shared_ptr<carto::Geometry>& geometry, const std::shared_ptr<carto::Projection>& proj, const std::string* layerName, const carto::Variant& var) : _geometry(geometry), _projection(proj), _layerName(layerName), _variant(var) { }
         virtual ~SearchQueryContext() { }
 
         virtual bool getVariable(const std::string& name, carto::Variant& value) const {
+            if (name == "layer::name") {
+                value = (_layerName ? carto::Variant(*_layerName) : carto::Variant());
+                return true;
+            }
+
             if (name == "geometry::type") {
                 value = carto::Variant(GetGeometryType(_geometry));
                 return true;
@@ -218,6 +223,7 @@ namespace {
 
         const std::shared_ptr<carto::Geometry>& _geometry;
         const std::shared_ptr<carto::Projection>& _projection;
+        const std::string* _layerName;
         const carto::Variant& _variant;
     };
 
@@ -286,7 +292,7 @@ namespace carto {
         return true;
     }
 
-    bool SearchProxy::testElement(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<Projection>& proj, const Variant& var) const {
+    bool SearchProxy::testElement(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<Projection>& proj, const std::string* layerName, const Variant& var) const {
         if (_re) {
             if (!matchRegexFilter(var, *_re)) {
                 return false;
@@ -294,7 +300,7 @@ namespace carto {
         }
 
         if (_expr) {
-            SearchQueryContext context(geometry, proj, var);
+            SearchQueryContext context(geometry, proj, layerName, var);
             if (!_expr->evaluate(context)) {
                 return false;
             }
