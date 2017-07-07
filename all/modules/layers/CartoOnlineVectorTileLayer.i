@@ -3,7 +3,7 @@
 
 %module CartoOnlineVectorTileLayer
 
-!proxy_imports(carto::CartoOnlineVectorTileLayer, layers.CartoVectorTileLayer, utils.AssetPackage)
+!proxy_imports(carto::CartoOnlineVectorTileLayer, datasources.TileDataSource, layers.CartoVectorTileLayer, utils.AssetPackage)
 
 %{
 #include "layers/CartoOnlineVectorTileLayer.h"
@@ -14,6 +14,7 @@
 %include <std_shared_ptr.i>
 %include <cartoswig.i>
 
+%import "datasources/TileDataSource.i"
 %import "layers/CartoVectorTileLayer.i"
 %import "utils/AssetPackage.i"
 
