@@ -46,6 +46,10 @@ namespace carto {
             styleAsset = std::make_shared<BinaryData>(nutibright_v3_zip, nutibright_v3_zip_len);
             styleName = "nutiteq_grey";
             break;
+        case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_BRIGHT:
+            styleAsset = std::make_shared<BinaryData>(nutibright_v3_zip, nutibright_v3_zip_len);
+            styleName = "style";
+            break;
         case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_VOYAGER:
             styleAsset = std::make_shared<BinaryData>(cartostyles_v1_zip, cartostyles_v1_zip_len);
             styleName = "voyager";

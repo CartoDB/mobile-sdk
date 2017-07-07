@@ -21,7 +21,7 @@ namespace carto {
          */
         enum CartoBaseMapStyle {
             /**
-             * The default (bright) style.
+             * The default style.
              */
             CARTO_BASEMAP_STYLE_DEFAULT,
             /**
@@ -33,9 +33,9 @@ namespace carto {
              */
             CARTO_BASEMAP_STYLE_GRAY,
             /**
-             * The Voyager style. Replacement for older 'bright' style.
+             * The bright style.
              */
-            CARTO_BASEMAP_STYLE_VOYAGER,
+            CARTO_BASEMAP_STYLE_BRIGHT,
             /**
              * The Positron style.
              */
@@ -43,7 +43,11 @@ namespace carto {
             /**
              * The Darkmatter style.
              */
-            CARTO_BASEMAP_STYLE_DARKMATTER
+            CARTO_BASEMAP_STYLE_DARKMATTER,
+            /**
+             * The Voyager style. Replacement for older 'bright' style.
+             */
+            CARTO_BASEMAP_STYLE_VOYAGER
         };
     }
 
