@@ -30,9 +30,8 @@ namespace carto {
 
     std::vector<std::shared_ptr<GeocodingResult> > GeocodingProxy::CalculateAddresses(const std::shared_ptr<geocoding::Geocoder>& geocoder, const std::shared_ptr<GeocodingRequest>& request) {
         geocoding::Geocoder::Options options;
-        MapPos pos = request->getLocation();
-        if (!std::isnan(pos.getX()) && !std::isnan(pos.getY())) {
-            MapPos posWgs84 = request->getProjection()->toWgs84(pos);
+        if (request->getLocationRadius() > 0) {
+            MapPos posWgs84 = request->getProjection()->toWgs84(request->getLocation());
             options.location = cglib::vec2<double>(posWgs84.getX(), posWgs84.getY());
             options.locationRadius = request->getLocationRadius();
         }

@@ -42,8 +42,8 @@ namespace carto {
         const std::vector<MapPos>& getPoints() const;
 
         /**
-         * Creates a string representation of this routing request object, useful for logging.
-         * @return The string representation of this routing request object.
+         * Creates a string representation of this request object, useful for logging.
+         * @return The string representation of this request object.
          */
         std::string toString() const;
         

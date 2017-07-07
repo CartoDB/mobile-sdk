@@ -13,8 +13,8 @@ namespace carto {
     GeocodingRequest::GeocodingRequest(const std::shared_ptr<Projection>& projection, const std::string& query) :
         _query(query),
         _projection(projection),
-        _location(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN()),
-        _locationRadius(DEFAULT_LOCATION_RADIUS),
+        _location(0, 0),
+        _locationRadius(0),
         _mutex()
     {
         if (!projection) {
@@ -59,7 +59,7 @@ namespace carto {
         std::stringstream ss;
         ss << "GeocodingRequest [";
         ss << "query='" << _query << "'";
-        if (!std::isnan(_location.getX()) && !std::isnan(_location.getY())) {
+        if (_locationRadius > 0) {
             ss << ", location=" << _location.toString();
             ss << ", locationRadius=" << _locationRadius;
         }

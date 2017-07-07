@@ -23,12 +23,27 @@ namespace carto {
         class RevGeocoder;
     }
 
+    /**
+     * A reverse geocoding service that uses geocoding packages from package manager.
+     */
     class PackageManagerReverseGeocodingService : public ReverseGeocodingService {
     public:
+        /**
+         * Constructs a new instance of the PackageManagerReverseGeocodingService given package manager instance.
+         * @param packageManager The package manager instance to use.
+         */
         explicit PackageManagerReverseGeocodingService(const std::shared_ptr<PackageManager>& packageManager);
         virtual ~PackageManagerReverseGeocodingService();
 
+        /**
+         * Returns the search radius (in meters).
+         * @return The search radius in meters.
+         */
         float getSearchRadius() const;
+        /**
+         * Sets the search radius (in meters).
+         * @param radius The new search radius in meters.
+         */
         void setSearchRadius(float radius);
 
         virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const;
@@ -54,6 +69,8 @@ namespace carto {
 
     private:
         std::shared_ptr<PackageManagerListener> _packageManagerListener;
+
+        static const float DEFAULT_SEARCH_RADIUS;
     };
     
 }

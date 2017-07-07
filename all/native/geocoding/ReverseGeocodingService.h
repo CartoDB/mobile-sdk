@@ -17,10 +17,18 @@
 
 namespace carto {
 
+    /**
+     * An abstract base class for reverse geocoding services.
+     */
     class ReverseGeocodingService {
     public:
         virtual ~ReverseGeocodingService();
 
+        /**
+         * Calculates matching addresses from the specified reverse geocoding request.
+         * @param request The reverse geocoding request to use.
+         * @result The list of matching geocoding results, sorted by descending ranks.
+         */
         virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const = 0;
 
     protected:

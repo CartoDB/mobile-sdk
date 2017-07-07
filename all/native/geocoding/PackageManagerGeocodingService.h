@@ -23,12 +23,28 @@ namespace carto {
         class Geocoder;
     }
 
+    /**
+     * A geocoding service that uses geocoding packages from package manager.
+     */
     class PackageManagerGeocodingService : public GeocodingService {
     public:
+        /**
+         * Constructs a new instance of the PackageManagerGeocodingService given package manager instance.
+         * @param packageManager The package manager instance to use.
+         */
         explicit PackageManagerGeocodingService(const std::shared_ptr<PackageManager>& packageManager);
         virtual ~PackageManagerGeocodingService();
 
+        /**
+         * Returns the autocomplete flag of the service.
+         * @return The autocomplete flag of the service.
+         */
         bool isAutocomplete() const;
+        /**
+         * Sets the autocomplete flag of the service.
+         * By default this flag is off.
+         * @param autocomplete The new value for autocomplete flag.
+         */
         void setAutocomplete(bool autocomplete);
 
         virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const;

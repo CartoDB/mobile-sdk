@@ -16,14 +16,35 @@
 namespace carto {
     class Projection;
 
+    /**
+     * A reverse geocoding request describing search location.
+     */
     class ReverseGeocodingRequest {
     public:
+        /**
+         * Constructs a new ReverseGeocodingRequest object from a projection and location.
+         * @param projection The projection to use for the result and location data.
+         * @param location The location of the query.
+         */
         ReverseGeocodingRequest(const std::shared_ptr<Projection>& projection, const MapPos& location);
         virtual ~ReverseGeocodingRequest();
 
+        /**
+         * Returns the location of the query.
+         * @return The location of the query.
+         */
         const MapPos& getLocation() const;
+
+        /**
+         * Returns the projection of the query.
+         * @return The projection of the query.
+         */
         const std::shared_ptr<Projection>& getProjection() const;
         
+        /**
+         * Creates a string representation of this request object, useful for logging.
+         * @return The string representation of this request object.
+         */
         std::string toString() const;
 
     private:

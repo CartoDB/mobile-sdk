@@ -17,10 +17,18 @@
 
 namespace carto {
 
+    /**
+     * An abstract base class for geocoding services.
+     */
     class GeocodingService {
     public:
         virtual ~GeocodingService();
 
+        /**
+         * Calculates matching addresses from the specified geocoding request.
+         * @param request The geocoding request to use.
+         * @result The list of matching geocoding results, sorted by descending ranks.
+         */
         virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const = 0;
 
     protected:

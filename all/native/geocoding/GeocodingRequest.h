@@ -18,25 +18,63 @@
 namespace carto {
     class Projection;
 
+    /**
+     * A geocoding request describing text-based query and other optional constraints.
+     */
     class GeocodingRequest {
     public:
+        /**
+         * Constructs a new GeocodingRequest object from a projection and a string-based query.
+         * @param projection The projection to use for the result and location data.
+         * @param query The text-based query.
+         */
         GeocodingRequest(const std::shared_ptr<Projection>& projection, const std::string& query);
         virtual ~GeocodingRequest();
 
+        /**
+         * Returns the text-based query of the request.
+         * @return The text-based query of the request.
+         */
         const std::string& getQuery() const;
+
+        /**
+         * Returns the projection of the request.
+         * @return The projection of the request.
+         */
         const std::shared_ptr<Projection>& getProjection() const;
 
+        /**
+         * Returns the location attribute of the request.
+         * The matching address near the specified location (up to a specified radius) are preferred.
+         * @return The location attribute of the request.
+         */
         MapPos getLocation() const;
+        /**
+         * Sets the location attribute of the request.
+         * The matching address near the specified location (up to a specified radius) are preferred.
+         * @param pos The new location for the request.
+         */
         void setLocation(const MapPos& pos);
 
+        /**
+         * Returns the location radius attribute of the request (in meters).
+         * @return The location radius attribute of the request in meters.
+         */
         float getLocationRadius() const;
+        /**
+         * Sets the location radius attribute of the request.
+         * The default is 0, which means that location based ranking is not applied.
+         * @param radius The location radius attribute of the request in meters.
+         */
         void setLocationRadius(float radius);
         
+        /**
+         * Creates a string representation of this request object, useful for logging.
+         * @return The string representation of this request object.
+         */
         std::string toString() const;
 
     private:
-        static const int DEFAULT_LOCATION_RADIUS = 100000; // in meters
-
         std::string _query;
         std::shared_ptr<Projection> _projection;
         MapPos _location;

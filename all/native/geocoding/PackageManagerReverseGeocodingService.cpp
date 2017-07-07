@@ -14,7 +14,7 @@ namespace carto {
 
     PackageManagerReverseGeocodingService::PackageManagerReverseGeocodingService(const std::shared_ptr<PackageManager>& packageManager) :
         _packageManager(packageManager),
-        _searchRadius(100.0f),
+        _searchRadius(DEFAULT_SEARCH_RADIUS),
         _cachedPackageDatabaseMap(),
         _cachedRevGeocoder(),
         _mutex()
@@ -93,6 +93,8 @@ namespace carto {
         _service._cachedPackageDatabaseMap.clear();
         _service._cachedRevGeocoder.reset();
     }
+
+    const float PackageManagerReverseGeocodingService::DEFAULT_SEARCH_RADIUS = 100.0f;
 
 }
 

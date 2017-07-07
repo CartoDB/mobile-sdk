@@ -91,6 +91,10 @@ namespace carto {
          */
         void setSearchRadius(float radius);
 
+        /**
+         * Creates a string representation of this request object, useful for logging.
+         * @return The string representation of this request object.
+         */
         std::string toString() const;
 
     private:
