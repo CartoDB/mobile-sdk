@@ -14,6 +14,7 @@
 %include <arrays_csharp.i>
 #endif
 %include <typemaps.i>
+%include <std_string.i>
 %include <std_shared_ptr.i>
 %include <std_vector.i>
 %include <carrays.i>

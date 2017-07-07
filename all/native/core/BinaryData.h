@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <vector>
+#include <string>
 #include <mutex>
 
 namespace carto {

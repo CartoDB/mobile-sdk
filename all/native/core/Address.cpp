@@ -74,6 +74,10 @@ namespace carto {
         return _categories;
     }
 
+    int Address::hash() const {
+        return static_cast<int>(std::hash<std::string>()(toString()));
+    }
+
     std::string Address::toString() const {
         std::vector<std::pair<std::string, std::string> > items {
             { "country",       _country       },

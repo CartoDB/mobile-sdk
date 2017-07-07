@@ -103,6 +103,12 @@ namespace carto {
         const std::vector<std::string>& getCategories() const;
 
         /**
+         * Returns the hash value of this object.
+         * @return The hash value of this object.
+         */
+        int hash() const;
+        
+        /**
          * Creates a string representation of this map bounds object, useful for logging.
          * @return The string representation of this map bounds object.
          */
