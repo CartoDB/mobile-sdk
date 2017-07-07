@@ -31,6 +31,7 @@
 %ignore carto::BinaryData::empty;
 %ignore carto::BinaryData::getDataPtr;
 !standard_equals(carto::BinaryData);
+!custom_tostring(carto::BinaryData);
 
 #if SWIGJAVA
 %typemap(jtype) (const unsigned char* dataPtr, std::size_t size) "byte[]"

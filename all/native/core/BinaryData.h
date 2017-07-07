@@ -32,7 +32,6 @@ namespace carto {
          * @param data The byte vector.
          */
         BinaryData(const unsigned char* dataPtr, std::size_t size);
-        virtual ~BinaryData();
 
         /**
          * Check if the data is empty (size is 0).
@@ -55,6 +54,12 @@ namespace carto {
          */
         std::shared_ptr<std::vector<unsigned char> > getDataPtr() const;
         
+        /**
+         * Creates a string representation of this map bounds object, useful for logging.
+         * @return The string representation of this map bounds object.
+         */
+        std::string toString() const;
+
     private:
         std::shared_ptr<std::vector<unsigned char> > _dataPtr;
     };
