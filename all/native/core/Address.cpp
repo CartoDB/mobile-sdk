@@ -4,6 +4,19 @@
 
 namespace carto {
 
+    Address::Address() :
+        _country(),
+        _region(),
+        _county(),
+        _locality(),
+        _neighbourhood(),
+        _street(),
+        _houseNumber(),
+        _name(),
+        _categories()
+    {
+    }
+
     Address::Address(const std::string& country, const std::string& region, const std::string& county, const std::string& locality, const std::string& neighbourhood, const std::string& street, const std::string& houseNumber, const std::string& name, const std::vector<std::string>& categories) :
         _country(country),
         _region(region),
@@ -17,9 +30,14 @@ namespace carto {
     {
     }
 
-    Address::~Address() {
+    bool Address::operator ==(const Address& address) const {
+        return _country == address._country && _region == address._region && _county == address._county && _locality == address._locality && _neighbourhood == address._neighbourhood && _street == address._street && _houseNumber == address._houseNumber && _name == address._name && _categories == address._categories;
     }
-
+    
+    bool Address::operator !=(const Address& address) const {
+        return !(*this == address);
+    }
+        
     const std::string& Address::getCountry() const {
         return _country;
     }

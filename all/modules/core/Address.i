@@ -28,6 +28,7 @@
 %attributestring(carto::Address, std::string, HouseNumber, getHouseNumber)
 %attributestring(carto::Address, std::string, Name, getName)
 %attributeval(carto::Address, std::vector<std::string>, Categories, getCategories)
+!custom_equals(carto::Address);
 !custom_tostring(carto::Address);
 
 %include "core/Address.h"
