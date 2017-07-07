@@ -3,7 +3,7 @@
 
 %module VectorTileFeature
 
-!proxy_imports(carto::VectorTileFeature, core.MapTile, geometry.Feature)
+!proxy_imports(carto::VectorTileFeature, core.MapTile, core.Variant, geometry.Feature)
 
 %{
 #include "geometry/VectorTileFeature.h"

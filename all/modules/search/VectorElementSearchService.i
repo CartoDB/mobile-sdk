@@ -8,7 +8,7 @@
 
 #ifdef _CARTO_SEARCH_SUPPORT
 
-!proxy_imports(carto::VectorElementSearchService, search.SearchRequest, datasources.VectorDataSource, vectorelements.VectorElement, projections.Projection)
+!proxy_imports(carto::VectorElementSearchService, search.SearchRequest, datasources.VectorDataSource, vectorelements.VectorElement, vectorelements.VectorElementVector, projections.Projection)
 
 %{
 #include "search/VectorElementSearchService.h"
