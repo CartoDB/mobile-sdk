@@ -5,7 +5,7 @@ from build.sdk_build_utils import *
 
 WINPHONE10_ARCHS = ['x86', 'x64', 'ARM']
 
-DEFAULT_MSBUILD = "C:/Program Files (x86)/MSBuild/14.0/Bin/msbuild.exe"
+DEFAULT_MSBUILD = "C:/Program Files (x86)/MSBuild/15.0/Bin/msbuild.exe"
 
 def msbuild(args, dir, *cmdArgs):
   return execute(args.msbuild, dir, *cmdArgs)
