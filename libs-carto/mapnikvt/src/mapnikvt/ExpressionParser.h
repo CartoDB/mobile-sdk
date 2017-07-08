@@ -208,22 +208,26 @@ namespace carto { namespace mvt {
 
             template <typename Op>
             static std::shared_ptr<Expression> makeComparisonPredicate(std::shared_ptr<const Expression> expr1, std::shared_ptr<const Expression> expr2) {
-                return std::make_shared<PredicateExpression>(std::make_shared<ComparisonPredicate>(std::make_shared<Op>(), std::move(expr1), std::move(expr2)));
+                static const std::shared_ptr<Op> op = std::make_shared<Op>();
+                return std::make_shared<PredicateExpression>(std::make_shared<ComparisonPredicate>(op, std::move(expr1), std::move(expr2)));
             }
 
             template <typename Op>
             static std::shared_ptr<Expression> makeUnaryExpression(std::shared_ptr<const Expression> expr) {
-                return std::make_shared<UnaryExpression>(std::make_shared<Op>(), std::move(expr));
+                static const std::shared_ptr<Op> op = std::make_shared<Op>();
+                return std::make_shared<UnaryExpression>(op, std::move(expr));
             }
 
             template <typename Op>
             static std::shared_ptr<Expression> makeBinaryExpression(std::shared_ptr<const Expression> expr1, std::shared_ptr<const Expression> expr2) {
-                return std::make_shared<BinaryExpression>(std::make_shared<Op>(), std::move(expr1), std::move(expr2));
+                static const std::shared_ptr<Op> op = std::make_shared<Op>();
+                return std::make_shared<BinaryExpression>(op, std::move(expr1), std::move(expr2));
             }
 
             template <typename Op>
             static std::shared_ptr<Expression> makeTertiaryExpression(std::shared_ptr<const Expression> expr1, std::shared_ptr<const Expression> expr2, std::shared_ptr<const Expression> expr3) {
-                return std::make_shared<TertiaryExpression>(std::make_shared<Op>(), std::move(expr1), std::move(expr2), std::move(expr3));
+                static const std::shared_ptr<Op> op = std::make_shared<Op>();
+                return std::make_shared<TertiaryExpression>(op, std::move(expr1), std::move(expr2), std::move(expr3));
             }
 
             static std::shared_ptr<Expression> makeInterpolateExpression(InterpolateExpression::Method method, std::shared_ptr<const Expression> timeExpr, std::vector<Value> keyFrames) {

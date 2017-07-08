@@ -383,20 +383,34 @@ namespace carto { namespace css {
 
     std::shared_ptr<mvt::ComparisonPredicate::Operator> CartoCSSMapnikTranslator::buildOperator(OpPredicate::Op op) const {
         switch (op) {
-        case OpPredicate::Op::EQ:
-            return std::make_shared<mvt::EQOperator>();
-        case OpPredicate::Op::NEQ:
-            return std::make_shared<mvt::NEQOperator>();
-        case OpPredicate::Op::LT:
-            return std::make_shared<mvt::LTOperator>();
-        case OpPredicate::Op::LTE:
-            return std::make_shared<mvt::LTEOperator>();
-        case OpPredicate::Op::GT:
-            return std::make_shared<mvt::GTOperator>();
-        case OpPredicate::Op::GTE:
-            return std::make_shared<mvt::GTEOperator>();
-        case OpPredicate::Op::MATCH:
-            return std::make_shared<mvt::MatchOperator>();
+        case OpPredicate::Op::EQ: {
+                static const std::shared_ptr<mvt::EQOperator> op = std::make_shared<mvt::EQOperator>();
+                return op;
+            }
+        case OpPredicate::Op::NEQ: {
+                static const std::shared_ptr<mvt::NEQOperator> op = std::make_shared<mvt::NEQOperator>();
+                return op;
+            }
+        case OpPredicate::Op::LT: {
+                static const std::shared_ptr<mvt::LTOperator> op = std::make_shared<mvt::LTOperator>();
+                return op;
+            }
+        case OpPredicate::Op::LTE: {
+                static const std::shared_ptr<mvt::LTEOperator> op = std::make_shared<mvt::LTEOperator>();
+                return op;
+            }
+        case OpPredicate::Op::GT: {
+                static const std::shared_ptr<mvt::GTOperator> op = std::make_shared<mvt::GTOperator>();
+                return op;
+            }
+        case OpPredicate::Op::GTE: {
+                static const std::shared_ptr<mvt::GTEOperator> op = std::make_shared<mvt::GTEOperator>();
+                return op;
+            }
+        case OpPredicate::Op::MATCH: {
+                static const std::shared_ptr<mvt::MatchOperator> op = std::make_shared<mvt::MatchOperator>();
+                return op;
+            }
         }
         throw TranslatorException("Unsupported predicate operator");
     }

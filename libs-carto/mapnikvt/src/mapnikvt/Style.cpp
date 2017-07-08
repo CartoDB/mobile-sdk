@@ -46,12 +46,9 @@ namespace carto { namespace mvt {
                 if (std::equal(rule1->getSymbolizers().begin(), rule1->getSymbolizers().end(), rule2->getSymbolizers().begin(), [](const std::shared_ptr<Symbolizer>& symbolizer1, const std::shared_ptr<Symbolizer>& symbolizer2) {
                     return typeid(symbolizer1.get()) == typeid(symbolizer2.get()) && symbolizer1->getParameterMap() == symbolizer2->getParameterMap();
                 })) {
-                    std::shared_ptr<Predicate> combinedPred;
-                    if (rule1->getFilter()->getPredicate() && rule2->getFilter()->getPredicate()) {
-                        combinedPred = std::make_shared<OrPredicate>(rule1->getFilter()->getPredicate(), rule2->getFilter()->getPredicate());
-                    }
-                    std::shared_ptr<Filter> combinedFilter = std::make_shared<Filter>(Filter::Type::FILTER, combinedPred);
-                    std::shared_ptr<Rule> combinedRule = std::make_shared<Rule>("combined", rule1->getMinZoom(), rule1->getMaxZoom(), combinedFilter, rule1->getSymbolizers());
+                    auto combinedPred = buildOptimizedOrPredicate(rule1->getFilter()->getPredicate(), rule2->getFilter()->getPredicate());
+                    auto combinedFilter = std::make_shared<Filter>(Filter::Type::FILTER, combinedPred);
+                    auto combinedRule = std::make_shared<Rule>("combined", rule1->getMinZoom(), rule1->getMaxZoom(), combinedFilter, rule1->getSymbolizers());
                     it = _rules.erase(it);
                     *it = combinedRule;
                     updated = true;
@@ -77,5 +74,50 @@ namespace carto { namespace mvt {
                 _zoomFieldExprsMap[zoom].insert(fieldExprs.begin(), fieldExprs.end());
             }
         }
+    }
+
+    std::shared_ptr<const Predicate> Style::buildOptimizedOrPredicate(const std::shared_ptr<const Predicate>& pred1, const std::shared_ptr<const Predicate>& pred2) {
+        // X or true = true
+        if (!pred1 || !pred2) {
+            return std::shared_ptr<Predicate>();
+        }
+
+        // X or X = X
+        if (pred1->equals(pred2)) {
+            return pred1;
+        }
+
+        // X or (X & Y) = X
+        std::shared_ptr<const Predicate> preds[] = { pred1, pred2 };
+        for (int i1 = 0; i1 < 2; i1++) {
+            if (auto andPred2 = std::dynamic_pointer_cast<const AndPredicate>(preds[i1 ^ 1])) {
+                std::shared_ptr<const Predicate> subPreds2[] = { andPred2->getPredicate1(), andPred2->getPredicate2() };
+                for (int i2 = 0; i2 < 2; i2++) {
+                    if (preds[i1]->equals(subPreds2[i2])) {
+                        return preds[i1];
+                    }
+                }
+            }
+        }
+
+        // (X & Y) or (X & Z) = X & (Y or Z)
+        if (auto andPred1 = std::dynamic_pointer_cast<const AndPredicate>(pred1)) {
+            std::shared_ptr<const Predicate> subPreds1[] = { andPred1->getPredicate1(), andPred1->getPredicate2() };
+            if (auto andPred2 = std::dynamic_pointer_cast<const AndPredicate>(pred2)) {
+                std::shared_ptr<const Predicate> subPreds2[] = { andPred2->getPredicate1(), andPred2->getPredicate2() };
+                for (int i1 = 0; i1 < 2; i1++) {
+                    for (int i2 = 0; i2 < 2; i2++) {
+                        if (subPreds1[i1]->equals(subPreds2[i2])) {
+                            auto subPred1 = subPreds1[i1];
+                            auto subPred2 = std::make_shared<OrPredicate>(subPreds1[i1 ^ 1], subPreds2[i2 ^ 1]);
+                            return std::make_shared<AndPredicate>(subPred1, subPred2);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Just combine
+        return std::make_shared<OrPredicate>(pred1, pred2);
     }
 } }
