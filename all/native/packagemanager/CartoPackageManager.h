@@ -54,12 +54,12 @@ namespace carto {
         static PackageSource ResolveSource(const std::string& source);
 
         static const std::string MAP_PACKAGE_LIST_URL;
-
         static const std::string ROUTING_PACKAGE_LIST_URL;
+        static const std::string GEOCODING_PACKAGE_LIST_URL;
 
         static const std::string CUSTOM_MAP_BBOX_PACKAGE_URL;
-
         static const std::string CUSTOM_ROUTING_BBOX_PACKAGE_URL;
+        static const std::string CUSTOM_GEOCODING_BBOX_PACKAGE_URL;
 
         static const int MAX_CUSTOM_BBOX_PACKAGE_TILES = 100000;
         static const int MAX_CUSTOM_BBOX_PACKAGE_TILEMASK_ZOOM = 12;

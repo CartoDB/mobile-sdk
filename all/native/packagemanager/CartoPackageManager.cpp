@@ -37,6 +37,9 @@ namespace carto {
         else if (packageSource.type == "routing") {
             baseURL = ROUTING_PACKAGE_LIST_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/packages.json";
         }
+        else if (packageSource.type == "geocoding") {
+            baseURL = GEOCODING_PACKAGE_LIST_URL + NetworkUtils::URLEncode(packageSource.id) + "/packages.json";
+        }
         else {
             Log::Errorf("CartoPackageManager: Illegal package type: %s", packageSource.type.c_str());
             return "";
@@ -159,6 +162,10 @@ namespace carto {
                 baseURL = CUSTOM_ROUTING_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/custom/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".mbtiles";
                 packageType = PackageType::PACKAGE_TYPE_VALHALLA_ROUTING;
             }
+            else if (packageSource.type == "geocoding") {
+                baseURL = CUSTOM_GEOCODING_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/custom/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".nutigeodb";
+                packageType = PackageType::PACKAGE_TYPE_GEOCODING;
+            }
             else {
                 Log::Errorf("CartoPackageManager: Illegal package type: %s", packageSource.type.c_str());
                 return std::shared_ptr<PackageInfo>();
@@ -202,9 +209,13 @@ namespace carto {
 
     const std::string CartoPackageManager::ROUTING_PACKAGE_LIST_URL = "http://api.nutiteq.com/routepackages/v2/";
 
+    const std::string CartoPackageManager::GEOCODING_PACKAGE_LIST_URL = "http://api.nutiteq.com/mappackages/v2/";
+
     const std::string CartoPackageManager::CUSTOM_MAP_BBOX_PACKAGE_URL = "http://api.nutiteq.com/v2/";
 
     const std::string CartoPackageManager::CUSTOM_ROUTING_BBOX_PACKAGE_URL = "http://he1.nutiteq.com/routing/v2/";
+
+    const std::string CartoPackageManager::CUSTOM_GEOCODING_BBOX_PACKAGE_URL = "http://he1.nutiteq.com/geocoding/v2/";
 
 }
 
