@@ -36,7 +36,7 @@ namespace carto {
         return _metaData;
     }
 
-    bool StyleSelectorContext::getVariable(const std::string& name, boost::variant<double, std::string>& value) const {
+    bool StyleSelectorContext::getVariable(const std::string& name, Variant& value) const {
         auto it = _metaData.find(name);
         if (it != _metaData.end()) {
             value = it->second;
@@ -54,7 +54,7 @@ namespace carto {
         }
 
         if (name == "geometry::vertices") {
-            value = Variant(GetGeometryVerticesCount(_geometry));
+            value = Variant(static_cast<long long>(GetGeometryVerticesCount(_geometry)));
             return true;
         }
 

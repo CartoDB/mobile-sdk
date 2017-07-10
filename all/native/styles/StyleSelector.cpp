@@ -1,7 +1,7 @@
 #ifdef _CARTO_GDAL_SUPPORT
 
 #include "StyleSelector.h"
-#include "seach/query/QueryExpression.h"
+#include "search/query/QueryExpression.h"
 #include "styles/StyleSelectorRule.h"
 #include "styles/StyleSelectorContext.h"
 

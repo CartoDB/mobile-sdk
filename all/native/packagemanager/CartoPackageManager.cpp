@@ -38,7 +38,7 @@ namespace carto {
             baseURL = ROUTING_PACKAGE_LIST_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/packages.json";
         }
         else if (packageSource.type == "geocoding") {
-            baseURL = GEOCODING_PACKAGE_LIST_URL + NetworkUtils::URLEncode(packageSource.id) + "/packages.json";
+            baseURL = GEOCODING_PACKAGE_LIST_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/packages.json";
         }
         else {
             Log::Errorf("CartoPackageManager: Illegal package type: %s", packageSource.type.c_str());
@@ -209,7 +209,7 @@ namespace carto {
 
     const std::string CartoPackageManager::ROUTING_PACKAGE_LIST_URL = "http://api.nutiteq.com/routepackages/v2/";
 
-    const std::string CartoPackageManager::GEOCODING_PACKAGE_LIST_URL = "http://api.nutiteq.com/mappackages/v2/";
+    const std::string CartoPackageManager::GEOCODING_PACKAGE_LIST_URL = "http://api.nutiteq.com/geocodepackages/v2/";
 
     const std::string CartoPackageManager::CUSTOM_MAP_BBOX_PACKAGE_URL = "http://api.nutiteq.com/v2/";
 
