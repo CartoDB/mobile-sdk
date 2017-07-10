@@ -115,7 +115,13 @@ namespace carto {
                     return Op<double>()(v1.get<double>(), v2.get<double>());
                 }
                 if (v1.is<std::string>() && v2.is<std::string>()) {
-                    return Op<std::string>()(v1.get<std::string>(), v2.get<std::string>());
+                    std::string str1 = v1.get<std::string>();
+                    std::wstring wstr1;
+                    utf8::utf8to32(str1.begin(), str1.end(), std::back_inserter(wstr1));
+                    std::string str2 = v2.get<std::string>();
+                    std::wstring wstr2;
+                    utf8::utf8to32(str2.begin(), str2.end(), std::back_inserter(wstr2));
+                    return Op<std::wstring>()(wstr1, wstr2);
                 }
                 return false;
             }
