@@ -149,7 +149,7 @@ namespace carto {
         };
 
         struct ConstOperand : public Operand {
-            ConstOperand(const Value& value) : _value(value) { }
+            explicit ConstOperand(const Value& value) : _value(value) { }
             virtual Value evaluate(const Context& context) const { return _value; }
             static std::shared_ptr<ConstOperand> create(const Value& value) { return std::make_shared<ConstOperand>(value); }
         private:
@@ -157,15 +157,37 @@ namespace carto {
         };
 
         struct VariableOperand : public Operand {
-            VariableOperand(const std::string& name) : _name(name) { }
-            virtual Value evaluate(const Context& context) const { Variant value; if (!context.getVariable(_name, value)) return Value(); return value; }
-            static std::shared_ptr<VariableOperand> create(const std::string& name) { return std::make_shared<VariableOperand>(name); }
+            VariableOperand(const std::string& name, bool nocase) : _name(name), _nocase(nocase) { }
+
+            virtual Value evaluate(const Context& context) const {
+                Variant value;
+                if (!context.getVariable(_name, value)) {
+                    return Value();
+                }
+                if (_nocase && value.getType() == VariantType::VARIANT_TYPE_STRING) {
+                    value = Value(CollateNoCase(value.getString()));
+                }
+                return value;
+            }
+
+            static std::shared_ptr<VariableOperand> create(const std::string& name) { return std::make_shared<VariableOperand>(name, false); }
+            static std::shared_ptr<VariableOperand> createEx(const std::string& name, const std::string& collateSeq) { return std::make_shared<VariableOperand>(name, CollateNoCase(collateSeq) == CollateNoCase("nocase")); }
+
         private:
+            static std::string CollateNoCase(std::string str) {
+                for (std::size_t i = 0; i < str.size(); i++) {
+                    // TODO: proper unicode conversion
+                    str[i] = (str[i] >= 'A' && str[i] <= 'Z' ? str[i] - 'A' + 'a' : str[i]);
+                }
+                return str;
+            }
+
             std::string _name;
+            bool _nocase;
         };
 
         struct NotExpression : public Expression {
-            NotExpression(const std::shared_ptr<Expression>& expr) : _expr(expr) { }
+            explicit NotExpression(const std::shared_ptr<Expression>& expr) : _expr(expr) { }
             virtual bool evaluate(const Context& context) const { return !_expr->evaluate(context); }
             static std::shared_ptr<NotExpression> create(const std::shared_ptr<Expression>& expr) { return std::make_shared<NotExpression>(expr); }
         private:

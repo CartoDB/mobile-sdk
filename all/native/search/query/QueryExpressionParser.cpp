@@ -39,6 +39,7 @@ namespace carto {
                 null_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["null"]];
                 false_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["false"]];
                 true_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["true"]];
+                collate_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["collate"]];
                 regexp_like_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["regexp_like"]];
 
                 string =
@@ -89,12 +90,13 @@ namespace carto {
         
                 operand =
                       value [_val = phx::bind(&ConstOperand::create, _1)]
+                    | (identifier >> collate_kw > identifier) [_val = phx::bind(&VariableOperand::createEx, _1, _2)]
                     | identifier [_val = phx::bind(&VariableOperand::create, _1)]
                     ;
             }
 
             qi::symbols<char const, char const> unesc_char;
-            qi::rule<Iterator, qi::unused_type()> is_kw, or_kw, and_kw, not_kw, null_kw, false_kw, true_kw, regexp_like_kw;
+            qi::rule<Iterator, qi::unused_type()> is_kw, or_kw, and_kw, not_kw, null_kw, false_kw, true_kw, collate_kw, regexp_like_kw;
             qi::rule<Iterator, std::string()> string;
             qi::rule<Iterator, Value()> value;
             qi::rule<Iterator, std::string()> identifier;
