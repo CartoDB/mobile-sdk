@@ -96,7 +96,7 @@ namespace carto { namespace geocoding {
             std::string id;
             std::shared_ptr<sqlite3pp::database> db;
             cglib::vec2<double> origin = cglib::vec2<double>(0, 0);
-            float rankScale = 1.0f;
+            double rankScale = 1.0;
             std::unordered_map<unichar_t, unistring> translationTable;
         };
 
@@ -128,7 +128,7 @@ namespace carto { namespace geocoding {
         
         static cglib::vec2<double> getOrigin(sqlite3pp::database& db);
         static std::unordered_map<unichar_t, unistring> getTranslationTable(sqlite3pp::database& db);
-        static float getRankScale(sqlite3pp::database& db);
+        static double getRankScale(sqlite3pp::database& db);
         static unistring getTranslatedToken(const unistring& token, const std::unordered_map<unichar_t, unistring>& translationTable);
 
         static constexpr float MIN_LOCATION_RANK = 0.2f; // should be larger than MIN_RANK

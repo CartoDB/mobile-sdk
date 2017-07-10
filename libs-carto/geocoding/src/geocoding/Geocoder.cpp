@@ -403,12 +403,8 @@ namespace carto { namespace geocoding {
             }
             std::string tableName = "en" + boost::lexical_cast<std::string>(sqlFilters.size());
             sqlTables.push_back(tableName);
-            if (sqlFilters.empty()) {
-                sqlFilters.push_back(tableName + ".name_id IN (" + values + ")");
-            }
-            else {
-                sqlFilters.push_back(tableName + ".entity_id=" + sqlTables.front() + ".entity_id AND " + tableName + ".name_id IN (" + values + ")");
-            }
+            std::string sqlFilter = tableName + ".name_id IN (" + values + ")";
+            sqlFilters.push_back(sqlFilters.empty() ? sqlFilter : tableName + ".entity_id=" + sqlTables.front() + ".entity_id AND " + sqlFilter);
         }
 
         // Build final SQL using CROSS JOINs
@@ -457,7 +453,7 @@ namespace carto { namespace geocoding {
                 if (qit->get<const void*>(2)) {
                     entityRow.houseNumbers = std::string(static_cast<const char*>(qit->get<const void*>(2)), qit->column_bytes(2));
                 }
-                entityRow.rank = static_cast<float>(qit->get<int>(3)) / query.database->rankScale;
+                entityRow.rank = static_cast<float>(qit->get<std::uint64_t>(3) / query.database->rankScale);
 
                 sqlite3pp::query sqlQuery2(*database.db, "SELECT DISTINCT n.type, n.id FROM entitynames en, names n WHERE en.entity_id=:entityId AND en.name_id=n.id");
                 sqlQuery2.bind(":entityId", qit->get<std::uint64_t>(0));
@@ -717,13 +713,13 @@ namespace carto { namespace geocoding {
         return cglib::vec2<double>(0, 0);
     }
 
-    float Geocoder::getRankScale(sqlite3pp::database& db) {
+    double Geocoder::getRankScale(sqlite3pp::database& db) {
         sqlite3pp::query query(db, "SELECT value FROM metadata WHERE name='rank_scale'");
         for (auto qit = query.begin(); qit != query.end(); qit++) {
             std::string value = qit->get<const char*>(0);
-            return boost::lexical_cast<float>(value);
+            return boost::lexical_cast<double>(value);
         }
-        return 32767.0f;
+        return 32767.0;
     }
 
     std::unordered_map<unichar_t, unistring> Geocoder::getTranslationTable(sqlite3pp::database& db) {
