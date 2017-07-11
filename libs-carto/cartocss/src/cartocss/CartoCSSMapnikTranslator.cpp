@@ -314,7 +314,7 @@ namespace carto { namespace css {
                         auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(funcExpr->getArgs()[i]);
                         auto keyFrames = boost::get<std::vector<Value>>(&constExpr->getValue());
                         subExprStr += "," + boost::lexical_cast<std::string>(buildValue(keyFrames->at(0)));
-                        subExprStr += "," + boost::lexical_cast<std::string>(boost::get<Color>(keyFrames->at(1)).rgba()[c] * 255.0f);
+                        subExprStr += "," + boost::lexical_cast<std::string>(boost::get<Color>(keyFrames->at(1)).rgba()[c] * (c < 3 ? 255.0f : 1.0f));
                     }
                     subExprStr += ")";
 
