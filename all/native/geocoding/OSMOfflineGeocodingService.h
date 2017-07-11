@@ -19,7 +19,7 @@ namespace carto {
     }
 
     /**
-     * A geocoding service that uses custom geocoding packages.
+     * A geocoding service that uses custom geocoding database files.
      */
     class OSMOfflineGeocodingService : public GeocodingService {
     public:
