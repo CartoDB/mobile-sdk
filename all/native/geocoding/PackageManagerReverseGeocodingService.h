@@ -42,6 +42,7 @@ namespace carto {
         float getSearchRadius() const;
         /**
          * Sets the search radius (in meters).
+         * The default search radius is 100 meters.
          * @param radius The new search radius in meters.
          */
         void setSearchRadius(float radius);

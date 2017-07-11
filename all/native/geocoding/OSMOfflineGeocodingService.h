@@ -18,12 +18,28 @@ namespace carto {
         class Geocoder;
     }
 
+    /**
+     * A geocoding service that uses custom geocoding packages.
+     */
     class OSMOfflineGeocodingService : public GeocodingService {
     public:
+        /**
+         * Constructs a new instance of the OSMOfflineGeocodingService given path to the geocoding database.
+         * @param path The full path to the geocoding database file.
+         */
         explicit OSMOfflineGeocodingService(const std::string& path);
         virtual ~OSMOfflineGeocodingService();
 
+        /**
+         * Returns the autocomplete flag of the service.
+         * @return The autocomplete flag of the service.
+         */
         bool isAutocomplete() const;
+        /**
+         * Sets the autocomplete flag of the service.
+         * By default this flag is off.
+         * @param autocomplete The new value for autocomplete flag.
+         */
         void setAutocomplete(bool autocomplete);
 
         virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const;

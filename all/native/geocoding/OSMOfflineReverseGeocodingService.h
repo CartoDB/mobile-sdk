@@ -18,12 +18,28 @@ namespace carto {
         class RevGeocoder;
     }
 
+    /**
+     * A reverse geocoding service that uses custom geocoding database files.
+     */
     class OSMOfflineReverseGeocodingService : public ReverseGeocodingService {
     public:
+        /**
+         * Constructs a new instance of the OSMOfflineReverseGeocodingService given path to the geocoding database.
+         * @param path The full path to the geocoding database file.
+         */
         explicit OSMOfflineReverseGeocodingService(const std::string& path);
         virtual ~OSMOfflineReverseGeocodingService();
 
+        /**
+         * Returns the search radius (in meters).
+         * @return The search radius in meters.
+         */
         float getSearchRadius() const;
+        /**
+         * Sets the search radius (in meters).
+         * The default search radius is 100 meters.
+         * @param radius The new search radius in meters.
+         */
         void setSearchRadius(float radius);
 
         virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const;

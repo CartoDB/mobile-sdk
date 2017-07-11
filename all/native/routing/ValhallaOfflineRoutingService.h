@@ -31,7 +31,7 @@ namespace carto {
          * @param path The full path to the database file.
          * @throws std::runtime_error If the database file could not be opened or read.
          */
-        ValhallaOfflineRoutingService(const std::string& path);
+        explicit ValhallaOfflineRoutingService(const std::string& path);
         virtual ~ValhallaOfflineRoutingService();
 
         /**
