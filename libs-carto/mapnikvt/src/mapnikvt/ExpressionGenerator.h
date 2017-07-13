@@ -108,6 +108,7 @@ namespace carto { namespace mvt {
 
                 factor =
                       constant                          [_pass = phx::bind(&getConstant, _val, _1)]
+                    | (karma::lit("pow" )   << '(' << expression << ',' << expression << ')') [_pass = phx::bind(&getBinaryExpression<PowOperator>, _val, _1, _2)]
                     | (karma::lit("step")   << '(' << expression << ',' << (constant % ',') << ')') [_pass = phx::bind(&getInterpolateExpression, InterpolateExpression::Method::STEP, _val, _1, _2)]
                     | (karma::lit("linear") << '(' << expression << ',' << (constant % ',') << ')') [_pass = phx::bind(&getInterpolateExpression, InterpolateExpression::Method::LINEAR, _val, _1, _2)]
                     | (karma::lit("cubic")  << '(' << expression << ',' << (constant % ',') << ')') [_pass = phx::bind(&getInterpolateExpression, InterpolateExpression::Method::CUBIC, _val, _1, _2)]

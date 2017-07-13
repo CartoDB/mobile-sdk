@@ -48,6 +48,7 @@ namespace carto { namespace mvt {
                 or_kw  = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["or"]];
                 and_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["and"]];
                 not_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["not"]];
+                pow_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["pow"]];
                 length_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["length"]];
                 uppercase_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["uppercase"]];
                 lowercase_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["lowercase"]];
@@ -135,6 +136,7 @@ namespace carto { namespace mvt {
 
                 factor =
                       constant                                       [_val = phx::bind(&makeConstExpression, _1)]
+                    | (pow_kw    >> '(' > expression > ',' > expression > ')') [_val = phx::bind(&makeBinaryExpression<PowOperator>, _1, _2)]
                     | (step_kw   >> '(' > expression > ',' > (constant % ',') > ')') [_val = phx::bind(&makeInterpolateExpression, InterpolateExpression::Method::STEP, _1, _2)]
                     | (linear_kw >> '(' > expression > ',' > (constant % ',') > ')') [_val = phx::bind(&makeInterpolateExpression, InterpolateExpression::Method::LINEAR, _1, _2)]
                     | (cubic_kw  >> '(' > expression > ',' > (constant % ',') > ')') [_val = phx::bind(&makeInterpolateExpression, InterpolateExpression::Method::CUBIC, _1, _2)]
@@ -145,7 +147,7 @@ namespace carto { namespace mvt {
 
             ValueParser<Iterator> constant;
             qi::rule<Iterator, std::string()> string;
-            qi::rule<Iterator, qi::unused_type()> not_kw, and_kw, or_kw, neq_kw, eq_kw, le_kw, ge_kw, lt_kw, gt_kw, length_kw, uppercase_kw, lowercase_kw, capitalize_kw, concat_kw, match_kw, replace_kw, step_kw, linear_kw, cubic_kw;
+            qi::rule<Iterator, qi::unused_type()> not_kw, and_kw, or_kw, neq_kw, eq_kw, le_kw, ge_kw, lt_kw, gt_kw, pow_kw, length_kw, uppercase_kw, lowercase_kw, capitalize_kw, concat_kw, match_kw, replace_kw, step_kw, linear_kw, cubic_kw;
             qi::rule<Iterator, std::shared_ptr<Expression>()> stringExpression, genericExpression;
             qi::rule<Iterator, std::shared_ptr<Expression>(), encoding::space_type> expression, term0, term1, term2, term3, unary, postfix, factor;
 

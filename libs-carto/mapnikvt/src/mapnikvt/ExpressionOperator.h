@@ -11,36 +11,38 @@
 #include "StringUtils.h"
 #include "ValueConverter.h"
 
+#include <cmath>
+
 namespace carto { namespace mvt {
-    struct LengthOperator : public UnaryExpression::Operator {
+    struct LengthOperator : UnaryExpression::Operator {
         virtual Value apply(const Value& val) const override {
             std::string str = ValueConverter<std::string>::convert(val);
             return Value(static_cast<long long>(stringLength(str)));
         }
     };
 
-    struct UpperCaseOperator : public UnaryExpression::Operator {
+    struct UpperCaseOperator : UnaryExpression::Operator {
         virtual Value apply(const Value& val) const override {
             std::string str = ValueConverter<std::string>::convert(val);
             return Value(toUpper(str));
         }
     };
 
-    struct LowerCaseOperator : public UnaryExpression::Operator {
+    struct LowerCaseOperator : UnaryExpression::Operator {
         virtual Value apply(const Value& val) const override {
             std::string str = ValueConverter<std::string>::convert(val);
             return Value(toLower(str));
         }
     };
 
-    struct CapitalizeOperator : public UnaryExpression::Operator {
+    struct CapitalizeOperator : UnaryExpression::Operator {
         virtual Value apply(const Value& val) const override {
             std::string str = ValueConverter<std::string>::convert(val);
             return Value(capitalize(str));
         }
     };
 
-    struct NegOperator : public UnaryExpression::Operator {
+    struct NegOperator : UnaryExpression::Operator {
         virtual Value apply(const Value& val) const override {
             return boost::apply_visitor(Operator(), val);
         }
@@ -55,7 +57,7 @@ namespace carto { namespace mvt {
     };
 
     template <template <typename T> class Op>
-    struct ArithmeticOperator : public BinaryExpression::Operator {
+    struct ArithmeticOperator : BinaryExpression::Operator {
         virtual Value apply(const Value& val1, const Value& val2) const override {
             return boost::apply_visitor(Operator(), val1, val2);
         }
@@ -86,7 +88,7 @@ namespace carto { namespace mvt {
 
     using MulOperator = ArithmeticOperator<std::multiplies>;
 
-    struct DivOperator : ArithmeticOperator<std::divides> {
+    struct DivOperator : BinaryExpression::Operator {
         virtual Value apply(const Value& val1, const Value& val2) const override {
             return boost::apply_visitor(Operator(), val1, val2);
         }
@@ -101,7 +103,7 @@ namespace carto { namespace mvt {
         };
     };
 
-    struct ModOperator : public ArithmeticOperator<std::divides> {
+    struct ModOperator : BinaryExpression::Operator {
         virtual Value apply(const Value& val1, const Value& val2) const override {
             return boost::apply_visitor(Operator(), val1, val2);
         }
@@ -116,7 +118,22 @@ namespace carto { namespace mvt {
         };
     };
 
-    struct ConcatenateOperator : public BinaryExpression::Operator {
+    struct PowOperator : BinaryExpression::Operator {
+        virtual Value apply(const Value& val1, const Value& val2) const override {
+            return boost::apply_visitor(Operator(), val1, val2);
+        }
+
+    private:
+        struct Operator : boost::static_visitor<Value> {
+            Value operator() (long long val1, long long val2) const { return std::pow(static_cast<double>(val1), static_cast<double>(val2)); }
+            Value operator() (long long val1, double val2) const { return Value(std::pow(static_cast<double>(val1), val2)); }
+            Value operator() (double val1, long long val2) const { return Value(std::pow(val1, static_cast<double>(val2))); }
+            Value operator() (double val1, double val2) const { return Value(std::pow(val1, val2)); }
+            template <typename S, typename T> Value operator() (S val1, T val2) const { return Value(val1); }
+        };
+    };
+
+    struct ConcatenateOperator : BinaryExpression::Operator {
         virtual Value apply(const Value& val1, const Value& val2) const override {
             std::string str1 = ValueConverter<std::string>::convert(val1);
             std::string str2 = ValueConverter<std::string>::convert(val2);
@@ -124,7 +141,7 @@ namespace carto { namespace mvt {
         }
     };
 
-    struct ReplaceOperator : public TertiaryExpression::Operator {
+    struct ReplaceOperator : TertiaryExpression::Operator {
         virtual Value apply(const Value& val1, const Value& val2, const Value& val3) const override {
             std::string str1 = ValueConverter<std::string>::convert(val1);
             std::string str2 = ValueConverter<std::string>::convert(val2);
@@ -133,7 +150,7 @@ namespace carto { namespace mvt {
         }
     };
 
-    struct ConditionalOperator : public TertiaryExpression::Operator {
+    struct ConditionalOperator : TertiaryExpression::Operator {
         virtual Value apply(const Value& val1, const Value& val2, const Value& val3) const override {
             bool b1 = ValueConverter<bool>::convert(val1);
             return b1 ? val2 : val3;
