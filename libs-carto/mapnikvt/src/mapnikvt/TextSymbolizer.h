@@ -23,8 +23,8 @@ namespace carto { namespace mvt {
             bind(&_haloFillFunc, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), &TextSymbolizer::convertColor);
         }
 
-        void setTextExpression(std::shared_ptr<Expression> textExpression);
-        const std::shared_ptr<Expression>& getTextExpression() const;
+        void setTextExpression(std::shared_ptr<const Expression> textExpression);
+        const std::shared_ptr<const Expression>& getTextExpression() const;
         
         virtual void build(const FeatureCollection& featureCollection, const FeatureExpressionContext& exprContext, const SymbolizerContext& symbolizerContext, vt::TileLayerBuilder& layerBuilder) override;
 
@@ -40,7 +40,7 @@ namespace carto { namespace mvt {
         void buildFeatureCollection(const FeatureCollection& featureCollection, const SymbolizerContext& symbolizerContext, vt::LabelOrientation placement, float textSize, const std::function<void(long long localId, long long globalId, const boost::optional<vt::TileLayerBuilder::Vertex>& vertex, const vt::TileLayerBuilder::Vertices& vertices)>& addText);
 
         const std::vector<std::shared_ptr<FontSet>> _fontSets;
-        std::shared_ptr<Expression> _textExpression;
+        std::shared_ptr<const Expression> _textExpression;
         std::string _text;
         std::string _textTransform;
         std::string _faceName;

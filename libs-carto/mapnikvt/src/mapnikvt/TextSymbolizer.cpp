@@ -12,12 +12,12 @@
 #include <boost/algorithm/string.hpp>
 
 namespace carto { namespace mvt {
-    void TextSymbolizer::setTextExpression(std::shared_ptr<Expression> textExpression) {
+    void TextSymbolizer::setTextExpression(std::shared_ptr<const Expression> textExpression) {
         _textExpression = std::move(textExpression);
         bind(&_text, _textExpression);
     }
 
-    const std::shared_ptr<Expression>& TextSymbolizer::getTextExpression() const {
+    const std::shared_ptr<const Expression>& TextSymbolizer::getTextExpression() const {
         return _textExpression;
     }
     
