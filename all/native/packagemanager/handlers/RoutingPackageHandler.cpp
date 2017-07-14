@@ -33,7 +33,10 @@ namespace carto {
         return _graphFile;
     }
 
-    void RoutingPackageHandler::importPackage() {
+    void RoutingPackageHandler::onImportPackage() {
+    }
+
+    void RoutingPackageHandler::onDeletePackage() {
     }
 
     std::shared_ptr<PackageTileMask> RoutingPackageHandler::calculateTileMask() const {

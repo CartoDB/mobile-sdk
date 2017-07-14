@@ -7,6 +7,7 @@
 #include "utils/GeneralUtils.h"
 #include "utils/NetworkUtils.h"
 #include "utils/PlatformUtils.h"
+#include "utils/TileUtils.h"
 #include "utils/Log.h"
 
 #include <regex>
@@ -75,16 +76,12 @@ namespace carto {
         return encKey;
     }
 
-    bool CartoPackageManager::CalculateBBoxTiles(const MapBounds& bounds, const Projection& proj, const PackageTileMask::Tile& tile, std::vector<PackageTileMask::Tile>& tiles) {
-        if (tile.zoom > MAX_CUSTOM_BBOX_PACKAGE_TILEMASK_ZOOM) {
+    bool CartoPackageManager::CalculateBBoxTiles(const MapBounds& bounds, const std::shared_ptr<Projection>& proj, const MapTile& tile, std::vector<MapTile>& tiles) {
+        if (tile.getZoom() > MAX_CUSTOM_BBOX_PACKAGE_TILE_ZOOM) {
             return true;
         }
         
-        double tileWidth = proj.getBounds().getDelta().getX() / (1 << tile.zoom);
-        double tileHeight = proj.getBounds().getDelta().getY() / (1 << tile.zoom);
-        MapPos tileOrigin(proj.getBounds().getMin().getX() + tile.x * tileWidth, proj.getBounds().getMin().getY() + tile.y * tileHeight);
-        MapBounds tileBounds(tileOrigin, MapPos(tileOrigin.getX() + tileWidth, tileOrigin.getY() + tileHeight));
-        if (!tileBounds.intersects(bounds)) {
+        if (!bounds.intersects(TileUtils::CalculateMapTileBounds(tile, proj))) {
             return true;
         }
 
@@ -93,12 +90,10 @@ namespace carto {
         }
         tiles.push_back(tile);
 
-        for (int dy = 0; dy < 2; dy++) {
-            for (int dx = 0; dx < 2; dx++) {
-                PackageTileMask::Tile subTile(tile.zoom + 1, tile.x * 2 + dx, tile.y * 2 + dy);
-                if (!CalculateBBoxTiles(bounds, proj, subTile, tiles)) {
-                    return false;
-                }
+        for (int i = 0; i < 4; i++) {
+            MapTile subTile = tile.getChild(i);
+            if (!CalculateBBoxTiles(bounds, proj, subTile, tiles)) {
+                return false;
             }
         }
         return true;
@@ -126,7 +121,7 @@ namespace carto {
         if (std::regex_match(packageId, results, re)) {
             PackageSource packageSource = ResolveSource(_source);
 
-            EPSG3857 proj;
+            auto proj = std::make_shared<EPSG3857>();
             MapBounds bounds;
             try {
                 double minLon = boost::lexical_cast<double>(std::string(results[1].first, results[1].second));
@@ -137,20 +132,20 @@ namespace carto {
                     Log::Warn("CartoPackageManager: Empty bounding box");
                     return std::shared_ptr<PackageInfo>();
                 }
-                bounds = MapBounds(proj.fromLatLong(minLat, minLon), proj.fromLatLong(maxLat, maxLon));
+                bounds = MapBounds(proj->fromLatLong(minLat, minLon), proj->fromLatLong(maxLat, maxLon));
             }
             catch (const boost::bad_lexical_cast&) {
                 Log::Error("CartoPackageManager: Illegal bounding box coordinates");
                 return std::shared_ptr<PackageInfo>();
             }
 
-            std::vector<PackageTileMask::Tile> tiles;
-            if (!CalculateBBoxTiles(bounds, proj, PackageTileMask::Tile(0, 0, 0), tiles)) {
+            std::vector<MapTile> tiles;
+            if (!CalculateBBoxTiles(bounds, proj, MapTile(0, 0, 0, 0), tiles)) {
                 Log::Error("CartoPackageManager: Too many tiles in custom package");
                 return std::shared_ptr<PackageInfo>();
             }
 
-            auto tileMask = std::make_shared<PackageTileMask>(tiles);
+            auto tileMask = std::make_shared<PackageTileMask>(tiles, MAX_CUSTOM_BBOX_PACKAGE_TILEMASK_ZOOMLEVEL);
 
             std::string baseURL;
             PackageType::PackageType packageType = PackageType::PACKAGE_TYPE_MAP;

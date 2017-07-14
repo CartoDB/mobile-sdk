@@ -118,18 +118,21 @@ namespace carto {
         return std::shared_ptr<BinaryData>();
     }
 
-    void MapPackageHandler::importPackage() {
+    void MapPackageHandler::onImportPackage() {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
         sqlite3pp::database packageDb;
         if (packageDb.connect_v2(_fileName.c_str(), SQLITE_OPEN_READWRITE) != SQLITE_OK) {
-            Log::Errorf("MapPackageHandler::importPackage: Failed to open database %s", _fileName.c_str());
+            Log::Errorf("MapPackageHandler::onImportPackage: Failed to open database %s", _fileName.c_str());
             return;
         }
         bool encrypted = CheckDbEncryption(packageDb, _serverEncKey);
         if (encrypted) {
             UpdateDbEncryption(packageDb, _serverEncKey + _localEncKey);
         }
+    }
+
+    void MapPackageHandler::onDeletePackage() {
     }
 
     std::shared_ptr<PackageTileMask> MapPackageHandler::calculateTileMask() const {
@@ -142,12 +145,14 @@ namespace carto {
             return std::shared_ptr<PackageTileMask>();
         }
         sqlite3pp::query query(packageDb, "SELECT zoom_level, tile_column, tile_row FROM tiles");
-        std::vector<PackageTileMask::Tile> tiles;
+        std::vector<MapTile> tiles;
+        int maxZoomLevel = 0;
         for (auto qit = query.begin(); qit != query.end(); qit++) {
-            PackageTileMask::Tile tile(qit->get<int>(0), qit->get<int>(1), qit->get<int>(2));
+            MapTile tile(qit->get<int>(1), qit->get<int>(2), qit->get<int>(0), 0);
+            maxZoomLevel = std::max(maxZoomLevel, tile.getZoom());
             tiles.push_back(tile);
         }
-        return std::make_shared<PackageTileMask>(tiles);
+        return std::make_shared<PackageTileMask>(tiles, maxZoomLevel);
     }
 
     bool MapPackageHandler::CheckDbEncryption(sqlite3pp::database& db, const std::string& encKey) {

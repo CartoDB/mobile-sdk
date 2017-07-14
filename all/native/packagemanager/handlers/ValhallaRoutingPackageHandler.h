@@ -25,7 +25,8 @@ namespace carto {
 
         std::shared_ptr<sqlite3pp::database> getDatabase();
 
-        virtual void importPackage();
+        virtual void onImportPackage();
+        virtual void onDeletePackage();
 
         virtual std::shared_ptr<PackageTileMask> calculateTileMask() const;
 

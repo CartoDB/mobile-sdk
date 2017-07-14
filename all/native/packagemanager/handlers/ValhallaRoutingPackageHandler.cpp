@@ -39,7 +39,10 @@ namespace carto {
         return _packageDb;
     }
 
-    void ValhallaRoutingPackageHandler::importPackage() {
+    void ValhallaRoutingPackageHandler::onImportPackage() {
+    }
+
+    void ValhallaRoutingPackageHandler::onDeletePackage() {
     }
 
     std::shared_ptr<PackageTileMask> ValhallaRoutingPackageHandler::calculateTileMask() const {
