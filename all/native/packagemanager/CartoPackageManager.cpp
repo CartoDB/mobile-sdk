@@ -212,6 +212,12 @@ namespace carto {
 
     const std::string CartoPackageManager::CUSTOM_GEOCODING_BBOX_PACKAGE_URL = "http://he1.nutiteq.com/geocoding/v2/";
 
+    const int CartoPackageManager::MAX_CUSTOM_BBOX_PACKAGE_TILES = 100000;
+
+    const int CartoPackageManager::MAX_CUSTOM_BBOX_PACKAGE_TILE_ZOOM = 14;
+
+    const int CartoPackageManager::MAX_CUSTOM_BBOX_PACKAGE_TILEMASK_ZOOMLEVEL = 12;
+
 }
 
 #endif
