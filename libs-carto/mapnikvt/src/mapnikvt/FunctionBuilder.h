@@ -8,7 +8,6 @@
 #define _CARTO_MAPNIKVT_FUNCTIONBUILDER_H_
 
 #include <string>
-#include <map>
 #include <unordered_map>
 
 #include "ParserUtils.h"
@@ -18,53 +17,23 @@
 namespace carto { namespace mvt {
     class FunctionBuilder final {
     public:
-        std::shared_ptr<const vt::FloatFunction> createFloatFunction(float value) const {
-            auto it = _floatFunctionCache.find(value);
-            if (it != _floatFunctionCache.end()) {
-                return it->second;
-            }
-
-            auto floatFunc = std::make_shared<vt::FloatFunction>([value](const vt::ViewState&) {
-                return value;
-            });
-
-            if (_floatFunctionCache.size() >= MAX_CACHE_SIZE) {
-                _floatFunctionCache.erase(_floatFunctionCache.begin());
-            }
-            _floatFunctionCache[value] = floatFunc;
-            return floatFunc;
+        vt::FloatFunction createFloatFunction(float value) const {
+            return vt::FloatFunction(value);
         }
 
-        std::shared_ptr<const vt::ColorFunction> createColorFunction(const vt::Color& value) const {
-            auto it = _colorFunctionCache.find(value);
-            if (it != _colorFunctionCache.end()) {
-                return it->second;
-            }
-
-            auto colorFunc = std::make_shared<vt::ColorFunction>([value](const vt::ViewState&) {
-                return value;
-            });
-
-            if (_colorFunctionCache.size() >= MAX_CACHE_SIZE) {
-                _colorFunctionCache.erase(_colorFunctionCache.begin());
-            }
-            _colorFunctionCache[value] = colorFunc;
-            return colorFunc;
+        vt::ColorFunction createColorFunction(const vt::Color& value) const {
+            return vt::ColorFunction(value);
         }
 
-        std::shared_ptr<const vt::FloatFunction> createChainedFloatFunction(const std::string& name, const std::function<float(float)>& func, const std::shared_ptr<const vt::FloatFunction>& baseFunc) const {
-            if (!baseFunc) {
-                return baseFunc;
-            }
-            
+        vt::FloatFunction createChainedFloatFunction(const std::string& name, const std::function<float(float)>& func, const vt::FloatFunction& baseFunc) const {
             auto it = _chainedFloatFunctionCache.find(std::make_pair(name, baseFunc));
             if (it != _chainedFloatFunctionCache.end()) {
                 return it->second;
             }
 
-            auto chainedFunc = std::make_shared<vt::FloatFunction>([func, baseFunc](const vt::ViewState& viewState) {
-                return func((*baseFunc)(viewState));
-            });
+            vt::FloatFunction chainedFunc(std::make_shared<std::function<float(const vt::ViewState&)>>([func, baseFunc](const vt::ViewState& viewState) {
+                return func((baseFunc)(viewState));
+            }));
 
             if (_chainedFloatFunctionCache.size() >= MAX_CACHE_SIZE) {
                 _chainedFloatFunctionCache.erase(_chainedFloatFunctionCache.begin());
@@ -73,8 +42,8 @@ namespace carto { namespace mvt {
             return chainedFunc;
         }
 
-        std::shared_ptr<const vt::ColorFunction> createColorOpacityFunction(const std::shared_ptr<const vt::ColorFunction>& color, const std::shared_ptr<const vt::FloatFunction>& opacity) {
-            if (!opacity) {
+        vt::ColorFunction createColorOpacityFunction(const vt::ColorFunction& color, const vt::FloatFunction& opacity) {
+            if (opacity == vt::FloatFunction(1)) {
                 return color;
             }
 
@@ -83,9 +52,9 @@ namespace carto { namespace mvt {
                 return it->second;
             }
 
-            auto colorOpacityFunc = std::make_shared<vt::ColorFunction>([color, opacity](const vt::ViewState& viewState) {
-                return vt::Color::fromColorOpacity((*color)(viewState), (*opacity)(viewState));
-            });
+            vt::ColorFunction colorOpacityFunc(std::make_shared<std::function<vt::Color(const vt::ViewState&)>>([color, opacity](const vt::ViewState& viewState) {
+                return vt::Color::fromColorOpacity((color)(viewState), (opacity)(viewState));
+            }));
 
             if (_colorOpacityFunctionCache.size() >= MAX_CACHE_SIZE) {
                 _colorOpacityFunctionCache.erase(_colorOpacityFunctionCache.begin());
@@ -95,12 +64,22 @@ namespace carto { namespace mvt {
         }
 
     private:
+        struct StringFloatFunctionPairHash {
+            std::size_t operator() (const std::pair<std::string, vt::FloatFunction>& pair) const {
+                return std::hash<std::string>()(pair.first) + std::hash<vt::FloatFunction>()(pair.second) * 2;
+            }
+        };
+
+        struct ColorFunctionFloatFunctionPairHash {
+            std::size_t operator() (const std::pair<vt::ColorFunction, vt::FloatFunction>& pair) const {
+                return std::hash<vt::ColorFunction>()(pair.first) + std::hash<vt::FloatFunction>()(pair.second) * 2;
+            }
+        };
+
         constexpr static std::size_t MAX_CACHE_SIZE = 256;
 
-        mutable std::unordered_map<float, std::shared_ptr<const vt::FloatFunction>> _floatFunctionCache;
-        mutable std::unordered_map<vt::Color, std::shared_ptr<const vt::ColorFunction>> _colorFunctionCache;
-        mutable std::map<std::pair<std::string, std::shared_ptr<const vt::FloatFunction>>, std::shared_ptr<const vt::FloatFunction>> _chainedFloatFunctionCache;
-        mutable std::map<std::pair<std::shared_ptr<const vt::ColorFunction>, std::shared_ptr<const vt::FloatFunction>>, std::shared_ptr<const vt::ColorFunction>> _colorOpacityFunctionCache;
+        mutable std::unordered_map<std::pair<std::string, vt::FloatFunction>, vt::FloatFunction, StringFloatFunctionPairHash> _chainedFloatFunctionCache;
+        mutable std::unordered_map<std::pair<vt::ColorFunction, vt::FloatFunction>, vt::ColorFunction, ColorFunctionFloatFunctionPairHash> _colorOpacityFunctionCache;
     };
 } }
 

@@ -14,6 +14,7 @@ namespace carto { namespace mvt {
     public:
         explicit BuildingSymbolizer(std::shared_ptr<Logger> logger) : GeometrySymbolizer(std::move(logger)) {
             bind(&_fillFunc, std::make_shared<ConstExpression>(Value(std::string("#808080"))), &BuildingSymbolizer::convertColor);
+            bind(&_fillOpacityFunc, std::make_shared<ConstExpression>(Value(1.0f)));
         }
 
         virtual void build(const FeatureCollection& featureCollection, const FeatureExpressionContext& exprContext, const SymbolizerContext& symbolizerContext, vt::TileLayerBuilder& layerBuilder) override;
@@ -23,8 +24,8 @@ namespace carto { namespace mvt {
 
         virtual void bindParameter(const std::string& name, const std::string& value) override;
 
-        std::shared_ptr<const vt::ColorFunction> _fillFunc; // vt::Color(0xff808080)
-        std::shared_ptr<const vt::FloatFunction> _fillOpacityFunc; // 1.0f
+        vt::ColorFunction _fillFunc; // vt::Color(0xff808080)
+        vt::FloatFunction _fillOpacityFunc; // 1.0f
         float _height = 0.0f;
     };
 } }

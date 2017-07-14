@@ -29,16 +29,16 @@ namespace carto { namespace vt {
     public:
         struct LabelStyle {
             LabelOrientation orientation;
-            std::shared_ptr<const ColorFunction> colorFunc;
-            std::shared_ptr<const FloatFunction> sizeFunc;
-            std::shared_ptr<const ColorFunction> haloColorFunc;
-            std::shared_ptr<const FloatFunction> haloRadiusFunc;
+            ColorFunction colorFunc;
+            FloatFunction sizeFunc;
+            ColorFunction haloColorFunc;
+            FloatFunction haloRadiusFunc;
             float scale;
             float ascent;
             boost::optional<cglib::mat3x3<float>> transform;
             std::shared_ptr<const GlyphMap> glyphMap;
 
-            explicit LabelStyle(LabelOrientation orientation, std::shared_ptr<const ColorFunction> colorFunc, std::shared_ptr<const FloatFunction> sizeFunc, std::shared_ptr<const ColorFunction> haloColorFunc, std::shared_ptr<const FloatFunction> haloRadiusFunc, float scale, float ascent, const boost::optional<cglib::mat3x3<float>>& transform, std::shared_ptr<const GlyphMap> glyphMap) : orientation(orientation), colorFunc(std::move(colorFunc)), sizeFunc(std::move(sizeFunc)), haloColorFunc(std::move(haloColorFunc)), haloRadiusFunc(std::move(haloRadiusFunc)), scale(scale), ascent(ascent), transform(transform), glyphMap(std::move(glyphMap)) { }
+            explicit LabelStyle(LabelOrientation orientation, ColorFunction colorFunc, FloatFunction sizeFunc, ColorFunction haloColorFunc, FloatFunction haloRadiusFunc, float scale, float ascent, const boost::optional<cglib::mat3x3<float>>& transform, std::shared_ptr<const GlyphMap> glyphMap) : orientation(orientation), colorFunc(std::move(colorFunc)), sizeFunc(std::move(sizeFunc)), haloColorFunc(std::move(haloColorFunc)), haloRadiusFunc(std::move(haloRadiusFunc)), scale(scale), ascent(ascent), transform(transform), glyphMap(std::move(glyphMap)) { }
         };
         
         explicit TileLabel(const TileId& tileId, long long localId, long long globalId, long long groupId, std::vector<Font::Glyph> glyphs, boost::optional<cglib::vec3<double>> position, std::vector<cglib::vec3<double>> vertices, std::shared_ptr<const LabelStyle> style);
@@ -73,8 +73,10 @@ namespace carto { namespace vt {
         bool updatePlacement(const ViewState& viewState);
 
         bool calculateCenter(cglib::vec3<double>& pos) const;
-        bool calculateEnvelope(const ViewState& viewState, std::array<cglib::vec3<float>, 4>& envelope) const;
-        bool calculateVertexData(const ViewState& viewState, int styleIndex, VertexArray<cglib::vec3<float>>& vertices, VertexArray<cglib::vec2<short>>& texCoords, VertexArray<cglib::vec4<char>>& attribs, VertexArray<unsigned short>& indices) const;
+        bool calculateEnvelope(const ViewState& viewState, std::array<cglib::vec3<float>, 4>& envelope) const { return calculateEnvelope((_style->sizeFunc)(viewState), viewState, envelope); }
+        bool calculateEnvelope(float size, const ViewState& viewState, std::array<cglib::vec3<float>, 4>& envelope) const;
+        bool calculateVertexData(const ViewState& viewState, int styleIndex, VertexArray<cglib::vec3<float>>& vertices, VertexArray<cglib::vec2<short>>& texCoords, VertexArray<cglib::vec4<char>>& attribs, VertexArray<unsigned short>& indices) const { return calculateVertexData((_style->sizeFunc)(viewState), viewState, styleIndex, vertices, texCoords, attribs, indices); }
+        bool calculateVertexData(float size, const ViewState& viewState, int styleIndex, VertexArray<cglib::vec3<float>>& vertices, VertexArray<cglib::vec2<short>>& texCoords, VertexArray<cglib::vec4<char>>& attribs, VertexArray<unsigned short>& indices) const;
 
     private:
         constexpr static float EXTRA_PLACEMENT_PIXELS = 30.0f; // extra visible pixels required for placement

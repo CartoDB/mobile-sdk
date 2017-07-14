@@ -8,6 +8,10 @@ namespace carto { namespace mvt {
 
         updateBindings(exprContext);
 
+        if (_opacityFunc == vt::FloatFunction(0)) {
+            return;
+        }
+        
         vt::CompOp compOp = convertCompOp(_compOp);
         
         float fontScale = symbolizerContext.getSettings().getFontScale();
@@ -30,8 +34,8 @@ namespace carto { namespace mvt {
             }
         }
 
-        std::shared_ptr<const vt::FloatFunction> sizeFunc = _functionBuilder.createFloatFunction(fontScale);
-        std::shared_ptr<const vt::ColorFunction> fillFunc = _functionBuilder.createColorOpacityFunction(_functionBuilder.createColorFunction(vt::Color(1, 1, 1, 1)), _opacityFunc);
+        vt::FloatFunction sizeFunc = _functionBuilder.createFloatFunction(fontScale);
+        vt::ColorFunction fillFunc = _functionBuilder.createColorOpacityFunction(_functionBuilder.createColorFunction(vt::Color(1, 1, 1, 1)), _opacityFunc);
 
         vt::PointStyle pointStyle(compOp, vt::PointOrientation::BILLBOARD_2D, fillFunc, sizeFunc, bitmapImage, _transform);
 

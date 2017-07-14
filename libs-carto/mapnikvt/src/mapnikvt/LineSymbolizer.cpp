@@ -12,6 +12,10 @@ namespace carto { namespace mvt {
 
         updateBindings(exprContext);
 
+        if (_strokeWidthFunc == vt::FloatFunction(0) || _strokeOpacityFunc == vt::FloatFunction(0)) {
+            return;
+        }
+        
         vt::LineJoinMode lineJoin = convertLineJoinMode(_strokeLinejoin);
         vt::LineCapMode lineCap = convertLineCapMode(_strokeLinecap);
         vt::CompOp compOp = convertCompOp(_compOp);
@@ -40,7 +44,7 @@ namespace carto { namespace mvt {
             }
         }
 
-        std::shared_ptr<const vt::ColorFunction> strokeFunc = _functionBuilder.createColorOpacityFunction(_strokeFunc, _strokeOpacityFunc);
+        vt::ColorFunction strokeFunc = _functionBuilder.createColorOpacityFunction(_strokeFunc, _strokeOpacityFunc);
         
         vt::LineStyle style(compOp, lineJoin, lineCap, strokeFunc, _strokeWidthFunc, strokePattern, _geometryTransform);
 

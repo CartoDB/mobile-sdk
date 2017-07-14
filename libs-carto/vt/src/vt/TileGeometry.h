@@ -32,9 +32,9 @@ namespace carto { namespace vt {
             constexpr static int MAX_PARAMETERS = 16;
 
             int parameterCount;
-            std::array<std::shared_ptr<const ColorFunction>, MAX_PARAMETERS> colorFuncs;
-            std::array<std::shared_ptr<const FloatFunction>, MAX_PARAMETERS> widthFuncs;
-            std::array<std::shared_ptr<const FloatFunction>, MAX_PARAMETERS> strokeWidthFuncs;
+            std::array<ColorFunction, MAX_PARAMETERS> colorFuncs;
+            std::array<FloatFunction, MAX_PARAMETERS> widthFuncs;
+            std::array<FloatFunction, MAX_PARAMETERS> strokeWidthFuncs;
             std::shared_ptr<const BitmapPattern> pattern;
             boost::optional<cglib::mat3x3<float>> transform;
             CompOp compOp;

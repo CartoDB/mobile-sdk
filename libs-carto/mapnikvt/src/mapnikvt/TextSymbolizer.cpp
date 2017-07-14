@@ -26,6 +26,10 @@ namespace carto { namespace mvt {
 
         updateBindings(exprContext);
 
+        if (_sizeFunc == vt::FloatFunction(0)) {
+            return;
+        }
+        
         std::shared_ptr<vt::Font> font = getFont(symbolizerContext);
         if (!font) {
             _logger->write(Logger::Severity::ERROR, "Failed to load text font " + (!_faceName.empty() ? _faceName :_fontSetName));
@@ -44,10 +48,10 @@ namespace carto { namespace mvt {
         float textSize = (placement == vt::LabelOrientation::LINE ? calculateTextSize(font, text, formatter).size()(0) : 0);
         long long groupId = (_allowOverlap ? -1 : (minimumDistance > 0 ? (hash & 0x7fffffff) : 0));
 
-        std::shared_ptr<const vt::ColorFunction> fillFunc = _functionBuilder.createColorOpacityFunction(_fillFunc, _opacityFunc);
-        std::shared_ptr<const vt::FloatFunction> sizeFunc = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _sizeFunc);
-        std::shared_ptr<const vt::ColorFunction> haloFillFunc = _functionBuilder.createColorOpacityFunction(_haloFillFunc, _haloOpacityFunc);
-        std::shared_ptr<const vt::FloatFunction> haloRadiusFunc = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _haloRadiusFunc);
+        vt::ColorFunction fillFunc = _functionBuilder.createColorOpacityFunction(_fillFunc, _opacityFunc);
+        vt::FloatFunction sizeFunc = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _sizeFunc);
+        vt::ColorFunction haloFillFunc = _functionBuilder.createColorOpacityFunction(_haloFillFunc, _haloOpacityFunc);
+        vt::FloatFunction haloRadiusFunc = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _haloRadiusFunc);
 
         std::vector<std::pair<long long, vt::TileLayerBuilder::Vertex>> textInfos;
         std::vector<std::pair<long long, vt::TileLayerBuilder::TextLabelInfo>> labelInfos;

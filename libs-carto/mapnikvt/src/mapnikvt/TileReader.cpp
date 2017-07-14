@@ -42,8 +42,7 @@ namespace carto { namespace mvt {
                     // ignore the error
                 }
                 
-                float opacity = style->getOpacity();
-                std::shared_ptr<const vt::FloatFunction> opacityFunc = std::make_shared<vt::FloatFunction>([opacity](const vt::ViewState& viewState) { return opacity; });
+                vt::FloatFunction opacityFunc(style->getOpacity());
 
                 int internalIdx = layerIdx * 65536 + static_cast<int>(layer->getStyleNames().size()) * 256 + styleIdx;
                 std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.build(internalIdx, compOp, opacityFunc);

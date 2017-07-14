@@ -81,7 +81,7 @@ namespace carto { namespace mvt {
         }
 
         template <typename V>
-        void bind(std::shared_ptr<const std::function<V(const vt::ViewState&)>>* field, const std::shared_ptr<const Expression>& expr) {
+        void bind(vt::UnaryFunction<V, vt::ViewState>* field, const std::shared_ptr<const Expression>& expr) {
             bindParameter(field, expr, std::function<V(const Value&)>(ValueConverter<V>::convert));
             if (!std::dynamic_pointer_cast<const ConstExpression>(expr)) {
                 _parameterExprs.push_back(expr);
@@ -89,7 +89,7 @@ namespace carto { namespace mvt {
         }
 
         template <typename V>
-        void bind(std::shared_ptr<const std::function<V(const vt::ViewState&)>>* field, const std::shared_ptr<const Expression>& expr, V(*convertFunc)(const Value&)) {
+        void bind(vt::UnaryFunction<V, vt::ViewState>* field, const std::shared_ptr<const Expression>& expr, V(*convertFunc)(const Value&)) {
             bindParameter(field, expr, std::function<V(const Value&)>(convertFunc));
             if (!std::dynamic_pointer_cast<const ConstExpression>(expr)) {
                 _parameterExprs.push_back(expr);
@@ -97,7 +97,7 @@ namespace carto { namespace mvt {
         }
 
         template <typename V>
-        void bind(std::shared_ptr<const std::function<V(const vt::ViewState&)>>* field, const std::shared_ptr<const Expression>& expr, V(Symbolizer::*memberconvertFunc)(const Value&) const) {
+        void bind(vt::UnaryFunction<V, vt::ViewState>* field, const std::shared_ptr<const Expression>& expr, V(Symbolizer::*memberconvertFunc)(const Value&) const) {
             bindParameter(field, expr, [this, memberconvertFunc](const Value& val) -> V {
                 return (this->*memberconvertFunc)(val);
             });
@@ -153,11 +153,11 @@ namespace carto { namespace mvt {
             _optionalMatrixBinder.bind(field, expr, convertFunc);
         }
 
-        void bindParameter(std::shared_ptr<const vt::FloatFunction>* field, const std::shared_ptr<const Expression>& expr, const std::function<float(const Value&)>& convertFunc) {
+        void bindParameter(vt::FloatFunction* field, const std::shared_ptr<const Expression>& expr, const std::function<float(const Value&)>& convertFunc) {
             _floatFunctionBinder.bind(field, expr, convertFunc);
         }
 
-        void bindParameter(std::shared_ptr<const vt::ColorFunction>* field, const std::shared_ptr<const Expression>& expr, const std::function<vt::Color(const Value&)>& convertFunc) {
+        void bindParameter(vt::ColorFunction* field, const std::shared_ptr<const Expression>& expr, const std::function<vt::Color(const Value&)>& convertFunc) {
             _colorFunctionBinder.bind(field, expr, convertFunc);
         }
 

@@ -35,10 +35,10 @@ namespace carto { namespace mvt {
         shieldFormatterOptions.offset = cglib::vec2<float>(_shieldDx * fontScale, -_shieldDy * fontScale);
         vt::TextFormatter shieldFormatter(font, _sizeStatic, shieldFormatterOptions);
 
-        std::shared_ptr<const vt::ColorFunction> fillFunc = _functionBuilder.createColorOpacityFunction(_fillFunc, _opacityFunc);
-        std::shared_ptr<const vt::FloatFunction> sizeFunc = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _sizeFunc);
-        std::shared_ptr<const vt::ColorFunction> haloFillFunc = _functionBuilder.createColorOpacityFunction(_haloFillFunc, _haloOpacityFunc);
-        std::shared_ptr<const vt::FloatFunction> haloRadiusFunc = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _haloRadiusFunc);
+        vt::ColorFunction fillFunc = _functionBuilder.createColorOpacityFunction(_fillFunc, _opacityFunc);
+        vt::FloatFunction sizeFunc = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _sizeFunc);
+        vt::ColorFunction haloFillFunc = _functionBuilder.createColorOpacityFunction(_haloFillFunc, _haloOpacityFunc);
+        vt::FloatFunction haloRadiusFunc = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _haloRadiusFunc);
 
         float minimumDistance = (_minimumDistance + bitmapSize) * std::pow(2.0f, -exprContext.getZoom()) / symbolizerContext.getSettings().getTileSize() * 2;
         long long groupId = (_allowOverlap ? -1 : 1); // use separate group from markers, markers use group 0

@@ -11,6 +11,10 @@ namespace carto { namespace mvt {
 
         updateBindings(exprContext);
 
+        if ((_widthDefined && _widthFunc == vt::FloatFunction(0)) || (_heightDefined && _heightFunc == vt::FloatFunction(0)) || _fillOpacity == 0) {
+            return;
+        }
+
         vt::CompOp compOp = convertCompOp(_compOp);
 
         float fontScale = symbolizerContext.getSettings().getFontScale();
@@ -25,7 +29,7 @@ namespace carto { namespace mvt {
             orientation = vt::LabelOrientation::POINT; // we will apply custom rotation, thus use point orientation
         }
 
-        std::shared_ptr<const vt::FloatFunction> sizeFunc;
+        vt::FloatFunction sizeFunc;
         float bitmapScaleX = fontScale, bitmapScaleY = fontScale;
         std::shared_ptr<const vt::BitmapImage> bitmapImage;
         std::string file = _file;
@@ -37,8 +41,8 @@ namespace carto { namespace mvt {
                 return;
             }
             
-            if (_widthFunc && _widthStatic > 0) {
-                if (_heightFunc && _heightStatic > 0) {
+            if (_widthDefined && _widthStatic > 0) {
+                if (_heightDefined && _heightStatic > 0) {
                     bitmapScaleY *= _heightStatic / _widthStatic;
                 }
                 else {
@@ -46,7 +50,7 @@ namespace carto { namespace mvt {
                 }
                 sizeFunc = _widthFunc;
             }
-            else if (_heightFunc && _heightStatic > 0) {
+            else if (_heightDefined && _heightStatic > 0) {
                 bitmapScaleX *= static_cast<float>(bitmapImage->bitmap->width) / bitmapImage->bitmap->height;
                 sizeFunc = _heightFunc;
             }
@@ -60,13 +64,13 @@ namespace carto { namespace mvt {
             vt::Color stroke = vt::Color::fromColorOpacity(_stroke, _strokeOpacity);
             bool ellipse = _markerType == "ellipse" || (_markerType.empty() && placement != vt::LabelOrientation::LINE);
             float bitmapWidth = (ellipse ? DEFAULT_CIRCLE_SIZE : DEFAULT_ARROW_WIDTH), bitmapHeight = (ellipse ? DEFAULT_CIRCLE_SIZE : DEFAULT_ARROW_HEIGHT);
-            if (_widthFunc) { // NOTE: special case, if accept all values
-                bitmapHeight = (_heightFunc ? _heightStatic : _widthStatic * bitmapHeight / bitmapWidth);
+            if (_widthDefined) { // NOTE: special case, if accept all values
+                bitmapHeight = (_heightDefined ? _heightStatic : _widthStatic * bitmapHeight / bitmapWidth);
                 bitmapWidth = _widthStatic;
                 bitmapScaleY *= bitmapHeight / bitmapWidth;
                 sizeFunc = _widthFunc;
             }
-            else if (_heightFunc) { // NOTE: special case, accept all values
+            else if (_heightDefined) { // NOTE: special case, accept all values
                 bitmapWidth = _heightStatic * bitmapWidth / bitmapHeight;
                 bitmapHeight = _heightStatic;
                 bitmapScaleX *= bitmapWidth / bitmapHeight;
@@ -104,7 +108,7 @@ namespace carto { namespace mvt {
         float bitmapSize = static_cast<float>(std::max(_widthStatic * fontScale, _heightStatic * fontScale));
         long long groupId = (_allowOverlap ? -1 : 0);
 
-        std::shared_ptr<const vt::ColorFunction> fillFunc = _functionBuilder.createColorFunction(vt::Color::fromColorOpacity(vt::Color(1, 1, 1, 1), fillOpacity));
+        vt::ColorFunction fillFunc = _functionBuilder.createColorFunction(vt::Color::fromColorOpacity(vt::Color(1, 1, 1, 1), fillOpacity));
 
         std::vector<std::pair<long long, vt::TileLayerBuilder::Vertex>> pointInfos;
         std::vector<std::pair<long long, vt::TileLayerBuilder::BitmapLabelInfo>> labelInfos;
@@ -248,10 +252,12 @@ namespace carto { namespace mvt {
         else if (name == "width") {
             bind(&_widthFunc, parseExpression(value));
             bind(&_widthStatic, parseExpression(value));
+            _widthDefined = true;
         }
         else if (name == "height") {
             bind(&_heightFunc, parseExpression(value));
             bind(&_heightStatic, parseExpression(value));
+            _heightDefined = true;
         }
         else if (name == "stroke") {
             bind(&_stroke, parseStringExpression(value), &MarkersSymbolizer::convertColor);

@@ -20,7 +20,10 @@ namespace carto { namespace mvt {
         explicit TextSymbolizer(std::vector<std::shared_ptr<FontSet>> fontSets, std::shared_ptr<Logger> logger) : Symbolizer(std::move(logger)), _fontSets(std::move(fontSets)) {
             bind(&_sizeFunc, std::make_shared<ConstExpression>(Value(_sizeStatic)));
             bind(&_fillFunc, std::make_shared<ConstExpression>(Value(std::string("#000000"))), &TextSymbolizer::convertColor);
+            bind(&_opacityFunc, std::make_shared<ConstExpression>(Value(1.0f)));
             bind(&_haloFillFunc, std::make_shared<ConstExpression>(Value(std::string("#ffffff"))), &TextSymbolizer::convertColor);
+            bind(&_haloOpacityFunc, std::make_shared<ConstExpression>(Value(1.0f)));
+            bind(&_haloRadiusFunc, std::make_shared<ConstExpression>(Value(0.0f)));
         }
 
         void setTextExpression(std::shared_ptr<const Expression> textExpression);
@@ -46,14 +49,14 @@ namespace carto { namespace mvt {
         std::string _faceName;
         std::string _fontSetName;
         std::string _placement = "point";
-        std::shared_ptr<const vt::FloatFunction> _sizeFunc; // 10.0f
+        vt::FloatFunction _sizeFunc; // 10.0f
         float _sizeStatic = 10.0f;
         float _spacing = 0.0f;
-        std::shared_ptr<const vt::ColorFunction> _fillFunc; // vt::Color(0xff000000)
-        std::shared_ptr<const vt::FloatFunction> _opacityFunc; // 1.0f
-        std::shared_ptr<const vt::ColorFunction> _haloFillFunc; // vt::Color(0xffffffff)
-        std::shared_ptr<const vt::FloatFunction> _haloOpacityFunc; // 1.0f
-        std::shared_ptr<const vt::FloatFunction> _haloRadiusFunc; // 0.0f
+        vt::ColorFunction _fillFunc; // vt::Color(0xff000000)
+        vt::FloatFunction _opacityFunc; // 1.0f
+        vt::ColorFunction _haloFillFunc; // vt::Color(0xffffffff)
+        vt::FloatFunction _haloOpacityFunc; // 1.0f
+        vt::FloatFunction _haloRadiusFunc; // 0.0f
         float _orientationAngle = 0.0f;
         bool _orientationDefined = false;
         float _dx = 0.0f;

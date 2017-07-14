@@ -37,13 +37,15 @@ namespace carto { namespace mvt {
         std::string _markerType;
         vt::Color _fill = vt::Color(0xff0000ff);
         float _fillOpacity = 1.0f;
-        std::shared_ptr<const vt::FloatFunction> _widthFunc; // undefined
+        vt::FloatFunction _widthFunc; // undefined
         float _widthStatic = 0;
-        std::shared_ptr<const vt::FloatFunction> _heightFunc; // undefined
+        bool _widthDefined = false;
+        vt::FloatFunction _heightFunc; // undefined
         float _heightStatic = 0;
+        bool _heightDefined = false;
         vt::Color _stroke = vt::Color(0xff000000);
         float _strokeOpacity = 1.0f;
-        std::shared_ptr<const vt::FloatFunction> _strokeWidthFunc; // 0.5f
+        vt::FloatFunction _strokeWidthFunc; // 0.5f
         float _strokeWidthStatic = 0.5f;
         float _spacing = 100.0f;
         bool _allowOverlap = false;

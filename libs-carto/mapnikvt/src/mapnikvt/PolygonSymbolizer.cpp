@@ -7,9 +7,13 @@ namespace carto { namespace mvt {
 
         updateBindings(exprContext);
 
+        if (_fillOpacityFunc == vt::FloatFunction(0)) {
+            return;
+        }
+        
         vt::CompOp compOp = convertCompOp(_compOp);
 
-        std::shared_ptr<const vt::ColorFunction> fillFunc = _functionBuilder.createColorOpacityFunction(_fillFunc, _fillOpacityFunc);
+        vt::ColorFunction fillFunc = _functionBuilder.createColorOpacityFunction(_fillFunc, _fillOpacityFunc);
         
         vt::PolygonStyle style(compOp, fillFunc, std::shared_ptr<vt::BitmapPattern>(), _geometryTransform);
 

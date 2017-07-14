@@ -412,7 +412,6 @@ namespace carto { namespace vt {
         std::shared_ptr<FontManagerLibrary> _library;
         mutable std::map<std::pair<std::string, std::shared_ptr<Font>>, std::shared_ptr<FontManagerFont>> _fontMap;
         mutable std::map<std::string, std::shared_ptr<GlyphMap>> _glyphMapMap;
-        mutable std::shared_ptr<Font> _nullFont;
         mutable std::mutex _mutex;
     };
 

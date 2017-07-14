@@ -7,7 +7,11 @@ namespace carto { namespace mvt {
 
         updateBindings(exprContext);
 
-        std::shared_ptr<const vt::ColorFunction> fillFunc = _functionBuilder.createColorOpacityFunction(_fillFunc, _fillOpacityFunc);
+        if (_fillOpacityFunc == vt::FloatFunction(0)) {
+            return;
+        }
+        
+        vt::ColorFunction fillFunc = _functionBuilder.createColorOpacityFunction(_fillFunc, _fillOpacityFunc);
         
         vt::Polygon3DStyle style(fillFunc, _geometryTransform);
 
