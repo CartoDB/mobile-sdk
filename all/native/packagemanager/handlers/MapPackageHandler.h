@@ -33,7 +33,8 @@ namespace carto {
         void closeDatabase();
         std::shared_ptr<BinaryData> loadTile(const MapTile& mapTile);
 
-        virtual void importPackage();
+        virtual void onImportPackage();
+        virtual void onDeletePackage();
 
         virtual std::shared_ptr<PackageTileMask> calculateTileMask() const;
 

@@ -118,18 +118,21 @@ namespace carto {
         return std::shared_ptr<BinaryData>();
     }
 
-    void MapPackageHandler::importPackage() {
+    void MapPackageHandler::onImportPackage() {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
         sqlite3pp::database packageDb;
         if (packageDb.connect_v2(_fileName.c_str(), SQLITE_OPEN_READWRITE) != SQLITE_OK) {
-            Log::Errorf("MapPackageHandler::importPackage: Failed to open database %s", _fileName.c_str());
+            Log::Errorf("MapPackageHandler::onImportPackage: Failed to open database %s", _fileName.c_str());
             return;
         }
         bool encrypted = CheckDbEncryption(packageDb, _serverEncKey);
         if (encrypted) {
             UpdateDbEncryption(packageDb, _serverEncKey + _localEncKey);
         }
+    }
+
+    void MapPackageHandler::onDeletePackage() {
     }
 
     std::shared_ptr<PackageTileMask> MapPackageHandler::calculateTileMask() const {

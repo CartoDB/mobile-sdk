@@ -22,7 +22,8 @@ namespace carto {
 
         std::shared_ptr<std::ifstream> getGraphFile();
 
-        virtual void importPackage();
+        virtual void onImportPackage();
+        virtual void onDeletePackage();
 
         virtual std::shared_ptr<PackageTileMask> calculateTileMask() const;
 

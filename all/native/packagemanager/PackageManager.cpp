@@ -1080,8 +1080,9 @@ namespace carto {
             onChangeListeners = _onChangeListeners;
         }
 
+        // Invoke handler callback
         if (auto handler = PackageHandlerFactory(_serverEncKey, _localEncKey).createPackageHandler(packageType, packageFileName)) {
-            handler->importPackage();
+            handler->onImportPackage();
         }
 
         // Mark downloaded package as valid and older packages as invalid.
@@ -1116,13 +1117,13 @@ namespace carto {
         }
 
         std::string packageFileName;
+        PackageType::PackageType packageType = PackageType::PACKAGE_TYPE_MAP;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
 
             // Get package file name
             sqlite3pp::query query(*_localDb, "SELECT package_id, package_type, version FROM packages WHERE id=:id");
             query.bind(":id", id);
-            PackageType::PackageType packageType = PackageType::PACKAGE_TYPE_MAP;
             for (auto qit = query.begin(); qit != query.end(); qit++) {
                 std::string packageId = qit->get<const char*>(0);
                 packageType = static_cast<PackageType::PackageType>(qit->get<int>(1));
@@ -1146,6 +1147,11 @@ namespace carto {
         // Notify that packages have changed before actually deleting the file
         for (const std::shared_ptr<OnChangeListener>& onChangeListener : onChangeListeners) {
             onChangeListener->onPackagesChanged();
+        }
+
+        // Invoke handler callback
+        if (auto handler = PackageHandlerFactory(_serverEncKey, _localEncKey).createPackageHandler(packageType, packageFileName)) {
+            handler->onDeletePackage();
         }
 
         // Delete file

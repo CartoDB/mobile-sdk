@@ -24,11 +24,13 @@ namespace carto {
 
         std::shared_ptr<sqlite3pp::database> getGeocodingDatabase();
 
-        virtual void importPackage();
+        virtual void onImportPackage();
+        virtual void onDeletePackage();
 
         virtual std::shared_ptr<PackageTileMask> calculateTileMask() const;
 
     private:
+        const std::string _uncompressedFileName;
         std::shared_ptr<sqlite3pp::database> _database;
     };
     

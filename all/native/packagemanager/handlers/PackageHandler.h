@@ -20,7 +20,8 @@ namespace carto {
     public:
         virtual ~PackageHandler() { }
 
-        virtual void importPackage() = 0;
+        virtual void onImportPackage() = 0;
+        virtual void onDeletePackage() = 0;
 
         virtual std::shared_ptr<PackageTileMask> calculateTileMask() const = 0;
     
