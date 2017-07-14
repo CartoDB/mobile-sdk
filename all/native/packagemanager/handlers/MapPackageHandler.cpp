@@ -145,12 +145,14 @@ namespace carto {
             return std::shared_ptr<PackageTileMask>();
         }
         sqlite3pp::query query(packageDb, "SELECT zoom_level, tile_column, tile_row FROM tiles");
-        std::vector<PackageTileMask::Tile> tiles;
+        std::vector<MapTile> tiles;
+        int maxZoomLevel = 0;
         for (auto qit = query.begin(); qit != query.end(); qit++) {
-            PackageTileMask::Tile tile(qit->get<int>(0), qit->get<int>(1), qit->get<int>(2));
+            MapTile tile(qit->get<int>(1), qit->get<int>(2), qit->get<int>(0), 0);
+            maxZoomLevel = std::max(maxZoomLevel, tile.getZoom());
             tiles.push_back(tile);
         }
-        return std::make_shared<PackageTileMask>(tiles);
+        return std::make_shared<PackageTileMask>(tiles, maxZoomLevel);
     }
 
     bool MapPackageHandler::CheckDbEncryption(sqlite3pp::database& db, const std::string& encKey) {

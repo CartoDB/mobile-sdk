@@ -9,6 +9,7 @@
 
 #ifdef _CARTO_PACKAGEMANAGER_SUPPORT
 
+#include "core/MapTile.h"
 #include "core/MapBounds.h"
 #include "packagemanager/PackageManager.h"
 
@@ -37,7 +38,7 @@ namespace carto {
         static std::string GetServerEncKey();
         static std::string GetLocalEncKey();
         
-        static bool CalculateBBoxTiles(const MapBounds& bounds, const Projection& proj, const PackageTileMask::Tile& tile, std::vector<PackageTileMask::Tile>& tiles);
+        static bool CalculateBBoxTiles(const MapBounds& bounds, const std::shared_ptr<Projection>& proj, const MapTile& tile, std::vector<MapTile>& tiles);
 
         virtual std::string createPackageURL(const std::string& packageId, int version, const std::string& baseURL, bool downloaded) const;
 
@@ -62,7 +63,8 @@ namespace carto {
         static const std::string CUSTOM_GEOCODING_BBOX_PACKAGE_URL;
 
         static const int MAX_CUSTOM_BBOX_PACKAGE_TILES = 100000;
-        static const int MAX_CUSTOM_BBOX_PACKAGE_TILEMASK_ZOOM = 12;
+        static const int MAX_CUSTOM_BBOX_PACKAGE_TILE_ZOOM = 14;
+        static const int MAX_CUSTOM_BBOX_PACKAGE_TILEMASK_ZOOMLEVEL = 12;
         
         std::string _source;
     };

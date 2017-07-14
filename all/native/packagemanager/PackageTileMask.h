@@ -47,22 +47,6 @@ namespace carto {
     class PackageTileMask {
     public:
         /**
-         * Tile info.
-         */
-        struct Tile {
-            int zoom;
-            int x, y;
-
-            Tile(int zoom, int x, int y) : zoom(zoom), x(x), y(y) { }
-        };
-
-        /**
-         * Constructs a new package tile mask instance from encoded string.
-         * @param stringValue The encoded tile mask of the package.
-         */
-        explicit PackageTileMask(const std::string& stringValue);
-
-        /**
          * Constructs a new package tile mask instance from encoded string and maximum zoom level.
          * @param stringValue The encoded tile mask of the package
          * @param maxZoom The maximum zoom level for the tiles.
@@ -72,8 +56,9 @@ namespace carto {
         /**
          * Constructs a new package tile mask instance from a list of tiles.
          * @param tiles The list of tiles.
+         * @param clipZoom The maximum zoom level to clip the tiles.
          */
-        explicit PackageTileMask(const std::vector<Tile>& tiles);
+        PackageTileMask(const std::vector<MapTile>& tiles, int clipZoom);
 
         /**
          * Returns the encoded tile mask value. This should not be displayed to the user.
@@ -95,37 +80,24 @@ namespace carto {
 
         /**
          * Returns the status of the specified tile. This method can be used for fast testing whether a tile is part of the package.
-         * @param mapTile The tile to check.
+         * @param tile The tile to check.
          * @return The status of the specified tile.
          */
-        PackageTileStatus::PackageTileStatus getTileStatus(const MapTile& mapTile) const;
+        PackageTileStatus::PackageTileStatus getTileStatus(const MapTile& tile) const;
 
     private:
         struct TileNode {
-            Tile tile;
+            MapTile tile;
             bool inside;
             std::shared_ptr<TileNode> subNodes[4];
 
-            TileNode(const Tile& tile, bool inside) : tile(tile), inside(inside) { }
+            TileNode(const MapTile& tile, bool inside) : tile(tile), inside(inside) { }
         };
 
-        struct TileHash {
-            std::size_t operator() (const Tile& tile) const {
-                return tile.zoom + 24 * (tile.x ^ (tile.y << 16));
-            }
-        };
+        std::shared_ptr<TileNode> findTileNode(const MapTile& tile) const;
 
-        struct TileEq {
-            bool operator() (const Tile& tile1, const Tile& tile2) const {
-                return tile1.x == tile2.x && tile1.y == tile2.y && tile1.zoom == tile2.zoom;
-            }
-        };
-
-        std::shared_ptr<TileNode> findTileNode(const Tile& tile) const;
-
-        static std::shared_ptr<TileNode> buildTileNode(std::queue<bool>& data, const Tile& tile);
-        static std::shared_ptr<TileNode> buildTileNode(const std::unordered_set<Tile, TileHash, TileEq>& tileSet, const Tile& tile);
-        static int getMaxTileNodeZoom(const std::shared_ptr<TileNode>& node);
+        static std::shared_ptr<TileNode> buildTileNode(const std::unordered_set<MapTile>& tileSet, const MapTile& tile, int clipZoom);
+        static std::shared_ptr<TileNode> decodeTileNode(std::queue<bool>& data, const MapTile& tile);
         static std::vector<bool> encodeTileNode(const std::shared_ptr<TileNode>& node);
 
         std::string _stringValue;
