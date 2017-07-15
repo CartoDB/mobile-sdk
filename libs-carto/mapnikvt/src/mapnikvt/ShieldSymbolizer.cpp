@@ -27,9 +27,8 @@ namespace carto { namespace mvt {
         if (orientation == vt::LabelOrientation::LINE) {
             orientation = vt::LabelOrientation::BILLBOARD_2D; // shields should be billboards, even when placed on a line
         }
+        float minimumDistance = (_minimumDistance + bitmapSize) * std::pow(2.0f, -exprContext.getZoom()) / symbolizerContext.getSettings().getTileSize() * 2;
 
-        std::string text = getTransformedText(_text);
-        std::size_t hash = std::hash<std::string>()(text);
         vt::TextFormatter textFormatter(font, _sizeStatic, getFormatterOptions(symbolizerContext));
         vt::TextFormatter::Options shieldFormatterOptions = textFormatter.getOptions();
         shieldFormatterOptions.offset = cglib::vec2<float>(_shieldDx * fontScale, -_shieldDy * fontScale);
@@ -40,19 +39,19 @@ namespace carto { namespace mvt {
         vt::ColorFunction haloFillFunc = _functionBuilder.createColorOpacityFunction(_haloFillFunc, _haloOpacityFunc);
         vt::FloatFunction haloRadiusFunc = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _haloRadiusFunc);
 
-        float minimumDistance = (_minimumDistance + bitmapSize) * std::pow(2.0f, -exprContext.getZoom()) / symbolizerContext.getSettings().getTileSize() * 2;
-        long long groupId = (_allowOverlap ? -1 : 1); // use separate group from markers, markers use group 0
-
-        std::vector<std::pair<long long, vt::TileLayerBuilder::Vertex>> shieldInfos;
+        std::vector<std::pair<long long, std::tuple<vt::TileLayerBuilder::Vertex, std::string>>> shieldInfos;
         std::vector<std::pair<long long, vt::TileLayerBuilder::TextLabelInfo>> labelInfos;
 
-        auto addShield = [&](long long localId, long long globalId, const boost::optional<vt::TileLayerBuilder::Vertex>& vertex, const vt::TileLayerBuilder::Vertices& vertices) {
+        auto addShield = [&](long long localId, long long globalId, const std::string& text, const boost::optional<vt::TileLayerBuilder::Vertex>& vertex, const vt::TileLayerBuilder::Vertices& vertices) {
+            std::size_t hash = std::hash<std::string>()(text);
+            long long groupId = (_allowOverlap ? -1 : 1); // use separate group from markers, markers use group 0
+
             if (_allowOverlap) {
                 if (vertex) {
-                    shieldInfos.emplace_back(localId, *vertex);
+                    shieldInfos.emplace_back(localId, std::make_tuple(*vertex, text));
                 }
                 else if (!vertices.empty()) {
-                    shieldInfos.emplace_back(localId, vertices.front());
+                    shieldInfos.emplace_back(localId, std::make_tuple(vertices.front(), text));
                 }
             }
             else {
@@ -76,13 +75,13 @@ namespace carto { namespace mvt {
                 vt::TextStyle style(compOp, convertLabelToPointOrientation(orientation), fillFunc, sizeFunc, haloFillFunc, haloRadiusFunc, _orientationAngle, fontScale, backgroundOffset, backgroundBitmap, transform);
 
                 std::size_t textInfoIndex = 0;
-                layerBuilder.addTexts([&](long long& id, vt::TileLayerBuilder::Vertex& vertex, std::string& txt) {
+                layerBuilder.addTexts([&](long long& id, vt::TileLayerBuilder::Vertex& vertex, std::string& text) {
                     if (textInfoIndex >= shieldInfos.size()) {
                         return false;
                     }
                     id = shieldInfos[textInfoIndex].first;
-                    vertex = shieldInfos[textInfoIndex].second;
-                    txt = text;
+                    vertex = std::get<0>(shieldInfos[textInfoIndex].second);
+                    text = std::get<1>(shieldInfos[textInfoIndex].second);
                     textInfoIndex++;
                     return true;
                 }, style, *formatter);
@@ -98,7 +97,7 @@ namespace carto { namespace mvt {
                         return false;
                     }
                     id = labelInfos[labelInfoIndex].first;
-                    labelInfo = std::move(labelInfos[labelInfoIndex].second);
+                    labelInfo = labelInfos[labelInfoIndex].second;
                     labelInfoIndex++;
                     return true;
                 }, style, *formatter);
@@ -107,7 +106,7 @@ namespace carto { namespace mvt {
             }
         };
 
-        buildFeatureCollection(featureCollection, symbolizerContext, placement, bitmapSize, addShield);
+        buildFeatureCollection(featureCollection, exprContext, symbolizerContext, shieldFormatter, placement, bitmapSize, addShield);
 
         flushShields(cglib::mat3x3<float>::identity());
     }

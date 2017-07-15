@@ -57,13 +57,22 @@ namespace carto { namespace mvt {
     }
 
     void TileReader::processLayer(const std::shared_ptr<const Layer>& layer, const std::shared_ptr<const Style>& style, FeatureExpressionContext& exprContext, vt::TileLayerBuilder& layerBuilder) const {
+        std::unordered_set<std::shared_ptr<const Expression>> styleFieldExprs = style->getReferencedFields(exprContext.getZoom());
+        std::unordered_set<std::string> styleFields;
+        std::for_each(styleFieldExprs.begin(), styleFieldExprs.end(), [&](const std::shared_ptr<const Expression>& expr) {
+            styleFields.insert(ValueConverter<std::string>::convert(expr->evaluate(exprContext)));
+        });
+
         std::shared_ptr<Symbolizer> currentSymbolizer;
         FeatureCollection currentFeatureCollection;
         std::unordered_map<std::shared_ptr<const FeatureData>, std::vector<std::shared_ptr<Symbolizer>>> featureDataSymbolizersMap;
-        if (auto featureIt = createFeatureIterator(layer, style, exprContext)) {
+
+        if (auto featureIt = createFeatureIterator(layer)) {
             for (; featureIt->valid(); featureIt->advance()) {
+                Feature feature = featureIt->getFeature();
+
                 // Cache symbolizer evaluation for each feature data object
-                std::shared_ptr<const FeatureData> featureData = featureIt->getFeatureData();
+                std::shared_ptr<const FeatureData> featureData = feature.getFeatureData();
                 auto symbolizersIt = featureDataSymbolizersMap.find(featureData);
                 if (symbolizersIt == featureDataSymbolizersMap.end()) {
                     exprContext.setFeatureData(featureData);
@@ -73,32 +82,41 @@ namespace carto { namespace mvt {
 
                 // Process symbolizers, try to batch as many calls together as possible
                 for (const std::shared_ptr<Symbolizer>& symbolizer : symbolizersIt->second) {
-                    if (std::shared_ptr<const Geometry> geometry = featureIt->getGeometry()) {
+                    if (std::shared_ptr<const Geometry> geometry = feature.getGeometry()) {
                         bool batch = false;
                         if (currentSymbolizer == symbolizer) {
-                            if (currentFeatureCollection.getFeatureData() == featureData || symbolizer->getParameterExpressions().empty()) {
-                                batch = true;
+                            batch = true;
+                            if (!symbolizer->getParameterExpressions().empty()) {
+                                for (const std::string& field : styleFields) {
+                                    Value val1, val2;
+                                    if (featureData->getVariable(field, val1) == currentFeatureCollection.getFeatureData(0)->getVariable(field, val2)) {
+                                        if (val1 == val2) {
+                                            continue;
+                                        }
+                                    }
+                                    batch = false;
+                                    break;
+                                }
                             }
                         }
 
                         if (!batch) {
-                            if (currentSymbolizer) {
-                                exprContext.setFeatureData(currentFeatureCollection.getFeatureData());
+                            if (currentSymbolizer && currentFeatureCollection.size() > 0) {
+                                exprContext.setFeatureData(currentFeatureCollection.getFeatureData(0));
                                 currentSymbolizer->build(currentFeatureCollection, exprContext, _symbolizerContext, layerBuilder);
                             }
                             currentFeatureCollection.clear();
-                            currentFeatureCollection.setFeatureData(featureData);
                             currentSymbolizer = symbolizer;
                         }
 
-                        currentFeatureCollection.append(featureIt->getLocalId(), featureIt->getGlobalId(), geometry);
+                        currentFeatureCollection.append(featureIt->getLocalId(), feature);
                     }
                 }
             }
 
             // Flush the remaining batched features
-            if (currentSymbolizer) {
-                exprContext.setFeatureData(currentFeatureCollection.getFeatureData());
+            if (currentSymbolizer && currentFeatureCollection.size() > 0) {
+                exprContext.setFeatureData(currentFeatureCollection.getFeatureData(0));
                 currentSymbolizer->build(currentFeatureCollection, exprContext, _symbolizerContext, layerBuilder);
             }
         }

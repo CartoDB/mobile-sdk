@@ -66,24 +66,24 @@ namespace carto { namespace mvt {
             return _index0;
         }
 
-        virtual long long getGlobalId() const override {
-            return 0;
+        virtual Feature getFeature() const override {
+            return Feature(0, getGeometry(), getFeatureData());
         }
 
-        virtual std::shared_ptr<const FeatureData> getFeatureData() const override {
+    private:
+        std::shared_ptr<const FeatureData> getFeatureData() const {
             const TorqueFeatureDecoder::Element& element = _elements[_index0];
             auto it = _featureDataCache.find(element.value);
             if (it != _featureDataCache.end()) {
                 return it->second;
             }
 
-            ;
             auto featureData = std::make_shared<FeatureData>(FeatureData::GeometryType::POINT_GEOMETRY, std::vector<std::pair<std::string, Value>>{ { std::string("value"), Value(element.value) } });
             _featureDataCache.emplace(element.value, featureData);
             return featureData;
         }
 
-        virtual std::shared_ptr<const Geometry> getGeometry() const override {
+        std::shared_ptr<const Geometry> getGeometry() const {
             float scale = 1.0f / _resolution;
             std::vector<cglib::vec2<float>> vertices;
             for (std::size_t i = _index0; i < _index1; i++) {
@@ -96,7 +96,6 @@ namespace carto { namespace mvt {
             return std::make_shared<PointGeometry>(std::move(vertices));
         }
 
-    private:
         std::size_t _index0 = 0;
         std::size_t _index1 = 0;
         const std::vector<TorqueFeatureDecoder::Element>& _elements;

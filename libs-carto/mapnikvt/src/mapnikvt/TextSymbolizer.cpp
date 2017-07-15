@@ -14,7 +14,6 @@
 namespace carto { namespace mvt {
     void TextSymbolizer::setTextExpression(std::shared_ptr<const Expression> textExpression) {
         _textExpression = std::move(textExpression);
-        bind(&_text, _textExpression);
     }
 
     const std::shared_ptr<const Expression>& TextSymbolizer::getTextExpression() const {
@@ -38,31 +37,30 @@ namespace carto { namespace mvt {
 
         vt::CompOp compOp = convertCompOp(_compOp);
 
-        std::string text = getTransformedText(_text);
-        std::size_t hash = std::hash<std::string>()(text);
         vt::TextFormatter formatter(font, _sizeStatic, getFormatterOptions(symbolizerContext));
 
         float fontScale = symbolizerContext.getSettings().getFontScale();
         vt::LabelOrientation placement = convertTextPlacement(_placement);
         float minimumDistance = _minimumDistance * std::pow(2.0f, -exprContext.getZoom());
-        float textSize = (placement == vt::LabelOrientation::LINE ? calculateTextSize(font, text, formatter).size()(0) : 0);
-        long long groupId = (_allowOverlap ? -1 : (minimumDistance > 0 ? (hash & 0x7fffffff) : 0));
 
         vt::ColorFunction fillFunc = _functionBuilder.createColorOpacityFunction(_fillFunc, _opacityFunc);
         vt::FloatFunction sizeFunc = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _sizeFunc);
         vt::ColorFunction haloFillFunc = _functionBuilder.createColorOpacityFunction(_haloFillFunc, _haloOpacityFunc);
         vt::FloatFunction haloRadiusFunc = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _haloRadiusFunc);
 
-        std::vector<std::pair<long long, vt::TileLayerBuilder::Vertex>> textInfos;
+        std::vector<std::pair<long long, std::tuple<vt::TileLayerBuilder::Vertex, std::string>>> textInfos;
         std::vector<std::pair<long long, vt::TileLayerBuilder::TextLabelInfo>> labelInfos;
 
-        auto addText = [&](long long localId, long long globalId, const boost::optional<vt::TileLayerBuilder::Vertex>& vertex, const vt::TileLayerBuilder::Vertices& vertices) {
+        auto addText = [&](long long localId, long long globalId, const std::string& text, const boost::optional<vt::TileLayerBuilder::Vertex>& vertex, const vt::TileLayerBuilder::Vertices& vertices) {
+            std::size_t hash = std::hash<std::string>()(text);
+            long long groupId = (_allowOverlap ? -1 : (minimumDistance > 0 ? (hash & 0x7fffffff) : 0));
+            
             if (_allowOverlap) {
                 if (vertex) {
-                    textInfos.emplace_back(localId, *vertex);
+                    textInfos.emplace_back(localId, std::make_tuple(*vertex, text));
                 }
                 else if (!vertices.empty()) {
-                    textInfos.emplace_back(localId, vertices.front());
+                    textInfos.emplace_back(localId, std::make_tuple(vertices.front(), text));
                 }
             }
             else {
@@ -75,13 +73,13 @@ namespace carto { namespace mvt {
                 vt::TextStyle style(compOp, convertLabelToPointOrientation(placement), fillFunc, sizeFunc, haloFillFunc, haloRadiusFunc, _orientationAngle, fontScale, cglib::vec2<float>(0, 0), std::shared_ptr<vt::BitmapImage>(), transform);
 
                 std::size_t textInfoIndex = 0;
-                layerBuilder.addTexts([&](long long& id, vt::TileLayerBuilder::Vertex& vertex, std::string& txt) {
+                layerBuilder.addTexts([&](long long& id, vt::TileLayerBuilder::Vertex& vertex, std::string& text) {
                     if (textInfoIndex >= textInfos.size()) {
                         return false;
                     }
                     id = textInfos[textInfoIndex].first;
-                    vertex = textInfos[textInfoIndex].second;
-                    txt = text;
+                    vertex = std::get<0>(textInfos[textInfoIndex].second);
+                    text = std::get<1>(textInfos[textInfoIndex].second);
                     textInfoIndex++;
                     return true;
                 }, style, formatter);
@@ -97,7 +95,7 @@ namespace carto { namespace mvt {
                         return false;
                     }
                     id = labelInfos[labelInfoIndex].first;
-                    labelInfo = std::move(labelInfos[labelInfoIndex].second);
+                    labelInfo = labelInfos[labelInfoIndex].second;
                     labelInfoIndex++;
                     return true;
                 }, style, formatter);
@@ -106,14 +104,14 @@ namespace carto { namespace mvt {
             }
         };
 
-        buildFeatureCollection(featureCollection, symbolizerContext, placement, textSize, addText);
+        buildFeatureCollection(featureCollection, exprContext, symbolizerContext, formatter, placement, -1, addText);
 
         flushTexts(cglib::mat3x3<float>::identity());
     }
 
     void TextSymbolizer::bindParameter(const std::string& name, const std::string& value) {
         if (name == "name") {
-            bind(&_text, std::make_shared<VariableExpression>(value));
+            _textExpression = std::make_shared<VariableExpression>(value);
         }
         else if (name == "face-name") {
             bind(&_faceName, parseStringExpression(value));
@@ -292,22 +290,27 @@ namespace carto { namespace mvt {
         return placement;
     }
 
-    void TextSymbolizer::buildFeatureCollection(const FeatureCollection& featureCollection, const SymbolizerContext& symbolizerContext, vt::LabelOrientation placement, float textSize, const std::function<void(long long localId, long long globalId, const boost::optional<vt::TileLayerBuilder::Vertex>& vertex, const vt::TileLayerBuilder::Vertices& vertices)>& addText) {
-        for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
+    void TextSymbolizer::buildFeatureCollection(const FeatureCollection& featureCollection, const FeatureExpressionContext& exprContext, const SymbolizerContext& symbolizerContext, const vt::TextFormatter& formatter, vt::LabelOrientation placement, float bitmapSize, const std::function<void(long long localId, long long globalId, const std::string& text, const boost::optional<vt::TileLayerBuilder::Vertex>& vertex, const vt::TileLayerBuilder::Vertices& vertices)>& addText) {
+        FeatureExpressionContext textExprContext(exprContext);
+        for (std::size_t index = 0; index < featureCollection.size(); index++) {
             long long localId = featureCollection.getLocalId(index);
             long long globalId = featureCollection.getGlobalId(index);
             const std::shared_ptr<const Geometry>& geometry = featureCollection.getGeometry(index);
 
+            textExprContext.setFeatureData(featureCollection.getFeatureData(index));
+            std::string text = getTransformedText(ValueConverter<std::string>::convert(_textExpression->evaluate(textExprContext)));
+            float textSize = bitmapSize < 0 ? (placement == vt::LabelOrientation::LINE ? calculateTextSize(formatter.getFont(), text, formatter).size()(0) : 0) : bitmapSize;
+
             if (auto pointGeometry = std::dynamic_pointer_cast<const PointGeometry>(geometry)) {
                 for (const auto& vertex : pointGeometry->getVertices()) {
-                    addText(localId, globalId, vertex, vt::TileLayerBuilder::Vertices());
+                    addText(localId, globalId, text, vertex, vt::TileLayerBuilder::Vertices());
                 }
             }
             else if (auto lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(geometry)) {
                 if (placement == vt::LabelOrientation::LINE) {
                     for (const auto& vertices : lineGeometry->getVerticesList()) {
                         if (_spacing <= 0) {
-                            addText(localId, globalId, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices);
+                            addText(localId, globalId, text, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices);
                             continue;
                         }
 
@@ -323,7 +326,7 @@ namespace carto { namespace mvt {
                             while (linePos < lineLen) {
                                 cglib::vec2<float> pos = v0 + (v1 - v0) * (linePos / lineLen);
                                 if (std::min(pos(0), pos(1)) > 0.0f && std::max(pos(0), pos(1)) < 1.0f) {
-                                    addText(localId, 0, pos, vertices);
+                                    addText(localId, 0, text, pos, vertices);
                                 }
 
                                 linePos += _spacing + textSize;
@@ -335,13 +338,13 @@ namespace carto { namespace mvt {
                 }
                 else {
                     for (const auto& vertices : lineGeometry->getVerticesList()) {
-                        addText(localId, globalId, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices);
+                        addText(localId, globalId, text, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices);
                     }
                 }
             }
             else if (auto polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(geometry)) {
                 for (const auto& vertex : polygonGeometry->getSurfacePoints()) {
-                    addText(localId, globalId, vertex, vt::TileLayerBuilder::Vertices());
+                    addText(localId, globalId, text, vertex, vt::TileLayerBuilder::Vertices());
                 }
             }
             else {

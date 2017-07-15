@@ -164,7 +164,7 @@ namespace carto { namespace mvt {
             }
         };
 
-        for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
+        for (std::size_t index = 0; index < featureCollection.size(); index++) {
             long long localId = featureCollection.getLocalId(index);
             long long globalId = featureCollection.getGlobalId(index);
             const std::shared_ptr<const Geometry>& geometry = featureCollection.getGeometry(index);

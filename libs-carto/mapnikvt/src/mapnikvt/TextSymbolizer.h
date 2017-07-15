@@ -40,11 +40,10 @@ namespace carto { namespace mvt {
         vt::TextFormatter::Options getFormatterOptions(const SymbolizerContext& symbolizerContext) const;
         vt::LabelOrientation convertTextPlacement(const std::string& orientation) const;
 
-        void buildFeatureCollection(const FeatureCollection& featureCollection, const SymbolizerContext& symbolizerContext, vt::LabelOrientation placement, float textSize, const std::function<void(long long localId, long long globalId, const boost::optional<vt::TileLayerBuilder::Vertex>& vertex, const vt::TileLayerBuilder::Vertices& vertices)>& addText);
+        void buildFeatureCollection(const FeatureCollection& featureCollection, const FeatureExpressionContext& exprContext, const SymbolizerContext& symbolizerContext, const vt::TextFormatter& formatter, vt::LabelOrientation placement, float bitmapSize, const std::function<void(long long localId, long long globalId, const std::string& text, const boost::optional<vt::TileLayerBuilder::Vertex>& vertex, const vt::TileLayerBuilder::Vertices& vertices)>& addText);
 
         const std::vector<std::shared_ptr<FontSet>> _fontSets;
         std::shared_ptr<const Expression> _textExpression;
-        std::string _text;
         std::string _textTransform;
         std::string _faceName;
         std::string _fontSetName;

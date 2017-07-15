@@ -40,7 +40,7 @@ namespace carto { namespace mvt {
         vt::PointStyle pointStyle(compOp, vt::PointOrientation::BILLBOARD_2D, fillFunc, sizeFunc, bitmapImage, _transform);
 
         std::vector<std::pair<long long, vt::TileLayerBuilder::Vertex>> pointInfos;
-        for (std::size_t index = 0; index < featureCollection.getSize(); index++) {
+        for (std::size_t index = 0; index < featureCollection.size(); index++) {
             long long localId = featureCollection.getLocalId(index);
             if (auto pointGeometry = std::dynamic_pointer_cast<const PointGeometry>(featureCollection.getGeometry(index))) {
                 for (const auto& vertex : pointGeometry->getVertices()) {

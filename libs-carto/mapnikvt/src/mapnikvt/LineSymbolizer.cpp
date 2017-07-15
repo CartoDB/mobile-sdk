@@ -78,7 +78,7 @@ namespace carto { namespace mvt {
                     geometryIndex = 0;
                 }
 
-                if (featureIndex >= featureCollection.getSize()) {
+                if (featureIndex >= featureCollection.size()) {
                     break;
                 }
                 lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(featureCollection.getGeometry(featureIndex));

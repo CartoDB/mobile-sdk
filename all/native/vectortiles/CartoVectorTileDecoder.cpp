@@ -157,22 +157,23 @@ namespace carto {
             }
 
             std::string mvtLayerName;
-            std::shared_ptr<const mvt::Feature> mvtFeature = decoder->getFeature(id, mvtLayerName);
-            if (!mvtFeature) {
+            mvt::Feature mvtFeature;
+            if (!decoder->findFeature(id, mvtLayerName, mvtFeature)) {
                 return std::shared_ptr<VectorTileFeature>();
             }
 
-            std::shared_ptr<const mvt::Geometry> mvtGeometry = mvtFeature->getGeometry();
+            std::shared_ptr<const mvt::Geometry> mvtGeometry = mvtFeature.getGeometry();
             if (!mvtGeometry) {
                 return std::shared_ptr<VectorTileFeature>();
             }
 
             std::map<std::string, Variant> featureData;
-            if (std::shared_ptr<const mvt::FeatureData> mvtFeatureData = mvtFeature->getFeatureData()) {
+            if (std::shared_ptr<const mvt::FeatureData> mvtFeatureData = mvtFeature.getFeatureData()) {
                 for (const std::string& varName : mvtFeatureData->getVariableNames()) {
                     mvt::Value mvtValue;
-                    mvtFeatureData->getVariable(varName, mvtValue);
-                    featureData[varName] = boost::apply_visitor(ValueConverter(), mvtValue);
+                    if (mvtFeatureData->getVariable(varName, mvtValue)) {
+                        featureData[varName] = boost::apply_visitor(ValueConverter(), mvtValue);
+                    }
                 }
             }
 
@@ -180,7 +181,7 @@ namespace carto {
                 return MapPos(tileBounds.getMin().getX() + pos(0) * tileBounds.getDelta().getX(), tileBounds.getMax().getY() - pos(1) * tileBounds.getDelta().getY(), 0);
             };
 
-            return std::make_shared<VectorTileFeature>(mvtFeature->getId(), MapTile(tile.x, tile.y, tile.zoom, 0), mvtLayerName, convertGeometry(convertFn, mvtGeometry), Variant(featureData));
+            return std::make_shared<VectorTileFeature>(mvtFeature.getId(), MapTile(tile.x, tile.y, tile.zoom, 0), mvtLayerName, convertGeometry(convertFn, mvtGeometry), Variant(featureData));
         } catch (const std::exception& ex) {
             Log::Errorf("CartoVectorTileDecoder::decodeFeature: Exception while decoding: %s", ex.what());
         }
@@ -214,17 +215,20 @@ namespace carto {
 
             for (const std::string& mvtLayerName : decoder->getLayerNames()) {
                 for (std::shared_ptr<mvt::FeatureDecoder::FeatureIterator> mvtIt = decoder->createLayerFeatureIterator(mvtLayerName); mvtIt->valid(); mvtIt->advance()) {
-                    std::shared_ptr<const mvt::Geometry> mvtGeometry = mvtIt->getGeometry();
+                    mvt::Feature mvtFeature = mvtIt->getFeature();
+
+                    std::shared_ptr<const mvt::Geometry> mvtGeometry = mvtFeature.getGeometry();
                     if (!mvtGeometry) {
                         continue;
                     }
 
                     std::map<std::string, Variant> featureData;
-                    if (std::shared_ptr<const mvt::FeatureData> mvtFeatureData = mvtIt->getFeatureData()) {
+                    if (std::shared_ptr<const mvt::FeatureData> mvtFeatureData = mvtFeature.getFeatureData()) {
                         for (const std::string& varName : mvtFeatureData->getVariableNames()) {
                             mvt::Value mvtValue;
-                            mvtFeatureData->getVariable(varName, mvtValue);
-                            featureData[varName] = boost::apply_visitor(ValueConverter(), mvtValue);
+                            if (mvtFeatureData->getVariable(varName, mvtValue)) {
+                                featureData[varName] = boost::apply_visitor(ValueConverter(), mvtValue);
+                            }
                         }
                     }
 
@@ -232,7 +236,7 @@ namespace carto {
                         return MapPos(tileBounds.getMin().getX() + pos(0) * tileBounds.getDelta().getX(), tileBounds.getMax().getY() - pos(1) * tileBounds.getDelta().getY(), 0);
                     };
 
-                    auto feature = std::make_shared<VectorTileFeature>(mvtIt->getGlobalId(), MapTile(tile.x, tile.y, tile.zoom, 0), mvtLayerName, convertGeometry(convertFn, mvtGeometry), Variant(featureData));
+                    auto feature = std::make_shared<VectorTileFeature>(mvtFeature.getId(), MapTile(tile.x, tile.y, tile.zoom, 0), mvtLayerName, convertGeometry(convertFn, mvtGeometry), Variant(featureData));
                     tileFeatures.push_back(feature);
                 }
             }
