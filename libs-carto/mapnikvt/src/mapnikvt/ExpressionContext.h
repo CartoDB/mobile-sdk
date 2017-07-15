@@ -32,7 +32,7 @@ namespace carto { namespace mvt {
         float getScaleDenominator() const { return _scaleDenom; }
 
         void setFeatureData(std::shared_ptr<const FeatureData> featureData) { _featureData = std::move(featureData); }
-        const std::shared_ptr<const FeatureData>& getFeatureDataPtr() const { return _featureData; }
+        const std::shared_ptr<const FeatureData>& getFeatureData() const { return _featureData; }
 
         void setNutiParameterValueMap(std::map<std::string, Value> paramValueMap) { _nutiParameterValueMap = std::move(paramValueMap); }
         const std::map<std::string, Value>& getNutiParameterValueMap() const { return _nutiParameterValueMap; }
