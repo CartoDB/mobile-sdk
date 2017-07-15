@@ -1,5 +1,5 @@
 #include "CartoVectorTileLayer.h"
-#include "assets/NutibrightV3ZIP.h"
+#include "assets/NutiBrightV4ZIP.h"
 #include "assets/CartoStylesV1ZIP.h"
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
@@ -39,16 +39,16 @@ namespace carto {
         std::string styleName;
         switch (style) {
         case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_DARK:
-            styleAsset = std::make_shared<BinaryData>(nutibright_v3_zip, nutibright_v3_zip_len);
-            styleName = "nutiteq_dark";
+            styleAsset = std::make_shared<BinaryData>(nutibright_v4_zip, nutibright_v4_zip_len);
+            styleName = "nutidark";
             break;
         case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_GRAY:
-            styleAsset = std::make_shared<BinaryData>(nutibright_v3_zip, nutibright_v3_zip_len);
-            styleName = "nutiteq_grey";
+            styleAsset = std::make_shared<BinaryData>(nutibright_v4_zip, nutibright_v4_zip_len);
+            styleName = "nutigrey";
             break;
         case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_BRIGHT:
-            styleAsset = std::make_shared<BinaryData>(nutibright_v3_zip, nutibright_v3_zip_len);
-            styleName = "style";
+            styleAsset = std::make_shared<BinaryData>(nutibright_v4_zip, nutibright_v4_zip_len);
+            styleName = "nutibright";
             break;
         case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_VOYAGER:
             styleAsset = std::make_shared<BinaryData>(cartostyles_v1_zip, cartostyles_v1_zip_len);
@@ -63,8 +63,8 @@ namespace carto {
             styleName = "darkmatter";
             break;
         default:
-            styleAsset = std::make_shared<BinaryData>(nutibright_v3_zip, nutibright_v3_zip_len);
-            styleName = "style";
+            styleAsset = std::make_shared<BinaryData>(nutibright_v4_zip, nutibright_v4_zip_len);
+            styleName = "nutibright";
             break;
         }
         auto styleAssetPackage = std::make_shared<ZippedAssetPackage>(styleAsset);
