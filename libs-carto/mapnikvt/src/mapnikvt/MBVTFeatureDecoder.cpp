@@ -67,12 +67,7 @@ namespace carto { namespace mvt {
             return _layerIndexOffset + _index;
         }
 
-        virtual Feature getFeature() const override {
-            return Feature(getGlobalId(), getGeometry(), getFeatureData());
-        }
-
-    private:
-        long long getGlobalId() const {
+        virtual long long getGlobalId() const override {
             if (_globalIdOverride) {
                 return _tileIdOffset + _layerIndexOffset + _index;
             }
@@ -102,7 +97,7 @@ namespace carto { namespace mvt {
             return 0;
         }
 
-        std::shared_ptr<const FeatureData> getFeatureData() const {
+        virtual std::shared_ptr<const FeatureData> getFeatureData() const override {
             const vector_tile::Tile::Feature& feature = _layer.features(_index);
             std::vector<int> tags(_fieldKeys.size() + 1, -1);
             tags.back() = static_cast<int>(feature.type());
@@ -132,7 +127,7 @@ namespace carto { namespace mvt {
             return featureData;
         }
 
-        std::shared_ptr<const Geometry> getGeometry() const {
+        virtual std::shared_ptr<const Geometry> getGeometry() const override {
             std::vector<std::vector<cglib::vec2<float>>> verticesList;
             decodeGeometry(_layer.features(_index), verticesList, 1.0f / _layer.extent());
             if (_buffer > 0 && _layer.features(_index).type() == vector_tile::Tile::LINESTRING) {
@@ -178,6 +173,7 @@ namespace carto { namespace mvt {
             }
         }
 
+    private:
         static FeatureData::GeometryType convertGeometryType(vector_tile::Tile::GeomType geomType) {
             switch (geomType) {
             case vector_tile::Tile::POINT:
@@ -390,7 +386,7 @@ namespace carto { namespace mvt {
             MBVTFeatureIterator it(*_tile, _tile->layers(i), nullptr, _transform, _clipBox, _buffer, _globalIdOverride, _tileIdOffset, featureDataCache);
             if (it.findByLocalId(localId)) {
                 layerName = _tile->layers(i).name();
-                feature = it.getFeature();
+                feature = Feature(it.getGlobalId(), it.getGeometry(), it.getFeatureData());
                 return true;
             }
         }

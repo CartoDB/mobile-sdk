@@ -69,10 +69,9 @@ namespace carto { namespace mvt {
 
         if (auto featureIt = createFeatureIterator(layer)) {
             for (; featureIt->valid(); featureIt->advance()) {
-                Feature feature = featureIt->getFeature();
+                std::shared_ptr<const FeatureData> featureData = featureIt->getFeatureData();
 
                 // Cache symbolizer evaluation for each feature data object
-                std::shared_ptr<const FeatureData> featureData = feature.getFeatureData();
                 auto symbolizersIt = featureDataSymbolizersMap.find(featureData);
                 if (symbolizersIt == featureDataSymbolizersMap.end()) {
                     exprContext.setFeatureData(featureData);
@@ -82,7 +81,7 @@ namespace carto { namespace mvt {
 
                 // Process symbolizers, try to batch as many calls together as possible
                 for (const std::shared_ptr<Symbolizer>& symbolizer : symbolizersIt->second) {
-                    if (std::shared_ptr<const Geometry> geometry = feature.getGeometry()) {
+                    if (std::shared_ptr<const Geometry> geometry = featureIt->getGeometry()) {
                         bool batch = false;
                         if (currentSymbolizer == symbolizer) {
                             batch = true;
@@ -109,7 +108,7 @@ namespace carto { namespace mvt {
                             currentSymbolizer = symbolizer;
                         }
 
-                        currentFeatureCollection.append(featureIt->getLocalId(), feature);
+                        currentFeatureCollection.append(featureIt->getLocalId(), Feature(featureIt->getGlobalId(), geometry, featureData));
                     }
                 }
             }
