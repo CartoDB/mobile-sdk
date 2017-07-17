@@ -11,8 +11,6 @@
 
 #include "geocoding/ReverseGeocodingService.h"
 
-#include <memory>
-
 namespace carto {
     namespace geocoding {
         class RevGeocoder;

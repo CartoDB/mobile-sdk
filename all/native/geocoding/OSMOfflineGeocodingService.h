@@ -11,8 +11,6 @@
 
 #include "geocoding/GeocodingService.h"
 
-#include <memory>
-
 namespace carto {
     namespace geocoding {
         class Geocoder;

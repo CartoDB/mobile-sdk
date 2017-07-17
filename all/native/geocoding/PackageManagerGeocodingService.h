@@ -12,8 +12,6 @@
 #include "geocoding/GeocodingService.h"
 #include "packagemanager/PackageManager.h"
 
-#include <memory>
-
 namespace sqlite3pp {
     class database;
 }

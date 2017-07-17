@@ -112,15 +112,15 @@ namespace carto {
             Log::Warnf("CartoOnlineTileDataSource: Failed to fetch tile source configuration"); // NOTE: we may have error messages, thus do not return from here
         }
 
-        std::string result;
+        std::string responseString;
         if (responseData) {
-            result = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+            responseString = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
         } else {
             Log::Error("CartoOnlineTileDataSource: Empty response");
             return false;
         }
         picojson::value config;
-        std::string err = picojson::parse(config, result);
+        std::string err = picojson::parse(config, responseString);
         if (!err.empty()) {
             Log::Errorf("CartoOnlineTileDataSource: Failed to parse tile source configuration: %s", err.c_str());
             return false;

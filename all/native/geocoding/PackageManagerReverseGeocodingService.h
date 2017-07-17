@@ -12,8 +12,6 @@
 #include "geocoding/ReverseGeocodingService.h"
 #include "packagemanager/PackageManager.h"
 
-#include <memory>
-
 namespace sqlite3pp {
     class database;
 }
