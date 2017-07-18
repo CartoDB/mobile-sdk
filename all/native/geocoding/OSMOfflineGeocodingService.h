@@ -18,6 +18,7 @@ namespace carto {
 
     /**
      * A geocoding service that uses custom geocoding database files.
+     * Note: this class is experimental and may change or even be removed in future SDK versions.
      */
     class OSMOfflineGeocodingService : public GeocodingService {
     public:
