@@ -12,6 +12,7 @@
 #include "core/MapPos.h"
 
 #include <memory>
+#include <mutex>
 
 namespace carto {
     class Projection;
@@ -36,6 +37,18 @@ namespace carto {
         const MapPos& getLocation() const;
 
         /**
+         * Returns the search radius (in meters).
+         * @return The search radius in meters.
+         */
+        float getSearchRadius() const;
+        /**
+         * Sets the search radius (in meters).
+         * The default search radius is 100 meters.
+         * @param radius The new search radius in meters.
+         */
+        void setSearchRadius(float radius);
+
+        /**
          * Returns the projection of the query.
          * @return The projection of the query.
          */
@@ -48,8 +61,13 @@ namespace carto {
         std::string toString() const;
 
     private:
+        static const float DEFAULT_SEARCH_RADIUS;
+
         MapPos _location;
+        float _searchRadius;
         std::shared_ptr<Projection> _projection;
+
+        mutable std::mutex _mutex;
     };
     
 }

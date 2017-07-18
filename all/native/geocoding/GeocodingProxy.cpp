@@ -46,7 +46,7 @@ namespace carto {
 
     std::vector<std::shared_ptr<GeocodingResult> > GeocodingProxy::CalculateAddresses(const std::shared_ptr<geocoding::RevGeocoder>& revGeocoder, const std::shared_ptr<ReverseGeocodingRequest>& request) {
         MapPos posWgs84 = request->getProjection()->toWgs84(request->getLocation());
-        std::vector<std::pair<geocoding::Address, float> > addrs = revGeocoder->findAddresses(posWgs84.getX(), posWgs84.getY());
+        std::vector<std::pair<geocoding::Address, float> > addrs = revGeocoder->findAddresses(posWgs84.getX(), posWgs84.getY(), request->getSearchRadius());
 
         std::vector<std::shared_ptr<GeocodingResult> > results;
         for (const std::pair<geocoding::Address, float>& addr : addrs) {

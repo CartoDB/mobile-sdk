@@ -25,7 +25,6 @@
 
 !polymorphic_shared_ptr(carto::PeliasReverseGeocodingService, geocoding.PeliasReverseGeocodingService)
 
-%attribute(carto::PeliasReverseGeocodingService, float, SearchRadius, getSearchRadius, setSearchRadius)
 %std_io_exceptions(carto::PeliasReverseGeocodingService::calculateAddresses)
 
 %feature("director") carto::PeliasReverseGeocodingService;

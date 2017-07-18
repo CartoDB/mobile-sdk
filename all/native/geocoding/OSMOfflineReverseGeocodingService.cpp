@@ -26,14 +26,6 @@ namespace carto {
     OSMOfflineReverseGeocodingService::~OSMOfflineReverseGeocodingService() {
     }
 
-    float OSMOfflineReverseGeocodingService::getSearchRadius() const {
-        return _revGeocoder->getRadius();
-    }
-
-    void OSMOfflineReverseGeocodingService::setSearchRadius(float radius) {
-        return _revGeocoder->setRadius(radius);
-    }
-
     std::vector<std::shared_ptr<GeocodingResult> > OSMOfflineReverseGeocodingService::calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const {
         if (!request) {
             throw NullArgumentException("Null request");

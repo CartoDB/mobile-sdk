@@ -16,7 +16,6 @@ namespace carto {
 
     PeliasGeocodingService::PeliasGeocodingService(const std::string& apiKey) :
         _apiKey(apiKey),
-        _httpClient(Log::IsShowDebug()),
         _autocomplete(false),
         _mutex()
     {

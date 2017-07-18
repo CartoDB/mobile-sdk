@@ -33,18 +33,6 @@ namespace carto {
         explicit PackageManagerReverseGeocodingService(const std::shared_ptr<PackageManager>& packageManager);
         virtual ~PackageManagerReverseGeocodingService();
 
-        /**
-         * Returns the search radius (in meters).
-         * @return The search radius in meters.
-         */
-        float getSearchRadius() const;
-        /**
-         * Sets the search radius (in meters).
-         * The default search radius is 100 meters.
-         * @param radius The new search radius in meters.
-         */
-        void setSearchRadius(float radius);
-
         virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const;
 
     protected:
@@ -59,7 +47,6 @@ namespace carto {
         };
 
         const std::shared_ptr<PackageManager> _packageManager;
-        float _searchRadius;
 
         mutable std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<sqlite3pp::database> > _cachedPackageDatabaseMap;
         mutable std::shared_ptr<geocoding::RevGeocoder> _cachedRevGeocoder;
@@ -68,8 +55,6 @@ namespace carto {
 
     private:
         std::shared_ptr<PackageManagerListener> _packageManagerListener;
-
-        static const float DEFAULT_SEARCH_RADIUS;
     };
     
 }

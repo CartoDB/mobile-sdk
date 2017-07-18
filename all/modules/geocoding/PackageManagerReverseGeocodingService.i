@@ -24,7 +24,6 @@
 
 !polymorphic_shared_ptr(carto::PackageManagerReverseGeocodingService, geocoding.PackageManagerReverseGeocodingService)
 
-%attribute(carto::PackageManagerReverseGeocodingService, float, SearchRadius, getSearchRadius, setSearchRadius)
 %std_exceptions(carto::PackageManagerReverseGeocodingService::PackageManagerReverseGeocodingService)
 %std_io_exceptions(carto::PackageManagerReverseGeocodingService::calculateAddresses)
 

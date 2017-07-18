@@ -32,16 +32,16 @@ namespace carto { namespace geocoding {
         
         bool import(const std::shared_ptr<sqlite3pp::database>& db);
 
-        float getRadius() const;
-        void setRadius(float radius);
-
         std::string getLanguage() const;
         void setLanguage(const std::string& language);
+
+        unsigned int getMaxResults() const;
+        void setMaxResults(unsigned int maxResults);
 
         bool isFilterEnabled(Address::EntityType type) const;
         void setFilterEnabled(Address::EntityType type, bool enabled);
 
-        std::vector<std::pair<Address, float>> findAddresses(double lng, double lat) const;
+        std::vector<std::pair<Address, float>> findAddresses(double lng, double lat, float radius) const;
 
     private:
         struct Database {
@@ -59,8 +59,8 @@ namespace carto { namespace geocoding {
         static constexpr std::size_t ADDRESS_CACHE_SIZE = 1024;
         static constexpr std::size_t QUERY_CACHE_SIZE = 64;
         
-        float _radius = 100.0f; // default search radius is 100m
         std::string _language; // use local language by default
+        unsigned int _maxResults = 10; // maximum number of results returned
         std::vector<Address::EntityType> _enabledFilters = { Address::EntityType::ADDRESS, Address::EntityType::POI }; // filters enabled
 
         mutable cache::lru_cache<std::string, Address> _addressCache;

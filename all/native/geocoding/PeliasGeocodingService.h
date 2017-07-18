@@ -10,7 +10,6 @@
 #if defined(_CARTO_GEOCODING_SUPPORT)
 
 #include "geocoding/GeocodingService.h"
-#include "network/HTTPClient.h"
 
 namespace carto {
 
@@ -46,7 +45,6 @@ namespace carto {
         static const std::string PELIAS_SEARCH_URL;
 
         std::string _apiKey;
-        HTTPClient _httpClient;
 
         bool _autocomplete;
 

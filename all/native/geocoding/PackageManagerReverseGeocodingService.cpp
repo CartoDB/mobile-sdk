@@ -14,7 +14,6 @@ namespace carto {
 
     PackageManagerReverseGeocodingService::PackageManagerReverseGeocodingService(const std::shared_ptr<PackageManager>& packageManager) :
         _packageManager(packageManager),
-        _searchRadius(DEFAULT_SEARCH_RADIUS),
         _cachedPackageDatabaseMap(),
         _cachedRevGeocoder(),
         _mutex()
@@ -30,17 +29,6 @@ namespace carto {
     PackageManagerReverseGeocodingService::~PackageManagerReverseGeocodingService() {
         _packageManager->unregisterOnChangeListener(_packageManagerListener);
         _packageManagerListener.reset();
-    }
-
-    float PackageManagerReverseGeocodingService::getSearchRadius() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _searchRadius;
-    }
-
-    void PackageManagerReverseGeocodingService::setSearchRadius(float radius) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _searchRadius = radius;
-        _cachedRevGeocoder.reset();
     }
 
     std::vector<std::shared_ptr<GeocodingResult> > PackageManagerReverseGeocodingService::calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const {
@@ -63,7 +51,6 @@ namespace carto {
             std::lock_guard<std::mutex> lock(_mutex);
             if (!_cachedRevGeocoder || packageDatabaseMap != _cachedPackageDatabaseMap) {
                 auto revGeocoder = std::make_shared<geocoding::RevGeocoder>();
-                revGeocoder->setRadius(_searchRadius);
                 for (auto it = packageDatabaseMap.begin(); it != packageDatabaseMap.end(); it++) {
                     try {
                         if (!revGeocoder->import(it->second)) {
@@ -93,8 +80,6 @@ namespace carto {
         _service._cachedPackageDatabaseMap.clear();
         _service._cachedRevGeocoder.reset();
     }
-
-    const float PackageManagerReverseGeocodingService::DEFAULT_SEARCH_RADIUS = 100.0f;
 
 }
 

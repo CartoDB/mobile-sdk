@@ -15,35 +15,16 @@
 namespace carto {
 
     PeliasReverseGeocodingService::PeliasReverseGeocodingService(const std::string& apiKey) :
-        _apiKey(apiKey),
-        _httpClient(Log::IsShowDebug()),
-        _searchRadius(DEFAULT_SEARCH_RADIUS),
-        _mutex()
+        _apiKey(apiKey)
     {
     }
 
     PeliasReverseGeocodingService::~PeliasReverseGeocodingService() {
     }
 
-    float PeliasReverseGeocodingService::getSearchRadius() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _searchRadius;
-    }
-
-    void PeliasReverseGeocodingService::setSearchRadius(float radius) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _searchRadius = radius;
-    }
-
     std::vector<std::shared_ptr<GeocodingResult> > PeliasReverseGeocodingService::calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const {
         if (!request) {
             throw NullArgumentException("Null request");
-        }
-
-        float searchRadius = 0;
-        {
-            std::lock_guard<std::mutex> lock(_mutex);
-            searchRadius = _searchRadius;
         }
 
         std::map<std::string, std::string> params;
@@ -54,7 +35,7 @@ namespace carto {
         params["point.lon"] = boost::lexical_cast<std::string>(point.getX());
         params["boundary.circle.lat"] = boost::lexical_cast<std::string>(point.getY());
         params["boundary.circle.lon"] = boost::lexical_cast<std::string>(point.getX());
-        params["boundary.circle.radius"] = boost::lexical_cast<std::string>(searchRadius);
+        params["boundary.circle.radius"] = boost::lexical_cast<std::string>(request->getSearchRadius());
 
         std::string url = NetworkUtils::BuildURLFromParameters(PELIAS_REVERSE_URL, params);
         Log::Debugf("PeliasReverseGeocodingService::calculateAddresses: Loading %s", url.c_str());
@@ -74,8 +55,6 @@ namespace carto {
 
         return PeliasGeocodingProxy::ReadResponse(responseString, request->getProjection());
     }
-
-    const float PeliasReverseGeocodingService::DEFAULT_SEARCH_RADIUS = 100;
 
     const std::string PeliasReverseGeocodingService::PELIAS_REVERSE_URL = "https://search.mapzen.com/v1/reverse";
 }

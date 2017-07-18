@@ -38,16 +38,6 @@ namespace carto { namespace geocoding {
         return true;
     }
     
-    bool Geocoder::getAutocomplete() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _autocomplete;
-    }
-
-    void Geocoder::setAutocomplete(bool autocomplete) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-         _autocomplete = autocomplete;
-    }
-
     std::string Geocoder::getLanguage() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _language;
@@ -61,6 +51,26 @@ namespace carto { namespace geocoding {
         _nameCache.clear();
         _nameRankCache.clear();
         _nameMatchCache.clear();
+    }
+
+    unsigned int Geocoder::getMaxResults() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _maxResults;
+    }
+
+    void Geocoder::setMaxResults(unsigned int maxResults) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _maxResults = maxResults;
+    }
+
+    bool Geocoder::getAutocomplete() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _autocomplete;
+    }
+
+    void Geocoder::setAutocomplete(bool autocomplete) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+         _autocomplete = autocomplete;
     }
 
     bool Geocoder::isFilterEnabled(Address::EntityType type) const {
@@ -124,7 +134,7 @@ namespace carto { namespace geocoding {
         // Create address data from the results by merging consecutive results, if possible
         std::vector<std::pair<Address, float>> addresses;
         for (const Result& result : results) {
-            if (addresses.size() >= MAX_RESULTS) {
+            if (addresses.size() >= _maxResults) {
                 break;
             }
 
@@ -595,7 +605,7 @@ namespace carto { namespace geocoding {
             resultIt = std::upper_bound(results.begin(), results.end(), result, [](const Result& result1, const Result& result2) {
                 return result1.totalRank() > result2.totalRank();
             });
-            if (!(resultIt == results.end() && results.size() == MAX_RESULTS)) {
+            if (!(resultIt == results.end() && results.size() == _maxResults)) {
                 results.insert(resultIt, result);
 
                 // Drop results that have too low rankings

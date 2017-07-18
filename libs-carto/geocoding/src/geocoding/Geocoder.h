@@ -41,11 +41,14 @@ namespace carto { namespace geocoding {
 
         bool import(const std::shared_ptr<sqlite3pp::database>& db);
         
-        bool getAutocomplete() const;
-        void setAutocomplete(bool autocomplete);
-
         std::string getLanguage() const;
         void setLanguage(const std::string& language);
+
+        unsigned int getMaxResults() const;
+        void setMaxResults(unsigned int maxResults);
+
+        bool getAutocomplete() const;
+        void setAutocomplete(bool autocomplete);
 
         bool isFilterEnabled(Address::EntityType type) const;
         void setFilterEnabled(Address::EntityType type, bool enabled);
@@ -142,7 +145,6 @@ namespace carto { namespace geocoding {
         static constexpr float TRANSLATION_EXTRA_PENALTY = 0.3f;
         static constexpr float AUTOCOMPLETE_EXTRA_CHAR_PENALTY = 0.1f;
         static constexpr unsigned int MAX_STRINGMATCH_DIST = 2;
-        static constexpr unsigned int MAX_RESULTS = 20;
         static constexpr std::size_t MIN_AUTOCOMPLETE_SIZE = 3;
         static constexpr std::size_t MAX_MATCH_COUNT = 10000;
         static constexpr std::size_t MAX_ENTITY_MATCH_COUNTER = 10000;
@@ -155,8 +157,9 @@ namespace carto { namespace geocoding {
         static constexpr std::size_t NAME_RANK_CACHE_SIZE = 128;
         static constexpr std::size_t NAME_MATCH_CACHE_SIZE = 4096;
         
-        bool _autocomplete = false; // no autocomplete by default
         std::string _language; // use local language by default
+        unsigned int _maxResults = 10; // maximum number of results returned
+        bool _autocomplete = false; // no autocomplete by default
         std::vector<Address::EntityType> _enabledFilters; // filters enabled, empty list means 'all enabled'
 
         mutable cache::lru_cache<std::string, Address> _addressCache;

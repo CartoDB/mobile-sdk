@@ -23,16 +23,6 @@ namespace carto { namespace geocoding {
         return true;
     }
 
-    float RevGeocoder::getRadius() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _radius;
-    }
-
-    void RevGeocoder::setRadius(float radius) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        _radius = radius;
-    }
-
     std::string RevGeocoder::getLanguage() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _language;
@@ -42,6 +32,16 @@ namespace carto { namespace geocoding {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _language = language;
         _addressCache.clear();
+    }
+
+    unsigned int RevGeocoder::getMaxResults() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _maxResults;
+    }
+
+    void RevGeocoder::setMaxResults(unsigned int maxResults) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _maxResults = maxResults;
     }
 
     bool RevGeocoder::isFilterEnabled(Address::EntityType type) const {
@@ -60,7 +60,7 @@ namespace carto { namespace geocoding {
         }
     }
 
-    std::vector<std::pair<Address, float>> RevGeocoder::findAddresses(double lng, double lat) const {
+    std::vector<std::pair<Address, float>> RevGeocoder::findAddresses(double lng, double lat, float radius) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
         std::vector<std::pair<Address, float>> addresses;
@@ -71,17 +71,17 @@ namespace carto { namespace geocoding {
                 cglib::vec2<double> point = database.bounds->nearest_point({ lng, lat });
                 cglib::vec2<double> diff = point - cglib::vec2<double>(lng, lat);
                 double dist = cglib::length(cglib::vec2<double>(diff(0) * lngLatMeters(0), diff(1) * lngLatMeters(1)));
-                if (dist > _radius) {
+                if (dist > radius) {
                     continue;
                 }
             }
 
             _previousEntityQueryCounter = _entityQueryCounter;
             QuadIndex index(std::bind(&RevGeocoder::findGeometryInfo, this, std::cref(database), std::placeholders::_1, std::placeholders::_2));
-            std::vector<QuadIndex::Result> results = index.findGeometries(lng, lat, _radius);
+            std::vector<QuadIndex::Result> results = index.findGeometries(lng, lat, radius);
 
             for (const QuadIndex::Result& result : results) {
-                float rank = 1.0f - static_cast<float>(result.second) / _radius;
+                float rank = 1.0f - static_cast<float>(result.second) / radius;
                 if (rank > 0) {
                     Address address;
                     std::string addrKey = database.id + "_" + boost::lexical_cast<std::string>(result.first);
@@ -95,6 +95,15 @@ namespace carto { namespace geocoding {
                 }
             }
         }
+
+        std::sort(addresses.begin(), addresses.end(), [](const std::pair<Address, float>& addrRank1, const std::pair<Address, float>& addrRank2) {
+            return addrRank1.second > addrRank2.second;
+        });
+
+        if (addresses.size() > _maxResults) {
+            addresses.erase(addresses.begin() + _maxResults, addresses.end());
+        }
+
         return addresses;
     }
 

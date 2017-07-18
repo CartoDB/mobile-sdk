@@ -60,10 +60,6 @@ namespace carto { namespace geocoding {
                 }
             }
 
-            std::sort(results.begin(), results.end(), [](const Result& result1, const Result& result2) {
-                return result1.second < result2.second;
-            });
-
             return results;
         }
 
