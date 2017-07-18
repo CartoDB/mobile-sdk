@@ -55,6 +55,9 @@ namespace carto {
         return results;
     }
 
+    GeocodingProxy::GeocodingProxy() {
+    }
+
     std::shared_ptr<GeocodingResult> GeocodingProxy::TranslateAddress(const std::shared_ptr<Projection>& proj, const geocoding::Address& addr, float rank) {
         std::vector<std::shared_ptr<Feature> > features;
         std::transform(addr.features.begin(), addr.features.end(), std::back_inserter(features), std::bind(&GeocodingProxy::TranslateFeature, proj, std::placeholders::_1));
