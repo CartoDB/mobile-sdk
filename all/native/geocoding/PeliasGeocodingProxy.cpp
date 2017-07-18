@@ -32,25 +32,25 @@ namespace carto {
         reader.setTargetProjection(proj);
 
         std::vector<std::shared_ptr<GeocodingResult> > results;
-        for (const picojson::value& feature : response.get("features").get<picojson::array>()) {
-             const picojson::value& properties = feature.get("properties");
+        for (const picojson::value& featureInfo : response.get("features").get<picojson::array>()) {
+             const picojson::value& properties = featureInfo.get("properties");
 
-             std::string country = properties.get("country").get<std::string>();
-             std::string region = properties.get("region").get<std::string>();
-             std::string county = properties.get("county").get<std::string>();
-             std::string locality = properties.get("locality").get<std::string>();
-             std::string neighbourhood = properties.get("neighbourhood").get<std::string>();
-             std::string street = properties.get("street").get<std::string>();
-             std::string houseNumber = properties.get("housenumber").get<std::string>();
-             std::string name = properties.get("name").get<std::string>();
+             std::string country       = properties.contains("country")       ? properties.get("country").get<std::string>() : std::string();
+             std::string region        = properties.contains("region")        ? properties.get("region").get<std::string>() : std::string();
+             std::string county        = properties.contains("county")        ? properties.get("county").get<std::string>() : std::string();
+             std::string locality      = properties.contains("locality")      ? properties.get("locality").get<std::string>() : std::string();
+             std::string neighbourhood = properties.contains("neighbourhood") ? properties.get("neighbourhood").get<std::string>() : std::string();
+             std::string street        = properties.contains("street")        ? properties.get("street").get<std::string>() : std::string();
+             std::string houseNumber   = properties.contains("housenumber")   ? properties.get("housenumber").get<std::string>() : std::string();
+             std::string name          = properties.contains("name")          ? properties.get("name").get<std::string>() : std::string();
              if (name == houseNumber + " " + street) {
                  name.clear();
              }
 
              Address address(country, region, county, locality, neighbourhood, street, houseNumber, name, std::vector<std::string>());
-             float rank = static_cast<float>(properties.get("confidence").get<double>());
+             float rank = static_cast<float>(properties.contains("confidence") ? properties.get("confidence").get<double>() : 0.5);
 
-             std::shared_ptr<Geometry> geometry = reader.readGeometry(feature.get("geometry").to_str());
+             std::shared_ptr<Geometry> geometry = reader.readGeometry(featureInfo.get("geometry").serialize());
 
              auto feature = std::make_shared<Feature>(geometry, Variant());
              auto featureCollection = std::make_shared<FeatureCollection>(std::vector<std::shared_ptr<Feature> > { feature });
