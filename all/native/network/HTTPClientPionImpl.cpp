@@ -12,7 +12,9 @@
 namespace carto {
 
     HTTPClient::PionImpl::PionImpl(bool log) :
-        _log(log), _connectionMap(), _mutex()
+        _log(log),
+        _connectionMap(),
+        _mutex()
     {
     }
 

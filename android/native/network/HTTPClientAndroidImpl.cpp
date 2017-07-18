@@ -91,7 +91,8 @@ namespace carto {
     };
     
     HTTPClient::AndroidImpl::AndroidImpl(bool log) :
-        _log(log), _timeout(-1)
+        _log(log),
+        _timeout(-1)
     {
     }
 

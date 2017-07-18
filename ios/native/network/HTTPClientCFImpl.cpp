@@ -13,7 +13,8 @@
 namespace carto {
 
     HTTPClient::CFImpl::CFImpl(bool log) :
-        _log(log), _timeout(-1)
+        _log(log),
+        _timeout(-1)
     {
     }
 
