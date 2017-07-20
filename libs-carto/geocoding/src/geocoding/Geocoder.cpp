@@ -533,7 +533,9 @@ namespace carto { namespace geocoding {
                         }
                     }
                 }
-                bestRank = std::max(bestRank, findBestMatch(index + 1, mask) * UNMATCHED_FIELD_PENALTY);
+                if (bestRank < UNMATCHED_FIELD_PENALTY) {
+                    bestRank = std::max(bestRank, findBestMatch(index + 1, mask) * UNMATCHED_FIELD_PENALTY);
+                }
                 return bestRank;
             };
 

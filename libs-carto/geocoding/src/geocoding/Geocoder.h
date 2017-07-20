@@ -140,7 +140,7 @@ namespace carto { namespace geocoding {
         static constexpr float MIN_MATCH_THRESHOLD = 0.55f;
         static constexpr float MAX_MATCH_RATIO = 0.85f;
         static constexpr float EXTRA_FIELD_PENALTY = 0.9f;
-        static constexpr float UNMATCHED_FIELD_PENALTY = 0.5f;
+        static constexpr float UNMATCHED_FIELD_PENALTY = 0.25f;
         static constexpr float POI_POPULATION_PENALTY = 0.99f;
         static constexpr float TRANSLATION_EXTRA_PENALTY = 0.3f;
         static constexpr float AUTOCOMPLETE_EXTRA_CHAR_PENALTY = 0.1f;
