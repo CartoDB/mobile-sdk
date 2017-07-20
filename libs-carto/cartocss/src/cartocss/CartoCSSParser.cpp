@@ -89,7 +89,7 @@ namespace carto { namespace css {
                 propid = qi::lexeme[(qi::char_("/_a-zA-Z-") | nonascii_) > *(qi::char_("/_a-zA-Z0-9-") | nonascii_)];
                 blockid = qi::lexeme[+(qi::char_("_a-zA-Z0-9-") | nonascii_)];
                 fieldid = qi::lexeme[+(qi::char_("_a-zA-Z0-9-") | nonascii_)];
-                unescapedfieldid = qi::lexeme[+(qi::print - qi::char_("[]{}")) > -(qi::char_("[{") > unescapedfieldid > qi::char_("}]"))];
+                unescapedfieldid = qi::lexeme[+(qi::print - qi::char_("[]{}")) > -(qi::char_("[") > unescapedfieldid > qi::char_("]")) > -(qi::char_("{") > unescapedfieldid > qi::char_("}"))];
                 varid = qi::lexeme[+(qi::char_("_a-zA-Z0-9-") | nonascii_)];
                 funcid = (nmstart_ > *nmchar_) [_pass = phx::bind(&makeFunctionIdentifier, _val, _1, _2)];
 
