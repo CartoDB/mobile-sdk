@@ -64,14 +64,13 @@ namespace carto {
 
         std::shared_ptr<BinaryData> responseData;
         if (!NetworkUtils::GetHTTP(url, responseData, Log::IsShowDebug())) {
-            Log::Warnf("PeliasGeocodingService: Failed to fetch tile response"); // NOTE: we may have error messages, thus do not return from here
+            throw NetworkException("Failed to fetch response");
         }
 
         std::string responseString;
         if (responseData) {
             responseString = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
         } else {
-            Log::Error("PeliasGeocodingService: Empty response");
             throw GenericException("Empty response");
         }
 

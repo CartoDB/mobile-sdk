@@ -112,10 +112,8 @@ namespace carto {
         std::shared_ptr<QueryExpression> queryExpr;
         bool result = boost::spirit::qi::phrase_parse(it, end, queryexpressionimpl::Grammar<std::string::const_iterator>(), space, queryExpr);
         if (!result) {
-            Log::Error("QueryExpressionParser::parse: Failed to parse query expression");
             throw ParseException("Failed to parse query expression", expr);
         } else if (it != expr.end()) {
-            Log::Error("QueryExpressionParser::parse: Could not parse to the end of query expression");
             throw ParseException("Could not parse to the end of query expression", expr);
         }
         return queryExpr;

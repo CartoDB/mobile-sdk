@@ -269,7 +269,6 @@ namespace carto {
                 _re = std::regex(request->getRegexFilter());
             }
             catch (const std::exception& ex) {
-                Log::Errorf("SearchProxy::SearchProxy: Exception when parsing regex: %s", ex.what());
                 throw ParseException("Failed to parse regex", ex.what());
             }
         }
@@ -279,7 +278,6 @@ namespace carto {
                 _expr = QueryExpressionParser::parse(request->getFilterExpression());
             }
             catch (const std::exception& ex) {
-                Log::Errorf("SearchProxy::SearchProxy: Exception when parsing filter expression: %s", ex.what());
                 throw ParseException("Failed to parse expression", ex.what());
             }
         }
@@ -288,6 +286,7 @@ namespace carto {
             if (!request->getProjection()) {
                 throw NullArgumentException("Null projection while geometry is not null");
             }
+
             MapPos centerPos = request->getProjection()->toWgs84(request->getGeometry()->getCenterPos());
             _geometry = convertToEPSG3857(request->getGeometry(), request->getProjection());
             MapBounds geometryBounds = _geometry->getBounds();

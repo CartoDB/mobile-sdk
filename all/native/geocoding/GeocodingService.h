@@ -28,6 +28,7 @@ namespace carto {
          * Calculates matching addresses from the specified geocoding request.
          * @param request The geocoding request to use.
          * @result The list of matching geocoding results, sorted by descending ranks.
+         * @throws std::runtime_error If IO error occured during the calculation.
          */
         virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const = 0;
 

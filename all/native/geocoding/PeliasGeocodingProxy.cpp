@@ -19,12 +19,10 @@ namespace carto {
         picojson::value response;
         std::string err = picojson::parse(response, responseString);
         if (!err.empty()) {
-            Log::Errorf("PeliasGeocodingProxy: Failed to parse response: %s", err.c_str());
             throw GenericException("Failed to parse response", err);
         }
 
         if (!response.get("features").is<picojson::array>()) {
-            Log::Error("PeliasGeocodingProxy: No features in the response");
             throw GenericException("No features in the response");
         }
 
