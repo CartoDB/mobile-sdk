@@ -154,8 +154,7 @@ if args.androidsdkpath == 'auto' and args.target == 'android':
 if args.androidndkpath == 'auto' and args.target == 'android':
   args.androidndkpath = os.environ.get('ANDROID_NDK_HOME', None)
   if args.androidndkpath is None:
-    print "ANDROID_NDK_HOME variable not set"
-    exit(-1)
+    args.androidndkpath = os.path.join(args.androidsdkpath, 'ndk-bundle')
 args.defines += ';' + getProfiles()[args.profile].get('defines', '')
 args.defines += ';TARGET_XAMARIN'
 args.cmakeoptions += ';' + getProfiles()[args.profile].get('cmake-options', '')
