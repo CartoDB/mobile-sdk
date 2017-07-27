@@ -139,14 +139,23 @@ namespace carto {
                 return std::shared_ptr<PackageInfo>();
             }
 
+            // Build explicit tile list
             std::vector<MapTile> tiles;
             if (!CalculateBBoxTiles(bounds, proj, MapTile(0, 0, 0, 0), tiles)) {
                 Log::Error("CartoPackageManager: Too many tiles in custom package");
                 return std::shared_ptr<PackageInfo>();
             }
 
-            auto tileMask = std::make_shared<PackageTileMask>(tiles, MAX_CUSTOM_BBOX_PACKAGE_TILEMASK_ZOOMLEVEL);
+            // Build tilemask. If the tilemask string is too long, use higher zoom levels
+            std::shared_ptr<PackageTileMask> tileMask;
+            for (int zoom = MAX_CUSTOM_BBOX_PACKAGE_TILEMASK_ZOOMLEVEL; zoom >= 0; zoom--) {
+                tileMask = std::make_shared<PackageTileMask>(tiles, zoom);
+                if (tileMask->getURLSafeStringValue().size() <= MAX_TILEMASK_LENGTH) {
+                    break;
+                }
+            }
 
+            // Configure service URL
             std::string baseURL;
             PackageType::PackageType packageType = PackageType::PACKAGE_TYPE_MAP;
             if (packageSource.type == "map") {
@@ -176,6 +185,7 @@ namespace carto {
             }
             std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
 
+            // Create package info
             auto packageInfo = std::make_shared<PackageInfo>(
                 packageId,
                 packageType,
@@ -217,6 +227,8 @@ namespace carto {
     const int CartoPackageManager::MAX_CUSTOM_BBOX_PACKAGE_TILE_ZOOM = 14;
 
     const int CartoPackageManager::MAX_CUSTOM_BBOX_PACKAGE_TILEMASK_ZOOMLEVEL = 12;
+
+    const int CartoPackageManager::MAX_TILEMASK_LENGTH = 128;
 
 }
 

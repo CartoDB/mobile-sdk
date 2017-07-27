@@ -65,6 +65,7 @@ namespace carto {
         static const int MAX_CUSTOM_BBOX_PACKAGE_TILES;
         static const int MAX_CUSTOM_BBOX_PACKAGE_TILE_ZOOM;
         static const int MAX_CUSTOM_BBOX_PACKAGE_TILEMASK_ZOOMLEVEL;
+        static const int MAX_TILEMASK_LENGTH;
         
         std::string _source;
     };
