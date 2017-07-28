@@ -44,7 +44,7 @@ namespace carto {
         static const std::string PELIAS_AUTOCOMPLETE_URL;
         static const std::string PELIAS_SEARCH_URL;
 
-        std::string _apiKey;
+        const std::string _apiKey;
 
         bool _autocomplete;
 

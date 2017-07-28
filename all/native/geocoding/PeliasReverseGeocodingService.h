@@ -31,7 +31,7 @@ namespace carto {
     protected:
         static const std::string PELIAS_REVERSE_URL;
 
-        std::string _apiKey;
+        const std::string _apiKey;
     };
     
 }
