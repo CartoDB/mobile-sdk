@@ -23,6 +23,7 @@ namespace carto {
 
     /**
      * An offline routing service that uses Valhalla routing tiles.
+     * Note: this class is experimental and may change or even be removed in future SDK versions.
      */
     class ValhallaOnlineRoutingService : public RoutingService {
     public:
