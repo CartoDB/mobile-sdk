@@ -156,19 +156,30 @@ namespace carto {
     }
     
     float RoutingProxy::CalculateTurnAngle(const std::vector<MapPos>& epsg3857Points, int pointIndex) {
-        if (pointIndex > 0 && pointIndex + 1 < static_cast<int>(epsg3857Points.size())) {
-            const MapPos& p0 = epsg3857Points.at(pointIndex - 1);
-            const MapPos& p1 = epsg3857Points.at(pointIndex);
-            const MapPos& p2 = epsg3857Points.at(pointIndex + 1);
-            MapVec v1 = p1 - p0;
-            MapVec v2 = p2 - p1;
-            if (v1.length() > 0 && v2.length() > 0) {
-                double dot = v1.dotProduct(v2) / v1.length() / v2.length();
-                float angle = static_cast<float>(std::acos(std::max(-1.0, std::min(1.0, dot))) * Const::RAD_TO_DEG);
-                return angle;
+        int pointIndex0 = pointIndex;
+        while (--pointIndex0 >= 0) {
+            if (epsg3857Points.at(pointIndex0) != epsg3857Points.at(pointIndex)) {
+                break;
             }
         }
-        return 0;
+        int pointIndex1 = pointIndex;
+        while (++pointIndex1 < static_cast<int>(epsg3857Points.size())) {
+            if (epsg3857Points.at(pointIndex1) != epsg3857Points.at(pointIndex)) {
+                break;
+            }
+        }
+
+        float turnAngle = 0;
+        if (pointIndex0 >= 0 && pointIndex1 < static_cast<int>(epsg3857Points.size())) {
+            const MapPos& p0 = epsg3857Points.at(pointIndex0);
+            const MapPos& p1 = epsg3857Points.at(pointIndex);
+            const MapPos& p2 = epsg3857Points.at(pointIndex1);
+            MapVec v1 = p1 - p0;
+            MapVec v2 = p2 - p1;
+            double dot = v1.dotProduct(v2) / v1.length() / v2.length();
+            turnAngle = static_cast<float>(std::acos(std::max(-1.0, std::min(1.0, dot))) * Const::RAD_TO_DEG);
+        }
+        return turnAngle;
     }
     
     float RoutingProxy::CalculateAzimuth(const std::vector<MapPos>& epsg3857Points, int pointIndex) {
