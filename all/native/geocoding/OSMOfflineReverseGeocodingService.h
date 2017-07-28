@@ -25,6 +25,7 @@ namespace carto {
         /**
          * Constructs a new instance of the OSMOfflineReverseGeocodingService given path to the geocoding database.
          * @param path The full path to the geocoding database file.
+         * @throws std::runtime_error If the database file could not be opened or read.
          */
         explicit OSMOfflineReverseGeocodingService(const std::string& path);
         virtual ~OSMOfflineReverseGeocodingService();
