@@ -24,6 +24,8 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include <picojson/picojson.h>
+
 #include <valhalla/config.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/constants.h>
@@ -383,6 +385,100 @@ namespace valhalla { namespace thor {
 
 namespace carto {
 
+    std::shared_ptr<RoutingResult> ValhallaRoutingProxy::CalculateRoute(const std::string& baseURL, const std::string& profile, const std::shared_ptr<RoutingRequest>& request) {
+        EPSG3857 epsg3857;
+        std::shared_ptr<Projection> proj = request->getProjection();
+
+        picojson::array locations;
+        for (const MapPos& pos : request->getPoints()) {
+            MapPos posWgs84 = proj->toWgs84(pos);
+            picojson::object location;
+            location["lon"] = picojson::value(posWgs84.getX());
+            location["lat"] = picojson::value(posWgs84.getY());
+            locations.emplace_back(location);
+        }
+
+        picojson::object json;
+        json["locations"] = picojson::value(locations);
+        json["costing"] = picojson::value(profile);
+
+        std::map<std::string, std::string> params;
+        params["json"] = picojson::value(json).serialize();
+        std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
+        Log::Debugf("ValhallaRoutingProxy::CalculateRoute: Loading %s", url.c_str());
+
+        std::shared_ptr<BinaryData> responseData;
+        if (!NetworkUtils::GetHTTP(url, responseData, Log::IsShowDebug())) {
+            throw NetworkException("Failed to fetch response"); // NOTE: we may have error messages, thus do not return from here
+        }
+
+        std::string responseString;
+        if (responseData) {
+            responseString = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+        } else {
+            throw GenericException("Empty response");
+        }
+
+        picojson::value response;
+        std::string err = picojson::parse(response, responseString);
+        if (!err.empty()) {
+            throw GenericException("Failed to parse response", err);
+        }
+
+        if (!response.get("trip").is<picojson::object>()) {
+            throw GenericException("No trip info in the response");
+        }
+
+        std::vector<MapPos> points;
+        std::vector<MapPos> epsg3857Points;
+        std::vector<RoutingInstruction> instructions;
+
+        try {
+            for (const picojson::value& legInfo : response.get("trip").get("legs").get<picojson::array>()) {
+                std::vector<valhalla::midgard::PointLL> shape = valhalla::midgard::decode<std::vector<PointLL> >(legInfo.get("shape").get<std::string>());
+                points.reserve(points.size() + shape.size());
+                epsg3857Points.reserve(epsg3857Points.size() + shape.size());
+
+                const picojson::array& maneuvers = legInfo.get("maneuvers").get<picojson::array>();
+                for (const picojson::value& maneuver : maneuvers) {
+                    RoutingAction::RoutingAction action = RoutingAction::ROUTING_ACTION_NO_TURN;
+                    TranslateManeuverType(static_cast<int>(maneuver.get("type").get<std::int64_t>()), action);
+
+                    std::size_t pointIndex = points.size();
+                    for (std::size_t j = static_cast<std::size_t>(maneuver.get("begin_shape_index").get<std::int64_t>()); j <= static_cast<std::size_t>(maneuver.get("end_shape_index").get<std::int64_t>()); j++) {
+                        const valhalla::midgard::PointLL& point = shape.at(j);
+                        epsg3857Points.push_back(epsg3857.fromLatLong(point.lat(), point.lng()));
+                        points.push_back(proj->fromLatLong(point.lat(), point.lng()));
+                    }
+
+                    float turnAngle = CalculateTurnAngle(epsg3857Points, pointIndex);
+                    float azimuth = CalculateAzimuth(epsg3857Points, pointIndex);
+
+                    std::string streetName;
+                    if (maneuver.get("street_names").is<picojson::array>()) {
+                        const picojson::array& streetNames = maneuver.get("street_names").get<picojson::array>();
+                        streetName = !streetNames.empty() ? streetNames[0].get<std::string>() : std::string("");
+                    }
+
+                    instructions.emplace_back(
+                        action,
+                        pointIndex,
+                        streetName,
+                        turnAngle,
+                        azimuth,
+                        maneuver.get("length").get<double>() * 1000.0,
+                        maneuver.get("time").get<double>()
+                    );
+                }
+            }
+        }
+        catch (const std::exception& ex) {
+            throw GenericException("Exception while translating route", ex.what());
+        }
+
+        return std::make_shared<RoutingResult>(proj, points, instructions);
+    }
+
     std::shared_ptr<RoutingResult> ValhallaRoutingProxy::CalculateRoute(const std::vector<std::shared_ptr<sqlite3pp::database> >& databases, const std::string& profile, const std::shared_ptr<RoutingRequest>& request) {
         EPSG3857 epsg3857;
         std::shared_ptr<Projection> proj = request->getProjection();
@@ -419,11 +515,9 @@ namespace carto {
 
                 for (int i = 0; i < tripDirections.maneuver_size(); i++) {
                     const valhalla::odin::TripDirections_Maneuver& maneuver = tripDirections.maneuver(i);
-                    auto it = valhalla::thor::maneuver_types.find(static_cast<int>(maneuver.type()));
-                    if (it == valhalla::thor::maneuver_types.end()) {
-                        Log::Warnf("ValhallaRoutingProxy::CalculateRoute: Failed to translate type %d", static_cast<int>(maneuver.type()));
-                        continue;
-                    }
+
+                    RoutingAction::RoutingAction action = RoutingAction::ROUTING_ACTION_NO_TURN;
+                    TranslateManeuverType(static_cast<int>(maneuver.type()), action);
 
                     std::size_t pointIndex = points.size();
                     for (int j = maneuver.begin_shape_index(); j <= maneuver.end_shape_index(); j++) {
@@ -432,21 +526,10 @@ namespace carto {
                         points.push_back(proj->fromLatLong(point.lat(), point.lng()));
                     }
 
-                    float turnAngle = 0;
-                    if (pointIndex > 0 && pointIndex + 1 < static_cast<int>(epsg3857Points.size())) {
-                        const MapPos& p0 = epsg3857Points.at(pointIndex - 1);
-                        const MapPos& p1 = epsg3857Points.at(pointIndex);
-                        const MapPos& p2 = epsg3857Points.at(pointIndex + 1);
-                        MapVec v1 = p1 - p0;
-                        MapVec v2 = p2 - p1;
-                        if (v1.length() > 0 && v2.length() > 0) {
-                            double dot = v1.dotProduct(v2) / v1.length() / v2.length();
-                            turnAngle = static_cast<float>(std::acos(std::max(-1.0, std::min(1.0, dot))) * Const::RAD_TO_DEG);
-                        }
-                    }
+                    float turnAngle = CalculateTurnAngle(epsg3857Points, pointIndex);
 
                     instructions.emplace_back(
-                        it->second,
+                        action,
                         pointIndex,
                         maneuver.street_name_size() ? maneuver.street_name(0) : std::string(""),
                         turnAngle,
@@ -464,9 +547,66 @@ namespace carto {
         return std::make_shared<RoutingResult>(proj, points, instructions);
     }
     
-    ValhallaRoutingProxy::ValhallaRoutingProxy() {
+    float ValhallaRoutingProxy::CalculateTurnAngle(const std::vector<MapPos>& epsg3857Points, int pointIndex) {
+        int pointIndex0 = pointIndex;
+        while (--pointIndex0 >= 0) {
+            if (epsg3857Points.at(pointIndex0) != epsg3857Points.at(pointIndex)) {
+                break;
+            }
+        }
+        int pointIndex1 = pointIndex;
+        while (++pointIndex1 < static_cast<int>(epsg3857Points.size())) {
+            if (epsg3857Points.at(pointIndex1) != epsg3857Points.at(pointIndex)) {
+                break;
+            }
+        }
+
+        float turnAngle = 0;
+        if (pointIndex0 >= 0 && pointIndex1 < static_cast<int>(epsg3857Points.size())) {
+            const MapPos& p0 = epsg3857Points.at(pointIndex0);
+            const MapPos& p1 = epsg3857Points.at(pointIndex);
+            const MapPos& p2 = epsg3857Points.at(pointIndex1);
+            MapVec v1 = p1 - p0;
+            MapVec v2 = p2 - p1;
+            double dot = v1.dotProduct(v2) / v1.length() / v2.length();
+            turnAngle = static_cast<float>(std::acos(std::max(-1.0, std::min(1.0, dot))) * Const::RAD_TO_DEG);
+        }
+        return turnAngle;
+    }
+
+    float ValhallaRoutingProxy::CalculateAzimuth(const std::vector<MapPos>& epsg3857Points, int pointIndex) {
+        int step = 1;
+        for (int i = pointIndex; i >= 0; i += step) {
+            if (i + 1 >= static_cast<int>(epsg3857Points.size())) {
+                step = -1;
+                continue;
+            }
+            const MapPos& p0 = epsg3857Points.at(i);
+            const MapPos& p1 = epsg3857Points.at(i + 1);
+            MapVec v = p1 - p0;
+            if (v.length() > 0) {
+                float angle = static_cast<float>(std::atan2(v.getY(), v.getX()) * Const::RAD_TO_DEG);
+                float azimuth = 90 - angle;
+                return (azimuth < 0 ? azimuth + 360 : azimuth);
+            }
+        }
+        return std::numeric_limits<float>::quiet_NaN();
+    }
+
+    bool ValhallaRoutingProxy::TranslateManeuverType(int maneuverType, RoutingAction::RoutingAction& action) {
+        auto it = valhalla::thor::maneuver_types.find(maneuverType);
+        if (it != valhalla::thor::maneuver_types.end()) {
+            action = it->second;
+            return true;
+        }
+
+        Log::Infof("ValhallaRoutingProxy::TranslateManeuverType: ignoring maneuver %d", maneuverType);
+        return false;
     }
     
+    ValhallaRoutingProxy::ValhallaRoutingProxy() {
+    }
+
 }
 
 #endif

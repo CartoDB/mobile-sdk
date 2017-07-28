@@ -198,6 +198,7 @@
 
 #ifdef _CARTO_VALHALLA_ROUTING_SUPPORT
 #import "NTValhallaOfflineRoutingService.h"
+#import "NTValhallaOnlineRoutingService.h"
 #endif
 
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT

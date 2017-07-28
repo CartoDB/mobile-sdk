@@ -22,10 +22,17 @@ namespace carto {
     
     class ValhallaRoutingProxy {
     public:
+        static std::shared_ptr<RoutingResult> CalculateRoute(const std::string& baseURL, const std::string& profile, const std::shared_ptr<RoutingRequest>& request);
         static std::shared_ptr<RoutingResult> CalculateRoute(const std::vector<std::shared_ptr<sqlite3pp::database> >& databases, const std::string& profile, const std::shared_ptr<RoutingRequest>& request);
         
     private:
         ValhallaRoutingProxy();
+
+        static float CalculateTurnAngle(const std::vector<MapPos>& epsg3857Points, int pointIndex);
+
+        static float CalculateAzimuth(const std::vector<MapPos>& epsg3857Points, int pointIndex);
+
+        static bool TranslateManeuverType(int maneuverType, RoutingAction::RoutingAction& action);
     };
     
 }
