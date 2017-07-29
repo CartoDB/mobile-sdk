@@ -91,11 +91,16 @@ include_directories(
     "${SDK_EXTERNAL_LIBS_DIR}/tess2/include"
     "${SDK_EXTERNAL_LIBS_DIR}/utf8/source"
     "${SDK_EXTERNAL_LIBS_DIR}/webp/src"
+    "${PNG_INCLUDE_DIR}"
+)
+
+if(INCLUDE_VALHALLA)
+include_directories(
     "${SDK_EXTERNAL_LIBS_DIR}/valhalla/include"
     "${SDK_EXTERNAL_LIBS_DIR}/valhalla/include/valhalla" 
     "${SDK_EXTERNAL_LIBS_DIR}/protobuf/src"
-    "${PNG_INCLUDE_DIR}"
 )
+endif(INCLUDE_VALHALLA)
 
 if(INCLUDE_GDAL)
 include_directories(
@@ -147,7 +152,6 @@ add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/msdfgen" msdfgen)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/jpeg" jpeg)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/miniz" miniz)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/png" png)
-add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/protobuf" protobuf)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/pugixml" pugixml)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/pvrt" pvrt)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/rg_etc1" rg_etc1)
@@ -155,10 +159,16 @@ add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/sqlite" sqlite)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/sqlite3pp" sqlite3pp)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/tess2" tess2)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/webp" webp)
+
+if(INCLUDE_VALHALLA)
+add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/protobuf" protobuf)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/valhalla" valhalla)
+endif(INCLUDE_VALHALLA)
+
 if(NOT IOS)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/zlib" zlib)
 endif(NOT IOS)
+
 if(NOT (WIN32 OR IOS OR ANDROID))
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/pion" pion)
 endif()
@@ -248,7 +258,6 @@ set(SDK_SRC_FILES
     "${cryptopp_SRC_FILES}"
     "${rg_etc1_SRC_FILES}"
     "${pvrt_SRC_FILES}"
-    "${protobuf_SRC_FILES}"
     "${pugixml_SRC_FILES}"
     "${libtess2_SRC_FILES}"
     "${miniz_SRC_FILES}"
@@ -260,12 +269,19 @@ set(SDK_SRC_FILES
     "${msdfgen_SRC_FILES}"
     "${sqlite3pp_SRC_FILES}"
     "${sqlite_SRC_FILES}"
+)
+
+if(INCLUDE_VALHALLA)
+set(SDK_SRC_FILES ${SDK_SRC_FILES}
+    "${protobuf_SRC_FILES}"
     "${valhalla_SRC_FILES}"
 )
+endif(INCLUDE_VALHALLA)
 
 if(NOT IOS)
 set(SDK_SRC_FILES ${SDK_SRC_FILES} ${zlib_SRC_FILES})
 endif()
+
 if(NOT (WIN32 OR IOS OR ANDROID))
 set(SDK_SRC_FILES ${SDK_SRC_FILES} ${pion_SRC_FILES})
 endif()
@@ -285,7 +301,6 @@ set(SDK_OBJECTS
     $<TARGET_OBJECTS:cryptopp>
     $<TARGET_OBJECTS:rg_etc1>
     $<TARGET_OBJECTS:pvrt>
-    $<TARGET_OBJECTS:protobuf>
     $<TARGET_OBJECTS:pugixml>
     $<TARGET_OBJECTS:libtess2>
     $<TARGET_OBJECTS:miniz>
@@ -297,12 +312,19 @@ set(SDK_OBJECTS
     $<TARGET_OBJECTS:msdfgen>
     $<TARGET_OBJECTS:sqlite3pp>
     $<TARGET_OBJECTS:sqlite>
+)
+
+if(INCLUDE_VALHALLA)
+set(SDK_OBJECTS ${SDK_OBJECTS}
+    $<TARGET_OBJECTS:protobuf>
     $<TARGET_OBJECTS:valhalla>
 )
+endif(INCLUDE_VALHALLA)
 
 if(NOT IOS)
 set(SDK_OBJECTS ${SDK_OBJECTS} $<TARGET_OBJECTS:zlib>)
 endif()
+
 if(NOT (WIN32 OR IOS OR ANDROID))
 set(SDK_OBJECTS ${SDK_OBJECTS} $<TARGET_OBJECTS:pion>)
 endif()
