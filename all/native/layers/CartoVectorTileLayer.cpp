@@ -1,5 +1,4 @@
 #include "CartoVectorTileLayer.h"
-#include "assets/NutiBrightV4ZIP.h"
 #include "assets/CartoStylesV1ZIP.h"
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
@@ -35,36 +34,20 @@ namespace carto {
     }
     
     std::shared_ptr<VectorTileDecoder> CartoVectorTileLayer::CreateTileDecoder(CartoBaseMapStyle::CartoBaseMapStyle style) {
-        std::shared_ptr<BinaryData> styleAsset;
+        auto styleAsset = std::make_shared<BinaryData>(cartostyles_v1_zip, cartostyles_v1_zip_len);
         std::string styleName;
         switch (style) {
-        case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_DARK:
-            styleAsset = std::make_shared<BinaryData>(nutibright_v4_zip, nutibright_v4_zip_len);
-            styleName = "nutidark";
-            break;
-        case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_GRAY:
-            styleAsset = std::make_shared<BinaryData>(nutibright_v4_zip, nutibright_v4_zip_len);
-            styleName = "nutigrey";
-            break;
-        case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_BRIGHT:
-            styleAsset = std::make_shared<BinaryData>(nutibright_v4_zip, nutibright_v4_zip_len);
-            styleName = "nutibright";
-            break;
         case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_VOYAGER:
-            styleAsset = std::make_shared<BinaryData>(cartostyles_v1_zip, cartostyles_v1_zip_len);
             styleName = "voyager";
             break;
         case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_POSITRON:
-            styleAsset = std::make_shared<BinaryData>(cartostyles_v1_zip, cartostyles_v1_zip_len);
             styleName = "positron";
             break;
         case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_DARKMATTER:
-            styleAsset = std::make_shared<BinaryData>(cartostyles_v1_zip, cartostyles_v1_zip_len);
             styleName = "darkmatter";
             break;
         default:
-            styleAsset = std::make_shared<BinaryData>(nutibright_v4_zip, nutibright_v4_zip_len);
-            styleName = "nutibright";
+            styleName = "voyager";
             break;
         }
         auto styleAssetPackage = std::make_shared<ZippedAssetPackage>(styleAsset);
