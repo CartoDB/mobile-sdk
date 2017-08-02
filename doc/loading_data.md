@@ -780,7 +780,7 @@ The DataSource constructor uses the following URL patterns. It requires a minimu
   
 	let url = "http://your-url-with-placeholders-see-below"
 	let tileDataSource = NTHTTPTileDataSource(minZoom: 0, maxZoom: 18, baseURL: url)
-	let layer = NTRasterTileLayer(tileDataSource)
+	let layer = NTRasterTileLayer(dataSource: tileDataSource)
 
   {% endhighlight %}
   </div>
@@ -799,6 +799,18 @@ The DataSource constructor uses the following URL patterns. It requires a minimu
 
 <br/><br/>
 The following sections provide the code for rester tile basemap urls, and a sample image.
+
+### HERE Satellite Tiles
+
+[`https://1.aerial.maps.api.here.com/maptile/2.1/maptile/newest/satellite.day/{z}/{x}/{y}/512/jpg?lg=eng&token=A7tBPacePg9Mj_zghvKt9Q&app_id=KuYppsdXZznpffJsKT24`](https://carto.com/location-data-services/basemaps/)
+
+<img src=https://1.aerial.maps.api.here.com/maptile/2.1/maptile/newest/satellite.day/4/4/4/256/jpg?lg=eng&token=A7tBPacePg9Mj_zghvKt9Q&app_id=KuYppsdXZznpffJsKT24"/>
+
+### HERE Map Tiles
+
+[`https://1.base.maps.api.here.com/maptile/2.1/maptile/newest/normal.day/{z}/{x}/{y}/256/png8?lg=eng&token=A7tBPacePg9Mj_zghvKt9Q&app_id=KuYppsdXZznpffJsKT24`](https://carto.com/location-data-services/basemaps/)
+
+<img src="https://1.base.maps.api.here.com/maptile/2.1/maptile/newest/normal.day/4/4/4/256/png8?lg=eng&token=A7tBPacePg9Mj_zghvKt9Q&app_id=KuYppsdXZznpffJsKT24"/>
 
 ### CARTO Positron Tiles
 
