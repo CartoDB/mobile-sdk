@@ -854,30 +854,6 @@ Please contact [Stamen](http://www.stamen.com) directly.
 
 Please contact [Stamen](http://www.stamen.com) directly.
 
-### Microsoft Bing Maps
-
-`http://ecn.t3.tiles.virtualearth.net/tiles/r{quadkey}.png?g=1&mkt=en-US&shading=hill&n=z`
-
-<img width="256" height="256" src="http://ecn.t3.tiles.virtualearth.net/tiles/r1202.png?g=1&mkt=en-US&shading=hill&n=z" alt=""/>
-
-<a href="http://www.microsoft.com/maps/product/terms.html">Commercial terms of Bing Maps API</a>. Must use <a href="http://msdn.microsoft.com/en-us/library/ff701716.aspx">Get Imagery Metadata Bing Service </a> to get supported URL parameters. 
-
-### Microsoft Bing Aerials
-
-`http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=1&mkt=en-US`
-
-<img width="256" height="256"  src="http://ecn.t3.tiles.virtualearth.net/tiles/a032010110123333.jpeg?g=1&mkt=en-US" alt=""/>
-
-<a href="http://www.microsoft.com/maps/product/terms.html">See Bing's APIs Terms of Use</a>. You must use the <a href="http://msdn.microsoft.com/en-us/library/ff701716.aspx">Get Imagery Metadata</a> service to retrieve supported URL parameters.
-
-### ESRI World Imagery (and other ESRI Basemaps)
-
-`http://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{zoom}/{y}/{x}`
-
-<img width="256" height="256"  src="http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/16/24351/35037" alt=""/>
-
-<a href="http://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9">See their Terms of Use</a>. Note that the ArcGIS&trade; Developer service subscription is required.
-
 ### OpenCycleMap
 
 `http://a.tile.opencyclemap.org/cycle/{zoom}/{x}/{y}.png`
