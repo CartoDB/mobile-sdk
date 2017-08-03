@@ -14,7 +14,9 @@
 namespace carto {
 
     /**
-     * A reverse geocoding service that uses Mapzen Pelias geocoder.
+     * An online reverse geocoding service that uses Mapzen Pelias geocoder.
+     * As the class connects to an external (non-CARTO) service, this class is provided "as-is",   
+     * future changes from the service provider may not be compatible with the implementation.
      * Note: this class is experimental and may change or even be removed in future SDK versions.
      */
     class PeliasReverseGeocodingService : public ReverseGeocodingService {

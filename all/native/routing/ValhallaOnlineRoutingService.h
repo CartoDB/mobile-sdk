@@ -22,7 +22,9 @@ namespace sqlite3pp {
 namespace carto {
 
     /**
-     * An offline routing service that uses Valhalla routing tiles.
+     * An online routing service that uses MapZen Valhalla routing service.
+     * As the class connects to an external (non-CARTO) service, this class is provided "as-is",   
+     * future changes from the service provider may not be compatible with the implementation.
      * Note: this class is experimental and may change or even be removed in future SDK versions.
      */
     class ValhallaOnlineRoutingService : public RoutingService {
