@@ -215,6 +215,6 @@ namespace carto {
         return tileData;
     }
 
-    const std::string CartoOnlineTileDataSource::TILE_SERVICE_URL = "http://api.nutiteq.com/v2/";
+    const std::string CartoOnlineTileDataSource::TILE_SERVICE_URL = "http://api.nutiteq.com/maps/v2/";
     
 }

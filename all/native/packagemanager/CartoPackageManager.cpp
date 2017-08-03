@@ -159,15 +159,15 @@ namespace carto {
             std::string baseURL;
             PackageType::PackageType packageType = PackageType::PACKAGE_TYPE_MAP;
             if (packageSource.type == "map") {
-                baseURL = CUSTOM_MAP_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(packageSource.id) + "/custom/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".mbtiles";
+                baseURL = CUSTOM_MAP_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(packageSource.id) + "/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".mbtiles";
                 packageType = PackageType::PACKAGE_TYPE_MAP;
             }
             else if (packageSource.type == "routing") {
-                baseURL = CUSTOM_ROUTING_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/custom/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".vtiles";
+                baseURL = CUSTOM_ROUTING_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".vtiles";
                 packageType = PackageType::PACKAGE_TYPE_VALHALLA_ROUTING;
             }
             else if (packageSource.type == "geocoding") {
-                baseURL = CUSTOM_GEOCODING_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/custom/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".nutigeodb";
+                baseURL = CUSTOM_GEOCODING_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".nutigeodb";
                 packageType = PackageType::PACKAGE_TYPE_GEOCODING;
             }
             else {
@@ -216,11 +216,11 @@ namespace carto {
 
     const std::string CartoPackageManager::GEOCODING_PACKAGE_LIST_URL = "http://api.nutiteq.com/geocodepackages/v2/";
 
-    const std::string CartoPackageManager::CUSTOM_MAP_BBOX_PACKAGE_URL = "http://api.nutiteq.com/v2/";
+    const std::string CartoPackageManager::CUSTOM_MAP_BBOX_PACKAGE_URL = "http://api.nutiteq.com/maparea/v2/";
 
-    const std::string CartoPackageManager::CUSTOM_ROUTING_BBOX_PACKAGE_URL = "http://api.nutiteq.com/routing/v2/";
+    const std::string CartoPackageManager::CUSTOM_ROUTING_BBOX_PACKAGE_URL = "http://api.nutiteq.com/routearea/v2/";
 
-    const std::string CartoPackageManager::CUSTOM_GEOCODING_BBOX_PACKAGE_URL = "http://api.nutiteq.com/geocoding/v2/";
+    const std::string CartoPackageManager::CUSTOM_GEOCODING_BBOX_PACKAGE_URL = "http://api.nutiteq.com/geocodearea/v2/";
 
     const int CartoPackageManager::MAX_CUSTOM_BBOX_PACKAGE_TILES = 250000;
 
