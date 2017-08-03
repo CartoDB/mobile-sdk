@@ -22,6 +22,7 @@ Also, getting all the SDK dependencies resolved and waiting for the build
 to complete can be very time-consuming.
 
 ## Dependencies
+
 Get the prepackaged dependencies from github **mobile-external-libs** repository (https://github.com/CartoDB/mobile-external-libs). Add links to external-libs/prebuilt at the project root directory level.
 
 In addition, **boost** library sources should be downloaded from boost.org and configured as described in mobile-external-libs documentation.
@@ -34,7 +35,7 @@ Android build requires **Android SDK** and **Android NDK r11** or later.
 
 iOS build requires **XCode 7.3** or later.
 
-Windows Phone build requires Visual Studio 2015 AND Visual Studio 2015 SDK.
+Windows Phone build requires Visual Studio 2017 AND Visual Studio 2017 SDK.
 
 ## Building process
 
