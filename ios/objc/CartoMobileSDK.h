@@ -177,8 +177,8 @@
 #import "NTPackageManagerReverseGeocodingService.h"
 #import "NTOSMOfflineGeocodingService.h"
 #import "NTOSMOfflineReverseGeocodingService.h"
-#import "NTPeliasGeocodingService.h"
-#import "NTPeliasReverseGeocodingService.h"
+#import "NTPeliasOnlineGeocodingService.h"
+#import "NTPeliasOnlineReverseGeocodingService.h"
 #endif
 
 #ifdef _CARTO_SEARCH_SUPPORT

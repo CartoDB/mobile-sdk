@@ -1,6 +1,6 @@
 #if defined(_CARTO_GEOCODING_SUPPORT)
 
-#include "PeliasReverseGeocodingService.h"
+#include "PeliasOnlineReverseGeocodingService.h"
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
 #include "geocoding/PeliasGeocodingProxy.h"
@@ -14,15 +14,15 @@
 
 namespace carto {
 
-    PeliasReverseGeocodingService::PeliasReverseGeocodingService(const std::string& apiKey) :
+    PeliasOnlineReverseGeocodingService::PeliasOnlineReverseGeocodingService(const std::string& apiKey) :
         _apiKey(apiKey)
     {
     }
 
-    PeliasReverseGeocodingService::~PeliasReverseGeocodingService() {
+    PeliasOnlineReverseGeocodingService::~PeliasOnlineReverseGeocodingService() {
     }
 
-    std::vector<std::shared_ptr<GeocodingResult> > PeliasReverseGeocodingService::calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const {
+    std::vector<std::shared_ptr<GeocodingResult> > PeliasOnlineReverseGeocodingService::calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const {
         if (!request) {
             throw NullArgumentException("Null request");
         }
@@ -38,7 +38,7 @@ namespace carto {
         params["boundary.circle.radius"] = boost::lexical_cast<std::string>(request->getSearchRadius());
 
         std::string url = NetworkUtils::BuildURLFromParameters(PELIAS_REVERSE_URL, params);
-        Log::Debugf("PeliasReverseGeocodingService::calculateAddresses: Loading %s", url.c_str());
+        Log::Debugf("PeliasOnlineReverseGeocodingService::calculateAddresses: Loading %s", url.c_str());
 
         std::shared_ptr<BinaryData> responseData;
         if (!NetworkUtils::GetHTTP(url, responseData, Log::IsShowDebug())) {
@@ -55,7 +55,7 @@ namespace carto {
         return PeliasGeocodingProxy::ReadResponse(responseString, request->getProjection());
     }
 
-    const std::string PeliasReverseGeocodingService::PELIAS_REVERSE_URL = "https://search.mapzen.com/v1/reverse";
+    const std::string PeliasOnlineReverseGeocodingService::PELIAS_REVERSE_URL = "https://search.mapzen.com/v1/reverse";
 }
 
 #endif

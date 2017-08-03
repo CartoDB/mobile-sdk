@@ -1,6 +1,6 @@
 #if defined(_CARTO_GEOCODING_SUPPORT)
 
-#include "PeliasGeocodingService.h"
+#include "PeliasOnlienGeocodingService.h"
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
 #include "geocoding/PeliasGeocodingProxy.h"
@@ -14,27 +14,27 @@
 
 namespace carto {
 
-    PeliasGeocodingService::PeliasGeocodingService(const std::string& apiKey) :
+    PeliasOnlineGeocodingService::PeliasOnlineGeocodingService(const std::string& apiKey) :
         _apiKey(apiKey),
         _autocomplete(false),
         _mutex()
     {
     }
 
-    PeliasGeocodingService::~PeliasGeocodingService() {
+    PeliasOnlineGeocodingService::~PeliasOnlineGeocodingService() {
     }
 
-    bool PeliasGeocodingService::isAutocomplete() const {
+    bool PeliasOnlineGeocodingService::isAutocomplete() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _autocomplete;
     }
 
-    void PeliasGeocodingService::setAutocomplete(bool autocomplete) {
+    void PeliasOnlineGeocodingService::setAutocomplete(bool autocomplete) {
         std::lock_guard<std::mutex> lock(_mutex);
         _autocomplete = autocomplete;
     }
 
-    std::vector<std::shared_ptr<GeocodingResult> > PeliasGeocodingService::calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const {
+    std::vector<std::shared_ptr<GeocodingResult> > PeliasOnlineGeocodingService::calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const {
         if (!request) {
             throw NullArgumentException("Null request");
         }
@@ -60,7 +60,7 @@ namespace carto {
         }
 
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
-        Log::Debugf("PeliasGeocodingService::calculateAddresses: Loading %s", url.c_str());
+        Log::Debugf("PeliasOnlineGeocodingService::calculateAddresses: Loading %s", url.c_str());
 
         std::shared_ptr<BinaryData> responseData;
         if (!NetworkUtils::GetHTTP(url, responseData, Log::IsShowDebug())) {
@@ -74,11 +74,11 @@ namespace carto {
             throw GenericException("Empty response");
         }
 
-        return PeliasGeocodingProxy::ReadResponse(responseString, request->getProjection());
+        return PeliasOnlineGeocodingProxy::ReadResponse(responseString, request->getProjection());
     }
 
-    const std::string PeliasGeocodingService::PELIAS_AUTOCOMPLETE_URL = "https://search.mapzen.com/v1/autocomplete";
-    const std::string PeliasGeocodingService::PELIAS_SEARCH_URL = "https://search.mapzen.com/v1/search";
+    const std::string PeliasOnlineGeocodingService::PELIAS_AUTOCOMPLETE_URL = "https://search.mapzen.com/v1/autocomplete";
+    const std::string PeliasOnlineGeocodingService::PELIAS_SEARCH_URL = "https://search.mapzen.com/v1/search";
 }
 
 #endif

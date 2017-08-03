@@ -4,8 +4,8 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_PELIASREVERSEGEOCODINGSERVICE_H_
-#define _CARTO_PELIASREVERSEGEOCODINGSERVICE_H_
+#ifndef _CARTO_PELIASONLINEREVERSEGEOCODINGSERVICE_H_
+#define _CARTO_PELIASONLINEREVERSEGEOCODINGSERVICE_H_
 
 #if defined(_CARTO_GEOCODING_SUPPORT)
 
@@ -19,14 +19,14 @@ namespace carto {
      * future changes from the service provider may not be compatible with the implementation.
      * Note: this class is experimental and may change or even be removed in future SDK versions.
      */
-    class PeliasReverseGeocodingService : public ReverseGeocodingService {
+    class PeliasOnlineReverseGeocodingService : public ReverseGeocodingService {
     public:
         /**
-         * Constructs a new instance of the OSMOfflineReverseGeocodingService given path to the geocoding database.
+         * Constructs a new instance of the PeliasOnlineReverseGeocodingService given API key.
          * @param apiKey The API key to use registered with Mapzen.
          */
-        explicit PeliasReverseGeocodingService(const std::string& apiKey);
-        virtual ~PeliasReverseGeocodingService();
+        explicit PeliasOnlineReverseGeocodingService(const std::string& apiKey);
+        virtual ~PeliasOnlineReverseGeocodingService();
 
         virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const;
 

@@ -4,8 +4,8 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_PELIASGEOCODINGSERVICE_H_
-#define _CARTO_PELIASGEOCODINGSERVICE_H_
+#ifndef _CARTO_PELIASONLINEGEOCODINGSERVICE_H_
+#define _CARTO_PELIASONLINEGEOCODINGSERVICE_H_
 
 #if defined(_CARTO_GEOCODING_SUPPORT)
 
@@ -19,14 +19,14 @@ namespace carto {
      * future changes from the service provider may not be compatible with the implementation.
      * Note: this class is experimental and may change or even be removed in future SDK versions.
      */
-    class PeliasGeocodingService : public GeocodingService {
+    class PeliasOnlineGeocodingService : public GeocodingService {
     public:
         /**
-         * Constructs a new instance of the PeliasGeocodingService given API key.
+         * Constructs a new instance of the PeliasOnlineGeocodingService given API key.
          * @param apiKey The API key to use registered with Mapzen.
          */
-        explicit PeliasGeocodingService(const std::string& apiKey);
-        virtual ~PeliasGeocodingService();
+        explicit PeliasOnlineGeocodingService(const std::string& apiKey);
+        virtual ~PeliasOnlineGeocodingService();
 
         /**
          * Returns the autocomplete flag of the service.
