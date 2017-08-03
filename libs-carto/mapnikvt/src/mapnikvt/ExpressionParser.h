@@ -61,7 +61,7 @@ namespace carto { namespace mvt {
                 cubic_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["cubic"]];
 
                 string %=
-                    qi::lexeme[+(qi::print - '[' - ']' - '{' - '}')]
+                    qi::lexeme[+(qi::print - qi::char_("[]{}"))]
                     ;
 
                 stringExpression =
