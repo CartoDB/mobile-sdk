@@ -1,6 +1,6 @@
 #if defined(_CARTO_GEOCODING_SUPPORT)
 
-#include "PeliasOnlienGeocodingService.h"
+#include "PeliasOnlineGeocodingService.h"
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
 #include "geocoding/PeliasGeocodingProxy.h"
@@ -74,7 +74,7 @@ namespace carto {
             throw GenericException("Empty response");
         }
 
-        return PeliasOnlineGeocodingProxy::ReadResponse(responseString, request->getProjection());
+        return PeliasGeocodingProxy::ReadResponse(responseString, request->getProjection());
     }
 
     const std::string PeliasOnlineGeocodingService::PELIAS_AUTOCOMPLETE_URL = "https://search.mapzen.com/v1/autocomplete";
