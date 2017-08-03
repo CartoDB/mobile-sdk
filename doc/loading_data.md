@@ -780,7 +780,7 @@ The DataSource constructor uses the following URL patterns. It requires a minimu
   
 	let url = "http://your-url-with-placeholders-see-below"
 	let tileDataSource = NTHTTPTileDataSource(minZoom: 0, maxZoom: 18, baseURL: url)
-	let layer = NTRasterTileLayer(tileDataSource)
+	let layer = NTRasterTileLayer(dataSource: tileDataSource)
 
   {% endhighlight %}
   </div>
@@ -799,6 +799,18 @@ The DataSource constructor uses the following URL patterns. It requires a minimu
 
 <br/><br/>
 The following sections provide the code for rester tile basemap urls, and a sample image.
+
+### HERE Satellite Tiles
+
+[`https://1.aerial.maps.api.here.com/maptile/2.1/maptile/newest/satellite.day/{z}/{x}/{y}/512/jpg?lg=eng&token=A7tBPacePg9Mj_zghvKt9Q&app_id=KuYppsdXZznpffJsKT24`](https://carto.com/location-data-services/basemaps/)
+
+<img src=https://1.aerial.maps.api.here.com/maptile/2.1/maptile/newest/satellite.day/4/4/4/256/jpg?lg=eng&token=A7tBPacePg9Mj_zghvKt9Q&app_id=KuYppsdXZznpffJsKT24"/>
+
+### HERE Map Tiles
+
+[`https://1.base.maps.api.here.com/maptile/2.1/maptile/newest/normal.day/{z}/{x}/{y}/256/png8?lg=eng&token=A7tBPacePg9Mj_zghvKt9Q&app_id=KuYppsdXZznpffJsKT24`](https://carto.com/location-data-services/basemaps/)
+
+<img src="https://1.base.maps.api.here.com/maptile/2.1/maptile/newest/normal.day/4/4/4/256/png8?lg=eng&token=A7tBPacePg9Mj_zghvKt9Q&app_id=KuYppsdXZznpffJsKT24"/>
 
 ### CARTO Positron Tiles
 
@@ -853,30 +865,6 @@ Please contact [Stamen](http://www.stamen.com) directly.
 <img src="http://tile.stamen.com/terrain/12/654/1583.jpg"/>
 
 Please contact [Stamen](http://www.stamen.com) directly.
-
-### Microsoft Bing Maps
-
-`http://ecn.t3.tiles.virtualearth.net/tiles/r{quadkey}.png?g=1&mkt=en-US&shading=hill&n=z`
-
-<img width="256" height="256" src="http://ecn.t3.tiles.virtualearth.net/tiles/r1202.png?g=1&mkt=en-US&shading=hill&n=z" alt=""/>
-
-<a href="http://www.microsoft.com/maps/product/terms.html">Commercial terms of Bing Maps API</a>. Must use <a href="http://msdn.microsoft.com/en-us/library/ff701716.aspx">Get Imagery Metadata Bing Service </a> to get supported URL parameters. 
-
-### Microsoft Bing Aerials
-
-`http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=1&mkt=en-US`
-
-<img width="256" height="256"  src="http://ecn.t3.tiles.virtualearth.net/tiles/a032010110123333.jpeg?g=1&mkt=en-US" alt=""/>
-
-<a href="http://www.microsoft.com/maps/product/terms.html">See Bing's APIs Terms of Use</a>. You must use the <a href="http://msdn.microsoft.com/en-us/library/ff701716.aspx">Get Imagery Metadata</a> service to retrieve supported URL parameters.
-
-### ESRI World Imagery (and other ESRI Basemaps)
-
-`http://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{zoom}/{y}/{x}`
-
-<img width="256" height="256"  src="http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/16/24351/35037" alt=""/>
-
-<a href="http://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9">See their Terms of Use</a>. Note that the ArcGIS&trade; Developer service subscription is required.
 
 ### OpenCycleMap
 
