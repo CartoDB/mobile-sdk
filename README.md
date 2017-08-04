@@ -35,7 +35,7 @@ Android build requires **Android SDK** and **Android NDK r11** or later.
 
 iOS build requires **XCode 7.3** or later.
 
-Windows Phone build requires Visual Studio 2017 AND Visual Studio 2017 SDK.
+Windows Phone build requires **Visual Studio 2017**.
 
 ## Building process
 

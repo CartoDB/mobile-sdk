@@ -159,7 +159,7 @@ namespace carto {
             std::string baseURL;
             PackageType::PackageType packageType = PackageType::PACKAGE_TYPE_MAP;
             if (packageSource.type == "map") {
-                baseURL = CUSTOM_MAP_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(packageSource.id) + "/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".mbtiles";
+                baseURL = CUSTOM_MAP_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".mbtiles";
                 packageType = PackageType::PACKAGE_TYPE_MAP;
             }
             else if (packageSource.type == "routing") {
