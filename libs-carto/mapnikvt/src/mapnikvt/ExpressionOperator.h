@@ -118,6 +118,32 @@ namespace carto { namespace mvt {
         };
     };
 
+    struct ExpOperator : UnaryExpression::Operator {
+        virtual Value apply(const Value& val) const override {
+            return boost::apply_visitor(Operator(), val);
+        }
+
+    private:
+        struct Operator : boost::static_visitor<Value> {
+            Value operator() (long long val) const { return std::exp(static_cast<double>(val)); }
+            Value operator() (double val) const { return Value(std::exp(val)); }
+            template <typename T> Value operator() (T val) const { return Value(val); }
+        };
+    };
+
+    struct LogOperator : UnaryExpression::Operator {
+        virtual Value apply(const Value& val) const override {
+            return boost::apply_visitor(Operator(), val);
+        }
+
+    private:
+        struct Operator : boost::static_visitor<Value> {
+            Value operator() (long long val) const { return std::log(static_cast<double>(val)); }
+            Value operator() (double val) const { return Value(std::log(val)); }
+            template <typename T> Value operator() (T val) const { return Value(val); }
+        };
+    };
+
     struct PowOperator : BinaryExpression::Operator {
         virtual Value apply(const Value& val1, const Value& val2) const override {
             return boost::apply_visitor(Operator(), val1, val2);
