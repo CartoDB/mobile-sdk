@@ -138,8 +138,8 @@ namespace carto { namespace mvt {
 
                 factor =
                       constant                                       [_val = phx::bind(&makeConstExpression, _1)]
-                    | (exp_kw    >> '(' > expression > ')') [_val = phx::bind(&makeUnaryExpression<ExpOperator>, _1)]
-                    | (log_kw    >> '(' > expression > ')') [_val = phx::bind(&makeUnaryExpression<LogOperator>, _1)]
+                    | (exp_kw    >> '(' > expression > ')')          [_val = phx::bind(&makeUnaryExpression<ExpOperator>, _1)]
+                    | (log_kw    >> '(' > expression > ')')          [_val = phx::bind(&makeUnaryExpression<LogOperator>, _1)]
                     | (pow_kw    >> '(' > expression > ',' > expression > ')') [_val = phx::bind(&makeBinaryExpression<PowOperator>, _1, _2)]
                     | (step_kw   >> '(' > expression > ',' > (constant % ',') > ')') [_val = phx::bind(&makeInterpolateExpression, InterpolateExpression::Method::STEP, _1, _2)]
                     | (linear_kw >> '(' > expression > ',' > (constant % ',') > ')') [_val = phx::bind(&makeInterpolateExpression, InterpolateExpression::Method::LINEAR, _1, _2)]

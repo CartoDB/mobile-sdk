@@ -125,7 +125,7 @@ namespace carto { namespace mvt {
 
     private:
         struct Operator : boost::static_visitor<Value> {
-            Value operator() (long long val) const { return std::exp(static_cast<double>(val)); }
+            Value operator() (long long val) const { return Value(std::exp(static_cast<double>(val))); }
             Value operator() (double val) const { return Value(std::exp(val)); }
             template <typename T> Value operator() (T val) const { return Value(val); }
         };
@@ -138,7 +138,7 @@ namespace carto { namespace mvt {
 
     private:
         struct Operator : boost::static_visitor<Value> {
-            Value operator() (long long val) const { return std::log(static_cast<double>(val)); }
+            Value operator() (long long val) const { return Value(std::log(static_cast<double>(val))); }
             Value operator() (double val) const { return Value(std::log(val)); }
             template <typename T> Value operator() (T val) const { return Value(val); }
         };
@@ -151,7 +151,7 @@ namespace carto { namespace mvt {
 
     private:
         struct Operator : boost::static_visitor<Value> {
-            Value operator() (long long val1, long long val2) const { return std::pow(static_cast<double>(val1), static_cast<double>(val2)); }
+            Value operator() (long long val1, long long val2) const { return Value(std::pow(static_cast<double>(val1), static_cast<double>(val2))); }
             Value operator() (long long val1, double val2) const { return Value(std::pow(static_cast<double>(val1), val2)); }
             Value operator() (double val1, long long val2) const { return Value(std::pow(val1, static_cast<double>(val2))); }
             Value operator() (double val1, double val2) const { return Value(std::pow(val1, val2)); }
