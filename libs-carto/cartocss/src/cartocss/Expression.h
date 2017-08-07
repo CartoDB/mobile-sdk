@@ -338,7 +338,7 @@ namespace carto { namespace css {
         };
 
         struct DivOp : boost::static_visitor<Value> {
-            Value operator() (long long val1, long long val2) const { if (val2 == 0) { throw std::runtime_error("Division with 0"); } return Value(val1 / val2); }
+            Value operator() (long long val1, long long val2) const { return val2 == 0 ? Value() : Value(static_cast<double>(val1) / static_cast<double>(val2)); }
             Value operator() (long long val1, double val2) const { return Value(static_cast<double>(val1) / val2); }
             Value operator() (double val1, long long val2) const { return Value(val1 / static_cast<double>(val2)); }
             Value operator() (double val1, double val2) const { return Value(val1 / val2); }
