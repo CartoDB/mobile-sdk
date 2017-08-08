@@ -1869,70 +1869,6 @@ namespace carto { namespace vt {
         glUseProgram(shaderProgram);
         checkGLError();
         
-        CompiledGeometry compiledGeometry;
-        auto itGeom = _compiledTileGeometryMap.find(geometry);
-        if (itGeom == _compiledTileGeometryMap.end()) {
-            if (_glExtensions->GL_OES_vertex_array_object_supported()) {
-                compiledGeometry.geometryVAO = createVertexArray();
-            }
-            
-            compiledGeometry.vertexGeometryVBO = createBuffer();
-            glBindBuffer(GL_ARRAY_BUFFER, compiledGeometry.vertexGeometryVBO);
-            glBufferData(GL_ARRAY_BUFFER, geometry->getVertexGeometry().size() * sizeof(unsigned char), geometry->getVertexGeometry().data(), GL_STATIC_DRAW);
-            
-            compiledGeometry.indicesVBO = createBuffer();
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, compiledGeometry.indicesVBO);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, geometry->getIndices().size() * sizeof(unsigned short), geometry->getIndices().data(), GL_STATIC_DRAW);
-            
-            if (!_interactionEnabled) {
-                geometry->releaseVertexArrays(); // if interaction is enabled, we must keep the vertex arrays. Otherwise optimize for lower memory usage
-            }
-            
-            _compiledTileGeometryMap[geometry] = compiledGeometry;
-        }
-        else {
-            compiledGeometry = itGeom->second;
-        }
-        
-        if (styleParams.pattern) {
-            float zoomScale = std::pow(2.0f, static_cast<int>(_zoom) - tileId.zoom);
-            float coordScale = 1.0f / (geometryLayoutParams.texCoordScale * styleParams.pattern->widthScale);
-            cglib::vec2<float> uvScale(coordScale, coordScale);
-            if (geometry->getType() == TileGeometry::Type::LINE) {
-                uvScale(0) *= zoomScale;
-            }
-            else if (geometry->getType() == TileGeometry::Type::POLYGON) {
-                uvScale *= zoomScale;
-            }
-            glUniform2fv(glGetUniformLocation(shaderProgram, "uUVScale"), 1, uvScale.data());
-            
-            CompiledBitmap compiledBitmap;
-            auto itBitmap = _compiledBitmapMap.find(styleParams.pattern->bitmap);
-            if (itBitmap == _compiledBitmapMap.end()) {
-                bool genMipmaps = geometry->getType() != TileGeometry::Type::LINE;
-                std::shared_ptr<const Bitmap> patternBitmap = BitmapManager::scaleToPOT(styleParams.pattern->bitmap);
-                compiledBitmap.texture = createTexture();
-                glBindTexture(GL_TEXTURE_2D, compiledBitmap.texture);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, genMipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, patternBitmap->width, patternBitmap->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, patternBitmap->data.data());
-                if (genMipmaps) {
-                    glGenerateMipmap(GL_TEXTURE_2D);
-                }
-                
-                _compiledBitmapMap[styleParams.pattern->bitmap] = compiledBitmap;
-            }
-            else {
-                compiledBitmap = itBitmap->second;
-            }
-            
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, compiledBitmap.texture);
-            glUniform1i(glGetUniformLocation(shaderProgram, "uPattern"), 0);
-        }
-        
         cglib::mat4x4<float> mvpMatrix = calculateTileMVPMatrix(tileId, 1.0f / geometryLayoutParams.vertexScale);
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "uMVPMatrix"), 1, GL_FALSE, mvpMatrix.data());
         
@@ -1968,6 +1904,12 @@ namespace carto { namespace vt {
                 float strokeWidth = (styleParams.strokeWidthFuncs[i])(_viewState) * HALO_RADIUS_SCALE;
                 strokeWidths[i] = strokeWidth;
             }
+
+            if (std::all_of(widths.begin(), widths.begin() + styleParams.parameterCount, [](float width) { return width == 0; })) {
+                if (std::all_of(strokeWidths.begin(), strokeWidths.begin() + styleParams.parameterCount, [](float strokeWidth) { return strokeWidth == 0; })) {
+                    return;
+                }
+            }
             
             glUniform1f(glGetUniformLocation(shaderProgram, "uBinormalScale"), 1.0f / geometryLayoutParams.binormalScale);
             glUniform1f(glGetUniformLocation(shaderProgram, "uSDFScale"), 2.0f * TEXT_SHARPNESS_FACTOR / BITMAP_SDF_SCALE / _halfResolution);
@@ -1977,7 +1919,8 @@ namespace carto { namespace vt {
             glUniform3fv(glGetUniformLocation(shaderProgram, "uYAxis"), 1, yAxis.data());
         }
         else if (geometry->getType() == TileGeometry::Type::LINE) {
-            float gamma = 0.5f;
+            constexpr float gamma = 0.5f;
+
             std::array<float, TileGeometry::StyleParameters::MAX_PARAMETERS> widths;
             for (int i = 0; i < styleParams.parameterCount; i++) {
                 float width = 0.5f * std::abs((styleParams.widthFuncs[i])(_viewState)) * geometry->getGeometryScale() / geometry->getTileSize();
@@ -1988,7 +1931,11 @@ namespace carto { namespace vt {
                 }
                 widths[i] = width;
             }
-            
+
+            if (std::all_of(widths.begin(), widths.begin() + styleParams.parameterCount, [](float width) { return width == 0; })) {
+                return;
+            }
+
             glUniform1f(glGetUniformLocation(shaderProgram, "uBinormalScale"), geometryLayoutParams.vertexScale / (_halfResolution * geometryLayoutParams.binormalScale * std::pow(2.0f, _zoom - tileId.zoom)));
             glUniform1fv(glGetUniformLocation(shaderProgram, "uWidthTable"), styleParams.parameterCount, widths.data());
             glUniform1f(glGetUniformLocation(shaderProgram, "uHalfResolution"), _halfResolution);
@@ -2003,8 +1950,78 @@ namespace carto { namespace vt {
             glUniformMatrix3fv(glGetUniformLocation(shaderProgram, "uTileMatrix"), 1, GL_FALSE, tileMatrix.data());
         }
         
+        if (std::all_of(colors.begin(), colors.begin() + styleParams.parameterCount, [](const cglib::vec4<float>& color) {
+            return std::all_of(color.cbegin(), color.cend(), [](float val) { return val < 1.0f / 256.0f; });
+        })) {
+            return;
+        }
+
         glUniform4fv(glGetUniformLocation(shaderProgram, "uColorTable"), styleParams.parameterCount, colors[0].data());
         
+        CompiledGeometry compiledGeometry;
+        auto itGeom = _compiledTileGeometryMap.find(geometry);
+        if (itGeom == _compiledTileGeometryMap.end()) {
+            if (_glExtensions->GL_OES_vertex_array_object_supported()) {
+                compiledGeometry.geometryVAO = createVertexArray();
+            }
+
+            compiledGeometry.vertexGeometryVBO = createBuffer();
+            glBindBuffer(GL_ARRAY_BUFFER, compiledGeometry.vertexGeometryVBO);
+            glBufferData(GL_ARRAY_BUFFER, geometry->getVertexGeometry().size() * sizeof(unsigned char), geometry->getVertexGeometry().data(), GL_STATIC_DRAW);
+
+            compiledGeometry.indicesVBO = createBuffer();
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, compiledGeometry.indicesVBO);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, geometry->getIndices().size() * sizeof(unsigned short), geometry->getIndices().data(), GL_STATIC_DRAW);
+
+            if (!_interactionEnabled) {
+                geometry->releaseVertexArrays(); // if interaction is enabled, we must keep the vertex arrays. Otherwise optimize for lower memory usage
+            }
+
+            _compiledTileGeometryMap[geometry] = compiledGeometry;
+        }
+        else {
+            compiledGeometry = itGeom->second;
+        }
+
+        if (styleParams.pattern) {
+            float zoomScale = std::pow(2.0f, static_cast<int>(_zoom) - tileId.zoom);
+            float coordScale = 1.0f / (geometryLayoutParams.texCoordScale * styleParams.pattern->widthScale);
+            cglib::vec2<float> uvScale(coordScale, coordScale);
+            if (geometry->getType() == TileGeometry::Type::LINE) {
+                uvScale(0) *= zoomScale;
+            }
+            else if (geometry->getType() == TileGeometry::Type::POLYGON) {
+                uvScale *= zoomScale;
+            }
+            glUniform2fv(glGetUniformLocation(shaderProgram, "uUVScale"), 1, uvScale.data());
+
+            CompiledBitmap compiledBitmap;
+            auto itBitmap = _compiledBitmapMap.find(styleParams.pattern->bitmap);
+            if (itBitmap == _compiledBitmapMap.end()) {
+                bool genMipmaps = geometry->getType() != TileGeometry::Type::LINE;
+                std::shared_ptr<const Bitmap> patternBitmap = BitmapManager::scaleToPOT(styleParams.pattern->bitmap);
+                compiledBitmap.texture = createTexture();
+                glBindTexture(GL_TEXTURE_2D, compiledBitmap.texture);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, genMipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, patternBitmap->width, patternBitmap->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, patternBitmap->data.data());
+                if (genMipmaps) {
+                    glGenerateMipmap(GL_TEXTURE_2D);
+                }
+
+                _compiledBitmapMap[styleParams.pattern->bitmap] = compiledBitmap;
+            }
+            else {
+                compiledBitmap = itBitmap->second;
+            }
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, compiledBitmap.texture);
+            glUniform1i(glGetUniformLocation(shaderProgram, "uPattern"), 0);
+        }
+
         if (_glExtensions->GL_OES_vertex_array_object_supported()) {
             _glExtensions->glBindVertexArrayOES(compiledGeometry.geometryVAO);
         }
