@@ -28,6 +28,10 @@ namespace carto { namespace vt {
     }
 
     void TileLayerBuilder::addPoints(const std::function<bool(long long& id, Vertex& vertex)>& generator, const PointStyle& style, const std::shared_ptr<GlyphMap>& glyphMap) {
+        if (style.sizeFunc == FloatFunction(0) || !style.pointImage) {
+            return;
+        }
+        
         long long id = 0;
         cglib::vec2<float> vertex(0, 0);
         if (!generator(id, vertex)) {
@@ -70,6 +74,10 @@ namespace carto { namespace vt {
     }
 
     void TileLayerBuilder::addTexts(const std::function<bool(long long& id, Vertex& vertex, std::string& text)>& generator, const TextStyle& style, const TextFormatter& formatter) {
+        if (style.sizeFunc == FloatFunction(0) && !style.backgroundImage) {
+            return;
+        }
+        
         long long id = 0;
         cglib::vec2<float> vertex(0, 0);
         std::string text;
@@ -154,6 +162,10 @@ namespace carto { namespace vt {
     }
 
     void TileLayerBuilder::addLines(const std::function<bool(long long& id, Vertices& vertices)>& generator, const LineStyle& style, const std::shared_ptr<StrokeMap>& strokeMap) {
+        if (style.widthFunc == FloatFunction(0)) {
+            return;
+        }
+        
         long long id = 0;
         std::vector<cglib::vec2<float>> vertices;
         if (!generator(id, vertices)) {
@@ -268,7 +280,7 @@ namespace carto { namespace vt {
     }
 
     void TileLayerBuilder::addBitmapLabels(const std::function<bool(long long& id, BitmapLabelInfo& labelInfo)>& generator, const BitmapLabelStyle& style, const std::shared_ptr<GlyphMap>& glyphMap) {
-        if (!style.image) {
+        if (style.sizeFunc == FloatFunction(0) || !style.image) {
             return;
         }
 
@@ -314,6 +326,10 @@ namespace carto { namespace vt {
     }
 
     void TileLayerBuilder::addTextLabels(const std::function<bool(long long& id, TextLabelInfo& labelInfo)>& generator, const TextLabelStyle& style, const TextFormatter& formatter) {
+        if (style.sizeFunc == FloatFunction(0) && !style.backgroundImage) {
+            return;
+        }
+        
         boost::optional<cglib::mat3x3<float>> transform;
         if (style.angle != 0) {
             transform = cglib::rotate3_matrix(cglib::vec3<float>(0, 0, 1), style.angle * boost::math::constants::pi<float>() / 180.0f);

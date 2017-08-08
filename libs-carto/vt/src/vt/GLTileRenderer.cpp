@@ -1923,17 +1923,24 @@ namespace carto { namespace vt {
 
             std::array<float, TileGeometry::StyleParameters::MAX_PARAMETERS> widths;
             for (int i = 0; i < styleParams.parameterCount; i++) {
+                if (styleParams.widthFuncs[i] == FloatFunction(0)) {
+                    widths[i] = 0;
+                    continue;
+                }
+                
                 float width = 0.5f * std::abs((styleParams.widthFuncs[i])(_viewState)) * geometry->getGeometryScale() / geometry->getTileSize();
                 float pixelWidth = 2.0f * _halfResolution * width;
-                if (pixelWidth > 0.0f && pixelWidth < 1.0f) {
+                if (pixelWidth < 1.0f) {
                     colors[i] = colors[i] * pixelWidth; // should do gamma correction here, but simple implementation gives closer results to Mapnik
-                    width = (pixelWidth > 0.0f ? 1.0f / (2.0f * _halfResolution) : 0.0f);
+                    width = (pixelWidth > 0.0f ? 1.0f / (2.0f * _halfResolution) : 0.0f); // normalize width to pixelWidth = 1
                 }
                 widths[i] = width;
             }
 
             if (std::all_of(widths.begin(), widths.begin() + styleParams.parameterCount, [](float width) { return width == 0; })) {
-                return;
+                if (std::all_of(styleParams.widthFuncs.begin(), styleParams.widthFuncs.begin() + styleParams.parameterCount, [](const FloatFunction& func) { return func != FloatFunction(0); })) { // check that all are proper lines, not polygons
+                    return;
+                }
             }
 
             glUniform1f(glGetUniformLocation(shaderProgram, "uBinormalScale"), geometryLayoutParams.vertexScale / (_halfResolution * geometryLayoutParams.binormalScale * std::pow(2.0f, _zoom - tileId.zoom)));
