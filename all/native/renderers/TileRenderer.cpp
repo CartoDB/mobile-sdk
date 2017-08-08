@@ -41,6 +41,7 @@ namespace carto {
         _useDepth(useDepth),
         _useStencil(useStencil),
         _interactionMode(false),
+        _subTileBlending(true),
         _labelOrder(0),
         _buildingOrder(1),
         _horizontalLayerOffset(0),
@@ -55,6 +56,11 @@ namespace carto {
     void TileRenderer::setInteractionMode(bool enabled) {
         std::lock_guard<std::mutex> lock(_mutex);
         _interactionMode = enabled;
+    }
+    
+    void TileRenderer::setSubTileBlending(bool enabled) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _subTileBlending = enabled;
     }
     
     void TileRenderer::setLabelOrder(int order) {
@@ -88,7 +94,7 @@ namespace carto {
         _glRenderer = std::shared_ptr<vt::GLTileRenderer>(
             new vt::GLTileRenderer(_glRendererMutex, std::make_shared<carto::vt::GLExtensions>(), carto::Const::WORLD_SIZE, _useFBO, _useDepth, _useStencil), glRendererDeleter
         );
-        _glRenderer->setSubTileBlending(true);
+        _glRenderer->setSubTileBlending(_subTileBlending);
         _glRenderer->initializeRenderer();
         _tiles.clear();
         GLContext::CheckGLError("TileRenderer::onSurfaceCreated()");

@@ -409,6 +409,7 @@ namespace carto {
             renderer->setLabelOrder(static_cast<int>(getLabelRenderOrder()));
             renderer->setBuildingOrder(static_cast<int>(getBuildingRenderOrder()));
             renderer->setInteractionMode(_vectorTileEventListener.get() ? true : false);
+            renderer->setSubTileBlending(false);
             return renderer->onDrawFrame(deltaSeconds, viewState);
         }
         return false;
