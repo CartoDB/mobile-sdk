@@ -34,14 +34,14 @@ namespace carto {
          * @param poses The vector of map positions that defines the location of this polygon.
          * @param style The style that defines what this polygon looks like.
          */
-        Polygon(const std::vector<MapPos>& poses, const std::shared_ptr<PolygonStyle>& style);
+        Polygon(std::vector<MapPos> poses, const std::shared_ptr<PolygonStyle>& style);
         /**
          * Constructs a Polygon object from a vector of map positions, a vector of holes and a style.
          * @param poses The vector of map positions that defines the location of this polygon.
          * @param holes The vector of holes that defines the locations of holes of this polygon.
          * @param style The style that defines what this polygon looks like.
          */
-        Polygon(const std::vector<MapPos>& poses, const std::vector<std::vector<MapPos> >& holes,
+        Polygon(std::vector<MapPos> poses, std::vector<std::vector<MapPos> > holes,
                 const std::shared_ptr<PolygonStyle>& style);
         virtual ~Polygon();
     

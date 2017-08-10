@@ -226,7 +226,8 @@ namespace {
 namespace carto {
 
     HTTPClient::WinSockImpl::WinSockImpl(bool log) :
-        _log(log), _timeout(-1)
+        _log(log),
+        _timeout(-1)
     {
     }
 

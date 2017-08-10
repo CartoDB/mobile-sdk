@@ -9,7 +9,6 @@
 
 #ifdef _CARTO_GDAL_SUPPORT
 
-#include "core/MapBounds.h"
 #include "datasources/TileDataSource.h"
 
 #include <cglib/vec.h>
@@ -46,11 +45,7 @@ namespace carto {
         GDALRasterTileDataSource(int minZoom, int maxZoom, const std::string& fileName, const std::string& srs);
         virtual ~GDALRasterTileDataSource();
 
-        /**
-         * Returns the extent of this data source. Extent is the minimal bounding box encompassing all the raster data.
-         * @return The minimal bounding box for the data.
-         */
-        MapBounds getDataExtent() const;
+        virtual MapBounds getDataExtent() const;
 
         virtual std::shared_ptr<TileData> loadTile(const MapTile& mapTile);
         

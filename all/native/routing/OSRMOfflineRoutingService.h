@@ -22,6 +22,7 @@ namespace carto {
     /**
      * An offline routing service that uses Carto-specific routing 
      * database file created from OSRM prepared routing files.
+     * Note: this class is experimental and may change or even be removed in future SDK versions.
      */
     class OSRMOfflineRoutingService : public RoutingService {
     public:

@@ -22,6 +22,7 @@
 
 %attribute(carto::ClusteredVectorLayer, float, MinimumClusterDistance, getMinimumClusterDistance, setMinimumClusterDistance)
 %attribute(carto::ClusteredVectorLayer, float, MaximumClusterZoom, getMaximumClusterZoom, setMaximumClusterZoom)
+%attribute(carto::ClusteredVectorLayer, bool, AnimatedClusters, isAnimatedClusters, setAnimatedClusters)
 !attributestring_polymorphic(carto::ClusteredVectorLayer, layers.ClusterElementBuilder, ClusterElementBuilder, getClusterElementBuilder)
 %std_exceptions(carto::ClusteredVectorLayer::ClusteredVectorLayer)
 

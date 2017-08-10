@@ -267,6 +267,17 @@ namespace carto {
          * @param reversed True if Google Maps compatible mode should be used. False otherwise (default).
          */
         void setTiltGestureReversed(bool reversed);
+
+        /**
+         * Returns the state of zoom gestures. Zoom gestures allow to use double click and dual click to zoom in/out of the map.
+         * @return True if zoom gestures are enabled. False otherwise.
+         */
+        bool isZoomGestures() const;
+        /**
+         * Sets the zoom gestures flag. By default, zoom gestures are not enabled.
+         * @param enabled True if zoom gestured should be enabled, false otherwise.
+         */
+        void setZoomGestures(bool enabled);
     
         /**
          * Returns the number of threads used by the envelope task pool.
@@ -293,9 +304,21 @@ namespace carto {
         void setTileThreadPoolSize(int poolSize);
     
         /**
-        * Returns the background bitmap. May be null.
-        * @return The background bitmap.
-        */
+         * Returns the clear color used by the renderer before drawing anything else.
+         * By default, this is white. It should be set to (0, 0, 0, 0) if transparent MapView is needed.
+         * @return The clear color.
+         */
+        Color getClearColor() const;
+        /**
+         * Sets the clear color of the renderer.
+         * @param color The new clear color.
+         */
+        void setClearColor(const Color& color);
+        
+        /**
+         * Returns the background bitmap. May be null.
+         * @return The background bitmap.
+         */
         std::shared_ptr<Bitmap> getBackgroundBitmap() const;
         /**
          * Sets the background bitmap. The purpose of the background bitmap is to fill out the empty space when there's
@@ -324,7 +347,7 @@ namespace carto {
          * @param skyBitmap The new sky bitmap.
          */
         void setSkyBitmap(const std::shared_ptr<Bitmap>& skyBitmap);
-        
+
         /**
          * Returns the horizontal alignment of the watermark.
          * @return The horizontal alignment of the watermark.
@@ -531,17 +554,15 @@ namespace carto {
          */
         void unregisterOnChangeListener(const std::shared_ptr<OnChangeListener>& listener);
 
-    private:
         static std::shared_ptr<Bitmap> GetDefaultBackgroundBitmap();
+
         static std::shared_ptr<Bitmap> GetDefaultSkyBitmap();
-        static std::shared_ptr<Bitmap> GetDefaultWatermarkBitmap();
-    
-        static std::shared_ptr<Bitmap> _DefaultBackgroundBitmap;
-        static std::shared_ptr<Bitmap> _DefaultSkyBitmap;
-        static std::shared_ptr<Bitmap> _DefaultWatermarkBitmap;
-        
-        static std::mutex _Mutex;
-        
+
+        static std::shared_ptr<Bitmap> GetCartoWatermarkBitmap();
+        static std::shared_ptr<Bitmap> GetEvaluationWatermarkBitmap();
+        static std::shared_ptr<Bitmap> GetExpiredWatermarkBitmap();
+
+    private:
         void notifyOptionChanged(const std::string& optionName);
         
         Color _ambientLightColor;
@@ -567,6 +588,10 @@ namespace carto {
         bool _seamlessPanning;
 
         bool _tiltGestureReversed;
+
+        bool _zoomGestures;
+
+        Color _clearColor;
     
         std::shared_ptr<Bitmap> _backgroundBitmap;
         std::shared_ptr<Bitmap> _skyBitmap;
@@ -598,6 +623,15 @@ namespace carto {
 
         std::vector<std::shared_ptr<OnChangeListener> > _onChangeListeners;
         mutable std::mutex _onChangeListenersMutex;
+
+        static std::shared_ptr<Bitmap> _DefaultBackgroundBitmap;
+        static std::shared_ptr<Bitmap> _DefaultSkyBitmap;
+        
+        static std::shared_ptr<Bitmap> _CartoWatermarkBitmap;
+        static std::shared_ptr<Bitmap> _EvaluationWatermarkBitmap;
+        static std::shared_ptr<Bitmap> _ExpiredWatermarkBitmap;
+        
+        static std::mutex _Mutex;
     };
     
 }

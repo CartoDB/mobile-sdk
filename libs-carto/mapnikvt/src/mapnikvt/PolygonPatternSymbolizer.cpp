@@ -6,15 +6,21 @@ namespace carto { namespace mvt {
 
         updateBindings(exprContext);
 
-        std::shared_ptr<const vt::BitmapPattern> pattern = symbolizerContext.getBitmapManager()->loadBitmapPattern(_file, 0.75f, 0.75f);
+        if (_opacityFunc == vt::FloatFunction(0)) {
+            return;
+        }
+        
+        std::shared_ptr<const vt::BitmapPattern> pattern = symbolizerContext.getBitmapManager()->loadBitmapPattern(_file, PATTERN_SCALE, PATTERN_SCALE);
         if (!pattern) {
             _logger->write(Logger::Severity::ERROR, "Failed to load polygon pattern bitmap " + _file);
             return;
         }
 
         vt::CompOp compOp = convertCompOp(_compOp);
-        
-        vt::PolygonStyle style(compOp, _fill, _opacity, pattern, _geometryTransform);
+
+        vt::ColorFunction fillFunc = _functionBuilder.createColorOpacityFunction(_fillFunc, _opacityFunc);
+
+        vt::PolygonStyle style(compOp, fillFunc, pattern, _geometryTransform);
 
         std::size_t featureIndex = 0;
         std::size_t geometryIndex = 0;
@@ -31,7 +37,7 @@ namespace carto { namespace mvt {
                     geometryIndex = 0;
                 }
 
-                if (featureIndex >= featureCollection.getSize()) {
+                if (featureIndex >= featureCollection.size()) {
                     break;
                 }
                 polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(featureCollection.getGeometry(featureIndex));
@@ -49,10 +55,10 @@ namespace carto { namespace mvt {
             bind(&_file, parseStringExpression(value));
         }
         else if (name == "fill") {
-            bind(&_fill, parseStringExpression(value), &PolygonPatternSymbolizer::convertColor);
+            bind(&_fillFunc, parseStringExpression(value), &PolygonPatternSymbolizer::convertColor);
         }
         else if (name == "opacity") {
-            bind(&_opacity, parseExpression(value));
+            bind(&_opacityFunc, parseExpression(value));
         }
         else {
             GeometrySymbolizer::bindParameter(name, value);

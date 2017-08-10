@@ -17,8 +17,10 @@ namespace carto {
     class KDTreeSpatialIndex : public SpatialIndex<T> {
     public:
         KDTreeSpatialIndex();
+        virtual ~KDTreeSpatialIndex() { }
         
         virtual std::size_t size() const;
+        virtual void reserve(std::size_t size);
         
         virtual void clear();
         virtual void insert(const MapBounds& bounds, const T& object);
@@ -73,6 +75,10 @@ namespace carto {
     template<typename T>
     std::size_t KDTreeSpatialIndex<T>::size() const {
         return _count;
+    }
+    
+    template<typename T>
+    void KDTreeSpatialIndex<T>::reserve(std::size_t size) {
     }
     
     template<typename T>

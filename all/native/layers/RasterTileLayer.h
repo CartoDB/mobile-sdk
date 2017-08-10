@@ -21,6 +21,7 @@
 
 namespace carto {
     class TileDrawData;
+    class RasterTileEventListener;
     namespace vt {
         class Tile;
     }
@@ -56,6 +57,17 @@ namespace carto {
          */
         void setTextureCacheCapacity(std::size_t capacityInBytes);
     
+        /**
+         * Returns the raster tile event listener.
+         * @return The raster tile event listener.
+         */
+        std::shared_ptr<RasterTileEventListener> getRasterTileEventListener() const;
+        /**
+         * Sets the raster tile event listener.
+         * @param eventListener The raster tile event listener.
+         */
+        void setRasterTileEventListener(const std::shared_ptr<RasterTileEventListener>& eventListener);
+    
     protected:
         class FetchTask : public TileLayer::FetchTaskBase {
         public:
@@ -65,8 +77,8 @@ namespace carto {
             bool loadTile(const std::shared_ptr<TileLayer>& tileLayer);
             
         private:
-            static std::shared_ptr<Bitmap> extractSubTile(const MapTile& subTile, const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap);
-            static std::shared_ptr<vt::Tile> createVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap);
+            static std::shared_ptr<Bitmap> ExtractSubTile(const MapTile& subTile, const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap);
+            static std::shared_ptr<vt::Tile> CreateVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap);
         };
     
         virtual bool tileExists(const MapTile& mapTile, bool preloadingCache) const;
@@ -82,6 +94,10 @@ namespace carto {
         virtual int getMaxZoom() const;
         virtual std::vector<long long> getVisibleTileIds() const;
         
+        virtual void calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray,
+            const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
+        virtual bool processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const;
+
         virtual void offsetLayerHorizontally(double offset);
         
         virtual void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
@@ -98,6 +114,8 @@ namespace carto {
         static const int EXTRA_TILE_FOOTPRINT = 4096;
         static const int DEFAULT_PRELOADING_CACHE_SIZE = 10 * 1024 * 1024;
         
+        ThreadSafeDirectorPtr<RasterTileEventListener> _rasterTileEventListener;
+
         std::vector<long long> _visibleTileIds;
         std::vector<std::shared_ptr<TileDrawData> > _tempDrawDatas;
         

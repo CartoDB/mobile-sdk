@@ -23,6 +23,7 @@
 %attributestring(carto::GeometryCollectionStyle, std::shared_ptr<carto::PointStyle>, PointStyle, getPointStyle)
 %attributestring(carto::GeometryCollectionStyle, std::shared_ptr<carto::LineStyle>, LineStyle, getLineStyle)
 %attributestring(carto::GeometryCollectionStyle, std::shared_ptr<carto::PolygonStyle>, PolygonStyle, getPolygonStyle)
+%ignore carto::GeometryCollectionStyle::GeometryCollectionStyle;
 
 %include "styles/GeometryCollectionStyle.h"
 

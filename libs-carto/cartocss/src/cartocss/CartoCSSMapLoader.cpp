@@ -209,6 +209,7 @@ namespace carto { namespace css {
             for (const AttachmentStyle& attachmentStyle : attachmentStyles) {
                 std::string styleName = layerName + attachmentStyle.attachment;
                 auto style = std::make_shared<mvt::Style>(styleName, attachmentStyle.opacity, attachmentStyle.compOp, mvt::Style::FilterMode::FIRST, attachmentStyle.rules);
+                style->optimizeRules();
                 map->addStyle(style);
                 styleNames.push_back(styleName);
             }
@@ -225,6 +226,10 @@ namespace carto { namespace css {
         }
         getMapProperty(mapProperties, "background-image", mapSettings.backgroundImage);
         getMapProperty(mapProperties, "font-directory", mapSettings.fontDirectory);
+        double bufferSize = 0;
+        if (getMapProperty(mapProperties, "buffer-size", bufferSize)) {
+            mapSettings.bufferSize = static_cast<float>(bufferSize);
+        }
     }
 
     void CartoCSSMapLoader::buildAttachmentStyleMap(const CartoCSSMapnikTranslator& translator, const std::shared_ptr<mvt::Map>& map, int minZoom, int maxZoom, const std::list<CartoCSSCompiler::LayerAttachment>& layerAttachments, std::map<std::string, AttachmentStyle>& attachmentStyleMap) const {

@@ -44,7 +44,7 @@ namespace carto {
         void operator()();
         
     private:
-        enum ClickMode { NO_CLICK, LONG_CLICK, DOUBLE_CLICK, DUAL_CLICK};
+        enum ClickMode { NO_CLICK, LONG_CLICK, DOUBLE_CLICK, DUAL_CLICK };
         
         static const std::chrono::milliseconds LONG_CLICK_MIN_DURATION;
         static const std::chrono::milliseconds DUAL_CLICK_BEGIN_DURATION;

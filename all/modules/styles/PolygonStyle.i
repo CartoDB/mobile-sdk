@@ -18,7 +18,8 @@
 !polymorphic_shared_ptr(carto::PolygonStyle, styles.PolygonStyle)
 
 %attributestring(carto::PolygonStyle, std::shared_ptr<carto::LineStyle>, LineStyle, getLineStyle)
-%attributestring(carto::PolygonStyle, std::shared_ptr<carto::Bitmap>, Bitmap, getBitmap)
+%ignore carto::PolygonStyle::getBitmap;
+%ignore carto::PolygonStyle::PolygonStyle;
 
 %include "styles/PolygonStyle.h"
 

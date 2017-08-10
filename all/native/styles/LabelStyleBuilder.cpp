@@ -83,6 +83,7 @@ namespace carto {
                                                           _verticalOffset,
                                                           _placementPriority,
                                                           _scaleWithDPI,
+                                                          _animationStyle,
                                                           _anchorPointX,
                                                           _anchorPointY,
                                                           _flippable,

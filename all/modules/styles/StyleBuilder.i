@@ -19,7 +19,6 @@
 !polymorphic_shared_ptr(carto::StyleBuilder, styles.StyleBuilder)
 
 %attributeval(carto::StyleBuilder, carto::Color, Color, getColor, setColor)
-%rename(clone) carto::StyleBuilder::operator=;
 !standard_equals(carto::StyleBuilder);
 
 %include "styles/StyleBuilder.h"

@@ -34,20 +34,19 @@ namespace carto {
          * @param max The maximum map position (north-east).
          */
         MapBounds(const MapPos& min, const MapPos& max);
-        virtual ~MapBounds();
     
         /**
          * Checks for equality between this and another map bounds object.
          * @param mapBounds The other map bounds object.
          * @return True if equal.
          */
-        bool operator==(const MapBounds& mapBounds) const;
+        bool operator ==(const MapBounds& mapBounds) const;
         /**
          * Checks for inequality between this and another map bounds object.
          * @param mapBounds The other map bounds object.
          * @return True if not equal.
          */
-        bool operator!=(const MapBounds& mapBounds) const;
+        bool operator !=(const MapBounds& mapBounds) const;
         
         /**
          * Sets the minimum and maximum map positions of this map bounds object. If a coordinate of the

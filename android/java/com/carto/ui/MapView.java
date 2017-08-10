@@ -157,10 +157,6 @@ public class MapView extends GLSurfaceView implements Renderer {
         }
     }
     
-    /**
-     * Not part of public API.
-     * @pad.exclude
-     */
     @Override
     public synchronized void onSurfaceCreated(GL10 gl, EGLConfig config) {
         if (baseMapView != null) {
@@ -168,10 +164,6 @@ public class MapView extends GLSurfaceView implements Renderer {
         }
     }
     
-    /**
-     * Not part of public API.
-     * @pad.exclude
-     */
     @Override
     public synchronized void onSurfaceChanged(GL10 gl, int width, int height) {
         if (baseMapView != null) {
@@ -179,10 +171,6 @@ public class MapView extends GLSurfaceView implements Renderer {
         }
     }
     
-    /**
-     * Not part of public API.
-     * @pad.exclude
-     */
     @Override
     public synchronized void onDrawFrame(GL10 gl) {
         if (baseMapView != null) {
@@ -190,10 +178,6 @@ public class MapView extends GLSurfaceView implements Renderer {
         }
     }
     
-    /**
-     * Not part of public API.
-     * @pad.exclude
-     */
     @Override
     public synchronized boolean onTouchEvent(MotionEvent event) {
         if (baseMapView == null) {

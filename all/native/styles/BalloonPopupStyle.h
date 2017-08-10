@@ -45,12 +45,13 @@ namespace carto {
          * @param color The color for the popup.
          * @param attachAnchorPointX The horizontal attaching anchor point for the popup.
          * @param attachAnchorPointY The vertical attaching anchor point for the popup.
-         * @param causesOverlap The causes overlap flag for the billboard.
-         * @param hideIfOverlapped The hide if overlapped flag for the billboard.
+         * @param causesOverlap The causes overlap flag for the popup.
+         * @param hideIfOverlapped The hide if overlapped flag for the popup.
          * @param horizontalOffset The horizontal offset for the popup.
          * @param verticalOffset The vertical offset for the popup.
          * @param placementPriority The placement priority for the popup.
          * @param scaleWithDPI The scale with DPI flag for the popup.
+         * @param animStyle The animation style to use for the popup.
          * @param cornerRadius The corner radius of the popup in dp.
          * @param leftColor The background color of the left part of the popup.
          * @param leftImage The image of the left part of the popup.
@@ -84,6 +85,7 @@ namespace carto {
                           float verticalOffset,
                           int placementPriority,
                           bool scaleWithDPI,
+                          const std::shared_ptr<AnimationStyle>& animStyle,
                           int cornerRadius,
                           const Color& leftColor,
                           const std::shared_ptr<Bitmap>& leftImage,

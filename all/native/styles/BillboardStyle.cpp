@@ -1,4 +1,5 @@
 #include "BillboardStyle.h"
+#include "AnimationStyle.h"
 
 namespace carto {
 
@@ -36,6 +37,10 @@ namespace carto {
     bool BillboardStyle::isScaleWithDPI() const {
         return _scaleWithDPI;
     }
+
+    std::shared_ptr<AnimationStyle> BillboardStyle::getAnimationStyle() const {
+        return _animationStyle;
+    }
         
     BillboardStyle::BillboardStyle(const Color& color,
                                    float attachAnchorPointX,
@@ -45,7 +50,8 @@ namespace carto {
                                    float horizontalOffset,
                                    float verticalOffset,
                                    int placementPriority,
-                                   bool scaleWithDPI) :
+                                   bool scaleWithDPI,
+                                   const std::shared_ptr<AnimationStyle>& animStyle) :
         Style(color),
         _attachAnchorPointX(attachAnchorPointX),
         _attachAnchorPointY(attachAnchorPointY),
@@ -54,7 +60,8 @@ namespace carto {
         _horizontalOffset(horizontalOffset),
         _verticalOffset(verticalOffset),
         _placementPriority(placementPriority),
-        _scaleWithDPI(scaleWithDPI)
+        _scaleWithDPI(scaleWithDPI),
+        _animationStyle(animStyle)
     {
     }
     

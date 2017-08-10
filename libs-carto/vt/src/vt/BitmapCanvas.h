@@ -17,21 +17,23 @@
 namespace carto { namespace vt {
     class BitmapCanvas final {
     public:
-        explicit BitmapCanvas(int width, int height);
+        explicit BitmapCanvas(int width, int height, bool sdfMode);
 
         void setOpacity(float opacity);
         void setColor(const Color& color);
 
         void drawPixel(int x, int y, float a);
+        void drawSDFPixel(int x, int y, float dist);
         void drawRectangle(float x0, float y0, float x1, float y1);
         void drawTriangle(float x0, float y0, float x1, float y1, float x2, float y2);
         void drawEllipse(float x0, float y0, float rx, float ry);
 
-        std::shared_ptr<Bitmap> buildBitmap() const;
+        std::shared_ptr<BitmapImage> buildBitmapImage() const;
 
     private:
         const int _width;
         const int _height;
+        const bool _sdfMode;
         float _opacity = 1.0f;
         std::array<std::uint8_t, 4> _color = { { 255, 255, 255, 255 } };
         std::vector<std::uint32_t> _data;

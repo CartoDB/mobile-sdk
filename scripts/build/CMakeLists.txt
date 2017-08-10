@@ -27,9 +27,9 @@ set(SDK_LIBRARY_TYPE STATIC)
 endif()
 
 # C++ compiler flags
-add_definitions("${SDK_CPP_DEFINES} -D_CARTO_MOBILE_SDK_PLATFORM=\"\\\"${SDK_PLATFORM}\\\"\" -D_CARTO_MOBILE_SDK_VERSION=\"\\\"${SDK_VERSION}\\\"\" -DHAVE_OT -DHAVE_UCDN -DHB_NO_MT -DFT2_BUILD_LIBRARY")
+add_definitions("${SDK_CPP_DEFINES} -DHAVE_OT -DHAVE_UCDN -DHB_NO_MT -DFT2_BUILD_LIBRARY -DUSE_STD_REGEX -DBOOST_ALL_NO_LIB")
 if(WIN32)
-add_definitions("-DNOMINMAX -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -DBOOST_VARIANT_DO_NOT_USE_VARIADIC_TEMPLATES -DBOOST_MSVC_ENABLE_2014_JUN_CTP -DRAPIDJSON_ENDIAN=RAPIDJSON_LITTLEENDIAN -DSQLITE_OS_WINRT -DSQLITE_OMIT_WAL -DNO_OS_DEPENDENCE -DGL_GLEXT_PROTOTYPES")
+add_definitions("-DNOMINMAX -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -DRAPIDJSON_HAS_CXX11_RVALUE_REFS=1 -DRAPIDJSON_HAS_STDSTRING=1 -DRAPIDJSON_ENDIAN=RAPIDJSON_LITTLEENDIAN -DSQLITE_OS_WINRT -DSQLITE_OMIT_WAL -DNO_OS_DEPENDENCE -DGL_GLEXT_PROTOTYPES")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /WINMD /NODEFAULTLIB:vccorlib /NODEFAULTLIB:msvcrt vccorlib.lib msvcrt.lib")
 endif(WIN32)
 
@@ -64,13 +64,16 @@ include_directories(
     "${SDK_CARTO_LIBS_DIR}/cartocss/src"
     "${SDK_CARTO_LIBS_DIR}/nml/src"
     "${SDK_CARTO_LIBS_DIR}/routing/src"
+    "${SDK_CARTO_LIBS_DIR}/geocoding/src"
     "${SDK_EXTERNAL_LIBS_DIR}/boost"
+    "${SDK_EXTERNAL_LIBS_DIR}/boostext"
     "${SDK_EXTERNAL_LIBS_DIR}/asio"
     "${SDK_EXTERNAL_LIBS_DIR}/cglib"
     "${SDK_EXTERNAL_LIBS_DIR}/stdext"
     "${SDK_EXTERNAL_LIBS_DIR}/cryptopp"
     "${SDK_EXTERNAL_LIBS_DIR}/freetype/include"
     "${SDK_EXTERNAL_LIBS_DIR}/harfbuzz/src"
+    "${SDK_EXTERNAL_LIBS_DIR}/msdfgen"
     "${SDK_EXTERNAL_LIBS_DIR}/bidi"
     "${SDK_EXTERNAL_LIBS_DIR}/jpeg"
     "${SDK_EXTERNAL_LIBS_DIR}/miniz"
@@ -90,6 +93,14 @@ include_directories(
     "${SDK_EXTERNAL_LIBS_DIR}/webp/src"
     "${PNG_INCLUDE_DIR}"
 )
+
+if(INCLUDE_VALHALLA)
+include_directories(
+    "${SDK_EXTERNAL_LIBS_DIR}/valhalla/include"
+    "${SDK_EXTERNAL_LIBS_DIR}/valhalla/include/valhalla" 
+    "${SDK_EXTERNAL_LIBS_DIR}/protobuf/src"
+)
+endif(INCLUDE_VALHALLA)
 
 if(INCLUDE_GDAL)
 include_directories(
@@ -132,10 +143,12 @@ add_subdirectory("${SDK_CARTO_LIBS_DIR}/mapnikvt" mapnikvt)
 add_subdirectory("${SDK_CARTO_LIBS_DIR}/cartocss" cartocss)
 add_subdirectory("${SDK_CARTO_LIBS_DIR}/nml" nml)
 add_subdirectory("${SDK_CARTO_LIBS_DIR}/routing" routing)
+add_subdirectory("${SDK_CARTO_LIBS_DIR}/geocoding" geocoding)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/bidi" bidi)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/cryptopp" cryptopp)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/freetype" freetype)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/harfbuzz" harfbuzz)
+add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/msdfgen" msdfgen)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/jpeg" jpeg)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/miniz" miniz)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/png" png)
@@ -146,9 +159,16 @@ add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/sqlite" sqlite)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/sqlite3pp" sqlite3pp)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/tess2" tess2)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/webp" webp)
+
+if(INCLUDE_VALHALLA)
+add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/protobuf" protobuf)
+add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/valhalla" valhalla)
+endif(INCLUDE_VALHALLA)
+
 if(NOT IOS)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/zlib" zlib)
 endif(NOT IOS)
+
 if(NOT (WIN32 OR IOS OR ANDROID))
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/pion" pion)
 endif()
@@ -164,6 +184,7 @@ file(GLOB SDK_SRC_FILES
     "${SDK_EXT_SRC_DIR}/*/*.h"
     "${SDK_EXT_SRC_DIR}/*/*/*.h"
 )
+set_source_files_properties("${SDK_SRC_DIR}/../../all/native/utils/PlatformUtils.cpp" PROPERTIES COMPILE_FLAGS "-D_CARTO_MOBILE_SDK_PLATFORM=\"\\\"${SDK_PLATFORM}\\\"\" -D_CARTO_MOBILE_SDK_VERSION=\"\\\"${SDK_VERSION}\\\"\"")
 if (WIN32 OR IOS OR ANDROID)
 list(REMOVE_ITEM SDK_SRC_FILES "${SDK_SRC_DIR}/network/HTTPClientPionImpl.cpp")
 endif()
@@ -232,6 +253,7 @@ set(SDK_SRC_FILES
     "${cartocss_SRC_FILES}"
     "${nml_SRC_FILES}"
     "${routing_SRC_FILES}"
+    "${geocoding_SRC_FILES}"
     "${bidi_SRC_FILES}"
     "${cryptopp_SRC_FILES}"
     "${rg_etc1_SRC_FILES}"
@@ -244,13 +266,22 @@ set(SDK_SRC_FILES
     "${webp_SRC_FILES}"
     "${freetype_SRC_FILES}"
     "${harfbuzz_SRC_FILES}"
+    "${msdfgen_SRC_FILES}"
     "${sqlite3pp_SRC_FILES}"
     "${sqlite_SRC_FILES}"
 )
 
+if(INCLUDE_VALHALLA)
+set(SDK_SRC_FILES ${SDK_SRC_FILES}
+    "${protobuf_SRC_FILES}"
+    "${valhalla_SRC_FILES}"
+)
+endif(INCLUDE_VALHALLA)
+
 if(NOT IOS)
 set(SDK_SRC_FILES ${SDK_SRC_FILES} ${zlib_SRC_FILES})
 endif()
+
 if(NOT (WIN32 OR IOS OR ANDROID))
 set(SDK_SRC_FILES ${SDK_SRC_FILES} ${pion_SRC_FILES})
 endif()
@@ -265,6 +296,7 @@ set(SDK_OBJECTS
     $<TARGET_OBJECTS:cartocss>
     $<TARGET_OBJECTS:nml>
     $<TARGET_OBJECTS:routing>
+    $<TARGET_OBJECTS:geocoding>
     $<TARGET_OBJECTS:bidi>
     $<TARGET_OBJECTS:cryptopp>
     $<TARGET_OBJECTS:rg_etc1>
@@ -277,13 +309,22 @@ set(SDK_OBJECTS
     $<TARGET_OBJECTS:webp>
     $<TARGET_OBJECTS:freetype>
     $<TARGET_OBJECTS:harfbuzz>
+    $<TARGET_OBJECTS:msdfgen>
     $<TARGET_OBJECTS:sqlite3pp>
     $<TARGET_OBJECTS:sqlite>
 )
 
+if(INCLUDE_VALHALLA)
+set(SDK_OBJECTS ${SDK_OBJECTS}
+    $<TARGET_OBJECTS:protobuf>
+    $<TARGET_OBJECTS:valhalla>
+)
+endif(INCLUDE_VALHALLA)
+
 if(NOT IOS)
 set(SDK_OBJECTS ${SDK_OBJECTS} $<TARGET_OBJECTS:zlib>)
 endif()
+
 if(NOT (WIN32 OR IOS OR ANDROID))
 set(SDK_OBJECTS ${SDK_OBJECTS} $<TARGET_OBJECTS:pion>)
 endif()

@@ -13,7 +13,7 @@
 #include "projections/Projection.h"
 #include "ui/UTFGridClickInfo.h"
 #include "utils/Const.h"
-#include "utils/GeomUtils.h"
+#include "utils/TileUtils.h"
 #include "utils/Log.h"
 
 namespace carto {
@@ -121,25 +121,15 @@ namespace carto {
     }
     
     MapTile TileLayer::calculateMapTile(const MapPos& mapPos, int zoom) const {
-        double tileWidth = _dataSource->getProjection()->getBounds().getDelta().getX() / (1 << zoom);
-        double tileHeight = _dataSource->getProjection()->getBounds().getDelta().getY() / (1 << zoom);
-        MapVec mapVec = mapPos - _dataSource->getProjection()->getBounds().getMin();
-        int x = static_cast<int>(std::floor(mapVec.getX() / tileWidth));
-        int y = static_cast<int>(std::floor(mapVec.getY() / tileHeight));
-        return MapTile(x, y, zoom, 0);
+        return TileUtils::CalculateMapTile(mapPos, zoom, _dataSource->getProjection());
     }
     
     MapPos TileLayer::calculateMapTileOrigin(const MapTile& mapTile) const {
-        double tileWidth = _dataSource->getProjection()->getBounds().getDelta().getX() / (1 << mapTile.getZoom());
-        double tileHeight = _dataSource->getProjection()->getBounds().getDelta().getY() / (1 << mapTile.getZoom());
-        MapVec mapVec(mapTile.getX() * tileWidth, mapTile.getY() * tileHeight);
-        return _dataSource->getProjection()->getBounds().getMin() + mapVec;
+        return TileUtils::CalculateMapTileOrigin(mapTile, _dataSource->getProjection());
     }
 
     MapBounds TileLayer::calculateMapTileBounds(const MapTile& mapTile) const {
-        MapPos pos0 = calculateMapTileOrigin(mapTile);
-        MapPos pos1 = calculateMapTileOrigin(MapTile(mapTile.getX() + 1, mapTile.getY() + 1, mapTile.getZoom(), mapTile.getFrameNr()));
-        return MapBounds(pos0, pos1);
+        return TileUtils::CalculateMapTileBounds(mapTile, _dataSource->getProjection());
     }
     
     void TileLayer::clearTileCaches(bool all) {
@@ -232,7 +222,7 @@ namespace carto {
         }
         
         // Check if layer should be drawn
-        if (!_visible || !_visibleZoomRange.inRange(cullState->getViewState().getZoom())) {
+        if (!isVisible() || !getVisibleZoomRange().inRange(cullState->getViewState().getZoom())) {
             _calculatingTiles = false;
 
             refreshDrawData(cullState);
@@ -259,9 +249,6 @@ namespace carto {
                     int tileMask = (1 << visTile.getZoom()) - 1;
                     MapTile tile(visTile.getX() & tileMask, visTile.getY() & tileMask, visTile.getZoom(), visTile.getFrameNr());
                     fetchTile(tile.getParent(), true, false);
-                    if (visTile.getZoom() > 1) {
-                        fetchTile(tile.getParent().getParent(), true, false);
-                    }
                 }
             }
         }
@@ -367,13 +354,13 @@ namespace carto {
         _preloadingTiles.clear();
         
         // Recursively calculate visible tiles
-        calculateVisibleTilesRecursive(cullState, MapTile(0, 0, 0, _frameNr));
+        calculateVisibleTilesRecursive(cullState, MapTile(0, 0, 0, _frameNr), _dataSource->getDataExtent());
         if (auto options = _options.lock()) {
             if (options->isSeamlessPanning()) {
                 // Additional visibility testing has to be done if seamless panning is enabled
                 for (int i = 1; i <= 5; i++) {
-                    calculateVisibleTilesRecursive(cullState, MapTile(-i, 0, 0, _frameNr));
-                    calculateVisibleTilesRecursive(cullState, MapTile( i, 0, 0, _frameNr));
+                    calculateVisibleTilesRecursive(cullState, MapTile(-i, 0, 0, _frameNr), _dataSource->getDataExtent());
+                    calculateVisibleTilesRecursive(cullState, MapTile( i, 0, 0, _frameNr), _dataSource->getDataExtent());
                 }
             }
         }
@@ -382,11 +369,17 @@ namespace carto {
         sortTiles(_preloadingTiles, cullState->getViewState(), true);
     }
 
-    void TileLayer::calculateVisibleTilesRecursive(const std::shared_ptr<CullState>& cullState, const MapTile& tile) {
+    void TileLayer::calculateVisibleTilesRecursive(const std::shared_ptr<CullState>& cullState, const MapTile& tile, const MapBounds& dataExtent) {
         const ViewState& viewState = cullState->getViewState();
         const Frustum& visibleFrustum = viewState.getFrustum();
         
         if (tile.getZoom() > Const::MAX_SUPPORTED_ZOOM_LEVEL) {
+            return;
+        }
+
+        int tileMask = (1 << tile.getZoom()) - 1;
+        MapTile flippedTile(tile.getX() & tileMask, tileMask - (tile.getY() & tileMask), tile.getZoom(), 0);
+        if (!calculateMapTileBounds(flippedTile).intersects(dataExtent)) {
             return;
         }
         
@@ -414,7 +407,7 @@ namespace carto {
         if (subDivide) {
             // The tile is too coarse, keep subdividing
             for (int n = 0; n < 4; n++) {
-                calculateVisibleTilesRecursive(cullState, tile.getChild(n));
+                calculateVisibleTilesRecursive(cullState, tile.getChild(n), dataExtent);
             }
         } else {
             // Add the tile to visible tiles, sort by the distnace to the camera
@@ -637,7 +630,7 @@ namespace carto {
         
         bool refresh = false;
         try {
-            refresh = loadTile(layer);
+            refresh = loadTile(layer) && !_preloadingTile;
             if (refresh) {
                 loadUTFGridTile(layer);
             }
@@ -704,7 +697,7 @@ namespace carto {
 
     const float TileLayer::DISCRETE_ZOOM_LEVEL_BIAS = 0.001f;
 
-    const float TileLayer::PRELOADING_TILE_SCALE = 2.0f;
+    const float TileLayer::PRELOADING_TILE_SCALE = 1.5f;
     const float TileLayer::SUBDIVISION_THRESHOLD = Const::WORLD_SIZE;
     
 }

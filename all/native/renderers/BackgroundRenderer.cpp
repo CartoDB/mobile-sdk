@@ -1,4 +1,5 @@
 #include "BackgroundRenderer.h"
+#include "components/Layers.h"
 #include "components/Options.h"
 #include "graphics/Bitmap.h"
 #include "graphics/Shader.h"
@@ -8,6 +9,7 @@
 #include "graphics/ViewState.h"
 #include "graphics/shaders/TexturedShaderSource.h"
 #include "graphics/utils/GLContext.h"
+#include "layers/Layer.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 
@@ -15,7 +17,7 @@
 
 namespace carto {
 
-    BackgroundRenderer::BackgroundRenderer(const Options& options) :
+    BackgroundRenderer::BackgroundRenderer(const Options& options, const Layers& layers) :
         _backgroundBitmap(),
         _backgroundTex(),
         _skyBitmap(),
@@ -26,7 +28,8 @@ namespace carto {
         _u_tex(0),
         _u_mvpMat(0),
         _textureManager(),
-        _options(options)
+        _options(options),
+        _layers(layers)
     {
     }
     
@@ -52,7 +55,14 @@ namespace carto {
     }
     
     void BackgroundRenderer::onDrawFrame(const ViewState& viewState) {
-        std::shared_ptr<Bitmap> backgroundBitmap(_options.getBackgroundBitmap());
+        std::vector<std::shared_ptr<Layer> > layers = _layers.getAll();
+
+        std::shared_ptr<Bitmap> backgroundBitmap = _options.getBackgroundBitmap();
+        if (backgroundBitmap == Options::GetDefaultBackgroundBitmap()) {
+            if (!layers.empty()) {
+                backgroundBitmap = layers.front()->getBackgroundBitmap();
+            }
+        }
         if (_backgroundBitmap != backgroundBitmap) {
             if (backgroundBitmap) {
                 _backgroundTex = _textureManager->createTexture(backgroundBitmap, true, true);
@@ -62,7 +72,12 @@ namespace carto {
             _backgroundBitmap = backgroundBitmap;
         }
     
-        std::shared_ptr<Bitmap> skyBitmap(_options.getSkyBitmap());
+        std::shared_ptr<Bitmap> skyBitmap = _options.getSkyBitmap();
+        if (skyBitmap == Options::GetDefaultSkyBitmap()) {
+            if (!layers.empty()) {
+                skyBitmap = layers.front()->getSkyBitmap();
+            }
+        }
         if (_skyBitmap != skyBitmap) {
             if (skyBitmap) {
                 _skyTex = _textureManager->createTexture(skyBitmap, true, true);

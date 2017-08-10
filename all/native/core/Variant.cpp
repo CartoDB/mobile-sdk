@@ -54,11 +54,11 @@ namespace carto {
         _value = picojson::value(valObj);
     }
 
-    bool Variant::operator == (const Variant& var) const {
+    bool Variant::operator ==(const Variant& var) const {
         return toPicoJSON() == var.toPicoJSON();
     }
 
-    bool Variant::operator != (const Variant& var) const {
+    bool Variant::operator !=(const Variant& var) const {
         return !(*this == var);
     }
 
@@ -143,6 +143,14 @@ namespace carto {
         }
         return keys;
     }
+
+    bool Variant::containsObjectKey(const std::string& key) const {
+        const picojson::value& val = toPicoJSON();
+        if (val.is<picojson::value::object>()) {
+            return val.contains(key);
+        }
+        return false;
+    }
     
     Variant Variant::getObjectElement(const std::string& key) const {
         const picojson::value& val = toPicoJSON();
@@ -175,12 +183,14 @@ namespace carto {
         if (!err.empty()) {
             throw ParseException(err, str);
         }
-        return FromPicoJSON(val);
+        Variant var;
+        var._value = std::move(val);
+        return var;
     }
 
-    Variant Variant::FromPicoJSON(const picojson::value& val) {
+    Variant Variant::FromPicoJSON(picojson::value val) {
         Variant var;
-        var._value = val;
+        var._value = std::move(val);
         return var;
     }
 

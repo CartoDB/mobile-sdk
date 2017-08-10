@@ -16,15 +16,46 @@
 #include <stdexcept>
 
 #include <rapidjson/rapidjson.h>
-#include <rapidjson/writer.h>
-#include <rapidjson/stringbuffer.h>
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
+
+namespace {
+
+    picojson::value convertRapidJSON(const rapidjson::Value& value) {
+        if (value.IsObject()) {
+            picojson::value object(picojson::object_type, true);
+            for (rapidjson::Value::ConstMemberIterator it = value.MemberBegin(); it != value.MemberEnd(); it++) {
+                object.set(it->name.GetString(), convertRapidJSON(it->value));
+            }
+            return object;
+        } else if (value.IsArray()) {
+            std::vector<picojson::value> array;
+            array.reserve(value.Size());
+            for (rapidjson::SizeType i = 0; i < value.Size(); i++) {
+                array.push_back(convertRapidJSON(value[i]));
+            }
+            return picojson::value(std::move(array));
+        } else if (value.IsString()) {
+            return picojson::value(value.GetString());
+        } else if (value.IsInt64()) {
+            return picojson::value(value.GetInt64());
+        } else if (value.IsUint64()) {
+            return picojson::value(static_cast<std::int64_t>(value.GetUint64()));
+        } else if (value.IsDouble()) {
+            return picojson::value(value.GetDouble());
+        } else if (value.IsBool()) {
+            return picojson::value(value.GetBool());
+        }
+        return picojson::value();
+    }
+
+}
 
 namespace carto {
 
     GeoJSONGeometryReader::GeoJSONGeometryReader() :
-        _targetProjection(), _mutex()
+        _targetProjection(),
+        _mutex()
     {
     }
     
@@ -94,7 +125,7 @@ namespace carto {
             std::shared_ptr<Feature> feature = readFeature(featuresValue[i]);
             features.push_back(feature);
         }
-        return std::make_shared<FeatureCollection>(features);
+        return std::make_shared<FeatureCollection>(std::move(features));
     }
 
     std::shared_ptr<Feature> GeoJSONGeometryReader::readFeature(const rapidjson::Value& value) const {
@@ -115,7 +146,7 @@ namespace carto {
         if (value.HasMember("properties")) {
             properties = readProperties(value["properties"]);
         }
-        return std::make_shared<Feature>(geometry, properties);
+        return std::make_shared<Feature>(std::move(geometry), std::move(properties));
     }
 
     std::shared_ptr<Geometry> GeoJSONGeometryReader::readGeometry(const rapidjson::Value& value) const {
@@ -183,10 +214,7 @@ namespace carto {
     }
 
     Variant GeoJSONGeometryReader::readProperties(const rapidjson::Value& value) const {
-        rapidjson::StringBuffer buffer;
-        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-        value.Accept(writer);
-        return Variant::FromString(buffer.GetString());
+        return Variant::FromPicoJSON(convertRapidJSON(value));
     }
 
     MapPos GeoJSONGeometryReader::readPoint(const rapidjson::Value& value) const {

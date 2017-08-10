@@ -89,9 +89,14 @@ namespace carto {
         return Const::MAX_SUPPORTED_ZOOM_LEVEL;
     }
         
-    std::shared_ptr<TorqueTileDecoder::TileFeature> TorqueTileDecoder::decodeFeature(long long id, const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const {
+    std::shared_ptr<VectorTileFeature> TorqueTileDecoder::decodeFeature(long long id, const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const {
         Log::Warn("TorqueTileDecoder::decodeFeature: Not implemented");
-        return std::shared_ptr<TileFeature>();
+        return std::shared_ptr<VectorTileFeature>();
+    }
+
+    std::shared_ptr<VectorTileFeatureCollection> TorqueTileDecoder::decodeFeatures(const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const {
+        Log::Warn("TorqueTileDecoder::decodeFeatures: Not implemented");
+        return std::shared_ptr<VectorTileFeatureCollection>();
     }
 
     std::shared_ptr<TorqueTileDecoder::TileMap> TorqueTileDecoder::decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const {
@@ -146,7 +151,7 @@ namespace carto {
         auto bitmapLoader = std::make_shared<VTBitmapLoader>("", std::shared_ptr<AssetPackage>());
         auto fontManager = std::make_shared<vt::FontManager>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
         auto bitmapManager = std::make_shared<vt::BitmapManager>(bitmapLoader);
-        auto strokeMap = std::make_shared<vt::StrokeMap>(1);
+        auto strokeMap = std::make_shared<vt::StrokeMap>(1, 1);
         auto glyphMap = std::make_shared<vt::GlyphMap>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
         mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, std::map<std::string, mvt::Value>());
         auto symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);

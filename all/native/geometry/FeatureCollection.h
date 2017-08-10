@@ -23,7 +23,7 @@ namespace carto {
          * Constructs a FeatureCollection from a vector of features.
          * @param features The features for the collection.
          */
-        explicit FeatureCollection(const std::vector<std::shared_ptr<Feature> >& features);
+        explicit FeatureCollection(std::vector<std::shared_ptr<Feature> > features);
         virtual ~FeatureCollection();
 
         /**
@@ -34,13 +34,18 @@ namespace carto {
 
         /**
          * Returns the feature at the specified index. Index must be between 0 and getFeatureCount (exclusive).
+         * @param index The index of the feature to get.
          * @return The feature at specified index.
          * @throws std::out_of_range If the index is out of range.
          */
         std::shared_ptr<Feature> getFeature(int index) const;
 
     protected:
-        std::vector<std::shared_ptr<Feature> > _features;
+        template <typename It>
+        FeatureCollection(It begin, It end) : _features(begin, end) {
+        }
+
+        const std::vector<std::shared_ptr<Feature> > _features;
     };
 
 }

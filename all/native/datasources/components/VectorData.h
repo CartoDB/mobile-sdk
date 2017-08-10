@@ -8,7 +8,6 @@
 #define _CARTO_VECTORDATA_H_
 
 #include <memory>
-#include <mutex>
 #include <vector>
 
 namespace carto {
@@ -23,7 +22,7 @@ namespace carto {
          * Constructs a VectorData object from a list of vector elements.
          * @param elements The list of vector elements.
          */
-        VectorData(const std::vector<std::shared_ptr<VectorElement> >& elements);
+        VectorData(std::vector<std::shared_ptr<VectorElement> > elements);
         virtual ~VectorData();
         
         /**
@@ -34,7 +33,6 @@ namespace carto {
         
     private:
         const std::vector<std::shared_ptr<VectorElement> > _elements;
-        mutable std::mutex _mutex;
     };
 
 }

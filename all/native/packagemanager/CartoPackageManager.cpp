@@ -7,6 +7,7 @@
 #include "utils/GeneralUtils.h"
 #include "utils/NetworkUtils.h"
 #include "utils/PlatformUtils.h"
+#include "utils/TileUtils.h"
 #include "utils/Log.h"
 
 #include <regex>
@@ -28,30 +29,27 @@ namespace carto {
     }
 
     std::string CartoPackageManager::GetPackageListURL(const std::string& source) {
-        std::string type = "map";
-        std::string id = source;
-        std::string::size_type pos = source.find(':');
-        if (pos != std::string::npos) {
-            type = source.substr(0, pos);
-            id = source.substr(pos + 1);
-        }
+        PackageSource packageSource = ResolveSource(source);
 
         std::string baseURL;
-        if (type == "map") {
-            baseURL = MAP_PACKAGE_LIST_URL + NetworkUtils::URLEncode(id) + "/1/packages.json";
+        if (packageSource.type == "map") {
+            baseURL = MAP_PACKAGE_LIST_URL + NetworkUtils::URLEncode(packageSource.id) + "/2/packages.json";
         }
-        else if (type == "routing") {
-            baseURL = ROUTING_PACKAGE_LIST_URL + NetworkUtils::URLEncode(id) + "/1/packages.json";
+        else if (packageSource.type == "routing") {
+            baseURL = ROUTING_PACKAGE_LIST_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/packages.json";
+        }
+        else if (packageSource.type == "geocoding") {
+            baseURL = GEOCODING_PACKAGE_LIST_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/packages.json";
         }
         else {
-            Log::Errorf("CartoPackageManager: Illegal package type: %s", type.c_str());
+            Log::Errorf("CartoPackageManager: Illegal package type: %s", packageSource.type.c_str());
             return "";
         }
 
         std::map<std::string, std::string> params;
         params["deviceId"] = PlatformUtils::GetDeviceId();
         params["platform"] = PlatformUtils::GetPlatformId();
-        params["sdk_build"] = _CARTO_MOBILE_SDK_VERSION;
+        params["sdk_build"] = PlatformUtils::GetSDKVersion();
         std::string appToken;
         if (LicenseManager::GetInstance().getParameter("appToken", appToken, false)) {
             params["appToken"] = appToken;
@@ -78,16 +76,12 @@ namespace carto {
         return encKey;
     }
 
-    bool CartoPackageManager::CalculateBBoxTiles(const MapBounds& bounds, const Projection& proj, const PackageTileMask::Tile& tile, std::vector<PackageTileMask::Tile>& tiles) {
-        if (tile.zoom > MAX_CUSTOM_BBOX_PACKAGE_TILEMASK_ZOOM) {
+    bool CartoPackageManager::CalculateBBoxTiles(const MapBounds& bounds, const std::shared_ptr<Projection>& proj, const MapTile& tile, std::vector<MapTile>& tiles) {
+        if (tile.getZoom() > MAX_CUSTOM_BBOX_PACKAGE_TILE_ZOOM) {
             return true;
         }
         
-        double tileWidth = proj.getBounds().getDelta().getX() / (1 << tile.zoom);
-        double tileHeight = proj.getBounds().getDelta().getY() / (1 << tile.zoom);
-        MapPos tileOrigin(proj.getBounds().getMin().getX() + tile.x * tileWidth, proj.getBounds().getMin().getY() + tile.y * tileHeight);
-        MapBounds tileBounds(tileOrigin, MapPos(tileOrigin.getX() + tileWidth, tileOrigin.getY() + tileHeight));
-        if (!tileBounds.intersects(bounds)) {
+        if (!bounds.intersects(TileUtils::CalculateMapTileBounds(tile, proj))) {
             return true;
         }
 
@@ -96,12 +90,10 @@ namespace carto {
         }
         tiles.push_back(tile);
 
-        for (int dy = 0; dy < 2; dy++) {
-            for (int dx = 0; dx < 2; dx++) {
-                PackageTileMask::Tile subTile(tile.zoom + 1, tile.x * 2 + dx, tile.y * 2 + dy);
-                if (!CalculateBBoxTiles(bounds, proj, subTile, tiles)) {
-                    return false;
-                }
+        for (int i = 0; i < 4; i++) {
+            MapTile subTile = tile.getChild(i);
+            if (!CalculateBBoxTiles(bounds, proj, subTile, tiles)) {
+                return false;
             }
         }
         return true;
@@ -127,48 +119,76 @@ namespace carto {
         
         std::match_results<std::string::const_iterator> results;
         if (std::regex_match(packageId, results, re)) {
-            std::string id = _source;
-            std::string::size_type pos = _source.find(':');
-            if (pos != std::string::npos) {
-                id = _source.substr(pos + 1);
-            }
+            PackageSource packageSource = ResolveSource(_source);
 
-            EPSG3857 proj;
+            auto proj = std::make_shared<EPSG3857>();
             MapBounds bounds;
             try {
                 double minLon = boost::lexical_cast<double>(std::string(results[1].first, results[1].second));
                 double minLat = boost::lexical_cast<double>(std::string(results[2].first, results[2].second));
                 double maxLon = boost::lexical_cast<double>(std::string(results[3].first, results[3].second));
                 double maxLat = boost::lexical_cast<double>(std::string(results[4].first, results[4].second));
-                bounds = MapBounds(proj.fromLatLong(minLat, minLon), proj.fromLatLong(maxLat, maxLon));
+                if (minLon >= maxLon || minLat >= maxLat) {
+                    Log::Warn("CartoPackageManager: Empty bounding box");
+                    return std::shared_ptr<PackageInfo>();
+                }
+                bounds = MapBounds(proj->fromLatLong(minLat, minLon), proj->fromLatLong(maxLat, maxLon));
             }
             catch (const boost::bad_lexical_cast&) {
                 Log::Error("CartoPackageManager: Illegal bounding box coordinates");
                 return std::shared_ptr<PackageInfo>();
             }
 
-            std::vector<PackageTileMask::Tile> tiles;
-            if (!CalculateBBoxTiles(bounds, proj, PackageTileMask::Tile(0, 0, 0), tiles)) {
+            // Build explicit tile list
+            std::vector<MapTile> tiles;
+            if (!CalculateBBoxTiles(bounds, proj, MapTile(0, 0, 0, 0), tiles)) {
                 Log::Error("CartoPackageManager: Too many tiles in custom package");
                 return std::shared_ptr<PackageInfo>();
             }
 
-            auto tileMask = std::make_shared<PackageTileMask>(tiles);
-            std::string baseURL = CUSTOM_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(id) + "/custom/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".mbtiles";
+            // Build tilemask. If the tilemask string is too long, use higher zoom levels
+            std::shared_ptr<PackageTileMask> tileMask;
+            for (int zoom = MAX_CUSTOM_BBOX_PACKAGE_TILEMASK_ZOOMLEVEL; zoom >= 0; zoom--) {
+                tileMask = std::make_shared<PackageTileMask>(tiles, zoom);
+                if (tileMask->getURLSafeStringValue().size() <= MAX_TILEMASK_LENGTH) {
+                    break;
+                }
+            }
+
+            // Configure service URL
+            std::string baseURL;
+            PackageType::PackageType packageType = PackageType::PACKAGE_TYPE_MAP;
+            if (packageSource.type == "map") {
+                baseURL = CUSTOM_MAP_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".mbtiles";
+                packageType = PackageType::PACKAGE_TYPE_MAP;
+            }
+            else if (packageSource.type == "routing") {
+                baseURL = CUSTOM_ROUTING_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".vtiles";
+                packageType = PackageType::PACKAGE_TYPE_VALHALLA_ROUTING;
+            }
+            else if (packageSource.type == "geocoding") {
+                baseURL = CUSTOM_GEOCODING_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".nutigeodb";
+                packageType = PackageType::PACKAGE_TYPE_GEOCODING;
+            }
+            else {
+                Log::Errorf("CartoPackageManager: Illegal package type: %s", packageSource.type.c_str());
+                return std::shared_ptr<PackageInfo>();
+            }
 
             std::map<std::string, std::string> params;
             params["deviceId"] = PlatformUtils::GetDeviceId();
             params["platform"] = PlatformUtils::GetPlatformId();
-            params["sdk_build"] = _CARTO_MOBILE_SDK_VERSION;
+            params["sdk_build"] = PlatformUtils::GetSDKVersion();
             std::string appToken;
             if (LicenseManager::GetInstance().getParameter("appToken", appToken, false)) {
                 params["appToken"] = appToken;
             }
             std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
 
+            // Create package info
             auto packageInfo = std::make_shared<PackageInfo>(
                 packageId,
-                PackageType::PACKAGE_TYPE_MAP,
+                packageType,
                 version,
                 0,
                 url,
@@ -180,11 +200,35 @@ namespace carto {
         return std::shared_ptr<PackageInfo>();
     }
 
+    CartoPackageManager::PackageSource CartoPackageManager::ResolveSource(const std::string& source) {
+        PackageSource packageSource("map", source);
+        std::string::size_type pos = source.find(':');
+        if (pos != std::string::npos) {
+            packageSource.type = source.substr(0, pos);
+            packageSource.id = source.substr(pos + 1);
+        }
+        return packageSource;
+    }
+
     const std::string CartoPackageManager::MAP_PACKAGE_LIST_URL = "http://api.nutiteq.com/mappackages/v2/";
 
     const std::string CartoPackageManager::ROUTING_PACKAGE_LIST_URL = "http://api.nutiteq.com/routepackages/v2/";
 
-    const std::string CartoPackageManager::CUSTOM_BBOX_PACKAGE_URL = "http://api.nutiteq.com/v2/";
+    const std::string CartoPackageManager::GEOCODING_PACKAGE_LIST_URL = "http://api.nutiteq.com/geocodepackages/v2/";
+
+    const std::string CartoPackageManager::CUSTOM_MAP_BBOX_PACKAGE_URL = "http://api.nutiteq.com/maparea/v2/";
+
+    const std::string CartoPackageManager::CUSTOM_ROUTING_BBOX_PACKAGE_URL = "http://api.nutiteq.com/routearea/v2/";
+
+    const std::string CartoPackageManager::CUSTOM_GEOCODING_BBOX_PACKAGE_URL = "http://api.nutiteq.com/geocodearea/v2/";
+
+    const int CartoPackageManager::MAX_CUSTOM_BBOX_PACKAGE_TILES = 250000;
+
+    const int CartoPackageManager::MAX_CUSTOM_BBOX_PACKAGE_TILE_ZOOM = 14;
+
+    const int CartoPackageManager::MAX_CUSTOM_BBOX_PACKAGE_TILEMASK_ZOOMLEVEL = 12;
+
+    const int CartoPackageManager::MAX_TILEMASK_LENGTH = 128;
 
 }
 

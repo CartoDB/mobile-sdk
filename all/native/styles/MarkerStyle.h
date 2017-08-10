@@ -30,12 +30,14 @@ namespace carto {
          * @param horizontalOffset The horizontal offset for the marker.
          * @param verticalOffset The vertical offset for the marker.
          * @param placementPriority The placement priority for the marker.
-         * @param scaleWithDPI The scale with DPI flag for the label.
+         * @param scaleWithDPI The scale with DPI flag for the marker.
+         * @param animStyle The animation style to use for the marker.
          * @param anchorPointX The horizontal anchor point for the marker.
          * @param anchorPointY The vertical anchor point for the marker.
          * @param bitmap The bitmap for the marker.
          * @param orientationMode The orientation mode for the marker.
          * @param scalingMode The scaling mode for the marker.
+         * @param clickSize The click size of the marker. If -1, then marker size is used.
          * @param size The size for the marker.
          */
         MarkerStyle(const Color& color,
@@ -47,11 +49,13 @@ namespace carto {
                     float verticalOffset,
                     int placementPriority,
                     bool scaleWithDPI,
+                    const std::shared_ptr<AnimationStyle>& animStyle,
                     float anchorPointX,
                     float anchorPointY,
                     const std::shared_ptr<Bitmap>& bitmap,
                     BillboardOrientation::BillboardOrientation orientationMode,
                     BillboardScaling::BillboardScaling scalingMode,
+                    float clickSize,
                     float size);
         virtual ~MarkerStyle();
     
@@ -85,6 +89,12 @@ namespace carto {
         BillboardScaling::BillboardScaling getScalingMode() const;
         
         /**
+         * Returns the click size of the marker.
+         * @return The click size of the marker, units depend on the scaling mode. If -1, then marker size is used.
+         */
+        float getClickSize() const;
+    
+        /**
          * Returns the size of the marker.
          * @return The size of the marker, units depend on the scaling mode.
          */
@@ -100,6 +110,8 @@ namespace carto {
         
         BillboardScaling::BillboardScaling _scalingMode;
         
+        float _clickSize;
+
         float _size;
     };
     

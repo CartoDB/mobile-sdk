@@ -75,13 +75,13 @@ namespace carto {
          * @param n The index of the requested coordinate.
          * @return The n-th coordinate of this map position.
          */
-        double operator[](std::size_t n) const;
+        double operator [](std::size_t n) const;
         /**
          * Returns a modifiable n-th coordinate of this map position.
          * @param n The index of the requested coordinate.
          * @return The modifiable n-th coordinate of this map position.
          */
-        double& operator[](std::size_t n);
+        double& operator [](std::size_t n);
         
         /**
          * Sets the x and y coordinates of this map position.
@@ -102,46 +102,46 @@ namespace carto {
          * @param v The map vector to be added.
          * @return This map position after the addition.
          */
-        MapPos& operator+=(const MapVec& v);
+        MapPos& operator +=(const MapVec& v);
         /**
          * Subtracts map vector from this map position.
          * @param v The map vector to be subtracted.
          * @return This map position after the subtraction.
          */
-        MapPos& operator-=(const MapVec& v);
+        MapPos& operator -=(const MapVec& v);
     
         /**
          * Creates a new map position by adding a map vector to this map position.
          * @param v The map vector to be added.
          * @return The new map position.
          */
-        MapPos operator+(const MapVec& v) const;
+        MapPos operator +(const MapVec& v) const;
         /**
          * Creates a new map position by subtracting a map vector from this map position.
          * @param v The map vector to be subtracted.
          * @return The new map position.
          */
-        MapPos operator-(const MapVec& v) const;
+        MapPos operator -(const MapVec& v) const;
     
         /**
          * Creates a new map vector by subtracting a map position from this map position.
          * @param p The map position to be subtracted.
          * @return The new map vector.
          */
-        MapVec operator-(const MapPos& p) const;
+        MapVec operator -(const MapPos& p) const;
     
         /**
          * Checks for equality between this and another map position.
          * @param p The other map position.
          * @return True if equal.
          */
-        bool operator==(const MapPos& p) const;
+        bool operator ==(const MapPos& p) const;
         /**
          * Checks for inequality between this and another map position.
          * @param p The other map position.
          * @return True if not equal.
          */
-        bool operator!=(const MapPos& p) const;
+        bool operator !=(const MapPos& p) const;
     
         /**
          * Returns the hash value of this object.
@@ -167,7 +167,7 @@ namespace std {
 
     template <>
     struct hash<carto::MapPos> {
-        size_t operator() (const carto::MapPos& pos) const {
+        size_t operator ()(const carto::MapPos& pos) const {
             return static_cast<size_t>(pos.hash());
         }
     };

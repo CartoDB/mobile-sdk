@@ -21,17 +21,17 @@ namespace carto {
          */
         enum CartoBaseMapStyle {
             /**
-             * The default (bright) style.
+             * The Positron style. Replacement for older 'grey' style.
              */
-            CARTO_BASEMAP_STYLE_DEFAULT,
+            CARTO_BASEMAP_STYLE_POSITRON,
             /**
-             * The dark style.
+             * The Darkmatter style. Replacement for older 'dark' style.
              */
-            CARTO_BASEMAP_STYLE_DARK,
+            CARTO_BASEMAP_STYLE_DARKMATTER,
             /**
-             * The gray style.
+             * The Voyager style. Replacement for older 'bright' style.
              */
-            CARTO_BASEMAP_STYLE_GRAY
+            CARTO_BASEMAP_STYLE_VOYAGER
         };
     }
 
@@ -47,7 +47,7 @@ namespace carto {
          */
         CartoVectorTileLayer(const std::shared_ptr<TileDataSource>& dataSource, CartoBaseMapStyle::CartoBaseMapStyle style);
         /**
-         * Constructs a CartoVectorTileLayer object from a source name and style asset package.
+         * Constructs a CartoVectorTileLayer object from a source name and a style asset package.
          * Style asset package defines visual style of the map and must be compatible with the source.
          * @param dataSource The data source from which this layer loads data.
          * @param styleAssetPackage The style asset package (usually a zipped file or an asset)
@@ -65,10 +65,15 @@ namespace carto {
          * @param lang The new language to use. The default is local language (empty string).
          */
         void setLanguage(const std::string& lang);
-        
-    private:
+
+        /**
+         * Creates a new tile decoder from the specified base map style.
+         * @param style The style to use for the decoder.
+         * @return The new vector tile decoder configured for the style.
+         */
         static std::shared_ptr<VectorTileDecoder> CreateTileDecoder(CartoBaseMapStyle::CartoBaseMapStyle style);
 
+    private:
         static std::shared_ptr<VectorTileDecoder> CreateTileDecoder(const std::shared_ptr<AssetPackage>& styleAssetPackage);
     };
     

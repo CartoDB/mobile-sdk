@@ -48,6 +48,9 @@ namespace carto { namespace mvt {
                 or_kw  = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["or"]];
                 and_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["and"]];
                 not_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["not"]];
+                exp_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["exp"]];
+                log_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["log"]];
+                pow_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["pow"]];
                 length_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["length"]];
                 uppercase_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["uppercase"]];
                 lowercase_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["lowercase"]];
@@ -60,13 +63,13 @@ namespace carto { namespace mvt {
                 cubic_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["cubic"]];
 
                 string %=
-                    qi::lexeme[+(qi::print - '[' - ']' - '{' - '}')]
+                    qi::lexeme[+(qi::print - qi::char_("[]{}"))]
                     ;
 
                 stringExpression =
                     ( (string                                        [_val = phx::bind(&makeStringExpression, _1)])
-                    | ('[' > stringExpression  > ']')	             [_val = phx::bind(&makeVariableExpression, _1)]
-            		| ('{' > qi::skip(encoding::space_type())[expression > '}']) [_val = _1]
+                    | ('[' > stringExpression  > ']')                [_val = phx::bind(&makeVariableExpression, _1)]
+                    | ('{' > qi::skip(encoding::space_type())[expression > '}']) [_val = _1]
                     )
                     > -(stringExpression                             [_val = phx::bind(&makeBinaryExpression<ConcatenateOperator>, _val, _1)])
                     ;
@@ -76,20 +79,20 @@ namespace carto { namespace mvt {
                     ;
 
                 expression =
-                    term0											 [_val = _1]
+                    term0                                            [_val = _1]
                     >> -( (qi::lit('?') > expression > ':' > expression) [_val = phx::bind(&makeTertiaryExpression<ConditionalOperator>, _val, _1, _2)]
                         )
                     ;
 
                 term0 =
-                    term1											 [_val = _1]
-                    >> *( ((qi::lit("&&") | and_kw) > term1)		 [_val = phx::bind(&makeAndPredicate, _val, _1)]
-                        | ((qi::lit("||") | or_kw) > term1)		     [_val = phx::bind(&makeOrPredicate,  _val, _1)]
+                    term1                                            [_val = _1]
+                    >> *( ((qi::lit("&&") | and_kw) > term1)         [_val = phx::bind(&makeAndPredicate, _val, _1)]
+                        | ((qi::lit("||") | or_kw) > term1)          [_val = phx::bind(&makeOrPredicate,  _val, _1)]
                         )
                     ;
 
                 term1 =
-                    term2											 [_val = _1]
+                    term2                                            [_val = _1]
                     >> *( ((qi::lit("<>") | "!=" | neq_kw) > term2)  [_val = phx::bind(&makeComparisonPredicate<NEQOperator>, _val, _1)]
                         | ((qi::lit("<=") | le_kw        ) > term2)  [_val = phx::bind(&makeComparisonPredicate<LTEOperator>, _val, _1)]
                         | ((qi::lit(">=") | ge_kw        ) > term2)  [_val = phx::bind(&makeComparisonPredicate<GTEOperator>, _val, _1)]
@@ -100,32 +103,32 @@ namespace carto { namespace mvt {
                     ;
 
                 term2 =
-                    term3											  [_val = _1]
-                    >> *( (qi::lit("+") > term3)					  [_val = phx::bind(&makeBinaryExpression<AddOperator>, _val, _1)]
-                        | (qi::lit("-") > term3)					  [_val = phx::bind(&makeBinaryExpression<SubOperator>, _val, _1)]
+                    term3                                            [_val = _1]
+                    >> *( (qi::lit("+") > term3)                     [_val = phx::bind(&makeBinaryExpression<AddOperator>, _val, _1)]
+                        | (qi::lit("-") > term3)                     [_val = phx::bind(&makeBinaryExpression<SubOperator>, _val, _1)]
                         )
                     ;
 
                 term3 =
-                    unary											  [_val = _1]
-                    >> *( (qi::lit("*") > unary)					  [_val = phx::bind(&makeBinaryExpression<MulOperator>, _val, _1)]
-                        | (qi::lit("/") > unary)					  [_val = phx::bind(&makeBinaryExpression<DivOperator>, _val, _1)]
-                        | (qi::lit("%") > unary)					  [_val = phx::bind(&makeBinaryExpression<ModOperator>, _val, _1)]
+                    unary                                            [_val = _1]
+                    >> *( (qi::lit("*") > unary)                     [_val = phx::bind(&makeBinaryExpression<MulOperator>, _val, _1)]
+                        | (qi::lit("/") > unary)                     [_val = phx::bind(&makeBinaryExpression<DivOperator>, _val, _1)]
+                        | (qi::lit("%") > unary)                     [_val = phx::bind(&makeBinaryExpression<ModOperator>, _val, _1)]
                         )
                     ;
 
                 unary =
-                        postfix										  [_val = _1]
-                    |  (qi::lit('-')            > unary)			  [_val = phx::bind(&makeUnaryExpression<NegOperator>, _1)]
-                    | ((qi::lit('!') || not_kw) > unary)			  [_val = phx::bind(&makeNotPredicate, _1)]
+                        postfix                                      [_val = _1]
+                    |  (qi::lit('-')            > unary)             [_val = phx::bind(&makeUnaryExpression<NegOperator>, _1)]
+                    | ((qi::lit('!') || not_kw) > unary)             [_val = phx::bind(&makeNotPredicate, _1)]
                     ;
 
                 postfix =
-                    factor											  [_val = _1]
-                    >> *('.' >> ( length_kw                           [_val = phx::bind(&makeUnaryExpression<LengthOperator>, _val)]
-                                | uppercase_kw                        [_val = phx::bind(&makeUnaryExpression<UpperCaseOperator>, _val)]
-                                | lowercase_kw                        [_val = phx::bind(&makeUnaryExpression<LowerCaseOperator>, _val)]
-                                | capitalize_kw                       [_val = phx::bind(&makeUnaryExpression<CapitalizeOperator>, _val)]
+                    factor                                           [_val = _1]
+                    >> *('.' >> ( length_kw                          [_val = phx::bind(&makeUnaryExpression<LengthOperator>, _val)]
+                                | uppercase_kw                       [_val = phx::bind(&makeUnaryExpression<UpperCaseOperator>, _val)]
+                                | lowercase_kw                       [_val = phx::bind(&makeUnaryExpression<LowerCaseOperator>, _val)]
+                                | capitalize_kw                      [_val = phx::bind(&makeUnaryExpression<CapitalizeOperator>, _val)]
                                 | (concat_kw  >> ('(' > expression > ')')) [_val = phx::bind(&makeBinaryExpression<ConcatenateOperator>, _val, _1)]
                                 | (match_kw >> ('(' > expression > ')')) [_val = phx::bind(&makeComparisonPredicate<MatchOperator>, _val, _1)]
                                 | (replace_kw >> ('(' > expression > ',' > expression > ')')) [_val = phx::bind(&makeTertiaryExpression<ReplaceOperator>, _val, _1, _2)]
@@ -134,18 +137,21 @@ namespace carto { namespace mvt {
                     ;
 
                 factor =
-                      constant										  [_val = phx::bind(&makeConstExpression, _1)]
+                      constant                                       [_val = phx::bind(&makeConstExpression, _1)]
+                    | (exp_kw    >> '(' > expression > ')')          [_val = phx::bind(&makeUnaryExpression<ExpOperator>, _1)]
+                    | (log_kw    >> '(' > expression > ')')          [_val = phx::bind(&makeUnaryExpression<LogOperator>, _1)]
+                    | (pow_kw    >> '(' > expression > ',' > expression > ')') [_val = phx::bind(&makeBinaryExpression<PowOperator>, _1, _2)]
                     | (step_kw   >> '(' > expression > ',' > (constant % ',') > ')') [_val = phx::bind(&makeInterpolateExpression, InterpolateExpression::Method::STEP, _1, _2)]
                     | (linear_kw >> '(' > expression > ',' > (constant % ',') > ')') [_val = phx::bind(&makeInterpolateExpression, InterpolateExpression::Method::LINEAR, _1, _2)]
                     | (cubic_kw  >> '(' > expression > ',' > (constant % ',') > ')') [_val = phx::bind(&makeInterpolateExpression, InterpolateExpression::Method::CUBIC, _1, _2)]
-                    | ('[' > stringExpression > ']')				  [_val = phx::bind(&makeVariableExpression, _1)]
-                    | ('(' > expression > ')')				    	  [_val = _1]
+                    | ('[' > stringExpression > ']')                 [_val = phx::bind(&makeVariableExpression, _1)]
+                    | ('(' > expression > ')')                       [_val = _1]
                     ;
             }
 
             ValueParser<Iterator> constant;
             qi::rule<Iterator, std::string()> string;
-            qi::rule<Iterator, qi::unused_type()> not_kw, and_kw, or_kw, neq_kw, eq_kw, le_kw, ge_kw, lt_kw, gt_kw, length_kw, uppercase_kw, lowercase_kw, capitalize_kw, concat_kw, match_kw, replace_kw, step_kw, linear_kw, cubic_kw;
+            qi::rule<Iterator, qi::unused_type()> not_kw, and_kw, or_kw, neq_kw, eq_kw, le_kw, ge_kw, lt_kw, gt_kw, exp_kw, log_kw, pow_kw, length_kw, uppercase_kw, lowercase_kw, capitalize_kw, concat_kw, match_kw, replace_kw, step_kw, linear_kw, cubic_kw;
             qi::rule<Iterator, std::shared_ptr<Expression>()> stringExpression, genericExpression;
             qi::rule<Iterator, std::shared_ptr<Expression>(), encoding::space_type> expression, term0, term1, term2, term3, unary, postfix, factor;
 
@@ -208,22 +214,26 @@ namespace carto { namespace mvt {
 
             template <typename Op>
             static std::shared_ptr<Expression> makeComparisonPredicate(std::shared_ptr<const Expression> expr1, std::shared_ptr<const Expression> expr2) {
-                return std::make_shared<PredicateExpression>(std::make_shared<ComparisonPredicate>(std::make_shared<Op>(), std::move(expr1), std::move(expr2)));
+                static const std::shared_ptr<Op> op = std::make_shared<Op>();
+                return std::make_shared<PredicateExpression>(std::make_shared<ComparisonPredicate>(op, std::move(expr1), std::move(expr2)));
             }
 
             template <typename Op>
             static std::shared_ptr<Expression> makeUnaryExpression(std::shared_ptr<const Expression> expr) {
-                return std::make_shared<UnaryExpression>(std::make_shared<Op>(), std::move(expr));
+                static const std::shared_ptr<Op> op = std::make_shared<Op>();
+                return std::make_shared<UnaryExpression>(op, std::move(expr));
             }
 
             template <typename Op>
             static std::shared_ptr<Expression> makeBinaryExpression(std::shared_ptr<const Expression> expr1, std::shared_ptr<const Expression> expr2) {
-                return std::make_shared<BinaryExpression>(std::make_shared<Op>(), std::move(expr1), std::move(expr2));
+                static const std::shared_ptr<Op> op = std::make_shared<Op>();
+                return std::make_shared<BinaryExpression>(op, std::move(expr1), std::move(expr2));
             }
 
             template <typename Op>
             static std::shared_ptr<Expression> makeTertiaryExpression(std::shared_ptr<const Expression> expr1, std::shared_ptr<const Expression> expr2, std::shared_ptr<const Expression> expr3) {
-                return std::make_shared<TertiaryExpression>(std::make_shared<Op>(), std::move(expr1), std::move(expr2), std::move(expr3));
+                static const std::shared_ptr<Op> op = std::make_shared<Op>();
+                return std::make_shared<TertiaryExpression>(op, std::move(expr1), std::move(expr2), std::move(expr3));
             }
 
             static std::shared_ptr<Expression> makeInterpolateExpression(InterpolateExpression::Method method, std::shared_ptr<const Expression> timeExpr, std::vector<Value> keyFrames) {

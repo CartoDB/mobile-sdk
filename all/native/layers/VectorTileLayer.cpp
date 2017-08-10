@@ -2,16 +2,18 @@
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
 #include "components/CancelableThreadPool.h"
+#include "geometry/VectorTileFeature.h"
+#include "graphics/utils/BackgroundBitmapGenerator.h"
+#include "graphics/utils/SkyBitmapGenerator.h"
 #include "datasources/TileDataSource.h"
-#include "layers/TileLoadListener.h"
 #include "layers/VectorTileEventListener.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/TileRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/drawdatas/TileDrawData.h"
+#include "ui/VectorTileClickInfo.h"
 #include "utils/Log.h"
 #include "utils/Const.h"
-#include "ui/VectorTileClickInfo.h"
 #include "vectortiles/VectorTileDecoder.h"
 
 #include <vt/TileId.h>
@@ -30,6 +32,10 @@ namespace carto {
         _buildingRenderOrder(VectorTileRenderOrder::VECTOR_TILE_RENDER_ORDER_LAST),
         _tileDecoder(decoder),
         _tileDecoderListener(),
+        _backgroundColor(),
+        _backgroundBitmap(),
+        _skyColor(),
+        _skyBitmap(),
         _labelCullThreadPool(std::make_shared<CancelableThreadPool>()),
         _visibleTileIds(),
         _tempDrawDatas(),
@@ -129,13 +135,18 @@ namespace carto {
 
         if (!invalidated) {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
-            if (preloadingTile && _preloadingCache.exists(tileId) && _preloadingCache.valid(tileId)) {
-                _preloadingCache.get(tileId);
+            if (_preloadingCache.exists(tileId) && _preloadingCache.valid(tileId)) {
+                if (!preloadingTile) {
+                    _preloadingCache.move(tileId, _visibleCache); // move to visible cache, just in case the element gets trashed
+                }
+                else {
+                    _preloadingCache.get(tileId);
+                }
                 return;
             }
-    
-            if (!preloadingTile && _visibleCache.exists(tileId) && _visibleCache.valid(tileId)) {
-                _visibleCache.get(tileId);
+
+            if (_visibleCache.exists(tileId) && _visibleCache.valid(tileId)) {
+                _visibleCache.get(tileId); // do not move to preloading, it will be moved at later stage
                 return;
             }
         }
@@ -332,11 +343,9 @@ namespace carto {
                     _visibleCache.peek(getTileId(mapTile), tileInfo);
 
                     if (std::shared_ptr<BinaryData> tileData = tileInfo.getTileData()) {
-                        std::shared_ptr<VectorTileDecoder::TileFeature> tileFeature = _tileDecoder->decodeFeature(id, vtTileId, tileData, tileInfo.getTileBounds());
-                        if (tileFeature) {
-                            auto elementInfo = std::make_shared<std::pair<MapTile, VectorTileDecoder::TileFeature> >(mapTile, *tileFeature);
+                        if (std::shared_ptr<VectorTileFeature> tileFeature = _tileDecoder->decodeFeature(id, vtTileId, tileData, tileInfo.getTileBounds())) {
                             std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
-                            results.push_back(RayIntersectedElement(elementInfo, thisLayer, mapPos, mapPos, 0, pass > 0));
+                            results.push_back(RayIntersectedElement(tileFeature, thisLayer, mapPos, mapPos, 0, pass > 0));
                         } else {
                             Log::Warnf("VectorTileLayer::calculateRayIntersectedElements: Failed to decode feature %lld", id);
                         }
@@ -354,10 +363,8 @@ namespace carto {
         DirectorPtr<VectorTileEventListener> eventListener = _vectorTileEventListener;
 
         if (eventListener) {
-            if (std::shared_ptr<std::pair<MapTile, VectorTileDecoder::TileFeature> > elementInfo = intersectedElement.getElement<std::pair<MapTile, VectorTileDecoder::TileFeature> >()) {
-                const MapTile& mapTile = elementInfo->first;
-                const VectorTileDecoder::TileFeature& tileFeature = elementInfo->second;
-                auto clickInfo = std::make_shared<VectorTileClickInfo>(clickType, intersectedElement.getHitPos(), intersectedElement.getHitPos(), mapTile, std::get<0>(tileFeature), std::get<2>(tileFeature), std::get<1>(tileFeature), intersectedElement.getLayer());
+            if (std::shared_ptr<VectorTileFeature> tileFeature = intersectedElement.getElement<VectorTileFeature>()) {
+                auto clickInfo = std::make_shared<VectorTileClickInfo>(clickType, intersectedElement.getHitPos(), intersectedElement.getHitPos(), tileFeature, intersectedElement.getLayer());
                 return eventListener->onVectorTileClicked(clickInfo);
             }
         }
@@ -402,6 +409,7 @@ namespace carto {
             renderer->setLabelOrder(static_cast<int>(getLabelRenderOrder()));
             renderer->setBuildingOrder(static_cast<int>(getBuildingRenderOrder()));
             renderer->setInteractionMode(_vectorTileEventListener.get() ? true : false);
+            renderer->setSubTileBlending(false);
             return renderer->onDrawFrame(deltaSeconds, viewState);
         }
         return false;
@@ -431,6 +439,28 @@ namespace carto {
         Layer::onSurfaceDestroyed();
     }
     
+    std::shared_ptr<Bitmap> VectorTileLayer::getBackgroundBitmap() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+        Color backgroundColor = _tileDecoder->getBackgroundColor();
+        if (backgroundColor != _backgroundColor || !_backgroundBitmap) {
+            _backgroundBitmap = BackgroundBitmapGenerator(BACKGROUND_BLOCK_SIZE, BACKGROUND_BLOCK_COUNT).generateBitmap(backgroundColor);
+            _backgroundColor = backgroundColor;
+        }
+        return _backgroundBitmap;
+    }
+
+    std::shared_ptr<Bitmap> VectorTileLayer::getSkyBitmap() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+        Color backgroundColor = _tileDecoder->getBackgroundColor();
+        if (backgroundColor != _skyColor || !_skyBitmap) {
+            _skyBitmap = SkyBitmapGenerator(SKY_WIDTH, SKY_HEIGHT, SKY_GRADIENT_SIZE, SKY_GRADIENT_OFFSET).generateBitmap(backgroundColor);
+            _skyColor = backgroundColor;
+        }
+        return _skyBitmap;
+    }
+
     void VectorTileLayer::registerDataSourceListener() {
         _tileDecoderListener = std::make_shared<TileDecoderListener>(std::static_pointer_cast<VectorTileLayer>(shared_from_this()));
         _tileDecoder->registerOnChangeListener(_tileDecoderListener);
@@ -523,7 +553,7 @@ namespace carto {
                 }
                 
                 refresh = true; // NOTE: need to refresh even when invalidated
-            } else {
+            } else if (!tileData->getData()->empty()) {
                 Log::Error("VectorTileLayer::FetchTask: Failed to decode tile");
             }
             break;

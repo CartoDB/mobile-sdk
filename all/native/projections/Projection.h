@@ -103,7 +103,7 @@ namespace carto {
         virtual std::string getName() const = 0;
     
     protected:
-        Projection(const MapBounds& bounds);
+        explicit Projection(const MapBounds& bounds);
     
         MapBounds _bounds;
 

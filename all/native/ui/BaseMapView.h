@@ -80,7 +80,15 @@ namespace carto {
          * @param y2 The y coordinate of the second pointer. -1 if there are no coordinates.
          */
         void onInputEvent(int event, float x1, float y1, float x2, float y2);
-        
+
+        /**
+         * Handles a wheel-rotation event.
+         * @param delta The number of ticks wheel changed with sign showing the direction of change.
+         * @param x The x coordinate of the pointer.
+         * @param y The y coordinate of the pointer.
+         */
+        void onWheelEvent(int delta, float x, float y);
+
         /**
          * Returns the Layers object, that can be used for adding and removing map layers.
          * @return The Layer object.

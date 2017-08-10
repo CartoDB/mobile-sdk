@@ -36,6 +36,7 @@
 %attribute(carto::Options, bool, KineticRotation, isKineticRotation, setKineticRotation)
 %attribute(carto::Options, bool, SeamlessPanning, isSeamlessPanning, setSeamlessPanning)
 %attribute(carto::Options, bool, TiltGestureReversed, isTiltGestureReversed, setTiltGestureReversed)
+%attribute(carto::Options, bool, ZoomGestures, isZoomGestures, setZoomGestures)
 %attributeval(carto::Options, carto::MapRange, ZoomRange, getZoomRange, setZoomRange)
 %attributeval(carto::Options, carto::MapRange, TiltRange, getTiltRange, setTiltRange)
 %attributeval(carto::Options, carto::MapBounds, PanBounds, getPanBounds, setPanBounds)
@@ -47,6 +48,7 @@
 %attribute(carto::Options, carto::ProjectionMode::ProjectionMode, ProjectionMode, getProjectionMode, setProjectionMode)
 %attribute(carto::Options, carto::PanningMode::PanningMode, PanningMode, getPanningMode, setPanningMode)
 %attribute(carto::Options, carto::PivotMode::PivotMode, PivotMode, getPivotMode, setPivotMode)
+%attributeval(carto::Options, carto::Color, ClearColor, getClearColor, setClearColor)
 %attributestring(carto::Options, std::shared_ptr<carto::Bitmap>, BackgroundBitmap, getBackgroundBitmap, setBackgroundBitmap)
 %attributestring(carto::Options, std::shared_ptr<carto::Bitmap>, SkyBitmap, getSkyBitmap, setSkyBitmap)
 %attribute(carto::Options, int, EnvelopeThreadPoolSize, getEnvelopeThreadPoolSize, setEnvelopeThreadPoolSize)
@@ -67,6 +69,11 @@
 %ignore carto::Options::OnChangeListener;
 %ignore carto::Options::registerOnChangeListener;
 %ignore carto::Options::unregisterOnChangeListener;
+%ignore carto::Options::GetDefaultBackgroundBitmap;
+%ignore carto::Options::GetDefaultSkyBitmap;
+%ignore carto::Options::GetCartoWatermarkBitmap;
+%ignore carto::Options::GetEvaluationWatermarkBitmap;
+%ignore carto::Options::GetExpiredWatermarkBitmap;
 !standard_equals(carto::Options);
 
 %include "components/Options.h"

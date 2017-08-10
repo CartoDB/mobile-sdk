@@ -77,7 +77,6 @@ namespace carto { namespace mvt {
                 return it->second;
             }
 
-            ;
             auto featureData = std::make_shared<FeatureData>(FeatureData::GeometryType::POINT_GEOMETRY, std::vector<std::pair<std::string, Value>>{ { std::string("value"), Value(element.value) } });
             _featureDataCache.emplace(element.value, featureData);
             return featureData;

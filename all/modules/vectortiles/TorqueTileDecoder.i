@@ -25,6 +25,7 @@
 %std_exceptions(carto::TorqueTileDecoder::TorqueTileDecoder)
 %std_exceptions(carto::TorqueTileDecoder::setStyleSet)
 %ignore carto::TorqueTileDecoder::decodeFeature;
+%ignore carto::TorqueTileDecoder::decodeFeatures;
 %ignore carto::TorqueTileDecoder::decodeTile;
 %ignore carto::TorqueTileDecoder::getBackgroundColor;
 %ignore carto::TorqueTileDecoder::getBackgroundPattern;

@@ -7,6 +7,7 @@
 #ifndef _CARTO_LAYER_H_
 #define _CARTO_LAYER_H_
 
+#include "core/ScreenPos.h"
 #include "core/MapRange.h"
 #include "renderers/components/StyleTextureCache.h"
 #include "renderers/components/CullState.h"
@@ -20,15 +21,16 @@
 #include <cglib/ray.h>
 
 namespace carto {
+    class Bitmap;
     class BillboardSorter;
     class DataSource;
     class Layers;
     class MapPos;
-    class MapRenderer;
-    class TouchHandler;
     class MapVec;
+    class MapRenderer;
     class ShaderManager;
     class TextureManager;
+    class TouchHandler;
     class CancelableThreadPool;
     class RayIntersectedElement;
     class ViewState;
@@ -106,10 +108,19 @@ namespace carto {
          * changes.
          */
         virtual void refresh();
+
+        /**
+         * Simulate click on this layer. This may trigger any event listeners attached to the layer.
+         * @param clickType The type of the click.
+         * @param screenPos The screen position for the simulated click.
+         * @param viewState The view state to use.
+         */
+        virtual void simulateClick(ClickType::ClickType clickType, const ScreenPos& screenPos, const ViewState& viewState);
     
     protected:
         friend class Layers;
         friend class MapRenderer;
+        friend class BackgroundRenderer;
         friend class TouchHandler;
     
         Layer();
@@ -125,12 +136,15 @@ namespace carto {
         virtual void loadData(const std::shared_ptr<CullState>& cullState) = 0;
         
         virtual void offsetLayerHorizontally(double offset) = 0;
-        
-        bool isSurfaceCreated();
+
+        virtual bool isSurfaceCreated() const;
         virtual void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
         virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) = 0;
         virtual bool onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
         virtual void onSurfaceDestroyed();
+        
+        virtual std::shared_ptr<Bitmap> getBackgroundBitmap() const;
+        virtual std::shared_ptr<Bitmap> getSkyBitmap() const;
         
         virtual void calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray,
                                                      const ViewState& viewState, std::vector<RayIntersectedElement>& results) const = 0;

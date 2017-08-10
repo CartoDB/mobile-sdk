@@ -1,7 +1,8 @@
 #include "PersistentCacheTileDataSource.h"
 #include "core/BinaryData.h"
-#include "core/MapTile.h"
+#include "datasources/TileDownloadListener.h"
 #include "utils/Log.h"
+#include "utils/TileUtils.h"
 
 #include <memory>
 
@@ -13,14 +14,18 @@ namespace carto {
         CacheTileDataSource(dataSource),
         _database(),
         _cacheOnlyMode(false),
+        _downloadThreadPool(std::make_shared<CancelableThreadPool>()),
         _cache(DEFAULT_CAPACITY),
         _mutex()
     {
+        _downloadThreadPool->setPoolSize(1);
         openDatabase(databasePath);
     }
     
     PersistentCacheTileDataSource::~PersistentCacheTileDataSource() {
+        stopAllDownloads();
         closeDatabase();
+        _downloadThreadPool->deinit();
     }
     
     bool PersistentCacheTileDataSource::isCacheOnlyMode() const {
@@ -31,6 +36,15 @@ namespace carto {
     void PersistentCacheTileDataSource::setCacheOnlyMode(bool enabled) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _cacheOnlyMode = enabled;
+    }
+
+    void PersistentCacheTileDataSource::startDownloadArea(const MapBounds& mapBounds, int minZoom, int maxZoom, const std::shared_ptr<TileDownloadListener>& tileDownloadListener) {
+        auto task = std::make_shared<DownloadTask>(std::static_pointer_cast<PersistentCacheTileDataSource>(shared_from_this()), mapBounds, minZoom, maxZoom, tileDownloadListener);
+        _downloadThreadPool->execute(task, 0);
+    }
+
+    void PersistentCacheTileDataSource::stopAllDownloads() {
+        _downloadThreadPool->cancelAll();
     }
     
     std::shared_ptr<TileData> PersistentCacheTileDataSource::loadTile(const MapTile& mapTile) {
@@ -77,6 +91,11 @@ namespace carto {
         }
         
         return tileData;
+    }
+
+    bool PersistentCacheTileDataSource::isOpen() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return (bool) _database;
     }
 
     void PersistentCacheTileDataSource::close() {
@@ -173,8 +192,8 @@ namespace carto {
         try {
             sqlite3pp::query query(*_database, "SELECT tileId, LENGTH(compressed) FROM persistent_cache ORDER BY time ASC");
             for (auto it = query.begin(); it != query.end(); ++it) {
-                long long tileId = (*it).get<uint64_t>(0);
-                int tileSize = (*it).get<int>(1);
+                long long tileId = (*it).get<std::uint64_t>(0);
+                std::size_t tileSize = static_cast<std::size_t>((*it).get<std::uint64_t>(1));
                 _cache.put(tileId, createTileId(tileId), tileSize);
             }
             query.finish();
@@ -190,8 +209,8 @@ namespace carto {
     
         try {
             // Get the tile from the database
-            sqlite3pp::query query(*_database, "SELECT compressed, LENGTH(compressed), expirationTime FROM persistent_cache WHERE tileId=:tileId");
-            query.bind(":tileId", static_cast<uint64_t>(tileId));
+            sqlite3pp::query query(*_database, "SELECT compressed, expirationTime FROM persistent_cache WHERE tileId=:tileId");
+            query.bind(":tileId", static_cast<std::uint64_t>(tileId));
             auto qit = query.begin();
             if (qit == query.end()) {
                 // No data exists for this tile in the database
@@ -200,9 +219,9 @@ namespace carto {
             }
             
             // Construct TileData from the blob returned from the database
+            std::size_t dataSize = (*qit).column_bytes(0);
             const unsigned char* dataPtr = static_cast<const unsigned char*>((*qit).get<const void*>(0));
-            std::size_t dataSize = (*qit).get<int>(1);
-            long long expirationTime = (*qit).get<std::uint64_t>(2);
+            long long expirationTime = (*qit).get<std::uint64_t>(1);
             auto data = std::make_shared<BinaryData>(dataPtr, dataSize);
             query.finish();
             
@@ -232,10 +251,10 @@ namespace carto {
         // Add tile to the database
         try {
             sqlite3pp::command command(*_database, "INSERT OR REPLACE INTO persistent_cache(tileId, compressed, time, expirationTime) VALUES (:tileId, :compressed, :time, :expirationTime)");
-            command.bind(":tileId", static_cast<uint64_t>(tileId));
+            command.bind(":tileId", static_cast<std::uint64_t>(tileId));
             command.bind(":compressed", tileData->getData()->data(), static_cast<unsigned int>(tileData->getData()->size()));
-            command.bind(":time", static_cast<uint64_t>(time));
-            command.bind(":expirationTime", static_cast<uint64_t>(expirationTime));
+            command.bind(":time", static_cast<std::uint64_t>(time));
+            command.bind(":expirationTime", static_cast<std::uint64_t>(expirationTime));
             command.execute();
             command.finish();
         } catch (const std::exception& e) {
@@ -250,7 +269,7 @@ namespace carto {
         
         try {
             sqlite3pp::command command(*_database, "DELETE FROM persistent_cache WHERE tileId=:tileId");
-            command.bind(":tileId", static_cast<uint64_t>(tileId));
+            command.bind(":tileId", static_cast<std::uint64_t>(tileId));
             command.execute();
             command.finish();
         } catch (const std::exception& e) {
@@ -269,5 +288,87 @@ namespace carto {
         };
         return std::shared_ptr<long long>(new long long(tileId), tileIdDeleter);
     }
+
+    PersistentCacheTileDataSource::DownloadTask::DownloadTask(const std::shared_ptr<PersistentCacheTileDataSource>& dataSource, const MapBounds& mapBounds, int minZoom, int maxZoom, const std::shared_ptr<TileDownloadListener>& listener) :
+        _dataSource(dataSource),
+        _mapBounds(mapBounds),
+        _minZoom(minZoom),
+        _maxZoom(maxZoom),
+        _downloadListener(listener)
+    {
+    }
     
+    void PersistentCacheTileDataSource::DownloadTask::run() {
+        std::shared_ptr<Projection> projection;
+        int minZoom = _minZoom;
+        int maxZoom = _maxZoom;
+        if (auto dataSource = _dataSource.lock()) {
+            if (!dataSource->isOpen()) {
+                Log::Warn("PersistentCacheTileDataSource:: DownloadTask: Database is not open, skipping download");
+                return;
+            }
+            projection = dataSource->getProjection();
+            minZoom = std::max(minZoom, dataSource->getMinZoom());
+            maxZoom = std::min(maxZoom, dataSource->getMaxZoom());
+        } else {
+            return;
+        }
+
+        std::uint64_t tileCount = 0;
+        for (int zoom = minZoom; zoom <= maxZoom; zoom++) {
+            MapTile mapTile1 = TileUtils::CalculateMapTile(_mapBounds.getMin(), zoom, projection);
+            MapTile mapTile2 = TileUtils::CalculateMapTile(_mapBounds.getMax(), zoom, projection);
+            std::uint64_t dx = std::abs(mapTile1.getX() - mapTile2.getX()) + 1;
+            std::uint64_t dy = std::abs(mapTile1.getY() - mapTile2.getY()) + 1;
+            tileCount += dx * dy;
+        }
+
+        Log::Infof("PersistentCacheTileDataSource:: DownloadTask: Starting to download %d tiles", static_cast<int>(tileCount));
+
+        if (_downloadListener) {
+            _downloadListener->onDownloadStarting(static_cast<int>(tileCount));
+        }
+
+        std::uint64_t tileIndex = 0;
+        for (int zoom = minZoom; zoom <= maxZoom; zoom++) {
+            MapTile mapTile1 = TileUtils::CalculateMapTile(_mapBounds.getMin(), zoom, projection);
+            MapTile mapTile2 = TileUtils::CalculateMapTile(_mapBounds.getMax(), zoom, projection);
+            for (int y = std::min(mapTile1.getY(), mapTile2.getY()); y <= std::max(mapTile1.getY(), mapTile2.getY()); y++) {
+                if (isCanceled()) {
+                    break;
+                }
+
+                for (int x = std::min(mapTile1.getX(), mapTile2.getX()); x <= std::max(mapTile1.getX(), mapTile2.getX()); x++) {
+                    if (isCanceled()) {
+                        break;
+                    }
+
+                    if (_downloadListener) {
+                        _downloadListener->onDownloadProgress(static_cast<float>(100.0 * tileIndex / tileCount));
+                    }
+
+                    MapTile mapTile(x, y, zoom, 0);
+                    std::shared_ptr<TileData> tileData;
+                    if (auto dataSource = _dataSource.lock()) {
+                        tileData = dataSource->loadTile(mapTile.getFlipped());
+                    } else {
+                        return;
+                    }
+                    tileIndex++;
+
+                    if (!tileData && _downloadListener) {
+                        _downloadListener->onDownloadFailed(mapTile);
+                    }
+                }
+            }
+        }
+
+        if (tileIndex == tileCount && _downloadListener) {
+            _downloadListener->onDownloadProgress(100.0f);
+            _downloadListener->onDownloadCompleted();
+        }
+
+        Log::Info("PersistentCacheTileDataSource:: DownloadTask: Finished downloading");
+    }
+
 }

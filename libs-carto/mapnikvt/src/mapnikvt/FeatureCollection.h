@@ -7,13 +7,10 @@
 #ifndef _CARTO_MAPNIKVT_FEATURECOLLECTION_H_
 #define _CARTO_MAPNIKVT_FEATURECOLLECTION_H_
 
-#include "Geometry.h"
-#include "FeatureData.h"
+#include "Feature.h"
 
-#include <memory>
-#include <tuple>
 #include <vector>
-#include <map>
+#include <utility>
 
 namespace carto { namespace mvt {
     class FeatureCollection final {
@@ -24,23 +21,23 @@ namespace carto { namespace mvt {
             _features.clear();
         }
         
-        void append(long long localId, long long globalId, std::shared_ptr<const Geometry> geometry) {
-            _features.emplace_back(localId, globalId, std::move(geometry));
+        void append(long long localId, const Feature& feature) {
+            _features.emplace_back(localId, feature);
         }
 
-        void setFeatureData(std::shared_ptr<const FeatureData> featureData) {
-            _featureData = std::move(featureData);
+        std::size_t size() const {
+            return _features.size();
         }
 
-        std::size_t getSize() const { return _features.size(); }
-        long long getLocalId(std::size_t index) const { return std::get<0>(_features.at(index)); }
-        long long getGlobalId(std::size_t index) const { return std::get<1>(_features.at(index)); }
-        const std::shared_ptr<const Geometry>& getGeometry(std::size_t index) const { return std::get<2>(_features.at(index)); }
-        const std::shared_ptr<const FeatureData>& getFeatureData() const { return _featureData; }
+        long long getLocalId(std::size_t index) const { return _features.at(index).first; }
+        long long getGlobalId(std::size_t index) const { return _features.at(index).second.getId(); }
+
+        const Feature& getFeature(std::size_t index) const { return _features.at(index).second; }
+        const std::shared_ptr<const Geometry>& getGeometry(std::size_t index) const { return _features.at(index).second.getGeometry(); }
+        const std::shared_ptr<const FeatureData>& getFeatureData(std::size_t index) const { return _features.at(index).second.getFeatureData(); }
 
     private:
-        std::vector<std::tuple<long long, long long, std::shared_ptr<const Geometry>>> _features;
-        std::shared_ptr<const FeatureData> _featureData;
+        std::vector<std::pair<long long, Feature>> _features;
     };
 } }
 

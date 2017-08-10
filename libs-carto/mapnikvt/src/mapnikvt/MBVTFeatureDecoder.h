@@ -33,11 +33,15 @@ namespace carto { namespace mvt {
         void setBuffer(float buffer);
         void setGlobalIdOverride(bool globalIdOverride, long long tileIdOffset = 0);
 
-        std::shared_ptr<Feature> getFeature(long long localId, std::string& layerName) const;
-        
-        std::shared_ptr<FeatureIterator> createLayerFeatureIterator(const std::string& name, const std::unordered_set<std::string>& fields) const;
+        std::vector<std::string> getLayerNames() const;
+
+        std::shared_ptr<FeatureIterator> createLayerFeatureIterator(const std::string& name) const;
+
+        bool findFeature(long long localId, std::string& layerName, Feature& feature) const;
 
     private:
+        using FeatureDataCache = std::map<std::vector<int>, std::shared_ptr<FeatureData>>;
+
         class MBVTFeatureIterator;
 
         cglib::mat3x3<float> _transform;
@@ -47,7 +51,7 @@ namespace carto { namespace mvt {
         long long _tileIdOffset;
         std::shared_ptr<vector_tile::Tile> _tile;
         std::map<std::string, int> _layerMap;
-        mutable std::map<std::string, std::map<std::vector<int>, std::shared_ptr<FeatureData>>> _layerFeatureDataCache;
+        mutable std::map<std::string, std::shared_ptr<FeatureDataCache>> _layerFeatureDataCache;
 
         const std::shared_ptr<Logger> _logger;
     };

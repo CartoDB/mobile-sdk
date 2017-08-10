@@ -19,5 +19,9 @@ namespace carto {
         }
     }
 
+    std::string PlatformUtils::GetSDKVersion() {
+        return _CARTO_MOBILE_SDK_VERSION;
+    }
+
 }
 

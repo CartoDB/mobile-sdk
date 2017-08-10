@@ -37,10 +37,7 @@ namespace carto {
         }
     }
     
-    MapEnvelope::~MapEnvelope() {
-    }
-        
-    bool MapEnvelope::operator==(const MapEnvelope& envelope) const {
+    bool MapEnvelope::operator ==(const MapEnvelope& envelope) const {
         if (_bounds != envelope._bounds) {
             return false;
         }
@@ -52,7 +49,7 @@ namespace carto {
         return true;
     }
     
-    bool MapEnvelope::operator!=(const MapEnvelope& envelope) const {
+    bool MapEnvelope::operator !=(const MapEnvelope& envelope) const {
         return !(*this == envelope);
     }
     

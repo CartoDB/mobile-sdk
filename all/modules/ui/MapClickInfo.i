@@ -20,6 +20,7 @@
 
 %attribute(carto::MapClickInfo, carto::ClickType::ClickType, ClickType, getClickType)
 %attributeval(carto::MapClickInfo, carto::MapPos, ClickPos, getClickPos)
+%ignore carto::MapClickInfo::MapClickInfo;
 !standard_equals(carto::MapClickInfo);
 
 %include "ui/MapClickInfo.h"

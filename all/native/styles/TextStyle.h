@@ -24,12 +24,13 @@ namespace carto {
          * @param color The color for the text.
          * @param attachAnchorPointX The horizontal attaching anchor point.
          * @param attachAnchorPointY The vertical attaching anchor point.
-         * @param causesOverlap The causes overlap flag for the billboard.
-         * @param hideIfOverlapped The hide if overlapped flag for the billboard.
+         * @param causesOverlap The causes overlap flag for the text.
+         * @param hideIfOverlapped The hide if overlapped flag for the text.
          * @param horizontalOffset The horizontal offset.
          * @param verticalOffset The vertical offset.
          * @param placementPriority The placement priority.
-         * @param scaleWithDPI The scale with DPI flag for the label.
+         * @param scaleWithDPI The scale with DPI flag for the text.
+         * @param animStyle The animation style for the text.
          * @param anchorPointX The horizontal anchor point.
          * @param anchorPointY The vertical anchor point.
          * @param flippable The fliappble flag.
@@ -50,6 +51,7 @@ namespace carto {
                   float verticalOffset,
                   int placementPriority,
                   bool scaleWithDPI,
+                  const std::shared_ptr<AnimationStyle>& animStyle,
                   float anchorPointX,
                   float anchorPointY,
                   bool flippable,

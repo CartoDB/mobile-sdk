@@ -7,7 +7,6 @@
 #ifndef _CARTO_LOCALVECTORDATASOURCE_H_
 #define _CARTO_LOCALVECTORDATASOURCE_H_
 
-#include "core/MapBounds.h"
 #include "datasources/VectorDataSource.h"
 #include "geometry/utils/SpatialIndex.h"
 
@@ -32,7 +31,10 @@ namespace carto {
         };
     }
 
+    class FeatureCollection;
+    class Geometry;
     class GeometrySimplifier;
+    class Style;
 
     /**
      * A modifiable vector data source that keeps all the elements in the local memory.
@@ -42,7 +44,7 @@ namespace carto {
      *
      * The draw order of vector elements within the data source is undefined.
      */
-    class LocalVectorDataSource: public VectorDataSource {
+    class LocalVectorDataSource : public VectorDataSource {
     public:
         /**
          * Constructs an LocalVectorDataSource object with no spatial index.
@@ -57,8 +59,6 @@ namespace carto {
         LocalVectorDataSource(const std::shared_ptr<Projection>& projection, LocalSpatialIndexType::LocalSpatialIndexType spatialIndexType);
         virtual ~LocalVectorDataSource();
         
-        virtual std::shared_ptr<VectorData> loadElements(const std::shared_ptr<CullState>& cullState);
-
         /**
          * Clear the data source by removing all elements.
          */
@@ -116,17 +116,28 @@ namespace carto {
         void setGeometrySimplifier(const std::shared_ptr<GeometrySimplifier>& simplifier);
         
         /**
-         * Returns the extent of this data source. Extent is the minimal bounding box encompassing all the elements.
-         * @return The minimal bounding box for the elements.
+         * Returns the elements of this data source as a feature collection. The feature collection can be then serialized as a GeoJSON, for example.
+         * @return The feature collection containing all data source elements.
          */
-        MapBounds getDataExtent() const;
-        
-    protected:
-        std::shared_ptr<VectorElement> simplifyElement(const std::shared_ptr<VectorElement>& element, float scale) const;
+        std::shared_ptr<FeatureCollection> getFeatureCollection() const;
+        /**
+         * Loads all vector elements from specified feature collection by applying specified style.
+         * @param featureCollection The feature collection to load elements from.
+         * @param style The geometry collection style to use. Only elements compatible with style are created.
+         */
+        void addFeatureCollection(const std::shared_ptr<FeatureCollection>& featureCollection, const std::shared_ptr<Style>& style);
 
+        virtual MapBounds getDataExtent() const;
+
+        virtual std::shared_ptr<VectorData> loadElements(const std::shared_ptr<CullState>& cullState);
+
+    protected:
         virtual void notifyElementChanged(const std::shared_ptr<VectorElement>& element);
 
     private:
+        std::shared_ptr<VectorElement> createElement(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<Style>& style) const;
+        std::shared_ptr<VectorElement> simplifyElement(const std::shared_ptr<VectorElement>& element, float scale) const;
+
         std::shared_ptr<GeometrySimplifier> _geometrySimplifier;
         std::shared_ptr<SpatialIndex<std::shared_ptr<VectorElement> > > _spatialIndex;
         

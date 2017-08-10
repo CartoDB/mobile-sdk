@@ -5,7 +5,7 @@ from build.sdk_build_utils import *
 
 WINPHONE10_ARCHS = ['x86', 'x64', 'ARM']
 
-DEFAULT_MSBUILD = "C:/Program Files (x86)/MSBuild/14.0/Bin/msbuild.exe"
+DEFAULT_MSBUILD = "C:/Program Files (x86)/MSBuild/15.0/Bin/msbuild.exe"
 
 def msbuild(args, dir, *cmdArgs):
   return execute(args.msbuild, dir, *cmdArgs)
@@ -41,7 +41,7 @@ def buildWinPhoneNativeDLL(args, arch):
   options = ["-D%s" % option for option in args.cmakeoptions.split(';') if option]
 
   if not cmake(args, buildDir, options + [
-    '-G', 'Visual Studio 14 2015',
+    '-G', 'Visual Studio 15 2017',
     '-DCMAKE_SYSTEM_NAME=WindowsStore',
     '-DCMAKE_SYSTEM_VERSION=10.0',
     '-DCMAKE_GENERATOR_PLATFORM=%s' % platformArch,
@@ -136,7 +136,7 @@ def buildWinPhoneNuget(args):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--profile', dest='profile', default=getDefaultProfile(), choices=getProfiles().keys(), help='Build profile')
-parser.add_argument('--winphone-arch', dest='winphonearch', default=['all'], choices=WINPHONE10_ARCHS + ['all'], nargs='+', help='Windows phone target architectures')
+parser.add_argument('--winphone-arch', dest='winphonearch', default=[], choices=WINPHONE10_ARCHS + ['all'], action='append', help='Windows phone target architectures')
 parser.add_argument('--defines', dest='defines', default='', help='Defines for compilation')
 parser.add_argument('--msbuild', dest='msbuild', default='auto', help='WinPhone msbuild executable')
 parser.add_argument('--nuget', dest='nuget', default='nuget', help='nuget executable')
@@ -151,7 +151,7 @@ parser.add_argument('--build-nuget', dest='buildnuget', default=False, action='s
 args = parser.parse_args()
 if args.msbuild == 'auto':
   args.msbuild = DEFAULT_MSBUILD
-if 'all' in args.winphonearch:
+if 'all' in args.winphonearch or args.winphonearch == []:
   args.winphonearch = WINPHONE10_ARCHS
 args.defines += ';' + getProfiles()[args.profile].get('defines', '')
 args.cmakeoptions += ';' + getProfiles()[args.profile].get('cmake-options', '')

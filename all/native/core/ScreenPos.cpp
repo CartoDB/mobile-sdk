@@ -35,7 +35,7 @@ namespace carto {
         _y = y;
     }
     
-    float ScreenPos::operator[](std::size_t n) const {
+    float ScreenPos::operator [](std::size_t n) const {
         switch (n) {
             case 0:
                 return _x;
@@ -45,7 +45,7 @@ namespace carto {
         throw OutOfRangeException("ScreenPos::operator[]");
     }
     
-    float& ScreenPos::operator[](std::size_t n) {
+    float& ScreenPos::operator [](std::size_t n) {
         switch (n) {
             case 0:
                 return _x;
@@ -60,12 +60,12 @@ namespace carto {
         _y = y;
     }
 
-    bool ScreenPos::operator==(const ScreenPos& p) const {
+    bool ScreenPos::operator ==(const ScreenPos& p) const {
         return _x == p._x && _y == p._y;
     }
     
-    bool ScreenPos::operator!=(const ScreenPos& p) const {
-        return !(operator==(p));
+    bool ScreenPos::operator !=(const ScreenPos& p) const {
+        return !(*this == p);
     }
     
     int ScreenPos::hash() const {

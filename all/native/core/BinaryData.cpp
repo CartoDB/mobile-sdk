@@ -1,5 +1,7 @@
 #include "BinaryData.h"
 
+#include <sstream>
+
 namespace carto {
 
     BinaryData::BinaryData() :
@@ -17,9 +19,6 @@ namespace carto {
     {
     }
     
-    BinaryData::~BinaryData() {
-    }
-
     bool BinaryData::empty() const {
         return _dataPtr->empty();
     }
@@ -34,6 +33,12 @@ namespace carto {
 
     std::shared_ptr<std::vector<unsigned char> > BinaryData::getDataPtr() const {
         return _dataPtr;
+    }
+
+    std::string BinaryData::toString() const {
+        std::stringstream ss;
+        ss << "BinaryData [size=" << _dataPtr->size() << "]";
+        return ss.str();
     }
 
 }

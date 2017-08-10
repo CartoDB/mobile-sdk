@@ -3,7 +3,7 @@
 
 %module BillboardStyle
 
-!proxy_imports(carto::BillboardStyle, graphics.Color, styles.Style)
+!proxy_imports(carto::BillboardStyle, graphics.Color, styles.AnimationStyle, styles.Style)
 
 %{
 #include "styles/BillboardStyle.h"
@@ -14,6 +14,7 @@
 %include <cartoswig.i>
 
 %import "styles/Style.i"
+%import "styles/AnimationStyle.i"
 
 !polymorphic_shared_ptr(carto::BillboardStyle, styles.BillboardStyle)
 
@@ -25,6 +26,8 @@
 %attribute(carto::BillboardStyle, float, AttachAnchorPointY, getAttachAnchorPointY)
 %attribute(carto::BillboardStyle, float, HorizontalOffset, getHorizontalOffset)
 %attribute(carto::BillboardStyle, float, VerticalOffset, getVerticalOffset)
+%attributestring(carto::BillboardStyle, std::shared_ptr<carto::AnimationStyle>, AnimationStyle, getAnimationStyle)
+%ignore carto::BillboardStyle::BillboardStyle;
 
 %include "styles/BillboardStyle.h"
 

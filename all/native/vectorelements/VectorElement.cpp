@@ -95,6 +95,11 @@ namespace carto {
         _visible(true)
     {
     }
+
+    std::shared_ptr<VectorDataSource> VectorElement::getDataSource() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _dataSource.lock();
+    }
         
     void VectorElement::attachToDataSource(const std::weak_ptr<VectorDataSource>& dataSource) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);

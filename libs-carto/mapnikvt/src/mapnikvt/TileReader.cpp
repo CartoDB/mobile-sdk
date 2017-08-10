@@ -42,11 +42,10 @@ namespace carto { namespace mvt {
                     // ignore the error
                 }
                 
-                float opacity = style->getOpacity();
-                std::shared_ptr<vt::FloatFunction> opacityFn = std::make_shared<vt::FloatFunction>([opacity](const vt::ViewState& viewState) { return opacity; });
+                vt::FloatFunction opacityFunc(style->getOpacity());
 
                 int internalIdx = layerIdx * 65536 + static_cast<int>(layer->getStyleNames().size()) * 256 + styleIdx;
-                std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.build(internalIdx, opacityFn, compOp);
+                std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.build(internalIdx, compOp, opacityFunc);
                 if (!(tileLayer->getBitmaps().empty() && tileLayer->getLabels().empty() && tileLayer->getGeometries().empty() && !compOp)) {
                     tileLayers.push_back(tileLayer);
                 }
@@ -58,13 +57,21 @@ namespace carto { namespace mvt {
     }
 
     void TileReader::processLayer(const std::shared_ptr<const Layer>& layer, const std::shared_ptr<const Style>& style, FeatureExpressionContext& exprContext, vt::TileLayerBuilder& layerBuilder) const {
+        std::unordered_set<std::shared_ptr<const Expression>> styleFieldExprs = style->getReferencedFields(exprContext.getZoom());
+        std::unordered_set<std::string> styleFields;
+        std::for_each(styleFieldExprs.begin(), styleFieldExprs.end(), [&](const std::shared_ptr<const Expression>& expr) {
+            styleFields.insert(ValueConverter<std::string>::convert(expr->evaluate(exprContext)));
+        });
+
         std::shared_ptr<Symbolizer> currentSymbolizer;
         FeatureCollection currentFeatureCollection;
         std::unordered_map<std::shared_ptr<const FeatureData>, std::vector<std::shared_ptr<Symbolizer>>> featureDataSymbolizersMap;
-        if (auto featureIt = createFeatureIterator(layer, style, exprContext)) {
+
+        if (auto featureIt = createFeatureIterator(layer)) {
             for (; featureIt->valid(); featureIt->advance()) {
-                // Cache symbolizer evaluation for each feature data object
                 std::shared_ptr<const FeatureData> featureData = featureIt->getFeatureData();
+
+                // Cache symbolizer evaluation for each feature data object
                 auto symbolizersIt = featureDataSymbolizersMap.find(featureData);
                 if (symbolizersIt == featureDataSymbolizersMap.end()) {
                     exprContext.setFeatureData(featureData);
@@ -77,29 +84,38 @@ namespace carto { namespace mvt {
                     if (std::shared_ptr<const Geometry> geometry = featureIt->getGeometry()) {
                         bool batch = false;
                         if (currentSymbolizer == symbolizer) {
-                            if (currentFeatureCollection.getFeatureData() == featureData || symbolizer->getParameterExpressions().empty()) {
-                                batch = true;
+                            batch = true;
+                            if (!symbolizer->getParameterExpressions().empty()) {
+                                for (const std::string& field : styleFields) {
+                                    Value val1, val2;
+                                    if (featureData->getVariable(field, val1) == currentFeatureCollection.getFeatureData(0)->getVariable(field, val2)) {
+                                        if (val1 == val2) {
+                                            continue;
+                                        }
+                                    }
+                                    batch = false;
+                                    break;
+                                }
                             }
                         }
 
                         if (!batch) {
-                            if (currentSymbolizer) {
-                                exprContext.setFeatureData(currentFeatureCollection.getFeatureData());
+                            if (currentSymbolizer && currentFeatureCollection.size() > 0) {
+                                exprContext.setFeatureData(currentFeatureCollection.getFeatureData(0));
                                 currentSymbolizer->build(currentFeatureCollection, exprContext, _symbolizerContext, layerBuilder);
                             }
                             currentFeatureCollection.clear();
-                            currentFeatureCollection.setFeatureData(featureData);
                             currentSymbolizer = symbolizer;
                         }
 
-                        currentFeatureCollection.append(featureIt->getLocalId(), featureIt->getGlobalId(), geometry);
+                        currentFeatureCollection.append(featureIt->getLocalId(), Feature(featureIt->getGlobalId(), geometry, featureData));
                     }
                 }
             }
 
             // Flush the remaining batched features
-            if (currentSymbolizer) {
-                exprContext.setFeatureData(currentFeatureCollection.getFeatureData());
+            if (currentSymbolizer && currentFeatureCollection.size() > 0) {
+                exprContext.setFeatureData(currentFeatureCollection.getFeatureData(0));
                 currentSymbolizer->build(currentFeatureCollection, exprContext, _symbolizerContext, layerBuilder);
             }
         }

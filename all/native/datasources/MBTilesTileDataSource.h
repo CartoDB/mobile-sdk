@@ -9,7 +9,6 @@
 
 #ifdef _CARTO_OFFLINE_SUPPORT
 
-#include "core/MapBounds.h"
 #include "datasources/TileDataSource.h"
 
 #include <map>
@@ -81,17 +80,14 @@ namespace carto {
          */
         std::map<std::string, std::string> getMetaData() const;
         
-        /**
-         * Returns the extent of this data source. Extent is the minimal bounding box encompassing all the tiles at maximum zoom level.
-         * @return The minimal bounding box for the tiles.
-         */
-        MapBounds getDataExtent() const;
+        virtual MapBounds getDataExtent() const;
 
         virtual std::shared_ptr<TileData> loadTile(const MapTile& mapTile);
     
     private:
         MBTilesScheme::MBTilesScheme _scheme;
         std::unique_ptr<sqlite3pp::database> _db;
+        mutable std::unique_ptr<MapBounds> _cachedDataExtent;
         mutable std::mutex _mutex;
     };
     

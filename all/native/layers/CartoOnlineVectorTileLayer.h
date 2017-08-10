@@ -40,6 +40,13 @@ namespace carto {
          */
         CartoOnlineVectorTileLayer(const std::string& source, const std::shared_ptr<AssetPackage>& styleAssetPackage);
         virtual ~CartoOnlineVectorTileLayer();
+
+        /**
+         * Creates a data source for the specified base map style.
+         * @param style The style to use for the layer.
+         * @return The new vector tile decoder configured for the style.
+         */
+        static std::shared_ptr<TileDataSource> CreateDataSource(CartoBaseMapStyle::CartoBaseMapStyle style);
     };
     
 }

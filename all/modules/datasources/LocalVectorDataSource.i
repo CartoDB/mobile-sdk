@@ -3,7 +3,7 @@
 
 %module(directors="1") LocalVectorDataSource
 
-!proxy_imports(carto::LocalVectorDataSource, datasources.VectorDataSource, datasources.components.VectorData, geometry.GeometrySimplifier, projections.Projection, core.MapBounds, renderers.components.CullState, vectorelements.VectorElement, vectorelements.VectorElementVector)
+!proxy_imports(carto::LocalVectorDataSource, core.MapBounds, datasources.VectorDataSource, datasources.components.VectorData, geometry.FeatureCollection, geometry.GeometrySimplifier, projections.Projection, renderers.components.CullState, styles.Style, vectorelements.VectorElement, vectorelements.VectorElementVector)
 
 %{
 #include "datasources/LocalVectorDataSource.h"
@@ -15,14 +15,15 @@
 %include <cartoswig.i>
 
 %import "datasources/VectorDataSource.i"
-%import "vectorelements/VectorElement.i"
 %import "geometry/GeometrySimplifier.i"
+%import "geometry/FeatureCollection.i"
+%import "styles/Style.i"
+%import "vectorelements/VectorElement.i"
 
 !polymorphic_shared_ptr(carto::LocalVectorDataSource, datasources.LocalVectorDataSource)
 
 %feature("director") carto::LocalVectorDataSource;
 
-%attributeval(carto::LocalVectorDataSource, carto::MapBounds, DataExtent, getDataExtent)
 !attributestring_polymorphic(carto::LocalVectorDataSource, geometry.GeometrySimplifier, GeometrySimplifier, getGeometrySimplifier, setGeometrySimplifier)
 %std_exceptions(carto::LocalVectorDataSource::LocalVectorDataSource)
 %std_exceptions(carto::LocalVectorDataSource::setAll)
@@ -30,6 +31,7 @@
 %std_exceptions(carto::LocalVectorDataSource::addAll)
 %std_exceptions(carto::LocalVectorDataSource::remove)
 %std_exceptions(carto::LocalVectorDataSource::removeAll)
+%std_exceptions(carto::LocalVectorDataSource::addFeatureCollection)
 
 %include "datasources/LocalVectorDataSource.h"
 

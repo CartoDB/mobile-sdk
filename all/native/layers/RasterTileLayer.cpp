@@ -1,10 +1,18 @@
 #include "RasterTileLayer.h"
+#include "components/Exceptions.h"
 #include "components/CancelableThreadPool.h"
+#include "datasources/TileDataSource.h"
+#include "layers/RasterTileEventListener.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/TileRenderer.h"
+#include "renderers/components/RayIntersectedElement.h"
 #include "renderers/drawdatas/TileDrawData.h"
 #include "graphics/Bitmap.h"
+#include "ui/RasterTileClickInfo.h"
 #include "utils/Log.h"
+
+#include <array>
+#include <algorithm>
 
 #include <vt/TileId.h>
 #include <vt/Tile.h>
@@ -12,10 +20,52 @@
 #include <vt/TileLayer.h>
 #include <vt/TileLayerBuilder.h>
 
+namespace {
+
+    std::array<std::uint8_t, 4> readTileBitmapColor(const carto::vt::TileBitmap& bitmap, int x, int y) {
+        x = std::max(0, std::min(x, bitmap.getWidth() - 1));
+        y = bitmap.getHeight() - 1 - std::max(0, std::min(y, bitmap.getHeight() - 1));
+
+        switch (bitmap.getFormat()) {
+        case carto::vt::TileBitmap::Format::GRAYSCALE: {
+                std::uint8_t val = bitmap.getData()[y * bitmap.getWidth() + x];
+                return std::array<std::uint8_t, 4> { { val, val, val, 255 } };
+            }
+        case carto::vt::TileBitmap::Format::RGB: {
+                const std::uint8_t* valPtr = &bitmap.getData()[(y * bitmap.getWidth() + x) * 3];
+                return std::array<std::uint8_t, 4> { { valPtr[0], valPtr[1], valPtr[2], 255 } };
+            }
+        case carto::vt::TileBitmap::Format::RGBA: {
+                const std::uint8_t* valPtr = &bitmap.getData()[(y * bitmap.getWidth() + x) * 4];
+                return std::array<std::uint8_t, 4> { { valPtr[0], valPtr[1], valPtr[2], valPtr[3] } };
+            }
+        }
+        return std::array<std::uint8_t, 4> { { 0, 0, 0, 0 } };
+    }
+
+    std::array<std::uint8_t, 4> readTileBitmapColor(const carto::vt::TileBitmap& bitmap, float x, float y) {
+        std::array<float, 4> result { 0, 0, 0, 0 };
+        for (int dy = 0; dy < 2; dy++) {
+            for (int dx = 0; dx < 2; dx++) {
+                int x0 = static_cast<int>(std::floor(x));
+                int y0 = static_cast<int>(std::floor(y));
+
+                std::array<std::uint8_t, 4> color = readTileBitmapColor(bitmap, x0 + dx, y0 + dy);
+                for (int i = 0; i < 4; i++) {
+                    result[i] += color[i] * (dx == 0 ? x0 + 1.0f - x : x - x0) * (dy == 0 ? y0 + 1.0f - y : y - y0);
+                }
+            }
+        }
+        return std::array<std::uint8_t, 4> { { static_cast<std::uint8_t>(result[0]), static_cast<std::uint8_t>(result[1]), static_cast<std::uint8_t>(result[2]), static_cast<std::uint8_t>(result[3]) } };
+    }
+
+}
+
 namespace carto {
 
     RasterTileLayer::RasterTileLayer(const std::shared_ptr<TileDataSource>& dataSource) :
         TileLayer(dataSource),
+        _rasterTileEventListener(),
         _visibleTileIds(),
         _tempDrawDatas(),
         _visibleCache(128 * 1024 * 1024), // limit should be never reached during normal use cases
@@ -35,6 +85,15 @@ namespace carto {
     void RasterTileLayer::setTextureCacheCapacity(std::size_t capacityInBytes) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _preloadingCache.resize(capacityInBytes);
+    }
+    
+    std::shared_ptr<RasterTileEventListener> RasterTileLayer::getRasterTileEventListener() const {
+        return _rasterTileEventListener.get();
+    }
+    
+    void RasterTileLayer::setRasterTileEventListener(const std::shared_ptr<RasterTileEventListener>& eventListener) {
+        _rasterTileEventListener.set(eventListener);
+        tilesChanged(false); // we must reload the tiles, we do not keep full element information if this is not required
     }
     
     bool RasterTileLayer::tileExists(const MapTile& tile, bool preloadingCache) const {
@@ -67,13 +126,18 @@ namespace carto {
 
         if (!invalidated) {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
-            if (preloadingTile && _preloadingCache.exists(tileId) && _preloadingCache.valid(tileId)) {
-                _preloadingCache.get(tileId);
+            if (_preloadingCache.exists(tileId) && _preloadingCache.valid(tileId)) {
+                if (!preloadingTile) {
+                    _preloadingCache.move(tileId, _visibleCache); // move to visible cache, just in case the element gets trashed
+                }
+                else {
+                    _preloadingCache.get(tileId);
+                }
                 return;
             }
     
-            if (!preloadingTile && _visibleCache.exists(tileId) && _visibleCache.valid(tileId)) {
-                _visibleCache.get(tileId);
+            if (_visibleCache.exists(tileId) && _visibleCache.valid(tileId)) {
+                _visibleCache.get(tileId); // just mark usage, do not move to preloading, it will be moved at later stage
                 return;
             }
         }
@@ -206,6 +270,65 @@ namespace carto {
         return _visibleTileIds;
     }
         
+    void RasterTileLayer::calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
+        DirectorPtr<RasterTileEventListener> eventListener = _rasterTileEventListener;
+
+        if (eventListener) {
+            std::vector<std::tuple<vt::TileId, double, vt::TileBitmap, cglib::vec2<float> > > hitResults;
+            if (auto renderer = getRenderer()) {
+                renderer->calculateRayIntersectedBitmaps(ray, viewState, hitResults);
+            }
+
+            for (auto it = hitResults.rbegin(); it != hitResults.rend(); it++) {
+                vt::TileId vtTileId = std::get<0>(*it);
+                double t = std::get<1>(*it);
+                const vt::TileBitmap& tileBitmap = std::get<2>(*it);
+                cglib::vec2<float> tilePos = std::get<3>(*it);
+                if (tileBitmap.getData().empty() || tileBitmap.getWidth() < 1 || tileBitmap.getHeight() < 1) {
+                    Log::Warnf("RasterTileLayer::processClick: Bitmap data not available");
+                    continue;
+                }
+
+                std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+                float x = tilePos(0) * tileBitmap.getWidth();
+                float y = tilePos(1) * tileBitmap.getHeight();
+                std::array<std::uint8_t, 4> interpolatedComponents = readTileBitmapColor(tileBitmap, x - 0.5f, y - 0.5f);
+                Color interpolatedColor(interpolatedComponents[0], interpolatedComponents[1], interpolatedComponents[2], interpolatedComponents[3]);
+
+                int nx = static_cast<int>(std::floor(x));
+                int ny = static_cast<int>(std::floor(y));
+                std::array<std::uint8_t, 4> nearestComponents = readTileBitmapColor(tileBitmap, nx, ny);
+                Color nearestColor(nearestComponents[0], nearestComponents[1], nearestComponents[2], nearestComponents[3]);
+
+                MapTile mapTile(vtTileId.x, vtTileId.y, vtTileId.zoom, _frameNr);
+                MapPos mapPos = projection.fromInternal(MapPos(ray(t)(0), ray(t)(1), ray(t)(2)));
+
+                auto pixelInfo = std::make_shared<std::tuple<MapTile, Color, Color> >(mapTile, nearestColor, interpolatedColor);
+                std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
+                results.push_back(RayIntersectedElement(pixelInfo, thisLayer, mapPos, mapPos, 0, false));
+            }
+        }
+
+        TileLayer::calculateRayIntersectedElements(projection, ray, viewState, results);
+    }
+
+    bool RasterTileLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
+        DirectorPtr<RasterTileEventListener> eventListener = _rasterTileEventListener;
+
+        if (eventListener) {
+            if (std::shared_ptr<std::tuple<MapTile, Color, Color> > pixelInfo = intersectedElement.getElement<std::tuple<MapTile, Color, Color> >()) {
+                const MapTile& mapTile = std::get<0>(*pixelInfo);
+                const Color& nearestColor = std::get<1>(*pixelInfo);
+                const Color& interpolatedColor = std::get<2>(*pixelInfo);
+                auto clickInfo = std::make_shared<RasterTileClickInfo>(clickType, intersectedElement.getHitPos(), mapTile, nearestColor, interpolatedColor, intersectedElement.getLayer());
+                return eventListener->onRasterTileClicked(clickInfo);
+            }
+        }
+
+        return TileLayer::processClick(clickType, intersectedElement, viewState);
+    }
+
     void RasterTileLayer::offsetLayerHorizontally(double offset) {
         if (auto renderer = getRenderer()) {
             renderer->offsetLayerHorizontally(offset);
@@ -236,6 +359,7 @@ namespace carto {
         updateTileLoadListener();
 
         if (auto renderer = getRenderer()) {
+            renderer->setInteractionMode(_rasterTileEventListener.get() ? true : false);
             return renderer->onDrawFrame(deltaSeconds, viewState);
         }
         return false;
@@ -303,12 +427,12 @@ namespace carto {
             if (bitmap) {
                 // Check if we received the requested tile or extract/scale the corresponding part
                 if (dataSourceTile != _tile) {
-                    bitmap = extractSubTile(_tile, dataSourceTile, bitmap);
+                    bitmap = ExtractSubTile(_tile, dataSourceTile, bitmap);
                 }
 
                 if (!isInvalidated()) {
                     // Build the bitmap object
-                    std::shared_ptr<vt::Tile> vtTile = createVectorTile(_tile, bitmap);
+                    std::shared_ptr<vt::Tile> vtTile = CreateVectorTile(_tile, bitmap);
                     std::size_t tileSize = EXTRA_TILE_FOOTPRINT + vtTile->getResidentSize();
                     if (isPreloading()) {
                         std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
@@ -334,7 +458,7 @@ namespace carto {
         return refresh;
     }
     
-    std::shared_ptr<Bitmap> RasterTileLayer::FetchTask::extractSubTile(const MapTile& subTile, const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap) {
+    std::shared_ptr<Bitmap> RasterTileLayer::FetchTask::ExtractSubTile(const MapTile& subTile, const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap) {
         int deltaZoom = subTile.getZoom() - tile.getZoom();
         int x = (bitmap->getWidth()  * (subTile.getX() & ((1 << deltaZoom) - 1))) >> deltaZoom;
         int y = (bitmap->getHeight() * (subTile.getY() & ((1 << deltaZoom) - 1))) >> deltaZoom;
@@ -344,7 +468,7 @@ namespace carto {
         return subBitmap->getResizedBitmap(bitmap->getWidth(), bitmap->getHeight());
     }
 
-    std::shared_ptr<vt::Tile> RasterTileLayer::FetchTask::createVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap) {
+    std::shared_ptr<vt::Tile> RasterTileLayer::FetchTask::CreateVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap) {
         std::shared_ptr<vt::TileBitmap> tileBitmap;
         switch (bitmap->getColorFormat()) {
         case ColorFormat::COLOR_FORMAT_GRAYSCALE:
@@ -364,7 +488,7 @@ namespace carto {
         vt::TileId vtTile(tile.getZoom(), tile.getX(), tile.getY());
         vt::TileLayerBuilder tileLayerBuilder(vtTile, 256.0f, 1.0f); // Note: the size/scale argument is ignored
         tileLayerBuilder.addBitmap(tileBitmap);
-        std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.build(0, std::shared_ptr<vt::FloatFunction>(), boost::optional<vt::CompOp>());
+        std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.build(0, boost::optional<vt::CompOp>(), vt::FloatFunction(1));
 
         return std::make_shared<vt::Tile>(vtTile, std::vector<std::shared_ptr<vt::TileLayer> > { tileLayer });
     }

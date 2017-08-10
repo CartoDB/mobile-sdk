@@ -15,9 +15,12 @@
 namespace carto {
 
     MBTilesTileDataSource::MBTilesTileDataSource(const std::string& path) :
-        TileDataSource(), _scheme(MBTilesScheme::MBTILES_SCHEME_TMS), _db(), _mutex()
+        TileDataSource(),
+        _scheme(MBTilesScheme::MBTILES_SCHEME_TMS),
+        _db(new sqlite3pp::database()),
+        _cachedDataExtent(),
+        _mutex()
     {
-        _db.reset(new sqlite3pp::database());
         if (_db->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
             throw FileException("Failed to open database file", path);
         }
@@ -35,18 +38,24 @@ namespace carto {
     }
 
     MBTilesTileDataSource::MBTilesTileDataSource(int minZoom, int maxZoom, const std::string& path) :
-        TileDataSource(minZoom, maxZoom), _scheme(MBTilesScheme::MBTILES_SCHEME_TMS), _db(), _mutex()
+        TileDataSource(minZoom, maxZoom),
+        _scheme(MBTilesScheme::MBTILES_SCHEME_TMS),
+        _db(new sqlite3pp::database()),
+        _cachedDataExtent(),
+        _mutex()
     {
-        _db.reset(new sqlite3pp::database());
         if (_db->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
             throw FileException("Failed to open database file", path);
         }
     }
     
     MBTilesTileDataSource::MBTilesTileDataSource(int minZoom, int maxZoom, const std::string& path, MBTilesScheme::MBTilesScheme scheme) :
-        TileDataSource(minZoom, maxZoom), _scheme(scheme), _db(), _mutex()
+        TileDataSource(minZoom, maxZoom),
+        _scheme(scheme),
+        _db(new sqlite3pp::database()),
+        _cachedDataExtent(),
+        _mutex()
     {
-        _db.reset(new sqlite3pp::database());
         if (_db->connect_v2(path.c_str(), SQLITE_OPEN_READONLY) != SQLITE_OK) {
             throw FileException("Failed to open database file", path);
         }
@@ -93,6 +102,11 @@ namespace carto {
             Log::Error("MBTilesTileDataSource::getDataExtent: Not connected to the database.");
             return MapBounds();
         }
+
+        // Try to reuse cached value
+        if (_cachedDataExtent) {
+            return *_cachedDataExtent;
+        }
         
         // As a first step, try to use meta data
         sqlite3pp::query query(*_db, "SELECT value FROM metadata WHERE name='bounds'");
@@ -110,10 +124,11 @@ namespace carto {
                 mapBounds.expandToContain(_projection->fromWgs84(MapPos(x1, y0)));
                 mapBounds.expandToContain(_projection->fromWgs84(MapPos(x1, y1)));
                 mapBounds.expandToContain(_projection->fromWgs84(MapPos(x0, y1)));
+                _cachedDataExtent.reset(new MapBounds(mapBounds));
                 return mapBounds;
             }
         }
-        
+
         // Meta data not available, use tiles at last zoom level
         MapBounds mapBounds;
         try {
@@ -142,8 +157,10 @@ namespace carto {
             }
         } catch (const std::exception& e) {
             Log::Errorf("MBTilesTileDataSource::getDataExtent: Failed to query tile data from the database: %s.", e.what());
+            _cachedDataExtent.reset(new MapBounds());
             return MapBounds();
         }
+        _cachedDataExtent.reset(new MapBounds(mapBounds));
         return mapBounds;
     }
     
@@ -157,7 +174,7 @@ namespace carto {
         
         try {
             // Make the query and check for database error
-            sqlite3pp::query query(*_db, "SELECT LENGTH(tile_data), tile_data FROM tiles WHERE zoom_level=:zoom AND tile_column=:x AND tile_row=:y");
+            sqlite3pp::query query(*_db, "SELECT tile_data FROM tiles WHERE zoom_level=:zoom AND tile_column=:x AND tile_row=:y");
             query.bind(":zoom", mapTile.getZoom());
             query.bind(":x", mapTile.getX());
             query.bind(":y", _scheme == MBTilesScheme::MBTILES_SCHEME_XYZ ? mapTile.getY() : (1 << (mapTile.getZoom())) - 1 - mapTile.getY());
@@ -175,8 +192,8 @@ namespace carto {
                 return tileData;
             }
             
-            std::size_t dataSize = (*it).get<int>(0);
-            const unsigned char* dataPtr = static_cast<const unsigned char*>((*it).get<const void*>(1));
+            std::size_t dataSize = (*it).column_bytes(0);
+            const unsigned char* dataPtr = static_cast<const unsigned char*>((*it).get<const void*>(0));
             auto data = std::make_shared<BinaryData>(dataPtr, dataSize);
             query.finish();
     

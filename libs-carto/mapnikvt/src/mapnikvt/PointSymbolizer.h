@@ -12,7 +12,9 @@
 namespace carto { namespace mvt {
     class PointSymbolizer : public GeometrySymbolizer {
     public:
-        explicit PointSymbolizer(std::shared_ptr<Logger> logger) : GeometrySymbolizer(std::move(logger)) { }
+        explicit PointSymbolizer(std::shared_ptr<Logger> logger) : GeometrySymbolizer(std::move(logger)) {
+            bind(&_opacityFunc, std::make_shared<ConstExpression>(Value(1.0f)));
+        }
 
         virtual void build(const FeatureCollection& featureCollection, const FeatureExpressionContext& exprContext, const SymbolizerContext& symbolizerContext, vt::TileLayerBuilder& layerBuilder) override;
 
@@ -21,13 +23,10 @@ namespace carto { namespace mvt {
 
         virtual void bindParameter(const std::string& name, const std::string& value) override;
 
-        static std::shared_ptr<vt::Bitmap> createRectangleBitmap(float size);
+        static std::shared_ptr<vt::BitmapImage> makeRectangleBitmap(float size);
 
         std::string _file;
-        vt::Color _fill = vt::Color(0xff000000);
-        float _opacity = 1.0f;
-        float _width = 10.0f;
-        float _height = 10.0f;
+        vt::FloatFunction _opacityFunc; // 1.0f
         bool _allowOverlap = false;
         bool _ignorePlacement = false;
         cglib::mat3x3<float> _transform = cglib::mat3x3<float>::identity();

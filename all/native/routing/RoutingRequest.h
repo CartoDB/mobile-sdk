@@ -40,6 +40,12 @@ namespace carto {
          * @return The point list of the request.
          */
         const std::vector<MapPos>& getPoints() const;
+
+        /**
+         * Creates a string representation of this request object, useful for logging.
+         * @return The string representation of this request object.
+         */
+        std::string toString() const;
         
     private:
         std::shared_ptr<Projection> _projection;

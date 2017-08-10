@@ -5,7 +5,7 @@
 
 #ifdef _CARTO_CUSTOM_BASEMAP_SUPPORT
 
-!proxy_imports(carto::CartoOnlineTileDataSource, core.MapTile, core.StringMap, datasources.TileDataSource, datasources.components.TileData)
+!proxy_imports(carto::CartoOnlineTileDataSource, core.MapTile, core.MapBounds, core.StringMap, datasources.TileDataSource, datasources.components.TileData)
 
 %{
 #include "datasources/CartoOnlineTileDataSource.h"

@@ -15,7 +15,7 @@ namespace carto {
     class Geometry;
 
     /**
-     * A feature consisting of geometry and properties
+     * A feature consisting of geometry and properties.
      */
     class Feature {
     public:
@@ -24,7 +24,7 @@ namespace carto {
          * @param geometry The geometry of the feature.
          * @param properties The properties of the feature.
          */
-        Feature(const std::shared_ptr<Geometry>& geometry, const Variant& properties);
+        Feature(const std::shared_ptr<Geometry>& geometry, Variant properties);
         virtual ~Feature();
         
         /**

@@ -25,6 +25,7 @@
 %csmethodmodifiers carto::VectorTileDecoder::MaxZoom "public virtual"
 %attribute(carto::VectorTileDecoder, int, MaxZoom, getMaxZoom)
 %ignore carto::VectorTileDecoder::decodeFeature;
+%ignore carto::VectorTileDecoder::decodeFeatures;
 %ignore carto::VectorTileDecoder::decodeTile;
 %ignore carto::VectorTileDecoder::getBackgroundColor;
 %ignore carto::VectorTileDecoder::getBackgroundPattern;

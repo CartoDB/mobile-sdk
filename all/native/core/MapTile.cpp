@@ -8,6 +8,15 @@
 
 namespace carto {
 
+    MapTile::MapTile() :
+        _x(0),
+        _y(0),
+        _zoom(0),
+        _frameNr(0),
+        _id(0)
+    {
+    }
+
     MapTile::MapTile(int x, int y, int zoom, int frameNr) :
         _x(x),
         _y(y),
@@ -22,7 +31,7 @@ namespace carto {
     }
     
     bool MapTile::operator !=(const MapTile& tile) const {
-        return !(operator==(tile));
+        return !(*this == tile);
     }
     
     int MapTile::getX() const {

@@ -12,6 +12,8 @@
 #include "geometry/MultiPointGeometry.h"
 #include "geometry/MultiLineGeometry.h"
 #include "geometry/MultiPolygonGeometry.h"
+#include "geometry/VectorTileFeature.h"
+#include "geometry/VectorTileFeatureCollection.h"
 #include "graphics/Bitmap.h"
 #include "styles/CompiledStyleSet.h"
 #include "styles/CartoCSSStyleSet.h"
@@ -294,13 +296,13 @@ namespace carto {
         return Const::MAX_SUPPORTED_ZOOM_LEVEL;
     }
 
-    std::shared_ptr<MBVectorTileDecoder::TileFeature> MBVectorTileDecoder::decodeFeature(long long id, const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const {
+    std::shared_ptr<VectorTileFeature> MBVectorTileDecoder::decodeFeature(long long id, const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const {
         if (!tileData) {
             Log::Warn("MBVectorTileDecoder::decodeFeature: Null tile data");
-            return std::shared_ptr<TileFeature>();
+            return std::shared_ptr<VectorTileFeature>();
         }
         if (tileData->empty()) {
-            return std::shared_ptr<TileFeature>();
+            return std::shared_ptr<VectorTileFeature>();
         }
 
         try {
@@ -319,31 +321,94 @@ namespace carto {
             }
 
             std::string mvtLayerName;
-            std::shared_ptr<mvt::Feature> mvtFeature = decoder->getFeature(id, mvtLayerName);
-            if (!mvtFeature) {
-                return std::shared_ptr<TileFeature>();
+            mvt::Feature mvtFeature;
+            if (!decoder->findFeature(id, mvtLayerName, mvtFeature)) {
+                return std::shared_ptr<VectorTileFeature>();
+            }
+
+            std::shared_ptr<const mvt::Geometry> mvtGeometry = mvtFeature.getGeometry();
+            if (!mvtGeometry) {
+                return std::shared_ptr<VectorTileFeature>();
             }
 
             std::map<std::string, Variant> featureData;
-            if (std::shared_ptr<const mvt::FeatureData> mvtFeatureData = mvtFeature->getFeatureData()) {
+            if (std::shared_ptr<const mvt::FeatureData> mvtFeatureData = mvtFeature.getFeatureData()) {
                 for (const std::string& varName : mvtFeatureData->getVariableNames()) {
                     mvt::Value mvtValue;
-                    mvtFeatureData->getVariable(varName, mvtValue);
-                    featureData[varName] = boost::apply_visitor(ValueConverter(), mvtValue);
+                    if (mvtFeatureData->getVariable(varName, mvtValue)) {
+                        featureData[varName] = boost::apply_visitor(ValueConverter(), mvtValue);
+                    }
                 }
             }
 
             auto convertFn = [&tileBounds](const cglib::vec2<float>& pos) {
                 return MapPos(tileBounds.getMin().getX() + pos(0) * tileBounds.getDelta().getX(), tileBounds.getMax().getY() - pos(1) * tileBounds.getDelta().getY(), 0);
             };
-            auto feature = std::make_shared<Feature>(convertGeometry(convertFn, mvtFeature->getGeometry()), Variant(featureData));
-            return std::make_shared<TileFeature>(mvtFeature->getId(), mvtLayerName, feature);
+
+            return std::make_shared<VectorTileFeature>(mvtFeature.getId(), MapTile(tile.x, tile.y, tile.zoom, 0), mvtLayerName, convertGeometry(convertFn, mvtGeometry), Variant(featureData));
         } catch (const std::exception& ex) {
             Log::Errorf("MBVectorTileDecoder::decodeFeature: Exception while decoding: %s", ex.what());
         }
-        return std::shared_ptr<TileFeature>();
+        return std::shared_ptr<VectorTileFeature>();
     }
-        
+
+    std::shared_ptr<VectorTileFeatureCollection> MBVectorTileDecoder::decodeFeatures(const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const {
+        if (!tileData) {
+            Log::Warn("MBVectorTileDecoder::decodeFeatures: Null tile data");
+            return std::shared_ptr<VectorTileFeatureCollection>();
+        }
+        if (tileData->empty()) {
+            return std::shared_ptr<VectorTileFeatureCollection>();
+        }
+
+        std::vector<std::shared_ptr<VectorTileFeature> > tileFeatures;
+        try {
+            std::shared_ptr<mvt::MBVTFeatureDecoder> decoder;
+            {
+                std::unique_lock<std::mutex> lock(_mutex);
+                if (_cachedFeatureDecoder.first != tileData) {
+                    lock.unlock();
+                    decoder = std::make_shared<mvt::MBVTFeatureDecoder>(*tileData->getDataPtr(), _logger);
+                    lock.lock();
+                    _cachedFeatureDecoder = std::make_pair(tileData, decoder);
+                }
+                else {
+                    decoder = _cachedFeatureDecoder.second;
+                }
+            }
+
+            for (const std::string& mvtLayerName : decoder->getLayerNames()) {
+                for (std::shared_ptr<mvt::FeatureDecoder::FeatureIterator> mvtIt = decoder->createLayerFeatureIterator(mvtLayerName); mvtIt->valid(); mvtIt->advance()) {
+                    std::shared_ptr<const mvt::Geometry> mvtGeometry = mvtIt->getGeometry();
+                    if (!mvtGeometry) {
+                        continue;
+                    }
+
+                    std::map<std::string, Variant> featureData;
+                    if (std::shared_ptr<const mvt::FeatureData> mvtFeatureData = mvtIt->getFeatureData()) {
+                        for (const std::string& varName : mvtFeatureData->getVariableNames()) {
+                            mvt::Value mvtValue;
+                            if (mvtFeatureData->getVariable(varName, mvtValue)) {
+                                featureData[varName] = boost::apply_visitor(ValueConverter(), mvtValue);
+                            }
+                        }
+                    }
+
+                    auto convertFn = [&tileBounds](const cglib::vec2<float>& pos) {
+                        return MapPos(tileBounds.getMin().getX() + pos(0) * tileBounds.getDelta().getX(), tileBounds.getMax().getY() - pos(1) * tileBounds.getDelta().getY(), 0);
+                    };
+
+                    auto feature = std::make_shared<VectorTileFeature>(mvtIt->getGlobalId(), MapTile(tile.x, tile.y, tile.zoom, 0), mvtLayerName, convertGeometry(convertFn, mvtGeometry), Variant(featureData));
+                    tileFeatures.push_back(feature);
+                }
+            }
+        } catch (const std::exception& ex) {
+            Log::Errorf("MBVectorTileDecoder::decodeFeatures: Exception while decoding: %s", ex.what());
+            return std::shared_ptr<VectorTileFeatureCollection>();
+        }
+        return std::make_shared<VectorTileFeatureCollection>(tileFeatures);
+    }
+
     std::shared_ptr<MBVectorTileDecoder::TileMap> MBVectorTileDecoder::decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const {
         if (!tileData) {
             Log::Warn("MBVectorTileDecoder::decodeTile: Null tile data");
@@ -463,7 +528,7 @@ namespace carto {
         auto fontManager = std::make_shared<vt::FontManager>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
         auto bitmapLoader = std::make_shared<VTBitmapLoader>(FileUtils::GetFilePath(styleAssetName), styleSetData);
         auto bitmapManager = std::make_shared<vt::BitmapManager>(bitmapLoader);
-        auto strokeMap = std::make_shared<vt::StrokeMap>(STROKEMAP_SIZE);
+        auto strokeMap = std::make_shared<vt::StrokeMap>(STROKEMAP_SIZE, STROKEMAP_SIZE);
         auto glyphMap = std::make_shared<vt::GlyphMap>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
         auto symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
 
@@ -493,7 +558,7 @@ namespace carto {
         _cachedFeatureDecoder.first.reset();
         _cachedFeatureDecoder.second.reset();
     }
-    
+
     const int MBVectorTileDecoder::DEFAULT_TILE_SIZE = 256;
     const int MBVectorTileDecoder::STROKEMAP_SIZE = 512;
     const int MBVectorTileDecoder::GLYPHMAP_SIZE = 2048;

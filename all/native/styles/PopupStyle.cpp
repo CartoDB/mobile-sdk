@@ -10,7 +10,8 @@ namespace carto {
                            float horizontalOffset,
                            float verticalOffset,
                            int placementPriority,
-                           bool scaleWithDPI) :
+                           bool scaleWithDPI,
+                           const std::shared_ptr<AnimationStyle>& animStyle) :
         BillboardStyle(color,
                        attachAnchorPointX,
                        attachAnchorPointY,
@@ -19,7 +20,8 @@ namespace carto {
                        horizontalOffset,
                        verticalOffset,
                        placementPriority,
-                       scaleWithDPI)
+                       scaleWithDPI,
+                       animStyle)
     {
     }
     

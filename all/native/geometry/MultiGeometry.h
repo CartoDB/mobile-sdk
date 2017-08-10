@@ -23,7 +23,7 @@ namespace carto {
          * Constructs a MultiGeometry from a vector of geometry objects.
          * @param geometries The geometries for multi geometry.
          */
-        explicit MultiGeometry(const std::vector<std::shared_ptr<Geometry> >& geometries);
+        explicit MultiGeometry(std::vector<std::shared_ptr<Geometry> > geometries);
         virtual ~MultiGeometry();
 
         virtual MapPos getCenterPos() const;
@@ -43,6 +43,13 @@ namespace carto {
         std::shared_ptr<Geometry> getGeometry(int index) const;
 
     protected:
+        template <typename It>
+        MultiGeometry(It begin, It end) : _geometries(begin, end) {
+            for (const std::shared_ptr<Geometry>& geometry : _geometries) {
+                _bounds.expandToContain(geometry->getBounds());
+            }
+        }
+
         std::vector<std::shared_ptr<Geometry> > _geometries;
     };
 

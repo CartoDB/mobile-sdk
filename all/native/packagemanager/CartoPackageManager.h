@@ -9,6 +9,7 @@
 
 #ifdef _CARTO_PACKAGEMANAGER_SUPPORT
 
+#include "core/MapTile.h"
 #include "core/MapBounds.h"
 #include "packagemanager/PackageManager.h"
 
@@ -37,21 +38,34 @@ namespace carto {
         static std::string GetServerEncKey();
         static std::string GetLocalEncKey();
         
-        static bool CalculateBBoxTiles(const MapBounds& bounds, const Projection& proj, const PackageTileMask::Tile& tile, std::vector<PackageTileMask::Tile>& tiles);
+        static bool CalculateBBoxTiles(const MapBounds& bounds, const std::shared_ptr<Projection>& proj, const MapTile& tile, std::vector<MapTile>& tiles);
 
         virtual std::string createPackageURL(const std::string& packageId, int version, const std::string& baseURL, bool downloaded) const;
 
         virtual std::shared_ptr<PackageInfo> getCustomPackage(const std::string& packageId, int version) const;
         
     private:
+        struct PackageSource {
+            std::string type;
+            std::string id;
+
+            PackageSource(const std::string& type, const std::string& id) : type(type), id(id) { }
+        };
+
+        static PackageSource ResolveSource(const std::string& source);
+
         static const std::string MAP_PACKAGE_LIST_URL;
-
         static const std::string ROUTING_PACKAGE_LIST_URL;
+        static const std::string GEOCODING_PACKAGE_LIST_URL;
 
-        static const std::string CUSTOM_BBOX_PACKAGE_URL;
+        static const std::string CUSTOM_MAP_BBOX_PACKAGE_URL;
+        static const std::string CUSTOM_ROUTING_BBOX_PACKAGE_URL;
+        static const std::string CUSTOM_GEOCODING_BBOX_PACKAGE_URL;
 
-        static const int MAX_CUSTOM_BBOX_PACKAGE_TILES = 100000;
-        static const int MAX_CUSTOM_BBOX_PACKAGE_TILEMASK_ZOOM = 12;
+        static const int MAX_CUSTOM_BBOX_PACKAGE_TILES;
+        static const int MAX_CUSTOM_BBOX_PACKAGE_TILE_ZOOM;
+        static const int MAX_CUSTOM_BBOX_PACKAGE_TILEMASK_ZOOMLEVEL;
+        static const int MAX_TILEMASK_LENGTH;
         
         std::string _source;
     };

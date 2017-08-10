@@ -14,12 +14,14 @@
 #include <bidi.h>
 
 namespace carto { namespace vt {
-    TextFormatter::TextFormatter(const std::shared_ptr<Font>& font) : _font(font) {
+    TextFormatter::TextFormatter(std::shared_ptr<Font> font, float fontSize, const Options& options) :
+        _font(font), _metrics(font->getMetrics(1.0f)), _fontSize(fontSize), _options(options)
+    {
     }
 
-    std::vector<Font::Glyph> TextFormatter::format(const std::string& text, const Options& options) const {
+    std::vector<Font::Glyph> TextFormatter::format(const std::string& text, float fontSize) const {
         // Split text into lines
-        std::vector<Line> lines = splitLines(text, options);
+        std::vector<Line> lines = splitLines(text);
             
         // Calculate full bounding box and per-line bounding boxes
         cglib::bbox2<float> textBBox = cglib::bbox2<float>::smallest();
@@ -29,16 +31,22 @@ namespace carto { namespace vt {
         std::vector<Font::Glyph> glyphs;
         glyphs.reserve(text.size() + lines.size());
         for (const Line& line : lines) {
-            float xoff = -textBBox.max(0) * (options.alignment(0) + 1.0f) * 0.5f + (textBBox.size()(0) - line.bbox.size()(0)) * 0.5f;
-            float yoff = (textBBox.min(1) - _font->getMetrics().descent) * (-options.alignment(1) + 1.0f) * 0.5f + (line.bbox.min(1) - textBBox.min(1));
-            glyphs.emplace_back(Font::Glyph(Font::CR_CODEPOINT, 0, 0, 0, 0, cglib::vec2<float>(0, 0), cglib::vec2<float>(0, 0), cglib::vec2<float>(xoff, yoff) + options.offset));
+            float xoff = -textBBox.max(0) * (_options.alignment(0) + 1.0f) * 0.5f + (textBBox.size()(0) - line.bbox.size()(0)) * 0.5f;
+            float yoff = (textBBox.min(1) - _metrics.descent) * (-_options.alignment(1) + 1.0f) * 0.5f + (line.bbox.min(1) - textBBox.min(1));
+            glyphs.emplace_back(Font::Glyph(Font::CR_CODEPOINT, GlyphMap::Glyph(false, 0, 0, 0, 0, cglib::vec2<float>(0, 0)), cglib::vec2<float>(0, 0), cglib::vec2<float>(0, 0), cglib::vec2<float>(xoff, yoff) + _options.offset * (1.0f / _fontSize)));
             glyphs.insert(glyphs.end(), line.glyphs.begin(), line.glyphs.end());
         }
-
+        if (fontSize != 1) {
+            for (Font::Glyph& glyph : glyphs) {
+                glyph.offset *= fontSize;
+                glyph.size *= fontSize;
+                glyph.advance *= fontSize;
+            }
+        }
         return glyphs;
     }
 
-    std::vector<TextFormatter::Line> TextFormatter::splitLines(const std::string& text, const Options& options) const {
+    std::vector<TextFormatter::Line> TextFormatter::splitLines(const std::string& text) const {
         std::vector<std::uint32_t> utf32Text;
         utf32Text.reserve(text.size());
         utf8::utf8to32(text.begin(), text.end(), std::back_inserter(utf32Text));
@@ -71,22 +79,22 @@ namespace carto { namespace vt {
                     int cchRun = bidi_run(&utf32Text[ich], &reorderLevels[ich], cchLine, nullptr);
                     cchLine -= cchRun;
                     
-                    std::vector<Font::Glyph> glyphs = _font->shapeGlyphs(&utf32Text[ich], cchRun, false);
+                    std::vector<Font::Glyph> glyphs = _font->shapeGlyphs(&utf32Text[ich], cchRun, 1.0f, false);
                     for (std::size_t i = 0; i < glyphs.size(); i++) {
                         Font::Glyph& glyph = glyphs[i];
                         if (glyph.advance(0) > 0 && glyph.advance(1) == 0) {
-                            glyph.advance(0) += options.characterSpacing;
+                            glyph.advance(0) += _options.characterSpacing / _fontSize;
                         }
-                        if (glyph.width == 0) {
+                        if (glyph.baseGlyph.width == 0) {
                             glyph.codePoint = Font::SPACE_CODEPOINT;
                         }
 
                         word.push_back(glyph);
-                        wordWidth += glyph.advance(0);
+                        wordWidth += glyph.advance(0) * _fontSize;
 
-                        if (glyph.codePoint == Font::SPACE_CODEPOINT && i + 1 < glyphs.size() && options.wrapWidth > 0) {
-                            if (lineWidth + wordWidth >= options.wrapWidth) {
-                                if (options.wrapBefore) {
+                        if (glyph.codePoint == Font::SPACE_CODEPOINT && i + 1 < glyphs.size() && _options.wrapWidth > 0) {
+                            if (lineWidth + wordWidth >= _options.wrapWidth) {
+                                if (_options.wrapBefore) {
                                     lines.emplace_back(Line());
                                     lines.back().glyphs.insert(lines.back().glyphs.end(), word.begin(), word.end());
                                     lineWidth = wordWidth;
@@ -120,13 +128,13 @@ namespace carto { namespace vt {
         cglib::vec2<float> pen(0, 0);
         for (Line& line : lines) {
             pen(0) = 0;
-            for (const Font::Glyph& glyph : line.glyphs) {
-                line.bbox.add(pen + cglib::vec2<float>(glyph.offset(0), -_font->getMetrics().ascent));
-                line.bbox.add(pen + cglib::vec2<float>(glyph.offset(0) + glyph.size(0), -_font->getMetrics().descent));
+            for (Font::Glyph glyph : line.glyphs) {
+                line.bbox.add(pen + cglib::vec2<float>(glyph.offset(0), -_metrics.ascent));
+                line.bbox.add(pen + cglib::vec2<float>(glyph.offset(0) + glyph.size(0), -_metrics.descent));
 
                 pen += glyph.advance;
             }
-            pen(1) -= _font->getMetrics().height + options.lineSpacing;
+            pen(1) -= _metrics.height + _options.lineSpacing / _fontSize;
         }
 
         return lines;

@@ -6,6 +6,8 @@
 #include <numeric>
 #include <functional>
 #include <utility>
+#include <iomanip>
+#include <sstream>
 
 namespace carto {
 
@@ -44,6 +46,17 @@ namespace carto {
         return std::accumulate(_instructions.begin(), _instructions.end(), 0.0, [](double time, const RoutingInstruction& instruction) {
             return time + instruction.getTime();
         });
+    }
+
+    std::string RoutingResult::toString() const {
+        std::stringstream ss;
+        ss << std::setiosflags(std::ios::fixed);
+        ss << "RoutingResult [";
+        ss << "instructions=" << _instructions.size() << ", ";
+        ss << "totalDistance=" << getTotalDistance() << ", ";
+        ss << "totalTime=" << getTotalTime();
+        ss << "]";
+        return ss.str();
     }
 
 }

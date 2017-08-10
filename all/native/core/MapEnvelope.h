@@ -37,20 +37,19 @@ namespace carto {
          * @param convexHull The list of convex hull points.
          */
         explicit MapEnvelope(const std::vector<MapPos>& convexHull);
-        virtual ~MapEnvelope();
     
         /**
          * Checks for equality between this and another envelope.
          * @param envelope The other map envelope object.
          * @return True if equal.
          */
-        bool operator==(const MapEnvelope& envelope) const;
+        bool operator ==(const MapEnvelope& envelope) const;
         /**
          * Checks for inequality between this and another map envelope.
          * @param envelope The other map envelope object.
          * @return True if not equal.
          */
-        bool operator!=(const MapEnvelope& envelope) const;
+        bool operator !=(const MapEnvelope& envelope) const;
         
         /**
          * Returns the map bounds of this map envelope.

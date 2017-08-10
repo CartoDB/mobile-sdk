@@ -25,6 +25,7 @@
 %attributeval(carto::VectorElementClickInfo, carto::MapPos, ElementClickPos, getElementClickPos)
 !attributestring_polymorphic(carto::VectorElementClickInfo, vectorelements.VectorElement, VectorElement, getVectorElement)
 !attributestring_polymorphic(carto::VectorElementClickInfo, layers.Layer, Layer, getLayer)
+%ignore carto::VectorElementClickInfo::VectorElementClickInfo;
 !standard_equals(carto::VectorElementClickInfo);
 
 %include "ui/VectorElementClickInfo.h"

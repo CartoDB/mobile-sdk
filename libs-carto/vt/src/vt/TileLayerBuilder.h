@@ -58,15 +58,15 @@ namespace carto { namespace vt {
         explicit TileLayerBuilder(const TileId& tileId, float tileSize, float geomScale);
 
         void addBitmap(const std::shared_ptr<TileBitmap>& bitmap);
-        void addPoints(const std::function<bool(long long& id, Vertex& vertex)>& generator, const PointStyle& style);
-        void addTexts(const std::function<bool(long long& id, Vertex& vertex, std::string& text)>& generator, const TextStyle& style);
-        void addLines(const std::function<bool(long long& id, Vertices& vertices)>& generator, const LineStyle& style);
+        void addPoints(const std::function<bool(long long& id, Vertex& vertex)>& generator, const PointStyle& style, const std::shared_ptr<GlyphMap>& glyphMap);
+        void addTexts(const std::function<bool(long long& id, Vertex& vertex, std::string& text)>& generator, const TextStyle& style, const TextFormatter& formatter);
+        void addLines(const std::function<bool(long long& id, Vertices& vertices)>& generator, const LineStyle& style, const std::shared_ptr<StrokeMap>& strokeMap);
         void addPolygons(const std::function<bool(long long& id, VerticesList& verticesList)>& generator, const PolygonStyle& style);
         void addPolygons3D(const std::function<bool(long long& id, VerticesList& verticesList)>& generator, float height, const Polygon3DStyle& style);
-        void addBitmapLabels(const std::function<bool(long long& id, BitmapLabelInfo& labelInfo)>& generator, const BitmapLabelStyle& style);
-        void addTextLabels(const std::function<bool(long long& id, TextLabelInfo& labelInfo)>& generator, const TextLabelStyle& style);
+        void addBitmapLabels(const std::function<bool(long long& id, BitmapLabelInfo& labelInfo)>& generator, const BitmapLabelStyle& style, const std::shared_ptr<GlyphMap>& glyphMap);
+        void addTextLabels(const std::function<bool(long long& id, TextLabelInfo& labelInfo)>& generator, const TextLabelStyle& style, const TextFormatter& formatter);
 
-        std::shared_ptr<TileLayer> build(int layerIdx, std::shared_ptr<FloatFunction> opacity, boost::optional<CompOp> compOp);
+        std::shared_ptr<TileLayer> build(int layerIdx, boost::optional<CompOp> compOp, FloatFunction opacityFunc);
 
     private:
         constexpr static int RESERVED_VERTICES = 4096;
@@ -88,7 +88,7 @@ namespace carto { namespace vt {
         void appendGeometry();
         void appendGeometry(float verticesScale, float binormalsScale, float texCoordsScale, const VertexArray<cglib::vec2<float>>& vertices, const VertexArray<cglib::vec2<float>>& texCoords, const VertexArray<cglib::vec2<float>>& binormals, const VertexArray<float>& heights, const VertexArray<cglib::vec4<char>>& attribs, const VertexArray<unsigned int>& indices, const VertexArray<long long>& ids, std::size_t offset, std::size_t count);
 
-        bool tesselateGlyph(const Vertex& vertex, char styleIndex, const cglib::vec2<float>& pen, const Font::Glyph* glyph);
+        bool tesselateGlyph(const Vertex& vertex, char styleIndex, const cglib::vec2<float>& pen, const cglib::vec2<float>& size, const GlyphMap::Glyph* glyph);
         bool tesselatePolygon(const VerticesList& verticesList, char styleIndex, const PolygonStyle& style);
         bool tesselatePolygon3D(const VerticesList& verticesList, float height, char styleIndex, const Polygon3DStyle& style);
         bool tesselateLine(const Vertices& points, char styleIndex, const StrokeMap::Stroke* stroke, const LineStyle& style);
@@ -99,6 +99,7 @@ namespace carto { namespace vt {
         const float _geomScale;
         BuilderParameters _builderParameters;
         TileGeometry::StyleParameters _styleParameters;
+        std::shared_ptr<const TileLabel::LabelStyle> _labelStyle;
 
         VertexArray<cglib::vec2<float>> _vertices;
         VertexArray<cglib::vec2<float>> _texCoords;
@@ -112,7 +113,6 @@ namespace carto { namespace vt {
         std::vector<std::shared_ptr<TileGeometry>> _geometryList;
         std::vector<std::shared_ptr<TileLabel>> _labelList;
 
-        std::shared_ptr<FloatFunction> _nullWidth;
         std::unique_ptr<PoolAllocator> _tessPoolAllocator;
     };
 } }

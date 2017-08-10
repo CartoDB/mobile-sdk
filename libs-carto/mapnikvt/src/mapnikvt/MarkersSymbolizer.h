@@ -12,7 +12,9 @@
 namespace carto { namespace mvt {
     class MarkersSymbolizer : public Symbolizer {
     public:
-        explicit MarkersSymbolizer(std::shared_ptr<Logger> logger) : Symbolizer(std::move(logger)) { }
+        explicit MarkersSymbolizer(std::shared_ptr<Logger> logger) : Symbolizer(std::move(logger)) {
+            bind(&_strokeWidthFunc, std::make_shared<ConstExpression>(Value(_strokeWidthStatic)));
+        }
 
         virtual void build(const FeatureCollection& featureCollection, const FeatureExpressionContext& exprContext, const SymbolizerContext& symbolizerContext, vt::TileLayerBuilder& layerBuilder) override;
 
@@ -21,26 +23,30 @@ namespace carto { namespace mvt {
         constexpr static int DEFAULT_ARROW_WIDTH = 28;
         constexpr static int DEFAULT_ARROW_HEIGHT = 14;
         constexpr static int SUPERSAMPLING_FACTOR = 4;
+        constexpr static int MAX_BITMAP_SIZE = 64;
 
         virtual void bindParameter(const std::string& name, const std::string& value) override;
 
         static bool containsRotationTransform(const Value& val);
 
-        static std::shared_ptr<vt::Bitmap> makeEllipseBitmap(float width, float height, const vt::Color& color, float strokeWidth, const vt::Color& strokeColor);
-        static std::shared_ptr<vt::Bitmap> makeArrowBitmap(float width, float height, const vt::Color& color, float strokeWidth, const vt::Color& strokeColor);
+        static std::shared_ptr<vt::BitmapImage> makeEllipseBitmap(float width, float height, const vt::Color& color, float strokeWidth, const vt::Color& strokeColor);
+        static std::shared_ptr<vt::BitmapImage> makeArrowBitmap(float width, float height, const vt::Color& color, float strokeWidth, const vt::Color& strokeColor);
 
         std::string _file;
         std::string _placement = "point";
         std::string _markerType;
         vt::Color _fill = vt::Color(0xff0000ff);
         float _fillOpacity = 1.0f;
-        float _width = -1.0f;
+        vt::FloatFunction _widthFunc; // undefined
+        float _widthStatic = 0;
         bool _widthDefined = false;
-        float _height = -1.0f;
+        vt::FloatFunction _heightFunc; // undefined
+        float _heightStatic = 0;
         bool _heightDefined = false;
         vt::Color _stroke = vt::Color(0xff000000);
         float _strokeOpacity = 1.0f;
-        float _strokeWidth = 0.5f;
+        vt::FloatFunction _strokeWidthFunc; // 0.5f
+        float _strokeWidthStatic = 0.5f;
         float _spacing = 100.0f;
         bool _allowOverlap = false;
         bool _ignorePlacement = false;

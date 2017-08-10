@@ -36,7 +36,7 @@ namespace carto {
          * @param style The style that defines what this 3d polygon looks like.
          * @param height The height of this 3d polygon in meters.
          */
-        Polygon3D(const std::vector<MapPos>& poses, const std::shared_ptr<Polygon3DStyle>& style, float height);
+        Polygon3D(std::vector<MapPos> poses, const std::shared_ptr<Polygon3DStyle>& style, float height);
         /**
          * Constructs a Polygon3D object from a vector of map positions, a vector of holes and a style.
          * @param poses The vector of map positions that defines the location of this 3d polygon.
@@ -44,8 +44,8 @@ namespace carto {
          * @param style The style that defines what this 3d polygon looks like.
          * @param height The height of this 3d polygon in meters.
          */
-        Polygon3D(const std::vector<MapPos>& poses, const std::vector<std::vector<MapPos> >& holes,
-                const std::shared_ptr<Polygon3DStyle>& style, float height);
+        Polygon3D(std::vector<MapPos> poses, std::vector<std::vector<MapPos> > holes,
+                  const std::shared_ptr<Polygon3DStyle>& style, float height);
         virtual ~Polygon3D();
     
         std::shared_ptr<PolygonGeometry> getGeometry() const;

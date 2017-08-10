@@ -21,15 +21,12 @@ namespace carto {
     {
     }
     
-    MapBounds::~MapBounds() {
+    bool MapBounds::operator ==(const MapBounds& mapBounds) const {
+        return _min == mapBounds._min && _max == mapBounds._max;
     }
     
-    bool MapBounds::operator==(const MapBounds& bounds) const {
-        return _min == bounds._min && _max == bounds._max;
-    }
-    
-    bool MapBounds::operator!=(const MapBounds& bounds) const {
-        return !operator==(bounds);
+    bool MapBounds::operator !=(const MapBounds& mapBounds) const {
+        return !(*this == mapBounds);
     }
         
     void MapBounds::setBounds(const MapPos& min, const MapPos& max) {

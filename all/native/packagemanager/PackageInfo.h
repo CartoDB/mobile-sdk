@@ -30,7 +30,15 @@ namespace carto {
             /**
              * Routing package.
              */
-            PACKAGE_TYPE_ROUTING = 1
+            PACKAGE_TYPE_ROUTING = 1,
+            /**
+             * Geocoding package.
+             */
+            PACKAGE_TYPE_GEOCODING = 2,
+            /**
+             * Valhalla routing package.
+             */
+            PACKAGE_TYPE_VALHALLA_ROUTING = 3
         };
     }
 

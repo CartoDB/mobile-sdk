@@ -109,7 +109,7 @@ def buildIOSCocoapod(args, buildpackage):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--profile', dest='profile', default=getDefaultProfile(), choices=getProfiles().keys(), help='Build profile')
-parser.add_argument('--ios-arch', dest='iosarch', default=['all'], choices=IOS_ARCHS + ['all'], nargs='+', help='Windows phone target architectures')
+parser.add_argument('--ios-arch', dest='iosarch', default=[], choices=IOS_ARCHS + ['all'], action='append', help='iOS target architectures')
 parser.add_argument('--defines', dest='defines', default='', help='Defines for compilation')
 parser.add_argument('--cmake', dest='cmake', default='cmake', help='CMake executable')
 parser.add_argument('--cmake-options', dest='cmakeoptions', default='', help='CMake options')
@@ -120,7 +120,7 @@ parser.add_argument('--build-cocoapod', dest='buildcocoapod', default=False, act
 parser.add_argument('--build-cocoapod-package', dest='buildcocoapodpackage', default=False, action='store_true', help='Build CocoaPod')
 
 args = parser.parse_args()
-if 'all' in args.iosarch:
+if 'all' in args.iosarch or args.iosarch == []:
   args.iosarch = IOS_ARCHS
 args.defines += ';' + getProfiles()[args.profile].get('defines', '')
 args.cmakeoptions += ';' + getProfiles()[args.profile].get('cmake-options', '')

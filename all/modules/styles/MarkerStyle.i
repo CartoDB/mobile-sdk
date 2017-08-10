@@ -19,11 +19,13 @@
 !polymorphic_shared_ptr(carto::MarkerStyle, styles.MarkerStyle)
 
 %attribute(carto::MarkerStyle, float, Size, getSize)
+%attribute(carto::MarkerStyle, float, ClickSize, getClickSize)
 %attribute(carto::MarkerStyle, carto::BillboardOrientation::BillboardOrientation, OrientationMode, getOrientationMode)
 %attribute(carto::MarkerStyle, carto::BillboardScaling::BillboardScaling, ScalingMode, getScalingMode)
 %attribute(carto::MarkerStyle, float, AnchorPointX, getAnchorPointX)
 %attribute(carto::MarkerStyle, float, AnchorPointY, getAnchorPointY)
 %attributestring(carto::MarkerStyle, std::shared_ptr<carto::Bitmap>, Bitmap, getBitmap)
+%ignore carto::MarkerStyle::MarkerStyle;
 
 %include "styles/MarkerStyle.h"
 

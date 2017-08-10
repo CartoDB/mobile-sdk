@@ -8,8 +8,6 @@
 #define _CARTO_MAPNIKVT_FEATUREDECODER_H_
 
 #include "Feature.h"
-#include "FeatureData.h"
-#include "Geometry.h"
 
 #include <memory>
 #include <string>
@@ -27,8 +25,8 @@ namespace carto { namespace mvt {
 
             virtual long long getLocalId() const = 0;
             virtual long long getGlobalId() const = 0;
-            virtual std::shared_ptr<const FeatureData> getFeatureData() const = 0;
             virtual std::shared_ptr<const Geometry> getGeometry() const = 0;
+            virtual std::shared_ptr<const FeatureData> getFeatureData() const = 0;
         };
 
         virtual ~FeatureDecoder() = default;

@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <algorithm>
 #include <utility>
+#include <functional>
 #include <array>
 
 #include <cglib/vec.h>
@@ -17,11 +18,11 @@
 namespace carto { namespace vt {
     class Color final {
     public:
-        Color() : _components{ 0, 0, 0, 0 } { }
+        Color() : _components { 0, 0, 0, 0 } { }
         
-        explicit Color(float r, float g, float b, float a) : _components{ r, g, b, a } { }
+        explicit Color(float r, float g, float b, float a) : _components { r, g, b, a } { }
 
-        explicit Color(unsigned int value) : _components{
+        explicit Color(unsigned int value) : _components {
             ((value >> 16) & 255) * (1.0f / 255.0f),
             ((value >>  8) & 255) * (1.0f / 255.0f),
             ((value >>  0) & 255) * (1.0f / 255.0f),
@@ -100,5 +101,14 @@ namespace carto { namespace vt {
         return !(color1 == color2);
     }
 } }
+
+namespace std {
+    template <>
+    struct hash<carto::vt::Color> {
+        std::size_t operator() (const carto::vt::Color& color) const {
+            return std::hash<float>()(color[0]) * 5 + std::hash<float>()(color[1]) * 3 + std::hash<float>()(color[2]) * 2 + std::hash<float>()(color[3]);
+        }
+    };
+}
 
 #endif

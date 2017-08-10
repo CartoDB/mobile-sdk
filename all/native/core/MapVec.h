@@ -70,13 +70,13 @@ namespace carto {
          * @param n The index of the requested coordinate.
          * @return The n-th coordinate of this map vector.
          */
-        double operator[](std::size_t n) const;
+        double operator [](std::size_t n) const;
         /**
          * Returns a modifiable n-th coordinate of this map vector.
          * @param n The index of the requested coordinate.
          * @return The modifiable n-th coordinate of this map vector.
          */
-        double& operator[](std::size_t n);
+        double& operator [](std::size_t n);
         
         /**
          * Sets the x and y coordinates of this map vector.
@@ -97,63 +97,63 @@ namespace carto {
          * @param v The map vector to be added.
          * @return This map vector after the addition.
          */
-        MapVec& operator+=(const MapVec& v);
+        MapVec& operator +=(const MapVec& v);
         /**
          * Subtracts another map vector from this map vector.
          * @param v The map vector to be added.
          * @return This map vector after the subtraction.
          */
-        MapVec& operator-=(const MapVec& v);
+        MapVec& operator -=(const MapVec& v);
         /**
          * Multiplies this map vector by a multiplier.
          * @param multiplier The multiplier.
          * @return This map vector after the multiplication.
          */
-        MapVec& operator*=(double multiplier);
+        MapVec& operator *=(double multiplier);
         /**
          * Divides this map vector by a divider.
          * @param divider The divider.
          * @return This map vector after the division.
          */
-        MapVec& operator/=(double divider);
+        MapVec& operator /=(double divider);
     
         /**
          * Creates a new map vector by adding a map vector to this map vector.
          * @param v The map vector to be added.
          * @return The new map vector.
          */
-        MapVec operator+(const MapVec& v) const;
+        MapVec operator +(const MapVec& v) const;
         /**
          * Creates a new map vector by subtracting a map vector from this map vector.
          * @param v The map vector to be subtracted.
          * @return The new map vector.
          */
-        MapVec operator-(const MapVec& v) const;
+        MapVec operator -(const MapVec& v) const;
         /**
          * Creates a new map vector by multiplying this map vector with a multiplier.
          * @param multiplier The multiplier.
          * @return The new map vector.
          */
-        MapVec operator*(double multiplier) const;
+        MapVec operator *(double multiplier) const;
         /**
          * Creates a new map vector by dividing this map vector with a divider.
          * @param divider The divider.
          * @return The new map vector.
          */
-        MapVec operator/(double divider) const;
+        MapVec operator /(double divider) const;
     
         /**
          * Checks for equality between this and another map vector.
          * @param v The other map vector.
          * @return True if equal.
          */
-        bool operator==(const MapVec& v) const;
+        bool operator ==(const MapVec& v) const;
         /**
          * Checks for inequality between this and another map vector.
          * @param v The other map vector.
          * @return True if not equal.
          */
-        bool operator!=(const MapVec& v) const;
+        bool operator !=(const MapVec& v) const;
     
         /**
          * Calculates the length of this map vector.

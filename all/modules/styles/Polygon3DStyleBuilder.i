@@ -19,6 +19,8 @@
 
 !polymorphic_shared_ptr(carto::Polygon3DStyleBuilder, styles.Polygon3DStyleBuilder)
 
+%attributeval(carto::Polygon3DStyleBuilder, carto::Color, Color, getSideColor, setSideColor)
+
 %include "styles/Polygon3DStyleBuilder.h"
 
 #endif

@@ -14,30 +14,14 @@
 #include <algorithm>
 #include <numeric>
 
-namespace {
-
-    boost::variant<double, std::string> convertVariant(const carto::Variant& variant) {
-        switch (variant.getType()) {
-        case carto::VariantType::VARIANT_TYPE_STRING:
-            return variant.getString();
-        case carto::VariantType::VARIANT_TYPE_BOOL:
-            return static_cast<double>(variant.getBool());
-        case carto::VariantType::VARIANT_TYPE_INTEGER:
-            return static_cast<double>(variant.getLong());
-        case carto::VariantType::VARIANT_TYPE_DOUBLE:
-            return variant.getDouble();
-        default:
-            return std::string();
-        }
-    }
-
-}
-
 namespace carto {
 
     StyleSelectorContext::StyleSelectorContext(const ViewState& viewState, const std::shared_ptr<Geometry>& geometry, const std::map<std::string, Variant>& metaData) :
         _viewState(viewState), _geometry(geometry), _metaData(metaData)
     {
+    }
+
+    StyleSelectorContext::~StyleSelectorContext() {
     }
 
     const ViewState& StyleSelectorContext::getViewState() const {
@@ -52,25 +36,25 @@ namespace carto {
         return _metaData;
     }
 
-    bool StyleSelectorContext::getVariable(const std::string& name, boost::variant<double, std::string>& value) const {
+    bool StyleSelectorContext::getVariable(const std::string& name, Variant& value) const {
         auto it = _metaData.find(name);
         if (it != _metaData.end()) {
-            value = convertVariant(it->second);
+            value = it->second;
             return true;
         }
 
         if (name == "view::zoom") {
-            value = static_cast<double>(_viewState.getZoom());
+            value = Variant(_viewState.getZoom());
             return true;
         }
 
         if (name == "geometry::type") {
-            value = GetGeometryType(_geometry);
+            value = Variant(GetGeometryType(_geometry));
             return true;
         }
 
         if (name == "geometry::vertices") {
-            value = static_cast<double>(GetGeometryVerticesCount(_geometry));
+            value = Variant(static_cast<long long>(GetGeometryVerticesCount(_geometry)));
             return true;
         }
 

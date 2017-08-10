@@ -6,7 +6,7 @@
 
 %module(directors="1") VectorDataSource
 
-!proxy_imports(carto::VectorDataSource, datasources.components.VectorData, projections.Projection, renderers.components.CullState, graphics.ViewState)
+!proxy_imports(carto::VectorDataSource, core.MapBounds, datasources.components.VectorData, projections.Projection, renderers.components.CullState, graphics.ViewState)
 
 %{
 #include "datasources/VectorDataSource.h"
@@ -17,6 +17,7 @@
 %include <std_shared_ptr.i>
 %include <cartoswig.i>
 
+%import "core/MapBounds.i"
 %import "datasources/components/VectorData.i"
 %import "projections/Projection.i"
 %import "renderers/components/CullState.i"
@@ -26,12 +27,14 @@
 
 %feature("director") carto::VectorDataSource;
 
+%attributeval(carto::VectorDataSource, carto::MapBounds, DataExtent, getDataExtent)
 !attributestring_polymorphic(carto::VectorDataSource, projections.Projection, Projection, getProjection)
 %std_exceptions(carto::VectorDataSource::VectorDataSource)
 %ignore carto::VectorDataSource::OnChangeListener;
 %ignore carto::VectorDataSource::registerOnChangeListener;
 %ignore carto::VectorDataSource::unregisterOnChangeListener;
 %ignore carto::VectorDataSource::calculateGeometrySimplifierScale;
+%ignore carto::VectorDataSource::getElementDataSource;
 
 %feature("nodirector") carto::VectorDataSource::notifyElementAdded;
 %feature("nodirector") carto::VectorDataSource::notifyElementChanged;

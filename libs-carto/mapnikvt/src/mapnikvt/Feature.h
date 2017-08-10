@@ -18,6 +18,7 @@
 namespace carto { namespace mvt {
     class Feature final {
     public:
+        Feature() = default;
         Feature(long long id, std::shared_ptr<const Geometry> geometry, std::shared_ptr<const FeatureData> featureData) : _id(id), _geometry(geometry), _featureData(featureData) { }
 
         long long getId() const { return _id; }
@@ -25,7 +26,7 @@ namespace carto { namespace mvt {
         const std::shared_ptr<const FeatureData>& getFeatureData() const { return _featureData; }
 
     private:
-        long long _id;
+        long long _id = 0;
         std::shared_ptr<const Geometry> _geometry;
         std::shared_ptr<const FeatureData> _featureData;
     };

@@ -21,9 +21,9 @@
 !polymorphic_shared_ptr(carto::CartoOfflineVectorTileLayer, layers.CartoOfflineVectorTileLayer)
 
 #ifdef _CARTO_CUSTOM_BASEMAP_SUPPORT
-%std_exceptions(carto::CartoOfflineVectorTileLayer::CartoOfflineVectorTileLayer(const std::shared_ptr<carto::CartoPackageManager>&, const std::shared_ptr<carto::AssetPackage>&))
+%std_exceptions(carto::CartoOfflineVectorTileLayer::CartoOfflineVectorTileLayer(const std::shared_ptr<CartoPackageManager>&, const std::shared_ptr<AssetPackage>&))
 #else
-%ignore carto::CartoOfflineVectorTileLayer::CartoOfflineVectorTileLayer(const std::shared_ptr<carto::CartoPackageManager>&, const std::shared_ptr<carto::AssetPackage>&);
+%ignore carto::CartoOfflineVectorTileLayer::CartoOfflineVectorTileLayer(const std::shared_ptr<CartoPackageManager>&, const std::shared_ptr<AssetPackage>&);
 #endif
 
 %include "layers/CartoOfflineVectorTileLayer.h"

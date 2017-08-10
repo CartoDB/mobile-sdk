@@ -27,9 +27,9 @@ namespace carto { namespace vt {
         explicit BitmapManager(const std::shared_ptr<BitmapLoader>& loader);
         virtual ~BitmapManager() = default;
 
-        std::shared_ptr<const Bitmap> getBitmap(const std::string& fileName) const;
-        std::shared_ptr<const Bitmap> loadBitmap(const std::string& fileName);
-        void storeBitmap(const std::string& fileName, const std::shared_ptr<const Bitmap>& bitmap);
+        std::shared_ptr<const BitmapImage> getBitmapImage(const std::string& fileName) const;
+        std::shared_ptr<const BitmapImage> loadBitmapImage(const std::string& fileName, bool sdfMode);
+        void storeBitmapImage(const std::string& fileName, const std::shared_ptr<const BitmapImage>& bitmapImage);
 
         std::shared_ptr<const BitmapPattern> getBitmapPattern(const std::string& fileName) const;
         std::shared_ptr<const BitmapPattern> loadBitmapPattern(const std::string& fileName, float widthScale, float heightScale);
@@ -40,7 +40,7 @@ namespace carto { namespace vt {
 
     protected:
         std::shared_ptr<BitmapLoader> _bitmapLoader;
-        std::map<std::string, std::shared_ptr<const Bitmap>> _bitmapMap;
+        std::map<std::string, std::shared_ptr<const BitmapImage>> _bitmapImageMap;
         std::map<std::string, std::shared_ptr<const BitmapPattern>> _bitmapPatternMap;
 
         mutable std::mutex _mutex;

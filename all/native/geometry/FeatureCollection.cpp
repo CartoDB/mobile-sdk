@@ -1,11 +1,10 @@
 #include "FeatureCollection.h"
 #include "components/Exceptions.h"
-#include "utils/Log.h"
 
 namespace carto {
 
-    FeatureCollection::FeatureCollection(const std::vector<std::shared_ptr<Feature> >& features) :
-        _features(features)
+    FeatureCollection::FeatureCollection(std::vector<std::shared_ptr<Feature> > features) :
+        _features(std::move(features))
     {
     }
 

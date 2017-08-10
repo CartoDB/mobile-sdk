@@ -1,6 +1,7 @@
 #include "BitmapFilterTable.h"
 
 namespace carto {
+
     const int BitmapFilterTable::_GaussTableSize = 64;
 
     const float BitmapFilterTable::_GaussTable[] = {
@@ -14,4 +15,5 @@ namespace carto {
         0.0302f, 0.0284f, 0.0266f, 0.0250f, 0.0235f, 0.0221f, 0.0208f, 0.0195f,
         0.0000f, 0.0000f
     };
+
 }

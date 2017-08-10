@@ -14,7 +14,7 @@
 namespace carto { namespace mvt {
     void SymbolizerGenerator::generateSymbolizer(const Symbolizer& symbolizer, pugi::xml_node& symbolizerNode) const {
         std::string type;
-        std::shared_ptr<Expression> expr;
+        std::shared_ptr<const Expression> expr;
         if (dynamic_cast<const PointSymbolizer*>(&symbolizer)) {
             type = "PointSymbolizer";
         }

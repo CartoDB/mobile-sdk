@@ -44,7 +44,7 @@ namespace carto { namespace mvt {
                     ;
 
                 stringExpression =
-                      string						    [_pass = phx::bind(&getString, _val, _1)]
+                      string                            [_pass = phx::bind(&getString, _val, _1)]
                     | (stringExpression << stringExpression) [_pass = phx::bind(&getBinaryExpression<ConcatenateOperator>, _val, _1, _2)]
                     | ('[' << stringExpression << ']' ) [_pass = phx::bind(&getVariableExpression, _val, _1)]
                     | ('{' << karma::delimit(encoding::space_type())[expression << '}']) [_1 = _val]
@@ -56,43 +56,43 @@ namespace carto { namespace mvt {
 
                 expression =
                       (term0 << '?' << expression << ':' << expression) [_pass = phx::bind(&getTertiaryExpression<ConditionalOperator>, _val, _1, _2, _3)]
-                    | term0								[_1 = _val]
+                    | term0                                [_1 = _val]
                     ;
 
                 term0 =
-                      (term0 << "and" << term1)			[_pass = phx::bind(&getAndPredicate, _val, _1, _2)]
-                    | (term0 << "or"  << term1)			[_pass = phx::bind(&getOrPredicate,  _val, _1, _2)]
-                    | term1								[_1 = _val]
+                      (term0 << "and" << term1)            [_pass = phx::bind(&getAndPredicate, _val, _1, _2)]
+                    | (term0 << "or"  << term1)            [_pass = phx::bind(&getOrPredicate,  _val, _1, _2)]
+                    | term1                                [_1 = _val]
                     ;
 
                 term1 =
-                      (term1 << "<>" << term2)			[_pass = phx::bind(&getComparisonPredicate<NEQOperator>, _val, _1, _2)]
-                    | (term1 << "<=" << term2)			[_pass = phx::bind(&getComparisonPredicate<LTEOperator>, _val, _1, _2)]
-                    | (term1 << ">=" << term2)			[_pass = phx::bind(&getComparisonPredicate<GTEOperator>, _val, _1, _2)]
-                    | (term1 << "!=" << term2)			[_pass = phx::bind(&getComparisonPredicate<NEQOperator>, _val, _1, _2)]
-                    | (term1 << '<'  << term2)			[_pass = phx::bind(&getComparisonPredicate<LTOperator>,  _val, _1, _2)]
-                    | (term1 << '>'  << term2)			[_pass = phx::bind(&getComparisonPredicate<GTOperator>,  _val, _1, _2)]
-                    | (term1 << '='  << term2)			[_pass = phx::bind(&getComparisonPredicate<EQOperator>,  _val, _1, _2)]
-                    | term2								[_1 = _val]
+                      (term1 << "<>" << term2)             [_pass = phx::bind(&getComparisonPredicate<NEQOperator>, _val, _1, _2)]
+                    | (term1 << "<=" << term2)             [_pass = phx::bind(&getComparisonPredicate<LTEOperator>, _val, _1, _2)]
+                    | (term1 << ">=" << term2)             [_pass = phx::bind(&getComparisonPredicate<GTEOperator>, _val, _1, _2)]
+                    | (term1 << "!=" << term2)             [_pass = phx::bind(&getComparisonPredicate<NEQOperator>, _val, _1, _2)]
+                    | (term1 << '<'  << term2)             [_pass = phx::bind(&getComparisonPredicate<LTOperator>,  _val, _1, _2)]
+                    | (term1 << '>'  << term2)             [_pass = phx::bind(&getComparisonPredicate<GTOperator>,  _val, _1, _2)]
+                    | (term1 << '='  << term2)             [_pass = phx::bind(&getComparisonPredicate<EQOperator>,  _val, _1, _2)]
+                    | term2                                [_1 = _val]
                     ;
 
                 term2 =
-                      (term2 << '+' << term3)			[_pass = phx::bind(&getBinaryExpression<AddOperator>, _val, _1, _2)]
-                    | (term2 << '-' << term3)			[_pass = phx::bind(&getBinaryExpression<SubOperator>, _val, _1, _2)]
-                    | term3								[_1 = _val]
+                      (term2 << '+' << term3)              [_pass = phx::bind(&getBinaryExpression<AddOperator>, _val, _1, _2)]
+                    | (term2 << '-' << term3)              [_pass = phx::bind(&getBinaryExpression<SubOperator>, _val, _1, _2)]
+                    | term3                                [_1 = _val]
                     ;
 
                 term3 =
-                      (term3 << '*' << unary)			[_pass = phx::bind(&getBinaryExpression<MulOperator>, _val, _1, _2)]
-                    | (term3 << '/' << unary)			[_pass = phx::bind(&getBinaryExpression<DivOperator>, _val, _1, _2)]
-                    | (term3 << '%' << unary)			[_pass = phx::bind(&getBinaryExpression<ModOperator>, _val, _1, _2)]
-                    | unary								[_1 = _val]
+                      (term3 << '*' << unary)              [_pass = phx::bind(&getBinaryExpression<MulOperator>, _val, _1, _2)]
+                    | (term3 << '/' << unary)              [_pass = phx::bind(&getBinaryExpression<DivOperator>, _val, _1, _2)]
+                    | (term3 << '%' << unary)              [_pass = phx::bind(&getBinaryExpression<ModOperator>, _val, _1, _2)]
+                    | unary                                [_1 = _val]
                     ;
 
                 unary =
-                      ('-' << unary)					[_pass = phx::bind(&getUnaryExpression<NegOperator>, _val, _1)]
-                    | ('!' << unary)					[_pass = phx::bind(&getNotPredicate, _val, _1)]
-                    | postfix							[_1 = _val]
+                      ('-' << unary)                       [_pass = phx::bind(&getUnaryExpression<NegOperator>, _val, _1)]
+                    | ('!' << unary)                       [_pass = phx::bind(&getNotPredicate, _val, _1)]
+                    | postfix                              [_1 = _val]
                     ;
 
                 postfix =
@@ -103,17 +103,18 @@ namespace carto { namespace mvt {
                     | (postfix << '.' << karma::lit("concat")  << '(' << expression << ')') [_pass = phx::bind(&getBinaryExpression<ConcatenateOperator>, _val, _1, _2)]
                     | (postfix << '.' << karma::lit("match")   << '(' << expression << ')') [_pass = phx::bind(&getComparisonPredicate<MatchOperator>, _val, _1, _2)]
                     | (postfix << '.' << karma::lit("replace") << '(' << expression << ',' << expression << ')') [_pass = phx::bind(&getTertiaryExpression<ReplaceOperator>, _val, _1, _2, _3)]
-                    | factor							                                    [_1 = _val]
+                    | factor                                                                [_1 = _val]
                     ;
 
                 factor =
-                      constant							[_pass = phx::bind(&getConstant, _val, _1)]
+                      constant                          [_pass = phx::bind(&getConstant, _val, _1)]
+                    | (karma::lit("pow" )   << '(' << expression << ',' << expression << ')') [_pass = phx::bind(&getBinaryExpression<PowOperator>, _val, _1, _2)]
                     | (karma::lit("step")   << '(' << expression << ',' << (constant % ',') << ')') [_pass = phx::bind(&getInterpolateExpression, InterpolateExpression::Method::STEP, _val, _1, _2)]
                     | (karma::lit("linear") << '(' << expression << ',' << (constant % ',') << ')') [_pass = phx::bind(&getInterpolateExpression, InterpolateExpression::Method::LINEAR, _val, _1, _2)]
                     | (karma::lit("cubic")  << '(' << expression << ',' << (constant % ',') << ')') [_pass = phx::bind(&getInterpolateExpression, InterpolateExpression::Method::CUBIC, _val, _1, _2)]
                     | predicate                         [_pass = phx::bind(&getExpressionPredicate, _val, _1)]
                     | (karma::no_delimit['[' << stringExpression] << ']') [_pass = phx::bind(&getVariableExpression, _val, _1)]
-                    | ('(' << expression << ')')		[_1 = _val]
+                    | ('(' << expression << ')')        [_1 = _val]
                     ;
 
                 predicate =
@@ -128,6 +129,13 @@ namespace carto { namespace mvt {
             karma::rule<OutputIterator, std::shared_ptr<const Predicate>(), encoding::space_type> predicate;
 
         private:
+            static std::shared_ptr<const Expression> makePredicateExpression(const std::shared_ptr<const Predicate>& pred) {
+                if (auto exprPred = std::dynamic_pointer_cast<const ExpressionPredicate>(pred)) {
+                    return exprPred->getExpression();
+                }
+                return std::make_shared<PredicateExpression>(pred);
+            }
+
             static bool getString(const std::shared_ptr<const Expression>& expr, std::string& str) {
                 if (auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(expr)) {
                     Value val = constExpr->getConstant();
@@ -174,7 +182,7 @@ namespace carto { namespace mvt {
             static bool getNotPredicate(const std::shared_ptr<const Expression>& expr, std::shared_ptr<const Expression>& expr1) {
                 if (auto predExpr = std::dynamic_pointer_cast<const PredicateExpression>(expr)) {
                     if (auto notPred = std::dynamic_pointer_cast<const NotPredicate>(predExpr->getPredicate())) {
-                        expr1 = std::make_shared<PredicateExpression>(notPred->getPredicate());
+                        expr1 = makePredicateExpression(notPred->getPredicate());
                         return true;
                     }
                 }
@@ -184,8 +192,8 @@ namespace carto { namespace mvt {
             static bool getOrPredicate(const std::shared_ptr<const Expression>& expr, std::shared_ptr<const Expression>& expr1, std::shared_ptr<const Expression>& expr2) {
                 if (auto predExpr = std::dynamic_pointer_cast<const PredicateExpression>(expr)) {
                     if (auto orPred = std::dynamic_pointer_cast<const OrPredicate>(predExpr->getPredicate())) {
-                        expr1 = std::make_shared<PredicateExpression>(orPred->getPredicate1());
-                        expr2 = std::make_shared<PredicateExpression>(orPred->getPredicate2());
+                        expr1 = makePredicateExpression(orPred->getPredicate1());
+                        expr2 = makePredicateExpression(orPred->getPredicate2());
                         return true;
                     }
                 }
@@ -195,8 +203,8 @@ namespace carto { namespace mvt {
             static bool getAndPredicate(const std::shared_ptr<const Expression>& expr, std::shared_ptr<const Expression>& expr1, std::shared_ptr<const Expression>& expr2) {
                 if (auto predExpr = std::dynamic_pointer_cast<const PredicateExpression>(expr)) {
                     if (auto andPred = std::dynamic_pointer_cast<const AndPredicate>(predExpr->getPredicate())) {
-                        expr1 = std::make_shared<PredicateExpression>(andPred->getPredicate1());
-                        expr2 = std::make_shared<PredicateExpression>(andPred->getPredicate2());
+                        expr1 = makePredicateExpression(andPred->getPredicate1());
+                        expr2 = makePredicateExpression(andPred->getPredicate2());
                         return true;
                     }
                 }

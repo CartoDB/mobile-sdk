@@ -53,8 +53,8 @@ namespace carto {
         void setId(long long id);
     
         /**
-         * Returns a modifiable meta data map. Users may add their data as key-value pairs.
-         * @return The modifiable meta data map of this vector element.
+         * Returns a copy of the meta data map. The changes you make to this map are NOT reflected in the actual meta data of the element.
+         * @return A copy of the meta data map.
          */
         std::map<std::string, Variant> getMetaData() const;
         /**
@@ -100,6 +100,7 @@ namespace carto {
         
         explicit VectorElement(const std::shared_ptr<Geometry>& geometry);
         
+        std::shared_ptr<VectorDataSource> getDataSource() const;
         void attachToDataSource(const std::weak_ptr<VectorDataSource>& dataSource);
         void detachFromDataSource();
     

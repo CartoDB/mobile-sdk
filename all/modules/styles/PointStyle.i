@@ -21,6 +21,7 @@
 %attribute(carto::PointStyle, float, Size, getSize)
 %attribute(carto::PointStyle, float, ClickSize, getClickSize)
 %attributestring(carto::PointStyle, std::shared_ptr<carto::Bitmap>, Bitmap, getBitmap)
+%ignore carto::PointStyle::PointStyle;
 
 %include "styles/PointStyle.h"
 

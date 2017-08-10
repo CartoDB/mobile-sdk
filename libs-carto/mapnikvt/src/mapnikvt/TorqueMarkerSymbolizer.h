@@ -22,8 +22,8 @@ namespace carto { namespace mvt {
 
         virtual void bindParameter(const std::string& name, const std::string& value) override;
 
-        static std::shared_ptr<vt::Bitmap> makeEllipseBitmap(float width, float height, const vt::Color& color, float strokeWidth, const vt::Color& strokeColor);
-        static std::shared_ptr<vt::Bitmap> makeRectangleBitmap(float width, float height, const vt::Color& color, float strokeWidth, const vt::Color& strokeColor);
+        static std::shared_ptr<vt::BitmapImage> makeEllipseBitmap(float width, float height, const vt::Color& color, float strokeWidth, const vt::Color& strokeColor);
+        static std::shared_ptr<vt::BitmapImage> makeRectangleBitmap(float width, float height, const vt::Color& color, float strokeWidth, const vt::Color& strokeColor);
 
         std::string _file;
         std::string _markerType;

@@ -77,7 +77,10 @@ namespace carto { namespace css {
 
     std::shared_ptr<mvt::Symbolizer> CartoCSSMapnikTranslator::buildSymbolizer(const std::string& symbolizerType, const std::list<CartoCSSCompiler::Property>& properties, const std::shared_ptr<mvt::Map>& map) const {
         std::shared_ptr<mvt::Symbolizer> mapnikSymbolizer;
-        if (symbolizerType == "line") {
+        if (symbolizerType == "point") {
+            mapnikSymbolizer = std::make_shared<mvt::PointSymbolizer>(_logger);
+        }
+        else if (symbolizerType == "line") {
             mapnikSymbolizer = std::make_shared<mvt::LineSymbolizer>(_logger);
         }
         else if (symbolizerType == "line-pattern") {
@@ -311,7 +314,7 @@ namespace carto { namespace css {
                         auto constExpr = std::dynamic_pointer_cast<const ConstExpression>(funcExpr->getArgs()[i]);
                         auto keyFrames = boost::get<std::vector<Value>>(&constExpr->getValue());
                         subExprStr += "," + boost::lexical_cast<std::string>(buildValue(keyFrames->at(0)));
-                        subExprStr += "," + boost::lexical_cast<std::string>(boost::get<Color>(keyFrames->at(1)).rgba()[c] * 255.0f);
+                        subExprStr += "," + boost::lexical_cast<std::string>(boost::get<Color>(keyFrames->at(1)).rgba()[c] * (c < 3 ? 255.0f : 1.0f));
                     }
                     subExprStr += ")";
 
@@ -380,20 +383,34 @@ namespace carto { namespace css {
 
     std::shared_ptr<mvt::ComparisonPredicate::Operator> CartoCSSMapnikTranslator::buildOperator(OpPredicate::Op op) const {
         switch (op) {
-        case OpPredicate::Op::EQ:
-            return std::make_shared<mvt::EQOperator>();
-        case OpPredicate::Op::NEQ:
-            return std::make_shared<mvt::NEQOperator>();
-        case OpPredicate::Op::LT:
-            return std::make_shared<mvt::LTOperator>();
-        case OpPredicate::Op::LTE:
-            return std::make_shared<mvt::LTEOperator>();
-        case OpPredicate::Op::GT:
-            return std::make_shared<mvt::GTOperator>();
-        case OpPredicate::Op::GTE:
-            return std::make_shared<mvt::GTEOperator>();
-        case OpPredicate::Op::MATCH:
-            return std::make_shared<mvt::MatchOperator>();
+        case OpPredicate::Op::EQ: {
+                static const std::shared_ptr<mvt::EQOperator> op = std::make_shared<mvt::EQOperator>();
+                return op;
+            }
+        case OpPredicate::Op::NEQ: {
+                static const std::shared_ptr<mvt::NEQOperator> op = std::make_shared<mvt::NEQOperator>();
+                return op;
+            }
+        case OpPredicate::Op::LT: {
+                static const std::shared_ptr<mvt::LTOperator> op = std::make_shared<mvt::LTOperator>();
+                return op;
+            }
+        case OpPredicate::Op::LTE: {
+                static const std::shared_ptr<mvt::LTEOperator> op = std::make_shared<mvt::LTEOperator>();
+                return op;
+            }
+        case OpPredicate::Op::GT: {
+                static const std::shared_ptr<mvt::GTOperator> op = std::make_shared<mvt::GTOperator>();
+                return op;
+            }
+        case OpPredicate::Op::GTE: {
+                static const std::shared_ptr<mvt::GTEOperator> op = std::make_shared<mvt::GTEOperator>();
+                return op;
+            }
+        case OpPredicate::Op::MATCH: {
+                static const std::shared_ptr<mvt::MatchOperator> op = std::make_shared<mvt::MatchOperator>();
+                return op;
+            }
         }
         throw TranslatorException("Unsupported predicate operator");
     }
@@ -530,14 +547,14 @@ namespace carto { namespace css {
         { "shield-size", "size" },
         { "shield-spacing", "spacing" },
         { "shield-fill", "fill" },
-        { "shield-opacity", "opacity" },
+        { "shield-text-opacity", "opacity" },
         { "shield-halo-fill", "halo-fill" },
         { "shield-halo-opacity", "halo-opacity" },
         { "shield-halo-radius", "halo-radius" },
         { "shield-halo-rasterizer", "halo-rasterizer" },
         { "shield-allow-overlap", "allow-overlap" },
         { "shield-min-distance", "minimum-distance" },
-        { "shield-transform", "text-transform" },
+        { "shield-text-transform", "text-transform" },
         { "shield-orientation", "orientation" },
         { "shield-text-dx", "dx" },
         { "shield-text-dy", "dy" },

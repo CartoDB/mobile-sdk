@@ -41,11 +41,11 @@ namespace carto {
         _styleCache(),
         _cullWorker(std::make_shared<CullWorker>()),
         _cullThread(),
-        _backgroundRenderer(*options),
 #ifdef TARGET_XAMARIN
         _redrawWorker(std::make_shared<RedrawWorker>()),
         _redrawThread(),
 #endif
+        _backgroundRenderer(*options, *layers),
         _watermarkRenderer(*options),
         _billboardSorter(),
         _billboardDrawDataBuffer(),
@@ -92,12 +92,12 @@ namespace carto {
     void MapRenderer::deinit() {
         _options->unregisterOnChangeListener(_optionsListener);
         _optionsListener.reset();
-
+        
 #ifdef TARGET_XAMARIN
         _redrawWorker->stop();
         _redrawThread.detach();
 #endif
-        
+
         _cullWorker->stop();
         _cullThread.detach();
         
@@ -128,6 +128,14 @@ namespace carto {
         return viewState;
     }
         
+    MapPos MapRenderer::screenToMap(const ScreenPos& screenPos, const ViewState& viewState) {
+        return _options->getBaseProjection()->fromInternal(screenToWorld(screenPos, viewState));
+    }
+
+    ScreenPos MapRenderer::mapToScreen(const MapPos& mapPos, const ViewState& viewState) {
+        return worldToScreen(_options->getBaseProjection()->toInternal(mapPos), viewState);
+    }
+
     void MapRenderer::requestRedraw() const {
         DirectorPtr<RedrawRequestListener> redrawRequestListener = _redrawRequestListener;
 
@@ -445,14 +453,14 @@ namespace carto {
         calculateCameraEvent(cameraZoomEvent, durationSeconds, false);
     }
     
-    MapPos MapRenderer::screenToWorld(const ScreenPos& screenPos) const {
+    MapPos MapRenderer::screenToWorld(const ScreenPos& screenPos, const ViewState& viewState) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _viewState.screenToWorldPlane(screenPos, _options);
+        return viewState.screenToWorldPlane(screenPos, _options);
     }
     
-    ScreenPos MapRenderer::worldToScreen(const MapPos& worldPos) const {
+    ScreenPos MapRenderer::worldToScreen(const MapPos& worldPos, const ViewState& viewState) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _viewState.worldToScreen(worldPos, *_options);
+        return viewState.worldToScreen(worldPos, *_options);
     }
     
     void MapRenderer::onSurfaceCreated() {
@@ -716,7 +724,8 @@ namespace carto {
     
     void MapRenderer::setUpGLState() const {
         // Set clear color
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        Color clearColor = _options->getClearColor();
+        glClearColor(clearColor.getR() / 255.0f, clearColor.getG() / 255.0f, clearColor.getB() / 255.0f, clearColor.getA() / 255.0f);
     
         // Enable backface culling
         glEnable(GL_CULL_FACE);

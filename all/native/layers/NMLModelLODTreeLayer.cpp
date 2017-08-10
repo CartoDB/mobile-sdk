@@ -382,7 +382,7 @@ namespace carto {
         }
     
         // Create actual draw list by opening bigger nodes (as seen from viewpoint) first and maximum memory footprint is not exceeded
-        std::vector<const nml::ModelLODTreeNode *> childList;
+        std::vector<const nml::ModelLODTreeNode*> childList;
         std::vector<Node> nodeDrawList;
         while (!queue.empty()) {
             SizeNodePair sizeNodePair = queue.top();
@@ -525,7 +525,7 @@ namespace carto {
                     globalParentIds.push_back(modelLODTree->getGlobalNodeId(parentId));
                 }
     
-                nodeDrawData = std::make_shared<NMLModelLODTreeDrawData>(std::static_pointer_cast<NMLModelLODTree>(const_cast<NMLModelLODTree *>(modelLODTree)->shared_from_this()), modelLODTree->getGlobalNodeId(nodeId), globalParentIds, glModel);
+                nodeDrawData = std::make_shared<NMLModelLODTreeDrawData>(std::static_pointer_cast<NMLModelLODTree>(const_cast<NMLModelLODTree*>(modelLODTree)->shared_from_this()), modelLODTree->getGlobalNodeId(nodeId), globalParentIds, glModel);
             }
     
             updateMeshes(modelLODTree, nodeId, nodeDrawData->getGLModel(), meshMap);

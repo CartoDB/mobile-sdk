@@ -52,6 +52,7 @@ namespace carto { namespace vt {
 
         bool findGeometryIntersections(const cglib::ray3<double>& ray, std::vector<std::tuple<TileId, double, long long>>& results, float radius, bool geom2D, bool geom3D) const;
         bool findLabelIntersections(const cglib::ray3<double>& ray, std::vector<std::tuple<TileId, double, long long>>& results, float radius, bool labels2D, bool labels3D) const;
+        bool findBitmapIntersections(const cglib::ray3<double>& ray, std::vector<std::tuple<TileId, double, TileBitmap, cglib::vec2<float>>>& results) const;
 
     private:
         using BitmapLabelMap = std::unordered_map<std::shared_ptr<const Bitmap>, std::vector<std::shared_ptr<TileLabel>>>;
@@ -120,10 +121,21 @@ namespace carto { namespace vt {
         struct CompiledLabelBatch {
             GLuint vertexGeometryVBO;
             GLuint vertexUVVBO;
-            GLuint vertexColorVBO;
+            GLuint vertexAttribsVBO;
             GLuint vertexIndicesVBO;
 
-            CompiledLabelBatch() : vertexGeometryVBO(0), vertexUVVBO(0), vertexColorVBO(0), vertexIndicesVBO(0) { }
+            CompiledLabelBatch() : vertexGeometryVBO(0), vertexUVVBO(0), vertexAttribsVBO(0), vertexIndicesVBO(0) { }
+        };
+
+        struct LabelBatchParameters {
+            constexpr static int MAX_PARAMETERS = 16;
+
+            int parameterCount;
+            std::array<cglib::vec4<float>, MAX_PARAMETERS> colorTable;
+            std::array<float, MAX_PARAMETERS> widthTable;
+            std::array<float, MAX_PARAMETERS> strokeWidthTable;
+
+            LabelBatchParameters() : parameterCount(0), colorTable(), widthTable(), strokeWidthTable() { }
         };
 
         struct LabelHash {
@@ -131,6 +143,9 @@ namespace carto { namespace vt {
                 return labelId.first ^ static_cast<std::size_t>(labelId.second & 0xffffffff) ^ static_cast<std::size_t>(labelId.second >> 32);
             }
         };
+
+        constexpr static float TEXT_SHARPNESS_FACTOR = 4.0f;
+        constexpr static float HALO_RADIUS_SCALE = 2.5f; // the scaling factor for halo radius
 
         static cglib::mat4x4<double> calculateLocalViewMatrix(const cglib::mat4x4<double>& cameraMatrix);
 
@@ -167,7 +182,7 @@ namespace carto { namespace vt {
         void renderTileBackground(const TileId& tileId, float opacity);
         void renderTileBitmap(const TileId& tileId, const TileId& targetTileId, float blend, float opacity, const std::shared_ptr<TileBitmap>& bitmap);
         void renderTileGeometry(const TileId& tileId, const TileId& targetTileId, float blend, float opacity, const std::shared_ptr<TileGeometry>& geometry);
-        void renderLabelBatch(const std::shared_ptr<const Bitmap>& bitmap);
+        void renderLabelBatch(const LabelBatchParameters& labelBatchParams, const std::shared_ptr<const Bitmap>& bitmap);
         void setBlendState(CompOp compOp);
         bool isEmptyBlendRequired(CompOp compOp) const;
         void checkGLError();
@@ -210,8 +225,8 @@ namespace carto { namespace vt {
         cglib::mat4x4<double> _labelMatrix;
         ViewState _viewState;
         VertexArray<cglib::vec3<float>> _labelVertices;
-        VertexArray<cglib::vec2<float>> _labelTexCoords;
-        VertexArray<cglib::vec4<float>> _labelColors;
+        VertexArray<cglib::vec2<short>> _labelTexCoords;
+        VertexArray<cglib::vec4<char>> _labelAttribs;
         VertexArray<unsigned short> _labelIndices;
         float _zoom = 0;
         float _halfResolution = 0;

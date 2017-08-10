@@ -7,7 +7,13 @@ namespace carto { namespace mvt {
 
         updateBindings(exprContext);
 
-        vt::Polygon3DStyle style(_fill, _fillOpacity, _geometryTransform);
+        if (_fillOpacityFunc == vt::FloatFunction(0)) {
+            return;
+        }
+        
+        vt::ColorFunction fillFunc = _functionBuilder.createColorOpacityFunction(_fillFunc, _fillOpacityFunc);
+        
+        vt::Polygon3DStyle style(fillFunc, _geometryTransform);
 
         std::size_t featureIndex = 0;
         std::size_t geometryIndex = 0;
@@ -24,7 +30,7 @@ namespace carto { namespace mvt {
                     geometryIndex = 0;
                 }
 
-                if (featureIndex >= featureCollection.getSize()) {
+                if (featureIndex >= featureCollection.size()) {
                     break;
                 }
                 polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(featureCollection.getGeometry(featureIndex));
@@ -39,10 +45,10 @@ namespace carto { namespace mvt {
 
     void BuildingSymbolizer::bindParameter(const std::string& name, const std::string& value) {
         if (name == "fill") {
-            bind(&_fill, parseStringExpression(value), &BuildingSymbolizer::convertColor);
+            bind(&_fillFunc, parseStringExpression(value), &BuildingSymbolizer::convertColor);
         }
         else if (name == "fill-opacity") {
-            bind(&_fillOpacity, parseExpression(value));
+            bind(&_fillOpacityFunc, parseExpression(value));
         }
         else if (name == "height") {
             bind(&_height, parseExpression(value));

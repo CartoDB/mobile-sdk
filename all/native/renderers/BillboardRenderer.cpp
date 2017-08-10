@@ -12,6 +12,7 @@
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/components/StyleTextureCache.h"
 #include "renderers/components/BillboardSorter.h"
+#include "styles/AnimationStyle.h"
 #include "styles/BillboardStyle.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
@@ -22,7 +23,7 @@
 namespace carto {
     
     void BillboardRenderer::CalculateBillboardCoords(const BillboardDrawData& drawData, const ViewState& viewState,
-                                                     std::vector<float>& coordBuf, int drawDataIndex)
+                                                     std::vector<float>& coordBuf, int drawDataIndex, float sizeScale)
     {
         const MapPos& cameraPos = viewState.getCameraPos();
         cglib::vec3<float> translate = cglib::vec3<float>::convert(drawData.getPos() - cglib::vec3<double>(cameraPos.getX(), cameraPos.getY(), cameraPos.getZ()));
@@ -35,6 +36,8 @@ namespace carto {
             float y = coords[i](1);
             
             float scale = drawData.isScaleWithDPI() ? viewState.getUnitToDPCoef() : viewState.getUnitToPXCoef();
+            scale *= sizeScale;
+
             // Calculate scaling
             switch (drawData.getScalingMode()) {
                 case BillboardScaling::BILLBOARD_SCALING_WORLD_SIZE:
@@ -115,17 +118,32 @@ namespace carto {
         _u_tex = _shader->getUniformLoc("u_tex");
     }
     
-    void BillboardRenderer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState)
-    {
+    bool BillboardRenderer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
     
         // Billboards can't be rendered in layer order, they have to be sorted globally and drawn from back to front
+        bool refresh = false;
         for (const std::shared_ptr<Billboard>& element : _elements) {
             std::shared_ptr<BillboardDrawData> drawData = element->getDrawData();
+
+            // Update animation state
+            if (auto animStyle = drawData->getAnimationStyle()) {
+                float transition = drawData->getTransition();
+                float step = (drawData->isHideIfOverlapped() && drawData->isOverlapping() ? -1.0f : 1.0f);
+                if ((transition < 1 && step > 0) || (transition > 0 && step < 0)) {
+                    drawData->setTransition(transition + step * (transition == 0 || transition == 1 ? 0.01f : deltaSeconds) * animStyle->getRelativeSpeed());
+                    refresh = true;
+                }
+            } else {
+                drawData->setTransition(drawData->isHideIfOverlapped() && drawData->isOverlapping() ? 0.0f : 1.0f);
+            }
+
+            // Add the draw data to the sorter
             if (calculateBaseBillboardDrawData(drawData, viewState)) {
                 billboardSorter.add(drawData);
             }
         }
+        return refresh;
     }
     
     void BillboardRenderer::onDrawFrameSorted(float deltaSeconds,
@@ -228,7 +246,7 @@ namespace carto {
                 continue;
             }
     
-            CalculateBillboardCoords(*drawData, viewState, coordBuf, 0);
+            CalculateBillboardCoords(*drawData, viewState, coordBuf, 0, drawData->getClickScale());
             cglib::vec3<double> originShift(viewState.getCameraPos().getX(), viewState.getCameraPos().getY(), viewState.getCameraPos().getZ());
             cglib::vec3<double> topLeft = cglib::vec3<double>(coordBuf[0], coordBuf[1], coordBuf[2]) + originShift;
             cglib::vec3<double> bottomLeft = cglib::vec3<double>(coordBuf[3], coordBuf[4], coordBuf[5]) + originShift;
@@ -276,6 +294,9 @@ namespace carto {
         GLuint drawDataIndex = 0;
         for (std::size_t i = 0; i < drawDataBuffer.size(); i++) {
             const std::shared_ptr<BillboardDrawData>& drawData = drawDataBuffer[i];
+
+            // Alpha value
+            int alpha = std::min(256, static_cast<int>(256 * AnimationStyle::CalculateTransition(drawData->getAnimationStyle() ? drawData->getAnimationStyle()->getFadeAnimationType() : AnimationType::ANIMATION_TYPE_NONE, drawData->getTransition())));
             
             // Check for possible overflow in the buffers
             if ((drawDataIndex + 1) * 6 > GLContext::MAX_VERTEXBUFFER_SIZE) {
@@ -288,13 +309,14 @@ namespace carto {
                 drawDataIndex = 0;
             }
             
-            // Overlapping billboards should be hidden
-            if (drawData->isHideIfOverlapped() && drawData->isOverlapping()) {
+            // If invisible, skip further steps
+            if (drawData->getTransition() == 0) {
                 continue;
             }
             
             // Calculate coordinates
-            CalculateBillboardCoords(*drawData, viewState, coordBuf, drawDataIndex);
+            float relativeSize = AnimationStyle::CalculateTransition(drawData->getAnimationStyle() ? drawData->getAnimationStyle()->getSizeAnimationType() : AnimationType::ANIMATION_TYPE_NONE, drawData->getTransition());
+            CalculateBillboardCoords(*drawData, viewState, coordBuf, drawDataIndex, relativeSize);
             
             // Billboards with ground orientation (like some texts) have to be flipped to readable
             bool flip = false;
@@ -329,10 +351,10 @@ namespace carto {
             const Color& color = drawData->getColor();
             int colorIndex = drawDataIndex * 4 * 4;
             for (int i = 0; i < 16; i += 4) {
-                colorBuf[colorIndex + i + 0] = color.getR();
-                colorBuf[colorIndex + i + 1] = color.getG();
-                colorBuf[colorIndex + i + 2] = color.getB();
-                colorBuf[colorIndex + i + 3] = color.getA();
+                colorBuf[colorIndex + i + 0] = static_cast<unsigned char>((color.getR() * alpha) >> 8);
+                colorBuf[colorIndex + i + 1] = static_cast<unsigned char>((color.getG() * alpha) >> 8);
+                colorBuf[colorIndex + i + 2] = static_cast<unsigned char>((color.getB() * alpha) >> 8);
+                colorBuf[colorIndex + i + 3] = static_cast<unsigned char>((color.getA() * alpha) >> 8);
             }
             
             // Calculate indices

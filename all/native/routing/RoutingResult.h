@@ -58,6 +58,12 @@ namespace carto {
          * @return The total duration in seconds.
          */
         double getTotalTime() const;
+
+        /**
+         * Creates a string representation of this routing request result, useful for logging.
+         * @return The string representation of this routing result object.
+         */
+        std::string toString() const;
         
     private:
         std::shared_ptr<Projection> _projection;

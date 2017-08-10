@@ -1,5 +1,5 @@
 #include "CartoVectorTileLayer.h"
-#include "assets/NutibrightV3ZIP.h"
+#include "assets/CartoStylesV1ZIP.h"
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
 #include "styles/CompiledStyleSet.h"
@@ -34,20 +34,23 @@ namespace carto {
     }
     
     std::shared_ptr<VectorTileDecoder> CartoVectorTileLayer::CreateTileDecoder(CartoBaseMapStyle::CartoBaseMapStyle style) {
-        auto styleAsset = std::make_shared<BinaryData>(nutibright_v3_zip, nutibright_v3_zip_len);
-        auto styleAssetPackage = std::make_shared<ZippedAssetPackage>(styleAsset);
+        auto styleAsset = std::make_shared<BinaryData>(cartostyles_v1_zip, cartostyles_v1_zip_len);
         std::string styleName;
         switch (style) {
-        case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_DARK:
-            styleName = "nutiteq_dark";
+        case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_VOYAGER:
+            styleName = "voyager";
             break;
-        case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_GRAY:
-            styleName = "nutiteq_grey";
+        case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_POSITRON:
+            styleName = "positron";
+            break;
+        case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_DARKMATTER:
+            styleName = "darkmatter";
             break;
         default:
-            styleName = "style";
+            styleName = "voyager";
             break;
         }
+        auto styleAssetPackage = std::make_shared<ZippedAssetPackage>(styleAsset);
         return std::make_shared<MBVectorTileDecoder>(std::make_shared<CompiledStyleSet>(styleAssetPackage, styleName));
     }
 

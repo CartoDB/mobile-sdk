@@ -141,6 +141,9 @@ namespace carto {
         virtual bool onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
         virtual void onSurfaceDestroyed();
         
+        virtual std::shared_ptr<Bitmap> getBackgroundBitmap() const;
+        virtual std::shared_ptr<Bitmap> getSkyBitmap() const;
+
         virtual void registerDataSourceListener();
         virtual void unregisterDataSourceListener();
 
@@ -199,6 +202,12 @@ namespace carto {
             std::shared_ptr<VectorTileDecoder::TileMap> _tileMap;
         };
 
+        static const int BACKGROUND_BLOCK_SIZE = 16;
+        static const int BACKGROUND_BLOCK_COUNT = 16;
+        static const int SKY_WIDTH = 512;
+        static const int SKY_HEIGHT = 128;
+        static const int SKY_GRADIENT_SIZE = 6;
+        static const int SKY_GRADIENT_OFFSET = 1;
         static const int DEFAULT_CULL_DELAY = 200;
         static const int PRELOADING_PRIORITY_OFFSET = -2;
         static const int EXTRA_TILE_FOOTPRINT = 4096;
@@ -212,6 +221,11 @@ namespace carto {
     
         const std::shared_ptr<VectorTileDecoder> _tileDecoder;
         std::shared_ptr<TileDecoderListener> _tileDecoderListener;
+
+        mutable Color _backgroundColor;
+        mutable std::shared_ptr<Bitmap> _backgroundBitmap;
+        mutable Color _skyColor;
+        mutable std::shared_ptr<Bitmap> _skyBitmap;
 
         std::shared_ptr<CancelableThreadPool> _labelCullThreadPool;
 

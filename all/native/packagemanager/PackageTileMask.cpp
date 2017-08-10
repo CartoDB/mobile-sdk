@@ -46,12 +46,8 @@ namespace {
         'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
         '8', '9', '+', '/'
     };
-}
 
-namespace carto {
-    
-    PackageTileMask::PackageTileMask(const std::string& stringValue) {
-        _stringValue = stringValue;
+    std::queue<bool> decodeBase64(const std::string& stringValue) {
         std::queue<bool> data;
         for (char c : stringValue) {
             int val = base64DecodeTable[static_cast<unsigned char>(c)];
@@ -59,24 +55,50 @@ namespace carto {
                 data.push(((val >> i) & 1) != 0);
             }
         }
-        _rootNode = buildTileNode(data, Tile(0, 0, 0));
+        return data;
     }
 
-    PackageTileMask::PackageTileMask(const std::vector<Tile>& tiles) {
-        std::unordered_set<Tile, TileHash, TileEq> tileSet(tiles.begin(), tiles.end());
-        _rootNode = buildTileNode(tileSet, Tile(0, 0, 0));
-        std::vector<bool> data = encodeTileNode(_rootNode);
+    std::string encodeBase64(std::vector<bool> data) {
         while (data.size() % 24 != 0) {
             data.push_back(false);
         }
+        std::string stringValue;
+        stringValue.reserve(data.size() / 6);
         unsigned char val = 0;
         for (std::size_t i = 0; i < data.size(); i++) {
             val = (val << 1) | (data[i] ? 1 : 0);
             if ((i + 1) % 6 == 0) {
-                _stringValue.push_back(base64EncodeTable[val]);
+                stringValue.push_back(base64EncodeTable[val]);
                 val = 0;
             }
         }
+        return stringValue;
+    }
+}
+
+namespace carto {
+    
+    PackageTileMask::PackageTileMask(const std::string& stringValue, int maxZoom) :
+        _stringValue(stringValue),
+        _rootNode(),
+        _maxZoomLevel(maxZoom)
+    {
+        std::queue<bool> data = decodeBase64(stringValue);
+        _rootNode = decodeTileNode(data, MapTile(0, 0, 0, 0));
+    }
+
+    PackageTileMask::PackageTileMask(const std::vector<MapTile>& tiles, int clipZoom) :
+        _stringValue(),
+        _rootNode(),
+        _maxZoomLevel(0)
+    {
+        std::unordered_set<MapTile> tileSet(tiles.begin(), tiles.end());
+        _rootNode = buildTileNode(tileSet, MapTile(0, 0, 0, 0), clipZoom);
+        for (const MapTile& tile : tiles) {
+            _maxZoomLevel = std::max(_maxZoomLevel, tile.getZoom());
+        }
+        std::vector<bool> data = encodeTileNode(_rootNode);
+        _stringValue = encodeBase64(std::move(data));
     }
 
     const std::string& PackageTileMask::getStringValue() const {
@@ -91,35 +113,32 @@ namespace carto {
     }
     
     int PackageTileMask::getMaxZoomLevel() const {
-        return getMaxTileNodeZoom(_rootNode);
+        return _maxZoomLevel;
     }
 
     PackageTileStatus::PackageTileStatus PackageTileMask::getTileStatus(const MapTile& mapTile) const {
-        int zoom = mapTile.getZoom(), x = mapTile.getX(), y = mapTile.getY();
-        std::shared_ptr<TileNode> node = findTileNode(Tile(zoom, x, y));
-        if (!node) {
-            return PackageTileStatus::PACKAGE_TILE_STATUS_MISSING;
+        if (std::shared_ptr<TileNode> node = findTileNode(mapTile)) {
+            if (mapTile.getZoom() <= _maxZoomLevel) {
+                return (node->inside ? PackageTileStatus::PACKAGE_TILE_STATUS_FULL : PackageTileStatus::PACKAGE_TILE_STATUS_MISSING);
+            }
         }
-        if (node->tile.zoom == zoom && node->tile.x == x && node->tile.y == y) {
-            return (node->inside ? PackageTileStatus::PACKAGE_TILE_STATUS_FULL : PackageTileStatus::PACKAGE_TILE_STATUS_MISSING);
-        }
-        return (node->inside ? PackageTileStatus::PACKAGE_TILE_STATUS_FULL : PackageTileStatus::PACKAGE_TILE_STATUS_PARTIAL);
+        return PackageTileStatus::PACKAGE_TILE_STATUS_MISSING;
     }
 
-    std::shared_ptr<PackageTileMask::TileNode> PackageTileMask::findTileNode(const Tile& tile) const {
-        if (tile.zoom == 0) {
-            if (tile.x == 0 && tile.y == 0) {
+    std::shared_ptr<PackageTileMask::TileNode> PackageTileMask::findTileNode(const MapTile& tile) const {
+        if (tile.getZoom() == 0) {
+            if (tile.getX() == 0 && tile.getY() == 0) {
                 return _rootNode;
             }
             return std::shared_ptr<TileNode>();
         }
 
-        std::shared_ptr<TileNode> parentNode = findTileNode(Tile(tile.zoom - 1, tile.x / 2, tile.y / 2));
+        std::shared_ptr<TileNode> parentNode = findTileNode(MapTile(tile.getX() / 2, tile.getY() / 2, tile.getZoom() - 1, tile.getFrameNr()));
         if (parentNode) {
             for (int i = 0; i < 4; i++) {
                 const std::shared_ptr<TileNode>& node = parentNode->subNodes[i];
                 if (node) {
-                    if (node->tile.zoom == tile.zoom && node->tile.x == tile.x && node->tile.y == tile.y) {
+                    if (node->tile == tile) {
                         return node;
                     }
                 }
@@ -131,7 +150,32 @@ namespace carto {
         return std::shared_ptr<TileNode>();
     }
 
-    std::shared_ptr<PackageTileMask::TileNode> PackageTileMask::buildTileNode(std::queue<bool>& data, const Tile& tile) {
+    std::shared_ptr<PackageTileMask::TileNode> PackageTileMask::buildTileNode(const std::unordered_set<MapTile>& tileSet, const MapTile& tile, int clipZoom) {
+        auto node = std::make_shared<TileNode>(tile, tileSet.find(tile) != tileSet.end());
+        if (!node->inside || tile.getZoom() >= clipZoom) {
+            return node; // Note: we assume here that tile does not exist implies subtiles do not exist
+        }
+
+        int idx = 0;
+        bool deep = false;
+        for (int dy = 0; dy < 2; dy++) {
+            for (int dx = 0; dx < 2; dx++) {
+                node->subNodes[idx] = buildTileNode(tileSet, MapTile(tile.getX() * 2 + dx, tile.getY() * 2 + dy, tile.getZoom() + 1, tile.getFrameNr()), clipZoom);
+                for (int i = 0; i < 4; i++) {
+                    deep = deep || node->subNodes[idx]->subNodes[i];
+                }
+                idx++;
+            }
+        }
+        if (!deep) {
+            if (node->subNodes[0]->inside && node->subNodes[1]->inside && node->subNodes[2]->inside && node->subNodes[3]->inside) {
+                node->subNodes[0] = node->subNodes[1] = node->subNodes[2] = node->subNodes[3] = std::shared_ptr<TileNode>();
+            }
+        }
+        return node;
+    }
+    
+    std::shared_ptr<PackageTileMask::TileNode> PackageTileMask::decodeTileNode(std::queue<bool>& data, const MapTile& tile) {
         bool leaf = !data.front();
         data.pop();
         bool inside = data.front();
@@ -141,56 +185,12 @@ namespace carto {
             int idx = 0;
             for (int dy = 0; dy < 2; dy++) {
                 for (int dx = 0; dx < 2; dx++) {
-                    node->subNodes[idx] = buildTileNode(data, Tile(tile.zoom + 1, tile.x * 2 + dx, tile.y * 2 + dy));
+                    node->subNodes[idx] = decodeTileNode(data, MapTile(tile.getX() * 2 + dx, tile.getY() * 2 + dy, tile.getZoom() + 1, tile.getFrameNr()));
                     idx++;
                 }
             }
         }
         return node;
-    }
-
-    std::shared_ptr<PackageTileMask::TileNode> PackageTileMask::buildTileNode(const std::unordered_set<Tile, TileHash, TileEq>& tileSet, const Tile& tile) {
-        auto node = std::make_shared<TileNode>(tile, tileSet.find(tile) != tileSet.end());
-        if (!node->inside) {
-            return node; // Note: we assume here that tile does not exist implies subtiles do not exist
-        }
-
-        int idx = 0;
-        bool deep = false;
-        for (int dy = 0; dy < 2; dy++) {
-            for (int dx = 0; dx < 2; dx++) {
-                node->subNodes[idx] = buildTileNode(tileSet, Tile(tile.zoom + 1, tile.x * 2 + dx, tile.y * 2 + dy));
-                for (int i = 0; i < 4; i++) {
-                    deep = deep || node->subNodes[idx]->subNodes[i];
-                }
-                idx++;
-            }
-        }
-        if (!deep) {
-            bool prune = false;
-            if (node->subNodes[0]->inside && node->subNodes[1]->inside && node->subNodes[2]->inside && node->subNodes[3]->inside) {
-                prune = true;
-            }
-            else if (!node->subNodes[0]->inside && !node->subNodes[1]->inside && !node->subNodes[2]->inside && !node->subNodes[3]->inside) {
-                prune = true;
-            }
-            if (prune) {
-                node->subNodes[0] = node->subNodes[1] = node->subNodes[2] = node->subNodes[3] = std::shared_ptr<TileNode>();
-            }
-        }
-        return node;
-    }
-    
-    int PackageTileMask::getMaxTileNodeZoom(const std::shared_ptr<TileNode>& node) {
-        if (!node) {
-            return -1;
-        }
-        
-        int maxZoom = node->tile.zoom;
-        for (int idx = 0; idx < 4; idx++) {
-            maxZoom = std::max(maxZoom, getMaxTileNodeZoom(node->subNodes[idx]));
-        }
-        return maxZoom;
     }
 
     std::vector<bool> PackageTileMask::encodeTileNode(const std::shared_ptr<TileNode>& node) {

@@ -103,13 +103,13 @@ namespace carto {
          * @param var The other variant object.
          * @return True if equal.
          */
-        bool operator == (const Variant& var) const;
+        bool operator ==(const Variant& var) const;
         /**
          * Checks for inequality between this and another value object.
          * @param value The other variant object.
          * @return True if not equal.
          */
-        bool operator != (const Variant& var) const;
+        bool operator !=(const Variant& var) const;
         
         /**
          * Returns the type of this variant.
@@ -156,6 +156,12 @@ namespace carto {
          */
         std::vector<std::string> getObjectKeys() const;
         /**
+         * Returns true if object elements contains the specified key.
+         * @param key The key of the object element to check.
+         * @return True if the specified exists in the object. If the element is not an object or the key does not exist, false is returned.
+         */
+        bool containsObjectKey(const std::string& key) const;
+        /**
          * Returns the element of object with the specified key.
          * @param key The key of the object element to return.
          * @return The object element with the specified key or null type if the element does not exist or the variant is not an object.
@@ -193,7 +199,7 @@ namespace carto {
          * @param val The PicoJSON value to use.
          * @return The corresponding Variant object.
          */
-        static Variant FromPicoJSON(const picojson::value& val);
+        static Variant FromPicoJSON(picojson::value val);
 
     private:
         picojson::value _value;

@@ -15,6 +15,7 @@
 namespace carto {
 
     CartoOnlineRoutingService::CartoOnlineRoutingService(const std::string& source) :
+        RoutingService(),
         _source(source)
     {
     }
@@ -44,7 +45,7 @@ namespace carto {
         params["appId"] = PlatformUtils::GetAppIdentifier();
         params["deviceId"] = PlatformUtils::GetDeviceId();
         params["platform"] = PlatformUtils::GetPlatformId();
-        params["sdk_build"] = _CARTO_MOBILE_SDK_VERSION;
+        params["sdk_build"] = PlatformUtils::GetSDKVersion();
         params["appToken"] = appToken;
 
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);

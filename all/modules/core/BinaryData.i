@@ -14,6 +14,7 @@
 %include <arrays_csharp.i>
 #endif
 %include <typemaps.i>
+%include <std_string.i>
 %include <std_shared_ptr.i>
 %include <std_vector.i>
 %include <carrays.i>
@@ -31,6 +32,7 @@
 %ignore carto::BinaryData::empty;
 %ignore carto::BinaryData::getDataPtr;
 !standard_equals(carto::BinaryData);
+!custom_tostring(carto::BinaryData);
 
 #if SWIGJAVA
 %typemap(jtype) (const unsigned char* dataPtr, std::size_t size) "byte[]"

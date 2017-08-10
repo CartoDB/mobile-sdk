@@ -3,7 +3,6 @@
 #include "OSRMOfflineRoutingService.h"
 #include "components/Exceptions.h"
 #include "projections/Projection.h"
-#include "projections/EPSG3857.h"
 #include "routing/RoutingProxy.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
@@ -17,6 +16,7 @@
 namespace carto {
 
     OSRMOfflineRoutingService::OSRMOfflineRoutingService(const std::string& path) :
+        RoutingService(),
         _routeFinder()
     {
         routing::Graph::Settings graphSettings;

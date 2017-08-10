@@ -14,6 +14,7 @@
 namespace carto {
     class Bitmap;
     class Options;
+    class Layers;
     class ShaderManager;
     class TextureManager;
     class Shader;
@@ -22,7 +23,7 @@ namespace carto {
     
     class BackgroundRenderer {
     public:
-        explicit BackgroundRenderer(const Options& options);
+        explicit BackgroundRenderer(const Options& options, const Layers& layers);
         virtual ~BackgroundRenderer();
     
         void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
@@ -60,6 +61,7 @@ namespace carto {
         std::shared_ptr<TextureManager> _textureManager;
     
         const Options& _options;
+        const Layers& _layers;
     };
     
 }

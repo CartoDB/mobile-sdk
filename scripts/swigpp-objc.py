@@ -18,10 +18,30 @@ VALUE_TYPE_TEMPLATE = """
 %typemap(objcdirectorin) const $CLASSNAME$& "[[$TYPE$ alloc] initWithCptr:$iminput swigOwnCObject:YES]"
 %typemap(objcout) const $CLASSNAME$& { return [[$TYPE$ alloc] initWithCptr:$imcall swigOwnCObject:YES]; }
 %typemap(objcdirectorout) const $CLASSNAME$& "[($objccall) getCptr]"
+
+%extend $CLASSNAME$ {
+  /**
+   * Returns the raw pointer to the object. This is used internally by the SDK.
+   * @return The internal pointer of the object.
+   */
+  long long swigGetRawPtr() const {
+    return reinterpret_cast<long long>($self);
+  }
+}
 """
 
 SHARED_PTR_TEMPLATE = """
 %shared_ptr($CLASSNAME$)
+
+%extend $CLASSNAME$ {
+  /**
+   * Returns the raw pointer to the object. This is used internally by the SDK.
+   * @return The internal pointer of the object.
+   */
+  long long swigGetRawPtr() const {
+    return reinterpret_cast<long long>($self);
+  }
+}
 """
 
 POLYMORPHIC_SHARED_PTR_TEMPLATE = SHARED_PTR_TEMPLATE + """
@@ -156,11 +176,11 @@ STANDARD_EQUALS_CODE_TEMPLATE = """
   if (![object isKindOfClass:[$objcclassname class]]) {
     return NO;
   }
-  return swigCPtr == [($objcclassname *)object getCptr];
+  return [self swigGetRawPtr] == [($objcclassname *)object swigGetRawPtr];
 }
 
 -(NSUInteger)hash {
-  return (NSUInteger)swigCPtr;
+  return (NSUInteger)[self swigGetRawPtr];
 }
 """
 
