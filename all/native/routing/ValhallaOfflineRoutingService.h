@@ -41,7 +41,7 @@ namespace carto {
         std::string getProfile() const;
         /**
          * Sets the current routing profile.
-         * @profile The new profile. Can be either "car", "auto", "auto_shorter", "bus", "bicycle", "pedestrian" or "truck".
+         * @param profile The new profile. Can be either "car", "auto", "auto_shorter", "bus", "bicycle", "pedestrian" or "truck".
          */
         void setProfile(const std::string& profile);
 

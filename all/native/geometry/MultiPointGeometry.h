@@ -19,7 +19,7 @@ namespace carto {
     public:
         /**
          * Constructs a MultiPointGeometry from the vector of points.
-         * @geometries The vector of point geometries.
+         * @param geometries The vector of point geometries.
          */
         explicit MultiPointGeometry(const std::vector<std::shared_ptr<PointGeometry> >& geometries);
         virtual ~MultiPointGeometry();

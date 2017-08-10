@@ -30,7 +30,8 @@ namespace carto {
         explicit BinaryData(std::vector<unsigned char> data);
         /**
          * Constructs a BinaryData object from a raw byte array.
-         * @param data The byte vector.
+         * @param dataPtr The raw pointer to the data.
+         * @param size The size of the data in bytes.
          */
         BinaryData(const unsigned char* dataPtr, std::size_t size);
 

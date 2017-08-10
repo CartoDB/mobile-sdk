@@ -24,6 +24,10 @@ namespace carto {
     public:
         /**
          * Constructs a GeocodingResult from a projection, address, rank and feature collection.
+         * @param projection The projection used for the geometry of the result.
+         * @param address The address of the result.
+         * @param rank The relative ranking of the result (in range 0..1).
+         * @param featureCollection The geometry (features) associated with the result.
          */
         GeocodingResult(const std::shared_ptr<Projection>& projection, const Address& address, float rank, const std::shared_ptr<FeatureCollection>& featureCollection);
         virtual ~GeocodingResult();
