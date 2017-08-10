@@ -802,49 +802,40 @@ The following sections provide the code for rester tile basemap urls, and a samp
 
 ### HERE Satellite Tiles
 
-[`https://1.aerial.maps.api.here.com/maptile/2.1/maptile/newest/satellite.day/{z}/{x}/{y}/512/jpg?lg=eng&token=A7tBPacePg9Mj_zghvKt9Q&app_id=KuYppsdXZznpffJsKT24`](https://carto.com/location-data-services/basemaps/)
+`https://1.aerial.maps.api.here.com/maptile/2.1/maptile/newest/satellite.day/{z}/{x}/{y}/512/jpg?lg=eng&token=A7tBPacePg9Mj_zghvKt9Q&app_id=KuYppsdXZznpffJsKT24`
 
 <img src="https://1.aerial.maps.api.here.com/maptile/2.1/maptile/newest/satellite.day/4/4/4/256/jpg?lg=eng&token=A7tBPacePg9Mj_zghvKt9Q&app_id=KuYppsdXZznpffJsKT24"/>
 
 ### HERE Map Tiles
 
-[`https://1.base.maps.api.here.com/maptile/2.1/maptile/newest/normal.day/{z}/{x}/{y}/256/png8?lg=eng&token=A7tBPacePg9Mj_zghvKt9Q&app_id=KuYppsdXZznpffJsKT24`](https://carto.com/location-data-services/basemaps/)
+`https://1.base.maps.api.here.com/maptile/2.1/maptile/newest/normal.day/{z}/{x}/{y}/256/png8?lg=eng&token=A7tBPacePg9Mj_zghvKt9Q&app_id=KuYppsdXZznpffJsKT24`
 
 <img src="https://1.base.maps.api.here.com/maptile/2.1/maptile/newest/normal.day/4/4/4/256/png8?lg=eng&token=A7tBPacePg9Mj_zghvKt9Q&app_id=KuYppsdXZznpffJsKT24"/>
 
 ### CARTO Positron Tiles
 
-[`http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png`](https://carto.com/location-data-services/basemaps/)
+`http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png`
 
 <img src="http://a.basemaps.cartocdn.com/light_all/17/65490/43588.png"/>
 
 ### CARTO Dark Matter Tiles
 
-[`http://a.basemaps.cartocdn.com/dark_all/{zoom}/{x}/{y}.png`](https://carto.com/location-data-services/basemaps/)
+`http://a.basemaps.cartocdn.com/dark_all/{zoom}/{x}/{y}.png`
 
 <img src="http://a.basemaps.cartocdn.com/dark_all/17/65490/43588.png"/>
 
 ### OpenStreetMap Mapnik Tiles
 
-[`http://a.tile.openstreetmap.org/{zoom}/{x}/{y}.png`](http://www.osm.org)
+`http://a.tile.openstreetmap.org/{zoom}/{x}/{y}.png`
 
 <img src="http://b.tile.openstreetmap.org/15/5241/12661.png"/>
 
 **Note:** OpenStreetMap Mapnik tiles are free for limited use. See a description of their [_Tile usage policy_](http://wiki.openstreetmap.org/wiki/Tile_usage_policy).
 
-{% comment %}
-Mapbox Raster Tiles
-
-[`http://api.mapbox.com/v4/{mapid}/{zoom}/{x}/{y}.png?access_token=&lt;your access token&gt;`](http://www.mapbox.com)
-
-<img src="http://api.tiles.mapbox.com/v3/nutiteq.map-f0sfyluv/17/65490/43588.png"/>
-
-See <a href=" https://www.mapbox.com/developers/api/maps/">MapBox API spec</a> for details about how to create access tokens. <a href='http://mapbox.com/about/maps' target='_blank'>MapBox Attributions</a>. 
-{% endcomment %}
 
 ### Stamen Toner
 
-[`http://a.tile.stamen.com/toner/{zoom}/{x}/{y}.png`](http://maps.stamen.com)
+`http://a.tile.stamen.com/toner/{zoom}/{x}/{y}.png`
 
 <img src="http://a.tile.stamen.com/toner/13/1310/3166.png"/>
 
@@ -852,7 +843,7 @@ Please contact [Stamen](http://www.stamen.com) directly.
 
 ### Stamen Watercolor
 
-[`http://tile.stamen.com/watercolor/{zoom}/{x}/{y}.png`](http://maps.stamen.com/#watercolor/12/37.7706/-122.3782)
+`http://tile.stamen.com/watercolor/{zoom}/{x}/{y}.png`
 
 <img src="http://tile.stamen.com/watercolor/12/654/1583.jpg"/>
 
@@ -860,7 +851,7 @@ Please contact [Stamen](http://www.stamen.com) directly.
 
 ### Stamen Terrain - US Only
 
-[`http://tile.stamen.com/terrain/{zoom}/{x}/{y}.png`](http://maps.stamen.com/#terrain/12/37.7706/-122.3782)
+`http://tile.stamen.com/terrain/{zoom}/{x}/{y}.png`
 
 <img src="http://tile.stamen.com/terrain/12/654/1583.jpg"/>
 
