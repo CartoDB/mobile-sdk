@@ -804,7 +804,7 @@ The following sections provide the code for rester tile basemap urls, and a samp
 
 [`https://1.aerial.maps.api.here.com/maptile/2.1/maptile/newest/satellite.day/{z}/{x}/{y}/512/jpg?lg=eng&token=A7tBPacePg9Mj_zghvKt9Q&app_id=KuYppsdXZznpffJsKT24`](https://carto.com/location-data-services/basemaps/)
 
-<img src=https://1.aerial.maps.api.here.com/maptile/2.1/maptile/newest/satellite.day/4/4/4/256/jpg?lg=eng&token=A7tBPacePg9Mj_zghvKt9Q&app_id=KuYppsdXZznpffJsKT24"/>
+<img src="https://1.aerial.maps.api.here.com/maptile/2.1/maptile/newest/satellite.day/4/4/4/256/jpg?lg=eng&token=A7tBPacePg9Mj_zghvKt9Q&app_id=KuYppsdXZznpffJsKT24"/>
 
 ### HERE Map Tiles
 
