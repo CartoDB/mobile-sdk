@@ -147,7 +147,6 @@ namespace carto { namespace geocoding {
         static constexpr unsigned int MAX_STRINGMATCH_DIST = 2;
         static constexpr std::size_t MIN_AUTOCOMPLETE_SIZE = 3;
         static constexpr std::size_t MAX_MATCH_COUNT = 10000;
-        static constexpr std::size_t MAX_ENTITY_MATCH_COUNTER = 10000;
         static constexpr std::size_t MAX_NAME_MATCH_COUNTER = 1000;
 
         static constexpr std::size_t ADDRESS_CACHE_SIZE = 1024;

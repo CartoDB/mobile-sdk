@@ -98,13 +98,6 @@ namespace carto { namespace geocoding {
 
         // Prepare autocomplete query string by appending % sign
         bool autocomplete = _autocomplete && safeQueryString.size() >= MIN_AUTOCOMPLETE_SIZE;
-        if (!safeQueryString.empty() && TokenList::isSeparator(safeQueryString.back())) { // TODO: final digit check?
-            autocomplete = false;
-        }
-        if (autocomplete) {
-            // Tricky, do not use autocomplete if the query ends with space. Otherwise append % sign that has special meaning
-            safeQueryString += (boost::trim_right_copy(queryString) != queryString ? " " : "%");
-        }
 
         // Do matching in 2 phases (exact/inexact), if required
         std::vector<Result> results;
@@ -112,7 +105,12 @@ namespace carto { namespace geocoding {
             for (const std::shared_ptr<Database>& database : _databases) {
                 Query query;
                 query.database = database;
-                query.tokenList = TokenList::build(safeQueryString);
+                if (autocomplete && pass > 0) {
+                    query.tokenList = TokenList::build(safeQueryString + (boost::trim_right_copy(queryString) != queryString ? " " : "%"));
+                }
+                else {
+                    query.tokenList = TokenList::build(safeQueryString);
+                }
                 matchTokens(query, pass, query.tokenList);
                 
                 std::set<std::vector<std::pair<std::uint32_t, std::string>>> assignments;
@@ -280,17 +278,28 @@ namespace carto { namespace geocoding {
         if (!_nameRankCache.read(nameKey, nameRanks)) {
             nameRanks = std::make_shared<std::vector<NameRank>>();
             std::vector<std::vector<Token>> sortedTokensList = tokensList;
+
+            // Optimization for autocomplete - if too many potential matches, remove the token or some matches
+            {
+                std::uint64_t count = 0;
+                for (auto it = sortedTokensList.back().begin(); it != sortedTokensList.back().end(); it++) {
+                    count += it->count;
+                    if (count > MAX_NAME_MATCH_COUNTER) {
+                        if (it != sortedTokensList.back().begin()) {
+                            sortedTokensList.back().erase(it);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // Sort tokens by increasing name counts
             std::sort(sortedTokensList.begin(), sortedTokensList.end(), [](const std::vector<Token>& tokens1, const std::vector<Token>& tokens2) {
                 std::uint64_t count1 = std::accumulate(tokens1.begin(), tokens1.end(), std::uint64_t(0), [](std::uint64_t sum, const Token& token) { return sum + token.count; });
                 std::uint64_t count2 = std::accumulate(tokens2.begin(), tokens2.end(), std::uint64_t(0), [](std::uint64_t sum, const Token& token) { return sum + token.count; });
                 return count1 < count2;
             });
-            const std::vector<Token>& tokens1 = sortedTokensList.front();
-            std::uint64_t count1 = std::accumulate(tokens1.begin(), tokens1.end(), std::uint64_t(0), [](std::uint64_t sum, const Token& token) { return sum + token.count; });
-            if (count1 > MAX_NAME_MATCH_COUNTER) {
-                return;
-            }
-            
+
             // Select names based on tokens
             std::vector<std::string> sqlTables;
             std::vector<std::string> sqlFilters;
@@ -448,7 +457,7 @@ namespace carto { namespace geocoding {
                 values += (values.empty() ? "" : ",") + boost::lexical_cast<std::string>(type);
             }
         }
-        sql += "(e.id=" + sqlTables.front() + ".entity_id) AND e.type in (" + values + ")";
+        sql += "(e.id=" + sqlTables.front() + ".entity_id) AND e.type in (" + values + ") LIMIT 1000";
 
         std::string entityKey = database.id + std::string(1, 0) + sql;
         std::vector<EntityRow> entityRows;
