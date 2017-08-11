@@ -44,6 +44,11 @@ namespace carto {
         }
         notifyElementChanged();
     }
+
+    bool VectorElement::containsMetaDataKey(const std::string& key) const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _metaData.find(key) != _metaData.end();
+    }
     
     Variant VectorElement::getMetaDataElement(const std::string& key) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);

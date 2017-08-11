@@ -64,6 +64,12 @@ namespace carto {
         void setMetaData(const std::map<std::string, Variant>& metaData);
         
         /** 
+         * Returns true if the specified key exists in the element meta data.
+         * @param key The key to use.
+         * @return True if the meta data element exists.
+         */
+        bool containsMetaDataKey(const std::string& key) const;
+        /** 
          * Returns a meta data element corresponding to the key. If no value is found null variant is returned.
          * @param key The key to use.
          * @return The value corresponding to the key from the meta data map. May be null.
