@@ -15,7 +15,7 @@ namespace carto {
     PointDrawData::PointDrawData(const PointGeometry& geometry, const PointStyle& style, const Projection& projection) :
         VectorElementDrawData(style.getColor()),
         _bitmap(style.getBitmap()),
-        _clickScale(style.getClickSize() == -1 ? std::max(1.0f, 1 + (IDEAL_CLICK_SIZE - style.getSize()) * CLICK_SIZE_COEF / style.getSize()) : style.getClickSize()),
+        _clickScale(style.getClickSize() == -1 ? std::max(1.0f, 1 + (IDEAL_CLICK_SIZE - style.getSize()) * CLICK_SIZE_COEF / style.getSize()) : style.getClickSize() / style.getSize()),
         _pos(),
         _size(style.getSize())
     {
