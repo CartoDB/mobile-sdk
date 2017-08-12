@@ -191,6 +191,7 @@ namespace carto { namespace geocoding {
                         token.idf = static_cast<float>(qit->get<double>(4));
                         tokens.push_back(std::move(token));
                     }
+                    tokens.shrink_to_fit();
 
                     _tokenQueryCounter++;
                     _tokenCache.put(tokenKey, tokens);
@@ -300,6 +301,11 @@ namespace carto { namespace geocoding {
                 return count1 < count2;
             });
 
+            // Drop tokens after pos 63 - sqlite supports only up to 64 joins
+            if (sortedTokensList.size() > 63) {
+                sortedTokensList.erase(sortedTokensList.begin() + 63);
+            }
+
             // Select names based on tokens
             std::vector<std::string> sqlTables;
             std::vector<std::string> sqlFilters;
@@ -310,19 +316,19 @@ namespace carto { namespace geocoding {
                 }
                 std::string tableName = "nt" + boost::lexical_cast<std::string>(sqlFilters.size());
                 sqlTables.push_back(tableName);
-                std::string sqlFilter = tableName + ".token_id IN (" + values + ") AND COALESCE(" + tableName + ".lang, '')=COALESCE(n.lang, '')";
+                std::string sqlFilter = tableName + ".token_id IN (" + values + ") AND " + tableName + ".lang IS " + sqlTables.front() + ".lang";
                 sqlFilters.push_back(sqlFilters.empty() ? sqlFilter : tableName + ".name_id=" + sqlTables.front() + ".name_id AND " + sqlFilter);
             }
 
-            std::string sql = "SELECT DISTINCT n.id, n.name, n.lang, n.type, n.entitycount FROM ";
+            std::string sql = "SELECT DISTINCT n.id, n.name, n.lang, n.type, n.entitycount FROM (SELECT nt0.name_id, nt0.lang FROM ";
             for (std::size_t i = 0; i < sqlTables.size(); i++) {
-                sql += "nametokens " + sqlTables[i] + " CROSS JOIN ";
+                sql += (i > 0 ? " CROSS JOIN " : "") + std::string("nametokens ") + sqlTables[i];
             }
-            sql += "names n WHERE ";
+            sql += " WHERE ";
             for (std::size_t i = 0; i < sqlFilters.size(); i++) {
-                sql += "(" + sqlFilters[i] + ") AND ";
+                sql += (i > 0 ? " AND " : "") + std::string("(") + sqlFilters[i] + ")";
             }
-            sql += "(n.id=" + sqlTables.front() + ".name_id AND COALESCE(n.lang, '') IN ('" + escapeSQLValue(_language) + "', ''))";
+            sql += ") nt CROSS JOIN names n WHERE n.id=nt.name_id AND n.lang IS nt.lang AND COALESCE(n.lang, '') IN ('" + escapeSQLValue(_language) + "', '') ORDER BY LENGTH(n.name) ASC LIMIT 1000";
 
             std::vector<std::shared_ptr<Name>> names;
             std::string namesKey = query.database->id + std::string(1, 0) + sql;
@@ -347,6 +353,7 @@ namespace carto { namespace geocoding {
 
                     names.push_back(std::move(name));
                 }
+                names.shrink_to_fit();
 
                 _nameQueryCounter++;
                 _nameCache.put(namesKey, names);
@@ -354,10 +361,11 @@ namespace carto { namespace geocoding {
 
             // Match names, use binary search for fast merging
             if (!names.empty()) {
+                nameRanks->reserve(names.size());
                 for (const std::shared_ptr<Name>& name : names) {
                     float rank = calculateNameRank(query, name->name, matchName, name->tokenIDFs);
                     if (rank >= MIN_MATCH_THRESHOLD) {
-                        nameRanks->push_back(NameRank{ name, rank });
+                        nameRanks->push_back(NameRank { name, rank });
                     }
                 }
 
@@ -366,12 +374,13 @@ namespace carto { namespace geocoding {
                     return nameRank1.rank > nameRank2.rank;
                 });
                 for (std::size_t i = 1; i < nameRanks->size(); i++) {
-                    if (nameRanks->at(i).rank < nameRanks->front().rank * (nameRanks->front().rank == 1.0f ? 1.0f : MAX_MATCH_RATIO)) {
+                    if (nameRanks->at(i).rank < nameRanks->front().rank * MAX_MATCH_RATIO) {
                         nameRanks->erase(nameRanks->begin() + i, nameRanks->end());
                         break;
                     }
                 }
             }
+            nameRanks->shrink_to_fit();
 
             _nameRankCounter++;
             _nameRankCache.put(nameKey, nameRanks);
@@ -457,7 +466,7 @@ namespace carto { namespace geocoding {
                 values += (values.empty() ? "" : ",") + boost::lexical_cast<std::string>(type);
             }
         }
-        sql += "(e.id=" + sqlTables.front() + ".entity_id) AND e.type in (" + values + ") LIMIT 1000";
+        sql += "(e.id=" + sqlTables.front() + ".entity_id) AND e.type in (" + values + ") ORDER BY e.type ASC, e.id ASC LIMIT 1000";
 
         std::string entityKey = database.id + std::string(1, 0) + sql;
         std::vector<EntityRow> entityRows;
@@ -485,6 +494,7 @@ namespace carto { namespace geocoding {
 
                 entityRows.push_back(std::move(entityRow));
             }
+            entityRows.shrink_to_fit();
 
             _entityQueryCounter++;
             _entityCache.put(entityKey, entityRows);
