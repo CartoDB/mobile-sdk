@@ -125,7 +125,7 @@ namespace carto { namespace geocoding {
         void matchNames(const Query& query, const std::vector<std::vector<Token>>& tokensList, const std::string& matchName, std::shared_ptr<std::vector<NameRank>>& nameRanks) const;
         void matchEntities(const Query& query, const Options& options, std::vector<Result>& results) const;
 
-        bool optimizeQuery(Query& query) const;
+        bool optimizeQueryFilters(const Query& query, int pass, std::vector<std::shared_ptr<std::vector<NameRank>>>& filtersList) const;
 
         float calculateNameRank(const Query& query, const std::string& name, const std::string& queryName, const std::vector<std::pair<std::string, float>>& tokenIDFs) const;
         
@@ -137,8 +137,10 @@ namespace carto { namespace geocoding {
         static constexpr float MIN_LOCATION_RANK = 0.2f; // should be larger than MIN_RANK
         static constexpr float MIN_RANK_THRESHOLD = 0.1f;
         static constexpr float MAX_RANK_RATIO = 0.5f;
+        static constexpr float MIN_RANK_SETTLE_THRESHOLD = 0.7f;
         static constexpr float MIN_MATCH_THRESHOLD = 0.55f;
-        static constexpr float MAX_MATCH_RATIO = 0.85f;
+        static constexpr float MIN_HOUSENUMBER_MATCH_THRESHOLD = 1.0f;
+        static constexpr float MAX_MATCH_RATIO = 0.9f;
         static constexpr float EXTRA_FIELD_PENALTY = 0.9f;
         static constexpr float UNMATCHED_FIELD_PENALTY = 0.25f;
         static constexpr float POI_POPULATION_PENALTY = 0.99f;

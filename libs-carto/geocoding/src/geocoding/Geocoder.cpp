@@ -256,7 +256,7 @@ namespace carto { namespace geocoding {
                 subQuery.filtersList.push_back(std::move(nameRanks));
                 matchQuery(subQuery, options, assignments, results);
             }
-            return results.size() == resultCount || results.front().unmatchedTokens > 0;
+            return results.size() == resultCount || results.front().unmatchedTokens > 0 || results.front().matchRank < MIN_RANK_SETTLE_THRESHOLD;
         });
 
         if (query.tokenList.unmatchedTokens() == 0) { // TODO: make 0 part of context
@@ -294,17 +294,17 @@ namespace carto { namespace geocoding {
                 }
             }
 
+            // Drop tokens after pos 32 - sqlite supports only up to 64 joins
+            if (sortedTokensList.size() > 32) {
+                sortedTokensList.erase(sortedTokensList.begin() + 32, sortedTokensList.end());
+            }
+
             // Sort tokens by increasing name counts
             std::sort(sortedTokensList.begin(), sortedTokensList.end(), [](const std::vector<Token>& tokens1, const std::vector<Token>& tokens2) {
                 std::uint64_t count1 = std::accumulate(tokens1.begin(), tokens1.end(), std::uint64_t(0), [](std::uint64_t sum, const Token& token) { return sum + token.count; });
                 std::uint64_t count2 = std::accumulate(tokens2.begin(), tokens2.end(), std::uint64_t(0), [](std::uint64_t sum, const Token& token) { return sum + token.count; });
                 return count1 < count2;
             });
-
-            // Drop tokens after pos 63 - sqlite supports only up to 64 joins
-            if (sortedTokensList.size() > 63) {
-                sortedTokensList.erase(sortedTokensList.begin() + 63);
-            }
 
             // Select names based on tokens
             std::vector<std::string> sqlTables;
@@ -364,7 +364,8 @@ namespace carto { namespace geocoding {
                 nameRanks->reserve(names.size());
                 for (const std::shared_ptr<Name>& name : names) {
                     float rank = calculateNameRank(query, name->name, matchName, name->tokenIDFs);
-                    if (rank >= MIN_MATCH_THRESHOLD) {
+                    float threshold = (name->type == FieldType::HOUSENUMBER ? MIN_HOUSENUMBER_MATCH_THRESHOLD : MIN_MATCH_THRESHOLD);
+                    if (rank >= threshold) {
                         nameRanks->push_back(NameRank { name, rank });
                     }
                 }
@@ -387,260 +388,263 @@ namespace carto { namespace geocoding {
         }
     }
 
-    void Geocoder::matchEntities(const Query& originalQuery, const Options& options, std::vector<Result>& results) const {
-        Query query = originalQuery;
-        if (!optimizeQuery(query)) {
-            return;
-        }
-
-        std::uint32_t typeMask = 0;
-        std::vector<std::shared_ptr<std::vector<NameRank>>> sortedFilters;
-        for (const std::shared_ptr<std::vector<NameRank>>& nameRanks : query.filtersList) {
-            std::uint32_t mask = std::accumulate(nameRanks->begin(), nameRanks->end(), std::uint32_t(0), [](std::uint32_t mask, const NameRank& nameRank) { return mask | 1 << static_cast<int>(nameRank.name->type); });
-            if (!(mask & (1 << static_cast<int>(FieldType::HOUSENUMBER)))) {
-                sortedFilters.push_back(nameRanks);
-            }
-            typeMask |= mask;
-        }
-        if (sortedFilters.empty()) {
-            return;
-        }
-
-        std::sort(sortedFilters.begin(), sortedFilters.end(), [](const std::shared_ptr<std::vector<NameRank>>& nameRanks1, const std::shared_ptr<std::vector<NameRank>>& nameRanks2) {
-            std::uint64_t count1 = std::accumulate(nameRanks1->begin(), nameRanks1->end(), std::uint64_t(0), [](std::uint64_t sum, const NameRank& nameRank) { return sum + nameRank.name->count; });
-            std::uint64_t count2 = std::accumulate(nameRanks2->begin(), nameRanks2->end(), std::uint64_t(0), [](std::uint64_t sum, const NameRank& nameRank) { return sum + nameRank.name->count; });
-            return count1 < count2;
-        });
-
-        // Verify that that the first filter is not too generic; if it is, drop name, street, house mode
-        const std::vector<NameRank>& nameRanks1 = *sortedFilters.front();
-        std::uint64_t count1 = std::accumulate(nameRanks1.begin(), nameRanks1.end(), std::uint64_t(0), [](std::uint64_t sum, const NameRank& nameRank) { return sum + nameRank.name->count; });
-        if (count1 > MAX_MATCH_COUNT) {
-            typeMask &= ~(1 << static_cast<int>(FieldType::NAME)) & ~(1 << static_cast<int>(FieldType::HOUSENUMBER)) & ~(1 << static_cast<int>(FieldType::STREET));
-        }
-
-        // Build SQL filters
-        const Database& database = *query.database;
-        std::vector<std::string> sqlTables;
-        std::vector<std::string> sqlFilters;
-        for (const std::shared_ptr<std::vector<NameRank>>& nameRanks : sortedFilters) {
-            std::string values;
-            // TODO: Potential optimization: if nameRanks.size() > THRESHOLD and sqlFilters.size > 0, skip this filter
-            for (const NameRank& nameRank : *nameRanks) {
-                values += (values.empty() ? "" : ",") + boost::lexical_cast<std::string>(nameRank.name->id);
-            }
-            std::string tableName = "en" + boost::lexical_cast<std::string>(sqlFilters.size());
-            sqlTables.push_back(tableName);
-            std::string sqlFilter = tableName + ".name_id IN (" + values + ")";
-            sqlFilters.push_back(sqlFilters.empty() ? sqlFilter : tableName + ".entity_id=" + sqlTables.front() + ".entity_id AND " + sqlFilter);
-        }
-
-        // Build final SQL using CROSS JOINs
-        std::string sql = "SELECT DISTINCT e.id, e.features, e.housenumbers, e.rank FROM ";
-        if (!(typeMask & (1 << static_cast<int>(FieldType::NAME))) && !(typeMask & (1 << static_cast<int>(FieldType::HOUSENUMBER))) && !(typeMask & (1 << static_cast<int>(FieldType::STREET)))) {
-            sql += "entities e";
-            for (std::size_t i = 0; i < sqlTables.size(); i++) {
-                sql += " CROSS JOIN entitynames " + sqlTables[i];
-            }
-        }
-        else {
-            for (std::size_t i = 0; i < sqlTables.size(); i++) {
-                sql += "entitynames " + sqlTables[i] + " CROSS JOIN ";
-            }
-            sql += "entities e";
-        }
-        sql += " WHERE ";
-        for (std::size_t i = 0; i < sqlFilters.size(); i++) {
-            sql += "(" + sqlFilters[i] + ") AND ";
-        }
-
-        // Filter out unwanted entities
-        std::string values;
-        for (std::uint32_t type = 0; (1U << type) <= typeMask; type++) {
-            if (!_enabledFilters.empty()) {
-                if (std::find(_enabledFilters.begin(), _enabledFilters.end(), static_cast<Address::EntityType>(type)) == _enabledFilters.end()) {
-                    continue;
-                }
-            }
-            if ((typeMask & (1 << type)) != 0) {
-                values += (values.empty() ? "" : ",") + boost::lexical_cast<std::string>(type);
-            }
-        }
-        sql += "(e.id=" + sqlTables.front() + ".entity_id) AND e.type in (" + values + ") ORDER BY e.type ASC, e.id ASC LIMIT 1000";
-
-        std::string entityKey = database.id + std::string(1, 0) + sql;
-        std::vector<EntityRow> entityRows;
-        if (!_entityCache.read(entityKey, entityRows)) {
-            sqlite3pp::query sqlQuery(*database.db, sql.c_str());
-            for (auto qit = sqlQuery.begin(); qit != sqlQuery.end(); qit++) {
-                EntityRow entityRow;
-                entityRow.id = qit->get<unsigned int>(0);
-                if (qit->get<const void*>(1)) {
-                    entityRow.features = std::string(static_cast<const char*>(qit->get<const void*>(1)), qit->column_bytes(1));
-                }
-                if (qit->get<const void*>(2)) {
-                    entityRow.houseNumbers = std::string(static_cast<const char*>(qit->get<const void*>(2)), qit->column_bytes(2));
-                }
-                entityRow.rank = static_cast<float>(qit->get<std::uint64_t>(3) / query.database->rankScale);
-
-                sqlite3pp::query sqlQuery2(*database.db, "SELECT DISTINCT n.type, n.id FROM entitynames en, names n WHERE en.entity_id=:entityId AND en.name_id=n.id");
-                sqlQuery2.bind(":entityId", qit->get<std::uint64_t>(0));
-                for (auto qit2 = sqlQuery2.begin(); qit2 != sqlQuery2.end(); qit2++) {
-                    EntityName entityName;
-                    entityName.type = static_cast<FieldType>(qit2->get<int>(0));
-                    entityName.id = qit2->get<std::uint64_t>(1);
-                    entityRow.entityNames.push_back(entityName);
-                }
-
-                entityRows.push_back(std::move(entityRow));
-            }
-            entityRows.shrink_to_fit();
-
-            _entityQueryCounter++;
-            _entityCache.put(entityKey, entityRows);
-            _missingEntityQueryCounter += (entityRows.empty() ? 1 : 0);
-        }
-
-        auto mercatorConverter = [&database](const cglib::vec2<double>& pos) {
-            return wgs84ToWebMercator(database.origin + pos);
-        };
-
-        for (const EntityRow& entityRow : entityRows) {
-            unsigned int elementIndex = 0;
-
-            std::function<float(std::size_t, std::uint32_t)> findBestMatch;
-            findBestMatch = [&](std::size_t index, std::uint32_t mask) {
-                if (index >= query.filtersList.size()) {
-                    float rank = 1.0f;
-                    for (const EntityName& entityName : entityRow.entityNames) {
-                        if (!(mask & (1 << static_cast<int>(entityName.type)))) {
-                            rank *= EXTRA_FIELD_PENALTY;
-                        }
-                    }
-                    return rank;
-                }
-
-                float bestRank = 0.0f;
-                for (const NameRank& nameRank : *query.filtersList[index]) {
-                    if (mask & (1 << static_cast<int>(nameRank.name->type))) {
-                        continue;
-                    }
-
-                    int houseIndex = -1;
-                    if (nameRank.name->type == FieldType::HOUSENUMBER) {
-                        EncodingStream houseNumberStream(entityRow.houseNumbers.data(), entityRow.houseNumbers.size());
-                        AddressInterpolator interpolator(houseNumberStream);
-
-                        houseIndex = interpolator.findAddress(nameRank.name->id); // if not found, interpolator returns -1
-                        if (houseIndex == -1) {
-                            continue;
-                        }
-                    }
-                    else {
-                        auto it = std::find_if(entityRow.entityNames.begin(), entityRow.entityNames.end(), [&nameRank](const EntityName& entityName) {
-                            return entityName.id == nameRank.name->id;
-                        });
-                        if (it == entityRow.entityNames.end()) {
-                            continue;
-                        }
-                    }
-                    float rank = findBestMatch(index + 1, mask | (1 << static_cast<int>(nameRank.name->type))) * nameRank.rank;
-                    if (rank > bestRank) {
-                        bestRank = rank;
-                        if (houseIndex != -1) {
-                            elementIndex = houseIndex + 1;
-                        }
-                    }
-                }
-                if (bestRank < UNMATCHED_FIELD_PENALTY) {
-                    bestRank = std::max(bestRank, findBestMatch(index + 1, mask) * UNMATCHED_FIELD_PENALTY);
-                }
-                return bestRank;
-            };
-
-            // Do field match ranking
-            float matchRank = findBestMatch(0, 0);
-
-            // Create result
-            Result result;
-            result.database = query.database;
-            result.encodedId = (static_cast<std::uint64_t>(elementIndex) << 32) | entityRow.id;
-            result.unmatchedTokens = query.tokenList.unmatchedTokens();
-
-            // Set penalty for unmatched fields
-            result.matchRank = matchRank;
-            result.matchRank *= std::pow(UNMATCHED_FIELD_PENALTY, query.tokenList.unmatchedTokens());
-
-            // Set entity ranking
-            result.entityRank *= entityRow.rank;
-
-            // Do location based ranking
-            if (options.location) {
-                EncodingStream featureStream(entityRow.features.data(), entityRow.features.size());
-                FeatureReader featureReader(featureStream, mercatorConverter);
-
-                std::vector<Feature> features;
-                if (elementIndex) {
-                    EncodingStream houseNumberStream(entityRow.houseNumbers.data(), entityRow.houseNumbers.size());
-                    AddressInterpolator interpolator(houseNumberStream);
-
-                    features = interpolator.enumerateAddresses(featureReader).at(elementIndex - 1).second;
-                }
-                else {
-                    features = featureReader.readFeatureCollection();
-                }
-
-                float minDist = options.locationRadius;
-                for (const Feature& feature : features) {
-                    if (std::shared_ptr<Geometry> geometry = feature.getGeometry()) {
-                        cglib::vec2<double> mercatorMeters = webMercatorMeters(*options.location);
-                        cglib::vec2<double> mercatorLocation = wgs84ToWebMercator(*options.location);
-                        cglib::vec2<double> point = geometry->calculateNearestPoint(mercatorLocation);
-                        cglib::vec2<double> diff = point - mercatorLocation;
-                        float dist = static_cast<float>(cglib::length(cglib::vec2<double>(diff(0) * mercatorMeters(0), diff(1) * mercatorMeters(1))));
-                        minDist = std::min(minDist, dist);
-                    }
-                }
-
-                float c = -std::log(MIN_LOCATION_RANK) / options.locationRadius;
-                result.locationRank *= std::exp(-minDist * c);
-            }
-
-            // Early out test
-            if (result.totalRank() < MIN_RANK_THRESHOLD) {
+    void Geocoder::matchEntities(const Query& query, const Options& options, std::vector<Result>& results) const {
+        // Do matching in up to 2 passes: first pass ignores all housenumbers while the second pass tries to match housenumbers
+        for (int pass = 0; pass < 2; pass++) {
+            std::vector<std::shared_ptr<std::vector<NameRank>>> filtersList;
+            if (!optimizeQueryFilters(query, pass, filtersList)) {
                 continue;
             }
 
-            // Check if the same result is already stored
-            auto resultIt = std::find_if(results.begin(), results.end(), [&result](const Result& result2) {
-                return result.encodedId == result2.encodedId;
+            // Sort filters by the number of potential matches (ascending)
+            std::vector<std::shared_ptr<std::vector<NameRank>>> sortedFiltersList = filtersList;
+            std::sort(sortedFiltersList.begin(), sortedFiltersList.end(), [](const std::shared_ptr<std::vector<NameRank>>& nameRanks1, const std::shared_ptr<std::vector<NameRank>>& nameRanks2) {
+                std::uint64_t count1 = std::accumulate(nameRanks1->begin(), nameRanks1->end(), std::uint64_t(0), [](std::uint64_t sum, const NameRank& nameRank) { return sum + nameRank.name->count; });
+                std::uint64_t count2 = std::accumulate(nameRanks2->begin(), nameRanks2->end(), std::uint64_t(0), [](std::uint64_t sum, const NameRank& nameRank) { return sum + nameRank.name->count; });
+                return count1 < count2;
             });
-            if (resultIt != results.end()) {
-                if (resultIt->totalRank() >= result.totalRank()) {
-                    continue; // if we have stored the row with better ranking, ignore current
-                }
-                results.erase(resultIt); // erase the old match, as the new match is better
+
+            // Find which fields are potentially present in the query
+            std::uint32_t typeMask = (pass > 0 ? 1 << static_cast<int>(FieldType::HOUSENUMBER) : 0);
+            for (const std::shared_ptr<std::vector<NameRank>>& nameRanks : filtersList) {
+                std::uint32_t mask = std::accumulate(nameRanks->begin(), nameRanks->end(), std::uint32_t(0), [](std::uint32_t mask, const NameRank& nameRank) { return mask | 1 << static_cast<int>(nameRank.name->type); });
+                typeMask |= mask;
             }
 
-            // Find position for the result
-            resultIt = std::upper_bound(results.begin(), results.end(), result, [](const Result& result1, const Result& result2) {
-                return result1.totalRank() > result2.totalRank();
-            });
-            if (!(resultIt == results.end() && results.size() == _maxResults)) {
-                results.insert(resultIt, result);
+            // Verify that that the first filter is not too generic; if it is, drop name, street, house mode
+            const std::vector<NameRank>& nameRanks1 = *sortedFiltersList.front();
+            std::uint64_t count1 = std::accumulate(nameRanks1.begin(), nameRanks1.end(), std::uint64_t(0), [](std::uint64_t sum, const NameRank& nameRank) { return sum + nameRank.name->count; });
+            if (count1 > MAX_MATCH_COUNT) {
+                typeMask &= ~(1 << static_cast<int>(FieldType::NAME)) & ~(1 << static_cast<int>(FieldType::HOUSENUMBER)) & ~(1 << static_cast<int>(FieldType::STREET));
+            }
 
-                // Drop results that have too low rankings
-                while (!results.empty()) {
-                    if (results.front().totalRank() * MAX_RANK_RATIO <= results.back().totalRank() && results.back().totalRank() >= MIN_RANK_THRESHOLD) {
-                        break;
+            // Build SQL filters
+            const Database& database = *query.database;
+            std::vector<std::string> sqlTables;
+            std::vector<std::string> sqlFilters;
+            for (const std::shared_ptr<std::vector<NameRank>>& nameRanks : sortedFiltersList) {
+                std::string values;
+                for (const NameRank& nameRank : *nameRanks) {
+                    values += (values.empty() ? "" : ",") + boost::lexical_cast<std::string>(nameRank.name->id);
+                }
+                std::string tableName = "en" + boost::lexical_cast<std::string>(sqlFilters.size());
+                sqlTables.push_back(tableName);
+                std::string sqlFilter = tableName + ".name_id IN (" + values + ")";
+                std::uint32_t mask = std::accumulate(nameRanks->begin(), nameRanks->end(), std::uint32_t(0), [](std::uint32_t mask, const NameRank& nameRank) { return mask | 1 << static_cast<int>(nameRank.name->type); });
+                sqlFilters.push_back(sqlFilters.empty() ? sqlFilter : tableName + ".entity_id=" + sqlTables.front() + ".entity_id AND " + sqlFilter);
+            }
+
+            // Build final SQL using CROSS JOINs. Use two different strategies: if we can not reduce the number of first entitynames matches to a threshold, do matching from entities filtered by type first
+            std::string sql = "SELECT DISTINCT e.id, e.features, e.housenumbers, e.rank FROM ";
+            if (count1 > MAX_MATCH_COUNT) {
+                sql += "entities e";
+                for (std::size_t i = 0; i < sqlTables.size(); i++) {
+                    sql += " CROSS JOIN entitynames " + sqlTables[i];
+                }
+            }
+            else {
+                for (std::size_t i = 0; i < sqlTables.size(); i++) {
+                    sql += "entitynames " + sqlTables[i] + " CROSS JOIN ";
+                }
+                sql += "entities e";
+            }
+            sql += " WHERE ";
+            for (std::size_t i = 0; i < sqlFilters.size(); i++) {
+                sql += "(" + sqlFilters[i] + ") AND ";
+            }
+
+            // Filter out unwanted entities
+            std::string values;
+            for (std::uint32_t type = 0; (1U << type) <= typeMask; type++) {
+                if (!_enabledFilters.empty()) {
+                    if (std::find(_enabledFilters.begin(), _enabledFilters.end(), static_cast<Address::EntityType>(type)) == _enabledFilters.end()) {
+                        continue;
                     }
-                    results.pop_back();
+                }
+                if ((typeMask & (1 << type)) != 0) {
+                    values += (values.empty() ? "" : ",") + boost::lexical_cast<std::string>(type);
+                }
+            }
+            sql += "(e.id=" + sqlTables.front() + ".entity_id) AND e.type in (" + values + ") AND e.housenumbers " + (pass > 0 ? "IS NOT NULL" : "IS NULL") + " ORDER BY e.type ASC, e.rank DESC LIMIT 1000";
+
+            std::string entityKey = database.id + std::string(1, 0) + sql;
+            std::vector<EntityRow> entityRows;
+            if (!_entityCache.read(entityKey, entityRows)) {
+                sqlite3pp::query sqlQuery(*database.db, sql.c_str());
+                for (auto qit = sqlQuery.begin(); qit != sqlQuery.end(); qit++) {
+                    EntityRow entityRow;
+                    entityRow.id = qit->get<unsigned int>(0);
+                    if (qit->get<const void*>(1)) {
+                        entityRow.features = std::string(static_cast<const char*>(qit->get<const void*>(1)), qit->column_bytes(1));
+                    }
+                    if (qit->get<const void*>(2)) {
+                        entityRow.houseNumbers = std::string(static_cast<const char*>(qit->get<const void*>(2)), qit->column_bytes(2));
+                    }
+                    entityRow.rank = static_cast<float>(qit->get<std::uint64_t>(3) / query.database->rankScale);
+
+                    sqlite3pp::query sqlQuery2(*database.db, "SELECT DISTINCT n.type, n.id FROM entitynames en, names n WHERE en.entity_id=:entityId AND en.name_id=n.id");
+                    sqlQuery2.bind(":entityId", qit->get<std::uint64_t>(0));
+                    for (auto qit2 = sqlQuery2.begin(); qit2 != sqlQuery2.end(); qit2++) {
+                        EntityName entityName;
+                        entityName.type = static_cast<FieldType>(qit2->get<int>(0));
+                        entityName.id = qit2->get<std::uint64_t>(1);
+                        entityRow.entityNames.push_back(entityName);
+                    }
+
+                    entityRows.push_back(std::move(entityRow));
+                }
+                entityRows.shrink_to_fit();
+
+                _entityQueryCounter++;
+                _entityCache.put(entityKey, entityRows);
+                _missingEntityQueryCounter += (entityRows.empty() ? 1 : 0);
+            }
+
+            if (entityRows.empty()) {
+                continue;
+            }
+
+            auto mercatorConverter = [&database](const cglib::vec2<double>& pos) {
+                return wgs84ToWebMercator(database.origin + pos);
+            };
+
+            for (const EntityRow& entityRow : entityRows) {
+                unsigned int elementIndex = 0;
+
+                std::function<float(std::size_t, std::uint32_t)> findBestMatch;
+                findBestMatch = [&](std::size_t index, std::uint32_t mask) {
+                    if (index >= query.filtersList.size()) {
+                        float rank = 1.0f;
+                        for (const EntityName& entityName : entityRow.entityNames) {
+                            if (!(mask & (1 << static_cast<int>(entityName.type)))) {
+                                rank *= EXTRA_FIELD_PENALTY;
+                            }
+                        }
+                        return rank;
+                    }
+
+                    float bestRank = 0.0f;
+                    for (const NameRank& nameRank : *query.filtersList[index]) {
+                        if (mask & (1 << static_cast<int>(nameRank.name->type))) {
+                            continue;
+                        }
+
+                        int houseIndex = -1;
+                        if (nameRank.name->type == FieldType::HOUSENUMBER) {
+                            EncodingStream houseNumberStream(entityRow.houseNumbers.data(), entityRow.houseNumbers.size());
+                            AddressInterpolator interpolator(houseNumberStream);
+
+                            houseIndex = interpolator.findAddress(nameRank.name->id); // if not found, interpolator returns -1
+                            if (houseIndex == -1) {
+                                continue;
+                            }
+                        }
+                        else {
+                            auto it = std::find_if(entityRow.entityNames.begin(), entityRow.entityNames.end(), [&nameRank](const EntityName& entityName) {
+                                return entityName.id == nameRank.name->id;
+                            });
+                            if (it == entityRow.entityNames.end()) {
+                                continue;
+                            }
+                        }
+                        float rank = findBestMatch(index + 1, mask | (1 << static_cast<int>(nameRank.name->type))) * nameRank.rank;
+                        if (rank > bestRank) {
+                            bestRank = rank;
+                            if (houseIndex != -1) {
+                                elementIndex = houseIndex + 1;
+                            }
+                        }
+                    }
+                    if (bestRank < UNMATCHED_FIELD_PENALTY) {
+                        bestRank = std::max(bestRank, findBestMatch(index + 1, mask) * UNMATCHED_FIELD_PENALTY);
+                    }
+                    return bestRank;
+                };
+
+                // Do field match ranking
+                float matchRank = findBestMatch(0, 0);
+
+                // Create result
+                Result result;
+                result.database = query.database;
+                result.encodedId = (static_cast<std::uint64_t>(elementIndex) << 32) | entityRow.id;
+                result.unmatchedTokens = query.tokenList.unmatchedTokens();
+
+                // Set penalty for unmatched fields
+                result.matchRank = matchRank;
+                result.matchRank *= std::pow(UNMATCHED_FIELD_PENALTY, query.tokenList.unmatchedTokens());
+
+                // Set entity ranking
+                result.entityRank *= entityRow.rank;
+
+                // Do location based ranking
+                if (options.location) {
+                    EncodingStream featureStream(entityRow.features.data(), entityRow.features.size());
+                    FeatureReader featureReader(featureStream, mercatorConverter);
+
+                    std::vector<Feature> features;
+                    if (elementIndex) {
+                        EncodingStream houseNumberStream(entityRow.houseNumbers.data(), entityRow.houseNumbers.size());
+                        AddressInterpolator interpolator(houseNumberStream);
+
+                        features = interpolator.enumerateAddresses(featureReader).at(elementIndex - 1).second;
+                    }
+                    else {
+                        features = featureReader.readFeatureCollection();
+                    }
+
+                    float minDist = options.locationRadius;
+                    for (const Feature& feature : features) {
+                        if (std::shared_ptr<Geometry> geometry = feature.getGeometry()) {
+                            cglib::vec2<double> mercatorMeters = webMercatorMeters(*options.location);
+                            cglib::vec2<double> mercatorLocation = wgs84ToWebMercator(*options.location);
+                            cglib::vec2<double> point = geometry->calculateNearestPoint(mercatorLocation);
+                            cglib::vec2<double> diff = point - mercatorLocation;
+                            float dist = static_cast<float>(cglib::length(cglib::vec2<double>(diff(0) * mercatorMeters(0), diff(1) * mercatorMeters(1))));
+                            minDist = std::min(minDist, dist);
+                        }
+                    }
+
+                    float c = -std::log(MIN_LOCATION_RANK) / options.locationRadius;
+                    result.locationRank *= std::exp(-minDist * c);
+                }
+
+                // Early out test
+                if (result.totalRank() < MIN_RANK_THRESHOLD) {
+                    continue;
+                }
+
+                // Check if the same result is already stored
+                auto resultIt = std::find_if(results.begin(), results.end(), [&result](const Result& result2) {
+                    return result.encodedId == result2.encodedId;
+                });
+                if (resultIt != results.end()) {
+                    if (resultIt->totalRank() >= result.totalRank()) {
+                        continue; // if we have stored the row with better ranking, ignore current
+                    }
+                    results.erase(resultIt); // erase the old match, as the new match is better
+                }
+
+                // Find position for the result
+                resultIt = std::upper_bound(results.begin(), results.end(), result, [](const Result& result1, const Result& result2) {
+                    return result1.totalRank() > result2.totalRank();
+                });
+                if (!(resultIt == results.end() && results.size() == _maxResults)) {
+                    results.insert(resultIt, result);
+
+                    // Drop results that have too low rankings
+                    while (!results.empty()) {
+                        if (results.front().totalRank() * MAX_RANK_RATIO <= results.back().totalRank() && results.back().totalRank() >= MIN_RANK_THRESHOLD) {
+                            break;
+                        }
+                        results.pop_back();
+                    }
                 }
             }
         }
     }
 
-    bool Geocoder::optimizeQuery(Query& query) const {
+    bool Geocoder::optimizeQueryFilters(const Query& query, int pass, std::vector<std::shared_ptr<std::vector<NameRank>>>& filtersList) const {
         std::function<bool(const std::vector<std::uint32_t>&)> validAssignment;
         validAssignment = [&validAssignment](const std::vector<std::uint32_t>& masks) {
             if (masks.empty()) {
@@ -659,6 +663,7 @@ namespace carto { namespace geocoding {
             return false;
         };
 
+        // Calculate potentially valid type masks for each name
         std::vector<std::uint32_t> validMasks;
         validMasks.reserve(query.filtersList.size());
         for (const std::shared_ptr<std::vector<NameRank>>& nameRanks : query.filtersList) {
@@ -666,6 +671,8 @@ namespace carto { namespace geocoding {
             validMasks.push_back(validMask);
         }
 
+        // Now iteratively try to remove impossible combinations. For example, for ({Street}, {Street, Region}) we can replace this with ({Street}, {Region})
+        // Also, we assume that house numbers can be only present if there is a street present. Thus ({HouseNumber, Name}, {Country}) can be replaced with ({Name}, {Country})
         bool progress;
         do {
             progress = false;
@@ -682,25 +689,50 @@ namespace carto { namespace geocoding {
                         }
                     }
                 }
-                if (validMask == 0) {
-                    return false;
-                }
 
-                if (validMask != validMasks[i]) {
-                    auto nameRanks = std::make_shared<std::vector<NameRank>>();
-                    nameRanks->reserve(query.filtersList[i]->size());
-                    for (const NameRank& nameRank : *query.filtersList[i]) {
-                        if (validMask & (1 << static_cast<int>(nameRank.name->type))) {
-                            nameRanks->push_back(nameRank);
-                        }
+                bool streetType = false;
+                for (std::size_t j = 0; j < query.filtersList.size(); j++) {
+                    if (i != j && (validMasks[j] & (1 << static_cast<int>(FieldType::STREET))) != 0) {
+                        streetType = true;
+                        break;
                     }
-                    std::swap(query.filtersList[i], nameRanks);
+                }
+                if (!(streetType && pass > 0)) {
+                    validMask &= ~(1 << static_cast<int>(FieldType::HOUSENUMBER));
+                }
+                
+                if (validMask != validMasks[i]) {
                     validMasks[i] = validMask;
                     progress = true;
                 }
             }
         } while (progress);
-        return true;
+
+        // Now simplify the query filters according to new valid type masks by removing impossible records.
+        // We will also remove housenumbers,
+        filtersList.reserve(query.filtersList.size());
+        for (std::size_t i = 0; i < query.filtersList.size(); i++) {
+            if (validMasks[i] & (1 << static_cast<int>(FieldType::HOUSENUMBER))) {
+                continue;
+            }
+            
+            auto nameRanks = std::make_shared<std::vector<NameRank>>();
+            nameRanks->reserve(query.filtersList[i]->size());
+            for (const NameRank& nameRank : *query.filtersList[i]) {
+                if (validMasks[i] & (1 << static_cast<int>(nameRank.name->type))) {
+                    nameRanks->push_back(nameRank);
+                }
+            }
+            if (nameRanks->empty()) {
+                return false;
+            }
+            filtersList.push_back(std::move(nameRanks));
+        }
+
+        if (pass > 0 && query.filtersList.size() == filtersList.size()) {
+            return false; // means we have no house number candidates, can skip pass 2
+        }
+        return !filtersList.empty();
     }
 
     float Geocoder::calculateNameRank(const Query& query, const std::string& name, const std::string& queryName, const std::vector<std::pair<std::string, float>>& tokenIDFs) const {
