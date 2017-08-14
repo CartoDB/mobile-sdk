@@ -144,7 +144,7 @@ namespace carto {
         jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setDoOutput, (jboolean)!request.contentType.empty());
         jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setUseCaches, (jboolean)false);
         jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setAllowUserInteraction, (jboolean)false);
-        jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setAllowUserInteraction, (jboolean)true);
+        jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setInstanceFollowRedirects, (jboolean)true);
         if (_timeout > 0) {
             jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setConnectTimeout, _timeout);
             jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setReadTimeout, _timeout);

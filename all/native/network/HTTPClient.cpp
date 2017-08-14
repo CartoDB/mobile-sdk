@@ -46,7 +46,7 @@ namespace carto {
         content.reserve(65536);
         auto handlerFn = [&content](std::uint64_t offset, std::uint64_t length, const unsigned char* buf, std::size_t size) -> bool {
             if (content.size() != offset) {
-                content.resize(static_cast<size_t>(offset));
+                content.resize(static_cast<std::size_t>(offset));
             }
             content.insert(content.end(), buf, buf + size);
             return true;
@@ -92,7 +92,7 @@ namespace carto {
         content.reserve(65536);
         auto handlerFn = [&content](std::uint64_t offset, std::uint64_t length, const unsigned char* buf, std::size_t size) -> bool {
             if (content.size() != offset) {
-                content.resize(static_cast<size_t>(offset));
+                content.resize(static_cast<std::size_t>(offset));
             }
             content.insert(content.end(), buf, buf + size);
             return true;
@@ -139,6 +139,7 @@ namespace carto {
             return true;
         };
 
+        std::uint64_t originalOffset = offset;
         auto dataFn = [&](const unsigned char* data, std::size_t size) {
             bool result = handlerFn(offset, contentOffset + contentLength, data, size);
             offset += size;
@@ -159,7 +160,7 @@ namespace carto {
                 Request redirectedRequest(request);
                 redirectedRequest.url = location;
                 response = Response();
-                return makeRequest(redirectedRequest, response, handlerFn, offset);
+                return makeRequest(redirectedRequest, response, handlerFn, originalOffset);
             }
         }
 
