@@ -4,9 +4,9 @@ For select account plans, you can connect to the CARTO Engine APIs via Mobile SD
 
 ## Loading CARTO Map Data to Mobile Apps
 
-You can also manage mobile rendering by defining how mobile features load with the CARTO APIs and with the CARTO Builder. For example:
+We support quite a few methods how you can put your map data from CARTO account via mobile SDK to your mobile app. The choise depends on you data size, visual requirements and other aspects.
 
-- To use **raster map tiles**, define the tile URL for RasterTileLayer
+- To use map as **raster map tiles**, define the tile URL for RasterTileLayer
 
 - To apply **interactivity** (object click data), use UTFGrid. This uses both raster map tiles and json-based UTF tiles
 
@@ -20,13 +20,23 @@ You can also manage mobile rendering by defining how mobile features load with t
 
 - For point-geometry time-series visualizations, use the _Animated_ aggregation to define Torque maps. This provides animated rendering, and the Mobile SDK has a special layer `TorqueTileLayer` to define this. From an API standpoint, Torque uses the SQL API and CartoCSS styling, but Torque contains an additional [time control method](/docs/carto-engine/torque-js/)
 
-## Publish a Mobile Map
+## Offline maps from CARTO
+
+CARTO SDK has several ways to use map data ofline, but the suggested method is via CARTO platform:
+
+1. Upload your data to CARTO platform, create new Map and map styling CartoCSS in BUILDER
+2. Use our [Mobile Tile Packager](https://github.com/CartoDB/mobile-tile-packager) tool to create offline map data package
+3. Load the package file to the mobile device - you can have your app to download it from your server, or add it as bundled asset to your app
+4. Finally add the map to MapView as a VectorTileLayer from MBTilesTileDataSource and CartoCSS. 
+
+With this method you get both optimized vector tiles and suitable CartoCSS styling for your map.
+
+For details see [Readme file](https://github.com/CartoDB/mobile-tile-packager/blob/master/README.md) of the Mobile Tile Packager.
 
 
+## Online maps from CARTO
 
-## SDK and CARTO APIs
-
-If you are using CARTO, you can define mobile map using web interface (BUILDER) and show it on the mobile with various methods. .
+If you have your map data in CARTO database, you can show it on the mobile with various methods. .
 
 1) Integrate with the [Maps API](/docs/carto-engine/maps-api/) for Anonymous or Named maps
 
