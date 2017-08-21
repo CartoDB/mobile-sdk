@@ -709,7 +709,7 @@ namespace carto { namespace geocoding {
         } while (progress);
 
         // Now simplify the query filters according to new valid type masks by removing impossible records.
-        // We will also remove housenumbers,
+        // We will also remove housenumbers, as these are not included in entitynames table.
         filtersList.reserve(query.filtersList.size());
         for (std::size_t i = 0; i < query.filtersList.size(); i++) {
             if (validMasks[i] & (1 << static_cast<int>(FieldType::HOUSENUMBER))) {
