@@ -39,6 +39,32 @@ namespace carto { namespace mvt {
         }
 
         bool updated = false;
+        
+        // Try to merge consecutive rules R1 and R2 with R1.maxZoom=R2.minZoom assuming everything else is equal
+        for (auto it = _rules.begin(); it + 1 != _rules.end(); ) {
+            std::shared_ptr<const Rule> rule1 = *(it + 0);
+            std::shared_ptr<const Rule> rule2 = *(it + 1);
+            if (rule1->getMinZoom() > rule2->getMinZoom()) {
+                std::swap(rule1, rule2);
+            }
+            std::shared_ptr<const Predicate> pred1 = rule1->getFilter()->getPredicate();
+            std::shared_ptr<const Predicate> pred2 = rule2->getFilter()->getPredicate();
+            bool samePred = (pred1 == pred2) || (pred1 && pred2 && pred1->equals(pred2));
+            if (rule1->getMaxZoom() == rule2->getMinZoom() && rule1->getFilter()->getType() == rule2->getFilter()->getType() && samePred && rule1->getSymbolizers().size() == rule2->getSymbolizers().size()) {
+                if (std::equal(rule1->getSymbolizers().begin(), rule1->getSymbolizers().end(), rule2->getSymbolizers().begin(), [](const std::shared_ptr<Symbolizer>& symbolizer1, const std::shared_ptr<Symbolizer>& symbolizer2) {
+                    return typeid(symbolizer1.get()) == typeid(symbolizer2.get()) && symbolizer1->getParameterMap() == symbolizer2->getParameterMap();
+                })) {
+                    auto combinedRule = std::make_shared<Rule>("combined", rule1->getMinZoom(), rule2->getMaxZoom(), rule1->getFilter(), rule1->getSymbolizers());
+                    it = _rules.erase(it);
+                    *it = combinedRule;
+                    updated = true;
+                    continue;
+                }
+            }
+            it++;
+        }
+
+        // Try to merge consecutive rules R1 and R2 with different filter expressions but with everything else equal
         for (auto it = _rules.begin(); it + 1 != _rules.end(); ) {
             std::shared_ptr<const Rule> rule1 = *(it + 0);
             std::shared_ptr<const Rule> rule2 = *(it + 1);
