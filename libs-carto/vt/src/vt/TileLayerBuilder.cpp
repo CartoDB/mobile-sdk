@@ -68,7 +68,7 @@ namespace carto { namespace vt {
             if (glyph) {
                 pen = -cglib::vec2<float>(glyph->width, glyph->height) * 0.5f;
             }
-            tesselateGlyph(vertex, static_cast<char>(styleIndex), pen, cglib::vec2<float>(glyph->width, glyph->height), glyph);
+            tesselateGlyph(vertex, static_cast<char>(styleIndex), pen * style.pointImage->scale, cglib::vec2<float>(glyph->width, glyph->height) * style.pointImage->scale, glyph);
             _ids.fill(id, _indices.size() - i0);
         } while (generator(id, vertex));
     }
@@ -131,9 +131,9 @@ namespace carto { namespace vt {
             if (style.backgroundImage) {
                 const GlyphMap::Glyph* baseGlyph = font->getGlyphMap()->getGlyph(font->getGlyphMap()->loadBitmapGlyph(style.backgroundImage->bitmap, style.backgroundImage->sdfMode));
                 if (baseGlyph) {
-                    float fontSize = formatter.getFontSize();
-                    Font::Glyph glyph(0, *baseGlyph, cglib::vec2<float>(baseGlyph->width, baseGlyph->height) * (style.backgroundScale / fontSize), style.backgroundOffset * (1.0f / fontSize), cglib::vec2<float>(baseGlyph->width / fontSize, 0));
-                    tesselateGlyph(vertex, styleIndex, glyph.offset, glyph.size, &glyph.baseGlyph);
+                    float scale = style.backgroundImage->scale / formatter.getFontSize();
+                    Font::Glyph glyph(0, *baseGlyph, cglib::vec2<float>(baseGlyph->width, baseGlyph->height) * (style.backgroundScale * scale), style.backgroundOffset * scale, cglib::vec2<float>(0, 0));
+                    tesselateGlyph(vertex, styleIndex, glyph.offset * style.backgroundImage->scale, glyph.size * style.backgroundImage->scale, &glyph.baseGlyph);
                 }
             }
 
@@ -291,8 +291,8 @@ namespace carto { namespace vt {
             return;
         }
         std::vector<Font::Glyph> bitmapGlyphs = {
-            Font::Glyph(Font::CR_CODEPOINT, GlyphMap::Glyph(false, 0, 0, 0, 0, cglib::vec2<float>(0, 0)), cglib::vec2<float>(0, 0), cglib::vec2<float>(0, 0), cglib::vec2<float>(-style.image->bitmap->width * 0.5f, -style.image->bitmap->height * 0.5f)),
-            Font::Glyph(0, *baseGlyph, cglib::vec2<float>(baseGlyph->width, baseGlyph->height), cglib::vec2<float>(0, 0), cglib::vec2<float>(baseGlyph->width, 0))
+            Font::Glyph(Font::CR_CODEPOINT, GlyphMap::Glyph(false, 0, 0, 0, 0, cglib::vec2<float>(0, 0)), cglib::vec2<float>(0, 0), cglib::vec2<float>(0, 0), -cglib::vec2<float>(style.image->bitmap->width, style.image->bitmap->height) * (style.image->scale * 0.5f)),
+            Font::Glyph(0, *baseGlyph, cglib::vec2<float>(baseGlyph->width, baseGlyph->height) * style.image->scale, cglib::vec2<float>(0, 0), cglib::vec2<float>(0, 0))
         };
 
         float scale = 1.0f / _tileSize;
@@ -354,8 +354,8 @@ namespace carto { namespace vt {
                 if (style.backgroundImage) {
                     const GlyphMap::Glyph* baseGlyph = font->getGlyphMap()->getGlyph(font->getGlyphMap()->loadBitmapGlyph(style.backgroundImage->bitmap, style.backgroundImage->sdfMode));
                     if (baseGlyph) {
-                        float fontSize = formatter.getFontSize();
-                        glyphs.insert(glyphs.begin(), Font::Glyph(0, *baseGlyph, cglib::vec2<float>(baseGlyph->width, baseGlyph->height) * (style.backgroundScale / fontSize), style.backgroundOffset * (1.0f / fontSize), cglib::vec2<float>(baseGlyph->width / fontSize, 0)));
+                        float scale = style.backgroundImage->scale / formatter.getFontSize();
+                        glyphs.insert(glyphs.begin(), Font::Glyph(0, *baseGlyph, cglib::vec2<float>(baseGlyph->width, baseGlyph->height) * (style.backgroundScale * scale), style.backgroundOffset * scale, cglib::vec2<float>(baseGlyph->width, 0) * scale));
                     }
                 }
 
@@ -501,7 +501,7 @@ namespace carto { namespace vt {
                 compressedVertexPtr[1] = static_cast<short>(vertex(1) * verticesScale);
 
                 const cglib::vec4<char>& attrib = attribs[i + offset];
-                char *compressedAttribsPtr = reinterpret_cast<char*>(baseCompressedPtr + geometryLayoutParameters.attribsOffset);
+                char* compressedAttribsPtr = reinterpret_cast<char*>(baseCompressedPtr + geometryLayoutParameters.attribsOffset);
                 compressedAttribsPtr[0] = attrib(0);
                 compressedAttribsPtr[1] = attrib(1);
                 compressedAttribsPtr[2] = attrib(2);

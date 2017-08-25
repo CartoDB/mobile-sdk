@@ -129,6 +129,6 @@ namespace carto { namespace vt {
     }
 
     std::shared_ptr<BitmapImage> BitmapCanvas::buildBitmapImage() const {
-        return std::make_shared<BitmapImage>(_sdfMode, std::make_shared<Bitmap>(_width, _height, _data));
+        return std::make_shared<BitmapImage>(_sdfMode, 1.0f, std::make_shared<Bitmap>(_width, _height, _data));
     }
 }}

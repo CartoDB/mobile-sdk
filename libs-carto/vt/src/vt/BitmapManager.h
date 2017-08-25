@@ -21,14 +21,14 @@ namespace carto { namespace vt {
         public:
             virtual ~BitmapLoader() = default;
 
-            virtual std::shared_ptr<Bitmap> load(const std::string& fileName) const = 0;
+            virtual std::shared_ptr<const Bitmap> load(const std::string& fileName, float& resolution) const = 0;
         };
 
         explicit BitmapManager(const std::shared_ptr<BitmapLoader>& loader);
         virtual ~BitmapManager() = default;
 
         std::shared_ptr<const BitmapImage> getBitmapImage(const std::string& fileName) const;
-        std::shared_ptr<const BitmapImage> loadBitmapImage(const std::string& fileName, bool sdfMode);
+        std::shared_ptr<const BitmapImage> loadBitmapImage(const std::string& fileName, bool sdfMode, float resolution);
         void storeBitmapImage(const std::string& fileName, const std::shared_ptr<const BitmapImage>& bitmapImage);
 
         std::shared_ptr<const BitmapPattern> getBitmapPattern(const std::string& fileName) const;

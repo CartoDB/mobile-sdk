@@ -19,7 +19,7 @@ namespace carto { namespace mvt {
         std::shared_ptr<const vt::BitmapImage> bitmapImage;
         float fillOpacity = _fillOpacity;
         if (!_file.empty()) {
-            bitmapImage = symbolizerContext.getBitmapManager()->loadBitmapImage(_file, false);
+            bitmapImage = symbolizerContext.getBitmapManager()->loadBitmapImage(_file, false, 1.0f);
             if (!bitmapImage) {
                 _logger->write(Logger::Severity::ERROR, "Failed to load marker bitmap " + _file);
                 return;
@@ -54,7 +54,7 @@ namespace carto { namespace mvt {
         vt::FloatFunction sizeFunc = _functionBuilder.createFloatFunction(1.0f);
         vt::ColorFunction fillFunc = _functionBuilder.createColorFunction(vt::Color::fromColorOpacity(vt::Color(1, 1, 1, 1), fillOpacity));
 
-        vt::PointStyle style(compOp, vt::PointOrientation::POINT, fillFunc, sizeFunc, bitmapImage, cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX, bitmapScaleY, 1)));
+        vt::PointStyle style(compOp, vt::PointOrientation::POINT, fillFunc, sizeFunc, bitmapImage, cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX * bitmapImage->scale, bitmapScaleY * bitmapImage->scale, 1)));
 
         std::size_t featureIndex = 0;
         std::size_t geometryIndex = 0;

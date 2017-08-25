@@ -19,7 +19,7 @@ namespace carto { namespace mvt {
         std::string file = _file;
         std::shared_ptr<const vt::BitmapImage> bitmapImage;
         if (!file.empty()) {
-            bitmapImage = symbolizerContext.getBitmapManager()->loadBitmapImage(file, false);
+            bitmapImage = symbolizerContext.getBitmapManager()->loadBitmapImage(file, false, 1.0f);
             if (!bitmapImage) {
                 _logger->write(Logger::Severity::ERROR, "Failed to load point bitmap " + _file);
                 return;
@@ -34,7 +34,7 @@ namespace carto { namespace mvt {
             }
         }
 
-        vt::FloatFunction sizeFunc = _functionBuilder.createFloatFunction(fontScale);
+        vt::FloatFunction sizeFunc = _functionBuilder.createFloatFunction(fontScale * bitmapImage->scale);
         vt::ColorFunction fillFunc = _functionBuilder.createColorOpacityFunction(_functionBuilder.createColorFunction(vt::Color(1, 1, 1, 1)), _opacityFunc);
 
         vt::PointStyle pointStyle(compOp, vt::PointOrientation::BILLBOARD_2D, fillFunc, sizeFunc, bitmapImage, _transform);

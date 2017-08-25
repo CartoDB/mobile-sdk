@@ -17,7 +17,7 @@ namespace carto { namespace vt {
         return std::shared_ptr<BitmapImage>();
     }
 
-    std::shared_ptr<const BitmapImage> BitmapManager::loadBitmapImage(const std::string& fileName, bool sdfMode) {
+    std::shared_ptr<const BitmapImage> BitmapManager::loadBitmapImage(const std::string& fileName, bool sdfMode, float resolution) {
         std::lock_guard<std::mutex> lock(_mutex);
 
         auto it = _bitmapImageMap.find(fileName);
@@ -26,8 +26,8 @@ namespace carto { namespace vt {
         }
 
         std::shared_ptr<BitmapImage> bitmapImage;
-        if (std::shared_ptr<Bitmap> bitmap = _bitmapLoader->load(fileName)) {
-            bitmapImage = std::make_shared<BitmapImage>(sdfMode, bitmap);
+        if (std::shared_ptr<const Bitmap> bitmap = _bitmapLoader->load(fileName, resolution)) {
+            bitmapImage = std::make_shared<BitmapImage>(sdfMode, 1.0f / resolution, bitmap);
         }
         _bitmapImageMap[fileName] = bitmapImage;
         return bitmapImage;
@@ -64,12 +64,13 @@ namespace carto { namespace vt {
         }
 
         // Load the bitmap
-        std::shared_ptr<Bitmap> bitmap = _bitmapLoader->load(fileName);
+        float resolution = 1.0f;
+        std::shared_ptr<const Bitmap> bitmap = _bitmapLoader->load(fileName, resolution);
 
         // Create pattern for the bitmap
         std::shared_ptr<BitmapPattern> bitmapPattern;
         if (bitmap) {
-            bitmapPattern = std::make_shared<BitmapPattern>(widthScale, heightScale, bitmap);
+            bitmapPattern = std::make_shared<BitmapPattern>(widthScale / resolution, heightScale / resolution, bitmap);
         }
         _bitmapPatternMap[patternId] = bitmapPattern;
         return bitmapPattern;

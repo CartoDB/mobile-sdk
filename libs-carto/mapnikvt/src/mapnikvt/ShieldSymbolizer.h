@@ -17,6 +17,8 @@ namespace carto { namespace mvt {
         virtual void build(const FeatureCollection& featureCollection, const FeatureExpressionContext& exprContext, const SymbolizerContext& symbolizerContext, vt::TileLayerBuilder& layerBuilder) override;
 
     protected:
+        constexpr static float IMAGE_UPSAMPLING_SCALE = 2.5f;
+        
         virtual void bindParameter(const std::string& name, const std::string& value) override;
 
         std::string _file;
