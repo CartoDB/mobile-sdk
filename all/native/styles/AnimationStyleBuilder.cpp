@@ -5,6 +5,8 @@ namespace carto {
 
     AnimationStyleBuilder::AnimationStyleBuilder() :
         _relativeSpeed(1.0f),
+        _phaseInDuration(0.5f),
+        _phaseOutDuration(0.0f),
         _fadeAnimationType(AnimationType::ANIMATION_TYPE_NONE),
         _sizeAnimationType(AnimationType::ANIMATION_TYPE_NONE),
         _mutex()
@@ -22,6 +24,26 @@ namespace carto {
     void AnimationStyleBuilder::setRelativeSpeed(float relativeSpeed) {
         std::lock_guard<std::mutex> lock(_mutex);
         _relativeSpeed = relativeSpeed;
+    }
+
+    float AnimationStyleBuilder::getPhaseInDuration() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _phaseInDuration;
+    }
+    
+    void AnimationStyleBuilder::setPhaseInDuration(float duration) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _phaseInDuration = duration;
+    }
+
+    float AnimationStyleBuilder::getPhaseOutDuration() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _phaseOutDuration;
+    }
+    
+    void AnimationStyleBuilder::setPhaseOutDuration(float duration) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _phaseOutDuration = duration;
     }
 
     AnimationType::AnimationType AnimationStyleBuilder::getFadeAnimationType() const {
@@ -46,7 +68,7 @@ namespace carto {
 
     std::shared_ptr<AnimationStyle> AnimationStyleBuilder::buildStyle() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return std::shared_ptr<AnimationStyle>(new AnimationStyle(_relativeSpeed, _fadeAnimationType, _sizeAnimationType));
+        return std::shared_ptr<AnimationStyle>(new AnimationStyle(_relativeSpeed, _phaseInDuration, _phaseOutDuration, _fadeAnimationType, _sizeAnimationType));
     }
         
 }

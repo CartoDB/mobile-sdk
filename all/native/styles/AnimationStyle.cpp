@@ -4,8 +4,12 @@
 
 namespace carto {
 
-    AnimationStyle::AnimationStyle(float relativeSpeed, AnimationType::AnimationType fadeAnimationType, AnimationType::AnimationType sizeAnimationType) :
-        _relativeSpeed(relativeSpeed), _fadeAnimationType(fadeAnimationType), _sizeAnimationType(sizeAnimationType)
+    AnimationStyle::AnimationStyle(float relativeSpeed, float phaseInDuration, float phaseOutDuration, AnimationType::AnimationType fadeAnimationType, AnimationType::AnimationType sizeAnimationType) :
+        _relativeSpeed(relativeSpeed),
+        _phaseInDuration(phaseInDuration),
+        _phaseOutDuration(phaseOutDuration),
+        _fadeAnimationType(fadeAnimationType),
+        _sizeAnimationType(sizeAnimationType)
     {
     }
     
@@ -14,6 +18,14 @@ namespace carto {
     
     float AnimationStyle::getRelativeSpeed() const {
         return _relativeSpeed;
+    }
+
+    float AnimationStyle::getPhaseInDuration() const {
+        return _phaseInDuration;
+    }
+
+    float AnimationStyle::getPhaseOutDuration() const {
+        return _phaseOutDuration;
     }
 
     AnimationType::AnimationType AnimationStyle::getFadeAnimationType() const {

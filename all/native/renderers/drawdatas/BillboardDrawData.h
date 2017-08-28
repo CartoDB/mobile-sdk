@@ -83,7 +83,7 @@ namespace carto {
         void setScreenBottomDistance(double screenBottomDistance);
     
         BillboardRenderer* getRenderer() const;
-        void setRenderer(BillboardRenderer& renderer);
+        void setRenderer(BillboardRenderer* renderer);
     
         virtual float getClickScale() const;
     

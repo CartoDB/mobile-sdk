@@ -31,10 +31,32 @@ namespace carto {
          */
         float getRelativeSpeed() const;
         /**
-         * Sets the relative speed of the animation.
+         * Sets the relative speed of the animation. The relative speed affects all phases of the animation.
          * @param relativeSpeed The new relative speed of the animation.
          */
         void setRelativeSpeed(float relativeSpeed);
+
+        /**
+         * Returns the phase-in duration of the animation.
+         * @return The phase-in duration of the animation in seconds. By default this is 0.5.
+         */
+        float getPhaseInDuration() const;
+        /**
+         * Sets the phase-in duration of the animation.
+         * @param duration The new phase-in duration of the animation in seconds.
+         */
+        void setPhaseInDuration(float duration);
+
+        /**
+         * Returns the phase-out duration of the animation.
+         * @return The phase-out duration of the animation in seconds. By default this is 0.0, which means instant effect.
+         */
+        float getPhaseOutDuration() const;
+        /**
+         * Sets the phase-out duration of the animation.
+         * @param duration The new phase-out duration of the animation in seconds.
+         */
+        void setPhaseOutDuration(float duration);
 
         /**
          * Returns the fade animation type.
@@ -66,6 +88,8 @@ namespace carto {
     
     protected:
         float _relativeSpeed;
+        float _phaseInDuration;
+        float _phaseOutDuration;
 
         AnimationType::AnimationType _fadeAnimationType;
         AnimationType::AnimationType _sizeAnimationType;
