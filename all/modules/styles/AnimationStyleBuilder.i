@@ -19,6 +19,8 @@
 !polymorphic_shared_ptr(carto::AnimationStyleBuilder, styles.AnimationStyleBuilder)
 
 %attribute(carto::AnimationStyleBuilder, float, RelativeSpeed, getRelativeSpeed, setRelativeSpeed)
+%attribute(carto::AnimationStyleBuilder, float, PhaseInDuration, getPhaseInDuration, setPhaseInDuration)
+%attribute(carto::AnimationStyleBuilder, float, PhaseOutDuration, getPhaseOutDuration, setPhaseOutDuration)
 %attribute(carto::AnimationStyleBuilder, carto::AnimationType::AnimationType, FadeAnimationType, getFadeAnimationType, setFadeAnimationType)
 %attribute(carto::AnimationStyleBuilder, carto::AnimationType::AnimationType, SizeAnimationType, getSizeAnimationType, setSizeAnimationType)
 

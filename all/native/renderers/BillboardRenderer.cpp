@@ -123,19 +123,32 @@ namespace carto {
     
         // Billboards can't be rendered in layer order, they have to be sorted globally and drawn from back to front
         bool refresh = false;
-        for (const std::shared_ptr<Billboard>& element : _elements) {
+        for (auto it = _elements.begin(); it != _elements.end(); ) {
+            std::shared_ptr<Billboard> element = *it++;
             std::shared_ptr<BillboardDrawData> drawData = element->getDrawData();
 
             // Update animation state
+            bool phaseOut = drawData->getRenderer() != this || (drawData->isHideIfOverlapped() && drawData->isOverlapping());
             if (auto animStyle = drawData->getAnimationStyle()) {
                 float transition = drawData->getTransition();
-                float step = (drawData->isHideIfOverlapped() && drawData->isOverlapping() ? -1.0f : 1.0f);
-                if ((transition < 1 && step > 0) || (transition > 0 && step < 0)) {
-                    drawData->setTransition(transition + step * (transition == 0 || transition == 1 ? 0.01f : deltaSeconds) * animStyle->getRelativeSpeed());
-                    refresh = true;
+                float step = (phaseOut ? -1.0f : 1.0f);
+                float duration = (phaseOut ? animStyle->getPhaseOutDuration() : animStyle->getPhaseInDuration()) / animStyle->getRelativeSpeed();
+                if ((transition < 1.0f && step > 0.0f) || (transition > 0.0f && step < 0.0f)) {
+                    if (duration > 0.0f) {
+                        drawData->setTransition(transition + step * (transition == 0.0f || transition == 1.0f ? 0.01f : deltaSeconds) / duration);
+                        refresh = true;
+                    } else {
+                        drawData->setTransition(phaseOut ? 0.0f : 1.0f);
+                    }
                 }
             } else {
-                drawData->setTransition(drawData->isHideIfOverlapped() && drawData->isOverlapping() ? 0.0f : 1.0f);
+                drawData->setTransition(phaseOut ? 0.0f : 1.0f);
+            }
+
+            // If the element has been removed and has become invisible, remove it from the list
+            if (drawData->getRenderer() != this && drawData->getTransition() == 0.0f) {
+                it = _elements.erase(--it);
+                continue;
             }
 
             // Add the draw data to the sorter
@@ -200,7 +213,7 @@ namespace carto {
     }
         
     void BillboardRenderer::addElement(const std::shared_ptr<Billboard>& element) {
-        element->getDrawData()->setRenderer(*this);
+        element->getDrawData()->setRenderer(this);
         _tempElements.push_back(element);
     }
     
@@ -209,10 +222,10 @@ namespace carto {
         _elements.clear();
         _elements.swap(_tempElements);
     }
-        
+    
     void BillboardRenderer::updateElement(const std::shared_ptr<Billboard>& element) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        element->getDrawData()->setRenderer(*this);
+        element->getDrawData()->setRenderer(this);
         if (std::find(_elements.begin(), _elements.end(), element) == _elements.end()) {
             _elements.push_back(element);
         }
@@ -220,7 +233,11 @@ namespace carto {
     
     void BillboardRenderer::removeElement(const std::shared_ptr<Billboard>& element) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        _elements.erase(std::remove(_elements.begin(), _elements.end(), element), _elements.end());
+        element->getDrawData()->setRenderer(nullptr);
+        if (!element->getDrawData()->getAnimationStyle()) {
+            element->getDrawData()->setTransition(0.0f);
+            _elements.erase(std::remove(_elements.begin(), _elements.end(), element), _elements.end());
+        }
     }
     
     void BillboardRenderer::setLayer(const std::shared_ptr<VectorLayer>& layer) {
@@ -241,8 +258,8 @@ namespace carto {
         for (const std::shared_ptr<Billboard>& element : _elements) {
             std::shared_ptr<BillboardDrawData> drawData = element->getDrawData();
 
-            // Don't detect clicks on overlapping billboards that are hidden
-            if (drawData->isHideIfOverlapped() && drawData->isOverlapping()) {
+            // Don't detect clicks on overlapping billboards that are hidden or removed elements
+            if (drawData->getRenderer() != this || (drawData->isHideIfOverlapped() && drawData->isOverlapping())) {
                 continue;
             }
     

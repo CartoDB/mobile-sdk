@@ -146,8 +146,8 @@ namespace carto {
         return _renderer;
     }
     
-    void BillboardDrawData::setRenderer(BillboardRenderer& renderer) {
-        _renderer = &renderer;
+    void BillboardDrawData::setRenderer(BillboardRenderer* renderer) {
+        _renderer = renderer;
     }
 
     float BillboardDrawData::getClickScale() const {

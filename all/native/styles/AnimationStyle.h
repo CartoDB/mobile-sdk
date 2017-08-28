@@ -45,11 +45,13 @@ namespace carto {
         /**
          * Constructs an AnimationStyle object from various parameters. Instantiating the object directly is
          * not recommended, AnimationStyleBuilder should be used instead.
-         * @param relativeSpeed The relative speed of the animation. 1.0 is the default.
+         * @param relativeSpeed The relative speed of the animation.
+         * @param phaseInDuration The duration of the in-phase in seconds.
+         * @param phaseOutDuration The duration of the out-phase in seconds.
          * @param fadeAnimationType The fade/blending animation type.
          * @param sizeAnimationType The element size animation type.
          */
-        AnimationStyle(float relativeSpeed, AnimationType::AnimationType fadeAnimationType, AnimationType::AnimationType sizeAnimationType);
+        AnimationStyle(float relativeSpeed, float phaseInDuration, float phaseOutDuration, AnimationType::AnimationType fadeAnimationType, AnimationType::AnimationType sizeAnimationType);
         virtual ~AnimationStyle();
     
         /**
@@ -57,6 +59,18 @@ namespace carto {
          * @return The relative speed of the animation (1.0 corresponds to the default speed).
          */
         float getRelativeSpeed() const;
+
+        /**
+         * Returns the phase-in duration of the animation.
+         * @return The phase-in duration of the animation in seconds.
+         */
+        float getPhaseInDuration() const;
+ 
+        /**
+         * Returns the phase-out duration of the animation.
+         * @return The phase-out duration of the animation in seconds.
+         */
+        float getPhaseOutDuration() const;
 
         /**
          * Returns the fade animation type.
@@ -80,6 +94,8 @@ namespace carto {
         
     protected:
         float _relativeSpeed;
+        float _phaseInDuration;
+        float _phaseOutDuration;
         
         AnimationType::AnimationType _fadeAnimationType;
         AnimationType::AnimationType _sizeAnimationType;
