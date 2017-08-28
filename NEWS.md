@@ -1,3 +1,108 @@
+CARTO Mobile SDK 4.1.0 (RC)
+-------------------
+
+### Key highlights:
+* SDK now supports **geocoding** and **reverse geocoding**. For offline geocoding, custom geocoding packages can be used through PackageManager. We have provided country-based packages (bigger countries like US, Germany have split packages) but custom packages based on bounding box can be also used. For online geocoding, SDK includes wrapper class for MapZen Pelias geocoder; your MapZen API key is required for that.
+* SDK has optional support for **MapZen Valhalla routing**. This feature requires a special SDK build as the routing engine is fairly complex and makes compiled SDK binaries approximately 30% larger. Compared to the custom built-in routing Valhalla routing packages are univeral -  single package can be used for car, bicycle or walking profiles. We have prepared country-based packages that can be downloaded  using PackageManager. Also, custom packages based on bounding box are supported. For online Valhalla routing, SDK includes wrapper class that uses MapZen Mobility API.
+* New **built-in styles** and vector tile structure. This change is backward-incompatible due to two reasons: the old styles are removed from the SDK and new styles require different tile and offline package sources. New styles are better optimized for lower-end devices and have more consistent information density on all zoom levels. Also, new styles are based on view-dependent zoom parameters instead of tile-based zoom parameters, which gives much more pleasant zooming experience and cleaner visuals at fractional zoom levels.
+* SDK supports **offline searching** features from various sources (VectorTileDataSource, FeatureCollection, VectorDataSource) via unified search API. The search API supports search requests based on geometry and distance, metadata and custom SQL-like query language.
+* The VectorElements appearing on the map can now have **transitioning animations**. This is currently supported for billboards only (markers, texts, popups). Different animations styles are supported and the effects can be customized.
+* SDK 4.1 has major **speed and memory usage improvements** when using ClusteredVectorLayer class. Performance can be up to 10x better compared to SDK 4.0.x and memory usage 2x lower.
+* Lots of lower level performance and memory usage optimizations, mostly related to vector tiles.
+
+### API changes:
+* The new built-in styles (Voyager, Positron, Darkmatter) use different data schema and are not compatible with *nutiteq.osm* source. Instead, "**carto.streets**"  source must be used. This applies to both online tiles and offline map packages. The old styles (Dark, Grey, Nutibright) and data source continue to work for now, but are no longer included in the SDK and must be downloaded/applied separately. Offline map packages are not updated for nutiteq.osm source.
+* The old nutibright, dark and grey styles are no longer included in the SDK and as a result the following CartoBaseMapStyles are removed:  CARTO_BASEMAP_STYLE_DEFAULT, CARTO_BASEMAP_STYLE_GREY, CARTO_BASEMAP_STYLE_DARK. Instead, new styles CARTO_BASEMAP_STYLE_VOYAGER,  CARTO_BASEMAP_STYLE_POSITRON, CARTO_BASEMAP_STYLE_DARKMATTER should be used.
+* Public constructors from various vector element Style classes are now hidden, these classes can now be instanced only through corresponding StyleBuilders.
+* Removed unsafe clone method from StyleBuilder.
+* Removed public constructors for internal 'UI info' classes.
+* Removed public constructors for Frustum class
+* New CartoStyles package with following changes:
+  1) default language is now "en" (before "local")
+  2) 'buildings3d' style parameter is no longer used, instead 'buildings' style parameter can be used to control rendering of buildings (0=no buildings, 1=2D buildings, 2=3D buildings)
+* Tilemasks used by the offline packages have stricter semantics now and PACKAGE_TILE_STATUS_PARTIAL tile status  is now deprecated (never used by the SDK) and will be removed in the later versions.
+
+
+### Detailed list of new features:
+* New 'geocoding' module that includes following generic classes/interfaces: GeocodingRequest, GeocodingResult, GeocodingService, ReverseGeocodingRequest, ReverseGeocodingService. The module also includes several classes for offline geocoding/reverse geocoding: OSMOfflineGeocodingService, OSMOfflineReverseGeocodingService, PackageManagerGeocodingService, PackageManagerReverseGeocodingService.  For online geocoding the module includes PeliasGeocodingService and PeliasReverseGeocodingService classes.
+* The routing module includes three new classes for Valhalla routing: PackageManagerValhallaRoutingService, ValhallaOfflineRoutingService, ValhallaOnlineRoutingService.  These classes are only included in Valhalla-supporting builds.
+* New 'search' module for searching features from various sources. The module includes following classes: SearchRequest, FeatureCollectionSearchService, VectorElementSearchService and VectorTileSearchService.  These classes can be used to search features from loaded geojson collections, vector data sources and vector tile data sources.
+* Billboards now support fade-in/fade-out animations. AnimationStyle objects can be now attached to billboard   StyleBuilder objects and the specified animations will be used when billboard appear/disappear.
+* PackageManager now includes two additional methods: isAreaDownloaded and suggestPackage. These methods can be used to detect is the view area is downloaded for offline use and if not, to get the best package for the area.
+* SDK now support optional zoom gestures. Options class includes setZoomGestures/isZoomGestures methods,  when zoom gestures are turned on, SDK automatically interprets double tap as a zoom-in action and two finger tap as a zoom-out action. By default, zoom gestures are not enabled.
+* Implemeted RasterTileClickEventListener class for receiving click events on raster tile layers. SDK provides  click coordinates and the raster tile color at the click point.
+* Implemented simulateClick method for Layer class. This method can be used to programatically call event handlers of the layer.
+* Implemented automatic background/sky color calculation for VectorTileLayers. If background/sky image is not explicitly defined using Options, then appropriate background/sky image is generated by the SDK.  This provides much better experience with dark styles compared vs SDK 4.0.x.
+* Implemented setClearColor/getClearColor for Options class to specify background color of the MapView. This can be used to enable partially transparent map views.
+* CartoOnlineDataSource has now support for 'water masks' and coarse water tiles are automatically detected and no longer requested from the server, thus reducing latency and providing better user experience.
+* Added getDataExtent method TileDataSource class.  SDK uses the datasource extent information when generating tiles and this results in much lower memory usage in some cases (local raster overlays, for example).
+* Added getDataExtent method VectorDataSource class.
+* Exposed screenToMap and mapToScreen methods of MapRenderer with explicit ViewState argument.
+* Added new helper classes VariantArrayBuilder and VariantObjectBuilder for building Variant instances.
+* Added containsObjectKey method to Variant
+* The performance of the clustering (ClusteredVectorLayer) is improved up to 10x. Also, the memory usage  of the clustering is now 2x lower. Due to the improvements, clusters of 100k points should works well  even on lowend devices.
+* Optimized memory usage of LocalVectorDataSource setAll/addAll methods.
+* ClusteredVectorLayer now monitors which attributes of elements change and avoids unnecessary costly reclustering.
+* Added option to disable clustering animations via setAnimatedClusters method
+* Added new option for faster clustering: ClusterElementBuilder includes additional buildClusterElement method (with cluster position and 'count' arguments). ClusterElementBuilder can specify ClusterBuilderMode which determines which of the two buildClusterElement method gets called.
+* Lower level vector tile text rendering uses now SDF (Signed Distance Field) glyph representation which gives
+  crisper texts especially on high-DPI devices. Also, memory usage of glyph atlas textures is reduced.   Additionally, the rendering artifacts of vector tile texts with large halos and overlapping glyphs are now fixed.
+* Better support for shared dictionaries for offline packages to reduce package sizes.
+* Added addFeatureCollection method to LocalVectorDataSource
+* CartoVectorTileLayer includes static createTileDecoder method that can used to instantiate VectorTileDecoder from built-in styles.
+* Added isOpen method to PersistentCacheTileDataSource.
+* PersistentCacheTileDataSource now support asynchronous tile download/cache prefill (startDownloadArea method). An optional listener can be used to monitor tile download progress.
+* Implemented setVectorTileBufferSize method for CartoMapsService. This method can be used to tweak tile sizes/fix rendering artifacts  when using vector tiles from CARTO Maps API.
+* Reduced memory consumption when large vector tiles are used
+* iOS: added support for converting 16 bits-per-component UIImages
+* UWP: Added mouse wheel support for zooming.
+* Optimizations for GeoJSONGeometryReader, loading large geojson files is now approximately 2x faster
+* Implemented ClickSize property for MarkerStyle, this allow enlarging of the click area when very small markers are used.
+* Faster loading of complex vector tiles, SDK now optimizes CartoCSS styling rules.
+* Optimized memory usage of complex Polygon vector elements (up to 25% in complex cases).
+* New classes VectorTileFeature and VectorTileFeatureCollection that are used by the new search API
+* CartoCSS: Implemented 'pow' operator
+* CartoCSS: Added support for metavariables
+* Implemented more optimizations in CartoCSS for various degenerate rendering rules: empty text expressions, zero size features, etc
+* Added SideColor property to Polygon3DStyle/builder classes. Previously single Color was always used for all faces of the 3D polygon.
+* Added toString method to BinaryData
+* CartoCSS feature: comp-op support for markers
+* CartoCSS: text-size attribute is now evaluated per-frame, allowing to use smooth text size interpolation based on zoom level
+* CartoCSS: enabled PointSymbolizer support
+* CartoCSS: parser now supports meta-variables
+
+
+### Fixes:
+* Fixed equals/hash implementation for several built-in classes. Previously both methods provided unreliable results.
+* Tile layer preloading tweaks - avoid cache trashing and constant refreshing in rare cases, reduce preloading dataset size
+* SDK does not show harmless 'failed to decode tile' warning for empty tiles anymore
+* Fixed subtle case of duplicate Layer instance handling in Layers container
+* SDK allows vector element to be attached to only a single data source, violating this results in an exception now
+* Fixed Windows Phone/UWP related pointer handling, previous version assumed MapView control to be at (0, 0) coordinates in the window
+* Fixed touch handling issues on Windows Phone when more than 2 fingers are used
+* Fixed regression in SDK 4.0.2 vs 4.0.0 when rendering vector tile lines with null width
+* CartoCSS: fixed handling of shield-text-opacity and shield-text-transform
+* Fixed multigeometry bounds calculations
+* Fixed alpha channel handling when translating color interpolation expressions from CartoCSS to rendering library
+
+
+CARTO Mobile SDK 4.0.2
+-------------------
+
+Maintenance release for CARTO Mobile SDK 4.x
+
+### Fixes/Changes:
+* Enabled stack protector for Android builds for better app security
+* Implemented null pointer checks throwing exceptions for various Layers methods, previously such cases could result in native level crashes
+* Implemented workaround for Xamarin/Android multithreading issues - native threads were sometimes not automatically registered when managed delegates are called from multiple threads
+* Fixed issues with online licenses when license server was unreliable and took long time to respond
+* Fixed app token issues with CARTO named map services
+* Fixed SDK log filters being ignored/not working
+* Fixed CartoCSS marker-transform handling for non-overlapping points
+* Fixed VectorTileLayer click detection when custom transform was applied
+* Fixed layer background not being properly set when VectorTileDecoder was updated
+
+
 CARTO Mobile SDK 4.0.1
 -------------------
 
