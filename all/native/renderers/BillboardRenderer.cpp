@@ -220,6 +220,7 @@ namespace carto {
     
     void BillboardRenderer::removeElement(const std::shared_ptr<Billboard>& element) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
+        element->getDrawData()->setTransition(0.0f);
         _elements.erase(std::remove(_elements.begin(), _elements.end(), element), _elements.end());
     }
     
