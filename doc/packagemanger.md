@@ -42,7 +42,7 @@ Each type of package should be stored in a different folder, e.g. `mappackages`,
 	}
 	
 	try {
-	    packageManager = new CartoPackageManager("routing:nutiteq.osm.car", packageFolder.getAbsolutePath());
+	    packageManager = new CartoPackageManager("<your-package-source>", packageFolder.getAbsolutePath());
 	} catch (IOException e) {
 	    e.printStackTrace();
 	}
@@ -61,7 +61,7 @@ Each type of package should be stored in a different folder, e.g. `mappackages`,
 		Log.Fatal("Could not create package folder!");
 	}
 	
-	packageManager = new CartoPackageManager("routing:nutiteq.osm.car", packageFolder);
+	packageManager = new CartoPackageManager("<your-package-source>", packageFolder);
 
   {% endhighlight %}
   </div>
@@ -77,7 +77,7 @@ Each type of package should be stored in a different folder, e.g. `mappackages`,
 	NSError *error;
 	[[NSFileManager defaultManager] createDirectoryAtPath:packagesDir withIntermediateDirectories:YES attributes:nil error:&error];
 	    
-	packageManager = [[NTCartoPackageManager alloc] initWithSource:@"routing:nutiteq.osm.car" dataFolder:packagesDir];
+	packageManager = [[NTCartoPackageManager alloc] initWithSource:@"<your-package-source>" dataFolder:packagesDir];
 
   {% endhighlight %}
   </div>
@@ -96,7 +96,7 @@ Each type of package should be stored in a different folder, e.g. `mappackages`,
         }
         
         // Create PackageManager instance for dealing with offline packages
-        var packageManager =  NTCartoPackageManager(source: "routing:nutiteq.osm.car", dataFolder: packageFolder)
+        var packageManager =  NTCartoPackageManager(source: "<your-package-source>", dataFolder: packageFolder)
 
   {% endhighlight %}
   </div>
@@ -112,7 +112,7 @@ Each type of package should be stored in a different folder, e.g. `mappackages`,
         }
 
         var packageManager = try {
-            CartoPackageManager("routing:nutiteq.osm.car", packageFolder.absolutePath)
+            CartoPackageManager("<your-package-source>", packageFolder.absolutePath)
         } catch (e: IOException) {
             null
         }
@@ -449,7 +449,7 @@ To link PackageManagerListener with PackageManager (and to have a fully working 
    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
   
-	NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"routing:nutiteq.osm.car" dataFolder:packagesDir];
+	NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"<your-package-source>" dataFolder:packagesDir];
 	    
 // 1. Create routePackageManagerListener with your listener class
 MyPackageManagerListener* _packageManagerListener = [[MyPackageManagerListener alloc] init];
@@ -474,7 +474,7 @@ _offlineRoutingService = [[NTPackageManagerRoutingService alloc] initWithPackage
   {% highlight swift %}
   
 // Create PackageManager instance for dealing with offline packages
-var packageManager =  NTCartoPackageManager(source: "routing:nutiteq.osm.car", dataFolder: packageFolder)
+var packageManager =  NTCartoPackageManager(source: "<your-package-source>", dataFolder: packageFolder)
     
 // 1. Set listener, and start PackageManager
 packageManager?.setPackageManagerListener(MyPackageManagerListener(packageManager: packageManager!))
