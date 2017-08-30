@@ -69,7 +69,7 @@ Each type of package should be stored in a different folder, e.g. `mappackages`,
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
-	// Define PackageManger to download offline routing packages
+	// Define PackageManger to download offline packages
 	// Create folder for package manager. Package manager needs persistent writable folder.
 	NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask,YES);
 	NSString* appSupportDir = [paths objectAtIndex: 0];
@@ -85,7 +85,7 @@ Each type of package should be stored in a different folder, e.g. `mappackages`,
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}
   
-        // Define PackageManger to download offline routing packages
+        // Define PackageManger to download offline packages
         // Create folder for package manager. Package manager needs persistent writable folder.
         let packageFolder = NTAssetUtils.calculateWritablePath("foldername")
         
@@ -156,10 +156,8 @@ Write your own `PackageManagerListener`, and start package download using the `o
         Log.d(Const.LOG_TAG, "Package list updated");
         // Start download of package of Estonia
         // see list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
-        // You can download several packages, and route is found through all of them
-
-        packageManager.startPackageDownload("EE-routing");
-        packageManager.startPackageDownload("LV-routing");
+        packageManager.startPackageDownload("EE");
+        packageManager.startPackageDownload("LV");
     }
 
     @Override
@@ -208,10 +206,8 @@ Write your own `PackageManagerListener`, and start package download using the `o
       Log.Debug("Package list updated");
       // We have packages all country/regions
       // see list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
-      // You can download several packages, and route is found through all of them
-
-      packageManager.StartPackageDownload("EE-routing");
-      packageManager.StartPackageDownload("LV-routing");
+      packageManager.StartPackageDownload("EE");
+      packageManager.StartPackageDownload("LV");
     }
 
     public override void OnPackageListFailed()
@@ -259,10 +255,8 @@ Write your own `PackageManagerListener`, and start package download using the `o
       NSLog(@"onPackageListUpdated");
       // We have packages all country/regions
       // see list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
-      // You can download several packages, and route is found through all of them
-      
-      [self._packageManager startPackageDownload: @"EE-routing"];
-      [self._packageManager startPackageDownload: @"LV-routing"];
+      [self._packageManager startPackageDownload: @"EE"];
+      [self._packageManager startPackageDownload: @"LV"];
   }
 
   - (void)onPackageListFailed
@@ -316,11 +310,8 @@ public class MyPackageManagerListener : NTPackageManagerListener {
         
         // Start download of package of Estonia & Latvia
         // see list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
-        // just append -routing to the ID-s
-        // You can download several packages, and route is found through all of them
-        
-        self.packageManager?.startPackageDownload("EE-routing");
-        self.packageManager?.startPackageDownload("LV-routing");
+        self.packageManager?.startPackageDownload("EE");
+        self.packageManager?.startPackageDownload("LV");
     }
     
     public override func onPackageListFailed() {
@@ -355,11 +346,8 @@ public class MyPackageManagerListener : NTPackageManagerListener {
 
             // Start download of package of Estonia & Latvia
             // see list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
-            // just append -routing to the ID-s
-            // You can download several packages, and route is found through all of them
-
-            packageManager.startPackageDownload("EE-routing");
-            packageManager.startPackageDownload("LV-routing");
+            packageManager.startPackageDownload("EE");
+            packageManager.startPackageDownload("LV");
         }
 
         override fun onPackageListFailed() {
@@ -388,11 +376,11 @@ public class MyPackageManagerListener : NTPackageManagerListener {
     
 </div>
 
-**Note:** If you are wondering why these code samples include `EE` and `LV` (Estonia and Latvia) packages, there is a  multi-country route that is needed for offline routing. For example, see why [these countries might be linked](http://www.baltictimes.com/estonian_president_marries_latvian_cyber_defence_expert/). This shows that offline routing works across borders.
+**Note:** If you are wondering why these code samples include `EE` and `LV` (Estonia and Latvia) packages, see why [these countries might be linked](http://www.baltictimes.com/estonian_president_marries_latvian_cyber_defence_expert/). This shows that offline works across borders.
 
 ##### Initialize your instance of PackageManagerListener, start PackageManager and package list update
 
-To link PackageManagerListener with PackageManager (and to have a fully working RoutingService as a result), apply the following code.
+To link PackageManagerListener with PackageManager, apply the following code.
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -423,9 +411,6 @@ To link PackageManagerListener with PackageManager (and to have a fully working 
 // 2. Fetch list of available packages from server. Note that this is asynchronous operation and listener will be notified via onPackageListUpdated when this succeeds.
  packageManager.startPackageListDownload();
 
-// 3. Create offline routing service connected to package manager
- offlineRoutingService = new PackageManagerRoutingService(packageManager);
-
   {% endhighlight %}
   </div>
 
@@ -440,9 +425,6 @@ To link PackageManagerListener with PackageManager (and to have a fully working 
  // Note that this is asynchronous operation and the listener will be notified via OnPackageListUpdated when this succeeds.        
  packageManager.StartPackageListDownload();
 
-// 3. Create offline routing service connected to package manager
- offlineRoutingService = new PackageManagerRoutingService(packageManager);
-
   {% endhighlight %}
   </div>
 
@@ -451,7 +433,7 @@ To link PackageManagerListener with PackageManager (and to have a fully working 
   
 	NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"<your-package-source>" dataFolder:packagesDir];
 	    
-// 1. Create routePackageManagerListener with your listener class
+// 1. Create PackageManagerListener with your listener class
 MyPackageManagerListener* _packageManagerListener = [[MyPackageManagerListener alloc] init];
 [_packageManagerListener setPackageManager: packageManager];
     
@@ -463,9 +445,6 @@ MyPackageManagerListener* _packageManagerListener = [[MyPackageManagerListener a
     
 // 2. Start download of packageList. When download is done, then the listener's onPackageListUpdated() is called
 [packageManager startPackageListDownload];
-    
-// 3. Create offline routing service connected to package manager
-_offlineRoutingService = [[NTPackageManagerRoutingService alloc] initWithPackageManager:packageManager];
 
   {% endhighlight %}
   </div>
@@ -484,9 +463,6 @@ packageManager?.start()
 // Note that this is asynchronous operation
 // and listener will be notified via onPackageListUpdated when this succeeds.
 packageManager?.startPackageListDownload()
-    
-// 3. Create offline routing service connected to package manager
-let offlineRoutingService = NTPackageManagerRoutingService(packageManager: packageManager)
 
   {% endhighlight %}
   </div>
@@ -502,9 +478,6 @@ packageManager.start()
 // Note that this is asynchronous operation 
 // and listener will be notified via onPackageListUpdated when this succeeds.
 packageManager.startPackageListDownload()
-
-// 3. Create offline routing service connected to package manager
-val offlineRoutingService = PackageManagerRoutingService(packageManager)
 
   {% endhighlight %}
   </div>
