@@ -483,3 +483,11 @@ packageManager.startPackageListDownload()
   </div>
     
 </div>
+
+### Downloading a specific area
+
+CartoMobileSDK allows for the download of custom areas, called bounding boxes. it can be anything from a park, a city, a route up to a block of countries.
+
+A bounding box is constructted as `bbox(min-longitude,min-latitude,max-longitude,max-latitude`, so the bounding box of Berlin would like this: `bbox(13.2285,52.4698,13.5046,52.57477)`. This is used as the package **id** instead of a country or county code.
+
+An example of a custom BoundingBox (written in Kotlin) class is available [here](https://github.com/CartoDB/mobile-android-samples/blob/master/AdvancedMapKotlin/app/src/main/java/com/carto/advanced/kotlin/utils/BoundingBox.kt) and implementation can be seen [here](https://github.com/CartoDB/mobile-android-samples/blob/AdvancedMapKotlin/AdvancedMapKotlin/app/src/main/java/com/carto/advanced/kotlin/model/Cities.kt)
