@@ -390,7 +390,7 @@ First, you need to initialize a package manager and a listener to download packa
 
 If all routing packages are downloaded and routing service is ready, you can calculate routing.
 
-- Create the `CartoOfflineRoutingService` call
+- Create the `PackageManagerValhallaRoutingService` call
 
    Define the *RoutingRequest* with at least two points. Start routing with the service and read response as *RoutingResult*.
 
