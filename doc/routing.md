@@ -49,19 +49,19 @@ For minimal routing implementation, use our sample app code for different mobile
   
   - [Sample app repository](https://github.com/CartoDB/mobile-ios-samples)
 
-  - [`OfflineRoutingController.mm`](https://github.com/CartoDB/mobile-ios-samples/blob/master/AdvancedMap.Objective-C/AdvancedMap/OfflineRoutingController.mm) parameter
+  - [`OfflineRoutingController.mm`](https://github.com/CartoDB/mobile-ios-samples/blob/master/AdvancedMap.Objective-C/AdvancedMap/OfflineRoutingController.mm)
 
 - Android Platform: 
 
   - [Sample app repository](https://github.com/CartoDB/mobile-android-samples)
 
-  - [`OfflineRoutingActivity.java`](https://github.com/CartoDB/mobile-android-samples/blob/master/AdvancedMapAndroid/app/src/main/java/com/carto/advancedmap/sections/routing/offline/OfflineRoutingActivity.java) parameter
+  - [`OfflineRoutingActivity.java`](https://github.com/CartoDB/mobile-android-samples/blob/master/AdvancedMapAndroid/app/src/main/java/com/carto/advancedmap/sections/routing/offline/OfflineRoutingActivity.java)
 
 - Xamarin (Android, iOS):
 
   - [Sample app repository](https://github.com/CartoDB/mobile-dotnet-samples)
 
-  - [`OfflineRouting.cs`](https://github.com/CartoDB/mobile-dotnet-samples/blob/master/AdvancedMap.Droid/Sections/Routing/OfflineRouting/OfflineRoutingActivity.cs) parameter
+  - [`OfflineRouting.cs`](https://github.com/CartoDB/mobile-dotnet-samples/blob/master/AdvancedMap.Droid/Sections/Routing/OfflineRouting/OfflineRoutingActivity.cs)
 
 ### Example Procedure
 
