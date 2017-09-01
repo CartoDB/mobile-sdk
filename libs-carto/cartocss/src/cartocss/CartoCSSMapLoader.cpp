@@ -71,7 +71,7 @@ namespace carto { namespace css {
     }
 
     std::shared_ptr<mvt::Map> CartoCSSMapLoader::loadMapProject(const std::string& fileName) const {
-        std::shared_ptr<std::vector<unsigned char>> mapData = _assetLoader->load(fileName);
+        std::shared_ptr<const std::vector<unsigned char>> mapData = _assetLoader->load(fileName);
         if (!mapData) {
             throw LoaderException(std::string("Could not load map description file ") + fileName);
         }
@@ -102,7 +102,7 @@ namespace carto { namespace css {
         // Combine stylesheet from individual fragments
         StyleSheet styleSheet;
         for (const std::string& mssFileName : mssFileNames) {
-            std::shared_ptr<std::vector<unsigned char>> mssData = _assetLoader->load(mssFileName);
+            std::shared_ptr<const std::vector<unsigned char>> mssData = _assetLoader->load(mssFileName);
             if (!mssData) {
                 throw LoaderException(std::string("Could not load CartoCSS file ") + mssFileName);
             }
