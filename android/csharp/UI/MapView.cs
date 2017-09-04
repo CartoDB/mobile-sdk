@@ -65,6 +65,20 @@ namespace Carto.Ui {
                 AssetUtils.SetAssetManagerPointer(_assetManager);
             }
 
+            // Unless explictly not clickable, make clickable by default
+            bool clickable = true;
+            bool longClickable = true;
+            try {
+                TypedArray ta = context.ObtainStyledAttributes(attrs, new int[]{ Android.Resource.Attribute.Clickable, Android.Resource.Attribute.LongClickable });
+                clickable = ta.GetBoolean(0, true);
+                longClickable = ta.GetBoolean(1, true);
+                ta.Recycle();
+            } catch (System.Exception e) {
+                Carto.Utils.Log.Warn("MapView: Failed to read attributes");
+            }
+            Clickable = clickable;
+            LongClickable = longClickable;
+
             // Create base map view, attach redraw listener
             _baseMapView = new BaseMapView();
             _baseMapView.GetOptions().DPI = (int)Resources.DisplayMetrics.DensityDpi;
@@ -128,6 +142,11 @@ namespace Carto.Ui {
             lock (this) {
                 if (_baseMapView == null) {
                     return false;
+                }
+
+                bool clickable = Clickable || LongClickable;
+                if (!Enabled || !clickable) {
+                    return clickable;
                 }
 
                 try {
@@ -210,11 +229,9 @@ namespace Carto.Ui {
                         }
                         break;
                     }
-                }
-                catch (Java.Lang.Exception e) {
+                } catch (Java.Lang.Exception e) {
                     Carto.Utils.Log.Error("MapView.OnTouchEvent: Java exception: " + e);
-                }
-                catch (System.Exception e) {
+                } catch (System.Exception e) {
                     Carto.Utils.Log.Error("MapView.OnTouchEvent: " + e);
                 }
                 return true;
