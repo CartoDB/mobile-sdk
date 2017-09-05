@@ -10,7 +10,7 @@ CartoMobileSDK supports several different types of custom sources:
 
 ### MBTiles
 
-MBTiles is a file format for storing map tiles in a single file. It is, technically, a SQLite database. Latest format version as of 21 October 2011 is 1.1, next version (1.2) is in development. [wiki.openstreetmap.org](http://wiki.openstreetmap.org/wiki/MBTiles)
+MBTiles is a file format for storing tilesets. It’s designed so that you can package the potentially thousands of files that make up a tileset and move them around, eventually uploading to Mapbox or using in a web or mobile application. MBTiles is an open specification and is based on the SQLite database. MBTiles can contain raster or vector tilesets. [MapBox](https://www.mapbox.com/help/define-mbtiles/)
 
 The following is an example of how you can load mbiles from bundled assets and render it on the map:
 
@@ -547,7 +547,39 @@ CartoMobileSDK offers a a way you can download tiles to your app and keep indefi
    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
-  // Java
+Projection projection = contentView.mapView.getOptions().getBaseProjection();
+
+String url = "http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png";
+String path = getExternalFilesDir(null).getAbsolutePath() + "/cache.db";
+
+// Approximately downtown Washington DC
+MapPos min = projection.fromWgs84(new MapPos(-77.08, 38.85));
+MapPos max = projection.fromWgs84(new MapPos(-76.94, 38.93));
+MapBounds bounds = new MapBounds(min, max);
+
+// This source can be anything, even aero picture etc,
+// just using the most basic variant for this example
+HTTPTileDataSource source = new HTTPTileDataSource(0, 24, url);
+PersistentCacheTileDataSource cache = new PersistentCacheTileDataSource(source, path);
+
+// Only uses cached tiles, does not download any new tiles during zoom
+cache.setCacheOnlyMode(true);
+
+cache.startDownloadArea(bounds, 0, 10, new TileDownloadListener() {
+    @Override
+    public void onDownloadProgress(float progress) {
+
+    }
+
+    @Override
+    public void onDownloadCompleted() {
+
+    }
+});
+
+RasterTileLayer layer = new RasterTileLayer(cache);
+
+contentView.mapView.getLayers().add(layer);
 
   {% endhighlight %}
   </div>
@@ -555,7 +587,46 @@ CartoMobileSDK offers a a way you can download tiles to your app and keep indefi
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 	
-	// C#
+Projection projection = ContentView.MapView.Options.BaseProjection;
+
+string url = "http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png";
+string path = GetExternalFilesDir(null).AbsolutePath + "/cache.db";
+
+// Approximately downtown Washington DC
+MapPos min = projection.FromWgs84(new MapPos(-77.08, 38.85));
+MapPos max = projection.FromWgs84(new MapPos(-76.94, 38.93));
+var bounds = new MapBounds(min, max);
+
+// This source can be anything, even aero picture etc,
+// just using the most basic variant for this example
+var source = new HTTPTileDataSource(0, 24, url);
+var cache = new PersistentCacheTileDataSource(source, path);
+
+// Only uses cached tiles, does not download any new tiles during zoom
+cache.CacheOnlyMode = true;
+
+var listener = new DownloadListener();
+cache.StartDownloadArea(bounds, 0, 10, listener);
+
+var layer = new RasterTileLayer(cache);
+
+ContentView.MapView.Layers.Add(layer);
+
+/*
+ * DownloadListener implementation
+ */
+public class DownloadListener : TileDownloadListener
+{
+    public override void OnDownloadProgress(float progress)
+    {
+        
+    }
+
+    public override void OnDownloadCompleted()
+    {
+        
+    }
+}
 
   {% endhighlight %}
   </div>
@@ -563,7 +634,52 @@ CartoMobileSDK offers a a way you can download tiles to your app and keep indefi
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
-  // Objective-C
+NTProjection *projection = [[mapView getOptions] getBaseProjection];
+    
+NSString *url = @"http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png";
+    
+// Create folder for the database file
+NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask,YES);
+NSString* appSupportDir = [paths objectAtIndex: 0];
+NSString* path = [appSupportDir stringByAppendingString:@"/cache.db"];
+    
+// Approximately downtown Washington DC
+NTMapPos *min = [projection fromWgs84:[[NTMapPos alloc] initWithX:-77.08 y:38.85]];
+NTMapPos *max = [projection fromWgs84:[[NTMapPos alloc] initWithX:-76.948 y:38.93]];
+NTMapBounds *bounds = [[NTMapBounds alloc] initWithMin:min max:max];
+    
+// This source can be anything, even aero picture etc,
+// just using the most basic variant for this example
+NTHTTPTileDataSource *source = [[NTHTTPTileDataSource alloc]initWithMinZoom:0 maxZoom:24 baseURL:url];
+NTPersistentCacheTileDataSource *cache = [[NTPersistentCacheTileDataSource alloc] initWithDataSource:source databasePath:path];
+    
+// Only uses cached tiles, does not download any new tiles during zoom
+[cache setCacheOnlyMode:YES];
+    
+DownloadListener *listener = [[DownloadListener alloc] init];
+[cache startDownloadArea:bounds minZoom:0 maxZoom:10 tileDownloadListener:listener];
+    
+NTRasterTileLayer *layer = [[NTRasterTileLayer alloc] initWithDataSource:cache];
+[[mapView getLayers] add:layer];
+
+/*
+ * DownloadListener implementation
+ */
+@interface DownloadListener : NTTileDownloadListener
+
+@end
+
+@implementation DownloadListener
+
+-(void)onDownloadProgress:(float)progress {
+    
+}
+
+-(void)onDownloadCompleted {
+    
+}
+
+@end
 
   {% endhighlight %}
   </div>
@@ -571,7 +687,46 @@ CartoMobileSDK offers a a way you can download tiles to your app and keep indefi
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}
   
-  // Swift
+let projection = contentView.map.getOptions().getBaseProjection()
+    
+let url = "http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
+    
+let documentDir = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
+let path = documentDir + "/cache.db"
+    
+// Approximately downtown Washington DC
+let min = projection?.fromWgs84(NTMapPos(x: -77.08, y: 38.85))
+let max = projection?.fromWgs84(NTMapPos(x: -76.94, y: 38.93))
+let bounds = NTMapBounds(min: min, max: max)
+    
+// This source can be anything, even aero picture etc,
+// just using the most basic variant for this example
+let source = NTHTTPTileDataSource(minZoom: 0, maxZoom: 24, baseURL: url)
+let cache = NTPersistentCacheTileDataSource(dataSource: source, databasePath: path)
+    
+// Only uses cached tiles, does not download any new tiles during zoom
+cache?.setCacheOnlyMode(true)
+    
+let listener = DownloadListener()
+cache?.startDownloadArea(bounds, minZoom: 0, maxZoom: 10, tileDownloadListener: listener)
+    
+let layer = NTRasterTileLayer(dataSource: cache)
+    
+contentView.map.getLayers().add(layer)
+
+/*
+ * DownloadListener implementation
+ */
+class DownloadListener : NTTileDownloadListener {
+    
+    override func onDownloadProgress(_ progress: Float) {
+    
+    }
+    
+    override func onDownloadCompleted() {
+        
+    }
+}
 
   {% endhighlight %}
   </div>
