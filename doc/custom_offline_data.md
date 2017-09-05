@@ -4,14 +4,9 @@
 
 CartoMobileSDK supports several different types of custom sources: 
 
-* mbtiles
-* geojson
-* Map preloader
-
-In addition to custom sources, your data can be stored on CARTO servers and accessed via
-
-* tile downloader
-* map preloader
+* Bundled MBtiles
+* Bundled GeoJson
+* Tile Download
 
 ### MBTiles
 
@@ -524,4 +519,99 @@ doAsync {
 </div>
 
 
+### Tile Download
+
+CartoMobileSDK offers a a way you can download tiles to your app and keep indefinitely them in your cache. That way, the area you specified will always be available to you offline. 
+
+`PersistentCacheTileDataSource`'s function `startDownloadArea` is used to achieve this. See the example below:
+
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
+  </ul>
+
+   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  {% highlight java %}
+
+  // Java
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  {% highlight csharp %}
+	
+	// C#
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  {% highlight objc %}
+
+  // Objective-C
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  {% highlight swift %}
+  
+  // Swift
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  {% highlight kotlin %}
+  
+val projection = contentView!!.map.options.baseProjection
+
+val url = "http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
+val path = getExternalFilesDir(null).absolutePath + "/cache.db"
+
+// Approximately downtown Washington DC
+val min = projection.fromWgs84(MapPos(-77.08, 38.85))
+val max = projection.fromWgs84(MapPos(-76.94, 38.93))
+val bounds = MapBounds(min, max)
+
+// This source can be anything, even aero picture etc,
+// just using the most basic variant for this example
+val source = HTTPTileDataSource(0, 24, url)
+val cache = PersistentCacheTileDataSource(source, path)
+
+// Only uses cached tiles, does not download any new tiles during zoom
+cache.isCacheOnlyMode = true
+
+cache.startDownloadArea(bounds, 0, 10, object: TileDownloadListener() {
+    override fun onDownloadProgress(progress: Float) {
+        print("Download progress: " + progress.toString())
+    }
+
+    override fun onDownloadCompleted() {
+        print("Download complete")
+    }
+})
+
+val layer = RasterTileLayer(cache)
+
+contentView!!.map.layers.add(layer)
+
+  {% endhighlight %}
+  </div>
+</div>
 
