@@ -1,8 +1,8 @@
-# Custom Offline data
+# Custom Offline Data
 
 ## Types
 
-CartoMobileSDK supports several different types of custom sources: 
+CARTO Mobile SDK supports several different types of custom sources: 
 
 * Bundled MBtiles
 * Bundled GeoJson
@@ -10,9 +10,9 @@ CartoMobileSDK supports several different types of custom sources:
 
 ### MBTiles
 
-MBTiles is a file format for storing tilesets. It’s designed so that you can package the potentially thousands of files that make up a tileset and move them around, eventually uploading to Mapbox or using in a web or mobile application. MBTiles is an open specification and is based on the SQLite database. MBTiles can contain raster or vector tilesets. [MapBox](https://www.mapbox.com/help/define-mbtiles/)
+MBTiles is a file format for storing tilesets. It is designed so that you can package thousands of files that make up a tileset and move them around; eventually uploading to [Mapbox](https://www.mapbox.com/help/define-mbtiles/) or to use in a web or mobile application. MBTiles is an open specification and is based on the SQLite database. MBTiles can contain raster or vector tilesets.
 
-The following is an example of how you can load mbiles from bundled assets and render it on the map:
+The following example displays how you can load MBtiles from bundled assets and render it on the map:
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -66,7 +66,7 @@ public void copyAssetToSDCard(AssetManager assetManager, String fileName, String
     InputStream in = assetManager.open(fileName);
     File outFile = new File(toDir, fileName);
 
-    // NB! Remember to check if storage is available and has enough space
+    // Note: Remember to check if storage is available and has enough space
 
     if (outFile.exists()) {
         // File already exists, no need to recreate
@@ -82,19 +82,19 @@ public void copyAssetToSDCard(AssetManager assetManager, String fileName, String
     out = null;
 }
 
-// Then initialize your layer as such:
+// Initialize your layer:
 addBaseLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_VOYAGER);
 
 TileDataSource source = createTileDataSource();
 
 // Get decoder from current layer,
-// so we wouldn't need a style asset to create a decoder from scratch
+// we do not need a style asset to create a decoder from scratch
 MBVectorTileDecoder decoder = (MBVectorTileDecoder)((VectorTileLayer)mapView.getLayers().get(0)).getTileDecoder();
 
 // Remove default baselayer
 mapView.getLayers().clear();
 
-// Add our new layer
+// Add new layer
 VectorTileLayer layer = new VectorTileLayer(source, decoder);
 mapView.getLayers().insert(0, layer);
 
@@ -131,17 +131,17 @@ TileDataSource CreateTileDataSource()
 	return null;
 }
 
-// And then you can simply call it as such:
+// Call it:
 			AddOnlineBaseLayer(CartoBaseMapStyle.CartoBasemapStyleDefault);
 
 // Get decoder from current layer,
-// so we wouldn't need a style asset to create a decoder from scratch
+// we do not need a style asset to create a decoder from scratch
 MBVectorTileDecoder decoder = (MBVectorTileDecoder)(MapView.Layers[0] as VectorTileLayer).TileDecoder;
 
 // Remove default baselayer
 MapView.Layers.Clear();
 
-// Do the actual copying and source creation on another thread so it wouldn't block the main thread
+// Do the actual copying and source creation on another thread so it does not block the main thread
 System.Threading.Tasks.Task.Run(delegate
 {
 	TileDataSource source = CreateTileDataSource();
@@ -174,7 +174,7 @@ System.Threading.Tasks.Task.Run(delegate
     return vectorTileDataSource;
 }
 
-// And then call it and create the layer as such:
+// Call it and create the layer:
 
 // Get the base projection set in the base class
 NTProjection* projection = [[self.mapView getOptions] getBaseProjection];
@@ -195,7 +195,7 @@ NTVectorTileLayer *layer = [[NTVectorTileLayer alloc]initWithDataSource:source d
 let baseLayer = NTCartoOnlineVectorTileLayer(style: .CARTO_BASEMAP_STYLE_VOYAGER);
 let decoder = baseLayer?.getTileDecoder()
     
-// Do the actual copying and source creation on another thread so it wouldn't block the main thread
+// Do the actual copying and source creation on another thread so it does not block the main thread
 DispatchQueue.global().async {
     
     let path = Bundle.main.path(forResource: "<your-file-name", ofType: "mbtiles")
@@ -217,7 +217,7 @@ DispatchQueue.global().async {
 val baseLayer = CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_VOYAGER)
 val decoder = baseLayer.tileDecoder
 
-// Do the actual copying and source creation on another thread so it wouldn't block the main thread
+// Do the actual copying and source creation on another thread so it does not block the main thread
 // This requires the anko coroutines library:
 // compile "org.jetbrains.anko:anko-sdk25-coroutines:$anko_version"
 doAsync {
@@ -251,9 +251,9 @@ doAsync {
 
 ### GeoJson
 
-GeoJSON is a format for encoding a variety of geographic data structures. GeoJSON supports the following geometry types: Point, LineString, Polygon, MultiPoint, MultiLineString, and MultiPolygon. Geometric objects with additional properties are Feature objects. Sets of features are contained by FeatureCollection objects. [geojson.org](http://geojson.org/)
+[GeoJSON](http://geojson.org/) is a format for encoding a variety of geographic data structures. GeoJSON supports the following geometry types: Point, LineString, Polygon, MultiPoint, MultiLineString, and MultiPolygon. Geometric objects with additional properties are Feature objects. Sets of features are contained by FeatureCollection objects.
 
-The following is an example of how you can load geojson from bundled assets and render it on the map (make sure you have cities15000.geojson as a bundled Asset (Android) or Resource (iOS):
+The following example displays how you can load GeoJSON from bundled assets and render it on the map (make sure you have cities15000.geojson as a bundled Asset (Android) or Resource (iOS):
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -283,7 +283,7 @@ final LocalVectorDataSource source = new LocalVectorDataSource(projection);
 VectorLayer layer = new VectorLayer(source);
 mapView.getLayers().add(layer);
 
-// As the file to load is rather large, we don't want to block our main thread
+// As the file to load is rather large, we do not want to block our main thread
 thread = new Thread(new Runnable() {
     @Override
     public void run() {
@@ -353,7 +353,7 @@ VectorLayer layer = new VectorLayer(source);
 
 new System.Threading.Thread((obj) =>
 {
-	// Create basic style. Use the builder to modify your markers
+	// Create basic style. Use the MarkerStyleBuilder to modify your markers
 	MarkerStyle style = new MarkerStyleBuilder().BuildStyle();
 
 	// Read GeoJSON, parse it using SDK GeoJSON parser
@@ -406,7 +406,7 @@ dispatch_async(queue, ^{
     
     NTFeatureCollection* features = [geoJsonReader readFeatureCollection:json];
     
-    // Initialize basic style, as it will later be overridden anyway
+    // Initialize basic style, as it will later be overridden
     NTMarkerStyle *style = [[[NTMarkerStyleBuilder alloc] init] buildStyle];
     
     NTVectorElementVector *elements = [[NTVectorElementVector alloc]init];
@@ -418,7 +418,7 @@ dispatch_async(queue, ^{
         [elements add:marker];
     }
     
-    // Add them all at once to avoid flickering
+    // To avoid flickering, add all the sources
     [source addAll:elements];
 });
 
@@ -521,9 +521,9 @@ doAsync {
 
 ### Tile Download
 
-CartoMobileSDK offers a a way you can download tiles to your app and keep indefinitely them in your cache. That way, the area you specified will always be available to you offline. 
+CARTO Mobile SDK enables you to download tiles to your app and keep them in your cache, indefinitely. The specified download location will always be available to you offline. 
 
-`PersistentCacheTileDataSource`'s function `startDownloadArea` is used to achieve this. See the example below:
+`PersistentCacheTileDataSource`'s function `startDownloadArea` is used to achieve this, as shown in the following example:
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -557,8 +557,8 @@ MapPos min = projection.fromWgs84(new MapPos(-77.08, 38.85));
 MapPos max = projection.fromWgs84(new MapPos(-76.94, 38.93));
 MapBounds bounds = new MapBounds(min, max);
 
-// This source can be anything, even aero picture etc,
-// just using the most basic variant for this example
+// This source can be anything, even aero picture etc.,
+// using the most basic variant for this example
 HTTPTileDataSource source = new HTTPTileDataSource(0, 24, url);
 PersistentCacheTileDataSource cache = new PersistentCacheTileDataSource(source, path);
 
@@ -597,8 +597,8 @@ MapPos min = projection.FromWgs84(new MapPos(-77.08, 38.85));
 MapPos max = projection.FromWgs84(new MapPos(-76.94, 38.93));
 var bounds = new MapBounds(min, max);
 
-// This source can be anything, even aero picture etc,
-// just using the most basic variant for this example
+// This source can be anything, even aero picture etc.,
+// using the most basic variant for this example
 var source = new HTTPTileDataSource(0, 24, url);
 var cache = new PersistentCacheTileDataSource(source, path);
 
@@ -648,8 +648,8 @@ NTMapPos *min = [projection fromWgs84:[[NTMapPos alloc] initWithX:-77.08 y:38.85
 NTMapPos *max = [projection fromWgs84:[[NTMapPos alloc] initWithX:-76.948 y:38.93]];
 NTMapBounds *bounds = [[NTMapBounds alloc] initWithMin:min max:max];
     
-// This source can be anything, even aero picture etc,
-// just using the most basic variant for this example
+// This source can be anything, even aero picture etc.,
+// using the most basic variant for this example
 NTHTTPTileDataSource *source = [[NTHTTPTileDataSource alloc]initWithMinZoom:0 maxZoom:24 baseURL:url];
 NTPersistentCacheTileDataSource *cache = [[NTPersistentCacheTileDataSource alloc] initWithDataSource:source databasePath:path];
     
@@ -699,8 +699,8 @@ let min = projection?.fromWgs84(NTMapPos(x: -77.08, y: 38.85))
 let max = projection?.fromWgs84(NTMapPos(x: -76.94, y: 38.93))
 let bounds = NTMapBounds(min: min, max: max)
     
-// This source can be anything, even aero picture etc,
-// just using the most basic variant for this example
+// This source can be anything, even aero picture etc.,
+// using the most basic variant for this example
 let source = NTHTTPTileDataSource(minZoom: 0, maxZoom: 24, baseURL: url)
 let cache = NTPersistentCacheTileDataSource(dataSource: source, databasePath: path)
     
@@ -744,8 +744,8 @@ val min = projection.fromWgs84(MapPos(-77.08, 38.85))
 val max = projection.fromWgs84(MapPos(-76.94, 38.93))
 val bounds = MapBounds(min, max)
 
-// This source can be anything, even aero picture etc,
-// just using the most basic variant for this example
+// This source can be anything, even aero picture etc.,
+// using the most basic variant for this example
 val source = HTTPTileDataSource(0, 24, url)
 val cache = PersistentCacheTileDataSource(source, path)
 

@@ -386,7 +386,7 @@ These code samples display how to show navigation instructions on the map, as in
 
 Offline routing requires a more complicated preparation of your offline map packages, listener events, package initialization, and routing calculation parameters.
 
-First, you need to initialize a package manager and a listener to download packages. Check our [PackageManager](/docs/carto-engine/mobile-sdk/package-manager/) chapter to find more about offline packages
+First, you need to initialize a package manager and a listener to download packages. View the [PackageManager](/docs/carto-engine/mobile-sdk/package-manager/) documentation to find more about offline packages.
 
 If all routing packages are downloaded and routing service is ready, you can calculate routing.
 

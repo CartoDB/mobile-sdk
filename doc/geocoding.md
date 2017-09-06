@@ -3,7 +3,7 @@
 
 ## Apply Geocoding in your App
 
-This section describes how to access prepackaged routing code from our Sample Apps, how how to implement geocoding in your mobile app.
+This section describes how to access prepackaged routing code from our Sample Apps and how to implement geocoding in your mobile app.
 
 ### Prepackaged Sample Code
 
@@ -23,9 +23,9 @@ For minimal routing implementation, use our sample app code for different mobile
   
 ### Online Geocoding
 
-Online geocoding is realized via [Pelias](https://github.com/pelias/pelias), and for that you need your own mapzen api key. Just go to https://mapzen.com/, sign up and you'll automatically receive your api key.
+Online geocoding is available through [Pelias](https://github.com/pelias/pelias). You will need your own Mapzen API key. Sign-up at [https://mapzen.com/](https://mapzen.com/) to receive an API key.
 
-All you need to do to implement online geocoding is initialize the service, create the request and then calculate addresses, as shown below
+Implement online geocoding to initialize the service, create the request, and calculate addresses:
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -105,14 +105,13 @@ val results = service!!.calculateAddresses(request)
 
 `GeocodingResultVector` is just a list of results, you can loop through it as you would with any other list.
 
-And from your `GeocodingResult` objects, you can simply access `name`, `locality`, `country` etc. properties and display them to the user as you wish
+From your `GeocodingResult` objects, you can simply access `name`, `locality`, `country` etc. properties and display them to the user.
 
 ### Online Reverse Geocoding
 
-Online reverse geocoding is also realized via [Pelias](https://github.com/pelias/pelias), and for that you need your own mapzen api key. Just go to https://mapzen.com/, sign up and you'll automatically receive your api key.
+Online reverse geocoding is also available through [Pelias](https://github.com/pelias/pelias). You will need your own Mapzen API key. Sign up at [https://mapzen.com/](https://mapzen.com/) to receive an API key.
 
-
-When implementing reverse geocoding, we initialize the service and request in a similar manner, but we also need to implement a map event listener, as shown below:
+When implementing reverse geocoding, you need implement a map event listener to initialize the service:
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -147,9 +146,9 @@ mapView.setMapEventListener(new MapEventListener() {
         float meters = 125.0f;
         request.setSearchRadius(meters);
 
-        // Scan the results list. If we found relatively close point-based match,
+        // Scan the results list. If relatively close point-based matches are found,
         // use this instead of the first result.
-        // In case of POIs within buildings, this allows us to hightlight POI instead of the building
+        // In case of POIs within buildings, this allows us to highlight POI instead of the building
         GeocodingResultVector results;
         try {
             results = service.calculateAddresses(request);
@@ -218,9 +217,9 @@ public class ReverseGeocodingEventListener : MapEventListener
 
         int count = results.Count;
 
-        // Scan the results list. If we found relatively close point-based match,
+        // Scan the results list. If relatively close point-based matches are found,
         // use this instead of the first result.
-        // In case of POIs within buildings, this allows us to hightlight POI instead of the building
+        // In case of POIs within buildings, this allows us to highlight POI instead of the building
 
         if (count > 0)
         {
@@ -276,9 +275,9 @@ public class ReverseGeocodingEventListener : MapEventListener
     NTReverseGeocodingRequest *request = [[NTReverseGeocodingRequest alloc]initWithProjection:projection location:location];
     [request setSearchRadius:125.0f];
     
-    // Scan the results list. If we found relatively close point-based match,
+    // Scan the results list. If relatively close point-based matches are found,
     // use this instead of the first result.
-    // In case of POIs within buildings, this allows us to hightlight POI instead of the building
+    // In case of POIs within buildings, this allows us to highlight POI instead of the building
     NTGeocodingResultVector *results = [self.controller.service calculateAddresses: request];
     
     NTGeocodingResult *result;
@@ -335,9 +334,9 @@ class ReverseGeocodingEventListener: NTMapEventListener {
         
         let results = service.calculateAddresses(request)
         
-        // Scan the results list. If we found relatively close point-based match,
+        // Scan the results list. If relatively close point-based matches are found,
         // use this instead of the first result.
-        // In case of POIs within buildings, this allows us to hightlight POI instead of the building
+        // In case of POIs within buildings, this allows us to highlight POI instead of the building
         
         var result: NTGeocodingResult?
         
@@ -424,7 +423,7 @@ map?.mapEventListener = object : MapEventListener() {
 
 ### Parsing your GeocodingResult
 
-Here's an example of how you could parse your GeocodingResult into a readable string. It is, of course, entirely up to you how you wish to realize it.
+The following example displays how to parse your `GeocodingResult` into a readable string. This is only a suggestion, you can parse results however you prefer.
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -777,14 +776,12 @@ fun String.addCommaIfNecessary(): String {
   </div>
 </div>
 
-### Displaying your GeocodingResult on the map
+### Displaying your GeocodingResult on the Map
 
-If you wish to display your `GeocodingResult` on the map, you need to create a `LocalVectorDataSource`, initialize a `VectorLayer` and add it to the map, then you can add various `VectorElements` to your 
+If you wish to display your `GeocodingResult` on the map, create a `LocalVectorDataSource`, initialize a `VectorLayer` and add it to the map, then you can add various `VectorElements` to your 
 `LocalVectorDataSource`.
 
-Please note that this function does not work out of the box, make sure your class contains a **vector element source** and **your mapView** object.
-
-Here's an example of how we did it:
+**Note:** This function does not work out of the box. Ensure your class contains a **vector element source** and **your mapView** object, as shown in the following example:
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -1180,23 +1177,20 @@ fun showResult(result: com.carto.geocoding.GeocodingResult, title: String, descr
 
 ### Offline Geocoding
 
-- The list of country packages for geocoding is the same as other offline maps. See [Offline Map Packages](/docs/carto-engine/mobile-sdk/offline-maps/#offline-map-packages) for the full list of offline packages
+- The list of country packages for geocoding is the same as other offline maps. See [Offline Map Packages](/docs/carto-engine/mobile-sdk/offline-maps/#offline-map-packages) for the full list of offline packages.
 
 - The download size of an offline geocoding package is somewhat smaller (10-40%) than the size of the corresponding offline map package.
 
 Offline geocoding requires a more complicated preparation of your offline map packages, listener events, package initialization, and geocoding calculation parameters.
 
-First, you need to initialize a package manager and a listener to download packages. Check our [PackageManager](/docs/carto-engine/mobile-sdk/package-manager/) chapter to find more about offline packages
+First, you need to initialize a package manager and a listener to download packages. View the [PackageManager](/docs/carto-engine/mobile-sdk/package-manager/) documentation to find more about offline packages.
 
 If all packages are downloaded and routing service is ready, you can start geocoding:
 
-- Create the `PackageManagerReverseGeocodingService` or `PackageManagerGeocodingService`, the constructor takes your package manager as an argument.
+- Create the `PackageManagerReverseGeocodingService` or `PackageManagerGeocodingService`. The constructor takes your package manager as an argument.
 
 -  Define the *RoutingRequest* with at least two points. Start routing with the service and read response as *RoutingResult*.
 
-- Calculate the route with the `calculateRoute` request
+- Calculate the route with the `calculateRoute` request.
 
 **Note:** This step is identical to the [online geocoding calculation code](/docs/carto-engine/mobile-sdk/mobile-geocoding/#online-geocoding) or [online reverse geocoding calculation code](/docs/carto-engine/mobile-sdk/mobile-geocoding/#online-reverse-geocoding).
-
-
-

@@ -1,14 +1,12 @@
-## Package manager
+## Package Manager
 
-CartoMobileSDK offers a convenient way for you to manage different offline packages: map, routing and geocoding. The API is the same, no matter what kind of packages you download.
-
-The only difference is in the `source` you define.
+CARTO Mobile SDK offers a convenient way for you to manage different offline packages: map, routing and geocoding. The API is the same, no matter what kind of packages you download. The only difference is in the `source` you define.
 
 * `carto.streets` is the base source used to download map packages
 * `routing:carto.streets` for routing packages
 * `geocoding:carto.streets` for geocoding packages
 
-##### First, you define the folder where to store the files 
+##### Define the folder to store the files 
 
 Each type of package should be stored in a different folder, e.g. `mappackages`, `routingpackages`, `geocodingpackages`.
 
@@ -126,7 +124,7 @@ Each type of package should be stored in a different folder, e.g. `mappackages`,
 
 Package downloads cannot be started immediately, as the Mobile SDK needs to get latest definition of packages from CARTO online service. Once this list is received, PackageManagerListener's `onPackageListUpdated()` is called.
 
-Write your own `PackageManagerListener`, and start package download using the `onPackageListUpdated` method, which ensures that the package metadata is downloaded
+Write your own `PackageManagerListener`, and start package download using the `onPackageListUpdated` method, which ensures that the package metadata is downloaded.
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -168,7 +166,7 @@ Write your own `PackageManagerListener`, and start package download using the `o
     @Override
     public void onPackageStatusChanged(String id, int version, PackageStatus status)
     {
-        // here you can monitor download process %
+        // you can monitor download process %
     }
 
     @Override
@@ -486,8 +484,8 @@ packageManager.startPackageListDownload()
 
 ### Downloading a specific area
 
-CartoMobileSDK allows for the download of custom areas, called bounding boxes. it can be anything from a park, a city, a route up to a block of countries.
+CARTO Mobile SDK allows for the download of custom areas, called bounding boxes. It can be anything from a park, a city, a route, or a block of countries.
 
-A bounding box is constructted as `bbox(min-longitude,min-latitude,max-longitude,max-latitude`, so the bounding box of Berlin would like this: `bbox(13.2285,52.4698,13.5046,52.57477)`. This is used as the package **id** instead of a country or county code.
+A bounding box is constructed as `bbox(min-longitude,min-latitude,max-longitude,max-latitude`, so the bounding box of Berlin would be: `bbox(13.2285,52.4698,13.5046,52.57477)`. This is used as the package **id** instead of a country or county code.
 
-An example of a custom BoundingBox (written in Kotlin) class is available [here](https://github.com/CartoDB/mobile-android-samples/blob/master/AdvancedMapKotlin/app/src/main/java/com/carto/advanced/kotlin/utils/BoundingBox.kt) and implementation can be seen [here](https://github.com/CartoDB/mobile-android-samples/blob/AdvancedMapKotlin/AdvancedMapKotlin/app/src/main/java/com/carto/advanced/kotlin/model/Cities.kt)
+An example of a custom BoundingBox (written in Kotlin) class is available [here](https://github.com/CartoDB/mobile-android-samples/blob/master/AdvancedMapKotlin/app/src/main/java/com/carto/advanced/kotlin/utils/BoundingBox.kt) and implementation can be seen [here](https://github.com/CartoDB/mobile-android-samples/blob/AdvancedMapKotlin/AdvancedMapKotlin/app/src/main/java/com/carto/advanced/kotlin/model/Cities.kt).

@@ -11,7 +11,14 @@ This file is for reference purposes only. It is intended for tracking the Mobile
 * [Mobile Routing](routing.md)
 * [Offline Maps](offline_maps.md)
 * [API References](api_reference.md)
- 
-Currently not being pulled into live docs: will be added for a future release
 
-* [Extension features](proextensions.md)
+New files: @Aare- where do these files belong? (in the list above^. I need to know the exact order too. This is the chapter order in the live docs output)
+
+* geocoding.md
+* packager_manager.md
+* custom_offine_data.md
+ 
+Currently not being pulled into live docs: 
+
+* [Extension features](proextensions.md) Will be added for a future release?
+* code_sample_block.js (Internal reference of code tab panes for Aare)
