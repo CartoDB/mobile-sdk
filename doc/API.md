@@ -9,7 +9,6 @@ This file is for reference purposes only. It is intended for tracking the Mobile
 * [Loading Map Data](loading_data.md)
 * [Developer Guide to SDK Features](developer_guide.md)
 * [Mobile Routing](routing.md)
-* [Offline Maps](offline_maps.md)
 * [API References](api_reference.md)
 
 New files: @Aare- where do these files belong? (in the list above^. I need to know the exact order too. This is the chapter order in the live docs output)
@@ -21,4 +20,5 @@ New files: @Aare- where do these files belong? (in the list above^. I need to kn
 Currently not being pulled into live docs: 
 
 * [Extension features](proextensions.md) Will be added for a future release?
-* code_sample_block.js (Internal reference of code tab panes for Aare)
+* Offline Maps (mobile-sdk/doc/deprecated/offline_maps.md)
+* Internal reference of code tab panes for Aare (mobile-sdk/doc/code_sample_block.js) 
