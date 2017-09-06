@@ -21,4 +21,6 @@ Currently not being pulled into live docs:
 
 * [Extension features](proextensions.md) Will be added for a future release?
 * Offline Maps (mobile-sdk/doc/deprecated/offline_maps.md)
+  **@Aare, we need to redirect any links to this file all the docs**
+
 * Internal reference of code tab panes for Aare (mobile-sdk/doc/code_sample_block.js) 
