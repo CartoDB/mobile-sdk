@@ -156,7 +156,7 @@ namespace carto {
     private:    
         class TileDecoderListener : public VectorTileDecoder::OnChangeListener {
         public:
-            TileDecoderListener(const std::shared_ptr<VectorTileLayer>& layer);
+            explicit TileDecoderListener(const std::shared_ptr<VectorTileLayer>& layer);
             
             virtual void onDecoderChanged();
     

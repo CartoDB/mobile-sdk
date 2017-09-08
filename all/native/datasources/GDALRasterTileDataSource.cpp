@@ -144,7 +144,7 @@ namespace carto {
                 epsgCode = boost::lexical_cast<int>(srs.substr(5));
             }
             catch (const std::exception& ex) {
-                throw ParseException("Failed to parse EPSG code", srs);
+                throw ParseException(std::string("Failed to parse EPSG code: ") + ex.what(), srs);
             }
             if (poDatasetSpatialRef->importFromEPSG(epsgCode) != OGRERR_NONE) {
                 Log::Error("GDALRasterTileDataSource: Failed to import projection info");

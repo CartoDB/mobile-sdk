@@ -51,7 +51,7 @@ namespace carto {
     protected:
         class DataSourceListener : public TileDataSource::OnChangeListener {
         public:
-            DataSourceListener(CacheTileDataSource& cacheDataSource);
+            explicit DataSourceListener(CacheTileDataSource& cacheDataSource);
             
             virtual void onTilesChanged(bool removeTiles);
             

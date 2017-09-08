@@ -206,7 +206,7 @@ namespace carto {
         picojson::value visJSON;
         std::string err = picojson::parse(visJSON, result);
         if (!err.empty()) {
-            throw ParseException("Failed to parse visJSON configuration", result);
+            throw ParseException(std::string("Failed to parse visJSON configuration: ") + err, result);
         }
 
         // Set default username

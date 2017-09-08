@@ -114,7 +114,7 @@ namespace carto {
         if (!result) {
             throw ParseException("Failed to parse query expression", expr);
         } else if (it != expr.end()) {
-            throw ParseException("Could not parse to the end of query expression", expr);
+            throw ParseException("Could not parse to the end of query expression", expr, static_cast<int>(expr.end() - it));
         }
         return queryExpr;
     }
