@@ -4,8 +4,6 @@
 
 In layman's terms, geocoding is when you enter an address (text) and the output is latitude/longitude, reverse geocoding is when you click on the map, and it finds a nearby address or point of interest.
 
-This section describes how to access prepackaged routing code from our Sample Apps and how to implement geocoding and reverse geocoding in your mobile app.
-
 ### Existing Samples
 
 For minimal geocoding implementation, use our sample app code for different mobile platforms. You can add this sample code to your mobile project.
@@ -51,7 +49,7 @@ Implement online geocoding to initialize the service, create the request, and ca
   {% highlight java %}
   
 PeliasOnlineGeocodingService service = new PeliasOnlineGeocodingService("<your-mapzen-api-key>");
-GeocodingRequest request = new GeocodingRequest(mapView.getOptions().getBaseProjection(), "text");
+GeocodingRequest request = new GeocodingRequest(mapView.getOptions().getBaseProjection(), "fifth");
 
 // Note: Geocoding is a complicated process and shouldn't be done on the main thread
 Thread thread = new Thread(new Runnable() {
@@ -74,8 +72,8 @@ thread.start();
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 
-Service = new PeliasOnlineGeocodingService(<your-mapzen-api-key>);
-var request = new GeocodingRequest(mapView.Options.BaseProjection, text);
+Service = new PeliasOnlineGeocodingService("<your-mapzen-api-key>");
+var request = new GeocodingRequest(mapView.Options.BaseProjection, "fifth");
 
 // Note: Geocoding is a complicated process and shouldn't be done on the main thread
 GeocodingResultVector results = Service.CalculateAddresses(request);
@@ -100,7 +98,7 @@ NTGeocodingResultVector *results = [service calculateAddresses:request];
   {% highlight swift %}
   
 let service = NTPeliasOnlineGeocodingService(apiKey: "<your-mapzen-api-key>")
-let request = NTGeocodingRequest(projection: self.contentView.map.getOptions().getBaseProjection(), query: text)
+let request = NTGeocodingRequest(projection: self.contentView.map.getOptions().getBaseProjection(), query: "fifth")
 
 // Note: Geocoding is a complicated process and shouldn't be done on the main thread
 let results = self.service.calculateAddresses(request)
@@ -112,7 +110,7 @@ let results = self.service.calculateAddresses(request)
   {% highlight kotlin %}
 
 val service = PeliasOnlineGeocodingService("<your-mapzen-api-key>")
-val request = GeocodingRequest(map.options.baseProjection, "text")
+val request = GeocodingRequest(map.options.baseProjection, "fifth")
 
 // Note: Geocoding is a complicated process and shouldn't be done on the main thread
 val results = service!!.calculateAddresses(request)
@@ -240,6 +238,124 @@ val results = service?.calculateAddresses(request)
   {% endhighlight %}
   </div>
 </div>
+
+### Offline Geocoding
+
+CARTO Mobile SDK also supports offline geocoding and reverse geocoding, but to be able to geocode offline, you first need to download packages – can't geocode without data!
+
+The list of country packages for geocoding is the same as other offline maps. See [Offline Map Packages](https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages) for the full list of offline packages. The download size of an offline geocoding package is somewhat smaller (10-40%) than the size of the corresponding offline map package.
+
+Offline geocoding requires a more complicated preparation of your offline map packages, listener events, package initialization, and geocoding calculation parameters.
+
+First, you need to initialize a package manager and a listener to download packages. See [PackageManager](/docs/carto-engine/mobile-sdk/packagemanager/) documentation to find more about offline packages.
+
+If relevant packages are downloaded and (reverse) geocoding service is ready, you can start geocoding:
+
+Create a `PackageManager` and `PackageManagerReverseGeocodingService` or `PackageManagerGeocodingService`. Then define the `GeocodingRequest` with at least two points. Start geocoding with the service and read response as `GeocodingResult`:
+
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
+  </ul>
+
+   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  {% highlight java %}
+
+CartoPackageManager packageManager;
+try {
+	// Note: Provide an absolute path for your geocoding package folder
+    packageManager = new CartoPackageManager("geocoding:carto.streets", "folder/geocodingpackages");
+}
+catch (IOException e) {
+    Log.e(MapApplication.LOG_TAG, "Exception: " + e);
+    finish();
+}
+
+// Geocoding service
+PackageManagerGeocodingService service = new PackageManagerGeocodingService(manager);
+
+// Reverse geocoding service
+PackageManagerReverseGeocodingService service = new PackageManagerReverseGeocodingService(manager);
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  {% highlight csharp %}
+  
+// Note: Provide an absolute path for your geocoding package folder
+var Manager = new CartoPackageManager("geocoding:carto.streets", "folder/geocodingpackages");
+
+// Geocoding service
+var Service = new PackageManagerGeocodingService(Manager);
+
+// Reverse geocoding service
+var Service = new PackageManagerReverseGeocodingService(Manager);
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  {% highlight objc %}
+
+// Note: Provide an absolute path for your geocoding package folder
+NTCartoPackageManager *packageManager = [[NTCartoPackageManager alloc] initWithSource:@"geocoding:carto.streets" dataFolder:@"folder/geocodingpackages"];
+
+// Geocoding service
+NTPackageManagerGeocodingService *service = [[NTPackageManagerGeocodingService alloc] initWithPackageManager:self.packageManager];
+
+// Reverse geocoding service
+NTPackageManagerReverseGeocodingService *service = [[NTPackageManagerReverseGeocodingService alloc] initWithPackageManager:self.packageManager];
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  {% highlight swift %}
+  
+// Note: Provide an absolute path for your geocoding package folder
+let manager = NTCartoPackageManager(source: "geocoding:carto.streets", dataFolder: "folder/geocodingpackages")
+
+// Geocoding service
+let service = NTPackageManagerGeocodingService(packageManager: manager)
+
+// Reverse geocoding service
+let service = NTPackageManagerReverseGeocodingService(packageManager: manager)
+
+  {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  {% highlight kotlin %}
+
+// Note: Provide an absolute path for your geocoding package folder
+val manager = manager = CartoPackageManager("geocoding:carto.streets", "folder/geocodingpackages")
+
+// Geocoding service
+val service = PackageManagerGeocodingService(manager)
+
+// Reverse geocoding service
+val service = PackageManagerReverseGeocodingService(manager)
+
+  {% endhighlight %}
+  </div>
+</div>
+
+... And then you simply call `calculateAddresses` with the appropriate arguments, as presented in our online geocoding sample
 
 ### Parsing Results
 
@@ -610,23 +726,3 @@ fun String.addCommaIfNecessary(): String {
   {% endhighlight %}
   </div>
 </div>
-
-### Offline Geocoding
-
-- The list of country packages for geocoding is the same as other offline maps. See [Offline Map Packages](/docs/carto-engine/mobile-sdk/offline-maps/#offline-map-packages) for the full list of offline packages.
-
-- The download size of an offline geocoding package is somewhat smaller (10-40%) than the size of the corresponding offline map package.
-
-Offline geocoding requires a more complicated preparation of your offline map packages, listener events, package initialization, and geocoding calculation parameters.
-
-First, you need to initialize a package manager and a listener to download packages. View the [PackageManager](/docs/carto-engine/mobile-sdk/package-manager/) documentation to find more about offline packages.
-
-If all packages are downloaded and routing service is ready, you can start geocoding:
-
-- Create the `PackageManagerReverseGeocodingService` or `PackageManagerGeocodingService`. The constructor takes your package manager as an argument.
-
--  Define the *RoutingRequest* with at least two points. Start routing with the service and read response as *RoutingResult*.
-
-- Calculate the route with the `calculateRoute` request.
-
-**Note:** This step is identical to the [online geocoding calculation code](/docs/carto-engine/mobile-sdk/mobile-geocoding/#online-geocoding) or [online reverse geocoding calculation code](/docs/carto-engine/mobile-sdk/mobile-geocoding/#online-reverse-geocoding).
