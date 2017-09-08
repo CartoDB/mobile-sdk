@@ -1,4 +1,4 @@
-## Package Manager
+# Package Manager
 
 CARTO Mobile SDK offers a convenient way for you to manage different offline packages: map, routing and geocoding. The API is the same, no matter what kind of packages you download. The only difference is in the `source` you define.
 

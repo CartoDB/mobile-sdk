@@ -1,8 +1,8 @@
 # Mobile Geocoding
 
-**Geocoding** is the computational process of transforming a postal address description to a location on the Earth's surface (spatial representation in numerical coordinates). **Reverse geocoding**, on the other hand, converts geographic coordinates to a description of a location, usually the name of a place or an addressable location. [Wikipedia](https://en.wikipedia.org/wiki/Geocoding)
+As per [Wikipedia](https://en.wikipedia), "**Geocoding** is the computational process of transforming a postal address description to a location on the Earth's surface (spatial representation in numerical coordinates). **Reverse geocoding** converts geographic coordinates to a description of a location, usually the name of a place or an addressable location.""
 
-In layman's terms, geocoding is when you enter an address (text) and the output is latitude/longitude, reverse geocoding is when you click on the map, and it finds a nearby address or point of interest.
+In layman's terms, geocoding is when you enter an address (text) and the output is latitude/longitude. Reverse geocoding is when you click on the map and it finds a nearby address, or point of interest.
 
 ### Existing Samples
 
@@ -51,7 +51,7 @@ Implement online geocoding to initialize the service, create the request, and ca
 PeliasOnlineGeocodingService service = new PeliasOnlineGeocodingService("<your-mapzen-api-key>");
 GeocodingRequest request = new GeocodingRequest(mapView.getOptions().getBaseProjection(), "fifth");
 
-// Note: Geocoding is a complicated process and shouldn't be done on the main thread
+// Note: Geocoding is a complicated process and should not be done on the main thread
 Thread thread = new Thread(new Runnable() {
     @Override
     public void run() {
@@ -75,7 +75,7 @@ thread.start();
 Service = new PeliasOnlineGeocodingService("<your-mapzen-api-key>");
 var request = new GeocodingRequest(mapView.Options.BaseProjection, "fifth");
 
-// Note: Geocoding is a complicated process and shouldn't be done on the main thread
+// Note: Geocoding is a complicated process and should not be done on the main thread
 GeocodingResultVector results = Service.CalculateAddresses(request);
 
   {% endhighlight %}
@@ -88,7 +88,7 @@ NTPeliasOnlineGeocodingService *service = [[NTPeliasOnlineGeocodingService alloc
 NTProjection *projection = [[self.mapView getOptions] getBaseProjection];
 NTGeocodingRequest *request = [[NTGeocodingRequest alloc]initWithProjection:projection query:@"text"];
 
-// Note: Geocoding is a complicated process and shouldn't be done on the main thread
+// Note: Geocoding is a complicated process and should not be done on the main thread
 NTGeocodingResultVector *results = [service calculateAddresses:request];
 
   {% endhighlight %}
@@ -100,7 +100,7 @@ NTGeocodingResultVector *results = [service calculateAddresses:request];
 let service = NTPeliasOnlineGeocodingService(apiKey: "<your-mapzen-api-key>")
 let request = NTGeocodingRequest(projection: self.contentView.map.getOptions().getBaseProjection(), query: "fifth")
 
-// Note: Geocoding is a complicated process and shouldn't be done on the main thread
+// Note: Geocoding is a complicated process and should not be done on the main thread
 let results = self.service.calculateAddresses(request)
 
   {% endhighlight %}
@@ -112,7 +112,7 @@ let results = self.service.calculateAddresses(request)
 val service = PeliasOnlineGeocodingService("<your-mapzen-api-key>")
 val request = GeocodingRequest(map.options.baseProjection, "fifth")
 
-// Note: Geocoding is a complicated process and shouldn't be done on the main thread
+// Note: Geocoding is a complicated process and should not be done on the main thread
 val results = service!!.calculateAddresses(request)
 
   {% endhighlight %}
@@ -151,13 +151,13 @@ Online reverse geocoding is also available through [Pelias](https://github.com/p
 
 service = new PeliasOnlineReverseGeocodingService("<your-mapzen-key>");
 
-// Center of New York. Reverse Geocoding these coordinates should find City Hall Park
+// Center of New York. Reverse Geocoding these coordinates will find City Hall Park
 MapPos newYork = baseProjection.fromLatLong(40.7128, -74.0059);
 ReverseGeocodingRequest request = new ReverseGeocodingRequest(baseProjection, newYork);
 float meters = 125.0f;
 request.setSearchRadius(meters);
 
-// Note: Reverse geocoding is a complicated process and shouldn't be done on the main thread
+// Note: Reverse geocoding is a complicated process and should not be done on the main thread
 try {
     GeocodingResultVector results = service.calculateAddresses(request);
 } catch (IOException e) {
@@ -173,14 +173,14 @@ try {
 
 Service = new PeliasOnlineReverseGeocodingService("<your-mapzen-key>");
 
-// Center of New York. Reverse Geocoding these coordinates should find City Hall Park
+// Center of New York. Reverse Geocoding these coordinates will find City Hall Park
 MapPos newYork = projection.FromLatLong(40.7128, -74.0059);
 
 var request = new ReverseGeocodingRequest(projection, newYork);
 var meters = 125.0f;
 request.SearchRadius = meters;
 
-// Note: Reverse geocoding is a complicated process and shouldn't be done on the main thread
+// Note: Reverse geocoding is a complicated process and should not be done on the main thread
 GeocodingResultVector results = Service.CalculateAddresses(request);
 
   {% endhighlight %}
@@ -192,12 +192,12 @@ GeocodingResultVector results = Service.CalculateAddresses(request);
 self.service = [[NTPeliasOnlineReverseGeocodingService alloc]initWithApiKey:@"<mapzen-api-key>"];
 
 NTProjection *projection = [self.controller getProjection];
-// Center of New York. Reverse Geocoding these coordinates should find City Hall Park
+// Center of New York. Reverse Geocoding these coordinates will find City Hall Park
 NTMapPos *newYork = [projection fromLat:40.7128 lng:-74.0059];
 NTReverseGeocodingRequest *request = [[NTReverseGeocodingRequest alloc]initWithProjection:projection location:newYork];
 [request setSearchRadius:125.0f];
     
-// Note: Reverse geocoding is a complicated process and shouldn't be done on the main thread
+// Note: Reverse geocoding is a complicated process and should not be done on the main thread
 NTGeocodingResultVector *results = [self.service calculateAddresses: request];
 
   {% endhighlight %}
@@ -208,14 +208,14 @@ NTGeocodingResultVector *results = [self.service calculateAddresses: request];
 
 service = NTPeliasOnlineReverseGeocodingService(apiKey: "<your-mapzen-key>")
 
-// Center of New York. Reverse Geocoding these coordinates should find City Hall Park
+// Center of New York. Reverse Geocoding these coordinates will find City Hall Park
 let newYork = projection.fromLat(40.7128, lng: -74.0059)
 let request = NTReverseGeocodingRequest(projection: projection, location: newYork)
     
 let meters: Float = 125.0
 request?.setSearchRadius(meters)
     
-// Note: Reverse geocoding is a complicated process and shouldn't be done on the main thread
+// Note: Reverse geocoding is a complicated process and should not be done on the main thread
 let results = service.calculateAddresses(request)
 
   {% endhighlight %}
@@ -226,13 +226,13 @@ let results = service.calculateAddresses(request)
 
 service = PeliasOnlineReverseGeocodingService("<your-mapzen-key>")
 
-// Center of New York. Reverse Geocoding these coordinates should find City Hall Park
+// Center of New York. Reverse Geocoding these coordinates will find City Hall Park
 val newYork = contentView?.projection?.fromLatLong(40.7128, -74.0059)
 val request = ReverseGeocodingRequest(contentView?.projection, newYork)
 val meters = 125.0f
 request.searchRadius = meters
 
-// Note: Reverse geocoding is a complicated process and shouldn't be done on the main thread
+// Note: Reverse geocoding is a complicated process and should not be done on the main thread
 val results = service?.calculateAddresses(request)
                 
   {% endhighlight %}
@@ -241,7 +241,7 @@ val results = service?.calculateAddresses(request)
 
 ### Offline Geocoding
 
-CARTO Mobile SDK also supports offline geocoding and reverse geocoding, but to be able to geocode offline, you first need to download packages – can't geocode without data!
+CARTO Mobile SDK also supports offline geocoding and reverse geocoding, In order to geocode offline, you must first download the required country packages. You will not be able to geocode without data!
 
 The list of country packages for geocoding is the same as other offline maps. See [Offline Map Packages](https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages) for the full list of offline packages. The download size of an offline geocoding package is somewhat smaller (10-40%) than the size of the corresponding offline map package.
 
@@ -355,7 +355,7 @@ val service = PackageManagerReverseGeocodingService(manager)
   </div>
 </div>
 
-... And then you simply call `calculateAddresses` with the appropriate arguments, as presented in our online geocoding sample
+... Lastly, simply call `calculateAddresses` with the appropriate arguments, as presented in our online geocoding sample.
 
 ### Parsing Results
 
