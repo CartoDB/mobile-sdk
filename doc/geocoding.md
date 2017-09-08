@@ -4,12 +4,11 @@
 
 In layman's terms, geocoding is when you enter an address (text) and the output is latitude/longitude, reverse geocoding is when you click on the map, and it finds a nearby address or point of interest.
 
+This section describes how to access prepackaged routing code from our Sample Apps and how to implement geocoding and reverse geocoding in your mobile app.
 
-This section describes how to access prepackaged routing code from our Sample Apps and how to implement geocoding in your mobile app.
+### Existing Samples
 
-### Prepackaged Sample Code
-
-For minimal routing implementation, use our sample app code for different mobile platforms. You can add this sample code to your mobile project.
+For minimal geocoding implementation, use our sample app code for different mobile platforms. You can add this sample code to your mobile project.
 
 - iOS:
   - [Sample app repository](https://github.com/CartoDB/mobile-ios-samples)
@@ -242,7 +241,7 @@ val results = service?.calculateAddresses(request)
   </div>
 </div>
 
-### Parsing your GeocodingResult
+### Parsing Results
 
 The following example displays how to parse your `GeocodingResult` into a readable string. This is only a suggestion, you can parse results however you prefer.
 
@@ -270,7 +269,7 @@ The following example displays how to parse your `GeocodingResult` into a readab
   
 public class GeocodingUtils {
 
-    public static String getPrettyAddres(Address address) {
+    public static String getPrettyAddress(Address address) {
 
         String string = "";
 
@@ -323,7 +322,10 @@ public class GeocodingUtils {
             }
             string += address.getCountry();
         }
-
+		
+	   // If you use this method to parse your GeocodingResult, the output string will be e.g.
+	   // "Fifth Avenue, Fifth Avenue, Gainesville, Alachua County, Florida, United States" or
+ 	   // "Fifth Street, Fifth Street, Fort Bend County, Texas, United States"
         return string;
     }
 }
@@ -386,7 +388,10 @@ public static class GeocodingExtensions
             parsed += parsed.AddCommaIfNecessary();
             parsed += address.Country;
         }
-
+        
+	   // If you use this method to parse your GeocodingResult, the output string will be e.g.
+	   // "Fifth Avenue, Fifth Avenue, Gainesville, Alachua County, Florida, United States" or
+ 	   // "Fifth Street, Fifth Street, Fort Bend County, Texas, United States"
         return parsed;
     }
 
@@ -468,6 +473,9 @@ public static class GeocodingExtensions
         string = [string stringByAppendingString: [address getCountry]];
     }
     
+   // If you use this method to parse your GeocodingResult, the output string will be e.g.
+   // "Fifth Avenue, Fifth Avenue, Gainesville, Alachua County, Florida, United States" or
+   // "Fifth Street, Fifth Street, Fort Bend County, Texas, United States"
     return string;
 }
 
@@ -522,6 +530,9 @@ extension NTGeocodingResult {
             string += (address?.getCountry())!
         }
         
+    	   // If you use this method to parse your GeocodingResult, the output string will be e.g.
+	   // "Fifth Avenue, Fifth Avenue, Gainesville, Alachua County, Florida, United States" or
+ 	   // "Fifth Street, Fifth Street, Fort Bend County, Texas, United States"
         return string
     }
 }
@@ -581,6 +592,9 @@ fun GeocodingResult.getPrettyAddress(): String {
         string += address.country
     }
 
+   // If you use this method to parse your GeocodingResult, the output string will be e.g.
+   // "Fifth Avenue, Fifth Avenue, Gainesville, Alachua County, Florida, United States" or
+   // "Fifth Street, Fifth Street, Fort Bend County, Texas, United States"
     return string
 }
 
@@ -592,405 +606,6 @@ fun String.addCommaIfNecessary(): String {
 
     return ""
 }
-
-  {% endhighlight %}
-  </div>
-</div>
-
-### Displaying your GeocodingResult on the Map
-
-If you wish to display your `GeocodingResult` on the map, create a `LocalVectorDataSource`, initialize a `VectorLayer` and add it to the map, then you can add various `VectorElements` to your 
-`LocalVectorDataSource`.
-
-**Note:** This function does not work out of the box. Ensure your class contains a **vector element source** and **your mapView** object, as shown in the following example:
-
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}
-  
-public void showResult(GeocodingResult result, String title, String description, boolean goToPosition) {
-
-        geocodingSource.clear();
-
-        AnimationStyleBuilder animationBuilder = new AnimationStyleBuilder();
-        animationBuilder.setRelativeSpeed(2.0f);
-        animationBuilder.setFadeAnimationType(AnimationType.ANIMATION_TYPE_SMOOTHSTEP);
-
-        BalloonPopupStyleBuilder builder = new BalloonPopupStyleBuilder();
-        builder.setLeftMargins(new BalloonPopupMargins(0, 0, 0, 0));
-        builder.setRightMargins(new BalloonPopupMargins(6, 3, 6, 3));
-        builder.setCornerRadius(5);
-        builder.setAnimationStyle(animationBuilder.buildStyle());
-        // Make sure this label is shown on top of all other labels
-        builder.setPlacementPriority(10);
-
-        FeatureCollection collection = result.getFeatureCollection();
-        int count = collection.getFeatureCount();
-
-        MapPos position = null;
-        Geometry geometry;
-
-        Color color = new Color((short)0, (short)100,(short)200, (short)150);
-
-        for (int i = 0; i < count; i++) {
-            geometry = collection.getFeature(i).getGeometry();
-
-            PointStyleBuilder pointBuilder = new PointStyleBuilder();
-            pointBuilder.setColor(color);
-
-            LineStyleBuilder lineBuilder = new LineStyleBuilder();
-            lineBuilder.setColor(color);
-
-            PolygonStyleBuilder polygonBuilder = new PolygonStyleBuilder();
-            polygonBuilder.setColor(color);
-
-            if (geometry instanceof PointGeometry) {
-                geocodingSource.add(new Point((PointGeometry)geometry, pointBuilder.buildStyle()));
-            } else if (geometry instanceof LineGeometry) {
-                geocodingSource.add(new Line((LineGeometry)geometry, lineBuilder.buildStyle()));
-            }  else if (geometry instanceof PolygonGeometry) {
-                geocodingSource.add(new Polygon((PolygonGeometry)geometry, polygonBuilder.buildStyle()));
-            } else if (geometry instanceof MultiGeometry) {
-
-                GeometryCollectionStyleBuilder collectionBuilder = new GeometryCollectionStyleBuilder();
-                collectionBuilder.setPointStyle(pointBuilder.buildStyle());
-                collectionBuilder.setLineStyle(lineBuilder.buildStyle());
-                collectionBuilder.setPolygonStyle(polygonBuilder.buildStyle());
-
-                geocodingSource.add(new GeometryCollection((MultiGeometry)geometry, collectionBuilder.buildStyle()));
-            }
-
-            position = geometry.getCenterPos();
-        }
-
-        if (goToPosition) {
-            mapView.setFocusPos(position, 1.0f);
-            mapView.setZoom(17.0f, 1.0f);
-        }
-
-        BalloonPopup popup = new BalloonPopup(position, builder.buildStyle(), title, description);
-        geocodingSource.add(popup);
-    }
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight csharp %}
-
-// This is an extension method of your LocalVectorDataSource
-public static void ShowResult(this LocalVectorDataSource source, MapView map, GeocodingResult result, string title, string description, bool goToPosition)
-{
-	source.Clear();
-
-	var builder = new BalloonPopupStyleBuilder();
-	builder.LeftMargins = new BalloonPopupMargins(0, 0, 0, 0);
-	builder.TitleMargins = new BalloonPopupMargins(6, 3, 6, 3);
-	builder.CornerRadius = 5;
-	// Make sure this label is shown on top of all other labels
-	builder.PlacementPriority = 10;
-    builder.DescriptionColor = new Carto.Graphics.Color(255, 255, 255, 255);
-
-	FeatureCollection collection = result.FeatureCollection;
-	int count = collection.FeatureCount;
-
-    MapPos position = new MapPos();
-	Geometry geometry;
-
-	for (int i = 0; i < count; i++)
-	{
-		geometry = collection.GetFeature(i).Geometry;
-		var color = new Carto.Graphics.Color(0, 100, 200, 150);
-
-		var pointBuilder = new PointStyleBuilder();
-		pointBuilder.Color = color;
-
-		var lineBuilder = new LineStyleBuilder();
-		builder.Color = color;
-
-		var polygonBuilder = new PolygonStyleBuilder();
-		polygonBuilder.Color = color;
-
-        VectorElement element = null;
-
-        if (geometry is PointGeometry)
-        {
-            element = new Point(geometry as PointGeometry, pointBuilder.BuildStyle());
-        }
-        else if (geometry is LineGeometry)
-        {
-            element = new Line(geometry as LineGeometry, lineBuilder.BuildStyle());
-        }
-        else if (geometry is PolygonGeometry)
-        {
-            element = new Polygon(geometry as PolygonGeometry, polygonBuilder.BuildStyle());
-        }
-        else if (geometry is MultiGeometry)
-        {
-            var collectionBuilder = new GeometryCollectionStyleBuilder();
-            collectionBuilder.PointStyle = pointBuilder.BuildStyle();
-            collectionBuilder.LineStyle = lineBuilder.BuildStyle();
-            collectionBuilder.PolygonStyle = polygonBuilder.BuildStyle();
-
-            element = new GeometryCollection(geometry as MultiGeometry, collectionBuilder.BuildStyle());
-        }
-
-        if (element != null)
-        {
-			position = geometry.CenterPos;
-			source.Add(element);   
-        }
-	}
-
-    if (goToPosition)
-    {
-        map.SetFocusPos(position, 1.0f);
-        map.SetZoom(16, 1.0f);
-    }
-
-    var popup = new BalloonPopup(position, builder.BuildStyle(), title, description);
-    source.Add(popup);
-}
-
-  {% endhighlight %}
-  </div>
-
-   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}
-  
-- (void)showResult:(NTGeocodingResult *)result title:(NSString *)title description:(NSString *)description goToPosition: (BOOL)goToPosition {
-    
-    [_geocodingSource clear];
-    
-    NTAnimationStyleBuilder *animationBuilder = [[NTAnimationStyleBuilder alloc]init];
-    [animationBuilder setRelativeSpeed:2.0f];
-    [animationBuilder setFadeAnimationType:NT_ANIMATION_TYPE_SMOOTHSTEP];
-    
-    NTBalloonPopupStyleBuilder *builder = [[NTBalloonPopupStyleBuilder alloc]init];
-    [builder setCornerRadius:5];
-    [builder setAnimationStyle:[animationBuilder buildStyle]];
-    // Make sure this label is shown on top of all other labels
-    [builder setPlacementPriority:10];
-    
-    NTFeatureCollection *collection = [result getFeatureCollection];
-    int count = [collection getFeatureCount];
-    
-    NTColor *color = [[NTColor alloc]initWithR:0 g:100 b:200 a:150];
-    
-    NTMapPos *position;
-    NTGeometry *geometry;
-    
-    for (int i = 0; i < count; i++) {
-        geometry = [[collection getFeature:i] getGeometry];
-        
-        NTPointStyleBuilder* pointStyleBuilder = [[NTPointStyleBuilder alloc] init];
-        [pointStyleBuilder setColor: color];
-        
-        NTLineStyleBuilder* lineStyleBuilder = [[NTLineStyleBuilder alloc] init];
-        [lineStyleBuilder setColor: color];
-        
-        NTPolygonStyleBuilder* polygonStyleBuilder = [[NTPolygonStyleBuilder alloc] init];
-        [polygonStyleBuilder setColor: color];
-        
-        if ([geometry isKindOfClass:[NTPointGeometry class]]) {
-            [_geocodingSource add: [[NTPoint alloc] initWithGeometry:(NTPointGeometry*)geometry style:[pointStyleBuilder buildStyle]]];
-        }
-        if ([geometry isKindOfClass:[NTLineGeometry class]]) {
-            [_geocodingSource add: [[NTLine alloc] initWithGeometry:(NTLineGeometry*)geometry style:[lineStyleBuilder buildStyle]]];
-        }
-        if ([geometry isKindOfClass:[NTPolygonGeometry class]]) {
-            [_geocodingSource add: [[NTPolygon alloc] initWithGeometry:(NTPolygonGeometry*)geometry style:[polygonStyleBuilder buildStyle]]];
-        }
-        if ([geometry isKindOfClass:[NTMultiGeometry class]]) {
-            NTGeometryCollectionStyleBuilder* geomCollectionStyleBuilder = [[NTGeometryCollectionStyleBuilder alloc] init];
-            [geomCollectionStyleBuilder setPointStyle:[pointStyleBuilder buildStyle]];
-            [geomCollectionStyleBuilder setLineStyle:[lineStyleBuilder buildStyle]];
-            [geomCollectionStyleBuilder setPolygonStyle:[polygonStyleBuilder buildStyle]];
-            [_geocodingSource add: [[NTGeometryCollection alloc] initWithGeometry:(NTMultiGeometry*)geometry style:[geomCollectionStyleBuilder buildStyle]]];
-        }
-        position = [geometry getCenterPos];
-    }
-    
-    if (goToPosition) {
-        [self.mapView setFocusPos:position durationSeconds:1.0f];
-        [self.mapView setZoom:17.0f durationSeconds:1.0f];
-    }
-    
-    NTBalloonPopup *popup = [[NTBalloonPopup alloc]initWithPos:position style:[builder buildStyle] title:title desc:description];
-    [_geocodingSource add:popup];
-}
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}
-  
-func showResult(result: NTGeocodingResult!, title: String, description: String, goToPosition: Bool) {
-    
-    source.clear()
-    
-    let builder = NTBalloonPopupStyleBuilder()
-    builder?.setLeftMargins(NTBalloonPopupMargins(left: 0, top: 0, right: 0, bottom: 0))
-    builder?.setTitleMargins(NTBalloonPopupMargins(left: 6, top: 3, right: 6, bottom: 3))
-    builder?.setCornerRadius(5)
-    
-    // Make sure this label is shown on top of all other labels
-    builder?.setPlacementPriority(10)
-    
-    let collection = result.getFeatureCollection()
-    let count = Int((collection?.getFeatureCount())!)
-    
-    var position: NTMapPos?
-    
-    var geometry: NTGeometry?
-    
-    for var i in 0..<count {
-        
-        geometry = collection?.getFeature(Int32(i)).getGeometry()
-        let color = NTColor(r: 0, g: 100, b: 200, a: 150)
-        
-        // Build styles for the displayed geometry
-        let pointBuilder = NTPointStyleBuilder()
-        pointBuilder?.setColor(color)
-        
-        let lineBuilder = NTLineStyleBuilder()
-        lineBuilder?.setColor(color)
-        
-        let polygonBuilder = NTPolygonStyleBuilder()
-        polygonBuilder?.setColor(color)
-        
-        var element: NTVectorElement?
-        
-        if let pointGeometry = geometry as? NTPointGeometry {
-            element = NTPoint(geometry: pointGeometry, style: pointBuilder?.buildStyle())
-            
-        } else if let lineGeometry = geometry as? NTLineGeometry {
-            element = NTLine(geometry: lineGeometry, style: lineBuilder?.buildStyle())
-        } else if let polygonGeometry = geometry as? NTPolygonGeometry {
-            element = NTPolygon(geometry: polygonGeometry, style: polygonBuilder?.buildStyle())
-            
-        } else if let multiGeometry = geometry as? NTMultiGeometry {
-            
-            let collectionBuilder = NTGeometryCollectionStyleBuilder()
-            collectionBuilder?.setPointStyle(pointBuilder?.buildStyle())
-            collectionBuilder?.setLineStyle(lineBuilder?.buildStyle())
-            collectionBuilder?.setPolygonStyle(polygonBuilder?.buildStyle())
-            
-            element = NTGeometryCollection(geometry: multiGeometry, style: collectionBuilder?.buildStyle())
-        }
-        
-        position = geometry?.getCenterPos()
-        source.add(element)
-        
-        i += 1
-    }
-    
-    if (goToPosition) {
-        map.setFocus(position, durationSeconds: 1.0)
-        map.setZoom(16, durationSeconds: 1)
-    }
-    
-    let popup = NTBalloonPopup(pos: position, style: builder?.buildStyle(), title: title, desc: description)
-    source.add(popup)
-}
-
-  {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-  {% highlight kotlin %}
-
-fun showResult(result: com.carto.geocoding.GeocodingResult, title: String, description: String, goToPosition: Boolean) {
-
-        source.clear()
-
-        val animationBuilder = AnimationStyleBuilder()
-        animationBuilder.relativeSpeed = 2.0f
-        animationBuilder.fadeAnimationType = AnimationType.ANIMATION_TYPE_SMOOTHSTEP
-
-        val builder = com.carto.styles.BalloonPopupStyleBuilder()
-        builder.leftMargins = com.carto.styles.BalloonPopupMargins(0, 0, 0, 0)
-        builder.titleMargins = com.carto.styles.BalloonPopupMargins(6, 3, 6, 3)
-        builder.cornerRadius = 5
-        builder.animationStyle = animationBuilder.buildStyle()
-
-        // Make sure this label is shown on top of all other labels
-        builder.placementPriority = 10
-
-        val collection = result.featureCollection
-        val count = collection.featureCount
-
-        var position: com.carto.core.MapPos? = null
-
-        var geometry: com.carto.geometry.Geometry?
-
-        for (i in 0..count - 1) {
-
-            geometry = collection?.getFeature(i)!!.geometry
-            val color = com.carto.graphics.Color(0, 100, 200, 150)
-
-            // Build styles for the displayed geometry
-            val pointBuilder = com.carto.styles.PointStyleBuilder()
-            pointBuilder.color = color
-
-            val lineBuilder = com.carto.styles.LineStyleBuilder()
-            lineBuilder.color = color
-
-            val polygonBuilder = com.carto.styles.PolygonStyleBuilder()
-            polygonBuilder.color = color
-
-            var element: com.carto.vectorelements.VectorElement? = null
-
-            if (geometry is com.carto.geometry.PointGeometry) {
-                element = com.carto.vectorelements.Point(geometry, pointBuilder.buildStyle())
-
-            } else if (geometry is com.carto.geometry.LineGeometry) {
-                element = com.carto.vectorelements.Line(geometry, lineBuilder.buildStyle())
-            } else if (geometry is com.carto.geometry.PolygonGeometry) {
-                element = com.carto.vectorelements.Polygon(geometry, polygonBuilder.buildStyle())
-
-            } else if (geometry is com.carto.geometry.MultiGeometry) {
-
-                val collectionBuilder = com.carto.styles.GeometryCollectionStyleBuilder()
-                collectionBuilder.pointStyle = pointBuilder.buildStyle()
-                collectionBuilder.lineStyle = lineBuilder.buildStyle()
-                collectionBuilder.polygonStyle = polygonBuilder.buildStyle()
-
-                element = com.carto.vectorelements.GeometryCollection(geometry, collectionBuilder.buildStyle())
-            }
-
-            position = geometry?.centerPos
-            source.add(element)
-        }
-
-        if (goToPosition) {
-
-            map.setFocusPos(position, 1.0f)
-            map.setZoom(17.0f, 1.0f)
-        }
-
-        val popup = com.carto.vectorelements.BalloonPopup(position, builder.buildStyle(), title, description)
-        source.add(popup)
-    }
 
   {% endhighlight %}
   </div>
