@@ -1,5 +1,6 @@
 #include "ZippedAssetPackage.h"
 #include "core/BinaryData.h"
+#include "components/Exceptions.h"
 #include "utils/Log.h"
 
 #define MINIZ_HEADER_FILE_ONLY
@@ -8,49 +9,52 @@
 namespace carto {
 
     ZippedAssetPackage::ZippedAssetPackage(const std::shared_ptr<BinaryData>& zipData) :
-        _handle(),
         _zipData(zipData),
+        _assetPackage(),
+        _handle(),
         _assetIndexMap()
     {
-        if (!_zipData) {
-            Log::Error("ZippedAssetPackage: Empty data");
-            return;
-        }
+        initialize();
+    }
     
-        _handle = std::make_shared<mz_zip_archive>();
-        mz_zip_archive* zip = static_cast<mz_zip_archive*>(_handle.get());
-        memset(zip, 0, sizeof(mz_zip_archive));
-        std::shared_ptr<std::vector<unsigned char> > data = _zipData->getDataPtr();
-        if (!mz_zip_reader_init_mem(zip, data->data(), data->size(), 0)) {
-            Log::Error("ZippedAssetPackage: Could not open archive");
-            return;
-        }
-    
-        for (unsigned int i = 0; i < mz_zip_reader_get_num_files(zip); i++) {
-            mz_zip_archive_file_stat stat;
-            if (!mz_zip_reader_file_stat(zip, i, &stat)) {
-                Log::Error("ZippedAssetPackage: Could not read file stats");
-                continue;
-            }
-    
-            _assetIndexMap[stat.m_filename] = i;
-        }
+    ZippedAssetPackage::ZippedAssetPackage(const std::shared_ptr<BinaryData>& zipData, const std::shared_ptr<AssetPackage>& assetPackage) :
+        _zipData(zipData),
+        _assetPackage(assetPackage),
+        _handle(),
+        _assetIndexMap()
+    {
+        initialize();
     }
     
     ZippedAssetPackage::~ZippedAssetPackage() {
-        mz_zip_archive* zip = static_cast<mz_zip_archive*>(_handle.get());
-        if (zip) {
-            mz_zip_reader_end(zip);
+        deinitialize();
+    }
+    
+    std::vector<std::string> ZippedAssetPackage::getLocalAssetNames() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        std::vector<std::string> names;
+        names.reserve(_assetIndexMap.size());
+        for (auto it = _assetIndexMap.begin(); it != _assetIndexMap.end(); it++) {
+            if (std::find(names.begin(), names.end(), it->first) == names.end()) {
+                names.push_back(it->first);
+            }
         }
+        return names;
     }
     
     std::vector<std::string> ZippedAssetPackage::getAssetNames() const {
         std::lock_guard<std::mutex> lock(_mutex);
 
         std::vector<std::string> names;
-        names.reserve(_assetIndexMap.size());
+        if (_assetPackage) {
+            names = _assetPackage->getAssetNames();
+        }
+        names.reserve(names.size() + _assetIndexMap.size());
         for (auto it = _assetIndexMap.begin(); it != _assetIndexMap.end(); it++) {
-            names.push_back(it->first);
+            if (std::find(names.begin(), names.end(), it->first) == names.end()) {
+                names.push_back(it->first);
+            }
         }
         return names;
     }
@@ -58,15 +62,19 @@ namespace carto {
     std::shared_ptr<BinaryData> ZippedAssetPackage::loadAsset(const std::string& name) const {
         std::lock_guard<std::mutex> lock(_mutex);
 
+        auto it = _assetIndexMap.find(name);
+        if (it == _assetIndexMap.end()) {
+            if (_assetPackage) {
+                return _assetPackage->loadAsset(name);
+            }
+            return std::shared_ptr<BinaryData>();
+        }
+
         mz_zip_archive* zip = static_cast<mz_zip_archive*>(_handle.get());
         if (!zip) {
             return std::shared_ptr<BinaryData>();
         }
     
-        auto it = _assetIndexMap.find(name);
-        if (it == _assetIndexMap.end()) {
-            return std::shared_ptr<BinaryData>();
-        }
         std::size_t elementSize = 0;
         std::shared_ptr<unsigned char> elementData(static_cast<unsigned char*>(mz_zip_reader_extract_to_heap(zip, it->second, &elementSize, 0)), mz_free);
         if (!elementData) {
@@ -74,6 +82,37 @@ namespace carto {
             return std::shared_ptr<BinaryData>();
         }
         return std::make_shared<BinaryData>(elementData.get(), elementSize);
+    }
+
+    void ZippedAssetPackage::initialize() {
+        if (!_zipData) {
+            throw NullArgumentException("Null zipData");
+        }
+    
+        _handle = std::make_shared<mz_zip_archive>();
+        mz_zip_archive* zip = static_cast<mz_zip_archive*>(_handle.get());
+        memset(zip, 0, sizeof(mz_zip_archive));
+        std::shared_ptr<std::vector<unsigned char> > data = _zipData->getDataPtr();
+        if (!mz_zip_reader_init_mem(zip, data->data(), data->size(), 0)) {
+            throw GenericException("Could not open ZIP archive");
+        }
+    
+        for (unsigned int i = 0; i < mz_zip_reader_get_num_files(zip); i++) {
+            mz_zip_archive_file_stat stat;
+            if (!mz_zip_reader_file_stat(zip, i, &stat)) {
+                throw GenericException("Could not read ZIP archive file stats");
+            }
+    
+            _assetIndexMap[stat.m_filename] = i;
+        }
+    }
+
+    void ZippedAssetPackage::deinitialize() {
+        mz_zip_archive* zip = static_cast<mz_zip_archive*>(_handle.get());
+        if (zip) {
+            mz_zip_reader_end(zip);
+        }
+        _handle.reset();
     }
     
 }
