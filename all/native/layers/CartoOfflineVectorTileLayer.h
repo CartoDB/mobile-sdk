@@ -8,12 +8,12 @@
 #define _CARTO_CARTOOFFNLINEVECTORTILELAYER_H_
 
 #include "layers/CartoVectorTileLayer.h"
+#include "packagemanager/CartoPackageManager.h"
 
 #include <string>
 #include <memory>
 
 namespace carto {
-    class CartoPackageManager;
 
     /**
      * Specialized offline vector tile layer that uses CartoPackageManager for offline maps service.
@@ -36,6 +36,22 @@ namespace carto {
          */
         CartoOfflineVectorTileLayer(const std::shared_ptr<CartoPackageManager>& packageManager, const std::shared_ptr<AssetPackage>& styleAssetPackage);
         virtual ~CartoOfflineVectorTileLayer();
+
+    protected:
+        class PackageManagerListener : public PackageManager::OnChangeListener {
+        public:
+            explicit PackageManagerListener(CartoOfflineVectorTileLayer& layer);
+                
+            virtual void onPackagesChanged();
+            virtual void onStylesChanged();
+                
+        private:
+            CartoOfflineVectorTileLayer& _layer;
+        };
+
+    private:
+        std::shared_ptr<CartoPackageManager> _packageManager;
+        std::shared_ptr<PackageManagerListener> _packageManagerListener;
     };
     
 }

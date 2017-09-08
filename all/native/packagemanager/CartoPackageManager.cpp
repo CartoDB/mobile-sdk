@@ -1,9 +1,12 @@
 #ifdef _CARTO_PACKAGEMANAGER_SUPPORT
 
 #include "CartoPackageManager.h"
+#include "core/BinaryData.h"
 #include "components/Exceptions.h"
 #include "components/LicenseManager.h"
 #include "projections/EPSG3857.h"
+#include "vectortiles/utils/CartoAssetPackageUpdater.h"
+#include "utils/MemoryAssetPackage.h"
 #include "utils/GeneralUtils.h"
 #include "utils/NetworkUtils.h"
 #include "utils/PlatformUtils.h"
@@ -12,6 +15,8 @@
 
 #include <regex>
 #include <sstream>
+
+#include <sqlite3pp.h>
 
 #include <boost/lexical_cast.hpp>
 
@@ -26,6 +31,66 @@ namespace carto {
     }
 
     CartoPackageManager::~CartoPackageManager() {
+    }
+
+    bool CartoPackageManager::startStyleDownload(CartoBaseMapStyle::CartoBaseMapStyle style) {
+        return PackageManager::startStyleDownload(CartoVectorTileLayer::GetStyleName(style));
+    }
+
+    bool CartoPackageManager::updateStyle(const std::string& styleName) {
+        std::shared_ptr<AssetPackage> styleAssetPackage = CartoVectorTileLayer::CreateStyleAssetPackage();
+
+        std::string dbFileName = createLocalFilePath("style_" + styleName + "_files.sqlite");
+        
+        sqlite3pp::database db(dbFileName.c_str());
+        db.execute("PRAGMA encoding='UTF-8'");
+
+        db.execute(R"SQL(
+                CREATE TABLE IF NOT EXISTS style_files (
+                    filename TEXT NOT NULL PRIMARY KEY,
+                    contents BLOB NULL
+                ))SQL");
+
+        std::map<std::string, std::shared_ptr<BinaryData> > updatedAssets;
+        sqlite3pp::query query(db, "SELECT filename, contents FROM files");
+        for (auto qit = query.begin(); qit != query.end(); qit++) {
+            std::string fileName = qit->get<const char*>(0);
+            std::shared_ptr<BinaryData> contents;
+            if (qit->get<const void*>(1)) {
+                contents = std::make_shared<BinaryData>(static_cast<const unsigned char*>(qit->get<const void*>(1)), qit->column_bytes(1));
+            }
+            updatedAssets[fileName] = contents;
+        }
+        auto currentAssetPackage = std::make_shared<MemoryAssetPackage>(updatedAssets, styleAssetPackage);
+
+        std::shared_ptr<MemoryAssetPackage> newAssetPackage;
+        try {
+            CartoAssetPackageUpdater updater(_source, styleName);
+            newAssetPackage = updater.update(currentAssetPackage);
+        }
+        catch (const std::exception& ex) {
+            Log::Errorf("CartoPackageManager::updateStyle: Error while updating style: %s", ex.what());
+            return false;
+        }
+
+        sqlite3pp::transaction xct(db);
+        {
+            for (const std::string& fileName : newAssetPackage->getLocalAssetNames()) {
+                std::shared_ptr<BinaryData> data = newAssetPackage->loadAsset(fileName);
+                sqlite3pp::command delCmd(db, "DELETE FROM files WHERE filename=:fileName");
+                delCmd.bind(":fileName", fileName.c_str());
+                delCmd.execute();
+                if (data) {
+                    sqlite3pp::command insCmd(db, "INSERT INTO FILES (filename, contents) VALUES(:fileName, :contents)");
+                    insCmd.bind(":fileName", fileName.c_str());
+                    insCmd.bind(":contents", data->data(), data->size());
+                    insCmd.execute();
+                }
+            }
+        }
+        xct.commit();
+
+        return newAssetPackage && !newAssetPackage->getLocalAssetNames().empty();
     }
 
     std::string CartoPackageManager::GetPackageListURL(const std::string& source) {
@@ -222,13 +287,13 @@ namespace carto {
 
     const std::string CartoPackageManager::CUSTOM_GEOCODING_BBOX_PACKAGE_URL = "http://api.nutiteq.com/geocodearea/v2/";
 
-    const int CartoPackageManager::MAX_CUSTOM_BBOX_PACKAGE_TILES = 250000;
+    const unsigned int CartoPackageManager::MAX_CUSTOM_BBOX_PACKAGE_TILES = 250000;
 
     const int CartoPackageManager::MAX_CUSTOM_BBOX_PACKAGE_TILE_ZOOM = 14;
 
     const int CartoPackageManager::MAX_CUSTOM_BBOX_PACKAGE_TILEMASK_ZOOMLEVEL = 12;
 
-    const int CartoPackageManager::MAX_TILEMASK_LENGTH = 128;
+    const unsigned int CartoPackageManager::MAX_TILEMASK_LENGTH = 128;
 
 }
 

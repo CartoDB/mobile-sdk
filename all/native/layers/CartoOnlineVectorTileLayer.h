@@ -8,6 +8,7 @@
 #define _CARTO_CARTOONLINEVECTORTILELAYER_H_
 
 #include "layers/CartoVectorTileLayer.h"
+#include "components/CancelableThreadPool.h"
 
 #include <string>
 #include <memory>
@@ -47,6 +48,28 @@ namespace carto {
          * @return The new vector tile decoder configured for the style.
          */
         static std::shared_ptr<TileDataSource> CreateDataSource(CartoBaseMapStyle::CartoBaseMapStyle style);
+
+    protected:
+        virtual void setComponents(const std::shared_ptr<CancelableThreadPool>& envelopeThreadPool,
+            const std::shared_ptr<CancelableThreadPool>& tileThreadPool,
+            const std::weak_ptr<Options>& options,
+            const std::weak_ptr<MapRenderer>& mapRenderer,
+            const std::weak_ptr<TouchHandler>& touchHandler);
+
+    private:
+        class StyleUpdateTask : public CancelableTask {
+        public:
+            StyleUpdateTask(const std::shared_ptr<CartoOnlineVectorTileLayer>& layer, CartoBaseMapStyle::CartoBaseMapStyle style);
+
+            virtual void run();
+
+        private:
+            std::weak_ptr<CartoOnlineVectorTileLayer> _layer;
+            CartoBaseMapStyle::CartoBaseMapStyle _style;
+        };
+
+        CartoBaseMapStyle::CartoBaseMapStyle _style;
+        std::shared_ptr<CancelableThreadPool> _styleUpdateThreadPool;
     };
     
 }

@@ -30,6 +30,11 @@
 %ignore carto::CartoVectorTileLayer::CartoVectorTileLayer(const std::shared_ptr<TileDataSource>&, const std::shared_ptr<AssetPackage>&);
 %ignore carto::CartoVectorTileLayer::CreateTileDecoder(const std::shared_ptr<AssetPackage>&);
 #endif
+
+%ignore carto::CartoVectorTileLayer::CreateStyleAssetPackage;
+%ignore carto::CartoVectorTileLayer::GetStyleName;
+%ignore carto::CartoVectorTileLayer::GetStyleSource;
+
 !objc_rename(createTileDecoderFromStyle) carto::CartoVectorTileLayer::CreateTileDecoder(CartoBaseMapStyle::CartoBaseMapStyle style);
 
 %include "layers/CartoVectorTileLayer.h"

@@ -24,34 +24,20 @@ namespace carto {
     }
 
     std::string CartoVectorTileLayer::getLanguage() const {
-        auto tileDecoder = std::dynamic_pointer_cast<MBVectorTileDecoder>(getTileDecoder());
-        return tileDecoder->getStyleParameter("lang");
+        if (auto tileDecoder = std::dynamic_pointer_cast<MBVectorTileDecoder>(getTileDecoder())) {
+            return tileDecoder->getStyleParameter("lang");
+        }
+        return std::string();
     }
 
     void CartoVectorTileLayer::setLanguage(const std::string& lang) {
-        auto tileDecoder = std::dynamic_pointer_cast<MBVectorTileDecoder>(getTileDecoder());
-        tileDecoder->setStyleParameter("lang", lang);
+        if (auto tileDecoder = std::dynamic_pointer_cast<MBVectorTileDecoder>(getTileDecoder())) {
+            tileDecoder->setStyleParameter("lang", lang);
+        }
     }
     
     std::shared_ptr<VectorTileDecoder> CartoVectorTileLayer::CreateTileDecoder(CartoBaseMapStyle::CartoBaseMapStyle style) {
-        auto styleAsset = std::make_shared<BinaryData>(cartostyles_v1_zip, cartostyles_v1_zip_len);
-        std::string styleName;
-        switch (style) {
-        case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_VOYAGER:
-            styleName = "voyager";
-            break;
-        case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_POSITRON:
-            styleName = "positron";
-            break;
-        case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_DARKMATTER:
-            styleName = "darkmatter";
-            break;
-        default:
-            styleName = "voyager";
-            break;
-        }
-        auto styleAssetPackage = std::make_shared<ZippedAssetPackage>(styleAsset);
-        return std::make_shared<MBVectorTileDecoder>(std::make_shared<CompiledStyleSet>(styleAssetPackage, styleName));
+        return std::make_shared<MBVectorTileDecoder>(std::make_shared<CompiledStyleSet>(CreateStyleAssetPackage(), GetStyleName(style)));
     }
 
     std::shared_ptr<VectorTileDecoder> CartoVectorTileLayer::CreateTileDecoder(const std::shared_ptr<AssetPackage>& styleAssetPackage) {
@@ -60,5 +46,34 @@ namespace carto {
         }
         return std::make_shared<MBVectorTileDecoder>(std::make_shared<CompiledStyleSet>(styleAssetPackage));
     }
-    
+
+    std::shared_ptr<AssetPackage> CartoVectorTileLayer::CreateStyleAssetPackage() {
+        auto styleAsset = std::make_shared<BinaryData>(cartostyles_v1_zip, cartostyles_v1_zip_len);
+        return std::make_shared<ZippedAssetPackage>(styleAsset);
+    }
+
+    std::string CartoVectorTileLayer::GetStyleName(CartoBaseMapStyle::CartoBaseMapStyle style) {
+        switch (style) {
+        case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_VOYAGER:
+            return "voyager";
+        case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_POSITRON:
+            return "positron";
+        case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_DARKMATTER:
+            return "darkmatter";
+        default:
+            return "voyager";
+        }
+    }
+
+    std::string CartoVectorTileLayer::GetStyleSource(CartoBaseMapStyle::CartoBaseMapStyle style) {
+        switch (style) {
+        case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_VOYAGER:
+        case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_POSITRON:
+        case CartoBaseMapStyle::CARTO_BASEMAP_STYLE_DARKMATTER:
+            return "carto.streets";
+        default:
+            return "carto.streets";
+        }
+    }
+
 }

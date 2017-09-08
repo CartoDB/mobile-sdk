@@ -39,10 +39,11 @@ namespace carto {
     protected:
         class PackageManagerListener : public PackageManager::OnChangeListener {
         public:
-            PackageManagerListener(PackageManagerRoutingService& service);
-        		
+            explicit PackageManagerListener(PackageManagerRoutingService& service);
+                
             virtual void onPackagesChanged();
-        		
+            virtual void onStylesChanged();
+                
         private:
             PackageManagerRoutingService& _service;
         };

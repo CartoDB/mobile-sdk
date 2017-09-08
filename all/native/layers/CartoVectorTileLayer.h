@@ -73,8 +73,18 @@ namespace carto {
          */
         static std::shared_ptr<VectorTileDecoder> CreateTileDecoder(CartoBaseMapStyle::CartoBaseMapStyle style);
 
-    private:
+        /**
+         * Creates a new tile decoder from the specified asset package.
+         * @param styleAssetPackage The style asset package (usually a zipped file or an asset)
+         * @return The new vector tile decoder configured for the style.
+         */
         static std::shared_ptr<VectorTileDecoder> CreateTileDecoder(const std::shared_ptr<AssetPackage>& styleAssetPackage);
+
+        static std::shared_ptr<AssetPackage> CreateStyleAssetPackage();
+
+        static std::string GetStyleName(CartoBaseMapStyle::CartoBaseMapStyle style);
+    
+        static std::string GetStyleSource(CartoBaseMapStyle::CartoBaseMapStyle style);
     };
     
 }

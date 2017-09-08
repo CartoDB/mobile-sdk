@@ -38,10 +38,11 @@ namespace carto {
     protected:
         class PackageManagerListener : public PackageManager::OnChangeListener {
         public:
-            PackageManagerListener(PackageManagerReverseGeocodingService& service);
-        		
+            explicit PackageManagerListener(PackageManagerReverseGeocodingService& service);
+                
             virtual void onPackagesChanged();
-        		
+            virtual void onStylesChanged();
+
         private:
             PackageManagerReverseGeocodingService& _service;
         };

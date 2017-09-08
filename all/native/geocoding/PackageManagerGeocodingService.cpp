@@ -94,6 +94,10 @@ namespace carto {
         _service._cachedGeocoder.reset();
     }
 
+    void PackageManagerGeocodingService::PackageManagerListener::onStylesChanged() {
+        // Impossible
+    }
+
 }
 
 #endif

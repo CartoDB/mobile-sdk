@@ -8,10 +8,11 @@
 
 #ifdef _CARTO_PACKAGEMANAGER_SUPPORT
 
-!proxy_imports(carto::CartoPackageManager, packagemanager.PackageManager)
+!proxy_imports(carto::CartoPackageManager, packagemanager.PackageManager, layers.CartoBaseMapStyle)
 
 %{
 #include "packagemanager/CartoPackageManager.h"
+#include "layers/CartoVectorTileLayer.h"
 #include "components/Exceptions.h"
 #include <memory>
 %}
@@ -21,6 +22,7 @@
 %include <cartoswig.i>
 
 %import "packagemanager/PackageManager.i"
+%import "layers/CartoVectorTileLayer.i"
 
 !polymorphic_shared_ptr(carto::CartoPackageManager, packagemanager.CartoPackageManager)
 

@@ -119,6 +119,10 @@ namespace carto {
         _dataSource.notifyTilesChanged(false);
     }
 
+    void PackageManagerTileDataSource::PackageManagerListener::onStylesChanged() {
+        // NOTE: ignore
+    }
+
 }
 
 #endif

@@ -81,6 +81,10 @@ namespace carto {
         _service._cachedRevGeocoder.reset();
     }
 
+    void PackageManagerReverseGeocodingService::PackageManagerListener::onStylesChanged() {
+        // Impossible
+    }
+
 }
 
 #endif
