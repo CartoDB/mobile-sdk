@@ -96,7 +96,7 @@ Search for "CartoMobileSDK.WinPhone10" or use url: "https://www.nuget.org/packag
 
 If you do not want to use package manager, you can download SDK from the [Github mobile-sdk project releases page]( https://github.com/CartoDB/mobile-sdk/releases)
 
-## Registering your Mobile App
+## Registering your App
 
 You must register your mobile applications under your CARTO.com account settings. Once an app is added, you can retrieve the mobile app license key, which is needed for your app code.
 
@@ -141,7 +141,7 @@ The following procedure describes how to register mobile apps under your account
 
     The Mobile apps page refreshes, displaying the added mobile application and the features enabled. 
 
-### Access your Mobile API Key
+### Access your API Key
 
 Once your mobile apps are registered for your account, you can retrieve the API Key for each application. This is useful when you need to copy and paste the API Key for mobile development.
 
@@ -169,7 +169,7 @@ Mobile App API Keys cannot be regenerated manually, but are automatically regene
 
 You will receive a notification when mobile api keys are regenerated.
 
-### Delete a Mobile App
+### Deleting an App
 
 Once a mobile application is saved, you cannot edit the Platform setting. As an alternative, you can delete the application and [recreate it](#registering-your-mobile-app) with new settings.
 
@@ -621,7 +621,7 @@ _**Note:** The  Windows Phone 10 implementation of the Mobile SDK is experimenta
 
     **Tip:** .Net [sample app](#xamarin-and-windows-phone-samples) contains two solutions: one for Windows Phone and another for Xamarin, and they share one project _hellomap-shared_ with map-related code.
 
-#### Create a WP App
+#### Creating a WP App
 
 Follow these steps in order to create a Windows Phone (WP) mobile application.
 
@@ -676,7 +676,7 @@ private Carto.Ui.MapView mapView;
 
 </pre>
 
-#### Add a Marker (WP)
+#### Adding a Marker (WP)
 
 To create a map marker at a defined coordinate on a Windows Phone mobile app, add following code (after creating a [MapView](#basic-map-features).
 
