@@ -13,7 +13,7 @@ Mobile SDK supports the following routing features:
  - Fast calculations in new devices, approximately 200-300 ms is expected, even for long routes
  - Multi-country route calculations
 
-## Routing Limitations
+### Limitations
 
 Mobile Routing is optimized for low memory usage and calculation speed, including very large road networks using *Contraction Hierarchy* representation and algorithms. As a result, this creates some expected limitations:
 
@@ -27,21 +27,7 @@ Mobile Routing is optimized for low memory usage and calculation speed, includin
 
 **Note:** Routing does not include live navigation features, such as following a GPS location, initiating automatic recalculations, or guided voice instructions. However, these features can be built on top of routing by your device application.
 
-## Offline Routing Packages
-
-CARTO has created a customized routing package, similar to other offline map packages, that contain **world-wide offline route packages**. This routing package includes the corresponding online service for most common profiles, using **osm.car** and **osm.foot** OpenStreetMap data, as the map source.
-
-- The list of country packages for routing is the same as other offline maps. See [Offline Map Packages](/docs/carto-engine/mobile-sdk/offline-maps/#offline-map-packages) for the full list of offline packages
-
-- The download size of the offline routing package is significantly larger (10-40% greater) than the size of the corresponding offline map package. Car profile packages are considerably smaller than walking packages
-
-- For Enterprise accounts, offline routing packages can include an extra agreement to include **HERE.com map data**. In many countries, especially outside Europe, offline routing packages contain more granular results. In addition, HERE includes address data. Please [contact us](mailto:sales@carto.com) if you are interested in extra Enterprise mobile features
-
-## Apply Routing in your App
-
-This section describes how to access prepackaged routing code from our Sample Apps, how how to apply routing in your mobile app.
-
-### Prepackaged Sample Code
+### Existing Samples
 
 For minimal routing implementation, use our sample app code for different mobile platforms. You can add this sample code to your mobile project.
 
@@ -97,7 +83,7 @@ _Note the following simplifications applied within the sample code_ You may need
 
 The following _Online Routing_ and _Offline Routing_ procedures demonstrate the required routing code.
 
-## Online Routing
+### Online Routing
  
 Online routing requires that you create a simple call and request to calculate the route.
 
@@ -382,7 +368,7 @@ These code samples display how to show navigation instructions on the map, as in
     
 </div>
 
-## Offline Routing
+### Offline Routing
 
 Offline routing requires a more complicated preparation of your offline map packages, listener events, package initialization, and routing calculation parameters.
 
@@ -392,8 +378,18 @@ If all routing packages are downloaded and routing service is ready, you can cal
 
 - Create the `PackageManagerValhallaRoutingService` call
 
-   Define the *RoutingRequest* with at least two points. Start routing with the service and read response as *RoutingResult*.
+   Define the `RoutingRequest` with at least two points. Start routing with the service and read response as *RoutingResult*.
 
 - Calculate the route with the `calculateRoute` request
 
 **Note:** This step is identical to the [online routing calculation code](/docs/carto-engine/mobile-sdk/mobile-routing/#online-routing).
+
+### Offline Packages
+
+CARTO has created a customized routing package, similar to other offline map packages, that contain **world-wide offline route packages**. This routing package includes the corresponding online service for most common profiles, using **osm.car** and **osm.foot** OpenStreetMap data, as the map source.
+
+- The list of country packages for routing is the same as other offline maps. See [Offline Map Packages](/docs/carto-engine/mobile-sdk/offline-maps/#offline-map-packages) for the full list of offline packages
+
+- The download size of the offline routing package is significantly larger (10-40% greater) than the size of the corresponding offline map package. Car profile packages are considerably smaller than walking packages
+
+- For Enterprise accounts, offline routing packages can include an extra agreement to include **HERE.com map data**. In many countries, especially outside Europe, offline routing packages contain more granular results. In addition, HERE includes address data. Please [contact us](mailto:sales@carto.com) if you are interested in extra Enterprise mobile features
