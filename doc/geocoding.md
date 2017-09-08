@@ -1,6 +1,6 @@
 # Mobile Geocoding
 
-As per [Wikipedia](https://en.wikipedia), "**Geocoding** is the computational process of transforming a postal address description to a location on the Earth's surface (spatial representation in numerical coordinates). **Reverse geocoding** converts geographic coordinates to a description of a location, usually the name of a place or an addressable location.""
+As per [Wikipedia](https://en.wikipedia), "**Geocoding** is the computational process of transforming a postal address description to a location on the Earth's surface (spatial representation in numerical coordinates). **Reverse geocoding** converts geographic coordinates to a description of a location, usually the name of a place or an addressable location."
 
 In layman's terms, geocoding is when you enter an address (text) and the output is latitude/longitude. Reverse geocoding is when you click on the map and it finds a nearby address, or point of interest.
 
