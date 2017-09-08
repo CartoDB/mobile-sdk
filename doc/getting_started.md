@@ -4,7 +4,7 @@ The following workflow guides you through the process of getting started with th
 
 [Prerequisites](#prerequisites) | 
 [1. Download the SDK by managed libraries, or by individual packages](#downloading-the-sdk) | 
-[2. Register your mobile app to get your API Key](#registering-your-mobile-app) | 
+[2. Register your mobile app to get your API Key](#registering-your-app) | 
 [3. Create your mobile project, based on the platform of your device](#creating-your-project) |
 [4. Create your first mobile app with basic map features](#basic-map-features) |
 [5. Use our sample mobile apps to test your project, and re-use prepackaged styles](#sample-apps) | 
@@ -133,7 +133,7 @@ The following procedure describes how to register mobile apps under your account
     App icon | Select an icon to represent your mobile application in your account
     Name | An informative name of the mobile application in your account
     Description | A description about the mobile application in your account
-    Platform | Identifies the type of mobile app platform. Some options may not be available, based on your account plan<br/><br/>**Note:** Once a mobile application is saved, you cannot edit the Platform setting. As an alternative, you can [delete](#delete-a-mobile-app) the application and recreate it with new settings.<br/><br/>**Tip:** When you select a _Platform_, the _Application ID_ displays more details about what identifiers, or packages, are required.<br/><br/><img src="/docs/img/layout/mobile/platform_appid.jpg" alt="Platform App ID hint" /> 
+    Platform | Identifies the type of mobile app platform. Some options may not be available, based on your account plan<br/><br/>**Note:** Once a mobile application is saved, you cannot edit the Platform setting. As an alternative, you can [delete](#deleting-an-app) the application and recreate it with new settings.<br/><br/>**Tip:** When you select a _Platform_, the _Application ID_ displays more details about what identifiers, or packages, are required.<br/><br/><img src="/docs/img/layout/mobile/platform_appid.jpg" alt="Platform App ID hint" /> 
     Application ID | The identification of the mobile app in the App store that is required for development with the Mobile SDK.<br/><br/>The following application ids identify the Platform selected:<br/><br/>- [**Android**](#android-implementation): *package* from the AndroidManifest.xml file or *applicationId* in build.gradle<br/><br/>- [**iOS**](#ios-implementation): Bundle Identifier. You can find it in the project properties in Xcode<br/><br/>- [**Xamarin Android**](#xamarin-android-and-ios-implementation): *package* from the AndroidManifest.xml file<br/><br/>- [**Xamarin iOS**](#xamarin-ios-app): Bundle Identifier from the project Info.plist<br/><br/>- [**Windows Phone**](#windows-phone-implementation): UUID from the Windows package.appmanifest 
     App type | Identifies the type of mobile application, which are subject to different quota limitations<br/><br/>- **Open**: This app type is open to the public and is available as free download in public app stores<br/><br/>- **Private**: Available for Enterprise accounts only, allows organizations to publish their apps internally and have paid app use cases. 
  
@@ -171,7 +171,7 @@ You will receive a notification when mobile api keys are regenerated.
 
 ### Deleting an App
 
-Once a mobile application is saved, you cannot edit the Platform setting. As an alternative, you can delete the application and [recreate it](#registering-your-mobile-app) with new settings.
+Once a mobile application is saved, you cannot edit the Platform setting. As an alternative, you can delete the application and [recreate it](#registering-your-app) with new settings.
 
 1. From the _Mobile apps_ section of your API Keys, click a mobile application name
 
@@ -270,7 +270,7 @@ class MainActivity : AppCompatActivity() {
 
   The map object needs a default map source in order to initialize. There are several requirements for this to work properly.
 
-  - Replace `YOUR_LICENSE_KEY` with your [Mobile App API Key](#registering-you-mobile-app)
+  - Replace `YOUR_LICENSE_KEY` with your [Mobile App API Key](#registering-your-app)
 
   - Define the first layer of the map, which will be the basemap layer. This is a vector map layer, which requires that you load and define styles in the assets of this layer. You can also add other map layers once a basemap is configured
 
@@ -330,7 +330,7 @@ pod 'CartoMobileSDK', '4.0.2'
   -  Implement **ViewController.h** to extend **GLKViewController**, instead of
     UIViewController
 
-  - You must replace `YOUR_LICENSE_KEY` with your [Mobile Apps and API Key](#registering-your-mobile-app) in the code below
+  - You must replace `YOUR_LICENSE_KEY` with your [Mobile Apps and API Key](#registering-your-app) in the code below
 
 {% highlight objc %}
 #import  <GLKit/GLKit.h>
@@ -411,7 +411,7 @@ If using Xamarin as the mobile platform, follow these implementation procedures 
 
 1. Add library as [nuget CartoMobileSDK.iOS](https://www.nuget.org/packages/CartoMobileSDK.iOS) and/or [nuget CartoMobileSDK.Android](https://www.nuget.org/packages/CartoMobileSDK.Android) from the main repo, and add to your mobile app. 
 
-2. [Register your mobile app](#registering-your-mobile-app) to get the API Key
+2. [Register your mobile app](#registering-your-app) to get the API Key
 
     **Note:** If you are using both Xamarin Android and iOS, register each platform as its own app.
 
@@ -611,7 +611,7 @@ _**Note:** The  Windows Phone 10 implementation of the Mobile SDK is experimenta
     - Windows Phone 10 SDK, should come with Visual Studio
     - Visual Studio extension (VSIX) for CARTO Maps SDK component. Download and start the package to install it
 
-2. [Register your app](#registering-your-mobile-app) and select _Windows Phone_ as the app type
+2. [Register your app](#registering-your-app) and select _Windows Phone_ as the app type
 
     - Ensure you enter the same application ID as your *Package.appmanifest > Packaging > Package name*. For example, the [sample app](#windows-phone-implementation) ID is **c882d38a-5c09-4994-87f0-89875cdee539**
 
