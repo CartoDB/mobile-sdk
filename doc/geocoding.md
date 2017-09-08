@@ -4,7 +4,7 @@
 
 In layman's terms, geocoding is when you enter an address (text) and the output is latitude/longitude, reverse geocoding is when you click on the map, and it finds a nearby address or point of interest.
 
-### Existing Samples
+## Existing Samples
 
 For minimal geocoding implementation, use our sample app code for different mobile platforms. You can add this sample code to your mobile project.
 
@@ -20,7 +20,7 @@ For minimal geocoding implementation, use our sample app code for different mobi
   - [Sample app repository](https://github.com/CartoDB/mobile-dotnet-samples)
   - [`Geocoding.cs`](https://github.com/CartoDB/mobile-dotnet-samples/blob/master/Shared/PackageManagerClient/Geocoding/Geocoding.cs)
   
-### Online Geocoding
+## Online Geocoding
 
 Online geocoding is available through [Pelias](https://github.com/pelias/pelias). You will need your own Mapzen API key. Sign-up at [https://mapzen.com/](https://mapzen.com/) to receive an API key.
 
@@ -123,7 +123,7 @@ val results = service!!.calculateAddresses(request)
 
 From your `GeocodingResult` objects, you can simply access `name`, `locality`, `country` etc. properties and display them to the user.
 
-### Reverse Geocoding
+## Reverse Geocoding
 
 Online reverse geocoding is also available through [Pelias](https://github.com/pelias/pelias). You will need your own Mapzen API key. Sign up at [https://mapzen.com/](https://mapzen.com/) to receive an API key.
 
@@ -239,7 +239,7 @@ val results = service?.calculateAddresses(request)
   </div>
 </div>
 
-### Offline Geocoding
+## Offline Geocoding
 
 CARTO Mobile SDK also supports offline geocoding and reverse geocoding, but to be able to geocode offline, you first need to download packages – can't geocode without data!
 
@@ -357,7 +357,7 @@ val service = PackageManagerReverseGeocodingService(manager)
 
 ... And then you simply call `calculateAddresses` with the appropriate arguments, as presented in our online geocoding sample
 
-### Parsing Results
+## Parsing Results
 
 The following example displays how to parse your `GeocodingResult` into a readable string. This is only a suggestion, you can parse results however you prefer.
 

@@ -1,4 +1,4 @@
-## Package Manager
+# Package Manager
 
 CARTO Mobile SDK offers a convenient way for you to manage different offline packages: map, routing and geocoding. The API is the same, no matter what kind of packages you download. The only difference is in the `source` you define.
 
@@ -6,7 +6,7 @@ CARTO Mobile SDK offers a convenient way for you to manage different offline pac
 * `routing:carto.streets` for routing packages
 * `geocoding:carto.streets` for geocoding packages
 
-### Define Folder
+## Define Folder
 
 Each type of package should be stored in a different folder, e.g. `mappackages`, `routingpackages`, `geocodingpackages`.
 
@@ -120,7 +120,7 @@ Each type of package should be stored in a different folder, e.g. `mappackages`,
   
 </div>
  
-### PackageManagerListener Events
+## PackageManagerListener Events
 
 Package downloads cannot be started immediately, as the Mobile SDK needs to get latest definition of packages from CARTO online service. Once this list is received, PackageManagerListener's `onPackageListUpdated()` is called.
 
@@ -376,7 +376,7 @@ public class MyPackageManagerListener : NTPackageManagerListener {
 
 **Note:** If you are wondering why these code samples include `EE` and `LV` (Estonia and Latvia) packages, see why [these countries might be linked](http://www.baltictimes.com/estonian_president_marries_latvian_cyber_defence_expert/). This shows that offline works across borders.
 
-### Initialize PackageManager
+## Initialize PackageManager
 
 To link PackageManagerListener with PackageManager, apply the following code.
 
@@ -482,7 +482,7 @@ packageManager.startPackageListDownload()
     
 </div>
 
-### Bounding Box
+## Bounding Box
 
 CARTO Mobile SDK allows for the download of custom areas, called bounding boxes. It can be anything from a park, a city, a route, or a block of countries.
 

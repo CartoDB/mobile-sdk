@@ -8,7 +8,7 @@ CARTO Mobile SDK supports several different types of custom sources:
 * Bundled GeoJson
 * Tile Download
 
-### MBTiles
+## MBTiles
 
 MBTiles is a file format for storing tilesets. It is designed so that you can package thousands of files that make up a tileset and move them around; eventually uploading to [Mapbox](https://www.mapbox.com/help/define-mbtiles/) or to use in a web or mobile application. MBTiles is an open specification and is based on the SQLite database. MBTiles can contain raster or vector tilesets.
 
@@ -249,7 +249,7 @@ doAsync {
   </div>
 </div>
 
-### GeoJson
+## GeoJson
 
 [GeoJSON](http://geojson.org/) is a format for encoding a variety of geographic data structures. GeoJSON supports the following geometry types: Point, LineString, Polygon, MultiPoint, MultiLineString, and MultiPolygon. Geometric objects with additional properties are Feature objects. Sets of features are contained by FeatureCollection objects.
 
@@ -519,7 +519,7 @@ doAsync {
 </div>
 
 
-### Tile Download
+## Tile Download
 
 CARTO Mobile SDK enables you to download tiles to your app and keep them in your cache, indefinitely. The specified download location will always be available to you offline. 
 
