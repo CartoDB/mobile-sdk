@@ -1,6 +1,8 @@
 #include "MemoryAssetPackage.h"
 #include "core/BinaryData.h"
 
+#include <algorithm>
+
 namespace carto {
 
     MemoryAssetPackage::MemoryAssetPackage(const std::map<std::string, std::shared_ptr<BinaryData> >& localAssets) :

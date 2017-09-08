@@ -8,7 +8,8 @@
 
 #ifdef _CARTO_PACKAGEMANAGER_SUPPORT
 
-!proxy_imports(carto::CartoPackageManager, packagemanager.PackageManager, layers.CartoBaseMapStyle)
+!proxy_imports(carto::CartoPackageManager, packagemanager.PackageManager, layers.CartoVectorTileLayer)
+!java_imports(carto::CartoPackageManager, com.carto.layers.CartoBaseMapStyle)
 
 %{
 #include "packagemanager/CartoPackageManager.h"
