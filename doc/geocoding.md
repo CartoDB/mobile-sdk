@@ -1,7 +1,9 @@
 # Mobile Geocoding
 
+**Geocoding** is the computational process of transforming a postal address description to a location on the Earth's surface (spatial representation in numerical coordinates). **Reverse geocoding**, on the other hand, converts geographic coordinates to a description of a location, usually the name of a place or an addressable location. [Wikipedia](https://en.wikipedia.org/wiki/Geocoding)
 
-## Apply Geocoding in your App
+In layman's terms, geocoding is when you enter an address (text) and the output is latitude/longitude, reverse geocoding is when you click on the map, and it finds a nearby address or point of interest.
+
 
 This section describes how to access prepackaged routing code from our Sample Apps and how to implement geocoding in your mobile app.
 
@@ -52,8 +54,21 @@ Implement online geocoding to initialize the service, create the request, and ca
 PeliasOnlineGeocodingService service = new PeliasOnlineGeocodingService("<your-mapzen-api-key>");
 GeocodingRequest request = new GeocodingRequest(mapView.getOptions().getBaseProjection(), "text");
 
-GeocodingResultVector results = service.calculateAddresses(request);
+// Note: Geocoding is a complicated process and shouldn't be done on the main thread
+Thread thread = new Thread(new Runnable() {
+    @Override
+    public void run() {
+		try {
+		    GeocodingResultVector results = service.calculateAddresses(request);
+		} catch (IOException e) {
+		    e.printStackTrace();
+		    return;
+		}
+	}
+}
 
+thread.start();
+	                
   {% endhighlight %}
   </div>
 
@@ -63,6 +78,7 @@ GeocodingResultVector results = service.calculateAddresses(request);
 Service = new PeliasOnlineGeocodingService(<your-mapzen-api-key>);
 var request = new GeocodingRequest(mapView.Options.BaseProjection, text);
 
+// Note: Geocoding is a complicated process and shouldn't be done on the main thread
 GeocodingResultVector results = Service.CalculateAddresses(request);
 
   {% endhighlight %}
@@ -75,6 +91,7 @@ NTPeliasOnlineGeocodingService *service = [[NTPeliasOnlineGeocodingService alloc
 NTProjection *projection = [[self.mapView getOptions] getBaseProjection];
 NTGeocodingRequest *request = [[NTGeocodingRequest alloc]initWithProjection:projection query:@"text"];
 
+// Note: Geocoding is a complicated process and shouldn't be done on the main thread
 NTGeocodingResultVector *results = [service calculateAddresses:request];
 
   {% endhighlight %}
@@ -86,6 +103,7 @@ NTGeocodingResultVector *results = [service calculateAddresses:request];
 let service = NTPeliasOnlineGeocodingService(apiKey: "<your-mapzen-api-key>")
 let request = NTGeocodingRequest(projection: self.contentView.map.getOptions().getBaseProjection(), query: text)
 
+// Note: Geocoding is a complicated process and shouldn't be done on the main thread
 let results = self.service.calculateAddresses(request)
 
   {% endhighlight %}
@@ -97,6 +115,7 @@ let results = self.service.calculateAddresses(request)
 val service = PeliasOnlineGeocodingService("<your-mapzen-api-key>")
 val request = GeocodingRequest(map.options.baseProjection, "text")
 
+// Note: Geocoding is a complicated process and shouldn't be done on the main thread
 val results = service!!.calculateAddresses(request)
 
   {% endhighlight %}
@@ -107,11 +126,9 @@ val results = service!!.calculateAddresses(request)
 
 From your `GeocodingResult` objects, you can simply access `name`, `locality`, `country` etc. properties and display them to the user.
 
-### Online Reverse Geocoding
+### Reverse Geocoding
 
 Online reverse geocoding is also available through [Pelias](https://github.com/pelias/pelias). You will need your own Mapzen API key. Sign up at [https://mapzen.com/](https://mapzen.com/) to receive an API key.
-
-When implementing reverse geocoding, you need implement a map event listener to initialize the service:
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -134,51 +151,22 @@ When implementing reverse geocoding, you need implement a map event listener to 
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
-  
-mapView.setMapEventListener(new MapEventListener() {
 
-    @Override
-    public void onMapClicked(MapClickInfo mapClickInfo) {
+service = new PeliasOnlineReverseGeocodingService("<your-mapzen-key>");
 
-        MapPos location = mapClickInfo.getClickPos();
+// Center of New York. Reverse Geocoding these coordinates should find City Hall Park
+MapPos newYork = baseProjection.fromLatLong(40.7128, -74.0059);
+ReverseGeocodingRequest request = new ReverseGeocodingRequest(baseProjection, newYork);
+float meters = 125.0f;
+request.setSearchRadius(meters);
 
-        ReverseGeocodingRequest request = new ReverseGeocodingRequest(mapView.getOptions().getBaseProjection(), location);
-        float meters = 125.0f;
-        request.setSearchRadius(meters);
-
-        // Scan the results list. If relatively close point-based matches are found,
-        // use this instead of the first result.
-        // In case of POIs within buildings, this allows us to highlight POI instead of the building
-        GeocodingResultVector results;
-        try {
-            results = service.calculateAddresses(request);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-
-        GeocodingResult result = null;
-        int count = (int)results.size();
-
-        if (count > 0) {
-            result = results.get(0);
-        }
-
-        for (int i = 0; i < count; i++) {
-            GeocodingResult other = results.get(i);
-
-            // 0.8f means 125 * (1.0 - 0.9) = 12.5 meters (rank is relative distance)
-            if (other.getRank() > 0.9f) {
-                String name = other.getAddress().getName();
-                // Points of interest usually have names, others just have addresses
-                if (name != null && name != "") {
-                    result = other;
-                    break;
-                }
-            }
-        }
-    }
-});
+// Note: Reverse geocoding is a complicated process and shouldn't be done on the main thread
+try {
+    GeocodingResultVector results = service.calculateAddresses(request);
+} catch (IOException e) {
+    e.printStackTrace();
+    return;
+}
         
   {% endhighlight %}
   </div>
@@ -186,66 +174,17 @@ mapView.setMapEventListener(new MapEventListener() {
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 
-// Attach this to your mapview as:
-// MapView.MapEventListener = new ReverseGeocodingEventListener(MapView.Options.BaseProjection)
-public class ReverseGeocodingEventListener : MapEventListener
-{
-    public EventHandler<EventArgs> ResultFound;
+Service = new PeliasOnlineReverseGeocodingService("<your-mapzen-key>");
 
-    public ReverseGeocodingService Service { get; set; }
+// Center of New York. Reverse Geocoding these coordinates should find City Hall Park
+MapPos newYork = projection.FromLatLong(40.7128, -74.0059);
 
-	Projection projection;
+var request = new ReverseGeocodingRequest(projection, newYork);
+var meters = 125.0f;
+request.SearchRadius = meters;
 
-    public ReverseGeocodingEventListener(Projection projection)
-    {
-        this.projection = projection;
-
-        Service = new PeliasOnlineReverseGeocodingService("<your-mapzen-api-key");
-    }
-
-    public override void OnMapClicked(MapClickInfo mapClickInfo)
-    {
-        MapPos position = mapClickInfo.ClickPos;
-        var request = new ReverseGeocodingRequest(projection, position);
-
-        var meters = 125.0f;
-        request.SearchRadius = meters;
-
-        GeocodingResultVector results = Service.CalculateAddresses(request);
-
-        GeocodingResult result = null;
-
-        int count = results.Count;
-
-        // Scan the results list. If relatively close point-based matches are found,
-        // use this instead of the first result.
-        // In case of POIs within buildings, this allows us to highlight POI instead of the building
-
-        if (count > 0)
-        {
-            result = results[0];
-        }
-
-        for (int i = 0; i < count; i++)
-        {
-            GeocodingResult other = results[i];
-
-            // 0.8f means 125 * (1.0 - 0.9) = 12.5 meters (rank is relative distance)
-            if (other.Rank > 0.9f)
-            {
-                string name = other.Address.Name;
-				// Points of interest usually have names, others just have addresses
-				if (!string.IsNullOrWhiteSpace(name))
-                {
-                    result = other;
-                    break;
-                }
-            }
-		}
-
-        ResultFound?.Invoke(result, EventArgs.Empty);
-	}
-}
+// Note: Reverse geocoding is a complicated process and shouldn't be done on the main thread
+GeocodingResultVector results = Service.CalculateAddresses(request);
 
   {% endhighlight %}
   </div>
@@ -253,57 +192,16 @@ public class ReverseGeocodingEventListener : MapEventListener
    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
-@interface ReverseGeocodingListener : NTMapEventListener
+self.service = [[NTPeliasOnlineReverseGeocodingService alloc]initWithApiKey:@"<mapzen-api-key>"];
 
-- (void)onMapClicked: (NTMapClickInfo *)mapClickinfo;
-
-// This controller is the controller this listener is attached to.
-// This must be initialized for the calculation to work
-// The controller contains the instance of your pelias online reverse geocoding service,
-// which should be initialized as: self.service = [[NTPeliasOnlineReverseGeocodingService alloc]initWithApiKey:@"<your-mapzen-api-key"];
-@property (nonatomic, strong) ReverseGeocodingBaseController *controller;
-
-@end
-
-@implementation ReverseGeocodingListener
-
-- (void)onMapClicked: (NTMapClickInfo *)mapClickinfo {
+NTProjection *projection = [self.controller getProjection];
+// Center of New York. Reverse Geocoding these coordinates should find City Hall Park
+NTMapPos *newYork = [projection fromLat:40.7128 lng:-74.0059];
+NTReverseGeocodingRequest *request = [[NTReverseGeocodingRequest alloc]initWithProjection:projection location:newYork];
+[request setSearchRadius:125.0f];
     
-    NTMapPos *location = [mapClickinfo getClickPos];
-    NTProjection *projection = [self.controller getProjection];
-    
-    NTReverseGeocodingRequest *request = [[NTReverseGeocodingRequest alloc]initWithProjection:projection location:location];
-    [request setSearchRadius:125.0f];
-    
-    // Scan the results list. If relatively close point-based matches are found,
-    // use this instead of the first result.
-    // In case of POIs within buildings, this allows us to highlight POI instead of the building
-    NTGeocodingResultVector *results = [self.controller.service calculateAddresses: request];
-    
-    NTGeocodingResult *result;
-    int count = (int)[results size];
-    
-    if (count > 0) {
-        result = [results get:0];
-    }
-    
-    for (int i = 0; i < count; i++) {
-        
-        NTGeocodingResult *other = [results get:i];
-        
-        // 0.8f means 125 * (1.0 - 0.9) = 12.5 meters (rank is relative distance)
-        if ([other getRank] > 0.9f) {
-            NSString *name = [[other getAddress] getName];
-            
-            if (name != nil && ![name  isEqual: @""]) {
-                result = other;
-                break;
-            }
-        }
-    }
-}
-
-@end
+// Note: Reverse geocoding is a complicated process and shouldn't be done on the main thread
+NTGeocodingResultVector *results = [self.service calculateAddresses: request];
 
   {% endhighlight %}
   </div>
@@ -311,66 +209,17 @@ public class ReverseGeocodingEventListener : MapEventListener
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}
 
-// Attach this to your map view, as:
-// let geocodingListener = ReverseGeocodingEventListener()
-// map.setMapEventListener(geocodingListener)
-class ReverseGeocodingEventListener: NTMapEventListener {
-    
-    var delegate: ReverseGeocodingEventDelegate?
-    
-    // Be sure to initialize this variable with your projection, e.g. map.getOptions().getBaseProjection()
-    var projection: NTProjection!
-    
-    // Be sure to initialize this variable with: NTPeliasOnlineReverseGeocodingService(apiKey:"<your-mapzen-api-key")
-    var service: NTReverseGeocodingService!
-    
-    override func onMapClicked(_ mapClickInfo: NTMapClickInfo!) {
-        
-        let location = mapClickInfo.getClickPos()
-        let request = NTReverseGeocodingRequest(projection: projection, location: location)
-        
-        let meters: Float = 125.0
-        request?.setSearchRadius(meters)
-        
-        let results = service.calculateAddresses(request)
-        
-        // Scan the results list. If relatively close point-based matches are found,
-        // use this instead of the first result.
-        // In case of POIs within buildings, this allows us to highlight POI instead of the building
-        
-        var result: NTGeocodingResult?
-        
-        let count = (results?.size())!
-        
-        if (count > 0) {
-            result = results?.get(0)
-        }
-        
-        for var i in 0..<count {
-            let other = results?.get(Int32(i))
-            
-            // 0.8f means 125 * (1.0 - 0.9) = 12.5 meters (rank is relative distance)
-            if ((other?.getRank())! > Float(0.9)) {
-                let name = other?.getAddress().getName()
-                // Points of interest usually have names, others just have addresses
-                if (name != nil && name != "") {
-                    result = other
-                    break
-                }
-            }
-            
-            i += 1
-        }
-        
-        delegate?.foundResult(result: result)
-    }
-}
+service = NTPeliasOnlineReverseGeocodingService(apiKey: "<your-mapzen-key>")
 
-// Delegate class to make implementation more native-like and remove circular dependency injection
-protocol ReverseGeocodingEventDelegate {
-    func foundResult(result: NTGeocodingResult!)
-}
-
+// Center of New York. Reverse Geocoding these coordinates should find City Hall Park
+let newYork = projection.fromLat(40.7128, lng: -74.0059)
+let request = NTReverseGeocodingRequest(projection: projection, location: newYork)
+    
+let meters: Float = 125.0
+request?.setSearchRadius(meters)
+    
+// Note: Reverse geocoding is a complicated process and shouldn't be done on the main thread
+let results = service.calculateAddresses(request)
 
   {% endhighlight %}
   </div>
@@ -378,45 +227,17 @@ protocol ReverseGeocodingEventDelegate {
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
   {% highlight kotlin %}
 
-map?.mapEventListener = object : MapEventListener() {
+service = PeliasOnlineReverseGeocodingService("<your-mapzen-key>")
 
-    override fun onMapClicked(mapClickInfo: MapClickInfo?) {
+// Center of New York. Reverse Geocoding these coordinates should find City Hall Park
+val newYork = contentView?.projection?.fromLatLong(40.7128, -74.0059)
+val request = ReverseGeocodingRequest(contentView?.projection, newYork)
+val meters = 125.0f
+request.searchRadius = meters
 
-        val location = mapClickInfo?.clickPos
-        val request = ReverseGeocodingRequest(map?.options?.baseProjection, location)
-
-        val meters = 125.0f
-        request.searchRadius = meters
-
-        val results = service?.calculateAddresses(request)
-        // Scan the results list. If we found relatively close point-based match,
-        // use this instead of the first result.
-        // In case of POIs within buildings, this allows us to hightlight POI instead of the building
-
-        var result: GeocodingResult? = null
-        val count = results?.size()?.toInt()!!
-
-        if (count > 0) {
-            result = results.get(0)
-        }
-
-        for (i in 0..count - 1) {
-
-            val other = results.get(i)
-
-            // 0.8f means 125 * (1.0 - 0.9) = 12.5 meters (rank is relative distance)
-            if (other.rank > 0.9f) {
-                val name = other.address.name
-                // Points of interest usually have names, others just have addresses
-                if (name != null && name != "") {
-                    result = other
-                    break
-                }
-            }
-        }
-    }
-}
-
+// Note: Reverse geocoding is a complicated process and shouldn't be done on the main thread
+val results = service?.calculateAddresses(request)
+                
   {% endhighlight %}
   </div>
 </div>
