@@ -68,7 +68,7 @@ namespace carto {
                 it2->second.verify(data);
             }
             catch (const std::exception& ex) {
-                throw FileException(std::string("Failed to update file, verification problem: ") + ex.what(), it2->first);
+                throw FileException(std::string("Failed to update file, verification failed: ") + ex.what(), it2->first);
             }
             updatedAssets[it2->first] = data;
         }

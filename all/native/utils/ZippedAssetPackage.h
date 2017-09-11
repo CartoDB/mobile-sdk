@@ -27,9 +27,9 @@ namespace carto {
         /**
          * Constructs a ZIP asset package from the archived binary data and a fallback asset package.
          * @param zipData The ZIP archive.
-         * @param assetPackage The fallback asset package. If an asset is not found in the ZIP archive, fallback asset package is used.
+         * @param baseAssetPackage The base asset package. If an asset is not found in the ZIP archive, base asset package is used.
          */
-        ZippedAssetPackage(const std::shared_ptr<BinaryData>& zipData, const std::shared_ptr<AssetPackage>& assetPackage);
+        ZippedAssetPackage(const std::shared_ptr<BinaryData>& zipData, const std::shared_ptr<AssetPackage>& baseAssetPackage);
         virtual ~ZippedAssetPackage();
 
         std::vector<std::string> getLocalAssetNames() const;
@@ -43,7 +43,7 @@ namespace carto {
         void deinitialize();
 
         const std::shared_ptr<BinaryData> _zipData;
-        const std::shared_ptr<AssetPackage> _assetPackage;
+        const std::shared_ptr<AssetPackage> _baseAssetPackage;
         std::shared_ptr<void> _handle;
         std::map<std::string, unsigned int> _assetIndexMap;
 

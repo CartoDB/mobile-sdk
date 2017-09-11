@@ -27,12 +27,10 @@ namespace carto {
         std::shared_ptr<BinaryData> fileData1 = assetPackage->loadAsset(projectFileName);
         picojson::value projectJson1 = ExtractFileData(fileData1);
         std::map<std::string, FileInfo> files1 = ReadFileInfo(projectJson1);
-        files1[projectFileName].verify(fileData1);
 
         std::shared_ptr<BinaryData> fileData2 = downloadFile(projectFileName);
         picojson::value projectJson2 = ExtractFileData(fileData2);
         std::map<std::string, FileInfo> files2 = ReadFileInfo(projectJson2);
-        files2[projectFileName].verify(fileData2);
 
         std::map<std::string, std::shared_ptr<BinaryData> > updatedAssets = updateFiles(files1, files2);
         if (projectJson1 != projectJson2) {

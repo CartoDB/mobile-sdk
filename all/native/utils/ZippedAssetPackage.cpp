@@ -10,16 +10,16 @@ namespace carto {
 
     ZippedAssetPackage::ZippedAssetPackage(const std::shared_ptr<BinaryData>& zipData) :
         _zipData(zipData),
-        _assetPackage(),
+        _baseAssetPackage(),
         _handle(),
         _assetIndexMap()
     {
         initialize();
     }
     
-    ZippedAssetPackage::ZippedAssetPackage(const std::shared_ptr<BinaryData>& zipData, const std::shared_ptr<AssetPackage>& assetPackage) :
+    ZippedAssetPackage::ZippedAssetPackage(const std::shared_ptr<BinaryData>& zipData, const std::shared_ptr<AssetPackage>& baseAssetPackage) :
         _zipData(zipData),
-        _assetPackage(assetPackage),
+        _baseAssetPackage(baseAssetPackage),
         _handle(),
         _assetIndexMap()
     {
@@ -47,8 +47,8 @@ namespace carto {
         std::lock_guard<std::mutex> lock(_mutex);
 
         std::vector<std::string> names;
-        if (_assetPackage) {
-            names = _assetPackage->getAssetNames();
+        if (_baseAssetPackage) {
+            names = _baseAssetPackage->getAssetNames();
         }
         names.reserve(names.size() + _assetIndexMap.size());
         for (auto it = _assetIndexMap.begin(); it != _assetIndexMap.end(); it++) {
@@ -64,8 +64,8 @@ namespace carto {
 
         auto it = _assetIndexMap.find(name);
         if (it == _assetIndexMap.end()) {
-            if (_assetPackage) {
-                return _assetPackage->loadAsset(name);
+            if (_baseAssetPackage) {
+                return _baseAssetPackage->loadAsset(name);
             }
             return std::shared_ptr<BinaryData>();
         }
