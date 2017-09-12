@@ -20,6 +20,11 @@ namespace carto {
     {
     }
     
+    CartoVectorTileLayer::CartoVectorTileLayer(const std::shared_ptr<TileDataSource>& dataSource, const std::shared_ptr<AssetPackage>& styleAssetPackage, const std::string& styleName) :
+        VectorTileLayer(dataSource, CreateTileDecoder(styleAssetPackage, styleName))
+    {
+    }
+    
     CartoVectorTileLayer::~CartoVectorTileLayer() {
     }
 
@@ -45,6 +50,13 @@ namespace carto {
             throw NullArgumentException("Null styleAssetPackage");
         }
         return std::make_shared<MBVectorTileDecoder>(std::make_shared<CompiledStyleSet>(styleAssetPackage));
+    }
+
+    std::shared_ptr<VectorTileDecoder> CartoVectorTileLayer::CreateTileDecoder(const std::shared_ptr<AssetPackage>& styleAssetPackage, const std::string& styleName) {
+        if (!styleAssetPackage) {
+            throw NullArgumentException("Null styleAssetPackage");
+        }
+        return std::make_shared<MBVectorTileDecoder>(std::make_shared<CompiledStyleSet>(styleAssetPackage, styleName));
     }
 
     std::shared_ptr<AssetPackage> CartoVectorTileLayer::CreateStyleAssetPackage() {

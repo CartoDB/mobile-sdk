@@ -10,7 +10,7 @@
 namespace carto {
     
     CartoOfflineVectorTileLayer::CartoOfflineVectorTileLayer(const std::shared_ptr<CartoPackageManager>& packageManager, CartoBaseMapStyle::CartoBaseMapStyle style) :
-        CartoVectorTileLayer(std::make_shared<PackageManagerTileDataSource>(packageManager), packageManager ? packageManager->getStyleAssetPackage(style) : std::shared_ptr<AssetPackage>()),
+        CartoVectorTileLayer(std::make_shared<PackageManagerTileDataSource>(packageManager), packageManager ? packageManager->getStyleAssetPackage(style) : std::shared_ptr<AssetPackage>(), GetStyleName(style)),
         _style(style),
         _packageManager(packageManager),
         _packageManagerListener()

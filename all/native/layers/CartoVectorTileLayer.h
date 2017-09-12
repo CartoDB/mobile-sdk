@@ -53,6 +53,14 @@ namespace carto {
          * @param styleAssetPackage The style asset package (usually a zipped file or an asset)
          */
         CartoVectorTileLayer(const std::shared_ptr<TileDataSource>& dataSource, const std::shared_ptr<AssetPackage>& styleAssetPackage);
+        /**
+         * Constructs a CartoVectorTileLayer object from a source name and a style asset package.
+         * Style asset package defines visual style of the map and must be compatible with the source.
+         * @param dataSource The data source from which this layer loads data.
+         * @param styleAssetPackage The style asset package (usually a zipped file or an asset)
+         * @param styleName The style to use from the asset package.
+         */
+        CartoVectorTileLayer(const std::shared_ptr<TileDataSource>& dataSource, const std::shared_ptr<AssetPackage>& styleAssetPackage, const std::string& styleName);
         virtual ~CartoVectorTileLayer();
 
         /**
@@ -72,13 +80,19 @@ namespace carto {
          * @return The new vector tile decoder configured for the style.
          */
         static std::shared_ptr<VectorTileDecoder> CreateTileDecoder(CartoBaseMapStyle::CartoBaseMapStyle style);
-
         /**
          * Creates a new tile decoder from the specified asset package.
          * @param styleAssetPackage The style asset package (usually a zipped file or an asset)
          * @return The new vector tile decoder configured for the style.
          */
         static std::shared_ptr<VectorTileDecoder> CreateTileDecoder(const std::shared_ptr<AssetPackage>& styleAssetPackage);
+        /**
+         * Creates a new tile decoder from the specified asset package.
+         * @param styleAssetPackage The style asset package (usually a zipped file or an asset)
+         * @param styleName The name of the style to use.
+         * @return The new vector tile decoder configured for the style.
+         */
+        static std::shared_ptr<VectorTileDecoder> CreateTileDecoder(const std::shared_ptr<AssetPackage>& styleAssetPackage, const std::string& styleName);
 
         static std::shared_ptr<AssetPackage> CreateStyleAssetPackage();
 
