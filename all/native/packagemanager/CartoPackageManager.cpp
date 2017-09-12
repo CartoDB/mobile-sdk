@@ -46,7 +46,7 @@ namespace carto {
         db.execute("PRAGMA encoding='UTF-8'");
 
         db.execute(R"SQL(
-                CREATE TABLE IF NOT EXISTS style_files (
+                CREATE TABLE IF NOT EXISTS files (
                     filename TEXT NOT NULL PRIMARY KEY,
                     contents BLOB NULL
                 ))SQL");
@@ -74,14 +74,14 @@ namespace carto {
         }
 
         sqlite3pp::transaction xct(db);
-        {
+        if (newAssetPackage) {
             for (const std::string& fileName : newAssetPackage->getLocalAssetNames()) {
                 std::shared_ptr<BinaryData> data = newAssetPackage->loadAsset(fileName);
                 sqlite3pp::command delCmd(db, "DELETE FROM files WHERE filename=:fileName");
                 delCmd.bind(":fileName", fileName.c_str());
                 delCmd.execute();
                 if (data) {
-                    sqlite3pp::command insCmd(db, "INSERT INTO FILES (filename, contents) VALUES(:fileName, :contents)");
+                    sqlite3pp::command insCmd(db, "INSERT INTO files (filename, contents) VALUES(:fileName, :contents)");
                     insCmd.bind(":fileName", fileName.c_str());
                     insCmd.bind(":contents", data->data(), data->size());
                     insCmd.execute();

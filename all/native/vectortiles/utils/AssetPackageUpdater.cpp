@@ -84,11 +84,13 @@ namespace carto {
 
     std::map<std::string, AssetPackageUpdater::FileInfo> AssetPackageUpdater::ReadFileInfo(const picojson::value& fileData) {
         std::map<std::string, FileInfo> files;
-        for (const std::pair<const std::string, picojson::value>& file : fileData.get<picojson::object>()) {
-            FileInfo fileInfo;
-            fileInfo.md5hash = file.second.get("md5").get<std::string>();
-            fileInfo.size = file.second.get("size").get<std::int64_t>();
-            files[file.first] = fileInfo;
+        if (fileData.is<picojson::object>()) {
+            for (const std::pair<const std::string, picojson::value>& file : fileData.get<picojson::object>()) {
+                FileInfo fileInfo;
+                fileInfo.md5hash = file.second.get("md5").get<std::string>();
+                fileInfo.size = file.second.get("size").get<std::int64_t>();
+                files[file.first] = fileInfo;
+            }
         }
         return files;
     }
@@ -104,7 +106,7 @@ namespace carto {
         if (!err.empty()) {
             throw ParseException(std::string("Failed to parse style info: ") + err, json);
         }
-        return projectInfo.get("files");
+        return projectInfo.get("fileinfo");
     }
 
 }
