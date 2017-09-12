@@ -12,8 +12,8 @@
 
 namespace carto {
 
-    CartoAssetPackageUpdater::CartoAssetPackageUpdater(const std::string& source, const std::string& styleName) :
-        _source(source),
+    CartoAssetPackageUpdater::CartoAssetPackageUpdater(const std::string& schema, const std::string& styleName) :
+        _schema(schema),
         _styleName(styleName)
     {
     }
@@ -40,10 +40,10 @@ namespace carto {
     }
 
     std::shared_ptr<BinaryData> CartoAssetPackageUpdater::downloadFile(const std::string& fileName) const {
-        std::vector<std::string> pathParts = GeneralUtils::Split(fileName, '/');
+        std::vector<std::string> pathParts = GeneralUtils::Split(_schema + "/" + fileName, '/');
         std::transform(pathParts.begin(), pathParts.end(), pathParts.begin(), NetworkUtils::URLEncode);
         std::string urlEncodedFileName = GeneralUtils::Join(pathParts, '/');
-        std::string url = STYLE_SERVICE_URL + NetworkUtils::URLEncode(_source) + "/v1/" + urlEncodedFileName;
+        std::string url = STYLE_SERVICE_URL + urlEncodedFileName;
 
         std::shared_ptr<BinaryData> responseData;
         if (!NetworkUtils::GetHTTP(url, responseData, Log::IsShowDebug())) {

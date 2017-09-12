@@ -61,7 +61,7 @@ namespace carto {
     }
 
     void CartoOnlineVectorTileLayer::StyleUpdateTask::run() {
-        std::string source = GetStyleSource(_style);
+        std::string schema;
         std::string styleName = GetStyleName(_style);
         std::shared_ptr<AssetPackage> styleAssetPackage;
         {
@@ -71,12 +71,19 @@ namespace carto {
                         styleAssetPackage = compiledStyleSet->getAssetPackage();
                     }
                 }
+
+                if (auto dataSource = std::dynamic_pointer_cast<CartoOnlineTileDataSource>(layer->getDataSource())) {
+                    schema = dataSource->getSchema();
+                }
             }
+        }
+        if (schema.empty()) {
+            schema = GetStyleSource(_style) + "/v1"; // default schema, if missing
         }
 
         std::shared_ptr<MemoryAssetPackage> updatedStyleAssetPackage;
         try {
-            CartoAssetPackageUpdater updater(source, styleName);
+            CartoAssetPackageUpdater updater(schema, styleName);
             updatedStyleAssetPackage = updater.update(styleAssetPackage);
         }
         catch (const std::exception& ex) {

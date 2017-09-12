@@ -32,6 +32,12 @@ namespace carto {
         explicit CartoOnlineTileDataSource(const std::string& source);
         virtual ~CartoOnlineTileDataSource();
 
+        /**
+         * Returns the current schema of the datasource.
+         * @return The current schema of the datasource.
+         */
+        std::string getSchema();
+
         virtual std::shared_ptr<TileData> loadTile(const MapTile& mapTile);
         
     protected:
@@ -45,7 +51,7 @@ namespace carto {
 
         std::string buildTileURL(const std::string& baseURL, const MapTile& tile) const;
 
-        bool loadTileURLs();
+        bool loadConfiguration();
 
         std::shared_ptr<TileData> loadOnlineTile(const std::string& url, const MapTile& mapTile);
 
@@ -57,6 +63,8 @@ namespace carto {
         const std::string _source;
         mutable cache::timed_lru_cache<long long, std::shared_ptr<TileData> > _cache;
         HTTPClient _httpClient;
+
+        std::string _schema;
 
         bool _tmsScheme;
         std::vector<std::string> _tileURLs;

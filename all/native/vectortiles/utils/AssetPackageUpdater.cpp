@@ -106,7 +106,7 @@ namespace carto {
         if (!err.empty()) {
             throw ParseException(std::string("Failed to parse style info: ") + err, json);
         }
-        return projectInfo.get("fileinfo");
+        return projectInfo.get("files");
     }
 
 }

@@ -220,7 +220,11 @@ namespace carto {
 
         std::shared_ptr<MemoryAssetPackage> newAssetPackage;
         try {
-            CartoAssetPackageUpdater updater(_source, styleName);
+            std::string schema = getSchema();
+            if (schema.empty()) {
+                schema = _source + "/v1"; // default schema, if missing
+            }
+            CartoAssetPackageUpdater updater(schema, styleName);
             newAssetPackage = updater.update(currentAssetPackage);
         }
         catch (const std::exception& ex) {

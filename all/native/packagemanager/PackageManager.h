@@ -115,6 +115,12 @@ namespace carto {
         void stop(bool wait);
 
         /**
+         * Returns the current schema of the packages.
+         * @return The current schema of the packages.
+         */
+        std::string getSchema() const;
+
+        /**
          * Returns the list of available server packages.
          * Note that the list must be retrieved from the server first, using startPackageListDownload.
          * @return The list of available server packages.
@@ -228,6 +234,7 @@ namespace carto {
         /**
          * Starts downloading the specified style. When this task finishes, listener is called.
          * @param styleName The name of the style to download.
+         * @return True if download process was started.
          */
         bool startStyleDownload(const std::string& styleName);
 

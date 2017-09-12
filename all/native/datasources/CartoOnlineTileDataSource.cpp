@@ -19,6 +19,7 @@ namespace carto {
         _source(source),
         _cache(MAX_CACHED_TILES),
         _httpClient(Log::IsShowDebug()),
+        _schema(),
         _tmsScheme(false),
         _tileURLs(),
         _tileMasks(),
@@ -29,6 +30,16 @@ namespace carto {
     }
     
     CartoOnlineTileDataSource::~CartoOnlineTileDataSource() {
+    }
+
+    std::string CartoOnlineTileDataSource::getSchema() {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+        // Load configuration, if needed
+        if (_tileURLs.empty()) {
+            loadConfiguration();
+        }
+        return _schema;
     }
 
     std::shared_ptr<TileData> CartoOnlineTileDataSource::loadTile(const MapTile& mapTile) {
@@ -45,7 +56,7 @@ namespace carto {
 
         // Reload tile service URLs, if needed
         if (_tileURLs.empty()) {
-            if (!loadTileURLs()) {
+            if (!loadConfiguration()) {
                 return std::shared_ptr<TileData>();
             }
         }
@@ -93,7 +104,7 @@ namespace carto {
         return GeneralUtils::ReplaceTags(baseURL, tagValues, "{", "}", true);
     }
 
-    bool CartoOnlineTileDataSource::loadTileURLs() {
+    bool CartoOnlineTileDataSource::loadConfiguration() {
         std::map<std::string, std::string> params;
         params["deviceId"] = PlatformUtils::GetDeviceId();
         params["platform"] = PlatformUtils::GetPlatformId();
@@ -105,7 +116,7 @@ namespace carto {
 
         std::string baseURL = TILE_SERVICE_URL + NetworkUtils::URLEncode(_source) + "/1/tiles.json";
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
-        Log::Debugf("CartoOnlineTileDataSource::loadTileURLs: Loading %s", url.c_str());
+        Log::Debugf("CartoOnlineTileDataSource::loadConfiguration: Loading %s", url.c_str());
 
         std::shared_ptr<BinaryData> responseData;
         if (!NetworkUtils::GetHTTP(url, responseData, Log::IsShowDebug())) {
@@ -134,6 +145,10 @@ namespace carto {
             }
         }
 
+        if (config.get("schema").is<std::string>()) {
+            _schema = config.get("schema").get<std::string>();
+        }
+
         _tileURLs.clear();
         if (!config.get("tiles").is<picojson::array>()) {
             Log::Error("CartoOnlineTileDataSource: Tile URLs missing from configuration");
@@ -144,7 +159,7 @@ namespace carto {
                 _tileURLs.push_back(tileURL.get<std::string>());
             }
         }
-
+        _tmsScheme = false;
         if (config.get("scheme").is<std::string>()) {
             _tmsScheme = config.get("scheme").get<std::string>() == "tms";
         }

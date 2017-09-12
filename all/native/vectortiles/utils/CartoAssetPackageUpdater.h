@@ -13,7 +13,7 @@ namespace carto {
 
     class CartoAssetPackageUpdater : public AssetPackageUpdater {
     public:
-        CartoAssetPackageUpdater(const std::string& source, const std::string& styleName);
+        CartoAssetPackageUpdater(const std::string& schema, const std::string& styleName);
         virtual ~CartoAssetPackageUpdater();
 
         virtual std::shared_ptr<MemoryAssetPackage> update(const std::shared_ptr<AssetPackage>& assetPackage) const;
@@ -23,7 +23,7 @@ namespace carto {
 
         static const std::string STYLE_SERVICE_URL;
 
-        const std::string _source;
+        const std::string _schema;
         const std::string _styleName;
     };
 

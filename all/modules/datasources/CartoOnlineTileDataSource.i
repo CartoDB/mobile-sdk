@@ -23,6 +23,7 @@
 
 %std_exceptions(carto::CartoOnlineTileDataSource::CartoOnlineTileDataSource)
 
+%ignore carto::CartoOnlineTileDataSource::getSchema;
 %ignore carto::CartoOnlineTileDataSource::buildTileURL;
 %ignore carto::CartoOnlineTileDataSource::loadTileURLs;
 %ignore carto::CartoOnlineTileDataSource::loadOnlineTile;

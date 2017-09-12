@@ -36,6 +36,7 @@
 #include <hex.h>
 
 namespace {
+
     std::shared_ptr<carto::PackageMetaInfo> createPackageMetaInfo(const rapidjson::Value& value) {
         rapidjson::StringBuffer metaInfo;
         rapidjson::Writer<rapidjson::StringBuffer> writer(metaInfo);
@@ -43,6 +44,7 @@ namespace {
         carto::Variant var = carto::Variant::FromString(metaInfo.GetString());
         return std::make_shared<carto::PackageMetaInfo>(var);
     }
+
 }
 
 namespace carto {
@@ -171,6 +173,24 @@ namespace carto {
             _packageManagerThread.reset();
             Log::Info("PackageManager: Package manager stopped");
         }
+    }
+
+    std::string PackageManager::getSchema() const {
+        if (!_localDb) {
+            return std::string();
+        }
+
+        try {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            sqlite3pp::query query(*_localDb, "SELECT value FROM metadata WHERE name='schema'");
+            for (auto qit = query.begin(); qit != query.end(); qit++) {
+                return qit->get<const char*>(0);
+            }
+        }
+        catch (const std::exception& ex) {
+            Log::Errorf("PackageManager::getSchema: %s", ex.what());
+        }
+        return std::string();
     }
 
     std::vector<std::shared_ptr<PackageInfo> > PackageManager::getServerPackages() const {
@@ -609,8 +629,6 @@ namespace carto {
         return false;
     }
 
-
-
     void PackageManager::run() {
         try {
             while (true) {
@@ -736,6 +754,18 @@ namespace carto {
         }
         if (!packageListDoc.HasMember("packages")) {
             throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM, "Package list does not contain package definitions");
+        }
+
+        // Check optional schema value. Always keep the schema up-to-date
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            sqlite3pp::command delCmd(*_localDb, "DELETE FROM metadata WHERE name='schema'");
+            delCmd.execute();
+            if (packageListDoc.HasMember("schema")) {
+                sqlite3pp::command insCmd(*_localDb, "INSERT INTO metadata(name, value) VALUES('schema', :schema)");
+                insCmd.bind(":schema", packageListDoc["schema"].GetString());
+                insCmd.execute();
+            }
         }
 
         // Update package list file
