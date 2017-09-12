@@ -41,6 +41,19 @@ namespace carto {
         }
     }
     
+    std::string CartoVectorTileLayer::getFallbackLanguage() const {
+        if (auto tileDecoder = std::dynamic_pointer_cast<MBVectorTileDecoder>(getTileDecoder())) {
+            return tileDecoder->getStyleParameter("fallback_lang");
+        }
+        return std::string();
+    }
+
+    void CartoVectorTileLayer::setFallbackLanguage(const std::string& lang) {
+        if (auto tileDecoder = std::dynamic_pointer_cast<MBVectorTileDecoder>(getTileDecoder())) {
+            tileDecoder->setStyleParameter("fallback_lang", lang);
+        }
+    }
+    
     std::shared_ptr<VectorTileDecoder> CartoVectorTileLayer::CreateTileDecoder(CartoBaseMapStyle::CartoBaseMapStyle style) {
         return std::make_shared<MBVectorTileDecoder>(std::make_shared<CompiledStyleSet>(CreateStyleAssetPackage(), GetStyleName(style)));
     }

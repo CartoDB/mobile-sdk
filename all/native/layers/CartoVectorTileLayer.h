@@ -69,10 +69,21 @@ namespace carto {
          */
         std::string getLanguage() const;
         /**
-         * Sets the current map language. The list of supported languages contains: en, de, es, it, fr, ru, zh, et.
+         * Sets the current map language.
          * @param lang The new language to use. The default is local language (empty string).
          */
         void setLanguage(const std::string& lang);
+
+        /**
+         * Returns the current fallback language used for the layer. Fallback language is used when a primary language name is not available.
+         * @return The current fallback language. If the returned string is empty, then 'local' languages are used.
+         */
+        std::string getFallbackLanguage() const;
+        /**
+         * Sets the current fallback map language. Fallback language is used when a primary language name is not available.
+         * @param lang The new fallback language to use. The default is local language (empty string).
+         */
+        void setFallbackLanguage(const std::string& lang);
 
         /**
          * Creates a new tile decoder from the specified base map style.
