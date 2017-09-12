@@ -68,7 +68,7 @@ namespace carto {
             CartoBaseMapStyle::CartoBaseMapStyle _style;
         };
 
-        CartoBaseMapStyle::CartoBaseMapStyle _style;
+        const CartoBaseMapStyle::CartoBaseMapStyle _style;
         std::shared_ptr<CancelableThreadPool> _styleUpdateThreadPool;
     };
     

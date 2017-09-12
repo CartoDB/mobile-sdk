@@ -50,6 +50,7 @@ namespace carto {
         };
 
     private:
+        const CartoBaseMapStyle::CartoBaseMapStyle _style;
         std::shared_ptr<CartoPackageManager> _packageManager;
         std::shared_ptr<PackageManagerListener> _packageManagerListener;
     };

@@ -35,11 +35,17 @@ namespace carto {
         virtual ~CartoPackageManager();
 
         /**
+         * Returns the specified style asset package.
+         * @param style The style of the asset package to return.
+         */
+        std::shared_ptr<AssetPackage> getStyleAssetPackage(CartoBaseMapStyle::CartoBaseMapStyle style) const;
+        
+        /**
          * Starts updating the specified map style asynchronously. When this task finishes, listener is called.
          * @return True if the style will be downloaded and listener will be notified (if set). False if it can not be downloaded.
          */
         bool startStyleDownload(CartoBaseMapStyle::CartoBaseMapStyle style);
-        
+
     protected:
         static std::string GetPackageListURL(const std::string& source);
         static std::string GetServerEncKey();
@@ -53,6 +59,10 @@ namespace carto {
 
         virtual bool updateStyle(const std::string& styleName);
         
+        std::shared_ptr<sqlite3pp::database> createStyleDb(const std::string& styleName) const;
+
+        std::shared_ptr<AssetPackage> getStyleAssetPackage(const std::string& styleName) const;
+
     private:
         struct PackageSource {
             std::string type;
@@ -76,7 +86,9 @@ namespace carto {
         static const int MAX_CUSTOM_BBOX_PACKAGE_TILEMASK_ZOOMLEVEL;
         static const unsigned int MAX_TILEMASK_LENGTH;
         
-        std::string _source;
+        const std::string _source;
+
+        mutable std::recursive_mutex _styleDbMutex;
     };
 }
 

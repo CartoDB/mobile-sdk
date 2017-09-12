@@ -8,13 +8,14 @@
 
 #ifdef _CARTO_PACKAGEMANAGER_SUPPORT
 
-!proxy_imports(carto::CartoPackageManager, packagemanager.PackageManager, layers.CartoVectorTileLayer)
+!proxy_imports(carto::CartoPackageManager, packagemanager.PackageManager, layers.CartoVectorTileLayer, utils.AssetPackage)
 !java_imports(carto::CartoPackageManager, com.carto.layers.CartoBaseMapStyle)
 
 %{
+#include "components/Exceptions.h"
 #include "packagemanager/CartoPackageManager.h"
 #include "layers/CartoVectorTileLayer.h"
-#include "components/Exceptions.h"
+#include "utils/AssetPackage.h"
 #include <memory>
 %}
 
@@ -24,6 +25,7 @@
 
 %import "packagemanager/PackageManager.i"
 %import "layers/CartoVectorTileLayer.i"
+%import "utils/AssetPackage.i"
 
 !polymorphic_shared_ptr(carto::CartoPackageManager, packagemanager.CartoPackageManager)
 

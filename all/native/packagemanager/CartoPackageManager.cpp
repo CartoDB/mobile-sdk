@@ -23,7 +23,9 @@
 namespace carto {
 
     CartoPackageManager::CartoPackageManager(const std::string& source, const std::string& dataFolder) :
-        PackageManager(GetPackageListURL(source), dataFolder, GetServerEncKey(), GetLocalEncKey()), _source(source)
+        PackageManager(GetPackageListURL(source), dataFolder, GetServerEncKey(), GetLocalEncKey()),
+        _source(source),
+        _styleDbMutex()
     {
         if (!PlatformUtils::ExcludeFolderFromBackup(dataFolder)) {
             Log::Warn("CartoPackageManager: Failed to change package manager directory attributes");
@@ -33,64 +35,12 @@ namespace carto {
     CartoPackageManager::~CartoPackageManager() {
     }
 
-    bool CartoPackageManager::startStyleDownload(CartoBaseMapStyle::CartoBaseMapStyle style) {
-        return PackageManager::startStyleDownload(CartoVectorTileLayer::GetStyleName(style));
+    std::shared_ptr<AssetPackage> CartoPackageManager::getStyleAssetPackage(CartoBaseMapStyle::CartoBaseMapStyle style) const {
+        return getStyleAssetPackage(CartoVectorTileLayer::GetStyleName(style));
     }
 
-    bool CartoPackageManager::updateStyle(const std::string& styleName) {
-        std::shared_ptr<AssetPackage> styleAssetPackage = CartoVectorTileLayer::CreateStyleAssetPackage();
-
-        std::string dbFileName = createLocalFilePath("style_" + styleName + "_files.sqlite");
-        
-        sqlite3pp::database db(dbFileName.c_str());
-        db.execute("PRAGMA encoding='UTF-8'");
-
-        db.execute(R"SQL(
-                CREATE TABLE IF NOT EXISTS files (
-                    filename TEXT NOT NULL PRIMARY KEY,
-                    contents BLOB NULL
-                ))SQL");
-
-        std::map<std::string, std::shared_ptr<BinaryData> > updatedAssets;
-        sqlite3pp::query query(db, "SELECT filename, contents FROM files");
-        for (auto qit = query.begin(); qit != query.end(); qit++) {
-            std::string fileName = qit->get<const char*>(0);
-            std::shared_ptr<BinaryData> contents;
-            if (qit->get<const void*>(1)) {
-                contents = std::make_shared<BinaryData>(static_cast<const unsigned char*>(qit->get<const void*>(1)), qit->column_bytes(1));
-            }
-            updatedAssets[fileName] = contents;
-        }
-        auto currentAssetPackage = std::make_shared<MemoryAssetPackage>(updatedAssets, styleAssetPackage);
-
-        std::shared_ptr<MemoryAssetPackage> newAssetPackage;
-        try {
-            CartoAssetPackageUpdater updater(_source, styleName);
-            newAssetPackage = updater.update(currentAssetPackage);
-        }
-        catch (const std::exception& ex) {
-            Log::Errorf("CartoPackageManager::updateStyle: Error while updating style: %s", ex.what());
-            return false;
-        }
-
-        sqlite3pp::transaction xct(db);
-        if (newAssetPackage) {
-            for (const std::string& fileName : newAssetPackage->getLocalAssetNames()) {
-                std::shared_ptr<BinaryData> data = newAssetPackage->loadAsset(fileName);
-                sqlite3pp::command delCmd(db, "DELETE FROM files WHERE filename=:fileName");
-                delCmd.bind(":fileName", fileName.c_str());
-                delCmd.execute();
-                if (data) {
-                    sqlite3pp::command insCmd(db, "INSERT INTO files (filename, contents) VALUES(:fileName, :contents)");
-                    insCmd.bind(":fileName", fileName.c_str());
-                    insCmd.bind(":contents", data->data(), data->size());
-                    insCmd.execute();
-                }
-            }
-        }
-        xct.commit();
-
-        return newAssetPackage && !newAssetPackage->getLocalAssetNames().empty();
+    bool CartoPackageManager::startStyleDownload(CartoBaseMapStyle::CartoBaseMapStyle style) {
+        return PackageManager::startStyleDownload(CartoVectorTileLayer::GetStyleName(style));
     }
 
     std::string CartoPackageManager::GetPackageListURL(const std::string& source) {
@@ -263,6 +213,74 @@ namespace carto {
             return packageInfo;
         }
         return std::shared_ptr<PackageInfo>();
+    }
+
+    bool CartoPackageManager::updateStyle(const std::string& styleName) {
+        std::shared_ptr<AssetPackage> currentAssetPackage = getStyleAssetPackage(styleName);
+
+        std::shared_ptr<MemoryAssetPackage> newAssetPackage;
+        try {
+            CartoAssetPackageUpdater updater(_source, styleName);
+            newAssetPackage = updater.update(currentAssetPackage);
+        }
+        catch (const std::exception& ex) {
+            Log::Errorf("CartoPackageManager::updateStyle: Error while updating style: %s", ex.what());
+            return false;
+        }
+
+        if (newAssetPackage) {
+            std::lock_guard<std::recursive_mutex> lock(_styleDbMutex);
+            std::shared_ptr<sqlite3pp::database> styleDb = createStyleDb(styleName);
+            sqlite3pp::transaction xct(*styleDb);
+            for (const std::string& fileName : newAssetPackage->getLocalAssetNames()) {
+                std::shared_ptr<BinaryData> data = newAssetPackage->loadAsset(fileName);
+                sqlite3pp::command delCmd(*styleDb, "DELETE FROM files WHERE filename=:fileName");
+                delCmd.bind(":fileName", fileName.c_str());
+                delCmd.execute();
+                if (data) {
+                    sqlite3pp::command insCmd(*styleDb, "INSERT INTO files (filename, contents) VALUES(:fileName, :contents)");
+                    insCmd.bind(":fileName", fileName.c_str());
+                    insCmd.bind(":contents", data->data(), data->size());
+                    insCmd.execute();
+                }
+            }
+            xct.commit();
+        }
+
+        return newAssetPackage && !newAssetPackage->getLocalAssetNames().empty();
+    }
+
+    std::shared_ptr<sqlite3pp::database> CartoPackageManager::createStyleDb(const std::string& styleName) const {
+        std::string dbFileName = createLocalFilePath("style_" + styleName + "_files.sqlite");
+        auto db = std::make_shared<sqlite3pp::database>(dbFileName.c_str());
+        db->execute("PRAGMA encoding='UTF-8'");
+
+        db->execute(R"SQL(
+                CREATE TABLE IF NOT EXISTS files (
+                    filename TEXT NOT NULL PRIMARY KEY,
+                    contents BLOB NULL
+                ))SQL");
+        return db;
+    }
+
+    std::shared_ptr<AssetPackage> CartoPackageManager::getStyleAssetPackage(const std::string& styleName) const {
+        std::shared_ptr<AssetPackage> styleAssetPackage = CartoVectorTileLayer::CreateStyleAssetPackage();
+
+        std::lock_guard<std::recursive_mutex> lock(_styleDbMutex);
+
+        std::shared_ptr<sqlite3pp::database> styleDb = createStyleDb(styleName);
+
+        sqlite3pp::query query(*styleDb, "SELECT filename, contents FROM files");
+        std::map<std::string, std::shared_ptr<BinaryData> > updatedAssets;
+        for (auto qit = query.begin(); qit != query.end(); qit++) {
+            std::string fileName = qit->get<const char*>(0);
+            std::shared_ptr<BinaryData> contents;
+            if (qit->get<const void*>(1)) {
+                contents = std::make_shared<BinaryData>(static_cast<const unsigned char*>(qit->get<const void*>(1)), qit->column_bytes(1));
+            }
+            updatedAssets[fileName] = contents;
+        }
+        return std::make_shared<MemoryAssetPackage>(updatedAssets, styleAssetPackage);
     }
 
     CartoPackageManager::PackageSource CartoPackageManager::ResolveSource(const std::string& source) {
