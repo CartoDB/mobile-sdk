@@ -3,7 +3,7 @@
 
 %module CartoMapsService
 
-!proxy_imports(carto::CartoMapsService, core.Variant, core.StringVariantMap, core.StringMap, core.StringVector, layers.Layer, layers.LayerVector, utils.AssetPackage)
+!proxy_imports(carto::CartoMapsService, core.Variant, core.IntVector, core.StringVariantMap, core.StringMap, core.StringVector, layers.Layer, layers.LayerVector, utils.AssetPackage)
 
 %{
 #include "services/CartoMapsService.h"
@@ -17,6 +17,7 @@
 %include <cartoswig.i>
 
 %import "core/Variant.i"
+%import "core/IntVector.i"
 %import "core/StringVector.i"
 %import "core/StringMap.i"
 %import "layers/Layer.i"
@@ -27,6 +28,7 @@
 %attributestring(carto::CartoMapsService, std::string, Username, getUsername, setUsername)
 %attributestring(carto::CartoMapsService, std::string, APITemplate, getAPITemplate, setAPITemplate)
 %attributeval(carto::CartoMapsService, %arg(std::vector<std::string>), AuthTokens, getAuthTokens, setAuthTokens)
+%attributeval(carto::CartoMapsService, %arg(std::vector<int>), LayerIndices, getLayerIndices, setLayerIndices)
 %attribute(carto::CartoMapsService, bool, Interactive, isInteractive, setInteractive)
 %attribute(carto::CartoMapsService, bool, DefaultVectorLayerMode, isDefaultVectorLayerMode, setDefaultVectorLayerMode)
 %attribute(carto::CartoMapsService, float, VectorTileBufferSize, getVectorTileBufferSize, setVectorTileBufferSize)
@@ -40,8 +42,6 @@
 %ignore carto::CartoMapsService::setStatTag;
 %ignore carto::CartoMapsService::getLayerFilter;
 %ignore carto::CartoMapsService::setLayerFilter;
-%ignore carto::CartoMapsService::getLayerIndices;
-%ignore carto::CartoMapsService::setLayerIndices;
 %ignore carto::CartoMapsService::getCDNURLs;
 %ignore carto::CartoMapsService::setCDNURLs;
 !standard_equals(carto::CartoMapsService);

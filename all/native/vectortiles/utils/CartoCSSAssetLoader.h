@@ -22,7 +22,7 @@ namespace carto {
         CartoCSSAssetLoader(const std::string& basePath, const std::shared_ptr<AssetPackage>& assetPackage);
         virtual ~CartoCSSAssetLoader();
         
-        virtual std::shared_ptr<std::vector<unsigned char> > load(const std::string& url) const;    
+        virtual std::shared_ptr<const std::vector<unsigned char> > load(const std::string& url) const;    
 
     private:
         std::string _basePath;

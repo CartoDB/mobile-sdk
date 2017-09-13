@@ -4,9 +4,9 @@ For select account plans, you can connect to the CARTO Engine APIs via Mobile SD
 
 ## Loading CARTO Map Data
 
-We support quite a few methods how you can put your map data from CARTO account via mobile SDK to your mobile app. The choise depends on you data size, visual requirements and other aspects.
+There are several methods of connecting map data from your CARTO account (via the Mobile SDK) to your mobile app; depending on the size of your data, the visual requirements, and other factors.
 
-- To use map as **raster map tiles**, define the tile URL for RasterTileLayer
+- To use a map as **raster map tiles**, define the tile URL for RasterTileLayer
 
 - To apply **interactivity** (object click data), use UTFGrid. This uses both raster map tiles and json-based UTF tiles
 
@@ -24,19 +24,19 @@ We support quite a few methods how you can put your map data from CARTO account 
 
 CARTO Mobile SDK offers several ways to use map data offline, but the suggested method is via CARTO platform:
 
-1. Upload your data to CARTO platform, create new Map and map styling CartoCSS in BUILDER
-2. Use our [Mobile Tile Packager](https://github.com/CartoDB/mobile-tile-packager) tool to create offline map data package
-3. Load the package file to the mobile device - you can have your app to download it from your server, or add it as bundled asset to your app
-4. Finally add the map to MapView as a VectorTileLayer from MBTilesTileDataSource and CartoCSS. 
+1. Upload your data to CARTO, create a new map with CARTO Builder, and apply map custom styling with CartoCSS.
+2. Use the [Mobile Tile Packager](https://github.com/CartoDB/mobile-tile-packager) tool to create the offline map data package.
+3. Load the package file to the mobile device - you can have your app download it from your server, or add it as bundled asset to your app.
+4. Add the map to MapView, as a VectorTileLayer, from MBTilesTileDataSource and CartoCSS. 
 
-With this method you get both optimized vector tiles and suitable CartoCSS styling for your map.
+This method enables you to get both optimized vector tiles and suitable CartoCSS styling for your map.
 
-For details see [Readme file](https://github.com/CartoDB/mobile-tile-packager/blob/master/README.md) of the Mobile Tile Packager.
+For details, see the [Readme file](https://github.com/CartoDB/mobile-tile-packager/blob/master/README.md) of the Mobile Tile Packager.
 
 
 ## Online maps 
 
-If you have your map data in CARTO database, you can show it on the mobile with various methods.
+If you have map data in a CARTO database, you can show it on mobile using any of the following methods:
 
 1) Integrate with the [Maps API](/docs/carto-engine/maps-api/) for Anonymous or Named maps
 

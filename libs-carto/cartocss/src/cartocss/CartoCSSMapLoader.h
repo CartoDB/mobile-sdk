@@ -30,7 +30,7 @@ namespace carto { namespace css {
         public:
             virtual ~AssetLoader() = default;
 
-            virtual std::shared_ptr<std::vector<unsigned char>> load(const std::string& fileName) const = 0;
+            virtual std::shared_ptr<const std::vector<unsigned char>> load(const std::string& fileName) const = 0;
         };
 
         explicit CartoCSSMapLoader(std::shared_ptr<AssetLoader> assetLoader, std::shared_ptr<mvt::Logger> logger) : _assetLoader(std::move(assetLoader)), _logger(std::move(logger)) { }
