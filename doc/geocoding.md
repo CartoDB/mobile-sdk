@@ -49,7 +49,7 @@ Implement online geocoding to initialize the service, create the request, and ca
   {% highlight java %}
   
 PeliasOnlineGeocodingService service = new PeliasOnlineGeocodingService("<your-mapzen-api-key>");
-GeocodingRequest request = new GeocodingRequest(mapView.getOptions().getBaseProjection(), "fifth");
+GeocodingRequest request = new GeocodingRequest(mapView.getOptions().getBaseProjection(), "Fifth Avenue, New York");
 
 // Note: Geocoding is a complicated process and should not be done on the main thread
 Thread thread = new Thread(new Runnable() {
@@ -73,7 +73,7 @@ thread.start();
   {% highlight csharp %}
 
 Service = new PeliasOnlineGeocodingService("<your-mapzen-api-key>");
-var request = new GeocodingRequest(mapView.Options.BaseProjection, "fifth");
+var request = new GeocodingRequest(mapView.Options.BaseProjection, "Fifth Avenue, New York");
 
 // Note: Geocoding is a complicated process and should not be done on the main thread
 GeocodingResultVector results = Service.CalculateAddresses(request);
@@ -98,7 +98,7 @@ NTGeocodingResultVector *results = [service calculateAddresses:request];
   {% highlight swift %}
   
 let service = NTPeliasOnlineGeocodingService(apiKey: "<your-mapzen-api-key>")
-let request = NTGeocodingRequest(projection: self.contentView.map.getOptions().getBaseProjection(), query: "fifth")
+let request = NTGeocodingRequest(projection: self.contentView.map.getOptions().getBaseProjection(), query: "Fifth Avenue, New York")
 
 // Note: Geocoding is a complicated process and should not be done on the main thread
 let results = self.service.calculateAddresses(request)
@@ -110,7 +110,7 @@ let results = self.service.calculateAddresses(request)
   {% highlight kotlin %}
 
 val service = PeliasOnlineGeocodingService("<your-mapzen-api-key>")
-val request = GeocodingRequest(map.options.baseProjection, "fifth")
+val request = GeocodingRequest(map.options.baseProjection, "Fifth Avenue, New York")
 
 // Note: Geocoding is a complicated process and should not be done on the main thread
 val results = service!!.calculateAddresses(request)
