@@ -1206,9 +1206,9 @@ This example uses only one geographical coordinate. The building size is known, 
 
 When you create a basemap, the Mobile SDK package enables you to select one of our pre-defined, built-in basemap styles:
 
- * CARTO_BASEMAP_STYLE_DEFAULT - general street map
- * CARTO_BASEMAP_STYLE_DARK - CARTO Dark Matter style
- * CARTO_BASEMAP_STYLE_GRAY - CARTO Positron style
+ * CARTO_BASEMAP_STYLE_VOYAGER - Light style, used as a general map where you need to distinguish forests, rivers, streets etc.
+ * CARTO_BASEMAP_STYLE_DARKMATTER - Dark style, best when displaying light-styled data
+ * CARTO_BASEMAP_STYLE_POSITRON - Gray style, used when displaying dark-styled data
 
 You can customize basemap styling by setting the colors, transparency, line styles (width, patterns, casings, endings), polygon patterns, icons, text placements, fonts, and other vector data parameters. 
 
