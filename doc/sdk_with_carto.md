@@ -1,8 +1,8 @@
-# SDK and other CARTO Tools
+# SDK & CARTO Tools
 
 For select account plans, you can connect to the CARTO Engine APIs via Mobile SDK, to retrieve map visualizations and table data from your CARTO account. _API access is not available for free users._ [Contact us](mailto:sales@carto.com) for questions about your account plan and enabling this feature.
 
-## Loading CARTO Map Data to Mobile Apps
+## Loading CARTO Map Data
 
 We support quite a few methods how you can put your map data from CARTO account via mobile SDK to your mobile app. The choise depends on you data size, visual requirements and other aspects.
 
@@ -20,9 +20,9 @@ We support quite a few methods how you can put your map data from CARTO account 
 
 - For point-geometry time-series visualizations, use the _Animated_ aggregation to define Torque maps. This provides animated rendering, and the Mobile SDK has a special layer `TorqueTileLayer` to define this. From an API standpoint, Torque uses the SQL API and CartoCSS styling, but Torque contains an additional [time control method](/docs/carto-engine/torque-js/)
 
-## Offline maps from CARTO
+## Offline maps
 
-CARTO SDK has several ways to use map data ofline, but the suggested method is via CARTO platform:
+CARTO Mobile SDK offers several ways to use map data offline, but the suggested method is via CARTO platform:
 
 1. Upload your data to CARTO platform, create new Map and map styling CartoCSS in BUILDER
 2. Use our [Mobile Tile Packager](https://github.com/CartoDB/mobile-tile-packager) tool to create offline map data package
@@ -34,9 +34,9 @@ With this method you get both optimized vector tiles and suitable CartoCSS styli
 For details see [Readme file](https://github.com/CartoDB/mobile-tile-packager/blob/master/README.md) of the Mobile Tile Packager.
 
 
-## Online maps from CARTO
+## Online maps 
 
-If you have your map data in CARTO database, you can show it on the mobile with various methods. .
+If you have your map data in CARTO database, you can show it on the mobile with various methods.
 
 1) Integrate with the [Maps API](/docs/carto-engine/maps-api/) for Anonymous or Named maps
 
@@ -977,7 +977,7 @@ CARTO’s [SQL API](https://carto.com/docs/carto-engine/sql-api/) allows you to 
 
 
 
-## SDK and CARTO API Samples
+## CARTO API Samples
 
 The CARTO [sample app](https://github.com/CartoDB/mobile-sdk-samples) projects contain a number of working samples for all the mobile platforms:
 
