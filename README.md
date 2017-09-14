@@ -81,6 +81,19 @@ python swigpp-csharp.py --profile standard winphone
 python build-winphone.py --profile standard
 ```
 
+## GDAL build for Android
+
+Use precompiled GDAL library containing headers and .so files. Make symbolic links
+from GDAL_precompiled/android to prebuilt/gdal and GDAL_precompiled/android to libs-external/gdal.
+
+```
+python swigpp-java.py --profile gisextensions
+python build-android.py --profile gisextensions --android-abi=armeabi-v7a --android-abi=arm64-v8a --android-abi=x86
+```
+
+Note: you need to copy libgdal.so files from the GDAL_precompiled folder
+
+
 # Usage
 
 * Developer docs: https://carto.com/docs/carto-engine/mobile-sdk/
