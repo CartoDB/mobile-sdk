@@ -30,9 +30,11 @@ namespace carto {
         
         static std::string ReplaceTags(const std::string& base, const std::map<std::string, std::string>& tagValues, const std::string& startTag = "{", const std::string& endTag = "}", bool keepUnknownTags = false);
 
-        static std::vector<std::string>& Split(const std::string& s, char delim, std::vector<std::string>& elems);
+        static std::vector<std::string>& Split(const std::string& str, char delim, std::vector<std::string>& elems);
         
-        static std::vector<std::string> Split(const std::string& s, char delim);
+        static std::vector<std::string> Split(const std::string& str, char delim);
+
+        static std::string Join(const std::vector<std::string>& strs, char delim);
 
     private:
         GeneralUtils();

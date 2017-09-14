@@ -218,7 +218,7 @@ namespace carto {
     protected:
         class DataSourceListener : public TileDataSource::OnChangeListener {
         public:
-            DataSourceListener(const std::shared_ptr<TileLayer>& layer);
+            explicit DataSourceListener(const std::shared_ptr<TileLayer>& layer);
             
             virtual void onTilesChanged(bool removeTiles);
             

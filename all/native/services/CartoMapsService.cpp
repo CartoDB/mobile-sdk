@@ -204,7 +204,7 @@ namespace carto {
         picojson::value mapInfo;
         std::string err = picojson::parse(mapInfo, result);
         if (!err.empty()) {
-            throw ParseException("Failed to parse map configuration response", result);
+            throw ParseException(std::string("Failed to parse map configuration response: ") + err, result);
         }
 
         // Check for errors and log them
@@ -254,7 +254,7 @@ namespace carto {
         picojson::value mapInfo;
         std::string err = picojson::parse(mapInfo, result);
         if (!err.empty()) {
-            throw ParseException("Failed to parse map configuration response", result);
+            throw ParseException(std::string("Failed to parse map configuration response: ") + err, result);
         }
 
         // Create layers

@@ -468,7 +468,7 @@ namespace carto {
                 map = mapLoader.loadMap((*cartoCSSStyleSet)->getCartoCSS());
             }
             catch (const std::exception& ex) {
-                throw ParseException("CartoCSS style parsing failed", ex.what());
+                throw ParseException(std::string("CartoCSS style parsing failed: ") + ex.what(), (*cartoCSSStyleSet)->getCartoCSS());
             }
         }
         else if (auto compiledStyleSet = boost::get<std::shared_ptr<CompiledStyleSet> >(&styleSet)) {
@@ -498,7 +498,7 @@ namespace carto {
                     map = mapParser.parseMap(doc);
                 }
                 catch (const std::exception& ex) {
-                    throw ParseException("XML style processing failed", ex.what());
+                    throw ParseException(std::string("XML style processing failed: ") + ex.what());
                 }
             }
             else if (boost::algorithm::ends_with(styleAssetName, ".json")) {
@@ -509,7 +509,7 @@ namespace carto {
                     map = mapLoader.loadMapProject(styleAssetName);
                 }
                 catch (const std::exception& ex) {
-                    throw ParseException("CartoCSS style parsing failed", ex.what());
+                    throw GenericException(std::string("CartoCSS style loading failed: ") + ex.what());
                 }
             }
             else {

@@ -76,7 +76,7 @@ namespace carto {
     protected:
         class DataSourceListener : public VectorDataSource::OnChangeListener {
         public:
-            DataSourceListener(const std::shared_ptr<VectorLayer>& layer);
+            explicit DataSourceListener(const std::shared_ptr<VectorLayer>& layer);
             
             virtual void onElementAdded(const std::shared_ptr<VectorElement>& element);
             virtual void onElementChanged(const std::shared_ptr<VectorElement>& element);
@@ -91,7 +91,7 @@ namespace carto {
         
         class FetchTask : public CancelableTask {
         public:
-            FetchTask(const std::weak_ptr<VectorLayer>& layer);
+            explicit FetchTask(const std::weak_ptr<VectorLayer>& layer);
             virtual void cancel();
             virtual void run();
             

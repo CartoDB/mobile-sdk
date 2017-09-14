@@ -225,7 +225,9 @@ namespace carto {
     
     void BillboardRenderer::updateElement(const std::shared_ptr<Billboard>& element) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        element->getDrawData()->setRenderer(this);
+        if (std::shared_ptr<BillboardDrawData> drawData = element->getDrawData()) {
+            drawData->setRenderer(this);
+        }
         if (std::find(_elements.begin(), _elements.end(), element) == _elements.end()) {
             _elements.push_back(element);
         }
@@ -233,9 +235,13 @@ namespace carto {
     
     void BillboardRenderer::removeElement(const std::shared_ptr<Billboard>& element) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        element->getDrawData()->setRenderer(nullptr);
-        if (!element->getDrawData()->getAnimationStyle()) {
-            element->getDrawData()->setTransition(0.0f);
+        if (std::shared_ptr<BillboardDrawData> drawData = element->getDrawData()) {
+            drawData->setRenderer(nullptr);
+            if (!drawData->getAnimationStyle()) {
+                drawData->setTransition(0.0f);
+                _elements.erase(std::remove(_elements.begin(), _elements.end(), element), _elements.end());
+            }
+        } else {
             _elements.erase(std::remove(_elements.begin(), _elements.end(), element), _elements.end());
         }
     }

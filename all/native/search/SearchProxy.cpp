@@ -269,7 +269,7 @@ namespace carto {
                 _re = std::regex(request->getRegexFilter());
             }
             catch (const std::exception& ex) {
-                throw ParseException("Failed to parse regex", ex.what());
+                throw ParseException(std::string("Failed to parse regex: ") + ex.what(), request->getRegexFilter());
             }
         }
 
@@ -278,7 +278,7 @@ namespace carto {
                 _expr = QueryExpressionParser::parse(request->getFilterExpression());
             }
             catch (const std::exception& ex) {
-                throw ParseException("Failed to parse expression", ex.what());
+                throw ParseException(std::string("Failed to parse expression: ") + ex.what(), request->getFilterExpression());
             }
         }
 

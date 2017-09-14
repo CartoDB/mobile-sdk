@@ -341,7 +341,7 @@ namespace carto {
             map = mapLoader.loadMap(styleSet->getCartoCSS());
         }
         catch (const std::exception& ex) {
-            throw ParseException("CartoCSS style parsing failed", ex.what());
+            throw ParseException(std::string("CartoCSS style parsing failed: ") + ex.what(), styleSet->getCartoCSS());
         }
 
         if (!_layerIds.empty() && _layerIds.front() == layerId) {

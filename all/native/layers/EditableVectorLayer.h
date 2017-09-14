@@ -85,7 +85,7 @@ namespace carto {
     private:
         class DataSourceListener : public VectorDataSource::OnChangeListener {
         public:
-            DataSourceListener(const std::shared_ptr<EditableVectorLayer>& layer);
+            explicit DataSourceListener(const std::shared_ptr<EditableVectorLayer>& layer);
 
             virtual void onElementAdded(const std::shared_ptr<VectorElement>& element);
             virtual void onElementChanged(const std::shared_ptr<VectorElement>& element);

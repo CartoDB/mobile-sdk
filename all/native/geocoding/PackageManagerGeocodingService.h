@@ -50,10 +50,11 @@ namespace carto {
     protected:
         class PackageManagerListener : public PackageManager::OnChangeListener {
         public:
-            PackageManagerListener(PackageManagerGeocodingService& service);
-        		
+            explicit PackageManagerListener(PackageManagerGeocodingService& service);
+
             virtual void onPackagesChanged();
-        		
+            virtual void onStylesChanged();
+
         private:
             PackageManagerGeocodingService& _service;
         };

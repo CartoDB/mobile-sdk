@@ -51,13 +51,21 @@ namespace carto {
     public:
 
         /**
-         * Listener interface for package change events.
+         * Listener interface for package/style change events.
          */
         class OnChangeListener {
         public:
             virtual ~OnChangeListener() { }
 
+            /**
+             * Called when a package has been added, removed or updated.
+             */
             virtual void onPackagesChanged() = 0;
+
+            /**
+             * Called when a style has been updated.
+             */
+            virtual void onStylesChanged() = 0;
         };
 
         /**
@@ -105,6 +113,12 @@ namespace carto {
          * @param wait If set to true, then synchronous stopping is performed and the operation may take a while.
          */
         void stop(bool wait);
+
+        /**
+         * Returns the current schema of the packages.
+         * @return The current schema of the packages.
+         */
+        std::string getSchema() const;
 
         /**
          * Returns the list of available server packages.
@@ -203,7 +217,7 @@ namespace carto {
 
         /**
          * Cancels the current/pending tasks involving of the specified package.
-         * @param packageId The id of the package to cancel
+         * @param packageId The id of the package to cancel.
          */
         void cancelPackageTasks(const std::string& packageId);
 
@@ -217,13 +231,25 @@ namespace carto {
         void setPackagePriority(const std::string& packageId, int priority);
         
     protected:
+        /**
+         * Starts downloading the specified style. When this task finishes, listener is called.
+         * @param styleName The name of the style to download.
+         * @return True if download process was started.
+         */
+        bool startStyleDownload(const std::string& styleName);
+
         virtual std::string createLocalFilePath(const std::string& name) const;
         virtual std::string createPackageFileName(const std::string& packageId, PackageType::PackageType packageType, int version) const;
         virtual std::string createPackageListURL(const std::string& baseURL) const;
         virtual std::string createPackageURL(const std::string& packageId, int version, const std::string& baseURL, bool downloaded) const;
         
         virtual std::shared_ptr<PackageInfo> getCustomPackage(const std::string& packageId, int version) const;
+
+        virtual bool updateStyle(const std::string& styleName);
         
+        void notifyPackagesChanged();
+        void notifyStylesChanged();
+
     private:
         struct Task {
             enum Command {
@@ -231,7 +257,8 @@ namespace carto {
                 DOWNLOAD_PACKAGE_LIST = 1,
                 DOWNLOAD_PACKAGE = 2,
                 IMPORT_PACKAGE = 3,
-                REMOVE_PACKAGE = 4
+                REMOVE_PACKAGE = 4,
+                DOWNLOAD_STYLE = 5
             };
 
             Command command = NOP;
@@ -286,6 +313,7 @@ namespace carto {
         bool importPackage(int taskId);
         bool downloadPackage(int taskId);
         bool removePackage(int taskId);
+        bool downloadStyle(int taskId);
         
         void syncLocalPackages();
         void importLocalPackage(int id, int taskId, const std::string& packageId, PackageType::PackageType packageType, const std::string& packageFileName);

@@ -51,10 +51,11 @@ namespace carto {
     protected:
         class PackageManagerListener : public PackageManager::OnChangeListener {
         public:
-            PackageManagerListener(PackageManagerValhallaRoutingService& service);
-        		
+            explicit PackageManagerListener(PackageManagerValhallaRoutingService& service);
+                
             virtual void onPackagesChanged();
-        		
+            virtual void onStylesChanged();
+
         private:
             PackageManagerValhallaRoutingService& _service;
         };
