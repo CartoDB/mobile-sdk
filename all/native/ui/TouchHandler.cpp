@@ -25,6 +25,7 @@ namespace carto {
         _pointersDown(0),
         _mapMoving(false),
         _noDualPointerYet(true),
+        _dualPointerReleaseTime(),
         _mapEventListener(),
         _clickHandlerWorker(std::make_shared<ClickHandlerWorker>(options)),
         _clickHandlerThread(),
@@ -189,7 +190,7 @@ namespace carto {
                 {
                     std::lock_guard<std::mutex> lock(_mutex);
                     _gestureMode = SINGLE_POINTER_CLICK_GUESS;
-                    if (screenPos1 == _prevScreenPos1) {
+                    if (cglib::length(_swipe1) < GUESS_SWIPE_ZOOM_THRESHOLD) {
                         CameraZoomEvent cameraZoomTargetEvent;
                         cameraZoomTargetEvent.setZoomDelta(1.0f);
                         cameraZoomTargetEvent.setTargetPos(_mapRenderer->screenToWorld(screenPos1, viewState));
@@ -337,6 +338,9 @@ namespace carto {
             _mapRenderer->getAnimationHandler().stopTilt();
             _mapRenderer->getAnimationHandler().stopZoom();
             
+            cglib::vec2<float> tempSwipe1(screenPos1.getX() - _prevScreenPos1.getX(), screenPos1.getY() - _prevScreenPos1.getY());
+            _swipe1 += tempSwipe1 * (1.0f / dpi);
+
             float delta = INCHES_TO_ZOOM_DELTA * (screenPos.getY() - _prevScreenPos1.getY()) / _options->getDPI();
             CameraZoomEvent cameraEvent;
             cameraEvent.setZoomDelta(delta);
@@ -517,6 +521,7 @@ namespace carto {
         _mapRenderer->getAnimationHandler().stopZoom();
 
         if (_options->isZoomGestures()) {
+            _swipe1 = cglib::vec2<float>(0, 0);
             _prevScreenPos1 = screenPos;
             _gestureMode = SINGLE_POINTER_ZOOM;
         } else {
@@ -633,6 +638,8 @@ namespace carto {
     const float TouchHandler::GUESS_MIN_SWIPE_LENGTH_OPPOSITE_INCHES = 0.06f;
     
     const float TouchHandler::GUESS_SWIPE_ABS_COS_THRESHOLD = 0.707f;
+
+    const float TouchHandler::GUESS_SWIPE_ZOOM_THRESHOLD = 0.06f;
     
     const float TouchHandler::SCALING_FACTOR_THRESHOLD = 0.5f;
     const float TouchHandler::ROTATION_FACTOR_THRESHOLD = 0.75f; // make rotation harder to trigger compared to scaling
