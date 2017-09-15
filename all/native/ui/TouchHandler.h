@@ -103,6 +103,9 @@ namespace carto {
         // Determines whether to choose view angle or some other pointer mode
         static const float GUESS_SWIPE_ABS_COS_THRESHOLD;
     
+        // Determines whether to apply zoom gestures or ignore them
+        static const float GUESS_SWIPE_ZOOM_THRESHOLD;
+
         // Determines when to switch between scalign and rotating when google style
         // panning is enabled
         static const float ROTATION_FACTOR_THRESHOLD;
