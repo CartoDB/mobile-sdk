@@ -52,6 +52,7 @@ namespace carto {
         _styleSet(),
         _map(),
         _parameterValueMap(),
+        _updatedParameters(),
         _backgroundPattern(),
         _symbolizerContext()
     {
@@ -71,6 +72,7 @@ namespace carto {
         _styleSet(),
         _map(),
         _parameterValueMap(),
+        _updatedParameters(),
         _backgroundPattern(),
         _symbolizerContext()
     {
@@ -146,8 +148,8 @@ namespace carto {
         
         mvt::Value value = nutiParam.getDefaultValue();
         {
-            auto it2 = _parameterValueMap->find(param);
-            if (it2 != _parameterValueMap->end()) {
+            auto it2 = _parameterValueMap.find(param);
+            if (it2 != _parameterValueMap.end()) {
                 value = it2->second;
             }
         }
@@ -193,7 +195,8 @@ namespace carto {
                     Log::Infof("MBVectorTileDecoder::setStyleParameter: Illegal enum value for parameter: %s/%s", param.c_str(), value.c_str());
                     return false;
                 }
-                (*_parameterValueMap)[param] = it2->second;
+                _parameterValueMap[param] = it2->second;
+                _updatedParameters.insert(param);
             } else {
                 mvt::Value val = nutiParam.getDefaultValue();
                 if (boost::get<bool>(&val)) {
@@ -216,10 +219,11 @@ namespace carto {
                 else if (boost::get<std::string>(&val)) {
                     val = value;
                 }
-                (*_parameterValueMap)[param] = val;
+                _parameterValueMap[param] = val;
+                _updatedParameters.insert(param);
             }
     
-            mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, *_parameterValueMap);
+            mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, _parameterValueMap);
             _symbolizerContext = std::make_shared<mvt::SymbolizerContext>(_symbolizerContext->getBitmapManager(), _symbolizerContext->getFontManager(), _symbolizerContext->getStrokeMap(), _symbolizerContext->getGlyphMap(), settings);
         }
         notifyDecoderChanged();
@@ -519,12 +523,33 @@ namespace carto {
             throw InvalidArgumentException("Invalid style set");
         }
 
-        auto parameterValueMap = std::make_shared<std::map<std::string, mvt::Value> >();
+        std::map<std::string, mvt::Value> parameterValueMap;
+        std::set<std::string> updatedParameters;
         for (auto it = map->getNutiParameterMap().begin(); it != map->getNutiParameterMap().end(); it++) {
-            (*parameterValueMap)[it->first] = it->second.getDefaultValue();
+            if (_updatedParameters.find(it->first) != _updatedParameters.end()) {
+                auto it2 = _parameterValueMap.find(it->first);
+                if (it2 != _parameterValueMap.end()) {
+                    bool valid = it->second.getDefaultValue().which() == it2->second.which();
+                    if (!it->second.getEnumMap().empty()) {
+                        valid = false;
+                        for (const std::pair<std::string, mvt::Value>& enumValue : it->second.getEnumMap()) {
+                            if (enumValue.second == it2->second) {
+                                valid = true;
+                            }
+                        }
+                    }
+                    if (valid) {
+                        parameterValueMap[it->first] = it2->second;
+                        updatedParameters.insert(it->first);
+                        continue;
+                    }
+                }
+            }
+
+            parameterValueMap[it->first] = it->second.getDefaultValue();
         }
 
-        mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, *parameterValueMap);
+        mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, parameterValueMap);
         auto fontManager = std::make_shared<vt::FontManager>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
         auto bitmapLoader = std::make_shared<VTBitmapLoader>(FileUtils::GetFilePath(styleAssetName), styleSetData);
         auto bitmapManager = std::make_shared<vt::BitmapManager>(bitmapLoader);
@@ -552,6 +577,7 @@ namespace carto {
 
         _map = map;
         _parameterValueMap = parameterValueMap;
+        _updatedParameters = updatedParameters;
         _backgroundPattern = backgroundPattern;
         _symbolizerContext = symbolizerContext;
         _styleSet = styleSet;
