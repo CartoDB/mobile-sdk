@@ -44,9 +44,9 @@ namespace carto { namespace mvt {
         float minimumDistance = _minimumDistance * std::pow(2.0f, -exprContext.getZoom());
 
         vt::ColorFunction fillFunc = _functionBuilder.createColorOpacityFunction(_fillFunc, _opacityFunc);
-        vt::FloatFunction sizeFunc = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _sizeFunc);
+        vt::FloatFunction sizeFunc = _functionBuilder.createChainedFloatFunction("multiply" + boost::lexical_cast<std::string>(fontScale), [fontScale](float size) { return size * fontScale; }, _sizeFunc);
         vt::ColorFunction haloFillFunc = _functionBuilder.createColorOpacityFunction(_haloFillFunc, _haloOpacityFunc);
-        vt::FloatFunction haloRadiusFunc = _functionBuilder.createChainedFloatFunction("multiply", [fontScale](float size) { return size * fontScale; }, _haloRadiusFunc);
+        vt::FloatFunction haloRadiusFunc = _functionBuilder.createChainedFloatFunction("multiply" + boost::lexical_cast<std::string>(fontScale), [fontScale](float size) { return size * fontScale; }, _haloRadiusFunc);
 
         std::vector<std::pair<long long, std::tuple<vt::TileLayerBuilder::Vertex, std::string>>> textInfos;
         std::vector<std::pair<long long, vt::TileLayerBuilder::TextLabelInfo>> labelInfos;
