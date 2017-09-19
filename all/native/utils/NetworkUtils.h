@@ -19,13 +19,13 @@ namespace carto {
 
     class NetworkUtils {
     public:
-        typedef std::function<bool(std::uint64_t, std::uint64_t, const unsigned char*, std::size_t)> HandlerFn;
+        typedef std::function<bool(std::uint64_t, std::uint64_t, const unsigned char*, std::size_t)> HandlerFunc;
 
         static bool GetHTTP(const std::string& url, std::shared_ptr<BinaryData>& responseData, bool log);
 
         static bool GetHTTP(const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, std::shared_ptr<BinaryData>& responseData, bool log);
 
-        static int GetHTTP(const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, HandlerFn handler, std::uint64_t offset, bool log);
+        static int GetHTTP(const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, HandlerFunc handler, std::uint64_t offset, bool log);
 
         static int GetMaxAgeHTTPHeader(const std::map<std::string, std::string>& headers);
 

@@ -52,5 +52,30 @@ namespace carto {
         // Other scheme, requires internal handling
         return false;
     }
+
+    bool URLFileLoader::streamFile(const std::string& url, HandlerFunc handlerFn) const {
+        // Check if http:// or https:// protocol is used
+        if (url.substr(0, 7) == "http://" || url.substr(0, 8) == "https://") {
+            Log::Infof("%s: Loading from network: %s", _tag.c_str(), url.c_str());
+            std::map<std::string, std::string> requestHeaders;
+            std::map<std::string, std::string> responseHeaders;
+            return NetworkUtils::GetHTTP(url, requestHeaders, responseHeaders, [&](std::uint64_t offset, std::uint64_t length, const unsigned char* buf, std::size_t size) -> bool {
+                return handlerFn(length, buf, size);
+            }, 0, Log::IsShowDebug());
+        }
+        
+        // Use synchronous loading for assets://
+        if (url.substr(0, 9) == "assets://") {
+            Log::Infof("%s: Loading from assets: %s", _tag.c_str(), url.c_str());
+            std::shared_ptr<BinaryData> data = AssetUtils::LoadAsset(url.substr(9)); // TODO: stream asset
+            if (data) {
+                return handlerFn(data->size(), data->data(), data->size());
+            }
+            else {
+                Log::Errorf("%s: Failed to load %s", _tag.c_str(), url.c_str());
+            }
+            return false;
+        }
+    }
     
 }

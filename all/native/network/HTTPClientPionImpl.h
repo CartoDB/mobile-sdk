@@ -20,7 +20,7 @@ namespace carto {
     public:
         explicit PionImpl(bool log);
 
-        virtual bool makeRequest(const HTTPClient::Request& request, HeaderFn headerFn, DataFn dataFn) const;
+        virtual bool makeRequest(const HTTPClient::Request& request, HeadersFunc headersFn, DataFunc dataFn) const;
 
     private:
         struct Connection {
@@ -34,7 +34,7 @@ namespace carto {
             bool isValid() const;
         };
 
-        bool makeRequest(Connection& connection, const HTTPClient::Request& request, HeaderFn headerFn, DataFn dataFn) const;
+        bool makeRequest(Connection& connection, const HTTPClient::Request& request, HeadersFunc headersFn, DataFunc dataFn) const;
 
         bool _log;
         mutable std::multimap<std::pair<std::string, int>, std::shared_ptr<Connection> > _connectionMap;

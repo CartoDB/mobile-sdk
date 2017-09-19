@@ -98,14 +98,14 @@ namespace {
         IXMLHTTPRequest3Callback>
     {
     public:
-        typedef std::function<bool(int, const std::map<std::string, std::string>&)> HeadersFn;
-        typedef std::function<bool(const unsigned char*, size_t)> DataFn;
-        typedef std::function<void(bool)> FinishFn;
+        typedef std::function<bool(int, const std::map<std::string, std::string>&)> HeadersFunc;
+        typedef std::function<bool(const unsigned char*, size_t)> DataFunc;
+        typedef std::function<void(bool)> FinishFunc;
 
         HRESULT RuntimeClassInitialize(
-            HeadersFn headersFn,
-            DataFn dataFn,
-            FinishFn finishFn)
+            HeadersFunc headersFn,
+            DataFunc dataFn,
+            FinishFunc finishFn)
         {
             _headersFn = headersFn;
             _dataFn = dataFn;
@@ -216,9 +216,9 @@ namespace {
         }
 
     private:
-        HeadersFn _headersFn;
-        DataFn _dataFn;
-        FinishFn _finishFn;
+        HeadersFunc _headersFn;
+        DataFunc _dataFn;
+        FinishFunc _finishFn;
     };
 
 }
@@ -235,7 +235,7 @@ namespace carto {
         _timeout = milliseconds;
     }
 
-    bool HTTPClient::WinSockImpl::makeRequest(const HTTPClient::Request& request, HeadersFn headersFn, DataFn dataFn) const {
+    bool HTTPClient::WinSockImpl::makeRequest(const HTTPClient::Request& request, HeadersFunc headersFn, DataFunc dataFn) const {
         MULTI_QI mqi = { 0 };
 
         mqi.hr = S_OK;

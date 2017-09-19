@@ -16,7 +16,7 @@ namespace carto {
         explicit WinSockImpl(bool log);
 
         virtual void setTimeout(int milliseconds);
-        virtual bool makeRequest(const HTTPClient::Request& request, HeadersFn headersFn, DataFn dataFn) const;
+        virtual bool makeRequest(const HTTPClient::Request& request, HeadersFunc headersFn, DataFunc dataFn) const;
 
     private:
         bool _log;

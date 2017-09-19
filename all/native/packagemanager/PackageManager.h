@@ -197,7 +197,7 @@ namespace carto {
          * Note 2: the package may not be deleted after this call, as the import is asynchronous operation. It is safe to delete the original file once import is complete (this is notified via manager listener).
          * @param packageId The id of the package to download.
          * @param version The version of the package.
-         * @param packageFileName The fully qualified path of the package.
+         * @param packageFileName The fully qualified path of the package. The file name may also refer to URL or asset (using 'asset://' prefix).
          * @return True is the package will be imported.
          */
         bool startPackageImport(const std::string& packageId, int version, const std::string& packageFileName);
@@ -336,7 +336,7 @@ namespace carto {
 
         static MapTile CalculateMapTile(const MapPos& mapPos, int zoom, const std::shared_ptr<Projection>& proj);
 
-        static int DownloadFile(const std::string& url, NetworkUtils::HandlerFn handler, std::uint64_t offset = 0);
+        static int DownloadFile(const std::string& url, NetworkUtils::HandlerFunc handler, std::uint64_t offset = 0);
 
         static const int DEFAULT_TILEMASK_ZOOMLEVEL;
 

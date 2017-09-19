@@ -37,7 +37,7 @@ namespace carto {
         return false;
     }
 
-    int NetworkUtils::GetHTTP(const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, HandlerFn handler, std::uint64_t offset, bool log) {
+    int NetworkUtils::GetHTTP(const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, HandlerFunc handler, std::uint64_t offset, bool log) {
         HTTPClient client(log);
         try {
             return client.get(url, requestHeaders, responseHeaders, handler, offset);

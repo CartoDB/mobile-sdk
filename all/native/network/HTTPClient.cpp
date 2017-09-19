@@ -62,7 +62,7 @@ namespace carto {
         return code;
     }
 
-    int HTTPClient::get(const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, HandlerFn handlerFn, std::uint64_t offset) const {
+    int HTTPClient::get(const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, HandlerFunc handlerFn, std::uint64_t offset) const {
         Request request("GET", url);
         request.headers.insert(requestHeaders.begin(), requestHeaders.end());
         if (request.headers.count("Accept") == 0) {
@@ -105,7 +105,7 @@ namespace carto {
         return code;
     }
 
-    int HTTPClient::makeRequest(Request request, Response& response, HandlerFn handlerFn, std::uint64_t offset) const {
+    int HTTPClient::makeRequest(Request request, Response& response, HandlerFunc handlerFn, std::uint64_t offset) const {
         std::uint64_t contentOffset = 0;
         std::uint64_t contentLength = std::numeric_limits<std::uint64_t>::max();
 

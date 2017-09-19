@@ -7,6 +7,7 @@
 #include "projections/EPSG3857.h"
 #include "packagemanager/handlers/PackageHandler.h"
 #include "packagemanager/handlers/PackageHandlerFactory.h"
+#include "utils/URLFileLoader.h"
 #include "utils/Log.h"
 
 #include <cstdint>
@@ -795,36 +796,36 @@ namespace carto {
             // Determine file size, copy file
             std::uint64_t fileSize = 0;
             {
-                FILE* fpSrcRaw = utf8_filesystem::fopen(task.packageLocation.c_str(), "rb");
-                if (!fpSrcRaw) {
-                    throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM, std::string("Could not open package file ") + task.packageLocation);
-                }
-                std::shared_ptr<FILE> fpSrc(fpSrcRaw, fclose);
-                utf8_filesystem::fseek64(fpSrc.get(), 0, SEEK_END);
-                fileSize = utf8_filesystem::ftell64(fpSrc.get());
-                utf8_filesystem::fseek64(fpSrc.get(), 0, SEEK_SET);
                 FILE* fpDestRaw = utf8_filesystem::fopen(packageFileName.c_str(), "wb");
                 if (!fpDestRaw) {
                     throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM, std::string("Could not create file ") + packageFileName);
                 }
                 std::shared_ptr<FILE> fpDest(fpDestRaw, fclose);
-                unsigned char buf[4096];
-                std::uint64_t fileOffset = 0;
-                while (!feof(fpSrc.get())) {
+
+                URLFileLoader loader("PackageManager", false);
+                bool result = loader.streamFile(task.packageLocation, [&](std::uint64_t length, const unsigned char* buf, std::size_t size) {
                     if (isTaskCancelled(taskId)) {
-                        throw CancelException();
-                    }
-                    if (isTaskPaused(taskId)) {
-                        throw PauseException();
+                        return false;
                     }
 
-                    std::size_t n = fread(buf, sizeof(unsigned char), sizeof(buf) / sizeof(unsigned char), fpSrc.get());
-                    if (fwrite(buf, sizeof(unsigned char), n, fpDest.get()) != n) {
-                        throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM, std::string("Could not write to file ") + packageFileName);
+                    if (fwrite(buf, sizeof(unsigned char), size, fpDest.get()) != size) {
+                        Log::Errorf("PackageManager: Storage full? Could not write to package file %s", packageFileName.c_str());
+                        return false;
                     }
-                    fileOffset += n;
-                    updateTaskStatus(taskId, PackageAction::PACKAGE_ACTION_COPYING, static_cast<float>(fileOffset) / static_cast<float>(fileSize));
+                    fileSize += size;
+                    if (length > 0) {
+                        updateTaskStatus(taskId, PackageAction::PACKAGE_ACTION_COPYING, static_cast<float>(fileSize) / static_cast<float>(length));
+                    }
+                    return true;
+                });
+
+                if (isTaskCancelled(taskId)) {
+                    throw CancelException();
                 }
+                if (!result) {
+                    throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM, "Failed to import package " + task.packageId);
+                }
+                updateTaskStatus(taskId, PackageAction::PACKAGE_ACTION_COPYING, 1.0f);
             }
 
             // Find package tiles and calculate tile mask
@@ -1515,7 +1516,7 @@ namespace carto {
         return MapTile(x, y, zoom, 0);
     }
 
-    int PackageManager::DownloadFile(const std::string& url, NetworkUtils::HandlerFn handler, std::uint64_t offset) {
+    int PackageManager::DownloadFile(const std::string& url, NetworkUtils::HandlerFunc handler, std::uint64_t offset) {
         Log::Debugf("PackageManager::DownloadFile: %s", url.c_str());
         std::map<std::string, std::string> requestHeaders;
         std::map<std::string, std::string> responseHeaders;
