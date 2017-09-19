@@ -18,7 +18,7 @@ namespace carto {
     class Projection;
 
     /**
-     * An online routing service that connects to Nutiteq-provided routing server.
+     * An online routing service that connects to Carto-provided routing server.
      */
     class CartoOnlineRoutingService : public RoutingService {
     public:
