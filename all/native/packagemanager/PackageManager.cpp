@@ -796,14 +796,20 @@ namespace carto {
             // Determine file size, copy file
             std::uint64_t fileSize = 0;
             {
+                std::string sourceURL = task.packageLocation;
+                if (sourceURL.find("://") == std::string::npos) {
+                    sourceURL = "file://" + sourceURL;
+                }
+
                 FILE* fpDestRaw = utf8_filesystem::fopen(packageFileName.c_str(), "wb");
                 if (!fpDestRaw) {
                     throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM, std::string("Could not create file ") + packageFileName);
                 }
                 std::shared_ptr<FILE> fpDest(fpDestRaw, fclose);
 
-                URLFileLoader loader("PackageManager", false);
-                bool result = loader.streamFile(task.packageLocation, [&](std::uint64_t length, const unsigned char* buf, std::size_t size) {
+                URLFileLoader loader;
+                loader.setLocalFiles(true);
+                bool result = loader.stream(sourceURL, [&](std::uint64_t length, const unsigned char* buf, std::size_t size) {
                     if (isTaskCancelled(taskId)) {
                         return false;
                     }
@@ -1520,7 +1526,7 @@ namespace carto {
         Log::Debugf("PackageManager::DownloadFile: %s", url.c_str());
         std::map<std::string, std::string> requestHeaders;
         std::map<std::string, std::string> responseHeaders;
-        return NetworkUtils::GetHTTP(url, requestHeaders, responseHeaders, handler, offset, Log::IsShowDebug());
+        return NetworkUtils::StreamHTTPResponse("GET", url, requestHeaders, responseHeaders, handler, offset, Log::IsShowDebug());
     }
 
     PackageManager::PersistentTaskQueue::PersistentTaskQueue(const std::string& dbFileName) {

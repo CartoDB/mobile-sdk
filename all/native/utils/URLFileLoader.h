@@ -22,15 +22,20 @@ namespace carto {
     public:
         typedef std::function<bool(std::uint64_t, const unsigned char*, std::size_t)> HandlerFunc;
 
-        URLFileLoader(const std::string& tag, bool cacheFiles);
+        URLFileLoader();
         virtual ~URLFileLoader();
 
-        bool loadFile(const std::string& url, std::shared_ptr<BinaryData>& data) const;
-        bool streamFile(const std::string& url, HandlerFunc handler) const;
+        void setCaching(bool caching);
+        void setLocalFiles(bool localFiles);
+
+        bool isSupported(const std::string& url) const;
+
+        bool load(const std::string& url, std::shared_ptr<BinaryData>& data) const;
+        bool stream(const std::string& url, HandlerFunc handler) const;
         
     private:
-        const std::string _tag;
-        const bool _cacheFiles;
+        bool _caching;
+        bool _localFiles;
         mutable std::map<std::string, std::shared_ptr<BinaryData> > _cachedFiles;
         mutable std::mutex _mutex;
     };
