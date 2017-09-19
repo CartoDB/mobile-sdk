@@ -52,6 +52,6 @@ namespace carto {
         return responseData;
     }
 
-    const std::string CartoAssetPackageUpdater::STYLE_SERVICE_URL = "http://api.nutiteq.com/styles/";
+    const std::string CartoAssetPackageUpdater::STYLE_SERVICE_URL = "http://mobile-api.carto.com/styles/";
 
 }

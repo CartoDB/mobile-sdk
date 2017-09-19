@@ -27,7 +27,7 @@ namespace carto {
          * Constructs a CartoPackageManager object, given application context and data folder.
          * The data folder must exist before creating a new package manager and it is assumed to be persistent.
          * Note: the package manager must be explicitly started using start() method!
-         * @param source Name of the package source. Default: "nutiteq.osm"
+         * @param source Name of the package source. The official source is "carto.streets".
          * @param dataFolder The folder where downloaded packages are kept. It must exist and must be writable.
          * @throws std::runtime_error If package manager fails to open or create package database.
          */

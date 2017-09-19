@@ -55,7 +55,7 @@ namespace carto {
         return RoutingProxy::CalculateRoute(httpClient, url, request);
     }
 
-    const std::string CartoOnlineRoutingService::ROUTING_SERVICE_URL = "http://api.nutiteq.com/routing/v2/";
+    const std::string CartoOnlineRoutingService::ROUTING_SERVICE_URL = "http://mobile-api.carto.com/routing/v2/";
     
 }
 

@@ -297,17 +297,17 @@ namespace carto {
         return packageSource;
     }
 
-    const std::string CartoPackageManager::MAP_PACKAGE_LIST_URL = "http://api.nutiteq.com/mappackages/v2/";
+    const std::string CartoPackageManager::MAP_PACKAGE_LIST_URL = "http://mobile-api.carto.com/mappackages/v2/";
 
-    const std::string CartoPackageManager::ROUTING_PACKAGE_LIST_URL = "http://api.nutiteq.com/routepackages/v2/";
+    const std::string CartoPackageManager::ROUTING_PACKAGE_LIST_URL = "http://mobile-api.carto.com/routepackages/v2/";
 
-    const std::string CartoPackageManager::GEOCODING_PACKAGE_LIST_URL = "http://api.nutiteq.com/geocodepackages/v2/";
+    const std::string CartoPackageManager::GEOCODING_PACKAGE_LIST_URL = "http://mobile-api.carto.com/geocodepackages/v2/";
 
-    const std::string CartoPackageManager::CUSTOM_MAP_BBOX_PACKAGE_URL = "http://api.nutiteq.com/maparea/v2/";
+    const std::string CartoPackageManager::CUSTOM_MAP_BBOX_PACKAGE_URL = "http://mobile-api.carto.com/maparea/v2/";
 
-    const std::string CartoPackageManager::CUSTOM_ROUTING_BBOX_PACKAGE_URL = "http://api.nutiteq.com/routearea/v2/";
+    const std::string CartoPackageManager::CUSTOM_ROUTING_BBOX_PACKAGE_URL = "http://mobile-api.carto.com/routearea/v2/";
 
-    const std::string CartoPackageManager::CUSTOM_GEOCODING_BBOX_PACKAGE_URL = "http://api.nutiteq.com/geocodearea/v2/";
+    const std::string CartoPackageManager::CUSTOM_GEOCODING_BBOX_PACKAGE_URL = "http://mobile-api.carto.com/geocodearea/v2/";
 
     const unsigned int CartoPackageManager::MAX_CUSTOM_BBOX_PACKAGE_TILES = 250000;
 
