@@ -124,7 +124,7 @@ namespace {
                             carto::MapVec v0 = unifiedPoses[k] - unifiedPoses[k - 1];
                             carto::MapVec v1 = unifiedPoses[k] - unifiedPoses[(k + 1) % unifiedPoses.size()];
                             if (v0 == v1) {
-                                unifiedPoses.erase(unifiedPoses.begin() + k);
+                                unifiedPoses.erase(unifiedPoses.begin() + k - 1, unifiedPoses.begin() + k + 1);
                             } else {
                                 k++;
                             }
