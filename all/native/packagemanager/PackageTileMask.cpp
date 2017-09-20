@@ -196,8 +196,14 @@ namespace carto {
         }
 
         std::vector<std::vector<MapPos> > poly = CalculateTileNodeBoundingPolygon(_rootNode, projection);
+
+        std::vector<std::vector<MapPos> > optimizedPoly;
+        for (std::size_t i = 0; i < poly.size(); i++) {
+            optimizedPoly = unifyTilePolygons(optimizedPoly, std::vector<std::vector<MapPos> >(poly.begin() + i, poly.begin() + i + 1));
+        }
+
         std::vector<std::shared_ptr<PolygonGeometry> > geoms;
-        geoms.push_back(std::make_shared<PolygonGeometry>(std::move(poly)));
+        geoms.push_back(std::make_shared<PolygonGeometry>(std::move(optimizedPoly)));
         return std::make_shared<MultiPolygonGeometry>(geoms);
     }
 
