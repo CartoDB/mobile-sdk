@@ -796,16 +796,18 @@ namespace carto {
             // Determine file size, copy file
             std::uint64_t fileSize = 0;
             {
-                std::string sourceURL = task.packageLocation;
-                if (sourceURL.find("://") == std::string::npos) {
-                    sourceURL = "file://" + sourceURL;
-                }
-
                 FILE* fpDestRaw = utf8_filesystem::fopen(packageFileName.c_str(), "wb");
                 if (!fpDestRaw) {
                     throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM, std::string("Could not create file ") + packageFileName);
                 }
                 std::shared_ptr<FILE> fpDest(fpDestRaw, fclose);
+
+                updateTaskStatus(taskId, PackageAction::PACKAGE_ACTION_COPYING, 0.0f);
+
+                std::string sourceURL = task.packageLocation;
+                if (sourceURL.find("://") == std::string::npos) {
+                    sourceURL = "file://" + sourceURL;
+                }
 
                 URLFileLoader loader;
                 loader.setLocalFiles(true);
