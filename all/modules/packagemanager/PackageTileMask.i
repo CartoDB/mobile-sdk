@@ -8,10 +8,12 @@
 
 #ifdef _CARTO_PACKAGEMANAGER_SUPPORT
 
-!proxy_imports(carto::PackageTileMask, core.MapTile)
+!proxy_imports(carto::PackageTileMask, core.MapTile, geometry.MultiPolygonGeometry, projections.Projection)
 
 %{
 #include "packagemanager/PackageTileMask.h"
+#include "geometry/MultiPolygonGeometry.h"
+#include "projections/Projection.h"
 #include <memory>
 %}
 
@@ -20,6 +22,8 @@
 %include <cartoswig.i>
 
 %import "core/MapTile.i"
+%import "geometry/MultiPolygonGeometry.i"
+%import "projections/Projection.i"
 
 !shared_ptr(carto::PackageTileMask, packagemanager.PackageTileMask)
 
