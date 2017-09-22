@@ -16,7 +16,7 @@ namespace carto {
     CartoCSSAssetLoader::~CartoCSSAssetLoader() {
     }
         
-    std::shared_ptr<std::vector<unsigned char> > CartoCSSAssetLoader::load(const std::string& url) const {
+    std::shared_ptr<const std::vector<unsigned char> > CartoCSSAssetLoader::load(const std::string& url) const {
         std::shared_ptr<BinaryData> data;
         if (!_urlFileLoader.loadFile(url, data)) {
             std::string fileName = FileUtils::NormalizePath(_basePath + url);

@@ -43,10 +43,11 @@ namespace carto {
     protected:
         class PackageManagerListener : public PackageManager::OnChangeListener {
         public:
-            PackageManagerListener(PackageManagerTileDataSource& dataSource);
-        		
+            explicit PackageManagerListener(PackageManagerTileDataSource& dataSource);
+                
             virtual void onPackagesChanged();
-        		
+            virtual void onStylesChanged();
+
         private:
             PackageManagerTileDataSource& _dataSource;
         };

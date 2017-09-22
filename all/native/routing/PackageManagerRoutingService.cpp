@@ -91,6 +91,10 @@ namespace carto {
         _service._cachedRouteFinder.reset();
     }
 
+    void PackageManagerRoutingService::PackageManagerListener::onStylesChanged() {
+        // Impossible
+    }
+
 }
 
 #endif

@@ -42,6 +42,7 @@ using std::uint64_t;
 %ignore carto::PackageManager::OnChangeListener;
 %ignore carto::PackageManager::registerOnChangeListener;
 %ignore carto::PackageManager::unregisterOnChangeListener;
+%ignore carto::PackageManager::getSchema;
 %ignore carto::PackageManager::accessLocalPackages;
 !standard_equals(carto::PackageManager);
 

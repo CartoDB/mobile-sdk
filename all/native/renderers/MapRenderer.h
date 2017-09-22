@@ -156,7 +156,7 @@ namespace carto {
     private:
         class OptionsListener : public Options::OnChangeListener {
         public:
-            OptionsListener(const std::shared_ptr<MapRenderer>& mapRenderer);
+            explicit OptionsListener(const std::shared_ptr<MapRenderer>& mapRenderer);
             
             virtual void onOptionChanged(const std::string& optionName);
             

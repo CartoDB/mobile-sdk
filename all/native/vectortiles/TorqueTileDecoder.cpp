@@ -145,7 +145,7 @@ namespace carto {
             map = mapLoader.loadMap(styleSet->getCartoCSS());
         }
         catch (const std::exception& ex) {
-            throw ParseException("Style parsing failed", ex.what());
+            throw ParseException(std::string("Style parsing failed: ") + ex.what(), styleSet->getCartoCSS());
         }
 
         auto bitmapLoader = std::make_shared<VTBitmapLoader>("", std::shared_ptr<AssetPackage>());

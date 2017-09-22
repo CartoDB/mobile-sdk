@@ -11,6 +11,7 @@
 
 #include "core/MapTile.h"
 #include "core/MapBounds.h"
+#include "layers/CartoVectorTileLayer.h"
 #include "packagemanager/PackageManager.h"
 
 namespace carto {
@@ -32,7 +33,19 @@ namespace carto {
          */
         CartoPackageManager(const std::string& source, const std::string& dataFolder);
         virtual ~CartoPackageManager();
+
+        /**
+         * Returns the specified style asset package.
+         * @param style The style of the asset package to return.
+         */
+        std::shared_ptr<AssetPackage> getStyleAssetPackage(CartoBaseMapStyle::CartoBaseMapStyle style) const;
         
+        /**
+         * Starts updating the specified map style asynchronously. When this task finishes, listener is called.
+         * @return True if the style will be downloaded and listener will be notified (if set). False if it can not be downloaded.
+         */
+        bool startStyleDownload(CartoBaseMapStyle::CartoBaseMapStyle style);
+
     protected:
         static std::string GetPackageListURL(const std::string& source);
         static std::string GetServerEncKey();
@@ -43,7 +56,13 @@ namespace carto {
         virtual std::string createPackageURL(const std::string& packageId, int version, const std::string& baseURL, bool downloaded) const;
 
         virtual std::shared_ptr<PackageInfo> getCustomPackage(const std::string& packageId, int version) const;
+
+        virtual bool updateStyle(const std::string& styleName);
         
+        std::shared_ptr<sqlite3pp::database> createStyleDb(const std::string& styleName) const;
+
+        std::shared_ptr<AssetPackage> getStyleAssetPackage(const std::string& styleName) const;
+
     private:
         struct PackageSource {
             std::string type;
@@ -62,12 +81,14 @@ namespace carto {
         static const std::string CUSTOM_ROUTING_BBOX_PACKAGE_URL;
         static const std::string CUSTOM_GEOCODING_BBOX_PACKAGE_URL;
 
-        static const int MAX_CUSTOM_BBOX_PACKAGE_TILES;
+        static const unsigned int MAX_CUSTOM_BBOX_PACKAGE_TILES;
         static const int MAX_CUSTOM_BBOX_PACKAGE_TILE_ZOOM;
         static const int MAX_CUSTOM_BBOX_PACKAGE_TILEMASK_ZOOMLEVEL;
-        static const int MAX_TILEMASK_LENGTH;
+        static const unsigned int MAX_TILEMASK_LENGTH;
         
-        std::string _source;
+        const std::string _source;
+
+        mutable std::recursive_mutex _styleDbMutex;
     };
 }
 

@@ -8,6 +8,7 @@ import javax.microedition.khronos.opengles.GL10;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
+import android.content.res.TypedArray;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLSurfaceView.Renderer;
 import android.util.AttributeSet;
@@ -113,6 +114,20 @@ public class MapView extends GLSurfaceView implements Renderer {
     public MapView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
+        // Unless explictly not clickable, make clickable by default
+        boolean clickable = true;
+        boolean longClickable = true;
+        try {
+            TypedArray ta = context.obtainStyledAttributes(attrs, new int[]{ android.R.attr.clickable, android.R.attr.longClickable });
+            clickable = ta.getBoolean(0, true);
+            longClickable = ta.getBoolean(1, true);
+            ta.recycle();
+        } catch (Exception e) {
+            com.carto.utils.Log.warn("MapView: Failed to read attributes");
+        }
+        setClickable(clickable);
+        setLongClickable(longClickable);
+
         if (!isInEditMode()) {
             // Connect context info and assets manager to native part
             AndroidUtils.setContext(context);
@@ -182,6 +197,11 @@ public class MapView extends GLSurfaceView implements Renderer {
     public synchronized boolean onTouchEvent(MotionEvent event) {
         if (baseMapView == null) {
             return false;
+        }
+
+        boolean clickable = isClickable() || isLongClickable();
+        if (!isEnabled() || !clickable) {
+            return clickable;
         }
 
         try {

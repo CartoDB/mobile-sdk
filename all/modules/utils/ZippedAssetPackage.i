@@ -7,6 +7,7 @@
 
 %{
 #include "utils/ZippedAssetPackage.h"
+#include "components/Exceptions.h"
 #include <memory>
 %}
 
@@ -19,6 +20,9 @@
 %import "utils/AssetPackage.i"
 
 !polymorphic_shared_ptr(carto::ZippedAssetPackage, utils.ZippedAssetPackage)
+
+%attributeval(carto::ZippedAssetPackage, %arg(std::vector<std::string>), LocalAssetNames, getLocalAssetNames)
+%std_exceptions(carto::ZippedAssetPackage::ZippedAssetPackage)
 
 %include "utils/ZippedAssetPackage.h"
 

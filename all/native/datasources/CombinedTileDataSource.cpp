@@ -8,7 +8,10 @@
 namespace carto {
     
     CombinedTileDataSource::CombinedTileDataSource(const std::shared_ptr<TileDataSource>& dataSource1, const std::shared_ptr<TileDataSource>& dataSource2, int zoomLevel) :
-        TileDataSource(), _dataSource1(dataSource1), _dataSource2(dataSource2), _zoomLevel(zoomLevel)
+        TileDataSource(),
+        _dataSource1(dataSource1),
+        _dataSource2(dataSource2),
+        _zoomLevel(zoomLevel)
     {
         if (!dataSource1) {
             throw NullArgumentException("Null dataSource1");

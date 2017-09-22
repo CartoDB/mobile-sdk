@@ -204,7 +204,7 @@ namespace carto {
         picojson::value mapInfo;
         std::string err = picojson::parse(mapInfo, result);
         if (!err.empty()) {
-            throw ParseException("Failed to parse map configuration response", result);
+            throw ParseException(std::string("Failed to parse map configuration response: ") + err, result);
         }
 
         // Check for errors and log them
@@ -254,7 +254,7 @@ namespace carto {
         picojson::value mapInfo;
         std::string err = picojson::parse(mapInfo, result);
         if (!err.empty()) {
-            throw ParseException("Failed to parse map configuration response", result);
+            throw ParseException(std::string("Failed to parse map configuration response: ") + err, result);
         }
 
         // Create layers
@@ -440,8 +440,8 @@ namespace carto {
                 }
             }
             
-            // Create previously gathered layers if type has changed (or Torque layer)
-            if (type != layerType || type == "torque") {
+            // Create previously gathered layers if type has changed (or Torque layer) or in interactive mode (as grid.json can be queried from a single layer)
+            if (type != layerType || type == "torque" || _interactive) {
                 if (std::shared_ptr<Layer> layer = createLayerGroup(layerGroupId, layerType, layerInfos, cdnURLs)) {
                     layers.push_back(layer);
                 }

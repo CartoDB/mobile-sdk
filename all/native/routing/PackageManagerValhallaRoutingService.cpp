@@ -87,6 +87,10 @@ namespace carto {
         _service._cachedPackageDatabases.clear();
     }
 
+    void PackageManagerValhallaRoutingService::PackageManagerListener::onStylesChanged() {
+        // Impossible
+    }
+
 }
 
 #endif

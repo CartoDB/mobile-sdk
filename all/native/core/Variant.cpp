@@ -181,7 +181,7 @@ namespace carto {
         picojson::value val;
         std::string err = picojson::parse(val, str);
         if (!err.empty()) {
-            throw ParseException(err, str);
+            throw ParseException(std::string("Variant parsing failed: ") + err, str);
         }
         Variant var;
         var._value = std::move(val);

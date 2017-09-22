@@ -798,27 +798,27 @@ The DataSource constructor uses the following URL patterns. It requires a minimu
 </div>
 
 <br/><br/>
-The following sections provide the code for rester tile basemap urls, and a sample image.
+The following sections provide the code for raster tile basemap urls, and a sample image.
 
 ### HERE Satellite Tiles
 
-`https://1.aerial.maps.api.here.com/maptile/2.1/maptile/newest/satellite.day/{z}/{x}/{y}/512/jpg?lg=eng&token=A7tBPacePg9Mj_zghvKt9Q&app_id=KuYppsdXZznpffJsKT24`
+`RasterTileLayer hereRasterLayer = new RasterTileLayer(new CartoOnlineTileDataSource("here.satellite.day@2x"));`
 
-<img src="https://1.aerial.maps.api.here.com/maptile/2.1/maptile/newest/satellite.day/4/4/4/256/jpg?lg=eng&token=A7tBPacePg9Mj_zghvKt9Q&app_id=KuYppsdXZznpffJsKT24"/>
+<img src="https://1.aerial.maps.api.here.com/maptile/2.1/maptile/newest/satellite.day/17/65490/43588/256/jpg?lg=eng&token=A7tBPacePg9Mj_zghvKt9Q&app_id=KuYppsdXZznpffJsKT24"/>
 
 ### HERE Map Tiles
 
-`https://1.base.maps.api.here.com/maptile/2.1/maptile/newest/normal.day/{z}/{x}/{y}/256/png8?lg=eng&token=A7tBPacePg9Mj_zghvKt9Q&app_id=KuYppsdXZznpffJsKT24`
+`RasterTileLayer hereRasterLayer = new RasterTileLayer(new CartoOnlineTileDataSource("here.normal.day@2x"));`
 
-<img src="https://1.base.maps.api.here.com/maptile/2.1/maptile/newest/normal.day/4/4/4/256/png8?lg=eng&token=A7tBPacePg9Mj_zghvKt9Q&app_id=KuYppsdXZznpffJsKT24"/>
+<img src="https://1.base.maps.api.here.com/maptile/2.1/maptile/newest/normal.day/17/65490/43588/256/png8?lg=eng&token=A7tBPacePg9Mj_zghvKt9Q&app_id=KuYppsdXZznpffJsKT24"/>
 
-### CARTO Positron Tiles
+### CARTO Positron Tiles in raster
 
 `http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png`
 
 <img src="http://a.basemaps.cartocdn.com/light_all/17/65490/43588.png"/>
 
-### CARTO Dark Matter Tiles
+### CARTO Dark Matter Tiles in raster
 
 `http://a.basemaps.cartocdn.com/dark_all/{zoom}/{x}/{y}.png`
 

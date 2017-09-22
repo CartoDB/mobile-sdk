@@ -8,7 +8,8 @@
 namespace carto {
     
     CacheTileDataSource::CacheTileDataSource(const std::shared_ptr<TileDataSource>& dataSource) :
-        TileDataSource(), _dataSource(dataSource)
+        TileDataSource(),
+        _dataSource(dataSource)
     {
         if (!dataSource) {
             throw NullArgumentException("Null dataSource");

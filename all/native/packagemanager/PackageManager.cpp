@@ -36,6 +36,7 @@
 #include <hex.h>
 
 namespace {
+
     std::shared_ptr<carto::PackageMetaInfo> createPackageMetaInfo(const rapidjson::Value& value) {
         rapidjson::StringBuffer metaInfo;
         rapidjson::Writer<rapidjson::StringBuffer> writer(metaInfo);
@@ -43,6 +44,7 @@ namespace {
         carto::Variant var = carto::Variant::FromString(metaInfo.GetString());
         return std::make_shared<carto::PackageMetaInfo>(var);
     }
+
 }
 
 namespace carto {
@@ -171,6 +173,24 @@ namespace carto {
             _packageManagerThread.reset();
             Log::Info("PackageManager: Package manager stopped");
         }
+    }
+
+    std::string PackageManager::getSchema() const {
+        if (!_localDb) {
+            return std::string();
+        }
+
+        try {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            sqlite3pp::query query(*_localDb, "SELECT value FROM metadata WHERE name='schema'");
+            for (auto qit = query.begin(); qit != query.end(); qit++) {
+                return qit->get<const char*>(0);
+            }
+        }
+        catch (const std::exception& ex) {
+            Log::Errorf("PackageManager::getSchema: %s", ex.what());
+        }
+        return std::string();
     }
 
     std::vector<std::shared_ptr<PackageInfo> > PackageManager::getServerPackages() const {
@@ -588,6 +608,27 @@ namespace carto {
         }
     }
 
+    bool PackageManager::startStyleDownload(const std::string& styleName) {
+        if (!_localDb) {
+            return false;
+        }
+
+        try {
+            Task downloadTask;
+            downloadTask.command = Task::DOWNLOAD_STYLE;
+            downloadTask.packageId = styleName;
+            int taskId = _taskQueue->scheduleTask(downloadTask);
+            _taskQueue->setTaskPriority(taskId, std::numeric_limits<int>::max());
+            updateTaskStatus(taskId, PackageAction::PACKAGE_ACTION_WAITING, 0);
+            _taskQueueCondition.notify_one();
+            return true;
+        }
+        catch (const std::exception& ex) {
+            Log::Errorf("PackageManager::startStyleDownload: %s", ex.what());
+        }
+        return false;
+    }
+
     void PackageManager::run() {
         try {
             while (true) {
@@ -621,6 +662,9 @@ namespace carto {
                         break;
                     case Task::REMOVE_PACKAGE:
                         success = removePackage(taskId);
+                        break;
+                    case Task::DOWNLOAD_STYLE:
+                        success = downloadStyle(taskId);
                         break;
                     }
                     if (success) {
@@ -710,6 +754,18 @@ namespace carto {
         }
         if (!packageListDoc.HasMember("packages")) {
             throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM, "Package list does not contain package definitions");
+        }
+
+        // Check optional schema value. Always keep the schema up-to-date
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            sqlite3pp::command delCmd(*_localDb, "DELETE FROM metadata WHERE name='schema'");
+            delCmd.execute();
+            if (packageListDoc.HasMember("schema")) {
+                sqlite3pp::command insCmd(*_localDb, "INSERT INTO metadata(name, value) VALUES('schema', :schema)");
+                insCmd.bind(":schema", packageListDoc["schema"].GetString());
+                insCmd.execute();
+            }
         }
 
         // Update package list file
@@ -1028,6 +1084,20 @@ namespace carto {
         return true;
     }
 
+    bool PackageManager::downloadStyle(int taskId) {
+        Task task = _taskQueue->getTask(taskId);
+
+        if (_taskQueue->isTaskCancelled(taskId)) {
+            throw CancelException();
+        }
+
+        if (updateStyle(task.packageId)) {
+            notifyStylesChanged();
+        }
+
+        return true;
+    }
+
     void PackageManager::syncLocalPackages() {
         if (!_localDb) {
             return;
@@ -1074,48 +1144,34 @@ namespace carto {
     }
 
     void PackageManager::importLocalPackage(int id, int taskId, const std::string& packageId, PackageType::PackageType packageType, const std::string& packageFileName) {
-        std::vector<std::shared_ptr<OnChangeListener> > onChangeListeners;
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            onChangeListeners = _onChangeListeners;
-        }
-
         // Invoke handler callback
         if (auto handler = PackageHandlerFactory(_serverEncKey, _localEncKey).createPackageHandler(packageType, packageFileName)) {
             handler->onImportPackage();
         }
 
         // Mark downloaded package as valid and older packages as invalid.
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        sqlite3pp::command command2(*_localDb, "UPDATE packages SET valid=(id=:id) WHERE package_id=:package_id");
-        command2.bind(":id", id);
-        command2.bind(":package_id", packageId.c_str());
-        command2.execute();
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            sqlite3pp::command command2(*_localDb, "UPDATE packages SET valid=(id=:id) WHERE package_id=:package_id");
+            command2.bind(":id", id);
+            command2.bind(":package_id", packageId.c_str());
+            command2.execute();
 
-        // Delete older invalid packages
-        sqlite3pp::query query(*_localDb, "SELECT id FROM packages WHERE package_id=:package_id AND valid=0");
-        query.bind(":package_id", packageId.c_str());
-        for (auto qit = query.begin(); qit != query.end(); qit++) {
-            int otherId = qit->get<int>(0);
-            deleteLocalPackage(otherId);
+            // Delete older invalid packages
+            sqlite3pp::query query(*_localDb, "SELECT id FROM packages WHERE package_id=:package_id AND valid=0");
+            query.bind(":package_id", packageId.c_str());
+            for (auto qit = query.begin(); qit != query.end(); qit++) {
+                int otherId = qit->get<int>(0);
+                deleteLocalPackage(otherId);
+            }
         }
 
         // Sync
         syncLocalPackages();
-
-        // Notify that packages have changed before actually deleting the file
-        for (const std::shared_ptr<OnChangeListener>& onChangeListener : onChangeListeners) {
-            onChangeListener->onPackagesChanged();
-        }
+        notifyPackagesChanged();
     }
 
     void PackageManager::deleteLocalPackage(int id) {
-        std::vector<std::shared_ptr<OnChangeListener> > onChangeListeners;
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            onChangeListeners = _onChangeListeners;
-        }
-
         std::string packageFileName;
         PackageType::PackageType packageType = PackageType::PACKAGE_TYPE_MAP;
         {
@@ -1143,11 +1199,7 @@ namespace carto {
 
         // Sync
         syncLocalPackages();
-
-        // Notify that packages have changed before actually deleting the file
-        for (const std::shared_ptr<OnChangeListener>& onChangeListener : onChangeListeners) {
-            onChangeListener->onPackagesChanged();
-        }
+        notifyPackagesChanged();
 
         // Invoke handler callback
         if (auto handler = PackageHandlerFactory(_serverEncKey, _localEncKey).createPackageHandler(packageType, packageFileName)) {
@@ -1189,11 +1241,15 @@ namespace carto {
 
         if (packageManagerListener) {
             Task task = _taskQueue->getTask(taskId);
-            if (!task.packageId.empty()) {
-                std::shared_ptr<PackageStatus> status = getLocalPackageStatus(task.packageId, task.packageVersion);
-                if (status) {
+            switch (task.command) {
+            case Task::Command::DOWNLOAD_PACKAGE:
+            case Task::Command::IMPORT_PACKAGE:
+                if (std::shared_ptr<PackageStatus> status = getLocalPackageStatus(task.packageId, task.packageVersion)) {
                     packageManagerListener->onPackageStatusChanged(task.packageId, task.packageVersion, status);
                 }
+                break;
+            default:
+                break;
             }
         }
     }
@@ -1205,11 +1261,20 @@ namespace carto {
         DirectorPtr<PackageManagerListener> packageManagerListener = _packageManagerListener;
 
         if (packageManagerListener) {
-            if (task.packageId.empty()) {
+            switch (task.command) {
+            case Task::Command::DOWNLOAD_PACKAGE_LIST:
                 packageManagerListener->onPackageListUpdated();
-            }
-            else {
+                break;
+            case Task::Command::DOWNLOAD_PACKAGE:
+            case Task::Command::IMPORT_PACKAGE:
+            case Task::Command::REMOVE_PACKAGE:
                 packageManagerListener->onPackageUpdated(task.packageId, task.packageVersion);
+                break;
+            case Task::Command::DOWNLOAD_STYLE:
+                packageManagerListener->onStyleUpdated(task.packageId);
+                break;
+            default:
+                break;
             }
         }
     }
@@ -1220,11 +1285,16 @@ namespace carto {
         DirectorPtr<PackageManagerListener> packageManagerListener = _packageManagerListener;
 
         if (packageManagerListener) {
-            if (!task.packageId.empty()) {
-                std::shared_ptr<PackageStatus> status = getLocalPackageStatus(task.packageId, task.packageVersion);
-                if (status) {
+            switch (task.command) {
+            case Task::Command::DOWNLOAD_PACKAGE:
+            case Task::Command::IMPORT_PACKAGE:
+            case Task::Command::REMOVE_PACKAGE:
+                if (std::shared_ptr<PackageStatus> status = getLocalPackageStatus(task.packageId, task.packageVersion)) {
                     packageManagerListener->onPackageStatusChanged(task.packageId, task.packageVersion, status);
                 }
+                break;
+            default:
+                break;
             }
         }
     }
@@ -1236,8 +1306,14 @@ namespace carto {
         DirectorPtr<PackageManagerListener> packageManagerListener = _packageManagerListener;
 
         if (packageManagerListener) {
-            if (!task.packageId.empty()) {
+            switch (task.command) {
+            case Task::Command::DOWNLOAD_PACKAGE:
+            case Task::Command::IMPORT_PACKAGE:
+            case Task::Command::REMOVE_PACKAGE:
                 packageManagerListener->onPackageCancelled(task.packageId, task.packageVersion);
+                break;
+            default:
+                break;
             }
         }
     }
@@ -1249,11 +1325,20 @@ namespace carto {
         DirectorPtr<PackageManagerListener> packageManagerListener = _packageManagerListener;
 
         if (packageManagerListener) {
-            if (task.packageId.empty()) {
+            switch (task.command) {
+            case Task::Command::DOWNLOAD_PACKAGE_LIST:
                 packageManagerListener->onPackageListFailed();
-            }
-            else {
+                break;
+            case Task::Command::DOWNLOAD_PACKAGE:
+            case Task::Command::IMPORT_PACKAGE:
+            case Task::Command::REMOVE_PACKAGE:
                 packageManagerListener->onPackageFailed(task.packageId, task.packageVersion, errorType);
+                break;
+            case Task::Command::DOWNLOAD_STYLE:
+                packageManagerListener->onStyleFailed(task.packageId);
+                break;
+            default:
+                break;
             }
         }
     }
@@ -1284,6 +1369,34 @@ namespace carto {
 
     std::shared_ptr<PackageInfo> PackageManager::getCustomPackage(const std::string& packageId, int version) const {
         return std::shared_ptr<PackageInfo>();
+    }
+
+    bool PackageManager::updateStyle(const std::string& styleName) {
+        return false;
+    }
+
+    void PackageManager::notifyPackagesChanged() {
+        std::vector<std::shared_ptr<OnChangeListener> > onChangeListeners;
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            onChangeListeners = _onChangeListeners;
+        }
+
+        for (const std::shared_ptr<OnChangeListener>& onChangeListener : onChangeListeners) {
+            onChangeListener->onPackagesChanged();
+        }
+    }
+
+    void PackageManager::notifyStylesChanged() {
+        std::vector<std::shared_ptr<OnChangeListener> > onChangeListeners;
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            onChangeListeners = _onChangeListeners;
+        }
+
+        for (const std::shared_ptr<OnChangeListener>& onChangeListener : onChangeListeners) {
+            onChangeListener->onStylesChanged();
+        }
     }
 
     std::string PackageManager::loadPackageListJson(const std::string& jsonFileName) const {

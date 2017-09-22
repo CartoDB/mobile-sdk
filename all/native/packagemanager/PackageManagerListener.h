@@ -89,6 +89,17 @@ namespace carto {
          * @param errorType Reason or type of the failure
          */
         virtual void onPackageFailed(const std::string& id, int version, PackageErrorType::PackageErrorType errorType) { }
+
+        /**
+         * Listener method that is called when map style has been successfully updated.
+         * @param styleName The name of the style that was updated.
+         */
+        virtual void onStyleUpdated(const std::string& styleName) { }
+        /**
+         * Listener method that is called when map style could not be downloaded or updated.
+         * @param styleName The name of the style that could not be updated.
+         */
+        virtual void onStyleFailed(const std::string& styleName) { }
     };
 
 }

@@ -73,7 +73,7 @@ namespace carto {
     
         class MapRendererListener : public MapRenderer::OnChangeListener {
         public:
-            MapRendererListener(const std::shared_ptr<TouchHandler>& touchHandler);
+            explicit MapRendererListener(const std::shared_ptr<TouchHandler>& touchHandler);
             
             virtual void onMapChanged();
             virtual void onMapIdle();
