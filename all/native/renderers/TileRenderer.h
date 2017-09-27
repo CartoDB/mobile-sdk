@@ -62,7 +62,7 @@ namespace carto {
         void calculateRayIntersectedBitmaps(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<std::tuple<vt::TileId, double, vt::TileBitmap, cglib::vec2<float> > >& results) const;
     
     private:
-        const static int CLICK_RADIUS = 3;
+        const static int CLICK_RADIUS = 4;
 
         std::weak_ptr<MapRenderer> _mapRenderer;
         std::shared_ptr<vt::GLTileRenderer> _glRenderer;
