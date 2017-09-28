@@ -14,7 +14,7 @@ namespace carto {
     class LabelStyle;
     class ViewState;
     
-    class LabelDrawData: public BillboardDrawData {
+    class LabelDrawData : public BillboardDrawData {
     public:
         LabelDrawData(const Label& label, const LabelStyle& style,
                       const Projection& projection, const ViewState& viewState);

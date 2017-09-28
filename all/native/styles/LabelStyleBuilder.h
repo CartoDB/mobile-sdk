@@ -90,6 +90,17 @@ namespace carto {
          * @param scalingMode The new scaling mode for the label.
          */
         void setScalingMode(BillboardScaling::BillboardScaling scalingMode);
+
+        /**
+         * Returns the relative rendering scale for the label. 
+         * @return The relative rendering scale for the label.
+         */
+        float getRenderScale() const;
+        /**
+         * Sets the relative rendering scale for the label. The default is 1.0. For sharper labels, this should be larger.
+         * @param renderScale The new rendering scale value.
+         */
+        void setRenderScale(float renderScale);
         
         /**
          * Builds a new instance of the LabelStyle object using previously set parameters.
@@ -100,12 +111,14 @@ namespace carto {
     protected:
         float _anchorPointX;
         float _anchorPointY;
-        
+
         bool _flippable;
         
         BillboardOrientation::BillboardOrientation _orientationMode;
         
         BillboardScaling::BillboardScaling _scalingMode;
+
+        float _renderScale;
     };
     
 }

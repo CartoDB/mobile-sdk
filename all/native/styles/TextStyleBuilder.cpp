@@ -84,6 +84,7 @@ namespace carto {
                                                         _flippable,
                                                         _orientationMode,
                                                         _scalingMode,
+                                                        _renderScale,
                                                         _fontName,
                                                         _textField,
                                                         _fontSize,

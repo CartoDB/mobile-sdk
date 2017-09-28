@@ -9,7 +9,8 @@ namespace carto {
         _anchorPointY(-1),
         _flippable(true),
         _orientationMode(BillboardOrientation::BILLBOARD_ORIENTATION_FACE_CAMERA),
-        _scalingMode(BillboardScaling::BILLBOARD_SCALING_CONST_SCREEN_SIZE)
+        _scalingMode(BillboardScaling::BILLBOARD_SCALING_CONST_SCREEN_SIZE),
+        _renderScale(1.0f)
     {
     }
     
@@ -71,6 +72,16 @@ namespace carto {
         std::lock_guard<std::mutex> lock(_mutex);
         _scalingMode = scalingMode;
     }
+
+    float LabelStyleBuilder::getRenderScale() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _renderScale;
+    }
+        
+    void LabelStyleBuilder::setRenderScale(float renderScale) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _renderScale = renderScale;
+    }
     
     std::shared_ptr<LabelStyle> LabelStyleBuilder::buildStyle() const {
         std::lock_guard<std::mutex> lock(_mutex);
@@ -88,7 +99,8 @@ namespace carto {
                                                           _anchorPointY,
                                                           _flippable,
                                                           _orientationMode,
-                                                          _scalingMode));
+                                                          _scalingMode,
+                                                          _renderScale));
     }
         
 }

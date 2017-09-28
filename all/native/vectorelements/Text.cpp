@@ -41,6 +41,9 @@ namespace carto {
         if (_style->isScaleWithDPI()) {
             dpToPX = 1;
         }
+
+        // Multiply with rendering scale
+        dpToPX *= _style->getRenderScale();
         
         // Use actual text or text field
         std::string text = _text;

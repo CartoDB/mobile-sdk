@@ -24,10 +24,11 @@ namespace carto {
                           false,
                           BillboardOrientation::BILLBOARD_ORIENTATION_FACE_CAMERA,
                           BillboardScaling::BILLBOARD_SCALING_CONST_SCREEN_SIZE,
+                          1.0f,
                           -1)
     {
         if (!style.isScaleWithDPI() || (style.isScaleWithDPI() && viewState.getDPI() >= Const::UNSCALED_DPI)) {
-            //The generated texture will never be downscaled and thus doesn't need mipmaps
+            // The generated texture will never be downscaled and thus doesn't need mipmaps
             _genMipmaps = false;
         }
     }

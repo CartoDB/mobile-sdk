@@ -13,7 +13,7 @@ namespace carto {
     class Marker;
     class MarkerStyle;
     
-    class MarkerDrawData: public BillboardDrawData {
+    class MarkerDrawData : public BillboardDrawData {
     public:
         MarkerDrawData(const Marker& marker, const MarkerStyle& style, const Projection& projection);
         virtual ~MarkerDrawData();

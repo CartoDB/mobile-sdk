@@ -37,6 +37,7 @@ namespace carto {
          * @param flippable The fliappble flag for the label.
          * @param orientationMode The orientation mode for the label.
          * @param scalingMode The scaling mode for the label.
+         * @param renderScale The relative rendering scale for the label.
          */
         LabelStyle(const Color& color,
                    float attachAnchorPointX,
@@ -52,7 +53,8 @@ namespace carto {
                    float anchorPointY,
                    bool flippable,
                    BillboardOrientation::BillboardOrientation orientationMode,
-                   BillboardScaling::BillboardScaling scalingMode);
+                   BillboardScaling::BillboardScaling scalingMode,
+                   float renderScale);
         virtual ~LabelStyle();
         
         /**
@@ -84,6 +86,12 @@ namespace carto {
          */
         BillboardScaling::BillboardScaling getScalingMode() const;
 
+        /**
+         * Returns the relative rendering scale of the label.
+         * @return The relative rendering scale of the label.
+         */
+        float getRenderScale() const;
+
     protected:
         float _anchorPointX;
         float _anchorPointY;
@@ -93,6 +101,8 @@ namespace carto {
         BillboardOrientation::BillboardOrientation _orientationMode;
         
         BillboardScaling::BillboardScaling _scalingMode;
+
+        float _renderScale;
     };
     
 }

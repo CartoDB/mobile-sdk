@@ -16,7 +16,8 @@ namespace carto {
                            float anchorPointY,
                            bool flippable,
                            BillboardOrientation::BillboardOrientation orientationMode,
-                           BillboardScaling::BillboardScaling scalingMode) :
+                           BillboardScaling::BillboardScaling scalingMode,
+                           float renderScale) :
         BillboardStyle(color,
                        attachAnchorPointX,
                        attachAnchorPointY,
@@ -31,7 +32,8 @@ namespace carto {
         _anchorPointY(anchorPointY),
         _flippable(flippable),
         _orientationMode(orientationMode),
-        _scalingMode(scalingMode)
+        _scalingMode(scalingMode),
+        _renderScale(renderScale)
     {
     }
     
@@ -56,6 +58,10 @@ namespace carto {
     
     BillboardScaling::BillboardScaling LabelStyle::getScalingMode() const {
         return _scalingMode;
+    }
+
+    float LabelStyle::getRenderScale() const {
+        return _renderScale;
     }
     
 }
