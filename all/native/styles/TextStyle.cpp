@@ -20,7 +20,7 @@ namespace carto {
                          float renderScale,
                          const std::string& fontName,
                          const std::string& textField,
-                         int fontSize,
+                         float fontSize,
                          const Color& strokeColor,
                          float strokeWidth) :
         LabelStyle(Color(0xFFFFFFFF),
@@ -63,7 +63,7 @@ namespace carto {
         return _textField;
     }
 
-    int TextStyle::getFontSize() const {
+    float TextStyle::getFontSize() const {
         return _fontSize;
     }
 

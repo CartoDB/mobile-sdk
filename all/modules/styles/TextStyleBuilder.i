@@ -20,7 +20,7 @@
 
 %attributestring(carto::TextStyleBuilder, std::string, FontName, getFontName, setFontName)
 %attributestring(carto::TextStyleBuilder, std::string, TextField, getTextField, setTextField)
-%attribute(carto::TextStyleBuilder, int, FontSize, getFontSize, setFontSize)
+%attribute(carto::TextStyleBuilder, float, FontSize, getFontSize, setFontSize)
 %attributeval(carto::TextStyleBuilder, carto::Color, StrokeColor, getStrokeColor, setStrokeColor)
 %attribute(carto::TextStyleBuilder, float, StrokeWidth, getStrokeWidth, setStrokeWidth)
 %csmethodmodifiers carto::TextStyleBuilder::buildStyle "public new";
