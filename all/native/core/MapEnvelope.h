@@ -39,19 +39,6 @@ namespace carto {
         explicit MapEnvelope(const std::vector<MapPos>& convexHull);
     
         /**
-         * Checks for equality between this and another envelope.
-         * @param envelope The other map envelope object.
-         * @return True if equal.
-         */
-        bool operator ==(const MapEnvelope& envelope) const;
-        /**
-         * Checks for inequality between this and another map envelope.
-         * @param envelope The other map envelope object.
-         * @return True if not equal.
-         */
-        bool operator !=(const MapEnvelope& envelope) const;
-        
-        /**
          * Returns the map bounds of this map envelope.
          * @return The map bounds of this map envelope.
          */
@@ -76,6 +63,19 @@ namespace carto {
          */
         bool intersects(const MapEnvelope& envelope) const;
     
+        /**
+         * Checks for equality between this and another envelope.
+         * @param envelope The other map envelope object.
+         * @return True if equal.
+         */
+        bool operator ==(const MapEnvelope& envelope) const;
+        /**
+         * Checks for inequality between this and another map envelope.
+         * @param envelope The other map envelope object.
+         * @return True if not equal.
+         */
+        bool operator !=(const MapEnvelope& envelope) const;
+        
         /**
          * Returns the hash value of this object.
          * @return The hash value of this object.

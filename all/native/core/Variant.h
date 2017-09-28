@@ -99,19 +99,6 @@ namespace carto {
         explicit Variant(const std::map<std::string, Variant>& object);
 
         /**
-         * Checks for equality between this and another value object.
-         * @param var The other variant object.
-         * @return True if equal.
-         */
-        bool operator ==(const Variant& var) const;
-        /**
-         * Checks for inequality between this and another value object.
-         * @param value The other variant object.
-         * @return True if not equal.
-         */
-        bool operator !=(const Variant& var) const;
-        
-        /**
          * Returns the type of this variant.
          * @return The type of this variant.
          */
@@ -168,6 +155,19 @@ namespace carto {
          */
         Variant getObjectElement(const std::string& key) const;
 
+        /**
+         * Checks for equality between this and another variant object.
+         * @param var The other variant object.
+         * @return True if equal.
+         */
+        bool operator ==(const Variant& var) const;
+        /**
+         * Checks for inequality between this and another variant object.
+         * @param value The other variant object.
+         * @return True if not equal.
+         */
+        bool operator !=(const Variant& var) const;
+        
         /**
          * Returns the hash value of this object.
          * @return The hash value of this object.

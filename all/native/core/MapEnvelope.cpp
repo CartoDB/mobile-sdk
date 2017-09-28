@@ -37,22 +37,6 @@ namespace carto {
         }
     }
     
-    bool MapEnvelope::operator ==(const MapEnvelope& envelope) const {
-        if (_bounds != envelope._bounds) {
-            return false;
-        }
-        if (_rectangularConvexHull || envelope._rectangularConvexHull) {
-            if (_convexHull != envelope._convexHull) { // not exact - if vertex ordering is different, may return false negative
-                return false;
-            }
-        }
-        return true;
-    }
-    
-    bool MapEnvelope::operator !=(const MapEnvelope& envelope) const {
-        return !(*this == envelope);
-    }
-    
     const MapBounds& MapEnvelope::getBounds() const {
         return _bounds;
     }
@@ -108,7 +92,22 @@ namespace carto {
         return GeomUtils::PolygonsIntersect(_convexHull, envelope._convexHull);
     }
     
+    bool MapEnvelope::operator ==(const MapEnvelope& envelope) const {
+        if (_bounds != envelope._bounds) {
+            return false;
+        }
+        if (_rectangularConvexHull || envelope._rectangularConvexHull) {
+            if (_convexHull != envelope._convexHull) { // not exact - if vertex ordering is different, may return false negative
+                return false;
+            }
+        }
+        return true;
+    }
     
+    bool MapEnvelope::operator !=(const MapEnvelope& envelope) const {
+        return !(*this == envelope);
+    }
+        
     int MapEnvelope::hash() const {
         return _bounds.hash();
     }

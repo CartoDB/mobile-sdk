@@ -26,14 +26,6 @@ namespace carto {
     {
     }
         
-    bool MapTile::operator ==(const MapTile& tile) const {
-        return _id == tile._id && _x == tile._x && _y == tile._y && _zoom == tile._zoom && _frameNr == tile._frameNr;
-    }
-    
-    bool MapTile::operator !=(const MapTile& tile) const {
-        return !(*this == tile);
-    }
-    
     int MapTile::getX() const {
         return _x;
     }
@@ -67,6 +59,14 @@ namespace carto {
 
     MapTile MapTile::getFlipped() const {
         return MapTile(_x, (1 << _zoom) - 1 - _y, _zoom, _frameNr);
+    }
+    
+    bool MapTile::operator ==(const MapTile& tile) const {
+        return _id == tile._id && _x == tile._x && _y == tile._y && _zoom == tile._zoom && _frameNr == tile._frameNr;
+    }
+    
+    bool MapTile::operator !=(const MapTile& tile) const {
+        return !(*this == tile);
     }
     
     int MapTile::hash() const {

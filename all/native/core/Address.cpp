@@ -30,14 +30,6 @@ namespace carto {
     {
     }
 
-    bool Address::operator ==(const Address& address) const {
-        return _country == address._country && _region == address._region && _county == address._county && _locality == address._locality && _neighbourhood == address._neighbourhood && _street == address._street && _houseNumber == address._houseNumber && _name == address._name && _categories == address._categories;
-    }
-    
-    bool Address::operator !=(const Address& address) const {
-        return !(*this == address);
-    }
-        
     const std::string& Address::getCountry() const {
         return _country;
     }
@@ -74,6 +66,14 @@ namespace carto {
         return _categories;
     }
 
+    bool Address::operator ==(const Address& address) const {
+        return _country == address._country && _region == address._region && _county == address._county && _locality == address._locality && _neighbourhood == address._neighbourhood && _street == address._street && _houseNumber == address._houseNumber && _name == address._name && _categories == address._categories;
+    }
+    
+    bool Address::operator !=(const Address& address) const {
+        return !(*this == address);
+    }
+        
     int Address::hash() const {
         return static_cast<int>(std::hash<std::string>()(toString()));
     }

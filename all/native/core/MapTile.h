@@ -32,19 +32,6 @@ namespace carto {
         MapTile(int x, int y, int zoom, int frameNr);
     
         /**
-         * Checks for equality between this and another map tile.
-         * @param tile The other map tile.
-         * @return True if equal.
-         */
-        bool operator ==(const MapTile& tile) const;
-        /**
-         * Checks for inequality between this and another map tile.
-         * @param tile The other map tile.
-         * @return True if not equal.
-         */
-        bool operator !=(const MapTile& tile) const;
-    
-        /**
          * Returns the x coordinate of this map tile.
          * @return The x coordinate of this map tile.
          */
@@ -90,6 +77,19 @@ namespace carto {
          */
         MapTile getFlipped() const;
 
+        /**
+         * Checks for equality between this and another map tile.
+         * @param tile The other map tile.
+         * @return True if equal.
+         */
+        bool operator ==(const MapTile& tile) const;
+        /**
+         * Checks for inequality between this and another map tile.
+         * @param tile The other map tile.
+         * @return True if not equal.
+         */
+        bool operator !=(const MapTile& tile) const;
+    
         /**
          * Returns the hash value of this object.
          * @return The hash value of this object.

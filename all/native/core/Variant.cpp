@@ -54,14 +54,6 @@ namespace carto {
         _value = picojson::value(valObj);
     }
 
-    bool Variant::operator ==(const Variant& var) const {
-        return toPicoJSON() == var.toPicoJSON();
-    }
-
-    bool Variant::operator !=(const Variant& var) const {
-        return !(*this == var);
-    }
-
     VariantType::VariantType Variant::getType() const {
         const picojson::value& val = toPicoJSON();
         if (val.is<std::string>()) {
@@ -163,6 +155,14 @@ namespace carto {
             }
         }
         return Variant();
+    }
+
+    bool Variant::operator ==(const Variant& var) const {
+        return toPicoJSON() == var.toPicoJSON();
+    }
+
+    bool Variant::operator !=(const Variant& var) const {
+        return !(*this == var);
     }
 
     int Variant::hash() const {

@@ -20,14 +20,6 @@ namespace carto {
     {
     }
     
-    bool ScreenBounds::operator ==(const ScreenBounds& bounds) const {
-        return _min == bounds._min && _max == bounds._max;
-    }
-    
-    bool ScreenBounds::operator !=(const ScreenBounds& bounds) const {
-        return !(*this == bounds);
-    }
-    
     void ScreenBounds::setBounds(const ScreenPos& min, const ScreenPos& max) {
         if (min.getX() > max.getX()) {
             _min.setX(max.getX());
@@ -131,6 +123,14 @@ namespace carto {
         if (bounds.getMax().getY() > _max.getY()) {
             _max.setY(bounds.getMax().getY());
         }
+    }
+    
+    bool ScreenBounds::operator ==(const ScreenBounds& bounds) const {
+        return _min == bounds._min && _max == bounds._max;
+    }
+    
+    bool ScreenBounds::operator !=(const ScreenBounds& bounds) const {
+        return !(*this == bounds);
     }
     
     int ScreenBounds::hash() const {
