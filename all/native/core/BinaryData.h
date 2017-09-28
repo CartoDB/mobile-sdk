@@ -57,6 +57,25 @@ namespace carto {
         std::shared_ptr<std::vector<unsigned char> > getDataPtr() const;
         
         /**
+         * Checks for equality between this and another blob.
+         * @param data The other data object.
+         * @return True if equal.
+         */
+        bool operator ==(const BinaryData& data) const;
+        /**
+         * Checks for inequality between this and another blob.
+         * @param data The other data object.
+         * @return True if not equal.
+         */
+        bool operator !=(const BinaryData& data) const;
+
+        /**
+         * Returns the hash value of this object.
+         * @return The hash value of this object.
+         */
+        int hash() const;
+
+        /**
          * Creates a string representation of this map bounds object, useful for logging.
          * @return The string representation of this map bounds object.
          */

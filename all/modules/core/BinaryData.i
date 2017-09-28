@@ -31,6 +31,9 @@
 %ignore carto::BinaryData::BinaryData(std::vector<unsigned char>);
 %ignore carto::BinaryData::empty;
 %ignore carto::BinaryData::getDataPtr;
+%ignore carto::BinaryData::operator==;
+%ignore carto::BinaryData::operator!=;
+%ignore carto::BinaryData::hash;
 !standard_equals(carto::BinaryData);
 !custom_tostring(carto::BinaryData);
 
