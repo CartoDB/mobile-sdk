@@ -5,7 +5,7 @@ from build.sdk_build_utils import *
 
 WINPHONE10_ARCHS = ['x86', 'x64', 'ARM']
 
-DEFAULT_MSBUILD = "C:/Program Files (x86)/MSBuild/15.0/Bin/msbuild.exe"
+DEFAULT_MSBUILD = "C:/Program Files (x86)/MSBuild/14.0/Bin/msbuild.exe"
 
 def msbuild(args, dir, *cmdArgs):
   return execute(args.msbuild, dir, *cmdArgs)
@@ -13,22 +13,47 @@ def msbuild(args, dir, *cmdArgs):
 def nuget(args, dir, *cmdArgs):
   return execute(args.nuget, dir, *cmdArgs)
 
-def patchVcxprojFile(baseDir, fileName):
+def patchVcxprojFile(baseDir, fileName, patched1=False, patched2=False, patched3=False, patched4=False):
   with open(fileName, 'rb') as f:
     linesIn = f.readlines()
   linesOut = []
-  patched1 = False
-  patched2 = False
   for line in linesIn:
     if line.strip() == '<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.targets" />' and not patched2:
       with open('%s/scripts/winphone10/carto_mobile_sdk.vcxproj.patch2' % baseDir, 'rb') as f:
         linesOut += f.readlines()
       patched2 = True
+    if line.strip() == '</Project>' and not patched4:
+      with open('%s/scripts/winphone10/carto_mobile_sdk.vcxproj.patch4' % baseDir, 'rb') as f:
+        linesOut += f.readlines()
+      patched4 = True
     linesOut.append(line)
     if line.strip() == '<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.props" />' and not patched1:
       with open('%s/scripts/winphone10/carto_mobile_sdk.vcxproj.patch1' % baseDir, 'rb') as f:
         linesOut += f.readlines()
       patched1 = True
+    if line.strip() == '<ImportGroup Label="ExtensionTargets">' and not patched3:
+      with open('%s/scripts/winphone10/carto_mobile_sdk.vcxproj.patch3' % baseDir, 'rb') as f:
+        linesOut += f.readlines()
+      patched3 = True
+
+  with open(fileName, 'wb') as f:
+    f.writelines(linesOut)
+
+def patchSubVcxprojFile(baseDir, fileName, patched3=False, patched4=False):
+  with open(fileName, 'rb') as f:
+    linesIn = f.readlines()
+  linesOut = []
+  for line in linesIn:
+    if line.strip() == '</Project>' and not patched4:
+      with open('%s/scripts/winphone10/carto_mobile_sdk.vcxproj.patch4.sub' % baseDir, 'rb') as f:
+        linesOut += f.readlines()
+      patched4 = True
+    linesOut.append(line)
+    if line.strip() == '<ImportGroup Label="ExtensionTargets">' and not patched3:
+      with open('%s/scripts/winphone10/carto_mobile_sdk.vcxproj.patch3.sub' % baseDir, 'rb') as f:
+        linesOut += f.readlines()
+      patched3 = True
+
   with open(fileName, 'wb') as f:
     f.writelines(linesOut)
 
@@ -39,6 +64,11 @@ def buildWinPhoneNativeDLL(args, arch):
   buildDir = getBuildDir('winphone_native10', platformArch)
   defines = ["-D%s" % define for define in args.defines.split(';') if define]
   options = ["-D%s" % option for option in args.cmakeoptions.split(';') if option]
+
+  copyfile('%s/scripts/winphone10/packages.config' % baseDir, '%s/packages.config' % buildDir)
+  if not nuget(args, buildDir, 'restore', '-PackagesDirectory', '%s/packages' % buildDir):
+    print "Failed to restore required nuget packages"
+    return False
 
   if not cmake(args, buildDir, options + [
     '-G', 'Visual Studio 15 2017',
@@ -55,6 +85,8 @@ def buildWinPhoneNativeDLL(args, arch):
   ]):
     return False
   patchVcxprojFile(baseDir, '%s/carto_mobile_sdk.vcxproj' % buildDir)
+  patchSubVcxprojFile(baseDir, '%s/vt/vt.vcxproj' % buildDir)
+  patchSubVcxprojFile(baseDir, '%s/nml/nml.vcxproj' % buildDir)
   return cmake(args, buildDir, [
     '--build', '.',
     '--config', args.nativeconfiguration
@@ -129,9 +161,9 @@ def buildWinPhoneNuget(args):
   ):
     return False
 
-  if not copyfile('%s/CartoMobileSDK.WinPhone10.%s.nupkg' % (buildDir, version), '%s/CartoMobileSDK.WinPhone10.%s.nupkg' % (distDir, version)):
+  if not copyfile('%s/CartoMobileSDK.UWP.%s.nupkg' % (buildDir, version), '%s/CartoMobileSDK.UWP.%s.nupkg' % (distDir, version)):
     return False
-  print "Output available in:\n%s\n\nTo publish, use:\nnuget.exe push %s/CartoMobileSDK.WinPhone10.%s.nupkg -Source https://www.nuget.org/api/v2/package\n" % (distDir, distDir, version)
+  print "Output available in:\n%s\n\nTo publish, use:\nnuget.exe push %s/CartoMobileSDK.UWP.%s.nupkg -Source https://www.nuget.org/api/v2/package\n" % (distDir, distDir, version)
   return True
 
 parser = argparse.ArgumentParser()
