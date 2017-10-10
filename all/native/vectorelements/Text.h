@@ -68,6 +68,8 @@ namespace carto {
         void setStyle(const std::shared_ptr<TextStyle>& style);
 
     private:
+        static const int MAX_CANVAS_SIZE = 8192;
+
         std::shared_ptr<TextStyle> _style;
 
         std::string _text;
