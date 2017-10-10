@@ -100,7 +100,6 @@ def buildXamarinDLL(args, target):
     return False
   return makedirs(distDir) and \
     copyfile('%s/bin/%s/CartoMobileSDK.%s.dll' % (buildDir, args.configuration, target), '%s/CartoMobileSDK.%s.dll' % (distDir, target)) and \
-    copyfile('%s/bin/%s/CartoMobileSDK.%s.dll.mdb' % (buildDir, args.configuration, target), '%s/CartoMobileSDK.%s.dll.mdb' % (distDir, target)) and \
     copyfile('%s/bin/%s/CartoMobileSDK.%s.xml' % (buildDir, args.configuration, target), '%s/CartoMobileSDK.%s.xml' % (distDir, target))
 
 def buildXamarinNuget(args, target):
