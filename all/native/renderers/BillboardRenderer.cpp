@@ -179,9 +179,12 @@ namespace carto {
         
         // Draw billboards, batch by bitmap
         _drawDataBuffer.clear();
-        const Bitmap* prevBitmap = NULL;
+        const Bitmap* prevBitmap = nullptr;
         for (const std::shared_ptr<BillboardDrawData>& drawData : billboardDrawDatas) {
             const Bitmap* bitmap = drawData->getBitmap().get();
+            if (!bitmap) {
+                continue;
+            }
     
             if (prevBitmap && (prevBitmap != bitmap)) {
                 drawBatch(styleCache, viewState);

@@ -783,7 +783,7 @@ namespace carto {
         }
         
         // Draw billboards, grouped by layer renderer
-        BillboardRenderer* prevRenderer = NULL;
+        BillboardRenderer* prevRenderer = nullptr;
         _billboardDrawDataBuffer.clear();
         const std::vector<std::shared_ptr<BillboardDrawData> >& sortedBillboardDrawDatas = _billboardSorter.getSortedBillboardDrawDatas();
         for (const std::shared_ptr<BillboardDrawData>& drawData : sortedBillboardDrawDatas) {
