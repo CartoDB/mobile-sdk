@@ -20,6 +20,7 @@
 
 %attribute(carto::LabelStyle, carto::BillboardOrientation::BillboardOrientation, OrientationMode, getOrientationMode)
 %attribute(carto::LabelStyle, carto::BillboardScaling::BillboardScaling, ScalingMode, getScalingMode)
+%attribute(carto::LabelStyle, float, RenderScale, getRenderScale)
 %attribute(carto::LabelStyle, bool, Flippable, isFlippable)
 %attribute(carto::LabelStyle, float, AnchorPointX, getAnchorPointX)
 %attribute(carto::LabelStyle, float, AnchorPointY, getAnchorPointY)

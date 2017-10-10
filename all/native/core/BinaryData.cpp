@@ -1,5 +1,6 @@
 #include "BinaryData.h"
 
+#include <algorithm>
 #include <sstream>
 
 namespace carto {
@@ -33,6 +34,21 @@ namespace carto {
 
     std::shared_ptr<std::vector<unsigned char> > BinaryData::getDataPtr() const {
         return _dataPtr;
+    }
+
+    bool BinaryData::operator ==(const BinaryData& data) const {
+        if (_dataPtr->size() != data._dataPtr->size()) {
+            return false;
+        }
+        return std::equal(_dataPtr->begin(), _dataPtr->end(), data._dataPtr->begin());
+    }
+
+    bool BinaryData::operator !=(const BinaryData& data) const {
+        return !(*this == data);
+    }
+
+    int BinaryData::hash() const {
+        return static_cast<int>(std::hash<std::string>()(std::string(reinterpret_cast<const char*>(_dataPtr->data()), _dataPtr->size())));
     }
 
     std::string BinaryData::toString() const {

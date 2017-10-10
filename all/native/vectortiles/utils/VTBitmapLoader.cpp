@@ -18,8 +18,9 @@ namespace carto {
     VTBitmapLoader::VTBitmapLoader(const std::string& basePath, const std::shared_ptr<AssetPackage>& assetPackage) :
         _basePath(basePath),
         _assetPackage(assetPackage),
-        _urlFileLoader("VTBitmapLoader", true)
+        _urlFileLoader()
     {
+        _urlFileLoader.setCaching(true);
     }
 
     VTBitmapLoader::~VTBitmapLoader() {
@@ -27,15 +28,20 @@ namespace carto {
     
     std::shared_ptr<const vt::Bitmap> VTBitmapLoader::load(const std::string& url, float& resolution) const {
         std::shared_ptr<BinaryData> fileData;
-        if (!_urlFileLoader.loadFile(url, fileData)) {
+        if (_urlFileLoader.isSupported(url)) {
+            if (!_urlFileLoader.load(url, fileData)) {
+                Log::Errorf("VTBitmapLoader: Failed to load bitmap: %s", url.c_str());
+            }
+        } else {
             std::string fileName = FileUtils::NormalizePath(_basePath + url);
             if (_assetPackage) {
                 fileData = _assetPackage->loadAsset(fileName);
             }
             if (!fileData) {
-                Log::Errorf("VTBitmapLoader: Failed to load bitmap: %s", fileName.c_str());
+                Log::Errorf("VTBitmapLoader: Failed to load bitmap from asset package: %s", fileName.c_str());
             }
         }
+
         if (!fileData) {
             return std::shared_ptr<vt::Bitmap>();
         }

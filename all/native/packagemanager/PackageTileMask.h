@@ -9,6 +9,7 @@
 
 #ifdef _CARTO_PACKAGEMANAGER_SUPPORT
 
+#include "core/MapPos.h"
 #include "core/MapTile.h"
 
 #include <string>
@@ -18,6 +19,8 @@
 #include <unordered_set>
 
 namespace carto {
+    class Projection;
+    class MultiPolygonGeometry;
 
     namespace PackageTileStatus {
         /**
@@ -79,6 +82,13 @@ namespace carto {
         int getMaxZoomLevel() const;
 
         /**
+         * Returns the bounding polygon of the tilemask.
+         * @param projection The projection to use.
+         * @return The bounding polygon of the tilemask area.
+         */
+        std::shared_ptr<MultiPolygonGeometry> getBoundingPolygon(const std::shared_ptr<Projection>& projection) const;
+
+        /**
          * Returns the status of the specified tile. This method can be used for fast testing whether a tile is part of the package.
          * @param tile The tile to check.
          * @return The status of the specified tile.
@@ -96,9 +106,10 @@ namespace carto {
 
         std::shared_ptr<TileNode> findTileNode(const MapTile& tile) const;
 
-        static std::shared_ptr<TileNode> buildTileNode(const std::unordered_set<MapTile>& tileSet, const MapTile& tile, int clipZoom);
-        static std::shared_ptr<TileNode> decodeTileNode(std::queue<bool>& data, const MapTile& tile);
-        static std::vector<bool> encodeTileNode(const std::shared_ptr<TileNode>& node);
+        static std::shared_ptr<TileNode> BuildTileNode(const std::unordered_set<MapTile>& tileSet, const MapTile& tile, int clipZoom);
+        static std::shared_ptr<TileNode> DecodeTileNode(std::queue<bool>& data, const MapTile& tile);
+        static std::vector<bool> EncodeTileNode(const std::shared_ptr<TileNode>& node);
+        static std::vector<std::vector<MapPos> > CalculateTileNodeBoundingPolygon(const std::shared_ptr<TileNode>& node, const std::shared_ptr<Projection>& proj);
 
         std::string _stringValue;
         std::shared_ptr<TileNode> _rootNode;

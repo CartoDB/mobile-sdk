@@ -1,5 +1,6 @@
 #include "graphics/BitmapCanvas.h"
 #include "graphics/Bitmap.h"
+#include "components/Exceptions.h"
 #include "utils/CFUniquePtr.h"
 #include "utils/Log.h"
 
@@ -67,6 +68,10 @@ namespace carto {
         _state->_colorSpace = CFUniquePtr<CGColorSpaceRef>(CGColorSpaceCreateDeviceRGB(), CGColorSpaceRelease);
         if (width > 0 && height > 0) {
             _state->_context = CFUniquePtr<CGContextRef>(CGBitmapContextCreate(_state->_data.data(), width, height, 8, 4 * width, _state->_colorSpace, kCGImageAlphaPremultipliedLast), CGContextRelease);
+            if (!_state->_context) {
+                _state.reset();
+                throw GenericException("Failed to create CGBitmap. Bitmap too large?");
+            }
         }
     }
 
@@ -94,6 +99,10 @@ namespace carto {
     }
 
     void BitmapCanvas::pushClipRect(const ScreenBounds& clipRect) {
+        if (!_state->_context) {
+            return;
+        }
+
         CGContextSaveGState(_state->_context);
 
         CGRect rect = CGRectMake(clipRect.getMin().getX(), clipRect.getMin().getY(), clipRect.getWidth(), clipRect.getHeight());
@@ -101,10 +110,18 @@ namespace carto {
     }
 
     void BitmapCanvas::popClipRect() {
+        if (!_state->_context) {
+            return;
+        }
+
         CGContextRestoreGState(_state->_context);
     }
 
     void BitmapCanvas::drawText(std::string text, const ScreenPos& pos, int maxWidth, bool breakLines) {
+        if (!_state->_context) {
+            return;
+        }
+
         if (text.empty()) {
             return;
         }
@@ -180,6 +197,10 @@ namespace carto {
     }
 
     void BitmapCanvas::drawRoundRect(const ScreenBounds& rect, float radius) {
+        if (!_state->_context) {
+            return;
+        }
+
         float minX = rect.getMin().getX(), minY = rect.getMin().getY();
         float maxX = rect.getMax().getX(), maxY = rect.getMax().getY();
         float midX = (minX + maxX) * 0.5f, midY = (minY + maxY) * 0.5f;
@@ -206,6 +227,10 @@ namespace carto {
     }
     
     void BitmapCanvas::drawPolygon(const std::vector<ScreenPos>& poses) {
+        if (!_state->_context) {
+            return;
+        }
+
         if (poses.empty()) {
             return;
         }
@@ -234,6 +259,10 @@ namespace carto {
     }
 
     void BitmapCanvas::drawBitmap(const ScreenBounds& rect, const std::shared_ptr<Bitmap>& bitmap) {
+        if (!_state->_context) {
+            return;
+        }
+
         if (!bitmap) {
             return;
         }

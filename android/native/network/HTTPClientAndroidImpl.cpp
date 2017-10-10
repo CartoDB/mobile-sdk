@@ -100,7 +100,7 @@ namespace carto {
         _timeout = milliseconds;
     }
     
-    bool HTTPClient::AndroidImpl::makeRequest(const HTTPClient::Request& request, HeadersFn headersFn, DataFn dataFn) const {
+    bool HTTPClient::AndroidImpl::makeRequest(const HTTPClient::Request& request, HeadersFunc headersFn, DataFunc dataFn) const {
         JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
         AndroidUtils::JNILocalFrame jframe(jenv, 32, "HTTPClient::AndroidImpl::HTTPClientAndroidImpl");
         if (!jframe.isValid()) {

@@ -6,7 +6,7 @@ from build.sdk_build_utils import *
 ANDROID_ABIS = ['armeabi', 'armeabi-v7a', 'x86', 'arm64-v8a', 'x86_64']
 IOS_ARCHS = ['i386', 'x86_64', 'armv7', 'arm64']
 
-DEFAULT_XBUILD = 'xbuild'
+DEFAULT_XBUILD = 'msbuild'
 
 def xbuild(args, dir, *cmdArgs):
   return execute(args.xbuild, dir, *cmdArgs)

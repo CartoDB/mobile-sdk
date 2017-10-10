@@ -24,17 +24,19 @@ namespace carto {
     std::shared_ptr<MemoryAssetPackage> CartoAssetPackageUpdater::update(const std::shared_ptr<AssetPackage>& assetPackage) const {
         std::string projectFileName = _styleName + ".json";
 
-        std::shared_ptr<BinaryData> fileData1 = assetPackage->loadAsset(projectFileName);
-        picojson::value projectJson1 = ExtractFileData(fileData1);
-        std::map<std::string, FileInfo> files1 = ReadFileInfo(projectJson1);
+        std::shared_ptr<BinaryData> projectData1 = assetPackage->loadAsset(projectFileName);
+        picojson::value filesJson1 = ExtractFileData(projectData1);
+        std::map<std::string, FileInfo> files1 = ReadFileInfo(filesJson1);
 
-        std::shared_ptr<BinaryData> fileData2 = downloadFile(projectFileName);
-        picojson::value projectJson2 = ExtractFileData(fileData2);
-        std::map<std::string, FileInfo> files2 = ReadFileInfo(projectJson2);
+        std::shared_ptr<BinaryData> projectData2 = downloadFile(projectFileName);
+        picojson::value filesJson2 = ExtractFileData(projectData2);
+        std::map<std::string, FileInfo> files2 = ReadFileInfo(filesJson2);
 
         std::map<std::string, std::shared_ptr<BinaryData> > updatedAssets = updateFiles(files1, files2);
-        if (projectJson1 != projectJson2) {
-            updatedAssets[projectFileName] = fileData2;
+        if (projectData1 && projectData2) {
+            if (*projectData1 != *projectData2) {
+                updatedAssets[projectFileName] = projectData2;
+            }
         }
         return std::make_shared<MemoryAssetPackage>(updatedAssets, assetPackage);
     }
@@ -52,6 +54,6 @@ namespace carto {
         return responseData;
     }
 
-    const std::string CartoAssetPackageUpdater::STYLE_SERVICE_URL = "http://api.nutiteq.com/styles/";
+    const std::string CartoAssetPackageUpdater::STYLE_SERVICE_URL = "http://mobile-api.carto.com/styles/";
 
 }

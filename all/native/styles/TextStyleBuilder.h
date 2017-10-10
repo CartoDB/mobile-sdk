@@ -52,12 +52,12 @@ namespace carto {
          * Returns the font size for the text label.
          * @return The font size for the text label in points.
          */
-        int getFontSize() const;
+        float getFontSize() const;
         /**
          * Sets the font size for the text label.
          * @param size The new font size for the text label in points.
          */
-        void setFontSize(int size);
+        void setFontSize(float size);
 
         /**
          * Returns the stroke color for the text label.
@@ -92,7 +92,7 @@ namespace carto {
         
         std::string _textField;
 
-        int _fontSize;
+        float _fontSize;
         
         Color _strokeColor;
 

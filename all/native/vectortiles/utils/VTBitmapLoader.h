@@ -7,7 +7,7 @@
 #ifndef _CARTO_VTBITMAPLOADER_H_
 #define _CARTO_VTBITMAPLOADER_H_
 
-#include "network/URLFileLoader.h"
+#include "utils/URLFileLoader.h"
 
 #include <string>
 #include <vector>

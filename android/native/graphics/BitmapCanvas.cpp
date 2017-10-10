@@ -1,5 +1,6 @@
 #include "graphics/BitmapCanvas.h"
 #include "graphics/Bitmap.h"
+#include "components/Exceptions.h"
 #include "utils/BitmapUtils.h"
 #include "utils/AndroidUtils.h"
 #include "utils/JNIUniqueGlobalRef.h"
@@ -202,10 +203,30 @@ namespace carto {
         }
 
         if (width > 0 && height > 0) {
-            _state->_bitmapObject = JNIUniqueGlobalRef<jobject>(jenv->NewGlobalRef(jenv->CallStaticObjectMethod(_state->_BitmapClass->clazz, _state->_BitmapClass->createBitmap, (jint)width, (jint)height, _state->_BitmapClass->rgba8888BCFG.get())));
-            _state->_canvasObject = JNIUniqueGlobalRef<jobject>(jenv->NewGlobalRef(jenv->NewObject(_state->_CanvasClass->clazz, _state->_CanvasClass->constructor, _state->_bitmapObject.get())));
+            jobject bitmapObject = jenv->CallStaticObjectMethod(_state->_BitmapClass->clazz, _state->_BitmapClass->createBitmap, (jint)width, (jint)height, _state->_BitmapClass->rgba8888BCFG.get());
+            if (jenv->ExceptionCheck()) {
+                jenv->ExceptionClear();
+                _state.reset();
+                throw GenericException("Failed to create Bitmap instance. Bitmap too large?");
+            }
+            _state->_bitmapObject = JNIUniqueGlobalRef<jobject>(jenv->NewGlobalRef(bitmapObject));
+
+            jobject canvasObject = jenv->NewObject(_state->_CanvasClass->clazz, _state->_CanvasClass->constructor, _state->_bitmapObject.get());
+            if (jenv->ExceptionCheck()) {
+                jenv->ExceptionClear();
+                _state.reset();
+                throw GenericException("Failed to create Canvas instance");
+            }
+            _state->_canvasObject = JNIUniqueGlobalRef<jobject>(jenv->NewGlobalRef(canvasObject));
         }
-        _state->_paintObject = JNIUniqueGlobalRef<jobject>(jenv->NewGlobalRef(jenv->NewObject(_state->_PaintClass->clazz, _state->_PaintClass->constructor, (jint)1))); // 1 = ANTIALIAS_FLAG
+
+        jobject paintObject = jenv->NewObject(_state->_PaintClass->clazz, _state->_PaintClass->constructor, (jint)1); // 1 = ANTIALIAS_FLAG
+        if (jenv->ExceptionCheck()) {
+            jenv->ExceptionClear();
+            _state.reset();
+            throw GenericException("Failed to create Paint instance");
+        }
+        _state->_paintObject = JNIUniqueGlobalRef<jobject>(jenv->NewGlobalRef(paintObject));
     }
 
     BitmapCanvas::~BitmapCanvas() {
@@ -264,6 +285,10 @@ namespace carto {
     }
 
     void BitmapCanvas::pushClipRect(const ScreenBounds& clipRect) {
+        if (!_state->_canvasObject) {
+            return;
+        }
+
         JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
         AndroidUtils::JNILocalFrame jframe(jenv, 32, "BitmapCanvas::pushClipRect");
         if (!jframe.isValid()) {
@@ -275,6 +300,10 @@ namespace carto {
     }
 
     void BitmapCanvas::popClipRect() {
+        if (!_state->_canvasObject) {
+            return;
+        }
+
         JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
         AndroidUtils::JNILocalFrame jframe(jenv, 32, "BitmapCanvas::popClipRect");
         if (!jframe.isValid()) {
@@ -285,6 +314,10 @@ namespace carto {
     }
 
     void BitmapCanvas::drawText(std::string text, const ScreenPos& pos, int maxWidth, bool breakLines) {
+        if (!_state->_canvasObject) {
+            return;
+        }
+
         if (text.empty()) {
             return;
         }
@@ -311,6 +344,10 @@ namespace carto {
     }
 
     void BitmapCanvas::drawRoundRect(const ScreenBounds& rect, float radius) {
+        if (!_state->_canvasObject) {
+            return;
+        }
+
         JNIEnv* jenv = AndroidUtils::GetCurrentThreadJNIEnv();
         AndroidUtils::JNILocalFrame jframe(jenv, 32, "BitmapCanvas::drawRoundRect");
         if (!jframe.isValid()) {
@@ -322,6 +359,10 @@ namespace carto {
     }
 
     void BitmapCanvas::drawPolygon(const std::vector<ScreenPos>& poses) {
+        if (!_state->_canvasObject) {
+            return;
+        }
+
         if (poses.empty()) {
             return;
         }
@@ -351,6 +392,10 @@ namespace carto {
     }
 
     void BitmapCanvas::drawBitmap(const ScreenBounds& rect, const std::shared_ptr<Bitmap>& bitmap) {
+        if (!_state->_canvasObject) {
+            return;
+        }
+
         if (!bitmap) {
             return;
         }
@@ -395,6 +440,10 @@ namespace carto {
     }
 
     std::shared_ptr<Bitmap> BitmapCanvas::buildBitmap() const {
+        if (!_state->_bitmapObject) {
+            return std::shared_ptr<Bitmap>();
+        }
+
         std::shared_ptr<Bitmap> bitmap = BitmapUtils::CreateBitmapFromAndroidBitmap(_state->_bitmapObject);
         if (!bitmap) {
             const unsigned char pixel[] = { 0, 0, 0, 0 };

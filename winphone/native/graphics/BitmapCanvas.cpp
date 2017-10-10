@@ -1,5 +1,6 @@
 #include "graphics/BitmapCanvas.h"
 #include "graphics/Bitmap.h"
+#include "components/Exceptions.h"
 #include "utils/Log.h"
 
 #include <cmath>
@@ -117,27 +118,32 @@ namespace carto {
                         _state->_d2dContext->SetTarget(_state->_d2dTargetBitmap.Get());
                     }
                     else {
-                        Log::Errorf("BitmapCanvas: Failed to create target bitmap, %x", (int)hr);
+                        _state.reset();
+                        throw GenericException("BitmapCanvas: Failed to create target bitmap");
                     }
 
                     _state->_d2dContext->BeginDraw();
                     _state->_d2dContext->Clear(D2D1::ColorF(0, 0));
                 }
                 else {
-                    Log::Errorf("BitmapCanvas: Failed to create D2DDeviceContext, %x", (int)hr);
+                    _state.reset();
+                    throw GenericException("BitmapCanvas: Failed to create D2DDeviceContext");
                 }
             }
             else {
-                Log::Errorf("BitmapCanvas: Failed to create D2DDevice, %x", (int)hr);
+                _state.reset();
+                throw GenericException("BitmapCanvas: Failed to create D2DDevice");
             }
         }
         else {
-            Log::Errorf("BitmapCanvas: Failed to create D3DDevice, %x", (int)hr);
+            _state.reset();
+            throw GenericException("BitmapCanvas: Failed to create D3DDevice");
         }
 
         hr = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), &_state->_dwriteFactory);
         if (FAILED(hr)) {
-            Log::Errorf("BitmapCanvas: Failed to create DWriteFactory, %x", (int)hr);
+            _state.reset();
+            throw GenericException("BitmapCanvas: Failed to create DWriteFactory");
         }
     }
 
@@ -329,6 +335,8 @@ namespace carto {
                 if (SUCCEEDED(hr)) {
                     std::shared_ptr<Bitmap> bitmap = std::make_shared<Bitmap>(mapped.bits, _state->_width, _state->_height, ColorFormat::COLOR_FORMAT_RGBA, mapped.pitch);
                     d2dBitmap->Unmap();
+
+                    _state->_d2dContext->BeginDraw();
                     return bitmap;
                 }
                 else {

@@ -634,7 +634,12 @@ namespace carto {
                 }
 
                 if (subLayerIndex < 0) {
-                    configureLayerInteractivity(*layer, layerConfig.get("interactivity"));
+                    if (layerConfig.contains("interactivity")) {
+                        configureLayerInteractivity(*layer, layerConfig.get("interactivity"));
+                    } else if (layerConfig.contains("options")) {
+                        const picojson::value& layerOptions = layerConfig.get("options");
+                        configureLayerInteractivity(*layer, layerOptions.get("interactivity"));
+                    }
                 }
 
                 if (auto visible = getBool(layerConfig.get("visible"))) {

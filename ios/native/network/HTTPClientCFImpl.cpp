@@ -22,7 +22,7 @@ namespace carto {
         _timeout = milliseconds;
     }
 
-    bool HTTPClient::CFImpl::makeRequest(const HTTPClient::Request& request, HeadersFn headersFn, DataFn dataFn) const {
+    bool HTTPClient::CFImpl::makeRequest(const HTTPClient::Request& request, HeadersFunc headersFn, DataFunc dataFn) const {
         // Create request
         CFUniquePtr<CFURLRef> cfUrl(CFURLCreateWithBytes(kCFAllocatorDefault, reinterpret_cast<const UInt8*>(request.url.c_str()), request.url.size(), kCFStringEncodingUTF8, NULL));
         CFUniquePtr<CFStringRef> hostName(CFURLCopyHostName(cfUrl));

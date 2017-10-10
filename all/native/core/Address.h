@@ -36,19 +36,6 @@ namespace carto {
         Address(const std::string& country, const std::string& region, const std::string& county, const std::string& locality, const std::string& neighbourhood, const std::string& street, const std::string& houseNumber, const std::string& name, const std::vector<std::string>& categories);
 
         /**
-         * Checks for equality between this and another address object.
-         * @param address The other address bounds object.
-         * @return True if equal.
-         */
-        bool operator ==(const Address& address) const;
-        /**
-         * Checks for inequality between this and another address object.
-         * @param address The other address object.
-         * @return True if not equal.
-         */
-        bool operator !=(const Address& address) const;
-        
-        /**
          * Returns the country name included in the address.
          * @return The country name included in the address.
          */
@@ -103,14 +90,27 @@ namespace carto {
         const std::vector<std::string>& getCategories() const;
 
         /**
+         * Checks for equality between this and another address object.
+         * @param address The other address object.
+         * @return True if equal.
+         */
+        bool operator ==(const Address& address) const;
+        /**
+         * Checks for inequality between this and another address object.
+         * @param address The other address object.
+         * @return True if not equal.
+         */
+        bool operator !=(const Address& address) const;
+        
+        /**
          * Returns the hash value of this object.
          * @return The hash value of this object.
          */
         int hash() const;
         
         /**
-         * Creates a string representation of this map bounds object, useful for logging.
-         * @return The string representation of this map bounds object.
+         * Creates a string representation of this address object, useful for logging.
+         * @return The string representation of this address object.
          */
         std::string toString() const;
         

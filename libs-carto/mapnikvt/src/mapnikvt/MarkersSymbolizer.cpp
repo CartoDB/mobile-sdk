@@ -108,6 +108,9 @@ namespace carto { namespace mvt {
         float bitmapSize = static_cast<float>(std::max(_widthStatic * fontScale, _heightStatic * fontScale));
         long long groupId = (_allowOverlap ? -1 : 0);
 
+        float widthScale = bitmapScaleX / bitmapImage->scale / bitmapImage->bitmap->width;
+        float heightScale = bitmapScaleY / bitmapImage->scale / bitmapImage->bitmap->height;
+        vt::FloatFunction normalizedSizeFunc = _functionBuilder.createChainedFloatFunction("multiply" + boost::lexical_cast<std::string>(widthScale), [widthScale](float size) { return size * widthScale; }, sizeFunc);
         vt::ColorFunction fillFunc = _functionBuilder.createColorFunction(vt::Color::fromColorOpacity(vt::Color(1, 1, 1, 1), fillOpacity));
 
         std::vector<std::pair<long long, vt::TileLayerBuilder::Vertex>> pointInfos;
@@ -131,7 +134,7 @@ namespace carto { namespace mvt {
 
         auto flushPoints = [&](const cglib::mat3x3<float>& transform) {
             if (_allowOverlap) {
-                vt::PointStyle style(compOp, convertLabelToPointOrientation(orientation), fillFunc, sizeFunc, bitmapImage, transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX / bitmapImage->scale / bitmapImage->bitmap->width, bitmapScaleY / bitmapImage->scale / bitmapImage->bitmap->height, 1)));
+                vt::PointStyle style(compOp, convertLabelToPointOrientation(orientation), fillFunc, normalizedSizeFunc, bitmapImage, transform * cglib::scale3_matrix(cglib::vec3<float>(1.0f, heightScale / widthScale, 1.0f)));
 
                 std::size_t pointInfoIndex = 0;
                 layerBuilder.addPoints([&](long long& id, vt::TileLayerBuilder::Vertex& vertex) {
@@ -147,7 +150,7 @@ namespace carto { namespace mvt {
                 pointInfos.clear();
             }
             else {
-                vt::BitmapLabelStyle style(orientation, fillFunc, sizeFunc, bitmapImage, transform * cglib::scale3_matrix(cglib::vec3<float>(bitmapScaleX / bitmapImage->scale / bitmapImage->bitmap->width, bitmapScaleY / bitmapImage->scale / bitmapImage->bitmap->height, 1)));
+                vt::BitmapLabelStyle style(orientation, fillFunc, normalizedSizeFunc, bitmapImage, transform * cglib::scale3_matrix(cglib::vec3<float>(1.0f, heightScale / widthScale, 1.0f)));
 
                 std::size_t labelInfoIndex = 0;
                 layerBuilder.addBitmapLabels([&](long long& id, vt::TileLayerBuilder::BitmapLabelInfo& labelInfo) {

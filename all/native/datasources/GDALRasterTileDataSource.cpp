@@ -36,7 +36,7 @@ namespace {
         std::size_t size;
     };
     
-    static const GDALVirtualFile _GDALVirtualFiles[] = {
+    const GDALVirtualFile _GDALVirtualFiles[] = {
         { "coordinate_axis.csv", _coordinate_axis_csv, sizeof(_coordinate_axis_csv) },
         { "datum_shift.csv", _datum_shift_csv, sizeof(_datum_shift_csv) },
         { "ellipsoid.csv", _ellipsoid_csv, sizeof(_ellipsoid_csv) },

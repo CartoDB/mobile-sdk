@@ -15,6 +15,7 @@ namespace carto {
                           false,
                           style.getOrientationMode(),
                           style.getScalingMode(),
+                          1.0f,
                           style.getSize()),
         _clickScale(1.0f)
     {

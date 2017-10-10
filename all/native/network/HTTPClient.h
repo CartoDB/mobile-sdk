@@ -20,15 +20,15 @@ namespace carto {
 
     class HTTPClient {
     public:
-        typedef std::function<bool(std::uint64_t, std::uint64_t, const unsigned char*, std::size_t)> HandlerFn;
+        typedef std::function<bool(std::uint64_t, std::uint64_t, const unsigned char*, std::size_t)> HandlerFunc;
 
         explicit HTTPClient(bool log);
 
         void setTimeout(int milliseconds);
 
         int get(const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, std::shared_ptr<BinaryData>& responseData, int* statusCode = 0) const;
-        int get(const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, HandlerFn handlerFn, std::uint64_t offset) const;
         int post(const std::string& url, const std::string& contentType, const std::shared_ptr<BinaryData>& requestData, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, std::shared_ptr<BinaryData>& responseData);
+        int streamResponse(const std::string& method, const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, HandlerFunc handlerFn, std::uint64_t offset) const;
 
     private:
         struct HeaderLess {
@@ -65,13 +65,13 @@ namespace carto {
 
         class Impl {
         public:
-            typedef std::function<bool(int, const std::map<std::string, std::string>&)> HeadersFn;
-            typedef std::function<bool(const unsigned char*, std::size_t)> DataFn;
+            typedef std::function<bool(int, const std::map<std::string, std::string>&)> HeadersFunc;
+            typedef std::function<bool(const unsigned char*, std::size_t)> DataFunc;
 
             virtual ~Impl();
 
             virtual void setTimeout(int milliseconds) = 0;
-            virtual bool makeRequest(const HTTPClient::Request& request, HeadersFn headersFn, DataFn dataFn) const = 0;
+            virtual bool makeRequest(const HTTPClient::Request& request, HeadersFunc headersFn, DataFunc dataFn) const = 0;
         };
 
         class PionImpl;
@@ -79,7 +79,7 @@ namespace carto {
         class CFImpl;
         class WinSockImpl;
 
-        int makeRequest(Request request, Response& response, HandlerFn handlerFn, std::uint64_t offset) const;
+        int makeRequest(Request request, Response& response, HandlerFunc handlerFn, std::uint64_t offset) const;
 
         bool _log;
         std::unique_ptr<Impl> _impl;

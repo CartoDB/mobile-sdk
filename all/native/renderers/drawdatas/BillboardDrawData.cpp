@@ -168,6 +168,7 @@ namespace carto {
                                          bool flippable,
                                          BillboardOrientation::BillboardOrientation orientationMode,
                                          BillboardScaling::BillboardScaling scalingMode,
+                                         float renderScale,
                                          float size) :
         VectorElementDrawData(style.getColor()),
         _anchorPointX(anchorPointX),
@@ -194,7 +195,7 @@ namespace carto {
         _rotation(billboard.getRotation()),
         _scaleWithDPI(style.isScaleWithDPI()),
         _scalingMode(scalingMode),
-        _size(size < 0 ? (bitmap ? bitmap->getWidth() : 0) : size),
+        _size(size < 0 ? (bitmap ? bitmap->getWidth() / renderScale : 0) : size),
         _cameraPlaneZoomDistance(0),
         _screenBottomDistance(0),
         _renderer()
@@ -218,7 +219,7 @@ namespace carto {
         float right = left + _size;
         float bottom = ((-_anchorPointY - 1.0f) * 0.5f / _aspect * _size + _verticalOffset);
         float top = bottom + _size / _aspect;
-    
+
         _coords[0] = cglib::vec2<float>(left, top);
         _coords[1] = cglib::vec2<float>(left, bottom);
         _coords[2] = cglib::vec2<float>(right, top);

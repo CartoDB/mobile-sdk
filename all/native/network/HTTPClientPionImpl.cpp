@@ -18,7 +18,7 @@ namespace carto {
     {
     }
 
-    bool HTTPClient::PionImpl::makeRequest(const HTTPClient::Request& request, HeaderFn headerFn, DataFn dataFn) const {
+    bool HTTPClient::PionImpl::makeRequest(const HTTPClient::Request& request, HeadersFunc headersFn, DataFunc dataFn) const {
         // Parse request URL
         std::string proto, host, path, query;
         std::uint16_t port;
@@ -49,7 +49,7 @@ namespace carto {
                 continue;
             }
 
-            result = makeRequest(*connection, request, headerFn, dataFn);
+            result = makeRequest(*connection, request, headersFn, dataFn);
 
             if (result) {
                 std::lock_guard<std::mutex> lock(_mutex);
@@ -66,7 +66,7 @@ namespace carto {
             return false;
         }
 
-        result = makeRequest(*connection, request, headerFn, dataFn);
+        result = makeRequest(*connection, request, headersFn, dataFn);
 
         if (result) {
             std::lock_guard<std::mutex> lock(_mutex);
@@ -77,7 +77,7 @@ namespace carto {
         return result;
     }
 
-    bool HTTPClient::PionImpl::makeRequest(Connection& connection, const HTTPClient::Request& request, HeaderFn headerFn, DataFn dataFn) const {
+    bool HTTPClient::PionImpl::makeRequest(Connection& connection, const HTTPClient::Request& request, HeadersFunc headersFn, DataFunc dataFn) const {
         std::string url = request.url;
         std::string proto, host, path, query;
         std::uint16_t port;

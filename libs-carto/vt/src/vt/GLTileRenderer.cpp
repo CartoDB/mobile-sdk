@@ -1272,13 +1272,15 @@ namespace carto { namespace vt {
             return false;
         }
 
+        float scaledRadius = radius * _viewState.zoomScale;
         cglib::vec3<float> center = (envelope[0] + envelope[1] + envelope[2] + envelope[3]) * 0.25f;
 
         std::array<cglib::vec3<double>, 4> p;
         for (int i = 0; i < 4; i++) {
             cglib::vec3<float> offset = envelope[i] - center;
-            if (cglib::length(offset) != 0) {
-                offset = offset * (1.0f + radius * label->getStyle()->scale / cglib::length(offset));
+            if (offset(0) * offset(1) != 0) {
+                offset(0) += scaledRadius * label->getStyle()->scale * (offset(0) > 0 ? 1.0f : -1.0f);
+                offset(1) += scaledRadius * label->getStyle()->scale * (offset(1) > 0 ? 1.0f : -1.0f);
             }
             p[i] = _viewState.origin + cglib::vec3<double>::convert(center + offset);
         }
@@ -1305,15 +1307,13 @@ namespace carto { namespace vt {
         std::size_t attribOffset = index * geometryLayoutParams.vertexSize + geometryLayoutParams.attribsOffset;
         const char* attribPtr = reinterpret_cast<const char*>(&geometry->getVertexGeometry()[attribOffset]);
         float size = 0.5f * std::abs((geometry->getStyleParameters().widthFuncs[attribPtr[0]])(_viewState));
-        if (size > 0) {
-            size += radius;
-        }
         cglib::vec2<float> xy = cglib::vec2<float>(binormalPtr[0], binormalPtr[1]) * (1.0f / geometryLayoutParams.binormalScale);
-        if (cglib::length(xy) != 0) {
-            xy = xy * (1.0f + radius / cglib::length(xy));
-        }
         if (geometry->getStyleParameters().transform) {
             xy = cglib::transform_point(xy, geometry->getStyleParameters().transform.get());
+        }
+        if (xy(0) * xy(1) * size != 0) {
+            xy(0) += 2 * radius / size * (xy(0) > 0 ? 1.0f : -1.0f);
+            xy(1) += 2 * radius / size * (xy(1) > 0 ? 1.0f : -1.0f);
         }
         return (xAxis * xy(0) + yAxis * xy(1)) * (size * geometry->getGeometryScale() / geometry->getTileSize());
     }

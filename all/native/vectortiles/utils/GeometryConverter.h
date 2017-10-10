@@ -17,16 +17,16 @@
 
 namespace carto {
 
-    typedef std::function<MapPos(const cglib::vec2<float>& pos)> PointConversionFunction;
+    typedef std::function<MapPos(const cglib::vec2<float>& pos)> PointConversionFunc;
 
-    inline std::vector<MapPos> convertPoints(const PointConversionFunction& convertFn, const std::vector<cglib::vec2<float> >& poses) {
+    inline std::vector<MapPos> convertPoints(const PointConversionFunc& convertFn, const std::vector<cglib::vec2<float> >& poses) {
         std::vector<MapPos> points;
         points.reserve(poses.size());
         std::transform(poses.begin(), poses.end(), std::back_inserter(points), convertFn);
         return points;
     }
 
-    inline std::vector<std::vector<MapPos> > convertPointsList(const PointConversionFunction& convertFn, const std::vector<std::vector<cglib::vec2<float> > >& posesList) {
+    inline std::vector<std::vector<MapPos> > convertPointsList(const PointConversionFunc& convertFn, const std::vector<std::vector<cglib::vec2<float> > >& posesList) {
         std::vector<std::vector<MapPos> > pointsList;
         pointsList.reserve(posesList.size());
         std::transform(posesList.begin(), posesList.end(), std::back_inserter(pointsList), [&](const std::vector<cglib::vec2<float> >& poses) {
@@ -35,7 +35,7 @@ namespace carto {
         return pointsList;
     }
 
-    inline std::vector<std::vector<std::vector<MapPos> > > convertPointsLists(const PointConversionFunction& convertFn, const std::vector<std::vector<std::vector<cglib::vec2<float> > > >& posesLists) {
+    inline std::vector<std::vector<std::vector<MapPos> > > convertPointsLists(const PointConversionFunc& convertFn, const std::vector<std::vector<std::vector<cglib::vec2<float> > > >& posesLists) {
         std::vector<std::vector<std::vector<MapPos> > > pointsLists;
         pointsLists.reserve(posesLists.size());
         std::transform(posesLists.begin(), posesLists.end(), std::back_inserter(pointsLists), [&](const std::vector<std::vector<cglib::vec2<float> > >& posesList) {
@@ -44,7 +44,7 @@ namespace carto {
         return pointsLists;
     }
 
-    inline std::shared_ptr<Geometry> convertGeometry(const PointConversionFunction& convertFn, const std::shared_ptr<const mvt::Geometry>& mvtGeometry) {
+    inline std::shared_ptr<Geometry> convertGeometry(const PointConversionFunc& convertFn, const std::shared_ptr<const mvt::Geometry>& mvtGeometry) {
         if (auto mvtPoint = std::dynamic_pointer_cast<const mvt::PointGeometry>(mvtGeometry)) {
             std::vector<MapPos> poses = convertPoints(convertFn, mvtPoint->getVertices());
             std::vector<std::shared_ptr<PointGeometry> > points;

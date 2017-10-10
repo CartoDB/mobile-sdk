@@ -6,7 +6,7 @@ namespace carto {
         LabelStyleBuilder(),
     	_fontName("Helvetica"),
         _textField(),
-    	_fontSize(20),
+    	_fontSize(20.0f),
     	_strokeColor(0xFFFFFFFF),
     	_strokeWidth(3)
     {
@@ -37,14 +37,14 @@ namespace carto {
         _textField = field;
     }
 
-    int TextStyleBuilder::getFontSize() const {
+    float TextStyleBuilder::getFontSize() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _fontSize;
     }
 
-    void TextStyleBuilder::setFontSize(int fontSize) {
+    void TextStyleBuilder::setFontSize(float size) {
         std::lock_guard<std::mutex> lock(_mutex);
-        _fontSize = fontSize;
+        _fontSize = size;
     }
 
     Color TextStyleBuilder::getStrokeColor() const {
@@ -84,6 +84,7 @@ namespace carto {
                                                         _flippable,
                                                         _orientationMode,
                                                         _scalingMode,
+                                                        _renderScale,
                                                         _fontName,
                                                         _textField,
                                                         _fontSize,

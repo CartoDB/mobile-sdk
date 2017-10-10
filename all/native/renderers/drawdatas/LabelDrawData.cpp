@@ -18,17 +18,19 @@ namespace carto {
                           style.isFlippable(),
                           style.getOrientationMode(),
                           style.getScalingMode(),
+                          style.getRenderScale(),
                           -1)
     {
         if (style.getOrientationMode() == BillboardOrientation::BILLBOARD_ORIENTATION_FACE_CAMERA &&
             style.getScalingMode() == BillboardScaling::BILLBOARD_SCALING_CONST_SCREEN_SIZE &&
+            style.getRenderScale() == 1.0f &&
             (!style.isScaleWithDPI() || (style.isScaleWithDPI() && viewState.getDPI() >= Const::UNSCALED_DPI))) {
-            //The generated texture will never be downscaled and thus doesn't need mipmaps
+            // The generated texture will never be downscaled and thus doesn't need mipmaps
             _genMipmaps = false;
         }
     }
     
     LabelDrawData::~LabelDrawData() {
     }
-    
+
 }

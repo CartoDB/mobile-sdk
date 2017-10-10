@@ -20,7 +20,7 @@
 %attributeval(carto::TextStyle, carto::Color, FontColor, getFontColor)
 %attributestring(carto::TextStyle, std::string, FontName, getFontName)
 %attributestring(carto::TextStyle, std::string, TextField, getTextField)
-%attribute(carto::TextStyle, int, FontSize, getFontSize)
+%attribute(carto::TextStyle, float, FontSize, getFontSize)
 %attributeval(carto::TextStyle, carto::Color, StrokeColor, getStrokeColor)
 %attribute(carto::TextStyle, float, StrokeWidth, getStrokeWidth)
 %ignore carto::TextStyle::TextStyle;

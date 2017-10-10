@@ -62,22 +62,6 @@ namespace carto {
         return code;
     }
 
-    int HTTPClient::get(const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, HandlerFn handlerFn, std::uint64_t offset) const {
-        Request request("GET", url);
-        request.headers.insert(requestHeaders.begin(), requestHeaders.end());
-        if (request.headers.count("Accept") == 0) {
-            request.headers["Accept"] = "*/*";
-        }
-        if (offset > 0) {
-            request.headers["Range"] = "bytes=" + boost::lexical_cast<std::string>(offset) + "-";
-        }
-
-        Response response;
-        int code = makeRequest(request, response, handlerFn, offset);
-        responseHeaders.insert(response.headers.begin(), response.headers.end());
-        return code;
-    }
-
     int HTTPClient::post(const std::string& url, const std::string& contentType, const std::shared_ptr<BinaryData>& requestData, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, std::shared_ptr<BinaryData>& responseData) {
         Request request("POST", url);
         request.contentType = contentType;
@@ -105,7 +89,23 @@ namespace carto {
         return code;
     }
 
-    int HTTPClient::makeRequest(Request request, Response& response, HandlerFn handlerFn, std::uint64_t offset) const {
+    int HTTPClient::streamResponse(const std::string& method, const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, HandlerFunc handlerFn, std::uint64_t offset) const {
+        Request request(method, url);
+        request.headers.insert(requestHeaders.begin(), requestHeaders.end());
+        if (request.headers.count("Accept") == 0) {
+            request.headers["Accept"] = "*/*";
+        }
+        if (offset > 0) {
+            request.headers["Range"] = "bytes=" + boost::lexical_cast<std::string>(offset) + "-";
+        }
+
+        Response response;
+        int code = makeRequest(request, response, handlerFn, offset);
+        responseHeaders.insert(response.headers.begin(), response.headers.end());
+        return code;
+    }
+
+    int HTTPClient::makeRequest(Request request, Response& response, HandlerFunc handlerFn, std::uint64_t offset) const {
         std::uint64_t contentOffset = 0;
         std::uint64_t contentLength = std::numeric_limits<std::uint64_t>::max();
 

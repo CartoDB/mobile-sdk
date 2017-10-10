@@ -34,19 +34,6 @@ namespace carto {
         ScreenBounds(const ScreenPos& min, const ScreenPos& max);
         
         /**
-         * Checks for equality between this and another screen bounds object.
-         * @param ScreenBounds The other screen bounds object.
-         * @return True if equal.
-         */
-        bool operator ==(const ScreenBounds& ScreenBounds) const;
-        /**
-         * Checks for inequality between this and another screen bounds object.
-         * @param ScreenBounds The other screen bounds object.
-         * @return True if not equal.
-         */
-        bool operator !=(const ScreenBounds& ScreenBounds) const;
-        
-        /**
          * Sets the minimum and maximum screen positions of this screen bounds object. If a coordinate of the
          * minimum screen positon is larger than the same coordinate of the maximum screen position then those
          * coordinates will be swapped.
@@ -122,6 +109,19 @@ namespace carto {
          * @param bounds The other screen bounds object.
          */
         void expandToContain(const ScreenBounds& bounds);
+        
+        /**
+         * Checks for equality between this and another screen bounds object.
+         * @param ScreenBounds The other screen bounds object.
+         * @return True if equal.
+         */
+        bool operator ==(const ScreenBounds& ScreenBounds) const;
+        /**
+         * Checks for inequality between this and another screen bounds object.
+         * @param ScreenBounds The other screen bounds object.
+         * @return True if not equal.
+         */
+        bool operator !=(const ScreenBounds& ScreenBounds) const;
         
         /**
          * Returns the hash value of this object.

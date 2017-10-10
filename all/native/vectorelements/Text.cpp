@@ -4,6 +4,7 @@
 #include "graphics/BitmapCanvas.h"
 #include "styles/TextStyle.h"
 #include "utils/Const.h"
+#include "utils/Log.h"
 
 #include <cstdlib>
 #include <cmath>
@@ -35,46 +36,61 @@ namespace carto {
     }
         
     std::shared_ptr<Bitmap> Text::drawBitmap(float dpToPX) const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        try {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-        // Scale with DPI, if necessary
-        if (_style->isScaleWithDPI()) {
-            dpToPX = 1;
-        }
-        
-        // Use actual text or text field
-        std::string text = _text;
-        if (text.empty() && !_style->getTextField().empty()) {
-            Variant value = getMetaDataElement(_style->getTextField());
-            if (value.getType() == VariantType::VARIANT_TYPE_STRING) {
-                text = value.getString();
-            } else {
-                text = value.toString();
+            // Scale with DPI, if necessary
+            if (_style->isScaleWithDPI()) {
+                dpToPX = 1;
             }
-        }
 
-        float fontSize = _style->getFontSize() * dpToPX;
-        float strokeWidth = _style->getStrokeWidth() * dpToPX;
+            // Multiply with rendering scale
+            dpToPX *= _style->getRenderScale();
+        
+            // Use actual text or text field
+            std::string text = _text;
+            if (text.empty() && !_style->getTextField().empty()) {
+                Variant value = getMetaDataElement(_style->getTextField());
+                if (value.getType() == VariantType::VARIANT_TYPE_STRING) {
+                    text = value.getString();
+                } else {
+                    text = value.toString();
+                }
+            }
 
-        BitmapCanvas measureCanvas(0, 0);
-        measureCanvas.setFont(_style->getFontName(), fontSize);
-        ScreenBounds textBounds = measureCanvas.measureTextSize(text, -1, false);
+            float fontSize = _style->getFontSize() * dpToPX;
+            float strokeWidth = _style->getStrokeWidth() * dpToPX;
 
-        BitmapCanvas canvas(static_cast<int>(std::ceil(textBounds.getWidth() + strokeWidth)), static_cast<int>(std::ceil(textBounds.getHeight() + strokeWidth)));
-        canvas.setFont(_style->getFontName(), fontSize);
+            BitmapCanvas measureCanvas(0, 0);
+            measureCanvas.setFont(_style->getFontName(), fontSize);
+            ScreenBounds textBounds = measureCanvas.measureTextSize(text, -1, false);
+            int canvasWidth = static_cast<int>(std::ceil(textBounds.getWidth() + strokeWidth));
+            int canvasHeight = static_cast<int>(std::ceil(textBounds.getHeight() + strokeWidth));
+            if (canvasWidth > MAX_CANVAS_SIZE || canvasHeight > MAX_CANVAS_SIZE) {
+                Log::Errorf("Text::drawBitmap: Text too large: %d x %d!", canvasWidth, canvasHeight);
+                return std::shared_ptr<Bitmap>();
+            }
 
-        if (strokeWidth > 0) {
-            canvas.setColor(_style->getStrokeColor());
-            canvas.setDrawMode(BitmapCanvas::STROKE);
-            canvas.setStrokeWidth(strokeWidth);
+            BitmapCanvas canvas(canvasWidth, canvasHeight);
+            canvas.setFont(_style->getFontName(), fontSize);
+
+            if (strokeWidth > 0) {
+                canvas.setColor(_style->getStrokeColor());
+                canvas.setDrawMode(BitmapCanvas::STROKE);
+                canvas.setStrokeWidth(strokeWidth);
+                canvas.drawText(text, ScreenPos(strokeWidth * 0.5f, strokeWidth * 0.5f), textBounds.getWidth(), false);
+            }
+
+            canvas.setColor(_style->getFontColor());
+            canvas.setDrawMode(BitmapCanvas::FILL);
             canvas.drawText(text, ScreenPos(strokeWidth * 0.5f, strokeWidth * 0.5f), textBounds.getWidth(), false);
+
+            return canvas.buildBitmap();
         }
-
-        canvas.setColor(_style->getFontColor());
-        canvas.setDrawMode(BitmapCanvas::FILL);
-        canvas.drawText(text, ScreenPos(strokeWidth * 0.5f, strokeWidth * 0.5f), textBounds.getWidth(), false);
-
-        return canvas.buildBitmap();
+        catch (const std::exception& ex) {
+            Log::Errorf("Text::drawBitmap: Failed to render bitmap: %s", ex.what());
+            return std::shared_ptr<Bitmap>();
+        }
     }
         
     std::string Text::getText() const {

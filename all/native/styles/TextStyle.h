@@ -36,6 +36,7 @@ namespace carto {
          * @param flippable The fliappble flag.
          * @param orientationMode The orientation mode.
          * @param scalingMode The scaling mode.
+         * @param renderScale The relative rendering scale.
          * @param fontName The font's name.
          * @param textField The text field variable to use.
          * @param fontSize The font's size.
@@ -57,9 +58,10 @@ namespace carto {
                   bool flippable,
                   BillboardOrientation::BillboardOrientation orientationMode,
                   BillboardScaling::BillboardScaling scalingMode,
+                  float renderScale,
                   const std::string& fontName,
                   const std::string& textField,
-                  int fontSize,
+                  float fontSize,
                   const Color& strokeColor,
                   float strokeWidth);
         virtual ~TextStyle();
@@ -86,7 +88,7 @@ namespace carto {
          * Returns the font's size.
          * @return The size of the font in points.
          */
-        int getFontSize() const;
+        float getFontSize() const;
 
         /**
          * Returns the color of the stroke.
@@ -107,7 +109,7 @@ namespace carto {
         
         std::string _textField;
 
-        int _fontSize;
+        float _fontSize;
 
         Color _strokeColor;
 

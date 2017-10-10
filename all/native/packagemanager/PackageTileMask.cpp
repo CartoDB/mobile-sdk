@@ -1,6 +1,11 @@
 #ifdef _CARTO_PACKAGEMANAGER_SUPPORT
 
 #include "PackageTileMask.h"
+#include "core/MapBounds.h"
+#include "components/Exceptions.h"
+#include "geometry/MultiPolygonGeometry.h"
+#include "projections/Projection.h"
+#include "utils/TileUtils.h"
 
 #include <vector>
 #include <algorithm>
@@ -8,7 +13,7 @@
 namespace {
     enum { NP = 255 };
 
-    static const unsigned char base64DecodeTable[] = {
+    const unsigned char base64DecodeTable[] = {
         NP,NP,NP,NP,NP,NP,NP,NP,NP,NP,
         NP,NP,NP,NP,NP,NP,NP,NP,NP,NP,
         NP,NP,NP,NP,NP,NP,NP,NP,NP,NP,
@@ -74,6 +79,75 @@ namespace {
         }
         return stringValue;
     }
+
+    std::vector<std::vector<carto::MapPos> > createTilePolygon(const carto::MapTile& mapTile, const std::shared_ptr<carto::Projection>& proj) {
+        std::vector<carto::MapPos> poses;
+        carto::MapBounds bounds = carto::TileUtils::CalculateMapTileBounds(mapTile, proj);
+        poses.emplace_back(bounds.getMin().getX(), bounds.getMin().getY());
+        poses.emplace_back(bounds.getMax().getX(), bounds.getMin().getY());
+        poses.emplace_back(bounds.getMax().getX(), bounds.getMax().getY());
+        poses.emplace_back(bounds.getMin().getX(), bounds.getMax().getY());
+        return std::vector<std::vector<carto::MapPos> > {{ poses }};
+    }
+
+    std::vector<std::vector<carto::MapPos> > unifyTilePolygons(const std::vector<std::vector<carto::MapPos> >& poly1, const std::vector<std::vector<carto::MapPos> >& poly2) {
+        std::unordered_set<std::size_t> poly2Indices;
+        std::vector<std::vector<carto::MapPos> > unifiedPoly;
+        for (const std::vector<carto::MapPos>& poses1 : poly1) {
+            bool found = false;
+            for (std::size_t i = 0; i < poses1.size() && !found; i++) {
+                for (auto it2 = poly2.begin(); it2 != poly2.end() && !found; it2++) {
+                    if (poly2Indices.find(it2 - poly2.begin()) != poly2Indices.end()) {
+                        continue;
+                    }
+
+                    const std::vector<carto::MapPos>& poses2 = *it2;
+                    for (std::size_t j = 0; j < poses2.size(); j++) {
+                        if (poses1[i] != poses2[j]) {
+                            continue;
+                        }
+
+                        std::size_t i0 = (i + poses1.size() - 1) % poses1.size();
+                        std::size_t j1 = (j + 1) % poses2.size();
+                        if ((poses1[i] - poses1[i0]).crossProduct2D(poses2[j1] - poses2[j]) > 0) {
+                            continue;
+                        }
+
+                        std::vector<carto::MapPos> unifiedPoses;
+                        unifiedPoses.reserve(poses1.size() + poses2.size());
+                        unifiedPoses.insert(unifiedPoses.end(), poses1.begin(), poses1.begin() + i);
+                        unifiedPoses.insert(unifiedPoses.end(), poses2.begin() + j, poses2.end());
+                        unifiedPoses.insert(unifiedPoses.end(), poses2.begin(), poses2.begin() + j);
+                        unifiedPoses.insert(unifiedPoses.end(), poses1.begin() + i, poses1.end());
+
+                        for (std::size_t k = 1; k < unifiedPoses.size(); ) {
+                            carto::MapVec v0 = unifiedPoses[k] - unifiedPoses[k - 1];
+                            carto::MapVec v1 = unifiedPoses[k] - unifiedPoses[(k + 1) % unifiedPoses.size()];
+                            if (v0 == v1) {
+                                unifiedPoses.erase(unifiedPoses.begin() + k - 1, unifiedPoses.begin() + k + 1);
+                            } else {
+                                k++;
+                            }
+                        }
+                        unifiedPoly.push_back(std::move(unifiedPoses));
+                        poly2Indices.insert(it2 - poly2.begin());
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if (!found) {
+                unifiedPoly.push_back(poses1);
+            }
+        }
+        for (auto it2 = poly2.begin(); it2 != poly2.end(); it2++) {
+            if (poly2Indices.find(it2 - poly2.begin()) == poly2Indices.end()) {
+                unifiedPoly.push_back(*it2);
+            }
+        }
+        return unifiedPoly;
+    }
+
 }
 
 namespace carto {
@@ -84,7 +158,7 @@ namespace carto {
         _maxZoomLevel(maxZoom)
     {
         std::queue<bool> data = decodeBase64(stringValue);
-        _rootNode = decodeTileNode(data, MapTile(0, 0, 0, 0));
+        _rootNode = DecodeTileNode(data, MapTile(0, 0, 0, 0));
     }
 
     PackageTileMask::PackageTileMask(const std::vector<MapTile>& tiles, int clipZoom) :
@@ -93,11 +167,11 @@ namespace carto {
         _maxZoomLevel(0)
     {
         std::unordered_set<MapTile> tileSet(tiles.begin(), tiles.end());
-        _rootNode = buildTileNode(tileSet, MapTile(0, 0, 0, 0), clipZoom);
+        _rootNode = BuildTileNode(tileSet, MapTile(0, 0, 0, 0), clipZoom);
         for (const MapTile& tile : tiles) {
             _maxZoomLevel = std::max(_maxZoomLevel, tile.getZoom());
         }
-        std::vector<bool> data = encodeTileNode(_rootNode);
+        std::vector<bool> data = EncodeTileNode(_rootNode);
         _stringValue = encodeBase64(std::move(data));
     }
 
@@ -114,6 +188,23 @@ namespace carto {
     
     int PackageTileMask::getMaxZoomLevel() const {
         return _maxZoomLevel;
+    }
+
+    std::shared_ptr<MultiPolygonGeometry> PackageTileMask::getBoundingPolygon(const std::shared_ptr<Projection>& projection) const {
+        if (!projection) {
+            throw NullArgumentException("Null projection");
+        }
+
+        std::vector<std::vector<MapPos> > poly = CalculateTileNodeBoundingPolygon(_rootNode, projection);
+
+        std::vector<std::vector<MapPos> > optimizedPoly;
+        for (std::size_t i = 0; i < poly.size(); i++) {
+            optimizedPoly = unifyTilePolygons(optimizedPoly, std::vector<std::vector<MapPos> >(poly.begin() + i, poly.begin() + i + 1));
+        }
+
+        std::vector<std::shared_ptr<PolygonGeometry> > geoms;
+        geoms.push_back(std::make_shared<PolygonGeometry>(std::move(optimizedPoly)));
+        return std::make_shared<MultiPolygonGeometry>(geoms);
     }
 
     PackageTileStatus::PackageTileStatus PackageTileMask::getTileStatus(const MapTile& mapTile) const {
@@ -150,7 +241,7 @@ namespace carto {
         return std::shared_ptr<TileNode>();
     }
 
-    std::shared_ptr<PackageTileMask::TileNode> PackageTileMask::buildTileNode(const std::unordered_set<MapTile>& tileSet, const MapTile& tile, int clipZoom) {
+    std::shared_ptr<PackageTileMask::TileNode> PackageTileMask::BuildTileNode(const std::unordered_set<MapTile>& tileSet, const MapTile& tile, int clipZoom) {
         auto node = std::make_shared<TileNode>(tile, tileSet.find(tile) != tileSet.end());
         if (!node->inside || tile.getZoom() >= clipZoom) {
             return node; // Note: we assume here that tile does not exist implies subtiles do not exist
@@ -160,7 +251,7 @@ namespace carto {
         bool deep = false;
         for (int dy = 0; dy < 2; dy++) {
             for (int dx = 0; dx < 2; dx++) {
-                node->subNodes[idx] = buildTileNode(tileSet, MapTile(tile.getX() * 2 + dx, tile.getY() * 2 + dy, tile.getZoom() + 1, tile.getFrameNr()), clipZoom);
+                node->subNodes[idx] = BuildTileNode(tileSet, MapTile(tile.getX() * 2 + dx, tile.getY() * 2 + dy, tile.getZoom() + 1, tile.getFrameNr()), clipZoom);
                 for (int i = 0; i < 4; i++) {
                     deep = deep || node->subNodes[idx]->subNodes[i];
                 }
@@ -175,7 +266,7 @@ namespace carto {
         return node;
     }
     
-    std::shared_ptr<PackageTileMask::TileNode> PackageTileMask::decodeTileNode(std::queue<bool>& data, const MapTile& tile) {
+    std::shared_ptr<PackageTileMask::TileNode> PackageTileMask::DecodeTileNode(std::queue<bool>& data, const MapTile& tile) {
         bool leaf = !data.front();
         data.pop();
         bool inside = data.front();
@@ -185,7 +276,7 @@ namespace carto {
             int idx = 0;
             for (int dy = 0; dy < 2; dy++) {
                 for (int dx = 0; dx < 2; dx++) {
-                    node->subNodes[idx] = decodeTileNode(data, MapTile(tile.getX() * 2 + dx, tile.getY() * 2 + dy, tile.getZoom() + 1, tile.getFrameNr()));
+                    node->subNodes[idx] = DecodeTileNode(data, MapTile(tile.getX() * 2 + dx, tile.getY() * 2 + dy, tile.getZoom() + 1, tile.getFrameNr()));
                     idx++;
                 }
             }
@@ -193,13 +284,13 @@ namespace carto {
         return node;
     }
 
-    std::vector<bool> PackageTileMask::encodeTileNode(const std::shared_ptr<TileNode>& node) {
+    std::vector<bool> PackageTileMask::EncodeTileNode(const std::shared_ptr<TileNode>& node) {
         std::vector<bool> data;
         if (!node) {
             return data;
         }
         for (int idx = 0; idx < 4; idx++) {
-            std::vector<bool> subData = encodeTileNode(node->subNodes[idx]);
+            std::vector<bool> subData = EncodeTileNode(node->subNodes[idx]);
             data.insert(data.end(), subData.begin(), subData.end());
         }
         if (data.empty()) {
@@ -211,6 +302,28 @@ namespace carto {
             data.insert(data.begin() + 1, node->inside);
         }
         return data;
+    }
+
+    std::vector<std::vector<MapPos> > PackageTileMask::CalculateTileNodeBoundingPolygon(const std::shared_ptr<TileNode>& node, const std::shared_ptr<Projection>& proj) {
+        std::vector<std::vector<MapPos> > poly;
+        if (!node) {
+            return poly;
+        }
+
+        for (int i = 0; i < 4; i++) {
+            std::vector<std::vector<MapPos> > subPoly = CalculateTileNodeBoundingPolygon(node->subNodes[i], proj);
+            if (!poly.empty() && !subPoly.empty()) {
+                poly = unifyTilePolygons(poly, subPoly);
+            } else if (!subPoly.empty()) {
+                poly = std::move(subPoly);
+            }
+        }
+
+        if (poly.empty() && node->inside) {
+            poly = createTilePolygon(node->tile, proj);
+        }
+
+        return poly;
     }
 
 }

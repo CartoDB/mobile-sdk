@@ -37,13 +37,13 @@ namespace carto {
         return false;
     }
 
-    int NetworkUtils::GetHTTP(const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, HandlerFn handler, std::uint64_t offset, bool log) {
+    int NetworkUtils::StreamHTTPResponse(const std::string& method, const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, HandlerFunc handler, std::uint64_t offset, bool log) {
         HTTPClient client(log);
         try {
-            return client.get(url, requestHeaders, responseHeaders, handler, offset);
+            return client.streamResponse(method, url, requestHeaders, responseHeaders, handler, offset);
         } catch (const std::exception& ex) {
             if (log) {
-                Log::Errorf("GetHTTP: Exception: %s", ex.what());
+                Log::Errorf("StreamHTTPResponse: Exception: %s", ex.what());
             }
         }
         return -1;

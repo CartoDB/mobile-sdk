@@ -7,25 +7,35 @@
 #ifndef _CARTO_URLFILELOADER_H_
 #define _CARTO_URLFILELOADER_H_
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
 #include <map>
 #include <mutex>
+#include <functional>
 
 namespace carto {
     class BinaryData;
     
     class URLFileLoader {
     public:
-        URLFileLoader(const std::string& tag, bool cacheFiles);
+        typedef std::function<bool(std::uint64_t, const unsigned char*, std::size_t)> HandlerFunc;
+
+        URLFileLoader();
         virtual ~URLFileLoader();
 
-        bool loadFile(const std::string& url, std::shared_ptr<BinaryData>& data) const;
+        void setCaching(bool caching);
+        void setLocalFiles(bool localFiles);
+
+        bool isSupported(const std::string& url) const;
+
+        bool load(const std::string& url, std::shared_ptr<BinaryData>& data) const;
+        bool stream(const std::string& url, HandlerFunc handler) const;
         
     private:
-        const std::string _tag;
-        const bool _cacheFiles;
+        bool _caching;
+        bool _localFiles;
         mutable std::map<std::string, std::shared_ptr<BinaryData> > _cachedFiles;
         mutable std::mutex _mutex;
     };

@@ -15,7 +15,7 @@ namespace carto {
     class PopupStyle;
     class ViewState;
     
-    class PopupDrawData: public BillboardDrawData {
+    class PopupDrawData : public BillboardDrawData {
     public:
         PopupDrawData(Popup& popup, const PopupStyle& style, const Projection& projection, const Options& options, const ViewState& viewState);
         virtual ~PopupDrawData();

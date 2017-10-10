@@ -30,22 +30,9 @@ namespace carto {
         MapRange(float min, float max);
     
         /**
-         * Checks for equality between this and another map tile.
-         * @param mapRange The other map range.
-         * @return True if equal.
+         * Returns the min value of this map range.
+         * @return The min value of this map range.
          */
-        bool operator ==(const MapRange& mapRange) const;
-        /**
-         * Checks for inequality between this and another map tile.
-         * @param mapRange The other map range.
-         * @return True if not equal.
-         */
-        bool operator !=(const MapRange& mapRange) const;
-    
-        /**
-        * Returns the min value of this map range.
-        * @return The min value of this map range.
-        */
         float getMin() const;
         /**
          * Sets the min value of this map range.
@@ -81,6 +68,19 @@ namespace carto {
          * @return The length of this map range.
          */
         float length() const;
+    
+        /**
+         * Checks for equality between this and another map tile.
+         * @param mapRange The other map range.
+         * @return True if equal.
+         */
+        bool operator ==(const MapRange& mapRange) const;
+        /**
+         * Checks for inequality between this and another map tile.
+         * @param mapRange The other map range.
+         * @return True if not equal.
+         */
+        bool operator !=(const MapRange& mapRange) const;
     
         /**
          * Returns the hash value of this object.

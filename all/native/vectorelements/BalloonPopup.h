@@ -91,6 +91,7 @@ namespace carto {
         
     private:
         static const int SCREEN_PADDING = 10;
+        static const int MAX_CANVAS_SIZE = 8192;
         
         std::shared_ptr<BalloonPopupStyle> _style;
         

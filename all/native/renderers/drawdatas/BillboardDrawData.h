@@ -84,7 +84,7 @@ namespace carto {
     
         BillboardRenderer* getRenderer() const;
         void setRenderer(BillboardRenderer* renderer);
-    
+
         virtual float getClickScale() const;
     
         virtual void offsetHorizontally(double offset);
@@ -99,6 +99,7 @@ namespace carto {
                           bool flippable,
                           BillboardOrientation::BillboardOrientation _orientationMode,
                           BillboardScaling::BillboardScaling _scalingMode,
+                          float renderScale,
                           float size);
     
         float _anchorPointX;

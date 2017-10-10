@@ -22,14 +22,6 @@ namespace carto {
         }
     }
     
-    bool MapRange::operator ==(const MapRange& mapRange) const {
-        return _min == mapRange._min && _max == mapRange._max;
-    }
-    
-    bool MapRange::operator !=(const MapRange& mapRange) const {
-        return !(*this == mapRange);
-    }
-    
     float MapRange::getMin() const {
         return _min;
     }
@@ -62,6 +54,14 @@ namespace carto {
     
     float MapRange::length() const{
         return _max - _min;
+    }
+    
+    bool MapRange::operator ==(const MapRange& mapRange) const {
+        return _min == mapRange._min && _max == mapRange._max;
+    }
+    
+    bool MapRange::operator !=(const MapRange& mapRange) const {
+        return !(*this == mapRange);
     }
     
     int MapRange::hash() const {
