@@ -169,7 +169,7 @@ namespace carto {
         void drawLayers(float deltaSeconds, const ViewState& viewState);
         
         void handleRenderThreadCallbacks();
-        void handleRenderCaptureCallbacks();
+        void handleRendererCaptureCallbacks();
     
         static const int BILLBOARD_PLACEMENT_TASK_DELAY;
 

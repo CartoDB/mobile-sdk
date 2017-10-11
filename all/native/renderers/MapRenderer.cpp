@@ -596,7 +596,7 @@ namespace carto {
         }
         
         handleRenderThreadCallbacks();
-        handleRenderCaptureCallbacks();
+        handleRendererCaptureCallbacks();
         
         // Call listener to inform we are idle now, if no redraw request is pending
         if (!_redrawPending) {
@@ -819,7 +819,7 @@ namespace carto {
         }
     }
     
-    void MapRenderer::handleRenderCaptureCallbacks() {
+    void MapRenderer::handleRendererCaptureCallbacks() {
         int width, height;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
@@ -833,6 +833,8 @@ namespace carto {
             std::lock_guard<std::mutex> lock(_rendererCaptureListenersMutex);
             _rendererCaptureListeners.swap(rendererCaptureListeners);
         }
+
+        bool callbacksPending = false;
         for (std::size_t i = 0; i < rendererCaptureListeners.size(); i++) {
             const DirectorPtr<RendererCaptureListener>& listener = rendererCaptureListeners[i].first;
             bool waitWhileUpdating = rendererCaptureListeners[i].second;
@@ -845,7 +847,9 @@ namespace carto {
                     }
                 }
                 if (_redrawPending || layersUpdating || !_cullWorker->isIdle() || !_billboardPlacementWorker->isIdle()) {
+                    std::lock_guard<std::mutex> lock(_rendererCaptureListenersMutex);
                     _rendererCaptureListeners.push_back(rendererCaptureListeners[i]);
+                    callbacksPending = true;
                     continue;
                 }
             }
@@ -857,6 +861,9 @@ namespace carto {
             }
             
             listener->onMapRendered(captureBitmap);
+        }
+        if (callbacksPending) {
+            requestRedraw();
         }
     }
     
