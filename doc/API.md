@@ -9,9 +9,14 @@ This file is for reference purposes only. It is intended for tracking the Mobile
 * [Loading Map Data](loading_data.md)
 * [Developer Guide to SDK Features](developer_guide.md)
 * [Mobile Routing](routing.md)
-* [Offline Maps](offline_maps.md)
+* [Mobile Geocoding](geocoding.md)
+* [Package Manager](packagemanager.md)
+* [Custom Offline Data](custom_offline_data.md)
 * [API References](api_reference.md)
- 
-Currently not being pulled into live docs: will be added for a future release
 
-* [Extension features](proextensions.md)
+#### Currently not being pulled into live docs: 
+
+* This file
+* [Extension features](proextensions.md) Will be added for a future release?
+* Offline Maps (mobile-sdk/doc/deprecated/offline_maps.md)
+* Internal reference of code tab panes for Aare (mobile-sdk/doc/code_sample_block.js) 
