@@ -193,6 +193,8 @@
 #import "NTRoutingRequest.h"
 #import "NTRoutingResult.h"
 #import "NTRoutingService.h"
+#import "NTRouteMatchingRequest.h"
+#import "NTRouteMatchingResult.h"
 #import "NTOSRMOfflineRoutingService.h"
 #endif
 

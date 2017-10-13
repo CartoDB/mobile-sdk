@@ -60,8 +60,8 @@ namespace carto {
         double getTotalTime() const;
 
         /**
-         * Creates a string representation of this routing request result, useful for logging.
-         * @return The string representation of this routing result object.
+         * Creates a string representation of this result object, useful for logging.
+         * @return The string representation of this result object.
          */
         std::string toString() const;
         
