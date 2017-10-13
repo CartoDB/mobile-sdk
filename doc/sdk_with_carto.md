@@ -1,8 +1,8 @@
-# SDK and other CARTO Tools
+# SDK and CARTO Tools
 
 For select account plans, you can connect to the CARTO Engine APIs via Mobile SDK, to retrieve map visualizations and table data from your CARTO account. _API access is not available for free users._ [Contact us](mailto:sales@carto.com) for questions about your account plan and enabling this feature.
 
-## Loading CARTO Map Data to Mobile Apps
+## Loading CARTO Map Data
 
 There are several methods of connecting map data from your CARTO account (via the Mobile SDK) to your mobile app; depending on the size of your data, the visual requirements, and other factors.
 
@@ -20,9 +20,9 @@ There are several methods of connecting map data from your CARTO account (via th
 
 - For point-geometry time-series visualizations, use the _Animated_ aggregation to define Torque maps. This provides animated rendering, and the Mobile SDK has a special layer `TorqueTileLayer` to define this. From an API standpoint, Torque uses the SQL API and CartoCSS styling, but Torque contains an additional [time control method](/docs/carto-engine/torque-js/)
 
-## Offline maps from CARTO
+## Offline maps
 
-The suggested method for using map data offline is via CARTO:
+CARTO Mobile SDK offers several ways to use map data offline, but the suggested method is via CARTO platform:
 
 1. Upload your data to CARTO, create a new map with CARTO Builder, and apply map custom styling with CartoCSS.
 2. Use the [Mobile Tile Packager](https://github.com/CartoDB/mobile-tile-packager) tool to create the offline map data package.
@@ -34,7 +34,7 @@ This method enables you to get both optimized vector tiles and suitable CartoCSS
 For details, see the [Readme file](https://github.com/CartoDB/mobile-tile-packager/blob/master/README.md) of the Mobile Tile Packager.
 
 
-## Online maps from CARTO
+## Online maps 
 
 If you have map data in a CARTO database, you can show it on mobile using any of the following methods:
 
@@ -977,7 +977,7 @@ CARTO’s [SQL API](https://carto.com/docs/carto-engine/sql-api/) allows you to 
 
 
 
-## SDK and CARTO API Samples
+## CARTO API Samples
 
 The CARTO [sample app](https://github.com/CartoDB/mobile-sdk-samples) projects contain a number of working samples for all the mobile platforms:
 
