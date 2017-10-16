@@ -22,6 +22,8 @@ namespace sqlite3pp {
 }
 
 namespace carto {
+    class RouteMatchingRequest;
+    class RouteMatchingResult;
 
     /**
      * A routing service that uses routing packages from package manager.
@@ -45,6 +47,14 @@ namespace carto {
          * @param profile The new profile. Can be either "car", "auto", "auto_shorter", "bus", "bicycle", "pedestrian" or "truck".
          */
         void setProfile(const std::string& profile);
+
+        /**
+         * Matches specified points to the points on road network.
+         * @param request The matching request.
+         * @return The matching result or null if route matching failed.
+         * @throws std::runtime_error If IO error occured during the route matching.
+         */
+        std::shared_ptr<RouteMatchingResult> matchRoute(const std::shared_ptr<RouteMatchingRequest>& request) const;
 
         virtual std::shared_ptr<RoutingResult> calculateRoute(const std::shared_ptr<RoutingRequest>& request) const;
 

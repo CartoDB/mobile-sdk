@@ -5,6 +5,8 @@
 #include "packagemanager/PackageInfo.h"
 #include "packagemanager/handlers/ValhallaRoutingPackageHandler.h"
 #include "projections/Projection.h"
+#include "routing/RouteMatchingRequest.h"
+#include "routing/RouteMatchingResult.h"
 #include "routing/ValhallaRoutingProxy.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
@@ -45,6 +47,36 @@ namespace carto {
     void PackageManagerValhallaRoutingService::setProfile(const std::string& profile) {
         std::lock_guard<std::mutex> lock(_mutex);
         _profile = profile;
+    }
+
+    std::shared_ptr<RouteMatchingResult> PackageManagerValhallaRoutingService::matchRoute(const std::shared_ptr<RouteMatchingRequest>& request) const {
+        if (!request) {
+            throw NullArgumentException("Null request");
+        }
+
+        // Do routing via package manager, so that all packages are locked during routing
+        std::shared_ptr<RouteMatchingResult> result;
+        _packageManager->accessLocalPackages([this, &result, &request](const std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<PackageHandler> >& packageHandlerMap) {
+            // Build map of routing packages and graph files
+            std::vector<std::shared_ptr<sqlite3pp::database> > packageDatabases;
+            for (auto it = packageHandlerMap.begin(); it != packageHandlerMap.end(); it++) {
+                if (auto valhallaRoutingHandler = std::dynamic_pointer_cast<ValhallaRoutingPackageHandler>(it->second)) {
+                    if (std::shared_ptr<sqlite3pp::database> database = valhallaRoutingHandler->getDatabase()) {
+                        packageDatabases.push_back(database);
+                    }
+                }
+            }
+
+            // Now check if we have already a cached route finder for the files. If not, create new instance.
+            std::lock_guard<std::mutex> lock(_mutex);
+            if (packageDatabases != _cachedPackageDatabases) {
+                _cachedPackageDatabases = packageDatabases;
+            }
+
+            result = ValhallaRoutingProxy::MatchRoute(_cachedPackageDatabases, _profile, request);
+        });
+
+        return result;
     }
 
     std::shared_ptr<RoutingResult> PackageManagerValhallaRoutingService::calculateRoute(const std::shared_ptr<RoutingRequest>& request) const {
