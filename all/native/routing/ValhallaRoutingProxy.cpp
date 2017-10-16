@@ -5,6 +5,8 @@
 #include "components/Exceptions.h"
 #include "projections/Projection.h"
 #include "projections/EPSG3857.h"
+#include "routing/RouteMatchingRequest.h"
+#include "routing/RouteMatchingResult.h"
 #include "network/HTTPClient.h"
 #include "utils/NetworkUtils.h"
 #include "utils/Const.h"
@@ -27,6 +29,13 @@
 #include <picojson/picojson.h>
 
 #include <valhalla/config.h>
+#include <valhalla/meili/measurement.h>
+#include <valhalla/meili/match_result.h>
+#include <valhalla/meili/map_matcher_factory.h>
+#include <valhalla/meili/candidate_search.h>
+#include <valhalla/meili/map_matcher.h>
+#include <valhalla/meili/universal_cost.h>
+#include <valhalla/meili/map_matcher_factory.h>
 #include <valhalla/midgard/logging.h>
 #include <valhalla/midgard/constants.h>
 #include <valhalla/midgard/encoded.h>
@@ -56,6 +65,200 @@
 #include <valhalla/odin/directionsbuilder.h>
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
+
+namespace valhalla { namespace meili {
+
+    inline float local_tile_size(const valhalla::baldr::GraphReader& graphreader) {
+        const auto& tile_hierarchy = graphreader.GetTileHierarchy();
+        const auto& tiles = tile_hierarchy.levels().rbegin()->second.tiles;
+        return tiles.TileSize();
+    }
+
+    class map_matcher_factory_t {
+    public:
+        map_matcher_factory_t(const std::vector<std::shared_ptr<sqlite3pp::database>>& databases, const std::string& costing);
+        ~map_matcher_factory_t();
+
+        baldr::GraphReader& graphreader()
+        { return graphreader_; }
+
+        CandidateQuery& candidatequery()
+        { return candidatequery_; }
+
+        MapMatcher* Create(const std::string& name)
+        { return Create(name, boost::property_tree::ptree()); }
+
+        MapMatcher* Create(const std::string& name,
+                           const boost::property_tree::ptree& preferences);
+
+        MapMatcher* Create(const boost::property_tree::ptree&);
+
+        boost::property_tree::ptree
+        MergeConfig(const std::string&, const boost::property_tree::ptree&);
+
+        boost::property_tree::ptree&
+        MergeConfig(const std::string&, boost::property_tree::ptree&);
+
+        static constexpr size_t kModeCostingCount = 8;
+
+    private:
+        typedef sif::cost_ptr_t (*factory_function_t)(const boost::property_tree::ptree&);
+
+        static boost::property_tree::ptree make_reader_config();
+        static boost::property_tree::ptree make_meili_config(const std::string& costing);
+
+        boost::property_tree::ptree config_;
+
+        baldr::GraphReader graphreader_;
+
+        valhalla::sif::cost_ptr_t mode_costing_[kModeCostingCount];
+
+        sif::CostFactory<sif::DynamicCost> cost_factory_;
+
+        CandidateGridQuery candidatequery_;
+
+        float max_grid_cache_size_;
+
+        sif::cost_ptr_t get_costing(const boost::property_tree::ptree& request,
+                                                const std::string& costing);
+    };
+
+    map_matcher_factory_t::map_matcher_factory_t(const std::vector<std::shared_ptr<sqlite3pp::database>>& databases, const std::string& costing)
+        : config_(make_meili_config(costing)),
+          graphreader_(std::make_shared<baldr::GraphTileMBTStorage>(databases), make_reader_config()),
+          candidatequery_(graphreader_,
+                          local_tile_size(graphreader_)/500,
+                          local_tile_size(graphreader_)/500),
+          max_grid_cache_size_(100240)
+    { 
+        cost_factory_.Register("auto", sif::CreateAutoCost);
+        cost_factory_.Register("bicycle", sif::CreateBicycleCost);
+        cost_factory_.Register("pedestrian", sif::CreatePedestrianCost);
+        cost_factory_.Register("multimodal", CreateUniversalCost);
+    }
+
+    map_matcher_factory_t::~map_matcher_factory_t() {
+    }
+
+    boost::property_tree::ptree map_matcher_factory_t::make_reader_config() {
+        boost::property_tree::ptree config;
+        config.put("max_cache_size", 16 * 1024 * 1024);
+        config.put("tile_dir", "");
+        return config;
+    }
+
+    boost::property_tree::ptree map_matcher_factory_t::make_meili_config(const std::string& costing) {
+        boost::property_tree::ptree defaultProfile;
+        defaultProfile.put("sigma_z", 4.07f);
+        defaultProfile.put("gps_accuracy", 5.0f);
+        defaultProfile.put("beta", 3);
+        defaultProfile.put("max_route_distance_factor", 3);
+        defaultProfile.put("breakage_distance", 2000);
+        defaultProfile.put("interpolation_distance", 10);
+        defaultProfile.put("search_radius", 50);
+        defaultProfile.put("max_search_radius", 100);
+        defaultProfile.put("geometry", false);
+        defaultProfile.put("route", true);
+        defaultProfile.put("turn_penalty_factor", 0);
+
+        boost::property_tree::ptree autoProfile;
+        autoProfile.put("turn_penalty_factor", 200);
+        autoProfile.put("search_radius", 50);
+
+        boost::property_tree::ptree pedestrianProfile;
+        pedestrianProfile.put("turn_penalty_factor", 100);
+        pedestrianProfile.put("search_radius", 25);
+
+        boost::property_tree::ptree bicycleProfile;
+        bicycleProfile.put("turn_penalty_factor", 140);
+
+        boost::property_tree::ptree multimodalProfile;
+        multimodalProfile.put("turn_penalty_factor", 70);
+
+        boost::property_tree::ptree config;
+        config.put("mode", costing);
+        config.put("verbose", false);
+        config.add_child("default", defaultProfile);
+        config.add_child("auto", autoProfile);
+        config.add_child("pedestrian", pedestrianProfile);
+        config.add_child("bicycle", bicycleProfile);
+        config.add_child("multimodal", multimodalProfile);
+
+        return config;
+    }
+
+    MapMatcher* map_matcher_factory_t::Create(const boost::property_tree::ptree& preferences) {
+        const auto& name = preferences.get<std::string>("mode", config_.get<std::string>("mode"));
+        return Create(name, preferences);
+    }
+
+    MapMatcher* map_matcher_factory_t::Create(const std::string& costing, const boost::property_tree::ptree& preferences) {
+        const auto& config = MergeConfig(costing, preferences);
+
+        valhalla::sif::cost_ptr_t cost = get_costing(config, costing);
+        valhalla::sif::TravelMode mode = cost->travel_mode();
+
+        mode_costing_[static_cast<uint32_t>(mode)] = cost;
+
+        // TODO investigate exception safety
+        return new MapMatcher(config, graphreader_, candidatequery_, mode_costing_, mode);
+    }
+
+    boost::property_tree::ptree map_matcher_factory_t::MergeConfig(const std::string& name,
+                                   const boost::property_tree::ptree& preferences)
+    {
+        // Copy the default child config
+        auto config = config_.get_child("default");
+
+        // The mode-specific config overwrites defaults
+        const auto mode_config = config_.get_child_optional(name);
+        if (mode_config) {
+            for (const auto& child : *mode_config) {
+               config.put_child(child.first, child.second);
+            }
+        }
+
+        // Preferences overwrites defaults
+        for (const auto& child : preferences) {
+            config.put_child(child.first, child.second);
+        }
+
+        // Give it back
+        return config;
+    }
+
+    boost::property_tree::ptree& map_matcher_factory_t::MergeConfig(const std::string& name,
+                                   boost::property_tree::ptree& preferences)
+    {
+        const auto mode_config = config_.get_child_optional(name);
+        if (mode_config) {
+            for (const auto& child : *mode_config) {
+                auto pchild = preferences.get_child_optional(child.first);
+                if (!pchild) {
+                  preferences.put_child(child.first, child.second);
+                }
+            }
+        }
+
+        for (const auto& child : config_.get_child("default")) {
+            auto pchild = preferences.get_child_optional(child.first);
+            if (!pchild) {
+                preferences.put_child(child.first, child.second);
+            }
+        }
+
+        return preferences;
+    }
+
+    sif::cost_ptr_t map_matcher_factory_t::get_costing(const boost::property_tree::ptree& request,
+                                              const std::string& costing)
+    {
+        std::string method_options = "costing_options." + costing;
+        auto costing_options = request.get_child(method_options, {});
+        return cost_factory_.Create(costing, costing_options);
+    }
+
+} }
 
 namespace valhalla { namespace thor {
 
@@ -384,6 +587,39 @@ namespace valhalla { namespace thor {
 } }
 
 namespace carto {
+
+    std::shared_ptr<RouteMatchingResult> ValhallaRoutingProxy::MatchRoute(const std::vector<std::shared_ptr<sqlite3pp::database> >& databases, const std::string& profile, const std::shared_ptr<RouteMatchingRequest>& request) {
+        EPSG3857 epsg3857;
+        std::shared_ptr<Projection> proj = request->getProjection();
+
+        const float searchRadius = 50.0f;
+        std::vector<valhalla::meili::Measurement> measurements;
+        try {
+            for (const MapPos& pos : request->getPoints()) {
+                MapPos posWgs84 = proj->toWgs84(pos);
+                valhalla::midgard::PointLL lnglat(static_cast<float>(posWgs84.getX()), static_cast<float>(posWgs84.getY()));
+                measurements.emplace_back(lnglat, request->getAccuracy(), searchRadius);
+            }
+
+            valhalla::meili::map_matcher_factory_t factory(databases, profile);
+            std::shared_ptr<valhalla::meili::MapMatcher> matcher(factory.Create(profile));
+            if (!matcher) {
+                throw std::runtime_error("Failed to create matcher instance");
+            }
+
+            std::vector<valhalla::meili::MatchResult> matchResults = matcher->OfflineMatch(measurements);
+
+            std::vector<MapPos> poses;
+            for (const valhalla::meili::MatchResult& matchResult : matchResults) {
+                MapPos pos = proj->fromLatLong(matchResult.lnglat().lat(), matchResult.lnglat().lng());
+                poses.push_back(pos);
+            }
+            return std::make_shared<RouteMatchingResult>(proj, poses);
+        }
+        catch (const std::exception& ex) {
+            throw GenericException("Exception while matching route", ex.what());
+        }
+    }
 
     std::shared_ptr<RoutingResult> ValhallaRoutingProxy::CalculateRoute(const std::string& baseURL, const std::string& profile, const std::shared_ptr<RoutingRequest>& request) {
         EPSG3857 epsg3857;

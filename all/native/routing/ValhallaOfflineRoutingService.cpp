@@ -2,6 +2,8 @@
 
 #include "ValhallaOfflineRoutingService.h"
 #include "components/Exceptions.h"
+#include "routing/RouteMatchingRequest.h"
+#include "routing/RouteMatchingResult.h"
 #include "routing/ValhallaRoutingProxy.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
@@ -32,6 +34,14 @@ namespace carto {
     void ValhallaOfflineRoutingService::setProfile(const std::string& profile) {
         std::lock_guard<std::mutex> lock(_mutex);
         _profile = profile;
+    }
+
+    std::shared_ptr<RouteMatchingResult> ValhallaOfflineRoutingService::matchRoute(const std::shared_ptr<RouteMatchingRequest>& request) const {
+        if (!request) {
+            throw NullArgumentException("Null request");
+        }
+
+        return ValhallaRoutingProxy::MatchRoute(std::vector<std::shared_ptr<sqlite3pp::database> > { _database }, getProfile(), request);
     }
 
     std::shared_ptr<RoutingResult> ValhallaOfflineRoutingService::calculateRoute(const std::shared_ptr<RoutingRequest>& request) const {
