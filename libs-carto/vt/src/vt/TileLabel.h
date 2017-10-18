@@ -91,6 +91,8 @@ namespace carto { namespace vt {
             struct Edge {
                 cglib::vec2<float> pos0;
                 cglib::vec2<float> pos1;
+                cglib::vec2<float> binormal0;
+                cglib::vec2<float> binormal1;
                 cglib::vec2<float> xAxis;
                 cglib::vec2<float> yAxis;
                 float length;
@@ -98,17 +100,27 @@ namespace carto { namespace vt {
                 explicit Edge(const cglib::vec3<double>& p0, const cglib::vec3<double>& p1, const cglib::vec3<double>& origin) {
                     pos0 = cglib::vec2<float>::convert(cglib::proj_o(p0 - origin));
                     pos1 = cglib::vec2<float>::convert(cglib::proj_o(p1 - origin));
-                    length = static_cast<float>(cglib::length(pos1 - pos0));
-                    xAxis = cglib::vec2<float>::convert(pos1 - pos0) * (1.0f / length);
+                    length = cglib::length(pos1 - pos0);
+                    xAxis = (pos1 - pos0) * (1.0f / length);
                     yAxis = cglib::vec2<float>(-xAxis(1), xAxis(0));
+                    binormal0 = yAxis;
+                    binormal1 = yAxis;
                 }
             };
             
-            const std::vector<Edge> edges;
-            const std::size_t index;
-            const cglib::vec3<double> pos;
+            std::vector<Edge> edges;
+            std::size_t index;
+            cglib::vec3<double> pos;
             
-            explicit Placement(std::vector<Edge> edges, std::size_t index, const cglib::vec3<double>& pos) : edges(std::move(edges)), index(index), pos(pos) { }
+            explicit Placement(std::vector<Edge> baseEdges, std::size_t index, const cglib::vec3<double>& pos) : edges(std::move(baseEdges)), index(index), pos(pos) {
+                for (std::size_t i = 1; i < edges.size(); i++) {
+                    cglib::vec2<float> binormal = edges[i - 1].yAxis + edges[i].yAxis;
+                    if (cglib::norm(binormal) != 0) {
+                        binormal = cglib::unit(binormal);
+                        edges[i - 1].binormal1 = edges[i].binormal0 = binormal * (1.0f / cglib::dot_product(edges[i - 1].yAxis, binormal));
+                    }
+                }
+            }
         };
         
         void setupCoordinateSystem(const ViewState& viewState, const std::shared_ptr<const Placement>& placement, cglib::vec3<float>& origin, cglib::vec3<float>& xAxis, cglib::vec3<float>& yAxis) const;

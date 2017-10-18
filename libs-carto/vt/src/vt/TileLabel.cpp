@@ -285,20 +285,17 @@ namespace carto { namespace vt {
     }
 
     bool TileLabel::buildLineVertexData(const std::shared_ptr<const Placement>& placement, float scale, VertexArray<cglib::vec2<float>>& vertices, VertexArray<cglib::vec2<short>>& texCoords, VertexArray<cglib::vec4<char>>& attribs, VertexArray<unsigned short>& indices) const {
+        float invScale = 1.0f / scale;
+        const std::vector<Placement::Edge>& edges = placement->edges;
         std::size_t edgeIndex = placement->index;
-        cglib::vec2<float> edgePos(0, 0);
-        float edgeLen = cglib::length(placement->edges[edgeIndex].pos1 - edgePos) / scale;
+        cglib::vec2<float> pen(cglib::dot_product(-edges[edgeIndex].pos0, edges[edgeIndex].xAxis) * invScale, 0);
 
         bool valid = true;
-        cglib::vec2<float> pen(0, 0);
         for (const Font::Glyph& glyph : _glyphs) {
             // If carriage return, reposition pen and state to the initial position
             if (glyph.codePoint == Font::CR_CODEPOINT) {
-                pen = cglib::vec2<float>(0, 0);
-
                 edgeIndex = placement->index;
-                edgePos = cglib::vec2<float>(0, 0);
-                edgeLen = cglib::length(placement->edges[edgeIndex].pos1 - edgePos) / scale;
+                pen = cglib::vec2<float>(cglib::dot_product(-edges[edgeIndex].pos0, edges[edgeIndex].xAxis) * invScale, 0);
             }
             else if (glyph.codePoint != Font::SPACE_CODEPOINT) {
                 unsigned short i0 = static_cast<unsigned short>(vertices.size());
@@ -311,20 +308,21 @@ namespace carto { namespace vt {
 
                 cglib::vec4<char> attrib(0, glyph.baseGlyph.sdfMode ? -1 : 1, 0, 0);
                 attribs.append(attrib, attrib, attrib, attrib);
-                
-                const cglib::vec2<float>& xAxis = placement->edges[edgeIndex].xAxis;
-                const cglib::vec2<float>& yAxis = placement->edges[edgeIndex].yAxis;
+
+                const cglib::vec2<float>& origin = edges[edgeIndex].pos0;
+                const cglib::vec2<float>& xAxis = edges[edgeIndex].xAxis;
+                const cglib::vec2<float>& yAxis = edges[edgeIndex].yAxis;
                 if (_style->transform) {
                     cglib::vec2<float> p0 = cglib::transform_point_affine(pen + glyph.offset, _style->transform.get()) * scale;
                     cglib::vec2<float> p1 = cglib::transform_point_affine(pen + glyph.offset + cglib::vec2<float>(glyph.size(0), 0), _style->transform.get()) * scale;
                     cglib::vec2<float> p2 = cglib::transform_point_affine(pen + glyph.offset + glyph.size, _style->transform.get()) * scale;
                     cglib::vec2<float> p3 = cglib::transform_point_affine(pen + glyph.offset + cglib::vec2<float>(0, glyph.size(1)), _style->transform.get()) * scale;
-                    vertices.append(edgePos + xAxis * p0(0) + yAxis * p0(1), edgePos + xAxis * p1(0) + yAxis * p1(1), edgePos + xAxis * p2(0) + yAxis * p2(1), edgePos + xAxis * p3(0) + yAxis * p3(1));
+                    vertices.append(origin + xAxis * p0(0) + yAxis * p0(1), origin + xAxis * p1(0) + yAxis * p1(1), origin + xAxis * p2(0) + yAxis * p2(1), origin + xAxis * p3(0) + yAxis * p3(1));
                 }
                 else {
                     cglib::vec2<float> p0 = (pen + glyph.offset) * scale;
                     cglib::vec2<float> p3 = (pen + glyph.offset + glyph.size) * scale;
-                    vertices.append(edgePos + xAxis * p0(0) + yAxis * p0(1), edgePos + xAxis * p3(0) + yAxis * p0(1), edgePos + xAxis * p3(0) + yAxis * p3(1), edgePos + xAxis * p0(0) + yAxis * p3(1));
+                    vertices.append(origin + xAxis * p0(0) + yAxis * p0(1), origin + xAxis * p3(0) + yAxis * p0(1), origin + xAxis * p3(0) + yAxis * p3(1), origin + xAxis * p0(0) + yAxis * p3(1));
                 }
             }
 
@@ -337,16 +335,10 @@ namespace carto { namespace vt {
                 edgeDir = glyph.advance(0) > 0 ? 1 : -1;
             }
 
-            const std::vector<Placement::Edge>& edges = placement->edges;
-            if (edgeDir <= 0 && pen(0) < 0) {
-                while (true) {
-                    const cglib::vec2<float>& p0 = edges[edgeIndex].pos0;
-                    float len = cglib::length(edgePos - p0) / scale;
-                    pen(0) += len;
-                    edgePos = p0;
-                    if (pen(0) >= 0) {
-                        break;
-                    }
+            float segmentBeg = -cglib::dot_product(edges[edgeIndex].binormal0, edges[edgeIndex].xAxis) * pen(1);
+            float segmentEnd = edges[edgeIndex].length * invScale + cglib::dot_product(edges[edgeIndex].binormal1, edges[edgeIndex].xAxis) * pen(1);
+            if (edgeDir <= 0 && pen(0) < segmentBeg) {
+                do {
                     if (edgeIndex == 0) {
                         valid = false;
                         break;
@@ -356,35 +348,31 @@ namespace carto { namespace vt {
                     if (edgeDir < 0) {
                         float cos = cglib::dot_product(edges[edgeIndex].xAxis, edges[edgeIndex + 1].xAxis);
                         float sin = cglib::dot_product(edges[edgeIndex].xAxis, edges[edgeIndex + 1].yAxis);
-                        pen(0) = cos * pen(0) - sin * (sin < 0 ? pen(1) + _style->ascent * 0.5f : 0);
+                        pen(0) = cos * pen(0) - sin * (sin < 0 ? _style->ascent * 0.5f : 0);
                     }
-                }
 
-                edgeLen = cglib::length(edges[edgeIndex].pos1 - edgePos) / scale;
+                    segmentBeg = -cglib::dot_product(edges[edgeIndex].binormal0, edges[edgeIndex].xAxis) * pen(1);
+                    segmentEnd = edges[edgeIndex].length * invScale + cglib::dot_product(edges[edgeIndex].binormal1, edges[edgeIndex].xAxis) * pen(1);
+                    pen(0) += segmentEnd;
+                } while (pen(0) < segmentBeg);
             }
-            else if (edgeDir >= 0 && pen(0) >= edgeLen) {
-                while (true) {
-                    const cglib::vec2<float>& p1 = edges[edgeIndex].pos1;
-                    float len = cglib::length(p1 - edgePos) / scale;
-                    if (pen(0) < len) {
-                        break;
-                    }
-                    pen(0) -= len;
-                    edgePos = p1;
+            else if (edgeDir >= 0 && pen(0) >= segmentEnd) {
+                do {
                     if (edgeIndex + 1 >= edges.size()) {
                         valid = false;
                         break;
                     }
                     edgeIndex++;
 
+                    pen(0) -= segmentEnd;
+                    segmentEnd = edges[edgeIndex].length * invScale + cglib::dot_product(edges[edgeIndex].binormal1, edges[edgeIndex].xAxis) * pen(1);
+
                     if (edgeDir > 0) {
                         float cos = cglib::dot_product(edges[edgeIndex - 1].xAxis, edges[edgeIndex].xAxis);
                         float sin = cglib::dot_product(edges[edgeIndex - 1].xAxis, edges[edgeIndex].yAxis);
-                        pen(0) = cos * pen(0) + sin * (sin > 0 ? pen(1) + _style->ascent * 0.5f : 0);
+                        pen(0) = cos * pen(0) + sin * (sin > 0 ? _style->ascent * 0.5f : 0);
                     }
-                }
-
-                edgeLen = cglib::length(edges[edgeIndex].pos1 - edgePos) / scale;
+                } while (pen(0) >= segmentEnd);
             }
         }
 
