@@ -20,6 +20,7 @@
 #include <list>
 #include <vector>
 #include <limits>
+#include <algorithm>
 
 #include <boost/variant.hpp>
 #include <boost/optional.hpp>
@@ -106,6 +107,15 @@ namespace carto { namespace vt {
                     binormal0 = yAxis;
                     binormal1 = yAxis;
                 }
+
+                void reverse() {
+                    std::swap(pos0, pos1);
+                    std::swap(binormal0, binormal1);
+                    binormal0 = -binormal0;
+                    binormal1 = -binormal1;
+                    xAxis = -xAxis;
+                    yAxis = -yAxis;
+                }
             };
             
             std::vector<Edge> edges;
@@ -120,6 +130,12 @@ namespace carto { namespace vt {
                         edges[i - 1].binormal1 = edges[i].binormal0 = binormal * (1.0f / cglib::dot_product(edges[i - 1].yAxis, binormal));
                     }
                 }
+            }
+
+            void reverse() {
+                index = edges.size() - 1 - index;
+                std::reverse(edges.begin(), edges.end());
+                std::for_each(edges.begin(), edges.end(), [](Edge& edge) { edge.reverse(); });
             }
         };
         
