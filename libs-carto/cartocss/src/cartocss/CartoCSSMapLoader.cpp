@@ -176,7 +176,7 @@ namespace carto { namespace css {
             std::map<std::string, AttachmentStyle> attachmentStyleMap;
             int minZoom = 0;
             std::list<CartoCSSCompiler::LayerAttachment> prevLayerAttachments;
-            for (int zoom = 0; zoom < MAX_ZOOM; zoom++) {
+            for (int zoom = 0; zoom < MAX_ZOOM + 1; zoom++) {
                 try {
                     ExpressionContext context;
                     std::map<std::string, Value> predefinedFieldMap;
@@ -198,7 +198,7 @@ namespace carto { namespace css {
                     throw LoaderException(std::string("Error while building zoom ") + boost::lexical_cast<std::string>(zoom) + " properties: " + ex.what());
                 }
             }
-            buildAttachmentStyleMap(translator, map, minZoom, MAX_ZOOM, prevLayerAttachments, attachmentStyleMap);
+            buildAttachmentStyleMap(translator, map, minZoom, MAX_ZOOM + 1, prevLayerAttachments, attachmentStyleMap);
 
             if (attachmentStyleMap.empty()) {
                 continue;
