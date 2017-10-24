@@ -61,6 +61,8 @@ namespace carto {
             contents.insert(contents.end(), buf, buf + size);
             return true;
         })) {
+            data = std::make_shared<BinaryData>(std::move(contents));
+
             std::lock_guard<std::mutex> lock(_mutex);
             if (_caching) {
                 _cachedFiles[url] = data;
@@ -78,7 +80,7 @@ namespace carto {
             std::map<std::string, std::string> responseHeaders;
             return NetworkUtils::StreamHTTPResponse("GET", url, requestHeaders, responseHeaders, [&](std::uint64_t offset, std::uint64_t length, const unsigned char* buf, std::size_t size) -> bool {
                 return handlerFn(length, buf, size);
-            }, 0, Log::IsShowDebug());
+            }, 0, Log::IsShowDebug()) == 0;
         }
         
         // Use synchronous loading for assets://
