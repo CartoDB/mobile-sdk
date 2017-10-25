@@ -22,7 +22,7 @@ static std::string constcolor_frag_glsl =
 
     "precision mediump float;"
 
-    "varying vec4 v_color;"
+    "varying lowp vec4 v_color;"
     "void main() {"
     "	vec4 color = v_color;"
     "	if (color.a == 0.0) {"

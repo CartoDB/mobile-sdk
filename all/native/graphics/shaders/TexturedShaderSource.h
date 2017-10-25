@@ -19,7 +19,7 @@ static std::string textured_vert_glsl =
 static std::string textured_frag_glsl =
     "#version 100\n"
     "precision mediump float;"
-    "varying vec2 v_texCoord;"
+    "varying highp vec2 v_texCoord;"
     "uniform sampler2D u_tex;"
     "void main() {"
     "	gl_FragColor = texture2D(u_tex, v_texCoord);"

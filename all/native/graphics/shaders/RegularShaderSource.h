@@ -25,8 +25,8 @@ static std::string regular_frag_glsl =
 
     "precision mediump float;"
 
-    "varying vec2 v_texCoord;"
-    "varying vec4 v_color;"
+    "varying highp vec2 v_texCoord;"
+    "varying lowp vec4 v_color;"
     "uniform sampler2D u_tex;"
     "void main() {"
     "	vec4 color = texture2D(u_tex, v_texCoord) * v_color;"

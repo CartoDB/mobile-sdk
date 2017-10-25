@@ -39,9 +39,9 @@ static std::string line_frag_glsl = R"GLSL(
     precision mediump float;
     uniform sampler2D u_tex;
     varying lowp vec4 v_color;
-    varying vec2 v_texCoord;
-    varying float v_dist;
-    varying float v_width;
+    varying highp vec2 v_texCoord;
+    varying highp float v_dist;
+    varying highp float v_width;
 
     void main() {
         lowp float a = clamp(v_width - abs(v_dist), 0.0, 1.0);
