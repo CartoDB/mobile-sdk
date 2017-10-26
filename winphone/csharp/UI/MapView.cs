@@ -91,10 +91,17 @@
         void OnPageLoaded(object sender, Windows.UI.Xaml.RoutedEventArgs args) {
             // The SwapChainPanel has been created and arranged in the page layout, so EGL can be initialized.
             CreateRenderSurface();
-            StartRenderLoop();
+
+            if (_renderSurface != IntPtr.Zero) {
+                StartRenderLoop();
+            }
         }
 
         void OnVisibilityChanged(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.VisibilityChangedEventArgs args) {
+            if (args.Visible && _renderSurface == IntPtr.Zero) {
+                CreateRenderSurface();
+            }
+
             if (args.Visible && _renderSurface != IntPtr.Zero) {
                 StartRenderLoop();
             } else {
@@ -181,9 +188,11 @@
             if (_renderSurface == IntPtr.Zero) {
                 int width = (int)(ConvertDipsToPixels(_swapChainPanelSize.Width) + 0.5f);
                 int height = (int)(ConvertDipsToPixels(_swapChainPanelSize.Height) + 0.5f);
-                _renderSurface = _eglContext.CreateSurface(_swapChainPanel, width, height);
-                _eglContext.MakeCurrent(_renderSurface);
-                _baseMapView.OnSurfaceCreated();
+                if (width > 0 && height > 0) {
+                    _renderSurface = _eglContext.CreateSurface(_swapChainPanel, width, height);
+                    _eglContext.MakeCurrent(_renderSurface);
+                    _baseMapView.OnSurfaceCreated();
+                }
             }
         }
 
@@ -203,7 +212,9 @@
                 CreateRenderSurface();
             }
 
-            StartRenderLoop();
+            if (_renderSurface != IntPtr.Zero) {
+                StartRenderLoop();
+            }
         }
 
         void StartRenderLoop() {
