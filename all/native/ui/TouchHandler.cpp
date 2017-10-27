@@ -370,9 +370,9 @@ namespace carto {
             float swipe2Length = cglib::length(_swipe2);
     
             // Check if swipes have opposite directions or same directions
-            if ((swipe1Length > GUESS_MIN_SWIPE_LENGTH_OPPOSITE_INCHES ||
-                 swipe2Length > GUESS_MIN_SWIPE_LENGTH_OPPOSITE_INCHES)
-                 && prevSwipe1Length + prevSwipe2Length > 0 && _swipe1(1) * _swipe2(1) <= 0) {
+            if (((swipe1Length > GUESS_MIN_SWIPE_LENGTH_OPPOSITE_INCHES && prevSwipe1Length > 0) ||
+                 (swipe2Length > GUESS_MIN_SWIPE_LENGTH_OPPOSITE_INCHES && prevSwipe2Length > 0))
+                 && _swipe1(1) * _swipe2(1) <= 0) {
                 _gestureMode = DUAL_POINTER_FREE;
             } else if (swipe1Length > GUESS_MIN_SWIPE_LENGTH_SAME_INCHES ||
                        swipe2Length > GUESS_MIN_SWIPE_LENGTH_SAME_INCHES) {
