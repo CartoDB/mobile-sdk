@@ -372,10 +372,11 @@ namespace carto {
             // Check if swipes have opposite directions or same directions
             if (((swipe1Length > GUESS_MIN_SWIPE_LENGTH_OPPOSITE_INCHES && prevSwipe1Length > 0) ||
                  (swipe2Length > GUESS_MIN_SWIPE_LENGTH_OPPOSITE_INCHES && prevSwipe2Length > 0))
-                 && _swipe1(1) * _swipe2(1) <= 0) {
+                && _swipe1(1) * _swipe2(1) <= 0) {
                 _gestureMode = DUAL_POINTER_FREE;
-            } else if (swipe1Length > GUESS_MIN_SWIPE_LENGTH_SAME_INCHES ||
-                       swipe2Length > GUESS_MIN_SWIPE_LENGTH_SAME_INCHES) {
+            } else if ((swipe1Length > GUESS_MIN_SWIPE_LENGTH_SAME_INCHES ||
+                        swipe2Length > GUESS_MIN_SWIPE_LENGTH_SAME_INCHES) 
+                       && _swipe1(1) * _swipe2(1) > 0) {
                 // Check if the angle of the same direction swipes
                 if (std::abs(_swipe1(0) / swipe1Length) > GUESS_SWIPE_ABS_COS_THRESHOLD ||
                     std::abs(_swipe2(0) / swipe2Length) > GUESS_SWIPE_ABS_COS_THRESHOLD) {
