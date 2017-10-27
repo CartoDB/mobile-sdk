@@ -357,7 +357,9 @@ namespace carto {
         if (deltaY > GUESS_MAX_DELTA_Y_INCHES) {
             _gestureMode = DUAL_POINTER_FREE;
         } else {
-    
+            float prevSwipe1Length = cglib::length(_swipe1);
+            float prevSwipe2Length = cglib::length(_swipe2);
+
             // Calculate swipe vectors
             cglib::vec2<float> tempSwipe1(screenPos1.getX() - _prevScreenPos1.getX(), screenPos1.getY() - _prevScreenPos1.getY());
             _swipe1 += tempSwipe1 * (1.0f / dpi);
@@ -369,11 +371,11 @@ namespace carto {
     
             // Check if swipes have opposite directions or same directions
             if ((swipe1Length > GUESS_MIN_SWIPE_LENGTH_OPPOSITE_INCHES ||
-                    swipe2Length > GUESS_MIN_SWIPE_LENGTH_OPPOSITE_INCHES)
-                    && _swipe1(1) * _swipe2(1) <= 0) {
+                 swipe2Length > GUESS_MIN_SWIPE_LENGTH_OPPOSITE_INCHES)
+                 && prevSwipe1Length + prevSwipe2Length > 0 && _swipe1(1) * _swipe2(1) <= 0) {
                 _gestureMode = DUAL_POINTER_FREE;
             } else if (swipe1Length > GUESS_MIN_SWIPE_LENGTH_SAME_INCHES ||
-                    swipe2Length > GUESS_MIN_SWIPE_LENGTH_SAME_INCHES) {
+                       swipe2Length > GUESS_MIN_SWIPE_LENGTH_SAME_INCHES) {
                 // Check if the angle of the same direction swipes
                 if (std::abs(_swipe1(0) / swipe1Length) > GUESS_SWIPE_ABS_COS_THRESHOLD ||
                     std::abs(_swipe2(0) / swipe2Length) > GUESS_SWIPE_ABS_COS_THRESHOLD) {
