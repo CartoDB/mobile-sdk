@@ -520,7 +520,7 @@ def buildSwigPackages(args, sourceDir, basePackageName):
   return True
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--profile', dest='profile', default=getDefaultProfile(), choices=getProfiles().keys(), help='Build profile')
+parser.add_argument('--profile', dest='profile', default=getDefaultProfileId(), type=validProfile, help='Build profile')
 parser.add_argument('--swig', dest='swigExecutable', default='swig', help='path to Swig executable')
 parser.add_argument('--dll', dest='dllName', default='carto_mobile_sdk', help='name of the DLL (Android only)')
 parser.add_argument('--defines', dest='defines', default='', help='Defines for Swig')
@@ -541,7 +541,7 @@ args.proxyDir = args.proxyDir.replace("{target}", args.target)
 args.wrapperDir = args.wrapperDir.replace("{target}", args.target)
 args.moduleDir = args.moduleDir.replace("{target}", args.target)
 args.sourceDir = args.sourceDir.replace("{target}", args.target)
-args.defines += ';' + getProfiles()[args.profile].get('defines', '')
+args.defines += ';' + getProfile(args.profile).get('defines', '')
 
 if os.path.isdir(args.wrapperDir):
   shutil.rmtree(args.wrapperDir)

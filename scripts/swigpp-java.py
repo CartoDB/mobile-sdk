@@ -431,7 +431,7 @@ def buildSwigPackages(args, sourceDir, basePackageName):
   return True
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--profile', dest='profile', default=getDefaultProfile(), choices=getProfiles().keys(), help='Build profile')
+parser.add_argument('--profile', dest='profile', default=getDefaultProfileId(), type=validProfile, help='Build profile')
 parser.add_argument('--swig', dest='swigExecutable', default='swig', help='path to Swig executable')
 parser.add_argument('--defines', dest='defines', default='', help='Defines for Swig')
 parser.add_argument('--cppdir', dest='cppDir', default='../all/native;../extensions/all/native;../android/native', help='directories containing C++ headers')
@@ -441,7 +441,7 @@ parser.add_argument('--moduledir', dest='moduleDir', default='../generated/andro
 parser.add_argument('--sourcedir', dest='sourceDir', default='../all/modules;../extensions/all/modules;../android/modules', help='input directories containing subdirectories of Swig wrappers')
 
 args = parser.parse_args()
-args.defines += ';' + getProfiles()[args.profile].get('defines', '')
+args.defines += ';' + getProfile(args.profile).get('defines', '')
 
 if os.path.isdir(args.wrapperDir):
   shutil.rmtree(args.wrapperDir)

@@ -108,7 +108,7 @@ def buildIOSCocoapod(args, buildpackage):
   return True
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--profile', dest='profile', default=getDefaultProfile(), choices=getProfiles().keys(), help='Build profile')
+parser.add_argument('--profile', dest='profile', default=getDefaultProfileId(), type=validProfile, help='Build profile')
 parser.add_argument('--ios-arch', dest='iosarch', default=[], choices=IOS_ARCHS + ['all'], action='append', help='iOS target architectures')
 parser.add_argument('--defines', dest='defines', default='', help='Defines for compilation')
 parser.add_argument('--cmake', dest='cmake', default='cmake', help='CMake executable')
@@ -122,8 +122,8 @@ parser.add_argument('--build-cocoapod-package', dest='buildcocoapodpackage', def
 args = parser.parse_args()
 if 'all' in args.iosarch or args.iosarch == []:
   args.iosarch = IOS_ARCHS
-args.defines += ';' + getProfiles()[args.profile].get('defines', '')
-args.cmakeoptions += ';' + getProfiles()[args.profile].get('cmake-options', '')
+args.defines += ';' + getProfile(args.profile).get('defines', '')
+args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
 
 for arch in args.iosarch:
   if not buildIOSLib(args, arch):

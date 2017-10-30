@@ -126,7 +126,7 @@ def buildXamarinNuget(args, target):
   return True
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--profile', dest='profile', default='standard', choices=getProfiles().keys(), help='Build profile')
+parser.add_argument('--profile', dest='profile', default='standard', type=validProfile, help='Build profile')
 parser.add_argument('--defines', dest='defines', default='', help='Defines for compilation')
 parser.add_argument('--xbuild', dest='xbuild', default='xbuild', help='Xamarin xbuild executable')
 parser.add_argument('--nuget', dest='nuget', default='nuget', help='nuget executable')
@@ -154,9 +154,9 @@ if args.androidndkpath == 'auto' and args.target == 'android':
   args.androidndkpath = os.environ.get('ANDROID_NDK_HOME', None)
   if args.androidndkpath is None:
     args.androidndkpath = os.path.join(args.androidsdkpath, 'ndk-bundle')
-args.defines += ';' + getProfiles()[args.profile].get('defines', '')
+args.defines += ';' + getProfile(args.profile).get('defines', '')
 args.defines += ';TARGET_XAMARIN'
-args.cmakeoptions += ';' + getProfiles()[args.profile].get('cmake-options', '')
+args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
 args.nativeconfiguration = args.configuration
 
 target = None

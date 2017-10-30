@@ -167,7 +167,7 @@ def buildWinPhoneNuget(args):
   return True
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--profile', dest='profile', default=getDefaultProfile(), choices=getProfiles().keys(), help='Build profile')
+parser.add_argument('--profile', dest='profile', default=getDefaultProfileId(), type=validProfile, help='Build profile')
 parser.add_argument('--winphone-arch', dest='winphonearch', default=[], choices=WINPHONE10_ARCHS + ['all'], action='append', help='Windows phone target architectures')
 parser.add_argument('--defines', dest='defines', default='', help='Defines for compilation')
 parser.add_argument('--msbuild', dest='msbuild', default='auto', help='WinPhone msbuild executable')
@@ -185,8 +185,8 @@ if args.msbuild == 'auto':
   args.msbuild = DEFAULT_MSBUILD
 if 'all' in args.winphonearch or args.winphonearch == []:
   args.winphonearch = WINPHONE10_ARCHS
-args.defines += ';' + getProfiles()[args.profile].get('defines', '')
-args.cmakeoptions += ';' + getProfiles()[args.profile].get('cmake-options', '')
+args.defines += ';' + getProfile(args.profile).get('defines', '')
+args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
 args.nativeconfiguration = 'RelWithDebInfo' if args.configuration == 'Debug' else args.configuration
 
 for arch in args.winphonearch:

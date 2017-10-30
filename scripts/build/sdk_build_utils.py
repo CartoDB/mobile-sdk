@@ -81,18 +81,35 @@ def getDistDir(target):
   makedirs(distDir)
   return distDir
 
-def getDefaultProfile():
+def getDefaultProfileId():
   return 'standard'
 
+def getProfile(profileIds):
+  defines = set()
+  cmakeOptions = set()
+  allProfileIds = profileIds.split('+')
+  if 'lite' not in profileIds:
+    allProfileIds.append(getDefaultProfileId())
+  for profileId in allProfileIds:
+    profile = getProfiles()[profileId]
+    defines.update(profile.get('defines', '').split(';'))
+    cmakeOptions.update(profile.get('cmake-options', '').split(';'))
+  return { 'defines': ';'.join(list(defines)), 'cmake-options': ';'.join(list(cmakeOptions)) }
+
 def getProfiles():
-  if getDefaultProfile() == 'free':
-    return { 'free': {} }
   profilesFilename = '%s/sdk_profiles.json' % os.path.dirname(os.path.realpath(__file__))
   if os.path.exists('%s/../../extensions' % os.path.dirname(os.path.realpath(__file__))):
     profilesFilename = '%s/../../extensions/scripts/build/sdk_profiles.json' % os.path.dirname(os.path.realpath(__file__))
   with open(profilesFilename, 'r') as f:
     profiles = json.loads(f.read())
     return { unicode(key).encode('utf-8') : val for key, val in profiles.items() if key != 'free' }
+
+def validProfile(profileIds):
+  validProfileIds = getProfiles().keys()
+  for profileId in profileIds.split('+'):
+    if not profileId in validProfileIds:
+      raise argparse.ArgumentTypeError('Profile must be one of or a combination of %s' % ', '.join(validProfileIds))
+  return profileIds
 
 def getVersion(buildnumber):
   try:

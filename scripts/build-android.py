@@ -121,7 +121,7 @@ def buildAndroidAAR(args):
   return False
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--profile', dest='profile', default=getDefaultProfile(), choices=getProfiles().keys(), help='Build profile')
+parser.add_argument('--profile', dest='profile', default=getDefaultProfileId(), type=validProfile, help='Build profile')
 parser.add_argument('--android-abi', dest='androidabi', default=[], choices=ANDROID_ABIS + ['all'], action='append', help='Android target ABIs')
 parser.add_argument('--android-ndk-path', dest='androidndkpath', default='auto', help='Android NDK path')
 parser.add_argument('--android-sdk-path', dest='androidsdkpath', default='auto', help='Android SDK path')
@@ -149,8 +149,8 @@ if args.androidndkpath == 'auto':
   args.androidndkpath = os.environ.get('ANDROID_NDK_HOME', None)
   if args.androidndkpath is None:
     args.androidndkpath = os.path.join(args.androidsdkpath, 'ndk-bundle')
-args.defines += ';' + getProfiles()[args.profile].get('defines', '')
-args.cmakeoptions += ';' + getProfiles()[args.profile].get('cmake-options', '')
+args.defines += ';' + getProfile(args.profile).get('defines', '')
+args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
 
 for abi in args.androidabi:
   if not buildAndroidSO(args, abi):
