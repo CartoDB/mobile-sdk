@@ -11,19 +11,21 @@ namespace carto {
         _locality(),
         _neighbourhood(),
         _street(),
+        _postcode(),
         _houseNumber(),
         _name(),
         _categories()
     {
     }
 
-    Address::Address(const std::string& country, const std::string& region, const std::string& county, const std::string& locality, const std::string& neighbourhood, const std::string& street, const std::string& houseNumber, const std::string& name, const std::vector<std::string>& categories) :
+    Address::Address(const std::string& country, const std::string& region, const std::string& county, const std::string& locality, const std::string& neighbourhood, const std::string& street, const std::string& postcode, const std::string& houseNumber, const std::string& name, const std::vector<std::string>& categories) :
         _country(country),
         _region(region),
         _county(county),
         _locality(locality),
         _neighbourhood(neighbourhood),
         _street(street),
+        _postcode(postcode),
         _houseNumber(houseNumber),
         _name(name),
         _categories(categories)
@@ -54,6 +56,10 @@ namespace carto {
         return _street;
     }
 
+    const std::string& Address::getPostcode() const {
+        return _postcode;
+    }
+
     const std::string& Address::getHouseNumber() const {
         return _houseNumber;
     }
@@ -67,7 +73,7 @@ namespace carto {
     }
 
     bool Address::operator ==(const Address& address) const {
-        return _country == address._country && _region == address._region && _county == address._county && _locality == address._locality && _neighbourhood == address._neighbourhood && _street == address._street && _houseNumber == address._houseNumber && _name == address._name && _categories == address._categories;
+        return _country == address._country && _region == address._region && _county == address._county && _locality == address._locality && _neighbourhood == address._neighbourhood && _street == address._street && _postcode == address._postcode && _houseNumber == address._houseNumber && _name == address._name && _categories == address._categories;
     }
     
     bool Address::operator !=(const Address& address) const {
@@ -86,6 +92,7 @@ namespace carto {
             { "locality",      _locality      },
             { "neighbourhood", _neighbourhood },
             { "street",        _street        },
+            { "postcode",      _postcode      },
             { "houseNumber",   _houseNumber   },
             { "name",          _name          }
         };

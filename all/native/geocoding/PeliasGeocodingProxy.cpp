@@ -39,13 +39,14 @@ namespace carto {
             std::string locality      = properties.contains("locality")      ? properties.get("locality").get<std::string>() : std::string();
             std::string neighbourhood = properties.contains("neighbourhood") ? properties.get("neighbourhood").get<std::string>() : std::string();
             std::string street        = properties.contains("street")        ? properties.get("street").get<std::string>() : std::string();
+            std::string postcode      = properties.contains("postalcode")    ? properties.get("postalcode").get<std::string>() : std::string();
             std::string houseNumber   = properties.contains("housenumber")   ? properties.get("housenumber").get<std::string>() : std::string();
             std::string name          = properties.contains("name")          ? properties.get("name").get<std::string>() : std::string();
             if (name == houseNumber + " " + street) {
                 name.clear();
             }
 
-            Address address(country, region, county, locality, neighbourhood, street, houseNumber, name, std::vector<std::string>());
+            Address address(country, region, county, locality, neighbourhood, street, postcode, houseNumber, name, std::vector<std::string>());
             float rank = static_cast<float>(properties.contains("confidence") ? properties.get("confidence").get<double>() : 0.5);
 
             std::shared_ptr<Geometry> geometry = reader.readGeometry(featureInfo.get("geometry").serialize());

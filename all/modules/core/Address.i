@@ -25,6 +25,7 @@
 %attributestring(carto::Address, std::string, Locality, getLocality)
 %attributestring(carto::Address, std::string, Neighbourhood, getNeighbourhood)
 %attributestring(carto::Address, std::string, Street, getStreet)
+%attributestring(carto::Address, std::string, Postcode, getPostcode)
 %attributestring(carto::Address, std::string, HouseNumber, getHouseNumber)
 %attributestring(carto::Address, std::string, Name, getName)
 %attributeval(carto::Address, std::vector<std::string>, Categories, getCategories)

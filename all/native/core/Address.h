@@ -29,11 +29,12 @@ namespace carto {
          * @param locality The locality name of the address.
          * @param neighbourhood The neighbourhood name of the address.
          * @param street The street name of the address.
+         * @param postcode The postcode of the address.
          * @param houseNumber The house number of the address.
          * @param name The name of the address.
          * @param categories The category tags describing the address.
          */
-        Address(const std::string& country, const std::string& region, const std::string& county, const std::string& locality, const std::string& neighbourhood, const std::string& street, const std::string& houseNumber, const std::string& name, const std::vector<std::string>& categories);
+        Address(const std::string& country, const std::string& region, const std::string& county, const std::string& locality, const std::string& neighbourhood, const std::string& street, const std::string& postcode, const std::string& houseNumber, const std::string& name, const std::vector<std::string>& categories);
 
         /**
          * Returns the country name included in the address.
@@ -70,6 +71,12 @@ namespace carto {
          * @return The street name included in the address.
          */
         const std::string& getStreet() const;
+
+        /**
+         * Returns the postcode of the address.
+         * @return The postcode of the address.
+         */
+        const std::string& getPostcode() const;
 
         /**
          * Returns the house number included in the address.
@@ -121,6 +128,7 @@ namespace carto {
         std::string _locality;
         std::string _neighbourhood;
         std::string _street;
+        std::string _postcode;
         std::string _houseNumber;
         std::string _name;
         std::vector<std::string> _categories;
