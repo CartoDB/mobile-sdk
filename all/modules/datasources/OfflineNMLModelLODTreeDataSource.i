@@ -5,7 +5,7 @@
 
 #if defined(_CARTO_NMLMODELLODTREE_SUPPORT) && defined(_CARTO_OFFLINE_SUPPORT)
 
-!proxy_imports(carto::OfflineNMLModelLODTreeDataSource, datasources.NMLModelLODTreeDataSource, projections.Projection)
+!proxy_imports(carto::OfflineNMLModelLODTreeDataSource, core.MapBounds, datasources.NMLModelLODTreeDataSource, projections.Projection)
 
 %{
 #include "datasources/OfflineNMLModelLODTreeDataSource.h"

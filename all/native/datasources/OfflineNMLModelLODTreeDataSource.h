@@ -31,6 +31,7 @@ namespace carto {
         explicit OfflineNMLModelLODTreeDataSource(const std::string& path);
         virtual ~OfflineNMLModelLODTreeDataSource();
 
+        virtual MapBounds getDataExtent() const;
         virtual std::vector<MapTile> loadMapTiles(const std::shared_ptr<CullState>& cullState);
         virtual std::shared_ptr<NMLModelLODTree> loadModelLODTree(const MapTile& mapTile);
         virtual std::shared_ptr<nml::Mesh> loadMesh(long long meshId);

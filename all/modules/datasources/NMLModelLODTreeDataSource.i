@@ -8,7 +8,7 @@
 
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT
 
-!proxy_imports(carto::NMLModelLODTreeDataSource, projections.Projection)
+!proxy_imports(carto::NMLModelLODTreeDataSource, core.MapBounds, projections.Projection)
 
 %{
 #include "datasources/NMLModelLODTreeDataSource.h"
@@ -18,10 +18,12 @@
 %include <std_shared_ptr.i>
 %include <cartoswig.i>
 
+%import "core/MapBounds.i"
 %import "projections/Projection.i"
 
 !polymorphic_shared_ptr(carto::NMLModelLODTreeDataSource, datasources.NMLModelLODTreeDataSource)
 
+%attributeval(carto::NMLModelLODTreeDataSource, carto::MapBounds, DataExtent, getDataExtent)
 !attributestring_polymorphic(carto::NMLModelLODTreeDataSource, projections.Projection, Projection, getProjection);
 %ignore carto::NMLModelLODTreeDataSource::MapTile;
 %ignore carto::NMLModelLODTreeDataSource::loadMapTiles;

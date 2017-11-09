@@ -27,6 +27,29 @@ namespace carto {
     
     OfflineNMLModelLODTreeDataSource::~OfflineNMLModelLODTreeDataSource() {
     }
+
+    MapBounds OfflineNMLModelLODTreeDataSource::getDataExtent() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        if (!_db) {
+            Log::Error("NMLModelLODTreeDataSource::getDataExtent: Failed to load tiles, could not connect to database");
+            return MapBounds();
+        }
+    
+        MapBounds dataExtent;
+        sqlite3pp::query query(*_db, "SELECT mapbounds_x0, mapbounds_y0, mapbounds_x1, mapbounds_y1 FROM MapTiles");
+        for (auto qit = query.begin(); qit != query.end(); qit++) {
+            double mapBoundsX0 = (*qit).get<double>(0);
+            double mapBoundsY0 = (*qit).get<double>(1);
+            double mapBoundsX1 = (*qit).get<double>(2);
+            double mapBoundsY1 = (*qit).get<double>(3);
+
+            dataExtent.expandToContain(MapPos(mapBoundsX0, mapBoundsY0));
+            dataExtent.expandToContain(MapPos(mapBoundsX1, mapBoundsY1));
+        }
+        query.finish();
+        return dataExtent;
+    }
     
     std::vector<NMLModelLODTreeDataSource::MapTile> OfflineNMLModelLODTreeDataSource::loadMapTiles(const std::shared_ptr<CullState>& cullState) {
         typedef cglib::vec3<double> Point;

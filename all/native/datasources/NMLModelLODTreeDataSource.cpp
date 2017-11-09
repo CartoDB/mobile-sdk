@@ -18,6 +18,10 @@ namespace carto {
         }
     }
     
+    MapBounds NMLModelLODTreeDataSource::getDataExtent() const {
+        return _projection->getBounds();
+    }
+
     std::shared_ptr<Projection> NMLModelLODTreeDataSource::getProjection() const {
         return _projection;
     }

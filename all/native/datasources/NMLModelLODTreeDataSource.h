@@ -9,6 +9,7 @@
 
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT
 
+#include "core/MapBounds.h"
 #include "datasources/components/NMLModelLODTree.h"
 
 #include <memory>
@@ -37,6 +38,13 @@ namespace carto {
     
         virtual ~NMLModelLODTreeDataSource();
     
+        /**
+         * Returns the extent of the models in this data source.
+         * The bounds are in coordinate system of the projection of the data source.
+         * @return The extent of the models in this data source.
+         */
+        virtual MapBounds getDataExtent() const;
+
         /**
          * Returns the projection used by this data source.
          * @return The projection used by this data source.
