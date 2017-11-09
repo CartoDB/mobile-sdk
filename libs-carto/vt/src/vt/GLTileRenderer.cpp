@@ -114,6 +114,10 @@ namespace {
     )GLSL";
 
     static const std::string labelFsh = R"GLSL(
+        #ifdef PERSPECTIVE_AND_DERIVATIVES
+        #extension GL_OES_standard_derivatives : enable
+        #endif
+
         precision mediump float;
         uniform sampler2D uBitmap;
         uniform highp vec2 uUVScale;
@@ -181,8 +185,8 @@ namespace {
         #ifdef PATTERN
             vUV = uUVScale * aVertexUV;
         #endif
-            float sdfScale = uSDFScale / size;
-            float sdfValue = clamp(0.5 - sdfScale * (1.0 + uStrokeWidthTable[styleIndex]), 0.0, 1.0);
+            float sdfScale = 2.0 * uSDFScale / size;
+            float sdfValue = 0.5 - sdfScale * (1.0 + uStrokeWidthTable[styleIndex]);
             vAttribs = vec4(aVertexAttribs[1], 0.0, sdfValue, 0.5 / sdfScale);
             gl_Position = uMVPMatrix * vec4(pos, 1.0);
         }
@@ -1924,7 +1928,7 @@ namespace carto { namespace vt {
             }
             
             glUniform1f(glGetUniformLocation(shaderProgram, "uBinormalScale"), 1.0f / geometryLayoutParams.binormalScale);
-            glUniform1f(glGetUniformLocation(shaderProgram, "uSDFScale"), styleParams.pattern ? styleParams.pattern->bitmap->width / _halfResolution / BITMAP_SDF_SCALE : 1.0f);
+            glUniform1f(glGetUniformLocation(shaderProgram, "uSDFScale"), 2.0f / _halfResolution / BITMAP_SDF_SCALE);
             glUniform1fv(glGetUniformLocation(shaderProgram, "uWidthTable"), styleParams.parameterCount, widths.data());
             glUniform1fv(glGetUniformLocation(shaderProgram, "uStrokeWidthTable"), styleParams.parameterCount, strokeWidths.data());
             glUniform3fv(glGetUniformLocation(shaderProgram, "uXAxis"), 1, xAxis.data());
