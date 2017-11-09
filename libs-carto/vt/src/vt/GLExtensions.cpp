@@ -47,6 +47,10 @@ namespace carto { namespace vt {
 #ifdef GL_OES_packed_depth_stencil
         _GL_OES_packed_depth_stencil_supported = paddedExtensions.find(" GL_OES_packed_depth_stencil ") != std::string::npos;
 #endif
+
+#ifdef GL_OES_standard_derivatives
+        _GL_OES_standard_derivatives_supported = paddedExtensions.find(" GL_OES_standard_derivatives ") != std::string::npos;
+#endif
     }
 
     void GLExtensions::glBindVertexArrayOES(GLuint array) {

@@ -144,7 +144,6 @@ namespace carto { namespace vt {
             }
         };
 
-        constexpr static float TEXT_SHARPNESS_FACTOR = 4.0f;
         constexpr static float HALO_RADIUS_SCALE = 2.5f; // the scaling factor for halo radius
 
         static cglib::mat4x4<double> calculateLocalViewMatrix(const cglib::mat4x4<double>& cameraMatrix);
@@ -209,6 +208,7 @@ namespace carto { namespace vt {
         std::shared_ptr<const BitmapPattern> _backgroundPattern;
 
         GLShaderManager::ShaderContext _patternTransformContext[2][2];
+        GLShaderManager::ShaderContext _perspectiveAndDerivativesContext[2];
         GLShaderManager _shaderManager;
 
         std::vector<LayerFBO> _layerFBOs;

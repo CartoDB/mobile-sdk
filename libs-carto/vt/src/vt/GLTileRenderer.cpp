@@ -94,8 +94,8 @@ namespace {
         attribute vec4 aVertexColor;
         attribute vec4 aVertexAttribs;
         uniform mat4 uMVPMatrix;
-        uniform vec2 uUVScale;
         uniform float uSDFScale;
+        uniform float uRawSDFScale;
         uniform vec4 uColorTable[16];
         uniform float uWidthTable[16];
         uniform float uStrokeWidthTable[16];
@@ -107,10 +107,8 @@ namespace {
             int styleIndex = int(aVertexAttribs[0]);
             float size = uWidthTable[styleIndex];
             vColor = uColorTable[styleIndex] * aVertexAttribs[2] * (1.0 / 127.0);
-            vUV = uUVScale * aVertexUV;
-            float sdfScale = uSDFScale / size;
-            float sdfValue = clamp(0.5 - sdfScale * (1.0 + uStrokeWidthTable[styleIndex]), 0.0, 1.0);
-            vAttribs = vec4(aVertexAttribs[1], 0.0, sdfValue, 0.5 / sdfScale);
+            vUV = aVertexUV;
+            vAttribs = vec4(aVertexAttribs[1], uStrokeWidthTable[styleIndex], uSDFScale / size, uRawSDFScale);
             gl_Position = uMVPMatrix * vec4(aVertexPosition, 1.0);
         }
     )GLSL";
@@ -118,17 +116,25 @@ namespace {
     static const std::string labelFsh = R"GLSL(
         precision mediump float;
         uniform sampler2D uBitmap;
+        uniform highp vec2 uUVScale;
         varying lowp vec4 vColor;
         varying highp vec2 vUV;
         varying highp vec4 vAttribs;
 
         void main(void) {
-            vec4 color = texture2D(uBitmap, vUV);
+            vec4 color = texture2D(uBitmap, vUV * uUVScale);
             if (vAttribs[0] > 0.5) {
                 gl_FragColor = color * vColor.a;
             } else {
+        #ifdef PERSPECTIVE_AND_DERIVATIVES
+                float size = dot(vec2(0.5, 0.5), fwidth(vUV)) * vAttribs[3];
+        #else
+                float size = vAttribs[2];
+        #endif
+                float scale = 0.5 / size;
+                float offset = 0.5 - (1.0 + vAttribs[1]) * size;
                 if (vAttribs[0] < -0.5) {
-                    gl_FragColor = clamp((color.r - vAttribs[2]) * vAttribs[3], 0.0, 1.0) * vColor;
+                    gl_FragColor = clamp((color.r - offset) * scale, 0.0, 1.0) * vColor;
                 } else {
                     gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
                 }
@@ -613,15 +619,21 @@ namespace carto { namespace vt {
         // Create shader contexts
         for (int i = 0; i < 2; i++) {
             for (int j = 0; j < 2; j++) {
-                std::set<std::string> defs;
+                auto defs = std::make_shared<std::set<std::string>>();
                 if (i != 0) {
-                    defs.insert("PATTERN");
+                    defs->insert("PATTERN");
                 }
                 if (j != 0) {
-                    defs.insert("TRANSFORM");
+                    defs->insert("TRANSFORM");
                 }
-                _patternTransformContext[i][j] = std::make_shared<std::set<std::string>>(defs);
+                _patternTransformContext[i][j] = defs;
             }
+
+            auto defs = std::make_shared<std::set<std::string>>();
+            if (i != 0) {
+                defs->insert("PERSPECTIVE_AND_DERIVATIVES");
+            }
+            _perspectiveAndDerivativesContext[i] = defs;
         }
     }
     
@@ -1912,7 +1924,7 @@ namespace carto { namespace vt {
             }
             
             glUniform1f(glGetUniformLocation(shaderProgram, "uBinormalScale"), 1.0f / geometryLayoutParams.binormalScale);
-            glUniform1f(glGetUniformLocation(shaderProgram, "uSDFScale"), 2.0f * TEXT_SHARPNESS_FACTOR / BITMAP_SDF_SCALE / _halfResolution);
+            glUniform1f(glGetUniformLocation(shaderProgram, "uSDFScale"), styleParams.pattern ? styleParams.pattern->bitmap->width / _halfResolution / BITMAP_SDF_SCALE : 1.0f);
             glUniform1fv(glGetUniformLocation(shaderProgram, "uWidthTable"), styleParams.parameterCount, widths.data());
             glUniform1fv(glGetUniformLocation(shaderProgram, "uStrokeWidthTable"), styleParams.parameterCount, strokeWidths.data());
             glUniform3fv(glGetUniformLocation(shaderProgram, "uXAxis"), 1, xAxis.data());
@@ -2129,14 +2141,16 @@ namespace carto { namespace vt {
             compiledBitmap = itBitmap->second;
         }
 
-        GLuint shaderProgram = _shaderManager.createProgram("label", _patternTransformContext[0][0]);
+        bool useDerivatives = _glExtensions->GL_OES_standard_derivatives_supported() && std::abs(_viewState.orientation[2][2]) < 0.99f;
+        GLuint shaderProgram = _shaderManager.createProgram("label", _perspectiveAndDerivativesContext[useDerivatives ? 1 : 0]);
         glUseProgram(shaderProgram);
         checkGLError();
 
         cglib::mat4x4<float> mvpMatrix = cglib::mat4x4<float>::convert(_projectionMatrix * _labelMatrix);
         glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "uMVPMatrix"), 1, GL_FALSE, mvpMatrix.data());
 
-        glUniform1f(glGetUniformLocation(shaderProgram, "uSDFScale"), TEXT_SHARPNESS_FACTOR / BITMAP_SDF_SCALE);
+        glUniform1f(glGetUniformLocation(shaderProgram, "uSDFScale"), bitmap->width / _halfResolution / BITMAP_SDF_SCALE);
+        glUniform1f(glGetUniformLocation(shaderProgram, "uRawSDFScale"), 0.25f / BITMAP_SDF_SCALE);
         glUniform4fv(glGetUniformLocation(shaderProgram, "uColorTable"), labelBatchParams.parameterCount, labelBatchParams.colorTable[0].data());
         glUniform1fv(glGetUniformLocation(shaderProgram, "uWidthTable"), labelBatchParams.parameterCount, labelBatchParams.widthTable.data());
         glUniform1fv(glGetUniformLocation(shaderProgram, "uStrokeWidthTable"), labelBatchParams.parameterCount, labelBatchParams.strokeWidthTable.data());

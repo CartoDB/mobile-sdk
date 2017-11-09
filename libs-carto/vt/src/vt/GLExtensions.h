@@ -35,11 +35,14 @@ namespace carto { namespace vt {
 
         bool GL_OES_packed_depth_stencil_supported() const { return _GL_OES_packed_depth_stencil_supported; }
 
+        bool GL_OES_standard_derivatives_supported() const { return _GL_OES_standard_derivatives_supported; }
+
     private:
         bool _GL_OES_vertex_array_object_supported = false;
         bool _GL_EXT_discard_framebuffer_supported = false;
         bool _GL_EXT_texture_filter_anisotropic_supported = false;
         bool _GL_OES_packed_depth_stencil_supported = false;
+        bool _GL_OES_standard_derivatives_supported = false;
 
 #if !defined(__APPLE__) && defined(GL_OES_vertex_array_object)
         PFNGLBINDVERTEXARRAYOESPROC _glBindVertexArrayOES = nullptr;
