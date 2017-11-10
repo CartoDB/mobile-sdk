@@ -130,14 +130,14 @@ namespace {
             if (vAttribs[0] > 0.5) {
                 gl_FragColor = color * vColor.a;
             } else {
-        #ifdef PERSPECTIVE_AND_DERIVATIVES
-                float size = dot(vec2(0.5, 0.5), fwidth(vUV)) * vAttribs[3];
-        #else
-                float size = vAttribs[2];
-        #endif
-                float scale = 0.5 / size;
-                float offset = 0.5 - (1.0 + vAttribs[1]) * size;
                 if (vAttribs[0] < -0.5) {
+        #ifdef PERSPECTIVE_AND_DERIVATIVES
+                    float size = dot(vec2(0.5, 0.5), fwidth(vUV)) * vAttribs[3];
+        #else
+                    float size = vAttribs[2];
+        #endif
+                    float scale = 0.5 / size;
+                    float offset = 0.5 - size - vAttribs[1] * vAttribs[2];
                     gl_FragColor = clamp((color.r - offset) * scale, 0.0, 1.0) * vColor;
                 } else {
                     gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
