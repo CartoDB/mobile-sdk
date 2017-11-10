@@ -131,11 +131,12 @@ namespace carto { namespace vt {
             constexpr static int MAX_PARAMETERS = 16;
 
             int parameterCount;
+            float scale;
             std::array<cglib::vec4<float>, MAX_PARAMETERS> colorTable;
             std::array<float, MAX_PARAMETERS> widthTable;
             std::array<float, MAX_PARAMETERS> strokeWidthTable;
 
-            LabelBatchParameters() : parameterCount(0), colorTable(), widthTable(), strokeWidthTable() { }
+            LabelBatchParameters() : parameterCount(0), scale(0), colorTable(), widthTable(), strokeWidthTable() { }
         };
 
         struct LabelHash {
@@ -144,6 +145,7 @@ namespace carto { namespace vt {
             }
         };
 
+        constexpr static float SDF_SHARPNESS_SCALE = 16.0f;
         constexpr static float HALO_RADIUS_SCALE = 2.5f; // the scaling factor for halo radius
 
         static cglib::mat4x4<double> calculateLocalViewMatrix(const cglib::mat4x4<double>& cameraMatrix);
