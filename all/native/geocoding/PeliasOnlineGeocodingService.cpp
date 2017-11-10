@@ -39,6 +39,10 @@ namespace carto {
             throw NullArgumentException("Null request");
         }
 
+        if (request->getQuery().empty()) {
+            return std::vector<std::shared_ptr<GeocodingResult> >();
+        }
+
         std::string baseURL;
         {
             std::lock_guard<std::mutex> lock(_mutex);
