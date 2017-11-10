@@ -2158,7 +2158,7 @@ namespace carto { namespace vt {
 
         glUniform1f(glGetUniformLocation(shaderProgram, "uSDFScale"), SDF_SHARPNESS_SCALE / labelBatchParams.scale / _halfResolution / BITMAP_SDF_SCALE);
         if (useDerivatives) {
-            glUniform1f(glGetUniformLocation(shaderProgram, "uDerivScale"), 2.0f * SDF_SHARPNESS_SCALE / BITMAP_SDF_SCALE); // 2.0 because we use half-res for uSDFScale
+            glUniform1f(glGetUniformLocation(shaderProgram, "uDerivScale"), 8.0f * SDF_SHARPNESS_SCALE / labelBatchParams.scale / bitmap->width / BITMAP_SDF_SCALE);
         }
         glUniform4fv(glGetUniformLocation(shaderProgram, "uColorTable"), labelBatchParams.parameterCount, labelBatchParams.colorTable[0].data());
         glUniform1fv(glGetUniformLocation(shaderProgram, "uWidthTable"), labelBatchParams.parameterCount, labelBatchParams.widthTable.data());
