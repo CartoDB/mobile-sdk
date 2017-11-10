@@ -153,7 +153,7 @@ namespace carto { namespace mvt {
                     }
                 }
 
-                float maxScaleDenominatorZoom = std::max(0.0f, scaleDenominator2Zoom(maxScaleDenominator));
+                float maxScaleDenominatorZoom = (maxScaleDenominator == 0 ? 0.0f : std::max(0.0f, scaleDenominator2Zoom(maxScaleDenominator)));
                 float minScaleDenominatorZoom = std::min(64.0f, scaleDenominator2Zoom(minScaleDenominator));
                 int minZoom = 64;
                 int maxZoom = 0;

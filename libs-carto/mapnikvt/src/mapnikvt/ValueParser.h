@@ -37,22 +37,29 @@ namespace carto { namespace mvt {
                                 ("\\\'", '\'')("\\\"", '\"');
 
                 null_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["null"]];
+                point_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["point"]];
+                linestring_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["linestring"]];
+                polygon_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["polygon"]];
 
                 string =
-                    '\'' >> *(unesc_char | "\\x" >> octet_ | (qi::char_ - '\'')) >> '\'';
+                      '\'' >> *(unesc_char | "\\x" >> octet_ | (qi::char_ - '\'')) >> '\''
+                    | '\"' >> *(unesc_char | "\\x" >> octet_ | (qi::char_ - '\"')) >> '\"';
 
                 value =
                       null_kw                [_val = phx::construct<Value>()]
-                    | qi::bool_                [_val = phx::construct<Value>(_1)]
+                    | point_kw               [_val = phx::construct<Value>(1LL)]
+                    | linestring_kw          [_val = phx::construct<Value>(2LL)]
+                    | polygon_kw             [_val = phx::construct<Value>(3LL)]
+                    | qi::bool_              [_val = phx::construct<Value>(_1)]
                     | qi::real_parser<double, qi::strict_real_policies<double>>() [_val = phx::construct<Value>(_1)]
-                    | qi::long_long            [_val = phx::construct<Value>(_1)]
-                    | string                [_val = phx::construct<Value>(_1)]
+                    | qi::long_long          [_val = phx::construct<Value>(_1)]
+                    | string                 [_val = phx::construct<Value>(_1)]
                     ;
             }
 
             qi::int_parser<char, 16, 2, 2> octet_;
             qi::symbols<char const, char const> unesc_char;
-            qi::rule<Iterator, qi::unused_type()> null_kw;
+            qi::rule<Iterator, qi::unused_type()> null_kw, point_kw, linestring_kw, polygon_kw;
             qi::rule<Iterator, std::string()> string;
             qi::rule<Iterator, Value()> value;
         };
