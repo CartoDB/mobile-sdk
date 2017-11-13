@@ -2126,9 +2126,10 @@ namespace carto { namespace vt {
         CompiledBitmap compiledBitmap;
         auto itBitmap = _compiledBitmapMap.find(bitmap);
         if (itBitmap == _compiledBitmapMap.end()) {
+            bool genMipMaps = false; // turn off mipmap creation as most labels are SDF texts
             compiledBitmap.texture = createTexture();
             glBindTexture(GL_TEXTURE_2D, compiledBitmap.texture);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, genMipMaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -2140,7 +2141,9 @@ namespace carto { namespace vt {
                 }
             }
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bitmap->width, bitmap->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bitmap->data.data());
-            glGenerateMipmap(GL_TEXTURE_2D);
+            if (genMipMaps) {
+                glGenerateMipmap(GL_TEXTURE_2D);
+            }
 
             _compiledBitmapMap[bitmap] = compiledBitmap;
         }
