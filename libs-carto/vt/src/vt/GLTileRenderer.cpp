@@ -2133,13 +2133,6 @@ namespace carto { namespace vt {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-            if (_glExtensions->GL_EXT_texture_filter_anisotropic_supported()) {
-                GLint maxAnisotropy = 0;
-                glGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
-                if (maxAnisotropy > 1) {
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, std::min(4, maxAnisotropy));
-                }
-            }
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bitmap->width, bitmap->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, bitmap->data.data());
             if (genMipMaps) {
                 glGenerateMipmap(GL_TEXTURE_2D);
