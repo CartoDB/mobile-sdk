@@ -260,7 +260,7 @@ namespace {
             vUV = uUVScale * aVertexUV;
         #endif
             vDist = vec2(aVertexAttribs[1], aVertexAttribs[2]) * (roundedWidth * gamma);
-            vWidth = (width - 1.0) * gamma;
+            vWidth = (width - 1.0) * gamma + 1.0;
             gl_Position = uMVPMatrix * vec4(pos, 1.0);
         }
     )GLSL";
@@ -278,8 +278,8 @@ namespace {
         varying highp float vWidth;
 
         void main(void) {
-            float dist = length(vDist) - vWidth;
-            lowp float a = clamp(1.0 - dist, 0.0, 1.0);
+            float dist = vWidth - length(vDist);
+            lowp float a = clamp(dist, 0.0, 1.0);
         #ifdef PATTERN
             gl_FragColor = texture2D(uPattern, vUV) * vColor * a;
         #else
