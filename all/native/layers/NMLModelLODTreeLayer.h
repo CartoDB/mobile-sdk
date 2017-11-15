@@ -63,7 +63,7 @@ namespace carto {
          * Set memory usage constraints for the layer. The specified limit is not exact, 
          * but should be relatively close to the actual memory usage of the layer.
          * If specific view requires more data than specified limit, then lower LOD levels
-         * of the models are used. The default is 40MB.
+         * of the models are used. The default is 80MB.
          * @param size The memory limit in bytes.
          */
         void setMaxMemorySize(std::size_t size);
@@ -210,9 +210,9 @@ namespace carto {
         static const int TEXTURE_LOADING_PRIORITY_OFFSET = 0;
 
         static const int DEFAULT_MODELLODTREE_CACHE_SIZE = 64;
-        static const int DEFAULT_MAX_MEMORY_SIZE = 40 * 1024 * 1024;
-        static const int DEFAULT_MESH_CACHE_SIZE = 40 * 1024 * 1024;
-        static const int DEFAULT_TEXTURE_CACHE_SIZE = 40 * 1024 * 1024;
+        static const int DEFAULT_MAX_MEMORY_SIZE = 80 * 1024 * 1024;
+        static const int DEFAULT_MESH_CACHE_SIZE = 80 * 1024 * 1024;
+        static const int DEFAULT_TEXTURE_CACHE_SIZE = 80 * 1024 * 1024;
     
         std::size_t _maxMemorySize;
         float _LODResolutionFactor;
