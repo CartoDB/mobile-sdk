@@ -89,6 +89,7 @@ namespace carto {
         _billboardRenderer->setLayer(std::static_pointer_cast<VectorLayer>(shared_from_this()));
         _polygon3DRenderer->setOptions(options);
         _nmlModelRenderer->setOptions(options);
+        _nmlModelRenderer->setMapRenderer(mapRenderer);
     }
     
     void VectorLayer::loadData(const std::shared_ptr<CullState>& cullState) {

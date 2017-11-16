@@ -66,12 +66,12 @@ namespace carto {
         };
     
         std::weak_ptr<MapRenderer> _mapRenderer;
+        std::weak_ptr<Options> _options;
+
         std::shared_ptr<nml::GLShaderManager> _glShaderManager;
         std::set<std::shared_ptr<nml::GLModel> > _glModels;
         std::vector<std::shared_ptr<NMLModelLODTreeDrawData> > _tempDrawDatas;
         std::map<long long, std::shared_ptr<ModelNodeDrawRecord> > _drawRecordMap;
-
-        std::weak_ptr<Options> _options;
 
         mutable std::mutex _mutex;
     };

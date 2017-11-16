@@ -1,6 +1,7 @@
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT
 
 #include "NMLModelLODTreeRenderer.h"
+#include "components/ThreadWorker.h"
 #include "datasources/NMLModelLODTreeDataSource.h"
 #include "graphics/Shader.h"
 #include "graphics/ShaderManager.h"
@@ -36,11 +37,11 @@ namespace carto {
 
     NMLModelLODTreeRenderer::NMLModelLODTreeRenderer(const std::weak_ptr<MapRenderer>& mapRenderer, const std::weak_ptr<Options>& options) :
         _mapRenderer(mapRenderer),
+        _options(options),
         _glShaderManager(),
         _glModels(),
         _tempDrawDatas(),
         _drawRecordMap(),
-        _options(options),
         _mutex()
     {
     }

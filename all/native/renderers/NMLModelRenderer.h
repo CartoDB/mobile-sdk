@@ -14,6 +14,7 @@
 #include <mutex>
 #include <list>
 #include <vector>
+#include <set>
 
 #include <cglib/ray.h>
 
@@ -25,6 +26,7 @@ namespace carto {
     class ShaderManager;
     class TextureManager;
     class RayIntersectedElement;
+    class MapRenderer;
     class ViewState;
     class VectorLayer;
     
@@ -43,6 +45,7 @@ namespace carto {
         void updateElement(const std::shared_ptr<NMLModel>& element);
         void removeElement(const std::shared_ptr<NMLModel>& element);
 
+        void setMapRenderer(const std::weak_ptr<MapRenderer>& mapRenderer);
         void setOptions(const std::weak_ptr<Options>& options);
     
         virtual void offsetLayerHorizontally(double offset);
@@ -59,6 +62,7 @@ namespace carto {
         std::vector<std::shared_ptr<NMLModel> > _elements;
         std::vector<std::shared_ptr<NMLModel> > _tempElements;
 
+        std::weak_ptr<MapRenderer> _mapRenderer;
         std::weak_ptr<Options> _options;
 
         mutable std::mutex _mutex;

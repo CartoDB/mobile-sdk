@@ -1,4 +1,5 @@
 #include "NMLModelRenderer.h"
+#include "components/ThreadWorker.h"
 #include "datasources/VectorDataSource.h"
 #include "graphics/Shader.h"
 #include "graphics/ShaderManager.h"
@@ -6,11 +7,29 @@
 #include "graphics/utils/GLContext.h"
 #include "layers/VectorLayer.h"
 #include "projections/Projection.h"
+#include "renderers/MapRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "utils/Log.h"
 
 #include <nml/GLModel.h>
 #include <nml/GLShaderManager.h>
+
+namespace {
+
+    struct GLModelsDeleter : carto::ThreadWorker {
+        GLModelsDeleter(std::set<std::shared_ptr<carto::nml::GLModel> > glModels) : _glModels(std::move(glModels)) { }
+
+        virtual void operator () () {
+            for (const std::shared_ptr<carto::nml::GLModel>& glModel : _glModels) {
+                glModel->dispose();
+            }
+        }
+
+    private:
+        std::set<std::shared_ptr<carto::nml::GLModel> > _glModels;
+    };
+
+}
 
 namespace carto {
 
@@ -19,12 +38,22 @@ namespace carto {
         _glModelMap(),
         _elements(),
         _tempElements(),
+        _mapRenderer(),
         _options(),
         _mutex()
     {
     }
     
     NMLModelRenderer::~NMLModelRenderer() {
+        if (_glShaderManager) {
+            if (auto mapRenderer = _mapRenderer.lock()) {
+                std::set<std::shared_ptr<nml::GLModel> > glModels;
+                for (auto it = _glModelMap.begin(); it != _glModelMap.end(); it++) {
+                    glModels.insert(it->second);
+                }
+                mapRenderer->addRenderThreadCallback(std::make_shared<GLModelsDeleter>(std::move(glModels)));
+            }
+        }
     }
         
     void NMLModelRenderer::addElement(const std::shared_ptr<NMLModel>& element) {
@@ -49,6 +78,11 @@ namespace carto {
         _elements.erase(std::remove(_elements.begin(), _elements.end(), element), _elements.end());
     }
     
+    void NMLModelRenderer::setMapRenderer(const std::weak_ptr<MapRenderer>& mapRenderer) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _mapRenderer = mapRenderer;
+    }
+
     void NMLModelRenderer::setOptions(const std::weak_ptr<Options>& options) {
         std::lock_guard<std::mutex> lock(_mutex);
         _options = options;
