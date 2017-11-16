@@ -16,6 +16,7 @@
 #include <mutex>
 #include <list>
 #include <vector>
+#include <set>
 
 #include <cglib/ray.h>
 
@@ -27,6 +28,7 @@ namespace carto {
     class ShaderManager;
     class TextureManager;
     class RayIntersectedElement;
+    class MapRenderer;
     class ViewState;
     class NMLModelLODTreeDataSource;
     class NMLModelLODTreeLayer;
@@ -38,14 +40,12 @@ namespace carto {
 
     class NMLModelLODTreeRenderer {
     public:
-        NMLModelLODTreeRenderer();
+        NMLModelLODTreeRenderer(const std::weak_ptr<MapRenderer>& mapRenderer, const std::weak_ptr<Options>& options);
         virtual ~NMLModelLODTreeRenderer();
     
         void addDrawData(const std::shared_ptr<NMLModelLODTreeDrawData>& drawData);
         void refreshDrawData();
 
-        void setOptions(const std::weak_ptr<Options>& options);
-        
         virtual void offsetLayerHorizontally(double offset);
     
         virtual void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
@@ -65,9 +65,12 @@ namespace carto {
             ModelNodeDrawRecord(const NMLModelLODTreeDrawData& drawData) : drawData(drawData), parent(0), children(), used(false), created(false) { }
         };
     
+        std::weak_ptr<MapRenderer> _mapRenderer;
         std::shared_ptr<nml::GLShaderManager> _glShaderManager;
+        std::set<std::shared_ptr<nml::GLModel> > _glModels;
         std::vector<std::shared_ptr<NMLModelLODTreeDrawData> > _tempDrawDatas;
         std::map<long long, std::shared_ptr<ModelNodeDrawRecord> > _drawRecordMap;
+
         std::weak_ptr<Options> _options;
 
         mutable std::mutex _mutex;

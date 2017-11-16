@@ -254,7 +254,8 @@ namespace carto { namespace nml {
         _transparency(),
         _specular(),
         _shininess(),
-        _glProgramId()
+        _glProgramId(),
+        _replacedTextures()
     {
         _type = material.type();
         _culling = material.culling();
@@ -310,13 +311,31 @@ namespace carto { namespace nml {
     }
 
     void GLMaterial::dispose() {
+       GLColorOrTexture* channels[] = {
+            &_emission,
+            &_ambient,
+            &_diffuse,
+            &_specular,
+            nullptr
+        };
+
+        for (int i = 0; channels[i]; i++) {
+            if (channels[i]->texture) {
+                channels[i]->texture->dispose();
+            }
+        }
+
+        for (auto it = _replacedTextures.begin(); it != _replacedTextures.end(); it++) {
+            (*it)->dispose();
+        }
+        _replacedTextures.clear();
     }
 
     int GLMaterial::getCulling() const {
         return _culling;
     }
 
-    void GLMaterial::replaceTexture(const std::string &textureId, const std::shared_ptr<GLTexture>& texture) {
+    void GLMaterial::replaceTexture(const std::string& textureId, const std::shared_ptr<GLTexture>& texture) {
         GLColorOrTexture* channels[] = {
             &_emission,
             &_ambient,
@@ -327,12 +346,19 @@ namespace carto { namespace nml {
 
         for (int i = 0; channels[i]; i++) {
             if (channels[i]->textureId == textureId) {
+                if (channels[i]->texture) {
+                    _replacedTextures.insert(channels[i]->texture);
+                }
                 channels[i]->texture = texture;
             }
         }
     }
     
-    void GLMaterial::bind(const RenderState& renderState, const cglib::mat4x4<float>& mvMatrix, const cglib::mat4x4<float>& invTransMVMatrix) {
+    void GLMaterial::bind(GLShaderManager& shaderManager, const RenderState& renderState, const cglib::mat4x4<float>& mvMatrix, const cglib::mat4x4<float>& invTransMVMatrix) {
+        if (_glProgramId == 0) {
+            create(shaderManager);
+        }
+
         glDepthMask(_opaqueMode == Material::OPAQUE ? GL_TRUE : GL_FALSE);
         
         glUseProgram(_glProgramId);

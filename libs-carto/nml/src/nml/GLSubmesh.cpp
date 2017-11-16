@@ -7,7 +7,6 @@
 namespace carto { namespace nml {
 
     GLSubmesh::GLSubmesh(const Submesh& submesh) :
-        _refCount(0),
         _glType(-1),
         _vertexCounts(),
         _materialId(),
@@ -49,7 +48,6 @@ namespace carto { namespace nml {
     }
     
     GLSubmesh::GLSubmesh(const GLMesh& glMesh, const SubmeshOpList& submeshOpList) :
-        _refCount(0),
         _glType(-1),
         _vertexCounts(),
         _materialId(),
@@ -108,18 +106,12 @@ namespace carto { namespace nml {
     }
     
     void GLSubmesh::create() {
-        if (_refCount++ > 0) {
-            return;
+        if (_glPositionVBOId == 0) {
+            uploadSubmesh();
         }
-    
-        uploadSubmesh();
     }
     
     void GLSubmesh::dispose() {
-        if (--_refCount > 0) {
-            return;
-        }
-    
         if (_glPositionVBOId != 0) {
             glDeleteBuffers(1, &_glPositionVBOId);
         }

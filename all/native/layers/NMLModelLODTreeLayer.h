@@ -227,6 +227,7 @@ namespace carto {
         TextureCache _textureCache;
         NodeDrawDataMap _nodeDrawDataMap;
     
+        std::shared_ptr<MapTilesFetchTask> _lastMapTilesFetchTask;
         FetchingTasks _fetchingModelLODTrees;
         FetchingTasks _fetchingMeshes;
         FetchingTasks _fetchingTextures;

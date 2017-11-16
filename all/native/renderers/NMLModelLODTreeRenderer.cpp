@@ -8,24 +8,49 @@
 #include "graphics/utils/GLContext.h"
 #include "layers/NMLModelLODTreeLayer.h"
 #include "projections/Projection.h"
+#include "renderers/MapRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "utils/Log.h"
 
 #include <nml/GLModel.h>
 #include <nml/GLShaderManager.h>
 
+namespace {
+
+    struct GLModelsDeleter : carto::ThreadWorker {
+        GLModelsDeleter(std::set<std::shared_ptr<carto::nml::GLModel> > glModels) : _glModels(std::move(glModels)) { }
+
+        virtual void operator () () {
+            for (const std::shared_ptr<carto::nml::GLModel>& glModel : _glModels) {
+                glModel->dispose();
+            }
+        }
+
+    private:
+        std::set<std::shared_ptr<carto::nml::GLModel> > _glModels;
+    };
+
+}
+
 namespace carto {
 
-    NMLModelLODTreeRenderer::NMLModelLODTreeRenderer() :
+    NMLModelLODTreeRenderer::NMLModelLODTreeRenderer(const std::weak_ptr<MapRenderer>& mapRenderer, const std::weak_ptr<Options>& options) :
+        _mapRenderer(mapRenderer),
         _glShaderManager(),
+        _glModels(),
         _tempDrawDatas(),
         _drawRecordMap(),
-        _options(),
+        _options(options),
         _mutex()
     {
     }
     
     NMLModelLODTreeRenderer::~NMLModelLODTreeRenderer() {
+        if (_glShaderManager) {
+            if (auto mapRenderer = _mapRenderer.lock()) {
+                mapRenderer->addRenderThreadCallback(std::make_shared<GLModelsDeleter>(std::move(_glModels)));
+            }
+        }
     }
     
     void NMLModelLODTreeRenderer::addDrawData(const std::shared_ptr<NMLModelLODTreeDrawData>& drawData) {
@@ -71,11 +96,6 @@ namespace carto {
         _tempDrawDatas.clear();
     }
     
-    void NMLModelLODTreeRenderer::setOptions(const std::weak_ptr<Options>& options) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _options = options;
-    }
-
     void NMLModelLODTreeRenderer::offsetLayerHorizontally(double offset) {
         std::lock_guard<std::mutex> lock(_mutex);
         
@@ -157,6 +177,8 @@ namespace carto {
             }
     
             record.drawData.getGLModel()->create(*_glShaderManager);
+            _glModels.insert(record.drawData.getGLModel());
+
             record.created = true;
             break;
         }
@@ -168,7 +190,7 @@ namespace carto {
                 continue;
             }
     
-            for (ModelNodeDrawRecord * parentRecord = record.parent; parentRecord; parentRecord = parentRecord->parent) {
+            for (ModelNodeDrawRecord* parentRecord = record.parent; parentRecord; parentRecord = parentRecord->parent) {
                 if (parentRecord->created) {
                     parentRecord->used = true;
                     break;
@@ -183,7 +205,7 @@ namespace carto {
                 continue;
             }
     
-            for (ModelNodeDrawRecord * parentRecord = record.parent; parentRecord; parentRecord = parentRecord->parent) {
+            for (ModelNodeDrawRecord* parentRecord = record.parent; parentRecord; parentRecord = parentRecord->parent) {
                 if (parentRecord->created) {
                     break;
                 }
@@ -202,7 +224,7 @@ namespace carto {
             }
     
             bool draw = true;
-            for (ModelNodeDrawRecord * parentRecord = record.parent; parentRecord; parentRecord = parentRecord->parent) {
+            for (ModelNodeDrawRecord* parentRecord = record.parent; parentRecord; parentRecord = parentRecord->parent) {
                 if (parentRecord->used && parentRecord->created) {
                     draw = false;
                     break;
@@ -215,10 +237,10 @@ namespace carto {
             cglib::mat4x4<float> mvMat = cglib::mat4x4<float>::convert(viewState.getModelviewMat() * record.drawData.getLocalMat());
             nml::RenderState renderState(projMat, mvMat, ambientLightColor, mainLightColor, mainLightDir);
 
-            record.drawData.getGLModel()->draw(renderState);
+            record.drawData.getGLModel()->draw(*_glShaderManager, renderState);
         }
     
-        // Dispose all unused models, update parent-child links
+        // Remove all unused models, update parent-child links
         for (auto it = _drawRecordMap.begin(); it != _drawRecordMap.end(); ) {
             ModelNodeDrawRecord& record = *it->second;
             if (record.used) {
@@ -234,13 +256,21 @@ namespace carto {
             for (std::size_t i = 0; i < record.children.size(); i++) {
                 record.children[i]->parent = record.parent;
             }
-            if (record.created) {
-                record.drawData.getGLModel()->dispose();
-            }
     
             _drawRecordMap.erase(it++);
         }
     
+        // Release stale GLModels
+        for (auto it = _glModels.begin(); it != _glModels.end(); ) {
+            const std::shared_ptr<nml::GLModel>& glModel = *it;
+            if (glModel.unique()) {
+                glModel->dispose();
+                it = _glModels.erase(it);
+            } else {
+                it++;
+            }
+        }
+        
         // Check if we need to still update some models
         bool refresh = false;
         for (auto it = _drawRecordMap.begin(); it != _drawRecordMap.end(); it++) {
@@ -251,7 +281,7 @@ namespace carto {
     
             refresh = true;
         }
-        
+
         // Restore expected GL state
         glDepthMask(GL_TRUE);
         glDisable(GL_DEPTH_TEST);

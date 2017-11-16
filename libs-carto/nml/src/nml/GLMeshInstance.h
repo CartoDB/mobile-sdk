@@ -10,6 +10,7 @@
 #include "GLBase.h"
 
 #include <map>
+#include <set>
 #include <vector>
 #include <memory>
 #include <string>
@@ -31,7 +32,7 @@ namespace carto { namespace nml {
         void replaceMesh(const std::string& meshId, const std::shared_ptr<GLMesh>& mesh);
         void replaceTexture(const std::string& textureId, const std::shared_ptr<GLTexture>& texture);
 
-        void draw(const RenderState& renderState);
+        void draw(GLShaderManager& shaderManager, const RenderState& renderState);
 
         void calculateRayIntersections(const cglib::ray3<double>& ray, std::vector<RayIntersection>& intersections) const;
 
@@ -40,6 +41,7 @@ namespace carto { namespace nml {
     private:
         std::string _meshId;
         std::shared_ptr<GLMesh> _mesh;
+        std::set<std::shared_ptr<GLMesh>> _replacedMeshes;
         std::map<std::string, std::shared_ptr<GLMaterial>> _materialMap;
         bool _transformEnabled;
         cglib::mat4x4<float> _transformMatrix;

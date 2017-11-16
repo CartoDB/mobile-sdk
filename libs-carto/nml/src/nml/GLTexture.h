@@ -39,7 +39,6 @@ namespace carto { namespace nml {
         void updateMipMaps(const Texture& texture);
         void uploadTexture();
 
-        int _refCount;
         std::shared_ptr<Texture> _texture;
 
         GLuint _glTextureId;

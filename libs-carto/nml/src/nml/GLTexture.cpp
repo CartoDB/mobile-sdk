@@ -43,25 +43,18 @@
 namespace carto { namespace nml {
 
     GLTexture::GLTexture(std::shared_ptr<Texture> texture) :
-        _refCount(0),
         _texture(texture),
         _glTextureId(0)
     {
     }
     
     void GLTexture::create() {
-        if (_refCount++ > 0) {
-            return;
+        if (_glTextureId == 0) {
+            uploadTexture();
         }
-    
-        uploadTexture();
     }
     
     void GLTexture::dispose()	{
-        if (--_refCount > 0) {
-            return;
-        }
-    
         if (_glTextureId != 0) {
             glDeleteTextures(1, &_glTextureId);
         }
@@ -232,12 +225,12 @@ namespace carto { namespace nml {
         if (!_texture) {
             return;
         }
-    
+
         const Texture& texture = *_texture;
         if (texture.width() < 1 || texture.height() < 1) {
             return;
         }
-    
+
         glGenTextures(1, &_glTextureId);
     
         glBindTexture(GL_TEXTURE_2D, _glTextureId);

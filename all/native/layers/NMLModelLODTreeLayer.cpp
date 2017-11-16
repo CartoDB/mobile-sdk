@@ -62,13 +62,14 @@ namespace carto {
         _textureMap(),
         _textureCache(DEFAULT_TEXTURE_CACHE_SIZE),
         _nodeDrawDataMap(),
+        _lastMapTilesFetchTask(),
         _fetchingModelLODTrees(),
         _fetchingMeshes(),
         _fetchingTextures(),
         _fetchThreadPool(std::make_shared<CancelableThreadPool>()),
         _nmlModelLODTreeEventListener(),
         _dataSource(dataSource),
-        _renderer(std::make_shared<NMLModelLODTreeRenderer>())
+        _renderer()
     {
         if (!dataSource) {
             throw NullArgumentException("Null dataSource");
@@ -121,27 +122,43 @@ namespace carto {
     }
     
     void NMLModelLODTreeLayer::offsetLayerHorizontally(double offset) {
-        _renderer->offsetLayerHorizontally(offset);
+        if (_renderer) {
+            _renderer->offsetLayerHorizontally(offset);
+        }
     }
     
     void NMLModelLODTreeLayer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
         Layer::onSurfaceCreated(shaderManager, textureManager);
+
+        if (_renderer) {
+            _renderer->onSurfaceDestroyed();
+            _renderer.reset();
+        }
+
+        _renderer = std::make_shared<NMLModelLODTreeRenderer>(_mapRenderer, _options);
         _renderer->onSurfaceCreated(shaderManager, textureManager);
     }
     
-    bool NMLModelLODTreeLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState)
-    {
-        return _renderer->onDrawFrame(deltaSeconds, viewState);
+    bool NMLModelLODTreeLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
+        if (_renderer) {
+            return _renderer->onDrawFrame(deltaSeconds, viewState);
+        }
     }
     
-    void NMLModelLODTreeLayer::onSurfaceDestroyed(){
-        _renderer->onSurfaceDestroyed();
+    void NMLModelLODTreeLayer::onSurfaceDestroyed() {
+        if (_renderer) {
+            _renderer->onSurfaceDestroyed();
+            _renderer.reset();
+        }
+
         Layer::onSurfaceDestroyed();
     }
     
     void NMLModelLODTreeLayer::calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
         std::shared_ptr<NMLModelLODTreeLayer> thisLayer = std::static_pointer_cast<NMLModelLODTreeLayer>(std::const_pointer_cast<Layer>(shared_from_this()));
-        _renderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
+        if (_renderer) {
+            _renderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
+        }
     }
 
     bool NMLModelLODTreeLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
@@ -172,20 +189,27 @@ namespace carto {
                                     const std::weak_ptr<TouchHandler>& touchHandler)
     {
         Layer::setComponents(envelopeThreadPool, tileThreadPool, options, mapRenderer, touchHandler);
-        _renderer->setOptions(options);
     }
     
     void NMLModelLODTreeLayer::loadData(const std::shared_ptr<CullState>& cullState) {
         float zoom = cullState->getViewState().getZoom();
         if (!isVisible() || !getVisibleZoomRange().inRange(zoom)) {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _renderer->refreshDrawData();
+            if (_renderer) {
+                _renderer->refreshDrawData();
+            }
             return;
+        }
+
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        if (_lastMapTilesFetchTask) {
+            _lastMapTilesFetchTask->cancel();
         }
     
         auto task = std::make_shared<MapTilesFetchTask>(std::static_pointer_cast<NMLModelLODTreeLayer>(shared_from_this()), cullState);
         if (_envelopeThreadPool) {
             _envelopeThreadPool->execute(task, getUpdatePriority());
+            _lastMapTilesFetchTask = task;
         }
     }
     
@@ -348,8 +372,9 @@ namespace carto {
         std::priority_queue<SizeNodePair> initialQueue;
         for (auto it = _modelLODTreeMap.begin(); it != _modelLODTreeMap.end(); it++) {
             const NMLModelLODTree* modelLODTree = it->second.get();
-            if (modelLODTree->getSourceNodeCount() == 0)
+            if (modelLODTree->getSourceNodeCount() == 0) {
                 continue;
+            }
     
             cglib::mat4x4<double> lmvpMatrix = mvpMatrix * modelLODTree->getLocalMat();
             float screenSize = calculateProjectedScreenSize(modelLODTree->getSourceNode(0)->bounds(), lmvpMatrix);
@@ -532,17 +557,21 @@ namespace carto {
             updateTextures(modelLODTree, nodeId, nodeDrawData->getGLModel(), textureMap);
     
             nodeDrawDataMap[modelLODTree->getGlobalNodeId(nodeId)] = nodeDrawData;
-            _renderer->addDrawData(nodeDrawData);
+            if (_renderer) {
+                _renderer->addDrawData(nodeDrawData);
+            }
         }
     
-        _renderer->refreshDrawData();
+        if (_renderer) {
+            _renderer->refreshDrawData();
+        }
     
         if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
             mapRenderer->requestRedraw();
         }
     }
     
-        NMLModelLODTreeLayer::MapTilesFetchTask::MapTilesFetchTask(const std::shared_ptr<NMLModelLODTreeLayer>& layer, const std::shared_ptr<CullState>& cullState) :
+    NMLModelLODTreeLayer::MapTilesFetchTask::MapTilesFetchTask(const std::shared_ptr<NMLModelLODTreeLayer>& layer, const std::shared_ptr<CullState>& cullState) :
         _layer(layer),
         _cullState(cullState)
     {
@@ -563,18 +592,24 @@ namespace carto {
         // If view has changed, cancel all previous task and fetch new list of map tiles
         if (layer->_mapTileListViewState.getModelviewProjectionMat() != _cullState->getViewState().getModelviewProjectionMat()) {
             layer->_fetchThreadPool->cancelAll();
+
+            std::shared_ptr<CullState> cullState = _cullState;
             
             lock.unlock();
             MapTileList mapTileList;
             try {
-                mapTileList = layer->_dataSource->loadMapTiles(_cullState);
+                mapTileList = layer->_dataSource->loadMapTiles(cullState);
             } catch (const std::exception& ex) {
                 Log::Errorf("NMLModelLODTreeLayer::MapTilesFetchTask: Exception while loading tiles: %s", ex.what());
             }
             lock.lock();
+
+            if (isCanceled()) {
+                return;
+            }
     
             layer->_mapTileList = mapTileList;
-            layer->_mapTileListViewState = _cullState->getViewState();
+            layer->_mapTileListViewState = cullState->getViewState();
         }
     
         // Load new model LOD trees

@@ -10,6 +10,8 @@ namespace carto { namespace nml {
     GLModel::GLModel(const Model& model) :
         _meshMap(),
         _textureMap(),
+        _replacedMeshSet(),
+        _replacedTextureSet(),
         _meshInstanceList()
     {
         // Get bounds
@@ -71,6 +73,16 @@ namespace carto { namespace nml {
         for (auto it = _textureMap.begin(); it != _textureMap.end(); it++) {
             it->second->dispose();
         }
+
+        for (auto it = _replacedMeshSet.begin(); it != _replacedMeshSet.end(); it++) {
+            (*it)->dispose();
+        }
+        _replacedMeshSet.clear();
+
+        for (auto it = _replacedTextureSet.begin(); it != _replacedTextureSet.end(); it++) {
+            (*it)->dispose();
+        }
+        _replacedTextureSet.clear();
     }
     
     void GLModel::replaceMesh(const std::string& id, const std::shared_ptr<GLMesh>& mesh) {
@@ -85,6 +97,7 @@ namespace carto { namespace nml {
             if (meshIt->second.first == mesh && meshIt->second.second == meshOp) {
                 return;
             }
+            _replacedMeshSet.insert(meshIt->second.first);
         }
     
         _meshMap[id] = { mesh, meshOp };
@@ -107,6 +120,7 @@ namespace carto { namespace nml {
             if (texIt->second == texture) {
                 return;
             }
+            _replacedTextureSet.insert(texIt->second);
         }
     
         _textureMap[id] = texture;
@@ -116,11 +130,11 @@ namespace carto { namespace nml {
         }
     }
     
-    void GLModel::draw(const RenderState& renderState)  {
+    void GLModel::draw(GLShaderManager& shaderManager, const RenderState& renderState)  {
         std::lock_guard<std::mutex> lock(_mutex);
-    
+
         for (const std::shared_ptr<GLMeshInstance>& meshInstance : _meshInstanceList) {
-            meshInstance->draw(renderState);
+            meshInstance->draw(shaderManager, renderState);
         }
     }
     

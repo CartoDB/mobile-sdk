@@ -10,6 +10,7 @@
 #include "GLBase.h"
 
 #include <map>
+#include <set>
 #include <vector>
 #include <string>
 #include <memory>
@@ -34,7 +35,7 @@ namespace carto { namespace nml {
         void replaceMesh(const std::string& id, const std::shared_ptr<GLMesh>& mesh, const std::shared_ptr<MeshOp>& meshOp);
         void replaceTexture(const std::string& id, const std::shared_ptr<GLTexture>& texture);
 
-        void draw(const RenderState& renderState);
+        void draw(GLShaderManager& shaderManager, const RenderState& renderState);
 
         void calculateRayIntersections(const cglib::ray3<double>& ray, std::vector<RayIntersection>& intersections) const;
 
@@ -49,6 +50,8 @@ namespace carto { namespace nml {
         cglib::bbox3<float> _bounds = cglib::bbox3<float>::smallest();
         std::map<std::string, GLMeshMeshOpPair> _meshMap;
         std::map<std::string, std::shared_ptr<GLTexture>> _textureMap;
+        std::set<std::shared_ptr<GLMesh>> _replacedMeshSet;
+        std::set<std::shared_ptr<GLTexture>> _replacedTextureSet;
         std::vector<std::shared_ptr<GLMeshInstance>> _meshInstanceList;
         mutable std::mutex _mutex;
     };

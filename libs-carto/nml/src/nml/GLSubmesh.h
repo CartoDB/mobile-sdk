@@ -42,7 +42,6 @@ namespace carto { namespace nml {
         static void convertToFloatBuffer(const std::string& str, std::vector<float>& buf);
         static void convertToByteBuffer(const std::string& str, std::vector<unsigned char>& buf);
 
-        int _refCount;
         GLint _glType;
         std::vector<int> _vertexCounts;
         std::string _materialId;

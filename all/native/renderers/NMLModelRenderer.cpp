@@ -102,7 +102,7 @@ namespace carto {
             cglib::mat4x4<float> mvMat = cglib::mat4x4<float>::convert(viewState.getModelviewMat() * drawData.getLocalMat());
             nml::RenderState renderState(projMat, mvMat, ambientLightColor, mainLightColor, -mainLightDir);
 
-            glModel->draw(renderState);
+            glModel->draw(*_glShaderManager, renderState);
         }
     
         // Dispose unused models

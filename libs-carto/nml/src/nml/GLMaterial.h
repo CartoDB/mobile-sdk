@@ -11,6 +11,7 @@
 
 #include <memory>
 #include <map>
+#include <set>
 #include <string>
 
 namespace carto { namespace nml {
@@ -30,7 +31,7 @@ namespace carto { namespace nml {
 
         void replaceTexture(const std::string& textureId, const std::shared_ptr<GLTexture>& texture);
 
-        void bind(const RenderState& renderState, const cglib::mat4x4<float>& mvMatrix, const cglib::mat4x4<float>& invTransMVMatrix);
+        void bind(GLShaderManager& shaderManager, const RenderState& renderState, const cglib::mat4x4<float>& mvMatrix, const cglib::mat4x4<float>& invTransMVMatrix);
 
     private:
         struct GLColorOrTexture {
@@ -53,6 +54,7 @@ namespace carto { namespace nml {
         GLColorOrTexture _specular;
         float _shininess;
         GLuint _glProgramId;
+        std::set<std::shared_ptr<GLTexture>> _replacedTextures;
     };
 } }
 

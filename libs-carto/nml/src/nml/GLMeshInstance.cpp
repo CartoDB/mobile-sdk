@@ -67,10 +67,22 @@ namespace carto { namespace nml {
         for (auto it = _materialMap.begin(); it != _materialMap.end(); it++) {
             it->second->dispose();
         }
+
+        if (_mesh) {
+            _mesh->dispose();
+        }
+
+        for (auto it = _replacedMeshes.begin(); it != _replacedMeshes.end(); it++) {
+            (*it)->dispose();
+        }
+        _replacedMeshes.clear();
     }
 
     void GLMeshInstance::replaceMesh(const std::string& meshId, const std::shared_ptr<GLMesh>& mesh) {
         if (_meshId == meshId) {
+            if (_mesh) {
+                _replacedMeshes.insert(_mesh);
+            }
             _mesh = mesh;
         }
     }
@@ -81,7 +93,7 @@ namespace carto { namespace nml {
         }
     }
     
-    void GLMeshInstance::draw(const RenderState& renderState) {
+    void GLMeshInstance::draw(GLShaderManager& shaderManager, const RenderState& renderState) {
         if (!_mesh) {
             return;
         }
@@ -98,7 +110,7 @@ namespace carto { namespace nml {
             if (materialIt != _materialMap.end()) {
                 const std::shared_ptr<GLMaterial>& material = materialIt->second;
 
-                material->bind(renderState, mvMatrix, invTransMVMatrix);
+                material->bind(shaderManager, renderState, mvMatrix, invTransMVMatrix);
                 submesh->draw(renderState);
             }
         }
