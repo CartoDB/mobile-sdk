@@ -65,7 +65,7 @@ namespace carto {
         for (auto it = _drawRecordMap.begin(); it != _drawRecordMap.end(); it++) {
             ModelNodeDrawRecord& record = *it->second;
             record.used = false;
-            record.parent = 0;
+            record.parent = nullptr;
             record.children.clear();
         }
     
@@ -181,22 +181,6 @@ namespace carto {
             _glModels.insert(record.drawData.getGLModel());
 
             record.created = true;
-            break;
-        }
-    
-        // If a model is used but not created, try to find its first parent that is created and mark it as used.  
-        for (auto it = _drawRecordMap.begin(); it != _drawRecordMap.end(); it++) {
-            ModelNodeDrawRecord& record = *it->second;
-            if (!(record.used && !record.created)) {
-                continue;
-            }
-    
-            for (ModelNodeDrawRecord* parentRecord = record.parent; parentRecord; parentRecord = parentRecord->parent) {
-                if (parentRecord->created) {
-                    parentRecord->used = true;
-                    break;
-                }
-            }
         }
     
         // If a model is not used but created then keep it if it has a parent that is used but not created. Also check that it does not have a closer parent that is created.  
@@ -272,23 +256,12 @@ namespace carto {
             }
         }
         
-        // Check if we need to still update some models
-        bool refresh = false;
-        for (auto it = _drawRecordMap.begin(); it != _drawRecordMap.end(); it++) {
-            ModelNodeDrawRecord& record = *it->second;
-            if (!(record.used && !record.created)) {
-                continue;
-            }
-    
-            refresh = true;
-        }
-
         // Restore expected GL state
         glDepthMask(GL_TRUE);
         glDisable(GL_DEPTH_TEST);
         glActiveTexture(GL_TEXTURE0);
 
-        return refresh;
+        return false;
     }
 
     void NMLModelLODTreeRenderer::onSurfaceDestroyed() {
