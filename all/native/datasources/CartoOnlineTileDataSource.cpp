@@ -118,8 +118,10 @@ namespace carto {
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
         Log::Debugf("CartoOnlineTileDataSource::loadConfiguration: Loading %s", url.c_str());
 
+        std::map<std::string, std::string> requestHeaders = NetworkUtils::CreateAppRefererHeader();
+        std::map<std::string, std::string> responseHeaders;
         std::shared_ptr<BinaryData> responseData;
-        if (!NetworkUtils::GetHTTP(url, responseData, Log::IsShowDebug())) {
+        if (!NetworkUtils::GetHTTP(url, requestHeaders, responseHeaders, responseData, Log::IsShowDebug())) {
             Log::Warnf("CartoOnlineTileDataSource: Failed to fetch tile source configuration"); // NOTE: we may have error messages, thus do not return from here
         }
 
@@ -204,7 +206,7 @@ namespace carto {
         }
         Log::Debugf("CartoOnlineTileDataSource::loadOnlineTile: Loading %s", url.c_str());
 
-        std::map<std::string, std::string> requestHeaders;
+        std::map<std::string, std::string> requestHeaders = NetworkUtils::CreateAppRefererHeader();
         std::map<std::string, std::string> responseHeaders;
         std::shared_ptr<BinaryData> responseData;
         int statusCode = -1;
