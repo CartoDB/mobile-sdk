@@ -2,6 +2,7 @@
 #include "core/BinaryData.h"
 #include "network/HTTPClient.h"
 #include "utils/GeneralUtils.h"
+#include "utils/PlatformUtils.h"
 #include "utils/Log.h"
 
 #include <fstream>
@@ -228,6 +229,12 @@ namespace carto {
         }
 
         return url;
+    }
+
+    std::map<std::string, std::string> NetworkUtils::CreateAppRefererHeader() {
+        std::map<std::string, std::string> headers;
+        headers["Referer"] = "appid://" + URLEncode(PlatformUtils::GetAppIdentifier());
+        return headers;
     }
 
     NetworkUtils::NetworkUtils() {

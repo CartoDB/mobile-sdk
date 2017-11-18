@@ -47,8 +47,10 @@ namespace carto {
         std::string urlEncodedFileName = GeneralUtils::Join(pathParts, '/');
         std::string url = STYLE_SERVICE_URL + urlEncodedFileName;
 
+        std::map<std::string, std::string> requestHeaders = NetworkUtils::CreateAppRefererHeader();
+        std::map<std::string, std::string> responseHeaders;
         std::shared_ptr<BinaryData> responseData;
-        if (!NetworkUtils::GetHTTP(url, responseData, Log::IsShowDebug())) {
+        if (!NetworkUtils::GetHTTP(url, requestHeaders, responseHeaders, responseData, Log::IsShowDebug())) {
             Log::Warnf("CartoAssetPackageUpdater: Failed to fetch tile style data");
         }
         return responseData;

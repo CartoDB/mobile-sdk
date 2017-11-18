@@ -94,7 +94,7 @@ namespace carto {
         std::shared_ptr<Projection> proj = request->getProjection();
         EPSG3857 epsg3857;
         
-        std::map<std::string, std::string> requestHeaders;
+        std::map<std::string, std::string> requestHeaders = NetworkUtils::CreateAppRefererHeader();
         requestHeaders["Connection"] = "close";
         std::map<std::string, std::string> responseHeaders;
         std::shared_ptr<BinaryData> responseData;
