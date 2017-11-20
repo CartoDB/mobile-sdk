@@ -85,34 +85,34 @@ namespace carto { namespace nml {
         GLuint texId = 0;
         glGenTextures(1, &texId);
 
-        _textureMap.emplace(texture, texId);
+        _textureMap[texture].push_back(texId);
         return texId;
     }
 
-    GLuint GLResourceManager::allocateVBO(const std::shared_ptr<GLSubmesh>& submesh) {
-        GLuint vboId = 0;
-        glGenBuffers(1, &vboId);
+    GLuint GLResourceManager::allocateBuffer(const std::shared_ptr<GLSubmesh>& submesh) {
+        GLuint bufId = 0;
+        glGenBuffers(1, &bufId);
 
-        _vboMap.emplace(submesh, vboId);
-        return vboId;
+        _bufferMap[submesh].push_back(bufId);
+        return bufId;
     }
 
     void GLResourceManager::deleteUnused() {
         for (auto it = _textureMap.begin(); it != _textureMap.end(); ) {
             if (it->first.expired()) {
-                GLuint texId = it->second;
-                glDeleteTextures(1, &texId);
+                const std::vector<GLuint>& texIds = it->second;
+                glDeleteTextures(texIds.size(), texIds.data());
                 it = _textureMap.erase(it);
             } else {
                 it++;
             }
         }
 
-        for (auto it = _vboMap.begin(); it != _vboMap.end(); it++) {
+        for (auto it = _bufferMap.begin(); it != _bufferMap.end(); ) {
             if (it->first.expired()) {
-                GLuint vboId = it->second;
-                glDeleteBuffers(1, &vboId);
-                it = _vboMap.erase(it);
+                const std::vector<GLuint>& bufIds = it->second;
+                glDeleteBuffers(bufIds.size(), bufIds.data());
+                it = _bufferMap.erase(it);
             } else {
                 it++;
             }
@@ -127,22 +127,22 @@ namespace carto { namespace nml {
         _programMap.clear();
 
         for (auto it = _textureMap.begin(); it != _textureMap.end(); it++) {
-            GLuint texId = it->second;
-            glDeleteTextures(1, &texId);
+            const std::vector<GLuint>& texIds = it->second;
+            glDeleteTextures(texIds.size(), texIds.data());
         }
         _textureMap.clear();
 
-        for (auto it = _vboMap.begin(); it != _vboMap.end(); it++) {
-            GLuint vboId = it->second;
-            glDeleteBuffers(1, &vboId);
+        for (auto it = _bufferMap.begin(); it != _bufferMap.end(); it++) {
+            const std::vector<GLuint>& bufIds = it->second;
+            glDeleteBuffers(bufIds.size(), bufIds.data());
         }
-        _vboMap.clear();
+        _bufferMap.clear();
     }
 
     void GLResourceManager::resetAll() {
         _programMap.clear();
         _textureMap.clear();
-        _vboMap.clear();
+        _bufferMap.clear();
     }
 
     std::string GLResourceManager::createShader(const std::string& shader, const std::set<std::string>& defs) {

@@ -27,7 +27,7 @@ namespace carto { namespace nml {
 
         GLuint allocateTexture(const std::shared_ptr<GLTexture>& texture);
 
-        GLuint allocateVBO(const std::shared_ptr<GLSubmesh>& submesh);
+        GLuint allocateBuffer(const std::shared_ptr<GLSubmesh>& submesh);
 
         void deleteUnused();
         void deleteAll();
@@ -37,8 +37,8 @@ namespace carto { namespace nml {
         static std::string createShader(const std::string& shader, const std::set<std::string>& defs);
         
         std::map<std::pair<std::pair<std::string, std::string>, std::set<std::string>>, GLuint> _programMap;
-        std::multimap<std::weak_ptr<GLTexture>, GLuint, std::owner_less<std::weak_ptr<GLTexture>>> _textureMap;
-        std::multimap<std::weak_ptr<GLSubmesh>, GLuint, std::owner_less<std::weak_ptr<GLSubmesh>>> _vboMap;
+        std::map<std::weak_ptr<GLTexture>, std::vector<GLuint>, std::owner_less<std::weak_ptr<GLTexture>>> _textureMap;
+        std::map<std::weak_ptr<GLSubmesh>, std::vector<GLuint>, std::owner_less<std::weak_ptr<GLSubmesh>>> _bufferMap;
     };
 } }
 

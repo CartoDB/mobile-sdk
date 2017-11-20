@@ -250,25 +250,25 @@ namespace carto { namespace nml {
     
     void GLSubmesh::uploadSubmesh(GLResourceManager& resourceManager) {
         if (!_positionBuffer.empty()) {
-            _glPositionVBOId = resourceManager.allocateVBO(shared_from_this());
+            _glPositionVBOId = resourceManager.allocateBuffer(shared_from_this());
             glBindBuffer(GL_ARRAY_BUFFER, _glPositionVBOId);
             glBufferData(GL_ARRAY_BUFFER, _positionBuffer.size() * sizeof(float), _positionBuffer.data(), GL_STATIC_DRAW);
         }
 
         if (!_normalBuffer.empty()) {
-            _glNormalVBOId = resourceManager.allocateVBO(shared_from_this());
+            _glNormalVBOId = resourceManager.allocateBuffer(shared_from_this());
             glBindBuffer(GL_ARRAY_BUFFER, _glNormalVBOId);
             glBufferData(GL_ARRAY_BUFFER, _normalBuffer.size() * sizeof(float), _normalBuffer.data(), GL_STATIC_DRAW);
         }
         
         if (!_uvBuffer.empty()) {
-            _glUVVBOId = resourceManager.allocateVBO(shared_from_this());
+            _glUVVBOId = resourceManager.allocateBuffer(shared_from_this());
             glBindBuffer(GL_ARRAY_BUFFER, _glUVVBOId);
             glBufferData(GL_ARRAY_BUFFER, _uvBuffer.size() * sizeof(float), _uvBuffer.data(), GL_STATIC_DRAW);
         }
         
         if (!_colorBuffer.empty()) {
-            _glColorVBOId = resourceManager.allocateVBO(shared_from_this());
+            _glColorVBOId = resourceManager.allocateBuffer(shared_from_this());
             glBindBuffer(GL_ARRAY_BUFFER, _glColorVBOId);
             glBufferData(GL_ARRAY_BUFFER, _colorBuffer.size() * sizeof(unsigned char), _colorBuffer.data(), GL_STATIC_DRAW);
         }

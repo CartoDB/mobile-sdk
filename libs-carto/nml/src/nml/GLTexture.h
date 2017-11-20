@@ -18,7 +18,7 @@ namespace carto { namespace nml {
     class Sampler;
     class GLResourceManager;
 
-    class GLTexture final : std::enable_shared_from_this<GLTexture> {
+    class GLTexture final : public std::enable_shared_from_this<GLTexture> {
     public:
         explicit GLTexture(std::shared_ptr<Texture> texture);
 

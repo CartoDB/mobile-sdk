@@ -143,6 +143,7 @@ namespace carto {
         if (_renderer) {
             return _renderer->onDrawFrame(deltaSeconds, viewState);
         }
+        return false;
     }
     
     void NMLModelLODTreeLayer::onSurfaceDestroyed() {
