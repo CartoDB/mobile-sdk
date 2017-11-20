@@ -18,20 +18,19 @@ namespace carto { namespace nml {
     class Material;
     class ColorOrTexture;
     class GLTexture;
-    class GLShaderManager;
+    class GLResourceManager;
 
     class GLMaterial final {
     public:
         explicit GLMaterial(const Material& material, const std::map<std::string, std::shared_ptr<GLTexture>>& textureMap);
 
-        void create(GLShaderManager& shaderManager);
-        void dispose();
+        void create(GLResourceManager& resourceManager);
 
         int getCulling() const;
 
         void replaceTexture(const std::string& textureId, const std::shared_ptr<GLTexture>& texture);
 
-        void bind(GLShaderManager& shaderManager, const RenderState& renderState, const cglib::mat4x4<float>& mvMatrix, const cglib::mat4x4<float>& invTransMVMatrix);
+        void bind(GLResourceManager& resourceManager, const RenderState& renderState, const cglib::mat4x4<float>& mvMatrix, const cglib::mat4x4<float>& invTransMVMatrix);
 
     private:
         struct GLColorOrTexture {
@@ -54,7 +53,6 @@ namespace carto { namespace nml {
         GLColorOrTexture _specular;
         float _shininess;
         GLuint _glProgramId;
-        std::set<std::shared_ptr<GLTexture>> _replacedTextures;
     };
 } }
 

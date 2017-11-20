@@ -1,5 +1,6 @@
 #include "GLSubmesh.h"
 #include "GLMesh.h"
+#include "GLResourceManager.h"
 #include "Package.h"
 
 #include <cassert>
@@ -105,39 +106,19 @@ namespace carto { namespace nml {
         }
     }
     
-    void GLSubmesh::create() {
+    void GLSubmesh::create(GLResourceManager& resourceManager) {
         if (_glPositionVBOId == 0) {
-            uploadSubmesh();
+            uploadSubmesh(resourceManager);
         }
     }
     
-    void GLSubmesh::dispose() {
-        if (_glPositionVBOId != 0) {
-            glDeleteBuffers(1, &_glPositionVBOId);
-        }
-        if (_glNormalVBOId != 0) {
-            glDeleteBuffers(1, &_glNormalVBOId);
-        }
-        if (_glUVVBOId != 0) {
-            glDeleteBuffers(1, &_glUVVBOId);
-        }
-        if (_glColorVBOId != 0) {
-            glDeleteBuffers(1, &_glColorVBOId);
-        }
-        
-        _glPositionVBOId = 0;
-        _glNormalVBOId = 0;
-        _glUVVBOId = 0;
-        _glColorVBOId = 0;
-    }
-    
-    void GLSubmesh::draw(const RenderState& renderState) {
+    void GLSubmesh::draw(GLResourceManager& resourceManager, const RenderState& renderState) {
         if (_vertexCounts.empty()) {
             return;
         }
     
         if (_glPositionVBOId == 0) {
-            uploadSubmesh();
+            uploadSubmesh(resourceManager);
         }
 
         // Enable vertex buffers
@@ -267,27 +248,27 @@ namespace carto { namespace nml {
         return static_cast<int>(size);
     }
     
-    void GLSubmesh::uploadSubmesh() {
+    void GLSubmesh::uploadSubmesh(GLResourceManager& resourceManager) {
         if (!_positionBuffer.empty()) {
-            glGenBuffers(1, &_glPositionVBOId);
+            _glPositionVBOId = resourceManager.allocateVBO(shared_from_this());
             glBindBuffer(GL_ARRAY_BUFFER, _glPositionVBOId);
             glBufferData(GL_ARRAY_BUFFER, _positionBuffer.size() * sizeof(float), _positionBuffer.data(), GL_STATIC_DRAW);
         }
 
         if (!_normalBuffer.empty()) {
-            glGenBuffers(1, &_glNormalVBOId);
+            _glNormalVBOId = resourceManager.allocateVBO(shared_from_this());
             glBindBuffer(GL_ARRAY_BUFFER, _glNormalVBOId);
             glBufferData(GL_ARRAY_BUFFER, _normalBuffer.size() * sizeof(float), _normalBuffer.data(), GL_STATIC_DRAW);
         }
         
         if (!_uvBuffer.empty()) {
-            glGenBuffers(1, &_glUVVBOId);
+            _glUVVBOId = resourceManager.allocateVBO(shared_from_this());
             glBindBuffer(GL_ARRAY_BUFFER, _glUVVBOId);
             glBufferData(GL_ARRAY_BUFFER, _uvBuffer.size() * sizeof(float), _uvBuffer.data(), GL_STATIC_DRAW);
         }
         
         if (!_colorBuffer.empty()) {
-            glGenBuffers(1, &_glColorVBOId);
+            _glColorVBOId = resourceManager.allocateVBO(shared_from_this());
             glBindBuffer(GL_ARRAY_BUFFER, _glColorVBOId);
             glBufferData(GL_ARRAY_BUFFER, _colorBuffer.size() * sizeof(unsigned char), _colorBuffer.data(), GL_STATIC_DRAW);
         }

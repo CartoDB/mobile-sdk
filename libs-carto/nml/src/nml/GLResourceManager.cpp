@@ -1,10 +1,12 @@
-#include "GLShaderManager.h"
+#include "GLResourceManager.h"
+#include "GLTexture.h"
+#include "GLSubmesh.h"
 
 #include <vector>
 
 namespace carto { namespace nml {
 
-    GLuint GLShaderManager::createProgram(const std::string& vertexShader, const std::string& fragmentShader, const std::set<std::string>& defs) {
+    GLuint GLResourceManager::createProgram(const std::string& vertexShader, const std::string& fragmentShader, const std::set<std::string>& defs) {
         std::pair<std::pair<std::string, std::string>, std::set<std::string>> program{ { vertexShader, fragmentShader }, defs };
         auto it = _programMap.find(program);
         if (it != _programMap.end()) {
@@ -79,19 +81,71 @@ namespace carto { namespace nml {
         return programId;
     }
 
-    void GLShaderManager::resetPrograms() {
-        _programMap.clear();
+    GLuint GLResourceManager::allocateTexture(const std::shared_ptr<GLTexture>& texture) {
+        GLuint texId = 0;
+        glGenTextures(1, &texId);
+
+        _textureMap.emplace(texture, texId);
+        return texId;
     }
 
-    void GLShaderManager::deletePrograms() {
+    GLuint GLResourceManager::allocateVBO(const std::shared_ptr<GLSubmesh>& submesh) {
+        GLuint vboId = 0;
+        glGenBuffers(1, &vboId);
+
+        _vboMap.emplace(submesh, vboId);
+        return vboId;
+    }
+
+    void GLResourceManager::deleteUnused() {
+        for (auto it = _textureMap.begin(); it != _textureMap.end(); ) {
+            if (it->first.expired()) {
+                GLuint texId = it->second;
+                glDeleteTextures(1, &texId);
+                it = _textureMap.erase(it);
+            } else {
+                it++;
+            }
+        }
+
+        for (auto it = _vboMap.begin(); it != _vboMap.end(); it++) {
+            if (it->first.expired()) {
+                GLuint vboId = it->second;
+                glDeleteBuffers(1, &vboId);
+                it = _vboMap.erase(it);
+            } else {
+                it++;
+            }
+        }
+    }
+
+    void GLResourceManager::deleteAll() {
         for (auto it = _programMap.begin(); it != _programMap.end(); it++) {
-            GLuint program = it->second;
-            glDeleteProgram(program);
+            GLuint programId = it->second;
+            glDeleteProgram(programId);
         }
         _programMap.clear();
+
+        for (auto it = _textureMap.begin(); it != _textureMap.end(); it++) {
+            GLuint texId = it->second;
+            glDeleteTextures(1, &texId);
+        }
+        _textureMap.clear();
+
+        for (auto it = _vboMap.begin(); it != _vboMap.end(); it++) {
+            GLuint vboId = it->second;
+            glDeleteBuffers(1, &vboId);
+        }
+        _vboMap.clear();
     }
 
-    std::string GLShaderManager::createShader(const std::string& shader, const std::set<std::string>& defs) {
+    void GLResourceManager::resetAll() {
+        _programMap.clear();
+        _textureMap.clear();
+        _vboMap.clear();
+    }
+
+    std::string GLResourceManager::createShader(const std::string& shader, const std::set<std::string>& defs) {
         std::string glslDefs;
         for (auto it2 = defs.begin(); it2 != defs.end(); it2++) {
             glslDefs += "#define " + *it2 + "\n";

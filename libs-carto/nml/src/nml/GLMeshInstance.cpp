@@ -3,7 +3,7 @@
 #include "GLTexture.h"
 #include "GLMaterial.h"
 #include "GLSubmesh.h"
-#include "GLShaderManager.h"
+#include "GLResourceManager.h"
 #include "Package.h"
 
 namespace carto { namespace nml {
@@ -57,32 +57,14 @@ namespace carto { namespace nml {
         }
     }
 
-    void GLMeshInstance::create(GLShaderManager& shaderManager) {
+    void GLMeshInstance::create(GLResourceManager& resourceManager) {
         for (auto it = _materialMap.begin(); it != _materialMap.end(); it++) {
-            it->second->create(shaderManager);
+            it->second->create(resourceManager);
         }
-    }
-
-    void GLMeshInstance::dispose() {
-        for (auto it = _materialMap.begin(); it != _materialMap.end(); it++) {
-            it->second->dispose();
-        }
-
-        if (_mesh) {
-            _mesh->dispose();
-        }
-
-        for (auto it = _replacedMeshes.begin(); it != _replacedMeshes.end(); it++) {
-            (*it)->dispose();
-        }
-        _replacedMeshes.clear();
     }
 
     void GLMeshInstance::replaceMesh(const std::string& meshId, const std::shared_ptr<GLMesh>& mesh) {
         if (_meshId == meshId) {
-            if (_mesh) {
-                _replacedMeshes.insert(_mesh);
-            }
             _mesh = mesh;
         }
     }
@@ -93,7 +75,7 @@ namespace carto { namespace nml {
         }
     }
     
-    void GLMeshInstance::draw(GLShaderManager& shaderManager, const RenderState& renderState) {
+    void GLMeshInstance::draw(GLResourceManager& resourceManager, const RenderState& renderState) {
         if (!_mesh) {
             return;
         }
@@ -110,8 +92,8 @@ namespace carto { namespace nml {
             if (materialIt != _materialMap.end()) {
                 const std::shared_ptr<GLMaterial>& material = materialIt->second;
 
-                material->bind(shaderManager, renderState, mvMatrix, invTransMVMatrix);
-                submesh->draw(renderState);
+                material->bind(resourceManager, renderState, mvMatrix, invTransMVMatrix);
+                submesh->draw(resourceManager, renderState);
             }
         }
     }

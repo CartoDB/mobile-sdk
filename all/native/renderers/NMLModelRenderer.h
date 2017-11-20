@@ -32,7 +32,7 @@ namespace carto {
     
     namespace nml {
         class GLModel;
-        class GLShaderManager;
+        class GLResourceManager;
     }
     
     class NMLModelRenderer {
@@ -57,8 +57,8 @@ namespace carto {
         virtual void calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
     
     private:
-        std::shared_ptr<nml::GLShaderManager> _glShaderManager;
-        std::map<std::shared_ptr<nml::Model>, std::shared_ptr<nml::GLModel> > _glModelMap;
+        std::shared_ptr<nml::GLResourceManager> _glResourceManager;
+        std::map<std::weak_ptr<nml::Model>, std::shared_ptr<nml::GLModel>, std::owner_less<std::weak_ptr<nml::Model> > > _glModelMap;
         std::vector<std::shared_ptr<NMLModel> > _elements;
         std::vector<std::shared_ptr<NMLModel> > _tempElements;
 

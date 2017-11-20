@@ -12,21 +12,19 @@
 #include "utils/Log.h"
 
 #include <nml/GLModel.h>
-#include <nml/GLShaderManager.h>
+#include <nml/GLResourceManager.h>
 
 namespace {
 
-    struct GLModelsDeleter : carto::ThreadWorker {
-        GLModelsDeleter(std::set<std::shared_ptr<carto::nml::GLModel> > glModels) : _glModels(std::move(glModels)) { }
+    struct GLResourceDeleter : carto::ThreadWorker {
+        GLResourceDeleter(std::shared_ptr<carto::nml::GLResourceManager> glResourceManager) : _glResourceManager(std::move(glResourceManager)) { }
 
         virtual void operator () () {
-            for (const std::shared_ptr<carto::nml::GLModel>& glModel : _glModels) {
-                glModel->dispose();
-            }
+            _glResourceManager->deleteAll();
         }
 
     private:
-        std::set<std::shared_ptr<carto::nml::GLModel> > _glModels;
+        std::shared_ptr<carto::nml::GLResourceManager> _glResourceManager;
     };
 
 }
@@ -34,7 +32,7 @@ namespace {
 namespace carto {
 
     NMLModelRenderer::NMLModelRenderer() :
-        _glShaderManager(),
+        _glResourceManager(),
         _glModelMap(),
         _elements(),
         _tempElements(),
@@ -45,13 +43,9 @@ namespace carto {
     }
     
     NMLModelRenderer::~NMLModelRenderer() {
-        if (_glShaderManager) {
+        if (_glResourceManager) {
             if (auto mapRenderer = _mapRenderer.lock()) {
-                std::set<std::shared_ptr<nml::GLModel> > glModels;
-                for (auto it = _glModelMap.begin(); it != _glModelMap.end(); it++) {
-                    glModels.insert(it->second);
-                }
-                mapRenderer->addRenderThreadCallback(std::make_shared<GLModelsDeleter>(std::move(glModels)));
+                mapRenderer->addRenderThreadCallback(std::make_shared<GLResourceDeleter>(_glResourceManager));
             }
         }
     }
@@ -97,7 +91,7 @@ namespace carto {
     }
 
     void NMLModelRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        _glShaderManager = std::make_shared<nml::GLShaderManager>();
+        _glResourceManager = std::make_shared<nml::GLResourceManager>();
         _glModelMap.clear();
     }
 
@@ -129,25 +123,27 @@ namespace carto {
             std::shared_ptr<nml::GLModel> glModel = _glModelMap[sourceModel];
             if (!glModel) {
                 glModel = std::make_shared<nml::GLModel>(*sourceModel);
-                glModel->create(*_glShaderManager);
+                glModel->create(*_glResourceManager);
                 _glModelMap[sourceModel] = glModel;
             }
     
             cglib::mat4x4<float> mvMat = cglib::mat4x4<float>::convert(viewState.getModelviewMat() * drawData.getLocalMat());
             nml::RenderState renderState(projMat, mvMat, ambientLightColor, mainLightColor, -mainLightDir);
 
-            glModel->draw(*_glShaderManager, renderState);
+            glModel->draw(*_glResourceManager, renderState);
         }
-    
-        // Dispose unused models
+
+        // Remove stale models
         for (auto it = _glModelMap.begin(); it != _glModelMap.end(); ) {
-            if (it->first.unique()) {
-                it->second->dispose();
+            if (it->first.expired()) {
                 it = _glModelMap.erase(it);
             } else {
                 it++;
             }
         }
+
+        // Dispose unused models
+        _glResourceManager->deleteUnused();
 
         // Restore expected GL state
         glDepthMask(GL_TRUE);
@@ -159,7 +155,7 @@ namespace carto {
     }
 
     void NMLModelRenderer::onSurfaceDestroyed() {
-        _glShaderManager.reset();
+        _glResourceManager.reset();
         _glModelMap.clear();
     }
 

@@ -1,6 +1,6 @@
 #include "GLMaterial.h"
 #include "GLTexture.h"
-#include "GLShaderManager.h"
+#include "GLResourceManager.h"
 #include "Package.h"
 
 namespace {
@@ -254,8 +254,7 @@ namespace carto { namespace nml {
         _transparency(),
         _specular(),
         _shininess(),
-        _glProgramId(),
-        _replacedTextures()
+        _glProgramId()
     {
         _type = material.type();
         _culling = material.culling();
@@ -269,7 +268,7 @@ namespace carto { namespace nml {
         _shininess = material.has_shininess() ? material.shininess() : 0.0f;
     }
     
-    void GLMaterial::create(GLShaderManager& shaderManager) {
+    void GLMaterial::create(GLResourceManager& resourceManager) {
         std::set<std::string> defs;
         if (!_emission.textureId.empty()) {
             defs.insert("EMISSION_TEXTURE");
@@ -289,46 +288,25 @@ namespace carto { namespace nml {
 
         switch (_type) {
         case Material::CONSTANT:
-            _glProgramId = shaderManager.createProgram(constantVsh, constantFsh, defs);
+            _glProgramId = resourceManager.createProgram(constantVsh, constantFsh, defs);
             break;
         case Material::PREBAKED:
-            _glProgramId = shaderManager.createProgram(prebakedVsh, prebakedFsh, defs);
+            _glProgramId = resourceManager.createProgram(prebakedVsh, prebakedFsh, defs);
             break;
         case Material::LAMBERT:
-            _glProgramId = shaderManager.createProgram(lambertPhongBlinnVsh, lambertPhongBlinnFsh, defs);
+            _glProgramId = resourceManager.createProgram(lambertPhongBlinnVsh, lambertPhongBlinnFsh, defs);
             break;
         case Material::PHONG:
             defs.insert("PHONG");
-            _glProgramId = shaderManager.createProgram(lambertPhongBlinnVsh, lambertPhongBlinnFsh, defs);
+            _glProgramId = resourceManager.createProgram(lambertPhongBlinnVsh, lambertPhongBlinnFsh, defs);
             break;
         case Material::BLINN:
             defs.insert("BLINN");
-            _glProgramId = shaderManager.createProgram(lambertPhongBlinnVsh, lambertPhongBlinnFsh, defs);
+            _glProgramId = resourceManager.createProgram(lambertPhongBlinnVsh, lambertPhongBlinnFsh, defs);
             break;
         default:
             assert(false);
         }
-    }
-
-    void GLMaterial::dispose() {
-       GLColorOrTexture* channels[] = {
-            &_emission,
-            &_ambient,
-            &_diffuse,
-            &_specular,
-            nullptr
-        };
-
-        for (int i = 0; channels[i]; i++) {
-            if (channels[i]->texture) {
-                channels[i]->texture->dispose();
-            }
-        }
-
-        for (auto it = _replacedTextures.begin(); it != _replacedTextures.end(); it++) {
-            (*it)->dispose();
-        }
-        _replacedTextures.clear();
     }
 
     int GLMaterial::getCulling() const {
@@ -346,17 +324,14 @@ namespace carto { namespace nml {
 
         for (int i = 0; channels[i]; i++) {
             if (channels[i]->textureId == textureId) {
-                if (channels[i]->texture) {
-                    _replacedTextures.insert(channels[i]->texture);
-                }
                 channels[i]->texture = texture;
             }
         }
     }
     
-    void GLMaterial::bind(GLShaderManager& shaderManager, const RenderState& renderState, const cglib::mat4x4<float>& mvMatrix, const cglib::mat4x4<float>& invTransMVMatrix) {
+    void GLMaterial::bind(GLResourceManager& resourceManager, const RenderState& renderState, const cglib::mat4x4<float>& mvMatrix, const cglib::mat4x4<float>& invTransMVMatrix) {
         if (_glProgramId == 0) {
-            create(shaderManager);
+            create(resourceManager);
         }
 
         glDepthMask(_opaqueMode == Material::OPAQUE ? GL_TRUE : GL_FALSE);
@@ -376,7 +351,7 @@ namespace carto { namespace nml {
         if (_type != Material::PREBAKED) {
             if (_emission.texture) {
                 glUniform1i(glGetUniformLocation(_glProgramId, "uEmissionTex"), 0);
-                _emission.texture->bind(0);
+                _emission.texture->bind(resourceManager, 0);
             } else {
                 glUniform4fv(glGetUniformLocation(_glProgramId, "uEmissionColor"), 1, _emission.color.data());
             }
@@ -385,14 +360,14 @@ namespace carto { namespace nml {
         if (_type != Material::CONSTANT) {
             if (_diffuse.texture) {
                 glUniform1i(glGetUniformLocation(_glProgramId, "uDiffuseTex"), 1);
-                _diffuse.texture->bind(1);
+                _diffuse.texture->bind(resourceManager, 1);
             } else {
                 glUniform4fv(glGetUniformLocation(_glProgramId, "uDiffuseColor"), 1, _diffuse.color.data());
             }
 
             if (_transparent.texture) {
                 glUniform1i(glGetUniformLocation(_glProgramId, "uTransparentTex"), 2);
-                _transparent.texture->bind(2);
+                _transparent.texture->bind(resourceManager, 2);
             } else {
                 glUniform4fv(glGetUniformLocation(_glProgramId, "uTransparentColor"), 1, _transparent.color.data());
             }
@@ -401,7 +376,7 @@ namespace carto { namespace nml {
             if (_type != Material::PREBAKED) {
                 if (_ambient.texture) {
                     glUniform1i(glGetUniformLocation(_glProgramId, "uAmbientTex"), 3);
-                    _ambient.texture->bind(3);
+                    _ambient.texture->bind(resourceManager, 3);
                 } else {
                     glUniform4fv(glGetUniformLocation(_glProgramId, "uAmbientColor"), 1, _ambient.color.data());
                 }
@@ -409,7 +384,7 @@ namespace carto { namespace nml {
                 if (_type != Material::LAMBERT) {
                     if (_specular.texture) {
                         glUniform1i(glGetUniformLocation(_glProgramId, "uSpecularTex"), 4);
-                        _specular.texture->bind(4);
+                        _specular.texture->bind(resourceManager, 4);
                     } else {
                         glUniform4fv(glGetUniformLocation(_glProgramId, "uSpecularColor"), 1, _specular.color.data());
                     }

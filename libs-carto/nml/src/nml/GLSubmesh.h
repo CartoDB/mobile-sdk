@@ -17,16 +17,16 @@ namespace carto { namespace nml {
     class Submesh;
     class SubmeshOpList;
     class GLMesh;
+    class GLResourceManager;
 
-    class GLSubmesh final {
+    class GLSubmesh final : public std::enable_shared_from_this<GLSubmesh> {
     public:
         explicit GLSubmesh(const Submesh& submesh);
         explicit GLSubmesh(const GLMesh& glMesh, const SubmeshOpList& submeshOpList);
 
-        void create();
-        void dispose();
+        void create(GLResourceManager& resourceManager);
 
-        void draw(const RenderState& renderState);
+        void draw(GLResourceManager& resourceManager, const RenderState& renderState);
 
         void calculateRayIntersections(const cglib::ray3<double>& ray, std::vector<RayIntersection>& intersections) const;
 
@@ -36,7 +36,7 @@ namespace carto { namespace nml {
         int getTotalGeometrySize() const;
 
     private:
-        void uploadSubmesh();
+        void uploadSubmesh(GLResourceManager& resourceManager);
         
         static GLint convertType(int type);
         static void convertToFloatBuffer(const std::string& str, std::vector<float>& buf);

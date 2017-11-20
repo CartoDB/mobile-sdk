@@ -1,4 +1,5 @@
 #include "GLTexture.h"
+#include "GLResourceManager.h"
 #include "Package.h"
 
 #include "rg_etc1.h"
@@ -48,22 +49,15 @@ namespace carto { namespace nml {
     {
     }
     
-    void GLTexture::create() {
+    void GLTexture::create(GLResourceManager& resourceManager) {
         if (_glTextureId == 0) {
-            uploadTexture();
+            uploadTexture(resourceManager);
         }
     }
     
-    void GLTexture::dispose()	{
-        if (_glTextureId != 0) {
-            glDeleteTextures(1, &_glTextureId);
-        }
-        _glTextureId = 0;
-    }
-    
-    void GLTexture::bind(int texUnit) {
+    void GLTexture::bind(GLResourceManager& resourceManager, int texUnit) {
         if (_glTextureId == 0) {
-            uploadTexture();
+            uploadTexture(resourceManager);
         }
 
         glActiveTexture(GL_TEXTURE0 + texUnit);
@@ -221,7 +215,7 @@ namespace carto { namespace nml {
         }
     }
     
-    void GLTexture::uploadTexture() {
+    void GLTexture::uploadTexture(GLResourceManager& resourceManager) {
         if (!_texture) {
             return;
         }
@@ -231,7 +225,7 @@ namespace carto { namespace nml {
             return;
         }
 
-        glGenTextures(1, &_glTextureId);
+        _glTextureId = resourceManager.allocateTexture(shared_from_this());
     
         glBindTexture(GL_TEXTURE_2D, _glTextureId);
         updateMipMaps(texture);

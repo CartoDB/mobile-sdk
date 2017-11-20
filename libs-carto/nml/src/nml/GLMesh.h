@@ -16,14 +16,14 @@ namespace carto { namespace nml {
     class Mesh;
     class MeshOp;
     class GLSubmesh;
+    class GLResourceManager;
         
     class GLMesh final {
     public:
         explicit GLMesh(const Mesh& mesh);
         explicit GLMesh(const GLMesh& glMesh, const MeshOp& meshOp);
 
-        void create();
-        void dispose();
+        void create(GLResourceManager& resourceManager);
 
         const std::vector<std::shared_ptr<GLSubmesh>>& getSubmeshList() const;
 

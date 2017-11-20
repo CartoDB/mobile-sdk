@@ -20,19 +20,18 @@ namespace carto { namespace nml {
     class GLMaterial;
     class GLMesh;
     class GLTexture;
-    class GLShaderManager;
+    class GLResourceManager;
         
     class GLMeshInstance final {
     public:
         explicit GLMeshInstance(const MeshInstance& meshInstance, const std::map<std::string, std::shared_ptr<GLMesh>>& meshMap, const std::map<std::string, std::shared_ptr<GLTexture>>& textureMap);
 
-        void create(GLShaderManager& shaderManager);
-        void dispose();
+        void create(GLResourceManager& resourceManager);
 
         void replaceMesh(const std::string& meshId, const std::shared_ptr<GLMesh>& mesh);
         void replaceTexture(const std::string& textureId, const std::shared_ptr<GLTexture>& texture);
 
-        void draw(GLShaderManager& shaderManager, const RenderState& renderState);
+        void draw(GLResourceManager& resourceManager, const RenderState& renderState);
 
         void calculateRayIntersections(const cglib::ray3<double>& ray, std::vector<RayIntersection>& intersections) const;
 
@@ -41,7 +40,6 @@ namespace carto { namespace nml {
     private:
         std::string _meshId;
         std::shared_ptr<GLMesh> _mesh;
-        std::set<std::shared_ptr<GLMesh>> _replacedMeshes;
         std::map<std::string, std::shared_ptr<GLMaterial>> _materialMap;
         bool _transformEnabled;
         cglib::mat4x4<float> _transformMatrix;

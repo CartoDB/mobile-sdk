@@ -1,5 +1,6 @@
 #include "GLMesh.h"
 #include "GLSubmesh.h"
+#include "GLResourceManager.h"
 #include "Package.h"
 
 namespace carto { namespace nml {
@@ -24,15 +25,9 @@ namespace carto { namespace nml {
         }
     }
     
-    void GLMesh::create() {
+    void GLMesh::create(GLResourceManager& resourceManager) {
         for (auto it = _submeshList.begin(); it != _submeshList.end(); it++) {
-            (*it)->create();
-        }
-    }
-    
-    void GLMesh::dispose() {
-        for (auto it = _submeshList.begin(); it != _submeshList.end(); it++) {
-            (*it)->dispose();
+            (*it)->create(resourceManager);
         }
     }
     

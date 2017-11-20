@@ -16,15 +16,15 @@
 namespace carto { namespace nml {
     class Texture;
     class Sampler;
+    class GLResourceManager;
 
-    class GLTexture final {
+    class GLTexture final : std::enable_shared_from_this<GLTexture> {
     public:
         explicit GLTexture(std::shared_ptr<Texture> texture);
 
-        void create();
-        void dispose();
+        void create(GLResourceManager& resourceManager);
 
-        void bind(int texUnit);
+        void bind(GLResourceManager& resourceManager, int texUnit);
 
         int getTextureSize() const;
 
@@ -37,7 +37,7 @@ namespace carto { namespace nml {
         void updateSampler(bool hasSampler, const Sampler& sampler, bool complete);
         void updateMipLevel(int level, const Texture& texture);
         void updateMipMaps(const Texture& texture);
-        void uploadTexture();
+        void uploadTexture(GLResourceManager& resourceManager);
 
         std::shared_ptr<Texture> _texture;
 
