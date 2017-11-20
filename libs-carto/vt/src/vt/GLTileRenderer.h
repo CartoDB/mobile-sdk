@@ -241,9 +241,9 @@ namespace carto { namespace vt {
         std::array<std::shared_ptr<BitmapLabelMap>, 2> _renderBitmapLabelMap;  // for 'ground' labels and for 'billboard' labels
         std::vector<std::shared_ptr<TileLabel>> _labels;
         std::unordered_map<std::pair<int, long long>, std::shared_ptr<TileLabel>, LabelHash> _labelMap;
-        std::unordered_map<std::shared_ptr<const Bitmap>, CompiledBitmap> _compiledBitmapMap;
-        std::unordered_map<std::shared_ptr<const TileBitmap>, CompiledBitmap> _compiledTileBitmapMap;
-        std::unordered_map<std::shared_ptr<const TileGeometry>, CompiledGeometry> _compiledTileGeometryMap;
+        std::map<std::weak_ptr<const Bitmap>, CompiledBitmap, std::owner_less<std::weak_ptr<const Bitmap>>> _compiledBitmapMap;
+        std::map<std::weak_ptr<const TileBitmap>, CompiledBitmap, std::owner_less<std::weak_ptr<const TileBitmap>>> _compiledTileBitmapMap;
+        std::map<std::weak_ptr<const TileGeometry>, CompiledGeometry, std::owner_less<std::weak_ptr<const TileGeometry>>> _compiledTileGeometryMap;
         std::map<int, CompiledLabelBatch> _compiledLabelBatches;
         int _labelBatchCounter = 0;
 
