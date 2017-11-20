@@ -54,6 +54,8 @@ namespace carto { namespace geocoding {
             for (auto qit1 = query1.begin(); qit1 != query1.end(); qit1++) {
                 std::string value = qit1->get<const char*>(0);
                 switch (static_cast<FieldType>(qit1->get<int>(1))) {
+                case FieldType::NONE:
+                    break;
                 case FieldType::COUNTRY:
                     country = value;
                     break;
@@ -77,6 +79,9 @@ namespace carto { namespace geocoding {
                     break;
                 case FieldType::NAME:
                     name = value;
+                    break;
+                case FieldType::HOUSENUMBER: // not really used
+                    houseNumber = value;
                     break;
                 }
             }
