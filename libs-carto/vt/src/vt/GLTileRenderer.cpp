@@ -876,7 +876,7 @@ namespace carto { namespace vt {
         
         // Release unused textures
         for (auto it = _compiledBitmapMap.begin(); it != _compiledBitmapMap.end();) {
-            if (it->first.unique()) {
+            if (it->first.use_count() == 1) {
                 deleteTexture(it->second.texture);
                 it = _compiledBitmapMap.erase(it);
             }
@@ -887,7 +887,7 @@ namespace carto { namespace vt {
         
         // Release unused tile textures
         for (auto it = _compiledTileBitmapMap.begin(); it != _compiledTileBitmapMap.end();) {
-            if (it->first.unique()) {
+            if (it->first.use_count() == 1) {
                 deleteTexture(it->second.texture);
                 it = _compiledTileBitmapMap.erase(it);
             }
@@ -898,7 +898,7 @@ namespace carto { namespace vt {
 
         // Release unused VBOs
         for (auto it = _compiledTileGeometryMap.begin(); it != _compiledTileGeometryMap.end();) {
-            if (it->first.unique()) {
+            if (it->first.use_count() == 1) {
                 deleteVertexArray(it->second.geometryVAO);
                 deleteBuffer(it->second.vertexGeometryVBO);
                 deleteBuffer(it->second.indicesVBO);

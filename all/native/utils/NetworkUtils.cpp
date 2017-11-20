@@ -233,7 +233,7 @@ namespace carto {
 
     std::map<std::string, std::string> NetworkUtils::CreateAppRefererHeader() {
         std::map<std::string, std::string> headers;
-        headers["Referer"] = "appid://" + URLEncode(PlatformUtils::GetAppIdentifier());
+        headers["Referer"] = "app://" + URLEncode(PlatformUtils::GetAppIdentifier());
         return headers;
     }
 
