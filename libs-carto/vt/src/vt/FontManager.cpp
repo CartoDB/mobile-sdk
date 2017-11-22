@@ -69,13 +69,13 @@ namespace carto { namespace vt {
     class FontManagerLibrary {
     public:
         FontManagerLibrary() : _library(nullptr) {
-            std::lock_guard<std::recursive_mutex> lock(_Mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
 
             FT_Init_FreeType(&_library);
         }
 
         ~FontManagerLibrary() {
-            std::lock_guard<std::recursive_mutex> lock(_Mutex);
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
 
             FT_Done_FreeType(_library);
             _library = nullptr;
@@ -86,15 +86,15 @@ namespace carto { namespace vt {
         }
 
         std::recursive_mutex& getMutex() const {
-            return _Mutex;
+            return _mutex;
         }
 
     private:
         FT_Library _library;
-        static std::recursive_mutex _Mutex; // use global lock as harfbuzz is not thread-safe on every platform
+        static std::recursive_mutex _mutex; // use global lock as harfbuzz is not thread-safe on every platform
     };
 
-    std::recursive_mutex FontManagerLibrary::_Mutex;
+    std::recursive_mutex FontManagerLibrary::_mutex;
 
     class FontManagerFont : public Font {
     public:

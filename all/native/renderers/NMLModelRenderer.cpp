@@ -12,6 +12,7 @@
 #include "utils/Log.h"
 
 #include <nml/GLModel.h>
+#include <nml/GLTexture.h>
 #include <nml/GLResourceManager.h>
 
 namespace {
@@ -93,6 +94,8 @@ namespace carto {
     void NMLModelRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
         _glResourceManager = std::make_shared<nml::GLResourceManager>();
         _glModelMap.clear();
+
+        nml::GLTexture::registerGLExtensions();
     }
 
     bool NMLModelRenderer::onDrawFrame(float deltaSeconds, const ViewState& viewState) {

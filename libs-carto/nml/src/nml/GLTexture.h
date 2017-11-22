@@ -10,8 +10,10 @@
 #include "GLBase.h"
 
 #include <map>
+#include <mutex>
 #include <memory>
 #include <string>
+#include <unordered_set>
 
 namespace carto { namespace nml {
     class Texture;
@@ -28,12 +30,15 @@ namespace carto { namespace nml {
 
         int getTextureSize() const;
 
-        static void uncompressTexture(Texture& texture);
+        static void transcodeIfNeeded(Texture& texture);
+
+        static void registerGLExtensions();
 
     private:
         static GLuint getSamplerWrapMode(int wrapMode);
         static bool hasGLExtension(const char* ext);
-        
+        static void uncompressTexture(Texture& texture);
+
         void updateSampler(bool hasSampler, const Sampler& sampler, bool complete);
         void updateMipLevel(int level, const Texture& texture);
         void updateMipMaps(const Texture& texture);
@@ -42,6 +47,9 @@ namespace carto { namespace nml {
         std::shared_ptr<Texture> _texture;
 
         GLuint _glTextureId;
+
+        static std::mutex _mutex;
+        static std::unordered_set<std::string> _extensions;
     };
 } }
 

@@ -75,7 +75,39 @@ namespace carto { namespace nml {
         }
         return static_cast<int>(size);
     }
-    
+
+    void GLTexture::transcodeIfNeeded(Texture& texture) {
+        switch (texture.format()) {
+        case Texture::ETC1:
+            if (!hasGLExtension("GL_OES_compressed_ETC1_RGB8_texture")) {
+                uncompressTexture(texture);
+            }
+            break;
+        case Texture::PVRTC:
+            if (!hasGLExtension("GL_IMG_texture_compression_pvrtc")) {
+                uncompressTexture(texture);
+            }
+            break;
+        default:
+            break;
+        }
+    }
+
+    void GLTexture::registerGLExtensions() {
+        std::lock_guard<std::mutex> lock(_mutex);
+        if (_extensions.empty()) {
+            const char* extensionsString = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
+            if (!extensionsString) {
+                return;
+            }
+            std::stringstream ss(extensionsString);
+            std::string s;
+            while (getline(ss, s, ' ')) {
+                _extensions.insert(s);
+            }
+        }
+    }
+
     GLuint GLTexture::getSamplerWrapMode(int wrapMode) {
         switch (wrapMode) {
         case Sampler::CLAMP:
@@ -86,26 +118,10 @@ namespace carto { namespace nml {
     }
 
     bool GLTexture::hasGLExtension(const char* ext) {
-        static std::mutex mutex;
-        static std::shared_ptr<std::unordered_set<std::string>> extensions;
-
-        std::lock_guard<std::mutex> lock(mutex);
-        if (!extensions) {
-            extensions = std::make_shared<std::unordered_set<std::string>>();
-
-            const char* extensionsString = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
-            if (!extensionsString) {
-                return false;
-            }
-            std::stringstream ss(extensionsString);
-            std::string s;
-            while (getline(ss, s, ' ')) {
-                extensions->insert(s);
-            }
-        }
-        return extensions->find(ext) != extensions->end();
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _extensions.find(ext) != _extensions.end();
     }
-    
+
     void GLTexture::updateSampler(bool hasSampler, const Sampler& sampler, bool complete) {
         if (hasSampler) {
             switch (sampler.filter()) {
@@ -288,5 +304,8 @@ namespace carto { namespace nml {
             break;
         }
     }
-    
+
+    std::mutex GLTexture::_mutex;
+    std::unordered_set<std::string> GLTexture::_extensions;
+
 } }

@@ -760,6 +760,8 @@ namespace carto {
         }
 
         if (texture) {
+            nml::GLTexture::transcodeIfNeeded(*texture);
+
             auto glTexture = std::make_shared<nml::GLTexture>(texture);
     
             std::unique_lock<std::recursive_mutex> lock(layer->_mutex);

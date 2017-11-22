@@ -14,6 +14,7 @@
 #include "utils/Log.h"
 
 #include <nml/GLModel.h>
+#include <nml/GLTexture.h>
 #include <nml/GLResourceManager.h>
 
 namespace {
@@ -106,6 +107,8 @@ namespace carto {
     void NMLModelLODTreeRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
         _glResourceManager = std::make_shared<nml::GLResourceManager>();
         _drawRecordMap.clear();
+
+        nml::GLTexture::registerGLExtensions();
     }
 
     void NMLModelLODTreeRenderer::calculateRayIntersectedElements(const std::shared_ptr<NMLModelLODTreeLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
