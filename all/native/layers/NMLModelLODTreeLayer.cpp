@@ -463,13 +463,12 @@ namespace carto {
         }
     
         // Refine data - if data is not available for any nodes, try substitutions
-        for (std::size_t idx = 0; idx < nodeDrawList.size(); ) {
+        for (std::size_t idx = 0; idx < nodeDrawList.size(); idx++) {
             const NMLModelLODTree* modelLODTree = nodeDrawList[idx].first;
             int nodeId = nodeDrawList[idx].second;
     
             // If data is available, move to next node
             if (isDataAvailable(modelLODTree, nodeId)) {
-                idx++;
                 continue;
             }
     
@@ -477,36 +476,42 @@ namespace carto {
             loadMeshes(modelLODTree, nodeId, false);
             loadTextures(modelLODTree, nodeId, false);
             
-            // Check if some children have data available. Size constraints are ignored from now on.
-            int childNodeCounter = 0;
-            std::vector<int> childIds = childrenIdsMap[modelLODTree->getGlobalNodeId(nodeId)];
-            for (std::size_t j = 0; j < childIds.size(); j++) {
-                int childId = childIds[j];
-                if (isDataAvailable(modelLODTree, childId)) {
-                    if (childNodeCounter++ == 0) {
-                        nodeDrawList[idx] = Node(modelLODTree, childId);
-                    } else {
-                        nodeDrawList.insert(nodeDrawList.begin() + idx, Node(modelLODTree, childId));
-                    }
-                    idx++;
-                    continue;
-                }
-                const std::vector<int>& childChildIds = childrenIdsMap[modelLODTree->getGlobalNodeId(childId)];
-                childIds.insert(childIds.end(), childChildIds.begin(), childChildIds.end());
-            }
-            if (childNodeCounter > 0) {
-                continue;
-            }
-    
             // Find closest parent that has data available. Ignore size constraints
+            bool parentFound = false;
+            int parentLevel = 0;
             for (int parentId = nodeId; parentId != 0; ) {
                 parentId = modelLODTree->getNodeParentId(parentId);
+                parentLevel++;
                 if (isDataAvailable(modelLODTree, parentId)) {
                     nodeDrawList[idx] = Node(modelLODTree, parentId);
+                    parentFound = true;
                     break;
                 }
             }
-            idx++;
+
+            if (!parentFound || parentLevel > 1) {
+                // Check if some children have data available. Size constraints are ignored from now on.
+                int childCounter = 0;
+                std::vector<int> childIds = childrenIdsMap[modelLODTree->getGlobalNodeId(nodeId)];
+                for (std::size_t j = 0; j < childIds.size(); j++) {
+                    int childId = childIds[j];
+                    if (isDataAvailable(modelLODTree, childId)) {
+                        if (childCounter++ == 0) {
+                            nodeDrawList[idx] = Node(modelLODTree, childId);
+                        } else {
+                            idx++;
+                            nodeDrawList.insert(nodeDrawList.begin() + idx, Node(modelLODTree, childId));
+                        }
+                        continue;
+                    }
+                    const std::vector<int>& childChildIds = childrenIdsMap[modelLODTree->getGlobalNodeId(childId)];
+                    childIds.insert(childIds.end(), childChildIds.begin(), childChildIds.end());
+                }
+                if ((!parentFound || parentLevel > 3) && childCounter == 0) {
+                    nodeDrawList.erase(nodeDrawList.begin() + idx);
+                    idx--;
+                }
+            }
         }
         
         // Create map of node ids
