@@ -12,6 +12,7 @@
 #include "utils/Const.h"
 #include "utils/Log.h"
 
+#include <ctime>
 #include <vector>
 #include <functional>
 #include <string>
@@ -25,6 +26,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/date_time/local_time/local_time.hpp>
 
 #include <picojson/picojson.h>
 
@@ -45,6 +47,7 @@
 #include <valhalla/baldr/graphtilembtstorage.h>
 #include <valhalla/baldr/pathlocation.h>
 #include <valhalla/baldr/directededge.h>
+#include <valhalla/baldr/datetime.h>
 #include <valhalla/loki/search.h>
 #include <valhalla/sif/autocost.h>
 #include <valhalla/sif/costfactory.h>
@@ -309,9 +312,18 @@ namespace valhalla { namespace thor {
         factory.Register("transit", sif::CreateTransitCost);
 
         boost::property_tree::ptree config_costing;
-        cost = factory.Create(costing, config_costing);
-        mode = cost->travel_mode();
-        mode_costing[static_cast<uint32_t>(mode)] = cost;
+        if (costing == "multimodal" || costing == "transit") {
+            mode_costing[0] = factory.Create("auto", config_costing);
+            mode_costing[1] = factory.Create("pedestrian", config_costing);
+            mode_costing[2] = factory.Create("bicycle", config_costing);
+            mode_costing[3] = factory.Create("transit", config_costing);
+            cost = factory.Create("pedestrian", config_costing);
+            mode = valhalla::sif::TravelMode::kPedestrian;
+        } else {
+            cost = factory.Create(costing, config_costing);
+            mode = cost->travel_mode();
+            mode_costing[static_cast<uint32_t>(mode)] = cost;
+        }
     }
     
     thor_worker_t::~thor_worker_t() {
@@ -435,13 +447,25 @@ namespace valhalla { namespace thor {
             correlated.push_back(projections.at(point));
         }
 
+        if (!correlated.empty() && date_time_type == 0) {
+#ifndef _WIN32
+            tzset();
+            time_t now = time(0);
+            struct tm* ltnow = localtime(&now);
+            boost::local_time::time_zone_ptr timezone(new boost::local_time::posix_time_zone(tzname[ltnow->tm_isdst]));
+            correlated.front().date_time_ = valhalla::baldr::DateTime::iso_date_time(timezone);
+#else
+            throw std::runtime_error("Multimodal routing not implemented on Windows platforms");
+#endif
+        }
+        
         auto s = std::chrono::system_clock::now();
         bool prior_is_node = false;
         std::list<baldr::PathLocation> through_loc;
         baldr::GraphId through_edge;
         std::vector<thor::PathInfo> path_edges;
         std::string origin_date_time, dest_date_time;
-
+        
         std::list<valhalla::odin::TripPath> trippaths;
         baldr::PathLocation& last_break_origin = correlated[0];
         for (auto path_location = ++correlated.cbegin(); path_location != correlated.cend(); ++path_location) {
@@ -728,7 +752,7 @@ namespace carto {
             }
             
             valhalla::thor::thor_worker_t worker(databases, profile);
-            tripPaths = worker.path_depart_at(points, boost::optional<int>());
+            tripPaths = worker.path_depart_at(points, profile == "multimodal" ? boost::optional<int>(0) : boost::optional<int>());
         }
         catch (const std::exception& ex) {
             throw GenericException("Exception while calculating route", ex.what());
