@@ -249,7 +249,11 @@ namespace carto { namespace vt {
         } while (generator(id, verticesList));
     }
 
-    void TileLayerBuilder::addPolygons3D(const std::function<bool(long long& id, VerticesList& verticesList)>& generator, float height, const Polygon3DStyle& style) {
+    void TileLayerBuilder::addPolygons3D(const std::function<bool(long long& id, VerticesList& verticesList)>& generator, float minHeight, float maxHeight, const Polygon3DStyle& style) {
+        if (minHeight > maxHeight) {
+            return;
+        }
+
         long long id = 0;
         std::vector<std::vector<cglib::vec2<float>>> verticesList;
         if (!generator(id, verticesList)) {
@@ -274,7 +278,7 @@ namespace carto { namespace vt {
 
         do {
             std::size_t i0 = _ids.size();
-            tesselatePolygon3D(verticesList, height, static_cast<char>(styleIndex), style);
+            tesselatePolygon3D(verticesList, minHeight, maxHeight, static_cast<char>(styleIndex), style);
             _ids.fill(id, _indices.size() - i0);
         } while (generator(id, verticesList));
     }
@@ -671,8 +675,8 @@ namespace carto { namespace vt {
         return true;
     }
 
-    bool TileLayerBuilder::tesselatePolygon3D(const VerticesList& verticesList, float height, char styleIndex, const Polygon3DStyle& style) {
-        if (height != 0) {
+    bool TileLayerBuilder::tesselatePolygon3D(const VerticesList& verticesList, float minHeight, float maxHeight, char styleIndex, const Polygon3DStyle& style) {
+        if (minHeight != maxHeight) {
             for (const Vertices& points : verticesList) {
                 std::size_t j = points.size() - 1;
                 for (std::size_t i = 0; i < points.size(); i++) {
@@ -682,14 +686,14 @@ namespace carto { namespace vt {
                     int i0 = static_cast<int>(_vertices.size());
                     _vertices.append(points[i], points[j], points[j]);
                     _binormals.append(binormal, binormal, binormal);
-                    _heights.append(0, 0, height);
+                    _heights.append(minHeight, minHeight, maxHeight);
                     _attribs.append(cglib::vec4<char>(styleIndex, 1, 0, 0), cglib::vec4<char>(styleIndex, 1, 0, 0), cglib::vec4<char>(styleIndex, 1, 1, 0));
                     _indices.append(i0 + 0, i0 + 1, i0 + 2);
 
                     int i1 = static_cast<int>(_vertices.size());
                     _vertices.append(points[j], points[i], points[i]);
                     _binormals.append(binormal, binormal, binormal);
-                    _heights.append(height, height, 0);
+                    _heights.append(maxHeight, maxHeight, minHeight);
                     _attribs.append(cglib::vec4<char>(styleIndex, 1, 1, 0), cglib::vec4<char>(styleIndex, 1, 1, 0), cglib::vec4<char>(styleIndex, 1, 0, 0));
                     _indices.append(i1 + 0, i1 + 1, i1 + 2);
 
@@ -734,7 +738,7 @@ namespace carto { namespace vt {
             _vertices.append(p);
         }
         _binormals.fill(cglib::vec2<float>(0, 0), _vertices.size() - offset);
-        _heights.fill(height, _vertices.size() - offset);
+        _heights.fill(maxHeight, _vertices.size() - offset);
         _attribs.fill(cglib::vec4<char>(styleIndex, 0, 1, 0), _vertices.size() - offset);
 
         for (int i = 0; i < elementCount * 3; i += 3) {

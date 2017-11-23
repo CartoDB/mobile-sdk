@@ -587,6 +587,7 @@ namespace carto { namespace css {
         { "building-fill", "fill" },
         { "building-fill-opacity", "fill-opacity" },
         { "building-height", "height" },
+        { "building-min-height", "min-height" },
         { "building-geometry-transform", "geometry-transform" }
         // NOTE: comp-op not supported for building symbolizer
     };

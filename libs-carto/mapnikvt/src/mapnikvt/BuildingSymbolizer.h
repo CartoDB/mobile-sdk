@@ -27,6 +27,7 @@ namespace carto { namespace mvt {
         vt::ColorFunction _fillFunc; // vt::Color(0xff808080)
         vt::FloatFunction _fillOpacityFunc; // 1.0f
         float _height = 0.0f;
+        float _minHeight = 0.0f;
     };
 } }
 

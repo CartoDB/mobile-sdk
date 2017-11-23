@@ -40,7 +40,7 @@ namespace carto { namespace mvt {
                 }
             }
             return false;
-        }, _height * HEIGHT_SCALE, style);
+        }, _minHeight * HEIGHT_SCALE, _height * HEIGHT_SCALE, style);
     }
 
     void BuildingSymbolizer::bindParameter(const std::string& name, const std::string& value) {
@@ -52,6 +52,9 @@ namespace carto { namespace mvt {
         }
         else if (name == "height") {
             bind(&_height, parseExpression(value));
+        }
+        else if (name == "min-height") {
+            bind(&_minHeight, parseExpression(value));
         }
         else {
             GeometrySymbolizer::bindParameter(name, value);
