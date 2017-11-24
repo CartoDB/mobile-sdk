@@ -41,7 +41,7 @@ namespace carto { namespace mvt {
 
         float fontScale = symbolizerContext.getSettings().getFontScale();
         vt::LabelOrientation placement = convertTextPlacement(_placement);
-        float minimumDistance = _minimumDistance * std::pow(2.0f, -exprContext.getZoom());
+        float minimumDistance = _minimumDistance * std::pow(2.0f, -exprContext.getAdjustedZoom());
 
         vt::ColorFunction fillFunc = _functionBuilder.createColorOpacityFunction(_fillFunc, _opacityFunc);
         vt::FloatFunction sizeFunc = _functionBuilder.createChainedFloatFunction("multiply" + boost::lexical_cast<std::string>(fontScale), [fontScale](float size) { return size * fontScale; }, _sizeFunc);

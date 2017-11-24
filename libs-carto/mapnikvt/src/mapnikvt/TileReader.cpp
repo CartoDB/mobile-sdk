@@ -16,7 +16,8 @@ namespace carto { namespace mvt {
 
     std::shared_ptr<vt::Tile> TileReader::readTile(const vt::TileId& tileId) const {
         FeatureExpressionContext exprContext;
-        exprContext.setZoom(tileId.zoom + static_cast<int>(_symbolizerContext.getSettings().getZoomLevelBias()));
+        exprContext.setTileId(tileId);
+        exprContext.setAdjustedZoom(tileId.zoom + static_cast<int>(_symbolizerContext.getSettings().getZoomLevelBias()));
         exprContext.setNutiParameterValueMap(_symbolizerContext.getSettings().getNutiParameterValueMap());
         vt::TileLayerBuilder tileLayerBuilder(tileId, _symbolizerContext.getSettings().getTileSize(), _symbolizerContext.getSettings().getGeometryScale());
 
@@ -57,7 +58,7 @@ namespace carto { namespace mvt {
     }
 
     void TileReader::processLayer(const std::shared_ptr<const Layer>& layer, const std::shared_ptr<const Style>& style, FeatureExpressionContext& exprContext, vt::TileLayerBuilder& layerBuilder) const {
-        std::unordered_set<std::shared_ptr<const Expression>> styleFieldExprs = style->getReferencedFields(exprContext.getZoom());
+        std::unordered_set<std::shared_ptr<const Expression>> styleFieldExprs = style->getReferencedFields(exprContext.getAdjustedZoom());
         std::unordered_set<std::string> styleFields;
         std::for_each(styleFieldExprs.begin(), styleFieldExprs.end(), [&](const std::shared_ptr<const Expression>& expr) {
             styleFields.insert(ValueConverter<std::string>::convert(expr->evaluate(exprContext)));
@@ -124,7 +125,7 @@ namespace carto { namespace mvt {
     std::vector<std::shared_ptr<Symbolizer>> TileReader::findFeatureSymbolizers(const std::shared_ptr<const Style>& style, FeatureExpressionContext& exprContext) const {
         bool anyMatch = false;
         std::vector<std::shared_ptr<Symbolizer>> symbolizers;
-        for (const std::shared_ptr<const Rule>& rule : style->getZoomRules(exprContext.getZoom())) {
+        for (const std::shared_ptr<const Rule>& rule : style->getZoomRules(exprContext.getAdjustedZoom())) {
             std::shared_ptr<const Filter> filter = rule->getFilter();
             if (!filter) {
                 filter = _trueFilter;

@@ -11,12 +11,12 @@
 
 namespace carto { namespace mvt {
     FeatureExpressionContext::FeatureExpressionContext() {
-        _scaleDenom = zoom2ScaleDenominator(static_cast<float>(_zoom));
+        _scaleDenom = zoom2ScaleDenominator(static_cast<float>(_adjustedZoom));
     }
     
-    void FeatureExpressionContext::setZoom(int zoom) {
-        _zoom = zoom;
-        _scaleDenom = zoom2ScaleDenominator(static_cast<float>(_zoom));
+    void FeatureExpressionContext::setAdjustedZoom(int zoom) {
+        _adjustedZoom = zoom;
+        _scaleDenom = zoom2ScaleDenominator(static_cast<float>(_adjustedZoom));
     }
 
     Value FeatureExpressionContext::getVariable(const std::string& name) const {
@@ -30,10 +30,10 @@ namespace carto { namespace mvt {
             }
         }
         if (name == "zoom") {
-            return Value(static_cast<long long>(_zoom));
+            return Value(static_cast<long long>(_adjustedZoom));
         }
         if (name == "view::zoom") {
-            return Value(static_cast<double>(_zoom + 0.5)); // use 'average' zoom; this is only needed for expressions that are not evaluated at view-time
+            return Value(static_cast<double>(_adjustedZoom + 0.5)); // use 'average' zoom; this is only needed for expressions that are not evaluated at view-time
         }
         if (name.compare(0, 6, "nuti::") == 0) {
             auto it = _nutiParameterValueMap.find(name.substr(6));

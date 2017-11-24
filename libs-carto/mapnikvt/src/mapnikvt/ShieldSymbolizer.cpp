@@ -27,7 +27,7 @@ namespace carto { namespace mvt {
         if (orientation == vt::LabelOrientation::LINE) {
             orientation = vt::LabelOrientation::BILLBOARD_2D; // shields should be billboards, even when placed on a line
         }
-        float minimumDistance = (_minimumDistance + bitmapSize) * std::pow(2.0f, -exprContext.getZoom()) / symbolizerContext.getSettings().getTileSize() * 2;
+        float minimumDistance = (_minimumDistance + bitmapSize) * std::pow(2.0f, -exprContext.getAdjustedZoom()) / symbolizerContext.getSettings().getTileSize() * 2;
 
         vt::TextFormatter textFormatter(font, _sizeStatic, getFormatterOptions(symbolizerContext));
         vt::TextFormatter::Options shieldFormatterOptions = textFormatter.getOptions();

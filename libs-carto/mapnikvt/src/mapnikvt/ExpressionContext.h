@@ -8,6 +8,7 @@
 #define _CARTO_MAPNIKVT_EXPRESSIONCONTEXT_H_
 
 #include "Value.h"
+#include "vt/TileId.h"
 
 #include <map>
 #include <memory>
@@ -27,8 +28,11 @@ namespace carto { namespace mvt {
     public:
         FeatureExpressionContext();
 
-        void setZoom(int zoom);
-        int getZoom() const { return _zoom; }
+        void setTileId(const vt::TileId& tileId) { _tileId = tileId; }
+        const vt::TileId& getTileId() const { return _tileId; }
+
+        void setAdjustedZoom(int zoom);
+        int getAdjustedZoom() const { return _adjustedZoom; }
         float getScaleDenominator() const { return _scaleDenom; }
 
         void setFeatureData(std::shared_ptr<const FeatureData> featureData) { _featureData = std::move(featureData); }
@@ -40,7 +44,8 @@ namespace carto { namespace mvt {
         virtual Value getVariable(const std::string& name) const override;
 
     private:
-        int _zoom = 0;
+        vt::TileId _tileId = vt::TileId { 0, 0, 0 };
+        int _adjustedZoom = 0;
         float _scaleDenom = 0;
         std::shared_ptr<const FeatureData> _featureData;
         std::map<std::string, Value> _nutiParameterValueMap;

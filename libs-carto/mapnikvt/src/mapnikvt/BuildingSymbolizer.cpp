@@ -1,6 +1,8 @@
 #include "BuildingSymbolizer.h"
 #include "ParserUtils.h"
 
+#include <cmath>
+
 namespace carto { namespace mvt {
     void BuildingSymbolizer::build(const FeatureCollection& featureCollection, const FeatureExpressionContext& exprContext, const SymbolizerContext& symbolizerContext, vt::TileLayerBuilder& layerBuilder) {
         std::lock_guard<std::mutex> lock(_mutex);
@@ -10,6 +12,8 @@ namespace carto { namespace mvt {
         if (_fillOpacityFunc == vt::FloatFunction(0)) {
             return;
         }
+
+        float heightScale = calculateHeightScale(exprContext.getTileId());
         
         vt::ColorFunction fillFunc = _functionBuilder.createColorOpacityFunction(_fillFunc, _fillOpacityFunc);
         
@@ -40,7 +44,7 @@ namespace carto { namespace mvt {
                 }
             }
             return false;
-        }, _minHeight * HEIGHT_SCALE, _height * HEIGHT_SCALE, style);
+        }, _minHeight * heightScale, _height * heightScale, style);
     }
 
     void BuildingSymbolizer::bindParameter(const std::string& name, const std::string& value) {
@@ -59,5 +63,13 @@ namespace carto { namespace mvt {
         else {
             GeometrySymbolizer::bindParameter(name, value);
         }
+    }
+
+    float BuildingSymbolizer::calculateHeightScale(const vt::TileId& tileId) {
+        // Apply latitude-based scale correction
+        float pi = std::atan(1.0f) * 4.0f;
+        float normMercatorY = 2 * ((tileId.y + 0.5f) / (1 << tileId.zoom) - 0.5f);
+        float lat = pi * 0.5f - 2.0f * std::atan(std::exp(normMercatorY * pi));
+        return HEIGHT_SCALE / std::cos(lat);
     }
 } }
