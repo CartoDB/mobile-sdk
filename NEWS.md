@@ -1,5 +1,40 @@
-CARTO Mobile SDK 4.1.0 (RC)
+CARTO Mobile SDK 4.1.1
 -------------------
+
+This is a maintenance release for SDK 4.1.x containing mostly fixes
+but also some new features.
+
+### New features:
+* Implemented route matching support in ValhallaOfflineRoutingService and PackageManagerValhallaRoutingService classes
+* Included NMLModelLODTree in the build (missing from all previous 4.x builds)
+* Added postcode to geocoding responses
+* Implemented building-min-height parameter for CartoCSS
+* Improved support for offline Valhalla routing with multimodal profile
+
+
+### Fixes/changes:
+* Improved text placement in vector tile renderer with texts that have non-zero vertical offsets
+* Improved tilting gesture handling on UWP
+* Pelias Online geocoding fixes
+* Text rendering quality improvements
+* Improvement of Mapnik XML styling reader
+* Fixed building height issue with built-in basemaps when 3d buildings are enabled
+* Fixed vector tile layer elements missing at zoom level 24
+* Fixed http:// and https:// handling when accessing CartoCSS external resources
+* Fixed subtle background rendering issues on iOS (PowerVR) due to insufficient precision in fragment shaders
+* Fixed UWP specific issue - do not try to create EGL context when panel size is 0
+* Fixed custom HTTP headers being ignored when using HTTPTileDataSource
+* Fixed basemap 3D building height calculation
+* Fixed minor rendering issues with NMLModelLODTreeLayer
+* Fixed a small memory leak with vector layers containing NMLModels
+* Documentation fixes
+
+
+CARTO Mobile SDK 4.1.0
+-------------------
+
+This is a major release containing many new features, fixes and performance
+optimizations.
 
 ### Key highlights:
 * SDK now supports **geocoding** and **reverse geocoding**. For offline geocoding, custom geocoding packages can be used through PackageManager. We have provided country-based packages (bigger countries like US, Germany have split packages) but custom packages based on bounding box can be also used. For online geocoding, SDK includes wrapper class for MapZen Pelias geocoder; your MapZen API key is required for that.
@@ -89,7 +124,7 @@ CARTO Mobile SDK 4.1.0 (RC)
 CARTO Mobile SDK 4.0.2
 -------------------
 
-Maintenance release for CARTO Mobile SDK 4.x
+Maintenance release for CARTO Mobile SDK 4.0.x
 
 ### Fixes/Changes:
 * Enabled stack protector for Android builds for better app security
@@ -106,7 +141,7 @@ Maintenance release for CARTO Mobile SDK 4.x
 CARTO Mobile SDK 4.0.1
 -------------------
 
-This is a maintenance release for 4.0 that includes several important reliability and performance fixes, in addition to
+This is a maintenance release for 4.0.x that includes several important reliability and performance fixes, in addition to
 some minor new features.
 
 ### New features and changes:
