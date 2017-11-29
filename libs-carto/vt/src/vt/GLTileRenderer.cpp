@@ -377,7 +377,7 @@ namespace {
             }
             vTilePos = (uTileMatrix * vec3(vec2(pos), 1.0)).xy;
             vColor = color;
-            vHeight = aVertexAttribs[2];
+            vHeight = max(0.0, (aVertexAttribs[1] != 0.0 ? aVertexHeight * uHeightScale * uVertexScale * 20037508.34 : 10.0) * 0.2);
             gl_Position = uMVPMatrix * vec4(pos, 1.0);
         }
     )GLSL";
@@ -396,7 +396,7 @@ namespace {
             if (min(vTilePos.x, vTilePos.y) < -0.01 || max(vTilePos.x, vTilePos.y) > 1.01) {
                 discard;
             }
-            gl_FragColor = vec4(vColor.rgb * (sqrt(vHeight) * 0.75 + 0.25), vColor.a);
+            gl_FragColor = vec4(vColor.rgb * ((1.0 - exp(-vHeight)) * 0.75 + 0.25), vColor.a);
         }
     )GLSL";
 }
@@ -826,7 +826,8 @@ namespace carto { namespace vt {
         glDepthMask(GL_TRUE);
         glDisable(GL_STENCIL_TEST);
         glStencilMask(0);
-        glDisable(GL_CULL_FACE);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
 
         // 3D polygon pass
         bool update = renderBlendNodes3D(*_renderBlendNodes);
@@ -834,7 +835,6 @@ namespace carto { namespace vt {
         // Restore GL state
         glEnable(GL_BLEND);
         glStencilMask(255);
-        glEnable(GL_CULL_FACE);
         
         return update;
     }
