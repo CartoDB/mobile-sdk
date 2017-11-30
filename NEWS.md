@@ -15,6 +15,7 @@ but also some new features.
 ### Fixes/changes:
 * Improved text placement in vector tile renderer with texts that have non-zero vertical offsets
 * Improved tilting gesture handling on UWP
+* Performance optimizations for MB vector tile decoder
 * Pelias Online geocoding fixes
 * Text rendering quality improvements
 * Improvement of Mapnik XML styling reader
@@ -25,6 +26,7 @@ but also some new features.
 * Fixed UWP specific issue - do not try to create EGL context when panel size is 0
 * Fixed custom HTTP headers being ignored when using HTTPTileDataSource
 * Fixed basemap 3D building height calculation
+* Fixed z-fighting/flickering issue with overlapping basemap 3D buildings
 * Fixed minor rendering issues with NMLModelLODTreeLayer
 * Fixed a small memory leak with vector layers containing NMLModels
 * Documentation fixes
