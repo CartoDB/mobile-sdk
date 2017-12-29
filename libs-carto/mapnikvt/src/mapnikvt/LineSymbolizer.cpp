@@ -12,7 +12,7 @@ namespace carto { namespace mvt {
 
         updateBindings(exprContext);
 
-        if (_strokeWidthFunc == vt::FloatFunction(0) || _strokeOpacityFunc == vt::FloatFunction(0)) {
+        if (_strokeWidthFunc == vt::FloatFunction(0) || _strokeOpacityFunc == vt::FloatFunction(0) || _strokeFunc == vt::ColorFunction(vt::Color())) {
             return;
         }
         

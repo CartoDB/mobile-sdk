@@ -6,7 +6,7 @@ namespace carto { namespace mvt {
 
         updateBindings(exprContext);
 
-        if (_opacityFunc == vt::FloatFunction(0)) {
+        if (_opacityFunc == vt::FloatFunction(0) || _fillFunc == vt::ColorFunction(vt::Color())) {
             return;
         }
         
