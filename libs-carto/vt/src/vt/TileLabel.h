@@ -36,10 +36,11 @@ namespace carto { namespace vt {
             FloatFunction haloRadiusFunc;
             float scale;
             float ascent;
+            float descent;
             boost::optional<cglib::mat3x3<float>> transform;
             std::shared_ptr<const GlyphMap> glyphMap;
 
-            explicit LabelStyle(LabelOrientation orientation, ColorFunction colorFunc, FloatFunction sizeFunc, ColorFunction haloColorFunc, FloatFunction haloRadiusFunc, float scale, float ascent, const boost::optional<cglib::mat3x3<float>>& transform, std::shared_ptr<const GlyphMap> glyphMap) : orientation(orientation), colorFunc(std::move(colorFunc)), sizeFunc(std::move(sizeFunc)), haloColorFunc(std::move(haloColorFunc)), haloRadiusFunc(std::move(haloRadiusFunc)), scale(scale), ascent(ascent), transform(transform), glyphMap(std::move(glyphMap)) { }
+            explicit LabelStyle(LabelOrientation orientation, ColorFunction colorFunc, FloatFunction sizeFunc, ColorFunction haloColorFunc, FloatFunction haloRadiusFunc, float scale, float ascent, float descent, const boost::optional<cglib::mat3x3<float>>& transform, std::shared_ptr<const GlyphMap> glyphMap) : orientation(orientation), colorFunc(std::move(colorFunc)), sizeFunc(std::move(sizeFunc)), haloColorFunc(std::move(haloColorFunc)), haloRadiusFunc(std::move(haloRadiusFunc)), scale(scale), ascent(ascent), descent(descent), transform(transform), glyphMap(std::move(glyphMap)) { }
         };
         
         explicit TileLabel(const TileId& tileId, long long localId, long long globalId, long long groupId, std::vector<Font::Glyph> glyphs, boost::optional<cglib::vec3<double>> position, std::vector<cglib::vec3<double>> vertices, std::shared_ptr<const LabelStyle> style);

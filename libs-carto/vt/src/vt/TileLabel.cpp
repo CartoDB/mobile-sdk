@@ -348,7 +348,7 @@ namespace carto { namespace vt {
                     if (edgeDir < 0) {
                         float cos = cglib::dot_product(edges[edgeIndex].xAxis, edges[edgeIndex + 1].xAxis);
                         float sin = cglib::dot_product(edges[edgeIndex].xAxis, edges[edgeIndex + 1].yAxis);
-                        pen(0) = cos * pen(0) - std::abs(sin) * _style->ascent * 0.25f;
+                        pen(0) = cos * cos * pen(0) - sin * sin * std::abs(sin > 0 ? _style->descent : _style->ascent * 0.5f);
                     }
 
                     segmentBeg = -cglib::dot_product(edges[edgeIndex].binormal0, edges[edgeIndex].xAxis) * pen(1);
@@ -370,7 +370,7 @@ namespace carto { namespace vt {
                     if (edgeDir > 0) {
                         float cos = cglib::dot_product(edges[edgeIndex - 1].xAxis, edges[edgeIndex].xAxis);
                         float sin = cglib::dot_product(edges[edgeIndex - 1].xAxis, edges[edgeIndex].yAxis);
-                        pen(0) = cos * pen(0) + std::abs(sin) * _style->ascent * 0.25f;
+                        pen(0) = cos * cos * pen(0) + sin * sin * std::abs(sin > 0 ? _style->descent : _style->ascent * 0.5f);
                     }
                 } while (pen(0) >= segmentEnd);
             }
