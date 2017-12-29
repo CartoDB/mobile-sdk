@@ -94,7 +94,7 @@ namespace carto { namespace vt {
 
                         if (glyph.codePoint == Font::SPACE_CODEPOINT && i + 1 < glyphs.size() && _options.wrapWidth > 0) {
                             if (lineWidth + wordWidth >= _options.wrapWidth) {
-                                if (_options.wrapBefore) {
+                                if (_options.wrapBefore && !lines.back().glyphs.empty()) {
                                     lines.emplace_back(Line());
                                     lines.back().glyphs.insert(lines.back().glyphs.end(), word.begin(), word.end());
                                     lineWidth = wordWidth;
@@ -119,6 +119,10 @@ namespace carto { namespace vt {
                     }
                     
                     ich += cchRun;
+                }
+
+                if (_options.wrapWidth > 0 && _options.wrapBefore && lineWidth + wordWidth >= _options.wrapWidth && !lines.back().glyphs.empty()) {
+                    lines.emplace_back(Line());
                 }
                 lines.back().glyphs.insert(lines.back().glyphs.end(), word.begin(), word.end());
             }
