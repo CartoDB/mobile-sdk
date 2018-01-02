@@ -21,7 +21,8 @@ namespace carto {
     
     /**
      * An online tile data source that connects to Carto tile server.
-     * Tile server is currently used to 
+     * This data source can be used with both vector and raster tiles,
+     * depending on the specified source id.
      */
     class CartoOnlineTileDataSource : public TileDataSource {
     public:
