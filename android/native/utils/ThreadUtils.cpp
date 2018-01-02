@@ -3,6 +3,7 @@
 #include "utils/Log.h"
 
 #include <sys/resource.h>
+#include <string.h>
 #include <unistd.h>
 
 namespace carto {

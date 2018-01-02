@@ -11,6 +11,7 @@
 #include <webp/decode.h>
 
 namespace {
+    const unsigned char NUTiHeader[4] = { 'N', 'U', 'T', 'i' };
 
     struct LibPNGIOContainer {
         LibPNGIOContainer(const unsigned char* compressedDataPtr) : _compressedDataPtr(compressedDataPtr) { }
@@ -211,8 +212,8 @@ namespace carto {
     
     std::shared_ptr<BinaryData> Bitmap::compressToInternal() const {
         std::size_t size = sizeof(_width) + sizeof(_height) + sizeof(_bytesPerPixel) + sizeof(unsigned int) + _width * _height * _bytesPerPixel;
-        std::vector<unsigned char> compressedData(4 + size);
-        memcpy(&compressedData.at(0), "NUTi", 4);
+        std::vector<unsigned char> compressedData(sizeof(NUTiHeader) + size);
+        std::copy(NUTiHeader, NUTiHeader + sizeof(NUTiHeader), compressedData.data());
         std::size_t offset = 4;
         encodeInt(_width, &compressedData.at(offset), sizeof(_width));
         offset += sizeof(_width);
@@ -645,10 +646,10 @@ namespace carto {
     }
     
     bool Bitmap::IsNUTI(const unsigned char* compressedData, std::size_t dataSize) {
-        if (dataSize < 4) {
+        if (dataSize < sizeof(NUTiHeader)) {
             return false;
         }
-        return memcmp(compressedData, "NUTi", 4) == 0;
+        return std::equal(NUTiHeader, NUTiHeader + sizeof(NUTiHeader), compressedData);
     }
         
     bool Bitmap::loadJPEG(const unsigned char* compressedData, std::size_t dataSize) {
