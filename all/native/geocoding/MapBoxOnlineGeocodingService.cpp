@@ -55,7 +55,7 @@ namespace carto {
 
         if (request->getLocationRadius() > 0) {
             MapPos focusPoint = request->getProjection()->toWgs84(request->getLocation());
-            params["proximity"] = boost::lexical_cast<std::string>(focusPoint.getY()) + "," + boost::lexical_cast<std::string>(focusPoint.getX());
+            params["proximity"] = boost::lexical_cast<std::string>(focusPoint.getX()) + "," + boost::lexical_cast<std::string>(focusPoint.getY());
             // TODO: bbox
         }
 

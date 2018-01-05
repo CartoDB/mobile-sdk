@@ -29,7 +29,7 @@ namespace carto {
         }
 
         MapPos point = request->getProjection()->toWgs84(request->getLocation());
-        std::string baseURL = MAPBOX_SERVICE_URL + NetworkUtils::URLEncode(boost::lexical_cast<std::string>(point.getY()) + "," + boost::lexical_cast<std::string>(point.getX())) + ".json";
+        std::string baseURL = MAPBOX_SERVICE_URL + NetworkUtils::URLEncode(boost::lexical_cast<std::string>(point.getX()) + "," + boost::lexical_cast<std::string>(point.getY())) + ".json";
 
         std::map<std::string, std::string> params;
         {
