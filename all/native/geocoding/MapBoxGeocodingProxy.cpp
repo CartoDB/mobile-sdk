@@ -50,12 +50,7 @@ namespace carto {
                     } else if (type == "neighbourhood") {
                         neighbourhood = text;
                     } else if (type == "address") {
-                        // NOTE: this is a ugly hack but works in most of the cases
-                        std::string::size_type pos = text.find(" ");
-                        if (pos != std::string::npos) {
-                            houseNumber = text.substr(0, pos);
-                            street = text.substr(pos + 1);
-                        }
+                        street = text;
                     } else if (type == "postcode") {
                         postcode = text;
                     } else {
@@ -65,10 +60,14 @@ namespace carto {
             };
 
             extractField(featureInfo);
-            if (response.contains("context")) {
-                for (const picojson::value& contextInfo : response.get("context").get<picojson::array>()) {
+            if (featureInfo.contains("context")) {
+                for (const picojson::value& contextInfo : featureInfo.get("context").get<picojson::array>()) {
                     extractField(contextInfo);
                 }
+            }
+            
+            if (featureInfo.contains("address")) {
+                houseNumber = featureInfo.get("address").get<std::string>();
             }
 
             std::vector<std::string> categories;
