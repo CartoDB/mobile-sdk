@@ -5,11 +5,14 @@
 #include "components/Exceptions.h"
 #include "geocoding/MapBoxGeocodingProxy.h"
 #include "projections/Projection.h"
+#include "projections/EPSG3857.h"
+#include "utils/Const.h"
 #include "utils/GeneralUtils.h"
 #include "utils/NetworkUtils.h"
 #include "utils/Log.h"
 
 #include <map>
+#include <cmath>
 
 #include <boost/lexical_cast.hpp>
 
@@ -87,7 +90,12 @@ namespace carto {
         if (request->getLocationRadius() > 0) {
             MapPos focusPoint = request->getProjection()->toWgs84(request->getLocation());
             params["proximity"] = boost::lexical_cast<std::string>(focusPoint.getX()) + "," + boost::lexical_cast<std::string>(focusPoint.getY());
-            // TODO: bbox
+
+            EPSG3857 epsg3857;
+            double radius = request->getLocationRadius() / std::cos(focusPoint.getY() * Const::DEG_TO_RAD);
+            MapPos point0 = epsg3857.toWgs84(epsg3857.fromWgs84(focusPoint) - MapVec(radius, radius));
+            MapPos point1 = epsg3857.toWgs84(epsg3857.fromWgs84(focusPoint) + MapVec(radius, radius));
+            params["bbox"] = boost::lexical_cast<std::string>(point0.getX()) + "," + boost::lexical_cast<std::string>(point0.getY()) + "," + boost::lexical_cast<std::string>(point1.getX()) + "," + boost::lexical_cast<std::string>(point1.getY());
         }
 
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
