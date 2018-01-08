@@ -116,7 +116,7 @@ namespace carto {
         return MapBoxGeocodingProxy::ReadResponse(responseString, request->getProjection());
     }
 
-    const std::string MapBoxOnlineGeocodingService::MAPBOX_SERVICE_URL = "https://api.mapbox.com/geocoding/v5/mapbox.places/{query}.json&access_token={access_token}";
+    const std::string MapBoxOnlineGeocodingService::MAPBOX_SERVICE_URL = "https://api.mapbox.com/geocoding/v5/mapbox.places/{query}.json?access_token={access_token}";
 }
 
 #endif

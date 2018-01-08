@@ -36,9 +36,9 @@ namespace carto {
 
             auto extractField = [&](const picojson::value& info) {
                 if (info.contains("id")) {
-                    std::string id = info.get("id").get<std::string>();
+                    std::string id = info.get("id").to_str();
                     std::string type = id.substr(0, id.find("."));
-                    std::string text = info.contains("text") ? info.get("text").get<std::string>() : std::string();
+                    std::string text = info.contains("text") ? info.get("text").to_str() : std::string();
                     if (type == "country") {
                         country = text;
                     } else if (type == "region") {
@@ -67,14 +67,14 @@ namespace carto {
             }
             
             if (featureInfo.contains("address")) {
-                houseNumber = featureInfo.get("address").get<std::string>();
+                houseNumber = featureInfo.get("address").to_str();
             }
 
             std::vector<std::string> categories;
             if (featureInfo.contains("properties")) {
                 const picojson::value& properties = featureInfo.get("properties");
                 if (properties.contains("categories")) {
-                    categories = GeneralUtils::Split(properties.get("categories").get<std::string>(), ',');
+                    categories = GeneralUtils::Split(properties.get("categories").to_str(), ',');
                 }
             }
 
