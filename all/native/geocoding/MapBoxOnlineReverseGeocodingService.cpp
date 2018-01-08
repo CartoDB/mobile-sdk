@@ -14,8 +14,9 @@
 
 namespace carto {
 
-    MapBoxOnlineReverseGeocodingService::MapBoxOnlineReverseGeocodingService(const std::string& apiKey) :
-        _apiKey(apiKey),
+    MapBoxOnlineReverseGeocodingService::MapBoxOnlineReverseGeocodingService(const std::string& accessToken) :
+        _accessToken(accessToken),
+        _language(),
         _mutex()
     {
     }
@@ -23,6 +24,16 @@ namespace carto {
     MapBoxOnlineReverseGeocodingService::~MapBoxOnlineReverseGeocodingService() {
     }
 
+    std::string MapBoxOnlineReverseGeocodingService::getLanguage() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _language;
+    }
+
+    void MapBoxOnlineReverseGeocodingService::setLanguage(const std::string& lang) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _language = lang;
+    }
+    
     std::vector<std::shared_ptr<GeocodingResult> > MapBoxOnlineReverseGeocodingService::calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const {
         if (!request) {
             throw NullArgumentException("Null request");
@@ -34,8 +45,10 @@ namespace carto {
         std::map<std::string, std::string> params;
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            params["access_token"] = _apiKey;
-            // TODO: language
+            params["access_token"] = _accessToken;
+            if (!_language.empty()) {
+                params["language"] = _language;
+            }
         }
 
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);

@@ -14,9 +14,10 @@
 
 namespace carto {
 
-    MapBoxOnlineGeocodingService::MapBoxOnlineGeocodingService(const std::string& apiKey) :
-        _apiKey(apiKey),
+    MapBoxOnlineGeocodingService::MapBoxOnlineGeocodingService(const std::string& accessToken) :
+        _accessToken(accessToken),
         _autocomplete(false),
+        _language(),
         _mutex()
     {
     }
@@ -34,6 +35,16 @@ namespace carto {
         _autocomplete = autocomplete;
     }
 
+    std::string MapBoxOnlineGeocodingService::getLanguage() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _language;
+    }
+
+    void MapBoxOnlineGeocodingService::setLanguage(const std::string& lang) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _language = lang;
+    }
+    
     std::vector<std::shared_ptr<GeocodingResult> > MapBoxOnlineGeocodingService::calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const {
         if (!request) {
             throw NullArgumentException("Null request");
@@ -48,9 +59,11 @@ namespace carto {
         std::map<std::string, std::string> params;
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            params["access_token"] = _apiKey;
+            params["access_token"] = _accessToken;
             params["autocomplete"] = _autocomplete ? "true" : "false";
-            // TODO: language
+            if (!_language.empty()) {
+                params["language"] = _language;
+            }
         }
 
         if (request->getLocationRadius() > 0) {

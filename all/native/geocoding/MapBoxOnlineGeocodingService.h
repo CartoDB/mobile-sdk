@@ -23,9 +23,9 @@ namespace carto {
     public:
         /**
          * Constructs a new instance of the MapBoxOnlineGeocodingService given API key.
-         * @param apiKey The API key to use registered with MapBox.
+         * @param accessToken The access token to use (registered with MapBox).
          */
-        explicit MapBoxOnlineGeocodingService(const std::string& apiKey);
+        explicit MapBoxOnlineGeocodingService(const std::string& accessToken);
         virtual ~MapBoxOnlineGeocodingService();
 
         /**
@@ -40,14 +40,25 @@ namespace carto {
          */
         void setAutocomplete(bool autocomplete);
 
-        // TODO: language
+        /**
+         * Returns the language of the expected results.
+         * @return The language of the expected results. As ISO 639-1 code or empty string.
+         */
+        std::string getLanguage() const;
+        /**
+         * Sets the language of the expected results.
+         * @param lang The language to use as ISO 639-1 code. Empty string can be used for default language.
+         */
+        void setLanguage(const std::string& lang);
 
         virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const;
 
     protected:
         static const std::string MAPBOX_SERVICE_URL;
 
-        const std::string _apiKey;
+        const std::string _accessToken;
+
+        std::string _language;
 
         bool _autocomplete;
 

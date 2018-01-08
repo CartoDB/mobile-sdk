@@ -23,7 +23,7 @@ namespace carto {
     public:
         /**
          * Constructs a new instance of the PeliasOnlineReverseGeocodingService given API key.
-         * @param apiKey The API key to use registered with Mapzen.
+         * @param apiKey The API key to use (registered with Mapzen).
          */
         explicit PeliasOnlineReverseGeocodingService(const std::string& apiKey);
         virtual ~PeliasOnlineReverseGeocodingService();

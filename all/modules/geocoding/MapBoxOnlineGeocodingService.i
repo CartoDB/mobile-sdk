@@ -17,6 +17,7 @@
 %}
 
 %include <std_shared_ptr.i>
+%include <std_string.i>
 %include <cartoswig.i>
 
 %import "geocoding/GeocodingService.i"
@@ -26,6 +27,7 @@
 !polymorphic_shared_ptr(carto::MapBoxOnlineGeocodingService, geocoding.MapBoxOnlineGeocodingService)
 
 %attribute(carto::MapBoxOnlineGeocodingService, bool, Autocomplete, isAutocomplete, setAutocomplete)
+%attributestring(carto::MapBoxOnlineGeocodingService, std::string, Language, getLanguage, setLanguage)
 %std_io_exceptions(carto::MapBoxOnlineGeocodingService::calculateAddresses)
 
 %feature("director") carto::MapBoxOnlineGeocodingService;
