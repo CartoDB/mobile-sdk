@@ -1,6 +1,6 @@
 #ifdef _CARTO_ROUTING_SUPPORT
 
-#include "RoutingProxy.h"
+#include "OSRMRoutingProxy.h"
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
 #include "projections/Projection.h"
@@ -24,7 +24,7 @@
 
 namespace carto {
 
-    std::shared_ptr<RoutingResult> RoutingProxy::CalculateRoute(const std::shared_ptr<routing::RouteFinder>& routeFinder, const std::shared_ptr<RoutingRequest>& request) {
+    std::shared_ptr<RoutingResult> OSRMRoutingProxy::CalculateRoute(const std::shared_ptr<routing::RouteFinder>& routeFinder, const std::shared_ptr<RoutingRequest>& request) {
         std::shared_ptr<Projection> proj = request->getProjection();
         EPSG3857 epsg3857;
 
@@ -90,7 +90,7 @@ namespace carto {
         return std::make_shared<RoutingResult>(proj, points, instructions);
     }
 
-    std::shared_ptr<RoutingResult> RoutingProxy::CalculateRoute(HTTPClient& httpClient, const std::string& url, const std::shared_ptr<RoutingRequest>& request) {
+    std::shared_ptr<RoutingResult> OSRMRoutingProxy::CalculateRoute(HTTPClient& httpClient, const std::string& url, const std::shared_ptr<RoutingRequest>& request) {
         std::shared_ptr<Projection> proj = request->getProjection();
         EPSG3857 epsg3857;
         
@@ -155,7 +155,7 @@ namespace carto {
         return std::make_shared<RoutingResult>(proj, points, instructions);
     }
     
-    float RoutingProxy::CalculateTurnAngle(const std::vector<MapPos>& epsg3857Points, int pointIndex) {
+    float OSRMRoutingProxy::CalculateTurnAngle(const std::vector<MapPos>& epsg3857Points, int pointIndex) {
         int pointIndex0 = pointIndex;
         while (--pointIndex0 >= 0) {
             if (epsg3857Points.at(pointIndex0) != epsg3857Points.at(pointIndex)) {
@@ -182,7 +182,7 @@ namespace carto {
         return turnAngle;
     }
     
-    float RoutingProxy::CalculateAzimuth(const std::vector<MapPos>& epsg3857Points, int pointIndex) {
+    float OSRMRoutingProxy::CalculateAzimuth(const std::vector<MapPos>& epsg3857Points, int pointIndex) {
         int step = 1;
         for (int i = pointIndex; i >= 0; i += step) {
             if (i + 1 >= static_cast<int>(epsg3857Points.size())) {
@@ -201,7 +201,7 @@ namespace carto {
         return std::numeric_limits<float>::quiet_NaN();
     }
     
-    bool RoutingProxy::TranslateInstructionCode(int instructionCode, RoutingAction::RoutingAction& action) {
+    bool OSRMRoutingProxy::TranslateInstructionCode(int instructionCode, RoutingAction::RoutingAction& action) {
         switch (static_cast<routing::Instruction::Type>(instructionCode)) {
             case routing::Instruction::Type::NO_TURN:
                 action = RoutingAction::ROUTING_ACTION_NO_TURN;
@@ -247,13 +247,13 @@ namespace carto {
                 action = RoutingAction::ROUTING_ACTION_FINISH;
                 break;
             default:
-                Log::Infof("RoutingProxy::TranslateInstructionCode: ignoring instruction %d", instructionCode);
+                Log::Infof("OSRMRoutingProxy::TranslateInstructionCode: ignoring instruction %d", instructionCode);
                 return false;
         }
         return true;
     }
 
-    std::vector<MapPos> RoutingProxy::DecodeGeometry(const std::string& encodedGeometry) {
+    std::vector<MapPos> OSRMRoutingProxy::DecodeGeometry(const std::string& encodedGeometry) {
         std::vector<MapPos> points;
         points.reserve(encodedGeometry.size());
         int lat = 0;
@@ -285,10 +285,10 @@ namespace carto {
         return points;
     }
     
-    RoutingProxy::RoutingProxy() {
+    OSRMRoutingProxy::OSRMRoutingProxy() {
     }
     
-    const double RoutingProxy::COORDINATE_SCALE = 1.0e-6;
+    const double OSRMRoutingProxy::COORDINATE_SCALE = 1.0e-6;
     
 }
 

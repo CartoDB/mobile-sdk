@@ -4,7 +4,7 @@
 #include "components/Exceptions.h"
 #include "components/LicenseManager.h"
 #include "projections/Projection.h"
-#include "routing/RoutingProxy.h"
+#include "routing/OSRMRoutingProxy.h"
 #include "network/HTTPClient.h"
 #include "utils/Log.h"
 #include "utils/PlatformUtils.h"
@@ -52,7 +52,7 @@ namespace carto {
         Log::Debugf("CartoOnlineRoutingService::calculateRoute: Loading %s", url.c_str());
 
         HTTPClient httpClient(Log::IsShowDebug());
-        return RoutingProxy::CalculateRoute(httpClient, url, request);
+        return OSRMRoutingProxy::CalculateRoute(httpClient, url, request);
     }
 
     const std::string CartoOnlineRoutingService::ROUTING_SERVICE_URL = "http://mobile-api.carto.com/routing/v2/";

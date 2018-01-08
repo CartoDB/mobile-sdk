@@ -5,7 +5,7 @@
 #include "packagemanager/PackageInfo.h"
 #include "packagemanager/handlers/RoutingPackageHandler.h"
 #include "projections/Projection.h"
-#include "routing/RoutingProxy.h"
+#include "routing/OSRMRoutingProxy.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 
@@ -74,7 +74,7 @@ namespace carto {
                 _cachedRouteFinder = std::make_shared<routing::RouteFinder>(graph);
             }
 
-            result = RoutingProxy::CalculateRoute(_cachedRouteFinder, request);
+            result = OSRMRoutingProxy::CalculateRoute(_cachedRouteFinder, request);
         });
 
         return result;
