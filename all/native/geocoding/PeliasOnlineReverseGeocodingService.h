@@ -28,12 +28,27 @@ namespace carto {
         explicit PeliasOnlineReverseGeocodingService(const std::string& apiKey);
         virtual ~PeliasOnlineReverseGeocodingService();
 
+        /**
+         * Returns the custom backend service URL.
+         * @return The custom backend service URL. If this is not defined, an empty string is returned.
+         */
+        std::string getCustomServiceURL() const;
+        /**
+         * Sets the custom backend service URL. 
+         * @param serviceURL The custom backend service URL to use. If this is empty, then the default service is used.
+         */
+        void setCustomServiceURL(const std::string& serviceURL);
+
         virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const;
 
     protected:
-        static const std::string PELIAS_REVERSE_URL;
+        static const std::string MAPZEN_SERVICE_URL;
+
+        std::string _serviceURL;
 
         const std::string _apiKey;
+
+        mutable std::mutex _mutex;
     };
     
 }
