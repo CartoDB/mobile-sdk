@@ -47,14 +47,28 @@ namespace carto {
          */
         void setProfile(const std::string& profile);
 
+        /**
+         * Returns the custom backend service URL.
+         * @return The custom backend service URL. If this is not defined, an empty string is returned.
+         */
+        std::string getCustomServiceURL() const;
+        /**
+         * Sets the custom backend service URL. 
+         * The custom URL may contain tag "{api_key}" which will be substituted with the set API key.
+         * @param serviceURL The custom backend service URL to use. If this is empty, then the default service is used.
+         */
+        void setCustomServiceURL(const std::string& serviceURL);
+
         virtual std::shared_ptr<RoutingResult> calculateRoute(const std::shared_ptr<RoutingRequest>& request) const;
 
     private:
-        static const std::string VALHALLA_ROUTING_URL;
+        static const std::string MAPZEN_SERVICE_URL;
 
         const std::string _apiKey;
 
         std::string _profile;
+
+        std::string _serviceURL;
 
         mutable std::mutex _mutex;
     };
