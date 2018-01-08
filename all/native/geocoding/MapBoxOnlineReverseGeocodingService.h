@@ -39,6 +39,18 @@ namespace carto {
          */
         void setLanguage(const std::string& lang);
 
+        /**
+         * Returns the custom backend service URL.
+         * @return The custom backend service URL. If this is not defined, an empty string is returned.
+         */
+        std::string getCustomServiceURL() const;
+        /**
+         * Sets the custom backend service URL. 
+         * The custom URL should contain tags "{query}" and "{access_token}" that will be substituted by the SDK.
+         * @param serviceURL The custom backend service URL to use. If this is empty, then the default service is used.
+         */
+        void setCustomServiceURL(const std::string& serviceURL);
+
         virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const;
 
     protected:
@@ -47,6 +59,8 @@ namespace carto {
         const std::string _accessToken;
 
         std::string _language;
+
+        std::string _serviceURL;
 
         mutable std::mutex _mutex;
     };

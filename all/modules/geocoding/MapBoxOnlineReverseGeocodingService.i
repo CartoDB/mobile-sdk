@@ -27,6 +27,7 @@
 !polymorphic_shared_ptr(carto::MapBoxOnlineReverseGeocodingService, geocoding.MapBoxOnlineReverseGeocodingService)
 
 %attributestring(carto::MapBoxOnlineReverseGeocodingService, std::string, Language, getLanguage, setLanguage)
+%attributestring(carto::MapBoxOnlineReverseGeocodingService, std::string, CustomServiceURL, getCustomServiceURL, setCustomServiceURL)
 %std_io_exceptions(carto::MapBoxOnlineReverseGeocodingService::calculateAddresses)
 
 %feature("director") carto::MapBoxOnlineReverseGeocodingService;

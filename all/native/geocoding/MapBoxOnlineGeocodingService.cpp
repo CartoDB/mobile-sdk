@@ -5,6 +5,7 @@
 #include "components/Exceptions.h"
 #include "geocoding/MapBoxGeocodingProxy.h"
 #include "projections/Projection.h"
+#include "utils/GeneralUtils.h"
 #include "utils/NetworkUtils.h"
 #include "utils/Log.h"
 
@@ -18,6 +19,7 @@ namespace carto {
         _accessToken(accessToken),
         _autocomplete(false),
         _language(),
+        _serviceURL(),
         _mutex()
     {
     }
@@ -44,7 +46,17 @@ namespace carto {
         std::lock_guard<std::mutex> lock(_mutex);
         _language = lang;
     }
-    
+
+    std::string MapBoxOnlineGeocodingService::getCustomServiceURL() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _serviceURL;
+    }
+
+    void MapBoxOnlineGeocodingService::setCustomServiceURL(const std::string& serviceURL) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _serviceURL = serviceURL;
+    }
+
     std::vector<std::shared_ptr<GeocodingResult> > MapBoxOnlineGeocodingService::calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const {
         if (!request) {
             throw NullArgumentException("Null request");
@@ -54,12 +66,18 @@ namespace carto {
             return std::vector<std::shared_ptr<GeocodingResult> >();
         }
 
-        std::string baseURL = MAPBOX_SERVICE_URL + NetworkUtils::URLEncode(request->getQuery()) + ".json";
+        std::string baseURL;
 
         std::map<std::string, std::string> params;
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            params["access_token"] = _accessToken;
+
+            std::map<std::string, std::string> tagMap;
+            tagMap["query"] = NetworkUtils::URLEncode(request->getQuery());
+            tagMap["access_token"] = NetworkUtils::URLEncode(_accessToken);
+
+            baseURL = GeneralUtils::ReplaceTags(_serviceURL.empty() ? MAPBOX_SERVICE_URL : _serviceURL, tagMap);
+
             params["autocomplete"] = _autocomplete ? "true" : "false";
             if (!_language.empty()) {
                 params["language"] = _language;
@@ -90,7 +108,7 @@ namespace carto {
         return MapBoxGeocodingProxy::ReadResponse(responseString, request->getProjection());
     }
 
-    const std::string MapBoxOnlineGeocodingService::MAPBOX_SERVICE_URL = "https://api.mapbox.com/geocoding/v5/mapbox.places/";
+    const std::string MapBoxOnlineGeocodingService::MAPBOX_SERVICE_URL = "https://api.mapbox.com/geocoding/v5/mapbox.places/{query}.json&access_token={access_token}";
 }
 
 #endif

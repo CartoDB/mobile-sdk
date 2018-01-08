@@ -28,6 +28,7 @@
 
 %attribute(carto::MapBoxOnlineGeocodingService, bool, Autocomplete, isAutocomplete, setAutocomplete)
 %attributestring(carto::MapBoxOnlineGeocodingService, std::string, Language, getLanguage, setLanguage)
+%attributestring(carto::MapBoxOnlineGeocodingService, std::string, CustomServiceURL, getCustomServiceURL, setCustomServiceURL)
 %std_io_exceptions(carto::MapBoxOnlineGeocodingService::calculateAddresses)
 
 %feature("director") carto::MapBoxOnlineGeocodingService;
