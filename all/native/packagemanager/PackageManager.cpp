@@ -228,8 +228,8 @@ namespace carto {
                     auto packageInfo = std::make_shared<PackageInfo>(
                         packageId,
                         packageType,
-                        jsonPackageInfo["version"].GetInt(),
-                        jsonPackageInfo["size"].GetInt64(),
+                        jsonPackageInfo["version"].IsString() ? boost::lexical_cast<int>(jsonPackageInfo["version"].GetString()) : jsonPackageInfo["version"].GetInt(),
+                        jsonPackageInfo["size"].IsString() ? boost::lexical_cast<std::uint64_t>(jsonPackageInfo["size"].GetString()) : jsonPackageInfo["size"].GetInt64(),
                         packageURL,
                         tileMask,
                         metaInfo
