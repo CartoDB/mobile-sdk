@@ -62,10 +62,10 @@ namespace carto {
             std::lock_guard<std::mutex> lock(_mutex);
 
             std::map<std::string, std::string> tagMap;
+            tagMap["api_key"] = NetworkUtils::URLEncode(_apiKey);
             tagMap["mode"] = _autocomplete ? "autocomplete": "search";
             baseURL = GeneralUtils::ReplaceTags(_serviceURL.empty() ? MAPZEN_SERVICE_URL : _serviceURL, tagMap);
 
-            params["api_key"] = _apiKey;
             params["text"] = request->getQuery();
             if (request->getLocationRadius() > 0) {
                 MapPos focusPoint = request->getProjection()->toWgs84(request->getLocation());
@@ -97,7 +97,7 @@ namespace carto {
         return PeliasGeocodingProxy::ReadResponse(responseString, request->getProjection());
     }
 
-    const std::string PeliasOnlineGeocodingService::MAPZEN_SERVICE_URL = "https://search.mapzen.com/v1/{mode}";
+    const std::string PeliasOnlineGeocodingService::MAPZEN_SERVICE_URL = "https://search.mapzen.com/v1/{mode}?api_key={api_key}";
 }
 
 #endif

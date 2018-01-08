@@ -47,6 +47,7 @@ namespace carto {
         std::string getCustomServiceURL() const;
         /**
          * Sets the custom backend service URL. 
+         * The custom URL may contain tag "{api_key}" which will be substituted with the set API key.
          * The custom URL should contain tag "{mode}" which will be set either to "autocomplete" or "search" based on the autocomplete state.
          * @param serviceURL The custom backend service URL to use. If this is empty, then the default service is used.
          */

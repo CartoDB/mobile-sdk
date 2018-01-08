@@ -5,6 +5,7 @@
 #include "components/Exceptions.h"
 #include "geocoding/PeliasGeocodingProxy.h"
 #include "projections/Projection.h"
+#include "utils/GeneralUtils.h"
 #include "utils/NetworkUtils.h"
 #include "utils/Log.h"
 
@@ -45,9 +46,10 @@ namespace carto {
 
         std::map<std::string, std::string> params;
         {
-            baseURL = _serviceURL.empty() ? MAPZEN_SERVICE_URL : _serviceURL;
+            std::map<std::string, std::string> tagMap;
+            tagMap["api_key"] = NetworkUtils::URLEncode(_apiKey);
+            baseURL = GeneralUtils::ReplaceTags(_serviceURL.empty() ? MAPZEN_SERVICE_URL : _serviceURL, tagMap);
 
-            params["api_key"] = _apiKey;
             params["point.lat"] = boost::lexical_cast<std::string>(point.getY());
             params["point.lon"] = boost::lexical_cast<std::string>(point.getX());
             params["boundary.circle.lat"] = boost::lexical_cast<std::string>(point.getY());
@@ -73,7 +75,7 @@ namespace carto {
         return PeliasGeocodingProxy::ReadResponse(responseString, request->getProjection());
     }
 
-    const std::string PeliasOnlineReverseGeocodingService::MAPZEN_SERVICE_URL = "https://search.mapzen.com/v1/reverse";
+    const std::string PeliasOnlineReverseGeocodingService::MAPZEN_SERVICE_URL = "https://search.mapzen.com/v1/reverse?api_key={api_key}";
 }
 
 #endif
