@@ -22,7 +22,7 @@ For minimal geocoding implementation, use our sample app code for different mobi
   
 ## Online Geocoding
 
-Online geocoding is available through [Pelias](https://github.com/pelias/pelias). You will need your own Mapzen API key. Sign-up at [https://mapzen.com/](https://mapzen.com/) to receive an API key.
+Online geocoding is available through MapBox's geocoding service. You will need your own Mapbox token. Sign up at [https://www.mapbox.com/](https://www.mapbox.com/) to obtain your token.
 
 Implement online geocoding to initialize the service, create the request, and calculate addresses:
 
@@ -48,7 +48,7 @@ Implement online geocoding to initialize the service, create the request, and ca
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
   
-PeliasOnlineGeocodingService service = new PeliasOnlineGeocodingService("<your-mapzen-api-key>");
+MapBoxOnlineGeocodingService service = new MapBoxOnlineGeocodingService("<your-mapbox-token>");
 GeocodingRequest request = new GeocodingRequest(mapView.getOptions().getBaseProjection(), "Fifth Avenue, New York");
 
 // Note: Geocoding is a complicated process and should not be done on the main thread
@@ -72,7 +72,7 @@ thread.start();
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 
-Service = new PeliasOnlineGeocodingService("<your-mapzen-api-key>");
+Service = new MapBoxOnlineGeocodingService("<your-mapbox-token>");
 var request = new GeocodingRequest(mapView.Options.BaseProjection, "Fifth Avenue, New York");
 
 // Note: Geocoding is a complicated process and should not be done on the main thread
@@ -84,7 +84,7 @@ GeocodingResultVector results = Service.CalculateAddresses(request);
    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
   
-NTPeliasOnlineGeocodingService *service = [[NTPeliasOnlineGeocodingService alloc]initWithApiKey:@"<your-mapzen-api-key>"];
+NTMapBoxOnlineGeocodingService *service = [[NTMapBoxOnlineGeocodingService alloc]initWithApiKey:@"<your-mapbox-key>"];
 NTProjection *projection = [[self.mapView getOptions] getBaseProjection];
 NTGeocodingRequest *request = [[NTGeocodingRequest alloc]initWithProjection:projection query:@"text"];
 
@@ -97,7 +97,7 @@ NTGeocodingResultVector *results = [service calculateAddresses:request];
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}
   
-let service = NTPeliasOnlineGeocodingService(apiKey: "<your-mapzen-api-key>")
+let service = NTMapBoxOnlineGeocodingService(apiKey: "<your-mapbox-key>")
 let request = NTGeocodingRequest(projection: self.contentView.map.getOptions().getBaseProjection(), query: "Fifth Avenue, New York")
 
 // Note: Geocoding is a complicated process and should not be done on the main thread
@@ -109,7 +109,7 @@ let results = self.service.calculateAddresses(request)
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
   {% highlight kotlin %}
 
-val service = PeliasOnlineGeocodingService("<your-mapzen-api-key>")
+val service = MapBoxOnlineGeocodingService("<your-mapbox-token>")
 val request = GeocodingRequest(map.options.baseProjection, "Fifth Avenue, New York")
 
 // Note: Geocoding is a complicated process and should not be done on the main thread
@@ -125,7 +125,7 @@ From your `GeocodingResult` objects, you can simply access `name`, `locality`, `
 
 ## Reverse Geocoding
 
-Online reverse geocoding is also available through [Pelias](https://github.com/pelias/pelias). You will need your own Mapzen API key. Sign up at [https://mapzen.com/](https://mapzen.com/) to receive an API key.
+Online reverse geocoding is also available through MapBox's geocoding service. You will need your own Mapbox token. Sign up at [https://www.mapbox.com/](https://www.mapbox.com/) obtain your token.
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -149,7 +149,7 @@ Online reverse geocoding is also available through [Pelias](https://github.com/p
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
 
-service = new PeliasOnlineReverseGeocodingService("<your-mapzen-key>");
+service = new MapBoxOnlineReverseGeocodingService("<your-mapbox-token>");
 
 // Center of New York. Reverse Geocoding these coordinates will find City Hall Park
 MapPos newYork = baseProjection.fromLatLong(40.7128, -74.0059);
@@ -171,7 +171,7 @@ try {
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
 
-Service = new PeliasOnlineReverseGeocodingService("<your-mapzen-key>");
+Service = new MapBoxOnlineReverseGeocodingService("<your-mapbox-token>");
 
 // Center of New York. Reverse Geocoding these coordinates will find City Hall Park
 MapPos newYork = projection.FromLatLong(40.7128, -74.0059);
@@ -189,7 +189,7 @@ GeocodingResultVector results = Service.CalculateAddresses(request);
    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
-self.service = [[NTPeliasOnlineReverseGeocodingService alloc]initWithApiKey:@"<mapzen-api-key>"];
+self.service = [[NTMapBoxOnlineReverseGeocodingService alloc]initWithApiKey:@"<mapbox-token>"];
 
 NTProjection *projection = [self.controller getProjection];
 // Center of New York. Reverse Geocoding these coordinates will find City Hall Park
@@ -206,7 +206,7 @@ NTGeocodingResultVector *results = [self.service calculateAddresses: request];
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}
 
-service = NTPeliasOnlineReverseGeocodingService(apiKey: "<your-mapzen-key>")
+service = NTMapBoxOnlineReverseGeocodingService(apiKey: "<your-mapbox-token>")
 
 // Center of New York. Reverse Geocoding these coordinates will find City Hall Park
 let newYork = projection.fromLat(40.7128, lng: -74.0059)
@@ -224,7 +224,7 @@ let results = service.calculateAddresses(request)
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
   {% highlight kotlin %}
 
-service = PeliasOnlineReverseGeocodingService("<your-mapzen-key>")
+service = MapBoxOnlineReverseGeocodingService("<your-mapbox-token>")
 
 // Center of New York. Reverse Geocoding these coordinates will find City Hall Park
 val newYork = contentView?.projection?.fromLatLong(40.7128, -74.0059)
