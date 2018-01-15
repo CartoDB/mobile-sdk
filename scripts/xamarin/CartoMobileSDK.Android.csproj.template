@@ -80,25 +80,9 @@
       <Abi>armeabi-v7a</Abi>
       <Link>armeabi-v7a\libcarto_mobile_sdk.so</Link>
     </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="$baseDir\prebuilt\gdal\libs\armeabi-v7a\libgdal.so">
-      <Abi>armeabi-v7a</Abi>
-      <Link>armeabi-v7a\libgdal.so</Link>
-    </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="$baseDir\prebuilt\gdal\libs\armeabi-v7a\libproj.so">
-      <Abi>armeabi-v7a</Abi>
-      <Link>armeabi-v7a\libproj.so</Link>
-    </EmbeddedNativeLibrary>
     <EmbeddedNativeLibrary Include="$buildDir\..\xamarin_android-x86\libcarto_mobile_sdk.so">
       <Abi>x86</Abi>
       <Link>x86\libcarto_mobile_sdk.so</Link>
-    </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="$baseDir\prebuilt\gdal\libs\x86\libgdal.so">
-      <Abi>x86</Abi>
-      <Link>x86\libgdal.so</Link>
-    </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="$baseDir\prebuilt\gdal\libs\x86\libproj.so">
-      <Abi>x86</Abi>
-      <Link>x86\libproj.so</Link>
     </EmbeddedNativeLibrary>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
