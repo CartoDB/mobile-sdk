@@ -76,6 +76,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedNativeLibrary Include="$buildDir\..\xamarin_android-armeabi\libcarto_mobile_sdk.so">
+      <Abi>armeabi</Abi>
+      <Link>armeabi\libcarto_mobile_sdk.so</Link>
+    </EmbeddedNativeLibrary>
     <EmbeddedNativeLibrary Include="$buildDir\..\xamarin_android-armeabi-v7a\libcarto_mobile_sdk.so">
       <Abi>armeabi-v7a</Abi>
       <Link>armeabi-v7a\libcarto_mobile_sdk.so</Link>
@@ -84,6 +88,14 @@
       <Abi>x86</Abi>
       <Link>x86\libcarto_mobile_sdk.so</Link>
     </EmbeddedNativeLibrary>
+    <EmbeddedNativeLibrary Include="$buildDir\..\xamarin_android-arm64-v8a\libcarto_mobile_sdk.so">
+      <Abi>arm64-v8a</Abi>
+      <Link>arm64-v8a\libcarto_mobile_sdk.so</Link>
+    </EmbeddedNativeLibrary>
+    <EmbeddedNativeLibrary Include="$buildDir\..\xamarin_android-x86_64\libcarto_mobile_sdk.so">
+      <Abi>x86_64</Abi>
+      <Link>x86_64\libcarto_mobile_sdk.so</Link>
+    </EmbeddedNativeLibrary>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
   <ItemGroup>
@@ -91,7 +103,10 @@
     <Folder Include="UI\" />
     <Folder Include="PackageManager\" />
     <Folder Include="Properties\" />
+    <Folder Include="armeabi\" />
     <Folder Include="armeabi-v7a\" />
     <Folder Include="x86\" />
+    <Folder Include="arm64-v8a\" />
+    <Folder Include="x86_64\" />
   </ItemGroup>
 </Project>
