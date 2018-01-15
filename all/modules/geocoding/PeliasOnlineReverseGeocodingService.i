@@ -17,6 +17,7 @@
 %}
 
 %include <std_shared_ptr.i>
+%include <std_string.i>
 %include <cartoswig.i>
 
 %import "geocoding/ReverseGeocodingService.i"
@@ -25,6 +26,7 @@
 
 !polymorphic_shared_ptr(carto::PeliasOnlineReverseGeocodingService, geocoding.PeliasOnlineReverseGeocodingService)
 
+%attributestring(carto::PeliasOnlineReverseGeocodingService, std::string, CustomServiceURL, getCustomServiceURL, setCustomServiceURL)
 %std_io_exceptions(carto::PeliasOnlineReverseGeocodingService::calculateAddresses)
 
 %feature("director") carto::PeliasOnlineReverseGeocodingService;

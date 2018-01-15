@@ -17,6 +17,7 @@
 %}
 
 %include <std_shared_ptr.i>
+%include <std_string.i>
 %include <cartoswig.i>
 
 %import "geocoding/GeocodingService.i"
@@ -26,6 +27,7 @@
 !polymorphic_shared_ptr(carto::PeliasOnlineGeocodingService, geocoding.PeliasOnlineGeocodingService)
 
 %attribute(carto::PeliasOnlineGeocodingService, bool, Autocomplete, isAutocomplete, setAutocomplete)
+%attributestring(carto::PeliasOnlineGeocodingService, std::string, CustomServiceURL, getCustomServiceURL, setCustomServiceURL)
 %std_io_exceptions(carto::PeliasOnlineGeocodingService::calculateAddresses)
 
 %feature("director") carto::PeliasOnlineGeocodingService;

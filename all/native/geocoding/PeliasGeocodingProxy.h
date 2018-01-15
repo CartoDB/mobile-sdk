@@ -4,8 +4,8 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_GEOCODINGPROXY_H_
-#define _CARTO_GEOCODINGPROXY_H_
+#ifndef _CARTO_PELIASGEOCODINGPROXY_H_
+#define _CARTO_PELIASGEOCODINGPROXY_H_
 
 #ifdef _CARTO_GEOCODING_SUPPORT
 

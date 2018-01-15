@@ -87,7 +87,7 @@ The following _Online Routing_ and _Offline Routing_ procedures demonstrate the 
  
 Online routing requires that you create a simple call and request to calculate the route.
 
-1) Create the `ValhallaOnlineRoutingService` call
+1) Create the `CartoOnlineRoutingService` call
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -111,8 +111,8 @@ Online routing requires that you create a simple call and request to calculate t
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
   {% highlight java %}
-  
-	ValhallaOnlineRoutingService onlineRoutingService = new ValhallaOnlineRoutingService("<your-mapzen-api-key>");
+
+	CartoOnlineRoutingService onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
 
   {% endhighlight %}
   </div>
@@ -120,7 +120,7 @@ Online routing requires that you create a simple call and request to calculate t
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
   {% highlight csharp %}
   
-	var onlineRoutingService = new ValhallaOnlineRoutingService("<your-mapzen-api-key");
+	var onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
 
   {% endhighlight %}
   </div>
@@ -128,7 +128,7 @@ Online routing requires that you create a simple call and request to calculate t
    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
   
-  	NTValhallaOnlineRoutingService* _onlineRoutingService = [[NTValhallaOnlineRoutingService alloc] initWithApiKey:@"<your-mapzen-api-key>"];
+  	NTCartoOnlineRoutingService* _onlineRoutingService = [[NTCartoOnlineRoutingService alloc] initWithApiKey:@"nutiteq.osm.car"];
 
   {% endhighlight %}
   </div>
@@ -136,7 +136,7 @@ Online routing requires that you create a simple call and request to calculate t
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
   {% highlight swift %}
   
-	let onlineRoutingService = NTValhallaOnlineRoutingService(apiKey: "<your-mapzen-api-key");
+	let onlineRoutingService = NTCartoOnlineRoutingService(source: "nutiteq.osm.car");
 
   {% endhighlight %}
   </div>
@@ -144,7 +144,7 @@ Online routing requires that you create a simple call and request to calculate t
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
   {% highlight kotlin %}
   
-	val onlineRoutingService = ValhallaOnlineRoutingService("<your-mapzen-api-key>");
+	val onlineRoutingService = CartoOnlineRoutingService("nutiteq.osm.car");
 
   {% endhighlight %}
   </div>

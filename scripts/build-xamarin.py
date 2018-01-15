@@ -127,6 +127,7 @@ def buildXamarinNuget(args, target):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--profile', dest='profile', default='standard', type=validProfile, help='Build profile')
+parser.add_argument('--android-abi', dest='androidabi', default=[], choices=ANDROID_ABIS + ['all'], action='append', help='Android target ABIs')
 parser.add_argument('--defines', dest='defines', default='', help='Defines for compilation')
 parser.add_argument('--xbuild', dest='xbuild', default='xbuild', help='Xamarin xbuild executable')
 parser.add_argument('--nuget', dest='nuget', default='nuget', help='nuget executable')
@@ -141,6 +142,8 @@ parser.add_argument('--build-nuget', dest='buildnuget', default=False, action='s
 parser.add_argument(dest='target', choices=['android', 'ios'], help='Target platform')
 
 args = parser.parse_args()
+if 'all' in args.androidabi or args.androidabi == []:
+  args.androidabi = ANDROID_ABIS
 if args.xbuild == 'auto':
   args.xbuild = DEFAULT_XBUILD
 elif args.xbuild == 'none':
@@ -162,7 +165,7 @@ args.nativeconfiguration = args.configuration
 target = None
 if args.target == 'android':
   target = 'Android'
-  for abi in ANDROID_ABIS:
+  for abi in args.androidabi:
     if not buildAndroidSO(args, abi):
       exit(-1)
 elif args.target == 'ios':

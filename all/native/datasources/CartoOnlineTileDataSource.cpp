@@ -26,7 +26,7 @@ namespace carto {
         _randomGenerator(),
         _mutex()
     {
-        _maxZoom = (isMapZenSource() ? MAPZEN_MAX_ZOOM : CARTO_MAX_ZOOM);
+        _maxZoom = DEFAULT_MAX_ZOOM;
     }
     
     CartoOnlineTileDataSource::~CartoOnlineTileDataSource() {
@@ -87,10 +87,6 @@ namespace carto {
         }
         
         return tileData;
-    }
-
-    bool CartoOnlineTileDataSource::isMapZenSource() const {
-        return _source.substr(0, 7) == "mapzen.";
     }
 
     std::string CartoOnlineTileDataSource::buildTileURL(const std::string& baseURL, const MapTile& tile) const {
@@ -221,7 +217,7 @@ namespace carto {
         }
         int maxAge = NetworkUtils::GetMaxAgeHTTPHeader(responseHeaders);
         auto tileData = std::make_shared<TileData>(responseData);
-        if (maxAge >= 0 && !isMapZenSource()) { // set max age header but only for non-mapzen sources as mapzen always sets max-age to 0
+        if (maxAge > 0) {
             Log::Infof("CartoOnlineTileDataSource::loadOnlineTile: Setting tile %d/%d/%d maxage=%d", mapTile.getZoom(), mapTile.getX(), mapTile.getY(), maxAge);
             tileData->setMaxAge(maxAge * 1000);
         }

@@ -48,16 +48,13 @@ namespace carto {
             std::shared_ptr<BinaryData> tileData;
         };
 
-        bool isMapZenSource() const;
-
         std::string buildTileURL(const std::string& baseURL, const MapTile& tile) const;
 
         bool loadConfiguration();
 
         std::shared_ptr<TileData> loadOnlineTile(const std::string& url, const MapTile& mapTile);
 
-        static const int CARTO_MAX_ZOOM = 14;
-        static const int MAPZEN_MAX_ZOOM = 17;
+        static const int DEFAULT_MAX_ZOOM = 14;
         static const int MAX_CACHED_TILES = 8;
         static const std::string TILE_SERVICE_URL;
 

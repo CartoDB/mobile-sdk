@@ -23,7 +23,7 @@ namespace carto {
     public:
         /**
          * Constructs a new instance of the PeliasOnlineGeocodingService given API key.
-         * @param apiKey The API key to use registered with Mapzen.
+         * @param apiKey The API key to use (registered with Mapzen).
          */
         explicit PeliasOnlineGeocodingService(const std::string& apiKey);
         virtual ~PeliasOnlineGeocodingService();
@@ -40,15 +40,29 @@ namespace carto {
          */
         void setAutocomplete(bool autocomplete);
 
+        /**
+         * Returns the custom backend service URL.
+         * @return The custom backend service URL. If this is not defined, an empty string is returned.
+         */
+        std::string getCustomServiceURL() const;
+        /**
+         * Sets the custom backend service URL. 
+         * The custom URL may contain tag "{api_key}" which will be substituted with the set API key.
+         * The custom URL should contain tag "{mode}" which will be set either to "autocomplete" or "search" based on the autocomplete state.
+         * @param serviceURL The custom backend service URL to use. If this is empty, then the default service is used.
+         */
+        void setCustomServiceURL(const std::string& serviceURL);
+
         virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const;
 
     protected:
-        static const std::string PELIAS_AUTOCOMPLETE_URL;
-        static const std::string PELIAS_SEARCH_URL;
+        static const std::string MAPZEN_SERVICE_URL;
 
         const std::string _apiKey;
 
         bool _autocomplete;
+
+        std::string _serviceURL;
 
         mutable std::mutex _mutex;
     };

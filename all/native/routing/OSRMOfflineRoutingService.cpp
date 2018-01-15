@@ -3,7 +3,7 @@
 #include "OSRMOfflineRoutingService.h"
 #include "components/Exceptions.h"
 #include "projections/Projection.h"
-#include "routing/RoutingProxy.h"
+#include "routing/OSRMRoutingProxy.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 
@@ -39,7 +39,7 @@ namespace carto {
             throw NullArgumentException("Null request");
         }
 
-        return RoutingProxy::CalculateRoute(_routeFinder, request);
+        return OSRMRoutingProxy::CalculateRoute(_routeFinder, request);
     }
 
 }
