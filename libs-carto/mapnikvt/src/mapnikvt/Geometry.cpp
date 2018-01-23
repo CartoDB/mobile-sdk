@@ -30,6 +30,22 @@ namespace carto { namespace mvt {
         return midPoints;
     }
 
+    PolygonGeometry::VerticesList PolygonGeometry::getClosedOuterRings() const {
+        VerticesList rings;
+        rings.reserve(getPolygonList().size());
+        for (const VerticesList& polygon : getPolygonList()) {
+            Vertices ring;
+            if (!polygon.empty()) {
+                ring = polygon.front();
+                if (!ring.empty()) {
+                    ring.push_back(ring.front());
+                }
+            }
+            rings.push_back(std::move(ring));
+        }
+        return rings;
+    }
+
     PolygonGeometry::Vertices PolygonGeometry::getCenterPoints() const {
         Vertices centerPoints;
         centerPoints.reserve(getPolygonList().size());

@@ -167,6 +167,44 @@ namespace carto { namespace mvt {
             }
         };
 
+        auto addLinePoints = [&](long long localId, long long globalId, const std::vector<cglib::vec2<float>>& vertices) {
+            if (_spacing <= 0) {
+                addPoint(localId, globalId, vertices);
+                return;
+            }
+
+            flushPoints(_transform); // NOTE: we need to flush previous points at this point as we will recalculate transform, which is part of the style
+
+            float linePos = 0;
+            for (std::size_t i = 1; i < vertices.size(); i++) {
+                const cglib::vec2<float>& v0 = vertices[i - 1];
+                const cglib::vec2<float>& v1 = vertices[i];
+
+                float lineLen = cglib::length(v1 - v0) * symbolizerContext.getSettings().getTileSize();
+                if (i == 1) {
+                    linePos = std::min(lineLen, _spacing) * 0.5f;
+                }
+                while (linePos < lineLen) {
+                    cglib::vec2<float> pos = v0 + (v1 - v0) * (linePos / lineLen);
+                    if (std::min(pos(0), pos(1)) > 0.0f && std::max(pos(0), pos(1)) < 1.0f) {
+                        addPoint(localId, 0, pos);
+
+                        cglib::vec2<float> dir = cglib::unit(v1 - v0);
+                        cglib::mat3x3<float> dirTransform = cglib::mat3x3<float>::identity();
+                        dirTransform(0, 0) = dir(0);
+                        dirTransform(0, 1) = -dir(1);
+                        dirTransform(1, 0) = dir(1);
+                        dirTransform(1, 1) = dir(0);
+                        flushPoints(dirTransform * _transform); // NOTE: we should flush to be sure that the point will not get buffered
+                    }
+
+                    linePos += _spacing + bitmapSize;
+                }
+
+                linePos -= lineLen;
+            }
+        };
+
         for (std::size_t index = 0; index < featureCollection.size(); index++) {
             long long localId = featureCollection.getLocalId(index);
             long long globalId = featureCollection.getGlobalId(index);
@@ -180,41 +218,7 @@ namespace carto { namespace mvt {
             else if (auto lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(geometry)) {
                 if (placement == vt::LabelOrientation::LINE) {
                     for (const auto& vertices : lineGeometry->getVerticesList()) {
-                        if (_spacing <= 0) {
-                            addPoint(localId, globalId, vertices);
-                            continue;
-                        }
-
-                        flushPoints(_transform); // NOTE: we need to flush previous points at this point as we will recalculate transform, which is part of the style
-
-                        float linePos = 0;
-                        for (std::size_t i = 1; i < vertices.size(); i++) {
-                            const cglib::vec2<float>& v0 = vertices[i - 1];
-                            const cglib::vec2<float>& v1 = vertices[i];
-
-                            float lineLen = cglib::length(v1 - v0) * symbolizerContext.getSettings().getTileSize();
-                            if (i == 1) {
-                                linePos = std::min(lineLen, _spacing) * 0.5f;
-                            }
-                            while (linePos < lineLen) {
-                                cglib::vec2<float> pos = v0 + (v1 - v0) * (linePos / lineLen);
-                                if (std::min(pos(0), pos(1)) > 0.0f && std::max(pos(0), pos(1)) < 1.0f) {
-                                    addPoint(localId, 0, pos);
-
-                                    cglib::vec2<float> dir = cglib::unit(v1 - v0);
-                                    cglib::mat3x3<float> dirTransform = cglib::mat3x3<float>::identity();
-                                    dirTransform(0, 0) = dir(0);
-                                    dirTransform(0, 1) = -dir(1);
-                                    dirTransform(1, 0) = dir(1);
-                                    dirTransform(1, 1) = dir(0);
-                                    flushPoints(dirTransform * _transform); // NOTE: we should flush to be sure that the point will not get buffered
-                                }
-
-                                linePos += _spacing + bitmapSize;
-                            }
-
-                            linePos -= lineLen;
-                        }
+                        addLinePoints(localId, globalId, vertices);
                     }
                 }
                 else {
@@ -224,8 +228,15 @@ namespace carto { namespace mvt {
                 }
             }
             else if (auto polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(geometry)) {
-                for (const auto& vertex : polygonGeometry->getSurfacePoints()) {
-                    addPoint(localId, globalId, vertex);
+                if (placement == vt::LabelOrientation::LINE) {
+                    for (const auto& vertices : polygonGeometry->getClosedOuterRings()) {
+                        addLinePoints(localId, globalId, vertices);
+                    }                  
+                }
+                else {
+                    for (const auto& vertex : polygonGeometry->getSurfacePoints()) {
+                        addPoint(localId, globalId, vertex);
+                    }
                 }
             }
             else {

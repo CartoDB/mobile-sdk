@@ -31,7 +31,7 @@ namespace carto { namespace mvt {
         
         std::shared_ptr<vt::Font> font = getFont(symbolizerContext);
         if (!font) {
-            _logger->write(Logger::Severity::ERROR, "Failed to load text font " + (!_faceName.empty() ? _faceName :_fontSetName));
+            _logger->write(Logger::Severity::ERROR, "Failed to load text font " + (!_faceName.empty() ? _faceName : _fontSetName));
             return;
         }
 
@@ -214,7 +214,7 @@ namespace carto { namespace mvt {
     std::shared_ptr<vt::Font> TextSymbolizer::getFont(const SymbolizerContext& symbolizerContext) const {
         std::shared_ptr<vt::Font> font;
         if (!_faceName.empty()) {
-            font = symbolizerContext.getFontManager()->getFont(_faceName, std::shared_ptr<vt::Font>());
+            font = symbolizerContext.getFontManager()->getFont(_faceName, font);
         }
         else if (!_fontSetName.empty()) {
             for (const std::shared_ptr<FontSet>& fontSet : _fontSets) {
@@ -301,6 +301,34 @@ namespace carto { namespace mvt {
             std::string text = getTransformedText(ValueConverter<std::string>::convert(_textExpression->evaluate(textExprContext)));
             float textSize = bitmapSize < 0 ? (placement == vt::LabelOrientation::LINE ? calculateTextSize(formatter.getFont(), text, formatter).size()(0) : 0) : bitmapSize;
 
+            auto addLineTexts = [&](const std::vector<cglib::vec2<float>>& vertices) {
+                if (_spacing <= 0) {
+                    addText(localId, globalId, text, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices);
+                    return;
+                }
+
+                float linePos = 0;
+                for (std::size_t i = 1; i < vertices.size(); i++) {
+                    const cglib::vec2<float>& v0 = vertices[i - 1];
+                    const cglib::vec2<float>& v1 = vertices[i];
+
+                    float lineLen = cglib::length(v1 - v0) * symbolizerContext.getSettings().getTileSize();
+                    if (i == 1) {
+                        linePos = std::min(lineLen, _spacing) * 0.5f;
+                    }
+                    while (linePos < lineLen) {
+                        cglib::vec2<float> pos = v0 + (v1 - v0) * (linePos / lineLen);
+                        if (std::min(pos(0), pos(1)) > 0.0f && std::max(pos(0), pos(1)) < 1.0f) {
+                            addText(localId, 0, text, pos, vertices);
+                        }
+
+                        linePos += _spacing + textSize;
+                    }
+
+                    linePos -= lineLen;
+                }
+            };
+
             if (auto pointGeometry = std::dynamic_pointer_cast<const PointGeometry>(geometry)) {
                 for (const auto& vertex : pointGeometry->getVertices()) {
                     addText(localId, globalId, text, vertex, vt::TileLayerBuilder::Vertices());
@@ -309,31 +337,7 @@ namespace carto { namespace mvt {
             else if (auto lineGeometry = std::dynamic_pointer_cast<const LineGeometry>(geometry)) {
                 if (placement == vt::LabelOrientation::LINE) {
                     for (const auto& vertices : lineGeometry->getVerticesList()) {
-                        if (_spacing <= 0) {
-                            addText(localId, globalId, text, boost::optional<vt::TileLayerBuilder::Vertex>(), vertices);
-                            continue;
-                        }
-
-                        float linePos = 0;
-                        for (std::size_t i = 1; i < vertices.size(); i++) {
-                            const cglib::vec2<float>& v0 = vertices[i - 1];
-                            const cglib::vec2<float>& v1 = vertices[i];
-
-                            float lineLen = cglib::length(v1 - v0) * symbolizerContext.getSettings().getTileSize();
-                            if (i == 1) {
-                                linePos = std::min(lineLen, _spacing) * 0.5f;
-                            }
-                            while (linePos < lineLen) {
-                                cglib::vec2<float> pos = v0 + (v1 - v0) * (linePos / lineLen);
-                                if (std::min(pos(0), pos(1)) > 0.0f && std::max(pos(0), pos(1)) < 1.0f) {
-                                    addText(localId, 0, text, pos, vertices);
-                                }
-
-                                linePos += _spacing + textSize;
-                            }
-
-                            linePos -= lineLen;
-                        }
+                        addLineTexts(vertices);
                     }
                 }
                 else {
@@ -343,8 +347,15 @@ namespace carto { namespace mvt {
                 }
             }
             else if (auto polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(geometry)) {
-                for (const auto& vertex : polygonGeometry->getSurfacePoints()) {
-                    addText(localId, globalId, text, vertex, vt::TileLayerBuilder::Vertices());
+                if (placement == vt::LabelOrientation::LINE) {
+                    for (const auto& vertices : polygonGeometry->getClosedOuterRings()) {
+                        addLineTexts(vertices);
+                    }
+                }
+                else {
+                    for (const auto& vertex : polygonGeometry->getSurfacePoints()) {
+                        addText(localId, globalId, text, vertex, vt::TileLayerBuilder::Vertices());
+                    }
                 }
             }
             else {

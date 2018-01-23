@@ -56,6 +56,8 @@ namespace carto { namespace mvt {
         
         const PolygonList& getPolygonList() const { return _polygonList; }
 
+        VerticesList getClosedOuterRings() const;
+
         Vertices getCenterPoints() const;
         Vertices getSurfacePoints() const;
 
