@@ -1,14 +1,23 @@
 # Package Manager
 
-CARTO Mobile SDK offers a convenient way for you to manage different offline packages: map, routing and geocoding. The API is the same, no matter what kind of packages you download. The only difference is in the `source` you define.
+**Offline maps, routing and geocoding** in the CARTO Mobile SDK require that you pre-download map data. For this we provide SDK internal API called **PackageManager** - this manages offline data packages, which are downloaded from CARTO server and used by the SDK for specific features. So for offline mapping you need to (1) create and configure PackageManager, then (2) download map data for the area what you need and finally (3) connect it to specific map layer or service to consume the data
 
-* `carto.streets` is the base source used to download map packages
-* `routing:carto.streets` for routing packages
-* `geocoding:carto.streets` for geocoding packages
 
-## Define Folder
+## Create and configure Package Manager
 
-Each type of package should be stored in a different folder, e.g. `mappackages`, `routingpackages`, `geocodingpackages`.
+### 1. Data Source ID
+
+When creating PackageManager, you specify package contents by setting `source` parameter value as following:
+
+* `carto.streets` map data packages (vector tiles) for visual map layer.
+* `routing:carto.streets` - routing data packages
+* `geocoding:carto.streets` -  geocoding/address search data packages
+
+All these sources are based on OpenStreetMaps map data.
+
+### 2. Define Folder
+
+App has to decide to which folder the map files are stored. Typically you use standard file locations there, depending on platform. Note that each package source ID should be stored in a different folder, e.g. `mappackages`, `routingpackages`, `geocodingpackages`.
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -120,11 +129,13 @@ Each type of package should be stored in a different folder, e.g. `mappackages`,
   
 </div>
  
-## PackageManagerListener Events
+### 3. Configure PackageManagerListener for Events
 
-Package downloads cannot be started immediately, as the Mobile SDK needs to get latest definition of packages from CARTO online service. Once this list is received, PackageManagerListener's `onPackageListUpdated()` is called.
+Package downloads for country packages cannot be started immediately, as the Mobile SDK needs to get latest definition of packages from CARTO online service. Once this list is received, PackageManagerListener's `onPackageListUpdated()` is called.
 
-Write your own `PackageManagerListener`, and start package download using the `onPackageListUpdated` method, which ensures that the package metadata is downloaded.
+Therefore you should write your own `PackageManagerListener`, and start package download using the `onPackageListUpdated` method, which ensures that the package metadata is downloaded.
+
+You see that `onPackageListUpdated()` callback starts immediately download of some packages, as we are quite impatient here. Real download starts when initialization is done and PackageManager is started.
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -152,7 +163,7 @@ Write your own `PackageManagerListener`, and start package download using the `o
     @Override
     public void onPackageListUpdated() {
         Log.d(Const.LOG_TAG, "Package list updated");
-        // Start download of package of Estonia
+        // Start download of package of Estonia. You can call several package downloads here
         // see list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
         packageManager.startPackageDownload("EE");
         packageManager.startPackageDownload("LV");
@@ -160,7 +171,7 @@ Write your own `PackageManagerListener`, and start package download using the `o
 
     @Override
     public void onPackageListFailed() {
-        Log.e(Const.LOG_TAG, "Package list update failed");
+        Log.e(Const.LOG_TAG, "Package list update failed. Network connection issues ? ");
     }
 
     @Override
@@ -202,7 +213,7 @@ Write your own `PackageManagerListener`, and start package download using the `o
     public override void OnPackageListUpdated()
     {
       Log.Debug("Package list updated");
-      // We have packages all country/regions
+      // We have packages for all country/regions
       // see list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
       packageManager.StartPackageDownload("EE");
       packageManager.StartPackageDownload("LV");
@@ -251,7 +262,7 @@ Write your own `PackageManagerListener`, and start package download using the `o
   - (void)onPackageListUpdated
   {
       NSLog(@"onPackageListUpdated");
-      // We have packages all country/regions
+      // We have packages for all country/regions
       // see list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
       [self._packageManager startPackageDownload: @"EE"];
       [self._packageManager startPackageDownload: @"LV"];
@@ -306,7 +317,7 @@ public class MyPackageManagerListener : NTPackageManagerListener {
     
     public override func onPackageListUpdated() {
         
-        // Start download of package of Estonia & Latvia
+        // Start download of package of Estonia and Latvia
         // see list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
         self.packageManager?.startPackageDownload("EE");
         self.packageManager?.startPackageDownload("LV");
@@ -342,7 +353,7 @@ public class MyPackageManagerListener : NTPackageManagerListener {
 
         override fun onPackageListUpdated() {
 
-            // Start download of package of Estonia & Latvia
+            // Start download of package of Estonia and Latvia
             // see list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
             packageManager.startPackageDownload("EE");
             packageManager.startPackageDownload("LV");
@@ -374,9 +385,8 @@ public class MyPackageManagerListener : NTPackageManagerListener {
     
 </div>
 
-**Note:** If you are wondering why these code samples include `EE` and `LV` (Estonia and Latvia) packages, see why [these countries might be linked](http://www.baltictimes.com/estonian_president_marries_latvian_cyber_defence_expert/). This shows that offline works across borders.
 
-## Initialize PackageManager
+### 4. Initialize PackageManager
 
 To link PackageManagerListener with PackageManager, apply the following code.
 
@@ -482,10 +492,45 @@ packageManager.startPackageListDownload()
     
 </div>
 
-## Bounding Box
+## Downloading map packages
 
-CARTO Mobile SDK allows for the download of custom areas, called bounding boxes. It can be anything from a park, a city, a route, or a block of countries.
+To have offline map data the PackageManager has to download some maps. Thre are two types of offline downloads:  code sample above already includes downloading for country ID-s, and you can download also offline maps for any custom areas e.g. cities.
 
-A bounding box is constructed as `bbox(min-longitude,min-latitude,max-longitude,max-latitude`, so the bounding box of Berlin would be: `bbox(13.2285,52.4698,13.5046,52.57477)`. This is used as the package **id** instead of a country or county code.
+During any package download PackageManagerListener gets `onPackageStatusChanged()` call back events, this can be used to display progress bar UI.
 
-An example of a custom BoundingBox (written in Kotlin) class is available [here](https://github.com/CartoDB/mobile-android-samples/blob/master/AdvancedMapKotlin/app/src/main/java/com/carto/advanced/kotlin/utils/BoundingBox.kt) and implementation can be seen [here](https://github.com/CartoDB/mobile-android-samples/blob/AdvancedMapKotlin/AdvancedMapKotlin/app/src/main/java/com/carto/advanced/kotlin/model/Cities.kt).
+### Using country ID
+
+Se list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
+
+Start download of e.g. Estonia with this PackageManager use method: `.startPackageDownload("EE");`. Note that you must be sure that the PackageList is downloaded at least once: this is started with `.startPackageListDownload()` and confirmed in `onPackageListUpdated()` callback.
+
+
+### Bounding Box
+
+CARTO Mobile SDK allows for the download of custom areas, called bounding boxes. It can be a city or national park for example. Note that there is size limit of about 50x50 km for the allowed areas here. For bigger areas you need to use several downloads, or country package.
+
+A bounding box is constructed as `bbox(west longitude,south latitude,east longitude,north latitude`, so the bounding box of Berlin would be: `bbox(13.2285,52.4698,13.5046,52.57477)`. There is no separate method for bounding box download start, just use same as string instead of  instead of a country or county code, as package ID. So Berlin download would start with `.startPackageDownload("bbox(13.2285,52.4698,13.5046,52.57477)");`
+
+Note that if you only download bounding box areas in your app, then PackageListDownload is not needed.
+
+
+## Consume PackageManager packages
+
+### As Offline Map Layers
+
+You should add `CartoOfflineVectorTileLayer` to the MapView, using PackageManager and map style for offline map layer as constructor parameters. 
+
+**Warning** - until map is downloaded, then this layer will have no map. So you may want to add another online tiled layer with same style, which will be replaced once offline map is downloaded
+
+```
+CartoOfflineVectorTileLayer layer = new CartoOfflineVectorTileLayer(cartoPackageManager, CartoBaseMapStyle.CARTO_BASEMAP_STYLE_VOYAGER);
+        mapView.getLayers().add(layer);
+```
+
+### Offline Routing
+
+Offline Routing is covered in separate document: https://carto.com/docs/carto-engine/mobile-sdk/mobile-routing/#offline-routing
+
+### Offline Geocoding
+
+Offline geocoding is covered here: https://carto.com/docs/carto-engine/mobile-sdk/mobile-geocoding/#offline-geocoding
