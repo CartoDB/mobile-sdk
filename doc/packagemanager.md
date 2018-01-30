@@ -522,10 +522,10 @@ You should add `CartoOfflineVectorTileLayer` to the MapView, using PackageManage
 
 **Warning** - until map is downloaded, then this layer will have no map. So you may want to add another online tiled layer with same style, which will be replaced once offline map is downloaded
 
-```
+  {% highlight java %}
 CartoOfflineVectorTileLayer layer = new CartoOfflineVectorTileLayer(cartoPackageManager, CartoBaseMapStyle.CARTO_BASEMAP_STYLE_VOYAGER);
         mapView.getLayers().add(layer);
-```
+  {% endhighlight %}
 
 ### Offline Routing
 
