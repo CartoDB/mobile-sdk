@@ -524,7 +524,7 @@ You should add `CartoOfflineVectorTileLayer` to the MapView, using PackageManage
 
 ```
 CartoOfflineVectorTileLayer layer = new CartoOfflineVectorTileLayer(cartoPackageManager, CartoBaseMapStyle.CARTO_BASEMAP_STYLE_VOYAGER);
-        mapView.getLayers().add(layer);
+mapView.getLayers().add(layer);
 ```
 
 ### Offline Routing
