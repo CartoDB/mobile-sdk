@@ -57,6 +57,8 @@ namespace carto { namespace vt {
 
         explicit TileLayerBuilder(const TileId& tileId, float tileSize, float geomScale);
 
+        void setClipBox(const cglib::bbox2<float>& clipBox);
+
         void addBitmap(const std::shared_ptr<TileBitmap>& bitmap);
         void addPoints(const std::function<bool(long long& id, Vertex& vertex)>& generator, const PointStyle& style, const std::shared_ptr<GlyphMap>& glyphMap);
         void addTexts(const std::function<bool(long long& id, Vertex& vertex, std::string& text)>& generator, const TextStyle& style, const TextFormatter& formatter);
@@ -88,15 +90,16 @@ namespace carto { namespace vt {
         void appendGeometry();
         void appendGeometry(float verticesScale, float binormalsScale, float texCoordsScale, const VertexArray<cglib::vec2<float>>& vertices, const VertexArray<cglib::vec2<float>>& texCoords, const VertexArray<cglib::vec2<float>>& binormals, const VertexArray<float>& heights, const VertexArray<cglib::vec4<char>>& attribs, const VertexArray<unsigned int>& indices, const VertexArray<long long>& ids, std::size_t offset, std::size_t count);
 
-        bool tesselateGlyph(const Vertex& vertex, char styleIndex, const cglib::vec2<float>& pen, const cglib::vec2<float>& size, const GlyphMap::Glyph* glyph);
-        bool tesselatePolygon(const VerticesList& verticesList, char styleIndex, const PolygonStyle& style);
-        bool tesselatePolygon3D(const VerticesList& verticesList, float minHeight, float maxHeight, char styleIndex, const Polygon3DStyle& style);
-        bool tesselateLine(const Vertices& points, char styleIndex, const StrokeMap::Stroke* stroke, const LineStyle& style);
-        bool tesselateLineEndPoint(const Vertex& p0, float u0, float v0, float v1, int i0, const cglib::vec2<float>& tangent, const cglib::vec2<float>& binormal, char styleIndex, const LineStyle& style);
+        bool tesselateGlyph(const cglib::vec2<float>& vertex, char styleIndex, const cglib::vec2<float>& pen, const cglib::vec2<float>& size, const GlyphMap::Glyph* glyph);
+        bool tesselatePolygon(const std::vector<std::vector<cglib::vec2<float>>>& verticesList, char styleIndex, const PolygonStyle& style);
+        bool tesselatePolygon3D(const std::vector<std::vector<cglib::vec2<float>>>& verticesList, float minHeight, float maxHeight, char styleIndex, const Polygon3DStyle& style);
+        bool tesselateLine(const std::vector<cglib::vec2<float>>& points, char styleIndex, const StrokeMap::Stroke* stroke, const LineStyle& style);
+        bool tesselateLineEndPoint(const cglib::vec2<float>& p0, float u0, float v0, float v1, unsigned int i0, const cglib::vec2<float>& tangent, const cglib::vec2<float>& binormal, char styleIndex, const LineStyle& style);
 
         const TileId _tileId;
         const float _tileSize;
         const float _geomScale;
+        cglib::bbox2<float> _clipBox;
         BuilderParameters _builderParameters;
         TileGeometry::StyleParameters _styleParameters;
         std::shared_ptr<const TileLabel::LabelStyle> _labelStyle;

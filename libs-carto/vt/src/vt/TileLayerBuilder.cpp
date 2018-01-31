@@ -12,7 +12,7 @@
 
 namespace carto { namespace vt {
     TileLayerBuilder::TileLayerBuilder(const TileId& tileId, float tileSize, float geomScale) :
-        _tileId(tileId), _tileSize(tileSize), _geomScale(geomScale)
+        _tileId(tileId), _tileSize(tileSize), _geomScale(geomScale), _clipBox(Vertex(-0.1f, -0.1f), Vertex(1.1f, 1.1f))
     {
         _vertices.reserve(RESERVED_VERTICES);
         _texCoords.reserve(RESERVED_VERTICES);
@@ -21,6 +21,10 @@ namespace carto { namespace vt {
         _attribs.reserve(RESERVED_VERTICES);
         _indices.reserve(RESERVED_VERTICES);
         _ids.reserve(RESERVED_VERTICES);
+    }
+
+    void TileLayerBuilder::setClipBox(const cglib::bbox2<float>& clipBox) {
+        _clipBox = clipBox;
     }
 
     void TileLayerBuilder::addBitmap(const std::shared_ptr<TileBitmap>& bitmap) {
@@ -33,7 +37,7 @@ namespace carto { namespace vt {
         }
         
         long long id = 0;
-        cglib::vec2<float> vertex(0, 0);
+        Vertex vertex(0, 0);
         if (!generator(id, vertex)) {
             return;
         }
@@ -79,7 +83,7 @@ namespace carto { namespace vt {
         }
         
         long long id = 0;
-        cglib::vec2<float> vertex(0, 0);
+        Vertex vertex(0, 0);
         std::string text;
         if (!generator(id, vertex, text)) {
             return;
@@ -167,7 +171,7 @@ namespace carto { namespace vt {
         }
         
         long long id = 0;
-        std::vector<cglib::vec2<float>> vertices;
+        Vertices vertices;
         if (!generator(id, vertices)) {
             return;
         }
@@ -207,7 +211,7 @@ namespace carto { namespace vt {
 
     void TileLayerBuilder::addPolygons(const std::function<bool(long long& id, VerticesList& verticesList)>& generator, const PolygonStyle& style) {
         long long id = 0;
-        std::vector<std::vector<cglib::vec2<float>>> verticesList;
+        VerticesList verticesList;
         if (!generator(id, verticesList)) {
             return;
         }
@@ -255,7 +259,7 @@ namespace carto { namespace vt {
         }
 
         long long id = 0;
-        std::vector<std::vector<cglib::vec2<float>>> verticesList;
+        VerticesList verticesList;
         if (!generator(id, verticesList)) {
             return;
         }
@@ -588,7 +592,7 @@ namespace carto { namespace vt {
         appendGeometry(verticesScale, binormalsScale, texCoordsScale, vertices, texCoords, binormals, heights, attribs, indices2, ids2, minIndex[1], maxIndex[1] - minIndex[1] + 1);
     }
 
-    bool TileLayerBuilder::tesselateGlyph(const Vertex& vertex, char styleIndex, const cglib::vec2<float>& pen, const cglib::vec2<float>& size, const GlyphMap::Glyph* glyph) {
+    bool TileLayerBuilder::tesselateGlyph(const cglib::vec2<float>& vertex, char styleIndex, const cglib::vec2<float>& pen, const cglib::vec2<float>& size, const GlyphMap::Glyph* glyph) {
         float u0 = 0, v0 = 0, u1 = 0, v1 = 0;
         cglib::vec2<float> p0 = pen, p3 = pen + size;
         cglib::vec4<char> attrib(styleIndex, 0, 0, 0);
@@ -599,18 +603,22 @@ namespace carto { namespace vt {
             v1 = static_cast<float>(glyph->y + glyph->height);
             attrib(1) = (glyph->sdfMode ? -1 : 1);
         }
-        _vertices.append(vertex, vertex, vertex, vertex);
-        _texCoords.append(cglib::vec2<float>(u0, v1), cglib::vec2<float>(u1, v1), cglib::vec2<float>(u1, v0), cglib::vec2<float>(u0, v0));
-        _binormals.append(p0, cglib::vec2<float>(p3(0), p0(1)), p3, cglib::vec2<float>(p0(0), p3(1)));
-        _attribs.append(attrib, attrib, attrib, attrib);
 
-        int i0 = static_cast<int>(_vertices.size()) - 4;
-        _indices.append(i0 + 0, i0 + 1, i0 + 2);
-        _indices.append(i0 + 0, i0 + 2, i0 + 3);
+        if (_clipBox.inside(vertex)) {
+            unsigned int i0 = static_cast<unsigned int>(_vertices.size());
+            _indices.append(i0 + 0, i0 + 1, i0 + 2);
+            _indices.append(i0 + 0, i0 + 2, i0 + 3);
+
+            _vertices.append(vertex, vertex, vertex, vertex);
+            _texCoords.append(cglib::vec2<float>(u0, v1), cglib::vec2<float>(u1, v1), cglib::vec2<float>(u1, v0), cglib::vec2<float>(u0, v0));
+            _binormals.append(p0, cglib::vec2<float>(p3(0), p0(1)), p3, cglib::vec2<float>(p0(0), p3(1)));
+            _attribs.append(attrib, attrib, attrib, attrib);
+        }
+
         return true;
     }
 
-    bool TileLayerBuilder::tesselatePolygon(const VerticesList& verticesList, char styleIndex, const PolygonStyle& style) {
+    bool TileLayerBuilder::tesselatePolygon(const std::vector<std::vector<cglib::vec2<float>>>& verticesList, char styleIndex, const PolygonStyle& style) {
         if (!_tessPoolAllocator) {
             _tessPoolAllocator = std::unique_ptr<PoolAllocator>(new PoolAllocator);
         }
@@ -626,7 +634,7 @@ namespace carto { namespace vt {
         if (!tess) {
             return false;
         }
-        for (const Vertices& points : verticesList) {
+        for (const std::vector<cglib::vec2<float>>& points : verticesList) {
             TESSreal* coords = reinterpret_cast<TESSreal*>(_tessPoolAllocator->allocate(points.size() * 2 * sizeof(TESSreal)));
             for (std::size_t i = 0; i < points.size(); i++) {
                 coords[i * 2 + 0] = static_cast<TESSreal>(points[i](0));
@@ -646,7 +654,7 @@ namespace carto { namespace vt {
             dv_dy = _tileSize / style.pattern->heightScale;
         }
 
-        int offset = static_cast<int>(_vertices.size());
+        unsigned int offset = static_cast<unsigned int>(_vertices.size());
         for (int i = 0; i < vertexCount; i++) {
             cglib::vec2<float> p(static_cast<float>(coords[i * 2 + 0]), static_cast<float>(coords[i * 2 + 1]));
             cglib::vec2<float> uv(p(0) * du_dx + 0.5f, p(1) * dv_dy + 0.5f);
@@ -656,6 +664,7 @@ namespace carto { namespace vt {
         }
         _attribs.fill(cglib::vec4<char>(styleIndex, 0, 0, 0), _vertices.size() - offset);
 
+        cglib::bbox2<float> clipBox(cglib::vec2<float>(0.0f, 0.0f), cglib::vec2<float>(1.0f, 1.0f));
         for (int i = 0; i < elementCount * 3; i += 3) {
             int i0 = elements[i + 0];
             int i1 = elements[i + 1];
@@ -667,7 +676,12 @@ namespace carto { namespace vt {
             i1 += offset;
             i2 += offset;
 
-            _indices.append(i0, i1, i2);
+            cglib::bbox2<float> bounds(_vertices[i0]);
+            bounds.add(_vertices[i1]);
+            bounds.add(_vertices[i2]);
+            if (clipBox.inside(bounds)) {
+                _indices.append(i0, i1, i2);
+            }
         }
 
         tessDeleteTess(tess);
@@ -675,27 +689,32 @@ namespace carto { namespace vt {
         return true;
     }
 
-    bool TileLayerBuilder::tesselatePolygon3D(const VerticesList& verticesList, float minHeight, float maxHeight, char styleIndex, const Polygon3DStyle& style) {
+    bool TileLayerBuilder::tesselatePolygon3D(const std::vector<std::vector<cglib::vec2<float>>>& verticesList, float minHeight, float maxHeight, char styleIndex, const Polygon3DStyle& style) {
+        cglib::bbox2<float> clipBox(cglib::vec2<float>(0.0f, 0.0f), cglib::vec2<float>(1.0f, 1.0f));
         if (minHeight != maxHeight) {
-            for (const Vertices& points : verticesList) {
+            for (const std::vector<cglib::vec2<float>>& points : verticesList) {
                 std::size_t j = points.size() - 1;
                 for (std::size_t i = 0; i < points.size(); i++) {
-                    cglib::vec2<float> tangent(cglib::unit(points[i] - points[j]));
-                    cglib::vec2<float> binormal = cglib::vec2<float>(tangent(1), -tangent(0));
+                    cglib::bbox2<float> bounds(points[i]);
+                    bounds.add(points[j]);
+                    if (clipBox.inside(bounds)) {
+                        cglib::vec2<float> tangent(cglib::unit(points[i] - points[j]));
+                        cglib::vec2<float> binormal = cglib::vec2<float>(tangent(1), -tangent(0));
 
-                    int i0 = static_cast<int>(_vertices.size());
-                    _vertices.append(points[i], points[j], points[j]);
-                    _binormals.append(binormal, binormal, binormal);
-                    _heights.append(minHeight, minHeight, maxHeight);
-                    _attribs.append(cglib::vec4<char>(styleIndex, 1, 0, 0), cglib::vec4<char>(styleIndex, 1, 0, 0), cglib::vec4<char>(styleIndex, 1, 1, 0));
-                    _indices.append(i0 + 0, i0 + 1, i0 + 2);
+                        unsigned int i0 = static_cast<unsigned int>(_vertices.size());
+                        _vertices.append(points[i], points[j], points[j]);
+                        _binormals.append(binormal, binormal, binormal);
+                        _heights.append(minHeight, minHeight, maxHeight);
+                        _attribs.append(cglib::vec4<char>(styleIndex, 1, 0, 0), cglib::vec4<char>(styleIndex, 1, 0, 0), cglib::vec4<char>(styleIndex, 1, 1, 0));
+                        _indices.append(i0 + 0, i0 + 1, i0 + 2);
 
-                    int i1 = static_cast<int>(_vertices.size());
-                    _vertices.append(points[j], points[i], points[i]);
-                    _binormals.append(binormal, binormal, binormal);
-                    _heights.append(maxHeight, maxHeight, minHeight);
-                    _attribs.append(cglib::vec4<char>(styleIndex, 1, 1, 0), cglib::vec4<char>(styleIndex, 1, 1, 0), cglib::vec4<char>(styleIndex, 1, 0, 0));
-                    _indices.append(i1 + 0, i1 + 1, i1 + 2);
+                        unsigned int i1 = static_cast<unsigned int>(_vertices.size());
+                        _vertices.append(points[j], points[i], points[i]);
+                        _binormals.append(binormal, binormal, binormal);
+                        _heights.append(maxHeight, maxHeight, minHeight);
+                        _attribs.append(cglib::vec4<char>(styleIndex, 1, 1, 0), cglib::vec4<char>(styleIndex, 1, 1, 0), cglib::vec4<char>(styleIndex, 1, 0, 0));
+                        _indices.append(i1 + 0, i1 + 1, i1 + 2);
+                    }
 
                     j = i;
                 }
@@ -717,7 +736,7 @@ namespace carto { namespace vt {
         if (!tess) {
             return false;
         }
-        for (const Vertices& points : verticesList) {
+        for (const std::vector<cglib::vec2<float>>& points : verticesList) {
             TESSreal* coords = reinterpret_cast<TESSreal*>(_tessPoolAllocator->allocate(points.size() * 2 * sizeof(TESSreal)));
             for (std::size_t i = 0; i < points.size(); i++) {
                 coords[i * 2 + 0] = static_cast<TESSreal>(points[i](0));
@@ -731,7 +750,7 @@ namespace carto { namespace vt {
         const int vertexCount = tessGetVertexCount(tess);
         const int elementCount = tessGetElementCount(tess);
 
-        int offset = static_cast<int>(_vertices.size());
+        unsigned int offset = static_cast<unsigned int>(_vertices.size());
         for (int i = 0; i < vertexCount; i++) {
             cglib::vec2<float> p(static_cast<float>(coords[i * 2 + 0]), static_cast<float>(coords[i * 2 + 1]));
 
@@ -752,7 +771,12 @@ namespace carto { namespace vt {
             i1 += offset;
             i2 += offset;
 
-            _indices.append(i2, i1, i0);
+            cglib::bbox2<float> bounds(_vertices[i0]);
+            bounds.add(_vertices[i1]);
+            bounds.add(_vertices[i2]);
+            if (clipBox.inside(bounds)) {
+                _indices.append(i2, i1, i0);
+            }
         }
 
         tessDeleteTess(tess);
@@ -760,7 +784,7 @@ namespace carto { namespace vt {
         return true;
     }
 
-    bool TileLayerBuilder::tesselateLine(const Vertices& points, char styleIndex, const StrokeMap::Stroke* stroke, const LineStyle& style) {
+    bool TileLayerBuilder::tesselateLine(const std::vector<cglib::vec2<float>>& points, char styleIndex, const StrokeMap::Stroke* stroke, const LineStyle& style) {
         if (points.size() < 2) {
             return false;
         }
@@ -824,7 +848,8 @@ namespace carto { namespace vt {
             binormal = cglib::vec2<float>(tangent(1), -tangent(0));
 
             if (endpoints) {
-                tesselateLineEndPoint(p0, u0, v0, v1, static_cast<int>(_vertices.size()) + 2, -tangent, binormal, styleIndex, style);
+                unsigned int i0 = static_cast<unsigned int>(_vertices.size()) + 2; // refer to the point that will be added after end point
+                tesselateLineEndPoint(p0, u0, v0, v1, i0, -tangent, binormal, styleIndex, style);
             }
 
             _vertices.append(p0, p0);
@@ -847,16 +872,21 @@ namespace carto { namespace vt {
             tangent = cglib::unit(dp);
             binormal = cglib::vec2<float>(tangent(1), -tangent(0));
 
+            unsigned int i0 = static_cast<unsigned int>(_vertices.size());
+
+            cglib::bbox2<float> bounds(p0);
+            bounds.add(_vertices[i0 - 2]);
+            if (_clipBox.inside(bounds)) {
+                _indices.append(i0 - 2, i0 - 1, i0 + 0);
+                _indices.append(i0 - 1, i0 + 0, i0 + 1);
+            }
+
             float dot = cglib::dot_product(binormal, prevBinormal);
             if (dot < MIN_MITER_DOT) {
                 _vertices.append(p0, p0);
                 _texCoords.append(cglib::vec2<float>(u0, v0), cglib::vec2<float>(u0, v1));
                 _binormals.append(-prevBinormal, prevBinormal);
                 _attribs.append(cglib::vec4<char>(styleIndex, 0, 1, 1), cglib::vec4<char>(styleIndex, 0, -1, 1));
-
-                int i0 = static_cast<int>(_vertices.size()) - 4;
-                _indices.append(i0 + 0, i0 + 1, i0 + 2);
-                _indices.append(i0 + 1, i0 + 2, i0 + 3);
 
                 _vertices.append(p0, p0);
                 _texCoords.append(cglib::vec2<float>(u0, v0), cglib::vec2<float>(u0, v1));
@@ -870,10 +900,6 @@ namespace carto { namespace vt {
                 _texCoords.append(cglib::vec2<float>(u0, v0), cglib::vec2<float>(u0, v1));
                 _binormals.append(-lerpedBinormal, lerpedBinormal);
                 _attribs.append(cglib::vec4<char>(styleIndex, 0, 1, 1), cglib::vec4<char>(styleIndex, 0, -1, 1));
-
-                int i0 = static_cast<int>(_vertices.size()) - 4;
-                _indices.append(i0 + 0, i0 + 1, i0 + 2);
-                _indices.append(i0 + 1, i0 + 2, i0 + 3);
             }
         }
             
@@ -881,32 +907,39 @@ namespace carto { namespace vt {
             const cglib::vec2<float>& p0 = points[i - 1];
             float u0 = linePos * du_dl;
 
+            unsigned int i0 = static_cast<unsigned int>(_vertices.size());
+            
+            cglib::bbox2<float> bounds(p0);
+            bounds.add(_vertices[i0 - 2]);
+            if (_clipBox.inside(bounds)) {
+                _indices.append(i0 - 2, i0 - 1, i0 + 0);
+                _indices.append(i0 - 1, i0 + 0, i0 + 1);
+            }
+
             _vertices.append(p0, p0);
             _texCoords.append(cglib::vec2<float>(u0, v0), cglib::vec2<float>(u0, v1));
             _binormals.append(cycle ? -knotBinormal : -binormal, cycle ? knotBinormal : binormal);
             _attribs.append(cglib::vec4<char>(styleIndex, 0, 1, 1), cglib::vec4<char>(styleIndex, 0, -1, 1));
 
-            int i0 = static_cast<int>(_vertices.size()) - 4;
-            _indices.append(i0 + 0, i0 + 1, i0 + 2);
-            _indices.append(i0 + 1, i0 + 2, i0 + 3);
-
             if (endpoints) {
-                tesselateLineEndPoint(p0, u0, v0, v1, static_cast<int>(_vertices.size()) - 2, tangent, binormal, styleIndex, style);
+                tesselateLineEndPoint(p0, u0, v0, v1, i0, tangent, binormal, styleIndex, style);
             }
         }
         return true;
     }
 
-    bool TileLayerBuilder::tesselateLineEndPoint(const Vertex& p0, float u0, float v0, float v1, int i0, const cglib::vec2<float>& tangent, const cglib::vec2<float>& binormal, char styleIndex, const LineStyle& style) {
-        _vertices.append(p0, p0);
-        _texCoords.append(cglib::vec2<float>(u0, v0), cglib::vec2<float>(u0, v1));
-        _binormals.append(tangent - binormal, tangent + binormal);
-        _attribs.append(cglib::vec4<char>(styleIndex, 1, 1, 1), cglib::vec4<char>(styleIndex, 1, -1, 1));
-                
-        int i2 = static_cast<int>(_vertices.size()) - 2;
-        _indices.append(i0 + 0, i0 + 1, i2 + 0);
-        _indices.append(i0 + 1, i2 + 0, i2 + 1);
+    bool TileLayerBuilder::tesselateLineEndPoint(const cglib::vec2<float>& p0, float u0, float v0, float v1, unsigned int i0, const cglib::vec2<float>& tangent, const cglib::vec2<float>& binormal, char styleIndex, const LineStyle& style) {
+        if (_clipBox.inside(p0)) {
+            unsigned int i2 = static_cast<unsigned int>(_vertices.size());
+            
+            _vertices.append(p0, p0);
+            _texCoords.append(cglib::vec2<float>(u0, v0), cglib::vec2<float>(u0, v1));
+            _binormals.append(tangent - binormal, tangent + binormal);
+            _attribs.append(cglib::vec4<char>(styleIndex, 1, 1, 1), cglib::vec4<char>(styleIndex, 1, -1, 1));
 
+            _indices.append(i0 + 0, i0 + 1, i2 + 0);
+            _indices.append(i0 + 1, i2 + 0, i2 + 1);
+        }
         return true;
     }
 } }
