@@ -522,18 +522,18 @@ You should add `CartoOfflineVectorTileLayer` to the MapView, using PackageManage
 
 **Warning** - until map is downloaded, then this layer will have no map. So you may want to add another online tiled layer with same style, which will be replaced once offline map is downloaded
 
-```
+  {% highlight java %}
 CartoOfflineVectorTileLayer layer = new CartoOfflineVectorTileLayer(cartoPackageManager, CartoBaseMapStyle.CARTO_BASEMAP_STYLE_VOYAGER);
 mapView.getLayers().add(layer);
-```
+  {% endhighlight %}
 
 ### Offline Routing
 
-Offline Routing is covered in separate document: https://carto.com/docs/carto-engine/mobile-sdk/mobile-routing/#offline-routing
+Offline Routing is covered in our [Offline Routing document](https://carto.com/docs/carto-engine/mobile-sdk/mobile-routing/#offline-routing)
 
 ### Offline Geocoding
 
-Offline geocoding is covered here: https://carto.com/docs/carto-engine/mobile-sdk/mobile-geocoding/#offline-geocoding
+Offline geocoding is covered in our [Offline Geocoding document](https://carto.com/docs/carto-engine/mobile-sdk/mobile-geocoding/#offline-geocoding)
 
 ## Additional notes
 ### Updating packages
