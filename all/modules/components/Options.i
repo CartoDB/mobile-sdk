@@ -35,6 +35,7 @@
 %attribute(carto::Options, bool, KineticPan, isKineticPan, setKineticPan)
 %attribute(carto::Options, bool, KineticRotation, isKineticRotation, setKineticRotation)
 %attribute(carto::Options, bool, SeamlessPanning, isSeamlessPanning, setSeamlessPanning)
+%attribute(carto::Options, bool, RestrictedPanning, isRestrictedPanning, setRestrictedPanning)
 %attribute(carto::Options, bool, TiltGestureReversed, isTiltGestureReversed, setTiltGestureReversed)
 %attribute(carto::Options, bool, ZoomGestures, isZoomGestures, setZoomGestures)
 %attributeval(carto::Options, carto::MapRange, ZoomRange, getZoomRange, setZoomRange)

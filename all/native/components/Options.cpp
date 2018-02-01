@@ -29,6 +29,7 @@ namespace carto {
         _panningMode(PanningMode::PANNING_MODE_FREE),
         _pivotMode(PivotMode::PIVOT_MODE_TOUCHPOINT),
         _seamlessPanning(true),
+        _restrictedPanning(false),
         _tiltGestureReversed(false),
         _zoomGestures(false),
         _clearColor(1, 1, 1, 1),
@@ -252,6 +253,22 @@ namespace carto {
             _seamlessPanning = enabled;
         }
         notifyOptionChanged("SeamlessPanning");
+    }
+        
+    bool Options::isRestrictedPanning() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _restrictedPanning;
+    }
+    
+    void Options::setRestrictedPanning(bool enabled) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            if (_restrictedPanning == enabled) {
+                return;
+            }
+            _restrictedPanning = enabled;
+        }
+        notifyOptionChanged("RestrictedPanning");
     }
         
     bool Options::isTiltGestureReversed() const {

@@ -31,6 +31,7 @@ namespace carto {
         bool isUseTarget() const;
     
         void calculate(Options& options, ViewState& viewState);
+
     private:
         float _zoom;
     

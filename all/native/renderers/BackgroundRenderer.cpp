@@ -129,7 +129,7 @@ namespace carto {
     
             // Scale background coordinates
             float backgroundScale = static_cast<float>(viewState.getFar() * 2 / viewState.getCosHalfFOVXY());
-            const MapPos cameraPos = viewState.getCameraPos();
+            const MapPos& cameraPos = viewState.getCameraPos();
             for (int i = 0; i < BACKGROUND_VERTEX_COUNT * 3; i += 3) {
                 _backgroundCoords[i + 0] = BACKGROUND_COORDS[i + 0] * backgroundScale;
                 _backgroundCoords[i + 1] = BACKGROUND_COORDS[i + 1] * backgroundScale;

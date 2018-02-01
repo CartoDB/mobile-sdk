@@ -1,4 +1,5 @@
 #include "ViewState.h"
+#include "core/ScreenBounds.h"
 #include "projections/Projection.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
@@ -18,6 +19,8 @@ namespace carto {
         _zoom(0.0f),
         _2PowZoom(1.0f),
         _zoom0Distance(0.0f),
+        _minZoom(0.0f),
+        _ignoreMinZoom(false),
         _normalizedResolution(0.0f),
         _width(0),
         _height(0),
@@ -52,36 +55,28 @@ namespace carto {
     ViewState::~ViewState() {
     }
     
-    MapPos& ViewState::getCameraPos() {
-        return _cameraPos;
-    }
-    
     const MapPos& ViewState::getCameraPos() const {
         return _cameraPos;
     }
     
-    MapPos& ViewState::getFocusPos() {
-        return _focusPos;
+    void ViewState::setCameraPos(const MapPos& cameraPos) {
+        _cameraPos = cameraPos;
     }
     
     const MapPos& ViewState::getFocusPos() const {
         return _focusPos;
     }
     
-    MapVec& ViewState::getUpVec() {
-        return _upVec;
+    void ViewState::setFocusPos(const MapPos& focusPos) {
+        _focusPos = focusPos;
     }
     
     const MapVec& ViewState::getUpVec() const {
         return _upVec;
     }
     
-    bool ViewState::isCameraChanged() const {
-        return _cameraChanged;
-    }
-    
-    void ViewState::cameraChanged() {
-        _cameraChanged = true;
+    void ViewState::setUpVec(const MapVec& upVec) {
+        _upVec = upVec;
     }
     
     float ViewState::getRotation() const {
@@ -109,12 +104,24 @@ namespace carto {
         _2PowZoom = std::pow(2.0f, zoom);
     }
     
+    bool ViewState::isCameraChanged() const {
+        return _cameraChanged;
+    }
+    
+    void ViewState::cameraChanged() {
+        _cameraChanged = true;
+    }
+    
     float ViewState::get2PowZoom() const {
         return _2PowZoom;
     }
     
     float ViewState::getZoom0Distance() const {
         return _zoom0Distance;
+    }
+
+    float ViewState::getMinZoom() const {
+        return _minZoom;
     }
     
     float ViewState::getNormalizedResolution() const {
@@ -217,12 +224,8 @@ namespace carto {
         return _rteModelviewProjectionMat;
     }
         
-    const Frustum& ViewState::getFrustum() const {
-        return _frustum;
-    }
-    
-    cglib::mat4x4<double> ViewState::GetLocalMat(const MapPos &mapPos, const Projection &proj) {
-        const MapBounds &bounds = proj.getBounds();
+    cglib::mat4x4<double> ViewState::GetLocalMat(const MapPos& mapPos, const Projection& proj) {
+        const MapBounds& bounds = proj.getBounds();
         const MapVec& boundsDelta = bounds.getDelta();
         double scaleX = Const::WORLD_SIZE / boundsDelta.getX();
         double scaleY = Const::WORLD_SIZE / boundsDelta.getY();
@@ -239,24 +242,10 @@ namespace carto {
         return localMat;
     }
     
-    cglib::mat4x4<float> ViewState::getRTELocalMat(const MapPos &mapPos, const Projection &proj) const {
-        const MapBounds &bounds = proj.getBounds();
-        const MapVec& boundsDelta = bounds.getDelta();
-        double scaleX = Const::WORLD_SIZE / boundsDelta.getX();
-        double scaleY = Const::WORLD_SIZE / boundsDelta.getY();
-        double scaleZ = std::min(scaleX, scaleY); // TODO: projection should supply this
-        double localScale = proj.getLocalScale(mapPos);
-        MapVec delta = proj.toInternal(mapPos) - _cameraPos;
-        cglib::mat4x4<float> localMat(cglib::mat4x4<float>::identity());
-        localMat(0, 0) = (float) (scaleX * localScale);
-        localMat(1, 1) = (float) (scaleY * localScale);
-        localMat(2, 2) = (float) (scaleZ * localScale);
-        localMat(0, 3) = (float) delta.getX();
-        localMat(1, 3) = (float) delta.getY();
-        localMat(2, 3) = (float) delta.getZ();
-        return localMat;
+    const Frustum& ViewState::getFrustum() const {
+        return _frustum;
     }
-        
+    
     int ViewState::getScreenWidth() const {
         return _width;
     }
@@ -279,92 +268,154 @@ namespace carto {
     
         _screenSizeChanged = true;
     }
+
+    void ViewState::clampFocusPos(const Options& options) {
+        if (!options.isRestrictedPanning() || _width <= 0 || _height <= 0) {
+            return;
+        }
+
+        MapBounds bounds = options.getInternalPanBounds();
+        MapPos boundsPoses[2] = { bounds.getMin(), bounds.getMax() };
+
+        ScreenBounds screenBounds(ScreenPos(_width * 0.5f - _height * 0.5f, 0.0f),
+                                  ScreenPos(_width * 0.5f + _height * 0.5f, _height));
+
+        MapVec cameraVec = _cameraPos - _focusPos;
+        for (int j = 0; j < 4; j++) {
+            if (options.isSeamlessPanning()) {
+                if (j % 2 == 0) {
+                    continue; // ignore X-based check if map is repeating along X
+                }
+            }
+
+            MapPos edgePos = _focusPos;
+            edgePos[j % 2] = boundsPoses[j / 2][j % 2];
+            MapPos centerPos = _focusPos;
+            centerPos[j % 2] = bounds.getCenter()[j % 2];
+
+            ViewState viewState;
+            viewState._ignoreMinZoom = true;
+            viewState.setFocusPos(_focusPos);
+            viewState.setCameraPos(_focusPos + MapVec(0, 0, cameraVec.length()));
+            viewState.setZoom(_zoom);
+            viewState.setScreenSize(_width, _height);
+            viewState.cameraChanged();
+            viewState.calculateViewState(options);
+            ScreenPos screenPos = viewState.worldToScreen(edgePos, options);
+            if (!screenBounds.contains(screenPos)) {
+                continue;
+            }
+
+            MapPos focusPos0 = centerPos, focusPos1 = edgePos;
+            for (int i = 0; i < 24; i++) {
+                viewState.setFocusPos(focusPos0 + (focusPos1 - focusPos0) * 0.5);
+                viewState.setCameraPos(viewState.getFocusPos() + MapVec(0, 0, cameraVec.length()));
+                viewState.cameraChanged();
+                viewState.calculateViewState(options);
+
+                ScreenPos screenPos = viewState.worldToScreen(edgePos, options);
+                if (!screenBounds.contains(screenPos)) {
+                    focusPos0 = viewState.getFocusPos();
+                } else {
+                    focusPos1 = viewState.getFocusPos();
+                }
+            }
+
+            setFocusPos(focusPos0);
+            setCameraPos(focusPos0 + cameraVec);
+
+            cameraChanged();
+        }
+    }
     
     void ViewState::calculateViewState(const Options& options) {
-    
         switch (options.getProjectionMode()) {
-        case ProjectionMode::PROJECTION_MODE_ORTHOGONAL: {
-            _projectionMode = ProjectionMode::PROJECTION_MODE_ORTHOGONAL;
-            break;
-        }
-        case ProjectionMode::PROJECTION_MODE_PERSPECTIVE:
-        default: {
-            _projectionMode = ProjectionMode::PROJECTION_MODE_PERSPECTIVE;
-    
-            // If FOV or tile draw size changed, recalculate zoom0Distance
-            int FOVY = options.getFieldOfViewY();
-            int tileDrawSize = options.getTileDrawSize();
-            float dpi = options.getDPI();
-            if (FOVY != _fovY || tileDrawSize != _tileDrawSize || dpi != _dpi || _screenSizeChanged) {
-                _fovY = FOVY;
-                _tileDrawSize = tileDrawSize;
-                _dpToPX = dpi / Const::UNSCALED_DPI;
-                _dpi = dpi;
-                _screenSizeChanged = false;
-    
-                _halfFOVY = _fovY * 0.5f;
-                _tanHalfFOVY = std::tan(static_cast<double>(_halfFOVY * Const::DEG_TO_RAD));
-                _cosHalfFOVY = std::cos(static_cast<double>(_halfFOVY * Const::DEG_TO_RAD));
-    
-                _tanHalfFOVX = _aspectRatio * _tanHalfFOVY;
-                _cosHalfFOVXY = std::cos(std::atan(_tanHalfFOVX)) * _cosHalfFOVY;
-    
-                _zoom0Distance = static_cast<float>(_height * Const::HALF_WORLD_SIZE / (tileDrawSize * _tanHalfFOVY * (_dpi / Const::UNSCALED_DPI)));
-                
-                _normalizedResolution = 2 * tileDrawSize * (_dpi / Const::UNSCALED_DPI);
-    
-                // Calculate new camera position
-                MapVec cameraVec = _cameraPos - _focusPos;
-                double length = cameraVec.length();
-                double newLength = _zoom0Distance / std::pow(2.0f, _zoom);
-                cameraVec *= newLength / length;
-                _cameraPos = _focusPos;
-                _cameraPos += cameraVec;
-    
-                _cameraChanged = true;
+            case ProjectionMode::PROJECTION_MODE_ORTHOGONAL: {
+                _projectionMode = ProjectionMode::PROJECTION_MODE_ORTHOGONAL;
+                break;
             }
-    
-            if (_cameraChanged) {
-                _cameraChanged = false;
-    
-                // Calculate concatenated matrix for XZ rotation (X before, then Z) for billboard vector elements
-                float cosX = static_cast<float>(std::cos((_tilt - 90) * Const::DEG_TO_RAD));
-                float sinX = static_cast<float>(std::sin((_tilt - 90) * Const::DEG_TO_RAD));
-                _rotationState._cosZ = static_cast<float>(std::cos(-_rotation * Const::DEG_TO_RAD));
-                _rotationState._sinZ = static_cast<float>(std::sin(-_rotation * Const::DEG_TO_RAD));
-                _rotationState._m11 = _rotationState._cosZ;
-                _rotationState._m12 = cosX * _rotationState._sinZ;
-                _rotationState._m21 = -_rotationState._sinZ;
-                _rotationState._m22 = cosX * _rotationState._cosZ;
-                _rotationState._m31 = 0;
-                _rotationState._m32 = -sinX;
-    
-                // Calculate scaling factor for vector elements
-                _unitToPXCoef = static_cast<float>(_zoom0Distance / (_height * _tanHalfFOVY) / _2PowZoom);
-                _unitToDPCoef = _unitToPXCoef * _dpi / Const::UNSCALED_DPI;
-    
-                _near = calculateNearPlanePersp(_cameraPos, _tilt, _halfFOVY);
-                _far = calculateFarPlanePersp(_cameraPos, _tilt, _halfFOVY, options);
-    
-                // Matrices
-                _projectionMat = calculatePerspMat(_halfFOVY, _near, _far, options);
-                _modelviewMat = calculateLookatMat();
-    
-                // Double precision mvp matrix and frustum
-                _modelviewProjectionMat = _projectionMat * _modelviewMat;
-                _frustum = Frustum(_modelviewProjectionMat);
-    
-                // Rte modleview matrix only requires float precision
-                _rteModelviewMat = cglib::mat4x4<float>::convert(_modelviewMat);
-                _rteModelviewMat(0, 3) = 0.0f;
-                _rteModelviewMat(1, 3) = 0.0f;
-                _rteModelviewMat(2, 3) = 0.0f;
-    
-                // Float precision Rte mvp matrix
-                _rteModelviewProjectionMat = cglib::mat4x4<float>::convert(_projectionMat) * _rteModelviewMat;
+            case ProjectionMode::PROJECTION_MODE_PERSPECTIVE:
+            default: {
+                _projectionMode = ProjectionMode::PROJECTION_MODE_PERSPECTIVE;
+        
+                // If FOV or tile draw size changed, recalculate zoom0Distance
+                int FOVY = options.getFieldOfViewY();
+                int tileDrawSize = options.getTileDrawSize();
+                float dpi = options.getDPI();
+                if (FOVY != _fovY || tileDrawSize != _tileDrawSize || dpi != _dpi || _screenSizeChanged) {
+                    _fovY = FOVY;
+                    _tileDrawSize = tileDrawSize;
+                    _dpToPX = dpi / Const::UNSCALED_DPI;
+                    _dpi = dpi;
+                    _screenSizeChanged = false;
+        
+                    _halfFOVY = _fovY * 0.5f;
+                    _tanHalfFOVY = std::tan(static_cast<double>(_halfFOVY * Const::DEG_TO_RAD));
+                    _cosHalfFOVY = std::cos(static_cast<double>(_halfFOVY * Const::DEG_TO_RAD));
+        
+                    _tanHalfFOVX = _aspectRatio * _tanHalfFOVY;
+                    _cosHalfFOVXY = std::cos(std::atan(_tanHalfFOVX)) * _cosHalfFOVY;
+        
+                    _zoom0Distance = static_cast<float>(_height * Const::HALF_WORLD_SIZE / (tileDrawSize * _tanHalfFOVY * (_dpi / Const::UNSCALED_DPI)));
+
+                    if (!_ignoreMinZoom) {
+                        _minZoom = calculateMinZoom(options);
+                    }
+                    
+                    _normalizedResolution = 2 * tileDrawSize * (_dpi / Const::UNSCALED_DPI);
+        
+                    // Calculate new camera position
+                    MapVec cameraVec = _cameraPos - _focusPos;
+                    double length = cameraVec.length();
+                    double newLength = _zoom0Distance / std::pow(2.0f, _zoom);
+                    cameraVec *= newLength / length;
+                    _cameraPos = _focusPos;
+                    _cameraPos += cameraVec;
+        
+                    _cameraChanged = true;
+                }
+        
+                if (_cameraChanged) {
+                    _cameraChanged = false;
+        
+                    // Calculate concatenated matrix for XZ rotation (X before, then Z) for billboard vector elements
+                    float cosX = static_cast<float>(std::cos((_tilt - 90) * Const::DEG_TO_RAD));
+                    float sinX = static_cast<float>(std::sin((_tilt - 90) * Const::DEG_TO_RAD));
+                    _rotationState._cosZ = static_cast<float>(std::cos(-_rotation * Const::DEG_TO_RAD));
+                    _rotationState._sinZ = static_cast<float>(std::sin(-_rotation * Const::DEG_TO_RAD));
+                    _rotationState._m11 = _rotationState._cosZ;
+                    _rotationState._m12 = cosX * _rotationState._sinZ;
+                    _rotationState._m21 = -_rotationState._sinZ;
+                    _rotationState._m22 = cosX * _rotationState._cosZ;
+                    _rotationState._m31 = 0;
+                    _rotationState._m32 = -sinX;
+        
+                    // Calculate scaling factor for vector elements
+                    _unitToPXCoef = static_cast<float>(_zoom0Distance / (_height * _tanHalfFOVY) / _2PowZoom);
+                    _unitToDPCoef = _unitToPXCoef * _dpi / Const::UNSCALED_DPI;
+        
+                    _near = calculateNearPlanePersp(_cameraPos, _tilt, _halfFOVY);
+                    _far = calculateFarPlanePersp(_cameraPos, _tilt, _halfFOVY, options);
+        
+                    // Matrices
+                    _projectionMat = calculatePerspMat(_halfFOVY, _near, _far, options);
+                    _modelviewMat = calculateLookatMat();
+        
+                    // Double precision mvp matrix and frustum
+                    _modelviewProjectionMat = _projectionMat * _modelviewMat;
+                    _frustum = Frustum(_modelviewProjectionMat);
+        
+                    // Rte modleview matrix only requires float precision
+                    _rteModelviewMat = cglib::mat4x4<float>::convert(_modelviewMat);
+                    _rteModelviewMat(0, 3) = 0.0f;
+                    _rteModelviewMat(1, 3) = 0.0f;
+                    _rteModelviewMat(2, 3) = 0.0f;
+        
+                    // Float precision Rte mvp matrix
+                    _rteModelviewProjectionMat = cglib::mat4x4<float>::convert(_projectionMat) * _rteModelviewMat;
+                }
+                break;
             }
-            break;
-        }
         }
     }
     
@@ -445,6 +496,49 @@ namespace carto {
         }
         return static_cast<float>(clipFar);
     }
+
+    float ViewState::calculateMinZoom(const Options& options) const {
+        if (!options.isRestrictedPanning() || _width <= 0 || _height <= 0) {
+            return options.getZoomRange().getMin();
+        }
+
+        MapBounds bounds = options.getInternalPanBounds();
+        MapPos boundsPoses[2] = { bounds.getMin(), bounds.getMax() };
+
+        ScreenBounds screenBounds(ScreenPos(_width * 0.5f - _height * 0.5f, 0.0f),
+                                  ScreenPos(_width * 0.5f + _height * 0.5f, _height));
+
+        MapRange range = options.getZoomRange();
+        for (int i = 0; i < 24; i++) {
+            MapVec cameraVec = getCameraPos() - getFocusPos();
+            ViewState viewState;
+            viewState._ignoreMinZoom = true;
+            viewState.setFocusPos(bounds.getCenter());
+            viewState.setCameraPos(bounds.getCenter() + cameraVec);
+            viewState.setZoom((range.getMin() + range.getMax()) * 0.5f);
+            viewState.setScreenSize(_width, _height);
+            viewState.cameraChanged();
+            viewState.calculateViewState(options);
+
+            bool fit = true;
+            for (int j = 0; j < 4; j++) {
+                MapPos mapPos(boundsPoses[j % 2].getX(), boundsPoses[j / 2].getY());
+                ScreenPos screenPos = viewState.worldToScreen(mapPos, options);
+                if (screenBounds.contains(screenPos)) {
+                    fit = false;
+                    break;
+                }
+            }
+
+            if (fit) {
+                range.setMax(viewState.getZoom());
+            } else {
+                range.setMin(viewState.getZoom());
+            }
+        }
+
+        return range.getMin();
+    }
     
     cglib::mat4x4<double> ViewState::calculatePerspMat(float halfFOVY, float near, float far, const Options& options) const {
         double tanHalfFOVY = std::tan(halfFOVY * Const::DEG_TO_RAD);
@@ -471,7 +565,7 @@ namespace carto {
             cglib::vec3<double>(_upVec.getX(), _upVec.getY(), _upVec.getZ()));
     }
     
-    cglib::mat4x4<double> ViewState::calculateModelViewMat(const carto::Options &options) const {
+    cglib::mat4x4<double> ViewState::calculateModelViewMat(const carto::Options& options) const {
         if (_cameraChanged) {
             // Camera has changed, but the matrices have not been updated yet from the render thread
             

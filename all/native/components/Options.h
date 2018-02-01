@@ -240,7 +240,7 @@ namespace carto {
          */
         PivotMode::PivotMode getPivotMode() const;
         /**
-         * Sets the pivot mode. The default is PivotMode::TOUCHPOINT
+         * Sets the pivot mode. The default is PIVOT_MODE_TOUCHPOINT
          * @param pivotMode The new pivot mode.
          */
         void setPivotMode(PivotMode::PivotMode pivotMode);
@@ -256,6 +256,17 @@ namespace carto {
          * @param enabled The new state of seamless horizontal panning flag.
          */
         void setSeamlessPanning(bool enabled);
+
+        /**
+         * Returns the state of the restricted panning flag.
+         * @return True if restricted panning is enabled.
+         */
+        bool isRestrictedPanning() const;
+        /**
+         * Sets the restricted panning flag. If set to true, then focus point coordinates and zoom level of the map view
+         * will be adjusted to display as little empty background as possible. The default is false.
+         */
+        void setRestrictedPanning(bool enabled);
 
         /**
          * Returns true if tilting gesture direction is reversed (and same as with Google Maps).
@@ -586,6 +597,7 @@ namespace carto {
         PivotMode::PivotMode _pivotMode;
     
         bool _seamlessPanning;
+        bool _restrictedPanning;
 
         bool _tiltGestureReversed;
 

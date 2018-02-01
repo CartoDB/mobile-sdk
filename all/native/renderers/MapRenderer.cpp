@@ -507,7 +507,8 @@ namespace carto {
     
     void MapRenderer::onSurfaceChanged(int width, int height) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-         _viewState.setScreenSize(width, height);
+        _viewState.setScreenSize(width, height);
+        _viewState.clampFocusPos(*_options);
         _surfaceChanged = true;
     }
     
@@ -876,6 +877,12 @@ namespace carto {
             if (optionName == "ProjectionMode" || optionName == "TileDrawSize" || optionName == "DPI" || optionName == "DrawDistance" || optionName == "FieldOfViewY" || optionName == "FocusPointOffset") {
             	mapRenderer->viewChanged(false);
             }
+
+            if (optionName == "RestrictedPanning") {
+                std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
+                mapRenderer->_viewState.clampFocusPos(*mapRenderer->_options);
+            }
+
             mapRenderer->requestRedraw();
         }
     }

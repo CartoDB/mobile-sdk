@@ -42,9 +42,9 @@ namespace carto {
     }
     
     void CameraTiltEvent::calculate(Options& options, ViewState& viewState) {
-        MapPos& cameraPos = viewState.getCameraPos();
-        MapPos& focusPos = viewState.getFocusPos();
-        MapVec& upVec = viewState.getUpVec();
+        MapPos cameraPos = viewState.getCameraPos();
+        const MapPos& focusPos = viewState.getFocusPos();
+        const MapVec& upVec = viewState.getUpVec();
     
         if (_useDelta) {
             // Calculate absolute tilt
@@ -66,7 +66,10 @@ namespace carto {
         cameraPos.setCoords(focusPos.getX() - upVec.getX() * lengthXY,
                 focusPos.getY() - upVec.getY() * lengthXY);
     
+        viewState.setCameraPos(cameraPos);
         viewState.setTilt(tilt);
+
+        viewState.clampFocusPos(options);
         
         // Calculate matrices etc. on the next onDrawFrame() call
         viewState.cameraChanged();

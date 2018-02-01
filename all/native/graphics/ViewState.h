@@ -44,39 +44,77 @@ namespace carto {
         virtual ~ViewState();
     
         /**
-         * Returns the camera position, allows for modifications. Changing the camera position doesn't 
-         * automatically update the view. To update the view cameraChanged() must be called.
-         * @return The modifiable camera position.
-         */
-        MapPos& getCameraPos();
-        /**
          * Returns the camera position.
          * @return The camera position.
          */
         const MapPos& getCameraPos() const;
         /**
-         * Returns the focus position, allows for modifications. Changing the focus position doesn't
+         * Sets the camera position. Changing the camera position doesn't 
          * automatically update the view. To update the view cameraChanged() must be called.
-         * @return The modifiable focus position.
+         * @param cameraPos The new camera position.
          */
-        MapPos& getFocusPos();
+        void setCameraPos(const MapPos& cameraPos);
+
         /**
          * Returns the focus position.
          * @return The focus position.
          */
         const MapPos& getFocusPos() const;
         /**
-         * Returns the up direction vector, allows for modifications. Changing the up direction vector doesn't
+         * Sets the focus position. Changing the focus position doesn't
          * automatically update the view. To update the view cameraChanged() must be called.
-         * @return The modifiable up direction vector.
+         * @param focusPos The new focus position.
          */
-        MapVec& getUpVec();
+        void setFocusPos(const MapPos& focusPos);
+
         /**
          * Returns the up direction vector.
          * @return The up direction vector.
          */
         const MapVec& getUpVec() const;
+        /**
+         * Sets the up direction vector. Changing the up direction vector doesn't
+         * automatically update the view. To update the view cameraChanged() must be called.
+         * @param upVec The new up direction vector.
+         */
+        void setUpVec(const MapVec& upVec);
     
+        /**
+         * Returns the camera rotation angle.
+         * @return The camera rotation angle in degrees.
+         */
+        float getRotation() const;
+        /**
+         * Sets the camera rotation angle. Changing the rotation angle doesn't
+         * automatically update the view. To update the view cameraChanged() must be called.
+         * @param rotation The new camera rotation angle in degrees.
+         */
+        void setRotation(float rotation);
+
+        /**
+         * Returns the camera tilt angle.
+         * @return The camera tilt angle in degrees.
+         */
+        float getTilt() const;
+        /**
+         * Sets the camera tilt angle. Changing the tilt angle doesn't
+         * automatically update the view. To update the view cameraChanged() must be called.
+         * @param tilt The new camera tilt angle in degrees.
+         */
+        void setTilt(float tilt);
+
+        /**
+         * Returns the camera zoom level.
+         * @return The camera zoom level.
+         */
+        float getZoom() const;
+        /**
+         * Sets the camera zoom level. Changing the zoom level doesn't
+         * automatically update the view. To update the view cameraChanged() must be called.
+         * @param zoom The new camera zoom level.
+         */
+        void setZoom(float zoom);
+
         /**
          * Returns the state of the camera changed flag.
          * @return True if camera has changed since the last frame.
@@ -89,39 +127,6 @@ namespace carto {
         void cameraChanged();
         
         /**
-         * Returns the camera rotation angle.
-         * @return The camera rotation angle in degrees.
-         */
-        float getRotation() const;
-        /**
-         * Sets the camera rotation angle. Changing the rotation angle doesn't
-         * automatically update the view. To update the view cameraChanged() must be called.
-         * @param rotation The new camera rotation angle in degrees.
-         */
-        void setRotation(float rotation);
-        /**
-         * Returns the camera tilt angle.
-         * @return The camera tilt angle in degrees.
-         */
-        float getTilt() const;
-        /**
-         * Sets the camera tilt angle. Changing the tilt angle doesn't
-         * automatically update the view. To update the view cameraChanged() must be called.
-         * @param tilt The new camera tilt angle in degrees.
-         */
-        void setTilt(float tilt);
-        /**
-         * Returns the camera zoom level.
-         * @return The camera zoom level.
-         */
-        float getZoom() const;
-        /**
-         * Sets the camera zoom level. Changing the zoom level doesn't
-         * automatically update the view. To update the view cameraChanged() must be called.
-         * @param zoom The new camera zoom level.
-         */
-        void setZoom(float zoom);
-        /**
          * Returns the number 2 lifted to the power of the zoom level: pow(2, zoom level).
          * @return pow(2, zoom level).
          */
@@ -132,6 +137,14 @@ namespace carto {
          * @return The distance between focus to camera position, when zoom level = 0.
          */
         float getZoom0Distance() const;
+
+        /**
+         * Returns the adjusted minimum zoom.
+         * If restricted panning is used, then this value can be greater than the minimum zoom specified
+         * via Options.
+         * @return The minimum zoom of the map view.
+         */
+        float getMinZoom() const;
         
         /**
          * Get normalized resolution of the view. This is an internal parameter used by vector tile renderer.
@@ -274,15 +287,14 @@ namespace carto {
          */
         const cglib::mat4x4<float>& getRTEModelviewProjectionMat() const;
         
+        // TODO: get rid of this at later stage
+        static cglib::mat4x4<double> GetLocalMat(const MapPos& mapPos, const Projection& proj);
+    
         /**
          * Returns the view frustum.
          * @return The view frustum.
          */
         const Frustum& getFrustum() const;
-    
-        // TODO: get rid of them at later stage
-        static cglib::mat4x4<double> GetLocalMat(const MapPos& mapPos, const Projection& proj);
-        cglib::mat4x4<float> getRTELocalMat(const MapPos &mapPos, const Projection &proj) const;
     
         /**
          * Returns the screen width.
@@ -300,6 +312,13 @@ namespace carto {
          * @param height The new height of the screen.
          */
         void setScreenSize(int width, int height);
+
+        /**
+         * Clamps the focus point if restricted panning is used.
+         * @param options The options object to use for clamping.
+         */
+        void clampFocusPos(const Options& options);
+
         /**
          * Updates the view when the screen size, view state or some other view options have changed. This is automatically
          * called at the beginning of every frame.
@@ -337,6 +356,7 @@ namespace carto {
     private:
         float calculateNearPlanePersp(const MapPos& cameraPos, float tilt, float halfFOVY) const;
         float calculateFarPlanePersp(const MapPos& cameraPos, float tilt, float halfFOVY, const Options& options) const;
+        float calculateMinZoom(const Options& options) const;
         cglib::mat4x4<double> calculatePerspMat(float halfFOVY, float near, float far, const Options& options) const;
         cglib::mat4x4<double> calculateLookatMat() const;
         cglib::mat4x4<double> calculateModelViewMat(const Options& options) const;
@@ -363,6 +383,8 @@ namespace carto {
         float _zoom;
         float _2PowZoom;
         float _zoom0Distance;
+        float _minZoom;
+        bool _ignoreMinZoom;
         float _normalizedResolution;
     
         int _width;

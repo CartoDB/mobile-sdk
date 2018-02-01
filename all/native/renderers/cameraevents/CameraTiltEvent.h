@@ -25,6 +25,7 @@ namespace carto {
         bool isUseDelta() const;
     
         void calculate(Options& options, ViewState& viewState);
+
     private:
         float _tilt;
     

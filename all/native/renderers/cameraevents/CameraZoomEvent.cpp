@@ -62,8 +62,8 @@ namespace carto {
     }
     
     void CameraZoomEvent::calculate(Options& options, ViewState& viewState) {
-        MapPos& cameraPos = viewState.getCameraPos();
-        MapPos& focusPos = viewState.getFocusPos();
+        MapPos cameraPos = viewState.getCameraPos();
+        MapPos focusPos = viewState.getFocusPos();
     
         if (!_useDelta) {
             _zoomDelta = _zoom - viewState.getZoom();
@@ -74,7 +74,7 @@ namespace carto {
         }
     
         MapRange zoomRange = options.getZoomRange();
-        float zoom = GeneralUtils::Clamp(viewState.getZoom() + _zoomDelta, zoomRange.getMin(), zoomRange.getMax());
+        float zoom = GeneralUtils::Clamp(viewState.getZoom() + _zoomDelta, viewState.getMinZoom(), zoomRange.getMax());
         float scale = std::pow(2.0f, viewState.getZoom() - zoom);
     
         MapVec cameraVec(cameraPos - focusPos);
@@ -106,8 +106,12 @@ namespace carto {
     
         cameraPos = focusPos;
         cameraPos += cameraVec;
-    
+
+        viewState.setCameraPos(cameraPos);
+        viewState.setFocusPos(focusPos);
         viewState.setZoom(zoom);
+
+        viewState.clampFocusPos(options);
         
         // Calculate matrices etc. on the next onDrawFrame() call
         viewState.cameraChanged();

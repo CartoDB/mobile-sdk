@@ -23,6 +23,9 @@
 
 !value_type(carto::ViewState, graphics.ViewState)
 
+%attributeval(carto::ViewState, carto::MapPos, CameraPos, getCameraPos)
+%attributeval(carto::ViewState, carto::MapPos, FocusPos, getFocusPos)
+%attributeval(carto::ViewState, carto::MapVec, UpVec, getUpVec)
 %attributeval(carto::ViewState, carto::Frustum, Frustum, getFrustum)
 %attribute(carto::ViewState, float, Rotation, getRotation)
 %attribute(carto::ViewState, float, Zoom, getZoom)
@@ -44,21 +47,22 @@
 %attribute(carto::ViewState, float, AspectRatio, getAspectRatio)
 %ignore carto::ViewState::ViewState;
 %ignore carto::ViewState::RotationState;
-%ignore carto::ViewState::getCameraPos();
-%ignore carto::ViewState::getFocusPos();
-%ignore carto::ViewState::getUpVec();
-%ignore carto::ViewState::getHalfWidth();
-%ignore carto::ViewState::getHalfHeight();
-%ignore carto::ViewState::getTanHalfFOVY();
-%ignore carto::ViewState::getHalfFOVY();
-%ignore carto::ViewState::getNormalizedResolution();
-%ignore carto::ViewState::getTanHalfFOVX();
-%ignore carto::ViewState::getCosHalfFOVY();
-%ignore carto::ViewState::getCosHalfFOVXY();
-%ignore carto::ViewState::cameraChanged;
+%ignore carto::ViewState::getMinZoom;
+%ignore carto::ViewState::getHalfWidth;
+%ignore carto::ViewState::getHalfHeight;
+%ignore carto::ViewState::getTanHalfFOVY;
+%ignore carto::ViewState::getHalfFOVY;
+%ignore carto::ViewState::getNormalizedResolution;
+%ignore carto::ViewState::getTanHalfFOVX;
+%ignore carto::ViewState::getCosHalfFOVY;
+%ignore carto::ViewState::getCosHalfFOVXY;
+%ignore carto::ViewState::setCameraPos;
+%ignore carto::ViewState::setFocusPos;
+%ignore carto::ViewState::setUpVec;
 %ignore carto::ViewState::setRotation;
 %ignore carto::ViewState::setTilt;
 %ignore carto::ViewState::setZoom;
+%ignore carto::ViewState::cameraChanged;
 %ignore carto::ViewState::get2PowZoom;
 %ignore carto::ViewState::getRotationState;
 %ignore carto::ViewState::getProjectionMat;
@@ -69,6 +73,7 @@
 %ignore carto::ViewState::getRTEModelviewMat;
 %ignore carto::ViewState::getRTEModelviewProjectionMat;
 %ignore carto::ViewState::setScreenSize;
+%ignore carto::ViewState::clampFocusPos;
 %ignore carto::ViewState::calculateViewState;
 %ignore carto::ViewState::worldToScreen;
 %ignore carto::ViewState::screenToWorldPlane;

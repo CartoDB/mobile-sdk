@@ -41,8 +41,8 @@ namespace carto {
     }
     
     void CameraPanEvent::calculate(Options& options, ViewState& viewState) {
-        MapPos& cameraPos = viewState.getCameraPos();
-        MapPos& focusPos = viewState.getFocusPos();
+        MapPos cameraPos = viewState.getCameraPos();
+        MapPos focusPos = viewState.getFocusPos();
     
         if (_useDelta) {
             // If the object was initialized using relative coordinates
@@ -73,6 +73,11 @@ namespace carto {
     
         cameraPos = focusPos;
         cameraPos += cameraVec;
+
+        viewState.setCameraPos(cameraPos);
+        viewState.setFocusPos(focusPos);
+
+        viewState.clampFocusPos(options);
         
         // Calculate matrices etc. on the next onDrawFrame() call
         viewState.cameraChanged();
