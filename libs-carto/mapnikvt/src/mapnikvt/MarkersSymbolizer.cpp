@@ -229,7 +229,7 @@ namespace carto { namespace mvt {
             }
             else if (auto polygonGeometry = std::dynamic_pointer_cast<const PolygonGeometry>(geometry)) {
                 if (placement == vt::LabelOrientation::LINE) {
-                    for (const auto& vertices : polygonGeometry->getClosedOuterRings()) {
+                    for (const auto& vertices : polygonGeometry->getClosedOuterRings(true)) {
                         addLinePoints(localId, globalId, vertices);
                     }                  
                 }

@@ -30,7 +30,16 @@ namespace carto { namespace mvt {
         return midPoints;
     }
 
-    PolygonGeometry::VerticesList PolygonGeometry::getClosedOuterRings() const {
+    PolygonGeometry::VerticesList PolygonGeometry::getClosedOuterRings(bool clip) const {
+        auto pointClass = [](const cglib::vec2<float>& v) -> bool {
+            int flags = 0;
+            if (v(0) < 0) flags |= 1;
+            if (v(0) > 1) flags |= 2;
+            if (v(1) < 0) flags |= 4;
+            if (v(1) > 1) flags |= 8;
+            return flags;
+        };
+
         VerticesList rings;
         rings.reserve(getPolygonList().size());
         for (const VerticesList& polygon : getPolygonList()) {
@@ -40,8 +49,34 @@ namespace carto { namespace mvt {
                 if (!ring.empty()) {
                     ring.push_back(ring.front());
                 }
+
+                if (clip) {
+                    for (std::size_t i = 0; i < ring.size(); i++) {
+                        int flags1 = pointClass(ring[i]);
+                        if (!flags1) {
+                            continue;
+                        }
+
+                        if (i > 0) {
+                            rings.push_back(Vertices(ring.begin(), ring.begin() + i + 1));
+                            ring.erase(ring.begin(), ring.begin() + i);
+                        }
+
+                        for (i = 1; i < ring.size(); i++) {
+                            int flags2 = pointClass(ring[i]);
+                            if (!(flags1 & flags2)) {
+                                break;
+                            }
+                            flags1 = flags2;
+                        }
+                        ring.erase(ring.begin(), ring.begin() + i - 1);
+                        i = 0;
+                    }
+                }
             }
-            rings.push_back(std::move(ring));
+            if (ring.size() > 1) {
+                rings.push_back(std::move(ring));
+            }
         }
         return rings;
     }
