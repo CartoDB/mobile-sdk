@@ -25,6 +25,8 @@ namespace carto {
      * An online routing service that uses MapZen Valhalla routing service.
      * As the class connects to an external (non-CARTO) service, this class is provided "as-is",   
      * future changes from the service provider may not be compatible with the implementation.
+     * Be sure to read the Terms and Conditions of your Valhalla service provider to see if the
+     * service is available for your application.
      * Note: this class is experimental and may change or even be removed in future SDK versions.
      */
     class ValhallaOnlineRoutingService : public RoutingService {

@@ -17,6 +17,8 @@ namespace carto {
      * An online geocoding service that uses MapBox geocoder.
      * As the class connects to an external (non-CARTO) service, this class is provided "as-is",
      * future changes from the service provider may not be compatible with the implementation.
+     * Be sure to read the Terms and Conditions of the MapBox service to see if the
+     * service is available for your application.
      * Note: this class is experimental and may change or even be removed in future SDK versions.
      */
     class MapBoxOnlineGeocodingService : public GeocodingService {
