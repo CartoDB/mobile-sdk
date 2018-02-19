@@ -1,3 +1,35 @@
+CARTO Mobile SDK 4.1.2
+-------------------
+
+This is a maintenance release for SDK 4.1.x containing mostly fixes
+but also some new features. This version deprecates support
+for external MapZen services due to the services being closed.
+
+### New features
+
+* SDK has support for MapBox online geocoding services.
+  New classes MapBoxOnlineGeocodingService and MapBoxOnlineReverseGeocodingService can be used for this.
+* All MapZen online service (Pelias and Valhalla) wrappers now include additional methods for specifying custom service URLs.
+  This feature was added as MapZen closes all online services as of February 2018.
+* Added optional  ‘restricted panning’ support to avoid zooming/panning outside world map area. If turned on, then  map area is restricted to maximize visible map. This can be turned on/off using Options.setRestrictedPanning method
+* Added custom service URL support for Pelias and Mapbox geocoders and Valhalla routing
+* API documentation for iOS is using Jazzy tool, instead of Doxygen. This allows us to show both ObjectiveC and Swift syntax for the API.
+
+
+### Fixes/changes:
+
+* Implemented fine-grained clipping in VT loader - reduces drawing of invisible geometry and improves performance 
+* Removed MapZen-specific handling from CartoOnlineTileDataSource
+* Smaller built-in style asset due to optimized fonts
+* Proper handling of line-placement of markers and texts with polygon geometry
+* Fixed C#-specific API wrapping issue: Polygon3DStyleBuilder and Polygon3DStyle SideColor property was not properly wrapped
+* SDK includes latest version of CARTO styles, with minor fixes
+* Improved text placement along lines in vector tile renderer
+* Fixed text wrapping in vector tile renderer when ‘wrap-before: true’ mode was used
+* MapZen-specific code is removed from CartoOnlineVectorLayer
+* Minor optimizations in vector tile renderer for faster rendering of transparent features
+
+
 CARTO Mobile SDK 4.1.1
 -------------------
 
