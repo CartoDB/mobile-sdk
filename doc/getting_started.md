@@ -53,7 +53,7 @@ These SDK libraries are managed by CARTO and include all the required libraries 
   // Add to your build.gradle file:
   
   dependencies {
-      compile 'com.carto:carto-mobile-sdk:4.1.0@aar'
+      compile 'com.carto:carto-mobile-sdk:4.1.2@aar'
   }
 
   {% endhighlight %}
@@ -64,7 +64,7 @@ These SDK libraries are managed by CARTO and include all the required libraries 
 
 // Add to your CocoaPods Podfile:
 
-pod 'CartoMobileSDK', '4.1.0'
+pod 'CartoMobileSDK', '4.1.2'
 
 {% endhighlight %}
   </div>
@@ -195,7 +195,7 @@ If using Android as the mobile platform, follow this implementation procedure.
 
 {% highlight groovy %}
   dependencies {
-      compile 'com.carto:carto-mobile-sdk:4.1.0@aar'
+      compile 'com.carto:carto-mobile-sdk:4.1.2@aar'
   }
 {% endhighlight %}
  
@@ -317,7 +317,7 @@ If using iOS as the mobile platform, follow this implementation procedure.
 
 // Add to your CocoaPods Podfile:
 
-pod 'CartoMobileSDK', '4.1.0'
+pod 'CartoMobileSDK', '4.1.2'
 
 {% endhighlight %}
 
@@ -362,7 +362,7 @@ pod 'CartoMobileSDK', '4.1.0'
   NTMapView* mapView = (NTMapView*) self.view;
 
   // 3. Create online vector tile layer, use style asset embedded in the project
-  NTVectorTileLayer* vectorTileLayer = [[NTCartoOnlineVectorTileLayer alloc] initWithSource: @"nutiteq.osm"];
+  NTVectorTileLayer* vectorTileLayer = [[NTCartoOnlineVectorTileLayer alloc] initWithSource: @"carto.streets"];
 
   // 4. Add vector tile layer
   [[mapView getLayers] add:vectorTileLayer];
@@ -482,7 +482,7 @@ While you can share most of code using Native Controls, you just need to specify
             stack.Children.Add(mapView);
 #endif
  // 2. Indicate the common code from both platforms
-    var baseLayer = new Carto.Layers.CartoOnlineVectorTileLayer("nutiteq.osm");
+    var baseLayer = new Carto.Layers.CartoOnlineVectorTileLayer("carto.streets");
      mapView.Layers.Add(baseLayer);
 </pre>
 
@@ -536,7 +536,7 @@ public class MainActivity : Activity
     var mapView = FindViewById<MapView> ( Resource.Id.mapView );
 
     /// 4. Online vector base layer
-    var baseLayer = new CartoOnlineVectorTileLayer("nutiteq.osm");
+    var baseLayer = new CartoOnlineVectorTileLayer("carto.streets");
 
     /// 5. Set online base layer  
     mapView.Layers.Add(baseLayer);
@@ -579,7 +579,7 @@ public class MainViewController : GLKit.GLKViewController
     MapView.RegisterLicense("YOUR_LICENSE_KEY");
 
     // Online vector base layer
-    var baseLayer = new CartoOnlineVectorTileLayer("nutiteq.osm");
+    var baseLayer = new CartoOnlineVectorTileLayer("carto.streets");
 
     // Set online base layer.
     // Note: assuming here that Map is an outlet added to the controller.
@@ -607,7 +607,7 @@ _**Note:** The  Windows Phone 10 implementation of the Mobile SDK is experimenta
     The following requirements are mandatory:
 
     - Windows Phone version 10
-    - MS Visual Studio 2013 Community edition, or better
+    - MS Visual Studio 2015 Community edition, or better
     - Windows Phone 10 SDK, should come with Visual Studio
     - Visual Studio extension (VSIX) for CARTO Maps SDK component. Download and start the package to install it
 

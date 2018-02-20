@@ -13,7 +13,7 @@
 #include <memory>
 
 namespace carto {
-	class AnimationStyle;
+    class AnimationStyle;
 
     /**
      * A base class for BillboardStyleBuilder subclasses.
