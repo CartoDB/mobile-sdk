@@ -1,3 +1,4 @@
+
 # Getting Started
 
 The following workflow guides you through the process of getting started with the Mobile SDK.
@@ -85,7 +86,7 @@ url for iOS: "https://www.nuget.org/packages/CartoMobileSDK.iOS/"
   {% highlight groovy %}
 
 Use NuGet package manager in Visual Studio:
-Search for "CartoMobileSDK.WinPhone10" or use url: "https://www.nuget.org/packages/CartoMobileSDK.WinPhone10"
+Search for "CartoMobileSDK.UWP" or use url: "https://www.nuget.org/packages/CartoMobileSDK.UWP"
 
 {% endhighlight %}
 
@@ -199,7 +200,7 @@ If using Android as the mobile platform, follow this implementation procedure.
   }
 {% endhighlight %}
  
-2) Define INTERNET permission for your AndroidManifest.xml
+2) Define **INTERNET** permission for your AndroidManifest.xml
 
 {% highlight xml %}
 <uses-permission android:name="android.permission.INTERNET"/>
@@ -272,7 +273,7 @@ class MainActivity : AppCompatActivity() {
 
   - Replace `YOUR_LICENSE_KEY` with your [Mobile App API Key](#registering-your-app)
 
-  - Define the first layer of the map, which will be the basemap layer. This is a vector map layer, which requires that you load and define styles in the assets of this layer. You can also add other map layers once a basemap is configured
+  - Define the first layer of the map, which will be the basemap layer. You can also add other map layers once a basemap is configured
 
 #### Example 
 
@@ -409,7 +410,7 @@ pod 'CartoMobileSDK', '4.1.2'
 
 If using Xamarin as the mobile platform, follow these implementation procedures for Xamarin (Android) and Xamarin (iOS).
 
-1. Add library as [nuget CartoMobileSDK.iOS](https://www.nuget.org/packages/CartoMobileSDK.iOS) and/or [nuget CartoMobileSDK.Android](https://www.nuget.org/packages/CartoMobileSDK.Android) from the main repo, and add to your mobile app. 
+1. Add library as [nuget CartoMobileSDK.iOS](https://www.nuget.org/packages/CartoMobileSDK.iOS) and/or [nuget CartoMobileSDK.Android](https://www.nuget.org/packages/CartoMobileSDK.Android) from the main repo to your mobile app. 
 
 2. [Register your mobile app](#registering-your-app) to get the API Key
 
@@ -551,12 +552,10 @@ Follow these steps to add apps to your Xamarin iOS package.
 
   **Note:** All the .dll files should be located in the **Assemblies** folder
 
-2) **Copy vector style file** (*osmbright.zip*) to your project. You can get it from our Sample Apps. This is needed for vector basemap.
-
-3) **Add Map object to app view**. When using Storyboards, use *OpenGL ES View Controller* (GLKit.GLKViewController) as a template for the map and replace *GLKView* with *MapView* as the underlying view class.
+2) **Add Map object to app view**. When using Storyboards, use *OpenGL ES View Controller* (GLKit.GLKViewController) as a template for the map and replace *GLKView* with *MapView* as the underlying view class.
 In the example below, it is assumed that the outlet name of the map view is *Map*.
 
-4) **Initiate map, set base layer**
+3) **Initiate map, set base layer**
 
 Add into MainViewController.cs:
 
@@ -596,42 +595,31 @@ public class MainViewController : GLKit.GLKViewController
   }
 {% endhighlight %}
 
-### Windows Phone Implementation
+### UWP (Windows Phone) Implementation
 
-If using Windows Phone as the mobile platform, follow this implementation procedure.
+If using UWP as the platform, follow this implementation procedure.
 
-_**Note:** The  Windows Phone 10 implementation of the Mobile SDK is experimental._ Please [contact us](mailto:support@carto.com) if you run into any issues.
+_**Note:** The  UWP implementation of the Mobile SDK is experimental and less tested compared to the other platforms._ Please [contact us](mailto:support@carto.com) if you run into any issues.
 
-1. Install SDK VSIX package for Windows (*Request this package from [CARTO Mobile support](mailto:mobile-support@carto.com))
-
-    The following requirements are mandatory:
-
-    - Windows Phone version 10
-    - MS Visual Studio 2015 Community edition, or better
-    - Windows Phone 10 SDK, should come with Visual Studio
-    - Visual Studio extension (VSIX) for CARTO Maps SDK component. Download and start the package to install it
+1. Add library as [nuget CartoMobileSDK.UWP](https://www.nuget.org/packages/CartoMobileSDK.UWP) from the main repo to your mobile app. 
 
 2. [Register your app](#registering-your-app) and select _Windows Phone_ as the app type
 
     - Ensure you enter the same application ID as your *Package.appmanifest > Packaging > Package name*. For example, the [sample app](#windows-phone-implementation) ID is **c882d38a-5c09-4994-87f0-89875cdee539**
 
-3. Create a cross-platform project for your Windows Phone app
+3. Create a cross-platform project for your UWP app
 
-    You can create one .Net project for Android, iOS, Windows Phone and share map-related code. Each platform still needs to be registered as its own app, since many app aspects (such as UI, file system, and so on) are platform-specific. However, when executing API requests with the Mobile SDK, you can create one project for adding layers and objects to map, handling interactions and click, and so on.
+    You can create one .Net project for Android, iOS, UWP and share map-related code. Each platform still needs to be registered as its own app, since many app aspects (such as UI, file system, and so on) are platform-specific. However, when executing API requests with the Mobile SDK, you can create one project for adding layers and objects to map, handling interactions and click, and so on.
 
-    **Tip:** .Net [sample app](#xamarin-and-windows-phone-samples) contains two solutions: one for Windows Phone and another for Xamarin, and they share one project _hellomap-shared_ with map-related code.
+    **Tip:** .Net [sample app](#xamarin-and-windows-phone-samples) contains two solutions: one for UWP (Windows Phone) and another for Xamarin, and they share one project _hellomap-shared_ with map-related code.
 
-#### Creating a WP App
+#### Creating a UWP App
 
-Follow these steps in order to create a Windows Phone (WP) mobile application.
+Follow these steps in order to create a UWP (Windows Phone) mobile application.
 
-1) Ensure you have the CARTO Visual Studio Extension installed, and your app project has Internet connection
+1) Ensure you have the CARTO Mobile SDK installed, and your app project has Internet connection
 
-  In the *Solution Explorer References* section, add *Carto Maps SDK for Windows Phone*. You will find it from the Windows Phone 8.1 extensions. We do not have NuGet package yet, please [let us know](mailto:support@carto.com) if this is something that interests you.
-
-2) Copy vector style file .zip to your project *Assets* folder, available from the [Sample Apps](#xamarin-and-windows-phone-samples). This is needed for vector basemaps
-
-3) Create MapView object, and add a base layer
+2) Create MapView object, and add a base layer
 
 You can create a MapView object with code. A definition of a base layer is enough for the minimal map configuration.
 
@@ -657,7 +645,7 @@ protected async override void OnLaunched(LaunchActivatedEventArgs e)
         mapView = new Carto.Ui.MapView();
 
         // 3. Online vector base layer
-        var baseLayer = new CartoOnlineVectorTileLayer("osmbright-v3.zip");
+        var baseLayer = new CartoOnlineVectorTileLayer("carto.streets");
 
         // 4. Set online base layer.
         // Note: assuming here that Map is an outlet added to the controller.
@@ -676,9 +664,9 @@ private Carto.Ui.MapView mapView;
 
 </pre>
 
-#### Adding a Marker (WP)
+#### Adding a Marker (UWP)
 
-To create a map marker at a defined coordinate on a Windows Phone mobile app, add following code (after creating a [MapView](#basic-map-features).
+To create a map marker at a defined coordinate on a UWP app, add following code (after creating a [MapView](#basic-map-features).
 
 **Note:** You must have an *Icon.png* bitmap, located in the Assets folder of your project
 
