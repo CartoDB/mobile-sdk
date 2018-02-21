@@ -446,11 +446,11 @@ The following common code can be used for both Xamarin Android and Xamarin iOS a
 // 1. Create overlay layer for markers
 var proj = new EPSG3857();
 var dataSource = new LocalVectorDataSource (proj);
-var overlayLayer = new VectorLayer (dataSource);
+var overlayLayer = new VectorLayer(dataSource);
 mapView.Layers.Add (overlayLayer);
 
 // 2. Create Marker style
-var markersStyleBuilder = new MarkerStyleBuilder ();
+var markersStyleBuilder = new MarkerStyleBuilder();
 markersStyleBuilder.Size = 20;
 UnsignedCharVector iconBytes = AssetUtils.LoadBytes("Icon.png");
 var bitmap = new Bitmap (iconBytes, true);
@@ -716,15 +716,26 @@ Map data is organized by **Layers**, which are needed for rendering your visuali
 
 For mobile maps, each map layer is required to have a **DataSource**, which defines where the layer retrieves data. Several common data source implementations are built directly into the Mobile SDK, but you can also define your own data sources using the following parameters. 
 
-- `HTTPRasterTileDataSource` is used for retrieving map tiles as images over HTTP connection
+- `HTTPTileDataSource` is used for retrieving map tiles as MVT vector tiles or images over HTTP connection
 
-- `LocalVectorDataSource` stores data in memory and is used for adding vector objects to the map, per each user session
+- `LocalVectorDataSource` stores data locally in memory and is used for adding vector objects to the map, per each user session
 
 **Tip:** For details about selecting different DataSources for your mobile map layers, see [Loading Map Data](/docs/carto-engine/mobile-sdk/loading-map-data/).
 
-### Basemap
+### Basemap layer
 
-Basemaps apply the map background required for rendering data. Basemaps are required as the bottom layer. You can add a vector layer that contains the background of your mobile map by using the following code: 
+In most cases adding a basemap layer consists of creating a
+`CartoOnlineVectorTileLayer` object with specified style and adding
+the layer to the layer list of your Map View. The examples can be
+found in the code samples above in Creating your Project section.
+
+In addition, CARTO Mobile SDK supports downloading map packages to the device
+for offline use. `CartoOfflineVectorTileLayer` class can be used as a base layer in that case.
+
+### Data layers
+
+In order to add vector elements (lines, popups, texts and so on) to the map, the first step requires
+constructing a DataSource for the elements and adding a `VectorLayer` to the map:
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -758,7 +769,7 @@ Basemaps apply the map background required for rendering data. Basemaps are requ
   // 3. Add the previous vector layer to the map
   mapView.getLayers().add(vectorLayer1);
 
-  // 4. Set limited visible zoom range for the vector layer
+  // 4. Set limited visible zoom range for the vector layer (optional)
   vectorLayer1.setVisibleZoomRange(new MapRange(10, 24));
   {% endhighlight %}
   </div>
@@ -776,7 +787,7 @@ Basemaps apply the map background required for rendering data. Basemaps are requ
   // 3. Add the previous vector layer to the map
   MapView.Layers.Add(vectorLayer1);
 
-  // 4. Set limited visible zoom range for the vector layer
+  // 4. Set limited visible zoom range for the vector layer (optional)
   vectorLayer1.VisibleZoomRange = new MapRange(10, 24);
   {% endhighlight %}
   </div>
@@ -795,7 +806,7 @@ Basemaps apply the map background required for rendering data. Basemaps are requ
   // 3. Add the previous vector layer to the map
   [[self getLayers] add:vectorLayer1];
 
-  // 4. Set visible zoom range for the vector layer
+  // 4. Set visible zoom range for the vector layer (optional)
   [vectorLayer1 setVisibleZoomRange:[[NTMapRange alloc] initWithMin:10 max:24]];
   {% endhighlight %}
   </div>
@@ -834,13 +845,12 @@ Basemaps apply the map background required for rendering data. Basemaps are requ
       
 </div>
 
-### MapView Objects
+### Vector elements
 
-In following examples, **vector elements** (Markers, Points, Lines, Polygons, Texts and BalloonPopups) are added to a mobile map application. For each object, the styling is defined and objects are created based on given coordinates. These coordinates are store in the memory-based vector data source parameter, `LocalVectorDataSource`.
+Once a VectorLayer is created (as described above), map objects such as markers can be added to the Datasource of the VectorLayer and thus visualized on the map.
+In following examples, **vector elements** (Markers, Points, Lines, Polygons, Texts and BalloonPopups) are added by the application. For each object, the styling is defined and objects are created based on given coordinates.
 
-- Before adding any MapView objects, you must create a [VectorLayer](#layers) as the data source and add the layer to the map
-
-**Note:** A popup (callout, bubble) which appears when you click on map is a map object of its own, and should be added using object click listener. For details, see [Add a BalloonPopup](#add-a-balloonpopup).
+**Note:** A popup (callout, bubble) which appears when you click on map is a vector element of its own, and should be added using map click listener. For details, see [Add a BalloonPopup](#add-a-balloonpopup).
 
 ### Add a Marker
 
