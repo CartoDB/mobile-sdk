@@ -65,7 +65,7 @@ include_directories(
     "${SDK_CARTO_LIBS_DIR}/nml/src"
     "${SDK_CARTO_LIBS_DIR}/routing/src"
     "${SDK_CARTO_LIBS_DIR}/geocoding/src"
-    "${SDK_EXTERNAL_LIBS_DIR}/boost/libs"
+    "${SDK_EXTERNAL_LIBS_DIR}/boost"
     "${SDK_EXTERNAL_LIBS_DIR}/boostext"
     "${SDK_EXTERNAL_LIBS_DIR}/asio"
     "${SDK_EXTERNAL_LIBS_DIR}/cglib"
