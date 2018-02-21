@@ -284,7 +284,7 @@ The following example shows the complete code for initializing your Android mobi
 	{% highlight java %}
 	
 	// Create basemap layer with bundled style
-	CartoOnlineVectorTileLayer baseLayer = new CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_DEFAULT);
+	CartoOnlineVectorTileLayer baseLayer = new CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_VOYAGER);
 	 
 	// Add layer to map
 	mapView.getLayers().add(baseLayer);
@@ -296,7 +296,7 @@ The following example shows the complete code for initializing your Android mobi
 {% highlight kotlin %}
 	   
 	// Create basemap layer with bundled style
-	val layer = CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_DEFAULT)
+	val layer = CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_VOYAGER)
 	// Add layer to map
 	mapView?.layers?.add(layer)
 
@@ -363,7 +363,7 @@ pod 'CartoMobileSDK', '4.1.2'
   NTMapView* mapView = (NTMapView*) self.view;
 
   // 3. Create online vector tile layer, use style asset embedded in the project
-  NTVectorTileLayer* vectorTileLayer = [[NTCartoOnlineVectorTileLayer alloc] initWithSource: @"carto.streets"];
+  NTVectorTileLayer* vectorTileLayer = [[NTCartoOnlineVectorTileLayer alloc] initWithStyle: NT_CARTO_BASEMAP_STYLE_VOYAGER];
 
   // 4. Add vector tile layer
   [[mapView getLayers] add:vectorTileLayer];
@@ -483,7 +483,7 @@ While you can share most of code using Native Controls, you just need to specify
             stack.Children.Add(mapView);
 #endif
  // 2. Indicate the common code from both platforms
-    var baseLayer = new Carto.Layers.CartoOnlineVectorTileLayer("carto.streets");
+    var baseLayer = new Carto.Layers.CartoOnlineVectorTileLayer(CartoBaseMapStyle.CartoBasemapStyleVoyager);
      mapView.Layers.Add(baseLayer);
 </pre>
 
@@ -531,13 +531,13 @@ public class MainActivity : Activity
     MapView.registerLicense("YOUR_LICENSE_KEY", this);
 
     /// 2. Set our view from the "main" layout resource
-    SetContentView ( Resource.Layout.Main );
+    SetContentView(Resource.Layout.Main);
   
     /// 3. Get our map from the layout resource 
-    var mapView = FindViewById<MapView> ( Resource.Id.mapView );
+    var mapView = FindViewById<MapView>(Resource.Id.mapView);
 
     /// 4. Online vector base layer
-    var baseLayer = new CartoOnlineVectorTileLayer("carto.streets");
+    var baseLayer = new CartoOnlineVectorTileLayer(CartoBaseMapStyle.CartoBasemapStyleVoyager);
 
     /// 5. Set online base layer  
     mapView.Layers.Add(baseLayer);
@@ -578,7 +578,7 @@ public class MainViewController : GLKit.GLKViewController
     MapView.RegisterLicense("YOUR_LICENSE_KEY");
 
     // Online vector base layer
-    var baseLayer = new CartoOnlineVectorTileLayer("carto.streets");
+    var baseLayer = new CartoOnlineVectorTileLayer(CartoBaseMapStyle.CartoBasemapStyleVoyager);
 
     // Set online base layer.
     // Note: assuming here that Map is an outlet added to the controller.
@@ -645,7 +645,7 @@ protected async override void OnLaunched(LaunchActivatedEventArgs e)
         mapView = new Carto.Ui.MapView();
 
         // 3. Online vector base layer
-        var baseLayer = new CartoOnlineVectorTileLayer("carto.streets");
+        var baseLayer = new CartoOnlineVectorTileLayer(CartoBaseMapStyle.CartoBasemapStyleVoyager);
 
         // 4. Set online base layer.
         // Note: assuming here that Map is an outlet added to the controller.
