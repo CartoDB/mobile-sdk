@@ -53,9 +53,9 @@ static carto::ClassRegistry::Entry $TYPE$RegistryEntry(typeid(const $CLASSNAME$&
 
 %extend $CLASSNAME$ {
   /**
-    * Returns the actual class name of this object. This is used internally by the SDK.
-    * @return The class name of this object.
-    */
+   * Returns the actual class name of this object. This is used internally by the SDK.
+   * @return The class name of this object.
+   */
   std::string swigGetClassName() const {
     std::string className = carto::ClassRegistry::GetClassName(typeid(*$self));
     if (className.empty()) {
@@ -65,9 +65,9 @@ static carto::ClassRegistry::Entry $TYPE$RegistryEntry(typeid(const $CLASSNAME$&
   }
 
   /**
-    * Returns the pointer to the connected director object. This is used internally by the SDK.
-    * @return The pointer to the connected director object or null if director is not connected.
-    */
+   * Returns the pointer to the connected director object. This is used internally by the SDK.
+   * @return The pointer to the connected director object or null if director is not connected.
+   */
   void* swigGetDirectorObject() const {
     if (auto director = dynamic_cast<const carto::Director*>($self)) {
       return director->getDirectorObject();
@@ -194,6 +194,14 @@ def fixProxyCode(fileName):
   for line in lines_in:
     # Rename #import "XXX_proxy.h" -> #import "NTXXX.h" / same for #include
     line = re.sub('#(import|include)\s+"(.*)_proxy.h"', '#\\1 "NT\\2.h"', line)
+
+    # Add '@internal:nodoc:' comment above the special SWIG-wrapper lines
+    hide = line.strip() in ['void *swigCPtr;', 'BOOL swigCMemOwn;', '-(void*)getCptr;', '-(id)initWithCptr: (void*)cptr swigOwnCObject: (BOOL)ownCObject;', '-(long long)swigGetRawPtr;', '-(NSString*)swigGetClassName;', '-(void *)swigGetDirectorObject;']
+    if line.find('swigCreatePolymorphicInstance:') != -1:
+      hide = True
+    if hide:
+      numSpaces = len(line) - len(line.lstrip())
+      lines_out.append(line[:numSpaces] + '/** @internal:nodoc: */\n')
 
     lines_out.append(line)
 
