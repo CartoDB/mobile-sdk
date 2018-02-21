@@ -23,7 +23,7 @@ to complete can be very time-consuming.
 Use `git submodule` to resolve all source-level dependencies
 
 ```
-git submodule update --init --recursive
+git submodule update --init --remote --recursive
 ```
 
 Set up boost library
