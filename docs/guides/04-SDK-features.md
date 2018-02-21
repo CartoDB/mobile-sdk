@@ -947,7 +947,7 @@ public class MyClusterElementBuilder : NTClusterElementBuilder {
 
 Ground overlays projects a bitmap (PNG, JPG) image of a defined coordinate over a basemap. For example, a ground overlay bitmap may be used to show an indoor floorplan over a building map.
 
-<span class="wrap-border"><img src="/docs/img/layout/mobile/ground_overlay.jpg" alt="Example of mobile ground overlays" /></span>
+<span class="wrap-border"><img src="../img//ground_overlay.jpg" alt="Example of mobile ground overlays" /></span>
 
 **Note:** Your bitmap must define **geographical map coordinates** with `Ground Control Points`. Currently, Mobile SDK supports three or four points on a bitmap image.
 
