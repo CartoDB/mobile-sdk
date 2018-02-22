@@ -45,16 +45,16 @@ namespace carto {
          */
         NMLModel(const MapPos& pos, const std::shared_ptr<nml::Model>& sourceModel);
         /**
-        * Constructs a NMLModel object from a geometry object and serialized model data.
-        * @param geometry The geometry object that defines the location of this model.
-        * @param sourceModelData Serialized data for 3D model.
-        */
+         * Constructs a NMLModel object from a geometry object and serialized model data.
+         * @param geometry The geometry object that defines the location of this model.
+         * @param sourceModelData Serialized data for 3D model.
+         */
         NMLModel(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<BinaryData>& sourceModelData);
         /**
-        * Constructs a NMLModel object from a map position and serialized model data.
-        * @param pos The map position that defines the location of this model.
-        * @param sourceModelData Serialized data for 3D model.
-        */
+         * Constructs a NMLModel object from a map position and serialized model data.
+         * @param pos The map position that defines the location of this model.
+         * @param sourceModelData Serialized data for 3D model.
+         */
         NMLModel(const MapPos& pos, const std::shared_ptr<BinaryData>& sourceModelData);
         virtual ~NMLModel();
 

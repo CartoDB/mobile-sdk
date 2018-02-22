@@ -41,7 +41,7 @@ namespace carto {
          * Searches for the vector elements specified by search request from the data source bound to the service.
          * @param request The search request containing search filters.
          * @return The resulting list of vector elements matching the request.
-        */
+         */
         virtual std::vector<std::shared_ptr<VectorElement> > findElements(const std::shared_ptr<SearchRequest>& request) const;
 
     protected:

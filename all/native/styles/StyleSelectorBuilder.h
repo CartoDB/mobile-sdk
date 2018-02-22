@@ -32,7 +32,6 @@ namespace carto {
         /**
          * Adds new rule to the builder rule set.
          * @param rule The rule to add
-         * @return Self.
          */
         void addRule(const std::shared_ptr<StyleSelectorRule>& rule);
 
@@ -45,14 +44,12 @@ namespace carto {
          * - There are few prebuilt variables (view::zoom, geometry::type), other variables correspond to metadata values.
          * @param expr The filter expression to use for this rule. For example, "geometry::type = 'linestring' AND type = 'road'"
          * @param style The style for this rule.
-         * @return Self.
          */
         void addRule(const std::string& expr, const std::shared_ptr<Style>& style);
 
         /**
          * Adds new rule to the builder rule set. This method should be used to add the 'default' style, if no filter needs to be applied.
          * @param style The style for this rule.
-         * @return Self.
          */
         void addRule(const std::shared_ptr<Style>& style);
         
