@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# mdoc executable to use
+# mdoc executable to use, python executable to use
 mdocExec="mdoc"
+python="python"
 
 # Set dirs
 cmdDir=$(dirname $0)
@@ -19,6 +20,9 @@ rm -rf ${htmldocDir}
 
 # Build individual XML documentation files
 ${mdocExec} update -i "${buildDir}/CartoMobileSDK.Android.xml" -o ${tempDir} "${buildDir}/CartoMobileSDK.Android.dll" ${libraryDirs}
+
+# Cleanup the documentation XML files
+${python} "${cmdDir}/htmldoc/cleanup-htmldoc.py" ${tempDir}
 
 # Build htmldoc
 ${mdocExec} export-html --template="${cmdDir}/htmldoc/template.xslt" --ignore -o ${htmldocDir} ${tempDir}

@@ -73,7 +73,7 @@ namespace carto {
         /**
          * Handles a user input event.
          * @param event The event type. First pointer down = 0, second pointer down = 1, either pointer moved = 2, 
-                        gesture canceled = 3, first pointer up = 4, second pointer up = 5.
+         *              gesture canceled = 3, first pointer up = 4, second pointer up = 5.
          * @param x1 The x coordinate of the first pointer. -1 if there are no coordinates.
          * @param y1 The y coordinate of the first pointer. -1 if there are no coordinates.
          * @param x2 The x coordinate of the second pointer. -1 if there are no coordinates.

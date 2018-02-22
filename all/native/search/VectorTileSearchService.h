@@ -75,7 +75,7 @@ namespace carto {
          * The zoom level range used for searching is specified using minZoom/maxZoom attributes of the search service.
          * @param request The search request containing search filters.
          * @return The resulting feature collection containing features matching the request.
-        */
+         */
         virtual std::shared_ptr<VectorTileFeatureCollection> findFeatures(const std::shared_ptr<SearchRequest>& request) const;
 
     protected:

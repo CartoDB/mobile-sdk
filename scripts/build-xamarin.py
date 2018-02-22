@@ -27,7 +27,7 @@ def buildAndroidSO(args, abi):
     '-DCMAKE_BUILD_TYPE=%s' % args.configuration,
     '-DWRAPPER_DIR=%s' % ('%s/generated/android-csharp/wrappers' % baseDir),
     "-DANDROID_ABI='%s'" % abi,
-    "-DANDROID_NATIVE_API_LEVEL='%s'" % ('android-21' if '64' in abi else 'android-9'),
+    "-DANDROID_NATIVE_API_LEVEL='%s'" % ('android-21' if '64' in abi else 'android-10'),
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
     "-DSDK_PLATFORM='Xamarin Android'",

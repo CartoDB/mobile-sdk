@@ -47,7 +47,7 @@ namespace carto {
          * Searches for the features specified by search request from the feature collection bound to the service.
          * @param request The search request containing search filters.
          * @return The resulting feature collection containing features matching the request.
-        */
+         */
         virtual std::shared_ptr<FeatureCollection> findFeatures(const std::shared_ptr<SearchRequest>& request) const;
 
     protected:

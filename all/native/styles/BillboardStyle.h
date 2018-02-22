@@ -12,7 +12,7 @@
 #include <memory>
 
 namespace carto {
-	class AnimationStyle;
+    class AnimationStyle;
 
     namespace BillboardOrientation {
         /**

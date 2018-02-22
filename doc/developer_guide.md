@@ -1212,122 +1212,14 @@ When you create a basemap, the Mobile SDK package enables you to select one of o
 
 You can customize basemap styling by setting the colors, transparency, line styles (width, patterns, casings, endings), polygon patterns, icons, text placements, fonts, and other vector data parameters. 
 
-CARTO uses [Mapnik](http://mapnik.org) XML style description language for customizing the visual style of vector tiles. Our styling is optimized for mobile and contain some unique style parameters. In general, you can reuse your existing Mapnik XML, or CartoCSS, styling files and tools (such as TileMill/Mapbox Studio).
-
 Vector styling is applied in the mobile client, where the style files are bundled with the application installer. The application can change the styling anytime, without reloading vector map data. This enables you to download map data once, and change styling from "day mode" to "night mode" with no new downloads.
 
-CARTO map rendering implementation is intended for real-time rendering. As a result, several limitations apply.
+CARTO supports two styling languages:
 
-### Mapnik Style Format
+ * High-level [CartoCSS](https://www.mapbox.com/help/studio-classic-cartocss/) styling language.
+   Mobile SDK has a few limitations and supports several extensions to the base specification as decribed
+   [here](https://github.com/CartoDB/mobile-sdk/wiki/CartoCSS-notes)
+ * Low-level [Mapnik XML](https://github.com/mapnik/mapnik/wiki/XMLConfigReference) styling language.
+   Again, the SDK implementation has a few notable differences and extensions that
+   are documented [here](https://github.com/CartoDB/mobile-sdk/wiki/Mapnik-style-notes)
 
-Mapnik style definitions are a common file format for map styles, based on XML. It was originally created for Mapnik, but is used by other software, such as our Mobile SDK. The file format specifications are located in this [XMLConfigReference](https://github.com/mapnik/mapnik/wiki/XMLConfigReference) document. There are several ways you can apply these styles:
-
- 1. Use CARTO provided styles
-
- 2. Modify the `style.xml`, located inside the sample style, with your own edits
-
- 3. Create your own styles using a Mapnik editor tool
-
-    **Note:** It is recommended to use the free MapBox Studio tool, which uses CartoCSS for primary style definitions. While the Mobile SDK does not use CartoCSS styles, you can modify and export Mapnik XML styles to be compatible with the Mobile SDK. 
-
-### Mapnik Limitations
-
-Please note the following limitations with Mapnik style formats.
-
-- There are no built-in fonts, fonts must be explicitly added to the project
-
-- Loading SVG icons is not supported, such icons should be converted to PNG format (Mapnik provides a _svg2png_ utility)
-
-- Original layer ordering is not always preserved, texts are always drawn on top of 2D geometry. 3D buildings are drawn on top of texts
-
-- Layer opacity works per element, not per layer as in Mapnik. For non-overlapping elements, the result will be same. For overlapping elements, there are likely artifacts
-
-- `comp-op` feature is not supported (neither is `layer/symbolizer`)
-
-- `line-join` parameter is ignored, only `miter line join` is used 
-
-- `GroupSymbolizer` and `RasterSymbolizer` are currently not supported
-
-- Text characters are rendered individually. If characters overlap, the halo of one character may cover glyph of another character. The suggested workaround is to increase spacing, or decrease the halo radius
-
-**Note:** The Mobile SDK does not implement 100% of the tags and features of Mapnik. This lists just a few of the Mapnik limitations, there are additional Mapnik XML features that are not standard. If you need some an unimplemented styling option, please [contact us](mailto:support@carto.com). 
-
-### Creating Vector Style Packages
-
-CARTO vector styles are distributed as zip-archives. All style-related files and folders must be placed into a single zip file.
-
-The most important part of the style is the style definition file, typically named _project.xml_. This file contains style descriptions for all layers, and usually references other files, such as fonts, icons, and pattern bitmaps (which should be placed in various subfolders).
-
-### Vector Style Performance 
-
-When using vector styles, the following recommendations are suggested for optimal performance:
-
-- **Multiple symbolizers per layer may have very large performance hits**. If possible, move each symbolizer into separate layer
-
-- `BuildingSymbolizer` requires an expensive OpenGL frame buffer read-back operation, and may perform very poorly on some devices (such as the original iPad Retina)
-
-- To increase performance, it is suggested to use power-of-two dimensions for bitmaps
-
-### SDK Extensions for Mapnik XML style files
-
-The following CARTO specific extensions are specific to Mapnik XML style files.
-
-#### NutiParameters
-
-_NutiParameters_ describe additional parameters that can be used in styles and controlled in the code (from `MBVectorTileDecoder`).
-
-- Parameters are typed, have default values and can be used as variables within _nuti_ namespace in the style (for example, `[nuti::lang]`)
-
-- Some parameters may have _ prefix in their name. Such variables are reserved and should not be updated directly by the application
-
-The following is a simple example of _NutiParameters_ section, located in the style xml file:
-
-{% highlight xml %} 
-`<NutiParameters>`
-`  <NutiParameter name="lang" type="string" value="en" />`
-`</NutiParameters>`
-{% endhighlight %}
-
-#### Metavariables
-
-Metavariables add support for dynamic variable look-up. Variable names may depend on other variables. For example, `[name_[nuti::lang]]`.
-
-If the value of `nuti::lang` is 'en', this metavariable expression would be equal to *[name_en]* expression.
-
-#### Conditional Operator
-
-Conditional operator ?: adds support for simple control flow management. It is similar to C language conditional operator and can be used in all expressions. For example:
-
-`[nuti::lang] == 'en' ? 'English' : 'Other'`
-
-#### 3D Texts and Markers
-
-Mapnik `MarkersSymbolizer` and `TextSymbolizer` support additional values _nutibillboard_ for _placement_ parameter. This enables texts and markers to act as billboards (always facing the viewer), even when screen is tilted. This option can be used to give markers and texts more '3D-like' appearance. For example,
-
-`<MarkersSymbolizer placement="nutibillboard" fill="#666666" file="icon/[maki]-12.svg" />`
-
-### Supported Symbolizers and Parameters
-
-The following lists contains all supported symbolizers and parameters for vector styles:
-
-- `PointSymbolizer`: file, opacity, allow-overlap, ignore-placement, transform
-
-- `BuildingSymbolizer`: fill, fill-opacity, height, geometry-transform
-
-- `LineSymbolizer`: stroke, stroke-width, stroke-opacity, stroke-linejoin, stroke-linecap, stroke-dasharray, geometry-transform
-
-- `LinePatternSymbolizer`: file, fill, opacity, geometry-transform
-
-- `PolygonSymbolizer`: fill, fill-opacity, geometry-transform
-
-- `PolygonPatternSymbolizer`: file, fill, opacity, geometry-transform
-
-- `MarkersSymbolizer`: file, placement, marker-type, fill, opacity, width, height, spacing, allow-overlap, ignore-placement, transform
-
-- `TextSymbolizer`: name, face-name, fontset-name, placement, size, spacing, fill, opacity, halo-fill, halo-opacity, halo-radius, allow-overlap, minimum-distance, text-transform, orientation, dx, dy, wrap-width, wrap-before, character-spacing, line-spacing, horizontal-alignment, vertical-alignment
-
-- `ShieldSymbolizer`: name, face-name, fontset-name, placement, size, spacing, fill, opacity, halo-fill, halo-opacity, halo-radius, allow-overlap, minimum-distance, text-transform, orientation, dx, dy, wrap-width, wrap-before, character-spacing, line-spacing, horizontal-alignment, vertical-alignment, file, shield-dx, shield-dy, unlock-image
-
-### CartoCSS Extensions for Vector Styles
-
-`Metavariables` and `nutiparameters` are also available as CartoCSS style extensions.

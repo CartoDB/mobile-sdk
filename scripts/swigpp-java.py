@@ -56,9 +56,9 @@ static carto::ClassRegistry::Entry $TYPE$RegistryEntry(typeid(const $CLASSNAME$&
 
 %extend $CLASSNAME$ {
   /**
-    * Returns the actual class name of this object. This is used internally by the SDK.
-    * @return The class name of this object.
-    */
+   * Returns the actual class name of this object. This is used internally by the SDK.
+   * @return The class name of this object.
+   */
   std::string swigGetClassName() const {
     std::string className = carto::ClassRegistry::GetClassName(typeid(*$self));
     if (className.empty()) {
@@ -68,9 +68,9 @@ static carto::ClassRegistry::Entry $TYPE$RegistryEntry(typeid(const $CLASSNAME$&
   }
 
   /**
-    * Returns the connected director object. This is used internally by the SDK.
-    * @return The connected director object or null if director is not connected.
-    */
+   * Returns the connected director object. This is used internally by the SDK.
+   * @return The connected director object or null if director is not connected.
+   */
   jobject swigGetDirectorObject() const {
     if (auto director = dynamic_cast<const carto::Director*>($self)) {
       return static_cast<jobject>(director->getDirectorObject());
@@ -182,6 +182,38 @@ CUSTOM_EQUALS_CODE_TEMPLATE = """
     return hashCodeInternal();
   }
 """
+
+def fixProxyCode(fileName, className):
+  if not os.path.isfile(fileName):
+    return
+
+  lines_in = readLines(fileName)
+
+  lines_out = []
+  for line in lines_in:
+    # Add '@hide' comment above the special SWIG-wrapper lines
+    hide = line.strip() in [
+      'private long swigCPtr;',
+      'protected boolean swigCMemOwn;',
+      'public %s(long cPtr, boolean cMemoryOwn) {' % className,
+      'public static long getCPtr(%s obj) {' % className,
+      'public long swigGetRawPtr() {',
+      'public String swigGetClassName() {',
+      'public Object swigGetDirectorObject() {',
+      'public void swigReleaseOwnership() {',
+      'public void swigTakeOwnership() {',
+      'protected void swigDirectorDisconnect() {'
+    ]
+    if line.find('swigCreatePolymorphicInstance') != -1:
+      hide = True
+    if hide:
+      numSpaces = len(line) - len(line.lstrip())
+      lines_out.append(line[:numSpaces] + '/** @hide */\n')
+
+    lines_out.append(line)
+
+  with open(fileName, 'w') as f:
+    f.writelines(lines_out)
 
 def transformSwigFile(sourcePath, outPath, headerDirs):
   lines_in = [line.rstrip('\n') for line in readUncommentedLines(sourcePath)]
@@ -416,6 +448,7 @@ def buildSwigPackage(args, sourceDir, packageName):
     if subprocess.call(cmd) != 0:
       print "Error in %s" % fileName
       return False
+    fixProxyCode(os.path.join(proxyDir, fileNameWithoutExt + ".java"), fileNameWithoutExt)
     os.remove(os.path.join(proxyDir, fileNameWithoutExt + "Module.java"))
   return True
 
