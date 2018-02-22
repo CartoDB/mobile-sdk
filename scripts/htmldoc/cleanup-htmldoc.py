@@ -1,11 +1,15 @@
 import os
+import re
 import argparse
 from xml.dom import minidom
 
 PATTERNS = [
-  ('.ctor', ['cPtr', 'cMemoryOwn']),
+  ('[.]ctor', ['cPtr', 'cMemoryOwn']),
   ('swigCMemOwn', []),
-  ('SwigGetRawPtr', [])
+  ('SwigGetRawPtr', []),
+  ('SwigGetDirectorObject.*', []),
+  ('SwigGetClassName.*', []),
+  ('SwigCreatePolymorphicInstance.*', ['cPtr', 'cMemoryOwn'])
 ]
 
 def cleanupXml(filePath, patterns):
@@ -16,7 +20,7 @@ def cleanupXml(filePath, patterns):
     members = membersList[i]
     for member in members.getElementsByTagName('Member'):
       for pattern in patterns:
-        if member.attributes['MemberName'].value == pattern[0]:
+        if re.match(pattern[0], member.attributes['MemberName'].value):
           paramList = member.getElementsByTagName('Parameter')
           if set([param.attributes['Name'].value for param in paramList]) == set(pattern[1]):
             removeList.append(member)
