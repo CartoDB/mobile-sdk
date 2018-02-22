@@ -196,7 +196,15 @@ def fixProxyCode(fileName):
     line = re.sub('#(import|include)\s+"(.*)_proxy.h"', '#\\1 "NT\\2.h"', line)
 
     # Add '@internal:nodoc:' comment above the special SWIG-wrapper lines
-    hide = line.strip() in ['void *swigCPtr;', 'BOOL swigCMemOwn;', '-(void*)getCptr;', '-(id)initWithCptr: (void*)cptr swigOwnCObject: (BOOL)ownCObject;', '-(long long)swigGetRawPtr;', '-(NSString*)swigGetClassName;', '-(void *)swigGetDirectorObject;']
+    hide = line.strip() in [
+      'void *swigCPtr;',
+      'BOOL swigCMemOwn;',
+      '-(void*)getCptr;',
+      '-(id)initWithCptr: (void*)cptr swigOwnCObject: (BOOL)ownCObject;',
+      '-(long long)swigGetRawPtr;',
+      '-(NSString*)swigGetClassName;',
+      '-(void *)swigGetDirectorObject;'
+    ]
     if line.find('swigCreatePolymorphicInstance:') != -1:
       hide = True
     if hide:
