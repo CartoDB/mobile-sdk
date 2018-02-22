@@ -15,6 +15,8 @@
 
 %import "styles/PopupStyle.i"
 
+!value_type(carto::BalloonPopupMargins, styles.BalloonPopupMargins)
+
 !polymorphic_shared_ptr(carto::BalloonPopupStyle, styles.BalloonPopupStyle)
 
 %attributeval(carto::BalloonPopupStyle, carto::Color, BackgroundColor, getBackgroundColor)

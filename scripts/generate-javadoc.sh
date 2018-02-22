@@ -29,7 +29,7 @@ find ${tempDir} -name "*.java" > ${tempDir}/files
 # Execute JavaDoc
 rm -rf ${javadocDir}
 mkdir -p ${javadocDir}
-${javadocExec} -classpath "${ANDROID_HOME}/platforms/android-8/android.jar" -source 1.6 -d ${javadocDir} -doctitle "CARTO Mobile SDK for Android" "@${tempDir}/files"
+${javadocExec} -doclet com.google.doclava.Doclava -docletpath ${cmdDir}/android/doclava-1.0.6.jar -public -classpath "${ANDROID_HOME}/platforms/android-8/android.jar" -source 1.6 -d "${javadocDir}" "@${tempDir}/files"
 
 # Finished
 echo "Done!"
