@@ -473,28 +473,28 @@ namespace carto { namespace vt {
             std::lock_guard<std::mutex> lock(*_mutex);
             frustum = _frustum;
         }
-        std::vector<TilePair> orderedTiles;
+        std::vector<std::shared_ptr<const Tile>> labelTiles;
         for (const TilePair& tilePair : tiles) {
-            if (tilePair.second) {
-                if (frustum.inside(calculateTileBBox(tilePair.first))) {
-                    orderedTiles.push_back(tilePair);
+            if (tilePair.second && frustum.inside(calculateTileBBox(tilePair.first))) {
+                // Keep only unique tiles and order them by tile zoom level.
+                // This will fix flickering when multiple tiles from different zoom levels redefine same label.
+                auto it = std::lower_bound(labelTiles.begin(), labelTiles.end(), tilePair.second, [](const std::shared_ptr<const Tile>& tile1, const std::shared_ptr<const Tile>& tile2) {
+                    return std::make_pair(tile2->getTileId(), tile2) < std::make_pair(tile1->getTileId(), tile1);
+                });
+                if (it == labelTiles.end() || *it != tilePair.second) {
+                    labelTiles.insert(it, tilePair.second);
                 }
             }
         }
-
-        // Order tiles by tile zoom level. This will fix flickering when multiple tiles from different zoom levels redefine same label
-        std::sort(orderedTiles.begin(), orderedTiles.end(), [](const TilePair& tilePair1, const TilePair& tilePair2) {
-            return tilePair2.second->getTileId() < tilePair1.second->getTileId();
-        });
 
         // All other operations must be synchronized
         std::lock_guard<std::mutex> lock(*_mutex);
         
         // Create label list, merge geometries
         std::unordered_map<std::pair<int, long long>, std::shared_ptr<TileLabel>, LabelHash> newLabelMap;
-        for (auto tileIt = orderedTiles.begin(); tileIt != orderedTiles.end(); tileIt++) {
-            cglib::mat4x4<double> tileMatrix = calculateTileMatrix(tileIt->second->getTileId());
-            for (const std::shared_ptr<TileLayer>& layer : tileIt->second->getLayers()) {
+        for (const std::shared_ptr<const Tile>& tile : labelTiles) {
+            cglib::mat4x4<double> tileMatrix = calculateTileMatrix(tile->getTileId());
+            for (const std::shared_ptr<TileLayer>& layer : tile->getLayers()) {
                 for (const std::shared_ptr<TileLabel>& label : layer->getLabels()) {
                     std::pair<int, long long> labelId(layer->getLayerIndex(), label->getGlobalId());
                     label->transformGeometry(tileMatrix);
