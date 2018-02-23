@@ -26,15 +26,6 @@ Use `git submodule` to resolve all source-level dependencies
 git submodule update --init --remote --recursive
 ```
 
-Set up boost library
-
-```
-cd libs-external/boost
-./bootstrap.sh
-./b2 headers
-cd ../..
-```
-
 Special **swig** version (swig-2.0.11-nutiteq branch) is needed for generating language-specific wrappers, this can be downloaded from https://github.com/CartoDB/swig. Clone it and compile it using usual `./configure;make` routine. Make sure build script refers to this one.
 
 **Python 2.7.x** is used for build scripts
@@ -48,13 +39,18 @@ Windows Phone build requires **Visual Studio 2017**.
 ## Building process
 Be patient - full build will take 1+ hours. You can speed it up by limiting architectures and platforms where it is built.
 
+Set up boost library:
+
 ```
-git clone https://github.com/CartoDB/mobile-external-libs.git
-cd mobile-external-libs/libs-external
-ln -s ../../sdk_3d/all/libs/boost # change to folder where you have boost libs!
-git clone https://github.com/CartoDB/mobile-sdk.git
-cd mobile-sdk
-ln -s ../mobile-external-libs/libs-external/
+cd libs-external/boost
+./bootstrap.sh
+./b2 headers
+cd ../..
+```
+
+Go to 'scripts' library where the actual build scripts are located:
+
+```
 cd mobile-sdk/scripts
 ```
 
