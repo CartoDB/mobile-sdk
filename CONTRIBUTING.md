@@ -26,9 +26,3 @@ After that, there are several rules you should follow when a new pull request is
 * assets - images and style files sources used for map rendering. Converted to C++ headers
 * doc - documentation, published in CARTO docs site
 * scripts - scripts for building SDK (using Python, CMake, Swig and other tools)
-* libs-carto - parts of SDK code which is used as internal library, have no dependencies to main SDK code and can be technically used as stand-alone code.
-* libs-carto/cartocss - CartoCSS parser, dependent on libs-carto/mapnikvt
-* libs-carto/mapnikvt - "Mapnik compatible" style parser and interpreter for vector tiles. Dependent on libs-carto/vt.
-* libs-carto/vt - Low-level vector tile renderer
-* libs-carto/nml - Our specific 3D format (NML) and 3D Level-of-Detail 3D format (NML LOD Tree) readers and renderers
-* libs-carto/routing - Offline routing runtime using our specific route packages converted from OSRM
