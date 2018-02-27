@@ -26,6 +26,14 @@ namespace carto {
     OSMOfflineReverseGeocodingService::~OSMOfflineReverseGeocodingService() {
     }
 
+    std::string OSMOfflineReverseGeocodingService::getLanguage() const {
+        return _revGeocoder->getLanguage();
+    }
+
+    void OSMOfflineReverseGeocodingService::setLanguage(const std::string& lang) {
+        _revGeocoder->setLanguage(lang);
+    }
+
     std::vector<std::shared_ptr<GeocodingResult> > OSMOfflineReverseGeocodingService::calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const {
         if (!request) {
             throw NullArgumentException("Null request");

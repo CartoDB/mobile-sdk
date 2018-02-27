@@ -31,7 +31,15 @@ namespace carto {
     }
 
     void OSMOfflineGeocodingService::setAutocomplete(bool autocomplete) {
-        return _geocoder->setAutocomplete(autocomplete);
+        _geocoder->setAutocomplete(autocomplete);
+    }
+
+    std::string OSMOfflineGeocodingService::getLanguage() const {
+        return _geocoder->getLanguage();
+    }
+
+    void OSMOfflineGeocodingService::setLanguage(const std::string& lang) {
+        _geocoder->setLanguage(lang);
     }
 
     std::vector<std::shared_ptr<GeocodingResult> > OSMOfflineGeocodingService::calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const {

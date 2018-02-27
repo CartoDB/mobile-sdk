@@ -15,6 +15,7 @@ namespace carto {
     PackageManagerGeocodingService::PackageManagerGeocodingService(const std::shared_ptr<PackageManager>& packageManager) :
         _packageManager(packageManager),
         _autocomplete(false),
+        _language(),
         _cachedPackageDatabaseMap(),
         _cachedGeocoder(),
         _mutex()
@@ -39,8 +40,23 @@ namespace carto {
 
     void PackageManagerGeocodingService::setAutocomplete(bool autocomplete) {
         std::lock_guard<std::mutex> lock(_mutex);
-        _autocomplete = autocomplete;
-        _cachedGeocoder.reset();
+        if (autocomplete != _autocomplete) {
+            _autocomplete = autocomplete;
+            _cachedGeocoder.reset();
+        }
+    }
+
+    std::string PackageManagerGeocodingService::getLanguage() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _language;
+    }
+
+    void PackageManagerGeocodingService::setLanguage(const std::string& lang) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        if (lang != _language) {
+            _language = lang;
+            _cachedGeocoder.reset();
+        }
     }
 
     std::vector<std::shared_ptr<GeocodingResult> > PackageManagerGeocodingService::calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const {
@@ -64,6 +80,7 @@ namespace carto {
             if (!_cachedGeocoder || packageDatabaseMap != _cachedPackageDatabaseMap) {
                 auto geocoder = std::make_shared<geocoding::Geocoder>();
                 geocoder->setAutocomplete(_autocomplete);
+                geocoder->setLanguage(_language);
                 for (auto it = packageDatabaseMap.begin(); it != packageDatabaseMap.end(); it++) {
                     try {
                         if (!geocoder->import(it->second)) {

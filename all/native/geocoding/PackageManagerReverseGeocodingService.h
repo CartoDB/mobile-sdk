@@ -33,6 +33,17 @@ namespace carto {
         explicit PackageManagerReverseGeocodingService(const std::shared_ptr<PackageManager>& packageManager);
         virtual ~PackageManagerReverseGeocodingService();
 
+        /**
+         * Returns the language of the expected results.
+         * @return The language of the expected results. As ISO 639-1 code or empty string.
+         */
+        std::string getLanguage() const;
+        /**
+         * Sets the language of the expected results.
+         * @param lang The language to use as ISO 639-1 code. Empty string can be used for default language.
+         */
+        void setLanguage(const std::string& lang);
+
         virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const;
 
     protected:
@@ -48,6 +59,7 @@ namespace carto {
         };
 
         const std::shared_ptr<PackageManager> _packageManager;
+        std::string _language;
 
         mutable std::map<std::shared_ptr<PackageInfo>, std::shared_ptr<sqlite3pp::database> > _cachedPackageDatabaseMap;
         mutable std::shared_ptr<geocoding::RevGeocoder> _cachedRevGeocoder;
