@@ -1,31 +1,25 @@
 ## Mobile Routing
 
-Routing is the navigation from a defined start location to a defined end location. The calculated results are displayed as turn-by-turn directions on your map, based on the transportation mode that you specified. Routing functionality through the Mobile SDK includes [online routing](#online-routing), based on CARTOs online service, and [offline routing](#offline-routing), which requires that you install an offline data package on your local device.
+**Routing** in CARTO Mobile SDK provides navigation info
+from a defined start location to a defined end location.
+
+The calculated route includes waypoints and instructions and
+can be displayed as turn-by-turn directions on your map,
+based on the transportation mode that you specified.
+Routing functionality through the Mobile SDK includes
+[online routing](#online-routing), based on CARTOs online service (or third party services),
+and [offline routing](#offline-routing), which requires that you install an offline data package on your local device.
 
 Mobile SDK supports the following routing features:
 
  - Find the fastest route from A to B
  - Find the fastest route between X points, in a given order
  - Get the complete result by route geometry and display it on the map
- - Set instructions for navigation actions (turn left/right, u-turn, leave roundabout etc.)
+ - Get instructions for navigation actions (turn left/right, u-turn, leave roundabout etc.)
  - Specify instruction details, such as the street name, turn angle, azimuth, distance and time for the next leg
  - Plan for turn restrictions and one-way streets as part of the route
- - Fast calculations in new devices, approximately 200-300 ms is expected, even for long routes
- - Multi-country route calculations
-
-#### Limitations
-
-Mobile Routing is optimized for low memory usage and calculation speed, including very large road networks using *Contraction Hierarchy* representation and algorithms. As a result, this creates some expected limitations:
-
-- Route profile is precalculated from the server and hardcoded in the data. For different profiles, such as driving or walking, download different map data packages to accomodate for offline routing
-
-- There is no shortest or fastest choice in the calculation, this is pre-coded in the routing data
-
-- There are no alternative routes provided
-
-- There is no live data in routing, traffic and temporarily closed roads do not appear
-
-**Note:** Routing does not include live navigation features, such as following a GPS location, initiating automatic recalculations, or guided voice instructions. However, these features can be built on top of routing by your device application.
+ - Fast calculations even in offline mode, approximately 50-300 ms is expected, even for long routes
+ - Multi-country route calculations, even in offline mode
 
 #### Existing Samples
 
@@ -110,43 +104,43 @@ Online routing requires that you create a simple call and request to calculate t
 
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}
+    {% highlight java %}
 
-	CartoOnlineRoutingService onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
+    CartoOnlineRoutingService onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight csharp %}
+    {% highlight csharp %}
   
-	var onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
+    var onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
-   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+    {% highlight objc %}
   
-  	NTCartoOnlineRoutingService* _onlineRoutingService = [[NTCartoOnlineRoutingService alloc] initWithApiKey:@"nutiteq.osm.car"];
+    NTCartoOnlineRoutingService* _onlineRoutingService = [[NTCartoOnlineRoutingService alloc] initWithApiKey:@"nutiteq.osm.car"];
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}
+    {% highlight swift %}
   
-	let onlineRoutingService = NTCartoOnlineRoutingService(source: "nutiteq.osm.car");
+    let onlineRoutingService = NTCartoOnlineRoutingService(source: "nutiteq.osm.car");
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-  {% highlight kotlin %}
+    {% highlight kotlin %}
   
-	val onlineRoutingService = CartoOnlineRoutingService("nutiteq.osm.car");
+    val onlineRoutingService = CartoOnlineRoutingService("nutiteq.osm.car");
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
     
 </div>
@@ -177,83 +171,80 @@ These code samples display how to show navigation instructions on the map, as in
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}
+    {% highlight java %}
   
-  AsyncTask<Void, Void, RoutingResult> task = new AsyncTask<Void, Void, RoutingResult>() {
+    AsyncTask<Void, Void, RoutingResult> task = new AsyncTask<Void, Void, RoutingResult>() {
 
-            protected RoutingResult doInBackground(Void... v) {
-                MapPosVector poses = new MapPosVector();
-                poses.add(startPos);
-                poses.add(stopPos);
-                RoutingRequest request = new RoutingRequest(baseProjection, poses);
-                RoutingResult result = onlineRoutingService.calculateRoute(request);
+        protected RoutingResult doInBackground(Void... v) {
+            MapPosVector poses = new MapPosVector();
+            poses.add(startPos);
+            poses.add(stopPos);
+            RoutingRequest request = new RoutingRequest(baseProjection, poses);
+            RoutingResult result = onlineRoutingService.calculateRoute(request);
 
-                return result;
+            return result;
+        }
+
+        protected void onPostExecute(RoutingResult result) {
+            if (result == null) {
+                Log.e(Const.LOG_TAG,"routing error");
+                return;
             }
 
-            protected void onPostExecute(RoutingResult result) {
-                if (result == null) {
-                    Log.e(Const.LOG_TAG,"routing error");
-                    return;
-                }
+            String routeText = "The route is " + (int) (result.getTotalDistance() / 100) / 10f + "km (" + result.getTotalTime() + " s)";
+            Log.i(Const.LOG_TAG,routeText);
 
-                String routeText = "The route is " + (int) (result.getTotalDistance() / 100) / 10f + "km (" + result.getTotalTime() + " s)";
-                Log.i(Const.LOG_TAG,routeText);
+            // get instruction details
+            RoutingInstructionVector instructions = result.getInstructions();
 
-                // get instruction details
-                RoutingInstructionVector instructions = result.getInstructions();
-
-                boolean first = true;
-        
-        // Remember: Put your operations back on the main thread to change the UI
-                
-                for (int i = 0; i < instructions.size(); i++) {
-                    RoutingInstruction instruction = instructions.get(i);
-                    Log.d(Const.LOG_TAG, instruction.toString());
-                }
-
+            // Remember: Put your operations back on the main thread to change the UI
+            
+            for (int i = 0; i < instructions.size(); i++) {
+                RoutingInstruction instruction = instructions.get(i);
+                Log.d(Const.LOG_TAG, instruction.toString());
             }
-        };
 
-        task.execute();
+        }
+    };
 
-  {% endhighlight %}
+    task.execute();
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight csharp %}
+    {% highlight csharp %}
   
     ThreadPool.QueueUserWorkItem(delegate
     {
-      MapPosVector poses = new MapPosVector();
-      poses.Add(startPos);
-      poses.Add(stopPos);
+        MapPosVector poses = new MapPosVector();
+        poses.Add(startPos);
+        poses.Add(stopPos);
 
-      RoutingRequest request = new RoutingRequest(baseProject, poses);
-      RoutingResult result = onlineRoutingService.CalculateRoute(request);
+        RoutingRequest request = new RoutingRequest(baseProject, poses);
+        RoutingResult result = onlineRoutingService.CalculateRoute(request);
 
-      // get total route results
-      String routeText = "The route is " + (int)(result.TotalDistance / 100) / 10f + "km (" + result.TotalTime + " sec) ";
-      Log.Debug(routeText);
+        // get total route results
+        String routeText = "The route is " + (int)(result.TotalDistance / 100) / 10f + "km (" + result.TotalTime + " sec) ";
+        Log.Debug(routeText);
 
-      // get instructions, just log them
-      RoutingInstructionVector instructions = result.Instructions;
-      
+        // get instructions, just log them
+        RoutingInstructionVector instructions = result.Instructions;
+        
 
-      // Remember: Put your operations back on the main thread to change the UI
-      for (int i = 0; i < instructions.Count; i++)
-      {
-        RoutingInstruction instruction = instructions[i];
-        Log.Debug(instruction.ToString());
-
-      }
+        // Remember: Put your operations back on the main thread to change the UI
+        for (int i = 0; i < instructions.Count; i++)
+        {
+            RoutingInstruction instruction = instructions[i];
+            Log.Debug(instruction.ToString());
+        }
     });
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
-   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+    {% highlight objc %}
 
     // Set route start end end points
     NTMapPosVector* poses = [[NTMapPosVector alloc] init];
@@ -278,92 +269,88 @@ These code samples display how to show navigation instructions on the map, as in
             [dateFormatter setDateFormat:@"HH:mm:ss"];
             [dateFormatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
             
-            double duration = 0.3;
-            
-            NSString* routeDesc = [NSString stringWithFormat:@"Route: %0.3f m, travel %@. Calculation took %0.3f s", [route getTotalDistance]/1000.0,
-                                   [dateFormatter stringFromDate: [NSDate dateWithTimeIntervalSince1970:[route getTotalTime]]],
-                                   duration];
+            NSString* routeDesc = [NSString stringWithFormat:@"Route: %0.3f km, travel %@.",
+                                   [route getTotalDistance]/1000.0,
+                                   [dateFormatter stringFromDate: [NSDate dateWithTimeIntervalSince1970:[route getTotalTime]]]];
             
             NSLog(@"%@",routeDesc);
             
-            // get instructions
-            for(int i=0; i < [[route getInstructions] size];i++){
-                
-                NTRoutingInstruction *instruction =[[route getInstructions] get:i];
-                NSLog(@"%@",[instruction description]);
-                
+            // Get instructions
+            for (int i=0; i < [[route getInstructions] size]; i++){
+                NTRoutingInstruction* instruction = [[route getInstructions] get:i];
+                NSLog(@"%@", [instruction description]);
             }
         });
     });
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}
+    {% highlight swift %}
   
-        // Sample positions, from from Tallinn (Estonia) to Tartu (Estonia)
-        let startPos = projection?.fromWgs84(NTMapPos(x: 24.7536, y: 59.4370))
-        let stopPos = projection?.fromWgs84(NTMapPos(x: 26.7290, y: 58.3776))
+    // Sample positions, from from Tallinn (Estonia) to Tartu (Estonia)
+    let startPos = projection?.fromWgs84(NTMapPos(x: 24.7536, y: 59.4370))
+    let stopPos = projection?.fromWgs84(NTMapPos(x: 26.7290, y: 58.3776))
+    
+    // This calculation should be in background thread
+    DispatchQueue.global(qos: .userInitiated).async {
         
-        // This calculation should be in background thread
-        DispatchQueue.global(qos: .userInitiated).async {
-            
-            let poses = NTMapPosVector()
-            poses?.add(startPos)
-            poses?.add(stopPos)
-            
-            let request = NTRoutingRequest(projection: projection, points: poses)
-            let result = onlineRoutingService?.calculateRoute(request)
-            
-            let km = ((result?.getTotalDistance())! / 100) / 10
-            let seconds = result?.getTotalTime()
-            let routeText = "The route is \(km) km ( \(seconds) s)"
-            
-            print("RouteText: " + routeText)
-            
-            // Get instruction details
-            let instructions = result?.getInstructions()
-            
-            for i in 0..<Int((instructions?.size())!) {
-                let instruction = instructions?.get(Int32(i))
-            }
+        let poses = NTMapPosVector()
+        poses?.add(startPos)
+        poses?.add(stopPos)
+        
+        let request = NTRoutingRequest(projection: projection, points: poses)
+        let result = onlineRoutingService?.calculateRoute(request)
+        
+        let km = ((result?.getTotalDistance())! / 100) / 10
+        let seconds = result?.getTotalTime()
+        let routeText = "The route is \(km) km ( \(seconds) s)"
+        
+        print("RouteText: " + routeText)
+        
+        // Get instruction details
+        let instructions = result?.getInstructions()
+        
+        for i in 0..<Int((instructions?.size())!) {
+            let instruction = instructions?.get(Int32(i))
         }
+    }
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-  {% highlight kotlin %}
+    {% highlight kotlin %}
   
-        // Sample positions, from from Tallinn (Estonia) to Tartu (Estonia)
-        val startPos = projection?.fromWgs84(MapPos(24.7536, 59.4370))
-        val stopPos = projection?.fromWgs84(MapPos(26.7290, 58.3776))
+    // Sample positions, from from Tallinn (Estonia) to Tartu (Estonia)
+    val startPos = projection?.fromWgs84(MapPos(24.7536, 59.4370))
+    val stopPos = projection?.fromWgs84(MapPos(26.7290, 58.3776))
 
-        // Remember: Put your operations back on the main thread to change the UI
-        // Note:
-        // doAsync requires anko coroutines dependency
-        // compile "org.jetbrains.anko:anko-sdk25-coroutines:$anko_version"
-        doAsync {
+    // Remember: Put your operations back on the main thread to change the UI
+    // Note:
+    // doAsync requires anko coroutines dependency
+    // compile "org.jetbrains.anko:anko-sdk25-coroutines:$anko_version"
+    doAsync {
 
-            val poses = MapPosVector()
-            poses.add(startPos)
-            poses.add(stopPos)
+        val poses = MapPosVector()
+        poses.add(startPos)
+        poses.add(stopPos)
 
-            val request = RoutingRequest(projection, poses)
-            val result = onlineRoutingService.calculateRoute(request)
+        val request = RoutingRequest(projection, poses)
+        val result = onlineRoutingService.calculateRoute(request)
 
-            val routeText = "The route is " + (result.totalDistance / 100) / 10f + "km (" + result.totalTime + " s)"
-            println("RouteText: " + routeText)
-            // get instruction details
-            val instructions = result.instructions
+        val routeText = "The route is " + (result.totalDistance / 100) / 10f + "km (" + result.totalTime + " s)"
+        println("RouteText: " + routeText)
+        // get instruction details
+        val instructions = result.instructions
 
-            for (i in 0..instructions.size()) {
-                val instruction = instructions.get(i.toInt())
-            }
+        for (i in 0..instructions.size()) {
+            val instruction = instructions.get(i.toInt())
         }
+    }
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
     
 </div>
@@ -374,7 +361,7 @@ Offline routing requires a more complicated preparation of your offline map pack
 
 First, you need to initialize a package manager and a listener to download packages. View the [PackageManager](/docs/carto-engine/mobile-sdk/package-manager/) documentation to find more about offline packages.
 
-If all routing packages are downloaded and routing service is ready, you can calculate routing.
+If all required routing packages are downloaded and routing service is ready, you can calculate routing.
 
 - Create the `PackageManagerValhallaRoutingService` call
 
@@ -383,6 +370,26 @@ If all routing packages are downloaded and routing service is ready, you can cal
 - Calculate the route with the `calculateRoute` request
 
 **Note:** This step is identical to the [online routing calculation code](/docs/carto-engine/mobile-sdk/mobile-routing/#online-routing).
+
+#### Limitations of offline routing
+
+CARTO Mobile SDK provides two built-in offline routing engines: the legacy
+routing engine (based loosely on OSRM project) and Valhalla routing engine.
+The legacy routing engine is better optimized for low memory usage and calculation speed,
+including very large road networks using *Contraction Hierarchy* representation and algorithms.
+As a result, this creates some expected limitations:
+
+- Route profile is precalculated and hardcoded in the data. For different profiles, such as driving or walking, download different map data packages to accomodate for offline routing
+
+- Only the fastest route is calculated, there is no shortest route choice
+
+- There are no alternative routes provided
+
+- There is no live data in routing, traffic and temporarily closed roads do not appear
+
+Valhalla routing engine is more flexible, but requires more memory and is slower.
+
+**Note:** Routing does not include live navigation features, such as following a GPS location, initiating automatic recalculations, or guided voice instructions. However, these features can be built on top of routing by your device application.
 
 #### Offline Packages
 

@@ -31,61 +31,61 @@ For raster data, use [MBTiles](https://github.com/mapbox/mbtiles-spec) format fi
     </li>
   </ul>
 
-   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+    {% highlight java %}
 
-	MBTilesTileDataSource tileDataSource = new MBTilesTileDataSource(filePath);
-	TileLayer rasterLayer = new RasterTileLayer(tileDataSource);
-	
-	mapView.getLayers().add(rasterLayer);
+    MBTilesTileDataSource tileDataSource = new MBTilesTileDataSource(filePath);
+    TileLayer rasterLayer = new RasterTileLayer(tileDataSource);
+    
+    mapView.getLayers().add(rasterLayer);
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight csharp %}
+    {% highlight csharp %}
   
-	var mbTilesLayer = new RasterTileLayer(new MBTilesTileDataSource(filePath));
-	MapView.Layers.Add(mbTilesLayer);
+    var mbTilesLayer = new RasterTileLayer(new MBTilesTileDataSource(filePath));
+    MapView.Layers.Add(mbTilesLayer);
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}
+    {% highlight objc %}
   
-	NSString* fullpathVT = [[NSBundle mainBundle] pathForResource:@"MBTILESFILENAME" ofType:@"mbtiles"];
-	NTTileDataSource* tileDataSource = [[NTMBTilesTileDataSource alloc] initWithPath: fullpathVT];
-	
-	// 1. Initialize a raster layer with the previous data source
-	NTRasterTileLayer* rasterLayer = [[NTRasterTileLayer alloc] initWithDataSource:tileDataSource];
-	
-	// 2. Add the raster layer to the map
-	[[mapView getLayers] add:rasterLayer];
+    NSString* fullpathVT = [[NSBundle mainBundle] pathForResource:@"MBTILESFILENAME" ofType:@"mbtiles"];
+    NTTileDataSource* tileDataSource = [[NTMBTilesTileDataSource alloc] initWithPath: fullpathVT];
+    
+    // 1. Initialize a raster layer with the previous data source
+    NTRasterTileLayer* rasterLayer = [[NTRasterTileLayer alloc] initWithDataSource:tileDataSource];
+    
+    // 2. Add the raster layer to the map
+    [[mapView getLayers] add:rasterLayer];
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}
+    {% highlight swift %}
   
-	let tileDataSource = NTMBTilesTileDataSource(path: filePath)
-	let rasterLayer = NTRasterTileLayer(dataSource: tileDataSource)
-	    
-	mapView?.getLayers()?.add(rasterLayer)
+    let tileDataSource = NTMBTilesTileDataSource(path: filePath)
+    let rasterLayer = NTRasterTileLayer(dataSource: tileDataSource)
+        
+    mapView?.getLayers()?.add(rasterLayer)
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-  {% highlight swift %}
+    {% highlight swift %}
   
-	val tileDataSource = MBTilesTileDataSource(filePath)
-	val rasterLayer = RasterTileLayer(tileDataSource)
-	
-	mapView?.layers?.add(rasterLayer)
+    val tileDataSource = MBTilesTileDataSource(filePath)
+    val rasterLayer = RasterTileLayer(tileDataSource)
+    
+    mapView?.layers?.add(rasterLayer)
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
     
 </div>
@@ -122,7 +122,7 @@ Use the following code to use MBtiles for a vector layer:
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}
+    {% highlight java %}
 
     // Initialize base layer with a bundled styles
     CartoOnlineVectorTileLayer baseLayer = new CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_GRAY);
@@ -141,11 +141,11 @@ Use the following code to use MBtiles for a vector layer:
     mapView.getLayers().add(baseLayer);
     mapView.getLayers().add(offlineLayer);
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-{% highlight csharp %}
+    {% highlight csharp %}
 
     var mapView = new MapView();
 
@@ -161,60 +161,60 @@ Use the following code to use MBtiles for a vector layer:
     mapView.Layers.Add(baseLayer);
     mapView.Layers.Add(offlineLayer);
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}
+    {% highlight objc %}
   
     // Use the style for your own vector tile datasource (online, offline etc),
-    NSString *path = [[NSBundle mainBundle] pathForResource:@"estonia_ntvt" ofType:@"mbtiles"];
-    NTMBTilesTileDataSource *tileDataSource = [[NTMBTilesTileDataSource alloc] initWithPath:path];
+    NSString* path = [[NSBundle mainBundle] pathForResource:@"estonia_ntvt" ofType:@"mbtiles"];
+    NTMBTilesTileDataSource* tileDataSource = [[NTMBTilesTileDataSource alloc] initWithPath:path];
     
     // Initialize offline layer & Grab vector tile layer from our base layer
-    NTMBVectorTileDecoder *decoder = [baseLayer getTileDecoder];
-    NTVectorTileLayer *offlineLayer = [[NTVectorTileLayer alloc] initWithDataSource:tileDataSource decoder:decoder];
+    NTMBVectorTileDecoder* decoder = [baseLayer getTileDecoder];
+    NTVectorTileLayer* offlineLayer = [[NTVectorTileLayer alloc] initWithDataSource:tileDataSource decoder:decoder];
     
     [[mapView getLayers] add:baseLayer];
     [[mapView getLayers] add:offlineLayer];
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}
-  
-        // Initialize base layer with a bundled styles
-        let baseLayer = NTCartoOnlineVectorTileLayer(style: NTCartoBaseMapStyle.CARTO_BASEMAP_STYLE_GRAY)
-        
-        // Use the style for your own vector tile datasource (online, offline etc),
-        let tileDataSource = NTMBTilesTileDataSource(path: Bundle.main.path(forResource: "estonia_ntvt", ofType: "mbtiles"))
-        
-        // Initialize offline layer & Grab vector tile layer from our base layer
-        let offlineLayer = NTVectorTileLayer(tileDataSource, baseLayer?.getTileDecoder())
-        
-        mapView?.layers?.add(baseLayer)
-        mapView?.layers?.add(offlineLayer)
+    {% highlight swift %}
 
-  {% endhighlight %}
+    // Initialize base layer with a bundled styles
+    let baseLayer = NTCartoOnlineVectorTileLayer(style: NTCartoBaseMapStyle.CARTO_BASEMAP_STYLE_GRAY)
+    
+    // Use the style for your own vector tile datasource (online, offline etc),
+    let tileDataSource = NTMBTilesTileDataSource(path: Bundle.main.path(forResource: "estonia_ntvt", ofType: "mbtiles"))
+    
+    // Initialize offline layer & Grab vector tile layer from our base layer
+    let offlineLayer = NTVectorTileLayer(tileDataSource, baseLayer?.getTileDecoder())
+    
+    mapView?.layers?.add(baseLayer)
+    mapView?.layers?.add(offlineLayer)
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-  {% highlight kotlin %}
+    {% highlight kotlin %}
   
-        // Initialize base layer with a bundled styles
-        val baseLayer = CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_GRAY)
-        
-        // Use the style for your own vector tile datasource (online, offline etc),
-        val tileDataSource = MBTilesTileDataSource("/sdcard/estonia_ntvt.mbtiles")
-        
-        // Initialize offline layer & Grab vector tile layer from our base layer
-        val offlineLayer = VectorTileLayer(tileDataSource, baseLayer.tileDecoder)
+    // Initialize base layer with a bundled styles
+    val baseLayer = CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_GRAY)
+    
+    // Use the style for your own vector tile datasource (online, offline etc),
+    val tileDataSource = MBTilesTileDataSource("/sdcard/estonia_ntvt.mbtiles")
+    
+    // Initialize offline layer & Grab vector tile layer from our base layer
+    val offlineLayer = VectorTileLayer(tileDataSource, baseLayer.tileDecoder)
 
-        mapView?.layers?.add(baseLayer)
-        mapView?.layers?.add(offlineLayer)
+    mapView?.layers?.add(baseLayer)
+    mapView?.layers?.add(offlineLayer)
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
     
 </div>
@@ -272,48 +272,48 @@ The Mobile SDK contains built-in vector tiles, as provided by CARTO maps as a se
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}
+    {% highlight java %}
   
-        CartoOnlineVectorTileLayer layer = new CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_DEFAULT);
-        mapView.getLayers().add(layer);
+    CartoOnlineVectorTileLayer layer = new CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_DEFAULT);
+    mapView.getLayers().add(layer);
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
-   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight csharp %}
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+    {% highlight csharp %}
   
-	var layer = new CartoOnlineVectorTileLayer(CartoBaseMapStyle.CartoBasemapStyleDefault);
-	MapView.Layers.Add(layer);
+    var layer = new CartoOnlineVectorTileLayer(CartoBaseMapStyle.CartoBasemapStyleDefault);
+    MapView.Layers.Add(layer);
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}
+    {% highlight objc %}
   
-	NTCartoOnlineVectorTileLayer* layer = [[NTCartoOnlineVectorTileLayer alloc] initWithStyle:NT_CARTO_BASEMAP_STYLE_DEFAULT];
+    NTCartoOnlineVectorTileLayer* layer = [[NTCartoOnlineVectorTileLayer alloc] initWithStyle:NT_CARTO_BASEMAP_STYLE_DEFAULT];
     [[self.mapView getLayers] add:layer];
   
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}
-  
-	let layer = NTCartoOnlineVectorTileLayer(style: NTCartoBaseMapStyle.CARTO_BASEMAP_STYLE_DEFAULT)
-	mapView?.getLayers()?.add(layer)
+    {% highlight swift %}
 
-  {% endhighlight %}
+    let layer = NTCartoOnlineVectorTileLayer(style: NTCartoBaseMapStyle.CARTO_BASEMAP_STYLE_DEFAULT)
+    mapView?.getLayers()?.add(layer)
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-  {% highlight kotlin %}
-  
-	val layer = CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_DEFAULT)
-	mapView?.layers?.add(layer)
+    {% highlight kotlin %}
 
-  {% endhighlight %}
+    val layer = CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_DEFAULT)
+    mapView?.layers?.add(layer)
+
+    {% endhighlight %}
   </div>
     
 </div>
@@ -348,116 +348,116 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}
+    {% highlight java %}
 
-	// 1. Define data source
-  	TileDataSource tileDataSource = new HTTPTileDataSource(0, 14, "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN");
+    // 1. Define data source
+    TileDataSource tileDataSource = new HTTPTileDataSource(0, 14, "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN");
 
-	// 2. Load vector tile style set
- 	BinaryData styleBytes = AssetUtils.loadAsset("osmbright.zip");
-     CompiledStyleSet vectorTileStyleSet = new CompiledStyleSet(new ZippedAssetPackage(styleBytes));
+    // 2. Load vector tile style set
+    BinaryData styleBytes = AssetUtils.loadAsset("osmbright.zip");
+    CompiledStyleSet vectorTileStyleSet = new CompiledStyleSet(new ZippedAssetPackage(styleBytes));
 
-	// 3. Create vector tile decoder using the style set
-     VectorTileDecoder vectorTileDecoder = new MBVectorTileDecoder(vectorTileStyleSet);
+    // 3. Create vector tile decoder using the style set
+    VectorTileDecoder vectorTileDecoder = new MBVectorTileDecoder(vectorTileStyleSet);
 
-	// 4. Create vector tile layer, using previously created data source and decoder
-     TileLayer vectorTileLayer = new VectorTileLayer(tileDataSource, vectorTileDecoder);
+    // 4. Create vector tile layer, using previously created data source and decoder
+    TileLayer vectorTileLayer = new VectorTileLayer(tileDataSource, vectorTileDecoder);
 
-	// 5. Add vector tile layer
-     mapView.getLayers().add(vectorTileLayer);
+    // 5. Add vector tile layer
+    mapView.getLayers().add(vectorTileLayer);
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight csharp %}
+    {% highlight csharp %}
 
-	// 1. Define data source
-     var tileDataSource = new HTTPTileDataSource(0, 14, "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN");
+    // 1. Define data source
+    var tileDataSource = new HTTPTileDataSource(0, 14, "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN");
 
-	// 2. Load vector tile style set
-     var styleBytes = AssetUtils.LoadAsset("nutiteq-dark.zip");
-     var vectorTileStyleSet = new CompiledStyleSet(new ZippedAssetPackage(styleBytes));
+    // 2. Load vector tile style set
+    var styleBytes = AssetUtils.LoadAsset("nutiteq-dark.zip");
+    var vectorTileStyleSet = new CompiledStyleSet(new ZippedAssetPackage(styleBytes));
 
-	// 3. Create vector tile decoder using the style set
-     var vectorTileDecoder = new MBVectorTileDecoder(vectorTileStyleSet);
+    // 3. Create vector tile decoder using the style set
+    var vectorTileDecoder = new MBVectorTileDecoder(vectorTileStyleSet);
 
-	// 4. Create vector tile layer, using previously created data source and decoder
-     var vectorTileLayer = new VectorTileLayer(tileDataSource, vectorTileDecoder);
+    // 4. Create vector tile layer, using previously created data source and decoder
+    var vectorTileLayer = new VectorTileLayer(tileDataSource, vectorTileDecoder);
 
-	// 5. Add vector tile layer
-     MapView.Layers.Add(vectorTileLayer);
+    // 5. Add vector tile layer
+    MapView.Layers.Add(vectorTileLayer);
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}
-		
-	// 1. Define data source
-	NTTileDataSource* tileDataSource = [[NTHTTPTileDataSource alloc] initWithMinZoom:0 maxZoom:14 baseURL:@"http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN"];
-	    
-	// 2. Load vector tile style set
-	NTBinaryData *vectorTileStyleSetData = [NTAssetUtils loadAsset: @"osmbright.zip"];
-	NTZippedAssetPackage *package = [[NTZippedAssetPackage alloc] initWithZipData:vectorTileStyleSetData];
-	NTCompiledStyleSet *vectorTileStyleSet = [[NTCompiledStyleSet alloc] initWithAssetPackage:package];
-	    
-	// 3. Create vector tile decoder using the style set
-	NTMBVectorTileDecoder *vectorTileDecoder = [[NTMBVectorTileDecoder alloc] initWithCompiledStyleSet:vectorTileStyleSet];
-	    
-	// 4. Create vector tile layer, using previously created data source and decoder
-	NTVectorTileLayer *vectorTileLayer = [[NTVectorTileLayer alloc] initWithDataSource:tileDataSource decoder:vectorTileDecoder];
-	    
-	// 5. Add vector tile layer
-	[[mapView getLayers] add:vectorTileLayer];
+    {% highlight objc %}
 
-  {% endhighlight %}
+    // 1. Define data source
+    NTTileDataSource* tileDataSource = [[NTHTTPTileDataSource alloc] initWithMinZoom:0 maxZoom:14 baseURL:@"http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN"];
+
+    // 2. Load vector tile style set
+    NTBinaryData* vectorTileStyleSetData = [NTAssetUtils loadAsset: @"osmbright.zip"];
+    NTZippedAssetPackage* package = [[NTZippedAssetPackage alloc] initWithZipData:vectorTileStyleSetData];
+    NTCompiledStyleSet* vectorTileStyleSet = [[NTCompiledStyleSet alloc] initWithAssetPackage:package];
+
+    // 3. Create vector tile decoder using the style set
+    NTMBVectorTileDecoder* vectorTileDecoder = [[NTMBVectorTileDecoder alloc] initWithCompiledStyleSet:vectorTileStyleSet];
+
+    // 4. Create vector tile layer, using previously created data source and decoder
+    NTVectorTileLayer* vectorTileLayer = [[NTVectorTileLayer alloc] initWithDataSource:tileDataSource decoder:vectorTileDecoder];
+
+    // 5. Add vector tile layer
+    [[mapView getLayers] add:vectorTileLayer];
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}
-  
-	// 1. Define data source
-	let url = "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN"
-	let tileDataSource = NTHTTPTileDataSource(minZoom: 0, maxZoom: 14, baseURL: url)
-	    
-	// 2. Load vector tile style set
-	let styleBytes = NTAssetUtils.loadAsset("osmbright.zip")
-	let vectorTileStyleSet = NTCompiledStyleSet(assetPackage: NTZippedAssetPackage(zip: styleBytes))
-	    
-	// 3. Create vector tile decoder using the style set
-	let vectorTileDecoder = NTMBVectorTileDecoder(compiledStyleSet: vectorTileStyleSet)
-	    
-	// 4. Create vector tile layer, using previously created data source and decoder
-	let vectorTileLayer = NTVectorTileLayer(dataSource: tileDataSource, decoder: vectorTileDecoder)
-	    
-	// 5. Add vector tile layer
-	mapView?.getLayers()?.add(vectorTileLayer)
+    {% highlight swift %}
 
-  {% endhighlight %}
+    // 1. Define data source
+    let url = "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN"
+    let tileDataSource = NTHTTPTileDataSource(minZoom: 0, maxZoom: 14, baseURL: url)
+
+    // 2. Load vector tile style set
+    let styleBytes = NTAssetUtils.loadAsset("osmbright.zip")
+    let vectorTileStyleSet = NTCompiledStyleSet(assetPackage: NTZippedAssetPackage(zip: styleBytes))
+
+    // 3. Create vector tile decoder using the style set
+    let vectorTileDecoder = NTMBVectorTileDecoder(compiledStyleSet: vectorTileStyleSet)
+
+    // 4. Create vector tile layer, using previously created data source and decoder
+    let vectorTileLayer = NTVectorTileLayer(dataSource: tileDataSource, decoder: vectorTileDecoder)
+
+    // 5. Add vector tile layer
+    mapView?.getLayers()?.add(vectorTileLayer)
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-  {% highlight kotlin %}
-	  
-	// 1. Define data source
-	val url = "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN"
-	val tileDataSource = HTTPTileDataSource(0, 14, url)
-	
-	// 2. Load vector tile style set
-	val styleBytes = AssetUtils.loadAsset("osmbright.zip")
-	val vectorTileStyleSet = CompiledStyleSet(ZippedAssetPackage(styleBytes))
-	
-	// 3. Create vector tile decoder using the style set
-	val vectorTileDecoder = MBVectorTileDecoder(vectorTileStyleSet)
-	
-	// 4. Create vector tile layer, using previously created data source and decoder
-	val vectorTileLayer = VectorTileLayer(tileDataSource, vectorTileDecoder)
-	
-	// 5. Add vector tile layer
-	mapView?.layers?.add(vectorTileLayer)
+    {% highlight kotlin %}
 
-  {% endhighlight %}
+    // 1. Define data source
+    val url = "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN"
+    val tileDataSource = HTTPTileDataSource(0, 14, url)
+
+    // 2. Load vector tile style set
+    val styleBytes = AssetUtils.loadAsset("osmbright.zip")
+    val vectorTileStyleSet = CompiledStyleSet(ZippedAssetPackage(styleBytes))
+
+    // 3. Create vector tile decoder using the style set
+    val vectorTileDecoder = MBVectorTileDecoder(vectorTileStyleSet)
+
+    // 4. Create vector tile layer, using previously created data source and decoder
+    val vectorTileLayer = VectorTileLayer(tileDataSource, vectorTileDecoder)
+
+    // 5. Add vector tile layer
+    mapView?.layers?.add(vectorTileLayer)
+
+    {% endhighlight %}
   </div>
     
 </div>
@@ -489,67 +489,67 @@ yflipped, quadkey**.
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}
-  
-	String url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US";
-	TileDataSource baseRasterTileDataSource = new HTTPTileDataSource(1, 19, url);
-	
-	TileLayer baseLayer = new RasterTileLayer(baseRasterTileDataSource);
-	mapView.getLayers().add(baseLayer);
+    {% highlight java %}
 
-  {% endhighlight %}
+    String url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US";
+    TileDataSource baseRasterTileDataSource = new HTTPTileDataSource(1, 19, url);
+
+    TileLayer baseLayer = new RasterTileLayer(baseRasterTileDataSource);
+    mapView.getLayers().add(baseLayer);
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight csharp %}
+    {% highlight csharp %}
 
-	// 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
-	string url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US";
-     var baseRasterTileDataSource = new HTTPTileDataSource(1, 19, url);
+    // 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
+    string url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US";
+    var baseRasterTileDataSource = new HTTPTileDataSource(1, 19, url);
 
-	// 2. Create layer and add to map
-     var baseLayer = new RasterTileLayer(baseRasterTileDataSource);
-     MapView.Layers.Add(baseLayer);
+    // 2. Create layer and add to map
+    var baseLayer = new RasterTileLayer(baseRasterTileDataSource);
+    MapView.Layers.Add(baseLayer);
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item">
-  {% highlight objc %}
-  
-	NTHTTPTileDataSource* baseRasterTileDataSource = [[NTHTTPTileDataSource alloc] initWithMinZoom:0 maxZoom:19 baseURL:@"http://otile1.mqcdn.com/tiles/1.0.0/osm/{zoom}/{x}/{y}.png"];
-	    
-	// 1. Initialize a raster layer with the previous data source
-	NTRasterTileLayer* rasterLayer = [[NTRasterTileLayer alloc] initWithDataSource:baseRasterTileDataSource];
-	    
-	// 2. Add the previous raster layer to the map
-	[[mapView getLayers] add:rasterLayer];
+    {% highlight objc %}
 
-  {% endhighlight %}
+    NTHTTPTileDataSource* baseRasterTileDataSource = [[NTHTTPTileDataSource alloc] initWithMinZoom:0 maxZoom:19 baseURL:@"http://otile1.mqcdn.com/tiles/1.0.0/osm/{zoom}/{x}/{y}.png"];
+      
+    // 1. Initialize a raster layer with the previous data source
+    NTRasterTileLayer* rasterLayer = [[NTRasterTileLayer alloc] initWithDataSource:baseRasterTileDataSource];
+      
+    // 2. Add the previous raster layer to the map
+    [[mapView getLayers] add:rasterLayer];
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}
-  
-	let url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US"
-	let baseRasterTileDataSource = NTHTTPTileDataSource(minZoom: 1, maxZoom: 19, baseURL: url)
-	    
-	let baseLayer = NTRasterTileLayer(dataSource: baseRasterTileDataSource)
-	mapView?.getLayers()?.add(baseLayer)
+    {% highlight swift %}
 
-  {% endhighlight %}
+    let url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US"
+    let baseRasterTileDataSource = NTHTTPTileDataSource(minZoom: 1, maxZoom: 19, baseURL: url)
+
+    let baseLayer = NTRasterTileLayer(dataSource: baseRasterTileDataSource)
+    mapView?.getLayers()?.add(baseLayer)
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-  {% highlight kotlin %}
-  
-	val url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US"
-	val baseRasterTileDataSource = HTTPTileDataSource(1, 19, url)
-	
-	val baseLayer = RasterTileLayer(baseRasterTileDataSource)
-	mapView?.layers?.add(baseLayer)
+    {% highlight kotlin %}
 
-  {% endhighlight %}
+    val url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US"
+    val baseRasterTileDataSource = HTTPTileDataSource(1, 19, url)
+
+    val baseLayer = RasterTileLayer(baseRasterTileDataSource)
+    mapView?.layers?.add(baseLayer)
+
+    {% endhighlight %}
   </div>
     
 </div>
@@ -590,90 +590,90 @@ There are some DataSources which can use another DataSource as input, and apply 
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}
+    {% highlight java %}
 
-	// 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
-     TileDataSource baseRasterTileDataSource = new HTTPTileDataSource(1, 19, "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US");
+    // 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
+    TileDataSource baseRasterTileDataSource = new HTTPTileDataSource(1, 19, "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US");
 
-	// 2. Add persistent caching datasource, tiles will be stored locally on persistent storage
-     PersistentCacheTileDataSource cachedDataSource = new PersistentCacheTileDataSource(baseRasterTileDataSource, getExternalFilesDir(null) + "/mapcache.db");
+    // 2. Add persistent caching datasource, tiles will be stored locally on persistent storage
+    PersistentCacheTileDataSource cachedDataSource = new PersistentCacheTileDataSource(baseRasterTileDataSource, getExternalFilesDir(null) + "/mapcache.db");
 
-	// 3. Create layer and add to map
-     TileLayer baseLayer = new RasterTileLayer(cachedDataSource);
-     mapView.getLayers().add(baseLayer);
+    // 3. Create layer and add to map
+    TileLayer baseLayer = new RasterTileLayer(cachedDataSource);
+    mapView.getLayers().add(baseLayer);
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight csharp %}
+    {% highlight csharp %}
 
-	// 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
-     var baseRasterTileDataSource = new HTTPTileDataSource(1, 19, "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US");
+    // 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
+    var baseRasterTileDataSource = new HTTPTileDataSource(1, 19, "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US");
 
-	// Add persistent caching datasource, tiles will be stored locally on persistent storage
-	// fileDir must be a directory where files can be written - this is platform-specific
-	var cachedDataSource = new PersistentCacheTileDataSource(baseRasterTileDataSource, fileDir + "/mapcache.db");
-	
-	// 2. Create layer and add to map
-	var baseLayer = new RasterTileLayer(cachedDataSource);
-	MapView.Layers.Add(baseLayer);
+    // Add persistent caching datasource, tiles will be stored locally on persistent storage
+    // fileDir must be a directory where files can be written - this is platform-specific
+    var cachedDataSource = new PersistentCacheTileDataSource(baseRasterTileDataSource, fileDir + "/mapcache.db");
 
-  {% endhighlight %}
+    // 2. Create layer and add to map
+    var baseLayer = new RasterTileLayer(cachedDataSource);
+    MapView.Layers.Add(baseLayer);
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}
+    {% highlight objc %}
 
-	// 1. Initialize a OSM raster data source from MapQuest Open Tiles
-     NTHTTPTileDataSource* baseRasterTileDataSource = [[NTHTTPTileDataSource alloc] initWithMinZoom:0 maxZoom:19 baseURL:@"http://otile1.mqcdn.com/tiles/1.0.0/osm/{zoom}/{x}/{y}.png"];
+    // 1. Initialize a OSM raster data source from MapQuest Open Tiles
+    NTHTTPTileDataSource* baseRasterTileDataSource = [[NTHTTPTileDataSource alloc] initWithMinZoom:0 maxZoom:19 baseURL:@"http://otile1.mqcdn.com/tiles/1.0.0/osm/{zoom}/{x}/{y}.png"];
 
-	// 2. Create persistent cache for the given data source  
-     NTPersistentCacheTileDataSource* cachedRasterTileDataSource = [[NTPersistentCacheTileDataSource alloc] initWithDataSource:baseRasterTileDataSource databasePath:[NTAssetUtils calculateWritablePath:@"mycache.db"]];
+    // 2. Create persistent cache for the given data source  
+    NTPersistentCacheTileDataSource* cachedRasterTileDataSource = [[NTPersistentCacheTileDataSource alloc] initWithDataSource:baseRasterTileDataSource databasePath:[NTAssetUtils calculateWritablePath:@"mycache.db"]];
 
-	// 3. Initialize a raster layer with the previous data source
-     NTRasterTileLayer* rasterLayer = [[NTRasterTileLayer alloc] initWithDataSource:cachedRasterTileDataSource];
+    // 3. Initialize a raster layer with the previous data source
+    NTRasterTileLayer* rasterLayer = [[NTRasterTileLayer alloc] initWithDataSource:cachedRasterTileDataSource];
 
-	// 4. Add the previous raster layer to the map
-     [[self.mapView getLayers] add:rasterLayer];
+    // 4. Add the previous raster layer to the map
+    [[self.mapView getLayers] add:rasterLayer];
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}
-  
-	// 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
-	let url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US"
-	let baseRasterTileDataSource = NTHTTPTileDataSource(minZoom: 1, maxZoom: 19, baseURL: url)
-	    
-	// 2. Add persistent caching datasource, tiles will be stored locally on persistent storage
-	let path = NTAssetUtils.calculateWritablePath("mapcache.db")
-	let cachedDataSource = NTPersistentCacheTileDataSource(dataSource: baseRasterTileDataSource, databasePath: path)
-	    
-	// 3. Create layer and add to map
-	let baseLayer = NTRasterTileLayer(dataSource: cachedDataSource)
-	mapView?.getLayers()?.add(baseLayer)
+    {% highlight swift %}
 
-  {% endhighlight %}
+    // 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
+    let url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US"
+    let baseRasterTileDataSource = NTHTTPTileDataSource(minZoom: 1, maxZoom: 19, baseURL: url)
+
+    // 2. Add persistent caching datasource, tiles will be stored locally on persistent storage
+    let path = NTAssetUtils.calculateWritablePath("mapcache.db")
+    let cachedDataSource = NTPersistentCacheTileDataSource(dataSource: baseRasterTileDataSource, databasePath: path)
+
+    // 3. Create layer and add to map
+    let baseLayer = NTRasterTileLayer(dataSource: cachedDataSource)
+    mapView?.getLayers()?.add(baseLayer)
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-  {% highlight kotlin %}
-  
-	// 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
-	val url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US"
-	val baseRasterTileDataSource = HTTPTileDataSource(1, 19, url)
-	
-	// 2. Add persistent caching datasource, tiles will be stored locally on persistent storage
-	val path = getExternalFilesDir(null).path + "/mapcache.db"
-	val cachedDataSource = PersistentCacheTileDataSource(baseRasterTileDataSource, path)
-	
-	// 3. Create layer and add to map
-	val baseLayer = RasterTileLayer(cachedDataSource)
-	mapView?.layers?.add(baseLayer)
+    {% highlight kotlin %}
 
-  {% endhighlight %}
+    // 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
+    val url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US"
+    val baseRasterTileDataSource = HTTPTileDataSource(1, 19, url)
+
+    // 2. Add persistent caching datasource, tiles will be stored locally on persistent storage
+    val path = getExternalFilesDir(null).path + "/mapcache.db"
+    val cachedDataSource = PersistentCacheTileDataSource(baseRasterTileDataSource, path)
+
+    // 3. Create layer and add to map
+    val baseLayer = RasterTileLayer(cachedDataSource)
+    mapView?.layers?.add(baseLayer)
+
+    {% endhighlight %}
   </div>
     
 </div>
@@ -746,53 +746,53 @@ The DataSource constructor uses the following URL patterns. It requires a minimu
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}
-  
-	String url = "http://your-url-with-placeholders-see-below";
-	TileDataSource tileDataSource = new HTTPTileDataSource(0, 18, url);
-	RasterTileLayer layer = new RasterTileLayer(tileDataSource);
+    {% highlight java %}
 
-  {% endhighlight %}
+    String url = "http://your-url-with-placeholders-see-below";
+    TileDataSource tileDataSource = new HTTPTileDataSource(0, 18, url);
+    RasterTileLayer layer = new RasterTileLayer(tileDataSource);
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight csharp %}
-  
-	string url = "http://your-url-with-placeholders-see-below";
-	TileDataSource tileDataSource = new HTTPTileDataSource(0, 18, url);
-	RasterTileLayer layer = new RasterTileLayer(tileDataSource);
+    {% highlight csharp %}
 
-  {% endhighlight %}
+    string url = "http://your-url-with-placeholders-see-below";
+    TileDataSource tileDataSource = new HTTPTileDataSource(0, 18, url);
+    RasterTileLayer layer = new RasterTileLayer(tileDataSource);
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}
-  
-	NSString* url = @"http://your-url-with-placeholders-see-below";
-	NTHTTPTileDataSource *source = [[NTHTTPTileDataSource alloc]initWithMinZoom:0 maxZoom:18 baseURL:url];
-	NTRasterTileLayer *layer = [[NTRasterTileLayer alloc]initWithDataSource:source];
+    {% highlight objc %}
 
-  {% endhighlight %}
+    NSString* url = @"http://your-url-with-placeholders-see-below";
+    NTHTTPTileDataSource* source = [[NTHTTPTileDataSource alloc] initWithMinZoom:0 maxZoom:18 baseURL:url];
+    NTRasterTileLayer* layer = [[NTRasterTileLayer alloc] initWithDataSource:source];
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}
-  
-	let url = "http://your-url-with-placeholders-see-below"
-	let tileDataSource = NTHTTPTileDataSource(minZoom: 0, maxZoom: 18, baseURL: url)
-	let layer = NTRasterTileLayer(dataSource: tileDataSource)
+    {% highlight swift %}
 
-  {% endhighlight %}
+    let url = "http://your-url-with-placeholders-see-below"
+    let tileDataSource = NTHTTPTileDataSource(minZoom: 0, maxZoom: 18, baseURL: url)
+    let layer = NTRasterTileLayer(dataSource: tileDataSource)
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-  {% highlight kotlin %}
-  
-	val url = "http://your-url-with-placeholders-see-below"
-	val tileDataSource = HTTPTileDataSource(0, 18, url)
-	val layer = RasterTileLayer(tileDataSource)
+    {% highlight kotlin %}
 
-  {% endhighlight %}
+    val url = "http://your-url-with-placeholders-see-below"
+    val tileDataSource = HTTPTileDataSource(0, 18, url)
+    val layer = RasterTileLayer(tileDataSource)
+
+    {% endhighlight %}
   </div>
     
 </div>

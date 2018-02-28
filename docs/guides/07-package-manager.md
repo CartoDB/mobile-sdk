@@ -10,7 +10,7 @@
 When creating PackageManager, you specify package contents by setting `source` parameter value as following:
 
 * `carto.streets` map data packages (vector tiles) for visual map layer.
-* `routing:carto.streets` - routing data packages
+* `routing:carto.streets` - routing data packages for Valhalla routing engine
 * `geocoding:carto.streets` -  geocoding/address search data packages
 
 All these sources are based on OpenStreetMaps map data.
@@ -38,93 +38,93 @@ App has to decide to which folder the map files are stored. Typically you use st
     </li>
   </ul>
 
-   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+    {% highlight java %}
 
-	// Create PackageManager instance for dealing with offline packages
-	File packageFolder = new File(getApplicationContext().getExternalFilesDir(null), "foldername");
-	    
-	if (!(packageFolder.mkdirs() || packageFolder.isDirectory())) {
-	    Log.e(Const.LOG_TAG, "Could not create package folder!");
-	}
-	
-	try {
-	    packageManager = new CartoPackageManager("<your-package-source>", packageFolder.getAbsolutePath());
-	} catch (IOException e) {
-	    e.printStackTrace();
-	}
+    // Create PackageManager instance for dealing with offline packages
+    File packageFolder = new File(getApplicationContext().getExternalFilesDir(null), "foldername");
+        
+    if (!(packageFolder.mkdirs() || packageFolder.isDirectory())) {
+        Log.e(Const.LOG_TAG, "Could not create package folder!");
+    }
+    
+    try {
+        packageManager = new CartoPackageManager("<your-package-source>", packageFolder.getAbsolutePath());
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight csharp %}
+    {% highlight csharp %}
 	
-	// Create PackageManager instance for dealing with offline packages
-	var packageFolder = new File(GetExternalFilesDir(null), "foldername");
-	
-	if (!(packageFolder.Mkdirs() || packageFolder.IsDirectory))
-	{
-		Log.Fatal("Could not create package folder!");
-	}
-	
-	packageManager = new CartoPackageManager("<your-package-source>", packageFolder);
+    // Create PackageManager instance for dealing with offline packages
+    var packageFolder = new File(GetExternalFilesDir(null), "foldername");
 
-  {% endhighlight %}
+    if (!(packageFolder.Mkdirs() || packageFolder.IsDirectory))
+    {
+        Log.Fatal("Could not create package folder!");
+    }
+
+    packageManager = new CartoPackageManager("<your-package-source>", packageFolder);
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}
+    {% highlight objc %}
 
-	// Define PackageManger to download offline packages
-	// Create folder for package manager. Package manager needs persistent writable folder.
-	NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask,YES);
-	NSString* appSupportDir = [paths objectAtIndex: 0];
-	NSString* packagesDir = [appSupportDir stringByAppendingString:@"/foldername"];
-	NSError *error;
-	[[NSFileManager defaultManager] createDirectoryAtPath:packagesDir withIntermediateDirectories:YES attributes:nil error:&error];
-	    
-	packageManager = [[NTCartoPackageManager alloc] initWithSource:@"<your-package-source>" dataFolder:packagesDir];
+    // Define PackageManger to download offline packages
+    // Create folder for package manager. Package manager needs persistent writable folder.
+    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask,YES);
+    NSString* appSupportDir = [paths objectAtIndex: 0];
+    NSString* packagesDir = [appSupportDir stringByAppendingString:@"/foldername"];
+    NSError *error;
+    [[NSFileManager defaultManager] createDirectoryAtPath:packagesDir withIntermediateDirectories:YES attributes:nil error:&error];
+       
+    packageManager = [[NTCartoPackageManager alloc] initWithSource:@"<your-package-source>" dataFolder:packagesDir];
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}
-  
-        // Define PackageManger to download offline packages
-        // Create folder for package manager. Package manager needs persistent writable folder.
-        let packageFolder = NTAssetUtils.calculateWritablePath("foldername")
-        
-        do {
-            try FileManager.default.createDirectory(atPath: packageFolder!, withIntermediateDirectories: false, attributes: nil)
-        } catch let error as NSError {
-            print(error.localizedDescription);
-        }
-        
-        // Create PackageManager instance for dealing with offline packages
-        var packageManager =  NTCartoPackageManager(source: "<your-package-source>", dataFolder: packageFolder)
+    {% highlight swift %}
 
-  {% endhighlight %}
+    // Define PackageManger to download offline packages
+    // Create folder for package manager. Package manager needs persistent writable folder.
+    let packageFolder = NTAssetUtils.calculateWritablePath("foldername")
+
+    do {
+        try FileManager.default.createDirectory(atPath: packageFolder!, withIntermediateDirectories: false, attributes: nil)
+    } catch let error as NSError {
+        print(error.localizedDescription);
+    }
+
+    // Create PackageManager instance for dealing with offline packages
+    var packageManager =  NTCartoPackageManager(source: "<your-package-source>", dataFolder: packageFolder)
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-  {% highlight kotlin %}
+    {% highlight kotlin %}
   
-        // Create PackageManager instance for dealing with offline packages
-        val packageFolder = File(applicationContext.getExternalFilesDir(null), "foldername")
+    // Create PackageManager instance for dealing with offline packages
+    val packageFolder = File(applicationContext.getExternalFilesDir(null), "foldername")
 
-        if (!(packageFolder.mkdirs() || packageFolder.isDirectory())) {
-            println("Could not create package folder!")
-        }
+    if (!(packageFolder.mkdirs() || packageFolder.isDirectory())) {
+        println("Could not create package folder!")
+    }
 
-        var packageManager = try {
-            CartoPackageManager("<your-package-source>", packageFolder.absolutePath)
-        } catch (e: IOException) {
-            null
-        }
+    var packageManager = try {
+        CartoPackageManager("<your-package-source>", packageFolder.absolutePath)
+    } catch (e: IOException) {
+        null
+    }
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
   
 </div>
@@ -157,197 +157,196 @@ You see that `onPackageListUpdated()` callback starts immediately download of so
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}
+    {% highlight java %}
   
-  public class MyPackageManagerListener extends PackageManagerListener {
-    @Override
-    public void onPackageListUpdated() {
-        Log.d(Const.LOG_TAG, "Package list updated");
-        // Start download of package of Estonia. You can call several package downloads here
-        // see list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
-        packageManager.startPackageDownload("EE");
-        packageManager.startPackageDownload("LV");
+    public class MyPackageManagerListener extends PackageManagerListener {
+        @Override
+        public void onPackageListUpdated() {
+            Log.d(Const.LOG_TAG, "Package list updated");
+            // Start download of package of Estonia. You can call several package downloads here
+            // see list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
+            packageManager.startPackageDownload("EE");
+            packageManager.startPackageDownload("LV");
+        }
+
+        @Override
+        public void onPackageListFailed() {
+            Log.e(Const.LOG_TAG, "Package list update failed. Network connection issues ? ");
+        }
+
+        @Override
+        public void onPackageStatusChanged(String id, int version, PackageStatus status)
+        {
+            // you can monitor download process %
+        }
+
+        @Override
+        public void onPackageCancelled(String id, int version) {
+        }
+
+        @Override
+        public void onPackageUpdated(String id, int version) {
+            Log.d(Const.LOG_TAG, "Offline package updated: " + id);
+        }
+
+        @Override
+        public void onPackageFailed(String id, int version, PackageErrorType errorType) {
+            Log.e(Const.LOG_TAG, "Offline package update failed: " + id);
+        }
     }
 
-    @Override
-    public void onPackageListFailed() {
-        Log.e(Const.LOG_TAG, "Package list update failed. Network connection issues ? ");
-    }
-
-    @Override
-    public void onPackageStatusChanged(String id, int version, PackageStatus status)
-    {
-        // you can monitor download process %
-    }
-
-    @Override
-    public void onPackageCancelled(String id, int version) {
-    }
-
-    @Override
-    public void onPackageUpdated(String id, int version) {
-        Log.d(Const.LOG_TAG, "Offline package updated: " + id);
-    }
-
-    @Override
-    public void onPackageFailed(String id, int version, PackageErrorType errorType) {
-        Log.e(Const.LOG_TAG, "Offline package update failed: " + id);
-    }
-  }
-
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight csharp %}
+    {% highlight csharp %}
   
-  public class MyPackageManagerListener : PackageManagerListener
-  {
-    PackageManager packageManager;
-
-    public MyPackageManagerListener(PackageManager manager)
+    public class MyPackageManagerListener : PackageManagerListener
     {
-      packageManager = manager;
+        PackageManager packageManager;
+
+        public MyPackageManagerListener(PackageManager manager)
+        {
+            packageManager = manager;
+        }
+
+        public override void OnPackageListUpdated()
+        {
+            Log.Debug("Package list updated");
+            // We have packages for all country/regions
+            // see list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
+            packageManager.StartPackageDownload("EE");
+            packageManager.StartPackageDownload("LV");
+        }
+
+        public override void OnPackageListFailed()
+        {
+            Log.Error("Package list update failed");
+        }
+
+        public override void OnPackageStatusChanged(String id, int version, PackageStatus status)
+        {
+            // here you can get progress of download
+        }
+
+        public override void OnPackageCancelled(String id, int version)
+        {
+        }
+
+        public override void OnPackageUpdated(String id, int version)
+        {
+            Log.Debug("Offline package updated: " + id);
+        }
+
+        public override void OnPackageFailed(String id, int version, PackageErrorType errorType)
+        {
+            Log.Error("Offline package download failed: " + id);
+        }
     }
 
-    public override void OnPackageListUpdated()
-    {
-      Log.Debug("Package list updated");
-      // We have packages for all country/regions
-      // see list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
-      packageManager.StartPackageDownload("EE");
-      packageManager.StartPackageDownload("LV");
-    }
-
-    public override void OnPackageListFailed()
-    {
-      Log.Error("Package list update failed");
-    }
-
-    public override void OnPackageStatusChanged(String id, int version, PackageStatus status)
-    {
-      // here you can get progress of download
-    }
-
-    public override void OnPackageCancelled(String id, int version)
-    {
-    }
-
-    public override void OnPackageUpdated(String id, int version)
-    {
-      Log.Debug("Offline package updated: " + id);
-    }
-
-    public override void OnPackageFailed(String id, int version, PackageErrorType errorType)
-    {
-      Log.Error("Offline package download failed: " + id);
-    }
-  }
-
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}
-  
-  @interface MyPackageManagerListener : NTPackageManagerListener
+    {% highlight objc %}
+    
+    @interface MyPackageManagerListener : NTPackageManagerListener
 
-    @property NTPackageManager* _packageManager;
-  - (void)setPackageManager:(NTPackageManager*)manager;
-  
-  @end
+      @property NTPackageManager* _packageManager;
+    - (void)setPackageManager:(NTPackageManager*)manager;
+    
+    @end
 
-  @implementation MyPackageManagerListener
+    @implementation MyPackageManagerListener
 
-  - (void)onPackageListUpdated
-  {
-      NSLog(@"onPackageListUpdated");
-      // We have packages for all country/regions
-      // see list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
-      [self._packageManager startPackageDownload: @"EE"];
-      [self._packageManager startPackageDownload: @"LV"];
-  }
+    - (void)onPackageListUpdated
+    {
+        NSLog(@"onPackageListUpdated");
+        // We have packages for all country/regions
+        // see list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
+        [self._packageManager startPackageDownload: @"EE"];
+        [self._packageManager startPackageDownload: @"LV"];
+    }
 
-  - (void)onPackageListFailed
-  {
-      NSLog(@"onPackageListFailed");
-  }
+    - (void)onPackageListFailed
+    {
+        NSLog(@"onPackageListFailed");
+    }
 
-  - (void)onPackageUpdated:(NSString*)packageId version:(int)version
-  {
-  }
+    - (void)onPackageUpdated:(NSString*)packageId version:(int)version
+    {
+    }
 
-  - (void)onPackageCancelled:(NSString*)packageId version:(int)version
-  {
-  }
+    - (void)onPackageCancelled:(NSString*)packageId version:(int)version
+    {
+    }
 
-  - (void)onPackageFailed:(NSString*)packageId version:(int)version errorType:(enum NTPackageErrorType)errorType
-  {
-      NSLog(@"onPackageFailed");
-  }
+    - (void)onPackageFailed:(NSString*)packageId version:(int)version errorType:(enum NTPackageErrorType)errorType
+    {
+        NSLog(@"onPackageFailed");
+    }
 
-  - (void)onPackageStatusChanged:(NSString*)packageId version:(int)version status:(NTPackageStatus*)status
-  {
-      // here you can get progress of download
-      NSLog(@"onPackageStatusChanged progress: %f", [status getProgress]);
-  }
+    - (void)onPackageStatusChanged:(NSString*)packageId version:(int)version status:(NTPackageStatus*)status
+    {
+        // here you can get progress of download
+        NSLog(@"onPackageStatusChanged progress: %f", [status getProgress]);
+    }
 
-  - (void)setPackageManager:(NTPackageManager*)manager
-  {
-      self._packageManager = manager;
-  }
+    - (void)setPackageManager:(NTPackageManager*)manager
+    {
+        self._packageManager = manager;
+    }
 
-  @end
+    @end
 
-
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}
-  
-public class MyPackageManagerListener : NTPackageManagerListener {
-    
-    var packageManager: NTCartoPackageManager?
-    
-    convenience init(packageManager: NTCartoPackageManager) {
-        self.init()
-        self.packageManager = packageManager
-    }
-    
-    public override func onPackageListUpdated() {
+    {% highlight swift %}
+      
+    public class MyPackageManagerListener : NTPackageManagerListener {
         
-        // Start download of package of Estonia and Latvia
-        // see list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
-        self.packageManager?.startPackageDownload("EE");
-        self.packageManager?.startPackageDownload("LV");
-    }
-    
-    public override func onPackageListFailed() {
+        var packageManager: NTCartoPackageManager?
         
-    }
-    
-    public override func onPackageStatusChanged(_ arg1: String!, version: Int32, status: NTPackageStatus!) {
-        // Here you can monitor download process %
-    }
-    public override func onPackageUpdated(_ arg1: String!, version: Int32) {
+        convenience init(packageManager: NTCartoPackageManager) {
+            self.init()
+            self.packageManager = packageManager
+        }
         
-    }
-    
-    public override func onPackageCancelled(_ arg1: String!, version: Int32) {
+        public override func onPackageListUpdated() {
+            
+            // Start download of package of Estonia and Latvia
+            // see list of available ID-s: https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages
+            self.packageManager?.startPackageDownload("EE");
+            self.packageManager?.startPackageDownload("LV");
+        }
         
-    }
-    
-    public override func onPackageFailed(_ arg1: String!, version: Int32, errorType: NTPackageErrorType) {
+        public override func onPackageListFailed() {
+            
+        }
         
+        public override func onPackageStatusChanged(_ arg1: String!, version: Int32, status: NTPackageStatus!) {
+            // Here you can monitor download process %
+        }
+        public override func onPackageUpdated(_ arg1: String!, version: Int32) {
+            
+        }
+        
+        public override func onPackageCancelled(_ arg1: String!, version: Int32) {
+            
+        }
+        
+        public override func onPackageFailed(_ arg1: String!, version: Int32, errorType: NTPackageErrorType) {
+            
+        }
     }
-}
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-  {% highlight kotlin %}
+    {% highlight kotlin %}
   
     class MyPackageManagerListener(val packageManager: CartoPackageManager) : PackageManagerListener() {
 
@@ -380,7 +379,7 @@ public class MyPackageManagerListener : NTPackageManagerListener {
         }
     }
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
     
 </div>
@@ -410,84 +409,84 @@ To link PackageManagerListener with PackageManager, apply the following code.
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}
+    {% highlight java %}
 
-// 1. Set listener, and start PackageManager
- packageManager.setPackageManagerListener(new MyPackageManagerListener());
- packageManager.start();
+    // 1. Set listener, and start PackageManager
+    packageManager.setPackageManagerListener(new MyPackageManagerListener());
+    packageManager.start();
 
-// 2. Fetch list of available packages from server. Note that this is asynchronous operation and listener will be notified via onPackageListUpdated when this succeeds.
- packageManager.startPackageListDownload();
+    // 2. Fetch list of available packages from server. Note that this is asynchronous operation and listener will be notified via onPackageListUpdated when this succeeds.
+    packageManager.startPackageListDownload();
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight csharp %}
+    {% highlight csharp %}
 
-// 1. Create and set listener, and start PackageManager
- packageManager.PackageManagerListener = new MyPackageManagerListener(packageManager);
- packageManager.Start();
+    // 1. Create and set listener, and start PackageManager
+    packageManager.PackageManagerListener = new MyPackageManagerListener(packageManager);
+    packageManager.Start();
 
-// 2. Fetch list of available packages from server. 
- // Note that this is asynchronous operation and the listener will be notified via OnPackageListUpdated when this succeeds.        
- packageManager.StartPackageListDownload();
+    // 2. Fetch list of available packages from server. 
+    // Note that this is asynchronous operation and the listener will be notified via OnPackageListUpdated when this succeeds.        
+    packageManager.StartPackageListDownload();
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
-   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}
-  
-	NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"<your-package-source>" dataFolder:packagesDir];
-	    
-// 1. Create PackageManagerListener with your listener class
-MyPackageManagerListener* _packageManagerListener = [[MyPackageManagerListener alloc] init];
-[_packageManagerListener setPackageManager: packageManager];
-    
-// Attach package manager listener
-[packageManager setPackageManagerListener:_packageManagerListener];
-    
-// Start PackageManager
-[packageManager start];
-    
-// 2. Start download of packageList. When download is done, then the listener's onPackageListUpdated() is called
-[packageManager startPackageListDownload];
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+    {% highlight objc %}
 
-  {% endhighlight %}
+    NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"<your-package-source>" dataFolder:packagesDir];
+        
+    // 1. Create PackageManagerListener with your listener class
+    MyPackageManagerListener* _packageManagerListener = [[MyPackageManagerListener alloc] init];
+    [_packageManagerListener setPackageManager: packageManager];
+
+    // Attach package manager listener
+    [packageManager setPackageManagerListener:_packageManagerListener];
+
+    // Start PackageManager
+    [packageManager start];
+
+    // 2. Start download of packageList. When download is done, then the listener's onPackageListUpdated() is called
+    [packageManager startPackageListDownload];
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}
-  
-// Create PackageManager instance for dealing with offline packages
-var packageManager =  NTCartoPackageManager(source: "<your-package-source>", dataFolder: packageFolder)
-    
-// 1. Set listener, and start PackageManager
-packageManager?.setPackageManagerListener(MyPackageManagerListener(packageManager: packageManager!))
-packageManager?.start()
-    
-// 2. Fetch list of available packages from server.
-// Note that this is asynchronous operation
-// and listener will be notified via onPackageListUpdated when this succeeds.
-packageManager?.startPackageListDownload()
+    {% highlight swift %}
 
-  {% endhighlight %}
+    // Create PackageManager instance for dealing with offline packages
+    var packageManager =  NTCartoPackageManager(source: "<your-package-source>", dataFolder: packageFolder)
+
+    // 1. Set listener, and start PackageManager
+    packageManager?.setPackageManagerListener(MyPackageManagerListener(packageManager: packageManager!))
+    packageManager?.start()
+
+    // 2. Fetch list of available packages from server.
+    // Note that this is asynchronous operation
+    // and listener will be notified via onPackageListUpdated when this succeeds.
+    packageManager?.startPackageListDownload()
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-  {% highlight kotlin %}
-  
-// 1. Set listener, and start PackageManager
-packageManager?.packageManagerListener = MyPackageManagerListener(packageManager!!)
-packageManager.start()
+    {% highlight kotlin %}
 
-// 2. Fetch list of available packages from server. 
-// Note that this is asynchronous operation 
-// and listener will be notified via onPackageListUpdated when this succeeds.
-packageManager.startPackageListDownload()
+    // 1. Set listener, and start PackageManager
+    packageManager?.packageManagerListener = MyPackageManagerListener(packageManager!!)
+    packageManager.start()
 
-  {% endhighlight %}
+    // 2. Fetch list of available packages from server. 
+    // Note that this is asynchronous operation 
+    // and listener will be notified via onPackageListUpdated when this succeeds.
+    packageManager.startPackageListDownload()
+
+    {% endhighlight %}
   </div>
     
 </div>
@@ -523,8 +522,8 @@ You should add `CartoOfflineVectorTileLayer` to the MapView, using PackageManage
 **Warning** - until map is downloaded, then this layer will have no map. So you may want to add another online tiled layer with same style, which will be replaced once offline map is downloaded
 
   {% highlight java %}
-CartoOfflineVectorTileLayer layer = new CartoOfflineVectorTileLayer(cartoPackageManager, CartoBaseMapStyle.CARTO_BASEMAP_STYLE_VOYAGER);
-mapView.getLayers().add(layer);
+  CartoOfflineVectorTileLayer layer = new CartoOfflineVectorTileLayer(cartoPackageManager, CartoBaseMapStyle.CARTO_BASEMAP_STYLE_VOYAGER);
+  mapView.getLayers().add(layer);
   {% endhighlight %}
 
 #### Offline Routing

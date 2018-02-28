@@ -61,11 +61,11 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}
+    {% highlight java %}
 
-  /**
-   * A custom map event listener that displays information about map events and creates pop-ups.
-   */
+    /*
+     * A custom map event listener that displays information about map events and creates pop-ups.
+     */
     public class MyMapEventListener extends MapEventListener {
         private MapView mapView;
         private LocalVectorDataSource vectorDataSource;
@@ -79,7 +79,6 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
 
         @Override
         public void onMapMoved() {
-
             final MapPos topLeft = mapView.screenToMap(new ScreenPos(0, 0));
             final MapPos bottomRight = mapView.screenToMap(new ScreenPos(mapView.getWidth(), mapView.getHeight()));
         }
@@ -123,62 +122,62 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
         }
     }
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight c## %}
+    {% highlight c## %}
 
-  	public class MyMapListener : MapEventListener
-	{
+    public class MyMapListener : MapEventListener
+    {
         MapView mapView;
         LocalVectorDataSource dataSource;
 		
         BalloonPopup _oldClickLabel;
 
         public MyMapListener(MapView mapView, LocalVectorDataSource dataSource)
-		{
+        {
             this.mapView = mapView;
-			this.dataSource = dataSource;
-		}
+            this.dataSource = dataSource;
+        }
 
-		public override void OnMapClicked(MapClickInfo mapClickInfo)
-		{
-			// A note about iOS: DISABLE 'Optimize PNG files for iOS' option in iOS build settings,
-			// otherwise icons can not be loaded using AssetUtils/Bitmap constructor as Xamarin converts
-			// PNGs to unsupported custom format.
+        public override void OnMapClicked(MapClickInfo mapClickInfo)
+        {
+            // A note about iOS: DISABLE 'Optimize PNG files for iOS' option in iOS build settings,
+            // otherwise icons can not be loaded using AssetUtils/Bitmap constructor as Xamarin converts
+            // PNGs to unsupported custom format.
 
-			// Remove old click label
-			if (_oldClickLabel != null)
-			{
-				dataSource.Remove(_oldClickLabel);
-				_oldClickLabel = null;
-			}
+            // Remove old click label
+            if (_oldClickLabel != null)
+            {
+                dataSource.Remove(_oldClickLabel);
+                _oldClickLabel = null;
+            }
 
-			var styleBuilder = new BalloonPopupStyleBuilder();
-			// Make sure this label is shown on top all other labels
-			styleBuilder.PlacementPriority = 10;
+            var styleBuilder = new BalloonPopupStyleBuilder();
+            // Make sure this label is shown on top all other labels
+            styleBuilder.PlacementPriority = 10;
 
             // Check the type of the click
             ClickType type = mapClickInfo.ClickType;
-			
+                	
             string clickMsg = "Unknown click Type";
 
             if (type == ClickType.ClickTypeSingle)
-			{
-				clickMsg = "Single map click!";
-			}
+            {
+                clickMsg = "Single map click!";
+            }
             else if (type == ClickType.ClickTypeLong)
-			{
-				clickMsg = "Long map click!";
-			}
+            {
+                clickMsg = "Long map click!";
+            }
             else if (type == ClickType.ClickTypeDouble)
-			{
-				clickMsg = "Double map click!";
-			}
+            {
+                clickMsg = "Double map click!";
+            }
             else if (type == ClickType.ClickTypeDual)
-			{
-				clickMsg = "Dual map click!";
+            {
+                clickMsg = "Dual map click!";
             }
 
             MapPos position = mapClickInfo.ClickPos;
@@ -188,231 +187,230 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
             string description = "" + wgs84Position.Y + " - " + wgs84Position.X;
             var clickPopup = new BalloonPopup(position, style, clickMsg, description);
 
-			dataSource.Add(clickPopup);
-			_oldClickLabel = clickPopup;
-		}
+            dataSource.Add(clickPopup);
+            _oldClickLabel = clickPopup;
+        }
 
-		public override void OnMapMoved()
-		{
-            
-		}
-	}
+        public override void OnMapMoved()
+        {
 
-  {% endhighlight %}
+        }
+    }
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}
+    {% highlight objc %}
 
-#import <CartoMobileSDK/CartoMobileSDK.h>
+    #import <CartoMobileSDK/CartoMobileSDK.h>
 
-/*
- * A custom map event listener that displays information about map events and creates pop-ups.
- */
-@interface  MyMapEventListener : NTMapEventListener
+    /*
+     * A custom map event listener that displays information about map events and creates pop-ups.
+     */
+    @interface  MyMapEventListener : NTMapEventListener
 
-@property NTMapView *mapView;
-@property NTLocalVectorDataSource *vectorDataSource;
+    @property NTMapView* mapView;
+    @property NTLocalVectorDataSource* vectorDataSource;
 
-@property NTBalloonPopup* oldClickLabel;
+    @property NTBalloonPopup* oldClickLabel;
 
--(void)setMapView:(NTMapView*)mapView vectorDataSource:(NTLocalVectorDataSource*)vectorDataSource;
--(void)onMapMoved;
--(void)onMapClicked:(NTMapClickInfo*)mapClickInfo;
+    -(void)setMapView:(NTMapView*)mapView vectorDataSource:(NTLocalVectorDataSource*)vectorDataSource;
+    -(void)onMapMoved;
+    -(void)onMapClicked:(NTMapClickInfo*)mapClickInfo;
 
-@end
+    @end
 
-@implementation MyMapEventListener
+    @implementation MyMapEventListener
 
--(void)setMapView:(NTMapView*)mapView vectorDataSource:(NTLocalVectorDataSource*)vectorDataSource
-{
-    self.mapView = mapView;
-    self.vectorDataSource = vectorDataSource;
-}
-
--(void)onMapMoved
-{
-    // called very often, even just console logging can lag map movement animation
-}
-
--(void)onMapClicked:(NTMapClickInfo*)mapClickInfo
-{
-    if (self.oldClickLabel != nil) {
-        [self.vectorDataSource remove:self.oldClickLabel];
-        self.oldClickLabel = nil;
-    }
-    
-    NSString* clickMsg;
-    // Check the type of the click
-    if ([mapClickInfo getClickType] == NT_CLICK_TYPE_SINGLE)
+    -(void)setMapView:(NTMapView*)mapView vectorDataSource:(NTLocalVectorDataSource*)vectorDataSource
     {
-        clickMsg = @"Single map click!";
+        self.mapView = mapView;
+        self.vectorDataSource = vectorDataSource;
     }
-    else if ([mapClickInfo getClickType] == NT_CLICK_TYPE_LONG)
-    {
-        clickMsg = @"Long map click!";
-    }
-    else if ([mapClickInfo getClickType] == NT_CLICK_TYPE_DOUBLE)
-    {
-        clickMsg = @"Double map click!";
-    }
-    else if ([mapClickInfo getClickType] == NT_CLICK_TYPE_DUAL)
-    {
-        clickMsg = @"Dual map click!";
-    }
-    
-    NTMapPos* clickPos = [mapClickInfo getClickPos];
-    NTMapPos* wgs84Clickpos = [[[_mapView getOptions] getBaseProjection] toWgs84:clickPos];
-    
-    NSString* description = [NSString stringWithFormat:@"%f, %f", [wgs84Clickpos getY], [wgs84Clickpos getX]];
-    
-    NTBalloonPopupStyleBuilder* builder = [[NTBalloonPopupStyleBuilder alloc] init];
-    [builder setPlacementPriority:10];
-    NTBalloonPopupStyle* style = [builder buildStyle];
-    
-    NTBalloonPopup* popup = [[NTBalloonPopup alloc] initWithPos:clickPos style:style title:clickMsg desc:description];
-    
-    [self.vectorDataSource add:popup];
-    self.oldClickLabel = popup;
-    
-}
 
-@end
+    -(void)onMapMoved
+    {
+        // called very often, even just console logging can lag map movement animation
+    }
 
-  {% endhighlight %}
+    -(void)onMapClicked:(NTMapClickInfo*)mapClickInfo
+    {
+        if (self.oldClickLabel != nil) {
+            [self.vectorDataSource remove:self.oldClickLabel];
+            self.oldClickLabel = nil;
+        }
+        
+        NSString* clickMsg;
+        // Check the type of the click
+        if ([mapClickInfo getClickType] == NT_CLICK_TYPE_SINGLE)
+        {
+            clickMsg = @"Single map click!";
+        }
+        else if ([mapClickInfo getClickType] == NT_CLICK_TYPE_LONG)
+        {
+            clickMsg = @"Long map click!";
+        }
+        else if ([mapClickInfo getClickType] == NT_CLICK_TYPE_DOUBLE)
+        {
+            clickMsg = @"Double map click!";
+        }
+        else if ([mapClickInfo getClickType] == NT_CLICK_TYPE_DUAL)
+        {
+            clickMsg = @"Dual map click!";
+        }
+        
+        NTMapPos* clickPos = [mapClickInfo getClickPos];
+        NTMapPos* wgs84Clickpos = [[[_mapView getOptions] getBaseProjection] toWgs84:clickPos];
+        
+        NSString* description = [NSString stringWithFormat:@"%f, %f", [wgs84Clickpos getY], [wgs84Clickpos getX]];
+        
+        NTBalloonPopupStyleBuilder* builder = [[NTBalloonPopupStyleBuilder alloc] init];
+        [builder setPlacementPriority:10];
+        NTBalloonPopupStyle* style = [builder buildStyle];
+        
+        NTBalloonPopup* popup = [[NTBalloonPopup alloc] initWithPos:clickPos style:style title:clickMsg desc:description];
+        
+        [self.vectorDataSource add:popup];
+        self.oldClickLabel = popup;
+    }
+
+    @end
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}
+    {% highlight swift %}
   
-public class MyMapEventListener : NTMapEventListener {
-    
-    var oldClickLabel: NTBalloonPopup?
-    
-    var mapView: NTMapView?
-    var vectorDataSource: NTLocalVectorDataSource?
-    
-    convenience init(mapView: NTMapView?, vectorDataSource: NTLocalVectorDataSource?) {
+    public class MyMapEventListener : NTMapEventListener {
         
-        self.init()
+        var oldClickLabel: NTBalloonPopup?
         
-        self.mapView = mapView
-        self.vectorDataSource = vectorDataSource
-    }
-    
-    public override func onMapMoved() {
+        var mapView: NTMapView?
+        var vectorDataSource: NTLocalVectorDataSource?
         
-        // This is called every time the map moves, and we can calculate positions as such:
-        
-        var topLeft = mapView?.screen(toMap: NTScreenPos(x: 0, y: 0))
-        
-        let width: Float = Float((mapView?.frame.width)!)
-        let height: Float = Float((mapView?.frame.width)!)
-        
-        var bottomRight = mapView?.screen(toMap: NTScreenPos(x: width, y: height))
-    }
-    
-    public override func onMapClicked(_ mapClickInfo: NTMapClickInfo!) {
-        
-        // Remove old click label
-        if (oldClickLabel != nil) {
-            vectorDataSource?.remove(oldClickLabel)
-            oldClickLabel = nil
+        convenience init(mapView: NTMapView?, vectorDataSource: NTLocalVectorDataSource?) {
+            
+            self.init()
+            
+            self.mapView = mapView
+            self.vectorDataSource = vectorDataSource
         }
         
-        let clickPos = mapClickInfo?.getClickPos()
-        
-        let styleBuilder = NTBalloonPopupStyleBuilder();
-        // Make sure this label is shown on top all other labels
-        styleBuilder?.setPlacementPriority(10)
-        let style = styleBuilder?.buildStyle()
-        
-        // Check the type of the click
-        var clickMsg = ""
-        let clickType = mapClickInfo?.getClickType()
-        
-        if (clickType == NTClickType.CLICK_TYPE_SINGLE) {
-            clickMsg = "Single map click!"
-        } else if (clickType == NTClickType.CLICK_TYPE_LONG) {
-            clickMsg = "Long map click!"
-        } else if (clickType == NTClickType.CLICK_TYPE_DOUBLE) {
-            clickMsg = "Double map click!"
-        } else if (clickType == NTClickType.CLICK_TYPE_DUAL) {
-            clickMsg = "Dual map click!"
+        public override func onMapMoved() {
+            
+            // This is called every time the map moves, and we can calculate positions as such:
+            
+            var topLeft = mapView?.screen(toMap: NTScreenPos(x: 0, y: 0))
+            
+            let width: Float = Float((mapView?.frame.width)!)
+            let height: Float = Float((mapView?.frame.width)!)
+            
+            var bottomRight = mapView?.screen(toMap: NTScreenPos(x: width, y: height))
         }
         
-        let wgs84Clickpos = mapView?.getOptions().getBaseProjection()?.toWgs84(clickPos)
-        let msg = String(describing: wgs84Clickpos?.getY()) + String(describing: wgs84Clickpos?.getX())
-        
-        let clickPopup = NTBalloonPopup(pos: clickPos, style: style, title: clickMsg, desc: msg)
-        
-        vectorDataSource?.add(clickPopup)
-        oldClickLabel = clickPopup
+        public override func onMapClicked(_ mapClickInfo: NTMapClickInfo!) {
+            
+            // Remove old click label
+            if (oldClickLabel != nil) {
+                vectorDataSource?.remove(oldClickLabel)
+                oldClickLabel = nil
+            }
+            
+            let clickPos = mapClickInfo?.getClickPos()
+            
+            let styleBuilder = NTBalloonPopupStyleBuilder();
+            // Make sure this label is shown on top all other labels
+            styleBuilder?.setPlacementPriority(10)
+            let style = styleBuilder?.buildStyle()
+            
+            // Check the type of the click
+            var clickMsg = ""
+            let clickType = mapClickInfo?.getClickType()
+            
+            if (clickType == NTClickType.CLICK_TYPE_SINGLE) {
+                clickMsg = "Single map click!"
+            } else if (clickType == NTClickType.CLICK_TYPE_LONG) {
+                clickMsg = "Long map click!"
+            } else if (clickType == NTClickType.CLICK_TYPE_DOUBLE) {
+                clickMsg = "Double map click!"
+            } else if (clickType == NTClickType.CLICK_TYPE_DUAL) {
+                clickMsg = "Dual map click!"
+            }
+            
+            let wgs84Clickpos = mapView?.getOptions().getBaseProjection()?.toWgs84(clickPos)
+            let msg = String(describing: wgs84Clickpos?.getY()) + String(describing: wgs84Clickpos?.getX())
+            
+            let clickPopup = NTBalloonPopup(pos: clickPos, style: style, title: clickMsg, desc: msg)
+            
+            vectorDataSource?.add(clickPopup)
+            oldClickLabel = clickPopup
+        }
     }
-}
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-  {% highlight kotlin %}
+    {% highlight kotlin %}
   
-class MyMapEventListener(var mapView: MapView?, var vectorDataSource: LocalVectorDataSource?) : MapEventListener() {
+    class MyMapEventListener(var mapView: MapView?, var vectorDataSource: LocalVectorDataSource?) : MapEventListener() {
 
-    var oldClickLabel: BalloonPopup? = null
+        var oldClickLabel: BalloonPopup? = null
 
-    override fun onMapMoved() {
+        override fun onMapMoved() {
 
-        // This is called every time the map moves, and we can calculate positions as such:
+            // This is called every time the map moves, and we can calculate positions as such:
 
-        var topLeft = mapView?.screenToMap(ScreenPos(0F, 0F))
+            var topLeft = mapView?.screenToMap(ScreenPos(0F, 0F))
 
-        val width: Float = mapView!!.width.toFloat()
-        val height: Float = mapView!!.height.toFloat()
+            val width: Float = mapView!!.width.toFloat()
+            val height: Float = mapView!!.height.toFloat()
 
-        var bottomRight = mapView?.screenToMap(ScreenPos(width, height))
-    }
-
-    override fun onMapClicked(mapClickInfo: MapClickInfo?) {
-
-        // Remove old click label
-        if (oldClickLabel != null) {
-            vectorDataSource?.remove(oldClickLabel)
-            oldClickLabel = null
+            var bottomRight = mapView?.screenToMap(ScreenPos(width, height))
         }
 
-        val clickPos = mapClickInfo?.clickPos
+        override fun onMapClicked(mapClickInfo: MapClickInfo?) {
 
-        val styleBuilder = BalloonPopupStyleBuilder();
-        // Make sure this label is shown on top all other labels
-        styleBuilder.placementPriority = 10
-        val style = styleBuilder.buildStyle()
+            // Remove old click label
+            if (oldClickLabel != null) {
+                vectorDataSource?.remove(oldClickLabel)
+                oldClickLabel = null
+            }
 
-        // Check the type of the click
-        var clickMsg = ""
-        val clickType = mapClickInfo?.clickType
+            val clickPos = mapClickInfo?.clickPos
 
-        if (clickType == ClickType.CLICK_TYPE_SINGLE) {
-            clickMsg = "Single map click!"
-        } else if (clickType == ClickType.CLICK_TYPE_LONG) {
-            clickMsg = "Long map click!"
-        } else if (clickType == ClickType.CLICK_TYPE_DOUBLE) {
-            clickMsg = "Double map click!"
-        } else if (clickType == ClickType.CLICK_TYPE_DUAL) {
-            clickMsg = "Dual map click!"
+            val styleBuilder = BalloonPopupStyleBuilder();
+            // Make sure this label is shown on top all other labels
+            styleBuilder.placementPriority = 10
+            val style = styleBuilder.buildStyle()
+
+            // Check the type of the click
+            var clickMsg = ""
+            val clickType = mapClickInfo?.clickType
+
+            if (clickType == ClickType.CLICK_TYPE_SINGLE) {
+                clickMsg = "Single map click!"
+            } else if (clickType == ClickType.CLICK_TYPE_LONG) {
+                clickMsg = "Long map click!"
+            } else if (clickType == ClickType.CLICK_TYPE_DOUBLE) {
+                clickMsg = "Double map click!"
+            } else if (clickType == ClickType.CLICK_TYPE_DUAL) {
+                clickMsg = "Dual map click!"
+            }
+
+            val wgs84Clickpos = mapView?.options?.baseProjection?.toWgs84(clickPos)
+            val msg = wgs84Clickpos?.y.toString() + wgs84Clickpos?.x
+
+            val clickPopup = BalloonPopup(clickPos, style, clickMsg, msg)
+
+            vectorDataSource?.add(clickPopup)
+            oldClickLabel = clickPopup
         }
-
-        val wgs84Clickpos = mapView?.options?.baseProjection?.toWgs84(clickPos)
-        val msg = wgs84Clickpos?.y.toString() + wgs84Clickpos?.x
-
-        val clickPopup = BalloonPopup(clickPos, style, clickMsg, msg)
-
-        vectorDataSource?.add(clickPopup)
-        oldClickLabel = clickPopup
     }
-}
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
     
 </div>
@@ -441,45 +439,45 @@ Apply the following code to initialize listener events for map clicks.
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}
+    {% highlight java %}
   
-	mapView.setMapEventListener(new MyMapEventListener(mapView, source));
+    mapView.setMapEventListener(new MyMapEventListener(mapView, source));
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight c## %}
+    {% highlight c## %}
   
-	MapView.MapEventListener = new MyMapListener(MapView, source);
+    MapView.MapEventListener = new MyMapListener(MapView, source);
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}
+    {% highlight objc %}
   
-	MyMapEventListener* listener = [[MyMapEventListener alloc]init];
+    MyMapEventListener* listener = [[MyMapEventListener alloc] init];
     [listener setMapView:mapView vectorDataSource:vectorDataSource];
     [mapView setMapEventListener:listener];
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}
+    {% highlight swift %}
   
-  mapView?.setMapEventListener(MyMapEventListener(mapView: mapView, vectorDataSource: source))
+    mapView?.setMapEventListener(MyMapEventListener(mapView: mapView, vectorDataSource: source))
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-  {% highlight swift %}
+    {% highlight swift %}
 
-	mapView?.mapEventListener = MyMapEventListener(mapView, source)
+    mapView?.mapEventListener = MyMapEventListener(mapView, source)
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
     
 </div>
@@ -546,102 +544,102 @@ Clusters are generated dynamically, based on `VectorDataSource` data that loads 
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}
+    {% highlight java %}
 
-	 // 1. Initialize a local vector data source
-      LocalVectorDataSource vectorDataSource1 = new LocalVectorDataSource(mapView.getOptions().getBaseProjection());
+    // 1. Initialize a local vector data source
+    LocalVectorDataSource vectorDataSource1 = new LocalVectorDataSource(mapView.getOptions().getBaseProjection());
 
-	 // 2. Create Marker objects and add them to vectorDataSource
-      // **Note:** This depends on the _app type_ of your mobile app settings. See AdvancedMap for samples with JSON loading and random point generation
+    // 2. Create Marker objects and add them to vectorDataSource
+    // **Note:** This depends on the _app type_ of your mobile app settings. See AdvancedMap for samples with JSON loading and random point generation
 
-	 // 3. Initialize a vector layer with the previous data source
-      ClusteredVectorLayer vectorLayer1 = new ClusteredVectorLayer(vectorDataSource1, new MyClusterElementBuilder(this.getApplication()));
-        vectorLayer1.setMinimumClusterDistance(20);
+    // 3. Initialize a vector layer with the previous data source
+    ClusteredVectorLayer vectorLayer1 = new ClusteredVectorLayer(vectorDataSource1, new MyClusterElementBuilder(this.getApplication()));
+    vectorLayer1.setMinimumClusterDistance(20);
 
-	 // 4. Add the previous vector layer to the map
-      mapView.getLayers().add(vectorLayer1);
+    // 4. Add the previous vector layer to the map
+    mapView.getLayers().add(vectorLayer1);
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight c## %}
+    {% highlight c## %}
 
-	 // 1. Create overlay layer for markers
-      var dataSource = new LocalVectorDataSource(MapView.Options.BaseProjection);
+    // 1. Create overlay layer for markers
+    var dataSource = new LocalVectorDataSource(MapView.Options.BaseProjection);
 
-	 // 2. Create Marker objects and add them to vectorDataSource.
-      // **Note:** This depends on the _app type_ of your mobile app settings. See samples with JSON loading
+    // 2. Create Marker objects and add them to vectorDataSource.
+    // **Note:** This depends on the _app type_ of your mobile app settings. See samples with JSON loading
 
-	 // 3. Initialize a vector layer with the previous data source
-      var layer = new ClusteredVectorLayer(dataSource, new MyClusterElementBuilder());
-      layer.MinimumClusterDistance = 20; // in pixels
-	
-      MapView.Layers.Add(layer);
+    // 3. Initialize a vector layer with the previous data source
+    var layer = new ClusteredVectorLayer(dataSource, new MyClusterElementBuilder());
+    layer.MinimumClusterDistance = 20; // in pixels
 
-  {% endhighlight %}
+    MapView.Layers.Add(layer);
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}
+    {% highlight objc %}
 
-	 // 1. Initialize a local vector data source
-      NTProjection* proj = [[mapView getOptions] getBaseProjection];
-      NTLocalVectorDataSource* vectorDataSource = [[NTLocalVectorDataSource alloc] initWithProjection:proj];
-    
-	 // 2. Create Marker objects and add them to vectorDataSource.
-      // **Note:** This depends on the _app type_ of your mobile app settings. See AdvancedMap for samples with JSON loading and random point generation
-    
-	 // 3. Create element builder
-      MyMarkerClusterElementBuilder* clusterElementBuilder = [[MyMarkerClusterElementBuilder alloc] init];
-    
-	 // 4. Initialize a vector layer with the previous data source
-      NTClusteredVectorLayer* vectorLayer = [[NTClusteredVectorLayer alloc] initWithDataSource:vectorDataSource clusterElementBuilder:clusterElementBuilder];
-    
-      [[mapView getLayers] add:vectorLayer];
+    // 1. Initialize a local vector data source
+    NTProjection* proj = [[mapView getOptions] getBaseProjection];
+    NTLocalVectorDataSource* vectorDataSource = [[NTLocalVectorDataSource alloc] initWithProjection:proj];
 
-  {% endhighlight %}
+    // 2. Create Marker objects and add them to vectorDataSource.
+    // **Note:** This depends on the _app type_ of your mobile app settings. See AdvancedMap for samples with JSON loading and random point generation
+
+    // 3. Create element builder
+    MyMarkerClusterElementBuilder* clusterElementBuilder = [[MyMarkerClusterElementBuilder alloc] init];
+
+    // 4. Initialize a vector layer with the previous data source
+    NTClusteredVectorLayer* vectorLayer = [[NTClusteredVectorLayer alloc] initWithDataSource:vectorDataSource clusterElementBuilder:clusterElementBuilder];
+
+    [[mapView getLayers] add:vectorLayer];
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}
+    {% highlight swift %}
   
-	   // 1. Initialize a local vector data source
-        let vectorDataSource1 = NTLocalVectorDataSource(projection: mapView?.getOptions().getBaseProjection())
-        
-        // 2. Create Marker objects and add them to vectorDataSource
-        // **Note:** This depends on the _app type_ of your mobile app settings.
-        // See AdvancedMap for samples with JSON loading and random point generation
-        
-        // 3. Initialize a vector layer with the previous data source
-        let builder = MyClusterElementBuilder(imageUrl: "marker_black.png")
-        let vectorLayer1 = NTClusteredVectorLayer(dataSource: vectorDataSource1, clusterElementBuilder: builder)
-        vectorLayer1?.setMinimumClusterDistance(20)
-        
-        // 4. Add the previous vector layer to the map
-        mapView?.getLayers()?.add(vectorLayer1)
+    // 1. Initialize a local vector data source
+    let vectorDataSource1 = NTLocalVectorDataSource(projection: mapView?.getOptions().getBaseProjection())
 
-  {% endhighlight %}
+    // 2. Create Marker objects and add them to vectorDataSource
+    // **Note:** This depends on the _app type_ of your mobile app settings.
+    // See AdvancedMap for samples with JSON loading and random point generation
+
+    // 3. Initialize a vector layer with the previous data source
+    let builder = MyClusterElementBuilder(imageUrl: "marker_black.png")
+    let vectorLayer1 = NTClusteredVectorLayer(dataSource: vectorDataSource1, clusterElementBuilder: builder)
+    vectorLayer1?.setMinimumClusterDistance(20)
+
+    // 4. Add the previous vector layer to the map
+    mapView?.getLayers()?.add(vectorLayer1)
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-  {% highlight kotlin %}
-  
-        // 1. Initialize a local vector data source
-        val vectorDataSource1 = LocalVectorDataSource(mapView?.options?.baseProjection)
+    {% highlight kotlin %}
 
-        // 2. Create Marker objects and add them to vectorDataSource
-        // **Note:** This depends on the _app type_ of your mobile app settings.
-        // See AdvancedMap for samples with JSON loading and random point generation
+    // 1. Initialize a local vector data source
+    val vectorDataSource1 = LocalVectorDataSource(mapView?.options?.baseProjection)
 
-        // 3. Initialize a vector layer with the previous data source
-        val vectorLayer1 = ClusteredVectorLayer(vectorDataSource1, MyClusterElementBuilder(this.application))
-        vectorLayer1.minimumClusterDistance = 20f
+    // 2. Create Marker objects and add them to vectorDataSource
+    // **Note:** This depends on the _app type_ of your mobile app settings.
+    // See AdvancedMap for samples with JSON loading and random point generation
 
-        // 4. Add the previous vector layer to the map
-        mapView?.layers?.add(vectorLayer1)
+    // 3. Initialize a vector layer with the previous data source
+    val vectorLayer1 = ClusteredVectorLayer(vectorDataSource1, MyClusterElementBuilder(this.application))
+    vectorLayer1.minimumClusterDistance = 20f
 
-  {% endhighlight %}
+    // 4. Add the previous vector layer to the map
+    mapView?.layers?.add(vectorLayer1)
+
+    {% endhighlight %}
   </div>
     
 </div>
@@ -669,9 +667,9 @@ The Cluster Element Builder takes set of original markers (map objects) as input
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}
+    {% highlight java %}
   
-  private class MyClusterElementBuilder extends ClusterElementBuilder {
+    private class MyClusterElementBuilder extends ClusterElementBuilder {
 
         @SuppressLint("UseSparseArrays")
         private Map< Integer, MarkerStyle > markerStyles = new HashMap< Integer, MarkerStyle >();
@@ -717,178 +715,180 @@ The Cluster Element Builder takes set of original markers (map objects) as input
         }
     }
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight c## %}public class MyClusterElementBuilder : ClusterElementBuilder
-  {
-    BalloonPopupStyleBuilder balloonPopupStyleBuilder;
-
-    public MyClusterElementBuilder()
+    {% highlight c## %}
+    public class MyClusterElementBuilder : ClusterElementBuilder
     {
-      balloonPopupStyleBuilder = new BalloonPopupStyleBuilder();
-      balloonPopupStyleBuilder.CornerRadius = 3;
-      balloonPopupStyleBuilder.TitleMargins = new BalloonPopupMargins(6, 6, 6, 6);
-      balloonPopupStyleBuilder.LeftColor = new Color(240, 230, 140, 255);
+        BalloonPopupStyleBuilder balloonPopupStyleBuilder;
+
+        public MyClusterElementBuilder()
+        {
+            balloonPopupStyleBuilder = new BalloonPopupStyleBuilder();
+            balloonPopupStyleBuilder.CornerRadius = 3;
+            balloonPopupStyleBuilder.TitleMargins = new BalloonPopupMargins(6, 6, 6, 6);
+            balloonPopupStyleBuilder.LeftColor = new Color(240, 230, 140, 255);
+        }
+
+        public override VectorElement BuildClusterElement(MapPos pos, VectorElementVector elements)
+        {
+            BalloonPopupStyle style = balloonPopupStyleBuilder.BuildStyle();
+            var popup = new BalloonPopup(pos, style, elements.Count.ToString(), "");
+
+            return popup;
+        }
     }
 
-    public override VectorElement BuildClusterElement(MapPos pos, VectorElementVector elements)
-    {
-      BalloonPopupStyle style = balloonPopupStyleBuilder.BuildStyle();
-      var popup = new BalloonPopup(pos, style, elements.Count.ToString(), "");
-
-      return popup;
-    }
-  }
-
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}
+    {% highlight objc %}
 
     // .h
 
     @interface MyMarkerClusterElementBuilder : NTClusterElementBuilder
 
-  @property NSMutableDictionary* markerStyles;
+    @property NSMutableDictionary* markerStyles;
 
-  @end
-  
-  // .m
+    @end
+    
+    // .m
 
-  @implementation MyMarkerClusterElementBuilder
+    @implementation MyMarkerClusterElementBuilder
 
-  -(NTVectorElement*)buildClusterElement:(NTMapPos *)mapPos elements:(NTVectorElementVector *)elements
-  {
-      if (!self.markerStyles) {
-          self.markerStyles = [NSMutableDictionary new];
-      }
-      
-      NSString* styleKey = [NSString stringWithFormat:@"%d",(int)[elements size]];
-      
-      if ([elements size] > 1000) {
-          styleKey = @">1K";
-      }
-      
-      NTMarkerStyle* markerStyle = [self.markerStyles valueForKey:styleKey];
-      
-      if ([elements size] == 1) {
-          markerStyle = [(NTMarker*)[elements get:0] getStyle];
-      }
-      
-      if (!markerStyle) {
-          
-          UIImage* image = [UIImage imageNamed:@"marker_black.png"];
-          UIGraphicsBeginImageContext(image.size);
-          [image drawAtPoint:CGPointMake(0, 0)];
-          
-          CGRect rect = CGRectMake(0, 15, image.size.width, image.size.height);
-          [[UIColor blackColor] set];
-         
-          NSMutableParagraphStyle *style = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
-          [style setAlignment:NSTextAlignmentCenter];
-          
-          NSDictionary *attr = [NSDictionary dictionaryWithObject:style forKey:NSParagraphStyleAttributeName];
-          [styleKey drawInRect:CGRectIntegral(rect) withAttributes:attr];
-          UIImage* newImage = UIGraphicsGetImageFromCurrentImageContext();
-          
-          UIGraphicsEndImageContext();
-          
-          NTBitmap* markerBitmap = [NTBitmapUtils createBitmapFromUIImage:newImage];
-          
-          NTMarkerStyleBuilder* markerStyleBuilder = [[NTMarkerStyleBuilder alloc] init];
-          [markerStyleBuilder setBitmap:markerBitmap];
-          [markerStyleBuilder setSize:30];
-          
-          [markerStyleBuilder setPlacementPriority:-(int)[elements size]];
-          markerStyle = [markerStyleBuilder buildStyle];
-          
-          [self.markerStyles setValue:markerStyle forKey:styleKey];
-      }
-      
-      NTMarker* marker = [[NTMarker alloc] initWithPos:mapPos style:markerStyle];
-      
-      NTVariant* variant = [[NTVariant alloc] initWithString:[@([elements size]) stringValue]];
-      [marker setMetaDataElement:@"elements" element:variant];
-      
-      return marker;
-  }
+    -(NTVectorElement*) buildClusterElement:(NTMapPos*)mapPos elements:(NTVectorElementVector*)elements
+    {
+        if (!self.markerStyles) {
+            self.markerStyles = [NSMutableDictionary new];
+        }
+        
+        NSString* styleKey = [NSString stringWithFormat:@"%d",(int)[elements size]];
+        
+        if ([elements size] > 1000) {
+            styleKey = @">1K";
+        }
+        
+        NTMarkerStyle* markerStyle = [self.markerStyles valueForKey:styleKey];
+        
+        if ([elements size] == 1) {
+            markerStyle = [(NTMarker*)[elements get:0] getStyle];
+        }
+        
+        if (!markerStyle) {
+            
+            UIImage* image = [UIImage imageNamed:@"marker_black.png"];
+            UIGraphicsBeginImageContext(image.size);
+            [image drawAtPoint:CGPointMake(0, 0)];
+            
+            CGRect rect = CGRectMake(0, 15, image.size.width, image.size.height);
+            [[UIColor blackColor] set];
+           
+            NSMutableParagraphStyle* style = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
+            [style setAlignment:NSTextAlignmentCenter];
+            
+            NSDictionary* attr = [NSDictionary dictionaryWithObject:style forKey:NSParagraphStyleAttributeName];
+            [styleKey drawInRect:CGRectIntegral(rect) withAttributes:attr];
+            UIImage* newImage = UIGraphicsGetImageFromCurrentImageContext();
+            
+            UIGraphicsEndImageContext();
+            
+            NTBitmap* markerBitmap = [NTBitmapUtils createBitmapFromUIImage:newImage];
+            
+            NTMarkerStyleBuilder* markerStyleBuilder = [[NTMarkerStyleBuilder alloc] init];
+            [markerStyleBuilder setBitmap:markerBitmap];
+            [markerStyleBuilder setSize:30];
+            
+            [markerStyleBuilder setPlacementPriority:-(int)[elements size]];
+            markerStyle = [markerStyleBuilder buildStyle];
+            
+            [self.markerStyles setValue:markerStyle forKey:styleKey];
+        }
+        
+        NTMarker* marker = [[NTMarker alloc] initWithPos:mapPos style:markerStyle];
+        
+        NTVariant* variant = [[NTVariant alloc] initWithString:[@([elements size]) stringValue]];
+        [marker setMetaDataElement:@"elements" element:variant];
+        
+        return marker;
+    }
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}
+    {% highlight swift %}
   
-public class MyClusterElementBuilder : NTClusterElementBuilder {
-    
-    let markerStyles = NSMutableDictionary()
-    
-    var imageUrl: String?
-    
-    convenience init(imageUrl: String) {
+    public class MyClusterElementBuilder : NTClusterElementBuilder {
         
-        self.init()
-        self.imageUrl = imageUrl
-    }
-    
-    override public func buildClusterElement(_ mapPos: NTMapPos!, elements: NTVectorElementVector!) -> NTVectorElement! {
+        let markerStyles = NSMutableDictionary()
         
-        var styleKey = String(elements.size())
+        var imageUrl: String?
         
-        if (elements.size() > 1000) {
-            styleKey = ">1K"
+        convenience init(imageUrl: String) {
+            
+            self.init()
+            self.imageUrl = imageUrl
         }
         
-        var markerStyle = self.markerStyles.value(forKeyPath: styleKey)
-        
-        if (elements.size() == 1) {
-            markerStyle = (elements.get(0) as! NTMarker).getStyle()
-        }
-        
-        if (markerStyle == nil) {
+        override public func buildClusterElement(_ mapPos: NTMapPos!, elements: NTVectorElementVector!) -> NTVectorElement! {
             
-            let image = UIImage(named: imageUrl!)
-            UIGraphicsBeginImageContext((image?.size)!)
+            var styleKey = String(elements.size())
             
-            image?.draw(at: CGPoint(x: 0, y: 0));
+            if (elements.size() > 1000) {
+                styleKey = ">1K"
+            }
             
-            let rect = CGRect(x: 0, y: 15, width: (image?.size.width)!, height: (image?.size.height)!)
-            UIColor.black.set()
+            var markerStyle = self.markerStyles.value(forKeyPath: styleKey)
+            
+            if (elements.size() == 1) {
+                markerStyle = (elements.get(0) as! NTMarker).getStyle()
+            }
+            
+            if (markerStyle == nil) {
+                
+                let image = UIImage(named: imageUrl!)
+                UIGraphicsBeginImageContext((image?.size)!)
+                
+                image?.draw(at: CGPoint(x: 0, y: 0));
+                
+                let rect = CGRect(x: 0, y: 15, width: (image?.size.width)!, height: (image?.size.height)!)
+                UIColor.black.set()
 
-            image?.draw(in: rect.integral, blendMode: CGBlendMode.color, alpha: 1.0)
-            let newImage = UIGraphicsGetImageFromCurrentImageContext()
+                image?.draw(in: rect.integral, blendMode: CGBlendMode.color, alpha: 1.0)
+                let newImage = UIGraphicsGetImageFromCurrentImageContext()
+                
+                UIGraphicsEndImageContext()
+                
+                let marker = NTBitmapUtils.createBitmap(from: newImage)
+                let builder = NTMarkerStyleBuilder()
+                builder?.setBitmap(marker)
+                builder?.setSize(30)
+                
+                builder?.setPlacementPriority(-(Int32(elements.size() as UInt32)))
+                markerStyle = builder?.buildStyle()
+                
+                self.markerStyles.setValue(markerStyle, forKey: styleKey)
+            }
             
-            UIGraphicsEndImageContext()
+            let marker = NTMarker(pos: mapPos, style: markerStyle as! NTMarkerStyle!)
             
-            let marker = NTBitmapUtils.createBitmap(from: newImage)
-            let builder = NTMarkerStyleBuilder()
-            builder?.setBitmap(marker)
-            builder?.setSize(30)
+            let variant = NTVariant(string: String(elements.size()))
+            marker?.setMetaData("elements", element: variant)
             
-            builder?.setPlacementPriority(-(Int32(elements.size() as UInt32)))
-            markerStyle = builder?.buildStyle()
-            
-            self.markerStyles.setValue(markerStyle, forKey: styleKey)
+            return marker
         }
-        
-        let marker = NTMarker(pos: mapPos, style: markerStyle as! NTMarkerStyle!)
-        
-        let variant = NTVariant(string: String(elements.size()))
-        marker?.setMetaData("elements", element: variant)
-        
-        return marker
     }
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-  {% highlight kotlin %}
+    {% highlight kotlin %}
   
-      private inner class MyClusterElementBuilder internal constructor(context: Context) : ClusterElementBuilder() {
+    private inner class MyClusterElementBuilder internal constructor(context: Context) : ClusterElementBuilder() {
 
         val markerStyles = HashMap<Int, MarkerStyle>()
         val markerBitmap: android.graphics.Bitmap
@@ -938,7 +938,7 @@ public class MyClusterElementBuilder : NTClusterElementBuilder {
         }
     }
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
     
 </div>
@@ -998,11 +998,11 @@ This example uses only one geographical coordinate. The building size is known, 
   </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}
-  
-  	com.carto.graphics.Bitmap overlayBitmap = BitmapUtils.loadBitmapFromAssets("jefferson-building-ground-floor.jpg");
+    {% highlight java %}
 
-	// 1. Create two vector containing geographical positions and corresponding raster image pixel coordinates
+    com.carto.graphics.Bitmap overlayBitmap = BitmapUtils.loadBitmapFromAssets("jefferson-building-ground-floor.jpg");
+
+    // 1. Create two vector containing geographical positions and corresponding raster image pixel coordinates
     MapPos pos = proj.fromWgs84(new MapPos(-77.004590, 38.888702));
     double sizeNS = 110, sizeWE = 100;
 
@@ -1018,15 +1018,15 @@ This example uses only one geographical coordinate. The building size is known, 
     bitmapPoses.add(new ScreenPos(overlayBitmap.getWidth(), overlayBitmap.getHeight()));
     bitmapPoses.add(new ScreenPos(overlayBitmap.getWidth(), 0));
 
-	// 2. Create bitmap overlay raster tile data source
+    // 2. Create bitmap overlay raster tile data source
     BitmapOverlayRasterTileDataSource rasterDataSource = new BitmapOverlayRasterTileDataSource(0, 20, overlayBitmap, proj, mapPoses, bitmapPoses);
     RasterTileLayer rasterLayer = new RasterTileLayer(rasterDataSource);
     mapView.getLayers().add(rasterLayer);
 
-	// 3. Apply zoom level bias to the raster layer
+    // 3. Apply zoom level bias to the raster layer
     // - By default, bitmaps are upsampled on high-DPI screens
-	
-	// 4. Correct this by applying appropriate bias
+
+    // 4. Correct this by applying appropriate bias
     float zoomLevelBias = (float) (Math.log(mapView.getOptions().getDPI() / 160.0f) / Math.log(2));
     rasterLayer.setZoomLevelBias(zoomLevelBias * 0.75f);
     rasterLayer.setTileSubstitutionPolicy(TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE);
@@ -1034,170 +1034,172 @@ This example uses only one geographical coordinate. The building size is known, 
     mapView.setFocusPos(pos, 0);
     mapView.setZoom(16f, 0);
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight csharp %}var overlayBitmap = BitmapUtils.LoadBitmapFromAssets("jefferson-building-ground-floor.jpg");
+    {% highlight csharp %}
 
-	 // 1. Create two vector geographical positions, and corresponding raster image pixel coordinates
-      var pos = proj.FromWgs84(new MapPos(-77.004590, 38.888702));
-      var sizeNS = 110;
-      var sizeWE = 100;
+    var overlayBitmap = BitmapUtils.LoadBitmapFromAssets("jefferson-building-ground-floor.jpg");
 
-      var mapPoses = new MapPosVector();
-      mapPoses.Add(new MapPos(pos.X - sizeWE, pos.Y + sizeNS));
-      mapPoses.Add(new MapPos(pos.X + sizeWE, pos.Y + sizeNS));
-      mapPoses.Add(new MapPos(pos.X + sizeWE, pos.Y - sizeNS));
-      mapPoses.Add(new MapPos(pos.X - sizeWE, pos.Y - sizeNS));
+    // 1. Create two vector geographical positions, and corresponding raster image pixel coordinates
+    var pos = proj.FromWgs84(new MapPos(-77.004590, 38.888702));
+    var sizeNS = 110;
+    var sizeWE = 100;
 
-      var bitmapPoses = new ScreenPosVector();
-      bitmapPoses.Add(new ScreenPos(0, 0));
-      bitmapPoses.Add(new ScreenPos(0, overlayBitmap.Height));
-      bitmapPoses.Add(new ScreenPos(overlayBitmap.Width, overlayBitmap.Height));
-      bitmapPoses.Add(new ScreenPos(overlayBitmap.Width, 0));
+    var mapPoses = new MapPosVector();
+    mapPoses.Add(new MapPos(pos.X - sizeWE, pos.Y + sizeNS));
+    mapPoses.Add(new MapPos(pos.X + sizeWE, pos.Y + sizeNS));
+    mapPoses.Add(new MapPos(pos.X + sizeWE, pos.Y - sizeNS));
+    mapPoses.Add(new MapPos(pos.X - sizeWE, pos.Y - sizeNS));
 
-	 // 2. Create bitmap overlay raster tile data source
-      var rasterDataSource = new BitmapOverlayRasterTileDataSource(0, 20, overlayBitmap, proj, mapPoses, bitmapPoses);
-      var rasterLayer = new RasterTileLayer(rasterDataSource);
-      MapView.Layers.Add(rasterLayer);
+    var bitmapPoses = new ScreenPosVector();
+    bitmapPoses.Add(new ScreenPos(0, 0));
+    bitmapPoses.Add(new ScreenPos(0, overlayBitmap.Height));
+    bitmapPoses.Add(new ScreenPos(overlayBitmap.Width, overlayBitmap.Height));
+    bitmapPoses.Add(new ScreenPos(overlayBitmap.Width, 0));
 
-	 // 3. Apply zoom level bias to the raster layer
-      // - By default, bitmaps are upsampled on high-DPI screens
+    // 2. Create bitmap overlay raster tile data source
+    var rasterDataSource = new BitmapOverlayRasterTileDataSource(0, 20, overlayBitmap, proj, mapPoses, bitmapPoses);
+    var rasterLayer = new RasterTileLayer(rasterDataSource);
+    MapView.Layers.Add(rasterLayer);
 
-	 // 4. Correct this by applying appropriate bias
-      float zoomLevelBias = (float)(Math.Log(MapView.Options.DPI / 160.0f) / Math.Log(2));
-      rasterLayer.ZoomLevelBias = zoomLevelBias * 0.75f;
-      rasterLayer.TileSubstitutionPolicy = TileSubstitutionPolicy.TileSubstitutionPolicyVisible;
+    // 3. Apply zoom level bias to the raster layer
+    // - By default, bitmaps are upsampled on high-DPI screens
 
-      MapView.SetFocusPos(pos, 0);
-      MapView.SetZoom(16f, 0);
+    // 4. Correct this by applying appropriate bias
+    float zoomLevelBias = (float)(Math.Log(MapView.Options.DPI / 160.0f) / Math.Log(2));
+    rasterLayer.ZoomLevelBias = zoomLevelBias * 0.75f;
+    rasterLayer.TileSubstitutionPolicy = TileSubstitutionPolicy.TileSubstitutionPolicyVisible;
 
-  {% endhighlight %}
+    MapView.SetFocusPos(pos, 0);
+    MapView.SetZoom(16f, 0);
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
   {% highlight objc %}
 
-	 // 1. Load ground overlay bitmap
-      NTBitmap *overlayBitmap = [NTBitmapUtils loadBitmapFromAssets:@"jefferson-building-ground-floor.jpg"];
-    
-	 // 2. Create two vector geographical positions, and corresponding raster image pixel coordinates
-      NTMapPos* pos = [proj fromWgs84:[[NTMapPos alloc] initWithX:-77.004590 y:38.888702]];
-      double sizeNS = 110, sizeWE = 100;
-    
-      NTMapPosVector* mapPoses = [[NTMapPosVector alloc] init];
-      [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]-sizeWE y:[pos getY]+sizeNS]];
-      [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]+sizeWE y:[pos getY]+sizeNS]];
-      [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]+sizeWE y:[pos getY]-sizeNS]];
-      [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]-sizeWE y:[pos getY]-sizeNS]];
-      
-      NTScreenPosVector* bitmapPoses = [[NTScreenPosVector alloc] init];
-      [bitmapPoses add:[[NTScreenPos alloc] initWithX:0 y:0]];
-      [bitmapPoses add:[[NTScreenPos alloc] initWithX:0 y:[overlayBitmap getHeight]]];
-      [bitmapPoses add:[[NTScreenPos alloc] initWithX:[overlayBitmap getWidth] y:[overlayBitmap getHeight]]];
-      [bitmapPoses add:[[NTScreenPos alloc] initWithX:[overlayBitmap getWidth] y:0]];
-    
-	 // 3. Create bitmap overlay raster tile data source
-      NTBitmapOverlayRasterTileDataSource* rasterDataSource = [[NTBitmapOverlayRasterTileDataSource alloc] initWithMinZoom:0 maxZoom:20 bitmap:overlayBitmap projection:proj mapPoses:mapPoses bitmapPoses:bitmapPoses];
-      NTRasterTileLayer* rasterLayer = [[NTRasterTileLayer alloc] initWithDataSource:rasterDataSource];
-      [[mapView getLayers] add:rasterLayer];
-    
-	 // 4. Apply zoom level bias to the raster layer
-      // - By default, bitmaps are upsampled on high-DPI screens
+    // 1. Load ground overlay bitmap
+    NTBitmap* overlayBitmap = [NTBitmapUtils loadBitmapFromAssets:@"jefferson-building-ground-floor.jpg"];
 
-	 // 5. Correct this by applying appropriate bias
-      float zoomLevelBias = log([[mapView getOptions] getDPI] / 160.0f) / log(2);
-      [rasterLayer setZoomLevelBias:zoomLevelBias * 0.75f];
-      [rasterLayer setTileSubstitutionPolicy:NT_TILE_SUBSTITUTION_POLICY_VISIBLE];
-      
-      [mapView setFocusPos:pos durationSeconds:0];
-      [mapView setZoom:16f durationSeconds:0];
+    // 2. Create two vector geographical positions, and corresponding raster image pixel coordinates
+    NTMapPos* pos = [proj fromWgs84:[[NTMapPos alloc] initWithX:-77.004590 y:38.888702]];
+    double sizeNS = 110, sizeWE = 100;
 
-  {% endhighlight %}
+    NTMapPosVector* mapPoses = [[NTMapPosVector alloc] init];
+    [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]-sizeWE y:[pos getY]+sizeNS]];
+    [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]+sizeWE y:[pos getY]+sizeNS]];
+    [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]+sizeWE y:[pos getY]-sizeNS]];
+    [mapPoses add:[[NTMapPos alloc] initWithX:[pos getX]-sizeWE y:[pos getY]-sizeNS]];
+
+    NTScreenPosVector* bitmapPoses = [[NTScreenPosVector alloc] init];
+    [bitmapPoses add:[[NTScreenPos alloc] initWithX:0 y:0]];
+    [bitmapPoses add:[[NTScreenPos alloc] initWithX:0 y:[overlayBitmap getHeight]]];
+    [bitmapPoses add:[[NTScreenPos alloc] initWithX:[overlayBitmap getWidth] y:[overlayBitmap getHeight]]];
+    [bitmapPoses add:[[NTScreenPos alloc] initWithX:[overlayBitmap getWidth] y:0]];
+
+    // 3. Create bitmap overlay raster tile data source
+    NTBitmapOverlayRasterTileDataSource* rasterDataSource = [[NTBitmapOverlayRasterTileDataSource alloc] initWithMinZoom:0 maxZoom:20 bitmap:overlayBitmap projection:proj mapPoses:mapPoses bitmapPoses:bitmapPoses];
+    NTRasterTileLayer* rasterLayer = [[NTRasterTileLayer alloc] initWithDataSource:rasterDataSource];
+    [[mapView getLayers] add:rasterLayer];
+
+    // 4. Apply zoom level bias to the raster layer
+    // - By default, bitmaps are upsampled on high-DPI screens
+
+    // 5. Correct this by applying appropriate bias
+    float zoomLevelBias = log([[mapView getOptions] getDPI] / 160.0f) / log(2);
+    [rasterLayer setZoomLevelBias:zoomLevelBias * 0.75f];
+    [rasterLayer setTileSubstitutionPolicy:NT_TILE_SUBSTITUTION_POLICY_VISIBLE];
+
+    [mapView setFocusPos:pos durationSeconds:0];
+    [mapView setZoom:16f durationSeconds:0];
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-  {% highlight swift %}
-  
-        let overlayBitmap = NTBitmapUtils.createBitmap(from: UIImage(named: "jefferson-building-ground-floor.jpg"))
-        
-        // 1. Create two vector containing geographical positions and corresponding raster image pixel coordinates
-        let pos = projection!.fromWgs84(NTMapPos(x: -77.004590, y: 38.888702))!
-        let sizeNS = 110.0
-        let sizeWE = 100.0
-        
-        let mapPoses = NTMapPosVector();
-        mapPoses?.add(NTMapPos(x: pos.getX() - sizeWE, y: pos.getY() + sizeNS))
-        mapPoses?.add(NTMapPos(x: pos.getX() + sizeWE, y: pos.getY() + sizeNS))
-        mapPoses?.add(NTMapPos(x: pos.getX() + sizeWE, y: pos.getY() - sizeNS))
-        mapPoses?.add(NTMapPos(x: pos.getX() - sizeWE, y: pos.getY() - sizeNS))
-        
-        let bitmapPoses = NTScreenPosVector()
-        bitmapPoses?.add(NTScreenPos(x: 0, y: 0))
-        bitmapPoses?.add(NTScreenPos(x: 0, y: Float(overlayBitmap!.getHeight())))
-        bitmapPoses?.add(NTScreenPos(x: Float(overlayBitmap!.getWidth()), y: Float(overlayBitmap!.getHeight())))
-        bitmapPoses?.add(NTScreenPos(x: Float(overlayBitmap!.getWidth()), y: 0))
-        
-        // 2. Create bitmap overlay raster tile data source
-        let rasterDataSource = NTBitmapOverlayRasterTileDataSource(minZoom: 0, maxZoom: 20, bitmap: overlayBitmap, projection: projection, mapPoses: mapPoses, bitmapPoses: bitmapPoses)
-        let rasterLayer = NTRasterTileLayer(dataSource: rasterDataSource);
-        mapView?.getLayers()?.add(rasterLayer)
-        
-        // 3. Apply zoom level bias to the raster layer
-        // - By default, bitmaps are upsampled on high-DPI screens
-        
-        // 4. Correct this by applying appropriate bias
-        
-        let zoomLevelBias = UIKit.log(mapView!.getOptions().getDPI() / 160.0) / UIKit.log(2.0)
-        rasterLayer?.setZoomLevelBias(zoomLevelBias * 0.75)
-        rasterLayer?.setTileSubstitutionPolicy(NTTileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE)
-        
-        mapView?.setFocus(pos, durationSeconds: 0)
-        mapView?.setZoom(16, durationSeconds: 0)
+    {% highlight swift %}
 
-  {% endhighlight %}
+    let overlayBitmap = NTBitmapUtils.createBitmap(from: UIImage(named: "jefferson-building-ground-floor.jpg"))
+
+    // 1. Create two vector containing geographical positions and corresponding raster image pixel coordinates
+    let pos = projection!.fromWgs84(NTMapPos(x: -77.004590, y: 38.888702))!
+    let sizeNS = 110.0
+    let sizeWE = 100.0
+
+    let mapPoses = NTMapPosVector();
+    mapPoses?.add(NTMapPos(x: pos.getX() - sizeWE, y: pos.getY() + sizeNS))
+    mapPoses?.add(NTMapPos(x: pos.getX() + sizeWE, y: pos.getY() + sizeNS))
+    mapPoses?.add(NTMapPos(x: pos.getX() + sizeWE, y: pos.getY() - sizeNS))
+    mapPoses?.add(NTMapPos(x: pos.getX() - sizeWE, y: pos.getY() - sizeNS))
+
+    let bitmapPoses = NTScreenPosVector()
+    bitmapPoses?.add(NTScreenPos(x: 0, y: 0))
+    bitmapPoses?.add(NTScreenPos(x: 0, y: Float(overlayBitmap!.getHeight())))
+    bitmapPoses?.add(NTScreenPos(x: Float(overlayBitmap!.getWidth()), y: Float(overlayBitmap!.getHeight())))
+    bitmapPoses?.add(NTScreenPos(x: Float(overlayBitmap!.getWidth()), y: 0))
+
+    // 2. Create bitmap overlay raster tile data source
+    let rasterDataSource = NTBitmapOverlayRasterTileDataSource(minZoom: 0, maxZoom: 20, bitmap: overlayBitmap, projection: projection, mapPoses: mapPoses, bitmapPoses: bitmapPoses)
+    let rasterLayer = NTRasterTileLayer(dataSource: rasterDataSource);
+    mapView?.getLayers()?.add(rasterLayer)
+
+    // 3. Apply zoom level bias to the raster layer
+    // - By default, bitmaps are upsampled on high-DPI screens
+
+    // 4. Correct this by applying appropriate bias
+
+    let zoomLevelBias = UIKit.log(mapView!.getOptions().getDPI() / 160.0) / UIKit.log(2.0)
+    rasterLayer?.setZoomLevelBias(zoomLevelBias * 0.75)
+    rasterLayer?.setTileSubstitutionPolicy(NTTileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE)
+
+    mapView?.setFocus(pos, durationSeconds: 0)
+    mapView?.setZoom(16, durationSeconds: 0)
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-  {% highlight kotlin %}
+    {% highlight kotlin %}
   
-        val overlayBitmap = BitmapUtils.loadBitmapFromAssets("jefferson-building-ground-floor.jpg");
+    val overlayBitmap = BitmapUtils.loadBitmapFromAssets("jefferson-building-ground-floor.jpg");
 
-        // 1. Create two vector containing geographical positions and corresponding raster image pixel coordinates
-        val pos = projection!!.fromWgs84(MapPos(-77.004590, 38.888702))
-        val sizeNS = 110
-        val sizeWE = 100
+    // 1. Create two vector containing geographical positions and corresponding raster image pixel coordinates
+    val pos = projection!!.fromWgs84(MapPos(-77.004590, 38.888702))
+    val sizeNS = 110
+    val sizeWE = 100
 
-        val mapPoses = MapPosVector();
-        mapPoses.add(MapPos(pos.x - sizeWE, pos.y + sizeNS))
-        mapPoses.add(MapPos(pos.x + sizeWE, pos.y + sizeNS))
-        mapPoses.add(MapPos(pos.x + sizeWE, pos.y - sizeNS))
-        mapPoses.add(MapPos(pos.x - sizeWE, pos.y - sizeNS))
+    val mapPoses = MapPosVector();
+    mapPoses.add(MapPos(pos.x - sizeWE, pos.y + sizeNS))
+    mapPoses.add(MapPos(pos.x + sizeWE, pos.y + sizeNS))
+    mapPoses.add(MapPos(pos.x + sizeWE, pos.y - sizeNS))
+    mapPoses.add(MapPos(pos.x - sizeWE, pos.y - sizeNS))
 
-        val bitmapPoses = ScreenPosVector()
-        bitmapPoses.add(ScreenPos(0F, 0F))
-        bitmapPoses.add(ScreenPos(0F, overlayBitmap.height.toFloat()))
-        bitmapPoses.add(ScreenPos(overlayBitmap.width.toFloat(), overlayBitmap.height.toFloat()))
-        bitmapPoses.add(ScreenPos(overlayBitmap.width.toFloat(), 0F))
+    val bitmapPoses = ScreenPosVector()
+    bitmapPoses.add(ScreenPos(0F, 0F))
+    bitmapPoses.add(ScreenPos(0F, overlayBitmap.height.toFloat()))
+    bitmapPoses.add(ScreenPos(overlayBitmap.width.toFloat(), overlayBitmap.height.toFloat()))
+    bitmapPoses.add(ScreenPos(overlayBitmap.width.toFloat(), 0F))
 
-        // 2. Create bitmap overlay raster tile data source
-        val rasterDataSource = BitmapOverlayRasterTileDataSource(0, 20, overlayBitmap, projection, mapPoses, bitmapPoses)
-        val rasterLayer = RasterTileLayer(rasterDataSource);
-        mapView?.layers?.add(rasterLayer)
+    // 2. Create bitmap overlay raster tile data source
+    val rasterDataSource = BitmapOverlayRasterTileDataSource(0, 20, overlayBitmap, projection, mapPoses, bitmapPoses)
+    val rasterLayer = RasterTileLayer(rasterDataSource);
+    mapView?.layers?.add(rasterLayer)
 
-        // 3. Apply zoom level bias to the raster layer
-        // - By default, bitmaps are upsampled on high-DPI screens
+    // 3. Apply zoom level bias to the raster layer
+    // - By default, bitmaps are upsampled on high-DPI screens
 
-        // 4. Correct this by applying appropriate bias
-        val zoomLevelBias = (Math.log(mapView!!.options.dpi / 160.0) / Math.log(2.0)).toFloat()
-        rasterLayer.zoomLevelBias = zoomLevelBias * 0.75f
-        rasterLayer.tileSubstitutionPolicy = TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE
+    // 4. Correct this by applying appropriate bias
+    val zoomLevelBias = (Math.log(mapView!!.options.dpi / 160.0) / Math.log(2.0)).toFloat()
+    rasterLayer.zoomLevelBias = zoomLevelBias * 0.75f
+    rasterLayer.tileSubstitutionPolicy = TileSubstitutionPolicy.TILE_SUBSTITUTION_POLICY_VISIBLE
 
-        mapView?.setFocusPos(pos, 0F)
-        mapView?.setZoom(16f, 0F)
+    mapView?.setFocusPos(pos, 0F)
+    mapView?.setZoom(16f, 0F)
 
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
     
 </div>

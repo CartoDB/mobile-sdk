@@ -6,9 +6,10 @@ For select account plans, you can connect to the CARTO Engine APIs via Mobile SD
 
 There are several methods of connecting map data from your CARTO account (via the Mobile SDK) to your mobile app; depending on the size of your data, the visual requirements, and other factors.
 
-- To use a map as **raster map tiles**, define the tile URL for RasterTileLayer
+- To use a map as **raster map tiles**, define the tile URL for `RasterTileLayer`
 
-- To apply **interactivity** (object click data), use UTFGrid. This uses both raster map tiles and json-based UTF tiles
+- To apply **interactivity** (object click data), use UTFGrid. This uses both raster map tiles and json-based UTF tiles.
+  UTFGrids are applicable to both raster and vector tiles, though are more useful for raster tiles.
 
   **Tip:** For CARTO Builder, you will need to enable and define tooltips with the [POP-UP](/docs/carto-builder/map-layers-for-rendering-data/#pop-up) feature
 
@@ -16,7 +17,7 @@ There are several methods of connecting map data from your CARTO account (via th
 
 - **Load GeoJSON vector data**. This is useful if you need need more advanced interactivity (object click actions) or dynamic client-side styling of the objects. For vector data, the CARTO Engine provides a [SQL API](/docs/carto-engine/sql-api/) and mobile app that can load entire tables and render maps. You can also use client-side simplification and clustering
 
-- If the **data table is large** (more than a few thousand objects), then loading entire tables can overload the mobile client. Alternatively, use on-demand, view-based loading of vector data. Similar to the SQL API and GeoJSON format used on the CARTO Engine side, the SDK applies custom vector data sources to load data. _Only a selected, visible area, of the map will load._ The mobile app can control zoom levels, server-side generalizations, and simplifications can be applied
+- If the **data table is large** (more than a ten thousand objects), then loading entire tables can overload the mobile client. Alternatively, use on-demand, view-based loading of vector data. Similar to the SQL API and GeoJSON format used on the CARTO Engine side, the SDK applies custom vector data sources to load data. _Only a selected, visible area, of the map will load._ The mobile app can control zoom levels, server-side generalizations, and simplifications can be applied
 
 - For point-geometry time-series visualizations, use the _Animated_ aggregation to define Torque maps. This provides animated rendering, and the Mobile SDK has a special layer `TorqueTileLayer` to define this. From an API standpoint, Torque uses the SQL API and CartoCSS styling, but Torque contains an additional [time control method](/docs/carto-engine/torque-js/)
 
@@ -27,7 +28,7 @@ CARTO Mobile SDK offers several ways to use map data offline, but the suggested 
 1. Upload your data to CARTO, create a new map with CARTO Builder, and apply map custom styling with CartoCSS.
 2. Use the [Mobile Tile Packager](https://github.com/CartoDB/mobile-tile-packager) tool to create the offline map data package.
 3. Load the package file to the mobile device - you can have your app download it from your server, or add it as bundled asset to your app.
-4. Add the map to MapView, as a VectorTileLayer, from MBTilesTileDataSource and CartoCSS. 
+4. Add the map to MapView, as a `VectorTileLayer`, from `MBTilesTileDataSource` and CartoCSS. 
 
 This method enables you to get both optimized vector tiles and suitable CartoCSS styling for your map.
 
@@ -52,32 +53,32 @@ CARTO Mobile SDK supports [Maps API](https://carto.com/docs/carto-engine/maps-ap
 
 ##### Building an Anonymous map config (SQL and CartoCSS)
 
-Use CARTO Maps service class to configure layers. Note that this must be done in a separate thread on Android, as Maps API requires connecting to server, which is not allowed in the main thread.
+Use `CartoMapsService` class to configure layers. Note that this must be done in a separate thread on Android, as Maps API requires connecting to server, which is not allowed in the main thread.
 
 The following snippet sets up the config (SQL and CartoCSS) we are going to use in our query
 
 <div class="js-TabPanes">
 
-<ul class="Tabs">
-  <li class="Tab js-Tabpanes-navItem--lang is-active">
-    <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-  </li>
-  <li class="Tab js-Tabpanes-navItem--lang">
-    <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-  </li>
-  <li class="Tab js-Tabpanes-navItem--lang">
-    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-  </li>
-  <li class="Tab js-Tabpanes-navItem--lang">
-    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-  </li>
-  <li class="Tab js-Tabpanes-navItem--lang">
-    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-  </li>
-</ul>
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
+  </ul>
 
-<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-{% highlight java %}
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+    {% highlight java %}
 
     private String getConfigJson() {
 
@@ -86,7 +87,7 @@ The following snippet sets up the config (SQL and CartoCSS) we are going to use 
 
         try {
             // Change these according to your DB
-            String sql = "select * from stations_1";
+            String sql = "SELECT * FROM stations_1";
             String statTag = "3c6f224a-c6ad-11e5-b17e-0e98b61680bf";
             String[] columns = new String[] { "name", "status", "slot" };
             String cartoCSS = "#stations_1{" +
@@ -148,199 +149,198 @@ The following snippet sets up the config (SQL and CartoCSS) we are going to use 
         return configJson.toString();
     }
 
-{% endhighlight %}
-</div>
+    {% endhighlight %}
+  </div>
 
-<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-{% highlight csharp %}
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+    {% highlight csharp %}
 
     static string CartoCSS
     {
-      get
-      {
-        return "#stations_1{" +
-              "marker-fill-opacity:0.9;" +
-              "marker-line-color:#FFF;" +
-              "marker-line-width:2;" +
-              "marker-line-opacity:1;" +
-              "marker-placement:point;" +
-              "marker-type:ellipse;" +
-              "marker-width:10;" +
-              "marker-allow-overlap:true;" +
-            "}" +
-            "#stations_1[status = 'In Service']{marker-fill:#0F3B82;}" +
-            "#stations_1[status = 'Not In Service']{marker-fill:#aaaaaa;}" +
-            "#stations_1[field_9 = 200]{marker-width:80.0;}" +
-            "#stations_1[field_9 <= 49]{marker-width:25.0;}" +
-            "#stations_1[field_9 <= 38]{marker-width:22.8;}" +
-            "#stations_1[field_9 <= 34]{marker-width:20.6;}" +
-            "#stations_1[field_9 <= 29]{marker-width:18.3;}" +
-            "#stations_1[field_9 <= 25]{marker-width:16.1;}" +
-            "#stations_1[field_9 <= 20.5]{marker-width:13.9;}" +
-            "#stations_1[field_9 <= 16]{marker-width:11.7;}" +
-            "#stations_1[field_9 <= 12]{marker-width:9.4;}" +
-            "#stations_1[field_9 <= 8]{marker-width:7.2;}" +
-            "#stations_1[field_9 <= 4]{marker-width:5.0;}";
-      }
+        get
+        {
+            return "#stations_1{" +
+                  "marker-fill-opacity:0.9;" +
+                  "marker-line-color:#FFF;" +
+                  "marker-line-width:2;" +
+                  "marker-line-opacity:1;" +
+                  "marker-placement:point;" +
+                  "marker-type:ellipse;" +
+                  "marker-width:10;" +
+                  "marker-allow-overlap:true;" +
+                "}" +
+                "#stations_1[status = 'In Service']{marker-fill:#0F3B82;}" +
+                "#stations_1[status = 'Not In Service']{marker-fill:#aaaaaa;}" +
+                "#stations_1[field_9 = 200]{marker-width:80.0;}" +
+                "#stations_1[field_9 <= 49]{marker-width:25.0;}" +
+                "#stations_1[field_9 <= 38]{marker-width:22.8;}" +
+                "#stations_1[field_9 <= 34]{marker-width:20.6;}" +
+                "#stations_1[field_9 <= 29]{marker-width:18.3;}" +
+                "#stations_1[field_9 <= 25]{marker-width:16.1;}" +
+                "#stations_1[field_9 <= 20.5]{marker-width:13.9;}" +
+                "#stations_1[field_9 <= 16]{marker-width:11.7;}" +
+                "#stations_1[field_9 <= 12]{marker-width:9.4;}" +
+                "#stations_1[field_9 <= 8]{marker-width:7.2;}" +
+                "#stations_1[field_9 <= 4]{marker-width:5.0;}";
+        }
     }
 
     public static JsonValue VectorLayerConfigJson
     {
-      get
-      {
-        JsonObject json = new JsonObject();
+        get
+        {
+            JsonObject json = new JsonObject();
 
-        json.Add("version", "1.0.1");
-        json.Add("stat_tag", "3c6f224a-c6ad-11e5-b17e-0e98b61680bf");
+            json.Add("version", "1.0.1");
+            json.Add("stat_tag", "3c6f224a-c6ad-11e5-b17e-0e98b61680bf");
 
-        JsonArray layerArray = new JsonArray();
-        JsonObject layerJson = new JsonObject();
+            JsonArray layerArray = new JsonArray();
+            JsonObject layerJson = new JsonObject();
 
-        layerJson.Add("type", "cartodb");
+            layerJson.Add("type", "cartodb");
 
-        JsonObject optionJson = new JsonObject();
+            JsonObject optionJson = new JsonObject();
 
-        optionJson.Add("sql", "select * from stations_1");
-        optionJson.Add("cartocss", CartoCSS);
-        optionJson.Add("cartocss_version", "2.1.1");
+            optionJson.Add("sql", "SELECT * FROM stations_1");
+            optionJson.Add("cartocss", CartoCSS);
+            optionJson.Add("cartocss_version", "2.1.1");
 
-        JsonArray interactivityJson = new JsonArray();
-        interactivityJson.Add("cartodb_id");
+            JsonArray interactivityJson = new JsonArray();
+            interactivityJson.Add("cartodb_id");
 
-        optionJson.Add("interactivity", interactivityJson);
+            optionJson.Add("interactivity", interactivityJson);
 
-        JsonObject attributesJson = new JsonObject();
-        attributesJson.Add("id", "cartodb_id");
+            JsonObject attributesJson = new JsonObject();
+            attributesJson.Add("id", "cartodb_id");
 
-        JsonArray columnJson = new JsonArray { "name", "field_9", "slot" };
+            JsonArray columnJson = new JsonArray { "name", "field_9", "slot" };
 
-        attributesJson.Add("columns", columnJson);
-        optionJson.Add("attributes", attributesJson);
-        layerJson.Add("options", optionJson);
-        layerArray.Add(layerJson);
+            attributesJson.Add("columns", columnJson);
+            optionJson.Add("attributes", attributesJson);
+            layerJson.Add("options", optionJson);
+            layerArray.Add(layerJson);
 
-        json.Add("layers", layerArray);
+            json.Add("layers", layerArray);
 
-        return json;
-      }
+            return json;
+        }
     }
 
-{% endhighlight %}
-</div>
+    {% endhighlight %}
+  </div>
 
-<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-{% highlight objc %}
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+    {% highlight objc %}
 
-- (NSString*) getConfig
-{
-    NSDictionary* options = @{
-                              @"sql": @"select * from stations_1",
-                              @"cartocss": [self getCartoCSS],
-                              @"cartocss_version": @"2.1.1",
-                              @"interactivity": [self getInteractivityJson],
-                              @"attributes": [self getAttributesJson]
-                              };
+    - (NSString*) getConfig
+    {
+        NSDictionary* options = @{
+                                  @"sql": @"SELECT FROM stations_1",
+                                  @"cartocss": [self getCartoCSS],
+                                  @"cartocss_version": @"2.1.1",
+                                  @"interactivity": [self getInteractivityJson],
+                                  @"attributes": [self getAttributesJson]
+                                  };
 
-    NSMutableArray *layerArray = [[NSMutableArray alloc]init];
-    NSDictionary *layerJson = @{ @"options": options, @"type": @"cartodb" };
-    
-    [layerArray addObject:layerJson];
-    
-    NSDictionary *json = @{
-                           @"version": @"1.0.1",
-                           @"stat_tag": @"3c6f224a-c6ad-11e5-b17e-0e98b61680bf",
-                           @"layers": layerArray
-                           };
-    
-    NSError *error;
-    NSData *data = [NSJSONSerialization dataWithJSONObject:json options:0 error:&error];
-    
-    return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-}
-
--(NSString *) getCartoCSS
-{
-    NSString *base = @"#stations_1 { marker-fill-opacity:0.9; marker-line-color:#FFF; marker-line-width:2; marker-line-opacity:1; marker-placement:point; marker-type:ellipse; marker-width:10; marker-allow-overlap:true; }";
-    
-    NSString *attributes = @"#stations_1[status = 'In Service'] { marker-fill:#0F3B82; } #stations_1[status = 'Not In Service'] { marker-fill:#aaaaaa; } #stations_1[field_9 = 200] { marker-width:80.0; } #stations_1[field_9 <= 49] { marker-width:25.0; } #stations_1[field_9 <= 38] { marker-width:22.8; } #stations_1[field_9 <= 34] { marker-width:20.6; } #stations_1[field_9 <= 29] { marker-width:18.3; } #stations_1[field_9 <= 25] { marker-width:16.1; } #stations_1[field_9 <= 20.5] { marker-width:13.9; } #stations_1[field_9 <= 16] { marker-width:11.7; } #stations_1[field_9 <= 12] { marker-width:9.4; } #stations_1[field_9 <= 8] { marker-width:7.2; } #stations_1[field_9 <= 4] { marker-width:5.0; } ";
-    
-    return [base stringByAppendingString:attributes];
-}
-
--(NSMutableArray *) getInteractivityJson
-{
-    NSMutableArray *array = [[NSMutableArray alloc]init];
-    [array addObject:@"cartodb_id"];
-    return array;
-}
-
--(NSDictionary *) getAttributesJson
-{
-    NSMutableArray *columns = [[NSMutableArray alloc]init];
-    [columns addObject:@"name"];
-    [columns addObject:@"field_9"];
-    [columns addObject:@"slot"];
-    
-    return @{ @"id": @"cartodb_id", @"columns": columns };
-}
-
-{% endhighlight %}
-</div>
-
-<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-{% highlight swift %}
-
-public func getConfig() -> String? {
-    
-    let options = NSDictionary(dictionaryLiteral:
-        ("sql","select * from stations_1"),
-        ("cartocss", getCartoCSS()),
-        ("cartocss_version", "2.1.1"),
-        ("interactivity", getInteractivityJson()),
-        ("attributes", getAttributesJson())
-    )
-    
-    let layerArray = NSMutableArray()
-    let layerJson = NSDictionary(dictionaryLiteral: ("options", options), ("type", "cartodb"))
-    
-    layerArray.add(layerJson)
-    
-    let json = NSDictionary(dictionaryLiteral:
-        ("version", "1.0.1"),
-        ("stat_tag", "3c6f224a-c6ad-11e5-b17e-0e98b61680bf"),
-        ("layers", layerArray)
-    );
-    
-    if let theJSONData = try? JSONSerialization.data(withJSONObject: json, options: []) {
-        return String(data: theJSONData, encoding: .ascii)
+        NSMutableArray* layerArray = [[NSMutableArray alloc] init];
+        NSDictionary* layerJson = @{ @"options": options, @"type": @"cartodb" };
+        
+        [layerArray addObject:layerJson];
+        
+        NSDictionary* json = @{
+                               @"version": @"1.0.1",
+                               @"stat_tag": @"3c6f224a-c6ad-11e5-b17e-0e98b61680bf",
+                               @"layers": layerArray
+                               };
+        
+        NSError* error;
+        NSData* data = [NSJSONSerialization dataWithJSONObject:json options:0 error:&error];
+        
+        return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     }
-    
-    return nil
-}
 
-public func getCartoCSS() -> String {
-    
-    let base = "#stations_1 { marker-fill-opacity:0.9; marker-line-color:#FFF; marker-line-width:2; marker-line-opacity:1; marker-placement:point; marker-type:ellipse; marker-width:10; marker-allow-overlap:true; }"
-    
-    let attributes = "#stations_1[status = 'In Service'] { marker-fill:#0F3B82; } #stations_1[status = 'Not In Service'] { marker-fill:#aaaaaa; } #stations_1[field_9 = 200] { marker-width:80.0; } #stations_1[field_9 <= 49] { marker-width:25.0; } #stations_1[field_9 <= 38] { marker-width:22.8; } #stations_1[field_9 <= 34] { marker-width:20.6; } #stations_1[field_9 <= 29] { marker-width:18.3; } #stations_1[field_9 <= 25] { marker-width:16.1; } #stations_1[field_9 <= 20.5] { marker-width:13.9; } #stations_1[field_9 <= 16] { marker-width:11.7; } #stations_1[field_9 <= 12] { marker-width:9.4; } #stations_1[field_9 <= 8] { marker-width:7.2; } #stations_1[field_9 <= 4] { marker-width:5.0; } "
-    
-    return base + attributes;
-}
+    -(NSString*) getCartoCSS
+    {
+        NSString* base = @"#stations_1 { marker-fill-opacity:0.9; marker-line-color:#FFF; marker-line-width:2; marker-line-opacity:1; marker-placement:point; marker-type:ellipse; marker-width:10; marker-allow-overlap:true; }";
+        
+        NSString* attributes = @"#stations_1[status = 'In Service'] { marker-fill:#0F3B82; } #stations_1[status = 'Not In Service'] { marker-fill:#aaaaaa; } #stations_1[field_9 = 200] { marker-width:80.0; } #stations_1[field_9 <= 49] { marker-width:25.0; } #stations_1[field_9 <= 38] { marker-width:22.8; } #stations_1[field_9 <= 34] { marker-width:20.6; } #stations_1[field_9 <= 29] { marker-width:18.3; } #stations_1[field_9 <= 25] { marker-width:16.1; } #stations_1[field_9 <= 20.5] { marker-width:13.9; } #stations_1[field_9 <= 16] { marker-width:11.7; } #stations_1[field_9 <= 12] { marker-width:9.4; } #stations_1[field_9 <= 8] { marker-width:7.2; } #stations_1[field_9 <= 4] { marker-width:5.0; } ";
+        
+        return [base stringByAppendingString:attributes];
+    }
 
-public func getInteractivityJson() -> NSMutableArray {
-    return NSMutableArray(array: ["cartodb_id"])
-}
+    -(NSMutableArray*) getInteractivityJson
+    {
+        NSMutableArray* array = [[NSMutableArray alloc] init];
+        [array addObject:@"cartodb_id"];
+        return array;
+    }
 
-public func getAttributesJson() -> NSDictionary {
-    let columns = NSMutableArray(array: ["name", "field_9", "slot"])
-    return NSDictionary(dictionaryLiteral: ("id", "cartodb_id"), ("columns", columns))
-}
+    -(NSDictionary*) getAttributesJson
+    {
+        NSMutableArray* columns = [[NSMutableArray alloc] init];
+        [columns addObject:@"name"];
+        [columns addObject:@"field_9"];
+        [columns addObject:@"slot"];
+        
+        return @{ @"id": @"cartodb_id", @"columns": columns };
+    }
 
-{% endhighlight %}
-</div>
+    {% endhighlight %}
+  </div>
 
-<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-{% highlight kotlin %}
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+    {% highlight swift %}
+
+    public func getConfig() -> String? {
+        
+        let options = NSDictionary(dictionaryLiteral:
+            ("sql","SELECT * FROM stations_1"),
+            ("cartocss", getCartoCSS()),
+            ("cartocss_version", "2.1.1"),
+            ("interactivity", getInteractivityJson()),
+            ("attributes", getAttributesJson())
+        )
+        
+        let layerArray = NSMutableArray()
+        let layerJson = NSDictionary(dictionaryLiteral: ("options", options), ("type", "cartodb"))
+        
+        layerArray.add(layerJson)
+        
+        let json = NSDictionary(dictionaryLiteral:
+            ("version", "1.0.1"),
+            ("stat_tag", "3c6f224a-c6ad-11e5-b17e-0e98b61680bf"),
+            ("layers", layerArray)
+        );
+        
+        if let theJSONData = try? JSONSerialization.data(withJSONObject: json, options: []) {
+            return String(data: theJSONData, encoding: .ascii)
+        }
+        
+        return nil
+    }
+
+    public func getCartoCSS() -> String {
+        let base = "#stations_1 { marker-fill-opacity:0.9; marker-line-color:#FFF; marker-line-width:2; marker-line-opacity:1; marker-placement:point; marker-type:ellipse; marker-width:10; marker-allow-overlap:true; }"
+        
+        let attributes = "#stations_1[status = 'In Service'] { marker-fill:#0F3B82; } #stations_1[status = 'Not In Service'] { marker-fill:#aaaaaa; } #stations_1[field_9 = 200] { marker-width:80.0; } #stations_1[field_9 <= 49] { marker-width:25.0; } #stations_1[field_9 <= 38] { marker-width:22.8; } #stations_1[field_9 <= 34] { marker-width:20.6; } #stations_1[field_9 <= 29] { marker-width:18.3; } #stations_1[field_9 <= 25] { marker-width:16.1; } #stations_1[field_9 <= 20.5] { marker-width:13.9; } #stations_1[field_9 <= 16] { marker-width:11.7; } #stations_1[field_9 <= 12] { marker-width:9.4; } #stations_1[field_9 <= 8] { marker-width:7.2; } #stations_1[field_9 <= 4] { marker-width:5.0; } "
+        
+        return base + attributes;
+    }
+
+    public func getInteractivityJson() -> NSMutableArray {
+        return NSMutableArray(array: ["cartodb_id"])
+    }
+
+    public func getAttributesJson() -> NSDictionary {
+        let columns = NSMutableArray(array: ["name", "field_9", "slot"])
+        return NSDictionary(dictionaryLiteral: ("id", "cartodb_id"), ("columns", columns))
+    }
+
+    {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+    {% highlight kotlin %}
 
      fun getConfigJson(): String? {
 
@@ -349,7 +349,7 @@ public func getAttributesJson() -> NSDictionary {
 
         try {
             // Change these according to your DB
-            val sql = "select * from stations_1"
+            val sql = "SELECT * FROM stations_1"
             val statTag = "3c6f224a-c6ad-11e5-b17e-0e98b61680bf"
             val columns = arrayOf("name", "status", "slot")
 
@@ -412,8 +412,8 @@ public func getAttributesJson() -> NSDictionary {
         return configJson.toString()
     }
 
-{% endhighlight %}
-</div>
+    {% endhighlight %}
+  </div>
 
 </div>
 
@@ -421,95 +421,84 @@ Now that the config is set up, you can apply the actual query. This snippet is f
 
 <div class="js-TabPanes">
 
-<ul class="Tabs">
-  <li class="Tab js-Tabpanes-navItem--lang is-active">
-    <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-  </li>
-  <li class="Tab js-Tabpanes-navItem--lang">
-    <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-  </li>
-  <li class="Tab js-Tabpanes-navItem--lang">
-    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-  </li>
-  <li class="Tab js-Tabpanes-navItem--lang">
-    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-  </li>
-  <li class="Tab js-Tabpanes-navItem--lang">
-    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-  </li>
-</ul>
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
+  </ul>
 
-<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-{% highlight java %}
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+    {% highlight java %}
 
-final String config = getConfigJson();
+    final String config = getConfigJson();
 
-// Use the Maps service to configure layers.
-// Note that this must be done in a separate thread on Android,
-// as Maps API requires connecting to server, which is not allowed in main thread.
-Thread serviceThread = new Thread(new Runnable() {
-  @Override
-  public void run() {
-
-    CartoMapsService mapsService = new CartoMapsService();
-    mapsService.setUsername("nutiteq");
-    mapsService.setDefaultVectorLayerMode(true); // use vector layers
+    // Use the Maps service to configure layers.
+    // Note that this must be done in a separate thread on Android,
+    // as Maps API requires connecting to server, which is not allowed in main thread.
+    Thread serviceThread = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            CartoMapsService mapsService = new CartoMapsService();
+            mapsService.setUsername("nutiteq");
+            mapsService.setDefaultVectorLayerMode(true); // use vector layers
 
             try {
                 LayerVector layers = mapsService.buildMap(Variant.fromString(config));
-                for (int i = 0; i < layers.size(); i++) {
-                    mapView.getLayers().add(layers.get(i));
-                }
+                mapView.getLayers().addAll(layers);
             }
             catch (IOException e) {
                 Log.e("EXCEPTION", "Exception: " + e);
             }
-  }
-});
+        }
+    });
 
-serviceThread.start();
+    serviceThread.start();
 
-{% endhighlight %}
-</div>
+    {% endhighlight %}
+  </div>
 
-<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-{% highlight csharp %}
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+    {% highlight csharp %}
 
-      JsonValue config = JsonUtils.VectorLayerConfigJson;
+    JsonValue config = JsonUtils.VectorLayerConfigJson;
 
-      MapView.ConfigureAnonymousVectorLayers(config);
+    MapView.ConfigureAnonymousVectorLayers(config);
 
-      // Extension method in static class
-      public static void ConfigureAnonymousVectorLayers(this MapView map, JsonValue config)
-      {
+    // Extension method in static class
+    public static void ConfigureAnonymousVectorLayers(this MapView map, JsonValue config)
+    {
         // Use the Maps service to configure layers. 
         // Note that this must be done in a separate thread on Android, 
         // as Maps API requires connecting to server, which cannot be done in the main thread.
 
         System.Threading.Tasks.Task.Run(delegate
         {
-          CartoMapsService service = new CartoMapsService();
-          service.Username = "nutiteq";
+            CartoMapsService service = new CartoMapsService();
+            service.Username = "nutiteq";
+            service.DefaultVectorLayerMode = true; // Use VectorLayers
 
-          // Use VectorLayers
-          service.DefaultVectorLayerMode = true;
-          service.Interactive = true;
-
-          LayerVector layers = service.BuildMap(Variant.FromString(config.ToString()));
-
-          for (int i = 0; i < layers.Count; i++)
-          {
-            map.Layers.Add(layers[i]);
-          }
+            LayerVector layers = service.BuildMap(Variant.FromString(config.ToString()));
+            map.Layers.AddAll(layers);
         });
-      }
+    }
 
+    {% endhighlight %}
+  </div>
 
-{% endhighlight %}
-</div>
-
-<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-{% highlight objc %}
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+    {% highlight objc %}
 
     NTCartoMapsService* mapsService = [[NTCartoMapsService alloc] init];
     
@@ -520,72 +509,60 @@ serviceThread.start();
     [mapsService setInteractive:TRUE];
     
     NTVariant* variant = [NTVariant fromString:[self getConfig]];
-    NTLayerVector *layers = [mapsService buildMap:variant];
+    NTLayerVector* layers = [mapsService buildMap:variant];
+    [[self.mapView getLayers] addAll:layers];
+
+    {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+    {% highlight swift %}
+
+    let config = getConfig()
     
-    for (int i = 0; i < [layers size]; i++) {
+    // This calculation should be in background thread
+    DispatchQueue.global(qos: .userInitiated).async {
         
-        NTLayer* layer = [layers get:i];
-        [[self.mapView getLayers]add:layer];
+        let mapsService = NTCartoMapsService()
+        mapsService?.setUsername("nutiteq")
+        mapsService?.setDefaultVectorLayerMode(true) // use vector layers
+        
+        let layers = mapsService?.buildMap(NTVariant.fromString(config))
+        self.mapView?.getLayers()?.addAll(layers)
     }
 
-{% endhighlight %}
-</div>
+    {% endhighlight %}
+  </div>
 
-<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-{% highlight swift %}
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+    {% highlight kotlin %}
 
-        let config = getConfig()
-        
-        // This calculation should be in background thread
-        DispatchQueue.global(qos: .userInitiated).async {
-            
-            let mapsService = NTCartoMapsService()
-            mapsService?.setUsername("nutiteq")
-            mapsService?.setDefaultVectorLayerMode(true) // use vector layers
-            
-            let layers = mapsService?.buildMap(NTVariant.fromString(config))
+    val config = getConfigJson()
 
-            let count = Int((layers?.size())!)
-            for i in 0..<count {
-                self.mapView?.getLayers()?.add(layers!.get(Int32(i)))
-            }
+    // Use the Maps service to configure layers.
+    // Note that this must be done in a separate thread on Android,
+    // as Maps API requires connecting to server, which is not allowed in main thread.
+
+    // Remember: Put your operations back on the main thread to change the UI
+    // Note:
+    // doAsync requires anko coroutines dependency
+    // compile "org.jetbrains.anko:anko-sdk25-coroutines:$anko_version"
+    doAsync {
+
+        val mapsService = CartoMapsService()
+        mapsService.username = "nutiteq"
+        mapsService.isDefaultVectorLayerMode = true // use vector layers
+
+        try {
+            val layers = mapsService.buildMap(Variant.fromString(config))
+            mapView?.layers?.addAll(layers)
+        } catch (e: IOException) {
+            println("Exception: " + e.message)
         }
+    }
 
-{% endhighlight %}
-</div>
-
-<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-{% highlight kotlin %}
-
-        val config = getConfigJson()
-
-        // Use the Maps service to configure layers.
-        // Note that this must be done in a separate thread on Android,
-        // as Maps API requires connecting to server, which is not allowed in main thread.
-
-        // Remember: Put your operations back on the main thread to change the UI
-        // Note:
-        // doAsync requires anko coroutines dependency
-        // compile "org.jetbrains.anko:anko-sdk25-coroutines:$anko_version"
-        doAsync {
-
-            val mapsService = CartoMapsService()
-            mapsService.username = "nutiteq"
-            mapsService.isDefaultVectorLayerMode = true // use vector layers
-
-            try {
-                val layers = mapsService.buildMap(Variant.fromString(config))
-                for (i in 0..layers.size() - 1) {
-                    mapView?.layers?.add(layers.get(i.toInt()))
-                }
-
-            } catch (e: IOException) {
-                println("Exception: " + e.message)
-            }
-        }
-
-{% endhighlight %}
-</div>
+    {% endhighlight %}
+  </div>
 
 </div>
 
@@ -593,26 +570,26 @@ serviceThread.start();
 
 <div class="js-TabPanes">
 
-<ul class="Tabs">
-  <li class="Tab js-Tabpanes-navItem--lang is-active">
-    <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-  </li>
-  <li class="Tab js-Tabpanes-navItem--lang">
-    <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-  </li>
-  <li class="Tab js-Tabpanes-navItem--lang">
-    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-  </li>
-  <li class="Tab js-Tabpanes-navItem--lang">
-    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-  </li>
-  <li class="Tab js-Tabpanes-navItem--lang">
-    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-  </li>
-</ul>
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
+  </ul>
 
-<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-{% highlight java %}
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+    {% highlight java %}
 
     final CartoMapsService service = new CartoMapsService();
 
@@ -628,14 +605,8 @@ serviceThread.start();
         @Override
         public void run() {
             try {
-
                 LayerVector layers = service.buildNamedMap(name, new StringVariantMap());
-
-                for (int i = 0; i < layers.size(); i++) {
-                    Layer layer = layers.get(i);
-                    mapView.getLayers().add(layer);
-                }
-
+                mapView.getLayers().addAll(layers);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -644,119 +615,98 @@ serviceThread.start();
 
     thread.start();
 
-{% endhighlight %}
-</div>
+    {% endhighlight %}
+  </div>
 
-<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-{% highlight csharp %}
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+    {% highlight csharp %}
 
+    MapView.ConfigureNamedVectorLayers("tpl_69f3eebe_33b6_11e6_8634_0e5db1731f59");
 
-MapView.ConfigureNamedVectorLayers("tpl_69f3eebe_33b6_11e6_8634_0e5db1731f59");
-
-// Extension method
-public static void ConfigureNamedVectorLayers(this MapView map, string name)
-{
-  System.Threading.Tasks.Task.Run(delegate
-  {
-    CartoMapsService service = new CartoMapsService();
-    service.Username = "nutiteq";
-
-    // Use VectorLayers
-    service.DefaultVectorLayerMode = true;
-
-    LayerVector layers = service.BuildNamedMap(name, new StringVariantMap());
-
-    for (int i = 0; i < layers.Count; i++)
+    // Extension method
+    public static void ConfigureNamedVectorLayers(this MapView map, string name)
     {
-      map.Layers.Add(layers[i]);
+        System.Threading.Tasks.Task.Run(delegate
+        {
+            CartoMapsService service = new CartoMapsService();
+            service.Username = "nutiteq";
+
+            // Use VectorLayers
+            service.DefaultVectorLayerMode = true;
+
+            LayerVector layers = service.BuildNamedMap(name, new StringVariantMap());
+            map.Layers.AddAll(layers);
+        });
     }
-  });
-}
 
-{% endhighlight %}
-</div>
+    {% endhighlight %}
+    </div>
 
-<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-{% highlight objc %}
+    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+    {% highlight objc %}
 
-NTCartoMapsService* mapsService = [[NTCartoMapsService alloc] init];
+    NTCartoMapsService* mapsService = [[NTCartoMapsService alloc] init];
 
-[mapsService setUsername:@"nutiteq"];
+    [mapsService setUsername:@"nutiteq"];
 
-// Use vector layers
-[mapsService setDefaultVectorLayerMode:YES];
+    // Use vector layers
+    [mapsService setDefaultVectorLayerMode:YES];
 
-NTLayerVector *layers = [mapsService buildNamedMap:@"tpl_69f3eebe_33b6_11e6_8634_0e5db1731f59" templateParams: [[NTStringVariantMap alloc] init]];
+    NTLayerVector* layers = [mapsService buildNamedMap:@"tpl_69f3eebe_33b6_11e6_8634_0e5db1731f59" templateParams: [[NTStringVariantMap alloc] init]];
+    [[self.mapView getLayers] addAll:layers];
 
-for (int i = 0; i < [layers size]; i++) {
-    NTLayer* layer = [layers get:i];
-    [[self.mapView getLayers]add:layer];
-}
+    {% endhighlight %}
+  </div>
 
-{% endhighlight %}
-</div>
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+    {% highlight swift %}
 
-<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-{% highlight swift %}
-
-        let service = NTCartoMapsService()
-        
-        // Use vector layers
-        service?.setDefaultVectorLayerMode(true)
-        
-        service?.setUsername("nutiteq")
-        
-        let name = "tpl_69f3eebe_33b6_11e6_8634_0e5db1731f59"
-
-        DispatchQueue.global(qos: .userInitiated).async {
-            
-            let layers = service?.buildNamedMap(name, templateParams: NTStringVariantMap())
-            
-            let count = Int((layers?.size())!)
-                
-            for i in 0..<count {
-                let layer = layers?.get(Int32(i))
-                self.mapView?.getLayers()?.add(layer)
-            }
-        }
-
-{% endhighlight %}
-</div>
-
-<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-{% highlight kotlin %}
-
-        val service = CartoMapsService()
-	    
-        // Use vector layers
-        service.isDefaultVectorLayerMode = true
-
-        service.username = "nutiteq"
-
-        val name = "tpl_69f3eebe_33b6_11e6_8634_0e5db1731f59"
-
-        // Be sure to make network queries on another thread
+    let service = NTCartoMapsService()
     
-        // Remember: Put your operations back on the main thread to change the UI
-        // Note:
-        // doAsync requires anko coroutines dependency
-        // compile "org.jetbrains.anko:anko-sdk25-coroutines:$anko_version"
-        doAsync {
-            try {
-                val layers = service.buildNamedMap(name, StringVariantMap())
+    // Use vector layers
+    service?.setDefaultVectorLayerMode(true)
+    
+    service?.setUsername("nutiteq")
+    
+    let name = "tpl_69f3eebe_33b6_11e6_8634_0e5db1731f59"
 
-                for (i in 0..layers.size() - 1) {
-                    val layer = layers.get(i.toInt())
-                    mapView?.layers?.add(layer)
-                }
+    DispatchQueue.global(qos: .userInitiated).async {
+        let layers = service?.buildNamedMap(name, templateParams: NTStringVariantMap())
+        self.mapView?.getLayers()?.addAll(layers)
+    }
 
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
+    {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+    {% highlight kotlin %}
+
+    val service = CartoMapsService()
+        
+    // Use vector layers
+    service.isDefaultVectorLayerMode = true
+
+    service.username = "nutiteq"
+
+    val name = "tpl_69f3eebe_33b6_11e6_8634_0e5db1731f59"
+
+    // Be sure to make network queries on another thread
+
+    // Remember: Put your operations back on the main thread to change the UI
+    // Note:
+    // doAsync requires anko coroutines dependency
+    // compile "org.jetbrains.anko:anko-sdk25-coroutines:$anko_version"
+    doAsync {
+        try {
+            val layers = service.buildNamedMap(name, StringVariantMap())
+            mapView?.layers?.addAll(layers)
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
+    }
 
-{% endhighlight %}
-</div>
+    {% endhighlight %}
+  </div>
 
 </div>
 
@@ -768,210 +718,206 @@ CARTO’s [SQL API](https://carto.com/docs/carto-engine/sql-api/) allows you to 
 
 <div class="js-TabPanes">
 
-<ul class="Tabs">
-  <li class="Tab js-Tabpanes-navItem--lang is-active">
-    <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-  </li>
-  <li class="Tab js-Tabpanes-navItem--lang">
-    <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-  </li>
-  <li class="Tab js-Tabpanes-navItem--lang">
-    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-  </li>
-  <li class="Tab js-Tabpanes-navItem--lang">
-    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-  </li>
-  <li class="Tab js-Tabpanes-navItem--lang">
-    <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-  </li>
-</ul>
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
+  </ul>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-  {% highlight java %}
+    {% highlight java %}
 
-  static final String query = "SELECT * FROM cities15000 WHERE population > 100000";
+    static final String query = "SELECT * FROM cities15000 WHERE population > 100000";
 
-  final CartoSQLService service = new CartoSQLService();
-  service.setUsername("nutiteq");
+    final CartoSQLService service = new CartoSQLService();
+    service.setUsername("nutiteq");
 
-  // Be sure to make network queries on another thread
-  Thread thread = new Thread(new Runnable() {
-      @Override
-      public void run() {
-          try {
-              features = service.queryFeatures(query, baseProjection);
+    // Be sure to make network queries on another thread
+    Thread thread = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            try {
+                features = service.queryFeatures(query, baseProjection);
 
-              for (int i = 0; i < features.getFeatureCount(); i++) {
+                for (int i = 0; i < features.getFeatureCount(); i++) {
+                    // This data set features point geometry,
+                    // however, it can also be LineGeometry or PolygonGeometry
+                    PointGeometry geometry = (PointGeometry)features.getFeature(i).getGeometry();
+                    source.add(new Point(geometry, getPointStyle()));
+                }
 
-                  // This data set features point geometry,
-                  // however, it can also be LineGeometry or PolygonGeometry
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    });
 
-                  PointGeometry geometry = (PointGeometry)features.getFeature(i).getGeometry();
-                  source.add(new Point(geometry, getPointStyle()));
-              }
+    thread.start();
 
-          } catch (IOException e) {
-              e.printStackTrace();
-          }
-      }
-  });
-
-  thread.start();
-
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-  {% highlight csharp %}
+    {% highlight csharp %}
 
-  const string query = "SELECT * FROM cities15000 WHERE population > 100000";
+    const string query = "SELECT * FROM cities15000 WHERE population > 100000";
 
-  CartoSQLService service = new CartoSQLService();
-  service.Username = "nutiteq";
+    CartoSQLService service = new CartoSQLService();
+    service.Username = "nutiteq";
 
-  PointStyleBuilder builder = new PointStyleBuilder
-  {
-    Color = new Carto.Graphics.Color(255, 0, 0, 255),
-    Size = 1
-  };
-
-  MapView.QueryFeatures(service, source, builder.BuildStyle(), query);
-
-  // Extension Method in a static class (shared code)
-  public static void QueryFeatures(this MapView map, CartoSQLService service, LocalVectorDataSource source, PointStyle style, string query)
-  {
-    System.Threading.Tasks.Task.Run(delegate
+    PointStyleBuilder builder = new PointStyleBuilder
     {
-      FeatureCollection features = service.QueryFeatures(query, map.Options.BaseProjection);
+        Color = new Carto.Graphics.Color(255, 0, 0, 255),
+        Size = 1
+    };
 
-      for (int i = 0; i < features.FeatureCount; i++)
-      {
-        Feature feature = features.GetFeature(i);
+    MapView.QueryFeatures(service, source, builder.BuildStyle(), query);
 
-        // This data set features point geometry,
-        // however, it can also be LineGeometry or PolygonGeometry
-        PointGeometry geometry = (PointGeometry)feature.Geometry;
+    // Extension Method in a static class (shared code)
+    public static void QueryFeatures(this MapView map, CartoSQLService service, LocalVectorDataSource source, PointStyle style, string query)
+    {
+        System.Threading.Tasks.Task.Run(delegate
+        {
+            FeatureCollection features = service.QueryFeatures(query, map.Options.BaseProjection);
 
-        var point = new Point(geometry, style);
-        source.Add(point);
-      }
+            for (int i = 0; i < features.FeatureCount; i++)
+            {
+                Feature feature = features.GetFeature(i);
 
-    }); 
-  }
+                // This data set features point geometry,
+                // however, it can also be LineGeometry or PolygonGeometry
+                PointGeometry geometry = (PointGeometry)feature.Geometry;
 
-  {% endhighlight %}
+                var point = new Point(geometry, style);
+                source.Add(point);
+            }
+        }); 
+    }
+
+    {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-  {% highlight objc %}
+    {% highlight objc %}
 
-  // Only get cities with over 100k, or else it will be too many results
-  NSString *sql = @"SELECT * FROM cities15000 WHERE population > 100000";
-  
-  // Initialize CartoSQL service, set a username
-  NTCartoSQLService *service = [[NTCartoSQLService alloc] init];
-  [service setUsername:@"nutiteq"];
-  
-  NTPointStyleBuilder *builder = [[NTPointStyleBuilder alloc]init];
-  NTColor *color = [[NTColor alloc] initWithR:255 g:0 b:0 a:255];
-  [builder setColor:color];
-  [builder setSize:1];
+    // Only get cities with over 100k, or else it will be too many results
+    NSString* sql = @"SELECT * FROM cities15000 WHERE population > 100000";
+    
+    // Initialize CartoSQL service, set a username
+    NTCartoSQLService* service = [[NTCartoSQLService alloc] init];
+    [service setUsername:@"nutiteq"];
+    
+    NTPointStyleBuilder* builder = [[NTPointStyleBuilder alloc] init];
+    NTColor* color = [[NTColor alloc] initWithR:255 g:0 b:0 a:255];
+    [builder setColor:color];
+    [builder setSize:1];
+    NTPointStyle* style = [builder buildStyle];
+    
+    dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0ul);
+    
+    // Set on background thread for "animated" point appear
+    dispatch_async(queue, ^{
+        NTFeatureCollection *features = [service queryFeatures:sql proj:self.projection];
+    
+        for (int i = 0; i < [features getFeatureCount]; i++) {
 
-  NTPointStyle *style = [builder buildStyle];
-  
-  dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0ul);
-  
-  // Set on background thread for "animated" point appear
-  dispatch_async(queue, ^{
-      NTFeatureCollection *features = [service queryFeatures:sql proj:self.projection];
-  
-      for (int i = 0; i < [features getFeatureCount]; i++) {
+            // This data set features point geometry,
+            // however, it can also be LineGeometry or PolygonGeometry
+            NTPointGeometry* geometry = (NTPointGeometry *)[[features getFeature:i] getGeometry];
+        
+            NTPoint* point = [[NTPoint alloc] initWithGeometry:geometry style:style];
+            [self.source add:point];
+        }
+    });
 
-          // This data set features point geometry,
-          // however, it can also be LineGeometry or PolygonGeometry
-          NTPointGeometry *geometry = (NTPointGeometry *)[[features getFeature:i] getGeometry];
-      
-          NTPoint *point = [[NTPoint alloc] initWithGeometry:geometry style:style];
-          [self.source add:point];
-      }
-  });
-
-  {% endhighlight %}
+    {% endhighlight %}
   </div>
-  
-<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-{% highlight swift %}
+    
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  {% highlight swift %}
 
-        let query = "SELECT * FROM cities15000 WHERE population > 100000"
+    let query = "SELECT * FROM cities15000 WHERE population > 100000"
+    
+    let service = NTCartoSQLService()
+    service?.setUsername("nutiteq")
+    
+    let builder = NTPointStyleBuilder()
+    builder?.setSize(1.0)
+    builder?.setColor(NTColor(r: 255, g: 0, b: 0, a: 255))
+    let style = builder?.buildStyle()
+    
+    let source = NTLocalVectorDataSource(projection: projection);
+    
+    // Networking should be placed on a background thread
+    // Remember: Put your operations back on the main thread to change the UI
+    DispatchQueue.global(qos: .userInitiated).async {
         
-        let service = NTCartoSQLService()
-        service?.setUsername("nutiteq")
+        let features = service?.queryFeatures(query, proj: projection)
         
-        let builder = NTPointStyleBuilder()
-        builder?.setSize(1.0)
-        builder?.setColor(NTColor(r: 255, g: 0, b: 0, a: 255))
-        let style = builder?.buildStyle()
-        
-        let source = NTLocalVectorDataSource(projection: projection);
-        
-        // Networking should be placed on a background thread
-        // Remember: Put your operations back on the main thread to change the UI
-        DispatchQueue.global(qos: .userInitiated).async {
+        let count = Int((features?.getFeatureCount())!)
+        for i in 0..<count {
             
-            let features = service?.queryFeatures(query, proj: projection)
+            // This data set features point geometry,
+            // however, it can also be LineGeometry or PolygonGeometry
             
-            let count = Int((features?.getFeatureCount())!)
-            for i in 0..<count {
-                
+            let geometry = features?.getFeature(Int32(i)).getGeometry() as! NTPointGeometry
+            source?.add(NTPoint (geometry: geometry, style: style))
+        }
+    }
+
+    {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+    {% highlight kotlin %}
+
+    val query = "SELECT * FROM cities15000 WHERE population > 100000"
+
+    val service = CartoSQLService()
+    service.username = "nutiteq"
+
+    val builder = PointStyleBuilder()
+    builder.size = 1F
+    builder.color = Color(255, 0, 0, 255)
+    val style = builder.buildStyle()
+
+    // Remember: Put your operations back on the main thread to change the UI
+    // Note:
+    // doAsync requires anko coroutines dependency
+    // compile "org.jetbrains.anko:anko-sdk25-coroutines:$anko_version"
+    doAsync {
+
+        try {
+            val features = service.queryFeatures(query, projection)
+
+            for (i in 0..features.featureCount - 1) {
+
                 // This data set features point geometry,
                 // however, it can also be LineGeometry or PolygonGeometry
-                
-                let geometry = features?.getFeature(Int32(i)).getGeometry() as! NTPointGeometry
-                source?.add(NTPoint (geometry: geometry, style: style))
+
+                val geometry = features.getFeature(i).geometry as PointGeometry
+                source?.add(Point (geometry, style))
             }
+
+        } catch (e: IOException) {
+
         }
+    }
 
-{% endhighlight %}
-</div>
-
-<div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-{% highlight kotlin %}
-
-        val query = "SELECT * FROM cities15000 WHERE population > 100000"
-
-        val service = CartoSQLService()
-        service.username = "nutiteq"
-
-        val builder = PointStyleBuilder()
-        builder.size = 1F
-        builder.color = Color(255, 0, 0, 255)
-        val style = builder.buildStyle()
-
-	   // Remember: Put your operations back on the main thread to change the UI
-	   // Note:
-	   // doAsync requires anko coroutines dependency
-	   // compile "org.jetbrains.anko:anko-sdk25-coroutines:$anko_version"
-        doAsync {
-
-            try {
-                val features = service.queryFeatures(query, projection)
-
-                for (i in 0..features.featureCount - 1) {
-
-                    // This data set features point geometry,
-                    // however, it can also be LineGeometry or PolygonGeometry
-
-                    val geometry = features.getFeature(i).geometry as PointGeometry
-                    source?.add(Point (geometry, style))
-                }
-
-            } catch (e: IOException) {
-
-            }
-        }
-
-{% endhighlight %}
-</div>
+    {% endhighlight %}
+  </div>
 
 </div>
 
