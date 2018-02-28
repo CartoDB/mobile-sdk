@@ -2,6 +2,12 @@ set -e
 
 rvm get head
 
+echo '---- Setting up boost ----'
+cd libs-external/boost
+./bootstrap.sh
+./b2 headers
+cd ../..
+
 echo '---- Downloading and installing CMake ----'
 curl -o cmake-3.5.2.tar.gz -L https://cmake.org/files/v3.5/cmake-3.5.2.tar.gz
 rm -rf cmake-3.5.2
