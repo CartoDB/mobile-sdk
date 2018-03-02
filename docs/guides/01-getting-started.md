@@ -223,7 +223,7 @@ If using iOS as the mobile platform, follow this implementation procedure.
 
   - Rename `ViewController.m` (comes with template) to `ViewController.mm`, to avoid compilation issues
 
-  -  Implement **ViewController.h** to extend **GLKViewController**, instead of
+  - Implement **ViewController.h** to extend **GLKViewController**, instead of
     UIViewController
 
   - You must replace `YOUR_LICENSE_KEY` with your [Mobile Apps and API Key](#registering-your-app) in the code below

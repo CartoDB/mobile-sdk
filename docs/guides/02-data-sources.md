@@ -37,10 +37,10 @@ For raster data, use [MBTiles](https://github.com/mapbox/mbtiles-spec) format fi
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
     {% highlight java %}
 
-    MBTilesTileDataSource tileDataSource = new MBTilesTileDataSource(filePath);
-    TileLayer rasterLayer = new RasterTileLayer(tileDataSource);
+    MBTilesTileDataSource tileDataSource = new MBTilesTileDataSource("MBTILES_FILENAME");
+    RasterTileLayer mbTilesLayer = new RasterTileLayer(tileDataSource);
     
-    mapView.getLayers().add(rasterLayer);
+    mapView.getLayers().add(mbTilesLayer);
 
     {% endhighlight %}
   </div>
@@ -48,7 +48,9 @@ For raster data, use [MBTiles](https://github.com/mapbox/mbtiles-spec) format fi
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
     {% highlight csharp %}
   
-    var mbTilesLayer = new RasterTileLayer(new MBTilesTileDataSource(filePath));
+    var tileDataSource = new MBTilesTileDataSource(filePath);
+    var mbTilesLayer = new RasterTileLayer(tileDataSource);
+
     MapView.Layers.Add(mbTilesLayer);
 
     {% endhighlight %}
@@ -57,14 +59,10 @@ For raster data, use [MBTiles](https://github.com/mapbox/mbtiles-spec) format fi
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
     {% highlight objc %}
   
-    NSString* fullpathVT = [[NSBundle mainBundle] pathForResource:@"MBTILESFILENAME" ofType:@"mbtiles"];
-    NTTileDataSource* tileDataSource = [[NTMBTilesTileDataSource alloc] initWithPath: fullpathVT];
+    NTTileDataSource* tileDataSource = [[NTMBTilesTileDataSource alloc] initWithPath: @"MBTILES_FILENAME"];
+    NTRasterTileLayer* mbTilesLayer = [[NTRasterTileLayer alloc] initWithDataSource:tileDataSource];
     
-    // 1. Initialize a raster layer with the previous data source
-    NTRasterTileLayer* rasterLayer = [[NTRasterTileLayer alloc] initWithDataSource:tileDataSource];
-    
-    // 2. Add the raster layer to the map
-    [[mapView getLayers] add:rasterLayer];
+    [[mapView getLayers] add:mbTilesLayer];
 
     {% endhighlight %}
   </div>
@@ -72,10 +70,10 @@ For raster data, use [MBTiles](https://github.com/mapbox/mbtiles-spec) format fi
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
     {% highlight swift %}
   
-    let tileDataSource = NTMBTilesTileDataSource(path: filePath)
-    let rasterLayer = NTRasterTileLayer(dataSource: tileDataSource)
+    let tileDataSource = NTMBTilesTileDataSource(path: "MBTILES_FILENAME")
+    let mbTilesLayer = NTRasterTileLayer(dataSource: tileDataSource)
         
-    mapView?.getLayers()?.add(rasterLayer)
+    mapView?.getLayers()?.add(mbTilesLayer)
 
     {% endhighlight %}
   </div>
@@ -83,10 +81,10 @@ For raster data, use [MBTiles](https://github.com/mapbox/mbtiles-spec) format fi
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
     {% highlight swift %}
   
-    val tileDataSource = MBTilesTileDataSource(filePath)
-    val rasterLayer = RasterTileLayer(tileDataSource)
+    val tileDataSource = MBTilesTileDataSource("MBTILES_FILENAME")
+    val mbTilesLayer = RasterTileLayer(tileDataSource)
     
-    mapView?.layers?.add(rasterLayer)
+    mapView?.layers?.add(mbTilesLayer)
 
     {% endhighlight %}
   </div>
@@ -128,21 +126,12 @@ Use the following code to use MBTiles for a vector layer:
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
     {% highlight java %}
 
-    // Initialize base layer with a bundled styles
-    CartoOnlineVectorTileLayer baseLayer = new CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_GRAY);
+    MBTilesTileDataSource tileDataSource = new MBTilesTileDataSource("estonia_ntvt.mbtiles");
 
-    // Use the style for your own vector tile datasource (online, offline etc),
-    MBTilesTileDataSource tileDataSource = null;
-    try {
-        tileDataSource = new MBTilesTileDataSource("estonia_ntvt.mbtiles");
-    } catch (IOException e) {
-        // Handle exception
-    }
+    // Create tile decoder based on Voyager style and VectorTileLayer
+    VectorTileDecoder tileDecoder = CartoVectorTileLayer.createTileDecoder(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_VOYAGER);
+    VectorTileLayer offlineLayer = new VectorTileLayer(tileDataSource, tileDecoder);
 
-    // Initialize offline layer & Grab vector tile layer from our base layer
-    VectorTileLayer offlineLayer = new VectorTileLayer(tileDataSource, baseLayer.getTileDecoder());
-
-    mapView.getLayers().add(baseLayer);
     mapView.getLayers().add(offlineLayer);
 
     {% endhighlight %}
@@ -151,18 +140,12 @@ Use the following code to use MBTiles for a vector layer:
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
     {% highlight csharp %}
 
-    var mapView = new MapView();
-
-    // Initialize base layer with a bundled styles
-    var baseLayer = new CartoOnlineVectorTileLayer(CartoBaseMapStyle.CartoBasemapStyleGray);
-
-    // Use the style for your own vector tile datasource (online, offline etc),
     var tileDataSource = new MBTilesTileDataSource("estonia_ntvt.mbtiles");
 
-    // Initialize offline layer & Grab vector tile layer from our base layer
-    var offlineLayer = new VectorTileLayer(tileDataSource, baseLayer.TileDecoder);
+    // Create tile decoder based on Voyager style and VectorTileLayer
+    var tileDecoder = CartoVectorTileLayer.CreateTileDecoder(CartoBaseMapStyle.CartoBasemapStyleVoyager);
+    var offlineLayer = new VectorTileLayer(tileDataSource, tileDecoder);
 
-    mapView.Layers.Add(baseLayer);
     mapView.Layers.Add(offlineLayer);
 
     {% endhighlight %}
@@ -171,15 +154,13 @@ Use the following code to use MBTiles for a vector layer:
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
     {% highlight objc %}
   
-    // Use the style for your own vector tile datasource (online, offline etc),
     NSString* path = [[NSBundle mainBundle] pathForResource:@"estonia_ntvt" ofType:@"mbtiles"];
     NTMBTilesTileDataSource* tileDataSource = [[NTMBTilesTileDataSource alloc] initWithPath:path];
     
-    // Initialize offline layer & Grab vector tile layer from our base layer
-    NTMBVectorTileDecoder* decoder = [baseLayer getTileDecoder];
-    NTVectorTileLayer* offlineLayer = [[NTVectorTileLayer alloc] initWithDataSource:tileDataSource decoder:decoder];
+    // Create tile decoder based on Voyager style and VectorTileLayer
+    NTMBVectorTileDecoder* tileDecoder = [NTCartoVectorTileLayer createTileDecoder: NT_CARTO_BASEMAP_STYLE_VOYAGER];
+    NTVectorTileLayer* offlineLayer = [[NTVectorTileLayer alloc] initWithDataSource:tileDataSource decoder:tileDecoder];
     
-    [[mapView getLayers] add:baseLayer];
     [[mapView getLayers] add:offlineLayer];
 
     {% endhighlight %}
@@ -188,16 +169,12 @@ Use the following code to use MBTiles for a vector layer:
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
     {% highlight swift %}
 
-    // Initialize base layer with a bundled styles
-    let baseLayer = NTCartoOnlineVectorTileLayer(style: NTCartoBaseMapStyle.CARTO_BASEMAP_STYLE_GRAY)
-    
-    // Use the style for your own vector tile datasource (online, offline etc),
     let tileDataSource = NTMBTilesTileDataSource(path: Bundle.main.path(forResource: "estonia_ntvt", ofType: "mbtiles"))
     
-    // Initialize offline layer & Grab vector tile layer from our base layer
-    let offlineLayer = NTVectorTileLayer(tileDataSource, baseLayer?.getTileDecoder())
+    // Create tile decoder based on Voyager style and VectorTileLayer
+    let tileDecoder = NTCartoVectorTileLayer.createTileDecoder(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_VOYAGER)
+    let offlineLayer = NTVectorTileLayer(tileDataSource, tileDecoder)
     
-    mapView?.layers?.add(baseLayer)
     mapView?.layers?.add(offlineLayer)
 
     {% endhighlight %}
@@ -206,16 +183,12 @@ Use the following code to use MBTiles for a vector layer:
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
     {% highlight kotlin %}
   
-    // Initialize base layer with a bundled styles
-    val baseLayer = CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_GRAY)
+    val tileDataSource = MBTilesTileDataSource("estonia_ntvt.mbtiles")
     
-    // Use the style for your own vector tile datasource (online, offline etc),
-    val tileDataSource = MBTilesTileDataSource("/sdcard/estonia_ntvt.mbtiles")
-    
-    // Initialize offline layer & Grab vector tile layer from our base layer
-    val offlineLayer = VectorTileLayer(tileDataSource, baseLayer.tileDecoder)
+    // Create tile decoder based on Voyager style and VectorTileLayer
+    val tileDecoder = CartoVectorTileLayer.createTileDecoder(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_VOYAGER)
+    val offlineLayer = VectorTileLayer(tileDataSource, tileDecoder)
 
-    mapView?.layers?.add(baseLayer)
     mapView?.layers?.add(offlineLayer)
 
     {% endhighlight %}
@@ -395,15 +368,14 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
     NTTileDataSource* tileDataSource = [[NTHTTPTileDataSource alloc] initWithMinZoom:0 maxZoom:14 baseURL:@"http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN"];
 
     // 2. Load vector tile style set
-    NTBinaryData* vectorTileStyleSetData = [NTAssetUtils loadAsset: @"CUSTOM_STYLESET.zip"];
-    NTZippedAssetPackage* package = [[NTZippedAssetPackage alloc] initWithZipData:vectorTileStyleSetData];
-    NTCompiledStyleSet* vectorTileStyleSet = [[NTCompiledStyleSet alloc] initWithAssetPackage:package];
+    NTBinaryData* styleBytes = [NTAssetUtils loadAsset: @"CUSTOM_STYLESET.zip"];
+    NTCompiledStyleSet* vectorTileStyleSet = [[NTCompiledStyleSet alloc] initWithAssetPackage: [[NTZippedAssetPackage alloc] initWithZipData: styleBytes]];
 
     // 3. Create vector tile decoder using the style set
-    NTMBVectorTileDecoder* vectorTileDecoder = [[NTMBVectorTileDecoder alloc] initWithCompiledStyleSet:vectorTileStyleSet];
+    NTMBVectorTileDecoder* vectorTileDecoder = [[NTMBVectorTileDecoder alloc] initWithCompiledStyleSet: vectorTileStyleSet];
 
     // 4. Create vector tile layer, using previously created data source and decoder
-    NTVectorTileLayer* vectorTileLayer = [[NTVectorTileLayer alloc] initWithDataSource:tileDataSource decoder:vectorTileDecoder];
+    NTVectorTileLayer* vectorTileLayer = [[NTVectorTileLayer alloc] initWithDataSource:tileDataSource decoder: vectorTileDecoder];
 
     // 5. Add vector tile layer
     [[mapView getLayers] add:vectorTileLayer];
@@ -500,11 +472,9 @@ yflipped, quadkey**.
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
     {% highlight csharp %}
 
-    // 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
     string url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US";
     var baseRasterTileDataSource = new HTTPTileDataSource(1, 19, url);
 
-    // 2. Create layer and add to map
     var baseLayer = new RasterTileLayer(baseRasterTileDataSource);
     MapView.Layers.Add(baseLayer);
 
@@ -514,13 +484,11 @@ yflipped, quadkey**.
   <div class="Carousel-item js-Tabpanes-item">
     {% highlight objc %}
 
-    NTHTTPTileDataSource* baseRasterTileDataSource = [[NTHTTPTileDataSource alloc] initWithMinZoom:0 maxZoom:19 baseURL:@"http://otile1.mqcdn.com/tiles/1.0.0/osm/{zoom}/{x}/{y}.png"];
+    NSString* url = @"http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US";
+    NTHTTPTileDataSource* baseRasterTileDataSource = [[NTHTTPTileDataSource alloc] initWithMinZoom:1 maxZoom:19 baseURL:url];
       
-    // 1. Initialize a raster layer with the previous data source
-    NTRasterTileLayer* rasterLayer = [[NTRasterTileLayer alloc] initWithDataSource:baseRasterTileDataSource];
-      
-    // 2. Add the previous raster layer to the map
-    [[mapView getLayers] add:rasterLayer];
+    NTRasterTileLayer* baseLayer = [[NTRasterTileLayer alloc] initWithDataSource:baseRasterTileDataSource];
+    [[mapView getLayers] add:baseLayer];
 
     {% endhighlight %}
   </div>
@@ -590,7 +558,8 @@ There are some DataSources which can use another DataSource as input, and apply 
     {% highlight java %}
 
     // 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
-    TileDataSource baseRasterTileDataSource = new HTTPTileDataSource(1, 19, "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US");
+    String url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US";
+    TileDataSource baseRasterTileDataSource = new HTTPTileDataSource(1, 19, url);
 
     // 2. Add persistent caching datasource, tiles will be stored locally on persistent storage
     PersistentCacheTileDataSource cachedDataSource = new PersistentCacheTileDataSource(baseRasterTileDataSource, getExternalFilesDir(null) + "/mapcache.db");
@@ -606,7 +575,8 @@ There are some DataSources which can use another DataSource as input, and apply 
     {% highlight csharp %}
 
     // 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
-    var baseRasterTileDataSource = new HTTPTileDataSource(1, 19, "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US");
+    var url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US";
+    var baseRasterTileDataSource = new HTTPTileDataSource(1, 19, url);
 
     // Add persistent caching datasource, tiles will be stored locally on persistent storage
     // fileDir must be a directory where files can be written - this is platform-specific
@@ -623,16 +593,17 @@ There are some DataSources which can use another DataSource as input, and apply 
     {% highlight objc %}
 
     // 1. Initialize a OSM raster data source from MapQuest Open Tiles
-    NTHTTPTileDataSource* baseRasterTileDataSource = [[NTHTTPTileDataSource alloc] initWithMinZoom:0 maxZoom:19 baseURL:@"http://otile1.mqcdn.com/tiles/1.0.0/osm/{zoom}/{x}/{y}.png"];
+    NSString* url = @"http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US";
+    NTHTTPTileDataSource* baseRasterTileDataSource = [[NTHTTPTileDataSource alloc] initWithMinZoom:1 maxZoom:19 baseURL: url];
 
     // 2. Create persistent cache for the given data source  
-    NTPersistentCacheTileDataSource* cachedRasterTileDataSource = [[NTPersistentCacheTileDataSource alloc] initWithDataSource:baseRasterTileDataSource databasePath:[NTAssetUtils calculateWritablePath:@"mycache.db"]];
+    NTPersistentCacheTileDataSource* cachedDataSource = [[NTPersistentCacheTileDataSource alloc] initWithDataSource:baseRasterTileDataSource databasePath:[NTAssetUtils calculateWritablePath:@"mycache.db"]];
 
     // 3. Initialize a raster layer with the previous data source
-    NTRasterTileLayer* rasterLayer = [[NTRasterTileLayer alloc] initWithDataSource:cachedRasterTileDataSource];
+    NTRasterTileLayer* baseLayer = [[NTRasterTileLayer alloc] initWithDataSource:cachedDataSource];
 
     // 4. Add the previous raster layer to the map
-    [[self.mapView getLayers] add:rasterLayer];
+    [[self.mapView getLayers] add:baseLayer];
 
     {% endhighlight %}
   </div>
@@ -650,6 +621,8 @@ There are some DataSources which can use another DataSource as input, and apply 
 
     // 3. Create layer and add to map
     let baseLayer = NTRasterTileLayer(dataSource: cachedDataSource)
+
+    // 4. Add the previous raster layer to the map
     mapView?.getLayers()?.add(baseLayer)
 
     {% endhighlight %}
@@ -668,6 +641,8 @@ There are some DataSources which can use another DataSource as input, and apply 
 
     // 3. Create layer and add to map
     val baseLayer = RasterTileLayer(cachedDataSource)
+
+    // 4. Add the previous raster layer to the map
     mapView?.layers?.add(baseLayer)
 
     {% endhighlight %}
@@ -767,8 +742,8 @@ The DataSource constructor uses the following URL patterns. It requires a minimu
     {% highlight objc %}
 
     NSString* url = @"http://your-url-with-placeholders-see-below";
-    NTHTTPTileDataSource* source = [[NTHTTPTileDataSource alloc] initWithMinZoom:0 maxZoom:18 baseURL:url];
-    NTRasterTileLayer* layer = [[NTRasterTileLayer alloc] initWithDataSource:source];
+    NTHTTPTileDataSource* tileDataSource = [[NTHTTPTileDataSource alloc] initWithMinZoom:0 maxZoom:18 baseURL:url];
+    NTRasterTileLayer* layer = [[NTRasterTileLayer alloc] initWithDataSource:tileDataSource];
 
     {% endhighlight %}
   </div>
