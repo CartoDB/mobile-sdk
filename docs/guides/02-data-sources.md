@@ -1,14 +1,17 @@
-## Loading Map Data
+## Data Sources
+
+Maps in CARTO Mobile SDK are displayed as list of layers. Each map layer is 
+connected to a **DataSource**, which defines the data the layer displays.
 
 The following DataSources are available for the Mobile SDK, and are supported on all mobile platforms.
 
 **Note:** Some DataSources are more generic and can be used for different data types and map layers (vector or raster). Others can only be applied for specific layer types. Please [contact us](mailto:mobile-support@carto.com) if you have questions about which DataSources are available for your account plan.
 
-### Offline Maps from MBTiles
+### Offline Maps from custom MBTiles
 
 **MBTilesTileDataSource** is universal datasource for raster, or vector, tile data.
 
-#### MBtiles as RasterTileLayer
+#### MBTiles as RasterTileLayer
 
 For raster data, use [MBTiles](https://github.com/mapbox/mbtiles-spec) format files, and use the following code to generate them:
 
@@ -90,17 +93,18 @@ For raster data, use [MBTiles](https://github.com/mapbox/mbtiles-spec) format fi
     
 </div>
 
-#### MBtiles as VectorTileLayer
+#### MBTiles as VectorTileLayer
 
 For packaged vector data, you will need CARTO specific vector files packages (NTVT - *NutiTeq Vector Tile*) and styling files must be in _Mapnik XML_ format. Download the following, free sample package using OpenStreetMap data:
 
 -   [estonia\_ntvt.mbtiles](https://dl.dropboxusercontent.com/u/3573333/public_web/ntvt_packages/estonia_ntvt.mbtiles)
 
-The Mobile SDK provides a built-in download service thorough the **Package Manager** to retrieve map packages for a country, or smaller region. For details, see [Offline Map Packages](/docs/carto-engine/mobile-sdk/offline-maps/#offline-map-packages).
+The Mobile SDK provides a built-in download service thorough the **Package Manager** to retrieve map packages for a country, or smaller region. For details, see [Package Manager](/docs/carto-engine/mobile-sdk/05-package-manager/) section.
 
 **Note:** Vector maps always need proper **style definitions**. Fortunately, we bundle three basic styles with the SDK (bright, default, gray).
+These styles assume *OpenMapTiles* data structure are not generally applicable to other data structures (*Mapbox*, for example).
 
-Use the following code to use MBtiles for a vector layer: 
+Use the following code to use MBTiles for a vector layer: 
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -219,30 +223,23 @@ Use the following code to use MBtiles for a vector layer:
     
 </div>
 
-### MBTiles for Map Data
+#### Tools for Raster Maps
 
-MBTiles contain the TileJSON formats that include basic map styling for Mapbox. [MBTiles](http://mapbox.com/developers/mbtiles/) support is included in CARTO Mobile SDK. MBTiles uses the SQLite database format, which only requires one file to be downloaded and managed.
-
-#### Raster Maps
-
-The following tools enable you to create MBTile packages:
+The following tools enable you to create MBTiles packages:
 
 - [MapTiler](http://www.maptiler.com/) is a utility to create MBTiles from raster geo files (GeoTIFF, JPG, ECW, and so on)
 
-* [TileMill](http://mapbox.com/tilemill/) is an open source generator of map packages for vector geo files, such as Shapefile or PosgGIS geo data
+- [TileMill](http://mapbox.com/tilemill/) is an open source generator of map packages for vector geo files, such as Shapefile or PosgGIS geo data
+
 - [MOBAC](http://mobac.sourceforge.net) is available to download from variety of free sources, such as Bing, OpenStreetMap, and so on. You can even load it from WMS with added configuration
 
 - [MBUtil](https://github.com/mapbox/mbutil) enables you to create mbtiles from/to TMS-style tile folders, created with different utilities, such as GDAL utility
 
 - [Portable Basemap Server](https://geopbs.codeplex.com/) is a free utility for Windows and loads data from various commercial servers and custom sources. It is also available in ESRI formats. It works mainly as WMTS server, but can create MBTiles as an extra feature
 
-#### Vector Maps
+#### Tools for Vector Maps
 
-The following vector map tools enable you to create MBTiles:
-
-- The Mobile SDK bundled [Package Manager API](/docs/carto-engine/mobile-sdk/offline-maps/) downloads country-wide, or bounding box based, map packages with **OpenStreetMap data**. These files are not directly visible, as Package Manager downloads the files, you only use the API
-
-_**Note:** If you need to create vector map files **from different sources, or with your own data** (e.g. Shapefiles), please contact [CARTO support](mailto:carto@support.com)._ Our Mobile Developers will provide you with a free converter toolchain for custom conversions.
+If you need to create vector map files **from different sources, or with your own data** (e.g. Shapefiles), please contact [CARTO support](mailto:carto@support.com)._ Our Mobile Developers will provide you with a free converter toolchain for custom conversions.
 
 ### Online Maps
 
@@ -250,7 +247,7 @@ _**Note:** If you need to create vector map files **from different sources, or w
 
 #### CARTO Online Vector Tile Layer
 
-The Mobile SDK contains built-in vector tiles, as provided by CARTO maps as a service, and is avilale for all account plans. This is useful for basic maps. For vector styling, you can use the same assets provided for offline tiles (OSMBright with 3D buildings [osmbright.zip](/docs/carto-engine/mobile-sdk/getting-started/#sample-apps)).
+The Mobile SDK contains built-in vector tiles, as provided by CARTO maps as a service, and is available for all account plans. This is useful for basic maps.
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -322,9 +319,9 @@ The Mobile SDK contains built-in vector tiles, as provided by CARTO maps as a se
 
 Some Mobile SDK plans enable you to use other vector tile map DataSources. These are similar to custom raster map data sources, but a vector decoder is needed for correct implementation.
 
-- Connect to MapBox vector tiles, which have a very similar (but not identical) data structure. You can use the same (OSMBright with 3D buildings [osmbright.zip](/docs/carto-engine/mobile-sdk/getting-started/#sample-apps)) asset for vector styling
+- Connect to Mapbox vector tiles, which have a different data structure. You need your own StyleSet asset.
 
-  **Note:** Before using these assets in your app, confirm with MapBox if this is allowed and make sure you use your MapBox license key in the URL. You may need to use your custom stylying and vector tile server URL.
+  **Note:** Before using these assets in your app, confirm with Mapbox if this is allowed and make sure you use your Mapbox license key in the URL. You may need to use your custom stylying and vector tile server URL.
 
 The following tags are supported in the URL definition: **zoom, x, y, xflipped, yflipped, quadkey**.
 
@@ -354,7 +351,7 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
     TileDataSource tileDataSource = new HTTPTileDataSource(0, 14, "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN");
 
     // 2. Load vector tile style set
-    BinaryData styleBytes = AssetUtils.loadAsset("osmbright.zip");
+    BinaryData styleBytes = AssetUtils.loadAsset("CUSTOM_STYLESET.zip");
     CompiledStyleSet vectorTileStyleSet = new CompiledStyleSet(new ZippedAssetPackage(styleBytes));
 
     // 3. Create vector tile decoder using the style set
@@ -376,7 +373,7 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
     var tileDataSource = new HTTPTileDataSource(0, 14, "http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN");
 
     // 2. Load vector tile style set
-    var styleBytes = AssetUtils.LoadAsset("nutiteq-dark.zip");
+    var styleBytes = AssetUtils.LoadAsset("CUSTOM_STYLESET.zip");
     var vectorTileStyleSet = new CompiledStyleSet(new ZippedAssetPackage(styleBytes));
 
     // 3. Create vector tile decoder using the style set
@@ -398,7 +395,7 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
     NTTileDataSource* tileDataSource = [[NTHTTPTileDataSource alloc] initWithMinZoom:0 maxZoom:14 baseURL:@"http://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v5/{zoom}/{x}/{y}.vector.pbf?access_token=YOUR-MAPBOX-TOKEN"];
 
     // 2. Load vector tile style set
-    NTBinaryData* vectorTileStyleSetData = [NTAssetUtils loadAsset: @"osmbright.zip"];
+    NTBinaryData* vectorTileStyleSetData = [NTAssetUtils loadAsset: @"CUSTOM_STYLESET.zip"];
     NTZippedAssetPackage* package = [[NTZippedAssetPackage alloc] initWithZipData:vectorTileStyleSetData];
     NTCompiledStyleSet* vectorTileStyleSet = [[NTCompiledStyleSet alloc] initWithAssetPackage:package];
 
@@ -422,7 +419,7 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
     let tileDataSource = NTHTTPTileDataSource(minZoom: 0, maxZoom: 14, baseURL: url)
 
     // 2. Load vector tile style set
-    let styleBytes = NTAssetUtils.loadAsset("osmbright.zip")
+    let styleBytes = NTAssetUtils.loadAsset("CUSTOM_STYLESET.zip")
     let vectorTileStyleSet = NTCompiledStyleSet(assetPackage: NTZippedAssetPackage(zip: styleBytes))
 
     // 3. Create vector tile decoder using the style set
@@ -445,7 +442,7 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
     val tileDataSource = HTTPTileDataSource(0, 14, url)
 
     // 2. Load vector tile style set
-    val styleBytes = AssetUtils.loadAsset("osmbright.zip")
+    val styleBytes = AssetUtils.loadAsset("CUSTOM_STYLESET.zip")
     val vectorTileStyleSet = CompiledStyleSet(ZippedAssetPackage(styleBytes))
 
     // 3. Create vector tile decoder using the style set
@@ -558,11 +555,11 @@ yflipped, quadkey**.
 
 Mobile SDK contains in-memory DataSources where applications can add vector objects as the map overlay layer.
 
-`LocalVectorDataSource` is a dynamic DataSource that is initially empty, and allows you to add or remove objects. Objects are cached and by default, all added objects are rendered. For detailed code samples, see [Basic Map Features](/docs/carto-engine/mobile-sdk/getting-started/#basic-map-features) for examples of adding Points, Markers, Texts, Lines and Polygons to map.
+`LocalVectorDataSource` is a dynamic DataSource that is initially empty, and allows you to add or remove objects. Objects are cached and by default, all added objects are rendered. For detailed code samples, see [Vector Elements](/docs/carto-engine/mobile-sdk/03-vector-elements/) for examples of adding Points, Markers, Texts, Lines and Polygons to map.
 
 ### App-defined Ground Overlays
 
-`BitmapOverlayRasterTileDataSource` defines a bitmap image and the geographical coordinates of the bitmap. For details, see [Ground Overlays](#ground-overlays).
+`BitmapOverlayRasterTileDataSource` defines a bitmap image and the geographical coordinates of the bitmap. For details, see [Ground Overlays](/docs/carto-engine/mobile-sdk/11-ground-overlays/).
 
 ### Virtual DataSources
 
@@ -680,7 +677,7 @@ There are some DataSources which can use another DataSource as input, and apply 
 
 -   **CompressedCacheTileDataSource**
 
-An in-memory cache DataSource. Although layers also cache tiles, the tiles are uncompressed and usually take 2-5x more memory after being loaded. `CompressedCacheTileDataSource` keeps all tiles in a compressed format for better use of existing memory.
+An in-memory cache tile DataSource. Although layers also cache tiles, the tiles are uncompressed and usually take 2-5x more memory after being loaded. `CompressedCacheTileDataSource` keeps all tiles in an original compressed format for better use of existing memory.
 
 -   **CombinedTileDataSource**
 
@@ -702,7 +699,8 @@ With the GIS extension we provide **OGRVectorDataSource** and **GDALRasterTileDa
 
 ### Custom DataSources
 
-You can define a custom datasource for your mobile application. See *MyMergedRasterTileDataSource* from the [Sample Apps](/docs/carto-engine/mobile-sdk/getting-started/#sample-apps) for an example of using a virtual DataSource. This example uses raster data from two raster datasources and merges the map using pixel aggregations. Note that the second datasource contains transparent, or semitransparent pixels. Otherwise, the pixels from the first datasource are hidden.
+You can define a custom datasource for your mobile application. 
+See *MyMergedRasterTileDataSource* from the [Sample Apps](/docs/carto-engine/mobile-sdk/01-getting-started/#sample-apps) for an example of using a virtual DataSource. This example uses raster data from two raster datasources and merges the map using pixel aggregations. Note that the second datasource contains transparent, or semitransparent pixels. Otherwise, the pixels from the first datasource are hidden.
 
 Custom DataSourced should extend one of following abstract base classes:
 

@@ -1,7 +1,18 @@
 ## Package Manager
 
-**Offline maps, routing and geocoding** in the CARTO Mobile SDK require that you pre-download map data. For this we provide SDK internal API called **PackageManager** - this manages offline data packages, which are downloaded from CARTO server and used by the SDK for specific features. So for offline mapping you need to (1) create and configure PackageManager, then (2) download map data for the area what you need and finally (3) connect it to specific map layer or service to consume the data
+**Offline maps, routing and geocoding** in the CARTO Mobile SDK require 
+that you pre-download map data. For this we provide SDK internal API called
+**PackageManager** - this manages offline data packages, which are downloaded from 
+CARTO server and used by the SDK for specific features. 
 
+So for offline mapping (geocoding or routing) you need to 
+
+* Create and configure PackageManager instance
+* Download map data for the area what you need using the instance
+* Create a map layer (geocoding or routing service) by refering to the PackageManager instance
+
+The packages that are once downloaded are kept persistently on the device
+and can be updated or removed through the PackageManager as the app requires.
 
 ### Create and configure Package Manager
 
@@ -528,13 +539,14 @@ You should add `CartoOfflineVectorTileLayer` to the MapView, using PackageManage
 
 #### Offline Routing
 
-Offline Routing is covered in our [Offline Routing document](https://carto.com/docs/carto-engine/mobile-sdk/mobile-routing/#offline-routing)
+Offline Routing is covered in our [Offline Routing document](https://carto.com/docs/carto-engine/mobile-sdk/07-mobile-routing/#offline-routing)
 
 #### Offline Geocoding
 
-Offline geocoding is covered in our [Offline Geocoding document](https://carto.com/docs/carto-engine/mobile-sdk/mobile-geocoding/#offline-geocoding)
+Offline geocoding is covered in our [Offline Geocoding document](https://carto.com/docs/carto-engine/mobile-sdk/06-mobile-geocoding/#offline-geocoding)
 
 ### Additional notes
+
 #### Updating packages
 
 There is no special event or method to check package updates, so updates can be checked and controlled by application using following logic. You can call this logic as soon as you feel appropriate. Different packages can be updated in different point of time, and with different frequency.

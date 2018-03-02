@@ -3,12 +3,13 @@
 **Routing** in CARTO Mobile SDK provides navigation info
 from a defined start location to a defined end location.
 
-The calculated route includes waypoints and instructions and
-can be displayed as turn-by-turn directions on your map,
+The calculated route includes waypoints and instructions.
+It can be displayed as turn-by-turn directions on your map,
 based on the transportation mode that you specified.
 Routing functionality through the Mobile SDK includes
 [online routing](#online-routing), based on CARTOs online service (or third party services),
-and [offline routing](#offline-routing), which requires that you install an offline data package on your local device.
+and [offline routing](#offline-routing), which requires that you install an offline data package 
+(usually through **Package Manager**) on your local device.
 
 Mobile SDK supports the following routing features:
 
@@ -55,7 +56,7 @@ The following procedure describes how to apply the sample routing code in your m
 
 2. Press and hold (long-click) on map to set route start point. Long-click a second time to set the end point
 
-    **Tip:** See [Listening to Events](/docs/carto-engine/mobile-sdk/developer-guide-to-sdk-features/#listening-to-events) for details about the `CLICK_TYPE_LONG` ClickType.
+    **Tip:** See [Listening to Events](/docs/carto-engine/mobile-sdk/04-map-listeners/#implementing-mapeventlistener) for details about the `CLICK_TYPE_LONG` ClickType.
 
 3. Once the end-point is set, the route is automatically calculated
 
@@ -359,7 +360,7 @@ These code samples display how to show navigation instructions on the map, as in
 
 Offline routing requires a more complicated preparation of your offline map packages, listener events, package initialization, and routing calculation parameters.
 
-First, you need to initialize a package manager and a listener to download packages. View the [PackageManager](/docs/carto-engine/mobile-sdk/package-manager/) documentation to find more about offline packages.
+First, you need to initialize a package manager and a listener to download packages. View the [PackageManager](/docs/carto-engine/mobile-sdk/05-package-manager/) documentation to find more about offline packages.
 
 If all required routing packages are downloaded and routing service is ready, you can calculate routing.
 
@@ -395,7 +396,7 @@ Valhalla routing engine is more flexible, but requires more memory and is slower
 
 CARTO has created a customized routing package, similar to other offline map packages, that contain **world-wide offline route packages**. This routing package includes the corresponding online service for most common profiles, using **osm.car** and **osm.foot** OpenStreetMap data, as the map source.
 
-- The list of country packages for routing is the same as other offline maps. See [Offline Map Packages](/docs/carto-engine/mobile-sdk/offline-maps/#offline-map-packages) for the full list of offline packages
+- The list of country packages for routing is the same as other offline maps. See [Offline Map Packages](https://github.com/CartoDB/mobile-sdk/wiki/List-of-Offline-map-packages) for the full list of offline packages
 
 - The download size of the offline routing package is significantly larger (10-40% greater) than the size of the corresponding offline map package. Car profile packages are considerably smaller than walking packages
 

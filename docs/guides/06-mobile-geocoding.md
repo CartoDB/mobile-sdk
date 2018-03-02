@@ -1,12 +1,14 @@
 ## Mobile Geocoding
 
 **Geocoding** is the process of transforming textual address to a location or a geographic identity.
-**Reverse geocoding** converts geographic coordinates to a description of a location, usually the name of a place or an addressable location."
+**Reverse geocoding** converts geographic coordinates to a description of a location, usually the name of a place or an addressable location.
 
 In layman's terms, geocoding is when you enter an address (text) and the output is latitude/longitude or geometric shape describing the identity (polygon of the building, for example).
 Reverse geocoding is when you click on the map and it finds a nearby address, or point of interest.
 
 CARTO Mobile SDK supports both geocoding and reverse geocoding and is available in both online and offline modes.
+Offline geocoding requires that you install an offline data package 
+(usually through **Package Manager**) on your local device.
 
 Mobile SDK supports the following geocoding features:
 
@@ -34,7 +36,7 @@ For minimal geocoding implementation, use our sample app code for different mobi
   
 ### Online Geocoding
 
-Online geocoding is available through MapBox's geocoding service. You will need your own Mapbox token. Sign up at [https://www.mapbox.com/](https://www.mapbox.com/) to obtain your token.
+Online geocoding is available through Mapbox's geocoding service. You will need your own Mapbox token. Sign up at [https://www.mapbox.com/](https://www.mapbox.com/) to obtain your token.
 
 SDK supports also Pelias online geocoding services, but you will need to find service provider as MapZen
 online service is no longer available.
@@ -140,7 +142,7 @@ From your `GeocodingResult` objects, you can simply access `name`, `locality`, `
 
 ### Reverse Geocoding
 
-Online reverse geocoding is also available through MapBox's geocoding service. You will need your own Mapbox token. Sign up at [https://www.mapbox.com/](https://www.mapbox.com/) obtain your token.
+Online reverse geocoding is also available through Mapbox's geocoding service. You will need your own Mapbox token. Sign up at [https://www.mapbox.com/](https://www.mapbox.com/) obtain your token.
 
 <div class="js-TabPanes">
   <ul class="Tabs">
