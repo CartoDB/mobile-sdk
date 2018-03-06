@@ -171,6 +171,12 @@ You see that `onPackageListUpdated()` callback starts immediately download of so
     {% highlight java %}
   
     public class MyPackageManagerListener extends PackageManagerListener {
+        PackageManager packageManager;
+
+        public MyPackageManagerListener(PackageManager manager) {
+            packageManager = manager;
+        }
+
         @Override
         public void onPackageListUpdated() {
             Log.d(Const.LOG_TAG, "Package list updated");
@@ -263,7 +269,7 @@ You see that `onPackageListUpdated()` callback starts immediately download of so
     
     @interface MyPackageManagerListener : NTPackageManagerListener
 
-      @property NTPackageManager* _packageManager;
+    @property NTPackageManager* _packageManager;
     - (void)setPackageManager:(NTPackageManager*)manager;
     
     @end
@@ -317,12 +323,11 @@ You see that `onPackageListUpdated()` callback starts immediately download of so
     {% highlight swift %}
       
     public class MyPackageManagerListener : NTPackageManagerListener {
+        var packageManager: NTPackageManager?
         
-        var packageManager: NTCartoPackageManager?
-        
-        convenience init(packageManager: NTCartoPackageManager) {
+        convenience init(manager: NTCartoPackageManager) {
             self.init()
-            self.packageManager = packageManager
+            self.packageManager = manager
         }
         
         public override func onPackageListUpdated() {
@@ -360,6 +365,11 @@ You see that `onPackageListUpdated()` callback starts immediately download of so
     {% highlight kotlin %}
   
     class MyPackageManagerListener(val packageManager: CartoPackageManager) : PackageManagerListener() {
+        var packageManager: PackageManager? = null
+
+        constructor(val manager: PackageManager?) {
+            packageManager = manager;
+        }
 
         override fun onPackageListUpdated() {
 
@@ -423,7 +433,7 @@ To link PackageManagerListener with PackageManager, apply the following code.
     {% highlight java %}
 
     // 1. Set listener, and start PackageManager
-    packageManager.setPackageManagerListener(new MyPackageManagerListener());
+    packageManager.setPackageManagerListener(new MyPackageManagerListener(packageManager));
     packageManager.start();
 
     // 2. Fetch list of available packages from server. Note that this is asynchronous operation and listener will be notified via onPackageListUpdated when this succeeds.
@@ -474,7 +484,7 @@ To link PackageManagerListener with PackageManager, apply the following code.
     var packageManager =  NTCartoPackageManager(source: "<your-package-source>", dataFolder: packageFolder)
 
     // 1. Set listener, and start PackageManager
-    packageManager?.setPackageManagerListener(MyPackageManagerListener(packageManager: packageManager!))
+    packageManager?.setPackageManagerListener(MyPackageManagerListener(manager: packageManager!))
     packageManager?.start()
 
     // 2. Fetch list of available packages from server.
@@ -489,7 +499,7 @@ To link PackageManagerListener with PackageManager, apply the following code.
     {% highlight kotlin %}
 
     // 1. Set listener, and start PackageManager
-    packageManager?.packageManagerListener = MyPackageManagerListener(packageManager!!)
+    packageManager?.packageManagerListener = MyPackageManagerListener(packageManager)
     packageManager.start()
 
     // 2. Fetch list of available packages from server. 

@@ -69,19 +69,7 @@ Implement online geocoding to initialize the service, create the request, and ca
     GeocodingRequest request = new GeocodingRequest(mapView.getOptions().getBaseProjection(), "Fifth Avenue, New York");
 
     // Note: Geocoding is a complicated process and should not be done on the main thread
-    Thread thread = new Thread(new Runnable() {
-        @Override
-        public void run() {
-            try {
-                GeocodingResultVector results = service.calculateAddresses(request);
-            } catch (IOException e) {
-                e.printStackTrace();
-                return;
-            }
-    	}
-    }
-
-    thread.start();
+    GeocodingResultVector results = service.calculateAddresses(request);
 	                
     {% endhighlight %}
   </div>
@@ -175,11 +163,7 @@ Online reverse geocoding is also available through Mapbox's geocoding service. Y
     request.setSearchRadius(meters);
 
     // Note: Reverse geocoding is a complicated process and should not be done on the main thread
-    try {
-        GeocodingResultVector results = service.calculateAddresses(request);
-    } catch (IOException e) {
-        e.printStackTrace();
-    }
+    GeocodingResultVector results = service.calculateAddresses(request);
         
     {% endhighlight %}
   </div>
@@ -191,7 +175,6 @@ Online reverse geocoding is also available through Mapbox's geocoding service. Y
 
     // Center of New York. Reverse Geocoding these coordinates will find City Hall Park
     MapPos newYork = projection.FromLatLong(40.7128, -74.0059);
-
     var request = new ReverseGeocodingRequest(projection, newYork);
     var meters = 125.0f;
     request.SearchRadius = meters;
@@ -227,7 +210,6 @@ Online reverse geocoding is also available through Mapbox's geocoding service. Y
     // Center of New York. Reverse Geocoding these coordinates will find City Hall Park
     let newYork = projection.fromLat(40.7128, lng: -74.0059)
     let request = NTReverseGeocodingRequest(projection: projection, location: newYork)
-        
     let meters: Float = 125.0
     request?.setSearchRadius(meters)
         
@@ -291,14 +273,8 @@ Create a `PackageManager` and `PackageManagerReverseGeocodingService` or `Packag
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
     {% highlight java %}
 
-    CartoPackageManager packageManager;
-    try {
-        // Note: Provide an absolute path for your geocoding package folder
-        packageManager = new CartoPackageManager("geocoding:carto.streets", "folder/geocodingpackages");
-    }
-    catch (IOException e) {
-        Log.e(MapApplication.LOG_TAG, "Exception: " + e);
-    }
+    // Note: Provide an absolute path for your geocoding package folder
+    CartoPackageManager packageManager = new CartoPackageManager("geocoding:carto.streets", "folder/geocodingpackages");
 
     // Geocoding service
     PackageManagerGeocodingService service = new PackageManagerGeocodingService(manager);

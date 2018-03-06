@@ -169,10 +169,6 @@ Add a point and apply point styling using the following code:
     point1.setMetaDataElement("ClickText", "Point nr 1");
 
     vectorDataSource1.add(point1);
-
-    // 4. Animate map to the point
-    mapView.setFocusPos(tallinn, 1);
-    mapView.setZoom(12, 1);
     {% endhighlight %}
   </div>
 
@@ -191,32 +187,24 @@ Add a point and apply point styling using the following code:
     point1.SetMetaDataElement("ClickText", new Variant("Point nr 1"));
 
     vectorDataSource1.Add(point1);
-
-    // 4. Animate map to the point
-    MapView.SetFocusPos(tallinn, 1);
-    MapView.SetZoom(12, 1);
     {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
     {% highlight objc %}
-    // 1. Create style and position for the Point
+    // 1. Set point position
+    NTMapPos* tallinn = [proj fromWgs84:[[NTMapPos alloc] initWithX:24.646469 y:59.426939]];
+
+    // 2. Create style and position for the Point
     NTPointStyleBuilder* pointStyleBuilder = [[NTPointStyleBuilder alloc] init];
-
-    // Color is defined as ARGB integer, i.e. following is opaque green
-    // You can not use UIColor (or any other UIKit-specific class) in CARTO Mobile SDK
-
     [pointStyleBuilder setColor:[[NTColor alloc] initWithColor:0xFF00FF00]];
     [pointStyleBuilder setSize:16];
-    NTMapPos* pos = [proj fromWgs84:[[NTMapPos alloc] initWithX:24.651488 y:59.423581]];
 
-    // 2. Create Point, add to datasource with metadata
-    NTPoint* point1 = [[NTPoint alloc] initWithPos:pos style:[pointStyleBuilder buildStyle]];
+    // 3. Create Point, add to datasource with metadata
+    NTPoint* point1 = [[NTPoint alloc] initWithPos:tallinn style:[pointStyleBuilder buildStyle]];
     [point1 setMetaDataElement:@"ClickText" element:[[NTVariant alloc] initWithString:@"Point 1"]];
-    [vectorDataSource1 add:point1];
 
-    [self.mapView setFocusPos:pos  durationSeconds:0]
-    [self.mapView setZoom:12 durationSeconds:1];
+    [vectorDataSource1 add:point1];
     {% endhighlight %}
   </div>
 
@@ -226,21 +214,15 @@ Add a point and apply point styling using the following code:
     let tallinn = projection?.fromWgs84(NTMapPos(x: 24.646469, y: 59.426939))
 
     // 2. Create style and position for the Point
-    let builder = NTPointStyleBuilder()
-    builder?.setColor(NTColor(r: 0, g: 255, b: 0, a: 255))
-    builder?.setSize(16)
+    let pointStyleBuilder = NTPointStyleBuilder()
+    pointStyleBuilder?.setColor(NTColor(r: 0, g: 255, b: 0, a: 255))
+    pointStyleBuilder?.setSize(16)
 
     // 3. Create Point, add to datasource with metadata
-    let style = builder?.buildStyle()
-    let point1 = NTPoint(pos: tallinn, style: style)
-
-    // Set text that will be displayed when the element is clicked
+    let point1 = NTPoint(pos: tallinn, style: pointStyleBuilder?.buildStyle())
     point1?.setMetaData("ClickText", element: NTVariant(string: "Point nr 1"));
-    source?.add(point1)
 
-    // 4. Animate map to the point
-    mapView?.setFocus(tallinn, durationSeconds: 1)
-    mapView?.setZoom(12, durationSeconds: 1)
+    vectorDataSource1?.add(point1)
     {% endhighlight %}
   </div>
 
@@ -250,19 +232,15 @@ Add a point and apply point styling using the following code:
     val tallinn = projection?.fromWgs84(MapPos(24.646469, 59.426939))
 
     // 2. Create style and position for the Point
-    val builder = PointStyleBuilder()
-    builder.color = Color(0, 255, 0, 255)
-    builder.size = 16F
+    val pointStyleBuilder = PointStyleBuilder()
+    pointStyleBuilder.color = Color(0, 255, 0, 255)
+    pointStyleBuilder.size = 16F
 
     // 3. Create Point, add to datasource with metadata
-    val point1 = Point(tallinn, builder.buildStyle())
+    val point1 = Point(tallinn, pointStyleBuilder.buildStyle())
     point1.setMetaDataElement("ClickText", Variant("Point nr 1"))
 
-    source.add(point1)
-
-    // 4. Animate map to the point
-    mapView?.setFocusPos(tallinn, 1F)
-    mapView?.setZoom(12F, 1F)
+    vectorDataSource1.add(point1)
     {% endhighlight %}
   </div>
   
@@ -295,7 +273,7 @@ Lines can be added to the same VectorDataSource. Add a line and apply line styli
     {% highlight java %}
     // 1. Create line style, and line poses
     LineStyleBuilder lineStyleBuilder = new LineStyleBuilder();
-    lineStyleBuilder.setColor(new Color(0xFFFFFFFF));
+    lineStyleBuilder.setColor(new Color(0xFFFF0000));
     lineStyleBuilder.setLineJointType(LineJointType.LINE_JOINT_TYPE_ROUND);
     lineStyleBuilder.setWidth(8);
 
@@ -314,10 +292,6 @@ Lines can be added to the same VectorDataSource. Add a line and apply line styli
     Line line1 = new Line(linePoses, lineStyleBuilder.buildStyle());
     line1.setMetaDataElement("ClickText", new Variant("Line nr 1"));
     vectorDataSource1.add(line1);
-
-    // 5. Animate map to the line
-    mapView.setFocusPos(tallinn, 1);
-    mapView.setZoom(12, 1);
     {% endhighlight %}
   </div>
 
@@ -325,9 +299,9 @@ Lines can be added to the same VectorDataSource. Add a line and apply line styli
     {% highlight csharp %}
     // 1. Create line style, and line poses
     var lineStyleBuilder = new LineStyleBuilder();
+    lineStyleBuilder.Color = new Color(255, 0, 0, 255); // Red
     lineStyleBuilder.LineJoinType = LineJoinType.LineJoinTypeRound;
     lineStyleBuilder.Width = 8;
-    lineStyleBuilder.Color = new Color(255, 0, 0, 255); // Red
 
     var positions = new MapPosVector();
     MapPos initial = proj.FromWgs84(new MapPos(24.645565, 59.422074));
@@ -342,10 +316,6 @@ Lines can be added to the same VectorDataSource. Add a line and apply line styli
     // 3. Add line to source
     var line = new Line(positions, lineStyleBuilder.BuildStyle());
     vectorDataSource1.Add(line);
-
-    // 4. Animate zoom to the line
-    MapView.SetFocusPos(initial, 1);
-    MapView.SetZoom(15, 1);
     {% endhighlight %}
   </div>
 
@@ -353,8 +323,7 @@ Lines can be added to the same VectorDataSource. Add a line and apply line styli
     {% highlight objc %}
     // 1. Define line style
     NTLineStyleBuilder* lineStyleBuilder = [[NTLineStyleBuilder alloc] init];
-    // White color, opaque
-    [lineStyleBuilder setColor:[[NTColor alloc] initWithColor:0xFFFFFFFF]];
+    [lineStyleBuilder setColor:[[NTColor alloc] initWithColor:0xFFFF0000]];
     [lineStyleBuilder setLineJointType:NT_LINE_JOINT_TYPE_ROUND];
     [lineStyleBuilder setWidth:8];
 
@@ -371,10 +340,8 @@ Lines can be added to the same VectorDataSource. Add a line and apply line styli
     // 3. Create line, add metadata and add to the datasource
     NTLine* line1 = [[NTLine alloc] initWithGeometry:[[NTLineGeometry alloc] initWithPoses:linePoses] style:[lineStyleBuilder buildStyle]];
     [line1 setMetaDataElement:@"ClickText" element:[[NTVariant alloc] initWithString:@"Line 1"]];
-    [vectorDataSource1 add:line1];
 
-    [self.mapView setFocusPos:initial  durationSeconds:0]
-    [self.mapView setZoom:15 durationSeconds:1];
+    [vectorDataSource1 add:line1];
     {% endhighlight %}
   </div>
 
@@ -383,7 +350,6 @@ Lines can be added to the same VectorDataSource. Add a line and apply line styli
     // 1. Create line style, and line poses
     let lineStyleBuilder = NTLineStyleBuilder()
     lineStyleBuilder?.setColor(NTColor(r: 255, g: 0, b: 0, a: 255))
-    // Define how lines are joined
     lineStyleBuilder?.setLineJoinType(NTLineJoinType.LINE_JOIN_TYPE_ROUND)
     lineStyleBuilder?.setWidth(8)
 
@@ -399,15 +365,10 @@ Lines can be added to the same VectorDataSource. Add a line and apply line styli
     linePoses?.add(projection?.fromWgs84(NTMapPos(x: 24.650887, y: 59.422707)));
 
     // 4. Add a line
-    let style = lineStyleBuilder?.buildStyle()
-    let line1 = NTLine(poses: linePoses, style: style);
-
+    let line1 = NTLine(poses: linePoses, style: lineStyleBuilder?.buildStyle());
     line1?.setMetaData("ClickText", element: NTVariant(string: "Line nr 1"))
-    source?.add(line1)
 
-    // 5. Animate map to the line
-    mapView?.setFocus(tallinn, durationSeconds: 1)
-    mapView?.setZoom(12, durationSeconds: 1)
+    vectorDataSource1?.add(line1)
     {% endhighlight %}
   </div>
     
@@ -434,11 +395,8 @@ Lines can be added to the same VectorDataSource. Add a line and apply line styli
     // 4. Add a line
     val line1 = Line(linePoses, lineStyleBuilder.buildStyle());
     line1.setMetaDataElement("ClickText", Variant("Line nr 1"))
-    source.add(line1)
 
-    // 5. Animate map to the line
-    mapView?.setFocusPos(tallinn, 1F)
-    mapView?.setZoom(12F, 1F)
+    vectorDataSource1.add(line1)
     {% endhighlight %}
   </div>
     
@@ -475,12 +433,13 @@ Add a polygon and apply polygon styling using the following code. The following 
     {% highlight java %}
     // 1. Create polygon style and poses
     PolygonStyleBuilder polygonStyleBuilder = new PolygonStyleBuilder();
-    polygonStyleBuilder.setColor(new Color(0xFFFF0000));
+    polygonStyleBuilder.setColor(new Color(0xFFFF0000)); // red
     lineStyleBuilder = new LineStyleBuilder();
-    lineStyleBuilder.setColor(new Color(0xFF000000));
+    lineStyleBuilder.setColor(new Color(0xFF000000)); // black
     lineStyleBuilder.setWidth(1.0f);
     polygonStyleBuilder.setLineStyle(lineStyleBuilder.buildStyle());
 
+    // 2. Define coordinates of outer ring
     MapPosVector polygonPoses = new MapPosVector();
     MapPos initial = proj.fromWgs84(new MapPos(24.650930, 59.421659));
     polygonPoses.add(initial);
@@ -493,7 +452,7 @@ Add a polygon and apply polygon styling using the following code. The following 
     polygonPoses.add(proj.fromWgs84(new MapPos(24.656552, 59.420175)));
     polygonPoses.add(proj.fromWgs84(new MapPos(24.654010, 59.421472)));
 
-    // 2. Create 2 polygon holes
+    // 3. Create 2 polygon holes
     MapPosVector holePoses1 = new MapPosVector();
     holePoses1.add(proj.fromWgs84(new MapPos(24.658409, 59.420522)));
     holePoses1.add(proj.fromWgs84(new MapPos(24.662207, 59.418896)));
@@ -504,19 +463,16 @@ Add a polygon and apply polygon styling using the following code. The following 
     holePoses2.add(proj.fromWgs84(new MapPos(24.665640, 59.421243)));
     holePoses2.add(proj.fromWgs84(new MapPos(24.668923, 59.419463)));
     holePoses2.add(proj.fromWgs84(new MapPos(24.662893, 59.419365)));
-    MapPosVectorVector polygonHoles = new MapPosVectorVector();
 
+    MapPosVectorVector polygonHoles = new MapPosVectorVector();
     polygonHoles.add(holePoses1);
     polygonHoles.add(holePoses2);
 
     // 3. Add polygon
     Polygon polygon = new Polygon(polygonPoses, polygonHoles, polygonStyleBuilder.buildStyle());
     polygon.setMetaDataElement("ClickText", new Variant("Polygon"));
-    vectorDataSource1.add(polygon);
 
-    // 4. Animate zoom to position
-    mapView.setFocusPos(initial, 1);
-    mapView.setZoom(13, 1);
+    vectorDataSource1.add(polygon);
     {% endhighlight %}
   </div>
 
@@ -544,32 +500,28 @@ Add a polygon and apply polygon styling using the following code. The following 
     polygonPoses.Add(proj.FromWgs84(new MapPos(24.654010, 59.421472)));
 
     // 3. Create polygon holes poses, note that special MapPosVectorVector must be used
+    MapPosVector holePoses1 = new MapPosVector();
+    holePoses1.Add(proj.FromWgs84(new MapPos(24.658409, 59.420522)));
+    holePoses1.Add(proj.FromWgs84(new MapPos(24.658409, 59.420522)));
+    holePoses1.Add(proj.FromWgs84(new MapPos(24.662207, 59.418896)));
+    holePoses1.Add(proj.FromWgs84(new MapPos(24.662207, 59.417411)));
+    holePoses1.Add(proj.FromWgs84(new MapPos(24.659524, 59.417171)));
+    holePoses1.Add(proj.FromWgs84(new MapPos(24.657615, 59.419834)));
+
+    MapPosVector holePoses2 = new MapPosVector();
+    holePoses2.Add(proj.FromWgs84(new MapPos(24.665640, 59.421243)));
+    holePoses2.Add(proj.FromWgs84(new MapPos(24.668923, 59.419463)));
+    holePoses2.Add(proj.FromWgs84(new MapPos(24.662893, 59.419365)));
+
     MapPosVectorVector polygonHoles = new MapPosVectorVector();
-
-    MapPosVector hole1 = new MapPosVector();
-    hole1.Add(proj.FromWgs84(new MapPos(24.658409, 59.420522)));
-    hole1.Add(proj.FromWgs84(new MapPos(24.658409, 59.420522)));
-    hole1.Add(proj.FromWgs84(new MapPos(24.662207, 59.418896)));
-    hole1.Add(proj.FromWgs84(new MapPos(24.662207, 59.417411)));
-    hole1.Add(proj.FromWgs84(new MapPos(24.659524, 59.417171)));
-    hole1.Add(proj.FromWgs84(new MapPos(24.657615, 59.419834)));
-
-    MapPosVector hole2 = new MapPosVector();
-    hole2.Add(proj.FromWgs84(new MapPos(24.665640, 59.421243)));
-    hole2.Add(proj.FromWgs84(new MapPos(24.668923, 59.419463)));
-    hole2.Add(proj.FromWgs84(new MapPos(24.662893, 59.419365)));
-
-    polygonHoles.Add(hole1);
-    polygonHoles.Add(hole2);
+    polygonHoles.Add(holePoses1);
+    polygonHoles.Add(holePoses2);
 
     // 4. Add polygon
     Polygon polygon = new Polygon(polygonPoses, polygonHoles, polygonStyleBuilder.BuildStyle());
     polygon.SetMetaDataElement("ClickText", new Variant("Polygon"));
-    vectorDataSource1.Add(polygon);
 
-    // 5. Animate zoom to position
-    MapView.SetFocusPos(initial, 1);
-    MapView.SetZoom(13, 1);
+    vectorDataSource1.Add(polygon);
     {% endhighlight %}
   </div>
 
@@ -577,22 +529,15 @@ Add a polygon and apply polygon styling using the following code. The following 
     {% highlight objc %}
     // 1. Create polygon style
     NTPolygonStyleBuilder* polygonStyleBuilder = [[NTPolygonStyleBuilder alloc] init];
-    // polygon fill color: opaque red
     [polygonStyleBuilder setColor:[[NTColor alloc] initWithColor:0xFFFF0000]];
-    // define polygon outline style as line style
     lineStyleBuilder = [[NTLineStyleBuilder alloc] init];
-    // opaque black color
     [lineStyleBuilder setColor:[[NTColor alloc] initWithColor:0xFF000000]];
     [lineStyleBuilder setWidth:1.0f];
     [polygonStyleBuilder setLineStyle:[lineStyleBuilder buildStyle]];
 
-    // 2. Define polygon coordinates
-    // First define outline as MapPosVector, which is an array of MapPos
-    // We cannot use Objective C objects, like NSArray in CARTO Mobile SDK, 
-    // so there are special objects for collections
-    MapPosVector* polygonPoses = [[MapPosVector alloc] init];
+    // 2. Define coordinates of outer ring
+    NTMapPosVector* polygonPoses = [[MapPosVector alloc] init];
     NTMapPos* initial = [proj fromWgs84:[[NTMapPos alloc] initWithX:24.650930 y:59.421659]];
-
     [polygonPoses add:initial];
     [polygonPoses add:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.657453 y:59.416354]]];
     [polygonPoses add:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.661187 y:59.414607]]];
@@ -603,27 +548,29 @@ Add a polygon and apply polygon styling using the following code. The following 
     [polygonPoses add:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.656552 y:59.420175]]];
     [polygonPoses add:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.654010 y:59.421472]]];
 
-    // Define polygon holes. This is two-dimensional array (MapPosVectorVector)
+    // 3. Define polygon holes. This is two-dimensional array (MapPosVectorVector)
     // because Polygon can have several holes. In this sample there are two
-    MapPosVectorVector* holes = [[MapPosVectorVector alloc] init];
-    [holes add:[[MapPosVector alloc] init]];
-    [[holes get:0] add:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.658409 y:59.420522]]];
-    [[holes get:0] add:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.662207 y:59.418896]]];
-    [[holes get:0] add:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.662207 y:59.417411]]];
-    [[holes get:0] add:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.659524 y:59.417171]]];
-    [[holes get:0] add:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.657615 y:59.419834]]];
-    [holes add:[[MapPosVector alloc] init]];
-    [[holes get:1] add:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.665640 y:59.421243]]];
-    [[holes get:1] add:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.668923 y:59.419463]]];
-    [[holes get:1] add:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.662893 y:59.419365]]];
+    NTMapPosVector* holePoses1 = [[MapPosVector alloc] init];
+    [holePoses1 add:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.658409 y:59.420522]]];
+    [holePoses1 add:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.662207 y:59.418896]]];
+    [holePoses1 add:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.662207 y:59.417411]]];
+    [holePoses1 add:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.659524 y:59.417171]]];
+    [holePoses1 add:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.657615 y:59.419834]]];
 
-    // 3. Create polygon, define metadata and add to datasource
-    NTPolygon* polygon = [[NTPolygon alloc] initWithGeometry:[[NTPolygonGeometry alloc] initWithPoses:polygonPoses holes:holes] style:[polygonStyleBuilder buildStyle]];
+    NTMapPosVector* holePoses2 = [[MapPosVector alloc] init];
+    [holePoses2 add:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.665640 y:59.421243]]];
+    [holePoses2 add:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.668923 y:59.419463]]];
+    [holePoses2 add:[proj fromWgs84:[[NTMapPos alloc] initWithX:24.662893 y:59.419365]]];
+
+    NTMapPosVectorVector* polygonHoles = [[MapPosVectorVector alloc] init];
+    [holes add:holePoses1];
+    [holes add:holePoses2];
+
+    // 4. Create polygon, define metadata and add to datasource
+    NTPolygon* polygon = [[NTPolygon alloc] initWithGeometry:[[NTPolygonGeometry alloc] initWithPoses:polygonPoses holes:polygonHoles] style:[polygonStyleBuilder buildStyle]];
     [polygon setMetaDataElement:@"ClickText" element:[[NTVariant alloc] initWithString:@"Polygon"]];
-    [vectorDataSource1 add:polygon];
 
-    [self.mapView setFocusPos:initial  durationSeconds:0]
-    [self.mapView setZoom:13 durationSeconds:1];
+    [vectorDataSource1 add:polygon];
     {% endhighlight %}
   </div>
 
@@ -632,19 +579,15 @@ Add a polygon and apply polygon styling using the following code. The following 
     // 1. Create polygon style and poses
     let polygonStyleBuilder = NTPolygonStyleBuilder()
     polygonStyleBuilder?.setColor(NTColor(r: 255, g: 0, b: 0, a: 255))
-
     let lineStyleBuilder = NTLineStyleBuilder()
-    // Blue
     lineStyleBuilder?.setColor(NTColor(r: 0, g: 0, b: 255, a: 255))
     lineStyleBuilder?.setWidth(1)
+    polygonStyleBuilder?.setLineStyle(lineStyleBuilder?.buildStyle())
 
-    let style = lineStyleBuilder?.buildStyle()
-    polygonStyleBuilder?.setLineStyle(style)
-
+    // 2. Define coordinates of outer ring
     let polygonPoses = NTMapPosVector()
     let initial = projection?.fromWgs84(NTMapPos(x: 24.650930, y: 59.421659))
     polygonPoses?.add(initial)
-
     polygonPoses?.add(projection?.fromWgs84(NTMapPos(x: 24.657453, y: 59.416354)))
     polygonPoses?.add(projection?.fromWgs84(NTMapPos(x: 24.661187, y: 59.414607)))
     polygonPoses?.add(projection?.fromWgs84(NTMapPos(x: 24.667667, y: 59.418123)))
@@ -654,7 +597,7 @@ Add a polygon and apply polygon styling using the following code. The following 
     polygonPoses?.add(projection?.fromWgs84(NTMapPos(x: 24.656552, y: 59.420175)))
     polygonPoses?.add(projection?.fromWgs84(NTMapPos(x: 24.654010, y: 59.421472)))
 
-    // 2. Create 2 polygon holes
+    // 3. Create 2 polygon holes
     let holePoses1 = NTMapPosVector()
     holePoses1?.add(projection?.fromWgs84(NTMapPos(x: 24.658409, y: 59.420522)))
     holePoses1?.add(projection?.fromWgs84(NTMapPos(x: 24.662207, y: 59.418896)))
@@ -671,16 +614,12 @@ Add a polygon and apply polygon styling using the following code. The following 
     polygonHoles?.add(holePoses1)
     polygonHoles?.add(holePoses2)
 
-    // 3. Add polygon
+    // 4. Add polygon
     let polygonStyle = polygonStyleBuilder?.buildStyle()
     let polygon = NTPolygon(poses: polygonPoses, holes: polygonHoles, style: polygonStyle)
     polygon?.setMetaData("ClickText", element: NTVariant(string: "Polygon"))
 
-    source?.add(polygon)
-
-    // 4. Animate zoom to position
-    mapView?.setFocus(initial, durationSeconds: 1)
-    mapView?.setZoom(13, durationSeconds: 1)
+    vectorDataSource1?.add(polygon)
     {% endhighlight %}
   </div>
 
@@ -689,18 +628,15 @@ Add a polygon and apply polygon styling using the following code. The following 
     // 1. Create polygon style and poses
     val polygonStyleBuilder = PolygonStyleBuilder()
     polygonStyleBuilder.color = Color(0xFFFF0000.toInt())
-
     val lineStyleBuilder = LineStyleBuilder()
-    // Blue
     lineStyleBuilder.color = Color(0, 0, 255, 255)
     lineStyleBuilder.width = 1F
-
     polygonStyleBuilder.lineStyle = lineStyleBuilder.buildStyle()
 
+    // 2. Define coordinates of outer ring
     val polygonPoses = MapPosVector()
     val initial = projection?.fromWgs84(MapPos(24.650930, 59.421659))
     polygonPoses.add(initial)
-
     polygonPoses.add(projection?.fromWgs84(MapPos(24.657453, 59.416354)))
     polygonPoses.add(projection?.fromWgs84(MapPos(24.661187, 59.414607)))
     polygonPoses.add(projection?.fromWgs84(MapPos(24.667667, 59.418123)))
@@ -710,30 +646,27 @@ Add a polygon and apply polygon styling using the following code. The following 
     polygonPoses.add(projection?.fromWgs84(MapPos(24.656552, 59.420175)))
     polygonPoses.add(projection?.fromWgs84(MapPos(24.654010, 59.421472)))
 
-    // 2. Create 2 polygon holes
+    // 3. Create 2 polygon holes
     val holePoses1 = MapPosVector()
     holePoses1.add(projection?.fromWgs84(MapPos(24.658409, 59.420522)))
     holePoses1.add(projection?.fromWgs84(MapPos(24.662207, 59.418896)))
     holePoses1.add(projection?.fromWgs84(MapPos(24.662207, 59.417411)))
     holePoses1.add(projection?.fromWgs84(MapPos(24.659524, 59.417171)))
     holePoses1.add(projection?.fromWgs84(MapPos(24.657615, 59.419834)))
+
     val holePoses2 = MapPosVector()
     holePoses2.add(projection?.fromWgs84(MapPos(24.665640, 59.421243)))
     holePoses2.add(projection?.fromWgs84(MapPos(24.668923, 59.419463)))
     holePoses2.add(projection?.fromWgs84(MapPos(24.662893, 59.419365)))
-    val polygonHoles = MapPosVectorVector()
 
+    val polygonHoles = MapPosVectorVector()
     polygonHoles.add(holePoses1)
     polygonHoles.add(holePoses2)
 
-    // 3. Add polygon
+    // 4. Add polygon
     val polygon = Polygon(polygonPoses, polygonHoles, polygonStyleBuilder.buildStyle())
     polygon.setMetaDataElement("ClickText", Variant("Polygon"))
-    source?.add(polygon)
-
-    // 4. Animate zoom to position
-    mapView?.setFocusPos(initial, 1F)
-    mapView?.setZoom(13F, 1F)
+    vectorDataSource1?.add(polygon)
     {% endhighlight %}
   </div>
     
@@ -778,7 +711,6 @@ Add text and apply text styling using the following code.
     TextStyleBuilder textStyleBuilder = new TextStyleBuilder();
     textStyleBuilder.setColor(new Color(0xFFFF0000));
     textStyleBuilder.setOrientationMode(BillboardOrientation.BILLBOARD_ORIENTATION_FACE_CAMERA);
-
     // This enables higher resolution texts for retina devices, but consumes more memory and is slower
     textStyleBuilder.setScaleWithDPI(false);
 
@@ -786,11 +718,8 @@ Add text and apply text styling using the following code.
     MapPos position = proj.fromWgs84(new MapPos(24.653302, 59.422269));
     Text textpopup1 = new Text(position, textStyleBuilder.buildStyle(), "Face camera text");
     textpopup1.setMetaDataElement("ClickText", new Variant("Text nr 1"));
-    vectorDataSource1.add(textpopup1);
 
-    // 3. Animate zoom to position
-    mapView.setFocusPos(position, 1);
-    mapView.setZoom(13, 1);
+    vectorDataSource1.add(textpopup1);
     {% endhighlight %}
   </div>
 
@@ -810,10 +739,6 @@ Add text and apply text styling using the following code.
     textpopup1.setMetaDataElement("ClickText", new Variant("Text nr 1"));
 
     vectorDataSource1.add(textpopup1);
-
-    // 3. Animate zoom to position
-    MapView.SetFocusPos(position, 1);
-    MapView.SetZoom(13, 1);
     {% endhighlight %}
   </div>
 
@@ -823,21 +748,16 @@ Add text and apply text styling using the following code.
     NTTextStyleBuilder* textStyleBuilder = [[NTTextStyleBuilder alloc] init];
     [textStyleBuilder setColor:[[NTColor alloc] initWithColor:0xFFFF0000]];
     [textStyleBuilder setOrientationMode:NT_BILLBOARD_ORIENTATION_FACE_CAMERA];
-
     // setScaleWithDPI enables higher resolution texts for retina devices,
     // but consumes more memory and is slower if you have many texts on map
     [textStyleBuilder setScaleWithDPI:false];
 
     // 2. Define text location and add to datasource
-    NTMapPos* pos = [proj fromWgs84:[[NTMapPos alloc] initWithX:24.653302 y:59.422269]];
-    NTText* text1 = [[NTText alloc] initWithPos:pos style:[textStyleBuilder buildStyle] text:@"Face camera text"];  
-    [text1 setMetaDataElement:@"ClickText" element:[[NTVariant alloc] initWithString:@"Text 1"]];
+    NTMapPos* position = [proj fromWgs84:[[NTMapPos alloc] initWithX:24.653302 y:59.422269]];
+    NTText* textpopup1 = [[NTText alloc] initWithPos:position style:[textStyleBuilder buildStyle] text:@"Face camera text"];  
+    [textpopup1 setMetaDataElement:@"ClickText" element:[[NTVariant alloc] initWithString:@"Text 1"]];
 
-    [vectorDataSource1 add:text1];
-
-    // 3. Animate zoom to position
-    [self.mapView setFocusPos:pos  durationSeconds:0]
-    [self.mapView setZoom:13 durationSeconds:1];
+    [vectorDataSource1 add:textpopup1];
     {% endhighlight %}
   </div>
 
@@ -847,21 +767,15 @@ Add text and apply text styling using the following code.
     let textStyleBuilder = NTTextStyleBuilder()
     textStyleBuilder?.setColor(NTColor(r: 255, g: 0, b: 0, a: 255))
     textStyleBuilder?.setOrientationMode(NTBillboardOrientation.BILLBOARD_ORIENTATION_FACE_CAMERA)
-
     // This enables higher resolution texts for retina devices, but consumes more memory and is slower
     textStyleBuilder?.setScaleWithDPI(false)
 
     // 2. Add text
     let position = projection?.fromWgs84(NTMapPos(x: 24.653302, y: 59.422269))
-    let style = textStyleBuilder?.buildStyle()
-    let textpopup1 = NTText(pos: position, style: style, text: "Face camera text")
+    let textpopup1 = NTText(pos: position, style: textStyleBuilder?.buildStyle(), text: "Face camera text")
     textpopup1?.setMetaData("ClickText", element: NTVariant(string: "Text nr 1"))
 
-    source?.add(textpopup1)
-
-    // 3. Animate zoom to position
-    mapView?.setFocus(position, durationSeconds: 1)
-    mapView?.setZoom(13, durationSeconds: 1)
+    vectorDataSource1.add(textpopup1)
     {% endhighlight %}
   </div>
 
@@ -871,7 +785,6 @@ Add text and apply text styling using the following code.
     val textStyleBuilder = TextStyleBuilder()
     textStyleBuilder.color = Color(0xFFFF0000.toInt())
     textStyleBuilder.orientationMode = BillboardOrientation.BILLBOARD_ORIENTATION_FACE_CAMERA
-
     // This enables higher resolution texts for retina devices, but consumes more memory and is slower
     textStyleBuilder.isScaleWithDPI = false
 
@@ -879,11 +792,8 @@ Add text and apply text styling using the following code.
     val position = projection?.fromWgs84(MapPos(24.653302, 59.422269))
     val textpopup1 = Text(position, textStyleBuilder.buildStyle(), "Face camera text")
     textpopup1.setMetaDataElement("ClickText", Variant("Text nr 1"))
-    source?.add(textpopup1)
 
-    // 3. Animate zoom to position
-    mapView?.setFocusPos(position, 1F)
-    mapView?.setZoom(13F, 1F)
+    vectorDataSource1.add(textpopup1)
     {% endhighlight %}
   </div>  
 </div>
@@ -941,25 +851,27 @@ A BalloonPopup appears based on click event of an object. You can also add a def
     popup.setMetaDataElement("ClickText", new Variant("Popup caption nr 1"));
 
     vectorDataSource1.add(popup);
-
-    mapView.setFocusPos(position, 1);
-    mapView.setZoom(13, 1);
     {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
     {% highlight csharp %}
-    // Android
+    // 1. Load bitmaps to show on the label
+
+    // Android code
     Bitmap androidInfoBitmap = BitmapFactory.DecodeResource(Resources, HelloMap.Resource.Drawable.info);
     Carto.Graphics.Bitmap infoBitmap = BitmapUtils.CreateBitmapFromAndroidBitmap(androidInfoBitmap);
 
     Bitmap androidArrowBitmap = BitmapFactory.DecodeResource(Resources, HelloMap.Resource.Drawable.arrow);
     Carto.Graphics.Bitmap arrowBitmap = BitmapUtils.CreateBitmapFromAndroidBitmap(androidArrowBitmap);
 
-    // iOS
+    // iOS code
     var infoBitmap = BitmapUtils.CreateBitmapFromUIImage(UIImage.FromFile("info.png"));
     var arrowBitmap = BitmapUtils.CreateBitmapFromUIImage(UIImage.FromFile("arrow.png"));
 
+    // 2. Add popup
+
+    // Shared code
     var builder = new BalloonPopupStyleBuilder();
     builder.LeftImage = infoBitmap;
     builder.RightImage = arrowBitmap;
@@ -975,47 +887,35 @@ A BalloonPopup appears based on click event of an object. You can also add a def
 
     MapPos position = proj.FromWgs84(new MapPos(0, 20));
     var popup = new BalloonPopup(position, builder.BuildStyle(), "Popup Title", "Description");
+    popup.setMetaDataElement("ClickText", new Variant("Popup caption nr 1"));
 
     vectorDataSource1.Add(popup);
-
-    // Animate zoom to position
-    MapView.SetFocusPos(position, 1);
-    MapView.SetZoom(13, 1);
     {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
     {% highlight objc %}
-      // 1. Load styling bitmaps to show on the popups
+    // 1. Load bitmaps to show on the label
     UIImage* infoImage = [UIImage imageNamed:@"info.png"];
     UIImage* arrowImage = [UIImage imageNamed:@"arrow.png"];
 
-    // 2. Create style for the BalloonPopup
+    // 2. Add popup
     NTBalloonPopupStyleBuilder* balloonPopupStyleBuilder = [[NTBalloonPopupStyleBuilder alloc] init];
     [balloonPopupStyleBuilder setCornerRadius:20];
     [balloonPopupStyleBuilder setLeftMargins:[[NTBalloonPopupMargins alloc] initWithLeft:6 top:6 right:6 bottom:6]];
     [balloonPopupStyleBuilder setLeftImage:infoImage];
     [balloonPopupStyleBuilder setRightImage:arrowImage];
     [balloonPopupStyleBuilder setRightMargins:[[NTBalloonPopupMargins alloc] initWithLeft:2 top:6 right:12 bottom:6]];
-
-    // Higher priority ensures that baloon is visible when overlaps with other billboards
     [balloonPopupStyleBuilder setPlacementPriority:1];
 
-    // 3. Define location
-    NTMapPos* pos = [proj fromWgs84:[[NTMapPos alloc] initWithX:24.655662 y:59.425521]];
-
-    // 4. Create BalloonPopup and add to datasource
-    NTBalloonPopup* popup1 = [[NTBalloonPopup alloc] initWithPos:pos
+    NTMapPos* position = [proj fromWgs84:[[NTMapPos alloc] initWithX:24.655662 y:59.425521]];
+    NTBalloonPopup* popup = [[NTBalloonPopup alloc] initWithPos:position
                                style:[balloonPopupStyleBuilder buildStyle]
                                title:@"Popup with pos"
                                desc:@"Images, round"];
+    [popup setMetaDataElement:@"ClickText" element:[[NTVariant alloc] initWithString:@"Popup caption 1"]];
 
-    [popup1 setMetaDataElement:@"ClickText" element:[[NTVariant alloc] initWithString:@"Popup caption 1"]];
-
-    [vectorDataSource1 add:popup1];
-
-    [self.mapView setFocusPos:pos  durationSeconds:0]
-    [self.mapView setZoom:13 durationSeconds:1];
+    [vectorDataSource1 add:popup];
     {% endhighlight %}
   </div>
 
@@ -1034,17 +934,11 @@ A BalloonPopup appears based on click event of an object. You can also add a def
     builder?.setRightMargins(NTBalloonPopupMargins(left: 2, top: 6, right: 12, bottom: 6))
     builder?.setPlacementPriority(1)
 
-
     let position = projection?.fromWgs84(NTMapPos(x: 24.655662, y: 59.425521))
-    let style = builder?.buildStyle()
-    let popup = NTBalloonPopup(pos: position, style: style, title: "Popup with pos", desc: "Images, round")
-
+    let popup = NTBalloonPopup(pos: position, style: builder?.buildStyle(), title: "Popup with pos", desc: "Images, round")
     popup?.setMetaData("ClickText", element: NTVariant(string: "Popup caption nr 1"))
 
-    source?.add(popup)
-
-    mapView?.setFocus(position, durationSeconds: 1)
-    mapView?.setZoom(13, durationSeconds: 1)
+    vectorDataSource1.add(popup)
     {% endhighlight %}
   </div>
     
@@ -1067,10 +961,7 @@ A BalloonPopup appears based on click event of an object. You can also add a def
     val popup = BalloonPopup(position, builder.buildStyle(), "Popup with pos", "Images, round")
     popup.setMetaDataElement("ClickText", Variant("Popup caption nr 1"))
 
-    source?.add(popup)
-
-    mapView?.setFocusPos(position, 1F)
-    mapView?.setZoom(13F, 1F)
+    vectorDataSource1.add(popup)
     {% endhighlight %}
   </div>
     
@@ -1122,114 +1013,90 @@ The following procedure describes how to setup and add a 3D object to your mobil
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
     {% highlight java %}
     // 1. Load NML model from a file
-    UnsignedCharVector modelFile = AssetUtils.loadBytes("fcd_auto.nml");
+    BinaryData modelData = AssetUtils.loadAsset("fcd_auto.nml");
 
     // 2. Set location for model, and create NMLModel object with this
-    MapPos modelPos = baseProjection.fromWgs84(new MapPos(24.646469, 59.423939));
-    NMLModel model = new NMLModel(modelPos, modelFile);
+    MapPos position = baseProjection.fromWgs84(new MapPos(24.646469, 59.423939));
+    NMLModel model = new NMLModel(position, modelData);
+    model.setMetaDataElement("ClickText", new Variant("Single model"));
 
     // 3. Adjust the size- oversize it by 20*, just to make it more visible (optional)
     model.setScale(20);
 
-    // 4. Add metadata for click handling (optional)
-    model.setMetaDataElement("ClickText", new Variant("Single model"));
-
-    // 5. Add it to normal datasource
+    // 4. Add it to normal datasource
     vectorDataSource1.add(model);
-
-    mapView.setFocusPos(position, 1);
-    mapView.setZoom(15, 1);
     {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
     {% highlight csharp %}
-    var file = AssetUtils.LoadAsset("fcd_auto.nml");
+    // 1. Load NML model from a file
+    var modelData = AssetUtils.LoadAsset("fcd_auto.nml");
 
-    // 1. Set location for model, and create NMLModel object with this
+    // 2. Set location for model, and create NMLModel object with this
     var position = proj.FromWgs84(new MapPos(24.646469, 59.423939));
-    var model = new NMLModel(position, file);
-
-    // 2. Adjust the size- oversize it by 20x, just to make it more visible (optional)
-    model.Scale = 20;
-
-    // 3. Add metadata for click handling (optional)
+    var model = new NMLModel(position, modelData);
     model.SetMetaDataElement("ClickText", new Variant("Single model"));
+
+    // 3. Adjust the size- oversize it by 20x, just to make it more visible (optional)
+    model.Scale = 20;
 
     // 4. Add it to normal datasource
     vectorDataSource1.Add(model);
-
-    // 5. Animate zoom to position
-    MapView.SetFocusPos(position, 1);
-    MapView.SetZoom(15, 1);
     {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
     {% highlight objc %}
     // 1. Load NML model from a file
-    NTUnsignedCharVector* modelData = [NTAssetUtils loadBytes:@"fcd_auto.nml"];
+    NTBinaryData* modelData = [NTAssetUtils loadAsset:@"fcd_auto.nml"];
 
     // 2. Set location for model, and create NMLModel object with this
     NTMapPos* pos = [proj fromWgs84:[[NTMapPos alloc] initWithX:24.646469 y:59.424939]];
     NTNMLModel* model = [[NTNMLModel alloc] initWithPos:pos sourceModelData:modelData];
-
-    // 3. Add metadata for click handling (optional)
     [model setMetaDataElement:@"ClickText" element:[[NTVariant alloc] initWithString:@"My nice car"]];    
 
-    // 4. Adjust the size- oversize it by 20*, just to make it more visible (optional)
+    // 3. Adjust the size- oversize it by 20*, just to make it more visible (optional)
     [model setScale:20];
 
+    // 4. Add it to normal datasource
     [vectorDataSource1 add:model];
-
-    [self.mapView setFocusPos:pos  durationSeconds:0]
-    [self.mapView setZoom:15 durationSeconds:1];
     {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
     {% highlight swift %}
     // 1. Load NML model from a file (be sure it's targeted by your application)
-    let modelFile = NTAssetUtils.loadAsset("fcd_auto.nml")
+    let modelData = NTAssetUtils.loadAsset("fcd_auto.nml")
 
     // 2. Set location for model, and create NMLModel object with this
-    let modelPos = projection?.fromWgs84(NTMapPos(x: 24.646469, y: 59.423939))
-    let model = NTNMLModel(pos: modelPos, sourceModelData: modelFile)
+    let position = projection?.fromWgs84(NTMapPos(x: 24.646469, y: 59.423939))
+    let model = NTNMLModel(pos: position, sourceModelData: modelData)
+    model?.setMetaData("ClickText", element: NTVariant(string: "Single model"))
 
     // 3. Adjust the size- oversize it by 20*, just to make it more visible (optional)
     model?.setScale(20)
 
-    // 4. Add metadata for click handling (optional)
-    model?.setMetaData("ClickText", element: NTVariant(string: "Single model"))
-
-    // 5. Add it to normal datasource
-    source?.add(model)
-
-    mapView?.setFocus(modelPos, durationSeconds: 1)
-    mapView?.setZoom(15, durationSeconds: 1)
+    // 4. Add it to normal datasource
+    vectorDataSource1.add(model)
     {% endhighlight %}
   </div>
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
     {% highlight kotlin %}
     // 1. Load NML model from a file
-    val modelFile = AssetUtils.loadAsset("fcd_auto.nml")
+    val modelData = AssetUtils.loadAsset("fcd_auto.nml")
 
     // 2. Set location for model, and create NMLModel object with this
-    val modelPos = projection?.fromWgs84(MapPos(24.646469, 59.423939))
-    val model = NMLModel(modelPos, modelFile);
+    val position = projection?.fromWgs84(MapPos(24.646469, 59.423939))
+    val model = NMLModel(position, modelData);
+    model.setMetaDataElement("ClickText", Variant("Single model"))
 
     // 3. Adjust the size- oversize it by 20*, just to make it more visible (optional)
     model.scale = 20F
 
-    // 4. Add metadata for click handling (optional)
-    model.setMetaDataElement("ClickText", Variant("Single model"))
-
-    // 5. Add it to normal datasource
-    source?.add(model)
-
-    mapView?.setFocusPos(modelPos, 1F)
-    mapView?.setZoom(15F, 1F)
+    // 4. Add it to normal datasource
+    vectorDataSource1.add(model)
     {% endhighlight %}
   </div>
     

@@ -45,9 +45,6 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
     {% highlight java %}
 
-    /*
-     * A custom map event listener that displays information about map events and creates pop-ups.
-     */
     public class MyMapEventListener extends MapEventListener {
         private MapView mapView;
         private LocalVectorDataSource vectorDataSource;
@@ -185,9 +182,6 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
     {% highlight objc %}
 
-    /*
-     * A custom map event listener that displays information about map events and creates pop-ups.
-     */
     @interface  MyMapEventListener : NTMapEventListener
 
     @property NTMapView* mapView;
@@ -264,11 +258,10 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
     {% highlight swift %}
   
     public class MyMapEventListener : NTMapEventListener {
-        
-        var oldClickLabel: NTBalloonPopup?
-        
         var mapView: NTMapView?
         var vectorDataSource: NTLocalVectorDataSource?
+
+        var oldClickLabel: NTBalloonPopup?
         
         convenience init(mapView: NTMapView?, vectorDataSource: NTLocalVectorDataSource?) {
             
@@ -336,6 +329,8 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
     {% highlight kotlin %}
   
     class MyMapEventListener(var mapView: MapView?, var vectorDataSource: LocalVectorDataSource?) : MapEventListener() {
+        var mapView: MapView? = null
+        var vectorDataSource: LocalVectorDataSource? = null
 
         var oldClickLabel: BalloonPopup? = null
 
