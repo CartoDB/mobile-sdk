@@ -116,7 +116,7 @@ namespace carto {
             }
             _dataSource._cachedOpenPackageHandlers.clear();
         }
-        _dataSource.notifyTilesChanged(false);
+        _dataSource.notifyTilesChanged(_dataSource._packageManager->getLocalPackages().empty()); // we need to remove all tiles only if there are no more packages left
     }
 
     void PackageManagerTileDataSource::PackageManagerListener::onStylesChanged() {
