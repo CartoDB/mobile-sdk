@@ -10,6 +10,8 @@
 #include "geometry/PolygonGeometry.h"
 #include "geometry/MultiGeometry.h"
 #include "projections/Projection.h"
+#include "projections/EPSG3857.h"
+#include "utils/Const.h"
 
 #include <geocoding/Geocoder.h>
 #include <geocoding/RevGeocoder.h>
@@ -30,10 +32,21 @@ namespace carto {
 
     std::vector<std::shared_ptr<GeocodingResult> > GeocodingProxy::CalculateAddresses(const std::shared_ptr<geocoding::Geocoder>& geocoder, const std::shared_ptr<GeocodingRequest>& request) {
         geocoding::Geocoder::Options options;
+        if (request->isLocationDefined()) {
+            MapPos wgs84Center = request->getProjection()->toWgs84(request->getLocation());
+            options.location = cglib::vec2<double>(wgs84Center.getX(), wgs84Center.getY());
+        }
         if (request->getLocationRadius() > 0) {
-            MapPos posWgs84 = request->getProjection()->toWgs84(request->getLocation());
-            options.location = cglib::vec2<double>(posWgs84.getX(), posWgs84.getY());
-            options.locationRadius = request->getLocationRadius();
+            EPSG3857 epsg3857;
+            MapPos wgs84Center = request->getProjection()->toWgs84(request->getLocation());
+            double mercRadius = request->getLocationRadius() / std::cos(std::min(89.9, std::abs(wgs84Center.getY())) * Const::DEG_TO_RAD);
+            MapPos mercPos0 = epsg3857.fromWgs84(wgs84Center) - MapVec(mercRadius, mercRadius);
+            MapPos mercPos1 = epsg3857.fromWgs84(wgs84Center) + MapVec(mercRadius, mercRadius);
+            mercPos0[0] = std::max(mercPos0[0], epsg3857.getBounds().getMin()[0] * 0.9999);
+            mercPos1[0] = std::min(mercPos1[0], epsg3857.getBounds().getMax()[0] * 0.9999);
+            MapPos wgs84Pos0 = epsg3857.toWgs84(mercPos0);
+            MapPos wgs84Pos1 = epsg3857.toWgs84(mercPos1);
+            options.bounds = cglib::bbox2<double>(cglib::vec2<double>(wgs84Pos0.getX(), wgs84Pos0.getY()), cglib::vec2<double>(wgs84Pos1.getX(), wgs84Pos1.getY()));
         }
         std::vector<std::pair<geocoding::Address, float> > addrs = geocoder->findAddresses(request->getQuery(), options);
 
