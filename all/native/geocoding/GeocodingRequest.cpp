@@ -14,6 +14,7 @@ namespace carto {
         _query(query),
         _projection(projection),
         _location(0, 0),
+        _locationDefined(false),
         _locationRadius(0),
         _mutex()
     {
@@ -41,6 +42,12 @@ namespace carto {
     void GeocodingRequest::setLocation(const MapPos& pos) {
         std::lock_guard<std::mutex> lock(_mutex);
         _location = pos;
+        _locationDefined = true;
+    }
+
+    bool GeocodingRequest::isLocationDefined() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _locationDefined;
     }
 
     float GeocodingRequest::getLocationRadius() const {
@@ -59,8 +66,10 @@ namespace carto {
         std::stringstream ss;
         ss << "GeocodingRequest [";
         ss << "query='" << _query << "'";
-        if (_locationRadius > 0) {
+        if (_locationDefined) {
             ss << ", location=" << _location.toString();
+        }
+        if (_locationRadius > 0) {
             ss << ", locationRadius=" << _locationRadius;
         }
         ss << "]";

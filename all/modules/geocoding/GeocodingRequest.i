@@ -28,6 +28,7 @@
 %attributestring(carto::GeocodingRequest, std::shared_ptr<carto::Projection>, Projection, getProjection)
 %attributeval(carto::GeocodingRequest, carto::MapPos, Location, getLocation, setLocation)
 %attribute(carto::GeocodingRequest, float, LocationRadius, getLocationRadius, setLocationRadius)
+%ignore carto::GeocodingRequest::isLocationDefined;
 %std_exceptions(carto::GeocodingRequest::GeocodingRequest)
 !standard_equals(carto::GeocodingRequest);
 !custom_tostring(carto::GeocodingRequest);

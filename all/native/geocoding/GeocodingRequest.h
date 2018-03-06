@@ -55,6 +55,11 @@ namespace carto {
          * @param pos The new location for the request.
          */
         void setLocation(const MapPos& pos);
+        /**
+         * Returns true if the location is explictly defined in the request.
+         * @return True if the location is explictly defined in the request.
+         */
+        bool isLocationDefined() const;
 
         /**
          * Returns the location radius attribute of the request (in meters).
@@ -78,6 +83,7 @@ namespace carto {
         std::string _query;
         std::shared_ptr<Projection> _projection;
         MapPos _location;
+        bool _locationDefined;
         float _locationRadius;
 
         mutable std::mutex _mutex;

@@ -67,15 +67,17 @@ namespace carto {
             baseURL = GeneralUtils::ReplaceTags(_serviceURL.empty() ? MAPZEN_SERVICE_URL : _serviceURL, tagMap);
 
             params["text"] = request->getQuery();
-            if (request->getLocationRadius() > 0) {
-                MapPos focusPoint = request->getProjection()->toWgs84(request->getLocation());
-                params["focus.point.lat"] = boost::lexical_cast<std::string>(focusPoint.getY());
-                params["focus.point.lon"] = boost::lexical_cast<std::string>(focusPoint.getX());
-                if (!_autocomplete) {
-                    params["boundary.circle.lat"] = boost::lexical_cast<std::string>(focusPoint.getY());
-                    params["boundary.circle.lon"] = boost::lexical_cast<std::string>(focusPoint.getX());
-                    params["boundary.circle.radius"] = boost::lexical_cast<std::string>(request->getLocationRadius());
-                }
+            if (request->isLocationDefined()) {
+                MapPos wgs84Center = request->getProjection()->toWgs84(request->getLocation());
+                params["focus.point.lat"] = boost::lexical_cast<std::string>(wgs84Center.getY());
+                params["focus.point.lon"] = boost::lexical_cast<std::string>(wgs84Center.getX());
+            }
+            if (request->getLocationRadius() > 0 && !_autocomplete) {
+                MapPos wgs84Center = request->getProjection()->toWgs84(request->getLocation());
+                double radius = request->getLocationRadius();
+                params["boundary.circle.lat"] = boost::lexical_cast<std::string>(wgs84Center.getY());
+                params["boundary.circle.lon"] = boost::lexical_cast<std::string>(wgs84Center.getX());
+                params["boundary.circle.radius"] = boost::lexical_cast<std::string>(radius);
             }
         }
 

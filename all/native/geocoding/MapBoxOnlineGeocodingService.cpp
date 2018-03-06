@@ -87,15 +87,21 @@ namespace carto {
             }
         }
 
+        if (request->isLocationDefined()) {
+            MapPos wgs84Center = request->getProjection()->toWgs84(request->getLocation());
+            params["proximity"] = boost::lexical_cast<std::string>(wgs84Center.getX()) + "," + boost::lexical_cast<std::string>(wgs84Center.getY());
+        }
         if (request->getLocationRadius() > 0) {
-            MapPos focusPoint = request->getProjection()->toWgs84(request->getLocation());
-            params["proximity"] = boost::lexical_cast<std::string>(focusPoint.getX()) + "," + boost::lexical_cast<std::string>(focusPoint.getY());
-
             EPSG3857 epsg3857;
-            double radius = request->getLocationRadius() / std::cos(focusPoint.getY() * Const::DEG_TO_RAD);
-            MapPos point0 = epsg3857.toWgs84(epsg3857.fromWgs84(focusPoint) - MapVec(radius, radius));
-            MapPos point1 = epsg3857.toWgs84(epsg3857.fromWgs84(focusPoint) + MapVec(radius, radius));
-            params["bbox"] = boost::lexical_cast<std::string>(point0.getX()) + "," + boost::lexical_cast<std::string>(point0.getY()) + "," + boost::lexical_cast<std::string>(point1.getX()) + "," + boost::lexical_cast<std::string>(point1.getY());
+            MapPos wgs84Center = request->getProjection()->toWgs84(request->getLocation());
+            double mercRadius = request->getLocationRadius() / std::cos(std::min(89.9, std::abs(wgs84Center.getY())) * Const::DEG_TO_RAD);
+            MapPos mercPos0 = epsg3857.fromWgs84(wgs84Center) - MapVec(mercRadius, mercRadius);
+            MapPos mercPos1 = epsg3857.fromWgs84(wgs84Center) + MapVec(mercRadius, mercRadius);
+            mercPos0[0] = std::max(mercPos0[0], epsg3857.getBounds().getMin()[0] * 0.9999);
+            mercPos1[0] = std::min(mercPos1[0], epsg3857.getBounds().getMax()[0] * 0.9999);
+            MapPos wgs84Pos0 = epsg3857.toWgs84(mercPos0);
+            MapPos wgs84Pos1 = epsg3857.toWgs84(mercPos1);
+            params["bbox"] = boost::lexical_cast<std::string>(wgs84Pos0.getX()) + "," + boost::lexical_cast<std::string>(wgs84Pos0.getY()) + "," + boost::lexical_cast<std::string>(wgs84Pos1.getX()) + "," + boost::lexical_cast<std::string>(wgs84Pos1.getY());
         }
 
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
