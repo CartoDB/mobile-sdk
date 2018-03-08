@@ -68,7 +68,7 @@ namespace carto {
             BalloonPopupMargins descMargins(_style->getDescriptionMargins().getLeft() * dpToPX, _style->getDescriptionMargins().getTop() * dpToPX,
                                             _style->getDescriptionMargins().getRight() * dpToPX, _style->getDescriptionMargins().getBottom() * dpToPX);
         
-            const std::shared_ptr<Bitmap>& leftImage = _style->getLeftImage();;
+            const std::shared_ptr<Bitmap>& leftImage = _style->getLeftImage();
             int leftImageWidth = 0, leftImageHeight = 0;
             if (leftImage) {
                 leftImageWidth = leftImage->getWidth();
