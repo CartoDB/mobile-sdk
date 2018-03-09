@@ -8,6 +8,7 @@
 #include "geometry/FeatureCollection.h"
 #include "geometry/PointGeometry.h"
 #include "projections/Projection.h"
+#include "utils/GeneralUtils.h"
 #include "utils/Log.h"
 
 #include <boost/lexical_cast.hpp>
@@ -23,22 +24,37 @@ namespace carto {
             throw GenericException("Failed to parse response", err);
         }
 
-        if (!response.get("results").is<picojson::array>()) {
+        const picojson::array* resultList = nullptr;
+        if (response.get("results").is<picojson::array>()) {
+            resultList = &response.get("results").get<picojson::array>();
+        } else if (response.get("addresses").is<picojson::array>()) {
+            resultList = &response.get("addresses").get<picojson::array>();
+        } else {
             throw GenericException("No results in the response");
         }
 
         std::vector<std::shared_ptr<GeocodingResult> > results;
-        for (const picojson::value& resultInfo : response.get("results").get<picojson::array>()) {
+        for (const picojson::value& resultInfo : *resultList) {
             const picojson::value& addressInfo = resultInfo.get("address");
 
-            std::string country       = addressInfo.contains("country")       ? addressInfo.get("country").get<std::string>() : std::string();
-            std::string region        = addressInfo.contains("countrySubdivisionName") ? addressInfo.get("countrySubdivisionName").get<std::string>() : std::string();
-            std::string county        = addressInfo.contains("countrySecondarySubdivision") ? addressInfo.get("countrySecondarySubdivision").get<std::string>() : std::string();
-            std::string locality      = addressInfo.contains("municipality")  ? addressInfo.get("municipality").get<std::string>() : std::string();
-            std::string neighbourhood = addressInfo.contains("municipalitySubdivision") ? addressInfo.get("municipalitySubdivision").get<std::string>() : std::string();
-            std::string street        = addressInfo.contains("streetName")    ? addressInfo.get("streetName").get<std::string>() : std::string();
-            std::string postcode      = addressInfo.contains("postalCode")    ? addressInfo.get("postalCode").get<std::string>() : std::string();
-            std::string houseNumber   = addressInfo.contains("streetNumber")  ? addressInfo.get("streetNumber").get<std::string>() : std::string();
+            auto extractAddressField = [&](const std::string& key) -> std::string {
+                if (addressInfo.get(key).is<std::string>()) {
+                    std::vector<std::string> items = GeneralUtils::Split(addressInfo.get(key).get<std::string>(), ',');
+                    if (!items.empty()) {
+                        return items.front();
+                    }
+                }
+                return std::string();
+            };
+
+            std::string country       = extractAddressField("country");
+            std::string region        = extractAddressField("countrySubdivisionName");
+            std::string county        = extractAddressField("countrySecondarySubdivision");
+            std::string locality      = extractAddressField("municipality");
+            std::string neighbourhood = extractAddressField("municipalitySubdivision");
+            std::string street        = extractAddressField("streetName");
+            std::string postcode      = extractAddressField("postalCode");
+            std::string houseNumber   = extractAddressField("streetNumber");
 
             std::string name;
             std::vector<std::string> categories;
@@ -56,9 +72,16 @@ namespace carto {
             Address address(country, region, county, locality, neighbourhood, street, postcode, houseNumber, name, categories);
             float rank = static_cast<float>(resultInfo.contains("score") ? resultInfo.get("score").get<double>() / 100.0 : 0.5);
 
+            double lat = 0, lon = 0;
             const picojson::value& positionInfo = resultInfo.get("position");
-            double lat = positionInfo.get("lat").is<double>() ? positionInfo.get("lat").get<double>() : boost::lexical_cast<double>(positionInfo.get("lat").get<std::string>());
-            double lon = positionInfo.get("lon").is<double>() ? positionInfo.get("lon").get<double>() : boost::lexical_cast<double>(positionInfo.get("lon").get<std::string>());
+            if (positionInfo.is<std::string>()) {
+                std::vector<std::string> latLon = GeneralUtils::Split(positionInfo.get<std::string>(), ',');
+                lat = boost::lexical_cast<double>(latLon.at(0));
+                lon = boost::lexical_cast<double>(latLon.at(1));
+            } else {
+                lat = positionInfo.get("lat").is<double>() ? positionInfo.get("lat").get<double>() : boost::lexical_cast<double>(positionInfo.get("lat").get<std::string>());
+                lon = positionInfo.get("lon").is<double>() ? positionInfo.get("lon").get<double>() : boost::lexical_cast<double>(positionInfo.get("lon").get<std::string>());
+            }
             auto geometry = std::make_shared<PointGeometry>(proj->fromWgs84(MapPos(lon, lat)));
 
             auto feature = std::make_shared<Feature>(geometry, Variant());

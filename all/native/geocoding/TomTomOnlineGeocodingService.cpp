@@ -111,7 +111,7 @@ namespace carto {
         return TomTomGeocodingProxy::ReadResponse(responseString, request->getProjection());
     }
 
-    const std::string TomTomOnlineGeocodingService::TOMTOM_SERVICE_URL = "https://api.tomtom.com/search/2/s/{query}.json?key={api_key}";
+    const std::string TomTomOnlineGeocodingService::TOMTOM_SERVICE_URL = "https://api.tomtom.com/search/2/geocode/{query}.json?key={api_key}";
 }
 
 #endif
