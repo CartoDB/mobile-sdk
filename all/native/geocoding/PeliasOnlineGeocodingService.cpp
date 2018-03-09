@@ -16,6 +16,7 @@ namespace carto {
     PeliasOnlineGeocodingService::PeliasOnlineGeocodingService(const std::string& apiKey) :
         _apiKey(apiKey),
         _autocomplete(false),
+        _language(),
         _serviceURL(),
         _mutex()
     {
@@ -32,6 +33,16 @@ namespace carto {
     void PeliasOnlineGeocodingService::setAutocomplete(bool autocomplete) {
         std::lock_guard<std::mutex> lock(_mutex);
         _autocomplete = autocomplete;
+    }
+
+    std::string PeliasOnlineGeocodingService::getLanguage() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _language;
+    }
+
+    void PeliasOnlineGeocodingService::setLanguage(const std::string& lang) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _language = lang;
     }
 
     std::string PeliasOnlineGeocodingService::getCustomServiceURL() const {
@@ -62,9 +73,11 @@ namespace carto {
             std::map<std::string, std::string> tagMap;
             tagMap["api_key"] = NetworkUtils::URLEncode(_apiKey);
             tagMap["mode"] = _autocomplete ? "autocomplete": "search";
+
             baseURL = GeneralUtils::ReplaceTags(_serviceURL.empty() ? MAPZEN_SERVICE_URL : _serviceURL, tagMap);
 
             params["text"] = request->getQuery();
+
             if (request->isLocationDefined()) {
                 MapPos wgs84Center = request->getProjection()->toWgs84(request->getLocation());
                 params["focus.point.lat"] = boost::lexical_cast<std::string>(wgs84Center.getY());
@@ -76,6 +89,10 @@ namespace carto {
                 params["boundary.circle.lat"] = boost::lexical_cast<std::string>(wgs84Center.getY());
                 params["boundary.circle.lon"] = boost::lexical_cast<std::string>(wgs84Center.getX());
                 params["boundary.circle.radius"] = boost::lexical_cast<std::string>(radius);
+            }
+
+            if (!_language.empty()) {
+                params["lang"] = _language;
             }
         }
 

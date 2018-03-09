@@ -31,6 +31,17 @@ namespace carto {
         virtual ~PeliasOnlineReverseGeocodingService();
 
         /**
+         * Returns the language of the expected results.
+         * @return The language of the expected results. As ISO 639-1 code or empty string.
+         */
+        std::string getLanguage() const;
+        /**
+         * Sets the language of the expected results.
+         * @param lang The language to use as ISO 639-1 code. Empty string can be used for default language.
+         */
+        void setLanguage(const std::string& lang);
+
+        /**
          * Returns the custom backend service URL.
          * @return The custom backend service URL. If this is not defined, an empty string is returned.
          */
@@ -47,9 +58,11 @@ namespace carto {
     protected:
         static const std::string MAPZEN_SERVICE_URL;
 
-        std::string _serviceURL;
-
         const std::string _apiKey;
+
+        std::string _language;
+
+        std::string _serviceURL;
 
         mutable std::mutex _mutex;
     };

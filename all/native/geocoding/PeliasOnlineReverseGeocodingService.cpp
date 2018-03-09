@@ -15,12 +15,23 @@ namespace carto {
 
     PeliasOnlineReverseGeocodingService::PeliasOnlineReverseGeocodingService(const std::string& apiKey) :
         _apiKey(apiKey),
+        _language(),
         _serviceURL(),
         _mutex()
     {
     }
 
     PeliasOnlineReverseGeocodingService::~PeliasOnlineReverseGeocodingService() {
+    }
+
+    std::string PeliasOnlineReverseGeocodingService::getLanguage() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _language;
+    }
+
+    void PeliasOnlineReverseGeocodingService::setLanguage(const std::string& lang) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _language = lang;
     }
 
     std::string PeliasOnlineReverseGeocodingService::getCustomServiceURL() const {
@@ -44,8 +55,11 @@ namespace carto {
 
         std::map<std::string, std::string> params;
         {
+            std::lock_guard<std::mutex> lock(_mutex);
+
             std::map<std::string, std::string> tagMap;
             tagMap["api_key"] = NetworkUtils::URLEncode(_apiKey);
+
             baseURL = GeneralUtils::ReplaceTags(_serviceURL.empty() ? MAPZEN_SERVICE_URL : _serviceURL, tagMap);
 
             params["point.lat"] = boost::lexical_cast<std::string>(point.getY());
@@ -53,6 +67,10 @@ namespace carto {
             params["boundary.circle.lat"] = boost::lexical_cast<std::string>(point.getY());
             params["boundary.circle.lon"] = boost::lexical_cast<std::string>(point.getX());
             params["boundary.circle.radius"] = boost::lexical_cast<std::string>(request->getSearchRadius());
+
+            if (!_language.empty()) {
+                params["lang"] = _language;
+            }
         }
 
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);

@@ -64,6 +64,7 @@ namespace carto {
             baseURL = GeneralUtils::ReplaceTags(_serviceURL.empty() ? MAPBOX_SERVICE_URL : _serviceURL, tagMap);
 
             params["types"] = "address,poi";
+
             if (!_language.empty()) {
                 params["language"] = _language;
             }

@@ -73,6 +73,7 @@ namespace carto {
             std::map<std::string, std::string> tagMap;
             tagMap["query"] = NetworkUtils::URLEncode(request->getQuery());
             tagMap["api_key"] = NetworkUtils::URLEncode(_apiKey);
+
             baseURL = GeneralUtils::ReplaceTags(_serviceURL.empty() ? TOMTOM_SERVICE_URL : _serviceURL, tagMap);
 
             params["typeahead"] = _autocomplete ? "true": "false";
