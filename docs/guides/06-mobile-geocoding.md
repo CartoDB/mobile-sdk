@@ -36,10 +36,13 @@ For minimal geocoding implementation, use our sample app code for different mobi
   
 ### Online Geocoding
 
-Online geocoding is available through Mapbox's geocoding service. You will need your own Mapbox token. Sign up at [https://www.mapbox.com/](https://www.mapbox.com/) to obtain your token.
+Online geocoding is available through multiple online service providers.
+SDK has built-in support for Mapbox, TomTom and Pelias (former MapZen) geocoders.
+For all these services you need to get a token or an API key from the service
+provider. For example, if you plan to use Mapbox service, sign up at [https://www.mapbox.com/](https://www.mapbox.com/) to obtain your token.
 
-SDK supports also Pelias online geocoding services, but you will need to find service provider as MapZen
-online service is no longer available.
+The following sample uses Mapbox service, but TomTom and Pelias services can be
+used instead by replacing `MapBoxOnlineGeocodingService` with `PeliasOnlineGeocodingService` or `TomTomOnlineGeocodingService`.
 
 Implement online geocoding to initialize the service, create the request, and calculate addresses:
 
@@ -77,11 +80,11 @@ Implement online geocoding to initialize the service, create the request, and ca
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
     {% highlight csharp %}
 
-    Service = new MapBoxOnlineGeocodingService("<your-mapbox-token>");
+    var service = new MapBoxOnlineGeocodingService("<your-mapbox-token>");
     var request = new GeocodingRequest(mapView.Options.BaseProjection, "Fifth Avenue, New York");
 
     // Note: Geocoding is a complicated process and should not be done on the main thread
-    GeocodingResultVector results = Service.CalculateAddresses(request);
+    GeocodingResultVector results = service.CalculateAddresses(request);
 
     {% endhighlight %}
   </div>
@@ -130,7 +133,14 @@ From your `GeocodingResult` objects, you can simply access `name`, `locality`, `
 
 ### Reverse Geocoding
 
-Online reverse geocoding is also available through Mapbox's geocoding service. You will need your own Mapbox token. Sign up at [https://www.mapbox.com/](https://www.mapbox.com/) obtain your token.
+Like online geocoding, online reverse geocoding is available through multiple online service providers.
+SDK has built-in support for Mapbox, TomTom and Pelias (former MapZen) reverse geocoders.
+
+For all these services you need to get a token or an API key from the service
+provider.
+
+The following sample uses Mapbox service, but TomTom and Pelias services can be
+used instead by replacing `MapBoxOnlineReverseGeocodingService` with `PeliasOnlineReverseGeocodingService` or `TomTomOnlineReverseGeocodingService`.
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -154,10 +164,10 @@ Online reverse geocoding is also available through Mapbox's geocoding service. Y
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
     {% highlight java %}
 
-    service = new MapBoxOnlineReverseGeocodingService("<your-mapbox-token>");
+    ReverseGeocodingService service = new MapBoxOnlineReverseGeocodingService("<your-mapbox-token>");
 
     // Center of New York. Reverse Geocoding these coordinates will find City Hall Park
-    MapPos newYork = baseProjection.fromLatLong(40.7128, -74.0059);
+    MapPos newYork = projection.fromLatLong(40.7128, -74.0059);
     ReverseGeocodingRequest request = new ReverseGeocodingRequest(baseProjection, newYork);
     float meters = 125.0f;
     request.setSearchRadius(meters);
@@ -171,7 +181,7 @@ Online reverse geocoding is also available through Mapbox's geocoding service. Y
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
     {% highlight csharp %}
 
-    Service = new MapBoxOnlineReverseGeocodingService("<your-mapbox-token>");
+    var service = new MapBoxOnlineReverseGeocodingService("<your-mapbox-token>");
 
     // Center of New York. Reverse Geocoding these coordinates will find City Hall Park
     MapPos newYork = projection.FromLatLong(40.7128, -74.0059);
@@ -180,7 +190,7 @@ Online reverse geocoding is also available through Mapbox's geocoding service. Y
     request.SearchRadius = meters;
 
     // Note: Reverse geocoding is a complicated process and should not be done on the main thread
-    GeocodingResultVector results = Service.CalculateAddresses(request);
+    GeocodingResultVector results = service.CalculateAddresses(request);
 
     {% endhighlight %}
   </div>
@@ -188,13 +198,13 @@ Online reverse geocoding is also available through Mapbox's geocoding service. Y
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
     {% highlight objc %}
 
-    self.service = [[NTMapBoxOnlineReverseGeocodingService alloc] initWithApiKey:@"<mapbox-token>"];
+    NTReverseGeocodingService* service = [[NTMapBoxOnlineReverseGeocodingService alloc] initWithApiKey:@"<mapbox-token>"];
 
-    NTProjection* projection = [self.controller getProjection];
     // Center of New York. Reverse Geocoding these coordinates will find City Hall Park
     NTMapPos* newYork = [projection fromLat:40.7128 lng:-74.0059];
     NTReverseGeocodingRequest* request = [[NTReverseGeocodingRequest alloc] initWithProjection:projection location:newYork];
-    [request setSearchRadius:125.0f];
+    float meters = 125.0f;
+    [request setSearchRadius:meters];
         
     // Note: Reverse geocoding is a complicated process and should not be done on the main thread
     NTGeocodingResultVector* results = [self.service calculateAddresses: request];
@@ -205,7 +215,7 @@ Online reverse geocoding is also available through Mapbox's geocoding service. Y
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
     {% highlight swift %}
 
-    service = NTMapBoxOnlineReverseGeocodingService(apiKey: "<your-mapbox-token>")
+    let service = NTMapBoxOnlineReverseGeocodingService(apiKey: "<your-mapbox-token>")
 
     // Center of New York. Reverse Geocoding these coordinates will find City Hall Park
     let newYork = projection.fromLat(40.7128, lng: -74.0059)
@@ -222,7 +232,7 @@ Online reverse geocoding is also available through Mapbox's geocoding service. Y
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
     {% highlight kotlin %}
 
-    service = MapBoxOnlineReverseGeocodingService("<your-mapbox-token>")
+    val service = MapBoxOnlineReverseGeocodingService("<your-mapbox-token>")
 
     // Center of New York. Reverse Geocoding these coordinates will find City Hall Park
     val newYork = contentView?.projection?.fromLatLong(40.7128, -74.0059)
@@ -289,13 +299,13 @@ Create a `PackageManager` and `PackageManagerReverseGeocodingService` or `Packag
     {% highlight csharp %}
   
     // Note: Provide an absolute path for your geocoding package folder
-    var Manager = new CartoPackageManager("geocoding:carto.streets", "folder/geocodingpackages");
+    var packageManager = new CartoPackageManager("geocoding:carto.streets", "folder/geocodingpackages");
 
     // Geocoding service
-    var Service = new PackageManagerGeocodingService(Manager);
+    var service = new PackageManagerGeocodingService(packageManager);
 
     // Reverse geocoding service
-    var Service = new PackageManagerReverseGeocodingService(Manager);
+    var service = new PackageManagerReverseGeocodingService(packageManager);
 
     {% endhighlight %}
   </div>
@@ -304,13 +314,13 @@ Create a `PackageManager` and `PackageManagerReverseGeocodingService` or `Packag
     {% highlight objc %}
 
     // Note: Provide an absolute path for your geocoding package folder
-    NTCartoPackageManager *packageManager = [[NTCartoPackageManager alloc] initWithSource:@"geocoding:carto.streets" dataFolder:@"folder/geocodingpackages"];
+    NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"geocoding:carto.streets" dataFolder:@"folder/geocodingpackages"];
 
     // Geocoding service
-    NTPackageManagerGeocodingService *service = [[NTPackageManagerGeocodingService alloc] initWithPackageManager:self.packageManager];
+    NTPackageManagerGeocodingService* service = [[NTPackageManagerGeocodingService alloc] initWithPackageManager:self.packageManager];
 
     // Reverse geocoding service
-    NTPackageManagerReverseGeocodingService *service = [[NTPackageManagerReverseGeocodingService alloc] initWithPackageManager:self.packageManager];
+    NTPackageManagerReverseGeocodingService* service = [[NTPackageManagerReverseGeocodingService alloc] initWithPackageManager:self.packageManager];
 
     {% endhighlight %}
   </div>
@@ -319,13 +329,13 @@ Create a `PackageManager` and `PackageManagerReverseGeocodingService` or `Packag
     {% highlight swift %}
   
     // Note: Provide an absolute path for your geocoding package folder
-    let manager = NTCartoPackageManager(source: "geocoding:carto.streets", dataFolder: "folder/geocodingpackages")
+    let packageManager = NTCartoPackageManager(source: "geocoding:carto.streets", dataFolder: "folder/geocodingpackages")
 
     // Geocoding service
-    let service = NTPackageManagerGeocodingService(packageManager: manager)
+    let service = NTPackageManagerGeocodingService(packageManager: packageManager)
 
     // Reverse geocoding service
-    let service = NTPackageManagerReverseGeocodingService(packageManager: manager)
+    let service = NTPackageManagerReverseGeocodingService(packageManager: packageManager)
 
     {% endhighlight %}
   </div>
@@ -334,13 +344,13 @@ Create a `PackageManager` and `PackageManagerReverseGeocodingService` or `Packag
     {% highlight kotlin %}
 
     // Note: Provide an absolute path for your geocoding package folder
-    val manager = manager = CartoPackageManager("geocoding:carto.streets", "folder/geocodingpackages")
+    val packageManager = CartoPackageManager("geocoding:carto.streets", "folder/geocodingpackages")
 
     // Geocoding service
-    val service = PackageManagerGeocodingService(manager)
+    val service = PackageManagerGeocodingService(packageManager)
 
     // Reverse geocoding service
-    val service = PackageManagerReverseGeocodingService(manager)
+    val service = PackageManagerReverseGeocodingService(packageManager)
 
     {% endhighlight %}
   </div>
@@ -524,7 +534,7 @@ The following example displays how to parse your `GeocodingResult` into a readab
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
     {% highlight objc %}
   
-    - (NSString*)getPrettyAddress:(NTGeocodingResult *)result {
+    - (NSString*)getPrettyAddress:(NTGeocodingResult*)result {
         
         NTAddress* address = [result getAddress];
         NSString* string = @"";
@@ -549,7 +559,7 @@ The following example displays how to parse your `GeocodingResult` into a readab
             if (string.length > 0) {
                 string = [string stringByAppendingString:@", "];
             }
-            string = [string stringByAppendingString: [address getStreet]];
+            string = [string stringByAppendingString: [address getNeighbourhood]];
         }
         
         if ([address getLocality].length > 0) {
