@@ -9,8 +9,6 @@
 #include "utils/NetworkUtils.h"
 #include "utils/Log.h"
 
-#include <map>
-
 #include <boost/lexical_cast.hpp>
 
 namespace carto {

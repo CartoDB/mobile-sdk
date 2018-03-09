@@ -1,9 +1,9 @@
 #if defined(_CARTO_GEOCODING_SUPPORT)
 
-#include "MapBoxOnlineReverseGeocodingService.h"
+#include "TomTomOnlineReverseGeocodingService.h"
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
-#include "geocoding/MapBoxGeocodingProxy.h"
+#include "geocoding/TomTomGeocodingProxy.h"
 #include "projections/Projection.h"
 #include "utils/GeneralUtils.h"
 #include "utils/NetworkUtils.h"
@@ -13,38 +13,38 @@
 
 namespace carto {
 
-    MapBoxOnlineReverseGeocodingService::MapBoxOnlineReverseGeocodingService(const std::string& accessToken) :
-        _accessToken(accessToken),
+    TomTomOnlineReverseGeocodingService::TomTomOnlineReverseGeocodingService(const std::string& apiKey) :
+        _apiKey(apiKey),
         _language(),
         _serviceURL(),
         _mutex()
     {
     }
 
-    MapBoxOnlineReverseGeocodingService::~MapBoxOnlineReverseGeocodingService() {
+    TomTomOnlineReverseGeocodingService::~TomTomOnlineReverseGeocodingService() {
     }
 
-    std::string MapBoxOnlineReverseGeocodingService::getLanguage() const {
+    std::string TomTomOnlineReverseGeocodingService::getLanguage() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _language;
     }
 
-    void MapBoxOnlineReverseGeocodingService::setLanguage(const std::string& lang) {
+    void TomTomOnlineReverseGeocodingService::setLanguage(const std::string& lang) {
         std::lock_guard<std::mutex> lock(_mutex);
         _language = lang;
     }
 
-    std::string MapBoxOnlineReverseGeocodingService::getCustomServiceURL() const {
+    std::string TomTomOnlineReverseGeocodingService::getCustomServiceURL() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _serviceURL;
     }
 
-    void MapBoxOnlineReverseGeocodingService::setCustomServiceURL(const std::string& serviceURL) {
+    void TomTomOnlineReverseGeocodingService::setCustomServiceURL(const std::string& serviceURL) {
         std::lock_guard<std::mutex> lock(_mutex);
         _serviceURL = serviceURL;
     }
 
-    std::vector<std::shared_ptr<GeocodingResult> > MapBoxOnlineReverseGeocodingService::calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const {
+    std::vector<std::shared_ptr<GeocodingResult> > TomTomOnlineReverseGeocodingService::calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const {
         if (!request) {
             throw NullArgumentException("Null request");
         }
@@ -58,19 +58,19 @@ namespace carto {
             std::lock_guard<std::mutex> lock(_mutex);
 
             std::map<std::string, std::string> tagMap;
-            tagMap["query"] = NetworkUtils::URLEncode(boost::lexical_cast<std::string>(point.getX()) + "," + boost::lexical_cast<std::string>(point.getY()));
-            tagMap["access_token"] = NetworkUtils::URLEncode(_accessToken);
+            tagMap["query"] = NetworkUtils::URLEncode(boost::lexical_cast<std::string>(point.getY()) + "," + boost::lexical_cast<std::string>(point.getX()));
+            tagMap["api_key"] = NetworkUtils::URLEncode(_apiKey);
 
-            baseURL = GeneralUtils::ReplaceTags(_serviceURL.empty() ? MAPBOX_SERVICE_URL : _serviceURL, tagMap);
+            baseURL = GeneralUtils::ReplaceTags(_serviceURL.empty() ? TOMTOM_SERVICE_URL : _serviceURL, tagMap);
 
-            params["types"] = "address,poi";
+            params["radius"] = boost::lexical_cast<std::string>(request->getSearchRadius());
             if (!_language.empty()) {
                 params["language"] = _language;
             }
         }
 
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
-        Log::Debugf("MapBoxOnlineReverseGeocodingService::calculateAddresses: Loading %s", url.c_str());
+        Log::Debugf("TomTomOnlineReverseGeocodingService::calculateAddresses: Loading %s", url.c_str());
 
         std::shared_ptr<BinaryData> responseData;
         if (!NetworkUtils::GetHTTP(url, responseData, Log::IsShowDebug())) {
@@ -84,10 +84,10 @@ namespace carto {
             throw GenericException("Empty response");
         }
 
-        return MapBoxGeocodingProxy::ReadResponse(responseString, request->getProjection());
+        return TomTomGeocodingProxy::ReadResponse(responseString, request->getProjection());
     }
 
-    const std::string MapBoxOnlineReverseGeocodingService::MAPBOX_SERVICE_URL = "https://api.mapbox.com/geocoding/v5/mapbox.places/{query}.json?access_token={access_token}";
+    const std::string TomTomOnlineReverseGeocodingService::TOMTOM_SERVICE_URL = "https://api.tomtom.com/search/2/reverseGeocode/{query}.json?key={api_key}";
 }
 
 #endif

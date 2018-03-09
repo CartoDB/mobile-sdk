@@ -181,6 +181,8 @@
 #import "NTPeliasOnlineReverseGeocodingService.h"
 #import "NTMapBoxOnlineGeocodingService.h"
 #import "NTMapBoxOnlineReverseGeocodingService.h"
+#import "NTTomTomOnlineGeocodingService.h"
+#import "NTTomTomOnlineReverseGeocodingService.h"
 #endif
 
 #ifdef _CARTO_SEARCH_SUPPORT
