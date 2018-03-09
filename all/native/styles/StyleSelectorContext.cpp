@@ -61,7 +61,7 @@ namespace carto {
         return false;
     }
     
-    std::string StyleSelectorContext::GetGeometryType(const std::shared_ptr<Geometry> &geometry) {
+    std::string StyleSelectorContext::GetGeometryType(const std::shared_ptr<Geometry>& geometry) {
         if (std::dynamic_pointer_cast<PointGeometry>(geometry)) {
             return "point";
         } else if (std::dynamic_pointer_cast<LineGeometry>(geometry)) {

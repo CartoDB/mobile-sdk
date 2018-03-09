@@ -200,7 +200,7 @@ namespace {
         }
 
     private:
-        static std::string GetGeometryType(const std::shared_ptr<carto::Geometry> &geometry) {
+        static std::string GetGeometryType(const std::shared_ptr<carto::Geometry>& geometry) {
             if (std::dynamic_pointer_cast<carto::PointGeometry>(geometry)) {
                 return "point";
             } else if (std::dynamic_pointer_cast<carto::LineGeometry>(geometry)) {

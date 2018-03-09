@@ -270,7 +270,7 @@ namespace valhalla { namespace thor {
         thor_worker_t(const std::vector<std::shared_ptr<sqlite3pp::database>>& databases, const std::string& costing);
         virtual ~thor_worker_t();
 
-        std::list<valhalla::odin::TripPath> path_depart_at(const std::vector<valhalla::midgard::PointLL>& points, const boost::optional<int> &date_time_type);
+        std::list<valhalla::odin::TripPath> path_depart_at(const std::vector<valhalla::midgard::PointLL>& points, const boost::optional<int>& date_time_type);
 
     protected:
         static boost::property_tree::ptree make_reader_config();
@@ -403,7 +403,7 @@ namespace valhalla { namespace thor {
             }
 
             // Check if the through edge is dist = 1 (through point is at a node)
-            bool ends_at_node = false;;
+            bool ends_at_node = false;
             for (const auto& e : origin.edges) {
                 if (e.id == through_edge) {
                     if (e.end_node()) {
@@ -435,7 +435,7 @@ namespace valhalla { namespace thor {
         }
     }
 
-    std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(const std::vector<valhalla::midgard::PointLL>& points, const boost::optional<int> &date_time_type) {
+    std::list<valhalla::odin::TripPath> thor_worker_t::path_depart_at(const std::vector<valhalla::midgard::PointLL>& points, const boost::optional<int>& date_time_type) {
         // Build correlated path locations
         std::vector<baldr::PathLocation> correlated;
         correlated.reserve(points.size());

@@ -84,7 +84,7 @@ namespace carto {
         std::shared_ptr<VectorDataSource> dataSource;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
-            dataSource = _dataSource.lock();;
+            dataSource = _dataSource.lock();
         }
         if (dataSource) {
             dataSource->notifyElementChanged(shared_from_this());

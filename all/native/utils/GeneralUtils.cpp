@@ -29,13 +29,15 @@ namespace carto {
     }
     
     void GeneralUtils::ReplaceSubstrings(std::string& base, const std::string& search, const std::string& replace) {
-        for (std::size_t pos = 0;; pos += replace.length()) {
+        std::string::size_type pos = 0;
+        while (pos < base.size()) {
             pos = base.find(search, pos);
             if (pos == std::string::npos) {
                 break;
             }
-            base.erase(pos, search.length());
+            base.erase(pos, search.size());
             base.insert(pos, replace);
+            pos += replace.size();
         }
     }
  

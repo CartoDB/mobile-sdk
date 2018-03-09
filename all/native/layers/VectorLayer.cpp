@@ -329,7 +329,7 @@ namespace carto {
         return billboardsChanged;
     }
     
-    bool VectorLayer::syncRendererElement(const std::shared_ptr<VectorElement> &element, const ViewState& viewState, bool remove) {
+    bool VectorLayer::syncRendererElement(const std::shared_ptr<VectorElement>& element, const ViewState& viewState, bool remove) {
         bool visible = element->isVisible() && isVisible() && getVisibleZoomRange().inRange(viewState.getZoom());
         bool billboardsChanged = false;
         
