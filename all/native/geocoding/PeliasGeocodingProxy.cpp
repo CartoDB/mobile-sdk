@@ -33,15 +33,22 @@ namespace carto {
         for (const picojson::value& featureInfo : response.get("features").get<picojson::array>()) {
             const picojson::value& properties = featureInfo.get("properties");
 
-            std::string country       = properties.contains("country")       ? properties.get("country").get<std::string>() : std::string();
-            std::string region        = properties.contains("region")        ? properties.get("region").get<std::string>() : std::string();
-            std::string county        = properties.contains("county")        ? properties.get("county").get<std::string>() : std::string();
-            std::string locality      = properties.contains("locality")      ? properties.get("locality").get<std::string>() : std::string();
-            std::string neighbourhood = properties.contains("neighbourhood") ? properties.get("neighbourhood").get<std::string>() : std::string();
-            std::string street        = properties.contains("street")        ? properties.get("street").get<std::string>() : std::string();
-            std::string postcode      = properties.contains("postalcode")    ? properties.get("postalcode").get<std::string>() : std::string();
-            std::string houseNumber   = properties.contains("housenumber")   ? properties.get("housenumber").get<std::string>() : std::string();
-            std::string name          = properties.contains("name")          ? properties.get("name").get<std::string>() : std::string();
+            auto extractAddressField = [&](const std::string& key) -> std::string {
+                if (properties.get(key).is<std::string>()) {
+                    return properties.get(key).get<std::string>();
+                }
+                return std::string();
+            };
+
+            std::string country       = extractAddressField("country");
+            std::string region        = extractAddressField("region");
+            std::string county        = extractAddressField("county");
+            std::string locality      = extractAddressField("locality");
+            std::string neighbourhood = extractAddressField("neighbourhood");
+            std::string street        = extractAddressField("street");
+            std::string postcode      = extractAddressField("postalcode");
+            std::string houseNumber   = extractAddressField("housenumber");
+            std::string name          = extractAddressField("name");
             if (name == houseNumber + " " + street) {
                 name.clear();
             }

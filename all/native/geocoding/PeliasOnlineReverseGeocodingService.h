@@ -32,12 +32,12 @@ namespace carto {
 
         /**
          * Returns the language of the expected results.
-         * @return The language of the expected results. As ISO 639-1 code or empty string.
+         * @return The language of the expected results. As BCP47 code or empty string.
          */
         std::string getLanguage() const;
         /**
          * Sets the language of the expected results.
-         * @param lang The language to use as ISO 639-1 code. Empty string can be used for default language.
+         * @param lang The language to use as BCP47 code. Empty string can be used for default language.
          */
         void setLanguage(const std::string& lang);
 

@@ -34,7 +34,7 @@ namespace carto {
         for (const picojson::value& featureInfo : response.get("features").get<picojson::array>()) {
             std::string country, region, county, locality, neighbourhood, street, postcode, houseNumber, name;
 
-            auto extractField = [&](const picojson::value& info) {
+            auto extractAddressField = [&](const picojson::value& info) {
                 if (info.contains("id")) {
                     std::string id = info.get("id").to_str();
                     std::string type = id.substr(0, id.find("."));
@@ -59,10 +59,10 @@ namespace carto {
                 }
             };
 
-            extractField(featureInfo);
+            extractAddressField(featureInfo);
             if (featureInfo.contains("context")) {
                 for (const picojson::value& contextInfo : featureInfo.get("context").get<picojson::array>()) {
-                    extractField(contextInfo);
+                    extractAddressField(contextInfo);
                 }
             }
             
