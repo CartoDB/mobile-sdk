@@ -63,8 +63,6 @@ namespace carto {
 
             baseURL = GeneralUtils::ReplaceTags(_serviceURL.empty() ? MAPBOX_SERVICE_URL : _serviceURL, tagMap);
 
-            params["types"] = "address,poi";
-
             if (!_language.empty()) {
                 params["language"] = _language;
             }
@@ -88,7 +86,7 @@ namespace carto {
         return MapBoxGeocodingProxy::ReadResponse(responseString, request->getProjection());
     }
 
-    const std::string MapBoxOnlineReverseGeocodingService::MAPBOX_SERVICE_URL = "https://api.mapbox.com/geocoding/v5/mapbox.places/{query}.json?access_token={access_token}";
+    const std::string MapBoxOnlineReverseGeocodingService::MAPBOX_SERVICE_URL = "https://api.mapbox.com/geocoding/v5/mapbox.places/{query}.json?access_token={access_token}&types=address,poi";
 }
 
 #endif
