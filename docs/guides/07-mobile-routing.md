@@ -123,7 +123,7 @@ Online routing requires that you create a simple call and request to calculate t
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
     {% highlight objc %}
   
-    NTCartoOnlineRoutingService* _onlineRoutingService = [[NTCartoOnlineRoutingService alloc] initWithApiKey:@"nutiteq.osm.car"];
+    NTCartoOnlineRoutingService* onlineRoutingService = [[NTCartoOnlineRoutingService alloc] initWithApiKey:@"nutiteq.osm.car"];
 
     {% endhighlight %}
   </div>
@@ -256,7 +256,7 @@ These code samples display how to show navigation instructions on the map, as in
     
     // This calculation should be in background thread
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        NTRoutingResult* route = [_onlineRoutingService calculateRoute:request];
+        NTRoutingResult* route = [onlineRoutingService calculateRoute:request];
         
         // Process results in main thread, so it can update UI
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -266,7 +266,7 @@ These code samples display how to show navigation instructions on the map, as in
                 return;
             }
             
-            NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+            NSDateFormatter* dateFormatter = [[NSDateFormatter alloc] init];
             [dateFormatter setDateFormat:@"HH:mm:ss"];
             [dateFormatter setTimeZone:[NSTimeZone timeZoneForSecondsFromGMT:0]];
             
