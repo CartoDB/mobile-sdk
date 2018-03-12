@@ -30,7 +30,7 @@ Special **swig** version (swig-2.0.11-nutiteq branch) is needed for generating l
 
 **Python 2.7.x** is used for build scripts
 
-Android build requires **Android SDK** and **Android NDK r11** or later.
+Android build requires **Android SDK** and **Android NDK r11** or later. Note that newer versions than **Android NDK r14b** deprecate/remove support for GCC and are not recommended.
 
 iOS build requires **XCode 7.3** or later.
 
