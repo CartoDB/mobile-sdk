@@ -10,7 +10,7 @@ namespace carto {
         _textMargins(0, 0, 0, 0),
         _strokeColor(0xFFFFFFFF),
         _strokeWidth(3),
-        _borderColor(),
+        _borderColor(0xFF000000),
         _borderWidth(0),
         _backgroundColor()
     {

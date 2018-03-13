@@ -65,13 +65,14 @@ namespace carto {
             float rightPadding = _style->getTextMargins().getRight() * dpToPX;
             float topPadding = _style->getTextMargins().getTop() * dpToPX;
             float bottomPadding = _style->getTextMargins().getBottom() * dpToPX;
+            float borderPadding = (borderWidth > 0 ? 1 : 0);
 
             BitmapCanvas measureCanvas(0, 0);
             measureCanvas.setFont(_style->getFontName(), fontSize);
             ScreenBounds textBounds = measureCanvas.measureTextSize(text, -1, false);
 
-            int canvasWidth = static_cast<int>(std::ceil(textBounds.getWidth() + strokeWidth + leftPadding + rightPadding + 2 * borderWidth));
-            int canvasHeight = static_cast<int>(std::ceil(textBounds.getHeight() + strokeWidth + topPadding + bottomPadding + 2 * borderWidth));
+            int canvasWidth = static_cast<int>(std::ceil(textBounds.getWidth() + strokeWidth + leftPadding + rightPadding + 2 * borderWidth + 2 * borderPadding));
+            int canvasHeight = static_cast<int>(std::ceil(textBounds.getHeight() + strokeWidth + topPadding + bottomPadding + 2 * borderWidth + 2 * borderPadding));
             if (canvasWidth > MAX_CANVAS_SIZE || canvasHeight > MAX_CANVAS_SIZE) {
                 Log::Errorf("Text::drawBitmap: Text too large: %d x %d!", canvasWidth, canvasHeight);
                 return std::shared_ptr<Bitmap>();
@@ -81,28 +82,28 @@ namespace carto {
             canvas.setFont(_style->getFontName(), fontSize);
 
             if (_style->getBackgroundColor() != Color()) {
-                canvas.setColor(_style->getBorderColor());
+                canvas.setColor(_style->getBackgroundColor());
                 canvas.setDrawMode(BitmapCanvas::FILL);
-                canvas.drawRoundRect(ScreenBounds(ScreenPos(0, 0), ScreenPos(canvasWidth, canvasHeight)), 0);
+                canvas.drawRoundRect(ScreenBounds(ScreenPos(borderPadding, borderPadding), ScreenPos(canvasWidth - borderPadding, canvasHeight - borderPadding)), 0);
             }
 
             if (borderWidth > 0 && _style->getBorderColor() != Color()) {
                 canvas.setColor(_style->getBorderColor());
                 canvas.setDrawMode(BitmapCanvas::STROKE);
                 canvas.setStrokeWidth(borderWidth);
-                canvas.drawRoundRect(ScreenBounds(ScreenPos(0.5f * borderWidth, 0.5f * borderWidth), ScreenPos(canvasWidth - 0.5f * borderWidth, canvasHeight - 0.5f * borderWidth)), 0);
+                canvas.drawRoundRect(ScreenBounds(ScreenPos(0.5f * borderWidth + borderPadding, 0.5f * borderWidth + borderPadding), ScreenPos(canvasWidth - borderPadding - 0.5f * borderWidth, canvasHeight - borderPadding - 0.5f * borderWidth)), 0);
             }
 
             if (strokeWidth > 0) {
                 canvas.setColor(_style->getStrokeColor());
                 canvas.setDrawMode(BitmapCanvas::STROKE);
                 canvas.setStrokeWidth(strokeWidth);
-                canvas.drawText(text, ScreenPos(borderWidth + leftPadding + strokeWidth * 0.5f, borderWidth + topPadding + strokeWidth * 0.5f), textBounds.getWidth(), false);
+                canvas.drawText(text, ScreenPos(borderPadding + borderWidth + leftPadding + strokeWidth * 0.5f, borderPadding + borderWidth + topPadding + strokeWidth * 0.5f), textBounds.getWidth(), false);
             }
 
             canvas.setColor(_style->getFontColor());
             canvas.setDrawMode(BitmapCanvas::FILL);
-            canvas.drawText(text, ScreenPos(borderWidth + leftPadding + strokeWidth * 0.5f, borderWidth + topPadding + strokeWidth * 0.5f), textBounds.getWidth(), false);
+            canvas.drawText(text, ScreenPos(borderPadding + borderWidth + leftPadding + strokeWidth * 0.5f, borderPadding + borderWidth + topPadding + strokeWidth * 0.5f), textBounds.getWidth(), false);
 
             return canvas.buildBitmap();
         }
