@@ -2,6 +2,33 @@
 
 namespace carto {
     
+    TextMargins::TextMargins(int left, int top, int right, int bottom) :
+        _left(left),
+        _top(top),
+        _right(right),
+        _bottom(bottom)
+    {
+    }
+
+    TextMargins::~TextMargins() {
+    }
+
+    int TextMargins::getLeft() const {
+        return _left;
+    }
+
+    int TextMargins::getTop() const {
+        return _top;
+    }
+
+    int TextMargins::getRight() const {
+        return _right;
+    }
+
+    int TextMargins::getBottom() const {
+        return _bottom;
+    }
+        
     TextStyle::TextStyle(const Color& color,
                          float attachAnchorPointX,
                          float attachAnchorPointY,
@@ -21,8 +48,12 @@ namespace carto {
                          const std::string& fontName,
                          const std::string& textField,
                          float fontSize,
+                         const TextMargins& textMargins,
                          const Color& strokeColor,
-                         float strokeWidth) :
+                         float strokeWidth,
+                         const Color& borderColor,
+                         float borderWidth,
+                         const Color& backgroundColor) :
         LabelStyle(Color(0xFFFFFFFF),
                    attachAnchorPointX,
                    attachAnchorPointY,
@@ -43,8 +74,12 @@ namespace carto {
         _fontName(fontName),
         _textField(textField),
         _fontSize(fontSize),
+        _textMargins(textMargins),
         _strokeColor(strokeColor),
-        _strokeWidth(strokeWidth)
+        _strokeWidth(strokeWidth),
+        _borderColor(borderColor),
+        _borderWidth(borderWidth),
+        _backgroundColor(backgroundColor)
     {
     }
 
@@ -67,12 +102,28 @@ namespace carto {
         return _fontSize;
     }
 
+    const TextMargins& TextStyle::getTextMargins() const {
+        return _textMargins;
+    }
+
     const Color& TextStyle::getStrokeColor() const {
         return _strokeColor;
     }
 
     float TextStyle::getStrokeWidth() const {
         return _strokeWidth;
+    }
+
+    const Color& TextStyle::getBorderColor() const {
+        return _borderColor;
+    }
+
+    float TextStyle::getBorderWidth() const {
+        return _borderWidth;
+    }
+
+    const Color& TextStyle::getBackgroundColor() const {
+        return _backgroundColor;
     }
 
 }

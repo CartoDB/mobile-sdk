@@ -4,11 +4,15 @@ namespace carto {
 
     TextStyleBuilder::TextStyleBuilder() :
         LabelStyleBuilder(),
-    	_fontName("Helvetica"),
+        _fontName("Helvetica"),
         _textField(),
-    	_fontSize(20.0f),
-    	_strokeColor(0xFFFFFFFF),
-    	_strokeWidth(3)
+        _fontSize(20.0f),
+        _textMargins(0, 0, 0, 0),
+        _strokeColor(0xFFFFFFFF),
+        _strokeWidth(3),
+        _borderColor(),
+        _borderWidth(0),
+        _backgroundColor()
     {
         setHideIfOverlapped(true);
         setColor(Color(0xFF000000));
@@ -47,6 +51,16 @@ namespace carto {
         _fontSize = size;
     }
 
+    TextMargins TextStyleBuilder::getTextMargins() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _textMargins;
+    }
+
+    void TextStyleBuilder::setTextMargins(const TextMargins& textMargins) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _textMargins = textMargins;
+    }
+
     Color TextStyleBuilder::getStrokeColor() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _strokeColor;
@@ -65,6 +79,36 @@ namespace carto {
     void TextStyleBuilder::setStrokeWidth(float strokeWidth) {
         std::lock_guard<std::mutex> lock(_mutex);
         _strokeWidth = strokeWidth;
+    }
+
+    Color TextStyleBuilder::getBorderColor() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _borderColor;
+    }
+
+    void TextStyleBuilder::setBorderColor(const Color& borderColor) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _borderColor = borderColor;
+    }
+
+    float TextStyleBuilder::getBorderWidth() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _borderWidth;
+    }
+
+    void TextStyleBuilder::setBorderWidth(float borderWidth) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _borderWidth = borderWidth;
+    }
+
+    Color TextStyleBuilder::getBackgroundColor() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _backgroundColor;
+    }
+
+    void TextStyleBuilder::setBackgroundColor(const Color& backgroundColor) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _backgroundColor = backgroundColor;
     }
 
     std::shared_ptr<TextStyle> TextStyleBuilder::buildStyle() {
@@ -88,8 +132,12 @@ namespace carto {
                                                         _fontName,
                                                         _textField,
                                                         _fontSize,
+                                                        _textMargins,
                                                         _strokeColor,
-                                                        _strokeWidth));
+                                                        _strokeWidth,
+                                                        _borderColor,
+                                                        _borderWidth,
+                                                        _backgroundColor));
     }
 
 }

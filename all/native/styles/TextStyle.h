@@ -14,6 +14,26 @@
 namespace carto {
 
     /**
+     * Margins info for text.
+     */
+    class TextMargins {
+    public:
+        TextMargins(int left, int top, int right, int bottom);
+        virtual ~TextMargins();
+        
+        int getLeft() const;
+        int getTop() const;
+        int getRight() const;
+        int getBottom() const;
+        
+    private:
+        int _left;
+        int _top;
+        int _right;
+        int _bottom;
+    };
+
+    /**
      * A style for text labels. Contains attributes for configuring how the text label is drawn on the screen.
      */
     class TextStyle : public LabelStyle {
@@ -40,8 +60,12 @@ namespace carto {
          * @param fontName The font's name.
          * @param textField The text field variable to use.
          * @param fontSize The font's size.
-         * @param strokeColor The width of the color.
+         * @param textMargins The margins for the text.
+         * @param strokeColor The color of the stroke.
          * @param strokeWidth The width of the stroke.
+         * @param borderColor The color of the border.
+         * @param borderWidth The width of the border.
+         * @param backgroundColor The color of the background.
          */
         TextStyle(const Color& color,
                   float attachAnchorPointX,
@@ -62,8 +86,12 @@ namespace carto {
                   const std::string& fontName,
                   const std::string& textField,
                   float fontSize,
+                  const TextMargins& textMargins,
                   const Color& strokeColor,
-                  float strokeWidth);
+                  float strokeWidth,
+                  const Color& borderColor,
+                  float borderWidth,
+                  const Color& backgroundColor);
         virtual ~TextStyle();
         
         /**
@@ -91,6 +119,12 @@ namespace carto {
         float getFontSize() const;
 
         /**
+         * Returns the margins for the text.
+         * @return The margins for the text.
+         */
+        const TextMargins& getTextMargins() const;
+
+        /**
          * Returns the color of the stroke.
          * @return The color of the stroke around the text.
          */
@@ -102,6 +136,24 @@ namespace carto {
          */
         float getStrokeWidth() const;
 
+        /**
+         * Returns the color of the border.
+         * @return The color of the border around the text.
+         */
+        const Color& getBorderColor() const;
+
+        /**
+         * Returns the width of the border.
+         * @return The width of the border around the text.
+         */
+        float getBorderWidth() const;
+
+        /**
+         * Returns the background color of the text.
+         * @return The background color of the text.
+         */
+        const Color& getBackgroundColor() const;
+
     protected:
         Color _fontColor;
 
@@ -111,9 +163,17 @@ namespace carto {
 
         float _fontSize;
 
+        TextMargins _textMargins;
+
         Color _strokeColor;
 
         float _strokeWidth;
+
+        Color _borderColor;
+
+        float _borderWidth;
+
+        Color _backgroundColor;
     };
 
 }

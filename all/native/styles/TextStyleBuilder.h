@@ -60,6 +60,18 @@ namespace carto {
         void setFontSize(float size);
 
         /**
+         * Returns the margins for the text.
+         * @return The margins for the text.
+         */
+        TextMargins getTextMargins() const;
+        /**
+         * Sets the margins for the text. The margins will determine how much
+         * empty space should surround the text. The default is TextMargins(0, 0, 0, 0).
+         * @param textMargins The new margins for the text in dp.
+         */
+        void setTextMargins(const TextMargins& textMargins);
+
+        /**
          * Returns the stroke color for the text label.
          * @return The stroke color for the text label.
          */
@@ -82,6 +94,39 @@ namespace carto {
         void setStrokeWidth(float strokeWidth);
 
         /**
+         * Returns the border color for the text label.
+         * @return The border color for the text label.
+         */
+        Color getBorderColor() const;
+        /**
+         * Sets the border color for the text label.
+         * @param borderColor The new border color for the text label. By default the border color is transparent.
+         */
+        void setBorderColor(const Color& borderColor);
+
+        /**
+         * Returns the border width for the text label.
+         * @return The border width for the text label in screen density independent pixels.
+         */
+        float getBorderWidth() const;
+        /**
+         * Sets the border width for the text label.
+         * @param borderWidth The new border width for the text label in screen density independent pixels. By default the border width is 0.
+         */
+        void setBorderWidth(float borderWidth);
+
+        /**
+         * Returns the background color for the text label.
+         * @return The background color for the text label.
+         */
+        Color getBackgroundColor() const;
+        /**
+         * Sets the background color for the text label.
+         * @param backgroundColor The new background color for the text label. By default the background color is transparent.
+         */
+        void setBackgroundColor(const Color& backgroundColor);
+
+        /**
          * Builds a new instance of the TextStyle object using previously set parameters.
          * @return A new TextStyle object.
          */
@@ -93,10 +138,18 @@ namespace carto {
         std::string _textField;
 
         float _fontSize;
+
+        TextMargins _textMargins;
         
         Color _strokeColor;
 
         float _strokeWidth;
+
+        Color _borderColor;
+
+        float _borderWidth;
+
+        Color _backgroundColor;
     };
 
 }
