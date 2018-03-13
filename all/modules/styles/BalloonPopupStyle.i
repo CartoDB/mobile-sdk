@@ -17,6 +17,11 @@
 
 !value_type(carto::BalloonPopupMargins, styles.BalloonPopupMargins)
 
+%attribute(carto::BalloonPopupMargins, int, Left, getLeft)
+%attribute(carto::BalloonPopupMargins, int, Right, getRight)
+%attribute(carto::BalloonPopupMargins, int, Top, getTop)
+%attribute(carto::BalloonPopupMargins, int, Bottom, getBottom)
+
 !polymorphic_shared_ptr(carto::BalloonPopupStyle, styles.BalloonPopupStyle)
 
 %attributeval(carto::BalloonPopupStyle, carto::Color, BackgroundColor, getBackgroundColor)
