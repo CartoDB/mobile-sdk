@@ -24,10 +24,11 @@
 !polymorphic_shared_ptr(carto::Layer, layers.Layer)
 !value_type(std::vector<std::shared_ptr<carto::Layer> >, layers.LayerVector)
 
-%attribute(carto::Layer, bool, Visible, isVisible, setVisible)
 %attribute(carto::Layer, int, UpdatePriority, getUpdatePriority, setUpdatePriority)
 %attribute(carto::Layer, int, CullDelay, getCullDelay, setCullDelay)
+%attribute(carto::Layer, bool, Visible, isVisible, setVisible)
 %attributeval(carto::Layer, carto::MapRange, VisibleZoomRange, getVisibleZoomRange, setVisibleZoomRange)
+%attribute(carto::Layer, float, Opacity, getOpacity, setOpacity)
 %ignore carto::Layer::isSurfaceCreated;
 %ignore carto::Layer::onSurfaceCreated;
 %ignore carto::Layer::onDrawFrame;

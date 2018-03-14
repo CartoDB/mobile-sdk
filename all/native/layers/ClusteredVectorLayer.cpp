@@ -151,7 +151,7 @@ namespace carto {
     }
 
     bool ClusteredVectorLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
-        if (!isVisible() || !_lastCullState || !getVisibleZoomRange().inRange(viewState.getZoom())) {
+        if (!isVisible() || !_lastCullState || !getVisibleZoomRange().inRange(viewState.getZoom()) || getOpacity() <= 0) {
             return false;
         }
 

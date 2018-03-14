@@ -194,7 +194,7 @@ namespace carto {
     
     void NMLModelLODTreeLayer::loadData(const std::shared_ptr<CullState>& cullState) {
         float zoom = cullState->getViewState().getZoom();
-        if (!isVisible() || !getVisibleZoomRange().inRange(zoom)) {
+        if (!isVisible() || !getVisibleZoomRange().inRange(zoom) || getOpacity() <= 0) {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             if (_renderer) {
                 _renderer->refreshDrawData();

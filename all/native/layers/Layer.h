@@ -85,12 +85,23 @@ namespace carto {
          */
         MapRange getVisibleZoomRange();
         /**
-         * Set the visible zoom range for this layer. Current zoom level must be within this range for the layer to be visible.
+         * Sets the visible zoom range for this layer. Current zoom level must be within this range for the layer to be visible.
          * This range is half-open, thus layer is visible if range.min <= ZOOMLEVEL < range.max.
          * @param range new visible zoom range
          */
         void setVisibleZoomRange(const MapRange& range);
         
+        /**
+         * Returns the opacity of this layer.
+         * @return The opacity of this layer.
+         */
+        float getOpacity() const;
+        /**
+         * Set the opacity of the layer.
+         * @param opacity The opacity of the layer in range (0..1). 1.0 is the default value.
+         */
+        void setOpacity(float opacity);
+
         /**
          * Tests whether this layer is being currently updated.
          * @return True when the layer is being updated or false when the layer is in steady state.
@@ -168,6 +179,8 @@ namespace carto {
         bool _visible;
         
         MapRange _visibleZoomRange;
+
+        float _opacity;
         
         mutable std::recursive_mutex _mutex;
 

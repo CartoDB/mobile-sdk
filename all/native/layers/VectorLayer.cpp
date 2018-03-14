@@ -104,7 +104,7 @@ namespace carto {
         }
 
         // Check if the layer should be shown
-        if (!isVisible() || !getVisibleZoomRange().inRange(cullState->getViewState().getZoom())) {
+        if (!isVisible() || !getVisibleZoomRange().inRange(cullState->getViewState().getZoom()) || getOpacity() <= 0) {
             // Synchronize in case FetchTask is running
             std::shared_ptr<MapRenderer> mapRenderer;
             bool billboardsChanged = false;
@@ -240,7 +240,7 @@ namespace carto {
             
             billboardsChanged = syncRendererElement(element, _lastCullState->getViewState(), remove);
             
-            if (!isVisible() || !getVisibleZoomRange().inRange(_lastCullState->getViewState().getZoom())) {
+            if (!isVisible() || !getVisibleZoomRange().inRange(_lastCullState->getViewState().getZoom()) || getOpacity() <= 0) {
                 return;
             }
             

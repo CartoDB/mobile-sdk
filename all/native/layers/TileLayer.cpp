@@ -222,7 +222,7 @@ namespace carto {
         }
         
         // Check if layer should be drawn
-        if (!isVisible() || !getVisibleZoomRange().inRange(cullState->getViewState().getZoom())) {
+        if (!isVisible() || !getVisibleZoomRange().inRange(cullState->getViewState().getZoom()) || getOpacity() <= 0) {
             _calculatingTiles = false;
 
             refreshDrawData(cullState);
