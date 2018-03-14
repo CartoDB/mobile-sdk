@@ -20,6 +20,7 @@
 
 #include <vt/TileId.h>
 #include <vt/Tile.h>
+#include <vt/Bitmap.h>
 
 namespace carto {
     class Projection;
@@ -30,7 +31,6 @@ namespace carto {
     class MapRenderer;
     class ViewState;
     namespace vt {
-        class BitmapPattern;
         class GLTileRenderer;
     }
     
