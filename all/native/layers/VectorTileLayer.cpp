@@ -23,9 +23,6 @@ namespace carto {
 
     VectorTileLayer::VectorTileLayer(const std::shared_ptr<TileDataSource>& dataSource, const std::shared_ptr<VectorTileDecoder>& decoder) :
         TileLayer(dataSource),
-        _useFBO(false),
-        _useDepth(true),
-        _useStencil(true),
         _useTileMapMode(false),
         _vectorTileEventListener(),
         _labelRenderOrder(VectorTileRenderOrder::VECTOR_TILE_RENDER_ORDER_LAYER),
@@ -393,7 +390,7 @@ namespace carto {
         }
     
         // Create new rendererer, simply drop old one (if exists)
-        auto renderer = std::make_shared<TileRenderer>(_mapRenderer, _useFBO, _useDepth, _useStencil);
+        auto renderer = std::make_shared<TileRenderer>(_mapRenderer);
         renderer->onSurfaceCreated(shaderManager, textureManager);
         setRenderer(renderer);
     }
@@ -402,6 +399,7 @@ namespace carto {
         updateTileLoadListener();
 
         if (auto renderer = getRenderer()) {
+            float opacity = getOpacity();
             renderer->setBackgroundColor(_tileDecoder->getBackgroundColor());
             if (auto backgroundPattern = _tileDecoder->getBackgroundPattern()) {
                 renderer->setBackgroundPattern(backgroundPattern);
@@ -410,6 +408,7 @@ namespace carto {
             renderer->setBuildingOrder(static_cast<int>(getBuildingRenderOrder()));
             renderer->setInteractionMode(_vectorTileEventListener.get() ? true : false);
             renderer->setSubTileBlending(false);
+            renderer->setRenderSettings(opacity < 1.0f, true, true, Color(), opacity);
             return renderer->onDrawFrame(deltaSeconds, viewState);
         }
         return false;

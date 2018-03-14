@@ -350,7 +350,7 @@ namespace carto {
         }
     
         // Create new rendererer, simply drop old one (if exists)
-        auto renderer = std::make_shared<TileRenderer>(_mapRenderer, false, false, false);
+        auto renderer = std::make_shared<TileRenderer>(_mapRenderer);
         renderer->onSurfaceCreated(shaderManager, textureManager);
         setRenderer(renderer);
     }
@@ -359,7 +359,9 @@ namespace carto {
         updateTileLoadListener();
 
         if (auto renderer = getRenderer()) {
+            float opacity = getOpacity();
             renderer->setInteractionMode(_rasterTileEventListener.get() ? true : false);
+            renderer->setRenderSettings(opacity < 1.0f, false, false, Color(), opacity);
             return renderer->onDrawFrame(deltaSeconds, viewState);
         }
         return false;

@@ -30,18 +30,22 @@ namespace carto {
     class MapRenderer;
     class ViewState;
     namespace vt {
+        class BitmapPattern;
         class GLTileRenderer;
     }
     
     class TileRenderer : public std::enable_shared_from_this<TileRenderer> {
     public:
-        TileRenderer(const std::weak_ptr<MapRenderer>& mapRenderer, bool useFBO, bool useDepth, bool useStencil);
+        TileRenderer(const std::weak_ptr<MapRenderer>& mapRenderer);
         virtual ~TileRenderer();
     
         void setInteractionMode(bool enabled);
         void setSubTileBlending(bool enabled);
+        void setRenderSettings(bool useFBO, bool useDepth, bool useStencil, const Color& fboClearColor, float fboOpacity);
         void setLabelOrder(int order);
         void setBuildingOrder(int order);
+        void setBackgroundColor(const Color& color);
+        void setBackgroundPattern(const std::shared_ptr<const vt::BitmapPattern>& pattern);
 
         void offsetLayerHorizontally(double offset);
     
@@ -50,9 +54,6 @@ namespace carto {
         bool onDrawFrame3D(float deltaSeconds, const ViewState& viewState);
         void onSurfaceDestroyed();
     
-        void setBackgroundColor(const Color& color);
-        void setBackgroundPattern(const std::shared_ptr<const vt::BitmapPattern>& pattern);
-
         bool cullLabels(const ViewState& viewState);
 
         bool refreshTiles(const std::vector<std::shared_ptr<TileDrawData> >& drawDatas);
@@ -67,13 +68,17 @@ namespace carto {
         std::weak_ptr<MapRenderer> _mapRenderer;
         std::shared_ptr<vt::GLTileRenderer> _glRenderer;
         std::shared_ptr<std::mutex> _glRendererMutex;
+        bool _interactionMode;
+        bool _subTileBlending;
         bool _useFBO;
         bool _useDepth;
         bool _useStencil;
-        bool _interactionMode;
-        bool _subTileBlending;
+        Color _fboClearColor;
+        float _fboOpacity;
         int _labelOrder;
         int _buildingOrder;
+        Color _backgroundColor;
+        std::shared_ptr<const vt::BitmapPattern> _backgroundPattern;
         double _horizontalLayerOffset;
         std::map<vt::TileId, std::shared_ptr<const vt::Tile> > _tiles;
 

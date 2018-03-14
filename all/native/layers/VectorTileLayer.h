@@ -148,9 +148,6 @@ namespace carto {
         virtual void unregisterDataSourceListener();
 
         // Configuration parameters that can be tweaked in subclasses
-        bool _useFBO;
-        bool _useDepth;
-        bool _useStencil;
         bool _useTileMapMode;
     
     private:    

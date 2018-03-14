@@ -33,17 +33,21 @@ namespace {
     
 namespace carto {
     
-    TileRenderer::TileRenderer(const std::weak_ptr<MapRenderer>& mapRenderer, bool useFBO, bool useDepth, bool useStencil) :
+    TileRenderer::TileRenderer(const std::weak_ptr<MapRenderer>& mapRenderer) :
         _mapRenderer(mapRenderer),
         _glRenderer(),
         _glRendererMutex(std::make_shared<std::mutex>()),
-        _useFBO(useFBO),
-        _useDepth(useDepth),
-        _useStencil(useStencil),
         _interactionMode(false),
         _subTileBlending(true),
+        _useFBO(false),
+        _useDepth(true),
+        _useStencil(true),
+        _fboClearColor(),
+        _fboOpacity(1.0f),
         _labelOrder(0),
         _buildingOrder(1),
+        _backgroundColor(),
+        _backgroundPattern(),
         _horizontalLayerOffset(0),
         _tiles(),
         _mutex()
@@ -62,6 +66,15 @@ namespace carto {
         std::lock_guard<std::mutex> lock(_mutex);
         _subTileBlending = enabled;
     }
+
+    void TileRenderer::setRenderSettings(bool useFBO, bool useDepth, bool useStencil, const Color& fboClearColor, float fboOpacity) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _useFBO = useFBO;
+        _useDepth = useDepth;
+        _useStencil = useStencil;
+        _fboClearColor = fboClearColor;
+        _fboOpacity = fboOpacity;
+    }
     
     void TileRenderer::setLabelOrder(int order) {
         std::lock_guard<std::mutex> lock(_mutex);
@@ -71,6 +84,16 @@ namespace carto {
     void TileRenderer::setBuildingOrder(int order) {
         std::lock_guard<std::mutex> lock(_mutex);
         _buildingOrder = order;
+    }
+    
+    void TileRenderer::setBackgroundColor(const Color& color) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _backgroundColor = color;
+    }
+    
+    void TileRenderer::setBackgroundPattern(const std::shared_ptr<const vt::BitmapPattern>& pattern) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _backgroundPattern = pattern;
     }
     
     void TileRenderer::offsetLayerHorizontally(double offset) {
@@ -92,9 +115,8 @@ namespace carto {
             }
         };
         _glRenderer = std::shared_ptr<vt::GLTileRenderer>(
-            new vt::GLTileRenderer(_glRendererMutex, std::make_shared<carto::vt::GLExtensions>(), carto::Const::WORLD_SIZE, _useFBO, _useDepth, _useStencil), glRendererDeleter
+            new vt::GLTileRenderer(_glRendererMutex, std::make_shared<carto::vt::GLExtensions>(), carto::Const::WORLD_SIZE), glRendererDeleter
         );
-        _glRenderer->setSubTileBlending(_subTileBlending);
         _glRenderer->initializeRenderer();
         _tiles.clear();
         GLContext::CheckGLError("TileRenderer::onSurfaceCreated()");
@@ -111,7 +133,10 @@ namespace carto {
         modelViewMat = modelViewMat * cglib::translate4_matrix(cglib::vec3<double>(_horizontalLayerOffset, 0, 0));
         _glRenderer->setViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution());
         _glRenderer->setInteractionMode(_interactionMode);
-        
+        _glRenderer->setSubTileBlending(_subTileBlending);
+        _glRenderer->setRenderSettings(_useFBO, _useDepth, _useStencil, vt::Color(_fboClearColor.getARGB()), _fboOpacity);
+        _glRenderer->setBackground(vt::Color(_backgroundColor.getARGB()), _backgroundPattern);
+
         _glRenderer->startFrame(deltaSeconds * 3);
 
         bool refresh = _glRenderer->renderGeometry2D();
@@ -176,31 +201,6 @@ namespace carto {
 
         _glRenderer->resetRenderer();
         _glRenderer.reset();
-    }
-    
-    void TileRenderer::setBackgroundColor(const Color& color) {
-        std::lock_guard<std::mutex> lock(_mutex);
-
-        if (!_glRenderer) {
-            return;
-        }
-
-        if (_useFBO) {
-            _glRenderer->setFBOClearColor(vt::Color(color.getARGB()));
-        }
-        else {
-            _glRenderer->setBackgroundColor(vt::Color(color.getARGB()));
-        }
-    }
-    
-    void TileRenderer::setBackgroundPattern(const std::shared_ptr<const vt::BitmapPattern>& pattern) {
-        std::lock_guard<std::mutex> lock(_mutex);
-
-        if (!_glRenderer) {
-            return;
-        }
-
-        _glRenderer->setBackgroundPattern(pattern);
     }
     
     bool TileRenderer::cullLabels(const ViewState& viewState) {

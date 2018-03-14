@@ -1,4 +1,7 @@
 #include "TorqueTileLayer.h"
+#include "layers/VectorTileEventListener.h"
+#include "renderers/MapRenderer.h"
+#include "renderers/TileRenderer.h"
 #include "vectortiles/TorqueTileDecoder.h"
 
 #include <vt/Tile.h>
@@ -9,9 +12,6 @@ namespace carto {
         VectorTileLayer(dataSource, decoder)
     {
         // Configure base class for Torque
-        _useFBO = true;
-        _useDepth = false;
-        _useStencil = false;
         _useTileMapMode = true;
     }
     
@@ -32,4 +32,16 @@ namespace carto {
         return count;
     }
 
+    bool TorqueTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
+        updateTileLoadListener();
+
+        if (auto renderer = getRenderer()) {
+            renderer->setInteractionMode(getVectorTileEventListener().get() ? true : false);
+            renderer->setSubTileBlending(false);
+            renderer->setRenderSettings(true, false, false, getTileDecoder()->getBackgroundColor(), getOpacity());
+            return renderer->onDrawFrame(deltaSeconds, viewState);
+        }
+        return false;
+    }
+        
 }

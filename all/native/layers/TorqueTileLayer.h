@@ -34,6 +34,9 @@ namespace carto {
          * @return The number of visible feature at the specified frame. If the frame is missing, 0 is returned.
          */
         int countVisibleFeatures(int frameNr) const;
+
+    protected:
+        virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
     };
 }
 
