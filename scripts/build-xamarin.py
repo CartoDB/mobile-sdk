@@ -115,7 +115,7 @@ def buildXamarinNuget(args, target):
 
   if not nuget(args, buildDir,
     'pack',
-    '%s/CartoMobileSDK.%s.nuspec' % (buildDir, target),
+    '"%s/CartoMobileSDK.%s.nuspec"' % (buildDir, target),
     '-BasePath', '/'
   ):
     return False
