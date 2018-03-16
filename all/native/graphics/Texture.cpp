@@ -76,7 +76,7 @@ namespace carto {
             glDeleteTextures(1, &_texId);
             _texId = 0;
 
-            GLContext::CheckGLError("Texture::unload()");
+            GLContext::CheckGLError("Texture::unload");
         }
     }
     
@@ -94,9 +94,8 @@ namespace carto {
         glBindTexture(GL_TEXTURE_2D, texId);
     
         const std::vector<unsigned char>& pixelData = bitmap.getPixelData();
-        const unsigned char* pixelDataPtr = &pixelData[0];
         glTexImage2D(GL_TEXTURE_2D, 0, bitmap.getColorFormat(), bitmap.getWidth(), bitmap.getHeight(),
-                0, bitmap.getColorFormat(), GL_UNSIGNED_BYTE, pixelDataPtr);
+                0, bitmap.getColorFormat(), GL_UNSIGNED_BYTE, pixelData.data());
         
         if (repeat) {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -126,7 +125,7 @@ namespace carto {
 
         glBindTexture(GL_TEXTURE_2D, oldTexId);
     
-        GLContext::CheckGLError("Texture::loadFromBitmap()");
+        GLContext::CheckGLError("Texture::loadFromBitmap");
     
         return texId;
     }

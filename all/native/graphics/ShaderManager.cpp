@@ -79,6 +79,8 @@ namespace carto {
             }
             std::swap(createQueue, _createQueue); // release the shaders only after lock is released
         }
+
+        GLContext::CheckGLError("ShaderManager::processShaders");
     }
 
     void ShaderManager::deleteShader(Shader* shader) {

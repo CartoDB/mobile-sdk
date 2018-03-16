@@ -10,6 +10,7 @@
 #include "graphics/utils/GLContext.h"
 
 #include <memory>
+#include <vector>
 
 namespace carto {
     class FrameBufferManager;

@@ -153,7 +153,7 @@ namespace carto {
         glDisable(GL_DEPTH_TEST);
         glActiveTexture(GL_TEXTURE0);
 
-        GLContext::CheckGLError("NMLModelRenderer::onDrawFrame()");
+        GLContext::CheckGLError("NMLModelRenderer::onDrawFrame");
         return false;
     }
 

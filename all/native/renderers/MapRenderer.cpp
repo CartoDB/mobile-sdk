@@ -684,11 +684,15 @@ namespace carto {
         glClearColor(color.getR() / 255.0f, color.getG() / 255.0f, color.getB() / 255.0f, color.getA() / 255.0f);
         glClearStencil(0);
         glClear(GL_COLOR_BUFFER_BIT | (depth ? GL_DEPTH_BUFFER_BIT : 0) | (stencil ? GL_STENCIL_BUFFER_BIT : 0));
+
+       	GLContext::CheckGLError("MapRenderer::clearAndBindScreenFBO");
     }
 
     void MapRenderer::blendAndUnbindScreenFBO(float opacity) {
         static const GLfloat screenVertices[8] = { -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f };
 
+        
+        
         if (!_screenFrameBuffer) {
             return;
         }
@@ -720,6 +724,8 @@ namespace carto {
         glBindTexture(GL_TEXTURE_2D, 0);
         
         glDisableVertexAttribArray(_screenBlendShader->getAttribLoc("a_coord"));
+
+       	GLContext::CheckGLError("MapRenderer::blendAndUnbindScreenFBO");
     }
 
     void MapRenderer::calculateRayIntersectedElements(const MapPos& targetPos, ViewState& viewState, std::vector<RayIntersectedElement>& results) {

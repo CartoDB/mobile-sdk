@@ -105,7 +105,7 @@ namespace carto {
         );
         _glRenderer->initializeRenderer();
         _tiles.clear();
-        GLContext::CheckGLError("TileRenderer::onSurfaceCreated()");
+        GLContext::CheckGLError("TileRenderer::onSurfaceCreated");
     }
     
     bool TileRenderer::onDrawFrame(float deltaSeconds, const ViewState& viewState) {
@@ -141,7 +141,7 @@ namespace carto {
         glDisable(GL_DEPTH_TEST);
         glDepthMask(GL_TRUE);
 
-        GLContext::CheckGLError("TileRenderer::onDrawFrame()");
+        GLContext::CheckGLError("TileRenderer::onDrawFrame");
         return refresh;
     }
     
@@ -171,7 +171,7 @@ namespace carto {
         glDisable(GL_DEPTH_TEST);
         glDepthMask(GL_TRUE);
 
-        GLContext::CheckGLError("TileRenderer::onDrawFrame3D()");
+        GLContext::CheckGLError("TileRenderer::onDrawFrame3D");
         return refresh;
     }
     

@@ -51,7 +51,7 @@ namespace carto {
 
         static std::unordered_set<std::string> _ExtensionCache;
     
-        static std::mutex _Mutex;
+        static std::recursive_mutex _Mutex;
     };
     
 }

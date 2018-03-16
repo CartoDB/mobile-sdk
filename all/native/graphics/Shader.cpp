@@ -79,7 +79,7 @@ namespace carto {
         _uniformMap.clear();
         _attribMap.clear();
         
-        GLContext::CheckGLError("Shader::unload()");
+        GLContext::CheckGLError("Shader::unload");
     }
     
     void Shader::registerVars(GLuint progId) const {
@@ -111,7 +111,7 @@ namespace carto {
             _attribMap[varName] = loc;
         }
         
-        GLContext::CheckGLError("Shader::registerVars()");
+        GLContext::CheckGLError("Shader::registerVars");
     }
 
     GLuint Shader::loadProg(GLuint vertShaderId, GLuint fragShaderId) const {
@@ -131,14 +131,14 @@ namespace carto {
             glGetShaderiv(progId, GL_INFO_LOG_LENGTH, &infoLen);
             if (infoLen > 0) {
                 std::vector<char> infoBuf(infoLen);
-                glGetProgramInfoLog(progId, infoLen, NULL, &infoBuf[0]);
-                Log::Errorf("Shader::loadProg: Failed to link shader program in '%s' shader \n Error: %s ", _shaderSource.getName().c_str(), &infoBuf[0]);
+                glGetProgramInfoLog(progId, infoLen, NULL, infoBuf.data());
+                Log::Errorf("Shader::loadProg: Failed to link shader program in '%s' shader \n Error: %s ", _shaderSource.getName().c_str(), infoBuf.data());
             }
             glDeleteProgram(progId);
             progId = 0;
         }
 
-        GLContext::CheckGLError("Shader::loadProg()");
+        GLContext::CheckGLError("Shader::loadProg");
 
         return progId;
     }
@@ -150,7 +150,7 @@ namespace carto {
             return 0;
         }
 
-        const char* sourceBuf = &source[0];
+        const char* sourceBuf = source.data();
         glShaderSource(shaderId, 1, &sourceBuf, NULL);
 
         glCompileShader(shaderId);
@@ -161,14 +161,14 @@ namespace carto {
             glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &infoLen);
             if (infoLen > 0) {
                 std::vector<char> infoBuf(infoLen);
-                glGetShaderInfoLog(shaderId, infoLen, NULL, &infoBuf[0]);
-                Log::Errorf("Shader::loadShader: Failed to compile shader type %i in '%s' shader \n Error: %s ", shaderType, _shaderSource.getName().c_str(), &infoBuf[0]);
+                glGetShaderInfoLog(shaderId, infoLen, NULL, infoBuf.data());
+                Log::Errorf("Shader::loadShader: Failed to compile shader type %i in '%s' shader \n Error: %s ", shaderType, _shaderSource.getName().c_str(), infoBuf.data());
             }
             glDeleteShader(shaderId);
             shaderId = 0;
         }
 
-        GLContext::CheckGLError("Shader::loadShader()");
+        GLContext::CheckGLError("Shader::loadShader");
 
         return shaderId;
     }

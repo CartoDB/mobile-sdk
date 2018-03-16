@@ -9,7 +9,7 @@
 namespace carto {
 
     bool GLContext::HasGLExtension(const char* extension) {
-        std::lock_guard<std::mutex> lock(_Mutex);
+        std::lock_guard<std::recursive_mutex> lock(_Mutex);
     
         auto it = _ExtensionCache.find(extension);
         if (it != _ExtensionCache.end()) {
@@ -19,7 +19,7 @@ namespace carto {
     }
     
     void GLContext::LoadExtensions() {
-        std::lock_guard<std::mutex> lock(_Mutex);
+        std::lock_guard<std::recursive_mutex> lock(_Mutex);
 
         const char* extensions = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
         if (!extensions) {
@@ -53,7 +53,7 @@ namespace carto {
     }
 
     void GLContext::DiscardFramebufferEXT(GLenum target, GLsizei numAttachments, const GLenum* attachments) {
-        std::lock_guard<std::mutex> lock(_Mutex);
+        std::lock_guard<std::recursive_mutex> lock(_Mutex);
 
 #ifdef __APPLE__
         ::glDiscardFramebufferEXT(target, numAttachments, attachments);
@@ -83,6 +83,6 @@ namespace carto {
 
     std::unordered_set<std::string> GLContext::_ExtensionCache;
         
-    std::mutex GLContext::_Mutex;
+    std::recursive_mutex GLContext::_Mutex;
     
 }

@@ -62,7 +62,7 @@ namespace carto {
             }
             if (!_deleteRBIdQueue.empty()) {
                 glDeleteRenderbuffers(static_cast<unsigned int>(_deleteRBIdQueue.size()), _deleteRBIdQueue.data());
-                _deleteFBOIdQueue.clear();
+                _deleteRBIdQueue.clear();
             }
 
             for (const std::weak_ptr<FrameBuffer>& frameBufferWeak : _createQueue) {
@@ -72,6 +72,8 @@ namespace carto {
             }
             std::swap(createQueue, _createQueue); // release the textures only after lock is released
         }
+
+        GLContext::CheckGLError("FrameBufferManager::processFrameBuffers");
     }
 
     void FrameBufferManager::deleteFrameBuffer(FrameBuffer* frameBuffer) {

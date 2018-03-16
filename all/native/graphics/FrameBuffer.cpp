@@ -135,10 +135,12 @@ namespace carto {
             }
 
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-                GLContext::CheckGLError("FrameBuffer::create()");
+                Log::Error("FrameBuffer::create: Framebuffer not complete");
             }
 
             glBindFramebuffer(GL_FRAMEBUFFER, oldFBOId);
+
+            GLContext::CheckGLError("FrameBuffer::create");
         }
     }
 
@@ -157,7 +159,7 @@ namespace carto {
                 _colorTexId = 0;
             }
 
-            GLContext::CheckGLError("FrameBuffer::destroy()");
+            GLContext::CheckGLError("FrameBuffer::destroy");
         }
     }
     

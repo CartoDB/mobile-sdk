@@ -62,6 +62,8 @@ namespace carto {
             }
             std::swap(createQueue, _createQueue); // release the textures only after lock is released
         }
+
+        GLContext::CheckGLError("TextureManager::processTextures");
     }
 
     void TextureManager::deleteTexture(Texture* texture) {
