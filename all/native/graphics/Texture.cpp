@@ -85,6 +85,9 @@ namespace carto {
             Log::Error("Texture::loadFromBitmap: Failed to create texture from bitmap, unsupported color format");
             return 0;
         }
+
+        GLint oldTexId = 0;
+        glGetIntegerv(GL_TEXTURE_BINDING_2D, &oldTexId);
         
         GLuint texId = 0;
         glGenTextures(1, &texId);
@@ -120,6 +123,8 @@ namespace carto {
     
             glGenerateMipmap(GL_TEXTURE_2D);
         }
+
+        glBindTexture(GL_TEXTURE_2D, oldTexId);
     
         GLContext::CheckGLError("Texture::loadFromBitmap()");
     

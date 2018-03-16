@@ -7,9 +7,13 @@
 #include "core/ScreenBounds.h"
 #include "drawdatas/BillboardDrawData.h"
 #include "graphics/Bitmap.h"
+#include "graphics/FrameBuffer.h"
 #include "graphics/Shader.h"
+#include "graphics/Texture.h"
+#include "graphics/FrameBufferManager.h"
 #include "graphics/ShaderManager.h"
 #include "graphics/TextureManager.h"
+#include "graphics/shaders/BlendShaderSource.h"
 #include "graphics/utils/GLContext.h"
 #include "layers/Layer.h"
 #include "renderers/BillboardRenderer.h"
@@ -36,6 +40,7 @@ namespace carto {
                              const std::shared_ptr<Options>& options) :
         _lastFrameTime(),
         _viewState(),
+        _frameBufferManager(),
         _shaderManager(),
         _textureManager(),
         _styleCache(),
@@ -45,6 +50,9 @@ namespace carto {
         _redrawWorker(std::make_shared<RedrawWorker>()),
         _redrawThread(),
 #endif
+        _optionsListener(),
+        _screenFrameBuffer(),
+        _screenBlendShader(),
         _backgroundRenderer(*options, *layers),
         _watermarkRenderer(*options),
         _billboardSorter(),
@@ -471,6 +479,13 @@ namespace carto {
         glPixelStorei(GL_PACK_ALIGNMENT, 1);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
+        // Reset frame buffer manager
+        if (_frameBufferManager) {
+            _frameBufferManager->setGLThreadId(std::thread::id());
+        }
+        _frameBufferManager = std::make_shared<FrameBufferManager>();
+        _frameBufferManager->setGLThreadId(std::this_thread::get_id());
+
         // Reset shader manager
         if (_shaderManager) {
             _shaderManager->setGLThreadId(std::thread::id());
@@ -487,6 +502,10 @@ namespace carto {
 
         // Reset style cache
         _styleCache = std::make_shared<StyleTextureCache>(_textureManager, STYLE_TEXTURE_CACHE_SIZE);
+
+        // Reset screen blending state
+        _screenFrameBuffer.reset();
+        _screenBlendShader.reset();
 
         // Drop all thread callbacks, as context is invalidated
         {
@@ -509,6 +528,7 @@ namespace carto {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _viewState.setScreenSize(width, height);
         _viewState.clampFocusPos(*_options);
+        _screenFrameBuffer.reset(); // reset, as this depends on the dimensions
         _surfaceChanged = true;
     }
     
@@ -524,10 +544,12 @@ namespace carto {
         DirectorPtr<MapRendererListener> mapRendererListener = _mapRendererListener;
 
         // Re-set GL thread ids, Windows Phone needs this as onSurfaceCreate/onSurfaceChange may be called from different threads
+        _frameBufferManager->setGLThreadId(std::this_thread::get_id());
         _shaderManager->setGLThreadId(std::this_thread::get_id());
         _textureManager->setGLThreadId(std::this_thread::get_id());
 
         // Create pending textures and shaders
+        _frameBufferManager->processFrameBuffers();
         _shaderManager->processShaders();
         _textureManager->processTextures();
 
@@ -612,18 +634,30 @@ namespace carto {
     void MapRenderer::onSurfaceDestroyed() {
         // This method may never be called (e.x Android)
 
-        // Reset shader/texture manager. We tell managers to ignore all resource 'release' operations by invalidating manager thread ids
+        // Reset texture manager. We tell managers to ignore all resource 'release' operations by invalidating manager thread ids
         if (_textureManager) {
             _textureManager->setGLThreadId(std::thread::id());
             _textureManager.reset();
         }
+
+        // Reset shader manager
         if (_shaderManager) {
             _shaderManager->setGLThreadId(std::thread::id());
             _shaderManager.reset();
         }
 
+        // Reset frame buffer manager
+        if (_frameBufferManager) {
+            _frameBufferManager->setGLThreadId(std::thread::id());
+            _frameBufferManager.reset();
+        }
+
         // Reset style cache
         _styleCache.reset();
+
+        // Reset screen blending state
+        _screenFrameBuffer.reset();
+        _screenBlendShader.reset();
 
         // Clean up all opengl resources
         for (const std::shared_ptr<Layer>& layer : _layers->getAll()) {
@@ -640,6 +674,54 @@ namespace carto {
         }
     }
     
+    void MapRenderer::clearAndBindScreenFBO(const Color& color, bool depth, bool stencil) {
+        if (!_screenFrameBuffer) {
+            _screenFrameBuffer = _frameBufferManager->createFrameBuffer(_viewState.getWidth(), _viewState.getHeight(), true, depth, stencil);
+        }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, _screenFrameBuffer->getFBOId());
+
+        glClearColor(color.getR() / 255.0f, color.getG() / 255.0f, color.getB() / 255.0f, color.getA() / 255.0f);
+        glClearStencil(0);
+        glClear(GL_COLOR_BUFFER_BIT | (depth ? GL_DEPTH_BUFFER_BIT : 0) | (stencil ? GL_STENCIL_BUFFER_BIT : 0));
+    }
+
+    void MapRenderer::blendAndUnbindScreenFBO(float opacity) {
+        static const GLfloat screenVertices[8] = { -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f };
+
+        if (!_screenFrameBuffer) {
+            return;
+        }
+
+        _screenFrameBuffer->discard(false, true, true);
+        
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        if (!_screenBlendShader) {
+            _screenBlendShader = _shaderManager->createShader(blend_shader_source);
+        }
+        
+        glUseProgram(_screenBlendShader->getProgId());
+
+        glVertexAttribPointer(_screenBlendShader->getAttribLoc("a_coord"), 2, GL_FLOAT, GL_FALSE, 0, screenVertices);
+        glEnableVertexAttribArray(_screenBlendShader->getAttribLoc("a_coord"));
+        
+        cglib::mat4x4<float> mvpMatrix = cglib::mat4x4<float>::identity();
+        glUniformMatrix4fv(_screenBlendShader->getUniformLoc("u_mvpMat"), 1, GL_FALSE, mvpMatrix.data());
+        
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, _screenFrameBuffer->getColorTexId());
+        glUniform1i(_screenBlendShader->getUniformLoc("u_tex"), 0);
+        glUniform4f(_screenBlendShader->getUniformLoc("u_color"), opacity, opacity, opacity, opacity);
+        glUniform2f(_screenBlendShader->getUniformLoc("u_invScreenSize"), 1.0f / _viewState.getWidth(), 1.0f / _viewState.getHeight());
+        
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        
+        glBindTexture(GL_TEXTURE_2D, 0);
+        
+        glDisableVertexAttribArray(_screenBlendShader->getAttribLoc("a_coord"));
+    }
+
     void MapRenderer::calculateRayIntersectedElements(const MapPos& targetPos, ViewState& viewState, std::vector<RayIntersectedElement>& results) {
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);

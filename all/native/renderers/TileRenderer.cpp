@@ -39,11 +39,6 @@ namespace carto {
         _glRendererMutex(std::make_shared<std::mutex>()),
         _interactionMode(false),
         _subTileBlending(true),
-        _useFBO(false),
-        _useDepth(true),
-        _useStencil(true),
-        _fboClearColor(),
-        _fboOpacity(1.0f),
         _labelOrder(0),
         _buildingOrder(1),
         _backgroundColor(),
@@ -67,15 +62,6 @@ namespace carto {
         _subTileBlending = enabled;
     }
 
-    void TileRenderer::setRenderSettings(bool useFBO, bool useDepth, bool useStencil, const Color& fboClearColor, float fboOpacity) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _useFBO = useFBO;
-        _useDepth = useDepth;
-        _useStencil = useStencil;
-        _fboClearColor = fboClearColor;
-        _fboOpacity = fboOpacity;
-    }
-    
     void TileRenderer::setLabelOrder(int order) {
         std::lock_guard<std::mutex> lock(_mutex);
         _labelOrder = order;
@@ -134,7 +120,6 @@ namespace carto {
         _glRenderer->setViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution());
         _glRenderer->setInteractionMode(_interactionMode);
         _glRenderer->setSubTileBlending(_subTileBlending);
-        _glRenderer->setRenderSettings(_useFBO, _useDepth, _useStencil, vt::Color(_fboClearColor.getARGB()), _fboOpacity);
         _glRenderer->setBackground(vt::Color(_backgroundColor.getARGB()), _backgroundPattern);
 
         _glRenderer->startFrame(deltaSeconds * 3);

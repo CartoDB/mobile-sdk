@@ -12,11 +12,10 @@
 #include <memory>
 #include <mutex>
 #include <thread>
-#include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace carto {
+
     class TextureManager : public std::enable_shared_from_this<TextureManager> {
     public:
         TextureManager();

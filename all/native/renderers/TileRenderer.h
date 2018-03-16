@@ -41,7 +41,6 @@ namespace carto {
     
         void setInteractionMode(bool enabled);
         void setSubTileBlending(bool enabled);
-        void setRenderSettings(bool useFBO, bool useDepth, bool useStencil, const Color& fboClearColor, float fboOpacity);
         void setLabelOrder(int order);
         void setBuildingOrder(int order);
         void setBackgroundColor(const Color& color);
@@ -70,11 +69,6 @@ namespace carto {
         std::shared_ptr<std::mutex> _glRendererMutex;
         bool _interactionMode;
         bool _subTileBlending;
-        bool _useFBO;
-        bool _useDepth;
-        bool _useStencil;
-        Color _fboClearColor;
-        float _fboOpacity;
         int _labelOrder;
         int _buildingOrder;
         Color _backgroundColor;

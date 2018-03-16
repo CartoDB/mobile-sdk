@@ -3,8 +3,6 @@
 
 #include "ShaderSource.h"
 
-#include <string>
-
 static std::string regular_vert_glsl =
     "#version 100\n"
 

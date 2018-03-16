@@ -165,14 +165,29 @@ namespace carto {
                                   StyleTextureCache& styleCache,
                                   const ViewState& viewState)
     {
-        bool refresh = false;
-        refresh = _billboardRenderer->onDrawFrame(deltaSeconds, billboardSorter, styleCache, viewState) || refresh;
+        std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock();
+        if (!mapRenderer) {
+            return false;
+        }
+
+        float opacity = getOpacity();
+
+        if (opacity < 1.0f) {
+            mapRenderer->clearAndBindScreenFBO(Color(), true, false);
+        }
+
+        bool refresh = _billboardRenderer->onDrawFrame(deltaSeconds, billboardSorter, styleCache, viewState);
         _geometryCollectionRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
         _lineRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
         _pointRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
         _polygonRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
         _polygon3DRenderer->onDrawFrame(deltaSeconds, viewState);
         _nmlModelRenderer->onDrawFrame(deltaSeconds, viewState);
+
+        if (opacity < 1.0f) {
+            mapRenderer->blendAndUnbindScreenFBO(opacity);
+        }
+
         return refresh;
     }
     

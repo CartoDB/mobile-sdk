@@ -398,8 +398,18 @@ namespace carto {
     bool VectorTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
         updateTileLoadListener();
 
+        std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock();
+        if (!mapRenderer) {
+            return false;
+        }
+
         if (auto renderer = getRenderer()) {
             float opacity = getOpacity();
+
+            if (opacity < 1.0f) {
+                mapRenderer->clearAndBindScreenFBO(Color(), true, true);
+            }
+
             renderer->setBackgroundColor(_tileDecoder->getBackgroundColor());
             if (auto backgroundPattern = _tileDecoder->getBackgroundPattern()) {
                 renderer->setBackgroundPattern(backgroundPattern);
@@ -408,8 +418,13 @@ namespace carto {
             renderer->setBuildingOrder(static_cast<int>(getBuildingRenderOrder()));
             renderer->setInteractionMode(_vectorTileEventListener.get() ? true : false);
             renderer->setSubTileBlending(false);
-            renderer->setRenderSettings(opacity < 1.0f, true, true, Color(), opacity);
-            return renderer->onDrawFrame(deltaSeconds, viewState);
+            bool refresh = renderer->onDrawFrame(deltaSeconds, viewState);
+
+            if (opacity < 1.0f) {
+                mapRenderer->blendAndUnbindScreenFBO(opacity);
+            }
+
+            return refresh;
         }
         return false;
     }

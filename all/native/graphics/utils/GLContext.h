@@ -28,6 +28,10 @@ namespace carto {
         static bool TEXTURE_NPOT_REPEAT;
         static bool TEXTURE_NPOT_MIPMAPS;
 
+        static bool DISCARD_FRAMEBUFFER;
+
+        static bool PACKED_DEPTH_STENCIL;
+
         static std::size_t MAX_VERTEXBUFFER_SIZE;
     
         static bool HasGLExtension(const char* extension);
@@ -35,9 +39,15 @@ namespace carto {
         static void LoadExtensions();
         
         static void CheckGLError(const char* place);
+
+        static void DiscardFramebufferEXT(GLenum target, GLsizei numAttachments, const GLenum* attachments);
     
     private:
         GLContext();
+
+#if !defined(__APPLE__) && defined(GL_EXT_discard_framebuffer)
+        static PFNGLDISCARDFRAMEBUFFEREXTPROC _DiscardFramebufferEXT;
+#endif
 
         static std::unordered_set<std::string> _ExtensionCache;
     

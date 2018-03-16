@@ -358,11 +358,26 @@ namespace carto {
     bool RasterTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
         updateTileLoadListener();
 
+        std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock();
+        if (!mapRenderer) {
+            return false;
+        }
+
         if (auto renderer = getRenderer()) {
             float opacity = getOpacity();
+
+            if (opacity < 1.0f) {
+                mapRenderer->clearAndBindScreenFBO(Color(), false, false);
+            }
+
             renderer->setInteractionMode(_rasterTileEventListener.get() ? true : false);
-            renderer->setRenderSettings(opacity < 1.0f, false, false, Color(), opacity);
-            return renderer->onDrawFrame(deltaSeconds, viewState);
+            bool refresh = renderer->onDrawFrame(deltaSeconds, viewState);
+
+            if (opacity < 1.0f) {
+                mapRenderer->blendAndUnbindScreenFBO(opacity);
+            }
+
+            return refresh;
         }
         return false;
     }

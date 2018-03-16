@@ -30,9 +30,13 @@ namespace carto {
     std::shared_ptr<Texture> TextureManager::createTexture(const std::shared_ptr<Bitmap>& bitmap, bool genMipmaps, bool repeat) {
         std::lock_guard<std::mutex> lock(_mutex);
 
-        std::shared_ptr<Texture> texture(new Texture(shared_from_this(), bitmap, genMipmaps, repeat), [this](Texture* texture) { deleteTexture(texture); });
+        std::shared_ptr<Texture> texture(
+            new Texture(shared_from_this(), bitmap, genMipmaps, repeat), [this](Texture* texture) {
+                deleteTexture(texture);
+            }
+        );
 
-        _createQueue.push_back(texture);        
+        _createQueue.push_back(texture);
         return texture;
     }
 

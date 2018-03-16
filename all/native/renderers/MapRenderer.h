@@ -44,6 +44,10 @@ namespace carto {
     class CullWorker;
     class BillboardPlacementWorker;
     class RedrawWorker;
+    class FrameBuffer;
+    class Shader;
+    class Texture;
+    class FrameBufferManager;
     class ShaderManager;
     class TextureManager;
 
@@ -141,6 +145,9 @@ namespace carto {
         void onSurfaceChanged(int width, int height);
         void onDrawFrame();
         void onSurfaceDestroyed();
+
+        void clearAndBindScreenFBO(const Color& color, bool depth, bool stencil);
+        void blendAndUnbindScreenFBO(float opacity);
     
         void calculateRayIntersectedElements(const MapPos& targetPos, ViewState& viewState, std::vector<RayIntersectedElement>& results);
     
@@ -165,7 +172,7 @@ namespace carto {
         };
 
         void setUpGLState() const;
-    
+
         void drawLayers(float deltaSeconds, const ViewState& viewState);
         
         void handleRenderThreadCallbacks();
@@ -179,8 +186,10 @@ namespace carto {
     
         ViewState _viewState;
     
+        std::shared_ptr<FrameBufferManager> _frameBufferManager;
         std::shared_ptr<ShaderManager> _shaderManager;
         std::shared_ptr<TextureManager> _textureManager;
+
         std::shared_ptr<StyleTextureCache> _styleCache;
     
         std::shared_ptr<CullWorker> _cullWorker;
@@ -191,6 +200,9 @@ namespace carto {
 #endif
         
         std::shared_ptr<OptionsListener> _optionsListener;
+
+        std::shared_ptr<FrameBuffer> _screenFrameBuffer;
+        std::shared_ptr<Shader> _screenBlendShader;
         
         BackgroundRenderer _backgroundRenderer;
         WatermarkRenderer _watermarkRenderer;
