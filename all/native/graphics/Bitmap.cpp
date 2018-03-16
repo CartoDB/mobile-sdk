@@ -191,7 +191,7 @@ namespace carto {
         }
     
         // Set the individual row pointers to point at the correct offsets of image data
-        unsigned char* pixelDataPtr =  const_cast<unsigned char*>(&pixelData[0]);
+        unsigned char* pixelDataPtr = pixelData.data();
         int bytesPerRealRow = _width * _bytesPerPixel;
         for (std::size_t i = 0; i < _height; i++) {
             rowPointers[_height - 1 - i] = pixelDataPtr + i * bytesPerRealRow;
@@ -204,7 +204,6 @@ namespace carto {
         png_write_end(pngPtr, infoPtr);
     
         // Free memory
-        png_free_data(pngPtr, infoPtr, PNG_FREE_ALL, -1);
         png_destroy_write_struct(&pngPtr, &infoPtr);
     
         return std::make_shared<BinaryData>(std::move(compressedData));
@@ -214,7 +213,7 @@ namespace carto {
         std::size_t size = sizeof(_width) + sizeof(_height) + sizeof(_bytesPerPixel) + sizeof(unsigned int) + _width * _height * _bytesPerPixel;
         std::vector<unsigned char> compressedData(sizeof(NUTiHeader) + size);
         std::copy(NUTiHeader, NUTiHeader + sizeof(NUTiHeader), compressedData.data());
-        std::size_t offset = 4;
+        std::size_t offset = sizeof(NUTiHeader);
         encodeInt(_width, &compressedData.at(offset), sizeof(_width));
         offset += sizeof(_width);
         encodeInt(_height, &compressedData.at(offset), sizeof(_height));
@@ -242,9 +241,9 @@ namespace carto {
 
         // This will only scale the actual image part, the padding that was previously added to make the image
         // dimensions power of 2 will be ignored
-        const unsigned char* dsrc = &_pixelData[0];
+        const unsigned char* dsrc = _pixelData.data();
         std::vector<unsigned char> pixelData(width * height * _bytesPerPixel);
-        unsigned char* ddest = &pixelData[0];
+        unsigned char* ddest = pixelData.data();
     
         bool bUpsampleX = (_width < width);
         bool bUpsampleY = (_height < height);
@@ -768,7 +767,7 @@ namespace carto {
     
         // Convert tRNS to alpha
         if (png_get_valid(pngPtr, infoPtr, PNG_INFO_tRNS)){
-            png_set_tRNS_to_alpha (pngPtr);
+            png_set_tRNS_to_alpha(pngPtr);
         }
     
         // Update png info
@@ -810,7 +809,7 @@ namespace carto {
     
         // Allocate the image_data as a big block, to be given to opengl
         _pixelData.resize(bytesPerRow * _height);
-        unsigned char* pixelDataPtr = &_pixelData[0];
+        unsigned char* pixelDataPtr = _pixelData.data();
     
         // Set row start pointers
         std::vector<png_bytep> rowPointers(_height);
@@ -833,7 +832,6 @@ namespace carto {
         }
     
         // Free memory
-        png_free_data(pngPtr, infoPtr, PNG_FREE_ALL, -1);
         png_destroy_read_struct(&pngPtr, &infoPtr, &endInfo);
     
         return true;
