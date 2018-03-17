@@ -173,7 +173,7 @@ namespace carto {
         float opacity = getOpacity();
 
         if (opacity < 1.0f) {
-            mapRenderer->clearAndBindScreenFBO(Color(), true, false);
+            mapRenderer->clearAndBindScreenFBO(Color(0, 0, 0, 0), true, false);
         }
 
         bool refresh = _billboardRenderer->onDrawFrame(deltaSeconds, billboardSorter, styleCache, viewState);

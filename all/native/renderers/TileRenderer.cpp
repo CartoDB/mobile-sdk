@@ -41,7 +41,7 @@ namespace carto {
         _subTileBlending(true),
         _labelOrder(0),
         _buildingOrder(1),
-        _backgroundColor(),
+        _backgroundColor(0, 0, 0, 0),
         _backgroundPattern(),
         _horizontalLayerOffset(0),
         _tiles(),

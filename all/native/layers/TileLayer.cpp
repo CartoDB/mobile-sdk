@@ -193,7 +193,7 @@ namespace carto {
         _visibleTiles(),
         _preloadingTiles(),
         _utfGridTiles(),
-        _renderer()
+        _tileRenderer()
     {
         if (!dataSource) {
             throw NullArgumentException("Null dataSource");
@@ -559,14 +559,14 @@ namespace carto {
         return MapBounds(MapPos(std::min(tilePos0.getX(), tilePos1.getX()), std::min(-tilePos0.getY(), -tilePos1.getY())), MapPos(std::max(tilePos0.getX(), tilePos1.getX()), std::max(-tilePos0.getY(), -tilePos1.getY())));
     }
 
-    std::shared_ptr<TileRenderer> TileLayer::getRenderer() const {
+    std::shared_ptr<TileRenderer> TileLayer::getTileRenderer() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _renderer;
+        return _tileRenderer;
     }
 
-    void TileLayer::setRenderer(const std::shared_ptr<TileRenderer>& renderer) {
+    void TileLayer::setTileRenderer(const std::shared_ptr<TileRenderer>& renderer) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        _renderer = renderer;
+        _tileRenderer = renderer;
     }
 
     TileLayer::FetchTaskBase::FetchTaskBase(const std::shared_ptr<TileLayer>& layer, const MapTile& tile, bool preloadingTile) :

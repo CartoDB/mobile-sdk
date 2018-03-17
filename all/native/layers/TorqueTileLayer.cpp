@@ -35,23 +35,20 @@ namespace carto {
     bool TorqueTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
         updateTileLoadListener();
 
-        std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock();
-        if (!mapRenderer) {
-            return false;
-        }
+        if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
+            if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
+                float opacity = getOpacity();
 
-        if (auto renderer = getRenderer()) {
-            float opacity = getOpacity();
+                mapRenderer->clearAndBindScreenFBO(getTileDecoder()->getBackgroundColor(), false, false);
 
-            mapRenderer->clearAndBindScreenFBO(getTileDecoder()->getBackgroundColor(), false, false);
+                tileRenderer->setInteractionMode(getVectorTileEventListener().get() ? true : false);
+                tileRenderer->setSubTileBlending(false);
+                bool refresh = tileRenderer->onDrawFrame(deltaSeconds, viewState);
 
-            renderer->setInteractionMode(getVectorTileEventListener().get() ? true : false);
-            renderer->setSubTileBlending(false);
-            bool refresh = renderer->onDrawFrame(deltaSeconds, viewState);
+                mapRenderer->blendAndUnbindScreenFBO(opacity);
 
-            mapRenderer->blendAndUnbindScreenFBO(opacity);
-
-            return refresh;
+                return refresh;
+            }
         }
         return false;
     }

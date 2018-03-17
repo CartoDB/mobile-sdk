@@ -276,8 +276,8 @@ namespace carto {
 
         MapBounds calculateInternalTileBounds(const MapTile& mapTile) const;
 
-        std::shared_ptr<TileRenderer> getRenderer() const;
-        void setRenderer(const std::shared_ptr<TileRenderer>& renderer);
+        std::shared_ptr<TileRenderer> getTileRenderer() const;
+        void setTileRenderer(const std::shared_ptr<TileRenderer>& renderer);
 
         static const float DISCRETE_ZOOM_LEVEL_BIAS;
 
@@ -326,7 +326,7 @@ namespace carto {
         std::vector<MapTile> _visibleTiles;
         std::vector<MapTile> _preloadingTiles;
         std::unordered_map<MapTile, std::shared_ptr<UTFGridTile> > _utfGridTiles;
-        std::shared_ptr<TileRenderer> _renderer;
+        std::shared_ptr<TileRenderer> _tileRenderer;
     };
     
 }

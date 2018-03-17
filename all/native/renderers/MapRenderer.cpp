@@ -51,6 +51,7 @@ namespace carto {
         _redrawThread(),
 #endif
         _optionsListener(),
+        _currentBoundFBO(0),
         _screenFrameBuffer(),
         _screenBlendShader(),
         _backgroundRenderer(*options, *layers),
@@ -679,6 +680,8 @@ namespace carto {
             _screenFrameBuffer = _frameBufferManager->createFrameBuffer(_viewState.getWidth(), _viewState.getHeight(), true, depth, stencil);
         }
 
+        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &_currentBoundFBO);
+
         glBindFramebuffer(GL_FRAMEBUFFER, _screenFrameBuffer->getFBOId());
 
         glClearColor(color.getR() / 255.0f, color.getG() / 255.0f, color.getB() / 255.0f, color.getA() / 255.0f);
@@ -691,15 +694,12 @@ namespace carto {
     void MapRenderer::blendAndUnbindScreenFBO(float opacity) {
         static const GLfloat screenVertices[8] = { -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f };
 
-        
-        
         if (!_screenFrameBuffer) {
             return;
         }
-
         _screenFrameBuffer->discard(false, true, true);
         
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, _currentBoundFBO);
 
         if (!_screenBlendShader) {
             _screenBlendShader = _shaderManager->createShader(blend_shader_source);

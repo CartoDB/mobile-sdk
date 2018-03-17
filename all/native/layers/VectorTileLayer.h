@@ -171,14 +171,14 @@ namespace carto {
         
         class LabelCullTask : public CancelableTask {
         public:
-            LabelCullTask(const std::shared_ptr<VectorTileLayer>& layer, const std::shared_ptr<TileRenderer>& renderer, const ViewState& viewState);
+            LabelCullTask(const std::shared_ptr<VectorTileLayer>& layer, const std::shared_ptr<TileRenderer>& tileRenderer, const ViewState& viewState);
             
             virtual void cancel();
             virtual void run();
     
         private:
             std::weak_ptr<VectorTileLayer> _layer;
-            std::weak_ptr<TileRenderer> _renderer;
+            std::weak_ptr<TileRenderer> _tileRenderer;
             ViewState _viewState;
         };
 
