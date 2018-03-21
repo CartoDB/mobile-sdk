@@ -60,6 +60,18 @@ namespace carto {
         void setFontSize(float size);
 
         /**
+         * Returns the state of the 'break lines' flag.
+         * @return The state of the 'break lines' flag.
+         */
+        bool isBreakLines() const;
+        /**
+         * Sets the state of the 'break lines' flag.
+         * If enabled, texts containing CR or NL characters are split into multiple lines.
+         * By default the flag is false, due to backward compatibility reasons.
+         */
+        void setBreakLines(bool enable);
+
+        /**
          * Returns the margins for the text.
          * @return The margins for the text.
          */
@@ -138,6 +150,8 @@ namespace carto {
         std::string _textField;
 
         float _fontSize;
+
+        bool _breakLines;
 
         TextMargins _textMargins;
         

@@ -7,6 +7,7 @@ namespace carto {
         _fontName("Helvetica"),
         _textField(),
         _fontSize(20.0f),
+        _breakLines(false),
         _textMargins(0, 0, 0, 0),
         _strokeColor(0xFFFFFFFF),
         _strokeWidth(3),
@@ -49,6 +50,16 @@ namespace carto {
     void TextStyleBuilder::setFontSize(float size) {
         std::lock_guard<std::mutex> lock(_mutex);
         _fontSize = size;
+    }
+
+    bool TextStyleBuilder::isBreakLines() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _breakLines;
+    }
+
+    void TextStyleBuilder::setBreakLines(bool enable) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _breakLines = enable;
     }
 
     TextMargins TextStyleBuilder::getTextMargins() const {
@@ -132,6 +143,7 @@ namespace carto {
                                                         _fontName,
                                                         _textField,
                                                         _fontSize,
+                                                        _breakLines,
                                                         _textMargins,
                                                         _strokeColor,
                                                         _strokeWidth,
