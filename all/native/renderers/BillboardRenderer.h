@@ -68,12 +68,13 @@ namespace carto {
                                         std::vector<float>& texCoordBuf,
                                         std::vector<std::shared_ptr<BillboardDrawData> >& drawDataBuffer,
                                         const cglib::vec2<float>& texCoordScale,
+                                        float opacity,
                                         StyleTextureCache& styleCache,
                                         const ViewState& viewState);
         
         bool calculateBaseBillboardDrawData(const std::shared_ptr<BillboardDrawData>& drawData, const ViewState& viewState);
         
-        void drawBatch(StyleTextureCache& styleCache, const ViewState& viewState);
+        void drawBatch(float opacity, StyleTextureCache& styleCache, const ViewState& viewState);
         
         std::weak_ptr<VectorLayer> _layer;
     

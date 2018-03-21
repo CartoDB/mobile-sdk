@@ -164,6 +164,12 @@ namespace carto {
                                               StyleTextureCache& styleCache, const ViewState& viewState)
     {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+        // Get layer opacity
+        float opacity = 1.0f;
+        if (auto layer = _layer.lock()) {
+            opacity = layer->getOpacity();
+        }
     
         // Prepare for drawing
         glUseProgram(_shader->getProgId());
@@ -187,7 +193,7 @@ namespace carto {
             }
     
             if (prevBitmap && (prevBitmap != bitmap)) {
-                drawBatch(styleCache, viewState);
+                drawBatch(opacity, styleCache, viewState);
                 _drawDataBuffer.clear();
             }
     
@@ -196,7 +202,7 @@ namespace carto {
         }
     
         if (prevBitmap) {
-            drawBatch(styleCache, viewState);
+            drawBatch(opacity, styleCache, viewState);
         }
     
         glDisableVertexAttribArray(_a_coord);
@@ -305,6 +311,7 @@ namespace carto {
                                                 std::vector<float>& texCoordBuf,
                                                 std::vector<std::shared_ptr<BillboardDrawData> >& drawDataBuffer,
                                                 const cglib::vec2<float>& texCoordScale,
+                                                float opacity,
                                                 StyleTextureCache& styleCache,
                                                 const ViewState& viewState)
     {
@@ -322,7 +329,7 @@ namespace carto {
             const std::shared_ptr<BillboardDrawData>& drawData = drawDataBuffer[i];
 
             // Alpha value
-            int alpha = std::min(256, static_cast<int>(256 * AnimationStyle::CalculateTransition(drawData->getAnimationStyle() ? drawData->getAnimationStyle()->getFadeAnimationType() : AnimationType::ANIMATION_TYPE_NONE, drawData->getTransition())));
+            int alpha = std::min(256, static_cast<int>(256 * opacity * AnimationStyle::CalculateTransition(drawData->getAnimationStyle() ? drawData->getAnimationStyle()->getFadeAnimationType() : AnimationType::ANIMATION_TYPE_NONE, drawData->getTransition())));
             
             // Check for possible overflow in the buffers
             if ((drawDataIndex + 1) * 6 > GLContext::MAX_VERTEXBUFFER_SIZE) {
@@ -475,7 +482,7 @@ namespace carto {
         return true;
     }
         
-    void BillboardRenderer::drawBatch(StyleTextureCache& styleCache, const ViewState& viewState) {
+    void BillboardRenderer::drawBatch(float opacity, StyleTextureCache& styleCache, const ViewState& viewState) {
         // Bind texture
         const std::shared_ptr<Bitmap>& bitmap = _drawDataBuffer.front()->getBitmap();
         std::shared_ptr<Texture> texture = styleCache.get(bitmap);
@@ -486,7 +493,7 @@ namespace carto {
         
         // Draw the draw datas, multiple passes may be necessary
         BuildAndDrawBuffers(_a_color, _a_coord, _a_texCoord, _colorBuf, _coordBuf, _indexBuf, _texCoordBuf, _drawDataBuffer,
-                            texture->getTexCoordScale(), styleCache, viewState);
+                            texture->getTexCoordScale(), opacity, styleCache, viewState);
     }
     
 }
