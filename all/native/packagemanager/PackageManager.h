@@ -336,6 +336,9 @@ namespace carto {
 
         static MapTile CalculateMapTile(const MapPos& mapPos, int zoom, const std::shared_ptr<Projection>& proj);
 
+        static std::shared_ptr<PackageTileMask> DecodeTileMask(const std::string& tileMaskStr);
+        static std::string EncodeTileMask(const std::shared_ptr<PackageTileMask>& tileMask);
+
         static int DownloadFile(const std::string& url, NetworkUtils::HandlerFunc handler, std::uint64_t offset = 0);
 
         static const int DEFAULT_TILEMASK_ZOOMLEVEL;
