@@ -8,6 +8,7 @@
 #include "packagemanager/handlers/PackageHandler.h"
 #include "packagemanager/handlers/PackageHandlerFactory.h"
 #include "utils/URLFileLoader.h"
+#include "utils/GeneralUtils.h"
 #include "utils/Log.h"
 
 #include <cstdint>
@@ -223,7 +224,7 @@ namespace carto {
                     }
                     std::shared_ptr<PackageTileMask> tileMask;
                     if (jsonPackageInfo.HasMember("tile_mask")) {
-                        tileMask = std::make_shared<PackageTileMask>(jsonPackageInfo["tile_mask"].GetString(), DEFAULT_TILEMASK_ZOOMLEVEL);
+                        tileMask = DecodeTileMask(jsonPackageInfo["tile_mask"].GetString());
                     }
                     auto packageInfo = std::make_shared<PackageInfo>(
                         packageId,
@@ -837,9 +838,9 @@ namespace carto {
             }
 
             // Find package tiles and calculate tile mask
-            std::shared_ptr<PackageTileMask> tileMask;
+            std::string tileMaskValue;
             if (auto handler = PackageHandlerFactory(_serverEncKey, _localEncKey).createPackageHandler(task.packageType, packageFileName)) {
-                tileMask = handler->calculateTileMask();
+                tileMaskValue = EncodeTileMask(handler->calculateTileMask());
             }
 
             // Get package id
@@ -858,7 +859,7 @@ namespace carto {
                     command.bind(":package_type", static_cast<int>(task.packageType));
                     command.bind(":version", task.packageVersion);
                     command.bind(":size", fileSize);
-                    command.bind(":tile_mask", tileMask ? tileMask->getStringValue().c_str() : "");
+                    command.bind(":tile_mask", tileMaskValue.c_str());
                     command.execute();
                     id = static_cast<int>(_localDb->last_insert_rowid());
                 }
@@ -1013,12 +1014,10 @@ namespace carto {
                     }
                     std::string tileMaskValue;
                     if (package->getTileMask()) {
-                        tileMaskValue = package->getTileMask()->getStringValue();
+                        tileMaskValue = EncodeTileMask(package->getTileMask());
                     }
                     else if (auto handler = PackageHandlerFactory(_serverEncKey, _localEncKey).createPackageHandler(task.packageType, packageFileName)) {
-                        if (std::shared_ptr<PackageTileMask> tileMask = handler->calculateTileMask()) {
-                            tileMaskValue = tileMask->getStringValue();
-                        }
+                        tileMaskValue = EncodeTileMask(handler->calculateTileMask());
                     }
                     std::uint64_t fileSize = package->getSize();
                     if (packageSizeIndeterminate) {
@@ -1121,7 +1120,7 @@ namespace carto {
             for (auto qit = query.begin(); qit != query.end(); qit++) {
                 std::shared_ptr<PackageTileMask> tileMask;
                 if (strlen(qit->get<const char*>(5)) != 0) {
-                    tileMask = std::make_shared<PackageTileMask>(qit->get<const char*>(5), DEFAULT_TILEMASK_ZOOMLEVEL);
+                    tileMask = DecodeTileMask(qit->get<const char*>(5));
                 }
                 std::shared_ptr<PackageMetaInfo> metaInfo;
                 if (strlen(qit->get<const char*>(6)) != 0) {
@@ -1522,6 +1521,25 @@ namespace carto {
         int x = static_cast<int>(std::floor(mapVec.getX() / tileWidth));
         int y = static_cast<int>(std::floor(mapVec.getY() / tileHeight));
         return MapTile(x, y, zoom, 0);
+    }
+
+    std::shared_ptr<PackageTileMask> PackageManager::DecodeTileMask(const std::string& tileMaskStr) {
+        std::vector<std::string> parts = GeneralUtils::Split(tileMaskStr, ':');
+        if (parts.empty()) {
+            return std::shared_ptr<PackageTileMask>();
+        }
+        int zoomLevel = DEFAULT_TILEMASK_ZOOMLEVEL;
+        if (parts.size() > 1) {
+            zoomLevel = boost::lexical_cast<int>(parts[1]);
+        }
+        return std::make_shared<PackageTileMask>(parts[0], zoomLevel);
+    }
+
+    std::string PackageManager::EncodeTileMask(const std::shared_ptr<PackageTileMask>& tileMask) {
+        if (!tileMask) {
+            return std::string();
+        }
+        return tileMask->getStringValue() + ":" + boost::lexical_cast<std::string>(tileMask->getMaxZoomLevel());
     }
 
     int PackageManager::DownloadFile(const std::string& url, NetworkUtils::HandlerFunc handler, std::uint64_t offset) {
