@@ -48,6 +48,7 @@ namespace carto {
                          const std::string& fontName,
                          const std::string& textField,
                          float fontSize,
+                         bool breakLines,
                          const TextMargins& textMargins,
                          const Color& strokeColor,
                          float strokeWidth,
@@ -74,6 +75,7 @@ namespace carto {
         _fontName(fontName),
         _textField(textField),
         _fontSize(fontSize),
+        _breakLines(breakLines),
         _textMargins(textMargins),
         _strokeColor(strokeColor),
         _strokeWidth(strokeWidth),
@@ -100,6 +102,10 @@ namespace carto {
 
     float TextStyle::getFontSize() const {
         return _fontSize;
+    }
+
+    bool TextStyle::isBreakLines() const {
+        return _breakLines;
     }
 
     const TextMargins& TextStyle::getTextMargins() const {

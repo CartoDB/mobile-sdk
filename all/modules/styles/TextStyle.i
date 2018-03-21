@@ -28,6 +28,7 @@
 %attributestring(carto::TextStyle, std::string, FontName, getFontName)
 %attributestring(carto::TextStyle, std::string, TextField, getTextField)
 %attribute(carto::TextStyle, float, FontSize, getFontSize)
+%attribute(carto::TextStyle, bool, BreakLines, isBreakLines)
 %attributeval(carto::TextStyle, carto::TextMargins, TextMargins, getTextMargins)
 %attributeval(carto::TextStyle, carto::Color, StrokeColor, getStrokeColor)
 %attribute(carto::TextStyle, float, StrokeWidth, getStrokeWidth)

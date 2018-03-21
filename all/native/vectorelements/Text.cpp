@@ -69,7 +69,7 @@ namespace carto {
 
             BitmapCanvas measureCanvas(0, 0);
             measureCanvas.setFont(_style->getFontName(), fontSize);
-            ScreenBounds textBounds = measureCanvas.measureTextSize(text, -1, false);
+            ScreenBounds textBounds = measureCanvas.measureTextSize(text, -1, _style->isBreakLines());
 
             int canvasWidth = static_cast<int>(std::ceil(textBounds.getWidth() + strokeWidth + leftPadding + rightPadding + 2 * borderWidth + 2 * borderPadding));
             int canvasHeight = static_cast<int>(std::ceil(textBounds.getHeight() + strokeWidth + topPadding + bottomPadding + 2 * borderWidth + 2 * borderPadding));
@@ -98,12 +98,12 @@ namespace carto {
                 canvas.setColor(_style->getStrokeColor());
                 canvas.setDrawMode(BitmapCanvas::STROKE);
                 canvas.setStrokeWidth(strokeWidth);
-                canvas.drawText(text, ScreenPos(borderPadding + borderWidth + leftPadding + strokeWidth * 0.5f, borderPadding + borderWidth + topPadding + strokeWidth * 0.5f), textBounds.getWidth(), false);
+                canvas.drawText(text, ScreenPos(borderPadding + borderWidth + leftPadding + strokeWidth * 0.5f, borderPadding + borderWidth + topPadding + strokeWidth * 0.5f), textBounds.getWidth(), _style->isBreakLines());
             }
 
             canvas.setColor(_style->getFontColor());
             canvas.setDrawMode(BitmapCanvas::FILL);
-            canvas.drawText(text, ScreenPos(borderPadding + borderWidth + leftPadding + strokeWidth * 0.5f, borderPadding + borderWidth + topPadding + strokeWidth * 0.5f), textBounds.getWidth(), false);
+            canvas.drawText(text, ScreenPos(borderPadding + borderWidth + leftPadding + strokeWidth * 0.5f, borderPadding + borderWidth + topPadding + strokeWidth * 0.5f), textBounds.getWidth(), _style->isBreakLines());
 
             return canvas.buildBitmap();
         }
