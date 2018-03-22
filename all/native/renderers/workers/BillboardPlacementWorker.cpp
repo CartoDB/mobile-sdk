@@ -14,7 +14,6 @@ namespace carto {
         _stop(false),
         _idle(false),
         _kdTree(),
-        _sort3D(false),
         _pendingWakeup(false),
         _wakeupTime(std::chrono::steady_clock::now() + std::chrono::hours(24)),
         _mapRenderer(),
@@ -92,13 +91,13 @@ namespace carto {
     
     bool BillboardPlacementWorker::calculateBillboardPlacement() {
         const std::shared_ptr<MapRenderer>& mapRenderer = _mapRenderer.lock();
-    
+
         if (!mapRenderer) {
             return false;
         }
-        
-        std::vector<std::shared_ptr<BillboardDrawData> > billboardDrawDatas(mapRenderer->getBillboardDrawDatas());
-        
+
+        std::vector<std::shared_ptr<BillboardDrawData> > billboardDrawDatas = mapRenderer->getBillboardDrawDatas();
+
         bool calculate = false;
         for (const std::shared_ptr<BillboardDrawData>& drawData : billboardDrawDatas) {
             if (drawData->isHideIfOverlapped()) {
@@ -106,18 +105,48 @@ namespace carto {
                 break;
             }
         }
-        
+
         if (!calculate) {
             return false;
         }
-        
+
         ViewState viewState(mapRenderer->getViewState());
         const cglib::mat4x4<float>& rteMVPMat = viewState.getRTEModelviewProjectionMat();
-        
+
         // Sort draw datas
-        _sort3D = viewState.getTilt() < 90;
-        std::sort(billboardDrawDatas.begin(), billboardDrawDatas.end(), std::bind(&BillboardPlacementWorker::overlapComparator, this, std::placeholders::_1, std::placeholders::_2));
-        
+        bool sort3D = viewState.getTilt() < 90;
+        std::sort(billboardDrawDatas.begin(), billboardDrawDatas.end(), [sort3D](const std::shared_ptr<BillboardDrawData>& drawData1, const std::shared_ptr<BillboardDrawData>& drawData2) {
+            // Sort by overlappability
+            int overlapDelta = (drawData2->isHideIfOverlapped() ? 0 : 1) - (drawData1->isHideIfOverlapped() ? 0 : 1);
+            if (overlapDelta > 0) {
+                return false;
+            } else if (overlapDelta < 0) {
+                return true;
+            }
+
+            // Sort by priority
+            float priorityDelta = drawData2->getPlacementPriority() - drawData1->getPlacementPriority();
+            if (priorityDelta > 0) {
+                return false;
+            } else if (priorityDelta < 0) {
+                return true;
+            }
+
+            if (sort3D) {
+                // If in 3D, sort the distance to the camera plane
+                return drawData1->getCameraPlaneZoomDistance() < drawData2->getCameraPlaneZoomDistance();
+            } else {
+                // If in 2D, sort by z coordinate and then by the distance to the bottom of the screen
+                double zDelta = drawData2->getPos()(2) - drawData1->getPos()(2);
+                if (zDelta > 0) {
+                    return false;
+                } else if (zDelta < 0) {
+                    return true;
+                }
+                return drawData1->getScreenBottomDistance() > drawData2->getScreenBottomDistance();
+            }
+        });
+
         // Calculate billboard screen coordinates, add envelopes to the tree
         std::vector<float> coordBuf(12);
         std::vector<MapPos> convexHull;
@@ -128,23 +157,23 @@ namespace carto {
             if (_stop) {
                 return false;
             }
-            
+
             // Calculate billboard world coordinates
             BillboardRenderer::CalculateBillboardCoords(*drawData, viewState, coordBuf, 0);
-            
+
             // Transform the world coordinates to screen coordinates
             cglib::vec3<float> topLeft(cglib::transform_point(cglib::vec3<float>(coordBuf[0], coordBuf[1], coordBuf[2]), rteMVPMat));
             cglib::vec3<float> bottomLeft(cglib::transform_point(cglib::vec3<float>(coordBuf[3], coordBuf[4], coordBuf[5]), rteMVPMat));
             cglib::vec3<float> topRight(cglib::transform_point(cglib::vec3<float>(coordBuf[6], coordBuf[7], coordBuf[8]), rteMVPMat));
             cglib::vec3<float> bottomRight(cglib::transform_point(cglib::vec3<float>(coordBuf[9], coordBuf[10], coordBuf[11]), rteMVPMat));
-            
+
             // Construct convex polygons from the screen coordinatees
             convexHull.emplace_back(topLeft(0), topLeft(1), 0);
             convexHull.emplace_back(bottomLeft(0), bottomLeft(1), 0);
             convexHull.emplace_back(topRight(0), topRight(1), 0);
             convexHull.emplace_back(bottomRight(0), bottomRight(1), 0);
             MapEnvelope envelope(convexHull);
-            
+
             bool overlapped = false;
             if (drawData->isHideIfOverlapped()) {
                 // Check that there are higher priority billboards overlapping with this one
@@ -169,46 +198,14 @@ namespace carto {
             }
             convexHull.clear();
         }
-        
+
         _kdTree.clear();
-        
+
         if (changed) {
             mapRenderer->requestRedraw();
         }
-        
+
         return true;
     }
-        
-    bool BillboardPlacementWorker::overlapComparator(const std::shared_ptr<BillboardDrawData>& drawData1, const std::shared_ptr<BillboardDrawData>& drawData2) const {
-        // Sort by overlappability
-        int overlapDelta = (drawData2->isHideIfOverlapped() ? 0 : 1) - (drawData1->isHideIfOverlapped() ? 0 : 1);
-        if (overlapDelta > 0) {
-            return false;
-        } else if (overlapDelta < 0) {
-            return true;
-        }
-    
-        // Sort by priority
-        float priorityDelta = drawData2->getPlacementPriority() - drawData1->getPlacementPriority();
-        if (priorityDelta > 0) {
-            return false;
-        } else if (priorityDelta < 0) {
-            return true;
-        }
-        
-        if (_sort3D) {
-            // If in 3D, sort the distance to the camera plane
-            return drawData1->getCameraPlaneZoomDistance() < drawData2->getCameraPlaneZoomDistance();
-        } else {
-            // If in 2D, sort by z coordinate and then by the distance to the bottom of the screen
-            double zDelta = drawData2->getPos()(2) - drawData1->getPos()(2);
-            if (zDelta > 0) {
-                return false;
-            } else if (zDelta < 0) {
-                return true;
-            }
-            return drawData1->getScreenBottomDistance() > drawData2->getScreenBottomDistance();
-        }
-    }
-    
+
 }
