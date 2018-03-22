@@ -90,8 +90,7 @@ namespace carto {
     }
     
     bool BillboardPlacementWorker::calculateBillboardPlacement() {
-        const std::shared_ptr<MapRenderer>& mapRenderer = _mapRenderer.lock();
-
+        std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock();
         if (!mapRenderer) {
             return false;
         }
@@ -110,7 +109,7 @@ namespace carto {
             return false;
         }
 
-        ViewState viewState(mapRenderer->getViewState());
+        ViewState viewState = mapRenderer->getViewState();
         const cglib::mat4x4<float>& rteMVPMat = viewState.getRTEModelviewProjectionMat();
 
         // Sort draw datas
@@ -148,9 +147,13 @@ namespace carto {
         });
 
         // Calculate billboard screen coordinates, add envelopes to the tree
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            _kdTree.clear();
+        }
+
         std::vector<float> coordBuf(12);
         std::vector<MapPos> convexHull;
-        convexHull.reserve(4);
         bool changed = false;
         for (const std::shared_ptr<BillboardDrawData>& drawData : billboardDrawDatas) {
             std::lock_guard<std::mutex> lock(_mutex);
@@ -168,10 +171,12 @@ namespace carto {
             cglib::vec3<float> bottomRight(cglib::transform_point(cglib::vec3<float>(coordBuf[9], coordBuf[10], coordBuf[11]), rteMVPMat));
 
             // Construct convex polygons from the screen coordinatees
+            convexHull.clear();
             convexHull.emplace_back(topLeft(0), topLeft(1), 0);
             convexHull.emplace_back(bottomLeft(0), bottomLeft(1), 0);
             convexHull.emplace_back(topRight(0), topRight(1), 0);
             convexHull.emplace_back(bottomRight(0), bottomRight(1), 0);
+
             MapEnvelope envelope(convexHull);
 
             bool overlapped = false;
@@ -196,10 +201,7 @@ namespace carto {
                     _kdTree.insert(envelope.getBounds(), envelope);
                 }
             }
-            convexHull.clear();
         }
-
-        _kdTree.clear();
 
         if (changed) {
             mapRenderer->requestRedraw();
