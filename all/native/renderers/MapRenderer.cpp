@@ -784,19 +784,18 @@ namespace carto {
         }
         
         // Draw billboards, grouped by layer renderer
-        BillboardRenderer* prevRenderer = nullptr;
         _billboardDrawDataBuffer.clear();
-        const std::vector<std::shared_ptr<BillboardDrawData> >& sortedBillboardDrawDatas = _billboardSorter.getSortedBillboardDrawDatas();
-        for (const std::shared_ptr<BillboardDrawData>& drawData : sortedBillboardDrawDatas) {
-            BillboardRenderer* renderer = drawData->getRenderer();
-    
-            if (prevRenderer && prevRenderer != renderer) {
-                prevRenderer->onDrawFrameSorted(deltaSeconds, _billboardDrawDataBuffer, *_styleCache, viewState);
-                _billboardDrawDataBuffer.clear();
+        std::shared_ptr<BillboardRenderer> prevRenderer;
+        for (const std::shared_ptr<BillboardDrawData>& drawData : _billboardSorter.getSortedBillboardDrawDatas()) {
+            if (std::shared_ptr<BillboardRenderer> renderer = drawData->getRenderer().lock()) {
+                if (prevRenderer && prevRenderer != renderer) {
+                    prevRenderer->onDrawFrameSorted(deltaSeconds, _billboardDrawDataBuffer, *_styleCache, viewState);
+                    _billboardDrawDataBuffer.clear();
+                }
+        
+                _billboardDrawDataBuffer.push_back(drawData);
+                prevRenderer = renderer;
             }
-    
-            _billboardDrawDataBuffer.push_back(drawData);
-            prevRenderer = renderer;
         }
     
         if (prevRenderer) {

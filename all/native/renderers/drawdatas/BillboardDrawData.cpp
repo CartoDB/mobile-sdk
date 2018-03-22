@@ -50,7 +50,7 @@ namespace carto {
         return _animationStyle;
     }
     
-    const cglib::vec2<float>* BillboardDrawData::getCoords() const {
+    const std::array<cglib::vec2<float>, 4>& BillboardDrawData::getCoords() const {
         return _coords;
     }
     
@@ -142,11 +142,11 @@ namespace carto {
         _screenBottomDistance = screenBottomDistance;
     }
     
-    BillboardRenderer* BillboardDrawData::getRenderer() const {
+    const std::weak_ptr<BillboardRenderer>& BillboardDrawData::getRenderer() const {
         return _renderer;
     }
     
-    void BillboardDrawData::setRenderer(BillboardRenderer* renderer) {
+    void BillboardDrawData::setRenderer(const std::weak_ptr<BillboardRenderer>& renderer) {
         _renderer = renderer;
     }
 

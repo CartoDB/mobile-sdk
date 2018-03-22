@@ -32,7 +32,7 @@ namespace carto {
     class ViewState;
     class StyleTextureCache;
     
-    class BillboardRenderer {
+    class BillboardRenderer : public std::enable_shared_from_this<BillboardRenderer> {
     public:
         static void CalculateBillboardCoords(const BillboardDrawData& drawData, const ViewState& viewState,
                                              std::vector<float>& coordBuf, int drawDataIndex, float sizeScale = 1.0f);

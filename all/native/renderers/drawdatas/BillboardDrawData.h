@@ -12,6 +12,7 @@
 
 #include <atomic>
 #include <memory>
+#include <array>
 
 #include <cglib/vec.h>
 
@@ -41,7 +42,7 @@ namespace carto {
         std::shared_ptr<Bitmap> getBitmap() const;
         std::shared_ptr<AnimationStyle> getAnimationStyle() const;
     
-        const cglib::vec2<float>* getCoords() const;
+        const std::array<cglib::vec2<float>, 4>& getCoords() const;
     
         bool isFlippable() const;
     
@@ -82,8 +83,8 @@ namespace carto {
         double getScreenBottomDistance() const;
         void setScreenBottomDistance(double screenBottomDistance);
     
-        BillboardRenderer* getRenderer() const;
-        void setRenderer(BillboardRenderer* renderer);
+        const std::weak_ptr<BillboardRenderer>& getRenderer() const;
+        void setRenderer(const std::weak_ptr<BillboardRenderer>& renderer);
 
         virtual float getClickScale() const;
     
@@ -116,7 +117,7 @@ namespace carto {
         std::shared_ptr<Bitmap> _bitmap;
         std::shared_ptr<AnimationStyle> _animationStyle;
     
-        cglib::vec2<float> _coords[4];
+        std::array<cglib::vec2<float>, 4> _coords;
     
         bool _flippable;
     
@@ -148,7 +149,7 @@ namespace carto {
         double _cameraPlaneZoomDistance;
         double _screenBottomDistance;
     
-        BillboardRenderer* _renderer;
+        std::weak_ptr<BillboardRenderer> _renderer;
     };
     
 }
