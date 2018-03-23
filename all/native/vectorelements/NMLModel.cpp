@@ -2,6 +2,8 @@
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
 #include "geometry/PointGeometry.h"
+#include "graphics/ViewState.h"
+#include "projections/EPSG3857.h"
 #include "renderers/drawdatas/NMLModelDrawData.h"
 #include "utils/Const.h"
 
@@ -22,10 +24,6 @@ namespace carto {
         if (!sourceModel) {
             throw NullArgumentException("Null sourceModel");
         }
-
-        const nml::Vector3& minBounds = _sourceModel->bounds().min();
-        const nml::Vector3& maxBounds = _sourceModel->bounds().max();
-        _bounds = MapBounds(MapPos(minBounds.x(), minBounds.y(), minBounds.z()), MapPos(maxBounds.x(), maxBounds.y(), maxBounds.z()));
     }
     
     NMLModel::NMLModel(const MapPos& mapPos, const std::shared_ptr<nml::Model>& sourceModel) :
@@ -38,10 +36,6 @@ namespace carto {
         if (!sourceModel) {
             throw NullArgumentException("Null sourceModel");
         }
-
-        const nml::Vector3& minBounds = _sourceModel->bounds().min();
-        const nml::Vector3& maxBounds = _sourceModel->bounds().max();
-        _bounds = MapBounds(MapPos(minBounds.x(), minBounds.y(), minBounds.z()), MapPos(maxBounds.x(), maxBounds.y(), maxBounds.z()));
     }
     
     NMLModel::NMLModel(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<BinaryData>& sourceModelData) :
@@ -61,9 +55,6 @@ namespace carto {
         std::shared_ptr<std::vector<unsigned char> > data = sourceModelData->getDataPtr();
         protobuf::message modelMsg(data->data(), data->size());
         _sourceModel = std::make_shared<nml::Model>(modelMsg);
-        const nml::Vector3& minBounds = _sourceModel->bounds().min();
-        const nml::Vector3& maxBounds = _sourceModel->bounds().max();
-        _bounds = MapBounds(MapPos(minBounds.x(), minBounds.y(), minBounds.z()), MapPos(maxBounds.x(), maxBounds.y(), maxBounds.z()));
     }
     
     NMLModel::NMLModel(const MapPos& mapPos, const std::shared_ptr<BinaryData>& sourceModelData) :
@@ -80,9 +71,6 @@ namespace carto {
         std::shared_ptr<std::vector<unsigned char> > data = sourceModelData->getDataPtr();
         protobuf::message modelMsg(data->data(), data->size());
         _sourceModel = std::make_shared<nml::Model>(modelMsg);
-        const nml::Vector3& minBounds = _sourceModel->bounds().min();
-        const nml::Vector3& maxBounds = _sourceModel->bounds().max();
-        _bounds = MapBounds(MapPos(minBounds.x(), minBounds.y(), minBounds.z()), MapPos(maxBounds.x(), maxBounds.y(), maxBounds.z()));
     }
     
     NMLModel::~NMLModel() {
@@ -90,7 +78,19 @@ namespace carto {
         
     MapBounds NMLModel::getBounds() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _bounds;
+
+        EPSG3857 proj;
+        cglib::mat4x4<double> localToGlobalMat = ViewState::GetLocalMat(_geometry->getCenterPos(), proj) * cglib::mat4x4<double>::convert(getLocalMat());
+
+        MapBounds modelBounds;
+        for (int i = 0; i < 8; i++) {
+            const nml::Vector3& minBounds = _sourceModel->bounds().min();
+            const nml::Vector3& maxBounds = _sourceModel->bounds().max();
+            cglib::vec3<double> posLocal((i & 1 ? minBounds : maxBounds).x(), (i & 2 ? minBounds : maxBounds).y(), (i & 4 ? minBounds : maxBounds).z());
+            cglib::vec3<double> posGlobal = cglib::transform_point(posLocal, localToGlobalMat);
+            modelBounds.expandToContain(proj.fromInternal(MapPos(posGlobal(0), posGlobal(1), 0)));
+        }
+        return modelBounds;
     }
     
     void NMLModel::setGeometry(const std::shared_ptr<Geometry>& geometry) {
