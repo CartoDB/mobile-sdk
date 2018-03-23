@@ -40,15 +40,11 @@ namespace carto {
         
         bool calculateBillboardPlacement();
         
-        bool overlapComparator(const std::shared_ptr<BillboardDrawData>& drawData1, const std::shared_ptr<BillboardDrawData>& drawData2) const;
-        
         bool _stop;
         bool _idle;
         
         KDTreeSpatialIndex<MapEnvelope> _kdTree;
         
-        bool _sort3D;
-    
         bool _pendingWakeup;
         std::chrono::steady_clock::time_point _wakeupTime;
         

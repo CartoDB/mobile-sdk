@@ -29,7 +29,7 @@ namespace carto {
         cglib::vec3<float> translate = cglib::vec3<float>::convert(drawData.getPos() - cglib::vec3<double>(cameraPos.getX(), cameraPos.getY(), cameraPos.getZ()));
         
         const ViewState::RotationState& rotationState = viewState.getRotationState();
-        const cglib::vec2<float>* coords = drawData.getCoords();
+        const std::array<cglib::vec2<float>, 4>& coords = drawData.getCoords();
         for (int i = 0; i < 4; i++) {
             int coordIndex = (drawDataIndex * 4 + i) * 3;
             float x = coords[i](0);
@@ -128,7 +128,7 @@ namespace carto {
             std::shared_ptr<BillboardDrawData> drawData = element->getDrawData();
 
             // Update animation state
-            bool phaseOut = drawData->getRenderer() != this || (drawData->isHideIfOverlapped() && drawData->isOverlapping());
+            bool phaseOut = drawData->getRenderer().lock() != shared_from_this() || (drawData->isHideIfOverlapped() && drawData->isOverlapping());
             if (auto animStyle = drawData->getAnimationStyle()) {
                 float transition = drawData->getTransition();
                 float step = (phaseOut ? -1.0f : 1.0f);
@@ -146,7 +146,7 @@ namespace carto {
             }
 
             // If the element has been removed and has become invisible, remove it from the list
-            if (drawData->getRenderer() != this && drawData->getTransition() == 0.0f) {
+            if (drawData->getRenderer().lock() != shared_from_this() && drawData->getTransition() == 0.0f) {
                 it = _elements.erase(--it);
                 continue;
             }
@@ -185,20 +185,17 @@ namespace carto {
         
         // Draw billboards, batch by bitmap
         _drawDataBuffer.clear();
-        const Bitmap* prevBitmap = nullptr;
+        std::shared_ptr<Bitmap> prevBitmap;
         for (const std::shared_ptr<BillboardDrawData>& drawData : billboardDrawDatas) {
-            const Bitmap* bitmap = drawData->getBitmap().get();
-            if (!bitmap) {
-                continue;
+            if (std::shared_ptr<Bitmap> bitmap = drawData->getBitmap()) {
+                if (prevBitmap && prevBitmap != bitmap) {
+                    drawBatch(opacity, styleCache, viewState);
+                    _drawDataBuffer.clear();
+                }
+        
+                _drawDataBuffer.push_back(std::move(drawData));
+                prevBitmap = bitmap;
             }
-    
-            if (prevBitmap && (prevBitmap != bitmap)) {
-                drawBatch(opacity, styleCache, viewState);
-                _drawDataBuffer.clear();
-            }
-    
-            _drawDataBuffer.push_back(std::move(drawData));
-            prevBitmap = bitmap;
         }
     
         if (prevBitmap) {
@@ -222,7 +219,7 @@ namespace carto {
     }
         
     void BillboardRenderer::addElement(const std::shared_ptr<Billboard>& element) {
-        element->getDrawData()->setRenderer(this);
+        element->getDrawData()->setRenderer(shared_from_this());
         _tempElements.push_back(element);
     }
     
@@ -235,7 +232,7 @@ namespace carto {
     void BillboardRenderer::updateElement(const std::shared_ptr<Billboard>& element) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         if (std::shared_ptr<BillboardDrawData> drawData = element->getDrawData()) {
-            drawData->setRenderer(this);
+            drawData->setRenderer(shared_from_this());
         }
         if (std::find(_elements.begin(), _elements.end(), element) == _elements.end()) {
             _elements.push_back(element);
@@ -245,7 +242,7 @@ namespace carto {
     void BillboardRenderer::removeElement(const std::shared_ptr<Billboard>& element) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         if (std::shared_ptr<BillboardDrawData> drawData = element->getDrawData()) {
-            drawData->setRenderer(nullptr);
+            drawData->setRenderer(std::weak_ptr<BillboardRenderer>());
             if (!drawData->getAnimationStyle()) {
                 drawData->setTransition(0.0f);
                 _elements.erase(std::remove(_elements.begin(), _elements.end(), element), _elements.end());
@@ -274,7 +271,7 @@ namespace carto {
             std::shared_ptr<BillboardDrawData> drawData = element->getDrawData();
 
             // Don't detect clicks on overlapping billboards that are hidden or removed elements
-            if (drawData->getRenderer() != this || (drawData->isHideIfOverlapped() && drawData->isOverlapping())) {
+            if (drawData->getRenderer().lock() != shared_from_this() || (drawData->isHideIfOverlapped() && drawData->isOverlapping())) {
                 continue;
             }
     
