@@ -161,37 +161,32 @@ namespace carto {
         _nmlModelRenderer->onSurfaceCreated(shaderManager, textureManager);
     }
     
-    bool VectorLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter,
-                                  StyleTextureCache& styleCache,
-                                  const ViewState& viewState)
-    {
-        std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock();
-        if (!mapRenderer) {
-            return false;
+    bool VectorLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
+        if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
+            float opacity = getOpacity();
+
+            if (opacity < 1.0f) {
+                mapRenderer->clearAndBindScreenFBO(Color(0, 0, 0, 0), true, false);
+            }
+
+            bool refresh = _billboardRenderer->onDrawFrame(deltaSeconds, billboardSorter, styleCache, viewState);
+            _geometryCollectionRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
+            _lineRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
+            _pointRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
+            _polygonRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
+            _polygon3DRenderer->onDrawFrame(deltaSeconds, viewState);
+            _nmlModelRenderer->onDrawFrame(deltaSeconds, viewState);
+
+            if (opacity < 1.0f) {
+                mapRenderer->blendAndUnbindScreenFBO(opacity);
+            }
+
+            return refresh;
         }
-
-        float opacity = getOpacity();
-
-        if (opacity < 1.0f) {
-            mapRenderer->clearAndBindScreenFBO(Color(0, 0, 0, 0), true, false);
-        }
-
-        bool refresh = _billboardRenderer->onDrawFrame(deltaSeconds, billboardSorter, styleCache, viewState);
-        _geometryCollectionRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
-        _lineRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
-        _pointRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
-        _polygonRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
-        _polygon3DRenderer->onDrawFrame(deltaSeconds, viewState);
-        _nmlModelRenderer->onDrawFrame(deltaSeconds, viewState);
-
-        if (opacity < 1.0f) {
-            mapRenderer->blendAndUnbindScreenFBO(opacity);
-        }
-
-        return refresh;
+        return false;
     }
     
-    void VectorLayer::onSurfaceDestroyed(){
+    void VectorLayer::onSurfaceDestroyed() {
         _billboardRenderer->onSurfaceDestroyed();
         _geometryCollectionRenderer->onSurfaceDestroyed();
         _lineRenderer->onSurfaceDestroyed();
