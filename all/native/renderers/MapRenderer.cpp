@@ -51,7 +51,7 @@ namespace carto {
         _redrawThread(),
 #endif
         _optionsListener(),
-        _currentBoundFBO(0),
+        _currentBoundFBOs(),
         _screenFrameBuffer(),
         _screenBlendShader(),
         _backgroundRenderer(*options, *layers),
@@ -505,6 +505,7 @@ namespace carto {
         _styleCache = std::make_shared<StyleTextureCache>(_textureManager, STYLE_TEXTURE_CACHE_SIZE);
 
         // Reset screen blending state
+        _currentBoundFBOs.clear();
         _screenFrameBuffer.reset();
         _screenBlendShader.reset();
 
@@ -529,7 +530,7 @@ namespace carto {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _viewState.setScreenSize(width, height);
         _viewState.clampFocusPos(*_options);
-        _screenFrameBuffer.reset(); // reset, as this depends on the dimensions
+        _screenFrameBuffer.reset(); // reset, as this depends on the surface dimensions
         _surfaceChanged = true;
     }
     
@@ -657,6 +658,7 @@ namespace carto {
         _styleCache.reset();
 
         // Reset screen blending state
+        _currentBoundFBOs.clear();
         _screenFrameBuffer.reset();
         _screenBlendShader.reset();
 
@@ -676,11 +678,13 @@ namespace carto {
     }
     
     void MapRenderer::clearAndBindScreenFBO(const Color& color, bool depth, bool stencil) {
+        GLint currentBoundFBO = 0;
+        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &currentBoundFBO);
+        _currentBoundFBOs.push_back(currentBoundFBO);
+
         if (!_screenFrameBuffer) {
             _screenFrameBuffer = _frameBufferManager->createFrameBuffer(_viewState.getWidth(), _viewState.getHeight(), true, depth, stencil);
         }
-
-        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &_currentBoundFBO);
 
         glBindFramebuffer(GL_FRAMEBUFFER, _screenFrameBuffer->getFBOId());
 
@@ -694,12 +698,19 @@ namespace carto {
     void MapRenderer::blendAndUnbindScreenFBO(float opacity) {
         static const GLfloat screenVertices[8] = { -1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, 1.0f, 1.0f };
 
-        if (!_screenFrameBuffer) {
+        if (_currentBoundFBOs.empty()) {
+            Log::Error("MapRenderer::blendAndUnbindScreenFBO: No bound FBOs");
             return;
         }
-        _screenFrameBuffer->discard(false, true, true);
+        GLuint currentBoundFBO = _currentBoundFBOs.back();
+        _currentBoundFBOs.pop_back();
         
-        glBindFramebuffer(GL_FRAMEBUFFER, _currentBoundFBO);
+        if (!_screenFrameBuffer) {
+            return; // should not happen, just safety
+        }
+        _screenFrameBuffer->discard(false, true, true);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, currentBoundFBO);
 
         if (!_screenBlendShader) {
             _screenBlendShader = _shaderManager->createShader(blend_shader_source);

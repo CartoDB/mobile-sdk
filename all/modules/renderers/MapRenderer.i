@@ -49,7 +49,6 @@
 %ignore carto::MapRenderer::onSurfaceDestroyed;
 %ignore carto::MapRenderer::clearAndBindScreenFBO;
 %ignore carto::MapRenderer::blendAndUnbindScreenFBO;
-
 %ignore carto::MapRenderer::calculateRayIntersectedElements;
 %ignore carto::MapRenderer::billboardsChanged;
 %ignore carto::MapRenderer::layerChanged;

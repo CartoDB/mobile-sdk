@@ -201,7 +201,7 @@ namespace carto {
         
         std::shared_ptr<OptionsListener> _optionsListener;
 
-        GLint _currentBoundFBO;
+        std::vector<GLuint> _currentBoundFBOs;
 
         std::shared_ptr<FrameBuffer> _screenFrameBuffer;
         std::shared_ptr<Shader> _screenBlendShader;
