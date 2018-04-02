@@ -67,9 +67,9 @@ namespace carto {
         _fetchingMeshes(),
         _fetchingTextures(),
         _fetchThreadPool(std::make_shared<CancelableThreadPool>()),
-        _nmlModelLODTreeEventListener(),
         _dataSource(dataSource),
-        _renderer()
+        _nmlModelLODTreeEventListener(),
+        _nmlModelLODTreeRenderer()
     {
         if (!dataSource) {
             throw NullArgumentException("Null dataSource");
@@ -122,34 +122,48 @@ namespace carto {
     }
     
     void NMLModelLODTreeLayer::offsetLayerHorizontally(double offset) {
-        if (_renderer) {
-            _renderer->offsetLayerHorizontally(offset);
+        if (_nmlModelLODTreeRenderer) {
+            _nmlModelLODTreeRenderer->offsetLayerHorizontally(offset);
         }
     }
     
     void NMLModelLODTreeLayer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
         Layer::onSurfaceCreated(shaderManager, textureManager);
 
-        if (_renderer) {
-            _renderer->onSurfaceDestroyed();
-            _renderer.reset();
+        if (_nmlModelLODTreeRenderer) {
+            _nmlModelLODTreeRenderer->onSurfaceDestroyed();
+            _nmlModelLODTreeRenderer.reset();
         }
 
-        _renderer = std::make_shared<NMLModelLODTreeRenderer>(_mapRenderer, _options);
-        _renderer->onSurfaceCreated(shaderManager, textureManager);
+        _nmlModelLODTreeRenderer = std::make_shared<NMLModelLODTreeRenderer>(_mapRenderer, _options);
+        _nmlModelLODTreeRenderer->onSurfaceCreated(shaderManager, textureManager);
     }
     
     bool NMLModelLODTreeLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
-        if (_renderer) {
-            return _renderer->onDrawFrame(deltaSeconds, viewState);
+        if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
+            if (_nmlModelLODTreeRenderer) {
+                float opacity = getOpacity();
+
+                if (opacity < 1.0f) {
+                    mapRenderer->clearAndBindScreenFBO(Color(0, 0, 0, 0), true, false);
+                }
+
+                bool refresh = _nmlModelLODTreeRenderer->onDrawFrame(deltaSeconds, viewState);
+
+                if (opacity < 1.0f) {
+                    mapRenderer->blendAndUnbindScreenFBO(opacity);
+                }
+
+                return refresh;
+            }
         }
         return false;
     }
     
     void NMLModelLODTreeLayer::onSurfaceDestroyed() {
-        if (_renderer) {
-            _renderer->onSurfaceDestroyed();
-            _renderer.reset();
+        if (_nmlModelLODTreeRenderer) {
+            _nmlModelLODTreeRenderer->onSurfaceDestroyed();
+            _nmlModelLODTreeRenderer.reset();
         }
 
         Layer::onSurfaceDestroyed();
@@ -157,8 +171,8 @@ namespace carto {
     
     void NMLModelLODTreeLayer::calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
         std::shared_ptr<NMLModelLODTreeLayer> thisLayer = std::static_pointer_cast<NMLModelLODTreeLayer>(std::const_pointer_cast<Layer>(shared_from_this()));
-        if (_renderer) {
-            _renderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
+        if (_nmlModelLODTreeRenderer) {
+            _nmlModelLODTreeRenderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
         }
     }
 
@@ -196,8 +210,8 @@ namespace carto {
         float zoom = cullState->getViewState().getZoom();
         if (!isVisible() || !getVisibleZoomRange().inRange(zoom) || getOpacity() <= 0) {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
-            if (_renderer) {
-                _renderer->refreshDrawData();
+            if (_nmlModelLODTreeRenderer) {
+                _nmlModelLODTreeRenderer->refreshDrawData();
             }
             return;
         }
@@ -563,13 +577,13 @@ namespace carto {
             updateTextures(modelLODTree, nodeId, nodeDrawData->getGLModel(), textureMap);
     
             nodeDrawDataMap[modelLODTree->getGlobalNodeId(nodeId)] = nodeDrawData;
-            if (_renderer) {
-                _renderer->addDrawData(nodeDrawData);
+            if (_nmlModelLODTreeRenderer) {
+                _nmlModelLODTreeRenderer->addDrawData(nodeDrawData);
             }
         }
     
-        if (_renderer) {
-            _renderer->refreshDrawData();
+        if (_nmlModelLODTreeRenderer) {
+            _nmlModelLODTreeRenderer->refreshDrawData();
         }
     
         if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {

@@ -89,10 +89,13 @@ namespace carto {
     {
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
+
             float opacity = getOpacity();
+
             _solidRenderer->setColor(Color(_color.getR(), _color.getG(), _color.getB(), static_cast<unsigned char>(_color.getA() * opacity)));
             _solidRenderer->setBitmap(_bitmap, _bitmapScale);
         }
+
         _solidRenderer->onDrawFrame(viewState);
         return false;
     }

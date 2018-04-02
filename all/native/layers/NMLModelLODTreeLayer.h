@@ -234,10 +234,11 @@ namespace carto {
         
         std::shared_ptr<CancelableThreadPool> _fetchThreadPool;
 
+        const std::shared_ptr<NMLModelLODTreeDataSource> _dataSource;
+
         ThreadSafeDirectorPtr<NMLModelLODTreeEventListener> _nmlModelLODTreeEventListener;
     
-        std::shared_ptr<NMLModelLODTreeDataSource> _dataSource;
-        std::shared_ptr<NMLModelLODTreeRenderer> _renderer;
+        std::shared_ptr<NMLModelLODTreeRenderer> _nmlModelLODTreeRenderer;
     };
     
 }

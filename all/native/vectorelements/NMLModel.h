@@ -122,8 +122,6 @@ namespace carto {
         friend class VectorLayer;
         
     private:
-        MapBounds _bounds;
-        
         std::shared_ptr<NMLModelDrawData> _drawData;
         
         MapVec _rotationAxis;

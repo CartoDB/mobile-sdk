@@ -144,10 +144,23 @@ namespace carto {
         _overlayRenderer->onSurfaceCreated(shaderManager, textureManager);
     }
 
-    bool EditableVectorLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState)
-    {
+    bool EditableVectorLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
         bool refresh = VectorLayer::onDrawFrame(deltaSeconds, billboardSorter, styleCache, viewState);
-        _overlayRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
+
+        if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
+            float opacity = getOpacity();
+
+            if (opacity < 1.0f) {
+                mapRenderer->clearAndBindScreenFBO(Color(0, 0, 0, 0), false, false);
+            }
+
+            _overlayRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
+
+            if (opacity < 1.0f) {
+                mapRenderer->blendAndUnbindScreenFBO(opacity);
+            }
+        }
+
         return refresh;
     }
 
