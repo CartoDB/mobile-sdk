@@ -1,25 +1,29 @@
-## Listening to Events
+## Map View control
 
-SDK contains various **Listener** hooks that are used to receive
-various events from the SDK. 
+### MapView options
 
-There are listeners for user interaction related events, rendering events and
-map download events among others.
+CARTO SDK MapView has various configuration options and settings, some of them are generic enough to be useful for almost any mobile app.
 
-### Listening to Map Events
 
-An app can register a custom `MapEventListener` to receive notifications
-about various events, such as:
 
-* Map is being moved or zoomed (`onMapMoved`)
 
-* Map has reached 'stable state', all tiles and data has been loaded displayed (`onMapStable`)
+### Listening to Events
 
-* Map has been clicked (`onMapClicked`)
+SDK contains various **Listener** hooks that are used to receive various events from the SDK. 
 
-**NOTE**: If you wish to listen to vector element clicks, you need to implement `VectorElementEventListener` and attach it to a `Vectorlayer`.
+There are listeners for user interaction related events, rendering events and map download events among others:
+* `MapEventListener` - map touches and movements - attach it to your `MapView`. See below for details
+* `VectorElementEventListener` - listen Vector Element touches/clicks, attach it to the related `VectorLayer`.
 
 #### Implementing MapEventListener
+
+An app can implement a custom `MapEventListener` to receive notifications about various events, such as:
+
+* Map is being moved or zoomed (`onMapMoved`)
+* Map has reached 'stable state', all tiles and data has been loaded displayed (`onMapStable`)
+* Map has been clicked (`onMapClicked`)
+
+
 
 Create a new class called **MyMapEventListener** which implements MapEventListner interface.
 

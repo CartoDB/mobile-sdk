@@ -7,13 +7,13 @@ You need CARTO **Enterprise** or **Enterprise trial** account for Mobile SDK. Pl
 
 #### Registering your App
 
-You must register all your mobile apps under your CARTO.com account settings. You'll get the **mobile app license code**, which is needed for your app code. There are no limits how many apps you can register, and every platform (also Xamarin iOS and Xamarin Android) is regarded as separate app and needs separate registration.
+You **must register all your mobile apps** under your CARTO.com account settings. You'll get the **mobile app license code**, which is needed for your app code. There are no limits how many apps you can register, and every platform (also Xamarin iOS and Xamarin Android) is regarded as separate app and needs separate registration.
 
 You can find detailed instructions on [API Keys page](/docs/carto-engine/mobile-sdk/API-keys/)
 
 ### Android app
 
-1) Add the following to the `build.gradle` of your project:
+1) **Install SDK** by adding the following to the `build.gradle` of your project:
 
   {% highlight groovy %}
 
@@ -24,13 +24,13 @@ You can find detailed instructions on [API Keys page](/docs/carto-engine/mobile-
   }
   {% endhighlight %}
  
-2) Define **INTERNET** permission for the app in your *AndroidManifest.xml*
+2) **Define INTERNET permission** for the app in your *AndroidManifest.xml*
 
   {% highlight xml %}
   <uses-permission android:name="android.permission.INTERNET"/>
   {% endhighlight %}
 
-3) Define your application layout
+3) Define your **application layout**
 
   Define **main layout** as **res/layout/main.xml**, so that it contains `com.carto.ui.MapView` element:
 
@@ -49,7 +49,7 @@ You can find detailed instructions on [API Keys page](/docs/carto-engine/mobile-
   </LinearLayout>
   {% endhighlight %}
 
-4) In your app code connect to the MapView object and add a base layer
+4) In your app code **connect to the MapView object and add a basemap layer**
 
   Following enables to load the MapView from the layout. _The object itself was already created during the layout creation process, this step is specific to finding and referencing the MapView object in your request._
 
@@ -120,12 +120,12 @@ You can find detailed instructions on [API Keys page](/docs/carto-engine/mobile-
   </div>
 </div>
 
-5) Run the Android app
+5) **Run the Android app**
 
   The map should appear with the default tyle. You can zoom, rotate, and tilt the map with touch.
 
 
-6) Do something useful with the map - add a styled Marker for a point
+6) Do something useful with the map - **add a styled Marker for a point**
 
 <div class="js-TabPanes">
   <ul class="Tabs">
@@ -230,9 +230,7 @@ pod install
 In **Objective-C apps** you need some special tricks:
 
   - Extend ViewController and add MapView manipulation code into it. _Ensure it is Objective C++, not plain Objective C class_
-
   - Rename `ViewController.m` (comes with template) to `ViewController.mm`, to avoid Objective C++ compilation issues
-
   - Implement **ViewController.h** to extend **GLKViewController**, instead of *UIViewController*
 
 in **Swift apps** you need one special trick:
@@ -317,15 +315,15 @@ in **Swift apps** you need one special trick:
 
 5) **Modify Storyboard** to enable Map View
 
-  _The default storyboard template uses UIView class, you must use NTMapView instead._
+The default storyboard template uses **UIView** class, you must use **NTMapView** class instead:
 
-  **Note:** If you are using iPhone (**Main\_iPhone.storyboard**) or iPad (**Main\_iPad.storyboard**) files for iOS, you must repeat this step to change the default storyboard.
 
-  -  Open Main.Storyboard, select *View Controller Scene -&gt; View Controller* -&gt; *View*
-
+  - Open Main.Storyboard, select *View Controller Scene &gt; View Controller* &gt; *View*
   - From Navigator window, select **Identity Inspector**, change the first parameter (Custom Class) to **NTMapView** (from the default UIView).
 
-  <span class="wrap-border"><img src="../img//xcode_storyboard.jpg" alt="Xcode storyboard" /></span>
+**Note:** If you are using both iPhone (**Main\_iPhone.storyboard**) or iPad (**Main\_iPad.storyboard**) files for iOS, you must repeat the steps to change the default storyboard.
+
+  <span class="wrap-border"><img src="../../img/xcode_storyboard.jpg" alt="Xcode storyboard" /></span>
 
 6) **Run the iOS app**
 
@@ -426,15 +424,18 @@ in **Swift apps** you need one special trick:
 
 ### Xamarin (Android and iOS) .NET apps
 
-1. **Create a project** for your apps
-    Each platform still needs to be registered as its own app, and app UI is created separately. However, when executing API requests with the Mobile SDK, you can create one Xamarin project for Android and iOS and share the code. _Some exceptions apply in regards to API calls which need Android context, or file system references._ For example, the following API requests are platform specific:
+Preparation steps:
 
-    - Register license key: `MapView.RegisterLicense()`
-    - Create package manager: `new CartoPackageManager()`
+1) **Create a project** for your apps
 
-    Almost all of the map related API code (such as adding layers and objects to map, handling interactions and clicks, etc.) can be shared for iOS and Android through one project!
+Each platform needs to be registered as its own app, and app UI is created separately. However, when executing API requests with the Mobile SDK, you can create one Xamarin project for Android and iOS and share the code. _Some exceptions apply in regards to API calls which need Android context, or file system references._ For example, the following API requests are platform specific:
 
-2. **Add library** : to iOS app add [nuget CartoMobileSDK.iOS](https://www.nuget.org/packages/CartoMobileSDK.iOS) and to Android app add [nuget CartoMobileSDK.Android](https://www.nuget.org/packages/CartoMobileSDK.Android) 
+ - Register license key: `MapView.RegisterLicense()`
+ - Create package manager: `new CartoPackageManager()`
+
+Almost all of the map related API code - such as adding layers and objects to map, handling interactions and clicks, etc. can be shared for iOS and Android through one project.
+
+2) **Add library** : to iOS app add [nuget CartoMobileSDK.iOS](https://www.nuget.org/packages/CartoMobileSDK.iOS) and to Android app add [nuget CartoMobileSDK.Android](https://www.nuget.org/packages/CartoMobileSDK.Android) 
 
 Setup on different platoforms is a bit different:
 
@@ -600,7 +601,7 @@ This, as given before, is cross-platform code, covering both Xamarin and UWP:
 
 Regardless of the name, CARTO Mobile SDK **works also in Windows 10 desktop apps**, assuming that they are created as modern UWP apps and not classic winapi apps.
 
-_**Note:** The  UWP implementation of the Mobile SDK is experimental and less tested compared to the other platforms._ 
+**Note:** The UWP implementation of the Mobile SDK is experimental.
 
 As app ID use same UUID as in your project's *Package.appmanifest > Packaging > Package name*. For example, the sample app ID is **c882d38a-5c09-4994-87f0-89875cdee539**
 
@@ -649,4 +650,4 @@ using Carto.VectorElements;
 
 3) **Add Marker points** to the map
 
-See sample code above under Xamarin section. The code is exactly the same.
+See [sample code above](#add-marker-points-to-the-map) under Xamarin section. The code is exactly the same.
