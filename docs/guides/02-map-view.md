@@ -1,11 +1,20 @@
-## Map View control
+## Map View 
+
+CARTO SDK **MapView** is the central map object to be added to your application screen - Storyboard or Layout. Technically it is platform-specific, so some details could be different on different platforms, but in general it provides same features cross-platform.
+
+Following figure provides summary of MapView most used properties, methods and relationships with other SDK classes:
+
+![SDK overview](../../img/mobile-api-overview.png)
+
+### MapView manipulation
+
+First step with MapView is always RegisterLicense, this ensures that next steps are pre-configured properly. Typical next step is to add your Layers, which are shown in same order as they are added. You can change layer order later, make layers invisible also. Typically you have basemap layer, such as `CartoOnlineVectorTileLayer`. Brand new map view is empty, with no map data.
+
+MapView has direct methods to zoom, pan, rotate and tilt map. Also you can request coordinates of the map view etc. 
 
 ### MapView options
 
-CARTO SDK MapView has various configuration options and settings, some of them are generic enough to be useful for almost any mobile app.
-
-
-
+CARTO SDK MapView has various configuration options and settings, some of them are generic enough to be useful for almost any mobile app. Drawing above lists some of them.
 
 ### Listening to Events
 
