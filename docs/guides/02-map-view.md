@@ -8,13 +8,18 @@ Following figure provides summary of MapView most used properties, methods and r
 
 ### MapView manipulation
 
-First step with MapView is always RegisterLicense, this ensures that next steps are pre-configured properly. Typical next step is to add your Layers, which are shown in same order as they are added. You can change layer order later, make layers invisible also. Typically you have basemap layer, such as `CartoOnlineVectorTileLayer`. Brand new map view is empty, with no map data.
+First step with MapView is always RegisterLicense, this is needed to connect to our map servers. Typical next step is to add your Layers, which are shown in same order as they are added. You can change layer order later, make layers invisible also. Typically you have basemap layer, such as `CartoOnlineVectorTileLayer`. Brand new map view is empty, with no map data.
 
 MapView has direct methods to zoom, pan, rotate and tilt map. Also you can request coordinates of the map view etc. 
 
 ### MapView options
 
-CARTO SDK MapView has various configuration options and settings, some of them are generic enough to be useful for almost any mobile app. Drawing above lists some of them.
+CARTO SDK MapView has various configuration options and settings, some of them are generic enough to be useful for almost any mobile app. SDK overview above lists some of them:
+
+* Parameters to limit interaction: zooming, panning rotating, tilting, touches
+* Finetune performance - number of threads/workers to load data. Set bigger for multi-core devices
+* Set custom map and sky background patterns and clors
+* etc
 
 ### Listening to Events
 
@@ -31,7 +36,6 @@ An app can implement a custom `MapEventListener` to receive notifications about 
 * Map is being moved or zoomed (`onMapMoved`)
 * Map has reached 'stable state', all tiles and data has been loaded displayed (`onMapStable`)
 * Map has been clicked (`onMapClicked`)
-
 
 
 Create a new class called **MyMapEventListener** which implements MapEventListner interface.
@@ -405,12 +409,8 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
 
 `MyMapEventListener` contains special functionality that shows, or hides, a small label text over a clicked object. The following label click event rules apply:
 
-- If you click on an object, it creates another map object as a **BalloonPopup**. This contains the text from the metadata of the clicked object
-
-  For this reason, our samples apps include a _Metadata field value_. You can use the metadata value directly, or use the **object unique ID** as the metadata, to query details about the clicked object from the database.
-
+- If you click on an object, it creates another map object as a **BalloonPopup**. This contains the text from the metadata of the clicked object. For this reason, our samples apps include a _Metadata field value_. You can use the metadata value directly, or use the **object unique ID** as the metadata, to query details about the clicked object from the database.
 - When a viewer clicks a new location on the map (or click another map object), the original BalloonPopup is deleted, and new one appears at the click location
-
 - The BalloonPopup is added to the DataSource, which is linked existing map layers. The same DataSource is used for other vector elements on a map
 
 
