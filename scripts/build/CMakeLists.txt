@@ -2,11 +2,13 @@ cmake_minimum_required(VERSION 3.1)
 project(carto_mobile_sdk)
 
 # General options
-option(SINGLE_LIBRARY "Compile as single library" OFF)
 option(INCLUDE_GDAL "Link with GDAL" OFF)
 option(INCLUDE_OBJC "Include ObjC code on iOS" OFF)
 
+option(SINGLE_LIBRARY "Compile as single library" OFF)
+
 if(IOS)
+option(SHARED_LIBRARY "Build as shared library" OFF)
 option(ENABLE_BITCODE "Enable bitcode support" ON)
 endif(IOS)
 
@@ -22,7 +24,9 @@ endif(ANDROID)
 
 if(WIN32 OR ANDROID)
 set(SDK_LIBRARY_TYPE SHARED)
-else(WIN32 OR ANDROID)
+elseif(SHARED_LIBRARY)
+set(SDK_LIBRARY_TYPE SHARED)
+elseif(NOT SHARED_LIBRARY)
 set(SDK_LIBRARY_TYPE STATIC)
 endif()
 

@@ -32,6 +32,7 @@ def buildIOSLib(args, arch):
     '-DWRAPPER_DIR=%s' % ('%s/generated/ios-objc/proxies' % baseDir),
     '-DINCLUDE_OBJC:BOOL=ON',
     '-DSINGLE_LIBRARY:BOOL=ON',
+    '-DSHARED_LIBRARY:BOOL=%s' % ('ON' if args.sharedlib else 'OFF'),
     '-DCMAKE_OSX_ARCHITECTURES=%s' % arch,
     '-DCMAKE_BUILD_TYPE=%s' % args.configuration,
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
@@ -56,7 +57,7 @@ def buildIOSFramework(args, archs):
 
   if not execute('lipo', baseDir,
     '-output', '%s/CartoMobileSDK' % outputDir,
-    '-create', *["%s/%s-%s/libcarto_mobile_sdk.a" % (getBuildDir('ios', '%s-%s' % (platform, arch)), args.configuration, 'iphoneos' if arch.startswith("arm") else "iphonesimulator") for platform, arch in platformArchs]
+    '-create', *["%s/%s-%s/libcarto_mobile_sdk.%s" % (getBuildDir('ios', '%s-%s' % (platform, arch)), args.configuration, 'iphoneos' if arch.startswith("arm") else "iphonesimulator", 'dylib' if args.sharedlib else 'a') for platform, arch in platformArchs]
   ):
     return False
 
@@ -118,6 +119,7 @@ parser.add_argument('--build-number', dest='buildnumber', default='', help='Buil
 parser.add_argument('--build-version', dest='buildversion', default='%s-devel' % SDK_VERSION, help='Build version, goes to distributions')
 parser.add_argument('--build-cocoapod', dest='buildcocoapod', default=False, action='store_true', help='Build CocoaPod')
 parser.add_argument('--build-cocoapod-package', dest='buildcocoapodpackage', default=False, action='store_true', help='Build CocoaPod')
+parser.add_argument('--shared-framework', dest='sharedlib', default=False, action='store_true', help='Build shared framework instead of static')
 
 args = parser.parse_args()
 if 'all' in args.iosarch or args.iosarch == []:
