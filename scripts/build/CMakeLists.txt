@@ -18,10 +18,6 @@ set(CMAKE_VS_WINRT_EXTENSIONS ON)
 set(VS_WINRT_EXTENSIONS ON)
 endif(WIN32)
 
-if(ANDROID)
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -s")
-endif(ANDROID)
-
 if(WIN32 OR ANDROID)
 set(SDK_LIBRARY_TYPE SHARED)
 elseif(SHARED_LIBRARY)
@@ -31,24 +27,22 @@ set(SDK_LIBRARY_TYPE STATIC)
 endif()
 
 # C++ compiler flags
-add_definitions("${SDK_CPP_DEFINES} -DHAVE_OT -DHAVE_UCDN -DHB_NO_MT -DFT2_BUILD_LIBRARY -DUSE_STD_REGEX -DBOOST_ALL_NO_LIB")
+add_definitions("${SDK_CPP_DEFINES} -DHAVE_OT -DHAVE_UCDN -DHB_NO_MT -DFT2_BUILD_LIBRARY -DUSE_STD_REGEX -DBOOST_ALL_NO_LIB -DNDEBUG")
+
 if(WIN32)
 add_definitions("-DNOMINMAX -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -DRAPIDJSON_HAS_CXX11_RVALUE_REFS=1 -DRAPIDJSON_HAS_STDSTRING=1 -DRAPIDJSON_ENDIAN=RAPIDJSON_LITTLEENDIAN -DSQLITE_OS_WINRT -DSQLITE_OMIT_WAL -DNO_OS_DEPENDENCE -DGL_GLEXT_PROTOTYPES")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /WINMD /NODEFAULTLIB:vccorlib /NODEFAULTLIB:msvcrt vccorlib.lib msvcrt.lib")
 endif(WIN32)
 
 if(IOS)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -ftemplate-depth=1024") 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -ftemplate-depth=1024")
 endif(IOS)
 
 if(ANDROID)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fstack-protector") 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector") 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fstack-protector -Os -ffunction-sections -fdata-sections -fvisibility=hidden -fvisibility-inlines-hidden -fomit-frame-pointer -fstrict-aliasing -funwind-tables -no-canonical-prefixes")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector -std=c++11 -ftemplate-depth=1024 -fexceptions -frtti -Os -ffunction-sections -fdata-sections -fvisibility=hidden -fvisibility-inlines-hidden -fomit-frame-pointer -fstrict-aliasing -funwind-tables -no-canonical-prefixes")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -s -Wl,--gc-sections -Wl,-z,noexecstack -Wl,--exclude-libs,libgcc.a -Wl,--exclude-libs,libatomic.a -Wl,--build-id")
 endif(ANDROID)
-
-if(CMAKE_COMPILER_IS_GNUCXX)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -ftemplate-depth=1024") 
-endif(CMAKE_COMPILER_IS_GNUCXX)
 
 # Directories
 set(SDK_BASE_DIR "${PROJECT_SOURCE_DIR}/../..")
@@ -189,6 +183,7 @@ file(GLOB SDK_SRC_FILES
     "${SDK_EXT_SRC_DIR}/*/*/*.h"
 )
 set_source_files_properties("${SDK_SRC_DIR}/../../all/native/utils/PlatformUtils.cpp" PROPERTIES COMPILE_FLAGS "-D_CARTO_MOBILE_SDK_PLATFORM=\"\\\"${SDK_PLATFORM}\\\"\" -D_CARTO_MOBILE_SDK_VERSION=\"\\\"${SDK_VERSION}\\\"\"")
+
 if (WIN32 OR IOS OR ANDROID)
 list(REMOVE_ITEM SDK_SRC_FILES "${SDK_SRC_DIR}/network/HTTPClientPionImpl.cpp")
 endif()

@@ -4,13 +4,10 @@ import argparse
 from build.sdk_build_utils import *
 
 ANDROID_TOOLCHAINS = {
-  'armeabi':     'arm-linux-androideabi',
   'armeabi-v7a': 'arm-linux-androideabi',
   'x86':         'x86',
-  'mips':        'mipsel-linux-android',
   'arm64-v8a':   'aarch64-linux-android',
-  'x86_64':      'x86_64',
-  'mips64':      'mips64el-linux-android'
+  'x86_64':      'x86_64'
 }
 
 ANDROID_ABIS = ANDROID_TOOLCHAINS.keys()
@@ -36,14 +33,14 @@ def buildAndroidSO(args, abi):
   options = ["-D%s" % option for option in args.cmakeoptions.split(';') if option]
 
   if not cmake(args, buildDir, options + [
-    '-DCMAKE_TOOLCHAIN_FILE=%s/scripts/android-cmake/android.toolchain.cmake' % baseDir,
-    '-DANDROID_NDK=%s' % args.androidndkpath,
+    '-DCMAKE_SYSTEM_NAME=Android',
+    "-DCMAKE_ANDROID_NDK='%s'" % args.androidndkpath,
+    "-DCMAKE_ANDROID_NDK_TOOLCHAIN_VERSION='%s'" % (args.compiler if not args.compiler.startswith('gcc-') else args.compiler[4:]),
+    "-DCMAKE_ANDROID_ARCH_ABI='%s'" % abi,
+    "-DCMAKE_ANDROID_STL_TYPE='%s'" % ('c++_static' if args.compiler.startswith('clang') else 'gnustl_static'),
+    "-DCMAKE_SYSTEM_VERSION='%s'" % ('21' if '64' in abi else '14'),
     '-DCMAKE_BUILD_TYPE=%s' % args.configuration,
     '-DWRAPPER_DIR=%s' % ('%s/generated/android-java/wrappers' % baseDir),
-    "-DANDROID_TOOLCHAIN_NAME='%s-%s'" % (ANDROID_TOOLCHAINS[abi], args.compiler if not args.compiler.startswith('gcc-') else args.compiler[4:]),
-    "-DANDROID_ABI='%s'" % abi,
-    "-DANDROID_STL='%s'" % ('c++_static' if args.compiler.startswith('clang') else 'gnustl_static'),
-    "-DANDROID_NATIVE_API_LEVEL='%s'" % ('android-21' if '64' in abi else 'android-10'),
     '-DSDK_CPP_DEFINES=%s' % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
     "-DSDK_PLATFORM='Android'",
@@ -76,7 +73,7 @@ def buildAndroidJAR(args):
     '-source', '1.6',
     '-target', '1.6',
     '-bootclasspath', '%s/scripts/android/rt.jar' % baseDir,
-    '-classpath', '%s/platforms/android-10/android.jar' % args.androidsdkpath,
+    '-classpath', '%s/platforms/android-14/android.jar' % args.androidsdkpath,
     '-d', buildDir,
     *javaFiles
   ):
@@ -132,7 +129,7 @@ parser.add_argument('--zip', dest='zip', default='zip', help='Zip executable')
 parser.add_argument('--cmake', dest='cmake', default='cmake', help='CMake executable')
 parser.add_argument('--cmake-options', dest='cmakeoptions', default='', help='CMake options')
 parser.add_argument('--gradle', dest='gradle', default='gradle', help='Gradle executable')
-parser.add_argument('--compiler', dest='compiler', default='gcc-4.9', choices=['gcc-4.9', 'clang'], help='C++ compiler')
+parser.add_argument('--compiler', dest='compiler', default='clang', choices=['gcc-4.9', 'clang'], help='C++ compiler')
 parser.add_argument('--configuration', dest='configuration', default='Release', choices=['Release', 'Debug'], help='Configuration')
 parser.add_argument('--build-number', dest='buildnumber', default='', help='Build sequence number, goes to version str')
 parser.add_argument('--build-version', dest='buildversion', default='%s-devel' % SDK_VERSION, help='Build version, goes to distributions')
