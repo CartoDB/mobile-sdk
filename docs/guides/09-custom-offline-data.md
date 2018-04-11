@@ -8,7 +8,331 @@ CARTO Mobile SDK supports several different types of custom sources:
 * Bundled GeoJson
 * Tile Download
 
+### Cached online data
+
+There are some DataSources which can use another DataSource as input, and apply internal processing and create a new DataSource as the result. This enables you to create a new DataSource based on a customized logic.
+
+-   `PersistentCacheTileDataSource` caches HTTP tiles to a persistent sqlite database file. If the tile already exists in the database, the request to the original DataSource is ignored. This can be applied for both raster and vector tiles. The original DataSource's expired headers are taken into account as part of the processing.
+
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
+  </ul>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+    {% highlight java %}
+
+    // 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
+    String url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US";
+    TileDataSource baseRasterTileDataSource = new HTTPTileDataSource(1, 19, url);
+
+    // 2. Add persistent caching datasource, tiles will be stored locally on persistent storage
+    PersistentCacheTileDataSource cachedDataSource = new PersistentCacheTileDataSource(baseRasterTileDataSource, getExternalFilesDir(null) + "/mapcache.db");
+
+    // 3. Create layer and add to map
+    TileLayer baseLayer = new RasterTileLayer(cachedDataSource);
+    mapView.getLayers().add(baseLayer);
+
+    {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+    {% highlight csharp %}
+
+    // 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
+    var url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US";
+    var baseRasterTileDataSource = new HTTPTileDataSource(1, 19, url);
+
+    // Add persistent caching datasource, tiles will be stored locally on persistent storage
+    // fileDir must be a directory where files can be written - this is platform-specific
+    var cachedDataSource = new PersistentCacheTileDataSource(baseRasterTileDataSource, fileDir + "/mapcache.db");
+
+    // 2. Create layer and add to map
+    var baseLayer = new RasterTileLayer(cachedDataSource);
+    MapView.Layers.Add(baseLayer);
+
+    {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+    {% highlight objc %}
+
+    // 1. Initialize a OSM raster data source from MapQuest Open Tiles
+    NSString* url = @"http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US";
+    NTHTTPTileDataSource* baseRasterTileDataSource = [[NTHTTPTileDataSource alloc] initWithMinZoom:1 maxZoom:19 baseURL: url];
+
+    // 2. Create persistent cache for the given data source  
+    NTPersistentCacheTileDataSource* cachedDataSource = [[NTPersistentCacheTileDataSource alloc] initWithDataSource:baseRasterTileDataSource databasePath:[NTAssetUtils calculateWritablePath:@"mycache.db"]];
+
+    // 3. Initialize a raster layer with the previous data source
+    NTRasterTileLayer* baseLayer = [[NTRasterTileLayer alloc] initWithDataSource:cachedDataSource];
+
+    // 4. Add the previous raster layer to the map
+    [[self.mapView getLayers] add:baseLayer];
+
+    {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+    {% highlight swift %}
+
+    // 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
+    let url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US"
+    let baseRasterTileDataSource = NTHTTPTileDataSource(minZoom: 1, maxZoom: 19, baseURL: url)
+
+    // 2. Add persistent caching datasource, tiles will be stored locally on persistent storage
+    let path = NTAssetUtils.calculateWritablePath("mapcache.db")
+    let cachedDataSource = NTPersistentCacheTileDataSource(dataSource: baseRasterTileDataSource, databasePath: path)
+
+    // 3. Create layer and add to map
+    let baseLayer = NTRasterTileLayer(dataSource: cachedDataSource)
+
+    // 4. Add the previous raster layer to the map
+    mapView?.getLayers()?.add(baseLayer)
+
+    {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+    {% highlight kotlin %}
+
+    // 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
+    val url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US"
+    val baseRasterTileDataSource = HTTPTileDataSource(1, 19, url)
+
+    // 2. Add persistent caching datasource, tiles will be stored locally on persistent storage
+    val path = getExternalFilesDir(null).path + "/mapcache.db"
+    val cachedDataSource = PersistentCacheTileDataSource(baseRasterTileDataSource, path)
+
+    // 3. Create layer and add to map
+    val baseLayer = RasterTileLayer(cachedDataSource)
+
+    // 4. Add the previous raster layer to the map
+    mapView?.layers?.add(baseLayer)
+
+    {% endhighlight %}
+  </div>
+    
+</div>
+
+
+
 ### MBTiles
+
+
+Code sample :
+
+<div class="js-TabPanes">
+  <ul class="Tabs">
+     <li class="Tab js-Tabpanes-navItem--lang is-active">
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
+  </ul>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+    {% highlight java %}
+
+    MBTilesTileDataSource tileDataSource = new MBTilesTileDataSource("MBTILES_FILENAME");
+    RasterTileLayer mbTilesLayer = new RasterTileLayer(tileDataSource);
+    
+    mapView.getLayers().add(mbTilesLayer);
+
+    {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+    {% highlight csharp %}
+  
+    var tileDataSource = new MBTilesTileDataSource(filePath);
+    var mbTilesLayer = new RasterTileLayer(tileDataSource);
+
+    MapView.Layers.Add(mbTilesLayer);
+
+    {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+    {% highlight objc %}
+  
+    NTTileDataSource* tileDataSource = [[NTMBTilesTileDataSource alloc] initWithPath: @"MBTILES_FILENAME"];
+    NTRasterTileLayer* mbTilesLayer = [[NTRasterTileLayer alloc] initWithDataSource:tileDataSource];
+    
+    [[mapView getLayers] add:mbTilesLayer];
+
+    {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+    {% highlight swift %}
+  
+    let tileDataSource = NTMBTilesTileDataSource(path: "MBTILES_FILENAME")
+    let mbTilesLayer = NTRasterTileLayer(dataSource: tileDataSource)
+        
+    mapView?.getLayers()?.add(mbTilesLayer)
+
+    {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+    {% highlight swift %}
+  
+    val tileDataSource = MBTilesTileDataSource("MBTILES_FILENAME")
+    val mbTilesLayer = RasterTileLayer(tileDataSource)
+    
+    mapView?.layers?.add(mbTilesLayer)
+
+    {% endhighlight %}
+  </div>
+    
+</div>
+
+#### MBTiles as VectorTileLayer
+
+For packaged vector data, you will need CARTO specific vector files packages (NTVT - *NutiTeq Vector Tile*) and styling files must be in _Mapnik XML_ format. Download the following, free sample package using OpenStreetMap data:
+
+-   [estonia\_ntvt.mbtiles](https://dl.dropboxusercontent.com/u/3573333/public_web/ntvt_packages/estonia_ntvt.mbtiles)
+
+The Mobile SDK provides a built-in download service thorough the **Package Manager** to retrieve map packages for a country, or smaller region. For details, see [Package Manager](/docs/carto-engine/mobile-sdk/05-package-manager/) section.
+
+**Note:** Vector maps always need proper **style definitions**. Fortunately, we bundle three basic styles with the SDK (bright, default, gray).
+These styles assume *OpenMapTiles* data structure are not generally applicable to other data structures (*Mapbox*, for example).
+
+Use the following code to use MBTiles for a vector layer: 
+
+<div class="js-TabPanes">
+  <ul class="Tabs">
+    <li class="Tab js-Tabpanes-navItem--lang is-active">
+      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+    </li>
+    <li class="Tab js-Tabpanes-navItem--lang">
+      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    </li>
+  </ul>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+    {% highlight java %}
+
+    MBTilesTileDataSource tileDataSource = new MBTilesTileDataSource("estonia_ntvt.mbtiles");
+
+    // Create tile decoder based on Voyager style and VectorTileLayer
+    VectorTileDecoder tileDecoder = CartoVectorTileLayer.createTileDecoder(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_VOYAGER);
+    VectorTileLayer offlineLayer = new VectorTileLayer(tileDataSource, tileDecoder);
+
+    mapView.getLayers().add(offlineLayer);
+
+    {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+    {% highlight csharp %}
+
+    var tileDataSource = new MBTilesTileDataSource("estonia_ntvt.mbtiles");
+
+    // Create tile decoder based on Voyager style and VectorTileLayer
+    var tileDecoder = CartoVectorTileLayer.CreateTileDecoder(CartoBaseMapStyle.CartoBasemapStyleVoyager);
+    var offlineLayer = new VectorTileLayer(tileDataSource, tileDecoder);
+
+    mapView.Layers.Add(offlineLayer);
+
+    {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+    {% highlight objc %}
+  
+    NSString* path = [[NSBundle mainBundle] pathForResource:@"estonia_ntvt" ofType:@"mbtiles"];
+    NTMBTilesTileDataSource* tileDataSource = [[NTMBTilesTileDataSource alloc] initWithPath:path];
+    
+    // Create tile decoder based on Voyager style and VectorTileLayer
+    NTMBVectorTileDecoder* tileDecoder = [NTCartoVectorTileLayer createTileDecoder: NT_CARTO_BASEMAP_STYLE_VOYAGER];
+    NTVectorTileLayer* offlineLayer = [[NTVectorTileLayer alloc] initWithDataSource:tileDataSource decoder:tileDecoder];
+    
+    [[mapView getLayers] add:offlineLayer];
+
+    {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+    {% highlight swift %}
+
+    let tileDataSource = NTMBTilesTileDataSource(path: Bundle.main.path(forResource: "estonia_ntvt", ofType: "mbtiles"))
+    
+    // Create tile decoder based on Voyager style and VectorTileLayer
+    let tileDecoder = NTCartoVectorTileLayer.createTileDecoder(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_VOYAGER)
+    let offlineLayer = NTVectorTileLayer(tileDataSource, tileDecoder)
+    
+    mapView?.layers?.add(offlineLayer)
+
+    {% endhighlight %}
+  </div>
+
+  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+    {% highlight kotlin %}
+  
+    val tileDataSource = MBTilesTileDataSource("estonia_ntvt.mbtiles")
+    
+    // Create tile decoder based on Voyager style and VectorTileLayer
+    val tileDecoder = CartoVectorTileLayer.createTileDecoder(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_VOYAGER)
+    val offlineLayer = VectorTileLayer(tileDataSource, tileDecoder)
+
+    mapView?.layers?.add(offlineLayer)
+
+    {% endhighlight %}
+  </div>
+    
+</div>
+
+#### Tools for Raster Maps
+
+The following tools enable you to create MBTiles packages:
+
+- [MapTiler](http://www.maptiler.com/) is a utility to create MBTiles from raster geo files (GeoTIFF, JPG, ECW, and so on)
+
+- [TileMill](http://mapbox.com/tilemill/) is an open source generator of map packages for vector geo files, such as Shapefile or PosgGIS geo data
+
+- [MOBAC](http://mobac.sourceforge.net) is available to download from variety of free sources, such as Bing, OpenStreetMap, and so on. You can even load it from WMS with added configuration
+
+- [MBUtil](https://github.com/mapbox/mbutil) enables you to create mbtiles from/to TMS-style tile folders, created with different utilities, such as GDAL utility
+
+- [Portable Basemap Server](https://geopbs.codeplex.com/) is a free utility for Windows and loads data from various commercial servers and custom sources. It is also available in ESRI formats. It works mainly as WMTS server, but can create MBTiles as an extra feature
+
+
+----
 
 MBTiles is a file format for storing tilesets. It is designed so that you can package thousands of files that make up a tileset and move them around; eventually uploading to [Mapbox](https://www.mapbox.com/help/define-mbtiles/) or to use in a web or mobile application. MBTiles is an open specification and is based on the SQLite database. MBTiles can contain raster or vector tilesets.
 
