@@ -19,6 +19,7 @@
 
 namespace carto {
     class AssetPackage;
+    class BinaryData;
     class Layer;
 
     /**
@@ -227,6 +228,8 @@ namespace carto {
         std::shared_ptr<Layer> createLayerGroup(const std::string& layerGroupId, const std::string& type, const std::vector<LayerInfo>& layerInfos, const std::map<std::string, std::string>& cdnURLs) const;
 
         std::vector<std::shared_ptr<Layer> > createLayers(const picojson::value& mapInfo) const;
+
+        static picojson::value parseJSONP(const std::shared_ptr<BinaryData>& data);
 
         static const std::string DEFAULT_API_TEMPLATE;
         
