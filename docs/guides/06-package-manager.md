@@ -561,23 +561,19 @@ Offline geocoding is covered in our [Offline Geocoding document](https://carto.c
 
 There is no special event or method to check package updates, so updates can be checked and controlled by application using following logic. You can call this logic as soon as you feel appropriate. Different packages can be updated in different point of time, and with different frequency.
 
-1. Use packagemanager *startPackageListDownload* to get server packages
-2. Wait for listener's *onPackageListUpdated* event, now server packages were downloaded
-3. Use packageManager *getLocalPackages* to get already downloaded packages (local packages)
-4. Iterate list of local packages, check from metadata if server package list has newer version of some
-5. If there is newer version, then this package is updated
-6. Updated package download is like normal first download
+- Use packagemanager *startPackageListDownload* to get server packages
+- Wait for listener's *onPackageListUpdated* event, now server packages were downloaded
+- Use packageManager *getLocalPackages* to get already downloaded packages (local packages)
+- Iterate list of local packages, check from metadata if server package list has newer version of some
+- If there is newer version, then this package is updated
+- Updated package download is like normal first download
 
 During re-download of same package application shows old map until download is complete. So the update can run in background safely.
 
 #### Additional notes
 
 * *startPackageListDownload* method does not need to be called every time when package list is required. In fact, once package list is successfully downloaded, it will remain locally available. But refreshing the contents once a day or perhaps once a week is recommended as some older packages may become available once newer versions are uploaded. *getServerPackageListAge* method can be used to check the age of the package list data.
-
 * Package manager keeps persistent task queue of all submitted requests. Even when it is stopped, downloads will automatically resume when it is started next time.
-
 * It is possible to pause downloads by setting task priority to -1. Downloads will resume once priority is set to non-negative number.
-
 * *PackageInfo* class provides two methods for human-readable package names: *getName* and *getNames*. *getNames* takes language argument and will return localized name of the package (assuming the language is supported, currently only major languages such as English, German, French are supported). *getNames* returns list of names, as some packages can be placed under multiple categories. So, using *getNames* should be preferred over *getName*.
-
 * Each package includes **tile mask**. Tile mask basically lists all tiles of the package up to a certain zoom level (currently 10). Tile mask can be used to quickly find a package corresponding to given tile coordinates or to find a package containing given tile.
