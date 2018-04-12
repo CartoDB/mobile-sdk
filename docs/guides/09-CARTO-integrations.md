@@ -1,29 +1,19 @@
-## CARTO integrations
+## CARTO Engine integrations
 
-For select account plans, you can connect to the CARTO Engine APIs via Mobile SDK, to retrieve map visualizations and table data from your CARTO account. _API access is not available for free users._ [Contact us](mailto:sales@carto.com) for questions about your account plan and enabling this feature.
-
-### Loading CARTO Map Data
+If you have CARTO Enterprise account plans, you can connect to the CARTO Engine APIs via Mobile SDK, to retrieve map visualizations and table data from your CARTO account. 
 
 There are several methods of connecting map data from your CARTO account (via the Mobile SDK) to your mobile app; depending on the size of your data, the visual requirements, and other factors.
 
 - To use a map as **raster map tiles**, define the tile URL for `RasterTileLayer`
-
-- To apply **interactivity** (object click data), use UTFGrid. This uses both raster map tiles and json-based UTF tiles.
-  UTFGrids are applicable to both raster and vector tiles, though are more useful for raster tiles.
-
-  **Tip:** For CARTO Builder, you will need to enable and define tooltips with the [POP-UP](/docs/carto-builder/map-layers-for-rendering-data/#pop-up) feature
-
+- To apply **interactivity** (object click data), use UTFGrid. This uses both raster map tiles and json-based UTF tiles.  UTFGrids are applicable to both raster and vector tiles, though are more useful for raster tiles. *For CARTO Builder Map, you will need to enable and define tooltips with the Pop-up feature*
 - Load **vector tiles**, the CARTO Engine supports Mapbox Vector Tile (MVT) format tiles, which the Mobile SDK can render on the client side. You will also need [CartoCSS](https://carto.com/docs/carto-engine/cartocss/) styles to view vector tiles. This is useful for applying advanced styling features, such as zooming and rotating maps based on data that can be packaged for offline line, using mbtiles
-
 - **Load GeoJSON vector data**. This is useful if you need need more advanced interactivity (object click actions) or dynamic client-side styling of the objects. For vector data, the CARTO Engine provides a [SQL API](/docs/carto-engine/sql-api/) and mobile app that can load entire tables and render maps. You can also use client-side simplification and clustering
-
 - If the **data table is large** (more than a ten thousand objects), then loading entire tables can overload the mobile client. Alternatively, use on-demand, view-based loading of vector data. Similar to the SQL API and GeoJSON format used on the CARTO Engine side, the SDK applies custom vector data sources to load data. _Only a selected, visible area, of the map will load._ The mobile app can control zoom levels, server-side generalizations, and simplifications can be applied
-
-- For point-geometry time-series visualizations, use the _Animated_ aggregation to define Torque maps. This provides animated rendering, and the Mobile SDK has a special layer `TorqueTileLayer` to define this. From an API standpoint, Torque uses the SQL API and CartoCSS styling, but Torque contains an additional [time control method](/docs/carto-engine/torque-js/)
+- For point-geometry time-series visualizations, use the _Animated_ aggregation to define Torque maps. This provides animated rendering, and the Mobile SDK has a special layer `TorqueTileLayer` to define this. 
 
 ### Offline maps
 
-CARTO Mobile SDK offers several ways to use map data offline, but the suggested method is via CARTO platform:
+CARTO Mobile SDK can take map offline via the CARTO platform:
 
 1. Upload your data to CARTO, create a new map with CARTO Builder, and apply map custom styling with CartoCSS.
 2. Use the [Mobile Tile Packager](https://github.com/CartoDB/mobile-tile-packager) tool to create the offline map data package.
@@ -32,30 +22,17 @@ CARTO Mobile SDK offers several ways to use map data offline, but the suggested 
 
 This method enables you to get both optimized vector tiles and suitable CartoCSS styling for your map.
 
-For details, see the [Readme file](https://github.com/CartoDB/mobile-tile-packager/blob/master/README.md) of the Mobile Tile Packager.
-
+For details, see the **Offline Maps** page.
 
 ### Online maps 
 
-If you have map data in a CARTO database, you can show it on mobile using any of the following methods:
+CARTO Mobile SDK supports **CARTO Maps API** integration for Anonymous Maps and Named Maps. *Anonymous maps* allow you to instantiate a map given SQL and CartoCSS. *Named Maps* are essentially the same as Anonymous Maps except the MapConfig is stored on the server, and the map is given a unique name.
 
-1) Integrate with the [Maps API](/docs/carto-engine/maps-api/) for Anonymous or Named maps
+### Anonymous Map
 
-  `CartoMapsService` is a mobile service that can be used to automatically configure layers using anonymous map configurations, or by using parametrized named maps
+Use `CartoMapsService` class to configure layers. Note that this must be done in a separate thread on Android, as Maps API requires connecting to server, which is not allowed in the main thread. The following snippet sets up the config (SQL and CartoCSS) we are going to use to define the map. As Anonymous map means that the map configuration - data and styles is created by client, then there are two phases. 
 
-2) Integrate with the [SQL API](/docs/carto-engine/sql-api/) for accessing database
-
-  `CartoSQLService` is a high-level interface for the CARTO SQL Service. The mobile service can be used to query data from CARTO databases using explicit SQL queries. _Note that this is only available for Public datasets._
-
-#### Maps API
-
-CARTO Mobile SDK supports [Maps API](https://carto.com/docs/carto-engine/maps-api/) integration for Anonymous Maps and Named Maps. Anonymous maps allow you to instantiate a map given SQL and CartoCSS. Named Maps are essentially the same as Anonymous Maps except the MapConfig is stored on the server, and the map is given a unique name.
-
-##### Building an Anonymous map config (SQL and CartoCSS)
-
-Use `CartoMapsService` class to configure layers. Note that this must be done in a separate thread on Android, as Maps API requires connecting to server, which is not allowed in the main thread.
-
-The following snippet sets up the config (SQL and CartoCSS) we are going to use in our query
+1) defining map parameters first:
 
 <div class="js-TabPanes">
 
@@ -417,7 +394,7 @@ The following snippet sets up the config (SQL and CartoCSS) we are going to use 
 
 </div>
 
-Now that the config is set up, you can apply the actual query. This snippet is for querying data from an anonymous vector table (change the default vector layer mode to false if you are using a raster table).
+2) Now that the config is set up, you initiate the map and create Layer to be added to the MapView. This snippet inits vector tiles, but you can change the default **vector layer mode to false** if you want to get a raster tiles.
 
 <div class="js-TabPanes">
 
@@ -566,7 +543,10 @@ Now that the config is set up, you can apply the actual query. This snippet is f
 
 </div>
 
-##### If you have the name of a map, use that to query data, instead of providing the SQL or CartoCSS
+
+### Named Map
+
+If you have created **Named map** using CARTO Maps API then map is already configured in the server, and map initiation is simpler:
 
 <div class="js-TabPanes">
 
@@ -710,11 +690,11 @@ Now that the config is set up, you can apply the actual query. This snippet is f
 
 </div>
 
-#### SQL API
+### SQL API
 
-CARTO’s [SQL API](https://carto.com/docs/carto-engine/sql-api/) allows you to interact with your tables and data inside CARTO, as if you were running SQL statements against a normal database. You can use the SQL API to insert, update or delete data (i.e., insert a new column with a latitude and longitude data) or to select data from public tables in order to use it on your website or application (i.e., display the 10 closest records to a particular location).
+CARTO’s **SQL API** allows you to interact with your tables and data inside CARTO, as if you were running SQL statements against a normal database. In general you can use the SQL API to insert, update or delete data (i.e., insert a new column with a latitude and longitude data) or to select data from public tables in order to use it on your website or application (i.e., display the 10 closest records to a particular location).
 
-##### Using CARTO SQL Service class to make a query
+**Note:** In mobile SDK you can only **SELECT** data from public tables without api_key for higher security. Private tables and using api_key is not allowed from mobile directly. If you need these, you need to proxy CARTO SQL API to a custom API towards your app, so api_key requests are done from server to server
 
 <div class="js-TabPanes">
 
@@ -922,19 +902,3 @@ CARTO’s [SQL API](https://carto.com/docs/carto-engine/sql-api/) allows you to 
 </div>
 
 
-
-### CARTO API Samples
-
-The CARTO [sample app](https://github.com/CartoDB/mobile-sdk-samples) projects contain a number of working samples for all the mobile platforms:
-
-- `CartoVisJsonActivity` load complete map configurations (from online viz.json)
-
-- `CartoSQLActivity`  vector data via SQL API
-
-- `CartoTorqueActivity` for Torque tiles
-
-- `CartoUTFGridActivity` for raster tiles and UTFGrid
-
-- `CartoVectorTileActivity` for vector tiles with CartoCSS styling 
-
-- `CartoRasterTileActivity` for raster tiles with CartoCSS styling 

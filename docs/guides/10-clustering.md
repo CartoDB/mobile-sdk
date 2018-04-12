@@ -1,11 +1,6 @@
 ## Clustering
 
-CARTO Mobile SDK can effectively cluster point data if large amounts
-of points need to be shown without cluttering the MapView. Clusters
-are formed based on the map zoom level and spatially close points
-are placed into the same cluster.
-
-### Clusters
+CARTO Mobile SDK can dynamically cluster point data if large amounts of points need to be shown without cluttering the MapView. Clusters are formed based on the map zoom level and spatially close points are placed into the same cluster.
 
 Clusters are usually markers which display a location of several objects, and typically indicate the number of markers within each object.
 
@@ -19,22 +14,18 @@ CARTO Mobile SDK has built-in cluster feature, which is highly customizable. You
 - Set the minimum distance between objects, before it becomes a cluster
 - Indicate the action when clicking on marker. For example, zoom in, or expand the cluster without zooming
 
-  **Tip:** The cluster expand feature is useful for small clusters (containing up to four objects inside)
+**Tip:** The cluster expand feature is useful for small clusters (containing up to four objects inside)
 
 Depending on the device, the Mobile SDK can cluster 100,000 points in less than a second.
 
 
-#### API Methods for Clusters
+### Implementing clustering
 
 Clusters are generated dynamically, based on `VectorDataSource` data that loads the map layer. If using an API, it works as a unique layer with the `ClusteredVectorLayer` method, and includes the following parameters in the a hierarchal order:
 
-1. Select the layer `DataSource`
-
-    In most cases,  the `LocalVectorDataSource` function contains all the elements to request the data. It is important that the DataSource displays all elements in a layer, and does not limit it to the current map visualization bbox (bounding box)
-
+1. Select the layer `DataSource`  In most cases,  the `LocalVectorDataSource` function contains all the elements to request the data. It is important that the DataSource displays all elements in a layer, and does not limit it to the current map visualization bbox (bounding box)
 2. `ClusterElementBuilder` defines a single method `buildClusterElement`
 
-#### Define Cluster Data and Layer
 
 <div class="js-TabPanes">
   <ul class="Tabs">

@@ -7,7 +7,7 @@ In the first example there is creatio of `LocalVectorVectorDataSource` object na
 
 **Note:** A popup (callout, bubble) which appears when you click on map is a vector element of its own, and should be added using **map click listener**. 
 
-### Add Marker
+### Marker
 
 Add a marker and apply marker styling using the following code:
 
@@ -202,7 +202,7 @@ Add a marker and apply marker styling using the following code:
 
 ![pin](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/pin.png)
 
-### Add Point
+### Point
 
 Points are used to indicating specific location points on a map, similar to Markers. However, Points do not have overlapping controls and cannot be use with billboard style version 2.5D. If you have a lot of data (thousands of points) and are not using 2.5D views, use Points as an alternative to Markers. Your rendering time will be significantly faster.
 
@@ -324,7 +324,7 @@ Add a point and apply point styling using the following code:
   
 </div>
 
-### Add Line or Polyline
+### Line or Polyline
 
 Lines can be added to the same VectorDataSource, it is defined by an array of MapPos locations, which goes to *MapPosVector* object:
 
@@ -484,7 +484,7 @@ Lines can be added to the same VectorDataSource, it is defined by an array of Ma
 
 ![line](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/line.png)
 
-### Add Polygon or Multi-Polygon
+### Polygon or Multi-Polygon
 
 Add a polygon and apply polygon styling using the following code. The following examples add a polygon with polygon holes, note that you need to use `MapPosVector` object for polygon coordinate arrays :
 
@@ -754,7 +754,7 @@ Add a polygon and apply polygon styling using the following code. The following 
 
 ![polygon](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/polygon.png)
 
-### Add Text
+### Text
 
 Text style parameters are similar to Markers, as both are Billboards - which are MapView objects that contain the following features:
 
@@ -879,7 +879,7 @@ Add text and apply text styling using the following code.
 
 ![text](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/text.png)
 
-### Add BalloonPopup
+### BalloonPopup
 
 A BalloonPopup appears often based on click event of an object, but you can use it also as stand-alone visual object instead of Marker, as you can define always-on text on it. Note that these examples contain several special styling elements, such as:
 
@@ -1048,7 +1048,7 @@ A BalloonPopup appears often based on click event of an object, but you can use 
 
 ![popup](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/popup.png)
 
-### Add 3D Model Objects
+### 3D Model Objects
 
 One special feature of the Mobile SDK is that you can add 3D objects (3D models) to a mobile map. For example, you can add small moving car or other decorative or informative elements.
 
