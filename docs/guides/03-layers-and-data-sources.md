@@ -1,20 +1,19 @@
 ## Layers and Data Sources
 
-Maps in CARTO Mobile SDK are organized overlaying **layers**. Layer displays map and takes data from a  
-connected **DataSource**, which has data loading and processing logics.
+Maps in CARTO Mobile SDK are organized overlaying **layers**. Layer displays map and takes data from a  connected **DataSource**, which has data loading and processing logics.
 
 
 ### Layers overview
 
-Depending on data type you can use following layer types, and there is class for each of them:
+Depending on data type you can use following layer types:
 
-* **VectorTileLayer** - renders styled maps from Mapbox Vector Tile (MVT) data
+* **VectorTileLayer** - renders styled maps from Mapbox Vector Tile (MVT) data. Use your own datasource, or one of the builtin ones:
   * **CartoVectorTileLayer** - uses built-in styles, requires suitable DataSource
   * **CartoOnlineVectorTileLayer** - specific one which connects to CARTO basemap server with built-in online tile DataSource. It is typical basemap, we provide several built-in styles for this.
   * **CartoOfflineVectorTileLayer** - connects to CARTO offline map package service via *PackageManager*. 
-* **RasterTileLayer** - uses raster tiles, which need to be in global OpenStreetMap tiling schema
-  * **CartoOnlineRasterTileLayer** - connects to raster-based maps bundled with CARTO service, e.g. Satellite images
-* **VectorLayer** - renders individual vector elements. Gives more flexibility than VectorTileLayer, but does not scale so well for large number of objects. Useful for your own objects on top of map.
+* **RasterTileLayer** - uses raster tiles, which need to be in global OpenStreetMap tiling schema. You can use own defined server, or CARTO one:
+  * **CartoOnlineRasterTileLayer** - connects to raster-based maps bundled with CARTO service, currently used for **Satellite images**
+* **VectorLayer** - renders individual vector elements, this is used to add your own Markers, Points, Lines, Polygons and 3D elements to the map. It gives more flexibility than VectorTileLayer (which can also be used for your own data), but does not scale so well for large number of objects. 
 * **ClusteredVectorLayer** - special version of VectorLayer which builds interactive and dynamically rendered clusters from points in datasource 
 * **EditableVectorLayer** - another special version of VectorLayer which allows to drag points, change lines and polygons. Has special methods to get events for edits and saves.
 * **NMLModelLODTreeLayer** - An advanced layer for 3D models that supports automatic Level of Detail (LOD) resolution calculation based on view. 
@@ -23,14 +22,14 @@ Depending on data type you can use following layer types, and there is class for
 
 ### Online map sample
 
-A hypothetical online map app configuration could be composed from following classes and elements:
+An online map app configuration could be composed from following classes and elements:
 
 <span class="wrap-border"><img src="../../img/mapview-online-layers.png" alt="Online map classes" /></span>
 
 Here are:
-* Basemap is standard online map. You just select style, and CARTO provides the map. You can use custom styles there also.
-* On top of basemap there is VectorLayer with Vector objects, e.g. points. The data can be loaded from your own server, using whatever API what the server provides. Your app defines custom DataSource which defines how exactly objects (Markers, Lines, Polygons etc) are created based on data what is loaded from your server. New data is needed with every map movement, so you need to be careful there, use caching for example. You do not need to change SDK code for that, all can be done in app code.
-* On top of this is another Editable layer, with a Marker which is used as draggable pin, to mark some location. User can change the pin. You may even have editable Lines and Polygons for more complex cases there. If you do not need geometry editing for the objects, just use plain VectorLayer, and via *LocalVectorDataSource* you can add immutable, but still reactive to clicks, map objects to map.
+* **Basemap** is standard online map. You just select style, and CARTO provides the map. You can use custom styles there also.
+* On top of basemap there is **VectorLayer** with Vector objects, e.g. points. The data can be loaded from your own server, using whatever API what the server provides. Your app defines custom DataSource which defines how exactly objects (Markers, Lines, Polygons etc) are created based on data what is loaded from your server. New data is needed with every map movement, so you need to be careful there, use caching for example. You do not need to change SDK code for that, all can be done in app code.
+* On top of this is another **Editable layer**, with a Marker which is used as draggable pin, to mark some location. User can change the pin. You may even have editable Lines and Polygons for more complex cases there. If you do not need geometry editing for the objects, just use **plain VectorLayer**, and via *LocalVectorDataSource* you can add immutable, but still reactive to clicks, map objects to map.
 
 Every app is different, and in your app you may need different combination of Layers and Data Sources, and SDK provides you many of them. Data Sources can be implemented by app, if built-in ones are not enough, or if you need to support your specific server API or file format. Layers and vector objects are fixed; and there is very rarely any need to change these.
 
@@ -205,9 +204,9 @@ Data Sources can deal with map tiles, or with individual vector objects. Here ar
 
 **PersistentCacheTileDataSource** is a 'virtual' data source in a sense that it does not provide data itself, but takes data from another specified datasource, caches it in file system with given parameters, and outputs it. So if already cached tile is requested, then it is loaded from the cache, not original source. It works with tiled data sources, and is typically used with *HTTPTileDataSource* to cache persistently online tiles.
 
-#### Use custom server with raster tiles
+#### Custom server with raster tiles
 
-As example following code loads online raster tiles into a layer. You can use any common web tiles in PNG or JPG formats, in Spherical Mercator system, just define proper ZXY or Quad-tree-based URL pattern for tiles. 
+As example following code loads online raster tiles into your map view. You can use any common web tiles in PNG or JPG formats, in Spherical Mercator system, just define proper ZXY or Quad-tree-based URL pattern for tiles. 
 
 **Tip:** For general information about raster tiles and geospatial data, see the following Open Source Geospatial Foundation reference materials for [Tile Map Service](http://wiki.openstreetmap.org/wiki/TMS) and [Featured Tile Layers](http://wiki.openstreetmap.org/wiki/Featured_tiles).
 
