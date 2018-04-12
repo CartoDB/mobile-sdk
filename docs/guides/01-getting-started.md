@@ -139,6 +139,8 @@ You can find detailed instructions on [API Keys page](/docs/carto-engine/mobile-
 
   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
     {% highlight java %}
+    
+    // this will be used later in several places
     Projection proj = mapView.getOptions().getBaseProjection();
 
     // 1. Initialize an vector data source where to put the elements
