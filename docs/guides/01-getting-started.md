@@ -9,7 +9,7 @@ You need CARTO **Enterprise** or **Enterprise trial** account for Mobile SDK. Pl
 
 You **must register all your mobile apps** under your CARTO.com account settings. You'll get the **mobile app license code**, which is needed for your app code. There are no limits how many apps you can register, and every platform (also Xamarin iOS and Xamarin Android) is regarded as separate app and needs separate registration.
 
-You can find detailed instructions on [API Keys page](/docs/carto-engine/mobile-sdk/API-keys/)
+You can find detailed instructions on [API Keys page](../API-keys/)
 
 ### Android app
 
