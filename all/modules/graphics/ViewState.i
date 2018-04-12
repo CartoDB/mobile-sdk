@@ -73,6 +73,7 @@
 %ignore carto::ViewState::getRTEModelviewMat;
 %ignore carto::ViewState::getRTEModelviewProjectionMat;
 %ignore carto::ViewState::setScreenSize;
+%ignore carto::ViewState::clampZoom;
 %ignore carto::ViewState::clampFocusPos;
 %ignore carto::ViewState::calculateViewState;
 %ignore carto::ViewState::worldToScreen;

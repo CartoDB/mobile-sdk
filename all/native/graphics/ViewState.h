@@ -314,6 +314,11 @@ namespace carto {
         void setScreenSize(int width, int height);
 
         /**
+         * Clamps the zoom level if restricted panning is used.
+         * @param options The options object to use for clamping.
+         */
+        void clampZoom(const Options& options);
+        /**
          * Clamps the focus point if restricted panning is used.
          * @param options The options object to use for clamping.
          */

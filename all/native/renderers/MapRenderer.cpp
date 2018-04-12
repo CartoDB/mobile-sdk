@@ -402,11 +402,13 @@ namespace carto {
             for (int i = 0; i < 24; i++) {
                 cameraZoomEvent.setZoom(zoom + zoomStep);
                 cameraZoomEvent.calculate(*_options, viewState);
+                viewState.clampZoom(*_options);
 
                 MapVec delta = focusPos - viewState.screenToWorldPlane(screenBounds.getCenter(), _options);
                 focusPos = center + delta;
                 cameraPanEvent.setPos(focusPos);
                 cameraPanEvent.calculate(*_options, viewState);
+                viewState.clampFocusPos(*_options);
     
                 bool fit = true;
                 for (const MapPos& pos : points) {
@@ -529,6 +531,8 @@ namespace carto {
     void MapRenderer::onSurfaceChanged(int width, int height) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _viewState.setScreenSize(width, height);
+        _viewState.calculateViewState(*_options);
+        _viewState.clampZoom(*_options);
         _viewState.clampFocusPos(*_options);
         _screenFrameBuffer.reset(); // reset, as this depends on the surface dimensions
         _surfaceChanged = true;
@@ -978,6 +982,7 @@ namespace carto {
 
             if (optionName == "RestrictedPanning") {
                 std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
+                mapRenderer->_viewState.clampZoom(*mapRenderer->_options);
                 mapRenderer->_viewState.clampFocusPos(*mapRenderer->_options);
             }
 

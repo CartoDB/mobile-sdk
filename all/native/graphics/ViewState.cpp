@@ -2,6 +2,7 @@
 #include "core/ScreenBounds.h"
 #include "projections/Projection.h"
 #include "utils/Const.h"
+#include "utils/GeneralUtils.h"
 #include "utils/Log.h"
 
 #include <cmath>
@@ -269,6 +270,21 @@ namespace carto {
         _screenSizeChanged = true;
     }
 
+    void ViewState::clampZoom(const Options& options) {
+        if (!options.isRestrictedPanning() || _width <= 0 || _height <= 0) {
+            return;
+        }
+
+        MapRange zoomRange = options.getZoomRange();
+        float zoom = GeneralUtils::Clamp(getZoom(), getMinZoom(), zoomRange.getMax());
+
+        if (zoom != getZoom()) {
+            setZoom(zoom);
+
+            cameraChanged();
+        }
+    }
+
     void ViewState::clampFocusPos(const Options& options) {
         if (!options.isRestrictedPanning() || _width <= 0 || _height <= 0) {
             return;
@@ -301,6 +317,7 @@ namespace carto {
             viewState.setScreenSize(_width, _height);
             viewState.cameraChanged();
             viewState.calculateViewState(options);
+            viewState.clampZoom(options);
             ScreenPos screenPos = viewState.worldToScreen(edgePos, options);
             if (!screenBounds.contains(screenPos)) {
                 continue;
@@ -321,10 +338,12 @@ namespace carto {
                 }
             }
 
-            setFocusPos(focusPos0);
-            setCameraPos(focusPos0 + cameraVec);
+            if (focusPos0 != getFocusPos()) {
+                setFocusPos(focusPos0);
+                setCameraPos(focusPos0 + cameraVec);
 
-            cameraChanged();
+                cameraChanged();
+            }
         }
     }
     
