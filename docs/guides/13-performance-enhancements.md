@@ -16,38 +16,38 @@ The overall maximum number of objects on map is limited to the RAM available for
 
 The following code describes how to adjust the `LocalVectorDataSource` performance by defining a spatial index:
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
+<div class="js-tabs-mobilesdk">
+   <ul class="tab-navigation">
+     <li class="tab-navigationItem">
+       <a href="#tab-java">Java</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-csharp">C#</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-objectivec">Objective-C</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-swift">Swift</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-kotlin">Kotlin</a>
+     </li>
+   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
     LocalVectorDataSource vectorDataSource2 = new LocalVectorDataSource(proj, LocalSpatialIndexType.LOCAL_SPATIAL_INDEX_TYPE_KDTREE);
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="tab-csharp">
     {% highlight csharp %}
     var vectorDataSource2 = new LocalVectorDataSource(proj, LocalSpatialIndexType.LocalSpatialIndexTypeKdtree);
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
     {% highlight objc %}
     NTLocalVectorDataSource* vectorDataSource2 =
         [[NTLocalVectorDataSource alloc] initWithProjection:proj
@@ -55,13 +55,13 @@ The following code describes how to adjust the `LocalVectorDataSource` performan
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
     {% highlight swift %}
     let vectorDataSource2 = NTLocalVectorDataSource(projection: projection, spatialIndexType: NTLocalSpatialIndexType.LOCAL_SPATIAL_INDEX_TYPE_KDTREE)
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
     val vectorDataSource2 = LocalVectorDataSource(projection, LocalSpatialIndexType.LOCAL_SPATIAL_INDEX_TYPE_KDTREE)
     {% endhighlight %}
@@ -82,51 +82,51 @@ There are several ways to simplify geometries for automatic simplification by us
 
 All this is can be applied with just one line of code - as shown in the following example (under iOS) for minimal 1-pixel simplification, the result is invisible but effects are significant, depending on your DataSource:
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
+<div class="js-tabs-mobilesdk">
+   <ul class="tab-navigation">
+     <li class="tab-navigationItem">
+       <a href="#tab-java">Java</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-csharp">C#</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-objectivec">Objective-C</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-swift">Swift</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-kotlin">Kotlin</a>
+     </li>
+   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
     vectorDataSource2.setGeometrySimplifier(new DouglasPeuckerGeometrySimplifier(1.0f / 320.0f));
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="tab-csharp">
     {% highlight csharp %}
     vectorDataSource2.GeometrySimplifier = new DouglasPeuckerGeometrySimplifier(1.0f / 320.0f);
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
     {% highlight objc %}
     [vectorDataSource2 setGeometrySimplifier:
       [[NTDouglasPeuckerGeometrySimplifier alloc] initWithTolerance: 1.0f / 320.0f]];
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
     {% highlight swift %}
     vectorDataSource2?.setGeometrySimplifier(NTDouglasPeuckerGeometrySimplifier(tolerance: 1.0 / 320.0))
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
     vectorDataSource2.geometrySimplifier = DouglasPeuckerGeometrySimplifier(1.0f / 320.0f)
     {% endhighlight %}

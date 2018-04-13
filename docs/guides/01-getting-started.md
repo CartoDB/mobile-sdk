@@ -15,7 +15,7 @@ You can find detailed instructions on [API Keys page](/docs/carto-engine/mobile-
 
 1) **Install SDK** by adding the following to the `build.gradle` of your project:
 
-  {% highlight groovy %}
+  {% highlight groovy linenos%}
 
   // use the latest version number from https://github.com/CartoDB/mobile-sdk/releases
 
@@ -26,7 +26,7 @@ You can find detailed instructions on [API Keys page](/docs/carto-engine/mobile-
  
 2) **Define INTERNET permission** for the app in your *AndroidManifest.xml*
 
-  {% highlight xml %}
+  {% highlight xml linenos %}
   <uses-permission android:name="android.permission.INTERNET"/>
   {% endhighlight %}
 
@@ -34,7 +34,7 @@ You can find detailed instructions on [API Keys page](/docs/carto-engine/mobile-
 
   Define **main layout** as **res/layout/main.xml**, so that it contains `com.carto.ui.MapView` element:
 
-  {% highlight xml %}
+  {% highlight xml linenos %}
   <?xml version="1.0" encoding="utf-8"?>
   <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:tools="http://schemas.android.com/tools"
@@ -53,18 +53,18 @@ You can find detailed instructions on [API Keys page](/docs/carto-engine/mobile-
 
   Following enables to load the MapView from the layout. _The object itself was already created during the layout creation process, this step is specific to finding and referencing the MapView object in your request._
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Java</a>
+<div class="js-tabs-mobilesdk">
+  <ul class="tab-navigation">
+    <li class="tab-navigationItem">
+      <a href="#tab-java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">Kotlin</a>
+    <li class="tab-navigationItem">
+      <a href="#tab-kotlin">Kotlin</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item is-active">
-  {% highlight java %}
+  <div id="tab-java">
+  {% highlight java linenos %}
   public class MainActivity extends Activity {
 	  
       // make sure you replace the String value with the one from carto.com mobile app registration !  
@@ -91,8 +91,8 @@ You can find detailed instructions on [API Keys page](/docs/carto-engine/mobile-
   {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item">
-  {% highlight kotlin %}
+  <div id="tab-kotlin">
+  {% highlight kotlin linenos %}
   class MainActivity : AppCompatActivity() {
 	  
       // make sure you replace the String value with the one from carto.com mobile app registration !  
@@ -127,17 +127,17 @@ You can find detailed instructions on [API Keys page](/docs/carto-engine/mobile-
 
 6) Do something useful with the map - **add a styled Marker for a point**
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+<div class="js-tabs-mobilesdk">
+  <ul class="tab-navigation">
+    <li class="tab-navigationItem">
+      <a href="#tab-java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    <li class="tab-navigationItem">
+      <a href="#tab-kotlin">Kotlin</a>
     </li>    
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
     
     // this will be used later in several places
@@ -173,7 +173,7 @@ You can find detailed instructions on [API Keys page](/docs/carto-engine/mobile-
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
 
     // Get base projection from mapView, we'll need it later
@@ -245,17 +245,17 @@ in **Swift apps** you need one special trick:
   
 
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+<div class="js-tabs-mobilesdk">
+  <ul class="tab-navigation">
+    <li class="tab-navigationItem">
+      <a href="#tab-swift">Swift</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+    <li class="tab-navigationItem">
+      <a href="#tab-objectivec">Objective-C</a>
     </li>  
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift is-active">
+  <div id="tab-swift">
     {% highlight swift %}
     
     // following would go to ViewController.swift in simple app:
@@ -273,7 +273,7 @@ in **Swift apps** you need one special trick:
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
   {% highlight objc %}
   #import  <GLKit/GLKit.h>
 
@@ -333,17 +333,17 @@ The default storyboard template uses **UIView** class, you must use **NTMapView*
 
 7) **Add a Marker to the map** to do something useful with the map
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+<div class="js-tabs-mobilesdk">
+  <ul class="tab-navigation">
+    <li class="tab-navigationItem">
+      <a href="#tab-swift">Swift</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+    <li class="tab-navigationItem">
+      <a href="#tab-objectivec">Objective-C</a>
     </li>  
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift is-active">
+  <div id="tab-swift">
     {% highlight swift %}
     
     // MapView initialization in code: initialize and set it as view
@@ -388,7 +388,7 @@ The default storyboard template uses **UIView** class, you must use **NTMapView*
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
     {% highlight objc %}
     
     // we'll need projection later

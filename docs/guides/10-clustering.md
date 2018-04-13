@@ -1,4 +1,4 @@
-## Clustering
+s## Clustering
 
 CARTO Mobile SDK can dynamically cluster point data if large amounts of points need to be shown without cluttering the MapView. Clusters are formed based on the map zoom level and spatially close points are placed into the same cluster.
 
@@ -27,26 +27,26 @@ Clusters are generated dynamically, based on `VectorDataSource` data that loads 
 2. `ClusterElementBuilder` defines a single method `buildClusterElement`
 
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
+<div class="js-tabs-mobilesdk">
+   <ul class="tab-navigation">
+     <li class="tab-navigationItem">
+       <a href="#tab-java">Java</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-csharp">C#</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-objectivec">Objective-C</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-swift">Swift</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-kotlin">Kotlin</a>
+     </li>
+   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
 
     // 1. Initialize a local vector data source
@@ -65,7 +65,7 @@ Clusters are generated dynamically, based on `VectorDataSource` data that loads 
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="">
     {% highlight c## %}
 
     // 1. Create overlay layer for markers
@@ -83,7 +83,7 @@ Clusters are generated dynamically, based on `VectorDataSource` data that loads 
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
     {% highlight objc %}
 
     // 1. Initialize a local vector data source
@@ -104,7 +104,7 @@ Clusters are generated dynamically, based on `VectorDataSource` data that loads 
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
     {% highlight swift %}
   
     // 1. Initialize a local vector data source
@@ -125,7 +125,7 @@ Clusters are generated dynamically, based on `VectorDataSource` data that loads 
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
 
     // 1. Initialize a local vector data source
@@ -153,23 +153,23 @@ The Cluster Element Builder takes set of original markers (map objects) as input
 
 **Note:** It is highly recommended to reuse and cache styles to reduce memory usage. For example, a marker style with a specific number is only created once. Android and iOS samples use platform-specific graphic APIs to generate the bitmap for the marker. .NET example only uses BalloonPopup, which is slower but works the same across all platforms.
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+<div class="js-tabs-mobilesdk">
+  <ul class="tab-navigation">
+    <li class="tab-navigationItem">
+      <a href="#/0">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+    <li class="tab-navigationItem">
+      <a href="#/1">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+    <li class="tab-navigationItem">
+      <a href="#/2">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+    <li class="tab-navigationItem">
+      <a href="#/3">Swift</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
   
     private class MyClusterElementBuilder extends ClusterElementBuilder {
@@ -221,7 +221,7 @@ The Cluster Element Builder takes set of original markers (map objects) as input
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="">
     {% highlight c## %}
     public class MyClusterElementBuilder : ClusterElementBuilder
     {
@@ -247,7 +247,7 @@ The Cluster Element Builder takes set of original markers (map objects) as input
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
     {% highlight objc %}
 
     // .h
@@ -321,7 +321,7 @@ The Cluster Element Builder takes set of original markers (map objects) as input
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
     {% highlight swift %}
   
     public class MyClusterElementBuilder : NTClusterElementBuilder {
@@ -388,7 +388,7 @@ The Cluster Element Builder takes set of original markers (map objects) as input
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
   
     private inner class MyClusterElementBuilder internal constructor(context: Context) : ClusterElementBuilder() {

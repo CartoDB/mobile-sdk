@@ -23,27 +23,27 @@ First create the `CartoOnlineRoutingService` and then  the route with the `calcu
 
 **Note:** Calculating online routing makes a network call, so do NOT do it in UI thread.
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
+<div class="js-tabs-mobilesdk">
+   <ul class="tab-navigation">
+     <li class="tab-navigationItem">
+       <a href="#tab-java">Java</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-csharp">C#</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-objectivec">Objective-C</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-swift">Swift</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-kotlin">Kotlin</a>
+     </li>
+   </ul>
 
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
 
     CartoOnlineRoutingService onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
@@ -92,7 +92,7 @@ First create the `CartoOnlineRoutingService` and then  the route with the `calcu
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="tab-csharp">
     {% highlight csharp %}
   
     var onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
@@ -126,7 +126,7 @@ First create the `CartoOnlineRoutingService` and then  the route with the `calcu
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
     {% highlight objc %}
   
     NTCartoOnlineRoutingService* onlineRoutingService = [[NTCartoOnlineRoutingService alloc] initWithApiKey:@"nutiteq.osm.car"];
@@ -171,7 +171,7 @@ First create the `CartoOnlineRoutingService` and then  the route with the `calcu
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
     {% highlight swift %}
   
     let onlineRoutingService = NTCartoOnlineRoutingService(source: "nutiteq.osm.car");
@@ -207,7 +207,7 @@ First create the `CartoOnlineRoutingService` and then  the route with the `calcu
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
   
     val onlineRoutingService = CartoOnlineRoutingService("nutiteq.osm.car");

@@ -25,26 +25,26 @@ The resulting `GeocodingResultVector` is just a list of results, you can loop th
 
 **Note:** As the service is making web requests, then you should NOT call `CalculateAddresses` from your UI thread.
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
+<div class="js-tabs-mobilesdk">
+   <ul class="tab-navigation">
+     <li class="tab-navigationItem">
+       <a href="#tab-java">Java</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-csharp">C#</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-objectivec">Objective-C</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-swift">Swift</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-kotlin">Kotlin</a>
+     </li>
+   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
   
     TomTomOnlineGeocodingService service = new TomTomOnlineGeocodingService("<your-tomtom-key>");
@@ -56,7 +56,7 @@ The resulting `GeocodingResultVector` is just a list of results, you can loop th
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="tab-csharp">
     {% highlight csharp %}
 
     var service = new TomTomOnlineGeocodingService("<your-tomtom-key>");
@@ -68,7 +68,7 @@ The resulting `GeocodingResultVector` is just a list of results, you can loop th
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
     {% highlight objc %}
   
     NTTomTomOnlineGeocodingService* service = [[NTTomTomOnlineGeocodingService alloc] initWithApiKey:@"<your-tomtom-key>"];
@@ -81,7 +81,7 @@ The resulting `GeocodingResultVector` is just a list of results, you can loop th
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
     {% highlight swift %}
   
     let service = NTTomTomOnlineGeocodingService(apiKey: "<your-tomtom-key>")
@@ -93,7 +93,7 @@ The resulting `GeocodingResultVector` is just a list of results, you can loop th
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
 
     val service = TomTomOnlineGeocodingService("<your-tomtom-key>")
@@ -118,26 +118,26 @@ The following sample uses TomTom service, but Mapbox and Pelias services can be 
 **Note:** As the service is making web requests, then you should NOT call `CalculateAddresses` from your UI thread.
 
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
+<div class="js-tabs-mobilesdk">
+   <ul class="tab-navigation">
+     <li class="tab-navigationItem">
+       <a href="#tab-java">Java</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-csharp">C#</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-objectivec">Objective-C</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-swift">Swift</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-kotlin">Kotlin</a>
+     </li>
+   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
 
     ReverseGeocodingService service = new TomTomOnlineReverseGeocodingService("<your-tomtom-token>");
@@ -154,7 +154,7 @@ The following sample uses TomTom service, but Mapbox and Pelias services can be 
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="tab-csharp">
     {% highlight csharp %}
 
     var service = new TomTomOnlineReverseGeocodingService("<your-tomtom-token>");
@@ -171,7 +171,7 @@ The following sample uses TomTom service, but Mapbox and Pelias services can be 
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
     {% highlight objc %}
 
     NTReverseGeocodingService* service = [[NTTomTomOnlineReverseGeocodingService alloc] initWithApiKey:@"<your-tomtom-key>"];
@@ -188,7 +188,7 @@ The following sample uses TomTom service, but Mapbox and Pelias services can be 
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
     {% highlight swift %}
 
     let service = NTTomTomOnlineReverseGeocodingService(apiKey: "<your-tomtom-key>")
@@ -205,7 +205,7 @@ The following sample uses TomTom service, but Mapbox and Pelias services can be 
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
 
     val service = TomTomOnlineReverseGeocodingService("<your-tomtom-key>")
@@ -236,26 +236,26 @@ First, you need to initialize a package manager and a listener to download packa
 Use your `PackageManager` within `PackageManagerReverseGeocodingService` or `PackageManagerGeocodingService` as given in sample below. Then define the `GeocodingRequest` and start geocoding using service's `calculateAddresses` and read response as `GeocodingResult`, just as in Online Geocoding and Reverse Geocoding samples above.
 
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
+<div class="js-tabs-mobilesdk">
+   <ul class="tab-navigation">
+     <li class="tab-navigationItem">
+       <a href="#tab-java">Java</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-csharp">C#</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-objectivec">Objective-C</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-swift">Swift</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-kotlin">Kotlin</a>
+     </li>
+   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
 
     // Note: Provide an absolute path for your geocoding package folder
@@ -273,7 +273,7 @@ Use your `PackageManager` within `PackageManagerReverseGeocodingService` or `Pac
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="tab-csharp">
     {% highlight csharp %}
   
     // Note: Provide an absolute path for your geocoding package folder
@@ -290,7 +290,7 @@ Use your `PackageManager` within `PackageManagerReverseGeocodingService` or `Pac
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
     {% highlight objc %}
 
     // Note: Provide an absolute path for your geocoding package folder
@@ -307,7 +307,7 @@ Use your `PackageManager` within `PackageManagerReverseGeocodingService` or `Pac
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
     {% highlight swift %}
   
     // Note: Provide an absolute path for your geocoding package folder
@@ -324,7 +324,7 @@ Use your `PackageManager` within `PackageManagerReverseGeocodingService` or `Pac
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
 
     // Note: Provide an absolute path for your geocoding package folder

@@ -29,26 +29,26 @@ Creation and management of `PackageManager`, which handles offline package disco
 
 This DataSource is used as "virtual datasource" - it you create it on top of another datasource, normally `HTTPTileDataSource`.
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
+<div class="js-tabs-mobilesdk">
+   <ul class="tab-navigation">
+     <li class="tab-navigationItem">
+       <a href="#tab-java">Java</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-csharp">C#</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-objectivec">Objective-C</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-swift">Swift</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-kotlin">Kotlin</a>
+     </li>
+   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
 
     // 1. Create a Bing raster data source. Note: tiles start from level 1
@@ -65,7 +65,7 @@ This DataSource is used as "virtual datasource" - it you create it on top of ano
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="tab-csharp">
     {% highlight csharp %}
 
     // 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
@@ -83,7 +83,7 @@ This DataSource is used as "virtual datasource" - it you create it on top of ano
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
     {% highlight objc %}
 
     // 1. Initialize a OSM raster data source from MapQuest Open Tiles
@@ -102,7 +102,7 @@ This DataSource is used as "virtual datasource" - it you create it on top of ano
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
     {% highlight swift %}
 
     // 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
@@ -122,7 +122,7 @@ This DataSource is used as "virtual datasource" - it you create it on top of ano
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
 
     // 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
@@ -150,26 +150,26 @@ CARTO Mobile SDK also enables you to download needed map tiles from online to yo
 
 **Note:** Most public map tile servers **do not allow** such bulk tile downloading, so this feature is meant to be used with your own server. Also check that the download would not be too big. You can check number of downloaded tiles with [tile count estimator](https://www.mapbox.com/help/offline-estimator/). We do not suggest let users to download larger areas than few thousand tiles.
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
+<div class="js-tabs-mobilesdk">
+   <ul class="tab-navigation">
+     <li class="tab-navigationItem">
+       <a href="#tab-java">Java</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-csharp">C#</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-objectivec">Objective-C</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-swift">Swift</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-kotlin">Kotlin</a>
+     </li>
+   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
 
     Projection projection = contentView.mapView.getOptions().getBaseProjection();
@@ -209,7 +209,7 @@ CARTO Mobile SDK also enables you to download needed map tiles from online to yo
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="tab-csharp">
     {% highlight csharp %}
       
     Projection projection = ContentView.MapView.Options.BaseProjection;
@@ -256,7 +256,7 @@ CARTO Mobile SDK also enables you to download needed map tiles from online to yo
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
     {% highlight objc %}
 
     NTProjection* projection = [[mapView getOptions] getBaseProjection];
@@ -309,7 +309,7 @@ CARTO Mobile SDK also enables you to download needed map tiles from online to yo
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
     {% highlight swift %}
       
     let projection = contentView.map.getOptions().getBaseProjection()
@@ -356,7 +356,7 @@ CARTO Mobile SDK also enables you to download needed map tiles from online to yo
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
       
     val projection = contentView!!.map.options.baseProjection
@@ -405,26 +405,26 @@ You can use your favorite MBTiles file creator go convert your data to MBTiles, 
 
 #### Raster MBTiles
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-     <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
+<div class="js-tabs-mobilesdk">
+   <ul class="tab-navigation">
+     <li class="tab-navigationItem">
+       <a href="#tab-java">Java</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-csharp">C#</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-objectivec">Objective-C</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-swift">Swift</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-kotlin">Kotlin</a>
+     </li>
+   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
 
     MBTilesTileDataSource tileDataSource = new MBTilesTileDataSource("MBTILES_FILE_FULL_PATH");
@@ -435,7 +435,7 @@ You can use your favorite MBTiles file creator go convert your data to MBTiles, 
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="tab-csharp">
     {% highlight csharp %}
   
     var tileDataSource = new MBTilesTileDataSource(filePath);
@@ -446,7 +446,7 @@ You can use your favorite MBTiles file creator go convert your data to MBTiles, 
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
     {% highlight objc %}
   
     NTTileDataSource* tileDataSource = [[NTMBTilesTileDataSource alloc] initWithPath: @"MBTILES_FILE_FULL_PATH"];
@@ -457,7 +457,7 @@ You can use your favorite MBTiles file creator go convert your data to MBTiles, 
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
     {% highlight swift %}
   
     let tileDataSource = NTMBTilesTileDataSource(path: "MBTILES_FILE_FULL_PATH")
@@ -468,7 +468,7 @@ You can use your favorite MBTiles file creator go convert your data to MBTiles, 
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="">
     {% highlight swift %}
   
     val tileDataSource = MBTilesTileDataSource("MBTILES_FILE_FULL_PATH")
@@ -489,26 +489,26 @@ You can also use **CARTO Builder** to define map styling using web interface , s
 
 In this sample we use mbtiles downloaded from openmaptiles.org, these are in [openmaptiles schema](http://openmaptiles.org/schema). As also CARTO bundled vector maps use same schema, then the built-in *CARTO_BASEMAP_STYLE_VOYAGER* and other styles happen to be compatible with this, and can be used to render the data.
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
+<div class="js-tabs-mobilesdk">
+   <ul class="tab-navigation">
+     <li class="tab-navigationItem">
+       <a href="#tab-java">Java</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-csharp">C#</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-objectivec">Objective-C</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-swift">Swift</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-kotlin">Kotlin</a>
+     </li>
+   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
 
     MBTilesTileDataSource tileDataSource = new MBTilesTileDataSource("estonia.mbtiles");
@@ -522,7 +522,7 @@ In this sample we use mbtiles downloaded from openmaptiles.org, these are in [op
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="tab-csharp">
     {% highlight csharp %}
 
     var tileDataSource = new MBTilesTileDataSource("estonia.mbtiles");
@@ -536,7 +536,7 @@ In this sample we use mbtiles downloaded from openmaptiles.org, these are in [op
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
     {% highlight objc %}
   
     NSString* path = [[NSBundle mainBundle] pathForResource:@"estonia" ofType:@"mbtiles"];
@@ -551,7 +551,7 @@ In this sample we use mbtiles downloaded from openmaptiles.org, these are in [op
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
     {% highlight swift %}
 
     let tileDataSource = NTMBTilesTileDataSource(path: Bundle.main.path(forResource: "estonia", ofType: "mbtiles"))
@@ -565,7 +565,7 @@ In this sample we use mbtiles downloaded from openmaptiles.org, these are in [op
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
   
     val tileDataSource = MBTilesTileDataSource("estonia.mbtiles")
@@ -588,26 +588,26 @@ In this sample we use mbtiles downloaded from openmaptiles.org, these are in [op
 
 The following example displays how you can load GeoJSON from bundled assets and render it on the map. Make sure you have the loaded .geojson file as a bundled Asset (Android) or Resource (iOS), you can get a copy from [here](https://github.com/CartoDB/mobile-dotnet-samples/blob/master/AdvancedMap.Droid/Assets/cities15000.geojson)
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
+<div class="js-tabs-mobilesdk">
+   <ul class="tab-navigation">
+     <li class="tab-navigationItem">
+       <a href="#tab-java">Java</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-csharp">C#</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-objectivec">Objective-C</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-swift">Swift</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-kotlin">Kotlin</a>
+     </li>
+   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="">
   {% highlight java %}
 
     // Initialize a local vector data source
@@ -667,7 +667,7 @@ The following example displays how you can load GeoJSON from bundled assets and 
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="tab-csharp">
     {% highlight csharp %}
       
     // Read json from assets and add to map
@@ -718,7 +718,7 @@ The following example displays how you can load GeoJSON from bundled assets and 
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
     {% highlight objc %}
 
     // Initialize a local vector data source
@@ -758,7 +758,7 @@ The following example displays how you can load GeoJSON from bundled assets and 
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
     {% highlight swift %}
 
     let projection = contentView.map.getOptions().getBaseProjection()
@@ -803,7 +803,7 @@ The following example displays how you can load GeoJSON from bundled assets and 
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
       
     val source = LocalVectorDataSource(contentView!!.map.options.baseProjection)
