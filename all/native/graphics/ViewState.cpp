@@ -533,7 +533,7 @@ namespace carto {
             ViewState viewState;
             viewState._ignoreMinZoom = true;
             viewState.setFocusPos(bounds.getCenter());
-            viewState.setCameraPos(bounds.getCenter() + cameraVec);
+            viewState.setCameraPos(bounds.getCenter() + MapVec(0, 0, cameraVec.length()));
             viewState.setZoom((range.getMin() + range.getMax()) * 0.5f);
             viewState.setScreenSize(_width, _height);
             viewState.cameraChanged();
