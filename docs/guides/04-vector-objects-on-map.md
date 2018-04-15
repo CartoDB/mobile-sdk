@@ -1,4 +1,4 @@
-s## Vector Objects on Map
+## Vector Objects on Map
 
 In following examples, **Vector Elements**  - Markers, Points, Lines, Polygons, Texts, BalloonPopups and a 3D model  - are added by the application.
 For each object, the styling is defined and objects are created based on given coordinates.
@@ -197,8 +197,6 @@ Add a marker and apply marker styling using the following code:
   </div>
     
 </div>
-
-#### Example Marker on a Mobile Map
 
 ![pin](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/pin.png)
 
@@ -480,8 +478,6 @@ Lines can be added to the same VectorDataSource, it is defined by an array of Ma
     
 </div>
 
-#### Example Line on a Mobile Map
-
 ![line](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/line.png)
 
 ### Polygon or Multi-Polygon
@@ -750,8 +746,6 @@ Add a polygon and apply polygon styling using the following code. The following 
     
 </div>
 
-#### Example Polygon on a Mobile App
-
 ![polygon](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/polygon.png)
 
 ### Text
@@ -875,8 +869,6 @@ Add text and apply text styling using the following code.
   </div>  
 </div>
 
-#### Example Text on a Mobile Map
-
 ![text](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/text.png)
 
 ### BalloonPopup
@@ -887,7 +879,7 @@ A BalloonPopup appears often based on click event of an object, but you can use 
 - Arrow (_arrow.png_)  as the "Right Image"
 - Styled appearance of tuned radius values
 
-**Tip:** To use these styling elements as part of your own project, copy the above .png files, to your local map application project. These are in our [sample apps in github}(https://github.com/CartoDB/mobile-sdk-samples/).
+**Tip:** To use these styling elements as part of your own project, copy the above .png files, to your local map application project. These are in our [sample apps in github](https://github.com/CartoDB/mobile-sdk-samples/).
 
 <div class="js-tabs-mobilesdk">
    <ul class="tab-navigation">
@@ -1044,8 +1036,6 @@ A BalloonPopup appears often based on click event of an object, but you can use 
     
 </div>
 
-#### Example BalloonPopup on a Mobile Map
-
 ![popup](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/popup.png)
 
 ### 3D Model Objects
@@ -1169,8 +1159,6 @@ The following procedure describes how to setup and add a 3D object to your mobil
     {% endhighlight %}
   </div>
 </div>
-
-#### Example 3D Model Object on a Mobile Map
 
 ![3d animated](https://github.com/CartoDB/mobile-ios-samples/blob/gh-pages/carto-mobile-sdk-animated.gif?raw=true)
 

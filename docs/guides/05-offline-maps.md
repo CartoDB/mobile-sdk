@@ -468,8 +468,8 @@ You can use your favorite MBTiles file creator go convert your data to MBTiles, 
     {% endhighlight %}
   </div>
 
-  <div id="">
-    {% highlight swift %}
+  <div id="tab-kotlin">
+    {% highlight kotlin %}
   
     val tileDataSource = MBTilesTileDataSource("MBTILES_FILE_FULL_PATH")
     val mbTilesLayer = RasterTileLayer(tileDataSource)
@@ -607,7 +607,7 @@ The following example displays how you can load GeoJSON from bundled assets and 
      </li>
    </ul>
 
-  <div id="">
+  <div id="tab-java">
   {% highlight java %}
 
     // Initialize a local vector data source
