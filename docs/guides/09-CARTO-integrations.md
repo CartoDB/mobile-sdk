@@ -34,27 +34,26 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
 
 1) defining map parameters first:
 
-<div class="js-TabPanes">
-
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+<div class="js-tabs-mobilesdk">
+  <ul class="tab-navigation">
+    <li class="tab-navigationItem">
+      <a href="#tab-java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+    <li class="tab-navigationItem">
+      <a href="#tab-csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+    <li class="tab-navigationItem">
+      <a href="#tab-objectivec">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+    <li class="tab-navigationItem">
+      <a href="#tab-swift">Swift</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    <li class="tab-navigationItem">
+      <a href="#tab-kotlin">Kotlin</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
 
     private String getConfigJson() {
@@ -129,7 +128,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="tab-csharp">
     {% highlight csharp %}
 
     static string CartoCSS
@@ -206,7 +205,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
     {% highlight objc %}
 
     - (NSString*) getConfig
@@ -265,7 +264,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
     {% highlight swift %}
 
     public func getConfig() -> String? {
@@ -316,7 +315,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
 
      fun getConfigJson(): String? {
@@ -396,27 +395,27 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
 
 2) Now that the config is set up, you initiate the map and create Layer to be added to the MapView. This snippet inits vector tiles, but you can change the default **vector layer mode to false** if you want to get a raster tiles.
 
-<div class="js-TabPanes">
+<div class="js-tabs-mobilesdk">
 
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+  <ul class="tab-navigation">
+    <li class="tab-navigationItem">
+      <a href="#/0">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+    <li class="tab-navigationItem">
+      <a href="#/1">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+    <li class="tab-navigationItem">
+      <a href="#/2">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+    <li class="tab-navigationItem">
+      <a href="#/2">Swift</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    <li class="tab-navigationItem">
+      <a href="#/2">Kotlin</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
 
     final String config = getConfigJson();
@@ -446,7 +445,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="tab-csharp">
     {% highlight csharp %}
 
     JsonValue config = JsonUtils.VectorLayerConfigJson;
@@ -474,7 +473,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
     {% highlight objc %}
 
     NTCartoMapsService* mapsService = [[NTCartoMapsService alloc] init];
@@ -492,7 +491,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
     {% highlight swift %}
 
     let config = getConfig()
@@ -511,7 +510,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
 
     val config = getConfigJson()
@@ -548,27 +547,27 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
 
 If you have created **Named map** using CARTO Maps API then map is already configured in the server, and map initiation is simpler:
 
-<div class="js-TabPanes">
+<div class="js-tabs-mobilesdk">
 
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+  <ul class="tab-navigation">
+    <li class="tab-navigationItem">
+      <a href="#/0">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+    <li class="tab-navigationItem">
+      <a href="#/1">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+    <li class="tab-navigationItem">
+      <a href="#/2">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+    <li class="tab-navigationItem">
+      <a href="#/2">Swift</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    <li class="tab-navigationItem">
+      <a href="#/2">Kotlin</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
 
     final CartoMapsService service = new CartoMapsService();
@@ -598,7 +597,7 @@ If you have created **Named map** using CARTO Maps API then map is already confi
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="tab-csharp">
     {% highlight csharp %}
 
     MapView.ConfigureNamedVectorLayers("tpl_69f3eebe_33b6_11e6_8634_0e5db1731f59");
@@ -622,7 +621,7 @@ If you have created **Named map** using CARTO Maps API then map is already confi
     {% endhighlight %}
     </div>
 
-    <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+    <div id="tab-objectivec">
     {% highlight objc %}
 
     NTCartoMapsService* mapsService = [[NTCartoMapsService alloc] init];
@@ -638,7 +637,7 @@ If you have created **Named map** using CARTO Maps API then map is already confi
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
     {% highlight swift %}
 
     let service = NTCartoMapsService()
@@ -658,7 +657,7 @@ If you have created **Named map** using CARTO Maps API then map is already confi
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
 
     val service = CartoMapsService()
@@ -696,27 +695,27 @@ CARTO’s **SQL API** allows you to interact with your tables and data inside CA
 
 **Note:** In mobile SDK you can only **SELECT** data from public tables without api_key for higher security. Private tables and using api_key is not allowed from mobile directly. If you need these, you need to proxy CARTO SQL API to a custom API towards your app, so api_key requests are done from server to server
 
-<div class="js-TabPanes">
+<div class="js-tabs-mobilesdk">
 
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+  <ul class="tab-navigation">
+    <li class="tab-navigationItem">
+      <a href="#/0">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+    <li class="tab-navigationItem">
+      <a href="#/1">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+    <li class="tab-navigationItem">
+      <a href="#/2">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+    <li class="tab-navigationItem">
+      <a href="#/2">Swift</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    <li class="tab-navigationItem">
+      <a href="#/2">Kotlin</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
 
     static final String query = "SELECT * FROM cities15000 WHERE population > 100000";
@@ -749,7 +748,7 @@ CARTO’s **SQL API** allows you to interact with your tables and data inside CA
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="tab-csharp">
     {% highlight csharp %}
 
     const string query = "SELECT * FROM cities15000 WHERE population > 100000";
@@ -789,7 +788,7 @@ CARTO’s **SQL API** allows you to interact with your tables and data inside CA
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
     {% highlight objc %}
 
     // Only get cities with over 100k, or else it will be too many results
@@ -825,7 +824,7 @@ CARTO’s **SQL API** allows you to interact with your tables and data inside CA
     {% endhighlight %}
   </div>
     
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
   {% highlight swift %}
 
     let query = "SELECT * FROM cities15000 WHERE population > 100000"
@@ -860,7 +859,7 @@ CARTO’s **SQL API** allows you to interact with your tables and data inside CA
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
 
     val query = "SELECT * FROM cities15000 WHERE population > 100000"

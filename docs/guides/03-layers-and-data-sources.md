@@ -39,70 +39,66 @@ The layers are added from bottom to top order.
 
 This adds to map CARTO built-in vector tile service with generic streetmaps, you just set styling and all the rest is done automatically.
 
- <div class="js-TabPanes">
-   <ul class="Tabs">
-     <li class="Tab js-Tabpanes-navItem--lang is-active">
-       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+<div class="js-tabs-mobilesdk">
+   <ul class="tab-navigation">
+     <li class="tab-navigationItem">
+       <a href="tab-java">Java</a>
      </li>
-     <li class="Tab js-Tabpanes-navItem--lang">
-       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+     <li class="tab-navigationItem">
+       <a href="#tab-csharp">C#</a>
      </li>
-     <li class="Tab js-Tabpanes-navItem--lang">
-       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+     <li class="tab-navigationItem">
+       <a href="#tab-objective">Objective-C</a>
      </li>
-     <li class="Tab js-Tabpanes-navItem--lang">
-       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+     <li class="tab-navigationItem">
+       <a href="#tab-swift">Swift</a>
      </li>
-     <li class="Tab js-Tabpanes-navItem--lang">
-       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+     <li class="tab-navigationItem">
+       <a href="#tab-kotlin">Kotlin</a>
      </li>
    </ul>
 
-   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+<div id="tab-java">
      {% highlight java %}
   
      CartoOnlineVectorTileLayer layer = new CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_POSITRON);
      mapView.getLayers().add(layer);
 
      {% endhighlight %}
-   </div>
-
-   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+</div>
+<div id="tab-csharp">
      {% highlight csharp %}
   
      var layer = new CartoOnlineVectorTileLayer(CartoBaseMapStyle.CartoBasemapStylePositron);
      MapView.Layers.Add(layer);
 
      {% endhighlight %}
-   </div>
-
-   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+</div>
+<div id="tab-objectivec">
      {% highlight objc %}
   
      NTCartoOnlineVectorTileLayer* layer = [[NTCartoOnlineVectorTileLayer alloc] initWithStyle:NT_CARTO_BASEMAP_STYLE_POSITRON];
      [[self.mapView getLayers] add:layer];
   
      {% endhighlight %}
-   </div>
-
-   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+</div>
+<div id="tab-swift">
      {% highlight swift %}
 
      let layer = NTCartoOnlineVectorTileLayer(style: NTCartoBaseMapStyle.CARTO_BASEMAP_STYLE_POSITRON)
      mapView?.getLayers()?.add(layer)
 
      {% endhighlight %}
-   </div>
-
-   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+</div>
+<div id="tab-kotlin">
      {% highlight kotlin %}
 
      val layer = CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_POSITRON)
      mapView?.layers?.add(layer)
 
      {% endhighlight %}
-   </div>
- </div>
+</div>
+</div>
 
 #### Basemap layer: CARTO Satellite
 
@@ -114,70 +110,70 @@ For certain maps - especially for **Satellite imagery** (sourced from HERE) CART
 * here.normal.day@2x
 
 
- <div class="js-TabPanes">
-   <ul class="Tabs">
-     <li class="Tab js-Tabpanes-navItem--lang is-active">
-       <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-     </li>
-     <li class="Tab js-Tabpanes-navItem--lang">
-       <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-     </li>
-     <li class="Tab js-Tabpanes-navItem--lang">
-       <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-     </li>
-     <li class="Tab js-Tabpanes-navItem--lang">
-       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-     </li>
-     <li class="Tab js-Tabpanes-navItem--lang">
-       <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-     </li>
-   </ul>
+ <div class="js-tabs-mobilesdk">
+<ul class="tab-navigation">
+  <li class="tab-navigationItem">
+    <a href="#tab-java">Java</a>
+  </li>
+  <li class="tab-navigationItem">
+    <a href="#tab-csharp">C#</a>
+  </li>
+  <li class="tab-navigationItem">
+    <a href="#tab-objectivec">Objective-C</a>
+  </li>
+  <li class="tab-navigationItem">
+    <a href="#tab-swift">Swift</a>
+  </li>
+  <li class="tab-navigationItem">
+    <a href="#tab-kotlin">Kotlin</a>
+  </li>
+</ul>
 
-   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-     {% highlight java %}
-  
-     CartoOnlineVectorTileLayer layer = new CartoOnlineRasterTileLayer("here.satellite.day");
-     mapView.getLayers().add(layer);
+<div id="tab-java">
+  {% highlight java %}
 
-     {% endhighlight %}
-   </div>
+  CartoOnlineVectorTileLayer layer = new CartoOnlineRasterTileLayer("here.satellite.day");
+  mapView.getLayers().add(layer);
 
-   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-     {% highlight csharp %}
-  
-     var layer = new CartoOnlineRasterTileLayer("here.satellite.day");
-     MapView.Layers.Add(layer);
+  {% endhighlight %}
+</div>
 
-     {% endhighlight %}
-   </div>
+<div id="tab-csharp">
+  {% highlight csharp %}
 
-   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-     {% highlight objc %}
-  
-     NTCartoOnlineVectorTileLayer* layer = [[NTCartoOnlineRasterTileLayer alloc] initWithSource:@"here.satellite.day"];
-     [[self.mapView getLayers] add:layer];
-  
-     {% endhighlight %}
-   </div>
+  var layer = new CartoOnlineRasterTileLayer("here.satellite.day");
+  MapView.Layers.Add(layer);
 
-   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-     {% highlight swift %}
+  {% endhighlight %}
+</div>
 
-     let layer = NTCartoOnlineRasterTileLayer(source: "here.satellite.day")
-     mapView?.getLayers()?.add(layer)
+<div id="tab-objectivec">
+  {% highlight objc %}
 
-     {% endhighlight %}
-   </div>
+  NTCartoOnlineVectorTileLayer* layer = [[NTCartoOnlineRasterTileLayer alloc] initWithSource:@"here.satellite.day"];
+  [[self.mapView getLayers] add:layer];
 
-   <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-     {% highlight kotlin %}
+  {% endhighlight %}
+</div>
 
-     val layer = CartoOnlineRasterTileLayer("here.satellite.day")
-     mapView?.layers?.add(layer)
+<div id="tab-swift">
+  {% highlight swift %}
 
-     {% endhighlight %}
-   </div>
- </div>
+  let layer = NTCartoOnlineRasterTileLayer(source: "here.satellite.day")
+  mapView?.getLayers()?.add(layer)
+
+  {% endhighlight %}
+</div>
+
+<div id="tab-kotlin">
+  {% highlight kotlin %}
+
+  val layer = CartoOnlineRasterTileLayer("here.satellite.day")
+  mapView?.layers?.add(layer)
+
+  {% endhighlight %}
+</div>
+</div>
 
 
 
@@ -212,26 +208,26 @@ As example following code loads online raster tiles into your map view. You can 
 
 The following tags are supported in the URL definition: **zoom, x, y, xflipped, yflipped, quadkey**.
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
+<div class="js-tabs-mobilesdk">
+   <ul class="tab-navigation">
+     <li class="tab-navigationItem">
+       <a href="#tab-java">Java</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-csharp">C#</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-objectivec">Objective-C</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-swift">Swift</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-kotlin">Kotlin</a>
+     </li>
+   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
 
     String url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US";
@@ -242,8 +238,7 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
 
     {% endhighlight %}
   </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+<div id="tab-csharp">
     {% highlight csharp %}
 
     string url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US";
@@ -253,9 +248,9 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
     MapView.Layers.Add(baseLayer);
 
     {% endhighlight %}
-  </div>
+</div>
 
-  <div class="Carousel-item js-Tabpanes-item">
+<div id="tab-objectivec">
     {% highlight objc %}
 
     NSString* url = @"http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US";
@@ -265,9 +260,9 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
     [[mapView getLayers] add:baseLayer];
 
     {% endhighlight %}
-  </div>
+</div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+<div id="tab-swift">
     {% highlight swift %}
 
     let url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US"
@@ -277,9 +272,9 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
     mapView?.getLayers()?.add(baseLayer)
 
     {% endhighlight %}
-  </div>
+</div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+<div id="tab-kotlin">
     {% highlight kotlin %}
 
     val url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US"
@@ -289,8 +284,7 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
     mapView?.layers?.add(baseLayer)
 
     {% endhighlight %}
-  </div>
-    
+</div>    
 </div>
 
 

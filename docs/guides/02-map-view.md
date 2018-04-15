@@ -40,26 +40,27 @@ An app can implement a custom `MapEventListener` to receive notifications about 
 
 Create a new class called **MyMapEventListener** which implements MapEventListner interface.
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+
+<div class="js-tabs-mobilesdk">
+  <ul class="tab-navigation">
+    <li class="tab-navigationItem">
+      <a href="#tab-java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+    <li class="tab-navigationItem">
+      <a href="#tab-csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+    <li class="tab-navigationItem">
+      <a href="#tab-objectivec">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+    <li class="tab-navigationItem">
+      <a href="#tab-swift">Swift</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    <li class="tab-navigationItem">
+      <a href="#tab-kotlin">Kotlin</a>
     </li>
   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
 
     public class MyMapEventListener extends MapEventListener {
@@ -119,16 +120,14 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
     }
 
     {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-    {% highlight c## %}
-
-    public class MyMapListener : MapEventListener
+</div>
+<div id="tab-csharp">
+  {% highlight c## %}
+  public class MyMapListener : MapEventListener
     {
         MapView mapView;
         LocalVectorDataSource dataSource;
-		
+    
         BalloonPopup _oldClickLabel;
 
         public MyMapListener(MapView mapView, LocalVectorDataSource dataSource)
@@ -156,7 +155,7 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
 
             // Check the type of the click
             ClickType type = mapClickInfo.ClickType;
-                	
+                  
             string clickMsg = "Unknown click Type";
 
             if (type == ClickType.ClickTypeSingle)
@@ -192,13 +191,10 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
 
         }
     }
-
     {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+</div>
+<div id="tab-objectivec">
     {% highlight objc %}
-
     @interface  MyMapEventListener : NTMapEventListener
 
     @property NTMapView* mapView;
@@ -269,9 +265,8 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
     @end
 
     {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+</div>
+<div id="tab-swift">
     {% highlight swift %}
   
     public class MyMapEventListener : NTMapEventListener {
@@ -340,9 +335,8 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
     }
 
     {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+</div>
+<div id="tab-kotlin">
     {% highlight kotlin %}
   
     class MyMapEventListener(var mapView: MapView?, var vectorDataSource: LocalVectorDataSource?) : MapEventListener() {
@@ -407,6 +401,7 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
     
 </div>
 
+
 `MyMapEventListener` contains special functionality that shows, or hides, a small label text over a clicked object. The following label click event rules apply:
 
 - If you click on an object, it creates another map object as a **BalloonPopup**. This contains the text from the metadata of the clicked object. For this reason, our samples apps include a _Metadata field value_. You can use the metadata value directly, or use the **object unique ID** as the metadata, to query details about the clicked object from the database.
@@ -418,42 +413,39 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
 
 Apply the following code to initialize listener events for map clicks.
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
+<div class="js-tabs-mobilesdk">
+  <ul class="tab-navigation">
+    <li class="tab-navigationItem">
+      <a href="#tab-java">Java</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
+    <li class="tab-navigationItem">
+      <a href="#tab-csharp">C#</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
+    <li class="tab-navigationItem">
+      <a href="#tab-objectivec">Objective-C</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
+    <li class="tab-navigationItem">
+      <a href="#tab-swift">Swift</a>
     </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
+    <li class="tab-navigationItem">
+      <a href="#tab-kotlin">Kotlin</a>
     </li>
   </ul>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
   
     mapView.setMapEventListener(new MyMapEventListener(mapView, source));
 
     {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+</div>
+<div id="tab-csharp">
     {% highlight c## %}
   
     MapView.MapEventListener = new MyMapListener(MapView, source);
 
     {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+</div>
+<div id="tab-objectivec">
     {% highlight objc %}
   
     MyMapEventListener* listener = [[MyMapEventListener alloc] init];
@@ -461,22 +453,20 @@ Apply the following code to initialize listener events for map clicks.
     [mapView setMapEventListener:listener];
 
     {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+</div>
+<div id="tab-swift">
     {% highlight swift %}
   
     mapView?.setMapEventListener(MyMapEventListener(mapView: mapView, vectorDataSource: source))
 
     {% endhighlight %}
-  </div>
+</div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+<div id="tab-kotlin">
     {% highlight swift %}
 
     mapView?.mapEventListener = MyMapEventListener(mapView, source)
 
     {% endhighlight %}
   </div>
-    
 </div>
