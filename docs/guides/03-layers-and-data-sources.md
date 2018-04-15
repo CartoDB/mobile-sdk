@@ -48,7 +48,7 @@ This adds to map CARTO built-in vector tile service with generic streetmaps, you
        <a href="#tab-csharp">C#</a>
      </li>
      <li class="tab-navigationItem">
-       <a href="#tab-objective">Objective-C</a>
+       <a href="#tab-objectivec">Objective-C</a>
      </li>
      <li class="tab-navigationItem">
        <a href="#tab-swift">Swift</a>
