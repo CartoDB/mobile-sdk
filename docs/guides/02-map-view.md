@@ -122,7 +122,7 @@ Create a new class called **MyMapEventListener** which implements MapEventListne
     {% endhighlight %}
 </div>
 <div id="tab-csharp">
-  {% highlight c## %}
+  {% highlight csharp %}
   public class MyMapListener : MapEventListener
     {
         MapView mapView;
@@ -439,7 +439,7 @@ Apply the following code to initialize listener events for map clicks.
     {% endhighlight %}
 </div>
 <div id="tab-csharp">
-    {% highlight c## %}
+    {% highlight csharp %}
   
     MapView.MapEventListener = new MyMapListener(MapView, source);
 
