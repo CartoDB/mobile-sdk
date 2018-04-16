@@ -276,10 +276,16 @@ namespace carto {
         }
 
         MapRange zoomRange = options.getZoomRange();
-        float zoom = GeneralUtils::Clamp(getZoom(), getMinZoom(), zoomRange.getMax());
+        float zoom = GeneralUtils::Clamp(_zoom, getMinZoom(), zoomRange.getMax());
 
         if (zoom != getZoom()) {
+            MapVec cameraVec = _cameraPos - _focusPos;
+            double length = cameraVec.length();
+            double newLength = _zoom0Distance / std::pow(2.0f, zoom);
+            MapPos cameraPos = _focusPos + cameraVec * (newLength / length);
+
             setZoom(zoom);
+            setCameraPos(cameraPos);
 
             cameraChanged();
         }
@@ -387,9 +393,7 @@ namespace carto {
                     MapVec cameraVec = _cameraPos - _focusPos;
                     double length = cameraVec.length();
                     double newLength = _zoom0Distance / std::pow(2.0f, _zoom);
-                    cameraVec *= newLength / length;
-                    _cameraPos = _focusPos;
-                    _cameraPos += cameraVec;
+                    _cameraPos = _focusPos + cameraVec * (newLength / length);
         
                     _cameraChanged = true;
                 }
