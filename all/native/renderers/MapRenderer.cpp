@@ -682,9 +682,10 @@ namespace carto {
     }
     
     void MapRenderer::clearAndBindScreenFBO(const Color& color, bool depth, bool stencil) {
-        GLint currentBoundFBO = 0;
-        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &currentBoundFBO);
-        _currentBoundFBOs.push_back(currentBoundFBO);
+        GLint prevBoundFBO = 0;
+        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevBoundFBO);
+        GLuint bufferMask = GL_COLOR_BUFFER_BIT | (depth ? GL_DEPTH_BUFFER_BIT : 0) | (stencil ? GL_STENCIL_BUFFER_BIT : 0);
+        _currentBoundFBOs.emplace_back(static_cast<GLuint>(prevBoundFBO), bufferMask);
 
         if (!_screenFrameBuffer) {
             _screenFrameBuffer = _frameBufferManager->createFrameBuffer(_viewState.getWidth(), _viewState.getHeight(), true, depth, stencil);
@@ -694,7 +695,7 @@ namespace carto {
 
         glClearColor(color.getR() / 255.0f, color.getG() / 255.0f, color.getB() / 255.0f, color.getA() / 255.0f);
         glClearStencil(0);
-        glClear(GL_COLOR_BUFFER_BIT | (depth ? GL_DEPTH_BUFFER_BIT : 0) | (stencil ? GL_STENCIL_BUFFER_BIT : 0));
+        glClear(bufferMask);
 
        	GLContext::CheckGLError("MapRenderer::clearAndBindScreenFBO");
     }
@@ -706,15 +707,19 @@ namespace carto {
             Log::Error("MapRenderer::blendAndUnbindScreenFBO: No bound FBOs");
             return;
         }
-        GLuint currentBoundFBO = _currentBoundFBOs.back();
+
+        GLuint prevBoundFBO = _currentBoundFBOs.back().first;
+        GLuint bufferMask = _currentBoundFBOs.back().second;
         _currentBoundFBOs.pop_back();
         
         if (!_screenFrameBuffer) {
             return; // should not happen, just safety
         }
-        _screenFrameBuffer->discard(false, true, true);
+        if (bufferMask & (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT)) {
+            _screenFrameBuffer->discard(false, (bufferMask & GL_DEPTH_BUFFER_BIT) != 0, (bufferMask & GL_STENCIL_BUFFER_BIT) != 0);
+        }
 
-        glBindFramebuffer(GL_FRAMEBUFFER, currentBoundFBO);
+        glBindFramebuffer(GL_FRAMEBUFFER, prevBoundFBO);
 
         if (!_screenBlendShader) {
             _screenBlendShader = _shaderManager->createShader(blend_shader_source);
