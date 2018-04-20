@@ -51,7 +51,7 @@ static const int NATIVE_NO_COORDINATE = -1;
     return self;
 }
 
--(id)initWithCoder:(NSCoder *)aDecoder {
+-(id)initWithCoder:(NSCoder*)aDecoder {
     self = [super initWithCoder:aDecoder];
     [self initBase];
     return self;
@@ -116,7 +116,7 @@ static const int NATIVE_NO_COORDINATE = -1;
     }
 }
 
--(void)glkView:(GLKView *)view drawInRect:(CGRect)rect {
+-(void)glkView:(GLKView*)view drawInRect:(CGRect)rect {
     if (_viewContext && _active) {
         EAGLContext* context = [EAGLContext currentContext];
         if (context != _viewContext) {
@@ -172,7 +172,7 @@ static const int NATIVE_NO_COORDINATE = -1;
     screenCoord->y *= _scale;
 }
 
--(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+-(void)touchesBegan:(NSSet*)touches withEvent:(UIEvent*)event {
     for (UITouch* pointer in [touches allObjects]) {
         if (!_pointer1) {
             _pointer1 = pointer;
@@ -194,7 +194,7 @@ static const int NATIVE_NO_COORDINATE = -1;
     }
 }
 
--(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+-(void)touchesMoved:(NSSet*)touches withEvent:(UIEvent*)event {
     if (_pointer1) {
         CGPoint screenPos1 = [_pointer1 locationInView:self];
         [self transformScreenCoord:&screenPos1];
@@ -208,13 +208,13 @@ static const int NATIVE_NO_COORDINATE = -1;
     }
 }
 
--(void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
+-(void)touchesCancelled:(NSSet*)touches withEvent:(UIEvent*)event {
     [_baseMapView onInputEvent:NATIVE_ACTION_CANCEL x1:NATIVE_NO_COORDINATE y1:NATIVE_NO_COORDINATE x2:NATIVE_NO_COORDINATE y2:NATIVE_NO_COORDINATE];
     _pointer1 = nil;
     _pointer2 = nil;
 }
 
--(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
+-(void)touchesEnded:(NSSet*)touches withEvent:(UIEvent*)event {
     if (_pointer2 && [touches containsObject:_pointer2]) {
         // Dual pointer, second pointer goes up first
         CGPoint screenPos1 = [_pointer1 locationInView:self];
