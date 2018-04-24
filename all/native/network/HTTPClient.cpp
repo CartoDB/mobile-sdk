@@ -14,8 +14,8 @@
 #define CARTO_HTTP_SOCKET_IMPL WinSockImpl
 #include "network/HTTPClientWinSockImpl.h"
 #elif defined(__APPLE__)
-#define CARTO_HTTP_SOCKET_IMPL CFImpl
-#include "network/HTTPClientCFImpl.h"
+#define CARTO_HTTP_SOCKET_IMPL IOSImpl
+#include "network/HTTPClientIOSImpl.h"
 #elif defined(__ANDROID__)
 #define CARTO_HTTP_SOCKET_IMPL AndroidImpl
 #include "network/HTTPClientAndroidImpl.h"
