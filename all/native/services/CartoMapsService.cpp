@@ -361,6 +361,12 @@ namespace carto {
                     }
                     auto vectorTileDecoder = std::make_shared<CartoVectorTileDecoder>(layerIds, layerStyleSets);
                     auto baseDataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.mvt" + urlTemplateSuffix);
+#if defined(__APPLE__)
+                    // Force using gzipped vector tiles on iOS, our decoder supports this
+                    std::map<std::string, std::string> headers;
+                    headers["Accept-Encoding"] = "gzip";
+                    baseDataSource->setHTTPHeaders(headers);
+#endif
                     auto dataSource = std::make_shared<MemoryCacheTileDataSource>(baseDataSource); // in memory cache allows to change style quickly
                     tileLayer = std::make_shared<VectorTileLayer>(dataSource, vectorTileDecoder);
                 }

@@ -203,6 +203,12 @@ namespace carto {
         Log::Debugf("CartoOnlineTileDataSource::loadOnlineTile: Loading %s", url.c_str());
 
         std::map<std::string, std::string> requestHeaders = NetworkUtils::CreateAppRefererHeader();
+#if defined(__APPLE__)
+        // Temporary hack to get gzipped tile on iOS. This works because our tile decoder can detect gzip encoding.
+        if (_source == "carto.streets") {
+            requestHeaders["Accept-Encoding"] = "gzip";
+        }
+#endif
         std::map<std::string, std::string> responseHeaders;
         std::shared_ptr<BinaryData> responseData;
         int statusCode = -1;
