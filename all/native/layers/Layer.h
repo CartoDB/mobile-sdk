@@ -69,6 +69,17 @@ namespace carto {
         void setCullDelay(int delay);
     
         /**
+         * Returns the opacity of this layer.
+         * @return The opacity of this layer.
+         */
+        float getOpacity() const;
+        /**
+         * Set the opacity of the layer.
+         * @param opacity The opacity of the layer in range (0..1). 1.0 is the default value.
+         */
+        void setOpacity(float opacity);
+
+        /**
          * Returns the visibility of this layer.
          * @return True if the layer is visible.
          */
@@ -91,17 +102,6 @@ namespace carto {
          */
         void setVisibleZoomRange(const MapRange& range);
         
-        /**
-         * Returns the opacity of this layer.
-         * @return The opacity of this layer.
-         */
-        float getOpacity() const;
-        /**
-         * Set the opacity of the layer.
-         * @param opacity The opacity of the layer in range (0..1). 1.0 is the default value.
-         */
-        void setOpacity(float opacity);
-
         /**
          * Tests whether this layer is being currently updated.
          * @return True when the layer is being updated or false when the layer is in steady state.
@@ -176,12 +176,12 @@ namespace carto {
 
         std::atomic<int> _cullDelay;
         
-        bool _visible;
+        std::atomic<float> _opacity;
+        
+        std::atomic<bool> _visible;
         
         MapRange _visibleZoomRange;
 
-        float _opacity;
-        
         mutable std::recursive_mutex _mutex;
 
     private:

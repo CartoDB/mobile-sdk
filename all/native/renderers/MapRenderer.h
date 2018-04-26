@@ -211,8 +211,6 @@ namespace carto {
         
         BillboardSorter _billboardSorter;
         std::vector<std::shared_ptr<BillboardDrawData> > _billboardDrawDataBuffer;
-    
-        bool _billboardsChanged;
         std::shared_ptr<BillboardPlacementWorker> _billboardPlacementWorker;
         std::thread _billboardPlacementThread;
     
@@ -223,6 +221,7 @@ namespace carto {
         const std::shared_ptr<Options> _options;
         
         bool _surfaceChanged;
+        mutable std::atomic<bool> _billboardsChanged;
         mutable std::atomic<bool> _redrawPending;
 
         ThreadSafeDirectorPtr<RedrawRequestListener> _redrawRequestListener;

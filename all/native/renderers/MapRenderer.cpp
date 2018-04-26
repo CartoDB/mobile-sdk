@@ -58,7 +58,6 @@ namespace carto {
         _watermarkRenderer(*options),
         _billboardSorter(),
         _billboardDrawDataBuffer(),
-        _billboardsChanged(false),
         _billboardPlacementWorker(std::make_shared<BillboardPlacementWorker>()),
         _billboardPlacementThread(),
         _animationHandler(*this),
@@ -66,6 +65,7 @@ namespace carto {
         _layers(layers),
         _options(options),
         _surfaceChanged(false),
+        _billboardsChanged(false),
         _redrawPending(false),
         _redrawRequestListener(),
         _mapRendererListener(),
@@ -616,12 +616,8 @@ namespace carto {
         }
 
         // Update billobard placements/visibility
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            if (_billboardsChanged) {
-                _billboardsChanged = false;
-                _billboardPlacementWorker->init(BILLBOARD_PLACEMENT_TASK_DELAY);
-            }
+        if (_billboardsChanged.exchange(false)) {
+            _billboardPlacementWorker->init(BILLBOARD_PLACEMENT_TASK_DELAY);
         }
         
         handleRenderThreadCallbacks();
@@ -782,7 +778,6 @@ namespace carto {
     }
      
     void MapRenderer::billboardsChanged() {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
         _billboardsChanged = true;
     }
         
