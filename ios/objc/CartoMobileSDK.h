@@ -106,6 +106,7 @@
 #import "NTBitmapUtils.h"
 #import "NTLog.h"
 #import "NTLogEventListener.h"
+#import "utils/ExceptionWrapper.h"
 
 #import "NTBalloonPopup.h"
 #import "NTCustomPopup.h"
