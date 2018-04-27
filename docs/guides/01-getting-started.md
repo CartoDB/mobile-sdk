@@ -1,130 +1,40 @@
 ## Getting Started
 
-The following workflow guides you through the process of getting started with the Mobile SDK.
 
-#### Prerequisites
+### Prerequisites
 
-You must have account access to develop location apps with CARTO Engine.
+You need CARTO **Enterprise** or **Enterprise trial** account for Mobile SDK. Please  [contact us](mailto:sales@carto.com) for an offer and free trials. 
 
-- View our [pricing page](https://carto.com/pricing/) for details about which accounts include the Mobile SDK
+#### Registering your App
 
-- Access to Mobile SDK features are managed by CARTO. If you cannot reproduce any of the steps in this Getting Started section, [contact us](mailto:sales@carto.com) to ensure that you have account access, and that the Mobile SDK features are enabled for your account
+You **must register all your mobile apps** under your CARTO.com account settings. You'll get the **mobile app license code**, which is needed for your app code. There are no limits how many apps you can register, and every platform (also Xamarin iOS and Xamarin Android) is regarded as separate app and needs separate registration.
 
-### Downloading the SDK
+You can find detailed instructions on [API Keys page](../API-keys/)
 
-To begin using the Mobile SDK, download the required SDK packages and libraries based on your mobile platform. [Contact us](mailto:support@carto.com) if you have questions about Mobile SDK packages and what features are included.
+### Android app
 
-There are multiple ways to download SDK packages:
+1) **Install SDK** by adding the following to the `build.gradle` of your project:
 
-- Use the Managed library package based on your platform - this is the **suggested method** for managing SDK features, and also contains some default style files
+  {% highlight groovy linenos%}
 
-- Download specific versions of SDK packages as zip files, and add them to you projects
+  // use the latest version number from https://github.com/CartoDB/mobile-sdk/releases
 
-#### Managed Libraries
-
-These SDK libraries are managed by CARTO and include all the required libraries to support the Mobile SDK. In some cases, managed libraries are not available and the direct download package url is provided.
-
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem is-active">
-      <a href="#/0" class="js-Tabpanes-navLink">Android</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/1" class="js-Tabpanes-navLink">iOS</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/2" class="js-Tabpanes-navLink">Xamarin</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem">
-      <a href="#/3" class="js-Tabpanes-navLink">Windows Phone 10</a>
-    </li>
-  </ul>
-
-  <div class="Carousel-item js-Tabpanes-item is-active">
-    {% highlight groovy %}
-
-    // Add to your build.gradle file:
-    
-    dependencies {
-        compile 'com.carto:carto-mobile-sdk:4.1.2@aar'
-    }
-
-    {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-    {% highlight groovy %}
-
-    // Add to your CocoaPods Podfile:
-
-    pod 'CartoMobileSDK', '4.1.2'
-
-    {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-    {% highlight groovy %}
-
-    // Download CartoMobileSDK.Android or CartoMobileSDK.iOS nuget for the Xamarin SDK package
-
-    url for Android: "https://www.nuget.org/packages/CartoMobileSDK.Android/"
-    url for iOS: "https://www.nuget.org/packages/CartoMobileSDK.iOS/"
-
-    {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item">
-    {% highlight groovy %}
-
-    Use NuGet package manager in Visual Studio:
-    Search for "CartoMobileSDK.UWP" or use url: "https://www.nuget.org/packages/CartoMobileSDK.UWP"
-
-    {% endhighlight %}
-  </div>
-</div>
-
-#### Download SDK manually
-
-If you do not want to use package manager, you can download SDK from the [Github mobile-sdk project releases page](https://github.com/CartoDB/mobile-sdk/releases)
-
-### Registering your App
-
-You must register your mobile applications under your CARTO.com account settings. Once an app is added, you can retrieve the mobile app license key, which is needed for your app code.
-
-You can find detailed instructions on [API Keys page](/docs/carto-engine/mobile-sdk/API-keys/)
-
-
-### Creating your Project
-
-Once your mobile apps are registered and you have your API Keys, it is recommended to familiarize yourself with the setup for the platform that you are using.
-Some of these platforms contain unique map features that are only available based on the mobile platform. You can then use sample mobile apps and add basic and advanced map features.
-
-The following platform-specific instructions allow you to create your first working 
-mapping app using the Mobile SDK.
-
-#### Android Implementation
-
-If using Android as the mobile platform, follow this implementation procedure.
-
-1) Add the following to the `build.gradle` of your project:
-
-  {% highlight groovy %}
   dependencies {
       compile 'com.carto:carto-mobile-sdk:4.1.2@aar'
   }
   {% endhighlight %}
  
-2) Define **INTERNET** permission for your AndroidManifest.xml
+2) **Define INTERNET permission** for the app in your *AndroidManifest.xml*
 
-  {% highlight xml %}
+  {% highlight xml linenos %}
   <uses-permission android:name="android.permission.INTERNET"/>
   {% endhighlight %}
 
-3) Define your application layout
+3) Define your **application layout**
 
   Define **main layout** as **res/layout/main.xml**, so that it contains `com.carto.ui.MapView` element:
 
-  {% highlight xml %}
+  {% highlight xml linenos %}
   <?xml version="1.0" encoding="utf-8"?>
   <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
       xmlns:tools="http://schemas.android.com/tools"
@@ -139,15 +49,25 @@ If using Android as the mobile platform, follow this implementation procedure.
   </LinearLayout>
   {% endhighlight %}
 
-4) Find the MapView object and add a base layer
+4) In your app code **connect to the MapView object and add a basemap layer**
 
-  Define the MapView type in your main activity class and load layout. 
-  This enables you to load the MapView from the layout. _The object itself was already created during the layout creation process, this step is specific to finding and referencing the MapView object in your request._
+  Following enables to load the MapView from the layout. _The object itself was already created during the layout creation process, this step is specific to finding and referencing the MapView object in your request._
 
-##### Java
+<div class="js-tabs-mobilesdk">
+  <ul class="tab-navigation">
+    <li class="tab-navigationItem">
+      <a href="#tab-java">Java</a>
+    </li>
+    <li class="tab-navigationItem">
+      <a href="#tab-kotlin">Kotlin</a>
+    </li>
+  </ul>
 
-  {% highlight java %}
+  <div id="tab-java">
+  {% highlight java linenos %}
   public class MainActivity extends Activity {
+	  
+      // make sure you replace the String value with the one from carto.com mobile app registration !  
       final String LICENSE = "YOUR_LICENSE_KEY";
 
       private MapView mapView;
@@ -169,11 +89,14 @@ If using Android as the mobile platform, follow this implementation procedure.
       }
   }
   {% endhighlight %}
+  </div>
 
-##### Kotlin
-
-  {% highlight kotlin %}
+  <div id="tab-kotlin">
+  {% highlight kotlin linenos %}
   class MainActivity : AppCompatActivity() {
+	  
+      // make sure you replace the String value with the one from carto.com mobile app registration !  
+	  
       val LICENSE = "YOUR_LICENSE_KEY"
 
       var mapView: MapView? = null
@@ -194,40 +117,163 @@ If using Android as the mobile platform, follow this implementation procedure.
       }
   }
   {% endhighlight %}
+  </div>
+</div>
 
-5) Run the Android app
+5) **Run the Android app**
 
-  The map should appear with the default world map provided by OpenStreetMap, as defined in your Activity. You can zoom, rotate, and tilt with these default settings.
+  The map should appear with the default tyle. You can zoom, rotate, and tilt the map with touch.
 
-#### iOS Implementation
 
-If using iOS as the mobile platform, follow this implementation procedure.
+6) Do something useful with the map - **add a styled Marker for a point**
 
-1) Create new project in Xcode and add Mobile SDK framework using Podfile
+<div class="js-tabs-mobilesdk">
+  <ul class="tab-navigation">
+    <li class="tab-navigationItem">
+      <a href="#tab-java">Java</a>
+    </li>
+    <li class="tab-navigationItem">
+      <a href="#tab-kotlin">Kotlin</a>
+    </li>    
+  </ul>
 
-  -  Create a new ‘Single View application’ in your Xcode project
+  <div id="tab-java">
+    {% highlight java %}
+    
+    // this will be used later in several places
+    Projection proj = mapView.getOptions().getBaseProjection();
 
-  -  Get current version of CARTO Mobile SDK using CocoaPod: 
+    // 1. Initialize an vector data source where to put the elements
+    LocalVectorDataSource vectorDataSource1 = new LocalVectorDataSource(proj);
 
-  {% highlight groovy %}
+    // 2. Initialize a vector layer with the previous data source
+    VectorLayer vectorLayer1 = new VectorLayer(vectorDataSource1);
+
+    // 3. Add the previous vector layer to the map
+    mapView.getLayers().add(vectorLayer1);
+
+    // 4. Set limited visible zoom range for the vector layer (optional)
+    vectorLayer1.setVisibleZoomRange(new MapRange(10, 24));
+	
+    // 5. Create marker style
+    MarkerStyleBuilder markerStyleBuilder = new MarkerStyleBuilder();
+    markerStyleBuilder.setSize(30);
+    markerStyleBuilder.setColor(new Color(0xFF00FF00)); // green
+
+    MarkerStyle markerStyle1 = markerStyleBuilder.buildStyle();
+
+    // 6. Add marker
+    MapPos pos1 = proj.fromWgs84(new MapPos(24.646469, 59.426939)); // Tallinn
+    Marker marker1 = new Marker(pos1, markerStyle1);
+
+    // 7. Add the marker to the datasource
+    vectorDataSource1.add(marker1);
+	
+	
+    {% endhighlight %}
+  </div>
+
+  <div id="tab-kotlin">
+    {% highlight kotlin %}
+
+    // Get base projection from mapView, we'll need it later
+    val projection = mapView?.options?.baseProjection
+
+    //1. Create a vector data source where to put the elements
+    val source = LocalVectorDataSource(projection)
+
+    // 2. Initialize layer, add to MapView
+    val layer = VectorLayer(source)
+    mapView?.layers?.add(layer)
+
+    // 3. Create a Marker style, using default marker bitmap here
+    val markerStyleBuilder = MarkerStyleBuilder()
+    markerStyleBuilder.size = 30F
+    markerStyleBuilder.color = Color(0, 255, 0, 255) // green + opacity byte
+    val markerStyle1 = builder.buildStyle()
+
+    // 4. Define marker position and create the marker
+    val pos1 = projection?.fromWgs84(MapPos(24.651488, 59.423581)) // Tallinn
+    val marker1 = Marker(pos1, markerStyle1)
+
+    // 5. Add the marker to the data source
+    vectorDataSource1.add(marker1)
+
+    {% endhighlight %}
+  </div>
+      
+</div>
+
+
+### iOS app
+
+1) **Create new project**. The simplest is to create a new ‘Single View application’ in your Xcode project
+
+2) **Configure Cocapod Podfile** to load SDK to your project. If you do not use Cocoapod, then you can also load SDK and add as plain .framework  to your project structure from the [Mobile SDK Releases](https://github.com/CartoDB/mobile-sdk/releases) page.
+
+{% highlight groovy %}
 
   // Add to your CocoaPods Podfile:
-
+  // use the latest version number from https://github.com/CartoDB/mobile-sdk/releases
   pod 'CartoMobileSDK', '4.1.2'
 
-  {% endhighlight %}
+{% endhighlight %}
 
-2)  Modify Controller for Map View
+
+3) Load/Update Cocoapods, and **open .xcworkspace** (instead of xcodeproj) to make use of Cocoapod. Run following in terminal, in your project folder
+{% highlight ssh %}
+pod install
+{% endhighlight %}
+
+4)  Modify Controller for **Map View**:
+
+  - Replace `YOUR_LICENSE_KEY` with your Mobile App License API, see App Registration above.
+
+In **Objective-C apps** you need some special tricks:
 
   - Extend ViewController and add MapView manipulation code into it. _Ensure it is Objective C++, not plain Objective C class_
+  - Rename `ViewController.m` (comes with template) to `ViewController.mm`, to avoid Objective C++ compilation issues
+  - Implement **ViewController.h** to extend **GLKViewController**, instead of *UIViewController*
 
-  - Rename `ViewController.m` (comes with template) to `ViewController.mm`, to avoid compilation issues
+in **Swift apps** you need one special trick:
 
-  - Implement **ViewController.h** to extend **GLKViewController**, instead of
-    UIViewController
+ - Add YOURPROJECT.Swift-Bridging-Header.h to your project with simply one line:
+ 
+{% highlight swift %}
+ #import <CartoMobileSDK/CartoMobileSDK.h>
+{% endhighlight %}
+  
 
-  - You must replace `YOUR_LICENSE_KEY` with your [Mobile Apps and API Key](#registering-your-app) in the code below
 
+<div class="js-tabs-mobilesdk">
+  <ul class="tab-navigation">
+    <li class="tab-navigationItem">
+      <a href="#tab-swift">Swift</a>
+    </li>
+    <li class="tab-navigationItem">
+      <a href="#tab-objectivec">Objective-C</a>
+    </li>  
+  </ul>
+
+  <div id="tab-swift">
+    {% highlight swift %}
+    
+    // following would go to ViewController.swift in simple app:
+    
+    var License = "YOUR_LICENSE_KEY";
+
+    
+    // MapView initialization in code: initialize and set it as view
+     let mapView = NTMapView();
+     view = mapView;
+        
+     let baseLayer = NTCartoOnlineVectorTileLayer(style: NTCartoBaseMapStyle.CARTO_BASEMAP_STYLE_VOYAGER);
+     mapView?.getLayers().add(baseLayer);
+    
+    {% endhighlight %}
+  </div>
+
+  <div id="tab-objectivec">
   {% highlight objc %}
   #import  <GLKit/GLKit.h>
 
@@ -264,72 +310,163 @@ If using iOS as the mobile platform, follow this implementation procedure.
 
   @end
   {% endhighlight %}
+  </div>
 
-3) Modify storyboard to enable Map View
+</div>
 
-  _The default storyboard template uses UIView class, you must use NTMapView instead._
 
-  **Note:** If you are using iPhone (**Main\_iPhone.storyboard**) or iPad (**Main\_iPad.storyboard**) files for iOS, you must repeat this step to change the default storyboard.
+5) **Modify Storyboard** to enable Map View
 
-  -  Open Main.Storyboard, select *View Controller Scene -&gt; View Controller* -&gt; *View*
+The default storyboard template uses **UIView** class, you must use **NTMapView** class instead:
 
+
+  - Open Main.Storyboard, select *View Controller Scene &gt; View Controller* &gt; *View*
   - From Navigator window, select **Identity Inspector**, change the first parameter (Custom Class) to **NTMapView** (from the default UIView).
 
-  <span class="wrap-border"><img src="../img//xcode_storyboard.jpg" alt="Xcode storyboard" /></span>
+**Note:** If you are using both iPhone (**Main\_iPhone.storyboard**) or iPad (**Main\_iPad.storyboard**) files for iOS, you must repeat the steps to change the default storyboard.
 
-4) Run the iOS app
+  <span class="wrap-border"><img src="../../img/xcode_storyboard.jpg" alt="Xcode storyboard" /></span>
 
-  The map should appear with the default world map provided by OpenStreetMap, as defined in your ViewController. You can zoom, rotate, and tilt with these default settings.
+6) **Run the iOS app**
 
-#### Xamarin (Android and iOS) Implementation
+  The map should appear with Voyager style, as defined in your ViewController. You can zoom, rotate, and tilt with multi-touch.
 
-If using Xamarin as the mobile platform, follow these implementation procedures for Xamarin (Android) and Xamarin (iOS).
+7) **Add a Marker to the map** to do something useful with the map
 
-1. Add library as [nuget CartoMobileSDK.iOS](https://www.nuget.org/packages/CartoMobileSDK.iOS) and/or [nuget CartoMobileSDK.Android](https://www.nuget.org/packages/CartoMobileSDK.Android) from the main repo to your mobile app. 
+<div class="js-tabs-mobilesdk">
+  <ul class="tab-navigation">
+    <li class="tab-navigationItem">
+      <a href="#tab-swift">Swift</a>
+    </li>
+    <li class="tab-navigationItem">
+      <a href="#tab-objectivec">Objective-C</a>
+    </li>  
+  </ul>
 
-2. [Register your mobile app](#registering-your-app) to get the API Key
+  <div id="tab-swift">
+    {% highlight swift %}
+    
+    // MapView initialization in code: initialize and set it as view
+    let mapView = NTMapView();
+    view = mapView;
 
-    **Note:** If you are using both Xamarin Android and iOS, register each platform as its own app.
+    // Get base projection from mapView
+    let projection = mapView?.getOptions().getBaseProjection();
+    
+   // Create a vector data source, bucket where we'll put objects
+    let source = NTLocalVectorDataSource(projection: projection);
+    
+    // Initialize layer
+    let layer = NTVectorLayer(dataSource: source);
+    
+    // Add layer
+    mapView?.getLayers().add(layer);
+    
+    // define marker location. Make sure to use projection fromWgs84 to have proper coordinate system
+    let tallinn = projection?.fromWgs84(NTMapPos(x: 24.646469, y: 59.426939));
+    
+    // Create a vector data source, bucket where we'll put objects
+    let source = NTLocalVectorDataSource(projection: projection);
 
-3. Create a cross-platform project for your apps
+    // Initialize layer with datasource, add it to MapView
+    let layer = NTVectorLayer(dataSource: source);
+    self.getLayers().add(layer);
 
-    Each platform still needs to be registered as its own app, since many app aspects (such as UI, file system, and so on) are platform-specific. However, when executing API requests with the Mobile SDK, you can create one Xamarin project for Android and iOS and share the code. _Some exceptions apply in regards to API calls which need Android context, or file system references._ For example, the following API requests are platform specific:
+    // define marker style        
+    let builder = NTMarkerStyleBuilder();
+    builder?.setSize(15);
+    builder?.setColor(NTColor(r: 0, g: 255, b: 0, a: 255)); // green, alpha = no transarency
+    
+    // create marker and add to DataSource    
+    let marker = NTMarker(pos: tallinn, style: builder?.buildStyle());
+    source?.add(marker);
 
-    - Register license key: `MapView.RegisterLicense()`
-    - Create package manager: `new CartoPackageManager()`
+    // zoom map view focus to the marker                
+    mapView?.setFocus(tallinn, durationSeconds: 0);
+    mapView?.setZoom(15, durationSeconds: 0);
+    
+    {% endhighlight %}
+  </div>
 
-    Almost all of the map related API code (such as adding layers and objects to map, handling interactions and clicks, etc.) can be shared for iOS and Android through one project!
+  <div id="tab-objectivec">
+    {% highlight objc %}
+    
+    // we'll need projection later
+    NTEPSG3857* proj = [[NTEPSG3857 alloc] init];
 
-The following sections describe the individual platform setup requirements for Xamarin options.
+    // 1. Create a vector data source, bucket where we'll put objects
+    NTLocalVectorDataSource* vectorDataSource1 = [[NTLocalVectorDataSource alloc] initWithProjection:proj];
 
+    // 2. Initialize a vector layer with the previous data source
+    NTVectorLayer* vectorLayer1 = [[NTVectorLayer alloc] initWithDataSource:vectorDataSource1];
 
-##### Xamarin Forms Apps
+    // 3. Add the previous vector layer to the map
+    [[self getLayers] add:vectorLayer1];
+
+    // 4. Set visible zoom range for the vector layer (optional)
+    [vectorLayer1 setVisibleZoomRange:[[NTMapRange alloc] initWithMin:10 max:24]];
+    
+    // 5. Create a marker style, using default marker bitmap here
+    NTMarkerStyleBuilder* markerStyleBuilder = [[NTMarkerStyleBuilder alloc] init];
+    [markerStyleBuilder setSize:30];
+    [markerStyleBuilder setColor:[[NTColor alloc] initWithColor:0xFF00FF00]]; // green
+    NTMarkerStyle* markerStyle1 = [markerStyleBuilder buildStyle];
+
+    // 6. Define marker position and create the marker
+    NTMapPos* pos1 = [proj fromWgs84:[[NTMapPos alloc] initWithX:24.651488 y:59.423581]]; // Tallinn
+    NTMarker* marker1 = [[NTMarker alloc] initWithPos:pos1 style:markerStyle1];
+
+    // 7. Add the marker to the data source
+    [vectorDataSource1 add:marker1];
+    
+    {% endhighlight %}
+  </div>
+
+</div>
+
+### Xamarin (Android and iOS) .NET apps
+
+Preparation steps:
+
+1) **Create a project** for your apps
+
+Each platform needs to be registered as its own app, and app UI is created separately. However, when executing API requests with the Mobile SDK, you can create one Xamarin project for Android and iOS and share the code. _Some exceptions apply in regards to API calls which need Android context, or file system references._ For example, the following API requests are platform specific:
+
+ - Register license key: `MapView.RegisterLicense()`
+ - Create package manager: `new CartoPackageManager()`
+
+Almost all of the map related API code - such as adding layers and objects to map, handling interactions and clicks, etc. can be shared for iOS and Android through one project.
+
+2) **Add library** : to iOS app add [nuget CartoMobileSDK.iOS](https://www.nuget.org/packages/CartoMobileSDK.iOS) and to Android app add [nuget CartoMobileSDK.Android](https://www.nuget.org/packages/CartoMobileSDK.Android) 
+
+Setup on different platoforms is a bit different:
+
+#### a) Xamarin Forms Apps
 
 Xamarin Forms (version 3.3.0 and higher) support *Native Controls*. If you add Mobile SDK apps for iOS and Android platforms, Xamarin Native Controls is available by default. See the blog [_Embedding Native Controls into Xamarin.Forms_](https://blog.xamarin.com/embedding-native-controls-into-xamarin-forms) for details. 
 
 While you can share most of code using Native Controls, you just need to specify the platform when creating the project:
 
-<pre class="brush: csharp">
-#if __IOS__
+   {% highlight csharp %}
+ #if __IOS__
   // 1. iOS specific code
   var mapView = new Carto.Ui.MapView();
   mapView.Frame = new CGRect(20, 20, 280, 80);
   stack.Children.Add(mapView);
-#endif
+ #endif
+ 
   // 2. Indicate the common code from both platforms
   var baseLayer = new Carto.Layers.CartoOnlineVectorTileLayer(CartoBaseMapStyle.CartoBasemapStyleVoyager);
   mapView.Layers.Add(baseLayer);
-</pre>
+ {% endhighlight %}
 
-**Note:** Native Controls only work if you create or update `Form` in the code, using the xml definition will not work. This Xamrin development requirement is subject to change with each release. _Mobile SDK with Xamarin Forms is currently in being tested with Native apps._ Please [contact us](mailto:support@carto.com) if you have an issues.
+**Note:** Native Controls only work if you create or update `Form` in the code, using the *xaml* definition will not work. This Xamarin development requirement is subject to change with each release. _Mobile SDK with Xamarin Forms is currently in being tested with Native apps._ .
 
-##### Xamarin Android App
+#### b) Xamarin Android App
 
 Follow these steps to add native apps to your Xamarin Android package.
 
-1) Add the nuget package [CartoMobileSDK.Android](https://www.nuget.org/packages/CartoMobileSDK.Android) to your mobile app project
-
-2) Add MapView to your application main layout
+1) Add MapView to your **application main layout**
 
   {% highlight xml %} 
   <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -344,9 +481,9 @@ Follow these steps to add native apps to your Xamarin Android package.
   </LinearLayout>
   {% endhighlight %}
 
-3) Create MapView object, add a base layer
+2) **Create MapView** object, add a base layer
 
-  Load layout from a xml, and load the MapView from Layout. Or, create it with code. A definition of a base layer is enough for minimal map configuration.
+  Load layout from a xml, and load the MapView from Layout. You can also create MapView with code. A definition of a base layer is enough for minimal map configuration.
 
   {% highlight csharp %}
   using Carto.Ui;
@@ -378,16 +515,14 @@ Follow these steps to add native apps to your Xamarin Android package.
   }
   {% endhighlight %}
 
-##### Xamarin iOS App
+#### c) Xamarin iOS App
 
 Follow these steps to add apps to your Xamarin iOS package.
 
-1) Add the nuget package [CartoMobileSDK.iOS](https://www.nuget.org/packages/CartoMobileSDK.iOS) to your mobile app project
-
-2) **Add Map object to app view**. When using Storyboards, use *OpenGL ES View Controller* (GLKit.GLKViewController) as a template for the map and replace *GLKView* with *MapView* as the underlying view class.
+1) **Add Map object to app view**. When using Storyboards, use *OpenGL ES View Controller* (GLKit.GLKViewController) as a template for the map and replace *GLKView* with *MapView* as the underlying view class.
 In the example below, it is assumed that the outlet name of the map view is *Map*.
 
-3) **Initiate map, set base layer**
+2) **Initiate map, set base layer**
 
 Add into MainViewController.cs:
 
@@ -427,36 +562,59 @@ Add into MainViewController.cs:
       }
   }
   {% endhighlight %}
+  
+#### Add Marker points to the map
 
-#### UWP (Windows Phone) App
+This, as given before, is cross-platform code, covering both Xamarin and UWP:
+:
+{% highlight csharp %}
 
-If using UWP as the platform, follow this implementation procedure.
+    // projection will be needed later
+    Projection proj = MapView.Options.BaseProjection;
 
-_**Note:** The  UWP implementation of the Mobile SDK is experimental and less tested compared to the other platforms._ Please [contact us](mailto:support@carto.com) if you run into any issues.
+    // 1. Initialize an local data source - a bucket for your objects created in code
+    LocalVectorDataSource vectorDataSource1 = new LocalVectorDataSource(proj);
 
-1. Add library as [nuget CartoMobileSDK.UWP](https://www.nuget.org/packages/CartoMobileSDK.UWP) from the main repo to your mobile app. 
+    // 2. Initialize a vector layer with the previous data source
+    VectorLayer vectorLayer1 = new VectorLayer(vectorDataSource1);
 
-2. [Register your app](#registering-your-app) and select _Windows Phone_ as the app type
+    // 3. Add the previous vector layer to the map
+    MapView.Layers.Add(vectorLayer1);
 
-    - Ensure you enter the same application ID as your *Package.appmanifest > Packaging > Package name*. For example, the sample app ID is **c882d38a-5c09-4994-87f0-89875cdee539**
+    // 4. Set limited visible zoom range for the vector layer (optional)
+    vectorLayer1.VisibleZoomRange = new MapRange(10, 24);
+    
+    // 5. Create marker style
+    MarkerStyleBuilder markerStyleBuilder = new MarkerStyleBuilder();
+    markerStyleBuilder.Size = 30;
+    markerStyleBuilder.Color = new Color(0, 255, 0, 255); // green
+    MarkerStyle markerStyle1 = markerStyleBuilder.BuildStyle();
 
-3. Create a cross-platform project for your UWP app
+    // 6. Define marker position and create the marker
+    MapPos pos1 = proj.FromWgs84(new MapPos(24.646469, 59.426939)); // Tallinn
+    Marker marker1 = new Marker(pos1, markerStyle1);
 
-    You can create one .Net project for Android, iOS, UWP and share map-related code. Each platform still needs to be registered as its own app, since many app aspects (such as UI, file system, and so on) are platform-specific. However, when executing API requests with the Mobile SDK, you can create one project for adding layers and objects to map, handling interactions and click, and so on.
+    // 7. Add the marker to the datasource
+    vectorDataSource1.Add(marker1);
+    
+{% endhighlight %}
 
-    **Tip:** .Net sample app contains two solutions: one for UWP (Windows Phone) and another for Xamarin, and they share one project _hellomap-shared_ with map-related code.
+### Windows (UWP) native apps
 
-##### Creating an UWP App
+Regardless of the name, CARTO Mobile SDK **works also in Windows 10 desktop apps**, assuming that they are created as modern UWP apps and not classic winapi apps.
 
-Follow these steps in order to create a UWP (Windows Phone) mobile application.
+**Note:** The UWP implementation of the Mobile SDK is experimental.
 
-1) Add the nuget package [CartoMobileSDK.UWP](https://www.nuget.org/packages/CartoMobileSDK.UWP) to your mobile app project
+As app ID use same UUID as in your project's *Package.appmanifest > Packaging > Package name*. For example, the sample app ID is **c882d38a-5c09-4994-87f0-89875cdee539**
+
+1) Add the **nuget package** [CartoMobileSDK.UWP](https://www.nuget.org/packages/CartoMobileSDK.UWP) to your app project
 
 2) **Create MapView object, and add a base layer**
 
-You can create a MapView object with code. A definition of a base layer is enough for the minimal map configuration.
+It is much simpler to create a MapView object with code. A definition of a base layer is enough for the minimal map configuration.
 
-<pre class="brush: csharp">
+{% highlight csharp %}
+
 using Carto.Core;
 using Carto.Graphics;
 using Carto.DataSources;
@@ -465,12 +623,10 @@ using Carto.Layers;
 using Carto.Styles;
 using Carto.VectorElements;
 
-...
-
-    protected async override void OnLaunched(LaunchActivatedEventArgs e)
-    {
-        if (mapView == null)
-        {
+ protected async override void OnLaunched(LaunchActivatedEventArgs e)
+   {
+   if (mapView == null)
+      {
             // 1. Register CARTO app license
             Carto.Ui.MapView.RegisterLicense("YOUR_LICENSE_KEY");
 
@@ -492,298 +648,8 @@ using Carto.VectorElements;
 
     private Carto.Ui.MapView mapView; 
 
-...
+{% endhighlight %}
 
-</pre>
+3) **Add Marker points** to the map
 
-
-### Basic Map Features
-
-This section describes the basic map components that are required when creating mobile apps with the SDK. The following key objects are required for each mobile app:
-
-- **MapView** is the root object which goes to your app view hierarchy. It provides methods for directly manipulating the map and its view.
-  For example, you can set center location, zoom, and so on.
-
-- **Layer** (attached to MapView) is an object that visualizes map data.
-
-- **DataSource** (attached to Layer) is an object provides data to the layer.
-
-- **VectorElements** (attached to VectorDataSource) are individual map objects like markers, popups, lines.
-
-#### Layers
-
-Map is displayed as an ordered list of **Layers**. 
-There are two general classes of layers: 
-
-- **TileLayers** are used mostly for basemaps and in some cases, as overlays on top of basemap.
-- **VectorLayers** are used mostly as overlay layers for displaying individual map elements like points, texts, lines and polygons.
-
-##### DataSources
-
-Each map layer is connected to a **DataSource**, which defines the 
-data the layer displays. Several data source implementations are built directly into the Mobile SDK, but you can also define your own data sources.
-The most important built-in data sources are: 
-
-- `CartoOnlineTileDataSource` is used for retrieving basemap tiles from CARTO map servers
-
-- `LocalVectorDataSource` stores data locally in memory and is used for adding vector objects to the map, per each user session
-
-**Tip:** For details about selecting different DataSources for your mobile map layers, see [Data Sources](/docs/carto-engine/mobile-sdk/02-data-sources/).
-
-#### Basemap layer
-
-In most cases adding a basemap layer consists of creating a
-`CartoOnlineVectorTileLayer` object with specified style and adding
-the layer to the layer list of your Map View. The examples can be
-found in the code samples above in Creating your Project section.
-
-In addition, CARTO Mobile SDK supports downloading map packages to the device
-for offline use. `CartoOfflineVectorTileLayer` class can be used as a base layer in that case.
-
-#### Data layers
-
-In order to add vector elements (lines, popups, texts and so on) to the map, the first step requires
-constructing a DataSource for the elements and adding a `VectorLayer` to the map:
-
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>    
-  </ul>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-    {% highlight java %}
-    Projection proj = mapView.getOptions().getBaseProjection();
-
-    // 1. Initialize an local vector data source
-    LocalVectorDataSource vectorDataSource1 = new LocalVectorDataSource(proj);
-
-    // 2. Initialize a vector layer with the previous data source
-    VectorLayer vectorLayer1 = new VectorLayer(vectorDataSource1);
-
-    // 3. Add the previous vector layer to the map
-    mapView.getLayers().add(vectorLayer1);
-
-    // 4. Set limited visible zoom range for the vector layer (optional)
-    vectorLayer1.setVisibleZoomRange(new MapRange(10, 24));
-    {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-    {% highlight csharp %}
-    Projection proj = MapView.Options.BaseProjection;
-
-    // 1. Initialize an local vector data source
-    LocalVectorDataSource vectorDataSource1 = new LocalVectorDataSource(proj);
-
-    // 2. Initialize a vector layer with the previous data source
-    VectorLayer vectorLayer1 = new VectorLayer(vectorDataSource1);
-
-    // 3. Add the previous vector layer to the map
-    MapView.Layers.Add(vectorLayer1);
-
-    // 4. Set limited visible zoom range for the vector layer (optional)
-    vectorLayer1.VisibleZoomRange = new MapRange(10, 24);
-    {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-    {% highlight objc %}
-    // this was already initialized before
-    NTEPSG3857* proj = [[NTEPSG3857 alloc] init];
-
-    // 1. Initialize a local vector data source
-    NTLocalVectorDataSource* vectorDataSource1 = [[NTLocalVectorDataSource alloc] initWithProjection:proj];
-
-    // 2. Initialize a vector layer with the previous data source
-    NTVectorLayer* vectorLayer1 = [[NTVectorLayer alloc] initWithDataSource:vectorDataSource1];
-
-    // 3. Add the previous vector layer to the map
-    [[self getLayers] add:vectorLayer1];
-
-    // 4. Set visible zoom range for the vector layer (optional)
-    [vectorLayer1 setVisibleZoomRange:[[NTMapRange alloc] initWithMin:10 max:24]];
-    {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-    {% highlight swift %}
-    // MapView initialization in code: initialize and set it as view
-    let mapView = NTMapView();
-    view = mapView;
-
-    // Get base projection from mapView
-    let projection = mapView?.getOptions().getBaseProjection();
-    // Create a local vector data source
-    let source = NTLocalVectorDataSource(projection: projection);
-    // Initialize layer
-    let layer = NTVectorLayer(dataSource: source);
-    // Add layer
-    mapView?.getLayers().add(layer);
-    {% endhighlight %}
-  </div>
-    
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-    {% highlight kotlin %}
-    mapView = MapView(this)
-    setContentView(mapView)
-
-    // Get base projection from mapView
-    val projection = mapView?.options?.baseProjection
-    // Create a local vector data source
-    val source = LocalVectorDataSource(projection)
-    // Initialize layer
-    val layer = VectorLayer(source)
-    mapView?.layers?.add(layer)
-    {% endhighlight %}
-  </div>
-      
-</div>
-
-#### Vector Elements
-
-Once a `VectorLayer` is created (as described above), map objects such as markers can be added to the Datasource of the `VectorLayer` and thus visualized on the map.
-In following examples, **Vector Elements** (Markers, Points, Lines, Polygons, Texts and BalloonPopups) are added by the application. For each object, the styling is defined and objects are created based on given coordinates.
-
-**Note:** A popup (callout, bubble) which appears when you click on map is a vector element of its own, and should be added using map click listener. For details, see [Implementing MapEventListener](/docs/carto-engine/mobile-sdk/04-map-listeners/#implementing-mapeventlistener).
-
-#### Add a Marker
-
-Add a marker and apply marker styling using the following code:
-
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-    {% highlight java %}
-    // 1. Create marker style
-    MarkerStyleBuilder markerStyleBuilder = new MarkerStyleBuilder();
-    markerStyleBuilder.setSize(30);
-    markerStyleBuilder.setColor(new Color(0xFF00FF00)); // green
-
-    MarkerStyle markerStyle1 = markerStyleBuilder.buildStyle();
-
-    // 2. Add marker
-    MapPos pos1 = proj.fromWgs84(new MapPos(24.646469, 59.426939)); // Tallinn
-    Marker marker1 = new Marker(pos1, markerStyle1);
-
-    // 3. Add the marker to the datasource
-    vectorDataSource1.add(marker1);
-    {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-    {% highlight csharp %}
-    // 1. Create marker style
-    MarkerStyleBuilder markerStyleBuilder = new MarkerStyleBuilder();
-    markerStyleBuilder.Size = 30;
-    markerStyleBuilder.Color = new Color(0, 255, 0, 255); // green
-    MarkerStyle markerStyle1 = markerStyleBuilder.BuildStyle();
-
-    // 2. Define marker position and create the marker
-    MapPos pos1 = proj.FromWgs84(new MapPos(24.646469, 59.426939)); // Tallinn
-    Marker marker1 = new Marker(pos1, markerStyle1);
-
-    // 3. Add the marker to the datasource
-    vectorDataSource1.Add(marker1);
-    {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-    {% highlight objc %}
-    // 1. Create a marker style, using default marker bitmap here
-    NTMarkerStyleBuilder* markerStyleBuilder = [[NTMarkerStyleBuilder alloc] init];
-    [markerStyleBuilder setSize:30];
-    [markerStyleBuilder setColor:[[NTColor alloc] initWithColor:0xFF00FF00]]; // green
-    NTMarkerStyle* markerStyle1 = [markerStyleBuilder buildStyle];
-
-    // 2. Define marker position and create the marker
-    NTMapPos* pos1 = [proj fromWgs84:[[NTMapPos alloc] initWithX:24.651488 y:59.423581]]; // Tallinn
-    NTMarker* marker1 = [[NTMarker alloc] initWithPos:pos1 style:markerStyle1];
-
-    // 3. Add the marker to the data source
-    [vectorDataSource1 add:marker1];
-    {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-    {% highlight swift %}
-    // 1. Create a marker style, using default marker bitmap here
-    let markerStyleBuilder = NTMarkerStyleBuilder();
-    markerStyleBuilder?.setSize(30);
-    markerStyleBuilder?.setColor(NTColor.init(r: 0, g: 255, b: 0, a: 255)); // green
-    let markerStyle1 = markerStyleBuilder?.buildStyle();
-
-    // 2. Define marker position and create the marker
-    let pos1 = projection?.fromWgs84(NTMapPos(x: 24.651488, y: 59.423581)); // Tallinn
-    let marker1 = NTMarker(pos: pos1, style: markerStyle1);
-
-    // 3. Add the marker to the data source
-    vectorDataSource1?.add(marker1);
-    {% endhighlight %}
-  </div>
-    
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-    {% highlight kotlin %}
-    // 1. Create a marker style, using default marker bitmap here
-    val markerStyleBuilder = MarkerStyleBuilder()
-    markerStyleBuilder.size = 30F
-    markerStyleBuilder.color = Color(0, 255, 0, 255) // green
-    val markerStyle1 = builder.buildStyle()
-
-    // 2. Define marker position and create the marker
-    val pos1 = projection?.fromWgs84(MapPos(24.651488, 59.423581)) // Tallinn
-    val marker1 = Marker(pos1, markerStyle1)
-
-    // 3. Add the marker to the data source
-    vectorDataSource1.add(marker1)
-    {% endhighlight %}
-  </div>
-    
-</div>
-
-### Sample Apps
-
-The following sample apps demonstrate more complex features of the SDK.
-You can use them as a basis for your own app.
-
-#### Android Samples
-
-* [https://github.com/CartoDB/mobile-android-samples](https://github.com/CartoDB/mobile-android-samples)
-
-#### iOS Samples
-
-* [https://github.com/CartoDB/mobile-ios-samples](https://github.com/CartoDB/mobile-ios-samples)
-
-#### Xamarin and Windows Phone (UWP) Samples
-
-* [https://github.com/CartoDB/mobile-dotnet-samples](https://github.com/CartoDB/mobile-dotnet-samples)
+See [sample code above](#add-marker-points-to-the-map) under Xamarin section. The code is exactly the same.

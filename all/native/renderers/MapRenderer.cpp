@@ -58,7 +58,6 @@ namespace carto {
         _watermarkRenderer(*options),
         _billboardSorter(),
         _billboardDrawDataBuffer(),
-        _billboardsChanged(false),
         _billboardPlacementWorker(std::make_shared<BillboardPlacementWorker>()),
         _billboardPlacementThread(),
         _animationHandler(*this),
@@ -66,6 +65,7 @@ namespace carto {
         _layers(layers),
         _options(options),
         _surfaceChanged(false),
+        _billboardsChanged(false),
         _redrawPending(false),
         _redrawRequestListener(),
         _mapRendererListener(),
@@ -402,11 +402,13 @@ namespace carto {
             for (int i = 0; i < 24; i++) {
                 cameraZoomEvent.setZoom(zoom + zoomStep);
                 cameraZoomEvent.calculate(*_options, viewState);
+                viewState.clampZoom(*_options);
 
                 MapVec delta = focusPos - viewState.screenToWorldPlane(screenBounds.getCenter(), _options);
                 focusPos = center + delta;
                 cameraPanEvent.setPos(focusPos);
                 cameraPanEvent.calculate(*_options, viewState);
+                viewState.clampFocusPos(*_options);
     
                 bool fit = true;
                 for (const MapPos& pos : points) {
@@ -529,6 +531,8 @@ namespace carto {
     void MapRenderer::onSurfaceChanged(int width, int height) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _viewState.setScreenSize(width, height);
+        _viewState.calculateViewState(*_options);
+        _viewState.clampZoom(*_options);
         _viewState.clampFocusPos(*_options);
         _screenFrameBuffer.reset(); // reset, as this depends on the surface dimensions
         _surfaceChanged = true;
@@ -612,12 +616,8 @@ namespace carto {
         }
 
         // Update billobard placements/visibility
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            if (_billboardsChanged) {
-                _billboardsChanged = false;
-                _billboardPlacementWorker->init(BILLBOARD_PLACEMENT_TASK_DELAY);
-            }
+        if (_billboardsChanged.exchange(false)) {
+            _billboardPlacementWorker->init(BILLBOARD_PLACEMENT_TASK_DELAY);
         }
         
         handleRenderThreadCallbacks();
@@ -678,9 +678,10 @@ namespace carto {
     }
     
     void MapRenderer::clearAndBindScreenFBO(const Color& color, bool depth, bool stencil) {
-        GLint currentBoundFBO = 0;
-        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &currentBoundFBO);
-        _currentBoundFBOs.push_back(currentBoundFBO);
+        GLint prevBoundFBO = 0;
+        glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevBoundFBO);
+        GLuint bufferMask = GL_COLOR_BUFFER_BIT | (depth ? GL_DEPTH_BUFFER_BIT : 0) | (stencil ? GL_STENCIL_BUFFER_BIT : 0);
+        _currentBoundFBOs.emplace_back(static_cast<GLuint>(prevBoundFBO), bufferMask);
 
         if (!_screenFrameBuffer) {
             _screenFrameBuffer = _frameBufferManager->createFrameBuffer(_viewState.getWidth(), _viewState.getHeight(), true, depth, stencil);
@@ -690,7 +691,7 @@ namespace carto {
 
         glClearColor(color.getR() / 255.0f, color.getG() / 255.0f, color.getB() / 255.0f, color.getA() / 255.0f);
         glClearStencil(0);
-        glClear(GL_COLOR_BUFFER_BIT | (depth ? GL_DEPTH_BUFFER_BIT : 0) | (stencil ? GL_STENCIL_BUFFER_BIT : 0));
+        glClear(bufferMask);
 
        	GLContext::CheckGLError("MapRenderer::clearAndBindScreenFBO");
     }
@@ -702,15 +703,19 @@ namespace carto {
             Log::Error("MapRenderer::blendAndUnbindScreenFBO: No bound FBOs");
             return;
         }
-        GLuint currentBoundFBO = _currentBoundFBOs.back();
+
+        GLuint prevBoundFBO = _currentBoundFBOs.back().first;
+        GLuint bufferMask = _currentBoundFBOs.back().second;
         _currentBoundFBOs.pop_back();
         
         if (!_screenFrameBuffer) {
             return; // should not happen, just safety
         }
-        _screenFrameBuffer->discard(false, true, true);
+        if (bufferMask & (GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT)) {
+            _screenFrameBuffer->discard(false, (bufferMask & GL_DEPTH_BUFFER_BIT) != 0, (bufferMask & GL_STENCIL_BUFFER_BIT) != 0);
+        }
 
-        glBindFramebuffer(GL_FRAMEBUFFER, currentBoundFBO);
+        glBindFramebuffer(GL_FRAMEBUFFER, prevBoundFBO);
 
         if (!_screenBlendShader) {
             _screenBlendShader = _shaderManager->createShader(blend_shader_source);
@@ -773,7 +778,6 @@ namespace carto {
     }
      
     void MapRenderer::billboardsChanged() {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
         _billboardsChanged = true;
     }
         
@@ -978,6 +982,7 @@ namespace carto {
 
             if (optionName == "RestrictedPanning") {
                 std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
+                mapRenderer->_viewState.clampZoom(*mapRenderer->_options);
                 mapRenderer->_viewState.clampFocusPos(*mapRenderer->_options);
             }
 

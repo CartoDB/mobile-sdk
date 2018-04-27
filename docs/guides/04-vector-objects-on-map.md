@@ -1,38 +1,53 @@
-### Vector Elements
+## Vector Objects on Map
 
-In following examples, **Vector Elements** (Markers, Points, Lines, Polygons, Texts and BalloonPopups) are added by the application.
+In following examples, **Vector Elements**  - Markers, Points, Lines, Polygons, Texts, BalloonPopups and a 3D model  - are added by the application.
 For each object, the styling is defined and objects are created based on given coordinates.
 
-The examples assume `LocalVectorVectorDataSource` object named 'vectorDataSource1' that
-is attached to a `VectorLayer` which is added to a `MapView`.
+In the first example there is creatio of `LocalVectorVectorDataSource` object named 'vectorDataSource1' that is attached to a `VectorLayer` which is added to a `MapView`. Other samples do not repeat this.
 
-**Note:** A popup (callout, bubble) which appears when you click on map is a vector element of its own, and should be added using map click listener. For details, see [Add a BalloonPopup](#add-a-balloonpopup).
+**Note:** A popup (callout, bubble) which appears when you click on map is a vector element of its own, and should be added using **map click listener**. 
 
-#### Add a Marker
+### Marker
 
 Add a marker and apply marker styling using the following code:
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
+<div class="js-tabs-mobilesdk">
+   <ul class="tab-navigation">
+     <li class="tab-navigationItem">
+       <a href="#tab-java">Java</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-csharp">C#</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-objectivec">Objective-C</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-swift">Swift</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-kotlin">Kotlin</a>
+     </li>
+   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
+    
+    // Preparation - create layer and datasource
+    // this will be used later in several places
+    Projection proj = mapView.getOptions().getBaseProjection();
+
+    // 1. Initialize an vector data source where to put the elements
+    LocalVectorDataSource vectorDataSource1 = new LocalVectorDataSource(proj);
+
+    // 2. Initialize a vector layer with the previous data source
+    VectorLayer vectorLayer1 = new VectorLayer(vectorDataSource1);
+
+    // 3. Add the previous vector layer to the map
+    mapView.getLayers().add(vectorLayer1);
+    
+    // Now real adding objects
+    
     // 1. Create marker style
     MarkerStyleBuilder markerStyleBuilder = new MarkerStyleBuilder();
     markerStyleBuilder.setSize(30);
@@ -49,8 +64,25 @@ Add a marker and apply marker styling using the following code:
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="tab-csharp">
     {% highlight csharp %}
+    
+    // Preparation - create layer and datasource
+    
+    // projection will be needed later
+    Projection proj = MapView.Options.BaseProjection;
+
+    // 1. Initialize an local data source - a bucket for your objects created in code
+    LocalVectorDataSource vectorDataSource1 = new LocalVectorDataSource(proj);
+
+    // 2. Initialize a vector layer with the previous data source
+    VectorLayer vectorLayer1 = new VectorLayer(vectorDataSource1);
+
+    // 3. Add the previous vector layer to the map
+    MapView.Layers.Add(vectorLayer1);
+    
+    // Now real adding objects
+    
     // 1. Create marker style
     MarkerStyleBuilder markerStyleBuilder = new MarkerStyleBuilder();
     markerStyleBuilder.Size = 30;
@@ -66,8 +98,23 @@ Add a marker and apply marker styling using the following code:
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
     {% highlight objc %}
+    // Preparation - create layer and datasource
+    
+    // we'll need projection later
+    NTEPSG3857* proj = [[NTEPSG3857 alloc] init];
+
+    // 1. Create a vector data source, bucket where we'll put objects
+    NTLocalVectorDataSource* vectorDataSource1 = [[NTLocalVectorDataSource alloc] initWithProjection:proj];
+
+    // 2. Initialize a vector layer with the previous data source
+    NTVectorLayer* vectorLayer1 = [[NTVectorLayer alloc] initWithDataSource:vectorDataSource1];
+
+    // 3. Add the previous vector layer to the map
+    [[self getLayers] add:vectorLayer1];
+    
+    // Now real adding objects
     // 1. Create a marker style, using default marker bitmap here
     NTMarkerStyleBuilder* markerStyleBuilder = [[NTMarkerStyleBuilder alloc] init];
     [markerStyleBuilder setSize:30];
@@ -83,8 +130,25 @@ Add a marker and apply marker styling using the following code:
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
     {% highlight swift %}
+
+     // Preparation - create layer and datasource
+    
+    // Get base projection from mapView
+    let projection = mapView?.getOptions().getBaseProjection();
+    
+   // Create a vector data source, bucket where we'll put objects
+    let source = NTLocalVectorDataSource(projection: projection);
+    
+    // Initialize layer
+    let layer = NTVectorLayer(dataSource: source);
+    
+    // Add layer
+    mapView?.getLayers().add(layer);    
+    
+    // Now real adding objects
+    
     // 1. Create a marker style, using default marker bitmap here
     let markerStyleBuilder = NTMarkerStyleBuilder();
     markerStyleBuilder?.setSize(30);
@@ -100,8 +164,23 @@ Add a marker and apply marker styling using the following code:
     {% endhighlight %}
   </div>
     
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
+    
+    // Preparation - create layer and datasource
+    
+    // Get base projection from mapView, we'll need it later
+    val projection = mapView?.options?.baseProjection
+
+    //1. Create a vector data source where to put the elements
+    val source = LocalVectorDataSource(projection)
+
+    // 2. Initialize layer, add to MapView
+    val layer = VectorLayer(source)
+    mapView?.layers?.add(layer)
+    
+    // Now real adding objects 
+    
     // 1. Create a marker style, using default marker bitmap here
     val markerStyleBuilder = MarkerStyleBuilder()
     markerStyleBuilder.size = 30F
@@ -119,42 +198,39 @@ Add a marker and apply marker styling using the following code:
     
 </div>
 
-##### Example Marker on a Mobile Map
-
 ![pin](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/pin.png)
 
-#### Add a Point
+### Point
 
 Points are used to indicating specific location points on a map, similar to Markers. However, Points do not have overlapping controls and cannot be use with billboard style version 2.5D. If you have a lot of data (thousands of points) and are not using 2.5D views, use Points as an alternative to Markers. Your rendering time will be significantly faster.
 
 You can add any type of vector objects to the same Layer and `LocalVectorDataSource`. This enables you to reuse settings for a defined Marker. It is recommended to define different Layers and DataSources for managing your objects, as it allows you to:
 
 -  Select and delete all objects of DataSource
-
 -  Specify the drawing order of layers. The drawing order within a single Layer is undefined. For multiple layers, layers that are added are drawn underneath the initial map layer
 
 Add a point and apply point styling using the following code:
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
+<div class="js-tabs-mobilesdk">
+   <ul class="tab-navigation">
+     <li class="tab-navigationItem">
+       <a href="#tab-java">Java</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-csharp">C#</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-objectivec">Objective-C</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-swift">Swift</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-kotlin">Kotlin</a>
+     </li>
+   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
     // 1. Set marker position
     MapPos tallinn = proj.FromWgs84(new MapPos(24.646469, 59.426939));
@@ -172,7 +248,7 @@ Add a point and apply point styling using the following code:
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="tab-csharp">
     {% highlight csharp %}
     // 1. Set point position
     MapPos tallinn = proj.FromWgs84(new MapPos(24.646469, 59.426939));
@@ -190,7 +266,7 @@ Add a point and apply point styling using the following code:
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
     {% highlight objc %}
     // 1. Set point position
     NTMapPos* tallinn = [proj fromWgs84:[[NTMapPos alloc] initWithX:24.646469 y:59.426939]];
@@ -208,7 +284,7 @@ Add a point and apply point styling using the following code:
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
     {% highlight swift %}
     // 1. Set marker position
     let tallinn = projection?.fromWgs84(NTMapPos(x: 24.646469, y: 59.426939))
@@ -226,7 +302,7 @@ Add a point and apply point styling using the following code:
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
     // 1. Set marker position
     val tallinn = projection?.fromWgs84(MapPos(24.646469, 59.426939))
@@ -246,30 +322,30 @@ Add a point and apply point styling using the following code:
   
 </div>
 
-#### Add a Line
+### Line or Polyline
 
-Lines can be added to the same VectorDataSource. Add a line and apply line styling using the following code:
+Lines can be added to the same VectorDataSource, it is defined by an array of MapPos locations, which goes to *MapPosVector* object:
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
+<div class="js-tabs-mobilesdk">
+   <ul class="tab-navigation">
+     <li class="tab-navigationItem">
+       <a href="#tab-java">Java</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-csharp">C#</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-objectivec">Objective-C</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-swift">Swift</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-kotlin">Kotlin</a>
+     </li>
+   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
     // 1. Create line style, and line poses
     LineStyleBuilder lineStyleBuilder = new LineStyleBuilder();
@@ -295,7 +371,7 @@ Lines can be added to the same VectorDataSource. Add a line and apply line styli
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="tab-csharp">
     {% highlight csharp %}
     // 1. Create line style, and line poses
     var lineStyleBuilder = new LineStyleBuilder();
@@ -319,7 +395,7 @@ Lines can be added to the same VectorDataSource. Add a line and apply line styli
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
     {% highlight objc %}
     // 1. Define line style
     NTLineStyleBuilder* lineStyleBuilder = [[NTLineStyleBuilder alloc] init];
@@ -345,7 +421,7 @@ Lines can be added to the same VectorDataSource. Add a line and apply line styli
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
     {% highlight swift %}
     // 1. Create line style, and line poses
     let lineStyleBuilder = NTLineStyleBuilder()
@@ -372,7 +448,7 @@ Lines can be added to the same VectorDataSource. Add a line and apply line styli
     {% endhighlight %}
   </div>
     
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
     // 1. Create line style, and line poses
     val lineStyleBuilder = LineStyleBuilder()
@@ -402,34 +478,32 @@ Lines can be added to the same VectorDataSource. Add a line and apply line styli
     
 </div>
 
-##### Example Line on a Mobile Map
-
 ![line](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/line.png)
 
-#### Add a Polygon
+### Polygon or Multi-Polygon
 
-Add a polygon and apply polygon styling using the following code. The following examples add a polygon with polygon holes:
+Add a polygon and apply polygon styling using the following code. The following examples add a polygon with polygon holes, note that you need to use `MapPosVector` object for polygon coordinate arrays :
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
+<div class="js-tabs-mobilesdk">
+   <ul class="tab-navigation">
+     <li class="tab-navigationItem">
+       <a href="#tab-java">Java</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-csharp">C#</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-objectivec">Objective-C</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-swift">Swift</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-kotlin">Kotlin</a>
+     </li>
+   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
     // 1. Create polygon style and poses
     PolygonStyleBuilder polygonStyleBuilder = new PolygonStyleBuilder();
@@ -476,7 +550,7 @@ Add a polygon and apply polygon styling using the following code. The following 
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="tab-csharp">
     {% highlight csharp %}
     // 1. Create polygon style and poses
     PolygonStyleBuilder polygonStyleBuilder = new PolygonStyleBuilder();
@@ -525,7 +599,7 @@ Add a polygon and apply polygon styling using the following code. The following 
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
     {% highlight objc %}
     // 1. Create polygon style
     NTPolygonStyleBuilder* polygonStyleBuilder = [[NTPolygonStyleBuilder alloc] init];
@@ -574,7 +648,7 @@ Add a polygon and apply polygon styling using the following code. The following 
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
     {% highlight swift %}
     // 1. Create polygon style and poses
     let polygonStyleBuilder = NTPolygonStyleBuilder()
@@ -623,7 +697,7 @@ Add a polygon and apply polygon styling using the following code. The following 
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
     // 1. Create polygon style and poses
     val polygonStyleBuilder = PolygonStyleBuilder()
@@ -672,40 +746,37 @@ Add a polygon and apply polygon styling using the following code. The following 
     
 </div>
 
-##### Example Polygon on a Mobile App
-
 ![polygon](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/polygon.png)
 
-#### Add Text
+### Text
 
 Text style parameters are similar to Markers, as both are Billboards - which are MapView objects that contain the following features:
 
 - Control and prohibit text overlapping, based on priority and the location of where the text appears
-
 - Display text as billboards in 2.5D (tilted) view by defining the `OrientationMode` parameter. There are 3 options: show on ground, and rotate with map (like street names), show on ground (do not rotate with map), or show as billboard (no rotation).
 
 Add text and apply text styling using the following code.
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
+<div class="js-tabs-mobilesdk">
+   <ul class="tab-navigation">
+     <li class="tab-navigationItem">
+       <a href="#tab-java">Java</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-csharp">C#</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-objectivec">Objective-C</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-swift">Swift</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-kotlin">Kotlin</a>
+     </li>
+   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
     // 1. Create text style
     TextStyleBuilder textStyleBuilder = new TextStyleBuilder();
@@ -723,7 +794,7 @@ Add text and apply text styling using the following code.
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="tab-csharp">
     {% highlight csharp %}
     // 1. Create text style
     TextStyleBuilder textStyleBuilder = new TextStyleBuilder();
@@ -742,7 +813,7 @@ Add text and apply text styling using the following code.
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
     {% highlight objc %}
     // 1. Create text style
     NTTextStyleBuilder* textStyleBuilder = [[NTTextStyleBuilder alloc] init];
@@ -761,7 +832,7 @@ Add text and apply text styling using the following code.
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
     {% highlight swift %}
     // 1. Create text style
     let textStyleBuilder = NTTextStyleBuilder()
@@ -779,7 +850,7 @@ Add text and apply text styling using the following code.
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
     // 1. Create text style
     val textStyleBuilder = TextStyleBuilder()
@@ -798,40 +869,38 @@ Add text and apply text styling using the following code.
   </div>  
 </div>
 
-##### Example Text on a Mobile Map
-
 ![text](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/text.png)
 
-#### Add a BalloonPopup
+### BalloonPopup
 
-A BalloonPopup appears based on click event of an object. You can also add a defined BalloonPopup. Add BalloonPops using the following code. Note that these examples contain several special styling elements, such as:
+A BalloonPopup appears often based on click event of an object, but you can use it also as stand-alone visual object instead of Marker, as you can define always-on text on it. Note that these examples contain several special styling elements, such as:
 
 - Image (_info.png_) as the "Left Image"
 - Arrow (_arrow.png_)  as the "Right Image"
 - Styled appearance of tuned radius values
 
-**Tip:** To use these styling elements as part of your own project, copy the above .png files, (available from the [Sample Apps](/docs/carto-engine/mobile-sdk/01-getting-started/#sample-apps)), to your local map application project.
+**Tip:** To use these styling elements as part of your own project, copy the above .png files, to your local map application project. These are in our [sample apps in github](https://github.com/CartoDB/mobile-sdk-samples/).
 
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-        <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
+<div class="js-tabs-mobilesdk">
+   <ul class="tab-navigation">
+     <li class="tab-navigationItem">
+       <a href="#tab-java">Java</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-csharp">C#</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-objectivec">Objective-C</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-swift">Swift</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-kotlin">Kotlin</a>
+     </li>
+   </ul>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
     // 1. Load bitmaps to show on the label
     Bitmap infoImage = BitmapFactory.decodeResource(getResources(), R.drawable.info);
@@ -854,7 +923,7 @@ A BalloonPopup appears based on click event of an object. You can also add a def
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="tab-csharp">
     {% highlight csharp %}
     // 1. Load bitmaps to show on the label
 
@@ -893,7 +962,7 @@ A BalloonPopup appears based on click event of an object. You can also add a def
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objective">
     {% highlight objc %}
     // 1. Load bitmaps to show on the label
     UIImage* infoImage = [UIImage imageNamed:@"info.png"];
@@ -919,7 +988,7 @@ A BalloonPopup appears based on click event of an object. You can also add a def
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
     {% highlight swift %}
     // 1. Load bitmaps to show on the label
     let infoImage = NTBitmapUtils.createBitmap(from: UIImage(named: "info.png"));
@@ -942,7 +1011,7 @@ A BalloonPopup appears based on click event of an object. You can also add a def
     {% endhighlight %}
   </div>
     
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
     // 1. Load bitmaps to show on the label
     val infoImage = BitmapFactory.decodeResource(resources, R.drawable.info)
@@ -967,50 +1036,40 @@ A BalloonPopup appears based on click event of an object. You can also add a def
     
 </div>
 
-##### Example BalloonPopup on a Mobile Map
-
 ![popup](https://raw.githubusercontent.com/CartoDB/mobile-dotnet-samples/master/images/popup.png)
 
-#### Add 3D Model Objects
+### 3D Model Objects
 
-One special feature of the Mobile SDK is that you can add 3D objects (models) to a mobile map. For example, you can add small moving car or other decorative or informative elements.
+One special feature of the Mobile SDK is that you can add 3D objects (3D models) to a mobile map. For example, you can add small moving car or other decorative or informative elements.
 
-**Note:** 3D objects are added to the same `LocalVectorDataSource` as 2D objects. However, 3D objects are only supported using the *Nutiteq 3D Model* (**NML**) format. This custom format is optimized for the multi-resolution of 3D files on mobile apps. _For details about tuning the performance of 3D models, see [`LocalVectorDataSource` Performance](#localvectordatasource-performance)._
+**Note:** 3D objects are added to the same `LocalVectorDataSource` as 2D objects. However, 3D objects are only supported using the *Nutiteq 3D Model* (**NML**) format. This custom format is optimized for the multi-resolution of 3D files on mobile apps.
 
 The following procedure describes how to setup and add a 3D object to your mobile MapView:
 
-1. Select a _NML file_
+- Select a _NML file_. You can retrieve some free samples from [Nutiteq's NML sample page](https://github.com/nutiteq/hellomap3d/wiki/NML-model-samples). If you have own model as Collada DAE (or KMZ) format, then you would need [CARTO Mobile 3D converter](https://github.com/CartoDB/mobile-sdk/wiki/NML-converter) to convert it to NML, so it can be used in mobile. 
+- Adjust the file size of the 3D object for rendering. Typically, NML files are smaller than 100K. Anything larger than that takes too long to render. Consider applying lower detail models for your 3D objects, before you convert it to NML. You can then add these models to the **res/raw** folder of your Android app, or as a **resource file** in your iOS project.
+- Load the model file in the code to add it to your map application by using the following code:
 
-    **Tip:** You can retrieve some free samples from [Nutiteq's NML sample page](https://github.com/nutiteq/hellomap3d/wiki/NML-model-samples).
+<div class="js-tabs-mobilesdk">
+   <ul class="tab-navigation">
+     <li class="tab-navigationItem">
+       <a href="#tab-java">Java</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-csharp">C#</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-objectivec">Objective-C</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-swift">Swift</a>
+     </li>
+     <li class="tab-navigationItem">
+       <a href="#tab-kotlin">Kotlin</a>
+     </li>
+   </ul>
 
-    If you have own model as Collada DAE (or KMZ) format, then you would need **CARTO Mobile 3D converter tools** to convert it to NML, so it can be used in mobile. Please [contact us](mailto:sales@carto.com) for more information.
-
-2. Adjust the file size of the 3D object for rendering
-
-    **Note:** Typically, NML files are smaller than 100K. Anything larger than that takes too long to render. Consider applying lower detail models for your 3D objects. You can then add these models to the **res/raw** folder of your Android app, or as a **resource file** in your iOS project.
-
-3. Load the model file in the code to add it to your map application by using the following code:
-
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
+  <div id="tab-java">
     {% highlight java %}
     // 1. Load NML model from a file
     BinaryData modelData = AssetUtils.loadAsset("fcd_auto.nml");
@@ -1028,7 +1087,7 @@ The following procedure describes how to setup and add a 3D object to your mobil
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
+  <div id="tab-csharp">
     {% highlight csharp %}
     // 1. Load NML model from a file
     var modelData = AssetUtils.LoadAsset("fcd_auto.nml");
@@ -1046,7 +1105,7 @@ The following procedure describes how to setup and add a 3D object to your mobil
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
+  <div id="tab-objectivec">
     {% highlight objc %}
     // 1. Load NML model from a file
     NTBinaryData* modelData = [NTAssetUtils loadAsset:@"fcd_auto.nml"];
@@ -1064,7 +1123,7 @@ The following procedure describes how to setup and add a 3D object to your mobil
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
+  <div id="tab-swift">
     {% highlight swift %}
     // 1. Load NML model from a file (be sure it's targeted by your application)
     let modelData = NTAssetUtils.loadAsset("fcd_auto.nml")
@@ -1082,7 +1141,7 @@ The following procedure describes how to setup and add a 3D object to your mobil
     {% endhighlight %}
   </div>
 
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
+  <div id="tab-kotlin">
     {% highlight kotlin %}
     // 1. Load NML model from a file
     val modelData = AssetUtils.loadAsset("fcd_auto.nml")
@@ -1099,144 +1158,9 @@ The following procedure describes how to setup and add a 3D object to your mobil
     vectorDataSource1.add(model)
     {% endhighlight %}
   </div>
-    
 </div>
-
-##### Example 3D Model Object on a Mobile Map
 
 ![3d animated](https://github.com/CartoDB/mobile-ios-samples/blob/gh-pages/carto-mobile-sdk-animated.gif?raw=true)
 
-##### LocalVectorDataSource Performance
 
-You can define the `spatialIndexType` of the `LocalVectorDataSource` to improve the performance of how a 3D model loads, by defining a spatial index to the DataSource. By default, no spatial index is defined. The following rules apply:
-
--  Do not define a spatial index if the number of elements is small, below ~1000 points or markers (or even less if you have complex lines and polygons). _This is the default option_
-
--  Apply `NT_LOCAL_SPATIAL_INDEX_TYPE_KDTREE` as the index type if there are a larger number of elements 
-
-The advantage of defining a spatial index is that CPU usage decreases for large number of objects, improving the map performance of panning and zooming. However, displaying overlays may slightly delay the map response, as the spatial index is not loaded immediately when your move the map, it only moves after some hundred milliseconds. 
-
-The overall maximum number of objects on map is limited to the RAM available for the app. Systems define several hundred MB for iOS apps, and closer to tens of MB for Android apps, but it depends on the device and app settings (as well as the density of the data). It is recommended to test your app with the targeted mobile platform and full dataset for the actual performance. 
-
-The following code describes how to adjust the `LocalVectorDataSource` performance by defining a spatial index:
-
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-    {% highlight java %}
-    LocalVectorDataSource vectorDataSource2 = new LocalVectorDataSource(proj, LocalSpatialIndexType.LOCAL_SPATIAL_INDEX_TYPE_KDTREE);
-    {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-    {% highlight csharp %}
-    var vectorDataSource2 = new LocalVectorDataSource(proj, LocalSpatialIndexType.LocalSpatialIndexTypeKdtree);
-    {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-    {% highlight objc %}
-    NTLocalVectorDataSource* vectorDataSource2 =
-        [[NTLocalVectorDataSource alloc] initWithProjection:proj
-                                         spatialIndexType: NTLocalSpatialIndexType::NT_LOCAL_SPATIAL_INDEX_TYPE_KDTREE];
-    {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-    {% highlight swift %}
-    let vectorDataSource2 = NTLocalVectorDataSource(projection: projection, spatialIndexType: NTLocalSpatialIndexType.LOCAL_SPATIAL_INDEX_TYPE_KDTREE)
-    {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-    {% highlight kotlin %}
-    val vectorDataSource2 = LocalVectorDataSource(projection, LocalSpatialIndexType.LOCAL_SPATIAL_INDEX_TYPE_KDTREE)
-    {% endhighlight %}
-  </div>
-  
-</div>
-
-<br/><br/>**Note:** If you have **very complex lines or polygons**, this creates objects with high numbers (more than hundreds of points per object) of vertexes. For example, the GPS traces for long periods of time, recording a point every second or so. 
-
-Spatial indexing will not help in this case, as you need to show the whole track on the screen. In this case, apply the **automatic line simplification** parameter for the `LocalVectorDataSource`. This reduces the number of polygon and line points, while maintaining the original object shape. 
-
-**Tip:** Automatic simplification is zoom-dependent. When a map is zoomed out, more aggressive simplification is used. When you zoom in, less simplification is applied until you see the original details.
-
-There are several ways to simplify geometries for automatic simplification by using the following code. Note that simplification is applied in two passes:
-
-- First pass applies fast Radial Distance vertex rejection
-- Second pass applies Ramer-Douglas-Peuckerworst algorithm (with the worst case quadratic complexity)
-
-All this is can be applied with just one line of code - as shown in the following example (under iOS) for minimal 1-pixel simplification, the result is invisible but effects are significant, depending on your DataSource:
-
-<div class="js-TabPanes">
-  <ul class="Tabs">
-    <li class="Tab js-Tabpanes-navItem--lang is-active">
-      <a href="#/0" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--java">Java</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/1" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--csharp">C#</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/2" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--objective-c">Objective-C</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--swift">Swift</a>
-    </li>
-    <li class="Tab js-Tabpanes-navItem--lang">
-      <a href="#/3" class="js-Tabpanes-navLink--lang js-Tabpanes-navLink--lang--kotlin">Kotlin</a>
-    </li>
-  </ul>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--java is-active">
-    {% highlight java %}
-    vectorDataSource2.setGeometrySimplifier(new DouglasPeuckerGeometrySimplifier(1.0f / 320.0f));
-    {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--csharp">
-    {% highlight csharp %}
-    vectorDataSource2.GeometrySimplifier = new DouglasPeuckerGeometrySimplifier(1.0f / 320.0f);
-    {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--objective-c">
-    {% highlight objc %}
-    [vectorDataSource2 setGeometrySimplifier:
-      [[NTDouglasPeuckerGeometrySimplifier alloc] initWithTolerance: 1.0f / 320.0f]];
-    {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--swift">
-    {% highlight swift %}
-    vectorDataSource2?.setGeometrySimplifier(NTDouglasPeuckerGeometrySimplifier(tolerance: 1.0 / 320.0))
-    {% endhighlight %}
-  </div>
-
-  <div class="Carousel-item js-Tabpanes-item--lang js-Tabpanes-item--lang--kotlin">
-    {% highlight kotlin %}
-    vectorDataSource2.geometrySimplifier = DouglasPeuckerGeometrySimplifier(1.0f / 320.0f)
-    {% endhighlight %}
-  </div>
-    
-</div>
-
-The automatic simplification makes renderingfaster with some additional computation on the CPU.
 

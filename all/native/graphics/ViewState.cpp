@@ -2,6 +2,7 @@
 #include "core/ScreenBounds.h"
 #include "projections/Projection.h"
 #include "utils/Const.h"
+#include "utils/GeneralUtils.h"
 #include "utils/Log.h"
 
 #include <cmath>
@@ -269,6 +270,27 @@ namespace carto {
         _screenSizeChanged = true;
     }
 
+    void ViewState::clampZoom(const Options& options) {
+        if (!options.isRestrictedPanning() || _width <= 0 || _height <= 0) {
+            return;
+        }
+
+        MapRange zoomRange = options.getZoomRange();
+        float zoom = GeneralUtils::Clamp(_zoom, getMinZoom(), zoomRange.getMax());
+
+        if (zoom != getZoom()) {
+            MapVec cameraVec = _cameraPos - _focusPos;
+            double length = cameraVec.length();
+            double newLength = _zoom0Distance / std::pow(2.0f, zoom);
+            MapPos cameraPos = _focusPos + cameraVec * (newLength / length);
+
+            setZoom(zoom);
+            setCameraPos(cameraPos);
+
+            cameraChanged();
+        }
+    }
+
     void ViewState::clampFocusPos(const Options& options) {
         if (!options.isRestrictedPanning() || _width <= 0 || _height <= 0) {
             return;
@@ -301,6 +323,7 @@ namespace carto {
             viewState.setScreenSize(_width, _height);
             viewState.cameraChanged();
             viewState.calculateViewState(options);
+            viewState.clampZoom(options);
             ScreenPos screenPos = viewState.worldToScreen(edgePos, options);
             if (!screenBounds.contains(screenPos)) {
                 continue;
@@ -321,10 +344,12 @@ namespace carto {
                 }
             }
 
-            setFocusPos(focusPos0);
-            setCameraPos(focusPos0 + cameraVec);
+            if (focusPos0 != getFocusPos()) {
+                setFocusPos(focusPos0);
+                setCameraPos(focusPos0 + cameraVec);
 
-            cameraChanged();
+                cameraChanged();
+            }
         }
     }
     
@@ -368,9 +393,7 @@ namespace carto {
                     MapVec cameraVec = _cameraPos - _focusPos;
                     double length = cameraVec.length();
                     double newLength = _zoom0Distance / std::pow(2.0f, _zoom);
-                    cameraVec *= newLength / length;
-                    _cameraPos = _focusPos;
-                    _cameraPos += cameraVec;
+                    _cameraPos = _focusPos + cameraVec * (newLength / length);
         
                     _cameraChanged = true;
                 }
@@ -514,7 +537,7 @@ namespace carto {
             ViewState viewState;
             viewState._ignoreMinZoom = true;
             viewState.setFocusPos(bounds.getCenter());
-            viewState.setCameraPos(bounds.getCenter() + cameraVec);
+            viewState.setCameraPos(bounds.getCenter() + MapVec(0, 0, cameraVec.length()));
             viewState.setZoom((range.getMin() + range.getMax()) * 0.5f);
             viewState.setScreenSize(_width, _height);
             viewState.cameraChanged();

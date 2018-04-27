@@ -163,14 +163,14 @@ namespace carto {
                                               const std::vector<std::shared_ptr<BillboardDrawData> >& billboardDrawDatas,
                                               StyleTextureCache& styleCache, const ViewState& viewState)
     {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-
         // Get layer opacity
         float opacity = 1.0f;
-        if (auto layer = _layer.lock()) {
+        if (std::shared_ptr<VectorLayer> layer = getLayer()) {
             opacity = layer->getOpacity();
         }
     
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+
         // Prepare for drawing
         glUseProgram(_shader->getProgId());
         // Coords, texCoords, colors

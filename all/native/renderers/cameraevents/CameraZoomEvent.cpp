@@ -95,13 +95,13 @@ namespace carto {
     
         // Teleport if necessary
         if (seamLess) {
-          if (focusPos.getX() > Const::HALF_WORLD_SIZE) {
-            focusPos.setX(-Const::HALF_WORLD_SIZE + (focusPos.getX() - Const::HALF_WORLD_SIZE));
-            viewState.setHorizontalLayerOffsetDir(-1);
-          } else if (focusPos.getX() < -Const::HALF_WORLD_SIZE) {
-            focusPos.setX(Const::HALF_WORLD_SIZE + (focusPos.getX() + Const::HALF_WORLD_SIZE));
-            viewState.setHorizontalLayerOffsetDir(1);
-          }
+            if (focusPos.getX() > Const::HALF_WORLD_SIZE) {
+                focusPos.setX(-Const::HALF_WORLD_SIZE + (focusPos.getX() - Const::HALF_WORLD_SIZE));
+                viewState.setHorizontalLayerOffsetDir(-1);
+            } else if (focusPos.getX() < -Const::HALF_WORLD_SIZE) {
+                focusPos.setX(Const::HALF_WORLD_SIZE + (focusPos.getX() + Const::HALF_WORLD_SIZE));
+                viewState.setHorizontalLayerOffsetDir(1);
+            }
         }
     
         cameraPos = focusPos;

@@ -17,6 +17,7 @@
 #include "utils/Log.h"
 
 #include <algorithm>
+#include <regex>
 
 #include <boost/lexical_cast.hpp>
 
@@ -176,22 +177,23 @@ namespace carto {
     std::vector<std::shared_ptr<Layer> > CartoMapsService::buildMap(const Variant& mapConfig) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-        // Build URL
-        std::string url = getServiceURL("/api/v1/map");
-
         // Create request data
         picojson::object bufferSizeObject;
         bufferSizeObject["mvt"] = picojson::value(_vectorTileBufferSize);
         picojson::object mapConfigObject = mapConfig.toPicoJSON().get<picojson::object>();
         mapConfigObject["buffersize"] = picojson::value(bufferSizeObject);
-        std::string mapConfigJSON = picojson::value(mapConfigObject).serialize();
-        auto requestData = std::make_shared<BinaryData>(reinterpret_cast<const unsigned char*>(mapConfigJSON.data()), mapConfigJSON.size());
 
-        // Do HTTP POST request
+        // Build URL
+        std::map<std::string, std::string> urlParams;
+        urlParams["config"] = picojson::value(mapConfigObject).serialize();
+        urlParams["callback"] = "callback";
+        std::string url = NetworkUtils::BuildURLFromParameters(getServiceURL("/api/v1/map"), urlParams);
+
+        // Do HTTP request
         HTTPClient client(Log::IsShowDebug());
         std::shared_ptr<BinaryData> responseData;
         std::map<std::string, std::string> responseHeaders;
-        if (client.post(url, "application/json", requestData, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
+        if (client.get(url, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
             std::string result;
             if (responseData) {
                 result = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
@@ -200,22 +202,18 @@ namespace carto {
         }
 
         // Parse result
-        std::string result(reinterpret_cast<const char*>(responseData->data()), responseData->size());
-        picojson::value mapInfo;
-        std::string err = picojson::parse(mapInfo, result);
-        if (!err.empty()) {
-            throw ParseException(std::string("Failed to parse map configuration response: ") + err, result);
-        }
+        picojson::value mapInfo = parseJSONP(responseData);
 
         // Check for errors and log them
         if (mapInfo.get("errors").is<picojson::array>()) {
             const picojson::array& errorsInfo = mapInfo.get("errors").get<picojson::array>();
             for (auto it = errorsInfo.begin(); it != errorsInfo.end(); it++) {
-                Log::Errorf("CartoMapsService::buildMap: %s", it->get<std::string>().c_str());
+                std::string error = it->get<std::string>();
+                Log::Errorf("CartoMapsService::buildMap: %s", error.c_str());
             }
             if (!errorsInfo.empty()) {
                 std::string firstError = errorsInfo.front().get<std::string>();
-                throw GenericException("Errors when trying to instantiate named map", firstError);
+                throw GenericException("Errors when trying to instantiate anonymous map", firstError);
             }
         }
 
@@ -226,22 +224,23 @@ namespace carto {
     std::vector<std::shared_ptr<Layer> > CartoMapsService::buildNamedMap(const std::string& templateId, const std::map<std::string, Variant>& templateParams) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-        // Build URL
-        std::string url = getServiceURL("/api/v1/map/named/" + NetworkUtils::URLEncode(templateId));
-
         // Create request data by serializing parameters
         picojson::object bufferSizeObject;
         bufferSizeObject["mvt"] = picojson::value(_vectorTileBufferSize);
         picojson::object paramsObject = Variant(templateParams).toPicoJSON().get<picojson::object>();
         paramsObject["buffersize"] = picojson::value(bufferSizeObject);
-        std::string paramsJSON = picojson::value(paramsObject).serialize();
-        auto requestData = std::make_shared<BinaryData>(reinterpret_cast<const unsigned char*>(paramsJSON.data()), paramsJSON.size());
+
+        // Build URL
+        std::map<std::string, std::string> urlParams;
+        urlParams["params"] = picojson::value(paramsObject).serialize();
+        urlParams["callback"] = "callback";
+        std::string url = NetworkUtils::BuildURLFromParameters(getServiceURL("/api/v1/map/named/" + NetworkUtils::URLEncode(templateId) + "/jsonp"), urlParams);
 
         // Perform HTTP request
         HTTPClient client(Log::IsShowDebug());
         std::shared_ptr<BinaryData> responseData;
         std::map<std::string, std::string> responseHeaders;
-        if (client.post(url, "application/json", requestData, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
+        if (client.get(url, std::map<std::string, std::string>(), responseHeaders, responseData) != 0) {
             std::string result;
             if (responseData) {
                 result = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
@@ -250,11 +249,19 @@ namespace carto {
         }
         
         // Parse result
-        std::string result(reinterpret_cast<const char*>(responseData->data()), responseData->size());
-        picojson::value mapInfo;
-        std::string err = picojson::parse(mapInfo, result);
-        if (!err.empty()) {
-            throw ParseException(std::string("Failed to parse map configuration response: ") + err, result);
+        picojson::value mapInfo = parseJSONP(responseData);
+
+        // Check for errors and log them
+        if (mapInfo.get("errors").is<picojson::array>()) {
+            const picojson::array& errorsInfo = mapInfo.get("errors").get<picojson::array>();
+            for (auto it = errorsInfo.begin(); it != errorsInfo.end(); it++) {
+                std::string error = it->get<std::string>();
+                Log::Errorf("CartoMapsService::buildNamedMap: %s", error.c_str());
+            }
+            if (!errorsInfo.empty()) {
+                std::string firstError = errorsInfo.front().get<std::string>();
+                throw GenericException("Errors when trying to instantiate named map", firstError);
+            }
         }
 
         // Create layers
@@ -354,6 +361,12 @@ namespace carto {
                     }
                     auto vectorTileDecoder = std::make_shared<CartoVectorTileDecoder>(layerIds, layerStyleSets);
                     auto baseDataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.mvt" + urlTemplateSuffix);
+#if defined(__APPLE__)
+                    // Force using gzipped vector tiles on iOS, our decoder supports this
+                    std::map<std::string, std::string> headers;
+                    headers["Accept-Encoding"] = "gzip";
+                    baseDataSource->setHTTPHeaders(headers);
+#endif
                     auto dataSource = std::make_shared<MemoryCacheTileDataSource>(baseDataSource); // in memory cache allows to change style quickly
                     tileLayer = std::make_shared<VectorTileLayer>(dataSource, vectorTileDecoder);
                 }
@@ -473,6 +486,30 @@ namespace carto {
         }
 
         return layers;
+    }
+
+    picojson::value CartoMapsService::parseJSONP(const std::shared_ptr<BinaryData>& data) {
+        static const std::regex re(".*callback\\s*[(]\\s*(.*)\\s*[)][^)]*");
+
+        if (!data) {
+            throw ParseException("Null response");
+        }
+
+        // Naive and hacky JSONP parsing using regex
+        std::string jsonp(reinterpret_cast<const char*>(data->data()), data->size());
+        std::smatch match;
+        if (!std::regex_match(jsonp, match, re)) {
+            throw ParseException("Failed to match JSONP format", jsonp);
+        }
+        std::string json = match[1];
+
+        // Parse the extracted JSON
+        picojson::value result;
+        std::string err = picojson::parse(result, json);
+        if (!err.empty()) {
+            throw ParseException(std::string("Failed to parse map configuration JSONP response: ") + err, jsonp);
+        }
+        return result;
     }
 
     const std::string CartoMapsService::DEFAULT_API_TEMPLATE = "http://{user}.carto.com";
