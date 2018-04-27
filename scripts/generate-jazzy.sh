@@ -18,6 +18,7 @@ cp -r ${baseDir}/ios/objc/ui/MapView.mm ${tempDir}/ui/MapView.mm
 cp -r ${baseDir}/ios/objc/utils/ExceptionWrapper.h ${tempDir}/utils/ExceptionWrapper.h
 cp -r ${baseDir}/ios/objc/utils/ExceptionWrapper.mm ${tempDir}/utils/ExceptionWrapper.mm
 find ${tempDir} -name "*NTIOSUtils.*" -exec rm {} \;
+find ${tempDir} -name "*.h" -exec sed -i '' s/@throws/@warning/g {} +
 
 # Execute Jazzy
 rm -rf ${distDir}/docObjC
