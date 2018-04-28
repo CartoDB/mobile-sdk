@@ -291,14 +291,17 @@ namespace carto {
 
         DirectorPtr<VectorEditEventListener> vectorEditEventListener = layer->_vectorEditEventListener;
 
-        std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
-
-        std::shared_ptr<MapRenderer> mapRenderer = layer->_mapRenderer.lock();
+        std::shared_ptr<MapRenderer> mapRenderer;
+        {
+            std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
+            mapRenderer = layer->_mapRenderer.lock();
+        }
         if (!mapRenderer) {
             return false;
         }
         ViewState viewState = mapRenderer->getViewState();
 
+        std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
         std::shared_ptr<VectorElement> selectedElement = layer->getSelectedVectorElement();
         if (!selectedElement) {
             return false;
@@ -311,12 +314,12 @@ namespace carto {
             {
                 MapPos mapPos1 = layer->_dataSource->getProjection()->fromInternal(mapRenderer->screenToWorld(screenPos1, viewState));
                 MapPos touchPos = mapRenderer->screenToWorld(screenPos1, viewState);
-                MapPos rayOrigin = mapRenderer->getCameraPos();
-                MapVec rayDir = touchPos - mapRenderer->getCameraPos();
+                MapPos rayOrigin = viewState.getCameraPos();
+                MapVec rayDir = touchPos - rayOrigin;
                 cglib::ray3<double> ray(cglib::vec3<double>(rayOrigin.getX(), rayOrigin.getY(), rayOrigin.getZ()), cglib::vec3<double>(rayDir.getX(), rayDir.getY(), rayDir.getZ()));
 
                 std::vector<RayIntersectedElement> results;
-                layer->_overlayRenderer->calculateRayIntersectedElements(layer, ray, mapRenderer->getViewState(), results);
+                layer->_overlayRenderer->calculateRayIntersectedElements(layer, ray, viewState, results);
                 if (!results.empty()) {
                     VectorElementDragResult::VectorElementDragResult dragResult = VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_IGNORE;
                     if (vectorEditEventListener) {
@@ -343,7 +346,7 @@ namespace carto {
                 }
                 
                 results.clear();
-                layer->calculateRayIntersectedElements(*layer->_dataSource->getProjection(), ray, mapRenderer->getViewState(), results);
+                layer->calculateRayIntersectedElements(*layer->_dataSource->getProjection(), ray, viewState, results);
                 for (const RayIntersectedElement& result : results) {
                     if (result.getElement<VectorElement>() != selectedElement) {
                         continue;

@@ -220,7 +220,8 @@ namespace carto {
         const std::shared_ptr<Layers> _layers;
         const std::shared_ptr<Options> _options;
         
-        bool _surfaceChanged;
+        mutable std::atomic<bool> _surfaceCreated;
+        mutable std::atomic<bool> _surfaceChanged;
         mutable std::atomic<bool> _billboardsChanged;
         mutable std::atomic<bool> _redrawPending;
 
