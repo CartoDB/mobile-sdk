@@ -14,6 +14,7 @@ namespace carto {
 
     CartoSQLService::CartoSQLService() :
         _username(),
+        _apiKey(),
         _apiTemplate(DEFAULT_API_TEMPLATE),
         _mutex()
     {
@@ -32,6 +33,16 @@ namespace carto {
         _username = username;
     }
 
+    std::string CartoSQLService::getAPIKey() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _apiKey;
+    }
+
+    void CartoSQLService::setAPIKey(const std::string& apiKey) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _apiKey = apiKey;
+    }
+
     std::string CartoSQLService::getAPITemplate() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _apiTemplate;
@@ -45,6 +56,12 @@ namespace carto {
     Variant CartoSQLService::queryData(const std::string& sql) const {
         std::map<std::string, std::string> urlParams;
         urlParams["q"] = sql;
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            if (!_apiKey.empty()) {
+                urlParams["api_key"] = _apiKey;
+            }
+        }
         std::string result = executeQuery(urlParams);
 
         // Parse result
@@ -55,6 +72,12 @@ namespace carto {
         std::map<std::string, std::string> urlParams;
         urlParams["q"] = sql;
         urlParams["format"] = "GeoJSON";
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            if (!_apiKey.empty()) {
+                urlParams["api_key"] = _apiKey;
+            }
+        }
         std::string result = executeQuery(urlParams);
 
         // Parse result
@@ -70,6 +93,9 @@ namespace carto {
         std::map<std::string, std::string> tagValues = { { "user", _username },{ "username", _username } };
         std::string baseURL = GeneralUtils::ReplaceTags(_apiTemplate, tagValues, "{", "}", false) + "/api/v2/sql";
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, urlParams);
+        if (urlParams.find("api_key") != urlParams.end()) {
+            url = NetworkUtils::SetURLProtocol(url, "https");
+        }
 
         // Perform HTTP request
         HTTPClient client(Log::IsShowDebug());
