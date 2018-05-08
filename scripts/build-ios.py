@@ -52,7 +52,10 @@ def buildIOSFramework(args, archs):
   platformArchs = [('OS' if arch.startswith('arm') else 'SIMULATOR', arch) for arch in archs]
   baseDir = getBaseDir()
   distDir = getDistDir('ios')
-  outputDir = '%s/CartoMobileSDK.framework/Versions/A' % distDir
+  if args.sharedlib:
+    outputDir = '%s/CartoMobileSDK.framework' % distDir
+  else:
+    outputDir = '%s/CartoMobileSDK.framework/Versions/A' % distDir
   makedirs(outputDir)
 
   if not execute('lipo', baseDir,
@@ -61,13 +64,23 @@ def buildIOSFramework(args, archs):
   ):
     return False
 
+  if args.sharedlib:
+    if not execute('install_name_tool', outputDir,
+      '-id', '@rpath/CartoMobileSDK.framework/CartoMobileSDK',
+      'CartoMobileSDK'
+    ):
+      return False
+    if not copyfile('%s/scripts/ios/Info.plist' % baseDir, '%s/Info.plist' % outputDir):
+      return False
+
   makedirs('%s/Headers' % outputDir)
-  if not makesymlink('%s/CartoMobileSDK.framework/Versions' % distDir, 'A', 'Current'):
-    return False
-  if not makesymlink('%s/CartoMobileSDK.framework' % distDir, 'Versions/A/Headers', 'Headers'):
-    return False
-  if not makesymlink('%s/CartoMobileSDK.framework' % distDir, 'Versions/A/CartoMobileSDK', 'CartoMobileSDK'):
-    return False
+  if not args.sharedlib:
+    if not makesymlink('%s/CartoMobileSDK.framework/Versions' % distDir, 'A', 'Current'):
+      return False
+    if not makesymlink('%s/CartoMobileSDK.framework' % distDir, 'Versions/A/Headers', 'Headers'):
+      return False
+    if not makesymlink('%s/CartoMobileSDK.framework' % distDir, 'Versions/A/CartoMobileSDK', 'CartoMobileSDK'):
+      return False
 
   for dir in ['%s/all/native', '%s/extensions/native', '%s/ios/native', '%s/ios/objc', '%s/generated/ios-objc/proxies', '%s/libs-external/cglib']:
     if not os.path.exists(dir % baseDir):
