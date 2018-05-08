@@ -84,7 +84,7 @@ def buildIOSFramework(args, archs):
           if filename == 'CartoMobileSDK.h':
             updateUmbrellaHeaderDefinitions('%s/%s' % (destDir, filename), args)
     os.chdir(currentDir)
-  print "Output available in:\n%s" % distDir
+  print("Output available in:\n%s" % distDir)
   return True
 
 def buildIOSCocoapod(args, buildpackage):
@@ -105,7 +105,7 @@ def buildIOSCocoapod(args, buildpackage):
       pass
     if not execute('zip', distDir, '-y', '-r', distName, 'CartoMobileSDK.framework'):
       return False
-    print "Output available in:\n%s\n\nTo publish, use:\ncd %s\naws s3 cp %s s3://nutifront/sdk_snapshots/%s\npod trunk push\n" % (distDir, distDir, distName, distName)
+    print("Output available in:\n%s\n\nTo publish, use:\ncd %s\naws s3 cp %s s3://nutifront/sdk_snapshots/%s\npod trunk push\n" % (distDir, distDir, distName, distName))
   return True
 
 parser = argparse.ArgumentParser()

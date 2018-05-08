@@ -446,7 +446,7 @@ def buildSwigPackage(args, sourceDir, packageName):
     defines = ["-D%s" % define for define in args.defines.split(';') if define]
     cmd = [args.swigExecutable, "-c++", "-java", "-package", "com.carto.%s" % packageName, "-outdir", proxyDir, "-o", outPath, "-doxygen"] + defines + includes + [sourcePath]
     if subprocess.call(cmd) != 0:
-      print "Error in %s" % fileName
+      print("Error in %s" % fileName)
       return False
     fixProxyCode(os.path.join(proxyDir, fileNameWithoutExt + ".java"), fileNameWithoutExt)
     os.remove(os.path.join(proxyDir, fileNameWithoutExt + "Module.java"))

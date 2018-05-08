@@ -67,7 +67,7 @@ def buildWinPhoneNativeDLL(args, arch):
 
   copyfile('%s/scripts/winphone10/packages.config' % baseDir, '%s/packages.config' % buildDir)
   if not nuget(args, buildDir, 'restore', '-PackagesDirectory', '%s/packages' % buildDir):
-    print "Failed to restore required nuget packages"
+    print("Failed to restore required nuget packages")
     return False
 
   if not cmake(args, buildDir, options + [
@@ -129,7 +129,7 @@ def buildWinPhoneVSIX(args):
   ):
     return False
   if copyfile('%s/bin/%s/CartoMobileSDK.WinPhone.VSIX.vsix' % (buildDir, args.configuration), '%s/CartoMobileSDK.WinPhone10.VSIX.vsix' % distDir):
-    print "Output available in:\n%s" % distDir
+    print("Output available in:\n%s" % distDir)
     return True
   return False
 
@@ -162,7 +162,7 @@ def buildWinPhoneNuget(args):
 
   if not copyfile('%s/CartoMobileSDK.UWP.%s.nupkg' % (buildDir, version), '%s/CartoMobileSDK.UWP.%s.nupkg' % (distDir, version)):
     return False
-  print "Output available in:\n%s\n\nTo publish, use:\nnuget.exe push %s/CartoMobileSDK.UWP.%s.nupkg -Source https://www.nuget.org/api/v2/package\n" % (distDir, distDir, version)
+  print("Output available in:\n%s\n\nTo publish, use:\nnuget.exe push %s/CartoMobileSDK.UWP.%s.nupkg -Source https://www.nuget.org/api/v2/package\n" % (distDir, distDir, version))
   return True
 
 parser = argparse.ArgumentParser()

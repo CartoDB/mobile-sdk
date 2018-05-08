@@ -503,7 +503,7 @@ def buildSwigPackage(args, sourceDir, packageName):
     defines = ["-D%s" % define for define in args.defines.split(';') if define]
     cmd = [args.swigExecutable, "-c++", "-csharp", "-namespace", "Carto.%s" % packageName, "-dllimport", args.dllName, "-outdir", args.proxyDir, "-o", outPath, "-doxygen"] + defines + includes + [sourcePath]
     if subprocess.call(cmd) != 0:
-      print "Error in %s" % fileName
+      print("Error in %s" % fileName)
       return False
     os.remove(os.path.join(args.proxyDir, fileNameWithoutExt + "Module.cs"))
   return True

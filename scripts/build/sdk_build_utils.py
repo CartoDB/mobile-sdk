@@ -14,7 +14,7 @@ def makedirs(dir):
       os.makedirs(dir)
   except:
     e = sys.exc_info()[1]
-    print "Exception %s while creating directory %s" % (str(e), dir)
+    print("Exception %s while creating directory %s" % (str(e), dir))
     return False
   return True
 
@@ -23,7 +23,7 @@ def copyfile(source, target):
     shutil.copyfile(source, target)
   except:
     e = sys.exc_info()[1]
-    print "Exception %s while copying %s -> %s" % (str(e), source, target)
+    print("Exception %s while copying %s -> %s" % (str(e), source, target))
     return False
   return True
 
@@ -36,7 +36,7 @@ def makesymlink(dir, source, target):
     os.symlink(source, target)
   except:
     e = sys.exc_info()[1]
-    print "Exception %s while creating symlink %s -> %s" % (str(e), source, target)
+    print("Exception %s while creating symlink %s -> %s" % (str(e), source, target))
     os.chdir(currentDir)
     return False
   os.chdir(currentDir)
@@ -50,12 +50,12 @@ def execute(cmd, dir, *cmdArgs):
     code = subprocess.call(cmdLine)
   except:
     e = sys.exc_info()[1]
-    print "Exception %s while executing %s (path %s):\n%s" % (str(e), cmd, dir, " ".join(cmdLine))
+    print("Exception %s while executing %s (path %s):\n%s" % (str(e), cmd, dir, " ".join(cmdLine)))
     os.chdir(currentDir)
     return False
   os.chdir(currentDir)
   if code != 0:
-    print "Error while executing %s (path %s):\n%s" % (cmd, dir, " ".join(cmdLine))
+    print("Error while executing %s (path %s):\n%s" % (cmd, dir, " ".join(cmdLine)))
     return False
   return True
 
@@ -102,7 +102,7 @@ def getProfiles():
     profilesFilename = '%s/../../extensions/scripts/build/sdk_profiles.json' % os.path.dirname(os.path.realpath(__file__))
   with open(profilesFilename, 'r') as f:
     profiles = json.loads(f.read())
-    return { unicode(key).encode('utf-8') : val for key, val in profiles.items() if key != 'free' }
+    return { str(key): val for key, val in profiles.items() if key != 'free' }
 
 def validProfile(profileIds):
   validProfileIds = getProfiles().keys()

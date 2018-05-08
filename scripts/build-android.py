@@ -97,7 +97,7 @@ def buildAndroidJAR(args):
     return False
   if makedirs(distDir) and \
      copyfile('%s/carto-mobile-sdk.jar' % buildDir, '%s/carto-mobile-sdk.jar' % distDir):
-    print "Output available in:\n%s" % distDir
+    print("Output available in:\n%s" % distDir)
     return True
   return False
 
@@ -116,7 +116,7 @@ def buildAndroidAAR(args):
   if makedirs(distDir) and \
      copyfile('%s/outputs/aar/android-aar-%s.aar' % (buildDir, args.configuration.lower()), '%s/carto-mobile-sdk-%s.aar' % (distDir, version)):
     zip(args, '%s/scripts/android-aar/src/main' % baseDir, '%s/carto-mobile-sdk-%s.aar' % (distDir, version), 'R.txt')
-    print "Output available in:\n%s" % distDir
+    print("Output available in:\n%s" % distDir)
     return True
   return False
 
@@ -143,7 +143,7 @@ if 'all' in args.androidabi or args.androidabi == []:
 if args.androidsdkpath == 'auto':
   args.androidsdkpath = os.environ.get('ANDROID_HOME', None)
   if args.androidsdkpath is None:
-    print "ANDROID_HOME variable not set"
+    print("ANDROID_HOME variable not set")
     exit(-1)
 if args.androidndkpath == 'auto':
   args.androidndkpath = os.environ.get('ANDROID_NDK_HOME', None)
