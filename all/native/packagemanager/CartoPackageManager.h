@@ -13,6 +13,7 @@
 #include "core/MapBounds.h"
 #include "layers/CartoVectorTileLayer.h"
 #include "packagemanager/PackageManager.h"
+#include "packagemanager/PackageInfo.h"
 
 namespace carto {
     class Projection;
@@ -65,21 +66,21 @@ namespace carto {
 
     private:
         struct PackageSource {
-            std::string type;
+            PackageType::PackageType type;
             std::string id;
 
-            PackageSource(const std::string& type, const std::string& id) : type(type), id(id) { }
+            PackageSource(PackageType::PackageType type, const std::string& id) : type(type), id(id) { }
         };
 
         static PackageSource ResolveSource(const std::string& source);
 
-        static const std::string MAP_PACKAGE_LIST_URL;
-        static const std::string ROUTING_PACKAGE_LIST_URL;
-        static const std::string GEOCODING_PACKAGE_LIST_URL;
+        static const std::string MAP_PACKAGE_LIST_TEMPLATE;
+        static const std::string ROUTING_PACKAGE_LIST_TEMPLATE;
+        static const std::string GEOCODING_PACKAGE_LIST_TEMPLATE;
 
-        static const std::string CUSTOM_MAP_BBOX_PACKAGE_URL;
-        static const std::string CUSTOM_ROUTING_BBOX_PACKAGE_URL;
-        static const std::string CUSTOM_GEOCODING_BBOX_PACKAGE_URL;
+        static const std::string CUSTOM_MAP_BBOX_PACKAGE_TEMPLATE;
+        static const std::string CUSTOM_ROUTING_BBOX_PACKAGE_TEMPLATE;
+        static const std::string CUSTOM_GEOCODING_BBOX_PACKAGE_TEMPLATE;
 
         static const unsigned int MAX_CUSTOM_BBOX_PACKAGE_TILES;
         static const int MAX_CUSTOM_BBOX_PACKAGE_TILE_ZOOM;

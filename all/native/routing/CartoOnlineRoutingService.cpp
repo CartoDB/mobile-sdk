@@ -30,7 +30,7 @@ namespace carto {
 
         std::shared_ptr<Projection> proj = request->getProjection();
         
-        std::string baseURL = ROUTING_SERVICE_URL + NetworkUtils::URLEncode(_source) + "/1/viaroute?instructions=true&alt=false&geometry=true&output=json";
+        std::string baseURL = NetworkUtils::CreateServiceURL(ROUTING_SERVICE_TEMPLATE, _source);
         for (const MapPos& pos : request->getPoints()) {
             MapPos wgsPos = proj->toWgs84(pos);
             baseURL += "&loc=" + boost::lexical_cast<std::string>(wgsPos.getY()) + "," + boost::lexical_cast<std::string>(wgsPos.getX());
@@ -55,7 +55,7 @@ namespace carto {
         return OSRMRoutingProxy::CalculateRoute(httpClient, url, request);
     }
 
-    const std::string CartoOnlineRoutingService::ROUTING_SERVICE_URL = "http://mobile-api.carto.com/routing/v2/";
+    const std::string CartoOnlineRoutingService::ROUTING_SERVICE_TEMPLATE = "http://mobile-api.carto.com/routing/v2/{source}/1/viaroute?instructions=true&alt=false&geometry=true&output=json";
     
 }
 

@@ -56,7 +56,7 @@ namespace carto {
 
         static const int DEFAULT_MAX_ZOOM = 14;
         static const int MAX_CACHED_TILES = 8;
-        static const std::string TILE_SERVICE_URL;
+        static const std::string TILE_SERVICE_TEMPLATE;
 
         const std::string _source;
         mutable cache::timed_lru_cache<long long, std::shared_ptr<TileData> > _cache;

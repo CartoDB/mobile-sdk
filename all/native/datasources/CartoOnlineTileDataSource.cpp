@@ -5,8 +5,8 @@
 #include "packagemanager/PackageTileMask.h"
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
-#include "utils/PlatformUtils.h"
 #include "utils/NetworkUtils.h"
+#include "utils/PlatformUtils.h"
 
 #include <picojson/picojson.h>
 
@@ -110,7 +110,7 @@ namespace carto {
             params["appToken"] = appToken;
         }
 
-        std::string baseURL = TILE_SERVICE_URL + NetworkUtils::URLEncode(_source) + "/1/tiles.json";
+        std::string baseURL = NetworkUtils::CreateServiceURL(TILE_SERVICE_TEMPLATE, _source);
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
         Log::Debugf("CartoOnlineTileDataSource::loadConfiguration: Loading %s", url.c_str());
 
@@ -234,6 +234,6 @@ namespace carto {
         return tileData;
     }
 
-    const std::string CartoOnlineTileDataSource::TILE_SERVICE_URL = "http://mobile-api.carto.com/maps/v2/";
+    const std::string CartoOnlineTileDataSource::TILE_SERVICE_TEMPLATE = "http://mobile-api.carto.com/maps/v2/{source}/1/tiles.json";
     
 }
