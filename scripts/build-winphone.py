@@ -13,6 +13,9 @@ def msbuild(args, dir, *cmdArgs):
 def nuget(args, dir, *cmdArgs):
   return execute(args.nuget, dir, *cmdArgs)
 
+def corflags(args, dir, *cmdArgs):
+  return execute(args.corflags, dir, *cmdArgs)
+
 def patchVcxprojFile(baseDir, fileName, patched1=False, patched2=False, patched3=False, patched4=False):
   with open(fileName, 'rb') as f:
     linesIn = f.readlines()
@@ -147,7 +150,7 @@ def buildWinPhoneNuget(args):
   # A hack to generate non-arch dependent assembly, this is nuget peculiarity
   if not copyfile('%s/../winphone_managed10-x86/bin/%s/CartoMobileSDK.WinPhone.dll' % (buildDir, args.configuration), '%s/CartoMobileSDK.WinPhone.dll' % buildDir):
     return False
-  if not execute('corflags', buildDir,
+  if not corflags(args, buildDir,
     '/32BITREQ-',
     '%s/CartoMobileSDK.WinPhone.dll' % buildDir
   ):
@@ -171,6 +174,7 @@ parser.add_argument('--winphone-arch', dest='winphonearch', default=[], choices=
 parser.add_argument('--defines', dest='defines', default='', help='Defines for compilation')
 parser.add_argument('--msbuild', dest='msbuild', default='auto', help='WinPhone msbuild executable')
 parser.add_argument('--nuget', dest='nuget', default='nuget', help='nuget executable')
+parser.add_argument('--corflags', dest='corflags', default='corflags', help='corflags executable')
 parser.add_argument('--cmake', dest='cmake', default='cmake', help='CMake executable')
 parser.add_argument('--cmake-options', dest='cmakeoptions', default='', help='CMake options')
 parser.add_argument('--configuration', dest='configuration', default='Release', choices=['Release', 'Debug'], help='Configuration')
