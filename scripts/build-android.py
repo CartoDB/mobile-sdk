@@ -13,7 +13,7 @@ ANDROID_TOOLCHAINS = {
   'mips64':      'mips64el-linux-android'
 }
 
-ANDROID_ABIS = ANDROID_TOOLCHAINS.keys()
+ANDROID_ABIS = list(ANDROID_TOOLCHAINS.keys())
 
 def javac(args, dir, *cmdArgs):
   return execute(args.javac, dir, *cmdArgs)
