@@ -486,11 +486,11 @@ def buildSwigPackage(args, sourceDir, packageName):
       os.makedirs(args.wrapperDir)
 
     includes = ["-I%s" % dir for dir in ["../scripts/swig/objc", "../scripts/swig", args.moduleDir] + args.sourceDir.split(";") + [args.wrapperDir] + args.cppDir.split(";")]
-    swigPath = os.path.dirname(args.swigExecutable)
+    swigPath = os.path.dirname(args.swig)
     if swigPath:
       includes += ["-I%s/Lib/objc" % swigPath, "-I%s/Lib" % swigPath]
     defines = ["-D%s" % define for define in args.defines.split(';') if define]
-    cmd = [args.swigExecutable, "-c++", "-doxygen", "-objc", "-outdir", proxyDir, "-o", outPath] + defines + includes + [sourcePath]
+    cmd = [args.swig, "-c++", "-doxygen", "-objc", "-outdir", proxyDir, "-o", outPath] + defines + includes + [sourcePath]
     if subprocess.call(cmd) != 0:
       print("Error in %s" % fileName)
       return False
@@ -529,7 +529,7 @@ def buildPolymorphicReferences(args):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--profile', dest='profile', default=getDefaultProfileId(), type=validProfile, help='Build profile')
-parser.add_argument('--swig', dest='swigExecutable', default='swig', help='path to Swig executable')
+parser.add_argument('--swig', dest='swig', default='swig', help='path to Swig executable')
 parser.add_argument('--defines', dest='defines', default='', help='Defines for Swig')
 parser.add_argument('--cppdir', dest='cppDir', default='../all/native;../extensions/all/native;../ios/native', help='directories containing C++ headers')
 parser.add_argument('--proxydir', dest='proxyDir', default='../generated/ios-objc/proxies', help='output directory for Objective C proxies')
@@ -539,6 +539,10 @@ parser.add_argument('--sourcedir', dest='sourceDir', default='../all/modules;../
 
 args = parser.parse_args()
 args.defines += ';' + getProfile(args.profile).get('defines', '')
+
+if not checkExecutable(args.swig, '-help'):
+  print('Unable to find SWIG executable. Use --swig argument to specify its location. The supported version is available from https://github.com/cartodb/mobile-swig')
+  sys.exit(-1)
 
 if os.path.isdir(args.wrapperDir):
   shutil.rmtree(args.wrapperDir)

@@ -497,11 +497,11 @@ def buildSwigPackage(args, sourceDir, packageName):
       os.makedirs(args.wrapperDir)
 
     includes = ["-I%s" % dir for dir in ["../scripts/swig/csharp", "../scripts/swig", args.moduleDir] + args.sourceDir.split(";") + [args.wrapperDir] + args.cppDir.split(";")]
-    swigPath = os.path.dirname(args.swigExecutable)
+    swigPath = os.path.dirname(args.swig)
     if swigPath:
       includes += ["-I%s/Lib/csharp" % swigPath, "-I%s/Lib" % swigPath]
     defines = ["-D%s" % define for define in args.defines.split(';') if define]
-    cmd = [args.swigExecutable, "-c++", "-csharp", "-namespace", "Carto.%s" % packageName, "-dllimport", args.dllName, "-outdir", args.proxyDir, "-o", outPath, "-doxygen"] + defines + includes + [sourcePath]
+    cmd = [args.swig, "-c++", "-csharp", "-namespace", "Carto.%s" % packageName, "-dllimport", args.dllName, "-outdir", args.proxyDir, "-o", outPath, "-doxygen"] + defines + includes + [sourcePath]
     if subprocess.call(cmd) != 0:
       print("Error in %s" % fileName)
       return False
@@ -521,7 +521,7 @@ def buildSwigPackages(args, sourceDir, basePackageName):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--profile', dest='profile', default=getDefaultProfileId(), type=validProfile, help='Build profile')
-parser.add_argument('--swig', dest='swigExecutable', default='swig', help='path to Swig executable')
+parser.add_argument('--swig', dest='swig', default='swig', help='path to Swig executable')
 parser.add_argument('--dll', dest='dllName', default='carto_mobile_sdk', help='name of the DLL (Android only)')
 parser.add_argument('--defines', dest='defines', default='', help='Defines for Swig')
 parser.add_argument('--cppdir', dest='cppDir', default='../all/native;../extensions/all/native;../{target}/native', help='directories containing C++ headers')
@@ -542,6 +542,10 @@ args.wrapperDir = args.wrapperDir.replace("{target}", args.target)
 args.moduleDir = args.moduleDir.replace("{target}", args.target)
 args.sourceDir = args.sourceDir.replace("{target}", args.target)
 args.defines += ';' + getProfile(args.profile).get('defines', '')
+
+if not checkExecutable(args.swig, '-help'):
+  print('Unable to find SWIG executable. Use --swig argument to specify its location. The supported version is available from https://github.com/cartodb/mobile-swig')
+  sys.exit(-1)
 
 if os.path.isdir(args.wrapperDir):
   shutil.rmtree(args.wrapperDir)

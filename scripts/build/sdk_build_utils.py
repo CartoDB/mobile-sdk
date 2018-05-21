@@ -59,6 +59,14 @@ def execute(cmd, dir, *cmdArgs):
     return False
   return True
 
+def checkExecutable(cmd, *cmdArgs):
+  cmdLine = [cmd] + list(cmdArgs)
+  try:
+    output = subprocess.check_output(cmdLine)
+  except:
+    return False
+  return True
+
 def cmake(args, dir, cmdArgs):
   return execute(args.cmake, dir, *cmdArgs)
 
