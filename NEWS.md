@@ -1,3 +1,37 @@
+CARTO Mobile SDK 4.1.3
+-------------------
+
+This update includes performance and stability improvements,
+bug fixes and some minor new features.
+
+### New features
+
+* Added support for TomTom online geocoding services (TomTomOnlineGeocodingService and TomTomOnlineReverseGeocodingService)
+* Implemented multilanguage support for offline geocoding classes (getLanguage, setLanguage methods in OSMOfflineGeocodingService and PackageManagerGeocodingService classes)
+* Implemented localization support for Pelias geocoding results (getLanguage, setLanguage methods in PeliasOnlineGeocodingService)
+* Implemented proper location bias for all geocoding services, 'location radius' is no longer needed for bias to work
+* Implemented opacity attribute for layers (setOpacity, getOpacity). Note that when used (opacity < 1.0), then this feature may have significant performance impact.
+* Implemented background color and border support for Text vectorelements (TextStyleBuilder class)
+* Implemented ‘break lines’ flag for texts (TextStyleBuilder class)
+* Added online API key interface to CartoMapsService and CartoSQLService
+* Added NTExceptionWrapper class for catching/handling SDK exceptions in Swift
+
+### Fixes/changes:
+
+* Min API level on Android is now 10 for Xamarin
+* Performance fix for CARTO Maps API - use cacheable requests when instantiating named and anonymous maps
+* Fixed regression in SDK 4.1.x vs 4.0.x - packages with incomplete zoom levels had wrong tilemasks after serialized/deserialized in database
+* Fixed bounds calculation for NML models
+* Fixed zoom level handling in ‘restricted panning’ mode
+* Fixed ‘restricted panning’ mode when tilt is applied
+* Fixed tile cache invalidation issue when all packages are removed from PackageManager
+* BalloonPopupStyleMargins class getters were not wrapped as properties for dotnet platforms previously, fixed now
+* Optimized label handling in VT renderer for zoom levels > 14
+* Optimized 3D buildings and transparent layers in VT renderer on GPUs that use tiled rendering
+* Distance based filtering in search API is more robust now (for coordinate wrapping, etc)
+* Fixed WKTGeometryWriter to NOT use scientific encoding
+
+
 CARTO Mobile SDK 4.1.2
 -------------------
 

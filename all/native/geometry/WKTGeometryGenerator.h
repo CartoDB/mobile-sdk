@@ -35,6 +35,12 @@ namespace carto {
 
         typedef std::function<std::shared_ptr<Geometry>(bool)> Func;
 
+        template <typename Num>
+        struct RealPolicy : karma::real_policies<Num> {
+            static unsigned int precision(Num n) { return 15; }
+            static int floatfield(Num n) { return karma::real_policies<Num>::fmtflags::fixed; }
+        };
+
         template <typename Iterator>
         struct Grammar : karma::grammar<Iterator, std::shared_ptr<Geometry>(bool)> {
             Grammar() : Grammar::base_type(geometry) {
@@ -45,7 +51,8 @@ namespace carto {
                 using karma::_3;
                 using karma::_r1;
 
-                pos = (karma::double_ << ' ' << karma::double_ << -(karma::lit(" ") << karma::double_)) [_pass = phx::bind(&GetMapPos, _val, _r1, _1, _2, _3)];
+                coord = karma::real_generator<double, RealPolicy<double>>();
+                pos = (coord << ' ' << coord << -(karma::lit(" ") << coord)) [_pass = phx::bind(&GetMapPos, _val, _r1, _1, _2, _3)];
                 ring = pos(_r1) % ',';
                 rings = '(' << (ring(_r1) % ',') << ')';
                 type = karma::lit(" Z") [_pass = _r1];
@@ -62,6 +69,7 @@ namespace carto {
                     ;
             }
 
+            karma::rule<Iterator, double()> coord;
             karma::rule<Iterator, MapPos(bool)> pos;
             karma::rule<Iterator, std::vector<MapPos>(bool)> ring;
             karma::rule<Iterator, std::vector<std::vector<MapPos> >(bool)> rings;

@@ -88,7 +88,7 @@ def buildXamarinDLL(args, target):
     f.write(csProjFile)
 
   if args.xbuild is None:
-    print '%s solution is in %s, please use Xamarin IDE to compile target DLL' % (target, buildDir)
+    print("%s solution is in %s, please use Xamarin IDE to compile target DLL" % (target, buildDir))
     return True
     
   if not xbuild(args, buildDir,
@@ -122,7 +122,7 @@ def buildXamarinNuget(args, target):
 
   if not copyfile('%s/CartoMobileSDK.%s.%s.nupkg' % (buildDir, target, version), '%s/CartoMobileSDK.%s.%s.nupkg' % (distDir, target, version)):
     return False
-  print "Output available in:\n%s\n\nTo publish, use:\nnuget push %s/CartoMobileSDK.%s.%s.nupkg -Source https://www.nuget.org/api/v2/package\n" % (distDir, distDir, target, version)
+  print("Output available in:\n%s\n\nTo publish, use:\nnuget push %s/CartoMobileSDK.%s.%s.nupkg -Source https://www.nuget.org/api/v2/package\n" % (distDir, distDir, target, version))
   return True
 
 parser = argparse.ArgumentParser()
@@ -151,7 +151,7 @@ elif args.xbuild == 'none':
 if args.androidsdkpath == 'auto' and args.target == 'android':
   args.androidsdkpath = os.environ.get('ANDROID_HOME', None)
   if args.androidsdkpath is None:
-    print "ANDROID_HOME variable not set"
+    print("ANDROID_HOME variable not set")
     exit(-1)
 if args.androidndkpath == 'auto' and args.target == 'android':
   args.androidndkpath = os.environ.get('ANDROID_NDK_HOME', None)

@@ -64,6 +64,7 @@ namespace carto {
         _kineticEventHandler(*this, *options),
         _layers(layers),
         _options(options),
+        _surfaceCreated(false),
         _surfaceChanged(false),
         _billboardsChanged(false),
         _redrawPending(false),
@@ -482,6 +483,8 @@ namespace carto {
         glPixelStorei(GL_PACK_ALIGNMENT, 1);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
+        _surfaceCreated = true;
+
         // Reset frame buffer manager
         if (_frameBufferManager) {
             _frameBufferManager->setGLThreadId(std::thread::id());
@@ -594,9 +597,8 @@ namespace carto {
             _viewState.setHorizontalLayerOffsetDir(0);
         }
 
-        if (_surfaceChanged) {
-            _surfaceChanged = false;
-            // Don't delay calling the cull task, the view state was already updated
+        // Don't delay calling the cull task, the view state was already updated
+        if (_surfaceChanged.exchange(false)) {
             viewChanged(false);
         }
         
@@ -615,7 +617,7 @@ namespace carto {
             mapRendererListener->onAfterDrawFrame();
         }
 
-        // Update billobard placements/visibility
+        // Update billboard placements/visibility
         if (_billboardsChanged.exchange(false)) {
             _billboardPlacementWorker->init(BILLBOARD_PLACEMENT_TASK_DELAY);
         }
@@ -635,6 +637,7 @@ namespace carto {
     
     void MapRenderer::onSurfaceDestroyed() {
         // This method may never be called (e.x Android)
+        _surfaceCreated = false;
 
         // Reset texture manager. We tell managers to ignore all resource 'release' operations by invalidating manager thread ids
         if (_textureManager) {
@@ -782,10 +785,9 @@ namespace carto {
     }
         
     void MapRenderer::layerChanged(const std::shared_ptr<Layer>& layer, bool delay) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
         // If screen size has been set, load the layers, otherwise wait for the onSurfaceChanged method
         // which will also start the cull worker
-        if (_viewState.getWidth() > 0 && _viewState.getHeight() > 0) {
+        if (_surfaceCreated) {
             int delayTime = layer->getCullDelay();
             _cullWorker->init(layer, delay ? delayTime : 0);
         }

@@ -231,6 +231,15 @@ namespace carto {
         return url;
     }
 
+    std::string NetworkUtils::CreateServiceURL(const std::string& serviceTemplate, const std::string& source) {
+        if (source.find("://") != std::string::npos) {
+            return source;
+        }
+
+        std::map<std::string, std::string> tagValues = { { "source", URLEncode(source) } };
+        return GeneralUtils::ReplaceTags(serviceTemplate, tagValues, "{", "}", true);
+    }
+
     std::map<std::string, std::string> NetworkUtils::CreateAppRefererHeader() {
         std::map<std::string, std::string> headers;
         headers["Referer"] = "app://" + URLEncode(PlatformUtils::GetAppIdentifier());
