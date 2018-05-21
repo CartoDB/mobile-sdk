@@ -62,7 +62,7 @@ def execute(cmd, dir, *cmdArgs):
 def checkExecutable(cmd, *cmdArgs):
   cmdLine = [cmd] + list(cmdArgs)
   try:
-    output = subprocess.check_output(cmdLine)
+    output = subprocess.check_output(cmdLine, stderr=subprocess.STDOUT)
   except:
     return False
   return True
