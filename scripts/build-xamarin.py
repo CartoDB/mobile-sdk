@@ -1,4 +1,5 @@
 import os
+import sys
 import argparse
 import string
 from build.sdk_build_utils import *
@@ -161,6 +162,19 @@ args.defines += ';' + getProfile(args.profile).get('defines', '')
 args.defines += ';TARGET_XAMARIN'
 args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
 args.nativeconfiguration = args.configuration
+
+if not checkExecutable(args.cmake, '--help'):
+  print('Failed to find CMake executable. Use --cmake to specify its location')
+  sys.exit(-1)
+
+if not checkExecutable(args.xbuild, '/?'):
+  print('Failed to find xbuild (or msbuild) executable. Use --xbuild to specify its location')
+  sys.exit(-1)
+
+if args.buildnuget:
+  if not checkExecutable(args.nuget, 'help'):
+    print('Failed to find nuget executable. Use --nuget to specify its location')
+    sys.exit(-1)
 
 target = None
 if args.target == 'android':

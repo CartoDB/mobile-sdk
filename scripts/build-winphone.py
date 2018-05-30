@@ -1,4 +1,5 @@
 import os
+import sys
 import string
 import argparse
 from build.sdk_build_utils import *
@@ -192,14 +193,30 @@ args.defines += ';' + getProfile(args.profile).get('defines', '')
 args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
 args.nativeconfiguration = 'RelWithDebInfo' if args.configuration == 'Debug' else args.configuration
 
+if not checkExecutable(args.cmake, '--help'):
+  print('Failed to find CMake executable. Use --cmake to specify its location')
+  sys.exit(-1)
+
+if not checkExecutable(args.msbuild, '/?'):
+  print('Failed to find msbuild executable. Use --msbuild to specify its location')
+  sys.exit(-1)
+
+if args.buildnuget:
+  if not checkExecutable(args.nuget, 'help'):
+    print('Failed to find nuget executable. Use --nuget to specify its location')
+    sys.exit(-1)
+  if not checkExecutable(args.corflags, '/?'):
+    print('Failed to find corflags executable. Use --corflags to specify its location')
+    sys.exit(-1)
+
 for arch in args.winphonearch:
   if not buildWinPhoneNativeDLL(args, arch):
-    exit(-1)
+    sys.exit(-1)
   if not buildWinPhoneManagedDLL(args, arch):
-    exit(-1)
+    sys.exit(-1)
 if args.buildvsix:
   if not buildWinPhoneVSIX(args):
-    exit(-1)
+    sys.exit(-1)
 if args.buildnuget:
   if not buildWinPhoneNuget(args):
-    exit(-1)
+    sys.exit(-1)

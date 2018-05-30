@@ -22,6 +22,8 @@ namespace carto {
         _zoom0Distance(0.0f),
         _minZoom(0.0f),
         _ignoreMinZoom(false),
+        _zoomRange(0.0f, 0.0f),
+        _restrictedPanning(false),
         _normalizedResolution(0.0f),
         _width(0),
         _height(0),
@@ -278,7 +280,7 @@ namespace carto {
         MapRange zoomRange = options.getZoomRange();
         float zoom = GeneralUtils::Clamp(_zoom, getMinZoom(), zoomRange.getMax());
 
-        if (zoom != getZoom()) {
+        if (zoom != getZoom() && _zoom0Distance > 0) {
             MapVec cameraVec = _cameraPos - _focusPos;
             double length = cameraVec.length();
             double newLength = _zoom0Distance / std::pow(2.0f, zoom);
@@ -317,6 +319,7 @@ namespace carto {
 
             ViewState viewState;
             viewState._ignoreMinZoom = true;
+            viewState._minZoom = _minZoom;
             viewState.setFocusPos(_focusPos);
             viewState.setCameraPos(_focusPos + MapVec(0, 0, cameraVec.length()));
             viewState.setZoom(_zoom);
@@ -367,7 +370,9 @@ namespace carto {
                 int FOVY = options.getFieldOfViewY();
                 int tileDrawSize = options.getTileDrawSize();
                 float dpi = options.getDPI();
-                if (FOVY != _fovY || tileDrawSize != _tileDrawSize || dpi != _dpi || _screenSizeChanged) {
+                MapRange zoomRange = options.getZoomRange();
+                bool restrictedPanning = options.isRestrictedPanning();
+                if (FOVY != _fovY || tileDrawSize != _tileDrawSize || dpi != _dpi || zoomRange != _zoomRange || restrictedPanning != _restrictedPanning || _screenSizeChanged) {
                     _fovY = FOVY;
                     _tileDrawSize = tileDrawSize;
                     _dpToPX = dpi / Const::UNSCALED_DPI;
@@ -386,14 +391,19 @@ namespace carto {
                     if (!_ignoreMinZoom) {
                         _minZoom = calculateMinZoom(options);
                     }
+
+                    _zoomRange = zoomRange;
+                    _restrictedPanning = restrictedPanning;
                     
                     _normalizedResolution = 2 * tileDrawSize * (_dpi / Const::UNSCALED_DPI);
         
                     // Calculate new camera position
-                    MapVec cameraVec = _cameraPos - _focusPos;
-                    double length = cameraVec.length();
-                    double newLength = _zoom0Distance / std::pow(2.0f, _zoom);
-                    _cameraPos = _focusPos + cameraVec * (newLength / length);
+                    if (_zoom0Distance > 0) {
+                        MapVec cameraVec = _cameraPos - _focusPos;
+                        double length = cameraVec.length();
+                        double newLength = _zoom0Distance / std::pow(2.0f, _zoom);
+                        _cameraPos = _focusPos + cameraVec * (newLength / length);
+                    }
         
                     _cameraChanged = true;
                 }

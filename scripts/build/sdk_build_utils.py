@@ -6,7 +6,7 @@ import argparse
 import shutil
 import json
 
-SDK_VERSION = '4.1.0'
+SDK_VERSION = '4.1.3'
 
 def makedirs(dir):
   try:
@@ -56,6 +56,14 @@ def execute(cmd, dir, *cmdArgs):
   os.chdir(currentDir)
   if code != 0:
     print("Error while executing %s (path %s):\n%s" % (cmd, dir, " ".join(cmdLine)))
+    return False
+  return True
+
+def checkExecutable(cmd, *cmdArgs):
+  cmdLine = [cmd] + list(cmdArgs)
+  try:
+    output = subprocess.check_output(cmdLine, stderr=subprocess.STDOUT)
+  except:
     return False
   return True
 

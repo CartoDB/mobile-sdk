@@ -978,17 +978,41 @@ namespace carto {
 
     void MapRenderer::OptionsListener::onOptionChanged(const std::string& optionName) {
         if (auto mapRenderer = _mapRenderer.lock()) {
+            bool updateView = false;
+
             if (optionName == "ProjectionMode" || optionName == "TileDrawSize" || optionName == "DPI" || optionName == "DrawDistance" || optionName == "FieldOfViewY" || optionName == "FocusPointOffset") {
-            	mapRenderer->viewChanged(false);
+                std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
+                mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
+                updateView = true;
+            }
+
+            if (optionName == "ZoomRange") {
+                std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
+                mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
+                mapRenderer->_viewState.clampZoom(*mapRenderer->_options);                
+                updateView = true;
+            }
+
+            if (optionName == "PanBounds") {
+                std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
+                mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
+                mapRenderer->_viewState.clampFocusPos(*mapRenderer->_options);
+                updateView = true;
             }
 
             if (optionName == "RestrictedPanning") {
                 std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
+                mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
                 mapRenderer->_viewState.clampZoom(*mapRenderer->_options);
                 mapRenderer->_viewState.clampFocusPos(*mapRenderer->_options);
+                updateView = true;
             }
 
-            mapRenderer->requestRedraw();
+            if (updateView) {
+            	mapRenderer->viewChanged(false);
+            } else {
+                mapRenderer->requestRedraw();
+            }
         }
     }
 

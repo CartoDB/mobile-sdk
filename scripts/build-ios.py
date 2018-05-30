@@ -1,4 +1,5 @@
 import os
+import sys
 import re
 import shutil
 import argparse
@@ -140,13 +141,17 @@ if 'all' in args.iosarch or args.iosarch == []:
 args.defines += ';' + getProfile(args.profile).get('defines', '')
 args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
 
+if not checkExecutable(args.cmake, '--help'):
+  print('Failed to find CMake executable. Use --cmake to specify its location')
+  sys.exit(-1)
+
 for arch in args.iosarch:
   if not buildIOSLib(args, arch):
-    exit(-1)
+    sys.exit(-1)
 
 if not buildIOSFramework(args, args.iosarch):
-  exit(-1)
+  sys.exit(-1)
 
 if args.buildcocoapod or args.buildcocoapodpackage:
   if not buildIOSCocoapod(args, args.buildcocoapodpackage):
-    exit(-1)
+    sys.exit(-1)
