@@ -104,6 +104,7 @@
 
 #import "NTAssetUtils.h"
 #import "NTBitmapUtils.h"
+#import "NTTileUtils.h"
 #import "NTLog.h"
 #import "NTLogEventListener.h"
 #import "utils/ExceptionWrapper.h"
