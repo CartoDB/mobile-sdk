@@ -139,7 +139,7 @@ namespace carto {
         }
         
         // Configure connection parameters
-        jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setRequestMethod, jenv->NewStringUTF("GET"));
+        jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setRequestMethod, jenv->NewStringUTF(request.method.c_str())));
         jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setDoInput, (jboolean)true);
         jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setDoOutput, (jboolean)!request.contentType.empty());
         jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setUseCaches, (jboolean)false);
