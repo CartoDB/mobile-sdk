@@ -788,8 +788,13 @@ namespace carto {
         // If screen size has been set, load the layers, otherwise wait for the onSurfaceChanged method
         // which will also start the cull worker
         if (_surfaceCreated) {
-            int delayTime = layer->getCullDelay();
-            _cullWorker->init(layer, delay ? delayTime : 0);
+            // If layer not yet initialized, Force the layer to be initialized (and then culled) in the UI thread
+            if (!layer->isSurfaceCreated()) {
+                requestRedraw();
+            } else {
+                int delayTime = layer->getCullDelay();
+                _cullWorker->init(layer, delay ? delayTime : 0);
+            }
         }
     }
     
