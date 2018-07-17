@@ -29,7 +29,7 @@ namespace carto {
         _buildingRenderOrder(VectorTileRenderOrder::VECTOR_TILE_RENDER_ORDER_LAST),
         _tileDecoder(decoder),
         _tileDecoderListener(),
-        _backgroundColor(),
+        _backgroundColor(0, 0, 0, 0),
         _backgroundBitmap(),
         _skyColor(),
         _skyBitmap(),
@@ -455,7 +455,11 @@ namespace carto {
 
         Color backgroundColor = _tileDecoder->getBackgroundColor();
         if (backgroundColor != _backgroundColor || !_backgroundBitmap) {
-            _backgroundBitmap = BackgroundBitmapGenerator(BACKGROUND_BLOCK_SIZE, BACKGROUND_BLOCK_COUNT).generateBitmap(backgroundColor);
+            if (backgroundColor == Color(0, 0, 0, 0)) {
+                _backgroundBitmap = TileLayer::getBackgroundBitmap();
+            } else {
+                _backgroundBitmap = BackgroundBitmapGenerator(BACKGROUND_BLOCK_SIZE, BACKGROUND_BLOCK_COUNT).generateBitmap(backgroundColor);
+            }
             _backgroundColor = backgroundColor;
         }
         return _backgroundBitmap;
