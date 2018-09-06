@@ -1,6 +1,7 @@
 #include "HTTPClientAndroidImpl.h"
 #include "components/Exceptions.h"
 #include "utils/AndroidUtils.h"
+#include "utils/JNIUniqueLocalRef.h"
 #include "utils/JNIUniqueGlobalRef.h"
 #include "utils/Log.h"
 
@@ -152,8 +153,8 @@ namespace carto {
         
         // Set request headers
         for (auto it = request.headers.begin(); it != request.headers.end(); it++) {
-            jstring key = jenv->NewStringUTF(it->first.c_str());
-            jstring value = jenv->NewStringUTF(it->second.c_str());
+            JNIUniqueLocalRef<jstring> key(jenv->NewStringUTF(it->first.c_str()));
+            JNIUniqueLocalRef<jstring> value(jenv->NewStringUTF(it->second.c_str()));
             jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setRequestProperty, key, value);
         }
 
@@ -195,11 +196,12 @@ namespace carto {
         }
         std::map<std::string, std::string> headers;
         for (int i = 0; true; i++) {
-            jstring key = (jstring)jenv->CallObjectMethod(conn, _HttpURLConnectionClass->getHeaderFieldKey, (jint)i);
+            JNIUniqueLocalRef<jstring> key(jenv->CallObjectMethod(conn, _HttpURLConnectionClass->getHeaderFieldKey, (jint)i));
             if (!key) {
                 break;
             }
-            jstring value = (jstring)jenv->CallObjectMethod(conn, _HttpURLConnectionClass->getHeaderField, (jint)i);
+            JNIUniqueLocalRef<jstring> value(jenv->CallObjectMethod(conn, _HttpURLConnectionClass->getHeaderField, (jint)i));
+
             const char* keyStr = jenv->GetStringUTFChars(key, NULL);
             const char* valueStr = jenv->GetStringUTFChars(value, NULL);
             headers[keyStr] = valueStr;
