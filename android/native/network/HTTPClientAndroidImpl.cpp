@@ -155,7 +155,7 @@ namespace carto {
         for (auto it = request.headers.begin(); it != request.headers.end(); it++) {
             JNIUniqueLocalRef<jstring> key(jenv->NewStringUTF(it->first.c_str()));
             JNIUniqueLocalRef<jstring> value(jenv->NewStringUTF(it->second.c_str()));
-            jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setRequestProperty, key, value);
+            jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setRequestProperty, key.get(), value.get());
         }
 
         // If Content-Type is set, write request body to output stream
@@ -202,11 +202,11 @@ namespace carto {
             }
             JNIUniqueLocalRef<jstring> value(jenv->CallObjectMethod(conn, _HttpURLConnectionClass->getHeaderField, (jint)i));
 
-            const char* keyStr = jenv->GetStringUTFChars(key, NULL);
-            const char* valueStr = jenv->GetStringUTFChars(value, NULL);
+            const char* keyStr = jenv->GetStringUTFChars(key.get(), NULL);
+            const char* valueStr = jenv->GetStringUTFChars(value.get(), NULL);
             headers[keyStr] = valueStr;
-            jenv->ReleaseStringUTFChars(value, valueStr);
-            jenv->ReleaseStringUTFChars(key, keyStr);
+            jenv->ReleaseStringUTFChars(value.get(), valueStr);
+            jenv->ReleaseStringUTFChars(key.get(), keyStr);
         }
 
         bool cancel = false;
