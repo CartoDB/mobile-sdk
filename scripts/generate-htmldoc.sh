@@ -10,7 +10,7 @@ baseDir="${cmdDir}/.."
 buildDir="${baseDir}/build/xamarin_Android/bin/Release"
 htmldocDir="${baseDir}/dist/xamarin/htmldoc"
 tempDir="${baseDir}/build/htmldoc"
-libraryDirs="-L /Developer/MonoAndroid/usr/lib/mandroid/platforms/android-10/ -L /Developer/MonoAndroid/usr/lib/mono/2.1 -L /Library/Frameworks/Mono.framework/Versions/4.4.2/lib/mono/xbuild-frameworks/.NETPortable/v4.6"
+libraryDirs="-L /Developer/MonoAndroid/usr/lib/mandroid/platforms/android-10/ -L /Developer/MonoAndroid/usr/lib/mono/2.1 -L /Library/Frameworks/Mono.framework/Versions/Current/lib/mono/xbuild-frameworks/.NETPortable/v4.6"
 
 # Remove old temp
 rm -rf ${tempDir}
