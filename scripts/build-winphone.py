@@ -201,10 +201,11 @@ if not checkExecutable(args.msbuild, '/?'):
   print('Failed to find msbuild executable. Use --msbuild to specify its location')
   sys.exit(-1)
 
+if not checkExecutable(args.nuget, 'help'):
+  print('Failed to find nuget executable. Use --nuget to specify its location')
+  sys.exit(-1)
+
 if args.buildnuget:
-  if not checkExecutable(args.nuget, 'help'):
-    print('Failed to find nuget executable. Use --nuget to specify its location')
-    sys.exit(-1)
   if not checkExecutable(args.corflags, '/?'):
     print('Failed to find corflags executable. Use --corflags to specify its location')
     sys.exit(-1)
