@@ -243,7 +243,7 @@ namespace carto {
 
         // Build URL
         std::map<std::string, std::string> urlParams;
-        urlParams["params"] = picojson::value(paramsObject).serialize();
+        urlParams["config"] = picojson::value(paramsObject).serialize();
         urlParams["callback"] = "callback";
         std::string url = NetworkUtils::BuildURLFromParameters(getServiceURL("/api/v1/map/named/" + NetworkUtils::URLEncode(templateId) + "/jsonp"), urlParams);
 
