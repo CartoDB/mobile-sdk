@@ -14,6 +14,7 @@ bug fixes and some minor new features.
 
 * Fixed Android HTTP connection class to use specified request method (previously always GET)
 * Fixed JNI local reference overflows in Android HTTP connection class (with HTTP servers returning very long lists of headers).
+* Removed unneeded iOS dependency of libstdc++.6 in Cocoapod, fixes build issues with iOS 12
 * Fixed the issue with delayed layer initialization, layers were not automatically rendered
 * Fixed several options not correctly reflected in renderer state when changed after the MapView was initialized
 * Fixed infinite loop in TileLayer update method when called with inconsistent state (zero view dimensions)
@@ -22,6 +23,9 @@ bug fixes and some minor new features.
 * Better error reporting of CartoCSS issues
 * SDK now uses default background bitmap in case of vector basemap with no background defined
 * Bitmap class decoder now supports automatic ungzipping. This is a fix for wrongly configured HTTP servers that send gzipped images even when this is not included in accepted encodings.
+* Fixed CartoNamedMapsService ignoring template parameter values when instantiating named maps
+* Fixed several grouped marker symbolizers being represented by a single marker
+* Fixed threading issue with online license management causing potential API token missing from initial HTTP requests
 
 
 CARTO Mobile SDK 4.1.3
