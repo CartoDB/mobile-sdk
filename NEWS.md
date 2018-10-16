@@ -26,6 +26,7 @@ bug fixes and some minor new features.
 * Fixed CartoNamedMapsService ignoring template parameter values when instantiating named maps
 * Fixed several grouped marker symbolizers being represented by a single marker
 * Fixed threading issue with online license management causing potential API token missing from initial HTTP requests
+* Fixed WebP library embedding on iOS targets (Xamarin/native), WebP symbols were previously exported, causing potential linking conflicts
 
 
 CARTO Mobile SDK 4.1.3
