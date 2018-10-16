@@ -357,6 +357,9 @@ target_link_libraries(carto_mobile_sdk msxml6.lib d3d11.lib dwrite.lib d2d1.lib)
 endif()
 
 if(IOS)
+set_target_properties(carto_mobile_sdk PROPERTIES
+    XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++"
+)
 if(ENABLE_BITCODE)
 set_target_properties(carto_mobile_sdk PROPERTIES
     XCODE_ATTRIBUTE_ENABLE_BITCODE YES
