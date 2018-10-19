@@ -1,5 +1,3 @@
-#ifdef _CARTO_PACKAGEMANAGER_SUPPORT
-
 #include "PackageTileMask.h"
 #include "core/MapBounds.h"
 #include "components/Exceptions.h"
@@ -327,5 +325,3 @@ namespace carto {
     }
 
 }
-
-#endif
