@@ -3,6 +3,8 @@
 
 %module CartoOfflineVectorTileLayer
 
+#ifdef _CARTO_PACKAGEMANAGER_SUPPORT
+
 !proxy_imports(carto::CartoOfflineVectorTileLayer, layers.CartoVectorTileLayer, packagemanager.CartoPackageManager, utils.AssetPackage)
 
 %{
@@ -27,5 +29,7 @@
 #endif
 
 %include "layers/CartoOfflineVectorTileLayer.h"
+
+#endif
 
 #endif
