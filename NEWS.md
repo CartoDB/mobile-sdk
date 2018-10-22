@@ -27,6 +27,7 @@ bug fixes and some minor new features.
 * Fixed several grouped marker symbolizers being represented by a single marker
 * Fixed threading issue with online license management causing potential API token missing from initial HTTP requests
 * Fixed WebP library embedding on iOS targets (Xamarin/native), WebP symbols were previously exported, causing potential linking conflicts
+* Made Xamarin.iOS build compatible with 'Linker behaviour = Link All' mode by explictly preserving symbols used through reflection
 
 
 CARTO Mobile SDK 4.1.3
