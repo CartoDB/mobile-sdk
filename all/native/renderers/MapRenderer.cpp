@@ -1014,7 +1014,7 @@ namespace carto {
             }
 
             if (updateView) {
-            	mapRenderer->viewChanged(false);
+                mapRenderer->viewChanged(false);
             } else {
                 mapRenderer->requestRedraw();
             }
