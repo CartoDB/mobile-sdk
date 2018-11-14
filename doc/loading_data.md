@@ -686,6 +686,10 @@ An in-memory cache DataSource. Although layers also cache tiles, the tiles are u
 
 A tile DataSource that combines two data sources (usually offline and online) and selects tiles based on the zoom level. All requests below a specified zoom level are directed to the first DataSource. All requests at, or above, a specified zoom level are directed to the second Datasource.
 
+-   **OrderedTileDataSource**
+
+A tile DataSource that combines two data sources (usually offline packages and online) and selects tiles based on the order. It will try to get tiles for the first datasource (offline packages), and will use second datasource if no tile is found.
+
 ## Other Built-in DataSources
 
 The following datasources are also built into the Mobile SDK packages.
