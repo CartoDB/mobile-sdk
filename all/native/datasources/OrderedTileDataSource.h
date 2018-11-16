@@ -4,8 +4,8 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_OrderedTileDataSource_H_
-#define _CARTO_OrderedTileDataSource_H_
+#ifndef _CARTO_ORDEREDTILEDATASOURCE_H_
+#define _CARTO_ORDEREDTILEDATASOURCE_H_
 
 #include "datasources/TileDataSource.h"
 #include "components/DirectorPtr.h"
@@ -23,7 +23,6 @@ namespace carto {
          * Constructs a combined tile data source object.
          * @param dataSource1 First data source that is used if requested tile is below given zoomLevel.
          * @param dataSource2 Second data source that is used if requested tile is at or above given zoomLevel.
-         * @param zoomLevel Threshold zoom level value.
          */
         OrderedTileDataSource(const std::shared_ptr<TileDataSource>& dataSource1, const std::shared_ptr<TileDataSource>& dataSource2);
         virtual ~OrderedTileDataSource();

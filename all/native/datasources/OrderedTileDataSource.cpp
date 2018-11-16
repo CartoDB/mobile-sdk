@@ -4,6 +4,7 @@
 #include "utils/Log.h"
 
 #include <memory>
+#include <algorithm>
 
 namespace carto {
     
@@ -48,17 +49,17 @@ namespace carto {
         int zoom = mapTile.getZoom();
         if (zoom <= _dataSource1->getMaxZoom() && zoom >= _dataSource1->getMinZoom()) {
             std::shared_ptr<TileData> result = _dataSource1->loadTile(mapTile);
-            if (result != NULL && !result->isReplaceWithParent()) {
+            if (result && !result->isReplaceWithParent()) {
                 return result;
             }
         }
         if (zoom <= _dataSource2->getMaxZoom() && zoom >= _dataSource2->getMinZoom()) {
             std::shared_ptr<TileData> result = _dataSource2->loadTile(mapTile);
-            if (result != NULL && !result->isReplaceWithParent()) {
+            if (result && !result->isReplaceWithParent()) {
                 return result;
             }
         }
-        return NULL;
+        return std::shared_ptr<TileData>();
     }
 
     OrderedTileDataSource::DataSourceListener::DataSourceListener(OrderedTileDataSource& combinedDataSource) :

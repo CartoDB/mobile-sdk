@@ -25,6 +25,7 @@
 #import "NTVariantObjectBuilder.h"
 
 #import "NTAssetTileDataSource.h"
+#import "NTOrderedTileDataSource.h"
 #import "NTBitmapOverlayRasterTileDataSource.h"
 #import "NTHTTPTileDataSource.h"
 #import "NTMemoryCacheTileDataSource.h"
