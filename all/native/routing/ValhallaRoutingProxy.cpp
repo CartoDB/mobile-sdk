@@ -617,6 +617,79 @@ namespace valhalla { namespace thor {
 
 namespace carto {
 
+    std::shared_ptr<RouteMatchingResult> ValhallaRoutingProxy::MatchRoute(const std::string& baseURL, const std::string& profile, const std::shared_ptr<RouteMatchingRequest>& request) {
+        EPSG3857 epsg3857;
+        std::shared_ptr<Projection> proj = request->getProjection();
+
+        std::vector<valhalla::midgard::PointLL> points;
+        for (const MapPos& pos : request->getPoints()) {
+            MapPos posWgs84 = proj->toWgs84(pos);
+            points.emplace_back(static_cast<float>(posWgs84.getX()), static_cast<float>(posWgs84.getY()));
+        }
+
+        picojson::object json;
+        json["encoded_polyline"] = picojson::value(valhalla::midgard::encode(points));
+        json["shape_match"] = picojson::value("map_snap");
+        json["costing"] = picojson::value(profile);
+        if (profile == "wheelchair") {
+            picojson::object pedestrianOptions;
+            pedestrianOptions["type"] = picojson::value("wheelchair");
+            picojson::object costingOptions;
+            costingOptions["pedestrian"] = picojson::value(pedestrianOptions);
+            json["costing"] = picojson::value("pedestrian");
+            json["costing_options"] = picojson::value(costingOptions);
+        }
+
+        std::map<std::string, std::string> params;
+        params["json"] = picojson::value(json).serialize();
+        std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
+        Log::Debugf("ValhallaRoutingProxy::MatchRoute: Loading %s", url.c_str());
+
+        std::shared_ptr<BinaryData> responseData;
+        if (!NetworkUtils::GetHTTP(url, responseData, Log::IsShowDebug())) {
+            throw NetworkException("Failed to fetch response"); // NOTE: we may have error messages, thus do not return from here
+        }
+
+        std::string responseString;
+        if (responseData) {
+            responseString = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+        } else {
+            throw GenericException("Empty response");
+        }
+
+        picojson::value response;
+        std::string err = picojson::parse(response, responseString);
+        if (!err.empty()) {
+            throw GenericException("Failed to parse response", err);
+        }
+
+        if (!response.get("trip").is<picojson::object>()) {
+            throw GenericException("No trip info in the response");
+        }
+
+        std::vector<MapPos> poses;
+
+        try {
+            for (const picojson::value& legInfo : response.get("trip").get("legs").get<picojson::array>()) {
+                std::vector<valhalla::midgard::PointLL> shape = valhalla::midgard::decode<std::vector<PointLL> >(legInfo.get("shape").get<std::string>());
+                poses.reserve(poses.size() + shape.size());
+
+                const picojson::array& maneuvers = legInfo.get("maneuvers").get<picojson::array>();
+                for (const picojson::value& maneuver : maneuvers) {
+                    for (std::size_t j = static_cast<std::size_t>(maneuver.get("begin_shape_index").get<std::int64_t>()); j <= static_cast<std::size_t>(maneuver.get("end_shape_index").get<std::int64_t>()); j++) {
+                        const valhalla::midgard::PointLL& point = shape.at(j);
+                        poses.push_back(proj->fromLatLong(point.lat(), point.lng()));
+                    }
+                }
+            }
+        }
+        catch (const std::exception& ex) {
+            throw GenericException("Exception while translating route", ex.what());
+        }
+
+        return std::make_shared<RouteMatchingResult>(proj, poses);
+    }
+
     std::shared_ptr<RouteMatchingResult> ValhallaRoutingProxy::MatchRoute(const std::vector<std::shared_ptr<sqlite3pp::database> >& databases, const std::string& profile, const std::shared_ptr<RouteMatchingRequest>& request) {
         EPSG3857 epsg3857;
         std::shared_ptr<Projection> proj = request->getProjection();

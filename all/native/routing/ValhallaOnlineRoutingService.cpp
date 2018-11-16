@@ -2,6 +2,8 @@
 
 #include "ValhallaOnlineRoutingService.h"
 #include "components/Exceptions.h"
+#include "routing/RouteMatchingRequest.h"
+#include "routing/RouteMatchingResult.h"
 #include "routing/ValhallaRoutingProxy.h"
 #include "utils/GeneralUtils.h"
 #include "utils/NetworkUtils.h"
@@ -42,6 +44,27 @@ namespace carto {
         _serviceURL = serviceURL;
     }
 
+    std::shared_ptr<RouteMatchingResult> ValhallaOnlineRoutingService::matchRoute(const std::shared_ptr<RouteMatchingRequest>& request) const {
+        if (!request) {
+            throw NullArgumentException("Null request");
+        }
+
+        std::string baseURL;
+
+        std::map<std::string, std::string> params;
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+
+            std::map<std::string, std::string> tagMap;
+            tagMap["service"] = "trace_route";
+            tagMap["api_key"] = NetworkUtils::URLEncode(_apiKey);
+            baseURL = GeneralUtils::ReplaceTags(_serviceURL.empty() ? MAPZEN_SERVICE_URL : _serviceURL, tagMap);
+        }
+
+        std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
+        return ValhallaRoutingProxy::MatchRoute(url, getProfile(), request);
+    }
+
     std::shared_ptr<RoutingResult> ValhallaOnlineRoutingService::calculateRoute(const std::shared_ptr<RoutingRequest>& request) const {
         if (!request) {
             throw NullArgumentException("Null request");
@@ -54,6 +77,7 @@ namespace carto {
             std::lock_guard<std::mutex> lock(_mutex);
 
             std::map<std::string, std::string> tagMap;
+            tagMap["service"] = "route";
             tagMap["api_key"] = NetworkUtils::URLEncode(_apiKey);
             baseURL = GeneralUtils::ReplaceTags(_serviceURL.empty() ? MAPZEN_SERVICE_URL : _serviceURL, tagMap);
         }
@@ -62,7 +86,7 @@ namespace carto {
         return ValhallaRoutingProxy::CalculateRoute(url, getProfile(), request);
     }
 
-    const std::string ValhallaOnlineRoutingService::MAPZEN_SERVICE_URL = "https://valhalla.mapzen.com/route?api_key={api_key}";
+    const std::string ValhallaOnlineRoutingService::MAPZEN_SERVICE_URL = "https://valhalla.mapzen.com/{service}?api_key={api_key}";
 
 }
 
