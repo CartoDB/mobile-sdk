@@ -33,19 +33,19 @@ namespace carto {
     public:
         /**
          * Constructs a new ValhallaOnlineRoutingService instance given database file.
-         * @param apiKey The API key to use registered with Mapzen.
+         * @param apiKey The API key to use registered with MapZen.
          */
         explicit ValhallaOnlineRoutingService(const std::string& apiKey);
         virtual ~ValhallaOnlineRoutingService();
 
         /**
          * Returns the current routing profile.
-         * @return The current routing profile. Can be either "auto", "auto_shorter", "bicycle", "bus", "hov", "pedestrian" or "multimodal". The default is "pedestrian".
+         * @return The current routing profile. Can be either "auto", "auto_shorter", "bicycle", "bus", "hov", "pedestrian", "wheelchair" or "multimodal". The default is "pedestrian".
          */
         std::string getProfile() const;
         /**
          * Sets the current routing profile.
-         * @param profile The new profile. Can be either "auto", "auto_shorter", "bicycle", "bus", "hov", "pedestrian" or "multimodal".
+         * @param profile The new profile. Can be either "auto", "auto_shorter", "bicycle", "bus", "hov", "pedestrian", "wheelchair" or "multimodal".
          */
         void setProfile(const std::string& profile);
 

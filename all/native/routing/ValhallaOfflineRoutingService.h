@@ -38,12 +38,12 @@ namespace carto {
 
         /**
          * Returns the current routing profile.
-         * @return The current routing profile. Can be either "auto", "bicycle", "pedestrian" or "multimodal". The default is "pedestrian".
+         * @return The current routing profile. Can be either "auto", "bicycle", "pedestrian", "wheelchair" or "multimodal". The default is "pedestrian".
          */
         std::string getProfile() const;
         /**
          * Sets the current routing profile.
-         * @param profile The new profile. Can be either "auto", "bicycle", "pedestrian" or "multimodal".
+         * @param profile The new profile. Can be either "auto", "bicycle", "pedestrian", "wheelchair" or "multimodal".
          */
         void setProfile(const std::string& profile);
 

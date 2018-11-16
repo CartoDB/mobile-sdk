@@ -137,6 +137,7 @@ namespace valhalla { namespace meili {
         cost_factory_.Register("auto", sif::CreateAutoCost);
         cost_factory_.Register("bicycle", sif::CreateBicycleCost);
         cost_factory_.Register("pedestrian", sif::CreatePedestrianCost);
+        cost_factory_.Register("wheelchair", sif::CreatePedestrianCost);
         cost_factory_.Register("multimodal", CreateUniversalCost);
     }
 
@@ -172,6 +173,9 @@ namespace valhalla { namespace meili {
         pedestrianProfile.put("turn_penalty_factor", 100);
         pedestrianProfile.put("search_radius", 25);
 
+        boost::property_tree::ptree wheelchairProfile(pedestrianProfile);
+        wheelchairProfile.put("type", "wheelchair");
+
         boost::property_tree::ptree bicycleProfile;
         bicycleProfile.put("turn_penalty_factor", 140);
 
@@ -184,6 +188,7 @@ namespace valhalla { namespace meili {
         config.add_child("default", defaultProfile);
         config.add_child("auto", autoProfile);
         config.add_child("pedestrian", pedestrianProfile);
+        config.add_child("wheelchair", wheelchairProfile);
         config.add_child("bicycle", bicycleProfile);
         config.add_child("multimodal", multimodalProfile);
 
@@ -279,6 +284,7 @@ namespace valhalla { namespace thor {
         void get_path(PathAlgorithm* path_algorithm, baldr::PathLocation& origin, baldr::PathLocation& destination, std::vector<thor::PathInfo>& path_edges);
         thor::PathAlgorithm* get_path_algorithm(const std::string& routetype, const baldr::PathLocation& origin, const baldr::PathLocation& destination);
 
+        valhalla::baldr::GraphReader reader;
         std::string costing;
         valhalla::sif::TravelMode mode;
         boost::optional<std::string> jsonp;
@@ -291,7 +297,6 @@ namespace valhalla { namespace thor {
         sif::CostFactory<sif::DynamicCost> factory;
         sif::CostFactory<sif::DynamicCost>::cost_ptr_t cost;
         valhalla::sif::cost_ptr_t mode_costing[16];
-        valhalla::baldr::GraphReader reader;
 
         // Path algorithms
         AStarPathAlgorithm astar;
@@ -308,6 +313,7 @@ namespace valhalla { namespace thor {
         factory.Register("bus", sif::CreateBusCost);
         factory.Register("bicycle", sif::CreateBicycleCost);
         factory.Register("pedestrian", sif::CreatePedestrianCost);
+        factory.Register("wheelchair", sif::CreatePedestrianCost);
         factory.Register("truck", sif::CreateTruckCost);
         factory.Register("transit", sif::CreateTransitCost);
 
@@ -345,7 +351,7 @@ namespace valhalla { namespace thor {
             // TODO - can we use bidirectional A*?
             return &astar;
         }
-        else if (routetype == "pedestrian") {
+        else if (routetype == "pedestrian" || routetype == "wheelchair") {
             return &bidir_astar;
         }
         else {
@@ -459,7 +465,6 @@ namespace valhalla { namespace thor {
 #endif
         }
         
-        auto s = std::chrono::system_clock::now();
         bool prior_is_node = false;
         std::list<baldr::PathLocation> through_loc;
         baldr::GraphId through_edge;
@@ -661,6 +666,14 @@ namespace carto {
         picojson::object json;
         json["locations"] = picojson::value(locations);
         json["costing"] = picojson::value(profile);
+        if (profile == "wheelchair") {
+            picojson::object pedestrianOptions;
+            pedestrianOptions["type"] = picojson::value("wheelchair");
+            picojson::object costingOptions;
+            costingOptions["pedestrian"] = picojson::value(pedestrianOptions);
+            json["costing"] = picojson::value("pedestrian");
+            json["costing_options"] = picojson::value(costingOptions);
+        }
 
         std::map<std::string, std::string> params;
         params["json"] = picojson::value(json).serialize();
