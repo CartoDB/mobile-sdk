@@ -24,7 +24,7 @@ namespace carto {
     class RouteMatchingResult;
 
     /**
-     * An online routing service that uses MapZen Valhalla routing service.
+     * An online routing service that uses MapBox Valhalla routing service.
      * As the class connects to an external (non-CARTO) service, this class is provided "as-is",   
      * future changes from the service provider may not be compatible with the implementation.
      * Be sure to read the Terms and Conditions of your Valhalla service provider to see if the
@@ -35,7 +35,7 @@ namespace carto {
     public:
         /**
          * Constructs a new ValhallaOnlineRoutingService instance given database file.
-         * @param apiKey The API key to use registered with MapZen.
+         * @param apiKey The API key (access token) to use registered with MapBox.
          */
         explicit ValhallaOnlineRoutingService(const std::string& apiKey);
         virtual ~ValhallaOnlineRoutingService();
@@ -74,7 +74,7 @@ namespace carto {
         virtual std::shared_ptr<RoutingResult> calculateRoute(const std::shared_ptr<RoutingRequest>& request) const;
 
     private:
-        static const std::string MAPZEN_SERVICE_URL;
+        static const std::string MAPBOX_SERVICE_URL;
 
         const std::string _apiKey;
 

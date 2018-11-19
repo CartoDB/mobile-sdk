@@ -58,7 +58,7 @@ namespace carto {
             std::map<std::string, std::string> tagMap;
             tagMap["service"] = "trace_route";
             tagMap["api_key"] = NetworkUtils::URLEncode(_apiKey);
-            baseURL = GeneralUtils::ReplaceTags(_serviceURL.empty() ? MAPZEN_SERVICE_URL : _serviceURL, tagMap);
+            baseURL = GeneralUtils::ReplaceTags(_serviceURL.empty() ? MAPBOX_SERVICE_URL : _serviceURL, tagMap);
         }
 
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
@@ -79,14 +79,14 @@ namespace carto {
             std::map<std::string, std::string> tagMap;
             tagMap["service"] = "route";
             tagMap["api_key"] = NetworkUtils::URLEncode(_apiKey);
-            baseURL = GeneralUtils::ReplaceTags(_serviceURL.empty() ? MAPZEN_SERVICE_URL : _serviceURL, tagMap);
+            baseURL = GeneralUtils::ReplaceTags(_serviceURL.empty() ? MAPBOX_SERVICE_URL : _serviceURL, tagMap);
         }
 
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
         return ValhallaRoutingProxy::CalculateRoute(url, getProfile(), request);
     }
 
-    const std::string ValhallaOnlineRoutingService::MAPZEN_SERVICE_URL = "https://valhalla.mapzen.com/{service}?api_key={api_key}";
+    const std::string ValhallaOnlineRoutingService::MAPBOX_SERVICE_URL = "https://api.mapbox.com/valhalla/v1/{service}?access_token={api_key}";
 
 }
 
