@@ -21,8 +21,8 @@ namespace carto {
     public:
         /**
          * Constructs a combined tile data source object.
-         * @param dataSource1 First data source that is used if requested tile is below given zoomLevel.
-         * @param dataSource2 Second data source that is used if requested tile is at or above given zoomLevel.
+         * @param dataSource1 First data source that is used first if found
+         * @param dataSource2 Second data source that is used only if dataSource1 tile is not found
          */
         OrderedTileDataSource(const std::shared_ptr<TileDataSource>& dataSource1, const std::shared_ptr<TileDataSource>& dataSource2);
         virtual ~OrderedTileDataSource();
@@ -47,7 +47,6 @@ namespace carto {
         
         const DirectorPtr<TileDataSource> _dataSource1;
         const DirectorPtr<TileDataSource> _dataSource2;
-        int _zoomLevel;
         
     private:
         std::shared_ptr<DataSourceListener> _dataSourceListener;
