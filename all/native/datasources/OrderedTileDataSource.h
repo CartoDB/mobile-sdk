@@ -13,9 +13,8 @@
 namespace carto {
     
     /**
-     * A tile data source that combines two data sources (usually offline and online) and selects tiles
-     * based on zoom level. All requests below specified zoom level are directed to the first data source
-     * and all requests at or above specified zoom level are directed to the second data source.
+     * A tile data source that combines two data sources (usually offline and online).
+     * All requests are made first to first data source. If not found the request will be made to the second data source.
      */
     class OrderedTileDataSource : public TileDataSource {
     public:

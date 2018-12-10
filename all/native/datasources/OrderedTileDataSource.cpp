@@ -36,7 +36,7 @@ namespace carto {
     }
 
     int OrderedTileDataSource::getMaxZoom() const {
-        return std::max(_dataSource1->getMinZoom(), _dataSource2->getMinZoom());
+        return std::max(_dataSource1->getMaxZoom(), _dataSource2->getMaxZoom());
     }
 
     MapBounds OrderedTileDataSource::getDataExtent() const {
