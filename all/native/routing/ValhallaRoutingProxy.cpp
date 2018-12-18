@@ -69,6 +69,16 @@
 #include <valhalla/proto/trippath.pb.h>
 #include <valhalla/proto/tripdirections.pb.h>
 
+namespace valhalla { namespace sif {
+
+    cost_ptr_t CreateWheelchairCost(const boost::property_tree::ptree& config) {
+        boost::property_tree::ptree wheelchairConfig(config);
+        wheelchairConfig.put("type", "wheelchair");
+        return CreatePedestrianCost(wheelchairConfig);
+    }
+
+} }
+
 namespace valhalla { namespace meili {
 
     inline float local_tile_size(const valhalla::baldr::GraphReader& graphreader) {
@@ -137,7 +147,7 @@ namespace valhalla { namespace meili {
         cost_factory_.Register("auto", sif::CreateAutoCost);
         cost_factory_.Register("bicycle", sif::CreateBicycleCost);
         cost_factory_.Register("pedestrian", sif::CreatePedestrianCost);
-        cost_factory_.Register("wheelchair", sif::CreatePedestrianCost);
+        cost_factory_.Register("wheelchair", sif::CreateWheelchairCost);
         cost_factory_.Register("multimodal", CreateUniversalCost);
     }
 
@@ -313,7 +323,7 @@ namespace valhalla { namespace thor {
         factory.Register("bus", sif::CreateBusCost);
         factory.Register("bicycle", sif::CreateBicycleCost);
         factory.Register("pedestrian", sif::CreatePedestrianCost);
-        factory.Register("wheelchair", sif::CreatePedestrianCost);
+        factory.Register("wheelchair", sif::CreateWheelchairCost);
         factory.Register("truck", sif::CreateTruckCost);
         factory.Register("transit", sif::CreateTransitCost);
 
