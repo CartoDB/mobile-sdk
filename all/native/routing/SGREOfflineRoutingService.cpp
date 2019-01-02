@@ -79,21 +79,25 @@ namespace carto {
     }
 
     std::shared_ptr<RoutingResult> SGREOfflineRoutingService::calculateRoute(const std::shared_ptr<RoutingRequest>& request) const {
-        std::lock_guard<std::mutex> lock(_mutex);
         if (!request) {
             throw NullArgumentException("Null request");
         }
 
-        if (!_cachedRouteFinder) {
-            try {
-                sgre::RuleList ruleList(*_ruleList);
-                ruleList.filter(_profile);
-                sgre::GeoJSONGraphBuilder graphBuilder(std::move(ruleList));
-                graphBuilder.importGeoJSON(_featureData);
-                _cachedRouteFinder = std::make_shared<sgre::RouteFinder>(graphBuilder.build());
-            } catch (const std::exception& ex) {
-                throw GenericException("Failed to create routing graph", ex.what());
+        std::shared_ptr<sgre::RouteFinder> routeFinder;
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            if (!_cachedRouteFinder) {
+                try {
+                    sgre::RuleList ruleList(*_ruleList);
+                    ruleList.filter(_profile);
+                    sgre::GeoJSONGraphBuilder graphBuilder(std::move(ruleList));
+                    graphBuilder.importGeoJSON(_featureData);
+                    _cachedRouteFinder = std::make_shared<sgre::RouteFinder>(graphBuilder.build());
+                } catch (const std::exception& ex) {
+                    throw GenericException("Failed to create routing graph", ex.what());
+                }
             }
+            routeFinder = _cachedRouteFinder;
         }
 
         std::shared_ptr<Projection> proj = request->getProjection();
@@ -108,7 +112,7 @@ namespace carto {
             MapPos p1 = proj->toWgs84(request->getPoints()[i]);
             double z1 = request->getPoints()[i].getZ();
             sgre::Query query(sgre::Point(p0.getX(), p0.getY(), z0), sgre::Point(p1.getX(), p1.getY(), z1));
-            sgre::Result result = _cachedRouteFinder->find(query);
+            sgre::Result result = routeFinder->find(query);
             if (result.getStatus() == sgre::Result::Status::FAILED) {
                 throw GenericException("Routing failed");
             }
