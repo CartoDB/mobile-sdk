@@ -36,18 +36,18 @@ namespace carto {
         /**
          * Constructs a new SGREOfflineRoutingService instance from a given GeoJSON and rule list.
          * @param geoJSON The GeoJSON variant specifying features used for the routing graph.
-         * @param ruleList A list of SGRE routing rules specified using variant.
+         * @param config A configuration specifying various routing metrics and rules.
          * @throws std::runtime_error If an error occured during rule list parsing.
          */
-        SGREOfflineRoutingService(const Variant& geoJSON, const Variant& ruleList);
+        SGREOfflineRoutingService(const Variant& geoJSON, const Variant& config);
         /**
          * Constructs a new SGREOfflineRoutingService instance from a given feature collection and rule list.
          * @param projection Projection for the features in featureCollection. Can be null if the coordinates are based on WGS84.
          * @param featureCollection The feature collection used for the routing graph.
-         * @param ruleList A list of SGRE routing rules specified using variant.
+         * @param config A configuration specifying various routing metrics and rules.
          * @throws std::runtime_error If an error occured during rule list parsing.
          */
-        SGREOfflineRoutingService(const std::shared_ptr<Projection>& projection, const std::shared_ptr<FeatureCollection>& featureCollection, const Variant& ruleList);
+        SGREOfflineRoutingService(const std::shared_ptr<Projection>& projection, const std::shared_ptr<FeatureCollection>& featureCollection, const Variant& config);
         virtual ~SGREOfflineRoutingService();
 
         /**
@@ -64,6 +64,8 @@ namespace carto {
         virtual std::shared_ptr<RoutingResult> calculateRoute(const std::shared_ptr<RoutingRequest>& request) const;
 
     protected:
+        void initialize(const Variant& config);
+
         static float CalculateTurnAngle(const std::vector<MapPos>& epsg3857Points, int pointIndex);
         
         static float CalculateAzimuth(const std::vector<MapPos>& epsg3857Points, int pointIndex);
@@ -72,6 +74,9 @@ namespace carto {
 
         picojson::value _featureData;
         std::string _profile;
+
+        double _tesselationDistance;
+        bool _pathStraightening;
         std::shared_ptr<sgre::RuleList> _ruleList;
 
         mutable std::shared_ptr<sgre::RouteFinder> _cachedRouteFinder;

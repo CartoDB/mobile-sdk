@@ -112,6 +112,15 @@ namespace carto {
             case RoutingAction::ROUTING_ACTION_LEAVE_AGAINST_ALLOWED_DIRECTION:
                 actionName = "Leave against allowed direction";
                 break;
+            case RoutingAction::ROUTING_ACTION_GO_UP:
+                actionName = "Go up";
+                break;
+            case RoutingAction::ROUTING_ACTION_GO_DOWN:
+                actionName = "Go down";
+                break;
+            case RoutingAction::ROUTING_ACTION_WAIT:
+                actionName = "Wait";
+                break;
         }
 
         std::stringstream ss;

@@ -6,9 +6,10 @@
 #include "geometry/GeoJSONGeometryWriter.h"
 #include "projections/Projection.h"
 #include "projections/EPSG3857.h"
-#include "routing/OSRMRoutingProxy.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
+
+#include <limits>
 
 #include <sgre/Graph.h>
 #include <sgre/GeoJSONGraphBuilder.h>
@@ -20,37 +21,31 @@
 
 namespace carto {
 
-    SGREOfflineRoutingService::SGREOfflineRoutingService(const Variant& geoJSON, const Variant& ruleList) :
+    SGREOfflineRoutingService::SGREOfflineRoutingService(const Variant& geoJSON, const Variant& config) :
         RoutingService(),
         _featureData(geoJSON.toPicoJSON()),
         _profile(),
+        _tesselationDistance(std::numeric_limits<double>::infinity()),
+        _pathStraightening(true),
         _ruleList(),
         _cachedRouteFinder(),
         _mutex()
     {
-        try {
-            _ruleList = std::make_shared<sgre::RuleList>(sgre::RuleList::parse(ruleList.toPicoJSON()));
-        } catch (const std::exception& ex) {
-            throw GenericException("Exception while importing rule list", ex.what());
-        }
+        initialize(config);
     }
 
-    SGREOfflineRoutingService::SGREOfflineRoutingService(const std::shared_ptr<Projection>& projection, const std::shared_ptr<FeatureCollection>& featureCollection, const Variant& ruleList) :
+    SGREOfflineRoutingService::SGREOfflineRoutingService(const std::shared_ptr<Projection>& projection, const std::shared_ptr<FeatureCollection>& featureCollection, const Variant& config) :
         RoutingService(),
         _featureData(),
         _profile(),
+        _tesselationDistance(std::numeric_limits<double>::infinity()),
+        _pathStraightening(true),
         _ruleList(),
         _cachedRouteFinder(),
         _mutex()
     {
         if (!featureCollection) {
             throw NullArgumentException("Null featureCollection");
-        }
-
-        try {
-            _ruleList = std::make_shared<sgre::RuleList>(sgre::RuleList::parse(ruleList.toPicoJSON()));
-        } catch (const std::exception& ex) {
-            throw GenericException("Exception while importing rule list", ex.what());
         }
 
         GeoJSONGeometryWriter geometryWriter;
@@ -60,6 +55,8 @@ namespace carto {
         if (!err.empty()) {
             throw GenericException("Error while serializing feature data", err);
         }
+
+        initialize(config);
     }
 
     SGREOfflineRoutingService::~SGREOfflineRoutingService() {
@@ -169,6 +166,26 @@ namespace carto {
         return std::make_shared<RoutingResult>(proj, points, instructions);
     }
 
+    void SGREOfflineRoutingService::initialize(const Variant& config) {
+        try {
+            if (config.containsObjectKey("tesselationdistance")) {
+                _tesselationDistance = config.getObjectElement("tesselationdistance").getDouble();
+            }
+
+            if (config.containsObjectKey("pathstraightening")) {
+                _pathStraightening = config.getObjectElement("pathstraightening").getBool();
+            }
+
+            if (config.containsObjectKey("rules")) {
+                _ruleList = std::make_shared<sgre::RuleList>(sgre::RuleList::parse(config.getObjectElement("rules").toPicoJSON()));
+            } else {
+                _ruleList = std::make_shared<sgre::RuleList>();
+            }
+        } catch (const std::exception& ex) {
+            throw GenericException("Exception while importing configuration/rule list", ex.what());
+        }
+    }
+
     float SGREOfflineRoutingService::CalculateTurnAngle(const std::vector<MapPos>& epsg3857Points, int pointIndex) {
         int pointIndex0 = pointIndex;
         while (--pointIndex0 >= 0) {
@@ -232,10 +249,15 @@ namespace carto {
             case sgre::Instruction::Type::REACHED_YOUR_DESTINATION:
                 action = RoutingAction::ROUTING_ACTION_FINISH;
                 break;
-            // TODO: implement
             case sgre::Instruction::Type::GO_UP:
+                action = RoutingAction::ROUTING_ACTION_GO_UP;
+                break;
             case sgre::Instruction::Type::GO_DOWN:
+                action = RoutingAction::ROUTING_ACTION_GO_DOWN;
+                break;
             case sgre::Instruction::Type::WAIT:
+                action = RoutingAction::ROUTING_ACTION_WAIT;
+                break;
             default:
                 Log::Infof("SGREOfflineRoutingService::TranslateInstructionCode: ignoring instruction %d", instructionCode);
                 return false;

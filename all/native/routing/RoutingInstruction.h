@@ -76,7 +76,19 @@ namespace carto {
             /**
              * Leave the street while moving aginst the allowed direction.
              */
-            ROUTING_ACTION_LEAVE_AGAINST_ALLOWED_DIRECTION
+            ROUTING_ACTION_LEAVE_AGAINST_ALLOWED_DIRECTION,
+            /**
+             * Go up.
+             */
+            ROUTING_ACTION_GO_UP,
+            /**
+             * Go down.
+             */
+            ROUTING_ACTION_GO_DOWN,
+            /**
+             * Wait.
+             */
+            ROUTING_ACTION_WAIT
         };
     }
 
