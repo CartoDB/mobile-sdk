@@ -64,8 +64,6 @@ namespace carto {
         virtual std::shared_ptr<RoutingResult> calculateRoute(const std::shared_ptr<RoutingRequest>& request) const;
 
     protected:
-        void initialize(const Variant& config);
-
         static float CalculateTurnAngle(const std::vector<MapPos>& epsg3857Points, int pointIndex);
         
         static float CalculateAzimuth(const std::vector<MapPos>& epsg3857Points, int pointIndex);
@@ -73,11 +71,8 @@ namespace carto {
         static bool TranslateInstructionCode(int instructionCode, RoutingAction::RoutingAction& action);
 
         picojson::value _featureData;
+        picojson::value _config;
         std::string _profile;
-
-        double _tesselationDistance;
-        bool _pathStraightening;
-        std::shared_ptr<sgre::RuleList> _ruleList;
 
         mutable std::shared_ptr<sgre::RouteFinder> _cachedRouteFinder;
 

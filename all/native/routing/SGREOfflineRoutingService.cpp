@@ -12,7 +12,7 @@
 #include <limits>
 
 #include <sgre/Graph.h>
-#include <sgre/GeoJSONGraphBuilder.h>
+#include <sgre/GraphBuilder.h>
 #include <sgre/Query.h>
 #include <sgre/Result.h>
 #include <sgre/Rule.h>
@@ -24,23 +24,18 @@ namespace carto {
     SGREOfflineRoutingService::SGREOfflineRoutingService(const Variant& geoJSON, const Variant& config) :
         RoutingService(),
         _featureData(geoJSON.toPicoJSON()),
+        _config(config.toPicoJSON()),
         _profile(),
-        _tesselationDistance(std::numeric_limits<double>::infinity()),
-        _pathStraightening(true),
-        _ruleList(),
         _cachedRouteFinder(),
         _mutex()
     {
-        initialize(config);
     }
 
     SGREOfflineRoutingService::SGREOfflineRoutingService(const std::shared_ptr<Projection>& projection, const std::shared_ptr<FeatureCollection>& featureCollection, const Variant& config) :
         RoutingService(),
         _featureData(),
+        _config(config.toPicoJSON()),
         _profile(),
-        _tesselationDistance(std::numeric_limits<double>::infinity()),
-        _pathStraightening(true),
-        _ruleList(),
         _cachedRouteFinder(),
         _mutex()
     {
@@ -55,8 +50,6 @@ namespace carto {
         if (!err.empty()) {
             throw GenericException("Error while serializing feature data", err);
         }
-
-        initialize(config);
     }
 
     SGREOfflineRoutingService::~SGREOfflineRoutingService() {
@@ -85,11 +78,14 @@ namespace carto {
             std::lock_guard<std::mutex> lock(_mutex);
             if (!_cachedRouteFinder) {
                 try {
-                    sgre::RuleList ruleList(*_ruleList);
+                    sgre::RuleList ruleList;
+                    if (_config.contains("rules")) {
+                        ruleList = sgre::RuleList::parse(_config.get("rules"));
+                    }
                     ruleList.filter(_profile);
-                    sgre::GeoJSONGraphBuilder graphBuilder(std::move(ruleList));
+                    sgre::GraphBuilder graphBuilder(std::move(ruleList));
                     graphBuilder.importGeoJSON(_featureData);
-                    _cachedRouteFinder = std::make_shared<sgre::RouteFinder>(graphBuilder.build());
+                    _cachedRouteFinder = sgre::RouteFinder::create(graphBuilder.build(), _config);
                 } catch (const std::exception& ex) {
                     throw GenericException("Failed to create routing graph", ex.what());
                 }
@@ -164,26 +160,6 @@ namespace carto {
         }
 
         return std::make_shared<RoutingResult>(proj, points, instructions);
-    }
-
-    void SGREOfflineRoutingService::initialize(const Variant& config) {
-        try {
-            if (config.containsObjectKey("tesselationdistance")) {
-                _tesselationDistance = config.getObjectElement("tesselationdistance").getDouble();
-            }
-
-            if (config.containsObjectKey("pathstraightening")) {
-                _pathStraightening = config.getObjectElement("pathstraightening").getBool();
-            }
-
-            if (config.containsObjectKey("rules")) {
-                _ruleList = std::make_shared<sgre::RuleList>(sgre::RuleList::parse(config.getObjectElement("rules").toPicoJSON()));
-            } else {
-                _ruleList = std::make_shared<sgre::RuleList>();
-            }
-        } catch (const std::exception& ex) {
-            throw GenericException("Exception while importing configuration/rule list", ex.what());
-        }
     }
 
     float SGREOfflineRoutingService::CalculateTurnAngle(const std::vector<MapPos>& epsg3857Points, int pointIndex) {
