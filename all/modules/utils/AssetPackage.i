@@ -1,7 +1,7 @@
 #ifndef _ASSETPACKAGE_I
 #define _ASSETPACKAGE_I
 
-%module AssetPackage
+%module(directors="1") AssetPackage
 
 !proxy_imports(carto::AssetPackage, core.BinaryData, core.StringVector)
 
@@ -21,6 +21,8 @@
 
 %attributeval(carto::AssetPackage, %arg(std::vector<std::string>), AssetNames, getAssetNames)
 !standard_equals(carto::AssetPackage);
+
+%feature("director") carto::AssetPackage;
 
 %include "utils/AssetPackage.h"
 
