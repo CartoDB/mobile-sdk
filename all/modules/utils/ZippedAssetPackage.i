@@ -1,7 +1,7 @@
 #ifndef _ZIPPEDASSETPACKAGE_I
 #define _ZIPPEDASSETPACKAGE_I
 
-%module ZippedAssetPackage
+%module(directors="1") ZippedAssetPackage
 
 !proxy_imports(carto::ZippedAssetPackage, core.BinaryData, core.StringVector, utils.AssetPackage)
 
