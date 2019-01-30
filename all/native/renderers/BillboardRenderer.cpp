@@ -291,7 +291,7 @@ namespace carto {
                 const std::shared_ptr<Projection>& projection = layer->getDataSource()->getProjection();
                 int priority = static_cast<int>(results.size());
                 if (viewState.getTilt() == 90) { // if distances are equal, billboards are ordered based on 2D distance
-                    priority = -drawData->getScreenBottomDistance();
+                    priority = -static_cast<int>(drawData->getScreenBottomDistance());
                 }
                 cglib::vec3<double> pos = drawData->getPos();
                 results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projection->fromInternal(clickPos), projection->fromInternal(MapPos(pos(0), pos(1), pos(2))), priority, true));

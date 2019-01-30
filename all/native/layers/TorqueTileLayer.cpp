@@ -20,7 +20,7 @@ namespace carto {
 
     int TorqueTileLayer::countVisibleFeatures(int frameNr) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        int count = 0;
+        std::size_t count = 0;
         for (long long tileId : getVisibleTileIds()) {
             if (std::shared_ptr<VectorTileDecoder::TileMap> tileMap = getTileMap(tileId)) {
                 auto it = tileMap->find(frameNr);
@@ -29,7 +29,7 @@ namespace carto {
                 }
             }
         }
-        return count;
+        return static_cast<int>(count);
     }
 
     bool TorqueTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
