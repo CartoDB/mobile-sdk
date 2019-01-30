@@ -24,7 +24,7 @@ namespace carto {
 
         // World size. World bounds are from left -HALF_WORLD_SIZE to right +HALF_WORLD_SIZE
         // and from top +HALF_WORLD_SIZE to bottom -HALF_WORLD_SIZE
-        static const int WORLD_SIZE = 1 << 20;
+        static const int WORLD_SIZE;
         static const float HALF_WORLD_SIZE;
     
         // Maximum supported zoom level
