@@ -24,6 +24,7 @@ namespace carto {
     class RasterTileEventListener;
     namespace vt {
         class Tile;
+        class TileTransformer;
     }
     
     /**
@@ -78,7 +79,7 @@ namespace carto {
             
         private:
             static std::shared_ptr<Bitmap> ExtractSubTile(const MapTile& subTile, const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap);
-            static std::shared_ptr<vt::Tile> CreateVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap);
+            static std::shared_ptr<vt::Tile> CreateVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap, const std::shared_ptr<vt::TileTransformer>& tileTransformer);
         };
     
         virtual bool tileExists(const MapTile& mapTile, bool preloadingCache) const;
@@ -115,6 +116,8 @@ namespace carto {
         static const int DEFAULT_PRELOADING_CACHE_SIZE = 10 * 1024 * 1024;
         
         ThreadSafeDirectorPtr<RasterTileEventListener> _rasterTileEventListener;
+
+        std::shared_ptr<vt::TileTransformer> _tileTransformer;
 
         std::vector<long long> _visibleTileIds;
         std::vector<std::shared_ptr<TileDrawData> > _tempDrawDatas;

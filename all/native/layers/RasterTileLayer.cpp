@@ -10,12 +10,14 @@
 #include "graphics/Bitmap.h"
 #include "ui/RasterTileClickInfo.h"
 #include "utils/Log.h"
+#include "utils/Const.h"
 
 #include <array>
 #include <algorithm>
 
 #include <vt/TileId.h>
 #include <vt/Tile.h>
+#include <vt/TileTransformer.h>
 #include <vt/TileBitmap.h>
 #include <vt/TileLayer.h>
 #include <vt/TileLayerBuilder.h>
@@ -66,6 +68,7 @@ namespace carto {
     RasterTileLayer::RasterTileLayer(const std::shared_ptr<TileDataSource>& dataSource) :
         TileLayer(dataSource),
         _rasterTileEventListener(),
+        _tileTransformer(std::make_shared<vt::DefaultTileTransformer>(Const::WORLD_SIZE)),
         _visibleTileIds(),
         _tempDrawDatas(),
         _visibleCache(128 * 1024 * 1024), // limit should be never reached during normal use cases
@@ -350,7 +353,7 @@ namespace carto {
         }
     
         // Create new rendererer, simply drop old one (if exists)
-        auto tileRenderer = std::make_shared<TileRenderer>(_mapRenderer);
+        auto tileRenderer = std::make_shared<TileRenderer>(_mapRenderer, _tileTransformer);
         tileRenderer->onSurfaceCreated(shaderManager, textureManager);
         setTileRenderer(tileRenderer);
     }
@@ -446,7 +449,7 @@ namespace carto {
 
                 if (!isInvalidated()) {
                     // Build the bitmap object
-                    std::shared_ptr<vt::Tile> vtTile = CreateVectorTile(_tile, bitmap);
+                    std::shared_ptr<vt::Tile> vtTile = CreateVectorTile(_tile, bitmap, layer->_tileTransformer);
                     std::size_t tileSize = EXTRA_TILE_FOOTPRINT + vtTile->getResidentSize();
                     if (isPreloading()) {
                         std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
@@ -482,7 +485,7 @@ namespace carto {
         return subBitmap->getResizedBitmap(bitmap->getWidth(), bitmap->getHeight());
     }
 
-    std::shared_ptr<vt::Tile> RasterTileLayer::FetchTask::CreateVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap) {
+    std::shared_ptr<vt::Tile> RasterTileLayer::FetchTask::CreateVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap, const std::shared_ptr<vt::TileTransformer>& tileTransformer) {
         std::shared_ptr<vt::TileBitmap> tileBitmap;
         switch (bitmap->getColorFormat()) {
         case ColorFormat::COLOR_FORMAT_GRAYSCALE:
@@ -499,12 +502,14 @@ namespace carto {
             break;
         }
 
+        float tileSize = 256.0f; // 'normalized' tile size in pixels. Not really important
         vt::TileId vtTile(tile.getZoom(), tile.getX(), tile.getY());
-        vt::TileLayerBuilder tileLayerBuilder(vtTile, 256.0f, 1.0f); // Note: the size/scale argument is ignored
+        std::shared_ptr<const vt::TileTransformer::VertexTransformer> vtTransformer = tileTransformer->createTileVertexTransformer(vtTile);
+        vt::TileLayerBuilder tileLayerBuilder(vtTile, 0, vtTransformer, tileSize, 1.0f); // Note: the size/scale argument is ignored
         tileLayerBuilder.addBitmap(tileBitmap);
-        std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.build(0, boost::optional<vt::CompOp>(), vt::FloatFunction(1));
+        std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.buildTileLayer(boost::optional<vt::CompOp>(), vt::FloatFunction(1));
 
-        return std::make_shared<vt::Tile>(vtTile, std::vector<std::shared_ptr<vt::TileLayer> > { tileLayer });
+        return std::make_shared<vt::Tile>(vtTile, tileSize, std::shared_ptr<vt::TileBackground>(), std::vector<std::shared_ptr<vt::TileLayer> > { tileLayer });
     }
 
 }

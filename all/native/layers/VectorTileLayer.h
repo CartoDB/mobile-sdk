@@ -23,6 +23,10 @@
 namespace carto {
     class TileDrawData;
     class VectorTileEventListener;
+    namespace vt {
+        class Tile;
+        class TileTransformer;
+    }
         
     namespace VectorTileRenderOrder {
         /**
@@ -216,6 +220,8 @@ namespace carto {
         VectorTileRenderOrder::VectorTileRenderOrder _labelRenderOrder;
         VectorTileRenderOrder::VectorTileRenderOrder _buildingRenderOrder;
     
+        std::shared_ptr<vt::TileTransformer> _tileTransformer;
+
         const std::shared_ptr<VectorTileDecoder> _tileDecoder;
         std::shared_ptr<TileDecoderListener> _tileDecoderListener;
 

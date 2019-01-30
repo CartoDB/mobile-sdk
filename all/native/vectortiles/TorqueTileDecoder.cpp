@@ -77,10 +77,6 @@ namespace carto {
         return Color(std::static_pointer_cast<mvt::TorqueMap>(_map)->getTorqueSettings().clearColor.value());
     }
     
-    std::shared_ptr<const vt::BitmapPattern> TorqueTileDecoder::getBackgroundPattern() const {
-        return std::shared_ptr<const vt::BitmapPattern>();
-    }
-        
     int TorqueTileDecoder::getMinZoom() const {
         return 0;
     }
@@ -99,7 +95,7 @@ namespace carto {
         return std::shared_ptr<VectorTileFeatureCollection>();
     }
 
-    std::shared_ptr<TorqueTileDecoder::TileMap> TorqueTileDecoder::decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const {
+    std::shared_ptr<TorqueTileDecoder::TileMap> TorqueTileDecoder::decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<vt::TileTransformer>& tileTransformer, const std::shared_ptr<BinaryData>& tileData) const {
         if (!tileData) {
             Log::Warn("TorqueTileDecoder::decodeTile: Null tile data");
             return std::shared_ptr<TileMap>();
@@ -124,7 +120,7 @@ namespace carto {
 
             auto tileMap = std::make_shared<TileMap>();
             for (int frame = 0; frame < map->getTorqueSettings().frameCount; frame++) {
-                mvt::TorqueTileReader reader(map, frame, true, *symbolizerContext, decoder);
+                mvt::TorqueTileReader reader(map, frame, true, tileTransformer, *symbolizerContext, decoder);
                 if (std::shared_ptr<vt::Tile> tile = reader.readTile(targetTile)) {
                     (*tileMap)[frame] = tile;
                 }

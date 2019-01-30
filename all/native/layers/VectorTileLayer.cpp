@@ -18,6 +18,7 @@
 
 #include <vt/TileId.h>
 #include <vt/Tile.h>
+#include <vt/TileTransformer.h>
 
 namespace carto {
 
@@ -27,6 +28,7 @@ namespace carto {
         _vectorTileEventListener(),
         _labelRenderOrder(VectorTileRenderOrder::VECTOR_TILE_RENDER_ORDER_LAYER),
         _buildingRenderOrder(VectorTileRenderOrder::VECTOR_TILE_RENDER_ORDER_LAST),
+        _tileTransformer(std::make_shared<vt::DefaultTileTransformer>(Const::WORLD_SIZE)),
         _tileDecoder(decoder),
         _tileDecoderListener(),
         _backgroundColor(0, 0, 0, 0),
@@ -390,7 +392,7 @@ namespace carto {
         }
     
         // Create new rendererer, simply drop old one (if exists)
-        auto tileRenderer = std::make_shared<TileRenderer>(_mapRenderer);
+        auto tileRenderer = std::make_shared<TileRenderer>(_mapRenderer, _tileTransformer);
         tileRenderer->onSurfaceCreated(shaderManager, textureManager);
         setTileRenderer(tileRenderer);
     }
@@ -406,10 +408,6 @@ namespace carto {
                     mapRenderer->clearAndBindScreenFBO(Color(0, 0, 0, 0), true, true);
                 }
 
-                tileRenderer->setBackgroundColor(_tileDecoder->getBackgroundColor());
-                if (auto backgroundPattern = _tileDecoder->getBackgroundPattern()) {
-                    tileRenderer->setBackgroundPattern(backgroundPattern);
-                }
                 tileRenderer->setLabelOrder(static_cast<int>(getLabelRenderOrder()));
                 tileRenderer->setBuildingOrder(static_cast<int>(getBuildingRenderOrder()));
                 tileRenderer->setInteractionMode(_vectorTileEventListener.get() ? true : false);
@@ -528,7 +526,7 @@ namespace carto {
     
             vt::TileId vtTile(_tile.getZoom(), _tile.getX(), _tile.getY());
             vt::TileId vtDataSourceTile(dataSourceTile.getZoom(), dataSourceTile.getX(), dataSourceTile.getY());
-            std::shared_ptr<VectorTileDecoder::TileMap> tileMap = layer->_tileDecoder->decodeTile(vtDataSourceTile, vtTile, tileData->getData());
+            std::shared_ptr<VectorTileDecoder::TileMap> tileMap = layer->_tileDecoder->decodeTile(vtDataSourceTile, vtTile, layer->_tileTransformer, tileData->getData());
             if (tileMap) {
                 // Construct tile info - keep original data if interactivity is required
                 VectorTileLayer::TileInfo tileInfo(layer->calculateMapTileBounds(dataSourceTile.getFlipped()), layer->_vectorTileEventListener.get() ? tileData->getData() : std::shared_ptr<BinaryData>(), tileMap);

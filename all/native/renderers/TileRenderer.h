@@ -31,20 +31,19 @@ namespace carto {
     class MapRenderer;
     class ViewState;
     namespace vt {
+        class TileTransformer;
         class GLTileRenderer;
     }
     
     class TileRenderer : public std::enable_shared_from_this<TileRenderer> {
     public:
-        TileRenderer(const std::weak_ptr<MapRenderer>& mapRenderer);
+        TileRenderer(const std::weak_ptr<MapRenderer>& mapRenderer, const std::shared_ptr<vt::TileTransformer>& tileTransformer);
         virtual ~TileRenderer();
     
         void setInteractionMode(bool enabled);
         void setSubTileBlending(bool enabled);
         void setLabelOrder(int order);
         void setBuildingOrder(int order);
-        void setBackgroundColor(const Color& color);
-        void setBackgroundPattern(const std::shared_ptr<const vt::BitmapPattern>& pattern);
 
         void offsetLayerHorizontally(double offset);
     
@@ -65,6 +64,7 @@ namespace carto {
         const static int CLICK_RADIUS = 4;
 
         std::weak_ptr<MapRenderer> _mapRenderer;
+        std::shared_ptr<vt::TileTransformer> _tileTransformer;
         std::shared_ptr<vt::GLTileRenderer> _glRenderer;
         std::shared_ptr<std::mutex> _glRendererMutex;
         bool _interactionMode;

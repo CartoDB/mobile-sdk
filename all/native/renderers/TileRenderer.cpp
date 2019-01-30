@@ -10,7 +10,9 @@
 #include "utils/Log.h"
 #include "utils/Const.h"
 
-#include <vt/TileLabelCuller.h>
+#include <vt/Label.h>
+#include <vt/LabelCuller.h>
+#include <vt/TileTransformer.h>
 #include <vt/GLTileRenderer.h>
 #include <vt/GLExtensions.h>
 
@@ -33,8 +35,9 @@ namespace {
     
 namespace carto {
     
-    TileRenderer::TileRenderer(const std::weak_ptr<MapRenderer>& mapRenderer) :
+    TileRenderer::TileRenderer(const std::weak_ptr<MapRenderer>& mapRenderer, const std::shared_ptr<vt::TileTransformer>& tileTransformer) :
         _mapRenderer(mapRenderer),
+        _tileTransformer(tileTransformer),
         _glRenderer(),
         _glRendererMutex(std::make_shared<std::mutex>()),
         _interactionMode(false),
@@ -72,16 +75,6 @@ namespace carto {
         _buildingOrder = order;
     }
     
-    void TileRenderer::setBackgroundColor(const Color& color) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _backgroundColor = color;
-    }
-    
-    void TileRenderer::setBackgroundPattern(const std::shared_ptr<const vt::BitmapPattern>& pattern) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _backgroundPattern = pattern;
-    }
-    
     void TileRenderer::offsetLayerHorizontally(double offset) {
         std::lock_guard<std::mutex> lock(_mutex);
         _horizontalLayerOffset += offset;
@@ -101,7 +94,7 @@ namespace carto {
             }
         };
         _glRenderer = std::shared_ptr<vt::GLTileRenderer>(
-            new vt::GLTileRenderer(_glRendererMutex, std::make_shared<carto::vt::GLExtensions>(), carto::Const::WORLD_SIZE), glRendererDeleter
+            new vt::GLTileRenderer(_glRendererMutex, std::make_shared<vt::GLExtensions>(), _tileTransformer, Const::WORLD_SIZE), glRendererDeleter
         );
         _glRenderer->initializeRenderer();
         _tiles.clear();
@@ -120,7 +113,6 @@ namespace carto {
         _glRenderer->setViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution());
         _glRenderer->setInteractionMode(_interactionMode);
         _glRenderer->setSubTileBlending(_subTileBlending);
-        _glRenderer->setBackground(vt::Color(_backgroundColor.getARGB()), _backgroundPattern);
 
         _glRenderer->startFrame(deltaSeconds * 3);
 
@@ -190,7 +182,7 @@ namespace carto {
     
     bool TileRenderer::cullLabels(const ViewState& viewState) {
         cglib::mat4x4<double> modelViewMat = viewState.getModelviewMat();
-        std::vector<std::shared_ptr<vt::TileLabel> > visibleLabels;
+        std::vector<std::shared_ptr<vt::Label> > visibleLabels;
         {
             std::lock_guard<std::mutex> lock(_mutex);
 
@@ -202,7 +194,7 @@ namespace carto {
             visibleLabels = _glRenderer->getVisibleLabels();
         }
 
-        vt::TileLabelCuller culler(_glRendererMutex, Const::WORLD_SIZE);
+        vt::LabelCuller culler(_glRendererMutex, _tileTransformer, Const::WORLD_SIZE);
         culler.setViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution());
         culler.process(visibleLabels);
         return true;

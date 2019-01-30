@@ -21,7 +21,7 @@ namespace carto {
     namespace vt {
         struct TileId;
         class Tile;
-        struct BitmapPattern;
+        class TileTransformer;
     }
 
     class BinaryData;
@@ -56,12 +56,6 @@ namespace carto {
          */
         virtual Color getBackgroundColor() const = 0;
     
-        /**
-         * Returns background pattern image for tiles.
-         * @return background pattern image for tiles.
-         */
-        virtual std::shared_ptr<const vt::BitmapPattern> getBackgroundPattern() const = 0;
-
         /**
          * Returns minimum zoom level supported for by the decoder (or style).
          * @return Minimum supported zoom level.
@@ -100,7 +94,7 @@ namespace carto {
          * @param tileData The tile data to decode.
          * @return The vector tile data, for each frame. If the tile is not available, null is returned.
          */
-        virtual std::shared_ptr<TileMap> decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const = 0;
+        virtual std::shared_ptr<TileMap> decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<vt::TileTransformer>& tileTransformer, const std::shared_ptr<BinaryData>& tileData) const = 0;
     
         /**
          * Notifies listeners that the decoder parameters have changed. Action taken depends on the implementation of the
