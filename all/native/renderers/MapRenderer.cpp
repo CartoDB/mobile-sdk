@@ -67,6 +67,7 @@ namespace carto {
         _surfaceCreated(false),
         _surfaceChanged(false),
         _billboardsChanged(false),
+        _renderProjectionChanged(false),
         _redrawPending(false),
         _redrawRequestListener(),
         _mapRendererListener(),
@@ -863,6 +864,9 @@ namespace carto {
         {
             std::vector<std::shared_ptr<Layer> > layers = _layers->getAll();
 
+            // Reset surfaces if renderprojection has changed
+            bool resetSurfaces = _renderProjectionChanged.exchange(false);
+
             // BillboardSorter modifications must be synchronized
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             
@@ -876,7 +880,10 @@ namespace carto {
                 }
     
                 // Initialize layer renderer if it was added after onSurfaceCreated was called
-                if (!layer->isSurfaceCreated()) {
+                if (!layer->isSurfaceCreated() || resetSurfaces) {
+                    if (layer->isSurfaceCreated()) {
+                        layer->onSurfaceDestroyed();
+                    }
                     layer->onSurfaceCreated(_shaderManager, _textureManager);
                     layerChanged(layer, false);
                 }
@@ -984,6 +991,11 @@ namespace carto {
     void MapRenderer::OptionsListener::onOptionChanged(const std::string& optionName) {
         if (auto mapRenderer = _mapRenderer.lock()) {
             bool updateView = false;
+
+            if (optionName == "RenderProjectionMode") {
+                std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
+                mapRenderer->_renderProjectionChanged = true;
+            }
 
             if (optionName == "ProjectionMode" || optionName == "TileDrawSize" || optionName == "DPI" || optionName == "DrawDistance" || optionName == "FieldOfViewY" || optionName == "FocusPointOffset") {
                 std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);

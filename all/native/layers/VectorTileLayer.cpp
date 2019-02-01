@@ -28,7 +28,6 @@ namespace carto {
         _vectorTileEventListener(),
         _labelRenderOrder(VectorTileRenderOrder::VECTOR_TILE_RENDER_ORDER_LAYER),
         _buildingRenderOrder(VectorTileRenderOrder::VECTOR_TILE_RENDER_ORDER_LAST),
-        _tileTransformer(std::make_shared<vt::DefaultTileTransformer>(Const::WORLD_SIZE)),
         _tileDecoder(decoder),
         _tileDecoderListener(),
         _backgroundColor(0, 0, 0, 0),
@@ -390,9 +389,10 @@ namespace carto {
             _preloadingCache.clear();
             _visibleCache.clear();
         }
-    
+
         // Create new rendererer, simply drop old one (if exists)
-        auto tileRenderer = std::make_shared<TileRenderer>(_mapRenderer, _tileTransformer);
+        resetTileTransformer();
+        auto tileRenderer = std::make_shared<TileRenderer>(_mapRenderer, getTileTransformer());
         tileRenderer->onSurfaceCreated(shaderManager, textureManager);
         setTileRenderer(tileRenderer);
     }
@@ -526,7 +526,8 @@ namespace carto {
     
             vt::TileId vtTile(_tile.getZoom(), _tile.getX(), _tile.getY());
             vt::TileId vtDataSourceTile(dataSourceTile.getZoom(), dataSourceTile.getX(), dataSourceTile.getY());
-            std::shared_ptr<VectorTileDecoder::TileMap> tileMap = layer->_tileDecoder->decodeTile(vtDataSourceTile, vtTile, layer->_tileTransformer, tileData->getData());
+            std::shared_ptr<vt::TileTransformer> tileTransformer = layer->getTileTransformer();
+            std::shared_ptr<VectorTileDecoder::TileMap> tileMap = layer->_tileDecoder->decodeTile(vtDataSourceTile, vtTile, tileTransformer, tileData->getData());
             if (tileMap) {
                 // Construct tile info - keep original data if interactivity is required
                 VectorTileLayer::TileInfo tileInfo(layer->calculateMapTileBounds(dataSourceTile.getFlipped()), layer->_vectorTileEventListener.get() ? tileData->getData() : std::shared_ptr<BinaryData>(), tileMap);
@@ -534,18 +535,18 @@ namespace carto {
                 // Store tile to cache, unless invalidated
                 if (!isInvalidated()) {
                     long long tileId = layer->getTileId(_tile);
-                    if (isPreloading()) {
-                        std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
-                        layer->_preloadingCache.put(tileId, tileInfo, tileInfo.getSize());
-                        if (tileData->getMaxAge() >= 0) {
-                            layer->_preloadingCache.invalidate(tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
-                        }
-                    }
-                    else {
-                        std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
-                        layer->_visibleCache.put(tileId, tileInfo, tileInfo.getSize());
-                        if (tileData->getMaxAge() >= 0) {
-                            layer->_visibleCache.invalidate(tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+                    std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
+                    if (layer->getTileTransformer() == tileTransformer) { // extra check that the tile is created with correct transformer. Otherwise simply drop it.
+                        if (isPreloading()) {
+                            layer->_preloadingCache.put(tileId, tileInfo, tileInfo.getSize());
+                            if (tileData->getMaxAge() >= 0) {
+                                layer->_preloadingCache.invalidate(tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+                            }
+                        } else {
+                            layer->_visibleCache.put(tileId, tileInfo, tileInfo.getSize());
+                            if (tileData->getMaxAge() >= 0) {
+                                layer->_visibleCache.invalidate(tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+                            }
                         }
                     }
                 }

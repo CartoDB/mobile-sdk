@@ -26,6 +26,9 @@ namespace carto {
     class TileLoadListener;
     class UTFGridTile;
     class UTFGridEventListener;
+    namespace vt {
+        class TileTransformer;
+    }
     
     namespace TileSubstitutionPolicy {
         /**
@@ -276,6 +279,9 @@ namespace carto {
 
         MapBounds calculateInternalTileBounds(const MapTile& mapTile) const;
 
+        std::shared_ptr<vt::TileTransformer> getTileTransformer() const;
+        void resetTileTransformer();
+
         std::shared_ptr<TileRenderer> getTileRenderer() const;
         void setTileRenderer(const std::shared_ptr<TileRenderer>& renderer);
 
@@ -327,6 +333,7 @@ namespace carto {
         std::vector<MapTile> _preloadingTiles;
         std::unordered_map<MapTile, std::shared_ptr<UTFGridTile> > _utfGridTiles;
         std::shared_ptr<TileRenderer> _tileRenderer;
+        std::shared_ptr<vt::TileTransformer> _tileTransformer;
     };
     
 }

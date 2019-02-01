@@ -42,6 +42,22 @@ namespace carto {
         };
     };
     
+    namespace RenderProjectionMode {
+        /**
+         *  Possible render projection modes.
+         */
+        enum RenderProjectionMode {
+            /**
+             * Planar projection.
+             */
+            RENDER_PROJECTION_MODE_PLANAR,
+            /**
+             * Spherical projection.
+             */
+            RENDER_PROJECTION_MODE_SPHERICAL
+        };
+    };
+    
     namespace PanningMode {
         /**
          *  Possible panning modes for dual touch user input.
@@ -158,6 +174,17 @@ namespace carto {
          * @param projectionMode The new projection mode.
          */
         void setProjectionMode(ProjectionMode::ProjectionMode projectionMode);
+    
+        /**
+         * Returns the render projection mode.
+         * @return The render projection mode.
+         */
+        RenderProjectionMode::RenderProjectionMode getRenderProjectionMode() const;
+        /**
+         * Sets the render projection mode. The default is RenderProjectionMode::PLANAR.
+         * @param renderProjectionMode The new render projection mode.
+         */
+        void setRenderProjectionMode(RenderProjectionMode::RenderProjectionMode renderProjectionMode);
     
         /**
          * Returns the click type detection state.
@@ -581,6 +608,8 @@ namespace carto {
         MapVec _mainLightDir;
     
         ProjectionMode::ProjectionMode _projectionMode;
+
+        RenderProjectionMode::RenderProjectionMode _renderProjectionMode;
     
         bool _clickTypeDetection;
     

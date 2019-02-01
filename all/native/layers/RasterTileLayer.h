@@ -24,7 +24,6 @@ namespace carto {
     class RasterTileEventListener;
     namespace vt {
         class Tile;
-        class TileTransformer;
     }
     
     /**
@@ -116,8 +115,6 @@ namespace carto {
         static const int DEFAULT_PRELOADING_CACHE_SIZE = 10 * 1024 * 1024;
         
         ThreadSafeDirectorPtr<RasterTileEventListener> _rasterTileEventListener;
-
-        std::shared_ptr<vt::TileTransformer> _tileTransformer;
 
         std::vector<long long> _visibleTileIds;
         std::vector<std::shared_ptr<TileDrawData> > _tempDrawDatas;

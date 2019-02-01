@@ -16,6 +16,8 @@
 #include "utils/TileUtils.h"
 #include "utils/Log.h"
 
+#include <vt/TileTransformer.h>
+
 namespace carto {
 
     TileLayer::~TileLayer() {
@@ -193,7 +195,8 @@ namespace carto {
         _visibleTiles(),
         _preloadingTiles(),
         _utfGridTiles(),
-        _tileRenderer()
+        _tileRenderer(),
+        _tileTransformer()
     {
         if (!dataSource) {
             throw NullArgumentException("Null dataSource");
@@ -557,6 +560,22 @@ namespace carto {
         MapPos tilePos0 = _dataSource->getProjection()->toInternal(tileBoundsProj.getMin());
         MapPos tilePos1 = _dataSource->getProjection()->toInternal(tileBoundsProj.getMax());
         return MapBounds(MapPos(std::min(tilePos0.getX(), tilePos1.getX()), std::min(-tilePos0.getY(), -tilePos1.getY())), MapPos(std::max(tilePos0.getX(), tilePos1.getX()), std::max(-tilePos0.getY(), -tilePos1.getY())));
+    }
+
+    std::shared_ptr<vt::TileTransformer> TileLayer::getTileTransformer() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _tileTransformer;
+    }
+
+    void TileLayer::resetTileTransformer() {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        if (auto options = _options.lock()) {
+            if (options->getRenderProjectionMode() == RenderProjectionMode::RENDER_PROJECTION_MODE_SPHERICAL) {
+                _tileTransformer = std::make_shared<vt::SphericalTileTransformer>(static_cast<float>(Const::WORLD_SIZE / Const::PI));
+                return;
+            }
+        }
+        _tileTransformer = std::make_shared<vt::DefaultTileTransformer>(static_cast<float>(Const::WORLD_SIZE));
     }
 
     std::shared_ptr<TileRenderer> TileLayer::getTileRenderer() const {

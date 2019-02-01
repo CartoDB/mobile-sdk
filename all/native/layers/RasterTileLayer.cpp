@@ -68,7 +68,6 @@ namespace carto {
     RasterTileLayer::RasterTileLayer(const std::shared_ptr<TileDataSource>& dataSource) :
         TileLayer(dataSource),
         _rasterTileEventListener(),
-        _tileTransformer(std::make_shared<vt::DefaultTileTransformer>(Const::WORLD_SIZE)),
         _visibleTileIds(),
         _tempDrawDatas(),
         _visibleCache(128 * 1024 * 1024), // limit should be never reached during normal use cases
@@ -353,7 +352,8 @@ namespace carto {
         }
     
         // Create new rendererer, simply drop old one (if exists)
-        auto tileRenderer = std::make_shared<TileRenderer>(_mapRenderer, _tileTransformer);
+        resetTileTransformer();
+        auto tileRenderer = std::make_shared<TileRenderer>(_mapRenderer, getTileTransformer());
         tileRenderer->onSurfaceCreated(shaderManager, textureManager);
         setTileRenderer(tileRenderer);
     }
@@ -446,22 +446,24 @@ namespace carto {
                 if (dataSourceTile != _tile) {
                     bitmap = ExtractSubTile(_tile, dataSourceTile, bitmap);
                 }
+                std::shared_ptr<vt::TileTransformer> tileTransformer = layer->getTileTransformer();
+                std::shared_ptr<vt::Tile> vtTile = CreateVectorTile(_tile, bitmap, tileTransformer);
+                std::size_t tileSize = EXTRA_TILE_FOOTPRINT + vtTile->getResidentSize();
 
                 if (!isInvalidated()) {
                     // Build the bitmap object
-                    std::shared_ptr<vt::Tile> vtTile = CreateVectorTile(_tile, bitmap, layer->_tileTransformer);
-                    std::size_t tileSize = EXTRA_TILE_FOOTPRINT + vtTile->getResidentSize();
-                    if (isPreloading()) {
-                        std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
-                        layer->_preloadingCache.put(_tile.getTileId(), vtTile, tileSize);
-                        if (tileData->getMaxAge() >= 0) {
-                            layer->_preloadingCache.invalidate(_tile.getTileId(), std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
-                        }
-                    } else {
-                        std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
-                        layer->_visibleCache.put(_tile.getTileId(), vtTile, tileSize);
-                        if (tileData->getMaxAge() >= 0) {
-                            layer->_visibleCache.invalidate(_tile.getTileId(), std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+                    std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
+                    if (layer->getTileTransformer() == tileTransformer) { // extra check that the tile is created with correct transformer. Otherwise simply drop it.
+                        if (isPreloading()) {
+                            layer->_preloadingCache.put(_tile.getTileId(), vtTile, tileSize);
+                            if (tileData->getMaxAge() >= 0) {
+                                layer->_preloadingCache.invalidate(_tile.getTileId(), std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+                            }
+                        } else {
+                            layer->_visibleCache.put(_tile.getTileId(), vtTile, tileSize);
+                            if (tileData->getMaxAge() >= 0) {
+                                layer->_visibleCache.invalidate(_tile.getTileId(), std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+                            }
                         }
                     }
                 }

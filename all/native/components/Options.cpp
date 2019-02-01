@@ -21,6 +21,7 @@ namespace carto {
         _mainLightColor(0xFF8F8F8F),
         _mainLightDir(0.35, 0.35, -0.87),
         _projectionMode(ProjectionMode::PROJECTION_MODE_PERSPECTIVE),
+        _renderProjectionMode(RenderProjectionMode::RENDER_PROJECTION_MODE_PLANAR),
         _clickTypeDetection(true),
         _tileDrawSize(256),
         _dpi(160.0f),
@@ -125,6 +126,22 @@ namespace carto {
             _projectionMode = projectionMode;
         }
         notifyOptionChanged("ProjectionMode");
+    }
+    
+    RenderProjectionMode::RenderProjectionMode Options::getRenderProjectionMode() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _renderProjectionMode;
+    }
+    
+    void Options::setRenderProjectionMode(RenderProjectionMode::RenderProjectionMode renderProjectionMode) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            if (_renderProjectionMode == renderProjectionMode) {
+                return;
+            }
+            _renderProjectionMode = renderProjectionMode;
+        }
+        notifyOptionChanged("RenderProjectionMode");
     }
     
     bool Options::isClickTypeDetection() const {
