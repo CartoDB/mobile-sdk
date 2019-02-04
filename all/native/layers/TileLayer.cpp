@@ -11,6 +11,7 @@
 #include "renderers/MapRenderer.h"
 #include "renderers/TileRenderer.h"
 #include "projections/Projection.h"
+#include "projections/EPSG3857.h"
 #include "ui/UTFGridClickInfo.h"
 #include "utils/Const.h"
 #include "utils/TileUtils.h"
@@ -200,6 +201,10 @@ namespace carto {
     {
         if (!dataSource) {
             throw NullArgumentException("Null dataSource");
+        }
+
+        if (!std::dynamic_pointer_cast<EPSG3857>(dataSource->getProjection())) {
+            throw InvalidArgumentException("Expecting EPSG3857 projection in datasource");
         }
     }
     
