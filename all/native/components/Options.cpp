@@ -51,6 +51,7 @@ namespace carto {
         _panBounds(MapPos(-Const::HALF_WORLD_SIZE, -Const::HALF_WORLD_SIZE, 0), MapPos(Const::HALF_WORLD_SIZE, Const::HALF_WORLD_SIZE, 0)),
         _focusPointOffset(0, 0),
         _baseProjection(std::make_shared<EPSG3857>()),
+        _renderProjection(std::make_shared<EPSG3857>()),
         _envelopeThreadPool(envelopeThreadPool),
         _tileThreadPool(tileThreadPool),
         _mutex()
@@ -667,6 +668,26 @@ namespace carto {
             _baseProjection = baseProjection;
         }
         notifyOptionChanged("BaseProjection");
+    }
+    
+    std::shared_ptr<Projection> Options::getRenderProjection() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _renderProjection;
+    }
+    
+    void Options::setRenderProjection(const std::shared_ptr<Projection>& renderProjection) {
+        if (!renderProjection) {
+            throw NullArgumentException("Null renderProjection");
+        }
+
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            if (_renderProjection == renderProjection) {
+            	return;
+            }
+            _renderProjection = renderProjection;
+        }
+        notifyOptionChanged("RenderProjection");
     }
     
     void Options::registerOnChangeListener(const std::shared_ptr<OnChangeListener>& listener) {

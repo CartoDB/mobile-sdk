@@ -992,9 +992,18 @@ namespace carto {
         if (auto mapRenderer = _mapRenderer.lock()) {
             bool updateView = false;
 
-            if (optionName == "RenderProjectionMode") {
+            if (optionName == "RenderProjectionMode" || optionName == "RenderProjection") {
                 std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
+                mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
                 mapRenderer->_renderProjectionChanged = true;
+                updateView = true;
+            }
+
+            if (optionName == "BaseProjection") {
+                std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
+                mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
+                mapRenderer->_viewState.clampFocusPos(*mapRenderer->_options);
+                updateView = true;
             }
 
             if (optionName == "ProjectionMode" || optionName == "TileDrawSize" || optionName == "DPI" || optionName == "DrawDistance" || optionName == "FieldOfViewY" || optionName == "FocusPointOffset") {

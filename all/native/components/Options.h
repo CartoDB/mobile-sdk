@@ -581,6 +581,19 @@ namespace carto {
         void setBaseProjection(const std::shared_ptr<Projection>& baseProjection);
         
         /**
+         * Returns the render projection.
+         * @return The render projection.
+         */
+        std::shared_ptr<Projection> getRenderProjection() const;
+        /**
+         * Sets the render projection. If render projection mode is set to planar, then map is displayed using this projection.
+         * This setting has no effect if spherical render projection mode is used.
+         * The default is EPSG3857.
+         * @param renderProjection The new render projection.
+         */
+        void setRenderProjection(const std::shared_ptr<Projection>& renderProjection);
+        
+        /**
          * Registers listener for options change events.
          * @param listener The listener for change events.
          */
@@ -656,6 +669,8 @@ namespace carto {
         ScreenPos _focusPointOffset;
     
         std::shared_ptr<Projection> _baseProjection;
+
+        std::shared_ptr<Projection> _renderProjection;
     
         std::shared_ptr<CancelableThreadPool> _envelopeThreadPool;
         std::shared_ptr<CancelableThreadPool> _tileThreadPool;

@@ -46,6 +46,7 @@
 %attributeval(carto::Options, carto::Color, MainLightColor, getMainLightColor, setMainLightColor)
 %attributeval(carto::Options, carto::MapVec, MainLightDirection, getMainLightDirection, setMainLightDirection)
 !attributestring_polymorphic(carto::Options, projections.Projection, BaseProjection, getBaseProjection, setBaseProjection)
+!attributestring_polymorphic(carto::Options, projections.Projection, RenderProjection, getRenderProjection, setRenderProjection)
 %attribute(carto::Options, carto::ProjectionMode::ProjectionMode, ProjectionMode, getProjectionMode, setProjectionMode)
 %attribute(carto::Options, carto::RenderProjectionMode::RenderProjectionMode, RenderProjectionMode, getRenderProjectionMode, setRenderProjectionMode)
 %attribute(carto::Options, carto::PanningMode::PanningMode, PanningMode, getPanningMode, setPanningMode)
