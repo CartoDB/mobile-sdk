@@ -7,6 +7,8 @@
 #ifndef _CARTO_CAMERAEVENT_H_
 #define _CARTO_CAMERAEVENT_H_
 
+#include "core/MapPos.h"
+
 namespace carto {
     class Options;
     class ViewState;
@@ -19,6 +21,8 @@ namespace carto {
     
     protected:
         CameraEvent() { }
+
+        static void ClampFocusPos(MapPos& focusPos, const Options& options);
     };
     
 }

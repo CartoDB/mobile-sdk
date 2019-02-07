@@ -535,11 +535,6 @@ namespace carto {
         void setZoomRange(const MapRange& zoomRange);
         
         /**
-         * Returns the map panning bounds constraints. Map bounds minimum and maximum points are in the internal coordinate system.
-         * @return The map bounds constraints.
-         */
-        MapBounds getInternalPanBounds() const;
-        /**
          * Returns the map panning bounds constraints. Map bounds minimum and maximum points are in the base
          * projection's coordinate system.
          * @return The map bounds constraints.

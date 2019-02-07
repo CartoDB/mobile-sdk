@@ -298,7 +298,9 @@ namespace carto {
             return;
         }
 
-        MapBounds bounds = options.getInternalPanBounds();
+        // TODO: fix the implementation: tesselate pan bounds, check against all tesselated points. Use 2 triangles?
+        std::shared_ptr<Projection> baseProjection = options.getBaseProjection();
+        MapBounds bounds = options.getPanBounds();
         MapPos boundsPoses[2] = { bounds.getMin(), bounds.getMax() };
 
         ScreenBounds screenBounds(ScreenPos(_width * 0.5f - _height * 0.5f, 0.0f),
@@ -312,9 +314,9 @@ namespace carto {
                 }
             }
 
-            MapPos edgePos = _focusPos;
+            MapPos edgePos = baseProjection->fromInternal(_focusPos);
             edgePos[j % 2] = boundsPoses[j / 2][j % 2];
-            MapPos centerPos = _focusPos;
+            MapPos centerPos = baseProjection->fromInternal(_focusPos);
             centerPos[j % 2] = bounds.getCenter()[j % 2];
 
             ViewState viewState;
@@ -334,22 +336,23 @@ namespace carto {
 
             MapPos focusPos0 = centerPos, focusPos1 = edgePos;
             for (int i = 0; i < 24; i++) {
-                viewState.setFocusPos(focusPos0 + (focusPos1 - focusPos0) * 0.5);
+                MapPos focusPos = focusPos0 + (focusPos1 - focusPos0) * 0.5;
+                viewState.setFocusPos(baseProjection->toInternal(focusPos));
                 viewState.setCameraPos(viewState.getFocusPos() + MapVec(0, 0, cameraVec.length()));
                 viewState.cameraChanged();
                 viewState.calculateViewState(options);
 
-                ScreenPos screenPos = viewState.worldToScreen(edgePos, options);
+                ScreenPos screenPos = viewState.worldToScreen(baseProjection->toInternal(edgePos), options);
                 if (!screenBounds.contains(screenPos)) {
-                    focusPos0 = viewState.getFocusPos();
+                    focusPos0 = focusPos;
                 } else {
-                    focusPos1 = viewState.getFocusPos();
+                    focusPos1 = focusPos;
                 }
             }
 
-            if (focusPos0 != getFocusPos()) {
-                setFocusPos(focusPos0);
-                setCameraPos(focusPos0 + cameraVec);
+            if (baseProjection->toInternal(focusPos0) != getFocusPos()) {
+                setFocusPos(baseProjection->toInternal(focusPos0));
+                setCameraPos(baseProjection->toInternal(focusPos0) + cameraVec);
 
                 cameraChanged();
             }
@@ -535,8 +538,16 @@ namespace carto {
             return options.getZoomRange().getMin();
         }
 
-        MapBounds bounds = options.getInternalPanBounds();
-        MapPos boundsPoses[2] = { bounds.getMin(), bounds.getMax() };
+        // TODO: fix the implementation: tesselate pan bounds, check against all tesselated points. Use 2 triangles?
+        std::shared_ptr<Projection> baseProjection = options.getBaseProjection();
+        MapBounds bounds = options.getPanBounds();
+
+        std::vector<MapPos> boundsPoses;
+        for (int i = 0; i < 4; i++) {
+            double x = (i % 2 == 0 ? bounds.getMin().getX() : bounds.getMax().getX());
+            double y = (i / 2 == 0 ? bounds.getMin().getY() : bounds.getMax().getY());
+            boundsPoses.push_back(baseProjection->toInternal(MapPos(x, y)));
+        }
 
         ScreenBounds screenBounds(ScreenPos(_width * 0.5f - _height * 0.5f, 0.0f),
                                   ScreenPos(_width * 0.5f + _height * 0.5f, _height));
@@ -554,8 +565,7 @@ namespace carto {
             viewState.calculateViewState(options);
 
             bool fit = true;
-            for (int j = 0; j < 4; j++) {
-                MapPos mapPos(boundsPoses[j % 2].getX(), boundsPoses[j / 2].getY());
+            for (const MapPos& mapPos : boundsPoses) {
                 ScreenPos screenPos = viewState.worldToScreen(mapPos, options);
                 if (screenBounds.contains(screenPos)) {
                     fit = false;

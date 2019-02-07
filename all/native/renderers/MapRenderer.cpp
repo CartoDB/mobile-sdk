@@ -244,7 +244,8 @@ namespace carto {
             zoom = _viewState.getZoom();
           
             // In case of seamless panning horizontal teleport, offset the delta focus pos
-            deltaFocusPos.setX(deltaFocusPos.getX() - _viewState.getHorizontalLayerOffsetDir() * Const::WORLD_SIZE);
+            // TODO: rethink this
+            //deltaFocusPos.setX(deltaFocusPos.getX() - _viewState.getHorizontalLayerOffsetDir() * Const::WORLD_SIZE);
         }
     
         // Delay updating the layers, because view state will be updated only after onDrawFrame is called

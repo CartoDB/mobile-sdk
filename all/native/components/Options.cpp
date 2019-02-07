@@ -48,7 +48,7 @@ namespace carto {
         _rotatable(true),
         _tiltRange(Const::MIN_SUPPORTED_TILT_ANGLE, 90.0f),
         _zoomRange(0.0, Const::MAX_SUPPORTED_ZOOM_LEVEL),
-        _panBounds(MapPos(-Const::HALF_WORLD_SIZE, -Const::HALF_WORLD_SIZE, 0), MapPos(Const::HALF_WORLD_SIZE, Const::HALF_WORLD_SIZE, 0)),
+        _panBounds(EPSG3857().getBounds()),
         _focusPointOffset(0, 0),
         _baseProjection(std::make_shared<EPSG3857>()),
         _renderProjection(std::make_shared<EPSG3857>()),
@@ -603,29 +603,19 @@ namespace carto {
         notifyOptionChanged("ZoomRange");
     }
         
-    MapBounds Options::getInternalPanBounds() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _panBounds;
-    }
-    
     MapBounds Options::getPanBounds() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        const MapPos& projectionMin = _baseProjection->fromInternal(_panBounds.getMin());
-        const MapPos& projectionMax = _baseProjection->fromInternal(_panBounds.getMax());
-        return MapBounds(projectionMin, projectionMax);
+        return _panBounds;
     }
     
     void Options::setPanBounds(const MapBounds& panBounds) {
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            double halfWorldSize = Const::HALF_WORLD_SIZE;
-            const MapPos& internalMin = _baseProjection->toInternal(panBounds.getMin());
-            const MapPos& internalMax = _baseProjection->toInternal(panBounds.getMax());
-            double left = GeneralUtils::Clamp(internalMin.getX(), -halfWorldSize, halfWorldSize);
-            double bottom = GeneralUtils::Clamp(internalMin.getY(), -halfWorldSize, halfWorldSize);
-            double right = GeneralUtils::Clamp(internalMax.getX(), -halfWorldSize, halfWorldSize);
-            double top = GeneralUtils::Clamp(internalMax.getY(), -halfWorldSize, halfWorldSize);
-            MapBounds panBoundsClipped(MapPos(left, bottom, 0), MapPos(right, top, 0));
+            MapBounds projBounds = _baseProjection->getBounds();
+            MapBounds panBoundsClipped(
+                MapPos(std::max(projBounds.getMin().getX(), panBounds.getMin().getX()), std::max(projBounds.getMin().getX(), panBounds.getMin().getY()), projBounds.getMin().getZ()),
+                MapPos(std::min(projBounds.getMax().getX(), panBounds.getMax().getX()), std::min(projBounds.getMax().getX(), panBounds.getMax().getY()), projBounds.getMax().getZ())
+            );
             if (_panBounds == panBoundsClipped) {
                 return;
             }
@@ -666,6 +656,7 @@ namespace carto {
             	return;
             }
             _baseProjection = baseProjection;
+            _panBounds = baseProjection->getBounds();
         }
         notifyOptionChanged("BaseProjection");
     }

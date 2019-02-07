@@ -107,28 +107,8 @@ namespace carto {
         upVec.rotate2D(_sin, _cos);
         
         MapVec cameraVec = cameraPos - focusPos;
-    
-        // Enforce map bounds
-        MapBounds mapBounds = options.getInternalPanBounds();
-        bool seamLess = options.isSeamlessPanning();
-        if (!seamLess || mapBounds.getMin().getX() >= -Const::HALF_WORLD_SIZE || mapBounds.getMax().getX() <= Const::HALF_WORLD_SIZE) {
-            focusPos.setX(GeneralUtils::Clamp(focusPos.getX(), mapBounds.getMin().getX(), mapBounds.getMax().getX()));
-        }
-        focusPos.setY(GeneralUtils::Clamp(focusPos.getY(), mapBounds.getMin().getY(), mapBounds.getMax().getY()));
-    
-        // Teleport if necessary
-        if (seamLess) {
-            if (focusPos.getX() > Const::HALF_WORLD_SIZE) {
-                focusPos.setX(-Const::HALF_WORLD_SIZE + (focusPos.getX() - Const::HALF_WORLD_SIZE));
-                viewState.setHorizontalLayerOffsetDir(-1);
-            } else if (focusPos.getX() < -Const::HALF_WORLD_SIZE) {
-                focusPos.setX(Const::HALF_WORLD_SIZE + (focusPos.getX() + Const::HALF_WORLD_SIZE));
-                viewState.setHorizontalLayerOffsetDir(1);
-            }
-        }
-        
-        cameraPos = focusPos;
-        cameraPos += cameraVec;
+        ClampFocusPos(focusPos, options);
+        cameraPos = focusPos + cameraVec;
 
         viewState.setCameraPos(cameraPos);
         viewState.setFocusPos(focusPos);
