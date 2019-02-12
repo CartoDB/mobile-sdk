@@ -16,8 +16,7 @@ namespace carto {
     
     class LabelDrawData : public BillboardDrawData {
     public:
-        LabelDrawData(const Label& label, const LabelStyle& style,
-                      const Projection& projection, const ViewState& viewState);
+        LabelDrawData(const Label& label, const LabelStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface, const ViewState& viewState);
         virtual ~LabelDrawData();
     };
     

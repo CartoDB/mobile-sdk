@@ -7,12 +7,11 @@
 #ifndef _CARTO_SPATIALINDEX_H_
 #define _CARTO_SPATIALINDEX_H_
 
-#include "core/MapBounds.h"
-#include "core/MapPos.h"
-#include "core/MapVec.h"
-#include "graphics/Frustum.h"
-
 #include <vector>
+
+#include <cglib/vec.h>
+#include <cglib/bbox.h>
+#include <cglib/frustum3.h>
 
 namespace carto {
     
@@ -25,12 +24,12 @@ namespace carto {
         virtual void reserve(std::size_t size) = 0;
         
         virtual void clear() = 0;
-        virtual void insert(const MapBounds& bounds, const T& object) = 0;
-        virtual bool remove(const MapBounds& bounds, const T& object) = 0;
+        virtual void insert(const cglib::bbox3<double>& bounds, const T& object) = 0;
+        virtual bool remove(const cglib::bbox3<double>& bounds, const T& object) = 0;
         virtual bool remove(const T& object) = 0;
         
-        virtual std::vector<T> query(const Frustum& frustum) const = 0;
-        virtual std::vector<T> query(const MapBounds& bounds) const = 0;
+        virtual std::vector<T> query(const cglib::frustum3<double>& frustum) const = 0;
+        virtual std::vector<T> query(const cglib::bbox3<double>& bounds) const = 0;
         virtual std::vector<T> getAll() const = 0;
     };
 

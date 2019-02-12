@@ -1,20 +1,24 @@
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT
 
 #include "NMLModelLODTreeDrawData.h"
+#include "projections/ProjectionSurface.h"
 
 namespace carto {
 
-    NMLModelLODTreeDrawData::NMLModelLODTreeDrawData(const std::shared_ptr<NMLModelLODTree>& modelLODTree, long long nodeId, const std::vector<long long>& parentIds, const std::shared_ptr<nml::GLModel>& glModel) :
+    NMLModelLODTreeDrawData::NMLModelLODTreeDrawData(const std::shared_ptr<NMLModelLODTree>& modelLODTree, long long nodeId, const std::vector<long long>& parentIds, const std::shared_ptr<nml::GLModel>& glModel, const ProjectionSurface& projectionSurface) :
         _modelLODTree(modelLODTree),
         _nodeId(nodeId),
         _parentIds(parentIds),
-        _localMat(modelLODTree->getLocalMat()),
+        _localMat(projectionSurface.calculateLocalMatrix(modelLODTree->getMapPos(), *modelLODTree->getProjection())),
         _glModel(glModel),
         _proxyMap(modelLODTree->getProxyMap()),
         _isOffset(false)
     {
     }
-    
+
+    NMLModelLODTreeDrawData::~NMLModelLODTreeDrawData() {
+    }
+ 
     std::shared_ptr<NMLModelLODTree> NMLModelLODTreeDrawData::getModelLODTree() const {
         return _modelLODTree;
     }

@@ -2,6 +2,8 @@
 #include "components/Options.h"
 #include "core/MapBounds.h"
 #include "graphics/ViewState.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
@@ -49,7 +51,6 @@ namespace carto {
     
     void CameraZoomEvent::setTargetPos(const MapPos& targetPos) {
         _targetPos = targetPos;
-        _targetPos.setZ(0);
         _useTarget = true;
     }
     
@@ -62,32 +63,46 @@ namespace carto {
     }
     
     void CameraZoomEvent::calculate(Options& options, ViewState& viewState) {
-        MapPos cameraPos = viewState.getCameraPos();
-        MapPos focusPos = viewState.getFocusPos();
-    
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            return;
+        }
+        
+        cglib::vec3<double> cameraPos = viewState.getCameraPos();
+        cglib::vec3<double> focusPos = viewState.getFocusPos();
+        cglib::vec3<double> upVec = viewState.getUpVec();
+
         if (!_useDelta) {
             _zoomDelta = _zoom - viewState.getZoom();
         }
     
-        if (!_useTarget) {
-            _targetPos = focusPos;
+        cglib::vec3<double> targetPos = focusPos;
+        if (_useTarget) {
+            targetPos = projectionSurface->calculatePosition(_targetPos);
         }
     
         MapRange zoomRange = options.getZoomRange();
         float zoom = GeneralUtils::Clamp(viewState.getZoom() + _zoomDelta, viewState.getMinZoom(), zoomRange.getMax());
-        float scale = std::pow(2.0f, viewState.getZoom() - zoom);
+        double scale = std::pow(2.0f, viewState.getZoom() - zoom);
     
-        MapVec cameraVec(cameraPos - focusPos);
-        cameraVec *= scale;
-    
-        MapVec targetVec(focusPos - _targetPos);
-        targetVec *= scale;
-        focusPos = _targetPos + targetVec;
-        ClampFocusPos(focusPos, options);
-        cameraPos = focusPos + cameraVec;
+        cglib::mat4x4<double> shiftTransform = projectionSurface->calculateTranslateMatrix(focusPos, targetPos, 1 - scale);
+
+        focusPos = cglib::transform_point(focusPos, shiftTransform);
+        cameraPos = focusPos + (cglib::transform_point(cameraPos, shiftTransform) - focusPos) * scale;
+        upVec = cglib::transform_vector(upVec, shiftTransform);
+
+        cglib::vec3<double> oldFocusPos = focusPos;
+        // TODO: after clamping, calculate delta transform and apply this to cameraPos and upVec
+        //ClampFocusPos(focusPos, options);
+        if (oldFocusPos != focusPos) {
+            cglib::mat4x4<double> translateTransform = projectionSurface->calculateTranslateMatrix(oldFocusPos, focusPos, 1);
+            cameraPos = cglib::transform_point(cameraPos, translateTransform);
+            upVec = cglib::transform_vector(upVec, translateTransform);
+        }
 
         viewState.setCameraPos(cameraPos);
         viewState.setFocusPos(focusPos);
+        viewState.setUpVec(upVec);
         viewState.setZoom(zoom);
 
         viewState.clampFocusPos(options);

@@ -2,6 +2,7 @@
 #include "components/Options.h"
 #include "core/MapPos.h"
 #include "graphics/ViewState.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/cameraevents/CameraPanEvent.h"
 #include "renderers/cameraevents/CameraRotationEvent.h"
@@ -16,7 +17,8 @@ namespace carto {
 
     KineticEventHandler::KineticEventHandler(MapRenderer& mapRenderer, Options& options) :
         _pan(false),
-        _panDelta(),
+        _panDelta(0),
+        _panPositions(),
         _rotation(false),
         _rotationDelta(0),
         _rotationTargetPos(),
@@ -46,17 +48,22 @@ namespace carto {
         return _pan;
     }
     
-    void KineticEventHandler::setPanDelta(const MapVec& panDelta, float zoom) {
+    void KineticEventHandler::setPanDelta(const std::pair<MapPos, MapPos>& panDelta, float zoom) {
         if (_options.isKineticPan()) {
             std::lock_guard<std::mutex> lock(_mutex);
     
             // Panning tolerance depends on the current zoom level
+            std::shared_ptr<ProjectionSurface> projectionSurface = _mapRenderer.getProjectionSurface();
             long long twoPowZoom = static_cast<long long>(std::pow(2.0f, static_cast<int>(zoom)));
-            if (panDelta.length() < static_cast<double>(KINETIC_PAN_START_TOLERANCE_ZOOM_0) / twoPowZoom) {
-                _panDelta.setCoords(0, 0);
+            cglib::vec3<double> pos0 = projectionSurface->calculatePosition(panDelta.first);
+            cglib::vec3<double> pos1 = projectionSurface->calculatePosition(panDelta.second);
+            _panDelta = static_cast<float>(projectionSurface->calculateMapDistance(pos0, pos1) / Const::EARTH_CIRCUMFERENCE * twoPowZoom);
+            if (_panDelta < KINETIC_PAN_START_TOLERANCE) {
+                _panDelta = 0;
                 return;
             }
-            _panDelta = panDelta * KINETIC_PAN_DELTA_MULTIPLIER;
+            _panDelta = std::min(_panDelta * KINETIC_PAN_DELTA_MULTIPLIER, KINETIC_PAN_DELTA_CLAMP);
+            _panPositions = panDelta;
         }
     }
     
@@ -69,7 +76,7 @@ namespace carto {
     void KineticEventHandler::stopPan() {
         std::lock_guard<std::mutex> lock(_mutex);
         _pan = false;
-        _panDelta.setCoords(0, 0);
+        _panDelta = 0;
     }
     
     bool KineticEventHandler::isRotating() const {
@@ -156,19 +163,19 @@ namespace carto {
     
     void KineticEventHandler::handlePan(const ViewState& viewState, float deltaSeconds) {
         if (_options.isKineticPan() && _pan) {
-            const MapPos& focusPos = viewState.getFocusPos();
-            long long twoPowZoom = static_cast<int>(std::pow(2.0f, static_cast<int>(viewState.getZoom())));
-            if (_panDelta.length() < static_cast<double>(KINETIC_PAN_STOP_TOLERANCE_ZOOM_0) / twoPowZoom) {
+            if (_panDelta < KINETIC_PAN_STOP_TOLERANCE) {
                 // Stop kinetic panning
                 _pan = false;
-                _panDelta.setCoords(0, 0);
+                _panDelta = 0;
             } else {
                 // Calculate delta time corrected position
-                MapPos newFocusPos;
-                double factor = std::pow(1.0 - KINETIC_PAN_SLOWDOWN, deltaSeconds);
-                newFocusPos.setX(-_panDelta.getX() * factor + focusPos.getX() + _panDelta.getX());
-                newFocusPos.setY(-_panDelta.getY() * factor + focusPos.getY() + _panDelta.getY());
-                _panDelta += focusPos - newFocusPos;
+                float factor = std::pow(1.0 - KINETIC_PAN_SLOWDOWN, deltaSeconds);
+                _panDelta *= factor;
+                std::shared_ptr<ProjectionSurface> projectionSurface = _mapRenderer.getProjectionSurface();
+                cglib::vec3<double> pos0 = projectionSurface->calculatePosition(_panPositions.first);
+                cglib::vec3<double> pos1 = projectionSurface->calculatePosition(_panPositions.second);
+                cglib::mat4x4<double> transform = projectionSurface->calculateTranslateMatrix(pos0, pos1, _panDelta);
+                MapPos newFocusPos = projectionSurface->calculateMapPos(cglib::transform_point(viewState.getFocusPos(), transform));
                 CameraPanEvent cameraEvent;
                 cameraEvent.setPos(newFocusPos);
                 _mapRenderer.calculateCameraEvent(cameraEvent, 0, false);
@@ -216,11 +223,12 @@ namespace carto {
         }
     }
     
-    const float KineticEventHandler::KINETIC_PAN_STOP_TOLERANCE_ZOOM_0 = 3.0f * Const::WORLD_SIZE / 1000.0f;
-    const float KineticEventHandler::KINETIC_PAN_START_TOLERANCE_ZOOM_0 = 17.0f * Const::WORLD_SIZE / 1000.0f;
+    const float KineticEventHandler::KINETIC_PAN_STOP_TOLERANCE = 0.007f;
+    const float KineticEventHandler::KINETIC_PAN_START_TOLERANCE = 0.025f;
     const float KineticEventHandler::KINETIC_PAN_SLOWDOWN = 0.99f;
     const float KineticEventHandler::KINETIC_PAN_DELTA_MULTIPLIER = 7.0f;
-    
+    const float KineticEventHandler::KINETIC_PAN_DELTA_CLAMP = 1.0f;
+
     const float KineticEventHandler::KINETIC_ROTATION_STOP_TOLERANCE_ANGLE = 0.2f;
     const float KineticEventHandler::KINETIC_ROTATION_START_TOLERANCE_ANGLE = 1.0f;
     const float KineticEventHandler::KINETIC_ROTATION_SLOWDOWN = 0.99f;

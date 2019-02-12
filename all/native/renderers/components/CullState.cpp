@@ -13,6 +13,7 @@ namespace carto {
     }
 
     MapEnvelope CullState::getProjectionEnvelope(const std::shared_ptr<Projection>& proj) const {
+        // TODO: not correct, implement based on projection surface
         std::vector<MapPos> convexHull;
         for (const MapPos& mapPosInternal : _envelope.getConvexHull()) {
             convexHull.push_back(proj->fromInternal(mapPosInternal));

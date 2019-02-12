@@ -128,7 +128,7 @@ namespace carto {
                        float verticalOffset,
                        int placementPriority,
                        bool scaleWithDPI,
-					   const std::shared_ptr<AnimationStyle>& animStyle);
+                       const std::shared_ptr<AnimationStyle>& animStyle);
 
         float _attachAnchorPointX;
         float _attachAnchorPointY;

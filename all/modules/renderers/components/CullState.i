@@ -3,7 +3,7 @@
 
 %module CullState
 
-!proxy_imports(carto::CullState, core.MapEnvelope, core.MapPos, graphics.Frustum, graphics.ViewState, projections.Projection)
+!proxy_imports(carto::CullState, core.MapEnvelope, core.MapPos, graphics.ViewState, projections.Projection)
 
 %{
 #include "renderers/components/CullState.h"
@@ -15,7 +15,6 @@
 
 %import "core/MapEnvelope.i"
 %import "core/MapPos.i"
-%import "graphics/Frustum.i"
 %import "graphics/ViewState.i"
 %import "projections/Projection.i"
 

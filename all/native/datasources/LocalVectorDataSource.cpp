@@ -10,6 +10,8 @@
 #include "geometry/GeometrySimplifier.h"
 #include "geometry/utils/KDTreeSpatialIndex.h"
 #include "geometry/utils/NullSpatialIndex.h"
+#include "projections/Projection.h"
+#include "projections/PlanarProjectionSurface.h"
 #include "styles/PointStyle.h"
 #include "styles/LineStyle.h"
 #include "styles/PolygonStyle.h"
@@ -41,6 +43,7 @@ namespace carto {
         VectorDataSource(projection),
         _geometrySimplifier(),
         _spatialIndex(std::make_shared<NullSpatialIndex<std::shared_ptr<VectorElement> > >()),
+        _spatialIndexType(LocalSpatialIndexType::LOCAL_SPATIAL_INDEX_TYPE_NULL),
         _elementId(0),
         _mutex()
     {
@@ -49,18 +52,11 @@ namespace carto {
     LocalVectorDataSource::LocalVectorDataSource(const std::shared_ptr<Projection>& projection, LocalSpatialIndexType::LocalSpatialIndexType spatialIndexType) :
         VectorDataSource(projection),
         _geometrySimplifier(),
-        _spatialIndex(),
+        _spatialIndex(std::make_shared<NullSpatialIndex<std::shared_ptr<VectorElement> > >()),
+        _spatialIndexType(spatialIndexType),
         _elementId(0),
         _mutex()
     {
-        switch (spatialIndexType) {
-            case LocalSpatialIndexType::LOCAL_SPATIAL_INDEX_TYPE_KDTREE:
-                _spatialIndex = std::make_shared<KDTreeSpatialIndex<std::shared_ptr<VectorElement> > >();
-                break;
-            default:
-                _spatialIndex = std::make_shared<NullSpatialIndex<std::shared_ptr<VectorElement> > >();
-                break;
-        }
     }
     
     LocalVectorDataSource::~LocalVectorDataSource() {
@@ -105,8 +101,7 @@ namespace carto {
             _spatialIndex->clear();
             _spatialIndex->reserve(elements.size());
             for (const std::shared_ptr<VectorElement>& element : elements) {
-                const MapBounds& bounds = element->getBounds();
-                MapBounds internalBounds(_projection->toInternal(bounds.getMin()), _projection->toInternal(bounds.getMax()));
+                cglib::bbox3<double> bounds = calculateBounds(element->getBounds());
                 auto it = oldElementSet.find(element);
                 if (it != oldElementSet.end()) {
                     oldElementSet.erase(it);
@@ -115,7 +110,7 @@ namespace carto {
                     elementsAdded.push_back(element);
                     _elementId++;
                 }
-                _spatialIndex->insert(internalBounds, element);
+                _spatialIndex->insert(bounds, element);
             }
             std::copy(oldElementSet.begin(), oldElementSet.end(), std::back_inserter(elementsRemoved));
         }
@@ -138,9 +133,8 @@ namespace carto {
         {
             std::lock_guard<std::mutex> lock(_mutex);
             element->setId(_elementId);
-            const MapBounds& bounds = element->getBounds();
-            MapBounds internalBounds(_projection->toInternal(bounds.getMin()), _projection->toInternal(bounds.getMax()));
-            _spatialIndex->insert(internalBounds, element);
+            cglib::bbox3<double> bounds = calculateBounds(element->getBounds());
+            _spatialIndex->insert(bounds, element);
             _elementId++;
         }
         notifyElementAdded(element);
@@ -161,9 +155,8 @@ namespace carto {
             _spatialIndex->reserve(_spatialIndex->size() + elements.size());
             for (const std::shared_ptr<VectorElement>& element : elements) {
                 element->setId(_elementId);
-                const MapBounds& bounds = element->getBounds();
-                MapBounds internalBounds(_projection->toInternal(bounds.getMin()), _projection->toInternal(bounds.getMax()));
-                _spatialIndex->insert(internalBounds, element);
+                cglib::bbox3<double> bounds = calculateBounds(element->getBounds());
+                _spatialIndex->insert(bounds, element);
                 _elementId++;
             }
         }
@@ -185,9 +178,8 @@ namespace carto {
         bool removed = false;
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            const MapBounds& bounds = element->getBounds();
-            MapBounds internalBounds(_projection->toInternal(bounds.getMin()), _projection->toInternal(bounds.getMax()));
-            removed = _spatialIndex->remove(internalBounds, element);
+            cglib::bbox3<double> bounds = calculateBounds(element->getBounds());
+            removed = _spatialIndex->remove(bounds, element);
         }
         if (removed) {
             notifyElementRemoved(element);
@@ -211,9 +203,8 @@ namespace carto {
         {
             std::lock_guard<std::mutex> lock(_mutex);
             for (const std::shared_ptr<VectorElement>& element : elements) {
-                const MapBounds& bounds = element->getBounds();
-                MapBounds internalBounds(_projection->toInternal(bounds.getMin()), _projection->toInternal(bounds.getMax()));
-                if (_spatialIndex->remove(internalBounds, element)) {
+                cglib::bbox3<double> bounds = calculateBounds(element->getBounds());
+                if (_spatialIndex->remove(bounds, element)) {
                     removedElements.push_back(element);
                 }
             }
@@ -289,6 +280,21 @@ namespace carto {
     
     std::shared_ptr<VectorData> LocalVectorDataSource::loadElements(const std::shared_ptr<CullState>& cullState) {
         std::lock_guard<std::mutex> lock(_mutex);
+
+        // Check if we need to rebuild the underlying spatial index
+        if (_spatialIndexType == LocalSpatialIndexType::LOCAL_SPATIAL_INDEX_TYPE_KDTREE) {
+            if (cullState->getViewState().getProjectionSurface() != _projectionSurface) {
+                std::vector<std::shared_ptr<VectorElement> > elements = _spatialIndex->getAll();
+                _projectionSurface = cullState->getViewState().getProjectionSurface();
+                _spatialIndex = std::make_shared<KDTreeSpatialIndex<std::shared_ptr<VectorElement> > >();
+                for (const std::shared_ptr<VectorElement>& element : elements) {
+                    cglib::bbox3<double> bounds = calculateBounds(element->getBounds());
+                    _spatialIndex->insert(bounds, element);
+                }
+            }
+        }
+
+        // Query the spatial index
         std::vector<std::shared_ptr<VectorElement> > elements = _spatialIndex->query(cullState->getViewState().getFrustum());
         
         // If geometry simplifier is specified, create new vector elements with simplified geometry
@@ -314,9 +320,8 @@ namespace carto {
             std::lock_guard<std::mutex> lock(_mutex);
             if (!(std::dynamic_pointer_cast<NullSpatialIndex<std::shared_ptr<VectorElement> > >(_spatialIndex))) {
                 _spatialIndex->remove(element);
-                const MapBounds& bounds = element->getBounds();
-                MapBounds internalBounds(_projection->toInternal(bounds.getMin()), _projection->toInternal(bounds.getMax()));
-                _spatialIndex->insert(internalBounds, element);
+                cglib::bbox3<double> bounds = calculateBounds(element->getBounds());
+                _spatialIndex->insert(bounds, element);
             }
         }
         VectorDataSource::notifyElementChanged(element);
@@ -417,6 +422,23 @@ namespace carto {
         }
 
         return simplifiedElement;
+    }
+
+    cglib::bbox3<double> LocalVectorDataSource::calculateBounds(const MapBounds& mapBounds) const {
+        if (!_projectionSurface) {
+            return cglib::bbox3<double>(cglib::vec3<double>(0, 0, 0), cglib::vec3<double>(0, 0, 0));
+        }
+
+        MapPos posesInternal[2] = { _projection->toInternal(mapBounds.getMin()), _projection->toInternal(mapBounds.getMax()) };
+        cglib::bbox3<double> bounds = cglib::bbox3<double>::smallest();
+        for (int z = 0; z < 2; z++) {
+            for (int y = 0; y < 2; y++) {
+                for (int x = 0; x < 2; x++) {
+                    bounds.add(_projectionSurface->calculatePosition(MapPos(posesInternal[x].getX(), posesInternal[y].getY(), posesInternal[z].getZ())));
+                }
+            }
+        }
+        return bounds;
     }
 
 }

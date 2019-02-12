@@ -9,6 +9,8 @@
 #include "geometry/MultiGeometry.h"
 #include "graphics/ViewState.h"
 #include "layers/VectorEditEventListener.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/BillboardRenderer.h"
 #include "renderers/LineRenderer.h"
 #include "renderers/MapRenderer.h"
@@ -299,6 +301,8 @@ namespace carto {
         if (!mapRenderer) {
             return false;
         }
+        
+        std::shared_ptr<ProjectionSurface> projectionSurface = mapRenderer->getProjectionSurface();
         ViewState viewState = mapRenderer->getViewState();
 
         std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
@@ -314,9 +318,9 @@ namespace carto {
             {
                 MapPos mapPos1 = layer->_dataSource->getProjection()->fromInternal(mapRenderer->screenToWorld(screenPos1, viewState));
                 MapPos touchPos = mapRenderer->screenToWorld(screenPos1, viewState);
-                MapPos rayOrigin = viewState.getCameraPos();
-                MapVec rayDir = touchPos - rayOrigin;
-                cglib::ray3<double> ray(cglib::vec3<double>(rayOrigin.getX(), rayOrigin.getY(), rayOrigin.getZ()), cglib::vec3<double>(rayDir.getX(), rayDir.getY(), rayDir.getZ()));
+                cglib::vec3<double> origin = viewState.getCameraPos();
+                cglib::vec3<double> target = projectionSurface->calculatePosition(touchPos);
+                cglib::ray3<double> ray(origin, target - origin);
 
                 std::vector<RayIntersectedElement> results;
                 layer->_overlayRenderer->calculateRayIntersectedElements(layer, ray, viewState, results);
@@ -796,7 +800,10 @@ namespace carto {
             overlayPoint = std::make_shared<Point>(mapPos, virtualPoint ? _overlayStyleVirtual : _overlayStyleNormal);
         }
         if (overlayPoint->getStyle()) {
-            overlayPoint->setDrawData(std::make_shared<PointDrawData>(*overlayPoint->getGeometry(), *overlayPoint->getStyle(), *_dataSource->getProjection()));
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            if (auto mapRenderer = _mapRenderer.lock()) {
+                overlayPoint->setDrawData(std::make_shared<PointDrawData>(*overlayPoint->getGeometry(), *overlayPoint->getStyle(), *_dataSource->getProjection(), *mapRenderer->getProjectionSurface()));
+            }
         }
         return overlayPoint;
     }

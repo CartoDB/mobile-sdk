@@ -19,12 +19,12 @@ static std::string diffuse_lighting_vert_glsl =
     "void main() {"
     "   if (a_normal.z != 1.0) {"
     "      float dotProduct = max(0.0, dot(a_normal, u_lightDir));"
-    "	   v_color = vec4(u_ambientColor.rgb + u_lightColor.rgb * dotProduct, 1.0) * a_color;"
+    "       v_color = vec4(u_ambientColor.rgb + u_lightColor.rgb * dotProduct, 1.0) * a_color;"
     "   } else {"
     "      v_color = a_color;"
     "   }"
     "   v_texCoord = a_texCoord;"
-    "	gl_Position = u_mvpMat * a_coord;"
+    "    gl_Position = u_mvpMat * a_coord;"
     "}";
 
 static std::string diffuse_lighting_frag_glsl =
@@ -36,11 +36,11 @@ static std::string diffuse_lighting_frag_glsl =
     "varying lowp vec4 v_color;"
     "varying highp vec2 v_texCoord;"
     "void main() {"
-    "	vec4 color = texture2D(u_tex, v_texCoord) * v_color;"
-    "	if (color.a == 0.0) {"
-    "		discard;"
-    "	}"
-    "	gl_FragColor = color;"
+    "    vec4 color = texture2D(u_tex, v_texCoord) * v_color;"
+    "    if (color.a == 0.0) {"
+    "        discard;"
+    "    }"
+    "    gl_FragColor = color;"
     "}";
 
 static carto::ShaderSource diffuse_lighting_shader_source("diffuse-lighting", &diffuse_lighting_vert_glsl, &diffuse_lighting_frag_glsl);

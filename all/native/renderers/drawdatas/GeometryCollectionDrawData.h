@@ -19,10 +19,11 @@ namespace carto {
     class GeometryCollection;
     class GeometryCollectionStyle;
     class Projection;
+    class ProjectionSurface;
 
     class GeometryCollectionDrawData : public VectorElementDrawData {
     public:
-        GeometryCollectionDrawData(const MultiGeometry& geometry, const GeometryCollectionStyle& style, const Projection& projection);
+        GeometryCollectionDrawData(const MultiGeometry& geometry, const GeometryCollectionStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface);
         virtual ~GeometryCollectionDrawData();
 
         const std::vector<std::shared_ptr<VectorElementDrawData> >& getDrawDatas() const;
@@ -30,7 +31,7 @@ namespace carto {
         virtual void offsetHorizontally(double offset);
 
     private:
-        void addDrawData(const Geometry& geometry, const GeometryCollectionStyle& style, const Projection& projection);
+        void addDrawData(const Geometry& geometry, const GeometryCollectionStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface);
 
         std::vector<std::shared_ptr<VectorElementDrawData> > _drawDatas;
     };

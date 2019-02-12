@@ -87,7 +87,7 @@ namespace carto {
          * Returns the current set of HTTP headers used. Initially this set is empty and can be changed with setHTTPHeaders.
          * @returns The current set of custom HTTP headers.
          */
-        std::map<std::string, std::string> getHTTPHeaders() const;		
+        std::map<std::string, std::string> getHTTPHeaders() const;
         /**
          * Sets HTTP headers for all requests. Calling this method will invalidate the datasource and
          * all layers using this data source will be refreshed.

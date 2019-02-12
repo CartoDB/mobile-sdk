@@ -26,7 +26,11 @@ namespace carto {
         // and from top +HALF_WORLD_SIZE to bottom -HALF_WORLD_SIZE
         static const int WORLD_SIZE;
         static const float HALF_WORLD_SIZE;
-    
+
+        // Earth size
+        static const double EARTH_RADIUS;
+        static const double EARTH_CIRCUMFERENCE;
+
         // Maximum supported zoom level
         enum { MAX_SUPPORTED_ZOOM_LEVEL = 24 };
     

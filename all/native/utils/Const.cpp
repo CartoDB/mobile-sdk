@@ -14,6 +14,9 @@ namespace carto {
     const int Const::WORLD_SIZE = 1 << 20;
     const float Const::HALF_WORLD_SIZE = (1 << 20) / 2.0f; // WORLD_SIZE / 2.0f
 
+    const double Const::EARTH_RADIUS = 6378137.0;
+    const double Const::EARTH_CIRCUMFERENCE = 40075016.68558;
+
     const float Const::UNSCALED_DPI = 160.0f;
 
     const float Const::MIN_SUPPORTED_TILT_ANGLE = 30.0f;

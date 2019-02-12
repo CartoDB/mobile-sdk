@@ -3,6 +3,7 @@
 #include "geometry/PolygonGeometry.h"
 #include "graphics/utils/GLContext.h"
 #include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/drawdatas/LineDrawData.h"
 #include "styles/PolygonStyle.h"
 #include "vectorelements/Line.h"
@@ -15,21 +16,9 @@
 #include <tesselator.h>
 #include <unordered_map>
 
-namespace {
-
-    void* polygonStdAlloc(void* userData, unsigned int size) {
-        return malloc(size);
-    }
-    
-    void polygonStdFree(void* userData, void* ptr) {
-        free(ptr);
-    }
-    
-}
-
 namespace carto {
 
-    PolygonDrawData::PolygonDrawData(const PolygonGeometry& geometry, const PolygonStyle& style, const Projection& projection) :
+    PolygonDrawData::PolygonDrawData(const PolygonGeometry& geometry, const PolygonStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface) :
         VectorElementDrawData(style.getColor()),
         _bitmap(style.getBitmap()),
         _boundingBox(cglib::bbox3<double>::smallest()),
@@ -45,67 +34,67 @@ namespace carto {
         _lineDrawDatas.reserve(lineDrawDataCount);
         
         TESSalloc ma;
-        ma.memalloc = polygonStdAlloc;
-        ma.memfree = polygonStdFree;
+        ma.memalloc = [](void* userData, unsigned int size) { return malloc(size); };
+        ma.memfree = [](void* userData, void* ptr) { free(ptr); };
         ma.extraVertices = 256;
-        TESStesselator* tess = tessNewTess(&ma);
-    
+        TESStesselator* tessPtr = tessNewTess(&ma);
+        if (!tessPtr) {
+            Log::Error("PolygonDrawData::PolygonDrawData: Failed to create tesselator!");
+            return;
+        }
+        std::shared_ptr<TESStesselator> tess(tessPtr, tessDeleteTess);
+
         // Add polygon exterior, calculate bounding box
         const std::vector<MapPos>& poses = geometry.getPoses();
-        std::vector<MapPos> internalPoses;
-        internalPoses.reserve(poses.size());
         std::vector<double> posesArray(poses.size() * 2);
-        for (std::size_t i = 0; i < poses.size() * 2; i += 2) {
-            std::size_t index = i / 2;
-            MapPos internalPos = projection.toInternal(poses[index]);
-            internalPoses.push_back(internalPos);
-            posesArray[i + 0] = internalPos.getX();
-            posesArray[i + 1] = internalPos.getY();
-            _boundingBox.add(cglib::vec3<double>(internalPos.getX(), internalPos.getY(), internalPos.getZ()));
+        std::vector<MapPos> linePoses;
+        linePoses.reserve(poses.size() + 1);
+        for (std::size_t i = 0; i < poses.size(); i++) {
+            MapPos internalPos = projection.toInternal(poses[i]);
+            posesArray[i * 2 + 0] = internalPos.getX();
+            posesArray[i * 2 + 1] = internalPos.getY();
+            linePoses.push_back(poses[i]);
         }
-        tessAddContour(tess, 2, posesArray.data(), sizeof(double) * 2, static_cast<unsigned int>(poses.size()));
+        tessAddContour(tess.get(), 2, posesArray.data(), sizeof(double) * 2, static_cast<unsigned int>(poses.size()));
     
-        if (style.getLineStyle()) {
-            _lineDrawDatas.push_back(std::make_shared<LineDrawData>(geometry, internalPoses, *style.getLineStyle(), projection));
+        if (style.getLineStyle() && !poses.empty()) {
+            linePoses.push_back(poses.front());
+            _lineDrawDatas.push_back(std::make_shared<LineDrawData>(linePoses, *style.getLineStyle(), projection, projectionSurface));
         }
     
         // Add polygon holes
         const std::vector<std::vector<MapPos> >& holes = geometry.getHoles();
         for (const std::vector<MapPos>& hole : holes) {
-            internalPoses.clear();
-            internalPoses.reserve(hole.size());
+            linePoses.clear();
+            linePoses.reserve(hole.size() + 1);
             std::vector<double> holeArray(hole.size() * 2);
-            for (std::size_t i = 0; i < hole.size() * 2; i += 2) {
-                std::size_t index = i / 2;
-                MapPos internalPos = projection.toInternal(hole[index]);
-                internalPoses.push_back(internalPos);
-                holeArray[i + 0] = internalPos.getX();
-                holeArray[i + 1] = internalPos.getY();
-                _boundingBox.add(cglib::vec3<double>(internalPos.getX(), internalPos.getY(), internalPos.getZ()));
+            for (std::size_t i = 0; i < hole.size(); i++) {
+                MapPos internalPos = projection.toInternal(hole[i]);
+                holeArray[i * 2 + 0] = internalPos.getX();
+                holeArray[i * 2 + 1] = internalPos.getY();
+                linePoses.push_back(hole[i]);
             }
-            tessAddContour(tess, 2, holeArray.data(), sizeof(double) * 2, static_cast<unsigned int>(hole.size()));
+            tessAddContour(tess.get(), 2, holeArray.data(), sizeof(double) * 2, static_cast<unsigned int>(hole.size()));
     
-            if (style.getLineStyle()) {
-                _lineDrawDatas.push_back(std::make_shared<LineDrawData>(geometry, internalPoses, *style.getLineStyle(), projection));
+            if (style.getLineStyle() && !hole.empty()) {
+                linePoses.push_back(hole.front());
+                _lineDrawDatas.push_back(std::make_shared<LineDrawData>(linePoses, *style.getLineStyle(), projection, projectionSurface));
             }
         }
     
         // Tesselate
+        // TODO: normal
         double normal[3] = { 0, 0, 1 };
-        if (!tessTesselate(tess, TESS_WINDING_ODD, TESS_POLYGONS, MAX_INDICES_PER_ELEMENT, 2, normal)) {
+        if (!tessTesselate(tess.get(), TESS_WINDING_ODD, TESS_POLYGONS, MAX_INDICES_PER_ELEMENT, 2, normal)) {
             Log::Error("PolygonDrawData::PolygonDrawData: Failed to triangulate polygon!");
-            tessDeleteTess(tess);
             return;
         }
     
         // Get tesselation results
-        const double* coords = tessGetVertices(tess);
-        const int* elements = tessGetElements(tess);
-        std::size_t vertexCount = tessGetVertexCount(tess);
-        std::size_t elementCount = tessGetElementCount(tess);
-    
-        // Calculate center
-        cglib::vec3<double> center = _boundingBox.center();
+        const double* coords = tessGetVertices(tess.get());
+        const int* elements = tessGetElements(tess.get());
+        std::size_t vertexCount = tessGetVertexCount(tess.get());
+        std::size_t elementCount = tessGetElementCount(tess.get());
     
         // Convert tesselation results to drawable format, split if into multiple buffers, if the polyong is too big
         _coords.push_back(std::vector<cglib::vec3<double> >());
@@ -127,31 +116,27 @@ namespace carto {
                 indexMap.clear();
             }
             
-            if (elements[i] == TESS_UNDEF || elements[i + 1] == TESS_UNDEF || elements[i + 2] == TESS_UNDEF) {
-                _coords.clear();
-                _indices.clear();
-                Log::Error("PolygonDrawData::PolygonDrawData: Undefined element in tessellation");
-                break;
-            }
-            
-            for (int j = 0; j < 3; j++) {
-                unsigned int index = static_cast<unsigned int>(elements[i + j]);
-                auto it = indexMap.find(index);
-                if (it == indexMap.end()) {
-                    unsigned int newIndex = static_cast<unsigned int>(_coords.back().size());
-                    _coords.back().emplace_back(coords[index * 2], coords[index * 2 + 1], center(2));
-                    _indices.back().push_back(newIndex);
-                    indexMap[index] = newIndex;
-                } else {
-                    _indices.back().push_back(it->second);
+            if (elements[i + 0] != TESS_UNDEF && elements[i + 1] != TESS_UNDEF && elements[i + 2] != TESS_UNDEF) {
+                for (int j = 0; j < 3; j++) {
+                    unsigned int index = static_cast<unsigned int>(elements[i + j]);
+                    auto it = indexMap.find(index);
+                    if (it == indexMap.end()) {
+                        unsigned int newIndex = static_cast<unsigned int>(_coords.back().size());
+                        MapPos posInternal(coords[index * 2 + 0], coords[index * 2 + 1], 0);
+                        _coords.back().push_back(projectionSurface.calculatePosition(posInternal));
+                        _boundingBox.add(_coords.back().back());
+                        _indices.back().push_back(newIndex);
+                        indexMap[index] = newIndex;
+                    }
+                    else {
+                        _indices.back().push_back(it->second);
+                    }
                 }
             }
         }
         
         _coords.back().shrink_to_fit();
         _indices.back().shrink_to_fit();
-        
-        tessDeleteTess(tess);
     }
     
     PolygonDrawData::~PolygonDrawData() {

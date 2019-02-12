@@ -1,6 +1,8 @@
 #include "CameraPanEvent.h"
 #include "components/Options.h"
 #include "graphics/ViewState.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
@@ -26,13 +28,12 @@ namespace carto {
         _useDelta = false;
     }
     
-    const MapVec& CameraPanEvent::getPosDelta() const {
+    const std::pair<MapPos, MapPos>& CameraPanEvent::getPosDelta() const {
         return _posDelta;
     }
     
-    void CameraPanEvent::setPosDelta(const MapVec& posDelta) {
+    void CameraPanEvent::setPosDelta(const std::pair<MapPos, MapPos>& posDelta) {
         _posDelta = posDelta;
-        _posDelta.setZ(0);
         _useDelta = true;
     }
     
@@ -41,21 +42,41 @@ namespace carto {
     }
     
     void CameraPanEvent::calculate(Options& options, ViewState& viewState) {
-        MapPos cameraPos = viewState.getCameraPos();
-        MapPos focusPos = viewState.getFocusPos();
-    
-        if (_useDelta) {
-            // If the object was initialized using relative coordinates
-            // calculate the absolute focus position
-            _pos = focusPos + _posDelta;
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            return;
         }
-    
-        MapVec cameraVec = cameraPos - focusPos;
-        ClampFocusPos(focusPos, options);
-        cameraPos = focusPos + cameraVec;
+        
+        cglib::vec3<double> cameraPos = viewState.getCameraPos();
+        cglib::vec3<double> focusPos = viewState.getFocusPos();
+        cglib::vec3<double> upVec = viewState.getUpVec();
+
+        cglib::mat4x4<double> translateTransform;
+        if (_useDelta) {
+            cglib::vec3<double> pos0 = projectionSurface->calculatePosition(_posDelta.first);
+            cglib::vec3<double> pos1 = projectionSurface->calculatePosition(_posDelta.second);
+            translateTransform = projectionSurface->calculateTranslateMatrix(pos0, pos1, 1.0f);
+        } else {
+            cglib::vec3<double> pos = projectionSurface->calculatePosition(_pos);
+            translateTransform = projectionSurface->calculateTranslateMatrix(focusPos, pos, 1.0f);
+        }
+
+        focusPos = cglib::transform_point(focusPos, translateTransform);
+        cameraPos = cglib::transform_point(cameraPos, translateTransform);
+        upVec = cglib::transform_vector(upVec, translateTransform);
+        
+        cglib::vec3<double> oldFocusPos = focusPos;
+        // TODO: after clamping, calculate delta transform and apply this to cameraPos and upVec
+        //ClampFocusPos(focusPos, options);
+        if (oldFocusPos != focusPos) {
+            cglib::mat4x4<double> translateTransform = projectionSurface->calculateTranslateMatrix(oldFocusPos, focusPos, 1);
+            cameraPos = cglib::transform_point(cameraPos, translateTransform);
+            upVec = cglib::transform_vector(upVec, translateTransform);
+        }
 
         viewState.setCameraPos(cameraPos);
         viewState.setFocusPos(focusPos);
+        viewState.setUpVec(upVec);
 
         viewState.clampFocusPos(options);
         

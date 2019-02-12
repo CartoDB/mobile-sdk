@@ -68,7 +68,7 @@
 !objc_rename(setWatermarkAnchorX) carto::Options::setWatermarkAnchor;
 !objc_rename(setWatermarkPaddingX) carto::Options::setWatermarkPadding;
 %ignore carto::Options::Options;
-%ignore carto::Options::getInternalPanBounds;
+%ignore carto::Options::getProjectionSurface;
 %ignore carto::Options::OnChangeListener;
 %ignore carto::Options::registerOnChangeListener;
 %ignore carto::Options::unregisterOnChangeListener;

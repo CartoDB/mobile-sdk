@@ -14,8 +14,8 @@ static std::string regular_vert_glsl =
     "uniform mat4 u_mvpMat;"
     "void main() {"
     "   v_texCoord = a_texCoord;"
-    "	v_color = a_color;"
-    "	gl_Position = u_mvpMat * a_coord;"
+    "    v_color = a_color;"
+    "    gl_Position = u_mvpMat * a_coord;"
     "}";
 
 static std::string regular_frag_glsl =
@@ -27,11 +27,11 @@ static std::string regular_frag_glsl =
     "varying lowp vec4 v_color;"
     "uniform sampler2D u_tex;"
     "void main() {"
-    "	vec4 color = texture2D(u_tex, v_texCoord) * v_color;"
-    "	if (color.a == 0.0) {"
-    "		discard;"
-    "	}"
-    "	gl_FragColor = color;"
+    "    vec4 color = texture2D(u_tex, v_texCoord) * v_color;"
+    "    if (color.a == 0.0) {"
+    "        discard;"
+    "    }"
+    "    gl_FragColor = color;"
     "}";
 
 static carto::ShaderSource regular_shader_source("regular", &regular_vert_glsl, &regular_frag_glsl);

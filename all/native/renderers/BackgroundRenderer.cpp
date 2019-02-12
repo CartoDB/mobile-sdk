@@ -123,17 +123,22 @@ namespace carto {
     }
     
     void BackgroundRenderer::drawBackground(const ViewState& viewState) {
+        if (_options.getRenderProjectionMode() != RenderProjectionMode::RENDER_PROJECTION_MODE_PLANAR) {
+            // TODO: implement spherical mode
+            return;
+        }
+
         if (_backgroundTex) {
             // Texture
             glBindTexture(GL_TEXTURE_2D, _backgroundTex->getTexId());
     
             // Scale background coordinates
             float backgroundScale = static_cast<float>(viewState.getFar() * 2 / viewState.getCosHalfFOVXY());
-            const MapPos& cameraPos = viewState.getCameraPos();
+            const cglib::vec3<double>& cameraPos = viewState.getCameraPos();
             for (int i = 0; i < BACKGROUND_VERTEX_COUNT * 3; i += 3) {
                 _backgroundCoords[i + 0] = BACKGROUND_COORDS[i + 0] * backgroundScale;
                 _backgroundCoords[i + 1] = BACKGROUND_COORDS[i + 1] * backgroundScale;
-                _backgroundCoords[i + 2] = static_cast<float>(-cameraPos.getZ());
+                _backgroundCoords[i + 2] = static_cast<float>(-cameraPos(2));
             }
             const cglib::mat4x4<float>& mvpMat = viewState.getRTEModelviewProjectionMat();
             glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, mvpMat.data());
@@ -141,8 +146,8 @@ namespace carto {
             // Transform texture coordinates
             int intTwoPowZoom = (int) std::pow(2.0f, (int) viewState.getZoom());
             float scale = (float) (intTwoPowZoom * 0.5f / Const::HALF_WORLD_SIZE);
-            double translateX = cameraPos.getX() * scale;
-            double translateY = cameraPos.getY() * scale;
+            double translateX = cameraPos(0) * scale;
+            double translateY = cameraPos(1) * scale;
             translateX -= std::floor(translateX);
             translateY -= std::floor(translateY);
             for (int i = 0; i < BACKGROUND_VERTEX_COUNT * 2; i += 2) {
@@ -158,6 +163,11 @@ namespace carto {
     }
     
     void BackgroundRenderer::drawSky(const ViewState& viewState) {
+        if (_options.getRenderProjectionMode() != RenderProjectionMode::RENDER_PROJECTION_MODE_PLANAR) {
+            // TODO: implement spherical mode
+            return;
+        }
+
         if (_skyTex) {
             // Texture
             glBindTexture(GL_TEXTURE_2D, _skyTex->getTexId());

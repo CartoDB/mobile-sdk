@@ -2,6 +2,7 @@
 #include "graphics/Bitmap.h"
 #include "geometry/PointGeometry.h"
 #include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "styles/PointStyle.h"
 #include "vectorelements/Point.h"
 #include "utils/Const.h"
@@ -12,15 +13,13 @@
 
 namespace carto {
 
-    PointDrawData::PointDrawData(const PointGeometry& geometry, const PointStyle& style, const Projection& projection) :
+    PointDrawData::PointDrawData(const PointGeometry& geometry, const PointStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface) :
         VectorElementDrawData(style.getColor()),
         _bitmap(style.getBitmap()),
         _clickScale(style.getClickSize() == -1 ? std::max(1.0f, 1 + (IDEAL_CLICK_SIZE - style.getSize()) * CLICK_SIZE_COEF / style.getSize()) : style.getClickSize() / style.getSize()),
-        _pos(),
+        _pos(projectionSurface.calculatePosition(projection.toInternal(geometry.getCenterPos()))),
         _size(style.getSize())
     {
-        MapPos posInternal = projection.toInternal(geometry.getPos());
-        _pos = cglib::vec3<double>(posInternal.getX(), posInternal.getY(), posInternal.getZ());
     }
     
     PointDrawData::~PointDrawData() {

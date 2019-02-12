@@ -89,6 +89,12 @@ namespace carto {
          * @return The current view state.
          */
         ViewState getViewState() const;
+
+        /**
+         * Returns the current projectin surface object.
+         * @return The current projection surface object.
+         */
+        std::shared_ptr<ProjectionSurface> getProjectionSurface() const;
     
         /**
          * Calculates the map position corresponding to a screen position, using the specified view state.
@@ -177,7 +183,7 @@ namespace carto {
         
         void handleRenderThreadCallbacks();
         void handleRendererCaptureCallbacks();
-    
+
         static const int BILLBOARD_PLACEMENT_TASK_DELAY;
 
         static const int STYLE_TEXTURE_CACHE_SIZE; // Size limit (in bytes) for style texture cache
@@ -185,7 +191,7 @@ namespace carto {
         std::chrono::steady_clock::time_point _lastFrameTime;
     
         ViewState _viewState;
-    
+
         std::shared_ptr<FrameBufferManager> _frameBufferManager;
         std::shared_ptr<ShaderManager> _shaderManager;
         std::shared_ptr<TextureManager> _textureManager;

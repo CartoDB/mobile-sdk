@@ -3,6 +3,8 @@
 #include "components/CancelableThreadPool.h"
 #include "datasources/TileDataSource.h"
 #include "layers/RasterTileEventListener.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/TileRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
@@ -303,12 +305,9 @@ namespace carto {
                 std::array<std::uint8_t, 4> nearestComponents = readTileBitmapColor(tileBitmap, nx, ny);
                 Color nearestColor(nearestComponents[0], nearestComponents[1], nearestComponents[2], nearestComponents[3]);
 
-                MapTile mapTile(vtTileId.x, vtTileId.y, vtTileId.zoom, _frameNr);
-                MapPos mapPos = projection.fromInternal(MapPos(ray(t)(0), ray(t)(1), ray(t)(2)));
-
-                auto pixelInfo = std::make_shared<std::tuple<MapTile, Color, Color> >(mapTile, nearestColor, interpolatedColor);
+                auto pixelInfo = std::make_shared<std::tuple<MapTile, Color, Color> >(MapTile(vtTileId.x, vtTileId.y, vtTileId.zoom, _frameNr), nearestColor, interpolatedColor);
                 std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
-                results.push_back(RayIntersectedElement(pixelInfo, thisLayer, mapPos, mapPos, 0, false));
+                results.push_back(RayIntersectedElement(pixelInfo, thisLayer, ray(t), ray(t), 0, false));
             }
         }
 
@@ -316,6 +315,8 @@ namespace carto {
     }
 
     bool RasterTileLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        
         DirectorPtr<RasterTileEventListener> eventListener = _rasterTileEventListener;
 
         if (eventListener) {
@@ -323,7 +324,9 @@ namespace carto {
                 const MapTile& mapTile = std::get<0>(*pixelInfo);
                 const Color& nearestColor = std::get<1>(*pixelInfo);
                 const Color& interpolatedColor = std::get<2>(*pixelInfo);
-                auto clickInfo = std::make_shared<RasterTileClickInfo>(clickType, intersectedElement.getHitPos(), mapTile, nearestColor, interpolatedColor, intersectedElement.getLayer());
+                MapPos hitPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getHitPos()));
+
+                auto clickInfo = std::make_shared<RasterTileClickInfo>(clickType, hitPos, mapTile, nearestColor, interpolatedColor, intersectedElement.getLayer());
                 return eventListener->onRasterTileClicked(clickInfo);
             }
         }

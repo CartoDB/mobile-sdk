@@ -8,6 +8,8 @@
 #include "components/CancelableThreadPool.h"
 #include "graphics/Bitmap.h"
 #include "projections/EPSG3857.h"
+#include "projections/ProjectionSurface.h"
+#include "projections/PlanarProjectionSurface.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
@@ -52,6 +54,7 @@ namespace carto {
         _focusPointOffset(0, 0),
         _baseProjection(std::make_shared<EPSG3857>()),
         _renderProjection(std::make_shared<EPSG3857>()),
+        _projectionSurface(std::make_shared<PlanarProjectionSurface>()),
         _envelopeThreadPool(envelopeThreadPool),
         _tileThreadPool(tileThreadPool),
         _mutex()
@@ -141,6 +144,8 @@ namespace carto {
                 return;
             }
             _renderProjectionMode = renderProjectionMode;
+            // TODO: set _projectionSurface
+            _projectionSurface = std::make_shared<PlanarProjectionSurface>();
         }
         notifyOptionChanged("RenderProjectionMode");
     }
@@ -653,7 +658,7 @@ namespace carto {
         {
             std::lock_guard<std::mutex> lock(_mutex);
             if (_baseProjection == baseProjection) {
-            	return;
+                return;
             }
             _baseProjection = baseProjection;
             _panBounds = baseProjection->getBounds();
@@ -674,11 +679,18 @@ namespace carto {
         {
             std::lock_guard<std::mutex> lock(_mutex);
             if (_renderProjection == renderProjection) {
-            	return;
+                return;
             }
             _renderProjection = renderProjection;
+            // TODO: set _projectionSurface
+            _projectionSurface = std::make_shared<PlanarProjectionSurface>();
         }
         notifyOptionChanged("RenderProjection");
+    }
+
+    std::shared_ptr<ProjectionSurface> Options::getProjectionSurface() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _projectionSurface;
     }
     
     void Options::registerOnChangeListener(const std::shared_ptr<OnChangeListener>& listener) {

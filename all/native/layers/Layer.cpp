@@ -86,12 +86,14 @@ namespace carto {
         if (!options) {
             return;
         }
+        if (!viewState.getProjectionSurface()) {
+            return;
+        }
         std::shared_ptr<Projection> projection = options->getBaseProjection();
 
-        MapPos worldPos = viewState.screenToWorldPlane(screenPos, options);
-        MapPos rayOrigin = viewState.getCameraPos();
-        MapVec rayDir = worldPos - viewState.getCameraPos();
-        cglib::ray3<double> ray(cglib::vec3<double>(rayOrigin.getX(), rayOrigin.getY(), rayOrigin.getZ()), cglib::vec3<double>(rayDir.getX(), rayDir.getY(), rayDir.getZ()));
+        cglib::vec3<double> target = viewState.screenToWorldPlane(cglib::vec2<float>(screenPos.getX(), screenPos.getY()), options);
+        cglib::vec3<double> origin = viewState.getCameraPos();
+        cglib::ray3<double> ray(origin, target - origin);
 
         // Calculate intersections
         std::vector<RayIntersectedElement> results;

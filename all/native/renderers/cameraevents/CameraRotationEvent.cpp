@@ -1,6 +1,8 @@
 #include "CameraRotationEvent.h"
 #include "components/Options.h"
 #include "graphics/ViewState.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
@@ -51,7 +53,6 @@ namespace carto {
     
     void CameraRotationEvent::setTargetPos(const MapPos& targetPos) {
         _targetPos = targetPos;
-        _targetPos.setZ(0);
         _useTarget = true;
     }
     
@@ -67,10 +68,15 @@ namespace carto {
         if (!options.isRotatable()) {
             return;
         }
-        
-        MapPos cameraPos = viewState.getCameraPos();
-        MapPos focusPos = viewState.getFocusPos();
-        MapVec upVec = viewState.getUpVec();
+
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            return;
+        }
+
+        cglib::vec3<double> cameraPos = viewState.getCameraPos();
+        cglib::vec3<double> focusPos = viewState.getFocusPos();
+        cglib::vec3<double> upVec = viewState.getUpVec();
         float rotation = viewState.getRotation();
     
         if (!_useDelta) {
@@ -78,14 +84,15 @@ namespace carto {
             float rotationDelta = _rotation - viewState.getRotation();
             _sin = std::sin(rotationDelta * Const::DEG_TO_RAD);
             _cos = std::cos(rotationDelta * Const::DEG_TO_RAD);
-            rotation = fmod(_rotation, 360.0f);
-        } else {
+            rotation = std::fmod(_rotation, 360.0f);
+        } else if (!(_sin == 0 && _cos == 0)) {
             rotation += static_cast<float>(std::atan2(_sin, _cos) * Const::RAD_TO_DEG);
         }
     
-        if (!_useTarget) {
-            // If target was not specified rotate around the focus pos
-            _targetPos = focusPos;
+        cglib::vec3<double> targetPos = focusPos;
+        if (_useTarget) {
+            // Use specified target instead of focus position, if specified
+            targetPos = projectionSurface->calculatePosition(_targetPos);
         }
         
         if (rotation > 180) {
@@ -94,26 +101,31 @@ namespace carto {
             rotation += 360;
         }
         
-        viewState.setRotation(rotation);
-    
-        MapVec targetVec((cameraPos - _targetPos).rotate2D(_sin, _cos));
-        cameraPos = _targetPos;
-        cameraPos += targetVec;
-    
-        targetVec = (focusPos - _targetPos).rotate2D(_sin, _cos);
-        focusPos = _targetPos;
-        focusPos += targetVec;
-    
-        upVec.rotate2D(_sin, _cos);
+        cglib::vec3<double> axis = projectionSurface->calculateNormal(projectionSurface->calculateMapPos(targetPos));
+        if (cglib::length(axis) == 0 || (_sin == 0 && _cos == 0)) {
+            return;
+        }
+        double angle = std::atan2(_sin, _cos);
+        cglib::mat4x4<double> rotateTransform = cglib::translate4_matrix(targetPos) * cglib::rotate4_matrix(axis, angle) * cglib::translate4_matrix(-targetPos);
         
-        MapVec cameraVec = cameraPos - focusPos;
-        ClampFocusPos(focusPos, options);
-        cameraPos = focusPos + cameraVec;
+        focusPos = cglib::transform_point(focusPos, rotateTransform);
+        cameraPos = cglib::transform_point(cameraPos, rotateTransform);
+        upVec = cglib::transform_vector(upVec, rotateTransform);
+        
+        cglib::vec3<double> oldFocusPos = focusPos;
+        // TODO: enable this
+        //ClampFocusPos(focusPos, options);
+        if (oldFocusPos != focusPos) {
+            cglib::mat4x4<double> translateTransform = projectionSurface->calculateTranslateMatrix(oldFocusPos, focusPos, 1);
+            cameraPos = cglib::transform_point(cameraPos, translateTransform);
+            upVec = cglib::transform_vector(upVec, translateTransform);
+        }
 
         viewState.setCameraPos(cameraPos);
         viewState.setFocusPos(focusPos);
         viewState.setUpVec(upVec);
-        
+        viewState.setRotation(rotation);
+
         viewState.clampFocusPos(options);
 
         // Calculate matrices etc. on the next onDrawFrame() call

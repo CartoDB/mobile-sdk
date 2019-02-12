@@ -58,8 +58,6 @@ namespace carto {
         NMLModel(const MapPos& pos, const std::shared_ptr<BinaryData>& sourceModelData);
         virtual ~NMLModel();
 
-        virtual MapBounds getBounds() const;
-        
         /**
          * Sets the location for this model.
          * @param geometry The new geometry object that defines the location of this model.
@@ -71,12 +69,6 @@ namespace carto {
          */
         void setPos(const MapPos& pos);
         
-        /**
-         * Returns a local transformation matrix. Includes rotation and scaling transformation.
-         * @return A 4x4 transformation matrix.
-         */
-        cglib::mat4x4<float> getLocalMat() const;
-
         /**
          * Returns the rotation axis of this model. If rotation angle is 0, then the axis is irrelevant.
          * @return The rotation axis vector.

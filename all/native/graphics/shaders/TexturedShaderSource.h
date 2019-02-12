@@ -11,8 +11,8 @@ static std::string textured_vert_glsl =
     "varying vec2 v_texCoord;"
     "uniform mat4 u_mvpMat;"
     "void main() {"
-    "	v_texCoord = a_texCoord;"
-    "	gl_Position = u_mvpMat * a_coord;"
+    "    v_texCoord = a_texCoord;"
+    "    gl_Position = u_mvpMat * a_coord;"
     "}";
 
 static std::string textured_frag_glsl =
@@ -23,7 +23,7 @@ static std::string textured_frag_glsl =
     "varying highp vec2 v_texCoord;"
     "uniform sampler2D u_tex;"
     "void main() {"
-    "	gl_FragColor = texture2D(u_tex, v_texCoord);"
+    "    gl_FragColor = texture2D(u_tex, v_texCoord);"
     "}";
 
 static carto::ShaderSource textured_shader_source("textured", &textured_vert_glsl, &textured_frag_glsl);

@@ -7,7 +7,6 @@
 #include "graphics/shaders/RegularShaderSource.h"
 #include "graphics/utils/GLContext.h"
 #include "layers/VectorLayer.h"
-#include "projections/Projection.h"
 #include "renderers/drawdatas/PointDrawData.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/components/StyleTextureCache.h"
@@ -139,11 +138,11 @@ namespace carto {
         }
     
         // Calculate and draw buffers
-        const MapPos& cameraPos = viewState.getCameraPos();
+        cglib::vec3<double> cameraPos = viewState.getCameraPos();
         GLuint drawDataIndex = 0;
         for (std::size_t i = 0; i < drawDataBuffer.size(); i++) {
             const std::shared_ptr<PointDrawData>& drawData = drawDataBuffer[i];
-            cglib::vec3<float> translate = cglib::vec3<float>::convert(drawData->getPos() - cglib::vec3<double>(cameraPos.getX(), cameraPos.getY(), cameraPos.getZ()));
+            cglib::vec3<float> translate = cglib::vec3<float>::convert(drawData->getPos() - cameraPos);
     
             // Check for possible overflow in the buffers
             if ((drawDataIndex + 1) * 6 > GLContext::MAX_VERTEXBUFFER_SIZE) {
@@ -237,9 +236,8 @@ namespace carto {
             cglib::intersect_triangle(bottomLeft, bottomRight, topRight, ray, &t))
         {
             MapPos clickPos(ray(t)(0), ray(t)(1), ray(t)(2));
-            const std::shared_ptr<Projection>& projection = layer->getDataSource()->getProjection();
             int priority = static_cast<int>(results.size());
-            results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projection->fromInternal(clickPos), projection->fromInternal(MapPos(pos(0), pos(1), pos(2))), priority));
+            results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, ray(t), pos, priority));
             return true;
         }
         return false;

@@ -8,7 +8,6 @@
 #include "graphics/ViewState.h"
 #include "graphics/utils/GLContext.h"
 #include "layers/NMLModelLODTreeLayer.h"
-#include "projections/Projection.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "utils/Log.h"
@@ -140,10 +139,8 @@ namespace carto {
                 }
                 
                 cglib::vec3<double> pos = cglib::transform_point(intersections[i].pos, modelMat);
-                MapPos clickPos(pos(0), pos(1), pos(2));
-                MapPos projectedClickPos = layer->getDataSource()->getProjection()->fromInternal(clickPos);
                 int priority = static_cast<int>(results.size());
-                results.push_back(RayIntersectedElement(std::make_shared<NMLModelLODTree::Proxy>(proxyIt->second), layer, projectedClickPos, projectedClickPos, priority, true));
+                results.push_back(RayIntersectedElement(std::make_shared<NMLModelLODTree::Proxy>(proxyIt->second), layer, pos, pos, priority, true));
             }
         }
     }

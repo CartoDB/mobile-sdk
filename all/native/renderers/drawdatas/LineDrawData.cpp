@@ -4,6 +4,7 @@
 #include "graphics/Bitmap.h"
 #include "graphics/utils/GLContext.h"
 #include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "styles/LineStyle.h"
 #include "vectorelements/Line.h"
 #include "vectorelements/Polygon.h"
@@ -25,7 +26,7 @@ namespace {
 
 namespace carto {
 
-    LineDrawData::LineDrawData(const LineGeometry& geometry, const LineStyle& style, const Projection& projection) :
+    LineDrawData::LineDrawData(const LineGeometry& geometry, const LineStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface) :
         VectorElementDrawData(style.getColor()),
         _bitmap(style.getBitmap()),
         _normalScale(style.getWidth() / 2),
@@ -36,22 +37,10 @@ namespace carto {
         _texCoords(),
         _indices()
     {
-        // Remove consecutive duplicates and project coordinates to internal coordinate system
-        const std::vector<MapPos>& poses = geometry.getPoses();
-        _poses.reserve(poses.size());
-        for (std::size_t i = 0; i < poses.size(); i++) {
-            MapPos posInternal = projection.toInternal(poses[i]);
-            cglib::vec3<double> pos(posInternal.getX(), posInternal.getY(), posInternal.getZ());
-            if (i == 0 || _poses.back() != pos) {
-                _poses.push_back(pos);
-            }
-        }
-        
-        // Init draw data
-        init(style);
+        init(geometry.getPoses(), projection, projectionSurface, style);
     }
     
-    LineDrawData::LineDrawData(const PolygonGeometry& geometry, const std::vector<MapPos>& internalPoses, const LineStyle& style, const Projection& projection) :
+    LineDrawData::LineDrawData(const std::vector<MapPos>& poses, const LineStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface) :
         VectorElementDrawData(style.getColor()),
         _bitmap(style.getBitmap()),
         _normalScale(style.getWidth() / 2),
@@ -62,55 +51,9 @@ namespace carto {
         _texCoords(),
         _indices()
     {
-        // Remove consecutive duplicates, do NOT project coordinates
-        _poses.reserve(internalPoses.size());
-        for (std::size_t i = 0; i < internalPoses.size(); i++) {
-            const MapPos& posInternal = internalPoses[i];
-            cglib::vec3<double> pos(posInternal.getX(), posInternal.getY(), posInternal.getZ());
-            if (i == 0 || _poses.back() != pos) {
-                _poses.push_back(pos);
-            }
-        }
-        if (!internalPoses.empty()) {
-            const MapPos& posInternal = internalPoses.front();
-            cglib::vec3<double> pos(posInternal.getX(), posInternal.getY(), posInternal.getZ());
-            if (_poses.back() != pos) {
-                _poses.push_back(pos);
-            }
-        }
-        
-        // Init draw data
-        init(style);
+        init(poses, projection, projectionSurface, style);
     }
         
-    LineDrawData::LineDrawData(const LineDrawData& lineDrawData) :
-        VectorElementDrawData(lineDrawData.getColor()),
-        _bitmap(lineDrawData._bitmap),
-        _normalScale(lineDrawData._normalScale),
-        _clickScale(lineDrawData._clickScale),
-        _poses(lineDrawData._poses),
-        _coords(),
-        _normals(lineDrawData._normals),
-        _texCoords(lineDrawData._texCoords),
-        _indices(lineDrawData._indices)
-    {
-        // Recalculate _coord pointers to _poses
-        _coords.reserve(lineDrawData._coords.size());
-        for (const std::vector<cglib::vec3<double>*>& coords : lineDrawData._coords) {
-            _coords.push_back(std::vector<cglib::vec3<double>*>());
-            _coords.back().reserve(coords.size());
-            const cglib::vec3<double>* prevPos = nullptr;
-            int index = -1;
-            for (const cglib::vec3<double>* pos : coords) {
-                if (pos != prevPos) {
-                    prevPos = pos;
-                    index++;
-                }
-                _coords.back().push_back(&_poses[index]);
-            }
-        }
-    }
-    
     LineDrawData::~LineDrawData() {
     }
     
@@ -149,7 +92,17 @@ namespace carto {
         setIsOffset(true);
     }
     
-    void LineDrawData::init(const LineStyle& style) {
+    void LineDrawData::init(const std::vector<MapPos>& poses, const Projection& projection, const ProjectionSurface& projectionSurface, const LineStyle& style) {
+        // Remove consecutive duplicates and project coordinates to internal coordinate system
+        _poses.reserve(poses.size());
+        for (std::size_t i = 0; i < poses.size(); i++) {
+            // TODO: tesselate segment
+            cglib::vec3<double> pos = projectionSurface.calculatePosition(projection.toInternal(poses[i]));
+            if (i == 0 || _poses.back() != pos) {
+                _poses.push_back(pos);
+            }
+        }
+
         if (_poses.size() < 2) {
             _coords.clear();
             _normals.clear();
@@ -494,6 +447,7 @@ namespace carto {
             _texCoords.back().reserve(std::min(texCoords.size(), GLContext::MAX_VERTEXBUFFER_SIZE));
             _indices.back().reserve(std::min(indices.size(), GLContext::MAX_VERTEXBUFFER_SIZE));
             std::unordered_map<unsigned int, unsigned int> indexMap;
+            indexMap.reserve(indices.size() * 2);
             for (std::size_t i = 0; i < indices.size(); i += 3) {
                 
                 // Check for possible GL buffer overflow

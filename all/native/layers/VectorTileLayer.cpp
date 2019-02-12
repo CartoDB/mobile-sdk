@@ -7,6 +7,8 @@
 #include "graphics/utils/SkyBitmapGenerator.h"
 #include "datasources/TileDataSource.h"
 #include "layers/VectorTileEventListener.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/TileRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
@@ -334,16 +336,13 @@ namespace carto {
 
                     std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-                    MapTile mapTile(vtTileId.x, vtTileId.y, vtTileId.zoom, _frameNr);
-                    MapPos mapPos = projection.fromInternal(MapPos(ray(t)(0), ray(t)(1), ray(t)(2)));
-
                     TileInfo tileInfo;
-                    _visibleCache.peek(getTileId(mapTile), tileInfo);
+                    _visibleCache.peek(getTileId(MapTile(vtTileId.x, vtTileId.y, vtTileId.zoom, _frameNr)), tileInfo);
 
                     if (std::shared_ptr<BinaryData> tileData = tileInfo.getTileData()) {
                         if (std::shared_ptr<VectorTileFeature> tileFeature = _tileDecoder->decodeFeature(id, vtTileId, tileData, tileInfo.getTileBounds())) {
                             std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
-                            results.push_back(RayIntersectedElement(tileFeature, thisLayer, mapPos, mapPos, 0, pass > 0));
+                            results.push_back(RayIntersectedElement(tileFeature, thisLayer, ray(t), ray(t), 0, pass > 0));
                         } else {
                             Log::Warnf("VectorTileLayer::calculateRayIntersectedElements: Failed to decode feature %lld", id);
                         }
@@ -358,11 +357,14 @@ namespace carto {
     }
 
     bool VectorTileLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        
         DirectorPtr<VectorTileEventListener> eventListener = _vectorTileEventListener;
 
         if (eventListener) {
             if (std::shared_ptr<VectorTileFeature> tileFeature = intersectedElement.getElement<VectorTileFeature>()) {
-                auto clickInfo = std::make_shared<VectorTileClickInfo>(clickType, intersectedElement.getHitPos(), intersectedElement.getHitPos(), tileFeature, intersectedElement.getLayer());
+                MapPos hitPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getHitPos()));
+                auto clickInfo = std::make_shared<VectorTileClickInfo>(clickType, hitPos, hitPos, tileFeature, intersectedElement.getLayer());
                 return eventListener->onVectorTileClicked(clickInfo);
             }
         }

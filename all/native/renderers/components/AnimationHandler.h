@@ -24,6 +24,7 @@ namespace carto {
         void calculate(const ViewState& viewState, float deltaSeconds);
     
         void setPanTarget(const MapPos& panTarget, float durationSeconds);
+        void setPanDelta(const std::pair<MapPos, MapPos>& panDelta, float durationSeconds);
         void stopPan();
         
         void setRotationTarget(float rotationTarget, const MapPos* targetPos, float durationSeconds);
@@ -44,6 +45,8 @@ namespace carto {
         bool _panStarted;
         float _panDurationSeconds;
         MapPos _panTarget;
+        std::pair<MapPos, MapPos> _panDelta;
+        bool _panUseDelta;
     
         bool _rotationStarted;
         float _rotationDurationSeconds;

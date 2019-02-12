@@ -2,6 +2,8 @@
 #include "components/Options.h"
 #include "graphics/ViewState.h"
 #include "layers/Layer.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/cameraevents/CameraPanEvent.h"
@@ -290,8 +292,11 @@ namespace carto {
     }
     
     bool TouchHandler::isValidTouchPosition(const MapPos& mapPos, const ViewState& viewState) const {
-        MapVec zVec = (viewState.getFocusPos() - viewState.getCameraPos()).getNormalized();
-        double dist = zVec.dotProduct(mapPos - viewState.getCameraPos());
+        if (!viewState.getProjectionSurface()) {
+            return false;
+        }
+        cglib::vec3<double> zVec = cglib::unit(viewState.getFocusPos() - viewState.getCameraPos());
+        double dist = cglib::dot_product(zVec, viewState.getProjectionSurface()->calculatePosition(mapPos) - viewState.getCameraPos());
         return dist > 0 && dist < viewState.getFar();
     }
 
@@ -324,7 +329,7 @@ namespace carto {
             
             if (isValidTouchPosition(currentPos, viewState) && isValidTouchPosition(prevPos, viewState)) {
                 CameraPanEvent cameraEvent;
-                cameraEvent.setPosDelta(prevPos - currentPos);
+                cameraEvent.setPosDelta(std::make_pair(currentPos, prevPos));
                 _mapRenderer->calculateCameraEvent(cameraEvent, 0, true);
             }
         }
@@ -456,7 +461,7 @@ namespace carto {
             &&  isValidTouchPosition(currentPos2, viewState) && isValidTouchPosition(prevPos2, viewState)) {
                 if (_options->getPivotMode() == PivotMode::PIVOT_MODE_TOUCHPOINT) {
                     CameraPanEvent cameraPanEvent;
-                    cameraPanEvent.setPosDelta(prevMiddlePos - currentMiddlePos);
+                    cameraPanEvent.setPosDelta(std::make_pair(currentMiddlePos, prevMiddlePos));
                     _mapRenderer->calculateCameraEvent(cameraPanEvent, 0, true);
                 }
             

@@ -6,6 +6,8 @@
 #include "layers/TileLoadListener.h"
 #include "layers/UTFGridEventListener.h"
 #include "layers/components/UTFGridTile.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/components/CullState.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/MapRenderer.h"
@@ -176,7 +178,7 @@ namespace carto {
     }
         
     TileLayer::TileLayer(const std::shared_ptr<TileDataSource>& dataSource) :
-       	Layer(),
+        Layer(),
         _synchronizedRefresh(false),
         _calculatingTiles(false),
         _refreshedTiles(false),
@@ -294,13 +296,15 @@ namespace carto {
             return;
         }
 
-        double t = 0;
-        if (!cglib::intersect_plane(cglib::vec4<double>(0, 0, 1, 0), ray, &t)) {
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+
+        // Find intersection with projection surface
+        double t = projectionSurface->calculateRayHit(ray);
+        if (t < 0) {
             return;
         }
 
-        MapPos mapPosInternal(ray(t)(0), ray(t)(1), ray(t)(2));
-        MapPos mapPos = utfGridDataSource->getProjection()->fromInternal(mapPosInternal);
+        MapPos mapPos = utfGridDataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(ray(t)));
         int zoom = std::min(getMaxZoom(), static_cast<int>(viewState.getZoom() + getZoomLevelBias() + DISCRETE_ZOOM_LEVEL_BIAS));
 
         // Try to get the tile from cache
@@ -338,17 +342,20 @@ namespace carto {
             if (keyId != 0) {
                 auto elementInfo = std::make_shared<Variant>(utfGridTile->getData(utfGridTile->getKey(keyId)));
                 std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
-                results.push_back(RayIntersectedElement(elementInfo, thisLayer, mapPos, mapPos, 0));
+                results.push_back(RayIntersectedElement(elementInfo, thisLayer, ray(t), ray(t), 0));
             }
         }
     }
 
     bool TileLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        
         DirectorPtr<UTFGridEventListener> utfGridEventListener = _utfGridEventListener;
 
         if (utfGridEventListener) {
             if (std::shared_ptr<Variant> elementInfo = intersectedElement.getElement<Variant>()) {
-                auto clickInfo = std::make_shared<UTFGridClickInfo>(clickType, intersectedElement.getHitPos(), *elementInfo, intersectedElement.getLayer());
+                MapPos hitPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getHitPos()));
+                auto clickInfo = std::make_shared<UTFGridClickInfo>(clickType, hitPos, *elementInfo, intersectedElement.getLayer());
                 return utfGridEventListener->onUTFGridClicked(clickInfo);
             }
         }
@@ -379,7 +386,7 @@ namespace carto {
 
     void TileLayer::calculateVisibleTilesRecursive(const std::shared_ptr<CullState>& cullState, const MapTile& tile, const MapBounds& dataExtent) {
         const ViewState& viewState = cullState->getViewState();
-        const Frustum& visibleFrustum = viewState.getFrustum();
+        const cglib::frustum3<double>& visibleFrustum = viewState.getFrustum();
         
         if (tile.getZoom() > Const::MAX_SUPPORTED_ZOOM_LEVEL) {
             return;
@@ -391,18 +398,19 @@ namespace carto {
             return;
         }
         
-        MapBounds tileBounds = calculateInternalTileBounds(tile);
-        MapPos tileCenter = tileBounds.getCenter();
+        cglib::bbox3<double> tileBounds = _tileTransformer->calculateTileBBox(vt::TileId(tile.getZoom(), tile.getX(), tile.getY()));
+        cglib::vec3<double> tileCenter = tileBounds.center();
+        cglib::bbox3<double> preloadingBounds(tileCenter + (tileBounds.min - tileCenter) * PRELOADING_TILE_SCALE, tileCenter + (tileBounds.max - tileCenter) * PRELOADING_TILE_SCALE);
 
-        bool inPreloadingFrustum = visibleFrustum.circleIntersects(tileCenter, tileBounds.getDelta().length() * 0.5 * PRELOADING_TILE_SCALE);
+        bool inPreloadingFrustum = visibleFrustum.inside(preloadingBounds);
         if (!inPreloadingFrustum) {
             return;
         }
-        bool inVisibleFrustum = visibleFrustum.squareIntersects(tileBounds);
+        bool inVisibleFrustum = visibleFrustum.inside(tileBounds);
         
         // Map tile is visible, calculate distance using camera plane
         const cglib::mat4x4<double>& mvpMat = viewState.getModelviewProjectionMat();
-        double tileW = tileCenter.getX() * mvpMat(3, 0) + tileCenter.getY() * mvpMat(3, 1) + mvpMat(3, 3);
+        double tileW = tileCenter(0) * mvpMat(3, 0) + tileCenter(1) * mvpMat(3, 1) + tileCenter(2) * mvpMat(3, 2) + mvpMat(3, 3);
         double zoomDistance = tileW * std::pow(2.0f, tile.getZoom() - getZoomLevelBias());
         bool subDivide = zoomDistance < SUBDIVISION_THRESHOLD * Const::SQRT_2;
         int targetTileZoom = std::min(getMaxZoom(), static_cast<int>(viewState.getZoom() + getZoomLevelBias() + DISCRETE_ZOOM_LEVEL_BIAS));
@@ -448,8 +456,8 @@ namespace carto {
                 }
             }
 
-            MapPos center = calculateInternalTileBounds(mapTile).getCenter();
-            double dist = (center - viewState.getCameraPos()).length();
+            cglib::vec3<double> center = _tileTransformer->calculateTileOrigin(vt::TileId(mapTile.getZoom(), mapTile.getX(), mapTile.getY()));
+            double dist = cglib::length(center - viewState.getCameraPos());
 
             taggedTiles.emplace_back(std::make_tuple(parentSubstLevel, childSubstLevel, dist), mapTile);
         }
@@ -721,7 +729,7 @@ namespace carto {
 
     const float TileLayer::DISCRETE_ZOOM_LEVEL_BIAS = 0.001f;
 
-    const float TileLayer::PRELOADING_TILE_SCALE = 1.5f;
+    const double TileLayer::PRELOADING_TILE_SCALE = 1.5;
     const float TileLayer::SUBDIVISION_THRESHOLD = Const::WORLD_SIZE;
     
 }

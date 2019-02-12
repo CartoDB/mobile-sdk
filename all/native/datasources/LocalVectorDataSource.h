@@ -34,6 +34,7 @@ namespace carto {
     class FeatureCollection;
     class Geometry;
     class GeometrySimplifier;
+    class ProjectionSurface;
     class Style;
 
     /**
@@ -137,9 +138,13 @@ namespace carto {
     private:
         std::shared_ptr<VectorElement> createElement(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<Style>& style) const;
         std::shared_ptr<VectorElement> simplifyElement(const std::shared_ptr<VectorElement>& element, float scale) const;
+        
+        cglib::bbox3<double> calculateBounds(const MapBounds& mapBounds) const;
 
         std::shared_ptr<GeometrySimplifier> _geometrySimplifier;
         std::shared_ptr<SpatialIndex<std::shared_ptr<VectorElement> > > _spatialIndex;
+        LocalSpatialIndexType::LocalSpatialIndexType _spatialIndexType;
+        std::shared_ptr<ProjectionSurface> _projectionSurface;
         
         unsigned int _elementId;
 

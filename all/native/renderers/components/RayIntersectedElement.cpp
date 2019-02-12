@@ -10,11 +10,11 @@ namespace carto {
         return _layer;
     }
 
-    const MapPos& RayIntersectedElement::getHitPos() const {
+    const cglib::vec3<double>& RayIntersectedElement::getHitPos() const {
         return _hitPos;
     }
 
-    const MapPos& RayIntersectedElement::getElementPos() const {
+    const cglib::vec3<double>& RayIntersectedElement::getElementPos() const {
         return _elementPos;
     }
 
@@ -26,8 +26,8 @@ namespace carto {
         return _is3D;
     }
 
-    double RayIntersectedElement::getDistance(const MapPos& origin) const {
-        return (origin - _hitPos).length();
+    double RayIntersectedElement::getDistance(const cglib::vec3<double>& origin) const {
+        return cglib::length(origin - _hitPos);
     }
     
 }

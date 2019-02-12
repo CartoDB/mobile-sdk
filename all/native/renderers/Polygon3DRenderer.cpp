@@ -10,7 +10,6 @@
 #include "graphics/ViewState.h"
 #include "graphics/shaders/DiffuseLightingShaderSource.h"
 #include "graphics/utils/GLContext.h"
-#include "projections/Projection.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
@@ -183,10 +182,8 @@ namespace carto {
             for (std::size_t i = 0; i < coords.size(); i += 3) {
                 double t = 0;
                 if (cglib::intersect_triangle(coords[i + 0], coords[i + 1], coords[i + 2], ray, &t)) {
-                    MapPos clickPos(ray(t)(0), ray(t)(1), ray(t)(2));
-                    MapPos projectedClickPos = layer->getDataSource()->getProjection()->fromInternal(clickPos);
                     int priority = static_cast<int>(results.size());
-                    results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projectedClickPos, projectedClickPos, priority, true));
+                    results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, ray(t), ray(t), priority, true));
                     break;
                 }
             }
@@ -216,7 +213,7 @@ namespace carto {
         }
     
         // View state specific data
-        const MapPos& cameraPos = viewState.getCameraPos();
+        cglib::vec3<double> cameraPos = viewState.getCameraPos();
         std::size_t colorIndex = 0;
         std::size_t normalIndex = 0;
         GLuint coordIndex = 0;
@@ -250,9 +247,9 @@ namespace carto {
             std::vector<cglib::vec3<float> >::const_iterator nit;
             for (cit = coords.begin(), nit = normals.begin(); cit != coords.end() && nit != normals.end(); ++cit, ++nit) {
                 const cglib::vec3<double>& coord = *cit;
-                coordBuf[coordIndex + 0] = static_cast<float>(coord(0) - cameraPos.getX());
-                coordBuf[coordIndex + 1] = static_cast<float>(coord(1) - cameraPos.getY());
-                coordBuf[coordIndex + 2] = static_cast<float>(coord(2) - cameraPos.getZ());
+                coordBuf[coordIndex + 0] = static_cast<float>(coord(0) - cameraPos(0));
+                coordBuf[coordIndex + 1] = static_cast<float>(coord(1) - cameraPos(1));
+                coordBuf[coordIndex + 2] = static_cast<float>(coord(2) - cameraPos(2));
                 coordIndex += 3;
                 
                 const cglib::vec3<float>& normal = *nit;

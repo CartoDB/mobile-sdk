@@ -2,8 +2,6 @@
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
 #include "geometry/PointGeometry.h"
-#include "graphics/ViewState.h"
-#include "projections/EPSG3857.h"
 #include "renderers/drawdatas/NMLModelDrawData.h"
 #include "utils/Const.h"
 
@@ -76,23 +74,6 @@ namespace carto {
     NMLModel::~NMLModel() {
     }
         
-    MapBounds NMLModel::getBounds() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-
-        EPSG3857 proj;
-        cglib::mat4x4<double> localToGlobalMat = ViewState::GetLocalMat(_geometry->getCenterPos(), proj) * cglib::mat4x4<double>::convert(getLocalMat());
-
-        MapBounds modelBounds;
-        for (int i = 0; i < 8; i++) {
-            const nml::Vector3& minBounds = _sourceModel->bounds().min();
-            const nml::Vector3& maxBounds = _sourceModel->bounds().max();
-            cglib::vec3<double> posLocal((i & 1 ? minBounds : maxBounds).x(), (i & 2 ? minBounds : maxBounds).y(), (i & 4 ? minBounds : maxBounds).z());
-            cglib::vec3<double> posGlobal = cglib::transform_point(posLocal, localToGlobalMat);
-            modelBounds.expandToContain(proj.fromInternal(MapPos(posGlobal(0), posGlobal(1), 0)));
-        }
-        return modelBounds;
-    }
-    
     void NMLModel::setGeometry(const std::shared_ptr<Geometry>& geometry) {
         if (!geometry) {
             throw NullArgumentException("Null geometry");
@@ -113,13 +94,6 @@ namespace carto {
         notifyElementChanged();
     }
         
-    cglib::mat4x4<float> NMLModel::getLocalMat() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        cglib::mat4x4<float> rotateMat = cglib::rotate4_matrix(cglib::vec3<float>((float) _rotationAxis.getX(), (float) _rotationAxis.getY(), (float) _rotationAxis.getZ()), _rotationAngle * static_cast<float>(Const::DEG_TO_RAD));
-        cglib::mat4x4<float> scaleMat = cglib::scale4_matrix(cglib::vec3<float>(_scale, _scale, _scale));
-        return rotateMat * scaleMat;
-    }
-    
     float NMLModel::getRotationAngle() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _rotationAngle;

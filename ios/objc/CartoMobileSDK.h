@@ -47,7 +47,6 @@
 #import "NTGeoJSONGeometryReader.h"
 #import "NTGeoJSONGeometryWriter.h"
 
-#import "NTFrustum.h"
 #import "NTBitmap.h"
 #import "NTColor.h"
 #import "NTViewState.h"

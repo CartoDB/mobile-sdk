@@ -16,6 +16,8 @@
 #include "graphics/shaders/BlendShaderSource.h"
 #include "graphics/utils/GLContext.h"
 #include "layers/Layer.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/BillboardRenderer.h"
 #include "renderers/MapRendererListener.h"
 #include "renderers/RendererCaptureListener.h"
@@ -138,6 +140,15 @@ namespace carto {
         viewState.calculateViewState(*_options);
         return viewState;
     }
+
+    std::shared_ptr<ProjectionSurface> MapRenderer::getProjectionSurface() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        std::shared_ptr<ProjectionSurface> projectionSurface = _viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            projectionSurface = _options->getProjectionSurface();
+        }
+        return projectionSurface;
+    }
         
     MapPos MapRenderer::screenToMap(const ScreenPos& screenPos, const ViewState& viewState) {
         return _options->getBaseProjection()->fromInternal(screenToWorld(screenPos, viewState));
@@ -178,18 +189,19 @@ namespace carto {
     }
     
     MapPos MapRenderer::getCameraPos() const {
+        // TODO: remove these methods alltogether? Use them through ViewState?
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return MapPos(_viewState.getCameraPos());
+        return _options->getProjectionSurface()->calculateMapPos(_viewState.getCameraPos());
     }
     
     MapPos MapRenderer::getFocusPos() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return MapPos(_viewState.getFocusPos());
+        return _options->getProjectionSurface()->calculateMapPos(_viewState.getFocusPos());
     }
     
     MapVec MapRenderer::getUpVec() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return MapVec(_viewState.getUpVec());
+        return _options->getProjectionSurface()->calculateMapVec(_viewState.getFocusPos(), _viewState.getUpVec());
     }
     
     float MapRenderer::getRotation() const {
@@ -217,30 +229,29 @@ namespace carto {
     
     void MapRenderer::calculateCameraEvent(CameraPanEvent& cameraEvent, float durationSeconds, bool updateKinetic) {
         if (durationSeconds > 0) {
-            MapPos oldFocusPos;
-            {
-                std::lock_guard<std::recursive_mutex> lock(_mutex);
-                oldFocusPos = _viewState.getFocusPos();
+            if (cameraEvent.isUseDelta()) {
+                _animationHandler.setPanDelta(cameraEvent.getPosDelta(), durationSeconds);
+            } else {
+                _animationHandler.setPanTarget(cameraEvent.getPos(), durationSeconds);
             }
-            _animationHandler.setPanTarget(cameraEvent.isUseDelta() ? oldFocusPos + cameraEvent.getPosDelta() : cameraEvent.getPos(), durationSeconds);
     
             // Animation will start on the next frame
             requestRedraw();
             return;
         }
     
-        MapVec deltaFocusPos;
+        MapPos oldFocusPos;
+        MapPos newFocusPos;
         float zoom;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
-            MapPos oldFocusPos = _viewState.getFocusPos();
+            oldFocusPos = _options->getProjectionSurface()->calculateMapPos(_viewState.getFocusPos());
         
             // Calculate new focusPos, cameraPos and upVec
             cameraEvent.calculate(*_options, _viewState);
     
             // Calculate parameters for kinetic events
-            MapPos focusPos = _viewState.getFocusPos();
-            deltaFocusPos = focusPos - oldFocusPos;
+            newFocusPos = _options->getProjectionSurface()->calculateMapPos(_viewState.getFocusPos());
             zoom = _viewState.getZoom();
           
             // In case of seamless panning horizontal teleport, offset the delta focus pos
@@ -252,7 +263,7 @@ namespace carto {
         viewChanged(true);
     
         if (updateKinetic) {
-            _kineticEventHandler.setPanDelta(deltaFocusPos, zoom);
+            _kineticEventHandler.setPanDelta(std::make_pair(oldFocusPos, newFocusPos), zoom);
         } 
     }
         
@@ -358,10 +369,12 @@ namespace carto {
         CameraZoomEvent cameraZoomEvent;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+            std::shared_ptr<ProjectionSurface> projectionSurface = getProjectionSurface();
             
             // Adjust the camera tilt, rotation and position to the final state of this animation
             MapPos focusPos = center;
-            MapPos oldFocusPos = _viewState.getFocusPos();
+            MapPos oldFocusPos = projectionSurface->calculateMapPos(_viewState.getFocusPos());
             cameraPanEvent.setPos(center);
             cameraPanEvent.calculate(*_options, _viewState);
             
@@ -385,7 +398,7 @@ namespace carto {
             MapRange zoomRange(_options->getZoomRange());
             float zoom = _options->getZoomRange().getMin();
             float zoomStep = zoomRange.length() * 0.5f;
-            if (std::all_of(points.begin(), points.end(), [&points](const MapPos& pos) {
+            if (points.empty() || std::all_of(points.begin(), points.end(), [&points](const MapPos& pos) {
                 return pos == points.front();
             })) {
                 zoom = oldZoom;
@@ -407,16 +420,18 @@ namespace carto {
                 cameraZoomEvent.calculate(*_options, viewState);
                 viewState.clampZoom(*_options);
 
-                MapVec delta = focusPos - viewState.screenToWorldPlane(screenBounds.getCenter(), _options);
+                ScreenPos screenPos = screenBounds.getCenter();
+                // TODO: questionable
+                MapVec delta = focusPos - projectionSurface->calculateMapPos(viewState.screenToWorldPlane(cglib::vec2<float>(screenPos.getX(), screenPos.getY()), _options));
                 focusPos = center + delta;
                 cameraPanEvent.setPos(focusPos);
                 cameraPanEvent.calculate(*_options, viewState);
                 viewState.clampFocusPos(*_options);
     
                 bool fit = true;
-                for (const MapPos& pos : points) {
-                    ScreenPos screenPos = viewState.worldToScreen(pos, *_options);
-                    if (!screenBounds.contains(screenPos)) {
+                for (const MapPos& mapPos : points) {
+                    cglib::vec2<float> screenPos = viewState.worldToScreen(projectionSurface->calculatePosition(mapPos), *_options);
+                    if (!screenBounds.contains(ScreenPos(screenPos(0), screenPos(1)))) {
                         fit = false;
                         break;
                     }
@@ -469,12 +484,14 @@ namespace carto {
     
     MapPos MapRenderer::screenToWorld(const ScreenPos& screenPos, const ViewState& viewState) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return viewState.screenToWorldPlane(screenPos, _options);
+        return _options->getProjectionSurface()->calculateMapPos(viewState.screenToWorldPlane(cglib::vec2<float>(screenPos.getX(), screenPos.getY()), _options));
     }
     
+    // TODO: rename worldPos -> internalPos?
     ScreenPos MapRenderer::worldToScreen(const MapPos& worldPos, const ViewState& viewState) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return viewState.worldToScreen(worldPos, *_options);
+        cglib::vec2<float> screenPos = viewState.worldToScreen(_options->getProjectionSurface()->calculatePosition(worldPos), *_options);
+        return ScreenPos(screenPos(0), screenPos(1));
     }
     
     void MapRenderer::onSurfaceCreated() {
@@ -530,7 +547,7 @@ namespace carto {
             layer->onSurfaceCreated(_shaderManager, _textureManager);
         }
         
-       	GLContext::CheckGLError("MapRenderer::onSurfaceCreated");
+        GLContext::CheckGLError("MapRenderer::onSurfaceCreated");
     }
     
     void MapRenderer::onSurfaceChanged(int width, int height) {
@@ -698,7 +715,7 @@ namespace carto {
         glClearStencil(0);
         glClear(bufferMask);
 
-       	GLContext::CheckGLError("MapRenderer::clearAndBindScreenFBO");
+        GLContext::CheckGLError("MapRenderer::clearAndBindScreenFBO");
     }
 
     void MapRenderer::blendAndUnbindScreenFBO(float opacity) {
@@ -746,7 +763,7 @@ namespace carto {
         
         glDisableVertexAttribArray(_screenBlendShader->getAttribLoc("a_coord"));
 
-       	GLContext::CheckGLError("MapRenderer::blendAndUnbindScreenFBO");
+        GLContext::CheckGLError("MapRenderer::blendAndUnbindScreenFBO");
     }
 
     void MapRenderer::calculateRayIntersectedElements(const MapPos& targetPos, ViewState& viewState, std::vector<RayIntersectedElement>& results) {
@@ -754,10 +771,13 @@ namespace carto {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             viewState = _viewState;
         }
+        if (!viewState.getProjectionSurface()) {
+            return;
+        }
 
-        MapPos rayOrigin = viewState.getCameraPos();
-        MapVec rayDir = targetPos - viewState.getCameraPos();
-        cglib::ray3<double> ray(cglib::vec3<double>(rayOrigin.getX(), rayOrigin.getY(), rayOrigin.getZ()), cglib::vec3<double>(rayDir.getX(), rayDir.getY(), rayDir.getZ()));
+        cglib::vec3<double> origin = viewState.getCameraPos();
+        cglib::vec3<double> target = _options->getProjectionSurface()->calculatePosition(targetPos);
+        cglib::ray3<double> ray(origin, target - origin);
     
         // Normal layer click detection is done in the layer order
         const std::shared_ptr<Projection> projection = _options->getBaseProjection();
@@ -873,7 +893,7 @@ namespace carto {
             
             // Clear billboard before sorting
             _billboardSorter.clear();
-            
+
             // Do base drawing pass
             for (const std::shared_ptr<Layer>& layer : layers) {
                 if (viewState.getHorizontalLayerOffsetDir() != 0) {
@@ -984,7 +1004,7 @@ namespace carto {
             requestRedraw();
         }
     }
-    
+
     MapRenderer::OptionsListener::OptionsListener(const std::shared_ptr<MapRenderer>& mapRenderer) : _mapRenderer(mapRenderer)
     {
     }

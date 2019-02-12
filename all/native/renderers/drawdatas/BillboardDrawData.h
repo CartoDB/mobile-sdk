@@ -23,6 +23,7 @@ namespace carto {
     class BillboardStyle;
     class AnimationStyle;
     class Projection;
+    class ProjectionSurface;
     
     class BillboardDrawData : public VectorElementDrawData {
     public:
@@ -94,6 +95,7 @@ namespace carto {
         BillboardDrawData(const Billboard& billboard,
                           const BillboardStyle& style,
                           const Projection& projection,
+                          const ProjectionSurface& projectionSurface,
                           const std::shared_ptr<Bitmap>& bitmap,
                           float anchorPointX,
                           float anchorPointY,

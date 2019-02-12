@@ -9,7 +9,6 @@
 
 #include "components/ThreadWorker.h"
 #include "core/MapEnvelope.h"
-#include "graphics/Frustum.h"
 #include "renderers/components/CullState.h"
 
 #include <chrono>

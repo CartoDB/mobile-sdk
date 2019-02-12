@@ -11,7 +11,6 @@
 #include "core/MapRange.h"
 #include "core/ScreenPos.h"
 #include "graphics/Color.h"
-#include "projections/Projection.h"
 
 #include <memory>
 #include <mutex>
@@ -20,6 +19,8 @@
 namespace carto {
     class Bitmap;
     class CancelableThreadPool;
+    class Projection;
+    class ProjectionSurface;
     
     namespace ProjectionMode {
         /**
@@ -587,6 +588,12 @@ namespace carto {
          * @param renderProjection The new render projection.
          */
         void setRenderProjection(const std::shared_ptr<Projection>& renderProjection);
+
+        /**
+         * Returns the projection surface.
+         * @return The projection surface.
+         */
+        std::shared_ptr<ProjectionSurface> getProjectionSurface() const;
         
         /**
          * Registers listener for options change events.
@@ -666,6 +673,8 @@ namespace carto {
         std::shared_ptr<Projection> _baseProjection;
 
         std::shared_ptr<Projection> _renderProjection;
+
+        std::shared_ptr<ProjectionSurface> _projectionSurface;
     
         std::shared_ptr<CancelableThreadPool> _envelopeThreadPool;
         std::shared_ptr<CancelableThreadPool> _tileThreadPool;

@@ -1,6 +1,5 @@
 #include "TileRenderer.h"
 #include "components/ThreadWorker.h"
-#include "graphics/Frustum.h"
 #include "graphics/Shader.h"
 #include "graphics/ShaderManager.h"
 #include "graphics/ViewState.h"
@@ -144,7 +143,7 @@ namespace carto {
             return false;
         }
 
-        bool refresh = false;	
+        bool refresh = false;    
         if (_labelOrder == 1) {
             refresh = _glRenderer->renderLabels(true, false) || refresh;
         }

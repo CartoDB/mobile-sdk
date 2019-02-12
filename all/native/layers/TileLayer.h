@@ -326,7 +326,7 @@ namespace carto {
         static const int MAX_PARENT_SEARCH_DEPTH = 6;
         static const int MAX_CHILD_SEARCH_DEPTH = 3;
         
-        static const float PRELOADING_TILE_SCALE;
+        static const double PRELOADING_TILE_SCALE;
         static const float SUBDIVISION_THRESHOLD;
         
         std::vector<MapTile> _visibleTiles;

@@ -5,7 +5,7 @@
 
 %module ViewState
 
-!proxy_imports(carto::ViewState, core.MapPos, core.ScreenPos, core.MapVec, components.Options, graphics.Frustum, projections.Projection)
+!proxy_imports(carto::ViewState, core.MapPos, core.ScreenPos, core.MapVec, components.Options, projections.Projection)
 !java_imports(carto::ViewState, com.carto.components.ProjectionMode)
 
 %{
@@ -19,14 +19,18 @@
 %import "core/MapVec.i"
 %import "core/ScreenPos.i"
 %import "components/Options.i"
-%import "graphics/Frustum.i"
 
 !value_type(carto::ViewState, graphics.ViewState)
 
-%attributeval(carto::ViewState, carto::MapPos, CameraPos, getCameraPos)
-%attributeval(carto::ViewState, carto::MapPos, FocusPos, getFocusPos)
-%attributeval(carto::ViewState, carto::MapVec, UpVec, getUpVec)
-%attributeval(carto::ViewState, carto::Frustum, Frustum, getFrustum)
+// TODO:
+//%attributeval(carto::ViewState, carto::MapPos, CameraPos, getCameraPos)
+//%attributeval(carto::ViewState, carto::MapPos, FocusPos, getFocusPos)
+//%attributeval(carto::ViewState, carto::MapVec, UpVec, getUpVec)
+%ignore carto::ViewState::getCameraPos;
+%ignore carto::ViewState::getFocusPos;
+%ignore carto::ViewState::getUpVec;
+%ignore carto::ViewState::getFrustum;
+
 %attribute(carto::ViewState, float, Rotation, getRotation)
 %attribute(carto::ViewState, float, Zoom, getZoom)
 %attribute(carto::ViewState, float, Tilt, getTilt)
@@ -65,6 +69,7 @@
 %ignore carto::ViewState::cameraChanged;
 %ignore carto::ViewState::get2PowZoom;
 %ignore carto::ViewState::getRotationState;
+%ignore carto::ViewState::getProjectionSurface;
 %ignore carto::ViewState::getProjectionMat;
 %ignore carto::ViewState::getModelviewMat;
 %ignore carto::ViewState::getModelviewProjectionMat;

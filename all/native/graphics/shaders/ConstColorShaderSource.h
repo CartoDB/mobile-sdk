@@ -11,8 +11,8 @@ static std::string constcolor_vert_glsl =
     "varying vec4 v_color;"
     "uniform mat4 u_mvpMat;"
     "void main() {"
-    "	v_color = a_color;"
-    "	gl_Position = u_mvpMat * a_coord;"
+    "    v_color = a_color;"
+    "    gl_Position = u_mvpMat * a_coord;"
     "}";
 
 static std::string constcolor_frag_glsl =
@@ -22,11 +22,11 @@ static std::string constcolor_frag_glsl =
 
     "varying lowp vec4 v_color;"
     "void main() {"
-    "	vec4 color = v_color;"
-    "	if (color.a == 0.0) {"
-    "		discard;"
-    "	}"
-    "	gl_FragColor = color;"
+    "    vec4 color = v_color;"
+    "    if (color.a == 0.0) {"
+    "        discard;"
+    "    }"
+    "    gl_FragColor = color;"
     "}";
 
 static carto::ShaderSource constcolor_shader_source("constcolor", &constcolor_vert_glsl, &constcolor_frag_glsl);

@@ -152,6 +152,7 @@ namespace carto {
         return MapVec(_x / len, _y / len, _z / len);
     }
     
+    // TODO: remove
     MapVec& MapVec::rotate2D(double sin, double cos) {
         double x = cos * _x - sin * _y;
         double y = sin * _x + cos * _y;

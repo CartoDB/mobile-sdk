@@ -7,11 +7,11 @@
 #ifndef _CARTO_RAYINTERSECTEDELEMENT_H_
 #define _CARTO_RAYINTERSECTEDELEMENT_H_
 
-#include "core/MapPos.h"
-
 #include <memory>
 
 #include <boost/any.hpp>
+
+#include <cglib/vec.h>
 
 namespace carto {
     class Layer;
@@ -19,7 +19,7 @@ namespace carto {
     class RayIntersectedElement {
     public:
         template <typename T>
-        RayIntersectedElement(const std::shared_ptr<T>& element, const std::shared_ptr<Layer>& layer, const MapPos& hitPos, const MapPos& elementPos, int order, bool is3D = false) :
+        RayIntersectedElement(const std::shared_ptr<T>& element, const std::shared_ptr<Layer>& layer, const cglib::vec3<double>& hitPos, const cglib::vec3<double>& elementPos, int order, bool is3D = false) :
             _element(element),
             _layer(layer),
             _hitPos(hitPos),
@@ -41,21 +41,21 @@ namespace carto {
     
         const std::shared_ptr<Layer>& getLayer() const;
 
-        const MapPos& getHitPos() const;
+        const cglib::vec3<double>& getHitPos() const;
 
-        const MapPos& getElementPos() const;
+        const cglib::vec3<double>& getElementPos() const;
 
         int getOrder() const;
 
         bool is3D() const;
 
-        double getDistance(const MapPos& origin) const;
+        double getDistance(const cglib::vec3<double>& origin) const;
     
     private:
         boost::any _element;
         std::shared_ptr<Layer> _layer;
-        MapPos _hitPos;
-        MapPos _elementPos;
+        cglib::vec3<double> _hitPos;
+        cglib::vec3<double> _elementPos;
         int _order;
         bool _is3D;
     };

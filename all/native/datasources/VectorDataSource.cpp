@@ -1,5 +1,7 @@
 #include "VectorDataSource.h"
 #include "components/Exceptions.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "graphics/ViewState.h"
 #include "vectorelements/VectorElement.h"
 #include "utils/Log.h"
@@ -30,12 +32,20 @@ namespace carto {
     }
 
     float VectorDataSource::calculateGeometrySimplifierScale(const ViewState& viewState) const {
-        float x0 = viewState.getWidth() * 0.5f;
-        float y0 = viewState.getHeight() * 0.5f;
-        MapPos p0 = viewState.screenToWorldPlane(ScreenPos(x0, y0));
-        MapPos p1 = viewState.screenToWorldPlane(ScreenPos(x0 + 1.0f, y0));
-        MapVec dp = _projection->fromInternal(p1) - _projection->fromInternal(p0);
-        return static_cast<float>(dp.length());
+        // TODO: hack, should implement something that does not depend on screen -> world translation
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            return 0;
+        }
+        cglib::vec3<double> pos0 = viewState.screenToWorldPlane(cglib::vec2<float>(viewState.getHalfWidth(), viewState.getHalfHeight()));
+        cglib::vec3<double> pos1 = viewState.screenToWorldPlane(cglib::vec2<float>(viewState.getHalfWidth() + 1.0f, viewState.getHalfHeight()));
+        cglib::vec3<double> pos2 = viewState.screenToWorldPlane(cglib::vec2<float>(viewState.getHalfWidth(), viewState.getHalfHeight() + 1.0f));
+        MapPos mapPos0 = projectionSurface->calculateMapPos(pos0);
+        MapPos mapPos1 = projectionSurface->calculateMapPos(pos1);
+        MapPos mapPos2 = projectionSurface->calculateMapPos(pos2);
+        MapVec dp1 = _projection->fromInternal(mapPos1) - _projection->fromInternal(mapPos0);
+        MapVec dp2 = _projection->fromInternal(mapPos2) - _projection->fromInternal(mapPos0);
+        return static_cast<float>(std::min(dp1.length(), dp2.length()));
     }
     
     void VectorDataSource::notifyElementsChanged() {

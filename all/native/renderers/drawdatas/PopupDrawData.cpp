@@ -2,6 +2,8 @@
 #include "geometry/PointGeometry.h"
 #include "graphics/Bitmap.h"
 #include "graphics/ViewState.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "styles/PopupStyle.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
@@ -9,15 +11,13 @@
 
 namespace carto {
 
-    PopupDrawData::PopupDrawData(Popup& popup, const PopupStyle& style, const Projection& projection, const Options& options,
+    PopupDrawData::PopupDrawData(Popup& popup, const PopupStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface, const Options& options,
                                  const ViewState& viewState) :
         BillboardDrawData(popup,
                           style,
                           projection,
-                          popup.drawBitmap(viewState.worldToScreen(projection.toInternal(popup.getRootGeometry()->getCenterPos()), options),
-                                           viewState.getWidth(),
-                                           viewState.getHeight(),
-                                           viewState.getDPToPX()),
+                          projectionSurface,
+                          popup.drawBitmap(CalculateAnchorScreenPos(popup, viewState, options, projection), viewState.getWidth(), viewState.getHeight(), viewState.getDPToPX()),
                           // Anchor point may be modified in Popup::drawBitmap, so order is important here
                           popup.getAnchorPointX(),
                           popup.getAnchorPointY(),
@@ -36,4 +36,11 @@ namespace carto {
     PopupDrawData::~PopupDrawData() {
     }
     
+    ScreenPos PopupDrawData::CalculateAnchorScreenPos(const Popup& popup, const ViewState& viewState, const Options& options, const Projection& projection) {
+        if (std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface()) {
+            cglib::vec2<float> screenPos = viewState.worldToScreen(projectionSurface->calculatePosition(projection.toInternal(popup.getRootGeometry()->getCenterPos())), options);
+            return ScreenPos(screenPos(0), screenPos(1));
+        }
+        return ScreenPos();
+    }
 }

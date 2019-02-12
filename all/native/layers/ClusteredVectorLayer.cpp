@@ -7,6 +7,8 @@
 #include "datasources/LocalVectorDataSource.h"
 #include "layers/VectorLayer.h"
 #include "layers/ClusterElementBuilder.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/components/CullState.h"
 #include "vectorelements/VectorElement.h"
@@ -456,12 +458,22 @@ namespace carto {
         if (!_clusters) {
             return false;
         }
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            return false;
+        }
+
+        // TODO: hack, should implement something that does not depend on screen -> world translation
+        cglib::vec3<double> pos0 = viewState.screenToWorldPlane(cglib::vec2<float>(viewState.getHalfWidth() + 0, viewState.getHalfHeight() + 0));
+        cglib::vec3<double> pos1 = viewState.screenToWorldPlane(cglib::vec2<float>(viewState.getHalfWidth() + 1, viewState.getHalfHeight() + 0));
+        cglib::vec3<double> pos2 = viewState.screenToWorldPlane(cglib::vec2<float>(viewState.getHalfWidth() + 0, viewState.getHalfHeight() + 1));
+        MapPos mapPos0 = projectionSurface->calculateMapPos(pos0);
+        MapPos mapPos1 = projectionSurface->calculateMapPos(pos1);
+        MapPos mapPos2 = projectionSurface->calculateMapPos(pos2);
 
         // Initialize render state, use previously renderered cluster list
         RenderState renderState;
-        MapPos p0 = viewState.screenToWorldPlane(ScreenPos(viewState.getHalfWidth() + 0, viewState.getHalfHeight()), 0);
-        MapPos p1 = viewState.screenToWorldPlane(ScreenPos(viewState.getHalfWidth() + 1, viewState.getHalfHeight()), 0);
-        renderState.pixelMeasure = MapVec(p1 - p0).length() * _dpiScale;
+        renderState.pixelMeasure = std::min((mapPos1 - mapPos0).length(), (mapPos2 - mapPos0).length()) * _dpiScale;
         renderState.totalExpanded = 0;
         renderState.expandedClusterIdx = -1;
         renderState.clusters = _clusters;
@@ -527,9 +539,10 @@ namespace carto {
             return false;
         }
         const Cluster& cluster = (*renderState.clusters)[clusterIdx];
-        if (!viewState.getFrustum().squareIntersects(cluster.mapBoundsInternal)) {
-            return false;
-        }
+        // TODO: convert to real frustum
+        //if (!viewState.getFrustum().squareIntersects(cluster.mapBoundsInternal)) {
+        //    return false;
+        //}
 
         // Handle expanded clusters. Expanded clusters are always fully expanded
         bool stop = false;
@@ -623,6 +636,7 @@ namespace carto {
 
         bool animated = _animatedClusters;
         if (animated) {
+            // TODO: not uniform across screen
             MapVec deltaPos(_dataSource->getProjection()->toInternal(targetPos) - _dataSource->getProjection()->toInternal(cluster.transitionPos));
             if (deltaPos.length() <= renderState.pixelMeasure * 0.25) {
                 animated = false;

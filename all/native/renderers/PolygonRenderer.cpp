@@ -12,7 +12,6 @@
 #include "renderers/drawdatas/PolygonDrawData.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/components/StyleTextureCache.h"
-#include "projections/Projection.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "vectorelements/Polygon.h"
@@ -152,7 +151,7 @@ namespace carto {
         }
     
         // View state specific data
-        const MapPos& cameraPos = viewState.getCameraPos();
+        cglib::vec3<double> cameraPos = viewState.getCameraPos();
         std::size_t colorIndex = 0;
         std::size_t coordIndex = 0;
         GLuint indexIndex = 0;
@@ -194,9 +193,9 @@ namespace carto {
                     colorBuf[colorIndex + 3] = color.getA();
                     colorIndex += 4;
                     
-                    coordBuf[coordIndex + 0] = static_cast<float>(pos(0) - cameraPos.getX());
-                    coordBuf[coordIndex + 1] = static_cast<float>(pos(1) - cameraPos.getY());
-                    coordBuf[coordIndex + 2] = static_cast<float>(pos(2) - cameraPos.getZ());
+                    coordBuf[coordIndex + 0] = static_cast<float>(pos(0) - cameraPos(0));
+                    coordBuf[coordIndex + 1] = static_cast<float>(pos(1) - cameraPos(1));
+                    coordBuf[coordIndex + 2] = static_cast<float>(pos(2) - cameraPos(2));
                     coordIndex += 3;
                 }
             }
@@ -230,10 +229,8 @@ namespace carto {
             for (std::size_t i = 0; i < indices.size(); i += 3) {
                 double t = 0;
                 if (cglib::intersect_triangle(coords[indices[i + 0]], coords[indices[i + 1]], coords[indices[i + 2]], ray, &t)) {
-                    MapPos clickPos(ray(t)(0), ray(t)(1), ray(t)(2));
-                    MapPos projectedClickPos = layer->getDataSource()->getProjection()->fromInternal(clickPos);
                     int priority = static_cast<int>(results.size());
-                    results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projectedClickPos, projectedClickPos, priority));
+                    results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, ray(t), ray(t), priority));
                     return true;
                 }
             }

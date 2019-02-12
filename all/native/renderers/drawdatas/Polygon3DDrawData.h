@@ -19,11 +19,11 @@ namespace carto {
     class Polygon3D;
     class Polygon3DStyle;
     class Projection;
+    class ProjectionSurface;
     
     class Polygon3DDrawData : public VectorElementDrawData {
     public:
-        Polygon3DDrawData(const Polygon3D& polygon3D, const Polygon3DStyle& style, const Projection& projection);
-        Polygon3DDrawData(const Polygon3DDrawData& drawData);
+        Polygon3DDrawData(const Polygon3D& polygon3D, const Polygon3DStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface);
         virtual ~Polygon3DDrawData();
 
         const Color& getSideColor() const;

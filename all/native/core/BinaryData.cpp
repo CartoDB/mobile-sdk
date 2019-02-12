@@ -6,17 +6,17 @@
 namespace carto {
 
     BinaryData::BinaryData() :
-    	_dataPtr(std::make_shared<std::vector<unsigned char> >())
+        _dataPtr(std::make_shared<std::vector<unsigned char> >())
     {
     }
 
     BinaryData::BinaryData(std::vector<unsigned char> data) :
-    	_dataPtr(std::make_shared<std::vector<unsigned char> >(std::move(data)))
+        _dataPtr(std::make_shared<std::vector<unsigned char> >(std::move(data)))
     {
     }
     
     BinaryData::BinaryData(const unsigned char* data, std::size_t size) :
-    	_dataPtr(std::make_shared<std::vector<unsigned char> >(data, data + size))
+        _dataPtr(std::make_shared<std::vector<unsigned char> >(data, data + size))
     {
     }
     

@@ -6,7 +6,6 @@
 #include "graphics/ViewState.h"
 #include "graphics/utils/GLContext.h"
 #include "layers/VectorLayer.h"
-#include "projections/Projection.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "utils/Log.h"
@@ -189,10 +188,8 @@ namespace carto {
             
             for (std::size_t i = 0; i < intersections.size(); i++) {
                 cglib::vec3<double> pos = cglib::transform_point(intersections[i].pos, modelMat);
-                MapPos clickPos(pos(0), pos(1), pos(2));
-                MapPos projectedClickPos = layer->getDataSource()->getProjection()->fromInternal(clickPos);
                 int priority = static_cast<int>(results.size());
-                results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projectedClickPos, projectedClickPos, priority, true));
+                results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, pos, pos, priority, true));
             }
         }
     }

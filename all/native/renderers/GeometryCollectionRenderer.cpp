@@ -5,7 +5,6 @@
 #include "drawdatas/PointDrawData.h"
 #include "drawdatas/PolygonDrawData.h"
 #include "graphics/ViewState.h"
-#include "projections/Projection.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "utils/Const.h"
 #include "utils/Log.h"

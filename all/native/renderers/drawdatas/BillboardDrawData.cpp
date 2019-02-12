@@ -2,6 +2,7 @@
 #include "graphics/Bitmap.h"
 #include "geometry/PointGeometry.h"
 #include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "styles/BillboardStyle.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
@@ -162,6 +163,7 @@ namespace carto {
     BillboardDrawData::BillboardDrawData(const Billboard& billboard,
                                          const BillboardStyle& style,
                                          const Projection& projection,
+                                         const ProjectionSurface& projectionSurface,
                                          const std::shared_ptr<Bitmap>& bitmap,
                                          float anchorPointX,
                                          float anchorPointY,
@@ -191,7 +193,7 @@ namespace carto {
         _overlapping(style.isHideIfOverlapped() ? true : false),
         _transition(0.0f),
         _placementPriority(style.getPlacementPriority()),
-        _pos(),
+        _pos(0, 0, 0),
         _rotation(billboard.getRotation()),
         _scaleWithDPI(style.isScaleWithDPI()),
         _scalingMode(scalingMode),
@@ -201,8 +203,7 @@ namespace carto {
         _renderer()
     {
         if (billboard.getGeometry()) {
-            MapPos posInternal = projection.toInternal(billboard.getGeometry()->getCenterPos());
-            _pos = cglib::vec3<double>(posInternal.getX(), posInternal.getY(), posInternal.getZ());
+            _pos = projectionSurface.calculatePosition(projection.toInternal(billboard.getGeometry()->getCenterPos()));
         }
 
         if (auto drawData = billboard.getDrawData()) {

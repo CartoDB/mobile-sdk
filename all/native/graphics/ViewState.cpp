@@ -1,6 +1,7 @@
 #include "ViewState.h"
 #include "core/ScreenBounds.h"
 #include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "utils/Const.h"
 #include "utils/GeneralUtils.h"
 #include "utils/Log.h"
@@ -11,12 +12,12 @@
 namespace carto {
 
     ViewState::ViewState() :
-        _cameraPos(DEFAULT_CAMERA_POS_X, DEFAULT_CAMERA_POS_Y, DEFAULT_CAMERA_POS_Z),
-        _focusPos(DEFAULT_FOCUS_POS_X, DEFAULT_FOCUS_POS_Y, DEFAULT_FOCUS_POS_Z),
-        _upVec(DEFAULT_UP_VEC_X, DEFAULT_UP_VEC_Y, DEFAULT_UP_VEC_Z),
+        _cameraPos(0, 0, 1),
+        _focusPos(0, 0, 0),
+        _upVec(0, 1, 0),
         _cameraChanged(true),
-        _rotation(DEFAULT_ROTATION),
-        _tilt(DEFAULT_TILT),
+        _rotation(0),
+        _tilt(90),
         _zoom(0.0f),
         _2PowZoom(1.0f),
         _zoom0Distance(0.0f),
@@ -46,6 +47,7 @@ namespace carto {
         _unitToDPCoef(0),
         _rotationState(),
         _projectionMode(ProjectionMode::PROJECTION_MODE_PERSPECTIVE),
+        _projectionSurface(),
         _projectionMat(),
         _modelviewMat(),
         _modelviewProjectionMat(),
@@ -58,27 +60,27 @@ namespace carto {
     ViewState::~ViewState() {
     }
     
-    const MapPos& ViewState::getCameraPos() const {
+    const cglib::vec3<double>& ViewState::getCameraPos() const {
         return _cameraPos;
     }
     
-    void ViewState::setCameraPos(const MapPos& cameraPos) {
+    void ViewState::setCameraPos(const cglib::vec3<double>& cameraPos) {
         _cameraPos = cameraPos;
     }
     
-    const MapPos& ViewState::getFocusPos() const {
+    const cglib::vec3<double>& ViewState::getFocusPos() const {
         return _focusPos;
     }
     
-    void ViewState::setFocusPos(const MapPos& focusPos) {
+    void ViewState::setFocusPos(const cglib::vec3<double>& focusPos) {
         _focusPos = focusPos;
     }
     
-    const MapVec& ViewState::getUpVec() const {
+    const cglib::vec3<double>& ViewState::getUpVec() const {
         return _upVec;
     }
     
-    void ViewState::setUpVec(const MapVec& upVec) {
+    void ViewState::setUpVec(const cglib::vec3<double>& upVec) {
         _upVec = upVec;
     }
     
@@ -206,6 +208,10 @@ namespace carto {
     ProjectionMode::ProjectionMode ViewState::getProjectionMode() const {
         return _projectionMode;
     }
+
+    std::shared_ptr<ProjectionSurface> ViewState::getProjectionSurface() const {
+        return _projectionSurface;
+    }
     
     const cglib::mat4x4<double>& ViewState::getProjectionMat() const {
         return _projectionMat;
@@ -227,25 +233,7 @@ namespace carto {
         return _rteModelviewProjectionMat;
     }
         
-    cglib::mat4x4<double> ViewState::GetLocalMat(const MapPos& mapPos, const Projection& proj) {
-        const MapBounds& bounds = proj.getBounds();
-        const MapVec& boundsDelta = bounds.getDelta();
-        double scaleX = Const::WORLD_SIZE / boundsDelta.getX();
-        double scaleY = Const::WORLD_SIZE / boundsDelta.getY();
-        double scaleZ = std::min(scaleX, scaleY); // TODO: projection should supply this
-        double localScale = proj.getLocalScale(mapPos);
-        MapPos mapPosInternal = proj.toInternal(mapPos);
-        cglib::mat4x4<double> localMat(cglib::mat4x4<double>::identity());
-        localMat(0, 0) = scaleX * localScale;
-        localMat(1, 1) = scaleY * localScale;
-        localMat(2, 2) = scaleZ * localScale;
-        localMat(0, 3) = mapPosInternal.getX();
-        localMat(1, 3) = mapPosInternal.getY();
-        localMat(2, 3) = mapPosInternal.getZ();
-        return localMat;
-    }
-    
-    const Frustum& ViewState::getFrustum() const {
+    const cglib::frustum3<double>& ViewState::getFrustum() const {
         return _frustum;
     }
     
@@ -281,10 +269,10 @@ namespace carto {
         float zoom = GeneralUtils::Clamp(_zoom, getMinZoom(), zoomRange.getMax());
 
         if (zoom != getZoom() && _zoom0Distance > 0) {
-            MapVec cameraVec = _cameraPos - _focusPos;
-            double length = cameraVec.length();
+            cglib::vec3<double> cameraVec = _cameraPos - _focusPos;
+            double length = cglib::length(cameraVec);
             double newLength = _zoom0Distance / std::pow(2.0f, zoom);
-            MapPos cameraPos = _focusPos + cameraVec * (newLength / length);
+            cglib::vec3<double> cameraPos = _focusPos + cameraVec * (newLength / length);
 
             setZoom(zoom);
             setCameraPos(cameraPos);
@@ -299,14 +287,16 @@ namespace carto {
         }
 
         // TODO: fix the implementation: tesselate pan bounds, check against all tesselated points. Use 2 triangles?
+        /*
         std::shared_ptr<Projection> baseProjection = options.getBaseProjection();
+        std::shared_ptr<ProjectionSurface> projectionSurface = options.getProjectionSurface();
         MapBounds bounds = options.getPanBounds();
         MapPos boundsPoses[2] = { bounds.getMin(), bounds.getMax() };
 
         ScreenBounds screenBounds(ScreenPos(_width * 0.5f - _height * 0.5f, 0.0f),
                                   ScreenPos(_width * 0.5f + _height * 0.5f, _height));
 
-        MapVec cameraVec = _cameraPos - _focusPos;
+        cglib::vec3<double> cameraVec = _cameraPos - _focusPos;
         for (int j = 0; j < 4; j++) {
             if (options.isSeamlessPanning()) {
                 if (j % 2 == 0) {
@@ -314,22 +304,23 @@ namespace carto {
                 }
             }
 
-            MapPos edgePos = baseProjection->fromInternal(_focusPos);
+            MapPos edgePos = baseProjection->fromInternal(projectionSurface->calculateMapPos(_focusPos));
+            MapPos centerPos = edgePos;
             edgePos[j % 2] = boundsPoses[j / 2][j % 2];
-            MapPos centerPos = baseProjection->fromInternal(_focusPos);
             centerPos[j % 2] = bounds.getCenter()[j % 2];
 
             ViewState viewState;
             viewState._ignoreMinZoom = true;
             viewState._minZoom = _minZoom;
             viewState.setFocusPos(_focusPos);
-            viewState.setCameraPos(_focusPos + MapVec(0, 0, cameraVec.length()));
+            viewState.setCameraPos(_focusPos + projectionSurface->calculateNormal(_focusPos) * cglib::length(cameraVec));
+            viewState.setUpVec(projectionSurface->calculateNormal(_focusPos));
             viewState.setZoom(_zoom);
             viewState.setScreenSize(_width, _height);
             viewState.cameraChanged();
             viewState.calculateViewState(options);
             viewState.clampZoom(options);
-            ScreenPos screenPos = viewState.worldToScreen(edgePos, options);
+            ScreenPos screenPos = viewState.worldToScreen(projectionSurface->calculatePosition(baseProjection->toInternal(edgePos)), options);
             if (!screenBounds.contains(screenPos)) {
                 continue;
             }
@@ -338,7 +329,8 @@ namespace carto {
             for (int i = 0; i < 24; i++) {
                 MapPos focusPos = focusPos0 + (focusPos1 - focusPos0) * 0.5;
                 viewState.setFocusPos(baseProjection->toInternal(focusPos));
-                viewState.setCameraPos(viewState.getFocusPos() + MapVec(0, 0, cameraVec.length()));
+                viewState.setCameraPos(viewState.getFocusPos() + projectionSurface->calculateNormal(viewState.getFocusPos()) * cglib::length(cameraVec));
+                viewState.setUpVec(projectionSurface->calculateNormal(viewState.getFocusPos()));
                 viewState.cameraChanged();
                 viewState.calculateViewState(options);
 
@@ -357,10 +349,12 @@ namespace carto {
                 cameraChanged();
             }
         }
+        */
     }
     
     void ViewState::calculateViewState(const Options& options) {
         switch (options.getProjectionMode()) {
+            // TODO: implement?
             case ProjectionMode::PROJECTION_MODE_ORTHOGONAL: {
                 _projectionMode = ProjectionMode::PROJECTION_MODE_ORTHOGONAL;
                 break;
@@ -370,12 +364,13 @@ namespace carto {
                 _projectionMode = ProjectionMode::PROJECTION_MODE_PERSPECTIVE;
         
                 // If FOV or tile draw size changed, recalculate zoom0Distance
+                std::shared_ptr<ProjectionSurface> projectionSurface = options.getProjectionSurface();
                 int FOVY = options.getFieldOfViewY();
                 int tileDrawSize = options.getTileDrawSize();
                 float dpi = options.getDPI();
                 MapRange zoomRange = options.getZoomRange();
                 bool restrictedPanning = options.isRestrictedPanning();
-                if (FOVY != _fovY || tileDrawSize != _tileDrawSize || dpi != _dpi || zoomRange != _zoomRange || restrictedPanning != _restrictedPanning || _screenSizeChanged) {
+                if (projectionSurface != _projectionSurface || FOVY != _fovY || tileDrawSize != _tileDrawSize || dpi != _dpi || zoomRange != _zoomRange || restrictedPanning != _restrictedPanning || _screenSizeChanged) {
                     _fovY = FOVY;
                     _tileDrawSize = tileDrawSize;
                     _dpToPX = dpi / Const::UNSCALED_DPI;
@@ -399,18 +394,43 @@ namespace carto {
                     _restrictedPanning = restrictedPanning;
                     
                     _normalizedResolution = 2 * tileDrawSize * (_dpi / Const::UNSCALED_DPI);
+
+                    // Recalculate camera orientation on projection change
+                    if (_projectionSurface != projectionSurface) {
+                        MapPos focusPosInternal(0, 0, 0);
+                        if (_projectionSurface) {
+                            focusPosInternal = _projectionSurface->calculateMapPos(_focusPos);
+                        }
+                        _focusPos = projectionSurface->calculatePosition(focusPosInternal);
+
+                        double sin = std::sin(_rotation * Const::DEG_TO_RAD);
+                        double cos = std::cos(_rotation * Const::DEG_TO_RAD);
+        
+                        // TODO: test this
+                        _cameraPos = _focusPos + projectionSurface->calculateNormal(focusPosInternal);
+                        _upVec = cglib::unit(projectionSurface->calculateVector(focusPosInternal, MapVec(sin, cos, 0)));
+                        
+                        cglib::vec3<double> axis = cglib::vector_product(_cameraPos - _focusPos, _upVec);
+                        if (cglib::length(axis) != 0) {
+                            cglib::mat4x4<double> transform = cglib::rotate4_matrix(axis, (90 - _tilt) * Const::DEG_TO_RAD);
+                            _cameraPos = _focusPos + cglib::transform_vector(_cameraPos - _focusPos, transform);
+                            _upVec = cglib::transform_vector(_upVec, transform);
+                        }
+
+                        _projectionSurface = projectionSurface;
+                    }
         
                     // Calculate new camera position
                     if (_zoom0Distance > 0) {
-                        MapVec cameraVec = _cameraPos - _focusPos;
-                        double length = cameraVec.length();
+                        cglib::vec3<double> cameraVec = _cameraPos - _focusPos;
+                        double length = cglib::length(cameraVec);
                         double newLength = _zoom0Distance / std::pow(2.0f, _zoom);
                         _cameraPos = _focusPos + cameraVec * (newLength / length);
                     }
         
                     _cameraChanged = true;
                 }
-        
+
                 if (_cameraChanged) {
                     _cameraChanged = false;
         
@@ -439,7 +459,7 @@ namespace carto {
         
                     // Double precision mvp matrix and frustum
                     _modelviewProjectionMat = _projectionMat * _modelviewMat;
-                    _frustum = Frustum(_modelviewProjectionMat);
+                    _frustum = cglib::gl_projection_frustum(_modelviewProjectionMat);
         
                     // Rte modleview matrix only requires float precision
                     _rteModelviewMat = cglib::mat4x4<float>::convert(_modelviewMat);
@@ -455,44 +475,46 @@ namespace carto {
         }
     }
     
-    MapPos ViewState::screenToWorldPlane(const ScreenPos& screenPos, std::shared_ptr<Options> options) const {
+    cglib::vec3<double> ViewState::screenToWorldPlane(const cglib::vec2<float>& screenPos, std::shared_ptr<Options> options) const {
         if (_width <= 0 || _height <= 0) {
             Log::Error("ViewState::screenToWorldPlane: Failed to transform point from screen space to world plane, screen size is unknown");
-            return MapPos();
+            return cglib::vec3<double>(0, 0, 0);
         }
 
-        cglib::mat4x4<double> modelviewProjectionMat = options ? calculateModelViewMat(*options) : _modelviewProjectionMat;
+        std::shared_ptr<ProjectionSurface> projectionSurface = _projectionSurface;
+        cglib::mat4x4<double> modelviewProjectionMat = _modelviewProjectionMat;
+        if (options) {
+            projectionSurface = options->getProjectionSurface();
+            modelviewProjectionMat = calculateModelViewMat(*options);
+        }
+        if (!projectionSurface) {
+            return cglib::vec3<double>(0, 0, 0); // TODO: better impl
+        }
         cglib::mat4x4<double> invModelviewProjectionMat = cglib::inverse(modelviewProjectionMat);
 
         // Transform 2 points with different z values from world to screen
-        cglib::vec3<double> screenCGPos0(screenPos.getX() / _width * 2 - 1, 1 - screenPos.getY() / _height * 2, -1);
-        cglib::vec3<double> screenCGPos1(screenPos.getX() / _width * 2 - 1, 1 - screenPos.getY() / _height * 2,  1);
+        cglib::vec3<double> screenCGPos0(screenPos(0) / _width * 2 - 1, 1 - screenPos(1) / _height * 2, -1);
+        cglib::vec3<double> screenCGPos1(screenPos(0) / _width * 2 - 1, 1 - screenPos(1) / _height * 2,  1);
         cglib::vec3<double> worldCGPos0 = cglib::transform_point(screenCGPos0, invModelviewProjectionMat);
         cglib::vec3<double> worldCGPos1 = cglib::transform_point(screenCGPos1, invModelviewProjectionMat);
-        cglib::vec3<double> worldCGDir = worldCGPos1 - worldCGPos0;
+        cglib::ray3<double> ray(worldCGPos0, worldCGPos1 - worldCGPos0);
 
-        // Calculate ray intersection with z=0 plane
-        double z = 0;
-        double t = (z - worldCGPos0(2)) / worldCGDir(2);
-        cglib::vec3<double> hitPos = worldCGPos0 + worldCGDir * t;
-        return MapPos(hitPos(0), hitPos(1), hitPos(2));
+        // TODO: check calling sites. Decide what to do when no hit.
+        double t = projectionSurface->calculateRayHit(ray);
+        return ray(t);
     }
     
-    ScreenPos ViewState::worldToScreen(const MapPos& worldPos, const Options& options) const {
+    cglib::vec2<float> ViewState::worldToScreen(const cglib::vec3<double>& worldPos, const Options& options) const {
         if (_width <= 0 || _height <= 0) {
             Log::Error("ViewState::worldToScreen: Failed to transform point from world to screen space, screen size is unknown");
-            return ScreenPos();
+            return cglib::vec2<float>(0, 0);
         }
         
         cglib::mat4x4<double> modelviewProjectionMat = calculateModelViewMat(options);
 
         // Transfrom world pos to screen
-        const cglib::vec3<double>& worldCGPos = cglib::vec3<double>(worldPos.getX(), worldPos.getY(), worldPos.getZ());
-        const cglib::vec3<double>& screenCGPos = cglib::transform_point(worldCGPos, modelviewProjectionMat);
-        ScreenPos screenPos(static_cast<float>(screenCGPos(0)), static_cast<float>(screenCGPos(1)));
-        screenPos.setX((screenPos.getX() + 1) * 0.5f * _width);
-        screenPos.setY((screenPos.getY() - 1) * -0.5f * _height);
-        return screenPos;
+        cglib::vec3<float> screenCGPos = cglib::vec3<float>::convert(cglib::transform_point(worldPos, modelviewProjectionMat));
+        return cglib::vec2<float>((screenCGPos(0) + 1) * 0.5f * _width, (1 - screenCGPos(1)) * 0.5f * _height);
     }
     
     int ViewState::getHorizontalLayerOffsetDir() const {
@@ -503,8 +525,9 @@ namespace carto {
         _horizontalLayerOffsetDir = horizontalLayerOffsetDir;
     }
     
-    float ViewState::calculateNearPlanePersp(const MapPos& cameraPos, float tilt, float halfFOVY) const {
-        double clipNear = std::min(cameraPos.getZ() * 0.9, std::max(cameraPos.getZ() - Const::MAX_HEIGHT, static_cast<double>(Const::MIN_NEAR)));
+    float ViewState::calculateNearPlanePersp(const cglib::vec3<double>& cameraPos, float tilt, float halfFOVY) const {
+        // TODO: reimplement
+        double clipNear = std::min(cameraPos(2) * 0.9, std::max(cameraPos(2) - Const::MAX_HEIGHT, static_cast<double>(Const::MIN_NEAR)));
         if (std::abs(90 - tilt - halfFOVY) < 90) {
             // Put near plane to intersection between frustum and ground plane
             double cosAminusB = std::cos((90 - tilt - halfFOVY) * Const::DEG_TO_RAD);
@@ -515,18 +538,19 @@ namespace carto {
         return static_cast<float>(clipNear);
     }
     
-    float ViewState::calculateFarPlanePersp(const MapPos& cameraPos, float tilt, float halfFOVY, const Options& options) const {
+    float ViewState::calculateFarPlanePersp(const cglib::vec3<double>& cameraPos, float tilt, float halfFOVY, const Options& options) const {
+        // TODO: reimplement
         // Hack: compensate focus point offset by increasing tilt
         if (options.getFocusPointOffset().getY() < 0) {
             float delta = -2 * options.getFocusPointOffset().getY() / _height;
             tilt = std::max(0.0f, tilt - static_cast<float>(std::atan2(delta, 1) * Const::RAD_TO_DEG));
         }
-        double clipFar = cameraPos.getZ() * options.getDrawDistance();
+        double clipFar = cameraPos(2) * options.getDrawDistance();
         if (90 - tilt + halfFOVY < 90) {
             // Put far plane to intersection between frustum and ground plane
             double cosAplusB = std::cos((90 - tilt + halfFOVY) * Const::DEG_TO_RAD);
             double cosB = std::cos(halfFOVY * Const::DEG_TO_RAD);
-            double distance = cameraPos.getZ() * cosB / cosAplusB;
+            double distance = cameraPos(2) * cosB / cosAplusB;
             // Put far plane a bit further to avoid precision issues
             clipFar = std::min(clipFar, 1.1 * distance);
         }
@@ -539,7 +563,9 @@ namespace carto {
         }
 
         // TODO: fix the implementation: tesselate pan bounds, check against all tesselated points. Use 2 triangles?
+        /*
         std::shared_ptr<Projection> baseProjection = options.getBaseProjection();
+        std::shared_ptr<ProjectionSurface> projectionSurface = options.getProjectionSurface();
         MapBounds bounds = options.getPanBounds();
 
         std::vector<MapPos> boundsPoses;
@@ -554,11 +580,11 @@ namespace carto {
 
         MapRange range = options.getZoomRange();
         for (int i = 0; i < 24; i++) {
-            MapVec cameraVec = getCameraPos() - getFocusPos();
+            cglib::vec3<double> cameraVec = getCameraPos() - getFocusPos();
             ViewState viewState;
             viewState._ignoreMinZoom = true;
             viewState.setFocusPos(bounds.getCenter());
-            viewState.setCameraPos(bounds.getCenter() + MapVec(0, 0, cameraVec.length()));
+            viewState.setCameraPos(bounds.getCenter() + projectionSurface->calculateNormal(bounds.getCenter()) * cglib::length(cameraVec));
             viewState.setZoom((range.getMin() + range.getMax()) * 0.5f);
             viewState.setScreenSize(_width, _height);
             viewState.cameraChanged();
@@ -581,6 +607,8 @@ namespace carto {
         }
 
         return range.getMin();
+        */
+        return 0;
     }
     
     cglib::mat4x4<double> ViewState::calculatePerspMat(float halfFOVY, float near, float far, const Options& options) const {
@@ -602,10 +630,7 @@ namespace carto {
     }
     
     cglib::mat4x4<double> ViewState::calculateLookatMat() const {
-        return cglib::lookat4_matrix(
-            cglib::vec3<double>(_cameraPos.getX(), _cameraPos.getY(), _cameraPos.getZ()),
-            cglib::vec3<double>(_focusPos.getX(), _focusPos.getY(), _focusPos.getZ()),
-            cglib::vec3<double>(_upVec.getX(), _upVec.getY(), _upVec.getZ()));
+        return cglib::lookat4_matrix(_cameraPos, _focusPos, _upVec);
     }
     
     cglib::mat4x4<double> ViewState::calculateModelViewMat(const carto::Options& options) const {

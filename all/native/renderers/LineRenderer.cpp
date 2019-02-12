@@ -8,7 +8,6 @@
 #include "graphics/shaders/LineShaderSource.h"
 #include "graphics/utils/GLContext.h"
 #include "layers/VectorLayer.h"
-#include "projections/Projection.h"
 #include "renderers/drawdatas/LineDrawData.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/components/StyleTextureCache.h"
@@ -172,7 +171,7 @@ namespace carto {
         }
         
         // Calculate and draw buffers
-        const MapPos& cameraPos = viewState.getCameraPos();
+        cglib::vec3<double> cameraPos = viewState.getCameraPos();
         std::size_t colorIndex = 0;
         std::size_t coordIndex = 0;
         std::size_t normalIndex = 0;
@@ -239,9 +238,9 @@ namespace carto {
 
                     // Coords
                     const cglib::vec3<double>& pos = **cit;
-                    coordBuf[coordIndex + 0] = static_cast<float>(pos(0) - cameraPos.getX());
-                    coordBuf[coordIndex + 1] = static_cast<float>(pos(1) - cameraPos.getY());
-                    coordBuf[coordIndex + 2] = static_cast<float>(pos(2) - cameraPos.getZ());
+                    coordBuf[coordIndex + 0] = static_cast<float>(pos(0) - cameraPos(0));
+                    coordBuf[coordIndex + 1] = static_cast<float>(pos(1) - cameraPos(1));
+                    coordBuf[coordIndex + 2] = static_cast<float>(pos(2) - cameraPos(2));
                     coordIndex += 3;
 
                     // Normals
@@ -325,12 +324,9 @@ namespace carto {
                 if (cglib::intersect_triangle(worldCoords[indices[i + 0]], worldCoords[indices[i + 1]], worldCoords[indices[i + 2]], ray, &t)) {
                     cglib::vec3<double> dp = ray(t) - *prevPos;
                     cglib::vec3<double> ds = *pos - *prevPos;
-                    cglib::vec3<double> p = *prevPos + ds * std::max(0.0, std::min(1.0, cglib::dot_product(dp, ds) / cglib::norm(ds)));
-                    MapPos clickPos(ray(t)(0), ray(t)(1), ray(t)(2));
-                    MapPos linePos(p(0), p(1), p(2));
-                    const std::shared_ptr<Projection>& projection = layer->getDataSource()->getProjection();
+                    cglib::vec3<double> pos = *prevPos + ds * std::max(0.0, std::min(1.0, cglib::dot_product(dp, ds) / cglib::norm(ds)));
                     int priority = static_cast<int>(results.size());
-                    results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projection->fromInternal(clickPos), projection->fromInternal(linePos), priority));
+                    results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, ray(t), pos, priority));
                     return true;
                 }
             }

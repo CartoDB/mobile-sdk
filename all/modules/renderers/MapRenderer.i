@@ -35,6 +35,7 @@
 %ignore carto::MapRenderer::getRotation;
 %ignore carto::MapRenderer::getTilt;
 %ignore carto::MapRenderer::getZoom;
+%ignore carto::MapRenderer::getProjectionSurface;
 %ignore carto::MapRenderer::getAnimationHandler;
 %ignore carto::MapRenderer::getKineticEventHandler;
 %ignore carto::MapRenderer::getRedrawRequestListener;

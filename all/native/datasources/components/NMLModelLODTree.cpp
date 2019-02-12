@@ -13,7 +13,7 @@ namespace carto {
     NMLModelLODTree::NMLModelLODTree(long long modelLODTreeId, const MapPos& mapPos, std::shared_ptr<Projection> projection, std::shared_ptr<nml::ModelLODTree> sourceModelLODTree, const ProxyMap& proxyMap, const MeshBindingsMap& meshBindingsMap, const TextureBindingsMap& textureBindingsMap) :
         _modelLODTreeId(modelLODTreeId),
         _mapPos(mapPos),
-        _localMat(ViewState::GetLocalMat(mapPos, *projection)),
+        _projection(projection),
         _sourceModelLODTree(sourceModelLODTree),
         _proxyMap(std::make_shared<ProxyMap>(proxyMap)),
         _meshBindingsMap(meshBindingsMap),
@@ -37,8 +37,8 @@ namespace carto {
         return _mapPos;
     }
     
-    const cglib::mat4x4<double>& NMLModelLODTree::getLocalMat() const {
-        return _localMat;
+    const std::shared_ptr<Projection>& NMLModelLODTree::getProjection() const {
+        return _projection;
     }
     
     std::shared_ptr<nml::ModelLODTree> NMLModelLODTree::getSourceModelLODTree() const {

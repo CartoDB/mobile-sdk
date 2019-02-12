@@ -17,11 +17,11 @@
 
 namespace carto {
     
-    GeometryCollectionDrawData::GeometryCollectionDrawData(const MultiGeometry& geometry, const GeometryCollectionStyle& style, const Projection& projection) :
+    GeometryCollectionDrawData::GeometryCollectionDrawData(const MultiGeometry& geometry, const GeometryCollectionStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface) :
         VectorElementDrawData(Color()),
         _drawDatas()
     {
-        addDrawData(geometry, style, projection);
+        addDrawData(geometry, style, projection, projectionSurface);
     }
     
     GeometryCollectionDrawData::~GeometryCollectionDrawData() {
@@ -38,22 +38,22 @@ namespace carto {
         setIsOffset(true);
     }
 
-    void GeometryCollectionDrawData::addDrawData(const Geometry &geometry, const GeometryCollectionStyle &style, const Projection& projection) {
+    void GeometryCollectionDrawData::addDrawData(const Geometry &geometry, const GeometryCollectionStyle &style, const Projection& projection, const ProjectionSurface& projectionSurface) {
         if (auto pointGeometry = dynamic_cast<const PointGeometry*>(&geometry)) {
             if (style.getPointStyle()) {
-                _drawDatas.push_back(std::make_shared<PointDrawData>(*pointGeometry, *style.getPointStyle(), projection));
+                _drawDatas.push_back(std::make_shared<PointDrawData>(*pointGeometry, *style.getPointStyle(), projection, projectionSurface));
             }
         } else if (auto lineGeometry = dynamic_cast<const LineGeometry*>(&geometry)) {
             if (style.getLineStyle()) {
-                _drawDatas.push_back(std::make_shared<LineDrawData>(*lineGeometry, *style.getLineStyle(), projection));
+                _drawDatas.push_back(std::make_shared<LineDrawData>(*lineGeometry, *style.getLineStyle(), projection, projectionSurface));
             }
         } else if (auto polygonGeometry = dynamic_cast<const PolygonGeometry*>(&geometry)) {
             if (style.getPolygonStyle()) {
-                _drawDatas.push_back(std::make_shared<PolygonDrawData>(*polygonGeometry, *style.getPolygonStyle(), projection));
+                _drawDatas.push_back(std::make_shared<PolygonDrawData>(*polygonGeometry, *style.getPolygonStyle(), projection, projectionSurface));
             }
         } else if (auto geomCollection = dynamic_cast<const MultiGeometry*>(&geometry)) {
             for (int i = 0; i < geomCollection->getGeometryCount(); i++) {
-                addDrawData(*geomCollection->getGeometry(i), style, projection);
+                addDrawData(*geomCollection->getGeometry(i), style, projection, projectionSurface);
             }
         }
     }

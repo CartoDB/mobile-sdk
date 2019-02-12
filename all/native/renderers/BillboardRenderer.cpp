@@ -7,7 +7,6 @@
 #include "graphics/shaders/RegularShaderSource.h"
 #include "graphics/utils/GLContext.h"
 #include "layers/VectorLayer.h"
-#include "projections/Projection.h"
 #include "renderers/drawdatas/BillboardDrawData.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/components/StyleTextureCache.h"
@@ -25,8 +24,7 @@ namespace carto {
     void BillboardRenderer::CalculateBillboardCoords(const BillboardDrawData& drawData, const ViewState& viewState,
                                                      std::vector<float>& coordBuf, int drawDataIndex, float sizeScale)
     {
-        const MapPos& cameraPos = viewState.getCameraPos();
-        cglib::vec3<float> translate = cglib::vec3<float>::convert(drawData.getPos() - cglib::vec3<double>(cameraPos.getX(), cameraPos.getY(), cameraPos.getZ()));
+        cglib::vec3<float> translate = cglib::vec3<float>::convert(drawData.getPos() - viewState.getCameraPos());
         
         const ViewState::RotationState& rotationState = viewState.getRotationState();
         const std::array<cglib::vec2<float>, 4>& coords = drawData.getCoords();
@@ -276,7 +274,7 @@ namespace carto {
             }
     
             CalculateBillboardCoords(*drawData, viewState, coordBuf, 0, drawData->getClickScale());
-            cglib::vec3<double> originShift(viewState.getCameraPos().getX(), viewState.getCameraPos().getY(), viewState.getCameraPos().getZ());
+            cglib::vec3<double> originShift = viewState.getCameraPos();
             cglib::vec3<double> topLeft = cglib::vec3<double>(coordBuf[0], coordBuf[1], coordBuf[2]) + originShift;
             cglib::vec3<double> bottomLeft = cglib::vec3<double>(coordBuf[3], coordBuf[4], coordBuf[5]) + originShift;
             cglib::vec3<double> topRight = cglib::vec3<double>(coordBuf[6], coordBuf[7], coordBuf[8]) + originShift;
@@ -287,14 +285,11 @@ namespace carto {
             if (cglib::intersect_triangle(topLeft, bottomLeft, topRight, ray, &t) ||
                 cglib::intersect_triangle(bottomLeft, bottomRight, topRight, ray, &t))
             {
-                MapPos clickPos(ray(t)(0), ray(t)(1), ray(t)(2));
-                const std::shared_ptr<Projection>& projection = layer->getDataSource()->getProjection();
                 int priority = static_cast<int>(results.size());
                 if (viewState.getTilt() == 90) { // if distances are equal, billboards are ordered based on 2D distance
                     priority = -static_cast<int>(drawData->getScreenBottomDistance());
                 }
-                cglib::vec3<double> pos = drawData->getPos();
-                results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projection->fromInternal(clickPos), projection->fromInternal(MapPos(pos(0), pos(1), pos(2))), priority, true));
+                results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, ray(t), drawData->getPos(), priority, true));
             }
         }
     }
@@ -424,19 +419,14 @@ namespace carto {
         // Billboard is attached to another billboard, calculate position before sorting
         cglib::vec3<double> baseBillboardPos = baseBillboardDrawData->getPos();
         float halfSize = baseBillboardDrawData->getSize() * 0.5f;
-        MapVec labelAnchorVec(((drawData->getAttachAnchorPointX() - baseBillboardDrawData->getAnchorPointX()) * halfSize),
-                              ((drawData->getAttachAnchorPointY() - baseBillboardDrawData->getAnchorPointY())
-                               / baseBillboardDrawData->getAspect() * halfSize), 0);
+        cglib::vec2<float> labelAnchorVec(((drawData->getAttachAnchorPointX() - baseBillboardDrawData->getAnchorPointX()) * halfSize),
+                                          ((drawData->getAttachAnchorPointY() - baseBillboardDrawData->getAnchorPointY()) / baseBillboardDrawData->getAspect() * halfSize));
         
         if (baseBillboardDrawData->getRotation() != 0) {
-            float sin = static_cast<float>(std::sin(baseBillboardDrawData->getRotation() * Const::DEG_TO_RAD));
-            float cos = static_cast<float>(std::cos(baseBillboardDrawData->getRotation() * Const::DEG_TO_RAD));
-            labelAnchorVec.rotate2D(sin, cos);
+            labelAnchorVec = cglib::transform(labelAnchorVec, cglib::rotate2_matrix(static_cast<float>(baseBillboardDrawData->getRotation() * Const::DEG_TO_RAD)));
         }
         
         const ViewState::RotationState& rotationState = viewState.getRotationState();
-        float x = static_cast<float>(labelAnchorVec.getX());
-        float y = static_cast<float>(labelAnchorVec.getY());
         
         float scale = baseBillboardDrawData->isScaleWithDPI() ? viewState.getUnitToDPCoef() : viewState.getUnitToPXCoef();
         // Calculate scaling
@@ -444,38 +434,40 @@ namespace carto {
             case BillboardScaling::BILLBOARD_SCALING_WORLD_SIZE:
                 break;
             case BillboardScaling::BILLBOARD_SCALING_SCREEN_SIZE:
-                x *= scale;
-                y *= scale;
+                labelAnchorVec *= scale;
                 break;
             case BillboardScaling::BILLBOARD_SCALING_CONST_SCREEN_SIZE:
             default:
                 const cglib::mat4x4<double>& mvpMat = viewState.getModelviewProjectionMat();
                 double distance = baseBillboardPos(0) * mvpMat(3, 0) + baseBillboardPos(1) * mvpMat(3, 1) + baseBillboardPos(2) * mvpMat(3, 2) + mvpMat(3, 3);
                 float coef = static_cast<float>(distance * viewState.get2PowZoom() / viewState.getZoom0Distance() * scale);
-                x *= coef;
-                y *= coef;
+                labelAnchorVec *= coef;
                 break;
         }
         
         // Calculate orientation
+        cglib::vec3<double> delta(0, 0, 0);
         switch (baseBillboardDrawData->getOrientationMode()) {
             case BillboardOrientation::BILLBOARD_ORIENTATION_GROUND:
-                labelAnchorVec.setX(x);
-                labelAnchorVec.setY(y);
+                delta = cglib::vec3<double>(labelAnchorVec(0), labelAnchorVec(1), 0);
                 break;
             case BillboardOrientation::BILLBOARD_ORIENTATION_FACE_CAMERA_GROUND:
-                labelAnchorVec.setX(x * rotationState._m11 + y * rotationState._sinZ);
-                labelAnchorVec.setY(x * rotationState._m21 + y * rotationState._cosZ);
-                labelAnchorVec.setZ(x * rotationState._m31 + 0);
+                delta = cglib::vec3<double>(
+                    labelAnchorVec(0) * rotationState._m11 + labelAnchorVec(1) * rotationState._sinZ,
+                    labelAnchorVec(0) * rotationState._m21 + labelAnchorVec(1) * rotationState._cosZ,
+                    labelAnchorVec(0) * rotationState._m31 + 0
+                );
                 break;
             case BillboardOrientation::BILLBOARD_ORIENTATION_FACE_CAMERA:
             default:
-                labelAnchorVec.setX(x * rotationState._m11 + y * rotationState._m12);
-                labelAnchorVec.setY(x * rotationState._m21 + y * rotationState._m22);
-                labelAnchorVec.setZ(x * rotationState._m31 + y * rotationState._m32);
+                delta = cglib::vec3<double>(
+                    labelAnchorVec(0) * rotationState._m11 + labelAnchorVec(1) * rotationState._m12,
+                    labelAnchorVec(0) * rotationState._m21 + labelAnchorVec(1) * rotationState._m22,
+                    labelAnchorVec(0) * rotationState._m31 + labelAnchorVec(1) * rotationState._m32
+                );
                 break;
         }
-        drawData->setPos(baseBillboardPos + cglib::vec3<double>(labelAnchorVec.getX(), labelAnchorVec.getY(), labelAnchorVec.getZ()));
+        drawData->setPos(baseBillboardPos + delta);
         return true;
     }
         

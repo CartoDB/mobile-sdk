@@ -29,7 +29,6 @@
 %csmethodmodifiers carto::NMLModel::Bounds "public override";
 %ignore carto::NMLModel::NMLModel(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<nml::Model>& sourceModel);
 %ignore carto::NMLModel::NMLModel(const MapPos& pos, const std::shared_ptr<nml::Model>& sourceModel);
-%ignore carto::NMLModel::getLocalMat;
 %ignore carto::NMLModel::getSourceModel;
 %ignore carto::NMLModel::getDrawData;
 %ignore carto::NMLModel::setDrawData;

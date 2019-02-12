@@ -7,6 +7,7 @@
 #ifndef _CARTO_POPUPDRAWDATA_H_
 #define _CARTO_POPUPDRAWDATA_H_
 
+#include "core/ScreenPos.h"
 #include "renderers/drawdatas/BillboardDrawData.h"
 
 namespace carto {
@@ -17,8 +18,11 @@ namespace carto {
     
     class PopupDrawData : public BillboardDrawData {
     public:
-        PopupDrawData(Popup& popup, const PopupStyle& style, const Projection& projection, const Options& options, const ViewState& viewState);
+        PopupDrawData(Popup& popup, const PopupStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface, const Options& options, const ViewState& viewState);
         virtual ~PopupDrawData();
+
+    private:
+        static ScreenPos CalculateAnchorScreenPos(const Popup& popup, const ViewState& viewState, const Options& options, const Projection& projection);
     };
     
 }
