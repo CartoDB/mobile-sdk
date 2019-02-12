@@ -85,22 +85,22 @@ namespace carto {
     
     std::shared_ptr<LabelStyle> LabelStyleBuilder::buildStyle() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return std::shared_ptr<LabelStyle>(new LabelStyle(_color,
-                                                          _attachAnchorPointX,
-                                                          _attachAnchorPointY,
-                                                          _causesOverlap,
-                                                          _hideIfOverlapped,
-                                                          _horizontalOffset,
-                                                          _verticalOffset,
-                                                          _placementPriority,
-                                                          _scaleWithDPI,
-                                                          _animationStyle,
-                                                          _anchorPointX,
-                                                          _anchorPointY,
-                                                          _flippable,
-                                                          _orientationMode,
-                                                          _scalingMode,
-                                                          _renderScale));
+        return std::make_shared<LabelStyle>(_color,
+                                            _attachAnchorPointX,
+                                            _attachAnchorPointY,
+                                            _causesOverlap,
+                                            _hideIfOverlapped,
+                                            _horizontalOffset,
+                                            _verticalOffset,
+                                            _placementPriority,
+                                            _scaleWithDPI,
+                                            _animationStyle,
+                                            _anchorPointX,
+                                            _anchorPointY,
+                                            _flippable,
+                                            _orientationMode,
+                                            _scalingMode,
+                                            _renderScale);
     }
         
 }

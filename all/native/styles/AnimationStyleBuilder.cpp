@@ -68,7 +68,7 @@ namespace carto {
 
     std::shared_ptr<AnimationStyle> AnimationStyleBuilder::buildStyle() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return std::shared_ptr<AnimationStyle>(new AnimationStyle(_relativeSpeed, _phaseInDuration, _phaseOutDuration, _fadeAnimationType, _sizeAnimationType));
+        return std::make_shared<AnimationStyle>(_relativeSpeed, _phaseInDuration, _phaseOutDuration, _fadeAnimationType, _sizeAnimationType);
     }
         
 }
