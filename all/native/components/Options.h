@@ -587,6 +587,7 @@ namespace carto {
          * The default is EPSG3857.
          * @param renderProjection The new render projection.
          */
+        // TODO: remove. Support only EPSG3857/globe mode
         void setRenderProjection(const std::shared_ptr<Projection>& renderProjection);
 
         /**
