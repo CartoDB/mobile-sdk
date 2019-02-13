@@ -37,8 +37,6 @@ namespace carto {
         virtual void offsetHorizontally(double offset);
     
     private:
-        static const int MAX_INDICES_PER_ELEMENT = 3;
-
         Color _sideColor;
     
         cglib::bbox3<double> _boundingBox;

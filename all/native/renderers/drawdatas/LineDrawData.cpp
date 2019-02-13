@@ -93,13 +93,17 @@ namespace carto {
     }
     
     void LineDrawData::init(const std::vector<MapPos>& poses, const Projection& projection, const ProjectionSurface& projectionSurface, const LineStyle& style) {
-        // Remove consecutive duplicates and project coordinates to internal coordinate system
+        // Calculate real coordinates and tesselate the line
         _poses.reserve(poses.size());
-        for (std::size_t i = 0; i < poses.size(); i++) {
-            // TODO: tesselate segment
-            cglib::vec3<double> pos = projectionSurface.calculatePosition(projection.toInternal(poses[i]));
-            if (i == 0 || _poses.back() != pos) {
-                _poses.push_back(pos);
+        std::vector<MapPos> internalPoses;
+        for (std::size_t i = 1; i < poses.size(); i++) {
+            internalPoses.clear();
+            projectionSurface.tesselateSegment(projection.toInternal(poses[i - 1]), projection.toInternal(poses[i]), internalPoses);
+            for (const MapPos& internalPos : internalPoses) {
+                cglib::vec3<double> pos = projectionSurface.calculatePosition(internalPos);
+                if (_poses.empty() || pos != _poses.back()) {
+                    _poses.push_back(pos);
+                }
             }
         }
 

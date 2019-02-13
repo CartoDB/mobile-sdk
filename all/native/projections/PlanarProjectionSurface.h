@@ -27,6 +27,9 @@ namespace carto {
         virtual cglib::vec3<double> calculateNormal(const MapPos& mapPos) const;
         virtual cglib::vec3<double> calculateVector(const MapPos& mapPos, const MapVec& mapVec) const;
 
+        virtual void tesselateSegment(const MapPos& mapPos0, const MapPos& mapPos1, std::vector<MapPos>& mapPoses) const;
+        virtual void tesselateTriangle(unsigned int i0, unsigned int i1, unsigned int i2, std::vector<unsigned int>& indices, std::vector<MapPos>& mapPoses) const;
+
         virtual double calculateRayHit(const cglib::ray3<double>& ray) const;
 
         virtual cglib::mat4x4<double> calculateLocalMatrix(const MapPos& mapPos, const Projection& projection) const;

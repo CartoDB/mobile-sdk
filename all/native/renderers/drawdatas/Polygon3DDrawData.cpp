@@ -12,6 +12,8 @@
 
 #include <cmath>
 #include <cstdlib>
+#include <numeric>
+
 #include <tesselator.h>
 
 namespace carto {
@@ -23,7 +25,10 @@ namespace carto {
         _coords(),
         _normals()
     {
-        // Triangulate polygon roof
+        const std::vector<MapPos>& poses = polygon3D.getGeometry()->getPoses();
+        const std::vector<std::vector<MapPos> >& holes = polygon3D.getGeometry()->getHoles();
+        
+        // Create tesselator
         TESSalloc ma;
         ma.memalloc = [](void* userData, unsigned int size) { return malloc(size); };
         ma.memfree = [](void* userData, void* ptr) { free(ptr); };
@@ -35,122 +40,134 @@ namespace carto {
         }
         std::shared_ptr<TESStesselator> tess(tessPtr, tessDeleteTess);
     
-        // Prepare polygon exterior, calculate bounding box
-        const std::vector<MapPos>& poses = polygon3D.getGeometry()->getPoses();
-        std::size_t edgeVertexCount = poses.size();
-        // TODO: make it 3D
-        std::vector<double> posesArray(poses.size() * 2);
+        // Prepare polygon exterior
+        std::vector<std::vector<MapPos> > ringsInternalPoses(1 + holes.size());
+        ringsInternalPoses[0].reserve(poses.size());
+        
+        std::vector<double> posesArray(poses.size() * 3);
         for (std::size_t i = 0; i < poses.size(); i++) {
             MapPos internalPos = projection.toInternal(poses[i]);
-            posesArray[i * 2 + 0] = internalPos.getX();
-            posesArray[i * 2 + 1] = internalPos.getY();
+            internalPos.setZ(0);
+            posesArray[i * 3 + 0] = internalPos.getX();
+            posesArray[i * 3 + 1] = internalPos.getY();
+            posesArray[i * 3 + 2] = internalPos.getZ();
+            ringsInternalPoses[0].push_back(internalPos);
         }
-        tessAddContour(tess.get(), 2, posesArray.data(), sizeof(double) * 2, static_cast<unsigned int>(poses.size()));
+        tessAddContour(tess.get(), 3, posesArray.data(), sizeof(double) * 3, static_cast<unsigned int>(poses.size()));
     
         // Prepare polygon holes
-        const std::vector<std::vector<MapPos> >& holes = polygon3D.getGeometry()->getHoles();
-        std::vector<std::vector<double> > holesArray(holes.size() * 2);
+        std::vector<std::vector<double> > holesArray(holes.size());
         for (std::size_t n = 0; n < holes.size(); n++) {
             const std::vector<MapPos>& hole = holes[n];
-            edgeVertexCount += hole.size();
             std::vector<double>& holeArray = holesArray[n];
-            holeArray.resize(hole.size() * 2);
+            holeArray.resize(hole.size() * 3);
             for (std::size_t i = 0; i < hole.size(); i++) {
                 MapPos internalPos = projection.toInternal(hole[i]);
-                holeArray[i * 2 + 0] = internalPos.getX();
-                holeArray[i * 2 + 1] = internalPos.getY();
+                internalPos.setZ(0);
+                holeArray[i * 3 + 0] = internalPos.getX();
+                holeArray[i * 3 + 1] = internalPos.getY();
+                holeArray[i * 3 + 2] = internalPos.getZ();
+                ringsInternalPoses[n + 1].push_back(internalPos);
             }
-            tessAddContour(tess.get(), 2, holeArray.data(), sizeof(double) * 2, static_cast<unsigned int>(hole.size()));
+            tessAddContour(tess.get(), 3, holeArray.data(), sizeof(double) * 3, static_cast<unsigned int>(hole.size()));
         }
     
         // Triangulate
-        // TODO: normal
         double normal[3] = { 0, 0, 1 };
-        if (!tessTesselate(tess.get(), TESS_WINDING_ODD, TESS_POLYGONS, MAX_INDICES_PER_ELEMENT, 2, normal)) {
+        if (!tessTesselate(tess.get(), TESS_WINDING_ODD, TESS_POLYGONS, 3, 3, normal)) {
             Log::Error("Polygon3DDrawData::Polygon3DDrawData: Failed to triangulate 3d polygon!");
             return;
         }
-    
         const double* roofCoords = tessGetVertices(tess.get());
         const int* roofElements = tessGetElements(tess.get());
-        const int roofVertexCount = tessGetVertexCount(tess.get());
-        const int roofElementCount = tessGetElementCount(tess.get());
+        std::size_t roofVertexCount = tessGetVertexCount(tess.get());
+        std::size_t roofElementCount = tessGetElementCount(tess.get());
     
+        // Do projection-surface based tesselation
+        std::vector<MapPos> roofInternalPoses;
+        roofInternalPoses.reserve(roofVertexCount);
+        for (std::size_t i = 0; i < roofVertexCount; i++) {
+            roofInternalPoses.emplace_back(roofCoords[i * 3 + 0], roofCoords[i * 3 + 1], roofCoords[i * 3 + 2]);
+        }
+        std::vector<unsigned int> roofIndices;
+        roofIndices.reserve(roofElementCount * 3);
+        for (std::size_t i = 0; i < roofElementCount * 3; i += 3) {
+            unsigned int i0 = roofElements[i + 0];
+            unsigned int i1 = roofElements[i + 1];
+            unsigned int i2 = roofElements[i + 2];
+            if (i0 != TESS_UNDEF && i1 != TESS_UNDEF && i2 != TESS_UNDEF) {
+                projectionSurface.tesselateTriangle(i0, i1, i2, roofIndices, roofInternalPoses);
+            }
+        }
+
+        // Tesselate rings
+        for (std::vector<MapPos>& ringInternalPoses : ringsInternalPoses) {
+            std::vector<MapPos> tesselatedPoses;
+            tesselatedPoses.reserve(ringInternalPoses.size());
+            for (std::size_t i = 0; i < ringInternalPoses.size(); i++) {
+                if (!tesselatedPoses.empty()) {
+                    tesselatedPoses.pop_back();
+                }
+                projectionSurface.tesselateSegment(ringInternalPoses[i], ringInternalPoses[(i + 1) % ringInternalPoses.size()], tesselatedPoses);
+            }
+            std::swap(ringInternalPoses, tesselatedPoses);
+        }
+        
         // Reserve space for roof and sides
-        _coords.reserve(roofVertexCount + edgeVertexCount * 6);
-        _normals.reserve(roofVertexCount + edgeVertexCount * 6);
+        std::size_t edgeVertexCount = std::accumulate(ringsInternalPoses.begin(), ringsInternalPoses.end(), std::size_t(0), [](std::size_t count, const std::vector<MapPos>& ringInternalPoses) { return count + ringInternalPoses.size(); });
+        _coords.reserve(roofIndices.size() + edgeVertexCount * 6);
+        _normals.reserve(roofIndices.size() + edgeVertexCount * 6);
         
         // Calculate height in the internal coordinate system
-        float baseZ = 0;
-        float roofZ = projection.toInternalScale(polygon3D.getHeight());
+        MapVec baseVec(0, 0, 0);
+        MapVec roofVec(0, 0, projection.toInternalScale(polygon3D.getHeight()));
         
         // Convert triangulator output to coord array
-        for (int i = 0; i < roofElementCount * MAX_INDICES_PER_ELEMENT; i += 3) {
-            if (roofElements[i + 0] != TESS_UNDEF && roofElements[i + 1] != TESS_UNDEF && roofElements[i + 2] != TESS_UNDEF) {
-                for (int j = 0; j < 3; j++) {
-                    unsigned int index = roofElements[i + j];
-                    MapPos internalPos(roofCoords[index * 2 + 0], roofCoords[index * 2 + 1], roofZ);
-                    _coords.push_back(projectionSurface.calculatePosition(internalPos));
-                    _normals.push_back(cglib::vec3<float>::convert(projectionSurface.calculateNormal(internalPos)));
-                }
-            }
+        for (std::size_t i = 0; i < roofIndices.size(); i++) {
+            std::size_t index = roofIndices[i];
+            MapPos internalPos = roofInternalPoses[index] + roofVec;
+            _coords.push_back(projectionSurface.calculatePosition(internalPos));
+            _normals.push_back(cglib::vec3<float>::convert(projectionSurface.calculateNormal(internalPos)));
         }
         
         // Calculate sides
-        for (int i = -1; i < static_cast<int>(holes.size()); i++) {
-            const std::vector<MapPos>* side = (i == -1 ? &poses : &holes[i]);
-            const std::vector<double>* sideArray = (i == -1 ? &posesArray : &holesArray[i]);
+        for (std::size_t n = 0; n < ringsInternalPoses.size(); n++) {
+            const std::vector<MapPos>& ringInternalPoses = ringsInternalPoses[n];
 
-            // TODO: test should be done based on internal coordinates
             // Calculate vertex orientation of the polygon
-            bool clockWise = GeomUtils::IsConcavePolygonClockwise(*side);
+            bool clockWise = GeomUtils::IsConcavePolygonClockwise(ringInternalPoses);
             // If calculating a whole, reverse the direction
-            clockWise = (i >= 0) ? !clockWise : clockWise;
+            bool flipOrder = (n > 0 ? !clockWise : clockWise);
             
-            const double* prevPos = sideArray->size() >= 2 ? &(*sideArray)[sideArray->size() - 2] : nullptr;
-            for (std::size_t j = 0; j < sideArray->size(); j += 2) {
-                const double* pos = &(*sideArray)[j];
+            for (std::size_t j = 1; j < ringInternalPoses.size(); j++) {
+                MapPos p0 = ringInternalPoses[(flipOrder ? j : j - 1)];
+                MapPos p1 = ringInternalPoses[(flipOrder ? j - 1 : j)];
                 
-                if (prevPos) {
-                    const double* p0 = clockWise ? pos : prevPos;
-                    const double* p1 = clockWise ? prevPos : pos;
+                // Add coordinates for 2 triangles
+                _coords.push_back(projectionSurface.calculatePosition(p0 + roofVec));
+                _coords.push_back(projectionSurface.calculatePosition(p0 + baseVec));
+                _coords.push_back(projectionSurface.calculatePosition(p1 + roofVec));
+                _coords.push_back(projectionSurface.calculatePosition(p0 + baseVec));
+                _coords.push_back(projectionSurface.calculatePosition(p1 + baseVec));
+                _coords.push_back(projectionSurface.calculatePosition(p1 + roofVec));
 
-                    MapPos internalPos0(p0[0], p0[1], roofZ);
-                    MapPos internalPos1(p0[0], p0[1], baseZ);
-                    MapPos internalPos2(p1[0], p1[1], roofZ);
-                    MapPos internalPos3(p0[0], p0[1], baseZ);
-                    MapPos internalPos4(p1[0], p1[1], baseZ);
-                    MapPos internalPos5(p1[0], p1[1], roofZ);
+                // Calculate side normal
+                cglib::vec3<float> sideNormal = cglib::unit(cglib::vec3<float>::convert(projectionSurface.calculateVector(p0 + baseVec, MapVec(p1[1] - p0[1], p0[0] - p1[0], 0))));
 
-                    // Add coordinates for 2 triangles
-                    _coords.push_back(projectionSurface.calculatePosition(internalPos0));
-                    _boundingBox.add(_coords.back());
-                    _coords.push_back(projectionSurface.calculatePosition(internalPos1));
-                    _boundingBox.add(_coords.back());
-                    _coords.push_back(projectionSurface.calculatePosition(internalPos2));
-                    _boundingBox.add(_coords.back());
-                    _coords.push_back(projectionSurface.calculatePosition(internalPos3));
-                    _boundingBox.add(_coords.back());
-                    _coords.push_back(projectionSurface.calculatePosition(internalPos4));
-                    _boundingBox.add(_coords.back());
-                    _coords.push_back(projectionSurface.calculatePosition(internalPos5));
-                    _boundingBox.add(_coords.back());
-
-                    // Calculate side normal
-                    cglib::vec3<float> sideNormal = cglib::unit(cglib::vec3<float>::convert(projectionSurface.calculateVector(internalPos0, MapVec(p1[1] - p0[1], p0[0] - p1[0], 0))));
-                    
-                    // Add normal for each vertex
-                    _normals.push_back(sideNormal);
-                    _normals.push_back(sideNormal);
-                    _normals.push_back(sideNormal);
-                    _normals.push_back(sideNormal);
-                    _normals.push_back(sideNormal);
-                    _normals.push_back(sideNormal);
-                }
-                prevPos = pos;
+                // Add normal for each vertex
+                _normals.push_back(sideNormal);
+                _normals.push_back(sideNormal);
+                _normals.push_back(sideNormal);
+                _normals.push_back(sideNormal);
+                _normals.push_back(sideNormal);
+                _normals.push_back(sideNormal);
             }
         }
+
+        // Update bounding box based on calculated coordinates
+        _boundingBox.add(_coords.begin(), _coords.end());
         
+        // Do sanity check on the size
         if (_coords.size() > GLContext::MAX_VERTEXBUFFER_SIZE) {
             Log::Error("Polygon3DDrawData::Polygon3DDrawData: Maximum buffer size exceeded, 3d polygon can't be drawn");
         }

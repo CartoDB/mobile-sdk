@@ -10,6 +10,8 @@
 #include "core/MapPos.h"
 #include "core/MapVec.h"
 
+#include <vector>
+
 #include <cglib/vec.h>
 #include <cglib/mat.h>
 #include <cglib/ray.h>
@@ -29,6 +31,9 @@ namespace carto {
         virtual cglib::vec3<double> calculatePosition(const MapPos& mapPos) const = 0;
         virtual cglib::vec3<double> calculateNormal(const MapPos& mapPos) const = 0;
         virtual cglib::vec3<double> calculateVector(const MapPos& mapPos, const MapVec& mapVec) const = 0;
+
+        virtual void tesselateSegment(const MapPos& mapPos0, const MapPos& mapPos1, std::vector<MapPos>& mapPoses) const = 0;
+        virtual void tesselateTriangle(unsigned int i0, unsigned int i1, unsigned int i2, std::vector<unsigned int>& indices, std::vector<MapPos>& mapPoses) const = 0;
 
         virtual double calculateRayHit(const cglib::ray3<double>& ray) const = 0;
 

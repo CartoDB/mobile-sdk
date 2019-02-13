@@ -42,8 +42,6 @@ namespace carto {
         virtual void offsetHorizontally(double offset);
     
     private:
-        static const int MAX_INDICES_PER_ELEMENT = 3;
-    
         std::shared_ptr<Bitmap> _bitmap;
     
         cglib::bbox3<double> _boundingBox;

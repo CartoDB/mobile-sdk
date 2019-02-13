@@ -32,6 +32,17 @@ namespace carto {
         return cglib::vec3<double>(mapVec.getX(), mapVec.getY(), mapVec.getZ());
     }
 
+    void PlanarProjectionSurface::tesselateSegment(const MapPos& mapPos0, const MapPos& mapPos1, std::vector<MapPos>& mapPoses) const {
+        mapPoses.push_back(mapPos0);
+        mapPoses.push_back(mapPos1);
+    }
+
+    void PlanarProjectionSurface::tesselateTriangle(unsigned int i0, unsigned int i1, unsigned int i2, std::vector<unsigned int>& indices, std::vector<MapPos>& mapPoses) const {
+        indices.push_back(i0);
+        indices.push_back(i1);
+        indices.push_back(i2);
+    }
+
     double PlanarProjectionSurface::calculateRayHit(const cglib::ray3<double>& ray) const {
         double t = -ray.origin(2) / ray.direction(2);
         return t;
