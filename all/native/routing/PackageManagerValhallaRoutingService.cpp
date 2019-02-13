@@ -11,12 +11,6 @@
 #include "utils/Const.h"
 #include "utils/Log.h"
 
-#include <osrm/Graph.h>
-#include <osrm/Query.h>
-#include <osrm/Result.h>
-#include <osrm/Instruction.h>
-#include <osrm/RouteFinder.h>
-
 namespace carto {
 
     PackageManagerValhallaRoutingService::PackageManagerValhallaRoutingService(const std::shared_ptr<PackageManager>& packageManager) :
