@@ -7,11 +7,11 @@
 #include "utils/Const.h"
 #include "utils/Log.h"
 
-#include <routing/Graph.h>
-#include <routing/Query.h>
-#include <routing/Result.h>
-#include <routing/Instruction.h>
-#include <routing/RouteFinder.h>
+#include <osrm/Graph.h>
+#include <osrm/Query.h>
+#include <osrm/Result.h>
+#include <osrm/Instruction.h>
+#include <osrm/RouteFinder.h>
 
 namespace carto {
 
@@ -19,8 +19,8 @@ namespace carto {
         RoutingService(),
         _routeFinder()
     {
-        routing::Graph::Settings graphSettings;
-        auto graph = std::make_shared<routing::Graph>(graphSettings);
+        osrm::Graph::Settings graphSettings;
+        auto graph = std::make_shared<osrm::Graph>(graphSettings);
         try {
             if (!graph->import(path)) {
                 throw FileException("Failed to import routing graph", path);
@@ -28,7 +28,7 @@ namespace carto {
         } catch (const std::exception& ex) {
             throw GenericException("Exception while importing routing graph", ex.what());
         }
-        _routeFinder = std::make_shared<routing::RouteFinder>(graph);
+        _routeFinder = std::make_shared<osrm::RouteFinder>(graph);
     }
 
     OSRMOfflineRoutingService::~OSRMOfflineRoutingService() {

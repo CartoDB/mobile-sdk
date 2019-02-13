@@ -68,7 +68,8 @@ include_directories(
     "${SDK_CARTO_LIBS_DIR}/mapnikvt/src"
     "${SDK_CARTO_LIBS_DIR}/cartocss/src"
     "${SDK_CARTO_LIBS_DIR}/nml/src"
-    "${SDK_CARTO_LIBS_DIR}/routing/src"
+    "${SDK_CARTO_LIBS_DIR}/osrm/src"
+    "${SDK_CARTO_LIBS_DIR}/sgre/src"
     "${SDK_CARTO_LIBS_DIR}/geocoding/src"
     "${SDK_EXTERNAL_LIBS_DIR}/boost"
     "${SDK_EXTERNAL_LIBS_DIR}/boostext"
@@ -147,7 +148,8 @@ add_subdirectory("${SDK_CARTO_LIBS_DIR}/vt" vt)
 add_subdirectory("${SDK_CARTO_LIBS_DIR}/mapnikvt" mapnikvt)
 add_subdirectory("${SDK_CARTO_LIBS_DIR}/cartocss" cartocss)
 add_subdirectory("${SDK_CARTO_LIBS_DIR}/nml" nml)
-add_subdirectory("${SDK_CARTO_LIBS_DIR}/routing" routing)
+add_subdirectory("${SDK_CARTO_LIBS_DIR}/osrm" osrm)
+add_subdirectory("${SDK_CARTO_LIBS_DIR}/sgre" sgre)
 add_subdirectory("${SDK_CARTO_LIBS_DIR}/geocoding" geocoding)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/bidi" bidi)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/cryptopp" cryptopp)
@@ -257,7 +259,8 @@ set(SDK_SRC_FILES
     "${mapnikvt_SRC_FILES}"
     "${cartocss_SRC_FILES}"
     "${nml_SRC_FILES}"
-    "${routing_SRC_FILES}"
+    "${osrm_SRC_FILES}"
+    "${sgre_SRC_FILES}"
     "${geocoding_SRC_FILES}"
     "${bidi_SRC_FILES}"
     "${cryptopp_SRC_FILES}"
@@ -300,7 +303,8 @@ set(SDK_OBJECTS
     $<TARGET_OBJECTS:mapnikvt>
     $<TARGET_OBJECTS:cartocss>
     $<TARGET_OBJECTS:nml>
-    $<TARGET_OBJECTS:routing>
+    $<TARGET_OBJECTS:osrm>
+    $<TARGET_OBJECTS:sgre>
     $<TARGET_OBJECTS:geocoding>
     $<TARGET_OBJECTS:bidi>
     $<TARGET_OBJECTS:cryptopp>

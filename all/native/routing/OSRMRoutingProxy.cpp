@@ -16,27 +16,27 @@
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
 
-#include <routing/Graph.h>
-#include <routing/Query.h>
-#include <routing/Result.h>
-#include <routing/Instruction.h>
-#include <routing/RouteFinder.h>
+#include <osrm/Graph.h>
+#include <osrm/Query.h>
+#include <osrm/Result.h>
+#include <osrm/Instruction.h>
+#include <osrm/RouteFinder.h>
 
 namespace carto {
 
-    std::shared_ptr<RoutingResult> OSRMRoutingProxy::CalculateRoute(const std::shared_ptr<routing::RouteFinder>& routeFinder, const std::shared_ptr<RoutingRequest>& request) {
+    std::shared_ptr<RoutingResult> OSRMRoutingProxy::CalculateRoute(const std::shared_ptr<osrm::RouteFinder>& routeFinder, const std::shared_ptr<RoutingRequest>& request) {
         std::shared_ptr<Projection> proj = request->getProjection();
         EPSG3857 epsg3857;
 
         std::size_t totalPoints = 0;
         std::size_t totalInstructions = 0;
-        std::vector<routing::Result> results;
+        std::vector<osrm::Result> results;
         for (std::size_t i = 1; i < request->getPoints().size(); i++) {
             MapPos p0 = proj->toWgs84(request->getPoints()[i - 1]);
             MapPos p1 = proj->toWgs84(request->getPoints()[i]);
-            routing::Query query(routing::WGSPos(p0.getY(), p0.getX()), routing::WGSPos(p1.getY(), p1.getX()));
-            routing::Result result = routeFinder->find(query);
-            if (result.getStatus() == routing::Result::Status::FAILED) {
+            osrm::Query query(osrm::WGSPos(p0.getY(), p0.getX()), osrm::WGSPos(p1.getY(), p1.getX()));
+            osrm::Result result = routeFinder->find(query);
+            if (result.getStatus() == osrm::Result::Status::FAILED) {
                 throw GenericException("Routing failed");
             }
             totalPoints += result.getGeometry().size();
@@ -51,18 +51,18 @@ namespace carto {
         std::vector<RoutingInstruction> instructions;
         instructions.reserve(totalInstructions);
         for (std::size_t i = 0; i < results.size(); i++) {
-            const routing::Result& result = results[i];
+            const osrm::Result& result = results[i];
             if (result.getInstructions().empty()) {
                 continue;
             }
 
             std::size_t pointIndex = points.size();
-            for (const routing::WGSPos& pos : result.getGeometry()) {
+            for (const osrm::WGSPos& pos : result.getGeometry()) {
                 points.push_back(proj->fromWgs84(MapPos(pos(1), pos(0))));
                 epsg3857Points.push_back(epsg3857.fromWgs84(MapPos(pos(1), pos(0))));
             }
 
-            for (const routing::Instruction& instr : result.getInstructions()) {
+            for (const osrm::Instruction& instr : result.getInstructions()) {
                 double distance = instr.getDistance();
                 double time = instr.getTime();
 
@@ -202,48 +202,48 @@ namespace carto {
     }
     
     bool OSRMRoutingProxy::TranslateInstructionCode(int instructionCode, RoutingAction::RoutingAction& action) {
-        switch (static_cast<routing::Instruction::Type>(instructionCode)) {
-            case routing::Instruction::Type::NO_TURN:
+        switch (static_cast<osrm::Instruction::Type>(instructionCode)) {
+            case osrm::Instruction::Type::NO_TURN:
                 action = RoutingAction::ROUTING_ACTION_NO_TURN;
                 break;
-            case routing::Instruction::Type::GO_STRAIGHT:
+            case osrm::Instruction::Type::GO_STRAIGHT:
                 action = RoutingAction::ROUTING_ACTION_GO_STRAIGHT;
                 break;
-            case routing::Instruction::Type::TURN_SLIGHT_RIGHT:
-            case routing::Instruction::Type::TURN_RIGHT:
-            case routing::Instruction::Type::TURN_SHARP_RIGHT:
+            case osrm::Instruction::Type::TURN_SLIGHT_RIGHT:
+            case osrm::Instruction::Type::TURN_RIGHT:
+            case osrm::Instruction::Type::TURN_SHARP_RIGHT:
                 action = RoutingAction::ROUTING_ACTION_TURN_RIGHT;
                 break;
-            case routing::Instruction::Type::UTURN:
+            case osrm::Instruction::Type::UTURN:
                 action = RoutingAction::ROUTING_ACTION_UTURN;
                 break;
-            case routing::Instruction::Type::TURN_SLIGHT_LEFT:
-            case routing::Instruction::Type::TURN_LEFT:
-            case routing::Instruction::Type::TURN_SHARP_LEFT:
+            case osrm::Instruction::Type::TURN_SLIGHT_LEFT:
+            case osrm::Instruction::Type::TURN_LEFT:
+            case osrm::Instruction::Type::TURN_SHARP_LEFT:
                 action = RoutingAction::ROUTING_ACTION_TURN_LEFT;
                 break;
-            case routing::Instruction::Type::REACH_VIA_LOCATION:
+            case osrm::Instruction::Type::REACH_VIA_LOCATION:
                 action = RoutingAction::ROUTING_ACTION_REACH_VIA_LOCATION;
                 break;
-            case routing::Instruction::Type::HEAD_ON:
+            case osrm::Instruction::Type::HEAD_ON:
                 action = RoutingAction::ROUTING_ACTION_HEAD_ON;
                 break;
-            case routing::Instruction::Type::ENTER_ROUNDABOUT:
+            case osrm::Instruction::Type::ENTER_ROUNDABOUT:
                 action = RoutingAction::ROUTING_ACTION_ENTER_ROUNDABOUT;
                 break;
-            case routing::Instruction::Type::LEAVE_ROUNDABOUT:
+            case osrm::Instruction::Type::LEAVE_ROUNDABOUT:
                 action = RoutingAction::ROUTING_ACTION_LEAVE_ROUNDABOUT;
                 break;
-            case routing::Instruction::Type::STAY_ON_ROUNDABOUT:
+            case osrm::Instruction::Type::STAY_ON_ROUNDABOUT:
                 action = RoutingAction::ROUTING_ACTION_STAY_ON_ROUNDABOUT;
                 break;
-            case routing::Instruction::Type::ENTER_AGAINST_ALLOWED_DIRECTION:
+            case osrm::Instruction::Type::ENTER_AGAINST_ALLOWED_DIRECTION:
                 action = RoutingAction::ROUTING_ACTION_ENTER_AGAINST_ALLOWED_DIRECTION;
                 break;
-            case routing::Instruction::Type::LEAVE_AGAINST_ALLOWED_DIRECTION:
+            case osrm::Instruction::Type::LEAVE_AGAINST_ALLOWED_DIRECTION:
                 action = RoutingAction::ROUTING_ACTION_LEAVE_AGAINST_ALLOWED_DIRECTION;
                 break;
-            case routing::Instruction::Type::REACHED_YOUR_DESTINATION:
+            case osrm::Instruction::Type::REACHED_YOUR_DESTINATION:
                 action = RoutingAction::ROUTING_ACTION_FINISH;
                 break;
             default:

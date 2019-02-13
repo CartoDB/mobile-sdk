@@ -11,11 +11,11 @@
 #include "utils/Const.h"
 #include "utils/Log.h"
 
-#include <routing/Graph.h>
-#include <routing/Query.h>
-#include <routing/Result.h>
-#include <routing/Instruction.h>
-#include <routing/RouteFinder.h>
+#include <osrm/Graph.h>
+#include <osrm/Query.h>
+#include <osrm/Result.h>
+#include <osrm/Instruction.h>
+#include <osrm/RouteFinder.h>
 
 namespace carto {
 
