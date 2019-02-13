@@ -5,7 +5,7 @@
 
 #ifdef _CARTO_ROUTING_SUPPORT
 
-!proxy_imports(carto::RoutingInstruction, core.MapPos)
+!proxy_imports(carto::RoutingInstruction, core.MapPos, core.Variant)
 
 %{
 #include "routing/RoutingInstruction.h"
@@ -16,6 +16,7 @@
 %include <cartoswig.i>
 
 %import "core/MapPos.i" 
+%import "core/Variant.i"
 
 !value_type(carto::RoutingInstruction, routing.RoutingInstruction)
 !value_type(std::vector<carto::RoutingInstruction>, routing.RoutingInstructionVector)
@@ -27,8 +28,10 @@
 %attribute(carto::RoutingInstruction, float, Azimuth, getAzimuth)
 %attribute(carto::RoutingInstruction, double, Distance, getDistance)
 %attribute(carto::RoutingInstruction, double, Time, getTime)
+%attributeval(carto::RoutingInstruction, carto::Variant, GeometryTag, getGeometryTag)
 %ignore carto::RoutingInstruction::setDistance;
 %ignore carto::RoutingInstruction::setTime;
+%ignore carto::RoutingInstruction::setGeometryTag;
 !standard_equals(carto::RoutingInstruction);
 !custom_tostring(carto::RoutingInstruction);
 

@@ -10,6 +10,7 @@
 #ifdef _CARTO_ROUTING_SUPPORT
 
 #include "core/MapPos.h"
+#include "core/Variant.h"
 
 #include <memory>
 #include <string>
@@ -159,6 +160,16 @@ namespace carto {
          * @param time The duration of the instruction in seconds.
          */
         void setTime(double time);
+        /**
+         * Returns the geometry tag associated with the instructions.
+         * @return The geometry tag associated with the instructions.
+         */
+        const Variant& getGeometryTag() const;
+        /**
+         * Sets the geometry tag of the instruction.
+         * @param geometryTag The geometry tag of the instruction.
+         */
+        void setGeometryTag(const Variant& variant);
 
         /**
          * Creates a string representation of this instruction, useful for logging.
@@ -174,6 +185,7 @@ namespace carto {
         float _azimuth;
         double _distance;
         double _time;
+        Variant _geometryTag;
     };
     
 }

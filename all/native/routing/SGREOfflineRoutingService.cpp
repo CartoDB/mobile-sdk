@@ -136,11 +136,13 @@ namespace carto {
             for (const sgre::Instruction& instr : result.getInstructions()) {
                 double distance = instr.getDistance();
                 double time = instr.getTime();
+                std::string streetName = instr.getTag().serialize();
+                Variant geometryTag = Variant::FromPicoJSON(instr.getTag());
 
                 RoutingAction::RoutingAction action = RoutingAction::ROUTING_ACTION_NO_TURN;
                 TranslateInstructionCode(static_cast<int>(instr.getType()), action);
                 if (action == RoutingAction::ROUTING_ACTION_NO_TURN) {
-                    if (!instructions.empty()) {
+                    if (!instructions.empty() && instructions.back().getStreetName() == streetName && instructions.back().getGeometryTag() == geometryTag) {
                         instructions.back().setTime(instructions.back().getTime() + time);
                         instructions.back().setDistance(instructions.back().getDistance() + distance);
                     }
@@ -151,11 +153,10 @@ namespace carto {
                 }
 
                 int posIndex = static_cast<int>(pointIndex + instr.getGeometryIndex());
-                // TODO: add tag to instructions?
-                std::string streetName = instr.getTag().serialize();
                 float turnAngle = CalculateTurnAngle(epsg3857Points, posIndex);
                 float azimuth = CalculateAzimuth(epsg3857Points, posIndex);
                 instructions.emplace_back(action, posIndex, streetName, turnAngle, azimuth, distance, time);
+                instructions.back().setGeometryTag(geometryTag);
             }
         }
 
