@@ -68,8 +68,11 @@ namespace carto {
         float getPlacementPriority() const;
     
         const cglib::vec3<double>& getPos() const;
-        void setPos(const cglib::vec3<double>& pos); // Used for setting label positon, when it's attached to another billboards
-    
+        void setPos(const cglib::vec3<double>& pos); // Used for setting label position, when it's attached to another billboards
+        const cglib::vec3<float>& getXAxis() const;
+        const cglib::vec3<float>& getYAxis() const;
+        const cglib::vec3<float>& getZAxis() const;
+
         float getRotation() const;
         
         bool isScaleWithDPI() const;
@@ -139,7 +142,10 @@ namespace carto {
         int _placementPriority;
     
         cglib::vec3<double> _pos;
-    
+        cglib::vec3<float> _xAxis;
+        cglib::vec3<float> _yAxis;
+        cglib::vec3<float> _zAxis;
+
         float _rotation;
         
         bool _scaleWithDPI;

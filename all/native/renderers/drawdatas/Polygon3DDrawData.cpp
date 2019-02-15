@@ -27,6 +27,7 @@ namespace carto {
     {
         const std::vector<MapPos>& poses = polygon3D.getGeometry()->getPoses();
         const std::vector<std::vector<MapPos> >& holes = polygon3D.getGeometry()->getHoles();
+        float height = polygon3D.getHeight();
         
         // Create tesselator
         TESSalloc ma;
@@ -46,8 +47,9 @@ namespace carto {
         
         std::vector<double> posesArray(poses.size() * 3);
         for (std::size_t i = 0; i < poses.size(); i++) {
-            MapPos internalPos = projection.toInternal(poses[i]);
-            internalPos.setZ(0);
+            MapPos pos = poses[i];
+            pos.setZ(height);
+            MapPos internalPos = projection.toInternal(pos);
             posesArray[i * 3 + 0] = internalPos.getX();
             posesArray[i * 3 + 1] = internalPos.getY();
             posesArray[i * 3 + 2] = internalPos.getZ();
@@ -62,8 +64,9 @@ namespace carto {
             std::vector<double>& holeArray = holesArray[n];
             holeArray.resize(hole.size() * 3);
             for (std::size_t i = 0; i < hole.size(); i++) {
-                MapPos internalPos = projection.toInternal(hole[i]);
-                internalPos.setZ(0);
+                MapPos pos = hole[i];
+                pos.setZ(height);
+                MapPos internalPos = projection.toInternal(pos);
                 holeArray[i * 3 + 0] = internalPos.getX();
                 holeArray[i * 3 + 1] = internalPos.getY();
                 holeArray[i * 3 + 2] = internalPos.getZ();
@@ -118,16 +121,11 @@ namespace carto {
         _coords.reserve(roofIndices.size() + edgeVertexCount * 6);
         _normals.reserve(roofIndices.size() + edgeVertexCount * 6);
         
-        // Calculate height in the internal coordinate system
-        MapVec baseVec(0, 0, 0);
-        MapVec roofVec(0, 0, projection.toInternalScale(polygon3D.getHeight()));
-        
         // Convert triangulator output to coord array
         for (std::size_t i = 0; i < roofIndices.size(); i++) {
             std::size_t index = roofIndices[i];
-            MapPos internalPos = roofInternalPoses[index] + roofVec;
-            _coords.push_back(projectionSurface.calculatePosition(internalPos));
-            _normals.push_back(cglib::vec3<float>::convert(projectionSurface.calculateNormal(internalPos)));
+            _coords.push_back(projectionSurface.calculatePosition(roofInternalPoses[index]));
+            _normals.push_back(cglib::vec3<float>::convert(projectionSurface.calculateNormal(roofInternalPoses[index])));
         }
         
         // Calculate sides
@@ -140,19 +138,25 @@ namespace carto {
             bool flipOrder = (n > 0 ? !clockWise : clockWise);
             
             for (std::size_t j = 1; j < ringInternalPoses.size(); j++) {
-                MapPos p0 = ringInternalPoses[(flipOrder ? j : j - 1)];
-                MapPos p1 = ringInternalPoses[(flipOrder ? j - 1 : j)];
-                
+                const MapPos& internalPos0 = ringInternalPoses[(flipOrder ? j : j - 1)];
+                const MapPos& internalPos1 = ringInternalPoses[(flipOrder ? j - 1 : j)];
+                cglib::vec3<double> p0r = projectionSurface.calculatePosition(internalPos0);
+                cglib::vec3<double> p1r = projectionSurface.calculatePosition(internalPos1);
+                cglib::vec3<double> p0b = projectionSurface.calculatePosition(MapPos(internalPos0.getX(), internalPos0.getY(), 0));
+                cglib::vec3<double> p1b = projectionSurface.calculatePosition(MapPos(internalPos1.getX(), internalPos1.getY(), 0));
+
                 // Add coordinates for 2 triangles
-                _coords.push_back(projectionSurface.calculatePosition(p0 + roofVec));
-                _coords.push_back(projectionSurface.calculatePosition(p0 + baseVec));
-                _coords.push_back(projectionSurface.calculatePosition(p1 + roofVec));
-                _coords.push_back(projectionSurface.calculatePosition(p0 + baseVec));
-                _coords.push_back(projectionSurface.calculatePosition(p1 + baseVec));
-                _coords.push_back(projectionSurface.calculatePosition(p1 + roofVec));
+                _coords.push_back(p0r);
+                _coords.push_back(p0b);
+                _coords.push_back(p1r);
+                _coords.push_back(p0b);
+                _coords.push_back(p1b);
+                _coords.push_back(p1r);
 
                 // Calculate side normal
-                cglib::vec3<float> sideNormal = cglib::unit(cglib::vec3<float>::convert(projectionSurface.calculateVector(p0 + baseVec, MapVec(p1[1] - p0[1], p0[0] - p1[0], 0))));
+                cglib::vec3<double> normal = projectionSurface.calculateNormal(internalPos0);
+                cglib::vec3<double> sideVec = projectionSurface.calculateVector(internalPos0, internalPos1 - internalPos0);
+                cglib::vec3<float> sideNormal = cglib::unit(cglib::vec3<float>::convert(cglib::vector_product(sideVec, normal)));
 
                 // Add normal for each vertex
                 _normals.push_back(sideNormal);

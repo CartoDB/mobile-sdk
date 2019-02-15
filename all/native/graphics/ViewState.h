@@ -26,14 +26,8 @@ namespace carto {
          * A container class for a partial rotation matrix for a view state.
          */
         struct RotationState {
-            float _cosZ;
-            float _sinZ;
-            float _m11;
-            float _m12;
-            float _m21;
-            float _m22;
-            float _m31;
-            float _m32;
+            cglib::vec3<float> xAxis;
+            cglib::vec3<float> yAxis;
         };
     
         /**
@@ -362,8 +356,7 @@ namespace carto {
         void setHorizontalLayerOffsetDir(int horizontalLayerOffsetDir);
     
     private:
-        float calculateNearPlanePersp(const cglib::vec3<double>& cameraPos, float tilt, float halfFOVY) const;
-        float calculateFarPlanePersp(const cglib::vec3<double>& cameraPos, float tilt, float halfFOVY, const Options& options) const;
+        std::pair<float, float> calculateNearFarPlanes(const Options& options) const;
         float calculateMinZoom(const Options& options) const;
         cglib::mat4x4<double> calculatePerspMat(float halfFOVY, float near, float far, const Options& options) const;
         cglib::mat4x4<double> calculateLookatMat() const;

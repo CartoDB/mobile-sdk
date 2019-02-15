@@ -7,6 +7,7 @@
 #include "graphics/shaders/RegularShaderSource.h"
 #include "graphics/utils/GLContext.h"
 #include "layers/VectorLayer.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/drawdatas/BillboardDrawData.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/components/StyleTextureCache.h"
@@ -20,13 +21,31 @@
 #include <cglib/mat.h>
 
 namespace carto {
+
+    void BillboardRenderer::CalculateBillboardAxis(const BillboardDrawData& drawData, const ViewState& viewState, cglib::vec3<float>& xAxis, cglib::vec3<float>& yAxis) {
+        const ViewState::RotationState& rotationState = viewState.getRotationState();
+        switch (drawData.getOrientationMode()) {
+        case BillboardOrientation::BILLBOARD_ORIENTATION_GROUND:
+            xAxis = drawData.getXAxis();
+            yAxis = drawData.getYAxis();
+            break;
+        case BillboardOrientation::BILLBOARD_ORIENTATION_FACE_CAMERA_GROUND:
+            xAxis = cglib::unit(cglib::vector_product(rotationState.yAxis, drawData.getZAxis()));
+            yAxis = cglib::unit(cglib::vector_product(drawData.getZAxis(), xAxis));
+            break;
+        case BillboardOrientation::BILLBOARD_ORIENTATION_FACE_CAMERA:
+        default:
+            xAxis = rotationState.xAxis;
+            yAxis = rotationState.yAxis;
+            break;
+        }
+    }
     
     void BillboardRenderer::CalculateBillboardCoords(const BillboardDrawData& drawData, const ViewState& viewState,
                                                      std::vector<float>& coordBuf, int drawDataIndex, float sizeScale)
     {
         cglib::vec3<float> translate = cglib::vec3<float>::convert(drawData.getPos() - viewState.getCameraPos());
         
-        const ViewState::RotationState& rotationState = viewState.getRotationState();
         const std::array<cglib::vec2<float>, 4>& coords = drawData.getCoords();
         for (int i = 0; i < 4; i++) {
             int coordIndex = (drawDataIndex * 4 + i) * 3;
@@ -52,25 +71,14 @@ namespace carto {
                     break;
             }
             
-            // Calculate orientation
-            switch (drawData.getOrientationMode()) {
-                case BillboardOrientation::BILLBOARD_ORIENTATION_GROUND:
-                    coordBuf[coordIndex + 0] = x + translate(0);
-                    coordBuf[coordIndex + 1] = y + translate(1);
-                    coordBuf[coordIndex + 2] = 0 + translate(2);
-                    break;
-                case BillboardOrientation::BILLBOARD_ORIENTATION_FACE_CAMERA_GROUND:
-                    coordBuf[coordIndex + 0] = x * rotationState._m11 + y * rotationState._sinZ + translate(0);
-                    coordBuf[coordIndex + 1] = x * rotationState._m21 + y * rotationState._cosZ + translate(1);
-                    coordBuf[coordIndex + 2] = x * rotationState._m31 + 0                       + translate(2);
-                    break;
-                case BillboardOrientation::BILLBOARD_ORIENTATION_FACE_CAMERA:
-                default:
-                    coordBuf[coordIndex + 0] = x * rotationState._m11 + y * rotationState._m12 + translate(0);
-                    coordBuf[coordIndex + 1] = x * rotationState._m21 + y * rotationState._m22 + translate(1);
-                    coordBuf[coordIndex + 2] = x * rotationState._m31 + y * rotationState._m32 + translate(2);
-                    break;
-            }
+            // Calculate axis
+            cglib::vec3<float> xAxis, yAxis;
+            CalculateBillboardAxis(drawData, viewState, xAxis, yAxis);
+        
+            // Build coordinates
+            coordBuf[coordIndex + 0] = x * xAxis(0) + y * yAxis(0) + translate(0);
+            coordBuf[coordIndex + 1] = x * xAxis(1) + y * yAxis(1) + translate(1);
+            coordBuf[coordIndex + 2] = x * xAxis(2) + y * yAxis(2) + translate(2);
         }
     }
     
@@ -326,10 +334,10 @@ namespace carto {
             // Check for possible overflow in the buffers
             if ((drawDataIndex + 1) * 6 > GLContext::MAX_VERTEXBUFFER_SIZE) {
                 // If it doesn't fit, stop and draw the buffers
-                glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, &coordBuf[0]);
-                glVertexAttribPointer(a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, &texCoordBuf[0]);
-                glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &colorBuf[0]);
-                glDrawElements(GL_TRIANGLES, drawDataIndex * 6, GL_UNSIGNED_SHORT, &indexBuf[0]);
+                glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, coordBuf.data());
+                glVertexAttribPointer(a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, texCoordBuf.data());
+                glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, colorBuf.data());
+                glDrawElements(GL_TRIANGLES, drawDataIndex * 6, GL_UNSIGNED_SHORT, indexBuf.data());
                 // Start filling buffers from the beginning
                 drawDataIndex = 0;
             }
@@ -395,10 +403,10 @@ namespace carto {
             drawDataIndex++;
         }
         
-        glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, &coordBuf[0]);
-        glVertexAttribPointer(a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, &texCoordBuf[0]);
-        glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &colorBuf[0]);
-        glDrawElements(GL_TRIANGLES, drawDataIndex * 6, GL_UNSIGNED_SHORT, &indexBuf[0]);
+        glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, coordBuf.data());
+        glVertexAttribPointer(a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, texCoordBuf.data());
+        glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, colorBuf.data());
+        glDrawElements(GL_TRIANGLES, drawDataIndex * 6, GL_UNSIGNED_SHORT, indexBuf.data());
     }
         
     bool BillboardRenderer::calculateBaseBillboardDrawData(const std::shared_ptr<BillboardDrawData>& drawData, const ViewState& viewState) {
@@ -446,28 +454,12 @@ namespace carto {
         }
         
         // Calculate orientation
-        cglib::vec3<double> delta(0, 0, 0);
-        switch (baseBillboardDrawData->getOrientationMode()) {
-            case BillboardOrientation::BILLBOARD_ORIENTATION_GROUND:
-                delta = cglib::vec3<double>(labelAnchorVec(0), labelAnchorVec(1), 0);
-                break;
-            case BillboardOrientation::BILLBOARD_ORIENTATION_FACE_CAMERA_GROUND:
-                delta = cglib::vec3<double>(
-                    labelAnchorVec(0) * rotationState._m11 + labelAnchorVec(1) * rotationState._sinZ,
-                    labelAnchorVec(0) * rotationState._m21 + labelAnchorVec(1) * rotationState._cosZ,
-                    labelAnchorVec(0) * rotationState._m31 + 0
-                );
-                break;
-            case BillboardOrientation::BILLBOARD_ORIENTATION_FACE_CAMERA:
-            default:
-                delta = cglib::vec3<double>(
-                    labelAnchorVec(0) * rotationState._m11 + labelAnchorVec(1) * rotationState._m12,
-                    labelAnchorVec(0) * rotationState._m21 + labelAnchorVec(1) * rotationState._m22,
-                    labelAnchorVec(0) * rotationState._m31 + labelAnchorVec(1) * rotationState._m32
-                );
-                break;
-        }
-        drawData->setPos(baseBillboardPos + delta);
+        cglib::vec3<float> xAxis, yAxis;
+        CalculateBillboardAxis(*baseBillboardDrawData, viewState, xAxis, yAxis);
+
+        // Calculate delta, update position
+        cglib::vec3<float> delta = xAxis * labelAnchorVec(0) + yAxis * labelAnchorVec(1);
+        drawData->setPos(baseBillboardPos + cglib::vec3<double>::convert(delta));
         return true;
     }
         

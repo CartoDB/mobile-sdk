@@ -35,7 +35,9 @@ namespace carto {
         virtual void tesselateSegment(const MapPos& mapPos0, const MapPos& mapPos1, std::vector<MapPos>& mapPoses) const = 0;
         virtual void tesselateTriangle(unsigned int i0, unsigned int i1, unsigned int i2, std::vector<unsigned int>& indices, std::vector<MapPos>& mapPoses) const = 0;
 
-        virtual double calculateRayHit(const cglib::ray3<double>& ray) const = 0;
+        virtual cglib::vec3<double> calculateNearestPoint(const cglib::vec3<double>& pos, double height) const = 0;
+        virtual cglib::vec3<double> calculateNearestPoint(const cglib::ray3<double>& ray, double height, double& t) const = 0;
+        virtual bool calculateHitPoint(const cglib::ray3<double>& ray, double height, double& t) const = 0;
 
         virtual cglib::mat4x4<double> calculateLocalMatrix(const MapPos& mapPos, const Projection& projection) const = 0;
 

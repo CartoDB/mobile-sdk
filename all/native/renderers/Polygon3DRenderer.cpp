@@ -229,9 +229,9 @@ namespace carto {
             // Check for possible overflow in the buffers
             if (coordIndex / 3 + coords.size() > GLContext::MAX_VERTEXBUFFER_SIZE) {
                 // If it doesn't fit, stop and draw the buffers
-                glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &colorBuf[0]);
-                glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, &coordBuf[0]);
-                glVertexAttribPointer(a_normal, 3, GL_FLOAT, GL_FALSE, 0, &normalBuf[0]);
+                glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, colorBuf.data());
+                glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, coordBuf.data());
+                glVertexAttribPointer(a_normal, 3, GL_FLOAT, GL_FALSE, 0, normalBuf.data());
                 glDrawArrays(GL_TRIANGLES, 0, coordIndex / 3);
                 // Start filling buffers from the beginning
                 colorIndex = 0;
@@ -258,6 +258,7 @@ namespace carto {
                 normalBuf[normalIndex + 2] = normal(2);
                 normalIndex += 3;
 
+                // TODO: wrong, does not work in spherical mode. Use additional 'attribute' channel
                 if (normal(2) == 1) {
                     colorBuf[colorIndex + 0] = color.getR();
                     colorBuf[colorIndex + 1] = color.getG();
@@ -275,9 +276,9 @@ namespace carto {
     
         // Draw the buffers
         if (coordIndex > 0) {
-            glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &colorBuf[0]);
-            glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, &coordBuf[0]);
-            glVertexAttribPointer(a_normal, 3, GL_FLOAT, GL_FALSE, 0, &normalBuf[0]);
+            glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, colorBuf.data());
+            glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, coordBuf.data());
+            glVertexAttribPointer(a_normal, 3, GL_FLOAT, GL_FALSE, 0, normalBuf.data());
             glDrawArrays(GL_TRIANGLES, 0, coordIndex / 3);
         }
     }

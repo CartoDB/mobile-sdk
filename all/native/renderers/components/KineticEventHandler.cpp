@@ -169,7 +169,7 @@ namespace carto {
                 _panDelta = 0;
             } else {
                 // Calculate delta time corrected position
-                float factor = std::pow(1.0 - KINETIC_PAN_SLOWDOWN, deltaSeconds);
+                float factor = std::pow(1.0f - KINETIC_PAN_SLOWDOWN, deltaSeconds);
                 _panDelta *= factor;
                 std::shared_ptr<ProjectionSurface> projectionSurface = _mapRenderer.getProjectionSurface();
                 cglib::vec3<double> pos0 = projectionSurface->calculatePosition(_panPositions.first);

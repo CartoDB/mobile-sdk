@@ -299,8 +299,8 @@ namespace carto {
         std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
 
         // Find intersection with projection surface
-        double t = projectionSurface->calculateRayHit(ray);
-        if (t < 0) {
+        double t = -1;
+        if (!projectionSurface->calculateHitPoint(ray, 0, t) || t < 0) {
             return;
         }
 

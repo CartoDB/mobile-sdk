@@ -4,8 +4,8 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_PLANARPROJECTIONSURFACE_H_
-#define _CARTO_PLANARPROJECTIONSURFACE_H_
+#ifndef _CARTO_SPHERICALPROJECTIONSURFACE_H_
+#define _CARTO_SPHERICALPROJECTIONSURFACE_H_
 
 #include "projections/ProjectionSurface.h"
 
@@ -15,9 +15,9 @@
 
 namespace carto {
     
-    class PlanarProjectionSurface : public ProjectionSurface {
+    class SphericalProjectionSurface : public ProjectionSurface {
     public:
-        PlanarProjectionSurface();
+        SphericalProjectionSurface();
         
         virtual MapPos calculateMapPos(const cglib::vec3<double>& pos) const;
         virtual MapVec calculateMapVec(const cglib::vec3<double>& pos, const cglib::vec3<double>& vec) const;
@@ -37,6 +37,13 @@ namespace carto {
         virtual cglib::mat4x4<double> calculateLocalMatrix(const MapPos& mapPos, const Projection& projection) const;
 
         virtual cglib::mat4x4<double> calculateTranslateMatrix(const cglib::vec3<double>& pos0, const cglib::vec3<double>& pos1, double t) const;
+
+    private:
+        static MapPos SphericalToInternal(const cglib::vec3<double>& pos);
+        static cglib::vec3<double> InternalToSpherical(const MapPos& mapPos);
+        static cglib::mat3x3<double> LocalFrame(const cglib::vec3<double>& pos);
+
+        static const double SPHERE_SIZE;
     };
     
 }

@@ -30,7 +30,9 @@ namespace carto {
         float getClickScale() const;
     
         const cglib::vec3<double>& getPos() const;
-    
+        const cglib::vec3<float>& getXAxis() const;
+        const cglib::vec3<float>& getYAxis() const;
+
         float getSize() const;
     
         virtual void offsetHorizontally(double offset);
@@ -45,7 +47,9 @@ namespace carto {
         float _clickScale;
     
         cglib::vec3<double> _pos;
-    
+        cglib::vec3<float> _xAxis;
+        cglib::vec3<float> _yAxis;
+
         float _size;
     };
     

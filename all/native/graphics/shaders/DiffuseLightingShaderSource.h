@@ -17,6 +17,7 @@ static std::string diffuse_lighting_vert_glsl =
     "varying vec4 v_color;"
     "varying vec2 v_texCoord;"
     "void main() {"
+    // TODO: fix this
     "   if (a_normal.z != 1.0) {"
     "      float dotProduct = max(0.0, dot(a_normal, u_lightDir));"
     "       v_color = vec4(u_ambientColor.rgb + u_lightColor.rgb * dotProduct, 1.0) * a_color;"

@@ -43,9 +43,20 @@ namespace carto {
         indices.push_back(i2);
     }
 
-    double PlanarProjectionSurface::calculateRayHit(const cglib::ray3<double>& ray) const {
-        double t = -ray.origin(2) / ray.direction(2);
-        return t;
+    cglib::vec3<double> PlanarProjectionSurface::calculateNearestPoint(const cglib::vec3<double>& pos, double height) const {
+        return cglib::vec3<double>(pos(0), pos(1), height);
+    }
+    
+    cglib::vec3<double> PlanarProjectionSurface::calculateNearestPoint(const cglib::ray3<double>& ray, double height, double& t) const {
+        if (calculateHitPoint(ray, height, t)) {
+            return ray(t);
+        }
+        return calculateNearestPoint(ray.origin, height);
+    }
+
+    bool PlanarProjectionSurface::calculateHitPoint(const cglib::ray3<double>& ray, double height, double& t) const {
+        t = (height - ray.origin(2)) / ray.direction(2);
+        return true;
     }
 
     cglib::mat4x4<double> PlanarProjectionSurface::calculateLocalMatrix(const MapPos& mapPos, const Projection& projection) const {

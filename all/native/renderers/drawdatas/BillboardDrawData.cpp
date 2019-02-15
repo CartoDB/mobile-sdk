@@ -110,7 +110,19 @@ namespace carto {
     void BillboardDrawData::setPos(const cglib::vec3<double>& pos) {
         _pos = pos;
     }
+
+    const cglib::vec3<float>& BillboardDrawData::getXAxis() const {
+        return _xAxis;
+    }
     
+    const cglib::vec3<float>& BillboardDrawData::getYAxis() const {
+        return _yAxis;
+    }
+
+    const cglib::vec3<float>& BillboardDrawData::getZAxis() const {
+        return _zAxis;
+    }
+
     float BillboardDrawData::getRotation() const {
         return _rotation;
     }
@@ -194,6 +206,9 @@ namespace carto {
         _transition(0.0f),
         _placementPriority(style.getPlacementPriority()),
         _pos(0, 0, 0),
+        _xAxis(1, 0, 0),
+        _yAxis(0, 1, 0),
+        _zAxis(0, 0, 1),
         _rotation(billboard.getRotation()),
         _scaleWithDPI(style.isScaleWithDPI()),
         _scalingMode(scalingMode),
@@ -203,7 +218,11 @@ namespace carto {
         _renderer()
     {
         if (billboard.getGeometry()) {
-            _pos = projectionSurface.calculatePosition(projection.toInternal(billboard.getGeometry()->getCenterPos()));
+            MapPos internalPos = projection.toInternal(billboard.getGeometry()->getCenterPos());
+            _pos = projectionSurface.calculatePosition(internalPos);
+            _xAxis = cglib::vec3<float>::convert(projectionSurface.calculateVector(internalPos, MapVec(1, 0, 0)));
+            _yAxis = cglib::vec3<float>::convert(projectionSurface.calculateVector(internalPos, MapVec(0, 1, 0)));
+            _zAxis = cglib::vec3<float>::convert(projectionSurface.calculateVector(internalPos, MapVec(0, 0, 1)));
         }
 
         if (auto drawData = billboard.getDrawData()) {

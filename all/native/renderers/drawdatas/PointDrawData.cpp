@@ -17,9 +17,15 @@ namespace carto {
         VectorElementDrawData(style.getColor()),
         _bitmap(style.getBitmap()),
         _clickScale(style.getClickSize() == -1 ? std::max(1.0f, 1 + (IDEAL_CLICK_SIZE - style.getSize()) * CLICK_SIZE_COEF / style.getSize()) : style.getClickSize() / style.getSize()),
-        _pos(projectionSurface.calculatePosition(projection.toInternal(geometry.getCenterPos()))),
+        _pos(),
+        _xAxis(),
+        _yAxis(),
         _size(style.getSize())
     {
+        MapPos internalPos = projection.toInternal(geometry.getCenterPos());
+        _pos = projectionSurface.calculatePosition(internalPos);
+        _xAxis = cglib::unit(cglib::vec3<float>::convert(projectionSurface.calculateVector(internalPos, MapVec(1, 0, 0))));
+        _yAxis = cglib::unit(cglib::vec3<float>::convert(projectionSurface.calculateVector(internalPos, MapVec(0, 1, 0))));
     }
     
     PointDrawData::~PointDrawData() {
@@ -37,6 +43,14 @@ namespace carto {
         return _pos;
     }
     
+    const cglib::vec3<float>& PointDrawData::getXAxis() const {
+        return _xAxis;
+    }
+
+    const cglib::vec3<float>& PointDrawData::getYAxis() const {
+        return _yAxis;
+    }
+
     float PointDrawData::getSize() const {
         return _size;
     }

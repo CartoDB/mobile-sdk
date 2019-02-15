@@ -434,28 +434,22 @@ namespace carto {
                 if (_cameraChanged) {
                     _cameraChanged = false;
         
-                    // Calculate concatenated matrix for XZ rotation (X before, then Z) for billboard vector elements
-                    float cosX = static_cast<float>(std::cos((_tilt - 90) * Const::DEG_TO_RAD));
-                    float sinX = static_cast<float>(std::sin((_tilt - 90) * Const::DEG_TO_RAD));
-                    _rotationState._cosZ = static_cast<float>(std::cos(-_rotation * Const::DEG_TO_RAD));
-                    _rotationState._sinZ = static_cast<float>(std::sin(-_rotation * Const::DEG_TO_RAD));
-                    _rotationState._m11 = _rotationState._cosZ;
-                    _rotationState._m12 = cosX * _rotationState._sinZ;
-                    _rotationState._m21 = -_rotationState._sinZ;
-                    _rotationState._m22 = cosX * _rotationState._cosZ;
-                    _rotationState._m31 = 0;
-                    _rotationState._m32 = -sinX;
-        
                     // Calculate scaling factor for vector elements
                     _unitToPXCoef = static_cast<float>(_zoom0Distance / (_height * _tanHalfFOVY) / _2PowZoom);
                     _unitToDPCoef = _unitToPXCoef * _dpi / Const::UNSCALED_DPI;
         
-                    _near = calculateNearPlanePersp(_cameraPos, _tilt, _halfFOVY);
-                    _far = calculateFarPlanePersp(_cameraPos, _tilt, _halfFOVY, options);
+                    std::pair<float, float> nearFarPlanes = calculateNearFarPlanes(options);
+                    _near = nearFarPlanes.first;
+                    _far = nearFarPlanes.second;
         
                     // Matrices
                     _projectionMat = calculatePerspMat(_halfFOVY, _near, _far, options);
                     _modelviewMat = calculateLookatMat();
+
+                    // Rotation state
+                    cglib::mat4x4<double> invCameraMatrix = cglib::inverse(_modelviewMat);
+                    _rotationState.xAxis = cglib::vec3<float>::convert(cglib::proj_o(cglib::col_vector(invCameraMatrix, 0)));
+                    _rotationState.yAxis = cglib::vec3<float>::convert(cglib::proj_o(cglib::col_vector(invCameraMatrix, 1)));
         
                     // Double precision mvp matrix and frustum
                     _modelviewProjectionMat = _projectionMat * _modelviewMat;
@@ -500,7 +494,10 @@ namespace carto {
         cglib::ray3<double> ray(worldCGPos0, worldCGPos1 - worldCGPos0);
 
         // TODO: check calling sites. Decide what to do when no hit.
-        double t = projectionSurface->calculateRayHit(ray);
+        double t = -1;
+        if (!projectionSurface->calculateHitPoint(ray, 0, t) || t < 0) {
+            return cglib::vec3<double>(0, 0, 0); // TODO: better impl
+        }
         return ray(t);
     }
     
@@ -524,39 +521,86 @@ namespace carto {
     void ViewState::setHorizontalLayerOffsetDir(int horizontalLayerOffsetDir) {
         _horizontalLayerOffsetDir = horizontalLayerOffsetDir;
     }
-    
-    float ViewState::calculateNearPlanePersp(const cglib::vec3<double>& cameraPos, float tilt, float halfFOVY) const {
-        // TODO: reimplement
-        double clipNear = std::min(cameraPos(2) * 0.9, std::max(cameraPos(2) - Const::MAX_HEIGHT, static_cast<double>(Const::MIN_NEAR)));
-        if (std::abs(90 - tilt - halfFOVY) < 90) {
+
+    std::pair<float, float> ViewState::calculateNearFarPlanes(const Options& options) const {
+        float halfFOVY = options.getFieldOfViewY() * 0.5f;
+        float tanHalfFOVY = std::tan(static_cast<float>(halfFOVY * Const::DEG_TO_RAD));
+        float zoom0Distance = _height * Const::HALF_WORLD_SIZE / (_tileDrawSize * tanHalfFOVY * (_dpi / Const::UNSCALED_DPI));
+        float initialZ = std::pow(2.0f, -_zoom) * zoom0Distance / 64.0f;
+
+        cglib::mat4x4<double> projMat = calculatePerspMat(halfFOVY, initialZ, 2.0f * initialZ, options);
+        cglib::mat4x4<double> modelviewMat = calculateLookatMat();
+        cglib::mat4x4<double> invModelviewProjMat = cglib::inverse(projMat * modelviewMat);
+
+        cglib::vec3<double> pos0Origin = cglib::transform_point(cglib::vec3<double>(0, 0, -1), invModelviewProjMat);
+        cglib::vec3<double> pos1Origin = cglib::transform_point(cglib::vec3<double>(0, 0,  1), invModelviewProjMat);
+        cglib::vec3<double> zProjVector = cglib::unit(pos1Origin - pos0Origin);
+
+        double heightMin = 0;
+        double heightMax = Const::MAX_HEIGHT / Const::EARTH_CIRCUMFERENCE;
+
+        double zMax = 0;
+        double zMin = cglib::dot_product(options.getProjectionSurface()->calculateNearestPoint(pos0Origin, heightMax) - pos0Origin, zProjVector);
+        if (zMin < 0) {
+            zMin = cglib::dot_product(options.getProjectionSurface()->calculateNearestPoint(pos0Origin, heightMin) - pos0Origin, zProjVector);
+        }
+
+        for (double x : { -1, 1 }) {
+            for (double y : { -1, 1 }) {
+                cglib::vec3<double> pos0 = cglib::transform_point(cglib::vec3<double>(x, y, -1), invModelviewProjMat);
+                cglib::vec3<double> pos1 = cglib::transform_point(cglib::vec3<double>(x, y,  1), invModelviewProjMat);
+                cglib::ray3<double> ray(pos0, pos1 - pos0);
+
+                double z0 = std::pow(2.0f, -_zoom) * zoom0Distance * options.getDrawDistance();
+                double t0 = -1;
+                cglib::vec3<double> nearestPos0 = options.getProjectionSurface()->calculateNearestPoint(ray, heightMin, t0);
+                if (t0 >= 0) {
+                    z0 = cglib::dot_product(nearestPos0 - pos0, zProjVector);
+                }
+
+                double z1 = z0 * 0.5f;
+                double t1 = -1;
+                cglib::vec3<double> nearestPos1 = options.getProjectionSurface()->calculateNearestPoint(ray, heightMax, t1);
+                if (t1 >= 0) {
+                    z1 = std::min(z1, cglib::dot_product(nearestPos1 - pos0, zProjVector));
+                }
+
+                zMax = std::max(zMax, z0);
+                zMin = std::min(zMin, z1);
+            }
+        }
+
+        // TODO: remove
+        double clipNear = std::min(_cameraPos(2) * 0.9, std::max(_cameraPos(2) - Const::MAX_HEIGHT, static_cast<double>(Const::MIN_NEAR)));
+        if (std::abs(90 - _tilt - halfFOVY) < 90) {
             // Put near plane to intersection between frustum and ground plane
-            double cosAminusB = std::cos((90 - tilt - halfFOVY) * Const::DEG_TO_RAD);
+            double cosAminusB = std::cos((90 - _tilt - halfFOVY) * Const::DEG_TO_RAD);
             double cosB = std::cos(halfFOVY * Const::DEG_TO_RAD);
             clipNear = clipNear * cosB / cosAminusB;
         }
         clipNear = std::min(clipNear, static_cast<double>(Const::MAX_NEAR));
-        return static_cast<float>(clipNear);
-    }
-    
-    float ViewState::calculateFarPlanePersp(const cglib::vec3<double>& cameraPos, float tilt, float halfFOVY, const Options& options) const {
-        // TODO: reimplement
+
+        // TODO: remove
         // Hack: compensate focus point offset by increasing tilt
+        float tilt = _tilt;
         if (options.getFocusPointOffset().getY() < 0) {
             float delta = -2 * options.getFocusPointOffset().getY() / _height;
             tilt = std::max(0.0f, tilt - static_cast<float>(std::atan2(delta, 1) * Const::RAD_TO_DEG));
         }
-        double clipFar = cameraPos(2) * options.getDrawDistance();
+        double clipFar = _cameraPos(2) * options.getDrawDistance();
         if (90 - tilt + halfFOVY < 90) {
             // Put far plane to intersection between frustum and ground plane
             double cosAplusB = std::cos((90 - tilt + halfFOVY) * Const::DEG_TO_RAD);
             double cosB = std::cos(halfFOVY * Const::DEG_TO_RAD);
-            double distance = cameraPos(2) * cosB / cosAplusB;
+            double distance = _cameraPos(2) * cosB / cosAplusB;
             // Put far plane a bit further to avoid precision issues
             clipFar = std::min(clipFar, 1.1 * distance);
         }
-        return static_cast<float>(clipFar);
-    }
 
+        // TODO:
+        return std::make_pair(static_cast<float>(zMin * 0.8f), static_cast<float>(zMax * 1.2f));
+    }
+    
     float ViewState::calculateMinZoom(const Options& options) const {
         if (!options.isRestrictedPanning() || _width <= 0 || _height <= 0) {
             return options.getZoomRange().getMin();
@@ -635,16 +679,11 @@ namespace carto {
     
     cglib::mat4x4<double> ViewState::calculateModelViewMat(const carto::Options& options) const {
         if (_cameraChanged) {
-            // Camera has changed, but the matrices have not been updated yet from the render thread
-            
-            // Calculate far and near distances
-            float fovY = options.getFieldOfViewY();
-            float halfFOVY = fovY * 0.5f;
-            float near = calculateNearPlanePersp(_cameraPos, _tilt, halfFOVY);
-            float far = calculateFarPlanePersp(_cameraPos, _tilt, halfFOVY, options);
+            // Camera has changed, but the matrices have not been updated yet from the render thread. Calculate far and near distances
+            std::pair<float, float> nearFarPlanes = calculateNearFarPlanes(options);
             
             // Matrices
-            cglib::mat4x4<double> projectionMat = calculatePerspMat(halfFOVY, near, far, options);
+            cglib::mat4x4<double> projectionMat = calculatePerspMat(options.getFieldOfViewY() * 0.5f, nearFarPlanes.first, nearFarPlanes.second, options);
             cglib::mat4x4<double> modelviewMat = calculateLookatMat();
             return projectionMat * modelviewMat;
         }

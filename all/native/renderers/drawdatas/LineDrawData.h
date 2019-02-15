@@ -37,7 +37,7 @@ namespace carto {
     
         const std::vector<std::vector<cglib::vec3<double>*> >& getCoords() const;
     
-        const std::vector<std::vector<cglib::vec3<float> > >& getNormals() const;
+        const std::vector<std::vector<cglib::vec4<float> > >& getNormals() const;
     
         const std::vector<std::vector<cglib::vec2<float> > >& getTexCoords() const;
     
@@ -67,7 +67,7 @@ namespace carto {
     
         // Origin point and normal for each vertex
         std::vector<std::vector<cglib::vec3<double>*> > _coords;
-        std::vector<std::vector<cglib::vec3<float> > > _normals;
+        std::vector<std::vector<cglib::vec4<float> > > _normals;
         std::vector<std::vector<cglib::vec2<float> > > _texCoords;
     
         std::vector<std::vector<unsigned int> > _indices;

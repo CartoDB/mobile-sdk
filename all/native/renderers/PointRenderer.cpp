@@ -142,34 +142,37 @@ namespace carto {
         GLuint drawDataIndex = 0;
         for (std::size_t i = 0; i < drawDataBuffer.size(); i++) {
             const std::shared_ptr<PointDrawData>& drawData = drawDataBuffer[i];
+            
+            float coordScale = drawData->getSize() * viewState.getUnitToDPCoef() * 0.5f;
             cglib::vec3<float> translate = cglib::vec3<float>::convert(drawData->getPos() - cameraPos);
-    
+            cglib::vec3<float> dx = drawData->getXAxis() * coordScale;
+            cglib::vec3<float> dy = drawData->getYAxis() * coordScale;
+
             // Check for possible overflow in the buffers
             if ((drawDataIndex + 1) * 6 > GLContext::MAX_VERTEXBUFFER_SIZE) {
                 // If it doesn't fit, stop and draw the buffers
-                glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &colorBuf[0]);
-                glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, &coordBuf[0]);
-                glVertexAttribPointer(a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, &texCoordBuf[0]);
-                glDrawElements(GL_TRIANGLES, drawDataIndex * 6, GL_UNSIGNED_SHORT, &indexBuf[0]);
+                glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, colorBuf.data());
+                glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, coordBuf.data());
+                glVertexAttribPointer(a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, texCoordBuf.data());
+                glDrawElements(GL_TRIANGLES, drawDataIndex * 6, GL_UNSIGNED_SHORT, indexBuf.data());
                 // Start filling buffers from the beginning
                 drawDataIndex = 0;
             }
     
             // Calculate coordinates
-            float coordScale = drawData->getSize() * viewState.getUnitToDPCoef() * 0.5f;
             int coordIndex = drawDataIndex * 4 * 3;
-            coordBuf[coordIndex + 0] = translate(0) - coordScale;
-            coordBuf[coordIndex + 1] = translate(1) + coordScale;
-            coordBuf[coordIndex + 2] = translate(2);
-            coordBuf[coordIndex + 3] = translate(0) - coordScale;
-            coordBuf[coordIndex + 4] = translate(1) - coordScale;
-            coordBuf[coordIndex + 5] = translate(2);
-            coordBuf[coordIndex + 6] = translate(0) + coordScale;
-            coordBuf[coordIndex + 7] = translate(1) + coordScale;
-            coordBuf[coordIndex + 8] = translate(2);
-            coordBuf[coordIndex + 9] = translate(0) + coordScale;
-            coordBuf[coordIndex + 10] = translate(1) - coordScale;
-            coordBuf[coordIndex + 11] = translate(2);
+            coordBuf[coordIndex + 0] = translate(0) - dx(0) + dy(0);
+            coordBuf[coordIndex + 1] = translate(1) - dx(1) + dy(1);
+            coordBuf[coordIndex + 2] = translate(2) - dx(2) + dy(2);
+            coordBuf[coordIndex + 3] = translate(0) - dx(0) - dy(0);
+            coordBuf[coordIndex + 4] = translate(1) - dx(1) - dy(1);
+            coordBuf[coordIndex + 5] = translate(2) - dx(2) - dy(2);
+            coordBuf[coordIndex + 6] = translate(0) + dx(0) + dy(0);
+            coordBuf[coordIndex + 7] = translate(1) + dx(1) + dy(1);
+            coordBuf[coordIndex + 8] = translate(2) + dx(2) + dy(2);
+            coordBuf[coordIndex + 9] = translate(0) + dx(0) - dy(0);
+            coordBuf[coordIndex + 10] = translate(1) + dx(1) - dy(1);
+            coordBuf[coordIndex + 11] = translate(2) + dx(2) - dy(2);
     
             // Calculate texture coordinates
             int texCoordIndex = drawDataIndex * 4 * 2;
@@ -207,10 +210,10 @@ namespace carto {
         
         // Draw the final batch
         if (drawDataIndex > 0) {
-            glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &colorBuf[0]);
-            glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, &coordBuf[0]);
-            glVertexAttribPointer(a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, &texCoordBuf[0]);
-            glDrawElements(GL_TRIANGLES, drawDataIndex * 6, GL_UNSIGNED_SHORT, &indexBuf[0]);
+            glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, colorBuf.data());
+            glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, coordBuf.data());
+            glVertexAttribPointer(a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, texCoordBuf.data());
+            glDrawElements(GL_TRIANGLES, drawDataIndex * 6, GL_UNSIGNED_SHORT, indexBuf.data());
         }
     }
     
