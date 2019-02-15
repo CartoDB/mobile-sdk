@@ -371,7 +371,7 @@ namespace carto {
         // Recursively calculate visible tiles
         calculateVisibleTilesRecursive(cullState, MapTile(0, 0, 0, _frameNr), _dataSource->getDataExtent());
         if (auto options = _options.lock()) {
-            if (options->isSeamlessPanning()) {
+            if (options->getRenderProjectionMode() == RenderProjectionMode::RENDER_PROJECTION_MODE_PLANAR && options->isSeamlessPanning()) {
                 // Additional visibility testing has to be done if seamless panning is enabled
                 for (int i = 1; i <= 5; i++) {
                     calculateVisibleTilesRecursive(cullState, MapTile(-i, 0, 0, _frameNr), _dataSource->getDataExtent());
