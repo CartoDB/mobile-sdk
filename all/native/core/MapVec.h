@@ -178,21 +178,6 @@ namespace carto {
         MapVec getNormalized() const;
     
         /**
-         * Rotates this map vector around it's back end and around z axis.
-         * @param sin The sine value of the rotation angle.
-         * @param cos The cosine value of the rotation angle.
-         * @return This map vector after the rotation.
-         */
-        MapVec& rotate2D(double sin, double cos);
-        /**
-         * Creates a new map vector by rotating this map vector around it's back end and around z axis.
-         * @param sin The sine value of the rotation angle.
-         * @param cos The cosine value of the rotation angle.
-         * @return The new rotated map vector.
-         */
-        MapVec getRotated2D(double sin, double cos) const;
-    
-        /**
          * Calculates the 2D cross product between this and another map vector. Defined as x1 * y2 - y1 * x2.
          * @param v The other map vector.
          * @return The 2D cross product between this and another map vector.

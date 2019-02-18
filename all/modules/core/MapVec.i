@@ -31,7 +31,6 @@
 %ignore carto::MapVec::operator-=;
 %ignore carto::MapVec::operator*=;
 %ignore carto::MapVec::operator/=;
-%ignore carto::MapVec::rotate2D;
 %ignore carto::MapVec::normalize;
 %ignore carto::MapVec::lengthSqr;
 !custom_equals(carto::MapVec);
