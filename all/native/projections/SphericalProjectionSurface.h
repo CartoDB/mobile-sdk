@@ -39,7 +39,7 @@ namespace carto {
         virtual cglib::mat4x4<double> calculateTranslateMatrix(const cglib::vec3<double>& pos0, const cglib::vec3<double>& pos1, double t) const;
 
     private:
-        static bool SplitSegment(const MapPos& mapPos0, const MapPos& mapPos1, double& t);
+        static bool SplitSegment(const MapPos& mapPos0, const MapPos& mapPos1, MapPos& mapPosM);
         static MapPos SphericalToInternal(const cglib::vec3<double>& pos);
         static cglib::vec3<double> InternalToSpherical(const MapPos& mapPos);
         static cglib::mat3x3<double> LocalFrame(const cglib::vec3<double>& pos);

@@ -46,9 +46,8 @@ namespace carto {
     }
 
     void SphericalProjectionSurface::tesselateSegment(const MapPos& mapPos0, const MapPos& mapPos1, std::vector<MapPos>& mapPoses) const {
-        double t = 0.5;
-        if (SplitSegment(mapPos0, mapPos1, t)) {
-            MapPos mapPosM = mapPos0 + (mapPos1 - mapPos0) * t;
+        MapPos mapPosM;
+        if (SplitSegment(mapPos0, mapPos1, mapPosM)) {
             tesselateSegment(mapPos0, mapPosM, mapPoses);
             tesselateSegment(mapPosM, mapPos1, mapPoses);
             return;
@@ -63,23 +62,20 @@ namespace carto {
         const MapPos& mapPos1 = mapPoses.at(i1);
         const MapPos& mapPos2 = mapPoses.at(i2);
         
-        double t = 0.5;
-        if (SplitSegment(mapPos0, mapPos1, t)) {
-            MapPos mapPosM = mapPos0 + (mapPos1 - mapPos0) * t;
+        MapPos mapPosM;
+        if (SplitSegment(mapPos0, mapPos1, mapPosM)) {
             unsigned int iM = static_cast<int>(mapPoses.size());
             mapPoses.push_back(mapPosM);
             tesselateTriangle(i0, iM, i2, indices, mapPoses);
             tesselateTriangle(iM, i1, i2, indices, mapPoses);
             return;
-        } else if (SplitSegment(mapPos0, mapPos2, t)) {
-            MapPos mapPosM = mapPos0 + (mapPos2 - mapPos0) * t;
+        } else if (SplitSegment(mapPos0, mapPos2, mapPosM)) {
             unsigned int iM = static_cast<int>(mapPoses.size());
             mapPoses.push_back(mapPosM);
             tesselateTriangle(i0, i1, iM, indices, mapPoses);
             tesselateTriangle(iM, i1, i2, indices, mapPoses);
             return;
-        } else if (SplitSegment(mapPos1, mapPos2, t)) {
-            MapPos mapPosM = mapPos1 + (mapPos2 - mapPos1) * t;
+        } else if (SplitSegment(mapPos1, mapPos2, mapPosM)) {
             unsigned int iM = static_cast<int>(mapPoses.size());
             mapPoses.push_back(mapPosM);
             tesselateTriangle(i0, i1, iM, indices, mapPoses);
@@ -148,14 +144,18 @@ namespace carto {
         return cglib::mat4x4<double>::identity();
     }
 
-    bool SphericalProjectionSurface::SplitSegment(const MapPos& mapPos0, const MapPos& mapPos1, double& t) {
-        // TODO: use better metric once internal coordinate system is updated
-        double dist = (mapPos1 - mapPos0).length();
-        if (dist < SEGMENT_SPLIT_THRESHOLD) {
+    bool SphericalProjectionSurface::SplitSegment(const MapPos& mapPos0, const MapPos& mapPos1, MapPos& mapPosM) {
+        cglib::vec3<double> pos0 = InternalToSpherical(mapPos0);
+        cglib::vec3<double> pos1 = InternalToSpherical(mapPos1);
+        double dot = cglib::dot_product(pos0, pos1);
+        if (dot <= -1) {
+            return false; // exactly on the opposite side, no way to split
+        }
+        double angle = std::acos(std::min(1.0, std::max(-1.0, dot)));
+        if (angle * Const::EARTH_RADIUS < SEGMENT_SPLIT_THRESHOLD) {
             return false;
         }
-
-        t = 0.5;
+        mapPosM = SphericalToInternal(cglib::unit(pos0 + pos1));
         return true;
     }
 
@@ -203,6 +203,6 @@ namespace carto {
 
     const double SphericalProjectionSurface::PLANAR_APPROX_ANGLE = 1.0e-6;
 
-    const double SphericalProjectionSurface::SEGMENT_SPLIT_THRESHOLD = Const::WORLD_SIZE / 1000.0;
+    const double SphericalProjectionSurface::SEGMENT_SPLIT_THRESHOLD = Const::WORLD_SIZE / 500.0;
     
 }
