@@ -166,7 +166,7 @@ namespace carto {
         double length = cglib::length(pos);
         double x1 = pos(0) != 0 || pos(1) != 0 ? std::atan2(pos(1), pos(0)) : 0;
         double y1 = std::atanh(std::max(-1.0, std::min(1.0, pos(2) / length)));
-        double z1 = length - 1;
+        double z1 = length - 1.0;
         return MapPos(x1 * scale, y1 * scale, z1 * Const::EARTH_RADIUS);
     }
 
@@ -178,7 +178,7 @@ namespace carto {
         double ss = std::sqrt(std::max(0.0, 1.0 - rz * rz));
         double rx = ss * std::cos(x1);
         double ry = ss * std::sin(x1);
-        return cglib::vec3<double>(rx, ry, rz);
+        return cglib::vec3<double>(rx, ry, rz) * (1.0 + mapPos.getZ() / Const::EARTH_RADIUS);
     }
 
     cglib::mat3x3<double> SphericalProjectionSurface::LocalFrame(const cglib::vec3<double>& pos) {
