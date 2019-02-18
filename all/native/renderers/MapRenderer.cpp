@@ -227,6 +227,7 @@ namespace carto {
         return _kineticEventHandler;
     }
     
+    // TODO: add explicit 'ViewState' argument to all calculateCameraEvent methods
     void MapRenderer::calculateCameraEvent(CameraPanEvent& cameraEvent, float durationSeconds, bool updateKinetic) {
         if (durationSeconds > 0) {
             if (cameraEvent.isUseDelta()) {

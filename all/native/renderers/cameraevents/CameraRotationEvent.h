@@ -22,7 +22,6 @@ namespace carto {
     
         float getRotationDelta() const;
         void setRotationDelta(float rotationDelta);
-        void setRotationDelta(double sin, double cos);
         
         const MapPos& getTargetPos() const;
         void setTargetPos(const MapPos& targetPos);

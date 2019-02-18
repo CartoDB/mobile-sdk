@@ -9,7 +9,6 @@
 
 #include "core/MapPos.h"
 #include "core/ScreenPos.h"
-#include "core/MapVec.h"
 #include "ui/MapClickInfo.h"
 #include "renderers/MapRenderer.h"
 
@@ -84,7 +83,7 @@ namespace carto {
         
         void checkMapStable();
 
-        bool isValidTouchPosition(const MapPos& mapPos, const ViewState& viewState) const;
+        bool isValidTouchPosition(const cglib::vec3<double>& pos, const ViewState& viewState) const;
 
         float calculateRotatingScalingFactor(const ScreenPos& screenPos1, const ScreenPos& screenPos2) const;
 

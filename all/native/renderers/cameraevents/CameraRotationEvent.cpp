@@ -41,12 +41,6 @@ namespace carto {
         _useDelta = true;
     }
     
-    void CameraRotationEvent::setRotationDelta(double sin, double cos) {
-        _sin = sin;
-        _cos = cos;
-        _useDelta = true;
-    }
-    
     const MapPos& CameraRotationEvent::getTargetPos() const {
         return _targetPos;
     }
