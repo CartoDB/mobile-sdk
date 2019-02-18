@@ -23,6 +23,10 @@ namespace carto {
     double SphericalProjectionSurface::calculateMapDistance(const cglib::vec3<double> pos0, const cglib::vec3<double>& pos1) const {
         double dot = cglib::dot_product(cglib::unit(pos0), cglib::unit(pos1));
         double angle = std::acos(std::min(1.0, std::max(-1.0, dot)));
+        if (angle < PLANAR_APPROX_ANGLE) {
+            cglib::vec3<double> delta = cglib::unit(pos0) - cglib::unit(pos1);
+            return cglib::length(delta) * Const::EARTH_RADIUS;
+        }
         return angle * Const::EARTH_RADIUS;
     }
 
@@ -42,13 +46,47 @@ namespace carto {
     }
 
     void SphericalProjectionSurface::tesselateSegment(const MapPos& mapPos0, const MapPos& mapPos1, std::vector<MapPos>& mapPoses) const {
-        // TODO:
+        double t = 0.5;
+        if (SplitSegment(mapPos0, mapPos1, t)) {
+            MapPos mapPosM = mapPos0 + (mapPos1 - mapPos0) * t;
+            tesselateSegment(mapPos0, mapPosM, mapPoses);
+            tesselateSegment(mapPosM, mapPos1, mapPoses);
+            return;
+        }
+
         mapPoses.push_back(mapPos0);
         mapPoses.push_back(mapPos1);
     }
 
     void SphericalProjectionSurface::tesselateTriangle(unsigned int i0, unsigned int i1, unsigned int i2, std::vector<unsigned int>& indices, std::vector<MapPos>& mapPoses) const {
-        // TODO:
+        const MapPos& mapPos0 = mapPoses.at(i0);
+        const MapPos& mapPos1 = mapPoses.at(i1);
+        const MapPos& mapPos2 = mapPoses.at(i2);
+        
+        double t = 0.5;
+        if (SplitSegment(mapPos0, mapPos1, t)) {
+            MapPos mapPosM = mapPos0 + (mapPos1 - mapPos0) * t;
+            unsigned int iM = static_cast<int>(mapPoses.size());
+            mapPoses.push_back(mapPosM);
+            tesselateTriangle(i0, iM, i2, indices, mapPoses);
+            tesselateTriangle(iM, i1, i2, indices, mapPoses);
+            return;
+        } else if (SplitSegment(mapPos0, mapPos2, t)) {
+            MapPos mapPosM = mapPos0 + (mapPos2 - mapPos0) * t;
+            unsigned int iM = static_cast<int>(mapPoses.size());
+            mapPoses.push_back(mapPosM);
+            tesselateTriangle(i0, i1, iM, indices, mapPoses);
+            tesselateTriangle(iM, i1, i2, indices, mapPoses);
+            return;
+        } else if (SplitSegment(mapPos1, mapPos2, t)) {
+            MapPos mapPosM = mapPos1 + (mapPos2 - mapPos1) * t;
+            unsigned int iM = static_cast<int>(mapPoses.size());
+            mapPoses.push_back(mapPosM);
+            tesselateTriangle(i0, i1, iM, indices, mapPoses);
+            tesselateTriangle(iM, i2, i0, indices, mapPoses);
+            return;
+        }
+
         indices.push_back(i0);
         indices.push_back(i1);
         indices.push_back(i2);
@@ -102,12 +140,23 @@ namespace carto {
         double angle = std::acos(std::min(1.0, std::max(-1.0, dot)));
         cglib::vec3<double> axis = cglib::vector_product(cglib::unit(pos0), cglib::unit(pos1));
         if (cglib::length(axis) > 0) {
-            if (angle < 1.0e-6) { // less than 10m
+            if (angle < PLANAR_APPROX_ANGLE) { // less than 10m
                 return cglib::translate4_matrix((cglib::unit(pos1) - cglib::unit(pos0)) * (SPHERE_SIZE * t));
             }
             return cglib::rotate4_matrix(axis, angle * t);
         }
         return cglib::mat4x4<double>::identity();
+    }
+
+    bool SphericalProjectionSurface::SplitSegment(const MapPos& mapPos0, const MapPos& mapPos1, double& t) {
+        // TODO: use better metric once internal coordinate system is updated
+        double dist = (mapPos1 - mapPos0).length();
+        if (dist < SEGMENT_SPLIT_THRESHOLD) {
+            return false;
+        }
+
+        t = 0.5;
+        return true;
     }
 
     MapPos SphericalProjectionSurface::SphericalToInternal(const cglib::vec3<double>& pos) {
@@ -151,5 +200,9 @@ namespace carto {
     }
 
     const double SphericalProjectionSurface::SPHERE_SIZE = Const::WORLD_SIZE / Const::PI;
+
+    const double SphericalProjectionSurface::PLANAR_APPROX_ANGLE = 1.0e-6;
+
+    const double SphericalProjectionSurface::SEGMENT_SPLIT_THRESHOLD = Const::WORLD_SIZE / 1000.0;
     
 }

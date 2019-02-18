@@ -248,8 +248,8 @@ namespace carto {
             const Color& color = drawData->getColor();
             const Color& sideColor = drawData->getSideColor();
             const std::vector<cglib::vec3<float> >& normals = drawData->getNormals();
-			const std::vector<unsigned char>& attribs = drawData->getAttribs();
-			std::vector<cglib::vec3<double> >::const_iterator cit = coords.begin();
+            const std::vector<unsigned char>& attribs = drawData->getAttribs();
+            std::vector<cglib::vec3<double> >::const_iterator cit = coords.begin();
             std::vector<cglib::vec3<float> >::const_iterator nit = normals.begin();
             std::vector<unsigned char>::const_iterator ait = attribs.begin();
             for (; cit != coords.end() && nit != normals.end(); ++cit, ++nit, ait++) {
