@@ -10,6 +10,7 @@
 #include "projections/EPSG3857.h"
 #include "projections/ProjectionSurface.h"
 #include "projections/PlanarProjectionSurface.h"
+#include "projections/SphericalProjectionSurface.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
@@ -53,7 +54,6 @@ namespace carto {
         _panBounds(EPSG3857().getBounds()),
         _focusPointOffset(0, 0),
         _baseProjection(std::make_shared<EPSG3857>()),
-        _renderProjection(std::make_shared<EPSG3857>()),
         _projectionSurface(std::make_shared<PlanarProjectionSurface>()),
         _envelopeThreadPool(envelopeThreadPool),
         _tileThreadPool(tileThreadPool),
@@ -144,8 +144,15 @@ namespace carto {
                 return;
             }
             _renderProjectionMode = renderProjectionMode;
-            // TODO: set _projectionSurface
-            _projectionSurface = std::make_shared<PlanarProjectionSurface>();
+            switch (renderProjectionMode) {
+            case RenderProjectionMode::RENDER_PROJECTION_MODE_SPHERICAL:
+                _projectionSurface = std::make_shared<SphericalProjectionSurface>();
+                break;
+            case RenderProjectionMode::RENDER_PROJECTION_MODE_PLANAR:
+            default:
+                _projectionSurface = std::make_shared<PlanarProjectionSurface>();
+                break;
+            }
         }
         notifyOptionChanged("RenderProjectionMode");
     }
@@ -666,28 +673,6 @@ namespace carto {
         notifyOptionChanged("BaseProjection");
     }
     
-    std::shared_ptr<Projection> Options::getRenderProjection() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _renderProjection;
-    }
-    
-    void Options::setRenderProjection(const std::shared_ptr<Projection>& renderProjection) {
-        if (!renderProjection) {
-            throw NullArgumentException("Null renderProjection");
-        }
-
-        {
-            std::lock_guard<std::mutex> lock(_mutex);
-            if (_renderProjection == renderProjection) {
-                return;
-            }
-            _renderProjection = renderProjection;
-            // TODO: set _projectionSurface
-            _projectionSurface = std::make_shared<PlanarProjectionSurface>();
-        }
-        notifyOptionChanged("RenderProjection");
-    }
-
     std::shared_ptr<ProjectionSurface> Options::getProjectionSurface() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _projectionSurface;

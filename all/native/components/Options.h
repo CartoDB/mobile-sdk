@@ -577,20 +577,6 @@ namespace carto {
         void setBaseProjection(const std::shared_ptr<Projection>& baseProjection);
         
         /**
-         * Returns the render projection.
-         * @return The render projection.
-         */
-        std::shared_ptr<Projection> getRenderProjection() const;
-        /**
-         * Sets the render projection. If render projection mode is set to planar, then map is displayed using this projection.
-         * This setting has no effect if spherical render projection mode is used.
-         * The default is EPSG3857.
-         * @param renderProjection The new render projection.
-         */
-        // TODO: remove. Support only EPSG3857/globe mode
-        void setRenderProjection(const std::shared_ptr<Projection>& renderProjection);
-
-        /**
          * Returns the projection surface.
          * @return The projection surface.
          */
