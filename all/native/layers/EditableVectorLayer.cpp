@@ -760,6 +760,13 @@ namespace carto {
     }
 
     void EditableVectorLayer::createGeometryOverlayPoints(const std::shared_ptr<Geometry>& geometry, int& index, std::vector<std::shared_ptr<Point> >& overlayPoints) const {
+        std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock();
+        if (!mapRenderer) {
+            return;
+        }
+        std::shared_ptr<Projection> projection = _dataSource->getProjection();
+        std::shared_ptr<ProjectionSurface> projectionSurface = mapRenderer->getProjectionSurface();
+
         if (auto pointGeometry = std::dynamic_pointer_cast<PointGeometry>(geometry)) {
             MapPos mapPos = pointGeometry->getPos();
             overlayPoints.push_back(createOverlayPoint(mapPos, false, index++));
@@ -769,7 +776,11 @@ namespace carto {
                 MapPos mapPos = mapPoses[i];
                 if (i > 0) {
                     MapPos prevMapPos = mapPoses[i - 1];
-                    overlayPoints.push_back(createOverlayPoint(prevMapPos + (mapPos - prevMapPos) * 0.5, true, index++));
+                    cglib::vec3<double> pos0 = projectionSurface->calculatePosition(projection->toInternal(prevMapPos));
+                    cglib::vec3<double> pos1 = projectionSurface->calculatePosition(projection->toInternal(mapPos));
+                    cglib::vec3<double> posM = cglib::transform_point(pos0, projectionSurface->calculateTranslateMatrix(pos0, pos1, 0.5f));
+                    MapPos mapPosM = projection->fromInternal(projectionSurface->calculateMapPos(posM));
+                    overlayPoints.push_back(createOverlayPoint(mapPosM, true, index++));
                 }
                 overlayPoints.push_back(createOverlayPoint(mapPos, false, index++));
             }
@@ -780,7 +791,11 @@ namespace carto {
                     MapPos mapPos = ring[i];
                     overlayPoints.push_back(createOverlayPoint(mapPos, false, index++));
                     MapPos nextMapPos = ring[i + 1 < ring.size() ? i + 1 : 0];
-                    overlayPoints.push_back(createOverlayPoint(mapPos + (nextMapPos - mapPos) * 0.5, true, index++));
+                    cglib::vec3<double> pos0 = projectionSurface->calculatePosition(projection->toInternal(mapPos));
+                    cglib::vec3<double> pos1 = projectionSurface->calculatePosition(projection->toInternal(nextMapPos));
+                    cglib::vec3<double> posM = cglib::transform_point(pos0, projectionSurface->calculateTranslateMatrix(pos0, pos1, 0.5f));
+                    MapPos mapPosM = projection->fromInternal(projectionSurface->calculateMapPos(posM));
+                    overlayPoints.push_back(createOverlayPoint(mapPosM, true, index++));
                 }
             }
         } else if (auto multiGeometry = std::dynamic_pointer_cast<MultiGeometry>(geometry)) {
