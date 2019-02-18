@@ -25,10 +25,12 @@ namespace carto {
         _tempElements(),
         _drawDataBuffer(),
         _colorBuf(),
+        _attribBuf(),
         _coordBuf(),
         _normalBuf(),
         _shader(),
         _a_color(0),
+        _a_attrib(0),
         _a_coord(0),
         _a_normal(0),
         _a_texCoord(0),
@@ -65,6 +67,7 @@ namespace carto {
         // Get shader variables locations
         glUseProgram(_shader->getProgId());
         _a_color = _shader->getAttribLoc("a_color");
+        _a_attrib = _shader->getAttribLoc("a_attrib");
         _a_coord = _shader->getAttribLoc("a_coord");
         _a_normal = _shader->getAttribLoc("a_normal");
         _a_texCoord = _shader->getAttribLoc("a_texCoord");
@@ -99,6 +102,7 @@ namespace carto {
         glUseProgram(_shader->getProgId());
         // Colors, coords, normals, texCoords
         glEnableVertexAttribArray(_a_color);
+        glEnableVertexAttribArray(_a_attrib);
         glEnableVertexAttribArray(_a_coord);
         glEnableVertexAttribArray(_a_normal);
         glDisableVertexAttribArray(_a_texCoord);
@@ -133,6 +137,7 @@ namespace carto {
     
         // Disable bound arrays
         glDisableVertexAttribArray(_a_color);
+        glDisableVertexAttribArray(_a_attrib);
         glDisableVertexAttribArray(_a_coord);
         glDisableVertexAttribArray(_a_normal);
     
@@ -191,9 +196,11 @@ namespace carto {
     }
     
     void Polygon3DRenderer::BuildAndDrawBuffers(GLuint a_color,
+                                                GLuint a_attrib,
                                                 GLuint a_coord,
                                                 GLuint a_normal,
                                                 std::vector<unsigned char>& colorBuf,
+                                                std::vector<unsigned char>& attribBuf,
                                                 std::vector<float>& coordBuf,
                                                 std::vector<float>& normalBuf,
                                                 std::vector<std::shared_ptr<Polygon3DDrawData> >& drawDataBuffer,
@@ -208,14 +215,13 @@ namespace carto {
         // Resize the buffers, if necessary
         if (colorBuf.size() < totalCoordCount * 4) {
             colorBuf.resize(std::min(totalCoordCount * 4, GLContext::MAX_VERTEXBUFFER_SIZE * 4));
+            attribBuf.resize(std::min(totalCoordCount * 1, GLContext::MAX_VERTEXBUFFER_SIZE * 1));
             coordBuf.resize(std::min(totalCoordCount * 3, GLContext::MAX_VERTEXBUFFER_SIZE * 3));
             normalBuf.resize(std::min(totalCoordCount * 3, GLContext::MAX_VERTEXBUFFER_SIZE * 3));
         }
     
         // View state specific data
         cglib::vec3<double> cameraPos = viewState.getCameraPos();
-        std::size_t colorIndex = 0;
-        std::size_t normalIndex = 0;
         GLuint coordIndex = 0;
         for (std::size_t i = 0; i < drawDataBuffer.size(); i++) {
             const std::shared_ptr<Polygon3DDrawData>& drawData = drawDataBuffer[i];
@@ -227,59 +233,61 @@ namespace carto {
             }
     
             // Check for possible overflow in the buffers
-            if (coordIndex / 3 + coords.size() > GLContext::MAX_VERTEXBUFFER_SIZE) {
+            if (coordIndex + coords.size() > GLContext::MAX_VERTEXBUFFER_SIZE) {
                 // If it doesn't fit, stop and draw the buffers
                 glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, colorBuf.data());
+                glVertexAttribPointer(a_attrib, 1, GL_UNSIGNED_BYTE, GL_FALSE, 0, attribBuf.data());
                 glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, coordBuf.data());
                 glVertexAttribPointer(a_normal, 3, GL_FLOAT, GL_FALSE, 0, normalBuf.data());
-                glDrawArrays(GL_TRIANGLES, 0, coordIndex / 3);
+                glDrawArrays(GL_TRIANGLES, 0, coordIndex);
                 // Start filling buffers from the beginning
-                colorIndex = 0;
                 coordIndex = 0;
-                normalIndex = 0;
             }
     
             // Coords and colors
             const Color& color = drawData->getColor();
             const Color& sideColor = drawData->getSideColor();
             const std::vector<cglib::vec3<float> >& normals = drawData->getNormals();
-            std::vector<cglib::vec3<double> >::const_iterator cit;
-            std::vector<cglib::vec3<float> >::const_iterator nit;
-            for (cit = coords.begin(), nit = normals.begin(); cit != coords.end() && nit != normals.end(); ++cit, ++nit) {
+			const std::vector<unsigned char>& attribs = drawData->getAttribs();
+			std::vector<cglib::vec3<double> >::const_iterator cit = coords.begin();
+            std::vector<cglib::vec3<float> >::const_iterator nit = normals.begin();
+            std::vector<unsigned char>::const_iterator ait = attribs.begin();
+            for (; cit != coords.end() && nit != normals.end(); ++cit, ++nit, ait++) {
+                if (*ait) {
+                    colorBuf[coordIndex * 4 + 0] = color.getR();
+                    colorBuf[coordIndex * 4 + 1] = color.getG();
+                    colorBuf[coordIndex * 4 + 2] = color.getB();
+                    colorBuf[coordIndex * 4 + 3] = color.getA();
+                    attribBuf[coordIndex] = 1;
+                } else {
+                    colorBuf[coordIndex * 4 + 0] = sideColor.getR();
+                    colorBuf[coordIndex * 4 + 1] = sideColor.getG();
+                    colorBuf[coordIndex * 4 + 2] = sideColor.getB();
+                    colorBuf[coordIndex * 4 + 3] = sideColor.getA();
+                    attribBuf[coordIndex] = 0;
+                }
+
                 const cglib::vec3<double>& coord = *cit;
-                coordBuf[coordIndex + 0] = static_cast<float>(coord(0) - cameraPos(0));
-                coordBuf[coordIndex + 1] = static_cast<float>(coord(1) - cameraPos(1));
-                coordBuf[coordIndex + 2] = static_cast<float>(coord(2) - cameraPos(2));
-                coordIndex += 3;
+                coordBuf[coordIndex * 3 + 0] = static_cast<float>(coord(0) - cameraPos(0));
+                coordBuf[coordIndex * 3 + 1] = static_cast<float>(coord(1) - cameraPos(1));
+                coordBuf[coordIndex * 3 + 2] = static_cast<float>(coord(2) - cameraPos(2));
                 
                 const cglib::vec3<float>& normal = *nit;
-                normalBuf[normalIndex + 0] = normal(0);
-                normalBuf[normalIndex + 1] = normal(1);
-                normalBuf[normalIndex + 2] = normal(2);
-                normalIndex += 3;
+                normalBuf[coordIndex * 3 + 0] = normal(0);
+                normalBuf[coordIndex * 3 + 1] = normal(1);
+                normalBuf[coordIndex * 3 + 2] = normal(2);
 
-                // TODO: wrong, does not work in spherical mode. Use additional 'attribute' channel
-                if (normal(2) == 1) {
-                    colorBuf[colorIndex + 0] = color.getR();
-                    colorBuf[colorIndex + 1] = color.getG();
-                    colorBuf[colorIndex + 2] = color.getB();
-                    colorBuf[colorIndex + 3] = color.getA();
-                } else {
-                    colorBuf[colorIndex + 0] = sideColor.getR();
-                    colorBuf[colorIndex + 1] = sideColor.getG();
-                    colorBuf[colorIndex + 2] = sideColor.getB();
-                    colorBuf[colorIndex + 3] = sideColor.getA();
-                }
-                colorIndex += 4;
+                coordIndex++;
             }
         }
     
         // Draw the buffers
         if (coordIndex > 0) {
             glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, colorBuf.data());
+            glVertexAttribPointer(a_attrib, 1, GL_UNSIGNED_BYTE, GL_FALSE, 0, attribBuf.data());
             glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, coordBuf.data());
             glVertexAttribPointer(a_normal, 3, GL_FLOAT, GL_FALSE, 0, normalBuf.data());
-            glDrawArrays(GL_TRIANGLES, 0, coordIndex / 3);
+            glDrawArrays(GL_TRIANGLES, 0, coordIndex);
         }
     }
         
@@ -294,7 +302,7 @@ namespace carto {
     
     void Polygon3DRenderer::drawBatch(const ViewState& viewState) {
         // Draw the draw datas, multiple passes may be necessary
-        BuildAndDrawBuffers(_a_color, _a_coord, _a_normal, _colorBuf, _coordBuf, _normalBuf, _drawDataBuffer, viewState);
+        BuildAndDrawBuffers(_a_color, _a_attrib, _a_coord, _a_normal, _colorBuf, _attribBuf, _coordBuf, _normalBuf, _drawDataBuffer, viewState);
     }
         
 }

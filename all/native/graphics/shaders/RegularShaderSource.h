@@ -13,7 +13,7 @@ static std::string regular_vert_glsl =
     "varying vec4 v_color;"
     "uniform mat4 u_mvpMat;"
     "void main() {"
-    "   v_texCoord = a_texCoord;"
+    "    v_texCoord = a_texCoord;"
     "    v_color = a_color;"
     "    gl_Position = u_mvpMat * a_coord;"
     "}";

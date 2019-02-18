@@ -8,6 +8,7 @@ static std::string diffuse_lighting_vert_glsl =
 
     "attribute vec4 a_color;"
     "attribute vec4 a_coord;"
+    "attribute float a_attrib;"
     "attribute vec3 a_normal;"
     "attribute vec2 a_texCoord;"
     "uniform vec4 u_ambientColor;"
@@ -17,14 +18,10 @@ static std::string diffuse_lighting_vert_glsl =
     "varying vec4 v_color;"
     "varying vec2 v_texCoord;"
     "void main() {"
-    // TODO: fix this
-    "   if (a_normal.z != 1.0) {"
-    "      float dotProduct = max(0.0, dot(a_normal, u_lightDir));"
-    "       v_color = vec4(u_ambientColor.rgb + u_lightColor.rgb * dotProduct, 1.0) * a_color;"
-    "   } else {"
-    "      v_color = a_color;"
-    "   }"
-    "   v_texCoord = a_texCoord;"
+    "    float dotProduct = max(0.0, dot(a_normal, u_lightDir));"
+    "    vec3 lighting = vec3(a_attrib, a_attrib, a_attrib) + (u_ambientColor.rgb + u_lightColor.rgb * dotProduct) * (1.0 - a_attrib);"
+    "    v_color = a_color * vec4(lighting, 1.0);"
+    "    v_texCoord = a_texCoord;"
     "    gl_Position = u_mvpMat * a_coord;"
     "}";
 

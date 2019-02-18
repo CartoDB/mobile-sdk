@@ -23,7 +23,8 @@ namespace carto {
         _sideColor(GetPremultipliedColor(style.getSideColor())),
         _boundingBox(cglib::bbox3<double>::smallest()),
         _coords(),
-        _normals()
+        _normals(),
+        _attribs()
     {
         const std::vector<MapPos>& poses = polygon3D.getGeometry()->getPoses();
         const std::vector<std::vector<MapPos> >& holes = polygon3D.getGeometry()->getHoles();
@@ -126,6 +127,7 @@ namespace carto {
             std::size_t index = roofIndices[i];
             _coords.push_back(projectionSurface.calculatePosition(roofInternalPoses[index]));
             _normals.push_back(cglib::vec3<float>::convert(projectionSurface.calculateNormal(roofInternalPoses[index])));
+            _attribs.push_back(1);
         }
         
         // Calculate sides
@@ -159,12 +161,10 @@ namespace carto {
                 cglib::vec3<float> sideNormal = cglib::unit(cglib::vec3<float>::convert(cglib::vector_product(sideVec, normal)));
 
                 // Add normal for each vertex
-                _normals.push_back(sideNormal);
-                _normals.push_back(sideNormal);
-                _normals.push_back(sideNormal);
-                _normals.push_back(sideNormal);
-                _normals.push_back(sideNormal);
-                _normals.push_back(sideNormal);
+                for (int k = 0; k < 6; k++) {
+                    _normals.push_back(sideNormal);
+                    _attribs.push_back(0);
+                }
             }
         }
 
@@ -194,6 +194,10 @@ namespace carto {
     
     const std::vector<cglib::vec3<float> >& Polygon3DDrawData::getNormals() const {
         return _normals;
+    }
+    
+    const std::vector<unsigned char>& Polygon3DDrawData::getAttribs() const {
+        return _attribs;
     }
     
     void Polygon3DDrawData::offsetHorizontally(double offset) {

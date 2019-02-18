@@ -52,9 +52,11 @@ namespace carto {
     
     private:
         static void BuildAndDrawBuffers(GLuint a_color,
+                                        GLuint a_attrib,
                                         GLuint a_coord,
                                         GLuint a_normal,
                                         std::vector<unsigned char>& colorBuf,
+                                        std::vector<unsigned char>& attribBuf,
                                         std::vector<float>& coordBuf,
                                         std::vector<float>& normalBuf,
                                         std::vector<std::shared_ptr<Polygon3DDrawData> >& drawDataBuffer,
@@ -74,11 +76,13 @@ namespace carto {
         std::vector<std::shared_ptr<Polygon3DDrawData> > _drawDataBuffer;
     
         std::vector<unsigned char> _colorBuf;
+        std::vector<unsigned char> _attribBuf;
         std::vector<float> _coordBuf;
         std::vector<float> _normalBuf;
     
         std::shared_ptr<Shader> _shader;
         GLuint _a_color;
+        GLuint _a_attrib;
         GLuint _a_coord;
         GLuint _a_normal;
         GLuint _a_texCoord;

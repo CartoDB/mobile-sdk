@@ -33,6 +33,8 @@ namespace carto {
         const std::vector<cglib::vec3<double> >& getCoords() const;
     
         const std::vector<cglib::vec3<float> >& getNormals() const;
+
+        const std::vector<unsigned char>& getAttribs() const;
     
         virtual void offsetHorizontally(double offset);
     
@@ -44,6 +46,8 @@ namespace carto {
         std::vector<cglib::vec3<double> > _coords;
 
         std::vector<cglib::vec3<float> > _normals;
+
+        std::vector<unsigned char> _attribs;
     };
     
 }
