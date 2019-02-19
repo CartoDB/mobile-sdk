@@ -255,7 +255,7 @@ namespace carto {
             }
 
             // Rebuild clusters, by doing bottom-up merging into a single cluster
-            rootClusterIdx = mergeClusters(clusterIdxs.begin(), clusterIdxs.end(), *clusters, 1).front();
+            rootClusterIdx = mergeClusters(clusterIdxs.begin(), clusterIdxs.end(), *clusters, *projectionSurface, 1).front();
         }
 
         // Synchronize cluster data
@@ -289,13 +289,15 @@ namespace carto {
         return clusterIdx;
     }
 
-    int ClusteredVectorLayer::createMergedCluster(int clusterIdx1, int clusterIdx2, std::vector<Cluster>& clusters) const {
-        const MapPos& clusterPos1 = clusters[clusterIdx1].staticPos;
-        const MapPos& clusterPos2 = clusters[clusterIdx2].staticPos;
+    int ClusteredVectorLayer::createMergedCluster(int clusterIdx1, int clusterIdx2, std::vector<Cluster>& clusters, const ProjectionSurface& projectionSurface) const {
         int n1 = clusters[clusterIdx1].elementCount;
         int n2 = clusters[clusterIdx2].elementCount;
+        const MapPos& clusterPos1 = clusters[clusterIdx1].staticPos;
+        const MapPos& clusterPos2 = clusters[clusterIdx2].staticPos;
+        MapPos internalPos1 = _dataSource->getProjection()->toInternal(clusterPos1);
+        MapPos internalPos2 = _dataSource->getProjection()->toInternal(clusterPos2);
+        double dist = projectionSurface.calculateMapDistance(projectionSurface.calculatePosition(internalPos1), projectionSurface.calculatePosition(internalPos2)) * Const::WORLD_SIZE / Const::EARTH_CIRCUMFERENCE;
         MapPos mapPos((clusterPos1.getX() * n1 + clusterPos2.getX() * n2) / (n1 + n2), (clusterPos1.getY() * n1 + clusterPos2.getY() * n2) / (n1 + n2));
-        double dist = MapVec(_dataSource->getProjection()->toInternal(clusterPos1) - _dataSource->getProjection()->toInternal(clusterPos2)).length();
 
         int clusterIdx = static_cast<int>(clusters.size());
         clusters.emplace_back();
@@ -314,7 +316,7 @@ namespace carto {
         return clusterIdx;
     }
 
-    std::vector<int> ClusteredVectorLayer::mergeClusters(std::vector<int>::iterator clustersBegin, std::vector<int>::iterator clustersEnd, std::vector<Cluster>& clusters, std::size_t maxClusters) const {
+    std::vector<int> ClusteredVectorLayer::mergeClusters(std::vector<int>::iterator clustersBegin, std::vector<int>::iterator clustersEnd, std::vector<Cluster>& clusters, const ProjectionSurface& projectionSurface, std::size_t maxClusters) const {
         struct ClusterInfo {
             int clusterIdx;
             double closestClusterDistance;
@@ -356,8 +358,8 @@ namespace carto {
                 }
             }
             if (!childClusterIdxs1.empty() && !childClusterIdxs2.empty()) {
-                childClusterIdxs1 = mergeClusters(childClusterIdxs1.begin(), childClusterIdxs1.end(), clusters, THRESHOLD);
-                childClusterIdxs2 = mergeClusters(childClusterIdxs2.begin(), childClusterIdxs2.end(), clusters, THRESHOLD);
+                childClusterIdxs1 = mergeClusters(childClusterIdxs1.begin(), childClusterIdxs1.end(), clusters, projectionSurface, THRESHOLD);
+                childClusterIdxs2 = mergeClusters(childClusterIdxs2.begin(), childClusterIdxs2.end(), clusters, projectionSurface, THRESHOLD);
                 std::sort(childClusterIdxs1.begin(), childClusterIdxs1.end(), clusterComparator);
                 std::sort(childClusterIdxs2.begin(), childClusterIdxs2.end(), clusterComparator);
                 for (int clusterIdx : childClusterIdxs1) {
@@ -412,7 +414,7 @@ namespace carto {
 
             // Merge cluster pair
             ClusterInfo mergedClusterInfo;
-            mergedClusterInfo.clusterIdx = createMergedCluster(it1->clusterIdx, it2->clusterIdx, clusters);
+            mergedClusterInfo.clusterIdx = createMergedCluster(it1->clusterIdx, it2->clusterIdx, clusters, projectionSurface);
             mergedClusterInfo.closestClusterDistance = std::numeric_limits<double>::infinity();
             mergedClusterInfo.closestClusterInfoIt = it2; // to force recalculation
 
@@ -477,16 +479,16 @@ namespace carto {
         cglib::vec3<double> pos0 = viewState.screenToWorldPlane(cglib::vec2<float>(viewState.getHalfWidth() + 0, viewState.getHalfHeight() + 0));
         cglib::vec3<double> pos1 = viewState.screenToWorldPlane(cglib::vec2<float>(viewState.getHalfWidth() + 1, viewState.getHalfHeight() + 0));
         cglib::vec3<double> pos2 = viewState.screenToWorldPlane(cglib::vec2<float>(viewState.getHalfWidth() + 0, viewState.getHalfHeight() + 1));
-        MapPos mapPos0 = _projectionSurface->calculateMapPos(pos0);
-        MapPos mapPos1 = _projectionSurface->calculateMapPos(pos1);
-        MapPos mapPos2 = _projectionSurface->calculateMapPos(pos2);
+        double dist1 = _projectionSurface->calculateMapDistance(pos1, pos0) * Const::WORLD_SIZE / Const::EARTH_CIRCUMFERENCE;
+        double dist2 = _projectionSurface->calculateMapDistance(pos2, pos0) * Const::WORLD_SIZE / Const::EARTH_CIRCUMFERENCE;
 
         // Initialize render state, use previously renderered cluster list
         RenderState renderState;
-        renderState.pixelMeasure = std::min((mapPos1 - mapPos0).length(), (mapPos2 - mapPos0).length()) * _dpiScale;
+        renderState.pixelMeasure = std::min(dist1, dist2) * _dpiScale;
         renderState.totalExpanded = 0;
         renderState.expandedClusterIdx = -1;
         renderState.clusters = _clusters;
+        renderState.projectionSurface = _projectionSurface;
         renderState.visibleIdxSet.insert(_renderClusterIdxs.begin(), _renderClusterIdxs.end());
         for (int clusterIdx : _renderClusterIdxs) {
             const Cluster& cluster = (*renderState.clusters)[clusterIdx];
@@ -645,9 +647,10 @@ namespace carto {
 
         bool animated = _animatedClusters;
         if (animated) {
-            // TODO: not uniform across screen
-            MapVec deltaPos(_dataSource->getProjection()->toInternal(targetPos) - _dataSource->getProjection()->toInternal(cluster.transitionPos));
-            if (deltaPos.length() <= renderState.pixelMeasure * 0.25) {
+            cglib::vec3<double> pos1 = renderState.projectionSurface->calculatePosition(_dataSource->getProjection()->toInternal(cluster.transitionPos));
+            cglib::vec3<double> pos2 = renderState.projectionSurface->calculatePosition(_dataSource->getProjection()->toInternal(targetPos));
+            double dist = renderState.projectionSurface->calculateMapDistance(pos1, pos2) * Const::WORLD_SIZE / Const::EARTH_CIRCUMFERENCE;
+            if (dist <= renderState.pixelMeasure * 0.25) {
                 animated = false;
             }
         }
@@ -667,6 +670,7 @@ namespace carto {
         MapPos mapPos = _dataSource->getProjection()->toInternal(expandedCluster.transitionPos);
         double angle = Const::PI * 2 * renderState.totalExpanded++ / expandedCluster.elementCount;
         double dist = expandedCluster.expandPx * renderState.pixelMeasure;
+        // TODO: not uniform across screen
         return _dataSource->getProjection()->fromInternal(mapPos + MapVec(std::cos(angle), std::sin(angle)) * dist);
     }
 

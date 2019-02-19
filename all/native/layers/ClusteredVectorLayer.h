@@ -113,6 +113,7 @@ namespace carto {
             int totalExpanded;
             int expandedClusterIdx;
             std::shared_ptr<std::vector<Cluster> > clusters;
+            std::shared_ptr<ProjectionSurface> projectionSurface;
             std::unordered_set<int> visibleIdxSet;
             std::unordered_map<int, std::vector<int> > visibleChildIdxMap;
         };
@@ -150,8 +151,8 @@ namespace carto {
 
         void rebuildClusters(const std::vector<std::shared_ptr<VectorElement> >& vectorElements);
         int createSingletonCluster(const std::shared_ptr<VectorElement>& element, std::vector<Cluster>& clusters, const ProjectionSurface& projectionSurface) const;
-        int createMergedCluster(int clusterIdx1, int clusterIdx2, std::vector<Cluster>& clusters) const;
-        std::vector<int> mergeClusters(std::vector<int>::iterator clustersBegin, std::vector<int>::iterator clustersEnd, std::vector<Cluster>& clusters, std::size_t maxClusters) const;
+        int createMergedCluster(int clusterIdx1, int clusterIdx2, std::vector<Cluster>& clusters, const ProjectionSurface& projectionSurface) const;
+        std::vector<int> mergeClusters(std::vector<int>::iterator clustersBegin, std::vector<int>::iterator clustersEnd, std::vector<Cluster>& clusters, const ProjectionSurface& projectionSurface, std::size_t maxClusters) const;
 
         bool renderClusters(const ViewState& viewState, float deltaSeconds);
         bool renderCluster(int clusterIdx, const ViewState& viewState, RenderState& renderState, float deltaSeconds);
