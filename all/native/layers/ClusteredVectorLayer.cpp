@@ -39,6 +39,7 @@ namespace carto {
         _animatedClusters(true),
         _dpiScale(1),
         _clusters(),
+        _projectionSurface(),
         _singletonClusterCount(0),
         _rootClusterIdx(-1),
         _renderClusterIdxs(),
@@ -205,6 +206,14 @@ namespace carto {
     }
 
     void ClusteredVectorLayer::rebuildClusters(const std::vector<std::shared_ptr<VectorElement> >& vectorElements) {
+        std::shared_ptr<ProjectionSurface> projectionSurface;
+        if (auto mapRenderer = _mapRenderer.lock()) {
+            projectionSurface = mapRenderer->getProjectionSurface();
+        }
+        if (!projectionSurface) {
+            return;
+        }
+
         auto clusters = std::make_shared<std::vector<Cluster> >();
         clusters->reserve(vectorElements.size() * 2);
         int singletonClusterCount = 0;
@@ -214,7 +223,7 @@ namespace carto {
             std::vector<int> clusterIdxs;
             clusterIdxs.reserve(vectorElements.size());
             for (const std::shared_ptr<VectorElement>& element : vectorElements) {
-                int clusterIdx = createSingletonCluster(element, *clusters);
+                int clusterIdx = createSingletonCluster(element, *clusters, *projectionSurface);
                 if (clusterIdx != -1) {
                     clusterIdxs.push_back(clusterIdx);
                 }
@@ -252,24 +261,26 @@ namespace carto {
         // Synchronize cluster data
         std::lock_guard<std::mutex> lock(_clusterMutex);
         std::swap(clusters, _clusters);
+        std::swap(projectionSurface, _projectionSurface);
         std::swap(singletonClusterCount, _singletonClusterCount);
         std::swap(rootClusterIdx, _rootClusterIdx);
         _renderClusterIdxs.clear();
     }
 
-    int ClusteredVectorLayer::createSingletonCluster(const std::shared_ptr<VectorElement>& element, std::vector<Cluster>& clusters) const {
+    int ClusteredVectorLayer::createSingletonCluster(const std::shared_ptr<VectorElement>& element, std::vector<Cluster>& clusters, const ProjectionSurface& projectionSurface) const {
         MapPos mapPos;
         if (!element->isVisible() || !GetVectorElementPos(element, mapPos)) {
             return -1;
         }
-        
+        cglib::vec3<double> pos = projectionSurface.calculatePosition(_dataSource->getProjection()->toInternal(mapPos));
+
         int clusterIdx = static_cast<int>(clusters.size());
         clusters.emplace_back();
         Cluster& cluster = clusters.back();
         cluster.maxDistance = 0;
         cluster.expandPx = 0;
         cluster.staticPos = cluster.transitionPos = mapPos;
-        cluster.mapBoundsInternal = MapBounds(_dataSource->getProjection()->toInternal(mapPos), _dataSource->getProjection()->toInternal(mapPos));
+        cluster.bounds = cglib::bbox3<double>(pos, pos);
         cluster.elementCount = 1;
         cluster.childClusterIdx[0] = -1;
         cluster.childClusterIdx[1] = -1;
@@ -292,8 +303,8 @@ namespace carto {
         cluster.maxDistance = dist;
         cluster.expandPx = 0;
         cluster.staticPos = cluster.transitionPos = mapPos;
-        cluster.mapBoundsInternal.expandToContain(clusters[clusterIdx1].mapBoundsInternal);
-        cluster.mapBoundsInternal.expandToContain(clusters[clusterIdx2].mapBoundsInternal);
+        cluster.bounds.add(clusters[clusterIdx1].bounds);
+        cluster.bounds.add(clusters[clusterIdx2].bounds);
         cluster.elementCount = n1 + n2;
         cluster.childClusterIdx[0] = clusterIdx1;
         cluster.childClusterIdx[1] = clusterIdx2;
@@ -458,8 +469,7 @@ namespace carto {
         if (!_clusters) {
             return false;
         }
-        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
-        if (!projectionSurface) {
+        if (viewState.getProjectionSurface() != _projectionSurface) {
             return false;
         }
 
@@ -467,9 +477,9 @@ namespace carto {
         cglib::vec3<double> pos0 = viewState.screenToWorldPlane(cglib::vec2<float>(viewState.getHalfWidth() + 0, viewState.getHalfHeight() + 0));
         cglib::vec3<double> pos1 = viewState.screenToWorldPlane(cglib::vec2<float>(viewState.getHalfWidth() + 1, viewState.getHalfHeight() + 0));
         cglib::vec3<double> pos2 = viewState.screenToWorldPlane(cglib::vec2<float>(viewState.getHalfWidth() + 0, viewState.getHalfHeight() + 1));
-        MapPos mapPos0 = projectionSurface->calculateMapPos(pos0);
-        MapPos mapPos1 = projectionSurface->calculateMapPos(pos1);
-        MapPos mapPos2 = projectionSurface->calculateMapPos(pos2);
+        MapPos mapPos0 = _projectionSurface->calculateMapPos(pos0);
+        MapPos mapPos1 = _projectionSurface->calculateMapPos(pos1);
+        MapPos mapPos2 = _projectionSurface->calculateMapPos(pos2);
 
         // Initialize render state, use previously renderered cluster list
         RenderState renderState;
@@ -539,10 +549,9 @@ namespace carto {
             return false;
         }
         const Cluster& cluster = (*renderState.clusters)[clusterIdx];
-        // TODO: convert to real frustum
-        //if (!viewState.getFrustum().squareIntersects(cluster.mapBoundsInternal)) {
-        //    return false;
-        //}
+        if (!viewState.getFrustum().inside(cluster.bounds)) {
+            return false;
+        }
 
         // Handle expanded clusters. Expanded clusters are always fully expanded
         bool stop = false;
