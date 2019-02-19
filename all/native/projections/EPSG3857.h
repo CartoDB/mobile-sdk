@@ -32,8 +32,6 @@ namespace carto {
     private:
         enum { EARTH_RADIUS = 6378137 };
 
-        static const double HALF_EARTH_RADIUS;
-        
         static const double METERS_TO_INTERNAL_EQUATOR;
     };
     

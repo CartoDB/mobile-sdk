@@ -44,7 +44,7 @@ namespace carto {
         double num = wgs84Pos.getX() * Const::DEG_TO_RAD;
         double x = EARTH_RADIUS * num;
         double a = wgs84Pos.getY() * Const::DEG_TO_RAD;
-        double y = HALF_EARTH_RADIUS * std::log((1 + std::sin(a)) / (1 - std::sin(a)));
+        double y = 0.5 * EARTH_RADIUS * std::log((1 + std::sin(a)) / (1 - std::sin(a)));
         return MapPos(x, y, wgs84Pos.getZ());
     }
     
@@ -61,8 +61,6 @@ namespace carto {
         return "EPSG:3857";
     }
         
-    const double EPSG3857::HALF_EARTH_RADIUS = EPSG3857::EARTH_RADIUS / 2.0;
-        
-    const double EPSG3857::METERS_TO_INTERNAL_EQUATOR = Const::WORLD_SIZE / (2 * std::atan(1.0) * 4 * EPSG3857::EARTH_RADIUS);
+    const double EPSG3857::METERS_TO_INTERNAL_EQUATOR = Const::WORLD_SIZE / (2.0 * Const::PI * EARTH_RADIUS);
     
 }
