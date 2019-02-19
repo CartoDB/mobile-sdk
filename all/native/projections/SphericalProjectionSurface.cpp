@@ -113,11 +113,12 @@ namespace carto {
     }
 
     cglib::mat4x4<double> SphericalProjectionSurface::calculateLocalFrameMatrix(const cglib::vec3<double>& pos) const {
-        cglib::mat3x3<double> localFrameMat3 = LocalFrame(pos);
+        cglib::mat3x3<double> localFrameMat3 = LocalFrame(pos * (1.0 / SPHERE_SIZE));
         cglib::mat4x4<double> localFrameMat4 = cglib::mat4x4<double>::identity();
         for (int i = 0; i < 3; i++) {
+            cglib::vec3<double> dir = cglib::unit(cglib::col_vector(localFrameMat3, i));
             for (int j = 0; j < 3; j++) {
-                localFrameMat4(i, j) = localFrameMat3(i, j) * SPHERE_SIZE;
+                localFrameMat4(j, i) = dir(j) * SPHERE_SIZE / Const::EARTH_RADIUS;
             }
             localFrameMat4(i, 3) = pos(i);
         }
@@ -158,18 +159,19 @@ namespace carto {
         double x1 = pos(0) != 0 || pos(1) != 0 ? std::atan2(pos(1), pos(0)) : 0;
         double y1 = std::atanh(std::max(-1.0, std::min(1.0, pos(2) / length)));
         double z1 = length - 1.0;
-        return MapPos(x1 * scale, y1 * scale, z1 * Const::EARTH_RADIUS);
+        return MapPos(x1 * scale, y1 * scale, z1 * scale);
     }
 
     cglib::vec3<double> SphericalProjectionSurface::InternalToSpherical(const MapPos& mapPos) {
         double scale = 2 * Const::PI / Const::WORLD_SIZE;
         double x1 = mapPos.getX() * scale;
         double y1 = mapPos.getY() * scale;
+        double z1 = mapPos.getZ() * scale;
         double rz = std::tanh(y1);
         double ss = std::sqrt(std::max(0.0, 1.0 - rz * rz));
         double rx = ss * std::cos(x1);
         double ry = ss * std::sin(x1);
-        return cglib::vec3<double>(rx, ry, rz) * (1.0 + mapPos.getZ() / Const::EARTH_RADIUS);
+        return cglib::vec3<double>(rx, ry, rz) * (1.0 + z1);
     }
 
     cglib::mat3x3<double> SphericalProjectionSurface::LocalFrame(const cglib::vec3<double>& pos) {
@@ -196,6 +198,6 @@ namespace carto {
 
     const double SphericalProjectionSurface::PLANAR_APPROX_ANGLE = 1.0e-6;
 
-    const double SphericalProjectionSurface::SEGMENT_SPLIT_THRESHOLD = Const::EARTH_CIRCUMFERENCE / 180.0;
+    const double SphericalProjectionSurface::SEGMENT_SPLIT_THRESHOLD = Const::EARTH_CIRCUMFERENCE / 120.0;
     
 }
