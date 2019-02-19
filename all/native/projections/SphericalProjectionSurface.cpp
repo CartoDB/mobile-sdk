@@ -126,16 +126,19 @@ namespace carto {
     }
 
     cglib::mat4x4<double> SphericalProjectionSurface::calculateTranslateMatrix(const cglib::vec3<double>& pos0, const cglib::vec3<double>& pos1, double t) const {
+        double scale = (1 - t) + (cglib::length(pos1) / cglib::length(pos0)) * t;
+        cglib::mat4x4<double> scaleMat = cglib::scale4_matrix(cglib::vec3<double>(scale, scale, scale));
+
         double dot = cglib::dot_product(cglib::unit(pos0), cglib::unit(pos1));
         double angle = std::acos(std::min(1.0, std::max(-1.0, dot)));
         cglib::vec3<double> axis = cglib::vector_product(cglib::unit(pos0), cglib::unit(pos1));
         if (cglib::length(axis) > 0) {
             if (angle < PLANAR_APPROX_ANGLE) { // less than 10m
-                return cglib::translate4_matrix((cglib::unit(pos1) - cglib::unit(pos0)) * (SPHERE_SIZE * t));
+                return cglib::translate4_matrix((cglib::unit(pos1) - cglib::unit(pos0)) * (SPHERE_SIZE * t)) * scaleMat;
             }
-            return cglib::rotate4_matrix(axis, angle * t);
+            return cglib::rotate4_matrix(axis, angle * t) * scaleMat;
         }
-        return cglib::mat4x4<double>::identity();
+        return scaleMat;
     }
 
     bool SphericalProjectionSurface::SplitSegment(const MapPos& mapPos0, const MapPos& mapPos1, MapPos& mapPosM) {

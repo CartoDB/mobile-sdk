@@ -91,14 +91,7 @@ namespace carto {
         cameraPos = focusPos + (cglib::transform_point(cameraPos, shiftTransform) - focusPos) * scale;
         upVec = cglib::transform_vector(upVec, shiftTransform);
 
-        cglib::vec3<double> oldFocusPos = focusPos;
-        // TODO: after clamping, calculate delta transform and apply this to cameraPos and upVec
-        //ClampFocusPos(focusPos, options);
-        if (oldFocusPos != focusPos) {
-            cglib::mat4x4<double> translateTransform = projectionSurface->calculateTranslateMatrix(oldFocusPos, focusPos, 1);
-            cameraPos = cglib::transform_point(cameraPos, translateTransform);
-            upVec = cglib::transform_vector(upVec, translateTransform);
-        }
+        ClampFocusPos(focusPos, cameraPos, upVec, options, viewState);
 
         viewState.setCameraPos(cameraPos);
         viewState.setFocusPos(focusPos);

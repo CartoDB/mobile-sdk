@@ -23,7 +23,7 @@ namespace carto {
     protected:
         CameraEvent() { }
 
-        static void ClampFocusPos(cglib::vec3<double>& focusPos, const Options& options);
+        static void ClampFocusPos(cglib::vec3<double>& focusPos, cglib::vec3<double>& cameraPos, cglib::vec3<double>& upVec, const Options& options, ViewState& viewState);
     };
     
 }
