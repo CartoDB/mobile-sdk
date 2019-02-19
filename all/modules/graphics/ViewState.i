@@ -22,10 +22,6 @@
 
 !value_type(carto::ViewState, graphics.ViewState)
 
-// TODO:
-//%attributeval(carto::ViewState, carto::MapPos, CameraPos, getCameraPos)
-//%attributeval(carto::ViewState, carto::MapPos, FocusPos, getFocusPos)
-//%attributeval(carto::ViewState, carto::MapVec, UpVec, getUpVec)
 %ignore carto::ViewState::getCameraPos;
 %ignore carto::ViewState::getFocusPos;
 %ignore carto::ViewState::getUpVec;

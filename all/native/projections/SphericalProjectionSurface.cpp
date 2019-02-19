@@ -1,6 +1,4 @@
 #include "SphericalProjectionSurface.h"
-#include "core/MapBounds.h"
-#include "projections/Projection.h"
 #include "utils/Const.h"
 
 namespace carto {
@@ -114,23 +112,16 @@ namespace carto {
         return true;
     }
 
-    cglib::mat4x4<double> SphericalProjectionSurface::calculateLocalMatrix(const MapPos& mapPos, const Projection& projection) const {
-        // TODO: check
-        const MapBounds& bounds = projection.getBounds();
-        const MapVec& boundsDelta = bounds.getDelta();
-        double scaleX = Const::WORLD_SIZE / boundsDelta.getX();
-        double scaleY = Const::WORLD_SIZE / boundsDelta.getY();
-        double scaleZ = std::min(scaleX, scaleY); // TODO: projection should supply this
-        double localScale = projection.getLocalScale(mapPos);
-        cglib::vec3<double> pos = calculatePosition(projection.toInternal(mapPos));
-        cglib::mat4x4<double> localMat(cglib::mat4x4<double>::identity());
-        localMat(0, 0) = scaleX * localScale;
-        localMat(1, 1) = scaleY * localScale;
-        localMat(2, 2) = scaleZ * localScale;
-        localMat(0, 3) = pos(0);
-        localMat(1, 3) = pos(1);
-        localMat(2, 3) = pos(2);
-        return localMat;
+    cglib::mat4x4<double> SphericalProjectionSurface::calculateLocalFrameMatrix(const cglib::vec3<double>& pos) const {
+        cglib::mat3x3<double> localFrameMat3 = LocalFrame(pos);
+        cglib::mat4x4<double> localFrameMat4 = cglib::mat4x4<double>::identity();
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                localFrameMat4(i, j) = localFrameMat3(i, j) * SPHERE_SIZE;
+            }
+            localFrameMat4(i, 3) = pos(i);
+        }
+        return localFrameMat4;
     }
 
     cglib::mat4x4<double> SphericalProjectionSurface::calculateTranslateMatrix(const cglib::vec3<double>& pos0, const cglib::vec3<double>& pos1, double t) const {

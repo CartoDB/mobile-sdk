@@ -13,10 +13,10 @@ namespace carto {
         _localMat()
     {
         MapPos mapPosInternal = projection.toInternal(model.getGeometry()->getCenterPos());
-        cglib::vec3<double> rotationAxis = projectionSurface.calculateVector(mapPosInternal, model.getRotationAxis());
-        cglib::mat4x4<double> rotateMat = cglib::rotate4_matrix(rotationAxis, model.getRotationAngle() * Const::DEG_TO_RAD);
+        cglib::vec3<double> pos = projectionSurface.calculatePosition(mapPosInternal);
+        cglib::mat4x4<double> rotateMat = cglib::rotate4_matrix(cglib::vec3<double>(model.getRotationAxis().getX(), model.getRotationAxis().getY(), model.getRotationAxis().getZ()), model.getRotationAngle() * Const::DEG_TO_RAD);
         cglib::mat4x4<double> scaleMat = cglib::scale4_matrix(cglib::vec3<double>(model.getScale(), model.getScale(), model.getScale()));
-        _localMat = projectionSurface.calculateLocalMatrix(model.getGeometry()->getCenterPos(), projection) * rotateMat * scaleMat;
+        _localMat = projectionSurface.calculateLocalFrameMatrix(pos) * rotateMat * scaleMat;
     }
 
     NMLModelDrawData::~NMLModelDrawData() {

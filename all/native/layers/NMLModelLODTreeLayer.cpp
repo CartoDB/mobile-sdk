@@ -604,7 +604,9 @@ namespace carto {
 
     cglib::mat4x4<double> NMLModelLODTreeLayer::CalculateLocalMat(const ViewState& viewState, const NMLModelLODTree* modelLODTree) {
         if (std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface()) {
-            return projectionSurface->calculateLocalMatrix(modelLODTree->getMapPos(), *modelLODTree->getProjection());
+            MapPos mapPosInternal = modelLODTree->getProjection()->toInternal(modelLODTree->getMapPos());
+            cglib::vec3<double> pos = projectionSurface->calculatePosition(mapPosInternal);
+            return projectionSurface->calculateLocalFrameMatrix(pos);
         }
         return cglib::mat4x4<double>::zero();
     }

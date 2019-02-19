@@ -34,8 +34,7 @@ namespace carto {
         virtual cglib::vec3<double> calculateNearestPoint(const cglib::ray3<double>& ray, double height, double& t) const;
         virtual bool calculateHitPoint(const cglib::ray3<double>& ray, double height, double& t) const;
 
-        virtual cglib::mat4x4<double> calculateLocalMatrix(const MapPos& mapPos, const Projection& projection) const;
-
+        virtual cglib::mat4x4<double> calculateLocalFrameMatrix(const cglib::vec3<double>& pos) const;
         virtual cglib::mat4x4<double> calculateTranslateMatrix(const cglib::vec3<double>& pos0, const cglib::vec3<double>& pos1, double t) const;
     };
     

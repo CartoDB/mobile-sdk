@@ -17,7 +17,6 @@
 #include <cglib/ray.h>
 
 namespace carto {
-    class Projection;
 
     // TODO: document
     class ProjectionSurface {
@@ -39,8 +38,7 @@ namespace carto {
         virtual cglib::vec3<double> calculateNearestPoint(const cglib::ray3<double>& ray, double height, double& t) const = 0;
         virtual bool calculateHitPoint(const cglib::ray3<double>& ray, double height, double& t) const = 0;
 
-        virtual cglib::mat4x4<double> calculateLocalMatrix(const MapPos& mapPos, const Projection& projection) const = 0;
-
+        virtual cglib::mat4x4<double> calculateLocalFrameMatrix(const cglib::vec3<double>& pos) const = 0;
         virtual cglib::mat4x4<double> calculateTranslateMatrix(const cglib::vec3<double>& pos0, const cglib::vec3<double>& pos1, double t) const = 0;
     };
     

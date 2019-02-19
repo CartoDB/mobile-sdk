@@ -1,6 +1,4 @@
 #include "PlanarProjectionSurface.h"
-#include "core/MapBounds.h"
-#include "projections/Projection.h"
 #include "utils/Const.h"
 
 namespace carto {
@@ -59,22 +57,16 @@ namespace carto {
         return true;
     }
 
-    cglib::mat4x4<double> PlanarProjectionSurface::calculateLocalMatrix(const MapPos& mapPos, const Projection& projection) const {
-        const MapBounds& bounds = projection.getBounds();
-        const MapVec& boundsDelta = bounds.getDelta();
-        double scaleX = Const::WORLD_SIZE / boundsDelta.getX();
-        double scaleY = Const::WORLD_SIZE / boundsDelta.getY();
-        double scaleZ = std::min(scaleX, scaleY); // TODO: projection should supply this
-        double localScale = projection.getLocalScale(mapPos);
-        MapPos mapPosInternal = projection.toInternal(mapPos);
-        cglib::mat4x4<double> localMat(cglib::mat4x4<double>::identity());
-        localMat(0, 0) = scaleX * localScale;
-        localMat(1, 1) = scaleY * localScale;
-        localMat(2, 2) = scaleZ * localScale;
-        localMat(0, 3) = mapPosInternal.getX();
-        localMat(1, 3) = mapPosInternal.getY();
-        localMat(2, 3) = mapPosInternal.getZ();
-        return localMat;
+    cglib::mat4x4<double> PlanarProjectionSurface::calculateLocalFrameMatrix(const cglib::vec3<double>& pos) const {
+        double sin = std::tanh(pos(1) * 2 * Const::PI / Const::WORLD_SIZE);
+        double cos = std::sqrt(std::max(0.0, 1.0 - sin * sin));
+        double scale = Const::WORLD_SIZE / Const::EARTH_CIRCUMFERENCE / cos;
+        cglib::mat4x4<double> localFrameMat = cglib::mat4x4<double>::identity();
+        for (int i = 0; i < 3; i++) {
+            localFrameMat(i, i) = scale;
+            localFrameMat(i, 3) = pos(i);
+        }
+        return localFrameMat;
     }
 
     cglib::mat4x4<double> PlanarProjectionSurface::calculateTranslateMatrix(const cglib::vec3<double>& pos0, const cglib::vec3<double>& pos1, double t) const {

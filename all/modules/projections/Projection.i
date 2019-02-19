@@ -22,6 +22,7 @@
 %attributestring(carto::Projection, std::string, Name, getName)
 !objc_rename(fromLat) carto::Projection::fromLatLong;
 %ignore carto::Projection::toInternalScale;
+%ignore carto::Projection::fromInternalScale;
 %ignore carto::Projection::fromInternal;
 %ignore carto::Projection::toInternal;
 !standard_equals(carto::Projection);

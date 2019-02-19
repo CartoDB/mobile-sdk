@@ -9,11 +9,14 @@ namespace carto {
         _modelLODTree(modelLODTree),
         _nodeId(nodeId),
         _parentIds(parentIds),
-        _localMat(projectionSurface.calculateLocalMatrix(modelLODTree->getMapPos(), *modelLODTree->getProjection())),
+        _localMat(),
         _glModel(glModel),
         _proxyMap(modelLODTree->getProxyMap()),
         _isOffset(false)
     {
+        MapPos mapPosInternal = modelLODTree->getProjection()->toInternal(modelLODTree->getMapPos());
+        cglib::vec3<double> pos = projectionSurface.calculatePosition(mapPosInternal);
+        _localMat = projectionSurface.calculateLocalFrameMatrix(pos);
     }
 
     NMLModelLODTreeDrawData::~NMLModelLODTreeDrawData() {
@@ -51,7 +54,7 @@ namespace carto {
         _localMat = cglib::translate4_matrix(cglib::vec3<double>(offset, 0, 0)) * _localMat;
         _isOffset = true;
     }
-    
+
 }
 
 #endif

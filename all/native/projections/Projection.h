@@ -26,22 +26,6 @@ namespace carto {
         virtual MapBounds getBounds() const;
         
         /**
-         * Returns local scale for the specified position.
-         * @param pos The position in the internal coordinate system.
-         * @return The local scale for the specified position.
-         */
-        virtual double getLocalScale(const MapPos& pos) const;
-        
-        /**
-         * Converts meters to approximate internal size at the specified position, towards specified direction.
-         * @param pos The position in the coordinate system of this projection.
-         * @param dir The direction in which the the distance is calculated.
-         * @param meters The meters.
-         * @return The approximate size in internal coordinate system.
-         */
-        double toInternalScale(const MapPos& pos, const MapVec& dir, double meters) const;
-        
-        /**
          * Converts internal size to meters at the equator.
          * @param size The size in the internal coordinate system.
          * @return The approximate size in meters at the equator.
@@ -60,13 +44,13 @@ namespace carto {
          * @param pos The position in the internal coordiante system.
          * @return The transformed position in the coordinate system of this projection.
          */
-        virtual MapPos fromInternal(const MapPos& pos) const;
+        virtual MapPos fromInternal(const MapPos& pos) const = 0;
         /**
          * Transforms a position from the coordinate system of this projection to the internal coordinate system.
          * @param pos The position in the coordinate system of this projection.
          * @return The transformed position in the internal coordinate system.
          */
-        virtual MapPos toInternal(const MapPos& pos) const;
+        virtual MapPos toInternal(const MapPos& pos) const = 0;
         
         /**
          * Transforms a position from the WGS84 coordinate system to the coordinate system of this projection.

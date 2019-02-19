@@ -22,6 +22,24 @@ namespace carto {
         return meters * METERS_TO_INTERNAL_EQUATOR;
     }
         
+    MapPos EPSG3857::fromInternal(const MapPos& mapPosInternal) const {
+        const MapVec& boundsDelta = _bounds.getDelta();
+        double offsetX = -_bounds.getMin().getX() - boundsDelta.getX() / 2;
+        double offsetY = -_bounds.getMin().getY() - boundsDelta.getY() / 2;
+        double scaleX = Const::WORLD_SIZE / boundsDelta.getX();
+        double scaleY = Const::WORLD_SIZE / boundsDelta.getY();
+        return MapPos(mapPosInternal.getX() / scaleX - offsetX, mapPosInternal.getY() / scaleY - offsetY, fromInternalScale(mapPosInternal.getZ()));
+    }
+    
+    MapPos EPSG3857::toInternal(const MapPos& mapPos) const {
+        const MapVec& boundsDelta = _bounds.getDelta();
+        double offsetX = -_bounds.getMin().getX() - boundsDelta.getX() / 2;
+        double offsetY = -_bounds.getMin().getY() - boundsDelta.getY() / 2;
+        double scaleX = Const::WORLD_SIZE / boundsDelta.getX();
+        double scaleY = Const::WORLD_SIZE / boundsDelta.getY();
+        return MapPos((mapPos.getX() + offsetX) * scaleX, (mapPos.getY() + offsetY) * scaleY, toInternalScale(mapPos.getZ()));
+    }
+
     MapPos EPSG3857::fromWgs84(const MapPos& wgs84Pos) const {
         double num = wgs84Pos.getX() * Const::DEG_TO_RAD;
         double x = EARTH_RADIUS * num;
