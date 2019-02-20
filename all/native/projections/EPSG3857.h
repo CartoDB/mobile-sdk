@@ -27,7 +27,8 @@ namespace carto {
 
         virtual MapPos fromWgs84(const MapPos& wgs84Pos) const;
         virtual MapPos toWgs84(const MapPos& mapPos) const;
-        virtual std::string getName() const;
+
+		virtual std::string getName() const;
         
     private:
         enum { EARTH_RADIUS = 6378137 };
