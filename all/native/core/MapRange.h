@@ -62,6 +62,12 @@ namespace carto {
          * @param max The new max value of this map range.
          */
         void setRange(float min, float max);
+
+        /**
+         * Calculate the midrange value.
+         * @return The midrange value.
+         */
+        float getMidrange() const;
     
         /**
          * Calculates the length of this map range. Defined as max - min.

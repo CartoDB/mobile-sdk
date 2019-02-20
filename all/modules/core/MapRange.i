@@ -14,6 +14,7 @@
 
 %attribute(carto::MapRange, float, Max, getMax)
 %attribute(carto::MapRange, float, Min, getMin)
+%attribute(carto::MapRange, float, Midrange, getMidrange)
 %attribute(carto::MapRange, float, Length, length)
 %ignore carto::MapRange::setRange;
 %ignore carto::MapRange::setMin;
