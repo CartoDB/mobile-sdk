@@ -27,8 +27,7 @@
 %ignore carto::TorqueTileDecoder::decodeFeature;
 %ignore carto::TorqueTileDecoder::decodeFeatures;
 %ignore carto::TorqueTileDecoder::decodeTile;
-%ignore carto::TorqueTileDecoder::getBackgroundColor;
-%ignore carto::TorqueTileDecoder::getBackgroundPattern;
+%ignore carto::TorqueTileDecoder::getMapSettings;
 
 %include "vectortiles/TorqueTileDecoder.h"
 

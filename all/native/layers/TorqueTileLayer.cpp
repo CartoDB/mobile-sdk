@@ -39,7 +39,11 @@ namespace carto {
             if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
                 float opacity = getOpacity();
 
-                mapRenderer->clearAndBindScreenFBO(getTileDecoder()->getBackgroundColor(), false, false);
+                Color backgroundColor(0, 0, 0, 0);
+                if (std::shared_ptr<mvt::Map::Settings> mapSettings = getTileDecoder()->getMapSettings()) {
+                    backgroundColor = Color(mapSettings->backgroundColor.value());
+                }
+                mapRenderer->clearAndBindScreenFBO(backgroundColor, false, false);
 
                 tileRenderer->setInteractionMode(getVectorTileEventListener().get() ? true : false);
                 tileRenderer->setSubTileBlending(false);

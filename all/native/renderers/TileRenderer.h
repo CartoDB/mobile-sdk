@@ -44,6 +44,7 @@ namespace carto {
         void setSubTileBlending(bool enabled);
         void setLabelOrder(int order);
         void setBuildingOrder(int order);
+        void setPoleColors(const vt::Color& northPoleColor, const vt::Color& southPoleColor);
 
         void offsetLayerHorizontally(double offset);
     
@@ -71,8 +72,8 @@ namespace carto {
         bool _subTileBlending;
         int _labelOrder;
         int _buildingOrder;
-        Color _backgroundColor;
-        std::shared_ptr<const vt::BitmapPattern> _backgroundPattern;
+        vt::Color _northPoleColor;
+        vt::Color _southPoleColor;
         double _horizontalLayerOffset;
         std::map<vt::TileId, std::shared_ptr<const vt::Tile> > _tiles;
 

@@ -17,6 +17,8 @@
 
 #include <cglib/mat.h>
 
+#include <mapnikvt/Map.h>
+
 namespace carto {
     namespace vt {
         struct TileId;
@@ -51,10 +53,10 @@ namespace carto {
         virtual ~VectorTileDecoder();
     
         /**
-         * Returns background color for tiles.
-         * @return Background color for tiles.
+         * Returns map settings.
+         * @return Map settings.
          */
-        virtual Color getBackgroundColor() const = 0;
+        virtual std::shared_ptr<mvt::Map::Settings> getMapSettings() const = 0;
     
         /**
          * Returns minimum zoom level supported for by the decoder (or style).

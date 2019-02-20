@@ -27,8 +27,7 @@
 %ignore carto::VectorTileDecoder::decodeFeature;
 %ignore carto::VectorTileDecoder::decodeFeatures;
 %ignore carto::VectorTileDecoder::decodeTile;
-%ignore carto::VectorTileDecoder::getBackgroundColor;
-%ignore carto::VectorTileDecoder::getBackgroundPattern;
+%ignore carto::VectorTileDecoder::getMapSettings;
 %ignore carto::VectorTileDecoder::OnChangeListener;
 %ignore carto::VectorTileDecoder::registerOnChangeListener;
 %ignore carto::VectorTileDecoder::unregisterOnChangeListener;

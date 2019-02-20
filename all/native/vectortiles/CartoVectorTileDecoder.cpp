@@ -50,7 +50,7 @@ namespace carto {
         _layerMaps(),
         _layerSymbolizerContexts(),
         _assetPackageSymbolizerContexts(),
-        _backgroundColor()
+        _mapSettings()
     {
         for (auto it = layerStyleSets.begin(); it != layerStyleSets.end(); it++) {
             updateLayerStyleSet(it->first, it->second);
@@ -113,9 +113,9 @@ namespace carto {
         notifyDecoderChanged();
     }
 
-    Color CartoVectorTileDecoder::getBackgroundColor() const {
+    std::shared_ptr<mvt::Map::Settings> CartoVectorTileDecoder::getMapSettings() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return _backgroundColor;
+        return _mapSettings;
     }
     
     int CartoVectorTileDecoder::getMinZoom() const {
@@ -345,7 +345,7 @@ namespace carto {
         }
 
         if (!_layerIds.empty() && _layerIds.front() == layerId) {
-            _backgroundColor = Color(map->getSettings().backgroundColor.value());
+            _mapSettings = std::make_shared<mvt::Map::Settings>(map->getSettings());
         }
 
         _layerStyleSets[layerId] = styleSet;

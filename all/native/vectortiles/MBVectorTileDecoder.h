@@ -144,7 +144,7 @@ namespace carto {
          */
         void setLayerNameOverride(const std::string& name);
 
-        virtual Color getBackgroundColor() const;
+        virtual std::shared_ptr<mvt::Map::Settings> getMapSettings() const;
     
         virtual int getMinZoom() const;
         
@@ -170,6 +170,7 @@ namespace carto {
         std::string _layerNameOverride;
         boost::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> > _styleSet;
         std::shared_ptr<mvt::Map> _map;
+        std::shared_ptr<mvt::Map::Settings> _mapSettings;
         std::map<std::string, mvt::Value> _parameterValueMap;
         std::set<std::string> _updatedParameters;
         std::shared_ptr<mvt::SymbolizerContext> _symbolizerContext;

@@ -41,8 +41,7 @@
 %ignore carto::MBVectorTileDecoder::decodeFeature;
 %ignore carto::MBVectorTileDecoder::decodeFeatures;
 %ignore carto::MBVectorTileDecoder::decodeTile;
-%ignore carto::MBVectorTileDecoder::getBackgroundColor;
-%ignore carto::MBVectorTileDecoder::getBackgroundPattern;
+%ignore carto::MBVectorTileDecoder::getMapSettings;
 %ignore carto::MBVectorTileDecoder::loadMapnikMap;
 %ignore carto::MBVectorTileDecoder::loadCartoCSSMap;
 

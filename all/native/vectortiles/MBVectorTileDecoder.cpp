@@ -51,6 +51,7 @@ namespace carto {
         _layerNameOverride(),
         _styleSet(),
         _map(),
+        _mapSettings(),
         _parameterValueMap(),
         _updatedParameters(),
         _symbolizerContext()
@@ -280,9 +281,9 @@ namespace carto {
         notifyDecoderChanged();
     }
 
-    Color MBVectorTileDecoder::getBackgroundColor() const {
+    std::shared_ptr<mvt::Map::Settings> MBVectorTileDecoder::getMapSettings() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return Color(_map->getSettings().backgroundColor.value());
+        return _mapSettings;
     }
     
     int MBVectorTileDecoder::getMinZoom() const {
@@ -564,6 +565,7 @@ namespace carto {
         }
 
         _map = map;
+        _mapSettings = std::make_shared<mvt::Map::Settings>(_map->getSettings());
         _parameterValueMap = parameterValueMap;
         _updatedParameters = updatedParameters;
         _symbolizerContext = symbolizerContext;

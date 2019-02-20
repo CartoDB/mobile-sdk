@@ -65,7 +65,7 @@ namespace carto {
          */
         void setResolution(int resolution);
 
-        virtual Color getBackgroundColor() const;
+        virtual std::shared_ptr<mvt::Map::Settings> getMapSettings() const;
 
         virtual int getMinZoom() const;
 
@@ -86,6 +86,7 @@ namespace carto {
         const std::shared_ptr<mvt::Logger> _logger;
         int _resolution;
         std::shared_ptr<mvt::TorqueMap> _map;
+        std::shared_ptr<mvt::Map::Settings> _mapSettings;
         std::shared_ptr<mvt::SymbolizerContext> _symbolizerContext;
         std::shared_ptr<CartoCSSStyleSet> _styleSet;
 

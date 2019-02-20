@@ -34,7 +34,7 @@ namespace carto {
         _tileDecoderListener(),
         _backgroundColor(0, 0, 0, 0),
         _backgroundBitmap(),
-        _skyColor(),
+        _skyColor(0, 0, 0, 0),
         _skyBitmap(),
         _labelCullThreadPool(std::make_shared<CancelableThreadPool>()),
         _visibleTileIds(),
@@ -414,6 +414,9 @@ namespace carto {
                 tileRenderer->setBuildingOrder(static_cast<int>(getBuildingRenderOrder()));
                 tileRenderer->setInteractionMode(_vectorTileEventListener.get() ? true : false);
                 tileRenderer->setSubTileBlending(false);
+                if (std::shared_ptr<mvt::Map::Settings> mapSettings = _tileDecoder->getMapSettings()) {
+                    tileRenderer->setPoleColors(mapSettings->northPoleColor, mapSettings->southPoleColor);
+                }
                 bool refresh = tileRenderer->onDrawFrame(deltaSeconds, viewState);
 
                 if (opacity < 1.0f) {
@@ -453,7 +456,10 @@ namespace carto {
     std::shared_ptr<Bitmap> VectorTileLayer::getBackgroundBitmap() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-        Color backgroundColor = _tileDecoder->getBackgroundColor();
+        Color backgroundColor = _backgroundColor;
+        if (std::shared_ptr<mvt::Map::Settings> mapSettings = _tileDecoder->getMapSettings()) {
+            backgroundColor = Color(mapSettings->backgroundColor.value());
+        }
         if (backgroundColor != _backgroundColor || !_backgroundBitmap) {
             if (backgroundColor == Color(0, 0, 0, 0)) {
                 _backgroundBitmap = TileLayer::getBackgroundBitmap();
@@ -468,7 +474,10 @@ namespace carto {
     std::shared_ptr<Bitmap> VectorTileLayer::getSkyBitmap() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-        Color backgroundColor = _tileDecoder->getBackgroundColor();
+        Color backgroundColor = _backgroundColor;
+        if (std::shared_ptr<mvt::Map::Settings> mapSettings = _tileDecoder->getMapSettings()) {
+            backgroundColor = Color(mapSettings->backgroundColor.value());
+        }
         if (backgroundColor != _skyColor || !_skyBitmap) {
             _skyBitmap = SkyBitmapGenerator(SKY_WIDTH, SKY_HEIGHT, SKY_GRADIENT_SIZE, SKY_GRADIENT_OFFSET).generateBitmap(backgroundColor);
             _skyColor = backgroundColor;

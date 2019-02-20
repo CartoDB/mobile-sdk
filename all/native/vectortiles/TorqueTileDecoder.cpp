@@ -23,6 +23,7 @@ namespace carto {
         _logger(std::make_shared<MapnikVTLogger>("TorqueTileDecoder")),
         _resolution(256),
         _map(),
+        _mapSettings(),
         _symbolizerContext(),
         _styleSet(),
         _mutex()
@@ -72,9 +73,9 @@ namespace carto {
         notifyDecoderChanged();
     }
     
-    Color TorqueTileDecoder::getBackgroundColor() const {
+    std::shared_ptr<mvt::Map::Settings> TorqueTileDecoder::getMapSettings() const  {
         std::lock_guard<std::mutex> lock(_mutex);
-        return Color(std::static_pointer_cast<mvt::TorqueMap>(_map)->getTorqueSettings().clearColor.value());
+        return _mapSettings;
     }
     
     int TorqueTileDecoder::getMinZoom() const {
@@ -153,6 +154,8 @@ namespace carto {
         auto symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
 
         _map = map;
+        _mapSettings = std::make_shared<mvt::Map::Settings>(map->getSettings());
+        _mapSettings->backgroundColor = std::static_pointer_cast<mvt::TorqueMap>(_map)->getTorqueSettings().clearColor;
         _symbolizerContext = symbolizerContext;
         _styleSet = styleSet;
     }
