@@ -286,70 +286,67 @@ namespace carto {
             return;
         }
 
-        // TODO: fix the implementation: tesselate pan bounds, check against all tesselated points. Use 2 triangles?
-        /*
         std::shared_ptr<Projection> baseProjection = options.getBaseProjection();
         std::shared_ptr<ProjectionSurface> projectionSurface = options.getProjectionSurface();
-        MapBounds bounds = options.getPanBounds();
-        MapPos boundsPoses[2] = { bounds.getMin(), bounds.getMax() };
+        
+        MapBounds boundsBase = options.getPanBounds();
+        MapPos boundsPoses[2] = { baseProjection->toInternal(boundsBase.getMin()), baseProjection->toInternal(boundsBase.getMax()) };
 
-        ScreenBounds screenBounds(ScreenPos(_width * 0.5f - _height * 0.5f, 0.0f),
-                                  ScreenPos(_width * 0.5f + _height * 0.5f, _height));
-
-        cglib::vec3<double> cameraVec = _cameraPos - _focusPos;
         for (int j = 0; j < 4; j++) {
-            if (options.isSeamlessPanning()) {
+            if (options.isSeamlessPanning() && options.getRenderProjectionMode() == RenderProjectionMode::RENDER_PROJECTION_MODE_PLANAR) {
                 if (j % 2 == 0) {
                     continue; // ignore X-based check if map is repeating along X
                 }
             }
 
-            MapPos edgePos = baseProjection->fromInternal(projectionSurface->calculateMapPos(_focusPos));
+            cglib::vec3<double> cameraVec = _cameraPos - _focusPos;
+
+            MapPos edgePos = projectionSurface->calculateMapPos(_focusPos);
             MapPos centerPos = edgePos;
             edgePos[j % 2] = boundsPoses[j / 2][j % 2];
-            centerPos[j % 2] = bounds.getCenter()[j % 2];
+            centerPos[j % 2] = (boundsPoses[0][j % 2] + boundsPoses[1][j % 2]) * 0.5;
 
             ViewState viewState;
             viewState._ignoreMinZoom = true;
             viewState._minZoom = _minZoom;
             viewState.setFocusPos(_focusPos);
-            viewState.setCameraPos(_focusPos + projectionSurface->calculateNormal(_focusPos) * cglib::length(cameraVec));
-            viewState.setUpVec(projectionSurface->calculateNormal(_focusPos));
+            viewState.setCameraPos(_focusPos + projectionSurface->calculateNormal(projectionSurface->calculateMapPos(_focusPos)) * cglib::length(cameraVec));
+            viewState.setUpVec(projectionSurface->calculateVector(projectionSurface->calculateMapPos(_focusPos), MapVec(0, 1, 0)));
             viewState.setZoom(_zoom);
-            viewState.setScreenSize(_width, _height);
+            viewState.setScreenSize(_height, _height); // TODO: test this for regressions (NOT _width, _height)
             viewState.cameraChanged();
             viewState.calculateViewState(options);
             viewState.clampZoom(options);
-            ScreenPos screenPos = viewState.worldToScreen(projectionSurface->calculatePosition(baseProjection->toInternal(edgePos)), options);
-            if (!screenBounds.contains(screenPos)) {
+            if (!viewState.getFrustum().inside(projectionSurface->calculatePosition(edgePos))) {
                 continue;
             }
 
-            MapPos focusPos0 = centerPos, focusPos1 = edgePos;
+            MapBounds range(centerPos, edgePos);
             for (int i = 0; i < 24; i++) {
-                MapPos focusPos = focusPos0 + (focusPos1 - focusPos0) * 0.5;
-                viewState.setFocusPos(baseProjection->toInternal(focusPos));
-                viewState.setCameraPos(viewState.getFocusPos() + projectionSurface->calculateNormal(viewState.getFocusPos()) * cglib::length(cameraVec));
-                viewState.setUpVec(projectionSurface->calculateNormal(viewState.getFocusPos()));
+                MapPos focusPos = range.getCenter();
+                viewState.setFocusPos(projectionSurface->calculatePosition(focusPos));
+                viewState.setCameraPos(viewState.getFocusPos() + projectionSurface->calculateNormal(focusPos) * cglib::length(cameraVec));
+                viewState.setUpVec(projectionSurface->calculateVector(focusPos, MapVec(0, 1, 0)));
                 viewState.cameraChanged();
                 viewState.calculateViewState(options);
 
-                ScreenPos screenPos = viewState.worldToScreen(baseProjection->toInternal(edgePos), options);
-                if (!screenBounds.contains(screenPos)) {
-                    focusPos0 = focusPos;
+                if (!viewState.getFrustum().inside(projectionSurface->calculatePosition(edgePos))) {
+                    range.setMin(focusPos);
                 } else {
-                    focusPos1 = focusPos;
+                    range.setMax(focusPos);
                 }
             }
 
-            if (baseProjection->toInternal(focusPos0) != getFocusPos()) {
-                setFocusPos(baseProjection->toInternal(focusPos0));
-                setCameraPos(baseProjection->toInternal(focusPos0) + cameraVec);
+            cglib::vec3<double> focusPos = projectionSurface->calculatePosition(range.getMin());
+            if (focusPos != getFocusPos()) {
+                cglib::mat4x4<double> transform = projectionSurface->calculateTranslateMatrix(getFocusPos(), focusPos, 1.0);
+                setFocusPos(cglib::transform_point(getFocusPos(), transform));
+                setCameraPos(cglib::transform_point(getCameraPos(), transform));
+                setUpVec(cglib::transform_vector(getUpVec(), transform));
 
                 cameraChanged();
             }
         }
-        */
     }
     
     void ViewState::calculateViewState(const Options& options) {
@@ -597,7 +594,7 @@ namespace carto {
             clipFar = std::min(clipFar, 1.1 * distance);
         }
 
-        // TODO:
+        // TODO: check multipliers, in theory 0.99/1.01 should suffice
         return std::make_pair(static_cast<float>(zMin * 0.8f), static_cast<float>(zMax * 1.2f));
     }
     
@@ -606,38 +603,30 @@ namespace carto {
             return options.getZoomRange().getMin();
         }
 
-        // TODO: fix the implementation: tesselate pan bounds, check against all tesselated points. Use 2 triangles?
-        /*
         std::shared_ptr<Projection> baseProjection = options.getBaseProjection();
         std::shared_ptr<ProjectionSurface> projectionSurface = options.getProjectionSurface();
-        MapBounds bounds = options.getPanBounds();
 
-        std::vector<MapPos> boundsPoses;
-        for (int i = 0; i < 4; i++) {
-            double x = (i % 2 == 0 ? bounds.getMin().getX() : bounds.getMax().getX());
-            double y = (i / 2 == 0 ? bounds.getMin().getY() : bounds.getMax().getY());
-            boundsPoses.push_back(baseProjection->toInternal(MapPos(x, y)));
-        }
-
-        ScreenBounds screenBounds(ScreenPos(_width * 0.5f - _height * 0.5f, 0.0f),
-                                  ScreenPos(_width * 0.5f + _height * 0.5f, _height));
+        MapBounds boundsBase = options.getPanBounds();
+        MapPos boundsPoses[2] = { baseProjection->toInternal(boundsBase.getMin()), baseProjection->toInternal(boundsBase.getMax()) };
 
         MapRange range = options.getZoomRange();
         for (int i = 0; i < 24; i++) {
+            MapPos centerPos = boundsPoses[0] + (boundsPoses[1] - boundsPoses[0]) * 0.5;
             cglib::vec3<double> cameraVec = getCameraPos() - getFocusPos();
             ViewState viewState;
             viewState._ignoreMinZoom = true;
-            viewState.setFocusPos(bounds.getCenter());
-            viewState.setCameraPos(bounds.getCenter() + projectionSurface->calculateNormal(bounds.getCenter()) * cglib::length(cameraVec));
-            viewState.setZoom((range.getMin() + range.getMax()) * 0.5f);
-            viewState.setScreenSize(_width, _height);
+            viewState.setFocusPos(projectionSurface->calculatePosition(centerPos));
+            viewState.setCameraPos(projectionSurface->calculatePosition(centerPos) + projectionSurface->calculateNormal(centerPos) * cglib::length(cameraVec));
+            viewState.setUpVec(projectionSurface->calculateVector(centerPos, MapVec(0, 1, 0)));
+            viewState.setZoom(range.getMidrange());
+            viewState.setScreenSize(_height, _height); // TODO: test this for regressions (NOT _width, _height)
             viewState.cameraChanged();
             viewState.calculateViewState(options);
 
             bool fit = true;
-            for (const MapPos& mapPos : boundsPoses) {
-                ScreenPos screenPos = viewState.worldToScreen(mapPos, options);
-                if (screenBounds.contains(screenPos)) {
+            for (int j = 0; j < 4; j++) {
+                MapPos mapPos(boundsPoses[j % 2].getX(), boundsPoses[j / 2].getY());
+                if (viewState.getFrustum().inside(projectionSurface->calculatePosition(mapPos))) {
                     fit = false;
                     break;
                 }
@@ -651,8 +640,6 @@ namespace carto {
         }
 
         return range.getMin();
-        */
-        return 0;
     }
     
     cglib::mat4x4<double> ViewState::calculatePerspMat(float halfFOVY, float near, float far, const Options& options) const {
