@@ -20,8 +20,15 @@ namespace carto {
     BackgroundRenderer::BackgroundRenderer(const Options& options, const Layers& layers) :
         _backgroundBitmap(),
         _backgroundTex(),
+        _backgroundCoords(),
+        _backgroundTexCoords(),
         _skyBitmap(),
         _skyTex(),
+        _skyCoords(),
+        _vertices(),
+        _normals(),
+        _texCoords(),
+        _indices(),
         _shader(),
         _a_coord(0),
         _a_texCoord(0),
@@ -123,68 +130,168 @@ namespace carto {
     }
     
     void BackgroundRenderer::drawBackground(const ViewState& viewState) {
-        if (_options.getRenderProjectionMode() != RenderProjectionMode::RENDER_PROJECTION_MODE_PLANAR) {
-            // TODO: implement spherical mode
+        if (!_backgroundTex) {
             return;
         }
 
-        if (_backgroundTex) {
-            // Texture
-            glBindTexture(GL_TEXTURE_2D, _backgroundTex->getTexId());
-    
-            // Scale background coordinates
-            float backgroundScale = static_cast<float>(viewState.getFar() * 2 / viewState.getCosHalfFOVXY());
-            const cglib::vec3<double>& cameraPos = viewState.getCameraPos();
-            for (int i = 0; i < BACKGROUND_VERTEX_COUNT * 3; i += 3) {
-                _backgroundCoords[i + 0] = BACKGROUND_COORDS[i + 0] * backgroundScale;
-                _backgroundCoords[i + 1] = BACKGROUND_COORDS[i + 1] * backgroundScale;
-                _backgroundCoords[i + 2] = static_cast<float>(-cameraPos(2));
+        // Texture
+        glBindTexture(GL_TEXTURE_2D, _backgroundTex->getTexId());
+
+        // Spherical mode?
+        if (_options.getRenderProjectionMode() == RenderProjectionMode::RENDER_PROJECTION_MODE_SPHERICAL) {
+            // Build sphere surface on first call
+            if (_indices.empty()) {
+                BuildSphereSurface(_vertices, _normals, _texCoords, _indices, SURFACE_TESSELATION_LEVELS, SURFACE_TESSELATION_LEVELS);
             }
-            const cglib::mat4x4<float>& mvpMat = viewState.getRTEModelviewProjectionMat();
-            glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, mvpMat.data());
-    
+
+            // Transform coordinates
+            float coordScale = Const::WORLD_SIZE / Const::PI;
+            const cglib::vec3<double>& focusPos = viewState.getFocusPos();
+            const cglib::vec3<double>& cameraPos = viewState.getCameraPos();
+
+            if (_vertices.size() != _backgroundCoords.size() * 3) {
+                _backgroundCoords.resize(_vertices.size() * 3);
+            }
+            for (std::size_t i = 0; i < _vertices.size(); i++) {
+                _backgroundCoords[i * 3 + 0] = static_cast<float>(_vertices[i](0) * coordScale - cameraPos(0));
+                _backgroundCoords[i * 3 + 1] = static_cast<float>(_vertices[i](1) * coordScale - cameraPos(1));
+                _backgroundCoords[i * 3 + 2] = static_cast<float>(_vertices[i](2) * coordScale - cameraPos(2));
+            }
+
             // Transform texture coordinates
+            float backgroundScale = static_cast<float>(Const::WORLD_SIZE / viewState.getCosHalfFOVXY());
             int intTwoPowZoom = (int) std::pow(2.0f, (int) viewState.getZoom());
             float scale = (float) (intTwoPowZoom * 0.5f / Const::HALF_WORLD_SIZE);
-            double translateX = cameraPos(0) * scale;
-            double translateY = cameraPos(1) * scale;
+            double translateOriginX = (focusPos(0) != 0 || focusPos(1) != 0 ? std::atan2(focusPos(1), focusPos(0)) / Const::PI + 1.0 : 0);
+            double translateOriginY = std::asin(std::max(-1.0, std::min(1.0, focusPos(2) / cglib::length(focusPos)))) / Const::PI + 0.5;
+            double translateX = translateOriginX * scale - 0.5 * scale * backgroundScale;
+            double translateY = translateOriginY * scale + 0.5 * scale * backgroundScale;
             translateX -= std::floor(translateX);
             translateY -= std::floor(translateY);
-            for (int i = 0; i < BACKGROUND_VERTEX_COUNT * 2; i += 2) {
-                _backgroundTexCoords[i + 0] = static_cast<float>((BACKGROUND_TEX_COORDS[i + 0] - 0.5f) * scale * backgroundScale + translateX);
-                _backgroundTexCoords[i + 1] = static_cast<float>((BACKGROUND_TEX_COORDS[i + 1] - 0.5f) * scale * backgroundScale + translateY);
+
+            if (_texCoords.size() != _backgroundTexCoords.size() * 2) {
+                _backgroundTexCoords.resize(_texCoords.size() * 2);
             }
-    
+            for (std::size_t i = 0; i < _texCoords.size(); i++) {
+                _backgroundTexCoords[i * 2 + 0] = static_cast<float>(_texCoords[i](0) * scale * backgroundScale + translateX);
+                _backgroundTexCoords[i * 2 + 1] = static_cast<float>(_texCoords[i](1) * scale * backgroundScale - translateY);
+            }
+
             // Draw
-            glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 0, _backgroundCoords);
-            glVertexAttribPointer(_a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, _backgroundTexCoords);
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, BACKGROUND_VERTEX_COUNT);
+            glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 0, _backgroundCoords.data());
+            glVertexAttribPointer(_a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, _backgroundTexCoords.data());
+            glDrawElements(GL_TRIANGLES, _indices.size(), GL_UNSIGNED_SHORT, _indices.data());
+            return;
         }
+
+        float backgroundScale = static_cast<float>(viewState.getFar() * 2 / viewState.getCosHalfFOVXY());
+        const cglib::vec3<double>& cameraPos = viewState.getCameraPos();
+
+        // Scale background coordinates
+        std::size_t vertexCount = sizeof(BACKGROUND_COORDS) / sizeof(float) / 3;
+        if (_backgroundCoords.size() != vertexCount * 3) {
+            _backgroundCoords.resize(vertexCount * 3);
+        }
+        for (std::size_t i = 0; i < vertexCount * 3; i += 3) {
+            _backgroundCoords[i + 0] = BACKGROUND_COORDS[i + 0] * backgroundScale;
+            _backgroundCoords[i + 1] = BACKGROUND_COORDS[i + 1] * backgroundScale;
+            _backgroundCoords[i + 2] = static_cast<float>(-cameraPos(2));
+        }
+
+        // Transform texture coordinates
+        int intTwoPowZoom = (int) std::pow(2.0f, (int) viewState.getZoom());
+        float scale = (float) (intTwoPowZoom * 0.5f / Const::HALF_WORLD_SIZE);
+        double translateX = cameraPos(0) * scale;
+        double translateY = cameraPos(1) * scale;
+        translateX -= std::floor(translateX);
+        translateY -= std::floor(translateY);
+        if (_backgroundTexCoords.size() != vertexCount * 2) {
+            _backgroundTexCoords.resize(vertexCount * 2);
+        }
+        for (std::size_t i = 0; i < vertexCount * 2; i += 2) {
+            _backgroundTexCoords[i + 0] = static_cast<float>((BACKGROUND_TEX_COORDS[i + 0] - 0.5f) * scale * backgroundScale + translateX);
+            _backgroundTexCoords[i + 1] = static_cast<float>((BACKGROUND_TEX_COORDS[i + 1] - 0.5f) * scale * backgroundScale + translateY);
+        }
+
+        // Draw
+        glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 0, _backgroundCoords.data());
+        glVertexAttribPointer(_a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, _backgroundTexCoords.data());
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount);
     }
     
     void BackgroundRenderer::drawSky(const ViewState& viewState) {
+        if (!_skyTex) {
+            return;
+        }
+
+        // Texture
+        glBindTexture(GL_TEXTURE_2D, _skyTex->getTexId());
+
+        // Spherical mode?
         if (_options.getRenderProjectionMode() != RenderProjectionMode::RENDER_PROJECTION_MODE_PLANAR) {
             // TODO: implement spherical mode
             return;
         }
 
-        if (_skyTex) {
-            // Texture
-            glBindTexture(GL_TEXTURE_2D, _skyTex->getTexId());
-    
-            // Transform
-            float skyScale = viewState.getFar() * SKY_SCALE_MULTIPLIER;
-            // Scale sky coordinates
-            for (int i = 0; i < SKY_VERTEX_COUNT * 3; ++i) {
-                _skyCoords[i] = SKY_COORDS[i] * skyScale;
+        // Scale sky coordinates
+        float skyScale = viewState.getFar() * SKY_SCALE_MULTIPLIER;
+        const cglib::mat4x4<float>& mvpMat = viewState.getRTEModelviewProjectionMat();
+        glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, mvpMat.data());
+
+        std::size_t vertexCount = sizeof(SKY_COORDS) / sizeof(float) / 3;
+        if (_skyCoords.size() != vertexCount * 3) {
+            _skyCoords.resize(vertexCount * 3);
+        }
+        for (std::size_t i = 0; i < vertexCount * 3; i++) {
+            _skyCoords[i] = SKY_COORDS[i] * skyScale;
+        }
+
+        // Draw
+        glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 0, _skyCoords.data());
+        glVertexAttribPointer(_a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, SKY_TEX_COORDS);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount);
+    }
+
+    void BackgroundRenderer::BuildSphereSurface(std::vector<cglib::vec3<double> >& vertices, std::vector<cglib::vec3<float> >& normals, std::vector<cglib::vec2<float> >& texCoords, std::vector<unsigned short>& indices, int tesselateU, int tesselateV) {
+        int vertexCount = (tesselateU + 1) * (tesselateV + 1);
+        int indexCount = 6 * tesselateU * tesselateV;
+        vertices.reserve(vertexCount);
+        normals.reserve(vertexCount);
+        texCoords.reserve(vertexCount);
+        indices.reserve(indexCount);
+
+        // Note: we use simple longitude/latitude tesselation scheme. Recursive tetrahedra-based surface would contain fewer vertexCount but produces texture artifacts near poles
+        for (int j = 0; j <= tesselateV; j++) {
+            float t = 1.0f - 1.0f * j / tesselateV;
+            double v = Const::PI * (static_cast<double>(j) / tesselateV - 0.5);
+            for (int i = 0; i <= tesselateU; i++) {
+                float s = 2.0f * i / tesselateU;
+                double u = 2.0 * Const::PI * (static_cast<double>(i) / tesselateU - 0.5);
+
+                double x = std::cos(u) * std::cos(v);
+                double y = std::sin(u) * std::cos(v);
+                double z = std::sin(v);
+
+                vertices.emplace_back(x, y, z);
+                normals.emplace_back(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z));
+                texCoords.emplace_back(s, t);
             }
-            const cglib::mat4x4<float>& mvpMat = viewState.getRTEModelviewProjectionMat();
-            glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, mvpMat.data());
-    
-            // Draw
-            glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 0, _skyCoords);
-            glVertexAttribPointer(_a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, SKY_TEX_COORDS);
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, SKY_VERTEX_COUNT);
+        }
+
+        for (int j = 0; j < tesselateV; j++) {
+            for (int i = 0; i < tesselateU; i++) {
+                int i00 = (i + 0) + (j + 0) * (tesselateU + 1);
+                int i01 = (i + 0) + (j + 1) * (tesselateU + 1);
+                int i10 = (i + 1) + (j + 0) * (tesselateU + 1);
+                int i11 = (i + 1) + (j + 1) * (tesselateU + 1);
+
+                indices.push_back(static_cast<unsigned short>(i00));
+                indices.push_back(static_cast<unsigned short>(i10));
+                indices.push_back(static_cast<unsigned short>(i01));
+                indices.push_back(static_cast<unsigned short>(i10));
+                indices.push_back(static_cast<unsigned short>(i11));
+                indices.push_back(static_cast<unsigned short>(i01));
+            }
         }
     }
     

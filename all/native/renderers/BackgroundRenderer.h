@@ -10,6 +10,9 @@
 #include "graphics/utils/GLContext.h"
 
 #include <memory>
+#include <vector>
+
+#include <cglib/vec.h>
 
 namespace carto {
     class Bitmap;
@@ -31,27 +34,34 @@ namespace carto {
         void onSurfaceDestroyed();
     
     protected:
+        static void BuildSphereSurface(std::vector<cglib::vec3<double> >& vertices, std::vector<cglib::vec3<float> >& normals, std::vector<cglib::vec2<float> >& texCoords, std::vector<unsigned short>& indices, int tesselateU, int tesselateV);
+
         void drawBackground(const ViewState& viewState);
         void drawSky(const ViewState& viewState);
+
+        enum { SURFACE_TESSELATION_LEVELS = 64 };
     
-        const static float BACKGROUND_COORDS[];
-        const static float BACKGROUND_TEX_COORDS[];
-        const static int BACKGROUND_VERTEX_COUNT = 4;
+        const static float BACKGROUND_COORDS[12];
+        const static float BACKGROUND_TEX_COORDS[8];
     
-        const static float SKY_COORDS[];
-        const static float SKY_TEX_COORDS[];
-        const static int SKY_VERTEX_COUNT = 16;
+        const static float SKY_COORDS[48];
+        const static float SKY_TEX_COORDS[48];
         const static float SKY_SCALE_MULTIPLIER;
     
         std::shared_ptr<Bitmap> _backgroundBitmap;
         std::shared_ptr<Texture> _backgroundTex;
-        float _backgroundCoords[BACKGROUND_VERTEX_COUNT * 3];
-        float _backgroundTexCoords[BACKGROUND_VERTEX_COUNT * 2];
+        std::vector<float> _backgroundCoords;
+        std::vector<float> _backgroundTexCoords;
     
         std::shared_ptr<Bitmap> _skyBitmap;
         std::shared_ptr<Texture> _skyTex;
-        float _skyCoords[SKY_VERTEX_COUNT * 3];
+        std::vector<float> _skyCoords;
     
+        std::vector<cglib::vec3<double> > _vertices;
+        std::vector<cglib::vec3<float> > _normals;
+        std::vector<cglib::vec2<float> > _texCoords;
+        std::vector<unsigned short> _indices;
+
         std::shared_ptr<Shader> _shader;
         GLuint _a_coord;
         GLuint _a_texCoord;
