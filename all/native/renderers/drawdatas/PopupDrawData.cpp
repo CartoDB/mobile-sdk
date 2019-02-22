@@ -11,7 +11,7 @@
 
 namespace carto {
 
-    PopupDrawData::PopupDrawData(Popup& popup, const PopupStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface, const Options& options,
+    PopupDrawData::PopupDrawData(Popup& popup, const PopupStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface, const std::shared_ptr<Options>& options,
                                  const ViewState& viewState) :
         BillboardDrawData(popup,
                           style,
@@ -36,7 +36,7 @@ namespace carto {
     PopupDrawData::~PopupDrawData() {
     }
     
-    ScreenPos PopupDrawData::CalculateAnchorScreenPos(const Popup& popup, const ViewState& viewState, const Options& options, const Projection& projection) {
+    ScreenPos PopupDrawData::CalculateAnchorScreenPos(const Popup& popup, const ViewState& viewState, const std::shared_ptr<Options>& options, const Projection& projection) {
         if (std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface()) {
             cglib::vec2<float> screenPos = viewState.worldToScreen(projectionSurface->calculatePosition(projection.toInternal(popup.getRootGeometry()->getCenterPos())), options);
             return ScreenPos(screenPos(0), screenPos(1));

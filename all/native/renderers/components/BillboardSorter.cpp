@@ -33,9 +33,6 @@ namespace carto {
         }
     
         // Calculate the world positions of the bottom screen corners, offset them by a little to avoid certain artifacts
-        cglib::vec3<double> bottomLeft = viewState.screenToWorldPlane(cglib::vec2<float>(0, viewState.getHeight() * 1.5f), 0);
-        cglib::vec3<double> bottomRight = viewState.screenToWorldPlane(cglib::vec2<float>(viewState.getWidth(), viewState.getHeight() * 1.5f), 0);
-        cglib::vec3<double> bottomAxis = cglib::unit(bottomRight - bottomLeft);
         bool sort3D = viewState.getTilt() < 90;
     
         // Calculate billboard distances
@@ -50,8 +47,8 @@ namespace carto {
     
             if (!sort3D) {
                 // If in 2D, calculate distance from the bottom of the screen
-                cglib::vec3<double> projPos = bottomLeft + bottomAxis * cglib::dot_product(pos - bottomLeft, bottomAxis);
-                drawData->setScreenBottomDistance(cglib::length(projPos - pos));
+                cglib::vec2<float> screenPos = viewState.worldToScreen(pos);
+                drawData->setScreenBottomDistance(viewState.getHeight() - screenPos(1));
             }
         }
 

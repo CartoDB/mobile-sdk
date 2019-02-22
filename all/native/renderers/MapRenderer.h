@@ -145,7 +145,7 @@ namespace carto {
         void moveToFitPoints(const MapPos& center, const std::vector<MapPos>& points, const ScreenBounds& screenBounds, bool integerZoom, bool resetTilt, bool resetRotation, float durationSeconds);
         
         MapPos screenToWorld(const ScreenPos& screenPos, const ViewState& viewState) const;
-        ScreenPos worldToScreen(const MapPos& worldPos, const ViewState& viewState) const;
+        ScreenPos worldToScreen(const MapPos& mapPos, const ViewState& viewState) const;
     
         void onSurfaceCreated();
         void onSurfaceChanged(int width, int height);

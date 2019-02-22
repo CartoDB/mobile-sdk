@@ -91,7 +91,10 @@ namespace carto {
         }
         std::shared_ptr<Projection> projection = options->getBaseProjection();
 
-        cglib::vec3<double> target = viewState.screenToWorldPlane(cglib::vec2<float>(screenPos.getX(), screenPos.getY()), options);
+        cglib::vec3<double> target = viewState.screenToWorld(cglib::vec2<float>(screenPos.getX(), screenPos.getY()), 0, options);
+        if (std::isnan(cglib::norm(target))) {
+            return; // point not on surface
+        }
         cglib::vec3<double> origin = viewState.getCameraPos();
         cglib::ray3<double> ray(origin, target - origin);
 

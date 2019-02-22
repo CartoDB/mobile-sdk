@@ -328,20 +328,20 @@ namespace carto {
         void calculateViewState(const Options& options);
     
         /**
-         * Projects a screen position into the map plane using the current view state.
+         * Projects a screen position into the projection surface (world) using the current view state.
          * @param screenPos The screen position.
+         * @param height The height in world space.
          * @param options The options object.
-         * @return The screen position projected into the map plane, in internal coordinates.
+         * @return The screen position projected into the map plane, in internal coordinates. If screen position does not hit projection surface, NaNs are returned.
          */
-        // TODO: rename: screenToWorld
-        cglib::vec3<double> screenToWorldPlane(const cglib::vec2<float>& screenPos, std::shared_ptr<Options> options = std::shared_ptr<Options>()) const;
+        cglib::vec3<double> screenToWorld(const cglib::vec2<float>& screenPos, double height, std::shared_ptr<Options> options = std::shared_ptr<Options>()) const;
         /**
          * Projects a world position onto the screen using the current view state.
          * @param worldPos The world position.
          * @param options The options object.
          * @return The world position projected onto the screen, in pixel coordinates.
          */
-        cglib::vec2<float> worldToScreen(const cglib::vec3<double>& worldPos, const Options& options) const;
+        cglib::vec2<float> worldToScreen(const cglib::vec3<double>& worldPos, std::shared_ptr<Options> options = std::shared_ptr<Options>()) const;
     
         /**
          * Returns the horizontal offset direction, caused by seamless panning horizontally over the map borders.

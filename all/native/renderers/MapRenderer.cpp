@@ -422,7 +422,12 @@ namespace carto {
 
                 ScreenPos screenPos = screenBounds.getCenter();
                 // TODO: questionable
-                MapVec delta = focusPos - projectionSurface->calculateMapPos(viewState.screenToWorldPlane(cglib::vec2<float>(screenPos.getX(), screenPos.getY()), _options));
+                cglib::vec3<double> pos = viewState.screenToWorld(cglib::vec2<float>(screenPos.getX(), screenPos.getY()), 0, _options);
+                if (std::isnan(cglib::norm(pos))) {
+                    Log::Error("MapRenderer::moveToFitPoints: Failed to translate screen position!");
+                    return;
+                }
+                MapVec delta = focusPos - projectionSurface->calculateMapPos(pos);
                 focusPos = center + delta;
                 cameraPanEvent.setPos(focusPos);
                 cameraPanEvent.calculate(*_options, viewState);
@@ -430,7 +435,7 @@ namespace carto {
     
                 bool fit = true;
                 for (const MapPos& mapPos : points) {
-                    cglib::vec2<float> screenPos = viewState.worldToScreen(projectionSurface->calculatePosition(mapPos), *_options);
+                    cglib::vec2<float> screenPos = viewState.worldToScreen(projectionSurface->calculatePosition(mapPos), _options);
                     if (!screenBounds.contains(ScreenPos(screenPos(0), screenPos(1)))) {
                         fit = false;
                         break;
@@ -484,13 +489,12 @@ namespace carto {
     
     MapPos MapRenderer::screenToWorld(const ScreenPos& screenPos, const ViewState& viewState) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _options->getProjectionSurface()->calculateMapPos(viewState.screenToWorldPlane(cglib::vec2<float>(screenPos.getX(), screenPos.getY()), _options));
+        return _options->getProjectionSurface()->calculateMapPos(viewState.screenToWorld(cglib::vec2<float>(screenPos.getX(), screenPos.getY()), 0, _options));
     }
     
-    // TODO: rename worldPos -> internalPos?
-    ScreenPos MapRenderer::worldToScreen(const MapPos& worldPos, const ViewState& viewState) const {
+    ScreenPos MapRenderer::worldToScreen(const MapPos& mapPos, const ViewState& viewState) const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        cglib::vec2<float> screenPos = viewState.worldToScreen(_options->getProjectionSurface()->calculatePosition(worldPos), *_options);
+        cglib::vec2<float> screenPos = viewState.worldToScreen(_options->getProjectionSurface()->calculatePosition(mapPos), _options);
         return ScreenPos(screenPos(0), screenPos(1));
     }
     

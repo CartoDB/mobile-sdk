@@ -39,6 +39,9 @@ namespace carto {
     
         // Min and max supported tilt angles
         static const float MIN_SUPPORTED_TILT_ANGLE;
+        // Minimum height (negative value). This is needed for globe view as the globe is tesselated and surface may be 'below'
+        // zero level. Should be approximately -WORLD_SIZE * cos(PI / TESSELATION_LEVEL) + WORLD_SIZE.
+        static const float MIN_HEIGHT;
         // Maximum building height, taller buildings will get clipped, if the camera
         // gets lower than the acutal building height, then it will get clipped anyway
         // for world map: Const.UNIT_SIZE / 16667. For SF map this looks usable: Const.UNIT_SIZE / 833
@@ -46,7 +49,7 @@ namespace carto {
         // Minimum near plane distance, used to avoid visual artifacts on large zoom levels
         static const float MIN_NEAR;
         // Maximum near plane distance
-        static const float MAX_NEAR;
+        static const float MAX_NEAR; // TODO: can be removed
     };
     
 }

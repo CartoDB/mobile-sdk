@@ -83,8 +83,6 @@ namespace carto {
         
         void checkMapStable();
 
-        bool isValidTouchPosition(const cglib::vec3<double>& pos, const ViewState& viewState) const;
-
         float calculateRotatingScalingFactor(const ScreenPos& screenPos1, const ScreenPos& screenPos2) const;
 
         void singlePointerPan(const ScreenPos& screenPos, const ViewState& viewState);
@@ -93,7 +91,8 @@ namespace carto {
         void dualPointerTilt(const ScreenPos& screenPos, const ViewState& viewState);
         void dualPointerPan(const ScreenPos& screenPos1, const ScreenPos& screenPos2, bool rotate, bool scale, const ViewState& viewState);
 
-        void handleClick(ClickType::ClickType clickType, const MapPos& targetPos);
+        bool isValidTouchPosition(const ScreenPos& screenPos, const ViewState& viewState) const;
+        void handleClick(ClickType::ClickType clickType, const ScreenPos& screenPos);
     
         static const float GUESS_MAX_DELTA_Y_INCHES;
         static const float GUESS_MIN_SWIPE_LENGTH_SAME_INCHES;

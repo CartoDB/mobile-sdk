@@ -466,9 +466,9 @@ namespace carto {
         }
     }
     
-    cglib::vec3<double> ViewState::screenToWorldPlane(const cglib::vec2<float>& screenPos, std::shared_ptr<Options> options) const {
+    cglib::vec3<double> ViewState::screenToWorld(const cglib::vec2<float>& screenPos, double height, std::shared_ptr<Options> options) const {
         if (_width <= 0 || _height <= 0) {
-            Log::Error("ViewState::screenToWorldPlane: Failed to transform point from screen space to world plane, screen size is unknown");
+            Log::Error("ViewState::screenToWorld: Failed to transform point from screen space to world plane, screen size is unknown");
             return cglib::vec3<double>(0, 0, 0);
         }
 
@@ -479,7 +479,7 @@ namespace carto {
             modelviewProjectionMat = calculateModelViewMat(*options);
         }
         if (!projectionSurface) {
-            return cglib::vec3<double>(0, 0, 0); // TODO: better impl
+            return cglib::vec3<double>(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
         }
         cglib::mat4x4<double> invModelviewProjectionMat = cglib::inverse(modelviewProjectionMat);
 
@@ -492,19 +492,22 @@ namespace carto {
 
         // TODO: check calling sites. Decide what to do when no hit.
         double t = -1;
-        if (!projectionSurface->calculateHitPoint(ray, 0, t) || t < 0) {
-            return cglib::vec3<double>(0, 0, 0); // TODO: better impl
+        if (!projectionSurface->calculateHitPoint(ray, height, t) || t < 0) {
+            return cglib::vec3<double>(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
         }
         return ray(t);
     }
     
-    cglib::vec2<float> ViewState::worldToScreen(const cglib::vec3<double>& worldPos, const Options& options) const {
+    cglib::vec2<float> ViewState::worldToScreen(const cglib::vec3<double>& worldPos, std::shared_ptr<Options> options) const {
         if (_width <= 0 || _height <= 0) {
             Log::Error("ViewState::worldToScreen: Failed to transform point from world to screen space, screen size is unknown");
             return cglib::vec2<float>(0, 0);
         }
         
-        cglib::mat4x4<double> modelviewProjectionMat = calculateModelViewMat(options);
+        cglib::mat4x4<double> modelviewProjectionMat = _modelviewProjectionMat;
+        if (options) {
+            modelviewProjectionMat = calculateModelViewMat(*options);
+        }
 
         // Transfrom world pos to screen
         cglib::vec3<float> screenCGPos = cglib::vec3<float>::convert(cglib::transform_point(worldPos, modelviewProjectionMat));
@@ -533,15 +536,11 @@ namespace carto {
         cglib::vec3<double> pos1Origin = cglib::transform_point(cglib::vec3<double>(0, 0,  1), invModelviewProjMat);
         cglib::vec3<double> zProjVector = cglib::unit(pos1Origin - pos0Origin);
 
-        double heightMin = 0;
-        double heightMax = Const::MAX_HEIGHT / Const::EARTH_CIRCUMFERENCE;
+        double heightMin = Const::MIN_HEIGHT;
+        double heightMax = Const::MAX_HEIGHT;
 
-        double zMax = 0;
         double zMin = cglib::dot_product(options.getProjectionSurface()->calculateNearestPoint(pos0Origin, heightMax) - pos0Origin, zProjVector);
-        if (zMin < 0) {
-            zMin = cglib::dot_product(options.getProjectionSurface()->calculateNearestPoint(pos0Origin, heightMin) - pos0Origin, zProjVector);
-        }
-
+        double zMax = zMin;
         for (double x : { -1, 1 }) {
             for (double y : { -1, 1 }) {
                 cglib::vec3<double> pos0 = cglib::transform_point(cglib::vec3<double>(x, y, -1), invModelviewProjMat);
@@ -595,7 +594,7 @@ namespace carto {
         }
 
         // TODO: check multipliers, in theory 0.99/1.01 should suffice
-        return std::make_pair(static_cast<float>(zMin * 0.8f), static_cast<float>(zMax * 1.2f));
+        return std::make_pair(std::max(static_cast<float>(zMin), Const::MIN_NEAR) * 0.9f, std::max(static_cast<float>(zMax), Const::MIN_NEAR) * 1.1f);
     }
     
     float ViewState::calculateMinZoom(const Options& options) const {

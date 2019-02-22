@@ -334,7 +334,7 @@ namespace carto {
         } else if (const std::shared_ptr<Popup>& popup = std::dynamic_pointer_cast<Popup>(element)) {
             if (!popup->getDrawData() || popup->getDrawData()->isOffset()) {
                 if (auto options = _options.lock()) {
-                    popup->setDrawData(std::make_shared<PopupDrawData>(*popup, *popup->getStyle(), *_dataSource->getProjection(), *projectionSurface, *options, _lastCullState->getViewState()));
+                    popup->setDrawData(std::make_shared<PopupDrawData>(*popup, *popup->getStyle(), *_dataSource->getProjection(), *projectionSurface, options, _lastCullState->getViewState()));
                 } else {
                     return;
                 }
@@ -435,7 +435,7 @@ namespace carto {
         } else if (const std::shared_ptr<Popup>& popup = std::dynamic_pointer_cast<Popup>(element)) {
             if (visible && !remove) {
                 if (auto options = _options.lock()) {
-                    popup->setDrawData(std::make_shared<PopupDrawData>(*popup, *popup->getStyle(), *_dataSource->getProjection(), *projectionSurface, *options, viewState));
+                    popup->setDrawData(std::make_shared<PopupDrawData>(*popup, *popup->getStyle(), *_dataSource->getProjection(), *projectionSurface, options, viewState));
                     _billboardRenderer->updateElement(popup);
                 }
             } else {

@@ -18,11 +18,11 @@ namespace carto {
     
     class PopupDrawData : public BillboardDrawData {
     public:
-        PopupDrawData(Popup& popup, const PopupStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface, const Options& options, const ViewState& viewState);
+        PopupDrawData(Popup& popup, const PopupStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface, const std::shared_ptr<Options>& options, const ViewState& viewState);
         virtual ~PopupDrawData();
 
     private:
-        static ScreenPos CalculateAnchorScreenPos(const Popup& popup, const ViewState& viewState, const Options& options, const Projection& projection);
+        static ScreenPos CalculateAnchorScreenPos(const Popup& popup, const ViewState& viewState, const std::shared_ptr<Options>& options, const Projection& projection);
     };
     
 }
