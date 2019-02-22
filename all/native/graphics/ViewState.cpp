@@ -541,59 +541,48 @@ namespace carto {
 
         double zMin = cglib::dot_product(options.getProjectionSurface()->calculateNearestPoint(pos0Origin, heightMax) - pos0Origin, zProjVector);
         double zMax = zMin;
+
+        bool extraScan = false;
         for (double x : { -1, 1 }) {
             for (double y : { -1, 1 }) {
                 cglib::vec3<double> pos0 = cglib::transform_point(cglib::vec3<double>(x, y, -1), invModelviewProjMat);
                 cglib::vec3<double> pos1 = cglib::transform_point(cglib::vec3<double>(x, y,  1), invModelviewProjMat);
                 cglib::ray3<double> ray(pos0, pos1 - pos0);
 
-                double z0 = std::pow(2.0f, -_zoom) * zoom0Distance * options.getDrawDistance();
-                double t0 = -1;
-                cglib::vec3<double> nearestPos0 = options.getProjectionSurface()->calculateNearestPoint(ray, heightMin, t0);
-                if (t0 >= 0) {
-                    z0 = cglib::dot_product(nearestPos0 - pos0, zProjVector);
+                double z = std::pow(2.0f, -_zoom) * zoom0Distance * options.getDrawDistance();
+                
+                double t = -1;
+                if (options.getProjectionSurface()->calculateHitPoint(ray, heightMin, t)) {
+                    if (t >= 0) {
+                        z = cglib::dot_product(ray(t) - pos0, zProjVector);
+                    }
+                } else {
+                    cglib::vec3<double> nearestPos0 = options.getProjectionSurface()->calculateNearestPoint(ray, heightMin, t);
+                    if (t >= 0) {
+                        z = cglib::dot_product(nearestPos0 - pos0, zProjVector);
+                    }
+                    extraScan = true;
                 }
 
-                double z1 = z0 * 0.5f;
-                double t1 = -1;
-                cglib::vec3<double> nearestPos1 = options.getProjectionSurface()->calculateNearestPoint(ray, heightMax, t1);
-                if (t1 >= 0) {
-                    z1 = std::min(z1, cglib::dot_product(nearestPos1 - pos0, zProjVector));
-                }
-
-                zMax = std::max(zMax, z0);
-                zMin = std::min(zMin, z1);
+                zMax = std::max(zMax, z);
             }
         }
 
-        // TODO: remove
-        double clipNear = std::min(_cameraPos(2) * 0.9, std::max(_cameraPos(2) - Const::MAX_HEIGHT, static_cast<double>(Const::MIN_NEAR)));
-        if (std::abs(90 - _tilt - halfFOVY) < 90) {
-            // Put near plane to intersection between frustum and ground plane
-            double cosAminusB = std::cos((90 - _tilt - halfFOVY) * Const::DEG_TO_RAD);
-            double cosB = std::cos(halfFOVY * Const::DEG_TO_RAD);
-            clipNear = clipNear * cosB / cosAminusB;
-        }
-        clipNear = std::min(clipNear, static_cast<double>(Const::MAX_NEAR));
+        if (extraScan) {
+            for (double y = -1; y < 1; y += 2.0 / _height) {
+                double x = 0;
+                cglib::vec3<double> pos0 = cglib::transform_point(cglib::vec3<double>(x, y, -1), invModelviewProjMat);
+                cglib::vec3<double> pos1 = cglib::transform_point(cglib::vec3<double>(x, y,  1), invModelviewProjMat);
+                cglib::ray3<double> ray(pos0, pos1 - pos0);
 
-        // TODO: remove
-        // Hack: compensate focus point offset by increasing tilt
-        float tilt = _tilt;
-        if (options.getFocusPointOffset().getY() < 0) {
-            float delta = -2 * options.getFocusPointOffset().getY() / _height;
-            tilt = std::max(0.0f, tilt - static_cast<float>(std::atan2(delta, 1) * Const::RAD_TO_DEG));
-        }
-        double clipFar = _cameraPos(2) * options.getDrawDistance();
-        if (90 - tilt + halfFOVY < 90) {
-            // Put far plane to intersection between frustum and ground plane
-            double cosAplusB = std::cos((90 - tilt + halfFOVY) * Const::DEG_TO_RAD);
-            double cosB = std::cos(halfFOVY * Const::DEG_TO_RAD);
-            double distance = _cameraPos(2) * cosB / cosAplusB;
-            // Put far plane a bit further to avoid precision issues
-            clipFar = std::min(clipFar, 1.1 * distance);
+                double t = -1;
+                cglib::vec3<double> nearestPos0 = options.getProjectionSurface()->calculateNearestPoint(ray, heightMin, t);
+                if (t >= 0) {
+                    zMax = std::max(zMax, cglib::dot_product(nearestPos0 - pos0, zProjVector));
+                }
+            }
         }
 
-        // TODO: check multipliers, in theory 0.99/1.01 should suffice
         return std::make_pair(std::max(static_cast<float>(zMin), Const::MIN_NEAR) * 0.9f, std::max(static_cast<float>(zMax), Const::MIN_NEAR) * 1.1f);
     }
     
