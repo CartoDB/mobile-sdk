@@ -151,11 +151,14 @@ namespace carto {
     }
         
     MapPos MapRenderer::screenToMap(const ScreenPos& screenPos, const ViewState& viewState) {
-        return _options->getBaseProjection()->fromInternal(screenToWorld(screenPos, viewState));
+        MapPos mapPosInternal = _options->getProjectionSurface()->calculateMapPos(viewState.screenToWorld(cglib::vec2<float>(screenPos.getX(), screenPos.getY()), 0, _options));
+        return _options->getBaseProjection()->fromInternal(mapPosInternal);
     }
 
     ScreenPos MapRenderer::mapToScreen(const MapPos& mapPos, const ViewState& viewState) {
-        return worldToScreen(_options->getBaseProjection()->toInternal(mapPos), viewState);
+        MapPos mapPosInternal =_options->getBaseProjection()->toInternal(mapPos);
+        cglib::vec2<float> screenPos = viewState.worldToScreen(_options->getProjectionSurface()->calculatePosition(mapPosInternal), _options);
+        return ScreenPos(screenPos(0), screenPos(1));
     }
 
     void MapRenderer::requestRedraw() const {
@@ -485,17 +488,6 @@ namespace carto {
             calculateCameraEvent(cameraTiltEvent, durationSeconds, false);
         }
         calculateCameraEvent(cameraZoomEvent, durationSeconds, false);
-    }
-    
-    MapPos MapRenderer::screenToWorld(const ScreenPos& screenPos, const ViewState& viewState) const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _options->getProjectionSurface()->calculateMapPos(viewState.screenToWorld(cglib::vec2<float>(screenPos.getX(), screenPos.getY()), 0, _options));
-    }
-    
-    ScreenPos MapRenderer::worldToScreen(const MapPos& mapPos, const ViewState& viewState) const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        cglib::vec2<float> screenPos = viewState.worldToScreen(_options->getProjectionSurface()->calculatePosition(mapPos), _options);
-        return ScreenPos(screenPos(0), screenPos(1));
     }
     
     void MapRenderer::onSurfaceCreated() {

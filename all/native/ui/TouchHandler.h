@@ -91,7 +91,8 @@ namespace carto {
         void dualPointerTilt(const ScreenPos& screenPos, const ViewState& viewState);
         void dualPointerPan(const ScreenPos& screenPos1, const ScreenPos& screenPos2, bool rotate, bool scale, const ViewState& viewState);
 
-        bool isValidTouchPosition(const ScreenPos& screenPos, const ViewState& viewState) const;
+        bool isValidScreenPosition(const ScreenPos& screenPos, const ViewState& viewState) const;
+        MapPos mapScreenPosition(const ScreenPos& screenPos, const ViewState& viewState) const;
         void handleClick(ClickType::ClickType clickType, const ScreenPos& screenPos);
     
         static const float GUESS_MAX_DELTA_Y_INCHES;

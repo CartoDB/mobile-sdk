@@ -192,8 +192,8 @@ namespace carto {
                 {
                     std::lock_guard<std::mutex> lock(_mutex);
                     _gestureMode = SINGLE_POINTER_CLICK_GUESS;
-                    if (cglib::length(_swipe1) < GUESS_SWIPE_ZOOM_THRESHOLD && isValidTouchPosition(screenPos1, viewState)) {
-                        MapPos targetPos = _mapRenderer->screenToWorld(screenPos1, viewState);
+                    if (cglib::length(_swipe1) < GUESS_SWIPE_ZOOM_THRESHOLD && isValidScreenPosition(screenPos1, viewState)) {
+                        MapPos targetPos = mapScreenPosition(screenPos1, viewState);
 
                         CameraZoomEvent cameraZoomTargetEvent;
                         cameraZoomTargetEvent.setZoomDelta(1.0f);
@@ -266,8 +266,8 @@ namespace carto {
             _mapRenderer->getAnimationHandler().stopZoom();
             
             ViewState viewState = _mapRenderer->getViewState();
-            if (isValidTouchPosition(screenPos, viewState)) {
-                MapPos targetPos(_mapRenderer->screenToWorld(screenPos, viewState));
+            if (isValidScreenPosition(screenPos, viewState)) {
+                MapPos targetPos(mapScreenPosition(screenPos, viewState));
 
                 CameraZoomEvent cameraZoomTargetEvent;
                 cameraZoomTargetEvent.setZoomDelta(delta * WHEEL_TICK_TO_ZOOM_DELTA);
@@ -324,9 +324,9 @@ namespace carto {
             _mapRenderer->getAnimationHandler().stopTilt();
             _mapRenderer->getAnimationHandler().stopZoom();
             
-            if (isValidTouchPosition(screenPos, viewState) && isValidTouchPosition(_prevScreenPos1, viewState)) {
-                MapPos currentPos = _mapRenderer->screenToWorld(screenPos, viewState);
-                MapPos prevPos = _mapRenderer->screenToWorld(_prevScreenPos1, viewState);
+            if (isValidScreenPosition(screenPos, viewState) && isValidScreenPosition(_prevScreenPos1, viewState)) {
+                MapPos currentPos = mapScreenPosition(screenPos, viewState);
+                MapPos prevPos = mapScreenPosition(_prevScreenPos1, viewState);
 
                 CameraPanEvent cameraEvent;
                 cameraEvent.setPosDelta(std::make_pair(currentPos, prevPos));
@@ -452,17 +452,17 @@ namespace carto {
             _mapRenderer->getAnimationHandler().stopTilt();
             _mapRenderer->getAnimationHandler().stopZoom();
             
-            if (isValidTouchPosition(screenPos1, viewState) && isValidTouchPosition(_prevScreenPos1, viewState)
-            &&  isValidTouchPosition(screenPos2, viewState) && isValidTouchPosition(_prevScreenPos2, viewState)) {
-                cglib::vec3<double> currentPos1 = projectionSurface->calculatePosition(_mapRenderer->screenToWorld(screenPos1, viewState));
-                cglib::vec3<double> currentPos2 = projectionSurface->calculatePosition(_mapRenderer->screenToWorld(screenPos2, viewState));
+            if (isValidScreenPosition(screenPos1, viewState) && isValidScreenPosition(_prevScreenPos1, viewState)
+            &&  isValidScreenPosition(screenPos2, viewState) && isValidScreenPosition(_prevScreenPos2, viewState)) {
+                cglib::vec3<double> currentPos1 = projectionSurface->calculatePosition(mapScreenPosition(screenPos1, viewState));
+                cglib::vec3<double> currentPos2 = projectionSurface->calculatePosition(mapScreenPosition(screenPos2, viewState));
                 cglib::vec3<double> currentVec = currentPos2 - currentPos1;
                 double currentDist = projectionSurface->calculateMapDistance(currentPos1, currentPos2);
                 cglib::mat4x4<double> currentTranslateTransform = projectionSurface->calculateTranslateMatrix(currentPos1, currentPos2, 0.5f);
                 MapPos currentMiddlePos = projectionSurface->calculateMapPos(cglib::transform_point(currentPos1, currentTranslateTransform));
 
-                cglib::vec3<double> prevPos1 = projectionSurface->calculatePosition(_mapRenderer->screenToWorld(_prevScreenPos1, viewState));
-                cglib::vec3<double> prevPos2 = projectionSurface->calculatePosition(_mapRenderer->screenToWorld(_prevScreenPos2, viewState));
+                cglib::vec3<double> prevPos1 = projectionSurface->calculatePosition(mapScreenPosition(_prevScreenPos1, viewState));
+                cglib::vec3<double> prevPos2 = projectionSurface->calculatePosition(mapScreenPosition(_prevScreenPos2, viewState));
                 cglib::vec3<double> prevVec = prevPos2 - prevPos1;
                 double prevDist = projectionSurface->calculateMapDistance(prevPos1, prevPos2);
                 cglib::mat4x4<double> prevTranslateTransform = projectionSurface->calculateTranslateMatrix(prevPos1, prevPos2, 0.5f);
@@ -569,7 +569,7 @@ namespace carto {
         }
     }
     
-    bool TouchHandler::isValidTouchPosition(const ScreenPos& screenPos, const ViewState& viewState) const {
+    bool TouchHandler::isValidScreenPosition(const ScreenPos& screenPos, const ViewState& viewState) const {
         if (!viewState.getProjectionSurface()) {
             return false;
         }
@@ -582,12 +582,17 @@ namespace carto {
         return dist > 0 && dist < viewState.getFar();
     }
 
+    MapPos TouchHandler::mapScreenPosition(const ScreenPos& screenPos, const ViewState& viewState) const {
+        cglib::vec3<double> pos = viewState.screenToWorld(cglib::vec2<float>(screenPos.getX(), screenPos.getY()), 0);
+        return viewState.getProjectionSurface()->calculateMapPos(pos);
+    }
+
     void TouchHandler::handleClick(ClickType::ClickType clickType, const ScreenPos& screenPos) {
         ViewState viewState = _mapRenderer->getViewState();
-        if (!isValidTouchPosition(screenPos, viewState)) {
+        if (!isValidScreenPosition(screenPos, viewState)) {
             return;
         }
-        MapPos mapPos = _mapRenderer->screenToWorld(screenPos, viewState);
+        MapPos mapPos = mapScreenPosition(screenPos, viewState);
         
         std::vector<RayIntersectedElement> results;
         _mapRenderer->calculateRayIntersectedElements(mapPos, viewState, results);

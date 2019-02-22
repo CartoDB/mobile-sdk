@@ -304,6 +304,11 @@ namespace carto {
         
         std::shared_ptr<ProjectionSurface> projectionSurface = mapRenderer->getProjectionSurface();
         ViewState viewState = mapRenderer->getViewState();
+        cglib::vec3<double> worldPos1 = viewState.screenToWorld(cglib::vec2<float>(screenPos1.getX(), screenPos1.getY()), 0);
+        if (std::isnan(cglib::norm(worldPos1))) {
+            return false;
+        }
+        MapPos mapPos1 = layer->_dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(worldPos1));
 
         std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
         std::shared_ptr<VectorElement> selectedElement = layer->getSelectedVectorElement();
@@ -316,10 +321,8 @@ namespace carto {
         switch (action) {
         case TouchHandler::ACTION_POINTER_1_DOWN:
             {
-                MapPos mapPos1 = layer->_dataSource->getProjection()->fromInternal(mapRenderer->screenToWorld(screenPos1, viewState));
-                MapPos touchPos = mapRenderer->screenToWorld(screenPos1, viewState);
                 cglib::vec3<double> origin = viewState.getCameraPos();
-                cglib::vec3<double> target = projectionSurface->calculatePosition(touchPos);
+                cglib::vec3<double> target = worldPos1;
                 cglib::ray3<double> ray(origin, target - origin);
 
                 std::vector<RayIntersectedElement> results;
@@ -363,7 +366,7 @@ namespace carto {
                     }
                     layer->_overlayDragMode = VectorElementDragMode::VECTOR_ELEMENT_DRAG_MODE_ELEMENT;
                     layer->_overlayDragGeometry = selectedElement->getGeometry();
-                    layer->_overlayDragGeometryPos = layer->_dataSource->getProjection()->fromInternal(touchPos);
+                    layer->_overlayDragGeometryPos = mapPos1;
                     switch (dragResult) {
                         case VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_IGNORE:
                             layer->_overlayDragGeometry.reset();
@@ -388,7 +391,6 @@ namespace carto {
                     return false;
                 }
 
-                MapPos mapPos1 = layer->_dataSource->getProjection()->fromInternal(mapRenderer->screenToWorld(screenPos1, viewState));
                 VectorElementDragResult::VectorElementDragResult dragResult = VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_IGNORE;
                 if (vectorEditEventListener) {
                     auto dragInfo = std::make_shared<VectorElementDragInfo>(selectedElement, layer->_overlayDragMode, screenPos1, mapPos1);
@@ -431,7 +433,6 @@ namespace carto {
                     return false;
                 }
 
-                MapPos mapPos1 = layer->_dataSource->getProjection()->fromInternal(mapRenderer->screenToWorld(screenPos1, viewState));
                 VectorElementDragResult::VectorElementDragResult dragResult = VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_IGNORE;
                 if (vectorEditEventListener) {
                     auto dragInfo = std::make_shared<VectorElementDragInfo>(selectedElement, layer->_overlayDragMode, screenPos1, mapPos1);
