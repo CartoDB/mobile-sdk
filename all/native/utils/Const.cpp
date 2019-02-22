@@ -22,7 +22,7 @@ namespace carto {
     const float Const::MIN_SUPPORTED_TILT_ANGLE = 30.0f;
     const float Const::MIN_HEIGHT = (1 << 20) * 0.9988f - (1 << 20); // approx 64 subdivide levels
     const float Const::MAX_HEIGHT = (1 << 20) * 0.5 / 6400.0; // approx 0.5km
-    const float Const::MIN_NEAR = 0.25f;
+    const float Const::MIN_NEAR = 1.0f / 16.0f;
     const float Const::MAX_NEAR = 100.0f;
     
 }
