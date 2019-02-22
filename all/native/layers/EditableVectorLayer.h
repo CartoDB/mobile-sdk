@@ -108,8 +108,8 @@ namespace carto {
             std::weak_ptr<EditableVectorLayer> _layer;
         };
 
-        void updateElementGeometry(std::shared_ptr<VectorElement> element, std::shared_ptr<Geometry> geometry, const MapVec& delta);
-        std::shared_ptr<Geometry> updateGeometryPoints(std::shared_ptr<Geometry> geometry, const MapVec& delta);
+        void updateElementGeometry(std::shared_ptr<VectorElement> element, std::shared_ptr<Geometry> geometry, const ViewState& viewState, const MapPos& mapPos0, const MapPos& mapPos1);
+        std::shared_ptr<Geometry> updateGeometryPoints(std::shared_ptr<Geometry> geometry, const ViewState& viewState, const MapPos& mapPos0, const MapPos& mapPos1);
 
         void removeElement(std::shared_ptr<VectorElement> element);
         

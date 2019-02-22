@@ -376,7 +376,7 @@ namespace carto {
                             return false;
                         case VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_MODIFY:
                             layer->_overlayDragStarted = true;
-                            layer->updateElementGeometry(selectedElement, selectedElement->getGeometry(), MapVec());
+                            layer->updateElementGeometry(selectedElement, selectedElement->getGeometry(), viewState, MapPos(), MapPos());
                             return true;
                         case VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_DELETE:
                             layer->removeElement(selectedElement);
@@ -410,8 +410,7 @@ namespace carto {
                         if (layer->_overlayDragMode == VectorElementDragMode::VECTOR_ELEMENT_DRAG_MODE_VERTEX) {
                             layer->updateElementPoint(selectedElement, selectedPoint, mapPos1);
                         } else {
-                            MapVec delta = mapPos1 - layer->_overlayDragGeometryPos;
-                            layer->updateElementGeometry(selectedElement, selectedGeometry, delta);
+                            layer->updateElementGeometry(selectedElement, selectedGeometry, viewState, layer->_overlayDragGeometryPos, mapPos1);
                         }
                         return true;
                     case VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_DELETE:
@@ -452,8 +451,7 @@ namespace carto {
                         if (layer->_overlayDragMode == VectorElementDragMode::VECTOR_ELEMENT_DRAG_MODE_VERTEX) {
                             layer->updateElementPoint(selectedElement, selectedPoint, mapPos1);
                         } else {
-                            MapVec delta = mapPos1 - layer->_overlayDragGeometryPos;
-                            layer->updateElementGeometry(selectedElement, selectedGeometry, delta);
+                            layer->updateElementGeometry(selectedElement, selectedGeometry, viewState, layer->_overlayDragGeometryPos, mapPos1);
                         }
                         layer->refresh();
                         return true;
@@ -474,12 +472,14 @@ namespace carto {
         return false;
     }
 
-    void EditableVectorLayer::updateElementGeometry(std::shared_ptr<VectorElement> element, std::shared_ptr<Geometry> geometry, const MapVec& delta) {
+    void EditableVectorLayer::updateElementGeometry(std::shared_ptr<VectorElement> element, std::shared_ptr<Geometry> geometry, const ViewState& viewState, const MapPos& mapPos0, const MapPos& mapPos1) {
         if (!element) {
             return;
         }
         
-        geometry = updateGeometryPoints(geometry, delta);
+        if (mapPos0 != mapPos1) {
+            geometry = updateGeometryPoints(geometry, viewState, mapPos0, mapPos1);
+        }
 
         DirectorPtr<VectorEditEventListener> vectorEditEventListener = _vectorEditEventListener;
 
@@ -494,24 +494,38 @@ namespace carto {
         }
     }
 
-    std::shared_ptr<Geometry> EditableVectorLayer::updateGeometryPoints(std::shared_ptr<Geometry> geometry, const MapVec& delta) {
+    std::shared_ptr<Geometry> EditableVectorLayer::updateGeometryPoints(std::shared_ptr<Geometry> geometry, const ViewState& viewState, const MapPos& mapPos0, const MapPos& mapPos1) {
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            return geometry;
+        }
+        cglib::vec3<double> pos0 = projectionSurface->calculatePosition(_dataSource->getProjection()->toInternal(mapPos0));
+        cglib::vec3<double> pos1 = projectionSurface->calculatePosition(_dataSource->getProjection()->toInternal(mapPos1));
+        cglib::mat4x4<double> transform = projectionSurface->calculateTranslateMatrix(pos0, pos1, 1.0f);
+        
+        auto updateMapPos = [&transform, &projectionSurface, this](const MapPos& mapPos) -> MapPos {
+            cglib::vec3<double> pos = projectionSurface->calculatePosition(_dataSource->getProjection()->toInternal(mapPos));
+            pos = cglib::transform_point(pos, transform);
+            return _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(pos));
+        };
+
         if (auto pointGeometry = std::dynamic_pointer_cast<PointGeometry>(geometry)) {
-            MapPos mapPos = pointGeometry->getPos() + delta;
+            MapPos mapPos = updateMapPos(pointGeometry->getPos());
             geometry = std::make_shared<PointGeometry>(mapPos);
         } else if (auto lineGeometry = std::dynamic_pointer_cast<LineGeometry>(geometry)) {
             std::vector<MapPos> mapPoses = lineGeometry->getPoses();
-            std::for_each(mapPoses.begin(), mapPoses.end(), [delta](MapPos& mapPos) { mapPos = mapPos + delta; });
+            std::for_each(mapPoses.begin(), mapPoses.end(), [&updateMapPos](MapPos& mapPos) { mapPos = updateMapPos(mapPos); });
             geometry = std::make_shared<LineGeometry>(mapPoses);
         } else if (auto polygonGeometry = std::dynamic_pointer_cast<PolygonGeometry>(geometry)) {
             std::vector<std::vector<MapPos> > rings = polygonGeometry->getRings();
             for (std::vector<MapPos>& ring : rings) {
-                std::for_each(ring.begin(), ring.end(), [delta](MapPos& mapPos) { mapPos = mapPos + delta; });
+                std::for_each(ring.begin(), ring.end(), [&updateMapPos](MapPos& mapPos) { mapPos = updateMapPos(mapPos); });
             }
             geometry = std::make_shared<PolygonGeometry>(rings);
         } else if (auto multiGeometry = std::dynamic_pointer_cast<MultiGeometry>(geometry)) {
             std::vector<std::shared_ptr<Geometry> > geometries;
             for (int i = 0; i < multiGeometry->getGeometryCount(); i++) {
-                geometries.push_back(updateGeometryPoints(multiGeometry->getGeometry(i), delta));
+                geometries.push_back(updateGeometryPoints(multiGeometry->getGeometry(i), viewState, mapPos0, mapPos1));
             }
             geometry = std::make_shared<MultiGeometry>(geometries);
         }
