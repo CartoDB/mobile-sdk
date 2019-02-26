@@ -43,8 +43,6 @@ namespace carto {
         _subTileBlending(true),
         _labelOrder(0),
         _buildingOrder(1),
-        _northPoleColor(0),
-        _southPoleColor(0),
         _horizontalLayerOffset(0),
         _tiles(),
         _mutex()
@@ -74,12 +72,6 @@ namespace carto {
         _buildingOrder = order;
     }
 
-    void TileRenderer::setPoleColors(const vt::Color& northPoleColor, const vt::Color& southPoleColor) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _northPoleColor = northPoleColor;
-        _southPoleColor = southPoleColor;
-    }
-    
     void TileRenderer::offsetLayerHorizontally(double offset) {
         std::lock_guard<std::mutex> lock(_mutex);
         _horizontalLayerOffset += offset;
@@ -118,7 +110,6 @@ namespace carto {
         _glRenderer->setViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution());
         _glRenderer->setInteractionMode(_interactionMode);
         _glRenderer->setSubTileBlending(_subTileBlending);
-        _glRenderer->setPoleColors(_northPoleColor, _southPoleColor);
 
         _glRenderer->startFrame(deltaSeconds * 3);
 

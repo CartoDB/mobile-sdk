@@ -36,6 +36,7 @@ namespace carto {
         _backgroundBitmap(),
         _skyColor(0, 0, 0, 0),
         _skyBitmap(),
+        _poleTiles(),
         _labelCullThreadPool(std::make_shared<CancelableThreadPool>()),
         _visibleTileIds(),
         _tempDrawDatas(),
@@ -213,6 +214,19 @@ namespace carto {
         }
         return std::shared_ptr<VectorTileDecoder::TileMap>();
     }
+
+    std::shared_ptr<vt::Tile> VectorTileLayer::getPoleTile(int y) const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        vt::Color color = (y < 0 ? _tileDecoder->getMapSettings()->northPoleColor : _tileDecoder->getMapSettings()->southPoleColor);
+        std::shared_ptr<vt::Tile>& tile = _poleTiles[y < 0 ? 0 : 1];
+        if (!tile || tile->getBackground()->getColor() != color) {
+            float tileSize = 256.0f; // 'normalized' tile size in pixels. Not really important
+            vt::TileId vtTile(0, 0, y);
+            auto tileBackground = std::make_shared<vt::TileBackground>(color, std::shared_ptr<const vt::BitmapPattern>());
+            tile = std::make_shared<vt::Tile>(vtTile, tileSize, tileBackground, std::vector<std::shared_ptr<vt::TileLayer> >());
+        }
+        return tile;
+    }
     
     void VectorTileLayer::calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
@@ -269,7 +283,23 @@ namespace carto {
         bool cull = false;
         if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
             if (!(_synchronizedRefresh && _fetchingTiles.getVisibleCount() > 0)) {
-                if (tileRenderer->refreshTiles(_tempDrawDatas)) {
+                std::vector<std::shared_ptr<TileDrawData>> drawDatas = _tempDrawDatas;
+
+                // Add poles
+                if (auto options = _options.lock()) {
+                    if (options->getRenderProjectionMode() == RenderProjectionMode::RENDER_PROJECTION_MODE_SPHERICAL) {
+                        const cglib::frustum3<double>& frustum = cullState->getViewState().getFrustum();
+                        for (int y = -1; y <= 1; y += 2) {
+                            vt::TileId vtTile(0, 0, y);
+                            cglib::bbox3<double> bbox = getTileTransformer()->calculateTileBBox(vtTile);
+                            if (frustum.inside(bbox)) {
+                                drawDatas.push_back(std::make_shared<TileDrawData>(vtTile, getPoleTile(y), -1, false));
+                            }
+                        }
+                    }
+                }
+                
+                if (tileRenderer->refreshTiles(drawDatas)) {
                     refresh = true;
                     cull = true;
                 }
@@ -414,9 +444,6 @@ namespace carto {
                 tileRenderer->setBuildingOrder(static_cast<int>(getBuildingRenderOrder()));
                 tileRenderer->setInteractionMode(_vectorTileEventListener.get() ? true : false);
                 tileRenderer->setSubTileBlending(false);
-                if (std::shared_ptr<mvt::Map::Settings> mapSettings = _tileDecoder->getMapSettings()) {
-                    tileRenderer->setPoleColors(mapSettings->northPoleColor, mapSettings->southPoleColor);
-                }
                 bool refresh = tileRenderer->onDrawFrame(deltaSeconds, viewState);
 
                 if (opacity < 1.0f) {

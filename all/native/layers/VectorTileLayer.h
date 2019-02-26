@@ -125,6 +125,7 @@ namespace carto {
 
         virtual long long getTileId(const MapTile& mapTile) const;
         virtual std::shared_ptr<VectorTileDecoder::TileMap> getTileMap(long long tileId) const;
+        virtual std::shared_ptr<vt::Tile> getPoleTile(int y) const;
 
         virtual void calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile);
         virtual void refreshDrawData(const std::shared_ptr<CullState>& cullState);
@@ -226,6 +227,7 @@ namespace carto {
         mutable std::shared_ptr<Bitmap> _backgroundBitmap;
         mutable Color _skyColor;
         mutable std::shared_ptr<Bitmap> _skyBitmap;
+        mutable std::shared_ptr<vt::Tile> _poleTiles[2];
 
         std::shared_ptr<CancelableThreadPool> _labelCullThreadPool;
 
