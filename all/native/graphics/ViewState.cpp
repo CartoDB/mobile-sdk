@@ -527,63 +527,48 @@ namespace carto {
         float tanHalfFOVY = std::tan(static_cast<float>(halfFOVY * Const::DEG_TO_RAD));
         float zoom0Distance = _height * Const::HALF_WORLD_SIZE / (_tileDrawSize * tanHalfFOVY * (_dpi / Const::UNSCALED_DPI));
         float initialZ = std::pow(2.0f, -_zoom) * zoom0Distance / 64.0f;
+        cglib::vec3<double> zProjVector = cglib::unit(_focusPos - _cameraPos);
 
         cglib::mat4x4<double> projMat = calculatePerspMat(halfFOVY, initialZ, 2.0f * initialZ, options);
         cglib::mat4x4<double> modelviewMat = calculateLookatMat();
         cglib::mat4x4<double> invModelviewProjMat = cglib::inverse(projMat * modelviewMat);
 
-        cglib::vec3<double> pos0Origin = cglib::transform_point(cglib::vec3<double>(0, 0, -1), invModelviewProjMat);
-        cglib::vec3<double> pos1Origin = cglib::transform_point(cglib::vec3<double>(0, 0,  1), invModelviewProjMat);
-        cglib::vec3<double> zProjVector = cglib::unit(pos1Origin - pos0Origin);
-
         double heightMin = Const::MIN_HEIGHT;
         double heightMax = Const::MAX_HEIGHT;
 
-        double zMin = cglib::dot_product(options.getProjectionSurface()->calculateNearestPoint(pos0Origin, heightMax) - pos0Origin, zProjVector);
+        double zMin = cglib::dot_product(options.getProjectionSurface()->calculateNearestPoint(_cameraPos, heightMax) - _cameraPos, zProjVector);
         double zMax = zMin;
+        for (double xx : { -1, 0, 1 }) {
+            for (double yy : { -1, 0, 1 }) {
+                double x0 = 0, y0 = 0, x1 = xx, y1 = yy;
+                for (int iter = 0; iter < 16; iter++) {
+                    double x = (iter < 0 ? x1 : (x0 + x1) * 0.5), y = (iter < 0 ? y1 : (y0 + y1) * 0.5);
+                    cglib::vec3<double> pos0 = cglib::transform_point(cglib::vec3<double>(x, y, -1), invModelviewProjMat);
+                    cglib::vec3<double> pos1 = cglib::transform_point(cglib::vec3<double>(x, y,  1), invModelviewProjMat);
+                    cglib::ray3<double> ray(pos0, pos1 - pos0);
 
-        bool extraScan = false;
-        for (double x : { -1, 1 }) {
-            for (double y : { -1, 1 }) {
-                cglib::vec3<double> pos0 = cglib::transform_point(cglib::vec3<double>(x, y, -1), invModelviewProjMat);
-                cglib::vec3<double> pos1 = cglib::transform_point(cglib::vec3<double>(x, y,  1), invModelviewProjMat);
-                cglib::ray3<double> ray(pos0, pos1 - pos0);
-
-                double z = std::pow(2.0f, -_zoom) * zoom0Distance * options.getDrawDistance();
-                
-                double t = -1;
-                if (options.getProjectionSurface()->calculateHitPoint(ray, heightMin, t)) {
-                    if (t >= 0) {
-                        z = cglib::dot_product(ray(t) - pos0, zProjVector);
+                    double t = -1;
+                    double z = std::pow(2.0f, -_zoom) * zoom0Distance * options.getDrawDistance();
+                    if (options.getProjectionSurface()->calculateHitPoint(ray, heightMin, t)) {
+                        if (t >= 0) {
+                            z = cglib::dot_product(ray(t) - pos0, zProjVector);
+                        }
+                        x0 = x; y0 = y;
+                    } else {
+                        x1 = x; y1 = y;
                     }
-                } else {
-                    cglib::vec3<double> nearestPos0 = options.getProjectionSurface()->calculateNearestPoint(ray, heightMin, t);
-                    if (t >= 0) {
-                        z = cglib::dot_product(nearestPos0 - pos0, zProjVector);
+
+                    zMin = std::min(zMin, z);
+                    zMax = std::max(zMax, z);
+
+                    if (iter < 0 && t >= 0) {
+                        break;
                     }
-                    extraScan = true;
-                }
-
-                zMax = std::max(zMax, z);
-            }
-        }
-
-        if (extraScan) {
-            for (double y = -1; y < 1; y += 2.0 / _height) {
-                double x = 0;
-                cglib::vec3<double> pos0 = cglib::transform_point(cglib::vec3<double>(x, y, -1), invModelviewProjMat);
-                cglib::vec3<double> pos1 = cglib::transform_point(cglib::vec3<double>(x, y,  1), invModelviewProjMat);
-                cglib::ray3<double> ray(pos0, pos1 - pos0);
-
-                double t = -1;
-                cglib::vec3<double> nearestPos0 = options.getProjectionSurface()->calculateNearestPoint(ray, heightMin, t);
-                if (t >= 0) {
-                    zMax = std::max(zMax, cglib::dot_product(nearestPos0 - pos0, zProjVector));
                 }
             }
         }
 
-        return std::make_pair(std::max(static_cast<float>(zMin), Const::MIN_NEAR) * 0.9f, std::max(static_cast<float>(zMax), Const::MIN_NEAR) * 1.1f);
+        return std::make_pair(std::max(static_cast<float>(zMin), Const::MIN_NEAR) * 0.8f, std::max(static_cast<float>(zMax), Const::MIN_NEAR) * 1.01f);
     }
     
     float ViewState::calculateMinZoom(const Options& options) const {
