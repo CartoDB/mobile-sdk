@@ -224,14 +224,16 @@ namespace carto {
                                                    const ViewState& viewState,
                                                    std::vector<RayIntersectedElement>& results)
     {
-        const cglib::vec3<double>& pos = drawData->getPos();
+        float coordScale = drawData->getSize() * viewState.getUnitToDPCoef() * drawData->getClickScale() * 0.5f;
+        cglib::vec3<double> pos = drawData->getPos();
+        cglib::vec3<double> dx = cglib::vec3<double>::convert(drawData->getXAxis() * coordScale);
+        cglib::vec3<double> dy = cglib::vec3<double>::convert(drawData->getYAxis() * coordScale);
             
         // Calculate coordinates
-        float coordScale = drawData->getSize() * viewState.getUnitToDPCoef() * 0.5f * drawData->getClickScale();
-        cglib::vec3<double> topLeft    (pos(0) - coordScale, pos(1) + coordScale, pos(2));
-        cglib::vec3<double> bottomLeft (pos(0) - coordScale, pos(1) - coordScale, pos(2));
-        cglib::vec3<double> topRight   (pos(0) + coordScale, pos(1) + coordScale, pos(2));
-        cglib::vec3<double> bottomRight(pos(0) + coordScale, pos(1) - coordScale, pos(2));
+        cglib::vec3<double> topLeft = pos - dx + dy;
+        cglib::vec3<double> bottomLeft = pos - dx - dy;
+        cglib::vec3<double> topRight = pos + dx + dy;
+        cglib::vec3<double> bottomRight = pos + dx - dy;
             
         // If either triangle intersects the ray, add the element to result list
         double t = 0;
