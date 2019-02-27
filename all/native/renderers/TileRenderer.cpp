@@ -4,6 +4,8 @@
 #include "graphics/ShaderManager.h"
 #include "graphics/ViewState.h"
 #include "graphics/utils/GLContext.h"
+#include "projections/ProjectionSurface.h"
+#include "projections/PlanarProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/drawdatas/TileDrawData.h"
 #include "utils/Log.h"
@@ -44,6 +46,7 @@ namespace carto {
         _labelOrder(0),
         _buildingOrder(1),
         _horizontalLayerOffset(0),
+        _lightingDir(0, 0, 0),
         _tiles(),
         _mutex()
     {
@@ -82,6 +85,14 @@ namespace carto {
         
         Log::Debug("TileRenderer: Surface created");
 
+        boost::optional<vt::GLTileRenderer::LightingShader> lightingShader2D;
+        if (auto mapRenderer = _mapRenderer.lock()) {
+            if (!std::dynamic_pointer_cast<PlanarProjectionSurface>(mapRenderer->getProjectionSurface())) {
+                lightingShader2D = vt::GLTileRenderer::LightingShader(true, LIGHTING_SHADER, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
+                    glUniform3fv(glGetUniformLocation(shaderProgram, "uLightDir"), 1, _lightingDir.data());
+                });
+            }
+        }
         std::weak_ptr<MapRenderer> mapRendererWeak(_mapRenderer);
         auto glRendererDeleter = [mapRendererWeak](vt::GLTileRenderer* rendererPtr) {
             std::unique_ptr<vt::GLTileRenderer> renderer(rendererPtr);
@@ -91,7 +102,7 @@ namespace carto {
             }
         };
         _glRenderer = std::shared_ptr<vt::GLTileRenderer>(
-            new vt::GLTileRenderer(_glRendererMutex, std::make_shared<vt::GLExtensions>(), _tileTransformer, Const::WORLD_SIZE), glRendererDeleter
+            new vt::GLTileRenderer(_glRendererMutex, std::make_shared<vt::GLExtensions>(), _tileTransformer, lightingShader2D, boost::optional<vt::GLTileRenderer::LightingShader>(), Const::WORLD_SIZE), glRendererDeleter
         );
         _glRenderer->initializeRenderer();
         _tiles.clear();
@@ -111,6 +122,16 @@ namespace carto {
         _glRenderer->setInteractionMode(_interactionMode);
         _glRenderer->setSubTileBlending(_subTileBlending);
 
+        _lightingDir = cglib::vec3<float>(0, 0, 1);
+        if (auto mapRenderer = _mapRenderer.lock()) {
+            std::shared_ptr<ProjectionSurface> projectionSurface = mapRenderer->getProjectionSurface();
+            
+            double t = 0;
+            cglib::ray3<double> ray(viewState.getCameraPos(), viewState.getFocusPos() - viewState.getCameraPos());
+            if (projectionSurface->calculateHitPoint(ray, 0, t)) {
+                _lightingDir = cglib::vec3<float>::convert(projectionSurface->calculateNormal(projectionSurface->calculateMapPos(ray(t))));
+            }
+        }
         _glRenderer->startFrame(deltaSeconds * 3);
 
         bool refresh = _glRenderer->renderGeometry2D();
@@ -268,5 +289,12 @@ namespace carto {
             _glRenderer->findLabelIntersections(ray, results, radius, false, true);
         }
     }
+
+    const std::string TileRenderer::LIGHTING_SHADER =
+        "uniform vec3 uLightDir;"
+        "lowp vec4 applyLighting(lowp vec4 color, vec3 normal) {"
+        "    float lighting = max(0.0, dot(normal, uLightDir)) * 0.5 + 0.5;"
+        "    return vec4(color.xyz * lighting, color.w);"
+        "}";
         
 }

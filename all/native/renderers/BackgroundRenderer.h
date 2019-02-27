@@ -41,12 +41,12 @@ namespace carto {
 
         enum { SURFACE_TESSELATION_LEVELS = 64 };
     
-        const static float BACKGROUND_COORDS[12];
-        const static float BACKGROUND_TEX_COORDS[8];
+        static const float BACKGROUND_COORDS[12];
+        static const float BACKGROUND_TEX_COORDS[8];
     
-        const static float SKY_COORDS[48];
-        const static float SKY_TEX_COORDS[48];
-        const static float SKY_SCALE_MULTIPLIER;
+        static const float SKY_COORDS[48];
+        static const float SKY_TEX_COORDS[48];
+        static const float SKY_SCALE_MULTIPLIER;
     
         std::shared_ptr<Bitmap> _backgroundBitmap;
         std::shared_ptr<Texture> _backgroundTex;
