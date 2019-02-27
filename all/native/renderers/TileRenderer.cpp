@@ -4,7 +4,6 @@
 #include "graphics/ShaderManager.h"
 #include "graphics/ViewState.h"
 #include "graphics/utils/GLContext.h"
-#include "projections/ProjectionSurface.h"
 #include "projections/PlanarProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/drawdatas/TileDrawData.h"
@@ -46,7 +45,7 @@ namespace carto {
         _labelOrder(0),
         _buildingOrder(1),
         _horizontalLayerOffset(0),
-        _lightingDir(0, 0, 0),
+        _lightDir(0, 0, 0),
         _tiles(),
         _mutex()
     {
@@ -89,7 +88,7 @@ namespace carto {
         if (auto mapRenderer = _mapRenderer.lock()) {
             if (!std::dynamic_pointer_cast<PlanarProjectionSurface>(mapRenderer->getProjectionSurface())) {
                 lightingShader2D = vt::GLTileRenderer::LightingShader(true, LIGHTING_SHADER, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
-                    glUniform3fv(glGetUniformLocation(shaderProgram, "uLightDir"), 1, _lightingDir.data());
+                    glUniform3fv(glGetUniformLocation(shaderProgram, "uLightDir"), 1, _lightDir.data());
                 });
             }
         }
@@ -122,7 +121,7 @@ namespace carto {
         _glRenderer->setInteractionMode(_interactionMode);
         _glRenderer->setSubTileBlending(_subTileBlending);
 
-        _lightingDir = viewState.getFocusPosNormal();
+        _lightDir = viewState.getFocusPosNormal();
 
         _glRenderer->startFrame(deltaSeconds * 3);
 

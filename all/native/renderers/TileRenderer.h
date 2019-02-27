@@ -73,7 +73,7 @@ namespace carto {
         int _labelOrder;
         int _buildingOrder;
         double _horizontalLayerOffset;
-        cglib::vec3<float> _lightingDir;
+        cglib::vec3<float> _lightDir;
         std::map<vt::TileId, std::shared_ptr<const vt::Tile> > _tiles;
 
         mutable std::mutex _mutex;

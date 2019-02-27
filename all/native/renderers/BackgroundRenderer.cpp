@@ -10,7 +10,6 @@
 #include "graphics/shaders/BackgroundShaderSource.h"
 #include "graphics/utils/GLContext.h"
 #include "layers/Layer.h"
-#include "projections/ProjectionSurface.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 
