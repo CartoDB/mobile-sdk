@@ -348,6 +348,13 @@ namespace carto {
             }
         }
     }
+
+    cglib::vec3<float> ViewState::getFocusPosNormal() const {
+        if (!_projectionSurface) {
+            return cglib::vec3<float>(0, 0, 1);
+        }
+        return cglib::vec3<float>::convert(_projectionSurface->calculateNormal(_projectionSurface->calculateMapPos(_focusPos)));
+    }
     
     void ViewState::calculateViewState(const Options& options) {
         switch (options.getProjectionMode()) {

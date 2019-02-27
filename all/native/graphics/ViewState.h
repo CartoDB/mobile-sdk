@@ -170,7 +170,7 @@ namespace carto {
          * @return The aspect ratio of the map screen.
          */
         float getAspectRatio() const;
-    
+
         /**
          * Returns the near plane distance.
          * @return The new plane distance.
@@ -319,6 +319,12 @@ namespace carto {
          * @param options The options object to use for clamping.
          */
         void clampFocusPos(const Options& options);
+
+        /**
+         * Returns the normal vector at focus point.
+         * @return The normal vector at focus point.
+         */
+        cglib::vec3<float> getFocusPosNormal() const;
 
         /**
          * Updates the view when the screen size, view state or some other view options have changed. This is automatically

@@ -69,13 +69,13 @@
 %ignore carto::ViewState::getProjectionMat;
 %ignore carto::ViewState::getModelviewMat;
 %ignore carto::ViewState::getModelviewProjectionMat;
-%ignore carto::ViewState::GetLocalMat;
 %ignore carto::ViewState::getRTELocalMat;
 %ignore carto::ViewState::getRTEModelviewMat;
 %ignore carto::ViewState::getRTEModelviewProjectionMat;
 %ignore carto::ViewState::setScreenSize;
 %ignore carto::ViewState::clampZoom;
 %ignore carto::ViewState::clampFocusPos;
+%ignore carto::ViewState::getFocusPosNormal;
 %ignore carto::ViewState::calculateViewState;
 %ignore carto::ViewState::worldToScreen;
 %ignore carto::ViewState::screenToWorldPlane;

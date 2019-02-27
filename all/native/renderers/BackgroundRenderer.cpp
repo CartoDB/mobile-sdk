@@ -7,9 +7,10 @@
 #include "graphics/TextureManager.h"
 #include "graphics/Texture.h"
 #include "graphics/ViewState.h"
-#include "graphics/shaders/TexturedShaderSource.h"
+#include "graphics/shaders/BackgroundShaderSource.h"
 #include "graphics/utils/GLContext.h"
 #include "layers/Layer.h"
+#include "projections/ProjectionSurface.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 
@@ -31,8 +32,10 @@ namespace carto {
         _indices(),
         _shader(),
         _a_coord(0),
+        _a_normal(0),
         _a_texCoord(0),
         _u_tex(0),
+        _u_lightDir(0),
         _u_mvpMat(0),
         _textureManager(),
         _options(options),
@@ -45,13 +48,15 @@ namespace carto {
     
     void BackgroundRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
         // Shader and textures must be reloaded
-        _shader = shaderManager->createShader(textured_shader_source);
+        _shader = shaderManager->createShader(background_shader_source);
     
         // Get shader variables locations
         glUseProgram(_shader->getProgId());
         _u_tex = _shader->getUniformLoc("u_tex");
+        _u_lightDir = _shader->getUniformLoc("u_lightDir");
         _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
         _a_coord = _shader->getAttribLoc("a_coord");
+        _a_normal = _shader->getAttribLoc("a_normal");
         _a_texCoord = _shader->getAttribLoc("a_texCoord");
     
         _textureManager = textureManager;
@@ -104,9 +109,12 @@ namespace carto {
             // Matrix
             const cglib::mat4x4<float>& mvpMat = viewState.getRTEModelviewProjectionMat();
             glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, mvpMat.data());
+            // Default lighting
+            glUniform3f(_u_lightDir, 0, 0, 1);
             // Coords, texCoords, colors
             glEnableVertexAttribArray(_a_coord);
             glEnableVertexAttribArray(_a_texCoord);
+            glVertexAttrib3f(_a_normal, 0, 0, 1);
     
             drawSky(viewState);
             drawBackground(viewState);
@@ -177,10 +185,17 @@ namespace carto {
                 _backgroundTexCoords[i * 2 + 1] = static_cast<float>(_texCoords[i](1) * scale * backgroundScale - translateY);
             }
 
+            // Lighting
+            cglib::vec3<float> lightDir = viewState.getFocusPosNormal();
+            glUniform3fv(_u_lightDir, 1, lightDir.data());
+            
             // Draw
+            glEnableVertexAttribArray(_a_normal);
             glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 0, _backgroundCoords.data());
+            glVertexAttribPointer(_a_normal, 3, GL_FLOAT, GL_FALSE, 0, _normals.data());
             glVertexAttribPointer(_a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, _backgroundTexCoords.data());
             glDrawElements(GL_TRIANGLES, _indices.size(), GL_UNSIGNED_SHORT, _indices.data());
+            glDisableVertexAttribArray(_a_normal);
             return;
         }
 

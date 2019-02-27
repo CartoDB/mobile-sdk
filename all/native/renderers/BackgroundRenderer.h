@@ -64,8 +64,10 @@ namespace carto {
 
         std::shared_ptr<Shader> _shader;
         GLuint _a_coord;
+        GLuint _a_normal;
         GLuint _a_texCoord;
         GLuint _u_tex;
+        GLuint _u_lightDir;
         GLuint _u_mvpMat;
 
         std::shared_ptr<TextureManager> _textureManager;

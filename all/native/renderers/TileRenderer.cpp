@@ -122,16 +122,8 @@ namespace carto {
         _glRenderer->setInteractionMode(_interactionMode);
         _glRenderer->setSubTileBlending(_subTileBlending);
 
-        _lightingDir = cglib::vec3<float>(0, 0, 1);
-        if (auto mapRenderer = _mapRenderer.lock()) {
-            std::shared_ptr<ProjectionSurface> projectionSurface = mapRenderer->getProjectionSurface();
-            
-            double t = 0;
-            cglib::ray3<double> ray(viewState.getCameraPos(), viewState.getFocusPos() - viewState.getCameraPos());
-            if (projectionSurface->calculateHitPoint(ray, 0, t)) {
-                _lightingDir = cglib::vec3<float>::convert(projectionSurface->calculateNormal(projectionSurface->calculateMapPos(ray(t))));
-            }
-        }
+        _lightingDir = viewState.getFocusPosNormal();
+
         _glRenderer->startFrame(deltaSeconds * 3);
 
         bool refresh = _glRenderer->renderGeometry2D();
