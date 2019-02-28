@@ -34,12 +34,13 @@ namespace carto {
         void onSurfaceDestroyed();
     
     protected:
+        static void BuildSphereSky(std::vector<cglib::vec3<double> >& vertices, std::vector<cglib::vec2<float> >& texCoords, std::vector<unsigned short>& indices, const cglib::vec3<double>& cameraPos, const cglib::vec3<double>& upVec, double height, int tesselate);
         static void BuildSphereSurface(std::vector<cglib::vec3<double> >& vertices, std::vector<cglib::vec3<float> >& normals, std::vector<cglib::vec2<float> >& texCoords, std::vector<unsigned short>& indices, int tesselateU, int tesselateV);
 
         void drawBackground(const ViewState& viewState);
         void drawSky(const ViewState& viewState);
 
-        enum { SURFACE_TESSELATION_LEVELS = 64 };
+        enum { SURFACE_TESSELATION_LEVELS = 64, SKY_TESSELATION_LEVELS = 128 };
     
         static const float BACKGROUND_COORDS[12];
         static const float BACKGROUND_TEX_COORDS[8];
@@ -47,7 +48,8 @@ namespace carto {
         static const float SKY_COORDS[48];
         static const float SKY_TEX_COORDS[48];
         static const float SKY_SCALE_MULTIPLIER;
-    
+        static const float SKY_RELATIVE_HEIGHT;
+
         std::shared_ptr<Bitmap> _backgroundBitmap;
         std::shared_ptr<Texture> _backgroundTex;
         std::vector<float> _backgroundCoords;
@@ -57,10 +59,14 @@ namespace carto {
         std::shared_ptr<Texture> _skyTex;
         std::vector<float> _skyCoords;
     
-        std::vector<cglib::vec3<double> > _vertices;
-        std::vector<cglib::vec3<float> > _normals;
-        std::vector<cglib::vec2<float> > _texCoords;
-        std::vector<unsigned short> _indices;
+        std::vector<cglib::vec3<double> > _surfaceVertices;
+        std::vector<cglib::vec3<float> > _surfaceNormals;
+        std::vector<cglib::vec2<float> > _surfaceTexCoords;
+        std::vector<unsigned short> _surfaceIndices;
+
+        std::vector<cglib::vec3<double> > _skyVertices;
+        std::vector<cglib::vec2<float> > _skyTexCoords;
+        std::vector<unsigned short> _skyIndices;
 
         std::shared_ptr<Shader> _shader;
         GLuint _a_coord;

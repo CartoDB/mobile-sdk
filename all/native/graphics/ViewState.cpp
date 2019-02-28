@@ -34,6 +34,7 @@ namespace carto {
         _screenSizeChanged(false),
         _near(0.0f),
         _far(0.0f),
+        _skyVisible(false),
         _fovY(0),
         _halfFOVY(0.0f),
         _tanHalfFOVY(0.0f),
@@ -355,6 +356,10 @@ namespace carto {
         }
         return cglib::vec3<float>::convert(_projectionSurface->calculateNormal(_projectionSurface->calculateMapPos(_focusPos)));
     }
+
+    bool ViewState::isSkyVisible() const {
+        return _skyVisible;
+    }
     
     void ViewState::calculateViewState(const Options& options) {
         switch (options.getProjectionMode()) {
@@ -442,9 +447,7 @@ namespace carto {
                     _unitToPXCoef = static_cast<float>(_zoom0Distance / (_height * _tanHalfFOVY) / _2PowZoom);
                     _unitToDPCoef = _unitToPXCoef * _dpi / Const::UNSCALED_DPI;
         
-                    std::pair<float, float> nearFarPlanes = calculateNearFarPlanes(options);
-                    _near = nearFarPlanes.first;
-                    _far = nearFarPlanes.second;
+                    calculateViewDistances(options, _near, _far, _skyVisible);
         
                     // Matrices
                     _projectionMat = calculatePerspMat(_halfFOVY, _near, _far, options);
@@ -529,7 +532,7 @@ namespace carto {
         _horizontalLayerOffsetDir = horizontalLayerOffsetDir;
     }
 
-    std::pair<float, float> ViewState::calculateNearFarPlanes(const Options& options) const {
+    void ViewState::calculateViewDistances(const Options& options, float& near, float& far, bool& skyVisible) const {
         float halfFOVY = options.getFieldOfViewY() * 0.5f;
         float tanHalfFOVY = std::tan(static_cast<float>(halfFOVY * Const::DEG_TO_RAD));
         float zoom0Distance = _height * Const::HALF_WORLD_SIZE / (_tileDrawSize * tanHalfFOVY * (_dpi / Const::UNSCALED_DPI));
@@ -543,12 +546,13 @@ namespace carto {
         double heightMin = Const::MIN_HEIGHT;
         double heightMax = Const::MAX_HEIGHT;
 
-        double zMin = cglib::dot_product(options.getProjectionSurface()->calculateNearestPoint(_cameraPos, heightMax) - _cameraPos, zProjVector);
-        double zMax = zMin;
+        near = cglib::dot_product(options.getProjectionSurface()->calculateNearestPoint(_cameraPos, heightMax) - _cameraPos, zProjVector);
+        far  = near;
+        skyVisible = false;
         for (double xx : { -1, 0, 1 }) {
             for (double yy : { -1, 0, 1 }) {
                 double x0 = 0, y0 = 0, x1 = xx, y1 = yy;
-                for (int iter = 0; iter < 16; iter++) {
+                for (int iter = -1; iter < 16; iter++) {
                     double x = (iter < 0 ? x1 : (x0 + x1) * 0.5), y = (iter < 0 ? y1 : (y0 + y1) * 0.5);
                     cglib::vec3<double> pos0 = cglib::transform_point(cglib::vec3<double>(x, y, -1), invModelviewProjMat);
                     cglib::vec3<double> pos1 = cglib::transform_point(cglib::vec3<double>(x, y,  1), invModelviewProjMat);
@@ -556,26 +560,26 @@ namespace carto {
 
                     double t = -1;
                     if (options.getProjectionSurface()->calculateHitPoint(ray, heightMin, t) && t > 0) {
-                        double z = cglib::dot_product(ray(t) - pos0, zProjVector);
-                        zMin = std::min(zMin, z);
-                        zMax = std::max(zMax, z);
+                        float z = static_cast<float>(cglib::dot_product(ray(t) - pos0, zProjVector));
+                        near = std::min(near, z);
+                        far  = std::max(far,  z);
 
                         if (iter < 0) {
                             break;
                         }
-
+                        
                         x0 = x; y0 = y;
                     } else {
+                        skyVisible = true;
+                        
                         x1 = x; y1 = y;
                     }
                 }
             }
         }
 
-        zMin = std::max((double) Const::MIN_NEAR, zMin);
-        zMax = std::max((double) Const::MIN_NEAR, std::min(std::pow(2.0, -_zoom) * zoom0Distance * options.getDrawDistance(), zMax));
-
-        return std::make_pair(static_cast<float>(zMin) * 0.8f, static_cast<float>(zMax) * 1.01f);
+        near = std::max(Const::MIN_NEAR, near) * 0.8f;
+        far  = std::max(Const::MIN_NEAR, std::min(std::pow(2.0f, -_zoom) * zoom0Distance * options.getDrawDistance(), far)) * 1.01f;
     }
     
     float ViewState::calculateMinZoom(const Options& options) const {
@@ -647,10 +651,13 @@ namespace carto {
     cglib::mat4x4<double> ViewState::calculateModelViewMat(const carto::Options& options) const {
         if (_cameraChanged) {
             // Camera has changed, but the matrices have not been updated yet from the render thread. Calculate far and near distances
-            std::pair<float, float> nearFarPlanes = calculateNearFarPlanes(options);
+            float near = 0;
+            float far = 0;
+            bool skyVisible = false;
+            calculateViewDistances(options, near, far, skyVisible);
             
             // Matrices
-            cglib::mat4x4<double> projectionMat = calculatePerspMat(options.getFieldOfViewY() * 0.5f, nearFarPlanes.first, nearFarPlanes.second, options);
+            cglib::mat4x4<double> projectionMat = calculatePerspMat(options.getFieldOfViewY() * 0.5f, near, far, options);
             cglib::mat4x4<double> modelviewMat = calculateLookatMat();
             return projectionMat * modelviewMat;
         }

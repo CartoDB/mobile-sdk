@@ -76,6 +76,7 @@
 %ignore carto::ViewState::clampZoom;
 %ignore carto::ViewState::clampFocusPos;
 %ignore carto::ViewState::getFocusPosNormal;
+%ignore carto::ViewState::isSkyVisible;
 %ignore carto::ViewState::calculateViewState;
 %ignore carto::ViewState::worldToScreen;
 %ignore carto::ViewState::screenToWorldPlane;

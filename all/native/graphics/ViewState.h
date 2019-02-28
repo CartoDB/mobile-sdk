@@ -327,6 +327,12 @@ namespace carto {
         cglib::vec3<float> getFocusPosNormal() const;
 
         /**
+         * Returns true if sky is visible.
+         * @return True if sky is visible.
+         */
+        bool isSkyVisible() const;
+
+        /**
          * Updates the view when the screen size, view state or some other view options have changed. This is automatically
          * called at the beginning of every frame.
          * @param options The state of options.
@@ -362,7 +368,7 @@ namespace carto {
         void setHorizontalLayerOffsetDir(int horizontalLayerOffsetDir);
     
     private:
-        std::pair<float, float> calculateNearFarPlanes(const Options& options) const;
+        void calculateViewDistances(const Options& options, float& near, float& far, bool& skyVisible) const;
         float calculateMinZoom(const Options& options) const;
         cglib::mat4x4<double> calculatePerspMat(float halfFOVY, float near, float far, const Options& options) const;
         cglib::mat4x4<double> calculateLookatMat() const;
@@ -393,6 +399,7 @@ namespace carto {
     
         float _near;
         float _far;
+        bool _skyVisible;
     
         int _fovY;
         float _halfFOVY;
