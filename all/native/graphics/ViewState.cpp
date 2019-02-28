@@ -555,27 +555,27 @@ namespace carto {
                     cglib::ray3<double> ray(pos0, pos1 - pos0);
 
                     double t = -1;
-                    double z = std::pow(2.0f, -_zoom) * zoom0Distance * options.getDrawDistance();
-                    if (options.getProjectionSurface()->calculateHitPoint(ray, heightMin, t)) {
-                        if (t >= 0) {
-                            z = cglib::dot_product(ray(t) - pos0, zProjVector);
+                    if (options.getProjectionSurface()->calculateHitPoint(ray, heightMin, t) && t > 0) {
+                        double z = cglib::dot_product(ray(t) - pos0, zProjVector);
+                        zMin = std::min(zMin, z);
+                        zMax = std::max(zMax, z);
+
+                        if (iter < 0) {
+                            break;
                         }
+
                         x0 = x; y0 = y;
                     } else {
                         x1 = x; y1 = y;
-                    }
-
-                    zMin = std::min(zMin, z);
-                    zMax = std::max(zMax, z);
-
-                    if (iter < 0 && t >= 0) {
-                        break;
                     }
                 }
             }
         }
 
-        return std::make_pair(std::max(static_cast<float>(zMin), Const::MIN_NEAR) * 0.8f, std::max(static_cast<float>(zMax), Const::MIN_NEAR) * 1.01f);
+        zMin = std::max((double) Const::MIN_NEAR, zMin);
+        zMax = std::max((double) Const::MIN_NEAR, std::min(std::pow(2.0, -_zoom) * zoom0Distance * options.getDrawDistance(), zMax));
+
+        return std::make_pair(static_cast<float>(zMin) * 0.8f, static_cast<float>(zMax) * 1.01f);
     }
     
     float ViewState::calculateMinZoom(const Options& options) const {
