@@ -477,7 +477,7 @@ namespace carto {
                     _rteModelviewProjectionMat = cglib::mat4x4<float>::convert(_projectionMat) * _rteModelviewMat;
 
                     // Calculate Rte sky matrix
-                    float skyFar = std::pow(2.0f, -_zoom) * _zoom0Distance * options.getDrawDistance();
+                    float skyFar = _zoom0Distance * options.getDrawDistance();
                     cglib::mat4x4<double> skyProjectionMat = calculatePerspMat(_halfFOVY, _near, skyFar, options);
                     _rteSkyProjectionMat = cglib::mat4x4<float>::convert(skyProjectionMat) * _rteModelviewMat;
                 }
@@ -589,7 +589,7 @@ namespace carto {
         }
 
         near = std::max(Const::MIN_NEAR, near) * 0.8f;
-        far  = std::max(Const::MIN_NEAR, std::min(std::pow(2.0f, -_zoom) * zoom0Distance * options.getDrawDistance(), far)) * 1.01f;
+        far  = std::max(Const::MIN_NEAR, std::min(std::pow(2.0f, -_zoom) * zoom0Distance * options.getDrawDistance(), far)) * 1.1f;
     }
     
     float ViewState::calculateMinZoom(const Options& options) const {

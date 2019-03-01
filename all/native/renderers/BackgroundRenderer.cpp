@@ -119,10 +119,12 @@ namespace carto {
             glEnableVertexAttribArray(_a_texCoord);
             glVertexAttrib3f(_a_normal, 0, 0, 1);
     
+            glDepthMask(GL_FALSE);
             if (viewState.isSkyVisible()) {
                 drawSky(viewState);
             }
             drawBackground(viewState);
+            glDepthMask(GL_TRUE);
     
             // Disable bound arrays
             glDisableVertexAttribArray(_a_coord);
@@ -319,7 +321,7 @@ namespace carto {
             double u = 2.0 * Const::PI * (static_cast<double>(i < tesselate ? i : 0) / tesselate - 0.5);
             double x = std::cos(u);
             double y = std::sin(u);
-            vertices.emplace_back((axis1 * x + axis2 * y) * (r * 0.95) + origin);
+            vertices.emplace_back((axis1 * x + axis2 * y) * (r * 0.98) + origin);
             vertices.emplace_back((axis1 * x + axis2 * y) * (r + height) + origin);
 
             float s = static_cast<float>(i) / tesselate;
