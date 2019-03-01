@@ -285,7 +285,12 @@ namespace carto {
          * @return The relative-to-eye modelview-projection matrix.
          */
         const cglib::mat4x4<float>& getRTEModelviewProjectionMat() const;
-        
+        /**
+         * Returns the relative-to-eye modelview-projection matrix with pushed back far plane.
+         * @return The relative-to-eye modelview-projection matrix.
+         */
+        const cglib::mat4x4<float>& getRTESkyProjectionMat() const;
+
         /**
          * Returns the view frustum.
          * @return The view frustum.
@@ -426,6 +431,7 @@ namespace carto {
         cglib::mat4x4<double> _modelviewProjectionMat;
         cglib::mat4x4<float> _rteModelviewMat;
         cglib::mat4x4<float> _rteModelviewProjectionMat;
+        cglib::mat4x4<float> _rteSkyProjectionMat;
 
         cglib::frustum3<double> _frustum;
     

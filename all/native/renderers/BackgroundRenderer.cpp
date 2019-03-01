@@ -110,7 +110,7 @@ namespace carto {
             glUniform1i(_u_tex, 0);
             glActiveTexture(GL_TEXTURE0);
             // Matrix
-            const cglib::mat4x4<float>& mvpMat = viewState.getRTEModelviewProjectionMat();
+            const cglib::mat4x4<float>& mvpMat = viewState.getRTESkyProjectionMat();
             glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, mvpMat.data());
             // Default lighting
             glUniform3f(_u_lightDir, 0, 0, 1);
@@ -158,7 +158,7 @@ namespace carto {
             }
 
             // Transform coordinates
-            float coordScale = Const::WORLD_SIZE / Const::PI;
+            float coordScale = static_cast<float>(Const::WORLD_SIZE / Const::PI);
             const cglib::vec3<double>& focusPos = viewState.getFocusPos();
             const cglib::vec3<double>& cameraPos = viewState.getCameraPos();
 
@@ -255,7 +255,7 @@ namespace carto {
             BuildSphereSky(_skyVertices, _skyTexCoords, _skyIndices, viewState.getCameraPos() * (1.0 / Const::WORLD_SIZE * Const::PI), viewState.getUpVec(), SKY_RELATIVE_HEIGHT, SKY_TESSELATION_LEVELS);
 
             // Transform coordinates
-            float coordScale = Const::WORLD_SIZE / Const::PI;
+            float coordScale = static_cast<float>(Const::WORLD_SIZE / Const::PI);
             const cglib::vec3<double>& focusPos = viewState.getFocusPos();
             const cglib::vec3<double>& cameraPos = viewState.getCameraPos();
 

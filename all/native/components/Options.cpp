@@ -746,7 +746,7 @@ namespace carto {
         }
     }
 
-    const Color Options::DEFAULT_SKY_COLOR = Color(0, 0, 200, 255);
+    const Color Options::DEFAULT_SKY_COLOR = Color(149, 196, 255, 255);
     const Color Options::DEFAULT_BACKGROUND_COLOR = Color(226, 226, 226, 255);
     const Color Options::DEFAULT_AMBIENT_LIGHT_COLOR = Color(112, 112, 112, 255);
     const Color Options::DEFAULT_MAIN_LIGHT_COLOR = Color(143, 143, 143, 255);

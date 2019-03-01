@@ -72,6 +72,7 @@
 %ignore carto::ViewState::getRTELocalMat;
 %ignore carto::ViewState::getRTEModelviewMat;
 %ignore carto::ViewState::getRTEModelviewProjectionMat;
+%ignore carto::ViewState::getRTESkyProjectionMat;
 %ignore carto::ViewState::setScreenSize;
 %ignore carto::ViewState::clampZoom;
 %ignore carto::ViewState::clampFocusPos;

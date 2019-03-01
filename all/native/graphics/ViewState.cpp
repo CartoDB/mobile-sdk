@@ -54,6 +54,7 @@ namespace carto {
         _modelviewProjectionMat(),
         _rteModelviewMat(),
         _rteModelviewProjectionMat(),
+        _rteSkyProjectionMat(),
         _horizontalLayerOffsetDir(0)
     {
     }
@@ -234,6 +235,10 @@ namespace carto {
         return _rteModelviewProjectionMat;
     }
         
+    const cglib::mat4x4<float>& ViewState::getRTESkyProjectionMat() const {
+        return _rteSkyProjectionMat;
+    }
+
     const cglib::frustum3<double>& ViewState::getFrustum() const {
         return _frustum;
     }
@@ -470,6 +475,11 @@ namespace carto {
         
                     // Float precision Rte mvp matrix
                     _rteModelviewProjectionMat = cglib::mat4x4<float>::convert(_projectionMat) * _rteModelviewMat;
+
+                    // Calculate Rte sky matrix
+                    float skyFar = std::pow(2.0f, -_zoom) * _zoom0Distance * options.getDrawDistance();
+                    cglib::mat4x4<double> skyProjectionMat = calculatePerspMat(_halfFOVY, _near, skyFar, options);
+                    _rteSkyProjectionMat = cglib::mat4x4<float>::convert(skyProjectionMat) * _rteModelviewMat;
                 }
                 break;
             }
