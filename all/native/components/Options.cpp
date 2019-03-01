@@ -1,12 +1,12 @@
 #include "Options.h"
 #include "assets/DefaultBackgroundPNG.h"
-#include "assets/DefaultSkyPNG.h"
 #include "assets/CartoWatermarkPNG.h"
 #include "assets/EvaluationWatermarkPNG.h"
 #include "assets/ExpiredWatermarkPNG.h"
 #include "components/Exceptions.h"
 #include "components/CancelableThreadPool.h"
 #include "graphics/Bitmap.h"
+#include "graphics/utils/SkyBitmapGenerator.h"
 #include "projections/EPSG3857.h"
 #include "projections/ProjectionSurface.h"
 #include "projections/PlanarProjectionSurface.h"
@@ -20,9 +20,9 @@
 namespace carto {
 
     Options::Options(const std::shared_ptr<CancelableThreadPool>& envelopeThreadPool, const std::shared_ptr<CancelableThreadPool>& tileThreadPool) :
-        _ambientLightColor(0xFF707070),
-        _mainLightColor(0xFF8F8F8F),
-        _mainLightDir(0.35, 0.35, -0.87),
+        _ambientLightColor(DEFAULT_AMBIENT_LIGHT_COLOR),
+        _mainLightColor(DEFAULT_MAIN_LIGHT_COLOR),
+        _mainLightDir(DEFAULT_MAIN_LIGHT_DIR),
         _projectionMode(ProjectionMode::PROJECTION_MODE_PERSPECTIVE),
         _renderProjectionMode(RenderProjectionMode::RENDER_PROJECTION_MODE_PLANAR),
         _clickTypeDetection(true),
@@ -37,8 +37,10 @@ namespace carto {
         _tiltGestureReversed(false),
         _zoomGestures(false),
         _clearColor(1, 1, 1, 1),
+        _skyColor(DEFAULT_SKY_COLOR),
+        _skyBitmapColor(0, 0, 0, 0),
+        _skyBitmap(),
         _backgroundBitmap(GetDefaultBackgroundBitmap()),
-        _skyBitmap(GetDefaultSkyBitmap()),
         _watermarkAlignmentX(-1),
         _watermarkAlignmentY(-1),
         _watermarkBitmap(GetCartoWatermarkBitmap()),
@@ -381,6 +383,35 @@ namespace carto {
         notifyOptionChanged("ClearColor");
     }
     
+    Color Options::getSkyColor() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _skyColor;
+    }
+
+    void Options::setSkyColor(const Color& color) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            if (_skyColor == color) {
+                return;
+            }
+            _skyColor = color;
+        }
+        notifyOptionChanged("SkyColor");
+    }
+
+    std::shared_ptr<Bitmap> Options::getSkyBitmap() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        if (_skyBitmapColor != _skyColor) {
+            if (_skyColor != Color(0, 0, 0, 0)) {
+                _skyBitmap = SkyBitmapGenerator(1, 128).generateBitmap(DEFAULT_BACKGROUND_COLOR, _skyColor);
+            } else {
+                _skyBitmap.reset();
+            }
+            _skyBitmapColor = _skyColor;
+        }
+        return _skyBitmap;
+    }
+
     std::shared_ptr<Bitmap> Options::getBackgroundBitmap() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _backgroundBitmap;
@@ -397,22 +428,6 @@ namespace carto {
         notifyOptionChanged("BackgroundBitmap");
     }
     
-    std::shared_ptr<Bitmap> Options::getSkyBitmap() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _skyBitmap;
-    }
-    
-    void Options::setSkyBitmap(const std::shared_ptr<Bitmap>& skyBitmap) {
-        {
-            std::lock_guard<std::mutex> lock(_mutex);
-            if (_skyBitmap == skyBitmap) {
-                return;
-            }
-            _skyBitmap = skyBitmap;
-        }
-        notifyOptionChanged("SkyBitmap");
-    }
-        
     float Options::getWatermarkAlignmentX() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _watermarkAlignmentX;
@@ -696,14 +711,6 @@ namespace carto {
         return _DefaultBackgroundBitmap;
     }
 
-    std::shared_ptr<Bitmap> Options::GetDefaultSkyBitmap() {
-        std::lock_guard<std::mutex> lock(_Mutex);
-        if (!_DefaultSkyBitmap) {
-            _DefaultSkyBitmap = Bitmap::CreateFromCompressed(default_sky_png, default_sky_png_len);
-        }
-        return _DefaultSkyBitmap;
-    }
-
     std::shared_ptr<Bitmap> Options::GetCartoWatermarkBitmap() {
         std::lock_guard<std::mutex> lock(_Mutex);
         if (!_CartoWatermarkBitmap) {
@@ -739,9 +746,13 @@ namespace carto {
         }
     }
 
-    std::shared_ptr<Bitmap> Options::_DefaultBackgroundBitmap;
-    std::shared_ptr<Bitmap> Options::_DefaultSkyBitmap;
+    const Color Options::DEFAULT_SKY_COLOR = Color(0, 0, 200, 255);
+    const Color Options::DEFAULT_BACKGROUND_COLOR = Color(226, 226, 226, 255);
+    const Color Options::DEFAULT_AMBIENT_LIGHT_COLOR = Color(112, 112, 112, 255);
+    const Color Options::DEFAULT_MAIN_LIGHT_COLOR = Color(143, 143, 143, 255);
+    const MapVec Options::DEFAULT_MAIN_LIGHT_DIR = MapVec(0.35, 0.35, -0.87);
 
+    std::shared_ptr<Bitmap> Options::_DefaultBackgroundBitmap;
     std::shared_ptr<Bitmap> Options::_CartoWatermarkBitmap;
     std::shared_ptr<Bitmap> Options::_EvaluationWatermarkBitmap;
     std::shared_ptr<Bitmap> Options::_ExpiredWatermarkBitmap;

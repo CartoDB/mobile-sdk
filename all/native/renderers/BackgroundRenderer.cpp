@@ -71,11 +71,12 @@ namespace carto {
     void BackgroundRenderer::onDrawFrame(const ViewState& viewState) {
         std::vector<std::shared_ptr<Layer> > layers = _layers.getAll();
 
-        std::shared_ptr<Bitmap> backgroundBitmap = _options.getBackgroundBitmap();
-        if (backgroundBitmap == Options::GetDefaultBackgroundBitmap()) {
-            if (!layers.empty()) {
-                backgroundBitmap = layers.front()->getBackgroundBitmap();
-            }
+        std::shared_ptr<Bitmap> backgroundBitmap;
+        if (!layers.empty() && _options.getBackgroundBitmap() == Options::GetDefaultBackgroundBitmap()) {
+            backgroundBitmap = layers.front()->getBackgroundBitmap();
+        }
+        if (!backgroundBitmap) {
+            backgroundBitmap = _options.getBackgroundBitmap();
         }
         if (_backgroundBitmap != backgroundBitmap) {
             if (backgroundBitmap) {
@@ -85,18 +86,18 @@ namespace carto {
             }
             _backgroundBitmap = backgroundBitmap;
         }
-    
-        std::shared_ptr<Bitmap> skyBitmap = _options.getSkyBitmap();
-        if (skyBitmap == Options::GetDefaultSkyBitmap()) {
-            if (!layers.empty()) {
-                skyBitmap = layers.front()->getSkyBitmap();
-            }
+
+        std::shared_ptr<Bitmap> skyBitmap;
+        if (!layers.empty()) {
+            skyBitmap = layers.front()->getSkyBitmap();
+        }
+        if (!skyBitmap) {
+            skyBitmap = _options.getSkyBitmap();
         }
         if (_skyBitmap != skyBitmap) {
             if (skyBitmap) {
                 _skyTex = _textureManager->createTexture(skyBitmap, true, true);
-            }
-            else {
+            } else {
                 _skyTex.reset();
             }
            _skyBitmap = skyBitmap;
@@ -283,8 +284,10 @@ namespace carto {
         if (_skyCoords.size() != vertexCount * 3) {
             _skyCoords.resize(vertexCount * 3);
         }
-        for (std::size_t i = 0; i < vertexCount * 3; i++) {
-            _skyCoords[i] = SKY_COORDS[i] * skyScale;
+        for (std::size_t i = 0; i < vertexCount; i++) {
+            _skyCoords[i * 3 + 0] = SKY_COORDS[i * 3 + 0] * skyScale;
+            _skyCoords[i * 3 + 1] = SKY_COORDS[i * 3 + 1] * skyScale;
+            _skyCoords[i * 3 + 2] = (SKY_COORDS[i * 3 + 2] + 0.5f) * 0.5f * skyScale;
         }
 
         // Draw

@@ -35,6 +35,7 @@ namespace carto {
         _backgroundColor(0, 0, 0, 0),
         _backgroundBitmap(),
         _skyColor(0, 0, 0, 0),
+        _skyGroundColor(0, 0, 0, 0),
         _skyBitmap(),
         _poleTiles(),
         _labelCullThreadPool(std::make_shared<CancelableThreadPool>()),
@@ -488,10 +489,10 @@ namespace carto {
             backgroundColor = Color(mapSettings->backgroundColor.value());
         }
         if (backgroundColor != _backgroundColor || !_backgroundBitmap) {
-            if (backgroundColor == Color(0, 0, 0, 0)) {
-                _backgroundBitmap = TileLayer::getBackgroundBitmap();
-            } else {
+            if (backgroundColor != Color(0, 0, 0, 0)) {
                 _backgroundBitmap = BackgroundBitmapGenerator(BACKGROUND_BLOCK_SIZE, BACKGROUND_BLOCK_COUNT).generateBitmap(backgroundColor);
+            } else {
+                _backgroundBitmap.reset();
             }
             _backgroundColor = backgroundColor;
         }
@@ -501,13 +502,23 @@ namespace carto {
     std::shared_ptr<Bitmap> VectorTileLayer::getSkyBitmap() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-        Color backgroundColor = _backgroundColor;
-        if (std::shared_ptr<mvt::Map::Settings> mapSettings = _tileDecoder->getMapSettings()) {
-            backgroundColor = Color(mapSettings->backgroundColor.value());
+        std::shared_ptr<Options> options = _options.lock();
+        if (!options) {
+            return std::shared_ptr<Bitmap>();
         }
-        if (backgroundColor != _skyColor || !_skyBitmap) {
-            _skyBitmap = SkyBitmapGenerator(SKY_WIDTH, SKY_HEIGHT, SKY_GRADIENT_SIZE, SKY_GRADIENT_OFFSET).generateBitmap(backgroundColor);
-            _skyColor = backgroundColor;
+        Color skyGroundColor = _skyGroundColor;
+        if (std::shared_ptr<mvt::Map::Settings> mapSettings = _tileDecoder->getMapSettings()) {
+            skyGroundColor = Color(mapSettings->backgroundColor.value());
+        }
+        Color skyColor = options->getSkyColor();
+        if (skyGroundColor != _skyGroundColor || skyColor != _skyColor || !_skyBitmap) {
+            if (skyColor == Color(0, 0, 0, 0)) {
+                _skyBitmap.reset();
+            } else {
+                _skyBitmap = SkyBitmapGenerator(1, 128).generateBitmap(skyGroundColor, skyColor);
+            }
+            _skyGroundColor = skyGroundColor;
+            _skyColor = skyColor;
         }
         return _skyBitmap;
     }

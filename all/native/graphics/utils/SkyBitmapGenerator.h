@@ -17,19 +17,14 @@ namespace carto {
      */
     class SkyBitmapGenerator {
     public:
-        SkyBitmapGenerator(int width, int height, int gradientSize, int gradientOffset) : _width(width), _height(height), _gradientSize(gradientSize), _gradientOffset(gradientOffset) { }
+        SkyBitmapGenerator(int width, int height);
+        virtual ~SkyBitmapGenerator();
 
-        std::shared_ptr<Bitmap> generateBitmap(const Color& backgroundColor) const;
-        std::shared_ptr<Bitmap> generateBitmap(const Color& backgroundColor, const Color& skyColor) const;
+        std::shared_ptr<Bitmap> generateBitmap(const Color& groundColor, const Color& skyColor) const;
 
     private:
-        static const unsigned int LIGHT_SKY_COLOR = 0xff95c4ff;
-        static const unsigned int DARK_SKY_COLOR  = 0xff003880;
-
         const int _width;
         const int _height;
-        const int _gradientSize;
-        const int _gradientOffset;
     };
 
 }

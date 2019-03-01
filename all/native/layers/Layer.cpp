@@ -194,11 +194,11 @@ namespace carto {
     }
     
     std::shared_ptr<Bitmap> Layer::getBackgroundBitmap() const {
-        return Options::GetDefaultBackgroundBitmap();
+        return std::shared_ptr<Bitmap>();
     }
 
     std::shared_ptr<Bitmap> Layer::getSkyBitmap() const {
-        return Options::GetDefaultSkyBitmap();
+        return std::shared_ptr<Bitmap>();
     }
 
 }

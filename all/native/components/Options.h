@@ -355,6 +355,22 @@ namespace carto {
         void setClearColor(const Color& color);
         
         /**
+         * Returns the sky color.
+         * @return The sky color.
+         */
+        Color getSkyColor() const;
+        /**
+         * Sets the sky color. The purpose of the sky bitmap is to fill out the empty space visible at low tilt angles.
+         * @param color The new sky color. If the color is transparent, sky is not rendered.
+         */
+        void setSkyColor(const Color& color);
+        /**
+         * Returns the sky bitmap. May be null.
+         * @return The sky bitmap.
+         */
+        std::shared_ptr<Bitmap> getSkyBitmap() const;
+
+        /**
          * Returns the background bitmap. May be null.
          * @return The background bitmap.
          */
@@ -370,23 +386,6 @@ namespace carto {
          */
         void setBackgroundBitmap(const std::shared_ptr<Bitmap>& backgroundBitmap);
     
-        /**
-         * Returns the sky bitmap. May be null.
-         * @return The sky bitmap.
-         */
-        std::shared_ptr<Bitmap> getSkyBitmap() const;
-        /**
-         * Sets the sky bitmap. The purpose of the sky bitmap is to fill out the empty space visible at low tilt angles.
-         * The bitmap is folded horizontally into 4 equal parts making up the north, east, south and west sides of the sky.
-         * The horizon of the sky should be vertically centered, for references look at the default sky bitmap bundled with the SDK.
-         * If a null pointer is passed, the sky won't be drawn.
-         * The width and height of the bitmap must be power of two (for example: 256 * 256 or 128 * 512). In the most common
-         * use case the width of the bitmap is 4 times the height (width == 4 * height), but this is not a requirement.  
-         * The default is "default_sky.png".
-         * @param skyBitmap The new sky bitmap.
-         */
-        void setSkyBitmap(const std::shared_ptr<Bitmap>& skyBitmap);
-
         /**
          * Returns the horizontal alignment of the watermark.
          * @return The horizontal alignment of the watermark.
@@ -596,13 +595,17 @@ namespace carto {
 
         static std::shared_ptr<Bitmap> GetDefaultBackgroundBitmap();
 
-        static std::shared_ptr<Bitmap> GetDefaultSkyBitmap();
-
         static std::shared_ptr<Bitmap> GetCartoWatermarkBitmap();
         static std::shared_ptr<Bitmap> GetEvaluationWatermarkBitmap();
         static std::shared_ptr<Bitmap> GetExpiredWatermarkBitmap();
 
     private:
+        static const Color DEFAULT_SKY_COLOR;
+        static const Color DEFAULT_BACKGROUND_COLOR;
+        static const Color DEFAULT_AMBIENT_LIGHT_COLOR;
+        static const Color DEFAULT_MAIN_LIGHT_COLOR;
+        static const MapVec DEFAULT_MAIN_LIGHT_DIR;
+        
         void notifyOptionChanged(const std::string& optionName);
         
         Color _ambientLightColor;
@@ -635,9 +638,12 @@ namespace carto {
         bool _zoomGestures;
 
         Color _clearColor;
-    
+        Color _skyColor;
+        
+        mutable Color _skyBitmapColor;
+        mutable std::shared_ptr<Bitmap> _skyBitmap;
+
         std::shared_ptr<Bitmap> _backgroundBitmap;
-        std::shared_ptr<Bitmap> _skyBitmap;
         
         float _watermarkAlignmentX;
         float _watermarkAlignmentY;
@@ -672,8 +678,6 @@ namespace carto {
         mutable std::mutex _onChangeListenersMutex;
 
         static std::shared_ptr<Bitmap> _DefaultBackgroundBitmap;
-        static std::shared_ptr<Bitmap> _DefaultSkyBitmap;
-        
         static std::shared_ptr<Bitmap> _CartoWatermarkBitmap;
         static std::shared_ptr<Bitmap> _EvaluationWatermarkBitmap;
         static std::shared_ptr<Bitmap> _ExpiredWatermarkBitmap;
