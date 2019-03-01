@@ -17,7 +17,7 @@ namespace carto {
     std::shared_ptr<Bitmap> SkyBitmapGenerator::generateBitmap(const Color& backgroundColor, const Color& skyColor) const {
         std::vector<unsigned char> data(_width * _height * 4);
 
-        unsigned char baseValue = std::max(128, 255 - std::max(backgroundColor.getR(), std::max(backgroundColor.getG(), backgroundColor.getB())));
+        unsigned char baseValue = std::min(128, 255 - std::max(backgroundColor.getR(), std::max(backgroundColor.getG(), backgroundColor.getB())));
         Color baseColor(
             std::max(skyColor.getR(), baseValue) - baseValue,
             std::max(skyColor.getG(), baseValue) - baseValue,
@@ -26,12 +26,13 @@ namespace carto {
         );
 
         for (int y = 0; y < _height; y++) {
-            float a = std::min(1.0f, y * 1.25f / _height) * baseColor.getA() / 255.0f;
-            float s = static_cast<float>(y * y) / ((_height + 1) * (_height + 1));
+			float v = y / (_height - 1.0f);
+            float a = v * baseColor.getA() / 255.0f;
+            float t = v * v;
             Color color(
-                static_cast<unsigned char>(((1 - s) * baseColor.getR() + s * backgroundColor.getR()) * a),
-                static_cast<unsigned char>(((1 - s) * baseColor.getG() + s * backgroundColor.getG()) * a),
-                static_cast<unsigned char>(((1 - s) * baseColor.getB() + s * backgroundColor.getB()) * a),
+                static_cast<unsigned char>(((1 - t) * baseColor.getR() + t * backgroundColor.getR()) * a),
+                static_cast<unsigned char>(((1 - t) * baseColor.getG() + t * backgroundColor.getG()) * a),
+                static_cast<unsigned char>(((1 - t) * baseColor.getB() + t * backgroundColor.getB()) * a),
                 static_cast<unsigned char>(255 * a)
             );
 
