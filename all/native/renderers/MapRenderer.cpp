@@ -1009,6 +1009,14 @@ namespace carto {
         if (auto mapRenderer = _mapRenderer.lock()) {
             bool updateView = false;
 
+            if (optionName == "AmbientLightColor" || optionName == "MainLightColor" || optionName == "MainLightDirection" || optionName == "ClearColor" || optionName == "SkyColor") {
+                updateView = true;
+            }
+
+            if (optionName.substr(0, 9) == "Watermark") {
+                updateView = true;
+            }
+
             if (optionName == "RenderProjectionMode" || optionName == "RenderProjection") {
                 std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
                 mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
