@@ -26,7 +26,7 @@ namespace carto {
         );
 
         for (int y = 0; y < _height; y++) {
-            float a = std::min(1.0f, y * 4.0f / _height) * baseColor.getA() / 255.0f;
+            float a = std::min(1.0f, y * 1.25f / _height) * baseColor.getA() / 255.0f;
             float s = static_cast<float>(y * y) / ((_height + 1) * (_height + 1));
             Color color(
                 static_cast<unsigned char>(((1 - s) * baseColor.getR() + s * backgroundColor.getR()) * a),

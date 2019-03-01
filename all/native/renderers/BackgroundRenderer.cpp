@@ -96,7 +96,7 @@ namespace carto {
         }
         if (_skyBitmap != skyBitmap) {
             if (skyBitmap) {
-                _skyTex = _textureManager->createTexture(skyBitmap, true, true);
+                _skyTex = _textureManager->createTexture(skyBitmap, false, false);
             } else {
                 _skyTex.reset();
             }
@@ -173,8 +173,8 @@ namespace carto {
 
             // Transform texture coordinates
             float backgroundScale = static_cast<float>(Const::WORLD_SIZE / viewState.getCosHalfFOVXY());
-            int intTwoPowZoom = (int) std::pow(2.0f, (int) viewState.getZoom());
-            float scale = (float) (intTwoPowZoom * 0.5f / Const::HALF_WORLD_SIZE);
+            int intTwoPowZoom = 1 << static_cast<int>(viewState.getZoom());
+            float scale = static_cast<float>(intTwoPowZoom * 0.5f / Const::HALF_WORLD_SIZE);
             double translateOriginX = (focusPos(0) != 0 || focusPos(1) != 0 ? std::atan2(focusPos(1), focusPos(0)) / Const::PI + 1.0 : 0);
             double translateOriginY = std::asin(std::max(-1.0, std::min(1.0, focusPos(2) / cglib::length(focusPos)))) / Const::PI + 0.5;
             double translateX = translateOriginX * scale - 0.5 * scale * backgroundScale;
@@ -212,15 +212,15 @@ namespace carto {
         if (_backgroundCoords.size() != vertexCount * 3) {
             _backgroundCoords.resize(vertexCount * 3);
         }
-        for (std::size_t i = 0; i < vertexCount * 3; i += 3) {
-            _backgroundCoords[i + 0] = BACKGROUND_COORDS[i + 0] * backgroundScale;
-            _backgroundCoords[i + 1] = BACKGROUND_COORDS[i + 1] * backgroundScale;
-            _backgroundCoords[i + 2] = static_cast<float>(-cameraPos(2));
+        for (std::size_t i = 0; i < vertexCount; i++) {
+            _backgroundCoords[i * 3 + 0] = BACKGROUND_COORDS[i * 3 + 0] * backgroundScale;
+            _backgroundCoords[i * 3 + 1] = BACKGROUND_COORDS[i * 3 + 1] * backgroundScale;
+            _backgroundCoords[i * 3 + 2] = static_cast<float>(-cameraPos(2));
         }
 
         // Transform texture coordinates
-        int intTwoPowZoom = (int) std::pow(2.0f, (int) viewState.getZoom());
-        float scale = (float) (intTwoPowZoom * 0.5f / Const::HALF_WORLD_SIZE);
+        int intTwoPowZoom = 1 << static_cast<int>(viewState.getZoom());
+        float scale = static_cast<float>(intTwoPowZoom * 0.5f / Const::HALF_WORLD_SIZE);
         double translateX = cameraPos(0) * scale;
         double translateY = cameraPos(1) * scale;
         translateX -= std::floor(translateX);
@@ -228,9 +228,9 @@ namespace carto {
         if (_backgroundTexCoords.size() != vertexCount * 2) {
             _backgroundTexCoords.resize(vertexCount * 2);
         }
-        for (std::size_t i = 0; i < vertexCount * 2; i += 2) {
-            _backgroundTexCoords[i + 0] = static_cast<float>((BACKGROUND_TEX_COORDS[i + 0] - 0.5f) * scale * backgroundScale + translateX);
-            _backgroundTexCoords[i + 1] = static_cast<float>((BACKGROUND_TEX_COORDS[i + 1] - 0.5f) * scale * backgroundScale + translateY);
+        for (std::size_t i = 0; i < vertexCount; i++) {
+            _backgroundTexCoords[i * 2 + 0] = static_cast<float>((BACKGROUND_TEX_COORDS[i * 2 + 0] - 0.5f) * scale * backgroundScale + translateX);
+            _backgroundTexCoords[i * 2 + 1] = static_cast<float>((BACKGROUND_TEX_COORDS[i * 2 + 1] - 0.5f) * scale * backgroundScale + translateY);
         }
 
         // Draw
@@ -287,12 +287,19 @@ namespace carto {
         for (std::size_t i = 0; i < vertexCount; i++) {
             _skyCoords[i * 3 + 0] = SKY_COORDS[i * 3 + 0] * skyScale;
             _skyCoords[i * 3 + 1] = SKY_COORDS[i * 3 + 1] * skyScale;
-            _skyCoords[i * 3 + 2] = (SKY_COORDS[i * 3 + 2] + 0.5f) * 0.5f * skyScale;
+            _skyCoords[i * 3 + 2] = SKY_COORDS[i * 3 + 2] * skyScale;
+        }
+        if (_skyTexCoords.size() != vertexCount * 2) {
+            _skyTexCoords.resize(vertexCount * 2);
+        }
+        for (std::size_t i = 0; i < vertexCount; i++) {
+            _skyTexCoords[i](0) = SKY_TEX_COORDS[i * 2 + 0];
+            _skyTexCoords[i](1) = SKY_TEX_COORDS[i * 2 + 1] * 2;
         }
 
         // Draw
         glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 0, _skyCoords.data());
-        glVertexAttribPointer(_a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, SKY_TEX_COORDS);
+        glVertexAttribPointer(_a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, _skyTexCoords.data());
         glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount);
     }
 
