@@ -24,7 +24,7 @@ namespace carto {
         
     MapPos EPSG4326::fromInternal(const MapPos& mapPosInternal) const {
         double x = mapPosInternal.getX() / UNITS_TO_INTERNAL * Const::RAD_TO_DEG;
-        double y = 90.0 - Const::DEG_TO_RAD * (2.0 * std::atan(std::exp(-mapPosInternal.getY() / UNITS_TO_INTERNAL)));
+        double y = 90.0 - Const::RAD_TO_DEG * (2.0 * std::atan(std::exp(-mapPosInternal.getY() / UNITS_TO_INTERNAL)));
         double z = mapPosInternal.getZ() / UNITS_TO_INTERNAL * EARTH_RADIUS;
         return MapPos(x, y, z);
     }
