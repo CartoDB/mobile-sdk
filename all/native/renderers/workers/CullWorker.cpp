@@ -6,6 +6,8 @@
 #include "utils/Log.h"
 #include "utils/ThreadUtils.h"
 
+#include <algorithm>
+
 namespace carto {
 
     CullWorker::CullWorker() :
@@ -158,6 +160,30 @@ namespace carto {
             }
             projectionSurface->tesselateSegment(mapPoses[i], mapPoses[(i + 1) % 4], envelopePoses);
         }
+
+        // Check for X coordinate wrapping. Do quick fix of the poles.
+        bool addPole1 = _viewState.getFrustum().inside(projectionSurface->calculatePosition(MapPos(0, -std::numeric_limits<double>::infinity())));
+        bool addPole2 = _viewState.getFrustum().inside(projectionSurface->calculatePosition(MapPos(0,  std::numeric_limits<double>::infinity())));
+        if (addPole1 || addPole2) {
+            double minX = -Const::WORLD_SIZE * 0.5;
+            double maxX =  Const::WORLD_SIZE * 0.5;
+            double minY = std::min_element(envelopePoses.begin(), envelopePoses.end(), [](const MapPos& p1, const MapPos& p2) { return p1.getY() < p2.getY(); })->getY();
+            double maxY = std::max_element(envelopePoses.begin(), envelopePoses.end(), [](const MapPos& p1, const MapPos& p2) { return p1.getY() < p2.getY(); })->getY();
+            if (addPole1) {
+                minY = -std::numeric_limits<double>::infinity();
+            }
+            if (addPole2) {
+                maxY =  std::numeric_limits<double>::infinity();
+            }
+
+            envelopePoses.clear();
+            envelopePoses.emplace_back(minX, minY);
+            envelopePoses.emplace_back(minX, maxY);
+            envelopePoses.emplace_back(maxX, maxY);
+            envelopePoses.emplace_back(maxX, minY);
+        }
+
+        // Check if poles are visible. We
         _envelope = MapEnvelope(envelopePoses);
     }
     
