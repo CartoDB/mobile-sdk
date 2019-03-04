@@ -142,8 +142,6 @@ namespace carto {
                                            StyleTextureCache& styleCache,
                                            const ViewState& viewState)
     {
-        // TODO: disable culling
-
         // Get bitmap
         std::shared_ptr<Bitmap> bitmap = drawDataBuffer.front()->getBitmap();
         

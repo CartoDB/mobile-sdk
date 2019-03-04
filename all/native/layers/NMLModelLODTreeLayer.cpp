@@ -597,9 +597,7 @@ namespace carto {
             _nmlModelLODTreeRenderer->refreshDrawData();
         }
     
-        if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
-            mapRenderer->requestRedraw();
-        }
+        redraw();
     }
 
     cglib::mat4x4<double> NMLModelLODTreeLayer::CalculateLocalMat(const ViewState& viewState, const NMLModelLODTree* modelLODTree) {

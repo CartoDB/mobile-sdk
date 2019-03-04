@@ -70,6 +70,17 @@ namespace carto {
          * @param eventListener The vector element event listener.
          */
         void setVectorElementEventListener(const std::shared_ptr<VectorElementEventListener>& eventListener);
+
+        /**
+         * Returns true if Z-buffering is enabled for 2D geometry. By default it is disabled and used only for billboards.
+         * @return True if Z-buffering is enabled for 2D geometry.
+         */
+        bool isZBuffering() const;
+        /**
+         * Sets the Z-buffering flag for 2D geometry. By default it is disabled.
+         * @param enabled True if Z-buffering should be enabled.
+         */
+        void setZBuffering(bool enabled);
     
         virtual bool isUpdateInProgress() const;
         
@@ -131,10 +142,12 @@ namespace carto {
         virtual void unregisterDataSourceListener();
 
         virtual std::shared_ptr<CancelableTask> createFetchTask(const std::shared_ptr<CullState>& cullState);
-    
+
         const DirectorPtr<VectorDataSource> _dataSource;
         std::shared_ptr<VectorDataSource::OnChangeListener> _dataSourceListener;
         
+        std::atomic<bool> _zBuffering;
+
     private:
         ThreadSafeDirectorPtr<VectorElementEventListener> _vectorElementEventListener;
 

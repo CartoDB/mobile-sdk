@@ -488,10 +488,7 @@ namespace carto {
         }
 
         syncElementOverlayPoints(element);
-        
-        if (const std::shared_ptr<MapRenderer>& mapRenderer = _mapRenderer.lock()) {
-            mapRenderer->requestRedraw();
-        }
+        redraw();
     }
 
     std::shared_ptr<Geometry> EditableVectorLayer::updateGeometryPoints(std::shared_ptr<Geometry> geometry, const ViewState& viewState, const MapPos& mapPos0, const MapPos& mapPos1) {
@@ -541,10 +538,7 @@ namespace carto {
         element.reset();
         
         syncElementOverlayPoints(element);
-        
-        if (const std::shared_ptr<MapRenderer>& mapRenderer = _mapRenderer.lock()) {
-            mapRenderer->requestRedraw();
-        }
+        redraw();
     }
     
     void EditableVectorLayer::updateElementPoint(std::shared_ptr<VectorElement> element, const std::shared_ptr<Point>& dragPoint, const MapPos& mapPos) {
@@ -576,10 +570,7 @@ namespace carto {
         }
 
         syncElementOverlayPoints(element);
-        
-        if (const std::shared_ptr<MapRenderer>& mapRenderer = _mapRenderer.lock()) {
-            mapRenderer->requestRedraw();
-        }
+        redraw();
     }
 
     std::shared_ptr<Geometry> EditableVectorLayer::updateGeometryPoint(std::shared_ptr<Geometry> geometry, int& offset, int index, const MapPos& mapPos) {
@@ -673,10 +664,7 @@ namespace carto {
         }
 
         syncElementOverlayPoints(element);
-
-        if (const std::shared_ptr<MapRenderer>& mapRenderer = _mapRenderer.lock()) {
-            mapRenderer->requestRedraw();
-        }
+        redraw();
     }
 
     std::shared_ptr<Geometry> EditableVectorLayer::removeGeometryPoint(std::shared_ptr<Geometry> geometry, int& offset, int index) {

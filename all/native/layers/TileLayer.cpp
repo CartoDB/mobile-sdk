@@ -220,8 +220,7 @@ namespace carto {
         for (auto it = _utfGridTiles.begin(); it != _utfGridTiles.end(); ) {
             if (!tileExists(it->first, false) && !tileExists(it->first, true)) {
                 it = _utfGridTiles.erase(it);
-            }
-            else {
+            } else {
                 it++;
             }
         }
@@ -560,8 +559,7 @@ namespace carto {
             if (tileExists(subTile, preloadingCache)) {
                 calculateDrawData(visTile, subTile, preloadingTile);
                 childTileCount++;
-            }
-            else {
+            } else {
                 childTileCount += findChildTiles(visTile, subTile, depth - 1, preloadingCache, preloadingTile);
             }
         }
@@ -718,8 +716,7 @@ namespace carto {
                 std::lock_guard<std::recursive_mutex> lock(tileLayer->_mutex);
                 tileLayer->_utfGridTiles[dataSourceTile] = utfTile; // we ignore expiration info here
                 refresh = true;
-            }
-            else {
+            } else {
                 Log::Error("TileLayer::FetchTaskBase: Failed to decode UTF grid tile");
             }
             break;

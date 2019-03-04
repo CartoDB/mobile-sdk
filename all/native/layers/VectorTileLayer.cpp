@@ -82,7 +82,7 @@ namespace carto {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             _labelRenderOrder = renderOrder;
         }
-        refresh();
+        redraw();
     }
     
     VectorTileRenderOrder::VectorTileRenderOrder VectorTileLayer::getBuildingRenderOrder() const {
@@ -95,7 +95,7 @@ namespace carto {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             _buildingRenderOrder = renderOrder;
         }
-        refresh();
+        redraw();
     }
     
     std::shared_ptr<VectorTileEventListener> VectorTileLayer::getVectorTileEventListener() const {
@@ -187,8 +187,7 @@ namespace carto {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             _visibleCache.clear();
             _preloadingCache.clear();
-        }
-        else {
+        } else {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             _visibleCache.invalidate_all(std::chrono::steady_clock::now());
             _preloadingCache.clear();
@@ -318,9 +317,7 @@ namespace carto {
         }
     
         if (refresh) {
-            if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
-                mapRenderer->requestRedraw();
-            }
+            redraw();
         }
 
         {
@@ -643,9 +640,7 @@ namespace carto {
     
         if (std::shared_ptr<TileRenderer> tileRenderer = _tileRenderer.lock()) {
             if (tileRenderer->cullLabels(_viewState)) {
-                if (std::shared_ptr<MapRenderer> mapRenderer = layer->_mapRenderer.lock()) {
-                    mapRenderer->requestRedraw();
-                }
+                layer->redraw();
             }
         }
     }

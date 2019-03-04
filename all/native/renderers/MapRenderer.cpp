@@ -621,7 +621,7 @@ namespace carto {
         _animationHandler.calculate(viewState, deltaSeconds);
         _kineticEventHandler.calculate(viewState, deltaSeconds);
 
-        setUpGLState();
+        initializeRenderState();
     
         _backgroundRenderer.onDrawFrame(viewState);
         drawLayers(deltaSeconds, viewState);
@@ -762,6 +762,16 @@ namespace carto {
         GLContext::CheckGLError("MapRenderer::blendAndUnbindScreenFBO");
     }
 
+    void MapRenderer::setZBuffering(bool enable) {
+        if (enable) {
+            glEnable(GL_DEPTH_TEST);
+            glDisable(GL_CULL_FACE);
+        } else {
+            glDisable(GL_DEPTH_TEST);
+            glEnable(GL_CULL_FACE);
+        }
+    }
+
     void MapRenderer::calculateRayIntersectedElements(const MapPos& targetPos, ViewState& viewState, std::vector<RayIntersectedElement>& results) {
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
@@ -851,7 +861,7 @@ namespace carto {
         _renderThreadCallbacks.push_back(callback);
     }
     
-    void MapRenderer::setUpGLState() const {
+    void MapRenderer::initializeRenderState() const {
         // Set clear color
         Color clearColor = _options->getClearColor();
         glClearColor(clearColor.getR() / 255.0f, clearColor.getG() / 255.0f, clearColor.getB() / 255.0f, clearColor.getA() / 255.0f);

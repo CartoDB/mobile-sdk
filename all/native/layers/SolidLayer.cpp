@@ -35,8 +35,11 @@ namespace carto {
     }
     
     void SolidLayer::setColor(const Color& color) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        _color = color;
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _color = color;
+        }
+        redraw();
     }
 
     std::shared_ptr<Bitmap> SolidLayer::getBitmap() const {
@@ -45,8 +48,11 @@ namespace carto {
     }
 
     void SolidLayer::setBitmap(const std::shared_ptr<Bitmap>& bitmap) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        _bitmap = bitmap;
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _bitmap = bitmap;
+        }
+        redraw();
     }
 
     float SolidLayer::getBitmapScale() const {
@@ -55,8 +61,11 @@ namespace carto {
     }
 
     void SolidLayer::setBitmapScale(float scale) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        _bitmapScale = scale;
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _bitmapScale = scale;
+        }
+        redraw();
     }
 
     bool SolidLayer::isUpdateInProgress() const {

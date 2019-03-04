@@ -128,8 +128,6 @@ namespace carto {
                                               StyleTextureCache& styleCache,
                                               const ViewState& viewState)
     {
-        // TODO: disable culling
-
         // Calculate buffer size
         std::size_t totalCoordCount = 0;
         std::size_t totalIndexCount = 0;

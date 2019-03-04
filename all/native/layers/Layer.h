@@ -143,6 +143,8 @@ namespace carto {
                                    const std::weak_ptr<TouchHandler>& touchHandler);
     
         std::shared_ptr<CullState> getLastCullState() const;
+
+        void redraw() const;
     
         virtual void loadData(const std::shared_ptr<CullState>& cullState) = 0;
         

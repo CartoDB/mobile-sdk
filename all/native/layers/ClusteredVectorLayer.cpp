@@ -70,15 +70,7 @@ namespace carto {
             std::lock_guard<std::mutex> lock(_clusterMutex);
             _minClusterDistance = px;
         }
-
-        std::shared_ptr<MapRenderer> mapRenderer;
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            mapRenderer = _mapRenderer.lock();
-        }
-        if (mapRenderer) {
-            mapRenderer->requestRedraw();
-        }
+        redraw();
     }
 
     float ClusteredVectorLayer::getMaximumClusterZoom() const {
@@ -91,15 +83,7 @@ namespace carto {
             std::lock_guard<std::mutex> lock(_clusterMutex);
             _maxClusterZoom = maxZoom;
         }
-        
-        std::shared_ptr<MapRenderer> mapRenderer;
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            mapRenderer = _mapRenderer.lock();
-        }
-        if (mapRenderer) {
-            mapRenderer->requestRedraw();
-        }
+        redraw();
     }
 
     bool ClusteredVectorLayer::isAnimatedClusters() const {
@@ -134,14 +118,7 @@ namespace carto {
                 clusterIdxs.push(cluster.childClusterIdx[1]);
             }
         }
-        std::shared_ptr<MapRenderer> mapRenderer;
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            mapRenderer = _mapRenderer.lock();
-        }
-        if (mapRenderer) {
-            mapRenderer->requestRedraw();
-        }
+        redraw();
         return updated;
     }
 

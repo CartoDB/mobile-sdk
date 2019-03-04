@@ -176,6 +176,18 @@ namespace carto {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _lastCullState;
     }
+
+    void Layer::redraw() const {
+        std::shared_ptr<MapRenderer> mapRenderer;
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            mapRenderer = _mapRenderer.lock();
+        }
+
+        if (mapRenderer) {
+            mapRenderer->requestRedraw();
+        }
+    }
     
     bool Layer::isSurfaceCreated() const {
         return _surfaceCreated;

@@ -46,6 +46,7 @@ namespace carto {
         Layer(),
         _dataSource(dataSource),
         _dataSourceListener(),
+        _zBuffering(false),
         _vectorElementEventListener(),
         _billboardRenderer(std::make_shared<BillboardRenderer>()),
         _geometryCollectionRenderer(std::make_shared<GeometryCollectionRenderer>()),
@@ -74,6 +75,15 @@ namespace carto {
     
     void VectorLayer::setVectorElementEventListener(const std::shared_ptr<VectorElementEventListener>& eventListener) {
         _vectorElementEventListener.set(eventListener);
+    }
+
+    bool VectorLayer::isZBuffering() const {
+        return _zBuffering;
+    }
+
+    void VectorLayer::setZBuffering(bool enabled) {
+        _zBuffering = enabled;
+        refresh();
     }
     
     bool VectorLayer::isUpdateInProgress() const {
@@ -124,7 +134,6 @@ namespace carto {
                     // Billboards were removed, calculate new placements
                     mapRenderer->billboardsChanged();
                 }
-
                 mapRenderer->requestRedraw();
             }
             return;
@@ -166,9 +175,13 @@ namespace carto {
     bool VectorLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
         if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
             float opacity = getOpacity();
+            bool zBuffering = isZBuffering();
 
             if (opacity < 1.0f) {
                 mapRenderer->clearAndBindScreenFBO(Color(0, 0, 0, 0), true, false);
+            }
+            if (_zBuffering) {
+                mapRenderer->setZBuffering(true);
             }
 
             bool refresh = _billboardRenderer->onDrawFrame(deltaSeconds, billboardSorter, styleCache, viewState);
@@ -179,6 +192,9 @@ namespace carto {
             _polygon3DRenderer->onDrawFrame(deltaSeconds, viewState);
             _nmlModelRenderer->onDrawFrame(deltaSeconds, viewState);
 
+            if (zBuffering) {
+                mapRenderer->setZBuffering(false);
+            }
             if (opacity < 1.0f) {
                 mapRenderer->blendAndUnbindScreenFBO(opacity);
             }
@@ -270,7 +286,6 @@ namespace carto {
                 // Billboards were added, calculate new placements
                 mapRenderer->billboardsChanged();
             }
-            
             mapRenderer->requestRedraw();
         }
     }
@@ -590,7 +605,6 @@ namespace carto {
                 // Billboards were added, calculate new placements
                 mapRenderer->billboardsChanged();
             }
-
             mapRenderer->requestRedraw();
         }
     }

@@ -151,6 +151,7 @@ namespace carto {
 
         void clearAndBindScreenFBO(const Color& color, bool depth, bool stencil);
         void blendAndUnbindScreenFBO(float opacity);
+        void setZBuffering(bool enable);
     
         void calculateRayIntersectedElements(const MapPos& targetPos, ViewState& viewState, std::vector<RayIntersectedElement>& results);
     
@@ -174,7 +175,7 @@ namespace carto {
             std::weak_ptr<MapRenderer> _mapRenderer;
         };
 
-        void setUpGLState() const;
+        void initializeRenderState() const;
 
         void drawLayers(float deltaSeconds, const ViewState& viewState);
         
