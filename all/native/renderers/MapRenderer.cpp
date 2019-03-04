@@ -1031,7 +1031,7 @@ namespace carto {
                 updateView = true;
             }
 
-            if (optionName == "ProjectionMode" || optionName == "TileDrawSize" || optionName == "DPI" || optionName == "DrawDistance" || optionName == "FieldOfViewY" || optionName == "FocusPointOffset") {
+            if (optionName == "TileDrawSize" || optionName == "DPI" || optionName == "DrawDistance" || optionName == "FieldOfViewY" || optionName == "FocusPointOffset") {
                 std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
                 mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
                 updateView = true;

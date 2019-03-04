@@ -245,12 +245,6 @@ namespace carto {
          */
         const RotationState& getRotationState() const;
     
-        /** 
-         * Returns the projection mode.
-         * @return The projection mode.
-         */
-        ProjectionMode::ProjectionMode getProjectionMode() const;
-
         /**
          * Returns the projection surface.
          * @return The projection surface.
@@ -421,8 +415,6 @@ namespace carto {
         float _unitToPXCoef;
         float _unitToDPCoef;
         RotationState _rotationState;
-    
-        ProjectionMode::ProjectionMode _projectionMode;
     
         std::shared_ptr<ProjectionSurface> _projectionSurface;
 

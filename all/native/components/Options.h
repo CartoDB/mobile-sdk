@@ -22,27 +22,6 @@ namespace carto {
     class Projection;
     class ProjectionSurface;
     
-    namespace ProjectionMode {
-        /**
-         *  Possible projection modes.
-         */
-        enum ProjectionMode {
-            /**
-             * Orthogonal projection mode means that the size of the objects on the screen
-             * does not depend on their distance from the camera. This might be useful because it 
-             * avoids perspective distortion, but it becomes unusable at small tilt angles. 
-             * This is sometimes confused with isometric projection which is a subtype of 
-             * orthogonal projection.
-             */
-            PROJECTION_MODE_ORTHOGONAL,
-            /**
-             * Perspective projection means that the further away objects get from the camera the smaller
-             * they appear on the screen. This projection mode is used in most 3D games and applications.
-             */
-            PROJECTION_MODE_PERSPECTIVE
-        };
-    };
-    
     namespace RenderProjectionMode {
         /**
          *  Possible render projection modes.
@@ -164,17 +143,6 @@ namespace carto {
          *        from east with a 45 degree angle. The direction vector will be normalized.
          */
         void setMainLightDirection(const MapVec& direction);
-    
-        /**
-         * Returns the projection mode.
-         * @return The projection mode.
-         */
-        ProjectionMode::ProjectionMode getProjectionMode() const;
-        /**
-         * Sets the projection mode. The default is ProjectionMode::PERSPECTIVE.
-         * @param projectionMode The new projection mode.
-         */
-        void setProjectionMode(ProjectionMode::ProjectionMode projectionMode);
     
         /**
          * Returns the render projection mode.
@@ -612,8 +580,6 @@ namespace carto {
         Color _mainLightColor;
         MapVec _mainLightDir;
     
-        ProjectionMode::ProjectionMode _projectionMode;
-
         RenderProjectionMode::RenderProjectionMode _renderProjectionMode;
     
         bool _clickTypeDetection;

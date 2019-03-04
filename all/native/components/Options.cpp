@@ -23,7 +23,6 @@ namespace carto {
         _ambientLightColor(DEFAULT_AMBIENT_LIGHT_COLOR),
         _mainLightColor(DEFAULT_MAIN_LIGHT_COLOR),
         _mainLightDir(DEFAULT_MAIN_LIGHT_DIR),
-        _projectionMode(ProjectionMode::PROJECTION_MODE_PERSPECTIVE),
         _renderProjectionMode(RenderProjectionMode::RENDER_PROJECTION_MODE_PLANAR),
         _clickTypeDetection(true),
         _tileDrawSize(256),
@@ -116,22 +115,6 @@ namespace carto {
             _mainLightDir = directionNormalized;
         }
         notifyOptionChanged("MainLightDirection");
-    }
-    
-    ProjectionMode::ProjectionMode Options::getProjectionMode() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _projectionMode;
-    }
-    
-    void Options::setProjectionMode(ProjectionMode::ProjectionMode projectionMode) {
-        {
-            std::lock_guard<std::mutex> lock(_mutex);
-            if (_projectionMode == projectionMode) {
-                return;
-            }
-            _projectionMode = projectionMode;
-        }
-        notifyOptionChanged("ProjectionMode");
     }
     
     RenderProjectionMode::RenderProjectionMode Options::getRenderProjectionMode() const {

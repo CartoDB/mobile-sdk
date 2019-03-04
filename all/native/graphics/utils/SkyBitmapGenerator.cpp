@@ -26,7 +26,7 @@ namespace carto {
         );
 
         for (int y = 0; y < _height; y++) {
-			float v = y / (_height - 1.0f);
+            float v = y / (_height - 1.0f);
             float a = v * baseColor.getA() / 255.0f;
             float t = v * v;
             Color color(

@@ -6,7 +6,6 @@
 %module ViewState
 
 !proxy_imports(carto::ViewState, core.MapPos, core.ScreenPos, core.MapVec, components.Options, projections.Projection)
-!java_imports(carto::ViewState, com.carto.components.ProjectionMode)
 
 %{
 #include "graphics/ViewState.h"	
@@ -30,7 +29,6 @@
 %attribute(carto::ViewState, float, Rotation, getRotation)
 %attribute(carto::ViewState, float, Zoom, getZoom)
 %attribute(carto::ViewState, float, Tilt, getTilt)
-%attribute(carto::ViewState, carto::ProjectionMode::ProjectionMode, ProjectionMode, getProjectionMode)
 %attribute(carto::ViewState, float, Zoom0Distance, getZoom0Distance)
 %attribute(carto::ViewState, int, FOVY, getFOVY)
 %attribute(carto::ViewState, float, Near, getNear)

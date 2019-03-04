@@ -47,7 +47,6 @@ namespace carto {
         _unitToPXCoef(0),
         _unitToDPCoef(0),
         _rotationState(),
-        _projectionMode(ProjectionMode::PROJECTION_MODE_PERSPECTIVE),
         _projectionSurface(),
         _projectionMat(),
         _modelviewMat(),
@@ -207,10 +206,6 @@ namespace carto {
         return _rotationState;
     }
     
-    ProjectionMode::ProjectionMode ViewState::getProjectionMode() const {
-        return _projectionMode;
-    }
-
     std::shared_ptr<ProjectionSurface> ViewState::getProjectionSurface() const {
         return _projectionSurface;
     }
@@ -367,122 +362,109 @@ namespace carto {
     }
     
     void ViewState::calculateViewState(const Options& options) {
-        switch (options.getProjectionMode()) {
-            // TODO: implement?
-            case ProjectionMode::PROJECTION_MODE_ORTHOGONAL: {
-                _projectionMode = ProjectionMode::PROJECTION_MODE_ORTHOGONAL;
-                break;
+        // If FOV or tile draw size changed, recalculate zoom0Distance
+        std::shared_ptr<ProjectionSurface> projectionSurface = options.getProjectionSurface();
+        int FOVY = options.getFieldOfViewY();
+        int tileDrawSize = options.getTileDrawSize();
+        float dpi = options.getDPI();
+        MapRange zoomRange = options.getZoomRange();
+        bool restrictedPanning = options.isRestrictedPanning();
+        if (projectionSurface != _projectionSurface || FOVY != _fovY || tileDrawSize != _tileDrawSize || dpi != _dpi || zoomRange != _zoomRange || restrictedPanning != _restrictedPanning || _screenSizeChanged) {
+            _fovY = FOVY;
+            _tileDrawSize = tileDrawSize;
+            _dpToPX = dpi / Const::UNSCALED_DPI;
+            _dpi = dpi;
+            _screenSizeChanged = false;
+
+            _halfFOVY = _fovY * 0.5f;
+            _tanHalfFOVY = std::tan(static_cast<double>(_halfFOVY * Const::DEG_TO_RAD));
+            _cosHalfFOVY = std::cos(static_cast<double>(_halfFOVY * Const::DEG_TO_RAD));
+
+            _tanHalfFOVX = _aspectRatio * _tanHalfFOVY;
+            _cosHalfFOVXY = std::cos(std::atan(_tanHalfFOVX)) * _cosHalfFOVY;
+
+            _zoom0Distance = static_cast<float>(_height * Const::HALF_WORLD_SIZE / (tileDrawSize * _tanHalfFOVY * (_dpi / Const::UNSCALED_DPI)));
+
+            if (!_ignoreMinZoom) {
+                _minZoom = calculateMinZoom(options);
             }
-            case ProjectionMode::PROJECTION_MODE_PERSPECTIVE:
-            default: {
-                _projectionMode = ProjectionMode::PROJECTION_MODE_PERSPECTIVE;
-        
-                // If FOV or tile draw size changed, recalculate zoom0Distance
-                std::shared_ptr<ProjectionSurface> projectionSurface = options.getProjectionSurface();
-                int FOVY = options.getFieldOfViewY();
-                int tileDrawSize = options.getTileDrawSize();
-                float dpi = options.getDPI();
-                MapRange zoomRange = options.getZoomRange();
-                bool restrictedPanning = options.isRestrictedPanning();
-                if (projectionSurface != _projectionSurface || FOVY != _fovY || tileDrawSize != _tileDrawSize || dpi != _dpi || zoomRange != _zoomRange || restrictedPanning != _restrictedPanning || _screenSizeChanged) {
-                    _fovY = FOVY;
-                    _tileDrawSize = tileDrawSize;
-                    _dpToPX = dpi / Const::UNSCALED_DPI;
-                    _dpi = dpi;
-                    _screenSizeChanged = false;
-        
-                    _halfFOVY = _fovY * 0.5f;
-                    _tanHalfFOVY = std::tan(static_cast<double>(_halfFOVY * Const::DEG_TO_RAD));
-                    _cosHalfFOVY = std::cos(static_cast<double>(_halfFOVY * Const::DEG_TO_RAD));
-        
-                    _tanHalfFOVX = _aspectRatio * _tanHalfFOVY;
-                    _cosHalfFOVXY = std::cos(std::atan(_tanHalfFOVX)) * _cosHalfFOVY;
-        
-                    _zoom0Distance = static_cast<float>(_height * Const::HALF_WORLD_SIZE / (tileDrawSize * _tanHalfFOVY * (_dpi / Const::UNSCALED_DPI)));
 
-                    if (!_ignoreMinZoom) {
-                        _minZoom = calculateMinZoom(options);
-                    }
+            _zoomRange = zoomRange;
+            _restrictedPanning = restrictedPanning;
 
-                    _zoomRange = zoomRange;
-                    _restrictedPanning = restrictedPanning;
-                    
-                    _normalizedResolution = 2 * tileDrawSize * (_dpi / Const::UNSCALED_DPI);
+            _normalizedResolution = 2 * tileDrawSize * (_dpi / Const::UNSCALED_DPI);
 
-                    // Recalculate camera orientation on projection change
-                    if (_projectionSurface != projectionSurface) {
-                        MapPos focusPosInternal(0, 0, 0);
-                        if (_projectionSurface) {
-                            focusPosInternal = _projectionSurface->calculateMapPos(_focusPos);
-                        }
-                        _focusPos = projectionSurface->calculatePosition(focusPosInternal);
+            // Recalculate camera orientation on projection change
+            if (_projectionSurface != projectionSurface) {
+                MapPos focusPosInternal(0, 0, 0);
+                if (_projectionSurface) {
+                    focusPosInternal = _projectionSurface->calculateMapPos(_focusPos);
+                }
+                _focusPos = projectionSurface->calculatePosition(focusPosInternal);
 
-                        double sin = std::sin(_rotation * Const::DEG_TO_RAD);
-                        double cos = std::cos(_rotation * Const::DEG_TO_RAD);
-        
-                        // TODO: test this
-                        _cameraPos = _focusPos + projectionSurface->calculateNormal(focusPosInternal);
-                        _upVec = cglib::unit(projectionSurface->calculateVector(focusPosInternal, MapVec(sin, cos, 0)));
-                        
-                        cglib::vec3<double> axis = cglib::vector_product(_cameraPos - _focusPos, _upVec);
-                        if (cglib::length(axis) != 0) {
-                            cglib::mat4x4<double> transform = cglib::rotate4_matrix(axis, (90 - _tilt) * Const::DEG_TO_RAD);
-                            _cameraPos = _focusPos + cglib::transform_vector(_cameraPos - _focusPos, transform);
-                            _upVec = cglib::transform_vector(_upVec, transform);
-                        }
+                double sin = std::sin(_rotation * Const::DEG_TO_RAD);
+                double cos = std::cos(_rotation * Const::DEG_TO_RAD);
 
-                        _projectionSurface = projectionSurface;
-                    }
-        
-                    // Calculate new camera position
-                    if (_zoom0Distance > 0) {
-                        cglib::vec3<double> cameraVec = _cameraPos - _focusPos;
-                        double length = cglib::length(cameraVec);
-                        double newLength = _zoom0Distance / std::pow(2.0f, _zoom);
-                        _cameraPos = _focusPos + cameraVec * (newLength / length);
-                    }
-        
-                    _cameraChanged = true;
+                // TODO: test this
+                _cameraPos = _focusPos + projectionSurface->calculateNormal(focusPosInternal);
+                _upVec = cglib::unit(projectionSurface->calculateVector(focusPosInternal, MapVec(sin, cos, 0)));
+
+                cglib::vec3<double> axis = cglib::vector_product(_cameraPos - _focusPos, _upVec);
+                if (cglib::length(axis) != 0) {
+                    cglib::mat4x4<double> transform = cglib::rotate4_matrix(axis, (90 - _tilt) * Const::DEG_TO_RAD);
+                    _cameraPos = _focusPos + cglib::transform_vector(_cameraPos - _focusPos, transform);
+                    _upVec = cglib::transform_vector(_upVec, transform);
                 }
 
-                if (_cameraChanged) {
-                    _cameraChanged = false;
-        
-                    // Calculate scaling factor for vector elements
-                    _unitToPXCoef = static_cast<float>(_zoom0Distance / (_height * _tanHalfFOVY) / _2PowZoom);
-                    _unitToDPCoef = _unitToPXCoef * _dpi / Const::UNSCALED_DPI;
-        
-                    calculateViewDistances(options, _near, _far, _skyVisible);
-        
-                    // Matrices
-                    _projectionMat = calculatePerspMat(_halfFOVY, _near, _far, options);
-                    _modelviewMat = calculateLookatMat();
-
-                    // Rotation state
-                    cglib::mat4x4<double> invCameraMatrix = cglib::inverse(_modelviewMat);
-                    _rotationState.xAxis = cglib::vec3<float>::convert(cglib::proj_o(cglib::col_vector(invCameraMatrix, 0)));
-                    _rotationState.yAxis = cglib::vec3<float>::convert(cglib::proj_o(cglib::col_vector(invCameraMatrix, 1)));
-        
-                    // Double precision mvp matrix and frustum
-                    _modelviewProjectionMat = _projectionMat * _modelviewMat;
-                    _frustum = cglib::gl_projection_frustum(_modelviewProjectionMat);
-        
-                    // Rte modleview matrix only requires float precision
-                    _rteModelviewMat = cglib::mat4x4<float>::convert(_modelviewMat);
-                    _rteModelviewMat(0, 3) = 0.0f;
-                    _rteModelviewMat(1, 3) = 0.0f;
-                    _rteModelviewMat(2, 3) = 0.0f;
-        
-                    // Float precision Rte mvp matrix
-                    _rteModelviewProjectionMat = cglib::mat4x4<float>::convert(_projectionMat) * _rteModelviewMat;
-
-                    // Calculate Rte sky matrix
-                    float skyFar = _zoom0Distance * options.getDrawDistance();
-                    cglib::mat4x4<double> skyProjectionMat = calculatePerspMat(_halfFOVY, _near, skyFar, options);
-                    _rteSkyProjectionMat = cglib::mat4x4<float>::convert(skyProjectionMat) * _rteModelviewMat;
-                }
-                break;
+                _projectionSurface = projectionSurface;
             }
+
+            // Calculate new camera position
+            if (_zoom0Distance > 0) {
+                cglib::vec3<double> cameraVec = _cameraPos - _focusPos;
+                double length = cglib::length(cameraVec);
+                double newLength = _zoom0Distance / std::pow(2.0f, _zoom);
+                _cameraPos = _focusPos + cameraVec * (newLength / length);
+            }
+
+            _cameraChanged = true;
+        }
+
+        if (_cameraChanged) {
+            _cameraChanged = false;
+
+            // Calculate scaling factor for vector elements
+            _unitToPXCoef = static_cast<float>(_zoom0Distance / (_height * _tanHalfFOVY) / _2PowZoom);
+            _unitToDPCoef = _unitToPXCoef * _dpi / Const::UNSCALED_DPI;
+
+            calculateViewDistances(options, _near, _far, _skyVisible);
+
+            // Matrices
+            _projectionMat = calculatePerspMat(_halfFOVY, _near, _far, options);
+            _modelviewMat = calculateLookatMat();
+
+            // Rotation state
+            cglib::mat4x4<double> invCameraMatrix = cglib::inverse(_modelviewMat);
+            _rotationState.xAxis = cglib::vec3<float>::convert(cglib::proj_o(cglib::col_vector(invCameraMatrix, 0)));
+            _rotationState.yAxis = cglib::vec3<float>::convert(cglib::proj_o(cglib::col_vector(invCameraMatrix, 1)));
+
+            // Double precision mvp matrix and frustum
+            _modelviewProjectionMat = _projectionMat * _modelviewMat;
+            _frustum = cglib::gl_projection_frustum(_modelviewProjectionMat);
+
+            // Rte modleview matrix only requires float precision
+            _rteModelviewMat = cglib::mat4x4<float>::convert(_modelviewMat);
+            _rteModelviewMat(0, 3) = 0.0f;
+            _rteModelviewMat(1, 3) = 0.0f;
+            _rteModelviewMat(2, 3) = 0.0f;
+
+            // Float precision Rte mvp matrix
+            _rteModelviewProjectionMat = cglib::mat4x4<float>::convert(_projectionMat) * _rteModelviewMat;
+
+            // Calculate Rte sky matrix
+            float skyFar = _zoom0Distance * options.getDrawDistance();
+            cglib::mat4x4<double> skyProjectionMat = calculatePerspMat(_halfFOVY, _near, skyFar, options);
+            _rteSkyProjectionMat = cglib::mat4x4<float>::convert(skyProjectionMat) * _rteModelviewMat;
         }
     }
     
@@ -556,7 +538,7 @@ namespace carto {
         double heightMin = Const::MIN_HEIGHT;
         double heightMax = Const::MAX_HEIGHT;
 
-        near = cglib::dot_product(options.getProjectionSurface()->calculateNearestPoint(_cameraPos, heightMax) - _cameraPos, zProjVector);
+        near = static_cast<float>(cglib::dot_product(options.getProjectionSurface()->calculateNearestPoint(_cameraPos, heightMax) - _cameraPos, zProjVector));
         far  = near;
         skyVisible = false;
         for (double xx : { -1, 0, 1 }) {
