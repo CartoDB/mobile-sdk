@@ -1,8 +1,8 @@
 #include "CullWorker.h"
 #include "layers/Layer.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "utils/Const.h"
-#include "utils/GeomUtils.h"
 #include "utils/Log.h"
 #include "utils/ThreadUtils.h"
 
@@ -104,11 +104,11 @@ namespace carto {
                 }
                 
                 // Check if view state has changed
-                if (_firstCull || viewState.getModelviewProjectionMat() != _viewState.getModelviewProjectionMat()) {
+                if (_firstCull || viewState.getModelviewProjectionMat() != _viewState.getModelviewProjectionMat() || viewState.getProjectionSurface() != _viewState.getProjectionSurface()) {
                     _firstCull = false;
                     _viewState = viewState;
                     
-                    // Calculate tiles
+                    // Calculate state
                     calculateCullState();
                 }
                 
@@ -124,46 +124,41 @@ namespace carto {
     }
     
     void CullWorker::calculateEnvelope() {
-        cglib::mat4x4<double> invMVPMat = cglib::inverse(_viewState.getModelviewProjectionMat());
-        
-        // Iterate over all edges and find intersection with ground plane
-        std::vector<MapPos> hullPoints;
-        hullPoints.reserve(12);
-        for (int i = 0; i < 12; i++) {
-            int ax = (i >> 2) & 3;
-            int as = (4-ax) >> 2;
-            int bs = (5-ax) >> 2;
-            int va = ((i&1) << as) | ((i&2) << bs);
-            int vb = va | (1 << ax);
-            
-            // Calculate vertex 0
-            double xa = (va & 1) == 0 ? VIEWPORT_SCALE : -VIEWPORT_SCALE;
-            double ya = (va & 2) == 0 ? VIEWPORT_SCALE : -VIEWPORT_SCALE;
-            double za = (va & 4) == 0 ? 1 : -1;
-            cglib::vec3<double> p0 = cglib::transform_point(cglib::vec3<double>(xa, ya, za), invMVPMat);
-            
-            // Calculate vertex 1
-            double xb = (vb & 1) == 0 ? VIEWPORT_SCALE : -VIEWPORT_SCALE;
-            double yb = (vb & 2) == 0 ? VIEWPORT_SCALE : -VIEWPORT_SCALE;
-            double zb = (vb & 4) == 0 ? 1 : -1;
-            cglib::vec3<double> p1 = cglib::transform_point(cglib::vec3<double>(xb, yb, zb), invMVPMat);
-            
-            // Calculate intersection between z=0 plane and line p0<->p1
-            cglib::vec3<double> dp = p1 - p0;
-            if (dp(2) != 0) {
-                double t = -p0(2) / dp(2);
-                
-                // If the intersection point is inside of the frustum, add it to the list of candidate points
-                if (t >= 0 && t <= 1) {
-                    cglib::vec3<double> hullPoint = p0 + dp * t;
-                    hullPoints.emplace_back(hullPoint(0), hullPoint(1), 0);
-                }
-            }
+        std::shared_ptr<ProjectionSurface> projectionSurface = _viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            return;
         }
 
-        // Calculate convex hull of the resulting point set
-        std::vector<MapPos> convexHull = GeomUtils::CalculateConvexHull(hullPoints);
-        _envelope = MapEnvelope(convexHull);
+        cglib::mat4x4<double> invMVPMat = cglib::inverse(_viewState.getModelviewProjectionMat());
+
+        // Find closest points to screen corners
+        cglib::vec2<float> screenPoses[] = {
+            cglib::vec2<float>(-VIEWPORT_SCALE, -VIEWPORT_SCALE),
+            cglib::vec2<float>(-VIEWPORT_SCALE,  VIEWPORT_SCALE),
+            cglib::vec2<float>( VIEWPORT_SCALE,  VIEWPORT_SCALE),
+            cglib::vec2<float>( VIEWPORT_SCALE, -VIEWPORT_SCALE)
+        };
+
+        MapPos mapPoses[4];
+        for (int i = 0; i < 4; i++) {
+            cglib::vec3<double> pos0 = cglib::transform_point(cglib::vec3<double>(screenPoses[i](0), screenPoses[i](1), -1), invMVPMat);
+            cglib::vec3<double> pos1 = cglib::transform_point(cglib::vec3<double>(screenPoses[i](0), screenPoses[i](1),  1), invMVPMat);
+            cglib::ray3<double> ray(pos0, pos1 - pos0);
+
+            double t = 0;
+            mapPoses[i] = projectionSurface->calculateMapPos(projectionSurface->calculateNearestPoint(ray, 0, t));
+        }
+
+        // Build envelope, tesselate envelope edges
+        std::vector<MapPos> envelopePoses;
+        envelopePoses.reserve(8);
+        for (int i = 0; i < 4; i++) {
+            if (!envelopePoses.empty()) {
+                envelopePoses.pop_back();
+            }
+            projectionSurface->tesselateSegment(mapPoses[i], mapPoses[(i + 1) % 4], envelopePoses);
+        }
+        _envelope = MapEnvelope(envelopePoses);
     }
     
     void CullWorker::updateLayers(const std::vector<std::shared_ptr<Layer> >& layers) {

@@ -486,11 +486,11 @@ namespace carto {
         cglib::mat4x4<double> invModelviewProjectionMat = cglib::inverse(modelviewProjectionMat);
 
         // Transform 2 points with different z values from world to screen
-        cglib::vec3<double> screenCGPos0(screenPos(0) / _width * 2 - 1, 1 - screenPos(1) / _height * 2, -1);
-        cglib::vec3<double> screenCGPos1(screenPos(0) / _width * 2 - 1, 1 - screenPos(1) / _height * 2,  1);
-        cglib::vec3<double> worldCGPos0 = cglib::transform_point(screenCGPos0, invModelviewProjectionMat);
-        cglib::vec3<double> worldCGPos1 = cglib::transform_point(screenCGPos1, invModelviewProjectionMat);
-        cglib::ray3<double> ray(worldCGPos0, worldCGPos1 - worldCGPos0);
+        cglib::vec3<double> screenPos0(screenPos(0) / _width * 2 - 1, 1 - screenPos(1) / _height * 2, -1);
+        cglib::vec3<double> screenPos1(screenPos(0) / _width * 2 - 1, 1 - screenPos(1) / _height * 2,  1);
+        cglib::vec3<double> worldPos0 = cglib::transform_point(screenPos0, invModelviewProjectionMat);
+        cglib::vec3<double> worldPos1 = cglib::transform_point(screenPos1, invModelviewProjectionMat);
+        cglib::ray3<double> ray(worldPos0, worldPos1 - worldPos0);
 
         // TODO: check calling sites. Decide what to do when no hit.
         double t = -1;
@@ -512,8 +512,8 @@ namespace carto {
         }
 
         // Transfrom world pos to screen
-        cglib::vec3<float> screenCGPos = cglib::vec3<float>::convert(cglib::transform_point(worldPos, modelviewProjectionMat));
-        return cglib::vec2<float>((screenCGPos(0) + 1) * 0.5f * _width, (1 - screenCGPos(1)) * 0.5f * _height);
+        cglib::vec3<float> screenPos = cglib::vec3<float>::convert(cglib::transform_point(worldPos, modelviewProjectionMat));
+        return cglib::vec2<float>((screenPos(0) + 1) * 0.5f * _width, (1 - screenPos(1)) * 0.5f * _height);
     }
 
     float ViewState::estimateWorldPixelMeasure() const {
@@ -531,11 +531,11 @@ namespace carto {
         cglib::vec3<double> worldPos = cglib::vec3<double>::zero();
         for (int iter = -1; iter < 8; iter++) {
             double dx = (iter < 0 ? 0 : std::pow(2.0f, -iter));
-            cglib::vec3<double> screenCGPos0((_width * 0.5f + dx) / _width * 2 - 1, 1 - (_height * 0.5f) / _height * 2, -1);
-            cglib::vec3<double> screenCGPos1((_width * 0.5f + dx) / _width * 2 - 1, 1 - (_height * 0.5f) / _height * 2,  1);
-            cglib::vec3<double> worldCGPos0 = cglib::transform_point(screenCGPos0, invModelviewProjectionMat);
-            cglib::vec3<double> worldCGPos1 = cglib::transform_point(screenCGPos1, invModelviewProjectionMat);
-            cglib::ray3<double> ray(worldCGPos0, worldCGPos1 - worldCGPos0);
+            cglib::vec3<double> screenPos0((_width * 0.5f + dx) / _width * 2 - 1, 1 - (_height * 0.5f) / _height * 2, -1);
+            cglib::vec3<double> screenPos1((_width * 0.5f + dx) / _width * 2 - 1, 1 - (_height * 0.5f) / _height * 2,  1);
+            cglib::vec3<double> worldPos0 = cglib::transform_point(screenPos0, invModelviewProjectionMat);
+            cglib::vec3<double> worldPos1 = cglib::transform_point(screenPos1, invModelviewProjectionMat);
+            cglib::ray3<double> ray(worldPos0, worldPos1 - worldPos0);
 
             double t = -1;
             if (_projectionSurface->calculateHitPoint(ray, 0, t) && t >= 0) {
@@ -580,13 +580,13 @@ namespace carto {
                 double x0 = 0, y0 = 0, x1 = xx, y1 = yy;
                 for (int iter = -1; iter < 16; iter++) {
                     double x = (iter < 0 ? x1 : (x0 + x1) * 0.5), y = (iter < 0 ? y1 : (y0 + y1) * 0.5);
-                    cglib::vec3<double> pos0 = cglib::transform_point(cglib::vec3<double>(x, y, -1), invModelviewProjMat);
-                    cglib::vec3<double> pos1 = cglib::transform_point(cglib::vec3<double>(x, y,  1), invModelviewProjMat);
-                    cglib::ray3<double> ray(pos0, pos1 - pos0);
+                    cglib::vec3<double> worldPos0 = cglib::transform_point(cglib::vec3<double>(x, y, -1), invModelviewProjMat);
+                    cglib::vec3<double> worldPos1 = cglib::transform_point(cglib::vec3<double>(x, y,  1), invModelviewProjMat);
+                    cglib::ray3<double> ray(worldPos0, worldPos1 - worldPos0);
 
                     double t = -1;
                     if (options.getProjectionSurface()->calculateHitPoint(ray, heightMin, t) && t > 0) {
-                        float z = static_cast<float>(cglib::dot_product(ray(t) - pos0, zProjVector));
+                        float z = static_cast<float>(cglib::dot_product(ray(t) - worldPos0, zProjVector));
                         near = std::min(near, z);
                         far  = std::max(far,  z);
 
