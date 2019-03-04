@@ -296,7 +296,7 @@ namespace carto {
         const MapPos& clusterPos2 = clusters[clusterIdx2].staticPos;
         MapPos internalPos1 = _dataSource->getProjection()->toInternal(clusterPos1);
         MapPos internalPos2 = _dataSource->getProjection()->toInternal(clusterPos2);
-        double dist = projectionSurface.calculateMapDistance(projectionSurface.calculatePosition(internalPos1), projectionSurface.calculatePosition(internalPos2)) * Const::WORLD_SIZE / Const::EARTH_CIRCUMFERENCE;
+        double dist = projectionSurface.calculateDistance(projectionSurface.calculatePosition(internalPos1), projectionSurface.calculatePosition(internalPos2));
         MapPos mapPos((clusterPos1.getX() * n1 + clusterPos2.getX() * n2) / (n1 + n2), (clusterPos1.getY() * n1 + clusterPos2.getY() * n2) / (n1 + n2));
 
         int clusterIdx = static_cast<int>(clusters.size());
@@ -642,7 +642,7 @@ namespace carto {
         if (animated) {
             cglib::vec3<double> pos1 = renderState.projectionSurface->calculatePosition(_dataSource->getProjection()->toInternal(cluster.transitionPos));
             cglib::vec3<double> pos2 = renderState.projectionSurface->calculatePosition(_dataSource->getProjection()->toInternal(targetPos));
-            double dist = renderState.projectionSurface->calculateMapDistance(pos1, pos2) * Const::WORLD_SIZE / Const::EARTH_CIRCUMFERENCE;
+            double dist = renderState.projectionSurface->calculateDistance(pos1, pos2);
             if (dist <= renderState.pixelMeasure * 0.25) {
                 animated = false;
             }

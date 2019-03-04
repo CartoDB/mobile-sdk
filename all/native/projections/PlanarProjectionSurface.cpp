@@ -14,10 +14,6 @@ namespace carto {
         return MapVec(vec(0), vec(1), vec(2));
     }
 
-    double PlanarProjectionSurface::calculateMapDistance(const cglib::vec3<double> pos0, const cglib::vec3<double>& pos1) const {
-        return cglib::length(pos1 - pos0) / Const::WORLD_SIZE * Const::EARTH_CIRCUMFERENCE;
-    }
-
     cglib::vec3<double> PlanarProjectionSurface::calculatePosition(const MapPos& mapPos) const {
         return cglib::vec3<double>(mapPos.getX(), mapPos.getY(), mapPos.getZ());
     }
@@ -39,6 +35,10 @@ namespace carto {
         indices.push_back(i0);
         indices.push_back(i1);
         indices.push_back(i2);
+    }
+
+    double PlanarProjectionSurface::calculateDistance(const cglib::vec3<double> pos0, const cglib::vec3<double>& pos1) const {
+        return cglib::length(pos1 - pos0);
     }
 
     cglib::vec3<double> PlanarProjectionSurface::calculateNearestPoint(const cglib::vec3<double>& pos, double height) const {

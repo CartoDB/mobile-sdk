@@ -57,7 +57,7 @@ namespace carto {
             long long twoPowZoom = static_cast<long long>(std::pow(2.0f, static_cast<int>(zoom)));
             cglib::vec3<double> pos0 = projectionSurface->calculatePosition(panDelta.first);
             cglib::vec3<double> pos1 = projectionSurface->calculatePosition(panDelta.second);
-            _panDelta = static_cast<float>(projectionSurface->calculateMapDistance(pos0, pos1) / Const::EARTH_CIRCUMFERENCE * twoPowZoom);
+            _panDelta = static_cast<float>(projectionSurface->calculateDistance(pos0, pos1) / Const::WORLD_SIZE * twoPowZoom);
             if (_panDelta < KINETIC_PAN_START_TOLERANCE) {
                 _panDelta = 0;
                 return;

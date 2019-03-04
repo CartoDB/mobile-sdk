@@ -457,14 +457,14 @@ namespace carto {
                 cglib::vec3<double> currentPos1 = projectionSurface->calculatePosition(mapScreenPosition(screenPos1, viewState));
                 cglib::vec3<double> currentPos2 = projectionSurface->calculatePosition(mapScreenPosition(screenPos2, viewState));
                 cglib::vec3<double> currentVec = currentPos2 - currentPos1;
-                double currentDist = projectionSurface->calculateMapDistance(currentPos1, currentPos2);
+                double currentDist = projectionSurface->calculateDistance(currentPos1, currentPos2);
                 cglib::mat4x4<double> currentTranslateTransform = projectionSurface->calculateTranslateMatrix(currentPos1, currentPos2, 0.5f);
                 MapPos currentMiddlePos = projectionSurface->calculateMapPos(cglib::transform_point(currentPos1, currentTranslateTransform));
 
                 cglib::vec3<double> prevPos1 = projectionSurface->calculatePosition(mapScreenPosition(_prevScreenPos1, viewState));
                 cglib::vec3<double> prevPos2 = projectionSurface->calculatePosition(mapScreenPosition(_prevScreenPos2, viewState));
                 cglib::vec3<double> prevVec = prevPos2 - prevPos1;
-                double prevDist = projectionSurface->calculateMapDistance(prevPos1, prevPos2);
+                double prevDist = projectionSurface->calculateDistance(prevPos1, prevPos2);
                 cglib::mat4x4<double> prevTranslateTransform = projectionSurface->calculateTranslateMatrix(prevPos1, prevPos2, 0.5f);
                 MapPos prevMiddlePos = projectionSurface->calculateMapPos(cglib::transform_point(prevPos1, prevTranslateTransform));
 

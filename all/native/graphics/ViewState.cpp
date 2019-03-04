@@ -540,7 +540,7 @@ namespace carto {
             double t = -1;
             if (_projectionSurface->calculateHitPoint(ray, 0, t) && t >= 0) {
                 if (iter >= 0) {
-                    return static_cast<float>(_projectionSurface->calculateMapDistance(ray(t), worldPos) / dx * Const::WORLD_SIZE / Const::EARTH_CIRCUMFERENCE);
+                    return static_cast<float>(_projectionSurface->calculateDistance(ray(t), worldPos) / dx);
                 }
                 worldPos = ray(t);
             } else if (iter < 0) {

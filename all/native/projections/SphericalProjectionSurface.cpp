@@ -18,16 +18,6 @@ namespace carto {
         return MapVec(mapVec(0) * scale, mapVec(1) * scale, mapVec(2) * scale);
     }
 
-    double SphericalProjectionSurface::calculateMapDistance(const cglib::vec3<double> pos0, const cglib::vec3<double>& pos1) const {
-        double dot = cglib::dot_product(cglib::unit(pos0), cglib::unit(pos1));
-        double angle = std::acos(std::min(1.0, std::max(-1.0, dot)));
-        if (angle < PLANAR_APPROX_ANGLE) {
-            cglib::vec3<double> delta = cglib::unit(pos0) - cglib::unit(pos1);
-            return cglib::length(delta) * Const::EARTH_RADIUS;
-        }
-        return angle * Const::EARTH_RADIUS;
-    }
-
     cglib::vec3<double> SphericalProjectionSurface::calculatePosition(const MapPos& mapPos) const {
         return InternalToSpherical(mapPos) * SPHERE_SIZE;
     }
@@ -86,6 +76,16 @@ namespace carto {
         indices.push_back(i0);
         indices.push_back(i1);
         indices.push_back(i2);
+    }
+
+    double SphericalProjectionSurface::calculateDistance(const cglib::vec3<double> pos0, const cglib::vec3<double>& pos1) const {
+        double dot = cglib::dot_product(cglib::unit(pos0), cglib::unit(pos1));
+        double angle = std::acos(std::min(1.0, std::max(-1.0, dot)));
+        if (angle < PLANAR_APPROX_ANGLE) {
+            cglib::vec3<double> delta = cglib::unit(pos0) - cglib::unit(pos1);
+            return cglib::length(delta) * Const::WORLD_SIZE;
+        }
+        return angle * Const::WORLD_SIZE;
     }
 
     cglib::vec3<double> SphericalProjectionSurface::calculateNearestPoint(const cglib::vec3<double>& pos, double height) const {

@@ -21,7 +21,6 @@ namespace carto {
         
         virtual MapPos calculateMapPos(const cglib::vec3<double>& pos) const;
         virtual MapVec calculateMapVec(const cglib::vec3<double>& pos, const cglib::vec3<double>& vec) const;
-        virtual double calculateMapDistance(const cglib::vec3<double> pos0, const cglib::vec3<double>& pos1) const;
 
         virtual cglib::vec3<double> calculatePosition(const MapPos& mapPos) const;
         virtual cglib::vec3<double> calculateNormal(const MapPos& mapPos) const;
@@ -30,6 +29,7 @@ namespace carto {
         virtual void tesselateSegment(const MapPos& mapPos0, const MapPos& mapPos1, std::vector<MapPos>& mapPoses) const;
         virtual void tesselateTriangle(unsigned int i0, unsigned int i1, unsigned int i2, std::vector<unsigned int>& indices, std::vector<MapPos>& mapPoses) const;
 
+        virtual double calculateDistance(const cglib::vec3<double> pos0, const cglib::vec3<double>& pos1) const;
         virtual cglib::vec3<double> calculateNearestPoint(const cglib::vec3<double>& pos, double height) const;
         virtual cglib::vec3<double> calculateNearestPoint(const cglib::ray3<double>& ray, double height, double& t) const;
         virtual bool calculateHitPoint(const cglib::ray3<double>& ray, double height, double& t) const;
