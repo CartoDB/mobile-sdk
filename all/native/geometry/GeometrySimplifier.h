@@ -13,6 +13,7 @@
 namespace carto {
     class Geometry;
     class Projection;
+    class ProjectionSurface;
 
     /**
      * Base class for geometry simplifiers.
@@ -29,7 +30,7 @@ namespace carto {
          * @return The simplified geometry. If simplification failed, original geometry may be returned. 
          *         Null pointer may be returned if geometry should be discarded.
          */
-        virtual std::shared_ptr<Geometry> simplify(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<Projection>& projection, float scale) const = 0;
+        virtual std::shared_ptr<Geometry> simplify(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<Projection>& projection, const std::shared_ptr<ProjectionSurface>& projectionSurface, float scale) const = 0;
         
     protected:
         GeometrySimplifier() { }

@@ -18,6 +18,7 @@
 
 !polymorphic_shared_ptr(carto::GeometrySimplifier, geometry.GeometrySimplifier)
 
+%ignore carto::GeometrySimplifier::simplify;
 !standard_equals(carto::GeometrySimplifier);
 
 %include "geometry/GeometrySimplifier.h"

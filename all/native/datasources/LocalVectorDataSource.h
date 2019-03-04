@@ -138,8 +138,7 @@ namespace carto {
     private:
         std::shared_ptr<VectorElement> createElement(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<Style>& style) const;
         std::shared_ptr<VectorElement> simplifyElement(const std::shared_ptr<VectorElement>& element, float scale) const;
-        
-        cglib::bbox3<double> calculateBounds(const MapBounds& mapBounds) const;
+        cglib::bbox3<double> calculateElementBounds(const std::shared_ptr<VectorElement>& element) const;
 
         std::shared_ptr<GeometrySimplifier> _geometrySimplifier;
         std::shared_ptr<SpatialIndex<std::shared_ptr<VectorElement> > > _spatialIndex;

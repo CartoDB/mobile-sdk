@@ -78,7 +78,7 @@
 %ignore carto::ViewState::isSkyVisible;
 %ignore carto::ViewState::calculateViewState;
 %ignore carto::ViewState::worldToScreen;
-%ignore carto::ViewState::screenToWorldPlane;
+%ignore carto::ViewState::screenToWorld;
 %ignore carto::ViewState::estimateWorldPixelMeasure;
 %ignore carto::ViewState::getHorizontalLayerOffsetDir;
 %ignore carto::ViewState::setHorizontalLayerOffsetDir;

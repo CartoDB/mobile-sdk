@@ -18,6 +18,8 @@
 
 !polymorphic_shared_ptr(carto::DouglasPeuckerGeometrySimplifier, geometry.DouglasPeuckerGeometrySimplifier)
 
+%ignore carto::DouglasPeuckerGeometrySimplifier::simplify;
+
 %include "geometry/DouglasPeuckerGeometrySimplifier.h"
 
 #endif

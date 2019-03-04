@@ -101,7 +101,7 @@ namespace carto {
             _spatialIndex->clear();
             _spatialIndex->reserve(elements.size());
             for (const std::shared_ptr<VectorElement>& element : elements) {
-                cglib::bbox3<double> bounds = calculateBounds(element->getBounds());
+                cglib::bbox3<double> bounds = calculateElementBounds(element);
                 auto it = oldElementSet.find(element);
                 if (it != oldElementSet.end()) {
                     oldElementSet.erase(it);
@@ -133,7 +133,7 @@ namespace carto {
         {
             std::lock_guard<std::mutex> lock(_mutex);
             element->setId(_elementId);
-            cglib::bbox3<double> bounds = calculateBounds(element->getBounds());
+            cglib::bbox3<double> bounds = calculateElementBounds(element);
             _spatialIndex->insert(bounds, element);
             _elementId++;
         }
@@ -155,7 +155,7 @@ namespace carto {
             _spatialIndex->reserve(_spatialIndex->size() + elements.size());
             for (const std::shared_ptr<VectorElement>& element : elements) {
                 element->setId(_elementId);
-                cglib::bbox3<double> bounds = calculateBounds(element->getBounds());
+                cglib::bbox3<double> bounds = calculateElementBounds(element);
                 _spatialIndex->insert(bounds, element);
                 _elementId++;
             }
@@ -178,7 +178,7 @@ namespace carto {
         bool removed = false;
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            cglib::bbox3<double> bounds = calculateBounds(element->getBounds());
+            cglib::bbox3<double> bounds = calculateElementBounds(element);
             removed = _spatialIndex->remove(bounds, element);
         }
         if (removed) {
@@ -203,7 +203,7 @@ namespace carto {
         {
             std::lock_guard<std::mutex> lock(_mutex);
             for (const std::shared_ptr<VectorElement>& element : elements) {
-                cglib::bbox3<double> bounds = calculateBounds(element->getBounds());
+                cglib::bbox3<double> bounds = calculateElementBounds(element);
                 if (_spatialIndex->remove(bounds, element)) {
                     removedElements.push_back(element);
                 }
@@ -288,7 +288,7 @@ namespace carto {
                 _projectionSurface = cullState->getViewState().getProjectionSurface();
                 _spatialIndex = std::make_shared<KDTreeSpatialIndex<std::shared_ptr<VectorElement> > >();
                 for (const std::shared_ptr<VectorElement>& element : elements) {
-                    cglib::bbox3<double> bounds = calculateBounds(element->getBounds());
+                    cglib::bbox3<double> bounds = calculateElementBounds(element);
                     _spatialIndex->insert(bounds, element);
                 }
             }
@@ -318,9 +318,9 @@ namespace carto {
     void LocalVectorDataSource::notifyElementChanged(const std::shared_ptr<VectorElement>& element) {
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            if (!(std::dynamic_pointer_cast<NullSpatialIndex<std::shared_ptr<VectorElement> > >(_spatialIndex))) {
+            if (!(std::dynamic_pointer_cast<NullSpatialIndex<std::shared_ptr<VectorElement>>>(_spatialIndex))) {
                 _spatialIndex->remove(element);
-                cglib::bbox3<double> bounds = calculateBounds(element->getBounds());
+                cglib::bbox3<double> bounds = calculateElementBounds(element);
                 _spatialIndex->insert(bounds, element);
             }
         }
@@ -382,7 +382,7 @@ namespace carto {
         std::shared_ptr<VectorElement> simplifiedElement = element;
         if (auto lineElement = std::dynamic_pointer_cast<Line>(element)) {
             auto lineGeometry = std::dynamic_pointer_cast<LineGeometry>(lineElement->getGeometry());
-            lineGeometry = std::dynamic_pointer_cast<LineGeometry>(_geometrySimplifier->simplify(lineGeometry, _projection, scale));
+            lineGeometry = std::dynamic_pointer_cast<LineGeometry>(_geometrySimplifier->simplify(lineGeometry, _projection, _projectionSurface, scale));
             if (lineGeometry) {
                 simplifiedElement = std::make_shared<Line>(lineGeometry, lineElement->getStyle());
             } else {
@@ -390,7 +390,7 @@ namespace carto {
             }
         } else if (auto polygonElement = std::dynamic_pointer_cast<Polygon>(element)) {
             auto polygonGeometry = std::dynamic_pointer_cast<PolygonGeometry>(polygonElement->getGeometry());
-            polygonGeometry = std::dynamic_pointer_cast<PolygonGeometry>(_geometrySimplifier->simplify(polygonGeometry, _projection, scale));
+            polygonGeometry = std::dynamic_pointer_cast<PolygonGeometry>(_geometrySimplifier->simplify(polygonGeometry, _projection, _projectionSurface, scale));
             if (polygonGeometry) {
                 simplifiedElement = std::make_shared<Polygon>(polygonGeometry, polygonElement->getStyle());
             } else {
@@ -398,7 +398,7 @@ namespace carto {
             }
         } else if (auto polygon3DElement = std::dynamic_pointer_cast<Polygon3D>(element)) {
             auto polygonGeometry = std::dynamic_pointer_cast<PolygonGeometry>(polygon3DElement->getGeometry());
-            polygonGeometry = std::dynamic_pointer_cast<PolygonGeometry>(_geometrySimplifier->simplify(polygonGeometry, _projection, scale));
+            polygonGeometry = std::dynamic_pointer_cast<PolygonGeometry>(_geometrySimplifier->simplify(polygonGeometry, _projection, _projectionSurface, scale));
             if (polygonGeometry) {
                 simplifiedElement = std::make_shared<Polygon3D>(polygonGeometry, polygon3DElement->getStyle(), polygon3DElement->getHeight());
             } else {
@@ -406,7 +406,7 @@ namespace carto {
             }
         } else if (auto geomCollectionElement = std::dynamic_pointer_cast<GeometryCollection>(element)) {
             auto multiGeometry = std::dynamic_pointer_cast<MultiGeometry>(geomCollectionElement->getGeometry());
-            multiGeometry = std::dynamic_pointer_cast<MultiGeometry>(_geometrySimplifier->simplify(multiGeometry, _projection, scale));
+            multiGeometry = std::dynamic_pointer_cast<MultiGeometry>(_geometrySimplifier->simplify(multiGeometry, _projection, _projectionSurface, scale));
             if (multiGeometry) {
                 simplifiedElement = std::make_shared<GeometryCollection>(multiGeometry, geomCollectionElement->getStyle());
             } else {
@@ -424,18 +424,19 @@ namespace carto {
         return simplifiedElement;
     }
 
-    cglib::bbox3<double> LocalVectorDataSource::calculateBounds(const MapBounds& mapBounds) const {
+    cglib::bbox3<double> LocalVectorDataSource::calculateElementBounds(const std::shared_ptr<VectorElement>& element) const {
         if (!_projectionSurface) {
             return cglib::bbox3<double>(cglib::vec3<double>(0, 0, 0), cglib::vec3<double>(0, 0, 0));
         }
 
-        MapPos posesInternal[2] = { _projection->toInternal(mapBounds.getMin()), _projection->toInternal(mapBounds.getMax()) };
+        MapBounds mapBounds = element->getBounds();
         cglib::bbox3<double> bounds = cglib::bbox3<double>::smallest();
-        for (int z = 0; z < 2; z++) {
-            for (int y = 0; y < 2; y++) {
-                for (int x = 0; x < 2; x++) {
-                    bounds.add(_projectionSurface->calculatePosition(MapPos(posesInternal[x].getX(), posesInternal[y].getY(), posesInternal[z].getZ())));
-                }
+        if (mapBounds.getMin() == mapBounds.getMax()) {
+            bounds.add(_projectionSurface->calculatePosition(_projection->toInternal(mapBounds.getMin())));
+        } else {
+            MapPos posesInternal[2] = { _projection->toInternal(mapBounds.getMin()), _projection->toInternal(mapBounds.getMax()) };
+            for (int i = 0; i < 8; i++) {
+                bounds.add(_projectionSurface->calculatePosition(MapPos(posesInternal[(i >> 2) & 1].getX(), posesInternal[(i >> 1) & 1].getY(), posesInternal[(i >> 0) & 1].getZ())));
             }
         }
         return bounds;
