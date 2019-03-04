@@ -515,6 +515,40 @@ namespace carto {
         cglib::vec3<float> screenCGPos = cglib::vec3<float>::convert(cglib::transform_point(worldPos, modelviewProjectionMat));
         return cglib::vec2<float>((screenCGPos(0) + 1) * 0.5f * _width, (1 - screenCGPos(1)) * 0.5f * _height);
     }
+
+    float ViewState::estimateWorldPixelMeasure() const {
+        if (_width <= 0 || _height <= 0) {
+            Log::Error("ViewState::estimateWorldPixelMeasure: Failed to estimate pixel size, screen size is unknown");
+            return 0;
+        }
+        if (!_projectionSurface) {
+            return 0;
+        }
+
+        cglib::mat4x4<double> invModelviewProjectionMat = cglib::inverse(_modelviewProjectionMat);
+
+        // Try consecutive horizontal points
+        cglib::vec3<double> worldPos = cglib::vec3<double>::zero();
+        for (int iter = -1; iter < 8; iter++) {
+            double dx = (iter < 0 ? 0 : std::pow(2.0f, -iter));
+            cglib::vec3<double> screenCGPos0((_width * 0.5f + dx) / _width * 2 - 1, 1 - (_height * 0.5f) / _height * 2, -1);
+            cglib::vec3<double> screenCGPos1((_width * 0.5f + dx) / _width * 2 - 1, 1 - (_height * 0.5f) / _height * 2,  1);
+            cglib::vec3<double> worldCGPos0 = cglib::transform_point(screenCGPos0, invModelviewProjectionMat);
+            cglib::vec3<double> worldCGPos1 = cglib::transform_point(screenCGPos1, invModelviewProjectionMat);
+            cglib::ray3<double> ray(worldCGPos0, worldCGPos1 - worldCGPos0);
+
+            double t = -1;
+            if (_projectionSurface->calculateHitPoint(ray, 0, t) && t >= 0) {
+                if (iter >= 0) {
+                    return static_cast<float>(_projectionSurface->calculateMapDistance(ray(t), worldPos) / dx * Const::WORLD_SIZE / Const::EARTH_CIRCUMFERENCE);
+                }
+                worldPos = ray(t);
+            } else if (iter < 0) {
+                break;
+            }
+        }
+        return 0;
+    }
     
     int ViewState::getHorizontalLayerOffsetDir() const {
         return _horizontalLayerOffsetDir;

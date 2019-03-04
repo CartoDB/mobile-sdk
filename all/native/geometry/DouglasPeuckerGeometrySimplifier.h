@@ -28,12 +28,12 @@ namespace carto {
          */
         explicit DouglasPeuckerGeometrySimplifier(float tolerance);
 
-        virtual std::shared_ptr<Geometry> simplify(const std::shared_ptr<Geometry>& geometry, float scale) const;
+        virtual std::shared_ptr<Geometry> simplify(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<Projection>& projection, float scale) const;
 
     private:
-        std::vector<MapPos> simplifyRing(const std::vector<MapPos>& ring, float scale) const;
-        std::vector<MapPos> simplifyRingRD(const std::vector<MapPos>& ring, float scale) const;
-        std::vector<MapPos> simplifyRingDP(const std::vector<MapPos>& ring, float scale) const;
+        std::vector<MapPos> simplifyRing(const std::vector<MapPos>& ring, const std::shared_ptr<Projection>& projection, float scale) const;
+        std::vector<MapPos> simplifyRingRD(const std::vector<MapPos>& ring, const std::shared_ptr<Projection>& projection, float scale) const;
+        std::vector<MapPos> simplifyRingDP(const std::vector<MapPos>& ring, const std::shared_ptr<Projection>& projection, float scale) const;
 
         const float _tolerance;
     };

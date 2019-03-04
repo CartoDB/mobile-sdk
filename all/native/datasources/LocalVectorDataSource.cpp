@@ -299,7 +299,7 @@ namespace carto {
         
         // If geometry simplifier is specified, create new vector elements with simplified geometry
         if (_geometrySimplifier) {
-            float simplifierScale = calculateGeometrySimplifierScale(cullState->getViewState());
+            float simplifierScale = cullState->getViewState().estimateWorldPixelMeasure();
 
             std::vector<std::shared_ptr<VectorElement> > simplifiedElements;
             simplifiedElements.reserve(elements.size());
@@ -382,7 +382,7 @@ namespace carto {
         std::shared_ptr<VectorElement> simplifiedElement = element;
         if (auto lineElement = std::dynamic_pointer_cast<Line>(element)) {
             auto lineGeometry = std::dynamic_pointer_cast<LineGeometry>(lineElement->getGeometry());
-            lineGeometry = std::dynamic_pointer_cast<LineGeometry>(_geometrySimplifier->simplify(lineGeometry, scale));
+            lineGeometry = std::dynamic_pointer_cast<LineGeometry>(_geometrySimplifier->simplify(lineGeometry, _projection, scale));
             if (lineGeometry) {
                 simplifiedElement = std::make_shared<Line>(lineGeometry, lineElement->getStyle());
             } else {
@@ -390,7 +390,7 @@ namespace carto {
             }
         } else if (auto polygonElement = std::dynamic_pointer_cast<Polygon>(element)) {
             auto polygonGeometry = std::dynamic_pointer_cast<PolygonGeometry>(polygonElement->getGeometry());
-            polygonGeometry = std::dynamic_pointer_cast<PolygonGeometry>(_geometrySimplifier->simplify(polygonGeometry, scale));
+            polygonGeometry = std::dynamic_pointer_cast<PolygonGeometry>(_geometrySimplifier->simplify(polygonGeometry, _projection, scale));
             if (polygonGeometry) {
                 simplifiedElement = std::make_shared<Polygon>(polygonGeometry, polygonElement->getStyle());
             } else {
@@ -398,7 +398,7 @@ namespace carto {
             }
         } else if (auto polygon3DElement = std::dynamic_pointer_cast<Polygon3D>(element)) {
             auto polygonGeometry = std::dynamic_pointer_cast<PolygonGeometry>(polygon3DElement->getGeometry());
-            polygonGeometry = std::dynamic_pointer_cast<PolygonGeometry>(_geometrySimplifier->simplify(polygonGeometry, scale));
+            polygonGeometry = std::dynamic_pointer_cast<PolygonGeometry>(_geometrySimplifier->simplify(polygonGeometry, _projection, scale));
             if (polygonGeometry) {
                 simplifiedElement = std::make_shared<Polygon3D>(polygonGeometry, polygon3DElement->getStyle(), polygon3DElement->getHeight());
             } else {
@@ -406,7 +406,7 @@ namespace carto {
             }
         } else if (auto geomCollectionElement = std::dynamic_pointer_cast<GeometryCollection>(element)) {
             auto multiGeometry = std::dynamic_pointer_cast<MultiGeometry>(geomCollectionElement->getGeometry());
-            multiGeometry = std::dynamic_pointer_cast<MultiGeometry>(_geometrySimplifier->simplify(multiGeometry, scale));
+            multiGeometry = std::dynamic_pointer_cast<MultiGeometry>(_geometrySimplifier->simplify(multiGeometry, _projection, scale));
             if (multiGeometry) {
                 simplifiedElement = std::make_shared<GeometryCollection>(multiGeometry, geomCollectionElement->getStyle());
             } else {

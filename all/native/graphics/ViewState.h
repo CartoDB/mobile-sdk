@@ -353,6 +353,11 @@ namespace carto {
          * @return The world position projected onto the screen, in pixel coordinates.
          */
         cglib::vec2<float> worldToScreen(const cglib::vec3<double>& worldPos, std::shared_ptr<Options> options = std::shared_ptr<Options>()) const;
+        /**
+         * Estimates a pixel measure in internal coordinate scale. The estimate is based on focus point.
+         * @return The pixel measure in internal coordinate scale.
+         */
+        float estimateWorldPixelMeasure() const;
     
         /**
          * Returns the horizontal offset direction, caused by seamless panning horizontally over the map borders.

@@ -475,16 +475,9 @@ namespace carto {
             return false;
         }
 
-        // TODO: hack, should implement something that does not depend on screen -> world translation
-        cglib::vec3<double> pos0 = viewState.screenToWorld(cglib::vec2<float>(viewState.getHalfWidth() + 0, viewState.getHalfHeight() + 0), 0);
-        cglib::vec3<double> pos1 = viewState.screenToWorld(cglib::vec2<float>(viewState.getHalfWidth() + 1, viewState.getHalfHeight() + 0), 0);
-        cglib::vec3<double> pos2 = viewState.screenToWorld(cglib::vec2<float>(viewState.getHalfWidth() + 0, viewState.getHalfHeight() + 1), 0);
-        double dist1 = _projectionSurface->calculateMapDistance(pos1, pos0) * Const::WORLD_SIZE / Const::EARTH_CIRCUMFERENCE;
-        double dist2 = _projectionSurface->calculateMapDistance(pos2, pos0) * Const::WORLD_SIZE / Const::EARTH_CIRCUMFERENCE;
-
         // Initialize render state, use previously renderered cluster list
         RenderState renderState;
-        renderState.pixelMeasure = std::min(dist1, dist2) * _dpiScale;
+        renderState.pixelMeasure = viewState.estimateWorldPixelMeasure() * _dpiScale;
         renderState.totalExpanded = 0;
         renderState.expandedClusterIdx = -1;
         renderState.clusters = _clusters;

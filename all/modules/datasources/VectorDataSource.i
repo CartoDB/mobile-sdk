@@ -33,7 +33,6 @@
 %ignore carto::VectorDataSource::OnChangeListener;
 %ignore carto::VectorDataSource::registerOnChangeListener;
 %ignore carto::VectorDataSource::unregisterOnChangeListener;
-%ignore carto::VectorDataSource::calculateGeometrySimplifierScale;
 %ignore carto::VectorDataSource::getElementDataSource;
 
 %feature("nodirector") carto::VectorDataSource::notifyElementAdded;

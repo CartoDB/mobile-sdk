@@ -31,23 +31,6 @@ namespace carto {
         return _projection;
     }
 
-    float VectorDataSource::calculateGeometrySimplifierScale(const ViewState& viewState) const {
-        // TODO: hack, should implement something that does not depend on screen -> world translation
-        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
-        if (!projectionSurface) {
-            return 0;
-        }
-        cglib::vec3<double> pos0 = viewState.screenToWorld(cglib::vec2<float>(viewState.getHalfWidth(), viewState.getHalfHeight()), 0);
-        cglib::vec3<double> pos1 = viewState.screenToWorld(cglib::vec2<float>(viewState.getHalfWidth() + 1.0f, viewState.getHalfHeight()), 0);
-        cglib::vec3<double> pos2 = viewState.screenToWorld(cglib::vec2<float>(viewState.getHalfWidth(), viewState.getHalfHeight() + 1.0f), 0);
-        MapPos mapPos0 = projectionSurface->calculateMapPos(pos0);
-        MapPos mapPos1 = projectionSurface->calculateMapPos(pos1);
-        MapPos mapPos2 = projectionSurface->calculateMapPos(pos2);
-        MapVec dp1 = _projection->fromInternal(mapPos1) - _projection->fromInternal(mapPos0);
-        MapVec dp2 = _projection->fromInternal(mapPos2) - _projection->fromInternal(mapPos0);
-        return static_cast<float>(std::min(dp1.length(), dp2.length()));
-    }
-    
     void VectorDataSource::notifyElementsChanged() {
         std::shared_ptr<std::vector<std::shared_ptr<OnChangeListener> > > onChangeListeners;
         {
