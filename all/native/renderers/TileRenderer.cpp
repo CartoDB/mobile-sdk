@@ -88,7 +88,7 @@ namespace carto {
         if (auto mapRenderer = _mapRenderer.lock()) {
             if (!std::dynamic_pointer_cast<PlanarProjectionSurface>(mapRenderer->getProjectionSurface())) {
                 lightingShader2D = vt::GLTileRenderer::LightingShader(true, LIGHTING_SHADER, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
-                    glUniform3fv(glGetUniformLocation(shaderProgram, "uLightDir"), 1, _lightDir.data());
+                    glUniform3fv(glGetUniformLocation(shaderProgram, "u_LightDir"), 1, _lightDir.data());
                 });
             }
         }
@@ -282,9 +282,9 @@ namespace carto {
     }
 
     const std::string TileRenderer::LIGHTING_SHADER =
-        "uniform vec3 uLightDir;"
+        "uniform vec3 u_LightDir;"
         "lowp vec4 applyLighting(lowp vec4 color, vec3 normal) {"
-        "    float lighting = max(0.0, dot(normal, uLightDir)) * 0.5 + 0.5;"
+        "    float lighting = max(0.0, dot(normal, u_LightDir)) * 0.5 + 0.5;"
         "    return vec4(color.xyz * lighting, color.w);"
         "}";
         
