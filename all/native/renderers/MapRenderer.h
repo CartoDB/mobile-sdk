@@ -63,8 +63,7 @@ namespace carto {
             virtual void onMapIdle() = 0;
         };
 
-        MapRenderer(const std::shared_ptr<Layers>& layers,
-                    const std::shared_ptr<Options>& options);
+        MapRenderer(const std::shared_ptr<Layers>& layers, const std::shared_ptr<Options>& options);
         virtual ~MapRenderer();
 
         void init();
@@ -126,13 +125,6 @@ namespace carto {
         void captureRendering(const std::shared_ptr<RendererCaptureListener>& listener, bool waitWhileUpdating);
         
         std::vector<std::shared_ptr<BillboardDrawData> > getBillboardDrawDatas() const;
-    
-        MapPos getCameraPos() const;
-        MapPos getFocusPos() const;
-        MapVec getUpVec() const;
-        float getRotation() const;
-        float getTilt() const;
-        float getZoom() const;
     
         AnimationHandler& getAnimationHandler();
         KineticEventHandler& getKineticEventHandler();

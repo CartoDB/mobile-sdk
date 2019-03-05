@@ -468,7 +468,7 @@ namespace carto {
                 cglib::mat4x4<double> prevTranslateTransform = projectionSurface->calculateTranslateMatrix(prevPos1, prevPos2, 0.5f);
                 MapPos prevMiddlePos = projectionSurface->calculateMapPos(cglib::transform_point(prevPos1, prevTranslateTransform));
 
-                MapPos pivotPos = (_options->getPivotMode() == PivotMode::PIVOT_MODE_TOUCHPOINT ? currentMiddlePos : _mapRenderer->getFocusPos());
+                MapPos pivotPos = (_options->getPivotMode() == PivotMode::PIVOT_MODE_TOUCHPOINT ? currentMiddlePos : projectionSurface->calculateMapPos(viewState.getFocusPos()));
 
                 if (_options->getPivotMode() == PivotMode::PIVOT_MODE_TOUCHPOINT) {
                     CameraPanEvent cameraPanEvent;
@@ -561,7 +561,7 @@ namespace carto {
         if (_options->isZoomGestures()) {
             CameraZoomEvent cameraZoomTargetEvent;
             cameraZoomTargetEvent.setZoomDelta(-1.0f);
-            cameraZoomTargetEvent.setTargetPos(_mapRenderer->getFocusPos());
+            cameraZoomTargetEvent.setTargetPos(_mapRenderer->getProjectionSurface()->calculateMapPos(_mapRenderer->getViewState().getFocusPos()));
             _mapRenderer->calculateCameraEvent(cameraZoomTargetEvent, ZOOM_GESTURE_ANIMATION_DURATION.count() / 1000.0f, true);
         } else {
             ScreenPos centreScreenPos((screenPos1.getX() + screenPos2.getX()) / 2, (screenPos1.getY() + screenPos2.getY()) / 2);

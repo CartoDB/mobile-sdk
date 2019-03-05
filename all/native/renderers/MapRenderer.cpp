@@ -38,8 +38,7 @@
 
 namespace carto {
 
-    MapRenderer::MapRenderer(const std::shared_ptr<Layers>& layers,
-                             const std::shared_ptr<Options>& options) :
+    MapRenderer::MapRenderer(const std::shared_ptr<Layers>& layers, const std::shared_ptr<Options>& options) :
         _lastFrameTime(),
         _viewState(),
         _frameBufferManager(),
@@ -190,38 +189,7 @@ namespace carto {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _billboardSorter.getSortedBillboardDrawDatas();
     }
-    
-    MapPos MapRenderer::getCameraPos() const {
-        // TODO: remove these methods alltogether? Use them through ViewState?
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _options->getProjectionSurface()->calculateMapPos(_viewState.getCameraPos());
-    }
-    
-    MapPos MapRenderer::getFocusPos() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _options->getProjectionSurface()->calculateMapPos(_viewState.getFocusPos());
-    }
-    
-    MapVec MapRenderer::getUpVec() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _options->getProjectionSurface()->calculateMapVec(_viewState.getFocusPos(), _viewState.getUpVec());
-    }
-    
-    float MapRenderer::getRotation() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _viewState.getRotation();
-    }
-    
-    float MapRenderer::getTilt() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _viewState.getTilt();
-    }
-    
-    float MapRenderer::getZoom() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _viewState.getZoom();
-    }
-    
+
     AnimationHandler& MapRenderer::getAnimationHandler() {
         return _animationHandler;
     }
@@ -249,6 +217,7 @@ namespace carto {
         float zoom;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
+
             oldFocusPos = _options->getProjectionSurface()->calculateMapPos(_viewState.getFocusPos());
         
             // Calculate new focusPos, cameraPos and upVec
@@ -287,6 +256,7 @@ namespace carto {
         float deltaRotation;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
+
             float oldRotation = _viewState.getRotation();
             
             // Calculate new focusPos, cameraPos and upVec
@@ -347,6 +317,7 @@ namespace carto {
         float deltaZoom;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
+
             float oldZoom = _viewState.getZoom();
             
             // Calculate new focusPos, cameraPos and upVec

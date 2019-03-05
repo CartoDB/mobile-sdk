@@ -9,6 +9,7 @@
 #include "layers/Layer.h"
 #include "layers/TileLayer.h"
 #include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/cameraevents/CameraPanEvent.h"
 #include "renderers/cameraevents/CameraRotationEvent.h"
@@ -97,19 +98,20 @@ namespace carto {
     }
     
     MapPos BaseMapView::getFocusPos() const {
-        return _options->getBaseProjection()->fromInternal(_mapRenderer->getFocusPos());
+        MapPos mapPosInternal = _options->getProjectionSurface()->calculateMapPos(_mapRenderer->getViewState().getFocusPos());
+        return _options->getBaseProjection()->fromInternal(mapPosInternal);
     }
     
     float BaseMapView::getRotation() const {
-        return _mapRenderer->getRotation();
+        return _mapRenderer->getViewState().getRotation();
     }
     
     float BaseMapView::getTilt() const {
-        return _mapRenderer->getTilt();
+        return _mapRenderer->getViewState().getTilt();
     }
     
     float BaseMapView::getZoom() const {
-        return _mapRenderer->getZoom();
+        return _mapRenderer->getViewState().getZoom();
     }
     
     void BaseMapView::pan(const MapVec& deltaPos, float durationSeconds) {
