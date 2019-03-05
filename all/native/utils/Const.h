@@ -48,8 +48,6 @@ namespace carto {
         static const float MAX_HEIGHT;
         // Minimum near plane distance, used to avoid visual artifacts on large zoom levels
         static const float MIN_NEAR;
-        // Maximum near plane distance
-        static const float MAX_NEAR; // TODO: can be removed
     };
     
 }
