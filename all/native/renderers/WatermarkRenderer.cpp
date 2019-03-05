@@ -7,7 +7,6 @@
 #include "graphics/TextureManager.h"
 #include "graphics/Texture.h"
 #include "graphics/ViewState.h"
-#include "graphics/shaders/TexturedShaderSource.h"
 #include "graphics/utils/GLContext.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
@@ -34,8 +33,8 @@ namespace carto {
         _textureManager(),
         _options(options)
     {
-        std::fill_n(_watermarkCoords, WATERMARK_VERTEX_COUNT * 3, 0.0f);
-        for (int i = 0; i < WATERMARK_VERTEX_COUNT; i++) {
+        std::fill_n(_watermarkCoords, sizeof(_watermarkCoords) / sizeof(float), 0.0f);
+        for (int i = 0; i * 2 < sizeof(_watermarkTexCoords) / sizeof(float); i++) {
             _watermarkTexCoords[i * 2 + 0] = static_cast<float>(i / 2);
             _watermarkTexCoords[i * 2 + 1] = static_cast<float>(1 - i % 2);
         }
@@ -45,9 +44,10 @@ namespace carto {
     }
     
     void WatermarkRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        // Shader and textures must be reloaded
-        _shader = shaderManager->createShader(textured_shader_source);
-    
+        static ShaderSource shaderSource("watermark", &WATERMARK_VERTEX_SHADER, &WATERMARK_FRAGMENT_SHADER);
+
+        _shader = shaderManager->createShader(shaderSource);
+
         // Get shader variables locations
         glUseProgram(_shader->getProgId());
         _u_tex = _shader->getUniformLoc("u_tex");
@@ -192,10 +192,35 @@ namespace carto {
         // Draw
         glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 0, _watermarkCoords);
         glVertexAttribPointer(_a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, _watermarkTexCoords);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, WATERMARK_VERTEX_COUNT);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, sizeof(_watermarkCoords) / sizeof(float) / 3);
         // Disable bound arrays
         glDisableVertexAttribArray(_a_coord);
         glDisableVertexAttribArray(_a_texCoord);
     }
         
+    const int WatermarkRenderer::FIXED_WATERMARK_PADDING_X = 4;
+    const int WatermarkRenderer::FIXED_WATERMARK_PADDING_Y = 4;
+
+    const int WatermarkRenderer::WATERMARK_WIDTH_DP = 100;
+
+    const std::string WatermarkRenderer::WATERMARK_VERTEX_SHADER =
+        "#version 100\n"
+        "attribute vec4 a_coord;"
+        "attribute vec2 a_texCoord;"
+        "varying vec2 v_texCoord;"
+        "uniform mat4 u_mvpMat;"
+        "void main() {"
+        "    v_texCoord = a_texCoord;"
+        "    gl_Position = u_mvpMat * a_coord;"
+        "}";
+
+    const std::string WatermarkRenderer::WATERMARK_FRAGMENT_SHADER =
+        "#version 100\n"
+        "precision mediump float;"
+        "varying mediump vec2 v_texCoord;"
+        "uniform sampler2D u_tex;"
+        "void main() {"
+        "    gl_FragColor = texture2D(u_tex, v_texCoord);"
+        "}";
+
 }

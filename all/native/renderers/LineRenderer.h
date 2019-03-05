@@ -79,6 +79,9 @@ namespace carto {
         void addToBatch(const std::shared_ptr<LineDrawData>& drawData, StyleTextureCache& styleCache, const ViewState& viewState);
         void drawBatch(StyleTextureCache& styleCache, const ViewState& viewState);
     
+        static const std::string LINE_VERTEX_SHADER;
+        static const std::string LINE_FRAGMENT_SHADER;
+
         std::vector<std::shared_ptr<Line> > _elements;
         std::vector<std::shared_ptr<Line> > _tempElements;
         

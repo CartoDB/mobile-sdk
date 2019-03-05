@@ -18,7 +18,6 @@
 
 namespace carto {
 
-    // TODO: document
     class ProjectionSurface {
     public:
         virtual ~ProjectionSurface() { }

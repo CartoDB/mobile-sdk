@@ -1,6 +1,6 @@
 #include "Shader.h"
 #include "ShaderManager.h"
-#include "graphics/shaders/ShaderSource.h"
+#include "graphics/ShaderSource.h"
 #include "graphics/utils/GLContext.h"
 #include "utils/Log.h"
 

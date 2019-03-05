@@ -76,6 +76,9 @@ namespace carto {
         
         void drawBatch(float opacity, StyleTextureCache& styleCache, const ViewState& viewState);
         
+        static const std::string BILLBOARD_VERTEX_SHADER;
+        static const std::string BILLBOARD_FRAGMENT_SHADER;
+        
         std::weak_ptr<VectorLayer> _layer;
     
         std::vector<std::shared_ptr<Billboard> > _elements;

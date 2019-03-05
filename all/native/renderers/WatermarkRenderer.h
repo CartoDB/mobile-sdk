@@ -34,21 +34,24 @@ namespace carto {
         void onSurfaceDestroyed();
     
     protected:
-        enum { FIXED_WATERMARK_PADDING_X = 4 };
-        enum { FIXED_WATERMARK_PADDING_Y = 4 };
-        
-        enum { WATERMARK_VERTEX_COUNT = 4 };
-        enum { WATERMARK_WIDTH_DP = 100 };
-        
         void drawWatermark(const ViewState& viewState);
+        
+        static const int FIXED_WATERMARK_PADDING_X;
+        static const int FIXED_WATERMARK_PADDING_Y;
+        
+        static const int WATERMARK_WIDTH_DP;
+
+        static const std::string WATERMARK_VERTEX_SHADER;
+        static const std::string WATERMARK_FRAGMENT_SHADER;
         
         float _randomAlignmentX;
         float _randomAlignmentY;
     
         std::shared_ptr<Bitmap> _watermarkBitmap;
         std::shared_ptr<Texture> _watermarkTex;
-        float _watermarkCoords[WATERMARK_VERTEX_COUNT * 3];
-        float _watermarkTexCoords[WATERMARK_VERTEX_COUNT * 2];
+
+        float _watermarkCoords[12];
+        float _watermarkTexCoords[8];
         
         cglib::mat4x4<float> _modelviewProjectionMat;
         

@@ -77,8 +77,10 @@ namespace carto {
         bool isEmptyBatch() const;
         void addToBatch(const std::shared_ptr<PointDrawData>& drawData, StyleTextureCache& styleCache, const ViewState& viewState);
         void drawBatch(StyleTextureCache& styleCache, const ViewState& viewState);
-        void drawBuffers(int indexCount) const;
     
+        static const std::string POINT_VERTEX_SHADER;
+        static const std::string POINT_FRAGMENT_SHADER;
+        
         std::vector<std::shared_ptr<Point> > _elements;
         std::vector<std::shared_ptr<Point> > _tempElements;
         

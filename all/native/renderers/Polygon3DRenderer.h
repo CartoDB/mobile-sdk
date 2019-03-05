@@ -62,13 +62,10 @@ namespace carto {
                                         std::vector<std::shared_ptr<Polygon3DDrawData> >& drawDataBuffer,
                                         const ViewState& viewState);
         
-        static std::shared_ptr<Bitmap> GetPolygon3DBitmap();
-        
-        static std::shared_ptr<Bitmap> _Polygon3DBitmap;
-        
         void drawBatch(const ViewState& viewState);
         
-        std::shared_ptr<Texture> _polygon3DTex;
+        static const std::string POLYGON3D_VERTEX_SHADER;
+        static const std::string POLYGON3D_FRAGMENT_SHADER;
     
         std::vector<std::shared_ptr<Polygon3D> > _elements;
         std::vector<std::shared_ptr<Polygon3D> > _tempElements;

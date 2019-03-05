@@ -50,6 +50,9 @@ namespace carto {
         static const float SKY_SCALE_MULTIPLIER;
         static const float SKY_RELATIVE_HEIGHT;
 
+        static const std::string BACKGROUND_VERTEX_SHADER;
+        static const std::string BACKGROUND_FRAGMENT_SHADER;
+
         std::shared_ptr<Bitmap> _backgroundBitmap;
         std::shared_ptr<Texture> _backgroundTex;
         std::vector<float> _backgroundCoords;

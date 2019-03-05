@@ -5,7 +5,6 @@
 #include "graphics/Texture.h"
 #include "graphics/TextureManager.h"
 #include "graphics/ViewState.h"
-#include "graphics/shaders/ConstColorShaderSource.h"
 #include "graphics/utils/GLContext.h"
 #include "layers/VectorLayer.h"
 #include "renderers/drawdatas/LineDrawData.h"
@@ -51,8 +50,10 @@ namespace carto {
     }
     
     void PolygonRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        _shader = shaderManager->createShader(constcolor_shader_source);
-    
+        static ShaderSource shaderSource("polygon", &POLYGON_VERTEX_SHADER, &POLYGON_FRAGMENT_SHADER);
+
+        _shader = shaderManager->createShader(shaderSource);
+
         // Get shader variables locations
         glUseProgram(_shader->getProgId());
         _a_color = _shader->getAttribLoc("a_color");
@@ -301,4 +302,26 @@ namespace carto {
         _prevBitmap = nullptr;
     }
     
+    const std::string PolygonRenderer::POLYGON_VERTEX_SHADER =
+        "#version 100\n"
+        "attribute vec4 a_coord;"
+        "attribute vec4 a_color;"
+        "varying vec4 v_color;"
+        "uniform mat4 u_mvpMat;"
+        "void main() {"
+        "    v_color = a_color;"
+        "    gl_Position = u_mvpMat * a_coord;"
+        "}";
+
+    const std::string PolygonRenderer::POLYGON_FRAGMENT_SHADER =
+        "#version 100\n"
+        "precision mediump float;"
+        "varying lowp vec4 v_color;"
+        "void main() {"
+        "    vec4 color = v_color;"
+        "    if (color.a == 0.0) {"
+        "        discard;"
+        "    }"
+        "    gl_FragColor = color;"
+        "}";
 }

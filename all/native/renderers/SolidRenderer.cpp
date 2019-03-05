@@ -5,7 +5,6 @@
 #include "graphics/TextureManager.h"
 #include "graphics/Texture.h"
 #include "graphics/ViewState.h"
-#include "graphics/shaders/SolidShaderSource.h"
 #include "graphics/utils/GLContext.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
@@ -33,8 +32,10 @@ namespace carto {
     }
     
     void SolidRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
+        static ShaderSource shaderSource("solid", &SOLID_VERTEX_SHADER, &SOLID_FRAGMENT_SHADER);
+        
         // Shader and textures must be reloaded
-        _shader = shaderManager->createShader(solid_shader_source);
+        _shader = shaderManager->createShader(shaderSource);
     
         // Get shader variables locations
         glUseProgram(_shader->getProgId());
@@ -60,8 +61,7 @@ namespace carto {
         if (_bitmap != bitmap || !_bitmapTex) {
             if (bitmap) {
                 _bitmapTex = _textureManager->createTexture(bitmap, true, true);
-            }
-            else {
+            } else {
                 auto defaultBitmap = std::make_shared<Bitmap>(DEFAULT_BITMAP, 1, 1, ColorFormat::COLOR_FORMAT_RGBA, 4);
                 _bitmapTex = _textureManager->createTexture(defaultBitmap, true, true);
             }
@@ -89,9 +89,9 @@ namespace carto {
             bitmapWScale = 0.5f / viewState.getWidth()  * _bitmap->getWidth()  * _bitmapScale;
             bitmapHScale = 0.5f / viewState.getHeight() * _bitmap->getHeight() * _bitmapScale;
         }
-        for (int i = 0; i < QUAD_VERTEX_COUNT * 2; i += 2) {
-            _quadTexCoords[i + 0] = QUAD_TEX_COORDS[i + 0] / bitmapWScale;
-            _quadTexCoords[i + 1] = QUAD_TEX_COORDS[i + 1] / bitmapHScale;
+        for (int i = 0; i < 4; i++) {
+            _quadTexCoords[i * 2 + 0] = QUAD_TEX_COORDS[i * 2 + 0] / bitmapWScale;
+            _quadTexCoords[i * 2 + 1] = QUAD_TEX_COORDS[i * 2 + 1] / bitmapHScale;
         }
         cglib::mat4x4<float> mvpMat = cglib::mat4x4<float>::identity();
         glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, mvpMat.data());
@@ -99,7 +99,7 @@ namespace carto {
         // Draw
         glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 0, QUAD_COORDS);
         glVertexAttribPointer(_a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, _quadTexCoords);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, QUAD_VERTEX_COUNT);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
         // Disable bound arrays
         glDisableVertexAttribArray(_a_coord);
@@ -127,5 +127,26 @@ namespace carto {
     const float SolidRenderer::QUAD_TEX_COORDS[] = {
         0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f
     };
+
+    const std::string SolidRenderer::SOLID_VERTEX_SHADER =
+        "#version 100\n"
+        "attribute vec4 a_coord;"
+        "attribute vec2 a_texCoord;"
+        "varying vec2 v_texCoord;"
+        "uniform mat4 u_mvpMat;"
+        "void main() {"
+        "    v_texCoord = a_texCoord;"
+        "    gl_Position = u_mvpMat * a_coord;"
+        "}";
+
+    const std::string SolidRenderer::SOLID_FRAGMENT_SHADER =
+        "#version 100\n"
+        "precision mediump float;"
+        "varying mediump vec2 v_texCoord;"
+        "uniform sampler2D u_tex;"
+        "uniform vec4 u_color;"
+        "void main() {"
+        "    gl_FragColor = texture2D(u_tex, v_texCoord) * u_color;"
+        "}";
 
 }

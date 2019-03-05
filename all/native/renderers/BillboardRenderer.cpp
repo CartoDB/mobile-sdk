@@ -4,7 +4,6 @@
 #include "graphics/Texture.h"
 #include "graphics/TextureManager.h"
 #include "graphics/ViewState.h"
-#include "graphics/shaders/RegularShaderSource.h"
 #include "graphics/utils/GLContext.h"
 #include "layers/VectorLayer.h"
 #include "projections/ProjectionSurface.h"
@@ -113,8 +112,10 @@ namespace carto {
     }
     
     void BillboardRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        _shader = shaderManager->createShader(regular_shader_source);
-    
+        static ShaderSource shaderSource("billboard", &BILLBOARD_VERTEX_SHADER, &BILLBOARD_FRAGMENT_SHADER);
+
+        _shader = shaderManager->createShader(shaderSource);
+
         // Get shader variables locations
         glUseProgram(_shader->getProgId());
         _a_color = _shader->getAttribLoc("a_color");
@@ -477,4 +478,32 @@ namespace carto {
                             texture->getTexCoordScale(), opacity, styleCache, viewState);
     }
     
+    const std::string BillboardRenderer::BILLBOARD_VERTEX_SHADER =
+        "#version 100\n"
+        "attribute vec4 a_coord;"
+        "attribute vec2 a_texCoord;"
+        "attribute vec4 a_color;"
+        "varying vec2 v_texCoord;"
+        "varying vec4 v_color;"
+        "uniform mat4 u_mvpMat;"
+        "void main() {"
+        "    v_texCoord = a_texCoord;"
+        "    v_color = a_color;"
+        "    gl_Position = u_mvpMat * a_coord;"
+        "}";
+
+    const std::string BillboardRenderer::BILLBOARD_FRAGMENT_SHADER =
+        "#version 100\n"
+        "precision mediump float;"
+        "varying mediump vec2 v_texCoord;"
+        "varying lowp vec4 v_color;"
+        "uniform sampler2D u_tex;"
+        "void main() {"
+        "    vec4 color = texture2D(u_tex, v_texCoord) * v_color;"
+        "    if (color.a == 0.0) {"
+        "        discard;"
+        "    }"
+        "    gl_FragColor = color;"
+        "}";
+
 }

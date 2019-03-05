@@ -162,6 +162,9 @@ namespace carto {
         static const int BILLBOARD_PLACEMENT_TASK_DELAY;
 
         static const int STYLE_TEXTURE_CACHE_SIZE; // Size limit (in bytes) for style texture cache
+
+        static const std::string BLEND_VERTEX_SHADER;
+        static const std::string BLEND_FRAGMENT_SHADER;
         
         std::chrono::steady_clock::time_point _lastFrameTime;
     

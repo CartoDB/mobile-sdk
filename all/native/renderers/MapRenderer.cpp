@@ -13,7 +13,6 @@
 #include "graphics/FrameBufferManager.h"
 #include "graphics/ShaderManager.h"
 #include "graphics/TextureManager.h"
-#include "graphics/shaders/BlendShaderSource.h"
 #include "graphics/utils/GLContext.h"
 #include "layers/Layer.h"
 #include "projections/Projection.h"
@@ -697,7 +696,9 @@ namespace carto {
         glBindFramebuffer(GL_FRAMEBUFFER, prevBoundFBO);
 
         if (!_screenBlendShader) {
-            _screenBlendShader = _shaderManager->createShader(blend_shader_source);
+            static const ShaderSource shaderSource("blend", &BLEND_VERTEX_SHADER, &BLEND_FRAGMENT_SHADER);
+            
+            _screenBlendShader = _shaderManager->createShader(shaderSource);
         }
         
         glUseProgram(_screenBlendShader->getProgId());
@@ -1042,4 +1043,22 @@ namespace carto {
 
     const int MapRenderer::STYLE_TEXTURE_CACHE_SIZE = 8 * 1024 * 1024;
 
+    const std::string MapRenderer::BLEND_VERTEX_SHADER =
+        "#version 100\n"
+        "attribute vec2 a_coord;"
+        "uniform mat4 u_mvpMat;"
+        "void main() {"
+        "    gl_Position = u_mvpMat * vec4(a_coord, 0.0, 1.0);"
+        "}";
+
+    const std::string MapRenderer::BLEND_FRAGMENT_SHADER =
+        "#version 100\n"
+        "precision mediump float;"
+        "uniform sampler2D u_tex;"
+        "uniform lowp vec4 u_color;"
+        "uniform mediump vec2 u_invScreenSize;"
+        "void main() {"
+        "    vec4 texColor = texture2D(u_tex, gl_FragCoord.xy * u_invScreenSize);"
+        "    gl_FragColor = texColor * u_color;"
+        "}";
 }
