@@ -15,7 +15,7 @@ namespace carto {
 
     MapEnvelope CullState::getProjectionEnvelope(const std::shared_ptr<Projection>& proj) const {
         std::vector<MapPos> mapPoses;
-        mapPoses.reserve(8);
+        mapPoses.reserve(_envelope.getConvexHull().size());
         for (const MapPos& mapPosInternal : _envelope.getConvexHull()) {
             mapPoses.push_back(proj->fromInternal(mapPosInternal));
         }

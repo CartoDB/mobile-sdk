@@ -46,6 +46,10 @@ namespace carto {
         void calculateEnvelope();
         void updateLayers(const std::vector<std::shared_ptr<Layer> >& layers);
     
+        static const int MAX_VIEWPORT_TESSELATION_LEVEL;
+
+        static const int MAX_ENVELOPE_POINTS;
+
         static const float VIEWPORT_SCALE;
 
         std::map<std::shared_ptr<Layer>, std::chrono::steady_clock::time_point> _layerWakeupMap;

@@ -1,12 +1,12 @@
 #include "CullWorker.h"
 #include "layers/Layer.h"
 #include "projections/ProjectionSurface.h"
+#include "projections/PlanarProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "utils/Const.h"
+#include "utils/GeomUtils.h"
 #include "utils/Log.h"
 #include "utils/ThreadUtils.h"
-
-#include <algorithm>
 
 namespace carto {
 
@@ -133,42 +133,57 @@ namespace carto {
 
         cglib::mat4x4<double> invMVPMat = cglib::inverse(_viewState.getModelviewProjectionMat());
 
-        // Find closest points to screen corners
+        bool addPole1 = _viewState.getFrustum().inside(projectionSurface->calculatePosition(MapPos(0, -std::numeric_limits<double>::infinity())));
+        bool addPole2 = _viewState.getFrustum().inside(projectionSurface->calculatePosition(MapPos(0,  std::numeric_limits<double>::infinity())));
+
+        // Calculate tesselation level. Planar projection does not need tesselation. Poles on spherical surface must be tesselated to a high degree.
+        int tesselationLevel = 1;
+        if (!std::dynamic_pointer_cast<PlanarProjectionSurface>(projectionSurface)) {
+            if (addPole1 || addPole2) {
+                tesselationLevel = MAX_VIEWPORT_TESSELATION_LEVEL;
+            } else {
+                tesselationLevel = std::max(1, MAX_VIEWPORT_TESSELATION_LEVEL >> static_cast<int>(_viewState.getZoom()));
+            }
+        }
+
+        // Find closest points to screen corners/edges
         cglib::vec2<float> screenPoses[] = {
             cglib::vec2<float>(-VIEWPORT_SCALE, -VIEWPORT_SCALE),
             cglib::vec2<float>(-VIEWPORT_SCALE,  VIEWPORT_SCALE),
             cglib::vec2<float>( VIEWPORT_SCALE,  VIEWPORT_SCALE),
             cglib::vec2<float>( VIEWPORT_SCALE, -VIEWPORT_SCALE)
         };
-
-        MapPos mapPoses[4];
+        std::vector<MapPos> mapPoses;
         for (int i = 0; i < 4; i++) {
-            cglib::vec3<double> pos0 = cglib::transform_point(cglib::vec3<double>(screenPoses[i](0), screenPoses[i](1), -1), invMVPMat);
-            cglib::vec3<double> pos1 = cglib::transform_point(cglib::vec3<double>(screenPoses[i](0), screenPoses[i](1),  1), invMVPMat);
-            cglib::ray3<double> ray(pos0, pos1 - pos0);
+            int j = (i + 1) % 4;
+            for (int n = 0; n < tesselationLevel; n++) {
+                cglib::vec2<float> screenPos = screenPoses[i] + (screenPoses[j] - screenPoses[i]) * (static_cast<float>(n) / tesselationLevel);
+                cglib::vec3<double> worldPos0 = cglib::transform_point(cglib::vec3<double>(screenPos(0), screenPos(1), -1), invMVPMat);
+                cglib::vec3<double> worldPos1 = cglib::transform_point(cglib::vec3<double>(screenPos(0), screenPos(1),  1), invMVPMat);
+                cglib::ray3<double> ray(worldPos0, worldPos1 - worldPos0);
 
-            double t = 0;
-            mapPoses[i] = projectionSurface->calculateMapPos(projectionSurface->calculateNearestPoint(ray, 0, t));
-        }
-
-        // Build envelope, tesselate envelope edges
-        std::vector<MapPos> envelopePoses;
-        envelopePoses.reserve(8);
-        for (int i = 0; i < 4; i++) {
-            if (!envelopePoses.empty()) {
-                envelopePoses.pop_back();
+                double t = 0;
+                mapPoses.push_back(projectionSurface->calculateMapPos(projectionSurface->calculateNearestPoint(ray, 0, t)));
             }
-            projectionSurface->tesselateSegment(mapPoses[i], mapPoses[(i + 1) % 4], envelopePoses);
         }
 
-        // Check for X coordinate wrapping. Do quick fix of the poles.
-        bool addPole1 = _viewState.getFrustum().inside(projectionSurface->calculatePosition(MapPos(0, -std::numeric_limits<double>::infinity())));
-        bool addPole2 = _viewState.getFrustum().inside(projectionSurface->calculatePosition(MapPos(0,  std::numeric_limits<double>::infinity())));
-        if (addPole1 || addPole2) {
-            double minX = -Const::WORLD_SIZE * 0.5;
-            double maxX =  Const::WORLD_SIZE * 0.5;
-            double minY = std::min_element(envelopePoses.begin(), envelopePoses.end(), [](const MapPos& p1, const MapPos& p2) { return p1.getY() < p2.getY(); })->getY();
-            double maxY = std::max_element(envelopePoses.begin(), envelopePoses.end(), [](const MapPos& p1, const MapPos& p2) { return p1.getY() < p2.getY(); })->getY();
+        // Calculate bounds
+        double minX =  Const::WORLD_SIZE;
+        double maxX = -Const::WORLD_SIZE;
+        double minY =  Const::WORLD_SIZE;
+        double maxY = -Const::WORLD_SIZE;
+        for (const MapPos& mapPos : mapPoses) {
+            minX = std::min(minX, mapPos.getX());
+            maxX = std::max(maxX, mapPos.getX());
+            minY = std::min(minY, mapPos.getY());
+            maxY = std::max(maxY, mapPos.getY());
+        }
+
+        // Do quick fix of the poles. Also check for X coordinate wrapping.
+        bool wrapX = (maxX - minX >= Const::WORLD_SIZE * 0.5);
+        if (addPole1 || addPole2 || wrapX) {
+            minX = -Const::WORLD_SIZE * 0.5;
+            maxX =  Const::WORLD_SIZE * 0.5;
             if (addPole1) {
                 minY = -std::numeric_limits<double>::infinity();
             }
@@ -176,15 +191,24 @@ namespace carto {
                 maxY =  std::numeric_limits<double>::infinity();
             }
 
-            envelopePoses.clear();
-            envelopePoses.emplace_back(minX, minY);
-            envelopePoses.emplace_back(minX, maxY);
-            envelopePoses.emplace_back(maxX, maxY);
-            envelopePoses.emplace_back(maxX, minY);
+            mapPoses.clear();
+            mapPoses.emplace_back(minX, minY);
+            mapPoses.emplace_back(minX, maxY);
+            mapPoses.emplace_back(maxX, maxY);
+            mapPoses.emplace_back(maxX, minY);
+            _envelope = MapEnvelope(mapPoses);
+        } else {
+            // Calculate convex hull. If it contains too many points, replace it with bounding box.
+            mapPoses = GeomUtils::CalculateConvexHull(mapPoses);
+            if (mapPoses.size() > static_cast<std::size_t>(MAX_ENVELOPE_POINTS)) {
+                mapPoses.clear();
+                mapPoses.emplace_back(minX, minY);
+                mapPoses.emplace_back(minX, maxY);
+                mapPoses.emplace_back(maxX, maxY);
+                mapPoses.emplace_back(maxX, minY);
+            }
+            _envelope = MapEnvelope(mapPoses);
         }
-
-        // Check if poles are visible. We
-        _envelope = MapEnvelope(envelopePoses);
     }
     
     void CullWorker::updateLayers(const std::vector<std::shared_ptr<Layer> >& layers) {
@@ -193,5 +217,9 @@ namespace carto {
         }
     }
     
+    const int CullWorker::MAX_VIEWPORT_TESSELATION_LEVEL = 32;
+
+    const int CullWorker::MAX_ENVELOPE_POINTS = 64;
+
     const float CullWorker::VIEWPORT_SCALE = 1.1f; // enlarge viewport envelope by approx. 10%
 }
