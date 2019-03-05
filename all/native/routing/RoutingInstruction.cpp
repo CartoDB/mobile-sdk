@@ -13,7 +13,8 @@ namespace carto {
         _turnAngle(0),
         _azimuth(0),
         _distance(0),
-        _time(0)
+        _time(0),
+        _geometryTag()
     {
     }
 
@@ -24,7 +25,8 @@ namespace carto {
         _turnAngle(turnAngle),
         _azimuth(azimuth),
         _distance(distance),
-        _time(time)
+        _time(time),
+        _geometryTag()
     {
     }
 
@@ -65,6 +67,14 @@ namespace carto {
     
     void RoutingInstruction::setTime(double time) {
         _time = time;
+    }
+
+    const Variant& RoutingInstruction::getGeometryTag() const {
+        return _geometryTag;
+    }
+
+    void RoutingInstruction::setGeometryTag(const Variant& geometryTag) {
+        _geometryTag = geometryTag;
     }
 
     std::string RoutingInstruction::toString() const {
@@ -111,6 +121,15 @@ namespace carto {
                 break;
             case RoutingAction::ROUTING_ACTION_LEAVE_AGAINST_ALLOWED_DIRECTION:
                 actionName = "Leave against allowed direction";
+                break;
+            case RoutingAction::ROUTING_ACTION_GO_UP:
+                actionName = "Go up";
+                break;
+            case RoutingAction::ROUTING_ACTION_GO_DOWN:
+                actionName = "Go down";
+                break;
+            case RoutingAction::ROUTING_ACTION_WAIT:
+                actionName = "Wait";
                 break;
         }
 

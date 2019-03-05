@@ -203,6 +203,7 @@
 #import "NTRouteMatchingRequest.h"
 #import "NTRouteMatchingResult.h"
 #import "NTOSRMOfflineRoutingService.h"
+#import "NTSGREOfflineRoutingService.h"
 #endif
 
 #ifdef _CARTO_VALHALLA_ROUTING_SUPPORT
