@@ -256,11 +256,16 @@ namespace carto {
     }
         
     MapPos BaseMapView::screenToMap(const ScreenPos& screenPos) {
-        return _mapRenderer->screenToMap(screenPos, _mapRenderer->getViewState());
+        ViewState viewState = _mapRenderer->getViewState();
+        MapPos mapPosInternal = _options->getProjectionSurface()->calculateMapPos(viewState.screenToWorld(cglib::vec2<float>(screenPos.getX(), screenPos.getY()), 0, _options));
+        return _options->getBaseProjection()->fromInternal(mapPosInternal);
     }
     
     ScreenPos BaseMapView::mapToScreen(const MapPos& mapPos) {
-        return _mapRenderer->mapToScreen(mapPos, _mapRenderer->getViewState());
+        ViewState viewState = _mapRenderer->getViewState();
+        MapPos mapPosInternal = _options->getBaseProjection()->toInternal(mapPos);
+        cglib::vec2<float> screenPos = viewState.worldToScreen(_options->getProjectionSurface()->calculatePosition(mapPosInternal), _options);
+        return ScreenPos(screenPos(0), screenPos(1));
     }
     
     void BaseMapView::cancelAllTasks() {
