@@ -187,7 +187,6 @@ namespace carto {
         return _kineticEventHandler;
     }
     
-    // TODO: add explicit 'ViewState' argument to all calculateCameraEvent methods
     void MapRenderer::calculateCameraEvent(CameraPanEvent& cameraEvent, float durationSeconds, bool updateKinetic) {
         if (durationSeconds > 0) {
             if (cameraEvent.isUseDelta()) {
@@ -207,13 +206,15 @@ namespace carto {
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-            oldFocusPos = _options->getProjectionSurface()->calculateMapPos(_viewState.getFocusPos());
+            std::shared_ptr<ProjectionSurface> projectionSurface = getProjectionSurface();
+
+            oldFocusPos = projectionSurface->calculateMapPos(_viewState.getFocusPos());
         
             // Calculate new focusPos, cameraPos and upVec
             cameraEvent.calculate(*_options, _viewState);
     
             // Calculate parameters for kinetic events
-            newFocusPos = _options->getProjectionSurface()->calculateMapPos(_viewState.getFocusPos());
+            newFocusPos = projectionSurface->calculateMapPos(_viewState.getFocusPos());
             zoom = _viewState.getZoom();
           
             // In case of seamless panning horizontal teleport, offset the delta focus pos
@@ -742,7 +743,7 @@ namespace carto {
         }
 
         cglib::vec3<double> origin = viewState.getCameraPos();
-        cglib::vec3<double> target = _options->getProjectionSurface()->calculatePosition(targetPos);
+        cglib::vec3<double> target = viewState.getProjectionSurface()->calculatePosition(targetPos);
         cglib::ray3<double> ray(origin, target - origin);
     
         // Normal layer click detection is done in the layer order
