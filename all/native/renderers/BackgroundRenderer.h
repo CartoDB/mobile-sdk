@@ -34,8 +34,8 @@ namespace carto {
         void onSurfaceDestroyed();
     
     protected:
-        static void BuildSphereSky(std::vector<cglib::vec3<double> >& vertices, std::vector<cglib::vec2<float> >& texCoords, std::vector<unsigned short>& indices, const cglib::vec3<double>& cameraPos, const cglib::vec3<double>& upVec, double height, int tesselate);
-        static void BuildSphereSurface(std::vector<cglib::vec3<double> >& vertices, std::vector<cglib::vec3<float> >& normals, std::vector<cglib::vec2<float> >& texCoords, std::vector<unsigned short>& indices, int tesselateU, int tesselateV);
+        static void BuildSphereSky(std::vector<cglib::vec3<double> >& coords, std::vector<cglib::vec2<float> >& texCoords, std::vector<unsigned short>& indices, const cglib::vec3<double>& cameraPos, const cglib::vec3<double>& upVec, double dist, double height, int tesselate);
+        static void BuildSphereSurface(std::vector<cglib::vec3<double> >& coords, std::vector<cglib::vec3<float> >& normals, std::vector<cglib::vec2<float> >& texCoords, std::vector<unsigned short>& indices, int tesselateU, int tesselateV);
 
         void drawBackground(const ViewState& viewState);
         void drawSky(const ViewState& viewState);
@@ -55,19 +55,18 @@ namespace carto {
 
         std::shared_ptr<Bitmap> _backgroundBitmap;
         std::shared_ptr<Texture> _backgroundTex;
-        std::vector<float> _backgroundCoords;
-        std::vector<float> _backgroundTexCoords;
+        std::vector<float> _backgroundVertices;
     
         std::shared_ptr<Bitmap> _skyBitmap;
         std::shared_ptr<Texture> _skyTex;
-        std::vector<float> _skyCoords;
+        std::vector<float> _skyVertices;
     
-        std::vector<cglib::vec3<double> > _surfaceVertices;
-        std::vector<cglib::vec3<float> > _surfaceNormals;
-        std::vector<cglib::vec2<float> > _surfaceTexCoords;
-        std::vector<unsigned short> _surfaceIndices;
+        std::vector<cglib::vec3<double> > _backgroundCoords;
+        std::vector<cglib::vec3<float> > _backgroundNormals;
+        std::vector<cglib::vec2<float> > _backgroundTexCoords;
+        std::vector<unsigned short> _backgroundIndices;
 
-        std::vector<cglib::vec3<double> > _skyVertices;
+        std::vector<cglib::vec3<double> > _skyCoords;
         std::vector<cglib::vec2<float> > _skyTexCoords;
         std::vector<unsigned short> _skyIndices;
 
