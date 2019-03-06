@@ -110,6 +110,9 @@ namespace carto {
             glActiveTexture(GL_TEXTURE0);
             // Default lighting
             glUniform3f(_u_lightDir, 0, 0, 1);
+            // Transformation matrix
+            const cglib::mat4x4<float>& mvpMat = viewState.getRTESkyProjectionMat();
+            glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, mvpMat.data());
             // Coords, texCoords, colors
             glEnableVertexAttribArray(_a_coord);
             glEnableVertexAttribArray(_a_texCoord);
@@ -151,10 +154,6 @@ namespace carto {
 
         // Texture
         glBindTexture(GL_TEXTURE_2D, _backgroundTex->getTexId());
-
-        // Transformation matrix
-        const cglib::mat4x4<float>& mvpMat = viewState.getRTEModelviewProjectionMat();
-        glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, mvpMat.data());
 
         // Spherical mode?
         if (_options.getRenderProjectionMode() == RenderProjectionMode::RENDER_PROJECTION_MODE_SPHERICAL) {
@@ -250,7 +249,9 @@ namespace carto {
 
             double dist1 = 1.0 / cglib::norm(viewState.getCameraPos());
             double dist2 = std::pow(2.0f, -viewState.getZoom()) * viewState.getZoom0Distance() * _options.getDrawDistance() / Const::WORLD_SIZE * Const::PI;
-            BuildSphereSky(_skyCoords, _skyTexCoords, _skyIndices, viewState.getCameraPos() * (1.0 / Const::WORLD_SIZE * Const::PI), viewState.getUpVec(), std::min(dist1, dist2), SKY_RELATIVE_HEIGHT, SKY_TESSELATION_LEVELS);
+            double height0 = -SKY_RELATIVE_HEIGHT * std::pow(2.0f, -viewState.getZoom());
+            double height1 = SKY_RELATIVE_HEIGHT;
+            BuildSphereSky(_skyCoords, _skyTexCoords, _skyIndices, viewState.getCameraPos() * (1.0 / Const::WORLD_SIZE * Const::PI), viewState.getUpVec(), height0, height1, SKY_TESSELATION_LEVELS);
 
             // Calculate coordinate transformation parameters
             const cglib::vec3<double>& focusPos = viewState.getFocusPos();
@@ -270,10 +271,6 @@ namespace carto {
                 _skyVertices[i * 5 + 3] = _skyTexCoords[i](0);
                 _skyVertices[i * 5 + 4] = _skyTexCoords[i](1);
             }
-
-            // Transformation matrix
-            const cglib::mat4x4<float>& mvpMat = viewState.getRTESkyProjectionMat();
-            glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, mvpMat.data());
 
             // Draw
             glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), _skyVertices.data() + 0);
@@ -299,38 +296,37 @@ namespace carto {
             _skyVertices[i * 5 + 4] = SKY_TEX_COORDS[i * 2 + 1] * 2;
         }
 
-        // Transformation matrix
-        const cglib::mat4x4<float>& mvpMat = viewState.getRTEModelviewProjectionMat();
-        glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, mvpMat.data());
-
         // Draw
         glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), _skyVertices.data() + 0);
         glVertexAttribPointer(_a_texCoord, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), _skyVertices.data() + 3);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount);
     }
 
-    void BackgroundRenderer::BuildSphereSky(std::vector<cglib::vec3<double> >& coords, std::vector<cglib::vec2<float> >& texCoords, std::vector<unsigned short>& indices, const cglib::vec3<double>& cameraPos, const cglib::vec3<double>& upVec, double dist, double height, int tesselate) {
+    void BackgroundRenderer::BuildSphereSky(std::vector<cglib::vec3<double> >& coords, std::vector<cglib::vec2<float> >& texCoords, std::vector<unsigned short>& indices, const cglib::vec3<double>& cameraPos, const cglib::vec3<double>& upVec, double height0, double height1, int tesselate) {
         int vertexCount = (tesselate + 1) * 2;
         int indexCount = 6 * tesselate;
         coords.reserve(vertexCount);
         texCoords.reserve(vertexCount);
         indices.reserve(indexCount);
 
-        cglib::vec3<double> axis1 = cglib::unit(cglib::vector_product(cglib::vector_product(cameraPos, upVec), cameraPos));
-        cglib::vec3<double> axis2 = cglib::unit(cglib::vector_product(cameraPos, axis1));
-        cglib::vec3<double> origin = cameraPos * dist;
+        cglib::vec3<double> axis1a = cglib::unit(cglib::vector_product(cglib::vector_product(cameraPos, upVec), cameraPos));
+        cglib::vec3<double> axis2a = cglib::unit(cglib::vector_product(cameraPos, axis1a));
+
+        cglib::vec3<double> axis1b = cglib::unit(upVec);
+        cglib::vec3<double> axis2b = cglib::unit(cglib::vector_product(cameraPos, axis1b));
+
+        cglib::vec3<double> origin = cameraPos * (1.0 / cglib::norm(cameraPos));
         double r = std::sqrt(std::max(0.0, 1.0 - cglib::norm(origin)));
 
         for (int i = 0; i <= tesselate; i++) {
             double u = 2.0 * Const::PI * (static_cast<double>(i < tesselate ? i : 0) / tesselate - 0.5);
             double x = std::cos(u);
             double y = std::sin(u);
-            coords.emplace_back((axis1 * x + axis2 * y) * (r * 0.98) + origin);
-            coords.emplace_back((axis1 * x + axis2 * y) * (r + height) + origin);
+            coords.emplace_back((axis1a * x + axis2a * y) * r + (axis1b * x + axis2b * y) * height0 + origin);
+            coords.emplace_back((axis1a * x + axis2a * y) * r + (axis1b * x + axis2b * y) * height1 + origin);
 
-            float s = static_cast<float>(i) / tesselate;
-            texCoords.emplace_back(s, 0.0f);
-            texCoords.emplace_back(s, 1.0f);
+            texCoords.emplace_back(0.5f, 0.0f);
+            texCoords.emplace_back(0.5f, 1.0f);
         }
 
         for (int i = 0; i < tesselate; i++) {
@@ -423,7 +419,7 @@ namespace carto {
 
     const std::string BackgroundRenderer::BACKGROUND_VERTEX_SHADER =
         "#version 100\n"
-        "attribute vec4 a_coord;"
+        "attribute vec3 a_coord;"
         "attribute vec3 a_normal;"
         "attribute vec2 a_texCoord;"
         "uniform vec3 u_lightDir;"
@@ -434,7 +430,7 @@ namespace carto {
         "    float lighting = max(0.0, dot(a_normal, u_lightDir)) * 0.5 + 0.5;"
         "    v_color = vec4(lighting, lighting, lighting, 1.0);"
         "    v_texCoord = a_texCoord;"
-        "    gl_Position = u_mvpMat * a_coord;"
+        "    gl_Position = u_mvpMat * vec4(a_coord, 1.0);"
         "}";
 
     const std::string BackgroundRenderer::BACKGROUND_FRAGMENT_SHADER =
