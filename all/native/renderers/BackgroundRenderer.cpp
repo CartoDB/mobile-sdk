@@ -247,11 +247,11 @@ namespace carto {
             _skyTexCoords.clear();
             _skyIndices.clear();
 
-            double dist1 = 1.0 / cglib::norm(viewState.getCameraPos());
-            double dist2 = std::pow(2.0f, -viewState.getZoom()) * viewState.getZoom0Distance() * _options.getDrawDistance() / Const::WORLD_SIZE * Const::PI;
             double height0 = -SKY_RELATIVE_HEIGHT * std::pow(2.0f, -viewState.getZoom());
             double height1 = SKY_RELATIVE_HEIGHT;
-            BuildSphereSky(_skyCoords, _skyTexCoords, _skyIndices, viewState.getCameraPos() * (1.0 / Const::WORLD_SIZE * Const::PI), viewState.getUpVec(), height0, height1, SKY_TESSELATION_LEVELS);
+            float t0 = 1.0f - std::pow(2.0f, -viewState.getZoom());
+            float t1 = 1.0f;
+            BuildSphereSky(_skyCoords, _skyTexCoords, _skyIndices, viewState.getCameraPos() * (1.0 / Const::WORLD_SIZE * Const::PI), viewState.getUpVec(), height0, height1, t0, t1, SKY_TESSELATION_LEVELS);
 
             // Calculate coordinate transformation parameters
             const cglib::vec3<double>& focusPos = viewState.getFocusPos();
@@ -302,7 +302,7 @@ namespace carto {
         glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount);
     }
 
-    void BackgroundRenderer::BuildSphereSky(std::vector<cglib::vec3<double> >& coords, std::vector<cglib::vec2<float> >& texCoords, std::vector<unsigned short>& indices, const cglib::vec3<double>& cameraPos, const cglib::vec3<double>& upVec, double height0, double height1, int tesselate) {
+    void BackgroundRenderer::BuildSphereSky(std::vector<cglib::vec3<double> >& coords, std::vector<cglib::vec2<float> >& texCoords, std::vector<unsigned short>& indices, const cglib::vec3<double>& cameraPos, const cglib::vec3<double>& upVec, double height0, double height1, float t0, float t1, int tesselate) {
         int vertexCount = (tesselate + 1) * 2;
         int indexCount = 6 * tesselate;
         coords.reserve(vertexCount);
@@ -325,8 +325,8 @@ namespace carto {
             coords.emplace_back((axis1a * x + axis2a * y) * r + (axis1b * x + axis2b * y) * height0 + origin);
             coords.emplace_back((axis1a * x + axis2a * y) * r + (axis1b * x + axis2b * y) * height1 + origin);
 
-            texCoords.emplace_back(0.5f, 0.0f);
-            texCoords.emplace_back(0.5f, 1.0f);
+            texCoords.emplace_back(0.5f, t0);
+            texCoords.emplace_back(0.5f, t1);
         }
 
         for (int i = 0; i < tesselate; i++) {

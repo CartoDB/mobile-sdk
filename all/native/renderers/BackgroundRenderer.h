@@ -34,7 +34,7 @@ namespace carto {
         void onSurfaceDestroyed();
     
     protected:
-        static void BuildSphereSky(std::vector<cglib::vec3<double> >& coords, std::vector<cglib::vec2<float> >& texCoords, std::vector<unsigned short>& indices, const cglib::vec3<double>& cameraPos, const cglib::vec3<double>& upVec, double height0, double height1, int tesselate);
+        static void BuildSphereSky(std::vector<cglib::vec3<double> >& coords, std::vector<cglib::vec2<float> >& texCoords, std::vector<unsigned short>& indices, const cglib::vec3<double>& cameraPos, const cglib::vec3<double>& upVec, double height0, double height1, float t0, float t1, int tesselate);
         static void BuildSphereSurface(std::vector<cglib::vec3<double> >& coords, std::vector<cglib::vec3<float> >& normals, std::vector<cglib::vec2<float> >& texCoords, std::vector<unsigned short>& indices, int tesselateU, int tesselateV);
 
         void drawBackground(const ViewState& viewState);
