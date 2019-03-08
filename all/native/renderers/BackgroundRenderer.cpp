@@ -362,8 +362,8 @@ namespace carto {
     }
     
     const float BackgroundRenderer::SKY_SCALE_MULTIPLIER_PLANAR = 2.0f / std::sqrt(3.0f);
-    const float BackgroundRenderer::SKY_RELATIVE_HEIGHT_PLANAR[] = { 0.015625f, 0.0625f };
-    const float BackgroundRenderer::SKY_HEIGHT_RAMP_PLANAR[] = { -40.0f, 12.0f };
+    const float BackgroundRenderer::SKY_RELATIVE_HEIGHT_PLANAR[] = { -0.02f, 0.06f };
+    const float BackgroundRenderer::SKY_HEIGHT_RAMP_PLANAR[] = { 40.0f, -18.0f };
     const float BackgroundRenderer::SKY_RELATIVE_HEIGHT_SPHERICAL[] = { -0.05f, 0.1f };
     const float BackgroundRenderer::SKY_HEIGHT_RAMP_SPHERICAL[2] = { 3.0f, 4.0f };
 
