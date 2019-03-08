@@ -34,19 +34,18 @@ namespace carto {
         void onSurfaceDestroyed();
     
     protected:
-        static void BuildSphereSky(std::vector<cglib::vec3<double> >& coords, std::vector<cglib::vec2<float> >& texCoords, std::vector<unsigned short>& indices, const cglib::vec3<double>& cameraPos, const cglib::vec3<double>& upVec, double height0, double height1, float t0, float t1, int tesselate);
+        static void BuildPlanarSky(std::vector<cglib::vec3<float> >& coords, std::vector<cglib::vec2<float> >& texCoords, const cglib::vec3<double>& cameraPos, const cglib::vec3<double>& focusPos, const cglib::vec3<double>& upVec, double height0, double height1, float coordScale);
+        static void BuildSphereSky(std::vector<cglib::vec3<float> >& coords, std::vector<cglib::vec2<float> >& texCoords, const cglib::vec3<double>& cameraPos, const cglib::vec3<double>& upVec, double height0, double height1, float coordScale, int tesselate);
         static void BuildSphereSurface(std::vector<cglib::vec3<double> >& coords, std::vector<cglib::vec3<float> >& normals, std::vector<cglib::vec2<float> >& texCoords, std::vector<unsigned short>& indices, int tesselateU, int tesselateV);
 
         void drawBackground(const ViewState& viewState);
         void drawSky(const ViewState& viewState);
 
-        enum { SURFACE_TESSELATION_LEVELS = 64, SKY_TESSELATION_LEVELS = 128 };
+        enum { SPHERE_TESSELATION_LEVELS_U = 128, SPHERE_TESSELATION_LEVELS_V = 64, SKY_TESSELATION_LEVELS = 128 };
     
-        static const float BACKGROUND_COORDS[12];
-        static const float BACKGROUND_TEX_COORDS[8];
+        static const float PLANE_COORDS[12];
+        static const float PLANE_TEX_COORDS[8];
     
-        static const float SKY_COORDS[48];
-        static const float SKY_TEX_COORDS[48];
         static const float SKY_SCALE_MULTIPLIER;
         static const float SKY_RELATIVE_HEIGHT;
 
@@ -66,9 +65,8 @@ namespace carto {
         std::vector<cglib::vec2<float> > _backgroundTexCoords;
         std::vector<unsigned short> _backgroundIndices;
 
-        std::vector<cglib::vec3<double> > _skyCoords;
+        std::vector<cglib::vec3<float> > _skyCoords;
         std::vector<cglib::vec2<float> > _skyTexCoords;
-        std::vector<unsigned short> _skyIndices;
 
         std::shared_ptr<Shader> _shader;
         GLuint _a_coord;

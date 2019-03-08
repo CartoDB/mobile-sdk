@@ -29,7 +29,6 @@ namespace carto {
         _backgroundIndices(),
         _skyCoords(),
         _skyTexCoords(),
-        _skyIndices(),
         _shader(),
         _a_coord(0),
         _a_normal(0),
@@ -159,7 +158,7 @@ namespace carto {
         if (_options.getRenderProjectionMode() == RenderProjectionMode::RENDER_PROJECTION_MODE_SPHERICAL) {
             // Build sphere surface on first call
             if (_backgroundIndices.empty()) {
-                BuildSphereSurface(_backgroundCoords, _backgroundNormals, _backgroundTexCoords, _backgroundIndices, SURFACE_TESSELATION_LEVELS, SURFACE_TESSELATION_LEVELS);
+                BuildSphereSurface(_backgroundCoords, _backgroundNormals, _backgroundTexCoords, _backgroundIndices, SPHERE_TESSELATION_LEVELS_U, SPHERE_TESSELATION_LEVELS_V);
             }
 
             // Calculate coordinate transformation parameters
@@ -214,17 +213,17 @@ namespace carto {
         translateY -= std::floor(translateY);
 
         // Build vertex array
-        std::size_t vertexCount = sizeof(BACKGROUND_COORDS) / sizeof(float) / 3;
+        std::size_t vertexCount = sizeof(PLANE_COORDS) / sizeof(float) / 3;
         if (_backgroundVertices.size() != vertexCount * 5) {
             _backgroundVertices.resize(vertexCount * 5);
         }
         for (std::size_t i = 0; i < vertexCount; i++) {
-            _backgroundVertices[i * 5 + 0] = BACKGROUND_COORDS[i * 3 + 0] * backgroundScale;
-            _backgroundVertices[i * 5 + 1] = BACKGROUND_COORDS[i * 3 + 1] * backgroundScale;
+            _backgroundVertices[i * 5 + 0] = PLANE_COORDS[i * 3 + 0] * backgroundScale;
+            _backgroundVertices[i * 5 + 1] = PLANE_COORDS[i * 3 + 1] * backgroundScale;
             _backgroundVertices[i * 5 + 2] = static_cast<float>(-cameraPos(2));
 
-            _backgroundVertices[i * 5 + 3] = static_cast<float>((BACKGROUND_TEX_COORDS[i * 2 + 0] - 0.5f) * scale * backgroundScale + translateX);
-            _backgroundVertices[i * 5 + 4] = static_cast<float>((BACKGROUND_TEX_COORDS[i * 2 + 1] - 0.5f) * scale * backgroundScale + translateY);
+            _backgroundVertices[i * 5 + 3] = static_cast<float>((PLANE_TEX_COORDS[i * 2 + 0] - 0.5f) * scale * backgroundScale + translateX);
+            _backgroundVertices[i * 5 + 4] = static_cast<float>((PLANE_TEX_COORDS[i * 2 + 1] - 0.5f) * scale * backgroundScale + translateY);
         }
 
         // Draw
@@ -241,59 +240,33 @@ namespace carto {
         // Texture
         glBindTexture(GL_TEXTURE_2D, _skyTex->getTexId());
 
-        // Spherical mode?
+        // Build sky procedurally
+        _skyCoords.clear();
+        _skyTexCoords.clear();
         if (_options.getRenderProjectionMode() != RenderProjectionMode::RENDER_PROJECTION_MODE_PLANAR) {
-            _skyCoords.clear();
-            _skyTexCoords.clear();
-            _skyIndices.clear();
-
-            double height0 = -SKY_RELATIVE_HEIGHT * std::pow(2.0f, -viewState.getZoom());
-            double height1 = SKY_RELATIVE_HEIGHT;
-            float t0 = 1.0f - std::pow(2.0f, -viewState.getZoom());
-            float t1 = 1.0f;
-            BuildSphereSky(_skyCoords, _skyTexCoords, _skyIndices, viewState.getCameraPos() * (1.0 / Const::WORLD_SIZE * Const::PI), viewState.getUpVec(), height0, height1, t0, t1, SKY_TESSELATION_LEVELS);
-
-            // Calculate coordinate transformation parameters
-            const cglib::vec3<double>& focusPos = viewState.getFocusPos();
-            const cglib::vec3<double>& cameraPos = viewState.getCameraPos();
             float coordScale = static_cast<float>(Const::WORLD_SIZE / Const::PI);
-
-            // Transform coordinates
-            std::size_t vertexCount = _skyCoords.size();
-            if (_skyVertices.size() != vertexCount * 5) {
-                _skyVertices.resize(vertexCount * 5);
-            }
-            for (std::size_t i = 0; i < vertexCount; i++) {
-                _skyVertices[i * 5 + 0] = static_cast<float>(_skyCoords[i](0) * coordScale - cameraPos(0));
-                _skyVertices[i * 5 + 1] = static_cast<float>(_skyCoords[i](1) * coordScale - cameraPos(1));
-                _skyVertices[i * 5 + 2] = static_cast<float>(_skyCoords[i](2) * coordScale - cameraPos(2));
-
-                _skyVertices[i * 5 + 3] = _skyTexCoords[i](0);
-                _skyVertices[i * 5 + 4] = _skyTexCoords[i](1);
-            }
-
-            // Draw
-            glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), _skyVertices.data() + 0);
-            glVertexAttribPointer(_a_texCoord, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), _skyVertices.data() + 3);
-            glDrawElements(GL_TRIANGLES, _skyIndices.size(), GL_UNSIGNED_SHORT, _skyIndices.data());
-            return;
+            double height0 = -SKY_RELATIVE_HEIGHT * std::pow(2.0f, -viewState.getZoom() / 3.0f) * coordScale;
+            double height1 =  SKY_RELATIVE_HEIGHT * coordScale;
+            BuildSphereSky(_skyCoords, _skyTexCoords, viewState.getCameraPos(), viewState.getUpVec(), height0, height1, coordScale, SKY_TESSELATION_LEVELS);
+        } else {
+            float coordScale = viewState.getFar() * SKY_SCALE_MULTIPLIER;
+            double height0 = -0.15 * coordScale;
+            double height1 =  0.75 * coordScale;
+            BuildPlanarSky(_skyCoords, _skyTexCoords, viewState.getCameraPos(), viewState.getFocusPos(), viewState.getUpVec(), height0, height1, coordScale);
         }
 
-        // Calculate coordinate transformation parameters
-        float coordScale = viewState.getFar() * SKY_SCALE_MULTIPLIER;
-
-        // Build vertex array
-        std::size_t vertexCount = sizeof(SKY_COORDS) / sizeof(float) / 3;
+        // Copy/pack coordinates
+        std::size_t vertexCount = _skyCoords.size();
         if (_skyVertices.size() != vertexCount * 5) {
             _skyVertices.resize(vertexCount * 5);
         }
         for (std::size_t i = 0; i < vertexCount; i++) {
-            _skyVertices[i * 5 + 0] = SKY_COORDS[i * 3 + 0] * coordScale;
-            _skyVertices[i * 5 + 1] = SKY_COORDS[i * 3 + 1] * coordScale;
-            _skyVertices[i * 5 + 2] = SKY_COORDS[i * 3 + 2] * coordScale;
+            _skyVertices[i * 5 + 0] = _skyCoords[i](0);
+            _skyVertices[i * 5 + 1] = _skyCoords[i](1);
+            _skyVertices[i * 5 + 2] = _skyCoords[i](2);
 
-            _skyVertices[i * 5 + 3] = SKY_TEX_COORDS[i * 2 + 0] * 1;
-            _skyVertices[i * 5 + 4] = SKY_TEX_COORDS[i * 2 + 1] * 2;
+            _skyVertices[i * 5 + 3] = _skyTexCoords[i](0);
+            _skyVertices[i * 5 + 4] = _skyTexCoords[i](1);
         }
 
         // Draw
@@ -302,12 +275,28 @@ namespace carto {
         glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount);
     }
 
-    void BackgroundRenderer::BuildSphereSky(std::vector<cglib::vec3<double> >& coords, std::vector<cglib::vec2<float> >& texCoords, std::vector<unsigned short>& indices, const cglib::vec3<double>& cameraPos, const cglib::vec3<double>& upVec, double height0, double height1, float t0, float t1, int tesselate) {
+    void BackgroundRenderer::BuildPlanarSky(std::vector<cglib::vec3<float> >& coords, std::vector<cglib::vec2<float> >& texCoords, const cglib::vec3<double>& cameraPos, const cglib::vec3<double>& focusPos, const cglib::vec3<double>& upVec, double height0, double height1, float coordScale) {
+        cglib::vec3<double> cameraVec = focusPos - cameraPos;
+
+        cglib::vec3<double> axis3 = cglib::unit(cglib::vec3<double>(cameraVec(0), cameraVec(1), 0));
+        cglib::vec3<double> axis2 = cglib::unit(upVec);
+        cglib::vec3<double> axis1 = cglib::unit(cglib::vector_product(axis2, axis3));
+
+        for (int j = 0; j < 2; j++) {
+            for (int i = 0; i < 2; i++) {
+                double x = (i - 0.5) * coordScale;
+                double y = height0 + j * (height1 - height0);
+                double z = 0.5 * coordScale;
+                coords.emplace_back(cglib::vec3<float>::convert(axis1 * x + axis2 * y + axis3 * z));
+                texCoords.emplace_back(0.5f, j);
+            }
+        }
+    }
+
+    void BackgroundRenderer::BuildSphereSky(std::vector<cglib::vec3<float> >& coords, std::vector<cglib::vec2<float> >& texCoords, const cglib::vec3<double>& cameraPos, const cglib::vec3<double>& upVec, double height0, double height1, float coordScale, int tesselate) {
         int vertexCount = (tesselate + 1) * 2;
-        int indexCount = 6 * tesselate;
         coords.reserve(vertexCount);
         texCoords.reserve(vertexCount);
-        indices.reserve(indexCount);
 
         cglib::vec3<double> axis1a = cglib::unit(cglib::vector_product(cglib::vector_product(cameraPos, upVec), cameraPos));
         cglib::vec3<double> axis2a = cglib::unit(cglib::vector_product(cameraPos, axis1a));
@@ -316,27 +305,17 @@ namespace carto {
         cglib::vec3<double> axis2b = cglib::unit(cglib::vector_product(cameraPos, axis1b));
 
         cglib::vec3<double> origin = cameraPos * (1.0 / cglib::norm(cameraPos));
-        double r = std::sqrt(std::max(0.0, 1.0 - cglib::norm(origin)));
+        double radius = std::sqrt(std::max(0.0, coordScale * coordScale - cglib::norm(origin)));
 
         for (int i = 0; i <= tesselate; i++) {
             double u = 2.0 * Const::PI * (static_cast<double>(i < tesselate ? i : 0) / tesselate - 0.5);
             double x = std::cos(u);
             double y = std::sin(u);
-            coords.emplace_back((axis1a * x + axis2a * y) * r + (axis1b * x + axis2b * y) * height0 + origin);
-            coords.emplace_back((axis1a * x + axis2a * y) * r + (axis1b * x + axis2b * y) * height1 + origin);
 
-            texCoords.emplace_back(0.5f, t0);
-            texCoords.emplace_back(0.5f, t1);
-        }
-
-        for (int i = 0; i < tesselate; i++) {
-            int j = i + 1;
-            indices.push_back(static_cast<unsigned short>(i * 2 + 0));
-            indices.push_back(static_cast<unsigned short>(i * 2 + 1));
-            indices.push_back(static_cast<unsigned short>(j * 2 + 1));
-            indices.push_back(static_cast<unsigned short>(i * 2 + 0));
-            indices.push_back(static_cast<unsigned short>(j * 2 + 1));
-            indices.push_back(static_cast<unsigned short>(j * 2 + 0));
+            coords.emplace_back(cglib::vec3<float>::convert((axis1a * x + axis2a * y) * radius + (axis1b * x + axis2b * y) * height0 + origin - cameraPos));
+            coords.emplace_back(cglib::vec3<float>::convert((axis1a * x + axis2a * y) * radius + (axis1b * x + axis2b * y) * height1 + origin - cameraPos));
+            texCoords.emplace_back(0.5f, 0.0f);
+            texCoords.emplace_back(0.5f, 1.0f);
         }
     }
 
@@ -383,37 +362,15 @@ namespace carto {
         }
     }
     
-    const float BackgroundRenderer::SKY_COORDS[] = {
-        // North
-        -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f,
-        // East
-        0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f, 0.5f,
-        // South
-        0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f,
-        // West
-        -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f
-    };
-
-    const float BackgroundRenderer::SKY_TEX_COORDS[] = {
-        // North
-        0.0f, 0.0f, 0.25f, 0.0f, 0.0f, 1.0f, 0.25f, 1.0f,
-        // East
-        0.25f, 0.0f, 0.5f, 0.0f, 0.25f, 1.0f, 0.5f, 1.0f,
-        // South
-        0.5f, 0.0f, 0.75f, 0.0f, 0.5f, 1.0f, 0.75f, 1.0f,
-        // West
-        0.75f, 0.0f, 1.0f, 0.0f, 0.75f, 1.0f, 1.0f, 1.0f
-    };
-
     const float BackgroundRenderer::SKY_SCALE_MULTIPLIER = 2.0f / std::sqrt(3.0f);
 
     const float BackgroundRenderer::SKY_RELATIVE_HEIGHT = 0.1f;
 
-    const float BackgroundRenderer::BACKGROUND_COORDS[] = {
+    const float BackgroundRenderer::PLANE_COORDS[] = {
         -0.5f, 0.5f, 0.0f, -0.5f, -0.5f, 0.0f, 0.5f, 0.5f, 0.0f, 0.5f, -0.5f, 0.0f
     };
 
-    const float BackgroundRenderer::BACKGROUND_TEX_COORDS[] = {
+    const float BackgroundRenderer::PLANE_TEX_COORDS[] = {
         0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f
     };
 

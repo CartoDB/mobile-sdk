@@ -579,7 +579,7 @@ namespace carto {
             for (double yy : { -1, 0, 1 }) {
                 double x0 = 0, y0 = 0, x1 = xx, y1 = yy;
                 for (int iter = -1; iter < 16; iter++) {
-                    double x = (iter < 0 ? x1 : (x0 + x1) * 0.5), y = (iter < 0 ? y1 : (y0 + y1) * 0.5);
+                    double x = (iter < 0 ? xx : (x0 + x1) * 0.5), y = (iter < 0 ? yy : (y0 + y1) * 0.5);
                     cglib::vec3<double> worldPos0 = cglib::transform_point(cglib::vec3<double>(x, y, -1), invModelviewProjMat);
                     cglib::vec3<double> worldPos1 = cglib::transform_point(cglib::vec3<double>(x, y,  1), invModelviewProjMat);
                     cglib::ray3<double> ray(worldPos0, worldPos1 - worldPos0);
@@ -604,8 +604,14 @@ namespace carto {
             }
         }
 
+        double maxDist = std::pow(2.0f, -_zoom) * zoom0Distance * options.getDrawDistance();
+        if (far > maxDist) {
+            far = maxDist;
+            skyVisible = true;
+        }
+
         near = std::max(Const::MIN_NEAR, near) * 0.8f;
-        far  = std::max(Const::MIN_NEAR, std::min(std::pow(2.0f, -_zoom) * zoom0Distance * options.getDrawDistance(), far)) * 1.1f;
+        far  = std::max(Const::MIN_NEAR, far)  * 1.1f;
     }
     
     float ViewState::calculateMinZoom(const Options& options) const {
