@@ -46,8 +46,11 @@ namespace carto {
         static const float PLANE_COORDS[12];
         static const float PLANE_TEX_COORDS[8];
     
-        static const float SKY_SCALE_MULTIPLIER;
-        static const float SKY_RELATIVE_HEIGHT;
+        static const float SKY_SCALE_MULTIPLIER_PLANAR;
+        static const float SKY_RELATIVE_HEIGHT_PLANAR[2];
+        static const float SKY_HEIGHT_RAMP_PLANAR[2];
+        static const float SKY_RELATIVE_HEIGHT_SPHERICAL[2];
+        static const float SKY_HEIGHT_RAMP_SPHERICAL[2];
 
         static const std::string BACKGROUND_VERTEX_SHADER;
         static const std::string BACKGROUND_FRAGMENT_SHADER;
