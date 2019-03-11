@@ -8,15 +8,47 @@ from build.sdk_build_utils import *
 
 IOS_ARCHS = ['x86_64', 'armv7', 'arm64']
 
-def updateUmbrellaHeaderDefinitions(filename, args):
+def updateUmbrellaHeader(filename, args):
   with open(filename, 'r') as f:
     lines = f.readlines()
+    for i in range(0, len(lines)):
+      match = re.search('^\s*#import\s+"(.*)".*', lines[i].rstrip('\n'))
+      if match:
+        lines[i] = '#import <CartoMobileSDK/%s>\n' % match.group(1)
     for i in range(0, len(lines)):
       if re.search('^\s*#define\s+.*$', lines[i].rstrip('\n')):
         break
     lines = lines[:i+1] + ['\n'] + ['#define %s\n' % define for define in args.defines.split(';') if define] + lines[i+1:]
   with open(filename, 'w') as f:
     f.writelines(lines)
+
+def updatePrivateHeader(filename, args):
+  with open(filename, 'r') as f:
+    lines = f.readlines()
+    for i in range(0, len(lines)):
+      match = re.search('^\s*#include\s+"(.*)".*', lines[i].rstrip('\n'))
+      if match:
+        lines[i] = '#include <CartoMobileSDK/%s>\n' % match.group(1)
+      match = re.search('^\s*#import\s+"(.*)".*', lines[i].rstrip('\n'))
+      if match:
+        lines[i] = '#import <CartoMobileSDK/%s>\n' % match.group(1)
+  with open(filename, 'w') as f:
+    f.writelines(lines)
+
+def buildModuleMap(filename, publicHeaders, privateHeaders):
+  with open(filename, 'w') as f:
+    f.write('framework module CartoMobileSDK {\n')
+    f.write('    umbrella header "CartoMobileSDK.h"\n')
+    for header in publicHeaders:
+      f.write('    header "%s"\n' % header)
+    f.write('    export *\n')
+    f.write('    module * { export * }\n')
+    f.write('    explicit module Private {\n')
+    f.write('        requires cplusplus\n')
+    for header in privateHeaders:
+      f.write('        header "%s"\n' % header)
+    f.write('    }\n')
+    f.write('}\n')
 
 def buildIOSLib(args, arch):
   platform = 'OS' if arch.startswith('arm') else 'SIMULATOR'
@@ -78,11 +110,17 @@ def buildIOSFramework(args, archs):
   if not args.sharedlib:
     if not makesymlink('%s/CartoMobileSDK.framework/Versions' % distDir, 'A', 'Current'):
       return False
+    if not makesymlink('%s/CartoMobileSDK.framework' % distDir, 'Versions/A/Modules', 'Modules'):
+      return False
     if not makesymlink('%s/CartoMobileSDK.framework' % distDir, 'Versions/A/Headers', 'Headers'):
+      return False
+    if not makesymlink('%s/CartoMobileSDK.framework' % distDir, 'Versions/A/PrivateHeaders', 'PrivateHeaders'):
       return False
     if not makesymlink('%s/CartoMobileSDK.framework' % distDir, 'Versions/A/CartoMobileSDK', 'CartoMobileSDK'):
       return False
 
+  publicHeaders = []
+  privateHeaders = []
   for dir in ['%s/all/native', '%s/extensions/native', '%s/ios/native', '%s/ios/objc', '%s/generated/ios-objc/proxies', '%s/libs-external/cglib']:
     if not os.path.exists(dir % baseDir):
       continue
@@ -92,12 +130,22 @@ def buildIOSFramework(args, archs):
       for filename in filenames:
         if filename.endswith('.h'):
           destDir = '%s/Headers/%s' % (outputDir, dirpath)
+          if dir.find('objc') == -1:
+            destDir = '%s/PrivateHeaders/%s' % (outputDir, dirpath)
+            privateHeaders.append(os.path.normpath(os.path.join(dirpath, filename)))
+          elif filename != 'CartoMobileSDK.h':
+            publicHeaders.append(os.path.normpath(os.path.join(dirpath, filename)))
           if not (makedirs(destDir) and copyfile(os.path.join(dirpath, filename), '%s/%s' % (destDir, filename))):
             os.chdir(currentDir)
             return False
           if filename == 'CartoMobileSDK.h':
-            updateUmbrellaHeaderDefinitions('%s/%s' % (destDir, filename), args)
+            updateUmbrellaHeader('%s/%s' % (destDir, filename), args)
+          else:
+            updatePrivateHeader('%s/%s' % (destDir, filename), args)
     os.chdir(currentDir)
+  makedirs('%s/Modules' % outputDir)
+  buildModuleMap('%s/Modules/module.modulemap' % outputDir, publicHeaders, privateHeaders)
+
   print("Output available in:\n%s" % distDir)
   return True
 
