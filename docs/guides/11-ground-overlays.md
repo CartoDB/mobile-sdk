@@ -53,7 +53,7 @@ This example uses only one geographical coordinate. The building size is known, 
    </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
 
     com.carto.graphics.Bitmap overlayBitmap = BitmapUtils.loadBitmapFromAssets("jefferson-building-ground-floor.jpg");
 
@@ -93,7 +93,7 @@ This example uses only one geographical coordinate. The building size is known, 
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
 
     var overlayBitmap = BitmapUtils.LoadBitmapFromAssets("jefferson-building-ground-floor.jpg");
 
@@ -134,7 +134,7 @@ This example uses only one geographical coordinate. The building size is known, 
   </div>
 
   <div id="">
-  {% highlight objc %}
+  {% highlight objc linenos %}
 
     // 1. Load ground overlay bitmap
     NTBitmap* overlayBitmap = [NTBitmapUtils loadBitmapFromAssets:@"jefferson-building-ground-floor.jpg"];
@@ -175,7 +175,7 @@ This example uses only one geographical coordinate. The building size is known, 
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
 
     let overlayBitmap = NTBitmapUtils.createBitmap(from: UIImage(named: "jefferson-building-ground-floor.jpg"))
 
@@ -217,7 +217,7 @@ This example uses only one geographical coordinate. The building size is known, 
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
   
     val overlayBitmap = BitmapUtils.loadBitmapFromAssets("jefferson-building-ground-floor.jpg");
 

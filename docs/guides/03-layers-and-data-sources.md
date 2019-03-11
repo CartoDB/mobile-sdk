@@ -59,7 +59,7 @@ This adds to map CARTO built-in vector tile service with generic streetmaps, you
    </ul>
 
 <div id="tab-java">
-     {% highlight java %}
+     {% highlight java linenos %}
   
      CartoOnlineVectorTileLayer layer = new CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_POSITRON);
      mapView.getLayers().add(layer);
@@ -67,7 +67,7 @@ This adds to map CARTO built-in vector tile service with generic streetmaps, you
      {% endhighlight %}
 </div>
 <div id="tab-csharp">
-     {% highlight csharp %}
+     {% highlight csharp linenos %}
   
      var layer = new CartoOnlineVectorTileLayer(CartoBaseMapStyle.CartoBasemapStylePositron);
      MapView.Layers.Add(layer);
@@ -75,7 +75,7 @@ This adds to map CARTO built-in vector tile service with generic streetmaps, you
      {% endhighlight %}
 </div>
 <div id="tab-objectivec">
-     {% highlight objc %}
+     {% highlight objc linenos %}
   
      NTCartoOnlineVectorTileLayer* layer = [[NTCartoOnlineVectorTileLayer alloc] initWithStyle:NT_CARTO_BASEMAP_STYLE_POSITRON];
      [[self.mapView getLayers] add:layer];
@@ -83,7 +83,7 @@ This adds to map CARTO built-in vector tile service with generic streetmaps, you
      {% endhighlight %}
 </div>
 <div id="tab-swift">
-     {% highlight swift %}
+     {% highlight swift linenos %}
 
      let layer = NTCartoOnlineVectorTileLayer(style: NTCartoBaseMapStyle.CARTO_BASEMAP_STYLE_POSITRON)
      mapView?.getLayers()?.add(layer)
@@ -91,7 +91,7 @@ This adds to map CARTO built-in vector tile service with generic streetmaps, you
      {% endhighlight %}
 </div>
 <div id="tab-kotlin">
-     {% highlight kotlin %}
+     {% highlight kotlin linenos %}
 
      val layer = CartoOnlineVectorTileLayer(CartoBaseMapStyle.CARTO_BASEMAP_STYLE_POSITRON)
      mapView?.layers?.add(layer)
@@ -130,7 +130,7 @@ For certain maps - especially for **Satellite imagery** (sourced from HERE) CART
 </ul>
 
 <div id="tab-java">
-  {% highlight java %}
+  {% highlight java linenos %}
 
   CartoOnlineVectorTileLayer layer = new CartoOnlineRasterTileLayer("here.satellite.day");
   mapView.getLayers().add(layer);
@@ -139,7 +139,7 @@ For certain maps - especially for **Satellite imagery** (sourced from HERE) CART
 </div>
 
 <div id="tab-csharp">
-  {% highlight csharp %}
+  {% highlight csharp linenos %}
 
   var layer = new CartoOnlineRasterTileLayer("here.satellite.day");
   MapView.Layers.Add(layer);
@@ -148,7 +148,7 @@ For certain maps - especially for **Satellite imagery** (sourced from HERE) CART
 </div>
 
 <div id="tab-objectivec">
-  {% highlight objc %}
+  {% highlight objc linenos %}
 
   NTCartoOnlineVectorTileLayer* layer = [[NTCartoOnlineRasterTileLayer alloc] initWithSource:@"here.satellite.day"];
   [[self.mapView getLayers] add:layer];
@@ -157,7 +157,7 @@ For certain maps - especially for **Satellite imagery** (sourced from HERE) CART
 </div>
 
 <div id="tab-swift">
-  {% highlight swift %}
+  {% highlight swift linenos %}
 
   let layer = NTCartoOnlineRasterTileLayer(source: "here.satellite.day")
   mapView?.getLayers()?.add(layer)
@@ -166,7 +166,7 @@ For certain maps - especially for **Satellite imagery** (sourced from HERE) CART
 </div>
 
 <div id="tab-kotlin">
-  {% highlight kotlin %}
+  {% highlight kotlin linenos %}
 
   val layer = CartoOnlineRasterTileLayer("here.satellite.day")
   mapView?.layers?.add(layer)
@@ -228,7 +228,7 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
    </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
 
     String url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US";
     TileDataSource baseRasterTileDataSource = new HTTPTileDataSource(1, 19, url);
@@ -239,7 +239,7 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
     {% endhighlight %}
   </div>
 <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
 
     string url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US";
     var baseRasterTileDataSource = new HTTPTileDataSource(1, 19, url);
@@ -251,7 +251,7 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
 </div>
 
 <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
 
     NSString* url = @"http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US";
     NTHTTPTileDataSource* baseRasterTileDataSource = [[NTHTTPTileDataSource alloc] initWithMinZoom:1 maxZoom:19 baseURL:url];
@@ -263,7 +263,7 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
 </div>
 
 <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
 
     let url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US"
     let baseRasterTileDataSource = NTHTTPTileDataSource(minZoom: 1, maxZoom: 19, baseURL: url)
@@ -275,7 +275,7 @@ The following tags are supported in the URL definition: **zoom, x, y, xflipped, 
 </div>
 
 <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
 
     val url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US"
     val baseRasterTileDataSource = HTTPTileDataSource(1, 19, url)

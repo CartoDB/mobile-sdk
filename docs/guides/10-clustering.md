@@ -47,7 +47,7 @@ Clusters are generated dynamically, based on `VectorDataSource` data that loads 
    </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
 
     // 1. Initialize a local vector data source
     LocalVectorDataSource vectorDataSource1 = new LocalVectorDataSource(mapView.getOptions().getBaseProjection());
@@ -66,7 +66,7 @@ Clusters are generated dynamically, based on `VectorDataSource` data that loads 
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
 
     // 1. Create overlay layer for markers
     var dataSource = new LocalVectorDataSource(MapView.Options.BaseProjection);
@@ -84,7 +84,7 @@ Clusters are generated dynamically, based on `VectorDataSource` data that loads 
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
 
     // 1. Initialize a local vector data source
     NTProjection* proj = [[mapView getOptions] getBaseProjection];
@@ -105,7 +105,7 @@ Clusters are generated dynamically, based on `VectorDataSource` data that loads 
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
   
     // 1. Initialize a local vector data source
     let vectorDataSource1 = NTLocalVectorDataSource(projection: mapView?.getOptions().getBaseProjection())
@@ -126,7 +126,7 @@ Clusters are generated dynamically, based on `VectorDataSource` data that loads 
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
 
     // 1. Initialize a local vector data source
     val vectorDataSource1 = LocalVectorDataSource(mapView?.options?.baseProjection)
@@ -170,7 +170,7 @@ The Cluster Element Builder takes set of original markers (map objects) as input
   </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
   
     private class MyClusterElementBuilder extends ClusterElementBuilder {
 
@@ -222,7 +222,7 @@ The Cluster Element Builder takes set of original markers (map objects) as input
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
     public class MyClusterElementBuilder : ClusterElementBuilder
     {
         BalloonPopupStyleBuilder balloonPopupStyleBuilder;
@@ -248,7 +248,7 @@ The Cluster Element Builder takes set of original markers (map objects) as input
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
 
     // .h
 
@@ -322,7 +322,7 @@ The Cluster Element Builder takes set of original markers (map objects) as input
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
   
     public class MyClusterElementBuilder : NTClusterElementBuilder {
         
@@ -389,7 +389,7 @@ The Cluster Element Builder takes set of original markers (map objects) as input
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
   
     private inner class MyClusterElementBuilder internal constructor(context: Context) : ClusterElementBuilder() {
 

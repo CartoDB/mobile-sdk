@@ -50,7 +50,7 @@ App has to decide to which folder the map files are stored. Typically you use st
    </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
 
     // Create PackageManager instance for dealing with offline packages
     File packageFolder = new File(getApplicationContext().getExternalFilesDir(null), "foldername");
@@ -69,7 +69,7 @@ App has to decide to which folder the map files are stored. Typically you use st
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
 	
     // Create PackageManager instance for dealing with offline packages
     var packageFolder = new File(GetExternalFilesDir(null), "foldername");
@@ -85,7 +85,7 @@ App has to decide to which folder the map files are stored. Typically you use st
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
 
     // Define PackageManger to download offline packages
     // Create folder for package manager. Package manager needs persistent writable folder.
@@ -101,7 +101,7 @@ App has to decide to which folder the map files are stored. Typically you use st
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
 
     // Define PackageManger to download offline packages
     // Create folder for package manager. Package manager needs persistent writable folder.
@@ -120,7 +120,7 @@ App has to decide to which folder the map files are stored. Typically you use st
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
   
     // Create PackageManager instance for dealing with offline packages
     val packageFolder = File(applicationContext.getExternalFilesDir(null), "foldername")
@@ -168,7 +168,7 @@ You see that `onPackageListUpdated()` callback starts immediately download of so
    </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
   
     public class MyPackageManagerListener extends PackageManagerListener {
         PackageManager packageManager;
@@ -216,7 +216,7 @@ You see that `onPackageListUpdated()` callback starts immediately download of so
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
   
     public class MyPackageManagerListener : PackageManagerListener
     {
@@ -265,7 +265,7 @@ You see that `onPackageListUpdated()` callback starts immediately download of so
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
     
     @interface MyPackageManagerListener : NTPackageManagerListener
 
@@ -320,7 +320,7 @@ You see that `onPackageListUpdated()` callback starts immediately download of so
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
       
     public class MyPackageManagerListener : NTPackageManagerListener {
         var packageManager: NTPackageManager?
@@ -362,7 +362,7 @@ You see that `onPackageListUpdated()` callback starts immediately download of so
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
   
     class MyPackageManagerListener(val packageManager: CartoPackageManager) : PackageManagerListener() {
         var packageManager: PackageManager? = null
@@ -430,7 +430,7 @@ To link PackageManagerListener with PackageManager, apply the following code.
    </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
 
     // 1. Set listener, and start PackageManager
     packageManager.setPackageManagerListener(new MyPackageManagerListener(packageManager));
@@ -443,7 +443,7 @@ To link PackageManagerListener with PackageManager, apply the following code.
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
 
     // 1. Create and set listener, and start PackageManager
     packageManager.PackageManagerListener = new MyPackageManagerListener(packageManager);
@@ -457,7 +457,7 @@ To link PackageManagerListener with PackageManager, apply the following code.
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
 
     NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"<your-package-source>" dataFolder:packagesDir];
         
@@ -478,7 +478,7 @@ To link PackageManagerListener with PackageManager, apply the following code.
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
 
     // Create PackageManager instance for dealing with offline packages
     var packageManager =  NTCartoPackageManager(source: "<your-package-source>", dataFolder: packageFolder)
@@ -496,7 +496,7 @@ To link PackageManagerListener with PackageManager, apply the following code.
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
 
     // 1. Set listener, and start PackageManager
     packageManager?.packageManagerListener = MyPackageManagerListener(packageManager)
@@ -542,7 +542,7 @@ You should add `CartoOfflineVectorTileLayer` to the MapView, using PackageManage
 
 **Warning** - until map is downloaded, then this layer will have no map. So you may want to add another online tiled layer with same style, which will be replaced once offline map is downloaded
 
-  {% highlight java %}
+  {% highlight java linenos %}
   CartoOfflineVectorTileLayer layer = new CartoOfflineVectorTileLayer(cartoPackageManager, CartoBaseMapStyle.CARTO_BASEMAP_STYLE_VOYAGER);
   mapView.getLayers().add(layer);
   {% endhighlight %}

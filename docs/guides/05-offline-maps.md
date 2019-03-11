@@ -22,7 +22,7 @@ Creation and management of `PackageManager`, which handles offline package disco
 
 **Note:** If map package is not yet downloaded, then this layer will have no map. So you may want to add another online tiled layer with same style, which will be replaced once offline map is downloaded
 
-  {% highlight java %}
+  {% highlight java linenos %}
   CartoOfflineVectorTileLayer layer = new CartoOfflineVectorTileLayer(cartoPackageManager, CartoBaseMapStyle.CARTO_BASEMAP_STYLE_VOYAGER);
   mapView.getLayers().add(layer);
   {% endhighlight %}
@@ -53,7 +53,7 @@ This DataSource is used as "virtual datasource" - it you create it on top of ano
    </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
 
     // 1. Create a Bing raster data source. Note: tiles start from level 1
     String url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US";
@@ -70,7 +70,7 @@ This DataSource is used as "virtual datasource" - it you create it on top of ano
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
 
     // 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
     var url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US";
@@ -88,7 +88,7 @@ This DataSource is used as "virtual datasource" - it you create it on top of ano
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
 
     // 1. Initialize a OSM raster data source from MapQuest Open Tiles
     NSString* url = @"http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US";
@@ -107,7 +107,7 @@ This DataSource is used as "virtual datasource" - it you create it on top of ano
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
 
     // 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
     let url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US"
@@ -127,7 +127,7 @@ This DataSource is used as "virtual datasource" - it you create it on top of ano
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
 
     // 1. Create a Bing raster data source. Note: tiles start from level 1, there is no single root tile!
     val url = "http://ecn.t3.tiles.virtualearth.net/tiles/a{quadkey}.jpeg?g=471&mkt=en-US"
@@ -174,7 +174,7 @@ CARTO Mobile SDK also enables you to download needed map tiles from online to yo
    </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
 
     Projection projection = contentView.mapView.getOptions().getBaseProjection();
 
@@ -214,7 +214,7 @@ CARTO Mobile SDK also enables you to download needed map tiles from online to yo
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
       
     Projection projection = ContentView.MapView.Options.BaseProjection;
 
@@ -261,7 +261,7 @@ CARTO Mobile SDK also enables you to download needed map tiles from online to yo
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
 
     NTProjection* projection = [[mapView getOptions] getBaseProjection];
         
@@ -314,7 +314,7 @@ CARTO Mobile SDK also enables you to download needed map tiles from online to yo
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
       
     let projection = contentView.map.getOptions().getBaseProjection()
         
@@ -361,7 +361,7 @@ CARTO Mobile SDK also enables you to download needed map tiles from online to yo
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
       
     val projection = contentView!!.map.options.baseProjection
 
@@ -429,7 +429,7 @@ You can use your favorite MBTiles file creator go convert your data to MBTiles, 
    </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
 
     MBTilesTileDataSource tileDataSource = new MBTilesTileDataSource("MBTILES_FILE_FULL_PATH");
     RasterTileLayer mbTilesLayer = new RasterTileLayer(tileDataSource);
@@ -440,7 +440,7 @@ You can use your favorite MBTiles file creator go convert your data to MBTiles, 
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
   
     var tileDataSource = new MBTilesTileDataSource(filePath);
     var mbTilesLayer = new RasterTileLayer(tileDataSource);
@@ -451,7 +451,7 @@ You can use your favorite MBTiles file creator go convert your data to MBTiles, 
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
   
     NTTileDataSource* tileDataSource = [[NTMBTilesTileDataSource alloc] initWithPath: @"MBTILES_FILE_FULL_PATH"];
     NTRasterTileLayer* mbTilesLayer = [[NTRasterTileLayer alloc] initWithDataSource:tileDataSource];
@@ -462,7 +462,7 @@ You can use your favorite MBTiles file creator go convert your data to MBTiles, 
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
   
     let tileDataSource = NTMBTilesTileDataSource(path: "MBTILES_FILE_FULL_PATH")
     let mbTilesLayer = NTRasterTileLayer(dataSource: tileDataSource)
@@ -473,7 +473,7 @@ You can use your favorite MBTiles file creator go convert your data to MBTiles, 
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
   
     val tileDataSource = MBTilesTileDataSource("MBTILES_FILE_FULL_PATH")
     val mbTilesLayer = RasterTileLayer(tileDataSource)
@@ -513,7 +513,7 @@ In this sample we use mbtiles downloaded from openmaptiles.org, these are in [op
    </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
 
     MBTilesTileDataSource tileDataSource = new MBTilesTileDataSource("estonia.mbtiles");
 
@@ -527,7 +527,7 @@ In this sample we use mbtiles downloaded from openmaptiles.org, these are in [op
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
 
     var tileDataSource = new MBTilesTileDataSource("estonia.mbtiles");
 
@@ -541,7 +541,7 @@ In this sample we use mbtiles downloaded from openmaptiles.org, these are in [op
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
   
     NSString* path = [[NSBundle mainBundle] pathForResource:@"estonia" ofType:@"mbtiles"];
     NTMBTilesTileDataSource* tileDataSource = [[NTMBTilesTileDataSource alloc] initWithPath:path];
@@ -556,7 +556,7 @@ In this sample we use mbtiles downloaded from openmaptiles.org, these are in [op
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
 
     let tileDataSource = NTMBTilesTileDataSource(path: Bundle.main.path(forResource: "estonia", ofType: "mbtiles"))
     
@@ -570,7 +570,7 @@ In this sample we use mbtiles downloaded from openmaptiles.org, these are in [op
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
   
     val tileDataSource = MBTilesTileDataSource("estonia.mbtiles")
     
@@ -612,7 +612,7 @@ The following example displays how you can load GeoJSON from bundled assets and 
    </ul>
 
   <div id="tab-java">
-  {% highlight java %}
+  {% highlight java linenos %}
 
     // Initialize a local vector data source
     final Projection projection = mapView.getOptions().getBaseProjection();
@@ -672,7 +672,7 @@ The following example displays how you can load GeoJSON from bundled assets and 
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
       
     // Read json from assets and add to map
     string json;
@@ -723,7 +723,7 @@ The following example displays how you can load GeoJSON from bundled assets and 
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
 
     // Initialize a local vector data source
     NTProjection* projection = [[self.mapView getOptions] getBaseProjection];
@@ -763,7 +763,7 @@ The following example displays how you can load GeoJSON from bundled assets and 
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
 
     let projection = contentView.map.getOptions().getBaseProjection()
     let source = NTLocalVectorDataSource(projection: projection)
@@ -808,7 +808,7 @@ The following example displays how you can load GeoJSON from bundled assets and 
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
       
     val source = LocalVectorDataSource(contentView!!.map.options.baseProjection)
     val layer = VectorLayer(source)
@@ -868,7 +868,7 @@ This method enables you to create two in one: optimized vector tiles and suitabl
 
 **Note:** If you use text labels, then you need to bundle and add Font package .zip file to the app and TileDecoder, as in sample below. You can get one from [here](https://github.com/CartoDB/mobile-dotnet-samples/blob/master/AdvancedMap.Droid/Assets/carto-fonts.zip), copy it to your app bundled assets.
 
-  {% highlight java %}
+  {% highlight java linenos %}
   
         // Below "text-placement: nutibillboard;" does not work in BUILDER web, it is special placement for 3D mobile maps
         

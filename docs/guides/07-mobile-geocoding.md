@@ -45,7 +45,7 @@ The resulting `GeocodingResultVector` is just a list of results, you can loop th
    </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
   
     TomTomOnlineGeocodingService service = new TomTomOnlineGeocodingService("<your-tomtom-key>");
     GeocodingRequest request = new GeocodingRequest(mapView.getOptions().getBaseProjection(), "Fifth Avenue, New York");
@@ -57,7 +57,7 @@ The resulting `GeocodingResultVector` is just a list of results, you can loop th
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
 
     var service = new TomTomOnlineGeocodingService("<your-tomtom-key>");
     var request = new GeocodingRequest(mapView.Options.BaseProjection, "Fifth Avenue, New York");
@@ -69,7 +69,7 @@ The resulting `GeocodingResultVector` is just a list of results, you can loop th
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
   
     NTTomTomOnlineGeocodingService* service = [[NTTomTomOnlineGeocodingService alloc] initWithApiKey:@"<your-tomtom-key>"];
     NTProjection* projection = [[self.mapView getOptions] getBaseProjection];
@@ -82,7 +82,7 @@ The resulting `GeocodingResultVector` is just a list of results, you can loop th
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
   
     let service = NTTomTomOnlineGeocodingService(apiKey: "<your-tomtom-key>")
     let request = NTGeocodingRequest(projection: self.contentView.map.getOptions().getBaseProjection(), query: "Fifth Avenue, New York")
@@ -94,7 +94,7 @@ The resulting `GeocodingResultVector` is just a list of results, you can loop th
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
 
     val service = TomTomOnlineGeocodingService("<your-tomtom-key>")
     val request = GeocodingRequest(map.options.baseProjection, "Fifth Avenue, New York")
@@ -138,7 +138,7 @@ The following sample uses TomTom service, but Mapbox and Pelias services can be 
    </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
 
     ReverseGeocodingService service = new TomTomOnlineReverseGeocodingService("<your-tomtom-token>");
 
@@ -155,7 +155,7 @@ The following sample uses TomTom service, but Mapbox and Pelias services can be 
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
 
     var service = new TomTomOnlineReverseGeocodingService("<your-tomtom-token>");
 
@@ -172,7 +172,7 @@ The following sample uses TomTom service, but Mapbox and Pelias services can be 
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
 
     NTReverseGeocodingService* service = [[NTTomTomOnlineReverseGeocodingService alloc] initWithApiKey:@"<your-tomtom-key>"];
 
@@ -189,7 +189,7 @@ The following sample uses TomTom service, but Mapbox and Pelias services can be 
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
 
     let service = NTTomTomOnlineReverseGeocodingService(apiKey: "<your-tomtom-key>")
 
@@ -206,7 +206,7 @@ The following sample uses TomTom service, but Mapbox and Pelias services can be 
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
 
     val service = TomTomOnlineReverseGeocodingService("<your-tomtom-key>")
 
@@ -256,7 +256,7 @@ Use your `PackageManager` within `PackageManagerReverseGeocodingService` or `Pac
    </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
 
     // Note: Provide an absolute path for your geocoding package folder
     CartoPackageManager packageManager = new CartoPackageManager("geocoding:carto.streets", "folder/geocodingpackages");
@@ -274,7 +274,7 @@ Use your `PackageManager` within `PackageManagerReverseGeocodingService` or `Pac
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
   
     // Note: Provide an absolute path for your geocoding package folder
     var packageManager = new CartoPackageManager("geocoding:carto.streets", "folder/geocodingpackages");
@@ -291,7 +291,7 @@ Use your `PackageManager` within `PackageManagerReverseGeocodingService` or `Pac
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
 
     // Note: Provide an absolute path for your geocoding package folder
     NTCartoPackageManager* packageManager = [[NTCartoPackageManager alloc] initWithSource:@"geocoding:carto.streets" dataFolder:@"folder/geocodingpackages"];
@@ -308,7 +308,7 @@ Use your `PackageManager` within `PackageManagerReverseGeocodingService` or `Pac
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
   
     // Note: Provide an absolute path for your geocoding package folder
     let packageManager = NTCartoPackageManager(source: "geocoding:carto.streets", dataFolder: "folder/geocodingpackages")
@@ -325,7 +325,7 @@ Use your `PackageManager` within `PackageManagerReverseGeocodingService` or `Pac
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
 
     // Note: Provide an absolute path for your geocoding package folder
     val packageManager = CartoPackageManager("geocoding:carto.streets", "folder/geocodingpackages")

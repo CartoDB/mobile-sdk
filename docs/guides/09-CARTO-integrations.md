@@ -54,7 +54,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
   </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
 
     private String getConfigJson() {
 
@@ -129,7 +129,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
 
     static string CartoCSS
     {
@@ -206,7 +206,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
 
     - (NSString*) getConfig
     {
@@ -265,7 +265,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
 
     public func getConfig() -> String? {
         
@@ -316,7 +316,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
 
      fun getConfigJson(): String? {
 
@@ -415,7 +415,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
   </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
 
     final String config = getConfigJson();
 
@@ -445,7 +445,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
 
     JsonValue config = JsonUtils.VectorLayerConfigJson;
 
@@ -473,7 +473,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
 
     NTCartoMapsService* mapsService = [[NTCartoMapsService alloc] init];
     
@@ -491,7 +491,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
 
     let config = getConfig()
     
@@ -510,7 +510,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
 
     val config = getConfigJson()
 
@@ -566,7 +566,7 @@ If you have created **Named map** using CARTO Maps API then map is already confi
   </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
 
     final CartoMapsService service = new CartoMapsService();
 
@@ -596,7 +596,7 @@ If you have created **Named map** using CARTO Maps API then map is already confi
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
 
     MapView.ConfigureNamedVectorLayers("tpl_69f3eebe_33b6_11e6_8634_0e5db1731f59");
 
@@ -620,7 +620,7 @@ If you have created **Named map** using CARTO Maps API then map is already confi
     </div>
 
     <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
 
     NTCartoMapsService* mapsService = [[NTCartoMapsService alloc] init];
 
@@ -636,7 +636,7 @@ If you have created **Named map** using CARTO Maps API then map is already confi
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
 
     let service = NTCartoMapsService()
     
@@ -656,7 +656,7 @@ If you have created **Named map** using CARTO Maps API then map is already confi
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
 
     val service = CartoMapsService()
         
@@ -713,7 +713,7 @@ CARTO’s **SQL API** allows you to interact with your tables and data inside CA
   </ul>
   
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
 
     static final String query = "SELECT * FROM cities15000 WHERE population > 100000";
 
@@ -746,7 +746,7 @@ CARTO’s **SQL API** allows you to interact with your tables and data inside CA
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
 
     const string query = "SELECT * FROM cities15000 WHERE population > 100000";
 
@@ -786,7 +786,7 @@ CARTO’s **SQL API** allows you to interact with your tables and data inside CA
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
 
     // Only get cities with over 100k, or else it will be too many results
     NSString* sql = @"SELECT * FROM cities15000 WHERE population > 100000";
@@ -822,7 +822,7 @@ CARTO’s **SQL API** allows you to interact with your tables and data inside CA
   </div>
     
   <div id="tab-swift">
-  {% highlight swift %}
+  {% highlight swift linenos %}
 
     let query = "SELECT * FROM cities15000 WHERE population > 100000"
     
@@ -857,7 +857,7 @@ CARTO’s **SQL API** allows you to interact with your tables and data inside CA
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
 
     val query = "SELECT * FROM cities15000 WHERE population > 100000"
 
