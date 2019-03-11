@@ -12,10 +12,6 @@ CARTO Mobile SDK supports several different types and levels of offline maps
 * **Offline package from CARTO** account data
 
 
-An offline map app setup could be composed as this for example:
-
-<span class="wrap-border"><img src="../../img/mapview-offline-layers.png" alt="Offline map classes" /></span>
-
 ### Offline global basemaps
 
 Creation and management of `PackageManager`, which handles offline package discovery, updates and downloads is covered in detail the next chapter. Once you have it, you should add `CartoOfflineVectorTileLayer` to the MapView, using PackageManager and map style for offline map layer as constructor parameters. 
