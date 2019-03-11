@@ -6,8 +6,6 @@
 
 #import "NTLicenseManagerListener.h"
 
-@class GLKView;
-
 @interface NTMapLicenseManagerListener : NTLicenseManagerListener
 
 -(id)initWithLicenseKey:(NSString*)licenseKey defaultsKeyOld:(NSString*)oldKey defaultsKeyNew:(NSString*)newKey;
