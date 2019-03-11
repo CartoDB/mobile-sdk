@@ -6,8 +6,8 @@ There are several methods of connecting map data from your CARTO account (via th
 
 - To use a map as **raster map tiles**, define the tile URL for `RasterTileLayer`
 - To apply **interactivity** (object click data), use UTFGrid. This uses both raster map tiles and json-based UTF tiles.  UTFGrids are applicable to both raster and vector tiles, though are more useful for raster tiles. *For CARTO Builder Map, you will need to enable and define tooltips with the Pop-up feature*
-- Load **vector tiles**, the CARTO Engine supports Mapbox Vector Tile (MVT) format tiles, which the Mobile SDK can render on the client side. You will also need [CartoCSS](https://carto.com/docs/carto-engine/cartocss/) styles to view vector tiles. This is useful for applying advanced styling features, such as zooming and rotating maps based on data that can be packaged for offline line, using mbtiles
-- **Load GeoJSON vector data**. This is useful if you need need more advanced interactivity (object click actions) or dynamic client-side styling of the objects. For vector data, the CARTO Engine provides a [SQL API](/docs/carto-engine/sql-api/) and mobile app that can load entire tables and render maps. You can also use client-side simplification and clustering
+- Load **vector tiles**, the CARTO Engine supports Mapbox Vector Tile (MVT) format tiles, which the Mobile SDK can render on the client side. You will also need [CartoCSS]({{site.styling_cartocss}}/) styles to view vector tiles. This is useful for applying advanced styling features, such as zooming and rotating maps based on data that can be packaged for offline line, using mbtiles
+- **Load GeoJSON vector data**. This is useful if you need need more advanced interactivity (object click actions) or dynamic client-side styling of the objects. For vector data, the CARTO Engine provides a [SQL API]({{site.sqlapi_docs}}/) and mobile app that can load gsimplification and clustering
 - If the **data table is large** (more than a ten thousand objects), then loading entire tables can overload the mobile client. Alternatively, use on-demand, view-based loading of vector data. Similar to the SQL API and GeoJSON format used on the CARTO Engine side, the SDK applies custom vector data sources to load data. _Only a selected, visible area, of the map will load._ The mobile app can control zoom levels, server-side generalizations, and simplifications can be applied
 - For point-geometry time-series visualizations, use the _Animated_ aggregation to define Torque maps. This provides animated rendering, and the Mobile SDK has a special layer `TorqueTileLayer` to define this. 
 
@@ -54,7 +54,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
   </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
 
     private String getConfigJson() {
 
@@ -129,7 +129,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
 
     static string CartoCSS
     {
@@ -206,7 +206,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
 
     - (NSString*) getConfig
     {
@@ -265,7 +265,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
 
     public func getConfig() -> String? {
         
@@ -316,7 +316,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
 
      fun getConfigJson(): String? {
 
@@ -415,7 +415,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
   </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
 
     final String config = getConfigJson();
 
@@ -445,7 +445,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
 
     JsonValue config = JsonUtils.VectorLayerConfigJson;
 
@@ -473,7 +473,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
 
     NTCartoMapsService* mapsService = [[NTCartoMapsService alloc] init];
     
@@ -491,7 +491,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
 
     let config = getConfig()
     
@@ -510,7 +510,7 @@ Use `CartoMapsService` class to configure layers. Note that this must be done in
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
 
     val config = getConfigJson()
 
@@ -566,7 +566,7 @@ If you have created **Named map** using CARTO Maps API then map is already confi
   </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
 
     final CartoMapsService service = new CartoMapsService();
 
@@ -596,7 +596,7 @@ If you have created **Named map** using CARTO Maps API then map is already confi
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
 
     MapView.ConfigureNamedVectorLayers("tpl_69f3eebe_33b6_11e6_8634_0e5db1731f59");
 
@@ -620,7 +620,7 @@ If you have created **Named map** using CARTO Maps API then map is already confi
     </div>
 
     <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
 
     NTCartoMapsService* mapsService = [[NTCartoMapsService alloc] init];
 
@@ -636,7 +636,7 @@ If you have created **Named map** using CARTO Maps API then map is already confi
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
 
     let service = NTCartoMapsService()
     
@@ -656,7 +656,7 @@ If you have created **Named map** using CARTO Maps API then map is already confi
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
 
     val service = CartoMapsService()
         
@@ -713,7 +713,7 @@ CARTO’s **SQL API** allows you to interact with your tables and data inside CA
   </ul>
   
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
 
     static final String query = "SELECT * FROM cities15000 WHERE population > 100000";
 
@@ -746,7 +746,7 @@ CARTO’s **SQL API** allows you to interact with your tables and data inside CA
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
 
     const string query = "SELECT * FROM cities15000 WHERE population > 100000";
 
@@ -786,7 +786,7 @@ CARTO’s **SQL API** allows you to interact with your tables and data inside CA
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
 
     // Only get cities with over 100k, or else it will be too many results
     NSString* sql = @"SELECT * FROM cities15000 WHERE population > 100000";
@@ -822,7 +822,7 @@ CARTO’s **SQL API** allows you to interact with your tables and data inside CA
   </div>
     
   <div id="tab-swift">
-  {% highlight swift %}
+  {% highlight swift linenos %}
 
     let query = "SELECT * FROM cities15000 WHERE population > 100000"
     
@@ -857,7 +857,7 @@ CARTO’s **SQL API** allows you to interact with your tables and data inside CA
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
 
     val query = "SELECT * FROM cities15000 WHERE population > 100000"
 

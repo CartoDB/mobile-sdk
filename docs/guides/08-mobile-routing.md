@@ -44,7 +44,7 @@ First create the `CartoOnlineRoutingService` and then  the route with the `calcu
 
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
 
     CartoOnlineRoutingService onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
     
@@ -93,7 +93,7 @@ First create the `CartoOnlineRoutingService` and then  the route with the `calcu
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
   
     var onlineRoutingService = new CartoOnlineRoutingService("nutiteq.osm.car");
 
@@ -127,7 +127,7 @@ First create the `CartoOnlineRoutingService` and then  the route with the `calcu
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
   
     NTCartoOnlineRoutingService* onlineRoutingService = [[NTCartoOnlineRoutingService alloc] initWithApiKey:@"nutiteq.osm.car"];
 
@@ -172,7 +172,7 @@ First create the `CartoOnlineRoutingService` and then  the route with the `calcu
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
   
     let onlineRoutingService = NTCartoOnlineRoutingService(source: "nutiteq.osm.car");
 
@@ -208,7 +208,7 @@ First create the `CartoOnlineRoutingService` and then  the route with the `calcu
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
   
     val onlineRoutingService = CartoOnlineRoutingService("nutiteq.osm.car");
 
@@ -276,7 +276,7 @@ To download *Valhalla* routing engine offline packages using `PackageManager`, u
 
 Note that the routing is very similar to online routing, just the service name is different. Following code assumes that you already have `PackageManager` with correct packages, and have downloaded a package.
 
-{% highlight java %}
+{% highlight java linenos %}
 
     PackageManagerValhallaRoutingService service =
                     new PackageManagerValhallaRoutingService(packageManager);
