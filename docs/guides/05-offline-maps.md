@@ -11,6 +11,10 @@ CARTO Mobile SDK supports several different types and levels of offline maps
 * **Bundled GeoJson** with your own data
 * **Offline package from CARTO** account data
 
+An offline map app setup could be composed as this for example:
+
+![Offline map classes](../../img/mapview-offline-layers.png)
+
 
 ### Offline global basemaps
 

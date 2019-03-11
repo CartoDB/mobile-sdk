@@ -549,11 +549,11 @@ You should add `CartoOfflineVectorTileLayer` to the MapView, using PackageManage
 
 #### Offline Routing
 
-Offline Routing is covered in our [Offline Routing document](https://carto.com/docs/carto-engine/mobile-sdk/07-mobile-routing/#offline-routing)
+Offline Routing is covered in our [Offline Routing document]({{site.mobilesdk_docs}}/guides/mobile-routing/#offline-routing)
 
 #### Offline Geocoding
 
-Offline geocoding is covered in our [Offline Geocoding document](https://carto.com/docs/carto-engine/mobile-sdk/06-mobile-geocoding/#offline-geocoding)
+Offline geocoding is covered in our [Offline Geocoding document]({{site.mobilesdk_docs}}/guides/mobile-geocoding/#offline-geocoding)
 
 ### Additional notes
 
