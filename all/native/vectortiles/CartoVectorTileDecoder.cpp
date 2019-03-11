@@ -137,9 +137,6 @@ namespace carto {
             Log::Warn("CartoVectorTileDecoder::decodeFeature: Null tile data");
             return std::shared_ptr<VectorTileFeature>();
         }
-        if (tileData->empty()) {
-            return std::shared_ptr<VectorTileFeature>();
-        }
 
         try {
             std::shared_ptr<mvt::MBVTFeatureDecoder> decoder;
@@ -150,8 +147,7 @@ namespace carto {
                     decoder = std::make_shared<mvt::MBVTFeatureDecoder>(*tileData->getDataPtr(), _logger);
                     lock.lock();
                     _cachedFeatureDecoder = std::make_pair(tileData, decoder);
-                }
-                else {
+                } else {
                     decoder = _cachedFeatureDecoder.second;
                 }
             }
@@ -193,9 +189,6 @@ namespace carto {
             Log::Warn("CartoVectorTileDecoder::decodeFeatures: Null tile data");
             return std::shared_ptr<VectorTileFeatureCollection>();
         }
-        if (tileData->empty()) {
-            return std::shared_ptr<VectorTileFeatureCollection>();
-        }
 
         std::vector<std::shared_ptr<VectorTileFeature> > tileFeatures;
         try {
@@ -207,8 +200,7 @@ namespace carto {
                     decoder = std::make_shared<mvt::MBVTFeatureDecoder>(*tileData->getDataPtr(), _logger);
                     lock.lock();
                     _cachedFeatureDecoder = std::make_pair(tileData, decoder);
-                }
-                else {
+                } else {
                     decoder = _cachedFeatureDecoder.second;
                 }
             }
@@ -248,9 +240,6 @@ namespace carto {
     std::shared_ptr<CartoVectorTileDecoder::TileMap> CartoVectorTileDecoder::decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const {
         if (!tileData) {
             Log::Warn("CartoVectorTileDecoder::decodeTile: Null tile data");
-            return std::shared_ptr<TileMap>();
-        }
-        if (tileData->empty()) {
             return std::shared_ptr<TileMap>();
         }
 
@@ -339,8 +328,7 @@ namespace carto {
             css::CartoCSSMapLoader mapLoader(assetLoader, _logger);
             mapLoader.setIgnoreLayerPredicates(true);
             map = mapLoader.loadMap(styleSet->getCartoCSS());
-        }
-        catch (const std::exception& ex) {
+        } catch (const std::exception& ex) {
             throw ParseException(std::string("CartoCSS style parsing failed: ") + ex.what(), styleSet->getCartoCSS());
         }
 

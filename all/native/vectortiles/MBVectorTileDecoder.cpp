@@ -160,18 +160,14 @@ namespace carto {
                     return it2->first;
                 }
             }
-        }
-        else {
+        } else {
             if (auto val = boost::get<bool>(&value)) {
                 return boost::lexical_cast<std::string>(*val);
-            }
-            else if (auto val = boost::get<long long>(&value)) {
+            } else if (auto val = boost::get<long long>(&value)) {
                 return boost::lexical_cast<std::string>(*val);
-            }
-            else if (auto val = boost::get<double>(&value)) {
+            } else if (auto val = boost::get<double>(&value)) {
                 return boost::lexical_cast<std::string>(*val);
-            }
-            else if (auto val = boost::get<std::string>(&value)) {
+            } else if (auto val = boost::get<std::string>(&value)) {
                 return *val;
             }
         }
@@ -202,21 +198,16 @@ namespace carto {
                 if (boost::get<bool>(&val)) {
                     if (value == "true") {
                         val = mvt::Value(true);
-                    }
-                    else if (value == "false") {
+                    } else if (value == "false") {
                         val = mvt::Value(false);
-                    }
-                    else {
+                    } else {
                         val = mvt::Value(boost::lexical_cast<bool>(value));
                     }
-                }
-                else if (boost::get<long long>(&val)) {
+                } else if (boost::get<long long>(&val)) {
                     val = mvt::Value(boost::lexical_cast<long long>(value));
-                }
-                else if (boost::get<double>(&val)) {
+                } else if (boost::get<double>(&val)) {
                     val = mvt::Value(boost::lexical_cast<double>(value));
-                }
-                else if (boost::get<std::string>(&val)) {
+                } else if (boost::get<std::string>(&val)) {
                     val = value;
                 }
                 _parameterValueMap[param] = val;
@@ -305,9 +296,6 @@ namespace carto {
             Log::Warn("MBVectorTileDecoder::decodeFeature: Null tile data");
             return std::shared_ptr<VectorTileFeature>();
         }
-        if (tileData->empty()) {
-            return std::shared_ptr<VectorTileFeature>();
-        }
 
         try {
             std::shared_ptr<mvt::MBVTFeatureDecoder> decoder;
@@ -318,8 +306,7 @@ namespace carto {
                     decoder = std::make_shared<mvt::MBVTFeatureDecoder>(*tileData->getDataPtr(), _logger);
                     lock.lock();
                     _cachedFeatureDecoder = std::make_pair(tileData, decoder);
-                }
-                else {
+                } else {
                     decoder = _cachedFeatureDecoder.second;
                 }
             }
@@ -361,9 +348,6 @@ namespace carto {
             Log::Warn("MBVectorTileDecoder::decodeFeatures: Null tile data");
             return std::shared_ptr<VectorTileFeatureCollection>();
         }
-        if (tileData->empty()) {
-            return std::shared_ptr<VectorTileFeatureCollection>();
-        }
 
         std::vector<std::shared_ptr<VectorTileFeature> > tileFeatures;
         try {
@@ -375,8 +359,7 @@ namespace carto {
                     decoder = std::make_shared<mvt::MBVTFeatureDecoder>(*tileData->getDataPtr(), _logger);
                     lock.lock();
                     _cachedFeatureDecoder = std::make_pair(tileData, decoder);
-                }
-                else {
+                } else {
                     decoder = _cachedFeatureDecoder.second;
                 }
             }
@@ -416,9 +399,6 @@ namespace carto {
     std::shared_ptr<MBVectorTileDecoder::TileMap> MBVectorTileDecoder::decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const {
         if (!tileData) {
             Log::Warn("MBVectorTileDecoder::decodeTile: Null tile data");
-            return std::shared_ptr<TileMap>();
-        }
-        if (tileData->empty()) {
             return std::shared_ptr<TileMap>();
         }
 
@@ -470,12 +450,10 @@ namespace carto {
                 css::CartoCSSMapLoader mapLoader(assetLoader, _logger);
                 mapLoader.setIgnoreLayerPredicates(_cartoCSSLayerNamesIgnored);
                 map = mapLoader.loadMap((*cartoCSSStyleSet)->getCartoCSS());
-            }
-            catch (const std::exception& ex) {
+            } catch (const std::exception& ex) {
                 throw ParseException(std::string("CartoCSS style parsing failed: ") + ex.what(), (*cartoCSSStyleSet)->getCartoCSS());
             }
-        }
-        else if (auto compiledStyleSet = boost::get<std::shared_ptr<CompiledStyleSet> >(&styleSet)) {
+        } else if (auto compiledStyleSet = boost::get<std::shared_ptr<CompiledStyleSet> >(&styleSet)) {
             styleAssetName = (*compiledStyleSet)->getStyleAssetName();
             if (styleAssetName.empty()) {
                 throw InvalidArgumentException("Could not find any styles in the style set");
@@ -500,23 +478,19 @@ namespace carto {
                     auto symbolizerParser = std::make_shared<mvt::SymbolizerParser>(_logger);
                     mvt::MapParser mapParser(symbolizerParser, _logger);
                     map = mapParser.parseMap(doc);
-                }
-                catch (const std::exception& ex) {
+                } catch (const std::exception& ex) {
                     throw ParseException(std::string("XML style processing failed: ") + ex.what());
                 }
-            }
-            else if (boost::algorithm::ends_with(styleAssetName, ".json")) {
+            } else if (boost::algorithm::ends_with(styleAssetName, ".json")) {
                 try {
                     auto assetLoader = std::make_shared<CartoCSSAssetLoader>(FileUtils::GetFilePath(styleAssetName), styleSetData);
                     css::CartoCSSMapLoader mapLoader(assetLoader, _logger);
                     mapLoader.setIgnoreLayerPredicates(_cartoCSSLayerNamesIgnored);
                     map = mapLoader.loadMapProject(styleAssetName);
-                }
-                catch (const std::exception& ex) {
+                } catch (const std::exception& ex) {
                     throw GenericException(std::string("CartoCSS style loading failed: ") + ex.what());
                 }
-            }
-            else {
+            } else {
                 throw GenericException("Failed to detect style asset type");
             }
         } else {

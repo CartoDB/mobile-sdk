@@ -214,8 +214,12 @@ namespace carto {
         int statusCode = -1;
         try {
             if (_httpClient.get(url, requestHeaders, responseHeaders, responseData, &statusCode) != 0) {
-                Log::Errorf("CartoOnlineTileDataSource::loadOnlineTile: Failed to load tile %d/%d/%d", mapTile.getZoom(), mapTile.getX(), mapTile.getY());
-                return std::shared_ptr<TileData>();
+                if (statusCode == 404) {
+                    responseData = std::make_shared<BinaryData>(std::vector<unsigned char>());
+                } else {
+                    Log::Errorf("CartoOnlineTileDataSource::loadOnlineTile: Failed to load tile %d/%d/%d: status code %d", mapTile.getZoom(), mapTile.getX(), mapTile.getY(), statusCode);
+                    return std::shared_ptr<TileData>();
+                }
             }
         } catch (const std::exception& ex) {
             Log::Errorf("CartoOnlineTileDataSource::loadOnlineTile: Exception while loading tile %d/%d/%d: %s", mapTile.getZoom(), mapTile.getX(), mapTile.getY(), ex.what());
