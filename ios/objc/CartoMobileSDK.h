@@ -137,8 +137,6 @@
 
 #import "NTCartoMapsService.h"
 #import "NTCartoSQLService.h"
-#import "NTCartoVisLoader.h"
-#import "NTCartoVisBuilder.h"
 
 #ifdef _CARTO_LICENSEMANAGER_SUPPORT
 #import "NTCartoOnlineTileDataSource.h"
