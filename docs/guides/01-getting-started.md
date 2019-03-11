@@ -138,7 +138,7 @@ You can find detailed instructions on [API Keys page](../API-keys/)
   </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
     
     // this will be used later in several places
     Projection proj = mapView.getOptions().getBaseProjection();
@@ -174,7 +174,7 @@ You can find detailed instructions on [API Keys page](../API-keys/)
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
 
     // Get base projection from mapView, we'll need it later
     val projection = mapView?.options?.baseProjection
@@ -239,7 +239,7 @@ in **Swift apps** you need one special trick:
 
  - Add YOURPROJECT.Swift-Bridging-Header.h to your project with simply one line:
  
-{% highlight swift %}
+{% highlight swift linenos %}
  #import <CartoMobileSDK/CartoMobileSDK.h>
 {% endhighlight %}
   
@@ -256,7 +256,7 @@ in **Swift apps** you need one special trick:
   </ul>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
     
     // following would go to ViewController.swift in simple app:
     
@@ -274,7 +274,7 @@ in **Swift apps** you need one special trick:
   </div>
 
   <div id="tab-objectivec">
-  {% highlight objc %}
+  {% highlight objc linenos %}
   #import  <GLKit/GLKit.h>
 
   @interface ViewController : GLKViewController
@@ -344,7 +344,7 @@ The default storyboard template uses **UIView** class, you must use **NTMapView*
   </ul>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
     
     // MapView initialization in code: initialize and set it as view
     let mapView = NTMapView();
@@ -389,7 +389,7 @@ The default storyboard template uses **UIView** class, you must use **NTMapView*
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
     
     // we'll need projection later
     NTEPSG3857* proj = [[NTEPSG3857 alloc] init];
@@ -447,7 +447,7 @@ Xamarin Forms (version 3.3.0 and higher) support *Native Controls*. If you add M
 
 While you can share most of code using Native Controls, you just need to specify the platform when creating the project:
 
-   {% highlight csharp %}
+   {% highlight csharp linenos %}
  #if __IOS__
   // 1. iOS specific code
   var mapView = new Carto.Ui.MapView();
@@ -485,7 +485,7 @@ Follow these steps to add native apps to your Xamarin Android package.
 
   Load layout from a xml, and load the MapView from Layout. You can also create MapView with code. A definition of a base layer is enough for minimal map configuration.
 
-  {% highlight csharp %}
+  {% highlight csharp linenos %}
   using Carto.Ui;
   using Carto.Layers;
   using Carto.DataSources;
@@ -526,7 +526,7 @@ In the example below, it is assumed that the outlet name of the map view is *Map
 
 Add into MainViewController.cs:
 
-  {% highlight csharp %}
+  {% highlight csharp linenos %}
   using Carto.Ui;
   using Carto.Layers;
   using Carto.DataSources;
@@ -567,7 +567,7 @@ Add into MainViewController.cs:
 
 This, as given before, is cross-platform code, covering both Xamarin and UWP:
 :
-{% highlight csharp %}
+{% highlight csharp linenos %}
 
     // projection will be needed later
     Projection proj = MapView.Options.BaseProjection;
@@ -613,7 +613,7 @@ As app ID use same UUID as in your project's *Package.appmanifest > Packaging > 
 
 It is much simpler to create a MapView object with code. A definition of a base layer is enough for the minimal map configuration.
 
-{% highlight csharp %}
+{% highlight csharp linenos %}
 
 using Carto.Core;
 using Carto.Graphics;

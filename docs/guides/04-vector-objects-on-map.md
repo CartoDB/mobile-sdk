@@ -31,7 +31,7 @@ Add a marker and apply marker styling using the following code:
    </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
     
     // Preparation - create layer and datasource
     // this will be used later in several places
@@ -65,7 +65,7 @@ Add a marker and apply marker styling using the following code:
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
     
     // Preparation - create layer and datasource
     
@@ -99,7 +99,7 @@ Add a marker and apply marker styling using the following code:
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
     // Preparation - create layer and datasource
     
     // we'll need projection later
@@ -131,7 +131,7 @@ Add a marker and apply marker styling using the following code:
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
 
      // Preparation - create layer and datasource
     
@@ -165,7 +165,7 @@ Add a marker and apply marker styling using the following code:
   </div>
     
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
     
     // Preparation - create layer and datasource
     
@@ -231,7 +231,7 @@ Add a point and apply point styling using the following code:
    </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
     // 1. Set marker position
     MapPos tallinn = proj.FromWgs84(new MapPos(24.646469, 59.426939));
 
@@ -249,7 +249,7 @@ Add a point and apply point styling using the following code:
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
     // 1. Set point position
     MapPos tallinn = proj.FromWgs84(new MapPos(24.646469, 59.426939));
 
@@ -267,7 +267,7 @@ Add a point and apply point styling using the following code:
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
     // 1. Set point position
     NTMapPos* tallinn = [proj fromWgs84:[[NTMapPos alloc] initWithX:24.646469 y:59.426939]];
 
@@ -285,7 +285,7 @@ Add a point and apply point styling using the following code:
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
     // 1. Set marker position
     let tallinn = projection?.fromWgs84(NTMapPos(x: 24.646469, y: 59.426939))
 
@@ -303,7 +303,7 @@ Add a point and apply point styling using the following code:
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
     // 1. Set marker position
     val tallinn = projection?.fromWgs84(MapPos(24.646469, 59.426939))
 
@@ -346,7 +346,7 @@ Lines can be added to the same VectorDataSource, it is defined by an array of Ma
    </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
     // 1. Create line style, and line poses
     LineStyleBuilder lineStyleBuilder = new LineStyleBuilder();
     lineStyleBuilder.setColor(new Color(0xFFFF0000));
@@ -372,7 +372,7 @@ Lines can be added to the same VectorDataSource, it is defined by an array of Ma
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
     // 1. Create line style, and line poses
     var lineStyleBuilder = new LineStyleBuilder();
     lineStyleBuilder.Color = new Color(255, 0, 0, 255); // Red
@@ -396,7 +396,7 @@ Lines can be added to the same VectorDataSource, it is defined by an array of Ma
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
     // 1. Define line style
     NTLineStyleBuilder* lineStyleBuilder = [[NTLineStyleBuilder alloc] init];
     [lineStyleBuilder setColor:[[NTColor alloc] initWithColor:0xFFFF0000]];
@@ -422,7 +422,7 @@ Lines can be added to the same VectorDataSource, it is defined by an array of Ma
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
     // 1. Create line style, and line poses
     let lineStyleBuilder = NTLineStyleBuilder()
     lineStyleBuilder?.setColor(NTColor(r: 255, g: 0, b: 0, a: 255))
@@ -449,7 +449,7 @@ Lines can be added to the same VectorDataSource, it is defined by an array of Ma
   </div>
     
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
     // 1. Create line style, and line poses
     val lineStyleBuilder = LineStyleBuilder()
     lineStyleBuilder.color = Color(255, 0, 0, 255)
@@ -504,7 +504,7 @@ Add a polygon and apply polygon styling using the following code. The following 
    </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
     // 1. Create polygon style and poses
     PolygonStyleBuilder polygonStyleBuilder = new PolygonStyleBuilder();
     polygonStyleBuilder.setColor(new Color(0xFFFF0000)); // red
@@ -551,7 +551,7 @@ Add a polygon and apply polygon styling using the following code. The following 
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
     // 1. Create polygon style and poses
     PolygonStyleBuilder polygonStyleBuilder = new PolygonStyleBuilder();
     polygonStyleBuilder.Color = new Color(255, 0, 0, 255); // red
@@ -600,7 +600,7 @@ Add a polygon and apply polygon styling using the following code. The following 
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
     // 1. Create polygon style
     NTPolygonStyleBuilder* polygonStyleBuilder = [[NTPolygonStyleBuilder alloc] init];
     [polygonStyleBuilder setColor:[[NTColor alloc] initWithColor:0xFFFF0000]];
@@ -649,7 +649,7 @@ Add a polygon and apply polygon styling using the following code. The following 
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
     // 1. Create polygon style and poses
     let polygonStyleBuilder = NTPolygonStyleBuilder()
     polygonStyleBuilder?.setColor(NTColor(r: 255, g: 0, b: 0, a: 255))
@@ -698,7 +698,7 @@ Add a polygon and apply polygon styling using the following code. The following 
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
     // 1. Create polygon style and poses
     val polygonStyleBuilder = PolygonStyleBuilder()
     polygonStyleBuilder.color = Color(0xFFFF0000.toInt())
@@ -777,7 +777,7 @@ Add text and apply text styling using the following code.
    </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
     // 1. Create text style
     TextStyleBuilder textStyleBuilder = new TextStyleBuilder();
     textStyleBuilder.setColor(new Color(0xFFFF0000));
@@ -795,7 +795,7 @@ Add text and apply text styling using the following code.
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
     // 1. Create text style
     TextStyleBuilder textStyleBuilder = new TextStyleBuilder();
     textStyleBuilder.setColor(new Color(0xFFFF0000));
@@ -814,7 +814,7 @@ Add text and apply text styling using the following code.
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
     // 1. Create text style
     NTTextStyleBuilder* textStyleBuilder = [[NTTextStyleBuilder alloc] init];
     [textStyleBuilder setColor:[[NTColor alloc] initWithColor:0xFFFF0000]];
@@ -833,7 +833,7 @@ Add text and apply text styling using the following code.
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
     // 1. Create text style
     let textStyleBuilder = NTTextStyleBuilder()
     textStyleBuilder?.setColor(NTColor(r: 255, g: 0, b: 0, a: 255))
@@ -851,7 +851,7 @@ Add text and apply text styling using the following code.
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
     // 1. Create text style
     val textStyleBuilder = TextStyleBuilder()
     textStyleBuilder.color = Color(0xFFFF0000.toInt())
@@ -901,7 +901,7 @@ A BalloonPopup appears often based on click event of an object, but you can use 
    </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
     // 1. Load bitmaps to show on the label
     Bitmap infoImage = BitmapFactory.decodeResource(getResources(), R.drawable.info);
     Bitmap arrowImage = BitmapFactory.decodeResource(getResources(), R.drawable.arrow);
@@ -924,7 +924,7 @@ A BalloonPopup appears often based on click event of an object, but you can use 
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
     // 1. Load bitmaps to show on the label
 
     // Android code
@@ -962,8 +962,8 @@ A BalloonPopup appears often based on click event of an object, but you can use 
     {% endhighlight %}
   </div>
 
-  <div id="tab-objective">
-    {% highlight objc %}
+  <div id="tab-objectivec">
+    {% highlight objc linenos %}
     // 1. Load bitmaps to show on the label
     UIImage* infoImage = [UIImage imageNamed:@"info.png"];
     UIImage* arrowImage = [UIImage imageNamed:@"arrow.png"];
@@ -989,7 +989,7 @@ A BalloonPopup appears often based on click event of an object, but you can use 
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
     // 1. Load bitmaps to show on the label
     let infoImage = NTBitmapUtils.createBitmap(from: UIImage(named: "info.png"));
     let arrowImage = NTBitmapUtils.createBitmap(from: UIImage(named: "arrow.png"));
@@ -1012,7 +1012,7 @@ A BalloonPopup appears often based on click event of an object, but you can use 
   </div>
     
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
     // 1. Load bitmaps to show on the label
     val infoImage = BitmapFactory.decodeResource(resources, R.drawable.info)
     val arrowImage = BitmapFactory.decodeResource(resources, R.drawable.arrow)
@@ -1070,7 +1070,7 @@ The following procedure describes how to setup and add a 3D object to your mobil
    </ul>
 
   <div id="tab-java">
-    {% highlight java %}
+    {% highlight java linenos %}
     // 1. Load NML model from a file
     BinaryData modelData = AssetUtils.loadAsset("fcd_auto.nml");
 
@@ -1088,7 +1088,7 @@ The following procedure describes how to setup and add a 3D object to your mobil
   </div>
 
   <div id="tab-csharp">
-    {% highlight csharp %}
+    {% highlight csharp linenos %}
     // 1. Load NML model from a file
     var modelData = AssetUtils.LoadAsset("fcd_auto.nml");
 
@@ -1106,7 +1106,7 @@ The following procedure describes how to setup and add a 3D object to your mobil
   </div>
 
   <div id="tab-objectivec">
-    {% highlight objc %}
+    {% highlight objc linenos %}
     // 1. Load NML model from a file
     NTBinaryData* modelData = [NTAssetUtils loadAsset:@"fcd_auto.nml"];
 
@@ -1124,7 +1124,7 @@ The following procedure describes how to setup and add a 3D object to your mobil
   </div>
 
   <div id="tab-swift">
-    {% highlight swift %}
+    {% highlight swift linenos %}
     // 1. Load NML model from a file (be sure it's targeted by your application)
     let modelData = NTAssetUtils.loadAsset("fcd_auto.nml")
 
@@ -1142,7 +1142,7 @@ The following procedure describes how to setup and add a 3D object to your mobil
   </div>
 
   <div id="tab-kotlin">
-    {% highlight kotlin %}
+    {% highlight kotlin linenos %}
     // 1. Load NML model from a file
     val modelData = AssetUtils.loadAsset("fcd_auto.nml")
 

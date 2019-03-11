@@ -5,7 +5,7 @@
 The following procedure describes how to register mobile apps under your account settings. While the number of mobile apps is unlimited, application quota consumption rules are enforced based on your account plan. [Contact us](mailto:sales@carto.com) if you have questions about your mobile account options.
 
 1. Access your [Account settings](https://carto.com/docs/carto-editor/your-account/#how-to-access-your-account-options) from the CARTO Dashboard. Your profile information appears. 
-    <span class="wrap-border"><img src="../../img/avatar.jpg" alt="Access mobile apps from API keys" /></span>
+    <span class="wrap-border"><img src="../../img/avatar.gif" alt="Access mobile apps from API keys" /></span>
 2. Click _API keys_. The API key page opens, displaying options for _CARTO_ or _Mobile Apps_.
 3. Click _Mobile apps_ to add mobile applications to your account
 
