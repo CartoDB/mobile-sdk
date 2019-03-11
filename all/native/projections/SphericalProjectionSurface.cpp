@@ -158,10 +158,12 @@ namespace carto {
 
     MapPos SphericalProjectionSurface::SphericalToInternal(const cglib::vec3<double>& pos) {
         double scale = Const::WORLD_SIZE / (2 * Const::PI);
-        double length = cglib::length(pos);
+        double len = cglib::length(pos);
+        double rz = pos(2) / len;
+        double ss = std::sqrt(std::max(0.0, 1.0 - rz * rz));
         double x1 = pos(0) != 0 || pos(1) != 0 ? std::atan2(pos(1), pos(0)) : 0;
-        double y1 = std::atanh(std::max(-1.0, std::min(1.0, pos(2) / length)));
-        double z1 = length - 1.0;
+        double y1 = std::atanh(std::max(-1.0, std::min(1.0, rz)));
+        double z1 = (len - 1.0) / ss;
         return MapPos(x1 * scale, y1 * scale, z1 * scale);
     }
 
@@ -174,7 +176,8 @@ namespace carto {
         double ss = std::sqrt(std::max(0.0, 1.0 - rz * rz));
         double rx = ss * std::cos(x1);
         double ry = ss * std::sin(x1);
-        return cglib::vec3<double>(rx, ry, rz) * (1.0 + z1);
+        double len = 1.0 + z1 * ss;
+        return cglib::vec3<double>(rx, ry, rz) * len;
     }
 
     cglib::mat3x3<double> SphericalProjectionSurface::LocalFrame(const cglib::vec3<double>& pos) {
