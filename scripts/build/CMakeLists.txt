@@ -30,6 +30,7 @@ endif()
 add_definitions("${SDK_CPP_DEFINES} -DHAVE_OT -DHAVE_UCDN -DHB_NO_MT -DFT2_BUILD_LIBRARY -DUSE_STD_REGEX -DBOOST_ALL_NO_LIB -DNDEBUG")
 
 if(WIN32)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc") 
 add_definitions("-DNOMINMAX -D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS -DRAPIDJSON_HAS_CXX11_RVALUE_REFS=1 -DRAPIDJSON_HAS_STDSTRING=1 -DRAPIDJSON_ENDIAN=RAPIDJSON_LITTLEENDIAN -DSQLITE_OS_WINRT -DSQLITE_OMIT_WAL -DNO_OS_DEPENDENCE -DGL_GLEXT_PROTOTYPES")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /WINMD /NODEFAULTLIB:vccorlib /NODEFAULTLIB:msvcrt vccorlib.lib msvcrt.lib")
 endif(WIN32)
@@ -61,7 +62,8 @@ include_directories(
     "${SDK_CARTO_LIBS_DIR}/mapnikvt/src"
     "${SDK_CARTO_LIBS_DIR}/cartocss/src"
     "${SDK_CARTO_LIBS_DIR}/nml/src"
-    "${SDK_CARTO_LIBS_DIR}/routing/src"
+    "${SDK_CARTO_LIBS_DIR}/osrm/src"
+    "${SDK_CARTO_LIBS_DIR}/sgre/src"
     "${SDK_CARTO_LIBS_DIR}/geocoding/src"
     "${SDK_EXTERNAL_LIBS_DIR}/boost"
     "${SDK_EXTERNAL_LIBS_DIR}/boostext"
@@ -140,7 +142,8 @@ add_subdirectory("${SDK_CARTO_LIBS_DIR}/vt" vt)
 add_subdirectory("${SDK_CARTO_LIBS_DIR}/mapnikvt" mapnikvt)
 add_subdirectory("${SDK_CARTO_LIBS_DIR}/cartocss" cartocss)
 add_subdirectory("${SDK_CARTO_LIBS_DIR}/nml" nml)
-add_subdirectory("${SDK_CARTO_LIBS_DIR}/routing" routing)
+add_subdirectory("${SDK_CARTO_LIBS_DIR}/osrm" osrm)
+add_subdirectory("${SDK_CARTO_LIBS_DIR}/sgre" sgre)
 add_subdirectory("${SDK_CARTO_LIBS_DIR}/geocoding" geocoding)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/bidi" bidi)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/cryptopp" cryptopp)
@@ -251,7 +254,8 @@ set(SDK_SRC_FILES
     "${mapnikvt_SRC_FILES}"
     "${cartocss_SRC_FILES}"
     "${nml_SRC_FILES}"
-    "${routing_SRC_FILES}"
+    "${osrm_SRC_FILES}"
+    "${sgre_SRC_FILES}"
     "${geocoding_SRC_FILES}"
     "${bidi_SRC_FILES}"
     "${cryptopp_SRC_FILES}"
@@ -294,7 +298,8 @@ set(SDK_OBJECTS
     $<TARGET_OBJECTS:mapnikvt>
     $<TARGET_OBJECTS:cartocss>
     $<TARGET_OBJECTS:nml>
-    $<TARGET_OBJECTS:routing>
+    $<TARGET_OBJECTS:osrm>
+    $<TARGET_OBJECTS:sgre>
     $<TARGET_OBJECTS:geocoding>
     $<TARGET_OBJECTS:bidi>
     $<TARGET_OBJECTS:cryptopp>
@@ -352,6 +357,9 @@ target_link_libraries(carto_mobile_sdk msxml6.lib d3d11.lib dwrite.lib d2d1.lib)
 endif()
 
 if(IOS)
+set_target_properties(carto_mobile_sdk PROPERTIES
+    XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++"
+)
 if(ENABLE_BITCODE)
 set_target_properties(carto_mobile_sdk PROPERTIES
     XCODE_ATTRIBUTE_ENABLE_BITCODE YES

@@ -53,88 +53,113 @@ namespace carto {
         CFReadStreamSetProperty(requestStream, kCFStreamPropertySSLSettings, sslDict);
 #endif
 
-        if (!CFReadStreamOpen(requestStream)) {
-            throw NetworkException("Failed to open HTTP stream", request.url);
-        }
+        struct StreamState {
+            bool headersReceived;
+            bool cancel;
+            std::string error;
+            HeadersFunc headersFn;
+            DataFunc dataFn;
+        } streamState { false, false, std::string(), headersFn, dataFn };
 
-        // Read initial block of the message. This is needed to parse the headers
-        UInt8 buf[4096];
-        CFIndex numBytesRead = 0;
-        CFAbsoluteTime startTime = CFAbsoluteTimeGetCurrent();
-        while (true) {
-            if (_timeout <= 0 || CFReadStreamHasBytesAvailable(requestStream)) {
+        CFOptionFlags registeredEvents = kCFStreamEventHasBytesAvailable | kCFStreamEventErrorOccurred | kCFStreamEventEndEncountered;
+        CFStreamClientContext streamContext = { 0, &streamState, NULL, NULL, NULL };
+
+        if (!CFReadStreamSetClient(requestStream, registeredEvents, [](CFReadStreamRef requestStream, CFStreamEventType event, void* ptr) {
+            StreamState& streamState = *static_cast<StreamState*>(ptr);
+            UInt8 buf[4096];
+            CFIndex numBytesRead = 0;
+
+            switch (event) {
+            case kCFStreamEventHasBytesAvailable:
+                // It is safe to call CFReadStreamRead; it won't block because bytes are available.
                 numBytesRead = CFReadStreamRead(requestStream, buf, sizeof(buf));
-                if (numBytesRead < 0) {
-                    throw NetworkException("Failed to read response", request.url);
+
+                // Headers callback
+                if (!streamState.headersReceived) {
+                    streamState.headersReceived = true;
+
+                    // Get response
+                    CFUniquePtr<CFHTTPMessageRef> cfResponse((CFHTTPMessageRef)CFReadStreamCopyProperty(requestStream, kCFStreamPropertyHTTPResponseHeader));
+                    if (!cfResponse) {
+                        streamState.error = "Failed to read HTTP headers";
+                        CFRunLoopStop(CFRunLoopGetCurrent());
+                        break;
+                    }
+
+                    int statusCode = static_cast<int>(CFHTTPMessageGetResponseStatusCode(cfResponse));
+
+                    CFUniquePtr<CFDictionaryRef> headersDict(CFHTTPMessageCopyAllHeaderFields(cfResponse));
+                    std::size_t headersCount = CFDictionaryGetCount(headersDict);
+                    std::vector<CFTypeRef> headerKeys(headersCount);
+                    std::vector<CFTypeRef> headerValues(headersCount);
+                    CFDictionaryGetKeysAndValues(headersDict, headerKeys.data(), headerValues.data());
+                    std::map<std::string, std::string> headers;
+                    for (std::size_t i = 0; i < headersCount; i++) {
+                        CFStringRef headerKey = (CFStringRef)headerKeys[i];
+                        std::vector<char> key(CFStringGetLength(headerKey) * 6 + 1);
+                        CFStringGetCString(headerKey, key.data(), key.size(), kCFStringEncodingUTF8);
+
+                        CFStringRef headerValue = (CFStringRef)headerValues[i];
+                        std::vector<char> value(CFStringGetLength(headerValue) * 6 + 1);
+                        CFStringGetCString(headerValue, value.data(), value.size(), kCFStringEncodingUTF8);
+
+                        headers[key.data()] = value.data();
+                    }
+
+                    if (!streamState.headersFn(statusCode, headers)) {
+                        streamState.cancel = true;
+                        CFRunLoopStop(CFRunLoopGetCurrent());
+                        break;
+                    }
                 }
+
+                // Data callback
+                if (numBytesRead > 0) {
+                    if (!streamState.dataFn(static_cast<const unsigned char*>(&buf[0]), numBytesRead)) {
+                        streamState.cancel = true;
+                        CFRunLoopStop(CFRunLoopGetCurrent());
+                        break;
+                    }
+                }
+
+                break;
+            case kCFStreamEventErrorOccurred:
+                streamState.error = "Stream data error";
+                CFRunLoopStop(CFRunLoopGetCurrent());
+                break;
+            case kCFStreamEventEndEncountered:
+                CFRunLoopStop(CFRunLoopGetCurrent());
                 break;
             }
-            if ((CFAbsoluteTimeGetCurrent() - startTime) * 1000 > _timeout) {
-                throw NetworkException("Response timeout", request.url);
-            }
-            sleep(0);
+        }, &streamContext)) {
+            throw NetworkException("Failed to register stream handler", request.url);
         }
 
-        // Get response
-        CFUniquePtr<CFHTTPMessageRef> cfResponse((CFHTTPMessageRef)CFReadStreamCopyProperty(requestStream, kCFStreamPropertyHTTPResponseHeader));
-        if (!cfResponse) {
-            throw NetworkException("Failed to read HTTP headers", request.url);
-        }
+        // Register stream with runloop
+        CFReadStreamScheduleWithRunLoop(requestStream, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
 
-        int statusCode = static_cast<int>(CFHTTPMessageGetResponseStatusCode(cfResponse));
-
-        std::map<std::string, std::string> headers;
-        CFUniquePtr<CFDictionaryRef> headersDict(CFHTTPMessageCopyAllHeaderFields(cfResponse));
-        std::size_t headersCount = CFDictionaryGetCount(headersDict);
-        std::vector<CFTypeRef> headerKeys(headersCount);
-        std::vector<CFTypeRef> headerValues(headersCount);
-        CFDictionaryGetKeysAndValues(headersDict, headerKeys.data(), headerValues.data());
-        for (std::size_t i = 0; i < headersCount; i++) {
-            CFStringRef headerKey = (CFStringRef)headerKeys[i];
-            std::vector<char> key(CFStringGetLength(headerKey) * 6 + 1);
-            CFStringGetCString(headerKey, key.data(), key.size(), kCFStringEncodingUTF8);
-
-            CFStringRef headerValue = (CFStringRef)headerValues[i];
-            std::vector<char> value(CFStringGetLength(headerValue) * 6 + 1);
-            CFStringGetCString(headerValue, value.data(), value.size(), kCFStringEncodingUTF8);
-
-            headers[key.data()] = value.data();
-        }
-
-        bool cancel = false;
-        if (!headersFn(statusCode, headers)) {
-            cancel = true;
-        }
-        else {
-            if (numBytesRead > 0) {
-                if (!dataFn(static_cast<const unsigned char*>(&buf[0]), numBytesRead)) {
-                    cancel = true;
-                }
+        // Open the stream, wait until complete
+        if (!CFReadStreamOpen(requestStream)) {
+            streamState.error = "Failed to open HTTP stream";
+        } else {
+            CFTimeInterval timeout = _timeout > 0 ? _timeout : 600;
+            if (CFRunLoopRunInMode(kCFRunLoopDefaultMode, timeout, false) == kCFRunLoopRunTimedOut) {
+                streamState.error = "Network time out";
             }
         }
 
-        // Read message body
-        std::uint64_t readOffset = numBytesRead;
-        while (!cancel) {
-            numBytesRead = CFReadStreamRead(requestStream, buf, sizeof(buf));
-            if (numBytesRead < 0) {
-                throw NetworkException("Failed to read data", request.url);
-            }
-            else if (numBytesRead == 0) {
-                break;
-            }
+        // Unschedule stream from runloop
+        CFReadStreamUnscheduleFromRunLoop(requestStream, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
 
-            if (!dataFn(static_cast<const unsigned char*>(&buf[0]), numBytesRead)) {
-                cancel = true;
-            }
-
-            readOffset += numBytesRead;
+        // Handle errors
+        if (!streamState.error.empty()) {
+            throw NetworkException(streamState.error, request.url);
         }
 
         // Done
         CFReadStreamClose(requestStream);
 
-        return !cancel;
+        return !streamState.cancel;
     }
 
 }

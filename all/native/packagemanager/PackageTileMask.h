@@ -7,8 +7,6 @@
 #ifndef _CARTO_PACKAGETILEMASK_H_
 #define _CARTO_PACKAGETILEMASK_H_
 
-#ifdef _CARTO_PACKAGEMANAGER_SUPPORT
-
 #include "core/MapPos.h"
 #include "core/MapTile.h"
 
@@ -116,7 +114,5 @@ namespace carto {
         int _maxZoomLevel;
     };
 }
-
-#endif
 
 #endif

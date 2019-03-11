@@ -31,8 +31,8 @@ namespace carto {
         const std::shared_ptr<nml::GLModel>& getGLModel() const;
         const std::shared_ptr<NMLModelLODTree::ProxyMap> getProxyMap() const;
         
-        virtual bool isOffset() const;
-        virtual void offsetHorizontally(double offset);
+        bool isOffset() const;
+        void offsetHorizontally(double offset);
     
     private:
         std::shared_ptr<NMLModelLODTree> _modelLODTree;

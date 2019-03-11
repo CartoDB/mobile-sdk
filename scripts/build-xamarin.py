@@ -129,6 +129,7 @@ def buildXamarinNuget(args, target):
 parser = argparse.ArgumentParser()
 parser.add_argument('--profile', dest='profile', default='standard', type=validProfile, help='Build profile')
 parser.add_argument('--android-abi', dest='androidabi', default=[], choices=ANDROID_ABIS + ['all'], action='append', help='Android target ABIs')
+parser.add_argument('--ios-arch', dest='iosarch', default=[], choices=IOS_ARCHS + ['all'], action='append', help='iOS target architectures')
 parser.add_argument('--defines', dest='defines', default='', help='Defines for compilation')
 parser.add_argument('--xbuild', dest='xbuild', default='xbuild', help='Xamarin xbuild executable')
 parser.add_argument('--nuget', dest='nuget', default='nuget', help='nuget executable')
@@ -145,6 +146,8 @@ parser.add_argument(dest='target', choices=['android', 'ios'], help='Target plat
 args = parser.parse_args()
 if 'all' in args.androidabi or args.androidabi == []:
   args.androidabi = ANDROID_ABIS
+if 'all' in args.iosarch or args.iosarch == []:
+  args.iosarch = IOS_ARCHS
 if args.xbuild == 'auto':
   args.xbuild = DEFAULT_XBUILD
 elif args.xbuild == 'none':
@@ -184,10 +187,10 @@ if args.target == 'android':
       exit(-1)
 elif args.target == 'ios':
   target = 'iOS'
-  for arch in IOS_ARCHS:
+  for arch in args.iosarch:
     if not buildIOSLib(args, arch):
       exit(-1)
-  if not buildIOSFatLib(args, IOS_ARCHS):
+  if not buildIOSFatLib(args, args.iosarch):
     exit(-1)
 
 if not buildXamarinDLL(args, target):

@@ -98,6 +98,8 @@ static carto::ClassRegistry::Entry $TYPE$RegistryEntry(typeid(const $CLASSNAME$&
 %typemap(csdirectorin) std::shared_ptr<$CLASSNAME$>, const std::shared_ptr<$CLASSNAME$>&, std::shared_ptr<$CLASSNAME$>& %{
   $NAMESPACE$.$TYPE$.SwigCreatePolymorphicInstance$TYPE$($iminput, true)
 %}
+
+%typemap(csclassmodifiers) $CLASSNAME$ "#if __IOS__\n[Foundation.Preserve(AllMembers=true)]\n#endif\npublic class"
 """
 
 POLYMORPHIC_SHARED_PTR_CODE_TEMPLATE = """

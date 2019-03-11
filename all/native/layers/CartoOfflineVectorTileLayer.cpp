@@ -1,3 +1,5 @@
+#ifdef _CARTO_PACKAGEMANAGER_SUPPORT
+
 #include "CartoOfflineVectorTileLayer.h"
 #include "components/Exceptions.h"
 #include "datasources/PackageManagerTileDataSource.h"
@@ -62,3 +64,5 @@ namespace carto {
     }
 
 }
+
+#endif

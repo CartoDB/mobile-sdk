@@ -15,7 +15,7 @@
 #include <string>
 
 namespace carto {
-    namespace routing {
+    namespace osrm {
         class RouteFinder;
     }
 
@@ -37,7 +37,7 @@ namespace carto {
         virtual std::shared_ptr<RoutingResult> calculateRoute(const std::shared_ptr<RoutingRequest>& request) const;
 
     protected:
-        std::shared_ptr<routing::RouteFinder> _routeFinder;
+        std::shared_ptr<osrm::RouteFinder> _routeFinder;
     };
     
 }

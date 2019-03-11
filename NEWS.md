@@ -1,10 +1,42 @@
+CARTO Mobile SDK 4.1.4
+-------------------
+
+This update includes performance and stability improvements,
+bug fixes and some minor new features.
+
+### New features:
+
+* Exposed TileUtils class with several static methods as part of public API
+* SDK now supports custom service URLs as online source ids
+
+
+### Fixes/changes:
+
+* Fixed Android HTTP connection class to use specified request method (previously always GET)
+* Fixed JNI local reference overflows in Android HTTP connection class (with HTTP servers returning very long lists of headers).
+* Removed unneeded iOS dependency of libstdc++.6 in Cocoapod, fixes build issues with iOS 12
+* Fixed the issue with delayed layer initialization, layers were not automatically rendered
+* Fixed several options not correctly reflected in renderer state when changed after the MapView was initialized
+* Fixed infinite loop in TileLayer update method when called with inconsistent state (zero view dimensions)
+* Fixed value clamping issue with Torque tiles (all floating point numbers were rounded to integers)
+* Optimized CartoCSS compiler with 10% reduced map initialization time and faster tile loading time
+* Better error reporting of CartoCSS issues
+* SDK now uses default background bitmap in case of vector basemap with no background defined
+* Bitmap class decoder now supports automatic ungzipping. This is a fix for wrongly configured HTTP servers that send gzipped images even when this is not included in accepted encodings.
+* Fixed CartoNamedMapsService ignoring template parameter values when instantiating named maps
+* Fixed several grouped marker symbolizers being represented by a single marker
+* Fixed threading issue with online license management causing potential API token missing from initial HTTP requests
+* Fixed WebP library embedding on iOS targets (Xamarin/native), WebP symbols were previously exported, causing potential linking conflicts
+* Made Xamarin.iOS build compatible with 'Linker behaviour = Link All' mode by explictly preserving symbols used through reflection
+
+
 CARTO Mobile SDK 4.1.3
 -------------------
 
 This update includes performance and stability improvements,
 bug fixes and some minor new features.
 
-### New features
+### New features:
 
 * Added support for TomTom online geocoding services (TomTomOnlineGeocodingService and TomTomOnlineReverseGeocodingService)
 * Implemented multilanguage support for offline geocoding classes (getLanguage, setLanguage methods in OSMOfflineGeocodingService and PackageManagerGeocodingService classes)
@@ -15,6 +47,7 @@ bug fixes and some minor new features.
 * Implemented ‘break lines’ flag for texts (TextStyleBuilder class)
 * Added online API key interface to CartoMapsService and CartoSQLService
 * Added NTExceptionWrapper class for catching/handling SDK exceptions in Swift
+
 
 ### Fixes/changes:
 
@@ -39,13 +72,13 @@ This is a maintenance release for SDK 4.1.x containing mostly fixes
 but also some new features. This version deprecates support
 for external MapZen services due to the services being closed.
 
-### New features
+### New features:
 
 * SDK has support for MapBox online geocoding services.
   New classes MapBoxOnlineGeocodingService and MapBoxOnlineReverseGeocodingService can be used for this.
 * All MapZen online service (Pelias and Valhalla) wrappers now include additional methods for specifying custom service URLs.
   This feature was added as MapZen closes all online services as of February 2018.
-* Added optional  ‘restricted panning’ support to avoid zooming/panning outside world map area. If turned on, then  map area is restricted to maximize visible map. This can be turned on/off using Options.setRestrictedPanning method
+* Added optional ‘restricted panning’ support to avoid zooming/panning outside world map area. If turned on, then  map area is restricted to maximize visible map. This can be turned on/off using Options.setRestrictedPanning method
 * Added custom service URL support for Pelias and Mapbox geocoders and Valhalla routing
 * API documentation for iOS is using Jazzy tool, instead of Doxygen. This allows us to show both ObjectiveC and Swift syntax for the API.
 

@@ -1,7 +1,7 @@
 [submodule "libs-carto"]
 	path = libs-carto
 	url = https://github.com/cartodb/mobile-carto-libs
-	branch = master
+	branch = feature/sgre
 [submodule "libs-external"]
 	path = libs-external
 	url = https://github.com/cartodb/mobile-external-libs
