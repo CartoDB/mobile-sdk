@@ -203,24 +203,26 @@ namespace carto {
 
     const int WatermarkRenderer::WATERMARK_WIDTH_DP = 100;
 
-    const std::string WatermarkRenderer::WATERMARK_VERTEX_SHADER =
-        "#version 100\n"
-        "attribute vec4 a_coord;"
-        "attribute vec2 a_texCoord;"
-        "varying vec2 v_texCoord;"
-        "uniform mat4 u_mvpMat;"
-        "void main() {"
-        "    v_texCoord = a_texCoord;"
-        "    gl_Position = u_mvpMat * a_coord;"
-        "}";
+    const std::string WatermarkRenderer::WATERMARK_VERTEX_SHADER = R"GLSL(
+        #version 100
+        attribute vec4 a_coord;
+        attribute vec2 a_texCoord;
+        varying vec2 v_texCoord;
+        uniform mat4 u_mvpMat;
+        void main() {
+            v_texCoord = a_texCoord;
+            gl_Position = u_mvpMat * a_coord;
+        }
+    )GLSL";
 
-    const std::string WatermarkRenderer::WATERMARK_FRAGMENT_SHADER =
-        "#version 100\n"
-        "precision mediump float;"
-        "varying mediump vec2 v_texCoord;"
-        "uniform sampler2D u_tex;"
-        "void main() {"
-        "    gl_FragColor = texture2D(u_tex, v_texCoord);"
-        "}";
+    const std::string WatermarkRenderer::WATERMARK_FRAGMENT_SHADER = R"GLSL(
+        #version 100
+        precision mediump float;
+        varying mediump vec2 v_texCoord;
+        uniform sampler2D u_tex;
+        void main() {
+            gl_FragColor = texture2D(u_tex, v_texCoord);
+        }
+    )GLSL";
 
 }
