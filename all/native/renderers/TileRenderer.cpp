@@ -281,11 +281,12 @@ namespace carto {
         }
     }
 
-    const std::string TileRenderer::LIGHTING_SHADER =
-        "uniform vec3 u_LightDir;"
-        "lowp vec4 applyLighting(lowp vec4 color, vec3 normal) {"
-        "    float lighting = max(0.0, dot(normal, u_LightDir)) * 0.5 + 0.5;"
-        "    return vec4(color.xyz * lighting, color.w);"
-        "}";
-        
+    const std::string TileRenderer::LIGHTING_SHADER = R"GLSL(
+        uniform vec3 u_LightDir;
+        lowp vec4 applyLighting(lowp vec4 color, vec3 normal) {
+            float lighting = max(0.0, dot(normal, u_LightDir)) * 0.5 + 0.5;
+            return vec4(color.xyz * lighting, color.w);
+        }
+    )GLSL";
+
 }

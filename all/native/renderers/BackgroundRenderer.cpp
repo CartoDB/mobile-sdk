@@ -375,37 +375,39 @@ namespace carto {
         0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f
     };
 
-    const std::string BackgroundRenderer::BACKGROUND_VERTEX_SHADER =
-        "#version 100\n"
-        "attribute vec3 a_coord;"
-        "attribute vec3 a_normal;"
-        "attribute vec2 a_texCoord;"
-        "uniform vec3 u_lightDir;"
-        "uniform mat4 u_mvpMat;"
-        "varying vec4 v_color;"
-        "varying vec2 v_texCoord;"
-        "void main() {"
-        "    float lighting = max(0.0, dot(a_normal, u_lightDir)) * 0.5 + 0.5;"
-        "    v_color = vec4(lighting, lighting, lighting, 1.0);"
-        "    v_texCoord = a_texCoord;"
-        "    gl_Position = u_mvpMat * vec4(a_coord, 1.0);"
-        "}";
+    const std::string BackgroundRenderer::BACKGROUND_VERTEX_SHADER = R"GLSL(
+        #version 100
+        attribute vec3 a_coord;
+        attribute vec3 a_normal;
+        attribute vec2 a_texCoord;
+        uniform vec3 u_lightDir;
+        uniform mat4 u_mvpMat;
+        varying vec4 v_color;
+        varying vec2 v_texCoord;
+        void main() {
+            float lighting = max(0.0, dot(a_normal, u_lightDir)) * 0.5 + 0.5;
+            v_color = vec4(lighting, lighting, lighting, 1.0);
+            v_texCoord = a_texCoord;
+            gl_Position = u_mvpMat * vec4(a_coord, 1.0);
+        }
+    )GLSL";
 
-    const std::string BackgroundRenderer::BACKGROUND_FRAGMENT_SHADER =
-        "#version 100\n"
-        "precision mediump float;"
-        "uniform sampler2D u_tex;"
-        "varying lowp vec4 v_color;"
-        "\n#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
-        "varying highp vec2 v_texCoord;"
-        "\n#else\n"
-        "varying mediump vec2 v_texCoord;"
-        "\n#endif\n"
-        "void main() {"
-        "    vec4 color = texture2D(u_tex, v_texCoord) * v_color;"
-        "    if (color.a == 0.0) {"
-        "        discard;"
-        "    }"
-        "    gl_FragColor = color;"
-        "}";
+    const std::string BackgroundRenderer::BACKGROUND_FRAGMENT_SHADER = R"GLSL(
+        #version 100
+        precision mediump float;
+        uniform sampler2D u_tex;
+        varying lowp vec4 v_color;
+        #ifdef GL_FRAGMENT_PRECISION_HIGH
+        varying highp vec2 v_texCoord;
+        #else
+        varying mediump vec2 v_texCoord;
+        #endif
+        void main() {
+            vec4 color = texture2D(u_tex, v_texCoord) * v_color;
+            if (color.a == 0.0) {
+                discard;
+            }
+            gl_FragColor = color;
+        }
+    )GLSL";
 }
