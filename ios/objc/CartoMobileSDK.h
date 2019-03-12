@@ -89,6 +89,8 @@
 #import "NTPopupStyle.h"
 #import "NTTextStyleBuilder.h"
 #import "NTTextStyle.h"
+#import "NTNMLModelStyleBuilder.h"
+#import "NTNMLModelStyle.h"
 #import "NTGeometryCollectionStyle.h"
 #import "NTGeometryCollectionStyleBuilder.h"
 
