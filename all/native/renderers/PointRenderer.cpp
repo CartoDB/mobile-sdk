@@ -190,7 +190,7 @@ namespace carto {
             const Color& color = drawData->getColor();
             int colorIndex = drawDataIndex * 4 * 4;
             for (int i = 0; i < 16; i += 4) {
-                colorBuf[colorIndex + i] = color.getR();
+                colorBuf[colorIndex + i + 0] = color.getR();
                 colorBuf[colorIndex + i + 1] = color.getG();
                 colorBuf[colorIndex + i + 2] = color.getB();
                 colorBuf[colorIndex + i + 3] = color.getA();

@@ -2,14 +2,15 @@
 #include "geometry/Geometry.h"
 #include "projections/Projection.h"
 #include "projections/ProjectionSurface.h"
+#include "styles/NMLModelStyle.h"
 #include "vectorelements/NMLModel.h"
 #include "utils/Const.h"
 
 namespace carto {
 
-    NMLModelDrawData::NMLModelDrawData(const NMLModel& model, const Projection& projection, const ProjectionSurface& projectionSurface) :
-        VectorElementDrawData(Color()),
-        _sourceModel(model.getSourceModel()),
+    NMLModelDrawData::NMLModelDrawData(const NMLModel& model, const NMLModelStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface) :
+        VectorElementDrawData(style.getColor()),
+        _sourceModel(style.getSourceModel()),
         _localMat()
     {
         MapPos mapPosInternal = projection.toInternal(model.getGeometry()->getCenterPos());
