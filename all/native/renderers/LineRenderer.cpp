@@ -82,6 +82,8 @@ namespace carto {
             return;
         }
         
+        glDisable(GL_CULL_FACE);
+        
         bind(viewState);
     
         // Draw, batch by bitmap
@@ -91,6 +93,8 @@ namespace carto {
         drawBatch(styleCache, viewState);
         
         unbind();
+
+        glEnable(GL_CULL_FACE);
     
         GLContext::CheckGLError("LineRenderer::onDrawFrame");
     }
