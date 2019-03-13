@@ -10,6 +10,7 @@
 #include "styles/StyleBuilder.h"
 
 #include <memory>
+#include <mutex>
 
 namespace carto {
     class BinaryData;
@@ -32,7 +33,7 @@ namespace carto {
          */
         std::shared_ptr<BinaryData> getModelAsset() const;
         /**
-         * Sets the model asset that will be used for drawing the object. By default empty model asset is used.
+         * Sets the model asset that will be used for drawing the object. By default a sphere asset is used.
          * @param modelAsset The new model assets for the object.
          */
         void setModelAsset(const std::shared_ptr<BinaryData>& modelAsset);
@@ -45,6 +46,9 @@ namespace carto {
     
     protected:
         static std::shared_ptr<BinaryData> GetDefaultModelAsset();
+
+        static std::shared_ptr<BinaryData> _DefaultNMLModel;
+        static std::mutex _DefaultNMLModelMutex;
     
         std::shared_ptr<BinaryData> _modelAsset;
     };

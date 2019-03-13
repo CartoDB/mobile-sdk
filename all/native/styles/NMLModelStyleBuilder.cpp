@@ -1,4 +1,5 @@
 #include "NMLModelStyleBuilder.h"
+#include "assets/DefaultNMLModelNML.h"
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
 #include "styles/NMLModelStyle.h"
@@ -34,7 +35,14 @@ namespace carto {
     }
     
     std::shared_ptr<BinaryData> NMLModelStyleBuilder::GetDefaultModelAsset() {
-        return std::shared_ptr<BinaryData>();
+        std::lock_guard<std::mutex> lock(_DefaultNMLModelMutex);
+        if (!_DefaultNMLModel) {
+            _DefaultNMLModel = std::make_shared<BinaryData>(default_nmlmodel_nml, default_nmlmodel_nml_len);
+        }
+        return _DefaultNMLModel;
     }
+
+    std::shared_ptr<BinaryData> NMLModelStyleBuilder::_DefaultNMLModel;
+    std::mutex NMLModelStyleBuilder::_DefaultNMLModelMutex;
     
 }
