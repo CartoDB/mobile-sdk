@@ -27,6 +27,7 @@
 #import "NTAssetTileDataSource.h"
 #import "NTOrderedTileDataSource.h"
 #import "NTBitmapOverlayRasterTileDataSource.h"
+#import "NTGeoJSONVectorTileDataSource.h"
 #import "NTHTTPTileDataSource.h"
 #import "NTMemoryCacheTileDataSource.h"
 #import "NTPersistentCacheTileDataSource.h"
