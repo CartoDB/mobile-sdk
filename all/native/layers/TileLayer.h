@@ -256,6 +256,12 @@ namespace carto {
         
         explicit TileLayer(const std::shared_ptr<TileDataSource>& dataSource);
 
+        virtual void setComponents(const std::shared_ptr<CancelableThreadPool>& envelopeThreadPool,
+                                   const std::shared_ptr<CancelableThreadPool>& tileThreadPool,
+                                   const std::weak_ptr<Options>& options,
+                                   const std::weak_ptr<MapRenderer>& mapRenderer,
+                                   const std::weak_ptr<TouchHandler>& touchHandler);
+
         virtual void loadData(const std::shared_ptr<CullState>& cullState);
 
         virtual void updateTileLoadListener();

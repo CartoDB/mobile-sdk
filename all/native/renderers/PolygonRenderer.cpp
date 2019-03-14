@@ -70,6 +70,8 @@ namespace carto {
             // Early return, to avoid calling glUseProgram etc.
             return;
         }
+
+        glDisable(GL_CULL_FACE);
        
         bind(viewState);
     
@@ -80,6 +82,8 @@ namespace carto {
         drawBatch(styleCache, viewState);
         
         unbind();
+
+        glEnable(GL_CULL_FACE);
     
         GLContext::CheckGLError("PolygonRenderer::onDrawFrame");
     }

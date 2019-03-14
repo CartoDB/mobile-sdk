@@ -210,6 +210,20 @@ namespace carto {
         }
     }
     
+    void TileLayer::setComponents(const std::shared_ptr<CancelableThreadPool>& envelopeThreadPool,
+                                  const std::shared_ptr<CancelableThreadPool>& tileThreadPool,
+                                  const std::weak_ptr<Options>& options,
+                                  const std::weak_ptr<MapRenderer>& mapRenderer,
+                                  const std::weak_ptr<TouchHandler>& touchHandler)
+    {
+        Layer::setComponents(envelopeThreadPool, tileThreadPool, options, mapRenderer, touchHandler);
+
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        if (_tileRenderer) {
+            _tileRenderer->setOptions(_options);
+        }
+    }
+
     void TileLayer::loadData(const std::shared_ptr<CullState>& cullState) {
         // This method (from update() or refresh()) might be called from multiple threads
         std::lock_guard<std::recursive_mutex> lock(_mutex);
@@ -597,6 +611,10 @@ namespace carto {
     void TileLayer::setTileRenderer(const std::shared_ptr<TileRenderer>& renderer) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _tileRenderer = renderer;
+
+        if (_tileRenderer) {
+            _tileRenderer->setOptions(_options);
+        }
     }
 
     TileLayer::FetchTaskBase::FetchTaskBase(const std::shared_ptr<TileLayer>& layer, const MapTile& tile, bool preloadingTile) :

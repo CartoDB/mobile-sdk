@@ -727,10 +727,8 @@ namespace carto {
     void MapRenderer::setZBuffering(bool enable) {
         if (enable) {
             glEnable(GL_DEPTH_TEST);
-            glDisable(GL_CULL_FACE);
         } else {
             glDisable(GL_DEPTH_TEST);
-            glEnable(GL_CULL_FACE);
         }
     }
 
