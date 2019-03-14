@@ -15,6 +15,7 @@
 
 namespace carto {
     class NMLModel;
+    class NMLModelStyle;
     class Projection;
     class ProjectionSurface;
     
@@ -24,7 +25,7 @@ namespace carto {
 
     class NMLModelDrawData : public VectorElementDrawData {
     public:
-        NMLModelDrawData(const NMLModel& model, const Projection& projection, const ProjectionSurface& projectionSurface);
+        NMLModelDrawData(const NMLModel& model, const NMLModelStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface);
         virtual ~NMLModelDrawData();
     
         std::shared_ptr<nml::Model> getSourceModel() const;

@@ -82,6 +82,8 @@ namespace carto {
             return;
         }
         
+        glDisable(GL_CULL_FACE);
+        
         bind(viewState);
     
         // Draw, batch by bitmap
@@ -91,6 +93,8 @@ namespace carto {
         drawBatch(styleCache, viewState);
         
         unbind();
+
+        glEnable(GL_CULL_FACE);
     
         GLContext::CheckGLError("LineRenderer::onDrawFrame");
     }
@@ -400,48 +404,50 @@ namespace carto {
     }
     
 
-    const std::string LineRenderer::LINE_VERTEX_SHADER =
-        "#version 100\n"
-        "attribute vec3 a_coord;"
-        "attribute vec4 a_normal;"
-        "attribute vec2 a_texCoord;"
-        "attribute vec4 a_color;"
-        "uniform float u_gamma;"
-        "uniform float u_dpToPX;"
-        "uniform float u_unitToDP;"
-        "uniform mat4 u_mvpMat;"
-        "varying lowp vec4 v_color;"
-        "varying vec2 v_texCoord;"
-        "varying float v_dist;"
-        "varying float v_width;"
-        "void main() {"
-        "    float width = length(a_normal.xyz) * u_dpToPX;"
-        "    float roundedWidth = width + 1.0;"
-        "    vec3 pos = a_coord + u_unitToDP * roundedWidth / width * (a_normal.xyz * a_normal.w);"
-        "    v_color = a_color;"
-        "    v_texCoord = a_texCoord;"
-        "    v_dist = a_normal.w * roundedWidth * u_gamma;"
-        "    v_width = 1.0 + (width - 1.0) * u_gamma;"
-        "    gl_Position = u_mvpMat * vec4(pos, 1.0);"
-        "}";
+    const std::string LineRenderer::LINE_VERTEX_SHADER = R"GLSL(
+        #version 100
+        attribute vec3 a_coord;
+        attribute vec4 a_normal;
+        attribute vec2 a_texCoord;
+        attribute vec4 a_color;
+        uniform float u_gamma;
+        uniform float u_dpToPX;
+        uniform float u_unitToDP;
+        uniform mat4 u_mvpMat;
+        varying lowp vec4 v_color;
+        varying vec2 v_texCoord;
+        varying float v_dist;
+        varying float v_width;
+        void main() {
+            float width = length(a_normal.xyz) * u_dpToPX;
+            float roundedWidth = width + 1.0;
+            vec3 pos = a_coord + u_unitToDP * roundedWidth / width * (a_normal.xyz * a_normal.w);
+            v_color = a_color;
+            v_texCoord = a_texCoord;
+            v_dist = a_normal.w * roundedWidth * u_gamma;
+            v_width = 1.0 + (width - 1.0) * u_gamma;
+            gl_Position = u_mvpMat * vec4(pos, 1.0);
+        }
+    )GLSL";
 
-    const std::string LineRenderer::LINE_FRAGMENT_SHADER =
-        "#version 100\n"
-        "precision mediump float;"
-        "uniform sampler2D u_tex;"
-        "varying lowp vec4 v_color;"
-        "\n#ifdef GL_FRAGMENT_PRECISION_HIGH\n"
-        "varying highp vec2 v_texCoord;"
-        "varying highp float v_dist;"
-        "varying highp float v_width;"
-        "\n#else\n"
-        "varying mediump vec2 v_texCoord;"
-        "varying mediump float v_dist;"
-        "varying mediump float v_width;"
-        "\n#endif\n"
-        "void main() {"
-        "    lowp float a = clamp(v_width - abs(v_dist), 0.0, 1.0);"
-        "    gl_FragColor = texture2D(u_tex, v_texCoord) * v_color * a;"
-        "}";
+    const std::string LineRenderer::LINE_FRAGMENT_SHADER = R"GLSL(
+        #version 100
+        precision mediump float;
+        uniform sampler2D u_tex;
+        varying lowp vec4 v_color;
+        #ifdef GL_FRAGMENT_PRECISION_HIGH
+        varying highp vec2 v_texCoord;
+        varying highp float v_dist;
+        varying highp float v_width;
+        #else
+        varying mediump vec2 v_texCoord;
+        varying mediump float v_dist;
+        varying mediump float v_width;
+        #endif
+        void main() {
+            lowp float a = clamp(v_width - abs(v_dist), 0.0, 1.0);
+            gl_FragColor = texture2D(u_tex, v_texCoord) * v_color * a;
+        }
+    )GLSL";
 
 }

@@ -283,33 +283,35 @@ namespace carto {
         BuildAndDrawBuffers(_a_color, _a_attrib, _a_coord, _a_normal, _colorBuf, _attribBuf, _coordBuf, _normalBuf, _drawDataBuffer, viewState);
     }
 
-    const std::string Polygon3DRenderer::POLYGON3D_VERTEX_SHADER =
-        "#version 100\n"
-        "attribute vec4 a_color;"
-        "attribute vec4 a_coord;"
-        "attribute float a_attrib;"
-        "attribute vec3 a_normal;"
-        "uniform vec4 u_ambientColor;"
-        "uniform vec4 u_lightColor;"
-        "uniform vec3 u_lightDir;"
-        "uniform mat4 u_mvpMat;"
-        "varying vec4 v_color;"
-        "void main() {"
-        "    float dotProduct = max(0.0, dot(a_normal, u_lightDir));"
-        "    vec3 lighting = vec3(a_attrib, a_attrib, a_attrib) + (u_ambientColor.rgb + u_lightColor.rgb * dotProduct) * (1.0 - a_attrib);"
-        "    v_color = a_color * vec4(lighting, 1.0);"
-        "    gl_Position = u_mvpMat * a_coord;"
-        "}";
+    const std::string Polygon3DRenderer::POLYGON3D_VERTEX_SHADER = R"GLSL(
+        #version 100
+        attribute vec4 a_color;
+        attribute vec4 a_coord;
+        attribute float a_attrib;
+        attribute vec3 a_normal;
+        uniform vec4 u_ambientColor;
+        uniform vec4 u_lightColor;
+        uniform vec3 u_lightDir;
+        uniform mat4 u_mvpMat;
+        varying vec4 v_color;
+        void main() {
+            float dotProduct = max(0.0, dot(a_normal, u_lightDir));
+            vec3 lighting = vec3(a_attrib, a_attrib, a_attrib) + (u_ambientColor.rgb + u_lightColor.rgb * dotProduct) * (1.0 - a_attrib);
+            v_color = a_color * vec4(lighting, 1.0);
+            gl_Position = u_mvpMat * a_coord;
+        }
+    )GLSL";
 
-    const std::string Polygon3DRenderer::POLYGON3D_FRAGMENT_SHADER =
-        "#version 100\n"
-        "precision mediump float;"
-        "varying lowp vec4 v_color;"
-        "void main() {"
-        "    vec4 color = v_color;"
-        "    if (color.a == 0.0) {"
-        "        discard;"
-        "    }"
-        "    gl_FragColor = color;"
-        "}";
+    const std::string Polygon3DRenderer::POLYGON3D_FRAGMENT_SHADER = R"GLSL(
+        #version 100
+        precision mediump float;
+        varying lowp vec4 v_color;
+        void main() {
+            vec4 color = v_color;
+            if (color.a == 0.0) {
+                discard;
+            }
+            gl_FragColor = color;
+        }
+    )GLSL";
 }

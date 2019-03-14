@@ -23,7 +23,7 @@
 #include <vt/Bitmap.h>
 
 namespace carto {
-    class Projection;
+    class Options;
     class Shader;
     class ShaderManager;
     class TextureManager;
@@ -39,6 +39,8 @@ namespace carto {
     public:
         TileRenderer(const std::weak_ptr<MapRenderer>& mapRenderer, const std::shared_ptr<vt::TileTransformer>& tileTransformer);
         virtual ~TileRenderer();
+    
+        void setOptions(const std::weak_ptr<Options>& options);
     
         void setInteractionMode(bool enabled);
         void setSubTileBlending(bool enabled);
@@ -62,7 +64,9 @@ namespace carto {
     
     private:
         static const int CLICK_RADIUS = 4;
-        static const std::string LIGHTING_SHADER;
+
+        static const std::string LIGHTING_SHADER_2D;
+        static const std::string LIGHTING_SHADER_3D;
 
         std::weak_ptr<MapRenderer> _mapRenderer;
         std::shared_ptr<vt::TileTransformer> _tileTransformer;
@@ -76,6 +80,8 @@ namespace carto {
         cglib::vec3<float> _lightDir;
         std::map<vt::TileId, std::shared_ptr<const vt::Tile> > _tiles;
 
+        std::weak_ptr<Options> _options;
+        
         mutable std::mutex _mutex;
     };
     

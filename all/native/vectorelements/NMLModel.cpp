@@ -3,36 +3,38 @@
 #include "components/Exceptions.h"
 #include "geometry/PointGeometry.h"
 #include "renderers/drawdatas/NMLModelDrawData.h"
+#include "styles/NMLModelStyle.h"
+#include "styles/NMLModelStyleBuilder.h"
 #include "utils/Const.h"
 
 #include <nml/Package.h>
 
 namespace carto {
 
-    NMLModel::NMLModel(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<nml::Model>& sourceModel) :
+    NMLModel::NMLModel(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<NMLModelStyle>& style) :
         VectorElement(geometry),
         _rotationAxis(0, 0, 1),
         _rotationAngle(0),
         _scale(1),
-        _sourceModel(sourceModel)
+        _style(style)
     {
         if (!geometry) {
             throw NullArgumentException("Null geometry");
         }
-        if (!sourceModel) {
-            throw NullArgumentException("Null sourceModel");
+        if (!style) {
+            throw NullArgumentException("Null style");
         }
     }
     
-    NMLModel::NMLModel(const MapPos& mapPos, const std::shared_ptr<nml::Model>& sourceModel) :
+    NMLModel::NMLModel(const MapPos& mapPos, const std::shared_ptr<NMLModelStyle>& style) :
         VectorElement(std::make_shared<PointGeometry>(mapPos)),
         _rotationAxis(0, 0, 1),
         _rotationAngle(0),
         _scale(1),
-        _sourceModel(sourceModel)
+        _style(style)
     {
-        if (!sourceModel) {
-            throw NullArgumentException("Null sourceModel");
+        if (!style) {
+            throw NullArgumentException("Null style");
         }
     }
     
@@ -41,7 +43,7 @@ namespace carto {
         _rotationAxis(0, 0, 1),
         _rotationAngle(0),
         _scale(1),
-        _sourceModel()
+        _style()
     {
         if (!geometry) {
             throw NullArgumentException("Null geometry");
@@ -50,9 +52,9 @@ namespace carto {
             throw NullArgumentException("Null sourceModelData");
         }
 
-        std::shared_ptr<std::vector<unsigned char> > data = sourceModelData->getDataPtr();
-        protobuf::message modelMsg(data->data(), data->size());
-        _sourceModel = std::make_shared<nml::Model>(modelMsg);
+        NMLModelStyleBuilder styleBuilder;
+        styleBuilder.setModelAsset(sourceModelData);
+        _style = styleBuilder.buildStyle();
     }
     
     NMLModel::NMLModel(const MapPos& mapPos, const std::shared_ptr<BinaryData>& sourceModelData) :
@@ -60,15 +62,15 @@ namespace carto {
         _rotationAxis(0, 0, 1),
         _rotationAngle(0),
         _scale(1),
-        _sourceModel()
+        _style()
     {
         if (!sourceModelData) {
             throw NullArgumentException("Null sourceModelData");
         }
 
-        std::shared_ptr<std::vector<unsigned char> > data = sourceModelData->getDataPtr();
-        protobuf::message modelMsg(data->data(), data->size());
-        _sourceModel = std::make_shared<nml::Model>(modelMsg);
+        NMLModelStyleBuilder styleBuilder;
+        styleBuilder.setModelAsset(sourceModelData);
+        _style = styleBuilder.buildStyle();
     }
     
     NMLModel::~NMLModel() {
@@ -126,8 +128,21 @@ namespace carto {
         notifyElementChanged();
     }
         
-    std::shared_ptr<nml::Model> NMLModel::getSourceModel() const {
-        return _sourceModel;
+    std::shared_ptr<NMLModelStyle> NMLModel::getStyle() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _style;
+    }
+
+    void NMLModel::setStyle(const std::shared_ptr<NMLModelStyle>& style) {
+        if (!style) {
+            throw NullArgumentException("Null style");
+        }
+
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _style = style;
+        }
+        notifyElementChanged();
     }
     
     std::shared_ptr<NMLModelDrawData> NMLModel::getDrawData() const {

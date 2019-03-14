@@ -190,7 +190,7 @@ namespace carto {
             const Color& color = drawData->getColor();
             int colorIndex = drawDataIndex * 4 * 4;
             for (int i = 0; i < 16; i += 4) {
-                colorBuf[colorIndex + i] = color.getR();
+                colorBuf[colorIndex + i + 0] = color.getR();
                 colorBuf[colorIndex + i + 1] = color.getG();
                 colorBuf[colorIndex + i + 2] = color.getB();
                 colorBuf[colorIndex + i + 3] = color.getA();
@@ -306,32 +306,34 @@ namespace carto {
         _prevBitmap = nullptr;
     }
     
-    const std::string PointRenderer::POINT_VERTEX_SHADER =
-        "#version 100\n"
-        "attribute vec4 a_coord;"
-        "attribute vec2 a_texCoord;"
-        "attribute vec4 a_color;"
-        "varying vec2 v_texCoord;"
-        "varying vec4 v_color;"
-        "uniform mat4 u_mvpMat;"
-        "void main() {"
-        "    v_texCoord = a_texCoord;"
-        "    v_color = a_color;"
-        "    gl_Position = u_mvpMat * a_coord;"
-        "}";
+    const std::string PointRenderer::POINT_VERTEX_SHADER = R"GLSL(
+        #version 100
+        attribute vec4 a_coord;
+        attribute vec2 a_texCoord;
+        attribute vec4 a_color;
+        varying vec2 v_texCoord;
+        varying vec4 v_color;
+        uniform mat4 u_mvpMat;
+        void main() {
+            v_texCoord = a_texCoord;
+            v_color = a_color;
+            gl_Position = u_mvpMat * a_coord;
+        }
+    )GLSL";
 
-    const std::string PointRenderer::POINT_FRAGMENT_SHADER =
-        "#version 100\n"
-        "precision mediump float;"
-        "varying mediump vec2 v_texCoord;"
-        "varying lowp vec4 v_color;"
-        "uniform sampler2D u_tex;"
-        "void main() {"
-        "    vec4 color = texture2D(u_tex, v_texCoord) * v_color;"
-        "    if (color.a == 0.0) {"
-        "        discard;"
-        "    }"
-        "    gl_FragColor = color;"
-        "}";
+    const std::string PointRenderer::POINT_FRAGMENT_SHADER = R"GLSL(
+        #version 100
+        precision mediump float;
+        varying mediump vec2 v_texCoord;
+        varying lowp vec4 v_color;
+        uniform sampler2D u_tex;
+        void main() {
+            vec4 color = texture2D(u_tex, v_texCoord) * v_color;
+            if (color.a == 0.0) {
+                discard;
+            }
+            gl_FragColor = color;
+        }
+    )GLSL";
 
 }

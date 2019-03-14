@@ -70,6 +70,8 @@ namespace carto {
             // Early return, to avoid calling glUseProgram etc.
             return;
         }
+
+        glDisable(GL_CULL_FACE);
        
         bind(viewState);
     
@@ -80,6 +82,8 @@ namespace carto {
         drawBatch(styleCache, viewState);
         
         unbind();
+
+        glEnable(GL_CULL_FACE);
     
         GLContext::CheckGLError("PolygonRenderer::onDrawFrame");
     }
@@ -302,26 +306,28 @@ namespace carto {
         _prevBitmap = nullptr;
     }
     
-    const std::string PolygonRenderer::POLYGON_VERTEX_SHADER =
-        "#version 100\n"
-        "attribute vec4 a_coord;"
-        "attribute vec4 a_color;"
-        "varying vec4 v_color;"
-        "uniform mat4 u_mvpMat;"
-        "void main() {"
-        "    v_color = a_color;"
-        "    gl_Position = u_mvpMat * a_coord;"
-        "}";
+    const std::string PolygonRenderer::POLYGON_VERTEX_SHADER = R"GLSL(
+        #version 100
+        attribute vec4 a_coord;
+        attribute vec4 a_color;
+        varying vec4 v_color;
+        uniform mat4 u_mvpMat;
+        void main() {
+            v_color = a_color;
+            gl_Position = u_mvpMat * a_coord;
+        }
+    )GLSL";
 
-    const std::string PolygonRenderer::POLYGON_FRAGMENT_SHADER =
-        "#version 100\n"
-        "precision mediump float;"
-        "varying lowp vec4 v_color;"
-        "void main() {"
-        "    vec4 color = v_color;"
-        "    if (color.a == 0.0) {"
-        "        discard;"
-        "    }"
-        "    gl_FragColor = color;"
-        "}";
+    const std::string PolygonRenderer::POLYGON_FRAGMENT_SHADER = R"GLSL(
+        #version 100
+        precision mediump float;
+        varying lowp vec4 v_color;
+        void main() {
+            vec4 color = v_color;
+            if (color.a == 0.0) {
+                discard;
+            }
+            gl_FragColor = color;
+        }
+    )GLSL";
 }

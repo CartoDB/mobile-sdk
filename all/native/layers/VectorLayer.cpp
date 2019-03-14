@@ -343,7 +343,7 @@ namespace carto {
             _polygon3DRenderer->addElement(polygon3D);
         } else if (const std::shared_ptr<NMLModel>& nmlModel = std::dynamic_pointer_cast<NMLModel>(element)) {
             if (!nmlModel->getDrawData() || nmlModel->getDrawData()->isOffset()) {
-                nmlModel->setDrawData(std::make_shared<NMLModelDrawData>(*nmlModel, *_dataSource->getProjection(), *projectionSurface));
+                nmlModel->setDrawData(std::make_shared<NMLModelDrawData>(*nmlModel, *nmlModel->getStyle(), *_dataSource->getProjection(), *projectionSurface));
             }
             _nmlModelRenderer->addElement(nmlModel);
         } else if (const std::shared_ptr<Popup>& popup = std::dynamic_pointer_cast<Popup>(element)) {
@@ -442,7 +442,7 @@ namespace carto {
             }
         } else if (const std::shared_ptr<NMLModel>& nmlModel = std::dynamic_pointer_cast<NMLModel>(element)) {
             if (visible && !remove) {
-                nmlModel->setDrawData(std::make_shared<NMLModelDrawData>(*nmlModel, *_dataSource->getProjection(), *projectionSurface));
+                nmlModel->setDrawData(std::make_shared<NMLModelDrawData>(*nmlModel, *nmlModel->getStyle(), *_dataSource->getProjection(), *projectionSurface));
                 _nmlModelRenderer->updateElement(nmlModel);
             } else {
                 _nmlModelRenderer->removeElement(nmlModel);

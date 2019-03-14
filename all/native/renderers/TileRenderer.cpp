@@ -1,4 +1,5 @@
 #include "TileRenderer.h"
+#include "components/Options.h"
 #include "components/ThreadWorker.h"
 #include "graphics/Shader.h"
 #include "graphics/ShaderManager.h"
@@ -47,11 +48,17 @@ namespace carto {
         _horizontalLayerOffset(0),
         _lightDir(0, 0, 0),
         _tiles(),
+        _options(),
         _mutex()
     {
     }
     
     TileRenderer::~TileRenderer() {
+    }
+    
+    void TileRenderer::setOptions(const std::weak_ptr<Options>& options) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _options = options;
     }
     
     void TileRenderer::setInteractionMode(bool enabled) {
@@ -87,11 +94,22 @@ namespace carto {
         boost::optional<vt::GLTileRenderer::LightingShader> lightingShader2D;
         if (auto mapRenderer = _mapRenderer.lock()) {
             if (!std::dynamic_pointer_cast<PlanarProjectionSurface>(mapRenderer->getProjectionSurface())) {
-                lightingShader2D = vt::GLTileRenderer::LightingShader(true, LIGHTING_SHADER, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
-                    glUniform3fv(glGetUniformLocation(shaderProgram, "u_LightDir"), 1, _lightDir.data());
+                lightingShader2D = vt::GLTileRenderer::LightingShader(true, LIGHTING_SHADER_2D, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
+                    glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1, _lightDir.data());
                 });
             }
         }
+        boost::optional<vt::GLTileRenderer::LightingShader> lightingShader3D = vt::GLTileRenderer::LightingShader(true, LIGHTING_SHADER_3D, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
+            if (auto options = _options.lock()) {
+                const Color& ambientLightColor = options->getAmbientLightColor();
+                glUniform4f(glGetUniformLocation(shaderProgram, "u_ambientColor"), ambientLightColor.getR() / 255.0f, ambientLightColor.getG() / 255.0f, ambientLightColor.getB() / 255.0f, ambientLightColor.getA() / 255.0f);
+                const Color& mainLightColor = options->getMainLightColor();
+                glUniform4f(glGetUniformLocation(shaderProgram, "u_lightColor"), mainLightColor.getR() / 255.0f, mainLightColor.getG() / 255.0f, mainLightColor.getB() / 255.0f, mainLightColor.getA() / 255.0f);
+                const MapVec& mainLightDir = options->getMainLightDirection();
+                glUniform3f(glGetUniformLocation(shaderProgram, "u_lightDir"), static_cast<float>(mainLightDir.getX()), static_cast<float>(mainLightDir.getY()), static_cast<float>(mainLightDir.getZ()));
+            }
+        });
+
         std::weak_ptr<MapRenderer> mapRendererWeak(_mapRenderer);
         auto glRendererDeleter = [mapRendererWeak](vt::GLTileRenderer* rendererPtr) {
             std::unique_ptr<vt::GLTileRenderer> renderer(rendererPtr);
@@ -101,7 +119,7 @@ namespace carto {
             }
         };
         _glRenderer = std::shared_ptr<vt::GLTileRenderer>(
-            new vt::GLTileRenderer(_glRendererMutex, std::make_shared<vt::GLExtensions>(), _tileTransformer, lightingShader2D, boost::optional<vt::GLTileRenderer::LightingShader>(), Const::WORLD_SIZE), glRendererDeleter
+            new vt::GLTileRenderer(_glRendererMutex, std::make_shared<vt::GLExtensions>(), _tileTransformer, lightingShader2D, lightingShader3D, Const::WORLD_SIZE), glRendererDeleter
         );
         _glRenderer->initializeRenderer();
         _tiles.clear();
@@ -281,11 +299,22 @@ namespace carto {
         }
     }
 
-    const std::string TileRenderer::LIGHTING_SHADER =
-        "uniform vec3 u_LightDir;"
-        "lowp vec4 applyLighting(lowp vec4 color, vec3 normal) {"
-        "    float lighting = max(0.0, dot(normal, u_LightDir)) * 0.5 + 0.5;"
-        "    return vec4(color.xyz * lighting, color.w);"
-        "}";
-        
+    const std::string TileRenderer::LIGHTING_SHADER_2D = R"GLSL(
+        uniform vec3 u_lightDir;
+        vec4 applyLighting(vec4 color, vec3 normal) {
+            float lighting = max(0.0, dot(normal, u_lightDir)) * 0.5 + 0.5;
+            return vec4(color.rgb * lighting, color.a);
+        }
+    )GLSL";
+
+    const std::string TileRenderer::LIGHTING_SHADER_3D = R"GLSL(
+        uniform vec4 u_ambientColor;
+        uniform vec4 u_lightColor;
+        uniform vec3 u_lightDir;
+        vec4 applyLighting(vec4 color, vec3 normal) {
+            vec3 lighting = max(0.0, dot(normal, u_lightDir)) * u_lightColor.rgb + u_ambientColor.rgb;
+            return vec4(color.rgb * lighting, color.a);
+        }
+    )GLSL";
+
 }
