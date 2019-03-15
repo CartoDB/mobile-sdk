@@ -4,6 +4,7 @@
 #include "graphics/Bitmap.h"
 #include "graphics/utils/GLContext.h"
 #include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "styles/LineStyle.h"
 #include "vectorelements/Line.h"
 #include "vectorelements/Polygon.h"
@@ -21,11 +22,16 @@ namespace {
         return cglib::vec2<float>(x, y);
     }
 
+    inline cglib::vec3<float> rotate2D(const cglib::vec3<float>& vec, const cglib::vec3<float>& normal, float sin, float cos) {
+        float angle = std::atan2(sin, cos);
+        return cglib::transform(vec, cglib::rotate3_matrix(normal, angle));
+    }
+
 }
 
 namespace carto {
 
-    LineDrawData::LineDrawData(const LineGeometry& geometry, const LineStyle& style, const Projection& projection) :
+    LineDrawData::LineDrawData(const LineGeometry& geometry, const LineStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface) :
         VectorElementDrawData(style.getColor()),
         _bitmap(style.getBitmap()),
         _normalScale(style.getWidth() / 2),
@@ -36,22 +42,10 @@ namespace carto {
         _texCoords(),
         _indices()
     {
-        // Remove consecutive duplicates and project coordinates to internal coordinate system
-        const std::vector<MapPos>& poses = geometry.getPoses();
-        _poses.reserve(poses.size());
-        for (std::size_t i = 0; i < poses.size(); i++) {
-            MapPos posInternal = projection.toInternal(poses[i]);
-            cglib::vec3<double> pos(posInternal.getX(), posInternal.getY(), posInternal.getZ());
-            if (i == 0 || _poses.back() != pos) {
-                _poses.push_back(pos);
-            }
-        }
-        
-        // Init draw data
-        init(style);
+        init(geometry.getPoses(), projection, projectionSurface, style);
     }
     
-    LineDrawData::LineDrawData(const PolygonGeometry& geometry, const std::vector<MapPos>& internalPoses, const LineStyle& style, const Projection& projection) :
+    LineDrawData::LineDrawData(const std::vector<MapPos>& poses, const LineStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface) :
         VectorElementDrawData(style.getColor()),
         _bitmap(style.getBitmap()),
         _normalScale(style.getWidth() / 2),
@@ -62,55 +56,9 @@ namespace carto {
         _texCoords(),
         _indices()
     {
-        // Remove consecutive duplicates, do NOT project coordinates
-        _poses.reserve(internalPoses.size());
-        for (std::size_t i = 0; i < internalPoses.size(); i++) {
-            const MapPos& posInternal = internalPoses[i];
-            cglib::vec3<double> pos(posInternal.getX(), posInternal.getY(), posInternal.getZ());
-            if (i == 0 || _poses.back() != pos) {
-                _poses.push_back(pos);
-            }
-        }
-        if (!internalPoses.empty()) {
-            const MapPos& posInternal = internalPoses.front();
-            cglib::vec3<double> pos(posInternal.getX(), posInternal.getY(), posInternal.getZ());
-            if (_poses.back() != pos) {
-                _poses.push_back(pos);
-            }
-        }
-        
-        // Init draw data
-        init(style);
+        init(poses, projection, projectionSurface, style);
     }
         
-    LineDrawData::LineDrawData(const LineDrawData& lineDrawData) :
-        VectorElementDrawData(lineDrawData.getColor()),
-        _bitmap(lineDrawData._bitmap),
-        _normalScale(lineDrawData._normalScale),
-        _clickScale(lineDrawData._clickScale),
-        _poses(lineDrawData._poses),
-        _coords(),
-        _normals(lineDrawData._normals),
-        _texCoords(lineDrawData._texCoords),
-        _indices(lineDrawData._indices)
-    {
-        // Recalculate _coord pointers to _poses
-        _coords.reserve(lineDrawData._coords.size());
-        for (const std::vector<cglib::vec3<double>*>& coords : lineDrawData._coords) {
-            _coords.push_back(std::vector<cglib::vec3<double>*>());
-            _coords.back().reserve(coords.size());
-            const cglib::vec3<double>* prevPos = nullptr;
-            int index = -1;
-            for (const cglib::vec3<double>* pos : coords) {
-                if (pos != prevPos) {
-                    prevPos = pos;
-                    index++;
-                }
-                _coords.back().push_back(&_poses[index]);
-            }
-        }
-    }
-    
     LineDrawData::~LineDrawData() {
     }
     
@@ -130,7 +78,7 @@ namespace carto {
         return _coords;
     }
     
-    const std::vector<std::vector<cglib::vec3<float> > >& LineDrawData::getNormals() const {
+    const std::vector<std::vector<cglib::vec4<float> > >& LineDrawData::getNormals() const {
         return _normals;
     }
     
@@ -149,7 +97,24 @@ namespace carto {
         setIsOffset(true);
     }
     
-    void LineDrawData::init(const LineStyle& style) {
+    void LineDrawData::init(const std::vector<MapPos>& poses, const Projection& projection, const ProjectionSurface& projectionSurface, const LineStyle& style) {
+        // Calculate real coordinates and tesselate the line
+        std::vector<cglib::vec3<float> > posNormals;
+        _poses.reserve(poses.size());
+        posNormals.reserve(poses.size());
+        std::vector<MapPos> internalPoses;
+        for (std::size_t i = 1; i < poses.size(); i++) {
+            internalPoses.clear();
+            projectionSurface.tesselateSegment(projection.toInternal(poses[i - 1]), projection.toInternal(poses[i]), internalPoses);
+            for (const MapPos& internalPos : internalPoses) {
+                cglib::vec3<double> pos = projectionSurface.calculatePosition(internalPos);
+                if (_poses.empty() || pos != _poses.back()) {
+                    _poses.push_back(pos);
+                    posNormals.push_back(cglib::vec3<float>::convert(projectionSurface.calculateNormal(internalPos)));
+                }
+            }
+        }
+
         if (_poses.size() < 2) {
             _coords.clear();
             _normals.clear();
@@ -218,7 +183,7 @@ namespace carto {
         // Instead of calculating actual vertex positions calculate vertex origins and normals
         // Actual vertex positions are view dependent and will be calculated in the renderer
         std::vector<cglib::vec3<double>*> coords;
-        std::vector<cglib::vec3<float> > normals;
+        std::vector<cglib::vec4<float> > normals;
         std::vector<cglib::vec2<float> > texCoords;
         std::vector<unsigned int> indices;
         coords.reserve(coordCount);
@@ -228,16 +193,14 @@ namespace carto {
 
         // Calculate initial state for line string
         cglib::vec3<float> nextLine = cglib::vec3<float>::convert(_poses[1] - _poses[0]);
-        float nextLineLength = cglib::length(nextLine);
-        cglib::vec2<float> nextPerpVec(-nextLine(1) / nextLineLength, nextLine(0) / nextLineLength);
+        cglib::vec3<float> nextPerpVec = cglib::unit(cglib::vector_product(posNormals[1], nextLine));
 
-        cglib::vec2<float> nextNormalVec = nextPerpVec;
+        cglib::vec3<float> nextNormalVec = nextPerpVec;
         bool resetNormalVec = true;
         if (style.getLineJoinType() == LineJoinType::LINE_JOIN_TYPE_MITER) {
             if (loopedLine) {
                 cglib::vec3<float> prevLine = cglib::vec3<float>::convert(_poses[0] - _poses[_poses.size() - 2]);
-                float prevLineLength = cglib::length(prevLine);
-                cglib::vec2<float> prevPerpVec = cglib::vec2<float>(-prevLine(1) / prevLineLength, prevLine(0) / prevLineLength);
+                cglib::vec3<float> prevPerpVec = cglib::unit(cglib::vector_product(posNormals[0], prevLine));
 
                 float dot = cglib::dot_product(prevPerpVec, nextPerpVec);
                 if (dot >= LINE_JOIN_MIN_MITER_DOT) {
@@ -248,18 +211,19 @@ namespace carto {
         }
 
         // Loop over line segments
-        cglib::vec2<float> firstPerpVec;
-        cglib::vec2<float> lastPerpVec;
+        cglib::vec3<float> firstPerpVec;
+        cglib::vec3<float> lastPerpVec;
         unsigned int vertexIndex = 0;
         for (std::size_t i = 1; i < _poses.size(); i++) {
+            std::size_t i1 = i + 1 < _poses.size() ? i + 1 : 1;
+            
             cglib::vec3<double>& pos = _poses[i];
             cglib::vec3<double>& prevPos = _poses[i - 1];
-            cglib::vec3<double>& nextPos = _poses[i + 1 < _poses.size() ? i + 1 : 1];
+            cglib::vec3<double>& nextPos = _poses[i1];
 
             // Calculate line body
             cglib::vec3<float> prevLine = cglib::vec3<float>::convert(pos - prevPos);
-            float prevLineLength = cglib::length(prevLine);
-            cglib::vec2<float> prevPerpVec(-prevLine(1) / prevLineLength, prevLine(0) / prevLineLength);
+            cglib::vec3<float> prevPerpVec = cglib::unit(cglib::vector_product(posNormals[i], prevLine));
 
             // Trick to reuse already generated vertex data (only for mitered lines)
             if (!resetNormalVec && vertexIndex >= 2) {
@@ -272,15 +236,14 @@ namespace carto {
                 normals.pop_back();
             }
 
-            cglib::vec2<float> prevNormalVec = (resetNormalVec ? prevPerpVec : nextNormalVec);
+            cglib::vec3<float> prevNormalVec = (resetNormalVec ? prevPerpVec : nextNormalVec);
             nextNormalVec = prevPerpVec;
             resetNormalVec = true;
 
             if (style.getLineJoinType() == LineJoinType::LINE_JOIN_TYPE_MITER) {
                 if (i + 1 < _poses.size() || loopedLine) {
                     cglib::vec3<float> nextLine = cglib::vec3<float>::convert(nextPos - pos);
-                    float nextLineLength = cglib::length(nextLine);
-                    cglib::vec2<float> nextPerpVec(-nextLine(1) / nextLineLength, nextLine(0) / nextLineLength);
+                    cglib::vec3<float> nextPerpVec = cglib::unit(cglib::vector_product(posNormals[i1], nextLine));
 
                     float dot = cglib::dot_product(prevPerpVec, nextPerpVec);
                     if (dot >= LINE_JOIN_MIN_MITER_DOT) {
@@ -304,7 +267,7 @@ namespace carto {
             coords.push_back(&pos);
             
             if (useTexCoordY) {
-                float texCoordYOffset = prevLineLength * texCoordYScale;
+                float texCoordYOffset = cglib::length(prevLine) * texCoordYScale;
                 texCoords.push_back(cglib::vec2<float>(0, texCoordY));
                 texCoords.push_back(cglib::vec2<float>(texCoordX, texCoordY));
                 texCoords.push_back(cglib::vec2<float>(0, texCoordY + texCoordYOffset));
@@ -346,7 +309,7 @@ namespace carto {
                     float sin = static_cast<float>(std::sin(segmentDeltaAngle * Const::DEG_TO_RAD));
                     float cos = static_cast<float>(std::cos(segmentDeltaAngle * Const::DEG_TO_RAD));
                     bool leftTurn = (deltaAngle <= 0);
-                    cglib::vec2<float> rotVec = prevNormalVec;
+                    cglib::vec3<float> rotVec = prevNormalVec;
                     
                     // Add the t vertex
                     coords.push_back(&pos);
@@ -355,7 +318,7 @@ namespace carto {
                     
                     // Add vertices and normals, do not create double vertices anywhere
                     for (int j = 0; j < segments - 1; j++) {
-                        rotVec = rotate2D(rotVec, sin, cos);
+                        rotVec = rotate2D(rotVec, posNormals[i], sin, cos);
                         coords.push_back(&pos);
                         normals.push_back(cglib::expand(rotVec, leftTurn ? 1.0f : -1.0f));
                         texCoords.push_back(cglib::vec2<float>(leftTurn ? 0.0f : 1.0f, texCoordY));
@@ -411,12 +374,12 @@ namespace carto {
                 
                 if (style.getLineEndType() == LineEndType::LINE_END_TYPE_ROUND) {
                     // Last end point, lastLine contains the last valid line segment
-                    cglib::vec2<float> rotVec = lastPerpVec;
+                    cglib::vec3<float> rotVec = lastPerpVec;
                     cglib::vec2<float> uvRotVec(-1, 0);
                 
                     // Vertices
                     for (int i = 0; i < segments - 1; i++) {
-                        rotVec = rotate2D(rotVec, sin, cos);
+                        rotVec = rotate2D(rotVec, posNormals[_poses.size() - 1], sin, cos);
                         uvRotVec = rotate2D(uvRotVec, sin, cos);
                         coords.push_back(&_poses[_poses.size() - 1]);
                         normals.push_back(cglib::expand(rotVec, -1.0f));
@@ -425,7 +388,7 @@ namespace carto {
                 } else {
                     // Vertices
                     for (int s = -1; s <= 1; s += 2) {
-                        cglib::vec2<float> normalVec = rotate2D(lastPerpVec, -s * sin, cos) * std::sqrt(2.0f);
+                        cglib::vec3<float> normalVec = rotate2D(lastPerpVec, posNormals[_poses.size() - 1], -s * sin, cos) * std::sqrt(2.0f);
                         coords.push_back(&_poses[_poses.size() - 1]);
                         normals.push_back(cglib::expand(normalVec, static_cast<float>(s)));
                         texCoords.push_back(cglib::vec2<float>(s * 0.5f + 0.5f, texCoordY));
@@ -447,12 +410,12 @@ namespace carto {
                 
                 if (style.getLineEndType() == LineEndType::LINE_END_TYPE_ROUND) {
                     // First end point, firstLine contains the first valid line segment
-                    cglib::vec2<float> rotVec = firstPerpVec;
+                    cglib::vec3<float> rotVec = firstPerpVec;
                     cglib::vec2<float> uvRotVec(1, 0);
                 
                     // Vertices
                     for (int i = 0; i < segments - 1; i++) {
-                        rotVec = rotate2D(rotVec, sin, cos);
+                        rotVec = rotate2D(rotVec, posNormals[0], sin, cos);
                         uvRotVec = rotate2D(uvRotVec, sin, cos);
                         coords.push_back(&_poses[0]);
                         normals.push_back(cglib::expand(rotVec, 1.0f));
@@ -461,7 +424,7 @@ namespace carto {
                 } else {
                     // Vertices
                     for (int s = 1; s >= -1; s -= 2) {
-                        cglib::vec2<float> normalVec = rotate2D(firstPerpVec, s * sin, cos) * std::sqrt(2.0f);
+                        cglib::vec3<float> normalVec = rotate2D(firstPerpVec, posNormals[0], s * sin, cos) * std::sqrt(2.0f);
                         coords.push_back(&_poses[0]);
                         normals.push_back(cglib::expand(normalVec, static_cast<float>(s)));
                         texCoords.push_back(cglib::vec2<float>(s * 0.5f + 0.5f, 0));
@@ -479,7 +442,7 @@ namespace carto {
         }
         
         _coords.push_back(std::vector<cglib::vec3<double>*>());
-        _normals.push_back(std::vector<cglib::vec3<float> >());
+        _normals.push_back(std::vector<cglib::vec4<float> >());
         _texCoords.push_back(std::vector<cglib::vec2<float> >());
         _indices.push_back(std::vector<unsigned int>());
         if (indices.size() <= GLContext::MAX_VERTEXBUFFER_SIZE) {
@@ -494,6 +457,7 @@ namespace carto {
             _texCoords.back().reserve(std::min(texCoords.size(), GLContext::MAX_VERTEXBUFFER_SIZE));
             _indices.back().reserve(std::min(indices.size(), GLContext::MAX_VERTEXBUFFER_SIZE));
             std::unordered_map<unsigned int, unsigned int> indexMap;
+            indexMap.reserve(indices.size() * 2);
             for (std::size_t i = 0; i < indices.size(); i += 3) {
                 
                 // Check for possible GL buffer overflow
@@ -503,7 +467,7 @@ namespace carto {
                     _coords.push_back(std::vector<cglib::vec3<double>*>());
                     _coords.back().reserve(std::min(coords.size(), GLContext::MAX_VERTEXBUFFER_SIZE));
                     _normals.back().shrink_to_fit();
-                    _normals.push_back(std::vector<cglib::vec3<float> >());
+                    _normals.push_back(std::vector<cglib::vec4<float> >());
                     _normals.back().reserve(std::min(normals.size(), GLContext::MAX_VERTEXBUFFER_SIZE));
                     _texCoords.back().shrink_to_fit();
                     _texCoords.push_back(std::vector<cglib::vec2<float> >());

@@ -109,7 +109,7 @@ namespace carto {
                           int strokeWidth,
                           int triangleWidth,
                           int triangleHeight);
-    	virtual ~BalloonPopupStyle();
+        virtual ~BalloonPopupStyle();
 
         /**
          * Returns the background color of the popup.

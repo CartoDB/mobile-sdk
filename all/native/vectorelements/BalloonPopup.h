@@ -82,12 +82,12 @@ namespace carto {
          * Returns the style of this balloon popup.
          * @return The style that defines what this balloon popup looks like.
          */
-    	std::shared_ptr<BalloonPopupStyle> getStyle() const;
+        std::shared_ptr<BalloonPopupStyle> getStyle() const;
         /**
          * Sets the style for this balloon popup.
          * @param style The new style that defines what this balloon popup looks like.
          */
-    	void setStyle(const std::shared_ptr<BalloonPopupStyle>& style);
+        void setStyle(const std::shared_ptr<BalloonPopupStyle>& style);
         
     private:
         static const int SCREEN_PADDING = 10;

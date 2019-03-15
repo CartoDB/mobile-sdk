@@ -26,7 +26,7 @@ namespace carto {
          * @param style The style that defines what this text label looks like.
          * @param text The text to be displayed.
          */
-    	Text(const std::shared_ptr<Billboard>& baseBillboard, const std::shared_ptr<TextStyle>& style, const std::string& text);
+        Text(const std::shared_ptr<Billboard>& baseBillboard, const std::shared_ptr<TextStyle>& style, const std::string& text);
         /**
          * Constructs a Text object from a geometry object and a style.
          * @param geometry The geometry object that defines the location of this text label.
@@ -56,7 +56,7 @@ namespace carto {
          */
         void setText(const std::string& text);
 
-    	/**
+        /**
          * Returns the style of this text label.
          * @return The style that defines what this text label looks like.
          */

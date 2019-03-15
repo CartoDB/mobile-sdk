@@ -3,7 +3,7 @@
 
 %module DouglasPeuckerGeometrySimplifier
 
-!proxy_imports(carto::DouglasPeuckerGeometrySimplifier, geometry.Geometry, geometry.GeometrySimplifier)
+!proxy_imports(carto::DouglasPeuckerGeometrySimplifier, geometry.Geometry, geometry.GeometrySimplifier, projections.Projection)
 
 %{
 #include "geometry/DouglasPeuckerGeometrySimplifier.h"
@@ -17,6 +17,8 @@
 %import "geometry/GeometrySimplifier.i"
 
 !polymorphic_shared_ptr(carto::DouglasPeuckerGeometrySimplifier, geometry.DouglasPeuckerGeometrySimplifier)
+
+%ignore carto::DouglasPeuckerGeometrySimplifier::simplify;
 
 %include "geometry/DouglasPeuckerGeometrySimplifier.h"
 

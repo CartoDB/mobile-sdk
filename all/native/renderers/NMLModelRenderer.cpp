@@ -6,7 +6,6 @@
 #include "graphics/ViewState.h"
 #include "graphics/utils/GLContext.h"
 #include "layers/VectorLayer.h"
-#include "projections/Projection.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "utils/Log.h"
@@ -111,17 +110,20 @@ namespace carto {
         glEnable(GL_DEPTH_TEST);
 
         // Calculate lighting state
-        Color ambientColor = options->getAmbientLightColor();
-        cglib::vec4<float> ambientLightColor = cglib::vec4<float>(ambientColor.getR(), ambientColor.getG(), ambientColor.getB(), ambientColor.getA()) * (1.0f / 255.0f);
-        Color mainColor = options->getMainLightColor();
-        cglib::vec4<float> mainLightColor = cglib::vec4<float>(mainColor.getR(), mainColor.getG(), mainColor.getB(), mainColor.getA()) * (1.0f / 255.0f);
-        MapVec mainDir = options->getMainLightDirection();
-        cglib::vec3<float> mainLightDir = cglib::unit(cglib::vec3<float>::convert(cglib::transform_vector(cglib::vec3<double>(mainDir.getX(), mainDir.getY(), mainDir.getZ()), viewState.getModelviewMat())));
+        Color optionsAmbientLightColor = options->getAmbientLightColor();
+        cglib::vec4<float> ambientLightColor = cglib::vec4<float>(optionsAmbientLightColor.getR(), optionsAmbientLightColor.getG(), optionsAmbientLightColor.getB(), optionsAmbientLightColor.getA()) * (1.0f / 255.0f);
+        Color optionsMainLightColor = options->getMainLightColor();
+        cglib::vec4<float> mainLightColor = cglib::vec4<float>(optionsMainLightColor.getR(), optionsMainLightColor.getG(), optionsMainLightColor.getB(), optionsMainLightColor.getA()) * (1.0f / 255.0f);
+        MapVec optionsMainLightDirection = options->getMainLightDirection();
+        cglib::vec3<float> mainLightDir = cglib::unit(cglib::vec3<float>::convert(cglib::transform_vector(cglib::vec3<double>(optionsMainLightDirection.getX(), optionsMainLightDirection.getY(), optionsMainLightDirection.getZ()), viewState.getModelviewMat())));
 
         // Draw models
         cglib::mat4x4<float> projMat = cglib::mat4x4<float>::convert(viewState.getProjectionMat());
         for (const std::shared_ptr<NMLModel>& element : _elements) {
             const NMLModelDrawData& drawData = *element->getDrawData();
+
+            Color drawDataColor = drawData.getColor();
+            cglib::vec4<float> modelColor = cglib::vec4<float>(drawDataColor.getR(), drawDataColor.getG(), drawDataColor.getB(), drawDataColor.getA()) * (1.0f / 255.0f);
             std::shared_ptr<nml::Model> sourceModel = drawData.getSourceModel();
             std::shared_ptr<nml::GLModel> glModel = _glModelMap[sourceModel];
             if (!glModel) {
@@ -131,7 +133,7 @@ namespace carto {
             }
     
             cglib::mat4x4<float> mvMat = cglib::mat4x4<float>::convert(viewState.getModelviewMat() * drawData.getLocalMat());
-            nml::RenderState renderState(projMat, mvMat, ambientLightColor, mainLightColor, -mainLightDir);
+            nml::RenderState renderState(projMat, mvMat, cglib::pointwise_product(ambientLightColor, modelColor), cglib::pointwise_product(mainLightColor, modelColor), -mainLightDir);
 
             glModel->draw(*_glResourceManager, renderState);
         }
@@ -189,10 +191,8 @@ namespace carto {
             
             for (std::size_t i = 0; i < intersections.size(); i++) {
                 cglib::vec3<double> pos = cglib::transform_point(intersections[i].pos, modelMat);
-                MapPos clickPos(pos(0), pos(1), pos(2));
-                MapPos projectedClickPos = layer->getDataSource()->getProjection()->fromInternal(clickPos);
                 int priority = static_cast<int>(results.size());
-                results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projectedClickPos, projectedClickPos, priority, true));
+                results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, pos, pos, priority, true));
             }
         }
     }

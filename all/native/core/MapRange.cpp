@@ -51,6 +51,10 @@ namespace carto {
             _max = max;
         }
     }
+
+    float MapRange::getMidrange() const {
+        return (_min + _max) * 0.5f;
+    }
     
     float MapRange::length() const{
         return _max - _min;

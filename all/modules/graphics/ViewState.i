@@ -5,8 +5,7 @@
 
 %module ViewState
 
-!proxy_imports(carto::ViewState, core.MapPos, core.ScreenPos, core.MapVec, components.Options, graphics.Frustum, projections.Projection)
-!java_imports(carto::ViewState, com.carto.components.ProjectionMode)
+!proxy_imports(carto::ViewState, core.MapPos, core.ScreenPos, core.MapVec, components.Options, projections.Projection)
 
 %{
 #include "graphics/ViewState.h"	
@@ -19,18 +18,17 @@
 %import "core/MapVec.i"
 %import "core/ScreenPos.i"
 %import "components/Options.i"
-%import "graphics/Frustum.i"
 
 !value_type(carto::ViewState, graphics.ViewState)
 
-%attributeval(carto::ViewState, carto::MapPos, CameraPos, getCameraPos)
-%attributeval(carto::ViewState, carto::MapPos, FocusPos, getFocusPos)
-%attributeval(carto::ViewState, carto::MapVec, UpVec, getUpVec)
-%attributeval(carto::ViewState, carto::Frustum, Frustum, getFrustum)
+%ignore carto::ViewState::getCameraPos;
+%ignore carto::ViewState::getFocusPos;
+%ignore carto::ViewState::getUpVec;
+%ignore carto::ViewState::getFrustum;
+
 %attribute(carto::ViewState, float, Rotation, getRotation)
 %attribute(carto::ViewState, float, Zoom, getZoom)
 %attribute(carto::ViewState, float, Tilt, getTilt)
-%attribute(carto::ViewState, carto::ProjectionMode::ProjectionMode, ProjectionMode, getProjectionMode)
 %attribute(carto::ViewState, float, Zoom0Distance, getZoom0Distance)
 %attribute(carto::ViewState, int, FOVY, getFOVY)
 %attribute(carto::ViewState, float, Near, getNear)
@@ -65,19 +63,23 @@
 %ignore carto::ViewState::cameraChanged;
 %ignore carto::ViewState::get2PowZoom;
 %ignore carto::ViewState::getRotationState;
+%ignore carto::ViewState::getProjectionSurface;
 %ignore carto::ViewState::getProjectionMat;
 %ignore carto::ViewState::getModelviewMat;
 %ignore carto::ViewState::getModelviewProjectionMat;
-%ignore carto::ViewState::GetLocalMat;
 %ignore carto::ViewState::getRTELocalMat;
 %ignore carto::ViewState::getRTEModelviewMat;
 %ignore carto::ViewState::getRTEModelviewProjectionMat;
+%ignore carto::ViewState::getRTESkyProjectionMat;
 %ignore carto::ViewState::setScreenSize;
 %ignore carto::ViewState::clampZoom;
 %ignore carto::ViewState::clampFocusPos;
+%ignore carto::ViewState::getFocusPosNormal;
+%ignore carto::ViewState::isSkyVisible;
 %ignore carto::ViewState::calculateViewState;
 %ignore carto::ViewState::worldToScreen;
-%ignore carto::ViewState::screenToWorldPlane;
+%ignore carto::ViewState::screenToWorld;
+%ignore carto::ViewState::estimateWorldPixelMeasure;
 %ignore carto::ViewState::getHorizontalLayerOffsetDir;
 %ignore carto::ViewState::setHorizontalLayerOffsetDir;
 !standard_equals(carto::ViewState);

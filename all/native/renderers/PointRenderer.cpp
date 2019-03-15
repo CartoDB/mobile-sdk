@@ -4,10 +4,8 @@
 #include "graphics/Texture.h"
 #include "graphics/TextureManager.h"
 #include "graphics/ViewState.h"
-#include "graphics/shaders/RegularShaderSource.h"
 #include "graphics/utils/GLContext.h"
 #include "layers/VectorLayer.h"
-#include "projections/Projection.h"
 #include "renderers/drawdatas/PointDrawData.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/components/StyleTextureCache.h"
@@ -51,7 +49,9 @@ namespace carto {
     }
     
     void PointRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        _shader = shaderManager->createShader(regular_shader_source);
+        static ShaderSource shaderSource("point", &POINT_VERTEX_SHADER, &POINT_FRAGMENT_SHADER);
+        
+        _shader = shaderManager->createShader(shaderSource);
     
         // Get shader variables locations
         glUseProgram(_shader->getProgId());
@@ -139,38 +139,41 @@ namespace carto {
         }
     
         // Calculate and draw buffers
-        const MapPos& cameraPos = viewState.getCameraPos();
+        cglib::vec3<double> cameraPos = viewState.getCameraPos();
         GLuint drawDataIndex = 0;
         for (std::size_t i = 0; i < drawDataBuffer.size(); i++) {
             const std::shared_ptr<PointDrawData>& drawData = drawDataBuffer[i];
-            cglib::vec3<float> translate = cglib::vec3<float>::convert(drawData->getPos() - cglib::vec3<double>(cameraPos.getX(), cameraPos.getY(), cameraPos.getZ()));
-    
+            
+            float coordScale = drawData->getSize() * viewState.getUnitToDPCoef() * 0.5f;
+            cglib::vec3<float> translate = cglib::vec3<float>::convert(drawData->getPos() - cameraPos);
+            cglib::vec3<float> dx = drawData->getXAxis() * coordScale;
+            cglib::vec3<float> dy = drawData->getYAxis() * coordScale;
+
             // Check for possible overflow in the buffers
             if ((drawDataIndex + 1) * 6 > GLContext::MAX_VERTEXBUFFER_SIZE) {
                 // If it doesn't fit, stop and draw the buffers
-                glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &colorBuf[0]);
-                glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, &coordBuf[0]);
-                glVertexAttribPointer(a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, &texCoordBuf[0]);
-                glDrawElements(GL_TRIANGLES, drawDataIndex * 6, GL_UNSIGNED_SHORT, &indexBuf[0]);
+                glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, colorBuf.data());
+                glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, coordBuf.data());
+                glVertexAttribPointer(a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, texCoordBuf.data());
+                glDrawElements(GL_TRIANGLES, drawDataIndex * 6, GL_UNSIGNED_SHORT, indexBuf.data());
                 // Start filling buffers from the beginning
                 drawDataIndex = 0;
             }
     
             // Calculate coordinates
-            float coordScale = drawData->getSize() * viewState.getUnitToDPCoef() * 0.5f;
             int coordIndex = drawDataIndex * 4 * 3;
-            coordBuf[coordIndex + 0] = translate(0) - coordScale;
-            coordBuf[coordIndex + 1] = translate(1) + coordScale;
-            coordBuf[coordIndex + 2] = translate(2);
-            coordBuf[coordIndex + 3] = translate(0) - coordScale;
-            coordBuf[coordIndex + 4] = translate(1) - coordScale;
-            coordBuf[coordIndex + 5] = translate(2);
-            coordBuf[coordIndex + 6] = translate(0) + coordScale;
-            coordBuf[coordIndex + 7] = translate(1) + coordScale;
-            coordBuf[coordIndex + 8] = translate(2);
-            coordBuf[coordIndex + 9] = translate(0) + coordScale;
-            coordBuf[coordIndex + 10] = translate(1) - coordScale;
-            coordBuf[coordIndex + 11] = translate(2);
+            coordBuf[coordIndex + 0] = translate(0) - dx(0) + dy(0);
+            coordBuf[coordIndex + 1] = translate(1) - dx(1) + dy(1);
+            coordBuf[coordIndex + 2] = translate(2) - dx(2) + dy(2);
+            coordBuf[coordIndex + 3] = translate(0) - dx(0) - dy(0);
+            coordBuf[coordIndex + 4] = translate(1) - dx(1) - dy(1);
+            coordBuf[coordIndex + 5] = translate(2) - dx(2) - dy(2);
+            coordBuf[coordIndex + 6] = translate(0) + dx(0) + dy(0);
+            coordBuf[coordIndex + 7] = translate(1) + dx(1) + dy(1);
+            coordBuf[coordIndex + 8] = translate(2) + dx(2) + dy(2);
+            coordBuf[coordIndex + 9] = translate(0) + dx(0) - dy(0);
+            coordBuf[coordIndex + 10] = translate(1) + dx(1) - dy(1);
+            coordBuf[coordIndex + 11] = translate(2) + dx(2) - dy(2);
     
             // Calculate texture coordinates
             int texCoordIndex = drawDataIndex * 4 * 2;
@@ -187,7 +190,7 @@ namespace carto {
             const Color& color = drawData->getColor();
             int colorIndex = drawDataIndex * 4 * 4;
             for (int i = 0; i < 16; i += 4) {
-                colorBuf[colorIndex + i] = color.getR();
+                colorBuf[colorIndex + i + 0] = color.getR();
                 colorBuf[colorIndex + i + 1] = color.getG();
                 colorBuf[colorIndex + i + 2] = color.getB();
                 colorBuf[colorIndex + i + 3] = color.getA();
@@ -208,10 +211,10 @@ namespace carto {
         
         // Draw the final batch
         if (drawDataIndex > 0) {
-            glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &colorBuf[0]);
-            glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, &coordBuf[0]);
-            glVertexAttribPointer(a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, &texCoordBuf[0]);
-            glDrawElements(GL_TRIANGLES, drawDataIndex * 6, GL_UNSIGNED_SHORT, &indexBuf[0]);
+            glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, colorBuf.data());
+            glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, coordBuf.data());
+            glVertexAttribPointer(a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, texCoordBuf.data());
+            glDrawElements(GL_TRIANGLES, drawDataIndex * 6, GL_UNSIGNED_SHORT, indexBuf.data());
         }
     }
     
@@ -222,14 +225,16 @@ namespace carto {
                                                    const ViewState& viewState,
                                                    std::vector<RayIntersectedElement>& results)
     {
-        const cglib::vec3<double>& pos = drawData->getPos();
+        float coordScale = drawData->getSize() * viewState.getUnitToDPCoef() * drawData->getClickScale() * 0.5f;
+        cglib::vec3<double> pos = drawData->getPos();
+        cglib::vec3<double> dx = cglib::vec3<double>::convert(drawData->getXAxis() * coordScale);
+        cglib::vec3<double> dy = cglib::vec3<double>::convert(drawData->getYAxis() * coordScale);
             
         // Calculate coordinates
-        float coordScale = drawData->getSize() * viewState.getUnitToDPCoef() * 0.5f * drawData->getClickScale();
-        cglib::vec3<double> topLeft    (pos(0) - coordScale, pos(1) + coordScale, pos(2));
-        cglib::vec3<double> bottomLeft (pos(0) - coordScale, pos(1) - coordScale, pos(2));
-        cglib::vec3<double> topRight   (pos(0) + coordScale, pos(1) + coordScale, pos(2));
-        cglib::vec3<double> bottomRight(pos(0) + coordScale, pos(1) - coordScale, pos(2));
+        cglib::vec3<double> topLeft = pos - dx + dy;
+        cglib::vec3<double> bottomLeft = pos - dx - dy;
+        cglib::vec3<double> topRight = pos + dx + dy;
+        cglib::vec3<double> bottomRight = pos + dx - dy;
             
         // If either triangle intersects the ray, add the element to result list
         double t = 0;
@@ -237,9 +242,8 @@ namespace carto {
             cglib::intersect_triangle(bottomLeft, bottomRight, topRight, ray, &t))
         {
             MapPos clickPos(ray(t)(0), ray(t)(1), ray(t)(2));
-            const std::shared_ptr<Projection>& projection = layer->getDataSource()->getProjection();
             int priority = static_cast<int>(results.size());
-            results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projection->fromInternal(clickPos), projection->fromInternal(MapPos(pos(0), pos(1), pos(2))), priority));
+            results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, ray(t), pos, priority));
             return true;
         }
         return false;
@@ -302,4 +306,34 @@ namespace carto {
         _prevBitmap = nullptr;
     }
     
+    const std::string PointRenderer::POINT_VERTEX_SHADER = R"GLSL(
+        #version 100
+        attribute vec4 a_coord;
+        attribute vec2 a_texCoord;
+        attribute vec4 a_color;
+        varying vec2 v_texCoord;
+        varying vec4 v_color;
+        uniform mat4 u_mvpMat;
+        void main() {
+            v_texCoord = a_texCoord;
+            v_color = a_color;
+            gl_Position = u_mvpMat * a_coord;
+        }
+    )GLSL";
+
+    const std::string PointRenderer::POINT_FRAGMENT_SHADER = R"GLSL(
+        #version 100
+        precision mediump float;
+        varying mediump vec2 v_texCoord;
+        varying lowp vec4 v_color;
+        uniform sampler2D u_tex;
+        void main() {
+            vec4 color = texture2D(u_tex, v_texCoord) * v_color;
+            if (color.a == 0.0) {
+                discard;
+            }
+            gl_FragColor = color;
+        }
+    )GLSL";
+
 }

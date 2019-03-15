@@ -39,7 +39,7 @@ namespace carto {
     }
 
     void BalloonPopupStyleBuilder::setCornerRadius(int cornerRadius) {
-    	std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::mutex> lock(_mutex);
         _cornerRadius = cornerRadius;
     }
 
@@ -154,12 +154,12 @@ namespace carto {
     }
         
     bool BalloonPopupStyleBuilder::isTitleWrap() const {
-    	std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::mutex> lock(_mutex);
         return _titleWrap;
     }
 
     void BalloonPopupStyleBuilder::setTitleWrap(bool titleWrap) {
-    	std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::mutex> lock(_mutex);
         _titleWrap = titleWrap;
     }
 
@@ -214,12 +214,12 @@ namespace carto {
     }
 
     bool BalloonPopupStyleBuilder::isDescriptionWrap() const {
-    	std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::mutex> lock(_mutex);
         return _descWrap;
     }
 
     void BalloonPopupStyleBuilder::setDescriptionWrap(bool descWrap) {
-    	std::lock_guard<std::mutex> lock(_mutex);
+        std::lock_guard<std::mutex> lock(_mutex);
         _descWrap = descWrap;
     }
 
@@ -265,39 +265,39 @@ namespace carto {
 
     std::shared_ptr<BalloonPopupStyle> BalloonPopupStyleBuilder::buildStyle() {
         std::lock_guard<std::mutex> lock(_mutex);
-    	return std::shared_ptr<BalloonPopupStyle>(new BalloonPopupStyle(_color,
-                                                                        _attachAnchorPointX,
-                                                                        _attachAnchorPointY,
-                                                                        _causesOverlap,
-                                                                        _hideIfOverlapped,
-                                                                        _horizontalOffset,
-                                                                        _verticalOffset,
-                                                                        _placementPriority,
-                                                                        _scaleWithDPI,
-                                                                        _animationStyle,
-                                                                        _cornerRadius,
-                                                                        _leftColor,
-                                                                        _leftImage,
-                                                                        _leftMargins,
-                                                                        _rightColor,
-                                                                        _rightImage,
-                                                                        _rightMargins,
-                                                                        _titleColor,
-                                                                        _titleFontName,
-                                                                        _titleField,
-                                                                        _titleFontSize,
-                                                                        _titleMargins,
-                                                                        _titleWrap,
-                                                                        _descColor,
-                                                                        _descFontName,
-                                                                        _descField,
-                                                                        _descFontSize,
-                                                                        _descMargins,
-                                                                        _descWrap,
-                                                                        _strokeColor,
-                                                                        _strokeWidth,
-                                                                        _triangleWidth,
-                                                                        _triangleHeight));
+        return std::make_shared<BalloonPopupStyle>(_color,
+                                                   _attachAnchorPointX,
+                                                   _attachAnchorPointY,
+                                                   _causesOverlap,
+                                                   _hideIfOverlapped,
+                                                   _horizontalOffset,
+                                                   _verticalOffset,
+                                                   _placementPriority,
+                                                   _scaleWithDPI,
+                                                   _animationStyle,
+                                                   _cornerRadius,
+                                                   _leftColor,
+                                                   _leftImage,
+                                                   _leftMargins,
+                                                   _rightColor,
+                                                   _rightImage,
+                                                   _rightMargins,
+                                                   _titleColor,
+                                                   _titleFontName,
+                                                   _titleField,
+                                                   _titleFontSize,
+                                                   _titleMargins,
+                                                   _titleWrap,
+                                                   _descColor,
+                                                   _descFontName,
+                                                   _descField,
+                                                   _descFontSize,
+                                                   _descMargins,
+                                                   _descWrap,
+                                                   _strokeColor,
+                                                   _strokeWidth,
+                                                   _triangleWidth,
+                                                   _triangleHeight);
     }
 
 }

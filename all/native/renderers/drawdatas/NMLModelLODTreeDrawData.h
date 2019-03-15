@@ -16,13 +16,15 @@
 #include <cglib/mat.h>
 
 namespace carto {
+    class ProjectionSurface;
     namespace nml {
         class GLModel;
     }
     
     class NMLModelLODTreeDrawData {
     public:
-        NMLModelLODTreeDrawData(const std::shared_ptr<NMLModelLODTree>& modelLODTree, long long nodeId, const std::vector<long long>& parentIds, const std::shared_ptr<nml::GLModel>& glModel);
+        NMLModelLODTreeDrawData(const std::shared_ptr<NMLModelLODTree>& modelLODTree, long long nodeId, const std::vector<long long>& parentIds, const std::shared_ptr<nml::GLModel>& glModel, const ProjectionSurface& projectionSurface);
+        ~NMLModelLODTreeDrawData();
     
         std::shared_ptr<NMLModelLODTree> getModelLODTree() const;
         long long getNodeId() const;

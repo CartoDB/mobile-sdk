@@ -14,13 +14,19 @@
 #include <cglib/mat.h>
 
 namespace carto {
+    class NMLModel;
+    class NMLModelStyle;
+    class Projection;
+    class ProjectionSurface;
+    
     namespace nml {
         class Model;
     }
 
     class NMLModelDrawData : public VectorElementDrawData {
     public:
-        NMLModelDrawData(const std::shared_ptr<nml::Model>& sourceModel, const cglib::mat4x4<double>& localMat);
+        NMLModelDrawData(const NMLModel& model, const NMLModelStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface);
+        virtual ~NMLModelDrawData();
     
         std::shared_ptr<nml::Model> getSourceModel() const;
         const cglib::mat4x4<double>& getLocalMat() const;

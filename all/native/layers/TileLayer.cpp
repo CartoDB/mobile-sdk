@@ -6,15 +6,20 @@
 #include "layers/TileLoadListener.h"
 #include "layers/UTFGridEventListener.h"
 #include "layers/components/UTFGridTile.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/components/CullState.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/TileRenderer.h"
 #include "projections/Projection.h"
+#include "projections/EPSG3857.h"
 #include "ui/UTFGridClickInfo.h"
 #include "utils/Const.h"
 #include "utils/TileUtils.h"
 #include "utils/Log.h"
+
+#include <vt/TileTransformer.h>
 
 namespace carto {
 
@@ -173,7 +178,7 @@ namespace carto {
     }
         
     TileLayer::TileLayer(const std::shared_ptr<TileDataSource>& dataSource) :
-       	Layer(),
+        Layer(),
         _synchronizedRefresh(false),
         _calculatingTiles(false),
         _refreshedTiles(false),
@@ -193,13 +198,32 @@ namespace carto {
         _visibleTiles(),
         _preloadingTiles(),
         _utfGridTiles(),
-        _tileRenderer()
+        _tileRenderer(),
+        _tileTransformer()
     {
         if (!dataSource) {
             throw NullArgumentException("Null dataSource");
         }
+
+        if (!std::dynamic_pointer_cast<EPSG3857>(dataSource->getProjection())) {
+            throw InvalidArgumentException("Expecting EPSG3857 projection in datasource");
+        }
     }
     
+    void TileLayer::setComponents(const std::shared_ptr<CancelableThreadPool>& envelopeThreadPool,
+                                  const std::shared_ptr<CancelableThreadPool>& tileThreadPool,
+                                  const std::weak_ptr<Options>& options,
+                                  const std::weak_ptr<MapRenderer>& mapRenderer,
+                                  const std::weak_ptr<TouchHandler>& touchHandler)
+    {
+        Layer::setComponents(envelopeThreadPool, tileThreadPool, options, mapRenderer, touchHandler);
+
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        if (_tileRenderer) {
+            _tileRenderer->setOptions(_options);
+        }
+    }
+
     void TileLayer::loadData(const std::shared_ptr<CullState>& cullState) {
         // This method (from update() or refresh()) might be called from multiple threads
         std::lock_guard<std::recursive_mutex> lock(_mutex);
@@ -210,8 +234,7 @@ namespace carto {
         for (auto it = _utfGridTiles.begin(); it != _utfGridTiles.end(); ) {
             if (!tileExists(it->first, false) && !tileExists(it->first, true)) {
                 it = _utfGridTiles.erase(it);
-            }
-            else {
+            } else {
                 it++;
             }
         }
@@ -286,13 +309,15 @@ namespace carto {
             return;
         }
 
-        double t = 0;
-        if (!cglib::intersect_plane(cglib::vec4<double>(0, 0, 1, 0), ray, &t)) {
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+
+        // Find intersection with projection surface
+        double t = -1;
+        if (!projectionSurface->calculateHitPoint(ray, 0, t) || t < 0) {
             return;
         }
 
-        MapPos mapPosInternal(ray(t)(0), ray(t)(1), ray(t)(2));
-        MapPos mapPos = utfGridDataSource->getProjection()->fromInternal(mapPosInternal);
+        MapPos mapPos = utfGridDataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(ray(t)));
         int zoom = std::min(getMaxZoom(), static_cast<int>(viewState.getZoom() + getZoomLevelBias() + DISCRETE_ZOOM_LEVEL_BIAS));
 
         // Try to get the tile from cache
@@ -330,17 +355,20 @@ namespace carto {
             if (keyId != 0) {
                 auto elementInfo = std::make_shared<Variant>(utfGridTile->getData(utfGridTile->getKey(keyId)));
                 std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
-                results.push_back(RayIntersectedElement(elementInfo, thisLayer, mapPos, mapPos, 0));
+                results.push_back(RayIntersectedElement(elementInfo, thisLayer, ray(t), ray(t), 0));
             }
         }
     }
 
     bool TileLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        
         DirectorPtr<UTFGridEventListener> utfGridEventListener = _utfGridEventListener;
 
         if (utfGridEventListener) {
             if (std::shared_ptr<Variant> elementInfo = intersectedElement.getElement<Variant>()) {
-                auto clickInfo = std::make_shared<UTFGridClickInfo>(clickType, intersectedElement.getHitPos(), *elementInfo, intersectedElement.getLayer());
+                MapPos hitPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getHitPos()));
+                auto clickInfo = std::make_shared<UTFGridClickInfo>(clickType, hitPos, *elementInfo, intersectedElement.getLayer());
                 return utfGridEventListener->onUTFGridClicked(clickInfo);
             }
         }
@@ -356,7 +384,7 @@ namespace carto {
         // Recursively calculate visible tiles
         calculateVisibleTilesRecursive(cullState, MapTile(0, 0, 0, _frameNr), _dataSource->getDataExtent());
         if (auto options = _options.lock()) {
-            if (options->isSeamlessPanning()) {
+            if (options->getRenderProjectionMode() == RenderProjectionMode::RENDER_PROJECTION_MODE_PLANAR && options->isSeamlessPanning()) {
                 // Additional visibility testing has to be done if seamless panning is enabled
                 for (int i = 1; i <= 5; i++) {
                     calculateVisibleTilesRecursive(cullState, MapTile(-i, 0, 0, _frameNr), _dataSource->getDataExtent());
@@ -371,7 +399,7 @@ namespace carto {
 
     void TileLayer::calculateVisibleTilesRecursive(const std::shared_ptr<CullState>& cullState, const MapTile& tile, const MapBounds& dataExtent) {
         const ViewState& viewState = cullState->getViewState();
-        const Frustum& visibleFrustum = viewState.getFrustum();
+        const cglib::frustum3<double>& visibleFrustum = viewState.getFrustum();
         
         if (tile.getZoom() > Const::MAX_SUPPORTED_ZOOM_LEVEL) {
             return;
@@ -383,18 +411,19 @@ namespace carto {
             return;
         }
         
-        MapBounds tileBounds = calculateInternalTileBounds(tile);
-        MapPos tileCenter = tileBounds.getCenter();
+        cglib::bbox3<double> tileBounds = _tileTransformer->calculateTileBBox(vt::TileId(tile.getZoom(), tile.getX(), tile.getY()));
+        cglib::vec3<double> tileCenter = tileBounds.center();
+        cglib::bbox3<double> preloadingBounds(tileCenter + (tileBounds.min - tileCenter) * PRELOADING_TILE_SCALE, tileCenter + (tileBounds.max - tileCenter) * PRELOADING_TILE_SCALE);
 
-        bool inPreloadingFrustum = visibleFrustum.circleIntersects(tileCenter, tileBounds.getDelta().length() * 0.5 * PRELOADING_TILE_SCALE);
+        bool inPreloadingFrustum = visibleFrustum.inside(preloadingBounds);
         if (!inPreloadingFrustum) {
             return;
         }
-        bool inVisibleFrustum = visibleFrustum.squareIntersects(tileBounds);
+        bool inVisibleFrustum = visibleFrustum.inside(tileBounds);
         
         // Map tile is visible, calculate distance using camera plane
         const cglib::mat4x4<double>& mvpMat = viewState.getModelviewProjectionMat();
-        double tileW = tileCenter.getX() * mvpMat(3, 0) + tileCenter.getY() * mvpMat(3, 1) + mvpMat(3, 3);
+        double tileW = tileCenter(0) * mvpMat(3, 0) + tileCenter(1) * mvpMat(3, 1) + tileCenter(2) * mvpMat(3, 2) + mvpMat(3, 3);
         double zoomDistance = tileW * std::pow(2.0f, tile.getZoom() - getZoomLevelBias());
         bool subDivide = zoomDistance < SUBDIVISION_THRESHOLD * Const::SQRT_2;
         int targetTileZoom = std::min(getMaxZoom(), static_cast<int>(viewState.getZoom() + getZoomLevelBias() + DISCRETE_ZOOM_LEVEL_BIAS));
@@ -440,8 +469,8 @@ namespace carto {
                 }
             }
 
-            MapPos center = calculateInternalTileBounds(mapTile).getCenter();
-            double dist = (center - viewState.getCameraPos()).length();
+            cglib::vec3<double> center = _tileTransformer->calculateTileOrigin(vt::TileId(mapTile.getZoom(), mapTile.getX(), mapTile.getY()));
+            double dist = cglib::length(center - viewState.getCameraPos());
 
             taggedTiles.emplace_back(std::make_tuple(parentSubstLevel, childSubstLevel, dist), mapTile);
         }
@@ -544,8 +573,7 @@ namespace carto {
             if (tileExists(subTile, preloadingCache)) {
                 calculateDrawData(visTile, subTile, preloadingTile);
                 childTileCount++;
-            }
-            else {
+            } else {
                 childTileCount += findChildTiles(visTile, subTile, depth - 1, preloadingCache, preloadingTile);
             }
         }
@@ -559,6 +587,22 @@ namespace carto {
         return MapBounds(MapPos(std::min(tilePos0.getX(), tilePos1.getX()), std::min(-tilePos0.getY(), -tilePos1.getY())), MapPos(std::max(tilePos0.getX(), tilePos1.getX()), std::max(-tilePos0.getY(), -tilePos1.getY())));
     }
 
+    std::shared_ptr<vt::TileTransformer> TileLayer::getTileTransformer() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _tileTransformer;
+    }
+
+    void TileLayer::resetTileTransformer() {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        if (auto options = _options.lock()) {
+            if (options->getRenderProjectionMode() == RenderProjectionMode::RENDER_PROJECTION_MODE_SPHERICAL) {
+                _tileTransformer = std::make_shared<vt::SphericalTileTransformer>(static_cast<float>(Const::WORLD_SIZE / Const::PI));
+                return;
+            }
+        }
+        _tileTransformer = std::make_shared<vt::DefaultTileTransformer>(static_cast<float>(Const::WORLD_SIZE));
+    }
+
     std::shared_ptr<TileRenderer> TileLayer::getTileRenderer() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _tileRenderer;
@@ -567,6 +611,10 @@ namespace carto {
     void TileLayer::setTileRenderer(const std::shared_ptr<TileRenderer>& renderer) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _tileRenderer = renderer;
+
+        if (_tileRenderer) {
+            _tileRenderer->setOptions(_options);
+        }
     }
 
     TileLayer::FetchTaskBase::FetchTaskBase(const std::shared_ptr<TileLayer>& layer, const MapTile& tile, bool preloadingTile) :
@@ -686,8 +734,7 @@ namespace carto {
                 std::lock_guard<std::recursive_mutex> lock(tileLayer->_mutex);
                 tileLayer->_utfGridTiles[dataSourceTile] = utfTile; // we ignore expiration info here
                 refresh = true;
-            }
-            else {
+            } else {
                 Log::Error("TileLayer::FetchTaskBase: Failed to decode UTF grid tile");
             }
             break;
@@ -697,7 +744,7 @@ namespace carto {
 
     const float TileLayer::DISCRETE_ZOOM_LEVEL_BIAS = 0.001f;
 
-    const float TileLayer::PRELOADING_TILE_SCALE = 1.5f;
+    const double TileLayer::PRELOADING_TILE_SCALE = 1.5;
     const float TileLayer::SUBDIVISION_THRESHOLD = Const::WORLD_SIZE;
     
 }

@@ -1,6 +1,8 @@
 #include "CameraPanEvent.h"
 #include "components/Options.h"
 #include "graphics/ViewState.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
@@ -26,13 +28,12 @@ namespace carto {
         _useDelta = false;
     }
     
-    const MapVec& CameraPanEvent::getPosDelta() const {
+    const std::pair<MapPos, MapPos>& CameraPanEvent::getPosDelta() const {
         return _posDelta;
     }
     
-    void CameraPanEvent::setPosDelta(const MapVec& posDelta) {
+    void CameraPanEvent::setPosDelta(const std::pair<MapPos, MapPos>& posDelta) {
         _posDelta = posDelta;
-        _posDelta.setZ(0);
         _useDelta = true;
     }
     
@@ -41,41 +42,34 @@ namespace carto {
     }
     
     void CameraPanEvent::calculate(Options& options, ViewState& viewState) {
-        MapPos cameraPos = viewState.getCameraPos();
-        MapPos focusPos = viewState.getFocusPos();
-    
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            return;
+        }
+        
+        cglib::vec3<double> cameraPos = viewState.getCameraPos();
+        cglib::vec3<double> focusPos = viewState.getFocusPos();
+        cglib::vec3<double> upVec = viewState.getUpVec();
+
+        cglib::mat4x4<double> translateTransform;
         if (_useDelta) {
-            // If the object was initialized using relative coordinates
-            // calculate the absolute focus position
-            _pos = focusPos + _posDelta;
+            cglib::vec3<double> pos0 = projectionSurface->calculatePosition(_posDelta.first);
+            cglib::vec3<double> pos1 = projectionSurface->calculatePosition(_posDelta.second);
+            translateTransform = projectionSurface->calculateTranslateMatrix(pos0, pos1, 1.0f);
+        } else {
+            cglib::vec3<double> pos = projectionSurface->calculatePosition(_pos);
+            translateTransform = projectionSurface->calculateTranslateMatrix(focusPos, pos, 1.0f);
         }
-    
-        MapVec cameraVec = cameraPos - focusPos;
-    
-        // Clamp the focus pos to map bounds
-        bool seamLess = options.isSeamlessPanning();
-        MapBounds mapBounds = options.getInternalPanBounds();
-        if (!seamLess || mapBounds.getMin().getX() >= -Const::HALF_WORLD_SIZE || mapBounds.getMax().getX() <= Const::HALF_WORLD_SIZE) {
-            focusPos.setX(GeneralUtils::Clamp(_pos.getX(), mapBounds.getMin().getX(), mapBounds.getMax().getX()));
-        }
-        focusPos.setY(GeneralUtils::Clamp(_pos.getY(), mapBounds.getMin().getY(), mapBounds.getMax().getY()));
-    
-        // Teleport if necessary
-        if (seamLess) {
-            if (_pos.getX() > Const::HALF_WORLD_SIZE) {
-                focusPos.setX(-Const::HALF_WORLD_SIZE + (_pos.getX() - Const::HALF_WORLD_SIZE));
-                viewState.setHorizontalLayerOffsetDir(-1);
-            } else if (_pos.getX() < -Const::HALF_WORLD_SIZE) {
-                focusPos.setX(Const::HALF_WORLD_SIZE + (_pos.getX() + Const::HALF_WORLD_SIZE));
-                viewState.setHorizontalLayerOffsetDir(1);
-            }
-        }
-    
-        cameraPos = focusPos;
-        cameraPos += cameraVec;
+
+        focusPos = cglib::transform_point(focusPos, translateTransform);
+        cameraPos = cglib::transform_point(cameraPos, translateTransform);
+        upVec = cglib::transform_vector(upVec, translateTransform);
+        
+        ClampFocusPos(focusPos, cameraPos, upVec, options, viewState);
 
         viewState.setCameraPos(cameraPos);
         viewState.setFocusPos(focusPos);
+        viewState.setUpVec(upVec);
 
         viewState.clampFocusPos(options);
         

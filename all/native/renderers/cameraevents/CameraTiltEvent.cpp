@@ -1,6 +1,8 @@
 #include "CameraTiltEvent.h"
 #include "components/Options.h"
 #include "graphics/ViewState.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
@@ -42,31 +44,40 @@ namespace carto {
     }
     
     void CameraTiltEvent::calculate(Options& options, ViewState& viewState) {
-        MapPos cameraPos = viewState.getCameraPos();
-        const MapPos& focusPos = viewState.getFocusPos();
-        const MapVec& upVec = viewState.getUpVec();
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            return;
+        }
+        
+        cglib::vec3<double> cameraPos = viewState.getCameraPos();
+        cglib::vec3<double> focusPos = viewState.getFocusPos();
+        cglib::vec3<double> upVec = viewState.getUpVec();
     
         if (_useDelta) {
             // Calculate absolute tilt
             _tilt = viewState.getTilt() + _tiltDelta;
         }
     
-        MapVec cameraVec = cameraPos - focusPos;
-        double length = cameraVec.length();
+        cglib::vec3<double> cameraVec = cameraPos - focusPos;
+        double length = cglib::length(cameraVec);
     
         // Enforce tilt range
         MapRange tiltRange = options.getTiltRange();
         float tilt = GeneralUtils::Clamp(_tilt, tiltRange.getMin(), tiltRange.getMax());
     
         // Calculate camera parameters
-        double sin = std::sin(tilt * Const::DEG_TO_RAD);
-        cameraPos.setZ(sin * length);
-        double lengthXY = std::sqrt(static_cast<long double>(
-                std::max(0.0, length * length - cameraPos.getZ() * cameraPos.getZ())));
-        cameraPos.setCoords(focusPos.getX() - upVec.getX() * lengthXY,
-                focusPos.getY() - upVec.getY() * lengthXY);
+        cglib::vec3<double> normal = projectionSurface->calculateNormal(projectionSurface->calculateMapPos(focusPos));
+        cglib::vec3<double> axis = cglib::vector_product(normal, upVec);
+        if (cglib::length(axis) == 0) {
+            return;
+        }
+        
+        cglib::mat4x4<double> tiltTransform = cglib::rotate4_matrix(axis, (tilt - viewState.getTilt()) * Const::DEG_TO_RAD);
+        cameraPos = focusPos + cglib::transform_vector(cameraPos - focusPos, tiltTransform);
+        upVec = cglib::transform_vector(upVec, tiltTransform);
     
         viewState.setCameraPos(cameraPos);
+        viewState.setUpVec(upVec);
         viewState.setTilt(tilt);
 
         viewState.clampFocusPos(options);

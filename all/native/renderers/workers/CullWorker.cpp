@@ -1,5 +1,7 @@
 #include "CullWorker.h"
 #include "layers/Layer.h"
+#include "projections/ProjectionSurface.h"
+#include "projections/PlanarProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "utils/Const.h"
 #include "utils/GeomUtils.h"
@@ -104,11 +106,11 @@ namespace carto {
                 }
                 
                 // Check if view state has changed
-                if (_firstCull || viewState.getModelviewProjectionMat() != _viewState.getModelviewProjectionMat()) {
+                if (_firstCull || viewState.getModelviewProjectionMat() != _viewState.getModelviewProjectionMat() || viewState.getProjectionSurface() != _viewState.getProjectionSurface()) {
                     _firstCull = false;
                     _viewState = viewState;
                     
-                    // Calculate tiles
+                    // Calculate state
                     calculateCullState();
                 }
                 
@@ -124,46 +126,89 @@ namespace carto {
     }
     
     void CullWorker::calculateEnvelope() {
+        std::shared_ptr<ProjectionSurface> projectionSurface = _viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            return;
+        }
+
         cglib::mat4x4<double> invMVPMat = cglib::inverse(_viewState.getModelviewProjectionMat());
-        
-        // Iterate over all edges and find intersection with ground plane
-        std::vector<MapPos> hullPoints;
-        hullPoints.reserve(12);
-        for (int i = 0; i < 12; i++) {
-            int ax = (i >> 2) & 3;
-            int as = (4-ax) >> 2;
-            int bs = (5-ax) >> 2;
-            int va = ((i&1) << as) | ((i&2) << bs);
-            int vb = va | (1 << ax);
-            
-            // Calculate vertex 0
-            double xa = (va & 1) == 0 ? VIEWPORT_SCALE : -VIEWPORT_SCALE;
-            double ya = (va & 2) == 0 ? VIEWPORT_SCALE : -VIEWPORT_SCALE;
-            double za = (va & 4) == 0 ? 1 : -1;
-            cglib::vec3<double> p0 = cglib::transform_point(cglib::vec3<double>(xa, ya, za), invMVPMat);
-            
-            // Calculate vertex 1
-            double xb = (vb & 1) == 0 ? VIEWPORT_SCALE : -VIEWPORT_SCALE;
-            double yb = (vb & 2) == 0 ? VIEWPORT_SCALE : -VIEWPORT_SCALE;
-            double zb = (vb & 4) == 0 ? 1 : -1;
-            cglib::vec3<double> p1 = cglib::transform_point(cglib::vec3<double>(xb, yb, zb), invMVPMat);
-            
-            // Calculate intersection between z=0 plane and line p0<->p1
-            cglib::vec3<double> dp = p1 - p0;
-            if (dp(2) != 0) {
-                double t = -p0(2) / dp(2);
-                
-                // If the intersection point is inside of the frustum, add it to the list of candidate points
-                if (t >= 0 && t <= 1) {
-                    cglib::vec3<double> hullPoint = p0 + dp * t;
-                    hullPoints.emplace_back(hullPoint(0), hullPoint(1), 0);
-                }
+
+        bool addPole1 = _viewState.getFrustum().inside(projectionSurface->calculatePosition(MapPos(0, -std::numeric_limits<double>::infinity())));
+        bool addPole2 = _viewState.getFrustum().inside(projectionSurface->calculatePosition(MapPos(0,  std::numeric_limits<double>::infinity())));
+
+        // Calculate tesselation level. Planar projection does not need tesselation. Poles on spherical surface must be tesselated to a high degree.
+        int tesselationLevel = 1;
+        if (!std::dynamic_pointer_cast<PlanarProjectionSurface>(projectionSurface)) {
+            if (addPole1 || addPole2) {
+                tesselationLevel = MAX_VIEWPORT_TESSELATION_LEVEL;
+            } else {
+                tesselationLevel = std::max(1, MAX_VIEWPORT_TESSELATION_LEVEL >> static_cast<int>(_viewState.getZoom()));
             }
         }
 
-        // Calculate convex hull of the resulting point set
-        std::vector<MapPos> convexHull = GeomUtils::CalculateConvexHull(hullPoints);
-        _envelope = MapEnvelope(convexHull);
+        // Find closest points to screen corners/edges
+        cglib::vec2<float> screenPoses[] = {
+            cglib::vec2<float>(-VIEWPORT_SCALE, -VIEWPORT_SCALE),
+            cglib::vec2<float>(-VIEWPORT_SCALE,  VIEWPORT_SCALE),
+            cglib::vec2<float>( VIEWPORT_SCALE,  VIEWPORT_SCALE),
+            cglib::vec2<float>( VIEWPORT_SCALE, -VIEWPORT_SCALE)
+        };
+        std::vector<MapPos> mapPoses;
+        for (int i = 0; i < 4; i++) {
+            int j = (i + 1) % 4;
+            for (int n = 0; n < tesselationLevel; n++) {
+                cglib::vec2<float> screenPos = screenPoses[i] + (screenPoses[j] - screenPoses[i]) * (static_cast<float>(n) / tesselationLevel);
+                cglib::vec3<double> worldPos0 = cglib::transform_point(cglib::vec3<double>(screenPos(0), screenPos(1), -1), invMVPMat);
+                cglib::vec3<double> worldPos1 = cglib::transform_point(cglib::vec3<double>(screenPos(0), screenPos(1),  1), invMVPMat);
+                cglib::ray3<double> ray(worldPos0, worldPos1 - worldPos0);
+
+                double t = 0;
+                mapPoses.push_back(projectionSurface->calculateMapPos(projectionSurface->calculateNearestPoint(ray, 0, t)));
+            }
+        }
+
+        // Calculate bounds
+        double minX =  Const::WORLD_SIZE;
+        double maxX = -Const::WORLD_SIZE;
+        double minY =  Const::WORLD_SIZE;
+        double maxY = -Const::WORLD_SIZE;
+        for (const MapPos& mapPos : mapPoses) {
+            minX = std::min(minX, mapPos.getX());
+            maxX = std::max(maxX, mapPos.getX());
+            minY = std::min(minY, mapPos.getY());
+            maxY = std::max(maxY, mapPos.getY());
+        }
+
+        // Do quick fix of the poles. Also check for X coordinate wrapping.
+        bool wrapX = (maxX - minX >= Const::WORLD_SIZE * 0.5);
+        if (addPole1 || addPole2 || wrapX) {
+            minX = -Const::WORLD_SIZE * 0.5;
+            maxX =  Const::WORLD_SIZE * 0.5;
+            if (addPole1) {
+                minY = -std::numeric_limits<double>::infinity();
+            }
+            if (addPole2) {
+                maxY =  std::numeric_limits<double>::infinity();
+            }
+
+            mapPoses.clear();
+            mapPoses.emplace_back(minX, minY);
+            mapPoses.emplace_back(minX, maxY);
+            mapPoses.emplace_back(maxX, maxY);
+            mapPoses.emplace_back(maxX, minY);
+            _envelope = MapEnvelope(mapPoses);
+        } else {
+            // Calculate convex hull. If it contains too many points, replace it with bounding box.
+            mapPoses = GeomUtils::CalculateConvexHull(mapPoses);
+            if (mapPoses.size() > static_cast<std::size_t>(MAX_ENVELOPE_POINTS)) {
+                mapPoses.clear();
+                mapPoses.emplace_back(minX, minY);
+                mapPoses.emplace_back(minX, maxY);
+                mapPoses.emplace_back(maxX, maxY);
+                mapPoses.emplace_back(maxX, minY);
+            }
+            _envelope = MapEnvelope(mapPoses);
+        }
     }
     
     void CullWorker::updateLayers(const std::vector<std::shared_ptr<Layer> >& layers) {
@@ -172,5 +217,9 @@ namespace carto {
         }
     }
     
+    const int CullWorker::MAX_VIEWPORT_TESSELATION_LEVEL = 32;
+
+    const int CullWorker::MAX_ENVELOPE_POINTS = 64;
+
     const float CullWorker::VIEWPORT_SCALE = 1.1f; // enlarge viewport envelope by approx. 10%
 }

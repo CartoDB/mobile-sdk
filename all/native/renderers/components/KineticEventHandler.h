@@ -26,7 +26,7 @@ namespace carto {
         void calculate(const ViewState& viewState, float deltaSeconds);
     
         bool isPanning() const;
-        void setPanDelta(const MapVec& deltaFocusPos, float zoom);
+        void setPanDelta(const std::pair<MapPos, MapPos>& panDelta, float zoom);
         void startPan();
         void stopPan();
     
@@ -45,10 +45,11 @@ namespace carto {
         void handleRotation(const ViewState& viewState, float deltaSeconds);
         void handleZoom(const ViewState& viewState, float deltaSeconds);
     
-        static const float KINETIC_PAN_START_TOLERANCE_ZOOM_0;
-        static const float KINETIC_PAN_STOP_TOLERANCE_ZOOM_0;
+        static const float KINETIC_PAN_START_TOLERANCE;
+        static const float KINETIC_PAN_STOP_TOLERANCE;
         static const float KINETIC_PAN_SLOWDOWN;
         static const float KINETIC_PAN_DELTA_MULTIPLIER;
+        static const float KINETIC_PAN_DELTA_CLAMP;
     
         static const float KINETIC_ROTATION_START_TOLERANCE_ANGLE;
         static const float KINETIC_ROTATION_STOP_TOLERANCE_ANGLE;
@@ -63,8 +64,9 @@ namespace carto {
         static const int AVERAGE_SAMPLE_COUNT = 7;
     
         bool _pan;
-        MapVec _panDelta;
-    
+        float _panDelta;
+        std::pair<MapPos, MapPos> _panPositions;
+
         bool _rotation;
         float _rotationDelta;
         MapPos _rotationTargetPos;

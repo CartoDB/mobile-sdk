@@ -5,10 +5,11 @@
 
 namespace carto {
 
-    MarkerDrawData::MarkerDrawData(const Marker& marker, const MarkerStyle& style, const Projection& projection) :
+    MarkerDrawData::MarkerDrawData(const Marker& marker, const MarkerStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface) :
         BillboardDrawData(marker,
                           style,
                           projection,
+                          projectionSurface,
                           style.getBitmap(),
                           style.getAnchorPointX(),
                           style.getAnchorPointY(),

@@ -4,7 +4,6 @@
 %module BaseMapView
 
 !proxy_imports(carto::BaseMapView, core.MapPos, core.MapVec, core.MapBounds, core.ScreenPos, core.ScreenBounds, components.Options, components.Layers, components.LicenseManagerListener, renderers.MapRenderer, renderers.RedrawRequestListener, ui.MapEventListener)
-!java_imports(carto::BaseMapView, com.carto.components.ProjectionMode)
 
 %{
 #include "ui/BaseMapView.h"

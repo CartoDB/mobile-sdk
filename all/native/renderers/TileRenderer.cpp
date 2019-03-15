@@ -1,16 +1,19 @@
 #include "TileRenderer.h"
+#include "components/Options.h"
 #include "components/ThreadWorker.h"
-#include "graphics/Frustum.h"
 #include "graphics/Shader.h"
 #include "graphics/ShaderManager.h"
 #include "graphics/ViewState.h"
 #include "graphics/utils/GLContext.h"
+#include "projections/PlanarProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/drawdatas/TileDrawData.h"
 #include "utils/Log.h"
 #include "utils/Const.h"
 
-#include <vt/TileLabelCuller.h>
+#include <vt/Label.h>
+#include <vt/LabelCuller.h>
+#include <vt/TileTransformer.h>
 #include <vt/GLTileRenderer.h>
 #include <vt/GLExtensions.h>
 
@@ -33,23 +36,29 @@ namespace {
     
 namespace carto {
     
-    TileRenderer::TileRenderer(const std::weak_ptr<MapRenderer>& mapRenderer) :
+    TileRenderer::TileRenderer(const std::weak_ptr<MapRenderer>& mapRenderer, const std::shared_ptr<vt::TileTransformer>& tileTransformer) :
         _mapRenderer(mapRenderer),
+        _tileTransformer(tileTransformer),
         _glRenderer(),
         _glRendererMutex(std::make_shared<std::mutex>()),
         _interactionMode(false),
         _subTileBlending(true),
         _labelOrder(0),
         _buildingOrder(1),
-        _backgroundColor(0, 0, 0, 0),
-        _backgroundPattern(),
         _horizontalLayerOffset(0),
+        _lightDir(0, 0, 0),
         _tiles(),
+        _options(),
         _mutex()
     {
     }
     
     TileRenderer::~TileRenderer() {
+    }
+    
+    void TileRenderer::setOptions(const std::weak_ptr<Options>& options) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _options = options;
     }
     
     void TileRenderer::setInteractionMode(bool enabled) {
@@ -71,17 +80,7 @@ namespace carto {
         std::lock_guard<std::mutex> lock(_mutex);
         _buildingOrder = order;
     }
-    
-    void TileRenderer::setBackgroundColor(const Color& color) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _backgroundColor = color;
-    }
-    
-    void TileRenderer::setBackgroundPattern(const std::shared_ptr<const vt::BitmapPattern>& pattern) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _backgroundPattern = pattern;
-    }
-    
+
     void TileRenderer::offsetLayerHorizontally(double offset) {
         std::lock_guard<std::mutex> lock(_mutex);
         _horizontalLayerOffset += offset;
@@ -92,6 +91,25 @@ namespace carto {
         
         Log::Debug("TileRenderer: Surface created");
 
+        boost::optional<vt::GLTileRenderer::LightingShader> lightingShader2D;
+        if (auto mapRenderer = _mapRenderer.lock()) {
+            if (!std::dynamic_pointer_cast<PlanarProjectionSurface>(mapRenderer->getProjectionSurface())) {
+                lightingShader2D = vt::GLTileRenderer::LightingShader(true, LIGHTING_SHADER_2D, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
+                    glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1, _lightDir.data());
+                });
+            }
+        }
+        boost::optional<vt::GLTileRenderer::LightingShader> lightingShader3D = vt::GLTileRenderer::LightingShader(true, LIGHTING_SHADER_3D, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
+            if (auto options = _options.lock()) {
+                const Color& ambientLightColor = options->getAmbientLightColor();
+                glUniform4f(glGetUniformLocation(shaderProgram, "u_ambientColor"), ambientLightColor.getR() / 255.0f, ambientLightColor.getG() / 255.0f, ambientLightColor.getB() / 255.0f, ambientLightColor.getA() / 255.0f);
+                const Color& mainLightColor = options->getMainLightColor();
+                glUniform4f(glGetUniformLocation(shaderProgram, "u_lightColor"), mainLightColor.getR() / 255.0f, mainLightColor.getG() / 255.0f, mainLightColor.getB() / 255.0f, mainLightColor.getA() / 255.0f);
+                const MapVec& mainLightDir = options->getMainLightDirection();
+                glUniform3f(glGetUniformLocation(shaderProgram, "u_lightDir"), static_cast<float>(mainLightDir.getX()), static_cast<float>(mainLightDir.getY()), static_cast<float>(mainLightDir.getZ()));
+            }
+        });
+
         std::weak_ptr<MapRenderer> mapRendererWeak(_mapRenderer);
         auto glRendererDeleter = [mapRendererWeak](vt::GLTileRenderer* rendererPtr) {
             std::unique_ptr<vt::GLTileRenderer> renderer(rendererPtr);
@@ -101,7 +119,7 @@ namespace carto {
             }
         };
         _glRenderer = std::shared_ptr<vt::GLTileRenderer>(
-            new vt::GLTileRenderer(_glRendererMutex, std::make_shared<carto::vt::GLExtensions>(), carto::Const::WORLD_SIZE), glRendererDeleter
+            new vt::GLTileRenderer(_glRendererMutex, std::make_shared<vt::GLExtensions>(), _tileTransformer, lightingShader2D, lightingShader3D, Const::WORLD_SIZE), glRendererDeleter
         );
         _glRenderer->initializeRenderer();
         _tiles.clear();
@@ -120,7 +138,8 @@ namespace carto {
         _glRenderer->setViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution());
         _glRenderer->setInteractionMode(_interactionMode);
         _glRenderer->setSubTileBlending(_subTileBlending);
-        _glRenderer->setBackground(vt::Color(_backgroundColor.getARGB()), _backgroundPattern);
+
+        _lightDir = viewState.getFocusPosNormal();
 
         _glRenderer->startFrame(deltaSeconds * 3);
 
@@ -152,7 +171,7 @@ namespace carto {
             return false;
         }
 
-        bool refresh = false;	
+        bool refresh = false;    
         if (_labelOrder == 1) {
             refresh = _glRenderer->renderLabels(true, false) || refresh;
         }
@@ -190,7 +209,7 @@ namespace carto {
     
     bool TileRenderer::cullLabels(const ViewState& viewState) {
         cglib::mat4x4<double> modelViewMat = viewState.getModelviewMat();
-        std::vector<std::shared_ptr<vt::TileLabel> > visibleLabels;
+        std::vector<std::shared_ptr<vt::Label> > visibleLabels;
         {
             std::lock_guard<std::mutex> lock(_mutex);
 
@@ -202,7 +221,7 @@ namespace carto {
             visibleLabels = _glRenderer->getVisibleLabels();
         }
 
-        vt::TileLabelCuller culler(_glRendererMutex, Const::WORLD_SIZE);
+        vt::LabelCuller culler(_glRendererMutex, _tileTransformer, Const::WORLD_SIZE);
         culler.setViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution());
         culler.process(visibleLabels);
         return true;
@@ -279,5 +298,23 @@ namespace carto {
             _glRenderer->findLabelIntersections(ray, results, radius, false, true);
         }
     }
-        
+
+    const std::string TileRenderer::LIGHTING_SHADER_2D = R"GLSL(
+        uniform vec3 u_lightDir;
+        vec4 applyLighting(vec4 color, vec3 normal) {
+            float lighting = max(0.0, dot(normal, u_lightDir)) * 0.5 + 0.5;
+            return vec4(color.rgb * lighting, color.a);
+        }
+    )GLSL";
+
+    const std::string TileRenderer::LIGHTING_SHADER_3D = R"GLSL(
+        uniform vec4 u_ambientColor;
+        uniform vec4 u_lightColor;
+        uniform vec3 u_lightDir;
+        vec4 applyLighting(vec4 color, vec3 normal) {
+            vec3 lighting = max(0.0, dot(normal, u_lightDir)) * u_lightColor.rgb + u_ambientColor.rgb;
+            return vec4(color.rgb * lighting, color.a);
+        }
+    )GLSL";
+
 }

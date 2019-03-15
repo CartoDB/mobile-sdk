@@ -48,7 +48,6 @@
 #import "NTGeoJSONGeometryReader.h"
 #import "NTGeoJSONGeometryWriter.h"
 
-#import "NTFrustum.h"
 #import "NTBitmap.h"
 #import "NTColor.h"
 #import "NTViewState.h"
@@ -67,6 +66,7 @@
 #import "NTClusterElementBuilder.h"
 
 #import "NTEPSG3857.h"
+#import "NTEPSG4326.h"
 
 #import "NTCullState.h"
 
@@ -90,6 +90,8 @@
 #import "NTPopupStyle.h"
 #import "NTTextStyleBuilder.h"
 #import "NTTextStyle.h"
+#import "NTNMLModelStyleBuilder.h"
+#import "NTNMLModelStyle.h"
 #import "NTGeometryCollectionStyle.h"
 #import "NTGeometryCollectionStyleBuilder.h"
 

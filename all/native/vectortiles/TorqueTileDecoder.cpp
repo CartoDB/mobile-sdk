@@ -23,6 +23,7 @@ namespace carto {
         _logger(std::make_shared<MapnikVTLogger>("TorqueTileDecoder")),
         _resolution(256),
         _map(),
+        _mapSettings(),
         _symbolizerContext(),
         _styleSet(),
         _mutex()
@@ -72,15 +73,11 @@ namespace carto {
         notifyDecoderChanged();
     }
     
-    Color TorqueTileDecoder::getBackgroundColor() const {
+    std::shared_ptr<mvt::Map::Settings> TorqueTileDecoder::getMapSettings() const  {
         std::lock_guard<std::mutex> lock(_mutex);
-        return Color(std::static_pointer_cast<mvt::TorqueMap>(_map)->getTorqueSettings().clearColor.value());
+        return _mapSettings;
     }
     
-    std::shared_ptr<const vt::BitmapPattern> TorqueTileDecoder::getBackgroundPattern() const {
-        return std::shared_ptr<const vt::BitmapPattern>();
-    }
-        
     int TorqueTileDecoder::getMinZoom() const {
         return 0;
     }
@@ -99,7 +96,7 @@ namespace carto {
         return std::shared_ptr<VectorTileFeatureCollection>();
     }
 
-    std::shared_ptr<TorqueTileDecoder::TileMap> TorqueTileDecoder::decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const {
+    std::shared_ptr<TorqueTileDecoder::TileMap> TorqueTileDecoder::decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<vt::TileTransformer>& tileTransformer, const std::shared_ptr<BinaryData>& tileData) const {
         if (!tileData) {
             Log::Warn("TorqueTileDecoder::decodeTile: Null tile data");
             return std::shared_ptr<TileMap>();
@@ -124,7 +121,7 @@ namespace carto {
 
             auto tileMap = std::make_shared<TileMap>();
             for (int frame = 0; frame < map->getTorqueSettings().frameCount; frame++) {
-                mvt::TorqueTileReader reader(map, frame, true, *symbolizerContext, decoder);
+                mvt::TorqueTileReader reader(map, frame, true, tileTransformer, *symbolizerContext, decoder);
                 if (std::shared_ptr<vt::Tile> tile = reader.readTile(targetTile)) {
                     (*tileMap)[frame] = tile;
                 }
@@ -157,6 +154,8 @@ namespace carto {
         auto symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
 
         _map = map;
+        _mapSettings = std::make_shared<mvt::Map::Settings>(map->getSettings());
+        _mapSettings->backgroundColor = std::static_pointer_cast<mvt::TorqueMap>(_map)->getTorqueSettings().clearColor;
         _symbolizerContext = symbolizerContext;
         _styleSet = styleSet;
     }

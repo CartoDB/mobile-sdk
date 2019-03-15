@@ -50,8 +50,7 @@ namespace carto {
         _layerMaps(),
         _layerSymbolizerContexts(),
         _assetPackageSymbolizerContexts(),
-        _backgroundColor(),
-        _backgroundPattern()
+        _mapSettings()
     {
         for (auto it = layerStyleSets.begin(); it != layerStyleSets.end(); it++) {
             updateLayerStyleSet(it->first, it->second);
@@ -114,16 +113,11 @@ namespace carto {
         notifyDecoderChanged();
     }
 
-    Color CartoVectorTileDecoder::getBackgroundColor() const {
+    std::shared_ptr<mvt::Map::Settings> CartoVectorTileDecoder::getMapSettings() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return _backgroundColor;
+        return _mapSettings;
     }
     
-    std::shared_ptr<const vt::BitmapPattern> CartoVectorTileDecoder::getBackgroundPattern() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _backgroundPattern;
-    }
-        
     int CartoVectorTileDecoder::getMinZoom() const {
         return 0;
     }
@@ -237,7 +231,7 @@ namespace carto {
         return std::make_shared<VectorTileFeatureCollection>(tileFeatures);
     }
 
-    std::shared_ptr<CartoVectorTileDecoder::TileMap> CartoVectorTileDecoder::decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const {
+    std::shared_ptr<CartoVectorTileDecoder::TileMap> CartoVectorTileDecoder::decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<vt::TileTransformer>& tileTransformer, const std::shared_ptr<BinaryData>& tileData) const {
         if (!tileData) {
             Log::Warn("CartoVectorTileDecoder::decodeTile: Null tile data");
             return std::shared_ptr<TileMap>();
@@ -269,14 +263,20 @@ namespace carto {
                     continue;
                 }
 
-                mvt::MBVTTileReader reader(it->second, *layerSymbolizerContexts[it->first], decoder);
+                mvt::MBVTTileReader reader(it->second, tileTransformer, *layerSymbolizerContexts[it->first], decoder);
                 reader.setLayerNameOverride(it->first);
                 tiles[index] = reader.readTile(targetTile);
             }
 
+            float tileSize = 256.0f;
+            std::shared_ptr<vt::TileBackground> tileBackground;
             std::vector<std::shared_ptr<vt::TileLayer> > tileLayers;
             for (std::size_t i = 0; i < tiles.size(); i++) {
                 if (std::shared_ptr<vt::Tile> tile = tiles[i]) {
+                    if (i == 0) {
+                        tileSize = tile->getTileSize();
+                        tileBackground = tile->getBackground();
+                    }
                     for (const std::shared_ptr<vt::TileLayer>& tileLayer : tile->getLayers()) {
                         int layerIdx = static_cast<int>(i * 65536) + tileLayer->getLayerIndex();
                         tileLayers.push_back(std::make_shared<vt::TileLayer>(layerIdx, tileLayer->getCompOp(), tileLayer->getOpacityFunc(), tileLayer->getBitmaps(), tileLayer->getGeometries(), tileLayer->getLabels()));
@@ -285,7 +285,7 @@ namespace carto {
             }
 
             auto tileMap = std::make_shared<TileMap>();
-            (*tileMap)[0] = std::make_shared<vt::Tile>(targetTile, tileLayers);
+            (*tileMap)[0] = std::make_shared<vt::Tile>(targetTile, tileSize, tileBackground, tileLayers);
             return tileMap;
         } catch (const std::exception& ex) {
             Log::Errorf("CartoVectorTileDecoder::decodeTile: Exception while decoding: %s", ex.what());
@@ -333,15 +333,7 @@ namespace carto {
         }
 
         if (!_layerIds.empty() && _layerIds.front() == layerId) {
-            _backgroundColor = Color(map->getSettings().backgroundColor.value());
-
-            std::shared_ptr<const vt::BitmapPattern> backgroundPattern;
-            if (!map->getSettings().backgroundImage.empty()) {
-                auto bitmapLoader = std::make_shared<VTBitmapLoader>("", assetPackage);
-                auto bitmapManager = std::make_shared<vt::BitmapManager>(bitmapLoader);
-                backgroundPattern = bitmapManager->loadBitmapPattern(map->getSettings().backgroundImage, 1.0f, 1.0f);
-            }
-            _backgroundPattern = backgroundPattern;
+            _mapSettings = std::make_shared<mvt::Map::Settings>(map->getSettings());
         }
 
         _layerStyleSets[layerId] = styleSet;

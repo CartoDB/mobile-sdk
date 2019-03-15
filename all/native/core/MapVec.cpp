@@ -152,20 +152,6 @@ namespace carto {
         return MapVec(_x / len, _y / len, _z / len);
     }
     
-    MapVec& MapVec::rotate2D(double sin, double cos) {
-        double x = cos * _x - sin * _y;
-        double y = sin * _x + cos * _y;
-        _x = x;
-        _y = y;
-        return *this;
-    }
-    
-    MapVec MapVec::getRotated2D(double sin, double cos) const {
-        MapVec mapVec(*this);
-        mapVec.rotate2D(sin, cos);
-        return mapVec;
-    }
-    
     double MapVec::crossProduct2D(const MapVec& v) const {
         return _x * v._y - _y * v._x;
     }

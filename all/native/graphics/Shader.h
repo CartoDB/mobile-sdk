@@ -7,7 +7,7 @@
 #ifndef _CARTO_SHADER_H_
 #define _CARTO_SHADER_H_
 
-#include "graphics/shaders/ShaderSource.h"
+#include "graphics/ShaderSource.h"
 #include "graphics/utils/GLContext.h"
 
 #include <memory>

@@ -7,6 +7,9 @@
 #ifndef _CARTO_CAMERAEVENT_H_
 #define _CARTO_CAMERAEVENT_H_
 
+#include <cglib/vec.h>
+#include <cglib/mat.h>
+
 namespace carto {
     class Options;
     class ViewState;
@@ -19,6 +22,8 @@ namespace carto {
     
     protected:
         CameraEvent() { }
+
+        static void ClampFocusPos(cglib::vec3<double>& focusPos, cglib::vec3<double>& cameraPos, cglib::vec3<double>& upVec, const Options& options, ViewState& viewState);
     };
     
 }

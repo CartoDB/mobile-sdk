@@ -170,6 +170,12 @@ namespace carto {
             cglib::vec3<float> topRight(cglib::transform_point(cglib::vec3<float>(coordBuf[6], coordBuf[7], coordBuf[8]), rteMVPMat));
             cglib::vec3<float> bottomRight(cglib::transform_point(cglib::vec3<float>(coordBuf[9], coordBuf[10], coordBuf[11]), rteMVPMat));
 
+            cglib::bbox3<double> bounds = cglib::bbox3<double>::smallest();
+            bounds.add(cglib::vec3<double>(topLeft(0), topLeft(1), 0));
+            bounds.add(cglib::vec3<double>(bottomLeft(0), bottomLeft(1), 0));
+            bounds.add(cglib::vec3<double>(topRight(0), topRight(1), 0));
+            bounds.add(cglib::vec3<double>(bottomRight(0), bottomRight(1), 0));
+
             // Construct convex polygons from the screen coordinatees
             convexHull.clear();
             convexHull.emplace_back(topLeft(0), topLeft(1), 0);
@@ -182,7 +188,7 @@ namespace carto {
             bool overlapped = false;
             if (drawData->isHideIfOverlapped()) {
                 // Check that there are higher priority billboards overlapping with this one
-                const std::vector<MapEnvelope>& overlappedEnvelopes = _kdTree.query(envelope.getBounds());
+                const std::vector<MapEnvelope>& overlappedEnvelopes = _kdTree.query(bounds);
                 for (const MapEnvelope& overlappedEnvelope : overlappedEnvelopes) {
                     if (overlappedEnvelope.intersects(envelope)) {
                         // Overlapping detected, hide this billboard
@@ -198,7 +204,7 @@ namespace carto {
                 drawData->setOverlapping(false);
                 changed = true;
                 if (drawData->isCausesOverlap()) {
-                    _kdTree.insert(envelope.getBounds(), envelope);
+                    _kdTree.insert(bounds, envelope);
                 }
             }
         }

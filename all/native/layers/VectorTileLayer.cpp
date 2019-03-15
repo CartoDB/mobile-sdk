@@ -7,6 +7,8 @@
 #include "graphics/utils/SkyBitmapGenerator.h"
 #include "datasources/TileDataSource.h"
 #include "layers/VectorTileEventListener.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/TileRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
@@ -18,6 +20,7 @@
 
 #include <vt/TileId.h>
 #include <vt/Tile.h>
+#include <vt/TileTransformer.h>
 
 namespace carto {
 
@@ -31,8 +34,10 @@ namespace carto {
         _tileDecoderListener(),
         _backgroundColor(0, 0, 0, 0),
         _backgroundBitmap(),
-        _skyColor(),
+        _skyColor(0, 0, 0, 0),
+        _skyGroundColor(0, 0, 0, 0),
         _skyBitmap(),
+        _poleTiles(),
         _labelCullThreadPool(std::make_shared<CancelableThreadPool>()),
         _visibleTileIds(),
         _tempDrawDatas(),
@@ -77,7 +82,7 @@ namespace carto {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             _labelRenderOrder = renderOrder;
         }
-        refresh();
+        redraw();
     }
     
     VectorTileRenderOrder::VectorTileRenderOrder VectorTileLayer::getBuildingRenderOrder() const {
@@ -90,7 +95,7 @@ namespace carto {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             _buildingRenderOrder = renderOrder;
         }
-        refresh();
+        redraw();
     }
     
     std::shared_ptr<VectorTileEventListener> VectorTileLayer::getVectorTileEventListener() const {
@@ -182,8 +187,7 @@ namespace carto {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             _visibleCache.clear();
             _preloadingCache.clear();
-        }
-        else {
+        } else {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             _visibleCache.invalidate_all(std::chrono::steady_clock::now());
             _preloadingCache.clear();
@@ -209,6 +213,19 @@ namespace carto {
             return tileInfo.getTileMap();
         }
         return std::shared_ptr<VectorTileDecoder::TileMap>();
+    }
+
+    std::shared_ptr<vt::Tile> VectorTileLayer::getPoleTile(int y) const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        vt::Color color = (y < 0 ? _tileDecoder->getMapSettings()->northPoleColor : _tileDecoder->getMapSettings()->southPoleColor);
+        std::shared_ptr<vt::Tile>& tile = _poleTiles[y < 0 ? 0 : 1];
+        if (!tile || tile->getBackground()->getColor() != color) {
+            float tileSize = 256.0f; // 'normalized' tile size in pixels. Not really important
+            vt::TileId vtTile(0, 0, y);
+            auto tileBackground = std::make_shared<vt::TileBackground>(color, std::shared_ptr<const vt::BitmapPattern>());
+            tile = std::make_shared<vt::Tile>(vtTile, tileSize, tileBackground, std::vector<std::shared_ptr<vt::TileLayer> >());
+        }
+        return tile;
     }
     
     void VectorTileLayer::calculateDrawData(const MapTile& visTile, const MapTile& closestTile, bool preloadingTile) {
@@ -266,7 +283,23 @@ namespace carto {
         bool cull = false;
         if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
             if (!(_synchronizedRefresh && _fetchingTiles.getVisibleCount() > 0)) {
-                if (tileRenderer->refreshTiles(_tempDrawDatas)) {
+                std::vector<std::shared_ptr<TileDrawData>> drawDatas = _tempDrawDatas;
+
+                // Add poles
+                if (auto options = _options.lock()) {
+                    if (options->getRenderProjectionMode() == RenderProjectionMode::RENDER_PROJECTION_MODE_SPHERICAL) {
+                        const cglib::frustum3<double>& frustum = cullState->getViewState().getFrustum();
+                        for (int y = -1; y <= 1; y += 2) {
+                            vt::TileId vtTile(0, 0, y);
+                            cglib::bbox3<double> bbox = getTileTransformer()->calculateTileBBox(vtTile);
+                            if (frustum.inside(bbox)) {
+                                drawDatas.push_back(std::make_shared<TileDrawData>(vtTile, getPoleTile(y), -1, false));
+                            }
+                        }
+                    }
+                }
+                
+                if (tileRenderer->refreshTiles(drawDatas)) {
                     refresh = true;
                     cull = true;
                 }
@@ -284,9 +317,7 @@ namespace carto {
         }
     
         if (refresh) {
-            if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
-                mapRenderer->requestRedraw();
-            }
+            redraw();
         }
 
         {
@@ -333,16 +364,13 @@ namespace carto {
 
                     std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-                    MapTile mapTile(vtTileId.x, vtTileId.y, vtTileId.zoom, _frameNr);
-                    MapPos mapPos = projection.fromInternal(MapPos(ray(t)(0), ray(t)(1), ray(t)(2)));
-
                     TileInfo tileInfo;
-                    _visibleCache.peek(getTileId(mapTile), tileInfo);
+                    _visibleCache.peek(getTileId(MapTile(vtTileId.x, vtTileId.y, vtTileId.zoom, _frameNr)), tileInfo);
 
                     if (std::shared_ptr<BinaryData> tileData = tileInfo.getTileData()) {
                         if (std::shared_ptr<VectorTileFeature> tileFeature = _tileDecoder->decodeFeature(id, vtTileId, tileData, tileInfo.getTileBounds())) {
                             std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
-                            results.push_back(RayIntersectedElement(tileFeature, thisLayer, mapPos, mapPos, 0, pass > 0));
+                            results.push_back(RayIntersectedElement(tileFeature, thisLayer, ray(t), ray(t), 0, pass > 0));
                         } else {
                             Log::Warnf("VectorTileLayer::calculateRayIntersectedElements: Failed to decode feature %lld", id);
                         }
@@ -357,11 +385,14 @@ namespace carto {
     }
 
     bool VectorTileLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        
         DirectorPtr<VectorTileEventListener> eventListener = _vectorTileEventListener;
 
         if (eventListener) {
             if (std::shared_ptr<VectorTileFeature> tileFeature = intersectedElement.getElement<VectorTileFeature>()) {
-                auto clickInfo = std::make_shared<VectorTileClickInfo>(clickType, intersectedElement.getHitPos(), intersectedElement.getHitPos(), tileFeature, intersectedElement.getLayer());
+                MapPos hitPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getHitPos()));
+                auto clickInfo = std::make_shared<VectorTileClickInfo>(clickType, hitPos, hitPos, tileFeature, intersectedElement.getLayer());
                 return eventListener->onVectorTileClicked(clickInfo);
             }
         }
@@ -388,9 +419,10 @@ namespace carto {
             _preloadingCache.clear();
             _visibleCache.clear();
         }
-    
+
         // Create new rendererer, simply drop old one (if exists)
-        auto tileRenderer = std::make_shared<TileRenderer>(_mapRenderer);
+        resetTileTransformer();
+        auto tileRenderer = std::make_shared<TileRenderer>(_mapRenderer, getTileTransformer());
         tileRenderer->onSurfaceCreated(shaderManager, textureManager);
         setTileRenderer(tileRenderer);
     }
@@ -406,10 +438,6 @@ namespace carto {
                     mapRenderer->clearAndBindScreenFBO(Color(0, 0, 0, 0), true, true);
                 }
 
-                tileRenderer->setBackgroundColor(_tileDecoder->getBackgroundColor());
-                if (auto backgroundPattern = _tileDecoder->getBackgroundPattern()) {
-                    tileRenderer->setBackgroundPattern(backgroundPattern);
-                }
                 tileRenderer->setLabelOrder(static_cast<int>(getLabelRenderOrder()));
                 tileRenderer->setBuildingOrder(static_cast<int>(getBuildingRenderOrder()));
                 tileRenderer->setInteractionMode(_vectorTileEventListener.get() ? true : false);
@@ -453,12 +481,15 @@ namespace carto {
     std::shared_ptr<Bitmap> VectorTileLayer::getBackgroundBitmap() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-        Color backgroundColor = _tileDecoder->getBackgroundColor();
+        Color backgroundColor = _backgroundColor;
+        if (std::shared_ptr<mvt::Map::Settings> mapSettings = _tileDecoder->getMapSettings()) {
+            backgroundColor = Color(mapSettings->backgroundColor.value());
+        }
         if (backgroundColor != _backgroundColor || !_backgroundBitmap) {
-            if (backgroundColor == Color(0, 0, 0, 0)) {
-                _backgroundBitmap = TileLayer::getBackgroundBitmap();
-            } else {
+            if (backgroundColor != Color(0, 0, 0, 0)) {
                 _backgroundBitmap = BackgroundBitmapGenerator(BACKGROUND_BLOCK_SIZE, BACKGROUND_BLOCK_COUNT).generateBitmap(backgroundColor);
+            } else {
+                _backgroundBitmap.reset();
             }
             _backgroundColor = backgroundColor;
         }
@@ -468,10 +499,23 @@ namespace carto {
     std::shared_ptr<Bitmap> VectorTileLayer::getSkyBitmap() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-        Color backgroundColor = _tileDecoder->getBackgroundColor();
-        if (backgroundColor != _skyColor || !_skyBitmap) {
-            _skyBitmap = SkyBitmapGenerator(SKY_WIDTH, SKY_HEIGHT, SKY_GRADIENT_SIZE, SKY_GRADIENT_OFFSET).generateBitmap(backgroundColor);
-            _skyColor = backgroundColor;
+        std::shared_ptr<Options> options = _options.lock();
+        if (!options) {
+            return std::shared_ptr<Bitmap>();
+        }
+        Color skyGroundColor = _skyGroundColor;
+        if (std::shared_ptr<mvt::Map::Settings> mapSettings = _tileDecoder->getMapSettings()) {
+            skyGroundColor = Color(mapSettings->backgroundColor.value());
+        }
+        Color skyColor = options->getSkyColor();
+        if (skyGroundColor != _skyGroundColor || skyColor != _skyColor || !_skyBitmap) {
+            if (skyColor == Color(0, 0, 0, 0)) {
+                _skyBitmap.reset();
+            } else {
+                _skyBitmap = SkyBitmapGenerator(1, 128).generateBitmap(skyGroundColor, skyColor);
+            }
+            _skyGroundColor = skyGroundColor;
+            _skyColor = skyColor;
         }
         return _skyBitmap;
     }
@@ -528,7 +572,8 @@ namespace carto {
     
             vt::TileId vtTile(_tile.getZoom(), _tile.getX(), _tile.getY());
             vt::TileId vtDataSourceTile(dataSourceTile.getZoom(), dataSourceTile.getX(), dataSourceTile.getY());
-            std::shared_ptr<VectorTileDecoder::TileMap> tileMap = layer->_tileDecoder->decodeTile(vtDataSourceTile, vtTile, tileData->getData());
+            std::shared_ptr<vt::TileTransformer> tileTransformer = layer->getTileTransformer();
+            std::shared_ptr<VectorTileDecoder::TileMap> tileMap = layer->_tileDecoder->decodeTile(vtDataSourceTile, vtTile, tileTransformer, tileData->getData());
             if (tileMap) {
                 // Construct tile info - keep original data if interactivity is required
                 VectorTileLayer::TileInfo tileInfo(layer->calculateMapTileBounds(dataSourceTile.getFlipped()), layer->_vectorTileEventListener.get() ? tileData->getData() : std::shared_ptr<BinaryData>(), tileMap);
@@ -536,18 +581,18 @@ namespace carto {
                 // Store tile to cache, unless invalidated
                 if (!isInvalidated()) {
                     long long tileId = layer->getTileId(_tile);
-                    if (isPreloading()) {
-                        std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
-                        layer->_preloadingCache.put(tileId, tileInfo, tileInfo.getSize());
-                        if (tileData->getMaxAge() >= 0) {
-                            layer->_preloadingCache.invalidate(tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
-                        }
-                    }
-                    else {
-                        std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
-                        layer->_visibleCache.put(tileId, tileInfo, tileInfo.getSize());
-                        if (tileData->getMaxAge() >= 0) {
-                            layer->_visibleCache.invalidate(tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+                    std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
+                    if (layer->getTileTransformer() == tileTransformer) { // extra check that the tile is created with correct transformer. Otherwise simply drop it.
+                        if (isPreloading()) {
+                            layer->_preloadingCache.put(tileId, tileInfo, tileInfo.getSize());
+                            if (tileData->getMaxAge() >= 0) {
+                                layer->_preloadingCache.invalidate(tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+                            }
+                        } else {
+                            layer->_visibleCache.put(tileId, tileInfo, tileInfo.getSize());
+                            if (tileData->getMaxAge() >= 0) {
+                                layer->_visibleCache.invalidate(tileId, std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+                            }
                         }
                     }
                 }
@@ -595,9 +640,7 @@ namespace carto {
     
         if (std::shared_ptr<TileRenderer> tileRenderer = _tileRenderer.lock()) {
             if (tileRenderer->cullLabels(_viewState)) {
-                if (std::shared_ptr<MapRenderer> mapRenderer = layer->_mapRenderer.lock()) {
-                    mapRenderer->requestRedraw();
-                }
+                layer->redraw();
             }
         }
     }

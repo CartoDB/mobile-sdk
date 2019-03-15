@@ -12,16 +12,16 @@
 namespace carto {
     
     Text::Text(const std::shared_ptr<Billboard>& baseBillboard, const std::shared_ptr<TextStyle>& style, const std::string& text) :
-    	Label(baseBillboard, style),
-    	_style(style),
-    	_text(text)
+        Label(baseBillboard, style),
+        _style(style),
+        _text(text)
     {
     }
 
     Text::Text(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<TextStyle>& style, const std::string& text) :
-    	Label(geometry, style),
-    	_style(style),
-    	_text(text)
+        Label(geometry, style),
+        _style(style),
+        _text(text)
     {
     }
         

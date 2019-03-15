@@ -1,13 +1,16 @@
 #include "Options.h"
 #include "assets/DefaultBackgroundPNG.h"
-#include "assets/DefaultSkyPNG.h"
 #include "assets/CartoWatermarkPNG.h"
 #include "assets/EvaluationWatermarkPNG.h"
 #include "assets/ExpiredWatermarkPNG.h"
 #include "components/Exceptions.h"
 #include "components/CancelableThreadPool.h"
 #include "graphics/Bitmap.h"
+#include "graphics/utils/SkyBitmapGenerator.h"
 #include "projections/EPSG3857.h"
+#include "projections/ProjectionSurface.h"
+#include "projections/PlanarProjectionSurface.h"
+#include "projections/SphericalProjectionSurface.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
@@ -17,10 +20,10 @@
 namespace carto {
 
     Options::Options(const std::shared_ptr<CancelableThreadPool>& envelopeThreadPool, const std::shared_ptr<CancelableThreadPool>& tileThreadPool) :
-        _ambientLightColor(0xFF707070),
-        _mainLightColor(0xFF8F8F8F),
-        _mainLightDir(0.35, 0.35, -0.87),
-        _projectionMode(ProjectionMode::PROJECTION_MODE_PERSPECTIVE),
+        _ambientLightColor(DEFAULT_AMBIENT_LIGHT_COLOR),
+        _mainLightColor(DEFAULT_MAIN_LIGHT_COLOR),
+        _mainLightDir(DEFAULT_MAIN_LIGHT_DIR),
+        _renderProjectionMode(RenderProjectionMode::RENDER_PROJECTION_MODE_PLANAR),
         _clickTypeDetection(true),
         _tileDrawSize(256),
         _dpi(160.0f),
@@ -33,8 +36,10 @@ namespace carto {
         _tiltGestureReversed(false),
         _zoomGestures(false),
         _clearColor(1, 1, 1, 1),
+        _skyColor(DEFAULT_SKY_COLOR),
+        _skyBitmapColor(0, 0, 0, 0),
+        _skyBitmap(),
         _backgroundBitmap(GetDefaultBackgroundBitmap()),
-        _skyBitmap(GetDefaultSkyBitmap()),
         _watermarkAlignmentX(-1),
         _watermarkAlignmentY(-1),
         _watermarkBitmap(GetCartoWatermarkBitmap()),
@@ -47,9 +52,10 @@ namespace carto {
         _rotatable(true),
         _tiltRange(Const::MIN_SUPPORTED_TILT_ANGLE, 90.0f),
         _zoomRange(0.0, Const::MAX_SUPPORTED_ZOOM_LEVEL),
-        _panBounds(MapPos(-Const::HALF_WORLD_SIZE, -Const::HALF_WORLD_SIZE, 0), MapPos(Const::HALF_WORLD_SIZE, Const::HALF_WORLD_SIZE, 0)),
+        _panBounds(EPSG3857().getBounds()),
         _focusPointOffset(0, 0),
         _baseProjection(std::make_shared<EPSG3857>()),
+        _projectionSurface(std::make_shared<PlanarProjectionSurface>()),
         _envelopeThreadPool(envelopeThreadPool),
         _tileThreadPool(tileThreadPool),
         _mutex()
@@ -111,20 +117,29 @@ namespace carto {
         notifyOptionChanged("MainLightDirection");
     }
     
-    ProjectionMode::ProjectionMode Options::getProjectionMode() const {
+    RenderProjectionMode::RenderProjectionMode Options::getRenderProjectionMode() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return _projectionMode;
+        return _renderProjectionMode;
     }
     
-    void Options::setProjectionMode(ProjectionMode::ProjectionMode projectionMode) {
+    void Options::setRenderProjectionMode(RenderProjectionMode::RenderProjectionMode renderProjectionMode) {
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            if (_projectionMode == projectionMode) {
+            if (_renderProjectionMode == renderProjectionMode) {
                 return;
             }
-            _projectionMode = projectionMode;
+            _renderProjectionMode = renderProjectionMode;
+            switch (renderProjectionMode) {
+            case RenderProjectionMode::RENDER_PROJECTION_MODE_SPHERICAL:
+                _projectionSurface = std::make_shared<SphericalProjectionSurface>();
+                break;
+            case RenderProjectionMode::RENDER_PROJECTION_MODE_PLANAR:
+            default:
+                _projectionSurface = std::make_shared<PlanarProjectionSurface>();
+                break;
+            }
         }
-        notifyOptionChanged("ProjectionMode");
+        notifyOptionChanged("RenderProjectionMode");
     }
     
     bool Options::isClickTypeDetection() const {
@@ -351,6 +366,35 @@ namespace carto {
         notifyOptionChanged("ClearColor");
     }
     
+    Color Options::getSkyColor() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _skyColor;
+    }
+
+    void Options::setSkyColor(const Color& color) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            if (_skyColor == color) {
+                return;
+            }
+            _skyColor = color;
+        }
+        notifyOptionChanged("SkyColor");
+    }
+
+    std::shared_ptr<Bitmap> Options::getSkyBitmap() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        if (_skyBitmapColor != _skyColor) {
+            if (_skyColor != Color(0, 0, 0, 0)) {
+                _skyBitmap = SkyBitmapGenerator(1, 128).generateBitmap(DEFAULT_BACKGROUND_COLOR, _skyColor);
+            } else {
+                _skyBitmap.reset();
+            }
+            _skyBitmapColor = _skyColor;
+        }
+        return _skyBitmap;
+    }
+
     std::shared_ptr<Bitmap> Options::getBackgroundBitmap() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _backgroundBitmap;
@@ -367,22 +411,6 @@ namespace carto {
         notifyOptionChanged("BackgroundBitmap");
     }
     
-    std::shared_ptr<Bitmap> Options::getSkyBitmap() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _skyBitmap;
-    }
-    
-    void Options::setSkyBitmap(const std::shared_ptr<Bitmap>& skyBitmap) {
-        {
-            std::lock_guard<std::mutex> lock(_mutex);
-            if (_skyBitmap == skyBitmap) {
-                return;
-            }
-            _skyBitmap = skyBitmap;
-        }
-        notifyOptionChanged("SkyBitmap");
-    }
-        
     float Options::getWatermarkAlignmentX() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _watermarkAlignmentX;
@@ -585,29 +613,19 @@ namespace carto {
         notifyOptionChanged("ZoomRange");
     }
         
-    MapBounds Options::getInternalPanBounds() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _panBounds;
-    }
-    
     MapBounds Options::getPanBounds() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        const MapPos& projectionMin = _baseProjection->fromInternal(_panBounds.getMin());
-        const MapPos& projectionMax = _baseProjection->fromInternal(_panBounds.getMax());
-        return MapBounds(projectionMin, projectionMax);
+        return _panBounds;
     }
     
     void Options::setPanBounds(const MapBounds& panBounds) {
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            double halfWorldSize = Const::HALF_WORLD_SIZE;
-            const MapPos& internalMin = _baseProjection->toInternal(panBounds.getMin());
-            const MapPos& internalMax = _baseProjection->toInternal(panBounds.getMax());
-            double left = GeneralUtils::Clamp(internalMin.getX(), -halfWorldSize, halfWorldSize);
-            double bottom = GeneralUtils::Clamp(internalMin.getY(), -halfWorldSize, halfWorldSize);
-            double right = GeneralUtils::Clamp(internalMax.getX(), -halfWorldSize, halfWorldSize);
-            double top = GeneralUtils::Clamp(internalMax.getY(), -halfWorldSize, halfWorldSize);
-            MapBounds panBoundsClipped(MapPos(left, bottom, 0), MapPos(right, top, 0));
+            MapBounds projBounds = _baseProjection->getBounds();
+            MapBounds panBoundsClipped(
+                MapPos(std::max(projBounds.getMin().getX(), panBounds.getMin().getX()), std::max(projBounds.getMin().getX(), panBounds.getMin().getY()), projBounds.getMin().getZ()),
+                MapPos(std::min(projBounds.getMax().getX(), panBounds.getMax().getX()), std::min(projBounds.getMax().getX(), panBounds.getMax().getY()), projBounds.getMax().getZ())
+            );
             if (_panBounds == panBoundsClipped) {
                 return;
             }
@@ -645,11 +663,17 @@ namespace carto {
         {
             std::lock_guard<std::mutex> lock(_mutex);
             if (_baseProjection == baseProjection) {
-            	return;
+                return;
             }
             _baseProjection = baseProjection;
+            _panBounds = baseProjection->getBounds();
         }
         notifyOptionChanged("BaseProjection");
+    }
+    
+    std::shared_ptr<ProjectionSurface> Options::getProjectionSurface() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _projectionSurface;
     }
     
     void Options::registerOnChangeListener(const std::shared_ptr<OnChangeListener>& listener) {
@@ -668,14 +692,6 @@ namespace carto {
             _DefaultBackgroundBitmap = Bitmap::CreateFromCompressed(default_background_png, default_background_png_len);
         }
         return _DefaultBackgroundBitmap;
-    }
-
-    std::shared_ptr<Bitmap> Options::GetDefaultSkyBitmap() {
-        std::lock_guard<std::mutex> lock(_Mutex);
-        if (!_DefaultSkyBitmap) {
-            _DefaultSkyBitmap = Bitmap::CreateFromCompressed(default_sky_png, default_sky_png_len);
-        }
-        return _DefaultSkyBitmap;
     }
 
     std::shared_ptr<Bitmap> Options::GetCartoWatermarkBitmap() {
@@ -713,9 +729,13 @@ namespace carto {
         }
     }
 
-    std::shared_ptr<Bitmap> Options::_DefaultBackgroundBitmap;
-    std::shared_ptr<Bitmap> Options::_DefaultSkyBitmap;
+    const Color Options::DEFAULT_SKY_COLOR = Color(149, 196, 255, 255);
+    const Color Options::DEFAULT_BACKGROUND_COLOR = Color(226, 226, 226, 255);
+    const Color Options::DEFAULT_AMBIENT_LIGHT_COLOR = Color(112, 112, 112, 255);
+    const Color Options::DEFAULT_MAIN_LIGHT_COLOR = Color(143, 143, 143, 255);
+    const MapVec Options::DEFAULT_MAIN_LIGHT_DIR = MapVec(0.35, 0.35, -0.87);
 
+    std::shared_ptr<Bitmap> Options::_DefaultBackgroundBitmap;
     std::shared_ptr<Bitmap> Options::_CartoWatermarkBitmap;
     std::shared_ptr<Bitmap> Options::_EvaluationWatermarkBitmap;
     std::shared_ptr<Bitmap> Options::_ExpiredWatermarkBitmap;

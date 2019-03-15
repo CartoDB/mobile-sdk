@@ -1,4 +1,5 @@
 #include "AnimationHandler.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/cameraevents/CameraPanEvent.h"
 #include "renderers/cameraevents/CameraRotationEvent.h"
@@ -13,6 +14,8 @@ namespace carto {
         _panStarted(false),
         _panDurationSeconds(0),
         _panTarget(),
+        _panDelta(),
+        _panUseDelta(false),
         _rotationStarted(false),
         _rotationDurationSeconds(0),
         _rotationTarget(),
@@ -45,8 +48,17 @@ namespace carto {
         _panStarted = true;
         _panTarget = panTarget;
         _panDurationSeconds = durationSeconds;
+        _panUseDelta = false;
     }
-        
+    
+    void AnimationHandler::setPanDelta(const std::pair<MapPos, MapPos>& panDelta, float durationSeconds) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _panStarted = true;
+        _panDelta = panDelta;
+        _panDurationSeconds = durationSeconds;
+        _panUseDelta = true;
+    }
+
     void AnimationHandler::stopPan() {
         std::lock_guard<std::mutex> lock(_mutex);
         _panDurationSeconds = 0;
@@ -106,13 +118,14 @@ namespace carto {
             float ratio = std::min(1.0f, deltaSeconds / _panDurationSeconds);
             _panDurationSeconds -= deltaSeconds;
             MapPos newFocusPos;
-            if (_panDurationSeconds <= 0) {
+            if (_panDurationSeconds <= 0 && !_panUseDelta) {
                 newFocusPos = _panTarget;
             } else {
-                MapVec delta = _panTarget - viewState.getFocusPos();
-                delta *= ratio;
-                newFocusPos = viewState.getFocusPos();
-                newFocusPos += delta;
+                std::shared_ptr<ProjectionSurface> projectionSurface = _mapRenderer.getProjectionSurface();
+                cglib::vec3<double> pos0 = _panUseDelta ? projectionSurface->calculatePosition(_panDelta.first) : viewState.getFocusPos();
+                cglib::vec3<double> pos1 = _panUseDelta ? projectionSurface->calculatePosition(_panDelta.second) : projectionSurface->calculatePosition(_panTarget);
+                cglib::mat4x4<double> transform = projectionSurface->calculateTranslateMatrix(pos0, pos1, ratio);
+                newFocusPos = projectionSurface->calculateMapPos(cglib::transform_point(viewState.getFocusPos(), transform));
             }
     
             CameraPanEvent cameraEvent;

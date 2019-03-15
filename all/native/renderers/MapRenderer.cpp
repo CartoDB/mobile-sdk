@@ -13,9 +13,10 @@
 #include "graphics/FrameBufferManager.h"
 #include "graphics/ShaderManager.h"
 #include "graphics/TextureManager.h"
-#include "graphics/shaders/BlendShaderSource.h"
 #include "graphics/utils/GLContext.h"
 #include "layers/Layer.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/BillboardRenderer.h"
 #include "renderers/MapRendererListener.h"
 #include "renderers/RendererCaptureListener.h"
@@ -36,8 +37,7 @@
 
 namespace carto {
 
-    MapRenderer::MapRenderer(const std::shared_ptr<Layers>& layers,
-                             const std::shared_ptr<Options>& options) :
+    MapRenderer::MapRenderer(const std::shared_ptr<Layers>& layers, const std::shared_ptr<Options>& options) :
         _lastFrameTime(),
         _viewState(),
         _frameBufferManager(),
@@ -67,6 +67,7 @@ namespace carto {
         _surfaceCreated(false),
         _surfaceChanged(false),
         _billboardsChanged(false),
+        _renderProjectionChanged(false),
         _redrawPending(false),
         _redrawRequestListener(),
         _mapRendererListener(),
@@ -137,15 +138,16 @@ namespace carto {
         viewState.calculateViewState(*_options);
         return viewState;
     }
+
+    std::shared_ptr<ProjectionSurface> MapRenderer::getProjectionSurface() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        std::shared_ptr<ProjectionSurface> projectionSurface = _viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            projectionSurface = _options->getProjectionSurface();
+        }
+        return projectionSurface;
+    }
         
-    MapPos MapRenderer::screenToMap(const ScreenPos& screenPos, const ViewState& viewState) {
-        return _options->getBaseProjection()->fromInternal(screenToWorld(screenPos, viewState));
-    }
-
-    ScreenPos MapRenderer::mapToScreen(const MapPos& mapPos, const ViewState& viewState) {
-        return worldToScreen(_options->getBaseProjection()->toInternal(mapPos), viewState);
-    }
-
     void MapRenderer::requestRedraw() const {
         DirectorPtr<RedrawRequestListener> redrawRequestListener = _redrawRequestListener;
 
@@ -175,37 +177,7 @@ namespace carto {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _billboardSorter.getSortedBillboardDrawDatas();
     }
-    
-    MapPos MapRenderer::getCameraPos() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return MapPos(_viewState.getCameraPos());
-    }
-    
-    MapPos MapRenderer::getFocusPos() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return MapPos(_viewState.getFocusPos());
-    }
-    
-    MapVec MapRenderer::getUpVec() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return MapVec(_viewState.getUpVec());
-    }
-    
-    float MapRenderer::getRotation() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _viewState.getRotation();
-    }
-    
-    float MapRenderer::getTilt() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _viewState.getTilt();
-    }
-    
-    float MapRenderer::getZoom() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _viewState.getZoom();
-    }
-    
+
     AnimationHandler& MapRenderer::getAnimationHandler() {
         return _animationHandler;
     }
@@ -216,41 +188,43 @@ namespace carto {
     
     void MapRenderer::calculateCameraEvent(CameraPanEvent& cameraEvent, float durationSeconds, bool updateKinetic) {
         if (durationSeconds > 0) {
-            MapPos oldFocusPos;
-            {
-                std::lock_guard<std::recursive_mutex> lock(_mutex);
-                oldFocusPos = _viewState.getFocusPos();
+            if (cameraEvent.isUseDelta()) {
+                _animationHandler.setPanDelta(cameraEvent.getPosDelta(), durationSeconds);
+            } else {
+                _animationHandler.setPanTarget(cameraEvent.getPos(), durationSeconds);
             }
-            _animationHandler.setPanTarget(cameraEvent.isUseDelta() ? oldFocusPos + cameraEvent.getPosDelta() : cameraEvent.getPos(), durationSeconds);
     
             // Animation will start on the next frame
             requestRedraw();
             return;
         }
     
-        MapVec deltaFocusPos;
+        MapPos oldFocusPos;
+        MapPos newFocusPos;
         float zoom;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
-            MapPos oldFocusPos = _viewState.getFocusPos();
+
+            std::shared_ptr<ProjectionSurface> projectionSurface = getProjectionSurface();
+
+            oldFocusPos = projectionSurface->calculateMapPos(_viewState.getFocusPos());
         
             // Calculate new focusPos, cameraPos and upVec
             cameraEvent.calculate(*_options, _viewState);
     
             // Calculate parameters for kinetic events
-            MapPos focusPos = _viewState.getFocusPos();
-            deltaFocusPos = focusPos - oldFocusPos;
+            newFocusPos = projectionSurface->calculateMapPos(_viewState.getFocusPos());
             zoom = _viewState.getZoom();
           
             // In case of seamless panning horizontal teleport, offset the delta focus pos
-            deltaFocusPos.setX(deltaFocusPos.getX() - _viewState.getHorizontalLayerOffsetDir() * Const::WORLD_SIZE);
+            oldFocusPos.setX(oldFocusPos.getX() + _viewState.getHorizontalLayerOffsetDir() * Const::WORLD_SIZE);
         }
     
         // Delay updating the layers, because view state will be updated only after onDrawFrame is called
         viewChanged(true);
     
         if (updateKinetic) {
-            _kineticEventHandler.setPanDelta(deltaFocusPos, zoom);
+            _kineticEventHandler.setPanDelta(std::make_pair(oldFocusPos, newFocusPos), zoom);
         } 
     }
         
@@ -271,6 +245,7 @@ namespace carto {
         float deltaRotation;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
+
             float oldRotation = _viewState.getRotation();
             
             // Calculate new focusPos, cameraPos and upVec
@@ -331,6 +306,7 @@ namespace carto {
         float deltaZoom;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
+
             float oldZoom = _viewState.getZoom();
             
             // Calculate new focusPos, cameraPos and upVec
@@ -356,10 +332,12 @@ namespace carto {
         CameraZoomEvent cameraZoomEvent;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+            std::shared_ptr<ProjectionSurface> projectionSurface = getProjectionSurface();
             
             // Adjust the camera tilt, rotation and position to the final state of this animation
             MapPos focusPos = center;
-            MapPos oldFocusPos = _viewState.getFocusPos();
+            MapPos oldFocusPos = projectionSurface->calculateMapPos(_viewState.getFocusPos());
             cameraPanEvent.setPos(center);
             cameraPanEvent.calculate(*_options, _viewState);
             
@@ -383,7 +361,7 @@ namespace carto {
             MapRange zoomRange(_options->getZoomRange());
             float zoom = _options->getZoomRange().getMin();
             float zoomStep = zoomRange.length() * 0.5f;
-            if (std::all_of(points.begin(), points.end(), [&points](const MapPos& pos) {
+            if (points.empty() || std::all_of(points.begin(), points.end(), [&points](const MapPos& pos) {
                 return pos == points.front();
             })) {
                 zoom = oldZoom;
@@ -405,16 +383,23 @@ namespace carto {
                 cameraZoomEvent.calculate(*_options, viewState);
                 viewState.clampZoom(*_options);
 
-                MapVec delta = focusPos - viewState.screenToWorldPlane(screenBounds.getCenter(), _options);
+                ScreenPos screenPos = screenBounds.getCenter();
+                // TODO: questionable
+                cglib::vec3<double> pos = viewState.screenToWorld(cglib::vec2<float>(screenPos.getX(), screenPos.getY()), 0, _options);
+                if (std::isnan(cglib::norm(pos))) {
+                    Log::Error("MapRenderer::moveToFitPoints: Failed to translate screen position!");
+                    return;
+                }
+                MapVec delta = focusPos - projectionSurface->calculateMapPos(pos);
                 focusPos = center + delta;
                 cameraPanEvent.setPos(focusPos);
                 cameraPanEvent.calculate(*_options, viewState);
                 viewState.clampFocusPos(*_options);
     
                 bool fit = true;
-                for (const MapPos& pos : points) {
-                    ScreenPos screenPos = viewState.worldToScreen(pos, *_options);
-                    if (!screenBounds.contains(screenPos)) {
+                for (const MapPos& mapPos : points) {
+                    cglib::vec2<float> screenPos = viewState.worldToScreen(projectionSurface->calculatePosition(mapPos), _options);
+                    if (!screenBounds.contains(ScreenPos(screenPos(0), screenPos(1)))) {
                         fit = false;
                         break;
                     }
@@ -463,16 +448,6 @@ namespace carto {
             calculateCameraEvent(cameraTiltEvent, durationSeconds, false);
         }
         calculateCameraEvent(cameraZoomEvent, durationSeconds, false);
-    }
-    
-    MapPos MapRenderer::screenToWorld(const ScreenPos& screenPos, const ViewState& viewState) const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return viewState.screenToWorldPlane(screenPos, _options);
-    }
-    
-    ScreenPos MapRenderer::worldToScreen(const MapPos& worldPos, const ViewState& viewState) const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return viewState.worldToScreen(worldPos, *_options);
     }
     
     void MapRenderer::onSurfaceCreated() {
@@ -528,7 +503,7 @@ namespace carto {
             layer->onSurfaceCreated(_shaderManager, _textureManager);
         }
         
-       	GLContext::CheckGLError("MapRenderer::onSurfaceCreated");
+        GLContext::CheckGLError("MapRenderer::onSurfaceCreated");
     }
     
     void MapRenderer::onSurfaceChanged(int width, int height) {
@@ -606,7 +581,7 @@ namespace carto {
         _animationHandler.calculate(viewState, deltaSeconds);
         _kineticEventHandler.calculate(viewState, deltaSeconds);
 
-        setUpGLState();
+        initializeRenderState();
     
         _backgroundRenderer.onDrawFrame(viewState);
         drawLayers(deltaSeconds, viewState);
@@ -696,7 +671,7 @@ namespace carto {
         glClearStencil(0);
         glClear(bufferMask);
 
-       	GLContext::CheckGLError("MapRenderer::clearAndBindScreenFBO");
+        GLContext::CheckGLError("MapRenderer::clearAndBindScreenFBO");
     }
 
     void MapRenderer::blendAndUnbindScreenFBO(float opacity) {
@@ -721,7 +696,9 @@ namespace carto {
         glBindFramebuffer(GL_FRAMEBUFFER, prevBoundFBO);
 
         if (!_screenBlendShader) {
-            _screenBlendShader = _shaderManager->createShader(blend_shader_source);
+            static const ShaderSource shaderSource("blend", &BLEND_VERTEX_SHADER, &BLEND_FRAGMENT_SHADER);
+            
+            _screenBlendShader = _shaderManager->createShader(shaderSource);
         }
         
         glUseProgram(_screenBlendShader->getProgId());
@@ -744,7 +721,15 @@ namespace carto {
         
         glDisableVertexAttribArray(_screenBlendShader->getAttribLoc("a_coord"));
 
-       	GLContext::CheckGLError("MapRenderer::blendAndUnbindScreenFBO");
+        GLContext::CheckGLError("MapRenderer::blendAndUnbindScreenFBO");
+    }
+
+    void MapRenderer::setZBuffering(bool enable) {
+        if (enable) {
+            glEnable(GL_DEPTH_TEST);
+        } else {
+            glDisable(GL_DEPTH_TEST);
+        }
     }
 
     void MapRenderer::calculateRayIntersectedElements(const MapPos& targetPos, ViewState& viewState, std::vector<RayIntersectedElement>& results) {
@@ -752,10 +737,13 @@ namespace carto {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             viewState = _viewState;
         }
+        if (!viewState.getProjectionSurface()) {
+            return;
+        }
 
-        MapPos rayOrigin = viewState.getCameraPos();
-        MapVec rayDir = targetPos - viewState.getCameraPos();
-        cglib::ray3<double> ray(cglib::vec3<double>(rayOrigin.getX(), rayOrigin.getY(), rayOrigin.getZ()), cglib::vec3<double>(rayDir.getX(), rayDir.getY(), rayDir.getZ()));
+        cglib::vec3<double> origin = viewState.getCameraPos();
+        cglib::vec3<double> target = viewState.getProjectionSurface()->calculatePosition(targetPos);
+        cglib::ray3<double> ray(origin, target - origin);
     
         // Normal layer click detection is done in the layer order
         const std::shared_ptr<Projection> projection = _options->getBaseProjection();
@@ -833,7 +821,7 @@ namespace carto {
         _renderThreadCallbacks.push_back(callback);
     }
     
-    void MapRenderer::setUpGLState() const {
+    void MapRenderer::initializeRenderState() const {
         // Set clear color
         Color clearColor = _options->getClearColor();
         glClearColor(clearColor.getR() / 255.0f, clearColor.getG() / 255.0f, clearColor.getB() / 255.0f, clearColor.getA() / 255.0f);
@@ -863,12 +851,15 @@ namespace carto {
         {
             std::vector<std::shared_ptr<Layer> > layers = _layers->getAll();
 
+            // Reset surfaces if renderprojection has changed
+            bool resetSurfaces = _renderProjectionChanged.exchange(false);
+
             // BillboardSorter modifications must be synchronized
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             
             // Clear billboard before sorting
             _billboardSorter.clear();
-            
+
             // Do base drawing pass
             for (const std::shared_ptr<Layer>& layer : layers) {
                 if (viewState.getHorizontalLayerOffsetDir() != 0) {
@@ -876,7 +867,10 @@ namespace carto {
                 }
     
                 // Initialize layer renderer if it was added after onSurfaceCreated was called
-                if (!layer->isSurfaceCreated()) {
+                if (!layer->isSurfaceCreated() || resetSurfaces) {
+                    if (layer->isSurfaceCreated()) {
+                        layer->onSurfaceDestroyed();
+                    }
                     layer->onSurfaceCreated(_shaderManager, _textureManager);
                     layerChanged(layer, false);
                 }
@@ -976,7 +970,7 @@ namespace carto {
             requestRedraw();
         }
     }
-    
+
     MapRenderer::OptionsListener::OptionsListener(const std::shared_ptr<MapRenderer>& mapRenderer) : _mapRenderer(mapRenderer)
     {
     }
@@ -985,7 +979,29 @@ namespace carto {
         if (auto mapRenderer = _mapRenderer.lock()) {
             bool updateView = false;
 
-            if (optionName == "ProjectionMode" || optionName == "TileDrawSize" || optionName == "DPI" || optionName == "DrawDistance" || optionName == "FieldOfViewY" || optionName == "FocusPointOffset") {
+            if (optionName == "AmbientLightColor" || optionName == "MainLightColor" || optionName == "MainLightDirection" || optionName == "ClearColor" || optionName == "SkyColor") {
+                updateView = true;
+            }
+
+            if (optionName.substr(0, 9) == "Watermark") {
+                updateView = true;
+            }
+
+            if (optionName == "RenderProjectionMode" || optionName == "RenderProjection") {
+                std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
+                mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
+                mapRenderer->_renderProjectionChanged = true;
+                updateView = true;
+            }
+
+            if (optionName == "BaseProjection") {
+                std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
+                mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
+                mapRenderer->_viewState.clampFocusPos(*mapRenderer->_options);
+                updateView = true;
+            }
+
+            if (optionName == "TileDrawSize" || optionName == "DPI" || optionName == "DrawDistance" || optionName == "FieldOfViewY" || optionName == "FocusPointOffset") {
                 std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
                 mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
                 updateView = true;
@@ -1025,4 +1041,24 @@ namespace carto {
 
     const int MapRenderer::STYLE_TEXTURE_CACHE_SIZE = 8 * 1024 * 1024;
 
+    const std::string MapRenderer::BLEND_VERTEX_SHADER = R"GLSL(
+        #version 100
+        attribute vec2 a_coord;
+        uniform mat4 u_mvpMat;
+        void main() {
+            gl_Position = u_mvpMat * vec4(a_coord, 0.0, 1.0);
+        };
+    )GLSL";
+
+    const std::string MapRenderer::BLEND_FRAGMENT_SHADER = R"GLSL(
+        #version 100
+        precision mediump float;
+        uniform sampler2D u_tex;
+        uniform lowp vec4 u_color;
+        uniform mediump vec2 u_invScreenSize;
+        void main() {
+            vec4 texColor = texture2D(u_tex, gl_FragCoord.xy * u_invScreenSize);
+            gl_FragColor = texColor * u_color;
+        }
+    )GLSL";
 }

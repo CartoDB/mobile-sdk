@@ -204,6 +204,8 @@ namespace carto {
         void updateMeshes(const NMLModelLODTree* modelLODTree, int nodeId, std::shared_ptr<nml::GLModel> glModel, MeshMap& meshMap);
         void updateTextures(const NMLModelLODTree* modelLODTree, int nodeId, std::shared_ptr<nml::GLModel> glModel, TextureMap& textureMap);
         void updateDrawLists(const ViewState& viewState, MeshMap& meshMap, TextureMap& textureMap, NodeDrawDataMap& nodeDrawDataMap);
+
+        static cglib::mat4x4<double> CalculateLocalMat(const ViewState& viewState, const NMLModelLODTree* modelLODTree);
     
         static const int MODELLODTREE_LOADING_PRIORITY_OFFSET = 1;
         static const int MESH_LOADING_PRIORITY_OFFSET = 0;

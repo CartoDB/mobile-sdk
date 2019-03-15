@@ -114,8 +114,6 @@ namespace carto {
          */
         explicit VectorDataSource(const std::shared_ptr<Projection>& projection);
 
-        float calculateGeometrySimplifierScale(const ViewState& viewState) const;
-        
         virtual void notifyElementAdded(const std::shared_ptr<VectorElement>& element);
         virtual void notifyElementChanged(const std::shared_ptr<VectorElement>& element);
         virtual void notifyElementRemoved(const std::shared_ptr<VectorElement>& element);

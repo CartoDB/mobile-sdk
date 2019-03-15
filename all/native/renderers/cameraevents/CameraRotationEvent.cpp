@@ -1,6 +1,8 @@
 #include "CameraRotationEvent.h"
 #include "components/Options.h"
 #include "graphics/ViewState.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
@@ -39,19 +41,12 @@ namespace carto {
         _useDelta = true;
     }
     
-    void CameraRotationEvent::setRotationDelta(double sin, double cos) {
-        _sin = sin;
-        _cos = cos;
-        _useDelta = true;
-    }
-    
     const MapPos& CameraRotationEvent::getTargetPos() const {
         return _targetPos;
     }
     
     void CameraRotationEvent::setTargetPos(const MapPos& targetPos) {
         _targetPos = targetPos;
-        _targetPos.setZ(0);
         _useTarget = true;
     }
     
@@ -67,10 +62,15 @@ namespace carto {
         if (!options.isRotatable()) {
             return;
         }
-        
-        MapPos cameraPos = viewState.getCameraPos();
-        MapPos focusPos = viewState.getFocusPos();
-        MapVec upVec = viewState.getUpVec();
+
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            return;
+        }
+
+        cglib::vec3<double> cameraPos = viewState.getCameraPos();
+        cglib::vec3<double> focusPos = viewState.getFocusPos();
+        cglib::vec3<double> upVec = viewState.getUpVec();
         float rotation = viewState.getRotation();
     
         if (!_useDelta) {
@@ -78,14 +78,15 @@ namespace carto {
             float rotationDelta = _rotation - viewState.getRotation();
             _sin = std::sin(rotationDelta * Const::DEG_TO_RAD);
             _cos = std::cos(rotationDelta * Const::DEG_TO_RAD);
-            rotation = fmod(_rotation, 360.0f);
-        } else {
+            rotation = std::fmod(_rotation, 360.0f);
+        } else if (!(_sin == 0 && _cos == 0)) {
             rotation += static_cast<float>(std::atan2(_sin, _cos) * Const::RAD_TO_DEG);
         }
     
-        if (!_useTarget) {
-            // If target was not specified rotate around the focus pos
-            _targetPos = focusPos;
+        cglib::vec3<double> targetPos = focusPos;
+        if (_useTarget) {
+            // Use specified target instead of focus position, if specified
+            targetPos = projectionSurface->calculatePosition(_targetPos);
         }
         
         if (rotation > 180) {
@@ -94,46 +95,24 @@ namespace carto {
             rotation += 360;
         }
         
-        viewState.setRotation(rotation);
-    
-        MapVec targetVec((cameraPos - _targetPos).rotate2D(_sin, _cos));
-        cameraPos = _targetPos;
-        cameraPos += targetVec;
-    
-        targetVec = (focusPos - _targetPos).rotate2D(_sin, _cos);
-        focusPos = _targetPos;
-        focusPos += targetVec;
-    
-        upVec.rotate2D(_sin, _cos);
-        
-        MapVec cameraVec = cameraPos - focusPos;
-    
-        // Enforce map bounds
-        MapBounds mapBounds = options.getInternalPanBounds();
-        bool seamLess = options.isSeamlessPanning();
-        if (!seamLess || mapBounds.getMin().getX() >= -Const::HALF_WORLD_SIZE || mapBounds.getMax().getX() <= Const::HALF_WORLD_SIZE) {
-            focusPos.setX(GeneralUtils::Clamp(focusPos.getX(), mapBounds.getMin().getX(), mapBounds.getMax().getX()));
+        cglib::vec3<double> axis = projectionSurface->calculateNormal(projectionSurface->calculateMapPos(targetPos));
+        if (cglib::length(axis) == 0 || (_sin == 0 && _cos == 0)) {
+            return;
         }
-        focusPos.setY(GeneralUtils::Clamp(focusPos.getY(), mapBounds.getMin().getY(), mapBounds.getMax().getY()));
-    
-        // Teleport if necessary
-        if (seamLess) {
-            if (focusPos.getX() > Const::HALF_WORLD_SIZE) {
-                focusPos.setX(-Const::HALF_WORLD_SIZE + (focusPos.getX() - Const::HALF_WORLD_SIZE));
-                viewState.setHorizontalLayerOffsetDir(-1);
-            } else if (focusPos.getX() < -Const::HALF_WORLD_SIZE) {
-                focusPos.setX(Const::HALF_WORLD_SIZE + (focusPos.getX() + Const::HALF_WORLD_SIZE));
-                viewState.setHorizontalLayerOffsetDir(1);
-            }
-        }
+        double angle = std::atan2(_sin, _cos);
+        cglib::mat4x4<double> rotateTransform = cglib::translate4_matrix(targetPos) * cglib::rotate4_matrix(axis, angle) * cglib::translate4_matrix(-targetPos);
         
-        cameraPos = focusPos;
-        cameraPos += cameraVec;
+        focusPos = cglib::transform_point(focusPos, rotateTransform);
+        cameraPos = cglib::transform_point(cameraPos, rotateTransform);
+        upVec = cglib::transform_vector(upVec, rotateTransform);
+        
+        ClampFocusPos(focusPos, cameraPos, upVec, options, viewState);
 
         viewState.setCameraPos(cameraPos);
         viewState.setFocusPos(focusPos);
         viewState.setUpVec(upVec);
-        
+        viewState.setRotation(rotation);
+
         viewState.clampFocusPos(options);
 
         // Calculate matrices etc. on the next onDrawFrame() call

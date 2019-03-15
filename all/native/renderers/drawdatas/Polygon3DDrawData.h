@@ -19,11 +19,11 @@ namespace carto {
     class Polygon3D;
     class Polygon3DStyle;
     class Projection;
+    class ProjectionSurface;
     
     class Polygon3DDrawData : public VectorElementDrawData {
     public:
-        Polygon3DDrawData(const Polygon3D& polygon3D, const Polygon3DStyle& style, const Projection& projection);
-        Polygon3DDrawData(const Polygon3DDrawData& drawData);
+        Polygon3DDrawData(const Polygon3D& polygon3D, const Polygon3DStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface);
         virtual ~Polygon3DDrawData();
 
         const Color& getSideColor() const;
@@ -33,12 +33,12 @@ namespace carto {
         const std::vector<cglib::vec3<double> >& getCoords() const;
     
         const std::vector<cglib::vec3<float> >& getNormals() const;
+
+        const std::vector<unsigned char>& getAttribs() const;
     
         virtual void offsetHorizontally(double offset);
     
     private:
-        static const int MAX_INDICES_PER_ELEMENT = 3;
-
         Color _sideColor;
     
         cglib::bbox3<double> _boundingBox;
@@ -46,6 +46,8 @@ namespace carto {
         std::vector<cglib::vec3<double> > _coords;
 
         std::vector<cglib::vec3<float> > _normals;
+
+        std::vector<unsigned char> _attribs;
     };
     
 }

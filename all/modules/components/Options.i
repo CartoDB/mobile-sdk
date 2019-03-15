@@ -46,12 +46,12 @@
 %attributeval(carto::Options, carto::Color, MainLightColor, getMainLightColor, setMainLightColor)
 %attributeval(carto::Options, carto::MapVec, MainLightDirection, getMainLightDirection, setMainLightDirection)
 !attributestring_polymorphic(carto::Options, projections.Projection, BaseProjection, getBaseProjection, setBaseProjection)
-%attribute(carto::Options, carto::ProjectionMode::ProjectionMode, ProjectionMode, getProjectionMode, setProjectionMode)
+%attribute(carto::Options, carto::RenderProjectionMode::RenderProjectionMode, RenderProjectionMode, getRenderProjectionMode, setRenderProjectionMode)
 %attribute(carto::Options, carto::PanningMode::PanningMode, PanningMode, getPanningMode, setPanningMode)
 %attribute(carto::Options, carto::PivotMode::PivotMode, PivotMode, getPivotMode, setPivotMode)
 %attributeval(carto::Options, carto::Color, ClearColor, getClearColor, setClearColor)
+%attributeval(carto::Options, carto::Color, SkyColor, getSkyColor, setSkyColor)
 %attributestring(carto::Options, std::shared_ptr<carto::Bitmap>, BackgroundBitmap, getBackgroundBitmap, setBackgroundBitmap)
-%attributestring(carto::Options, std::shared_ptr<carto::Bitmap>, SkyBitmap, getSkyBitmap, setSkyBitmap)
 %attribute(carto::Options, int, EnvelopeThreadPoolSize, getEnvelopeThreadPoolSize, setEnvelopeThreadPoolSize)
 %attribute(carto::Options, int, TileThreadPoolSize, getTileThreadPoolSize, setTileThreadPoolSize)
 %attribute(carto::Options, int, TileDrawSize, getTileDrawSize, setTileDrawSize)
@@ -66,12 +66,12 @@
 !objc_rename(setWatermarkAnchorX) carto::Options::setWatermarkAnchor;
 !objc_rename(setWatermarkPaddingX) carto::Options::setWatermarkPadding;
 %ignore carto::Options::Options;
-%ignore carto::Options::getInternalPanBounds;
+%ignore carto::Options::getProjectionSurface;
+%ignore carto::Options::getSkyBitmap;
 %ignore carto::Options::OnChangeListener;
 %ignore carto::Options::registerOnChangeListener;
 %ignore carto::Options::unregisterOnChangeListener;
 %ignore carto::Options::GetDefaultBackgroundBitmap;
-%ignore carto::Options::GetDefaultSkyBitmap;
 %ignore carto::Options::GetCartoWatermarkBitmap;
 %ignore carto::Options::GetEvaluationWatermarkBitmap;
 %ignore carto::Options::GetExpiredWatermarkBitmap;

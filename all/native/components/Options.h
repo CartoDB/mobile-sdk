@@ -11,7 +11,6 @@
 #include "core/MapRange.h"
 #include "core/ScreenPos.h"
 #include "graphics/Color.h"
-#include "projections/Projection.h"
 
 #include <memory>
 #include <mutex>
@@ -20,25 +19,22 @@
 namespace carto {
     class Bitmap;
     class CancelableThreadPool;
+    class Projection;
+    class ProjectionSurface;
     
-    namespace ProjectionMode {
+    namespace RenderProjectionMode {
         /**
-         *  Possible projection modes.
+         *  Possible render projection modes.
          */
-        enum ProjectionMode {
+        enum RenderProjectionMode {
             /**
-             * Orthogonal projection mode means that the size of the objects on the screen
-             * does not depend on their distance from the camera. This might be useful because it 
-             * avoids perspective distortion, but it becomes unusable at small tilt angles. 
-             * This is sometimes confused with isometric projection which is a subtype of 
-             * orthogonal projection.
+             * Planar projection.
              */
-            PROJECTION_MODE_ORTHOGONAL,
+            RENDER_PROJECTION_MODE_PLANAR,
             /**
-             * Perspective projection means that the further away objects get from the camera the smaller
-             * they appear on the screen. This projection mode is used in most 3D games and applications.
+             * Spherical projection.
              */
-            PROJECTION_MODE_PERSPECTIVE
+            RENDER_PROJECTION_MODE_SPHERICAL
         };
     };
     
@@ -149,15 +145,15 @@ namespace carto {
         void setMainLightDirection(const MapVec& direction);
     
         /**
-         * Returns the projection mode.
-         * @return The projection mode.
+         * Returns the render projection mode.
+         * @return The render projection mode.
          */
-        ProjectionMode::ProjectionMode getProjectionMode() const;
+        RenderProjectionMode::RenderProjectionMode getRenderProjectionMode() const;
         /**
-         * Sets the projection mode. The default is ProjectionMode::PERSPECTIVE.
-         * @param projectionMode The new projection mode.
+         * Sets the render projection mode. The default is RenderProjectionMode::PLANAR.
+         * @param renderProjectionMode The new render projection mode.
          */
-        void setProjectionMode(ProjectionMode::ProjectionMode projectionMode);
+        void setRenderProjectionMode(RenderProjectionMode::RenderProjectionMode renderProjectionMode);
     
         /**
          * Returns the click type detection state.
@@ -327,6 +323,22 @@ namespace carto {
         void setClearColor(const Color& color);
         
         /**
+         * Returns the sky color.
+         * @return The sky color.
+         */
+        Color getSkyColor() const;
+        /**
+         * Sets the sky color. The purpose of the sky bitmap is to fill out the empty space visible at low tilt angles.
+         * @param color The new sky color. If the color is transparent, sky is not rendered.
+         */
+        void setSkyColor(const Color& color);
+        /**
+         * Returns the sky bitmap. May be null.
+         * @return The sky bitmap.
+         */
+        std::shared_ptr<Bitmap> getSkyBitmap() const;
+
+        /**
          * Returns the background bitmap. May be null.
          * @return The background bitmap.
          */
@@ -342,23 +354,6 @@ namespace carto {
          */
         void setBackgroundBitmap(const std::shared_ptr<Bitmap>& backgroundBitmap);
     
-        /**
-         * Returns the sky bitmap. May be null.
-         * @return The sky bitmap.
-         */
-        std::shared_ptr<Bitmap> getSkyBitmap() const;
-        /**
-         * Sets the sky bitmap. The purpose of the sky bitmap is to fill out the empty space visible at low tilt angles.
-         * The bitmap is folded horizontally into 4 equal parts making up the north, east, south and west sides of the sky.
-         * The horizon of the sky should be vertically centered, for references look at the default sky bitmap bundled with the SDK.
-         * If a null pointer is passed, the sky won't be drawn.
-         * The width and height of the bitmap must be power of two (for example: 256 * 256 or 128 * 512). In the most common
-         * use case the width of the bitmap is 4 times the height (width == 4 * height), but this is not a requirement.  
-         * The default is "default_sky.png".
-         * @param skyBitmap The new sky bitmap.
-         */
-        void setSkyBitmap(const std::shared_ptr<Bitmap>& skyBitmap);
-
         /**
          * Returns the horizontal alignment of the watermark.
          * @return The horizontal alignment of the watermark.
@@ -508,11 +503,6 @@ namespace carto {
         void setZoomRange(const MapRange& zoomRange);
         
         /**
-         * Returns the map panning bounds constraints. Map bounds minimum and maximum points are in the internal coordinate system.
-         * @return The map bounds constraints.
-         */
-        MapBounds getInternalPanBounds() const;
-        /**
          * Returns the map panning bounds constraints. Map bounds minimum and maximum points are in the base
          * projection's coordinate system.
          * @return The map bounds constraints.
@@ -554,6 +544,12 @@ namespace carto {
         void setBaseProjection(const std::shared_ptr<Projection>& baseProjection);
         
         /**
+         * Returns the projection surface.
+         * @return The projection surface.
+         */
+        std::shared_ptr<ProjectionSurface> getProjectionSurface() const;
+        
+        /**
          * Registers listener for options change events.
          * @param listener The listener for change events.
          */
@@ -567,20 +563,24 @@ namespace carto {
 
         static std::shared_ptr<Bitmap> GetDefaultBackgroundBitmap();
 
-        static std::shared_ptr<Bitmap> GetDefaultSkyBitmap();
-
         static std::shared_ptr<Bitmap> GetCartoWatermarkBitmap();
         static std::shared_ptr<Bitmap> GetEvaluationWatermarkBitmap();
         static std::shared_ptr<Bitmap> GetExpiredWatermarkBitmap();
 
     private:
+        static const Color DEFAULT_SKY_COLOR;
+        static const Color DEFAULT_BACKGROUND_COLOR;
+        static const Color DEFAULT_AMBIENT_LIGHT_COLOR;
+        static const Color DEFAULT_MAIN_LIGHT_COLOR;
+        static const MapVec DEFAULT_MAIN_LIGHT_DIR;
+        
         void notifyOptionChanged(const std::string& optionName);
         
         Color _ambientLightColor;
         Color _mainLightColor;
         MapVec _mainLightDir;
     
-        ProjectionMode::ProjectionMode _projectionMode;
+        RenderProjectionMode::RenderProjectionMode _renderProjectionMode;
     
         bool _clickTypeDetection;
     
@@ -604,9 +604,12 @@ namespace carto {
         bool _zoomGestures;
 
         Color _clearColor;
-    
+        Color _skyColor;
+        
+        mutable Color _skyBitmapColor;
+        mutable std::shared_ptr<Bitmap> _skyBitmap;
+
         std::shared_ptr<Bitmap> _backgroundBitmap;
-        std::shared_ptr<Bitmap> _skyBitmap;
         
         float _watermarkAlignmentX;
         float _watermarkAlignmentY;
@@ -627,6 +630,10 @@ namespace carto {
         ScreenPos _focusPointOffset;
     
         std::shared_ptr<Projection> _baseProjection;
+
+        std::shared_ptr<Projection> _renderProjection;
+
+        std::shared_ptr<ProjectionSurface> _projectionSurface;
     
         std::shared_ptr<CancelableThreadPool> _envelopeThreadPool;
         std::shared_ptr<CancelableThreadPool> _tileThreadPool;
@@ -637,8 +644,6 @@ namespace carto {
         mutable std::mutex _onChangeListenersMutex;
 
         static std::shared_ptr<Bitmap> _DefaultBackgroundBitmap;
-        static std::shared_ptr<Bitmap> _DefaultSkyBitmap;
-        
         static std::shared_ptr<Bitmap> _CartoWatermarkBitmap;
         static std::shared_ptr<Bitmap> _EvaluationWatermarkBitmap;
         static std::shared_ptr<Bitmap> _ExpiredWatermarkBitmap;

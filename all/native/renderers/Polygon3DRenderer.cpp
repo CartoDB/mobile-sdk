@@ -1,5 +1,4 @@
 #include "Polygon3DRenderer.h"
-#include "assets/DefaultPolygon3DPNG.h"
 #include "components/Options.h"
 #include "drawdatas/Polygon3DDrawData.h"
 #include "layers/VectorLayer.h"
@@ -8,9 +7,7 @@
 #include "graphics/ShaderManager.h"
 #include "graphics/TextureManager.h"
 #include "graphics/ViewState.h"
-#include "graphics/shaders/DiffuseLightingShaderSource.h"
 #include "graphics/utils/GLContext.h"
-#include "projections/Projection.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
@@ -21,23 +18,22 @@
 namespace carto {
 
     Polygon3DRenderer::Polygon3DRenderer() :
-        _polygon3DTex(),
         _elements(),
         _tempElements(),
         _drawDataBuffer(),
         _colorBuf(),
+        _attribBuf(),
         _coordBuf(),
         _normalBuf(),
         _shader(),
         _a_color(0),
+        _a_attrib(0),
         _a_coord(0),
         _a_normal(0),
-        _a_texCoord(0),
         _u_ambientColor(0),
         _u_lightColor(0),
         _u_lightDir(0),
         _u_mvpMat(0),
-        _u_tex(0),
         _options(),
         _mutex()
     {
@@ -61,22 +57,20 @@ namespace carto {
     }
     
     void Polygon3DRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        _shader = shaderManager->createShader(diffuse_lighting_shader_source);
-    
+        static ShaderSource shaderSource("polygon3d", &POLYGON3D_VERTEX_SHADER, &POLYGON3D_FRAGMENT_SHADER);
+
+        _shader = shaderManager->createShader(shaderSource);
+
         // Get shader variables locations
         glUseProgram(_shader->getProgId());
         _a_color = _shader->getAttribLoc("a_color");
+        _a_attrib = _shader->getAttribLoc("a_attrib");
         _a_coord = _shader->getAttribLoc("a_coord");
         _a_normal = _shader->getAttribLoc("a_normal");
-        _a_texCoord = _shader->getAttribLoc("a_texCoord");
         _u_ambientColor = _shader->getUniformLoc("u_ambientColor");
         _u_lightColor = _shader->getUniformLoc("u_lightColor");
         _u_lightDir = _shader->getUniformLoc("u_lightDir");
         _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
-        _u_tex = _shader->getUniformLoc("u_tex");
-    
-        // Create texture
-        _polygon3DTex = textureManager->createTexture(GetPolygon3DBitmap(), false, false);
     }
     
     void Polygon3DRenderer::onDrawFrame(float deltaSeconds, const ViewState& viewState) {
@@ -98,11 +92,11 @@ namespace carto {
     
         // Prepare for drawing
         glUseProgram(_shader->getProgId());
-        // Colors, coords, normals, texCoords
+        // Colors, coords, normals
         glEnableVertexAttribArray(_a_color);
+        glEnableVertexAttribArray(_a_attrib);
         glEnableVertexAttribArray(_a_coord);
         glEnableVertexAttribArray(_a_normal);
-        glDisableVertexAttribArray(_a_texCoord);
         // Ambient light color
         const Color& ambientLightColor = options->getAmbientLightColor();
         glUniform4f(_u_ambientColor, ambientLightColor.getR() / 255.0f, ambientLightColor.getG() / 255.0f,
@@ -117,9 +111,6 @@ namespace carto {
         // Matrix
         const cglib::mat4x4<float>& mvpMat = viewState.getRTEModelviewProjectionMat();
         glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, mvpMat.data());
-        // Texture
-        glUniform1i(_u_tex, 0);
-        glBindTexture(GL_TEXTURE_2D, _polygon3DTex->getTexId());
     
         // Draw
         _drawDataBuffer.clear();
@@ -134,6 +125,7 @@ namespace carto {
     
         // Disable bound arrays
         glDisableVertexAttribArray(_a_color);
+        glDisableVertexAttribArray(_a_attrib);
         glDisableVertexAttribArray(_a_coord);
         glDisableVertexAttribArray(_a_normal);
     
@@ -141,7 +133,6 @@ namespace carto {
     }
     
     void Polygon3DRenderer::onSurfaceDestroyed() {
-        _polygon3DTex.reset();
         _shader.reset();
     }
     
@@ -183,10 +174,8 @@ namespace carto {
             for (std::size_t i = 0; i < coords.size(); i += 3) {
                 double t = 0;
                 if (cglib::intersect_triangle(coords[i + 0], coords[i + 1], coords[i + 2], ray, &t)) {
-                    MapPos clickPos(ray(t)(0), ray(t)(1), ray(t)(2));
-                    MapPos projectedClickPos = layer->getDataSource()->getProjection()->fromInternal(clickPos);
                     int priority = static_cast<int>(results.size());
-                    results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projectedClickPos, projectedClickPos, priority, true));
+                    results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, ray(t), ray(t), priority, true));
                     break;
                 }
             }
@@ -194,9 +183,11 @@ namespace carto {
     }
     
     void Polygon3DRenderer::BuildAndDrawBuffers(GLuint a_color,
+                                                GLuint a_attrib,
                                                 GLuint a_coord,
                                                 GLuint a_normal,
                                                 std::vector<unsigned char>& colorBuf,
+                                                std::vector<unsigned char>& attribBuf,
                                                 std::vector<float>& coordBuf,
                                                 std::vector<float>& normalBuf,
                                                 std::vector<std::shared_ptr<Polygon3DDrawData> >& drawDataBuffer,
@@ -211,14 +202,13 @@ namespace carto {
         // Resize the buffers, if necessary
         if (colorBuf.size() < totalCoordCount * 4) {
             colorBuf.resize(std::min(totalCoordCount * 4, GLContext::MAX_VERTEXBUFFER_SIZE * 4));
+            attribBuf.resize(std::min(totalCoordCount * 1, GLContext::MAX_VERTEXBUFFER_SIZE * 1));
             coordBuf.resize(std::min(totalCoordCount * 3, GLContext::MAX_VERTEXBUFFER_SIZE * 3));
             normalBuf.resize(std::min(totalCoordCount * 3, GLContext::MAX_VERTEXBUFFER_SIZE * 3));
         }
     
         // View state specific data
-        const MapPos& cameraPos = viewState.getCameraPos();
-        std::size_t colorIndex = 0;
-        std::size_t normalIndex = 0;
+        cglib::vec3<double> cameraPos = viewState.getCameraPos();
         GLuint coordIndex = 0;
         for (std::size_t i = 0; i < drawDataBuffer.size(); i++) {
             const std::shared_ptr<Polygon3DDrawData>& drawData = drawDataBuffer[i];
@@ -230,73 +220,98 @@ namespace carto {
             }
     
             // Check for possible overflow in the buffers
-            if (coordIndex / 3 + coords.size() > GLContext::MAX_VERTEXBUFFER_SIZE) {
+            if (coordIndex + coords.size() > GLContext::MAX_VERTEXBUFFER_SIZE) {
                 // If it doesn't fit, stop and draw the buffers
-                glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &colorBuf[0]);
-                glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, &coordBuf[0]);
-                glVertexAttribPointer(a_normal, 3, GL_FLOAT, GL_FALSE, 0, &normalBuf[0]);
-                glDrawArrays(GL_TRIANGLES, 0, coordIndex / 3);
+                glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, colorBuf.data());
+                glVertexAttribPointer(a_attrib, 1, GL_UNSIGNED_BYTE, GL_FALSE, 0, attribBuf.data());
+                glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, coordBuf.data());
+                glVertexAttribPointer(a_normal, 3, GL_FLOAT, GL_FALSE, 0, normalBuf.data());
+                glDrawArrays(GL_TRIANGLES, 0, coordIndex);
                 // Start filling buffers from the beginning
-                colorIndex = 0;
                 coordIndex = 0;
-                normalIndex = 0;
             }
     
             // Coords and colors
             const Color& color = drawData->getColor();
             const Color& sideColor = drawData->getSideColor();
             const std::vector<cglib::vec3<float> >& normals = drawData->getNormals();
-            std::vector<cglib::vec3<double> >::const_iterator cit;
-            std::vector<cglib::vec3<float> >::const_iterator nit;
-            for (cit = coords.begin(), nit = normals.begin(); cit != coords.end() && nit != normals.end(); ++cit, ++nit) {
+            const std::vector<unsigned char>& attribs = drawData->getAttribs();
+            std::vector<cglib::vec3<double> >::const_iterator cit = coords.begin();
+            std::vector<cglib::vec3<float> >::const_iterator nit = normals.begin();
+            std::vector<unsigned char>::const_iterator ait = attribs.begin();
+            for (; cit != coords.end() && nit != normals.end(); ++cit, ++nit, ait++) {
+                if (*ait) {
+                    colorBuf[coordIndex * 4 + 0] = color.getR();
+                    colorBuf[coordIndex * 4 + 1] = color.getG();
+                    colorBuf[coordIndex * 4 + 2] = color.getB();
+                    colorBuf[coordIndex * 4 + 3] = color.getA();
+                    attribBuf[coordIndex] = 1;
+                } else {
+                    colorBuf[coordIndex * 4 + 0] = sideColor.getR();
+                    colorBuf[coordIndex * 4 + 1] = sideColor.getG();
+                    colorBuf[coordIndex * 4 + 2] = sideColor.getB();
+                    colorBuf[coordIndex * 4 + 3] = sideColor.getA();
+                    attribBuf[coordIndex] = 0;
+                }
+
                 const cglib::vec3<double>& coord = *cit;
-                coordBuf[coordIndex + 0] = static_cast<float>(coord(0) - cameraPos.getX());
-                coordBuf[coordIndex + 1] = static_cast<float>(coord(1) - cameraPos.getY());
-                coordBuf[coordIndex + 2] = static_cast<float>(coord(2) - cameraPos.getZ());
-                coordIndex += 3;
+                coordBuf[coordIndex * 3 + 0] = static_cast<float>(coord(0) - cameraPos(0));
+                coordBuf[coordIndex * 3 + 1] = static_cast<float>(coord(1) - cameraPos(1));
+                coordBuf[coordIndex * 3 + 2] = static_cast<float>(coord(2) - cameraPos(2));
                 
                 const cglib::vec3<float>& normal = *nit;
-                normalBuf[normalIndex + 0] = normal(0);
-                normalBuf[normalIndex + 1] = normal(1);
-                normalBuf[normalIndex + 2] = normal(2);
-                normalIndex += 3;
+                normalBuf[coordIndex * 3 + 0] = normal(0);
+                normalBuf[coordIndex * 3 + 1] = normal(1);
+                normalBuf[coordIndex * 3 + 2] = normal(2);
 
-                if (normal(2) == 1) {
-                    colorBuf[colorIndex + 0] = color.getR();
-                    colorBuf[colorIndex + 1] = color.getG();
-                    colorBuf[colorIndex + 2] = color.getB();
-                    colorBuf[colorIndex + 3] = color.getA();
-                } else {
-                    colorBuf[colorIndex + 0] = sideColor.getR();
-                    colorBuf[colorIndex + 1] = sideColor.getG();
-                    colorBuf[colorIndex + 2] = sideColor.getB();
-                    colorBuf[colorIndex + 3] = sideColor.getA();
-                }
-                colorIndex += 4;
+                coordIndex++;
             }
         }
     
         // Draw the buffers
         if (coordIndex > 0) {
-            glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &colorBuf[0]);
-            glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, &coordBuf[0]);
-            glVertexAttribPointer(a_normal, 3, GL_FLOAT, GL_FALSE, 0, &normalBuf[0]);
-            glDrawArrays(GL_TRIANGLES, 0, coordIndex / 3);
+            glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, colorBuf.data());
+            glVertexAttribPointer(a_attrib, 1, GL_UNSIGNED_BYTE, GL_FALSE, 0, attribBuf.data());
+            glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, coordBuf.data());
+            glVertexAttribPointer(a_normal, 3, GL_FLOAT, GL_FALSE, 0, normalBuf.data());
+            glDrawArrays(GL_TRIANGLES, 0, coordIndex);
         }
     }
         
-    std::shared_ptr<Bitmap> Polygon3DRenderer::GetPolygon3DBitmap() {
-        if (!_Polygon3DBitmap) {
-            _Polygon3DBitmap = Bitmap::CreateFromCompressed(default_polygon_3d_png, default_polygon_3d_png_len);
-        }
-        return _Polygon3DBitmap;
-    }
-    
-    std::shared_ptr<Bitmap> Polygon3DRenderer::_Polygon3DBitmap;
-    
     void Polygon3DRenderer::drawBatch(const ViewState& viewState) {
         // Draw the draw datas, multiple passes may be necessary
-        BuildAndDrawBuffers(_a_color, _a_coord, _a_normal, _colorBuf, _coordBuf, _normalBuf, _drawDataBuffer, viewState);
+        BuildAndDrawBuffers(_a_color, _a_attrib, _a_coord, _a_normal, _colorBuf, _attribBuf, _coordBuf, _normalBuf, _drawDataBuffer, viewState);
     }
-        
+
+    const std::string Polygon3DRenderer::POLYGON3D_VERTEX_SHADER = R"GLSL(
+        #version 100
+        attribute vec4 a_color;
+        attribute vec4 a_coord;
+        attribute float a_attrib;
+        attribute vec3 a_normal;
+        uniform vec4 u_ambientColor;
+        uniform vec4 u_lightColor;
+        uniform vec3 u_lightDir;
+        uniform mat4 u_mvpMat;
+        varying vec4 v_color;
+        void main() {
+            float dotProduct = max(0.0, dot(a_normal, u_lightDir));
+            vec3 lighting = vec3(a_attrib, a_attrib, a_attrib) + (u_ambientColor.rgb + u_lightColor.rgb * dotProduct) * (1.0 - a_attrib);
+            v_color = a_color * vec4(lighting, 1.0);
+            gl_Position = u_mvpMat * a_coord;
+        }
+    )GLSL";
+
+    const std::string Polygon3DRenderer::POLYGON3D_FRAGMENT_SHADER = R"GLSL(
+        #version 100
+        precision mediump float;
+        varying lowp vec4 v_color;
+        void main() {
+            vec4 color = v_color;
+            if (color.a == 0.0) {
+                discard;
+            }
+            gl_FragColor = color;
+        }
+    )GLSL";
 }

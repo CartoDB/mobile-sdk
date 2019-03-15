@@ -9,6 +9,8 @@
 #include "geometry/MultiGeometry.h"
 #include "graphics/ViewState.h"
 #include "layers/VectorEditEventListener.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/BillboardRenderer.h"
 #include "renderers/LineRenderer.h"
 #include "renderers/MapRenderer.h"
@@ -299,7 +301,14 @@ namespace carto {
         if (!mapRenderer) {
             return false;
         }
+        
+        std::shared_ptr<ProjectionSurface> projectionSurface = mapRenderer->getProjectionSurface();
         ViewState viewState = mapRenderer->getViewState();
+        cglib::vec3<double> worldPos1 = viewState.screenToWorld(cglib::vec2<float>(screenPos1.getX(), screenPos1.getY()), 0);
+        if (std::isnan(cglib::norm(worldPos1))) {
+            return false;
+        }
+        MapPos mapPos1 = layer->_dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(worldPos1));
 
         std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
         std::shared_ptr<VectorElement> selectedElement = layer->getSelectedVectorElement();
@@ -312,11 +321,9 @@ namespace carto {
         switch (action) {
         case TouchHandler::ACTION_POINTER_1_DOWN:
             {
-                MapPos mapPos1 = layer->_dataSource->getProjection()->fromInternal(mapRenderer->screenToWorld(screenPos1, viewState));
-                MapPos touchPos = mapRenderer->screenToWorld(screenPos1, viewState);
-                MapPos rayOrigin = viewState.getCameraPos();
-                MapVec rayDir = touchPos - rayOrigin;
-                cglib::ray3<double> ray(cglib::vec3<double>(rayOrigin.getX(), rayOrigin.getY(), rayOrigin.getZ()), cglib::vec3<double>(rayDir.getX(), rayDir.getY(), rayDir.getZ()));
+                cglib::vec3<double> origin = viewState.getCameraPos();
+                cglib::vec3<double> target = worldPos1;
+                cglib::ray3<double> ray(origin, target - origin);
 
                 std::vector<RayIntersectedElement> results;
                 layer->_overlayRenderer->calculateRayIntersectedElements(layer, ray, viewState, results);
@@ -359,7 +366,7 @@ namespace carto {
                     }
                     layer->_overlayDragMode = VectorElementDragMode::VECTOR_ELEMENT_DRAG_MODE_ELEMENT;
                     layer->_overlayDragGeometry = selectedElement->getGeometry();
-                    layer->_overlayDragGeometryPos = layer->_dataSource->getProjection()->fromInternal(touchPos);
+                    layer->_overlayDragGeometryPos = mapPos1;
                     switch (dragResult) {
                         case VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_IGNORE:
                             layer->_overlayDragGeometry.reset();
@@ -369,7 +376,7 @@ namespace carto {
                             return false;
                         case VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_MODIFY:
                             layer->_overlayDragStarted = true;
-                            layer->updateElementGeometry(selectedElement, selectedElement->getGeometry(), MapVec());
+                            layer->updateElementGeometry(selectedElement, selectedElement->getGeometry(), viewState, MapPos(), MapPos());
                             return true;
                         case VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_DELETE:
                             layer->removeElement(selectedElement);
@@ -384,7 +391,6 @@ namespace carto {
                     return false;
                 }
 
-                MapPos mapPos1 = layer->_dataSource->getProjection()->fromInternal(mapRenderer->screenToWorld(screenPos1, viewState));
                 VectorElementDragResult::VectorElementDragResult dragResult = VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_IGNORE;
                 if (vectorEditEventListener) {
                     auto dragInfo = std::make_shared<VectorElementDragInfo>(selectedElement, layer->_overlayDragMode, screenPos1, mapPos1);
@@ -404,8 +410,7 @@ namespace carto {
                         if (layer->_overlayDragMode == VectorElementDragMode::VECTOR_ELEMENT_DRAG_MODE_VERTEX) {
                             layer->updateElementPoint(selectedElement, selectedPoint, mapPos1);
                         } else {
-                            MapVec delta = mapPos1 - layer->_overlayDragGeometryPos;
-                            layer->updateElementGeometry(selectedElement, selectedGeometry, delta);
+                            layer->updateElementGeometry(selectedElement, selectedGeometry, viewState, layer->_overlayDragGeometryPos, mapPos1);
                         }
                         return true;
                     case VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_DELETE:
@@ -427,7 +432,6 @@ namespace carto {
                     return false;
                 }
 
-                MapPos mapPos1 = layer->_dataSource->getProjection()->fromInternal(mapRenderer->screenToWorld(screenPos1, viewState));
                 VectorElementDragResult::VectorElementDragResult dragResult = VectorElementDragResult::VECTOR_ELEMENT_DRAG_RESULT_IGNORE;
                 if (vectorEditEventListener) {
                     auto dragInfo = std::make_shared<VectorElementDragInfo>(selectedElement, layer->_overlayDragMode, screenPos1, mapPos1);
@@ -447,8 +451,7 @@ namespace carto {
                         if (layer->_overlayDragMode == VectorElementDragMode::VECTOR_ELEMENT_DRAG_MODE_VERTEX) {
                             layer->updateElementPoint(selectedElement, selectedPoint, mapPos1);
                         } else {
-                            MapVec delta = mapPos1 - layer->_overlayDragGeometryPos;
-                            layer->updateElementGeometry(selectedElement, selectedGeometry, delta);
+                            layer->updateElementGeometry(selectedElement, selectedGeometry, viewState, layer->_overlayDragGeometryPos, mapPos1);
                         }
                         layer->refresh();
                         return true;
@@ -469,12 +472,14 @@ namespace carto {
         return false;
     }
 
-    void EditableVectorLayer::updateElementGeometry(std::shared_ptr<VectorElement> element, std::shared_ptr<Geometry> geometry, const MapVec& delta) {
+    void EditableVectorLayer::updateElementGeometry(std::shared_ptr<VectorElement> element, std::shared_ptr<Geometry> geometry, const ViewState& viewState, const MapPos& mapPos0, const MapPos& mapPos1) {
         if (!element) {
             return;
         }
         
-        geometry = updateGeometryPoints(geometry, delta);
+        if (mapPos0 != mapPos1) {
+            geometry = updateGeometryPoints(geometry, viewState, mapPos0, mapPos1);
+        }
 
         DirectorPtr<VectorEditEventListener> vectorEditEventListener = _vectorEditEventListener;
 
@@ -483,30 +488,41 @@ namespace carto {
         }
 
         syncElementOverlayPoints(element);
-        
-        if (const std::shared_ptr<MapRenderer>& mapRenderer = _mapRenderer.lock()) {
-            mapRenderer->requestRedraw();
-        }
+        redraw();
     }
 
-    std::shared_ptr<Geometry> EditableVectorLayer::updateGeometryPoints(std::shared_ptr<Geometry> geometry, const MapVec& delta) {
+    std::shared_ptr<Geometry> EditableVectorLayer::updateGeometryPoints(std::shared_ptr<Geometry> geometry, const ViewState& viewState, const MapPos& mapPos0, const MapPos& mapPos1) {
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            return geometry;
+        }
+        cglib::vec3<double> pos0 = projectionSurface->calculatePosition(_dataSource->getProjection()->toInternal(mapPos0));
+        cglib::vec3<double> pos1 = projectionSurface->calculatePosition(_dataSource->getProjection()->toInternal(mapPos1));
+        cglib::mat4x4<double> transform = projectionSurface->calculateTranslateMatrix(pos0, pos1, 1.0f);
+        
+        auto updateMapPos = [&transform, &projectionSurface, this](const MapPos& mapPos) -> MapPos {
+            cglib::vec3<double> pos = projectionSurface->calculatePosition(_dataSource->getProjection()->toInternal(mapPos));
+            pos = cglib::transform_point(pos, transform);
+            return _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(pos));
+        };
+
         if (auto pointGeometry = std::dynamic_pointer_cast<PointGeometry>(geometry)) {
-            MapPos mapPos = pointGeometry->getPos() + delta;
+            MapPos mapPos = updateMapPos(pointGeometry->getPos());
             geometry = std::make_shared<PointGeometry>(mapPos);
         } else if (auto lineGeometry = std::dynamic_pointer_cast<LineGeometry>(geometry)) {
             std::vector<MapPos> mapPoses = lineGeometry->getPoses();
-            std::for_each(mapPoses.begin(), mapPoses.end(), [delta](MapPos& mapPos) { mapPos = mapPos + delta; });
+            std::for_each(mapPoses.begin(), mapPoses.end(), [&updateMapPos](MapPos& mapPos) { mapPos = updateMapPos(mapPos); });
             geometry = std::make_shared<LineGeometry>(mapPoses);
         } else if (auto polygonGeometry = std::dynamic_pointer_cast<PolygonGeometry>(geometry)) {
             std::vector<std::vector<MapPos> > rings = polygonGeometry->getRings();
             for (std::vector<MapPos>& ring : rings) {
-                std::for_each(ring.begin(), ring.end(), [delta](MapPos& mapPos) { mapPos = mapPos + delta; });
+                std::for_each(ring.begin(), ring.end(), [&updateMapPos](MapPos& mapPos) { mapPos = updateMapPos(mapPos); });
             }
             geometry = std::make_shared<PolygonGeometry>(rings);
         } else if (auto multiGeometry = std::dynamic_pointer_cast<MultiGeometry>(geometry)) {
             std::vector<std::shared_ptr<Geometry> > geometries;
             for (int i = 0; i < multiGeometry->getGeometryCount(); i++) {
-                geometries.push_back(updateGeometryPoints(multiGeometry->getGeometry(i), delta));
+                geometries.push_back(updateGeometryPoints(multiGeometry->getGeometry(i), viewState, mapPos0, mapPos1));
             }
             geometry = std::make_shared<MultiGeometry>(geometries);
         }
@@ -522,10 +538,7 @@ namespace carto {
         element.reset();
         
         syncElementOverlayPoints(element);
-        
-        if (const std::shared_ptr<MapRenderer>& mapRenderer = _mapRenderer.lock()) {
-            mapRenderer->requestRedraw();
-        }
+        redraw();
     }
     
     void EditableVectorLayer::updateElementPoint(std::shared_ptr<VectorElement> element, const std::shared_ptr<Point>& dragPoint, const MapPos& mapPos) {
@@ -557,10 +570,7 @@ namespace carto {
         }
 
         syncElementOverlayPoints(element);
-        
-        if (const std::shared_ptr<MapRenderer>& mapRenderer = _mapRenderer.lock()) {
-            mapRenderer->requestRedraw();
-        }
+        redraw();
     }
 
     std::shared_ptr<Geometry> EditableVectorLayer::updateGeometryPoint(std::shared_ptr<Geometry> geometry, int& offset, int index, const MapPos& mapPos) {
@@ -654,10 +664,7 @@ namespace carto {
         }
 
         syncElementOverlayPoints(element);
-
-        if (const std::shared_ptr<MapRenderer>& mapRenderer = _mapRenderer.lock()) {
-            mapRenderer->requestRedraw();
-        }
+        redraw();
     }
 
     std::shared_ptr<Geometry> EditableVectorLayer::removeGeometryPoint(std::shared_ptr<Geometry> geometry, int& offset, int index) {
@@ -756,6 +763,13 @@ namespace carto {
     }
 
     void EditableVectorLayer::createGeometryOverlayPoints(const std::shared_ptr<Geometry>& geometry, int& index, std::vector<std::shared_ptr<Point> >& overlayPoints) const {
+        std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock();
+        if (!mapRenderer) {
+            return;
+        }
+        std::shared_ptr<Projection> projection = _dataSource->getProjection();
+        std::shared_ptr<ProjectionSurface> projectionSurface = mapRenderer->getProjectionSurface();
+
         if (auto pointGeometry = std::dynamic_pointer_cast<PointGeometry>(geometry)) {
             MapPos mapPos = pointGeometry->getPos();
             overlayPoints.push_back(createOverlayPoint(mapPos, false, index++));
@@ -765,7 +779,11 @@ namespace carto {
                 MapPos mapPos = mapPoses[i];
                 if (i > 0) {
                     MapPos prevMapPos = mapPoses[i - 1];
-                    overlayPoints.push_back(createOverlayPoint(prevMapPos + (mapPos - prevMapPos) * 0.5, true, index++));
+                    cglib::vec3<double> pos0 = projectionSurface->calculatePosition(projection->toInternal(prevMapPos));
+                    cglib::vec3<double> pos1 = projectionSurface->calculatePosition(projection->toInternal(mapPos));
+                    cglib::vec3<double> posM = cglib::transform_point(pos0, projectionSurface->calculateTranslateMatrix(pos0, pos1, 0.5f));
+                    MapPos mapPosM = projection->fromInternal(projectionSurface->calculateMapPos(posM));
+                    overlayPoints.push_back(createOverlayPoint(mapPosM, true, index++));
                 }
                 overlayPoints.push_back(createOverlayPoint(mapPos, false, index++));
             }
@@ -776,7 +794,11 @@ namespace carto {
                     MapPos mapPos = ring[i];
                     overlayPoints.push_back(createOverlayPoint(mapPos, false, index++));
                     MapPos nextMapPos = ring[i + 1 < ring.size() ? i + 1 : 0];
-                    overlayPoints.push_back(createOverlayPoint(mapPos + (nextMapPos - mapPos) * 0.5, true, index++));
+                    cglib::vec3<double> pos0 = projectionSurface->calculatePosition(projection->toInternal(mapPos));
+                    cglib::vec3<double> pos1 = projectionSurface->calculatePosition(projection->toInternal(nextMapPos));
+                    cglib::vec3<double> posM = cglib::transform_point(pos0, projectionSurface->calculateTranslateMatrix(pos0, pos1, 0.5f));
+                    MapPos mapPosM = projection->fromInternal(projectionSurface->calculateMapPos(posM));
+                    overlayPoints.push_back(createOverlayPoint(mapPosM, true, index++));
                 }
             }
         } else if (auto multiGeometry = std::dynamic_pointer_cast<MultiGeometry>(geometry)) {
@@ -796,7 +818,10 @@ namespace carto {
             overlayPoint = std::make_shared<Point>(mapPos, virtualPoint ? _overlayStyleVirtual : _overlayStyleNormal);
         }
         if (overlayPoint->getStyle()) {
-            overlayPoint->setDrawData(std::make_shared<PointDrawData>(*overlayPoint->getGeometry(), *overlayPoint->getStyle(), *_dataSource->getProjection()));
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            if (auto mapRenderer = _mapRenderer.lock()) {
+                overlayPoint->setDrawData(std::make_shared<PointDrawData>(*overlayPoint->getGeometry(), *overlayPoint->getStyle(), *_dataSource->getProjection(), *mapRenderer->getProjectionSurface()));
+            }
         }
         return overlayPoint;
     }

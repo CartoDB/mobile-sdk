@@ -21,13 +21,12 @@ namespace carto {
     class MapPos;
     class PolygonGeometry;
     class Projection;
+    class ProjectionSurface;
     
     class LineDrawData : public VectorElementDrawData {
     public:
-        // Saves a little space compared to MapPos
-        LineDrawData(const LineGeometry& geometry, const LineStyle& style, const Projection& projection);
-        LineDrawData(const PolygonGeometry& geometry, const std::vector<MapPos>& internalPoses, const LineStyle& style, const Projection& projection);
-        LineDrawData(const LineDrawData& lineDrawData);
+        LineDrawData(const LineGeometry& geometry, const LineStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface);
+        LineDrawData(const std::vector<MapPos>& poses, const LineStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface);
         virtual ~LineDrawData();
     
         const std::shared_ptr<Bitmap> getBitmap() const;
@@ -38,7 +37,7 @@ namespace carto {
     
         const std::vector<std::vector<cglib::vec3<double>*> >& getCoords() const;
     
-        const std::vector<std::vector<cglib::vec3<float> > >& getNormals() const;
+        const std::vector<std::vector<cglib::vec4<float> > >& getNormals() const;
     
         const std::vector<std::vector<cglib::vec2<float> > >& getTexCoords() const;
     
@@ -55,7 +54,7 @@ namespace carto {
     
         static const float CLICK_WIDTH_COEF;
         
-        void init(const LineStyle& style);
+        void init(const std::vector<MapPos>& poses, const Projection& projection, const ProjectionSurface& projectionSurface, const LineStyle& style);
     
         std::shared_ptr<Bitmap> _bitmap;
     
@@ -68,7 +67,7 @@ namespace carto {
     
         // Origin point and normal for each vertex
         std::vector<std::vector<cglib::vec3<double>*> > _coords;
-        std::vector<std::vector<cglib::vec3<float> > > _normals;
+        std::vector<std::vector<cglib::vec4<float> > > _normals;
         std::vector<std::vector<cglib::vec2<float> > > _texCoords;
     
         std::vector<std::vector<unsigned int> > _indices;

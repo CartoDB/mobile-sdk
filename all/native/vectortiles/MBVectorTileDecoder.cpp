@@ -51,9 +51,9 @@ namespace carto {
         _layerNameOverride(),
         _styleSet(),
         _map(),
+        _mapSettings(),
         _parameterValueMap(),
         _updatedParameters(),
-        _backgroundPattern(),
         _symbolizerContext()
     {
         if (!compiledStyleSet) {
@@ -73,7 +73,6 @@ namespace carto {
         _map(),
         _parameterValueMap(),
         _updatedParameters(),
-        _backgroundPattern(),
         _symbolizerContext()
     {
         if (!cartoCSSStyleSet) {
@@ -273,16 +272,11 @@ namespace carto {
         notifyDecoderChanged();
     }
 
-    Color MBVectorTileDecoder::getBackgroundColor() const {
+    std::shared_ptr<mvt::Map::Settings> MBVectorTileDecoder::getMapSettings() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return Color(_map->getSettings().backgroundColor.value());
+        return _mapSettings;
     }
     
-    std::shared_ptr<const vt::BitmapPattern> MBVectorTileDecoder::getBackgroundPattern() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _backgroundPattern;
-    }
-        
     int MBVectorTileDecoder::getMinZoom() const {
         return 0;
     }
@@ -396,7 +390,7 @@ namespace carto {
         return std::make_shared<VectorTileFeatureCollection>(tileFeatures);
     }
 
-    std::shared_ptr<MBVectorTileDecoder::TileMap> MBVectorTileDecoder::decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const {
+    std::shared_ptr<MBVectorTileDecoder::TileMap> MBVectorTileDecoder::decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<vt::TileTransformer>& tileTransformer, const std::shared_ptr<BinaryData>& tileData) const {
         if (!tileData) {
             Log::Warn("MBVectorTileDecoder::decodeTile: Null tile data");
             return std::shared_ptr<TileMap>();
@@ -422,7 +416,7 @@ namespace carto {
             decoder.setBuffer(buffer);
             decoder.setGlobalIdOverride(featureIdOverride, MapTile(tile.x, tile.y, tile.zoom, 0).getTileId());
             
-            mvt::MBVTTileReader reader(map, *symbolizerContext, decoder);
+            mvt::MBVTTileReader reader(map, tileTransformer, *symbolizerContext, decoder);
             reader.setLayerNameOverride(layerNameOverride);
 
             if (std::shared_ptr<vt::Tile> tile = reader.readTile(targetTile)) {
@@ -544,15 +538,10 @@ namespace carto {
             }
         }
 
-        std::shared_ptr<const vt::BitmapPattern> backgroundPattern;
-        if (!map->getSettings().backgroundImage.empty()) {
-            backgroundPattern = bitmapManager->loadBitmapPattern(map->getSettings().backgroundImage, 1.0f, 1.0f);
-        }
-
         _map = map;
+        _mapSettings = std::make_shared<mvt::Map::Settings>(_map->getSettings());
         _parameterValueMap = parameterValueMap;
         _updatedParameters = updatedParameters;
-        _backgroundPattern = backgroundPattern;
         _symbolizerContext = symbolizerContext;
         _styleSet = styleSet;
         _cachedFeatureDecoder.first.reset();

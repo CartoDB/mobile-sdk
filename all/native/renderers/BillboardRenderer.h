@@ -34,8 +34,8 @@ namespace carto {
     
     class BillboardRenderer : public std::enable_shared_from_this<BillboardRenderer> {
     public:
-        static void CalculateBillboardCoords(const BillboardDrawData& drawData, const ViewState& viewState,
-                                             std::vector<float>& coordBuf, int drawDataIndex, float sizeScale = 1.0f);
+        static void CalculateBillboardAxis(const BillboardDrawData& drawData, const ViewState& viewState, cglib::vec3<float>& xAxis, cglib::vec3<float>& yAxis);
+        static void CalculateBillboardCoords(const BillboardDrawData& drawData, const ViewState& viewState, std::vector<float>& coordBuf, int drawDataIndex, float sizeScale = 1.0f);
         
         BillboardRenderer();
         virtual ~BillboardRenderer();
@@ -75,6 +75,9 @@ namespace carto {
         bool calculateBaseBillboardDrawData(const std::shared_ptr<BillboardDrawData>& drawData, const ViewState& viewState);
         
         void drawBatch(float opacity, StyleTextureCache& styleCache, const ViewState& viewState);
+        
+        static const std::string BILLBOARD_VERTEX_SHADER;
+        static const std::string BILLBOARD_FRAGMENT_SHADER;
         
         std::weak_ptr<VectorLayer> _layer;
     

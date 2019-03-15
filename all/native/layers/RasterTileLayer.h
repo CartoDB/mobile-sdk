@@ -78,7 +78,7 @@ namespace carto {
             
         private:
             static std::shared_ptr<Bitmap> ExtractSubTile(const MapTile& subTile, const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap);
-            static std::shared_ptr<vt::Tile> CreateVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap);
+            static std::shared_ptr<vt::Tile> CreateVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap, const std::shared_ptr<vt::TileTransformer>& tileTransformer);
         };
     
         virtual bool tileExists(const MapTile& mapTile, bool preloadingCache) const;

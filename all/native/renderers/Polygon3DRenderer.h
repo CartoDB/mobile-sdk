@@ -52,21 +52,20 @@ namespace carto {
     
     private:
         static void BuildAndDrawBuffers(GLuint a_color,
+                                        GLuint a_attrib,
                                         GLuint a_coord,
                                         GLuint a_normal,
                                         std::vector<unsigned char>& colorBuf,
+                                        std::vector<unsigned char>& attribBuf,
                                         std::vector<float>& coordBuf,
                                         std::vector<float>& normalBuf,
                                         std::vector<std::shared_ptr<Polygon3DDrawData> >& drawDataBuffer,
                                         const ViewState& viewState);
         
-        static std::shared_ptr<Bitmap> GetPolygon3DBitmap();
-        
-        static std::shared_ptr<Bitmap> _Polygon3DBitmap;
-        
         void drawBatch(const ViewState& viewState);
         
-        std::shared_ptr<Texture> _polygon3DTex;
+        static const std::string POLYGON3D_VERTEX_SHADER;
+        static const std::string POLYGON3D_FRAGMENT_SHADER;
     
         std::vector<std::shared_ptr<Polygon3D> > _elements;
         std::vector<std::shared_ptr<Polygon3D> > _tempElements;
@@ -74,11 +73,13 @@ namespace carto {
         std::vector<std::shared_ptr<Polygon3DDrawData> > _drawDataBuffer;
     
         std::vector<unsigned char> _colorBuf;
+        std::vector<unsigned char> _attribBuf;
         std::vector<float> _coordBuf;
         std::vector<float> _normalBuf;
     
         std::shared_ptr<Shader> _shader;
         GLuint _a_color;
+        GLuint _a_attrib;
         GLuint _a_coord;
         GLuint _a_normal;
         GLuint _a_texCoord;

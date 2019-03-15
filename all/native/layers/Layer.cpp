@@ -86,12 +86,17 @@ namespace carto {
         if (!options) {
             return;
         }
+        if (!viewState.getProjectionSurface()) {
+            return;
+        }
         std::shared_ptr<Projection> projection = options->getBaseProjection();
 
-        MapPos worldPos = viewState.screenToWorldPlane(screenPos, options);
-        MapPos rayOrigin = viewState.getCameraPos();
-        MapVec rayDir = worldPos - viewState.getCameraPos();
-        cglib::ray3<double> ray(cglib::vec3<double>(rayOrigin.getX(), rayOrigin.getY(), rayOrigin.getZ()), cglib::vec3<double>(rayDir.getX(), rayDir.getY(), rayDir.getZ()));
+        cglib::vec3<double> target = viewState.screenToWorld(cglib::vec2<float>(screenPos.getX(), screenPos.getY()), 0, options);
+        if (std::isnan(cglib::norm(target))) {
+            return; // point not on surface
+        }
+        cglib::vec3<double> origin = viewState.getCameraPos();
+        cglib::ray3<double> ray(origin, target - origin);
 
         // Calculate intersections
         std::vector<RayIntersectedElement> results;
@@ -171,6 +176,18 @@ namespace carto {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _lastCullState;
     }
+
+    void Layer::redraw() const {
+        std::shared_ptr<MapRenderer> mapRenderer;
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            mapRenderer = _mapRenderer.lock();
+        }
+
+        if (mapRenderer) {
+            mapRenderer->requestRedraw();
+        }
+    }
     
     bool Layer::isSurfaceCreated() const {
         return _surfaceCreated;
@@ -189,11 +206,11 @@ namespace carto {
     }
     
     std::shared_ptr<Bitmap> Layer::getBackgroundBitmap() const {
-        return Options::GetDefaultBackgroundBitmap();
+        return std::shared_ptr<Bitmap>();
     }
 
     std::shared_ptr<Bitmap> Layer::getSkyBitmap() const {
-        return Options::GetDefaultSkyBitmap();
+        return std::shared_ptr<Bitmap>();
     }
 
 }

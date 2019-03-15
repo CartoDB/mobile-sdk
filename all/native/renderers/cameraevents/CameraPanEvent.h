@@ -21,8 +21,8 @@ namespace carto {
         const MapPos& getPos() const;
         void setPos(const MapPos& pos);
     
-        const MapVec& getPosDelta() const;
-        void setPosDelta(const MapVec& posDelta);
+        const std::pair<MapPos, MapPos>& getPosDelta() const;
+        void setPosDelta(const std::pair<MapPos, MapPos>& posDelta);
     
         bool isUseDelta() const;
     
@@ -31,7 +31,7 @@ namespace carto {
     private:
         MapPos _pos;
     
-        MapVec _posDelta;
+        std::pair<MapPos, MapPos> _posDelta;
     
         bool _useDelta;
     };

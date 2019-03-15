@@ -23,28 +23,28 @@ namespace carto {
         virtual void reserve(std::size_t size);
         
         virtual void clear();
-        virtual void insert(const MapBounds& bounds, const T& object);
-        virtual bool remove(const MapBounds& bounds, const T& object);
+        virtual void insert(const cglib::bbox3<double>& bounds, const T& object);
+        virtual bool remove(const cglib::bbox3<double>& bounds, const T& object);
         virtual bool remove(const T& object);
         
-        virtual std::vector<T> query(const Frustum& frustum) const;
-        virtual std::vector<T> query(const MapBounds& bounds) const;
+        virtual std::vector<T> query(const cglib::frustum3<double>& frustum) const;
+        virtual std::vector<T> query(const cglib::bbox3<double>& bounds) const;
         virtual std::vector<T> getAll() const;
         
     private:
         class Record {
         public:
-            Record(const MapBounds& bounds, const T& object);
+            Record(const cglib::bbox3<double>& bounds, const T& object);
             
-            MapBounds bounds;
+            cglib::bbox3<double> bounds;
             T object;
         };
         
         class Node {
         public:
-            Node(const MapBounds& bounds);
+            Node(const cglib::bbox3<double>& bounds);
             
-            MapBounds bounds;
+            cglib::bbox3<double> bounds;
             std::list<Record> records;
             std::vector<std::shared_ptr<Node> > children; // <, >= half-planes
             int axis; // splitting axis (0 is x, 1 is y, 2 is z)
@@ -54,11 +54,11 @@ namespace carto {
         static const int MAX_DEPTH = 20;
         static const std::size_t MIN_SPLIT_COUNT = 2;
         
-        void insertToNode(const std::shared_ptr<Node>& node, const MapBounds& bounds, const T& object, int depth);
-        std::shared_ptr<Node> removeFromNode(const std::shared_ptr<Node>& node, const MapBounds* bounds, const T& object);
+        void insertToNode(const std::shared_ptr<Node>& node, const cglib::bbox3<double>& bounds, const T& object, int depth);
+        std::shared_ptr<Node> removeFromNode(const std::shared_ptr<Node>& node, const cglib::bbox3<double>* bounds, const T& object);
         
-        void queryNode(const std::shared_ptr<Node>& node, const Frustum& frustum, std::vector<T>& results) const;
-        void queryNode(const std::shared_ptr<Node>& node, const MapBounds& bounds, std::vector<T>& results) const;
+        void queryNode(const std::shared_ptr<Node>& node, const cglib::frustum3<double>& frustum, std::vector<T>& results) const;
+        void queryNode(const std::shared_ptr<Node>& node, const cglib::bbox3<double>& bounds, std::vector<T>& results) const;
         void getAllFromNode(const std::shared_ptr<Node>& node, std::vector<T>& results) const;
         
         std::shared_ptr<Node> _root;
@@ -88,7 +88,7 @@ namespace carto {
     }
     
     template<typename T>
-    void KDTreeSpatialIndex<T>::insert(const MapBounds& bounds, const T& object) {
+    void KDTreeSpatialIndex<T>::insert(const cglib::bbox3<double>& bounds, const T& object) {
         if (!_root) {
             _root = std::make_shared<Node>(bounds);
         }
@@ -96,7 +96,7 @@ namespace carto {
     }
     
     template<typename T>
-    bool KDTreeSpatialIndex<T>::remove(const MapBounds& bounds, const T& object) {
+    bool KDTreeSpatialIndex<T>::remove(const cglib::bbox3<double>& bounds, const T& object) {
         std::size_t count = _count;
         _root = removeFromNode(_root, &bounds, object);
         return count != _count;
@@ -110,14 +110,14 @@ namespace carto {
     }
     
     template<typename T>
-    std::vector<T> KDTreeSpatialIndex<T>::query(const Frustum& frustum) const {
+    std::vector<T> KDTreeSpatialIndex<T>::query(const cglib::frustum3<double>& frustum) const {
         std::vector<T> results;
         queryNode(_root, frustum, results);
         return results;
     }
     
     template<typename T>
-    std::vector<T> KDTreeSpatialIndex<T>::query(const MapBounds& bounds) const {
+    std::vector<T> KDTreeSpatialIndex<T>::query(const cglib::bbox3<double>& bounds) const {
         std::vector<T> results;
         queryNode(_root, bounds, results);
         return results;
@@ -131,14 +131,14 @@ namespace carto {
     }
     
     template<typename T>
-    KDTreeSpatialIndex<T>::Record::Record(const MapBounds& bounds, const T& object) :
+    KDTreeSpatialIndex<T>::Record::Record(const cglib::bbox3<double>& bounds, const T& object) :
         bounds(bounds),
         object(object)
     {
     }
     
     template<typename T>
-    KDTreeSpatialIndex<T>::Node::Node(const MapBounds& bounds) :
+    KDTreeSpatialIndex<T>::Node::Node(const cglib::bbox3<double>& bounds) :
         bounds(bounds),
         records(),
         children(),
@@ -148,9 +148,9 @@ namespace carto {
     }
     
     template<typename T>
-    void KDTreeSpatialIndex<T>::insertToNode(const std::shared_ptr<Node>& node, const MapBounds& bounds, const T& object, int depth) {
+    void KDTreeSpatialIndex<T>::insertToNode(const std::shared_ptr<Node>& node, const cglib::bbox3<double>& bounds, const T& object, int depth) {
         // Update node bounds
-        node->bounds.expandToContain(bounds);
+        node->bounds.add(bounds);
         
         // If depth limit has been exceeded, add to current node
         if (depth >= MAX_DEPTH) {
@@ -166,25 +166,22 @@ namespace carto {
             
             // Create children and redistribute node records among children if enough records have been added
             if (node->records.size() > MIN_SPLIT_COUNT) {
+                cglib::vec3<double> boundsDelta = node->bounds.size();
                 int axis = 0;
-                const MapVec& boundsDelta = node->bounds.getDelta();
-                double biggestDelta = boundsDelta.getX();
-                if (boundsDelta.getY() > biggestDelta) {
+                if (boundsDelta(1) > boundsDelta(0) && boundsDelta(1) > boundsDelta(2)) {
                     axis = 1;
-                    biggestDelta = boundsDelta.getY();
-                }
-                if (boundsDelta.getZ() > biggestDelta) {
+                } else if (boundsDelta(2) > boundsDelta(0) && boundsDelta(2) > boundsDelta(1)) {
                     axis = 2;
                 }
                 
                 std::vector<std::shared_ptr<Node> > children(2);
-                double distance = node->bounds.getCenter()[axis];
+                double distance = node->bounds.center()(axis);
                 for (const Record& record : node->records) {
-                    int index = record.bounds.getCenter()[axis] >= distance ? 1 : 0;
+                    int index = record.bounds.center()(axis) >= distance ? 1 : 0;
                     if (!children[index]) {
                         children[index] = std::make_shared<Node>(record.bounds);
                     } else {
-                        children[index]->bounds.expandToContain(record.bounds);
+                        children[index]->bounds.add(record.bounds);
                     }
                     children[index]->records.push_back(record);
                 }
@@ -201,7 +198,7 @@ namespace carto {
         }
         
         // Recurse to children
-        int index = (node->bounds.getCenter()[node->axis] >= node->distance ? 1 : 0);
+        int index = (node->bounds.center()(node->axis) >= node->distance ? 1 : 0);
         if (!node->children[index]) {
             node->children[index] = std::make_shared<Node>(bounds);
         }
@@ -209,12 +206,12 @@ namespace carto {
     }
     
     template<typename T>
-    std::shared_ptr<typename KDTreeSpatialIndex<T>::Node> KDTreeSpatialIndex<T>::removeFromNode(const std::shared_ptr<Node>& node, const MapBounds* bounds, const T& object) {
+    std::shared_ptr<typename KDTreeSpatialIndex<T>::Node> KDTreeSpatialIndex<T>::removeFromNode(const std::shared_ptr<Node>& node, const cglib::bbox3<double>* bounds, const T& object) {
         // Check if we need to proceed
         if (!node) {
             return node;
         }
-        if (bounds && !node->bounds.intersects(*bounds)) {
+        if (bounds && !node->bounds.inside(*bounds)) {
             return node;
         }
         
@@ -242,19 +239,19 @@ namespace carto {
     }
     
     template<typename T>
-    void KDTreeSpatialIndex<T>::queryNode(const std::shared_ptr<Node>& node, const Frustum& frustum, std::vector<T>& results) const {
+    void KDTreeSpatialIndex<T>::queryNode(const std::shared_ptr<Node>& node, const cglib::frustum3<double>& frustum, std::vector<T>& results) const {
         // Check if this node intersects with given envelope
         if (!node) {
             return;
         }
-        if (!frustum.cuboidIntersects(node->bounds)) {
+        if (!frustum.inside(node->bounds)) {
             return;
         }
         
         // Test for intersection of current node records
         for (typename std::list<Record>::iterator it = node->records.begin(); it != node->records.end(); ++it) {
             const Record& record = *it;
-            if (frustum.cuboidIntersects(record.bounds)) {
+            if (frustum.inside(record.bounds)) {
                 results.push_back(record.object);
             }
         }
@@ -266,19 +263,19 @@ namespace carto {
     }
     
     template<typename T>
-    void KDTreeSpatialIndex<T>::queryNode(const std::shared_ptr<Node>& node, const MapBounds& bounds, std::vector<T>& results) const {
+    void KDTreeSpatialIndex<T>::queryNode(const std::shared_ptr<Node>& node, const cglib::bbox3<double>& bounds, std::vector<T>& results) const {
         // Check if this node intersects with given envelope
         if (!node) {
             return;
         }
-        if (!bounds.intersects(node->bounds)) {
+        if (!bounds.inside(node->bounds)) {
             return;
         }
         
         // Test for intersection of current node records
         for (typename std::list<Record>::iterator it = node->records.begin(); it != node->records.end(); ++it) {
             const Record& record = *it;
-            if (bounds.intersects(record.bounds)) {
+            if (bounds.inside(record.bounds)) {
                 results.push_back(record.object);
             }
         }

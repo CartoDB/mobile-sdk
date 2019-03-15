@@ -1,5 +1,6 @@
 #include "CullState.h"
 #include "projections/Projection.h"
+#include "utils/GeomUtils.h"
 
 namespace carto {
     
@@ -13,11 +14,12 @@ namespace carto {
     }
 
     MapEnvelope CullState::getProjectionEnvelope(const std::shared_ptr<Projection>& proj) const {
-        std::vector<MapPos> convexHull;
+        std::vector<MapPos> mapPoses;
+        mapPoses.reserve(_envelope.getConvexHull().size());
         for (const MapPos& mapPosInternal : _envelope.getConvexHull()) {
-            convexHull.push_back(proj->fromInternal(mapPosInternal));
+            mapPoses.push_back(proj->fromInternal(mapPosInternal));
         }
-        return MapEnvelope(convexHull);
+        return MapEnvelope(GeomUtils::CalculateConvexHull(mapPoses));
     }
     
     const MapEnvelope& CullState::getEnvelope() const {

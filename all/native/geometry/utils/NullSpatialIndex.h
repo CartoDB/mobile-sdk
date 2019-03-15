@@ -23,12 +23,12 @@ namespace carto {
         virtual void reserve(std::size_t size);
         
         virtual void clear();
-        virtual void insert(const MapBounds& bounds, const T& object);
-        virtual bool remove(const MapBounds& bounds, const T& object);
+        virtual void insert(const cglib::bbox3<double>& bounds, const T& object);
+        virtual bool remove(const cglib::bbox3<double>& bounds, const T& object);
         virtual bool remove(const T& object);
         
-        virtual std::vector<T> query(const Frustum& frustum) const;
-        virtual std::vector<T> query(const MapBounds& bounds) const;
+        virtual std::vector<T> query(const cglib::frustum3<double>& frustum) const;
+        virtual std::vector<T> query(const cglib::bbox3<double>& bounds) const;
         virtual std::vector<T> getAll() const;
         
     private:
@@ -57,12 +57,12 @@ namespace carto {
     }
     
     template<typename T>
-    void NullSpatialIndex<T>::insert(const MapBounds& bounds, const T& object) {
+    void NullSpatialIndex<T>::insert(const cglib::bbox3<double>& bounds, const T& object) {
         _objects.push_back(object);
     }
     
     template<typename T>
-    bool NullSpatialIndex<T>::remove(const MapBounds& bounds, const T& object) {
+    bool NullSpatialIndex<T>::remove(const cglib::bbox3<double>& bounds, const T& object) {
         return remove(object);
     }
     
@@ -80,12 +80,12 @@ namespace carto {
     }
     
     template<typename T>
-    std::vector<T> NullSpatialIndex<T>::query(const Frustum& frustum) const {
+    std::vector<T> NullSpatialIndex<T>::query(const cglib::frustum3<double>& frustum) const {
         return _objects;
     }
     
     template<typename T>
-    std::vector<T> NullSpatialIndex<T>::query(const MapBounds& bounds) const {
+    std::vector<T> NullSpatialIndex<T>::query(const cglib::bbox3<double>& bounds) const {
         return _objects;
     }
     

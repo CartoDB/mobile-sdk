@@ -76,6 +76,9 @@ namespace carto {
         void addToBatch(const std::shared_ptr<PolygonDrawData>& drawData, StyleTextureCache& styleCache, const ViewState& viewState);
         void drawBatch(StyleTextureCache& styleCache, const ViewState& viewState);
     
+        static const std::string POLYGON_VERTEX_SHADER;
+        static const std::string POLYGON_FRAGMENT_SHADER;
+        
         std::vector<std::shared_ptr<Polygon> > _elements;
         std::vector<std::shared_ptr<Polygon> > _tempElements;
         

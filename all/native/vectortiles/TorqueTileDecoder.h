@@ -65,9 +65,7 @@ namespace carto {
          */
         void setResolution(int resolution);
 
-        virtual Color getBackgroundColor() const;
-
-        virtual std::shared_ptr<const vt::BitmapPattern> getBackgroundPattern() const;
+        virtual std::shared_ptr<mvt::Map::Settings> getMapSettings() const;
 
         virtual int getMinZoom() const;
 
@@ -77,7 +75,7 @@ namespace carto {
 
         virtual std::shared_ptr<VectorTileFeatureCollection> decodeFeatures(const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const;
 
-        virtual std::shared_ptr<TileMap> decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const;
+        virtual std::shared_ptr<TileMap> decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<vt::TileTransformer>& tileTransformer, const std::shared_ptr<BinaryData>& tileData) const;
 
     protected:
         void updateCurrentStyle(const std::shared_ptr<CartoCSSStyleSet>& styleSet);
@@ -88,6 +86,7 @@ namespace carto {
         const std::shared_ptr<mvt::Logger> _logger;
         int _resolution;
         std::shared_ptr<mvt::TorqueMap> _map;
+        std::shared_ptr<mvt::Map::Settings> _mapSettings;
         std::shared_ptr<mvt::SymbolizerContext> _symbolizerContext;
         std::shared_ptr<CartoCSSStyleSet> _styleSet;
 

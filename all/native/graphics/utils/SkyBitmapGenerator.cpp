@@ -5,24 +5,42 @@
 
 namespace carto {
 
-    std::shared_ptr<Bitmap> SkyBitmapGenerator::generateBitmap(const Color& backgroundColor) const {
-        unsigned char maxComponent = std::max(backgroundColor.getR(), std::max(backgroundColor.getG(), backgroundColor.getB()));
-        return generateBitmap(backgroundColor, maxComponent >= 128 ? Color(LIGHT_SKY_COLOR) : Color(DARK_SKY_COLOR));
+    SkyBitmapGenerator::SkyBitmapGenerator(int width, int height) :
+        _width(width),
+        _height(height)
+    {
+    }
+
+    SkyBitmapGenerator::~SkyBitmapGenerator() {
     }
 
     std::shared_ptr<Bitmap> SkyBitmapGenerator::generateBitmap(const Color& backgroundColor, const Color& skyColor) const {
         std::vector<unsigned char> data(_width * _height * 4);
 
-        for (int y = 0; y < _height; y++) {
-            float s = std::max(0.0f, std::min(1.0f, static_cast<float>(y - _height / 2 + _gradientSize / 2 - _gradientOffset) / _gradientSize));
-            Color color(static_cast<unsigned char>((1 - s) * skyColor.getR() + s * backgroundColor.getR()),
-                        static_cast<unsigned char>((1 - s) * skyColor.getG() + s * backgroundColor.getG()),
-                        static_cast<unsigned char>((1 - s) * skyColor.getB() + s * backgroundColor.getB()),
-                        255);
+        unsigned char baseValue = std::min(128, 255 - std::max(backgroundColor.getR(), std::max(backgroundColor.getG(), backgroundColor.getB())));
+        Color baseColor(
+            std::max(skyColor.getR(), baseValue) - baseValue,
+            std::max(skyColor.getG(), baseValue) - baseValue,
+            std::max(skyColor.getB(), baseValue) - baseValue,
+            skyColor.getA()
+        );
 
-            unsigned char components[4] = { color.getR(), color.getG(), color.getB(), color.getA() };
-            for (int i = 0; i < _width * 4; i++) {
-                data[y * _width * 4 + i] = components[i % 4];
+        for (int y = 0; y < _height; y++) {
+            float v = y / (_height - 1.0f);
+            float a = v * baseColor.getA() / 255.0f;
+            float t = v * v;
+            Color color(
+                static_cast<unsigned char>(((1 - t) * baseColor.getR() + t * backgroundColor.getR()) * a),
+                static_cast<unsigned char>(((1 - t) * baseColor.getG() + t * backgroundColor.getG()) * a),
+                static_cast<unsigned char>(((1 - t) * baseColor.getB() + t * backgroundColor.getB()) * a),
+                static_cast<unsigned char>(255 * a)
+            );
+
+            for (int x = 0; x < _width; x++) {
+                data[(y * _width + x) * 4 + 0] = color.getR();
+                data[(y * _width + x) * 4 + 1] = color.getG();
+                data[(y * _width + x) * 4 + 2] = color.getB();
+                data[(y * _width + x) * 4 + 3] = color.getA();
             }
         }
 

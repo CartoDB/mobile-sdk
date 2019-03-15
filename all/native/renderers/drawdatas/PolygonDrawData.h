@@ -22,11 +22,11 @@ namespace carto {
     class PolygonGeometry;
     class PolygonStyle;
     class Projection;
+    class ProjectionSurface;
     
     class PolygonDrawData : public VectorElementDrawData {
     public:
-        PolygonDrawData(const PolygonGeometry& geometry, const PolygonStyle& style, const Projection& projection);
-        PolygonDrawData(const PolygonDrawData& drawData);
+        PolygonDrawData(const PolygonGeometry& geometry, const PolygonStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface);
         virtual ~PolygonDrawData();
     
         const std::shared_ptr<Bitmap> getBitmap() const;
@@ -42,8 +42,6 @@ namespace carto {
         virtual void offsetHorizontally(double offset);
     
     private:
-        static const int MAX_INDICES_PER_ELEMENT = 3;
-    
         std::shared_ptr<Bitmap> _bitmap;
     
         cglib::bbox3<double> _boundingBox;

@@ -1,5 +1,7 @@
 #include "VectorDataSource.h"
 #include "components/Exceptions.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "graphics/ViewState.h"
 #include "vectorelements/VectorElement.h"
 #include "utils/Log.h"
@@ -29,15 +31,6 @@ namespace carto {
         return _projection;
     }
 
-    float VectorDataSource::calculateGeometrySimplifierScale(const ViewState& viewState) const {
-        float x0 = viewState.getWidth() * 0.5f;
-        float y0 = viewState.getHeight() * 0.5f;
-        MapPos p0 = viewState.screenToWorldPlane(ScreenPos(x0, y0));
-        MapPos p1 = viewState.screenToWorldPlane(ScreenPos(x0 + 1.0f, y0));
-        MapVec dp = _projection->fromInternal(p1) - _projection->fromInternal(p0);
-        return static_cast<float>(dp.length());
-    }
-    
     void VectorDataSource::notifyElementsChanged() {
         std::shared_ptr<std::vector<std::shared_ptr<OnChangeListener> > > onChangeListeners;
         {

@@ -78,10 +78,8 @@ namespace carto {
          */
         void setLayerStyleSet(const std::string& layerId, const std::shared_ptr<CartoCSSStyleSet>& styleSet);
 
-        virtual Color getBackgroundColor() const;
+        virtual std::shared_ptr<mvt::Map::Settings> getMapSettings() const;
     
-        virtual std::shared_ptr<const vt::BitmapPattern> getBackgroundPattern() const;
-        
         virtual int getMinZoom() const;
         
         virtual int getMaxZoom() const;
@@ -90,7 +88,7 @@ namespace carto {
 
         virtual std::shared_ptr<VectorTileFeatureCollection> decodeFeatures(const vt::TileId& tile, const std::shared_ptr<BinaryData>& tileData, const MapBounds& tileBounds) const;
 
-        virtual std::shared_ptr<TileMap> decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<BinaryData>& tileData) const;
+        virtual std::shared_ptr<TileMap> decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<vt::TileTransformer>& tileTransformer, const std::shared_ptr<BinaryData>& tileData) const;
     
     protected:
         void updateLayerStyleSet(const std::string& layerId, const std::shared_ptr<CartoCSSStyleSet>& styleSet);
@@ -106,8 +104,7 @@ namespace carto {
         std::map<std::string, std::shared_ptr<mvt::Map> > _layerMaps;
         std::map<std::string, std::shared_ptr<mvt::SymbolizerContext> > _layerSymbolizerContexts;
         std::map<std::shared_ptr<AssetPackage>, std::shared_ptr<mvt::SymbolizerContext> > _assetPackageSymbolizerContexts;
-        Color _backgroundColor;
-        std::shared_ptr<const vt::BitmapPattern> _backgroundPattern;
+        std::shared_ptr<mvt::Map::Settings> _mapSettings;
 
         mutable std::pair<std::shared_ptr<BinaryData>, std::shared_ptr<mvt::MBVTFeatureDecoder> > _cachedFeatureDecoder;
     

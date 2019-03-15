@@ -63,8 +63,7 @@ namespace carto {
             virtual void onMapIdle() = 0;
         };
 
-        MapRenderer(const std::shared_ptr<Layers>& layers,
-                    const std::shared_ptr<Options>& options);
+        MapRenderer(const std::shared_ptr<Layers>& layers, const std::shared_ptr<Options>& options);
         virtual ~MapRenderer();
 
         void init();
@@ -89,22 +88,13 @@ namespace carto {
          * @return The current view state.
          */
         ViewState getViewState() const;
-    
-        /**
-         * Calculates the map position corresponding to a screen position, using the specified view state.
-         * @param screenPos The screen position.
-         * @param viewState The view state to use.
-         * @return The calculated map position in base projection coordinate system.
-         */
-        MapPos screenToMap(const ScreenPos& screenPos, const ViewState& viewState);
-        /**
-         * Calculates the screen position corresponding to a map position, using the specified view state.
-         * @param mapPos The map position in base projection coordinate system.
-         * @param viewState The view state to use.
-         * @return The calculated screen position.
-         */
-        ScreenPos mapToScreen(const MapPos& mapPos, const ViewState& viewState);
 
+        /**
+         * Returns the current projectin surface object.
+         * @return The current projection surface object.
+         */
+        std::shared_ptr<ProjectionSurface> getProjectionSurface() const;
+    
         /**
          * Requests the renderer to refresh the view.
          * Note that there is normally no need to do this manually,
@@ -121,13 +111,6 @@ namespace carto {
         
         std::vector<std::shared_ptr<BillboardDrawData> > getBillboardDrawDatas() const;
     
-        MapPos getCameraPos() const;
-        MapPos getFocusPos() const;
-        MapVec getUpVec() const;
-        float getRotation() const;
-        float getTilt() const;
-        float getZoom() const;
-    
         AnimationHandler& getAnimationHandler();
         KineticEventHandler& getKineticEventHandler();
         
@@ -138,9 +121,6 @@ namespace carto {
     
         void moveToFitPoints(const MapPos& center, const std::vector<MapPos>& points, const ScreenBounds& screenBounds, bool integerZoom, bool resetTilt, bool resetRotation, float durationSeconds);
         
-        MapPos screenToWorld(const ScreenPos& screenPos, const ViewState& viewState) const;
-        ScreenPos worldToScreen(const MapPos& worldPos, const ViewState& viewState) const;
-    
         void onSurfaceCreated();
         void onSurfaceChanged(int width, int height);
         void onDrawFrame();
@@ -148,6 +128,7 @@ namespace carto {
 
         void clearAndBindScreenFBO(const Color& color, bool depth, bool stencil);
         void blendAndUnbindScreenFBO(float opacity);
+        void setZBuffering(bool enable);
     
         void calculateRayIntersectedElements(const MapPos& targetPos, ViewState& viewState, std::vector<RayIntersectedElement>& results);
     
@@ -171,21 +152,24 @@ namespace carto {
             std::weak_ptr<MapRenderer> _mapRenderer;
         };
 
-        void setUpGLState() const;
+        void initializeRenderState() const;
 
         void drawLayers(float deltaSeconds, const ViewState& viewState);
         
         void handleRenderThreadCallbacks();
         void handleRendererCaptureCallbacks();
-    
+
         static const int BILLBOARD_PLACEMENT_TASK_DELAY;
 
         static const int STYLE_TEXTURE_CACHE_SIZE; // Size limit (in bytes) for style texture cache
+
+        static const std::string BLEND_VERTEX_SHADER;
+        static const std::string BLEND_FRAGMENT_SHADER;
         
         std::chrono::steady_clock::time_point _lastFrameTime;
     
         ViewState _viewState;
-    
+
         std::shared_ptr<FrameBufferManager> _frameBufferManager;
         std::shared_ptr<ShaderManager> _shaderManager;
         std::shared_ptr<TextureManager> _textureManager;
@@ -223,6 +207,7 @@ namespace carto {
         mutable std::atomic<bool> _surfaceCreated;
         mutable std::atomic<bool> _surfaceChanged;
         mutable std::atomic<bool> _billboardsChanged;
+        mutable std::atomic<bool> _renderProjectionChanged;
         mutable std::atomic<bool> _redrawPending;
 
         ThreadSafeDirectorPtr<RedrawRequestListener> _redrawRequestListener;

@@ -4,6 +4,8 @@
 #include "components/Exceptions.h"
 #include "components/CancelableThreadPool.h"
 #include "layers/NMLModelLODTreeEventListener.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/NMLModelLODTreeRenderer.h"
 #include "renderers/components/CullState.h"
@@ -177,11 +179,15 @@ namespace carto {
     }
 
     bool NMLModelLODTreeLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        
         DirectorPtr<NMLModelLODTreeEventListener> nmlModelLODTreeEventListener = _nmlModelLODTreeEventListener;
 
         if (nmlModelLODTreeEventListener) {
             if (std::shared_ptr<NMLModelLODTree::Proxy> element = intersectedElement.getElement<NMLModelLODTree::Proxy>()) {
-                auto clickInfo = std::make_shared<NMLModelLODTreeClickInfo>(clickType, intersectedElement.getHitPos(), intersectedElement.getElementPos(), element->metaData, intersectedElement.getLayer());
+                MapPos hitPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getHitPos()));
+                MapPos elementPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getElementPos()));
+                auto clickInfo = std::make_shared<NMLModelLODTreeClickInfo>(clickType, hitPos, elementPos, element->metaData, intersectedElement.getLayer());
                 return nmlModelLODTreeEventListener->onNMLModelLODTreeClicked(clickInfo);
             }
         }
@@ -230,7 +236,7 @@ namespace carto {
     
     bool NMLModelLODTreeLayer::isDataAvailable(const NMLModelLODTree* modelLODTree, int nodeId) {
         return loadMeshes(modelLODTree, nodeId, true) && loadTextures(modelLODTree, nodeId, true);
-    }	
+    }    
     
     bool NMLModelLODTreeLayer::loadModelLODTrees(const MapTileList& mapTileList, bool checkOnly) {
         for (auto it = mapTileList.begin(); it != mapTileList.end(); it++) {
@@ -379,6 +385,11 @@ namespace carto {
     void NMLModelLODTreeLayer::updateDrawLists(const ViewState& viewState, MeshMap& meshMap, TextureMap& textureMap, NodeDrawDataMap& nodeDrawDataMap) {
         typedef std::pair<const NMLModelLODTree *, int> Node;
         typedef std::pair<float, Node> SizeNodePair;
+
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            return;
+        }
     
         cglib::mat4x4<double> mvpMatrix = viewState.getModelviewProjectionMat();
         cglib::frustum3<double> frustum = cglib::gl_projection_frustum(mvpMatrix);
@@ -391,7 +402,7 @@ namespace carto {
                 continue;
             }
     
-            cglib::mat4x4<double> lmvpMatrix = mvpMatrix * modelLODTree->getLocalMat();
+            cglib::mat4x4<double> lmvpMatrix = mvpMatrix * CalculateLocalMat(viewState, modelLODTree);
             float screenSize = calculateProjectedScreenSize(modelLODTree->getSourceNode(0)->bounds(), lmvpMatrix);
             initialQueue.push(SizeNodePair(screenSize, Node(modelLODTree, 0)));
         }
@@ -408,7 +419,7 @@ namespace carto {
             const nml::ModelLODTreeNode* node = modelLODTree->getSourceNode(nodeId);
     
             // If node is invisible, simply drop it and continue
-            cglib::bbox3<double> modelBounds = calculateBounds(node->model().bounds(), modelLODTree->getLocalMat());
+            cglib::bbox3<double> modelBounds = calculateBounds(node->model().bounds(), CalculateLocalMat(viewState, modelLODTree));
             if (!frustum.inside(modelBounds)) {
                 continue;
             }
@@ -442,7 +453,7 @@ namespace carto {
                     const nml::ModelLODTreeNode* childNode = modelLODTree->getSourceNode(node->children_ids(i));
     
                     // If child node is visible, add it to child list
-                    cglib::bbox3<double> childModelBounds = calculateBounds(childNode->model().bounds(), modelLODTree->getLocalMat());
+                    cglib::bbox3<double> childModelBounds = calculateBounds(childNode->model().bounds(), CalculateLocalMat(viewState, modelLODTree));
                     if (frustum.inside(childModelBounds)) {
                         childList.push_back(childNode);
                         std::size_t childNodeSize = childNode->model().texture_footprint() + childNode->model().mesh_footprint();
@@ -452,7 +463,7 @@ namespace carto {
                 if (childListTotalSize <= _maxMemorySize) {
                     for (std::size_t i = 0; i < childList.size(); i++) {
                         const nml::ModelLODTreeNode* childNode = childList[i];
-                        float screenSize = calculateProjectedScreenSize(childNode->bounds(), mvpMatrix * modelLODTree->getLocalMat());
+                        float screenSize = calculateProjectedScreenSize(childNode->bounds(), mvpMatrix * CalculateLocalMat(viewState, modelLODTree));
                         queue.push(SizeNodePair(screenSize, Node(modelLODTree, childNode->id())));
                     }
                     totalSize = childListTotalSize;
@@ -570,7 +581,7 @@ namespace carto {
                     globalParentIds.push_back(modelLODTree->getGlobalNodeId(parentId));
                 }
     
-                nodeDrawData = std::make_shared<NMLModelLODTreeDrawData>(std::static_pointer_cast<NMLModelLODTree>(const_cast<NMLModelLODTree*>(modelLODTree)->shared_from_this()), modelLODTree->getGlobalNodeId(nodeId), globalParentIds, glModel);
+                nodeDrawData = std::make_shared<NMLModelLODTreeDrawData>(std::static_pointer_cast<NMLModelLODTree>(const_cast<NMLModelLODTree*>(modelLODTree)->shared_from_this()), modelLODTree->getGlobalNodeId(nodeId), globalParentIds, glModel, *projectionSurface);
             }
     
             updateMeshes(modelLODTree, nodeId, nodeDrawData->getGLModel(), meshMap);
@@ -586,9 +597,16 @@ namespace carto {
             _nmlModelLODTreeRenderer->refreshDrawData();
         }
     
-        if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
-            mapRenderer->requestRedraw();
+        redraw();
+    }
+
+    cglib::mat4x4<double> NMLModelLODTreeLayer::CalculateLocalMat(const ViewState& viewState, const NMLModelLODTree* modelLODTree) {
+        if (std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface()) {
+            MapPos mapPosInternal = modelLODTree->getProjection()->toInternal(modelLODTree->getMapPos());
+            cglib::vec3<double> pos = projectionSurface->calculatePosition(mapPosInternal);
+            return projectionSurface->calculateLocalFrameMatrix(pos);
         }
+        return cglib::mat4x4<double>::zero();
     }
     
     NMLModelLODTreeLayer::MapTilesFetchTask::MapTilesFetchTask(const std::shared_ptr<NMLModelLODTreeLayer>& layer, const std::shared_ptr<CullState>& cullState) :

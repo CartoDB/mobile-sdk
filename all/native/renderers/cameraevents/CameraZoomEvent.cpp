@@ -2,6 +2,8 @@
 #include "components/Options.h"
 #include "core/MapBounds.h"
 #include "graphics/ViewState.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
@@ -49,7 +51,6 @@ namespace carto {
     
     void CameraZoomEvent::setTargetPos(const MapPos& targetPos) {
         _targetPos = targetPos;
-        _targetPos.setZ(0);
         _useTarget = true;
     }
     
@@ -62,53 +63,39 @@ namespace carto {
     }
     
     void CameraZoomEvent::calculate(Options& options, ViewState& viewState) {
-        MapPos cameraPos = viewState.getCameraPos();
-        MapPos focusPos = viewState.getFocusPos();
-    
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            return;
+        }
+        
+        cglib::vec3<double> cameraPos = viewState.getCameraPos();
+        cglib::vec3<double> focusPos = viewState.getFocusPos();
+        cglib::vec3<double> upVec = viewState.getUpVec();
+
         if (!_useDelta) {
             _zoomDelta = _zoom - viewState.getZoom();
         }
     
-        if (!_useTarget) {
-            _targetPos = focusPos;
+        cglib::vec3<double> targetPos = focusPos;
+        if (_useTarget) {
+            targetPos = projectionSurface->calculatePosition(_targetPos);
         }
     
         MapRange zoomRange = options.getZoomRange();
         float zoom = GeneralUtils::Clamp(viewState.getZoom() + _zoomDelta, viewState.getMinZoom(), zoomRange.getMax());
-        float scale = std::pow(2.0f, viewState.getZoom() - zoom);
+        double scale = std::pow(2.0f, viewState.getZoom() - zoom);
     
-        MapVec cameraVec(cameraPos - focusPos);
-        cameraVec *= scale;
-    
-        MapVec targetVec(focusPos - _targetPos);
-        targetVec *= scale;
-        focusPos = _targetPos;
-        focusPos += targetVec;
-    
-        // Enforce map bounds
-        MapBounds mapBounds = options.getInternalPanBounds();
-        bool seamLess = options.isSeamlessPanning();
-        if (!seamLess || mapBounds.getMin().getX() >= -Const::HALF_WORLD_SIZE || mapBounds.getMax().getX() <= Const::HALF_WORLD_SIZE) {
-            focusPos.setX(GeneralUtils::Clamp(focusPos.getX(), mapBounds.getMin().getX(), mapBounds.getMax().getX()));
-        }
-        focusPos.setY(GeneralUtils::Clamp(focusPos.getY(), mapBounds.getMin().getY(), mapBounds.getMax().getY()));
-    
-        // Teleport if necessary
-        if (seamLess) {
-            if (focusPos.getX() > Const::HALF_WORLD_SIZE) {
-                focusPos.setX(-Const::HALF_WORLD_SIZE + (focusPos.getX() - Const::HALF_WORLD_SIZE));
-                viewState.setHorizontalLayerOffsetDir(-1);
-            } else if (focusPos.getX() < -Const::HALF_WORLD_SIZE) {
-                focusPos.setX(Const::HALF_WORLD_SIZE + (focusPos.getX() + Const::HALF_WORLD_SIZE));
-                viewState.setHorizontalLayerOffsetDir(1);
-            }
-        }
-    
-        cameraPos = focusPos;
-        cameraPos += cameraVec;
+        cglib::mat4x4<double> shiftTransform = projectionSurface->calculateTranslateMatrix(focusPos, targetPos, 1 - scale);
+
+        focusPos = cglib::transform_point(focusPos, shiftTransform);
+        cameraPos = focusPos + (cglib::transform_point(cameraPos, shiftTransform) - focusPos) * scale;
+        upVec = cglib::transform_vector(upVec, shiftTransform);
+
+        ClampFocusPos(focusPos, cameraPos, upVec, options, viewState);
 
         viewState.setCameraPos(cameraPos);
         viewState.setFocusPos(focusPos);
+        viewState.setUpVec(upVec);
         viewState.setZoom(zoom);
 
         viewState.clampFocusPos(options);

@@ -9,6 +9,7 @@
 #include "layers/Layer.h"
 #include "layers/TileLayer.h"
 #include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/cameraevents/CameraPanEvent.h"
 #include "renderers/cameraevents/CameraRotationEvent.h"
@@ -97,19 +98,20 @@ namespace carto {
     }
     
     MapPos BaseMapView::getFocusPos() const {
-        return _options->getBaseProjection()->fromInternal(_mapRenderer->getFocusPos());
+        MapPos mapPosInternal = _options->getProjectionSurface()->calculateMapPos(_mapRenderer->getViewState().getFocusPos());
+        return _options->getBaseProjection()->fromInternal(mapPosInternal);
     }
     
     float BaseMapView::getRotation() const {
-        return _mapRenderer->getRotation();
+        return _mapRenderer->getViewState().getRotation();
     }
     
     float BaseMapView::getTilt() const {
-        return _mapRenderer->getTilt();
+        return _mapRenderer->getViewState().getTilt();
     }
     
     float BaseMapView::getZoom() const {
-        return _mapRenderer->getZoom();
+        return _mapRenderer->getViewState().getZoom();
     }
     
     void BaseMapView::pan(const MapVec& deltaPos, float durationSeconds) {
@@ -254,11 +256,16 @@ namespace carto {
     }
         
     MapPos BaseMapView::screenToMap(const ScreenPos& screenPos) {
-        return _mapRenderer->screenToMap(screenPos, _mapRenderer->getViewState());
+        ViewState viewState = _mapRenderer->getViewState();
+        MapPos mapPosInternal = _options->getProjectionSurface()->calculateMapPos(viewState.screenToWorld(cglib::vec2<float>(screenPos.getX(), screenPos.getY()), 0, _options));
+        return _options->getBaseProjection()->fromInternal(mapPosInternal);
     }
     
     ScreenPos BaseMapView::mapToScreen(const MapPos& mapPos) {
-        return _mapRenderer->mapToScreen(mapPos, _mapRenderer->getViewState());
+        ViewState viewState = _mapRenderer->getViewState();
+        MapPos mapPosInternal = _options->getBaseProjection()->toInternal(mapPos);
+        cglib::vec2<float> screenPos = viewState.worldToScreen(_options->getProjectionSurface()->calculatePosition(mapPosInternal), _options);
+        return ScreenPos(screenPos(0), screenPos(1));
     }
     
     void BaseMapView::cancelAllTasks() {

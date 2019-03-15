@@ -8,7 +8,6 @@
 #include "graphics/ViewState.h"
 #include "graphics/utils/GLContext.h"
 #include "layers/NMLModelLODTreeLayer.h"
-#include "projections/Projection.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "utils/Log.h"
@@ -140,10 +139,8 @@ namespace carto {
                 }
                 
                 cglib::vec3<double> pos = cglib::transform_point(intersections[i].pos, modelMat);
-                MapPos clickPos(pos(0), pos(1), pos(2));
-                MapPos projectedClickPos = layer->getDataSource()->getProjection()->fromInternal(clickPos);
                 int priority = static_cast<int>(results.size());
-                results.push_back(RayIntersectedElement(std::make_shared<NMLModelLODTree::Proxy>(proxyIt->second), layer, projectedClickPos, projectedClickPos, priority, true));
+                results.push_back(RayIntersectedElement(std::make_shared<NMLModelLODTree::Proxy>(proxyIt->second), layer, pos, pos, priority, true));
             }
         }
     }
@@ -166,7 +163,7 @@ namespace carto {
         Color mainColor = options->getMainLightColor();
         cglib::vec4<float> mainLightColor = cglib::vec4<float>(mainColor.getR(), mainColor.getG(), mainColor.getB(), mainColor.getA()) * (1.0f / 255.0f);
         MapVec mainDir = options->getMainLightDirection();
-        cglib::vec3<float> mainLightDir(mainDir.getX(), mainDir.getY(), mainDir.getZ());
+        cglib::vec3<float> mainLightDir(static_cast<float>(mainDir.getX()), static_cast<float>(mainDir.getY()), static_cast<float>(mainDir.getZ()));
 
         cglib::mat4x4<float> projMat = cglib::mat4x4<float>::convert(viewState.getProjectionMat());
 

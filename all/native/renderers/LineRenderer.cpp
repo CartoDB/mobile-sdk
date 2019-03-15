@@ -5,10 +5,8 @@
 #include "graphics/Texture.h"
 #include "graphics/TextureManager.h"
 #include "graphics/ViewState.h"
-#include "graphics/shaders/LineShaderSource.h"
 #include "graphics/utils/GLContext.h"
 #include "layers/VectorLayer.h"
-#include "projections/Projection.h"
 #include "renderers/drawdatas/LineDrawData.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/components/StyleTextureCache.h"
@@ -59,7 +57,9 @@ namespace carto {
     }
     
     void LineRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        _shader = shaderManager->createShader(line_shader_source);
+        static ShaderSource shaderSource("line", &LINE_VERTEX_SHADER, &LINE_FRAGMENT_SHADER);
+        
+        _shader = shaderManager->createShader(shaderSource);
     
         // Get shader variables locations
         glUseProgram(_shader->getProgId());
@@ -82,6 +82,8 @@ namespace carto {
             return;
         }
         
+        glDisable(GL_CULL_FACE);
+        
         bind(viewState);
     
         // Draw, batch by bitmap
@@ -91,6 +93,8 @@ namespace carto {
         drawBatch(styleCache, viewState);
         
         unbind();
+
+        glEnable(GL_CULL_FACE);
     
         GLContext::CheckGLError("LineRenderer::onDrawFrame");
     }
@@ -163,7 +167,7 @@ namespace carto {
         if (coordBuf.size() < totalCoordCount * 3) {
             colorBuf.resize(std::min(totalCoordCount * 4, GLContext::MAX_VERTEXBUFFER_SIZE * 4));
             coordBuf.resize(std::min(totalCoordCount * 3, GLContext::MAX_VERTEXBUFFER_SIZE * 3));
-            normalBuf.resize(std::min(totalCoordCount * 3, GLContext::MAX_VERTEXBUFFER_SIZE * 3));
+            normalBuf.resize(std::min(totalCoordCount * 4, GLContext::MAX_VERTEXBUFFER_SIZE * 4));
             texCoordBuf.resize(std::min(totalCoordCount * 2, GLContext::MAX_VERTEXBUFFER_SIZE * 2));
         }
         
@@ -172,7 +176,7 @@ namespace carto {
         }
         
         // Calculate and draw buffers
-        const MapPos& cameraPos = viewState.getCameraPos();
+        cglib::vec3<double> cameraPos = viewState.getCameraPos();
         std::size_t colorIndex = 0;
         std::size_t coordIndex = 0;
         std::size_t normalIndex = 0;
@@ -187,11 +191,11 @@ namespace carto {
                 const std::vector<unsigned int>& indices = drawData->getIndices()[i];
                 if (indexIndex + indices.size() > GLContext::MAX_VERTEXBUFFER_SIZE) {
                     // If it doesn't fit, stop and draw the buffers
-                    glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &colorBuf[0]);
-                    glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, &coordBuf[0]);
-                    glVertexAttribPointer(a_normal, 3, GL_FLOAT, GL_FALSE, 0, &normalBuf[0]);
-                    glVertexAttribPointer(a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, &texCoordBuf[0]);
-                    glDrawElements(GL_TRIANGLES, indexIndex, GL_UNSIGNED_SHORT, &indexBuf[0]);
+                    glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, colorBuf.data());
+                    glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, coordBuf.data());
+                    glVertexAttribPointer(a_normal, 4, GL_FLOAT, GL_FALSE, 0, normalBuf.data());
+                    glVertexAttribPointer(a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, texCoordBuf.data());
+                    glDrawElements(GL_TRIANGLES, indexIndex, GL_UNSIGNED_SHORT, indexBuf.data());
                     // Start filling buffers from the beginning
                     colorIndex = 0;
                     coordIndex = 0;
@@ -224,7 +228,7 @@ namespace carto {
                     normalScale = 0.5f;
                 }
                 const std::vector<cglib::vec3<double>*>& coords = drawData->getCoords()[i];
-                const std::vector<cglib::vec3<float> >& normals = drawData->getNormals()[i];
+                const std::vector<cglib::vec4<float> >& normals = drawData->getNormals()[i];
                 const std::vector<cglib::vec2<float> >& texCoords = drawData->getTexCoords()[i];
                 auto cit = coords.begin();
                 auto nit = normals.begin();
@@ -239,17 +243,18 @@ namespace carto {
 
                     // Coords
                     const cglib::vec3<double>& pos = **cit;
-                    coordBuf[coordIndex + 0] = static_cast<float>(pos(0) - cameraPos.getX());
-                    coordBuf[coordIndex + 1] = static_cast<float>(pos(1) - cameraPos.getY());
-                    coordBuf[coordIndex + 2] = static_cast<float>(pos(2) - cameraPos.getZ());
+                    coordBuf[coordIndex + 0] = static_cast<float>(pos(0) - cameraPos(0));
+                    coordBuf[coordIndex + 1] = static_cast<float>(pos(1) - cameraPos(1));
+                    coordBuf[coordIndex + 2] = static_cast<float>(pos(2) - cameraPos(2));
                     coordIndex += 3;
 
                     // Normals
-                    const cglib::vec3<float>& normal = *nit;
+                    const cglib::vec4<float>& normal = *nit;
                     normalBuf[normalIndex + 0] = normal(0) * normalScale;
                     normalBuf[normalIndex + 1] = normal(1) * normalScale;
-                    normalBuf[normalIndex + 2] = normal(2);
-                    normalIndex += 3;
+                    normalBuf[normalIndex + 2] = normal(2) * normalScale;
+                    normalBuf[normalIndex + 3] = normal(3);
+                    normalIndex += 4;
                     
                     // Tex coords
                     const cglib::vec2<float>& texCoord = *tit;
@@ -262,11 +267,11 @@ namespace carto {
         
         // Draw the final batch
         if (indexIndex > 0) {
-            glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &colorBuf[0]);
-            glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, &coordBuf[0]);
-            glVertexAttribPointer(a_normal, 3, GL_FLOAT, GL_FALSE, 0, &normalBuf[0]);
-            glVertexAttribPointer(a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, &texCoordBuf[0]);
-            glDrawElements(GL_TRIANGLES, indexIndex, GL_UNSIGNED_SHORT, &indexBuf[0]);
+            glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, colorBuf.data());
+            glVertexAttribPointer(a_coord, 3, GL_FLOAT, GL_FALSE, 0, coordBuf.data());
+            glVertexAttribPointer(a_normal, 4, GL_FLOAT, GL_FALSE, 0, normalBuf.data());
+            glVertexAttribPointer(a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, texCoordBuf.data());
+            glDrawElements(GL_TRIANGLES, indexIndex, GL_UNSIGNED_SHORT, indexBuf.data());
         }
     }
     
@@ -287,13 +292,13 @@ namespace carto {
             
             // Calculate world coordinates and bounding box
             cglib::bbox3<double> bounds = cglib::bbox3<double>::smallest();
-            const std::vector<cglib::vec3<float> >& normals = drawData->getNormals()[i];
+            const std::vector<cglib::vec4<float> >& normals = drawData->getNormals()[i];
             auto cit = coords.begin();
             auto nit = normals.begin();
             for ( ; cit != coords.end() && nit != normals.end(); ++cit, ++nit) {
                 const cglib::vec3<double>& pos = **cit;
-                const cglib::vec3<float>& normal = *nit;
-                cglib::vec3<double> worldCoord = pos + cglib::vec3<double>(normal(0) * normal(2), normal(1) * normal(2), 0) * static_cast<double>(viewState.getUnitToDPCoef() * drawData->getClickScale());
+                const cglib::vec4<float>& normal = *nit;
+                cglib::vec3<double> worldCoord = pos + cglib::vec3<double>(normal(0) * normal(3), normal(1) * normal(3), normal(2) * normal(3)) * static_cast<double>(viewState.getUnitToDPCoef() * drawData->getClickScale());
                 bounds.add(worldCoord);
                 worldCoords.push_back(worldCoord);
             }
@@ -325,12 +330,9 @@ namespace carto {
                 if (cglib::intersect_triangle(worldCoords[indices[i + 0]], worldCoords[indices[i + 1]], worldCoords[indices[i + 2]], ray, &t)) {
                     cglib::vec3<double> dp = ray(t) - *prevPos;
                     cglib::vec3<double> ds = *pos - *prevPos;
-                    cglib::vec3<double> p = *prevPos + ds * std::max(0.0, std::min(1.0, cglib::dot_product(dp, ds) / cglib::norm(ds)));
-                    MapPos clickPos(ray(t)(0), ray(t)(1), ray(t)(2));
-                    MapPos linePos(p(0), p(1), p(2));
-                    const std::shared_ptr<Projection>& projection = layer->getDataSource()->getProjection();
+                    cglib::vec3<double> pos = *prevPos + ds * std::max(0.0, std::min(1.0, cglib::dot_product(dp, ds) / cglib::norm(ds)));
                     int priority = static_cast<int>(results.size());
-                    results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, projection->fromInternal(clickPos), projection->fromInternal(linePos), priority));
+                    results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, ray(t), pos, priority));
                     return true;
                 }
             }
@@ -401,4 +403,51 @@ namespace carto {
         _prevBitmap = nullptr;
     }
     
+
+    const std::string LineRenderer::LINE_VERTEX_SHADER = R"GLSL(
+        #version 100
+        attribute vec3 a_coord;
+        attribute vec4 a_normal;
+        attribute vec2 a_texCoord;
+        attribute vec4 a_color;
+        uniform float u_gamma;
+        uniform float u_dpToPX;
+        uniform float u_unitToDP;
+        uniform mat4 u_mvpMat;
+        varying lowp vec4 v_color;
+        varying vec2 v_texCoord;
+        varying float v_dist;
+        varying float v_width;
+        void main() {
+            float width = length(a_normal.xyz) * u_dpToPX;
+            float roundedWidth = width + 1.0;
+            vec3 pos = a_coord + u_unitToDP * roundedWidth / width * (a_normal.xyz * a_normal.w);
+            v_color = a_color;
+            v_texCoord = a_texCoord;
+            v_dist = a_normal.w * roundedWidth * u_gamma;
+            v_width = 1.0 + (width - 1.0) * u_gamma;
+            gl_Position = u_mvpMat * vec4(pos, 1.0);
+        }
+    )GLSL";
+
+    const std::string LineRenderer::LINE_FRAGMENT_SHADER = R"GLSL(
+        #version 100
+        precision mediump float;
+        uniform sampler2D u_tex;
+        varying lowp vec4 v_color;
+        #ifdef GL_FRAGMENT_PRECISION_HIGH
+        varying highp vec2 v_texCoord;
+        varying highp float v_dist;
+        varying highp float v_width;
+        #else
+        varying mediump vec2 v_texCoord;
+        varying mediump float v_dist;
+        varying mediump float v_width;
+        #endif
+        void main() {
+            lowp float a = clamp(v_width - abs(v_dist), 0.0, 1.0);
+            gl_FragColor = texture2D(u_tex, v_texCoord) * v_color * a;
+        }
+    )GLSL";
+
 }

@@ -3,6 +3,8 @@
 #include "components/CancelableThreadPool.h"
 #include "datasources/TileDataSource.h"
 #include "layers/RasterTileEventListener.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/TileRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
@@ -10,12 +12,14 @@
 #include "graphics/Bitmap.h"
 #include "ui/RasterTileClickInfo.h"
 #include "utils/Log.h"
+#include "utils/Const.h"
 
 #include <array>
 #include <algorithm>
 
 #include <vt/TileId.h>
 #include <vt/Tile.h>
+#include <vt/TileTransformer.h>
 #include <vt/TileBitmap.h>
 #include <vt/TileLayer.h>
 #include <vt/TileLayerBuilder.h>
@@ -101,8 +105,7 @@ namespace carto {
         long long tileId = tile.getTileId();
         if (preloadingCache) {
             return _preloadingCache.exists(tileId);
-        }
-        else {
+        } else {
             return _visibleCache.exists(tileId);
         }
     }
@@ -112,8 +115,7 @@ namespace carto {
         long long tileId = tile.getTileId();
         if (preloadingCache) {
             return _preloadingCache.exists(tileId) && _preloadingCache.valid(tileId);
-        }
-        else {
+        } else {
             return _visibleCache.exists(tileId) && _visibleCache.valid(tileId);
         }
     }
@@ -129,8 +131,7 @@ namespace carto {
             if (_preloadingCache.exists(tileId) && _preloadingCache.valid(tileId)) {
                 if (!preloadingTile) {
                     _preloadingCache.move(tileId, _visibleCache); // move to visible cache, just in case the element gets trashed
-                }
-                else {
+                } else {
                     _preloadingCache.get(tileId);
                 }
                 return;
@@ -159,8 +160,7 @@ namespace carto {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         if (preloadingTiles) {
             _preloadingCache.clear();
-        }
-        else {
+        } else {
             _visibleCache.clear();
         }
     }
@@ -176,8 +176,7 @@ namespace carto {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             _visibleCache.clear();
             _preloadingCache.clear();
-        }
-        else {
+        } else {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             _visibleCache.invalidate_all(std::chrono::steady_clock::now());
             _preloadingCache.clear();
@@ -242,9 +241,7 @@ namespace carto {
         }
     
         if (refresh) {
-            if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
-                mapRenderer->requestRedraw();
-            }
+            redraw();
         }
 
         {
@@ -301,12 +298,9 @@ namespace carto {
                 std::array<std::uint8_t, 4> nearestComponents = readTileBitmapColor(tileBitmap, nx, ny);
                 Color nearestColor(nearestComponents[0], nearestComponents[1], nearestComponents[2], nearestComponents[3]);
 
-                MapTile mapTile(vtTileId.x, vtTileId.y, vtTileId.zoom, _frameNr);
-                MapPos mapPos = projection.fromInternal(MapPos(ray(t)(0), ray(t)(1), ray(t)(2)));
-
-                auto pixelInfo = std::make_shared<std::tuple<MapTile, Color, Color> >(mapTile, nearestColor, interpolatedColor);
+                auto pixelInfo = std::make_shared<std::tuple<MapTile, Color, Color> >(MapTile(vtTileId.x, vtTileId.y, vtTileId.zoom, _frameNr), nearestColor, interpolatedColor);
                 std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
-                results.push_back(RayIntersectedElement(pixelInfo, thisLayer, mapPos, mapPos, 0, false));
+                results.push_back(RayIntersectedElement(pixelInfo, thisLayer, ray(t), ray(t), 0, false));
             }
         }
 
@@ -314,6 +308,8 @@ namespace carto {
     }
 
     bool RasterTileLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
+        std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        
         DirectorPtr<RasterTileEventListener> eventListener = _rasterTileEventListener;
 
         if (eventListener) {
@@ -321,7 +317,9 @@ namespace carto {
                 const MapTile& mapTile = std::get<0>(*pixelInfo);
                 const Color& nearestColor = std::get<1>(*pixelInfo);
                 const Color& interpolatedColor = std::get<2>(*pixelInfo);
-                auto clickInfo = std::make_shared<RasterTileClickInfo>(clickType, intersectedElement.getHitPos(), mapTile, nearestColor, interpolatedColor, intersectedElement.getLayer());
+                MapPos hitPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getHitPos()));
+
+                auto clickInfo = std::make_shared<RasterTileClickInfo>(clickType, hitPos, mapTile, nearestColor, interpolatedColor, intersectedElement.getLayer());
                 return eventListener->onRasterTileClicked(clickInfo);
             }
         }
@@ -350,7 +348,8 @@ namespace carto {
         }
     
         // Create new rendererer, simply drop old one (if exists)
-        auto tileRenderer = std::make_shared<TileRenderer>(_mapRenderer);
+        resetTileTransformer();
+        auto tileRenderer = std::make_shared<TileRenderer>(_mapRenderer, getTileTransformer());
         tileRenderer->onSurfaceCreated(shaderManager, textureManager);
         setTileRenderer(tileRenderer);
     }
@@ -443,22 +442,24 @@ namespace carto {
                 if (dataSourceTile != _tile) {
                     bitmap = ExtractSubTile(_tile, dataSourceTile, bitmap);
                 }
+                std::shared_ptr<vt::TileTransformer> tileTransformer = layer->getTileTransformer();
+                std::shared_ptr<vt::Tile> vtTile = CreateVectorTile(_tile, bitmap, tileTransformer);
+                std::size_t tileSize = EXTRA_TILE_FOOTPRINT + vtTile->getResidentSize();
 
                 if (!isInvalidated()) {
                     // Build the bitmap object
-                    std::shared_ptr<vt::Tile> vtTile = CreateVectorTile(_tile, bitmap);
-                    std::size_t tileSize = EXTRA_TILE_FOOTPRINT + vtTile->getResidentSize();
-                    if (isPreloading()) {
-                        std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
-                        layer->_preloadingCache.put(_tile.getTileId(), vtTile, tileSize);
-                        if (tileData->getMaxAge() >= 0) {
-                            layer->_preloadingCache.invalidate(_tile.getTileId(), std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
-                        }
-                    } else {
-                        std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
-                        layer->_visibleCache.put(_tile.getTileId(), vtTile, tileSize);
-                        if (tileData->getMaxAge() >= 0) {
-                            layer->_visibleCache.invalidate(_tile.getTileId(), std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+                    std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
+                    if (layer->getTileTransformer() == tileTransformer) { // extra check that the tile is created with correct transformer. Otherwise simply drop it.
+                        if (isPreloading()) {
+                            layer->_preloadingCache.put(_tile.getTileId(), vtTile, tileSize);
+                            if (tileData->getMaxAge() >= 0) {
+                                layer->_preloadingCache.invalidate(_tile.getTileId(), std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+                            }
+                        } else {
+                            layer->_visibleCache.put(_tile.getTileId(), vtTile, tileSize);
+                            if (tileData->getMaxAge() >= 0) {
+                                layer->_visibleCache.invalidate(_tile.getTileId(), std::chrono::steady_clock::now() + std::chrono::milliseconds(tileData->getMaxAge()));
+                            }
                         }
                     }
                 }
@@ -482,7 +483,7 @@ namespace carto {
         return subBitmap->getResizedBitmap(bitmap->getWidth(), bitmap->getHeight());
     }
 
-    std::shared_ptr<vt::Tile> RasterTileLayer::FetchTask::CreateVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap) {
+    std::shared_ptr<vt::Tile> RasterTileLayer::FetchTask::CreateVectorTile(const MapTile& tile, const std::shared_ptr<Bitmap>& bitmap, const std::shared_ptr<vt::TileTransformer>& tileTransformer) {
         std::shared_ptr<vt::TileBitmap> tileBitmap;
         switch (bitmap->getColorFormat()) {
         case ColorFormat::COLOR_FORMAT_GRAYSCALE:
@@ -499,12 +500,15 @@ namespace carto {
             break;
         }
 
+        float tileSize = 256.0f; // 'normalized' tile size in pixels. Not really important
         vt::TileId vtTile(tile.getZoom(), tile.getX(), tile.getY());
-        vt::TileLayerBuilder tileLayerBuilder(vtTile, 256.0f, 1.0f); // Note: the size/scale argument is ignored
+        std::shared_ptr<vt::TileBackground> tileBackground = std::make_shared<vt::TileBackground>(vt::Color(), std::shared_ptr<vt::BitmapPattern>());
+        std::shared_ptr<const vt::TileTransformer::VertexTransformer> vtTransformer = tileTransformer->createTileVertexTransformer(vtTile);
+        vt::TileLayerBuilder tileLayerBuilder(vtTile, 0, vtTransformer, tileSize, 1.0f); // Note: the size/scale argument is ignored
         tileLayerBuilder.addBitmap(tileBitmap);
-        std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.build(0, boost::optional<vt::CompOp>(), vt::FloatFunction(1));
+        std::shared_ptr<vt::TileLayer> tileLayer = tileLayerBuilder.buildTileLayer(boost::optional<vt::CompOp>(), vt::FloatFunction(1));
 
-        return std::make_shared<vt::Tile>(vtTile, std::vector<std::shared_ptr<vt::TileLayer> > { tileLayer });
+        return std::make_shared<vt::Tile>(vtTile, tileSize, tileBackground, std::vector<std::shared_ptr<vt::TileLayer> > { tileLayer });
     }
 
 }

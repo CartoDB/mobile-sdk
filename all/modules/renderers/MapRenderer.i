@@ -29,12 +29,7 @@
 %ignore carto::MapRenderer::init;
 %ignore carto::MapRenderer::deinit;
 %ignore carto::MapRenderer::getBillboardDrawDatas;
-%ignore carto::MapRenderer::getCameraPos;
-%ignore carto::MapRenderer::getFocusPos;
-%ignore carto::MapRenderer::getUpVec;
-%ignore carto::MapRenderer::getRotation;
-%ignore carto::MapRenderer::getTilt;
-%ignore carto::MapRenderer::getZoom;
+%ignore carto::MapRenderer::getProjectionSurface;
 %ignore carto::MapRenderer::getAnimationHandler;
 %ignore carto::MapRenderer::getKineticEventHandler;
 %ignore carto::MapRenderer::getRedrawRequestListener;

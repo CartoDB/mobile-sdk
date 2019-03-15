@@ -7,25 +7,29 @@
 #include "geometry/MultiGeometry.h"
 #include "geometry/MultiLineGeometry.h"
 #include "geometry/MultiPolygonGeometry.h"
+#include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
+#include "utils/Const.h"
 
 #include <stack>
 #include <utility>
 #include <algorithm>
 
-namespace {
+namespace carto {
 
-    // This is taken from http://psimpl.sourceforge.net/douglas-peucker.html
-    class DPHelper {
+    class DouglasPeuckerGeometrySimplifier::Helper {
     public:
-        static void Approximate(const carto::MapPos* points, std::size_t pointCount, double minDist, unsigned char* keys) {
-            double minDist2 = minDist * minDist;
+        Helper(const std::shared_ptr<Projection>& projection, const std::shared_ptr<ProjectionSurface>& projectionSurface) : _projection(projection), _projectionSurface(projectionSurface) {
+        }
+
+        void approximate(const MapPos* points, std::size_t pointCount, double minDist, unsigned char* keys) const {
             std::stack<SubPoly> stack;
             stack.push(SubPoly(0, pointCount - 1));
             while (!stack.empty()) {
                 SubPoly subPoly = stack.top();
                 stack.pop();
-                KeyInfo keyInfo = FindKey(points, subPoly.first, subPoly.last);
-                if (keyInfo.index && minDist2 < keyInfo.dist2) {
+                KeyInfo keyInfo = findKey(points, subPoly.first, subPoly.last);
+                if (keyInfo.index && minDist < keyInfo.dist) {
                     keys[keyInfo.index] = 1;
                     stack.push(SubPoly(keyInfo.index, subPoly.last));
                     stack.push(SubPoly(subPoly.first, keyInfo.index));
@@ -42,47 +46,50 @@ namespace {
         };
 
         struct KeyInfo {
-            KeyInfo(std::size_t index = 0, double dist2 = 0) : index(index), dist2(dist2) { }
+            KeyInfo(std::size_t index = 0, double dist = 0) : index(index), dist(dist) { }
 
             std::size_t index;
-            double dist2;
+            double dist;
         };
 
-        static KeyInfo FindKey(const carto::MapPos* points, std::size_t first, std::size_t last) {
+        static double FindSegmentDistance(const cglib::vec3<double>& s1, const cglib::vec3<double>& s2, const cglib::vec3<double>& p) {
+            // NOTE: not really correct on spherical surface but, but should still give reasonable results
+            cglib::vec3<double> v = (s2 - s1);
+            cglib::vec3<double> w = (p - s1);
+            double cw = cglib::dot_product(v, w);
+            if (cw <= 0) {
+                return cglib::length(p - s1);
+            }
+            double cv = cglib::norm(v);
+            if (cv <= cw) {
+                return cglib::length(p - s2);
+            }
+
+            double fraction = cv == 0 ? 0 : cw / cv;
+            cglib::vec3<double> pProj = s1 + (s2 - s1) * fraction;
+            return cglib::length(pProj - p);
+        }
+
+        KeyInfo findKey(const MapPos* points, std::size_t first, std::size_t last) const {
             KeyInfo keyInfo;
 
+            cglib::vec3<double> s1 = _projectionSurface->calculatePosition(_projection->toInternal(points[first]));
+            cglib::vec3<double> s2 = _projectionSurface->calculatePosition(_projection->toInternal(points[last]));
             for (std::size_t current = first + 1; current < last; current++) {
-                double d2 = FindSegmentDistance2(points[first], points[last], points[current]);
-                if (d2 < keyInfo.dist2) {
+                cglib::vec3<double> p = _projectionSurface->calculatePosition(_projection->toInternal(points[current]));
+                double dist = FindSegmentDistance(s1, s2, p);
+                if (dist < keyInfo.dist) {
                     continue;
                 }
                 keyInfo.index = current;
-                keyInfo.dist2 = d2;
+                keyInfo.dist = dist;
             }
             return keyInfo;
         }
 
-        static double FindSegmentDistance2(const carto::MapPos& s1, const carto::MapPos& s2, const carto::MapPos& p) {
-            carto::MapVec v = (s2 - s1);
-            carto::MapVec w = (p - s1);
-            double cw = v.dotProduct(w);
-            if (cw <= 0) {
-                return (p - s1).lengthSqr();
-            }
-            double cv = v.lengthSqr();
-            if (cv <= cw) {
-                return (p - s2).lengthSqr();
-            }
-
-            double fraction = cv == 0 ? 0 : cw / cv;
-            carto::MapPos pProj = s1 + (s2 - s1) * fraction;
-            return (pProj - p).lengthSqr();
-        }
+        std::shared_ptr<Projection> _projection;
+        std::shared_ptr<ProjectionSurface> _projectionSurface;
     };
-
-}
-
-namespace carto {
 
     DouglasPeuckerGeometrySimplifier::DouglasPeuckerGeometrySimplifier(float tolerance) :
         GeometrySimplifier(),
@@ -90,9 +97,9 @@ namespace carto {
     {
     }
 
-    std::shared_ptr<Geometry> DouglasPeuckerGeometrySimplifier::simplify(const std::shared_ptr<Geometry>& geometry, float scale) const {
+    std::shared_ptr<Geometry> DouglasPeuckerGeometrySimplifier::simplify(const std::shared_ptr<Geometry>& geometry, const std::shared_ptr<Projection>& projection, const std::shared_ptr<ProjectionSurface>& projectionSurface, float scale) const {
         if (auto lineGeometry = std::dynamic_pointer_cast<LineGeometry>(geometry)) {
-            std::vector<MapPos> mapPoses = simplifyRing(lineGeometry->getPoses(), scale);
+            std::vector<MapPos> mapPoses = simplifyRing(lineGeometry->getPoses(), projection, projectionSurface, scale);
             if (mapPoses.size() < 2) {
                 return std::shared_ptr<Geometry>();
             }
@@ -101,14 +108,14 @@ namespace carto {
                 return std::make_shared<LineGeometry>(mapPoses);
             }
         } else if (auto polygonGeometry = std::dynamic_pointer_cast<PolygonGeometry>(geometry)) {
-            std::vector<MapPos> mapPoses = simplifyRing(polygonGeometry->getPoses(), scale);
+            std::vector<MapPos> mapPoses = simplifyRing(polygonGeometry->getPoses(), projection, projectionSurface, scale);
             if (mapPoses.size() < 3) {
                 return std::shared_ptr<Geometry>();
             }
             bool simplified = mapPoses.size() < polygonGeometry->getPoses().size();
             std::vector<std::vector<MapPos> > holes;
             for (const std::vector<MapPos>& holeRing : polygonGeometry->getHoles()) {
-                std::vector<MapPos> holeMapPoses = simplifyRing(holeRing, scale);
+                std::vector<MapPos> holeMapPoses = simplifyRing(holeRing, projection, projectionSurface, scale);
                 if (holeMapPoses.size() < holeRing.size()) {
                     simplified = true;
                 }
@@ -123,7 +130,7 @@ namespace carto {
             std::vector<std::shared_ptr<LineGeometry> > lines;
             bool simplified = false;
             for (int i = 0; i < multiLineGeometry->getGeometryCount(); i++) {
-                std::shared_ptr<Geometry> geom = simplify(multiLineGeometry->getGeometry(i), scale);
+                std::shared_ptr<Geometry> geom = simplify(multiLineGeometry->getGeometry(i), projection, projectionSurface, scale);
                 if (geom != multiLineGeometry->getGeometry(i)) {
                     simplified = true;
                 }
@@ -138,7 +145,7 @@ namespace carto {
             std::vector<std::shared_ptr<PolygonGeometry> > polygons;
             bool simplified = false;
             for (int i = 0; i < multiPolygonGeometry->getGeometryCount(); i++) {
-                std::shared_ptr<Geometry> geom = simplify(multiPolygonGeometry->getGeometry(i), scale);
+                std::shared_ptr<Geometry> geom = simplify(multiPolygonGeometry->getGeometry(i), projection, projectionSurface, scale);
                 if (geom != multiPolygonGeometry->getGeometry(i)) {
                     simplified = true;
                 }
@@ -153,7 +160,7 @@ namespace carto {
             std::vector<std::shared_ptr<Geometry> > geoms;
             bool simplified = false;
             for (int i = 0; i < multiGeometry->getGeometryCount(); i++) {
-                std::shared_ptr<Geometry> geom = simplify(multiGeometry->getGeometry(i), scale);
+                std::shared_ptr<Geometry> geom = simplify(multiGeometry->getGeometry(i), projection, projectionSurface, scale);
                 if (geom != multiGeometry->getGeometry(i)) {
                     simplified = true;
                 }
@@ -168,46 +175,39 @@ namespace carto {
         return geometry;
     }
 
-    std::vector<MapPos> DouglasPeuckerGeometrySimplifier::simplifyRing(const std::vector<MapPos>& ring, float scale) const {
-        return simplifyRingDP(simplifyRingRD(ring, scale), scale);
-    }
-
-    std::vector<MapPos> DouglasPeuckerGeometrySimplifier::simplifyRingRD(const std::vector<MapPos>& ring, float scale) const {
+    std::vector<MapPos> DouglasPeuckerGeometrySimplifier::simplifyRing(const std::vector<MapPos>& ring, const std::shared_ptr<Projection>& projection, const std::shared_ptr<ProjectionSurface>& projectionSurface, float scale) const {
         if (ring.size() <= 2) {
             return ring;
         }
 
-        double minDist2 = scale * _tolerance * scale * _tolerance;
-        std::vector<MapPos> simplifiedRing;
-        simplifiedRing.reserve(ring.size());
-        simplifiedRing.push_back(ring.front());
+        std::vector<MapPos> simplifiedRing1;
+        simplifiedRing1.reserve(ring.size());
+        simplifiedRing1.push_back(ring.front());
+        cglib::vec3<double> pos0 = projectionSurface->calculatePosition(projection->toInternal(simplifiedRing1.back()));
         for (std::size_t i = 1; i + 1 < ring.size(); i++) {
-            double dist2 = (ring[i] - simplifiedRing.back()).lengthSqr();
-            if (dist2 > minDist2) {
-                simplifiedRing.push_back(ring[i]);
+            cglib::vec3<double> pos1 = projectionSurface->calculatePosition(projection->toInternal(ring[i]));
+            double dist = cglib::length(pos1 - pos0); // NOTE: not really correct on spherical surface but, but should still give reasonable results
+            if (dist > scale * _tolerance) {
+                simplifiedRing1.push_back(ring[i]);
+                pos0 = pos1;
             }
         }
-        simplifiedRing.push_back(ring.back());
-        return simplifiedRing;
-    }
+        simplifiedRing1.push_back(ring.back());
 
-    std::vector<MapPos> DouglasPeuckerGeometrySimplifier::simplifyRingDP(const std::vector<MapPos>& ring, float scale) const {
-        if (ring.size() <= 2) {
-            return ring;
-        }
-
-        std::vector<unsigned char> keys(ring.size(), 0);
+        std::vector<unsigned char> keys(simplifiedRing1.size(), 0);
         keys.front() = 1;
         keys.back() = 1;
-        DPHelper::Approximate(&ring[0], ring.size(), scale * _tolerance, &keys[0]);
-        std::vector<MapPos> simplifiedRing;
-        simplifiedRing.reserve(std::count(keys.begin(), keys.end(), 1));
-        for (std::size_t i = 0; i < ring.size(); i++) {
+        Helper helper(projection, projectionSurface);
+        helper.approximate(simplifiedRing1.data(), simplifiedRing1.size(), scale * _tolerance, &keys[0]);
+        std::vector<MapPos> simplifiedRing2;
+        simplifiedRing2.reserve(std::count(keys.begin(), keys.end(), 1));
+        for (std::size_t i = 0; i < simplifiedRing1.size(); i++) {
             if (keys[i] == 1) {
-                simplifiedRing.push_back(ring[i]);
+                simplifiedRing2.push_back(simplifiedRing1[i]);
             }
         }
-        return simplifiedRing;
+
+        return simplifiedRing2;
     }
 
 }

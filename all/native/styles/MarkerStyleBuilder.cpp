@@ -103,23 +103,23 @@ namespace carto {
     
     std::shared_ptr<MarkerStyle> MarkerStyleBuilder::buildStyle() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return std::shared_ptr<MarkerStyle>(new MarkerStyle(_color,
-                                                            _attachAnchorPointX,
-                                                            _attachAnchorPointY,
-                                                            _causesOverlap,
-                                                            _hideIfOverlapped,
-                                                            _horizontalOffset,
-                                                            _verticalOffset,
-                                                            _placementPriority,
-                                                            _scaleWithDPI,
-                                                            _animationStyle,
-                                                            _anchorPointX,
-                                                            _anchorPointY,
-                                                            _bitmap,
-                                                            _orientationMode,
-                                                            _scalingMode,
-                                                            _clickSize,
-                                                            _size));
+        return std::make_shared<MarkerStyle>(_color,
+                                             _attachAnchorPointX,
+                                             _attachAnchorPointY,
+                                             _causesOverlap,
+                                             _hideIfOverlapped,
+                                             _horizontalOffset,
+                                             _verticalOffset,
+                                             _placementPriority,
+                                             _scaleWithDPI,
+                                             _animationStyle,
+                                             _anchorPointX,
+                                             _anchorPointY,
+                                             _bitmap,
+                                             _orientationMode,
+                                             _scalingMode,
+                                             _clickSize,
+                                             _size);
     }
     
     std::shared_ptr<Bitmap> MarkerStyleBuilder::GetDefaultBitmap() {

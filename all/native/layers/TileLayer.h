@@ -26,6 +26,9 @@ namespace carto {
     class TileLoadListener;
     class UTFGridTile;
     class UTFGridEventListener;
+    namespace vt {
+        class TileTransformer;
+    }
     
     namespace TileSubstitutionPolicy {
         /**
@@ -253,6 +256,12 @@ namespace carto {
         
         explicit TileLayer(const std::shared_ptr<TileDataSource>& dataSource);
 
+        virtual void setComponents(const std::shared_ptr<CancelableThreadPool>& envelopeThreadPool,
+                                   const std::shared_ptr<CancelableThreadPool>& tileThreadPool,
+                                   const std::weak_ptr<Options>& options,
+                                   const std::weak_ptr<MapRenderer>& mapRenderer,
+                                   const std::weak_ptr<TouchHandler>& touchHandler);
+
         virtual void loadData(const std::shared_ptr<CullState>& cullState);
 
         virtual void updateTileLoadListener();
@@ -275,6 +284,9 @@ namespace carto {
         virtual bool processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const;
 
         MapBounds calculateInternalTileBounds(const MapTile& mapTile) const;
+
+        std::shared_ptr<vt::TileTransformer> getTileTransformer() const;
+        void resetTileTransformer();
 
         std::shared_ptr<TileRenderer> getTileRenderer() const;
         void setTileRenderer(const std::shared_ptr<TileRenderer>& renderer);
@@ -320,13 +332,14 @@ namespace carto {
         static const int MAX_PARENT_SEARCH_DEPTH = 6;
         static const int MAX_CHILD_SEARCH_DEPTH = 3;
         
-        static const float PRELOADING_TILE_SCALE;
+        static const double PRELOADING_TILE_SCALE;
         static const float SUBDIVISION_THRESHOLD;
         
         std::vector<MapTile> _visibleTiles;
         std::vector<MapTile> _preloadingTiles;
         std::unordered_map<MapTile, std::shared_ptr<UTFGridTile> > _utfGridTiles;
         std::shared_ptr<TileRenderer> _tileRenderer;
+        std::shared_ptr<vt::TileTransformer> _tileTransformer;
     };
     
 }

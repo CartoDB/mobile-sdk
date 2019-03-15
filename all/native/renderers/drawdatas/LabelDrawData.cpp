@@ -7,11 +7,11 @@
 
 namespace carto {
 
-    LabelDrawData::LabelDrawData(const Label& label, const LabelStyle& style,
-                                 const Projection& projection, const ViewState& viewState) :
+    LabelDrawData::LabelDrawData(const Label& label, const LabelStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface, const ViewState& viewState) :
         BillboardDrawData(label,
                           style,
                           projection,
+                          projectionSurface,
                           label.drawBitmap(viewState.getDPToPX()),
                           style.getAnchorPointX(),
                           style.getAnchorPointY(),

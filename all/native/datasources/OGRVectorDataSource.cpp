@@ -490,7 +490,7 @@ namespace carto {
             return std::shared_ptr<VectorData>();
         }
 
-        float simplifierScale = calculateGeometrySimplifierScale(cullState->getViewState());
+        float simplifierScale = cullState->getViewState().estimateWorldPixelMeasure();
 
         MapBounds bounds;
         for (const MapPos& mapPosInternal : cullState->getEnvelope().getConvexHull()) {
@@ -550,7 +550,7 @@ namespace carto {
             std::shared_ptr<Geometry> geometry = createGeometry(poGeometry);
             if (_geometrySimplifier) {
                 if (geometry) {
-                    geometry = _geometrySimplifier->simplify(geometry, simplifierScale);
+                    geometry = _geometrySimplifier->simplify(geometry, _projection, simplifierScale);
                 }
             }
             if (geometry) {

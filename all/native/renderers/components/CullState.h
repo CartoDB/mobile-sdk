@@ -38,7 +38,7 @@ namespace carto {
         MapEnvelope getProjectionEnvelope(const std::shared_ptr<Projection>& proj) const;
         /**
          * Returns an envelope for the visible area.
-         * @return The envelope for the visible area in the internal coordiante system.
+         * @return The envelope for the visible area in the internal coordinate system.
          */
         const MapEnvelope& getEnvelope() const;
     
@@ -47,7 +47,7 @@ namespace carto {
          * @return The view state.
          */
         const ViewState& getViewState() const;
-    
+
     private:
         MapEnvelope _envelope;
         

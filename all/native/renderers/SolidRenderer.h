@@ -35,16 +35,18 @@ namespace carto {
         void setBitmap(const std::shared_ptr<Bitmap>& bitmap, float scale);
 
     private:
-        const static unsigned char DEFAULT_BITMAP[];
-        const static float QUAD_COORDS[];
-        const static float QUAD_TEX_COORDS[];
-        const static int QUAD_VERTEX_COUNT = 4;
+        static const unsigned char DEFAULT_BITMAP[4];
+        static const float QUAD_COORDS[12];
+        static const float QUAD_TEX_COORDS[8];
+
+        static const std::string SOLID_VERTEX_SHADER;
+        static const std::string SOLID_FRAGMENT_SHADER;
 
         Color _color;
         std::shared_ptr<Bitmap> _bitmap;
         std::shared_ptr<Texture> _bitmapTex;
         float _bitmapScale;
-        float _quadTexCoords[QUAD_VERTEX_COUNT * 2];
+        float _quadTexCoords[8];
 
         std::shared_ptr<Shader> _shader;
         GLuint _a_coord;

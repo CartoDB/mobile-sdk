@@ -22,16 +22,17 @@ namespace carto {
         
         virtual double fromInternalScale(double size) const;
         virtual double toInternalScale(double meters) const;
-    
+        virtual MapPos fromInternal(const MapPos& mapPosInternal) const;
+        virtual MapPos toInternal(const MapPos& mapPos) const;
+
         virtual MapPos fromWgs84(const MapPos& wgs84Pos) const;
         virtual MapPos toWgs84(const MapPos& mapPos) const;
+
         virtual std::string getName() const;
         
     private:
         enum { EARTH_RADIUS = 6378137 };
 
-        static const double HALF_EARTH_RADIUS;
-        
         static const double METERS_TO_INTERNAL_EQUATOR;
     };
     

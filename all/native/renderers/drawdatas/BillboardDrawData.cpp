@@ -2,6 +2,7 @@
 #include "graphics/Bitmap.h"
 #include "geometry/PointGeometry.h"
 #include "projections/Projection.h"
+#include "projections/ProjectionSurface.h"
 #include "styles/BillboardStyle.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
@@ -109,7 +110,19 @@ namespace carto {
     void BillboardDrawData::setPos(const cglib::vec3<double>& pos) {
         _pos = pos;
     }
+
+    const cglib::vec3<float>& BillboardDrawData::getXAxis() const {
+        return _xAxis;
+    }
     
+    const cglib::vec3<float>& BillboardDrawData::getYAxis() const {
+        return _yAxis;
+    }
+
+    const cglib::vec3<float>& BillboardDrawData::getZAxis() const {
+        return _zAxis;
+    }
+
     float BillboardDrawData::getRotation() const {
         return _rotation;
     }
@@ -162,6 +175,7 @@ namespace carto {
     BillboardDrawData::BillboardDrawData(const Billboard& billboard,
                                          const BillboardStyle& style,
                                          const Projection& projection,
+                                         const ProjectionSurface& projectionSurface,
                                          const std::shared_ptr<Bitmap>& bitmap,
                                          float anchorPointX,
                                          float anchorPointY,
@@ -191,7 +205,10 @@ namespace carto {
         _overlapping(style.isHideIfOverlapped() ? true : false),
         _transition(0.0f),
         _placementPriority(style.getPlacementPriority()),
-        _pos(),
+        _pos(0, 0, 0),
+        _xAxis(1, 0, 0),
+        _yAxis(0, 1, 0),
+        _zAxis(0, 0, 1),
         _rotation(billboard.getRotation()),
         _scaleWithDPI(style.isScaleWithDPI()),
         _scalingMode(scalingMode),
@@ -201,8 +218,11 @@ namespace carto {
         _renderer()
     {
         if (billboard.getGeometry()) {
-            MapPos posInternal = projection.toInternal(billboard.getGeometry()->getCenterPos());
-            _pos = cglib::vec3<double>(posInternal.getX(), posInternal.getY(), posInternal.getZ());
+            MapPos internalPos = projection.toInternal(billboard.getGeometry()->getCenterPos());
+            _pos = projectionSurface.calculatePosition(internalPos);
+            _xAxis = cglib::vec3<float>::convert(projectionSurface.calculateVector(internalPos, MapVec(1, 0, 0)));
+            _yAxis = cglib::vec3<float>::convert(projectionSurface.calculateVector(internalPos, MapVec(0, 1, 0)));
+            _zAxis = cglib::vec3<float>::convert(projectionSurface.calculateVector(internalPos, MapVec(0, 0, 1)));
         }
 
         if (auto drawData = billboard.getDrawData()) {

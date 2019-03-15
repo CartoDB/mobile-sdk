@@ -2,7 +2,6 @@
 #include "graphics/ViewState.h"
 #include "renderers/drawdatas/BillboardDrawData.h"
 #include "utils/Const.h"
-#include "utils/GeomUtils.h"
 #include "utils/Log.h"
 #include "vectorelements/Billboard.h"
 
@@ -34,8 +33,6 @@ namespace carto {
         }
     
         // Calculate the world positions of the bottom screen corners, offset them by a little to avoid certain artifacts
-        MapPos bottomLeft(viewState.screenToWorldPlane(ScreenPos(0, viewState.getHeight() * 1.5f), 0));
-        MapPos bottomRight(viewState.screenToWorldPlane(ScreenPos(viewState.getWidth(), viewState.getHeight() * 1.5f), 0));
         bool sort3D = viewState.getTilt() < 90;
     
         // Calculate billboard distances
@@ -50,8 +47,8 @@ namespace carto {
     
             if (!sort3D) {
                 // If in 2D, calculate distance from the bottom of the screen
-                double dist = GeomUtils::DistanceFromLine(MapPos(pos(0), pos(1), pos(2)), bottomLeft, bottomRight);
-                drawData->setScreenBottomDistance(dist);
+                cglib::vec2<float> screenPos = viewState.worldToScreen(pos);
+                drawData->setScreenBottomDistance(viewState.getHeight() - screenPos(1));
             }
         }
 
