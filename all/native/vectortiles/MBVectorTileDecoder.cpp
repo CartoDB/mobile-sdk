@@ -45,7 +45,6 @@ namespace carto {
     
     MBVectorTileDecoder::MBVectorTileDecoder(const std::shared_ptr<CompiledStyleSet>& compiledStyleSet) :
         _logger(std::make_shared<MapnikVTLogger>("MBVectorTileDecoder")),
-        _buffer(0),
         _featureIdOverride(false),
         _cartoCSSLayerNamesIgnored(false),
         _layerNameOverride(),
@@ -65,7 +64,6 @@ namespace carto {
     
     MBVectorTileDecoder::MBVectorTileDecoder(const std::shared_ptr<CartoCSSStyleSet>& cartoCSSStyleSet) :
         _logger(std::make_shared<MapnikVTLogger>("MBVectorTileDecoder")),
-        _buffer(0),
         _featureIdOverride(false),
         _cartoCSSLayerNamesIgnored(false),
         _layerNameOverride(),
@@ -218,19 +216,6 @@ namespace carto {
         }
         notifyDecoderChanged();
         return true;
-    }
-
-    float MBVectorTileDecoder::getBuffering() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _buffer;
-    }
-        
-    void MBVectorTileDecoder::setBuffering(float buffer) {
-        {
-            std::lock_guard<std::mutex> lock(_mutex);
-            _buffer = buffer;
-        }
-        notifyDecoderChanged();
     }
 
     bool MBVectorTileDecoder::isFeatureIdOverride() const {
@@ -398,14 +383,12 @@ namespace carto {
 
         std::shared_ptr<mvt::Map> map;
         std::shared_ptr<mvt::SymbolizerContext> symbolizerContext;
-        float buffer;
         bool featureIdOverride;
         std::string layerNameOverride;
         {
             std::lock_guard<std::mutex> lock(_mutex);
             map = _map;
             symbolizerContext = _symbolizerContext;
-            buffer = _buffer;
             featureIdOverride = _featureIdOverride;
             layerNameOverride = _layerNameOverride;
         }
@@ -413,7 +396,6 @@ namespace carto {
         try {
             mvt::MBVTFeatureDecoder decoder(*tileData->getDataPtr(), _logger);
             decoder.setTransform(calculateTileTransform(tile, targetTile));
-            decoder.setBuffer(buffer);
             decoder.setGlobalIdOverride(featureIdOverride, MapTile(tile.x, tile.y, tile.zoom, 0).getTileId());
             
             mvt::MBVTTileReader reader(map, tileTransformer, *symbolizerContext, decoder);
