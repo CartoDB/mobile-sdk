@@ -88,9 +88,10 @@ namespace carto {
         std::lock_guard<std::mutex> lock(_mutex);
         MapBounds mapBounds;
         for (int layerIndex : _tileBuilder->getLayerIndices()) {
+            // NOTE: layerBounds are flipped
             auto layerBounds = _tileBuilder->getLayerBounds(layerIndex);
-            mapBounds.expandToContain(MapPos(layerBounds.min(0), layerBounds.min(1)));
-            mapBounds.expandToContain(MapPos(layerBounds.max(0), layerBounds.max(1)));
+            mapBounds.expandToContain(MapPos(layerBounds.min(0), -layerBounds.max(1)));
+            mapBounds.expandToContain(MapPos(layerBounds.max(0), -layerBounds.min(1)));
         }
         return mapBounds;
     }
