@@ -30,8 +30,6 @@
 %std_exceptions(carto::MBVectorTileDecoder::setCartoCSSStyleSet)
 %std_exceptions(carto::MBVectorTileDecoder::getStyleParameter)
 %std_exceptions(carto::MBVectorTileDecoder::setStyleParameter)
-%ignore carto::MBVectorTileDecoder::getBuffering;
-%ignore carto::MBVectorTileDecoder::setBuffering;
 %ignore carto::MBVectorTileDecoder::isFeatureIdOverride;
 %ignore carto::MBVectorTileDecoder::setFeatureIdOverride;
 %ignore carto::MBVectorTileDecoder::isCartoCSSLayerNamesIgnored;
