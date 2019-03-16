@@ -7,10 +7,10 @@ mapping SDK written mostly in C++11 with bindings to numerous languages
 This project contains the core part of the SDK, for samples, look at
 the ['Usage' section](#usage).
 
-[comment]: # ## Current build status
-[comment]: # | Platforms    | Status |
-[comment]: # |:-------------|:-------|
-[comment]: # | Android, iOS |  [![Build Status](https://travis-ci.org/CartoDB/mobile-sdk.svg?branch=master)](https://travis-ci.org/CartoDB/mobile-sdk)|
+[](## Current build status)
+[](| Platforms    | Status |)
+[](|:-------------|:-------|)
+[](| Android, iOS |  [![Build Status](https://travis-ci.org/CartoDB/mobile-sdk.svg?branch=master)](https://travis-ci.org/CartoDB/mobile-sdk)|)
 
 # Building
 **We strongly suggest to use the precompiled SDK versions that can be found in
