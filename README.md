@@ -26,11 +26,11 @@ Use `git submodule` to resolve all source-level dependencies
 git submodule update --init --remote --recursive
 ```
 
-Special **swig** version (swig-2.0.11-nutiteq branch) is needed for generating language-specific wrappers, this can be downloaded from https://github.com/CartoDB/swig. Clone it and compile it using usual `./configure;make` routine. Make sure build script refers to this one.
+Special **swig** version (swig-2.0.11-nutiteq branch) is needed for generating language-specific wrappers, this can be downloaded from https://github.com/CartoDB/swig. Clone it and compile it using usual `./configure; make` routine. Make sure build script refers to this one.
 
 **Python 2.7.x** is used for build scripts
 
-**CMake 3.10 or later** is required by build scripts
+**CMake 3.14 or later** is required by build scripts
 
 Android build requires **Android SDK** and **Android NDK r11** or later. Note that newer versions than **Android NDK r14b** deprecate/remove support for GCC and are not recommended.
 
