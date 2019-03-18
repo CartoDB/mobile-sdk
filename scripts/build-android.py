@@ -25,6 +25,17 @@ def gradle(args, dir, *cmdArgs):
 def zip(args, dir, *cmdArgs):
   return execute(args.zip, dir, *cmdArgs)
 
+def detectAndroidAPIs(args):
+  api32, api64 = None, None
+  for name in os.listdir('%s/platforms' % args.androidndkpath):
+    if name.startswith('android-'):
+      api = int(name[8:])
+      if api >= 9:
+        api32 = min(api32 or api, api)
+      if api >= 21:
+        api64 = min(api64 or api, api)
+  return api32, api64
+
 def buildAndroidSO(args, abi):
   version = getVersion(args.buildnumber) if args.configuration == 'Release' else 'Devel'
   baseDir = getBaseDir()
@@ -32,14 +43,18 @@ def buildAndroidSO(args, abi):
   distDir = getDistDir('android')
   defines = ["-D%s" % define for define in args.defines.split(';') if define]
   options = ["-D%s" % option for option in args.cmakeoptions.split(';') if option]
+  api32, api64 = detectAndroidAPIs(args)
+  if api32 is None or api64 is None:
+    print('Failed to detect available platform APIs')
+  print('Using API-%d for 32-bit builds, API-%d for 64-bit builds' % (api32, api64))
 
   if not cmake(args, buildDir, options + [
     '-DCMAKE_SYSTEM_NAME=Android',
     "-DCMAKE_ANDROID_NDK='%s'" % args.androidndkpath,
-    "-DCMAKE_ANDROID_NDK_TOOLCHAIN_VERSION='%s'" % (args.compiler if not args.compiler.startswith('gcc-') else args.compiler[4:]),
+    "-DCMAKE_ANDROID_NDK_TOOLCHAIN_VERSION='%s'" % (args.compiler[4:] if args.compiler.startswith('gcc-') else args.compiler),
     "-DCMAKE_ANDROID_ARCH_ABI='%s'" % abi,
     "-DCMAKE_ANDROID_STL_TYPE='%s'" % ('c++_static' if args.compiler.startswith('clang') else 'gnustl_static'),
-    "-DCMAKE_SYSTEM_VERSION='%s'" % ('21' if '64' in abi else '14'),
+    "-DCMAKE_SYSTEM_VERSION='%d'" % (api64 if '64' in abi else api32),
     '-DCMAKE_BUILD_TYPE=%s' % args.configuration,
     '-DWRAPPER_DIR=%s' % ('%s/generated/android-java/wrappers' % baseDir),
     '-DSDK_CPP_DEFINES=%s' % " ".join(defines),
@@ -74,7 +89,7 @@ def buildAndroidJAR(args):
     '-source', '1.6',
     '-target', '1.6',
     '-bootclasspath', '%s/scripts/android/rt.jar' % baseDir,
-    '-classpath', '%s/platforms/android-14/android.jar' % args.androidsdkpath,
+    '-classpath', '%s/platforms/android-10/android.jar' % args.androidsdkpath,
     '-d', buildDir,
     *javaFiles
   ):

@@ -60,13 +60,14 @@ def buildIOSLib(args, arch):
 
   if not cmake(args, buildDir, options + [
     '-G', 'Xcode',
-    '-DCMAKE_TOOLCHAIN_FILE=%s/scripts/ios-cmake/iOS.cmake' % baseDir,
-    '-DIOS_PLATFORM=%s' % platform,
+    '-DCMAKE_SYSTEM_NAME=iOS',
     '-DWRAPPER_DIR=%s' % ('%s/generated/ios-objc/proxies' % baseDir),
     '-DINCLUDE_OBJC:BOOL=ON',
     '-DSINGLE_LIBRARY:BOOL=ON',
     '-DSHARED_LIBRARY:BOOL=%s' % ('ON' if args.sharedlib else 'OFF'),
     '-DCMAKE_OSX_ARCHITECTURES=%s' % arch,
+    '-DCMAKE_OSX_SYSROOT=iphone%s' % platform.lower(),
+    '-DCMAKE_OSX_DEPLOYMENT_TARGET=7.0',
     '-DCMAKE_BUILD_TYPE=%s' % args.configuration,
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,

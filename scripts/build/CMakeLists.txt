@@ -36,12 +36,40 @@ set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /WINMD /NODEFAULTLIB
 endif(WIN32)
 
 if(IOS)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -ftemplate-depth=1024")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Os -fvisibility=hidden -flto=thin")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -ftemplate-depth=1024 -Os -fvisibility=hidden -flto=thin")
+
+set(CMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH YES)
+set(CMAKE_XCODE_ATTRIBUTE_CLANG_ENABLE_MODULES YES)
+set(CMAKE_XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES)
+set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
+
+if(ENABLE_BITCODE)
+set(CMAKE_XCODE_ATTRIBUTE_ENABLE_BITCODE YES)
+else()
+set(CMAKE_XCODE_ATTRIBUTE_ENABLE_BITCODE NO)
+endif()
+
+if(SINGLE_LIBRARY)
+set(CMAKE_XCODE_ATTRIBUTE_OTHER_LDFLAGS "-ObjC")
+set(CMAKE_XCODE_ATTRIBUTE_GCC_SYMBOLS_PRIVATE_EXTERN YES)
+
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+set(CMAKE_XCODE_ATTRIBUTE_DEPLOYMENT_POSTPROCESSING YES)
+set(CMAKE_XCODE_ATTRIBUTE_DEAD_CODE_STRIPPING YES)
+set(CMAKE_XCODE_ATTRIBUTE_SEPARATE_STRIP YES)
+set(CMAKE_XCODE_ATTRIBUTE_STRIP_STYLE "non-global")
+set(CMAKE_XCODE_ATTRIBUTE_GENERATE_MASTER_OBJECT_FILE YES)
+set(CMAKE_XCODE_ATTRIBUTE_GCC_GENERATE_DEBUGGING_SYMBOLS NO)
+endif()
+
+endif(SINGLE_LIBRARY)
+
 endif(IOS)
 
 if(ANDROID)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fstack-protector -Os -ffunction-sections -fdata-sections -fvisibility=hidden -fvisibility-inlines-hidden -fomit-frame-pointer -fstrict-aliasing -funwind-tables -no-canonical-prefixes")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector -std=c++11 -ftemplate-depth=1024 -fexceptions -frtti -Os -ffunction-sections -fdata-sections -fvisibility=hidden -fvisibility-inlines-hidden -fomit-frame-pointer -fstrict-aliasing -funwind-tables -no-canonical-prefixes")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fstack-protector -Oz -ffunction-sections -fdata-sections -fvisibility=hidden -fomit-frame-pointer -fstrict-aliasing -funwind-tables -no-canonical-prefixes")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector -std=c++11 -ftemplate-depth=1024 -fexceptions -frtti -Oz -ffunction-sections -fdata-sections -fvisibility=hidden -fvisibility-inlines-hidden -fomit-frame-pointer -fstrict-aliasing -funwind-tables -no-canonical-prefixes")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -s -Wl,--gc-sections -Wl,-z,noexecstack -Wl,--exclude-libs,libgcc.a -Wl,--exclude-libs,libatomic.a -Wl,--build-id")
 endif(ANDROID)
 
@@ -358,38 +386,4 @@ elseif(IOS)
 target_link_libraries(carto_mobile_sdk "-framework Foundation" "-framework CoreGraphics" "-framework CoreText" "-framework OpenGLES" "-framework GLKit" "-framework UIKit" "-framework CFNetwork")
 elseif(WIN32)
 target_link_libraries(carto_mobile_sdk msxml6.lib d3d11.lib dwrite.lib d2d1.lib)
-endif()
-
-if(IOS)
-set_target_properties(carto_mobile_sdk PROPERTIES
-    XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++"
-)
-if(ENABLE_BITCODE)
-set_target_properties(carto_mobile_sdk PROPERTIES
-    XCODE_ATTRIBUTE_ENABLE_BITCODE YES
-)
-else()
-set_target_properties(carto_mobile_sdk PROPERTIES
-    XCODE_ATTRIBUTE_ENABLE_BITCODE NO
-)
-endif()
-endif(IOS)
-if(IOS AND SINGLE_LIBRARY)
-set_target_properties(carto_mobile_sdk PROPERTIES
-    XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET "7.0"
-    XCODE_ATTRIBUTE_OTHER_LDFLAGS "-ObjC"
-    XCODE_ATTRIBUTE_CLANG_ENABLE_MODULES YES
-    XCODE_ATTRIBUTE_GCC_SYMBOLS_PRIVATE_EXTERN YES
-    XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH YES
-)
-if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-set_target_properties(carto_mobile_sdk PROPERTIES
-    XCODE_ATTRIBUTE_DEPLOYMENT_POSTPROCESSING YES
-    XCODE_ATTRIBUTE_DEAD_CODE_STRIPPING YES
-    XCODE_ATTRIBUTE_SEPARATE_STRIP YES
-    XCODE_ATTRIBUTE_STRIP_STYLE "non-global"
-    XCODE_ATTRIBUTE_GENERATE_MASTER_OBJECT_FILE YES
-    XCODE_ATTRIBUTE_GCC_GENERATE_DEBUGGING_SYMBOLS NO
-)
-endif()
 endif()
