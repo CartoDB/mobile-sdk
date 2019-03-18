@@ -82,12 +82,10 @@ namespace carto {
         GLuint _a_attrib;
         GLuint _a_coord;
         GLuint _a_normal;
-        GLuint _a_texCoord;
         GLuint _u_ambientColor;
         GLuint _u_lightColor;
         GLuint _u_lightDir;
         GLuint _u_mvpMat;
-        GLuint _u_tex;
     
         std::weak_ptr<Options> _options;
         
