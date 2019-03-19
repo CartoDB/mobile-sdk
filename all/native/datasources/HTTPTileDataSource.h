@@ -23,8 +23,8 @@ namespace carto {
      * The requests are generated using a template scheme, where tags in the baseURL string are replaced with actual values.
      * The following tags are supported: s, z, zoom, x, y, xflipped, yflipped, quadkey, frame.
      *
-     * For example, if baseURL = "http://tile.openstreetmap.org/{zoom}/{x}/{y}.png" and the requested tile has zoom = 2,
-     * x = 1 and y = 3, then the tile will be loaded from the following URL: "http://tile.openstreetmap.org/2/1/3.png".
+     * For example, if baseURL = "https://tile.openstreetmap.org/{zoom}/{x}/{y}.png" and the requested tile has zoom = 2,
+     * x = 1 and y = 3, then the tile will be loaded from the following URL: "https://tile.openstreetmap.org/2/1/3.png".
      */
     class HTTPTileDataSource : public TileDataSource {
     public:
@@ -32,7 +32,7 @@ namespace carto {
          * Constructs a HTTPTileDataSource object.
          * @param minZoom The minimum zoom level supported by this data source.
          * @param maxZoom The maximum zoom level supported by this data source.
-         * @param baseURL The base URL containing tags (for example, "http://tile.openstreetmap.org/{zoom}/{x}/{y}.png").
+         * @param baseURL The base URL containing tags (for example, "https://tile.openstreetmap.org/{zoom}/{x}/{y}.png").
          */
         HTTPTileDataSource(int minZoom, int maxZoom, const std::string& baseURL);
         virtual ~HTTPTileDataSource();
@@ -44,7 +44,7 @@ namespace carto {
         std::string getBaseURL() const;
         /**
          * Sets the base URL for the data source.
-         * @param baseURL The base URL containing tags (for example, "http://tile.openstreetmap.org/{zoom}/{x}/{y}.png").
+         * @param baseURL The base URL containing tags (for example, "https://tile.openstreetmap.org/{zoom}/{x}/{y}.png").
          */
         void setBaseURL(const std::string& baseURL);
 

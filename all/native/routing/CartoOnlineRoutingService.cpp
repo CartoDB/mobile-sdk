@@ -55,7 +55,7 @@ namespace carto {
         return OSRMRoutingProxy::CalculateRoute(httpClient, url, request);
     }
 
-    const std::string CartoOnlineRoutingService::ROUTING_SERVICE_TEMPLATE = "http://mobile-api.carto.com/routing/v2/{source}/1/viaroute?instructions=true&alt=false&geometry=true&output=json";
+    const std::string CartoOnlineRoutingService::ROUTING_SERVICE_TEMPLATE = "https://api.nutiteq.com/routing/v2/{source}/1/viaroute?instructions=true&alt=false&geometry=true&output=json";
     
 }
 

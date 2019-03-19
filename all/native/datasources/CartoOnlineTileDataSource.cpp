@@ -238,6 +238,6 @@ namespace carto {
         return tileData;
     }
 
-    const std::string CartoOnlineTileDataSource::TILE_SERVICE_TEMPLATE = "http://mobile-api.carto.com/maps/v2/{source}/1/tiles.json";
+    const std::string CartoOnlineTileDataSource::TILE_SERVICE_TEMPLATE = "https://api.nutiteq.com/maps/v2/{source}/1/tiles.json";
     
 }

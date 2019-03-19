@@ -532,6 +532,6 @@ namespace carto {
         return result;
     }
 
-    const std::string CartoMapsService::DEFAULT_API_TEMPLATE = "http://{user}.carto.com";
+    const std::string CartoMapsService::DEFAULT_API_TEMPLATE = "https://{user}.carto.com";
 
 }

@@ -61,7 +61,7 @@ namespace carto {
         /**
          * Sets the API endpoint template of the online service.
          * By default cartodb.com endpoint is used. This needs to be redefined only for on-premise services.
-         * @param apiTemplate The API endpoint template of the online service. For example, "http://{user}.cartodb.com"
+         * @param apiTemplate The API endpoint template of the online service. For example, "https://{user}.cartodb.com"
          */
         void setAPITemplate(const std::string& apiTemplate);
 
