@@ -36,8 +36,12 @@ set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /WINMD /NODEFAULTLIB
 endif(WIN32)
 
 if(IOS)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Os -fvisibility=hidden -flto=thin")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -ftemplate-depth=1024 -Os -fvisibility=hidden -flto=thin")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -ftemplate-depth=1024 -fvisibility=hidden")
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Os -flto=thin")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -flto=thin")
+endif()
 
 set(CMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH YES)
 set(CMAKE_XCODE_ATTRIBUTE_CLANG_ENABLE_MODULES YES)
