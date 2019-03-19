@@ -249,13 +249,13 @@ __attribute__ ((visibility("default"))) @interface NTMapView : GLKView
 /**
  * Calculates the map position in base projection coordinate system corresponding to a screen position, using the current view parameters.
  * @param screenPos The screen position.
- * @return The calculated map position in base projection coordinate system.
+ * @return The calculated map position in base projection coordinate system. If the given screen position is not on the map, then NaNs are returned.
  */
 -(NTMapPos*)screenToMap: (NTScreenPos*)screenPos;
 /**
  * Calculates the screen position corresponding to a map position in base projection coordinate system, using the current view parameters.
  * @param mapPos The map position in base projection coordinate system.
- * @return The calculated screen position.
+ * @return The calculated screen position. Can be off-screen.
  */
 -(NTScreenPos*)mapToScreen: (NTMapPos*)mapPos;
 

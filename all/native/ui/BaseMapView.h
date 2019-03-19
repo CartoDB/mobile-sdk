@@ -321,13 +321,13 @@ namespace carto {
         /**
          * Calculates the map position corresponding to a screen position, using the current view parameters.
          * @param screenPos The screen position.
-         * @return The calculated map position in base projection coordinate system.
+         * @return The calculated map position in base projection coordinate system. If the given screen position is not on the map, NaNs are returned.
          */
         MapPos screenToMap(const ScreenPos& screenPos);
         /**
          * Calculates the screen position corresponding to a map position, using the current view parameters.
          * @param mapPos The map position in base projection coordinate system.
-         * @return The calculated screen position.
+         * @return The calculated screen position. Can be off-screen.
          */
         ScreenPos mapToScreen(const MapPos& mapPos);
         

@@ -384,7 +384,6 @@ namespace carto {
                 viewState.clampZoom(*_options);
 
                 ScreenPos screenPos = screenBounds.getCenter();
-                // TODO: questionable
                 cglib::vec3<double> pos = viewState.screenToWorld(cglib::vec2<float>(screenPos.getX(), screenPos.getY()), 0, _options);
                 if (std::isnan(cglib::norm(pos))) {
                     Log::Error("MapRenderer::moveToFitPoints: Failed to translate screen position!");

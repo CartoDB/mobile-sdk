@@ -349,7 +349,7 @@ namespace Carto.Ui {
         /// Calculates the map position corresponding to a screen position, using the current view parameters.
         /// </summary>
         /// <param name="screenPos">The screen position.</param>
-        /// <returns>The calculated map position in base projection coordinate system.</returns>
+        /// <returns>The calculated map position in base projection coordinate system. If the given screen position is not on the map, then NaNs are returned.</returns>
         public MapPos ScreenToMap(ScreenPos screenPos) {
             return _baseMapView.ScreenToMap(screenPos);
         }
@@ -358,7 +358,7 @@ namespace Carto.Ui {
         /// Calculates the screen position corresponding to a map position, using the current view parameters.
         /// </summary>
         /// <param name="mapPos">The map position in base projection coordinate system.</param>
-        /// <returns>The calculated screen position.</returns>
+        /// <returns>The calculated screen position. Can be off-screen.</returns>
         public ScreenPos MapToScreen(MapPos mapPos) {
             return _baseMapView.MapToScreen(mapPos);
         }

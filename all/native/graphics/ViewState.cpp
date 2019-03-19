@@ -492,7 +492,6 @@ namespace carto {
         cglib::vec3<double> worldPos1 = cglib::transform_point(screenPos1, invModelviewProjectionMat);
         cglib::ray3<double> ray(worldPos0, worldPos1 - worldPos0);
 
-        // TODO: check calling sites. Decide what to do when no hit.
         double t = -1;
         if (!projectionSurface->calculateHitPoint(ray, height, t) || t < 0) {
             return cglib::vec3<double>(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
