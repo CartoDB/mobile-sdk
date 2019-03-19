@@ -14,6 +14,7 @@ namespace carto {
     class HTTPClient::IOSImpl : public HTTPClient::Impl {
     public:
         explicit IOSImpl(bool log);
+        virtual ~IOSImpl();
 
         virtual void setTimeout(int milliseconds);
         virtual bool makeRequest(const HTTPClient::Request& request, HeadersFunc headersFn, DataFunc dataFn) const;
@@ -21,6 +22,7 @@ namespace carto {
     private:
         bool _log;
         int _timeout;
+        void* _connection;
     };
 
 }

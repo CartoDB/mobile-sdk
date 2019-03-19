@@ -1,91 +1,106 @@
 #include "HTTPClientIOSImpl.h"
 #include "components/Exceptions.h"
-#include "utils/CFUniquePtr.h"
 #include "utils/Log.h"
-
-#include <chrono>
-#include <limits>
-#include <regex>
-
-#include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
 
 #import <Foundation/Foundation.h>
 
-@interface URLConnection : NSObject <NSURLConnectionDataDelegate, NSURLConnectionDelegate>
+@interface URLConnection : NSObject <NSURLSessionDelegate, NSURLSessionTaskDelegate, NSURLSessionDataDelegate>
 
+-(id)init;
 -(NSError*)sendSynchronousRequest:(NSURLRequest*)request didReceiveResponse:(BOOL(^)(NSURLResponse*))responseHandler didReceiveData:(BOOL(^)(NSData*))dataHandler;
 
 @end
 
 @interface URLConnection ()
-@property(nonatomic, strong) NSURLConnection* connection;
+
+@property(nonatomic, strong) NSURLSession* session;
 @property(nonatomic, strong) NSCondition* condition;
-@property(nonatomic, strong) NSError* error;
-@property(nonatomic, strong) BOOL(^responseHandler)(NSURLResponse*);
-@property(nonatomic, strong) BOOL(^dataHandler)(NSData*);
-@property(nonatomic) BOOL connectionDidFinishLoading;
+@property(nonatomic, strong) NSMutableDictionary* responseHandlers;
+@property(nonatomic, strong) NSMutableDictionary* dataHandlers;
+
 @end
 
 @implementation URLConnection
 
--(NSError*)sendSynchronousRequest:(NSURLRequest*)request didReceiveResponse:(BOOL(^)(NSURLResponse*))responseHandler didReceiveData:(BOOL(^)(NSData*))dataHandler {
-    self.responseHandler = responseHandler;
-    self.dataHandler = dataHandler;
-    self.condition = [[NSCondition alloc] init];
-    self.error = nil;
-    self.connectionDidFinishLoading = NO;
-    self.connection = [[NSURLConnection alloc] initWithRequest:request delegate:self startImmediately:NO];
-    [self.connection setDelegateQueue:[[NSOperationQueue alloc] init]];
-    [self.connection start];
-    [self waitForConnectionToFinishLoading];
-    return self.error;
+-(id)init {
+    if (self = [super init]) {
+        NSURLSessionConfiguration* defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
+
+        self.session = [NSURLSession sessionWithConfiguration: defaultConfigObject delegate:self delegateQueue:nil];
+        self.condition = [[NSCondition alloc] init];
+        self.responseHandlers = [[NSMutableDictionary alloc] init];
+        self.dataHandlers = [[NSMutableDictionary alloc] init];
+    }
+    return self;
 }
 
--(void)waitForConnectionToFinishLoading {
+-(NSError*)sendSynchronousRequest:(NSURLRequest*)request didReceiveResponse:(BOOL(^)(NSURLResponse*))responseHandler didReceiveData:(BOOL(^)(NSData*))dataHandler {
+    NSURLSessionDataTask* dataTask = [self.session dataTaskWithRequest:request];
+
     [self.condition lock];
-    while (!self.connectionDidFinishLoading) {
+    [self.responseHandlers setObject:responseHandler forKey:dataTask];
+    [self.dataHandlers setObject:dataHandler forKey:dataTask];
+    [self.condition unlock];
+
+    [dataTask resume];
+
+    [self.condition lock];
+    while ([self.responseHandlers objectForKey:dataTask]) {
         [self.condition wait];
     }
     [self.condition unlock];
+
+    return dataTask.error;
 }
 
--(void)connection:(NSURLConnection*)connection didReceiveResponse:(NSURLResponse*)response {
-    if (self.responseHandler(response)) {
-        [self connectionDidFinishLoading:connection];
-    }
+-(void)URLSession:(NSURLSession*)session task:(NSURLSessionTask*)task didCompleteWithError:(NSError*)error {
+    [self signalConnectionDidFinishLoading:(NSURLSessionDataTask*)task];
 }
 
--(void)connection:(NSURLConnection*)connection didReceiveData:(NSData*)data {
-    if (self.dataHandler(data)) {
-        [self connectionDidFinishLoading:connection];
-    }
+-(void)URLSession:(NSURLSession*)session task:(NSURLSessionTask*)task willPerformHTTPRedirection:(NSHTTPURLResponse*)response newRequest:(NSURLRequest*)request completionHandler:(void (^)(NSURLRequest*))completionHandler {
+    completionHandler(request);
 }
 
--(void)connection:(NSURLConnection*)connection didFailWithError:(NSError*)error {
+-(void)URLSession:(NSURLSession*)session dataTask:(NSURLSessionDataTask*)dataTask didReceiveResponse:(NSURLResponse*)response completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler {
+    completionHandler(NSURLSessionResponseAllow);
+
     [self.condition lock];
-    self.error = error;
-    self.connectionDidFinishLoading = YES;
-    [self.condition signal];
-    [self.condition unlock];    
-}
-
--(void)connectionDidFinishLoading:(NSURLConnection*)connection {
-    [self.condition lock];
-    self.connectionDidFinishLoading = YES;
-    [self.condition signal];
+    BOOL(^responseHandler)(NSURLResponse*) = [self.responseHandlers objectForKey:dataTask];
     [self.condition unlock];
+
+    if (responseHandler(response)) {
+        [dataTask cancel];
+        [self signalConnectionDidFinishLoading:dataTask];
+    }
+}
+
+-(void)URLSession:(NSURLSession*)session dataTask:(NSURLSessionDataTask*)dataTask didReceiveData:(NSData*)data {
+    [self.condition lock];
+    BOOL(^dataHandler)(NSData*) = [self.dataHandlers objectForKey:dataTask];
+    [self.condition unlock];
+
+    if (dataHandler(data)) {
+        [dataTask cancel];
+        [self signalConnectionDidFinishLoading:dataTask];
+    }
 }
 
 #ifdef _CARTO_IGNORE_SSL_CERTS
--(void)connection:(NSURLConnection*)connection willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge*)challenge {
+-(void)URLSession:(NSURLSession*)session didReceiveChallenge:(NSURLAuthenticationChallenge*)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential*))completionHandler {
     if ([[challenge protectionSpace] authenticationMethod] == NSURLAuthenticationMethodServerTrust) {
-        [[challenge sender] useCredential:[NSURLCredential credentialForTrust:[[challenge protectionSpace] serverTrust]] forAuthenticationChallenge:challenge];
-    } else {
-        [[challenge sender] performDefaultHandlingForAuthenticationChallenge:challenge];
+        NSURLCredential* credential = [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust];
+        completionHandler(NSURLSessionAuthChallengeUseCredential, credential);
     }
 }
 #endif
+
+-(void)signalConnectionDidFinishLoading:(NSURLSessionDataTask*)dataTask {
+    [self.condition lock];
+    [self.responseHandlers removeObjectForKey:dataTask];
+    [self.dataHandlers removeObjectForKey:dataTask];
+    [self.condition signal];
+    [self.condition unlock];
+}
 
 @end
 
@@ -93,8 +108,16 @@ namespace carto {
 
     HTTPClient::IOSImpl::IOSImpl(bool log) :
         _log(log),
-        _timeout(-1)
+        _timeout(-1),
+        _connection(nullptr)
     {
+        URLConnection* connection = [[URLConnection alloc] init];
+        _connection = (__bridge_retained void*)connection;
+    }
+    
+    HTTPClient::IOSImpl::~IOSImpl() {
+        URLConnection* connection = (__bridge_transfer URLConnection*)_connection;
+        _connection = nullptr;
     }
 
     void HTTPClient::IOSImpl::setTimeout(int milliseconds) {
@@ -102,28 +125,30 @@ namespace carto {
     }
 
     bool HTTPClient::IOSImpl::makeRequest(const HTTPClient::Request& request, HeadersFunc headersFn, DataFunc dataFn) const {
-        NSString* url = [[NSString alloc] initWithUTF8String:request.url.c_str()];
-        NSMutableURLRequest* httpRequest = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:url]];
-        [httpRequest setHTTPShouldUsePipelining:YES];
+        NSURL* url = [NSURL URLWithString:[NSString stringWithUTF8String:request.url.c_str()]];
+
+        NSMutableURLRequest* mutableRequest = [[NSMutableURLRequest alloc] init];
+        [mutableRequest setURL:url];
+        [mutableRequest setHTTPShouldUsePipelining:YES];
 
         if (_timeout > 0) {
-            [httpRequest setTimeoutInterval:_timeout / 1000.0];
+            [mutableRequest setTimeoutInterval:_timeout / 1000.0];
         }
 
-        NSString* method = [[NSString alloc] initWithUTF8String:request.method.c_str()];
-        [httpRequest setHTTPMethod:method];
+        NSString* method = [NSString stringWithUTF8String:request.method.c_str()];
+        [mutableRequest setHTTPMethod:method];
 
         // Set request headers
         for (auto it = request.headers.begin(); it != request.headers.end(); it++) {
-            NSString* key = [[NSString alloc] initWithUTF8String:it->first.c_str()];
-            NSString* val = [[NSString alloc] initWithUTF8String:it->second.c_str()];
-            [httpRequest addValue:val forHTTPHeaderField:key];
+            NSString* key = [NSString stringWithUTF8String:it->first.c_str()];
+            NSString* val = [NSString stringWithUTF8String:it->second.c_str()];
+            [mutableRequest addValue:val forHTTPHeaderField:key];
         }
 
         // Set request body, if contentType defined
         if (!request.contentType.empty()) {
             NSData* body = [NSData dataWithBytes:request.body.data() length:request.body.size()];
-            [httpRequest setHTTPBody:body];
+            [mutableRequest setHTTPBody:body];
         }
 
         // Response and data handlers
@@ -150,9 +175,9 @@ namespace carto {
             return cancel;
         };
 
-        // Send the request
-        URLConnection* connection = [[URLConnection alloc] init];
-        NSError* error = [connection sendSynchronousRequest:httpRequest didReceiveResponse:handleResponse didReceiveData:handleData];
+        // Send the request synchronously
+        URLConnection* connection = (__bridge URLConnection*)_connection;
+        NSError* error = [connection sendSynchronousRequest:[mutableRequest copy] didReceiveResponse:handleResponse didReceiveData:handleData];
         if (error) {
             NSString* description = [error localizedDescription];
             throw NetworkException(std::string([description UTF8String]), request.url);
