@@ -46,10 +46,10 @@ namespace carto {
     }
         
     std::string AssetUtils::CalculateWritablePath(const std::string& fileName) {
+        NSString* nsFileName = [NSString stringWithUTF8String:fileName.c_str()];
         NSArray* dirPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
         NSString* docsDir = [dirPaths objectAtIndex:0];
-        NSString* nsFileName = [NSString stringWithUTF8String:fileName.c_str()];
-        NSString* writablePath = [[NSString alloc] initWithString: [docsDir stringByAppendingPathComponent: nsFileName]];
+        NSString* writablePath = [docsDir stringByAppendingPathComponent:nsFileName];
         return std::string([writablePath UTF8String]);
     }
 

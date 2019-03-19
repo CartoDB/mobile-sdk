@@ -50,7 +50,7 @@ namespace carto {
     
     bool PlatformUtils::ExcludeFolderFromBackup(const std::string &folder) {
         // Exclude map packages from iCloud backup, important as device id may change after restore
-        NSString* directory = [[NSString alloc] initWithUTF8String:folder.c_str()];
+        NSString* directory = [NSString stringWithUTF8String:folder.c_str()];
         NSURL* url = [NSURL fileURLWithPath:directory];
         NSError* error;
         return [url setResourceValue:[NSNumber numberWithBool:YES] forKey:NSURLIsExcludedFromBackupKey error:&error] == YES;
