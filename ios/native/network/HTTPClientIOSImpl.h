@@ -4,18 +4,17 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_HTTPCLIENTCFIMPL_H_
-#define _CARTO_HTTPCLIENTCFIMPL_H_
-
-#include <CFNetwork/CFNetwork.h>
+#ifndef _CARTO_HTTPCLIENTIOSIMPL_H_
+#define _CARTO_HTTPCLIENTIOSIMPL_H_
 
 #include "network/HTTPClient.h"
 
 namespace carto {
 
-    class HTTPClient::CFImpl : public HTTPClient::Impl {
+    class HTTPClient::IOSImpl : public HTTPClient::Impl {
     public:
-        explicit CFImpl(bool log);
+        explicit IOSImpl(bool log);
+        virtual ~IOSImpl();
 
         virtual void setTimeout(int milliseconds);
         virtual bool makeRequest(const HTTPClient::Request& request, HeadersFunc headersFn, DataFunc dataFn) const;
@@ -23,6 +22,7 @@ namespace carto {
     private:
         bool _log;
         int _timeout;
+        void* _connection;
     };
 
 }
