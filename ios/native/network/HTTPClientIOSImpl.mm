@@ -23,14 +23,14 @@
 @implementation URLConnection
 
 -(id)init {
-    if (self = [super init]) {
-        NSURLSessionConfiguration* defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
+    self = [super init];
 
-        self.session = [NSURLSession sessionWithConfiguration: defaultConfigObject delegate:self delegateQueue:nil];
-        self.condition = [[NSCondition alloc] init];
-        self.responseHandlers = [[NSMutableDictionary alloc] init];
-        self.dataHandlers = [[NSMutableDictionary alloc] init];
-    }
+    NSURLSessionConfiguration* defaultConfigObject = [NSURLSessionConfiguration defaultSessionConfiguration];
+
+    self.session = [NSURLSession sessionWithConfiguration: defaultConfigObject delegate:self delegateQueue:nil];
+    self.condition = [[NSCondition alloc] init];
+    self.responseHandlers = [[NSMutableDictionary alloc] init];
+    self.dataHandlers = [[NSMutableDictionary alloc] init];
     return self;
 }
 
