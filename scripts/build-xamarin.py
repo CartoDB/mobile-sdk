@@ -11,9 +11,20 @@ DEFAULT_XBUILD = 'msbuild'
 
 def xbuild(args, dir, *cmdArgs):
   return execute(args.xbuild, dir, *cmdArgs)
-	
+
 def nuget(args, dir, *cmdArgs):
   return execute(args.nuget, dir, *cmdArgs)
+
+def detectAndroidAPIs(args):
+  api32, api64 = None, None
+  for name in os.listdir('%s/platforms' % args.androidndkpath):
+    if name.startswith('android-'):
+      api = int(name[8:])
+      if api >= 9:
+        api32 = min(api32 or api, api)
+      if api >= 21:
+        api64 = min(api64 or api, api)
+  return api32, api64
 
 def buildAndroidSO(args, abi):
   version = getVersion(args.buildnumber) if args.configuration == 'Release' else 'Devel'
@@ -21,14 +32,20 @@ def buildAndroidSO(args, abi):
   buildDir = getBuildDir('xamarin_android', abi)
   defines = ["-D%s" % define for define in args.defines.split(';') if define]
   options = ["-D%s" % option for option in args.cmakeoptions.split(';') if option]
+  api32, api64 = detectAndroidAPIs(args)
+  if api32 is None or api64 is None:
+    print('Failed to detect available platform APIs')
+  print('Using API-%d for 32-bit builds, API-%d for 64-bit builds' % (api32, api64))
 
   if not cmake(args, buildDir, options + [
-    '-DCMAKE_TOOLCHAIN_FILE=%s/scripts/android-cmake/android.toolchain.cmake' % baseDir,
-    '-DANDROID_NDK=%s' % args.androidndkpath,
+    '-DCMAKE_SYSTEM_NAME=Android',
+    "-DCMAKE_ANDROID_NDK='%s'" % args.androidndkpath,
+    "-DCMAKE_ANDROID_NDK_TOOLCHAIN_VERSION='clang'",
+    "-DCMAKE_ANDROID_ARCH_ABI='%s'" % abi,
+    "-DCMAKE_ANDROID_STL_TYPE='c++_static'",
+    "-DCMAKE_SYSTEM_VERSION='%d'" % (api64 if '64' in abi else api32),
     '-DCMAKE_BUILD_TYPE=%s' % args.configuration,
     '-DWRAPPER_DIR=%s' % ('%s/generated/android-csharp/wrappers' % baseDir),
-    "-DANDROID_ABI='%s'" % abi,
-    "-DANDROID_NATIVE_API_LEVEL='%s'" % ('android-21' if '64' in abi else 'android-10'),
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
     "-DSDK_PLATFORM='Xamarin Android'",
@@ -49,13 +66,14 @@ def buildIOSLib(args, arch):
 
   if not cmake(args, buildDir, options + [
     '-G', 'Xcode',
-    '-DCMAKE_TOOLCHAIN_FILE=%s/scripts/ios-cmake/iOS.cmake' % baseDir,
-    '-DIOS_PLATFORM=%s' % platform,
+    '-DCMAKE_SYSTEM_NAME=iOS',
     '-DWRAPPER_DIR=%s' % ('%s/generated/ios-csharp/wrappers' % baseDir),
     '-DINCLUDE_OBJC:BOOL=OFF',
     '-DSINGLE_LIBRARY:BOOL=ON',
     '-DENABLE_BITCODE:BOOL=OFF',
     '-DCMAKE_OSX_ARCHITECTURES=%s' % arch,
+    '-DCMAKE_OSX_SYSROOT=iphone%s' % platform.lower(),
+    '-DCMAKE_OSX_DEPLOYMENT_TARGET=7.0',
     '-DCMAKE_BUILD_TYPE=%s' % args.configuration,
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
