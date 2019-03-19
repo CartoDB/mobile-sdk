@@ -1,3 +1,70 @@
+CARTO Mobile SDK 4.1.4
+-------------------
+
+This update includes performance and stability improvements,
+bug fixes and some minor new features.
+
+### New features:
+
+* Exposed TileUtils class with several static methods as part of public API
+* SDK now supports custom service URLs as online source ids
+
+
+### Fixes/changes:
+
+* Fixed Android HTTP connection class to use specified request method (previously always GET)
+* Fixed JNI local reference overflows in Android HTTP connection class (with HTTP servers returning very long lists of headers).
+* Removed unneeded iOS dependency of libstdc++.6 in Cocoapod, fixes build issues with iOS 12
+* Fixed the issue with delayed layer initialization, layers were not automatically rendered
+* Fixed several options not correctly reflected in renderer state when changed after the MapView was initialized
+* Fixed infinite loop in TileLayer update method when called with inconsistent state (zero view dimensions)
+* Fixed value clamping issue with Torque tiles (all floating point numbers were rounded to integers)
+* Optimized CartoCSS compiler with 10% reduced map initialization time and faster tile loading time
+* Better error reporting of CartoCSS issues
+* SDK now uses default background bitmap in case of vector basemap with no background defined
+* Bitmap class decoder now supports automatic ungzipping. This is a fix for wrongly configured HTTP servers that send gzipped images even when this is not included in accepted encodings.
+* Fixed CartoNamedMapsService ignoring template parameter values when instantiating named maps
+* Fixed several grouped marker symbolizers being represented by a single marker
+* Fixed threading issue with online license management causing potential API token missing from initial HTTP requests
+* Fixed WebP library embedding on iOS targets (Xamarin/native), WebP symbols were previously exported, causing potential linking conflicts
+* Made Xamarin.iOS build compatible with 'Linker behaviour = Link All' mode by explictly preserving symbols used through reflection
+
+
+CARTO Mobile SDK 4.1.3
+-------------------
+
+This update includes performance and stability improvements,
+bug fixes and some minor new features.
+
+### New features:
+
+* Added support for TomTom online geocoding services (TomTomOnlineGeocodingService and TomTomOnlineReverseGeocodingService)
+* Implemented multilanguage support for offline geocoding classes (getLanguage, setLanguage methods in OSMOfflineGeocodingService and PackageManagerGeocodingService classes)
+* Implemented localization support for Pelias geocoding results (getLanguage, setLanguage methods in PeliasOnlineGeocodingService)
+* Implemented proper location bias for all geocoding services, 'location radius' is no longer needed for bias to work
+* Implemented opacity attribute for layers (setOpacity, getOpacity). Note that when used (opacity < 1.0), then this feature may have significant performance impact.
+* Implemented background color and border support for Text vectorelements (TextStyleBuilder class)
+* Implemented ‘break lines’ flag for texts (TextStyleBuilder class)
+* Added online API key interface to CartoMapsService and CartoSQLService
+* Added NTExceptionWrapper class for catching/handling SDK exceptions in Swift
+
+
+### Fixes/changes:
+
+* Min API level on Android is now 10 for Xamarin
+* Performance fix for CARTO Maps API - use cacheable requests when instantiating named and anonymous maps
+* Fixed regression in SDK 4.1.x vs 4.0.x - packages with incomplete zoom levels had wrong tilemasks after serialized/deserialized in database
+* Fixed bounds calculation for NML models
+* Fixed zoom level handling in ‘restricted panning’ mode
+* Fixed ‘restricted panning’ mode when tilt is applied
+* Fixed tile cache invalidation issue when all packages are removed from PackageManager
+* BalloonPopupStyleMargins class getters were not wrapped as properties for dotnet platforms previously, fixed now
+* Optimized label handling in VT renderer for zoom levels > 14
+* Optimized 3D buildings and transparent layers in VT renderer on GPUs that use tiled rendering
+* Distance based filtering in search API is more robust now (for coordinate wrapping, etc)
+* Fixed WKTGeometryWriter to NOT use scientific encoding
+
+
 CARTO Mobile SDK 4.1.2
 -------------------
 
@@ -5,13 +72,13 @@ This is a maintenance release for SDK 4.1.x containing mostly fixes
 but also some new features. This version deprecates support
 for external MapZen services due to the services being closed.
 
-### New features
+### New features:
 
 * SDK has support for MapBox online geocoding services.
   New classes MapBoxOnlineGeocodingService and MapBoxOnlineReverseGeocodingService can be used for this.
 * All MapZen online service (Pelias and Valhalla) wrappers now include additional methods for specifying custom service URLs.
   This feature was added as MapZen closes all online services as of February 2018.
-* Added optional  ‘restricted panning’ support to avoid zooming/panning outside world map area. If turned on, then  map area is restricted to maximize visible map. This can be turned on/off using Options.setRestrictedPanning method
+* Added optional ‘restricted panning’ support to avoid zooming/panning outside world map area. If turned on, then  map area is restricted to maximize visible map. This can be turned on/off using Options.setRestrictedPanning method
 * Added custom service URL support for Pelias and Mapbox geocoders and Valhalla routing
 * API documentation for iOS is using Jazzy tool, instead of Doxygen. This allows us to show both ObjectiveC and Swift syntax for the API.
 

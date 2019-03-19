@@ -26,6 +26,7 @@
 !shared_ptr(carto::CartoMapsService, services.CartoMapsService)
 
 %attributestring(carto::CartoMapsService, std::string, Username, getUsername, setUsername)
+%attributestring(carto::CartoMapsService, std::string, APIKey, getAPIKey, setAPIKey)
 %attributestring(carto::CartoMapsService, std::string, APITemplate, getAPITemplate, setAPITemplate)
 %attributeval(carto::CartoMapsService, %arg(std::vector<std::string>), AuthTokens, getAuthTokens, setAuthTokens)
 %attributeval(carto::CartoMapsService, %arg(std::vector<int>), LayerIndices, getLayerIndices, setLayerIndices)

@@ -20,9 +20,11 @@ namespace sqlite3pp {
 }
 
 namespace carto {
+    class RouteMatchingRequest;
+    class RouteMatchingResult;
 
     /**
-     * An online routing service that uses MapZen Valhalla routing service.
+     * An online routing service that uses MapBox Valhalla routing service.
      * As the class connects to an external (non-CARTO) service, this class is provided "as-is",   
      * future changes from the service provider may not be compatible with the implementation.
      * Be sure to read the Terms and Conditions of your Valhalla service provider to see if the
@@ -33,19 +35,19 @@ namespace carto {
     public:
         /**
          * Constructs a new ValhallaOnlineRoutingService instance given database file.
-         * @param apiKey The API key to use registered with Mapzen.
+         * @param apiKey The API key (access token) to use registered with MapBox.
          */
         explicit ValhallaOnlineRoutingService(const std::string& apiKey);
         virtual ~ValhallaOnlineRoutingService();
 
         /**
          * Returns the current routing profile.
-         * @return The current routing profile. Can be either "auto", "auto_shorter", "bicycle", "bus", "hov", "pedestrian" or "multimodal". The default is "pedestrian".
+         * @return The current routing profile. Can be either "auto", "auto_shorter", "bicycle", "bus", "hov", "pedestrian", "wheelchair" or "multimodal". The default is "pedestrian".
          */
         std::string getProfile() const;
         /**
          * Sets the current routing profile.
-         * @param profile The new profile. Can be either "auto", "auto_shorter", "bicycle", "bus", "hov", "pedestrian" or "multimodal".
+         * @param profile The new profile. Can be either "auto", "auto_shorter", "bicycle", "bus", "hov", "pedestrian", "wheelchair" or "multimodal".
          */
         void setProfile(const std::string& profile);
 
@@ -61,10 +63,18 @@ namespace carto {
          */
         void setCustomServiceURL(const std::string& serviceURL);
 
+        /**
+         * Matches specified points to the points on road network.
+         * @param request The matching request.
+         * @return The matching result or null if route matching failed.
+         * @throws std::runtime_error If IO error occured during the route matching.
+         */
+        std::shared_ptr<RouteMatchingResult> matchRoute(const std::shared_ptr<RouteMatchingRequest>& request) const;
+
         virtual std::shared_ptr<RoutingResult> calculateRoute(const std::shared_ptr<RoutingRequest>& request) const;
 
     private:
-        static const std::string MAPZEN_SERVICE_URL;
+        static const std::string MAPBOX_SERVICE_URL;
 
         const std::string _apiKey;
 

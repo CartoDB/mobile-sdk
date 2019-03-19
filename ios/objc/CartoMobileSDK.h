@@ -25,6 +25,7 @@
 #import "NTVariantObjectBuilder.h"
 
 #import "NTAssetTileDataSource.h"
+#import "NTOrderedTileDataSource.h"
 #import "NTBitmapOverlayRasterTileDataSource.h"
 #import "NTHTTPTileDataSource.h"
 #import "NTMemoryCacheTileDataSource.h"
@@ -104,8 +105,10 @@
 
 #import "NTAssetUtils.h"
 #import "NTBitmapUtils.h"
+#import "NTTileUtils.h"
 #import "NTLog.h"
 #import "NTLogEventListener.h"
+#import "utils/ExceptionWrapper.h"
 
 #import "NTBalloonPopup.h"
 #import "NTCustomPopup.h"
@@ -200,6 +203,7 @@
 #import "NTRouteMatchingRequest.h"
 #import "NTRouteMatchingResult.h"
 #import "NTOSRMOfflineRoutingService.h"
+#import "NTSGREOfflineRoutingService.h"
 #endif
 
 #ifdef _CARTO_VALHALLA_ROUTING_SUPPORT

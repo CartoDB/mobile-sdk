@@ -97,8 +97,8 @@ namespace carto {
             }
             return tileData;
         }
-        catch (const std::exception& e) {
-            Log::Errorf("PackageManagerTileDataSource::loadTile: Exception: %s", e.what());
+        catch (const std::exception& ex) {
+            Log::Errorf("PackageManagerTileDataSource::loadTile: Exception: %s", ex.what());
         }
         return std::shared_ptr<TileData>();
     }

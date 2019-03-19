@@ -9,11 +9,11 @@
 #include "utils/Const.h"
 #include "utils/Log.h"
 
-#include <routing/Graph.h>
-#include <routing/Query.h>
-#include <routing/Result.h>
-#include <routing/Instruction.h>
-#include <routing/RouteFinder.h>
+#include <osrm/Graph.h>
+#include <osrm/Query.h>
+#include <osrm/Result.h>
+#include <osrm/Instruction.h>
+#include <osrm/RouteFinder.h>
 
 namespace carto {
 
@@ -56,25 +56,29 @@ namespace carto {
             }
 
             // Now check if we have already a cached route finder for the files. If not, create new instance.
-            std::lock_guard<std::mutex> lock(_mutex);
-            if (!_cachedRouteFinder || packageFileMap != _cachedPackageFileMap) {
-                routing::Graph::Settings graphSettings;
-                auto graph = std::make_shared<routing::Graph>(graphSettings);
-                for (auto it = packageFileMap.begin(); it != packageFileMap.end(); it++) {
-                    try {
-                        if (!graph->import(it->second)) {
-                            throw FileException("Failed to import graph " + it->first->getPackageId(), "");
+            std::shared_ptr<osrm::RouteFinder> routeFinder;
+            {
+                std::lock_guard<std::mutex> lock(_mutex);
+                if (!_cachedRouteFinder || packageFileMap != _cachedPackageFileMap) {
+                    osrm::Graph::Settings graphSettings;
+                    auto graph = std::make_shared<osrm::Graph>(graphSettings);
+                    for (auto it = packageFileMap.begin(); it != packageFileMap.end(); it++) {
+                        try {
+                            if (!graph->import(it->second)) {
+                                throw FileException("Failed to import graph " + it->first->getPackageId(), "");
+                            }
+                        }
+                        catch (const std::exception& ex) {
+                            throw GenericException("Exception while importing graph " + it->first->getPackageId(), ex.what());
                         }
                     }
-                    catch (const std::exception& ex) {
-                        throw GenericException("Exception while importing graph " + it->first->getPackageId(), ex.what());
-                    }
+                    _cachedPackageFileMap = packageFileMap;
+                    _cachedRouteFinder = std::make_shared<osrm::RouteFinder>(graph);
                 }
-                _cachedPackageFileMap = packageFileMap;
-                _cachedRouteFinder = std::make_shared<routing::RouteFinder>(graph);
+                routeFinder = _cachedRouteFinder;
             }
 
-            result = OSRMRoutingProxy::CalculateRoute(_cachedRouteFinder, request);
+            result = OSRMRoutingProxy::CalculateRoute(routeFinder, request);
         });
 
         return result;

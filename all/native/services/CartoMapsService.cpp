@@ -25,6 +25,7 @@ namespace carto {
 
     CartoMapsService::CartoMapsService() :
         _username(),
+        _apiKey(),
         _apiTemplate(DEFAULT_API_TEMPLATE),
         _tilerURL(),
         _statTag(),
@@ -52,6 +53,16 @@ namespace carto {
     void CartoMapsService::setUsername(const std::string& username) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _username = username;
+    }
+
+    std::string CartoMapsService::getAPIKey() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _apiKey;
+    }
+
+    void CartoMapsService::setAPIKey(const std::string& apiKey) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _apiKey = apiKey;
     }
 
     std::string CartoMapsService::getAPITemplate() const {
@@ -232,7 +243,7 @@ namespace carto {
 
         // Build URL
         std::map<std::string, std::string> urlParams;
-        urlParams["params"] = picojson::value(paramsObject).serialize();
+        urlParams["config"] = picojson::value(paramsObject).serialize();
         urlParams["callback"] = "callback";
         std::string url = NetworkUtils::BuildURLFromParameters(getServiceURL("/api/v1/map/named/" + NetworkUtils::URLEncode(templateId) + "/jsonp"), urlParams);
 
@@ -272,6 +283,11 @@ namespace carto {
         std::map<std::string, std::string> tagValues = { { "user", _username },{ "username", _username } };
         std::string url = GeneralUtils::ReplaceTags(_apiTemplate, tagValues, "{", "}", false) + path;
         std::multimap<std::string, std::string> urlParams;
+
+        if (!_apiKey.empty()) {
+            urlParams.insert({ "api_key", _apiKey });
+            url = NetworkUtils::SetURLProtocol(url, "https");
+        }
 
         if (!_authTokens.empty()) {
             for (const std::string& authToken : _authTokens) {
@@ -330,9 +346,13 @@ namespace carto {
             for (std::size_t i = 0; i < layerInfos.size(); i++) {
                 urlTemplateBase += (i == 0 ? "/" : ",") + boost::lexical_cast<std::string>(layerInfos[i].index);
             }
+
             std::string urlTemplateSuffix;
-            if (!_authTokens.empty()) {
+            if (!_apiKey.empty() || !_authTokens.empty()) {
                 std::multimap<std::string, std::string> urlParams;
+                if (!_apiKey.empty()) {
+                    urlParams.insert({ "api_key", _apiKey });
+                }
                 for (const std::string& authToken : _authTokens) {
                     urlParams.insert({ _authTokens.size() == 1 ? "auth_token" : "auth_token[]", authToken });
                 }
@@ -361,6 +381,12 @@ namespace carto {
                     }
                     auto vectorTileDecoder = std::make_shared<CartoVectorTileDecoder>(layerIds, layerStyleSets);
                     auto baseDataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.mvt" + urlTemplateSuffix);
+#if defined(__APPLE__)
+                    // Force using gzipped vector tiles on iOS, our decoder supports this
+                    std::map<std::string, std::string> headers;
+                    headers["Accept-Encoding"] = "gzip";
+                    baseDataSource->setHTTPHeaders(headers);
+#endif
                     auto dataSource = std::make_shared<MemoryCacheTileDataSource>(baseDataSource); // in memory cache allows to change style quickly
                     tileLayer = std::make_shared<VectorTileLayer>(dataSource, vectorTileDecoder);
                 }

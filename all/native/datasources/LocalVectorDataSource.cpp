@@ -356,6 +356,18 @@ namespace carto {
         } else if (auto geomCollectionStyle = std::dynamic_pointer_cast<GeometryCollectionStyle>(style)) {
             if (auto multiGeometry = std::dynamic_pointer_cast<MultiGeometry>(geometry)) {
                 return std::make_shared<GeometryCollection>(multiGeometry, geomCollectionStyle);
+            } else if (auto pointGeometry = std::dynamic_pointer_cast<PointGeometry>(geometry)) {
+                if (auto pointStyle = geomCollectionStyle->getPointStyle()) {
+                    return std::make_shared<Point>(pointGeometry, pointStyle);
+                }
+            } else if (auto lineGeometry = std::dynamic_pointer_cast<LineGeometry>(geometry)) {
+                if (auto lineStyle = geomCollectionStyle->getLineStyle()) {
+                    return std::make_shared<Line>(lineGeometry, lineStyle);
+                }
+            } else if (auto polygonGeometry = std::dynamic_pointer_cast<PolygonGeometry>(geometry)) {
+                if (auto polygonStyle = geomCollectionStyle->getPolygonStyle()) {
+                    return std::make_shared<Polygon>(polygonGeometry, polygonStyle);
+                }
             }
         }
         return std::shared_ptr<VectorElement>();

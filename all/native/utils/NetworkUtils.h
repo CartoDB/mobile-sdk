@@ -49,6 +49,8 @@ namespace carto {
 
         static std::string ParseURLPath(std::string url);
 
+        static std::string CreateServiceURL(const std::string& serviceTemplate, const std::string& source);
+
         static std::map<std::string, std::string> CreateAppRefererHeader();
 
     private:

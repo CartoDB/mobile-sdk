@@ -58,14 +58,15 @@ namespace carto {
         _watermarkRenderer(*options),
         _billboardSorter(),
         _billboardDrawDataBuffer(),
-        _billboardsChanged(false),
         _billboardPlacementWorker(std::make_shared<BillboardPlacementWorker>()),
         _billboardPlacementThread(),
         _animationHandler(*this),
         _kineticEventHandler(*this, *options),
         _layers(layers),
         _options(options),
+        _surfaceCreated(false),
         _surfaceChanged(false),
+        _billboardsChanged(false),
         _redrawPending(false),
         _redrawRequestListener(),
         _mapRendererListener(),
@@ -482,6 +483,8 @@ namespace carto {
         glPixelStorei(GL_PACK_ALIGNMENT, 1);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
+        _surfaceCreated = true;
+
         // Reset frame buffer manager
         if (_frameBufferManager) {
             _frameBufferManager->setGLThreadId(std::thread::id());
@@ -594,9 +597,8 @@ namespace carto {
             _viewState.setHorizontalLayerOffsetDir(0);
         }
 
-        if (_surfaceChanged) {
-            _surfaceChanged = false;
-            // Don't delay calling the cull task, the view state was already updated
+        // Don't delay calling the cull task, the view state was already updated
+        if (_surfaceChanged.exchange(false)) {
             viewChanged(false);
         }
         
@@ -615,13 +617,9 @@ namespace carto {
             mapRendererListener->onAfterDrawFrame();
         }
 
-        // Update billobard placements/visibility
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            if (_billboardsChanged) {
-                _billboardsChanged = false;
-                _billboardPlacementWorker->init(BILLBOARD_PLACEMENT_TASK_DELAY);
-            }
+        // Update billboard placements/visibility
+        if (_billboardsChanged.exchange(false)) {
+            _billboardPlacementWorker->init(BILLBOARD_PLACEMENT_TASK_DELAY);
         }
         
         handleRenderThreadCallbacks();
@@ -639,6 +637,7 @@ namespace carto {
     
     void MapRenderer::onSurfaceDestroyed() {
         // This method may never be called (e.x Android)
+        _surfaceCreated = false;
 
         // Reset texture manager. We tell managers to ignore all resource 'release' operations by invalidating manager thread ids
         if (_textureManager) {
@@ -782,17 +781,20 @@ namespace carto {
     }
      
     void MapRenderer::billboardsChanged() {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
         _billboardsChanged = true;
     }
         
     void MapRenderer::layerChanged(const std::shared_ptr<Layer>& layer, bool delay) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
         // If screen size has been set, load the layers, otherwise wait for the onSurfaceChanged method
         // which will also start the cull worker
-        if (_viewState.getWidth() > 0 && _viewState.getHeight() > 0) {
-            int delayTime = layer->getCullDelay();
-            _cullWorker->init(layer, delay ? delayTime : 0);
+        if (_surfaceCreated) {
+            // If layer not yet initialized, Force the layer to be initialized (and then culled) in the UI thread
+            if (!layer->isSurfaceCreated()) {
+                requestRedraw();
+            } else {
+                int delayTime = layer->getCullDelay();
+                _cullWorker->init(layer, delay ? delayTime : 0);
+            }
         }
     }
     
@@ -981,17 +983,41 @@ namespace carto {
 
     void MapRenderer::OptionsListener::onOptionChanged(const std::string& optionName) {
         if (auto mapRenderer = _mapRenderer.lock()) {
+            bool updateView = false;
+
             if (optionName == "ProjectionMode" || optionName == "TileDrawSize" || optionName == "DPI" || optionName == "DrawDistance" || optionName == "FieldOfViewY" || optionName == "FocusPointOffset") {
-            	mapRenderer->viewChanged(false);
+                std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
+                mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
+                updateView = true;
+            }
+
+            if (optionName == "ZoomRange") {
+                std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
+                mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
+                mapRenderer->_viewState.clampZoom(*mapRenderer->_options);                
+                updateView = true;
+            }
+
+            if (optionName == "PanBounds") {
+                std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
+                mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
+                mapRenderer->_viewState.clampFocusPos(*mapRenderer->_options);
+                updateView = true;
             }
 
             if (optionName == "RestrictedPanning") {
                 std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
+                mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
                 mapRenderer->_viewState.clampZoom(*mapRenderer->_options);
                 mapRenderer->_viewState.clampFocusPos(*mapRenderer->_options);
+                updateView = true;
             }
 
-            mapRenderer->requestRedraw();
+            if (updateView) {
+                mapRenderer->viewChanged(false);
+            } else {
+                mapRenderer->requestRedraw();
+            }
         }
     }
 

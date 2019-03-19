@@ -1,4 +1,5 @@
 import os
+import sys
 import argparse
 import string
 from build.sdk_build_utils import *
@@ -88,7 +89,7 @@ def buildXamarinDLL(args, target):
     f.write(csProjFile)
 
   if args.xbuild is None:
-    print '%s solution is in %s, please use Xamarin IDE to compile target DLL' % (target, buildDir)
+    print("%s solution is in %s, please use Xamarin IDE to compile target DLL" % (target, buildDir))
     return True
     
   if not xbuild(args, buildDir,
@@ -122,12 +123,13 @@ def buildXamarinNuget(args, target):
 
   if not copyfile('%s/CartoMobileSDK.%s.%s.nupkg' % (buildDir, target, version), '%s/CartoMobileSDK.%s.%s.nupkg' % (distDir, target, version)):
     return False
-  print "Output available in:\n%s\n\nTo publish, use:\nnuget push %s/CartoMobileSDK.%s.%s.nupkg -Source https://www.nuget.org/api/v2/package\n" % (distDir, distDir, target, version)
+  print("Output available in:\n%s\n\nTo publish, use:\nnuget push %s/CartoMobileSDK.%s.%s.nupkg -Source https://www.nuget.org/api/v2/package\n" % (distDir, distDir, target, version))
   return True
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--profile', dest='profile', default='standard', type=validProfile, help='Build profile')
 parser.add_argument('--android-abi', dest='androidabi', default=[], choices=ANDROID_ABIS + ['all'], action='append', help='Android target ABIs')
+parser.add_argument('--ios-arch', dest='iosarch', default=[], choices=IOS_ARCHS + ['all'], action='append', help='iOS target architectures')
 parser.add_argument('--defines', dest='defines', default='', help='Defines for compilation')
 parser.add_argument('--xbuild', dest='xbuild', default='xbuild', help='Xamarin xbuild executable')
 parser.add_argument('--nuget', dest='nuget', default='nuget', help='nuget executable')
@@ -144,6 +146,8 @@ parser.add_argument(dest='target', choices=['android', 'ios'], help='Target plat
 args = parser.parse_args()
 if 'all' in args.androidabi or args.androidabi == []:
   args.androidabi = ANDROID_ABIS
+if 'all' in args.iosarch or args.iosarch == []:
+  args.iosarch = IOS_ARCHS
 if args.xbuild == 'auto':
   args.xbuild = DEFAULT_XBUILD
 elif args.xbuild == 'none':
@@ -151,7 +155,7 @@ elif args.xbuild == 'none':
 if args.androidsdkpath == 'auto' and args.target == 'android':
   args.androidsdkpath = os.environ.get('ANDROID_HOME', None)
   if args.androidsdkpath is None:
-    print "ANDROID_HOME variable not set"
+    print("ANDROID_HOME variable not set")
     exit(-1)
 if args.androidndkpath == 'auto' and args.target == 'android':
   args.androidndkpath = os.environ.get('ANDROID_NDK_HOME', None)
@@ -162,6 +166,19 @@ args.defines += ';TARGET_XAMARIN'
 args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
 args.nativeconfiguration = args.configuration
 
+if not checkExecutable(args.cmake, '--help'):
+  print('Failed to find CMake executable. Use --cmake to specify its location')
+  sys.exit(-1)
+
+if not checkExecutable(args.xbuild, '/?'):
+  print('Failed to find xbuild (or msbuild) executable. Use --xbuild to specify its location')
+  sys.exit(-1)
+
+if args.buildnuget:
+  if not checkExecutable(args.nuget, 'help'):
+    print('Failed to find nuget executable. Use --nuget to specify its location')
+    sys.exit(-1)
+
 target = None
 if args.target == 'android':
   target = 'Android'
@@ -170,10 +187,10 @@ if args.target == 'android':
       exit(-1)
 elif args.target == 'ios':
   target = 'iOS'
-  for arch in IOS_ARCHS:
+  for arch in args.iosarch:
     if not buildIOSLib(args, arch):
       exit(-1)
-  if not buildIOSFatLib(args, IOS_ARCHS):
+  if not buildIOSFatLib(args, args.iosarch):
     exit(-1)
 
 if not buildXamarinDLL(args, target):

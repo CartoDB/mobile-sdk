@@ -492,7 +492,7 @@ While you can share most of code using Native Controls, you just need to specify
 
 Follow these steps to add native apps to your Xamarin Android package.
 
-1) Add the nuget package [CartoMobileSDK](https://www.nuget.org/packages/CartoMobileSDK/) to your mobile app project
+1) Add the nuget package [CartoMobileSDK.Android](https://www.nuget.org/packages/CartoMobileSDK.Android/) to your mobile app project
 
 2) Add MapView to your application main layout
 

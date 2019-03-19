@@ -7,6 +7,8 @@
 #ifndef _CARTO_CARTOOFFNLINEVECTORTILELAYER_H_
 #define _CARTO_CARTOOFFNLINEVECTORTILELAYER_H_
 
+#ifdef _CARTO_PACKAGEMANAGER_SUPPORT
+
 #include "layers/CartoVectorTileLayer.h"
 #include "packagemanager/CartoPackageManager.h"
 
@@ -58,3 +60,6 @@ namespace carto {
 }
 
 #endif
+
+#endif
+

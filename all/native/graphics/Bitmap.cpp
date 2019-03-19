@@ -6,6 +6,9 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+
+#include <stdext/miniz.h>
+
 #include <jpeglib.h>
 #include <png.h>
 #include <webp/decode.h>
@@ -504,8 +507,14 @@ namespace carto {
         } else if (IsNUTI(compressedData, dataSize)) {
             return loadNUTI(compressedData, dataSize);
         } else {
-            Log::Error("Bitmap::loadFromCompressedBytes: Unsupported image format");
-            return false;
+            std::vector<unsigned char> uncompressedData;
+            if (miniz::inflate_gzip(compressedData, dataSize, uncompressedData)) {
+                Log::Info("Bitmap::loadFromCompressedBytes: Image is gzipped, decompressing");
+                return loadFromCompressedBytes(uncompressedData.data(), uncompressedData.size());
+            } else {
+                Log::Error("Bitmap::loadFromCompressedBytes: Unsupported image format");
+                return false;
+            }
         }
     }
     

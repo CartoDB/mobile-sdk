@@ -1,4 +1,5 @@
 import os
+import sys
 import re
 import shutil
 import argparse
@@ -52,7 +53,10 @@ def buildIOSFramework(args, archs):
   platformArchs = [('OS' if arch.startswith('arm') else 'SIMULATOR', arch) for arch in archs]
   baseDir = getBaseDir()
   distDir = getDistDir('ios')
-  outputDir = '%s/CartoMobileSDK.framework/Versions/A' % distDir
+  if args.sharedlib:
+    outputDir = '%s/CartoMobileSDK.framework' % distDir
+  else:
+    outputDir = '%s/CartoMobileSDK.framework/Versions/A' % distDir
   makedirs(outputDir)
 
   if not execute('lipo', baseDir,
@@ -61,13 +65,23 @@ def buildIOSFramework(args, archs):
   ):
     return False
 
+  if args.sharedlib:
+    if not execute('install_name_tool', outputDir,
+      '-id', '@rpath/CartoMobileSDK.framework/CartoMobileSDK',
+      'CartoMobileSDK'
+    ):
+      return False
+    if not copyfile('%s/scripts/ios/Info.plist' % baseDir, '%s/Info.plist' % outputDir):
+      return False
+
   makedirs('%s/Headers' % outputDir)
-  if not makesymlink('%s/CartoMobileSDK.framework/Versions' % distDir, 'A', 'Current'):
-    return False
-  if not makesymlink('%s/CartoMobileSDK.framework' % distDir, 'Versions/A/Headers', 'Headers'):
-    return False
-  if not makesymlink('%s/CartoMobileSDK.framework' % distDir, 'Versions/A/CartoMobileSDK', 'CartoMobileSDK'):
-    return False
+  if not args.sharedlib:
+    if not makesymlink('%s/CartoMobileSDK.framework/Versions' % distDir, 'A', 'Current'):
+      return False
+    if not makesymlink('%s/CartoMobileSDK.framework' % distDir, 'Versions/A/Headers', 'Headers'):
+      return False
+    if not makesymlink('%s/CartoMobileSDK.framework' % distDir, 'Versions/A/CartoMobileSDK', 'CartoMobileSDK'):
+      return False
 
   for dir in ['%s/all/native', '%s/extensions/native', '%s/ios/native', '%s/ios/objc', '%s/generated/ios-objc/proxies', '%s/libs-external/cglib']:
     if not os.path.exists(dir % baseDir):
@@ -84,7 +98,7 @@ def buildIOSFramework(args, archs):
           if filename == 'CartoMobileSDK.h':
             updateUmbrellaHeaderDefinitions('%s/%s' % (destDir, filename), args)
     os.chdir(currentDir)
-  print "Output available in:\n%s" % distDir
+  print("Output available in:\n%s" % distDir)
   return True
 
 def buildIOSCocoapod(args, buildpackage):
@@ -105,7 +119,7 @@ def buildIOSCocoapod(args, buildpackage):
       pass
     if not execute('zip', distDir, '-y', '-r', distName, 'CartoMobileSDK.framework'):
       return False
-    print "Output available in:\n%s\n\nTo publish, use:\ncd %s\naws s3 cp %s s3://nutifront/sdk_snapshots/%s\npod trunk push\n" % (distDir, distDir, distName, distName)
+    print("Output available in:\n%s\n\nTo publish, use:\ncd %s\naws s3 cp %s s3://nutifront/sdk_snapshots/%s\npod trunk push\n" % (distDir, distDir, distName, distName))
   return True
 
 parser = argparse.ArgumentParser()
@@ -127,13 +141,17 @@ if 'all' in args.iosarch or args.iosarch == []:
 args.defines += ';' + getProfile(args.profile).get('defines', '')
 args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
 
+if not checkExecutable(args.cmake, '--help'):
+  print('Failed to find CMake executable. Use --cmake to specify its location')
+  sys.exit(-1)
+
 for arch in args.iosarch:
   if not buildIOSLib(args, arch):
-    exit(-1)
+    sys.exit(-1)
 
 if not buildIOSFramework(args, args.iosarch):
-  exit(-1)
+  sys.exit(-1)
 
 if args.buildcocoapod or args.buildcocoapodpackage:
   if not buildIOSCocoapod(args, args.buildcocoapodpackage):
-    exit(-1)
+    sys.exit(-1)

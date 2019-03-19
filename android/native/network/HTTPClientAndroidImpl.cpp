@@ -1,6 +1,7 @@
 #include "HTTPClientAndroidImpl.h"
 #include "components/Exceptions.h"
 #include "utils/AndroidUtils.h"
+#include "utils/JNIUniqueLocalRef.h"
 #include "utils/JNIUniqueGlobalRef.h"
 #include "utils/Log.h"
 
@@ -139,7 +140,7 @@ namespace carto {
         }
         
         // Configure connection parameters
-        jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setRequestMethod, jenv->NewStringUTF("GET"));
+        jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setRequestMethod, jenv->NewStringUTF(request.method.c_str()));
         jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setDoInput, (jboolean)true);
         jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setDoOutput, (jboolean)!request.contentType.empty());
         jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setUseCaches, (jboolean)false);
@@ -152,9 +153,9 @@ namespace carto {
         
         // Set request headers
         for (auto it = request.headers.begin(); it != request.headers.end(); it++) {
-            jstring key = jenv->NewStringUTF(it->first.c_str());
-            jstring value = jenv->NewStringUTF(it->second.c_str());
-            jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setRequestProperty, key, value);
+            JNIUniqueLocalRef<jstring> key(jenv->NewStringUTF(it->first.c_str()));
+            JNIUniqueLocalRef<jstring> value(jenv->NewStringUTF(it->second.c_str()));
+            jenv->CallVoidMethod(conn, _HttpURLConnectionClass->setRequestProperty, key.get(), value.get());
         }
 
         // If Content-Type is set, write request body to output stream
@@ -195,16 +196,17 @@ namespace carto {
         }
         std::map<std::string, std::string> headers;
         for (int i = 0; true; i++) {
-            jstring key = (jstring)jenv->CallObjectMethod(conn, _HttpURLConnectionClass->getHeaderFieldKey, (jint)i);
+            JNIUniqueLocalRef<jstring> key(jenv->CallObjectMethod(conn, _HttpURLConnectionClass->getHeaderFieldKey, (jint)i));
             if (!key) {
                 break;
             }
-            jstring value = (jstring)jenv->CallObjectMethod(conn, _HttpURLConnectionClass->getHeaderField, (jint)i);
-            const char* keyStr = jenv->GetStringUTFChars(key, NULL);
-            const char* valueStr = jenv->GetStringUTFChars(value, NULL);
+            JNIUniqueLocalRef<jstring> value(jenv->CallObjectMethod(conn, _HttpURLConnectionClass->getHeaderField, (jint)i));
+
+            const char* keyStr = jenv->GetStringUTFChars(key.get(), NULL);
+            const char* valueStr = jenv->GetStringUTFChars(value.get(), NULL);
             headers[keyStr] = valueStr;
-            jenv->ReleaseStringUTFChars(value, valueStr);
-            jenv->ReleaseStringUTFChars(key, keyStr);
+            jenv->ReleaseStringUTFChars(value.get(), valueStr);
+            jenv->ReleaseStringUTFChars(key.get(), keyStr);
         }
 
         bool cancel = false;

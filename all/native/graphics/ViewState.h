@@ -10,6 +10,7 @@
 #include "core/MapPos.h"
 #include "core/ScreenPos.h"
 #include "core/MapVec.h"
+#include "core/MapRange.h"
 #include "components/Options.h"
 #include "graphics/Frustum.h"
 
@@ -390,6 +391,8 @@ namespace carto {
         float _zoom0Distance;
         float _minZoom;
         bool _ignoreMinZoom;
+        MapRange _zoomRange;
+        bool _restrictedPanning;
         float _normalizedResolution;
     
         int _width;

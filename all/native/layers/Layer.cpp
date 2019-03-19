@@ -31,16 +31,21 @@ namespace carto {
         _cullDelay = std::max(0, cullDelay);
     }
         
+    float Layer::getOpacity() const {
+        return _opacity;
+    }
+    
+    void Layer::setOpacity(float opacity) {
+        _opacity = std::max(0.0f, std::min(1.0f, opacity));
+        refresh();
+    }
+    
     bool Layer::isVisible() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
         return _visible;
     }
     
     void Layer::setVisible(bool visible) {
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _visible = visible;
-        }
+        _visible = visible;
         refresh();
     }
     
@@ -57,19 +62,6 @@ namespace carto {
         refresh();
     }
         
-    float Layer::getOpacity() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _opacity;
-    }
-    
-    void Layer::setOpacity(float opacity) {
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _opacity = std::max(0.0f, std::min(1.0f, opacity));
-        }
-        refresh();
-    }
-    
     void Layer::update(const std::shared_ptr<CullState>& cullState) {
         // Load data
         loadData(cullState);
@@ -137,9 +129,9 @@ namespace carto {
         _lastCullState(),
         _updatePriority(0),
         _cullDelay(DEFAULT_CULL_DELAY),
+        _opacity(1.0f),
         _visible(true),
         _visibleZoomRange(0, std::numeric_limits<float>::infinity()),
-        _opacity(1.0f),
         _mutex(),
         _surfaceCreated(false)
     {

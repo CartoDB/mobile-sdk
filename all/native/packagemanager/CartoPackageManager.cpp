@@ -5,6 +5,7 @@
 #include "components/Exceptions.h"
 #include "components/LicenseManager.h"
 #include "projections/EPSG3857.h"
+#include "packagemanager/handlers/PackageHandlerFactory.h"
 #include "vectortiles/utils/CartoAssetPackageUpdater.h"
 #include "utils/MemoryAssetPackage.h"
 #include "utils/GeneralUtils.h"
@@ -47,17 +48,19 @@ namespace carto {
         PackageSource packageSource = ResolveSource(source);
 
         std::string baseURL;
-        if (packageSource.type == "map") {
-            baseURL = MAP_PACKAGE_LIST_URL + NetworkUtils::URLEncode(packageSource.id) + "/2/packages.json";
-        }
-        else if (packageSource.type == "routing") {
-            baseURL = ROUTING_PACKAGE_LIST_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/packages.json";
-        }
-        else if (packageSource.type == "geocoding") {
-            baseURL = GEOCODING_PACKAGE_LIST_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/packages.json";
-        }
-        else {
-            Log::Errorf("CartoPackageManager: Illegal package type: %s", packageSource.type.c_str());
+        switch (packageSource.type) {
+        case PackageType::PACKAGE_TYPE_MAP:
+            baseURL = NetworkUtils::CreateServiceURL(MAP_PACKAGE_LIST_TEMPLATE, packageSource.id);
+            break;
+        case PackageType::PACKAGE_TYPE_ROUTING:
+        case PackageType::PACKAGE_TYPE_VALHALLA_ROUTING:
+            baseURL = NetworkUtils::CreateServiceURL(ROUTING_PACKAGE_LIST_TEMPLATE, packageSource.id);
+            break;
+        case PackageType::PACKAGE_TYPE_GEOCODING:
+            baseURL = NetworkUtils::CreateServiceURL(GEOCODING_PACKAGE_LIST_TEMPLATE, packageSource.id);
+            break;
+        default:
+            Log::Errorf("CartoPackageManager: Failed to resolve source: %s", source.c_str());
             return "";
         }
 
@@ -171,24 +174,26 @@ namespace carto {
             }
 
             // Configure service URL
-            std::string baseURL;
-            PackageType::PackageType packageType = PackageType::PACKAGE_TYPE_MAP;
-            if (packageSource.type == "map") {
-                baseURL = CUSTOM_MAP_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".mbtiles";
-                packageType = PackageType::PACKAGE_TYPE_MAP;
-            }
-            else if (packageSource.type == "routing") {
-                baseURL = CUSTOM_ROUTING_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".vtiles";
-                packageType = PackageType::PACKAGE_TYPE_VALHALLA_ROUTING;
-            }
-            else if (packageSource.type == "geocoding") {
-                baseURL = CUSTOM_GEOCODING_BBOX_PACKAGE_URL + NetworkUtils::URLEncode(packageSource.id) + "/1/" + NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) + ".nutigeodb";
-                packageType = PackageType::PACKAGE_TYPE_GEOCODING;
-            }
-            else {
-                Log::Errorf("CartoPackageManager: Illegal package type: %s", packageSource.type.c_str());
+            std::string baseURLTemplate;
+            switch (packageSource.type) {
+            case PackageType::PACKAGE_TYPE_MAP:
+                baseURLTemplate = NetworkUtils::CreateServiceURL(CUSTOM_MAP_BBOX_PACKAGE_TEMPLATE, packageSource.id);
+                break;
+            case PackageType::PACKAGE_TYPE_ROUTING:
+            case PackageType::PACKAGE_TYPE_VALHALLA_ROUTING:
+                baseURLTemplate = NetworkUtils::CreateServiceURL(CUSTOM_ROUTING_BBOX_PACKAGE_TEMPLATE, packageSource.id);
+                packageSource.type = PackageType::PACKAGE_TYPE_VALHALLA_ROUTING; // kind of hack, we currently only support Valhalla custom extracts
+                break;
+            case PackageType::PACKAGE_TYPE_GEOCODING:
+                baseURLTemplate = NetworkUtils::CreateServiceURL(CUSTOM_GEOCODING_BBOX_PACKAGE_TEMPLATE, packageSource.id);
+                break;
+            default:
+                Log::Errorf("CartoPackageManager: Failed to resolve source: %s", _source.c_str());
                 return std::shared_ptr<PackageInfo>();
             }
+
+            std::map<std::string, std::string> tagValues = { { "tilemask", NetworkUtils::URLEncode(tileMask->getURLSafeStringValue()) } };
+            std::string baseURL = GeneralUtils::ReplaceTags(baseURLTemplate, tagValues, "{", "}", true);
 
             std::map<std::string, std::string> params;
             params["deviceId"] = PlatformUtils::GetDeviceId();
@@ -203,7 +208,7 @@ namespace carto {
             // Create package info
             auto packageInfo = std::make_shared<PackageInfo>(
                 packageId,
-                packageType,
+                packageSource.type,
                 version,
                 0,
                 url,
@@ -288,26 +293,37 @@ namespace carto {
     }
 
     CartoPackageManager::PackageSource CartoPackageManager::ResolveSource(const std::string& source) {
-        PackageSource packageSource("map", source);
+        if (source.find("://") != std::string::npos) {
+            return PackageSource(PackageHandlerFactory::DetectPackageType(source), source);
+        }
+
         std::string::size_type pos = source.find(':');
         if (pos != std::string::npos) {
-            packageSource.type = source.substr(0, pos);
-            packageSource.id = source.substr(pos + 1);
+            std::string type = source.substr(0, pos);
+            std::string realSource = source.substr(pos + 1);
+            if (type == "map") {
+                return PackageSource(PackageType::PACKAGE_TYPE_MAP, realSource);
+            } else if (type == "routing") {
+                return PackageSource(PackageType::PACKAGE_TYPE_ROUTING, realSource); // Note: we do not differentiate between Valhalla/legacy routing here
+            } else if (type == "geocoding") {
+                return PackageSource(PackageType::PACKAGE_TYPE_GEOCODING, realSource);
+            }
+            Log::Errorf("CartoPackageManager::ResolveSource: Unsupported type: %s", type.c_str());
         }
-        return packageSource;
+        return PackageSource(PackageType::PACKAGE_TYPE_MAP, source);
     }
 
-    const std::string CartoPackageManager::MAP_PACKAGE_LIST_URL = "http://mobile-api.carto.com/mappackages/v2/";
+    const std::string CartoPackageManager::MAP_PACKAGE_LIST_TEMPLATE = "http://mobile-api.carto.com/mappackages/v2/{source}/2/packages.json";
 
-    const std::string CartoPackageManager::ROUTING_PACKAGE_LIST_URL = "http://mobile-api.carto.com/routepackages/v2/";
+    const std::string CartoPackageManager::ROUTING_PACKAGE_LIST_TEMPLATE = "http://mobile-api.carto.com/routepackages/v2/{source}/1/packages.json";
 
-    const std::string CartoPackageManager::GEOCODING_PACKAGE_LIST_URL = "http://mobile-api.carto.com/geocodepackages/v2/";
+    const std::string CartoPackageManager::GEOCODING_PACKAGE_LIST_TEMPLATE = "http://mobile-api.carto.com/geocodepackages/v2/{source}/1/packages.json";
 
-    const std::string CartoPackageManager::CUSTOM_MAP_BBOX_PACKAGE_URL = "http://mobile-api.carto.com/maparea/v2/";
+    const std::string CartoPackageManager::CUSTOM_MAP_BBOX_PACKAGE_TEMPLATE = "http://mobile-api.carto.com/maparea/v2/{source}/1/{tilemask}.mbtiles";
 
-    const std::string CartoPackageManager::CUSTOM_ROUTING_BBOX_PACKAGE_URL = "http://mobile-api.carto.com/routearea/v2/";
+    const std::string CartoPackageManager::CUSTOM_ROUTING_BBOX_PACKAGE_TEMPLATE = "http://mobile-api.carto.com/routearea/v2/{source}/1/{tilemask}.vtiles";
 
-    const std::string CartoPackageManager::CUSTOM_GEOCODING_BBOX_PACKAGE_URL = "http://mobile-api.carto.com/geocodearea/v2/";
+    const std::string CartoPackageManager::CUSTOM_GEOCODING_BBOX_PACKAGE_TEMPLATE = "http://mobile-api.carto.com/geocodearea/v2/{source}/1/{tilemask}.nutigeodb";
 
     const unsigned int CartoPackageManager::MAX_CUSTOM_BBOX_PACKAGE_TILES = 250000;
 

@@ -32,7 +32,7 @@ namespace carto {
         virtual std::shared_ptr<RoutingResult> calculateRoute(const std::shared_ptr<RoutingRequest>& request) const;
 
     protected:
-        static const std::string ROUTING_SERVICE_URL;
+        static const std::string ROUTING_SERVICE_TEMPLATE;
 
         const std::string _source;
     };

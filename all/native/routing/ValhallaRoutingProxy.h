@@ -24,6 +24,7 @@ namespace carto {
     
     class ValhallaRoutingProxy {
     public:
+        static std::shared_ptr<RouteMatchingResult> MatchRoute(const std::string& baseURL, const std::string& profile, const std::shared_ptr<RouteMatchingRequest>& request);
         static std::shared_ptr<RouteMatchingResult> MatchRoute(const std::vector<std::shared_ptr<sqlite3pp::database> >& databases, const std::string& profile, const std::shared_ptr<RouteMatchingRequest>& request);
 
         static std::shared_ptr<RoutingResult> CalculateRoute(const std::string& baseURL, const std::string& profile, const std::shared_ptr<RoutingRequest>& request);

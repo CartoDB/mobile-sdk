@@ -99,6 +99,9 @@ namespace carto {
                 
                 // Get view state
                 const ViewState& viewState = mapRenderer->getViewState();
+                if (viewState.getWidth() <= 0 || viewState.getHeight() <= 0) {
+                    continue;
+                }
                 
                 // Check if view state has changed
                 if (_firstCull || viewState.getModelviewProjectionMat() != _viewState.getModelviewProjectionMat()) {

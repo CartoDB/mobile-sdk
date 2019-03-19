@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 import argparse
 from build.sdk_build_utils import *
@@ -13,7 +14,7 @@ ANDROID_TOOLCHAINS = {
   'mips64':      'mips64el-linux-android'
 }
 
-ANDROID_ABIS = ANDROID_TOOLCHAINS.keys()
+ANDROID_ABIS = list(ANDROID_TOOLCHAINS.keys())
 
 def javac(args, dir, *cmdArgs):
   return execute(args.javac, dir, *cmdArgs)
@@ -97,7 +98,7 @@ def buildAndroidJAR(args):
     return False
   if makedirs(distDir) and \
      copyfile('%s/carto-mobile-sdk.jar' % buildDir, '%s/carto-mobile-sdk.jar' % distDir):
-    print "Output available in:\n%s" % distDir
+    print("Output available in:\n%s" % distDir)
     return True
   return False
 
@@ -116,7 +117,7 @@ def buildAndroidAAR(args):
   if makedirs(distDir) and \
      copyfile('%s/outputs/aar/android-aar-%s.aar' % (buildDir, args.configuration.lower()), '%s/carto-mobile-sdk-%s.aar' % (distDir, version)):
     zip(args, '%s/scripts/android-aar/src/main' % baseDir, '%s/carto-mobile-sdk-%s.aar' % (distDir, version), 'R.txt')
-    print "Output available in:\n%s" % distDir
+    print("Output available in:\n%s" % distDir)
     return True
   return False
 
@@ -143,8 +144,8 @@ if 'all' in args.androidabi or args.androidabi == []:
 if args.androidsdkpath == 'auto':
   args.androidsdkpath = os.environ.get('ANDROID_HOME', None)
   if args.androidsdkpath is None:
-    print "ANDROID_HOME variable not set"
-    exit(-1)
+    print("ANDROID_HOME variable not set")
+    sys.exit(-1)
 if args.androidndkpath == 'auto':
   args.androidndkpath = os.environ.get('ANDROID_NDK_HOME', None)
   if args.androidndkpath is None:
@@ -152,12 +153,28 @@ if args.androidndkpath == 'auto':
 args.defines += ';' + getProfile(args.profile).get('defines', '')
 args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
 
+if not checkExecutable(args.cmake, '--help'):
+  print('Failed to find CMake executable. Use --cmake to specify its location')
+  sys.exit(-1)
+
+if not checkExecutable(args.javac, '-help'):
+  print('Failed to find javac executable. Use --javac to specify its location')
+  sys.exit(-1)
+
+if args.buildaar:
+  if not checkExecutable(args.zip, '-h'):
+    print('Failed to find zip executable. Use --zip to specify its location')
+    sys.exit(-1)
+  if not checkExecutable(args.gradle, '--help'):
+    print('Failed to find gradle executable. Use --gradle to specify its location')
+    sys.exit(-1)
+
 for abi in args.androidabi:
   if not buildAndroidSO(args, abi):
-    exit(-1)
+    sys.exit(-1)
 if not buildAndroidJAR(args):
-  exit(-1)
+  sys.exit(-1)
 
 if args.buildaar:
   if not buildAndroidAAR(args):
-    exit(-1)
+    sys.exit(-1)
