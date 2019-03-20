@@ -1,3 +1,31 @@
+CARTO Mobile SDK 4.1.6
+-------------------
+
+This update includes performance and stability improvements,
+bug fixes and some minor new features. A new routing engine is introduced 
+as an experimental feature.
+
+### New features:
+
+* Added experimental indoor routing support via SGREOfflineRoutingService class.
+
+
+### Fixes/changes:
+
+* A reworked implementation of HTTP connection worker for iOS that fixes airplane mode switching issues.
+* ValhallaOnlineRoutingService now connects to MapBox online service instead of defunct MapZen online service
+* Added matchRoute method to ValhallaOnlineRoutingServices
+* Added 'wheelchair' routing profile support for Valhalla routing services
+* Optimized MBTilesTileDataSource constructor with no explicit minZoom and maxZoom arguments, zoom range is now read first from 'metadata' table. If this fails, full table scan is performed.
+* getDataExtent method of MBTilesTileDataSource is now more robust for bad values in 'metadata' table
+* GeometryCollectionStyle can now be used when importing FeatureCollection consisting of normal points, lines, polygons to LocalVectorDataSource
+* Fixed OrderedTileDataSource getMaxZoom method implementation
+* AssetPackage class can now be subclassed from applications
+* SDK now handles empty vector tiles as a general case, renders them with background color, not as transparent tiles. 
+* Compatibility fix for CartoOnlineVectorTileDataSource by handling 404 code according to server changes (display empty ground tile)
+* Added missing header to iOS umbrella header (NTCombinedTileDataSource.h)
+
+
 CARTO Mobile SDK 4.1.4
 -------------------
 
