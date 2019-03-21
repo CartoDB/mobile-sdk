@@ -12,7 +12,6 @@
 #include "utils/Const.h"
 
 #include <vt/Label.h>
-#include <vt/LabelCuller.h>
 #include <vt/TileTransformer.h>
 #include <vt/GLTileRenderer.h>
 #include <vt/GLExtensions.h>
@@ -40,7 +39,6 @@ namespace carto {
         _mapRenderer(mapRenderer),
         _tileTransformer(tileTransformer),
         _glRenderer(),
-        _glRendererMutex(std::make_shared<std::mutex>()),
         _interactionMode(false),
         _subTileBlending(true),
         _labelOrder(0),
@@ -119,7 +117,7 @@ namespace carto {
             }
         };
         _glRenderer = std::shared_ptr<vt::GLTileRenderer>(
-            new vt::GLTileRenderer(_glRendererMutex, std::make_shared<vt::GLExtensions>(), _tileTransformer, lightingShader2D, lightingShader3D, Const::WORLD_SIZE), glRendererDeleter
+            new vt::GLTileRenderer(std::make_shared<vt::GLExtensions>(), _tileTransformer, lightingShader2D, lightingShader3D, Const::WORLD_SIZE), glRendererDeleter
         );
         _glRenderer->initializeRenderer();
         _tiles.clear();
@@ -208,22 +206,16 @@ namespace carto {
     }
     
     bool TileRenderer::cullLabels(const ViewState& viewState) {
-        cglib::mat4x4<double> modelViewMat = viewState.getModelviewMat();
-        std::vector<std::shared_ptr<vt::Label> > visibleLabels;
+        std::shared_ptr<vt::GLTileRenderer> glRenderer;
         {
             std::lock_guard<std::mutex> lock(_mutex);
-
-            if (!_glRenderer) {
-                return false;
-            }
-
-            modelViewMat = modelViewMat * cglib::translate4_matrix(cglib::vec3<double>(_horizontalLayerOffset, 0, 0));
-            visibleLabels = _glRenderer->getVisibleLabels();
+            glRenderer = _glRenderer;
         }
 
-        vt::LabelCuller culler(_glRendererMutex, _tileTransformer, Const::WORLD_SIZE);
-        culler.setViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution());
-        culler.process(visibleLabels);
+        if (!glRenderer) {
+            return false;
+        }
+        glRenderer->cullLabels();
         return true;
     }
     
