@@ -6,6 +6,7 @@
 !proxy_imports(carto::CullState, core.MapEnvelope, core.MapPos, graphics.ViewState, projections.Projection)
 
 %{
+#include "components/Exceptions.h"
 #include "renderers/components/CullState.h"
 #include <memory>
 %}
@@ -21,6 +22,7 @@
 !shared_ptr(carto::CullState, renderers.components.CullState)
 
 %attributeval(carto::CullState, carto::ViewState, ViewState, getViewState)
+%std_exceptions(carto::CullState::getProjectionEnvelope)
 %ignore carto::CullState::getEnvelope;
 !standard_equals(carto::CullState);
 

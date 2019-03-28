@@ -28,7 +28,9 @@ namespace carto {
     }
     
     std::vector<NMLModelLODTreeDataSource::MapTile> OnlineNMLModelLODTreeDataSource::loadMapTiles(const std::shared_ptr<CullState>& cullState) {
-        MapBounds bounds(_projection->fromInternal(cullState->getEnvelope().getBounds().getMin()), _projection->fromInternal(cullState->getEnvelope().getBounds().getMax()));
+        MapBounds bounds;
+        bounds.expandToContain(_projection->fromInternal(cullState->getEnvelope().getBounds().getMin()));
+        bounds.expandToContain(_projection->fromInternal(cullState->getEnvelope().getBounds().getMax()));
     
         std::map<std::string, std::string> urlParams;
         urlParams["q"] = "MapTiles";

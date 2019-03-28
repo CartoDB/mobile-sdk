@@ -32,10 +32,10 @@ namespace carto {
     
         /**
          * Returns an envelope for the visible area in given projection coordinates.
-         * @param proj The projection for the envelope
+         * @param projection The projection for the envelope
          * @return The envelope for the visible area in the coordinate system of the given projection.
          */
-        MapEnvelope getProjectionEnvelope(const std::shared_ptr<Projection>& proj) const;
+        MapEnvelope getProjectionEnvelope(const std::shared_ptr<Projection>& projection) const;
         /**
          * Returns an envelope for the visible area.
          * @return The envelope for the visible area in the internal coordinate system.
