@@ -49,6 +49,7 @@ def buildAndroidSO(args, abi):
   print('Using API-%d for 32-bit builds, API-%d for 64-bit builds' % (api32, api64))
 
   if not cmake(args, buildDir, options + [
+    '-G', 'Unix Makefiles',
     '-DCMAKE_SYSTEM_NAME=Android',
     "-DCMAKE_ANDROID_NDK='%s'" % args.androidndkpath,
     "-DCMAKE_ANDROID_NDK_TOOLCHAIN_VERSION='%s'" % (args.compiler[4:] if args.compiler.startswith('gcc-') else args.compiler),
@@ -56,6 +57,7 @@ def buildAndroidSO(args, abi):
     "-DCMAKE_ANDROID_STL_TYPE='%s'" % ('c++_static' if args.compiler.startswith('clang') else 'gnustl_static'),
     "-DCMAKE_SYSTEM_VERSION='%d'" % (api64 if '64' in abi else api32),
     '-DCMAKE_BUILD_TYPE=%s' % args.configuration,
+    "-DCMAKE_MAKE_PROGRAM='%s'" % args.make,
     '-DWRAPPER_DIR=%s' % ('%s/generated/android-java/wrappers' % baseDir),
     '-DSDK_CPP_DEFINES=%s' % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
@@ -142,6 +144,7 @@ parser.add_argument('--defines', dest='defines', default='', help='Defines for c
 parser.add_argument('--javac', dest='javac', default='javac', help='Java compiler executable')
 parser.add_argument('--jar', dest='jar', default='jar', help='Jar executable')
 parser.add_argument('--zip', dest='zip', default='zip', help='Zip executable')
+parser.add_argument('--make', dest='make', default='make', help='Make executable')
 parser.add_argument('--cmake', dest='cmake', default='cmake', help='CMake executable')
 parser.add_argument('--cmake-options', dest='cmakeoptions', default='', help='CMake options')
 parser.add_argument('--gradle', dest='gradle', default='gradle', help='Gradle executable')
@@ -167,6 +170,10 @@ args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
 
 if not checkExecutable(args.cmake, '--help'):
   print('Failed to find CMake executable. Use --cmake to specify its location')
+  sys.exit(-1)
+
+if not checkExecutable(args.make, '--help'):
+  print('Failed to find make executable. Use --make to specify its location')
   sys.exit(-1)
 
 if not checkExecutable(args.javac, '-help'):
