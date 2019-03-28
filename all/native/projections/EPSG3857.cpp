@@ -14,14 +14,6 @@ namespace carto {
     EPSG3857::~EPSG3857() {
     }
         
-    double EPSG3857::fromInternalScale(double size) const {
-        return size / METERS_TO_INTERNAL_EQUATOR;
-    }
-        
-    double EPSG3857::toInternalScale(double meters) const {
-        return meters * METERS_TO_INTERNAL_EQUATOR;
-    }
-        
     MapPos EPSG3857::fromInternal(const MapPos& mapPosInternal) const {
         return MapPos(mapPosInternal.getX() / METERS_TO_INTERNAL_EQUATOR, mapPosInternal.getY() / METERS_TO_INTERNAL_EQUATOR, mapPosInternal.getZ() / METERS_TO_INTERNAL_EQUATOR);
     }

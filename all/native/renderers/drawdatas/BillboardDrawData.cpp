@@ -232,7 +232,7 @@ namespace carto {
         // If size was given in meters, calculate the approximate internal size
         if (scalingMode == BillboardScaling::BILLBOARD_SCALING_WORLD_SIZE) {
             // Don't account for the projection distortion, calculate size at the equator
-            _size = static_cast<float>(projection.toInternalScale(_size));
+            _size = static_cast<float>(_size * Const::WORLD_SIZE / Const::EARTH_CIRCUMFERENCE);
         }
         
         float left = ((-_anchorPointX - 1.0f) * 0.5f * _size + _horizontalOffset);

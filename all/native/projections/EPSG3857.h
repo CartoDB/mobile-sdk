@@ -20,8 +20,6 @@ namespace carto {
         EPSG3857();
         virtual ~EPSG3857();
         
-        virtual double fromInternalScale(double size) const;
-        virtual double toInternalScale(double meters) const;
         virtual MapPos fromInternal(const MapPos& mapPosInternal) const;
         virtual MapPos toInternal(const MapPos& mapPos) const;
 

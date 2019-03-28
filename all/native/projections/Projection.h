@@ -26,20 +26,6 @@ namespace carto {
         virtual MapBounds getBounds() const;
         
         /**
-         * Converts internal size to meters at the equator.
-         * @param size The size in the internal coordinate system.
-         * @return The approximate size in meters at the equator.
-         */
-        virtual double fromInternalScale(double size) const = 0;
-        
-        /**
-         * Converts meters to approximate internal size at the equator.
-         * @param meters The meters at the equator.
-         * @return The approximate size in internal coordinate system.
-         */
-        virtual double toInternalScale(double meters) const = 0;
-        
-        /**
          * Transforms a position from the internal coordinate system to the coordinate system of this projection.
          * @param pos The position in the internal coordiante system.
          * @return The transformed position in the coordinate system of this projection.

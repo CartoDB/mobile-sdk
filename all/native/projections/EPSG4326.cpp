@@ -14,14 +14,6 @@ namespace carto {
     EPSG4326::~EPSG4326() {
     }
         
-    double EPSG4326::fromInternalScale(double size) const {
-        return size / UNITS_TO_INTERNAL * EARTH_RADIUS;
-    }
-        
-    double EPSG4326::toInternalScale(double meters) const {
-        return meters * UNITS_TO_INTERNAL / EARTH_RADIUS;
-    }
-        
     MapPos EPSG4326::fromInternal(const MapPos& mapPosInternal) const {
         double x = mapPosInternal.getX() / UNITS_TO_INTERNAL * Const::RAD_TO_DEG;
         double y = 90.0 - Const::RAD_TO_DEG * (2.0 * std::atan(std::exp(-mapPosInternal.getY() / UNITS_TO_INTERNAL)));
