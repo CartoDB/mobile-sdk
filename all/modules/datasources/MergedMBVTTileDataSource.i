@@ -1,5 +1,5 @@
-#ifndef _MergedMBVTTileDataSource_I
-#define _MergedMBVTTileDataSource_I
+#ifndef _MERGEDMBVTTILEDATASOURCE_I
+#define _MERGEDMBVTTILEDATASOURCE_I
 
 %module(directors="1") MergedMBVTTileDataSource
 

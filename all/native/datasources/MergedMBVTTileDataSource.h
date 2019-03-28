@@ -4,8 +4,8 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_MergedMBVTTileDataSource_H_
-#define _CARTO_MergedMBVTTileDataSource_H_
+#ifndef _CARTO_MERGEDMBVTTILEDATASOURCE_H_
+#define _CARTO_MERGEDMBVTTILEDATASOURCE_H_
 
 #include "datasources/TileDataSource.h"
 #include "components/DirectorPtr.h"
@@ -13,13 +13,15 @@
 namespace carto {
     
     /**
-     * A tile data source that combines two MBVT/protobuf  data sources into one */
+     * A tile data source that merges two MBVT/protobuf data sources into one.
+     * It is assumed that the layer ids from the two sources are distinct.
+     */
     class MergedMBVTTileDataSource : public TileDataSource {
     public:
         /**
-         * Constructs a combined tile data source object.
-         * @param dataSource1 First data source to be combined
-         * @param dataSource2 Second ddata source to be combined
+         * Constructs a new MergedMBVTTileDataSource tile data source object.
+         * @param dataSource1 First data source to be merged
+         * @param dataSource2 Second data source to be merged
          */
         MergedMBVTTileDataSource(const std::shared_ptr<TileDataSource>& dataSource1, const std::shared_ptr<TileDataSource>& dataSource2);
         virtual ~MergedMBVTTileDataSource();
