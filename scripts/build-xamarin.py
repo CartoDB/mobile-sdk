@@ -38,6 +38,7 @@ def buildAndroidSO(args, abi):
   print('Using API-%d for 32-bit builds, API-%d for 64-bit builds' % (api32, api64))
 
   if not cmake(args, buildDir, options + [
+    '-G', 'Unix Makefiles',
     '-DCMAKE_SYSTEM_NAME=Android',
     "-DCMAKE_ANDROID_NDK='%s'" % args.androidndkpath,
     "-DCMAKE_ANDROID_NDK_TOOLCHAIN_VERSION='clang'",
@@ -45,6 +46,7 @@ def buildAndroidSO(args, abi):
     "-DCMAKE_ANDROID_STL_TYPE='c++_static'",
     "-DCMAKE_SYSTEM_VERSION='%d'" % (api64 if '64' in abi else api32),
     '-DCMAKE_BUILD_TYPE=%s' % args.configuration,
+    "-DCMAKE_MAKE_PROGRAM='%s'" % args.make,
     '-DWRAPPER_DIR=%s' % ('%s/generated/android-csharp/wrappers' % baseDir),
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
@@ -153,6 +155,7 @@ parser.add_argument('--xbuild', dest='xbuild', default='xbuild', help='Xamarin x
 parser.add_argument('--nuget', dest='nuget', default='nuget', help='nuget executable')
 parser.add_argument('--android-ndk-path', dest='androidndkpath', default='auto', help='Android NDK path')
 parser.add_argument('--android-sdk-path', dest='androidsdkpath', default='auto', help='Android SDK path')
+parser.add_argument('--make', dest='make', default='make', help='Make executable for Android')
 parser.add_argument('--cmake', dest='cmake', default='cmake', help='CMake executable')
 parser.add_argument('--cmake-options', dest='cmakeoptions', default='', help='CMake options')
 parser.add_argument('--configuration', dest='configuration', default='Release', choices=['Release', 'Debug'], help='Configuration')
@@ -186,6 +189,10 @@ args.nativeconfiguration = args.configuration
 
 if not checkExecutable(args.cmake, '--help'):
   print('Failed to find CMake executable. Use --cmake to specify its location')
+  sys.exit(-1)
+
+if args.target == 'android' and not checkExecutable(args.make, '--help'):
+  print('Failed to find make executable. Use --make to specify its location')
   sys.exit(-1)
 
 if not checkExecutable(args.xbuild, '/?'):
