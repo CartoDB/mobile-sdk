@@ -71,7 +71,6 @@ namespace carto {
         std::weak_ptr<MapRenderer> _mapRenderer;
         std::shared_ptr<vt::TileTransformer> _tileTransformer;
         std::shared_ptr<vt::GLTileRenderer> _glRenderer;
-        std::shared_ptr<std::mutex> _glRendererMutex;
         bool _interactionMode;
         bool _subTileBlending;
         int _labelOrder;
