@@ -42,8 +42,7 @@ namespace carto {
     }
     
     MapPos EPSG4326::toWgs84(const MapPos& mapPos) const {
-        double x = mapPos.getX() - (std::floor((mapPos.getX() + 180.0) / 360.0) * 360.0);
-        return MapPos(x, mapPos.getY(), mapPos.getZ());
+        return mapPos;
     }
     
     std::string EPSG4326::getName() const {

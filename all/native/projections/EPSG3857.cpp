@@ -38,10 +38,9 @@ namespace carto {
     }
     
     MapPos EPSG3857::toWgs84(const MapPos& mapPos) const {
-        double x0 = mapPos.getX() / EARTH_RADIUS * Const::RAD_TO_DEG;
-        double x1 = x0 - (std::floor((x0 + 180.0) / 360.0) * 360.0);
-        double y0 = 90.0 - Const::RAD_TO_DEG * (2.0 * std::atan(std::exp(-mapPos.getY() / EARTH_RADIUS)));
-        return MapPos(x1, y0, mapPos.getZ());
+        double x = mapPos.getX() / EARTH_RADIUS * Const::RAD_TO_DEG;
+        double y = 90.0 - Const::RAD_TO_DEG * (2.0 * std::atan(std::exp(-mapPos.getY() / EARTH_RADIUS)));
+        return MapPos(x, y, mapPos.getZ());
     }
     
     std::string EPSG3857::getName() const {
