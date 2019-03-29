@@ -131,9 +131,8 @@ namespace carto {
             return false;
         }
 
-        cglib::mat4x4<double> modelViewMat = viewState.getModelviewMat();
-        modelViewMat = modelViewMat * cglib::translate4_matrix(cglib::vec3<double>(_horizontalLayerOffset, 0, 0));
-        _glRenderer->setViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution());
+        cglib::mat4x4<double> modelViewMat = viewState.getModelviewMat() * cglib::translate4_matrix(cglib::vec3<double>(_horizontalLayerOffset, 0, 0));
+        _glRenderer->setViewState(vt::ViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution()));
         _glRenderer->setInteractionMode(_interactionMode);
         _glRenderer->setSubTileBlending(_subTileBlending);
 
@@ -207,15 +206,19 @@ namespace carto {
     
     bool TileRenderer::cullLabels(const ViewState& viewState) {
         std::shared_ptr<vt::GLTileRenderer> glRenderer;
+        cglib::mat4x4<double> modelViewMat;
         {
             std::lock_guard<std::mutex> lock(_mutex);
+
+            if (!_glRenderer) {
+                return false;
+            }
+
             glRenderer = _glRenderer;
+            modelViewMat = viewState.getModelviewMat() * cglib::translate4_matrix(cglib::vec3<double>(_horizontalLayerOffset, 0, 0));
         }
 
-        if (!glRenderer) {
-            return false;
-        }
-        glRenderer->cullLabels();
+        glRenderer->cullLabels(vt::ViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution()));
         return true;
     }
     
