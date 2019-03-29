@@ -328,11 +328,11 @@ namespace carto {
 
         // Note: we use simple longitude/latitude tesselation scheme. Recursive tetrahedra-based surface would contain fewer vertexCount but produces texture artifacts near poles
         for (int j = 0; j <= tesselateV; j++) {
-            float t = 1.0f - 1.0f * j / tesselateV;
             double v = Const::PI * (static_cast<double>(j) / tesselateV - 0.5);
+            float t = 0.5f * std::log((1.0f + std::sin(v)) / (1.0f - std::sin(v))) / static_cast<float>(Const::PI);
             for (int i = 0; i <= tesselateU; i++) {
-                float s = 2.0f * i / tesselateU;
                 double u = 2.0 * Const::PI * (static_cast<double>(i < tesselateU ? i : 0) / tesselateU - 0.5);
+                float s = 2.0f * i / tesselateU;
 
                 double x = std::cos(u) * std::cos(v);
                 double y = std::sin(u) * std::cos(v);
