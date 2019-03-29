@@ -400,16 +400,15 @@ namespace carto {
                 if (_projectionSurface) {
                     focusPosInternal = _projectionSurface->calculateMapPos(_focusPos);
                 }
+
+                double sin = std::sin(-_rotation * Const::DEG_TO_RAD);
+                double cos = std::cos(-_rotation * Const::DEG_TO_RAD);
+
                 _focusPos = projectionSurface->calculatePosition(focusPosInternal);
-
-                double sin = std::sin(_rotation * Const::DEG_TO_RAD);
-                double cos = std::cos(_rotation * Const::DEG_TO_RAD);
-
-                // TODO: test this
                 _cameraPos = _focusPos + projectionSurface->calculateNormal(focusPosInternal);
                 _upVec = cglib::unit(projectionSurface->calculateVector(focusPosInternal, MapVec(sin, cos, 0)));
 
-                cglib::vec3<double> axis = cglib::vector_product(_cameraPos - _focusPos, _upVec);
+                cglib::vec3<double> axis = cglib::vector_product(_focusPos - _cameraPos, _upVec);
                 if (cglib::length(axis) != 0) {
                     cglib::mat4x4<double> transform = cglib::rotate4_matrix(axis, (90 - _tilt) * Const::DEG_TO_RAD);
                     _cameraPos = _focusPos + cglib::transform_vector(_cameraPos - _focusPos, transform);
