@@ -113,38 +113,29 @@ namespace carto {
         const cglib::mat4x4<float>& rteMVPMat = viewState.getRTEModelviewProjectionMat();
 
         // Sort draw datas
-        bool sort3D = viewState.getTilt() < 90;
-        std::sort(billboardDrawDatas.begin(), billboardDrawDatas.end(), [sort3D](const std::shared_ptr<BillboardDrawData>& drawData1, const std::shared_ptr<BillboardDrawData>& drawData2) {
+        auto distanceComparator = [](const std::shared_ptr<BillboardDrawData>& drawData1, const std::shared_ptr<BillboardDrawData>& drawData2) {
             // Sort by overlappability
             int overlapDelta = (drawData2->isHideIfOverlapped() ? 0 : 1) - (drawData1->isHideIfOverlapped() ? 0 : 1);
-            if (overlapDelta > 0) {
-                return false;
-            } else if (overlapDelta < 0) {
-                return true;
+            if (overlapDelta != 0) {
+                return overlapDelta < 0;
             }
 
             // Sort by priority
             float priorityDelta = drawData2->getPlacementPriority() - drawData1->getPlacementPriority();
-            if (priorityDelta > 0) {
-                return false;
-            } else if (priorityDelta < 0) {
-                return true;
+            if (priorityDelta != 0) {
+                return priorityDelta < 0;
             }
 
-            if (sort3D) {
-                // If in 3D, sort the distance to the camera plane
-                return drawData1->getCameraPlaneZoomDistance() < drawData2->getCameraPlaneZoomDistance();
-            } else {
-                // If in 2D, sort by z coordinate and then by the distance to the bottom of the screen
-                double zDelta = drawData2->getPos()(2) - drawData1->getPos()(2);
-                if (zDelta > 0) {
-                    return false;
-                } else if (zDelta < 0) {
-                    return true;
-                }
-                return drawData1->getScreenBottomDistance() > drawData2->getScreenBottomDistance();
+            // Sort by distance to camera plane
+            double cameraPlaneZoomDistDelta = drawData2->getCameraPlaneZoomDistance() - drawData1->getCameraPlaneZoomDistance();
+            if (cameraPlaneZoomDistDelta != 0) {
+                return cameraPlaneZoomDistDelta > 0;
             }
-        });
+
+            // Sort by the distance to the bottom of the screen
+            return drawData1->getScreenBottomDistance() > drawData2->getScreenBottomDistance();
+        };
+        std::stable_sort(billboardDrawDatas.begin(), billboardDrawDatas.end(), distanceComparator);
 
         // Calculate billboard screen coordinates, add envelopes to the tree
         {

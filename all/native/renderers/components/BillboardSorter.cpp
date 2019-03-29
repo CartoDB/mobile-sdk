@@ -32,9 +32,6 @@ namespace carto {
             return;
         }
     
-        // Calculate the world positions of the bottom screen corners, offset them by a little to avoid certain artifacts
-        bool sort3D = viewState.getTilt() < 90;
-    
         // Calculate billboard distances
         const cglib::mat4x4<double>& mvpMat = viewState.getModelviewProjectionMat();
         for (const std::shared_ptr<BillboardDrawData>& drawData : _billboardDrawDatas) {
@@ -45,39 +42,28 @@ namespace carto {
             double zoomDistance = distance * viewState.get2PowZoom() / viewState.getZoom0Distance();
             drawData->setCameraPlaneZoomDistance(zoomDistance);
     
-            if (!sort3D) {
-                // If in 2D, calculate distance from the bottom of the screen
-                cglib::vec2<float> screenPos = viewState.worldToScreen(pos);
-                drawData->setScreenBottomDistance(viewState.getHeight() - screenPos(1));
-            }
+            // Calculate distance from the bottom of the screen
+            cglib::vec2<float> screenPos = viewState.worldToScreen(pos);
+            drawData->setScreenBottomDistance(viewState.getHeight() - screenPos(1));
         }
 
-        // Billboard sorter comparator
-        auto distanceComparator = [sort3D](const std::shared_ptr<BillboardDrawData>& drawData1, const std::shared_ptr<BillboardDrawData>& drawData2) {
+        // Sort billboards
+        auto distanceComparator = [](const std::shared_ptr<BillboardDrawData>& drawData1, const std::shared_ptr<BillboardDrawData>& drawData2) {
             // First compare placement priorities
             float priorityDelta = drawData2->getPlacementPriority() - drawData1->getPlacementPriority();
-            if (priorityDelta > 0) {
-                return true;
-            } else if (priorityDelta < 0) {
-                return false;
+            if (priorityDelta != 0) {
+                return priorityDelta > 0;
             }
     
-            if (sort3D) {
-                // If in 3D, sort the distance to the camera plane
-                return drawData1->getCameraPlaneZoomDistance() > drawData2->getCameraPlaneZoomDistance();
-            } else {
-                // If in 2D, sort by z coordinate and then by the distance to the bottom of the screen
-                double zDelta = drawData2->getPos()(2) - drawData1->getPos()(2);
-                if (zDelta > 0) {
-                    return true;
-                } else if (zDelta < 0) {
-                    return false;
-                }
-                return drawData1->getScreenBottomDistance() > drawData2->getScreenBottomDistance();
+            // Sort by the distance to the camera plane
+            double cameraPlaneZoomDistDelta = drawData2->getCameraPlaneZoomDistance() - drawData1->getCameraPlaneZoomDistance();
+            if (cameraPlaneZoomDistDelta != 0) {
+                return cameraPlaneZoomDistDelta < 0;
             }
+
+            // Sort by the distance to the bottom of screen
+            return drawData1->getScreenBottomDistance() > drawData2->getScreenBottomDistance();
         };
-    
-        // Sort billboards
         std::stable_sort(_billboardDrawDatas.begin(), _billboardDrawDatas.end(), distanceComparator);
     }
     
