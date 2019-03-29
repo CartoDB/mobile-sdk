@@ -234,18 +234,18 @@ namespace carto {
             if (auto customPopup = std::dynamic_pointer_cast<CustomPopup>(element)) {
                 if (auto drawData = customPopup->getDrawData()) {
                     std::vector<float> coordBuf(12);
-                    BillboardRenderer::CalculateBillboardCoords(*drawData, viewState, coordBuf, 0);
+                    if (BillboardRenderer::CalculateBillboardCoords(*drawData, viewState, coordBuf, 0)) {
+                        cglib::vec3<double> topLeft = viewState.getCameraPos() + cglib::vec3<double>(coordBuf[0], coordBuf[1], coordBuf[2]);
+                        cglib::vec3<double> bottomLeft = viewState.getCameraPos() + cglib::vec3<double>(coordBuf[3], coordBuf[4], coordBuf[5]);
+                        cglib::vec3<double> topRight = viewState.getCameraPos() + cglib::vec3<double>(coordBuf[6], coordBuf[7], coordBuf[8]);
+                        cglib::vec3<double> delta = intersectedElement.getHitPos() - topLeft;
 
-                    cglib::vec3<double> topLeft = viewState.getCameraPos() + cglib::vec3<double>(coordBuf[0], coordBuf[1], coordBuf[2]);
-                    cglib::vec3<double> bottomLeft = viewState.getCameraPos() + cglib::vec3<double>(coordBuf[3], coordBuf[4], coordBuf[5]);
-                    cglib::vec3<double> topRight = viewState.getCameraPos() + cglib::vec3<double>(coordBuf[6], coordBuf[7], coordBuf[8]);
-                    cglib::vec3<double> delta = intersectedElement.getHitPos() - topLeft;
+                        float x = static_cast<float>(cglib::dot_product(delta, topRight - topLeft) / cglib::norm(topRight - topLeft));
+                        float y = static_cast<float>(cglib::dot_product(delta, bottomLeft - topLeft) / cglib::norm(bottomLeft - topLeft));
 
-                    float x = static_cast<float>(cglib::dot_product(delta, topRight - topLeft) / cglib::norm(topRight - topLeft));
-                    float y = static_cast<float>(cglib::dot_product(delta, bottomLeft - topLeft) / cglib::norm(bottomLeft - topLeft));
-
-                    MapPos hitPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getHitPos()));
-                    return customPopup->processClick(clickType, hitPos, ScreenPos(x, y));
+                        MapPos hitPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getHitPos()));
+                        return customPopup->processClick(clickType, hitPos, ScreenPos(x, y));
+                    }
                 }
             }
 

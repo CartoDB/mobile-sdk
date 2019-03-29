@@ -107,8 +107,12 @@ namespace carto {
         return _pos;
     }
         
-    void BillboardDrawData::setPos(const cglib::vec3<double>& pos) {
+    void BillboardDrawData::setPos(const cglib::vec3<double>& pos, const ProjectionSurface& projectionSurface) {
+        MapPos internalPos = projectionSurface.calculateMapPos(pos);
         _pos = pos;
+        _xAxis = cglib::vec3<float>::convert(projectionSurface.calculateVector(internalPos, MapVec(1, 0, 0)));
+        _yAxis = cglib::vec3<float>::convert(projectionSurface.calculateVector(internalPos, MapVec(0, 1, 0)));
+        _zAxis = cglib::vec3<float>::convert(projectionSurface.calculateVector(internalPos, MapVec(0, 0, 1)));
     }
 
     const cglib::vec3<float>& BillboardDrawData::getXAxis() const {

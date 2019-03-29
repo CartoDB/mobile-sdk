@@ -68,7 +68,7 @@ namespace carto {
         float getPlacementPriority() const;
     
         const cglib::vec3<double>& getPos() const;
-        void setPos(const cglib::vec3<double>& pos); // Used for setting label position, when it's attached to another billboards
+        void setPos(const cglib::vec3<double>& pos, const ProjectionSurface& projectionSurface); // Used for setting label position, when it's attached to another billboards
         const cglib::vec3<float>& getXAxis() const;
         const cglib::vec3<float>& getYAxis() const;
         const cglib::vec3<float>& getZAxis() const;

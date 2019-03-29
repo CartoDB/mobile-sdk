@@ -40,10 +40,13 @@ namespace carto {
         }
     }
     
-    void BillboardRenderer::CalculateBillboardCoords(const BillboardDrawData& drawData, const ViewState& viewState,
+    bool BillboardRenderer::CalculateBillboardCoords(const BillboardDrawData& drawData, const ViewState& viewState,
                                                      std::vector<float>& coordBuf, int drawDataIndex, float sizeScale)
     {
         cglib::vec3<float> translate = cglib::vec3<float>::convert(drawData.getPos() - viewState.getCameraPos());
+        if (cglib::dot_product(drawData.getZAxis(), translate) > 0) {
+            return false;
+        }
         
         const std::array<cglib::vec2<float>, 4>& coords = drawData.getCoords();
         for (int i = 0; i < 4; i++) {
@@ -79,6 +82,7 @@ namespace carto {
             coordBuf[coordIndex + 1] = x * xAxis(1) + y * yAxis(1) + translate(1);
             coordBuf[coordIndex + 2] = x * xAxis(2) + y * yAxis(2) + translate(2);
         }
+        return true;
     }
     
     BillboardRenderer::BillboardRenderer() :
@@ -278,11 +282,16 @@ namespace carto {
             std::shared_ptr<BillboardDrawData> drawData = element->getDrawData();
 
             // Don't detect clicks on overlapping billboards that are hidden or removed elements
-            if (drawData->getRenderer().lock() != shared_from_this() || (drawData->isHideIfOverlapped() && drawData->isOverlapping())) {
+            if (drawData->getRenderer().lock() != shared_from_this()) {
+                continue;
+            }
+            if (drawData->getTransition() == 0) {
                 continue;
             }
     
-            CalculateBillboardCoords(*drawData, viewState, coordBuf, 0, drawData->getClickScale());
+            if (!CalculateBillboardCoords(*drawData, viewState, coordBuf, 0, drawData->getClickScale())) {
+                continue;
+            }
             cglib::vec3<double> originShift = viewState.getCameraPos();
             cglib::vec3<double> topLeft = cglib::vec3<double>(coordBuf[0], coordBuf[1], coordBuf[2]) + originShift;
             cglib::vec3<double> bottomLeft = cglib::vec3<double>(coordBuf[3], coordBuf[4], coordBuf[5]) + originShift;
@@ -350,7 +359,9 @@ namespace carto {
             
             // Calculate coordinates
             float relativeSize = AnimationStyle::CalculateTransition(drawData->getAnimationStyle() ? drawData->getAnimationStyle()->getSizeAnimationType() : AnimationType::ANIMATION_TYPE_NONE, drawData->getTransition());
-            CalculateBillboardCoords(*drawData, viewState, coordBuf, drawDataIndex, relativeSize);
+            if (!CalculateBillboardCoords(*drawData, viewState, coordBuf, drawDataIndex, relativeSize)) {
+                continue;
+            }
             
             // Billboards with ground orientation (like some texts) have to be flipped to readable
             bool flip = false;
@@ -460,7 +471,9 @@ namespace carto {
 
         // Calculate delta, update position
         cglib::vec3<float> delta = xAxis * labelAnchorVec(0) + yAxis * labelAnchorVec(1);
-        drawData->setPos(baseBillboardPos + cglib::vec3<double>::convert(delta));
+        if (std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface()) {
+            drawData->setPos(baseBillboardPos + cglib::vec3<double>::convert(delta), *projectionSurface);
+        }
         return true;
     }
         

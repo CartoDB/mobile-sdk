@@ -162,7 +162,9 @@ namespace carto {
             }
 
             // Calculate billboard world coordinates
-            BillboardRenderer::CalculateBillboardCoords(*drawData, viewState, coordBuf, 0);
+            if (!BillboardRenderer::CalculateBillboardCoords(*drawData, viewState, coordBuf, 0)) {
+                continue;
+            }
 
             // Transform the world coordinates to screen coordinates
             cglib::vec3<float> topLeft(cglib::transform_point(cglib::vec3<float>(coordBuf[0], coordBuf[1], coordBuf[2]), rteMVPMat));

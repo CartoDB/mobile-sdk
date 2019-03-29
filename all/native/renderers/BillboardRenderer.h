@@ -35,7 +35,7 @@ namespace carto {
     class BillboardRenderer : public std::enable_shared_from_this<BillboardRenderer> {
     public:
         static void CalculateBillboardAxis(const BillboardDrawData& drawData, const ViewState& viewState, cglib::vec3<float>& xAxis, cglib::vec3<float>& yAxis);
-        static void CalculateBillboardCoords(const BillboardDrawData& drawData, const ViewState& viewState, std::vector<float>& coordBuf, int drawDataIndex, float sizeScale = 1.0f);
+        static bool CalculateBillboardCoords(const BillboardDrawData& drawData, const ViewState& viewState, std::vector<float>& coordBuf, int drawDataIndex, float sizeScale = 1.0f);
         
         BillboardRenderer();
         virtual ~BillboardRenderer();
