@@ -438,6 +438,11 @@ namespace carto {
         
         // Billboard is attached to another billboard, calculate position before sorting
         cglib::vec3<double> baseBillboardPos = baseBillboardDrawData->getPos();
+        cglib::vec3<float> baseBillboardTranslate = cglib::vec3<float>::convert(baseBillboardPos - viewState.getCameraPos());
+        if (cglib::dot_product(baseBillboardDrawData->getZAxis(), baseBillboardTranslate) > 0) {
+            return false;
+        }
+
         float halfSize = baseBillboardDrawData->getSize() * 0.5f;
         cglib::vec2<float> labelAnchorVec(((drawData->getAttachAnchorPointX() - baseBillboardDrawData->getAnchorPointX()) * halfSize),
                                           ((drawData->getAttachAnchorPointY() - baseBillboardDrawData->getAnchorPointY()) / baseBillboardDrawData->getAspect() * halfSize));
@@ -470,9 +475,9 @@ namespace carto {
         CalculateBillboardAxis(*baseBillboardDrawData, viewState, xAxis, yAxis);
 
         // Calculate delta, update position
-        cglib::vec3<float> delta = xAxis * labelAnchorVec(0) + yAxis * labelAnchorVec(1);
+        cglib::vec3<double> delta = cglib::vec3<double>::convert(xAxis * labelAnchorVec(0) + yAxis * labelAnchorVec(1));
         if (std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface()) {
-            drawData->setPos(baseBillboardPos + cglib::vec3<double>::convert(delta), *projectionSurface);
+            drawData->setPos(baseBillboardPos + delta, *projectionSurface);
         }
         return true;
     }
