@@ -16,7 +16,7 @@
 #include <boost/variant.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include <utf8.h>
+#include <stdext/unistring.h>
 
 namespace carto {
     namespace queryexpressionimpl {
@@ -45,8 +45,7 @@ namespace carto {
                     break;
                 }
                 std::string str = val1.getString();
-                std::wstring wstr;
-                utf8::utf8to32(str.begin(), str.end(), std::back_inserter(wstr));
+                unistring::unistring unistr = unistring::to_unistring(str);
 
                 switch (val2.getType()) {
                 case VariantType::VARIANT_TYPE_NULL:
@@ -57,10 +56,9 @@ namespace carto {
                     break;
                 }
                 std::string re = val2.getString();
-                std::wstring wre;
-                utf8::utf8to32(re.begin(), re.end(), std::back_inserter(wre));
+                unistring::unistring unire = unistring::to_unistring(re);
 
-                return std::regex_match(wstr, std::wregex(wre));
+                return std::regex_match(unistring::to_wstring(unistr), std::wregex(unistring::to_wstring(unire)));
             }
         };
 
@@ -116,12 +114,10 @@ namespace carto {
                 }
                 if (v1.is<std::string>() && v2.is<std::string>()) {
                     std::string str1 = v1.get<std::string>();
-                    std::wstring wstr1;
-                    utf8::utf8to32(str1.begin(), str1.end(), std::back_inserter(wstr1));
+                    unistring::unistring unistr1 = unistring::to_unistring(str1);
                     std::string str2 = v2.get<std::string>();
-                    std::wstring wstr2;
-                    utf8::utf8to32(str2.begin(), str2.end(), std::back_inserter(wstr2));
-                    return Op<std::wstring>()(wstr1, wstr2);
+                    unistring::unistring unistr2 = unistring::to_unistring(str2);
+                    return Op<unistring::unistring>()(unistr1, unistr2);
                 }
                 return false;
             }
@@ -174,12 +170,9 @@ namespace carto {
             static std::shared_ptr<VariableOperand> createEx(const std::string& name, const std::string& collateSeq) { return std::make_shared<VariableOperand>(name, CollateNoCase(collateSeq) == CollateNoCase("nocase")); }
 
         private:
-            static std::string CollateNoCase(std::string str) {
-                for (std::size_t i = 0; i < str.size(); i++) {
-                    // TODO: proper unicode conversion
-                    str[i] = (str[i] >= 'A' && str[i] <= 'Z' ? str[i] - 'A' + 'a' : str[i]);
-                }
-                return str;
+            static std::string CollateNoCase(const std::string& str) {
+                unistring::unistring unistr = unistring::to_unistring(str);
+                return unistring::to_utf8string(unistring::to_upper(unistr));
             }
 
             std::string _name;

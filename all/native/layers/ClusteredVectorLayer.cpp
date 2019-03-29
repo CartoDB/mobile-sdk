@@ -637,11 +637,11 @@ namespace carto {
 
     MapPos ClusteredVectorLayer::createExpandedElementPos(RenderState& renderState) const {
         Cluster& expandedCluster = (*renderState.clusters)[renderState.expandedClusterIdx];
-        MapPos mapPos = _dataSource->getProjection()->toInternal(expandedCluster.transitionPos);
+        MapPos internalPos = _dataSource->getProjection()->toInternal(expandedCluster.transitionPos);
         double angle = Const::PI * 2 * renderState.totalExpanded++ / expandedCluster.elementCount;
         double dist = expandedCluster.expandPx * renderState.pixelMeasure;
-        // TODO: not uniform across screen
-        return _dataSource->getProjection()->fromInternal(mapPos + MapVec(std::cos(angle), std::sin(angle)) * dist);
+        // Note: not uniform across screen, approximation
+        return _dataSource->getProjection()->fromInternal(internalPos + MapVec(std::cos(angle), std::sin(angle)) * dist);
     }
 
     void ClusteredVectorLayer::StoreVectorElements(int clusterIdx, const std::vector<Cluster>& clusters, std::vector<std::shared_ptr<VectorElement> >& elements) {
