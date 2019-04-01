@@ -39,6 +39,7 @@ namespace carto {
         _mapRenderer(mapRenderer),
         _tileTransformer(tileTransformer),
         _glRenderer(),
+        _firstDraw(false),
         _interactionMode(false),
         _subTileBlending(true),
         _labelOrder(0),
@@ -120,6 +121,7 @@ namespace carto {
             new vt::GLTileRenderer(std::make_shared<vt::GLExtensions>(), _tileTransformer, lightingShader2D, lightingShader3D, Const::WORLD_SIZE), glRendererDeleter
         );
         _glRenderer->initializeRenderer();
+        _firstDraw = true;
         _tiles.clear();
         GLContext::CheckGLError("TileRenderer::onSurfaceCreated");
     }
@@ -136,11 +138,18 @@ namespace carto {
         _glRenderer->setInteractionMode(_interactionMode);
         _glRenderer->setSubTileBlending(_subTileBlending);
 
+        bool refresh = _firstDraw;
+        if (_firstDraw) {
+            _glRenderer->setVisibleTiles(_tiles, _horizontalLayerOffset == 0);
+            _glRenderer->cullLabels(vt::ViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution()));
+            _firstDraw = false;
+        }
+
         _lightDir = viewState.getFocusPosNormal();
 
         _glRenderer->startFrame(deltaSeconds * 3);
 
-        bool refresh = _glRenderer->renderGeometry2D();
+        refresh = _glRenderer->renderGeometry2D() || refresh;
         if (_labelOrder == 0) {
             refresh = _glRenderer->renderLabels(true, false) || refresh;
         }
@@ -236,7 +245,9 @@ namespace carto {
 
         bool changed = tiles != _tiles;
         if (changed) {
-            _glRenderer->setVisibleTiles(tiles, _horizontalLayerOffset == 0);
+            if (!_firstDraw) {
+                _glRenderer->setVisibleTiles(tiles, _horizontalLayerOffset == 0);
+            }
             _tiles = tiles;
         }
         _horizontalLayerOffset = 0;
