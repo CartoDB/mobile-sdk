@@ -21,7 +21,7 @@ Use `git submodule` to resolve all source-level dependencies
 git submodule update --init --remote --recursive
 ```
 
-Special **swig** version (swig-2.0.11-nutiteq branch) is needed for generating language-specific wrappers, this can be downloaded from https://github.com/CartoDB/swig. Clone it and compile it using usual `./configure; make` routine. Make sure build script refers to this one.
+Special **swig** version (swig-2.0.11-nutiteq branch) is needed for generating language-specific wrappers, this can be downloaded from https://github.com/CartoDB/swig. Clone it and compile it using usual `./autogen.sh; ./configure; make` routine. Make sure build script refers to this one.
 
 **Python 2.7.x** is used for build scripts
 
