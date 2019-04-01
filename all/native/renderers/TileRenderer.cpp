@@ -122,6 +122,7 @@ namespace carto {
         );
         _glRenderer->initializeRenderer();
         _firstDraw = true;
+        _horizontalLayerOffset = 0;
         _tiles.clear();
         GLContext::CheckGLError("TileRenderer::onSurfaceCreated");
     }
@@ -138,7 +139,6 @@ namespace carto {
         _glRenderer->setInteractionMode(_interactionMode);
         _glRenderer->setSubTileBlending(_subTileBlending);
 
-        bool refresh = _firstDraw;
         if (_firstDraw) {
             _glRenderer->setVisibleTiles(_tiles, _horizontalLayerOffset == 0);
             _glRenderer->cullLabels(vt::ViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution()));
@@ -149,6 +149,7 @@ namespace carto {
 
         _glRenderer->startFrame(deltaSeconds * 3);
 
+        bool refresh = false;
         refresh = _glRenderer->renderGeometry2D() || refresh;
         if (_labelOrder == 0) {
             refresh = _glRenderer->renderLabels(true, false) || refresh;
@@ -219,14 +220,15 @@ namespace carto {
         {
             std::lock_guard<std::mutex> lock(_mutex);
 
-            if (!_glRenderer) {
-                return false;
+            if (!_firstDraw) {
+                glRenderer = _glRenderer;
             }
-
-            glRenderer = _glRenderer;
             modelViewMat = viewState.getModelviewMat() * cglib::translate4_matrix(cglib::vec3<double>(_horizontalLayerOffset, 0, 0));
         }
 
+        if (!glRenderer) {
+            return false;
+        }
         glRenderer->cullLabels(vt::ViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution()));
         return true;
     }
