@@ -165,12 +165,10 @@ namespace carto {
             float coordScale = static_cast<float>(Const::WORLD_SIZE / Const::PI);
             float backgroundScale = static_cast<float>(Const::WORLD_SIZE / viewState.getCosHalfFOVXY());
             float scale = static_cast<float>(intTwoPowZoom * 0.5f / Const::HALF_WORLD_SIZE);
-            double translateOriginX = (focusPos(0) != 0 || focusPos(1) != 0 ? std::atan2(focusPos(1), focusPos(0)) / Const::PI + 1.0 : 0);
-            double translateOriginY = std::asin(std::max(-1.0, std::min(1.0, focusPos(2) / cglib::length(focusPos)))) / Const::PI + 0.5;
-            double translateX = translateOriginX * scale - 0.5 * scale * backgroundScale;
-            double translateY = translateOriginY * scale + 0.5 * scale * backgroundScale;
-            translateX -= std::floor(translateX);
-            translateY -= std::floor(translateY);
+            double focusPosS = (focusPos(0) != 0 || focusPos(1) != 0 ? std::atan2(focusPos(1), focusPos(0)) / Const::PI + 1 : 0);
+            double focusPosT = 0.5 * std::log((1 + cglib::unit(focusPos)(2)) / (1 - cglib::unit(focusPos)(2))) / Const::PI;
+            double translateS = -std::floor(focusPosS * scale * backgroundScale);
+            double translateT = -std::floor(focusPosT * scale * backgroundScale);
 
             // Build vertex array
             std::size_t vertexCount = _backgroundCoords.size();
@@ -186,8 +184,8 @@ namespace carto {
                 _backgroundVertices[i * 8 + 4] = _backgroundNormals[i](1);
                 _backgroundVertices[i * 8 + 5] = _backgroundNormals[i](2);
 
-                _backgroundVertices[i * 8 + 6] = static_cast<float>(_backgroundTexCoords[i](0) * scale * backgroundScale + translateX);
-                _backgroundVertices[i * 8 + 7] = static_cast<float>(_backgroundTexCoords[i](1) * scale * backgroundScale - translateY);
+                _backgroundVertices[i * 8 + 6] = static_cast<float>(_backgroundTexCoords[i](0) * scale * backgroundScale + translateS);
+                _backgroundVertices[i * 8 + 7] = static_cast<float>(_backgroundTexCoords[i](1) * scale * backgroundScale + translateT);
             }
 
             // Lighting
@@ -205,10 +203,10 @@ namespace carto {
             // Calculate coordinate transformation parameters
             float backgroundScale = static_cast<float>(viewState.getFar() * 2 / viewState.getCosHalfFOVXY());
             float scale = static_cast<float>(intTwoPowZoom * 0.5f / Const::HALF_WORLD_SIZE);
-            double translateX = cameraPos(0) * scale;
-            double translateY = cameraPos(1) * scale;
-            translateX -= std::floor(translateX);
-            translateY -= std::floor(translateY);
+            double translateS = cameraPos(0) * scale;
+            double translateT = cameraPos(1) * scale;
+            translateS -= std::floor(translateS);
+            translateT -= std::floor(translateT);
 
             // Build vertex array
             std::size_t vertexCount = sizeof(PLANE_COORDS) / sizeof(float) / 3;
@@ -220,8 +218,8 @@ namespace carto {
                 _backgroundVertices[i * 5 + 1] = PLANE_COORDS[i * 3 + 1] * backgroundScale;
                 _backgroundVertices[i * 5 + 2] = static_cast<float>(-cameraPos(2));
 
-                _backgroundVertices[i * 5 + 3] = static_cast<float>((PLANE_TEX_COORDS[i * 2 + 0] - 0.5f) * scale * backgroundScale + translateX);
-                _backgroundVertices[i * 5 + 4] = static_cast<float>((PLANE_TEX_COORDS[i * 2 + 1] - 0.5f) * scale * backgroundScale + translateY);
+                _backgroundVertices[i * 5 + 3] = static_cast<float>((PLANE_TEX_COORDS[i * 2 + 0] - 0.5f) * scale * backgroundScale + translateS);
+                _backgroundVertices[i * 5 + 4] = static_cast<float>((PLANE_TEX_COORDS[i * 2 + 1] - 0.5f) * scale * backgroundScale + translateT);
             }
 
             // Draw
