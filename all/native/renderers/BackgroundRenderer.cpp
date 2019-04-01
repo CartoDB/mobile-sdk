@@ -168,7 +168,7 @@ namespace carto {
             double focusPosS = (focusPos(0) != 0 || focusPos(1) != 0 ? std::atan2(focusPos(1), focusPos(0)) / Const::PI + 1 : 0);
             double focusPosT = 0.5 * std::log((1 + cglib::unit(focusPos)(2)) / (1 - cglib::unit(focusPos)(2))) / Const::PI;
             double translateS = -std::floor(focusPosS * scale * backgroundScale);
-            double translateT = -std::floor(focusPosT * scale * backgroundScale);
+            double translateT = std::isinf(focusPosT) ? 0 : -std::floor(focusPosT * scale * backgroundScale);
 
             // Build vertex array
             std::size_t vertexCount = _backgroundCoords.size();
