@@ -60,6 +60,16 @@ namespace carto {
         _a_texCoord = _shader->getAttribLoc("a_texCoord");
         _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
         _u_tex = _shader->getUniformLoc("u_tex");
+
+        // Drop elements
+        std::vector<std::shared_ptr<Point>> elements;
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            std::swap(elements, _elements);
+        }
+        for (const std::shared_ptr<Point>& element : elements) {
+            element->setDrawData(std::shared_ptr<PointDrawData>());
+        }
     }
     
     void PointRenderer::onDrawFrame(float deltaSeconds, StyleTextureCache& styleCache, const ViewState& viewState) {

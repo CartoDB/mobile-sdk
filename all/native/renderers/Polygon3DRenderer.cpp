@@ -71,6 +71,16 @@ namespace carto {
         _u_lightColor = _shader->getUniformLoc("u_lightColor");
         _u_lightDir = _shader->getUniformLoc("u_lightDir");
         _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
+
+        // Drop elements
+        std::vector<std::shared_ptr<Polygon3D>> elements;
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            std::swap(elements, _elements);
+        }
+        for (const std::shared_ptr<Polygon3D>& element : elements) {
+            element->setDrawData(std::shared_ptr<Polygon3DDrawData>());
+        }
     }
     
     void Polygon3DRenderer::onDrawFrame(float deltaSeconds, const ViewState& viewState) {

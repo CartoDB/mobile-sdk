@@ -60,6 +60,16 @@ namespace carto {
         _a_coord = _shader->getAttribLoc("a_coord");
         _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
 
+        // Drop elements
+        std::vector<std::shared_ptr<Polygon>> elements;
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            std::swap(elements, _elements);
+        }
+        for (const std::shared_ptr<Polygon>& element : elements) {
+            element->setDrawData(std::shared_ptr<PolygonDrawData>());
+        }
+
         _lineRenderer.onSurfaceCreated(shaderManager, textureManager);
     }
     
