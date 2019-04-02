@@ -92,19 +92,10 @@ namespace carto {
         _solidRenderer->onSurfaceCreated(shaderManager, textureManager);
     }
     
-    bool SolidLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter,
-                                  StyleTextureCache& styleCache,
-                                  const ViewState& viewState)
-    {
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-
-            float opacity = getOpacity();
-
-            _solidRenderer->setColor(Color(_color.getR(), _color.getG(), _color.getB(), static_cast<unsigned char>(_color.getA() * opacity)));
-            _solidRenderer->setBitmap(_bitmap, _bitmapScale);
-        }
-
+    bool SolidLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
+        Color color = getColor();
+        _solidRenderer->setColor(Color(color.getR(), color.getG(), color.getB(), static_cast<unsigned char>(color.getA() * getOpacity())));
+        _solidRenderer->setBitmap(getBitmap(), getBitmapScale());
         _solidRenderer->onDrawFrame(viewState);
         return false;
     }
