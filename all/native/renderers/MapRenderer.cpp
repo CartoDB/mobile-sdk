@@ -724,11 +724,7 @@ namespace carto {
     }
 
     void MapRenderer::setZBuffering(bool enable) {
-        if (enable) {
-            glEnable(GL_DEPTH_TEST);
-        } else {
-            glDisable(GL_DEPTH_TEST);
-        }
+        glDepthMask(enable ? GL_TRUE : GL_FALSE);
     }
 
     void MapRenderer::calculateRayIntersectedElements(const MapPos& targetPos, ViewState& viewState, std::vector<RayIntersectedElement>& results) {
@@ -837,10 +833,10 @@ namespace carto {
         // Disable dithering for better performance
         glDisable(GL_DITHER);
     
-        // Disable depth testing
-        glDisable(GL_DEPTH_TEST);
+        // Enable depth testing, disable writing
+        glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
-        glDepthMask(GL_TRUE);
+        glDepthMask(GL_FALSE);
     
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     }

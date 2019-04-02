@@ -29,6 +29,7 @@ namespace carto {
         _backgroundIndices(),
         _skyCoords(),
         _skyTexCoords(),
+        _contourCoords(),
         _shader(),
         _a_coord(0),
         _a_normal(0),
@@ -100,7 +101,8 @@ namespace carto {
             }
            _skyBitmap = skyBitmap;
         }
-    
+
+        // Draw sky and background
         if (_skyTex || _backgroundTex) {
             // Prepare for drawing
             glUseProgram(_shader->getProgId());
@@ -117,18 +119,45 @@ namespace carto {
             glEnableVertexAttribArray(_a_texCoord);
             glVertexAttrib3f(_a_normal, 0, 0, 1);
     
-            glDepthMask(GL_FALSE);
+            // Draw background and sky
             if (viewState.isSkyVisible()) {
                 drawSky(viewState);
             }
             drawBackground(viewState);
-            glDepthMask(GL_TRUE);
-    
+
             // Disable bound arrays
             glDisableVertexAttribArray(_a_coord);
             glDisableVertexAttribArray(_a_texCoord);
         }
     
+        // Draw contour, if in spherical mode. This is a fix for geometry on the back side of the sphere.
+        if (_options.getRenderProjectionMode() == RenderProjectionMode::RENDER_PROJECTION_MODE_SPHERICAL) {
+            // Prepare for drawing
+            glUseProgram(_shader->getProgId());
+            // Texture
+            glUniform1i(_u_tex, 0);
+            glActiveTexture(GL_TEXTURE0);
+            // Default lighting
+            glUniform3f(_u_lightDir, 0, 0, 1);
+            // Transformation matrix
+            const cglib::mat4x4<float>& mvpMat = viewState.getRTEModelviewProjectionMat();
+            glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, mvpMat.data());
+            // Coords, texCoords, colors
+            glEnableVertexAttribArray(_a_coord);
+            glVertexAttrib2f(_a_texCoord, 0, 0);
+            glVertexAttrib3f(_a_normal, 0, 0, 1);
+
+            glDepthMask(GL_TRUE);
+            glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+
+            drawContour(viewState);
+
+            glDepthMask(GL_FALSE);
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
+            glDisableVertexAttribArray(_a_coord);
+        }
+
         GLContext::CheckGLError("BackgroundRenderer::onDrawFrame");
     }
     
@@ -272,6 +301,19 @@ namespace carto {
         glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount);
     }
 
+    void BackgroundRenderer::drawContour(const ViewState& viewState) {
+        _contourCoords.clear();
+        if (_options.getRenderProjectionMode() == RenderProjectionMode::RENDER_PROJECTION_MODE_SPHERICAL) {
+            float coordScale = static_cast<float>(Const::WORLD_SIZE / Const::PI);
+            BuildSphereContour(_contourCoords, viewState.getCameraPos(), viewState.getUpVec(), coordScale, CONTOUR_TESSELATION_LEVELS);
+        }
+
+        // Draw
+        std::size_t vertexCount = _contourCoords.size();
+        glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 0, _contourCoords.data());
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, vertexCount);
+    }
+
     void BackgroundRenderer::BuildPlanarSky(std::vector<cglib::vec3<float> >& coords, std::vector<cglib::vec2<float> >& texCoords, const cglib::vec3<double>& cameraPos, const cglib::vec3<double>& focusPos, const cglib::vec3<double>& upVec, double height0, double height1, float coordScale) {
         cglib::vec3<double> cameraVec = focusPos - cameraPos;
 
@@ -316,6 +358,26 @@ namespace carto {
         }
     }
 
+    void BackgroundRenderer::BuildSphereContour(std::vector<cglib::vec3<float> >& coords, const cglib::vec3<double>& cameraPos, const cglib::vec3<double>& upVec, float coordScale, int tesselate) {
+        int vertexCount = (tesselate + 1) * 2;
+        coords.reserve(vertexCount);
+
+        cglib::vec3<double> axis1a = cglib::unit(cglib::vector_product(cglib::vector_product(cameraPos, upVec), cameraPos));
+        cglib::vec3<double> axis2a = cglib::unit(cglib::vector_product(cameraPos, axis1a));
+
+        cglib::vec3<double> origin = cameraPos * (coordScale * coordScale / cglib::norm(cameraPos));
+        double radius = std::sqrt(std::max(0.0, coordScale * coordScale - cglib::norm(origin)));
+
+        for (int i = 0; i <= tesselate; i++) {
+            double u = 2.0 * Const::PI * (static_cast<double>(i < tesselate ? i : 0) / tesselate - 0.5);
+            double x = std::cos(u);
+            double y = std::sin(u);
+
+            coords.emplace_back(cglib::vec3<float>::convert(origin - cameraPos));
+            coords.emplace_back(cglib::vec3<float>::convert((axis1a * x + axis2a * y) * radius + origin - cameraPos));
+        }
+    }
+    
     void BackgroundRenderer::BuildSphereSurface(std::vector<cglib::vec3<double> >& coords, std::vector<cglib::vec3<float> >& normals, std::vector<cglib::vec2<float> >& texCoords, std::vector<unsigned short>& indices, int tesselateU, int tesselateV) {
         int vertexCount = (tesselateU + 1) * (tesselateV + 1);
         int indexCount = 6 * tesselateU * tesselateV;
@@ -358,7 +420,7 @@ namespace carto {
             }
         }
     }
-    
+
     const float BackgroundRenderer::SKY_SCALE_MULTIPLIER_PLANAR = 2.0f / std::sqrt(3.0f);
     const float BackgroundRenderer::SKY_RELATIVE_HEIGHT_PLANAR[] = { -0.02f, 0.06f };
     const float BackgroundRenderer::SKY_HEIGHT_RAMP_PLANAR[] = { 40.0f, -18.0f };

@@ -88,7 +88,7 @@ namespace carto {
         }
         
         // Enable depth test
-        glEnable(GL_DEPTH_TEST);
+        glDepthMask(GL_TRUE);
     
         // Prepare for drawing
         glUseProgram(_shader->getProgId());
@@ -121,7 +121,7 @@ namespace carto {
         drawBatch(viewState);
         
         // Disable depth test
-        glDisable(GL_DEPTH_TEST);
+        glDepthMask(GL_FALSE);
     
         // Disable bound arrays
         glDisableVertexAttribArray(_a_color);

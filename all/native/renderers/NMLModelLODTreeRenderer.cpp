@@ -155,7 +155,6 @@ namespace carto {
 
         // Set expected GL state
         glDepthMask(GL_TRUE);
-        glEnable(GL_DEPTH_TEST);
 
         // Calculate lighting state
         Color ambientColor = options->getAmbientLightColor();
@@ -245,8 +244,7 @@ namespace carto {
         _glResourceManager->deleteUnused();
         
         // Restore expected GL state
-        glDepthMask(GL_TRUE);
-        glDisable(GL_DEPTH_TEST);
+        glDepthMask(GL_FALSE);
         glActiveTexture(GL_TEXTURE0);
 
         return false;

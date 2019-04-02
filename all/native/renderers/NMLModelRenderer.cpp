@@ -105,9 +105,13 @@ namespace carto {
             return false;
         }
     
+        if (_elements.empty()) {
+            // Early return, to avoid calling glUseProgram etc.
+            return false;
+        }
+
         // Set expected GL state
         glDepthMask(GL_TRUE);
-        glEnable(GL_DEPTH_TEST);
 
         // Calculate lighting state
         Color optionsAmbientLightColor = options->getAmbientLightColor();
@@ -151,8 +155,7 @@ namespace carto {
         _glResourceManager->deleteUnused();
 
         // Restore expected GL state
-        glDepthMask(GL_TRUE);
-        glDisable(GL_DEPTH_TEST);
+        glDepthMask(GL_FALSE);
         glActiveTexture(GL_TEXTURE0);
 
         GLContext::CheckGLError("NMLModelRenderer::onDrawFrame");

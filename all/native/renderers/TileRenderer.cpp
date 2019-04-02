@@ -164,8 +164,8 @@ namespace carto {
         // Reset GL state to the expected state
         glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
-        glDisable(GL_DEPTH_TEST);
-        glDepthMask(GL_TRUE);
+        glEnable(GL_DEPTH_TEST);
+        glDepthMask(GL_FALSE);
 
         GLContext::CheckGLError("TileRenderer::onDrawFrame");
         return refresh;
@@ -194,8 +194,8 @@ namespace carto {
         // Reset GL state to the expected state
         glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
-        glDisable(GL_DEPTH_TEST);
-        glDepthMask(GL_TRUE);
+        glEnable(GL_DEPTH_TEST);
+        glDepthMask(GL_FALSE);
 
         GLContext::CheckGLError("TileRenderer::onDrawFrame3D");
         return refresh;
