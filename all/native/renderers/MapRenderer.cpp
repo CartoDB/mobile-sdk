@@ -667,8 +667,22 @@ namespace carto {
         glBindFramebuffer(GL_FRAMEBUFFER, _screenFrameBuffer->getFBOId());
 
         glClearColor(color.getR() / 255.0f, color.getG() / 255.0f, color.getB() / 255.0f, color.getA() / 255.0f);
-        glClearStencil(0);
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        if (depth) {
+            glDepthMask(GL_TRUE);
+        }
+        if (stencil) {
+            glStencilMask(255);
+        }
+
         glClear(bufferMask);
+
+        if (depth) {
+            glDepthMask(GL_FALSE);
+        }
+        if (stencil) {
+            glStencilMask(0);
+        }
 
         GLContext::CheckGLError("MapRenderer::clearAndBindScreenFBO");
     }
@@ -817,28 +831,31 @@ namespace carto {
     }
     
     void MapRenderer::initializeRenderState() const {
-        // Set clear color
-        Color clearColor = _options->getClearColor();
-        glClearColor(clearColor.getR() / 255.0f, clearColor.getG() / 255.0f, clearColor.getB() / 255.0f, clearColor.getA() / 255.0f);
-    
         // Enable backface culling
         glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
     
         // Enable blending, use premultiplied alpha
         glEnable(GL_BLEND);
-        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     
         // Disable dithering for better performance
         glDisable(GL_DITHER);
     
-        // Enable depth testing, disable writing
+        // Enable depth testing, disable writing, set up clear color, etc
+        Color clearColor = _options->getClearColor();
+        glClearColor(clearColor.getR() / 255.0f, clearColor.getG() / 255.0f, clearColor.getB() / 255.0f, clearColor.getA() / 255.0f);
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LEQUAL);
-        glDepthMask(GL_FALSE);
+        glDepthMask(GL_TRUE);
+        glDisable(GL_STENCIL_TEST);
+        glStencilMask(255);
     
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+        glDepthMask(GL_FALSE);
+        glStencilMask(0);
     }
     
     void MapRenderer::drawLayers(float deltaSeconds, const ViewState& viewState) {
