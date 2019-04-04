@@ -158,12 +158,16 @@ namespace carto {
             int j = (i + 1) % 4;
             for (int n = 0; n < tesselationLevel; n++) {
                 cglib::vec2<float> screenPos = screenPoses[i] + (screenPoses[j] - screenPoses[i]) * (static_cast<float>(n) / tesselationLevel);
-                cglib::vec3<double> worldPos0 = cglib::transform_point(cglib::vec3<double>(screenPos(0), screenPos(1), -1), invMVPMat);
-                cglib::vec3<double> worldPos1 = cglib::transform_point(cglib::vec3<double>(screenPos(0), screenPos(1),  1), invMVPMat);
-                cglib::ray3<double> ray(worldPos0, worldPos1 - worldPos0);
+                cglib::vec3<double> pos0 = cglib::transform_point(cglib::vec3<double>(screenPos(0), screenPos(1), -1), invMVPMat);
+                cglib::vec3<double> pos1 = cglib::transform_point(cglib::vec3<double>(screenPos(0), screenPos(1),  1), invMVPMat);
+                cglib::ray3<double> ray(pos0, pos1 - pos0);
 
                 double t = 0;
-                mapPoses.push_back(projectionSurface->calculateMapPos(projectionSurface->calculateNearestPoint(ray, 0, t)));
+                if (projectionSurface->calculateHitPoint(ray, 0, t)) {
+                    mapPoses.push_back(projectionSurface->calculateMapPos(ray(t > 0 ? t : _viewState.getFar())));
+                } else {
+                    mapPoses.push_back(projectionSurface->calculateMapPos(projectionSurface->calculateNearestPoint(ray, 0, t)));
+                }
             }
         }
 
