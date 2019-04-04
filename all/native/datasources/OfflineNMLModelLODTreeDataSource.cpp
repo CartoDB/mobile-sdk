@@ -88,8 +88,10 @@ namespace carto {
             const std::shared_ptr<ProjectionSurface>& projectionSurface = cullState->getViewState().getProjectionSurface();
 
             cglib::bbox3<double> bbox = cglib::bbox3<double>::smallest();
-            bbox.add(projectionSurface->calculatePosition(_projection->toInternal(MapPos(mapBoundsX0, mapBoundsY0, mapPosZ + MIN_HEIGHT))));
-            bbox.add(projectionSurface->calculatePosition(_projection->toInternal(MapPos(mapBoundsX1, mapBoundsY1, mapPosZ + MAX_HEIGHT))));
+            for (int i = 0; i < 8; i++) {
+                MapPos mapPos(i & 1 ? mapBoundsX1 : mapBoundsX0, i & 2 ? mapBoundsY1 : mapBoundsY0, i & 4 ? mapPosZ + MAX_HEIGHT : mapPosZ + MIN_HEIGHT);
+                bbox.add(projectionSurface->calculatePosition(_projection->toInternal(mapPos)));
+            }
             if (!cullState->getViewState().getFrustum().inside(bbox)) {
                 continue;
             }

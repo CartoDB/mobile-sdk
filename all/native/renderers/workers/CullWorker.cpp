@@ -167,7 +167,7 @@ namespace carto {
                     MapPos mapPos = projectionSurface->calculateMapPos(ray(t > 0 ? t : _viewState.getFar()));
                     mapPoses.emplace_back(mapPos.getX(), mapPos.getY());
                 } else {
-                    MapPos mapPos = projectionSurface->calculateMapPos(projectionSurface->calculateNearestPoint(ray, 0, t))
+                    MapPos mapPos = projectionSurface->calculateMapPos(projectionSurface->calculateNearestPoint(ray, 0, t));
                     mapPoses.emplace_back(mapPos.getX(), mapPos.getY());
                 }
             }
