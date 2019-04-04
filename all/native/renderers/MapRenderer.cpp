@@ -342,6 +342,9 @@ namespace carto {
                 cglib::vec3<double> maxPos = projectionSurface->calculatePosition(mapBounds.getMax());
                 cglib::mat4x4<double> transform = projectionSurface->calculateTranslateMatrix(minPos, maxPos, 0.5f);
                 centerPos = cglib::transform_point(minPos, transform);
+                if (std::isnan(cglib::norm(centerPos))) {
+                    centerPos = cglib::vec3<double>(0, 0, 0);
+                }
             }
             
             // Adjust the camera tilt, rotation and position to the final state of this animation
