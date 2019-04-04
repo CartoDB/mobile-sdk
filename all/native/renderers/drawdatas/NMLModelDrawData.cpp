@@ -15,7 +15,7 @@ namespace carto {
     {
         MapPos mapPosInternal = projection.toInternal(model.getGeometry()->getCenterPos());
         cglib::vec3<double> pos = projectionSurface.calculatePosition(mapPosInternal);
-        cglib::mat4x4<double> rotateMat = cglib::rotate4_matrix(cglib::vec3<double>(model.getRotationAxis().getX(), model.getRotationAxis().getY(), model.getRotationAxis().getZ()), model.getRotationAngle() * Const::DEG_TO_RAD);
+        cglib::mat4x4<double> rotateMat = cglib::rotate4_matrix(projectionSurface.calculateVector(mapPosInternal, model.getRotationAxis()), model.getRotationAngle() * Const::DEG_TO_RAD);
         cglib::mat4x4<double> scaleMat = cglib::scale4_matrix(cglib::vec3<double>(model.getScale(), model.getScale(), model.getScale()));
         _localMat = projectionSurface.calculateLocalFrameMatrix(pos) * rotateMat * scaleMat;
     }
