@@ -325,7 +325,7 @@ namespace carto {
         }
     }
     
-    void MapRenderer::moveToFitPoints(const MapPos& center, const std::vector<MapPos>& points, const ScreenBounds& screenBounds, bool integerZoom, bool resetTilt, bool resetRotation, float durationSeconds) {
+    void MapRenderer::moveToFitBounds(const MapBounds& mapBounds, const ScreenBounds& screenBounds, bool integerZoom, bool resetTilt, bool resetRotation, float durationSeconds) {
         CameraPanEvent cameraPanEvent;
         CameraRotationEvent cameraRotationEvent;
         CameraTiltEvent cameraTiltEvent;
@@ -334,11 +334,20 @@ namespace carto {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
 
             std::shared_ptr<ProjectionSurface> projectionSurface = getProjectionSurface();
+
+            // Find center position
+            cglib::vec3<double> centerPos(0, 0, 0);
+            {
+                cglib::vec3<double> minPos = projectionSurface->calculatePosition(mapBounds.getMin());
+                cglib::vec3<double> maxPos = projectionSurface->calculatePosition(mapBounds.getMax());
+                cglib::mat4x4<double> transform = projectionSurface->calculateTranslateMatrix(minPos, maxPos, 0.5f);
+                centerPos = cglib::transform_point(minPos, transform);
+            }
             
             // Adjust the camera tilt, rotation and position to the final state of this animation
-            MapPos focusPos = center;
-            MapPos oldFocusPos = projectionSurface->calculateMapPos(_viewState.getFocusPos());
-            cameraPanEvent.setPos(center);
+            cglib::vec3<double> focusPos = centerPos;
+            cglib::vec3<double> oldFocusPos = _viewState.getFocusPos();
+            cameraPanEvent.setPos(projectionSurface->calculateMapPos(centerPos));
             cameraPanEvent.calculate(*_options, _viewState);
             
             float rotation = 0;
@@ -361,9 +370,7 @@ namespace carto {
             MapRange zoomRange(_options->getZoomRange());
             float zoom = _options->getZoomRange().getMin();
             float zoomStep = zoomRange.length() * 0.5f;
-            if (points.empty() || std::all_of(points.begin(), points.end(), [&points](const MapPos& pos) {
-                return pos == points.front();
-            })) {
+            if (mapBounds.getMin() == mapBounds.getMax()) {
                 zoom = oldZoom;
                 zoomStep = 0;
             }
@@ -386,19 +393,26 @@ namespace carto {
                 ScreenPos screenPos = screenBounds.getCenter();
                 cglib::vec3<double> pos = viewState.screenToWorld(cglib::vec2<float>(screenPos.getX(), screenPos.getY()), 0, _options);
                 if (std::isnan(cglib::norm(pos))) {
-                    Log::Error("MapRenderer::moveToFitPoints: Failed to translate screen position!");
+                    Log::Error("MapRenderer::moveToFitBounds: Failed to translate screen position!");
                     return;
                 }
-                MapVec delta = focusPos - projectionSurface->calculateMapPos(pos);
-                focusPos = center + delta;
-                cameraPanEvent.setPos(focusPos);
+
+                cglib::mat4x4<double> transform = projectionSurface->calculateTranslateMatrix(pos, focusPos, 1);
+                focusPos = cglib::transform_point(centerPos, transform);
+                cameraPanEvent.setPos(projectionSurface->calculateMapPos(focusPos));
                 cameraPanEvent.calculate(*_options, viewState);
                 viewState.clampFocusPos(*_options);
     
                 bool fit = true;
-                for (const MapPos& mapPos : points) {
+                for (int j = 0; j < 4; j++) {
+                    MapPos mapPos(j & 1 ? mapBounds.getMax().getX() : mapBounds.getMin().getX(), j & 2 ? mapBounds.getMax().getY() : mapBounds.getMin().getY());
                     cglib::vec2<float> screenPos = viewState.worldToScreen(projectionSurface->calculatePosition(mapPos), _options);
                     if (!screenBounds.contains(ScreenPos(screenPos(0), screenPos(1)))) {
+                        fit = false;
+                        break;
+                    }
+                    cglib::vec3<double> normal = projectionSurface->calculateNormal(mapPos);
+                    if (cglib::dot_product(normal, _viewState.getCameraPos() - projectionSurface->calculatePosition(mapPos)) < 0) {
                         fit = false;
                         break;
                     }
@@ -415,14 +429,14 @@ namespace carto {
             
             // Reset the camera position, rotation tilt and zoom to the starting state of this animation
             // And then animate them to the final state over time, if needed
-            cameraPanEvent.setPos(oldFocusPos);
+            cameraPanEvent.setPos(projectionSurface->calculateMapPos(oldFocusPos));
             cameraPanEvent.calculate(*_options, _viewState);
-            cameraPanEvent.setPos(focusPos);
+            cameraPanEvent.setPos(projectionSurface->calculateMapPos(focusPos));
             
             if (resetRotation) {
                 cameraRotationEvent.setRotation(oldRotation);
                 cameraRotationEvent.calculate(*_options, _viewState);
-                cameraRotationEvent.setTargetPos(focusPos);
+                cameraRotationEvent.setTargetPos(projectionSurface->calculateMapPos(focusPos));
                 cameraRotationEvent.setRotation(rotation);
             }
             
@@ -434,7 +448,7 @@ namespace carto {
             
             cameraZoomEvent.setZoom(oldZoom);
             cameraZoomEvent.calculate(*_options, _viewState);
-            cameraZoomEvent.setTargetPos(focusPos);
+            cameraZoomEvent.setTargetPos(projectionSurface->calculateMapPos(focusPos));
             cameraZoomEvent.setZoom(zoom);
         }
         
