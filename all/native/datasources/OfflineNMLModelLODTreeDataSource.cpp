@@ -62,9 +62,7 @@ namespace carto {
             return std::vector<MapTile>();
         }
     
-        MapBounds bounds;
-        bounds.expandToContain(_projection->fromInternal(cullState->getEnvelope().getBounds().getMin()));
-        bounds.expandToContain(_projection->fromInternal(cullState->getEnvelope().getBounds().getMax()));
+        MapBounds bounds = cullState->getProjectionEnvelope(_projection).getBounds();
         
         sqlite3pp::query query(*_db, "SELECT id, modellodtree_id, mappos_x, mappos_y, groundheight, mapbounds_x0, mapbounds_y0, mapbounds_x1, mapbounds_y1 FROM MapTiles WHERE ((mapbounds_x1>=:x0 AND mapbounds_x0<=:x1) OR (mapbounds_x1>=:x0 + :width AND mapbounds_x0<=:x1 + :width) OR (mapbounds_x1>=:x0 - :width AND mapbounds_x0<=:x1 - :width)) AND (mapbounds_y1>=:y0 AND mapbounds_y0<=:y1)");
         query.bind(":x0", bounds.getMin().getX());
