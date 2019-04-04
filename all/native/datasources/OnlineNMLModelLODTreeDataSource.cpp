@@ -8,13 +8,11 @@
 #include "utils/Log.h"
 #include "utils/NetworkUtils.h"
 
-#include <nml/Package.h>
-
-#include <cglib/frustum3.h>
-
 #include <boost/lexical_cast.hpp>
 
 #include <stdext/miniz.h>
+
+#include <nml/Package.h>
 
 namespace carto {
 
