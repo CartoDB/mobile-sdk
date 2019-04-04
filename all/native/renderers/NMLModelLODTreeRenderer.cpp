@@ -8,6 +8,7 @@
 #include "graphics/ViewState.h"
 #include "graphics/utils/GLContext.h"
 #include "layers/NMLModelLODTreeLayer.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "utils/Log.h"
@@ -157,12 +158,11 @@ namespace carto {
         glDepthMask(GL_TRUE);
 
         // Calculate lighting state
-        Color ambientColor = options->getAmbientLightColor();
-        cglib::vec4<float> ambientLightColor = cglib::vec4<float>(ambientColor.getR(), ambientColor.getG(), ambientColor.getB(), ambientColor.getA()) * (1.0f / 255.0f);
-        Color mainColor = options->getMainLightColor();
-        cglib::vec4<float> mainLightColor = cglib::vec4<float>(mainColor.getR(), mainColor.getG(), mainColor.getB(), mainColor.getA()) * (1.0f / 255.0f);
-        MapVec mainDir = options->getMainLightDirection();
-        cglib::vec3<float> mainLightDir(static_cast<float>(mainDir.getX()), static_cast<float>(mainDir.getY()), static_cast<float>(mainDir.getZ()));
+        Color optionsAmbientLightColor = options->getAmbientLightColor();
+        cglib::vec4<float> ambientLightColor = cglib::vec4<float>(optionsAmbientLightColor.getR(), optionsAmbientLightColor.getG(), optionsAmbientLightColor.getB(), optionsAmbientLightColor.getA()) * (1.0f / 255.0f);
+        Color optionsMainLightColor = options->getMainLightColor();
+        cglib::vec4<float> mainLightColor = cglib::vec4<float>(optionsMainLightColor.getR(), optionsMainLightColor.getG(), optionsMainLightColor.getB(), optionsMainLightColor.getA()) * (1.0f / 255.0f);
+        cglib::vec3<float> mainLightDir = cglib::vec3<float>::convert(viewState.getProjectionSurface()->calculateVector(MapPos(0, 0), options->getMainLightDirection()));
 
         cglib::mat4x4<float> projMat = cglib::mat4x4<float>::convert(viewState.getProjectionMat());
 

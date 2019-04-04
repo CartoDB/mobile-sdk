@@ -6,6 +6,7 @@
 #include "graphics/ViewState.h"
 #include "graphics/utils/GLContext.h"
 #include "layers/VectorLayer.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "utils/Log.h"
@@ -119,7 +120,7 @@ namespace carto {
         Color optionsMainLightColor = options->getMainLightColor();
         cglib::vec4<float> mainLightColor = cglib::vec4<float>(optionsMainLightColor.getR(), optionsMainLightColor.getG(), optionsMainLightColor.getB(), optionsMainLightColor.getA()) * (1.0f / 255.0f);
         MapVec optionsMainLightDirection = options->getMainLightDirection();
-        cglib::vec3<float> mainLightDir = cglib::unit(cglib::vec3<float>::convert(cglib::transform_vector(cglib::vec3<double>(optionsMainLightDirection.getX(), optionsMainLightDirection.getY(), optionsMainLightDirection.getZ()), viewState.getModelviewMat())));
+        cglib::vec3<float> mainLightDir = cglib::vec3<float>::convert(viewState.getProjectionSurface()->calculateVector(MapPos(0, 0), options->getMainLightDirection()));
 
         // Draw models
         cglib::mat4x4<float> projMat = cglib::mat4x4<float>::convert(viewState.getProjectionMat());

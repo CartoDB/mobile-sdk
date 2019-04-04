@@ -8,6 +8,7 @@
 #include "graphics/TextureManager.h"
 #include "graphics/ViewState.h"
 #include "graphics/utils/GLContext.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
@@ -116,8 +117,8 @@ namespace carto {
         glUniform4f(_u_lightColor, mainLightColor.getR() / 255.0f, mainLightColor.getG() / 255.0f,
                     mainLightColor.getB() / 255.0f, mainLightColor.getA() / 255.0f);
         // Main light direction
-        const MapVec& mainLightDir = options->getMainLightDirection();
-        glUniform3f(_u_lightDir, static_cast<float>(mainLightDir.getX()), static_cast<float>(mainLightDir.getY()), static_cast<float>(mainLightDir.getZ()));
+        cglib::vec3<float> mainLightDir = cglib::vec3<float>::convert(viewState.getProjectionSurface()->calculateVector(MapPos(0, 0), options->getMainLightDirection()));
+        glUniform3fv(_u_lightDir, 1, mainLightDir.data());
         // Matrix
         const cglib::mat4x4<float>& mvpMat = viewState.getRTEModelviewProjectionMat();
         glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, mvpMat.data());
