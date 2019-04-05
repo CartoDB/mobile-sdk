@@ -24,8 +24,8 @@ namespace carto {
     {
         MapPos internalPos = projection.toInternal(geometry.getCenterPos());
         _pos = projectionSurface.calculatePosition(internalPos);
-        _xAxis = cglib::unit(cglib::vec3<float>::convert(projectionSurface.calculateVector(internalPos, MapVec(1, 0, 0))));
-        _yAxis = cglib::unit(cglib::vec3<float>::convert(projectionSurface.calculateVector(internalPos, MapVec(0, 1, 0))));
+        _xAxis = cglib::vec3<float>::convert(cglib::unit(projectionSurface.calculateVector(internalPos, MapVec(1, 0, 0))));
+        _yAxis = cglib::vec3<float>::convert(cglib::unit(projectionSurface.calculateVector(internalPos, MapVec(0, 1, 0))));
     }
     
     PointDrawData::~PointDrawData() {
