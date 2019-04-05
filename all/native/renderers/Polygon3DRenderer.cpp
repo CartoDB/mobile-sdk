@@ -117,7 +117,7 @@ namespace carto {
         glUniform4f(_u_lightColor, mainLightColor.getR() / 255.0f, mainLightColor.getG() / 255.0f,
                     mainLightColor.getB() / 255.0f, mainLightColor.getA() / 255.0f);
         // Main light direction
-        cglib::vec3<float> mainLightDir = cglib::vec3<float>::convert(viewState.getProjectionSurface()->calculateVector(MapPos(0, 0), options->getMainLightDirection()));
+        cglib::vec3<float> mainLightDir = cglib::vec3<float>::convert(cglib::unit(viewState.getProjectionSurface()->calculateVector(MapPos(0, 0), options->getMainLightDirection())));
         glUniform3fv(_u_lightDir, 1, mainLightDir.data());
         // Matrix
         const cglib::mat4x4<float>& mvpMat = viewState.getRTEModelviewProjectionMat();

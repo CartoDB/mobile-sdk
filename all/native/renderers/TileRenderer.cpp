@@ -146,9 +146,9 @@ namespace carto {
             _firstDraw = false;
         }
 
-        _viewDir = viewState.getFocusPosNormal();
+        _viewDir = cglib::unit(viewState.getFocusPosNormal());
         if (auto options = _options.lock()) {
-            _mainLightDir = cglib::vec3<float>::convert(viewState.getProjectionSurface()->calculateVector(MapPos(0, 0), options->getMainLightDirection()));
+            _mainLightDir = cglib::vec3<float>::convert(cglib::unit(viewState.getProjectionSurface()->calculateVector(MapPos(0, 0), options->getMainLightDirection())));
         }
 
         _glRenderer->startFrame(deltaSeconds * 3);
