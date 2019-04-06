@@ -8,7 +8,7 @@
 #include "utils/Log.h"
 #include "vectorelements/Billboard.h"
 
-#include <cmath>
+#include <algorithm>
 
 namespace carto {
 
@@ -110,9 +110,9 @@ namespace carto {
     void BillboardDrawData::setPos(const cglib::vec3<double>& pos, const ProjectionSurface& projectionSurface) {
         MapPos internalPos = projectionSurface.calculateMapPos(pos);
         _pos = pos;
-        _xAxis = cglib::vec3<float>::convert(projectionSurface.calculateVector(internalPos, MapVec(1, 0, 0)));
-        _yAxis = cglib::vec3<float>::convert(projectionSurface.calculateVector(internalPos, MapVec(0, 1, 0)));
-        _zAxis = cglib::vec3<float>::convert(projectionSurface.calculateVector(internalPos, MapVec(0, 0, 1)));
+        _xAxis = cglib::vec3<float>::convert(cglib::unit(projectionSurface.calculateVector(internalPos, MapVec(1, 0, 0))));
+        _yAxis = cglib::vec3<float>::convert(cglib::unit(projectionSurface.calculateVector(internalPos, MapVec(0, 1, 0))));
+        _zAxis = cglib::vec3<float>::convert(cglib::unit(projectionSurface.calculateVector(internalPos, MapVec(0, 0, 1))));
     }
 
     const cglib::vec3<float>& BillboardDrawData::getXAxis() const {
@@ -224,9 +224,9 @@ namespace carto {
         if (billboard.getGeometry()) {
             MapPos internalPos = projection.toInternal(billboard.getGeometry()->getCenterPos());
             _pos = projectionSurface.calculatePosition(internalPos);
-            _xAxis = cglib::vec3<float>::convert(projectionSurface.calculateVector(internalPos, MapVec(1, 0, 0)));
-            _yAxis = cglib::vec3<float>::convert(projectionSurface.calculateVector(internalPos, MapVec(0, 1, 0)));
-            _zAxis = cglib::vec3<float>::convert(projectionSurface.calculateVector(internalPos, MapVec(0, 0, 1)));
+            _xAxis = cglib::vec3<float>::convert(cglib::unit(projectionSurface.calculateVector(internalPos, MapVec(1, 0, 0))));
+            _yAxis = cglib::vec3<float>::convert(cglib::unit(projectionSurface.calculateVector(internalPos, MapVec(0, 1, 0))));
+            _zAxis = cglib::vec3<float>::convert(cglib::unit(projectionSurface.calculateVector(internalPos, MapVec(0, 0, 1))));
         }
 
         if (auto drawData = billboard.getDrawData()) {
@@ -250,12 +250,9 @@ namespace carto {
         _coords[3] = cglib::vec2<float>(right, bottom);
     
         if (_rotation != 0.0f) {
-            float sin = static_cast<float>(std::sin(_rotation * Const::DEG_TO_RAD));
-            float cos = static_cast<float>(std::cos(_rotation * Const::DEG_TO_RAD));
+            cglib::mat2x2<float> rotMat = cglib::rotate2_matrix(static_cast<float>(_rotation * Const::DEG_TO_RAD));
             for (int i = 0; i < 4; i++) {
-                float x = cos * _coords[i](0) - sin * _coords[i](1);
-                float y = sin * _coords[i](0) + cos * _coords[i](1);
-                _coords[i] = cglib::vec2<float>(x, y);
+                _coords[i] = cglib::transform(_coords[i], rotMat);
             }
         }
     }

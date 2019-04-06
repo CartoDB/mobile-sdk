@@ -5,6 +5,7 @@
 #include "graphics/ShaderManager.h"
 #include "graphics/ViewState.h"
 #include "graphics/utils/GLContext.h"
+#include "projections/ProjectionSurface.h"
 #include "projections/PlanarProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/drawdatas/TileDrawData.h"
@@ -45,7 +46,8 @@ namespace carto {
         _labelOrder(0),
         _buildingOrder(1),
         _horizontalLayerOffset(0),
-        _lightDir(0, 0, 0),
+        _viewDir(0, 0, 0),
+        _mainLightDir(0, 0, 0),
         _tiles(),
         _options(),
         _mutex()
@@ -94,7 +96,7 @@ namespace carto {
         if (auto mapRenderer = _mapRenderer.lock()) {
             if (!std::dynamic_pointer_cast<PlanarProjectionSurface>(mapRenderer->getProjectionSurface())) {
                 lightingShader2D = vt::GLTileRenderer::LightingShader(true, LIGHTING_SHADER_2D, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
-                    glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1, _lightDir.data());
+                    glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1, _viewDir.data());
                 });
             }
         }
@@ -104,8 +106,7 @@ namespace carto {
                 glUniform4f(glGetUniformLocation(shaderProgram, "u_ambientColor"), ambientLightColor.getR() / 255.0f, ambientLightColor.getG() / 255.0f, ambientLightColor.getB() / 255.0f, ambientLightColor.getA() / 255.0f);
                 const Color& mainLightColor = options->getMainLightColor();
                 glUniform4f(glGetUniformLocation(shaderProgram, "u_lightColor"), mainLightColor.getR() / 255.0f, mainLightColor.getG() / 255.0f, mainLightColor.getB() / 255.0f, mainLightColor.getA() / 255.0f);
-                const MapVec& mainLightDir = options->getMainLightDirection();
-                glUniform3f(glGetUniformLocation(shaderProgram, "u_lightDir"), static_cast<float>(mainLightDir.getX()), static_cast<float>(mainLightDir.getY()), static_cast<float>(mainLightDir.getZ()));
+                glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1, _mainLightDir.data());
             }
         });
 
@@ -145,7 +146,10 @@ namespace carto {
             _firstDraw = false;
         }
 
-        _lightDir = viewState.getFocusPosNormal();
+        _viewDir = cglib::unit(viewState.getFocusPosNormal());
+        if (auto options = _options.lock()) {
+            _mainLightDir = cglib::vec3<float>::convert(cglib::unit(viewState.getProjectionSurface()->calculateVector(MapPos(0, 0), options->getMainLightDirection())));
+        }
 
         _glRenderer->startFrame(deltaSeconds * 3);
 
@@ -164,8 +168,8 @@ namespace carto {
         // Reset GL state to the expected state
         glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
-        glDisable(GL_DEPTH_TEST);
-        glDepthMask(GL_TRUE);
+        glEnable(GL_DEPTH_TEST);
+        glDepthMask(GL_FALSE);
 
         GLContext::CheckGLError("TileRenderer::onDrawFrame");
         return refresh;
@@ -194,8 +198,8 @@ namespace carto {
         // Reset GL state to the expected state
         glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
-        glDisable(GL_DEPTH_TEST);
-        glDepthMask(GL_TRUE);
+        glEnable(GL_DEPTH_TEST);
+        glDepthMask(GL_FALSE);
 
         GLContext::CheckGLError("TileRenderer::onDrawFrame3D");
         return refresh;

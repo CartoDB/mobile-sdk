@@ -493,8 +493,7 @@ namespace carto {
         float simplifierScale = cullState->getViewState().estimateWorldPixelMeasure();
 
         MapBounds bounds;
-        for (const MapPos& mapPosInternal : cullState->getEnvelope().getConvexHull()) {
-            MapPos mapPos = _projection->fromInternal(mapPosInternal);
+        for (const MapPos& mapPos : cullState->getProjectionEnvelope(_projection).getConvexHull()) {
             bounds.expandToContain(_poLayerSpatialRef->inverseTransform(mapPos.getX(), mapPos.getY(), mapPos.getZ()));
         }
         _poLayer->SetSpatialFilterRect(bounds.getMin().getX(), bounds.getMin().getY(), bounds.getMax().getX(), bounds.getMax().getY());

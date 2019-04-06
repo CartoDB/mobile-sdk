@@ -180,7 +180,7 @@ namespace carto {
             if (opacity < 1.0f) {
                 mapRenderer->clearAndBindScreenFBO(Color(0, 0, 0, 0), true, false);
             }
-            if (_zBuffering) {
+            if (zBuffering) {
                 mapRenderer->setZBuffering(true);
             }
 

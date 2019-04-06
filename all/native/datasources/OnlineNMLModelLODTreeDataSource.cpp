@@ -8,13 +8,11 @@
 #include "utils/Log.h"
 #include "utils/NetworkUtils.h"
 
-#include <nml/Package.h>
-
-#include <cglib/frustum3.h>
-
 #include <boost/lexical_cast.hpp>
 
 #include <stdext/miniz.h>
+
+#include <nml/Package.h>
 
 namespace carto {
 
@@ -28,9 +26,7 @@ namespace carto {
     }
     
     std::vector<NMLModelLODTreeDataSource::MapTile> OnlineNMLModelLODTreeDataSource::loadMapTiles(const std::shared_ptr<CullState>& cullState) {
-        MapBounds bounds;
-        bounds.expandToContain(_projection->fromInternal(cullState->getEnvelope().getBounds().getMin()));
-        bounds.expandToContain(_projection->fromInternal(cullState->getEnvelope().getBounds().getMax()));
+        MapBounds bounds = cullState->getProjectionEnvelope(_projection).getBounds();
     
         std::map<std::string, std::string> urlParams;
         urlParams["q"] = "MapTiles";

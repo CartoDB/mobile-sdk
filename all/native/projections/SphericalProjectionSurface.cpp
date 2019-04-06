@@ -85,7 +85,7 @@ namespace carto {
             cglib::vec3<double> delta = cglib::unit(pos0) - cglib::unit(pos1);
             return cglib::length(delta) * Const::WORLD_SIZE;
         }
-        return angle * Const::WORLD_SIZE;
+        return angle * Const::WORLD_SIZE / Const::PI;
     }
 
     cglib::vec3<double> SphericalProjectionSurface::calculateNearestPoint(const cglib::vec3<double>& pos, double height) const {

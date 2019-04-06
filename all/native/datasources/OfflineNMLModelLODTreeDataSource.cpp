@@ -2,15 +2,18 @@
 
 #include "OfflineNMLModelLODTreeDataSource.h"
 #include "components/Exceptions.h"
+#include "graphics/ViewState.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/components/CullState.h"
 #include "projections/EPSG3857.h"
 #include "utils/Log.h"
 
+#include <cglib/bbox.h>
+#include <cglib/frustum3.h>
+
 #include <nml/Package.h>
 
 #include <sqlite3pp.h>
-
-#include <cglib/frustum3.h>
 
 namespace carto {
 
@@ -52,12 +55,6 @@ namespace carto {
     }
     
     std::vector<NMLModelLODTreeDataSource::MapTile> OfflineNMLModelLODTreeDataSource::loadMapTiles(const std::shared_ptr<CullState>& cullState) {
-        typedef cglib::vec3<double> Point;
-        typedef cglib::frustum3<double> Frustum;
-        typedef cglib::bbox3<double> BoundingBox;
-    
-        static const float MAX_HEIGHT = 1000.0f;
-    
         std::lock_guard<std::mutex> lock(_mutex);
     
         if (!_db) {
@@ -65,13 +62,7 @@ namespace carto {
             return std::vector<MapTile>();
         }
     
-        std::vector<MapTile> mapTiles;
-        
-        Frustum frustum(cglib::gl_projection_frustum(cullState->getViewState().getModelviewProjectionMat()));
-    
-        MapBounds bounds;
-        bounds.expandToContain(_projection->fromInternal(cullState->getEnvelope().getBounds().getMin()));
-        bounds.expandToContain(_projection->fromInternal(cullState->getEnvelope().getBounds().getMax()));
+        MapBounds bounds = cullState->getProjectionEnvelope(_projection).getBounds();
         
         sqlite3pp::query query(*_db, "SELECT id, modellodtree_id, mappos_x, mappos_y, groundheight, mapbounds_x0, mapbounds_y0, mapbounds_x1, mapbounds_y1 FROM MapTiles WHERE ((mapbounds_x1>=:x0 AND mapbounds_x0<=:x1) OR (mapbounds_x1>=:x0 + :width AND mapbounds_x0<=:x1 + :width) OR (mapbounds_x1>=:x0 - :width AND mapbounds_x0<=:x1 - :width)) AND (mapbounds_y1>=:y0 AND mapbounds_y0<=:y1)");
         query.bind(":x0", bounds.getMin().getX());
@@ -79,6 +70,9 @@ namespace carto {
         query.bind(":x1", bounds.getMax().getX());
         query.bind(":y1", bounds.getMax().getY());
         query.bind(":width", _projection->getBounds().getDelta().getX());
+
+        std::vector<MapTile> mapTiles;
+        
         for (auto qit = query.begin(); qit != query.end(); qit++) {
             long long mapTileId = (*qit).get<std::uint64_t>(0);
             
@@ -90,11 +84,15 @@ namespace carto {
             double mapBoundsY0 = (*qit).get<double>(6);
             double mapBoundsX1 = (*qit).get<double>(7);
             double mapBoundsY1 = (*qit).get<double>(8);
-    
-            MapPos intMinPos(_projection->toInternal(MapPos(mapBoundsX0, mapBoundsY0, mapPosZ)));
-            MapPos intMaxPos(_projection->toInternal(MapPos(mapBoundsX1, mapBoundsY1, mapPosZ + MAX_HEIGHT)));
-            BoundingBox bbox(Point(intMinPos.getX(), intMinPos.getY(), intMinPos.getZ()), Point(intMaxPos.getX(), intMaxPos.getY(), intMaxPos.getZ()));
-            if (!frustum.inside(bbox)) {
+
+            const std::shared_ptr<ProjectionSurface>& projectionSurface = cullState->getViewState().getProjectionSurface();
+
+            cglib::bbox3<double> bbox = cglib::bbox3<double>::smallest();
+            for (int i = 0; i < 8; i++) {
+                MapPos mapPos(i & 1 ? mapBoundsX1 : mapBoundsX0, i & 2 ? mapBoundsY1 : mapBoundsY0, i & 4 ? mapPosZ + MAX_HEIGHT : mapPosZ + MIN_HEIGHT);
+                bbox.add(projectionSurface->calculatePosition(_projection->toInternal(mapPos)));
+            }
+            if (!cullState->getViewState().getFrustum().inside(bbox)) {
                 continue;
             }
     
@@ -228,6 +226,9 @@ namespace carto {
         query.finish();
         return std::shared_ptr<nml::Texture>();
     }
+
+    const float OfflineNMLModelLODTreeDataSource::MIN_HEIGHT = 0.0f;
+    const float OfflineNMLModelLODTreeDataSource::MAX_HEIGHT = 1000.0f;
     
 }
 

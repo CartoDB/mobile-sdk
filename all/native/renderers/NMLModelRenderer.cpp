@@ -6,6 +6,7 @@
 #include "graphics/ViewState.h"
 #include "graphics/utils/GLContext.h"
 #include "layers/VectorLayer.h"
+#include "projections/ProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "utils/Log.h"
@@ -105,9 +106,13 @@ namespace carto {
             return false;
         }
     
+        if (_elements.empty()) {
+            // Early return, to avoid calling glUseProgram etc.
+            return false;
+        }
+
         // Set expected GL state
         glDepthMask(GL_TRUE);
-        glEnable(GL_DEPTH_TEST);
 
         // Calculate lighting state
         Color optionsAmbientLightColor = options->getAmbientLightColor();
@@ -115,7 +120,7 @@ namespace carto {
         Color optionsMainLightColor = options->getMainLightColor();
         cglib::vec4<float> mainLightColor = cglib::vec4<float>(optionsMainLightColor.getR(), optionsMainLightColor.getG(), optionsMainLightColor.getB(), optionsMainLightColor.getA()) * (1.0f / 255.0f);
         MapVec optionsMainLightDirection = options->getMainLightDirection();
-        cglib::vec3<float> mainLightDir = cglib::unit(cglib::vec3<float>::convert(cglib::transform_vector(cglib::vec3<double>(optionsMainLightDirection.getX(), optionsMainLightDirection.getY(), optionsMainLightDirection.getZ()), viewState.getModelviewMat())));
+        cglib::vec3<float> mainLightDir = cglib::vec3<float>::convert(cglib::unit(viewState.getProjectionSurface()->calculateVector(MapPos(0, 0), options->getMainLightDirection())));
 
         // Draw models
         cglib::mat4x4<float> projMat = cglib::mat4x4<float>::convert(viewState.getProjectionMat());
@@ -151,8 +156,7 @@ namespace carto {
         _glResourceManager->deleteUnused();
 
         // Restore expected GL state
-        glDepthMask(GL_TRUE);
-        glDisable(GL_DEPTH_TEST);
+        glDepthMask(GL_FALSE);
         glActiveTexture(GL_TEXTURE0);
 
         GLContext::CheckGLError("NMLModelRenderer::onDrawFrame");

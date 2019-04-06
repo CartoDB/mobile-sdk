@@ -158,7 +158,7 @@ namespace carto {
                 // Calculate side normal
                 cglib::vec3<double> normal = projectionSurface.calculateNormal(internalPos0);
                 cglib::vec3<double> sideVec = projectionSurface.calculateVector(internalPos0, internalPos1 - internalPos0);
-                cglib::vec3<float> sideNormal = cglib::unit(cglib::vec3<float>::convert(cglib::vector_product(sideVec, normal)));
+                cglib::vec3<float> sideNormal = cglib::vec3<float>::convert(cglib::unit(cglib::vector_product(sideVec, normal)));
 
                 // Add normal for each vertex
                 for (int k = 0; k < 6; k++) {

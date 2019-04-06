@@ -133,7 +133,7 @@ namespace carto {
     
     void Billboard::setDrawData(const std::shared_ptr<BillboardDrawData>& drawData) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        if (_drawData) {
+        if (drawData && _drawData) {
             drawData->setOverlapping(_drawData->isOverlapping());
         }
         _drawData = drawData;

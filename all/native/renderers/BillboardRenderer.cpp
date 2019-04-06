@@ -127,6 +127,16 @@ namespace carto {
         _a_texCoord = _shader->getAttribLoc("a_texCoord");
         _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
         _u_tex = _shader->getUniformLoc("u_tex");
+
+        // Drop elements
+        std::vector<std::shared_ptr<Billboard>> elements;
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            std::swap(elements, _elements);
+        }
+        for (const std::shared_ptr<Billboard>& element : elements) {
+            element->setDrawData(std::shared_ptr<BillboardDrawData>());
+        }
     }
     
     bool BillboardRenderer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {

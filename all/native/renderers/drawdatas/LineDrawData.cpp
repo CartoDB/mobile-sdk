@@ -14,21 +14,6 @@
 #include <cmath>
 #include <unordered_map>
 
-namespace {
-
-    inline cglib::vec2<float> rotate2D(const cglib::vec2<float>& vec, float sin, float cos) {
-        float x = cos * vec(0) - sin * vec(1);
-        float y = sin * vec(0) + cos * vec(1);
-        return cglib::vec2<float>(x, y);
-    }
-
-    inline cglib::vec3<float> rotate2D(const cglib::vec3<float>& vec, const cglib::vec3<float>& normal, float sin, float cos) {
-        float angle = std::atan2(sin, cos);
-        return cglib::transform(vec, cglib::rotate3_matrix(normal, angle));
-    }
-
-}
-
 namespace carto {
 
     LineDrawData::LineDrawData(const LineGeometry& geometry, const LineStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface) :
@@ -133,7 +118,7 @@ namespace carto {
         std::size_t coordCount = (_poses.size() - 1) * 4;
         std::size_t indexCount = (_poses.size() - 1) * 6;
         std::vector<float> deltaAngles(_poses.size() - 1);
-        float prevAngle = 0;
+        cglib::vec3<float> prevLineVec(0, 0, 0);
         if (tesselateLineJoin) {
             for (std::size_t i = 0; i < _poses.size(); i++) {
                 if (!loopedLine && i + 1 >= _poses.size()) {
@@ -142,13 +127,16 @@ namespace carto {
     
                 const cglib::vec3<double>& pos = _poses[i];
                 const cglib::vec3<double>& nextPos = (i + 1 < _poses.size()) ? _poses[i + 1] : _poses[1];
-                cglib::vec3<double> nextLine(nextPos - pos);
-                float nextAngle = static_cast<float>(std::atan2(nextLine(1), nextLine(0)) * Const::RAD_TO_DEG - 90);
-    
-                if (i > 0) {
-                    float deltaAngle = std::fmod((nextAngle - prevAngle + 360.0f), 360.0f);
-                    if (deltaAngle >= 180) {
-                        deltaAngle -= 360;
+                if (nextPos == pos) {
+                    continue;
+                }
+                cglib::vec3<float> nextLineVec = cglib::vec3<float>::convert(cglib::unit(nextPos - pos));
+
+                double dot = cglib::dot_product(prevLineVec, nextLineVec);
+                if (cglib::norm(prevLineVec) > 0) {
+                    float deltaAngle = static_cast<float>(std::acos(std::max(-1.0, std::min(1.0, dot))) * Const::RAD_TO_DEG);
+                    if (cglib::dot_product(posNormals[i], cglib::vector_product(prevLineVec, nextLineVec)) < 0) {
+                        deltaAngle = -deltaAngle;
                     }
                     deltaAngles[i - 1] = deltaAngle;
     
@@ -163,7 +151,7 @@ namespace carto {
                     indexCount += segments * 3;
                 }
     
-                prevAngle = nextAngle;
+                prevLineVec = nextLineVec;
             }
         }
     
@@ -306,8 +294,8 @@ namespace carto {
                 }
                 if (segments > 0) {
                     float segmentDeltaAngle = deltaAngle / segments;
-                    float sin = static_cast<float>(std::sin(segmentDeltaAngle * Const::DEG_TO_RAD));
-                    float cos = static_cast<float>(std::cos(segmentDeltaAngle * Const::DEG_TO_RAD));
+                    cglib::mat2x2<float> rot2DMat = cglib::rotate2_matrix(static_cast<float>(segmentDeltaAngle * Const::DEG_TO_RAD));
+                    cglib::mat3x3<float> rot3DMat = cglib::rotate3_matrix(posNormals[i], static_cast<float>(segmentDeltaAngle * Const::DEG_TO_RAD));
                     bool leftTurn = (deltaAngle <= 0);
                     cglib::vec3<float> rotVec = prevNormalVec;
                     
@@ -318,7 +306,7 @@ namespace carto {
                     
                     // Add vertices and normals, do not create double vertices anywhere
                     for (int j = 0; j < segments - 1; j++) {
-                        rotVec = rotate2D(rotVec, posNormals[i], sin, cos);
+                        rotVec = cglib::transform(rotVec, rot3DMat);
                         coords.push_back(&pos);
                         normals.push_back(cglib::expand(rotVec, leftTurn ? 1.0f : -1.0f));
                         texCoords.push_back(cglib::vec2<float>(leftTurn ? 0.0f : 1.0f, texCoordY));
@@ -364,8 +352,7 @@ namespace carto {
                 segmentDeltaAngle = 180.0f / (segments - 1);
             }
             if (segments > 1) {
-                float sin = static_cast<float>(std::sin(segmentDeltaAngle * Const::DEG_TO_RAD));
-                float cos = static_cast<float>(std::cos(segmentDeltaAngle * Const::DEG_TO_RAD));
+                cglib::mat2x2<float> rot2DMat = cglib::rotate2_matrix(static_cast<float>(segmentDeltaAngle * Const::DEG_TO_RAD));
                 
                 // Add the t vertex
                 coords.push_back(&_poses[_poses.size() - 1]);
@@ -374,13 +361,14 @@ namespace carto {
                 
                 if (style.getLineEndType() == LineEndType::LINE_END_TYPE_ROUND) {
                     // Last end point, lastLine contains the last valid line segment
+                    cglib::mat3x3<float> rot3DMat = cglib::rotate3_matrix(posNormals[_poses.size() - 1], static_cast<float>(segmentDeltaAngle * Const::DEG_TO_RAD));
                     cglib::vec3<float> rotVec = lastPerpVec;
                     cglib::vec2<float> uvRotVec(-1, 0);
                 
                     // Vertices
                     for (int i = 0; i < segments - 1; i++) {
-                        rotVec = rotate2D(rotVec, posNormals[_poses.size() - 1], sin, cos);
-                        uvRotVec = rotate2D(uvRotVec, sin, cos);
+                        rotVec = cglib::transform(rotVec, rot3DMat);
+                        uvRotVec = cglib::transform(uvRotVec, rot2DMat);
                         coords.push_back(&_poses[_poses.size() - 1]);
                         normals.push_back(cglib::expand(rotVec, -1.0f));
                         texCoords.push_back(cglib::vec2<float>(uvRotVec(0) * 0.5f + 0.5f, texCoordY));
@@ -388,7 +376,8 @@ namespace carto {
                 } else {
                     // Vertices
                     for (int s = -1; s <= 1; s += 2) {
-                        cglib::vec3<float> normalVec = rotate2D(lastPerpVec, posNormals[_poses.size() - 1], -s * sin, cos) * std::sqrt(2.0f);
+                        cglib::mat3x3<float> rot3DMat = cglib::rotate3_matrix(posNormals[_poses.size() - 1], static_cast<float>(-s * segmentDeltaAngle * Const::DEG_TO_RAD));
+                        cglib::vec3<float> normalVec = cglib::transform(lastPerpVec, rot3DMat) * std::sqrt(2.0f);
                         coords.push_back(&_poses[_poses.size() - 1]);
                         normals.push_back(cglib::expand(normalVec, static_cast<float>(s)));
                         texCoords.push_back(cglib::vec2<float>(s * 0.5f + 0.5f, texCoordY));
@@ -410,13 +399,14 @@ namespace carto {
                 
                 if (style.getLineEndType() == LineEndType::LINE_END_TYPE_ROUND) {
                     // First end point, firstLine contains the first valid line segment
+                    cglib::mat3x3<float> rot3DMat = cglib::rotate3_matrix(posNormals[0], static_cast<float>(segmentDeltaAngle * Const::DEG_TO_RAD));
                     cglib::vec3<float> rotVec = firstPerpVec;
                     cglib::vec2<float> uvRotVec(1, 0);
                 
                     // Vertices
                     for (int i = 0; i < segments - 1; i++) {
-                        rotVec = rotate2D(rotVec, posNormals[0], sin, cos);
-                        uvRotVec = rotate2D(uvRotVec, sin, cos);
+                        rotVec = cglib::transform(rotVec, rot3DMat);
+                        uvRotVec = cglib::transform(uvRotVec, rot2DMat);
                         coords.push_back(&_poses[0]);
                         normals.push_back(cglib::expand(rotVec, 1.0f));
                         texCoords.push_back(cglib::vec2<float>(uvRotVec(0) * 0.5f + 0.5f, 0));
@@ -424,7 +414,8 @@ namespace carto {
                 } else {
                     // Vertices
                     for (int s = 1; s >= -1; s -= 2) {
-                        cglib::vec3<float> normalVec = rotate2D(firstPerpVec, posNormals[0], s * sin, cos) * std::sqrt(2.0f);
+                        cglib::mat3x3<float> rot3DMat = cglib::rotate3_matrix(posNormals[0], static_cast<float>(s * segmentDeltaAngle * Const::DEG_TO_RAD));
+                        cglib::vec3<float> normalVec = cglib::transform(firstPerpVec, rot3DMat) * std::sqrt(2.0f);
                         coords.push_back(&_poses[0]);
                         normals.push_back(cglib::expand(normalVec, static_cast<float>(s)));
                         texCoords.push_back(cglib::vec2<float>(s * 0.5f + 0.5f, 0));

@@ -229,14 +229,8 @@ namespace carto {
         _mapRenderer->getAnimationHandler().stopZoom();
         _mapRenderer->getKineticEventHandler().stopZoom();
         
-        MapBounds internalBounds(_options->getBaseProjection()->toInternal(mapBounds.getMin()), _options->getBaseProjection()->toInternal(mapBounds.getMax()));
-        std::vector<MapPos> internalCorners;
-        internalCorners.reserve(4);
-        internalCorners.emplace_back(internalBounds.getMin());
-        internalCorners.emplace_back(internalBounds.getMin().getX(), internalBounds.getMax().getY());
-        internalCorners.emplace_back(internalBounds.getMax());
-        internalCorners.emplace_back(internalBounds.getMax().getX(), internalBounds.getMin().getY());
-        _mapRenderer->moveToFitPoints(internalBounds.getCenter(), internalCorners, screenBounds, integerZoom, resetTilt, resetRotation, durationSeconds);
+        MapBounds mapBoundsInternal(_options->getBaseProjection()->toInternal(mapBounds.getMin()), _options->getBaseProjection()->toInternal(mapBounds.getMax()));
+        _mapRenderer->moveToFitBounds(mapBoundsInternal, screenBounds, integerZoom, resetTilt, resetRotation, durationSeconds);
     }
     
     std::shared_ptr<MapEventListener> BaseMapView::getMapEventListener() const {
