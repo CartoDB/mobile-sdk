@@ -48,6 +48,7 @@ namespace carto {
         _featureIdOverride(false),
         _cartoCSSLayerNamesIgnored(false),
         _layerNameOverride(),
+        _fallbackFonts(),
         _styleSet(),
         _map(),
         _mapSettings(),
@@ -59,7 +60,7 @@ namespace carto {
             throw NullArgumentException("Null compiledStyleSet");
         }
 
-        updateCurrentStyle(compiledStyleSet);
+        updateCurrentStyleSet(compiledStyleSet);
     }
     
     MBVectorTileDecoder::MBVectorTileDecoder(const std::shared_ptr<CartoCSSStyleSet>& cartoCSSStyleSet) :
@@ -67,6 +68,7 @@ namespace carto {
         _featureIdOverride(false),
         _cartoCSSLayerNamesIgnored(false),
         _layerNameOverride(),
+        _fallbackFonts(),
         _styleSet(),
         _map(),
         _parameterValueMap(),
@@ -77,7 +79,7 @@ namespace carto {
             throw NullArgumentException("Null cartoCSSStyleSet");
         }
 
-        updateCurrentStyle(cartoCSSStyleSet);
+        updateCurrentStyleSet(cartoCSSStyleSet);
     }
     
     MBVectorTileDecoder::~MBVectorTileDecoder() {
@@ -98,7 +100,7 @@ namespace carto {
 
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            updateCurrentStyle(styleSet);
+            updateCurrentStyleSet(styleSet);
         }
         notifyDecoderChanged();
     }
@@ -119,7 +121,7 @@ namespace carto {
 
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            updateCurrentStyle(styleSet);
+            updateCurrentStyleSet(styleSet);
         }
         notifyDecoderChanged();
     }
@@ -260,6 +262,17 @@ namespace carto {
     std::shared_ptr<mvt::Map::Settings> MBVectorTileDecoder::getMapSettings() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _mapSettings;
+    }
+
+    void MBVectorTileDecoder::addFallbackFont(const std::shared_ptr<BinaryData>& fontData) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            if (fontData) {
+                _fallbackFonts.push_back(fontData);
+                updateCurrentStyleSet(_styleSet);
+            }
+        }
+        notifyDecoderChanged();
     }
     
     int MBVectorTileDecoder::getMinZoom() const {
@@ -412,7 +425,7 @@ namespace carto {
         return std::shared_ptr<TileMap>();
     }
 
-    void MBVectorTileDecoder::updateCurrentStyle(const boost::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> >& styleSet) {
+    void MBVectorTileDecoder::updateCurrentStyleSet(const boost::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> >& styleSet) {
         std::string styleAssetName;
         std::shared_ptr<AssetPackage> styleSetData;
         std::shared_ptr<mvt::Map> map;
@@ -499,12 +512,17 @@ namespace carto {
             parameterValueMap[it->first] = it->second.getDefaultValue();
         }
 
-        mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, parameterValueMap);
         auto fontManager = std::make_shared<vt::FontManager>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
         auto bitmapLoader = std::make_shared<VTBitmapLoader>(FileUtils::GetFilePath(styleAssetName), styleSetData);
         auto bitmapManager = std::make_shared<vt::BitmapManager>(bitmapLoader);
         auto strokeMap = std::make_shared<vt::StrokeMap>(STROKEMAP_SIZE, STROKEMAP_SIZE);
         auto glyphMap = std::make_shared<vt::GlyphMap>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
+
+        std::shared_ptr<vt::Font> fallbackFont;
+        for (auto it = _fallbackFonts.rbegin(); it != _fallbackFonts.rend(); it++) {
+            fallbackFont = fontManager->getFont(fontManager->loadFontData(*it), fallbackFont);
+        }
+        mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, parameterValueMap, fallbackFont);
         auto symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
 
         if (styleSetData) {

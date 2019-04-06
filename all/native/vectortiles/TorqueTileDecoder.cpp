@@ -22,6 +22,7 @@ namespace carto {
     TorqueTileDecoder::TorqueTileDecoder(const std::shared_ptr<CartoCSSStyleSet>& styleSet) :
         _logger(std::make_shared<MapnikVTLogger>("TorqueTileDecoder")),
         _resolution(256),
+        _fallbackFonts(),
         _map(),
         _mapSettings(),
         _symbolizerContext(),
@@ -32,7 +33,7 @@ namespace carto {
             throw NullArgumentException("Null styleSet");
         }
 
-        updateCurrentStyle(styleSet);
+        updateCurrentStyleSet(styleSet);
     }
     
     TorqueTileDecoder::~TorqueTileDecoder() {
@@ -55,7 +56,7 @@ namespace carto {
 
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            updateCurrentStyle(styleSet);
+            updateCurrentStyleSet(styleSet);
         }
         notifyDecoderChanged();
     }
@@ -78,6 +79,17 @@ namespace carto {
         return _mapSettings;
     }
     
+    void CartoVectorTileDecoder::addFallbackFont(const std::shared_ptr<BinaryData>& fontData) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            if (fontData) {
+                _fallbackFonts.push_back(fontData);
+                updateCurrentStyleSet(_styleSet);
+            }
+        }
+        notifyDecoderChanged();
+    }
+
     int TorqueTileDecoder::getMinZoom() const {
         return 0;
     }
@@ -133,7 +145,7 @@ namespace carto {
         return std::shared_ptr<TileMap>();
     }
 
-    void TorqueTileDecoder::updateCurrentStyle(const std::shared_ptr<CartoCSSStyleSet>& styleSet) {
+    void TorqueTileDecoder::updateCurrentStyleSet(const std::shared_ptr<CartoCSSStyleSet>& styleSet) {
         std::shared_ptr<mvt::TorqueMap> map;
         try {
             auto assetLoader = std::make_shared<CartoCSSAssetLoader>("", std::shared_ptr<AssetPackage>());
@@ -145,12 +157,17 @@ namespace carto {
             throw ParseException(std::string("Style parsing failed: ") + ex.what(), styleSet->getCartoCSS());
         }
 
-        auto bitmapLoader = std::make_shared<VTBitmapLoader>("", std::shared_ptr<AssetPackage>());
         auto fontManager = std::make_shared<vt::FontManager>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
+        auto bitmapLoader = std::make_shared<VTBitmapLoader>("", std::shared_ptr<AssetPackage>());
         auto bitmapManager = std::make_shared<vt::BitmapManager>(bitmapLoader);
         auto strokeMap = std::make_shared<vt::StrokeMap>(1, 1);
         auto glyphMap = std::make_shared<vt::GlyphMap>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
-        mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, std::map<std::string, mvt::Value>());
+
+        std::shared_ptr<vt::Font> fallbackFont;
+        for (auto it = _fallbackFonts.rbegin(); it != _fallbackFonts.rend(); it++) {
+            fallbackFont = fontManager->getFont(fontManager->loadFontData(*it), fallbackFont);
+        }
+        mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, std::map<std::string, mvt::Value>(), fallbackFont);
         auto symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
 
         _map = map;

@@ -46,6 +46,7 @@ namespace carto {
         _logger(std::make_shared<MapnikVTLogger>("CartoVectorTileDecoder")),
         _layerIds(layerIds),
         _layerInvisibleSet(),
+        _fallbackFonts(),
         _layerStyleSets(),
         _layerMaps(),
         _layerSymbolizerContexts(),
@@ -116,6 +117,20 @@ namespace carto {
     std::shared_ptr<mvt::Map::Settings> CartoVectorTileDecoder::getMapSettings() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _mapSettings;
+    }
+    
+    void CartoVectorTileDecoder::addFallbackFont(const std::shared_ptr<BinaryData>& fontData) {
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            if (fontData) {
+                _fallbackFonts.push_back(fontData);
+                _assetPackageSymbolizerContexts.clear();
+                for (auto it = _layerStyleSets.begin(); it != _layerStyleSets.end(); it++) {
+                    updateLayerStyleSet(it->first, it->second);
+                }
+            }
+        }
+        notifyDecoderChanged();
     }
     
     int CartoVectorTileDecoder::getMinZoom() const {
@@ -301,12 +316,17 @@ namespace carto {
         std::shared_ptr<AssetPackage> assetPackage = styleSet->getAssetPackage();
         std::shared_ptr<mvt::SymbolizerContext>& symbolizerContext = _assetPackageSymbolizerContexts[assetPackage];
         if (!symbolizerContext) {
-            mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, std::map<std::string, mvt::Value>());
             auto fontManager = std::make_shared<vt::FontManager>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
             auto bitmapLoader = std::make_shared<VTBitmapLoader>("", assetPackage);
             auto bitmapManager = std::make_shared<vt::BitmapManager>(bitmapLoader);
             auto strokeMap = std::make_shared<vt::StrokeMap>(STROKEMAP_SIZE, STROKEMAP_SIZE);
             auto glyphMap = std::make_shared<vt::GlyphMap>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
+
+            std::shared_ptr<vt::Font> fallbackFont;
+            for (auto it = _fallbackFonts.rbegin(); it != _fallbackFonts.rend(); it++) {
+                fallbackFont = fontManager->getFont(fontManager->loadFontData(*it), fallbackFont);
+            }
+            mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, std::map<std::string, mvt::Value>(), fallbackFont);
             symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
 
             if (assetPackage) {

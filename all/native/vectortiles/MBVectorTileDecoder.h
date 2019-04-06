@@ -135,6 +135,8 @@ namespace carto {
 
         virtual std::shared_ptr<mvt::Map::Settings> getMapSettings() const;
     
+        virtual void addFallbackFont(const std::shared_ptr<BinaryData>& fontData);
+
         virtual int getMinZoom() const;
         
         virtual int getMaxZoom() const;
@@ -146,7 +148,7 @@ namespace carto {
         virtual std::shared_ptr<TileMap> decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<vt::TileTransformer>& tileTransformer, const std::shared_ptr<BinaryData>& tileData) const;
     
     protected:
-        void updateCurrentStyle(const boost::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> >& styleSet);
+        void updateCurrentStyleSet(const boost::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> >& styleSet);
 
         static const int DEFAULT_TILE_SIZE;
         static const int STROKEMAP_SIZE;
@@ -156,6 +158,7 @@ namespace carto {
         bool _featureIdOverride;
         bool _cartoCSSLayerNamesIgnored;
         std::string _layerNameOverride;
+        std::vector<std::shared_ptr<BinaryData> > _fallbackFonts;
         boost::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> > _styleSet;
         std::shared_ptr<mvt::Map> _map;
         std::shared_ptr<mvt::Map::Settings> _mapSettings;

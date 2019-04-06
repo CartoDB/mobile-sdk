@@ -80,6 +80,8 @@ namespace carto {
 
         virtual std::shared_ptr<mvt::Map::Settings> getMapSettings() const;
     
+        virtual void addFallbackFont(const std::shared_ptr<BinaryData>& fontData);
+
         virtual int getMinZoom() const;
         
         virtual int getMaxZoom() const;
@@ -100,6 +102,7 @@ namespace carto {
         const std::shared_ptr<mvt::Logger> _logger;
         const std::vector<std::string> _layerIds;
         std::set<std::string> _layerInvisibleSet;
+        std::vector<std::shared_ptr<BinaryData> > _fallbackFonts;
         std::map<std::string, std::shared_ptr<CartoCSSStyleSet> > _layerStyleSets;
         std::map<std::string, std::shared_ptr<mvt::Map> > _layerMaps;
         std::map<std::string, std::shared_ptr<mvt::SymbolizerContext> > _layerSymbolizerContexts;

@@ -57,6 +57,12 @@ namespace carto {
          * @return Map settings.
          */
         virtual std::shared_ptr<mvt::Map::Settings> getMapSettings() const = 0;
+
+        /**
+         * Adds a fallback font. The font should be TTF or OTF font. It is used for glyphs not found in style defined fonts.
+         * @param fontData The font binary.
+         */
+        virtual void addFallbackFont(const std::shared_ptr<BinaryData>& fontData) = 0;
     
         /**
          * Returns minimum zoom level supported for by the decoder (or style).

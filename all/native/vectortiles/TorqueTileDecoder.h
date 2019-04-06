@@ -67,6 +67,8 @@ namespace carto {
 
         virtual std::shared_ptr<mvt::Map::Settings> getMapSettings() const;
 
+        virtual void addFallbackFont(const std::shared_ptr<BinaryData>& fontData);
+
         virtual int getMinZoom() const;
 
         virtual int getMaxZoom() const;
@@ -78,13 +80,14 @@ namespace carto {
         virtual std::shared_ptr<TileMap> decodeTile(const vt::TileId& tile, const vt::TileId& targetTile, const std::shared_ptr<vt::TileTransformer>& tileTransformer, const std::shared_ptr<BinaryData>& tileData) const;
 
     protected:
-        void updateCurrentStyle(const std::shared_ptr<CartoCSSStyleSet>& styleSet);
+        void updateCurrentStyleSet(const std::shared_ptr<CartoCSSStyleSet>& styleSet);
 
         static const int DEFAULT_TILE_SIZE;
         static const int GLYPHMAP_SIZE;
 
         const std::shared_ptr<mvt::Logger> _logger;
         int _resolution;
+        std::vector<std::shared_ptr<BinaryData> > _fallbackFonts;
         std::shared_ptr<mvt::TorqueMap> _map;
         std::shared_ptr<mvt::Map::Settings> _mapSettings;
         std::shared_ptr<mvt::SymbolizerContext> _symbolizerContext;
