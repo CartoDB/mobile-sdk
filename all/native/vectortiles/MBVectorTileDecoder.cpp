@@ -54,7 +54,8 @@ namespace carto {
         _mapSettings(),
         _parameterValueMap(),
         _updatedParameters(),
-        _symbolizerContext()
+        _symbolizerContext(),
+        _assetPackageSymbolizerContexts()
     {
         if (!compiledStyleSet) {
             throw NullArgumentException("Null compiledStyleSet");
@@ -242,6 +243,7 @@ namespace carto {
         {
             std::lock_guard<std::mutex> lock(_mutex);
             _cartoCSSLayerNamesIgnored = ignore;
+            updateCurrentStyleSet(_styleSet);
         }
         notifyDecoderChanged();
     }
@@ -269,6 +271,7 @@ namespace carto {
             std::lock_guard<std::mutex> lock(_mutex);
             if (fontData) {
                 _fallbackFonts.push_back(fontData);
+                _assetPackageSymbolizerContexts.clear();
                 updateCurrentStyleSet(_styleSet);
             }
         }
@@ -427,12 +430,12 @@ namespace carto {
 
     void MBVectorTileDecoder::updateCurrentStyleSet(const boost::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> >& styleSet) {
         std::string styleAssetName;
-        std::shared_ptr<AssetPackage> styleSetData;
+        std::shared_ptr<AssetPackage> assetPackage;
         std::shared_ptr<mvt::Map> map;
 
         if (auto cartoCSSStyleSet = boost::get<std::shared_ptr<CartoCSSStyleSet> >(&styleSet)) {
             styleAssetName = "";
-            styleSetData = (*cartoCSSStyleSet)->getAssetPackage();
+            assetPackage = (*cartoCSSStyleSet)->getAssetPackage();
 
             try {
                 auto assetLoader = std::make_shared<CartoCSSAssetLoader>("", (*cartoCSSStyleSet)->getAssetPackage());
@@ -448,11 +451,11 @@ namespace carto {
                 throw InvalidArgumentException("Could not find any styles in the style set");
             }
 
-            styleSetData = (*compiledStyleSet)->getAssetPackage();
+            assetPackage = (*compiledStyleSet)->getAssetPackage();
 
             std::shared_ptr<BinaryData> styleData;
-            if (styleSetData) {
-                styleData = styleSetData->loadAsset(styleAssetName);
+            if (assetPackage) {
+                styleData = assetPackage->loadAsset(styleAssetName);
             }
             if (!styleData) {
                 throw GenericException("Failed to load style description asset");
@@ -472,7 +475,7 @@ namespace carto {
                 }
             } else if (boost::algorithm::ends_with(styleAssetName, ".json")) {
                 try {
-                    auto assetLoader = std::make_shared<CartoCSSAssetLoader>(FileUtils::GetFilePath(styleAssetName), styleSetData);
+                    auto assetLoader = std::make_shared<CartoCSSAssetLoader>(FileUtils::GetFilePath(styleAssetName), assetPackage);
                     css::CartoCSSMapLoader mapLoader(assetLoader, _logger);
                     mapLoader.setIgnoreLayerPredicates(_cartoCSSLayerNamesIgnored);
                     map = mapLoader.loadMapProject(styleAssetName);
@@ -484,6 +487,40 @@ namespace carto {
             }
         } else {
             throw InvalidArgumentException("Invalid style set");
+        }
+
+        if (_assetPackageSymbolizerContexts.find(assetPackage) == _assetPackageSymbolizerContexts.end() && _assetPackageSymbolizerContexts.size() >= MAX_ASSETPACKAGE_SYMBOLIZER_CONTEXTS) {
+            _assetPackageSymbolizerContexts.clear();
+        }
+        std::shared_ptr<mvt::SymbolizerContext>& symbolizerContext = _assetPackageSymbolizerContexts[assetPackage];
+        if (!symbolizerContext) {
+            auto fontManager = std::make_shared<vt::FontManager>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
+            auto bitmapLoader = std::make_shared<VTBitmapLoader>(FileUtils::GetFilePath(styleAssetName), assetPackage);
+            auto bitmapManager = std::make_shared<vt::BitmapManager>(bitmapLoader);
+            auto strokeMap = std::make_shared<vt::StrokeMap>(STROKEMAP_SIZE, STROKEMAP_SIZE);
+            auto glyphMap = std::make_shared<vt::GlyphMap>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
+
+            std::shared_ptr<vt::Font> fallbackFont;
+            for (auto it = _fallbackFonts.rbegin(); it != _fallbackFonts.rend(); it++) {
+                std::shared_ptr<BinaryData> fontData = *it;
+                std::string fontName = fontManager->loadFontData(*fontData->getDataPtr());
+                fallbackFont = fontManager->getFont(fontName, fallbackFont);
+            }
+            mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, parameterValueMap, fallbackFont);
+            symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
+
+            if (assetPackage) {
+                std::string fontPrefix = map->getSettings().fontDirectory;
+                fontPrefix = FileUtils::NormalizePath(FileUtils::GetFilePath(styleAssetName) + fontPrefix + "/");
+
+                for (const std::string& assetName : assetPackage->getAssetNames()) {
+                    if (assetName.size() > fontPrefix.size() && assetName.substr(0, fontPrefix.size()) == fontPrefix) {
+                        if (std::shared_ptr<BinaryData> fontData = assetPackage->loadAsset(assetName)) {
+                            fontManager->loadFontData(*fontData->getDataPtr());
+                        }
+                    }
+                }
+            }
         }
 
         std::map<std::string, mvt::Value> parameterValueMap;
@@ -512,32 +549,6 @@ namespace carto {
             parameterValueMap[it->first] = it->second.getDefaultValue();
         }
 
-        auto fontManager = std::make_shared<vt::FontManager>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
-        auto bitmapLoader = std::make_shared<VTBitmapLoader>(FileUtils::GetFilePath(styleAssetName), styleSetData);
-        auto bitmapManager = std::make_shared<vt::BitmapManager>(bitmapLoader);
-        auto strokeMap = std::make_shared<vt::StrokeMap>(STROKEMAP_SIZE, STROKEMAP_SIZE);
-        auto glyphMap = std::make_shared<vt::GlyphMap>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
-
-        std::shared_ptr<vt::Font> fallbackFont;
-        for (auto it = _fallbackFonts.rbegin(); it != _fallbackFonts.rend(); it++) {
-            fallbackFont = fontManager->getFont(fontManager->loadFontData(*it), fallbackFont);
-        }
-        mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, parameterValueMap, fallbackFont);
-        auto symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
-
-        if (styleSetData) {
-            std::string fontPrefix = map->getSettings().fontDirectory;
-            fontPrefix = FileUtils::NormalizePath(FileUtils::GetFilePath(styleAssetName) + fontPrefix + "/");
-
-            for (const std::string& assetName : styleSetData->getAssetNames()) {
-                if (assetName.size() > fontPrefix.size() && assetName.substr(0, fontPrefix.size()) == fontPrefix) {
-                    if (std::shared_ptr<BinaryData> fontData = styleSetData->loadAsset(assetName)) {
-                        fontManager->loadFontData(*fontData->getDataPtr());
-                    }
-                }
-            }
-        }
-
         _map = map;
         _mapSettings = std::make_shared<mvt::Map::Settings>(_map->getSettings());
         _parameterValueMap = parameterValueMap;
@@ -551,4 +562,5 @@ namespace carto {
     const int MBVectorTileDecoder::DEFAULT_TILE_SIZE = 256;
     const int MBVectorTileDecoder::STROKEMAP_SIZE = 512;
     const int MBVectorTileDecoder::GLYPHMAP_SIZE = 2048;
+    const int MBVectorTileDecoder::MAX_ASSETPACKAGE_SYMBOLIZER_CONTEXTS = 2;
 }

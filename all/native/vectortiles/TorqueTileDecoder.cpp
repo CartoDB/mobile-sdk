@@ -165,7 +165,9 @@ namespace carto {
 
         std::shared_ptr<vt::Font> fallbackFont;
         for (auto it = _fallbackFonts.rbegin(); it != _fallbackFonts.rend(); it++) {
-            fallbackFont = fontManager->getFont(fontManager->loadFontData(*it), fallbackFont);
+            std::shared_ptr<BinaryData> fontData = *it;
+            std::string fontName = fontManager->loadFontData(*fontData->getDataPtr());
+            fallbackFont = fontManager->getFont(fontName, fallbackFont);
         }
         mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, std::map<std::string, mvt::Value>(), fallbackFont);
         auto symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);

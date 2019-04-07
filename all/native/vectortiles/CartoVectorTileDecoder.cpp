@@ -313,6 +313,9 @@ namespace carto {
             throw NullArgumentException("Null styleset");
         }
 
+        if (_assetPackageSymbolizerContexts.find(assetPackage) == _assetPackageSymbolizerContexts.end() && _assetPackageSymbolizerContexts.size() >= MAX_ASSETPACKAGE_SYMBOLIZER_CONTEXTS) {
+            _assetPackageSymbolizerContexts.clear();
+        }
         std::shared_ptr<AssetPackage> assetPackage = styleSet->getAssetPackage();
         std::shared_ptr<mvt::SymbolizerContext>& symbolizerContext = _assetPackageSymbolizerContexts[assetPackage];
         if (!symbolizerContext) {
@@ -324,7 +327,9 @@ namespace carto {
 
             std::shared_ptr<vt::Font> fallbackFont;
             for (auto it = _fallbackFonts.rbegin(); it != _fallbackFonts.rend(); it++) {
-                fallbackFont = fontManager->getFont(fontManager->loadFontData(*it), fallbackFont);
+                std::shared_ptr<BinaryData> fontData = *it;
+                std::string fontName = fontManager->loadFontData(*fontData->getDataPtr());
+                fallbackFont = fontManager->getFont(fontName, fallbackFont);
             }
             mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, std::map<std::string, mvt::Value>(), fallbackFont);
             symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
@@ -364,4 +369,5 @@ namespace carto {
     const int CartoVectorTileDecoder::DEFAULT_TILE_SIZE = 256;
     const int CartoVectorTileDecoder::STROKEMAP_SIZE = 512;
     const int CartoVectorTileDecoder::GLYPHMAP_SIZE = 2048;
+    const int CartoVectorTileDecoder::MAX_ASSETPACKAGE_SYMBOLIZER_CONTEXTS = 4;
 }

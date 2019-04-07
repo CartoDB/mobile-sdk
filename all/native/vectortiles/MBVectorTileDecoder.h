@@ -28,6 +28,7 @@ namespace carto {
         class Logger;
     }
 
+    class AssetPackage;
     class CompiledStyleSet;
     class CartoCSSStyleSet;
     
@@ -153,6 +154,7 @@ namespace carto {
         static const int DEFAULT_TILE_SIZE;
         static const int STROKEMAP_SIZE;
         static const int GLYPHMAP_SIZE;
+        static const int MAX_ASSETPACKAGE_SYMBOLIZER_CONTEXTS;
         
         const std::shared_ptr<mvt::Logger> _logger;
         bool _featureIdOverride;
@@ -165,6 +167,7 @@ namespace carto {
         std::map<std::string, mvt::Value> _parameterValueMap;
         std::set<std::string> _updatedParameters;
         std::shared_ptr<mvt::SymbolizerContext> _symbolizerContext;
+        std::map<std::shared_ptr<AssetPackage>, std::shared_ptr<mvt::SymbolizerContext> > _assetPackageSymbolizerContexts;
 
         mutable std::pair<std::shared_ptr<BinaryData>, std::shared_ptr<mvt::MBVTFeatureDecoder> > _cachedFeatureDecoder;
     
