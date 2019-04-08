@@ -165,7 +165,7 @@ namespace carto {
         std::shared_ptr<mvt::Map> _map;
         std::shared_ptr<mvt::Map::Settings> _mapSettings;
         std::shared_ptr<mvt::SymbolizerContext> _symbolizerContext;
-        std::map<std::shared_ptr<AssetPackage>, std::shared_ptr<mvt::SymbolizerContext> > _assetPackageSymbolizerContexts;
+        std::map<std::pair<std::string, std::shared_ptr<AssetPackage> >, std::shared_ptr<mvt::SymbolizerContext> > _assetPackageSymbolizerContexts;
 
         mutable std::pair<std::shared_ptr<BinaryData>, std::shared_ptr<mvt::MBVTFeatureDecoder> > _cachedFeatureDecoder;
     

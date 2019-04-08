@@ -184,7 +184,7 @@ namespace carto {
             const mvt::NutiParameter& nutiParam = it->second;
 
             if (!nutiParam.getEnumMap().empty()) {
-                auto it2 = nutiParam.getEnumMap().find(boost::lexical_cast<std::string>(value));
+                auto it2 = nutiParam.getEnumMap().find(value);
                 if (it2 == nutiParam.getEnumMap().end()) {
                     Log::Errorf("MBVectorTileDecoder::setStyleParameter: Illegal enum value for parameter: %s/%s", param.c_str(), value.c_str());
                     return false;
@@ -452,7 +452,6 @@ namespace carto {
             if (styleAssetName.empty()) {
                 throw InvalidArgumentException("Could not find any styles in the style set");
             }
-
             assetPackage = (*compiledStyleSet)->getAssetPackage();
 
             std::shared_ptr<BinaryData> styleData;
@@ -491,10 +490,10 @@ namespace carto {
             throw InvalidArgumentException("Invalid style set");
         }
 
-        if (_assetPackageSymbolizerContexts.find(assetPackage) == _assetPackageSymbolizerContexts.end() && _assetPackageSymbolizerContexts.size() >= MAX_ASSETPACKAGE_SYMBOLIZER_CONTEXTS) {
+        if (_assetPackageSymbolizerContexts.find(std::make_pair(styleAssetName, assetPackage)) == _assetPackageSymbolizerContexts.end() && _assetPackageSymbolizerContexts.size() >= MAX_ASSETPACKAGE_SYMBOLIZER_CONTEXTS) {
             _assetPackageSymbolizerContexts.clear();
         }
-        std::shared_ptr<mvt::SymbolizerContext>& symbolizerContext = _assetPackageSymbolizerContexts[assetPackage];
+        std::shared_ptr<mvt::SymbolizerContext>& symbolizerContext = _assetPackageSymbolizerContexts[std::make_pair(styleAssetName, assetPackage)];
         if (!symbolizerContext) {
             auto fontManager = std::make_shared<vt::FontManager>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);
             auto bitmapLoader = std::make_shared<VTBitmapLoader>(FileUtils::GetFilePath(styleAssetName), assetPackage);
@@ -527,25 +526,28 @@ namespace carto {
 
         std::map<std::string, mvt::Value> parameterValueMap;
         for (auto it = map->getNutiParameterMap().begin(); it != map->getNutiParameterMap().end(); it++) {
-            auto it2 = _parameterValueMap.find(it->first);
+            const std::string& param = it->first;
+            const mvt::NutiParameter& nutiParam = it->second;
+
+            auto it2 = _parameterValueMap.find(param);
             if (it2 != _parameterValueMap.end()) {
-                bool valid = it->second.getDefaultValue().which() == it2->second.which();
-                if (!it->second.getEnumMap().empty()) {
+                bool valid = nutiParam.getDefaultValue().which() == it2->second.which();
+                if (!nutiParam.getEnumMap().empty()) {
                     valid = false;
-                    for (const std::pair<std::string, mvt::Value>& enumValue : it->second.getEnumMap()) {
+                    for (const std::pair<std::string, mvt::Value>& enumValue : nutiParam.getEnumMap()) {
                         if (enumValue.second == it2->second) {
                             valid = true;
                         }
                     }
                 }
                 if (valid) {
-                    parameterValueMap[it->first] = it2->second;
+                    parameterValueMap[param] = it2->second;
                     continue;
                 }
                 _parameterValueMap.erase(it2);
             }
 
-            parameterValueMap[it->first] = it->second.getDefaultValue();
+            parameterValueMap[param] = nutiParam.getDefaultValue();
         }
         for (auto it = _parameterValueMap.begin(); it != _parameterValueMap.end(); ) {
             if (map->getNutiParameterMap().find(it->first) != map->getNutiParameterMap().end()) {
