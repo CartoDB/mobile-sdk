@@ -313,10 +313,11 @@ namespace carto {
             throw NullArgumentException("Null styleset");
         }
 
+        std::shared_ptr<AssetPackage> assetPackage = styleSet->getAssetPackage();
+
         if (_assetPackageSymbolizerContexts.find(assetPackage) == _assetPackageSymbolizerContexts.end() && _assetPackageSymbolizerContexts.size() >= MAX_ASSETPACKAGE_SYMBOLIZER_CONTEXTS) {
             _assetPackageSymbolizerContexts.clear();
         }
-        std::shared_ptr<AssetPackage> assetPackage = styleSet->getAssetPackage();
         std::shared_ptr<mvt::SymbolizerContext>& symbolizerContext = _assetPackageSymbolizerContexts[assetPackage];
         if (!symbolizerContext) {
             auto fontManager = std::make_shared<vt::FontManager>(GLYPHMAP_SIZE, GLYPHMAP_SIZE);

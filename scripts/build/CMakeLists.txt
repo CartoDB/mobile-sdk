@@ -74,7 +74,7 @@ endif(IOS)
 if(ANDROID)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fstack-protector -Oz -ffunction-sections -fdata-sections -fvisibility=hidden -fomit-frame-pointer -fstrict-aliasing -funwind-tables -no-canonical-prefixes")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector -std=c++11 -ftemplate-depth=1024 -fexceptions -frtti -Oz -ffunction-sections -fdata-sections -fvisibility=hidden -fvisibility-inlines-hidden -fomit-frame-pointer -fstrict-aliasing -funwind-tables -no-canonical-prefixes")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -s -Wl,--gc-sections -Wl,-z,noexecstack -Wl,--exclude-libs,libgcc.a -Wl,--exclude-libs,libatomic.a -Wl,--build-id")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -s -Wl,--gc-sections -Wl,-z,noexecstack -Wl,--exclude-libs,libgcc.a -Wl,--exclude-libs,libatomic.a -Wl,--build-id -fuse-ld=lld")
 endif(ANDROID)
 
 # Directories

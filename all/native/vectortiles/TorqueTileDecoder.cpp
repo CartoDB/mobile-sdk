@@ -79,7 +79,7 @@ namespace carto {
         return _mapSettings;
     }
     
-    void CartoVectorTileDecoder::addFallbackFont(const std::shared_ptr<BinaryData>& fontData) {
+    void TorqueTileDecoder::addFallbackFont(const std::shared_ptr<BinaryData>& fontData) {
         {
             std::lock_guard<std::mutex> lock(_mutex);
             if (fontData) {

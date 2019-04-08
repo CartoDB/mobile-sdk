@@ -213,8 +213,8 @@ namespace carto {
                 _parameterValueMap[param] = val;
                 _updatedParameters.insert(param);
             }
-    
-            mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, _parameterValueMap);
+
+            mvt::SymbolizerContext::Settings settings(_symbolizerContext->getSettings().getTileSize(), _parameterValueMap, _symbolizerContext->getSettings().getFallbackFont());
             _symbolizerContext = std::make_shared<mvt::SymbolizerContext>(_symbolizerContext->getBitmapManager(), _symbolizerContext->getFontManager(), _symbolizerContext->getStrokeMap(), _symbolizerContext->getGlyphMap(), settings);
         }
         notifyDecoderChanged();
@@ -243,6 +243,7 @@ namespace carto {
         {
             std::lock_guard<std::mutex> lock(_mutex);
             _cartoCSSLayerNamesIgnored = ignore;
+            _assetPackageSymbolizerContexts.clear();
             updateCurrentStyleSet(_styleSet);
         }
         notifyDecoderChanged();
@@ -506,7 +507,7 @@ namespace carto {
                 std::string fontName = fontManager->loadFontData(*fontData->getDataPtr());
                 fallbackFont = fontManager->getFont(fontName, fallbackFont);
             }
-            mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, parameterValueMap, fallbackFont);
+            mvt::SymbolizerContext::Settings settings(DEFAULT_TILE_SIZE, std::map<std::string, mvt::Value>(), fallbackFont);
             symbolizerContext = std::make_shared<mvt::SymbolizerContext>(bitmapManager, fontManager, strokeMap, glyphMap, settings);
 
             if (assetPackage) {
@@ -549,11 +550,12 @@ namespace carto {
             parameterValueMap[it->first] = it->second.getDefaultValue();
         }
 
+        mvt::SymbolizerContext::Settings settings(symbolizerContext->getSettings().getTileSize(), parameterValueMap, symbolizerContext->getSettings().getFallbackFont());
+        _symbolizerContext = std::make_shared<mvt::SymbolizerContext>(symbolizerContext->getBitmapManager(), symbolizerContext->getFontManager(), symbolizerContext->getStrokeMap(), symbolizerContext->getGlyphMap(), settings);
         _map = map;
         _mapSettings = std::make_shared<mvt::Map::Settings>(_map->getSettings());
         _parameterValueMap = parameterValueMap;
         _updatedParameters = updatedParameters;
-        _symbolizerContext = symbolizerContext;
         _styleSet = styleSet;
         _cachedFeatureDecoder.first.reset();
         _cachedFeatureDecoder.second.reset();
