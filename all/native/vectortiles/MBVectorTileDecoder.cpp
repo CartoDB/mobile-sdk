@@ -48,12 +48,11 @@ namespace carto {
         _featureIdOverride(false),
         _cartoCSSLayerNamesIgnored(false),
         _layerNameOverride(),
+        _parameterValueMap(),
         _fallbackFonts(),
         _styleSet(),
         _map(),
         _mapSettings(),
-        _parameterValueMap(),
-        _updatedParameters(),
         _symbolizerContext(),
         _assetPackageSymbolizerContexts()
     {
@@ -69,11 +68,10 @@ namespace carto {
         _featureIdOverride(false),
         _cartoCSSLayerNamesIgnored(false),
         _layerNameOverride(),
+        _parameterValueMap(),
         _fallbackFonts(),
         _styleSet(),
         _map(),
-        _parameterValueMap(),
-        _updatedParameters(),
         _symbolizerContext()
     {
         if (!cartoCSSStyleSet) {
@@ -180,7 +178,7 @@ namespace carto {
     
             auto it = _map->getNutiParameterMap().find(param);
             if (it == _map->getNutiParameterMap().end()) {
-                Log::Infof("MBVectorTileDecoder::setStyleParameter: Could not find parameter: %s", param.c_str());
+                Log::Errorf("MBVectorTileDecoder::setStyleParameter: Could not find parameter: %s", param.c_str());
                 return false;
             }
             const mvt::NutiParameter& nutiParam = it->second;
@@ -188,30 +186,33 @@ namespace carto {
             if (!nutiParam.getEnumMap().empty()) {
                 auto it2 = nutiParam.getEnumMap().find(boost::lexical_cast<std::string>(value));
                 if (it2 == nutiParam.getEnumMap().end()) {
-                    Log::Infof("MBVectorTileDecoder::setStyleParameter: Illegal enum value for parameter: %s/%s", param.c_str(), value.c_str());
+                    Log::Errorf("MBVectorTileDecoder::setStyleParameter: Illegal enum value for parameter: %s/%s", param.c_str(), value.c_str());
                     return false;
                 }
                 _parameterValueMap[param] = it2->second;
-                _updatedParameters.insert(param);
             } else {
-                mvt::Value val = nutiParam.getDefaultValue();
-                if (boost::get<bool>(&val)) {
-                    if (value == "true") {
-                        val = mvt::Value(true);
-                    } else if (value == "false") {
-                        val = mvt::Value(false);
-                    } else {
-                        val = mvt::Value(boost::lexical_cast<bool>(value));
+                try {
+                    mvt::Value val = nutiParam.getDefaultValue();
+                    if (boost::get<bool>(&val)) {
+                        if (value == "true") {
+                            val = mvt::Value(true);
+                        } else if (value == "false") {
+                            val = mvt::Value(false);
+                        } else {
+                            val = mvt::Value(boost::lexical_cast<bool>(value));
+                        }
+                    } else if (boost::get<long long>(&val)) {
+                        val = mvt::Value(boost::lexical_cast<long long>(value));
+                    } else if (boost::get<double>(&val)) {
+                        val = mvt::Value(boost::lexical_cast<double>(value));
+                    } else if (boost::get<std::string>(&val)) {
+                        val = value;
                     }
-                } else if (boost::get<long long>(&val)) {
-                    val = mvt::Value(boost::lexical_cast<long long>(value));
-                } else if (boost::get<double>(&val)) {
-                    val = mvt::Value(boost::lexical_cast<double>(value));
-                } else if (boost::get<std::string>(&val)) {
-                    val = value;
+                    _parameterValueMap[param] = val;
+                } catch (const std::exception& ex) {
+                    Log::Errorf("MBVectorTileDecoder::setStyleParameter: Exception while converting parameter %s/%s: %s", param.c_str(), value.c_str(), ex.what());
+                    return false;
                 }
-                _parameterValueMap[param] = val;
-                _updatedParameters.insert(param);
             }
 
             mvt::SymbolizerContext::Settings settings(_symbolizerContext->getSettings().getTileSize(), _parameterValueMap, _symbolizerContext->getSettings().getFallbackFont());
@@ -525,37 +526,19 @@ namespace carto {
         }
 
         std::map<std::string, mvt::Value> parameterValueMap;
-        std::set<std::string> updatedParameters;
         for (auto it = map->getNutiParameterMap().begin(); it != map->getNutiParameterMap().end(); it++) {
-            if (_updatedParameters.find(it->first) != _updatedParameters.end()) {
-                auto it2 = _parameterValueMap.find(it->first);
-                if (it2 != _parameterValueMap.end()) {
-                    bool valid = it->second.getDefaultValue().which() == it2->second.which();
-                    if (!it->second.getEnumMap().empty()) {
-                        valid = false;
-                        for (const std::pair<std::string, mvt::Value>& enumValue : it->second.getEnumMap()) {
-                            if (enumValue.second == it2->second) {
-                                valid = true;
-                            }
-                        }
-                    }
-                    if (valid) {
-                        parameterValueMap[it->first] = it2->second;
-                        updatedParameters.insert(it->first);
-                        continue;
-                    }
-                }
+            auto it2 = _parameterValueMap.find(it->first);
+            if (it2 != _parameterValueMap.end()) {
+                parameterValueMap[it->first] = it2->second;
+            } else {
+                parameterValueMap[it->first] = it->second.getDefaultValue();
             }
-
-            parameterValueMap[it->first] = it->second.getDefaultValue();
         }
 
         mvt::SymbolizerContext::Settings settings(symbolizerContext->getSettings().getTileSize(), parameterValueMap, symbolizerContext->getSettings().getFallbackFont());
         _symbolizerContext = std::make_shared<mvt::SymbolizerContext>(symbolizerContext->getBitmapManager(), symbolizerContext->getFontManager(), symbolizerContext->getStrokeMap(), symbolizerContext->getGlyphMap(), settings);
         _map = map;
         _mapSettings = std::make_shared<mvt::Map::Settings>(_map->getSettings());
-        _parameterValueMap = parameterValueMap;
-        _updatedParameters = updatedParameters;
         _styleSet = styleSet;
         _cachedFeatureDecoder.first.reset();
         _cachedFeatureDecoder.second.reset();

@@ -12,7 +12,6 @@
 #include <memory>
 #include <mutex>
 #include <map>
-#include <set>
 #include <vector>
 #include <string>
 
@@ -160,12 +159,11 @@ namespace carto {
         bool _featureIdOverride;
         bool _cartoCSSLayerNamesIgnored;
         std::string _layerNameOverride;
+        std::map<std::string, mvt::Value> _parameterValueMap;
         std::vector<std::shared_ptr<BinaryData> > _fallbackFonts;
         boost::variant<std::shared_ptr<CompiledStyleSet>, std::shared_ptr<CartoCSSStyleSet> > _styleSet;
         std::shared_ptr<mvt::Map> _map;
         std::shared_ptr<mvt::Map::Settings> _mapSettings;
-        std::map<std::string, mvt::Value> _parameterValueMap;
-        std::set<std::string> _updatedParameters;
         std::shared_ptr<mvt::SymbolizerContext> _symbolizerContext;
         std::map<std::shared_ptr<AssetPackage>, std::shared_ptr<mvt::SymbolizerContext> > _assetPackageSymbolizerContexts;
 
