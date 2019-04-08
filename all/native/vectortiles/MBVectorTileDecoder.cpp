@@ -215,7 +215,11 @@ namespace carto {
                 }
             }
 
-            mvt::SymbolizerContext::Settings settings(_symbolizerContext->getSettings().getTileSize(), _parameterValueMap, _symbolizerContext->getSettings().getFallbackFont());
+            std::map<std::string, mvt::Value> parameterValueMap = _symbolizerContext->getSettings().getNutiParameterValueMap();
+            for (auto it2 = _parameterValueMap.begin(); it2 != _parameterValueMap.end(); it2++) {
+                parameterValueMap[it2->first] = it2->second;
+            }
+            mvt::SymbolizerContext::Settings settings(_symbolizerContext->getSettings().getTileSize(), parameterValueMap, _symbolizerContext->getSettings().getFallbackFont());
             _symbolizerContext = std::make_shared<mvt::SymbolizerContext>(_symbolizerContext->getBitmapManager(), _symbolizerContext->getFontManager(), _symbolizerContext->getStrokeMap(), _symbolizerContext->getGlyphMap(), settings);
         }
         notifyDecoderChanged();
@@ -526,35 +530,33 @@ namespace carto {
 
         std::map<std::string, mvt::Value> parameterValueMap;
         for (auto it = map->getNutiParameterMap().begin(); it != map->getNutiParameterMap().end(); it++) {
-            const std::string& param = it->first;
-            const mvt::NutiParameter& nutiParam = it->second;
-
-            auto it2 = _parameterValueMap.find(param);
-            if (it2 != _parameterValueMap.end()) {
-                bool valid = nutiParam.getDefaultValue().which() == it2->second.which();
-                if (!nutiParam.getEnumMap().empty()) {
-                    valid = false;
-                    for (const std::pair<std::string, mvt::Value>& enumValue : nutiParam.getEnumMap()) {
-                        if (enumValue.second == it2->second) {
-                            valid = true;
-                        }
-                    }
-                }
-                if (valid) {
-                    parameterValueMap[param] = it2->second;
-                    continue;
-                }
-                _parameterValueMap.erase(it2);
-            }
-
-            parameterValueMap[param] = nutiParam.getDefaultValue();
+            parameterValueMap[it->first] = it->second.getDefaultValue();
         }
         for (auto it = _parameterValueMap.begin(); it != _parameterValueMap.end(); ) {
-            if (map->getNutiParameterMap().find(it->first) != map->getNutiParameterMap().end()) {
-                it++;
-            } else {
+            auto it2 = map->getNutiParameterMap().find(it->first);
+            if (it2 == map->getNutiParameterMap().end()) {
                 it = _parameterValueMap.erase(it);
+                continue;
             }
+            const mvt::NutiParameter& nutiParam = it2->second;
+
+            bool valid = nutiParam.getDefaultValue().which() == it->second.which();
+            if (!nutiParam.getEnumMap().empty()) {
+                valid = false;
+                for (const std::pair<std::string, mvt::Value>& enumValue : nutiParam.getEnumMap()) {
+                    if (enumValue.second == it->second) {
+                        valid = true;
+                        break;
+                    }
+                }
+            }
+            if (!valid) {
+                it = _parameterValueMap.erase(it);
+                continue;
+            }
+
+            parameterValueMap[it->first] = it->second;
+            it++;
         }
 
         mvt::SymbolizerContext::Settings settings(symbolizerContext->getSettings().getTileSize(), parameterValueMap, symbolizerContext->getSettings().getFallbackFont());
