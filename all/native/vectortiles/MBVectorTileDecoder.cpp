@@ -529,9 +529,29 @@ namespace carto {
         for (auto it = map->getNutiParameterMap().begin(); it != map->getNutiParameterMap().end(); it++) {
             auto it2 = _parameterValueMap.find(it->first);
             if (it2 != _parameterValueMap.end()) {
-                parameterValueMap[it->first] = it2->second;
+                bool valid = it->second.getDefaultValue().which() == it2->second.which();
+                if (!it->second.getEnumMap().empty()) {
+                    valid = false;
+                    for (const std::pair<std::string, mvt::Value>& enumValue : it->second.getEnumMap()) {
+                        if (enumValue.second == it2->second) {
+                            valid = true;
+                        }
+                    }
+                }
+                if (valid) {
+                    parameterValueMap[it->first] = it2->second;
+                    continue;
+                }
+                _parameterValueMap.erase(it2);
+            }
+
+            parameterValueMap[it->first] = it->second.getDefaultValue();
+        }
+        for (auto it = _parameterValueMap.begin(); it != _parameterValueMap.end(); ) {
+            if (map->getNutiParameterMap().find(it->first) != map->getNutiParameterMap().end()) {
+                it++;
             } else {
-                parameterValueMap[it->first] = it->second.getDefaultValue();
+                it = _parameterValueMap.erase(it);
             }
         }
 
