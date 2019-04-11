@@ -162,14 +162,13 @@ namespace carto {
                 cglib::vec3<double> pos1 = cglib::transform_point(cglib::vec3<double>(screenPos(0), screenPos(1),  1), invMVPMat);
                 cglib::ray3<double> ray(pos0, cglib::unit(pos1 - pos0));
 
-                double t = 0;
+                double t = -1;
                 if (projectionSurface->calculateHitPoint(ray, 0, t)) {
-                    MapPos mapPos = projectionSurface->calculateMapPos(ray(t > 0 ? t : _viewState.getFar()));
-                    mapPoses.emplace_back(mapPos.getX(), mapPos.getY());
-                } else {
-                    MapPos mapPos = projectionSurface->calculateMapPos(projectionSurface->calculateNearestPoint(ray, 0, t));
-                    mapPoses.emplace_back(mapPos.getX(), mapPos.getY());
+                    t = std::min(t, static_cast<double>(_viewState.getFar()));
                 }
+
+                MapPos mapPos = projectionSurface->calculateMapPos(ray(t > 0 ? t : _viewState.getFar()));
+                mapPoses.emplace_back(mapPos.getX(), mapPos.getY());
             }
         }
 
