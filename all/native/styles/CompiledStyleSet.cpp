@@ -5,7 +5,9 @@
 namespace carto {
     
     CompiledStyleSet::CompiledStyleSet(const std::shared_ptr<AssetPackage>& assetPackage) :
-        _styleName(), _styleAssetName(), _assetPackage(assetPackage)
+        _styleName(),
+        _styleAssetName(),
+        _assetPackage(assetPackage)
     {
         // Find first .xml or .json from the root directory, use this as the default style
         for (const std::string& assetName : _assetPackage->getAssetNames()) {
@@ -28,7 +30,9 @@ namespace carto {
     }
 
     CompiledStyleSet::CompiledStyleSet(const std::shared_ptr<AssetPackage>& assetPackage, const std::string& styleName) :
-        _styleName(), _styleAssetName(), _assetPackage(assetPackage)
+        _styleName(),
+        _styleAssetName(),
+        _assetPackage(assetPackage)
     {
         for (const std::string& assetName : _assetPackage->getAssetNames()) {
             if (assetName == styleName + ".xml" || assetName == styleName + ".json") {

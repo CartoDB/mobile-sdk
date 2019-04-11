@@ -5,12 +5,14 @@
 namespace carto {
     
     CartoCSSStyleSet::CartoCSSStyleSet(const std::string& cartoCSS) :
-        _cartoCSS(cartoCSS), _assetPackage()
+        _cartoCSS(cartoCSS),
+        _assetPackage()
     {
     }
 
     CartoCSSStyleSet::CartoCSSStyleSet(const std::string& cartoCSS, const std::shared_ptr<AssetPackage>& assetPackage) :
-        _cartoCSS(cartoCSS), _assetPackage(assetPackage)
+        _cartoCSS(cartoCSS),
+        _assetPackage(assetPackage)
     {
     }
 
