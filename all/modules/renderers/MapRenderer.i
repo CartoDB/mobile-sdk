@@ -36,7 +36,7 @@
 %ignore carto::MapRenderer::getRedrawRequestListener;
 %ignore carto::MapRenderer::setRedrawRequestListener;
 %ignore carto::MapRenderer::calculateCameraEvent;
-%ignore carto::MapRenderer::moveToFitPoints;
+%ignore carto::MapRenderer::moveToFitBounds;
 %ignore carto::MapRenderer::screenToWorld;
 %ignore carto::MapRenderer::worldToScreen;
 %ignore carto::MapRenderer::onSurfaceCreated;
@@ -45,6 +45,7 @@
 %ignore carto::MapRenderer::onSurfaceDestroyed;
 %ignore carto::MapRenderer::clearAndBindScreenFBO;
 %ignore carto::MapRenderer::blendAndUnbindScreenFBO;
+%ignore carto::MapRenderer::setZBuffering;
 %ignore carto::MapRenderer::calculateRayIntersectedElements;
 %ignore carto::MapRenderer::billboardsChanged;
 %ignore carto::MapRenderer::layerChanged;
