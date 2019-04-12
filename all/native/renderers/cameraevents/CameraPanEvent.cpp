@@ -65,8 +65,6 @@ namespace carto {
         cameraPos = cglib::transform_point(cameraPos, translateTransform);
         upVec = cglib::transform_vector(upVec, translateTransform);
         
-        ClampFocusPos(focusPos, cameraPos, upVec, options, viewState);
-
         viewState.setCameraPos(cameraPos);
         viewState.setFocusPos(focusPos);
         viewState.setUpVec(upVec);

@@ -52,7 +52,7 @@ namespace carto {
         _rotatable(true),
         _tiltRange(Const::MIN_SUPPORTED_TILT_ANGLE, 90.0f),
         _zoomRange(0.0, Const::MAX_SUPPORTED_ZOOM_LEVEL),
-        _panBounds(EPSG3857().getBounds()),
+        _panBounds(MapPos(-std::numeric_limits<double>::infinity(), -std::numeric_limits<double>::infinity()), MapPos(std::numeric_limits<double>::infinity(), std::numeric_limits<double>::infinity())),
         _focusPointOffset(0, 0),
         _baseProjection(std::make_shared<EPSG3857>()),
         _projectionSurface(std::make_shared<PlanarProjectionSurface>()),
@@ -584,6 +584,9 @@ namespace carto {
             float min = GeneralUtils::Clamp(tiltRange.getMin(), Const::MIN_SUPPORTED_TILT_ANGLE, 90.0f);
             float max = GeneralUtils::Clamp(tiltRange.getMax(), Const::MIN_SUPPORTED_TILT_ANGLE, 90.0f);
             MapRange tiltRangeClipped(min, max);
+            if (tiltRangeClipped.getMin() > tiltRangeClipped.getMax()) {
+                throw InvalidArgumentException("Min larger than max in tiltRange");
+            }
             if (_tiltRange == tiltRangeClipped) {
                 return;
             }
@@ -600,11 +603,12 @@ namespace carto {
     void Options::setZoomRange(const MapRange& zoomRange) {
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            float min = GeneralUtils::Clamp(zoomRange.getMin(), 0.0f,
-                static_cast<float>(Const::MAX_SUPPORTED_ZOOM_LEVEL));
-            float max = GeneralUtils::Clamp(zoomRange.getMax(), 0.0f,
-                static_cast<float>(Const::MAX_SUPPORTED_ZOOM_LEVEL));
+            float min = GeneralUtils::Clamp(zoomRange.getMin(), 0.0f, static_cast<float>(Const::MAX_SUPPORTED_ZOOM_LEVEL));
+            float max = GeneralUtils::Clamp(zoomRange.getMax(), 0.0f, static_cast<float>(Const::MAX_SUPPORTED_ZOOM_LEVEL));
             MapRange zoomRangeClipped(min, max);
+            if (zoomRangeClipped.getMin() > zoomRangeClipped.getMax()) {
+                throw InvalidArgumentException("Min larger than max in zoomRange");
+            }
             if (_zoomRange == zoomRangeClipped) {
                 return;
             }
@@ -621,17 +625,34 @@ namespace carto {
     void Options::setPanBounds(const MapBounds& panBounds) {
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            MapBounds projBounds = _baseProjection->getBounds();
-            MapBounds panBoundsClipped(
-                MapPos(std::max(projBounds.getMin().getX(), panBounds.getMin().getX()), std::max(projBounds.getMin().getX(), panBounds.getMin().getY()), projBounds.getMin().getZ()),
-                MapPos(std::min(projBounds.getMax().getX(), panBounds.getMax().getX()), std::min(projBounds.getMax().getX(), panBounds.getMax().getY()), projBounds.getMax().getZ())
-            );
-            if (_panBounds == panBoundsClipped) {
+            if (panBounds.getMin().getX() > panBounds.getMax().getX() || panBounds.getMin().getY() > panBounds.getMax().getY()) {
+                throw InvalidArgumentException("Min larger than max in panBounds");
+            }
+            if (_panBounds == panBounds) {
                 return;
             }
-            _panBounds = panBoundsClipped;
+            _panBounds = panBounds;
         }
         notifyOptionChanged("PanBounds");
+    }
+    
+    MapBounds Options::getAdjustedInternalPanBounds() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        MapPos panBoundsMin = _baseProjection->toInternal(_panBounds.getMin());
+        MapPos panBoundsMax = _baseProjection->toInternal(_panBounds.getMax());
+        if (_renderProjectionMode == RenderProjectionMode::RENDER_PROJECTION_MODE_PLANAR) {
+            EPSG3857 proj;
+            MapPos projBoundsMin = proj.toInternal(proj.getBounds().getMin());
+            MapPos projBoundsMax = proj.toInternal(proj.getBounds().getMax());
+
+            panBoundsMin.setY(std::max(panBoundsMin.getY(), projBoundsMin.getY()));
+            panBoundsMax.setY(std::min(panBoundsMax.getY(), projBoundsMax.getY()));
+            if (!_seamlessPanning) {
+                panBoundsMin.setX(std::max(panBoundsMin.getX(), projBoundsMin.getX()));
+                panBoundsMax.setX(std::min(panBoundsMax.getX(), projBoundsMax.getX()));
+            }
+        }
+        return MapBounds(panBoundsMin, panBoundsMax);
     }
     
     ScreenPos Options::getFocusPointOffset() const {
@@ -666,7 +687,6 @@ namespace carto {
                 return;
             }
             _baseProjection = baseProjection;
-            _panBounds = baseProjection->getBounds();
         }
         notifyOptionChanged("BaseProjection");
     }

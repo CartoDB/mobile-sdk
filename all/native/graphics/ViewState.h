@@ -374,10 +374,12 @@ namespace carto {
     private:
         void calculateViewDistances(const Options& options, float& near, float& far, bool& skyVisible) const;
         float calculateMinZoom(const Options& options) const;
+        MapPos calculateMapBoundsCenter(const Options& options, const MapBounds& mapBounds) const;
+   
         cglib::mat4x4<double> calculatePerspMat(float halfFOVY, float near, float far, const Options& options) const;
         cglib::mat4x4<double> calculateLookatMat() const;
         cglib::mat4x4<double> calculateModelViewMat(const Options& options) const;
-    
+
         cglib::vec3<double> _cameraPos;
         cglib::vec3<double> _focusPos;
         cglib::vec3<double> _upVec;

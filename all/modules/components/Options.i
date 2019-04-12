@@ -63,11 +63,15 @@
 %attribute(carto::Options, float, WatermarkScale, getWatermarkScale, setWatermarkScale)
 %attributeval(carto::Options, carto::ScreenPos, WatermarkPadding, getWatermarkPadding, setWatermarkPadding)
 %std_exceptions(carto::Options::setBaseProjection)
+%std_exceptions(carto::Options::setTiltRange)
+%std_exceptions(carto::Options::setZoomRange)
+%std_exceptions(carto::Options::setPanBounds)
 !objc_rename(setWatermarkAnchorX) carto::Options::setWatermarkAnchor;
 !objc_rename(setWatermarkPaddingX) carto::Options::setWatermarkPadding;
 %ignore carto::Options::Options;
 %ignore carto::Options::getProjectionSurface;
 %ignore carto::Options::getSkyBitmap;
+%ignore carto::Options::getAdjustedInternalPanBounds;
 %ignore carto::Options::OnChangeListener;
 %ignore carto::Options::registerOnChangeListener;
 %ignore carto::Options::unregisterOnChangeListener;

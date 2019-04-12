@@ -91,13 +91,12 @@ namespace carto {
         cameraPos = focusPos + (cglib::transform_point(cameraPos, shiftTransform) - focusPos) * scale;
         upVec = cglib::transform_vector(upVec, shiftTransform);
 
-        ClampFocusPos(focusPos, cameraPos, upVec, options, viewState);
-
         viewState.setCameraPos(cameraPos);
         viewState.setFocusPos(focusPos);
         viewState.setUpVec(upVec);
         viewState.setZoom(zoom);
 
+        viewState.clampZoom(options);
         viewState.clampFocusPos(options);
         
         // Calculate matrices etc. on the next onDrawFrame() call
