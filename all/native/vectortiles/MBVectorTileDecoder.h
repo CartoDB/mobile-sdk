@@ -153,7 +153,7 @@ namespace carto {
         static const int DEFAULT_TILE_SIZE;
         static const int STROKEMAP_SIZE;
         static const int GLYPHMAP_SIZE;
-        static const int MAX_ASSETPACKAGE_SYMBOLIZER_CONTEXTS;
+        static const std::size_t MAX_ASSETPACKAGE_SYMBOLIZER_CONTEXTS;
         
         const std::shared_ptr<mvt::Logger> _logger;
         bool _featureIdOverride;

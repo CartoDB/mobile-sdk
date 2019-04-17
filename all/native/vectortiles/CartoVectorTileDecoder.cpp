@@ -370,5 +370,5 @@ namespace carto {
     const int CartoVectorTileDecoder::DEFAULT_TILE_SIZE = 256;
     const int CartoVectorTileDecoder::STROKEMAP_SIZE = 512;
     const int CartoVectorTileDecoder::GLYPHMAP_SIZE = 2048;
-    const int CartoVectorTileDecoder::MAX_ASSETPACKAGE_SYMBOLIZER_CONTEXTS = 4;
+    const std::size_t CartoVectorTileDecoder::MAX_ASSETPACKAGE_SYMBOLIZER_CONTEXTS = 4;
 }

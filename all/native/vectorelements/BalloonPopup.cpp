@@ -172,9 +172,8 @@ namespace carto {
             int popupWidth = std::max(titleSize.getWidth() + titleMarginWidth, descSize.getWidth() + descMarginWidth);
             popupWidth += leftMarginWidth + rightMarginWidth + strokeWidth;
             float halfPopupWidth = popupWidth * 0.5f;
-            int popupInnerHeight = std::max((float) (titleSize.getHeight() + titleMarginHeight + descSize.getHeight() + descMarginHeight),
-                                            (float) std::max(leftMarginHeight, rightMarginHeight));
-            int popupHeight = popupInnerHeight + std::max((float) triangleStrokeOffset, halfStrokeWidth) + halfStrokeWidth;
+            int popupInnerHeight = static_cast<int>(std::max((float) (titleSize.getHeight() + titleMarginHeight + descSize.getHeight() + descMarginHeight), (float) std::max(leftMarginHeight, rightMarginHeight)));
+            int popupHeight = popupInnerHeight + static_cast<int>(std::max((float) triangleStrokeOffset, halfStrokeWidth) + halfStrokeWidth);
 
             int canvasWidth = popupWidth;
             int canvasHeight = popupHeight;
@@ -197,7 +196,7 @@ namespace carto {
                 triangleOffsetX = screenPos.getX() - halfPopupWidth - screenPadding;
             }
         
-            int maxHalfOffsetX = halfPopupWidth - halfTriangleWidth - _style->getCornerRadius() - halfStrokeWidth;
+            int maxHalfOffsetX = static_cast<int>(halfPopupWidth - halfTriangleWidth - _style->getCornerRadius() - halfStrokeWidth);
             triangleOffsetX = std::min(maxHalfOffsetX, std::max(-maxHalfOffsetX, triangleOffsetX));
         
             // Prepare triangle path
