@@ -75,7 +75,7 @@ def buildWinPhoneNativeDLL(args, arch):
     return False
 
   if not cmake(args, buildDir, options + [
-    '-G', 'Visual Studio 15 2017',
+    '-G', 'Visual Studio 16 2019',
     '-DCMAKE_SYSTEM_NAME=WindowsStore',
     '-DCMAKE_SYSTEM_VERSION=10.0',
     '-DCMAKE_GENERATOR_PLATFORM=%s' % platformArch,
