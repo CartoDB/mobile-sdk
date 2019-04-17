@@ -4,13 +4,11 @@ import argparse
 import string
 from build.sdk_build_utils import *
 
-ANDROID_ABIS = ['armeabi', 'armeabi-v7a', 'x86', 'arm64-v8a', 'x86_64']
+ANDROID_ABIS = ['armeabi-v7a', 'x86', 'arm64-v8a', 'x86_64']
 IOS_ARCHS = ['i386', 'x86_64', 'armv7', 'arm64']
 
-DEFAULT_XBUILD = 'msbuild'
-
-def xbuild(args, dir, *cmdArgs):
-  return execute(args.xbuild, dir, *cmdArgs)
+def msbuild(args, dir, *cmdArgs):
+  return execute(args.msbuild, dir, *cmdArgs)
 
 def nuget(args, dir, *cmdArgs):
   return execute(args.nuget, dir, *cmdArgs)
@@ -39,15 +37,14 @@ def buildAndroidSO(args, abi):
 
   if not cmake(args, buildDir, options + [
     '-G', 'Unix Makefiles',
-    '-DCMAKE_SYSTEM_NAME=Android',
-    "-DCMAKE_ANDROID_NDK='%s'" % args.androidndkpath,
-    "-DCMAKE_ANDROID_NDK_TOOLCHAIN_VERSION='clang'",
-    "-DCMAKE_ANDROID_ARCH_ABI='%s'" % abi,
-    "-DCMAKE_ANDROID_STL_TYPE='c++_static'",
-    "-DCMAKE_SYSTEM_VERSION='%d'" % (api64 if '64' in abi else api32),
-    '-DCMAKE_BUILD_TYPE=%s' % args.configuration,
+    "-DCMAKE_TOOLCHAIN_FILE='%s/build/cmake/android.toolchain.cmake'" % args.androidndkpath,
+    "-DCMAKE_SYSTEM_NAME=Android",
+    "-DCMAKE_BUILD_TYPE=%s" % args.configuration,
     "-DCMAKE_MAKE_PROGRAM='%s'" % args.make,
-    '-DWRAPPER_DIR=%s' % ('%s/generated/android-csharp/wrappers' % baseDir),
+    "-DWRAPPER_DIR=%s" % ('%s/generated/android-csharp/wrappers' % baseDir),
+    "-DANDROID_STL='c++_static'",
+    "-DANDROID_ABI='%s'" % abi,
+    "-DANDROID_PLATFORM='%d'" % (api64 if '64' in abi else api32),
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
     "-DSDK_PLATFORM='Xamarin Android'",
@@ -108,11 +105,11 @@ def buildXamarinDLL(args, target):
   with open('%s/CartoMobileSDK.%s.csproj' % (buildDir, target), 'w') as f:
     f.write(csProjFile)
 
-  if args.xbuild is None:
+  if args.msbuild is None:
     print("%s solution is in %s, please use Xamarin IDE to compile target DLL" % (target, buildDir))
     return True
     
-  if not xbuild(args, buildDir,
+  if not msbuild(args, buildDir,
     '/t:Build',
     '/p:Configuration=%s' % args.configuration,
     '/p:AndroidSdkDirectory=%s' % args.androidsdkpath,
@@ -151,14 +148,14 @@ parser.add_argument('--profile', dest='profile', default='standard', type=validP
 parser.add_argument('--android-abi', dest='androidabi', default=[], choices=ANDROID_ABIS + ['all'], action='append', help='Android target ABIs')
 parser.add_argument('--ios-arch', dest='iosarch', default=[], choices=IOS_ARCHS + ['all'], action='append', help='iOS target architectures')
 parser.add_argument('--defines', dest='defines', default='', help='Defines for compilation')
-parser.add_argument('--xbuild', dest='xbuild', default='xbuild', help='Xamarin xbuild executable')
+parser.add_argument('--msbuild', dest='msbuild', default='msbuild', help='Xamarin msbuild executable')
 parser.add_argument('--nuget', dest='nuget', default='nuget', help='nuget executable')
 parser.add_argument('--android-ndk-path', dest='androidndkpath', default='auto', help='Android NDK path')
 parser.add_argument('--android-sdk-path', dest='androidsdkpath', default='auto', help='Android SDK path')
 parser.add_argument('--make', dest='make', default='make', help='Make executable for Android')
 parser.add_argument('--cmake', dest='cmake', default='cmake', help='CMake executable')
 parser.add_argument('--cmake-options', dest='cmakeoptions', default='', help='CMake options')
-parser.add_argument('--configuration', dest='configuration', default='Release', choices=['Release', 'Debug'], help='Configuration')
+parser.add_argument('--configuration', dest='configuration', default='Release', choices=['Release', 'RelWithDebInfo', 'Debug'], help='Configuration')
 parser.add_argument('--build-number', dest='buildnumber', default='', help='Build sequence number, goes to version str')
 parser.add_argument('--build-version', dest='buildversion', default='%s-devel' % SDK_VERSION, help='Build version, goes to distributions')
 parser.add_argument('--build-nuget', dest='buildnuget', default=False, action='store_true', help='Build Nuget package')
@@ -169,10 +166,8 @@ if 'all' in args.androidabi or args.androidabi == []:
   args.androidabi = ANDROID_ABIS
 if 'all' in args.iosarch or args.iosarch == []:
   args.iosarch = IOS_ARCHS
-if args.xbuild == 'auto':
-  args.xbuild = DEFAULT_XBUILD
-elif args.xbuild == 'none':
-  args.xbuild = None
+if args.msbuild == 'none':
+  args.msbuild = None
 if args.androidsdkpath == 'auto' and args.target == 'android':
   args.androidsdkpath = os.environ.get('ANDROID_HOME', None)
   if args.androidsdkpath is None:
@@ -195,8 +190,8 @@ if args.target == 'android' and not checkExecutable(args.make, '--help'):
   print('Failed to find make executable. Use --make to specify its location')
   sys.exit(-1)
 
-if not checkExecutable(args.xbuild, '/?'):
-  print('Failed to find xbuild (or msbuild) executable. Use --xbuild to specify its location')
+if not checkExecutable(args.msbuild, '/?'):
+  print('Failed to find msbuild executable. Use --msbuild to specify its location')
   sys.exit(-1)
 
 if args.buildnuget:
