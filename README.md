@@ -27,11 +27,11 @@ Special **swig** version (swig-2.0.11-nutiteq branch) is needed for generating l
 
 **CMake 3.14 or later** is required by build scripts
 
-Android build requires **Android SDK** and **Android NDK r17** or later.
+Android build requires **Android SDK** and **Android NDK r19** or later.
 
 iOS build requires **XCode 7.3** or later.
 
-Windows Phone build requires **Visual Studio 2017**.
+Windows Phone build requires **Visual Studio 2019**.
 
 ## Building process
 Be patient - full build will take 1+ hours. You can speed it up by limiting architectures and platforms where it is built.

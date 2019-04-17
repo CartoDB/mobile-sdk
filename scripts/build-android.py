@@ -50,16 +50,15 @@ def buildAndroidSO(args, abi):
 
   if not cmake(args, buildDir, options + [
     '-G', 'Unix Makefiles',
-    '-DCMAKE_SYSTEM_NAME=Android',
-    "-DCMAKE_ANDROID_NDK='%s'" % args.androidndkpath,
-    "-DCMAKE_ANDROID_NDK_TOOLCHAIN_VERSION='%s'" % (args.compiler[4:] if args.compiler.startswith('gcc-') else args.compiler),
-    "-DCMAKE_ANDROID_ARCH_ABI='%s'" % abi,
-    "-DCMAKE_ANDROID_STL_TYPE='%s'" % ('c++_static' if args.compiler.startswith('clang') else 'gnustl_static'),
-    "-DCMAKE_SYSTEM_VERSION='%d'" % (api64 if '64' in abi else api32),
-    '-DCMAKE_BUILD_TYPE=%s' % args.configuration,
+    "-DCMAKE_TOOLCHAIN_FILE='%s/build/cmake/android.toolchain.cmake'" % args.androidndkpath,
+    "-DCMAKE_SYSTEM_NAME=Android",
+    "-DCMAKE_BUILD_TYPE=%s" % args.configuration,
     "-DCMAKE_MAKE_PROGRAM='%s'" % args.make,
-    '-DWRAPPER_DIR=%s' % ('%s/generated/android-java/wrappers' % baseDir),
-    '-DSDK_CPP_DEFINES=%s' % " ".join(defines),
+    "-DWRAPPER_DIR=%s" % ('%s/generated/android-java/wrappers' % baseDir),
+    "-DANDROID_STL='c++_static'",
+    "-DANDROID_ABI='%s'" % abi,
+    "-DANDROID_PLATFORM='%d'" % (api64 if '64' in abi else api32),
+    "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
     "-DSDK_PLATFORM='Android'",
     '%s/scripts/build' % baseDir
@@ -125,7 +124,8 @@ def buildAndroidAAR(args):
   if not gradle(args, '%s/scripts' % baseDir,
     '-p', 'android-aar',
     '--project-cache-dir', buildDir,
-    'assemble%s' % args.configuration
+    '--gradle-user-home', '%s/gradle' % buildDir,
+    'assembleRelease'
   ):
     return False
   if makedirs(distDir) and \
@@ -148,8 +148,7 @@ parser.add_argument('--make', dest='make', default='make', help='Make executable
 parser.add_argument('--cmake', dest='cmake', default='cmake', help='CMake executable')
 parser.add_argument('--cmake-options', dest='cmakeoptions', default='', help='CMake options')
 parser.add_argument('--gradle', dest='gradle', default='gradle', help='Gradle executable')
-parser.add_argument('--compiler', dest='compiler', default='clang', choices=['gcc-4.9', 'clang'], help='C++ compiler')
-parser.add_argument('--configuration', dest='configuration', default='Release', choices=['Release', 'Debug'], help='Configuration')
+parser.add_argument('--configuration', dest='configuration', default='Release', choices=['Release', 'RelWithDebInfo', 'Debug'], help='Configuration')
 parser.add_argument('--build-number', dest='buildnumber', default='', help='Build sequence number, goes to version str')
 parser.add_argument('--build-version', dest='buildversion', default='%s-devel' % SDK_VERSION, help='Build version, goes to distributions')
 parser.add_argument('--build-aar', dest='buildaar', default=False, action='store_true', help='Build Android .aar package')

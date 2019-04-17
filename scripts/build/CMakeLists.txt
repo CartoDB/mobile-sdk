@@ -36,12 +36,10 @@ set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /WINMD /NODEFAULTLIB
 endif(WIN32)
 
 if(IOS)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -ftemplate-depth=1024 -fvisibility=hidden")
-if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Os -flto=thin")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Os -flto=thin")
-endif()
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS_RELEASE} -fvisibility=hidden")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_RELEASE} -std=c++11 -ftemplate-depth=1024 -fexceptions -frtti -fvisibility=hidden -fvisibility-inlines-hidden")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS} -Os -flto=full")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -Os -flto=full")
 
 set(CMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH YES)
 set(CMAKE_XCODE_ATTRIBUTE_CLANG_ENABLE_MODULES YES)
@@ -58,7 +56,7 @@ if(SINGLE_LIBRARY)
 set(CMAKE_XCODE_ATTRIBUTE_OTHER_LDFLAGS "-ObjC")
 set(CMAKE_XCODE_ATTRIBUTE_GCC_SYMBOLS_PRIVATE_EXTERN YES)
 
-if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
 set(CMAKE_XCODE_ATTRIBUTE_DEPLOYMENT_POSTPROCESSING YES)
 set(CMAKE_XCODE_ATTRIBUTE_DEAD_CODE_STRIPPING YES)
 set(CMAKE_XCODE_ATTRIBUTE_SEPARATE_STRIP YES)
@@ -72,9 +70,17 @@ endif(SINGLE_LIBRARY)
 endif(IOS)
 
 if(ANDROID)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fstack-protector -Oz -ffunction-sections -fdata-sections -fvisibility=hidden -fomit-frame-pointer -fstrict-aliasing -funwind-tables -no-canonical-prefixes")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fstack-protector -std=c++11 -ftemplate-depth=1024 -fexceptions -frtti -Oz -ffunction-sections -fdata-sections -fvisibility=hidden -fvisibility-inlines-hidden -fomit-frame-pointer -fstrict-aliasing -funwind-tables -no-canonical-prefixes")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -s -Wl,--gc-sections -Wl,-z,noexecstack -Wl,--exclude-libs,libgcc.a -Wl,--exclude-libs,libatomic.a -Wl,--build-id -fuse-ld=lld")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -ftemplate-depth=1024 -fexceptions -frtti -fvisibility=hidden -fvisibility-inlines-hidden")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -flto=full -Oz -fomit-frame-pointer -fstrict-aliasing")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto=full -Oz -fomit-frame-pointer -fstrict-aliasing")
+set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,-plugin-opt=O2 -s -Wl,--gc-sections -Wl,--as-needed -fuse-ld=lld")
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+string(REPLACE "-Wa,--noexecstack" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+string(REPLACE "-Wa,--noexecstack" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+endif()
+
 endif(ANDROID)
 
 # Directories
@@ -221,11 +227,11 @@ file(GLOB SDK_SRC_FILES
 )
 set_source_files_properties("${SDK_SRC_DIR}/../../all/native/utils/PlatformUtils.cpp" PROPERTIES COMPILE_FLAGS "-D_CARTO_MOBILE_SDK_PLATFORM=\"\\\"${SDK_PLATFORM}\\\"\" -D_CARTO_MOBILE_SDK_VERSION=\"\\\"${SDK_VERSION}\\\"\"")
 
-if (WIN32 OR IOS OR ANDROID)
+if(WIN32 OR IOS OR ANDROID)
 list(REMOVE_ITEM SDK_SRC_FILES "${SDK_SRC_DIR}/network/HTTPClientPionImpl.cpp")
 endif()
 
-if (ANDROID)
+if(ANDROID)
 file(GLOB SDK_ANDROID_SRC_FILES
     "${WRAPPER_DIR}/*.cpp"
     "${WRAPPER_DIR}/*.h"
