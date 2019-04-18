@@ -55,6 +55,7 @@ def buildAndroidSO(args, abi):
     "-DCMAKE_BUILD_TYPE=%s" % args.configuration,
     "-DCMAKE_MAKE_PROGRAM='%s'" % args.make,
     "-DWRAPPER_DIR=%s" % ('%s/generated/android-java/wrappers' % baseDir),
+    "-DSINGLE_LIBRARY:BOOL=ON",
     "-DANDROID_STL='c++_static'",
     "-DANDROID_ABI='%s'" % abi,
     "-DANDROID_PLATFORM='%d'" % (api64 if '64' in abi else api32),
@@ -128,8 +129,11 @@ def buildAndroidAAR(args):
     'assembleRelease'
   ):
     return False
+  aarFile = '%s/outputs/aar/android-aar.aar' % buildDir
+  if not os.path.exists(aarFile):
+    aarFile = '%s/outputs/aar/android-aar-%s.aar' % (buildDir, args.configuration.lower())
   if makedirs(distDir) and \
-     copyfile('%s/outputs/aar/android-aar-%s.aar' % (buildDir, args.configuration.lower()), '%s/carto-mobile-sdk-%s.aar' % (distDir, version)):
+     copyfile(aarFile, '%s/carto-mobile-sdk-%s.aar' % (distDir, version)):
     zip(args, '%s/scripts/android-aar/src/main' % baseDir, '%s/carto-mobile-sdk-%s.aar' % (distDir, version), 'R.txt')
     print("Output available in:\n%s" % distDir)
     return True
