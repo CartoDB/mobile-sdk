@@ -38,8 +38,8 @@ endif(WIN32)
 if(IOS)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -ftemplate-depth=1024 -fexceptions -frtti -fvisibility=hidden -fvisibility-inlines-hidden")
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os -flto=full")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Os -flto=full")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os -flto=thin")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Os -flto=thin")
 
 set(CMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH YES)
 set(CMAKE_XCODE_ATTRIBUTE_CLANG_ENABLE_MODULES YES)
@@ -56,7 +56,7 @@ if(SINGLE_LIBRARY)
 set(CMAKE_XCODE_ATTRIBUTE_OTHER_LDFLAGS "-ObjC")
 set(CMAKE_XCODE_ATTRIBUTE_GCC_SYMBOLS_PRIVATE_EXTERN YES)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
+if(CMAKE_BUILD_TYPE MATCHES "Release|RELEASE")
 set(CMAKE_XCODE_ATTRIBUTE_DEPLOYMENT_POSTPROCESSING YES)
 set(CMAKE_XCODE_ATTRIBUTE_DEAD_CODE_STRIPPING YES)
 set(CMAKE_XCODE_ATTRIBUTE_SEPARATE_STRIP YES)
@@ -76,7 +76,7 @@ set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -flto=full -Oz -fomit-frame-
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto=full -Oz -fomit-frame-pointer -fstrict-aliasing")
 set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,-plugin-opt=O2 -s -Wl,--gc-sections -Wl,--as-needed -fuse-ld=lld")
 
-if(CMAKE_BUILD_TYPE STREQUAL "Release")
+if(CMAKE_BUILD_TYPE MATCHES "Release|RELEASE")
 string(REPLACE "-Wa,--noexecstack" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 string(REPLACE "-Wa,--noexecstack" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 endif()
@@ -154,11 +154,11 @@ include_directories(
 )
 endif(INCLUDE_OBJC)
 
-if(NOT IOS)
+if(WIN32)
 include_directories(
     "${ZLIB_INCLUDE_DIR}"
 )
-endif(NOT IOS)
+endif(WIN32)
 
 if(ANDROID)
 include_directories(
@@ -206,9 +206,9 @@ add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/protobuf" protobuf)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/valhalla" valhalla)
 endif(INCLUDE_VALHALLA)
 
-if(NOT IOS)
+if(WIN32)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/zlib" zlib)
-endif(NOT IOS)
+endif(WIN32)
 
 if(NOT (WIN32 OR IOS OR ANDROID))
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/pion" pion)
@@ -322,9 +322,9 @@ set(SDK_SRC_FILES ${SDK_SRC_FILES}
 )
 endif(INCLUDE_VALHALLA)
 
-if(NOT IOS)
+if(WIN32)
 set(SDK_SRC_FILES ${SDK_SRC_FILES} ${zlib_SRC_FILES})
-endif()
+endif(WIN32)
 
 if(NOT (WIN32 OR IOS OR ANDROID))
 set(SDK_SRC_FILES ${SDK_SRC_FILES} ${pion_SRC_FILES})
@@ -367,9 +367,9 @@ set(SDK_OBJECTS ${SDK_OBJECTS}
 )
 endif(INCLUDE_VALHALLA)
 
-if(NOT IOS)
+if(WIN32)
 set(SDK_OBJECTS ${SDK_OBJECTS} $<TARGET_OBJECTS:zlib>)
-endif()
+endif(WIN32)
 
 if(NOT (WIN32 OR IOS OR ANDROID))
 set(SDK_OBJECTS ${SDK_OBJECTS} $<TARGET_OBJECTS:pion>)
@@ -391,7 +391,7 @@ target_link_libraries(carto_mobile_sdk gdal)
 endif(INCLUDE_GDAL)
 
 if(ANDROID)
-target_link_libraries(carto_mobile_sdk EGL GLESv2 log android jnigraphics)
+target_link_libraries(carto_mobile_sdk EGL GLESv2 z log android jnigraphics)
 elseif(IOS)
 target_link_libraries(carto_mobile_sdk "-framework Foundation" "-framework CoreGraphics" "-framework CoreText" "-framework OpenGLES" "-framework GLKit" "-framework UIKit" "-framework CFNetwork")
 elseif(WIN32)
