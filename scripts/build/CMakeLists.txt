@@ -39,15 +39,13 @@ set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /WINMD /NODEFAULTLIB
 endif(WIN32)
 
 if(IOS)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -ftemplate-depth=1024 -fexceptions -frtti -fvisibility=hidden -fvisibility-inlines-hidden")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fobjc-arc -fmodules -fvisibility=hidden")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc -fmodules -stdlib=libc++ -std=c++11 -ftemplate-depth=1024 -fexceptions -frtti -fvisibility=hidden -fvisibility-inlines-hidden")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os -flto=thin")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Os -flto=thin")
+set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -ObjC")
 
 set(CMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH YES)
-set(CMAKE_XCODE_ATTRIBUTE_CLANG_ENABLE_MODULES YES)
-set(CMAKE_XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES)
-set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
 
 if(ENABLE_BITCODE)
 set(CMAKE_XCODE_ATTRIBUTE_ENABLE_BITCODE YES)
@@ -55,20 +53,13 @@ else()
 set(CMAKE_XCODE_ATTRIBUTE_ENABLE_BITCODE NO)
 endif()
 
-if(SINGLE_LIBRARY)
-set(CMAKE_XCODE_ATTRIBUTE_OTHER_LDFLAGS "-ObjC")
-set(CMAKE_XCODE_ATTRIBUTE_GCC_SYMBOLS_PRIVATE_EXTERN YES)
-
 if(CMAKE_BUILD_TYPE MATCHES "Release|RELEASE")
 set(CMAKE_XCODE_ATTRIBUTE_DEPLOYMENT_POSTPROCESSING YES)
 set(CMAKE_XCODE_ATTRIBUTE_DEAD_CODE_STRIPPING YES)
 set(CMAKE_XCODE_ATTRIBUTE_SEPARATE_STRIP YES)
 set(CMAKE_XCODE_ATTRIBUTE_STRIP_STYLE "non-global")
 set(CMAKE_XCODE_ATTRIBUTE_GENERATE_MASTER_OBJECT_FILE YES)
-set(CMAKE_XCODE_ATTRIBUTE_GCC_GENERATE_DEBUGGING_SYMBOLS NO)
 endif()
-
-endif(SINGLE_LIBRARY)
 
 endif(IOS)
 
@@ -92,9 +83,6 @@ set(SDK_SRC_DIR "${SDK_BASE_DIR}/all/native")
 set(SDK_EXT_SRC_DIR "${SDK_BASE_DIR}/extensions/all/native")
 set(SDK_CARTO_LIBS_DIR "${SDK_BASE_DIR}/libs-carto" )
 set(SDK_EXTERNAL_LIBS_DIR "${SDK_BASE_DIR}/libs-external")
-
-set(ZLIB_INCLUDE_DIR "${SDK_EXTERNAL_LIBS_DIR}/zlib")
-set(PNG_INCLUDE_DIR "${SDK_EXTERNAL_LIBS_DIR}/png")
 
 include_directories(
     "${SDK_EXT_SRC_DIR}"
@@ -134,7 +122,7 @@ include_directories(
     "${SDK_EXTERNAL_LIBS_DIR}/tess2/include"
     "${SDK_EXTERNAL_LIBS_DIR}/utf8/source"
     "${SDK_EXTERNAL_LIBS_DIR}/webp/src"
-    "${PNG_INCLUDE_DIR}"
+    "${SDK_EXTERNAL_LIBS_DIR}/png"
 )
 
 if(INCLUDE_VALHALLA)
@@ -157,12 +145,6 @@ include_directories(
 )
 endif(INCLUDE_OBJC)
 
-if(WIN32)
-include_directories(
-    "${ZLIB_INCLUDE_DIR}"
-)
-endif(WIN32)
-
 if(ANDROID)
 include_directories(
     "${SDK_SRC_DIR}/../../android/native"
@@ -176,6 +158,7 @@ include_directories(
 elseif(WIN32)
 include_directories(
     "${SDK_SRC_DIR}/../../winphone/native"
+    "${SDK_EXTERNAL_LIBS_DIR}/zlib"
 )
 endif()
 
