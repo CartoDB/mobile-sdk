@@ -323,7 +323,7 @@ namespace carto {
             double n = std::floor((mapPos.getX() + Const::HALF_WORLD_SIZE) / Const::WORLD_SIZE);
             if (n != 0) {
                 mapPos.setX(mapPos.getX() - n * Const::WORLD_SIZE);
-                _horizontalLayerOffsetDir = static_cast<int>(n);
+                _horizontalLayerOffsetDir = -static_cast<int>(n);
 
                 cameraChanged();
             }
