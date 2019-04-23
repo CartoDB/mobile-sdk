@@ -673,7 +673,7 @@ namespace carto {
         std::shared_ptr<Projection> baseProjection = options.getBaseProjection();
         std::shared_ptr<ProjectionSurface> projectionSurface = options.getProjectionSurface();
 
-        MapBounds mapBounds = options.getAdjustedInternalPanBounds(true);
+        MapBounds mapBounds = options.getAdjustedInternalPanBounds(false);
         MapPos mapPos = calculateMapBoundsCenter(options, mapBounds);
 
         MapRange range = options.getZoomRange();
@@ -696,15 +696,17 @@ namespace carto {
 
             bool fit = true;
             for (int j = 0; j < 4; j++) {
-                MapPos mapPosCorner((j / 2 ? mapBounds.getMax() : mapBounds.getMin()).getX(), (j % 2 ? mapBounds.getMax() : mapBounds.getMin()).getY());
-                cglib::vec3<double> cornerPos = projectionSurface->calculatePosition(mapPosCorner);
-
-                if (viewState.getFrustum().inside(cornerPos)) {
-                    cglib::vec3<double> normal = projectionSurface->calculateNormal(projectionSurface->calculateMapPos(cornerPos));
-                    if (cglib::dot_product(normal, cornerPos - viewState.getCameraPos()) < 0) {
-                        fit = false;
-                        break;
-                    }
+                cglib::vec2<float> screenPosCorner(_height * (j % 2), _height * (j / 2));
+                cglib::vec3<double> cornerPos = viewState.screenToWorld(screenPosCorner, 0);
+                if (!std::isfinite(cglib::norm(cornerPos))) {
+                    fit = false;
+                    break;
+                }
+                MapPos mapPosCorner = projectionSurface->calculateMapPos(cornerPos);
+                mapPosCorner.setZ(0);
+                if (!mapBounds.contains(mapPosCorner)) {
+                    fit = false;
+                    break;
                 }
             }
 
