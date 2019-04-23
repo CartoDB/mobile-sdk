@@ -74,7 +74,7 @@ namespace Carto.Ui {
                 longClickable = ta.GetBoolean(1, true);
                 ta.Recycle();
             } catch (System.Exception e) {
-                Carto.Utils.Log.Warn("MapView: Failed to read attributes");
+                Carto.Utils.Log.Warn("MapView: Failed to read attributes: " + e);
             }
             Clickable = clickable;
             LongClickable = longClickable;
@@ -92,8 +92,8 @@ namespace Carto.Ui {
             try {
                 System.Reflection.PropertyInfo prop = typeof(GLSurfaceView).GetProperty("PreserveEGLContextOnPause");
                 prop.SetValue(this, true);
-            } catch (System.Exception) {
-                Carto.Utils.Log.Info("MapView: Preserving EGL context on pause is not possible");
+            } catch (System.Exception e) {
+                Carto.Utils.Log.Info("MapView: Preserving EGL context on pause is not possible: " + e);
             }
 
             SetEGLContextClientVersion(2);
@@ -232,7 +232,7 @@ namespace Carto.Ui {
                 } catch (Java.Lang.Exception e) {
                     Carto.Utils.Log.Error("MapView.OnTouchEvent: Java exception: " + e);
                 } catch (System.Exception e) {
-                    Carto.Utils.Log.Error("MapView.OnTouchEvent: " + e);
+                    Carto.Utils.Log.Error("MapView.OnTouchEvent: Exception: " + e);
                 }
                 return true;
             }

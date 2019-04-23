@@ -147,10 +147,10 @@ public class MapView extends GLSurfaceView implements Renderer {
             baseMapView.setRedrawRequestListener(new MapRedrawRequestListener(this));
         
             try {
-                Method m = GLSurfaceView.class.getMethod("setPreserveEGLContextOnPause", Void.TYPE, Boolean.TYPE);
-                m.invoke(null, true);
+                Method m = GLSurfaceView.class.getMethod("setPreserveEGLContextOnPause", Boolean.TYPE);
+                m.invoke(this, true);
             } catch (Exception e) {
-                com.carto.utils.Log.info("MapView: Preserving EGL context on pause is not possible");
+                com.carto.utils.Log.info("MapView: Preserving EGL context on pause is not possible: " + e);
             }
             setEGLContextClientVersion(2);
             setEGLConfigChooser(new ConfigChooser());
