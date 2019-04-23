@@ -1,5 +1,4 @@
 #include "ViewState.h"
-#include "core/ScreenBounds.h"
 #include "projections/EPSG3857.h"
 #include "projections/Projection.h"
 #include "projections/ProjectionSurface.h"
@@ -69,7 +68,7 @@ namespace carto {
     void ViewState::setCameraPos(const cglib::vec3<double>& cameraPos) {
         if (!std::isfinite(cglib::norm(cameraPos))) {
             Log::Errorf("ViewState::setCameraPos: Invalid coordinates %g, %g, %g", cameraPos(0), cameraPos(1), cameraPos(2)); 
-            // TODO: return
+            return;
         }
         _cameraPos = cameraPos;
     }
@@ -81,7 +80,7 @@ namespace carto {
     void ViewState::setFocusPos(const cglib::vec3<double>& focusPos) {
         if (!std::isfinite(cglib::norm(focusPos))) {
             Log::Errorf("ViewState::setFocusPos: Invalid coordinates %g, %g, %g", focusPos(0), focusPos(1), focusPos(2)); 
-            // TODO: return
+            return;
         }
         _focusPos = focusPos;
     }
@@ -93,7 +92,7 @@ namespace carto {
     void ViewState::setUpVec(const cglib::vec3<double>& upVec) {
         if (!std::isfinite(cglib::norm(upVec))) {
             Log::Errorf("ViewState::setUpVec: Invalid coordinates %g, %g, %g", upVec(0), upVec(1), upVec(2)); 
-            // TODO: return
+            return;
         }
         _upVec = upVec;
     }
@@ -105,7 +104,7 @@ namespace carto {
     void ViewState::setRotation(float rotation) {
         if (!std::isfinite(rotation)) {
             Log::Errorf("ViewState::setRotation: Invalid value %g", rotation); 
-            // TODO: return
+            return;
         }
         _rotation = rotation;
     }
@@ -117,7 +116,7 @@ namespace carto {
     void ViewState::setTilt(float tilt) {
         if (!std::isfinite(tilt)) {
             Log::Errorf("ViewState::setTilt: Invalid value %g", tilt); 
-            // TODO: return
+            return;
         }
         _tilt = tilt;
     }
@@ -129,7 +128,7 @@ namespace carto {
     void ViewState::setZoom(float zoom) {
         if (!std::isfinite(zoom)) {
             Log::Errorf("ViewState::setZoom: Invalid value %g", zoom); 
-            // TODO: return
+            return;
         }
         _zoom = zoom;
         _2PowZoom = std::pow(2.0f, zoom);
@@ -311,7 +310,7 @@ namespace carto {
         std::shared_ptr<Projection> baseProjection = options.getBaseProjection();
         std::shared_ptr<ProjectionSurface> projectionSurface = options.getProjectionSurface();
         
-        MapBounds mapBounds = options.getAdjustedInternalPanBounds();
+        MapBounds mapBounds = options.getAdjustedInternalPanBounds(false);
         MapPos mapPos = projectionSurface->calculateMapPos(_focusPos);
         MapPos oldMapPos = mapPos;
 
@@ -323,7 +322,7 @@ namespace carto {
             double n = std::floor((mapPos.getX() + Const::HALF_WORLD_SIZE) / Const::WORLD_SIZE);
             if (n != 0) {
                 mapPos.setX(mapPos.getX() - n * Const::WORLD_SIZE);
-                _horizontalLayerOffsetDir = -static_cast<int>(n);
+                setHorizontalLayerOffsetDir(-static_cast<int>(n));
 
                 cameraChanged();
             }
@@ -340,25 +339,28 @@ namespace carto {
 
         if (options.isRestrictedPanning() && _width > 0 && _height > 0) {
             for (int j = 0; j < 4; j++) {
-                MapPos mapPos1 = projectionSurface->calculateMapPos(_focusPos);
-                MapPos mapPos0 = mapPos1;
-                mapPos1[j % 2] = (j / 2 ? mapBounds.getMax() : mapBounds.getMin())[j % 2];
-                mapPos0[j % 2] = calculateMapBoundsCenter(options, mapBounds)[j % 2];
+                MapPos mapPosEdge = projectionSurface->calculateMapPos(_focusPos);
+                mapPosEdge[j % 2] = (j / 2 ? mapBounds.getMax() : mapBounds.getMin())[j % 2];
+                cglib::vec3<double> edgePos = projectionSurface->calculatePosition(mapPosEdge);
 
-                cglib::vec3<double> edgePos = projectionSurface->calculatePosition(mapPos1);
+                MapPos mapPosCenter = mapPosEdge;
+                mapPosCenter[j % 2] = calculateMapBoundsCenter(options, mapBounds)[j % 2];
+                cglib::vec3<double> centerPos = projectionSurface->calculatePosition(mapPosCenter);
+                
                 cglib::vec3<double> cameraVec = _cameraPos - _focusPos;
                 cglib::vec3<double> focusPos = _focusPos;
-                cglib::vec3<double> cameraPos = projectionSurface->calculateNormal(projectionSurface->calculateMapPos(_focusPos)) * cglib::length(cameraVec);
+                cglib::vec3<double> cameraPos = _focusPos + projectionSurface->calculateNormal(projectionSurface->calculateMapPos(_focusPos)) * cglib::length(cameraVec);
                 cglib::vec3<double> upVec = projectionSurface->calculateVector(projectionSurface->calculateMapPos(_focusPos), MapVec(0, 1, 0));
 
                 ViewState viewState;
                 viewState._ignoreMinZoom = true;
                 viewState._minZoom = _minZoom;
+                viewState._projectionSurface = _projectionSurface;
                 viewState.setFocusPos(focusPos);
                 viewState.setCameraPos(cameraPos);
                 viewState.setUpVec(upVec);
                 viewState.setZoom(_zoom);
-                viewState.setScreenSize(_height, _height); // TODO: test this for regressions (NOT _width, _height)
+                viewState.setScreenSize(_height, _height);
                 viewState.cameraChanged();
                 viewState.calculateViewState(options);
 
@@ -373,7 +375,7 @@ namespace carto {
 
                 MapRange range(0, 1);
                 for (int i = 0; i < 24; i++) {
-                    cglib::mat4x4<double> transform = projectionSurface->calculateTranslateMatrix(projectionSurface->calculatePosition(mapPos0), projectionSurface->calculatePosition(mapPos1), range.getMidrange());
+                    cglib::mat4x4<double> transform = projectionSurface->calculateTranslateMatrix(edgePos, centerPos, range.getMidrange());
                     viewState.setFocusPos(cglib::transform_point(focusPos, transform));
                     viewState.setCameraPos(cglib::transform_point(cameraPos, transform));
                     viewState.setUpVec(cglib::transform_vector(upVec, transform));
@@ -381,23 +383,24 @@ namespace carto {
                     viewState.calculateViewState(options);
 
                     if (!viewState.getFrustum().inside(edgePos)) {
-                        range.setMin(range.getMidrange());
+                        range.setMax(range.getMidrange());
                     } else {
                         cglib::vec3<double> normal = projectionSurface->calculateNormal(projectionSurface->calculateMapPos(edgePos));
                         if (cglib::dot_product(normal, edgePos - viewState.getCameraPos()) > 0) {
-                            range.setMin(range.getMidrange());
-                        } else {
                             range.setMax(range.getMidrange());
+                        } else {
+                            range.setMin(range.getMidrange());
                         }
                     }
                 }
 
-                cglib::mat4x4<double> transform = projectionSurface->calculateTranslateMatrix(projectionSurface->calculatePosition(mapPos0), projectionSurface->calculatePosition(mapPos1), range.getMin());
+                cglib::mat4x4<double> transform = projectionSurface->calculateTranslateMatrix(edgePos, centerPos, range.getMidrange());
                 setFocusPos(cglib::transform_point(_focusPos, transform));
                 setCameraPos(cglib::transform_point(_cameraPos, transform));
                 setUpVec(cglib::transform_vector(_upVec, transform));
 
                 cameraChanged();
+                calculateViewState(options);
             }
         }
     }
@@ -670,30 +673,31 @@ namespace carto {
         std::shared_ptr<Projection> baseProjection = options.getBaseProjection();
         std::shared_ptr<ProjectionSurface> projectionSurface = options.getProjectionSurface();
 
-        MapBounds mapBounds = options.getAdjustedInternalPanBounds();
+        MapBounds mapBounds = options.getAdjustedInternalPanBounds(true);
         MapPos mapPos = calculateMapBoundsCenter(options, mapBounds);
 
         MapRange range = options.getZoomRange();
         for (int i = 0; i < 24; i++) {
             cglib::vec3<double> cameraVec = _cameraPos - _focusPos;
             cglib::vec3<double> focusPos = projectionSurface->calculatePosition(mapPos);
-            cglib::vec3<double> cameraPos = projectionSurface->calculateNormal(mapPos) * cglib::length(cameraVec);
+            cglib::vec3<double> cameraPos = focusPos + projectionSurface->calculateNormal(mapPos) * cglib::length(cameraVec);
             cglib::vec3<double> upVec = projectionSurface->calculateVector(mapPos, MapVec(0, 1, 0));
 
             ViewState viewState;
             viewState._ignoreMinZoom = true;
+            viewState._projectionSurface = _projectionSurface;
             viewState.setFocusPos(focusPos);
             viewState.setCameraPos(cameraPos);
             viewState.setUpVec(upVec);
             viewState.setZoom(range.getMidrange());
-            viewState.setScreenSize(_height, _height); // TODO: test this for regressions (NOT _width, _height)
+            viewState.setScreenSize(_height, _height);
             viewState.cameraChanged();
             viewState.calculateViewState(options);
 
             bool fit = true;
             for (int j = 0; j < 4; j++) {
-                MapPos mapPos((j / 2 ? mapBounds.getMax() : mapBounds.getMin()).getX(), (j % 2 ? mapBounds.getMax() : mapBounds.getMin()).getY());
-                cglib::vec3<double> cornerPos = projectionSurface->calculatePosition(mapPos);
+                MapPos mapPosCorner((j / 2 ? mapBounds.getMax() : mapBounds.getMin()).getX(), (j % 2 ? mapBounds.getMax() : mapBounds.getMin()).getY());
+                cglib::vec3<double> cornerPos = projectionSurface->calculatePosition(mapPosCorner);
 
                 if (viewState.getFrustum().inside(cornerPos)) {
                     cglib::vec3<double> normal = projectionSurface->calculateNormal(projectionSurface->calculateMapPos(cornerPos));
@@ -715,12 +719,13 @@ namespace carto {
     }
 
     MapPos ViewState::calculateMapBoundsCenter(const Options& options, const MapBounds& mapBounds) const {
-        std::shared_ptr<ProjectionSurface> projectionSurface = options.getProjectionSurface();
-
-        cglib::vec3<double> minPos = projectionSurface->calculatePosition(mapBounds.getMin());
-        cglib::vec3<double> maxPos = projectionSurface->calculatePosition(mapBounds.getMax());
-        cglib::mat4x4<double> transform = projectionSurface->calculateTranslateMatrix(minPos, maxPos, 0.5);
-        return projectionSurface->calculateMapPos(cglib::transform_point(minPos, transform));
+        MapPos centerPos(0, 0);
+        for (int i = 0; i < 2; i++) {
+            if (mapBounds.getMin()[i] != -std::numeric_limits<double>::infinity() || mapBounds.getMax()[i] != std::numeric_limits<double>::infinity()) {
+                centerPos[i] = mapBounds.getMin()[i] * 0.5 + mapBounds.getMax()[i] * 0.5;
+            }
+        }
+        return centerPos;
     }
     
     cglib::mat4x4<double> ViewState::calculatePerspMat(float halfFOVY, float near, float far, const Options& options) const {

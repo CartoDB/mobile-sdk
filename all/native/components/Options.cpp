@@ -636,7 +636,7 @@ namespace carto {
         notifyOptionChanged("PanBounds");
     }
     
-    MapBounds Options::getAdjustedInternalPanBounds() const {
+    MapBounds Options::getAdjustedInternalPanBounds(bool clamp) const {
         std::lock_guard<std::mutex> lock(_mutex);
         MapPos panBoundsMin = _baseProjection->toInternal(_panBounds.getMin());
         MapPos panBoundsMax = _baseProjection->toInternal(_panBounds.getMax());
@@ -651,6 +651,13 @@ namespace carto {
                 panBoundsMin.setX(std::max(panBoundsMin.getX(), projBoundsMin.getX()));
                 panBoundsMax.setX(std::min(panBoundsMax.getX(), projBoundsMax.getX()));
             }
+        }
+
+        if (clamp) {
+            panBoundsMin.setX(GeneralUtils::Clamp(panBoundsMin.getX(), -Const::WORLD_SIZE * 0.5, Const::WORLD_SIZE * 0.5));
+            panBoundsMin.setY(GeneralUtils::Clamp(panBoundsMin.getY(), -Const::WORLD_SIZE * 0.5, Const::WORLD_SIZE * 0.5));
+            panBoundsMax.setX(GeneralUtils::Clamp(panBoundsMax.getX(), -Const::WORLD_SIZE * 0.5, Const::WORLD_SIZE * 0.5));
+            panBoundsMax.setY(GeneralUtils::Clamp(panBoundsMax.getY(), -Const::WORLD_SIZE * 0.5, Const::WORLD_SIZE * 0.5));
         }
         return MapBounds(panBoundsMin, panBoundsMax);
     }

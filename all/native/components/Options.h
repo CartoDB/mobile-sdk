@@ -519,9 +519,10 @@ namespace carto {
         void setPanBounds(const MapBounds& panBounds);
         /**
          * Returns the adjusted internal pan bounds. This takes also account of render projection mode.
+         * @param clamp True if the coordinates should be clamped.
          * @return The adjusted internal pan bounds.
          */
-        MapBounds getAdjustedInternalPanBounds() const;
+        MapBounds getAdjustedInternalPanBounds(bool clamp) const;
     
         /**
          * Returns the focus point offset (from screen center) in pixels.
