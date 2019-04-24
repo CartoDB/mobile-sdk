@@ -1076,7 +1076,7 @@ namespace carto {
         uniform mat4 u_mvpMat;
         void main() {
             gl_Position = u_mvpMat * vec4(a_coord, 0.0, 1.0);
-        };
+        }
     )GLSL";
 
     const std::string MapRenderer::BLEND_FRAGMENT_SHADER = R"GLSL(
