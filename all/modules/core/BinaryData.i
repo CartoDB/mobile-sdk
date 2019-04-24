@@ -43,8 +43,14 @@
 %typemap(jni) (const unsigned char* dataPtr, std::size_t size) "jbyteArray"
 %typemap(javain) (const unsigned char* dataPtr, std::size_t size) "$javainput"
 %typemap(in) (const unsigned char* dataPtr, std::size_t size) {
-  $1 = (unsigned char*)jenv->GetByteArrayElements($input, 0);
-  $2 = (std::size_t)jenv->GetArrayLength($input);
+  jsize len = jenv->GetArrayLength($input);
+  jbyte* buf = new jbyte[len];
+  jenv->GetByteArrayRegion($input, 0, len, buf);
+  $1 = reinterpret_cast<unsigned char*>(buf);
+  $2 = static_cast<std::size_t>(len);
+}
+%typemap(freearg) (const unsigned char* dataPtr, std::size_t size) {
+  delete[] $1;
 }
 
 %typemap(jtype) const unsigned char* data "byte[]"
