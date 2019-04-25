@@ -1,3 +1,89 @@
+CARTO Mobile SDK 4.2.0
+-------------------
+
+This version is a major update and brings lots of new features and optimizations. Some features present in older releases are removed or deprecated in this version.
+
+### Key highlights:
+
+* Globe view support. Maps can be displayed in planar mode (as in previous versions) or in globe view mode.
+* EPSG4326 support. WGS84 coordinates can be directly used without needing to convert them to EPSG3857.
+* Indoor 3D routing by using GeoJSON input and custom routing profiles. We pulled experimental versions with this into 4.1.x releases, but have since made some changes and stabilized it.
+* On-the-fly conversion GeoJSON to vector tiles, so that CartoCSS can be used for styling.
+* Faster basemaps with several rendering optimizations.
+* Better compatibility with Swift on iOS. SDK does not require bridging header anymore and can be simply 'imported'.
+* Faster networking on iOS, by better utilizing OS-provided caching.
+* Increased security, all basemap services use HTTPS connection by default.
+* Startup time on Android has been significantly reduced. Previously low-end devices required more than a second to load the native SDK component. This loading time is reduced by at least 5 times.
+* Basemap style parsing and loading is now faster due to smaller font assets and due to internal optimizations.
+* SDK is considerable smaller due to several factors:
+  - We have removed offline Valhalla routing support from the SDK. It is still available in the repository and SDK can be built with it.
+  - We have removed some font assets from the SDK, so Arabic and few other scripts need external fonts.
+  - We use carefully tuned compilation flags that produce smaller native binaries on all platforms.
+* All SDK components are now open-source. In previous versions we kept one small component (LicenseManager) private, so custom builds could not connect to online services provided by CARTO. Now this restriction is removed.
+* Improvements to build scripts, making compiling the SDK easier and less frustrating experience.
+
+
+### New features:
+
+* Added EPSG4326 projection. This allows to use longitude/latitude coordinates in the SDK directly, without the need to convert them first.
+* New class GeoJSONVectorTileDataSource - provides on-the-fly conversion from GeoJSON layers to vector tiles. This is useful for indoor mapping and allows to use SDKs vector tile renderer with CartoCSS styling.
+* New class SGRERoutingService for indoor routing. Additional details can be found in Wiki.
+* New class MergedMBVTTileDataSource that merges two MapBox Vector Tile sources into one.
+* Added addFallbackFont method to VectorTileDecoder class. This can be used to supply universal fallback font (as binary .TTF asset) for basemaps.
+* Added setRenderProjection/getRenderProjection methods to Options class, for switching between planar and globe mode.
+* Implemented 3D coordinate support for VectorElements. Previously only billboards handled Z coordinate properly, while using non-zero Z coordinate for polygons or lines produced undefined and usually wrong results.
+* Added setZBuffering/isZBuffering methods to VectorLayer. Z buffering may be needed if 3D coordinates are used for lines or polygons.
+* Added NMLModelStyle and NMLModelStyleBuilder classes for constructing style instances for NMLModels.
+* New HTTP connection class for iOS that works better with device proxy settings and provides better download concurrency.
+* Added setSkyColor, getSkyColor to Options class
+* Added getMidrange method to MapRange.
+* CartoCSS improvements, 'marker-clip' support, 'north-pole-color', 'south-pole-color' map settings support
+
+### Deprecated features:
+
+* NMLModel constructors with explicit model assets are now deprecated. Use constructors with NMLModelStyle argument instead.
+
+
+### Removed features:
+
+* Built-in map styles are now smaller and load faster due to fewer built-in fonts. Arabic and few eastern scripts that were displayed in previous versions now require custom font assets. These can be supplied to VectorTileDecoder using addFallbackFont method.
+* Removed setSkyBitmap/getSkyBitmap methods from Options class. Sky bitmap usage was poorly documented and relied too much on internal implementation. Use setSkyColor instead of setSkyBitmap.
+* simplify method is no longer exposed in GeometrySimplifier class and its subclasses.
+* Frustum class is removed from the SDK.
+* ViewState class does not expose getCameraPos, getFocusPos, getUpVec, getFrustum methods starting from version 4.2.
+* setProjectionMode/getProjectionMode methods are removed ViewState class. Setting projection mode never really worked.
+* Removed fromInternalScale method from Projection. This method was never expected to be part of public API and was not useful for applications.
+* ValhallaOnlineRoutingService, ValhallaOfflineRoutingService and PackageManagerValhallaRoutingService classes are removed from the public build. SDK used customized version of Valhalla that is not compatible with the latest official Valhalla versions and the library made SDK binaries considerably larger. Valhalla support is still present in the code, it is possible to build a custom version supporting these classes.
+* CartoVisBuilder and CartoVisLoader classes are removed from the SDK. These classes provided experimental 'vizjson' support, but were never really complete. 'vizjson' is now deprecated by CARTO.
+
+
+### Changes:
+
+* All online connections to CARTO services are secure by default. Previously some non-critical services used plaintext connections, causing problems with some newer devices (Android 9) having strict security settings.
+* MapView screenToMap now returns NaNs in coordinates if mapping from a given pixel is not possible (tilted map when using sky coordinates, for example)
+* EPSG3857 toWgs84 does not return longitude in range -180..180 if the input X coordinate is outside of projection bounds.
+* Default panning bounds is now ((-inf, -inf), (inf, inf)) instead of EPSG3857 bounds as in previous versions.
+* Sky rendering implementation and default sky color has changed
+* Restricted panning mode implementation and behaviour has slightly changed
+* All internal fields of wrapped SDK classes on Android are now marked 'transient' and are never serialized. In previous versions trying to serialize/deserialize SDK classes caused native crashes during subsequent GC cycle. The new behviour should result in NPEs and not hard crashes.
+* Algorithm for placing text on lines in vector tile renderer is re-implemented and should fix previously distorted placements
+* iOS HTTP network stack now uses NSURLSession API for better performance and compatibility. Note that this may cause issues with custom HTTP datasources that do not use secure protocol.
+* Much faster handling of [view::zoom] parameter in CartoCSS expressions
+* Slightly more compact internal vector tile representation for rendering, gives better tile cache utilization and faster performance
+
+
+### Fixes:
+
+* setColor, setBitmap, setBitmapScale methods in SolidLayer class properly update the view when called.
+* Fixed a memory leak in Java-specific BinaryData constructor taking byte array argument
+* Fixed setPreserveEGLContextOnPause not properly invoked in Android MapView class
+* Improved compatibility with Android devices with very old GPUs
+* Minor search API query language fixes, better support for unicode strings
+* Fixed vertex array binding issues with NMLModel rendering
+* Fixed minor glyph rendering issues causing glyphs to be slightly blurry under tilted view.
+* Minor CartoCSS fixes related to patterned symbolizer support
+
+
 CARTO Mobile SDK 4.1.6
 -------------------
 
@@ -282,12 +368,12 @@ some minor new features.
 * Minor optimizations in vector tile renderer
 * implemented timeout for online license update procedure
 * forward-compatible changes for future features in online tile service and offline packages
-* Exposed `CartoVectorTileDecoder` constructor for better integration with CARTO vector overlays
-* Added additional `CartoOnlineVectorTile` constructor with explicit source and built-in style enumeration parameters
-* Added `countVisibleFeatures` method to `TorqueTileLayer`
+* Exposed CartoVectorTileDecoder constructor for better integration with CARTO vector overlays
+* Added additional CartoOnlineVectorTile constructor with explicit source and built-in style enumeration parameters
+* Added countVisibleFeatures method to TorqueTileLayer
 * Added comp-op support to points, markers, texts and shields
 * Increased internal visible tile cache size by 4x, for really large overlay datasets (does not affect memory usage in normal cases)
-* `MBTilesDataSource` and `OfflineNMLModelLODTreeDataSource` classes now open database in read-only mode (previously in read-write mode)
+* MBTilesDataSource and OfflineNMLModelLODTreeDataSource classes now open database in read-only mode (previously in read-write mode)
 * More precise label coverage analysis for transformed labels
 
 ### Fixes:
