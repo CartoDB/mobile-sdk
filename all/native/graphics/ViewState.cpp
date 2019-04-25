@@ -359,7 +359,7 @@ namespace carto {
                 viewState.cameraChanged();
                 viewState.calculateViewState(options);
 
-                cglib::vec2<float> screenEdgePos(j / 2 == 0 ? _width * (j % 2) : _width * 0.5f, j / 2 != 0 ? _height * (j % 2) : _height * 0.5f);
+                cglib::vec2<float> screenEdgePos(_width * (j / 2 == 0 ? (j % 2) : 0.5f), _height * (j / 2 != 0 ? (j % 2) : 0.5f));
                 cglib::vec3<double> edgePos = viewState.screenToWorld(screenEdgePos, 0);
                 if (!std::isfinite(cglib::norm(edgePos))) {
                     continue;
@@ -705,15 +705,15 @@ namespace carto {
 
             bool fit = true;
             for (int j = 0; j < 4; j++) {
-                cglib::vec2<float> screenPosCorner(_width * (j % 2), _height * (j / 2));
-                cglib::vec3<double> cornerPos = viewState.screenToWorld(screenPosCorner, 0);
-                if (!std::isfinite(cglib::norm(cornerPos))) {
+                cglib::vec2<float> screenEdgePos(_width * (j / 2 == 0 ? (j % 2) : 0.5f), _height * (j / 2 != 0 ? (j % 2) : 0.5f));
+                cglib::vec3<double> edgePos = viewState.screenToWorld(screenEdgePos, 0);
+                if (!std::isfinite(cglib::norm(edgePos))) {
                     fit = false;
                     break;
                 }
-                MapPos mapPosCorner = projectionSurface->calculateMapPos(cornerPos);
-                mapPosCorner.setZ(0); // important in spherical mode due to small imprecisions in conversions
-                if (!mapBounds.contains(mapPosCorner)) {
+                MapPos mapPosEdge = projectionSurface->calculateMapPos(edgePos);
+                mapPosEdge.setZ(0); // important in spherical mode due to small imprecisions in conversions
+                if (!mapBounds.contains(mapPosEdge)) {
                     fit = false;
                     break;
                 }
