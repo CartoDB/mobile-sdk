@@ -14,30 +14,23 @@ namespace {
     carto::Variant rapidJSONToVariant(const rapidjson::Value& value) {
         if (value.IsString()) {
             return carto::Variant(value.GetString());
-        }
-        else if (value.IsInt()) {
+        } else if (value.IsInt()) {
             return carto::Variant(static_cast<long long>(value.GetInt()));
-        }
-        else if (value.IsUint()) {
+        } else if (value.IsUint()) {
             return carto::Variant(static_cast<long long>(value.GetUint()));
-        }
-        else if (value.IsInt64()) {
+        } else if (value.IsInt64()) {
             return carto::Variant(static_cast<long long>(value.GetInt64()));
-        }
-        else if (value.IsUint64()) {
+        } else if (value.IsUint64()) {
             return carto::Variant(static_cast<long long>(value.GetUint64()));
-        }
-        else if (value.IsNumber()) {
+        } else if (value.IsNumber()) {
             return carto::Variant(value.GetDouble());
-        }
-        else if (value.IsArray()) {
+        } else if (value.IsArray()) {
             std::vector<carto::Variant> values;
             for (rapidjson::Value::ConstValueIterator it = value.Begin(); it != value.End(); it++) {
                 values.push_back(rapidJSONToVariant(*it));
             }
             return carto::Variant(values);
-        }
-        else if (value.IsObject()) {
+        } else if (value.IsObject()) {
             std::map<std::string, carto::Variant> valueMap;
             for (rapidjson::Value::ConstMemberIterator it = value.MemberBegin(); it != value.MemberEnd(); it++) {
                 if (!it->name.IsString()) {

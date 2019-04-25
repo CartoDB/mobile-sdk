@@ -95,7 +95,8 @@ namespace carto {
         case ACTION_POINTER_2_DOWN:
             _noDualPointerYet = false;
             switch (_gestureMode) {
-            case SINGLE_POINTER_CLICK_GUESS: {
+            case SINGLE_POINTER_CLICK_GUESS:
+                {
                     std::lock_guard<std::mutex> lock(_mutex);
                     _clickHandlerWorker->pointer2Down(screenPos2);
                     _gestureMode = DUAL_POINTER_CLICK_GUESS;
@@ -172,73 +173,78 @@ namespace carto {
                 _gestureMode = SINGLE_POINTER_CLICK_GUESS;
                 break;
             }
-            case SINGLE_POINTER_PAN: {
+            case SINGLE_POINTER_PAN:
                 {
-                    std::lock_guard<std::mutex> lock(_mutex);
-                    _gestureMode = SINGLE_POINTER_CLICK_GUESS;
+                    {
+                        std::lock_guard<std::mutex> lock(_mutex);
+                        _gestureMode = SINGLE_POINTER_CLICK_GUESS;
+                    }
+                    if (_noDualPointerYet) {
+                        _mapRenderer->getKineticEventHandler().startPan();
+                    } else {
+                        auto deltaTime = std::chrono::steady_clock::now() - _dualPointerReleaseTime;
+                        if (deltaTime < DUAL_KINETIC_HOLD_DURATION) {
+                            _mapRenderer->getKineticEventHandler().startRotation();
+                            _mapRenderer->getKineticEventHandler().startZoom();
+                        }
+                    }
                 }
-                if (_noDualPointerYet) {
-                    _mapRenderer->getKineticEventHandler().startPan();
-                } else {
-                    auto deltaTime = std::chrono::steady_clock::now() - _dualPointerReleaseTime;
-                    if (deltaTime < DUAL_KINETIC_HOLD_DURATION) {
-                        _mapRenderer->getKineticEventHandler().startRotation();
+                break;
+            case SINGLE_POINTER_ZOOM:
+                {
+                    {
+                        std::lock_guard<std::mutex> lock(_mutex);
+                        _gestureMode = SINGLE_POINTER_CLICK_GUESS;
+                        if (cglib::length(_swipe1) < GUESS_SWIPE_ZOOM_THRESHOLD && isValidScreenPosition(screenPos1, viewState)) {
+                            MapPos targetPos = mapScreenPosition(screenPos1, viewState);
+
+                            CameraZoomEvent cameraZoomTargetEvent;
+                            cameraZoomTargetEvent.setZoomDelta(1.0f);
+                            cameraZoomTargetEvent.setTargetPos(targetPos);
+                            _mapRenderer->calculateCameraEvent(cameraZoomTargetEvent, ZOOM_GESTURE_ANIMATION_DURATION.count() / 1000.0f, true);
+                        }
+                    }
+                    if (_noDualPointerYet) {
                         _mapRenderer->getKineticEventHandler().startZoom();
                     }
                 }
                 break;
-            }
-            case SINGLE_POINTER_ZOOM: {
-                {
-                    std::lock_guard<std::mutex> lock(_mutex);
-                    _gestureMode = SINGLE_POINTER_CLICK_GUESS;
-                    if (cglib::length(_swipe1) < GUESS_SWIPE_ZOOM_THRESHOLD && isValidScreenPosition(screenPos1, viewState)) {
-                        MapPos targetPos = mapScreenPosition(screenPos1, viewState);
-
-                        CameraZoomEvent cameraZoomTargetEvent;
-                        cameraZoomTargetEvent.setZoomDelta(1.0f);
-                        cameraZoomTargetEvent.setTargetPos(targetPos);
-                        _mapRenderer->calculateCameraEvent(cameraZoomTargetEvent, ZOOM_GESTURE_ANIMATION_DURATION.count() / 1000.0f, true);
-                    }
-                }
-                if (_noDualPointerYet) {
-                    _mapRenderer->getKineticEventHandler().startZoom();
-                }
-                break;
-            }
             case DUAL_POINTER_GUESS:
             case DUAL_POINTER_TILT:
             case DUAL_POINTER_ROTATE:
             case DUAL_POINTER_SCALE:
-            case DUAL_POINTER_FREE: {
-                std::lock_guard<std::mutex> lock(_mutex);
-                _dualPointerReleaseTime = std::chrono::steady_clock::now();
-                _prevScreenPos1 = screenPos2;
-                _gestureMode = SINGLE_POINTER_PAN;
+            case DUAL_POINTER_FREE:
+                {
+                    std::lock_guard<std::mutex> lock(_mutex);
+                    _dualPointerReleaseTime = std::chrono::steady_clock::now();
+                    _prevScreenPos1 = screenPos2;
+                    _gestureMode = SINGLE_POINTER_PAN;
+                }
                 break;
-            }
             }
             break;
     
         case ACTION_POINTER_2_UP:
             switch (_gestureMode) {
-            case DUAL_POINTER_CLICK_GUESS: {
-                std::lock_guard<std::mutex> lock(_mutex);
-                _clickHandlerWorker->pointer2Up();
-                _gestureMode = SINGLE_POINTER_CLICK_GUESS;
+            case DUAL_POINTER_CLICK_GUESS:
+                {
+                    std::lock_guard<std::mutex> lock(_mutex);
+                    _clickHandlerWorker->pointer2Up();
+                    _gestureMode = SINGLE_POINTER_CLICK_GUESS;
+                }
                 break;
-            }
             case DUAL_POINTER_GUESS:
             case DUAL_POINTER_TILT:
             case DUAL_POINTER_ROTATE:
             case DUAL_POINTER_SCALE:
-            case DUAL_POINTER_FREE: {
-                std::lock_guard<std::mutex> lock(_mutex);
-                _dualPointerReleaseTime = std::chrono::steady_clock::now();
-                _prevScreenPos1 = screenPos1;
-                _gestureMode = SINGLE_POINTER_PAN;
-                break;
-            }
+            case DUAL_POINTER_FREE:
+                {
+                     std::lock_guard<std::mutex> lock(_mutex);
+                     _dualPointerReleaseTime = std::chrono::steady_clock::now();
+                     _prevScreenPos1 = screenPos1;
+                     _gestureMode = SINGLE_POINTER_PAN;
+                 }
+                 break;
             default:
                 break;
             }
@@ -419,6 +425,7 @@ namespace carto {
         default:
             _prevScreenPos1 = screenPos1;
             _prevScreenPos2 = screenPos2;
+            break;
         }
     }
     

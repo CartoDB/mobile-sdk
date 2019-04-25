@@ -214,7 +214,7 @@ namespace carto {
                 url,
                 tileMask,
                 std::shared_ptr<PackageMetaInfo>()
-                );
+            );
             return packageInfo;
         }
         return std::shared_ptr<PackageInfo>();

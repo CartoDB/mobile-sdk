@@ -505,18 +505,18 @@ namespace carto {
             // Build list of caches to use (based on tile substitution policy)
             std::vector<bool> preloadingCaches;
             switch (getTileSubstitutionPolicy()) {
-                case TileSubstitutionPolicy::TILE_SUBSTITUTION_POLICY_ALL:
-                    preloadingCaches.push_back(false);
+            case TileSubstitutionPolicy::TILE_SUBSTITUTION_POLICY_ALL:
+                preloadingCaches.push_back(false);
+                preloadingCaches.push_back(true);
+                break;
+            case TileSubstitutionPolicy::TILE_SUBSTITUTION_POLICY_VISIBLE:
+                preloadingCaches.push_back(false);
+                if (preloadingTiles) {
                     preloadingCaches.push_back(true);
-                    break;
-                case TileSubstitutionPolicy::TILE_SUBSTITUTION_POLICY_VISIBLE:
-                    preloadingCaches.push_back(false);
-                    if (preloadingTiles) {
-                        preloadingCaches.push_back(true);
-                    }
-                    break;
-                default:
-                    break;
+                }
+                break;
+            default:
+                break;
             }
             for (bool preloadingCache : preloadingCaches) {
                 // Check for a tile with the last frame nr

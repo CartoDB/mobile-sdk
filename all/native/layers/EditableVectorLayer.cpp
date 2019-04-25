@@ -225,8 +225,7 @@ namespace carto {
     void EditableVectorLayer::DataSourceListener::onElementAdded(const std::shared_ptr<VectorElement>& element) {
         if (std::shared_ptr<EditableVectorLayer> layer = _layer.lock()) {
             layer->refreshElement(element, false);
-        }
-        else {
+        } else {
             Log::Error("EditableVectorLayer::DataSourceListener: Lost connection to layer");
         }
     }
@@ -234,8 +233,7 @@ namespace carto {
     void EditableVectorLayer::DataSourceListener::onElementChanged(const std::shared_ptr<VectorElement>& element) {
         if (std::shared_ptr<EditableVectorLayer> layer = _layer.lock()) {
             layer->refreshElement(element, false);
-        }
-        else {
+        } else {
             Log::Error("EditableVectorLayer::DataSourceListener: Lost connection to layer");
         }
     }
@@ -246,8 +244,7 @@ namespace carto {
                 layer->setSelectedVectorElement(std::shared_ptr<VectorElement>());
             }
             layer->refreshElement(element, true);
-        }
-        else {
+        } else {
             Log::Error("EditableVectorLayer::DataSourceListener: Lost connection to layer");
         }
     }
@@ -255,8 +252,7 @@ namespace carto {
     void EditableVectorLayer::DataSourceListener::onElementsAdded(const std::vector<std::shared_ptr<VectorElement> >& elements) {
         if (std::shared_ptr<EditableVectorLayer> layer = _layer.lock()) {
             layer->refresh();
-        }
-        else {
+        } else {
             Log::Error("EditableVectorLayer::DataSourceListener: Lost connection to layer");
         }
     }
@@ -264,8 +260,7 @@ namespace carto {
     void EditableVectorLayer::DataSourceListener::onElementsChanged() {
         if (std::shared_ptr<EditableVectorLayer> layer = _layer.lock()) {
             layer->refresh();
-        }
-        else {
+        } else {
             Log::Error("EditableVectorLayer::DataSourceListener: Lost connection to layer");
         }
     }
@@ -274,8 +269,7 @@ namespace carto {
         if (std::shared_ptr<EditableVectorLayer> layer = _layer.lock()) {
             layer->setSelectedVectorElement(std::shared_ptr<VectorElement>());
             layer->refresh();
-        }
-        else {
+        } else {
             Log::Error("EditableVectorLayer::DataSourceListener: Lost connection to layer");
         }
     }

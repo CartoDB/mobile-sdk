@@ -671,8 +671,7 @@ namespace carto {
                     }
                     if (success) {
                         setTaskFinished(taskId);
-                    }
-                    else {
+                    } else {
                         setTaskFailed(taskId, PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM);
                     }
                 }
@@ -1480,8 +1479,7 @@ namespace carto {
                 command.bind(":hash", sha1.c_str());
                 command.execute();
             }
-        }
-        else {
+        } else {
             CheckDbEncryption(db, encKey);
         }
     }

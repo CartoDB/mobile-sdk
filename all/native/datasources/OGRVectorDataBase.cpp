@@ -75,30 +75,30 @@ namespace carto {
         }
         OGRwkbGeometryType wkbGeometryType = wkbUnknown;
         switch (geometryType) {
-            case OGRGeometryType::OGR_GEOMETRY_TYPE_POINT:
-                wkbGeometryType = wkbPoint;
-                break;
-            case OGRGeometryType::OGR_GEOMETRY_TYPE_LINE:
-                wkbGeometryType = wkbLineString;
-                break;
-            case OGRGeometryType::OGR_GEOMETRY_TYPE_POLYGON:
-                wkbGeometryType = wkbPolygon;
-                break;
-            case OGRGeometryType::OGR_GEOMETRY_TYPE_MULTIPOINT:
-                wkbGeometryType = wkbMultiPoint;
-                break;
-            case OGRGeometryType::OGR_GEOMETRY_TYPE_MULTILINE:
-                wkbGeometryType = wkbMultiLineString;
-                break;
-            case OGRGeometryType::OGR_GEOMETRY_TYPE_MULTIPOLYGON:
-                wkbGeometryType = wkbMultiPolygon;
-                break;
-            case OGRGeometryType::OGR_GEOMETRY_TYPE_GEOMETRYCOLLECTION:
-                wkbGeometryType = wkbGeometryCollection;
-                break;
-            default:
-                wkbGeometryType = wkbUnknown;
-                break;
+        case OGRGeometryType::OGR_GEOMETRY_TYPE_POINT:
+            wkbGeometryType = wkbPoint;
+            break;
+        case OGRGeometryType::OGR_GEOMETRY_TYPE_LINE:
+            wkbGeometryType = wkbLineString;
+            break;
+        case OGRGeometryType::OGR_GEOMETRY_TYPE_POLYGON:
+            wkbGeometryType = wkbPolygon;
+            break;
+        case OGRGeometryType::OGR_GEOMETRY_TYPE_MULTIPOINT:
+            wkbGeometryType = wkbMultiPoint;
+            break;
+        case OGRGeometryType::OGR_GEOMETRY_TYPE_MULTILINE:
+            wkbGeometryType = wkbMultiLineString;
+            break;
+        case OGRGeometryType::OGR_GEOMETRY_TYPE_MULTIPOLYGON:
+            wkbGeometryType = wkbMultiPolygon;
+            break;
+        case OGRGeometryType::OGR_GEOMETRY_TYPE_GEOMETRYCOLLECTION:
+            wkbGeometryType = wkbGeometryCollection;
+            break;
+        default:
+            wkbGeometryType = wkbUnknown;
+            break;
         }
         OGRLayer* poLayer = _poDS->CreateLayer(name.c_str(), poSpatialRef.get(), wkbGeometryType, NULL);
         if (!poLayer) {

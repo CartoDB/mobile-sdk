@@ -194,30 +194,30 @@ namespace carto {
         
         OGRGeometryType::OGRGeometryType geometryType = OGRGeometryType::OGR_GEOMETRY_TYPE_UNKNOWN;
         switch (_poLayer->GetGeomType()) {
-            case wkbPoint:
-                geometryType = OGRGeometryType::OGR_GEOMETRY_TYPE_POINT;
-                break;
-            case wkbLineString:
-                geometryType = OGRGeometryType::OGR_GEOMETRY_TYPE_LINE;
-                break;
-            case wkbPolygon:
-                geometryType = OGRGeometryType::OGR_GEOMETRY_TYPE_POLYGON;
-                break;
-            case wkbMultiPoint:
-                geometryType = OGRGeometryType::OGR_GEOMETRY_TYPE_MULTIPOINT;
-                break;
-            case wkbMultiLineString:
-                geometryType = OGRGeometryType::OGR_GEOMETRY_TYPE_MULTILINE;
-                break;
-            case wkbMultiPolygon:
-                geometryType = OGRGeometryType::OGR_GEOMETRY_TYPE_MULTIPOLYGON;
-                break;
-            case wkbGeometryCollection:
-                geometryType = OGRGeometryType::OGR_GEOMETRY_TYPE_GEOMETRYCOLLECTION;
-                break;
-            default:
-                geometryType = OGRGeometryType::OGR_GEOMETRY_TYPE_UNKNOWN;
-                break;
+        case wkbPoint:
+            geometryType = OGRGeometryType::OGR_GEOMETRY_TYPE_POINT;
+            break;
+        case wkbLineString:
+            geometryType = OGRGeometryType::OGR_GEOMETRY_TYPE_LINE;
+            break;
+        case wkbPolygon:
+            geometryType = OGRGeometryType::OGR_GEOMETRY_TYPE_POLYGON;
+            break;
+        case wkbMultiPoint:
+            geometryType = OGRGeometryType::OGR_GEOMETRY_TYPE_MULTIPOINT;
+            break;
+        case wkbMultiLineString:
+            geometryType = OGRGeometryType::OGR_GEOMETRY_TYPE_MULTILINE;
+            break;
+        case wkbMultiPolygon:
+            geometryType = OGRGeometryType::OGR_GEOMETRY_TYPE_MULTIPOLYGON;
+            break;
+        case wkbGeometryCollection:
+            geometryType = OGRGeometryType::OGR_GEOMETRY_TYPE_GEOMETRYCOLLECTION;
+            break;
+        default:
+            geometryType = OGRGeometryType::OGR_GEOMETRY_TYPE_UNKNOWN;
+            break;
         }
         return geometryType;
     }
@@ -394,28 +394,28 @@ namespace carto {
         
         ::OGRFieldType ogrFieldType = OFTString;
         switch (type) {
-            case OGRFieldType::OGR_FIELD_TYPE_INTEGER:
-                ogrFieldType = OFTInteger;
-                break;
-            case OGRFieldType::OGR_FIELD_TYPE_REAL:
-                ogrFieldType = OFTReal;
-                break;
-            case OGRFieldType::OGR_FIELD_TYPE_STRING:
-                ogrFieldType = OFTString;
-                break;
-            case OGRFieldType::OGR_FIELD_TYPE_TIME:
-                ogrFieldType = OFTTime;
-                break;
-            case OGRFieldType::OGR_FIELD_TYPE_DATE:
-                ogrFieldType = OFTDate;
-                break;
-            case OGRFieldType::OGR_FIELD_TYPE_DATETIME:
-                ogrFieldType = OFTDateTime;
-                break;
-            default:
-                Log::Warnf("OGRVectorDataSource::createField: Setting field type to string for field %s", name.c_str());
-                ogrFieldType = OFTString;
-                break;
+        case OGRFieldType::OGR_FIELD_TYPE_INTEGER:
+            ogrFieldType = OFTInteger;
+            break;
+        case OGRFieldType::OGR_FIELD_TYPE_REAL:
+            ogrFieldType = OFTReal;
+            break;
+        case OGRFieldType::OGR_FIELD_TYPE_STRING:
+            ogrFieldType = OFTString;
+            break;
+        case OGRFieldType::OGR_FIELD_TYPE_TIME:
+            ogrFieldType = OFTTime;
+            break;
+        case OGRFieldType::OGR_FIELD_TYPE_DATE:
+            ogrFieldType = OFTDate;
+            break;
+        case OGRFieldType::OGR_FIELD_TYPE_DATETIME:
+            ogrFieldType = OFTDateTime;
+            break;
+        default:
+            Log::Warnf("OGRVectorDataSource::createField: Setting field type to string for field %s", name.c_str());
+            ogrFieldType = OFTString;
+            break;
         }
         
         std::shared_ptr<OGRFieldDefn> ogrField = std::make_shared<OGRFieldDefn>(name.c_str(), ogrFieldType);
@@ -521,13 +521,14 @@ namespace carto {
                     OGRFieldDefn* poFieldDefn = poFeature->GetFieldDefnRef(i);
                     Variant value;
                     switch (poFieldDefn->GetType()) {
-                        case OFTInteger:
-                            value = Variant(static_cast<long long>(poFeature->GetFieldAsInteger(i)));
-                            break;
-                        case OFTReal:
-                            value = Variant(poFeature->GetFieldAsDouble(i));
-                            break;
-                        default: {
+                    case OFTInteger:
+                        value = Variant(static_cast<long long>(poFeature->GetFieldAsInteger(i)));
+                        break;
+                    case OFTReal:
+                        value = Variant(poFeature->GetFieldAsDouble(i));
+                        break;
+                    default:
+                        {
                             const char* strValue = poFeature->GetFieldAsString(i);
                             if (!strValue) {
                                 continue;
@@ -539,8 +540,8 @@ namespace carto {
                             } else {
                                 value = Variant(strValue);
                             }
-                            break;
                         }
+                        break;
                     }
                     metaData[poFDefn->GetFieldDefn(i)->GetNameRef()] = value;
                 }
@@ -587,91 +588,97 @@ namespace carto {
         
         std::shared_ptr<Geometry> geometry;
         switch (wkbFlatten(poGeometry->getGeometryType())) {
-            case wkbPoint: {
-                    OGRPoint* poPoint = (OGRPoint*) poGeometry;
-                    MapPos mapPos = _poLayerSpatialRef->transform(poPoint->getX(), poPoint->getY(), poPoint->getZ());
-                    geometry = std::make_shared<PointGeometry>(mapPos);
+        case wkbPoint:
+            {
+                OGRPoint* poPoint = (OGRPoint*) poGeometry;
+                MapPos mapPos = _poLayerSpatialRef->transform(poPoint->getX(), poPoint->getY(), poPoint->getZ());
+                geometry = std::make_shared<PointGeometry>(mapPos);
+            }
+            break;
+        case wkbLineString:
+            {
+                OGRLineString* poLineString = (OGRLineString*) poGeometry;
+                std::vector<MapPos> mapPoses(poLineString->getNumPoints());
+                for (int i = 0; i < poLineString->getNumPoints(); i++) {
+                    mapPoses[i] = _poLayerSpatialRef->transform(poLineString->getX(i), poLineString->getY(i), poLineString->getZ(i));
                 }
-                break;
-            case wkbLineString: {
-                    OGRLineString* poLineString = (OGRLineString*) poGeometry;
-                    std::vector<MapPos> mapPoses(poLineString->getNumPoints());
+                geometry = std::make_shared<LineGeometry>(mapPoses);
+            }
+            break;
+        case wkbPolygon:
+            {
+                OGRPolygon* poPolygon = (OGRPolygon*) poGeometry;
+                OGRLineString* poLineString = poPolygon->getExteriorRing();
+                std::vector<MapPos> mapPoses(poLineString->getNumPoints());
+                for (int i = 0; i < poLineString->getNumPoints(); i++) {
+                    mapPoses[i] = _poLayerSpatialRef->transform(poLineString->getX(i), poLineString->getY(i), poLineString->getZ(i));
+                }
+                std::vector<std::vector<MapPos>> interiorMapPoses(poPolygon->getNumInteriorRings());
+                for (int n = 0; n < poPolygon->getNumInteriorRings(); n++) {
+                    poLineString = poPolygon->getInteriorRing(n);
+                    interiorMapPoses[n].resize(poLineString->getNumPoints());
                     for (int i = 0; i < poLineString->getNumPoints(); i++) {
-                        mapPoses[i] = _poLayerSpatialRef->transform(poLineString->getX(i), poLineString->getY(i), poLineString->getZ(i));
+                        interiorMapPoses[n][i] = _poLayerSpatialRef->transform(poLineString->getX(i), poLineString->getY(i),   poLineString->getZ(i));
                     }
-                    geometry = std::make_shared<LineGeometry>(mapPoses);
                 }
-                break;
-            case wkbPolygon: {
-                    OGRPolygon* poPolygon = (OGRPolygon*) poGeometry;
-                    OGRLineString* poLineString = poPolygon->getExteriorRing();
-                    std::vector<MapPos> mapPoses(poLineString->getNumPoints());
-                    for (int i = 0; i < poLineString->getNumPoints(); i++) {
-                        mapPoses[i] = _poLayerSpatialRef->transform(poLineString->getX(i), poLineString->getY(i), poLineString->getZ(i));
+                geometry = std::make_shared<PolygonGeometry>(mapPoses, interiorMapPoses);
+            }
+            break;
+        case wkbGeometryCollection:
+            {
+                OGRGeometryCollection* poGeomCollection = (OGRGeometryCollection*) poGeometry;
+                std::vector<std::shared_ptr<Geometry> > geoms;
+                for (int i = 0; i < poGeomCollection->getNumGeometries(); i++) {
+                    std::shared_ptr<Geometry> geom = createGeometry(poGeomCollection->getGeometryRef(i));
+                    if (geom) {
+                        geoms.push_back(geom);
                     }
-                    std::vector<std::vector<MapPos>> interiorMapPoses(poPolygon->getNumInteriorRings());
-                    for (int n = 0; n < poPolygon->getNumInteriorRings(); n++) {
-                        poLineString = poPolygon->getInteriorRing(n);
-                        interiorMapPoses[n].resize(poLineString->getNumPoints());
-                        for (int i = 0; i < poLineString->getNumPoints(); i++) {
-                            interiorMapPoses[n][i] = _poLayerSpatialRef->transform(poLineString->getX(i), poLineString->getY(i),   poLineString->getZ(i));
-                        }
+                }
+                geometry = std::make_shared<MultiGeometry>(geoms);
+            }
+            break;
+        case wkbMultiPoint:
+            {
+                OGRGeometryCollection* poGeomCollection = (OGRGeometryCollection*) poGeometry;
+                std::vector<std::shared_ptr<PointGeometry> > points;
+                for (int i = 0; i < poGeomCollection->getNumGeometries(); i++) {
+                    std::shared_ptr<Geometry> geom = createGeometry(poGeomCollection->getGeometryRef(i));
+                    if (auto point = std::dynamic_pointer_cast<PointGeometry>(geom)) {
+                        points.push_back(point);
                     }
-                    geometry = std::make_shared<PolygonGeometry>(mapPoses, interiorMapPoses);
                 }
-                break;
-            case wkbGeometryCollection: {
-                    OGRGeometryCollection* poGeomCollection = (OGRGeometryCollection*) poGeometry;
-                    std::vector<std::shared_ptr<Geometry> > geoms;
-                    for (int i = 0; i < poGeomCollection->getNumGeometries(); i++) {
-                        std::shared_ptr<Geometry> geom = createGeometry(poGeomCollection->getGeometryRef(i));
-                        if (geom) {
-                            geoms.push_back(geom);
-                        }
+                geometry = std::make_shared<MultiPointGeometry>(points);
+            }
+            break;
+        case wkbMultiLineString:
+            {
+                OGRGeometryCollection* poGeomCollection = (OGRGeometryCollection*) poGeometry;
+                std::vector<std::shared_ptr<LineGeometry> > lines;
+                for (int i = 0; i < poGeomCollection->getNumGeometries(); i++) {
+                    std::shared_ptr<Geometry> geom = createGeometry(poGeomCollection->getGeometryRef(i));
+                    if (auto line = std::dynamic_pointer_cast<LineGeometry>(geom)) {
+                        lines.push_back(line);
                     }
-                    geometry = std::make_shared<MultiGeometry>(geoms);
                 }
-                break;
-            case wkbMultiPoint: {
-                    OGRGeometryCollection* poGeomCollection = (OGRGeometryCollection*) poGeometry;
-                    std::vector<std::shared_ptr<PointGeometry> > points;
-                    for (int i = 0; i < poGeomCollection->getNumGeometries(); i++) {
-                        std::shared_ptr<Geometry> geom = createGeometry(poGeomCollection->getGeometryRef(i));
-                        if (auto point = std::dynamic_pointer_cast<PointGeometry>(geom)) {
-                            points.push_back(point);
-                        }
+                geometry = std::make_shared<MultiLineGeometry>(lines);
+            }
+            break;
+        case wkbMultiPolygon:
+            {
+                OGRGeometryCollection* poGeomCollection = (OGRGeometryCollection*) poGeometry;
+                std::vector<std::shared_ptr<PolygonGeometry> > polygons;
+                for (int i = 0; i < poGeomCollection->getNumGeometries(); i++) {
+                    std::shared_ptr<Geometry> geom = createGeometry(poGeomCollection->getGeometryRef(i));
+                    if (auto polygon = std::dynamic_pointer_cast<PolygonGeometry>(geom)) {
+                        polygons.push_back(polygon);
                     }
-                    geometry = std::make_shared<MultiPointGeometry>(points);
                 }
-                break;
-            case wkbMultiLineString: {
-                    OGRGeometryCollection* poGeomCollection = (OGRGeometryCollection*) poGeometry;
-                    std::vector<std::shared_ptr<LineGeometry> > lines;
-                    for (int i = 0; i < poGeomCollection->getNumGeometries(); i++) {
-                        std::shared_ptr<Geometry> geom = createGeometry(poGeomCollection->getGeometryRef(i));
-                        if (auto line = std::dynamic_pointer_cast<LineGeometry>(geom)) {
-                            lines.push_back(line);
-                        }
-                    }
-                    geometry = std::make_shared<MultiLineGeometry>(lines);
-                }
-                break;
-            case wkbMultiPolygon: {
-                    OGRGeometryCollection* poGeomCollection = (OGRGeometryCollection*) poGeometry;
-                    std::vector<std::shared_ptr<PolygonGeometry> > polygons;
-                    for (int i = 0; i < poGeomCollection->getNumGeometries(); i++) {
-                        std::shared_ptr<Geometry> geom = createGeometry(poGeomCollection->getGeometryRef(i));
-                        if (auto polygon = std::dynamic_pointer_cast<PolygonGeometry>(geom)) {
-                            polygons.push_back(polygon);
-                        }
-                    }
-                    geometry = std::make_shared<MultiPolygonGeometry>(polygons);
-                }
-                break;
-            default: {
-                    Log::Error("OGRVectorDataSource: Unimplemented geometry type!");
-                }
-                break;
+                geometry = std::make_shared<MultiPolygonGeometry>(polygons);
+            }
+            break;
+        default:
+            Log::Error("OGRVectorDataSource: Unimplemented geometry type!");
+            break;
         }
 
         return geometry;
@@ -792,13 +799,14 @@ namespace carto {
 
                 OGRFieldDefn* poFieldDefn = poFeature->GetFieldDefnRef(i);
                 switch (poFieldDefn->GetType()) {
-                    case OFTInteger:
-                        poFeature->SetField(i, static_cast<int>(value.getLong()));
-                        break;
-                    case OFTReal:
-                        poFeature->SetField(i, value.getDouble());
-                        break;
-                    default: {
+                case OFTInteger:
+                    poFeature->SetField(i, static_cast<int>(value.getLong()));
+                    break;
+                case OFTReal:
+                    poFeature->SetField(i, value.getDouble());
+                    break;
+                default:
+                    {
                         std::string strValue;
                         if (value.getType() == VariantType::VARIANT_TYPE_STRING) {
                             strValue = value.getString();
@@ -812,8 +820,8 @@ namespace carto {
                         } else {
                             poFeature->SetField(i, strValue.c_str());
                         }
-                        break;
                     }
+                    break;
                 }
             }
         }

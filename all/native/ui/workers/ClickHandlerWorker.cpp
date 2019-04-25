@@ -228,42 +228,42 @@ namespace carto {
                     
                     auto deltaTime = std::chrono::steady_clock::now() - _startTime;
                     switch (_clickMode) {
-                        case NO_CLICK:
-                            break;
-                        case LONG_CLICK:
-                            if (!_clickTypeDetection || deltaTime >= LONG_CLICK_MIN_DURATION) {
-                                _chosen = true;
-                            }
-                            break;
-                        case DOUBLE_CLICK:
-                            if (!_clickTypeDetection || deltaTime >= DOUBLE_CLICK_MAX_DURATION) {
-                                _chosen = true;
-                                _canceled = true;
-                            }
-                            break;
-                        case DUAL_CLICK:
-                            if (!_clickTypeDetection || deltaTime >= DUAL_CLICK_END_DURATION) {
-                                _chosen = true;
-                                _canceled = true;
-                            }
-                            break;
+                    case NO_CLICK:
+                        break;
+                    case LONG_CLICK:
+                        if (!_clickTypeDetection || deltaTime >= LONG_CLICK_MIN_DURATION) {
+                            _chosen = true;
+                        }
+                        break;
+                    case DOUBLE_CLICK:
+                        if (!_clickTypeDetection || deltaTime >= DOUBLE_CLICK_MAX_DURATION) {
+                            _chosen = true;
+                            _canceled = true;
+                        }
+                        break;
+                    case DUAL_CLICK:
+                        if (!_clickTypeDetection || deltaTime >= DUAL_CLICK_END_DURATION) {
+                            _chosen = true;
+                            _canceled = true;
+                        }
+                        break;
                     }
                 }
                 std::this_thread::yield();
             }
             
             switch (_clickMode) {
-                case NO_CLICK:
-                    break;
-                case LONG_CLICK:
-                    afterLongClick();
-                    break;
-                case DOUBLE_CLICK:
-                    afterDoubleClick();
-                    break;
-                case DUAL_CLICK:
-                    afterDualClick();
-                    break;
+            case NO_CLICK:
+                break;
+            case LONG_CLICK:
+                afterLongClick();
+                break;
+            case DOUBLE_CLICK:
+                afterDoubleClick();
+                break;
+            case DUAL_CLICK:
+                afterDualClick();
+                break;
             }
             
             {

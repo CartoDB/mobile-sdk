@@ -211,33 +211,33 @@ namespace carto {
     
     bool SGREOfflineRoutingService::TranslateInstructionCode(int instructionCode, RoutingAction::RoutingAction& action) {
         switch (static_cast<sgre::Instruction::Type>(instructionCode)) {
-            case sgre::Instruction::Type::HEAD_ON:
-                action = RoutingAction::ROUTING_ACTION_HEAD_ON;
-                break;
-            case sgre::Instruction::Type::GO_STRAIGHT:
-                action = RoutingAction::ROUTING_ACTION_GO_STRAIGHT;
-                break;
-            case sgre::Instruction::Type::TURN_RIGHT:
-                action = RoutingAction::ROUTING_ACTION_TURN_RIGHT;
-                break;
-            case sgre::Instruction::Type::TURN_LEFT:
-                action = RoutingAction::ROUTING_ACTION_TURN_LEFT;
-                break;
-            case sgre::Instruction::Type::REACHED_YOUR_DESTINATION:
-                action = RoutingAction::ROUTING_ACTION_FINISH;
-                break;
-            case sgre::Instruction::Type::GO_UP:
-                action = RoutingAction::ROUTING_ACTION_GO_UP;
-                break;
-            case sgre::Instruction::Type::GO_DOWN:
-                action = RoutingAction::ROUTING_ACTION_GO_DOWN;
-                break;
-            case sgre::Instruction::Type::WAIT:
-                action = RoutingAction::ROUTING_ACTION_WAIT;
-                break;
-            default:
-                Log::Infof("SGREOfflineRoutingService::TranslateInstructionCode: ignoring instruction %d", instructionCode);
-                return false;
+        case sgre::Instruction::Type::HEAD_ON:
+            action = RoutingAction::ROUTING_ACTION_HEAD_ON;
+            break;
+        case sgre::Instruction::Type::GO_STRAIGHT:
+            action = RoutingAction::ROUTING_ACTION_GO_STRAIGHT;
+            break;
+        case sgre::Instruction::Type::TURN_RIGHT:
+            action = RoutingAction::ROUTING_ACTION_TURN_RIGHT;
+            break;
+        case sgre::Instruction::Type::TURN_LEFT:
+            action = RoutingAction::ROUTING_ACTION_TURN_LEFT;
+            break;
+        case sgre::Instruction::Type::REACHED_YOUR_DESTINATION:
+            action = RoutingAction::ROUTING_ACTION_FINISH;
+            break;
+        case sgre::Instruction::Type::GO_UP:
+            action = RoutingAction::ROUTING_ACTION_GO_UP;
+            break;
+        case sgre::Instruction::Type::GO_DOWN:
+            action = RoutingAction::ROUTING_ACTION_GO_DOWN;
+            break;
+        case sgre::Instruction::Type::WAIT:
+            action = RoutingAction::ROUTING_ACTION_WAIT;
+            break;
+        default:
+            Log::Infof("SGREOfflineRoutingService::TranslateInstructionCode: ignoring instruction %d", instructionCode);
+            return false;
         }
         return true;
     }

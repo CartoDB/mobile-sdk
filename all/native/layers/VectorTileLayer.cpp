@@ -112,8 +112,7 @@ namespace carto {
         long long tileId = getTileId(tile);
         if (preloadingCache) {
             return _preloadingCache.exists(tileId);
-        }
-        else {
+        } else {
             return _visibleCache.exists(tileId);
         }
     }
@@ -123,8 +122,7 @@ namespace carto {
         long long tileId = getTileId(tile);
         if (preloadingCache) {
             return _preloadingCache.exists(tileId) && _preloadingCache.valid(tileId);
-        }
-        else {
+        } else {
             return _visibleCache.exists(tileId) && _visibleCache.valid(tileId);
         }
     }
@@ -140,8 +138,7 @@ namespace carto {
             if (_preloadingCache.exists(tileId) && _preloadingCache.valid(tileId)) {
                 if (!preloadingTile) {
                     _preloadingCache.move(tileId, _visibleCache); // move to visible cache, just in case the element gets trashed
-                }
-                else {
+                } else {
                     _preloadingCache.get(tileId);
                 }
                 return;
@@ -170,8 +167,7 @@ namespace carto {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         if (preloadingTiles) {
             _preloadingCache.clear();
-        }
-        else {
+        } else {
             _visibleCache.clear();
         }
     }

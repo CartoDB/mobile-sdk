@@ -80,57 +80,57 @@ namespace carto {
     std::string RoutingInstruction::toString() const {
         std::string actionName;
         switch (_action) {
-            case RoutingAction::ROUTING_ACTION_HEAD_ON:
-                actionName = "Head on";
-                break;
-            case RoutingAction::ROUTING_ACTION_FINISH:
-                actionName = "Finish";
-                break;
-            case RoutingAction::ROUTING_ACTION_NO_TURN:
-                actionName = "No turn";
-                break;
-            case RoutingAction::ROUTING_ACTION_GO_STRAIGHT:
-                actionName = "Go straight";
-                break;
-            case RoutingAction::ROUTING_ACTION_TURN_RIGHT:
-                actionName = "Turn right";
-                break;
-            case RoutingAction::ROUTING_ACTION_UTURN:
-                actionName = "U turn";
-                break;
-            case RoutingAction::ROUTING_ACTION_TURN_LEFT:
-                actionName = "Turn left";
-                break;
-            case RoutingAction::ROUTING_ACTION_REACH_VIA_LOCATION:
-                actionName = "Reach via location";
-                break;
-            case RoutingAction::ROUTING_ACTION_ENTER_ROUNDABOUT:
-                actionName = "Enter roundabout";
-                break;
-            case RoutingAction::ROUTING_ACTION_LEAVE_ROUNDABOUT:
-                actionName = "Leave roundabout";
-                break;
-            case RoutingAction::ROUTING_ACTION_STAY_ON_ROUNDABOUT:
-                actionName = "Stay on roundabout";
-                break;
-            case RoutingAction::ROUTING_ACTION_START_AT_END_OF_STREET:
-                actionName = "Start at end of street";
-                break;
-            case RoutingAction::ROUTING_ACTION_ENTER_AGAINST_ALLOWED_DIRECTION:
-                actionName = "Enter against allowed direction";
-                break;
-            case RoutingAction::ROUTING_ACTION_LEAVE_AGAINST_ALLOWED_DIRECTION:
-                actionName = "Leave against allowed direction";
-                break;
-            case RoutingAction::ROUTING_ACTION_GO_UP:
-                actionName = "Go up";
-                break;
-            case RoutingAction::ROUTING_ACTION_GO_DOWN:
-                actionName = "Go down";
-                break;
-            case RoutingAction::ROUTING_ACTION_WAIT:
-                actionName = "Wait";
-                break;
+        case RoutingAction::ROUTING_ACTION_HEAD_ON:
+            actionName = "Head on";
+            break;
+        case RoutingAction::ROUTING_ACTION_FINISH:
+            actionName = "Finish";
+            break;
+        case RoutingAction::ROUTING_ACTION_NO_TURN:
+            actionName = "No turn";
+            break;
+        case RoutingAction::ROUTING_ACTION_GO_STRAIGHT:
+            actionName = "Go straight";
+            break;
+        case RoutingAction::ROUTING_ACTION_TURN_RIGHT:
+            actionName = "Turn right";
+            break;
+        case RoutingAction::ROUTING_ACTION_UTURN:
+            actionName = "U turn";
+            break;
+        case RoutingAction::ROUTING_ACTION_TURN_LEFT:
+            actionName = "Turn left";
+            break;
+        case RoutingAction::ROUTING_ACTION_REACH_VIA_LOCATION:
+            actionName = "Reach via location";
+            break;
+        case RoutingAction::ROUTING_ACTION_ENTER_ROUNDABOUT:
+            actionName = "Enter roundabout";
+            break;
+        case RoutingAction::ROUTING_ACTION_LEAVE_ROUNDABOUT:
+            actionName = "Leave roundabout";
+            break;
+        case RoutingAction::ROUTING_ACTION_STAY_ON_ROUNDABOUT:
+            actionName = "Stay on roundabout";
+            break;
+        case RoutingAction::ROUTING_ACTION_START_AT_END_OF_STREET:
+            actionName = "Start at end of street";
+            break;
+        case RoutingAction::ROUTING_ACTION_ENTER_AGAINST_ALLOWED_DIRECTION:
+            actionName = "Enter against allowed direction";
+            break;
+        case RoutingAction::ROUTING_ACTION_LEAVE_AGAINST_ALLOWED_DIRECTION:
+            actionName = "Leave against allowed direction";
+            break;
+        case RoutingAction::ROUTING_ACTION_GO_UP:
+            actionName = "Go up";
+            break;
+        case RoutingAction::ROUTING_ACTION_GO_DOWN:
+            actionName = "Go down";
+            break;
+        case RoutingAction::ROUTING_ACTION_WAIT:
+            actionName = "Wait";
+            break;
         }
 
         std::stringstream ss;

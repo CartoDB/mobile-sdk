@@ -169,8 +169,7 @@ namespace carto {
         }
     
         // Set PNG info
-        png_set_IHDR(pngPtr, infoPtr, _width, _height, 8, colorType, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE,
-                PNG_FILTER_TYPE_BASE);
+        png_set_IHDR(pngPtr, infoPtr, _width, _height, 8, colorType, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
     
         // Write PNG info
         png_write_info(pngPtr, infoPtr);
@@ -401,35 +400,36 @@ namespace carto {
                 unsigned int destIndex = (i * _width + j) * 4;
                 unsigned int srcIndex = (i * _width + j) * _bytesPerPixel;
                 switch (_colorFormat) {
-                    case ColorFormat::COLOR_FORMAT_GRAYSCALE:
-                        pixelData[destIndex + 0] = _pixelData[srcIndex];
-                        pixelData[destIndex + 1] = _pixelData[srcIndex];
-                        pixelData[destIndex + 2] = _pixelData[srcIndex];
-                        break;
-                    case ColorFormat::COLOR_FORMAT_GRAYSCALE_ALPHA:
-                        pixelData[destIndex + 0] = _pixelData[srcIndex];
-                        pixelData[destIndex + 1] = _pixelData[srcIndex];
-                        pixelData[destIndex + 2] = _pixelData[srcIndex];
-                        pixelData[destIndex + 3] = _pixelData[srcIndex + 1];
-                        break;
-                    case ColorFormat::COLOR_FORMAT_RGB:
-                        pixelData[destIndex + 0] = _pixelData[srcIndex + 0];
-                        pixelData[destIndex + 1] = _pixelData[srcIndex + 1];
-                        pixelData[destIndex + 2] = _pixelData[srcIndex + 2];
-                        break;
-                    case ColorFormat::COLOR_FORMAT_RGBA:
-                        pixelData[destIndex + 0] = _pixelData[srcIndex + 0];
-                        pixelData[destIndex + 1] = _pixelData[srcIndex + 1];
-                        pixelData[destIndex + 2] = _pixelData[srcIndex + 2];
-                        pixelData[destIndex + 3] = _pixelData[srcIndex + 3];
-                        break;
-                    case ColorFormat::COLOR_FORMAT_BGRA:
-                        pixelData[destIndex + 0] = _pixelData[srcIndex + 2];
-                        pixelData[destIndex + 1] = _pixelData[srcIndex + 1];
-                        pixelData[destIndex + 2] = _pixelData[srcIndex + 0];
-                        pixelData[destIndex + 3] = _pixelData[srcIndex + 3];
-                        break;
-                    case ColorFormat::COLOR_FORMAT_RGBA_4444: {
+                case ColorFormat::COLOR_FORMAT_GRAYSCALE:
+                    pixelData[destIndex + 0] = _pixelData[srcIndex];
+                    pixelData[destIndex + 1] = _pixelData[srcIndex];
+                    pixelData[destIndex + 2] = _pixelData[srcIndex];
+                    break;
+                case ColorFormat::COLOR_FORMAT_GRAYSCALE_ALPHA:
+                    pixelData[destIndex + 0] = _pixelData[srcIndex];
+                    pixelData[destIndex + 1] = _pixelData[srcIndex];
+                    pixelData[destIndex + 2] = _pixelData[srcIndex];
+                    pixelData[destIndex + 3] = _pixelData[srcIndex + 1];
+                    break;
+                case ColorFormat::COLOR_FORMAT_RGB:
+                    pixelData[destIndex + 0] = _pixelData[srcIndex + 0];
+                    pixelData[destIndex + 1] = _pixelData[srcIndex + 1];
+                    pixelData[destIndex + 2] = _pixelData[srcIndex + 2];
+                    break;
+                case ColorFormat::COLOR_FORMAT_RGBA:
+                    pixelData[destIndex + 0] = _pixelData[srcIndex + 0];
+                    pixelData[destIndex + 1] = _pixelData[srcIndex + 1];
+                    pixelData[destIndex + 2] = _pixelData[srcIndex + 2];
+                    pixelData[destIndex + 3] = _pixelData[srcIndex + 3];
+                    break;
+                case ColorFormat::COLOR_FORMAT_BGRA:
+                    pixelData[destIndex + 0] = _pixelData[srcIndex + 2];
+                    pixelData[destIndex + 1] = _pixelData[srcIndex + 1];
+                    pixelData[destIndex + 2] = _pixelData[srcIndex + 0];
+                    pixelData[destIndex + 3] = _pixelData[srcIndex + 3];
+                    break;
+                case ColorFormat::COLOR_FORMAT_RGBA_4444:
+                    {
                         unsigned short color = *reinterpret_cast<const unsigned short*>(&_pixelData[srcIndex]);
                         unsigned char r = (color & 0xF000) >> 8;
                         r = r | (r >> 4);
@@ -443,9 +443,10 @@ namespace carto {
                         pixelData[destIndex + 1] = g;
                         pixelData[destIndex + 2] = b;
                         pixelData[destIndex + 3] = a;
-                        break;
                     }
-                    case ColorFormat::COLOR_FORMAT_RGB_565: {
+                    break;
+                case ColorFormat::COLOR_FORMAT_RGB_565:
+                    {
                         unsigned short color = *reinterpret_cast<const unsigned short*>(&_pixelData[srcIndex]);
                         unsigned char r = (color & 0xF800) >> 8;
                         r = r | (r >> 5);
@@ -456,12 +457,11 @@ namespace carto {
                         pixelData[destIndex + 0] = r;
                         pixelData[destIndex + 1] = g;
                         pixelData[destIndex + 2] = b;
-                        break;
                     }
-                    default: {
-                        Log::Error("Bitmap::getRGBABitmap: Failed to convert bitmap due to unsupported color format");
-                        break;
-                    }
+                    break;
+                default:
+                    Log::Error("Bitmap::getRGBABitmap: Failed to convert bitmap due to unsupported color format");
+                    break;
                 }
             }
         }
@@ -522,33 +522,33 @@ namespace carto {
         _colorFormat = colorFormat;
         bool convert = false;
         switch (_colorFormat) {
-            case ColorFormat::COLOR_FORMAT_GRAYSCALE:
-                _bytesPerPixel = 1;
-                break;
-            case ColorFormat::COLOR_FORMAT_GRAYSCALE_ALPHA:
-                _bytesPerPixel = 2;
-                break;
-            case ColorFormat::COLOR_FORMAT_RGB:
-                _bytesPerPixel = 3;
-                break;
-            case ColorFormat::COLOR_FORMAT_RGBA:
-                _bytesPerPixel = 4;
-                break;
-            case ColorFormat::COLOR_FORMAT_BGRA:
-                _bytesPerPixel = 4;
-                convert = true;
-                break;
-            case ColorFormat::COLOR_FORMAT_RGBA_4444:
-                _bytesPerPixel = 2;
-                convert = true;
-                break;
-            case ColorFormat::COLOR_FORMAT_RGB_565:
-                _bytesPerPixel = 2;
-                convert = true;
-                break;
-            default:
-                Log::Errorf("Bitmap::loadFromUncompressedBytes: Failed to load bitmap, unsupported color format: %d", colorFormat);
-                return false;
+        case ColorFormat::COLOR_FORMAT_GRAYSCALE:
+            _bytesPerPixel = 1;
+            break;
+        case ColorFormat::COLOR_FORMAT_GRAYSCALE_ALPHA:
+            _bytesPerPixel = 2;
+            break;
+        case ColorFormat::COLOR_FORMAT_RGB:
+            _bytesPerPixel = 3;
+            break;
+        case ColorFormat::COLOR_FORMAT_RGBA:
+            _bytesPerPixel = 4;
+            break;
+        case ColorFormat::COLOR_FORMAT_BGRA:
+            _bytesPerPixel = 4;
+            convert = true;
+            break;
+        case ColorFormat::COLOR_FORMAT_RGBA_4444:
+            _bytesPerPixel = 2;
+            convert = true;
+            break;
+        case ColorFormat::COLOR_FORMAT_RGB_565:
+            _bytesPerPixel = 2;
+            convert = true;
+            break;
+        default:
+            Log::Errorf("Bitmap::loadFromUncompressedBytes: Failed to load bitmap, unsupported color format: %d", colorFormat);
+            return false;
         }
     
         _width = width;
@@ -568,13 +568,14 @@ namespace carto {
                     unsigned int destIndex = flippedI * newBytesPerRow + j;
                     unsigned int srcIndex = (bytesPerRow < 0 ? flippedI : i) * std::abs(bytesPerRow) + j;
                     switch (_colorFormat) {
-                        case ColorFormat::COLOR_FORMAT_BGRA:
-                            _pixelData[destIndex] = pixelData[srcIndex + 2];
-                            _pixelData[destIndex + 1] = pixelData[srcIndex + 1];
-                            _pixelData[destIndex + 2] = pixelData[srcIndex];
-                            _pixelData[destIndex + 3] = pixelData[srcIndex + 3];
-                            break;
-                        case ColorFormat::COLOR_FORMAT_RGBA_4444: {
+                    case ColorFormat::COLOR_FORMAT_BGRA:
+                        _pixelData[destIndex] = pixelData[srcIndex + 2];
+                        _pixelData[destIndex + 1] = pixelData[srcIndex + 1];
+                        _pixelData[destIndex + 2] = pixelData[srcIndex];
+                        _pixelData[destIndex + 3] = pixelData[srcIndex + 3];
+                        break;
+                    case ColorFormat::COLOR_FORMAT_RGBA_4444:
+                        {
                             unsigned short color = *reinterpret_cast<const unsigned short*>(pixelData + srcIndex);
                             unsigned char r = (color & 0xF000) >> 8;
                             r = r | (r >> 4);
@@ -588,9 +589,10 @@ namespace carto {
                             _pixelData[destIndex + 1] = g;
                             _pixelData[destIndex + 2] = b;
                             _pixelData[destIndex + 3] = a;
-                            break;
                         }
-                        case ColorFormat::COLOR_FORMAT_RGB_565: {
+                        break;
+                    case ColorFormat::COLOR_FORMAT_RGB_565:
+                        {
                             unsigned short color = *reinterpret_cast<const unsigned short*>(pixelData + srcIndex);
                             unsigned char r = (color & 0xF800) >> 8;
                             r = r | (r >> 5);
@@ -601,27 +603,27 @@ namespace carto {
                             _pixelData[destIndex] = r;
                             _pixelData[destIndex + 1] = g;
                             _pixelData[destIndex + 2] = b;
-                            break;
                         }
-                        default:
-                            Log::Error("Bitmap::loadFromUncompressedBytes: Failed to load PNG, invalid color format for conversion");
-                            break;
+                        break;
+                    default:
+                        Log::Error("Bitmap::loadFromUncompressedBytes: Failed to load PNG, invalid color format for conversion");
+                        break;
                     }
                 }
             }
             switch (_colorFormat) {
-                case ColorFormat::COLOR_FORMAT_BGRA:
-                case ColorFormat::COLOR_FORMAT_RGBA_4444:
-                    _bytesPerPixel = 4;
-                    _colorFormat = ColorFormat::COLOR_FORMAT_RGBA;
-                    break;
-                case ColorFormat::COLOR_FORMAT_RGB_565:
-                    _bytesPerPixel = 3;
-                    _colorFormat = ColorFormat::COLOR_FORMAT_RGB;
-                    break;
-                default:
-                    Log::Error("Bitmap::loadFromUncompressedBytes: Failed to load PNG, invalid color format for conversion");
-                    break;
+            case ColorFormat::COLOR_FORMAT_BGRA:
+            case ColorFormat::COLOR_FORMAT_RGBA_4444:
+                _bytesPerPixel = 4;
+                _colorFormat = ColorFormat::COLOR_FORMAT_RGBA;
+                break;
+            case ColorFormat::COLOR_FORMAT_RGB_565:
+                _bytesPerPixel = 3;
+                _colorFormat = ColorFormat::COLOR_FORMAT_RGB;
+                break;
+            default:
+                Log::Error("Bitmap::loadFromUncompressedBytes: Failed to load PNG, invalid color format for conversion");
+                break;
             }
         } else {
             // Normal copy
@@ -641,8 +643,7 @@ namespace carto {
         if (dataSize < 4) {
             return false;
         }
-        return compressedData[0] == 0xFF && compressedData[1] == 0xD8 && compressedData[2] == 0xFF &&
-                (compressedData[3] == 0xE0 || compressedData[3] == 0xE1);
+        return compressedData[0] == 0xFF && compressedData[1] == 0xD8 && compressedData[2] == 0xFF && (compressedData[3] == 0xE0 || compressedData[3] == 0xE1);
     }
     
     bool Bitmap::IsPNG(const unsigned char* compressedData, std::size_t dataSize) {

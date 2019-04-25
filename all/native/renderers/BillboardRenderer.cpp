@@ -59,18 +59,18 @@ namespace carto {
 
             // Calculate scaling
             switch (drawData.getScalingMode()) {
-                case BillboardScaling::BILLBOARD_SCALING_WORLD_SIZE:
-                    break;
-                case BillboardScaling::BILLBOARD_SCALING_SCREEN_SIZE:
-                    x *= scale;
-                    y *= scale;
-                    break;
-                case BillboardScaling::BILLBOARD_SCALING_CONST_SCREEN_SIZE:
-                default:
-                    float coef = static_cast<float>(scale * drawData.getCameraPlaneZoomDistance());
-                    x *= coef;
-                    y *= coef;
-                    break;
+            case BillboardScaling::BILLBOARD_SCALING_WORLD_SIZE:
+                break;
+            case BillboardScaling::BILLBOARD_SCALING_SCREEN_SIZE:
+                x *= scale;
+                y *= scale;
+                break;
+            case BillboardScaling::BILLBOARD_SCALING_CONST_SCREEN_SIZE:
+            default:
+                float coef = static_cast<float>(scale * drawData.getCameraPlaneZoomDistance());
+                x *= coef;
+                y *= coef;
+                break;
             }
             
             // Calculate axis
@@ -466,18 +466,20 @@ namespace carto {
         float scale = baseBillboardDrawData->isScaleWithDPI() ? viewState.getUnitToDPCoef() : viewState.getUnitToPXCoef();
         // Calculate scaling
         switch (baseBillboardDrawData->getScalingMode()) {
-            case BillboardScaling::BILLBOARD_SCALING_WORLD_SIZE:
-                break;
-            case BillboardScaling::BILLBOARD_SCALING_SCREEN_SIZE:
-                labelAnchorVec *= scale;
-                break;
-            case BillboardScaling::BILLBOARD_SCALING_CONST_SCREEN_SIZE:
-            default:
+        case BillboardScaling::BILLBOARD_SCALING_WORLD_SIZE:
+            break;
+        case BillboardScaling::BILLBOARD_SCALING_SCREEN_SIZE:
+            labelAnchorVec *= scale;
+            break;
+        case BillboardScaling::BILLBOARD_SCALING_CONST_SCREEN_SIZE:
+        default:
+            {
                 const cglib::mat4x4<double>& mvpMat = viewState.getModelviewProjectionMat();
                 double distance = baseBillboardPos(0) * mvpMat(3, 0) + baseBillboardPos(1) * mvpMat(3, 1) + baseBillboardPos(2) * mvpMat(3, 2) + mvpMat(3, 3);
                 float coef = static_cast<float>(distance * viewState.get2PowZoom() / viewState.getZoom0Distance() * scale);
                 labelAnchorVec *= coef;
-                break;
+            }
+            break;
         }
         
         // Calculate orientation

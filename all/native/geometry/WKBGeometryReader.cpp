@@ -97,19 +97,17 @@ namespace carto {
         std::uint32_t type = stream.readUInt32();
         std::shared_ptr<Geometry> geometry;
         switch (type & ~(WKB_ZMASK | WKB_MMASK)) {
-            case WKB_POINT: {
-                geometry = std::make_shared<PointGeometry>(readPoint(stream, type));
-                break;
-            }
-            case WKB_LINESTRING: {
-                geometry = std::make_shared<LineGeometry>(readRing(stream, type));
-                break;
-            }
-            case WKB_POLYGON: {
-                geometry = std::make_shared<PolygonGeometry>(readRings(stream, type));
-                break;
-            }
-            case WKB_MULTIPOINT: {
+        case WKB_POINT:
+            geometry = std::make_shared<PointGeometry>(readPoint(stream, type));
+            break;
+        case WKB_LINESTRING:
+            geometry = std::make_shared<LineGeometry>(readRing(stream, type));
+            break;
+        case WKB_POLYGON:
+            geometry = std::make_shared<PolygonGeometry>(readRings(stream, type));
+            break;
+        case WKB_MULTIPOINT:
+            {
                 std::vector<std::shared_ptr<PointGeometry> > points;
                 std::uint32_t pointCount = stream.readUInt32();
                 points.reserve(pointCount);
@@ -121,9 +119,10 @@ namespace carto {
                     }
                 }
                 geometry = std::make_shared<MultiPointGeometry>(points);
-                break;
             }
-            case WKB_MULTILINESTRING: {
+            break;
+        case WKB_MULTILINESTRING:
+            {
                 std::vector<std::shared_ptr<LineGeometry> > lines;
                 std::uint32_t lineCount = stream.readUInt32();
                 lines.reserve(lineCount);
@@ -135,9 +134,10 @@ namespace carto {
                     }
                 }
                 geometry = std::make_shared<MultiLineGeometry>(lines);
-                break;
             }
-            case WKB_MULTIPOLYGON: {
+            break;
+        case WKB_MULTIPOLYGON:
+            {
                 std::vector<std::shared_ptr<PolygonGeometry> > polygons;
                 std::uint32_t polygonCount = stream.readUInt32();
                 polygons.reserve(polygonCount);
@@ -149,9 +149,10 @@ namespace carto {
                     }
                 }
                 geometry = std::make_shared<MultiPolygonGeometry>(polygons);
-                break;
             }
-            case WKB_GEOMETRYCOLLECTION: {
+            break;
+        case WKB_GEOMETRYCOLLECTION:
+            {
                 std::vector<std::shared_ptr<Geometry> > geometries;
                 std::uint32_t geometryCount = stream.readUInt32();
                 geometries.reserve(geometryCount);
@@ -161,11 +162,10 @@ namespace carto {
                     }
                 }
                 geometry = std::make_shared<MultiGeometry>(geometries);
-                break;
             }
-            default: {
-                throw ParseException("Unknown geometry type"); // NOTE: not possible to continue after this
-            }
+            break;
+        default:
+            throw ParseException("Unknown geometry type"); // NOTE: not possible to continue after this
         }
 
         stream.popBigEndian();

@@ -37,20 +37,20 @@ namespace carto {
     
     float ScreenPos::operator [](std::size_t n) const {
         switch (n) {
-            case 0:
-                return _x;
-            case 1:
-                return _y;
+        case 0:
+            return _x;
+        case 1:
+            return _y;
         }
         throw OutOfRangeException("ScreenPos::operator[]");
     }
     
     float& ScreenPos::operator [](std::size_t n) {
         switch (n) {
-            case 0:
-                return _x;
-            case 1:
-                return _y;
+        case 0:
+            return _x;
+        case 1:
+            return _y;
         }
         throw OutOfRangeException("ScreenPos::operator[]");
     }

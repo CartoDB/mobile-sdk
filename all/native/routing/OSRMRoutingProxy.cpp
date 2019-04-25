@@ -203,52 +203,52 @@ namespace carto {
     
     bool OSRMRoutingProxy::TranslateInstructionCode(int instructionCode, RoutingAction::RoutingAction& action) {
         switch (static_cast<osrm::Instruction::Type>(instructionCode)) {
-            case osrm::Instruction::Type::NO_TURN:
-                action = RoutingAction::ROUTING_ACTION_NO_TURN;
-                break;
-            case osrm::Instruction::Type::GO_STRAIGHT:
-                action = RoutingAction::ROUTING_ACTION_GO_STRAIGHT;
-                break;
-            case osrm::Instruction::Type::TURN_SLIGHT_RIGHT:
-            case osrm::Instruction::Type::TURN_RIGHT:
-            case osrm::Instruction::Type::TURN_SHARP_RIGHT:
-                action = RoutingAction::ROUTING_ACTION_TURN_RIGHT;
-                break;
-            case osrm::Instruction::Type::UTURN:
-                action = RoutingAction::ROUTING_ACTION_UTURN;
-                break;
-            case osrm::Instruction::Type::TURN_SLIGHT_LEFT:
-            case osrm::Instruction::Type::TURN_LEFT:
-            case osrm::Instruction::Type::TURN_SHARP_LEFT:
-                action = RoutingAction::ROUTING_ACTION_TURN_LEFT;
-                break;
-            case osrm::Instruction::Type::REACH_VIA_LOCATION:
-                action = RoutingAction::ROUTING_ACTION_REACH_VIA_LOCATION;
-                break;
-            case osrm::Instruction::Type::HEAD_ON:
-                action = RoutingAction::ROUTING_ACTION_HEAD_ON;
-                break;
-            case osrm::Instruction::Type::ENTER_ROUNDABOUT:
-                action = RoutingAction::ROUTING_ACTION_ENTER_ROUNDABOUT;
-                break;
-            case osrm::Instruction::Type::LEAVE_ROUNDABOUT:
-                action = RoutingAction::ROUTING_ACTION_LEAVE_ROUNDABOUT;
-                break;
-            case osrm::Instruction::Type::STAY_ON_ROUNDABOUT:
-                action = RoutingAction::ROUTING_ACTION_STAY_ON_ROUNDABOUT;
-                break;
-            case osrm::Instruction::Type::ENTER_AGAINST_ALLOWED_DIRECTION:
-                action = RoutingAction::ROUTING_ACTION_ENTER_AGAINST_ALLOWED_DIRECTION;
-                break;
-            case osrm::Instruction::Type::LEAVE_AGAINST_ALLOWED_DIRECTION:
-                action = RoutingAction::ROUTING_ACTION_LEAVE_AGAINST_ALLOWED_DIRECTION;
-                break;
-            case osrm::Instruction::Type::REACHED_YOUR_DESTINATION:
-                action = RoutingAction::ROUTING_ACTION_FINISH;
-                break;
-            default:
-                Log::Infof("OSRMRoutingProxy::TranslateInstructionCode: ignoring instruction %d", instructionCode);
-                return false;
+        case osrm::Instruction::Type::NO_TURN:
+            action = RoutingAction::ROUTING_ACTION_NO_TURN;
+            break;
+        case osrm::Instruction::Type::GO_STRAIGHT:
+            action = RoutingAction::ROUTING_ACTION_GO_STRAIGHT;
+            break;
+        case osrm::Instruction::Type::TURN_SLIGHT_RIGHT:
+        case osrm::Instruction::Type::TURN_RIGHT:
+        case osrm::Instruction::Type::TURN_SHARP_RIGHT:
+            action = RoutingAction::ROUTING_ACTION_TURN_RIGHT;
+            break;
+        case osrm::Instruction::Type::UTURN:
+            action = RoutingAction::ROUTING_ACTION_UTURN;
+            break;
+        case osrm::Instruction::Type::TURN_SLIGHT_LEFT:
+        case osrm::Instruction::Type::TURN_LEFT:
+        case osrm::Instruction::Type::TURN_SHARP_LEFT:
+            action = RoutingAction::ROUTING_ACTION_TURN_LEFT;
+            break;
+        case osrm::Instruction::Type::REACH_VIA_LOCATION:
+            action = RoutingAction::ROUTING_ACTION_REACH_VIA_LOCATION;
+            break;
+        case osrm::Instruction::Type::HEAD_ON:
+            action = RoutingAction::ROUTING_ACTION_HEAD_ON;
+            break;
+        case osrm::Instruction::Type::ENTER_ROUNDABOUT:
+            action = RoutingAction::ROUTING_ACTION_ENTER_ROUNDABOUT;
+            break;
+        case osrm::Instruction::Type::LEAVE_ROUNDABOUT:
+            action = RoutingAction::ROUTING_ACTION_LEAVE_ROUNDABOUT;
+            break;
+        case osrm::Instruction::Type::STAY_ON_ROUNDABOUT:
+            action = RoutingAction::ROUTING_ACTION_STAY_ON_ROUNDABOUT;
+            break;
+        case osrm::Instruction::Type::ENTER_AGAINST_ALLOWED_DIRECTION:
+            action = RoutingAction::ROUTING_ACTION_ENTER_AGAINST_ALLOWED_DIRECTION;
+            break;
+        case osrm::Instruction::Type::LEAVE_AGAINST_ALLOWED_DIRECTION:
+            action = RoutingAction::ROUTING_ACTION_LEAVE_AGAINST_ALLOWED_DIRECTION;
+            break;
+        case osrm::Instruction::Type::REACHED_YOUR_DESTINATION:
+            action = RoutingAction::ROUTING_ACTION_FINISH;
+            break;
+        default:
+            Log::Infof("OSRMRoutingProxy::TranslateInstructionCode: ignoring instruction %d", instructionCode);
+            return false;
         }
         return true;
     }

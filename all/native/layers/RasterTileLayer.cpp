@@ -31,18 +31,23 @@ namespace {
         y = bitmap.getHeight() - 1 - std::max(0, std::min(y, bitmap.getHeight() - 1));
 
         switch (bitmap.getFormat()) {
-        case carto::vt::TileBitmap::Format::GRAYSCALE: {
+        case carto::vt::TileBitmap::Format::GRAYSCALE:
+            {
                 std::uint8_t val = bitmap.getData()[y * bitmap.getWidth() + x];
                 return std::array<std::uint8_t, 4> { { val, val, val, 255 } };
             }
-        case carto::vt::TileBitmap::Format::RGB: {
+        case carto::vt::TileBitmap::Format::RGB:
+            {
                 const std::uint8_t* valPtr = &bitmap.getData()[(y * bitmap.getWidth() + x) * 3];
                 return std::array<std::uint8_t, 4> { { valPtr[0], valPtr[1], valPtr[2], 255 } };
             }
-        case carto::vt::TileBitmap::Format::RGBA: {
+        case carto::vt::TileBitmap::Format::RGBA:
+            {
                 const std::uint8_t* valPtr = &bitmap.getData()[(y * bitmap.getWidth() + x) * 4];
                 return std::array<std::uint8_t, 4> { { valPtr[0], valPtr[1], valPtr[2], valPtr[3] } };
             }
+        default:
+            break;
         }
         return std::array<std::uint8_t, 4> { { 0, 0, 0, 0 } };
     }
