@@ -46,20 +46,21 @@ namespace carto {
     }
     
     std::shared_ptr<TileData> OrderedTileDataSource::loadTile(const MapTile& mapTile) {
+        std::shared_ptr<TileData> result1, result2;
         int zoom = mapTile.getZoom();
         if (zoom <= _dataSource1->getMaxZoom() && zoom >= _dataSource1->getMinZoom()) {
-            std::shared_ptr<TileData> result = _dataSource1->loadTile(mapTile);
-            if (result && !result->isReplaceWithParent()) {
-                return result;
+            result1 = _dataSource1->loadTile(mapTile);
+            if (result1 && !result1->isReplaceWithParent()) {
+                return result1;
             }
         }
         if (zoom <= _dataSource2->getMaxZoom() && zoom >= _dataSource2->getMinZoom()) {
-            std::shared_ptr<TileData> result = _dataSource2->loadTile(mapTile);
-            if (result && !result->isReplaceWithParent()) {
-                return result;
+            result2 = _dataSource2->loadTile(mapTile);
+            if (result2 && !result2->isReplaceWithParent()) {
+                return result2;
             }
         }
-        return std::shared_ptr<TileData>();
+        return result1 ? result1 : result2;
     }
 
     OrderedTileDataSource::DataSourceListener::DataSourceListener(OrderedTileDataSource& combinedDataSource) :
