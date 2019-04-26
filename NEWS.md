@@ -82,6 +82,7 @@ This version is a major update and brings lots of new features and optimizations
 * Fixed vertex array binding issues with NMLModel rendering
 * Fixed minor glyph rendering issues causing glyphs to be slightly blurry under tilted view.
 * Minor CartoCSS fixes related to patterned symbolizer support
+* Fixed OrderedTileDataSource handling of 'replace with parent' flag
 
 
 CARTO Mobile SDK 4.1.6
