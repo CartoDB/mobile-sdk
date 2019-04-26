@@ -208,6 +208,8 @@ namespace carto {
         if (!std::dynamic_pointer_cast<EPSG3857>(dataSource->getProjection())) {
             throw InvalidArgumentException("Expecting EPSG3857 projection in datasource");
         }
+
+        resetTileTransformer();
     }
     
     void TileLayer::setComponents(const std::shared_ptr<CancelableThreadPool>& envelopeThreadPool,
@@ -222,6 +224,7 @@ namespace carto {
         if (_tileRenderer) {
             _tileRenderer->setOptions(_options);
         }
+        resetTileTransformer();
     }
 
     void TileLayer::loadData(const std::shared_ptr<CullState>& cullState) {
@@ -381,10 +384,6 @@ namespace carto {
         _visibleTiles.clear();
         _preloadingTiles.clear();
 
-        if (!_tileTransformer) {
-            return;
-        }
-        
         // Recursively calculate visible tiles
         calculateVisibleTilesRecursive(cullState, MapTile(0, 0, 0, _frameNr), _dataSource->getDataExtent());
         if (auto options = _options.lock()) {
