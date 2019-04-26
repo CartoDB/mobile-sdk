@@ -380,6 +380,10 @@ namespace carto {
         // Remove last visible and preloading tiles
         _visibleTiles.clear();
         _preloadingTiles.clear();
+
+        if (!_tileTransformer) {
+            return;
+        }
         
         // Recursively calculate visible tiles
         calculateVisibleTilesRecursive(cullState, MapTile(0, 0, 0, _frameNr), _dataSource->getDataExtent());
