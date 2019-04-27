@@ -638,8 +638,16 @@ namespace carto {
     
     MapBounds Options::getAdjustedInternalPanBounds(bool clamp) const {
         std::lock_guard<std::mutex> lock(_mutex);
+
         MapPos panBoundsMin = _baseProjection->toInternal(_panBounds.getMin());
         MapPos panBoundsMax = _baseProjection->toInternal(_panBounds.getMax());
+        if (std::isnan(panBoundsMin.getY())) {
+            panBoundsMin.setY(_panBounds.getMin().getY());
+        }
+        if (std::isnan(panBoundsMax.getY())) {
+            panBoundsMax.setY(_panBounds.getMax().getY());
+        }
+
         if (_renderProjectionMode == RenderProjectionMode::RENDER_PROJECTION_MODE_PLANAR) {
             EPSG3857 proj;
             MapPos projBoundsMin = proj.toInternal(proj.getBounds().getMin());

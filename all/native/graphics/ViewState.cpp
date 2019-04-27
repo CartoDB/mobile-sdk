@@ -308,7 +308,6 @@ namespace carto {
         bool seamlessPanning = options.isSeamlessPanning();
         bool restrictedPanning = options.isRestrictedPanning();
         RenderProjectionMode::RenderProjectionMode renderProjectionMode = options.getRenderProjectionMode();
-        std::shared_ptr<Projection> baseProjection = options.getBaseProjection();
         std::shared_ptr<ProjectionSurface> projectionSurface = options.getProjectionSurface();
         
         MapBounds mapBounds = options.getAdjustedInternalPanBounds(false);
@@ -679,7 +678,6 @@ namespace carto {
             return options.getZoomRange().getMin();
         }
 
-        std::shared_ptr<Projection> baseProjection = options.getBaseProjection();
         std::shared_ptr<ProjectionSurface> projectionSurface = options.getProjectionSurface();
 
         MapBounds mapBounds = options.getAdjustedInternalPanBounds(false);
