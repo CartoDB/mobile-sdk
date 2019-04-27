@@ -7,8 +7,6 @@
 #ifndef _CARTO_LICENSEMANAGER_H_
 #define _CARTO_LICENSEMANAGER_H_
 
-#ifdef _CARTO_LICENSEMANAGER_SUPPORT
-
 #include "components/DirectorPtr.h"
 
 #include <mutex>
@@ -61,7 +59,5 @@ namespace carto {
     };
     
 }
-
-#endif
 
 #endif

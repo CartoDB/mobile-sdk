@@ -1,5 +1,3 @@
-#ifdef _CARTO_LICENSEMANAGER_SUPPORT
-
 #include "LicenseManager.h"
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
@@ -418,5 +416,3 @@ namespace carto {
     const std::string LicenseManager::PRODUCT_VERSION = "4.0.0";
 
 }
-
-#endif
