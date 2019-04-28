@@ -772,9 +772,8 @@ namespace carto {
         cglib::ray3<double> ray(origin, target - origin);
     
         // Normal layer click detection is done in the layer order
-        const std::shared_ptr<Projection> projection = _options->getBaseProjection();
         for (const std::shared_ptr<Layer>& layer : _layers->getAll()) {
-            layer->calculateRayIntersectedElements(*projection, ray, viewState, results);
+            layer->calculateRayIntersectedElements(ray, viewState, results);
         }
     
         // Sort the results

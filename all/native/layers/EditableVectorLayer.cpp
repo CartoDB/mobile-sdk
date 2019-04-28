@@ -347,7 +347,7 @@ namespace carto {
                 }
                 
                 results.clear();
-                layer->calculateRayIntersectedElements(*layer->_dataSource->getProjection(), ray, viewState, results);
+                layer->calculateRayIntersectedElements(ray, viewState, results);
                 for (const RayIntersectedElement& result : results) {
                     if (result.getElement<VectorElement>() != selectedElement) {
                         continue;

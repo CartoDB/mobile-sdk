@@ -215,8 +215,7 @@ namespace carto {
         Layer::onSurfaceDestroyed();
     }
     
-    void VectorLayer::calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray,
-                const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
+    void VectorLayer::calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
         std::shared_ptr<VectorLayer> thisLayer = std::static_pointer_cast<VectorLayer>(std::const_pointer_cast<Layer>(shared_from_this()));
         _billboardRenderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
         _geometryCollectionRenderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);

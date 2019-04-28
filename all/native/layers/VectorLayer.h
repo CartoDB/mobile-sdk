@@ -128,8 +128,7 @@ namespace carto {
         virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
         virtual void onSurfaceDestroyed();
         
-        virtual void calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray,
-                                                     const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
+        virtual void calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
         virtual bool processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const;
 
         virtual void refreshElement(const std::shared_ptr<VectorElement>& element, bool remove);

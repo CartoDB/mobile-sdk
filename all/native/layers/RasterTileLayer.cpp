@@ -272,7 +272,7 @@ namespace carto {
         return _visibleTileIds;
     }
         
-    void RasterTileLayer::calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
+    void RasterTileLayer::calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
         DirectorPtr<RasterTileEventListener> eventListener = _rasterTileEventListener;
 
         if (eventListener) {
@@ -309,7 +309,7 @@ namespace carto {
             }
         }
 
-        TileLayer::calculateRayIntersectedElements(projection, ray, viewState, results);
+        TileLayer::calculateRayIntersectedElements(ray, viewState, results);
     }
 
     bool RasterTileLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {

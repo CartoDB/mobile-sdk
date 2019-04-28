@@ -171,7 +171,7 @@ namespace carto {
         Layer::onSurfaceDestroyed();
     }
     
-    void NMLModelLODTreeLayer::calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
+    void NMLModelLODTreeLayer::calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
         std::shared_ptr<NMLModelLODTreeLayer> thisLayer = std::static_pointer_cast<NMLModelLODTreeLayer>(std::const_pointer_cast<Layer>(shared_from_this()));
         if (_nmlModelLODTreeRenderer) {
             _nmlModelLODTreeRenderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);

@@ -305,7 +305,7 @@ namespace carto {
         }
     }
     
-    void TileLayer::calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
+    void TileLayer::calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
         DirectorPtr<TileDataSource> utfGridDataSource = _utfGridDataSource;
 
         if (!utfGridDataSource) {

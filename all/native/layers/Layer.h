@@ -159,8 +159,7 @@ namespace carto {
         virtual std::shared_ptr<Bitmap> getBackgroundBitmap() const;
         virtual std::shared_ptr<Bitmap> getSkyBitmap() const;
         
-        virtual void calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray,
-                                                     const ViewState& viewState, std::vector<RayIntersectedElement>& results) const = 0;
+        virtual void calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const = 0;
         virtual bool processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const = 0;
     
         virtual void registerDataSourceListener() = 0;

@@ -279,8 +279,7 @@ namespace carto {
         virtual int getMaxZoom() const = 0;
         virtual std::vector<long long> getVisibleTileIds() const = 0;
         
-        virtual void calculateRayIntersectedElements(const Projection& projection, const cglib::ray3<double>& ray,
-            const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
+        virtual void calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
         virtual bool processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const;
 
         MapBounds calculateInternalTileBounds(const MapTile& mapTile) const;

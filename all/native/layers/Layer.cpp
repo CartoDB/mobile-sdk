@@ -89,7 +89,6 @@ namespace carto {
         if (!viewState.getProjectionSurface()) {
             return;
         }
-        std::shared_ptr<Projection> projection = options->getBaseProjection();
 
         cglib::vec3<double> target = viewState.screenToWorld(cglib::vec2<float>(screenPos.getX(), screenPos.getY()), 0, options);
         if (std::isnan(cglib::norm(target))) {
@@ -100,7 +99,7 @@ namespace carto {
 
         // Calculate intersections
         std::vector<RayIntersectedElement> results;
-        calculateRayIntersectedElements(*projection, ray, viewState, results);
+        calculateRayIntersectedElements(ray, viewState, results);
 
         // Sort the results
         auto distanceComparator = [&viewState](const RayIntersectedElement& element1, const RayIntersectedElement& element2) -> bool {
