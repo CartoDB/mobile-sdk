@@ -120,6 +120,11 @@ namespace carto {
          * @param bounds The other map bounds object.
          */
         void expandToContain(const MapBounds& bounds);
+        /**
+         * Shrinks this map bounds object to the intersection of this bounds and given bounds object.
+         * @param bounds The other map bounds object.
+         */
+        void shrinkToIntersection(const MapBounds& bounds);
         
         /**
          * Returns the hash value of this object.

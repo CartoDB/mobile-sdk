@@ -156,6 +156,29 @@ namespace carto {
         }
     }
     
+    void MapBounds::shrinkToIntersection(const MapBounds& bounds) {
+        if (bounds.getMin().getX() > _min.getX()) {
+            _min.setX(bounds.getMin().getX());
+        }
+        if (bounds.getMax().getX() < _max.getX()) {
+            _max.setX(bounds.getMax().getX());
+        }
+    
+        if (bounds.getMin().getY() > _min.getY()) {
+            _min.setY(bounds.getMin().getY());
+        }
+        if (bounds.getMax().getY() < _max.getY()) {
+            _max.setY(bounds.getMax().getY());
+        }
+    
+        if (bounds.getMin().getZ() > _min.getZ()) {
+            _min.setZ(bounds.getMin().getZ());
+        }
+        if (bounds.getMax().getZ() < _max.getZ()) {
+            _max.setZ(bounds.getMax().getZ());
+        }
+    }
+    
     int MapBounds::hash() const {
         return static_cast<int>(_min.hash() << 16 ^ _max.hash());
     }

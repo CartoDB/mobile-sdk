@@ -36,7 +36,8 @@ This version is a major update and brings lots of new features and optimizations
 * Added NMLModelStyle and NMLModelStyleBuilder classes for constructing style instances for NMLModels.
 * New HTTP connection class for iOS that works better with device proxy settings and provides better download concurrency.
 * Added setSkyColor, getSkyColor to Options class
-* Added getMidrange method to MapRange.
+* Added getMidrange method to MapRange
+* Added shrinkToIntersection method to MapBounds
 * CartoCSS improvements, 'marker-clip' support, 'north-pole-color', 'south-pole-color' map settings support
 
 ### Deprecated features:
