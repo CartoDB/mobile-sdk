@@ -71,28 +71,18 @@ namespace carto {
         cglib::vec3<double> cameraPos = viewState.getCameraPos();
         cglib::vec3<double> focusPos = viewState.getFocusPos();
         cglib::vec3<double> upVec = viewState.getUpVec();
-        float rotation = viewState.getRotation();
     
         if (!_useDelta) {
             // If the object was initialized using absolute rotation, calculate delta rotation
             float rotationDelta = _rotation - viewState.getRotation();
             _sin = std::sin(rotationDelta * Const::DEG_TO_RAD);
             _cos = std::cos(rotationDelta * Const::DEG_TO_RAD);
-            rotation = std::fmod(_rotation, 360.0f);
-        } else if (!(_sin == 0 && _cos == 0)) {
-            rotation += static_cast<float>(std::atan2(_sin, _cos) * Const::RAD_TO_DEG);
         }
     
         cglib::vec3<double> targetPos = focusPos;
         if (_useTarget) {
             // Use specified target instead of focus position, if specified
             targetPos = projectionSurface->calculatePosition(_targetPos);
-        }
-        
-        if (rotation > 180) {
-            rotation -= 360;
-        } else if (rotation <= -180) {
-            rotation += 360;
         }
         
         cglib::vec3<double> axis = projectionSurface->calculateNormal(projectionSurface->calculateMapPos(targetPos));
@@ -109,7 +99,6 @@ namespace carto {
         viewState.setCameraPos(cameraPos);
         viewState.setFocusPos(focusPos);
         viewState.setUpVec(upVec);
-        viewState.setRotation(rotation);
 
         viewState.clampFocusPos(options);
 
