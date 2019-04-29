@@ -98,7 +98,7 @@ namespace carto {
 
         if (_projectionSurface) {
             MapVec upVecInternal = _projectionSurface->calculateMapVec(_focusPos, _upVec);
-            double rotation = -std::atan2(upVecInternal.getX(), upVecInternal.getY()) * Const::RAD_TO_DEG;
+            float rotation = static_cast<float>(-std::atan2(upVecInternal.getX(), upVecInternal.getY()) * Const::RAD_TO_DEG);
             if (!std::isfinite(rotation)) {
                 Log::Errorf("ViewState::setUpVec: Failed to calculate rotation %g (old %g)", rotation, _rotation);
             } else {
