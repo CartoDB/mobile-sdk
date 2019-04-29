@@ -241,7 +241,8 @@ namespace carto {
             requestRedraw();
             return;
         }
-    
+
+        MapPos focusPos;
         float deltaRotation;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
@@ -254,13 +255,15 @@ namespace carto {
             // Calculate parameters for kinetic events
             float rotation = _viewState.getRotation();
             deltaRotation = rotation - oldRotation;
+
+            focusPos = getProjectionSurface()->calculateMapPos(_viewState.getFocusPos());
         }
     
         // Delay updating the layers, because view state will be updated only after onDrawFrame is called
         viewChanged(true);
         
         if (updateKinetic) {
-            _kineticEventHandler.setRotationDelta(deltaRotation, cameraEvent.getTargetPos());
+            _kineticEventHandler.setRotationDelta(deltaRotation, cameraEvent.isUseTarget() ? cameraEvent.getTargetPos() : focusPos);
         }
     }
         
@@ -303,6 +306,7 @@ namespace carto {
             return;
         }
     
+        MapPos focusPos;
         float deltaZoom;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
@@ -315,13 +319,15 @@ namespace carto {
             // Calculate parameters for kinetic events
             float zoom = _viewState.getZoom();
             deltaZoom = zoom - oldZoom;
+
+            focusPos = getProjectionSurface()->calculateMapPos(_viewState.getFocusPos());
         }
     
         // Delay updating the layers, because view state will be updated only after onDrawFrame is called
         viewChanged(true);
         
         if (updateKinetic) {
-            _kineticEventHandler.setZoomDelta(deltaZoom, cameraEvent.getTargetPos());
+            _kineticEventHandler.setZoomDelta(deltaZoom, cameraEvent.isUseTarget() ? cameraEvent.getTargetPos() : focusPos);
         }
     }
     
