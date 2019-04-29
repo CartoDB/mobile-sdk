@@ -55,11 +55,13 @@ namespace carto {
         static const float KINETIC_ROTATION_STOP_TOLERANCE_ANGLE;
         static const float KINETIC_ROTATION_SLOWDOWN;
         static const float KINETIC_ROTATION_DELTA_MULTIPLIER;
+        static const float KINETIC_ROTATION_DELTA_CLAMP;
         
         static const float KINETIC_ZOOM_START_TOLERANCE;
         static const float KINETIC_ZOOM_STOP_TOLERANCE;
         static const float KINETIC_ZOOM_SLOWDOWN;
         static const float KINETIC_ZOOM_DELTA_MULTIPLIER;
+        static const float KINETIC_ZOOM_DELTA_CLAMP;
         
         static const int AVERAGE_SAMPLE_COUNT = 7;
     

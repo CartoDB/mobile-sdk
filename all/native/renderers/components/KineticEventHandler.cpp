@@ -105,8 +105,7 @@ namespace carto {
                 _rotationDelta = 0;
                 return;
             }
-            _rotationDelta = average * KINETIC_ROTATION_DELTA_MULTIPLIER;
-            
+            _rotationDelta = std::min(average * KINETIC_ROTATION_DELTA_MULTIPLIER, KINETIC_ROTATION_DELTA_CLAMP);
             _rotationTargetPos = targetPos;
         }
     }
@@ -143,7 +142,7 @@ namespace carto {
                 _zoomDelta = 0;
                 return;
             }
-            _zoomDelta = average * KINETIC_ZOOM_DELTA_MULTIPLIER;
+            _zoomDelta = std::min(average * KINETIC_ZOOM_DELTA_MULTIPLIER, KINETIC_ZOOM_DELTA_CLAMP);
             _zoomTargetPos = targetPos;
         }
     }
@@ -233,10 +232,12 @@ namespace carto {
     const float KineticEventHandler::KINETIC_ROTATION_START_TOLERANCE_ANGLE = 1.0f;
     const float KineticEventHandler::KINETIC_ROTATION_SLOWDOWN = 0.99f;
     const float KineticEventHandler::KINETIC_ROTATION_DELTA_MULTIPLIER = 5.0f;
+    const float KineticEventHandler::KINETIC_ROTATION_DELTA_CLAMP = 1.0f;
         
     const float KineticEventHandler::KINETIC_ZOOM_STOP_TOLERANCE = 0.05f;
     const float KineticEventHandler::KINETIC_ZOOM_START_TOLERANCE = 0.05f;
     const float KineticEventHandler::KINETIC_ZOOM_SLOWDOWN = 0.99f;
     const float KineticEventHandler::KINETIC_ZOOM_DELTA_MULTIPLIER = 5.0f;
+    const float KineticEventHandler::KINETIC_ZOOM_DELTA_CLAMP = 1.0f;
     
 }
