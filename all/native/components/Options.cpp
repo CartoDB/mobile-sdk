@@ -639,13 +639,22 @@ namespace carto {
     MapBounds Options::getAdjustedInternalPanBounds(bool clamp) const {
         std::lock_guard<std::mutex> lock(_mutex);
 
-        MapPos panBoundsMin = _baseProjection->toInternal(_panBounds.getMin());
-        MapPos panBoundsMax = _baseProjection->toInternal(_panBounds.getMax());
-        if (std::isnan(panBoundsMin.getY())) {
-            panBoundsMin.setY(_panBounds.getMin().getY());
+        MapBounds panBoundsClipped = _panBounds;
+        panBoundsClipped.shrinkToIntersection(_baseProjection->getBounds());
+
+        MapPos panBoundsMin = _panBounds.getMin();
+        MapPos panBoundsMax = _panBounds.getMax();
+        if (std::isfinite(panBoundsMin.getX())) {
+            panBoundsMin.setX(_baseProjection->toInternal(panBoundsClipped.getMin()).getX());
         }
-        if (std::isnan(panBoundsMax.getY())) {
-            panBoundsMax.setY(_panBounds.getMax().getY());
+        if (std::isfinite(panBoundsMin.getY())) {
+            panBoundsMin.setY(_baseProjection->toInternal(panBoundsClipped.getMin()).getY());
+        }
+        if (std::isfinite(panBoundsMax.getX())) {
+            panBoundsMax.setX(_baseProjection->toInternal(panBoundsClipped.getMax()).getX());
+        }
+        if (std::isfinite(panBoundsMax.getY())) {
+            panBoundsMax.setY(_baseProjection->toInternal(panBoundsClipped.getMax()).getY());
         }
 
         if (_renderProjectionMode == RenderProjectionMode::RENDER_PROJECTION_MODE_PLANAR) {
