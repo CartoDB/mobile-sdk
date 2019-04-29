@@ -36,6 +36,15 @@ def detectAndroidAPIs(args):
         api64 = min(api64 or api, api)
   return api32, api64
 
+def detectAndroidJavaAPI(args):
+  apiJava = None
+  for name in os.listdir('%s/platforms' % args.androidsdkpath):
+    if name.startswith('android-'):
+      api = int(name[8:])
+      if api >= 10:
+        apiJava = min(apiJava or api, api)
+  return apiJava
+
 def buildAndroidSO(args, abi):
   version = getVersion(args.buildnumber) if args.configuration == 'Release' else 'Devel'
   baseDir = getBaseDir()
@@ -77,8 +86,8 @@ def buildAndroidJAR(args):
   baseDir = getBaseDir()
   buildDir = getBuildDir('android_java')
   distDir = getDistDir('android')
-  api32, api64 = detectAndroidAPIs(args)
-  if api32 is None:
+  apiJava = detectAndroidJavaAPI(args)
+  if apiJava is None:
     print('Failed to detect available platform APIs')
 
   javaFiles = []
@@ -94,7 +103,7 @@ def buildAndroidJAR(args):
     '-source', '1.6',
     '-target', '1.6',
     '-bootclasspath', '%s/scripts/android/rt.jar' % baseDir,
-    '-classpath', '%s/platforms/android-%d/android.jar' % (args.androidsdkpath, api32),
+    '-classpath', '%s/platforms/android-%d/android.jar' % (args.androidsdkpath, apiJava),
     '-d', buildDir,
     *javaFiles
   ):
