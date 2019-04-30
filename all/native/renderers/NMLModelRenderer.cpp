@@ -52,7 +52,9 @@ namespace carto {
     }
         
     void NMLModelRenderer::addElement(const std::shared_ptr<NMLModel>& element) {
-        _tempElements.push_back(element);
+        if (element->getDrawData()) {
+            _tempElements.push_back(element);
+        }
     }
     
     void NMLModelRenderer::refreshElements() {
@@ -64,7 +66,9 @@ namespace carto {
     void NMLModelRenderer::updateElement(const std::shared_ptr<NMLModel>& element) {
         std::lock_guard<std::mutex> lock(_mutex);
         if (std::find(_elements.begin(), _elements.end(), element) == _elements.end()) {
-            _elements.push_back(element);
+            if (element->getDrawData()) {
+                _elements.push_back(element);
+            }
         }
     }
     

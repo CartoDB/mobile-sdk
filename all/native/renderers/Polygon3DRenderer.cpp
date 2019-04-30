@@ -54,7 +54,6 @@ namespace carto {
         for (const std::shared_ptr<Polygon3D>& element : _elements) {
             element->getDrawData()->offsetHorizontally(offset);
         }
-    
     }
     
     void Polygon3DRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
@@ -148,7 +147,9 @@ namespace carto {
     }
     
     void Polygon3DRenderer::addElement(const std::shared_ptr<Polygon3D>& element) {
-        _tempElements.push_back(element);
+        if (element->getDrawData()) {
+            _tempElements.push_back(element);
+        }
     }
     
     void Polygon3DRenderer::refreshElements() {
@@ -160,7 +161,9 @@ namespace carto {
     void Polygon3DRenderer::updateElement(const std::shared_ptr<Polygon3D>& element) {
         std::lock_guard<std::mutex> lock(_mutex);
         if (std::find(_elements.begin(), _elements.end(), element) == _elements.end()) {
-            _elements.push_back(element);
+            if (element->getDrawData()) {
+                _elements.push_back(element);
+            }
         }
     }
     
@@ -220,7 +223,7 @@ namespace carto {
     
         // View state specific data
         cglib::vec3<double> cameraPos = viewState.getCameraPos();
-        GLuint coordIndex = 0;
+        std::size_t coordIndex = 0;
         for (std::size_t i = 0; i < drawDataBuffer.size(); i++) {
             const std::shared_ptr<Polygon3DDrawData>& drawData = drawDataBuffer[i];
             

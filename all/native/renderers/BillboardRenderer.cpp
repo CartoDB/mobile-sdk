@@ -41,7 +41,7 @@ namespace carto {
     }
     
     bool BillboardRenderer::CalculateBillboardCoords(const BillboardDrawData& drawData, const ViewState& viewState,
-                                                     std::vector<float>& coordBuf, int drawDataIndex, float sizeScale)
+                                                     std::vector<float>& coordBuf, std::size_t drawDataIndex, float sizeScale)
     {
         cglib::vec3<float> translate = cglib::vec3<float>::convert(drawData.getPos() - viewState.getCameraPos());
         if (cglib::dot_product(drawData.getZAxis(), translate) > 0) {
@@ -50,7 +50,7 @@ namespace carto {
         
         const std::array<cglib::vec2<float>, 4>& coords = drawData.getCoords();
         for (int i = 0; i < 4; i++) {
-            int coordIndex = (drawDataIndex * 4 + i) * 3;
+            std::size_t coordIndex = (drawDataIndex * 4 + i) * 3;
             float x = coords[i](0);
             float y = coords[i](1);
             
@@ -240,8 +240,10 @@ namespace carto {
     }
         
     void BillboardRenderer::addElement(const std::shared_ptr<Billboard>& element) {
-        element->getDrawData()->setRenderer(shared_from_this());
-        _tempElements.push_back(element);
+        if (std::shared_ptr<BillboardDrawData> drawData = element->getDrawData()) {
+            drawData->setRenderer(shared_from_this());
+            _tempElements.push_back(element);
+        }
     }
     
     void BillboardRenderer::refreshElements() {
@@ -252,11 +254,11 @@ namespace carto {
     
     void BillboardRenderer::updateElement(const std::shared_ptr<Billboard>& element) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        if (std::shared_ptr<BillboardDrawData> drawData = element->getDrawData()) {
-            drawData->setRenderer(shared_from_this());
-        }
         if (std::find(_elements.begin(), _elements.end(), element) == _elements.end()) {
-            _elements.push_back(element);
+            if (std::shared_ptr<BillboardDrawData> drawData = element->getDrawData()) {
+                drawData->setRenderer(shared_from_this());
+                _elements.push_back(element);
+            }
         }
     }
     
@@ -344,7 +346,7 @@ namespace carto {
         }
         
         // Calculate and draw buffers
-        GLuint drawDataIndex = 0;
+        std::size_t drawDataIndex = 0;
         for (std::size_t i = 0; i < drawDataBuffer.size(); i++) {
             const std::shared_ptr<BillboardDrawData>& drawData = drawDataBuffer[i];
 
@@ -381,7 +383,7 @@ namespace carto {
             }
             
             // Calculate texture coordinates
-            int texCoordIndex = drawDataIndex * 4 * 2;
+            std::size_t texCoordIndex = drawDataIndex * 4 * 2;
             if (!flip) {
                 texCoordBuf[texCoordIndex + 0] = 0.0f;
                 texCoordBuf[texCoordIndex + 1] = texCoordScale(1);
@@ -404,7 +406,7 @@ namespace carto {
             
             // Calculate colors
             const Color& color = drawData->getColor();
-            int colorIndex = drawDataIndex * 4 * 4;
+            std::size_t colorIndex = drawDataIndex * 4 * 4;
             for (int i = 0; i < 16; i += 4) {
                 colorBuf[colorIndex + i + 0] = static_cast<unsigned char>((color.getR() * alpha) >> 8);
                 colorBuf[colorIndex + i + 1] = static_cast<unsigned char>((color.getG() * alpha) >> 8);
@@ -413,8 +415,8 @@ namespace carto {
             }
             
             // Calculate indices
-            int indexIndex = drawDataIndex * 6;
-            int vertexIndex = drawDataIndex * 4;
+            std::size_t indexIndex = drawDataIndex * 6;
+            unsigned short vertexIndex = static_cast<unsigned short>(drawDataIndex * 4);
             indexBuf[indexIndex + 0] = vertexIndex + 0;
             indexBuf[indexIndex + 1] = vertexIndex + 1;
             indexBuf[indexIndex + 2] = vertexIndex + 2;
