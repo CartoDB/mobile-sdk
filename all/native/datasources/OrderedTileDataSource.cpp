@@ -48,16 +48,26 @@ namespace carto {
     std::shared_ptr<TileData> OrderedTileDataSource::loadTile(const MapTile& mapTile) {
         std::shared_ptr<TileData> result1, result2;
         int zoom = mapTile.getZoom();
-        if (zoom <= _dataSource1->getMaxZoom() && zoom >= _dataSource1->getMinZoom()) {
-            result1 = _dataSource1->loadTile(mapTile);
-            if (result1 && !result1->isReplaceWithParent()) {
-                return result1;
+        if (zoom >= _dataSource1->getMinZoom()) {
+            if (zoom <= _dataSource1->getMaxZoom()) {
+                result1 = _dataSource1->loadTile(mapTile);
+                if (result1 && !result1->isReplaceWithParent()) {
+                    return result1;
+                }
+            } else {
+                result1 = std::make_shared<TileData>(std::shared_ptr<BinaryData>());
+                result1->setReplaceWithParent(true);
             }
         }
-        if (zoom <= _dataSource2->getMaxZoom() && zoom >= _dataSource2->getMinZoom()) {
-            result2 = _dataSource2->loadTile(mapTile);
-            if (result2 && !result2->isReplaceWithParent()) {
-                return result2;
+        if (zoom >= _dataSource2->getMinZoom()) {
+            if (zoom <= _dataSource2->getMaxZoom()) {
+                result2 = _dataSource2->loadTile(mapTile);
+                if (result2 && !result2->isReplaceWithParent()) {
+                    return result2;
+                }
+            } else {
+                result2 = std::make_shared<TileData>(std::shared_ptr<BinaryData>());
+                result2->setReplaceWithParent(true);
             }
         }
         return result1 ? result1 : result2;
