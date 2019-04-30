@@ -255,7 +255,6 @@ namespace carto {
         if (cglib::intersect_triangle(topLeft, bottomLeft, topRight, ray, &t) ||
             cglib::intersect_triangle(bottomLeft, bottomRight, topRight, ray, &t))
         {
-            MapPos clickPos(ray(t)(0), ray(t)(1), ray(t)(2));
             int priority = static_cast<int>(results.size());
             results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, ray(t), pos, priority));
             return true;
