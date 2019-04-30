@@ -100,32 +100,9 @@ namespace carto {
             MapVec upVecInternal = _projectionSurface->calculateMapVec(_focusPos, _upVec);
             float rotation = static_cast<float>(-std::atan2(upVecInternal.getX(), upVecInternal.getY()) * Const::RAD_TO_DEG);
             if (!std::isfinite(rotation)) {
-                Log::Errorf("ViewState::setUpVec: Failed to calculate rotation %g (old %g)", rotation, _rotation);
+                Log::Infof("ViewState::setUpVec: Failed to calculate rotation %g (old %g)", rotation, _rotation);
             } else {
                 _rotation = rotation;
-            }
-        }
-    }
-    
-    float ViewState::getRotation() const {
-        return _rotation;
-    }
-    
-    void ViewState::setRotation(float rotation) {
-        if (!std::isfinite(rotation)) {
-            Log::Errorf("ViewState::setRotation: Invalid value %g", rotation); 
-            return;
-        }
-        _rotation = rotation;
-
-        if (_projectionSurface) {
-            MapPos focusPosInternal = _projectionSurface->calculateMapPos(_focusPos);
-            MapVec upVecInternal(std::sin(-_rotation * Const::DEG_TO_RAD), std::cos(-_rotation * Const::DEG_TO_RAD), 0);
-            cglib::vec3<double> upVec = cglib::unit(_projectionSurface->calculateVector(focusPosInternal, upVecInternal));
-            if (!std::isfinite(cglib::norm(upVec))) {
-                Log::Errorf("ViewState::setRotation: Invalid upVec coordinates %g, %g, %g", upVec(0), upVec(1), upVec(2)); 
-            } else {
-                _upVec = upVec;
             }
         }
     }
@@ -161,6 +138,10 @@ namespace carto {
     
     void ViewState::cameraChanged() {
         _cameraChanged = true;
+    }
+    
+    float ViewState::getRotation() const {
+        return _rotation;
     }
     
     float ViewState::get2PowZoom() const {

@@ -73,18 +73,6 @@ namespace carto {
         void setUpVec(const cglib::vec3<double>& upVec);
     
         /**
-         * Returns the camera rotation angle.
-         * @return The camera rotation angle in degrees.
-         */
-        float getRotation() const;
-        /**
-         * Sets the camera rotation angle. Changing the rotation angle doesn't
-         * automatically update the view. To update the view cameraChanged() must be called.
-         * @param rotation The new camera rotation angle in degrees.
-         */
-        void setRotation(float rotation);
-
-        /**
          * Returns the camera tilt angle.
          * @return The camera tilt angle in degrees.
          */
@@ -119,6 +107,12 @@ namespace carto {
          */
         void cameraChanged();
         
+        /**
+         * Returns the camera rotation angle.
+         * @return The camera rotation angle in degrees.
+         */
+        float getRotation() const;
+
         /**
          * Returns the number 2 lifted to the power of the zoom level: pow(2, zoom level).
          * @return pow(2, zoom level).
