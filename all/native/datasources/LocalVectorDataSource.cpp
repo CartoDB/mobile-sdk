@@ -282,16 +282,19 @@ namespace carto {
         std::lock_guard<std::mutex> lock(_mutex);
 
         // Check if we need to rebuild the underlying spatial index
+        std::shared_ptr<ProjectionSurface> projectionSurface = cullState->getViewState().getProjectionSurface();
         if (_spatialIndexType == LocalSpatialIndexType::LOCAL_SPATIAL_INDEX_TYPE_KDTREE) {
-            if (cullState->getViewState().getProjectionSurface() != _projectionSurface) {
+            if (projectionSurface != _projectionSurface) {
                 std::vector<std::shared_ptr<VectorElement> > elements = _spatialIndex->getAll();
-                _projectionSurface = cullState->getViewState().getProjectionSurface();
+                _projectionSurface = projectionSurface;
                 _spatialIndex = std::make_shared<KDTreeSpatialIndex<std::shared_ptr<VectorElement> > >();
                 for (const std::shared_ptr<VectorElement>& element : elements) {
                     cglib::bbox3<double> bounds = calculateElementBounds(element);
                     _spatialIndex->insert(bounds, element);
                 }
             }
+        } else {
+            _projectionSurface = projectionSurface;
         }
 
         // Query the spatial index
@@ -379,6 +382,10 @@ namespace carto {
     }
     
     std::shared_ptr<VectorElement> LocalVectorDataSource::simplifyElement(const std::shared_ptr<VectorElement>& element, float scale) const {
+        if (!_projectionSurface) {
+            return element;
+        }
+
         std::shared_ptr<VectorElement> simplifiedElement = element;
         if (auto lineElement = std::dynamic_pointer_cast<Line>(element)) {
             auto lineGeometry = std::dynamic_pointer_cast<LineGeometry>(lineElement->getGeometry());
