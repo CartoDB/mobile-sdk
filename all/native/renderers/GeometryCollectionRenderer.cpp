@@ -37,6 +37,16 @@ namespace carto {
         _pointRenderer.onSurfaceCreated(shaderManager, textureManager);
         _lineRenderer.onSurfaceCreated(shaderManager, textureManager);
         _polygonRenderer.onSurfaceCreated(shaderManager, textureManager);
+
+        // Drop elements
+        std::vector<std::shared_ptr<GeometryCollection>> elements;
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            std::swap(elements, _elements);
+        }
+        for (const std::shared_ptr<GeometryCollection>& element : elements) {
+            element->setDrawData(std::shared_ptr<GeometryCollectionDrawData>());
+        }
     }
 
     void GeometryCollectionRenderer::onDrawFrame(float deltaSeconds, StyleTextureCache& styleCache, const ViewState& viewState) {
@@ -105,7 +115,9 @@ namespace carto {
     }
 
     void GeometryCollectionRenderer::addElement(const std::shared_ptr<GeometryCollection>& element) {
-        _tempElements.push_back(element);
+        if (element->getDrawData()) {
+            _tempElements.push_back(element);
+        }
     }
 
     void GeometryCollectionRenderer::refreshElements() {
@@ -117,7 +129,9 @@ namespace carto {
     void GeometryCollectionRenderer::updateElement(const std::shared_ptr<GeometryCollection>& element) {
         std::lock_guard<std::mutex> lock(_mutex);
         if (std::find(_elements.begin(), _elements.end(), element) == _elements.end()) {
-            _elements.push_back(element);
+            if (element->getDrawData()) {
+                _elements.push_back(element);
+            }
         }
     }
 

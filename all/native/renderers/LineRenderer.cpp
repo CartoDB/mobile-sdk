@@ -114,7 +114,9 @@ namespace carto {
     }
     
     void LineRenderer::addElement(const std::shared_ptr<Line>& element) {
-        _tempElements.push_back(element);
+        if (element->getDrawData()) {
+            _tempElements.push_back(element);
+        }
     }
     
     void LineRenderer::refreshElements() {
@@ -126,7 +128,9 @@ namespace carto {
     void LineRenderer::updateElement(const std::shared_ptr<Line>& element) {
         std::lock_guard<std::mutex> lock(_mutex);
         if (std::find(_elements.begin(), _elements.end(), element) == _elements.end()) {
-            _elements.push_back(element);
+            if (element->getDrawData()) {
+                _elements.push_back(element);
+            }
         }
     }
         
@@ -191,7 +195,7 @@ namespace carto {
         std::size_t coordIndex = 0;
         std::size_t normalIndex = 0;
         std::size_t texCoordIndex = 0;
-        GLuint indexIndex = 0;
+        std::size_t indexIndex = 0;
         float texCoordYScale = (bitmap->getHeight() > 1 ? 1.0f / viewState.getUnitToDPCoef() : 1.0f);
         for (const LineDrawData* drawData : drawDataBuffer) {
             // Draw data vertex info may be split into multiple buffers, draw each one
