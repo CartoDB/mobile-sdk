@@ -49,22 +49,10 @@ namespace carto {
 
         // Sort billboards
         auto distanceComparator = [](const std::shared_ptr<BillboardDrawData>& drawData1, const std::shared_ptr<BillboardDrawData>& drawData2) {
-            // First compare placement priorities
-            float priorityDelta = drawData2->getPlacementPriority() - drawData1->getPlacementPriority();
-            if (priorityDelta != 0) {
-                return priorityDelta > 0;
-            }
-    
-            // Sort by the distance to the camera plane
-            double cameraPlaneZoomDistDelta = drawData2->getCameraPlaneZoomDistance() - drawData1->getCameraPlaneZoomDistance();
-            if (cameraPlaneZoomDistDelta != 0) {
-                return cameraPlaneZoomDistDelta < 0;
-            }
-
-            // Sort by the distance to the bottom of screen
-            return drawData1->getScreenBottomDistance() > drawData2->getScreenBottomDistance();
+            return drawData1->isBefore(*drawData2);
         };
         std::stable_sort(_billboardDrawDatas.begin(), _billboardDrawDatas.end(), distanceComparator);
+        std::reverse(_billboardDrawDatas.begin(), _billboardDrawDatas.end());
     }
     
     const std::vector<std::shared_ptr<BillboardDrawData> >& BillboardSorter::getSortedBillboardDrawDatas() const {

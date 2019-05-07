@@ -52,6 +52,8 @@ namespace carto {
         
         bool isGenMipmaps() const;
     
+        int getPlacementPriority() const;
+    
         BillboardOrientation::BillboardOrientation getOrientationMode() const;
     
         bool isCausesOverlap() const;
@@ -64,8 +66,6 @@ namespace carto {
         // These two methods may be called from multiple threads at the same time
         float getTransition() const;
         void setTransition(float transition);
-    
-        float getPlacementPriority() const;
     
         const cglib::vec3<double>& getPos() const;
         void setPos(const cglib::vec3<double>& pos, const ProjectionSurface& projectionSurface); // Used for setting label position, when it's attached to another billboards
@@ -89,6 +89,8 @@ namespace carto {
     
         const std::weak_ptr<BillboardRenderer>& getRenderer() const;
         void setRenderer(const std::weak_ptr<BillboardRenderer>& renderer);
+
+        bool isBefore(const BillboardDrawData& drawData) const;
 
         virtual float getClickScale() const;
     

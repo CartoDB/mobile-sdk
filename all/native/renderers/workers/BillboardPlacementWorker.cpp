@@ -120,20 +120,8 @@ namespace carto {
                 return overlapDelta < 0;
             }
 
-            // Sort by priority
-            float priorityDelta = drawData2->getPlacementPriority() - drawData1->getPlacementPriority();
-            if (priorityDelta != 0) {
-                return priorityDelta < 0;
-            }
-
-            // Sort by distance to camera plane
-            double cameraPlaneZoomDistDelta = drawData2->getCameraPlaneZoomDistance() - drawData1->getCameraPlaneZoomDistance();
-            if (cameraPlaneZoomDistDelta != 0) {
-                return cameraPlaneZoomDistDelta > 0;
-            }
-
-            // Sort by the distance to the bottom of the screen
-            return drawData1->getScreenBottomDistance() > drawData2->getScreenBottomDistance();
+            // Sort using DrawData ordering
+            return drawData1->isBefore(*drawData2);
         };
         std::stable_sort(billboardDrawDatas.begin(), billboardDrawDatas.end(), distanceComparator);
 

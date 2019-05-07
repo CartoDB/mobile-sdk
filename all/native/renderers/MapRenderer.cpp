@@ -29,6 +29,7 @@
 #include "renderers/workers/BillboardPlacementWorker.h"
 #include "renderers/workers/CullWorker.h"
 #include "renderers/workers/RedrawWorker.h"
+#include "vectorelements/Billboard.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "utils/ThreadUtils.h"
@@ -782,21 +783,33 @@ namespace carto {
             layer->calculateRayIntersectedElements(ray, viewState, results);
         }
     
-        // Sort the results
+        // Result order comparator
         auto distanceComparator = [&viewState](const RayIntersectedElement& element1, const RayIntersectedElement& element2) -> bool {
             if (element1.is3D() != element2.is3D()) {
-                return element1.is3D() > element2.is3D();
+                return element1.is3D() < element2.is3D();
             }
             if (element1.is3D()) {
+                if (auto billboard1 = element1.getElement<Billboard>()) {
+                    if (auto billboard2 = element2.getElement<Billboard>()) {
+                        std::shared_ptr<BillboardDrawData> drawData1 = billboard1->getDrawData();
+                        std::shared_ptr<BillboardDrawData> drawData2 = billboard2->getDrawData();
+                        if (drawData1 && drawData2) {
+                            return drawData1->isBefore(*drawData2);
+                        }
+                    }
+                }
+
                 double deltaDistance = element1.getDistance(viewState.getCameraPos()) - element2.getDistance(viewState.getCameraPos());
                 if (deltaDistance != 0) {
                     return deltaDistance < 0;
                 }
             }
-            return element1.getOrder() > element2.getOrder();
+            return false;
         };
         
-        std::sort(results.begin(), results.end(), distanceComparator);
+        // Sort the results but do 'reverse stable sort' to be consistent with the rendering order
+        std::stable_sort(results.begin(), results.end(), distanceComparator);
+        std::reverse(results.begin(), results.end());
     }
      
     void MapRenderer::billboardsChanged() {

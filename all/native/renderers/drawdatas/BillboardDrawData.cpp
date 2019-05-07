@@ -71,6 +71,10 @@ namespace carto {
         return _genMipmaps;
     }
     
+    int BillboardDrawData::getPlacementPriority() const {
+        return _placementPriority;
+    }
+    
     BillboardOrientation::BillboardOrientation BillboardDrawData::getOrientationMode() const {
         return _orientationMode;
     }
@@ -97,10 +101,6 @@ namespace carto {
 
     void BillboardDrawData::setTransition(float transition) {
         _transition = std::max(0.0f, std::min(1.0f, transition));
-    }
-    
-    float BillboardDrawData::getPlacementPriority() const {
-        return static_cast<float>(_placementPriority);
     }
     
     const cglib::vec3<double>& BillboardDrawData::getPos() const {
@@ -165,6 +165,23 @@ namespace carto {
     
     void BillboardDrawData::setRenderer(const std::weak_ptr<BillboardRenderer>& renderer) {
         _renderer = renderer;
+    }
+
+    bool BillboardDrawData::isBefore(const BillboardDrawData& drawData) const {
+        // First compare placement priorities
+        int priorityDelta = drawData._placementPriority - _placementPriority;
+        if (priorityDelta != 0) {
+            return priorityDelta < 0;
+        }
+
+        // If equal, use the distance to the camera plane
+        double cameraPlaneZoomDistDelta = drawData._cameraPlaneZoomDistance - _cameraPlaneZoomDistance;
+        if (cameraPlaneZoomDistDelta != 0) {
+            return cameraPlaneZoomDistDelta > 0;
+        }
+
+        // As a last resort, use the distance to the bottom of screen
+        return drawData._screenBottomDistance > _screenBottomDistance;
     }
 
     float BillboardDrawData::getClickScale() const {
