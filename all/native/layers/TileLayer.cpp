@@ -358,7 +358,7 @@ namespace carto {
             if (keyId != 0) {
                 auto elementInfo = std::make_shared<Variant>(utfGridTile->getData(utfGridTile->getKey(keyId)));
                 std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
-                results.push_back(RayIntersectedElement(elementInfo, thisLayer, ray(t), ray(t), 0));
+                results.push_back(RayIntersectedElement(elementInfo, thisLayer, ray(t), ray(t), false));
             }
         }
     }

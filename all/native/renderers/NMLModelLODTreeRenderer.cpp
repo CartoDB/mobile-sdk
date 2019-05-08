@@ -52,49 +52,6 @@ namespace carto {
         }
     }
     
-    void NMLModelLODTreeRenderer::addDrawData(const std::shared_ptr<NMLModelLODTreeDrawData>& drawData) {
-        _tempDrawDatas.push_back(drawData);
-    }
-    
-    void NMLModelLODTreeRenderer::refreshDrawData() {
-        std::lock_guard<std::mutex> lock(_mutex);
-    
-        // Mark all existing records as unused, unlink node hierarchy
-        for (auto it = _drawRecordMap.begin(); it != _drawRecordMap.end(); it++) {
-            ModelNodeDrawRecord& record = *it->second;
-            record.used = false;
-            record.parent = nullptr;
-            record.children.clear();
-        }
-    
-        // Create new nodes, mark used nodes
-        for (auto it = _tempDrawDatas.begin(); it != _tempDrawDatas.end(); it++) {
-            std::shared_ptr<ModelNodeDrawRecord>& record = _drawRecordMap[(*it)->getNodeId()];
-            if (!record) {
-                record.reset(new ModelNodeDrawRecord(**it));
-            } else {
-                record->drawData = **it;
-            }
-            record->used = true;
-        }
-    
-        // Build node hierarchy, create parent-child links between draw records
-        for (auto it = _drawRecordMap.begin(); it != _drawRecordMap.end(); it++) {
-            ModelNodeDrawRecord& record = *it->second;
-            for (std::size_t i = 0; i < record.drawData.getParentIds().size(); i++) {
-                auto it2 = _drawRecordMap.find(record.drawData.getParentIds()[i]);
-                if (it2 != _drawRecordMap.end()) {
-                    ModelNodeDrawRecord& parentRecord = *it2->second;
-                    record.parent = &parentRecord;
-                    parentRecord.children.push_back(&record);
-                    break;
-                }
-            }
-        }
-    
-        _tempDrawDatas.clear();
-    }
-    
     void NMLModelLODTreeRenderer::offsetLayerHorizontally(double offset) {
         std::lock_guard<std::mutex> lock(_mutex);
         
@@ -109,41 +66,6 @@ namespace carto {
         _drawRecordMap.clear();
 
         nml::GLTexture::registerGLExtensions();
-    }
-
-    void NMLModelLODTreeRenderer::calculateRayIntersectedElements(const std::shared_ptr<NMLModelLODTreeLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
-        std::lock_guard<std::mutex> lock(_mutex);
-    
-        for (auto it = _drawRecordMap.begin(); it != _drawRecordMap.end(); it++) {
-            const ModelNodeDrawRecord& record = *it->second;
-            if (!(record.used && record.created)) {
-                continue;
-            }
-    
-            std::shared_ptr<nml::GLModel> glModel = record.drawData.getGLModel();
-            const cglib::mat4x4<double>& modelMat = record.drawData.getLocalMat();
-            cglib::mat4x4<double> invModelMat = cglib::inverse(modelMat);
-    
-            cglib::ray3<double> rayModel = cglib::transform_ray(ray, invModelMat);
-            cglib::bbox3<double> modelBounds = cglib::bbox3<double>::convert(glModel->getBounds());
-            if (!cglib::intersect_bbox(modelBounds, rayModel)) {
-                continue;
-            }
-            
-            std::vector<nml::RayIntersection> intersections;
-            glModel->calculateRayIntersections(rayModel, intersections);
-            
-            for (std::size_t i = 0; i < intersections.size(); i++) {
-                auto proxyIt = record.drawData.getProxyMap()->find(intersections[i].vertexId);
-                if (proxyIt == record.drawData.getProxyMap()->end()) {
-                    continue;
-                }
-                
-                cglib::vec3<double> pos = cglib::transform_point(intersections[i].pos, modelMat);
-                int priority = static_cast<int>(results.size());
-                results.push_back(RayIntersectedElement(std::make_shared<NMLModelLODTree::Proxy>(proxyIt->second), layer, pos, pos, priority, true));
-            }
-        }
     }
 
     bool NMLModelLODTreeRenderer::onDrawFrame(float deltaSeconds, const ViewState& viewState) {
@@ -253,6 +175,83 @@ namespace carto {
     void NMLModelLODTreeRenderer::onSurfaceDestroyed() {
         _glResourceManager.reset();
         _drawRecordMap.clear();
+    }
+
+    void NMLModelLODTreeRenderer::addDrawData(const std::shared_ptr<NMLModelLODTreeDrawData>& drawData) {
+        _tempDrawDatas.push_back(drawData);
+    }
+    
+    void NMLModelLODTreeRenderer::refreshDrawData() {
+        std::lock_guard<std::mutex> lock(_mutex);
+    
+        // Mark all existing records as unused, unlink node hierarchy
+        for (auto it = _drawRecordMap.begin(); it != _drawRecordMap.end(); it++) {
+            ModelNodeDrawRecord& record = *it->second;
+            record.used = false;
+            record.parent = nullptr;
+            record.children.clear();
+        }
+    
+        // Create new nodes, mark used nodes
+        for (auto it = _tempDrawDatas.begin(); it != _tempDrawDatas.end(); it++) {
+            std::shared_ptr<ModelNodeDrawRecord>& record = _drawRecordMap[(*it)->getNodeId()];
+            if (!record) {
+                record.reset(new ModelNodeDrawRecord(**it));
+            } else {
+                record->drawData = **it;
+            }
+            record->used = true;
+        }
+    
+        // Build node hierarchy, create parent-child links between draw records
+        for (auto it = _drawRecordMap.begin(); it != _drawRecordMap.end(); it++) {
+            ModelNodeDrawRecord& record = *it->second;
+            for (std::size_t i = 0; i < record.drawData.getParentIds().size(); i++) {
+                auto it2 = _drawRecordMap.find(record.drawData.getParentIds()[i]);
+                if (it2 != _drawRecordMap.end()) {
+                    ModelNodeDrawRecord& parentRecord = *it2->second;
+                    record.parent = &parentRecord;
+                    parentRecord.children.push_back(&record);
+                    break;
+                }
+            }
+        }
+    
+        _tempDrawDatas.clear();
+    }
+    
+    void NMLModelLODTreeRenderer::calculateRayIntersectedElements(const std::shared_ptr<NMLModelLODTreeLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
+        std::lock_guard<std::mutex> lock(_mutex);
+    
+        for (auto it = _drawRecordMap.begin(); it != _drawRecordMap.end(); it++) {
+            const ModelNodeDrawRecord& record = *it->second;
+            if (!(record.used && record.created)) {
+                continue;
+            }
+    
+            std::shared_ptr<nml::GLModel> glModel = record.drawData.getGLModel();
+            const cglib::mat4x4<double>& modelMat = record.drawData.getLocalMat();
+            cglib::mat4x4<double> invModelMat = cglib::inverse(modelMat);
+    
+            cglib::ray3<double> rayModel = cglib::transform_ray(ray, invModelMat);
+            cglib::bbox3<double> modelBounds = cglib::bbox3<double>::convert(glModel->getBounds());
+            if (!cglib::intersect_bbox(modelBounds, rayModel)) {
+                continue;
+            }
+            
+            std::vector<nml::RayIntersection> intersections;
+            glModel->calculateRayIntersections(rayModel, intersections);
+            
+            for (std::size_t i = 0; i < intersections.size(); i++) {
+                auto proxyIt = record.drawData.getProxyMap()->find(intersections[i].vertexId);
+                if (proxyIt == record.drawData.getProxyMap()->end()) {
+                    continue;
+                }
+                
+                cglib::vec3<double> pos = cglib::transform_point(intersections[i].pos, modelMat);
+                results.push_back(RayIntersectedElement(std::make_shared<NMLModelLODTree::Proxy>(proxyIt->second), layer, pos, pos, true));
+            }
+        }
     }
 
 }

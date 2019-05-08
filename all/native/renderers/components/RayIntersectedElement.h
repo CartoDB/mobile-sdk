@@ -19,12 +19,11 @@ namespace carto {
     class RayIntersectedElement {
     public:
         template <typename T>
-        RayIntersectedElement(const std::shared_ptr<T>& element, const std::shared_ptr<Layer>& layer, const cglib::vec3<double>& hitPos, const cglib::vec3<double>& elementPos, int order, bool is3D = false) :
+        RayIntersectedElement(const std::shared_ptr<T>& element, const std::shared_ptr<Layer>& layer, const cglib::vec3<double>& hitPos, const cglib::vec3<double>& elementPos, bool is3D) :
             _element(element),
             _layer(layer),
             _hitPos(hitPos),
             _elementPos(elementPos),
-            _order(order),
             _is3D(is3D)
         {
         }
@@ -45,8 +44,6 @@ namespace carto {
 
         const cglib::vec3<double>& getElementPos() const;
 
-        int getOrder() const;
-
         bool is3D() const;
 
         double getDistance(const cglib::vec3<double>& origin) const;
@@ -56,7 +53,6 @@ namespace carto {
         std::shared_ptr<Layer> _layer;
         cglib::vec3<double> _hitPos;
         cglib::vec3<double> _elementPos;
-        int _order;
         bool _is3D;
     };
     

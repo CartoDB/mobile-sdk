@@ -40,7 +40,7 @@ namespace carto {
         BillboardRenderer();
         virtual ~BillboardRenderer();
     
-        virtual void offsetLayerHorizontally(double offset);
+        void offsetLayerHorizontally(double offset);
     
         void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
         bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
@@ -56,7 +56,7 @@ namespace carto {
         void setLayer(const std::shared_ptr<VectorLayer>& layer);
         std::shared_ptr<VectorLayer> getLayer() const;
     
-        virtual void calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
+        void calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
     
     private:
         static void BuildAndDrawBuffers(GLuint a_color,

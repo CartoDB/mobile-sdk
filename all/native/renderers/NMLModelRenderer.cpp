@@ -51,38 +51,6 @@ namespace carto {
         }
     }
         
-    void NMLModelRenderer::addElement(const std::shared_ptr<NMLModel>& element) {
-        _tempElements.push_back(element);
-    }
-    
-    void NMLModelRenderer::refreshElements() {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _elements.clear();
-        _elements.swap(_tempElements);
-    }
-        
-    void NMLModelRenderer::updateElement(const std::shared_ptr<NMLModel>& element) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        if (std::find(_elements.begin(), _elements.end(), element) == _elements.end()) {
-            _elements.push_back(element);
-        }
-    }
-    
-    void NMLModelRenderer::removeElement(const std::shared_ptr<NMLModel>& element) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _elements.erase(std::remove(_elements.begin(), _elements.end(), element), _elements.end());
-    }
-    
-    void NMLModelRenderer::setMapRenderer(const std::weak_ptr<MapRenderer>& mapRenderer) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _mapRenderer = mapRenderer;
-    }
-
-    void NMLModelRenderer::setOptions(const std::weak_ptr<Options>& options) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _options = options;
-    }
-
     void NMLModelRenderer::offsetLayerHorizontally(double offset) {
         std::lock_guard<std::mutex> lock(_mutex);
         
@@ -168,6 +136,38 @@ namespace carto {
         _glModelMap.clear();
     }
 
+    void NMLModelRenderer::addElement(const std::shared_ptr<NMLModel>& element) {
+        _tempElements.push_back(element);
+    }
+    
+    void NMLModelRenderer::refreshElements() {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _elements.clear();
+        _elements.swap(_tempElements);
+    }
+        
+    void NMLModelRenderer::updateElement(const std::shared_ptr<NMLModel>& element) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        if (std::find(_elements.begin(), _elements.end(), element) == _elements.end()) {
+            _elements.push_back(element);
+        }
+    }
+    
+    void NMLModelRenderer::removeElement(const std::shared_ptr<NMLModel>& element) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _elements.erase(std::remove(_elements.begin(), _elements.end(), element), _elements.end());
+    }
+    
+    void NMLModelRenderer::setMapRenderer(const std::weak_ptr<MapRenderer>& mapRenderer) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _mapRenderer = mapRenderer;
+    }
+
+    void NMLModelRenderer::setOptions(const std::weak_ptr<Options>& options) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _options = options;
+    }
+
     void NMLModelRenderer::calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
         std::lock_guard<std::mutex> lock(_mutex);
         
@@ -195,8 +195,7 @@ namespace carto {
             
             for (std::size_t i = 0; i < intersections.size(); i++) {
                 cglib::vec3<double> pos = cglib::transform_point(intersections[i].pos, modelMat);
-                int priority = static_cast<int>(results.size());
-                results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, pos, pos, priority, true));
+                results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, pos, pos, true));
             }
         }
     }

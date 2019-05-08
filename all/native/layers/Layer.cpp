@@ -5,6 +5,7 @@
 #include "graphics/ViewState.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
+#include "renderers/components/RayIntersectedElementComparator.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 
@@ -102,20 +103,8 @@ namespace carto {
         calculateRayIntersectedElements(ray, viewState, results);
 
         // Sort the results
-        auto distanceComparator = [&viewState](const RayIntersectedElement& element1, const RayIntersectedElement& element2) -> bool {
-            if (element1.is3D() != element2.is3D()) {
-                return element1.is3D() > element2.is3D();
-            }
-            if (element1.is3D()) {
-                double deltaDistance = element1.getDistance(viewState.getCameraPos()) - element2.getDistance(viewState.getCameraPos());
-                if (deltaDistance != 0) {
-                    return deltaDistance < 0;
-                }
-            }
-            return element1.getOrder() > element2.getOrder();
-        };
-
-        std::sort(results.begin(), results.end(), distanceComparator);
+        std::stable_sort(results.begin(), results.end(), RayIntersectedElementComparator(viewState));
+        std::reverse(results.begin(), results.end());
 
         // Send click events
         for (const RayIntersectedElement& intersectedElement : results) {

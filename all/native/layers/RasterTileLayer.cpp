@@ -305,7 +305,7 @@ namespace carto {
 
                 auto pixelInfo = std::make_shared<std::tuple<MapTile, Color, Color> >(MapTile(vtTileId.x, vtTileId.y, vtTileId.zoom, _frameNr), nearestColor, interpolatedColor);
                 std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
-                results.push_back(RayIntersectedElement(pixelInfo, thisLayer, ray(t), ray(t), 0, false));
+                results.push_back(RayIntersectedElement(pixelInfo, thisLayer, ray(t), ray(t), false));
             }
         }
 

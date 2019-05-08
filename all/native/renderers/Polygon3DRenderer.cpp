@@ -185,8 +185,7 @@ namespace carto {
             for (std::size_t i = 0; i < coords.size(); i += 3) {
                 double t = 0;
                 if (cglib::intersect_triangle(coords[i + 0], coords[i + 1], coords[i + 2], ray, &t)) {
-                    int priority = static_cast<int>(results.size());
-                    results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, ray(t), ray(t), priority, true));
+                    results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, ray(t), ray(t), true));
                     break;
                 }
             }

@@ -43,16 +43,16 @@ namespace carto {
         NMLModelLODTreeRenderer(const std::weak_ptr<MapRenderer>& mapRenderer, const std::weak_ptr<Options>& options);
         virtual ~NMLModelLODTreeRenderer();
     
+        void offsetLayerHorizontally(double offset);
+    
+        void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
+        bool onDrawFrame(float deltaSeconds, const ViewState& viewState);
+        void onSurfaceDestroyed();
+
         void addDrawData(const std::shared_ptr<NMLModelLODTreeDrawData>& drawData);
         void refreshDrawData();
 
-        virtual void offsetLayerHorizontally(double offset);
-    
-        virtual void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
-        virtual bool onDrawFrame(float deltaSeconds, const ViewState& viewState);
-        virtual void onSurfaceDestroyed();
-
-        virtual void calculateRayIntersectedElements(const std::shared_ptr<NMLModelLODTreeLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
+        void calculateRayIntersectedElements(const std::shared_ptr<NMLModelLODTreeLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
     
     protected:
         struct ModelNodeDrawRecord {

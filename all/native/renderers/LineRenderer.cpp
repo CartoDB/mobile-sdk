@@ -341,8 +341,7 @@ namespace carto {
                     cglib::vec3<double> dp = ray(t) - *prevPos;
                     cglib::vec3<double> ds = *pos - *prevPos;
                     cglib::vec3<double> pos = *prevPos + ds * std::max(0.0, std::min(1.0, cglib::dot_product(dp, ds) / cglib::norm(ds)));
-                    int priority = static_cast<int>(results.size());
-                    results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, ray(t), pos, priority));
+                    results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, ray(t), pos, layer->isZBuffering()));
                     return true;
                 }
             }

@@ -313,11 +313,7 @@ namespace carto {
             if (cglib::intersect_triangle(topLeft, bottomLeft, topRight, ray, &t) ||
                 cglib::intersect_triangle(bottomLeft, bottomRight, topRight, ray, &t))
             {
-                int priority = static_cast<int>(results.size());
-                if (viewState.getTilt() == 90) { // if distances are equal, billboards are ordered based on 2D distance
-                    priority = -static_cast<int>(drawData->getScreenBottomDistance());
-                }
-                results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, ray(t), drawData->getPos(), priority, true));
+                results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, ray(t), drawData->getPos(), true));
             }
         }
     }

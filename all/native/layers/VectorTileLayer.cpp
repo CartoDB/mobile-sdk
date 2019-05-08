@@ -366,7 +366,7 @@ namespace carto {
                     if (std::shared_ptr<BinaryData> tileData = tileInfo.getTileData()) {
                         if (std::shared_ptr<VectorTileFeature> tileFeature = _tileDecoder->decodeFeature(id, vtTileId, tileData, tileInfo.getTileBounds())) {
                             std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
-                            results.push_back(RayIntersectedElement(tileFeature, thisLayer, ray(t), ray(t), 0, pass > 0));
+                            results.push_back(RayIntersectedElement(tileFeature, thisLayer, ray(t), ray(t), pass > 0));
                         } else {
                             Log::Warnf("VectorTileLayer::calculateRayIntersectedElements: Failed to decode feature %lld", id);
                         }

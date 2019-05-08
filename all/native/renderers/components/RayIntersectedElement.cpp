@@ -18,10 +18,6 @@ namespace carto {
         return _elementPos;
     }
 
-    int RayIntersectedElement::getOrder() const {
-        return _order;
-    }
-
     bool RayIntersectedElement::is3D() const {
         return _is3D;
     }
