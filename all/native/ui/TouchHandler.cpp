@@ -17,6 +17,8 @@
 #include "utils/Const.h"
 #include "utils/Log.h"
 
+#include <algorithm>
+
 namespace carto {
 
     TouchHandler::TouchHandler(const std::shared_ptr<MapRenderer>& mapRenderer, const std::shared_ptr<Options>& options) :

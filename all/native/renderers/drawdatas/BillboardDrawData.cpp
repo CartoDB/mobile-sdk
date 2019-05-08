@@ -174,14 +174,19 @@ namespace carto {
             return priorityDelta > 0;
         }
 
+        // Screen bottom distance sorting
+        float screenBottomDistDelta = drawData._screenBottomDistance - _screenBottomDistance;
+        if (screenBottomDistDelta != 0) {
+            return screenBottomDistDelta < 0;
+        }
+
         // If equal, use the distance to the camera plane
         double cameraPlaneZoomDistDelta = drawData._cameraPlaneZoomDistance - _cameraPlaneZoomDistance;
         if (cameraPlaneZoomDistDelta != 0) {
             return cameraPlaneZoomDistDelta < 0;
         }
 
-        // As a last resort, use the distance to the bottom of screen
-        return drawData._screenBottomDistance < _screenBottomDistance;
+        return false;
     }
 
     float BillboardDrawData::getClickScale() const {

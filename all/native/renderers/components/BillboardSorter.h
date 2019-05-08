@@ -28,6 +28,8 @@ namespace carto {
         const std::vector<std::shared_ptr<BillboardDrawData> >& getSortedBillboardDrawDatas() const;
     
     private:
+        static const float PLANAR_ZOOM_THRESHOLD;
+
         std::vector<std::shared_ptr<BillboardDrawData> > _billboardDrawDatas;
     };
     

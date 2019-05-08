@@ -254,11 +254,14 @@ namespace carto {
     
     void BillboardRenderer::updateElement(const std::shared_ptr<Billboard>& element) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+        std::shared_ptr<BillboardDrawData> drawData = element->getDrawData();
+        if (!drawData) {
+            return;
+        }
+        drawData->setRenderer(shared_from_this());
         if (std::find(_elements.begin(), _elements.end(), element) == _elements.end()) {
-            if (std::shared_ptr<BillboardDrawData> drawData = element->getDrawData()) {
-                drawData->setRenderer(shared_from_this());
-                _elements.push_back(element);
-            }
+            _elements.push_back(element);
         }
     }
     
