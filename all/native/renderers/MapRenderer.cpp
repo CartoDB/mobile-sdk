@@ -22,7 +22,6 @@
 #include "renderers/RendererCaptureListener.h"
 #include "renderers/RedrawRequestListener.h"
 #include "renderers/components/RayIntersectedElement.h"
-#include "renderers/components/RayIntersectedElementComparator.h"
 #include "renderers/cameraevents/CameraPanEvent.h"
 #include "renderers/cameraevents/CameraRotationEvent.h"
 #include "renderers/cameraevents/CameraTiltEvent.h"
@@ -782,10 +781,6 @@ namespace carto {
         for (const std::shared_ptr<Layer>& layer : _layers->getAll()) {
             layer->calculateRayIntersectedElements(ray, viewState, results);
         }
-    
-        // Sort the results but do 'reverse stable sort' to be consistent with the rendering order
-        std::stable_sort(results.begin(), results.end(), RayIntersectedElementComparator(viewState));
-        std::reverse(results.begin(), results.end());
     }
      
     void MapRenderer::billboardsChanged() {

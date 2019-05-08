@@ -26,7 +26,7 @@ namespace carto {
             std::shared_ptr<Billboard> billboard1 = element1.getElement<Billboard>();
             std::shared_ptr<Billboard> billboard2 = element2.getElement<Billboard>();
             if ((bool)billboard1 != (bool)billboard2) {
-                return (bool)billboard1 != (bool)billboard2;
+                return (bool)billboard1 < (bool)billboard2;
             }
             if (billboard1) {
                 std::shared_ptr<BillboardDrawData> drawData1 = billboard1->getDrawData();

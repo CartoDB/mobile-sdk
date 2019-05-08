@@ -6,6 +6,7 @@
 #include "projections/ProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
+#include "renderers/components/RayIntersectedElementComparator.h"
 #include "renderers/cameraevents/CameraPanEvent.h"
 #include "renderers/cameraevents/CameraRotationEvent.h"
 #include "renderers/cameraevents/CameraTiltEvent.h"
@@ -600,16 +601,23 @@ namespace carto {
             return;
         }
         MapPos mapPos = mapScreenPosition(screenPos, viewState);
-        
+
+        // Find all intersected elements
         std::vector<RayIntersectedElement> results;
         _mapRenderer->calculateRayIntersectedElements(mapPos, viewState, results);
+    
+        // Sort the results but do 'reverse stable sort' to be consistent with the rendering order
+        std::stable_sort(results.begin(), results.end(), RayIntersectedElementComparator(viewState));
+        std::reverse(results.begin(), results.end());
 
+        // Process the results
         for (const RayIntersectedElement& intersectedElement : results) {
             if (intersectedElement.getLayer()->processClick(clickType, intersectedElement, viewState)) {
                 return;
             }
         }
 
+        // Click was ignored by layers, call map event listener
         DirectorPtr<MapEventListener> mapEventListener = _mapEventListener;
 
         if (mapEventListener) {
