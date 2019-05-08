@@ -22,6 +22,7 @@
 #include "renderers/RendererCaptureListener.h"
 #include "renderers/RedrawRequestListener.h"
 #include "renderers/components/RayIntersectedElement.h"
+#include "renderers/components/RayIntersectedElementComparator.h"
 #include "renderers/cameraevents/CameraPanEvent.h"
 #include "renderers/cameraevents/CameraRotationEvent.h"
 #include "renderers/cameraevents/CameraTiltEvent.h"
@@ -29,7 +30,6 @@
 #include "renderers/workers/BillboardPlacementWorker.h"
 #include "renderers/workers/CullWorker.h"
 #include "renderers/workers/RedrawWorker.h"
-#include "vectorelements/Billboard.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "utils/ThreadUtils.h"
@@ -783,32 +783,8 @@ namespace carto {
             layer->calculateRayIntersectedElements(ray, viewState, results);
         }
     
-        // Result order comparator
-        auto distanceComparator = [&viewState](const RayIntersectedElement& element1, const RayIntersectedElement& element2) -> bool {
-            if (element1.is3D() != element2.is3D()) {
-                return element1.is3D() < element2.is3D();
-            }
-            if (element1.is3D()) {
-                if (auto billboard1 = element1.getElement<Billboard>()) {
-                    if (auto billboard2 = element2.getElement<Billboard>()) {
-                        std::shared_ptr<BillboardDrawData> drawData1 = billboard1->getDrawData();
-                        std::shared_ptr<BillboardDrawData> drawData2 = billboard2->getDrawData();
-                        if (drawData1 && drawData2) {
-                            return drawData1->isBefore(*drawData2);
-                        }
-                    }
-                }
-
-                double deltaDistance = element1.getDistance(viewState.getCameraPos()) - element2.getDistance(viewState.getCameraPos());
-                if (deltaDistance != 0) {
-                    return deltaDistance < 0;
-                }
-            }
-            return false;
-        };
-        
         // Sort the results but do 'reverse stable sort' to be consistent with the rendering order
-        std::stable_sort(results.begin(), results.end(), distanceComparator);
+        std::stable_sort(results.begin(), results.end(), RayIntersectedElementComparator(viewState));
         std::reverse(results.begin(), results.end());
     }
      
@@ -935,24 +911,30 @@ namespace carto {
         }
         
         // Draw billboards, grouped by layer renderer
-        _billboardDrawDataBuffer.clear();
-        std::shared_ptr<BillboardRenderer> prevRenderer;
-        for (const std::shared_ptr<BillboardDrawData>& drawData : _billboardSorter.getSortedBillboardDrawDatas()) {
-            if (std::shared_ptr<BillboardRenderer> renderer = drawData->getRenderer().lock()) {
-                if (prevRenderer && prevRenderer != renderer) {
-                    prevRenderer->onDrawFrameSorted(deltaSeconds, _billboardDrawDataBuffer, *_styleCache, viewState);
-                    _billboardDrawDataBuffer.clear();
+        if (!_billboardSorter.getSortedBillboardDrawDatas().empty()) {
+            glDisable(GL_DEPTH_TEST);
+
+            _billboardDrawDataBuffer.clear();
+            std::shared_ptr<BillboardRenderer> prevRenderer;
+            for (const std::shared_ptr<BillboardDrawData>& drawData : _billboardSorter.getSortedBillboardDrawDatas()) {
+                if (std::shared_ptr<BillboardRenderer> renderer = drawData->getRenderer().lock()) {
+                    if (prevRenderer && prevRenderer != renderer) {
+                        prevRenderer->onDrawFrameSorted(deltaSeconds, _billboardDrawDataBuffer, *_styleCache, viewState);
+                        _billboardDrawDataBuffer.clear();
+                    }
+            
+                    _billboardDrawDataBuffer.push_back(drawData);
+                    prevRenderer = renderer;
                 }
-        
-                _billboardDrawDataBuffer.push_back(drawData);
-                prevRenderer = renderer;
             }
+            if (prevRenderer) {
+                prevRenderer->onDrawFrameSorted(deltaSeconds, _billboardDrawDataBuffer, *_styleCache, viewState);
+            }
+
+            glEnable(GL_DEPTH_TEST);
         }
     
-        if (prevRenderer) {
-            prevRenderer->onDrawFrameSorted(deltaSeconds, _billboardDrawDataBuffer, *_styleCache, viewState);
-        }
-    
+        // Redraw, if needed
         if (needRedraw) {
             requestRedraw();
         }
