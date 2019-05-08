@@ -52,7 +52,6 @@ namespace carto {
             return drawData1->isBefore(*drawData2);
         };
         std::stable_sort(_billboardDrawDatas.begin(), _billboardDrawDatas.end(), distanceComparator);
-        std::reverse(_billboardDrawDatas.begin(), _billboardDrawDatas.end());
     }
     
     const std::vector<std::shared_ptr<BillboardDrawData> >& BillboardSorter::getSortedBillboardDrawDatas() const {

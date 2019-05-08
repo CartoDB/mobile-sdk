@@ -115,15 +115,15 @@ namespace carto {
         // Sort draw datas
         auto distanceComparator = [](const std::shared_ptr<BillboardDrawData>& drawData1, const std::shared_ptr<BillboardDrawData>& drawData2) {
             // Sort by overlappability
-            int overlapDelta = (drawData2->isHideIfOverlapped() ? 0 : 1) - (drawData1->isHideIfOverlapped() ? 0 : 1);
-            if (overlapDelta != 0) {
-                return overlapDelta < 0;
+            if (drawData1->isHideIfOverlapped() != drawData2->isHideIfOverlapped()) {
+                return drawData2->isHideIfOverlapped() < drawData1->isHideIfOverlapped();
             }
 
             // Sort using DrawData ordering
             return drawData1->isBefore(*drawData2);
         };
         std::stable_sort(billboardDrawDatas.begin(), billboardDrawDatas.end(), distanceComparator);
+        std::reverse(billboardDrawDatas.begin(), billboardDrawDatas.end());
 
         // Calculate billboard screen coordinates, add envelopes to the tree
         {

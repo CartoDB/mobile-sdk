@@ -102,7 +102,7 @@ namespace carto {
         std::vector<RayIntersectedElement> results;
         calculateRayIntersectedElements(ray, viewState, results);
 
-        // Sort the results
+        // Sort the results but do 'reverse stable sort' to be consistent with the rendering order
         std::stable_sort(results.begin(), results.end(), RayIntersectedElementComparator(viewState));
         std::reverse(results.begin(), results.end());
 

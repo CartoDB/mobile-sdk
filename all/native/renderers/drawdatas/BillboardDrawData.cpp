@@ -171,17 +171,17 @@ namespace carto {
         // First compare placement priorities
         int priorityDelta = drawData._placementPriority - _placementPriority;
         if (priorityDelta != 0) {
-            return priorityDelta < 0;
+            return priorityDelta > 0;
         }
 
         // If equal, use the distance to the camera plane
         double cameraPlaneZoomDistDelta = drawData._cameraPlaneZoomDistance - _cameraPlaneZoomDistance;
         if (cameraPlaneZoomDistDelta != 0) {
-            return cameraPlaneZoomDistDelta > 0;
+            return cameraPlaneZoomDistDelta < 0;
         }
 
         // As a last resort, use the distance to the bottom of screen
-        return drawData._screenBottomDistance > _screenBottomDistance;
+        return drawData._screenBottomDistance < _screenBottomDistance;
     }
 
     float BillboardDrawData::getClickScale() const {
