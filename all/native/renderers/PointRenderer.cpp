@@ -99,7 +99,9 @@ namespace carto {
     }
     
     void PointRenderer::addElement(const std::shared_ptr<Point>& element) {
-        _tempElements.push_back(element);
+        if (element->getDrawData()) {
+            _tempElements.push_back(element);
+        }
     }
     
     void PointRenderer::refreshElements() {
@@ -111,7 +113,9 @@ namespace carto {
     void PointRenderer::updateElement(const std::shared_ptr<Point>& element) {
         std::lock_guard<std::mutex> lock(_mutex);
         if (std::find(_elements.begin(), _elements.end(), element) == _elements.end()) {
-            _elements.push_back(element);
+            if (element->getDrawData()) {
+                _elements.push_back(element);
+            }
         }
     }
     
@@ -150,7 +154,7 @@ namespace carto {
     
         // Calculate and draw buffers
         cglib::vec3<double> cameraPos = viewState.getCameraPos();
-        GLuint drawDataIndex = 0;
+        std::size_t drawDataIndex = 0;
         for (std::size_t i = 0; i < drawDataBuffer.size(); i++) {
             const std::shared_ptr<PointDrawData>& drawData = drawDataBuffer[i];
             
@@ -171,7 +175,7 @@ namespace carto {
             }
     
             // Calculate coordinates
-            int coordIndex = drawDataIndex * 4 * 3;
+            std::size_t coordIndex = drawDataIndex * 4 * 3;
             coordBuf[coordIndex + 0] = translate(0) - dx(0) + dy(0);
             coordBuf[coordIndex + 1] = translate(1) - dx(1) + dy(1);
             coordBuf[coordIndex + 2] = translate(2) - dx(2) + dy(2);
@@ -186,7 +190,7 @@ namespace carto {
             coordBuf[coordIndex + 11] = translate(2) + dx(2) - dy(2);
     
             // Calculate texture coordinates
-            int texCoordIndex = drawDataIndex * 4 * 2;
+            std::size_t texCoordIndex = drawDataIndex * 4 * 2;
             texCoordBuf[texCoordIndex + 0] = 0.0f;
             texCoordBuf[texCoordIndex + 1] = texCoordScale(1);
             texCoordBuf[texCoordIndex + 2] = 0.0f;
@@ -198,7 +202,7 @@ namespace carto {
     
             // Calculate colors
             const Color& color = drawData->getColor();
-            int colorIndex = drawDataIndex * 4 * 4;
+            std::size_t colorIndex = drawDataIndex * 4 * 4;
             for (int i = 0; i < 16; i += 4) {
                 colorBuf[colorIndex + i + 0] = color.getR();
                 colorBuf[colorIndex + i + 1] = color.getG();
@@ -207,9 +211,9 @@ namespace carto {
             }
     
             // Calculate indices
-            int indexIndex = drawDataIndex * 6;
-            int vertexIndex = drawDataIndex * 4;
-            indexBuf[indexIndex + 0] = vertexIndex;
+            std::size_t indexIndex = drawDataIndex * 6;
+            unsigned short vertexIndex = static_cast<unsigned short>(drawDataIndex * 4);
+            indexBuf[indexIndex + 0] = vertexIndex + 0;
             indexBuf[indexIndex + 1] = vertexIndex + 1;
             indexBuf[indexIndex + 2] = vertexIndex + 2;
             indexBuf[indexIndex + 3] = vertexIndex + 1;
@@ -251,7 +255,6 @@ namespace carto {
         if (cglib::intersect_triangle(topLeft, bottomLeft, topRight, ray, &t) ||
             cglib::intersect_triangle(bottomLeft, bottomRight, topRight, ray, &t))
         {
-            MapPos clickPos(ray(t)(0), ray(t)(1), ray(t)(2));
             results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, ray(t), pos, layer->isZBuffering()));
             return true;
         }

@@ -749,9 +749,7 @@ namespace carto {
         
         std::swap(overlayPoints, _overlayPoints);
         for (const std::shared_ptr<Point>& overlayPoint : _overlayPoints) {
-            if (overlayPoint->getDrawData()) {
-                _overlayRenderer->addElement(overlayPoint);
-            }
+            _overlayRenderer->addElement(overlayPoint);
         }
         _overlayRenderer->refreshElements();
     }

@@ -105,7 +105,9 @@ namespace carto {
     }
     
     void PolygonRenderer::addElement(const std::shared_ptr<Polygon>& element) {
-        _tempElements.push_back(element);
+        if (element->getDrawData()) {
+            _tempElements.push_back(element);
+        }
     }
     
     void PolygonRenderer::refreshElements() {
@@ -117,7 +119,9 @@ namespace carto {
     void PolygonRenderer::updateElement(const std::shared_ptr<Polygon>& element) {
         std::lock_guard<std::mutex> lock(_mutex);
         if (std::find(_elements.begin(), _elements.end(), element) == _elements.end()) {
-            _elements.push_back(element);
+            if (element->getDrawData()) {
+                _elements.push_back(element);
+            }
         }
     }
     
@@ -169,7 +173,7 @@ namespace carto {
         cglib::vec3<double> cameraPos = viewState.getCameraPos();
         std::size_t colorIndex = 0;
         std::size_t coordIndex = 0;
-        GLuint indexIndex = 0;
+        std::size_t indexIndex = 0;
         for (const std::shared_ptr<PolygonDrawData>& drawData : drawDataBuffer) {
             // Draw data vertex info may be split into multiple buffers, draw each one
             for (std::size_t i = 0; i < drawData->getCoords().size(); i++) {

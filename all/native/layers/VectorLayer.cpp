@@ -231,7 +231,7 @@ namespace carto {
 
         if (std::shared_ptr<VectorElement> element = intersectedElement.getElement<VectorElement>()) {
             if (auto customPopup = std::dynamic_pointer_cast<CustomPopup>(element)) {
-                if (auto drawData = customPopup->getDrawData()) {
+                if (std::shared_ptr<BillboardDrawData> drawData = customPopup->getDrawData()) {
                     std::vector<float> coordBuf(12);
                     if (BillboardRenderer::CalculateBillboardCoords(*drawData, viewState, coordBuf, 0)) {
                         cglib::vec3<double> topLeft = viewState.getCameraPos() + cglib::vec3<double>(coordBuf[0], coordBuf[1], coordBuf[2]);
