@@ -23,8 +23,8 @@ namespace carto {
 
         bool operator() (const RayIntersectedElement& element1, const RayIntersectedElement& element2) const {
             // If either element is billboard, use special billboard ordering rules
-            std::shared_ptr<Billboard> billboard1 = element1.getElement<Billboard>();
-            std::shared_ptr<Billboard> billboard2 = element2.getElement<Billboard>();
+            std::shared_ptr<Billboard> billboard1 = std::dynamic_pointer_cast<Billboard>(element1.getElement<VectorElement>());
+            std::shared_ptr<Billboard> billboard2 = std::dynamic_pointer_cast<Billboard>(element2.getElement<VectorElement>());
             if ((bool)billboard1 != (bool)billboard2) {
                 return (bool)billboard1 < (bool)billboard2;
             }
