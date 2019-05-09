@@ -463,8 +463,9 @@ namespace carto {
         for (int clusterIdx : _renderClusterIdxs) {
             const Cluster& cluster = (*renderState.clusters)[clusterIdx];
             for (int parentClusterIdx = cluster.parentClusterIdx; parentClusterIdx != -1; ) {
+                const Cluster& parentCluster = (*renderState.clusters)[parentClusterIdx];
                 renderState.visibleChildIdxMap[parentClusterIdx].push_back(clusterIdx);
-                parentClusterIdx = (*renderState.clusters)[parentClusterIdx].parentClusterIdx;
+                parentClusterIdx = parentCluster.parentClusterIdx;
             }
         }
 
@@ -476,7 +477,7 @@ namespace carto {
         for (int clusterIdx : _renderClusterIdxs) {
             Cluster& cluster = (*renderState.clusters)[clusterIdx];
             std::shared_ptr<VectorElement> element;
-            if ((cluster.elementCount == 1 && cluster.transitionPos == cluster.staticPos)) {
+            if (cluster.elementCount == 1 && cluster.transitionPos == cluster.staticPos) {
                 element = cluster.vectorElement;
             } else {
                 if (!cluster.clusterElement) {
@@ -569,12 +570,12 @@ namespace carto {
             for (int childClusterIdx : it->second) {
                 if (moveCluster(childClusterIdx, cluster.staticPos, renderState, deltaSeconds)) {
                     refresh = true;
-                    _renderClusterIdxs.push_back(childClusterIdx);
                 }
             }
-        }
-        if (refresh) {
-            return refresh;
+            if (refresh) {
+                _renderClusterIdxs.insert(_renderClusterIdxs.end(), it->second.begin(), it->second.end());
+                return refresh;
+            }
         }
 
         // Transition from expanded parent to actual expanded positions
