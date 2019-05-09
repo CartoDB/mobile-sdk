@@ -7,7 +7,7 @@
 #include <cmath>
 #include <cstdlib>
 
-#include <stdext/miniz.h>
+#include <stdext/zlib.h>
 
 #include <jpeglib.h>
 #include <png.h>
@@ -508,7 +508,7 @@ namespace carto {
             return loadNUTI(compressedData, dataSize);
         } else {
             std::vector<unsigned char> uncompressedData;
-            if (miniz::inflate_gzip(compressedData, dataSize, uncompressedData)) {
+            if (zlib::inflate_gzip(compressedData, dataSize, uncompressedData)) {
                 Log::Info("Bitmap::loadFromCompressedBytes: Image is gzipped, decompressing");
                 return loadFromCompressedBytes(uncompressedData.data(), uncompressedData.size());
             } else {

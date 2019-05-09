@@ -6,7 +6,7 @@
 
 #include <algorithm>
 
-#include <stdext/miniz.h>
+#include <stdext/zlib.h>
 
 namespace carto {
     
@@ -76,13 +76,13 @@ namespace carto {
             mergedData.reserve(data1->size() + data2->size());
 
             std::vector<unsigned char> uncompressedData1;
-            if (miniz::inflate_gzip(data1->data(), data1->size(), uncompressedData1)) {
+            if (zlib::inflate_gzip(data1->data(), data1->size(), uncompressedData1)) {
                 mergedData.insert(mergedData.end(), uncompressedData1.begin(), uncompressedData1.end());
             } else {
                 mergedData.insert(mergedData.end(), data1->begin(), data1->end());
             }
             std::vector<unsigned char> uncompressedData2;
-            if (miniz::inflate_gzip(data2->data(), data2->size(), uncompressedData2)) {
+            if (zlib::inflate_gzip(data2->data(), data2->size(), uncompressedData2)) {
                 mergedData.insert(mergedData.end(), uncompressedData2.begin(), uncompressedData2.end());
             } else {
                 mergedData.insert(mergedData.end(), data2->begin(), data2->end());

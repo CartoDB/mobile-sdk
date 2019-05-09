@@ -10,7 +10,7 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include <stdext/miniz.h>
+#include <stdext/zlib.h>
 
 #include <nml/Package.h>
 
@@ -48,7 +48,7 @@ namespace carto {
         int gzipDataSize = gzipStream.readInt();
         std::vector<unsigned char> gzipData = gzipStream.readBytes(gzipDataSize);
         std::vector<unsigned char> data;
-        if (!miniz::inflate_gzip(gzipData.data(), gzipData.size(), data)) {
+        if (!zlib::inflate_gzip(gzipData.data(), gzipData.size(), data)) {
             Log::Error("OnlineNMLModelLODTreeDataSource: Failed to decompress tile list data.");
             return std::vector<MapTile>();
         }
@@ -90,7 +90,7 @@ namespace carto {
         int gzipDataSize = gzipStream.readInt();
         std::vector<unsigned char> gzipData = gzipStream.readBytes(gzipDataSize);
         std::vector<unsigned char> data;
-        if (!miniz::inflate_gzip(gzipData.data(), gzipData.size(), data)) {
+        if (!zlib::inflate_gzip(gzipData.data(), gzipData.size(), data)) {
             Log::Error("OnlineNMLModelLODTreeDataSource: Failed to decompress LOD tree.");
             return std::shared_ptr<NMLModelLODTree>();
         }
@@ -174,7 +174,7 @@ namespace carto {
         int gzipDataSize = gzipStream.readInt();
         std::vector<unsigned char> gzipData = gzipStream.readBytes(gzipDataSize);
         std::vector<unsigned char> data;
-        if (!miniz::inflate_gzip(gzipData.data(), gzipData.size(), data)) {
+        if (!zlib::inflate_gzip(gzipData.data(), gzipData.size(), data)) {
             Log::Error("OnlineNMLModelLODTreeDataSource: Failed to decompress mesh data.");
             return std::shared_ptr<nml::Mesh>();
         }
@@ -201,7 +201,7 @@ namespace carto {
         int gzipDataSize = gzipStream.readInt();
         std::vector<unsigned char> gzipData = gzipStream.readBytes(gzipDataSize);
         std::vector<unsigned char> data;
-        if (!miniz::inflate_gzip(gzipData.data(), gzipData.size(), data)) {
+        if (!zlib::inflate_gzip(gzipData.data(), gzipData.size(), data)) {
             Log::Error("OnlineNMLModelLODTreeDataSource: Failed to decompress texture data.");
             return std::shared_ptr<nml::Texture>();
         }
