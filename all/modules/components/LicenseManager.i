@@ -19,6 +19,8 @@
 %ignore carto::LicenseManager::WatermarkType;
 %ignore carto::LicenseManager::registerLicense;
 %ignore carto::LicenseManager::getWatermarkType;
+%ignore carto::LicenseManager::getParameter;
+%ignore carto::LicenseManager::getPackageEncryptionKey;
 %ignore carto::LicenseManager::GetInstance;
 
 %include "components/LicenseManager.h"
