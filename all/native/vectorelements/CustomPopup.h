@@ -10,7 +10,6 @@
 #include "components/DirectorPtr.h"
 #include "core/MapPos.h"
 #include "core/ScreenPos.h"
-#include "ui/ClickType.h"
 #include "vectorelements/Popup.h"
 
 namespace carto {
@@ -52,17 +51,10 @@ namespace carto {
          */
         std::shared_ptr<CustomPopupHandler> getPopupHandler() const;
     
-        /**
-         * Handles the click event for this Popup.
-         * @param clickType The type of the click.
-         * @param clickPos The position of the click.
-         * @param elementClickPos The 2D position of the click on the popup.
-         * @return True if the click was handled. False otherwise.
-         */
         virtual bool processClick(ClickType::ClickType clickType, const MapPos& clickPos, const ScreenPos& elementClickPos);
         
         virtual std::shared_ptr<Bitmap> drawBitmap(const ScreenPos& anchorScreenPos,
-                                                    float screenWidth, float screenHeight, float dpToPX);
+                                                   float screenWidth, float screenHeight, float dpToPX);
 
     private:
         const DirectorPtr<CustomPopupHandler> _popupHandler;

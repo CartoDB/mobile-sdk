@@ -44,6 +44,7 @@
 %attribute(carto::BalloonPopupStyle, int, DescriptionFontSize, getDescriptionFontSize)
 %attributeval(carto::BalloonPopupStyle, carto::BalloonPopupMargins, DescriptionMargins, getDescriptionMargins)
 %attribute(carto::BalloonPopupStyle, bool, DescriptionWrap, isDescriptionWrap)
+%attributeval(carto::BalloonPopupStyle, carto::BalloonPopupMargins, ButtonMargins, getButtonMargins)
 %attributeval(carto::BalloonPopupStyle, carto::Color, StrokeColor, getStrokeColor)
 %attribute(carto::BalloonPopupStyle, int, StrokeWidth, getStrokeWidth)
 %attribute(carto::BalloonPopupStyle, int, TriangleWidth, getTriangleWidth)

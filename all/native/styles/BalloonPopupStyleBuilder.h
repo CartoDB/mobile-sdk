@@ -219,7 +219,7 @@ namespace carto {
         BalloonPopupMargins getDescriptionMargins() const;
         /**
          * Sets the margins for the description. The margins will determine how much
-         * empty space should surround the description. The default is BalloonPopupMargins(8, 4, 8, 0).
+         * empty space should surround the description. The default is BalloonPopupMargins(8, 0, 8, 6).
          * @param descMargins The new margins for the description in dp.
          */
         void setDescriptionMargins(const BalloonPopupMargins& descMargins);
@@ -236,6 +236,18 @@ namespace carto {
          */
         void setDescriptionWrap(bool descWrap);
         
+        /**
+         * Returns the margins for popup buttons.
+         * @return The margins for popup buttons.
+         */
+        BalloonPopupMargins getButtonMargins() const;
+        /**
+         * Sets the margins for popup buttons. The margins will determine how much
+         * empty space should surround the buttons. The default is BalloonPopupMargins(8, 4, 8, 4).
+         * @param buttonMargins The new popup margins for the buttons in dp.
+         */
+        void setButtonMargins(const BalloonPopupMargins& buttonMargins);
+
         /**
          * Returns the color of the stroke surrounding the popup.
          * @return The color of the stroke surrounding the popup.
@@ -308,6 +320,8 @@ namespace carto {
         int _descFontSize;
         BalloonPopupMargins _descMargins;
         bool _descWrap;
+
+        BalloonPopupMargins _buttonMargins;
         
         Color _strokeColor;
         int _strokeWidth;

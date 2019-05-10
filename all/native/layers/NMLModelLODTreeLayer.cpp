@@ -184,7 +184,7 @@ namespace carto {
         DirectorPtr<NMLModelLODTreeEventListener> nmlModelLODTreeEventListener = _nmlModelLODTreeEventListener;
 
         if (nmlModelLODTreeEventListener) {
-            if (std::shared_ptr<NMLModelLODTree::Proxy> element = intersectedElement.getElement<NMLModelLODTree::Proxy>()) {
+            if (auto element = intersectedElement.getElement<NMLModelLODTree::Proxy>()) {
                 MapPos hitPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getHitPos()));
                 MapPos elementPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getElementPos()));
                 auto clickInfo = std::make_shared<NMLModelLODTreeClickInfo>(clickType, hitPos, elementPos, element->metaData, intersectedElement.getLayer());

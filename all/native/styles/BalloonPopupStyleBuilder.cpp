@@ -23,6 +23,7 @@ namespace carto {
         _descFontSize(14),
         _descMargins(BalloonPopupMargins(8, 0, 8, 6)),
         _descWrap(true),
+        _buttonMargins(BalloonPopupMargins(8, 4, 8, 4)),
         _strokeColor(Color(0xFF000000)),
         _strokeWidth(1),
         _triangleWidth(20),
@@ -223,6 +224,16 @@ namespace carto {
         _descWrap = descWrap;
     }
 
+    BalloonPopupMargins BalloonPopupStyleBuilder::getButtonMargins() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _buttonMargins;
+    }
+
+    void BalloonPopupStyleBuilder::setButtonMargins(const BalloonPopupMargins& buttonMargins) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _buttonMargins = buttonMargins;
+    }
+
     Color BalloonPopupStyleBuilder::getStrokeColor() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _strokeColor;
@@ -294,6 +305,7 @@ namespace carto {
                                                    _descFontSize,
                                                    _descMargins,
                                                    _descWrap,
+                                                   _buttonMargins,
                                                    _strokeColor,
                                                    _strokeWidth,
                                                    _triangleWidth,

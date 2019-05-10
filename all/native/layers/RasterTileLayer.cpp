@@ -318,7 +318,7 @@ namespace carto {
         DirectorPtr<RasterTileEventListener> eventListener = _rasterTileEventListener;
 
         if (eventListener) {
-            if (std::shared_ptr<std::tuple<MapTile, Color, Color> > pixelInfo = intersectedElement.getElement<std::tuple<MapTile, Color, Color> >()) {
+            if (auto pixelInfo = intersectedElement.getElement<std::tuple<MapTile, Color, Color> >()) {
                 const MapTile& mapTile = std::get<0>(*pixelInfo);
                 const Color& nearestColor = std::get<1>(*pixelInfo);
                 const Color& interpolatedColor = std::get<2>(*pixelInfo);

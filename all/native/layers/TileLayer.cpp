@@ -369,7 +369,7 @@ namespace carto {
         DirectorPtr<UTFGridEventListener> utfGridEventListener = _utfGridEventListener;
 
         if (utfGridEventListener) {
-            if (std::shared_ptr<Variant> elementInfo = intersectedElement.getElement<Variant>()) {
+            if (auto elementInfo = intersectedElement.getElement<Variant>()) {
                 MapPos hitPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getHitPos()));
                 auto clickInfo = std::make_shared<UTFGridClickInfo>(clickType, hitPos, *elementInfo, intersectedElement.getLayer());
                 return utfGridEventListener->onUTFGridClicked(clickInfo);

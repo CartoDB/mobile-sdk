@@ -32,7 +32,7 @@ namespace carto {
         /**
          * Handler method that gets called when the popup is clicked
          * @param popupClickInfo The information about the popup click event.
-         * @return True if the click was handler. False otherwise.
+         * @return True if the click was handled. False otherwise.
          */
         virtual bool onPopupClicked(const std::shared_ptr<PopupClickInfo>& popupClickInfo) { return true; }
     };

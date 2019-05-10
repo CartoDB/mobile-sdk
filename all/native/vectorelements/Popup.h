@@ -8,6 +8,7 @@
 #define _CARTO_POPUP_H_
 
 #include "core/ScreenPos.h"
+#include "ui/ClickType.h"
 #include "vectorelements/Billboard.h"
 
 namespace carto {
@@ -41,18 +42,6 @@ namespace carto {
         Popup(const MapPos& pos, const std::shared_ptr<PopupStyle>& style);
         virtual ~Popup();
     
-        /**
-         * Draws a custom bitmap for this Popup that will be used for drawing the Popup on the map.
-         * The method is called each time the Popup gets reloaded internally.
-         * @param anchorScreenPos The screen position of the anchor point of this popup in pixels.
-         * @param screenWidth The current screen width in pixels.
-         * @param screenHeight The current screen height in pixels.
-         * @param dpToPX The value used for converting display independent pixels (dp) to pixels (px).
-         * @return The custom Popup bitmap.
-         */
-        virtual std::shared_ptr<Bitmap> drawBitmap(const ScreenPos& anchorScreenPos,
-                                                    float screenWidth, float screenHeight, float dpToPX) = 0;
-
         /**
          * Returns the horizontal anchor point of this popup.
          * @return The horizontal anchor point of this popup.
@@ -99,6 +88,27 @@ namespace carto {
          */
         void setStyle(const std::shared_ptr<PopupStyle>& style);
         
+        /**
+         * Handles the click events for this Popup.
+         * @param clickType The type of the click.
+         * @param clickPos The position of the click.
+         * @param elementClickPos The 2D position of the click on the popup.
+         * @return True if the click was handled. False otherwise.
+         */
+        virtual bool processClick(ClickType::ClickType clickType, const MapPos& clickPos, const ScreenPos& elementClickPos) = 0;
+        
+        /**
+         * Draws a custom bitmap for this Popup that will be used for drawing the Popup on the map.
+         * The method is called each time the Popup gets reloaded internally.
+         * @param anchorScreenPos The screen position of the anchor point of this popup in pixels.
+         * @param screenWidth The current screen width in pixels.
+         * @param screenHeight The current screen height in pixels.
+         * @param dpToPX The value used for converting display independent pixels (dp) to pixels (px).
+         * @return The custom Popup bitmap.
+         */
+        virtual std::shared_ptr<Bitmap> drawBitmap(const ScreenPos& anchorScreenPos,
+                                                   float screenWidth, float screenHeight, float dpToPX) = 0;
+
     private:
         float _anchorPointX;
         float _anchorPointY;

@@ -7,11 +7,16 @@
 #ifndef _CARTO_BALLOONPOPUP_H_
 #define _CARTO_BALLOONPOPUP_H_
 
+#include "core/ScreenBounds.h"
+#include "components/DirectorPtr.h"
 #include "vectorelements/Popup.h"
 
 #include <memory>
 
 namespace carto {
+    class BitmapCanvas;
+    class BalloonPopupButton;
+    class BalloonPopupEventListener;
     class BalloonPopupStyle;
 
     /**
@@ -51,9 +56,6 @@ namespace carto {
                      const std::string& title, const std::string& desc);
         virtual ~BalloonPopup();
         
-        virtual std::shared_ptr<Bitmap> drawBitmap(const ScreenPos& anchorScreenPos,
-                                                   float screenWidth, float screenHeight, float dpToPX);
-        
         /**
          * Returns the title of this balloon popup.
          * @return The title of this balloon popup.
@@ -88,15 +90,56 @@ namespace carto {
          * @param style The new style that defines what this balloon popup looks like.
          */
         void setStyle(const std::shared_ptr<BalloonPopupStyle>& style);
+
+        /**
+         * Removes all buttons from the balloon popup.
+         */
+        void clearButtons();
+        /**
+         * Adds a new button to the balloon popup.
+         * If the button is already added, the call is ignored.
+         * @param button The button object to add. 
+         */
+        void addButton(const std::shared_ptr<BalloonPopupButton>& button);
+        /**
+         * Removes a button from the balloon popup.
+         * If the button is not present, the call is ignored.
+         * @param button The button object to remove.
+         */
+        void removeButton(const std::shared_ptr<BalloonPopupButton>& button);
+
+        /**
+         * Returns the balloon popup event listener.
+         * @return The balloon popup event listener.
+         */
+        std::shared_ptr<BalloonPopupEventListener> getBalloonPopupEventListener() const;
+        /**
+         * Sets the balloon popup event listener.
+         * @param eventListener The balloon popup event listener.
+         */
+        void setBalloonPopupEventListener(const std::shared_ptr<BalloonPopupEventListener>& eventListener);
+        
+        virtual bool processClick(ClickType::ClickType clickType, const MapPos& clickPos, const ScreenPos& elementClickPos);
+
+        virtual std::shared_ptr<Bitmap> drawBitmap(const ScreenPos& anchorScreenPos,
+                                                   float screenWidth, float screenHeight, float dpToPX);
         
     private:
         static const int SCREEN_PADDING = 10;
         static const int MAX_CANVAS_SIZE = 8192;
-        
+
+        ScreenBounds measureButtonSize(const std::shared_ptr<BalloonPopupButton>& button, float dpToPX) const;
+        void drawButtonOnCanvas(const std::shared_ptr<BalloonPopupButton>& button, BitmapCanvas& canvas, const ScreenBounds& bounds, float dpToPX) const;
+
         std::shared_ptr<BalloonPopupStyle> _style;
         
         std::string _title;
         std::string _desc;
+
+        std::vector<std::shared_ptr<BalloonPopupButton> > _buttons;
+        std::map<std::shared_ptr<BalloonPopupButton>, ScreenBounds> _buttonBounds;
+
+        ThreadSafeDirectorPtr<BalloonPopupEventListener> _balloonPopupEventListener;
     };
 
 }

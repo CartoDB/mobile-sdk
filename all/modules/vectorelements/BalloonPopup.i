@@ -3,7 +3,7 @@
 
 %module BalloonPopup
 
-!proxy_imports(carto::BalloonPopup, core.MapPos, core.ScreenPos, graphics.Bitmap, geometry.Geometry, styles.BalloonPopupStyle, vectorelements.Popup)
+!proxy_imports(carto::BalloonPopup, core.MapPos, core.ScreenPos, graphics.Bitmap, geometry.Geometry, styles.BalloonPopupStyle, ui.ClickType, vectorelements.BalloonPopupEventListener, vectorelements.Popup)
 
 %{
 #include "vectorelements/BalloonPopup.h"
@@ -17,6 +17,7 @@
 %import "core/ScreenPos.i"
 %import "graphics/Bitmap.i"
 %import "styles/BalloonPopupStyle.i"
+%import "vectorelements/BalloonPopupEventListener.i"
 %import "vectorelements/Popup.i"
 
 !polymorphic_shared_ptr(carto::BalloonPopup, vectorelements.BalloonPopup)
@@ -25,8 +26,11 @@
 %attributestring(carto::BalloonPopup, std::string, Description, getDescription, setDescription)
 %csmethodmodifiers carto::BalloonPopup::Style "public new";
 !attributestring_polymorphic(carto::BalloonPopup, styles.BalloonPopupStyle, Style, getStyle, setStyle)
+!attributestring_polymorphic(carto::BalloonPopup, vectorelements.BalloonPopupEventListener, BalloonPopupEventListener, getBalloonPopupEventListener, setBalloonPopupEventListener)
 %std_exceptions(carto::BalloonPopup::BalloonPopup)
 %std_exceptions(carto::BalloonPopup::setStyle)
+%std_exceptions(carto::BalloonPopup::addButton)
+%std_exceptions(carto::BalloonPopup::removeButton)
 
 %include "vectorelements/BalloonPopup.h"
 

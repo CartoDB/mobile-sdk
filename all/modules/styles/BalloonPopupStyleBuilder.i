@@ -39,6 +39,7 @@
 %attribute(carto::BalloonPopupStyleBuilder, int, DescriptionFontSize, getDescriptionFontSize, setDescriptionFontSize)
 %attributeval(carto::BalloonPopupStyleBuilder, carto::BalloonPopupMargins, DescriptionMargins, getDescriptionMargins, setDescriptionMargins)
 %attribute(carto::BalloonPopupStyleBuilder, bool, DescriptionWrap, isDescriptionWrap, setDescriptionWrap)
+%attributeval(carto::BalloonPopupStyleBuilder, carto::BalloonPopupMargins, ButtonMargins, getButtonMargins, setButtonMargins)
 %attributeval(carto::BalloonPopupStyleBuilder, carto::Color, StrokeColor, getStrokeColor, setStrokeColor)
 %attribute(carto::BalloonPopupStyleBuilder, int, StrokeWidth, getStrokeWidth, setStrokeWidth)
 %attribute(carto::BalloonPopupStyleBuilder, int, TriangleWidth, getTriangleWidth, setTriangleWidth)

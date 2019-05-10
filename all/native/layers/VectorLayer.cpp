@@ -34,7 +34,6 @@
 #include "vectorelements/Polygon3D.h"
 #include "vectorelements/Polygon.h"
 #include "vectorelements/Popup.h"
-#include "vectorelements/CustomPopup.h"
 #include "ui/VectorElementClickInfo.h"
 #include "utils/Log.h"
 
@@ -229,9 +228,9 @@ namespace carto {
     bool VectorLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
         std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
 
-        if (std::shared_ptr<VectorElement> element = intersectedElement.getElement<VectorElement>()) {
-            if (auto customPopup = std::dynamic_pointer_cast<CustomPopup>(element)) {
-                if (std::shared_ptr<BillboardDrawData> drawData = customPopup->getDrawData()) {
+        if (auto element = intersectedElement.getElement<VectorElement>()) {
+            if (auto popup = std::dynamic_pointer_cast<Popup>(element)) {
+                if (std::shared_ptr<BillboardDrawData> drawData = popup->getDrawData()) {
                     std::vector<float> coordBuf(12);
                     if (BillboardRenderer::CalculateBillboardCoords(*drawData, viewState, coordBuf, 0)) {
                         cglib::vec3<double> topLeft = viewState.getCameraPos() + cglib::vec3<double>(coordBuf[0], coordBuf[1], coordBuf[2]);
@@ -243,7 +242,9 @@ namespace carto {
                         float y = static_cast<float>(cglib::dot_product(delta, bottomLeft - topLeft) / cglib::norm(bottomLeft - topLeft));
 
                         MapPos hitPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getHitPos()));
-                        return customPopup->processClick(clickType, hitPos, ScreenPos(x, y));
+                        if (popup->processClick(clickType, hitPos, ScreenPos(x, y))) {
+                            return true;
+                        }
                     }
                 }
             }

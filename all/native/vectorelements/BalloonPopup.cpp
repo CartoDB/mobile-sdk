@@ -7,6 +7,10 @@
 #include "graphics/Bitmap.h"
 #include "graphics/BitmapCanvas.h"
 #include "styles/BalloonPopupStyle.h"
+#include "styles/BalloonPopupButtonStyle.h"
+#include "ui/BalloonPopupButtonClickInfo.h"
+#include "vectorelements/BalloonPopupButton.h"
+#include "vectorelements/BalloonPopupEventListener.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 
@@ -20,7 +24,10 @@ namespace carto {
         Popup(baseBillboard, style),
         _style(style),
         _title(title),
-        _desc(desc)
+        _desc(desc),
+        _buttons(),
+        _buttonBounds(),
+        _balloonPopupEventListener()
     {
     }
 
@@ -29,7 +36,10 @@ namespace carto {
         Popup(geometry, style),
         _style(style),
         _title(title),
-        _desc(desc)
+        _desc(desc),
+        _buttons(),
+        _buttonBounds(),
+        _balloonPopupEventListener()
     {
     }
         
@@ -38,18 +48,142 @@ namespace carto {
         Popup(pos, style),
         _style(style),
         _title(title),
-        _desc(desc)
+        _desc(desc),
+        _buttons(),
+        _buttonBounds(),
+        _balloonPopupEventListener()
     {
     }
 
     BalloonPopup::~BalloonPopup() {
     }
         
+    std::string BalloonPopup::getTitle() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _title;
+    }
+        
+    void BalloonPopup::setTitle(const std::string& title) {
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _title = title;
+        }
+        notifyElementChanged();
+    }
+        
+    std::string BalloonPopup::getDescription() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _desc;
+    }
+
+    void BalloonPopup::setDescription(const std::string& desc) {
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _desc = desc;
+        }
+        notifyElementChanged();
+    }
+        
+    std::shared_ptr<BalloonPopupStyle> BalloonPopup::getStyle() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _style;
+    }
+
+    void BalloonPopup::setStyle(const std::shared_ptr<BalloonPopupStyle>& style) {
+        if (!style) {
+            throw NullArgumentException("Null style");
+        }
+
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _style = style;
+        }
+        Popup::setStyle(style);
+    }
+
+    void BalloonPopup::clearButtons() {
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            _buttons.clear();
+            _buttonBounds.clear();
+        }
+        notifyElementChanged();
+    }
+
+    void BalloonPopup::addButton(const std::shared_ptr<BalloonPopupButton>& button) {
+        if (!button) {
+            throw NullArgumentException("Null button");
+        }
+
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            if (std::find(_buttons.begin(), _buttons.end(), button) == _buttons.end()) {
+                _buttons.push_back(button);
+            }
+            // Note: _buttonBounds will be updated when the button is drawn
+        }
+        notifyElementChanged();
+    }
+
+    void BalloonPopup::removeButton(const std::shared_ptr<BalloonPopupButton>& button) {
+        if (!button) {
+            throw NullArgumentException("Null button");
+        }
+
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            auto it = std::find(_buttons.begin(), _buttons.end(), button);
+            if (it != _buttons.end()) {
+                _buttons.erase(it);
+            }
+            _buttonBounds.erase(button);
+        }
+        notifyElementChanged();
+    }
+
+    std::shared_ptr<BalloonPopupEventListener> BalloonPopup::getBalloonPopupEventListener() const {
+        return _balloonPopupEventListener.get();
+    }
+
+    void BalloonPopup::setBalloonPopupEventListener(const std::shared_ptr<BalloonPopupEventListener>& eventListener) {
+        _balloonPopupEventListener.set(eventListener);
+    }
+        
+    bool BalloonPopup::processClick(ClickType::ClickType clickType, const MapPos& clickPos, const ScreenPos& elementClickPos) {
+        DirectorPtr<BalloonPopupEventListener> eventListener = _balloonPopupEventListener;
+
+        if (eventListener) {
+            std::vector<std::shared_ptr<BalloonPopupButton> > buttons;
+            std::map<std::shared_ptr<BalloonPopupButton>, ScreenBounds> buttonBounds;
+            {
+                std::lock_guard<std::recursive_mutex> lock(_mutex);
+                buttons = _buttons;
+                buttonBounds = _buttonBounds;
+            }
+
+            // Process the buttons in reverse rendering order
+            for (auto it1 = buttons.rbegin(); it1 != buttons.rend(); it1++) {
+                const std::shared_ptr<BalloonPopupButton>& button = *it1;
+
+                auto it2 = buttonBounds.find(button);
+                if (it2 != buttonBounds.end()) {
+                    if (it2->second.contains(elementClickPos)) {
+                        auto clickInfo = std::make_shared<BalloonPopupButtonClickInfo>(clickType, button, std::static_pointer_cast<BalloonPopup>(shared_from_this()));
+                        if (eventListener->onButtonClicked(clickInfo)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     std::shared_ptr<Bitmap> BalloonPopup::drawBitmap(const ScreenPos& anchorScreenPos,
                                                      float screenWidth, float screenHeight, float dpToPX) {
         try {
             std::unique_lock<std::recursive_mutex> lock(_mutex);
-        
+
             float pxToDP = 1 / dpToPX;
             if (_style->isScaleWithDPI()) {
                 dpToPX = 1;
@@ -67,6 +201,8 @@ namespace carto {
                                              _style->getTitleMargins().getRight() * dpToPX, _style->getTitleMargins().getBottom() * dpToPX);
             BalloonPopupMargins descMargins(_style->getDescriptionMargins().getLeft() * dpToPX, _style->getDescriptionMargins().getTop() * dpToPX,
                                             _style->getDescriptionMargins().getRight() * dpToPX, _style->getDescriptionMargins().getBottom() * dpToPX);
+            BalloonPopupMargins buttonMargins(_style->getButtonMargins().getLeft() * dpToPX, _style->getButtonMargins().getTop() * dpToPX,
+                                              _style->getButtonMargins().getRight() * dpToPX, _style->getButtonMargins().getBottom() * dpToPX);
         
             const std::shared_ptr<Bitmap>& leftImage = _style->getLeftImage();
             int leftImageWidth = 0, leftImageHeight = 0;
@@ -82,7 +218,7 @@ namespace carto {
             int rightImageWidth = 0, rightImageHeight = 0;
             if (rightImage) {
                 rightImageWidth = rightImage->getWidth();
-                 rightImageHeight = rightImage->getHeight();
+                rightImageHeight = rightImage->getHeight();
             }
             BalloonPopupMargins rightMargins(_style->getRightMargins().getLeft() * dpToPX, _style->getRightMargins().getTop() * dpToPX,
                                              _style->getRightMargins().getRight() * dpToPX, _style->getRightMargins().getBottom() * dpToPX);
@@ -93,6 +229,9 @@ namespace carto {
             int strokeWidth = _style->getStrokeWidth() * dpToPX;
         
             int screenPadding = SCREEN_PADDING * dpToPX;
+
+            // Clear button bounds
+            _buttonBounds.clear();
         
             // Use actual texts or text fields
             std::string title = _title;
@@ -162,17 +301,35 @@ namespace carto {
                 measureCanvas.setFont(_style->getDescriptionFontName(), descFontSize);
                 descSize = measureCanvas.measureTextSize(desc, maxDescWidth, _style->isDescriptionWrap());
             }
+
+            // Measure button sizes, generate button positions
+            std::map<std::shared_ptr<BalloonPopupButton>, ScreenBounds> buttonBounds;
+
+            int buttonMarginWidth = 0;
+            int buttonMarginHeight = 0;
+            ScreenBounds buttonsSize(ScreenPos(0, 0), ScreenPos(0, 0));
+            if (!_buttons.empty()) {
+                buttonMarginWidth = buttonMargins.getLeft() + buttonMargins.getRight();
+                buttonMarginHeight = buttonMargins.getTop() + buttonMargins.getBottom();
+                for (const std::shared_ptr<BalloonPopupButton>& button : _buttons) {
+                    ScreenBounds buttonSize = measureButtonSize(button, dpToPX);
+                    buttonSize.setMin(ScreenPos(buttonSize.getMin().getX(), buttonSize.getMin().getY() + buttonsSize.getMax().getY()));
+                    buttonSize.setMax(ScreenPos(buttonSize.getMax().getX(), buttonSize.getMax().getY() + buttonsSize.getMax().getY()));
+                    buttonBounds[button] = buttonSize;
+                    buttonsSize.expandToContain(buttonSize);
+                }
+            }
         
             // Calculate triangle height with stroke
             float halfTriangleWidth = triangleWidth * 0.5f;
-            double halfTriangleAngle = std::atan2(triangleWidth, (triangleHeight * 2));
+            float halfTriangleAngle = std::atan2(triangleWidth, (triangleHeight * 2));
             int triangleStrokeOffset = static_cast<int>(triangleHeight + 2 * std::cos(halfTriangleAngle) * strokeWidth * 0.5f / std::cos(Const::PI / 2 - 2 * halfTriangleAngle) + 0.5f);
         
             // Calculate bitmap size and create canvas
-            int popupWidth = std::max(titleSize.getWidth() + titleMarginWidth, descSize.getWidth() + descMarginWidth);
-            popupWidth += leftMarginWidth + rightMarginWidth + strokeWidth;
+            int popupInnerWidth = static_cast<int>(std::max(buttonsSize.getWidth() + buttonMarginWidth, std::max(titleSize.getWidth() + titleMarginWidth, descSize.getWidth() + descMarginWidth)));
+            int popupWidth = popupInnerWidth + static_cast<int>(leftMarginWidth + rightMarginWidth + strokeWidth);
             float halfPopupWidth = popupWidth * 0.5f;
-            int popupInnerHeight = static_cast<int>(std::max((float) (titleSize.getHeight() + titleMarginHeight + descSize.getHeight() + descMarginHeight), (float) std::max(leftMarginHeight, rightMarginHeight)));
+            int popupInnerHeight = static_cast<int>(std::max((float) (titleSize.getHeight() + titleMarginHeight + descSize.getHeight() + descMarginHeight + buttonsSize.getHeight() + buttonMarginHeight), (float) std::max(leftMarginHeight, rightMarginHeight)));
             int popupHeight = popupInnerHeight + static_cast<int>(std::max((float) triangleStrokeOffset, halfStrokeWidth) + halfStrokeWidth);
 
             int canvasWidth = popupWidth;
@@ -277,6 +434,17 @@ namespace carto {
                 canvas.drawText(desc, descPos, descSize.getWidth(), _style->isDescriptionWrap());
             }
 
+            // Draw buttons, finalize button positions
+            float buttonsOriginX = halfStrokeWidth + leftMarginWidth + popupInnerWidth * 0.5f;
+            float buttonsOriginY = halfStrokeWidth + titleSize.getHeight() + titleMarginHeight + descSize.getHeight() + descMarginHeight + buttonMargins.getTop();
+            for (const std::shared_ptr<BalloonPopupButton>& button : _buttons) {
+                const ScreenBounds& buttonSize = buttonBounds[button];
+                ScreenBounds buttonRect(ScreenPos(buttonsOriginX + buttonSize.getMin().getX() - buttonSize.getWidth() * 0.5f, buttonsOriginY + buttonSize.getMin().getY()),
+                                        ScreenPos(buttonsOriginX + buttonSize.getMax().getX() - buttonSize.getWidth() * 0.5f, buttonsOriginY + buttonSize.getMax().getY()));
+                drawButtonOnCanvas(button, canvas, buttonRect, dpToPX);
+            }
+            std::swap(buttonBounds, _buttonBounds);
+
             // Done with internal state, update anchor point and build bitmap
             lock.unlock();
             setAnchorPoint(triangleOffsetX / halfPopupWidth, -1);
@@ -288,48 +456,49 @@ namespace carto {
             return std::shared_ptr<Bitmap>();
         }
     }
+
+    ScreenBounds BalloonPopup::measureButtonSize(const std::shared_ptr<BalloonPopupButton>& button, float dpToPX) const {
+        const std::shared_ptr<BalloonPopupButtonStyle>& buttonStyle = button->getStyle();
+
+        int strokeWidth = buttonStyle->getStrokeWidth() * dpToPX;
+        int textFontSize = buttonStyle->getTextFontSize() * dpToPX;
+        BalloonPopupMargins textMargins(buttonStyle->getTextMargins().getLeft() * dpToPX, buttonStyle->getTextMargins().getTop() * dpToPX,
+                                        buttonStyle->getTextMargins().getRight() * dpToPX, buttonStyle->getTextMargins().getBottom() * dpToPX);
+
+        BitmapCanvas measureCanvas(0, 0);
+        measureCanvas.setFont(buttonStyle->getTextFontName(), textFontSize);
+        ScreenBounds textSize = measureCanvas.measureTextSize(button->getText(), -1, false);
+
+        float buttonWidth = strokeWidth + textMargins.getLeft() + textMargins.getRight() + textSize.getWidth();
+        float buttonHeight = strokeWidth + textMargins.getTop() + textMargins.getBottom() + textSize.getHeight();
+        return ScreenBounds(ScreenPos(0, 0), ScreenPos(buttonWidth, buttonHeight));
+    }
+
+    void BalloonPopup::drawButtonOnCanvas(const std::shared_ptr<BalloonPopupButton>& button, BitmapCanvas& canvas, const ScreenBounds& bounds, float dpToPX) const {
+        const std::shared_ptr<BalloonPopupButtonStyle>& buttonStyle = button->getStyle();
+
+        int strokeWidth = buttonStyle->getStrokeWidth() * dpToPX;
+        int textFontSize = buttonStyle->getTextFontSize() * dpToPX;
+        BalloonPopupMargins textMargins(buttonStyle->getTextMargins().getLeft() * dpToPX, buttonStyle->getTextMargins().getTop() * dpToPX,
+                                        buttonStyle->getTextMargins().getRight() * dpToPX, buttonStyle->getTextMargins().getBottom() * dpToPX);
+
+        // Stroke background and triangle
+        canvas.setDrawMode(BitmapCanvas::STROKE);
+        canvas.setColor(buttonStyle->getStrokeColor());
+        canvas.setStrokeWidth(strokeWidth);
+        canvas.drawRoundRect(bounds, buttonStyle->getCornerRadius());
+    
+        // Fill background/2 and triangle
+        canvas.setDrawMode(BitmapCanvas::FILL);
+        canvas.setColor(buttonStyle->getBackgroundColor());
+        canvas.drawRoundRect(bounds, buttonStyle->getCornerRadius());
+
+        // Draw text
+        ScreenPos textPos(bounds.getMin().getX() + strokeWidth * 0.5f + textMargins.getLeft(),
+                          bounds.getMin().getY() + strokeWidth * 0.5f + textMargins.getTop());
+        canvas.setColor(buttonStyle->getTextColor());
+        canvas.setFont(buttonStyle->getTextFontName(), textFontSize);
+        canvas.drawText(button->getText(), textPos, bounds.getWidth(), false);
+    }
        
-    std::string BalloonPopup::getTitle() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _title;
-    }
-        
-    void BalloonPopup::setTitle(const std::string& title) {
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _title = title;
-        }
-        notifyElementChanged();
-    }
-        
-    std::string BalloonPopup::getDescription() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _desc;
-    }
-
-    void BalloonPopup::setDescription(const std::string& desc) {
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _desc = desc;
-        }
-        notifyElementChanged();
-    }
-        
-    std::shared_ptr<BalloonPopupStyle> BalloonPopup::getStyle() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _style;
-    }
-
-    void BalloonPopup::setStyle(const std::shared_ptr<BalloonPopupStyle>& style) {
-        if (!style) {
-            throw NullArgumentException("Null style");
-        }
-
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _style = style;
-        }
-        Popup::setStyle(style);
-    }
-
 }

@@ -19,13 +19,12 @@ namespace carto {
      */
     class BalloonPopupMargins {
     public:
-        BalloonPopupMargins(int left, int top, int right, int bottom);
-        virtual ~BalloonPopupMargins();
+        BalloonPopupMargins(int left, int top, int right, int bottom) : _left(left), _top(top), _right(right), _bottom(bottom) { }
         
-        int getLeft() const;
-        int getTop() const;
-        int getRight() const;
-        int getBottom() const;
+        int getLeft() const { return _left; }
+        int getTop() const { return _top; }
+        int getRight() const { return _right; }
+        int getBottom() const { return _bottom; }
         
     private:
         int _left;
@@ -71,6 +70,7 @@ namespace carto {
          * @param descFontSize The size of the description font.
          * @param descMargins The margins of the description.
          * @param descWrap True if long descriptions are wrapped, false if it is truncated.
+         * @param buttonMargins The margins for popup buttons.
          * @param strokeColor The color of the stroke surrounding the popup.
          * @param strokeWidth The width of the stroke surrounding the popup in dp.
          * @param triangleWidth The width of the triangle at the bottom of the popup in dp.
@@ -105,6 +105,7 @@ namespace carto {
                           int descFontSize,
                           const BalloonPopupMargins& descMargins,
                           bool descWrap,
+                          const BalloonPopupMargins& buttonMargins,
                           const Color& strokeColor,
                           int strokeWidth,
                           int triangleWidth,
@@ -217,6 +218,12 @@ namespace carto {
         bool isDescriptionWrap() const;
         
         /**
+         * Returns the margins for the buttons of the popup.
+         * @return The margins for the buttons of the popup.
+         */
+        const BalloonPopupMargins& getButtonMargins() const;
+
+        /**
          * Returns the color of the stroke surrounding the popup.
          * @return The color of the stroke surrounding the popup.
          */
@@ -263,6 +270,8 @@ namespace carto {
         int _descFontSize;
         BalloonPopupMargins _descMargins;
         bool _descWrap;
+
+        BalloonPopupMargins _buttonMargins;
         
         Color _strokeColor;
         int _strokeWidth;

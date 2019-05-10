@@ -386,7 +386,7 @@ namespace carto {
         DirectorPtr<VectorTileEventListener> eventListener = _vectorTileEventListener;
 
         if (eventListener) {
-            if (std::shared_ptr<VectorTileFeature> tileFeature = intersectedElement.getElement<VectorTileFeature>()) {
+            if (auto tileFeature = intersectedElement.getElement<VectorTileFeature>()) {
                 MapPos hitPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getHitPos()));
                 auto clickInfo = std::make_shared<VectorTileClickInfo>(clickType, hitPos, hitPos, tileFeature, intersectedElement.getLayer());
                 return eventListener->onVectorTileClicked(clickInfo);

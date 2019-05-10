@@ -3,33 +3,6 @@
 
 namespace carto {
     
-    BalloonPopupMargins::BalloonPopupMargins(int left, int top, int right, int bottom) :
-        _left(left),
-        _top(top),
-        _right(right),
-        _bottom(bottom)
-    {
-    }
-
-    BalloonPopupMargins::~BalloonPopupMargins() {
-    }
-
-    int BalloonPopupMargins::getLeft() const {
-        return _left;
-    }
-
-    int BalloonPopupMargins::getTop() const {
-        return _top;
-    }
-
-    int BalloonPopupMargins::getRight() const {
-        return _right;
-    }
-
-    int BalloonPopupMargins::getBottom() const {
-        return _bottom;
-    }
-        
     BalloonPopupStyle::BalloonPopupStyle(const Color& color,
                                          float attachAnchorPointX,
                                          float attachAnchorPointY,
@@ -59,6 +32,7 @@ namespace carto {
                                          int descFontSize,
                                          const BalloonPopupMargins& descMargins,
                                          bool descWrap,
+                                         const BalloonPopupMargins& buttonMargins,
                                          const Color& strokeColor,
                                          int strokeWidth,
                                          int triangleWidth,
@@ -93,6 +67,7 @@ namespace carto {
         _descFontSize(descFontSize),
         _descMargins(descMargins),
         _descWrap(descWrap),
+        _buttonMargins(buttonMargins),
         _strokeColor(strokeColor),
         _strokeWidth(strokeWidth),
         _triangleWidth(triangleWidth),
@@ -183,6 +158,10 @@ namespace carto {
         return _descWrap;
     }
 
+    const BalloonPopupMargins& BalloonPopupStyle::getButtonMargins() const {
+        return _buttonMargins;
+    }
+        
     const Color& BalloonPopupStyle::getStrokeColor() const {
         return _strokeColor;
     }

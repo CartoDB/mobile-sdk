@@ -3,7 +3,7 @@
 
 %module Popup
 
-!proxy_imports(carto::Popup, core.MapPos, core.ScreenPos, graphics.Bitmap, geometry.Geometry, geometry.PointGeometry, styles.PopupStyle, vectorelements.Billboard)
+!proxy_imports(carto::Popup, core.MapPos, core.ScreenPos, graphics.Bitmap, geometry.Geometry, geometry.PointGeometry, styles.PopupStyle, ui.ClickType, vectorelements.Billboard)
 
 %{
 #include "vectorelements/Popup.h"
@@ -18,6 +18,7 @@
 %import "core/ScreenPos.i"
 %import "graphics/Bitmap.i"
 %import "styles/PopupStyle.i"
+%import "ui/ClickType.i"
 %import "vectorelements/Billboard.i"
 
 !polymorphic_shared_ptr(carto::Popup, vectorelements.Popup)
