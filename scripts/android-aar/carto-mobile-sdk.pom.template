@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.carto</groupId>
+  <artifactId>carto-mobile-sdk</artifactId>
+  <version>$version</version>
+  <packaging>aar</packaging>
+  <name>CARTO Maps SDK</name>
+  <description>CARTO Maps SDK build for Android</description>
+  <url>https://github.com/CartoDB/mobile-sdk</url>
+  <licenses>
+    <license>
+      <name>BSD 3-Clause</name>
+      <url>http://opensource.org/licenses/BSD-3-Clause</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>CARTO</id>
+      <name>CARTO Mobile</name>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:git://github.com/CartoDB/mobile-sdk.git</connection>
+    <developerConnection>scm:git:git@github.com:CartoDB/mobile-sdk.git</developerConnection>
+    <url>http://github.com/CartoDB/mobile-sdk</url>
+  </scm>
+</project>
