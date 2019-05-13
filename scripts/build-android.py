@@ -134,6 +134,12 @@ def buildAndroidAAR(args):
   distDir = getDistDir('android')
   version = args.buildversion
 
+  with open('%s/scripts/build-aar/carto-mobile-sdk.pom.template' % baseDir, 'r') as f:
+    pomFile = string.Template(f.read()).safe_substitute({ 'baseDir': baseDir, 'buildDir': buildDir, 'distDir': distDir, 'version': version })
+  pomFileName = '%s/carto-mobile-sdk.pom' % buildDir
+  with open(pomFileName, 'w') as f:
+    f.write(pomFile)
+
   if not gradle(args, '%s/scripts' % baseDir,
     '-p', 'android-aar',
     '--project-cache-dir', buildDir,
@@ -141,13 +147,14 @@ def buildAndroidAAR(args):
     'assembleRelease'
   ):
     return False
-  aarFile = '%s/outputs/aar/android-aar.aar' % buildDir
-  if not os.path.exists(aarFile):
-    aarFile = '%s/outputs/aar/android-aar-%s.aar' % (buildDir, args.configuration.lower())
+  aarFileName = '%s/outputs/aar/android-aar.aar' % buildDir
+  if not os.path.exists(aarFileName):
+    aarFileName = '%s/outputs/aar/android-aar-%s.aar' % (buildDir, args.configuration.lower())
   if makedirs(distDir) and \
-     copyfile(aarFile, '%s/carto-mobile-sdk-%s.aar' % (distDir, version)):
+     copyfile(pomFileName, '%s/carto-mobile-sdk-%s.pom' % (distDir, version)) and \
+     copyfile(aarFileName, '%s/carto-mobile-sdk-%s.aar' % (distDir, version)):
     zip(args, '%s/scripts/android-aar/src/main' % baseDir, '%s/carto-mobile-sdk-%s.aar' % (distDir, version), 'R.txt')
-    print("Output available in:\n%s" % distDir)
+    print("Output available in:\n%s\n\nTo publish, upload .pom and .aar to bintray\n" % distDir)
     return True
   return False
 

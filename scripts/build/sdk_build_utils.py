@@ -106,8 +106,6 @@ def getProfile(profileIds):
 
 def getProfiles():
   profilesFilename = '%s/sdk_profiles.json' % os.path.dirname(os.path.realpath(__file__))
-  if os.path.exists('%s/../../extensions' % os.path.dirname(os.path.realpath(__file__))):
-    profilesFilename = '%s/../../extensions/scripts/build/sdk_profiles.json' % os.path.dirname(os.path.realpath(__file__))
   with open(profilesFilename, 'r') as f:
     profiles = json.loads(f.read())
     return { str(key): val for key, val in profiles.items() if key != 'free' }
