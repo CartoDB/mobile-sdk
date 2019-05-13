@@ -22,6 +22,7 @@ namespace carto {
          * Constructs a BalloonPopupButtonStyle object from various parameters. Instantiating the object directly is
          * not recommended, BalloonPopupButtonStyleBuilder should be used instead.
          * @param color The color for the button.
+         * @param buttonWidth The width of the button in dp.
          * @param cornerRadius The corner radius of the button in dp.
          * @param textColor The color of the text.
          * @param textFontName The name of the text font.
@@ -31,6 +32,7 @@ namespace carto {
          * @param strokeWidth The width of the stroke surrounding the button in dp.
          */
         BalloonPopupButtonStyle(const Color& color,
+                                int buttonWidth,
                                 int cornerRadius,
                                 const Color& textColor,
                                 const std::string& textFontName,
@@ -45,6 +47,12 @@ namespace carto {
          * @return The background color of the button.
          */
         const Color& getBackgroundColor() const;
+        /**
+         * Returns the width of the button.
+         * If this value is -1, then button width is calculated automatically based on button text.
+         * @return The width of the button in dp.
+         */
+        int getButtonWidth() const;
         /**
          * Returns the corner radius of the button.
          * @return The corner radius of the button.
@@ -85,6 +93,7 @@ namespace carto {
         
     protected:
         Color _backgroundColor;
+        int _buttonWidth;
         int _cornerRadius;
         
         Color _textColor;

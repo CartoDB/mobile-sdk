@@ -1,13 +1,15 @@
 #include "BalloonPopupButtonClickInfo.h"
+#include "vectorelements/BalloonPopupButton.h"
+#include "vectorelements/VectorElement.h"
 
 namespace carto {
 
     BalloonPopupButtonClickInfo::BalloonPopupButtonClickInfo(ClickType::ClickType clickType,
                                                    const std::shared_ptr<BalloonPopupButton>& button,
-                                                   const std::shared_ptr<BalloonPopup>& balloonPopup) :
+                                                   const std::shared_ptr<VectorElement>& vectorElement) :
         _clickType(clickType),
         _button(button),
-        _balloonPopup(balloonPopup)
+        _vectorElement(vectorElement)
     {
     }
     
@@ -22,8 +24,8 @@ namespace carto {
         return _button;
     }
     
-    std::shared_ptr<BalloonPopup> BalloonPopupButtonClickInfo::getBalloonPopup() const {
-        return _balloonPopup;
+    std::shared_ptr<VectorElement> BalloonPopupButtonClickInfo::getVectorElement() const {
+        return _vectorElement;
     }
     
 }

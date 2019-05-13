@@ -3,6 +3,7 @@
 namespace carto {
     
     BalloonPopupButtonStyle::BalloonPopupButtonStyle(const Color& color,
+                                                     int buttonWidth,
                                                      int cornerRadius,
                                                      const Color& textColor,
                                                      const std::string& textFontName,
@@ -12,6 +13,7 @@ namespace carto {
                                                      int strokeWidth) :
         Style(Color(0xFFFFFFFF)),
         _backgroundColor(color),
+        _buttonWidth(buttonWidth),
         _cornerRadius(cornerRadius),
         _textColor(textColor),
         _textFontName(textFontName),
@@ -27,6 +29,10 @@ namespace carto {
         
     const Color& BalloonPopupButtonStyle::getBackgroundColor() const {
         return _backgroundColor;
+    }
+        
+    int BalloonPopupButtonStyle::getButtonWidth() const {
+        return _buttonWidth;
     }
         
     int BalloonPopupButtonStyle::getCornerRadius() const {

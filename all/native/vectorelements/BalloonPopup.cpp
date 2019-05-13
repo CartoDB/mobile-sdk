@@ -464,12 +464,14 @@ namespace carto {
         int textFontSize = buttonStyle->getTextFontSize() * dpToPX;
         BalloonPopupMargins textMargins(buttonStyle->getTextMargins().getLeft() * dpToPX, buttonStyle->getTextMargins().getTop() * dpToPX,
                                         buttonStyle->getTextMargins().getRight() * dpToPX, buttonStyle->getTextMargins().getBottom() * dpToPX);
+        int maxTextWidth = buttonStyle->getButtonWidth() >= 0 ? std::max(0.0f, buttonStyle->getButtonWidth() * dpToPX - strokeWidth - textMargins.getLeft() - textMargins.getRight()) : -1;
+        bool isTextWrap = buttonStyle->getButtonWidth() >= 0;
 
         BitmapCanvas measureCanvas(0, 0);
         measureCanvas.setFont(buttonStyle->getTextFontName(), textFontSize);
-        ScreenBounds textSize = measureCanvas.measureTextSize(button->getText(), -1, false);
+        ScreenBounds textSize = measureCanvas.measureTextSize(button->getText(), maxTextWidth, isTextWrap);
 
-        float buttonWidth = strokeWidth + textMargins.getLeft() + textMargins.getRight() + textSize.getWidth();
+        float buttonWidth = std::max(buttonStyle->getButtonWidth() * dpToPX, strokeWidth + textMargins.getLeft() + textMargins.getRight() + textSize.getWidth());
         float buttonHeight = strokeWidth + textMargins.getTop() + textMargins.getBottom() + textSize.getHeight();
         return ScreenBounds(ScreenPos(0, 0), ScreenPos(buttonWidth, buttonHeight));
     }
@@ -481,6 +483,8 @@ namespace carto {
         int textFontSize = buttonStyle->getTextFontSize() * dpToPX;
         BalloonPopupMargins textMargins(buttonStyle->getTextMargins().getLeft() * dpToPX, buttonStyle->getTextMargins().getTop() * dpToPX,
                                         buttonStyle->getTextMargins().getRight() * dpToPX, buttonStyle->getTextMargins().getBottom() * dpToPX);
+        int maxTextWidth = buttonStyle->getButtonWidth() >= 0 ? std::max(0.0f, buttonStyle->getButtonWidth() * dpToPX - strokeWidth - textMargins.getLeft() - textMargins.getRight()) : -1;
+        bool isTextWrap = buttonStyle->getButtonWidth() >= 0;
 
         // Stroke background and triangle
         canvas.setDrawMode(BitmapCanvas::STROKE);
@@ -498,7 +502,7 @@ namespace carto {
                           bounds.getMin().getY() + strokeWidth * 0.5f + textMargins.getTop());
         canvas.setColor(buttonStyle->getTextColor());
         canvas.setFont(buttonStyle->getTextFontName(), textFontSize);
-        canvas.drawText(button->getText(), textPos, bounds.getWidth(), false);
+        canvas.drawText(button->getText(), textPos, maxTextWidth, isTextWrap);
     }
        
 }

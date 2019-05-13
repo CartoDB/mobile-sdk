@@ -3,6 +3,7 @@
 namespace carto {
 
     BalloonPopupButtonStyleBuilder::BalloonPopupButtonStyleBuilder() :
+        _buttonWidth(-1),
         _cornerRadius(3),
         _textColor(Color(0xFF000000)),
         _textFontName("HelveticaNeue-Light"),
@@ -16,6 +17,16 @@ namespace carto {
     BalloonPopupButtonStyleBuilder::~BalloonPopupButtonStyleBuilder() {
     }
         
+    int BalloonPopupButtonStyleBuilder::getButtonWidth() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _buttonWidth;
+    }
+
+    void BalloonPopupButtonStyleBuilder::setButtonWidth(int buttonWidth) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _buttonWidth = buttonWidth;
+    }
+
     int BalloonPopupButtonStyleBuilder::getCornerRadius() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _cornerRadius;
@@ -89,6 +100,7 @@ namespace carto {
     std::shared_ptr<BalloonPopupButtonStyle> BalloonPopupButtonStyleBuilder::buildStyle() {
         std::lock_guard<std::mutex> lock(_mutex);
         return std::make_shared<BalloonPopupButtonStyle>(_color,
+                                                         _buttonWidth,
                                                          _cornerRadius,
                                                          _textColor,
                                                          _textFontName,

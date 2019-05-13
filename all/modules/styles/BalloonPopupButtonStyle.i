@@ -20,6 +20,7 @@
 !polymorphic_shared_ptr(carto::BalloonPopupButtonStyle, styles.BalloonPopupButtonStyle)
 
 %attributeval(carto::BalloonPopupButtonStyle, carto::Color, BackgroundColor, getBackgroundColor)
+%attribute(carto::BalloonPopupButtonStyle, int, ButtonWidth, getButtonWidth)
 %attribute(carto::BalloonPopupButtonStyle, int, CornerRadius, getCornerRadius)
 %attributeval(carto::BalloonPopupButtonStyle, carto::Color, TextColor, getTextColor)
 %attributestring(carto::BalloonPopupButtonStyle, std::string, TextFontName, getTextFontName)

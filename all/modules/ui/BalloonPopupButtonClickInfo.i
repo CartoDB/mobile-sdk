@@ -3,7 +3,7 @@
 
 %module BalloonPopupButtonClickInfo
 
-!proxy_imports(carto::BalloonPopupButtonClickInfo, vectorelements.BalloonPopup, vectorelements.BalloonPopupButton, ui.ClickType)
+!proxy_imports(carto::BalloonPopupButtonClickInfo, ui.ClickType, vectorelements.BalloonPopupButton, vectorelements.VectorElement)
 
 %{
 #include "ui/BalloonPopupButtonClickInfo.h"
@@ -14,14 +14,14 @@
 %include <cartoswig.i>
 
 %import "ui/ClickType.i"
-%import "vectorelements/BalloonPopup.i"
 %import "vectorelements/BalloonPopupButton.i"
+%import "vectorelements/VectorElement.i"
 
 !shared_ptr(carto::BalloonPopupButtonClickInfo, ui.BalloonPopupButtonClickInfo)
 
 %attribute(carto::BalloonPopupButtonClickInfo, carto::ClickType::ClickType, ClickType, getClickType)
 !attributestring_polymorphic(carto::BalloonPopupButtonClickInfo, vectorelements.BalloonPopupButton, Button, getButton)
-!attributestring_polymorphic(carto::BalloonPopupButtonClickInfo, vectorelements.BalloonPopup, BalloonPopup, getBalloonPopup)
+!attributestring_polymorphic(carto::BalloonPopupButtonClickInfo, vectorelements.VectorElement, VectorElement, getVectorElement)
 %ignore carto::BalloonPopupButtonClickInfo::BalloonPopupButtonClickInfo;
 !standard_equals(carto::BalloonPopupButtonClickInfo);
 

@@ -26,6 +26,19 @@ namespace carto {
         virtual ~BalloonPopupButtonStyleBuilder();
         
         /**
+         * Returns the width of the button.
+         * If this value is -1, then button width is calculated automatically based on button text.
+         * @return The width of the button in dp.
+         */
+        int getButtonWidth() const;
+        /**
+         * Sets the width of the button.
+         * The default is -1, which means that button width is calculated automatically based on button text.
+         * @param buttonWidth The button width in dp, or -1.
+         */
+        void setButtonWidth(int buttonWidth);
+
+        /**
          * Returns the corner radius of the button.
          * @return The corner radius of the button in dp.
          */
@@ -108,6 +121,7 @@ namespace carto {
         std::shared_ptr<BalloonPopupButtonStyle> buildStyle();
 
     protected:
+        int _buttonWidth;
         int _cornerRadius;
         
         Color _textColor;
