@@ -23,7 +23,7 @@ namespace carto {
         _descFontSize(14),
         _descMargins(BalloonPopupMargins(8, 0, 8, 6)),
         _descWrap(true),
-        _buttonMargins(BalloonPopupMargins(8, 4, 8, 4)),
+        _buttonMargins(BalloonPopupMargins(8, 0, 8, 8)),
         _strokeColor(Color(0xFF000000)),
         _strokeWidth(1),
         _triangleWidth(20),

@@ -125,6 +125,22 @@ namespace carto {
         notifyElementChanged();
     }
 
+    void BalloonPopup::replaceButton(const std::shared_ptr<BalloonPopupButton>& oldButton, const std::shared_ptr<BalloonPopupButton>& newButton) {
+        if (!oldButton || !newButton) {
+            throw NullArgumentException("Null button");
+        }
+
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            auto it = std::find(_buttons.begin(), _buttons.end(), oldButton);
+            if (it != _buttons.end()) {
+                *it = newButton;
+                _buttonRects.erase(oldButton);
+            }
+        }
+        notifyElementChanged();
+    }
+
     void BalloonPopup::removeButton(const std::shared_ptr<BalloonPopupButton>& button) {
         if (!button) {
             throw NullArgumentException("Null button");
@@ -135,8 +151,8 @@ namespace carto {
             auto it = std::find(_buttons.begin(), _buttons.end(), button);
             if (it != _buttons.end()) {
                 _buttons.erase(it);
+                _buttonRects.erase(button);
             }
-            _buttonRects.erase(button);
         }
         notifyElementChanged();
     }
@@ -309,14 +325,15 @@ namespace carto {
             int buttonMarginHeight = 0;
             ScreenBounds buttonsSize(ScreenPos(0, 0), ScreenPos(0, 0));
             if (!_buttons.empty()) {
-                buttonMarginWidth = buttonMargins.getLeft() + buttonMargins.getRight();
-                buttonMarginHeight = buttonMargins.getTop() + buttonMargins.getBottom();
+                int buttonY = 0;
                 for (const std::shared_ptr<BalloonPopupButton>& button : _buttons) {
                     ScreenBounds buttonSize = measureButtonSize(button, dpToPX);
-                    buttonSize.setMin(ScreenPos(buttonSize.getMin().getX(), buttonSize.getMin().getY() + buttonsSize.getMax().getY()));
-                    buttonSize.setMax(ScreenPos(buttonSize.getMax().getX(), buttonSize.getMax().getY() + buttonsSize.getMax().getY()));
+                    buttonSize.setMin(ScreenPos(buttonSize.getMin().getX() + buttonMargins.getLeft(), buttonSize.getMin().getY() + buttonMargins.getTop() + buttonY));
+                    buttonSize.setMax(ScreenPos(buttonSize.getMax().getX() + buttonMargins.getLeft(), buttonSize.getMax().getY() + buttonMargins.getTop() + buttonY));
                     buttonSizes[button] = buttonSize;
-                    buttonsSize.expandToContain(buttonSize);
+
+                    buttonY += buttonMargins.getTop() + buttonSize.getHeight() + buttonMargins.getBottom();
+                    buttonsSize.expandToContain(ScreenPos(buttonMargins.getLeft() + buttonSize.getWidth() + buttonMargins.getRight(), buttonY));
                 }
             }
         
@@ -436,7 +453,7 @@ namespace carto {
 
             // Draw buttons, finalize button positions
             float buttonsOriginX = halfStrokeWidth + leftMarginWidth + popupInnerWidth * 0.5f;
-            float buttonsOriginY = halfStrokeWidth + titleSize.getHeight() + titleMarginHeight + descSize.getHeight() + descMarginHeight + buttonMargins.getTop();
+            float buttonsOriginY = halfStrokeWidth + titleSize.getHeight() + titleMarginHeight + descSize.getHeight() + descMarginHeight;
             for (const std::shared_ptr<BalloonPopupButton>& button : _buttons) {
                 const ScreenBounds& buttonSize = buttonSizes[button];
                 ScreenBounds buttonRect(ScreenPos(buttonsOriginX + buttonSize.getMin().getX() - buttonSize.getWidth() * 0.5f, buttonsOriginY + buttonSize.getMin().getY()),

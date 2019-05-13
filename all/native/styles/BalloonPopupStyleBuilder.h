@@ -243,7 +243,7 @@ namespace carto {
         BalloonPopupMargins getButtonMargins() const;
         /**
          * Sets the margins for popup buttons. The margins will determine how much
-         * empty space should surround the buttons. The default is BalloonPopupMargins(8, 4, 8, 4).
+         * empty space should surround the buttons. The default is BalloonPopupMargins(8, 0, 8, 8).
          * @param buttonMargins The new popup margins for the buttons in dp.
          */
         void setButtonMargins(const BalloonPopupMargins& buttonMargins);

@@ -102,6 +102,12 @@ namespace carto {
          */
         void addButton(const std::shared_ptr<BalloonPopupButton>& button);
         /**
+         * Replaces an old baloon popup button with a new button.
+         * @param oldButton The old button to replace.
+         * @param newButton The new button.
+         */
+        void replaceButton(const std::shared_ptr<BalloonPopupButton>& oldButton, const std::shared_ptr<BalloonPopupButton>& newButton);
+        /**
          * Removes a button from the balloon popup.
          * If the button is not present, the call is ignored.
          * @param button The button object to remove.
