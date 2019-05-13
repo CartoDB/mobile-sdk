@@ -3,7 +3,7 @@
 
 %module BalloonPopupButtonStyle
 
-!proxy_imports(carto::BalloonPopupButtonStyle, graphics.Color, styles.BalloonPopupMargins, styles.Style)
+!proxy_imports(carto::BalloonPopupButtonStyle, graphics.Color, styles.BalloonPopupStyle, styles.BalloonPopupMargins, styles.Style)
 
 %{
 #include "styles/BalloonPopupButtonStyle.h"
