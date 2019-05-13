@@ -550,7 +550,7 @@ namespace carto {
             std::shared_ptr<Geometry> geometry = createGeometry(poGeometry);
             if (_geometrySimplifier) {
                 if (geometry) {
-                    geometry = _geometrySimplifier->simplify(geometry, _projection, simplifierScale);
+                    geometry = _geometrySimplifier->simplify(geometry, _projection, cullState->getViewState().getProjectionSurface(), simplifierScale);
                 }
             }
             if (geometry) {
