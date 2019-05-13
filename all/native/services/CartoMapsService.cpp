@@ -1,3 +1,5 @@
+#ifdef _CARTO_SERVICES_SUPPORT
+
 #include "CartoMapsService.h"
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
@@ -535,3 +537,5 @@ namespace carto {
     const std::string CartoMapsService::DEFAULT_API_TEMPLATE = "https://{user}.carto.com";
 
 }
+
+#endif

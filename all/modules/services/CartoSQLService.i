@@ -1,7 +1,11 @@
 #ifndef _CARTOSQLSERVICE_I
 #define _CARTOSQLSERVICE_I
 
+#pragma SWIG nowarn=325
+
 %module CartoSQLService
+
+#ifdef _CARTO_SERVICES_SUPPORT
 
 !proxy_imports(carto::CartoSQLService, core.Variant, geometry.FeatureCollection, projections.Projection)
 
@@ -30,5 +34,7 @@
 !standard_equals(carto::CartoSQLService);
 
 %include "services/CartoSQLService.h"
+
+#endif
 
 #endif

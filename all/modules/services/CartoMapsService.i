@@ -1,7 +1,11 @@
 #ifndef _CARTOMAPSSERVICE_I
 #define _CARTOMAPSSERVICE_I
 
+#pragma SWIG nowarn=325
+
 %module CartoMapsService
+
+#ifdef _CARTO_SERVICES_SUPPORT
 
 !proxy_imports(carto::CartoMapsService, core.Variant, core.IntVector, core.StringVariantMap, core.StringMap, core.StringVector, layers.Layer, layers.LayerVector, utils.AssetPackage)
 
@@ -48,5 +52,7 @@
 !standard_equals(carto::CartoMapsService);
 
 %include "services/CartoMapsService.h"
+
+#endif
 
 #endif

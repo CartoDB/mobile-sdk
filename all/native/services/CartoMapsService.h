@@ -7,6 +7,8 @@
 #ifndef _CARTO_CARTOMAPSSERVICE_H_
 #define _CARTO_CARTOMAPSSERVICE_H_
 
+#ifdef _CARTO_SERVICES_SUPPORT
+
 #include "core/Variant.h"
 
 #include <memory>
@@ -264,5 +266,7 @@ namespace carto {
     };
 
 }
+
+#endif
 
 #endif

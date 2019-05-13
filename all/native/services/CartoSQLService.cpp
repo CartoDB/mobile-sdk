@@ -1,3 +1,5 @@
+#ifdef _CARTO_SERVICES_SUPPORT
+
 #include "CartoSQLService.h"
 #include "core/BinaryData.h"
 #include "geometry/FeatureCollection.h"
@@ -128,3 +130,5 @@ namespace carto {
     const std::string CartoSQLService::DEFAULT_API_TEMPLATE = "https://{user}.carto.com";
 
 }
+
+#endif
