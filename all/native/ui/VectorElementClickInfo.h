@@ -25,8 +25,8 @@ namespace carto {
         /**
          * Constructs a VectorElementClickInfo object from a click position and a vector element.
          * @param clickType The click type (SINGLE, DUAL, etc)
-         * @param clickPos The click position in the coordinate system of the base projection.
-         * @param elementClickPos The click position in the coordinate system of the base projection that corresponds to element point.
+         * @param clickPos The click position in the coordinate system of the data source.
+         * @param elementClickPos The click position in the coordinate system of the data source that corresponds to element point.
          * @param vectorElement The vector element on which the click was performed.
          * @param layer The layer of the vector element on which the click was performed.
          */
@@ -41,7 +41,7 @@ namespace carto {
 
         /**
          * Returns the click position.
-         * @return The click position in the coordinate system of the base projection.
+         * @return The click position in the coordinate system of the data source.
          */
         const MapPos& getClickPos() const;
         
@@ -50,7 +50,7 @@ namespace carto {
          * For points it will always be the center position, for lines it will be the closest point
          * on the line, for billboards it will be the anchor point and for polygons it's equal to
          * getClickPos().
-         * @return The element click position in the coordinate system of the base projection.
+         * @return The element click position in the coordinate system of the data source.
          */
         const MapPos& getElementClickPos() const;
     

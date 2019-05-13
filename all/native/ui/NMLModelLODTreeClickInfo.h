@@ -28,8 +28,8 @@ namespace carto {
         /**
          * Constructs a NMLModelLODTreeClickInfo object from a click position and a element data.
          * @param clickType The click type (SINGLE, DUAL, etc)
-         * @param clickPos The click position in the coordinate system of the base projection.
-         * @param elementClickPos The click position in the coordinate system of the base projection that corresponds to element point.
+         * @param clickPos The click position in the coordinate system of the data source.
+         * @param elementClickPos The click position in the coordinate system of the data source that corresponds to element point.
          * @param metaData The element meta data at the click position.
          * @param layer The layer of the vector element on which the click was performed.
          */
@@ -44,13 +44,13 @@ namespace carto {
 
         /**
          * Returns the click position.
-         * @return The click position in the coordinate system of the base projection.
+         * @return The click position in the coordinate system of the data source.
          */
         const MapPos& getClickPos() const;
         
         /**
          * Returns the position on the clicked element, that is close to the click position.
-         * @return The element click position in the coordinate system of the base projection.
+         * @return The element click position in the coordinate system of the data source.
          */
         const MapPos& getElementClickPos() const;
     

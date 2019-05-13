@@ -26,7 +26,7 @@ namespace carto {
         /**
          * Constructs a RasterTileClickInfo object from a click position, tile information and clicked feature.
          * @param clickType The click type (SINGLE, DUAL, etc)
-         * @param clickPos The click position in the coordinate system of the base projection.
+         * @param clickPos The click position in the coordinate system of the data source.
          * @param mapTile The clicked tile id.
          * @param nearestColor The color of the nearest pixel to the click position.
          * @param interpolatedColor The interpolated color at the click position.
@@ -43,7 +43,7 @@ namespace carto {
 
         /**
          * Returns the click position.
-         * @return The click position in the coordinate system of the base projection.
+         * @return The click position in the coordinate system of the data source.
          */
         const MapPos& getClickPos() const;
         

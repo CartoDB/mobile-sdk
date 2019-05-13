@@ -27,7 +27,7 @@ namespace carto {
         /**
          * Constructs an UTFGridClickInfo object from a click position and grid element metadata.
          * @param clickType The click type (SINGLE, DUAL, etc)
-         * @param clickPos The click position in the coordinate system of the base projection.
+         * @param clickPos The click position in the coordinate system of the data source.
          * @param elementInfo The info tag of the element that was clicked.
          * @param layer The layer on which the click was performed.
          */
@@ -42,7 +42,7 @@ namespace carto {
 
         /**
          * Returns the click position.
-         * @return The click position in the coordinate system of the base projection.
+         * @return The click position in the coordinate system of the data source.
          */
         const MapPos& getClickPos() const;
         

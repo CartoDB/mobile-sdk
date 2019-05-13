@@ -26,8 +26,8 @@ namespace carto {
         /**
          * Constructs a VectorTileClickInfo object from a click position, tile information and clicked feature.
          * @param clickType The click type (SINGLE, DUAL, etc)
-         * @param clickPos The click position in the coordinate system of the base projection.
-         * @param featureClickPos The click position in the coordinate system of the base projection that corresponds to feature point.
+         * @param clickPos The click position in the coordinate system of the data source.
+         * @param featureClickPos The click position in the coordinate system of the data source that corresponds to feature point.
          * @param feature The clicked vector tile feature.
          * @param layer The layer on which the click was performed.
          */
@@ -42,7 +42,7 @@ namespace carto {
 
         /**
          * Returns the click position.
-         * @return The click position in the coordinate system of the base projection.
+         * @return The click position in the coordinate system of the data source.
          */
         const MapPos& getClickPos() const;
         
@@ -51,7 +51,7 @@ namespace carto {
          * For points it will always be the center position, for lines it will be the closest point
          * on the line, for billboards it will be the anchor point and for polygons it's equal to
          * getClickPos().
-         * @return The feature click position in the coordinate system of the base projection.
+         * @return The feature click position in the coordinate system of the data source.
          */
         const MapPos& getFeatureClickPos() const;
 

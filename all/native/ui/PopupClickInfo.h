@@ -25,7 +25,7 @@ namespace carto {
         /**
          * Constructs a PopupClickInfo object from a click position and a vector element.
          * @param clickType The click type (SINGLE, DUAL, etc)
-         * @param clickPos The click position in the coordinate system of the base projection.
+         * @param clickPos The click position in the coordinate system of the data source.
          * @param elementClickPos The 2D click position on the popup.
          * @param popup The popup on which the click was performed.
          */
@@ -40,13 +40,13 @@ namespace carto {
 
         /**
          * Returns the click position.
-         * @return The click position in the coordinate system of the base projection.
+         * @return The click position in the coordinate system of the data source.
          */
         const MapPos& getClickPos() const;
         
         /**
          * Returns the 2D click position on the clicked popup.
-         * @return The 2D element click position.
+         * @return The 2D element click position in pixels.
          */
         const ScreenPos& getElementClickPos() const;
     
