@@ -2,6 +2,7 @@ import os
 import sys
 import shutil
 import argparse
+import string
 from build.sdk_build_utils import *
 
 ANDROID_TOOLCHAINS = {
@@ -134,7 +135,7 @@ def buildAndroidAAR(args):
   distDir = getDistDir('android')
   version = args.buildversion
 
-  with open('%s/scripts/build-aar/carto-mobile-sdk.pom.template' % baseDir, 'r') as f:
+  with open('%s/scripts/android-aar/carto-mobile-sdk.pom.template' % baseDir, 'r') as f:
     pomFile = string.Template(f.read()).safe_substitute({ 'baseDir': baseDir, 'buildDir': buildDir, 'distDir': distDir, 'version': version })
   pomFileName = '%s/carto-mobile-sdk.pom' % buildDir
   with open(pomFileName, 'w') as f:
