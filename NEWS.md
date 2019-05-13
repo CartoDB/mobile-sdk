@@ -1,4 +1,24 @@
-CARTO Mobile SDK 4.2.0
+CARTO Mobile SDK 4.2.0RC2
+-------------------
+
+### Changes/fixes:
+
+* Added BalloonPopupButton and related classes so that basic interactivity can be added to BalloonPopups
+* Major SGRE optimizations: replaced one-to-one routing engine with many-to-many routing engine, using optimized data structures for routing
+* Fixed/improved label ordering in vector tile renderer: prefer bigger labels over smaller ones
+* Fixed geometry simplifier attached to LocalVectorDataSource causing a crash
+* Fixed multiple issues with billboard sorting and ray casting.
+* More consistent ordering of vector elements
+* Change billboard rendering to ignore depth testing. Better fit with 3D objects.
+* Fixed potential rendering issue with GeometryCollections when switching between planar/spherical rendering mode
+* Fixed ray-intersection code with Polygon3D, use the closest intersection point, not the first found point
+* Fixed subtle flickering in ClusteredVectorLayer animations
+* Minor performance optimization by using platform-optimized zlib
+* Fixed getElementClickPos method of PopupClickInfo to return click coordinates as pixel coordinates, not normalized-to-size coordinates
+* Documentation fixes
+
+
+CARTO Mobile SDK 4.2.0RC1
 -------------------
 
 This version is a major update and brings lots of new features and optimizations. Some features present in older releases are removed or deprecated in this version.
