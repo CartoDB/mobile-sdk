@@ -2,7 +2,7 @@
 #include "components/Exceptions.h"
 #include "components/CancelableThreadPool.h"
 #include "datasources/VectorDataSource.h"
-#include "geometry/PointGeometry.h"
+#include "graphics/Bitmap.h"
 #include "layers/VectorElementEventListener.h"
 #include "projections/Projection.h"
 #include "projections/ProjectionSurface.h"
@@ -231,6 +231,7 @@ namespace carto {
         if (auto element = intersectedElement.getElement<VectorElement>()) {
             if (auto popup = std::dynamic_pointer_cast<Popup>(element)) {
                 if (std::shared_ptr<BillboardDrawData> drawData = popup->getDrawData()) {
+                    const std::shared_ptr<Bitmap>& bitmap = drawData->getBitmap();
                     std::vector<float> coordBuf(12);
                     if (BillboardRenderer::CalculateBillboardCoords(*drawData, viewState, coordBuf, 0)) {
                         cglib::vec3<double> topLeft = viewState.getCameraPos() + cglib::vec3<double>(coordBuf[0], coordBuf[1], coordBuf[2]);
@@ -238,8 +239,8 @@ namespace carto {
                         cglib::vec3<double> topRight = viewState.getCameraPos() + cglib::vec3<double>(coordBuf[6], coordBuf[7], coordBuf[8]);
                         cglib::vec3<double> delta = intersectedElement.getHitPos() - topLeft;
 
-                        float x = static_cast<float>(cglib::dot_product(delta, topRight - topLeft) / cglib::norm(topRight - topLeft));
-                        float y = static_cast<float>(cglib::dot_product(delta, bottomLeft - topLeft) / cglib::norm(bottomLeft - topLeft));
+                        float x = static_cast<float>(cglib::dot_product(delta, topRight - topLeft) / cglib::norm(topRight - topLeft)) * bitmap->getWidth();
+                        float y = static_cast<float>(cglib::dot_product(delta, bottomLeft - topLeft) / cglib::norm(bottomLeft - topLeft)) * bitmap->getHeight();
 
                         MapPos hitPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getHitPos()));
                         if (popup->processClick(clickType, hitPos, ScreenPos(x, y))) {

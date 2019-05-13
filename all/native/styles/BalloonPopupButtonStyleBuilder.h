@@ -88,7 +88,7 @@ namespace carto {
         BalloonPopupMargins getTextMargins() const;
         /**
          * Sets the margins for the text. The margins will determine how much
-         * empty space should surround the text. The default is BalloonPopupMargins(8, 4, 8, 4).
+         * empty space should surround the text. The default is BalloonPopupMargins(8, 4, 8, 8).
          * @param textMargins The new margins for the text in dp.
          */
         void setTextMargins(const BalloonPopupMargins& textMargins);

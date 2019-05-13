@@ -26,7 +26,7 @@ namespace carto {
         _title(title),
         _desc(desc),
         _buttons(),
-        _buttonBounds(),
+        _buttonRects(),
         _balloonPopupEventListener()
     {
     }
@@ -38,7 +38,7 @@ namespace carto {
         _title(title),
         _desc(desc),
         _buttons(),
-        _buttonBounds(),
+        _buttonRects(),
         _balloonPopupEventListener()
     {
     }
@@ -50,7 +50,7 @@ namespace carto {
         _title(title),
         _desc(desc),
         _buttons(),
-        _buttonBounds(),
+        _buttonRects(),
         _balloonPopupEventListener()
     {
     }
@@ -105,7 +105,7 @@ namespace carto {
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             _buttons.clear();
-            _buttonBounds.clear();
+            _buttonRects.clear();
         }
         notifyElementChanged();
     }
@@ -120,7 +120,7 @@ namespace carto {
             if (std::find(_buttons.begin(), _buttons.end(), button) == _buttons.end()) {
                 _buttons.push_back(button);
             }
-            // Note: _buttonBounds will be updated when the button is drawn
+            // Note: _buttonRects will be updated when the button is drawn
         }
         notifyElementChanged();
     }
@@ -136,7 +136,7 @@ namespace carto {
             if (it != _buttons.end()) {
                 _buttons.erase(it);
             }
-            _buttonBounds.erase(button);
+            _buttonRects.erase(button);
         }
         notifyElementChanged();
     }
@@ -154,19 +154,19 @@ namespace carto {
 
         if (eventListener) {
             std::vector<std::shared_ptr<BalloonPopupButton> > buttons;
-            std::map<std::shared_ptr<BalloonPopupButton>, ScreenBounds> buttonBounds;
+            std::map<std::shared_ptr<BalloonPopupButton>, ScreenBounds> buttonRects;
             {
                 std::lock_guard<std::recursive_mutex> lock(_mutex);
                 buttons = _buttons;
-                buttonBounds = _buttonBounds;
+                buttonRects = _buttonRects;
             }
 
             // Process the buttons in reverse rendering order
             for (auto it1 = buttons.rbegin(); it1 != buttons.rend(); it1++) {
                 const std::shared_ptr<BalloonPopupButton>& button = *it1;
 
-                auto it2 = buttonBounds.find(button);
-                if (it2 != buttonBounds.end()) {
+                auto it2 = buttonRects.find(button);
+                if (it2 != buttonRects.end()) {
                     if (it2->second.contains(elementClickPos)) {
                         auto clickInfo = std::make_shared<BalloonPopupButtonClickInfo>(clickType, button, std::static_pointer_cast<BalloonPopup>(shared_from_this()));
                         if (eventListener->onButtonClicked(clickInfo)) {
@@ -231,7 +231,7 @@ namespace carto {
             int screenPadding = SCREEN_PADDING * dpToPX;
 
             // Clear button bounds
-            _buttonBounds.clear();
+            _buttonRects.clear();
         
             // Use actual texts or text fields
             std::string title = _title;
@@ -303,7 +303,7 @@ namespace carto {
             }
 
             // Measure button sizes, generate button positions
-            std::map<std::shared_ptr<BalloonPopupButton>, ScreenBounds> buttonBounds;
+            std::map<std::shared_ptr<BalloonPopupButton>, ScreenBounds> buttonSizes;
 
             int buttonMarginWidth = 0;
             int buttonMarginHeight = 0;
@@ -315,7 +315,7 @@ namespace carto {
                     ScreenBounds buttonSize = measureButtonSize(button, dpToPX);
                     buttonSize.setMin(ScreenPos(buttonSize.getMin().getX(), buttonSize.getMin().getY() + buttonsSize.getMax().getY()));
                     buttonSize.setMax(ScreenPos(buttonSize.getMax().getX(), buttonSize.getMax().getY() + buttonsSize.getMax().getY()));
-                    buttonBounds[button] = buttonSize;
+                    buttonSizes[button] = buttonSize;
                     buttonsSize.expandToContain(buttonSize);
                 }
             }
@@ -438,12 +438,12 @@ namespace carto {
             float buttonsOriginX = halfStrokeWidth + leftMarginWidth + popupInnerWidth * 0.5f;
             float buttonsOriginY = halfStrokeWidth + titleSize.getHeight() + titleMarginHeight + descSize.getHeight() + descMarginHeight + buttonMargins.getTop();
             for (const std::shared_ptr<BalloonPopupButton>& button : _buttons) {
-                const ScreenBounds& buttonSize = buttonBounds[button];
+                const ScreenBounds& buttonSize = buttonSizes[button];
                 ScreenBounds buttonRect(ScreenPos(buttonsOriginX + buttonSize.getMin().getX() - buttonSize.getWidth() * 0.5f, buttonsOriginY + buttonSize.getMin().getY()),
                                         ScreenPos(buttonsOriginX + buttonSize.getMax().getX() - buttonSize.getWidth() * 0.5f, buttonsOriginY + buttonSize.getMax().getY()));
                 drawButtonOnCanvas(button, canvas, buttonRect, dpToPX);
+                _buttonRects[button] = buttonRect;
             }
-            std::swap(buttonBounds, _buttonBounds);
 
             // Done with internal state, update anchor point and build bitmap
             lock.unlock();

@@ -137,7 +137,7 @@ namespace carto {
         std::string _desc;
 
         std::vector<std::shared_ptr<BalloonPopupButton> > _buttons;
-        std::map<std::shared_ptr<BalloonPopupButton>, ScreenBounds> _buttonBounds;
+        std::map<std::shared_ptr<BalloonPopupButton>, ScreenBounds> _buttonRects;
 
         ThreadSafeDirectorPtr<BalloonPopupEventListener> _balloonPopupEventListener;
     };

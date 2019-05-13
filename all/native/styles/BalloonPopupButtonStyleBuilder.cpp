@@ -8,7 +8,7 @@ namespace carto {
         _textColor(Color(0xFF000000)),
         _textFontName("HelveticaNeue-Light"),
         _textFontSize(16),
-        _textMargins(BalloonPopupMargins(8, 4, 8, 4)),
+        _textMargins(BalloonPopupMargins(8, 4, 8, 8)),
         _strokeColor(Color(0xFF000000)),
         _strokeWidth(1)
     {
