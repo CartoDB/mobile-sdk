@@ -48,8 +48,7 @@ namespace carto {
             const cglib::vec3<double>& pos = drawData->getPos();
 
             // If in 2D mode, calculate proper distance from the bottom of the screen.
-            // Do this only for popups, for labels/markers this seems not intuitive.
-            if (is2DMode && std::dynamic_pointer_cast<PopupDrawData>(drawData)) {
+            if (is2DMode) {
                 cglib::vec2<float> screenPos = viewState.worldToScreen(pos);
                 drawData->setScreenBottomDistance(viewState.getHeight() - std::floor(screenPos(1)));
             } else {
