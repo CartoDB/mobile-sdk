@@ -28,7 +28,6 @@
 #include "renderers/cameraevents/CameraZoomEvent.h"
 #include "renderers/workers/BillboardPlacementWorker.h"
 #include "renderers/workers/CullWorker.h"
-#include "renderers/workers/RedrawWorker.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "utils/ThreadUtils.h"
@@ -46,10 +45,6 @@ namespace carto {
         _styleCache(),
         _cullWorker(std::make_shared<CullWorker>()),
         _cullThread(),
-#ifdef TARGET_XAMARIN
-        _redrawWorker(std::make_shared<RedrawWorker>()),
-        _redrawThread(),
-#endif
         _optionsListener(),
         _currentBoundFBOs(),
         _screenFrameBuffer(),
@@ -88,11 +83,6 @@ namespace carto {
         _cullWorker->setComponents(shared_from_this(), _cullWorker);
         _cullThread = std::thread(std::ref(*_cullWorker));
 
-#ifdef TARGET_XAMARIN
-        _redrawWorker->setComponents(shared_from_this(), _redrawWorker);
-        _redrawThread = std::thread(std::ref(*_redrawWorker));
-#endif
-        
         _billboardPlacementWorker->setComponents(shared_from_this(), _billboardPlacementWorker);
         _billboardPlacementThread = std::thread(std::ref(*_billboardPlacementWorker));
         
@@ -104,11 +94,6 @@ namespace carto {
         _options->unregisterOnChangeListener(_optionsListener);
         _optionsListener.reset();
         
-#ifdef TARGET_XAMARIN
-        _redrawWorker->stop();
-        _redrawThread.detach();
-#endif
-
         _cullWorker->stop();
         _cullThread.detach();
         
@@ -153,11 +138,7 @@ namespace carto {
 
         if (redrawRequestListener) {
             _redrawPending = true;
-#ifdef TARGET_XAMARIN
-            _redrawWorker->init(redrawRequestListener);
-#else
             redrawRequestListener->onRedrawRequested();
-#endif
         }
     }
     

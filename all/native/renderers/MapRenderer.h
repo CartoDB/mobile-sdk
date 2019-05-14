@@ -43,7 +43,6 @@ namespace carto {
     class ThreadWorker;
     class CullWorker;
     class BillboardPlacementWorker;
-    class RedrawWorker;
     class FrameBuffer;
     class Shader;
     class Texture;
@@ -178,10 +177,6 @@ namespace carto {
     
         std::shared_ptr<CullWorker> _cullWorker;
         std::thread _cullThread;
-#ifdef TARGET_XAMARIN
-        std::shared_ptr<RedrawWorker> _redrawWorker;
-        std::thread _redrawThread;
-#endif
         
         std::shared_ptr<OptionsListener> _optionsListener;
 
