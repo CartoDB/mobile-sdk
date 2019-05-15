@@ -8,13 +8,16 @@ CARTO Mobile SDK 4.2.0RC2
 * Fixed/improved label ordering in vector tile renderer: prefer bigger labels over smaller ones
 * Fixed geometry simplifier attached to LocalVectorDataSource causing a crash
 * Fixed multiple issues with billboard sorting and ray casting.
-* More consistent ordering of vector elements
-* Change billboard rendering to ignore depth testing. Better fit with 3D objects.
+* When calculating actual ray hit with billboard or point, SDK now uses actual bitmap to detect if the clicked pixel is transparent
+* Implemented more consistent ordering of vector elements
+* Changed billboard rendering to ignore depth testing. Better fit with 3D objects.
 * Fixed potential rendering issue with GeometryCollections when switching between planar/spherical rendering mode
 * Fixed ray-intersection code with Polygon3D, use the closest intersection point, not the first found point
 * Fixed subtle flickering in ClusteredVectorLayer animations
 * Minor performance optimization by using platform-optimized zlib
 * Fixed getElementClickPos method of PopupClickInfo to return click coordinates as pixel coordinates, not normalized-to-size coordinates
+* Fixed issue in SDK4.2.0RC1 that caused map rotation to change when setting focus position in globe view mode
+* Fixed GeometryCollectionRenderer to accept both clockwise and counterclockwise oriented polygons
 * Documentation fixes
 
 
