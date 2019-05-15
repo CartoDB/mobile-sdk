@@ -17,6 +17,9 @@ namespace carto {
         CameraZoomEvent();
         virtual ~CameraZoomEvent();
     
+        bool isKeepRotation() const;
+        void setKeepRotation(bool keepRotation);
+    
         float getZoom() const;
         void setZoom(float zoom);
     
@@ -33,6 +36,8 @@ namespace carto {
         void calculate(Options& options, ViewState& viewState);
 
     private:
+        bool _keepRotation;
+
         float _zoom;
     
         float _zoomDelta;

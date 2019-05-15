@@ -16,6 +16,9 @@ namespace carto {
         CameraTiltEvent();
         virtual ~CameraTiltEvent();
     
+        bool isKeepRotation() const;
+        void setKeepRotation(bool keepRotation);
+    
         float getTilt() const;
         void setTilt(float tilt);
     
@@ -27,6 +30,8 @@ namespace carto {
         void calculate(Options& options, ViewState& viewState);
 
     private:
+        bool _keepRotation;
+
         float _tilt;
     
         float _tiltDelta;

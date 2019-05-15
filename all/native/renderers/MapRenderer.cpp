@@ -337,6 +337,7 @@ namespace carto {
             // Adjust the camera tilt, rotation and position to the final state of this animation
             cglib::vec3<double> focusPos = centerPos;
             cglib::vec3<double> oldFocusPos = _viewState.getFocusPos();
+            cameraPanEvent.setKeepRotation(true);
             cameraPanEvent.setPos(projectionSurface->calculateMapPos(centerPos));
             cameraPanEvent.calculate(*_options, _viewState);
             
@@ -350,6 +351,7 @@ namespace carto {
             float oldTilt = _viewState.getTilt();
             float tilt = 90;
             if (resetTilt) {
+                cameraTiltEvent.setKeepRotation(true);
                 cameraTiltEvent.setTilt(90);
                 cameraTiltEvent.calculate(*_options, _viewState);
             }
@@ -376,6 +378,7 @@ namespace carto {
             }
 
             for (int i = 0; i < 24; i++) {
+                cameraZoomEvent.setKeepRotation(true);
                 cameraZoomEvent.setZoom(zoom + zoomStep);
                 cameraZoomEvent.calculate(*_options, viewState);
                 viewState.clampZoom(*_options);

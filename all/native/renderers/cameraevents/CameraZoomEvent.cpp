@@ -1,4 +1,5 @@
 #include "CameraZoomEvent.h"
+#include "CameraRotationEvent.h"
 #include "components/Options.h"
 #include "core/MapBounds.h"
 #include "graphics/ViewState.h"
@@ -11,6 +12,7 @@
 namespace carto {
 
     CameraZoomEvent::CameraZoomEvent() :
+        _keepRotation(false),
         _zoom(0.0f),
         _zoomDelta(0.0f),
         _targetPos(),
@@ -22,6 +24,14 @@ namespace carto {
     CameraZoomEvent::~CameraZoomEvent() {
     }
     
+    bool CameraZoomEvent::isKeepRotation() const {
+        return _keepRotation;
+    }
+
+    void CameraZoomEvent::setKeepRotation(bool keepRotation) {
+        _keepRotation = keepRotation;
+    }
+
     float CameraZoomEvent::getZoom() const {
         return _zoom;
     }
@@ -68,6 +78,7 @@ namespace carto {
             return;
         }
         
+        float rotation = viewState.getRotation();
         cglib::vec3<double> cameraPos = viewState.getCameraPos();
         cglib::vec3<double> focusPos = viewState.getFocusPos();
         cglib::vec3<double> upVec = viewState.getUpVec();
@@ -101,6 +112,13 @@ namespace carto {
         
         // Calculate matrices etc. on the next onDrawFrame() call
         viewState.cameraChanged();
+
+        // Restore rotation, if needed
+        if (_keepRotation) {
+            CameraRotationEvent cameraRotationEvent;
+            cameraRotationEvent.setRotation(rotation);
+            cameraRotationEvent.calculate(options, viewState);
+        }
     }
     
 }

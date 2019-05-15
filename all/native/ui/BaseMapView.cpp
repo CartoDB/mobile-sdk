@@ -115,9 +115,16 @@ namespace carto {
     }
     
     void BaseMapView::pan(const MapVec& deltaPos, float durationSeconds) {
-        MapPos focusPos(getFocusPos());
-        focusPos += deltaPos;
-        setFocusPos(focusPos, durationSeconds);
+        MapPos focusPos0Internal = _options->getBaseProjection()->toInternal(getFocusPos());
+        MapPos focusPos1Internal = _options->getBaseProjection()->toInternal(getFocusPos() + deltaPos);
+
+        _mapRenderer->getAnimationHandler().stopPan();
+        _mapRenderer->getKineticEventHandler().stopPan();
+        
+        CameraPanEvent cameraEvent;
+        cameraEvent.setKeepRotation(true);
+        cameraEvent.setPosDelta(std::make_pair(focusPos0Internal, focusPos1Internal));
+        _mapRenderer->calculateCameraEvent(cameraEvent, durationSeconds, false);
     }
     
     void BaseMapView::setFocusPos(const MapPos& pos, float durationSeconds) {
@@ -125,6 +132,7 @@ namespace carto {
         _mapRenderer->getKineticEventHandler().stopPan();
         
         CameraPanEvent cameraEvent;
+        cameraEvent.setKeepRotation(true);
         cameraEvent.setPos(_options->getBaseProjection()->toInternal(pos));
         _mapRenderer->calculateCameraEvent(cameraEvent, durationSeconds, false);
     }
@@ -171,6 +179,7 @@ namespace carto {
         _mapRenderer->getAnimationHandler().stopTilt();
         
         CameraTiltEvent cameraEvent;
+        cameraEvent.setKeepRotation(true);
         cameraEvent.setTiltDelta(tiltDelta);
         _mapRenderer->calculateCameraEvent(cameraEvent, durationSeconds, false);
     }
@@ -179,6 +188,7 @@ namespace carto {
         _mapRenderer->getAnimationHandler().stopTilt();
         
         CameraTiltEvent cameraEvent;
+        cameraEvent.setKeepRotation(true);
         cameraEvent.setTilt(tilt);
         _mapRenderer->calculateCameraEvent(cameraEvent, durationSeconds, false);
     }
@@ -188,6 +198,7 @@ namespace carto {
         _mapRenderer->getKineticEventHandler().stopZoom();
         
         CameraZoomEvent cameraEvent;
+        cameraEvent.setKeepRotation(true);
         cameraEvent.setZoomDelta(zoomDelta);
         _mapRenderer->calculateCameraEvent(cameraEvent, durationSeconds, false);
     }
@@ -197,6 +208,7 @@ namespace carto {
         _mapRenderer->getKineticEventHandler().stopZoom();
         
         CameraZoomEvent cameraEvent;
+        cameraEvent.setKeepRotation(true);
         cameraEvent.setZoomDelta(zoomDelta);
         cameraEvent.setTargetPos(_options->getBaseProjection()->toInternal(targetPos));
         _mapRenderer->calculateCameraEvent(cameraEvent, durationSeconds, false);
@@ -207,6 +219,7 @@ namespace carto {
         _mapRenderer->getKineticEventHandler().stopZoom();
         
         CameraZoomEvent cameraEvent;
+        cameraEvent.setKeepRotation(true);
         cameraEvent.setZoom(zoom);
         _mapRenderer->calculateCameraEvent(cameraEvent, durationSeconds, false);
     }
@@ -216,6 +229,7 @@ namespace carto {
         _mapRenderer->getKineticEventHandler().stopZoom();
         
         CameraZoomEvent cameraEvent;
+        cameraEvent.setKeepRotation(true);
         cameraEvent.setZoom(zoom);
         cameraEvent.setTargetPos(_options->getBaseProjection()->toInternal(targetPos));
         _mapRenderer->calculateCameraEvent(cameraEvent, durationSeconds, false);

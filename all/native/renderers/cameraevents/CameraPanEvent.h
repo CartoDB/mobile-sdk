@@ -18,17 +18,22 @@ namespace carto {
         CameraPanEvent();
         virtual ~CameraPanEvent();
     
+        bool isKeepRotation() const;
+        void setKeepRotation(bool keepRotation);
+    
         const MapPos& getPos() const;
         void setPos(const MapPos& pos);
     
         const std::pair<MapPos, MapPos>& getPosDelta() const;
         void setPosDelta(const std::pair<MapPos, MapPos>& posDelta);
-    
+
         bool isUseDelta() const;
     
         void calculate(Options& options, ViewState& viewState);
     
     private:
+        bool _keepRotation;
+
         MapPos _pos;
     
         std::pair<MapPos, MapPos> _posDelta;

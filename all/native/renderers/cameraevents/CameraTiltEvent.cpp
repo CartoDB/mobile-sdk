@@ -1,4 +1,5 @@
 #include "CameraTiltEvent.h"
+#include "CameraRotationEvent.h"
 #include "components/Options.h"
 #include "graphics/ViewState.h"
 #include "projections/Projection.h"
@@ -12,6 +13,7 @@
 namespace carto {
 
     CameraTiltEvent::CameraTiltEvent() :
+        _keepRotation(false),
         _tilt(0),
         _tiltDelta(0),
         _useDelta(true)
@@ -21,6 +23,14 @@ namespace carto {
     CameraTiltEvent::~CameraTiltEvent() {
     }
     
+    bool CameraTiltEvent::isKeepRotation() const {
+        return _keepRotation;
+    }
+
+    void CameraTiltEvent::setKeepRotation(bool keepRotation) {
+        _keepRotation = keepRotation;
+    }
+
     float CameraTiltEvent::getTilt() const {
         return _tilt;
     }
@@ -49,6 +59,7 @@ namespace carto {
             return;
         }
         
+        float rotation = viewState.getRotation();
         cglib::vec3<double> cameraPos = viewState.getCameraPos();
         cglib::vec3<double> focusPos = viewState.getFocusPos();
         cglib::vec3<double> upVec = viewState.getUpVec();
@@ -84,6 +95,13 @@ namespace carto {
         
         // Calculate matrices etc. on the next onDrawFrame() call
         viewState.cameraChanged();
+
+        // Restore rotation, if needed
+        if (_keepRotation) {
+            CameraRotationEvent cameraRotationEvent;
+            cameraRotationEvent.setRotation(rotation);
+            cameraRotationEvent.calculate(options, viewState);
+        }
     }
     
 }
