@@ -240,8 +240,8 @@ namespace carto {
                         cglib::vec3<double> topRight = originShift + cglib::vec3<double>(coordBuf[6], coordBuf[7], coordBuf[8]);
                         cglib::vec3<double> delta = intersectedElement.getHitPos() - topLeft;
 
-                        float x = static_cast<float>(cglib::dot_product(delta, topRight - topLeft) / cglib::norm(topRight - topLeft)) * bitmap->getWidth();
-                        float y = static_cast<float>(cglib::dot_product(delta, bottomLeft - topLeft) / cglib::norm(bottomLeft - topLeft)) * bitmap->getHeight();
+                        float x = static_cast<float>(cglib::dot_product(delta, topRight - topLeft) / cglib::norm(topRight - topLeft) * bitmap->getWidth());
+                        float y = static_cast<float>(cglib::dot_product(delta, bottomLeft - topLeft) / cglib::norm(bottomLeft - topLeft) * bitmap->getHeight());
 
                         MapPos hitPos = _dataSource->getProjection()->fromInternal(projectionSurface->calculateMapPos(intersectedElement.getHitPos()));
                         if (popup->processClick(clickType, hitPos, ScreenPos(x, y))) {

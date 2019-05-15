@@ -323,8 +323,9 @@ namespace carto {
 
                 // Check that the pixel we have hit is not transparent
                 cglib::vec3<double> delta = ray(t) - topLeft;
-                int x = static_cast<int>(cglib::dot_product(delta, topRight - topLeft) / cglib::norm(topRight - topLeft)) * bitmap->getWidth();
-                int y = static_cast<int>(cglib::dot_product(delta, bottomLeft - topLeft) / cglib::norm(bottomLeft - topLeft)) * bitmap->getHeight();
+                int x = static_cast<int>(cglib::dot_product(delta, topRight - topLeft) / cglib::norm(topRight - topLeft) * bitmap->getWidth());
+                int y = static_cast<int>(cglib::dot_product(delta, bottomLeft - topLeft) / cglib::norm(bottomLeft - topLeft) * bitmap->getHeight());
+
                 if (x >= 0 && y >= 0 && x < static_cast<int>(bitmap->getWidth()) && y < static_cast<int>(bitmap->getHeight())) {
                     int width  = std::min(2, static_cast<int>(bitmap->getWidth())  - x);
                     int height = std::min(2, static_cast<int>(bitmap->getHeight()) - y);
