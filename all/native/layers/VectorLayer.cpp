@@ -234,9 +234,10 @@ namespace carto {
                     const std::shared_ptr<Bitmap>& bitmap = drawData->getBitmap();
                     std::vector<float> coordBuf(12);
                     if (BillboardRenderer::CalculateBillboardCoords(*drawData, viewState, coordBuf, 0)) {
-                        cglib::vec3<double> topLeft = viewState.getCameraPos() + cglib::vec3<double>(coordBuf[0], coordBuf[1], coordBuf[2]);
-                        cglib::vec3<double> bottomLeft = viewState.getCameraPos() + cglib::vec3<double>(coordBuf[3], coordBuf[4], coordBuf[5]);
-                        cglib::vec3<double> topRight = viewState.getCameraPos() + cglib::vec3<double>(coordBuf[6], coordBuf[7], coordBuf[8]);
+                        cglib::vec3<double> originShift = viewState.getCameraPos();
+                        cglib::vec3<double> topLeft = originShift + cglib::vec3<double>(coordBuf[0], coordBuf[1], coordBuf[2]);
+                        cglib::vec3<double> bottomLeft = originShift + cglib::vec3<double>(coordBuf[3], coordBuf[4], coordBuf[5]);
+                        cglib::vec3<double> topRight = originShift + cglib::vec3<double>(coordBuf[6], coordBuf[7], coordBuf[8]);
                         cglib::vec3<double> delta = intersectedElement.getHitPos() - topLeft;
 
                         float x = static_cast<float>(cglib::dot_product(delta, topRight - topLeft) / cglib::norm(topRight - topLeft)) * bitmap->getWidth();

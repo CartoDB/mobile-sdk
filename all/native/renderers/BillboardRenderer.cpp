@@ -1,4 +1,5 @@
 #include "BillboardRenderer.h"
+#include "graphics/Bitmap.h"
 #include "graphics/Shader.h"
 #include "graphics/ShaderManager.h"
 #include "graphics/Texture.h"
@@ -313,12 +314,26 @@ namespace carto {
             cglib::vec3<double> topRight = cglib::vec3<double>(coordBuf[6], coordBuf[7], coordBuf[8]) + originShift;
             cglib::vec3<double> bottomRight = cglib::vec3<double>(coordBuf[9], coordBuf[10], coordBuf[11]) + originShift;
             
-            // If either triangle intersects the ray, add the element to result list
+            // Check if either triangle intersects the ray
             double t = 0;
             if (cglib::intersect_triangle(topLeft, bottomLeft, topRight, ray, &t) ||
                 cglib::intersect_triangle(bottomLeft, bottomRight, topRight, ray, &t))
             {
-                results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, ray(t), drawData->getPos(), true));
+                const std::shared_ptr<Bitmap>& bitmap = drawData->getBitmap();
+
+                // Check that the pixel we have hit is not transparent
+                cglib::vec3<double> delta = ray(t) - topLeft;
+                int x = static_cast<int>(cglib::dot_product(delta, topRight - topLeft) / cglib::norm(topRight - topLeft)) * bitmap->getWidth();
+                int y = static_cast<int>(cglib::dot_product(delta, bottomLeft - topLeft) / cglib::norm(bottomLeft - topLeft)) * bitmap->getHeight();
+                if (x >= 0 && y >= 0 && x < static_cast<int>(bitmap->getWidth()) && y < static_cast<int>(bitmap->getHeight())) {
+                    int width  = std::min(2, static_cast<int>(bitmap->getWidth())  - x);
+                    int height = std::min(2, static_cast<int>(bitmap->getHeight()) - y);
+                    std::shared_ptr<Bitmap> subBitmap = bitmap->getSubBitmap(x, y, width, height)->getRGBABitmap();
+                    const std::vector<unsigned char>& pixelData = subBitmap->getPixelData();
+                    if (std::any_of(pixelData.begin(), pixelData.end(), [](unsigned char c) { return c != 0; })) {
+                        results.push_back(RayIntersectedElement(std::static_pointer_cast<VectorElement>(element), layer, ray(t), drawData->getPos(), true));
+                    }
+                }
             }
         }
     }
