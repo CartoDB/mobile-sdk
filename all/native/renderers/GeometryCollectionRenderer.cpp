@@ -52,6 +52,13 @@ namespace carto {
     void GeometryCollectionRenderer::onDrawFrame(float deltaSeconds, StyleTextureCache& styleCache, const ViewState& viewState) {
         std::lock_guard<std::mutex> lock(_mutex);
 
+        if (_elements.empty()) {
+            // Early return, to avoid calling glUseProgram etc.
+            return;
+        }
+
+        glDisable(GL_CULL_FACE);
+
         for (const std::shared_ptr<GeometryCollection>& element : _elements) {
             for (const std::shared_ptr<VectorElementDrawData>& drawData : element->getDrawData()->getDrawDatas()) {
                 if (std::shared_ptr<PointDrawData> pointDrawData = std::dynamic_pointer_cast<PointDrawData>(drawData)) {
@@ -106,6 +113,8 @@ namespace carto {
             _polygonRenderer.drawBatch(styleCache, viewState);
             _polygonRenderer.unbind();
         }
+        
+        glEnable(GL_CULL_FACE);
     }
 
     void GeometryCollectionRenderer::onSurfaceDestroyed() {
