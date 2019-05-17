@@ -281,13 +281,14 @@ namespace carto {
                 tileRenderer->calculateRayIntersectedBitmaps(ray, viewState, hitResults);
             }
 
-            for (auto it = hitResults.rbegin(); it != hitResults.rend(); it++) {
-                vt::TileId vtTileId = std::get<0>(*it);
-                double t = std::get<1>(*it);
-                const vt::TileBitmap& tileBitmap = std::get<2>(*it);
-                cglib::vec2<float> tilePos = std::get<3>(*it);
+            for (const std::tuple<vt::TileId, double, vt::TileBitmap, cglib::vec2<float> >& hitResult : hitResults) {
+                vt::TileId vtTileId = std::get<0>(hitResult);
+                double t = std::get<1>(hitResult);
+                const vt::TileBitmap& tileBitmap = std::get<2>(hitResult);
+                cglib::vec2<float> tilePos = std::get<3>(hitResult);
+
                 if (tileBitmap.getData().empty() || tileBitmap.getWidth() < 1 || tileBitmap.getHeight() < 1) {
-                    Log::Warnf("RasterTileLayer::processClick: Bitmap data not available");
+                    Log::Warnf("RasterTileLayer::calculateRayIntersectedElements: Bitmap data not available");
                     continue;
                 }
 

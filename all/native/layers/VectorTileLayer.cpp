@@ -353,16 +353,15 @@ namespace carto {
                     }
                 }
 
-                for (auto it = hitResults.rbegin(); it != hitResults.rend(); it++) {
-                    vt::TileId vtTileId = std::get<0>(*it);
-                    double t = std::get<1>(*it);
-                    long long id = std::get<2>(*it);
+                for (const std::tuple<vt::TileId, double, long long>& hitResult : hitResults) {
+                    vt::TileId vtTileId = std::get<0>(hitResult);
+                    double t = std::get<1>(hitResult);
+                    long long id = std::get<2>(hitResult);
 
                     std::lock_guard<std::recursive_mutex> lock(_mutex);
 
                     TileInfo tileInfo;
                     _visibleCache.peek(getTileId(MapTile(vtTileId.x, vtTileId.y, vtTileId.zoom, _frameNr)), tileInfo);
-
                     if (std::shared_ptr<BinaryData> tileData = tileInfo.getTileData()) {
                         if (std::shared_ptr<VectorTileFeature> tileFeature = _tileDecoder->decodeFeature(id, vtTileId, tileData, tileInfo.getTileBounds())) {
                             std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
