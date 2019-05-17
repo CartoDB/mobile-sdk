@@ -215,14 +215,17 @@ namespace carto {
                 }
             }
             
+            ClickMode clickMode = NO_CLICK;
             while (true) {
                 // Loop until a click type is chosen
                 {
                     std::lock_guard<std::mutex> lock(_mutex);
+
                     if (_stop) {
                         return;
                     }
                     if (_chosen) {
+                        clickMode = _clickMode;
                         break;
                     }
                     
@@ -252,7 +255,7 @@ namespace carto {
                 std::this_thread::yield();
             }
             
-            switch (_clickMode) {
+            switch (clickMode) {
             case NO_CLICK:
                 break;
             case LONG_CLICK:
@@ -275,52 +278,76 @@ namespace carto {
     }
 
     void ClickHandlerWorker::afterLongClick() {
-        const std::shared_ptr<TouchHandler>& touchHandler = _touchHandler.lock();
+        std::shared_ptr<TouchHandler> touchHandler = _touchHandler.lock();
         if (!touchHandler) {
             return;
         }
         
-        if (!_clickTypeDetection) {
-            touchHandler->startSinglePointer(_pointer1Moved);
-            touchHandler->click(_pointer1Down);
+        std::unique_lock<std::mutex> lock(_mutex);
+        bool canceled = _canceled;
+        bool clickTypeDetection = _clickTypeDetection;
+        ScreenPos pointer1Down = _pointer1Down;
+        ScreenPos pointer1Moved = _pointer1Moved;
+        lock.unlock();
+
+        if (!clickTypeDetection) {
+            touchHandler->startSinglePointer(pointer1Moved);
+            touchHandler->click(pointer1Down);
             return;
         }
     
-        if (_canceled) {
-            touchHandler->startSinglePointer(_pointer1Moved);
+        if (canceled) {
+            touchHandler->startSinglePointer(pointer1Moved);
             return;
         }
-        touchHandler->longClick(_pointer1Down);
+
+        touchHandler->longClick(pointer1Down);
     }
     
     void ClickHandlerWorker::afterDoubleClick() {
-        const std::shared_ptr<TouchHandler>& touchHandler = _touchHandler.lock();
+        std::shared_ptr<TouchHandler> touchHandler = _touchHandler.lock();
         if (!touchHandler) {
             return;
         }
+
+        std::unique_lock<std::mutex> lock(_mutex);
+        bool canceled = _canceled;
+        ScreenPos pointer1Down = _pointer1Down;
+        lock.unlock();
         
-        if (_canceled) {
-            touchHandler->click(_pointer1Down);
+        if (canceled) {
+            touchHandler->click(pointer1Down);
             return;
         }
-        touchHandler->doubleClick(_pointer1Down);
+
+        touchHandler->doubleClick(pointer1Down);
     }
     
     void ClickHandlerWorker::afterDualClick() {
-        const std::shared_ptr<TouchHandler>& touchHandler = _touchHandler.lock();
+        std::shared_ptr<TouchHandler> touchHandler = _touchHandler.lock();
         if (!touchHandler) {
             return;
         }
+
+        std::unique_lock<std::mutex> lock(_mutex);
+        bool canceled = _canceled;
+        int pointersDown = _pointersDown;
+        ScreenPos pointer1Down = _pointer1Down;
+        ScreenPos pointer2Down = _pointer2Down;
+        ScreenPos pointer1Moved = _pointer1Moved;
+        ScreenPos pointer2Moved = _pointer2Moved;
+        lock.unlock();
         
-        if (_canceled) {
-            if (_pointersDown == 1) {
-                touchHandler->startSinglePointer(_pointer1Moved);
-            } else if (_pointersDown >= 2) {
-                touchHandler->startDualPointer(_pointer1Moved, _pointer2Moved);
+        if (canceled) {
+            if (pointersDown == 1) {
+                touchHandler->startSinglePointer(pointer1Moved);
+            } else if (pointersDown >= 2) {
+                touchHandler->startDualPointer(pointer1Moved, pointer2Moved);
             }
             return;
         }
-        touchHandler->dualClick(_pointer1Down, _pointer2Down);
+
+        touchHandler->dualClick(pointer1Down, pointer2Down);
     }
         
     const std::chrono::milliseconds ClickHandlerWorker::LONG_CLICK_MIN_DURATION = std::chrono::milliseconds(400);
