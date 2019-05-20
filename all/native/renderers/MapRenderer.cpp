@@ -995,16 +995,19 @@ namespace carto {
                 updateView = true;
             }
 
-            if (optionName == "RenderProjectionMode" || optionName == "RenderProjection") {
+            if (optionName == "RenderProjectionMode") {
                 std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
                 mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
+                mapRenderer->_viewState.clampZoom(*mapRenderer->_options);
+                mapRenderer->_viewState.clampFocusPos(*mapRenderer->_options);
                 mapRenderer->_renderProjectionChanged = true;
                 updateView = true;
             }
 
-            if (optionName == "BaseProjection") {
+            if (optionName == "BaseProjection" || optionName == "ZoomRange" || optionName == "PanBounds" || optionName == "RestrictedPanning") {
                 std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
                 mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
+                mapRenderer->_viewState.clampZoom(*mapRenderer->_options);
                 mapRenderer->_viewState.clampFocusPos(*mapRenderer->_options);
                 updateView = true;
             }
@@ -1012,28 +1015,6 @@ namespace carto {
             if (optionName == "TileDrawSize" || optionName == "DPI" || optionName == "DrawDistance" || optionName == "FieldOfViewY" || optionName == "FocusPointOffset") {
                 std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
                 mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
-                updateView = true;
-            }
-
-            if (optionName == "ZoomRange") {
-                std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
-                mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
-                mapRenderer->_viewState.clampZoom(*mapRenderer->_options);                
-                updateView = true;
-            }
-
-            if (optionName == "PanBounds") {
-                std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
-                mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
-                mapRenderer->_viewState.clampFocusPos(*mapRenderer->_options);
-                updateView = true;
-            }
-
-            if (optionName == "RestrictedPanning") {
-                std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
-                mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
-                mapRenderer->_viewState.clampZoom(*mapRenderer->_options);
-                mapRenderer->_viewState.clampFocusPos(*mapRenderer->_options);
                 updateView = true;
             }
 

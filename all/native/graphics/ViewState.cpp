@@ -449,11 +449,7 @@ namespace carto {
             _cosHalfFOVXY = std::cos(std::atan(_tanHalfFOVX)) * _cosHalfFOVY;
 
             _zoom0Distance = static_cast<float>(_height * Const::HALF_WORLD_SIZE / (tileDrawSize * _tanHalfFOVY * (_dpi / Const::UNSCALED_DPI)));
-
-            if (!_ignoreMinZoom) {
-                _minZoom = calculateMinZoom(options);
-            }
-
+            _minZoom = zoomRange.getMin();
             _zoomRange = zoomRange;
             _restrictedPanning = restrictedPanning;
 
@@ -487,6 +483,11 @@ namespace carto {
             if (_zoom0Distance > 0) {
                 double length = _zoom0Distance / std::pow(2.0f, _zoom);
                 _cameraPos = _focusPos + cglib::unit(_cameraPos - _focusPos) * length;
+            }
+
+            // Calculate min zoom
+            if (!_ignoreMinZoom) {
+                _minZoom = calculateMinZoom(options);
             }
 
             _cameraChanged = true;
