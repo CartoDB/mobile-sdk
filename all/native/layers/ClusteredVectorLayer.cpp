@@ -492,7 +492,9 @@ namespace carto {
                 }
                 element = cluster.clusterElement;
             }
-            addRendererElement(element);
+            if (element) {
+                addRendererElement(element);
+            }
         }
 
         bool billboardsChanged = refreshRendererElements();
