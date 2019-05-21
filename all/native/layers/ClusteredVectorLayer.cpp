@@ -282,7 +282,7 @@ namespace carto {
         cluster.maxDistance = dist;
         cluster.expandPx = 0;
         cluster.staticPos = cluster.transitionPos = mapPos;
-        cluster.bounds.add(clusters[clusterIdx1].bounds);
+        cluster.bounds = clusters[clusterIdx1].bounds;
         cluster.bounds.add(clusters[clusterIdx2].bounds);
         cluster.elementCount = n1 + n2;
         cluster.childClusterIdx[0] = clusterIdx1;
@@ -502,7 +502,7 @@ namespace carto {
         // Second pass, update positions of clustering elements
         for (int clusterIdx : _renderClusterIdxs) {
             Cluster& cluster = (*renderState.clusters)[clusterIdx];
-            if (!(cluster.elementCount == 1 && cluster.transitionPos == cluster.staticPos)) {
+            if (cluster.clusterElement && !(cluster.elementCount == 1 && cluster.transitionPos == cluster.staticPos)) {
                 SetVectorElementPos(cluster.clusterElement, cluster.transitionPos);
                 billboardsChanged = syncRendererElement(cluster.clusterElement, viewState, false) || billboardsChanged;
             }
