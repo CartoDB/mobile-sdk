@@ -360,8 +360,12 @@ namespace carto {
 
                     std::lock_guard<std::recursive_mutex> lock(_mutex);
 
+                    long long tileId = getTileId(MapTile(vtTileId.x, vtTileId.y, vtTileId.zoom, _frameNr));
                     TileInfo tileInfo;
-                    _visibleCache.peek(getTileId(MapTile(vtTileId.x, vtTileId.y, vtTileId.zoom, _frameNr)), tileInfo);
+                    _visibleCache.peek(tileId, tileInfo);
+                    if (!tileInfo.getTileMap()) {
+                        _preloadingCache.peek(tileId, tileInfo);
+                    }
                     if (std::shared_ptr<BinaryData> tileData = tileInfo.getTileData()) {
                         if (std::shared_ptr<VectorTileFeature> tileFeature = _tileDecoder->decodeFeature(id, vtTileId, tileData, tileInfo.getTileBounds())) {
                             std::shared_ptr<Layer> thisLayer = std::const_pointer_cast<Layer>(shared_from_this());
