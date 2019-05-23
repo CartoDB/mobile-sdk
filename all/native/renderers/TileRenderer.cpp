@@ -249,14 +249,14 @@ namespace carto {
             tiles[drawData->getVTTileId()] = drawData->getVTTile();
         }
 
-        bool changed = tiles != _tiles;
+        bool changed = (tiles != _tiles) || (_horizontalLayerOffset != 0);
         if (changed) {
             if (!_firstDraw) {
                 _glRenderer->setVisibleTiles(tiles, _horizontalLayerOffset == 0);
             }
-            _tiles = tiles;
+            _tiles = std::move(tiles);
+            _horizontalLayerOffset = 0;
         }
-        _horizontalLayerOffset = 0;
         return changed;
     }
 
