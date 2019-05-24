@@ -32,6 +32,7 @@ android {
 
     sourceSets {
         main {
+            java.srcDirs = ['../../generated/android-java/proxies', '../../android/java']
             jniLibs.srcDir '../../dist/android/'
         }
     }
@@ -42,8 +43,4 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-}
-
-dependencies {
-    implementation fileTree(dir: '../../dist/android/', include: ['*.jar'])
 }

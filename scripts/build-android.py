@@ -92,12 +92,10 @@ def buildAndroidJAR(args):
     print('Failed to detect available platform APIs')
 
   javaFiles = []
-  for dirpath, dirnames, filenames in os.walk("%s/generated/android-java/proxies" % baseDir):
-    for filename in [f for f in filenames if f.endswith(".java")]:
-      javaFiles.append(os.path.join(dirpath, filename))
-  for dirpath, dirnames, filenames in os.walk("%s/android/java" % baseDir):
-    for filename in [f for f in filenames if f.endswith(".java")]:
-      javaFiles.append(os.path.join(dirpath, filename))
+  for sourceDir in ["%s/generated/android-java/proxies" % baseDir, "%s/android/java" % baseDir]:
+    for dirpath, dirnames, filenames in os.walk(sourceDir):
+      for filename in [f for f in filenames if f.endswith(".java")]:
+        javaFiles.append(os.path.join(dirpath, filename))
 
   if not javac(args, buildDir,
     '-g:vars',
@@ -109,7 +107,7 @@ def buildAndroidJAR(args):
     *javaFiles
   ):
     return False
-  
+
   currentDir = os.getcwd()
   os.chdir(buildDir)
   classFiles = []
@@ -123,6 +121,7 @@ def buildAndroidJAR(args):
     *classFiles
   ):
     return False
+
   if makedirs(distDir) and \
      copyfile('%s/carto-mobile-sdk.jar' % buildDir, '%s/carto-mobile-sdk.jar' % distDir):
     print("Output available in:\n%s" % distDir)
@@ -130,7 +129,10 @@ def buildAndroidJAR(args):
   return False
 
 def buildAndroidAAR(args):
+  shutil.rmtree(getBuildDir('android-src'), True)
+
   baseDir = getBaseDir()
+  srcDir = getBuildDir('android-src')
   buildDir = getBuildDir('android-aar')
   distDir = getDistDir('android')
   version = args.buildversion
@@ -140,6 +142,19 @@ def buildAndroidAAR(args):
   pomFileName = '%s/carto-mobile-sdk.pom' % buildDir
   with open(pomFileName, 'w') as f:
     f.write(pomFile)
+
+  javaFiles = []
+  for sourceDir in ["%s/generated/android-java/proxies" % baseDir, "%s/android/java" % baseDir]:
+    for dirpath, dirnames, filenames in os.walk(sourceDir):
+      relpath = os.path.relpath(dirpath, sourceDir)
+      makedirs(os.path.join(srcDir, relpath))
+      for filename in [f for f in filenames if f.endswith(".java")]:
+        copyfile(os.path.join(dirpath, filename), os.path.join(srcDir, relpath, filename))
+
+  srcFileName = '%s/sources.jar' % buildDir
+  if not jar(args, srcDir,
+    'cf', srcFileName, '.'):
+    return False
 
   if not gradle(args, '%s/scripts' % baseDir,
     '-p', 'android-aar',
@@ -153,9 +168,10 @@ def buildAndroidAAR(args):
     aarFileName = '%s/outputs/aar/android-aar-%s.aar' % (buildDir, args.configuration.lower())
   if makedirs(distDir) and \
      copyfile(pomFileName, '%s/carto-mobile-sdk-%s.pom' % (distDir, version)) and \
-     copyfile(aarFileName, '%s/carto-mobile-sdk-%s.aar' % (distDir, version)):
+     copyfile(aarFileName, '%s/carto-mobile-sdk-%s.aar' % (distDir, version)) and \
+     copyfile(srcFileName, '%s/carto-mobile-sdk-%s-sources.jar' % (distDir, version)):
     zip(args, '%s/scripts/android-aar/src/main' % baseDir, '%s/carto-mobile-sdk-%s.aar' % (distDir, version), 'R.txt')
-    print("Output available in:\n%s\n\nTo publish, upload .pom and .aar to bintray\n" % distDir)
+    print("Output available in:\n%s\n\nTo publish, upload .pom, sources.jar and .aar to bintray.\n" % distDir)
     return True
   return False
 
@@ -176,6 +192,7 @@ parser.add_argument('--configuration', dest='configuration', default='Release', 
 parser.add_argument('--build-number', dest='buildnumber', default='', help='Build sequence number, goes to version str')
 parser.add_argument('--build-version', dest='buildversion', default='%s-devel' % SDK_VERSION, help='Build version, goes to distributions')
 parser.add_argument('--build-aar', dest='buildaar', default=False, action='store_true', help='Build Android .aar package')
+parser.add_argument('--build-jar', dest='buildjar', default=False, action='store_true', help='Build Android .jar package')
 args = parser.parse_args()
 if 'all' in args.androidabi or args.androidabi == []:
   args.androidabi = ANDROID_ABIS
@@ -214,8 +231,10 @@ if args.buildaar:
 for abi in args.androidabi:
   if not buildAndroidSO(args, abi):
     sys.exit(-1)
-if not buildAndroidJAR(args):
-  sys.exit(-1)
+
+if args.buildjar:
+  if not buildAndroidJAR(args):
+    sys.exit(-1)
 
 if args.buildaar:
   if not buildAndroidAAR(args):

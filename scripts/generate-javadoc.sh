@@ -2,6 +2,7 @@
 
 # Javadoc executable to use
 javadocExec="javadoc"
+jarExec="jar"
 
 # Set dirs
 cmdDir=$(dirname $0)
@@ -30,6 +31,11 @@ find ${tempDir} -name "*.java" > ${tempDir}/files
 rm -rf ${javadocDir}
 mkdir -p ${javadocDir}
 ${javadocExec} -hdf project.name "CARTO Mobile SDK" -doclet com.google.doclava.Doclava -docletpath ${cmdDir}/javadoc/doclava-1.0.6.jar -public -classpath "${ANDROID_HOME}/platforms/android-8/android.jar" -source 1.6 -d "${javadocDir}" "@${tempDir}/files"
+
+# Create .jar
+cd ${javadocDir}
+${jarExec} cf ../carto-mobile-sdk-javadoc.jar .
+cd ${cmdDir}
 
 # Finished
 echo "Done!"
