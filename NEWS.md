@@ -1,3 +1,17 @@
+CARTO Mobile SDK 4.2.0
+-------------------
+
+### Changes/fixes:
+
+* Added support for 'marker-feature-id', 'text-feature-id' and 'shield-feature-id' CartoCSS properties for uniquely identifying labels
+* Fixed regression in 4.2.0RC2 vs RC1 regarding VectorTile hit results ordering
+* Fixed render projection switching issues in 4.2.0RC1/RC2
+* Fixed kinetic rotation clamping issue in 4.2.0RC1/RC2
+* Fixed culling related performance issue in ClusteredVectorLayer
+* Guards against null pointer exceptions in ClusteredVectorLayer when interfacing with custom builder
+* Better handling of horizontal offsetting in TileRenderer
+
+
 CARTO Mobile SDK 4.2.0RC2
 -------------------
 
