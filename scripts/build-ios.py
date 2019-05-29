@@ -98,6 +98,9 @@ def buildIOSFramework(args, archs):
     '-create', *["%s/%s-%s/libcarto_mobile_sdk.%s" % (getBuildDir('ios', '%s-%s' % (platform, arch)), args.configuration, 'iphoneos' if arch.startswith("arm") else "iphonesimulator", 'dylib' if args.sharedlib else 'a') for platform, arch in platformArchs]
   ):
     return False
+  
+  if not copyfile('%s/scripts/ios/Info.plist' % baseDir, '%s/Info.plist' % outputDir):
+      return False
 
   if args.sharedlib:
     if not execute('install_name_tool', outputDir,
@@ -105,8 +108,7 @@ def buildIOSFramework(args, archs):
       'CartoMobileSDK'
     ):
       return False
-    if not copyfile('%s/scripts/ios/Info.plist' % baseDir, '%s/Info.plist' % outputDir):
-      return False
+    
 
   makedirs('%s/Headers' % outputDir)
   if not args.sharedlib:
