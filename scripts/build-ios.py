@@ -159,7 +159,7 @@ def buildIOSCocoapod(args, buildpackage):
   version = args.buildversion
   distName = 'sdk4-ios-%s.zip' % version
   
-  with open('%s/scripts/ios-cocoapod/CartoMobileSDK.podspec.template' % baseDir, 'r') as f:
+  with open('%s/scripts/ios-cocoapod/Akylas-CartoMobileSDK.podspec.template' % baseDir, 'r') as f:
     cocoapodFile = string.Template(f.read()).safe_substitute({ 'baseDir': baseDir, 'distDir': distDir, 'distName': distName, 'version': version })
   with open('%s/CartoMobileSDK.podspec' % distDir, 'w') as f:
     f.write(cocoapodFile)
