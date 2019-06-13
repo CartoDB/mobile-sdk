@@ -570,7 +570,6 @@ namespace carto {
         static std::shared_ptr<Bitmap> GetDefaultBackgroundBitmap();
 
         static std::shared_ptr<Bitmap> GetCartoWatermarkBitmap();
-        static std::shared_ptr<Bitmap> GetEvaluationWatermarkBitmap();
         static std::shared_ptr<Bitmap> GetExpiredWatermarkBitmap();
 
     private:

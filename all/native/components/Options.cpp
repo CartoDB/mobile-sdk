@@ -1,7 +1,6 @@
 #include "Options.h"
 #include "assets/DefaultBackgroundPNG.h"
 #include "assets/CartoWatermarkPNG.h"
-#include "assets/EvaluationWatermarkPNG.h"
 #include "assets/ExpiredWatermarkPNG.h"
 #include "components/Exceptions.h"
 #include "components/CancelableThreadPool.h"
@@ -745,14 +744,7 @@ namespace carto {
         }
         return _CartoWatermarkBitmap;
     }
-        
-    std::shared_ptr<Bitmap> Options::GetEvaluationWatermarkBitmap() {
-        std::lock_guard<std::mutex> lock(_Mutex);
-        if (!_EvaluationWatermarkBitmap) {
-            _EvaluationWatermarkBitmap = Bitmap::CreateFromCompressed(evaluation_watermark_png, evaluation_watermark_png_len);
-        }
-        return _EvaluationWatermarkBitmap;
-    }
+       
     
     std::shared_ptr<Bitmap> Options::GetExpiredWatermarkBitmap() {
         std::lock_guard<std::mutex> lock(_Mutex);

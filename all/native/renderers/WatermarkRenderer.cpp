@@ -92,8 +92,8 @@ namespace carto {
             } else if (watermark == "carto" || watermark == "cartodb" || watermark == "nutiteq") {
                 watermarkBitmap = Options::GetCartoWatermarkBitmap();
             } else if (watermark == "evaluation" || watermark == "development" || watermark == "expired") {
-                limitedLicense = true;
-                watermarkBitmap = (watermark == "expired" ? Options::GetExpiredWatermarkBitmap() : Options::GetEvaluationWatermarkBitmap());
+                limitedLicense = watermark == "expired";
+                watermarkBitmap = (watermark == "expired" ? Options::GetExpiredWatermarkBitmap() : Options::GetCartoWatermarkBitmap());
             } else {
                 Log::Error("WatermarkRenderer::onDrawFrame: Unsupported watermark type!");
             }

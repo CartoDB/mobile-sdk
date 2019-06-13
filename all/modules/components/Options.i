@@ -77,7 +77,6 @@
 %ignore carto::Options::unregisterOnChangeListener;
 %ignore carto::Options::GetDefaultBackgroundBitmap;
 %ignore carto::Options::GetCartoWatermarkBitmap;
-%ignore carto::Options::GetEvaluationWatermarkBitmap;
 %ignore carto::Options::GetExpiredWatermarkBitmap;
 !standard_equals(carto::Options);
 
