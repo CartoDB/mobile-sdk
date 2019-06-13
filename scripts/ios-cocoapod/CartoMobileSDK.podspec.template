@@ -1,7 +1,7 @@
 
 Pod::Spec.new do |s|
 
-  s.name         = "CartoMobileSDK"
+  s.name         = "Akylas-CartoMobileSDK"
   s.version      = "$version"
   s.summary      = "CARTO Mobile SDK is an advanced MapView with 3D effects, offline maps and many more features"
 
@@ -27,7 +27,7 @@ Pod::Spec.new do |s|
 
   s.platform     = :ios, "7.0"
 
-  s.source       = { :http => "https://nutifront.s3.amazonaws.com/sdk_snapshots/sdk4-ios-$version.zip"}
+  s.source       = { :http => "https://github.com/Akylas/mobile-sdk/releases/download/$version/sdk4-ios-$version.zip"}
 
   s.source_files  = "CartoMobileSDK.framework/**/*.{h,m}"
   # s.exclude_files = "Classes/Exclude"
@@ -42,6 +42,6 @@ Pod::Spec.new do |s|
 
   s.requires_arc = true
 
-  s.xcconfig = { "FRAMEWORK_SEARCH_PATHS" => "\"$(PODS_ROOT)/CartoMobileSDK/\"" }
+  s.xcconfig = { "FRAMEWORK_SEARCH_PATHS" => "\"$(PODS_ROOT)/Akylas-CartoMobileSDK/\"" }
 
 end
