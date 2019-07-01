@@ -534,7 +534,7 @@ namespace carto {
     cglib::vec3<double> ViewState::screenToWorld(const cglib::vec2<float>& screenPos, double height, std::shared_ptr<Options> options) const {
         if (_width <= 0 || _height <= 0) {
             Log::Error("ViewState::screenToWorld: Failed to transform point from screen space to world plane, screen size is unknown");
-            return cglib::vec3<double>(0, 0, 0);
+            return cglib::vec3<double>(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
         }
 
         std::shared_ptr<ProjectionSurface> projectionSurface = _projectionSurface;
@@ -565,7 +565,7 @@ namespace carto {
     cglib::vec2<float> ViewState::worldToScreen(const cglib::vec3<double>& worldPos, std::shared_ptr<Options> options) const {
         if (_width <= 0 || _height <= 0) {
             Log::Error("ViewState::worldToScreen: Failed to transform point from world to screen space, screen size is unknown");
-            return cglib::vec2<float>(0, 0);
+            return cglib::vec2<float>(std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::quiet_NaN());
         }
         
         cglib::mat4x4<double> modelviewProjectionMat = _modelviewProjectionMat;
