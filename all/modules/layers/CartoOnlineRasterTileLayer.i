@@ -3,8 +3,6 @@
 
 %module CartoOnlineRasterTileLayer
 
-#ifdef _CARTO_CUSTOM_BASEMAP_SUPPORT
-
 !proxy_imports(carto::CartoOnlineRasterTileLayer, layers.RasterTileLayer)
 
 %{
@@ -21,7 +19,5 @@
 !polymorphic_shared_ptr(carto::CartoOnlineRasterTileLayer, layers.CartoOnlineRasterTileLayer)
 
 %include "layers/CartoOnlineRasterTileLayer.h"
-
-#endif
 
 #endif

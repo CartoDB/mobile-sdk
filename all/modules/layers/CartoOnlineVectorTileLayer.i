@@ -20,11 +20,7 @@
 
 !polymorphic_shared_ptr(carto::CartoOnlineVectorTileLayer, layers.CartoOnlineVectorTileLayer)
 
-#ifdef _CARTO_CUSTOM_BASEMAP_SUPPORT
 %std_exceptions(carto::CartoOnlineVectorTileLayer::CartoOnlineVectorTileLayer(const std::string&, const std::shared_ptr<AssetPackage>&))
-#else
-%ignore carto::CartoOnlineVectorTileLayer::CartoOnlineVectorTileLayer(const std::string&, const std::shared_ptr<AssetPackage>&);
-#endif
 
 %include "layers/CartoOnlineVectorTileLayer.h"
 
