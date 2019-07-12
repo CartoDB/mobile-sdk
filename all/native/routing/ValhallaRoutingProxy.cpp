@@ -1,4 +1,4 @@
-#ifdef _CARTO_VALHALLA_ROUTING_SUPPORT
+#ifdef _CARTO_ROUTING_SUPPORT
 
 #include "ValhallaRoutingProxy.h"
 #include "core/BinaryData.h"
@@ -18,10 +18,10 @@
 #include <string>
 #include <stdexcept>
 #include <vector>
-#include <unordered_map>
 #include <cstdint>
 #include <sstream>
 #include <strstream>
+#include <utility>
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -30,6 +30,7 @@
 
 #include <picojson/picojson.h>
 
+#ifdef _CARTO_VALHALLA_ROUTING_SUPPORT
 #include <valhalla/config.h>
 #include <valhalla/meili/measurement.h>
 #include <valhalla/meili/match_result.h>
@@ -587,43 +588,106 @@ namespace valhalla { namespace thor {
         return trippaths;
     }
 
-    const std::unordered_map<int, carto::RoutingAction::RoutingAction> maneuver_types = {
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kNone),             carto::RoutingAction::ROUTING_ACTION_NO_TURN },//NoTurn = 0,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kContinue),         carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kBecomes),          carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kRampStraight),     carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kStayStraight),     carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kMerge),            carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kFerryEnter),       carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kFerryExit),        carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kSlightRight),      carto::RoutingAction::ROUTING_ACTION_TURN_RIGHT },//TurnSlightRight,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kRight),            carto::RoutingAction::ROUTING_ACTION_TURN_RIGHT },//TurnRight,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kRampRight),        carto::RoutingAction::ROUTING_ACTION_TURN_RIGHT },//TurnRight,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kExitRight),        carto::RoutingAction::ROUTING_ACTION_TURN_RIGHT },//TurnRight,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kStayRight),        carto::RoutingAction::ROUTING_ACTION_TURN_RIGHT },//TurnRight,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kSharpRight),       carto::RoutingAction::ROUTING_ACTION_TURN_RIGHT },//TurnSharpRight,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kUturnLeft),        carto::RoutingAction::ROUTING_ACTION_UTURN },//UTurn,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kUturnRight),       carto::RoutingAction::ROUTING_ACTION_UTURN },//UTurn,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kSharpLeft),        carto::RoutingAction::ROUTING_ACTION_TURN_LEFT },//TurnSharpLeft,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kLeft),             carto::RoutingAction::ROUTING_ACTION_TURN_LEFT },//TurnLeft,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kRampLeft),         carto::RoutingAction::ROUTING_ACTION_TURN_LEFT },//TurnLeft,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kExitLeft),         carto::RoutingAction::ROUTING_ACTION_TURN_LEFT },//TurnLeft,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kStayLeft),         carto::RoutingAction::ROUTING_ACTION_TURN_LEFT },//TurnLeft,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kSlightLeft),       carto::RoutingAction::ROUTING_ACTION_TURN_LEFT },//TurnSlightLeft,
-        //{ static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_k),               carto::RoutingAction::ROUTING_ACTION_REACH_VIA_LOCATION },//ReachViaLocation,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kRoundaboutEnter),  carto::RoutingAction::ROUTING_ACTION_ENTER_ROUNDABOUT },//EnterRoundAbout,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kRoundaboutExit),   carto::RoutingAction::ROUTING_ACTION_LEAVE_ROUNDABOUT },//LeaveRoundAbout,
-        //{ static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_k),               carto::RoutingAction::ROUTING_ACTION_STAY_ON_ROUNDABOUT },//StayOnRoundAbout,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kStart),            carto::RoutingAction::ROUTING_ACTION_START_AT_END_OF_STREET },//StartAtEndOfStreet,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kStartRight),       carto::RoutingAction::ROUTING_ACTION_START_AT_END_OF_STREET },//StartAtEndOfStreet,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kStartLeft),        carto::RoutingAction::ROUTING_ACTION_START_AT_END_OF_STREET },//StartAtEndOfStreet,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kDestination),      carto::RoutingAction::ROUTING_ACTION_FINISH },//ReachedYourDestination,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kDestinationRight), carto::RoutingAction::ROUTING_ACTION_FINISH },//ReachedYourDestination,
-        { static_cast<int>(valhalla::odin::TripDirections_Maneuver_Type_kDestinationLeft),  carto::RoutingAction::ROUTING_ACTION_FINISH },//ReachedYourDestination,
-        //{ static_cast<int>valhalla::odin::TripDirections_Maneuver_Type_k),                carto::RoutingAction::ROUTING_ACTION_ENTER_AGAINST_ALLOWED_DIRECTION, },//EnterAgainstAllowedDirection,
-        //{ static_cast<int>valhalla::odin::TripDirections_Maneuver_Type_k),                carto::RoutingAction::ROUTING_ACTION_LEAVE_AGAINST_ALLOWED_DIRECTION },//LeaveAgainstAllowedDirection
-    };
 } }
+
+#else
+
+namespace valhalla { namespace midgard {
+
+    typedef std::pair<float, float> PointLL;
+
+    template<typename Point>
+    class Shape5Decoder {
+    public:
+        Shape5Decoder(const char* begin, const size_t size) : begin(begin), end(begin + size) {
+        }
+        Point pop() noexcept(false) {
+            lat = next(lat);
+            lon = next(lon);
+            return Point(typename Point::first_type(double(lon) * 1e-6),
+                         typename Point::second_type(double(lat) * 1e-6));
+        }
+        bool empty() const {
+            return begin == end;
+        }
+
+    private:
+        const char* begin;
+        const char* end;
+        int32_t lat = 0;
+        int32_t lon = 0;
+
+        int32_t next(const int32_t previous) noexcept(false) {
+            //grab each 5 bits and mask it in where it belongs using the shift
+            int byte, shift = 0, result = 0;
+              do {
+                if(empty()) throw std::runtime_error("Bad encoded polyline");
+                //take the least significant 5 bits shifted into place
+                byte = int32_t(*begin++) - 63;
+                result |= (byte & 0x1f) << shift;
+                shift += 5;
+                //if the most significant bit is set there is more to this number
+            } while (byte >= 0x20);
+            //handle the bit flipping and add to previous since its an offset
+            return previous + (result & 1 ? ~(result >> 1) : (result >> 1));
+        }
+    };
+
+    // specialized implemetation for std::vector with reserve
+    template<class container_t,
+             class ShapeDecoder = Shape5Decoder<typename container_t::value_type>>
+    container_t decode(const std::string& encoded) {
+        ShapeDecoder shape(encoded.c_str(), encoded.size());
+        container_t c;
+        c.reserve(encoded.size() / 4);
+        while (!shape.empty()) {
+            c.emplace_back(shape.pop());
+        }
+        return c;
+    }
+
+    template<class container_t>
+    std::string encode(const container_t& points) {
+        //a place to keep the output
+        std::string output;
+        //unless the shape is very course you should probably only need about 3 bytes
+        //per coord, which is 6 bytes with 2 coords, so we overshoot to 8 just in case
+        output.reserve(points.size() * 8);
+
+        //handy lambda to turn an integer into an encoded string
+        auto serialize = [&output](int number) {
+            //move the bits left 1 position and flip all the bits if it was a negative number
+            number = number < 0 ? ~(number << 1) : (number << 1);
+            //write 5 bit chunks of the number
+            while (number >= 0x20) {
+                int nextValue = (0x20 | (number & 0x1f)) + 63;
+                output.push_back(static_cast<char>(nextValue));
+                number >>= 5;
+            }
+            //write the last chunk
+            number += 63;
+            output.push_back(static_cast<char>(number));
+        };
+
+        //this is an offset encoding so we remember the last point we saw
+        int last_lon = 0, last_lat = 0;
+        //for each point
+        for (const auto& p : points) {
+            //shift the decimal point 5 places to the right and truncate
+            int lon = static_cast<int>(floor(static_cast<double>(p.first) * 1e6));
+            int lat = static_cast<int>(floor(static_cast<double>(p.second) * 1e6));
+            //encode each coordinate, lat first for some reason
+            serialize(lat - last_lat);
+            serialize(lon - last_lon);
+            //remember the last one we encountered
+            last_lon = lon;
+            last_lat = lat;
+        }
+        return output;
+    }
+
+} }
+#endif
 
 namespace carto {
 
@@ -681,14 +745,14 @@ namespace carto {
 
         try {
             for (const picojson::value& legInfo : response.get("trip").get("legs").get<picojson::array>()) {
-                std::vector<valhalla::midgard::PointLL> shape = valhalla::midgard::decode<std::vector<PointLL> >(legInfo.get("shape").get<std::string>());
+                std::vector<valhalla::midgard::PointLL> shape = valhalla::midgard::decode<std::vector<valhalla::midgard::PointLL> >(legInfo.get("shape").get<std::string>());
                 poses.reserve(poses.size() + shape.size());
 
                 const picojson::array& maneuvers = legInfo.get("maneuvers").get<picojson::array>();
                 for (const picojson::value& maneuver : maneuvers) {
                     for (std::size_t j = static_cast<std::size_t>(maneuver.get("begin_shape_index").get<std::int64_t>()); j <= static_cast<std::size_t>(maneuver.get("end_shape_index").get<std::int64_t>()); j++) {
                         const valhalla::midgard::PointLL& point = shape.at(j);
-                        poses.push_back(proj->fromLatLong(point.lat(), point.lng()));
+                        poses.push_back(proj->fromLatLong(point.second, point.first));
                     }
                 }
             }
@@ -698,39 +762,6 @@ namespace carto {
         }
 
         return std::make_shared<RouteMatchingResult>(proj, poses);
-    }
-
-    std::shared_ptr<RouteMatchingResult> ValhallaRoutingProxy::MatchRoute(const std::vector<std::shared_ptr<sqlite3pp::database> >& databases, const std::string& profile, const std::shared_ptr<RouteMatchingRequest>& request) {
-        EPSG3857 epsg3857;
-        std::shared_ptr<Projection> proj = request->getProjection();
-
-        const float searchRadius = 50.0f;
-        std::vector<valhalla::meili::Measurement> measurements;
-        try {
-            for (const MapPos& pos : request->getPoints()) {
-                MapPos posWgs84 = proj->toWgs84(pos);
-                valhalla::midgard::PointLL lnglat(static_cast<float>(posWgs84.getX()), static_cast<float>(posWgs84.getY()));
-                measurements.emplace_back(lnglat, request->getAccuracy(), searchRadius);
-            }
-
-            valhalla::meili::map_matcher_factory_t factory(databases, profile);
-            std::shared_ptr<valhalla::meili::MapMatcher> matcher(factory.Create(profile));
-            if (!matcher) {
-                throw std::runtime_error("Failed to create matcher instance");
-            }
-
-            std::vector<valhalla::meili::MatchResult> matchResults = matcher->OfflineMatch(measurements);
-
-            std::vector<MapPos> poses;
-            for (const valhalla::meili::MatchResult& matchResult : matchResults) {
-                MapPos pos = proj->fromLatLong(matchResult.lnglat().lat(), matchResult.lnglat().lng());
-                poses.push_back(pos);
-            }
-            return std::make_shared<RouteMatchingResult>(proj, poses);
-        }
-        catch (const std::exception& ex) {
-            throw GenericException("Exception while matching route", ex.what());
-        }
     }
 
     std::shared_ptr<RoutingResult> ValhallaRoutingProxy::CalculateRoute(const std::string& baseURL, const std::string& profile, const std::shared_ptr<RoutingRequest>& request) {
@@ -791,7 +822,7 @@ namespace carto {
 
         try {
             for (const picojson::value& legInfo : response.get("trip").get("legs").get<picojson::array>()) {
-                std::vector<valhalla::midgard::PointLL> shape = valhalla::midgard::decode<std::vector<PointLL> >(legInfo.get("shape").get<std::string>());
+                std::vector<valhalla::midgard::PointLL> shape = valhalla::midgard::decode<std::vector<valhalla::midgard::PointLL> >(legInfo.get("shape").get<std::string>());
                 points.reserve(points.size() + shape.size());
                 epsg3857Points.reserve(epsg3857Points.size() + shape.size());
 
@@ -803,8 +834,8 @@ namespace carto {
                     std::size_t pointIndex = points.size();
                     for (std::size_t j = static_cast<std::size_t>(maneuver.get("begin_shape_index").get<std::int64_t>()); j <= static_cast<std::size_t>(maneuver.get("end_shape_index").get<std::int64_t>()); j++) {
                         const valhalla::midgard::PointLL& point = shape.at(j);
-                        epsg3857Points.push_back(epsg3857.fromLatLong(point.lat(), point.lng()));
-                        points.push_back(proj->fromLatLong(point.lat(), point.lng()));
+                        epsg3857Points.push_back(epsg3857.fromLatLong(point.second, point.first));
+                        points.push_back(proj->fromLatLong(point.second, point.first));
                     }
 
                     float turnAngle = CalculateTurnAngle(epsg3857Points, pointIndex);
@@ -833,6 +864,40 @@ namespace carto {
         }
 
         return std::make_shared<RoutingResult>(proj, points, instructions);
+    }
+
+#ifdef _CARTO_VALHALLA_ROUTING_SUPPORT
+    std::shared_ptr<RouteMatchingResult> ValhallaRoutingProxy::MatchRoute(const std::vector<std::shared_ptr<sqlite3pp::database> >& databases, const std::string& profile, const std::shared_ptr<RouteMatchingRequest>& request) {
+        EPSG3857 epsg3857;
+        std::shared_ptr<Projection> proj = request->getProjection();
+
+        const float searchRadius = 50.0f;
+        std::vector<valhalla::meili::Measurement> measurements;
+        try {
+            for (const MapPos& pos : request->getPoints()) {
+                MapPos posWgs84 = proj->toWgs84(pos);
+                valhalla::midgard::PointLL lnglat(static_cast<float>(posWgs84.getX()), static_cast<float>(posWgs84.getY()));
+                measurements.emplace_back(lnglat, request->getAccuracy(), searchRadius);
+            }
+
+            valhalla::meili::map_matcher_factory_t factory(databases, profile);
+            std::shared_ptr<valhalla::meili::MapMatcher> matcher(factory.Create(profile));
+            if (!matcher) {
+                throw std::runtime_error("Failed to create matcher instance");
+            }
+
+            std::vector<valhalla::meili::MatchResult> matchResults = matcher->OfflineMatch(measurements);
+
+            std::vector<MapPos> poses;
+            for (const valhalla::meili::MatchResult& matchResult : matchResults) {
+                MapPos pos = proj->fromLatLong(matchResult.lnglat().lat(), matchResult.lnglat().lng());
+                poses.push_back(pos);
+            }
+            return std::make_shared<RouteMatchingResult>(proj, poses);
+        }
+        catch (const std::exception& ex) {
+            throw GenericException("Exception while matching route", ex.what());
+        }
     }
 
     std::shared_ptr<RoutingResult> ValhallaRoutingProxy::CalculateRoute(const std::vector<std::shared_ptr<sqlite3pp::database> >& databases, const std::string& profile, const std::shared_ptr<RoutingRequest>& request) {
@@ -902,6 +967,7 @@ namespace carto {
 
         return std::make_shared<RoutingResult>(proj, points, instructions);
     }
+#endif
     
     float ValhallaRoutingProxy::CalculateTurnAngle(const std::vector<MapPos>& epsg3857Points, int pointIndex) {
         int pointIndex0 = pointIndex;
@@ -950,8 +1016,82 @@ namespace carto {
     }
 
     bool ValhallaRoutingProxy::TranslateManeuverType(int maneuverType, RoutingAction::RoutingAction& action) {
-        auto it = valhalla::thor::maneuver_types.find(maneuverType);
-        if (it != valhalla::thor::maneuver_types.end()) {
+        enum {
+            TripDirections_Maneuver_Type_kNone = 0,
+            TripDirections_Maneuver_Type_kStart = 1,
+            TripDirections_Maneuver_Type_kStartRight = 2,
+            TripDirections_Maneuver_Type_kStartLeft = 3,
+            TripDirections_Maneuver_Type_kDestination = 4,
+            TripDirections_Maneuver_Type_kDestinationRight = 5,
+            TripDirections_Maneuver_Type_kDestinationLeft = 6,
+            TripDirections_Maneuver_Type_kBecomes = 7,
+            TripDirections_Maneuver_Type_kContinue = 8,
+            TripDirections_Maneuver_Type_kSlightRight = 9,
+            TripDirections_Maneuver_Type_kRight = 10,
+            TripDirections_Maneuver_Type_kSharpRight = 11,
+            TripDirections_Maneuver_Type_kUturnRight = 12,
+            TripDirections_Maneuver_Type_kUturnLeft = 13,
+            TripDirections_Maneuver_Type_kSharpLeft = 14,
+            TripDirections_Maneuver_Type_kLeft = 15,
+            TripDirections_Maneuver_Type_kSlightLeft = 16,
+            TripDirections_Maneuver_Type_kRampStraight = 17,
+            TripDirections_Maneuver_Type_kRampRight = 18,
+            TripDirections_Maneuver_Type_kRampLeft = 19,
+            TripDirections_Maneuver_Type_kExitRight = 20,
+            TripDirections_Maneuver_Type_kExitLeft = 21,
+            TripDirections_Maneuver_Type_kStayStraight = 22,
+            TripDirections_Maneuver_Type_kStayRight = 23,
+            TripDirections_Maneuver_Type_kStayLeft = 24,
+            TripDirections_Maneuver_Type_kMerge = 25,
+            TripDirections_Maneuver_Type_kRoundaboutEnter = 26,
+            TripDirections_Maneuver_Type_kRoundaboutExit = 27,
+            TripDirections_Maneuver_Type_kFerryEnter = 28,
+            TripDirections_Maneuver_Type_kFerryExit = 29,
+            TripDirections_Maneuver_Type_kTransit = 30,
+            TripDirections_Maneuver_Type_kTransitTransfer = 31,
+            TripDirections_Maneuver_Type_kTransitRemainOn = 32,
+            TripDirections_Maneuver_Type_kTransitConnectionStart = 33,
+            TripDirections_Maneuver_Type_kTransitConnectionTransfer = 34,
+            TripDirections_Maneuver_Type_kTransitConnectionDestination = 35,
+            TripDirections_Maneuver_Type_kPostTransitConnectionDestination = 36
+        };
+
+        static const std::unordered_map<int, RoutingAction::RoutingAction> maneuverTypes = {
+            { TripDirections_Maneuver_Type_kNone,             carto::RoutingAction::ROUTING_ACTION_NO_TURN },//NoTurn = 0,
+            { TripDirections_Maneuver_Type_kContinue,         carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
+            { TripDirections_Maneuver_Type_kBecomes,          carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
+            { TripDirections_Maneuver_Type_kRampStraight,     carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
+            { TripDirections_Maneuver_Type_kStayStraight,     carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
+            { TripDirections_Maneuver_Type_kMerge,            carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
+            { TripDirections_Maneuver_Type_kFerryEnter,       carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
+            { TripDirections_Maneuver_Type_kFerryExit,        carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
+            { TripDirections_Maneuver_Type_kSlightRight,      carto::RoutingAction::ROUTING_ACTION_TURN_RIGHT },//TurnSlightRight,
+            { TripDirections_Maneuver_Type_kRight,            carto::RoutingAction::ROUTING_ACTION_TURN_RIGHT },//TurnRight,
+            { TripDirections_Maneuver_Type_kRampRight,        carto::RoutingAction::ROUTING_ACTION_TURN_RIGHT },//TurnRight,
+            { TripDirections_Maneuver_Type_kExitRight,        carto::RoutingAction::ROUTING_ACTION_TURN_RIGHT },//TurnRight,
+            { TripDirections_Maneuver_Type_kStayRight,        carto::RoutingAction::ROUTING_ACTION_TURN_RIGHT },//TurnRight,
+            { TripDirections_Maneuver_Type_kSharpRight,       carto::RoutingAction::ROUTING_ACTION_TURN_RIGHT },//TurnSharpRight,
+            { TripDirections_Maneuver_Type_kUturnLeft,        carto::RoutingAction::ROUTING_ACTION_UTURN },//UTurn,
+            { TripDirections_Maneuver_Type_kUturnRight,       carto::RoutingAction::ROUTING_ACTION_UTURN },//UTurn,
+            { TripDirections_Maneuver_Type_kSharpLeft,        carto::RoutingAction::ROUTING_ACTION_TURN_LEFT },//TurnSharpLeft,
+            { TripDirections_Maneuver_Type_kLeft,             carto::RoutingAction::ROUTING_ACTION_TURN_LEFT },//TurnLeft,
+            { TripDirections_Maneuver_Type_kRampLeft,         carto::RoutingAction::ROUTING_ACTION_TURN_LEFT },//TurnLeft,
+            { TripDirections_Maneuver_Type_kExitLeft,         carto::RoutingAction::ROUTING_ACTION_TURN_LEFT },//TurnLeft,
+            { TripDirections_Maneuver_Type_kStayLeft,         carto::RoutingAction::ROUTING_ACTION_TURN_LEFT },//TurnLeft,
+            { TripDirections_Maneuver_Type_kSlightLeft,       carto::RoutingAction::ROUTING_ACTION_TURN_LEFT },//TurnSlightLeft,
+            { TripDirections_Maneuver_Type_kRoundaboutEnter,  carto::RoutingAction::ROUTING_ACTION_ENTER_ROUNDABOUT },//EnterRoundAbout,
+            { TripDirections_Maneuver_Type_kRoundaboutExit,   carto::RoutingAction::ROUTING_ACTION_LEAVE_ROUNDABOUT },//LeaveRoundAbout,
+            { TripDirections_Maneuver_Type_kStart,            carto::RoutingAction::ROUTING_ACTION_START_AT_END_OF_STREET },//StartAtEndOfStreet,
+            { TripDirections_Maneuver_Type_kStartRight,       carto::RoutingAction::ROUTING_ACTION_START_AT_END_OF_STREET },//StartAtEndOfStreet,
+            { TripDirections_Maneuver_Type_kStartLeft,        carto::RoutingAction::ROUTING_ACTION_START_AT_END_OF_STREET },//StartAtEndOfStreet,
+            { TripDirections_Maneuver_Type_kDestination,      carto::RoutingAction::ROUTING_ACTION_FINISH },//ReachedYourDestination,
+            { TripDirections_Maneuver_Type_kDestinationRight, carto::RoutingAction::ROUTING_ACTION_FINISH },//ReachedYourDestination,
+            { TripDirections_Maneuver_Type_kDestinationLeft,  carto::RoutingAction::ROUTING_ACTION_FINISH },//ReachedYourDestination,
+            // NOTE: transit maneuvers are missing from this table
+        };
+
+        auto it = maneuverTypes.find(maneuverType);
+        if (it != maneuverTypes.end()) {
             action = it->second;
             return true;
         }

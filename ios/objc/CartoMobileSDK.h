@@ -33,6 +33,7 @@
 #import "NTHTTPTileDataSource.h"
 #import "NTMemoryCacheTileDataSource.h"
 #import "NTPersistentCacheTileDataSource.h"
+#import "NTCartoOnlineTileDataSource.h"
 #import "NTLocalVectorDataSource.h"
 #import "NTTileDownloadListener.h"
 
@@ -65,6 +66,8 @@
 #import "NTVectorTileLayer.h"
 #import "NTTorqueTileLayer.h"
 #import "NTClusteredVectorLayer.h"
+#import "NTCartoOnlineRasterTileLayer.h"
+#import "NTCartoOnlineVectorTileLayer.h"
 #import "NTClusterElementBuilder.h"
 
 #import "NTEPSG3857.h"
@@ -148,13 +151,6 @@
 #import "NTCartoMapsService.h"
 #import "NTCartoSQLService.h"
 
-#ifdef _CARTO_LICENSEMANAGER_SUPPORT
-#import "NTCartoOnlineTileDataSource.h"
-#import "NTCartoOnlineRasterTileLayer.h"
-#import "NTCartoOnlineVectorTileLayer.h"
-#import "NTCartoOnlineRoutingService.h"
-#endif
-
 #ifdef _CARTO_OFFLINE_SUPPORT
 #import "NTMBTilesTileDataSource.h"
 #endif
@@ -164,9 +160,9 @@
 
 #ifdef _CARTO_ROUTING_SUPPORT
 #import "NTPackageManagerRoutingService.h"
-#endif
 #ifdef _CARTO_VALHALLA_ROUTING_SUPPORT
 #import "NTPackageManagerValhallaRoutingService.h"
+#endif
 #endif
 
 #import "NTPackageInfo.h"
@@ -212,11 +208,11 @@
 #import "NTRouteMatchingResult.h"
 #import "NTOSRMOfflineRoutingService.h"
 #import "NTSGREOfflineRoutingService.h"
-#endif
-
+#import "NTCartoOnlineRoutingService.h"
+#import "NTValhallaOnlineRoutingService.h"
 #ifdef _CARTO_VALHALLA_ROUTING_SUPPORT
 #import "NTValhallaOfflineRoutingService.h"
-#import "NTValhallaOnlineRoutingService.h"
+#endif
 #endif
 
 #ifdef _CARTO_NMLMODELLODTREE_SUPPORT
