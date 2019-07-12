@@ -34,6 +34,7 @@
 #import "NTMemoryCacheTileDataSource.h"
 #import "NTPersistentCacheTileDataSource.h"
 #import "NTCartoOnlineTileDataSource.h"
+#import "NTMapTilerOnlineTileDataSource.h"
 #import "NTLocalVectorDataSource.h"
 #import "NTTileDownloadListener.h"
 
