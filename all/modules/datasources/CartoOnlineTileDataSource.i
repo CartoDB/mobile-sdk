@@ -25,7 +25,7 @@
 
 %ignore carto::CartoOnlineTileDataSource::getSchema;
 %ignore carto::CartoOnlineTileDataSource::buildTileURL;
-%ignore carto::CartoOnlineTileDataSource::loadTileURLs;
+%ignore carto::CartoOnlineTileDataSource::loadConfiguration;
 %ignore carto::CartoOnlineTileDataSource::loadOnlineTile;
 
 %feature("director") carto::CartoOnlineTileDataSource;
