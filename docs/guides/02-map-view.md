@@ -18,7 +18,7 @@ CARTO SDK MapView has various configuration options and settings, some of them a
 
 * Parameters to limit interaction: zooming, panning rotating, tilting, touches
 * Finetune performance - number of threads/workers to load data. Set bigger for multi-core devices
-* Set custom map and sky background patterns and clors
+* Set custom map and sky background patterns and colors
 * etc
 
 ### Listening to Events
