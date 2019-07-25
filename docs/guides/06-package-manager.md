@@ -21,7 +21,8 @@ and can be updated or removed through the PackageManager as the app requires.
 When creating PackageManager, you specify package contents by setting `source` parameter value as following:
 
 * `carto.streets` map data packages (vector tiles) for visual map layer.
-* `routing:carto.streets` - routing data packages for Valhalla routing engine
+* `routing:nutiteq.osm.car` - routing data packages for OSRM routing engine and car profile
+* `routing:carto.streets` - routing data packages for Valhalla routing engine (deprecated in SDK 4.2)
 * `geocoding:carto.streets` -  geocoding/address search data packages
 
 All these sources are based on OpenStreetMaps map data.

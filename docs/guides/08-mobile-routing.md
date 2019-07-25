@@ -253,14 +253,14 @@ First, you need to initialize a package manager and a listener to download packa
 
 If the required routing packages are downloaded and routing service is ready, you can calculate routing.
 
-- Create `PackageManagerValhallaRoutingService`
+- Create `PackageManagerRoutingService`
 - Define `RoutingRequest` with at least two points. 
 - Calculate the route with the `calculateRoute` request, read response as *RoutingResult*.
 
 
 #### Limitations of offline routing
 
-CARTO Mobile SDK provides two built-in offline routing engines: the legacy routing engine is based on **OSRM project** and newer one is using **Valhalla routing engine**. The OSRM-based routing engine is better optimized for low memory usage and calculation speed, including very large road networks using *Contraction Hierarchy* representation and algorithms. However, this has some expected limitations:
+CARTO Mobile SDK provides two built-in offline routing engines: the basic routing engine is based on **OSRM project** and the alternative one is using **Valhalla routing engine**. The OSRM-based routing engine is better optimized for low memory usage and calculation speed, including very large road networks using *Contraction Hierarchy* representation and algorithms. However, this has some expected limitations:
 
 - Route profile is precalculated and hardcoded in the data. For different profiles, such as driving or walking, download different map data packages to accomodate for offline routing
 - Only the fastest route is calculated, there is no shortest route choice
@@ -268,18 +268,17 @@ CARTO Mobile SDK provides two built-in offline routing engines: the legacy routi
 - There is no live data in routing, traffic and temporarily closed roads do not appear
 - You have to download whole country package, no custom bounding box area downloads are possible
 
-Valhalla routing engine is more flexible, but requires more memory and is slower.
+Valhalla routing engine is more flexible, but requires more memory and is slower. Starting from SDK 4.2, Valhalla routing engine is not included in the precompiled SDK packages. It is still supported in custom SDK builds.
 
 **Note:** SDK itself does not include live navigation features, such as following a GPS location, initiating automatic recalculations, or guided voice instructions. These features can still be built on top of routing by your device application, and our sample apps have code for this.
 
-To download *Valhalla* routing engine offline packages using `PackageManager`, use `"routing:carto.streets"`  as source ID. You can then request list of country packages (we have all countries in the world covered, but some are divided to smaller parts), or use custom bounding box area to download route data for e.g. smaller metropolitan area.
+To download *OSRM* offline packages using `PackageManager`, use `"routing:nutiteq.osm.car"` as source ID. To download *Valhalla* routing engine offline packages, use `"routing:carto.streets"`  as source ID. You can then request list of country packages (we have all countries in the world covered, but some are divided to smaller parts), or use custom bounding box area to download route data for e.g. smaller metropolitan area.
 
 Note that the routing is very similar to online routing, just the service name is different. Following code assumes that you already have `PackageManager` with correct packages, and have downloaded a package.
 
 {% highlight java linenos %}
 
-    PackageManagerValhallaRoutingService service =
-                    new PackageManagerValhallaRoutingService(packageManager);
+    PackageManagerRoutingService service = new PackageManagerRoutingService(packageManager);
     
     // create separate task, as network request is done
     
