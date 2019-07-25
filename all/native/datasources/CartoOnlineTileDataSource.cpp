@@ -90,13 +90,14 @@ namespace carto {
     }
 
     std::string CartoOnlineTileDataSource::buildTileURL(const std::string& baseURL, const MapTile& tile) const {
+        std::map<std::string, std::string> tagValues = buildTagValues(_tmsScheme ? tile.getFlipped() : tile);
         std::string appToken;
-        if (!LicenseManager::GetInstance().getParameter("appToken", appToken, false)) {
+        if (LicenseManager::GetInstance().getParameter("appToken", appToken, false)) {
+            tagValues["key"] = appToken;
+        } else {
+            Log::Error("CartoOnlineTileDataSource::buildTileURL: appToken not available. License issue?");
             return std::string();
         }
-
-        std::map<std::string, std::string> tagValues = buildTagValues(_tmsScheme ? tile.getFlipped() : tile);
-        tagValues["key"] = appToken;
         return GeneralUtils::ReplaceTags(baseURL, tagValues, "{", "}", true);
     }
 
@@ -197,11 +198,10 @@ namespace carto {
 
         std::string url = buildTileURL(tileURL, mapTile);
         if (url.empty()) {
-            Log::Error("CartoOnlineTileDataSource::loadOnlineTile: Online service not available (license issue?)");
             return std::shared_ptr<TileData>();
         }
-        Log::Debugf("CartoOnlineTileDataSource::loadOnlineTile: Loading %s", url.c_str());
 
+        Log::Debugf("CartoOnlineTileDataSource::loadOnlineTile: Loading %s", url.c_str());
         std::map<std::string, std::string> requestHeaders = NetworkUtils::CreateAppRefererHeader();
 #if defined(__APPLE__)
         // Temporary hack to get gzipped tile on iOS. This works because our tile decoder can detect gzip encoding.

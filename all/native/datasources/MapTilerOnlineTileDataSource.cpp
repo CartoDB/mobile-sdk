@@ -126,11 +126,10 @@ namespace carto {
 
         std::string url = buildTileURL(tileURL, mapTile);
         if (url.empty()) {
-            Log::Error("MapTilerOnlineTileDataSource::loadOnlineTile: Online service not available (license issue?)");
             return std::shared_ptr<TileData>();
         }
-        Log::Debugf("MapTilerOnlineTileDataSource::loadOnlineTile: Loading %s", url.c_str());
 
+        Log::Debugf("MapTilerOnlineTileDataSource::loadOnlineTile: Loading %s", url.c_str());
         std::map<std::string, std::string> requestHeaders = NetworkUtils::CreateAppRefererHeader();
         std::map<std::string, std::string> responseHeaders;
         std::shared_ptr<BinaryData> responseData;

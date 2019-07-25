@@ -61,7 +61,7 @@ namespace carto {
             break;
         default:
             Log::Errorf("CartoPackageManager: Failed to resolve source: %s", source.c_str());
-            return "";
+            return std::string();
         }
 
         std::map<std::string, std::string> params;
@@ -71,6 +71,9 @@ namespace carto {
         std::string appToken;
         if (LicenseManager::GetInstance().getParameter("appToken", appToken, false)) {
             params["appToken"] = appToken;
+        } else {
+            Log::Error("CartoPackageManager::GetPackageListURL: appToken not available. License issue?");
+            return std::string();
         }
         return NetworkUtils::BuildURLFromParameters(baseURL, params);
     }

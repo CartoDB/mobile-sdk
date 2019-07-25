@@ -97,7 +97,12 @@ namespace carto {
             headers = _headers;
             maxAgeHeaderCheck = _maxAgeHeaderCheck;
         }
+
         std::string url = buildTileURL(baseURL, mapTile);
+        if (url.empty()) {
+            return std::shared_ptr<TileData>();
+        }
+
         Log::Infof("HTTPTileDataSource::loadTile: Loading %s", url.c_str());
         std::map<std::string, std::string> responseHeaders;
         std::shared_ptr<BinaryData> responseData;
