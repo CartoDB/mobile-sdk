@@ -11,24 +11,11 @@ namespace carto {
     RoutingRequest::RoutingRequest(const std::shared_ptr<Projection>& projection, const std::vector<MapPos>& points) :
         _projection(projection),
         _points(points),
-        _filters()
+        _filters(),
+        _mutex()
     {
         if (!projection) {
             throw NullArgumentException("Null projection");
-        }
-    }
-
-    RoutingRequest::RoutingRequest(const std::shared_ptr<Projection>& projection, const std::vector<MapPos>& points, const std::vector<Variant>& filters) :
-        _projection(projection),
-        _points(points),
-        _filters(filters)
-    {
-        if (!projection) {
-            throw NullArgumentException("Null projection");
-        }
-
-        if (!filters.empty() && filters.size() != _points.size()) {
-            throw InvalidArgumentException("Points and filters size mismatch");
         }
     }
 
@@ -43,11 +30,18 @@ namespace carto {
         return _points;
     }
 
-    const std::vector<Variant>& RoutingRequest::getFilters() const {
+    std::vector<Variant> RoutingRequest::getGeometryTagFilters() const {
+        std::lock_guard<std::mutex> lock(_mutex);
         return _filters;
     }
 
+    void RoutingRequest::setGeometryTagFilters(const std::vector<Variant>& filters) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _filters = filters;
+    }
+
     std::string RoutingRequest::toString() const {
+        std::lock_guard<std::mutex> lock(_mutex);
         std::stringstream ss;
         ss << std::setiosflags(std::ios::fixed);
         ss << "RoutingRequest [points=";

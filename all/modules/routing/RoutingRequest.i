@@ -26,7 +26,7 @@
 
 %attributestring(carto::RoutingRequest, std::shared_ptr<carto::Projection>, Projection, getProjection)
 %attributeval(carto::RoutingRequest, std::vector<carto::MapPos>, Points, getPoints)
-%attributeval(carto::RoutingRequest, std::vector<carto::Variant>, Filters, getFilters)
+%attributeval(carto::RoutingRequest, std::vector<carto::Variant>, GeometryTagFilters, getGeometryTagFilters, setGeometryTagFilters)
 %std_exceptions(carto::RoutingRequest::RoutingRequest)
 !standard_equals(carto::RoutingRequest);
 !custom_tostring(carto::RoutingRequest);

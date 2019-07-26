@@ -13,6 +13,7 @@
 #include "core/Variant.h"
 
 #include <memory>
+#include <mutex>
 #include <vector>
 
 namespace carto {
@@ -29,13 +30,6 @@ namespace carto {
          * @param points The list of points that the route must pass. Must contains at least 2 elements.
          */
         RoutingRequest(const std::shared_ptr<Projection>& projection, const std::vector<MapPos>& points);
-        /**
-         * Constructs a new RoutingRequest instance from projection, via points and via filters.
-         * @param projection The projection of the points.
-         * @param points The list of points that the route must pass. Must contains at least 2 elements.
-         * @param filters The list of attribute values each corresponding point has to match. Can be empty of must be contains same number of elements as points.
-         */
-        RoutingRequest(const std::shared_ptr<Projection>& projection, const std::vector<MapPos>& points, const std::vector<Variant>& filters);
         virtual ~RoutingRequest();
 
         /**
@@ -48,11 +42,17 @@ namespace carto {
          * @return The point list of the request.
          */
         const std::vector<MapPos>& getPoints() const;
+
         /**
-         * Returns the filter list of the request.
-         * @return The filter list of the request.
+         * Returns the geometry tag filter list of the request.
+         * @return The geometry tag filter list of the request.
          */
-        const std::vector<Variant>& getFilters() const;
+        std::vector<Variant> getGeometryTagFilters() const;
+        /**
+         * Sets the geometry tag filter list for the request.
+         * @param filters The new filter list for the request.
+         */
+        void setGeometryTagFilters(const std::vector<Variant>& filters);
 
         /**
          * Creates a string representation of this request object, useful for logging.
@@ -61,9 +61,11 @@ namespace carto {
         std::string toString() const;
         
     private:
-        std::shared_ptr<Projection> _projection;
-        std::vector<MapPos> _points;
+        const std::shared_ptr<Projection> _projection;
+        const std::vector<MapPos> _points;
+
         std::vector<Variant> _filters;
+        mutable std::mutex _mutex;
     };
     
 }

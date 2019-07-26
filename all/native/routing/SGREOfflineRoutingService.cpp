@@ -94,6 +94,7 @@ namespace carto {
         }
 
         std::shared_ptr<Projection> proj = request->getProjection();
+        std::vector<Variant> filters = request->getGeometryTagFilters();
         EPSG3857 epsg3857;
 
         std::size_t totalPoints = 0;
@@ -105,14 +106,16 @@ namespace carto {
             MapPos p1 = proj->toWgs84(request->getPoints()[i]);
             double z1 = request->getPoints()[i].getZ();
             sgre::Query query(sgre::Point(p0.getX(), p0.getY(), z0), sgre::Point(p1.getX(), p1.getY(), z1));
-            if (i < request->getFilters().size()) {
-                Variant filter0 = request->getFilters()[i - 1];
-                if (filter0.toPicoJSON().is<picojson::object>()) {
-                    query.setFilter(0, filter0.toPicoJSON().get<picojson::object>());
+            if (i - 1 < filters.size()) {
+                picojson::value filter0 = filters[i - 1].toPicoJSON();
+                if (filter0.is<picojson::object>()) {
+                    query.setFilter(0, filter0.get<picojson::object>());
                 }
-                Variant filter1 = request->getFilters()[i];
-                if (filter1.toPicoJSON().is<picojson::object>()) {
-                    query.setFilter(1, filter1.toPicoJSON().get<picojson::object>());
+            }
+            if (i < filters.size()) {
+                picojson::value filter1 = filters[i].toPicoJSON();
+                if (filter1.is<picojson::object>()) {
+                    query.setFilter(1, filter1.get<picojson::object>());
                 }
             }
             sgre::Result result = routeFinder->find(query);
