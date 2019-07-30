@@ -8,6 +8,11 @@ namespace carto {
     {
     }
 
+    void VariantArrayBuilder::clear() {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _elements.clear();
+    }
+
     void VariantArrayBuilder::addString(const std::string& str) {
         std::lock_guard<std::mutex> lock(_mutex);
         _elements.emplace_back(str);

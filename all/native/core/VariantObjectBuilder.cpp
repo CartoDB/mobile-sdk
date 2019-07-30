@@ -8,6 +8,11 @@ namespace carto {
     {
     }
 
+    void VariantObjectBuilder::clear() {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _elementMap.clear();
+    }
+
     void VariantObjectBuilder::setString(const std::string& key, const std::string& str) {
         std::lock_guard<std::mutex> lock(_mutex);
         _elementMap[key] = Variant(str);
