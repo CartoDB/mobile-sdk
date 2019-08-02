@@ -1,3 +1,18 @@
+CARTO Mobile SDK 4.2.1RC1
+-------------------
+
+### Changes/fixes:
+
+* The SDK can now be used without calling registerLicense method of MapView class if CARTO basemap services are not needed. In 4.2.1 and later versions we are showing normal CARTO watermark instead of evaluation watermark in this case.
+* Added MapTilerOnlineTileDataSource class that can be used for MapTiler or OpenMapTiles tiles
+* Added getGeometryTagFilters/setGeometryTagFilters methods to RoutingRequest; they can be used to filter routing endpoints. This is currently supported only when using SGRE routing engine.
+* ValhallaOnlineRoutingService is now included in the standard SDK build. It was available in 4.1.x versions but removed from 4.2.0.
+* Added clear methods to VariantArrayBuilder and VariantObjectBuilder classes
+* Changed the behavior or MapView screenToMap and mapToScreen methods if called before view size is initialized - the SDK now returns NaNs
+* CartoPackageManager constructor now throws an exception if it is instantiated without a valid license
+* protected loadConfiguration method in CartoOnlineTileDataSource is no longer exposed
+
+
 CARTO Mobile SDK 4.2.0
 -------------------
 
