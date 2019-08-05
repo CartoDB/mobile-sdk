@@ -11,6 +11,7 @@ CARTO Mobile SDK 4.2.1RC1
 * Changed the behavior or MapView screenToMap and mapToScreen methods if called before view size is initialized - the SDK now returns NaNs
 * CartoPackageManager constructor now throws an exception if it is instantiated without a valid license
 * protected loadConfiguration method in CartoOnlineTileDataSource is no longer exposed
+* Fixed MapView background clearing issue with Android Q beta versions
 
 
 CARTO Mobile SDK 4.2.0

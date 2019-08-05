@@ -574,6 +574,7 @@ namespace carto {
         static std::shared_ptr<Bitmap> GetExpiredWatermarkBitmap();
 
     private:
+        static const Color DEFAULT_CLEAR_COLOR;
         static const Color DEFAULT_SKY_COLOR;
         static const Color DEFAULT_BACKGROUND_COLOR;
         static const Color DEFAULT_AMBIENT_LIGHT_COLOR;
