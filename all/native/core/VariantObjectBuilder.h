@@ -25,6 +25,11 @@ namespace carto {
         VariantObjectBuilder();
         
         /**
+         * Clears the object.
+         */
+        void clear();
+
+        /**
          * Sets a specified string value.
          * @param key The key to set.
          * @param str The string value.

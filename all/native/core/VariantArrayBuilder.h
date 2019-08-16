@@ -25,6 +25,11 @@ namespace carto {
         VariantArrayBuilder();
         
         /**
+         * Clears the array.
+         */
+        void clear();
+
+        /**
          * Adds a new string to the array as the last element.
          * @param str The string to add.
          */

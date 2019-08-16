@@ -161,9 +161,9 @@ namespace carto {
         double len = cglib::length(pos);
         double rz = pos(2) / len;
         double ss = std::sqrt(std::max(0.0, 1.0 - rz * rz));
-        double x1 = pos(0) != 0 || pos(1) != 0 ? std::atan2(pos(1), pos(0)) : 0;
-        double y1 = std::atanh(std::max(-1.0, std::min(1.0, rz)));
-        double z1 = len != 1 || ss != 0 ? (len - 1.0) / ss : 0;
+        double x1 = (pos(0) == 0.0 && pos(1) == 0.0 ? 0.0 : std::atan2(pos(1), pos(0)));
+        double y1 = (std::isnan(rz) ? rz : std::atanh(std::max(-1.0, std::min(1.0, rz))));
+        double z1 = (len == 1.0 && ss == 0.0 ? 0.0 : (len - 1.0) / ss);
         return MapPos(x1 * scale, y1 * scale, z1 * scale);
     }
 

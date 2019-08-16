@@ -3,8 +3,6 @@
 
 %module(directors="1") CartoOnlineTileDataSource
 
-#ifdef _CARTO_CUSTOM_BASEMAP_SUPPORT
-
 !proxy_imports(carto::CartoOnlineTileDataSource, core.MapTile, core.MapBounds, core.StringMap, datasources.TileDataSource, datasources.components.TileData)
 
 %{
@@ -25,13 +23,11 @@
 
 %ignore carto::CartoOnlineTileDataSource::getSchema;
 %ignore carto::CartoOnlineTileDataSource::buildTileURL;
-%ignore carto::CartoOnlineTileDataSource::loadTileURLs;
+%ignore carto::CartoOnlineTileDataSource::loadConfiguration;
 %ignore carto::CartoOnlineTileDataSource::loadOnlineTile;
 
 %feature("director") carto::CartoOnlineTileDataSource;
 
 %include "datasources/CartoOnlineTileDataSource.h"
-
-#endif
 
 #endif

@@ -36,17 +36,11 @@ namespace carto {
     protected:
         void drawWatermark(const ViewState& viewState);
         
-        static const int FIXED_WATERMARK_PADDING_X;
-        static const int FIXED_WATERMARK_PADDING_Y;
-        
         static const int WATERMARK_WIDTH_DP;
 
         static const std::string WATERMARK_VERTEX_SHADER;
         static const std::string WATERMARK_FRAGMENT_SHADER;
         
-        float _randomAlignmentX;
-        float _randomAlignmentY;
-    
         std::shared_ptr<Bitmap> _watermarkBitmap;
         std::shared_ptr<Texture> _watermarkTex;
 

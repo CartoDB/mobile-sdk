@@ -72,6 +72,10 @@ namespace carto {
         _packageHandlerCache(),
         _mutex()
     {
+        if (_packageListURL.empty()) {
+            throw GenericException("Package list URL not defined");
+        }
+
         std::string taskDbFileName = "tasks_v1.sqlite";
         try {
             _taskQueue = std::make_shared<PersistentTaskQueue>(createLocalFilePath(taskDbFileName));

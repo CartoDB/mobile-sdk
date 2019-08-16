@@ -3,7 +3,7 @@
 
 %module(directors="1") ValhallaOnlineRoutingService
 
-#if defined(_CARTO_VALHALLA_ROUTING_SUPPORT)
+#ifdef _CARTO_ROUTING_SUPPORT
 
 !proxy_imports(carto::ValhallaOnlineRoutingService, routing.RoutingService, routing.RoutingRequest, routing.RoutingResult, routing.RouteMatchingRequest, routing.RouteMatchingResult)
 

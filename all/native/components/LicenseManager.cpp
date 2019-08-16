@@ -107,7 +107,7 @@ namespace carto {
         _updateThreads(),
         _updateThreadsMutex()
     {
-        _parameters["watermark"] = "evaluation";
+        _parameters["watermark"] = "development";
     }
 
     LicenseManager::~LicenseManager() {

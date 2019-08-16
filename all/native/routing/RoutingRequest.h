@@ -10,8 +10,10 @@
 #ifdef _CARTO_ROUTING_SUPPORT
 
 #include "core/MapPos.h"
+#include "core/Variant.h"
 
 #include <memory>
+#include <mutex>
 #include <vector>
 
 namespace carto {
@@ -42,14 +44,28 @@ namespace carto {
         const std::vector<MapPos>& getPoints() const;
 
         /**
+         * Returns the geometry tag filter list of the request.
+         * @return The geometry tag filter list of the request.
+         */
+        std::vector<Variant> getGeometryTagFilters() const;
+        /**
+         * Sets the geometry tag filter list for the request.
+         * @param filters The new filter list for the request.
+         */
+        void setGeometryTagFilters(const std::vector<Variant>& filters);
+
+        /**
          * Creates a string representation of this request object, useful for logging.
          * @return The string representation of this request object.
          */
         std::string toString() const;
         
     private:
-        std::shared_ptr<Projection> _projection;
-        std::vector<MapPos> _points;
+        const std::shared_ptr<Projection> _projection;
+        const std::vector<MapPos> _points;
+
+        std::vector<Variant> _filters;
+        mutable std::mutex _mutex;
     };
     
 }

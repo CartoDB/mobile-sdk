@@ -12,15 +12,11 @@
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
 
-#include <random>
-
 #include <cglib/mat.h>
 
 namespace carto {
 
     WatermarkRenderer::WatermarkRenderer(const Options& options) :
-        _randomAlignmentX(),
-        _randomAlignmentY(),
         _watermarkBitmap(),
         _watermarkTex(),
         _watermarkCoords(),
@@ -61,17 +57,6 @@ namespace carto {
     }
         
     void WatermarkRenderer::onSurfaceChanged(int width, int height) {
-        // Choose a random corner, this is used for placing the watermark with
-        // the evaluation license
-        std::mt19937 rng;
-        rng.seed(static_cast<int>(time(NULL)));
-        for (int i = 0; i < 16; i++) {
-            rng();
-        }
-        std::uniform_int_distribution<int> dist(0, 1);
-        _randomAlignmentX = dist(rng) * 2 - 1;
-        _randomAlignmentY = dist(rng) * 2 - 1;
-        
         cglib::mat4x4<float> modelviewMat = cglib::lookat4_matrix(cglib::vec3<float>(0, 0, 1), cglib::vec3<float>(0, 0, 0), cglib::vec3<float>(0, 1, 0));
         
         float aspectRatio = static_cast<float>(width) / height;
@@ -83,17 +68,17 @@ namespace carto {
     }
     
     void WatermarkRenderer::onDrawFrame(const ViewState& viewState) {
-        bool limitedLicense = false;
         std::shared_ptr<Bitmap> watermarkBitmap;
         std::string watermark;
         if (LicenseManager::GetInstance().getParameter("watermark", watermark, false)) {
             if (watermark == "custom") {
                 watermarkBitmap = _options.getWatermarkBitmap();
-            } else if (watermark == "carto" || watermark == "cartodb" || watermark == "nutiteq") {
+            } else if (watermark == "carto" || watermark == "cartodb" || watermark == "nutiteq" || watermark == "development") {
                 watermarkBitmap = Options::GetCartoWatermarkBitmap();
-            } else if (watermark == "evaluation" || watermark == "development" || watermark == "expired") {
-                limitedLicense = watermark == "expired";
-                watermarkBitmap = (watermark == "expired" ? Options::GetExpiredWatermarkBitmap() : Options::GetCartoWatermarkBitmap());
+            } else if (watermark == "evaluation") {
+                watermarkBitmap = Options::GetEvaluationWatermarkBitmap();
+            } else if (watermark == "expired") {
+                watermarkBitmap = Options::GetExpiredWatermarkBitmap();
             } else {
                 Log::Error("WatermarkRenderer::onDrawFrame: Unsupported watermark type!");
             }
@@ -116,11 +101,11 @@ namespace carto {
             _surfaceChanged = false;
             
             // If the license is limited, draw the watermark in a random corner with a fixed padding
-            float watermarkAlignmentX = limitedLicense ? _randomAlignmentX : _options.getWatermarkAlignmentX();
-            float watermarkAlignmentY = limitedLicense ? _randomAlignmentY : _options.getWatermarkAlignmentY();
-            float watermarkPaddingX = limitedLicense ? FIXED_WATERMARK_PADDING_X : _options.getWatermarkPadding().getX();
-            float watermarkPaddingY = limitedLicense ? FIXED_WATERMARK_PADDING_Y : _options.getWatermarkPadding().getY();
-            float watermarkScale = limitedLicense ? 1.0f : _options.getWatermarkScale();
+            float watermarkAlignmentX = _options.getWatermarkAlignmentX();
+            float watermarkAlignmentY = _options.getWatermarkAlignmentY();
+            float watermarkPaddingX = _options.getWatermarkPadding().getX();
+            float watermarkPaddingY = _options.getWatermarkPadding().getY();
+            float watermarkScale = _options.getWatermarkScale();
             
             // Calculate some params
             float bitmapAspectRatio = static_cast<float>(_watermarkBitmap->getWidth()) / _watermarkBitmap->getHeight();
@@ -198,9 +183,6 @@ namespace carto {
         glDisableVertexAttribArray(_a_texCoord);
     }
         
-    const int WatermarkRenderer::FIXED_WATERMARK_PADDING_X = 4;
-    const int WatermarkRenderer::FIXED_WATERMARK_PADDING_Y = 4;
-
     const int WatermarkRenderer::WATERMARK_WIDTH_DP = 100;
 
     const std::string WatermarkRenderer::WATERMARK_VERTEX_SHADER = R"GLSL(

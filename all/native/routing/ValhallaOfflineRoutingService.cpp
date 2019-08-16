@@ -1,4 +1,4 @@
-#if defined(_CARTO_VALHALLA_ROUTING_SUPPORT) && defined(_CARTO_OFFLINE_SUPPORT)
+#if defined(_CARTO_ROUTING_SUPPORT) && defined(_CARTO_VALHALLA_ROUTING_SUPPORT) && defined(_CARTO_OFFLINE_SUPPORT)
 
 #include "ValhallaOfflineRoutingService.h"
 #include "components/Exceptions.h"
