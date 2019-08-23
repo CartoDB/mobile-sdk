@@ -1,3 +1,15 @@
+CARTO Mobile SDK 4.2.1RC2
+-------------------
+
+### Changes/fixes:
+
+* Tweaks to built-in styles to better prioritise rendering of low rank street names
+* Better Mapnik compatibility by supporting linestring geometry in PolygonSymbolizer, PolygonPatternSymbolizer and BuildingSymbolizer
+* Minor tweaks to line placement clipping against frustum in VT renderer
+* Use constant padding around labels, fixes obscure issues with label click area for long texts
+* Fixed issue with label click handling - due to label geometry merging wrong geometry was returned in certain cases
+
+
 CARTO Mobile SDK 4.2.1RC1
 -------------------
 
