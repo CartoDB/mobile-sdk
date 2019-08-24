@@ -6,7 +6,7 @@ import argparse
 import string
 from build.sdk_build_utils import *
 
-IOS_ARCHS = ['x86_64', 'armv7', 'arm64']
+IOS_ARCHS = ['i386', 'x86_64', 'armv7', 'arm64']
 
 def updateUmbrellaHeader(filename, args):
   with open(filename, 'r') as f:
