@@ -1,4 +1,4 @@
 {
   local: *;
-  global: Java_*;
+  global: Java_*; CSharp_*; SWIG*;
 };
