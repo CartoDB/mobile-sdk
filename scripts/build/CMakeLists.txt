@@ -68,7 +68,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -ftemplate-depth=1024 -fexceptions -frtti -fvisibility=hidden -fvisibility-inlines-hidden")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os -flto=full -fomit-frame-pointer")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Os -flto=full -fomit-frame-pointer")
-set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,-plugin-opt=O2 -s -Wl,--gc-sections -Wl,--as-needed -fuse-ld=lld")
+set(CMAKE_SHARED_LINKER_FLAGS_RELEASE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE} -Wl,-plugin-opt=O2 -s -Wl,--gc-sections -Wl,--as-needed -fuse-ld=lld -Wl,--version-script=${PROJECT_SOURCE_DIR}/../android/version-script")
 
 if(CMAKE_BUILD_TYPE MATCHES "Release|RELEASE")
 string(REPLACE "-Wa,--noexecstack" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
