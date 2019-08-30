@@ -1,3 +1,12 @@
+CARTO Mobile SDK 4.2.1
+-------------------
+
+### Changes/fixes:
+
+* Optimized symbol tables in Android .so libraries so SDK is now 5% smaller
+* Fixed a potential NPE crash in VT glyph rendering code
+
+
 CARTO Mobile SDK 4.2.1RC2
 -------------------
 
