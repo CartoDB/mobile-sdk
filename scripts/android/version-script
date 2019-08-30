@@ -1,0 +1,4 @@
+{
+  local: *;
+  global: Java_*; CSharp_*; SWIG*;
+};
