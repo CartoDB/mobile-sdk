@@ -18,16 +18,41 @@
 namespace carto {
     class LicenseManagerListener;
 
+    /**
+     * An internal class for managing SDK licenses and services.
+     */
     class LicenseManager {
     public:
         virtual ~LicenseManager();
 
+        /**
+         * Registers a license.
+         * @param licenseKey The encoded license string.
+         * @param listener The listener to call once the license has been verified and updated.
+         * @return True if the license is valid.
+         */
         bool registerLicense(const std::string& licenseKey, const std::shared_ptr<LicenseManagerListener>& listener);
 
+        /**
+         * Returns the value of specified license parameter.
+         * @param name The name of the parameter to return.
+         * @param value The parameter value. It is set only if the method returns true.
+         * @param wait If true, then SDK will wait until online license verification has completed and returns the value of the verified and updated parameter.
+         * @return True if the specified parameter exists. False otherwise.
+         */
         bool getParameter(const std::string& name, std::string& value, bool wait = false) const;
 
+        /**
+         * Returns the encryption key for offline packages.
+         * @param key The encryption key. It is set only if the method returns true.
+         * @return True if the offline package encryption key is available.
+         */
         bool getPackageEncryptionKey(std::string& key) const;
 
+        /**
+         * Returns the singleton instance of the class.
+         * @return The singleton instance of the class.
+         */
         static LicenseManager& GetInstance();
         
     private:
