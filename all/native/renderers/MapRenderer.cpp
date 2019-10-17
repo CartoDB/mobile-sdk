@@ -511,7 +511,7 @@ namespace carto {
         
         GLContext::CheckGLError("MapRenderer::onSurfaceCreated");
     }
-    
+
     void MapRenderer::onSurfaceChanged(int width, int height) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         _viewState.setScreenSize(width, height);
@@ -659,6 +659,10 @@ namespace carto {
             std::lock_guard<std::mutex> lock(_renderThreadCallbacksMutex);
             _renderThreadCallbacks.clear();
         }
+    }
+    
+    void MapRenderer::finishRendering() {
+        glFinish();
     }
     
     void MapRenderer::clearAndBindScreenFBO(const Color& color, bool depth, bool stencil) {

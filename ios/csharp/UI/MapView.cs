@@ -80,6 +80,7 @@
             _active = true;
 
             _scale = (float) UIScreen.MainScreen.Scale;
+
             _baseMapView = new BaseMapView();
             _baseMapView.SetRedrawRequestListener(new MapRedrawRequestListener(this));
             _baseMapView.GetOptions().DPI = 160 * _scale;
@@ -90,55 +91,75 @@
         }
 
         private void InitGL() {
-            _viewContext = new EAGLContext(EAGLRenderingAPI.OpenGLES2);
-            if (_viewContext == null) {
-                Log.Fatal("MapView.InitGL: Failed to create OpenGLES 2.0 context");
+            lock (this) {
+                _viewContext = new EAGLContext(EAGLRenderingAPI.OpenGLES2);
+                if (_viewContext == null) {
+                    Log.Fatal("MapView.InitGL: Failed to create OpenGLES 2.0 context");
+                }
+                this.Context = _viewContext;
+
+                DrawableColorFormat = GLKViewDrawableColorFormat.RGBA8888;
+                DrawableDepthFormat = GLKViewDrawableDepthFormat.Format24;
+                DrawableMultisample = GLKViewDrawableMultisample.None;
+                DrawableStencilFormat = GLKViewDrawableStencilFormat.Format8;
+                MultipleTouchEnabled = true;
+
+                EAGLContext.SetCurrentContext(_viewContext);
+                _baseMapView.OnSurfaceCreated();
+                _baseMapView.OnSurfaceChanged((int) (Bounds.Size.Width * _scale), (int) (Bounds.Size.Height * _scale));
             }
-            this.Context = _viewContext;
-
-            DrawableColorFormat = GLKViewDrawableColorFormat.RGBA8888;
-            DrawableDepthFormat = GLKViewDrawableDepthFormat.Format24;
-            DrawableMultisample = GLKViewDrawableMultisample.None;
-            DrawableStencilFormat = GLKViewDrawableStencilFormat.Format8;
-            MultipleTouchEnabled = true;
-
-            EAGLContext.SetCurrentContext(_viewContext);
-            _baseMapView.OnSurfaceCreated();
-            _baseMapView.OnSurfaceChanged((int) (Bounds.Size.Width * _scale), (int) (Bounds.Size.Height * _scale));
-
             SetNeedsDisplay();
         }
 
         private void OnDraw() {
-            if (_viewContext != null && _active) {
-                EAGLContext context = EAGLContext.CurrentContext;
-                if (context != _viewContext) {
-                    EAGLContext.SetCurrentContext(_viewContext);
-                }
-                _baseMapView.OnDrawFrame();
-                if (context != _viewContext) {
-                    EAGLContext.SetCurrentContext(context);
+            lock (this) {
+                if (_viewContext != null && _active) {
+                    EAGLContext context = EAGLContext.CurrentContext;
+                    if (context != _viewContext) {
+                        EAGLContext.SetCurrentContext(_viewContext);
+                    }
+                    _baseMapView.OnDrawFrame();
+                    if (context != _viewContext) {
+                        EAGLContext.SetCurrentContext(context);
+                    }
                 }
             }
         }
 
         private void OnAppDidEnterBackground(NSNotification notification) {
-            _active = false;
+            lock (self) {
+                _active = false;
+                if (_viewContext != null) {
+                    EAGLContext context = EAGLContext.CurrentContext;
+                    if (context != _viewContext) {
+                        EAGLContext.SetCurrentContext(_viewContext);
+                    }
+                    _baseMapView.FinishRendering();
+                    if (context != _viewContext) {
+                        EAGLContext.SetCurrentContext(context);
+                    }
+                }
+            }
         }
 
         private void OnAppWillEnterForeground(NSNotification notification) {
-            _active = true;
+            lock (self) {
+                _active = true;
+            }
+            SetNeedsDisplay();
         }
 
         protected override void Dispose(bool disposing) {
-            if (_viewContext != null) {
-                _baseMapView.OnSurfaceDestroyed();
-                if (EAGLContext.CurrentContext == _viewContext) {
-                    EAGLContext.SetCurrentContext(null);
+            lock (self) {
+                if (_viewContext != null) {
+                    _baseMapView.OnSurfaceDestroyed();
+                    if (EAGLContext.CurrentContext == _viewContext) {
+                        EAGLContext.SetCurrentContext(null);
+                    }
+                    _baseMapView.SetRedrawRequestListener(null);
+                    _baseMapView = null;
+                    _viewContext = null;
                 }
-                _baseMapView.SetRedrawRequestListener(null);
-                _baseMapView = null;
-                _viewContext = null;
             }
 
             NSNotificationCenter.DefaultCenter.RemoveObserver(_didEnterBackgroundNotificationObserver);
@@ -150,11 +171,19 @@
         public override void LayoutSubviews() {
             base.LayoutSubviews();
 
-            if (_viewContext != null) {
-                EAGLContext.SetCurrentContext(_viewContext);
-                _baseMapView.OnSurfaceChanged((int) (Bounds.Size.Width * _scale), (int) (Bounds.Size.Height * _scale));
-                SetNeedsDisplay();
+            lock (this) {
+                if (_viewContext != null) {
+                    EAGLContext context = EAGLContext.CurrentContext;
+                    if (context != _viewContext) {
+                        EAGLContext.SetCurrentContext(_viewContext);
+                    }
+                    _baseMapView.OnSurfaceChanged((int) (Bounds.Size.Width * _scale), (int) (Bounds.Size.Height * _scale));
+                    if (context != _viewContext) {
+                        EAGLContext.SetCurrentContext(context);
+                    }
+                }
             }
+            SetNeedsDisplay();
         }
 
         public override void TouchesBegan(Foundation.NSSet touches, UIEvent evt) {

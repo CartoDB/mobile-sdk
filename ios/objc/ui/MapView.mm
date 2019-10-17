@@ -8,8 +8,6 @@
 #include "utils/IOSUtils.h"
 #include "utils/Log.h"
 
-#include <memory>
-
 #import  <UIKit/UIKit.h>
 
 static BOOL MapViewCreated = NO;
@@ -114,8 +112,14 @@ static const int NATIVE_NO_COORDINATE = -1;
 
     @synchronized (self) {
         if (_viewContext) {
-            [EAGLContext setCurrentContext:_viewContext];
+            EAGLContext* context = [EAGLContext currentContext];
+            if (context != _viewContext) {
+                [EAGLContext setCurrentContext:_viewContext];
+            }
             [_baseMapView onSurfaceChanged:(int)(self.bounds.size.width * _scale) height:(int)(self.bounds.size.height * _scale)];
+            if (context != _viewContext) {
+                [EAGLContext setCurrentContext:context];
+            }
         }
     }
     [self setNeedsDisplay];
@@ -164,7 +168,7 @@ static const int NATIVE_NO_COORDINATE = -1;
             if (context != _viewContext) {
                 [EAGLContext setCurrentContext:_viewContext];
             }
-            glFinish();
+            [_baseMapView finishRendering];
             if (context != _viewContext) {
                 [EAGLContext setCurrentContext:context];
             }
