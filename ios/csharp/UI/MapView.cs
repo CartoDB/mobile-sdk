@@ -127,7 +127,7 @@
         }
 
         private void OnAppDidEnterBackground(NSNotification notification) {
-            lock (self) {
+            lock (this) {
                 _active = false;
                 if (_viewContext != null) {
                     EAGLContext context = EAGLContext.CurrentContext;
@@ -143,14 +143,14 @@
         }
 
         private void OnAppWillEnterForeground(NSNotification notification) {
-            lock (self) {
+            lock (this) {
                 _active = true;
             }
             SetNeedsDisplay();
         }
 
         protected override void Dispose(bool disposing) {
-            lock (self) {
+            lock (this) {
                 if (_viewContext != null) {
                     _baseMapView.OnSurfaceDestroyed();
                     if (EAGLContext.CurrentContext == _viewContext) {
