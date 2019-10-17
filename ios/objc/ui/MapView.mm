@@ -75,6 +75,7 @@ static const int NATIVE_NO_COORDINATE = -1;
     if ([[UIScreen mainScreen] respondsToSelector:@selector(scale)]) {
         _scale = [[UIScreen mainScreen] scale];
     }
+
     _baseMapView = [[NTBaseMapView alloc] init];
     _nativeMapView = [_baseMapView getCptr];
 
@@ -88,57 +89,65 @@ static const int NATIVE_NO_COORDINATE = -1;
 }
 
 -(void)initGL {
-    _viewContext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
-    if (!_viewContext) {
-        carto::Log::Fatal("MapView::initGL: Failed to create OpenGL ES 2.0 context");
-    }
+    @synchronized(self) {
+        _viewContext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+        if (!_viewContext) {
+            carto::Log::Fatal("MapView::initGL: Failed to create OpenGL ES 2.0 context");
+        }
 
-    self.context = _viewContext;
-    self.drawableColorFormat = GLKViewDrawableColorFormatRGBA8888;
-    self.drawableDepthFormat = GLKViewDrawableDepthFormat24;
-    self.drawableMultisample = GLKViewDrawableMultisampleNone;
-    self.drawableStencilFormat = GLKViewDrawableStencilFormat8;
-    self.multipleTouchEnabled = YES;
-    
-    [EAGLContext setCurrentContext:_viewContext];
-    [_baseMapView onSurfaceCreated];
-    [_baseMapView onSurfaceChanged:(int)(self.bounds.size.width * _scale) height:(int)(self.bounds.size.height * _scale)];
-    
+        self.context = _viewContext;
+        self.drawableColorFormat = GLKViewDrawableColorFormatRGBA8888;
+        self.drawableDepthFormat = GLKViewDrawableDepthFormat24;
+        self.drawableMultisample = GLKViewDrawableMultisampleNone;
+        self.drawableStencilFormat = GLKViewDrawableStencilFormat8;
+        self.multipleTouchEnabled = YES;
+        
+        [EAGLContext setCurrentContext:_viewContext];
+        [_baseMapView onSurfaceCreated];
+        [_baseMapView onSurfaceChanged:(int)(self.bounds.size.width * _scale) height:(int)(self.bounds.size.height * _scale)];
+    }
     [self setNeedsDisplay];
 }
 
 -(void)layoutSubviews {
     [super layoutSubviews];
-    if (_viewContext) {
-        [EAGLContext setCurrentContext:_viewContext];
-        [_baseMapView onSurfaceChanged:(int)(self.bounds.size.width * _scale) height:(int)(self.bounds.size.height * _scale)];
-        [self setNeedsDisplay];
+
+    @synchronized (self) {
+        if (_viewContext) {
+            [EAGLContext setCurrentContext:_viewContext];
+            [_baseMapView onSurfaceChanged:(int)(self.bounds.size.width * _scale) height:(int)(self.bounds.size.height * _scale)];
+        }
     }
+    [self setNeedsDisplay];
 }
 
 -(void)glkView:(GLKView*)view drawInRect:(CGRect)rect {
-    if (_viewContext && _active) {
-        EAGLContext* context = [EAGLContext currentContext];
-        if (context != _viewContext) {
-            [EAGLContext setCurrentContext:_viewContext];
-        }
-        [_baseMapView onDrawFrame];
-        if (context != _viewContext) {
-            [EAGLContext setCurrentContext:context];
+    @synchronized (self) {
+        if (_viewContext && _active) {
+            EAGLContext* context = [EAGLContext currentContext];
+            if (context != _viewContext) {
+                [EAGLContext setCurrentContext:_viewContext];
+            }
+            [_baseMapView onDrawFrame];
+            if (context != _viewContext) {
+                [EAGLContext setCurrentContext:context];
+            }
         }
     }
 }
 
 -(void)dealloc {
-    if (_viewContext) {
-        [_baseMapView onSurfaceDestroyed];
-        if ([EAGLContext currentContext] == _viewContext) {
-            [EAGLContext setCurrentContext:nil];
+    @synchronized (self) {
+        if (_viewContext) {
+            [_baseMapView onSurfaceDestroyed];
+            if ([EAGLContext currentContext] == _viewContext) {
+                [EAGLContext setCurrentContext:nil];
+            }
+            [_baseMapView setRedrawRequestListener:nil];
+            _nativeMapView = nil;
+            _baseMapView = nil;
+            _viewContext = nil;
         }
-        [_baseMapView setRedrawRequestListener:nil];
-        _nativeMapView = nil;
-        _baseMapView = nil;
-        _viewContext = nil;
     }
 
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
@@ -147,27 +156,32 @@ static const int NATIVE_NO_COORDINATE = -1;
 
 -(void)appDidEnterBackground {
     carto::Log::Info("MapView::appDidEnterBackground");
-    _active = NO;
-    if (_viewContext) {
-        EAGLContext* context = [EAGLContext currentContext];
-        if (context != _viewContext) {
-            [EAGLContext setCurrentContext:_viewContext];
-        }
-        glFinish();
-        if (context != _viewContext) {
-            [EAGLContext setCurrentContext:context];
+
+    @synchronized (self) {
+        _active = NO;
+        if (_viewContext) {
+            EAGLContext* context = [EAGLContext currentContext];
+            if (context != _viewContext) {
+                [EAGLContext setCurrentContext:_viewContext];
+            }
+            glFinish();
+            if (context != _viewContext) {
+                [EAGLContext setCurrentContext:context];
+            }
         }
     }
 }
 
 -(void)appWillEnterForeground {
     carto::Log::Info("MapView::appWillEnterForeground");
-    _active = YES;
 
+    @synchronized (self) {
+        _active = YES;
+    }
     [self setNeedsDisplay];
 }
 
--(void)transformScreenCoord: (CGPoint*)screenCoord {
+-(void)transformScreenCoord:(CGPoint*)screenCoord {
     screenCoord->x *= _scale;
     screenCoord->y *= _scale;
 }
@@ -246,7 +260,7 @@ static const int NATIVE_NO_COORDINATE = -1;
     return [_baseMapView getLayers];
 }
 
-+(BOOL)registerLicense: (NSString*)licenseKey {
++(BOOL)registerLicense:(NSString*)licenseKey {
     @synchronized (self) {
         if (MapViewCreated) {
             carto::Log::Error("NTMapView.registerLicense: The method [NTMapView registerLicense:] must be called before the MapView is created. Either in the static initializer or before [super viewDidLoad] method.");
@@ -269,123 +283,99 @@ static const int NATIVE_NO_COORDINATE = -1;
     }
 }
 
--(NTOptions*)getOptions
-{
+-(NTOptions*)getOptions {
     return [_baseMapView getOptions];
 }
 
--(NTMapRenderer*)getMapRenderer
-{
+-(NTMapRenderer*)getMapRenderer {
     return [_baseMapView getMapRenderer];
 }
 
--(NTMapPos*)getFocusPos
-{
+-(NTMapPos*)getFocusPos {
     return [_baseMapView getFocusPos];
 }
 
--(float)getRotation
-{
+-(float)getRotation {
     return [_baseMapView getRotation];
 }
 
--(float)getTilt
-{
+-(float)getTilt {
     return [_baseMapView getTilt];
 }
 
--(float)getZoom
-{
+-(float)getZoom {
     return [_baseMapView getZoom];
 }
 
--(void)pan: (NTMapVec*)deltaPos durationSeconds: (float)durationSeconds
-{
+-(void)pan:(NTMapVec*)deltaPos durationSeconds:(float)durationSeconds {
     [_baseMapView pan:deltaPos durationSeconds:durationSeconds];
 }
 
--(void)setFocusPos: (NTMapPos*)pos durationSeconds: (float)durationSeconds
-{
+-(void)setFocusPos:(NTMapPos*)pos durationSeconds:(float)durationSeconds {
     [_baseMapView setFocusPos:pos durationSeconds:durationSeconds];
 }
 
--(void)rotate: (float)deltaAngle durationSeconds: (float)durationSeconds
-{
+-(void)rotate:(float)deltaAngle durationSeconds:(float)durationSeconds {
     [_baseMapView rotate:deltaAngle durationSeconds:durationSeconds];
 }
 
--(void)rotate: (float)deltaAngle targetPos: (NTMapPos*)targetPos durationSeconds: (float)durationSeconds
-{
+-(void)rotate:(float)deltaAngle targetPos:(NTMapPos*)targetPos durationSeconds:(float)durationSeconds {
     [_baseMapView rotate:deltaAngle targetPos:targetPos durationSeconds:durationSeconds];
 }
 
--(void)setRotation: (float)angle durationSeconds: (float)durationSeconds
-{
+-(void)setRotation:(float)angle durationSeconds:(float)durationSeconds {
     [_baseMapView setRotation:angle durationSeconds:durationSeconds];
 }
 
--(void)setRotation: (float)angle targetPos: (NTMapPos*)targetPos durationSeconds: (float)durationSeconds
-{
+-(void)setRotation:(float)angle targetPos:(NTMapPos*)targetPos durationSeconds:(float)durationSeconds {
     [_baseMapView setRotation:angle targetPos:targetPos durationSeconds:durationSeconds];
 }
 
--(void)tilt: (float)deltaTilt durationSeconds: (float)durationSeconds
-{
+-(void)tilt:(float)deltaTilt durationSeconds:(float)durationSeconds {
     [_baseMapView tilt:deltaTilt durationSeconds:durationSeconds];
 }
 
--(void)setTilt: (float)tilt durationSeconds: (float)durationSeconds
-{
+-(void)setTilt:(float)tilt durationSeconds:(float)durationSeconds {
     [_baseMapView setTilt:tilt durationSeconds:durationSeconds];
 }
 
--(void)zoom: (float)deltaZoom durationSeconds: (float)durationSeconds
-{
+-(void)zoom:(float)deltaZoom durationSeconds:(float)durationSeconds {
     [_baseMapView zoom:deltaZoom durationSeconds:durationSeconds];
 }
 
--(void)zoom: (float)deltaZoom targetPos: (NTMapPos*)targetPos durationSeconds: (float)durationSeconds
-{
+-(void)zoom:(float)deltaZoom targetPos:(NTMapPos*)targetPos durationSeconds:(float)durationSeconds {
     [_baseMapView zoom:deltaZoom targetPos:targetPos durationSeconds:durationSeconds];
 }
 
--(void)setZoom: (float)zoom durationSeconds: (float)durationSeconds
-{
+-(void)setZoom:(float)zoom durationSeconds:(float)durationSeconds {
     [_baseMapView setZoom:zoom durationSeconds:durationSeconds];
 }
 
--(void)setZoom: (float)zoom targetPos: (NTMapPos*)targetPos durationSeconds: (float)durationSeconds
-{
+-(void)setZoom:(float)zoom targetPos:(NTMapPos*)targetPos durationSeconds:(float)durationSeconds {
     [_baseMapView setZoom:zoom targetPos:targetPos durationSeconds:durationSeconds];
 }
 
--(void)moveToFitBounds: (NTMapBounds*)mapBounds screenBounds: (NTScreenBounds*)screenBounds integerZoom: (BOOL)integerZoom durationSeconds: (float)durationSeconds
-{
+-(void)moveToFitBounds:(NTMapBounds*)mapBounds screenBounds:(NTScreenBounds*)screenBounds integerZoom:(BOOL)integerZoom durationSeconds:(float)durationSeconds {
     [_baseMapView moveToFitBounds:mapBounds screenBounds:screenBounds integerZoom:integerZoom durationSeconds:durationSeconds];
 }
 
--(void)moveToFitBounds: (NTMapBounds*)mapBounds screenBounds: (NTScreenBounds*)screenBounds integerZoom: (BOOL)integerZoom resetRotation: (BOOL)resetRotation resetTilt: (BOOL)resetTilt durationSeconds: (float)durationSeconds
-{
+-(void)moveToFitBounds:(NTMapBounds*)mapBounds screenBounds:(NTScreenBounds*)screenBounds integerZoom:(BOOL)integerZoom resetRotation:(BOOL)resetRotation resetTilt:(BOOL)resetTilt durationSeconds:(float)durationSeconds {
     [_baseMapView moveToFitBounds:mapBounds screenBounds:screenBounds integerZoom:integerZoom resetRotation:resetRotation resetTilt:resetTilt durationSeconds:durationSeconds];
 }
 
--(NTMapEventListener*) getMapEventListener
-{
+-(NTMapEventListener*) getMapEventListener {
     return [_baseMapView getMapEventListener];
 }
 
--(void)setMapEventListener: (NTMapEventListener*)mapEventListener
-{
+-(void)setMapEventListener:(NTMapEventListener*)mapEventListener {
     [_baseMapView setMapEventListener:mapEventListener];
 }
 
--(NTMapPos*)screenToMap: (NTScreenPos*)screenPos
-{
+-(NTMapPos*)screenToMap:(NTScreenPos*)screenPos {
     return [_baseMapView screenToMap:screenPos];
 }
 
--(NTScreenPos*)mapToScreen: (NTMapPos*)mapPos
-{
+-(NTScreenPos*)mapToScreen:(NTMapPos*)mapPos {
     return [_baseMapView mapToScreen:mapPos];
 }
 
