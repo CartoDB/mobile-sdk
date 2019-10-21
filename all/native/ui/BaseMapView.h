@@ -70,6 +70,12 @@ namespace carto {
          * Stops renderer. Rendering may resume only after onSurfaceCreated is called again.
          */
         void onSurfaceDestroyed();
+
+        /**
+         * Finish all rendering (wait until all rendering commands have finished executing).
+         */
+        void finishRendering();
+
         /**
          * Handles a user input event.
          * @param event The event type. First pointer down = 0, second pointer down = 1, either pointer moved = 2, 

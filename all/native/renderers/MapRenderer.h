@@ -125,6 +125,8 @@ namespace carto {
         void onDrawFrame();
         void onSurfaceDestroyed();
 
+        void finishRendering();
+
         void clearAndBindScreenFBO(const Color& color, bool depth, bool stencil);
         void blendAndUnbindScreenFBO(float opacity);
         void setZBuffering(bool enable);

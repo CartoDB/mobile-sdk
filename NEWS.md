@@ -1,3 +1,15 @@
+CARTO Mobile SDK 4.2.2RC1
+-------------------
+
+### Changes/fixes:
+
+* Additional synchronization for iOS events to prevent potential GL calls while app is paused
+* Fixed wrong rendering of vector tile labels using 'point-placement' mode 
+* Fixed vector tile label transformation handling
+* Speed and memory usage optimizations for vector tile labels
+* Minor improvements to CartoCSS error reporting
+
+
 CARTO Mobile SDK 4.2.1
 -------------------
 

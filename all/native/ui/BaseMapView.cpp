@@ -88,6 +88,10 @@ namespace carto {
         Log::Info("BaseMapView::onSurfaceDestroyed()");
         _mapRenderer->onSurfaceDestroyed();
     }
+
+    void BaseMapView::finishRendering() {
+        _mapRenderer->finishRendering();
+    }
     
     void BaseMapView::onInputEvent(int event, float x1, float y1, float x2, float y2) {
         _touchHandler->onTouchEvent(event, ScreenPos(x1, y1), ScreenPos(x2, y2));

@@ -43,6 +43,7 @@
 %ignore carto::MapRenderer::onSurfaceChanged;
 %ignore carto::MapRenderer::onDrawFrame;
 %ignore carto::MapRenderer::onSurfaceDestroyed;
+%ignore carto::MapRenderer::finishRendering;
 %ignore carto::MapRenderer::clearAndBindScreenFBO;
 %ignore carto::MapRenderer::blendAndUnbindScreenFBO;
 %ignore carto::MapRenderer::setZBuffering;
