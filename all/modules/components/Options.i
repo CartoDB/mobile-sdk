@@ -66,8 +66,8 @@
 %std_exceptions(carto::Options::setTiltRange)
 %std_exceptions(carto::Options::setZoomRange)
 %std_exceptions(carto::Options::setPanBounds)
-!objc_rename(setWatermarkAnchorX) carto::Options::setWatermarkAnchor;
-!objc_rename(setWatermarkPaddingX) carto::Options::setWatermarkPadding;
+!objc_rename(setWatermarkAnchor) carto::Options::setWatermarkAnchor;
+!objc_rename(setWatermarkPadding) carto::Options::setWatermarkPadding;
 %ignore carto::Options::Options;
 %ignore carto::Options::getProjectionSurface;
 %ignore carto::Options::getSkyBitmap;
