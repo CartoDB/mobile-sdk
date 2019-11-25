@@ -1,3 +1,14 @@
+CARTO Mobile SDK 4.2.2RC2
+-------------------
+
+### Changes/fixes:
+
+* Fixed vector tile click radius of points if 'allow-overlapping' flag was set to true
+* Fixed name wrapping of setWatermarkPadding method in Options class on iOS (was setWatermarkPaddingX, now setWatermarkPadding)
+* Clearer error reporting when parsing CartoCSS styles
+* Improvements and tweaks to text-on-line rendering in vector tiles
+
+
 CARTO Mobile SDK 4.2.2RC1
 -------------------
 
