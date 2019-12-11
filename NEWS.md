@@ -1,3 +1,12 @@
+CARTO Mobile SDK 4.2.2
+-------------------
+
+### Changes/fixes:
+
+* Fixed iOS specific compilation warning in NTExceptionWrapper.h ("This function declaration is not a prototype")
+* Disabled LTO on iOS builds (fixes issue with bitcode generation on iOS platform)
+
+
 CARTO Mobile SDK 4.2.2RC2
 -------------------
 
