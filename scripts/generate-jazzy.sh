@@ -11,7 +11,7 @@ rm -rf ${tempDir}
 mkdir -p ${tempDir}
 mkdir -p ${tempDir}/ui
 mkdir -p ${tempDir}/utils
-cp -r ${distDir}/CartoMobileSDK.framework/Headers/CartoMobileSDK.h ${tempDir}/CartoMobileSDK.h
+sed -e 's|CartoMobileSDK/||g' ${distDir}/CartoMobileSDK.framework/Headers/CartoMobileSDK.h | tr '<>' '""' > ${tempDir}/CartoMobileSDK.h
 cp -r ${baseDir}/generated/ios-objc/proxies/* ${tempDir}
 cp -r ${baseDir}/ios/objc/ui/MapView.h ${tempDir}/ui/MapView.h
 cp -r ${baseDir}/ios/objc/ui/MapView.mm ${tempDir}/ui/MapView.mm
