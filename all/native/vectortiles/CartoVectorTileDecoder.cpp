@@ -187,7 +187,8 @@ namespace carto {
             };
 
             return std::make_shared<VectorTileFeature>(mvtFeature.getId(), MapTile(tile.x, tile.y, tile.zoom, 0), mvtLayerName, convertGeometry(convertFn, mvtGeometry), Variant(featureData));
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("CartoVectorTileDecoder::decodeFeature: Exception while decoding: %s", ex.what());
         }
         return std::shared_ptr<VectorTileFeature>();
@@ -239,7 +240,8 @@ namespace carto {
                     tileFeatures.push_back(feature);
                 }
             }
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("CartoVectorTileDecoder::decodeFeatures: Exception while decoding: %s", ex.what());
             return std::shared_ptr<VectorTileFeatureCollection>();
         }
@@ -302,7 +304,8 @@ namespace carto {
             auto tileMap = std::make_shared<TileMap>();
             (*tileMap)[0] = std::make_shared<vt::Tile>(targetTile, tileSize, tileBackground, tileLayers);
             return tileMap;
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("CartoVectorTileDecoder::decodeTile: Exception while decoding: %s", ex.what());
         }
         return std::shared_ptr<TileMap>();
@@ -354,7 +357,8 @@ namespace carto {
             css::CartoCSSMapLoader mapLoader(assetLoader, _logger);
             mapLoader.setIgnoreLayerPredicates(true);
             map = mapLoader.loadMap(styleSet->getCartoCSS());
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             throw ParseException(std::string("CartoCSS style parsing failed: ") + ex.what(), styleSet->getCartoCSS());
         }
 

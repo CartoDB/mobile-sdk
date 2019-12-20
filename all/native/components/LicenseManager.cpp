@@ -297,7 +297,8 @@ namespace carto {
             for (auto it2 = boost::make_split_iterator(it->second, boost::token_finder(boost::is_any_of("-"))); it2 != boost::split_iterator<std::string::const_iterator>(); it2++) {
                 try {
                     expirationDate.push_back(boost::lexical_cast<int>(*it2));
-                } catch (const boost::bad_lexical_cast&) {
+                }
+                catch (const boost::bad_lexical_cast&) {
                     throw GenericException("Invalid date in license");
                 }
             }

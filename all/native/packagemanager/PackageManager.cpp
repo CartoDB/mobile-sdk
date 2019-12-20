@@ -1018,8 +1018,7 @@ namespace carto {
                     std::string tileMaskValue;
                     if (package->getTileMask()) {
                         tileMaskValue = EncodeTileMask(package->getTileMask());
-                    }
-                    else if (auto handler = PackageHandlerFactory(_serverEncKey, _localEncKey).createPackageHandler(task.packageType, packageFileName)) {
+                    } else if (auto handler = PackageHandlerFactory(_serverEncKey, _localEncKey).createPackageHandler(task.packageType, packageFileName)) {
                         tileMaskValue = EncodeTileMask(handler->calculateTileMask());
                     }
                     std::uint64_t fileSize = package->getSize();

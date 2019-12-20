@@ -209,7 +209,8 @@ namespace carto {
                         val = value;
                     }
                     _parameterValueMap[param] = val;
-                } catch (const std::exception& ex) {
+                }
+                catch (const std::exception& ex) {
                     Log::Errorf("MBVectorTileDecoder::setStyleParameter: Exception while converting parameter %s/%s: %s", param.c_str(), value.c_str(), ex.what());
                     return false;
                 }
@@ -338,7 +339,8 @@ namespace carto {
             };
 
             return std::make_shared<VectorTileFeature>(mvtFeature.getId(), MapTile(tile.x, tile.y, tile.zoom, 0), mvtLayerName, convertGeometry(convertFn, mvtGeometry), Variant(featureData));
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("MBVectorTileDecoder::decodeFeature: Exception while decoding: %s", ex.what());
         }
         return std::shared_ptr<VectorTileFeature>();
@@ -390,7 +392,8 @@ namespace carto {
                     tileFeatures.push_back(feature);
                 }
             }
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("MBVectorTileDecoder::decodeFeatures: Exception while decoding: %s", ex.what());
             return std::shared_ptr<VectorTileFeatureCollection>();
         }
@@ -428,7 +431,8 @@ namespace carto {
                 (*tileMap)[0] = tile;
                 return tileMap;
             }
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("MBVectorTileDecoder::decodeTile: Exception while decoding: %s", ex.what());
         }
         return std::shared_ptr<TileMap>();
@@ -448,7 +452,8 @@ namespace carto {
                 css::CartoCSSMapLoader mapLoader(assetLoader, _logger);
                 mapLoader.setIgnoreLayerPredicates(_cartoCSSLayerNamesIgnored);
                 map = mapLoader.loadMap((*cartoCSSStyleSet)->getCartoCSS());
-            } catch (const std::exception& ex) {
+            }
+            catch (const std::exception& ex) {
                 throw ParseException(std::string("CartoCSS style parsing failed: ") + ex.what(), (*cartoCSSStyleSet)->getCartoCSS());
             }
         } else if (auto compiledStyleSet = boost::get<std::shared_ptr<CompiledStyleSet> >(&styleSet)) {
@@ -475,7 +480,8 @@ namespace carto {
                     auto symbolizerParser = std::make_shared<mvt::SymbolizerParser>(_logger);
                     mvt::MapParser mapParser(symbolizerParser, _logger);
                     map = mapParser.parseMap(doc);
-                } catch (const std::exception& ex) {
+                }
+                catch (const std::exception& ex) {
                     throw ParseException(std::string("XML style processing failed: ") + ex.what());
                 }
             } else if (boost::algorithm::ends_with(styleAssetName, ".json")) {
@@ -484,7 +490,8 @@ namespace carto {
                     css::CartoCSSMapLoader mapLoader(assetLoader, _logger);
                     mapLoader.setIgnoreLayerPredicates(_cartoCSSLayerNamesIgnored);
                     map = mapLoader.loadMapProject(styleAssetName);
-                } catch (const std::exception& ex) {
+                }
+                catch (const std::exception& ex) {
                     throw GenericException(std::string("CartoCSS style loading failed: ") + ex.what());
                 }
             } else {

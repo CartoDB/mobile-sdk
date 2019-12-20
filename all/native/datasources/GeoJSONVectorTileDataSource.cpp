@@ -29,7 +29,8 @@ namespace carto {
         try {
             std::lock_guard<std::mutex> lock(_mutex);
             layerIndex = _tileBuilder->createLayer(name);
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("GeoJSONVectorTileDataSource::createLayer: Failed to create layer: %s", ex.what());
             throw GenericException("Failed to create layer", ex.what());
         }
@@ -42,7 +43,8 @@ namespace carto {
             std::lock_guard<std::mutex> lock(_mutex);
             _tileBuilder->clearLayer(layerIndex);
             _tileBuilder->importGeoJSONFeatureCollection(layerIndex, geoJSON.toPicoJSON());
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("GeoJSONVectorTileDataSource::setLayerGeoJSON: Failed to update layer: %s", ex.what());
             throw GenericException("Failed to set layer contents", ex.what());
         }
@@ -67,7 +69,8 @@ namespace carto {
             std::lock_guard<std::mutex> lock(_mutex);
             _tileBuilder->clearLayer(layerIndex);
             _tileBuilder->importGeoJSONFeatureCollection(layerIndex, geoJSON);
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("GeoJSONVectorTileDataSource::setLayerGeoJSON: Failed to update layer: %s", ex.what());
             throw GenericException("Failed to set layer contents", ex.what());
         }
@@ -78,7 +81,8 @@ namespace carto {
         try {
             std::lock_guard<std::mutex> lock(_mutex);
             _tileBuilder->deleteLayer(layerIndex);
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("GeoJSONVectorTileDataSource::deleteLayer: Failed to delete layer: %s", ex.what());
         }
         notifyTilesChanged(false);
@@ -104,7 +108,8 @@ namespace carto {
             _tileBuilder->buildTile(mapTile.getZoom(), mapTile.getX(), mapTile.getY(), encodedTile);
             auto data = std::make_shared<BinaryData>(reinterpret_cast<const unsigned char*>(encodedTile.data().data()), encodedTile.data().size());
             return std::make_shared<TileData>(data);
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("GeoJSONVectorTileDataSource::loadTile: Failed to build tile: %s", ex.what());
             return std::shared_ptr<TileData>();
         }

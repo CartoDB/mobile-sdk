@@ -116,26 +116,22 @@ namespace carto {
                     hr = _state->_d2dContext->CreateBitmap(size, NULL, 0, &targetProperties, &_state->_d2dTargetBitmap);
                     if (SUCCEEDED(hr)) {
                         _state->_d2dContext->SetTarget(_state->_d2dTargetBitmap.Get());
-                    }
-                    else {
+                    } else {
                         _state.reset();
                         throw GenericException("BitmapCanvas: Failed to create target bitmap");
                     }
 
                     _state->_d2dContext->BeginDraw();
                     _state->_d2dContext->Clear(D2D1::ColorF(0, 0));
-                }
-                else {
+                } else {
                     _state.reset();
                     throw GenericException("BitmapCanvas: Failed to create D2DDeviceContext");
                 }
-            }
-            else {
+            } else {
                 _state.reset();
                 throw GenericException("BitmapCanvas: Failed to create D2DDevice");
             }
-        }
-        else {
+        } else {
             _state.reset();
             throw GenericException("BitmapCanvas: Failed to create D3DDevice");
         }
@@ -211,8 +207,7 @@ namespace carto {
             if (SUCCEEDED(hr)) {
                 D2D1_POINT_2F d2dPos = { pos.getX(), pos.getY() };
                 _state->_d2dContext->DrawTextLayout(d2dPos, dwriteTextLayout.Get(), _state->_d2dBrush.Get());
-            }
-            else {
+            } else {
                 Log::Errorf("BitmapCanvas: Failed to create text layout, %x", (int)hr);
             }
         }
@@ -260,8 +255,7 @@ namespace carto {
                     _state->_d2dContext->FillGeometry(d2dPathGeometry.Get(), _state->_d2dBrush.Get());
                     break;
                 }
-            }
-            else {
+            } else {
                 Log::Errorf("BitmapCanvas: Failed to create path geometry, %x", (int)hr);
             }
         }
@@ -285,8 +279,7 @@ namespace carto {
             if (SUCCEEDED(hr)) {
                 D2D1_RECT_F d2dRect = { rect.getMin().getX(), rect.getMin().getY(), rect.getMax().getX(), rect.getMax().getY() };
                 _state->_d2dContext->DrawBitmap(d2dBitmap.Get(), d2dRect);
-            }
-            else {
+            } else {
                 Log::Errorf("BitmapCanvas: Failed to create bitmap, %x", (int)hr);
             }
         }
@@ -305,12 +298,10 @@ namespace carto {
                 hr = dwriteTextLayout->GetMetrics(&dwriteMetrics);
                 if (SUCCEEDED(hr)) {
                     return ScreenBounds(ScreenPos(0, 0), ScreenPos(std::ceil(dwriteMetrics.left + dwriteMetrics.width), std::ceil(dwriteMetrics.top + dwriteMetrics.height)));
-                }
-                else {
+                } else {
                     Log::Errorf("BitmapCanvas: Failed to read text metrics, %x", (int)hr);
                 }
-            }
-            else {
+            } else {
                 Log::Errorf("BitmapCanvas: Failed to create text layout, %x", (int)hr);
             }
         }
@@ -338,12 +329,10 @@ namespace carto {
 
                     _state->_d2dContext->BeginDraw();
                     return bitmap;
-                }
-                else {
+                } else {
                     Log::Errorf("BitmapCanvas: Failed to map bitmap, %x", (int)hr);
                 }
-            }
-            else {
+            } else {
                 Log::Errorf("BitmapCanvas: Failed to create bitmap, %x", (int)hr);
             }
 

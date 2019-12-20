@@ -105,16 +105,13 @@ namespace carto {
 
         if (auto pointGeom = std::dynamic_pointer_cast<geocoding::PointGeometry>(geom)) {
             return std::make_shared<PointGeometry>(translatePoint(pointGeom->getPoint()));
-        }
-        else if (auto lineGeom = std::dynamic_pointer_cast<geocoding::LineGeometry>(geom)) {
+        } else if (auto lineGeom = std::dynamic_pointer_cast<geocoding::LineGeometry>(geom)) {
             return std::make_shared<LineGeometry>(translateRing(lineGeom->getPoints()));
-        }
-        else if (auto polygonGeom = std::dynamic_pointer_cast<geocoding::PolygonGeometry>(geom)) {
+        } else if (auto polygonGeom = std::dynamic_pointer_cast<geocoding::PolygonGeometry>(geom)) {
             std::vector<std::vector<MapPos> > holes;
             std::transform(polygonGeom->getHoles().begin(), polygonGeom->getHoles().end(), std::back_inserter(holes), translateRing);
             return std::make_shared<PolygonGeometry>(translateRing(polygonGeom->getPoints()), holes);
-        }
-        else if (auto multiGeom = std::dynamic_pointer_cast<geocoding::MultiGeometry>(geom)) {
+        } else if (auto multiGeom = std::dynamic_pointer_cast<geocoding::MultiGeometry>(geom)) {
             std::vector<std::shared_ptr<Geometry> > geometries;
             std::transform(multiGeom->getGeometries().begin(), multiGeom->getGeometries().end(), std::back_inserter(geometries), std::bind(&GeocodingProxy::TranslateGeometry, proj, std::placeholders::_1));
             return std::make_shared<MultiGeometry>(geometries);

@@ -304,8 +304,7 @@ namespace carto {
             }
 
             hr = httpRequest3->Send(postStream.Get(), request.body.size());
-        }
-        else {
+        } else {
             hr = httpRequest3->Send(nullptr, 0);
         }
 

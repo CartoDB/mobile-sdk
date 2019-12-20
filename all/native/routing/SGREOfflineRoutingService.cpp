@@ -86,7 +86,8 @@ namespace carto {
                     sgre::GraphBuilder graphBuilder(std::move(ruleList));
                     graphBuilder.importGeoJSON(_featureData);
                     _cachedRouteFinder = sgre::RouteFinder::create(graphBuilder.build(), _config);
-                } catch (const std::exception& ex) {
+                }
+                catch (const std::exception& ex) {
                     throw GenericException("Failed to create routing graph", ex.what());
                 }
             }

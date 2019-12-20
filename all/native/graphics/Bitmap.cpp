@@ -311,20 +311,22 @@ namespace carto {
                 for (int y = y1c; y <= y1d; y++) {
                     unsigned int weight_y = 256;
                     if (y1c != y1d) {
-                        if (y == y1c)
+                        if (y == y1c) {
                             weight_y = 256 - (y1a & 0xFF);
-                        else if (y == y1d)
+                        } else if (y == y1d) {
                             weight_y = (y1b & 0xFF);
+                        }
                     }
     
                     const unsigned char* dsrc2 = &dsrc[y * _width * _bytesPerPixel + x1c * _bytesPerPixel];
                     for (int x = x1c; x <= x1d; x++) {
                         unsigned int weight_x = 256;
                         if (x1c != x1d) {
-                            if (x == x1c)
+                            if (x == x1c) {
                                 weight_x = 256 - (x1a & 0xFF);
-                            else if (x == x1d)
+                            } else if (x == x1d) {
                                 weight_x = (x1b & 0xFF);
+                            }
                         }
     
                         unsigned int w = (weight_x * weight_y) >> weight_shift;

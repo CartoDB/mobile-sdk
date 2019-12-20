@@ -221,7 +221,8 @@ namespace carto {
                     return std::shared_ptr<TileData>();
                 }
             }
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("CartoOnlineTileDataSource::loadOnlineTile: Exception while loading tile %d/%d/%d: %s", mapTile.getZoom(), mapTile.getX(), mapTile.getY(), ex.what());
             return std::shared_ptr<TileData>();
         }

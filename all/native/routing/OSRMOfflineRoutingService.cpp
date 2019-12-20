@@ -25,7 +25,8 @@ namespace carto {
             if (!graph->import(path)) {
                 throw FileException("Failed to import routing graph", path);
             }
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             throw GenericException("Exception while importing routing graph", ex.what());
         }
         _routeFinder = std::make_shared<osrm::RouteFinder>(graph);

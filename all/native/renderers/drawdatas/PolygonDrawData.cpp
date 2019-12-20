@@ -136,8 +136,7 @@ namespace carto {
                     _boundingBox.add(_coords.back().back());
                     _indices.back().push_back(newIndex);
                     indexMap[index] = newIndex;
-                }
-                else {
+                } else {
                     _indices.back().push_back(it->second);
                 }
             }

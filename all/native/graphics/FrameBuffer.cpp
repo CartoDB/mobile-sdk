@@ -97,8 +97,7 @@ namespace carto {
                 glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthStencilRBId);
                 glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depthStencilRBId);
                 _depthStencilRBIds.push_back(depthStencilRBId);
-            }
-            else {
+            } else {
                 if (_depth) {
                     GLuint depthRBId = 0;
                     glGenRenderbuffers(1, &depthRBId);

@@ -43,7 +43,8 @@ namespace carto {
                 }
             }
             query.finish();
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("MBTilesTileDataSource: Exception while reading zoom level metadata: %s", ex.what());
         }
 
@@ -60,7 +61,8 @@ namespace carto {
                     }
                 }
                 query.finish();
-            } catch (const std::exception& ex) {
+            }
+            catch (const std::exception& ex) {
                 Log::Errorf("MBTilesTileDataSource: Failed to read min/max zoom info: %s", ex.what());
             }
         }
@@ -96,7 +98,8 @@ namespace carto {
                 if (_db->disconnect() != SQLITE_OK) {
                     Log::Error("MBTilesTileDataSource: Failed to close database");
                 }
-            } catch (const std::exception& ex) {
+            }
+            catch (const std::exception& ex) {
                 Log::Errorf("MBTilesTileDataSource: Failed to close database: %s", ex.what());
             }
             _db.reset();
@@ -119,7 +122,8 @@ namespace carto {
             }
             query.finish();
             return metaData;
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("MBTilesTileDataSource::getMetaData: Failed to query metadata from the database: %s", ex.what());
             return std::map<std::string, std::string>();
         }
@@ -159,7 +163,8 @@ namespace carto {
                 }
             }
             query.finish();
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("MBTilesTileDataSource::getDataExtent: Exception while reading bounds metadata: %s", ex.what());
         }
 
@@ -190,7 +195,8 @@ namespace carto {
                     mapBounds.expandToContain(MapBounds(tileP0, tileP1));
                 }
                 query.finish();
-            } catch (const std::exception& ex) {
+            }
+            catch (const std::exception& ex) {
                 Log::Errorf("MBTilesTileDataSource::getDataExtent: Failed to query tile data from the database: %s", ex.what());
             }
         }
@@ -233,7 +239,8 @@ namespace carto {
             query.finish();
     
             return std::make_shared<TileData>(data);
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("MBTilesTileDataSource::loadTile: Failed to query tile data from the database: %s", ex.what());
             return std::shared_ptr<TileData>();
         }

@@ -357,15 +357,12 @@ namespace valhalla { namespace thor {
         const baldr::PathLocation& origin, const baldr::PathLocation& destination) {
         if (routetype == "multimodal") {
             return &multi_modal_astar;
-        }
-        else if (routetype == "bus") {
+        } else if (routetype == "bus") {
             // TODO - can we use bidirectional A*?
             return &astar;
-        }
-        else if (routetype == "pedestrian" || routetype == "wheelchair") {
+        } else if (routetype == "pedestrian" || routetype == "wheelchair") {
             return &bidir_astar;
-        }
-        else {
+        } else {
             // Use A* if any origin and destination edges are the same - otherwise
             // use bidirectional A*. Bidirectional A* does not handle trivial cases
             // with oneways.
@@ -410,8 +407,7 @@ namespace valhalla { namespace thor {
             // TODO - remove the opposing through edge from list of edges unless
             // all outbound edges are entering noth_thru regions.
             // For now allow all edges
-        }
-        else {
+        } else {
             // Check if the edge is entering a not_thru region - if so do not
             // exclude the opposing edge
             const baldr::DirectedEdge* de = reader.GetGraphTile(through_edge)->directededge(through_edge);
@@ -438,8 +434,7 @@ namespace valhalla { namespace thor {
                 std::remove_if(origin.edges.begin(), origin.edges.end(),
                     [&through_edge, &opp_edge](const baldr::PathLocation::PathEdge& edge) {
                     return edge.id == through_edge || edge.id == opp_edge; });
-            }
-            else {
+            } else {
                 // Set the origin edge to the through_edge.
                 for (auto e : origin.edges) {
                     if (e.id == through_edge) {
@@ -495,8 +490,7 @@ namespace valhalla { namespace thor {
             // Through edge is valid if last destination was "through"
             if (through_edge.Is_Valid()) {
                 update_origin(origin, prior_is_node, through_edge);
-            }
-            else {
+            } else {
                 last_break_origin = origin;
             }
 
@@ -514,8 +508,7 @@ namespace valhalla { namespace thor {
                 if (date_time_type && *date_time_type == 0 && origin_date_time.empty() &&
                     origin.stoptype_ == baldr::Location::StopType::BREAK)
                     last_break_origin.date_time_ = origin.date_time_;
-            }
-            else {
+            } else {
                 // Get the path in a temporary vector
                 std::vector<thor::PathInfo> temp_path;
                 get_path(path_algorithm, origin, destination, temp_path);
@@ -564,8 +557,7 @@ namespace valhalla { namespace thor {
                 // Clear path edges and set through edge to invalid
                 path_edges.clear();
                 through_edge = baldr::GraphId();
-            }
-            else {
+            } else {
                 // This is a through location. Save last edge as the through_edge
                 prior_is_node = false;
                 for (const auto& e : origin.edges) {

@@ -72,8 +72,7 @@ namespace carto {
         if (texture) {
             if (std::this_thread::get_id() == _glThreadId) {
                 texture->unload();
-            }
-            else {
+            } else {
                 if (texture->_texId != 0) {
                     _deleteTexIdQueue.push_back(texture->_texId);
                 }

@@ -139,7 +139,8 @@ namespace carto {
                 }
             }
             return tileMap;
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("TorqueTileDecoder::decodeTile: Exception while decoding: %s", ex.what());
         }
         return std::shared_ptr<TileMap>();

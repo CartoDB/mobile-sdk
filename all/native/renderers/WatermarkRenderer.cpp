@@ -88,8 +88,7 @@ namespace carto {
         if (_watermarkBitmap != watermarkBitmap) {
             if (watermarkBitmap) {
                 _watermarkTex = _textureManager->createTexture(watermarkBitmap, true, false);
-            }
-            else {
+            } else {
                 _watermarkTex.reset();
             }
 

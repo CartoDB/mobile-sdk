@@ -30,7 +30,8 @@ namespace carto {
         HTTPClient client(log);
         try {
             return client.get(url, requestHeaders, responseHeaders, responseData) == 0;
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             if (log) {
                 Log::Errorf("GetHTTP: Exception: %s", ex.what());
             }
@@ -42,7 +43,8 @@ namespace carto {
         HTTPClient client(log);
         try {
             return client.streamResponse(method, url, requestHeaders, responseHeaders, handler, offset);
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             if (log) {
                 Log::Errorf("StreamHTTPResponse: Exception: %s", ex.what());
             }
@@ -138,8 +140,7 @@ namespace carto {
             std::string::size_type pos = encKeyValue.find('=');
             if (pos == std::string::npos) {
                 valueMap.insert({ URLDecode(encKeyValue), std::string() });
-            }
-            else {
+            } else {
                 valueMap.insert({ URLDecode(encKeyValue.substr(0, pos)), URLDecode(encKeyValue.substr(pos + 1)) });
             }
         }
@@ -201,8 +202,7 @@ namespace carto {
         index = url.find(":");
         if (index != std::string::npos) {
             url.erase(0, index + 1);
-        }
-        else {
+        } else {
             return 80;
         }
 

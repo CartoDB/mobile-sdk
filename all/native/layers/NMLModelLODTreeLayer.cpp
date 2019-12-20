@@ -637,7 +637,8 @@ namespace carto {
             MapTileList mapTileList;
             try {
                 mapTileList = layer->_dataSource->loadMapTiles(cullState);
-            } catch (const std::exception& ex) {
+            }
+            catch (const std::exception& ex) {
                 Log::Errorf("NMLModelLODTreeLayer::MapTilesFetchTask: Exception while loading tiles: %s", ex.what());
             }
             lock.lock();
@@ -696,7 +697,8 @@ namespace carto {
         std::shared_ptr<NMLModelLODTree> modelLODTree;
         try {
             modelLODTree = layer->_dataSource->loadModelLODTree(_mapTile);
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("NMLModelLODTreeLayer::ModelLODTreeFetchTask: Exception while loading LOD tree: %s", ex.what());
         }
 
@@ -743,7 +745,8 @@ namespace carto {
         std::shared_ptr<nml::Mesh> mesh;
         try {
             mesh = layer->_dataSource->loadMesh(_binding.meshId);
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("NMLModelLODTreeLayer::MeshFetchTask: Exception while loading mesh: %s", ex.what());
         }
 
@@ -792,7 +795,8 @@ namespace carto {
         std::shared_ptr<nml::Texture> texture;
         try {
             texture = layer->_dataSource->loadTexture(_binding.textureId, _binding.level);
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("NMLModelLODTreeLayer::TextureFetchTask: Exception while loading texture: %s", ex.what());
         }
 
