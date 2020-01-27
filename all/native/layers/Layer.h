@@ -9,6 +9,7 @@
 
 #include "core/ScreenPos.h"
 #include "core/MapRange.h"
+#include "core/Variant.h"
 #include "renderers/components/StyleTextureCache.h"
 #include "renderers/components/CullState.h"
 #include "ui/ClickType.h"
@@ -16,7 +17,9 @@
 #include <atomic>
 #include <memory>
 #include <mutex>
+#include <map>
 #include <vector>
+#include <string>
 
 #include <cglib/ray.h>
 
@@ -41,6 +44,37 @@ namespace carto {
     class Layer : public std::enable_shared_from_this<Layer> {
     public:
         virtual ~Layer();
+    
+        /**
+         * Returns a copy of the layer meta data map. The changes you make to this map are NOT reflected in the actual meta data of the layer.
+         * @return A copy of the layer meta data map.
+         */
+        std::map<std::string, Variant> getMetaData() const;
+        /**
+         * Sets a new meta data map for the layer. Old meta data values will be lost.
+         * @param metaData The new meta data map for this layer.
+         */
+        void setMetaData(const std::map<std::string, Variant>& metaData);
+        
+        /** 
+         * Returns true if the specified key exists in the layer meta data map.
+         * @param key The key to check.
+         * @return True if the meta data element exists.
+         */
+        bool containsMetaDataKey(const std::string& key) const;
+        /** 
+         * Returns a layer meta data element corresponding to the key. If no value is found null variant is returned.
+         * @param key The key to use.
+         * @return The value corresponding to the key from the meta data map. If the key does not exist, empty variant is returned.
+         */
+        Variant getMetaDataElement(const std::string& key) const;
+        /**
+         * Adds a new key-value pair to the layer meta data map. If the key already exists in the map,
+         * it's value will be replaced by the new value.
+         * @param key The new key.
+         * @param element The new value.
+         */
+        void setMetaDataElement(const std::string& key, const Variant& element);
     
         /**
          * Returns the layer task priority of this layer.
@@ -187,6 +221,8 @@ namespace carto {
 
     private:
         static const int DEFAULT_CULL_DELAY = 400;
+
+        std::map<std::string, Variant> _metaData;
 
         bool _surfaceCreated;
     };

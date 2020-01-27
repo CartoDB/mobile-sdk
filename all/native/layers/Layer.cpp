@@ -16,6 +16,35 @@ namespace carto {
     Layer::~Layer() {
     }
     
+    std::map<std::string, Variant> Layer::getMetaData() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _metaData;
+    }
+        
+    void Layer::setMetaData(const std::map<std::string, Variant>& metaData) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _metaData = metaData;
+    }
+
+    bool Layer::containsMetaDataKey(const std::string& key) const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _metaData.find(key) != _metaData.end();
+    }
+    
+    Variant Layer::getMetaDataElement(const std::string& key) const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        auto it = _metaData.find(key);
+        if (it == _metaData.end()) {
+            return Variant();
+        }
+        return it->second;
+    }
+    
+    void Layer::setMetaDataElement(const std::string& key, const Variant& element) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _metaData[key] = element;
+    }
+    
     int Layer::getUpdatePriority() const {
         return _updatePriority;
     }
@@ -126,6 +155,7 @@ namespace carto {
         _visible(true),
         _visibleZoomRange(0, std::numeric_limits<float>::infinity()),
         _mutex(),
+        _metaData(),
         _surfaceCreated(false)
     {
     }
