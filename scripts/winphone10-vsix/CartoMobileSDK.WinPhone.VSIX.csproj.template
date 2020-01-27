@@ -46,8 +46,8 @@
     <Compile Include="$baseDir\scripts\winphone10-vsix\Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="$buildDir\..\winphone_native10-ARM\$nativeConfiguration\carto_mobile_sdk.dll">
-      <Link>Redist\CommonConfiguration\ARM\carto_mobile_sdk.dll</Link>
+    <Content Include="$buildDir\..\winphone_native10-ARM64\$nativeConfiguration\carto_mobile_sdk.dll">
+      <Link>Redist\CommonConfiguration\ARM64\carto_mobile_sdk.dll</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="$buildDir\..\winphone_native10-x64\$nativeConfiguration\carto_mobile_sdk.dll">
@@ -58,12 +58,12 @@
       <Link>Redist\CommonConfiguration\x86\carto_mobile_sdk.dll</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="$buildDir\..\winphone_managed10-ARM\bin\$configuration\CartoMobileSDK.WinPhone.dll">
-      <Link>References\CommonConfiguration\ARM\CartoMobileSDK.WinPhone.dll</Link>
+    <Content Include="$buildDir\..\winphone_managed10-ARM64\bin\$configuration\CartoMobileSDK.WinPhone.dll">
+      <Link>References\CommonConfiguration\ARM64\CartoMobileSDK.WinPhone.dll</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="$buildDir\..\winphone_managed10-ARM\bin\$configuration\CartoMobileSDK.WinPhone.XML">
-      <Link>References\CommonConfiguration\ARM\CartoMobileSDK.WinPhone.XML</Link>
+    <Content Include="$buildDir\..\winphone_managed10-ARM64\bin\$configuration\CartoMobileSDK.WinPhone.XML">
+      <Link>References\CommonConfiguration\ARM64\CartoMobileSDK.WinPhone.XML</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="$buildDir\..\winphone_managed10-x64\bin\$configuration\CartoMobileSDK.WinPhone.dll">
@@ -86,8 +86,8 @@
       <Link>License.md</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <None Include="$buildDir\..\winphone_native10-ARM\$nativeConfiguration\carto_mobile_sdk.winmd">
-      <Link>References\CommonConfiguration\ARM\carto_mobile_sdk.winmd</Link>
+    <None Include="$buildDir\..\winphone_native10-ARM64\$nativeConfiguration\carto_mobile_sdk.winmd">
+      <Link>References\CommonConfiguration\ARM64\carto_mobile_sdk.winmd</Link>
     </None>
     <None Include="$buildDir\..\winphone_native10-x64\$nativeConfiguration\carto_mobile_sdk.winmd">
       <Link>References\CommonConfiguration\x64\carto_mobile_sdk.winmd</Link>
@@ -100,27 +100,27 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="$buildDir\..\winphone_native10-ARM\packages\ANGLE.WindowsStore.2.1.13\bin\UAP\ARM\libEGL.dll">
-      <Link>Redist\CommonConfiguration\ARM\libEGL.dll</Link>
+    <Content Include="$baseDir\libs-external\angle-uwp\arm64\libEGL.dll">
+      <Link>Redist\CommonConfiguration\ARM64\libEGL.dll</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="$buildDir\..\winphone_native10-ARM\packages\ANGLE.WindowsStore.2.1.13\bin\UAP\ARM\libGLESv2.dll">
-      <Link>Redist\CommonConfiguration\ARM\libGLESv2.dll</Link>
+    <Content Include="$baseDir\libs-external\angle-uwp\arm64\libGLESv2.dll">
+      <Link>Redist\CommonConfiguration\ARM64\libGLESv2.dll</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="$buildDir\..\winphone_native10-x64\packages\ANGLE.WindowsStore.2.1.13\bin\UAP\x64\libEGL.dll">
+    <Content Include="$baseDir\libs-external\angle-uwp\x64\libEGL.dll">
       <Link>Redist\CommonConfiguration\x64\libEGL.dll</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="$buildDir\..\winphone_native10-x64\packages\ANGLE.WindowsStore.2.1.13\bin\UAP\x64\libGLESv2.dll">
+    <Content Include="$baseDir\libs-external\angle-uwp\x64\libGLESv2.dll">
       <Link>Redist\CommonConfiguration\x64\libGLESv2.dll</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="$buildDir\..\winphone_native10-Win32\packages\ANGLE.WindowsStore.2.1.13\bin\UAP\Win32\libEGL.dll">
+    <Content Include="$baseDir\libs-external\angle-uwp\x86\libEGL.dll">
       <Link>Redist\CommonConfiguration\x86\libEGL.dll</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="$buildDir\..\winphone_native10-Win32\packages\ANGLE.WindowsStore.2.1.13\bin\UAP\Win32\libGLESv2.dll">
+    <Content Include="$baseDir\libs-external\angle-uwp\x86\libGLESv2.dll">
       <Link>Redist\CommonConfiguration\x86\libGLESv2.dll</Link>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
