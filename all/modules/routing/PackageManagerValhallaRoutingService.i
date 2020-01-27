@@ -5,7 +5,7 @@
 
 #if defined(_CARTO_ROUTING_SUPPORT) && defined(_CARTO_VALHALLA_ROUTING_SUPPORT) && defined(_CARTO_PACKAGEMANAGER_SUPPORT)
 
-!proxy_imports(carto::PackageManagerValhallaRoutingService, packagemanager.PackageManager, routing.RoutingService, routing.RoutingRequest, routing.RoutingResult, routing.RouteMatchingRequest, routing.RouteMatchingResult)
+!proxy_imports(carto::PackageManagerValhallaRoutingService, packagemanager.PackageManager, core.Variant, routing.RoutingService, routing.RoutingRequest, routing.RoutingResult, routing.RouteMatchingRequest, routing.RouteMatchingResult)
 
 %{
 #include "routing/PackageManagerValhallaRoutingService.h"
@@ -17,6 +17,7 @@
 %include <std_string.i>
 %include <cartoswig.i>
 
+%import "core/Variant.i"
 %import "routing/RoutingService.i"
 %import "routing/RoutingRequest.i"
 %import "routing/RoutingResult.i"

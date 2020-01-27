@@ -9,6 +9,7 @@
 
 #if defined(_CARTO_ROUTING_SUPPORT) && defined(_CARTO_VALHALLA_ROUTING_SUPPORT) && defined(_CARTO_PACKAGEMANAGER_SUPPORT)
 
+#include "core/Variant.h"
 #include "packagemanager/PackageManager.h"
 #include "routing/RoutingService.h"
 
@@ -49,6 +50,19 @@ namespace carto {
         void setProfile(const std::string& profile);
 
         /**
+         * Returns the value of specified Valhalla configuration parameter.
+         * @param param The name of the parameter. For example, "meili.auto.search_radius".
+         * @return The value of the parameter. If the parameter does not exist, empty variant is returned.
+         */
+        Variant getConfigurationParameter(const std::string& param) const;
+        /**
+         * Sets the value of specified Valhalla configuration parameter.
+         * @param param The name of the parameter. For example, "meili.auto.search_radius".
+         * @param value The new value of the parameter.
+         */
+        void setConfigurationParameter(const std::string& param, const Variant& value);
+
+        /**
          * Matches specified points to the points on road network.
          * @param request The matching request.
          * @return The matching result or null if route matching failed.
@@ -72,6 +86,7 @@ namespace carto {
 
         const std::shared_ptr<PackageManager> _packageManager;
         std::string _profile;
+        Variant _configuration;
 
         mutable std::vector<std::shared_ptr<sqlite3pp::database> > _cachedPackageDatabases;
 
