@@ -204,6 +204,7 @@ namespace carto {
         glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, mvpMat.data());
         // Texture
         glUniform1i(_u_tex, 0);
+        glActiveTexture(GL_TEXTURE0);
         
         // Draw billboards, batch by bitmap
         _drawDataBuffer.clear();

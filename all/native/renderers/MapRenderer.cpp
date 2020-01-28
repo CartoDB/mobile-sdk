@@ -733,9 +733,10 @@ namespace carto {
         cglib::mat4x4<float> mvpMatrix = cglib::mat4x4<float>::identity();
         glUniformMatrix4fv(_screenBlendShader->getUniformLoc("u_mvpMat"), 1, GL_FALSE, mvpMatrix.data());
         
+        glUniform1i(_screenBlendShader->getUniformLoc("u_tex"), 0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, _screenFrameBuffer->getColorTexId());
-        glUniform1i(_screenBlendShader->getUniformLoc("u_tex"), 0);
+
         glUniform4f(_screenBlendShader->getUniformLoc("u_color"), opacity, opacity, opacity, opacity);
         glUniform2f(_screenBlendShader->getUniformLoc("u_invScreenSize"), 1.0f / _viewState.getWidth(), 1.0f / _viewState.getHeight());
         
