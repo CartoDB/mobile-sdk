@@ -37,8 +37,8 @@ namespace carto {
     }
 
     double RoutingResult::getTotalDistance() const {
-        return std::accumulate(_instructions.begin(), _instructions.end(), 0.0, [](double time, const RoutingInstruction& instruction) {
-            return time + instruction.getDistance();
+        return std::accumulate(_instructions.begin(), _instructions.end(), 0.0, [](double dist, const RoutingInstruction& instruction) {
+            return dist + instruction.getDistance();
         });
     }
     
