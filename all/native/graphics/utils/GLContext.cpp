@@ -2,9 +2,7 @@
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
 
-#ifndef __APPLE__
 #include <EGL/egl.h>
-#endif
 
 namespace carto {
 
@@ -35,15 +33,14 @@ namespace carto {
         TEXTURE_NPOT_REPEAT = HasGLExtension("GL_OES_texture_npot");
         TEXTURE_NPOT_MIPMAPS = HasGLExtension("GL_OES_texture_npot") || HasGLExtension("NV_texture_npot_2D_mipmap");
 
+#ifdef GL_EXT_discard_framebuffer
         DISCARD_FRAMEBUFFER = HasGLExtension("GL_EXT_discard_framebuffer");
-
-        PACKED_DEPTH_STENCIL = HasGLExtension("GL_OES_packed_depth_stencil");
-
-#if !defined(__APPLE__) && defined(GL_EXT_discard_framebuffer)
         if (DISCARD_FRAMEBUFFER) {
             _DiscardFramebufferEXT = reinterpret_cast<PFNGLDISCARDFRAMEBUFFEREXTPROC>(eglGetProcAddress("glDiscardFramebufferEXT"));
         }
 #endif
+
+        PACKED_DEPTH_STENCIL = HasGLExtension("GL_OES_packed_depth_stencil");
     }
         
     void GLContext::CheckGLError(const char* place) {
@@ -55,9 +52,7 @@ namespace carto {
     void GLContext::DiscardFramebufferEXT(GLenum target, GLsizei numAttachments, const GLenum* attachments) {
         std::lock_guard<std::recursive_mutex> lock(_Mutex);
 
-#ifdef __APPLE__
-        ::glDiscardFramebufferEXT(target, numAttachments, attachments);
-#else
+#ifdef GL_EXT_discard_framebuffer
         if (_DiscardFramebufferEXT) {
             _DiscardFramebufferEXT(target, numAttachments, attachments);
         }
@@ -77,7 +72,7 @@ namespace carto {
     
     std::size_t GLContext::MAX_VERTEXBUFFER_SIZE = 65535; // Should NOT exceed 64k!
 
-#if !defined(__APPLE__) && defined(GL_EXT_discard_framebuffer)
+#ifdef GL_EXT_discard_framebuffer
     PFNGLDISCARDFRAMEBUFFEREXTPROC GLContext::_DiscardFramebufferEXT = nullptr;
 #endif
 

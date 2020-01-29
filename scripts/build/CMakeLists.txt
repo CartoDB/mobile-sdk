@@ -152,6 +152,7 @@ include_directories(
 elseif(IOS)
 include_directories(
     "${SDK_SRC_DIR}/../../ios/native"
+    "${SDK_SRC_DIR}/../../ios/gl"
     "${SDK_SRC_DIR}/../../generated/ios-objc/proxies"
     "${SDK_SRC_DIR}/../../generated/ios-objc/wrappers"
 )

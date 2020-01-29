@@ -7,13 +7,8 @@
 #ifndef _CARTO_GLCONTEXT_H_
 #define _CARTO_GLCONTEXT_H_
 
-#ifdef __APPLE__
-#include <OpenGLES/ES2/gl.h>
-#include <OpenGLES/ES2/glext.h>
-#else
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
-#endif
 
 #include <mutex>
 #include <string>
@@ -45,7 +40,7 @@ namespace carto {
     private:
         GLContext();
 
-#if !defined(__APPLE__) && defined(GL_EXT_discard_framebuffer)
+#ifdef GL_EXT_discard_framebuffer
         static PFNGLDISCARDFRAMEBUFFEREXTPROC _DiscardFramebufferEXT;
 #endif
 
