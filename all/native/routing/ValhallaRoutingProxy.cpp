@@ -584,9 +584,14 @@ namespace carto {
                 epsg3857Points.reserve(epsg3857Points.size() + shape.size());
 
                 const picojson::array& maneuvers = legInfo.get("maneuvers").get<picojson::array>();
-                for (const picojson::value& maneuver : maneuvers) {
+                for (std::size_t i = 0; i < maneuvers.size(); i++) {
+                    const picojson::value& maneuver = maneuvers[i];
+
                     RoutingAction::RoutingAction action = RoutingAction::ROUTING_ACTION_NO_TURN;
                     TranslateManeuverType(static_cast<int>(maneuver.get("type").get<std::int64_t>()), action);
+                    if (action == RoutingAction::ROUTING_ACTION_FINISH && i + 1 < maneuvers.size()) {
+                        action = RoutingAction::ROUTING_ACTION_REACH_VIA_LOCATION;
+                    }
 
                     std::size_t pointIndex = points.size();
                     for (std::size_t j = static_cast<std::size_t>(maneuver.get("begin_shape_index").get<std::int64_t>()); j <= static_cast<std::size_t>(maneuver.get("end_shape_index").get<std::int64_t>()); j++) {
@@ -710,6 +715,9 @@ namespace carto {
 
                         RoutingAction::RoutingAction action = RoutingAction::ROUTING_ACTION_NO_TURN;
                         TranslateManeuverType(static_cast<int>(maneuver.type()), action);
+                        if (action == RoutingAction::ROUTING_ACTION_FINISH && i + 1 < directionsLeg.maneuver_size()) {
+                            action = RoutingAction::ROUTING_ACTION_REACH_VIA_LOCATION;
+                        }
 
                         std::size_t pointIndex = points.size();
                         for (unsigned int j = maneuver.begin_shape_index(); j <= maneuver.end_shape_index(); j++) {
@@ -841,6 +849,8 @@ namespace carto {
             { TripDirections_Maneuver_Type_kRampStraight,     carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
             { TripDirections_Maneuver_Type_kStayStraight,     carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
             { TripDirections_Maneuver_Type_kMerge,            carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
+            { TripDirections_Maneuver_Type_kMergeLeft,        carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
+            { TripDirections_Maneuver_Type_kMergeRight,       carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
             { TripDirections_Maneuver_Type_kFerryEnter,       carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
             { TripDirections_Maneuver_Type_kFerryExit,        carto::RoutingAction::ROUTING_ACTION_GO_STRAIGHT },//GoStraight,
             { TripDirections_Maneuver_Type_kSlightRight,      carto::RoutingAction::ROUTING_ACTION_TURN_RIGHT },//TurnSlightRight,
@@ -859,9 +869,9 @@ namespace carto {
             { TripDirections_Maneuver_Type_kSlightLeft,       carto::RoutingAction::ROUTING_ACTION_TURN_LEFT },//TurnSlightLeft,
             { TripDirections_Maneuver_Type_kRoundaboutEnter,  carto::RoutingAction::ROUTING_ACTION_ENTER_ROUNDABOUT },//EnterRoundAbout,
             { TripDirections_Maneuver_Type_kRoundaboutExit,   carto::RoutingAction::ROUTING_ACTION_LEAVE_ROUNDABOUT },//LeaveRoundAbout,
-            { TripDirections_Maneuver_Type_kStart,            carto::RoutingAction::ROUTING_ACTION_START_AT_END_OF_STREET },//StartAtEndOfStreet,
-            { TripDirections_Maneuver_Type_kStartRight,       carto::RoutingAction::ROUTING_ACTION_START_AT_END_OF_STREET },//StartAtEndOfStreet,
-            { TripDirections_Maneuver_Type_kStartLeft,        carto::RoutingAction::ROUTING_ACTION_START_AT_END_OF_STREET },//StartAtEndOfStreet,
+            { TripDirections_Maneuver_Type_kStart,            carto::RoutingAction::ROUTING_ACTION_HEAD_ON },//StartAtEndOfStreet,
+            { TripDirections_Maneuver_Type_kStartRight,       carto::RoutingAction::ROUTING_ACTION_HEAD_ON },//StartAtEndOfStreet,
+            { TripDirections_Maneuver_Type_kStartLeft,        carto::RoutingAction::ROUTING_ACTION_HEAD_ON },//StartAtEndOfStreet,
             { TripDirections_Maneuver_Type_kDestination,      carto::RoutingAction::ROUTING_ACTION_FINISH },//ReachedYourDestination,
             { TripDirections_Maneuver_Type_kDestinationRight, carto::RoutingAction::ROUTING_ACTION_FINISH },//ReachedYourDestination,
             { TripDirections_Maneuver_Type_kDestinationLeft,  carto::RoutingAction::ROUTING_ACTION_FINISH },//ReachedYourDestination,
