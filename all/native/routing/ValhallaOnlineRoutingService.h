@@ -58,7 +58,8 @@ namespace carto {
         std::string getCustomServiceURL() const;
         /**
          * Sets the custom backend service URL. 
-         * The custom URL may contain tag "{api_key}" which will be substituted with the set API key.
+         * The custom URL should contain tag "{service}", it will be substituted by the SDK by the service type the SDK needs to perform ("route" or "trace_route").
+         * The custom URL may also contain tag "{api_key}" which will be substituted with the set API key.
          * @param serviceURL The custom backend service URL to use. If this is empty, then the default service is used.
          */
         void setCustomServiceURL(const std::string& serviceURL);
