@@ -44,6 +44,8 @@ namespace carto {
         static float CalculateAzimuth(const std::vector<MapPos>& epsg3857Points, int pointIndex);
 
         static bool TranslateManeuverType(int maneuverType, RoutingAction::RoutingAction& action);
+
+        static std::shared_ptr<RouteMatchingResult> TranslateRouteMatchingResult(const std::shared_ptr<Projection>& proj, const std::string& resultString);
     };
 
 }
