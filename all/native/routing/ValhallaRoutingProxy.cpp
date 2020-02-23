@@ -324,6 +324,7 @@ namespace carto {
         EPSG3857 epsg3857;
         std::shared_ptr<Projection> proj = request->getProjection();
 
+        valhalla::Api api;
         std::string result;
         try {
             boost::property_tree::ptree configTree = getConfigTree(config);
@@ -339,8 +340,8 @@ namespace carto {
             json["shape"] = picojson::value(valhalla::midgard::encode(points));
             json["costing"] = picojson::value(profile);
             json["units"] = picojson::value("kilometers");
-            valhalla::Api api;
-            valhalla::ParseApi(picojson::object(json).serialize(), valhalla::Options::trace_attributes, api);
+
+            valhalla::ParseApi(picojson::value(json).serialize(), valhalla::Options::trace_attributes, api);
 
             valhalla::loki::loki_worker_t lokiworker(configTree, reader);
             lokiworker.route(api);
@@ -358,6 +359,7 @@ namespace carto {
         EPSG3857 epsg3857;
         std::shared_ptr<Projection> proj = request->getProjection();
         
+        valhalla::Api api;
         try {
             boost::property_tree::ptree configTree = getConfigTree(config);
             auto reader = std::make_shared<valhalla::baldr::GraphReader>(databases);
@@ -367,8 +369,7 @@ namespace carto {
             json["costing"] = picojson::value(profile);
             json["units"] = picojson::value("kilometers");
 
-            valhalla::Api api;
-            valhalla::ParseApi(picojson::object(json).serialize(), valhalla::Options::route, api);
+            valhalla::ParseApi(picojson::value(json).serialize(), valhalla::Options::route, api);
             api.mutable_options()->mutable_locations()->Clear();
             for (const MapPos& pos : request->getPoints()) {
                 MapPos posWgs84 = proj->toWgs84(pos);
@@ -577,7 +578,7 @@ namespace carto {
         return false;
     }
 
-    std::shared_ptr<RouteMatchingResult> ValhallaRoutingProxy::TranslateRouteMatchingResult(const std::string& resultString) {
+    std::shared_ptr<RouteMatchingResult> ValhallaRoutingProxy::TranslateRouteMatchingResult(const std::shared_ptr<Projection>& proj, const std::string& resultString) {
         picojson::value result;
         std::string err = picojson::parse(result, resultString);
         if (!err.empty()) {
@@ -613,7 +614,7 @@ namespace carto {
                 if (edgeInfo.is<picojson::object>()) {
                     const picojson::object& edgeInfoObject = edgeInfo.get<picojson::object>();
                     for (auto it = edgeInfoObject.begin(); it != edgeInfoObject.end(); it++) {
-                        attributes[it->first] = Variant::fromPicoJSON(it->second);
+                        attributes[it->first] = Variant::FromPicoJSON(it->second);
                     }
                 }
 
