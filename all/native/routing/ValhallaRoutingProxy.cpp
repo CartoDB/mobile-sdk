@@ -337,14 +337,15 @@ namespace carto {
             }
 
             picojson::object json;
-            json["shape"] = picojson::value(valhalla::midgard::encode(points));
+            json["encoded_polyline"] = picojson::value(valhalla::midgard::encode(points));
+            json["shape_match"] = picojson::value("map_snap");
             json["costing"] = picojson::value(profile);
             json["units"] = picojson::value("kilometers");
 
             valhalla::ParseApi(picojson::value(json).serialize(), valhalla::Options::trace_attributes, api);
 
             valhalla::loki::loki_worker_t lokiworker(configTree, reader);
-            lokiworker.route(api);
+            lokiworker.trace(api);
             valhalla::thor::thor_worker_t worker(configTree, reader);
             result = worker.trace_attributes(api);
         }
@@ -370,7 +371,6 @@ namespace carto {
             json["units"] = picojson::value("kilometers");
 
             valhalla::ParseApi(picojson::value(json).serialize(), valhalla::Options::route, api);
-            api.mutable_options()->mutable_locations()->Clear();
             for (const MapPos& pos : request->getPoints()) {
                 MapPos posWgs84 = proj->toWgs84(pos);
                 valhalla::LatLng& latlng = *api.mutable_options()->mutable_locations()->Add()->mutable_ll();
@@ -584,10 +584,10 @@ namespace carto {
         if (!err.empty()) {
             throw GenericException("Failed to parse result", err);
         }
-        if (!result.get("matched_points").is<picojson::object>()) {
+        if (!result.get("matched_points").is<picojson::array>()) {
             throw GenericException("No matched_points info in the result");
         }
-        if (!result.get("edges").is<picojson::object>()) {
+        if (!result.get("edges").is<picojson::array>()) {
             throw GenericException("No edges info in the result");
         }
 
@@ -604,7 +604,7 @@ namespace carto {
 
                 double lat = matchedPointInfo.get("lat").get<double>();
                 double lon = matchedPointInfo.get("lon").get<double>();
-                int edgeIndex = matchedPointInfo.get("type").get<int>();
+                int edgeIndex = static_cast<int>(matchedPointInfo.get("edge_index").get<std::int64_t>());
 
                 matchingPoints.emplace_back(proj->fromLatLong(lat, lon), type, edgeIndex);
             }

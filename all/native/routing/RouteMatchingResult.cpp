@@ -26,7 +26,7 @@ namespace carto {
 
     std::vector<MapPos> RouteMatchingResult::getPoints() const {
         std::vector<MapPos> poses;
-        poses.resize(_matchingPoints.size());
+        poses.reserve(_matchingPoints.size());
         for (const RouteMatchingPoint& point : _matchingPoints) {
             poses.push_back(point.getPos());
         }
