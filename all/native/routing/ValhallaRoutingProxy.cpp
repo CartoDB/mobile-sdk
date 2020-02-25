@@ -184,23 +184,8 @@ namespace valhalla { namespace midgard {
 namespace carto {
 
     std::shared_ptr<RouteMatchingResult> ValhallaRoutingProxy::MatchRoute(const std::string& baseURL, const std::string& profile, const std::shared_ptr<RouteMatchingRequest>& request) {
-        EPSG3857 epsg3857;
-        std::shared_ptr<Projection> proj = request->getProjection();
-
-        std::vector<valhalla::midgard::PointLL> points;
-        for (const MapPos& pos : request->getPoints()) {
-            MapPos posWgs84 = proj->toWgs84(pos);
-            points.emplace_back(static_cast<float>(posWgs84.getX()), static_cast<float>(posWgs84.getY()));
-        }
-
-        picojson::object json;
-        json["encoded_polyline"] = picojson::value(valhalla::midgard::encode(points));
-        json["shape_match"] = picojson::value("map_snap");
-        json["costing"] = picojson::value(profile);
-        json["units"] = picojson::value("kilometers");
-
         std::map<std::string, std::string> params;
-        params["json"] = picojson::value(json).serialize();
+        params["json"] = SerializeRouteMatchingRequest(request);
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
         Log::Debugf("ValhallaRoutingProxy::MatchRoute: Loading %s", url.c_str());
 
@@ -208,37 +193,17 @@ namespace carto {
         if (!NetworkUtils::GetHTTP(url, responseData, Log::IsShowDebug())) {
             throw NetworkException("Failed to fetch response"); // NOTE: we may have error messages, thus do not return from here
         }
-
-        std::string responseString;
-        if (responseData) {
-            responseString = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
-        } else {
+        if (!responseData) {
             throw GenericException("Empty response");
         }
 
-        return TranslateRouteMatchingResult(proj, responseString);
+        std::string responseString = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+        return ParseRouteMatchingResult(request->getProjection(), responseString);
     }
 
     std::shared_ptr<RoutingResult> ValhallaRoutingProxy::CalculateRoute(const std::string& baseURL, const std::string& profile, const std::shared_ptr<RoutingRequest>& request) {
-        EPSG3857 epsg3857;
-        std::shared_ptr<Projection> proj = request->getProjection();
-
-        picojson::array locations;
-        for (const MapPos& pos : request->getPoints()) {
-            MapPos posWgs84 = proj->toWgs84(pos);
-            picojson::object location;
-            location["lon"] = picojson::value(posWgs84.getX());
-            location["lat"] = picojson::value(posWgs84.getY());
-            locations.emplace_back(location);
-        }
-
-        picojson::object json;
-        json["locations"] = picojson::value(locations);
-        json["costing"] = picojson::value(profile);
-        json["units"] = picojson::value("kilometers");
-
         std::map<std::string, std::string> params;
-        params["json"] = picojson::value(json).serialize();
+        params["json"] = SerializeRoutingRequest(request);
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
         Log::Debugf("ValhallaRoutingProxy::CalculateRoute: Loading %s", url.c_str());
 
@@ -246,103 +211,23 @@ namespace carto {
         if (!NetworkUtils::GetHTTP(url, responseData, Log::IsShowDebug())) {
             throw NetworkException("Failed to fetch response"); // NOTE: we may have error messages, thus do not return from here
         }
-
-        std::string responseString;
-        if (responseData) {
-            responseString = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
-        } else {
+        if (!responseData) {
             throw GenericException("Empty response");
         }
 
-        // TODO: refactor into separate method, like above
-        picojson::value response;
-        std::string err = picojson::parse(response, responseString);
-        if (!err.empty()) {
-            throw GenericException("Failed to parse response", err);
-        }
-
-        if (!response.get("trip").is<picojson::object>()) {
-            throw GenericException("No trip info in the response");
-        }
-
-        std::vector<MapPos> points;
-        std::vector<MapPos> epsg3857Points;
-        std::vector<RoutingInstruction> instructions;
-        try {
-            for (const picojson::value& legInfo : response.get("trip").get("legs").get<picojson::array>()) {
-                std::vector<valhalla::midgard::PointLL> shape = valhalla::midgard::decode<std::vector<valhalla::midgard::PointLL> >(legInfo.get("shape").get<std::string>());
-                points.reserve(points.size() + shape.size());
-                epsg3857Points.reserve(epsg3857Points.size() + shape.size());
-
-                const picojson::array& maneuvers = legInfo.get("maneuvers").get<picojson::array>();
-                for (std::size_t i = 0; i < maneuvers.size(); i++) {
-                    const picojson::value& maneuver = maneuvers[i];
-
-                    RoutingAction::RoutingAction action = RoutingAction::ROUTING_ACTION_NO_TURN;
-                    TranslateManeuverType(static_cast<int>(maneuver.get("type").get<std::int64_t>()), action);
-                    if (action == RoutingAction::ROUTING_ACTION_FINISH && i + 1 < maneuvers.size()) {
-                        action = RoutingAction::ROUTING_ACTION_REACH_VIA_LOCATION;
-                    }
-
-                    std::size_t pointIndex = points.size();
-                    for (std::size_t j = static_cast<std::size_t>(maneuver.get("begin_shape_index").get<std::int64_t>()); j <= static_cast<std::size_t>(maneuver.get("end_shape_index").get<std::int64_t>()); j++) {
-                        const valhalla::midgard::PointLL& point = shape.at(j);
-                        epsg3857Points.push_back(epsg3857.fromLatLong(point.second, point.first));
-                        points.push_back(proj->fromLatLong(point.second, point.first));
-                    }
-
-                    float turnAngle = CalculateTurnAngle(epsg3857Points, pointIndex);
-                    float azimuth = CalculateAzimuth(epsg3857Points, pointIndex);
-
-                    std::string streetName;
-                    if (maneuver.get("street_names").is<picojson::array>()) {
-                        const picojson::array& streetNames = maneuver.get("street_names").get<picojson::array>();
-                        streetName = !streetNames.empty() ? streetNames[0].get<std::string>() : std::string("");
-                    }
-
-                    instructions.emplace_back(
-                        action,
-                        pointIndex,
-                        streetName,
-                        turnAngle,
-                        azimuth,
-                        maneuver.get("length").get<double>() * 1000.0,
-                        maneuver.get("time").get<double>()
-                    );
-                }
-            }
-        }
-        catch (const std::exception& ex) {
-            throw GenericException("Exception while translating route", ex.what());
-        }
-
-        return std::make_shared<RoutingResult>(proj, points, instructions);
+        std::string responseString = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+        return ParseRoutingResult(request->getProjection(), responseString);
     }
 
 #ifdef _CARTO_VALHALLA_ROUTING_SUPPORT
     std::shared_ptr<RouteMatchingResult> ValhallaRoutingProxy::MatchRoute(const std::vector<std::shared_ptr<sqlite3pp::database> >& databases, const std::string& profile, const Variant& config, const std::shared_ptr<RouteMatchingRequest>& request) {
-        EPSG3857 epsg3857;
-        std::shared_ptr<Projection> proj = request->getProjection();
-
-        valhalla::Api api;
         std::string result;
         try {
             boost::property_tree::ptree configTree = getConfigTree(config);
             auto reader = std::make_shared<valhalla::baldr::GraphReader>(databases);
 
-            std::vector<valhalla::midgard::PointLL> points;
-            for (const MapPos& pos : request->getPoints()) {
-                MapPos posWgs84 = proj->toWgs84(pos);
-                points.emplace_back(static_cast<float>(posWgs84.getX()), static_cast<float>(posWgs84.getY()));
-            }
-
-            picojson::object json;
-            json["encoded_polyline"] = picojson::value(valhalla::midgard::encode(points));
-            json["shape_match"] = picojson::value("map_snap");
-            json["costing"] = picojson::value(profile);
-            json["units"] = picojson::value("kilometers");
-
-            valhalla::ParseApi(picojson::value(json).serialize(), valhalla::Options::trace_attributes, api);
+            valhalla::Api api;
+            valhalla::ParseApi(SerializeRouteMatchingRequest(request), valhalla::Options::trace_attributes, api);
 
             valhalla::loki::loki_worker_t lokiworker(configTree, reader);
             lokiworker.trace(api);
@@ -352,31 +237,16 @@ namespace carto {
         catch (const std::exception& ex) {
             throw GenericException("Exception while matching route", ex.what());
         }
-
-        return TranslateRouteMatchingResult(proj, result);
+        return ParseRouteMatchingResult(proj, result);
     }
 
     std::shared_ptr<RoutingResult> ValhallaRoutingProxy::CalculateRoute(const std::vector<std::shared_ptr<sqlite3pp::database> >& databases, const std::string& profile, const Variant& config, const std::shared_ptr<RoutingRequest>& request) {
-        EPSG3857 epsg3857;
-        std::shared_ptr<Projection> proj = request->getProjection();
-        
-        valhalla::Api api;
         try {
             boost::property_tree::ptree configTree = getConfigTree(config);
             auto reader = std::make_shared<valhalla::baldr::GraphReader>(databases);
 
-            picojson::object json;
-            json["locations"] = picojson::value(picojson::array());
-            json["costing"] = picojson::value(profile);
-            json["units"] = picojson::value("kilometers");
-
-            valhalla::ParseApi(picojson::value(json).serialize(), valhalla::Options::route, api);
-            for (const MapPos& pos : request->getPoints()) {
-                MapPos posWgs84 = proj->toWgs84(pos);
-                valhalla::LatLng& latlng = *api.mutable_options()->mutable_locations()->Add()->mutable_ll();
-                latlng.set_lng(static_cast<float>(posWgs84.getX()));
-                latlng.set_lat(static_cast<float>(posWgs84.getY()));
-            }
+            valhalla::Api api;
+            valhalla::ParseApi(SerializeRoutingRequest(request), valhalla::Options::route, api);
 
             valhalla::loki::loki_worker_t lokiworker(configTree, reader);
             lokiworker.route(api);
@@ -388,7 +258,9 @@ namespace carto {
             throw GenericException("Exception while calculating route", ex.what());
         }
 
-        // TODO: refactor into separate method, like above
+        // TODO: convert via string
+        EPSG3857 epsg3857;
+        std::shared_ptr<Projection> proj = request->getProjection();
         std::vector<MapPos> points;
         std::vector<MapPos> epsg3857Points;
         std::vector<RoutingInstruction> instructions;
@@ -578,7 +450,46 @@ namespace carto {
         return false;
     }
 
-    std::shared_ptr<RouteMatchingResult> ValhallaRoutingProxy::TranslateRouteMatchingResult(const std::shared_ptr<Projection>& proj, const std::string& resultString) {
+    std::string ValhallaRoutingProxy::SerializeRouteMatchingRequest(const std::shared_ptr<RouteMatchingRequest>& request) {
+        std::shared_ptr<Projection> proj = request->getProjection();
+
+        std::vector<valhalla::midgard::PointLL> points;
+        for (const MapPos& pos : request->getPoints()) {
+            MapPos posWgs84 = proj->toWgs84(pos);
+            points.emplace_back(static_cast<float>(posWgs84.getX()), static_cast<float>(posWgs84.getY()));
+        }
+
+        picojson::object json;
+        json["encoded_polyline"] = picojson::value(valhalla::midgard::encode(points));
+        json["shape_match"] = picojson::value("map_snap");
+        json["costing"] = picojson::value(profile);
+        json["units"] = picojson::value("kilometers");
+        if (request->getAccuracy() > 0) {
+            json["gps_accuracy"] = picojson::value(request->getAccuracy());
+        }
+        return picojson::value(json).serialize();
+    }
+
+    std::string ValhallaRoutingProxy::SerializeRoutingRequest(const std::shared_ptr<RoutingRequest>& request) {
+        std::shared_ptr<Projection> proj = request->getProjection();
+
+        picojson::array locations;
+        for (const MapPos& pos : request->getPoints()) {
+            MapPos posWgs84 = proj->toWgs84(pos);
+            picojson::object location;
+            location["lon"] = picojson::value(posWgs84.getX());
+            location["lat"] = picojson::value(posWgs84.getY());
+            locations.emplace_back(location);
+        }
+
+        picojson::object json;
+        json["locations"] = picojson::value(locations);
+        json["costing"] = picojson::value(profile);
+        json["units"] = picojson::value("kilometers");
+        return picojson::value(json).serialize();
+    }
+
+    std::shared_ptr<RouteMatchingResult> ValhallaRoutingProxy::ParseRouteMatchingResult(const std::shared_ptr<Projection>& proj, const std::string& resultString) {
         picojson::value result;
         std::string err = picojson::parse(result, resultString);
         if (!err.empty()) {
@@ -591,6 +502,7 @@ namespace carto {
             throw GenericException("No edges info in the result");
         }
 
+        std::shared_ptr<Projection> proj = request->getProjection();
         std::vector<RouteMatchingPoint> matchingPoints;
         std::vector<RouteMatchingEdge> matchingEdges;
         try {
@@ -626,6 +538,72 @@ namespace carto {
         }
 
         return std::make_shared<RouteMatchingResult>(proj, matchingPoints, matchingEdges);
+    }
+
+    std::shared_ptr<RoutingResult> ValhallaRoutingProxy::ParseRoutingResult(const std::shared_ptr<Projection>& proj, const std::string& resultString) {
+        picojson::value result;
+        std::string err = picojson::parse(result, resultString);
+        if (!err.empty()) {
+            throw GenericException("Failed to parse result", err);
+        }
+        if (!response.get("trip").is<picojson::object>()) {
+            throw GenericException("No trip info in the result");
+        }
+
+        EPSG3857 epsg3857;
+        std::shared_ptr<Projection> proj = request->getProjection();
+        std::vector<MapPos> points;
+        std::vector<MapPos> epsg3857Points;
+        std::vector<RoutingInstruction> instructions;
+        try {
+            for (const picojson::value& legInfo : result.get("trip").get("legs").get<picojson::array>()) {
+                std::vector<valhalla::midgard::PointLL> shape = valhalla::midgard::decode<std::vector<valhalla::midgard::PointLL> >(legInfo.get("shape").get<std::string>());
+                points.reserve(points.size() + shape.size());
+                epsg3857Points.reserve(epsg3857Points.size() + shape.size());
+
+                const picojson::array& maneuvers = legInfo.get("maneuvers").get<picojson::array>();
+                for (std::size_t i = 0; i < maneuvers.size(); i++) {
+                    const picojson::value& maneuver = maneuvers[i];
+
+                    RoutingAction::RoutingAction action = RoutingAction::ROUTING_ACTION_NO_TURN;
+                    TranslateManeuverType(static_cast<int>(maneuver.get("type").get<std::int64_t>()), action);
+                    if (action == RoutingAction::ROUTING_ACTION_FINISH && i + 1 < maneuvers.size()) {
+                        action = RoutingAction::ROUTING_ACTION_REACH_VIA_LOCATION;
+                    }
+
+                    std::size_t pointIndex = points.size();
+                    for (std::size_t j = static_cast<std::size_t>(maneuver.get("begin_shape_index").get<std::int64_t>()); j <= static_cast<std::size_t>(maneuver.get("end_shape_index").get<std::int64_t>()); j++) {
+                        const valhalla::midgard::PointLL& point = shape.at(j);
+                        epsg3857Points.push_back(epsg3857.fromLatLong(point.second, point.first));
+                        points.push_back(proj->fromLatLong(point.second, point.first));
+                    }
+
+                    float turnAngle = CalculateTurnAngle(epsg3857Points, pointIndex);
+                    float azimuth = CalculateAzimuth(epsg3857Points, pointIndex);
+
+                    std::string streetName;
+                    if (maneuver.get("street_names").is<picojson::array>()) {
+                        const picojson::array& streetNames = maneuver.get("street_names").get<picojson::array>();
+                        streetName = !streetNames.empty() ? streetNames[0].get<std::string>() : std::string("");
+                    }
+
+                    instructions.emplace_back(
+                        action,
+                        pointIndex,
+                        streetName,
+                        turnAngle,
+                        azimuth,
+                        maneuver.get("length").get<double>() * 1000.0,
+                        maneuver.get("time").get<double>()
+                    );
+                }
+            }
+        }
+        catch (const std::exception& ex) {
+            throw GenericException("Exception while translating route", ex.what());
+        }
+
+        return std::make_shared<RoutingResult>(proj, points, instructions);
     }
 
     ValhallaRoutingProxy::ValhallaRoutingProxy() {
