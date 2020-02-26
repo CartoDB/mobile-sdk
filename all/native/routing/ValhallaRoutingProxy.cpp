@@ -403,6 +403,7 @@ namespace carto {
 
     std::string ValhallaRoutingProxy::SerializeRouteMatchingRequest(const std::string& profile, const std::shared_ptr<RouteMatchingRequest>& request) {
         std::shared_ptr<Projection> proj = request->getProjection();
+        std::map<std::string, Variant> customParams = request->getCustomParameters();
 
         std::vector<valhalla::midgard::PointLL> points;
         for (const MapPos& pos : request->getPoints()) {
@@ -411,6 +412,9 @@ namespace carto {
         }
 
         picojson::object json;
+        for (auto it = customParams.begin(); it != customParams.end(); it++) {
+            json[it->first] = it->second.toPicoJSON();
+        }
         json["encoded_polyline"] = picojson::value(valhalla::midgard::encode(points));
         json["shape_match"] = picojson::value("map_snap");
         json["costing"] = picojson::value(profile);
@@ -423,6 +427,7 @@ namespace carto {
 
     std::string ValhallaRoutingProxy::SerializeRoutingRequest(const std::string& profile, const std::shared_ptr<RoutingRequest>& request) {
         std::shared_ptr<Projection> proj = request->getProjection();
+        std::map<std::string, Variant> customParams = request->getCustomParameters();
 
         picojson::array locations;
         for (const MapPos& pos : request->getPoints()) {
@@ -434,6 +439,9 @@ namespace carto {
         }
 
         picojson::object json;
+        for (auto it = customParams.begin(); it != customParams.end(); it++) {
+            json[it->first] = it->second.toPicoJSON();
+        }
         json["locations"] = picojson::value(locations);
         json["costing"] = picojson::value(profile);
         json["units"] = picojson::value("kilometers");

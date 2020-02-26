@@ -10,9 +10,12 @@
 #ifdef _CARTO_ROUTING_SUPPORT
 
 #include "core/MapPos.h"
+#include "core/Variant.h"
 
 #include <memory>
+#include <mutex>
 #include <vector>
+#include <map>
 
 namespace carto {
     class Projection;
@@ -48,6 +51,17 @@ namespace carto {
         float getAccuracy() const;
 
         /**
+         * Returns the custom parameters of the request.
+         * @return The custom parameters of the request.
+         */
+        std::map<std::string, Variant> getCustomParameters() const;
+        /**
+         * Sets the custom parameters for the the request.
+         * @param customParams The map of custom parameters to set.
+         */
+        void setCustomParameters(const std::map<std::string, Variant>& customParams);
+
+        /**
          * Creates a string representation of this request object, useful for logging.
          * @return The string representation of this request object.
          */
@@ -57,6 +71,9 @@ namespace carto {
         std::shared_ptr<Projection> _projection;
         std::vector<MapPos> _points;
         float _accuracy;
+
+        std::map<std::string, Variant> _customParams;
+        mutable std::mutex _mutex;
     };
     
 }

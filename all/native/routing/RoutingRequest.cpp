@@ -12,6 +12,7 @@ namespace carto {
         _projection(projection),
         _points(points),
         _filters(),
+        _customParams(),
         _mutex()
     {
         if (!projection) {
@@ -40,20 +41,34 @@ namespace carto {
         _filters = filters;
     }
 
+    std::map<std::string, Variant> RoutingRequest::getCustomParameters() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _customParams;
+    }
+
+    void RoutingRequest::setCustomParameters(const std::map<std::string, Variant>& customParams) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _customParams = customParams;
+    }
+
     std::string RoutingRequest::toString() const {
         std::lock_guard<std::mutex> lock(_mutex);
         std::stringstream ss;
         ss << std::setiosflags(std::ios::fixed);
         ss << "RoutingRequest [points=";
         for (auto it = _points.begin(); it != _points.end(); ++it) {
-            const MapPos& pos = *it;
-            ss << (it == _points.begin() ? "" : ", ") << pos.toString();
+            ss << (it == _points.begin() ? "" : ", ") << it->toString();
         }
         if (!_filters.empty()) {
             ss << ", filters=";
             for (auto it = _filters.begin(); it != _filters.end(); ++it) {
-                const Variant& filter = *it;
-                ss << (it == _filters.begin() ? "" : ", ") << filter.toString();
+                ss << (it == _filters.begin() ? "" : ", ") << it->toString();
+            }
+        }
+        if (!_customParams.empty()) {
+            ss << ", customParams=";
+            for (auto it = _customParams.begin(); it != _customParams.end(); ++it) {
+                ss << (it == _customParams.begin() ? "" : ", ") << it->first << "=" << it->second.toString();
             }
         }
         ss << "]";
