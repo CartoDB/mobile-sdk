@@ -21,6 +21,7 @@
 %include <cartoswig.i>
 
 %import "core/MapPos.i"
+%import "core/Variant.i"
 %import "projections/Projection.i"
 
 !shared_ptr(carto::RouteMatchingRequest, routing.RouteMatchingRequest)
