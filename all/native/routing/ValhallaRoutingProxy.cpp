@@ -62,11 +62,9 @@
 #include <valhalla/meili/map_matcher.h>
 #include <valhalla/meili/map_matcher_factory.h>
 #include <valhalla/meili/match_result.h>
-#include <valhalla/thor/pathalgorithm.h>
-#include <valhalla/thor/bidirectional_astar.h>
-#include <valhalla/thor/astar.h>
-#include <valhalla/thor/multimodal.h>
-#include <valhalla/thor/isochrone.h>
+#include <valhalla/odin/worker.h>
+#include <valhalla/thor/worker.h>
+#include <valhalla/tyr/serializers.h>
 #include <valhalla/odin/util.h>
 #include <valhalla/odin/directionsbuilder.h>
 
@@ -221,7 +219,7 @@ namespace carto {
 
 #ifdef _CARTO_VALHALLA_ROUTING_SUPPORT
     std::shared_ptr<RouteMatchingResult> ValhallaRoutingProxy::MatchRoute(const std::vector<std::shared_ptr<sqlite3pp::database> >& databases, const std::string& profile, const Variant& config, const std::shared_ptr<RouteMatchingRequest>& request) {
-        std::string result;
+        std::string resultString;
         try {
             boost::property_tree::ptree configTree = getConfigTree(config);
             auto reader = std::make_shared<valhalla::baldr::GraphReader>(databases);
@@ -231,83 +229,36 @@ namespace carto {
 
             valhalla::loki::loki_worker_t lokiworker(configTree, reader);
             lokiworker.trace(api);
-            valhalla::thor::thor_worker_t worker(configTree, reader);
-            result = worker.trace_attributes(api);
+            valhalla::thor::thor_worker_t thorworker(configTree, reader);
+            resultString = thorworker.trace_attributes(api);
         }
         catch (const std::exception& ex) {
             throw GenericException("Exception while matching route", ex.what());
         }
-        return ParseRouteMatchingResult(request->getProjection(), result);
+        return ParseRouteMatchingResult(request->getProjection(), resultString);
     }
 
     std::shared_ptr<RoutingResult> ValhallaRoutingProxy::CalculateRoute(const std::vector<std::shared_ptr<sqlite3pp::database> >& databases, const std::string& profile, const Variant& config, const std::shared_ptr<RoutingRequest>& request) {
-        valhalla::Api api;
+        std::string resultString;
         try {
             boost::property_tree::ptree configTree = getConfigTree(config);
             auto reader = std::make_shared<valhalla::baldr::GraphReader>(databases);
 
+            valhalla::Api api;
             valhalla::ParseApi(SerializeRoutingRequest(profile, request), valhalla::Options::route, api);
 
             valhalla::loki::loki_worker_t lokiworker(configTree, reader);
             lokiworker.route(api);
-            valhalla::thor::thor_worker_t worker(configTree, reader);
-            worker.route(api);
-            valhalla::odin::DirectionsBuilder::Build(api);
+            valhalla::thor::thor_worker_t thorworker(configTree, reader);
+            thorworker.route(api);
+            valhalla::odin::odin_worker_t odinworker(configTree);
+            odinworker.narrate(api);
+            resultString = valhalla::tyr::serializeDirections(api);
         }
         catch (const std::exception& ex) {
             throw GenericException("Exception while calculating route", ex.what());
         }
-
-        // TODO: convert via string
-        EPSG3857 epsg3857;
-        std::shared_ptr<Projection> proj = request->getProjection();
-        std::vector<MapPos> points;
-        std::vector<MapPos> epsg3857Points;
-        std::vector<RoutingInstruction> instructions;
-        if (api.directions().routes_size() > 0) {
-            const valhalla::DirectionsRoute& directionsRoute = api.directions().routes(0);
-            try {
-                for (const valhalla::DirectionsLeg& directionsLeg : directionsRoute.legs()) {
-                    std::vector<valhalla::midgard::PointLL> shape = valhalla::midgard::decode<std::vector<valhalla::midgard::PointLL> >(directionsLeg.shape());
-                    points.reserve(points.size() + shape.size());
-                    epsg3857Points.reserve(epsg3857Points.size() + shape.size());
-
-                    for (int i = 0; i < directionsLeg.maneuver_size(); i++) {
-                        const valhalla::DirectionsLeg_Maneuver& maneuver = directionsLeg.maneuver(i);
-
-                        RoutingAction::RoutingAction action = RoutingAction::ROUTING_ACTION_NO_TURN;
-                        TranslateManeuverType(static_cast<int>(maneuver.type()), action);
-                        if (action == RoutingAction::ROUTING_ACTION_FINISH && i + 1 < directionsLeg.maneuver_size()) {
-                            action = RoutingAction::ROUTING_ACTION_REACH_VIA_LOCATION;
-                        }
-
-                        std::size_t pointIndex = points.size();
-                        for (unsigned int j = maneuver.begin_shape_index(); j <= maneuver.end_shape_index(); j++) {
-                            const valhalla::midgard::PointLL& point = shape.at(j);
-                            epsg3857Points.push_back(epsg3857.fromLatLong(point.lat(), point.lng()));
-                            points.push_back(proj->fromLatLong(point.lat(), point.lng()));
-                        }
-
-                        float turnAngle = CalculateTurnAngle(epsg3857Points, pointIndex);
-
-                        instructions.emplace_back(
-                            action,
-                            pointIndex,
-                            maneuver.street_name_size() ? maneuver.street_name(0).value() : std::string(""),
-                            turnAngle,
-                            maneuver.begin_heading(),
-                            maneuver.length() * 1000.0,
-                            maneuver.time()
-                        );
-                    }
-                }
-            }
-            catch (const std::exception& ex) {
-                throw GenericException("Exception while translating route", ex.what());
-            }
-        }
-
-        return std::make_shared<RoutingResult>(proj, points, instructions);
+        return ParseRoutingResult(request->getProjection(), resultString);
     }
 #endif
 
@@ -535,7 +486,6 @@ namespace carto {
         catch (const std::exception& ex) {
             throw GenericException("Exception while translating route", ex.what());
         }
-
         return std::make_shared<RouteMatchingResult>(proj, matchingPoints, matchingEdges);
     }
 
@@ -600,7 +550,6 @@ namespace carto {
         catch (const std::exception& ex) {
             throw GenericException("Exception while translating route", ex.what());
         }
-
         return std::make_shared<RoutingResult>(proj, points, instructions);
     }
 
