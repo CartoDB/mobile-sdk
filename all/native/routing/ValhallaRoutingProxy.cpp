@@ -185,7 +185,7 @@ namespace carto {
 
     std::shared_ptr<RouteMatchingResult> ValhallaRoutingProxy::MatchRoute(const std::string& baseURL, const std::string& profile, const std::shared_ptr<RouteMatchingRequest>& request) {
         std::map<std::string, std::string> params;
-        params["json"] = SerializeRouteMatchingRequest(request);
+        params["json"] = SerializeRouteMatchingRequest(profile, request);
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
         Log::Debugf("ValhallaRoutingProxy::MatchRoute: Loading %s", url.c_str());
 
@@ -203,7 +203,7 @@ namespace carto {
 
     std::shared_ptr<RoutingResult> ValhallaRoutingProxy::CalculateRoute(const std::string& baseURL, const std::string& profile, const std::shared_ptr<RoutingRequest>& request) {
         std::map<std::string, std::string> params;
-        params["json"] = SerializeRoutingRequest(request);
+        params["json"] = SerializeRoutingRequest(profile, request);
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
         Log::Debugf("ValhallaRoutingProxy::CalculateRoute: Loading %s", url.c_str());
 
@@ -227,7 +227,7 @@ namespace carto {
             auto reader = std::make_shared<valhalla::baldr::GraphReader>(databases);
 
             valhalla::Api api;
-            valhalla::ParseApi(SerializeRouteMatchingRequest(request), valhalla::Options::trace_attributes, api);
+            valhalla::ParseApi(SerializeRouteMatchingRequest(profile, request), valhalla::Options::trace_attributes, api);
 
             valhalla::loki::loki_worker_t lokiworker(configTree, reader);
             lokiworker.trace(api);
@@ -237,16 +237,16 @@ namespace carto {
         catch (const std::exception& ex) {
             throw GenericException("Exception while matching route", ex.what());
         }
-        return ParseRouteMatchingResult(proj, result);
+        return ParseRouteMatchingResult(request->getProjection(), result);
     }
 
     std::shared_ptr<RoutingResult> ValhallaRoutingProxy::CalculateRoute(const std::vector<std::shared_ptr<sqlite3pp::database> >& databases, const std::string& profile, const Variant& config, const std::shared_ptr<RoutingRequest>& request) {
+        valhalla::Api api;
         try {
             boost::property_tree::ptree configTree = getConfigTree(config);
             auto reader = std::make_shared<valhalla::baldr::GraphReader>(databases);
 
-            valhalla::Api api;
-            valhalla::ParseApi(SerializeRoutingRequest(request), valhalla::Options::route, api);
+            valhalla::ParseApi(SerializeRoutingRequest(profile, request), valhalla::Options::route, api);
 
             valhalla::loki::loki_worker_t lokiworker(configTree, reader);
             lokiworker.route(api);
@@ -450,7 +450,7 @@ namespace carto {
         return false;
     }
 
-    std::string ValhallaRoutingProxy::SerializeRouteMatchingRequest(const std::shared_ptr<RouteMatchingRequest>& request) {
+    std::string ValhallaRoutingProxy::SerializeRouteMatchingRequest(const std::string& profile, const std::shared_ptr<RouteMatchingRequest>& request) {
         std::shared_ptr<Projection> proj = request->getProjection();
 
         std::vector<valhalla::midgard::PointLL> points;
@@ -470,7 +470,7 @@ namespace carto {
         return picojson::value(json).serialize();
     }
 
-    std::string ValhallaRoutingProxy::SerializeRoutingRequest(const std::shared_ptr<RoutingRequest>& request) {
+    std::string ValhallaRoutingProxy::SerializeRoutingRequest(const std::string& profile, const std::shared_ptr<RoutingRequest>& request) {
         std::shared_ptr<Projection> proj = request->getProjection();
 
         picojson::array locations;
@@ -502,7 +502,6 @@ namespace carto {
             throw GenericException("No edges info in the result");
         }
 
-        std::shared_ptr<Projection> proj = request->getProjection();
         std::vector<RouteMatchingPoint> matchingPoints;
         std::vector<RouteMatchingEdge> matchingEdges;
         try {
@@ -546,12 +545,11 @@ namespace carto {
         if (!err.empty()) {
             throw GenericException("Failed to parse result", err);
         }
-        if (!response.get("trip").is<picojson::object>()) {
+        if (!result.get("trip").is<picojson::object>()) {
             throw GenericException("No trip info in the result");
         }
 
         EPSG3857 epsg3857;
-        std::shared_ptr<Projection> proj = request->getProjection();
         std::vector<MapPos> points;
         std::vector<MapPos> epsg3857Points;
         std::vector<RoutingInstruction> instructions;

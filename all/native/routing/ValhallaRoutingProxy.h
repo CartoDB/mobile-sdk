@@ -45,9 +45,9 @@ namespace carto {
 
         static bool TranslateManeuverType(int maneuverType, RoutingAction::RoutingAction& action);
 
-        static std::string SerializeRouteMatchingRequest(const std::shared_ptr<RouteMatchingRequest>& request);
+        static std::string SerializeRouteMatchingRequest(const std::string& profile, const std::shared_ptr<RouteMatchingRequest>& request);
 
-        static std::string SerializeRoutingRequest(const std::shared_ptr<RoutingRequest>& request);
+        static std::string SerializeRoutingRequest(const std::string& profile, const std::shared_ptr<RoutingRequest>& request);
 
         static std::shared_ptr<RouteMatchingResult> ParseRouteMatchingResult(const std::shared_ptr<Projection>& proj, const std::string& resultString);
 
