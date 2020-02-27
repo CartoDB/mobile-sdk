@@ -56,7 +56,7 @@ namespace carto {
             std::lock_guard<std::mutex> lock(_mutex);
 
             std::map<std::string, std::string> tagMap;
-            tagMap["service"] = "trace_route";
+            tagMap["service"] = "trace_attributes";
             tagMap["api_key"] = NetworkUtils::URLEncode(_apiKey);
             baseURL = GeneralUtils::ReplaceTags(_serviceURL.empty() ? MAPBOX_SERVICE_URL : _serviceURL, tagMap);
         }
