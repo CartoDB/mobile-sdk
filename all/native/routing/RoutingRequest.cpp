@@ -6,6 +6,8 @@
 #include <iomanip>
 #include <sstream>
 
+#include <boost/algorithm/string.hpp>
+
 namespace carto {
 
     RoutingRequest::RoutingRequest(const std::shared_ptr<Projection>& projection, const std::vector<MapPos>& points) :
@@ -41,35 +43,59 @@ namespace carto {
         _filters = filters;
     }
 
-    std::map<std::string, Variant> RoutingRequest::getCustomParameters() const {
+    Variant RoutingRequest::getCustomParameters() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _customParams;
     }
 
-    void RoutingRequest::setCustomParameters(const std::map<std::string, Variant>& customParams) {
+    Variant RoutingRequest::getCustomParameter(const std::string& param) const {
         std::lock_guard<std::mutex> lock(_mutex);
-        _customParams = customParams;
+        std::vector<std::string> keys;
+        boost::split(keys, param, boost::is_any_of("."));
+        picojson::value subValue = _customParams.toPicoJSON();
+        for (const std::string& key : keys) {
+            if (!subValue.is<picojson::object>()) {
+                return Variant();
+            }
+            subValue = subValue.get(key);
+        }
+        return Variant::FromPicoJSON(subValue);
+    }
+
+    void RoutingRequest::setCustomParameter(const std::string& param, const Variant& value) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        std::vector<std::string> keys;
+        boost::split(keys, param, boost::is_any_of("."));
+        picojson::value config = _customParams.toPicoJSON();
+        picojson::value* subValue = &config;
+        for (const std::string& key : keys) {
+            if (!subValue->is<picojson::object>()) {
+                subValue->set(picojson::object());
+            }
+            subValue = &subValue->get<picojson::object>()[key];
+        }
+        *subValue = value.toPicoJSON();
+        _customParams = Variant::FromPicoJSON(config);
     }
 
     std::string RoutingRequest::toString() const {
         std::lock_guard<std::mutex> lock(_mutex);
         std::stringstream ss;
         ss << std::setiosflags(std::ios::fixed);
-        ss << "RoutingRequest [points=";
+        ss << "RoutingRequest [points=[";
         for (auto it = _points.begin(); it != _points.end(); ++it) {
             ss << (it == _points.begin() ? "" : ", ") << it->toString();
         }
+        ss << "]";
         if (!_filters.empty()) {
-            ss << ", filters=";
+            ss << ", filters=[";
             for (auto it = _filters.begin(); it != _filters.end(); ++it) {
                 ss << (it == _filters.begin() ? "" : ", ") << it->toString();
             }
+            ss << "]";
         }
-        if (!_customParams.empty()) {
-            ss << ", customParams=";
-            for (auto it = _customParams.begin(); it != _customParams.end(); ++it) {
-                ss << (it == _customParams.begin() ? "" : ", ") << it->first << "=" << it->second.toString();
-            }
+        if (_customParams.getType() != VariantType::VARIANT_TYPE_NULL) {
+            ss << ", customParams=" << _customParams.toString();
         }
         ss << "]";
         return ss.str();

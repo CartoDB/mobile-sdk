@@ -51,15 +51,22 @@ namespace carto {
         float getAccuracy() const;
 
         /**
-         * Returns the custom parameters of the request.
-         * @return The custom parameters of the request.
+         * Returns the set of custom parameters of the request as a variant.
+         * @return The set of custom parameters as a variant. Can be empty.
          */
-        std::map<std::string, Variant> getCustomParameters() const;
+        Variant getCustomParameters() const;
         /**
-         * Sets the custom parameters for the the request.
-         * @param customParams The map of custom parameters to set.
+         * Returns the custom parameter value of the request.
+         * @param param The name of the parameter to return.
+         * @return The value of the parameter. If the parameter does not exist, empty variant is returned.
          */
-        void setCustomParameters(const std::map<std::string, Variant>& customParams);
+        Variant getCustomParameter(const std::string& param) const;
+        /**
+         * Sets a custom parameter for the the request.
+         * @param param The name of the parameter. For example, "trace_options.search_radius".
+         * @param value The new value for the parameter.
+         */
+        void setCustomParameter(const std::string& param, const Variant& value);
 
         /**
          * Creates a string representation of this request object, useful for logging.
@@ -72,7 +79,7 @@ namespace carto {
         std::vector<MapPos> _points;
         float _accuracy;
 
-        std::map<std::string, Variant> _customParams;
+        Variant _customParams;
         mutable std::mutex _mutex;
     };
     

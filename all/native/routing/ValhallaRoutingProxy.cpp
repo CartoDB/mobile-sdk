@@ -68,18 +68,6 @@
 #include <valhalla/odin/util.h>
 #include <valhalla/odin/directionsbuilder.h>
 
-namespace {
-
-    boost::property_tree::ptree getConfigTree(const carto::Variant& variant) {
-        std::stringstream ss;
-        ss << variant.toPicoJSON().serialize();
-        boost::property_tree::ptree pt;
-        rapidjson::read_json(ss, pt);
-        return pt;
-    }
-
-}
-
 #else
 
 namespace valhalla { namespace midgard {
@@ -221,7 +209,10 @@ namespace carto {
     std::shared_ptr<RouteMatchingResult> ValhallaRoutingProxy::MatchRoute(const std::vector<std::shared_ptr<sqlite3pp::database> >& databases, const std::string& profile, const Variant& config, const std::shared_ptr<RouteMatchingRequest>& request) {
         std::string resultString;
         try {
-            boost::property_tree::ptree configTree = getConfigTree(config);
+            std::stringstream ss;
+            ss << config.toPicoJSON().serialize();
+            boost::property_tree::ptree configTree;
+            rapidjson::read_json(ss, configTree);
             auto reader = std::make_shared<valhalla::baldr::GraphReader>(databases);
 
             valhalla::Api api;
@@ -241,7 +232,10 @@ namespace carto {
     std::shared_ptr<RoutingResult> ValhallaRoutingProxy::CalculateRoute(const std::vector<std::shared_ptr<sqlite3pp::database> >& databases, const std::string& profile, const Variant& config, const std::shared_ptr<RoutingRequest>& request) {
         std::string resultString;
         try {
-            boost::property_tree::ptree configTree = getConfigTree(config);
+            std::stringstream ss;
+            ss << config.toPicoJSON().serialize();
+            boost::property_tree::ptree configTree;
+            rapidjson::read_json(ss, configTree);
             auto reader = std::make_shared<valhalla::baldr::GraphReader>(databases);
 
             valhalla::Api api;
@@ -403,7 +397,6 @@ namespace carto {
 
     std::string ValhallaRoutingProxy::SerializeRouteMatchingRequest(const std::string& profile, const std::shared_ptr<RouteMatchingRequest>& request) {
         std::shared_ptr<Projection> proj = request->getProjection();
-        std::map<std::string, Variant> customParams = request->getCustomParameters();
 
         std::vector<valhalla::midgard::PointLL> points;
         for (const MapPos& pos : request->getPoints()) {
@@ -411,9 +404,11 @@ namespace carto {
             points.emplace_back(static_cast<float>(posWgs84.getX()), static_cast<float>(posWgs84.getY()));
         }
 
+        picojson::value customParams = request->getCustomParameters().toPicoJSON();
+
         picojson::object json;
-        for (auto it = customParams.begin(); it != customParams.end(); it++) {
-            json[it->first] = it->second.toPicoJSON();
+        if (customParams.is<picojson::object>()) {
+            json = customParams.get<picojson::object>();
         }
         json["encoded_polyline"] = picojson::value(valhalla::midgard::encode(points));
         json["shape_match"] = picojson::value("map_snap");
@@ -427,7 +422,6 @@ namespace carto {
 
     std::string ValhallaRoutingProxy::SerializeRoutingRequest(const std::string& profile, const std::shared_ptr<RoutingRequest>& request) {
         std::shared_ptr<Projection> proj = request->getProjection();
-        std::map<std::string, Variant> customParams = request->getCustomParameters();
 
         picojson::array locations;
         for (const MapPos& pos : request->getPoints()) {
@@ -438,9 +432,11 @@ namespace carto {
             locations.emplace_back(location);
         }
 
+        picojson::value customParams = request->getCustomParameters().toPicoJSON();
+
         picojson::object json;
-        for (auto it = customParams.begin(); it != customParams.end(); it++) {
-            json[it->first] = it->second.toPicoJSON();
+        if (customParams.is<picojson::object>()) {
+            json = customParams.get<picojson::object>();
         }
         json["locations"] = picojson::value(locations);
         json["costing"] = picojson::value(profile);

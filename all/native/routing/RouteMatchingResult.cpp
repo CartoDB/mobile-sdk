@@ -43,15 +43,15 @@ namespace carto {
 
     std::string RouteMatchingResult::toString() const {
         std::stringstream ss;
-        ss << "RouteMatchingResult [matchingPoints=";
+        ss << "RouteMatchingResult [matchingPoints=[";
         for (auto it = _matchingPoints.begin(); it != _matchingPoints.end(); ++it) {
             ss << (it == _matchingPoints.begin() ? "" : ", ") << (*it).toString();
         }
-        ss << ", matchingEdges=";
+        ss << "], matchingEdges=[";
         for (auto it = _matchingEdges.begin(); it != _matchingEdges.end(); ++it) {
             ss << (it == _matchingEdges.begin() ? "" : ", ") << (*it).toString();
         }
-        ss << "]";
+        ss << "]]";
         return ss.str();
     }
 
