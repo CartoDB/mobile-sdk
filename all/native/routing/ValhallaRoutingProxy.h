@@ -52,6 +52,8 @@ namespace carto {
         static std::shared_ptr<RouteMatchingResult> ParseRouteMatchingResult(const std::shared_ptr<Projection>& proj, const std::string& resultString);
 
         static std::shared_ptr<RoutingResult> ParseRoutingResult(const std::shared_ptr<Projection>& proj, const std::string& resultString);
+
+        static std::string MakeHTTPRequest(const std::string& url);
     };
 
 }

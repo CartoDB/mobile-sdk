@@ -175,15 +175,7 @@ namespace carto {
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
         Log::Debugf("ValhallaRoutingProxy::MatchRoute: Loading %s", url.c_str());
 
-        std::shared_ptr<BinaryData> responseData;
-        if (!NetworkUtils::GetHTTP(url, responseData, Log::IsShowDebug())) {
-            throw NetworkException("Failed to fetch response"); // NOTE: we may have error messages, thus do not return from here
-        }
-        if (!responseData) {
-            throw GenericException("Empty response");
-        }
-
-        std::string responseString = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+        std::string responseString = MakeHTTPRequest(url);
         return ParseRouteMatchingResult(request->getProjection(), responseString);
     }
 
@@ -193,15 +185,7 @@ namespace carto {
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
         Log::Debugf("ValhallaRoutingProxy::CalculateRoute: Loading %s", url.c_str());
 
-        std::shared_ptr<BinaryData> responseData;
-        if (!NetworkUtils::GetHTTP(url, responseData, Log::IsShowDebug())) {
-            throw NetworkException("Failed to fetch response"); // NOTE: we may have error messages, thus do not return from here
-        }
-        if (!responseData) {
-            throw GenericException("Empty response");
-        }
-
-        std::string responseString = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+        std::string responseString = MakeHTTPRequest(url);
         return ParseRoutingResult(request->getProjection(), responseString);
     }
 
@@ -555,6 +539,28 @@ namespace carto {
             throw GenericException("Exception while translating route", ex.what());
         }
         return std::make_shared<RoutingResult>(proj, points, instructions);
+    }
+
+    std::string ValhallaRoutingProxy::MakeHTTPRequest(const std::string& url) {
+        std::string responseString;
+        if (!NetworkUtils::GetHTTP(url, responseString, Log::IsShowDebug())) {
+            if (responseString.empty()) {
+                throw NetworkException("Failed to fetch response");
+            }
+            Log::Debugf("ValhallaRoutingProxy::MakeHTTPRequest: Failed response %s", responseString.c_str());
+
+            picojson::value result;
+            std::string err = picojson::parse(result, responseString);
+            if (!err.empty()) {
+                throw GenericException("Failed to parse routing/matching result", err);
+            }
+            std::string details;
+            if (result.get("error").is<std::string>()) {
+                details = result.get("error").get<std::string>();
+            }
+            throw GenericException("Routing/matching failed", details);
+        }
+        return responseString;
     }
 
     ValhallaRoutingProxy::ValhallaRoutingProxy() {

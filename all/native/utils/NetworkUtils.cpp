@@ -19,6 +19,12 @@
 #include <boost/lexical_cast.hpp>
 
 namespace carto {
+
+    bool NetworkUtils::GetHTTP(const std::string& url, std::string& responseString, bool log) {
+        std::map<std::string, std::string> requestHeaders;
+        std::map<std::string, std::string> responseHeaders;
+        return GetHTTP(url, requestHeaders, responseHeaders, responseString, log);
+    }
     
     bool NetworkUtils::GetHTTP(const std::string& url, std::shared_ptr<BinaryData>& responseData, bool log) {
         std::map<std::string, std::string> requestHeaders;
@@ -26,6 +32,20 @@ namespace carto {
         return GetHTTP(url, requestHeaders, responseHeaders, responseData, log);
     }
 
+    bool NetworkUtils::GetHTTP(const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, std::string& responseString, bool log) {
+        std::shared_ptr<BinaryData> responseData;
+        bool success = GetHTTP(url, requestHeaders, responseHeaders, responseData, log);
+        if (responseData) {
+            responseString = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+        } else {
+            responseString.clear();
+            if (success && log) {
+                Log::Warn("GetHTTP: Empty response data");
+            }
+        }
+        return success;
+    }
+    
     bool NetworkUtils::GetHTTP(const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, std::shared_ptr<BinaryData>& responseData, bool log) {
         HTTPClient client(log);
         try {
