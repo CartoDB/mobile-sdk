@@ -9,7 +9,8 @@
 
 #ifdef _CARTO_ROUTING_SUPPORT
 
-#include "routing/RoutingService.h"
+#include "core/Variant.h"
+#include "routing/RoutingInstruction.h"
 
 #include <memory>
 #include <vector>
@@ -20,9 +21,11 @@ namespace sqlite3pp {
 }
 
 namespace carto {
+    class Projection;
+    class RoutingRequest;
+    class RoutingResult;
     class RouteMatchingRequest;
     class RouteMatchingResult;
-    class Variant;
     
     class ValhallaRoutingProxy {
     public:

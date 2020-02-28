@@ -19,10 +19,6 @@
 
 %import "core/Variant.i"
 %import "routing/RoutingService.i"
-%import "routing/RoutingRequest.i"
-%import "routing/RoutingResult.i"
-%import "routing/RouteMatchingRequest.i"
-%import "routing/RouteMatchingResult.i"
 %import "packagemanager/PackageManager.i"
 
 !polymorphic_shared_ptr(carto::PackageManagerValhallaRoutingService, routing.PackageManagerValhallaRoutingService)

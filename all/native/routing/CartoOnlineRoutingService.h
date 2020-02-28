@@ -29,6 +29,8 @@ namespace carto {
         explicit CartoOnlineRoutingService(const std::string& source);
         virtual ~CartoOnlineRoutingService();
 
+        virtual std::shared_ptr<RouteMatchingResult> matchRoute(const std::shared_ptr<RouteMatchingRequest>& request) const;
+
         virtual std::shared_ptr<RoutingResult> calculateRoute(const std::shared_ptr<RoutingRequest>& request) const;
 
     protected:

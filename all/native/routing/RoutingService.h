@@ -11,6 +11,8 @@
 
 #include "routing/RoutingRequest.h"
 #include "routing/RoutingResult.h"
+#include "routing/RouteMatchingRequest.h"
+#include "routing/RouteMatchingResult.h"
 
 #include <memory>
 
@@ -24,7 +26,15 @@ namespace carto {
         virtual ~RoutingService();
 
         /**
-         * Calculates routing result (path) based on routing result.
+         * Matches specified points to the points on the road network.
+         * @param request The matching request defining points.
+         * @return The matching result or null if route matching failed.
+         * @throws std::runtime_error If IO error occured during the route matching.
+         */
+        virtual std::shared_ptr<RouteMatchingResult> matchRoute(const std::shared_ptr<RouteMatchingRequest>& request) const = 0;
+
+        /**
+         * Calculates routing result (path) based on routing request.
          * @param request The routing request defining via points.
          * @return The result or null if routing failed.
          * @throws std::runtime_error If IO error occured during the route calculation.

@@ -8,7 +8,7 @@
 
 #ifdef _CARTO_ROUTING_SUPPORT
 
-!proxy_imports(carto::RoutingService, routing.RoutingRequest, routing.RoutingResult)
+!proxy_imports(carto::RoutingService, routing.RoutingRequest, routing.RoutingResult, routing.RouteMatchingRequest, routing.RouteMatchingResult)
 
 %{
 #include "routing/RoutingService.h"
@@ -21,9 +21,12 @@
 
 %import "routing/RoutingRequest.i"
 %import "routing/RoutingResult.i"
+%import "routing/RouteMatchingRequest.i"
+%import "routing/RouteMatchingResult.i"
 
 !polymorphic_shared_ptr(carto::RoutingService, routing.RoutingService)
 
+%std_io_exceptions(carto::RoutingService::matchRoute)
 %std_io_exceptions(carto::RoutingService::calculateRoute)
 
 %feature("director") carto::RoutingService;

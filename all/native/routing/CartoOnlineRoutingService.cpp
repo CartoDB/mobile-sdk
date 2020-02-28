@@ -23,6 +23,10 @@ namespace carto {
     CartoOnlineRoutingService::~CartoOnlineRoutingService() {
     }
 
+    std::shared_ptr<RouteMatchingResult> CartoOnlineRoutingService::matchRoute(const std::shared_ptr<RouteMatchingRequest>& request) const {
+        throw GenericException("matchRoute not implemented for this RoutingService");
+    }
+
     std::shared_ptr<RoutingResult> CartoOnlineRoutingService::calculateRoute(const std::shared_ptr<RoutingRequest>& request) const {
         if (!request) {
             throw NullArgumentException("Null request");

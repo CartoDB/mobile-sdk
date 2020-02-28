@@ -10,7 +10,7 @@
 #ifdef _CARTO_ROUTING_SUPPORT
 
 #include "core/MapPos.h"
-#include "routing/RoutingService.h"
+#include "routing/RoutingInstruction.h"
 
 #include <memory>
 #include <string>
@@ -22,6 +22,10 @@ namespace carto {
     }
     
     class HTTPClient;
+    class RoutingRequest;
+    class RoutingResult;
+    class RouteMatchingRequest;
+    class RouteMatchingResult;
 
     class OSRMRoutingProxy {
     public:

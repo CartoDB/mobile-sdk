@@ -5,7 +5,7 @@
 
 #if defined(_CARTO_ROUTING_SUPPORT) && defined(_CARTO_OFFLINE_SUPPORT)
 
-!proxy_imports(carto::OSRMOfflineRoutingService, routing.RoutingService, routing.RoutingRequest, routing.RoutingResult)
+!proxy_imports(carto::OSRMOfflineRoutingService, routing.RoutingService, routing.RoutingRequest, routing.RoutingResult, routing.RouteMatchingRequest, routing.RouteMatchingResult)
 
 %{
 #include "routing/OSRMOfflineRoutingService.h"
@@ -21,6 +21,7 @@
 !polymorphic_shared_ptr(carto::OSRMOfflineRoutingService, routing.OSRMOfflineRoutingService)
 
 %std_io_exceptions(carto::OSRMOfflineRoutingService::OSRMOfflineRoutingService)
+%std_io_exceptions(carto::OSRMOfflineRoutingService::matchRoute)
 %std_io_exceptions(carto::OSRMOfflineRoutingService::calculateRoute)
 
 %feature("director") carto::OSRMOfflineRoutingService;

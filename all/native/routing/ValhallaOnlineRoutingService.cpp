@@ -2,8 +2,6 @@
 
 #include "ValhallaOnlineRoutingService.h"
 #include "components/Exceptions.h"
-#include "routing/RouteMatchingRequest.h"
-#include "routing/RouteMatchingResult.h"
 #include "routing/ValhallaRoutingProxy.h"
 #include "utils/GeneralUtils.h"
 #include "utils/NetworkUtils.h"

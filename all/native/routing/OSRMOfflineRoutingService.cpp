@@ -35,6 +35,10 @@ namespace carto {
     OSRMOfflineRoutingService::~OSRMOfflineRoutingService() {
     }
 
+    std::shared_ptr<RouteMatchingResult> OSRMOfflineRoutingService::matchRoute(const std::shared_ptr<RouteMatchingRequest>& request) const {
+        throw GenericException("matchRoute not implemented for this RoutingService");
+    }
+
     std::shared_ptr<RoutingResult> OSRMOfflineRoutingService::calculateRoute(const std::shared_ptr<RoutingRequest>& request) const {
         if (!request) {
             throw NullArgumentException("Null request");
