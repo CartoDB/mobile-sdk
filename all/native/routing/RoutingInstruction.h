@@ -89,7 +89,15 @@ namespace carto {
             /**
              * Wait. Only used by SGRE.
              */
-            ROUTING_ACTION_WAIT
+            ROUTING_ACTION_WAIT,
+            /**
+             * Enter ferry. Only used by Valhalla.
+             */
+            ROUTING_ACTION_ENTER_FERRY,
+            /**
+             * Leave ferry. Only used by Valhalla.
+             */
+            ROUTING_ACTION_LEAVE_FERRY
         };
     }
 
