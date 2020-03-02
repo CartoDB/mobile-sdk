@@ -3,6 +3,7 @@
 #include "ValhallaOnlineRoutingService.h"
 #include "components/Exceptions.h"
 #include "routing/ValhallaRoutingProxy.h"
+#include "network/HTTPClient.h"
 #include "utils/GeneralUtils.h"
 #include "utils/NetworkUtils.h"
 #include "utils/Log.h"
@@ -60,7 +61,9 @@ namespace carto {
         }
 
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
-        return ValhallaRoutingProxy::MatchRoute(url, getProfile(), request);
+
+        HTTPClient httpClient(Log::IsShowDebug());
+        return ValhallaRoutingProxy::MatchRoute(httpClient, url, getProfile(), request);
     }
 
     std::shared_ptr<RoutingResult> ValhallaOnlineRoutingService::calculateRoute(const std::shared_ptr<RoutingRequest>& request) const {
@@ -81,7 +84,9 @@ namespace carto {
         }
 
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
-        return ValhallaRoutingProxy::CalculateRoute(url, getProfile(), request);
+
+        HTTPClient httpClient(Log::IsShowDebug());
+        return ValhallaRoutingProxy::CalculateRoute(httpClient, url, getProfile(), request);
     }
 
     const std::string ValhallaOnlineRoutingService::MAPBOX_SERVICE_URL = "https://api.mapbox.com/valhalla/v1/{service}?access_token={api_key}";

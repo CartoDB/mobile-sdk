@@ -171,23 +171,23 @@ namespace valhalla { namespace midgard {
 
 namespace carto {
 
-    std::shared_ptr<RouteMatchingResult> ValhallaRoutingProxy::MatchRoute(const std::string& baseURL, const std::string& profile, const std::shared_ptr<RouteMatchingRequest>& request) {
+    std::shared_ptr<RouteMatchingResult> ValhallaRoutingProxy::MatchRoute(HTTPClient& httpClient, const std::string& baseURL, const std::string& profile, const std::shared_ptr<RouteMatchingRequest>& request) {
         std::map<std::string, std::string> params;
         params["json"] = SerializeRouteMatchingRequest(profile, request);
-        std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
-        Log::Debugf("ValhallaRoutingProxy::MatchRoute: Loading %s", url.c_str());
+        std::string finalURL = NetworkUtils::BuildURLFromParameters(baseURL, params);
+        Log::Debugf("ValhallaRoutingProxy::MatchRoute: Loading %s", finalURL.c_str());
 
-        std::string responseString = MakeHTTPRequest(url);
+        std::string responseString = MakeHTTPRequest(httpClient, finalURL);
         return ParseRouteMatchingResult(request->getProjection(), responseString);
     }
 
-    std::shared_ptr<RoutingResult> ValhallaRoutingProxy::CalculateRoute(const std::string& baseURL, const std::string& profile, const std::shared_ptr<RoutingRequest>& request) {
+    std::shared_ptr<RoutingResult> ValhallaRoutingProxy::CalculateRoute(HTTPClient& httpClient, const std::string& baseURL, const std::string& profile, const std::shared_ptr<RoutingRequest>& request) {
         std::map<std::string, std::string> params;
         params["json"] = SerializeRoutingRequest(profile, request);
-        std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
-        Log::Debugf("ValhallaRoutingProxy::CalculateRoute: Loading %s", url.c_str());
+        std::string finalURL = NetworkUtils::BuildURLFromParameters(baseURL, params);
+        Log::Debugf("ValhallaRoutingProxy::CalculateRoute: Loading %s", finalURL.c_str());
 
-        std::string responseString = MakeHTTPRequest(url);
+        std::string responseString = MakeHTTPRequest(httpClient, finalURL);
         return ParseRoutingResult(request->getProjection(), responseString);
     }
 
@@ -543,9 +543,19 @@ namespace carto {
         return std::make_shared<RoutingResult>(proj, points, instructions);
     }
 
-    std::string ValhallaRoutingProxy::MakeHTTPRequest(const std::string& url) {
+    std::string ValhallaRoutingProxy::MakeHTTPRequest(HTTPClient& httpClient, const std::string& url) {
+        std::map<std::string, std::string> requestHeaders;
+        requestHeaders["Connection"] = "close";
+        std::map<std::string, std::string> responseHeaders;
+        std::shared_ptr<BinaryData> responseData;
+        int code = httpClient.get(url, requestHeaders, responseHeaders, responseData);
         std::string responseString;
-        if (!NetworkUtils::GetHTTP(url, responseString, Log::IsShowDebug())) {
+        if (responseData) {
+            const char* responseDataPtr = reinterpret_cast<const char*>(responseData->data());
+            responseString = std::string(responseDataPtr, responseDataPtr + responseData->size());
+        }
+
+        if (code != 0) {
             if (responseString.empty()) {
                 throw NetworkException("Failed to fetch response");
             }
