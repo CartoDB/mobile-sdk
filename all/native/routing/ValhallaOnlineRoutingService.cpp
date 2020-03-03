@@ -23,16 +23,6 @@ namespace carto {
     ValhallaOnlineRoutingService::~ValhallaOnlineRoutingService() {
     }
 
-    std::string ValhallaOnlineRoutingService::getProfile() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _profile;
-    }
-
-    void ValhallaOnlineRoutingService::setProfile(const std::string& profile) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _profile = profile;
-    }
-
     std::string ValhallaOnlineRoutingService::getCustomServiceURL() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _serviceURL;
@@ -41,6 +31,16 @@ namespace carto {
     void ValhallaOnlineRoutingService::setCustomServiceURL(const std::string& serviceURL) {
         std::lock_guard<std::mutex> lock(_mutex);
         _serviceURL = serviceURL;
+    }
+
+    std::string ValhallaOnlineRoutingService::getProfile() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _profile;
+    }
+
+    void ValhallaOnlineRoutingService::setProfile(const std::string& profile) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _profile = profile;
     }
 
     std::shared_ptr<RouteMatchingResult> ValhallaOnlineRoutingService::matchRoute(const std::shared_ptr<RouteMatchingRequest>& request) const {

@@ -39,17 +39,6 @@ namespace carto {
         virtual ~ValhallaOnlineRoutingService();
 
         /**
-         * Returns the current routing profile.
-         * @return The current routing profile. Can be either "auto", "auto_shorter", "bicycle", "bus", "hov", "pedestrian", "wheelchair" or "multimodal". The default is "pedestrian".
-         */
-        std::string getProfile() const;
-        /**
-         * Sets the current routing profile.
-         * @param profile The new profile. Can be either "auto", "auto_shorter", "bicycle", "bus", "hov", "pedestrian", "wheelchair" or "multimodal".
-         */
-        void setProfile(const std::string& profile);
-
-        /**
          * Returns the custom backend service URL.
          * @return The custom backend service URL. If this is not defined, an empty string is returned.
          */
@@ -61,6 +50,9 @@ namespace carto {
          * @param serviceURL The custom backend service URL to use. If this is empty, then the default service is used.
          */
         void setCustomServiceURL(const std::string& serviceURL);
+
+        virtual std::string getProfile() const;
+        virtual void setProfile(const std::string& profile);
 
         virtual std::shared_ptr<RouteMatchingResult> matchRoute(const std::shared_ptr<RouteMatchingRequest>& request) const;
 

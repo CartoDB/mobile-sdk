@@ -23,7 +23,6 @@
 
 !polymorphic_shared_ptr(carto::PackageManagerValhallaRoutingService, routing.PackageManagerValhallaRoutingService)
 
-%attributestring(carto::PackageManagerValhallaRoutingService, std::string, Profile, getProfile, setProfile)
 %std_exceptions(carto::PackageManagerValhallaRoutingService::PackageManagerValhallaRoutingService)
 %std_io_exceptions(carto::PackageManagerValhallaRoutingService::matchRoute)
 %std_io_exceptions(carto::PackageManagerValhallaRoutingService::calculateRoute)

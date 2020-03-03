@@ -17,6 +17,7 @@
 %}
 
 %include <std_shared_ptr.i>
+%include <std_string.i>
 %include <cartoswig.i>
 
 %import "routing/RoutingRequest.i"
@@ -26,6 +27,8 @@
 
 !polymorphic_shared_ptr(carto::RoutingService, routing.RoutingService)
 
+%attributestring(carto::RoutingService, std::string, Profile, getProfile, setProfile)
+%std_exceptions(carto::RoutingService::setProfile)
 %std_io_exceptions(carto::RoutingService::matchRoute)
 %std_io_exceptions(carto::RoutingService::calculateRoute)
 

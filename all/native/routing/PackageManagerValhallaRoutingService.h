@@ -37,17 +37,6 @@ namespace carto {
         virtual ~PackageManagerValhallaRoutingService();
 
         /**
-         * Returns the current routing profile.
-         * @return The current routing profile. Can be either "auto", "bicycle", "pedestrian", "wheelchair" or "multimodal". The default is "pedestrian".
-         */
-        std::string getProfile() const;
-        /**
-         * Sets the current routing profile.
-         * @param profile The new profile. Can be either "auto", "bicycle", "pedestrian", "wheelchair" or "multimodal".
-         */
-        void setProfile(const std::string& profile);
-
-        /**
          * Returns the value of specified Valhalla configuration parameter.
          * @param param The name of the parameter. For example, "meili.auto.search_radius".
          * @return The value of the parameter. If the parameter does not exist, empty variant is returned.
@@ -59,6 +48,9 @@ namespace carto {
          * @param value The new value of the parameter.
          */
         void setConfigurationParameter(const std::string& param, const Variant& value);
+
+        virtual std::string getProfile() const;
+        virtual void setProfile(const std::string& profile);
 
         virtual std::shared_ptr<RouteMatchingResult> matchRoute(const std::shared_ptr<RouteMatchingRequest>& request) const;
 

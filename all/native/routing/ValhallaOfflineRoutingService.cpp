@@ -27,16 +27,6 @@ namespace carto {
     ValhallaOfflineRoutingService::~ValhallaOfflineRoutingService() {
     }
 
-    std::string ValhallaOfflineRoutingService::getProfile() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _profile;
-    }
-
-    void ValhallaOfflineRoutingService::setProfile(const std::string& profile) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _profile = profile;
-    }
-
     Variant ValhallaOfflineRoutingService::getConfigurationParameter(const std::string& param) const {
         std::lock_guard<std::mutex> lock(_mutex);
         std::vector<std::string> keys;
@@ -65,6 +55,16 @@ namespace carto {
         }
         *subValue = value.toPicoJSON();
         _configuration = Variant::FromPicoJSON(config);
+    }
+
+    std::string ValhallaOfflineRoutingService::getProfile() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _profile;
+    }
+
+    void ValhallaOfflineRoutingService::setProfile(const std::string& profile) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _profile = profile;
     }
 
     std::shared_ptr<RouteMatchingResult> ValhallaOfflineRoutingService::matchRoute(const std::shared_ptr<RouteMatchingRequest>& request) const {

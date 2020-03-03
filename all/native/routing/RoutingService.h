@@ -26,6 +26,17 @@ namespace carto {
         virtual ~RoutingService();
 
         /**
+         * Returns the current routing profile.
+         * @return The current routing profile.
+         */
+        virtual std::string getProfile() const = 0;
+        /**
+         * Sets the current routing profile.
+         * @param profile The new routing profile. Routing profiles are dependent on specific routing service.
+         */
+        virtual void setProfile(const std::string& profile) = 0;
+
+        /**
          * Matches specified points to the points on the road network.
          * @param request The matching request defining points.
          * @return The matching result or null if route matching failed.

@@ -22,7 +22,6 @@
 
 !polymorphic_shared_ptr(carto::ValhallaOfflineRoutingService, routing.ValhallaOfflineRoutingService)
 
-%attributestring(carto::ValhallaOfflineRoutingService, std::string, Profile, getProfile, setProfile)
 %std_io_exceptions(carto::ValhallaOfflineRoutingService::ValhallaOfflineRoutingService)
 %std_io_exceptions(carto::ValhallaOfflineRoutingService::matchRoute)
 %std_io_exceptions(carto::ValhallaOfflineRoutingService::calculateRoute)

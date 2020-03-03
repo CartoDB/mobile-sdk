@@ -37,6 +37,16 @@ namespace carto {
         _packageManagerListener.reset();
     }
 
+    std::string PackageManagerRoutingService::getProfile() const {
+        return std::string();
+    }
+
+    void PackageManagerRoutingService::setProfile(const std::string& profile) {
+        if (!profile.empty()) {
+            throw GenericException("Only default profile supported");
+        }
+    }
+
     std::shared_ptr<RouteMatchingResult> PackageManagerRoutingService::matchRoute(const std::shared_ptr<RouteMatchingRequest>& request) const {
         throw GenericException("matchRoute not implemented for this RoutingService");
     }

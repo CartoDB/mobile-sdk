@@ -24,7 +24,6 @@
 
 !polymorphic_shared_ptr(carto::SGREOfflineRoutingService, routing.SGREOfflineRoutingService)
 
-%attributestring(carto::SGREOfflineRoutingService, std::string, Profile, getProfile, setProfile)
 %std_io_exceptions(carto::SGREOfflineRoutingService::SGREOfflineRoutingService)
 %std_io_exceptions(carto::SGREOfflineRoutingService::matchRoute)
 %std_io_exceptions(carto::SGREOfflineRoutingService::calculateRoute)

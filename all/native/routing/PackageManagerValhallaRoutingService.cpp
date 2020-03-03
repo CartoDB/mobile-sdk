@@ -34,16 +34,6 @@ namespace carto {
         _packageManagerListener.reset();
     }
 
-    std::string PackageManagerValhallaRoutingService::getProfile() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _profile;
-    }
-
-    void PackageManagerValhallaRoutingService::setProfile(const std::string& profile) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _profile = profile;
-    }
-
     Variant PackageManagerValhallaRoutingService::getConfigurationParameter(const std::string& param) const {
         std::lock_guard<std::mutex> lock(_mutex);
         std::vector<std::string> keys;
@@ -72,6 +62,16 @@ namespace carto {
         }
         *subValue = value.toPicoJSON();
         _configuration = Variant::FromPicoJSON(config);
+    }
+
+    std::string PackageManagerValhallaRoutingService::getProfile() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _profile;
+    }
+
+    void PackageManagerValhallaRoutingService::setProfile(const std::string& profile) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _profile = profile;
     }
 
     std::shared_ptr<RouteMatchingResult> PackageManagerValhallaRoutingService::matchRoute(const std::shared_ptr<RouteMatchingRequest>& request) const {
