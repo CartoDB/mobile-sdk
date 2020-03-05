@@ -144,7 +144,7 @@ namespace carto {
                     if (style.getLineJoinType() == LineJoinType::LINE_JOIN_TYPE_BEVEL) {
                         segments = deltaAngle != 0 ? 1 : 0;
                     } else { //style.getLineJoinType() == LineJoinType::ROUND
-                        segments = static_cast<int>(std::ceil(std::abs(deltaAngle) * style.getWidth() * LINE_ENDPOINT_TESSELATION_FACTOR));
+                        segments = static_cast<int>(std::ceil(std::abs(deltaAngle) * style.getWidth() * LINE_JOIN_TESSELATION_FACTOR));
                     }
     
                     coordCount += segments;
