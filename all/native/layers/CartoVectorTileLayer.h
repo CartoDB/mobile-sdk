@@ -35,6 +35,46 @@ namespace carto {
         };
     }
 
+    namespace CartoBaseMapPOIRenderMode {
+        /**
+         * Supported POI rendering styles for Carto basemaps.
+         */
+        enum CartoBaseMapPOIRenderMode {
+            /**
+             * No basemap POIs.
+             */
+            CARTO_BASE_MAP_POI_RENDER_MODE_NONE,
+            /**
+             * Render basemap POIs as icons only.
+             */
+            CARTO_BASE_MAP_POI_RENDER_MODE_ICON,
+            /**
+             * Render basemap POIs as icons with text.
+             */
+            CARTO_BASE_MAP_POI_RENDER_MODE_FULL
+        };
+    }
+
+    namespace CartoBaseMapBuildingRenderMode {
+        /**
+         * Supported building rendering styles for Carto basemaps.
+         */
+        enum CartoBaseMapBuildingRenderMode {
+            /**
+             * No basemap buildings.
+             */
+            CARTO_BASE_MAP_BUILDING_RENDER_MODE_NONE,
+            /**
+             * 2D basemap buildings, displayed as polygons.
+             */
+            CARTO_BASE_MAP_BUILDING_RENDER_MODE_2D,
+            /**
+             * 3D basemap buildings, displayed as 3D polygons.
+             */
+            CARTO_BASE_MAP_BUILDING_RENDER_MODE_3D
+        };
+    }
+
     /**
      * Specialized vector tile layer that can use built-in vector tile styles.
      */
@@ -84,6 +124,28 @@ namespace carto {
          * @param lang The new fallback language to use. The default is local language (empty string).
          */
         void setFallbackLanguage(const std::string& lang);
+
+        /**
+         * Returns the current render mode for Point-Of-Interest icons.
+         * @return The current render mode for for Point-Of-Interest icons.
+         */
+        CartoBaseMapPOIRenderMode::CartoBaseMapPOIRenderMode getPOIRenderMode() const;
+        /**
+         * Sets the current render mode for Point-Of-Interest icons.
+         * @param renderMode The new render mode for Point-Of-Interest icons.
+         */
+        void setPOIRenderMode(CartoBaseMapPOIRenderMode::CartoBaseMapPOIRenderMode renderMode);
+
+        /**
+         * Returns the current render mode for buildings.
+         * @return The current render mode for buildings.
+         */
+        CartoBaseMapBuildingRenderMode::CartoBaseMapBuildingRenderMode getBuildingRenderMode() const;
+        /**
+         * Sets the current render mode for buildings.
+         * @param renderMode The new render mode for buildings.
+         */
+        void setBuildingRenderMode(CartoBaseMapBuildingRenderMode::CartoBaseMapBuildingRenderMode renderMode);
 
         /**
          * Creates a new tile decoder from the specified base map style.

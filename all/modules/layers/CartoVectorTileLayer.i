@@ -23,6 +23,8 @@
 
 %attributestring(carto::CartoVectorTileLayer, std::string, Language, getLanguage, setLanguage)
 %attributestring(carto::CartoVectorTileLayer, std::string, FallbackLanguage, getFallbackLanguage, setFallbackLanguage)
+%attribute(carto::CartoVectorTileLayer, carto::CartoBaseMapPOIRenderMode::CartoBaseMapPOIRenderMode, POIRenderMode, getPOIRenderMode, setPOIRenderMode)
+%attribute(carto::CartoVectorTileLayer, carto::CartoBaseMapBuildingRenderMode::CartoBaseMapBuildingRenderMode, BuildingRenderMode, getBuildingRenderMode, setBuildingRenderMode)
 %std_exceptions(carto::CartoVectorTileLayer::CartoVectorTileLayer(const std::shared_ptr<TileDataSource>&, const std::shared_ptr<AssetPackage>&))
 %std_exceptions(carto::CartoVectorTileLayer::CreateTileDecoder(const std::shared_ptr<AssetPackage>&))
 !objc_rename(createTileDecoderFromAssetPackage) carto::CartoVectorTileLayer::CreateTileDecoder(const std::shared_ptr<AssetPackage>&);
