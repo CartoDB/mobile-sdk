@@ -43,15 +43,15 @@ namespace carto {
             /**
              * No basemap POIs.
              */
-            CARTO_BASE_MAP_POI_RENDER_MODE_NONE,
+            CARTO_BASEMAP_POI_RENDER_MODE_NONE,
             /**
              * Render basemap POIs as icons only.
              */
-            CARTO_BASE_MAP_POI_RENDER_MODE_ICON,
+            CARTO_BASEMAP_POI_RENDER_MODE_ICON,
             /**
              * Render basemap POIs as icons with text.
              */
-            CARTO_BASE_MAP_POI_RENDER_MODE_FULL
+            CARTO_BASEMAP_POI_RENDER_MODE_FULL
         };
     }
 
@@ -63,15 +63,15 @@ namespace carto {
             /**
              * No basemap buildings.
              */
-            CARTO_BASE_MAP_BUILDING_RENDER_MODE_NONE,
+            CARTO_BASEMAP_BUILDING_RENDER_MODE_NONE,
             /**
              * 2D basemap buildings, displayed as polygons.
              */
-            CARTO_BASE_MAP_BUILDING_RENDER_MODE_2D,
+            CARTO_BASEMAP_BUILDING_RENDER_MODE_2D,
             /**
              * 3D basemap buildings, displayed as 3D polygons.
              */
-            CARTO_BASE_MAP_BUILDING_RENDER_MODE_3D
+            CARTO_BASEMAP_BUILDING_RENDER_MODE_3D
         };
     }
 
