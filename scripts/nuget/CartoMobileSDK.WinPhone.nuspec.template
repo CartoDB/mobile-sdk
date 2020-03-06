@@ -21,28 +21,28 @@
     <files>
         <!-- This is hack - we use Win32 assembly and remove reference to Win32 using corflags -->
         <file src="$buildDir\CartoMobileSDK.WinPhone.dll" target="lib\uap10.0\CartoMobileSDK.WinPhone.dll" />
-        <file src="$baseDir\build\winphone_managed10-ARM\bin\$configuration\CartoMobileSDK.WinPhone.xml" target="lib\uap10.0\CartoMobileSDK.WinPhone.xml" />
+        <file src="$baseDir\build\winphone_managed10-ARM64\bin\$configuration\CartoMobileSDK.WinPhone.xml" target="lib\uap10.0\CartoMobileSDK.WinPhone.xml" />
         <file src="$baseDir\build\winphone_native10-Win32\$nativeConfiguration\carto_mobile_sdk.winmd" target="lib\uap10.0\carto_mobile_sdk.winmd" />
 
-        <file src="$baseDir\build\winphone_managed10-ARM\bin\$configuration\CartoMobileSDK.WinPhone.dll" target="runtimes\win10-arm\lib\uap10.0\CartoMobileSDK.WinPhone.dll" />
-        <file src="$baseDir\build\winphone_native10-ARM\$nativeConfiguration\carto_mobile_sdk.dll" target="runtimes\win10-arm\native\carto_mobile_sdk.dll" />
-        <file src="$baseDir\build\winphone_native10-ARM\$nativeConfiguration\carto_mobile_sdk.pri" target="runtimes\win10-arm\native\carto_mobile_sdk.pri" />
-        <file src="$baseDir\build\winphone_native10-ARM\$nativeConfiguration\carto_mobile_sdk.winmd" target="runtimes\win10-arm\native\carto_mobile_sdk.winmd" />
-        <file src="$baseDir\build\winphone_native10-ARM\packages\ANGLE.WindowsStore.2.1.13\bin\UAP\ARM\libEGL.dll" target="runtimes\win10-arm\native\libEGL.dll" />
-        <file src="$baseDir\build\winphone_native10-ARM\packages\ANGLE.WindowsStore.2.1.13\bin\UAP\ARM\libGLESv2.dll" target="runtimes\win10-arm\native\libGLESv2.dll" />
+        <file src="$baseDir\build\winphone_managed10-ARM64\bin\$configuration\CartoMobileSDK.WinPhone.dll" target="runtimes\win10-arm64\lib\uap10.0\CartoMobileSDK.WinPhone.dll" />
+        <file src="$baseDir\build\winphone_native10-ARM64\$nativeConfiguration\carto_mobile_sdk.dll" target="runtimes\win10-arm64\native\carto_mobile_sdk.dll" />
+        <file src="$baseDir\build\winphone_native10-ARM64\$nativeConfiguration\carto_mobile_sdk.pri" target="runtimes\win10-arm64\native\carto_mobile_sdk.pri" />
+        <file src="$baseDir\build\winphone_native10-ARM64\$nativeConfiguration\carto_mobile_sdk.winmd" target="runtimes\win10-arm64\native\carto_mobile_sdk.winmd" />
+        <file src="$baseDir\libs-external\angle-uwp\ARM64\libEGL.dll" target="runtimes\win10-arm64\native\libEGL.dll" />
+        <file src="$baseDir\libs-external\angle-uwp\ARM64\libGLESv2.dll" target="runtimes\win10-arm64\native\libGLESv2.dll" />
 
         <file src="$baseDir\build\winphone_managed10-x86\bin\$configuration\CartoMobileSDK.WinPhone.dll" target="runtimes\win10-x86\lib\uap10.0\CartoMobileSDK.WinPhone.dll" />
         <file src="$baseDir\build\winphone_native10-Win32\$nativeConfiguration\carto_mobile_sdk.dll" target="runtimes\win10-x86\native\carto_mobile_sdk.dll" />
         <file src="$baseDir\build\winphone_native10-Win32\$nativeConfiguration\carto_mobile_sdk.pri" target="runtimes\win10-x86\native\carto_mobile_sdk.pri" />
         <file src="$baseDir\build\winphone_native10-Win32\$nativeConfiguration\carto_mobile_sdk.winmd" target="runtimes\win10-x86\native\carto_mobile_sdk.winmd" />
-        <file src="$baseDir\build\winphone_native10-ARM\packages\ANGLE.WindowsStore.2.1.13\bin\UAP\Win32\libEGL.dll" target="runtimes\win10-x86\native\libEGL.dll" />
-        <file src="$baseDir\build\winphone_native10-ARM\packages\ANGLE.WindowsStore.2.1.13\bin\UAP\Win32\libGLESv2.dll" target="runtimes\win10-x86\native\libGLESv2.dll" />
+        <file src="$baseDir\libs-external\angle-uwp\x86\libEGL.dll" target="runtimes\win10-x86\native\libEGL.dll" />
+        <file src="$baseDir\libs-external\angle-uwp\x86\libGLESv2.dll" target="runtimes\win10-x86\native\libGLESv2.dll" />
 
         <file src="$baseDir\build\winphone_managed10-x64\bin\$configuration\CartoMobileSDK.WinPhone.dll" target="runtimes\win10-x64\lib\uap10.0\CartoMobileSDK.WinPhone.dll" />
         <file src="$baseDir\build\winphone_native10-x64\$nativeConfiguration\carto_mobile_sdk.dll" target="runtimes\win10-x64\native\carto_mobile_sdk.dll" />
         <file src="$baseDir\build\winphone_native10-x64\$nativeConfiguration\carto_mobile_sdk.pri" target="runtimes\win10-x64\native\carto_mobile_sdk.pri" />
         <file src="$baseDir\build\winphone_native10-x64\$nativeConfiguration\carto_mobile_sdk.winmd" target="runtimes\win10-x64\native\carto_mobile_sdk.winmd" />
-        <file src="$baseDir\build\winphone_native10-ARM\packages\ANGLE.WindowsStore.2.1.13\bin\UAP\x64\libEGL.dll" target="runtimes\win10-x64\native\libEGL.dll" />
-        <file src="$baseDir\build\winphone_native10-ARM\packages\ANGLE.WindowsStore.2.1.13\bin\UAP\x64\libGLESv2.dll" target="runtimes\win10-x64\native\libGLESv2.dll" />
+        <file src="$baseDir\libs-external\angle-uwp\x64\libEGL.dll" target="runtimes\win10-x64\native\libEGL.dll" />
+        <file src="$baseDir\libs-external\angle-uwp\x64\libGLESv2.dll" target="runtimes\win10-x64\native\libGLESv2.dll" />
     </files>
 </package>

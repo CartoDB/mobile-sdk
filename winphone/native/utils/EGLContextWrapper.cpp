@@ -46,9 +46,11 @@ namespace carto {
             // eglInitialize will only succeed with these attributes if the hardware supports D3D11 Feature Level 10_0+.
             EGL_PLATFORM_ANGLE_TYPE_ANGLE, EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE,
 
+#ifdef EGL_ANGLE_DISPLAY_ALLOW_RENDER_TO_BACK_BUFFER
             // EGL_ANGLE_DISPLAY_ALLOW_RENDER_TO_BACK_BUFFER is an optimization that can have large performance benefits on mobile devices.
             // Its syntax is subject to change, though. Please update your Visual Studio templates if you experience compilation issues with it.
             EGL_ANGLE_DISPLAY_ALLOW_RENDER_TO_BACK_BUFFER, EGL_TRUE,
+#endif
 
             // EGL_PLATFORM_ANGLE_ENABLE_AUTOMATIC_TRIM_ANGLE is an option that enables ANGLE to automatically call 
             // the IDXGIDevice3::Trim method on behalf of the application when it gets suspended. 
@@ -63,7 +65,9 @@ namespace carto {
             EGL_PLATFORM_ANGLE_TYPE_ANGLE, EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE,
             EGL_PLATFORM_ANGLE_MAX_VERSION_MAJOR_ANGLE, 9,
             EGL_PLATFORM_ANGLE_MAX_VERSION_MINOR_ANGLE, 3,
+#ifdef EGL_ANGLE_DISPLAY_ALLOW_RENDER_TO_BACK_BUFFER
             EGL_ANGLE_DISPLAY_ALLOW_RENDER_TO_BACK_BUFFER, EGL_TRUE,
+#endif
             EGL_PLATFORM_ANGLE_ENABLE_AUTOMATIC_TRIM_ANGLE, EGL_TRUE,
             EGL_NONE,
         };
@@ -72,8 +76,10 @@ namespace carto {
             // These attributes can be used to request D3D11 WARP.
             // They are used if eglInitialize fails with both the default display attributes and the 9_3 display attributes.
             EGL_PLATFORM_ANGLE_TYPE_ANGLE, EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE,
-            EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE, EGL_PLATFORM_ANGLE_DEVICE_TYPE_WARP_ANGLE,
+            EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE, EGL_PLATFORM_ANGLE_DEVICE_TYPE_D3D_WARP_ANGLE,
+#ifdef EGL_ANGLE_DISPLAY_ALLOW_RENDER_TO_BACK_BUFFER
             EGL_ANGLE_DISPLAY_ALLOW_RENDER_TO_BACK_BUFFER, EGL_TRUE,
+#endif
             EGL_PLATFORM_ANGLE_ENABLE_AUTOMATIC_TRIM_ANGLE, EGL_TRUE,
             EGL_NONE,
         };
@@ -146,9 +152,11 @@ namespace carto {
         EGLSurface surface = EGL_NO_SURFACE;
 
         const EGLint surfaceAttributes[] = {
+#ifdef EGL_ANGLE_SURFACE_RENDER_TO_BACK_BUFFER
             // EGL_ANGLE_SURFACE_RENDER_TO_BACK_BUFFER is part of the same optimization as EGL_ANGLE_DISPLAY_ALLOW_RENDER_TO_BACK_BUFFER (see above).
             // If you have compilation issues with it then please update your Visual Studio templates.
             EGL_ANGLE_SURFACE_RENDER_TO_BACK_BUFFER, EGL_TRUE,
+#endif
             EGL_NONE
         };
 

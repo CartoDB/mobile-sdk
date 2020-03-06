@@ -160,8 +160,10 @@ include_directories(
 elseif(WIN32)
 include_directories(
     "${SDK_SRC_DIR}/../../winphone/native"
+    "${SDK_SRC_DIR}/../../libs-external/angle-uwp/include"
     "${SDK_EXTERNAL_LIBS_DIR}/zlib"
 )
+link_directories("${SDK_BASE_DIR}/libs-external/angle-uwp/${WINPHONE_ARCH}")
 endif()
 
 # Subprojects
@@ -386,5 +388,5 @@ target_link_libraries(carto_mobile_sdk EGL GLESv2 z log android jnigraphics)
 elseif(IOS)
 target_link_libraries(carto_mobile_sdk "-framework Foundation" "-framework CoreGraphics" "-framework CoreText" "-framework OpenGLES" "-framework GLKit" "-framework UIKit" "-framework CFNetwork")
 elseif(WIN32)
-target_link_libraries(carto_mobile_sdk msxml6.lib d3d11.lib dwrite.lib d2d1.lib)
+target_link_libraries(carto_mobile_sdk msxml6.lib d3d11.lib dwrite.lib d2d1.lib libEGL.dll.lib libGLESv2.dll.lib)
 endif()

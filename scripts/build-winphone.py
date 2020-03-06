@@ -4,7 +4,7 @@ import string
 import argparse
 from build.sdk_build_utils import *
 
-WINPHONE10_ARCHS = ['x86', 'x64', 'ARM']
+WINPHONE10_ARCHS = ['x86', 'x64', 'ARM64']
 
 DEFAULT_MSBUILD = "C:/Program Files (x86)/MSBuild/14.0/Bin/msbuild.exe"
 
@@ -17,7 +17,7 @@ def nuget(args, dir, *cmdArgs):
 def corflags(args, dir, *cmdArgs):
   return execute(args.corflags, dir, *cmdArgs)
 
-def patchVcxprojFile(baseDir, fileName, patched1=False, patched2=False, patched3=False, patched4=False):
+def patchVcxprojFile(baseDir, fileName, patched1=False, patched2=False):
   with open(fileName, 'rb') as f:
     linesIn = f.readlines()
   linesOut = []
@@ -26,37 +26,11 @@ def patchVcxprojFile(baseDir, fileName, patched1=False, patched2=False, patched3
       with open('%s/scripts/winphone10/carto_mobile_sdk.vcxproj.patch2' % baseDir, 'rb') as f:
         linesOut += f.readlines()
       patched2 = True
-    if line.strip() == '</Project>' and not patched4:
-      with open('%s/scripts/winphone10/carto_mobile_sdk.vcxproj.patch4' % baseDir, 'rb') as f:
-        linesOut += f.readlines()
-      patched4 = True
     linesOut.append(line)
     if line.strip() == '<Import Project="$(VCTargetsPath)\\Microsoft.Cpp.props" />' and not patched1:
       with open('%s/scripts/winphone10/carto_mobile_sdk.vcxproj.patch1' % baseDir, 'rb') as f:
         linesOut += f.readlines()
       patched1 = True
-    if line.strip() == '<ImportGroup Label="ExtensionTargets">' and not patched3:
-      with open('%s/scripts/winphone10/carto_mobile_sdk.vcxproj.patch3' % baseDir, 'rb') as f:
-        linesOut += f.readlines()
-      patched3 = True
-
-  with open(fileName, 'wb') as f:
-    f.writelines(linesOut)
-
-def patchSubVcxprojFile(baseDir, fileName, patched3=False, patched4=False):
-  with open(fileName, 'rb') as f:
-    linesIn = f.readlines()
-  linesOut = []
-  for line in linesIn:
-    if line.strip() == '</Project>' and not patched4:
-      with open('%s/scripts/winphone10/carto_mobile_sdk.vcxproj.patch4.sub' % baseDir, 'rb') as f:
-        linesOut += f.readlines()
-      patched4 = True
-    linesOut.append(line)
-    if line.strip() == '<ImportGroup Label="ExtensionTargets">' and not patched3:
-      with open('%s/scripts/winphone10/carto_mobile_sdk.vcxproj.patch3.sub' % baseDir, 'rb') as f:
-        linesOut += f.readlines()
-      patched3 = True
 
   with open(fileName, 'wb') as f:
     f.writelines(linesOut)
@@ -81,6 +55,7 @@ def buildWinPhoneNativeDLL(args, arch):
     '-DCMAKE_GENERATOR_PLATFORM=%s' % platformArch,
     '-DCMAKE_BUILD_TYPE=%s' % args.nativeconfiguration,
     '-DWRAPPER_DIR=%s' % ('%s/generated/winphone-csharp/wrappers' % baseDir),
+    "-DWINPHONE_ARCH=%s" % arch,
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
     "-DSDK_PLATFORM='Windows Phone 10'",
@@ -88,8 +63,6 @@ def buildWinPhoneNativeDLL(args, arch):
   ]):
     return False
   patchVcxprojFile(baseDir, '%s/carto_mobile_sdk.vcxproj' % buildDir)
-  patchSubVcxprojFile(baseDir, '%s/vt/vt.vcxproj' % buildDir)
-  patchSubVcxprojFile(baseDir, '%s/nml/nml.vcxproj' % buildDir)
   return cmake(args, buildDir, [
     '--build', '.',
     '--config', args.nativeconfiguration
