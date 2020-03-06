@@ -78,7 +78,7 @@ namespace carto {
             }
         }
         if (schema.empty()) {
-            schema = GetStyleSource(_style) + "/v1"; // default schema, if missing
+            schema = GetStyleSource(_style) + "/v2"; // default schema, if missing
         }
 
         std::shared_ptr<MemoryAssetPackage> updatedStyleAssetPackage;

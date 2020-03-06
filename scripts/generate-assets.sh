@@ -10,4 +10,4 @@ xxd -i default-nmlmodel.nml > ../all/native/assets/DefaultNMLModelNML.h
 xxd -i evaluation-watermark.png | sed 's/unsigned/static unsigned/' > ../all/native/assets/EvaluationWatermarkPNG.h
 xxd -i expired-watermark.png | sed 's/unsigned/static unsigned/' > ../all/native/assets/ExpiredWatermarkPNG.h
 xxd -i carto-watermark.png | sed 's/unsigned/static unsigned/' > ../all/native/assets/CartoWatermarkPNG.h
-xxd -i cartostyles-v1.zip | sed 's/unsigned/static unsigned/' > ../all/native/assets/CartoStylesV1ZIP.h
+xxd -i cartostyles-v2.zip | sed 's/unsigned/static unsigned/' > ../all/native/assets/CartoStylesV2ZIP.h

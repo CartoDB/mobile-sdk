@@ -1,5 +1,5 @@
 #include "CartoVectorTileLayer.h"
-#include "assets/CartoStylesV1ZIP.h"
+#include "assets/CartoStylesV2ZIP.h"
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
 #include "styles/CompiledStyleSet.h"
@@ -60,7 +60,7 @@ namespace carto {
         if (auto tileDecoder = std::dynamic_pointer_cast<MBVectorTileDecoder>(getTileDecoder())) {
             return static_cast<CartoBaseMapPOIRenderMode::CartoBaseMapPOIRenderMode>(boost::lexical_cast<int>(tileDecoder->getStyleParameter("icons")));
         }
-        return CartoBaseMapPOIRenderMode::CARTO_BASE_MAP_POI_RENDER_MODE_NONE;
+        return CartoBaseMapPOIRenderMode::CARTO_BASEMAP_POI_RENDER_MODE_NONE;
     }
 
     void CartoVectorTileLayer::setPOIRenderMode(CartoBaseMapPOIRenderMode::CartoBaseMapPOIRenderMode renderMode) {
@@ -73,7 +73,7 @@ namespace carto {
         if (auto tileDecoder = std::dynamic_pointer_cast<MBVectorTileDecoder>(getTileDecoder())) {
             return static_cast<CartoBaseMapBuildingRenderMode::CartoBaseMapBuildingRenderMode>(boost::lexical_cast<int>(tileDecoder->getStyleParameter("pois")));
         }
-        return CartoBaseMapBuildingRenderMode::CARTO_BASE_MAP_BUILDING_RENDER_MODE_NONE;
+        return CartoBaseMapBuildingRenderMode::CARTO_BASEMAP_BUILDING_RENDER_MODE_NONE;
     }
 
     void CartoVectorTileLayer::setBuildingRenderMode(CartoBaseMapBuildingRenderMode::CartoBaseMapBuildingRenderMode renderMode) {
@@ -101,7 +101,7 @@ namespace carto {
     }
 
     std::shared_ptr<AssetPackage> CartoVectorTileLayer::CreateStyleAssetPackage() {
-        auto styleAsset = std::make_shared<BinaryData>(cartostyles_v1_zip, cartostyles_v1_zip_len);
+        auto styleAsset = std::make_shared<BinaryData>(cartostyles_v2_zip, cartostyles_v2_zip_len);
         return std::make_shared<ZippedAssetPackage>(styleAsset);
     }
 
