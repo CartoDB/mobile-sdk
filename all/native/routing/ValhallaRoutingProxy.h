@@ -9,7 +9,8 @@
 
 #ifdef _CARTO_ROUTING_SUPPORT
 
-#include "routing/RoutingService.h"
+#include "core/Variant.h"
+#include "routing/RoutingInstruction.h"
 
 #include <memory>
 #include <vector>
@@ -20,19 +21,25 @@ namespace sqlite3pp {
 }
 
 namespace carto {
+    class HTTPClient;
+    class Projection;
+    class RoutingRequest;
+    class RoutingResult;
     class RouteMatchingRequest;
     class RouteMatchingResult;
     
     class ValhallaRoutingProxy {
     public:
-        static std::shared_ptr<RouteMatchingResult> MatchRoute(const std::string& baseURL, const std::string& profile, const std::shared_ptr<RouteMatchingRequest>& request);
-        static std::shared_ptr<RoutingResult> CalculateRoute(const std::string& baseURL, const std::string& profile, const std::shared_ptr<RoutingRequest>& request);
+        static std::shared_ptr<RouteMatchingResult> MatchRoute(HTTPClient& httpClient, const std::string& baseURL, const std::string& profile, const std::shared_ptr<RouteMatchingRequest>& request);
+        static std::shared_ptr<RoutingResult> CalculateRoute(HTTPClient& httpClient, const std::string& baseURL, const std::string& profile, const std::shared_ptr<RoutingRequest>& request);
 
 #ifdef _CARTO_VALHALLA_ROUTING_SUPPORT
-        static std::shared_ptr<RouteMatchingResult> MatchRoute(const std::vector<std::shared_ptr<sqlite3pp::database> >& databases, const std::string& profile, const std::shared_ptr<RouteMatchingRequest>& request);
-        static std::shared_ptr<RoutingResult> CalculateRoute(const std::vector<std::shared_ptr<sqlite3pp::database> >& databases, const std::string& profile, const std::shared_ptr<RoutingRequest>& request);
+        static std::shared_ptr<RouteMatchingResult> MatchRoute(const std::vector<std::shared_ptr<sqlite3pp::database> >& databases, const std::string& profile, const Variant& config, const std::shared_ptr<RouteMatchingRequest>& request);
+        static std::shared_ptr<RoutingResult> CalculateRoute(const std::vector<std::shared_ptr<sqlite3pp::database> >& databases, const std::string& profile, const Variant& config, const std::shared_ptr<RoutingRequest>& request);
 #endif
-        
+
+        static Variant GetDefaultConfiguration();
+
     private:
         ValhallaRoutingProxy();
 
@@ -41,8 +48,18 @@ namespace carto {
         static float CalculateAzimuth(const std::vector<MapPos>& epsg3857Points, int pointIndex);
 
         static bool TranslateManeuverType(int maneuverType, RoutingAction::RoutingAction& action);
+
+        static std::string SerializeRouteMatchingRequest(const std::string& profile, const std::shared_ptr<RouteMatchingRequest>& request);
+
+        static std::string SerializeRoutingRequest(const std::string& profile, const std::shared_ptr<RoutingRequest>& request);
+
+        static std::shared_ptr<RouteMatchingResult> ParseRouteMatchingResult(const std::shared_ptr<Projection>& proj, const std::string& resultString);
+
+        static std::shared_ptr<RoutingResult> ParseRoutingResult(const std::shared_ptr<Projection>& proj, const std::string& resultString);
+
+        static std::string MakeHTTPRequest(HTTPClient& httpClient, const std::string& url);
     };
-    
+
 }
 
 #endif

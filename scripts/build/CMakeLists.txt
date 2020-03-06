@@ -130,6 +130,7 @@ include_directories(
     "${SDK_EXTERNAL_LIBS_DIR}/valhalla/include"
     "${SDK_EXTERNAL_LIBS_DIR}/valhalla/include/valhalla" 
     "${SDK_EXTERNAL_LIBS_DIR}/protobuf/src"
+    "${SDK_EXTERNAL_LIBS_DIR}/date/include"
 )
 endif(INCLUDE_VALHALLA)
 
@@ -189,6 +190,7 @@ add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/tess2" tess2)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/webp" webp)
 
 if(INCLUDE_VALHALLA)
+add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/date" date)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/protobuf" protobuf)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/valhalla" valhalla)
 endif(INCLUDE_VALHALLA)
@@ -304,6 +306,7 @@ set(SDK_SRC_FILES
 
 if(INCLUDE_VALHALLA)
 set(SDK_SRC_FILES ${SDK_SRC_FILES}
+    "${date_SRC_FILES}"
     "${protobuf_SRC_FILES}"
     "${valhalla_SRC_FILES}"
 )
@@ -349,6 +352,7 @@ set(SDK_OBJECTS
 
 if(INCLUDE_VALHALLA)
 set(SDK_OBJECTS ${SDK_OBJECTS}
+    $<TARGET_OBJECTS:date>
     $<TARGET_OBJECTS:protobuf>
     $<TARGET_OBJECTS:valhalla>
 )

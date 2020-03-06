@@ -43,6 +43,10 @@ namespace carto {
             Log::Error("OnlineNMLModelLODTreeDataSource: Failed to receive tile list.");
             return std::vector<MapTile>();
         }
+        if (!response) {
+            Log::Error("OnlineNMLModelLODTreeDataSource: Empty response.");
+            return std::vector<MapTile>();
+        }
     
         DataInputStream gzipStream(*response->getDataPtr());
         int gzipDataSize = gzipStream.readInt();
@@ -83,6 +87,10 @@ namespace carto {
         std::shared_ptr<BinaryData> response;
         if (!NetworkUtils::GetHTTP(url, response, Log::IsShowDebug())) {
             Log::Error("OnlineNMLModelLODTreeDataSource: Failed to receive LOD tree.");
+            return std::shared_ptr<NMLModelLODTree>();
+        }
+        if (!response) {
+            Log::Error("OnlineNMLModelLODTreeDataSource: Empty response.");
             return std::shared_ptr<NMLModelLODTree>();
         }
     
@@ -168,6 +176,10 @@ namespace carto {
             Log::Error("OnlineNMLModelLODTreeDataSource: Failed to receive mesh data.");
             return std::shared_ptr<nml::Mesh>();
         }
+        if (!response) {
+            Log::Error("OnlineNMLModelLODTreeDataSource: Empty response.");
+            return std::shared_ptr<nml::Mesh>();
+        }
     
         DataInputStream gzipStream(*response->getDataPtr());
         gzipStream.readLongLong();
@@ -193,6 +205,10 @@ namespace carto {
         std::shared_ptr<BinaryData> response;
         if (!NetworkUtils::GetHTTP(url, response, Log::IsShowDebug())) {
             Log::Error("OnlineNMLModelLODTreeDataSource: Failed to receive texture data.");
+            return std::shared_ptr<nml::Texture>();
+        }
+        if (!response) {
+            Log::Error("OnlineNMLModelLODTreeDataSource: Empty response.");
             return std::shared_ptr<nml::Texture>();
         }
     

@@ -145,7 +145,7 @@ namespace carto {
         /**
          * Returns true if object elements contains the specified key.
          * @param key The key of the object element to check.
-         * @return True if the specified exists in the object. If the element is not an object or the key does not exist, false is returned.
+         * @return True if the specified key exists in the object. If the element is not an object or the key does not exist, false is returned.
          */
         bool containsObjectKey(const std::string& key) const;
         /**

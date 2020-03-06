@@ -318,13 +318,13 @@ namespace carto {
 
     const std::string CartoPackageManager::MAP_PACKAGE_LIST_TEMPLATE = "https://api.nutiteq.com/mappackages/v2/{source}/2/packages.json";
 
-    const std::string CartoPackageManager::ROUTING_PACKAGE_LIST_TEMPLATE = "https://api.nutiteq.com/routepackages/v2/{source}/1/packages.json";
+    const std::string CartoPackageManager::ROUTING_PACKAGE_LIST_TEMPLATE = "https://api.nutiteq.com/routepackages/v2/{source}/2/packages.json";
 
     const std::string CartoPackageManager::GEOCODING_PACKAGE_LIST_TEMPLATE = "https://api.nutiteq.com/geocodepackages/v2/{source}/1/packages.json";
 
     const std::string CartoPackageManager::CUSTOM_MAP_BBOX_PACKAGE_TEMPLATE = "https://api.nutiteq.com/maparea/v2/{source}/1/{tilemask}.mbtiles";
 
-    const std::string CartoPackageManager::CUSTOM_ROUTING_BBOX_PACKAGE_TEMPLATE = "https://api.nutiteq.com/routearea/v2/{source}/1/{tilemask}.vtiles";
+    const std::string CartoPackageManager::CUSTOM_ROUTING_BBOX_PACKAGE_TEMPLATE = "https://api.nutiteq.com/routearea/v2/{source}/2/{tilemask}.vtiles";
 
     const std::string CartoPackageManager::CUSTOM_GEOCODING_BBOX_PACKAGE_TEMPLATE = "https://api.nutiteq.com/geocodearea/v2/{source}/1/{tilemask}.nutigeodb";
 

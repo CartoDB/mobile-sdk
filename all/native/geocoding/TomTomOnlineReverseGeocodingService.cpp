@@ -72,18 +72,10 @@ namespace carto {
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
         Log::Debugf("TomTomOnlineReverseGeocodingService::calculateAddresses: Loading %s", url.c_str());
 
-        std::shared_ptr<BinaryData> responseData;
-        if (!NetworkUtils::GetHTTP(url, responseData, Log::IsShowDebug())) {
+        std::string responseString;
+        if (!NetworkUtils::GetHTTP(url, responseString, Log::IsShowDebug())) {
             throw NetworkException("Failed to fetch response");
         }
-
-        std::string responseString;
-        if (responseData) {
-            responseString = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
-        } else {
-            throw GenericException("Empty response");
-        }
-
         return TomTomGeocodingProxy::ReadResponse(responseString, request->getProjection());
     }
 

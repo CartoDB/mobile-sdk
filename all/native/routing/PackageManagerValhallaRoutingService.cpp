@@ -5,11 +5,11 @@
 #include "packagemanager/PackageInfo.h"
 #include "packagemanager/handlers/ValhallaRoutingPackageHandler.h"
 #include "projections/Projection.h"
-#include "routing/RouteMatchingRequest.h"
-#include "routing/RouteMatchingResult.h"
 #include "routing/ValhallaRoutingProxy.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
+
+#include <boost/algorithm/string.hpp>
 
 namespace carto {
 
@@ -17,6 +17,7 @@ namespace carto {
         RoutingService(),
         _packageManager(packageManager),
         _profile("pedestrian"),
+        _configuration(ValhallaRoutingProxy::GetDefaultConfiguration()),
         _cachedPackageDatabases(),
         _mutex()
     {
@@ -31,6 +32,36 @@ namespace carto {
     PackageManagerValhallaRoutingService::~PackageManagerValhallaRoutingService() {
         _packageManager->unregisterOnChangeListener(_packageManagerListener);
         _packageManagerListener.reset();
+    }
+
+    Variant PackageManagerValhallaRoutingService::getConfigurationParameter(const std::string& param) const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        std::vector<std::string> keys;
+        boost::split(keys, param, boost::is_any_of("."));
+        picojson::value subValue = _configuration.toPicoJSON();
+        for (const std::string& key : keys) {
+            if (!subValue.is<picojson::object>()) {
+                return Variant();
+            }
+            subValue = subValue.get(key);
+        }
+        return Variant::FromPicoJSON(subValue);
+    }
+
+    void PackageManagerValhallaRoutingService::setConfigurationParameter(const std::string& param, const Variant& value) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        std::vector<std::string> keys;
+        boost::split(keys, param, boost::is_any_of("."));
+        picojson::value config = _configuration.toPicoJSON();
+        picojson::value* subValue = &config;
+        for (const std::string& key : keys) {
+            if (!subValue->is<picojson::object>()) {
+                subValue->set(picojson::object());
+            }
+            subValue = &subValue->get<picojson::object>()[key];
+        }
+        *subValue = value.toPicoJSON();
+        _configuration = Variant::FromPicoJSON(config);
     }
 
     std::string PackageManagerValhallaRoutingService::getProfile() const {
@@ -67,7 +98,7 @@ namespace carto {
                 _cachedPackageDatabases = packageDatabases;
             }
 
-            result = ValhallaRoutingProxy::MatchRoute(_cachedPackageDatabases, _profile, request);
+            result = ValhallaRoutingProxy::MatchRoute(_cachedPackageDatabases, _profile, _configuration, request);
         });
 
         return result;
@@ -97,7 +128,7 @@ namespace carto {
                 _cachedPackageDatabases = packageDatabases;
             }
 
-            result = ValhallaRoutingProxy::CalculateRoute(_cachedPackageDatabases, _profile, request);
+            result = ValhallaRoutingProxy::CalculateRoute(_cachedPackageDatabases, _profile, _configuration, request);
         });
 
         return result;

@@ -15,6 +15,7 @@
 #include <memory>
 #include <mutex>
 #include <vector>
+#include <map>
 
 namespace carto {
     class Projection;
@@ -55,6 +56,24 @@ namespace carto {
         void setGeometryTagFilters(const std::vector<Variant>& filters);
 
         /**
+         * Returns the set of custom parameters of the request as a variant.
+         * @return The set of custom parameters as a variant. Can be empty.
+         */
+        Variant getCustomParameters() const;
+        /**
+         * Returns the custom parameter value of the request.
+         * @param param The name of the parameter to return.
+         * @return The value of the parameter. If the parameter does not exist, empty variant is returned.
+         */
+        Variant getCustomParameter(const std::string& param) const;
+        /**
+         * Sets a custom parameter for the the request.
+         * @param param The name of the parameter. For example, "trace_options.search_radius".
+         * @param value The new value for the parameter.
+         */
+        void setCustomParameter(const std::string& param, const Variant& value);
+
+        /**
          * Creates a string representation of this request object, useful for logging.
          * @return The string representation of this request object.
          */
@@ -65,6 +84,7 @@ namespace carto {
         const std::vector<MapPos> _points;
 
         std::vector<Variant> _filters;
+        Variant _customParams;
         mutable std::mutex _mutex;
     };
     

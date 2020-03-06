@@ -55,41 +55,49 @@ namespace carto {
              */
             ROUTING_ACTION_REACH_VIA_LOCATION,
             /**
-             * Enter roundabout.
+             * Enter roundabout. Used by Valhalla and OSRM.
              */
             ROUTING_ACTION_ENTER_ROUNDABOUT,
             /**
-             * Leave roundabout.
+             * Leave roundabout. Used by Valhalla and OSRM.
              */
             ROUTING_ACTION_LEAVE_ROUNDABOUT,
             /**
-             * Continue along the roundabout.
+             * Continue along the roundabout. Only used by OSRM.
              */
             ROUTING_ACTION_STAY_ON_ROUNDABOUT,
             /**
-             * Start at the end of the street.
+             * Start at the end of the street. Currently used only by OSRM.
              */
             ROUTING_ACTION_START_AT_END_OF_STREET,
             /**
-             * Enter street while moving against the allowed direction.
+             * Enter street while moving against the allowed direction. Only used by OSRM.
              */
             ROUTING_ACTION_ENTER_AGAINST_ALLOWED_DIRECTION,
             /**
-             * Leave the street while moving aginst the allowed direction.
+             * Leave the street while moving aginst the allowed direction. Only used by OSRM.
              */
             ROUTING_ACTION_LEAVE_AGAINST_ALLOWED_DIRECTION,
             /**
-             * Go up.
+             * Go up. Only used by the SGRE.
              */
             ROUTING_ACTION_GO_UP,
             /**
-             * Go down.
+             * Go down. Only used by SGRE.
              */
             ROUTING_ACTION_GO_DOWN,
             /**
-             * Wait.
+             * Wait. Only used by SGRE.
              */
-            ROUTING_ACTION_WAIT
+            ROUTING_ACTION_WAIT,
+            /**
+             * Enter ferry. Only used by Valhalla.
+             */
+            ROUTING_ACTION_ENTER_FERRY,
+            /**
+             * Leave ferry. Only used by Valhalla.
+             */
+            ROUTING_ACTION_LEAVE_FERRY
         };
     }
 
