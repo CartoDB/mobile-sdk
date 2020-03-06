@@ -6,6 +6,9 @@
 
 #import <GLKit/GLKit.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 @class NTLayers;
 @class NTMapBounds;
 @class NTMapPos;
@@ -279,3 +282,5 @@ __attribute__ ((visibility("default"))) @interface NTMapView : GLKView
 -(void)clearAllCaches;
 
 @end
+
+#pragma clang diagnostic pop

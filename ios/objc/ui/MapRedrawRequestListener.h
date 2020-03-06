@@ -6,6 +6,9 @@
 
 #import "NTRedrawRequestListener.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 @class GLKView;
 
 @interface NTMapRedrawRequestListener : NTRedrawRequestListener
@@ -15,3 +18,6 @@
 -(id)initWithView:(GLKView*)view;
 
 @end
+
+#pragma clang diagnostic pop
+
