@@ -649,10 +649,16 @@ namespace carto {
     }
     
     bool Bitmap::IsPNG(const unsigned char* compressedData, std::size_t dataSize) {
+        if (dataSize < PNG_SIGNATURE_LENGTH) {
+            return false;
+        }
         return png_sig_cmp(compressedData, 0, PNG_SIGNATURE_LENGTH) == 0;
     }
         
     bool Bitmap::IsWEBP(const unsigned char* compressedData, std::size_t dataSize) {
+        if (dataSize < 4) {
+            return false;
+        }
         return WebPGetInfo(compressedData, dataSize, nullptr, nullptr) == 1;
     }
     
