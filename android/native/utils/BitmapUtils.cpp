@@ -30,6 +30,10 @@ namespace carto {
         fseek(fp.get(), 0, SEEK_END);
         long size = ftell(fp.get());
         fseek(fp.get(), 0, SEEK_SET);
+        if (size <= 0) {
+            Log::Errorf("BitmapUtils::LoadBitmapFromFile: Ignore load due to size %d: %s", size, filePath.c_str());
+            return std::shared_ptr<Bitmap>();
+        }
         std::vector<unsigned char> data(static_cast<size_t>(size));
         fread(data.data(), 1, size, fp.get());
         return Bitmap::CreateFromCompressed(data.data(), data.size());
