@@ -16,6 +16,7 @@
 #include <memory>
 %}
 
+%include <std_string.i>
 %include <std_shared_ptr.i>
 %include <cartoswig.i>
 
