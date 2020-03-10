@@ -21,6 +21,7 @@ then binaries of the SDK are considerably larger on Android compared to SDK 4.2.
 * Added setMaxResults to base GeocodingService interface.
 * Moved setLanguage method to base ReverseGeocodingService interface.
 * Added 'uppercase', 'lowercase', 'length', 'concat', 'match', 'replace' functions to CartoCSS compiler.
+* Added 'regexp_ilike' operator to the search API query language to perform case-insensitive substring matching
 * Added support for ARM64 UWP target, removed deprecated ARM UWP target.
 
 ### Changes/fixes:

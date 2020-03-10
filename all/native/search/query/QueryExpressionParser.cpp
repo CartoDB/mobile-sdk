@@ -41,6 +41,7 @@ namespace carto {
                 true_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["true"]];
                 collate_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["collate"]];
                 regexp_like_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["regexp_like"]];
+                regexp_ilike_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["regexp_ilike"]];
 
                 string =
                     '\'' >> *(unesc_char | "\\x" >> qi::hex | (qi::print - '\'')) >> '\'';
@@ -73,7 +74,8 @@ namespace carto {
 
                 term3 =
                       predicate [_val = _1]
-                    | (regexp_like_kw >> '(' > operand > ',' > operand > ')')  [_val = phx::bind(&BinaryPredicateExpression<RegexpLikePredicate>::create, _1, _2)]
+                    | (regexp_like_kw  >> '(' > operand > ',' > operand > ')')  [_val = phx::bind(&BinaryPredicateExpression<RegexpLikePredicate<false>>::create, _1, _2)]
+                    | (regexp_ilike_kw >> '(' > operand > ',' > operand > ')')  [_val = phx::bind(&BinaryPredicateExpression<RegexpLikePredicate<true>>::create, _1, _2)]
                     | ('(' >> expression > ')') [_val = _1]
                     ;
 
@@ -96,7 +98,7 @@ namespace carto {
             }
 
             qi::symbols<char const, char const> unesc_char;
-            qi::rule<Iterator, qi::unused_type()> is_kw, or_kw, and_kw, not_kw, null_kw, false_kw, true_kw, collate_kw, regexp_like_kw;
+            qi::rule<Iterator, qi::unused_type()> is_kw, or_kw, and_kw, not_kw, null_kw, false_kw, true_kw, collate_kw, regexp_like_kw, regexp_ilike_kw;
             qi::rule<Iterator, std::string()> string;
             qi::rule<Iterator, Value()> value;
             qi::rule<Iterator, std::string()> identifier;

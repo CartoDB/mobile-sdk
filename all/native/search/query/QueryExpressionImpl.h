@@ -34,6 +34,7 @@ namespace carto {
             bool operator() (const Value& val) const { return val.getType() != VariantType::VARIANT_TYPE_NULL; }
         };
 
+        template <bool CaseInsensitive>
         struct RegexpLikePredicate {
             bool operator() (const Value& val1, const Value& val2) const {
                 switch (val1.getType()) {
@@ -46,6 +47,9 @@ namespace carto {
                 }
                 std::string str = val1.getString();
                 unistring::unistring unistr = unistring::to_unistring(str);
+                if (CaseInsensitive) {
+                    unistr = unistring::to_normalized(unistring::to_upper(unistr));
+                }
 
                 switch (val2.getType()) {
                 case VariantType::VARIANT_TYPE_NULL:
@@ -57,6 +61,9 @@ namespace carto {
                 }
                 std::string re = val2.getString();
                 unistring::unistring unire = unistring::to_unistring(re);
+                if (CaseInsensitive) {
+                    unire = unistring::to_normalized(unistring::to_upper(unire));
+                }
 
                 return std::regex_match(unistring::to_wstring(unistr), std::wregex(unistring::to_wstring(unire)));
             }
