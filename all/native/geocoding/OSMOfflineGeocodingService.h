@@ -30,28 +30,14 @@ namespace carto {
         explicit OSMOfflineGeocodingService(const std::string& path);
         virtual ~OSMOfflineGeocodingService();
 
-        /**
-         * Returns the autocomplete flag of the service.
-         * @return The autocomplete flag of the service.
-         */
-        bool isAutocomplete() const;
-        /**
-         * Sets the autocomplete flag of the service.
-         * By default this flag is off.
-         * @param autocomplete The new value for autocomplete flag.
-         */
-        void setAutocomplete(bool autocomplete);
+        virtual bool isAutocomplete() const;
+        virtual void setAutocomplete(bool autocomplete);
 
-        /**
-         * Returns the language of the expected results.
-         * @return The language of the expected results. As ISO 639-1 code or empty string.
-         */
-        std::string getLanguage() const;
-        /**
-         * Sets the language of the expected results.
-         * @param lang The language to use as ISO 639-1 code. Empty string can be used for default language.
-         */
-        void setLanguage(const std::string& lang);
+        virtual std::string getLanguage() const;
+        virtual void setLanguage(const std::string& lang);
+
+        virtual int getMaxResults() const;
+        virtual void setMaxResults(int maxResults);
 
         virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const;
 

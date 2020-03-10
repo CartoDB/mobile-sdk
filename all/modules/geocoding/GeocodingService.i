@@ -24,6 +24,12 @@
 
 !polymorphic_shared_ptr(carto::GeocodingService, geocoding.GeocodingService)
 
+%attribute(carto::GeocodingService, bool, Autocomplete, isAutocomplete, setAutocomplete)
+%attributestring(carto::GeocodingService, std::string, Language, getLanguage, setLanguage)
+%attribute(carto::GeocodingService, int, MaxResults, getMaxResults, setMaxResults)
+%std_exceptions(carto::GeocodingService::setAutocomplete)
+%std_exceptions(carto::GeocodingService::setLanguage)
+%std_exceptions(carto::GeocodingService::setNumResults)
 %std_io_exceptions(carto::GeocodingService::calculateAddresses)
 
 %feature("director") carto::GeocodingService;

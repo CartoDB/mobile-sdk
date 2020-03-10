@@ -24,16 +24,6 @@ namespace carto {
     TomTomOnlineReverseGeocodingService::~TomTomOnlineReverseGeocodingService() {
     }
 
-    std::string TomTomOnlineReverseGeocodingService::getLanguage() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _language;
-    }
-
-    void TomTomOnlineReverseGeocodingService::setLanguage(const std::string& lang) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _language = lang;
-    }
-
     std::string TomTomOnlineReverseGeocodingService::getCustomServiceURL() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _serviceURL;
@@ -42,6 +32,16 @@ namespace carto {
     void TomTomOnlineReverseGeocodingService::setCustomServiceURL(const std::string& serviceURL) {
         std::lock_guard<std::mutex> lock(_mutex);
         _serviceURL = serviceURL;
+    }
+
+    std::string TomTomOnlineReverseGeocodingService::getLanguage() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _language;
+    }
+
+    void TomTomOnlineReverseGeocodingService::setLanguage(const std::string& lang) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _language = lang;
     }
 
     std::vector<std::shared_ptr<GeocodingResult> > TomTomOnlineReverseGeocodingService::calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const {

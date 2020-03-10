@@ -25,6 +25,41 @@ namespace carto {
         virtual ~GeocodingService();
 
         /**
+         * Returns the autocomplete flag of the service.
+         * @return The autocomplete flag of the service.
+         */
+        virtual bool isAutocomplete() const = 0;
+        /**
+         * Sets the autocomplete flag of the service.
+         * By default this flag is off.
+         * @param autocomplete The new value for autocomplete flag.
+         */
+        virtual void setAutocomplete(bool autocomplete) = 0;
+
+        /**
+         * Returns the language of the expected results.
+         * @return The language of the expected results. As ISO 639-1 code or empty string.
+         */
+        virtual std::string getLanguage() const = 0;
+        /**
+         * Sets the language of the expected results.
+         * @param lang The language to use as ISO 639-1 code. Empty string can be used for default language.
+         */
+        virtual void setLanguage(const std::string& lang) = 0;
+
+        /**
+         * Returns the maximum number of results the geocoding service returns.
+         * @return The maximum number of results the geocoding service returns.
+         */
+        virtual int getMaxResults() const = 0;
+        /**
+         * Sets the maximum number of results the geocoding service returns.
+         * The default number of results is service dependant (normally 10).
+         * @param maxResults The new maximum number of results the geocoding service returns.
+         */
+        virtual void setMaxResults(int maxResults) = 0;
+
+        /**
          * Calculates matching addresses from the specified geocoding request.
          * @param request The geocoding request to use.
          * @result The list of matching geocoding results, sorted by descending ranks.

@@ -24,7 +24,6 @@
 
 !polymorphic_shared_ptr(carto::PackageManagerReverseGeocodingService, geocoding.PackageManagerReverseGeocodingService)
 
-%attributestring(carto::PackageManagerReverseGeocodingService, std::string, Language, getLanguage, setLanguage)
 %std_exceptions(carto::PackageManagerReverseGeocodingService::PackageManagerReverseGeocodingService)
 %std_io_exceptions(carto::PackageManagerReverseGeocodingService::calculateAddresses)
 

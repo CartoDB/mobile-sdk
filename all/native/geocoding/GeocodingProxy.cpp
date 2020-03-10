@@ -18,6 +18,7 @@
 
 #include <cmath>
 #include <functional>
+#include <algorithm>
 
 namespace {
 

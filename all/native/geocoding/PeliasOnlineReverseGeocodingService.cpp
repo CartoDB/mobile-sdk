@@ -24,16 +24,6 @@ namespace carto {
     PeliasOnlineReverseGeocodingService::~PeliasOnlineReverseGeocodingService() {
     }
 
-    std::string PeliasOnlineReverseGeocodingService::getLanguage() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-        return _language;
-    }
-
-    void PeliasOnlineReverseGeocodingService::setLanguage(const std::string& lang) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _language = lang;
-    }
-
     std::string PeliasOnlineReverseGeocodingService::getCustomServiceURL() const {
         std::lock_guard<std::mutex> lock(_mutex);
         return _serviceURL;
@@ -42,6 +32,16 @@ namespace carto {
     void PeliasOnlineReverseGeocodingService::setCustomServiceURL(const std::string& serviceURL) {
         std::lock_guard<std::mutex> lock(_mutex);
         _serviceURL = serviceURL;
+    }
+
+    std::string PeliasOnlineReverseGeocodingService::getLanguage() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _language;
+    }
+
+    void PeliasOnlineReverseGeocodingService::setLanguage(const std::string& lang) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _language = lang;
     }
 
     std::vector<std::shared_ptr<GeocodingResult> > PeliasOnlineReverseGeocodingService::calculateAddresses(const std::shared_ptr<ReverseGeocodingRequest>& request) const {

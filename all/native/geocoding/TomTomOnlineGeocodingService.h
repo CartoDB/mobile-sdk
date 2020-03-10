@@ -31,29 +31,6 @@ namespace carto {
         virtual ~TomTomOnlineGeocodingService();
 
         /**
-         * Returns the autocomplete flag of the service.
-         * @return The autocomplete flag of the service.
-         */
-        bool isAutocomplete() const;
-        /**
-         * Sets the autocomplete flag of the service.
-         * By default this flag is off.
-         * @param autocomplete The new value for autocomplete flag.
-         */
-        void setAutocomplete(bool autocomplete);
-
-        /**
-         * Returns the language of the expected results.
-         * @return The language of the expected results. As IETF code or empty string.
-         */
-        std::string getLanguage() const;
-        /**
-         * Sets the language of the expected results.
-         * @param lang The language to use as IETF code. Empty string can be used for default language.
-         */
-        void setLanguage(const std::string& lang);
-
-        /**
          * Returns the custom backend service URL.
          * @return The custom backend service URL. If this is not defined, an empty string is returned.
          */
@@ -66,17 +43,24 @@ namespace carto {
          */
         void setCustomServiceURL(const std::string& serviceURL);
 
+        virtual bool isAutocomplete() const;
+        virtual void setAutocomplete(bool autocomplete);
+
+        virtual std::string getLanguage() const;
+        virtual void setLanguage(const std::string& lang);
+
+        virtual int getMaxResults() const;
+        virtual void setMaxResults(int maxResults);
+
         virtual std::vector<std::shared_ptr<GeocodingResult> > calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const;
 
     protected:
         static const std::string TOMTOM_SERVICE_URL;
 
         const std::string _apiKey;
-
         bool _autocomplete;
-
         std::string _language;
-
+        int _maxResults;
         std::string _serviceURL;
 
         mutable std::mutex _mutex;
