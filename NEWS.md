@@ -1,3 +1,44 @@
+CARTO Mobile SDK 4.3.0RC1
+-------------------
+
+This version is a major update and brings several new features and optimizations. Note that due to the inclusion of Valhalla 3,
+then binaries of the SDK are considerably larger on Android compared to SDK 4.2.x.
+
+### Key highlights:
+
+* Valhalla 3 routing support. Valhalla 2 routing was supported in SDK 4.1.x and removed from SDK 4.2.x. This release brings Valhalla back but with new major version and lots of improvements. Note that previous Valhalla 2 offline packages are incompatible with Valhalla 3 and can not be used.
+
+### New features:
+
+* A fully featued matchRoute API for matching points to routing network and extracting routing attributes. 
+* Added custom metadata support for Layer class (getMetaData, setMetaData, containsMetaDataKey methods in Layer class)
+* Support for rendering basemap Point-of-Interests, API for directly controlling POI/building rendering mode (setPOIRenderMode/getPOIRenderMode methods in CartoVectorTileLayer class)
+* API for controlling the render style of basemap buildings (setBuildingRenderMode/getBuildingRenderMode methods in CartoVectorTileLayer class)
+* Added 'custom parameters' option to RoutingRequest and RouteMatchingRequest classes. Custom parameters can be used to customize routing schemas of specific routing engines.
+* Moved matchRoute method to base RoutingService interface
+* Moved setProfile/getProfile methods to base RoutingService interface
+* Moved setLanguage and setAutocomplete methods to base GeocodingService interface.
+* Added setMaxResults to base GeocodingService interface.
+* Moved setLanguage method to base ReverseGeocodingService interface.
+* Added 'uppercase', 'lowercase', 'length', 'concat', 'match', 'replace' functions to CartoCSS compiler.
+* Added support for ARM64 UWP target, removed deprecated ARM UWP target.
+
+### Changes/fixes:
+
+* SDK does not throw exception anymore when package manager device keys do not match, this fixes issues with TestFlight on iOS
+* Tweaked and optimized offline geocoder, mostly affects autocomplete mode
+* Better reporting of online Valhalla routing errors
+* Added ferry instruction types (enter/leave ferry) to RoutingAction enum
+* Fixed search API issues with tiles and non-closed polygons
+* Tweaked rendering of lines with round join types to look smoother, especially when used with thin lines
+* Suppressed GLKView deprecation warnings on iOS
+* Additional NPE safety in OnlineNMLModelLODTreeDataSource
+* Fixed native crash when loading 0-sized image files
+* Minor improvements to CartoCSS error reporting.
+* Made Mapnik-level string expression parsing recursive, fixes subtle issues with complex expressions
+* Better SVG compatibility with RGBA color support
+
+
 CARTO Mobile SDK 4.2.2
 -------------------
 
