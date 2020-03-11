@@ -27,6 +27,7 @@
 !polymorphic_shared_ptr(carto::VectorElementSearchService, search.VectorElementSearchService)
 
 %attributestring(carto::VectorElementSearchService, std::shared_ptr<carto::VectorDataSource>, DataSource, getDataSource)
+%attribute(carto::VectorElementSearchService, int, MaxResults, getMaxResults, setMaxResults)
 %std_exceptions(carto::VectorElementSearchService::VectorElementSearchService)
 %std_exceptions(carto::VectorElementSearchService::findElements)
 

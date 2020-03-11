@@ -19,8 +19,9 @@ namespace carto {
     VectorTileSearchService::VectorTileSearchService(const std::shared_ptr<TileDataSource>& dataSource, const std::shared_ptr<VectorTileDecoder>& tileDecoder) :
         _dataSource(dataSource),
         _tileDecoder(tileDecoder),
-        _minZoom(),
-        _maxZoom(),
+        _minZoom(0),
+        _maxZoom(0),
+        _maxResults(1000),
         _mutex()
     {
         if (!dataSource) {
@@ -65,6 +66,16 @@ namespace carto {
         _maxZoom = maxZoom;
     }
 
+    int VectorTileSearchService::getMaxResults() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _maxResults;
+    }
+
+    void VectorTileSearchService::setMaxResults(int maxResults) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _maxResults = maxResults;
+    }
+
     std::shared_ptr<VectorTileFeatureCollection> VectorTileSearchService::findFeatures(const std::shared_ptr<SearchRequest>& request) const {
         if (!request) {
             throw NullArgumentException("Null request");
@@ -74,10 +85,12 @@ namespace carto {
         MapBounds searchBounds = proxy.getSearchBounds();
         int minZoom = _dataSource->getMinZoom();
         int maxZoom = _dataSource->getMaxZoom();
+        int maxResults = 0;
         {
             std::lock_guard<std::mutex> lock(_mutex);
             minZoom = std::max(minZoom, _minZoom);
             maxZoom = std::min(maxZoom, _maxZoom);
+            maxResults = _maxResults;
         }
 
         std::vector<MapTile> mapTiles;
@@ -100,12 +113,21 @@ namespace carto {
                 MapBounds tileBounds = TileUtils::CalculateMapTileBounds(mapTile, _dataSource->getProjection());
                 if (std::shared_ptr<VectorTileFeatureCollection> featureCollection = _tileDecoder->decodeFeatures(vt::TileId(mapTile.getZoom(), mapTile.getX(), mapTile.getY()), tileData->getData(), tileBounds)) {
                     for (int i = 0; i < featureCollection->getFeatureCount(); i++) {
+                        if (static_cast<int>(features.size()) >= maxResults) {
+                            break;
+                        }
+
                         const std::shared_ptr<VectorTileFeature>& feature = featureCollection->getFeature(i);
+
                         if (proxy.testElement(feature->getGeometry(), &feature->getLayerName(), feature->getProperties())) {
                             features.push_back(feature);
                         }
                     }
                 }
+            }
+
+            if (static_cast<int>(features.size()) >= maxResults) {
+                break;
             }
         }
         return std::make_shared<VectorTileFeatureCollection>(features);
