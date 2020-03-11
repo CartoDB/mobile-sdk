@@ -28,10 +28,9 @@ namespace carto {
                 using qi::_1;
                 using qi::_2;
 
-                unesc_char.add
-                    ("\\a", '\a')("\\b", '\b')("\\f", '\f')("\\n", '\n')
-                    ("\\r", '\r')("\\t", '\t')("\\v", '\v')("\\\\", '\\')
-                    ("\\\'", '\'')("\\\"", '\"');
+                unesc_char.add("\\a", '\a')("\\b", '\b')("\\f", '\f')("\\n", '\n')
+                              ("\\r", '\r')("\\t", '\t')("\\v", '\v')("\\\\", '\\')
+                              ("\\\'", '\'')("\\\"", '\"');
 
                 is_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["is"]];
                 or_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["or"]];
@@ -113,11 +112,17 @@ namespace carto {
         std::string::const_iterator end = expr.end();
         queryexpressionimpl::encoding::space_type space;
         std::shared_ptr<QueryExpression> queryExpr;
-        bool result = boost::spirit::qi::phrase_parse(it, end, queryexpressionimpl::Grammar<std::string::const_iterator>(), space, queryExpr);
+        bool result = false;
+        try {
+            result = boost::spirit::qi::phrase_parse(it, end, queryexpressionimpl::Grammar<std::string::const_iterator>(), space, queryExpr);
+        }
+        catch (const boost::spirit::qi::expectation_failure<std::string::const_iterator>& ex) {
+            throw ParseException("Expectation error", expr, static_cast<int>(ex.first - expr.begin()));
+        }
         if (!result) {
             throw ParseException("Failed to parse query expression", expr);
         } else if (it != expr.end()) {
-            throw ParseException("Could not parse to the end of query expression", expr, static_cast<int>(expr.end() - it));
+            throw ParseException("Could not parse to the end of query expression", expr, static_cast<int>(it - expr.begin()));
         }
         return queryExpr;
     }
