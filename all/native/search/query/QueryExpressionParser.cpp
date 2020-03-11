@@ -28,9 +28,10 @@ namespace carto {
                 using qi::_1;
                 using qi::_2;
 
-                unesc_char.add("\\a", '\a')("\\b", '\b')("\\f", '\f')("\\n", '\n')
-                ("\\r", '\r')("\\t", '\t')("\\v", '\v')("\\\\", '\\')
-                ("\\\'", '\'')("\\\"", '\"');
+                unesc_char.add
+                    ("\\a", '\a')("\\b", '\b')("\\f", '\f')("\\n", '\n')
+                    ("\\r", '\r')("\\t", '\t')("\\v", '\v')("\\\\", '\\')
+                    ("\\\'", '\'')("\\\"", '\"');
 
                 is_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["is"]];
                 or_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["or"]];
@@ -44,7 +45,7 @@ namespace carto {
                 regexp_ilike_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["regexp_ilike"]];
 
                 string =
-                    '\'' >> *(unesc_char | "\\x" >> qi::hex | (qi::print - '\'')) >> '\'';
+                    '\'' >> *(unesc_char | "\\x" >> qi::hex | (qi::char_ - '\'')) >> '\'';
 
                 value =
                       null_kw       [_val = phx::construct<Value>()]
