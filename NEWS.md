@@ -18,8 +18,10 @@ then binaries of the SDK are considerably larger on Android compared to SDK 4.2.
 * Moved matchRoute method to base RoutingService interface
 * Moved setProfile/getProfile methods to base RoutingService interface
 * Moved setLanguage and setAutocomplete methods to base GeocodingService interface.
-* Added setMaxResults to base GeocodingService interface.
+* Added setMaxResults and getMaxResults methods to base GeocodingService interface.
 * Moved setLanguage method to base ReverseGeocodingService interface.
+* Added setClickRadius and getClickRadius methods to VectorTileLayer
+* Added setMaxResults and getMaxResults methods to all search services. Note that searches are now capped, thus applications may need to configure the limit appropriately.
 * Added 'uppercase', 'lowercase', 'length', 'concat', 'match', 'replace' functions to CartoCSS compiler.
 * Added 'regexp_ilike' operator to the search API query language to perform case-insensitive substring matching
 * Added support for ARM64 UWP target, removed deprecated ARM UWP target.
