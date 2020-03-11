@@ -260,14 +260,12 @@ namespace carto {
         return changed;
     }
 
-    void TileRenderer::calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<std::tuple<vt::TileId, double, long long> >& results) const {
+    void TileRenderer::calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, float radius, std::vector<std::tuple<vt::TileId, double, long long> >& results) const {
         std::lock_guard<std::mutex> lock(_mutex);
 
         if (!_glRenderer) {
             return;
         }
-
-        float radius = CLICK_RADIUS; // NOTE: the value will be automatically multiplied with DPI factor
 
         _glRenderer->findGeometryIntersections(ray, results, radius, true, false);
         if (_labelOrder == 0) {
@@ -281,24 +279,12 @@ namespace carto {
         }
     }
         
-    void TileRenderer::calculateRayIntersectedBitmaps(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<std::tuple<vt::TileId, double, vt::TileBitmap, cglib::vec2<float> > >& results) const {
+    void TileRenderer::calculateRayIntersectedElements3D(const cglib::ray3<double>& ray, const ViewState& viewState, float radius, std::vector<std::tuple<vt::TileId, double, long long> >& results) const {
         std::lock_guard<std::mutex> lock(_mutex);
 
         if (!_glRenderer) {
             return;
         }
-
-        _glRenderer->findBitmapIntersections(ray, results);
-    }
-
-    void TileRenderer::calculateRayIntersectedElements3D(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<std::tuple<vt::TileId, double, long long> >& results) const {
-        std::lock_guard<std::mutex> lock(_mutex);
-
-        if (!_glRenderer) {
-            return;
-        }
-
-        float radius = viewState.getUnitToDPCoef() * CLICK_RADIUS;
 
         if (_labelOrder == 1) {
             _glRenderer->findLabelIntersections(ray, results, radius, true, false);
@@ -309,6 +295,16 @@ namespace carto {
         if (_labelOrder == 1) {
             _glRenderer->findLabelIntersections(ray, results, radius, false, true);
         }
+    }
+
+    void TileRenderer::calculateRayIntersectedBitmaps(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<std::tuple<vt::TileId, double, vt::TileBitmap, cglib::vec2<float> > >& results) const {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        if (!_glRenderer) {
+            return;
+        }
+
+        _glRenderer->findBitmapIntersections(ray, results);
     }
 
     const std::string TileRenderer::LIGHTING_SHADER_2D = R"GLSL(

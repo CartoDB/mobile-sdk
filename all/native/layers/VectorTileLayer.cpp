@@ -30,6 +30,7 @@ namespace carto {
         _vectorTileEventListener(),
         _labelRenderOrder(VectorTileRenderOrder::VECTOR_TILE_RENDER_ORDER_LAYER),
         _buildingRenderOrder(VectorTileRenderOrder::VECTOR_TILE_RENDER_ORDER_LAST),
+        _clickRadius(4),
         _tileDecoder(decoder),
         _tileDecoderListener(),
         _backgroundColor(0, 0, 0, 0),
@@ -96,6 +97,16 @@ namespace carto {
             _buildingRenderOrder = renderOrder;
         }
         redraw();
+    }
+
+    float VectorTileLayer::getClickRadius() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _clickRadius;
+    }
+
+    void VectorTileLayer::setClickRadius(float radius) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _clickRadius = radius;
     }
     
     std::shared_ptr<VectorTileEventListener> VectorTileLayer::getVectorTileEventListener() const {
@@ -343,13 +354,19 @@ namespace carto {
         DirectorPtr<VectorTileEventListener> eventListener = _vectorTileEventListener;
 
         if (eventListener) {
+            float clickRadius = 0;
+            {
+                std::lock_guard<std::recursive_mutex> lock(_mutex);
+                clickRadius = _clickRadius;
+            }
+
             for (int pass = 0; pass < 2; pass++) {
                 std::vector<std::tuple<vt::TileId, double, long long> > hitResults;
                 if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
                     if (pass == 0) {
-                        tileRenderer->calculateRayIntersectedElements(ray, viewState, hitResults);
+                        tileRenderer->calculateRayIntersectedElements(ray, viewState, clickRadius, hitResults);
                     } else {
-                        tileRenderer->calculateRayIntersectedElements3D(ray, viewState, hitResults);
+                        tileRenderer->calculateRayIntersectedElements3D(ray, viewState, clickRadius, hitResults);
                     }
                 }
 

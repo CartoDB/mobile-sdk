@@ -24,6 +24,7 @@
 %attribute(carto::VectorTileLayer, std::size_t, TileCacheCapacity, getTileCacheCapacity, setTileCacheCapacity)
 %attribute(carto::VectorTileLayer, VectorTileRenderOrder::VectorTileRenderOrder, LabelRenderOrder, getLabelRenderOrder, setLabelRenderOrder)
 %attribute(carto::VectorTileLayer, VectorTileRenderOrder::VectorTileRenderOrder, BuildingRenderOrder, getBuildingRenderOrder, setBuildingRenderOrder)
+%attribute(carto::VectorTileLayer, float, ClickRadius, getClickRadius, setClickRadius)
 !attributestring_polymorphic(carto::VectorTileLayer, vectortiles.VectorTileDecoder, TileDecoder, getTileDecoder)
 !attributestring_polymorphic(carto::VectorTileLayer, layers.VectorTileEventListener, VectorTileEventListener, getVectorTileEventListener, setVectorTileEventListener)
 %std_exceptions(carto::VectorTileLayer::VectorTileLayer)
