@@ -110,23 +110,22 @@ namespace carto {
             double z0 = request->getPoints()[i - 1].getZ();
             MapPos p1 = proj->toWgs84(request->getPoints()[i]);
             double z1 = request->getPoints()[i].getZ();
+
             sgre::Query query(sgre::Point(p0.getX(), p0.getY(), z0), sgre::Point(p1.getX(), p1.getY(), z1));
-            if (i - 1 < filters.size()) {
-                picojson::value filter0 = filters[i - 1].toPicoJSON();
-                if (filter0.is<picojson::object>()) {
-                    query.setFilter(0, filter0.get<picojson::object>());
-                }
+            picojson::value filter0 = request->getPointParameter(static_cast<int>(i - 1), "geometry_tag_filter").toPicoJSON();
+            if (filter0.is<picojson::object>()) {
+                query.setFilter(0, filter0.get<picojson::object>());
             }
-            if (i < filters.size()) {
-                picojson::value filter1 = filters[i].toPicoJSON();
-                if (filter1.is<picojson::object>()) {
-                    query.setFilter(1, filter1.get<picojson::object>());
-                }
+            picojson::value filter1 = request->getPointParameter(static_cast<int>(i), "geometry_tag_filter").toPicoJSON();
+            if (filter1.is<picojson::object>()) {
+                query.setFilter(1, filter1.get<picojson::object>());
             }
+
             sgre::Result result = routeFinder->find(query);
             if (result.getStatus() == sgre::Result::Status::FAILED) {
                 throw GenericException("Routing failed");
             }
+
             totalPoints += result.getGeometry().size();
             totalInstructions += result.getInstructions().size();
             results.push_back(std::move(result));

@@ -410,9 +410,14 @@ namespace carto {
         std::shared_ptr<Projection> proj = request->getProjection();
 
         picojson::array locations;
-        for (const MapPos& pos : request->getPoints()) {
-            MapPos posWgs84 = proj->toWgs84(pos);
+        std::vector<MapPos> points = request->getPoints();
+        for (std::size_t i = 0; i < points.size(); i++) {
             picojson::object location;
+            picojson::value pointParams = request->getPointParameters(static_cast<int>(i)).toPicoJSON();
+            if (pointParams.is<picojson::object>()) {
+                location = pointParams.get<picojson::object>();
+            }
+            MapPos posWgs84 = proj->toWgs84(points[i]);
             location["lon"] = picojson::value(posWgs84.getX());
             location["lat"] = picojson::value(posWgs84.getY());
             locations.emplace_back(location);

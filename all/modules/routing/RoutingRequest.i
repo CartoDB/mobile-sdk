@@ -7,7 +7,7 @@
 
 #ifdef _CARTO_ROUTING_SUPPORT
 
-!proxy_imports(carto::RoutingRequest, core.MapPos, core.MapPosVector, core.Variant, core.VariantVector, projections.Projection)
+!proxy_imports(carto::RoutingRequest, core.MapPos, core.MapPosVector, core.Variant, projections.Projection)
 
 %{
 #include "routing/RoutingRequest.h"
@@ -29,7 +29,7 @@
 
 %attributestring(carto::RoutingRequest, std::shared_ptr<carto::Projection>, Projection, getProjection)
 %attributeval(carto::RoutingRequest, std::vector<carto::MapPos>, Points, getPoints)
-%attributeval(carto::RoutingRequest, std::vector<carto::Variant>, GeometryTagFilters, getGeometryTagFilters, setGeometryTagFilters)
+%ignore carto::RoutingRequest::getPointParameters;
 %ignore carto::RoutingRequest::getCustomParameters;
 %std_exceptions(carto::RoutingRequest::RoutingRequest)
 !standard_equals(carto::RoutingRequest);

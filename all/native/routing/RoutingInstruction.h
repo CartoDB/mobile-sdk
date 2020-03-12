@@ -175,6 +175,7 @@ namespace carto {
         const Variant& getGeometryTag() const;
         /**
          * Sets the geometry tag of the instruction.
+         * This is currently supported by SGRE routing engine only.
          * @param geometryTag The geometry tag of the instruction.
          */
         void setGeometryTag(const Variant& variant);

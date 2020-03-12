@@ -13,7 +13,7 @@ namespace carto {
     RoutingRequest::RoutingRequest(const std::shared_ptr<Projection>& projection, const std::vector<MapPos>& points) :
         _projection(projection),
         _points(points),
-        _filters(),
+        _pointParams(),
         _customParams(),
         _mutex()
     {
@@ -33,14 +33,47 @@ namespace carto {
         return _points;
     }
 
-    std::vector<Variant> RoutingRequest::getGeometryTagFilters() const {
+    Variant RoutingRequest::getPointParameters(int index) const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return _filters;
+        auto it = _pointParams.find(index);
+        if (it == _pointParams.end()) {
+            return Variant();
+        }
+        return it->second;
     }
 
-    void RoutingRequest::setGeometryTagFilters(const std::vector<Variant>& filters) {
+    Variant RoutingRequest::getPointParameter(int index, const std::string& param) const {
         std::lock_guard<std::mutex> lock(_mutex);
-        _filters = filters;
+        auto it = _pointParams.find(index);
+        if (it == _pointParams.end()) {
+            return Variant();
+        }
+        std::vector<std::string> keys;
+        boost::split(keys, param, boost::is_any_of("."));
+        picojson::value subValue = it->second.toPicoJSON();
+        for (const std::string& key : keys) {
+            if (!subValue.is<picojson::object>()) {
+                return Variant();
+            }
+            subValue = subValue.get(key);
+        }
+        return Variant::FromPicoJSON(subValue);
+    }
+
+    void RoutingRequest::setPointParameter(int index, const std::string& param, const Variant& value) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        std::vector<std::string> keys;
+        boost::split(keys, param, boost::is_any_of("."));
+        picojson::value rootValue = _pointParams[index].toPicoJSON();
+        picojson::value* subValue = &rootValue;
+        for (const std::string& key : keys) {
+            if (!subValue->is<picojson::object>()) {
+                subValue->set(picojson::object());
+            }
+            subValue = &subValue->get<picojson::object>()[key];
+        }
+        *subValue = value.toPicoJSON();
+        _pointParams[index] = Variant::FromPicoJSON(rootValue);
     }
 
     Variant RoutingRequest::getCustomParameters() const {
@@ -66,8 +99,8 @@ namespace carto {
         std::lock_guard<std::mutex> lock(_mutex);
         std::vector<std::string> keys;
         boost::split(keys, param, boost::is_any_of("."));
-        picojson::value config = _customParams.toPicoJSON();
-        picojson::value* subValue = &config;
+        picojson::value rootValue = _customParams.toPicoJSON();
+        picojson::value* subValue = &rootValue;
         for (const std::string& key : keys) {
             if (!subValue->is<picojson::object>()) {
                 subValue->set(picojson::object());
@@ -75,7 +108,7 @@ namespace carto {
             subValue = &subValue->get<picojson::object>()[key];
         }
         *subValue = value.toPicoJSON();
-        _customParams = Variant::FromPicoJSON(config);
+        _customParams = Variant::FromPicoJSON(rootValue);
     }
 
     std::string RoutingRequest::toString() const {
@@ -87,10 +120,10 @@ namespace carto {
             ss << (it == _points.begin() ? "" : ", ") << it->toString();
         }
         ss << "]";
-        if (!_filters.empty()) {
-            ss << ", filters=[";
-            for (auto it = _filters.begin(); it != _filters.end(); ++it) {
-                ss << (it == _filters.begin() ? "" : ", ") << it->toString();
+        if (!_pointParams.empty()) {
+            ss << ", pointParams=[";
+            for (auto it = _pointParams.begin(); it != _pointParams.end(); ++it) {
+                ss << (it == _pointParams.begin() ? "" : ", ") << it->first << "=" << it->second.toString();
             }
             ss << "]";
         }
