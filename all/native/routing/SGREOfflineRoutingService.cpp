@@ -99,7 +99,6 @@ namespace carto {
         }
 
         std::shared_ptr<Projection> proj = request->getProjection();
-        std::vector<Variant> filters = request->getGeometryTagFilters();
         EPSG3857 epsg3857;
 
         std::size_t totalPoints = 0;
