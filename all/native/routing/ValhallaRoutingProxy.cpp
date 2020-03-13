@@ -404,7 +404,7 @@ namespace carto {
         if (customParams.is<picojson::object>()) {
             json = customParams.get<picojson::object>();
         }
-        json["locations"] = picojson::value(locations);
+        json["shape"] = picojson::value(locations);
         json["shape_match"] = picojson::value("map_snap");
         json["costing"] = picojson::value(profile);
         json["units"] = picojson::value("kilometers");
