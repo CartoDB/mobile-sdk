@@ -51,6 +51,27 @@ namespace carto {
         float getAccuracy() const;
 
         /**
+         * Returns the set of given point parameters as a variant.
+         * @return The set of given point parameters as a variant. Can be empty.
+         */
+        Variant getPointParameters(int index) const;
+        /**
+         * Returns the parameter value for the given routing point.
+         * @param index The routing point index.
+         * @param param The name of the parameter.
+         * @return The value of the specified parameter of the given routing point. If the parameter does not exist, empty variant is returned.
+         */
+        Variant getPointParameter(int index, const std::string& param) const;
+        /**
+         * Sets the parameter value for the given routing point.
+         * This is currently supported by Valhalla routing engine and can be used to specify initial or final heading, for example.
+         * @param index The routing point index.
+         * @param param The name of the parameter to set.
+         * @param value The new value for the parameter of the given routing point.
+         */
+        void setPointParameter(int index, const std::string& param, const Variant& value);
+
+        /**
          * Returns the set of custom parameters of the request as a variant.
          * @return The set of custom parameters as a variant. Can be empty.
          */
@@ -75,11 +96,12 @@ namespace carto {
         std::string toString() const;
         
     private:
-        std::shared_ptr<Projection> _projection;
-        std::vector<MapPos> _points;
-        float _accuracy;
-
+        const std::shared_ptr<Projection> _projection;
+        const std::vector<MapPos> _points;
+        const float _accuracy;
+        std::map<int, Variant> _pointParams;
         Variant _customParams;
+
         mutable std::mutex _mutex;
     };
     

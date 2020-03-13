@@ -29,6 +29,7 @@
 %attributestring(carto::RouteMatchingRequest, std::shared_ptr<carto::Projection>, Projection, getProjection)
 %attributeval(carto::RouteMatchingRequest, std::vector<carto::MapPos>, Points, getPoints)
 %attribute(carto::RouteMatchingRequest, float, Accuracy, getAccuracy)
+%ignore carto::RouteMatchingRequest::getPointParameters;
 %ignore carto::RouteMatchingRequest::getCustomParameters;
 %std_exceptions(carto::RouteMatchingRequest::RouteMatchingRequest)
 !standard_equals(carto::RouteMatchingRequest);
