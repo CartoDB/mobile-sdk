@@ -20,8 +20,6 @@ namespace sqlite3pp {
 }
 
 namespace carto {
-    class RouteMatchingRequest;
-    class RouteMatchingResult;
 
     /**
      * An online routing service that uses MapBox Valhalla routing service.
@@ -41,35 +39,22 @@ namespace carto {
         virtual ~ValhallaOnlineRoutingService();
 
         /**
-         * Returns the current routing profile.
-         * @return The current routing profile. Can be either "auto", "auto_shorter", "bicycle", "bus", "hov", "pedestrian", "wheelchair" or "multimodal". The default is "pedestrian".
-         */
-        std::string getProfile() const;
-        /**
-         * Sets the current routing profile.
-         * @param profile The new profile. Can be either "auto", "auto_shorter", "bicycle", "bus", "hov", "pedestrian", "wheelchair" or "multimodal".
-         */
-        void setProfile(const std::string& profile);
-
-        /**
          * Returns the custom backend service URL.
          * @return The custom backend service URL. If this is not defined, an empty string is returned.
          */
         std::string getCustomServiceURL() const;
         /**
          * Sets the custom backend service URL. 
-         * The custom URL may contain tag "{api_key}" which will be substituted with the set API key.
+         * The custom URL should contain tag "{service}", it will be substituted by the SDK by the service type the SDK needs to perform ("route" or "trace_route").
+         * The custom URL may also contain tag "{api_key}" which will be substituted with the set API key.
          * @param serviceURL The custom backend service URL to use. If this is empty, then the default service is used.
          */
         void setCustomServiceURL(const std::string& serviceURL);
 
-        /**
-         * Matches specified points to the points on road network.
-         * @param request The matching request.
-         * @return The matching result or null if route matching failed.
-         * @throws std::runtime_error If IO error occured during the route matching.
-         */
-        std::shared_ptr<RouteMatchingResult> matchRoute(const std::shared_ptr<RouteMatchingRequest>& request) const;
+        virtual std::string getProfile() const;
+        virtual void setProfile(const std::string& profile);
+
+        virtual std::shared_ptr<RouteMatchingResult> matchRoute(const std::shared_ptr<RouteMatchingRequest>& request) const;
 
         virtual std::shared_ptr<RoutingResult> calculateRoute(const std::shared_ptr<RoutingRequest>& request) const;
 

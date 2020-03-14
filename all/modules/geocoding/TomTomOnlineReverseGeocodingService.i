@@ -26,7 +26,6 @@
 
 !polymorphic_shared_ptr(carto::TomTomOnlineReverseGeocodingService, geocoding.TomTomOnlineReverseGeocodingService)
 
-%attributestring(carto::TomTomOnlineReverseGeocodingService, std::string, Language, getLanguage, setLanguage)
 %attributestring(carto::TomTomOnlineReverseGeocodingService, std::string, CustomServiceURL, getCustomServiceURL, setCustomServiceURL)
 %std_io_exceptions(carto::TomTomOnlineReverseGeocodingService::calculateAddresses)
 

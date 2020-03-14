@@ -7,7 +7,7 @@
 
 #ifdef _CARTO_ROUTING_SUPPORT
 
-!proxy_imports(carto::RouteMatchingResult, core.MapPos, core.MapPosVector, projections.Projection)
+!proxy_imports(carto::RouteMatchingResult, core.MapPos, core.MapPosVector, projections.Projection, routing.RouteMatchingPoint, routing.RouteMatchingEdge)
 
 %{
 #include "routing/RouteMatchingResult.h"
@@ -20,11 +20,15 @@
 
 %import "core/MapPos.i"
 %import "projections/Projection.i"
+%import "routing/RouteMatchingPoint.i"
+%import "routing/RouteMatchingEdge.i"
 
 !shared_ptr(carto::RouteMatchingResult, routing.RouteMatchingResult)
 
 %attributestring(carto::RouteMatchingResult, std::shared_ptr<carto::Projection>, Projection, getProjection)
 %attributeval(carto::RouteMatchingResult, std::vector<carto::MapPos>, Points, getPoints)
+%attributeval(carto::RouteMatchingResult, std::vector<carto::RouteMatchingEdge>, MatchingEdges, getMatchingEdges)
+%attributeval(carto::RouteMatchingResult, std::vector<carto::RouteMatchingPoint>, MatchingPoints, getMatchingPoints)
 %std_exceptions(carto::RouteMatchingResult::RouteMatchingResult)
 !standard_equals(carto::RouteMatchingResult);
 !custom_tostring(carto::RouteMatchingResult);

@@ -68,14 +68,11 @@ namespace carto {
 
         if (fileNameEndsWith(GetPackageTypeExtension(PackageType::PACKAGE_TYPE_MAP))) {
             return PackageType::PACKAGE_TYPE_MAP;
-        }
-        else if (fileNameEndsWith(GetPackageTypeExtension(PackageType::PACKAGE_TYPE_ROUTING))) {
+        } else if (fileNameEndsWith(GetPackageTypeExtension(PackageType::PACKAGE_TYPE_ROUTING))) {
             return PackageType::PACKAGE_TYPE_ROUTING;
-        }
-        else if (fileNameEndsWith(GetPackageTypeExtension(PackageType::PACKAGE_TYPE_GEOCODING))) {
+        } else if (fileNameEndsWith(GetPackageTypeExtension(PackageType::PACKAGE_TYPE_GEOCODING))) {
             return PackageType::PACKAGE_TYPE_GEOCODING;
-        }
-        else if (fileNameEndsWith(GetPackageTypeExtension(PackageType::PACKAGE_TYPE_VALHALLA_ROUTING))) {
+        } else if (fileNameEndsWith(GetPackageTypeExtension(PackageType::PACKAGE_TYPE_VALHALLA_ROUTING))) {
             return PackageType::PACKAGE_TYPE_VALHALLA_ROUTING;
         }
         Log::Warnf("PackageHandlerFactory::DetectPackageType: Unexpected package extension: %s", url.c_str());

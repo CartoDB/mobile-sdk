@@ -25,7 +25,6 @@
 
 !polymorphic_shared_ptr(carto::OSMOfflineReverseGeocodingService, geocoding.OSMOfflineReverseGeocodingService)
 
-%attributestring(carto::OSMOfflineReverseGeocodingService, std::string, Language, getLanguage, setLanguage)
 %std_io_exceptions(carto::OSMOfflineReverseGeocodingService::OSMOfflineReverseGeocodingService)
 %std_io_exceptions(carto::OSMOfflineReverseGeocodingService::calculateAddresses)
 

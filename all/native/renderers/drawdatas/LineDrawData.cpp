@@ -144,7 +144,7 @@ namespace carto {
                     if (style.getLineJoinType() == LineJoinType::LINE_JOIN_TYPE_BEVEL) {
                         segments = deltaAngle != 0 ? 1 : 0;
                     } else { //style.getLineJoinType() == LineJoinType::ROUND
-                        segments = static_cast<int>(std::ceil(std::abs(deltaAngle) * style.getWidth() * LINE_ENDPOINT_TESSELATION_FACTOR));
+                        segments = 1 + static_cast<int>(std::ceil(std::abs(deltaAngle) * style.getWidth() * LINE_JOIN_TESSELATION_FACTOR));
                     }
     
                     coordCount += segments;
@@ -290,7 +290,7 @@ namespace carto {
                 if (style.getLineJoinType() == LineJoinType::LINE_JOIN_TYPE_BEVEL) {
                     segments = deltaAngle != 0 ? 1 : 0;
                 } else { // style.getLineJoinType() == LineJoinType::ROUND
-                    segments = static_cast<int>(std::ceil(std::abs(deltaAngle) * style.getWidth() * LINE_JOIN_TESSELATION_FACTOR));
+                    segments = 1 + static_cast<int>(std::ceil(std::abs(deltaAngle) * style.getWidth() * LINE_JOIN_TESSELATION_FACTOR));
                 }
                 if (segments > 0) {
                     float segmentDeltaAngle = deltaAngle / segments;
@@ -493,7 +493,7 @@ namespace carto {
     }
     
     const float LineDrawData::LINE_ENDPOINT_TESSELATION_FACTOR = 0.004f;
-    const float LineDrawData::LINE_JOIN_TESSELATION_FACTOR = 0.0018f;
+    const float LineDrawData::LINE_JOIN_TESSELATION_FACTOR = 0.002f;
     const float LineDrawData::LINE_JOIN_MIN_MITER_DOT = -0.8f;
     
     const float LineDrawData::CLICK_WIDTH_COEF = 0.5f;

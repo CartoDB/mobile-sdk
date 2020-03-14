@@ -25,6 +25,17 @@ namespace carto {
         virtual ~ReverseGeocodingService();
 
         /**
+         * Returns the language of the expected results.
+         * @return The language of the expected results. As ISO 639-1 code or empty string.
+         */
+        virtual std::string getLanguage() const = 0;
+        /**
+         * Sets the language of the expected results.
+         * @param lang The language to use as ISO 639-1 code. Empty string can be used for default language.
+         */
+        virtual void setLanguage(const std::string& lang) = 0;
+
+        /**
          * Calculates matching addresses from the specified reverse geocoding request.
          * @param request The reverse geocoding request to use.
          * @result The list of matching geocoding results, sorted by descending ranks.

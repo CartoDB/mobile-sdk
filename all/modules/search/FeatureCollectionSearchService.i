@@ -27,6 +27,7 @@
 
 %attributestring(carto::FeatureCollectionSearchService, std::shared_ptr<carto::Projection>, Projection, getProjection)
 %attributestring(carto::FeatureCollectionSearchService, std::shared_ptr<carto::FeatureCollection>, FeatureCollection, getFeatureCollection)
+%attribute(carto::FeatureCollectionSearchService, int, MaxResults, getMaxResults, setMaxResults)
 %std_exceptions(carto::FeatureCollectionSearchService::FeatureCollectionSearchService)
 %std_exceptions(carto::FeatureCollectionSearchService::findFeatures)
 

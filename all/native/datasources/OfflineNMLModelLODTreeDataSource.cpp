@@ -163,7 +163,8 @@ namespace carto {
                     }
                 }
                 queryMeshBindings.finish();
-            } catch (const sqlite3pp::database_error& ) {
+            }
+            catch (const sqlite3pp::database_error& ) {
                 Log::Error("OfflineNMLModelLODTreeDataSource: Mesh query failed. Legacy database without 'nmlmeshop' column?");
             }
     

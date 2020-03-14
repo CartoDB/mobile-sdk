@@ -31,6 +31,7 @@
 %attributestring(carto::VectorTileSearchService, std::shared_ptr<carto::VectorTileDecoder>, TileDecoder, getTileDecoder)
 %attribute(carto::VectorTileSearchService, int, MinZoom, getMinZoom, setMinZoom)
 %attribute(carto::VectorTileSearchService, int, MaxZoom, getMaxZoom, setMaxZoom)
+%attribute(carto::VectorTileSearchService, int, MaxResults, getMaxResults, setMaxResults)
 %std_exceptions(carto::VectorTileSearchService::VectorTileSearchService)
 %std_exceptions(carto::VectorTileSearchService::findFeatures)
 

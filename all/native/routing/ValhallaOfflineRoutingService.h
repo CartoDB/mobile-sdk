@@ -9,6 +9,7 @@
 
 #if defined(_CARTO_ROUTING_SUPPORT) && defined(_CARTO_VALHALLA_ROUTING_SUPPORT) && defined(_CARTO_OFFLINE_SUPPORT)
 
+#include "core/Variant.h"
 #include "routing/RoutingService.h"
 
 #include <memory>
@@ -20,8 +21,6 @@ namespace sqlite3pp {
 }
 
 namespace carto {
-    class RouteMatchingRequest;
-    class RouteMatchingResult;
 
     /**
      * An offline routing service that uses Valhalla routing tiles.
@@ -37,29 +36,29 @@ namespace carto {
         virtual ~ValhallaOfflineRoutingService();
 
         /**
-         * Returns the current routing profile.
-         * @return The current routing profile. Can be either "auto", "bicycle", "pedestrian", "wheelchair" or "multimodal". The default is "pedestrian".
+         * Returns the value of specified Valhalla configuration parameter.
+         * @param param The name of the parameter. For example, "meili.auto.search_radius".
+         * @return The value of the parameter. If the parameter does not exist, empty variant is returned.
          */
-        std::string getProfile() const;
+        Variant getConfigurationParameter(const std::string& param) const;
         /**
-         * Sets the current routing profile.
-         * @param profile The new profile. Can be either "auto", "bicycle", "pedestrian", "wheelchair" or "multimodal".
+         * Sets the value of specified Valhalla configuration parameter.
+         * @param param The name of the parameter. For example, "meili.auto.search_radius".
+         * @param value The new value of the parameter.
          */
-        void setProfile(const std::string& profile);
+        void setConfigurationParameter(const std::string& param, const Variant& value);
 
-        /**
-         * Matches specified points to the points on road network.
-         * @param request The matching request.
-         * @return The matching result or null if route matching failed.
-         * @throws std::runtime_error If IO error occured during the route matching.
-         */
-        std::shared_ptr<RouteMatchingResult> matchRoute(const std::shared_ptr<RouteMatchingRequest>& request) const;
+        virtual std::string getProfile() const;
+        virtual void setProfile(const std::string& profile);
+
+        virtual std::shared_ptr<RouteMatchingResult> matchRoute(const std::shared_ptr<RouteMatchingRequest>& request) const;
 
         virtual std::shared_ptr<RoutingResult> calculateRoute(const std::shared_ptr<RoutingRequest>& request) const;
 
     private:
         std::shared_ptr<sqlite3pp::database> _database;
         std::string _profile;
+        Variant _configuration;
         mutable std::mutex _mutex;
     };
     

@@ -29,8 +29,8 @@ namespace carto {
                 using qi::_2;
 
                 unesc_char.add("\\a", '\a')("\\b", '\b')("\\f", '\f')("\\n", '\n')
-                ("\\r", '\r')("\\t", '\t')("\\v", '\v')("\\\\", '\\')
-                ("\\\'", '\'')("\\\"", '\"');
+                              ("\\r", '\r')("\\t", '\t')("\\v", '\v')("\\\\", '\\')
+                              ("\\\'", '\'')("\\\"", '\"');
 
                 is_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["is"]];
                 or_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["or"]];
@@ -41,9 +41,10 @@ namespace carto {
                 true_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["true"]];
                 collate_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["collate"]];
                 regexp_like_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["regexp_like"]];
+                regexp_ilike_kw = repo::distinct(qi::char_("a-zA-Z0-9_"))[qi::no_case["regexp_ilike"]];
 
                 string =
-                    '\'' >> *(unesc_char | "\\x" >> qi::hex | (qi::print - '\'')) >> '\'';
+                    '\'' >> *(unesc_char | "\\x" >> qi::hex | (qi::char_ - '\'')) >> '\'';
 
                 value =
                       null_kw       [_val = phx::construct<Value>()]
@@ -73,7 +74,8 @@ namespace carto {
 
                 term3 =
                       predicate [_val = _1]
-                    | (regexp_like_kw >> '(' > operand > ',' > operand > ')')  [_val = phx::bind(&BinaryPredicateExpression<RegexpLikePredicate>::create, _1, _2)]
+                    | (regexp_like_kw  >> '(' > operand > ',' > operand > ')')  [_val = phx::bind(&BinaryPredicateExpression<RegexpLikePredicate<false>>::create, _1, _2)]
+                    | (regexp_ilike_kw >> '(' > operand > ',' > operand > ')')  [_val = phx::bind(&BinaryPredicateExpression<RegexpLikePredicate<true>>::create, _1, _2)]
                     | ('(' >> expression > ')') [_val = _1]
                     ;
 
@@ -96,7 +98,7 @@ namespace carto {
             }
 
             qi::symbols<char const, char const> unesc_char;
-            qi::rule<Iterator, qi::unused_type()> is_kw, or_kw, and_kw, not_kw, null_kw, false_kw, true_kw, collate_kw, regexp_like_kw;
+            qi::rule<Iterator, qi::unused_type()> is_kw, or_kw, and_kw, not_kw, null_kw, false_kw, true_kw, collate_kw, regexp_like_kw, regexp_ilike_kw;
             qi::rule<Iterator, std::string()> string;
             qi::rule<Iterator, Value()> value;
             qi::rule<Iterator, std::string()> identifier;
@@ -110,11 +112,17 @@ namespace carto {
         std::string::const_iterator end = expr.end();
         queryexpressionimpl::encoding::space_type space;
         std::shared_ptr<QueryExpression> queryExpr;
-        bool result = boost::spirit::qi::phrase_parse(it, end, queryexpressionimpl::Grammar<std::string::const_iterator>(), space, queryExpr);
+        bool result = false;
+        try {
+            result = boost::spirit::qi::phrase_parse(it, end, queryexpressionimpl::Grammar<std::string::const_iterator>(), space, queryExpr);
+        }
+        catch (const boost::spirit::qi::expectation_failure<std::string::const_iterator>& ex) {
+            throw ParseException("Expectation error", expr, static_cast<int>(ex.first - expr.begin()));
+        }
         if (!result) {
             throw ParseException("Failed to parse query expression", expr);
         } else if (it != expr.end()) {
-            throw ParseException("Could not parse to the end of query expression", expr, static_cast<int>(expr.end() - it));
+            throw ParseException("Could not parse to the end of query expression", expr, static_cast<int>(it - expr.begin()));
         }
         return queryExpr;
     }

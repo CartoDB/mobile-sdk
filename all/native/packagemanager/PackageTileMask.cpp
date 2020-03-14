@@ -294,8 +294,7 @@ namespace carto {
         if (data.empty()) {
             data.push_back(false);
             data.push_back(node->inside);
-        }
-        else {
+        } else {
             data.insert(data.begin(), true);
             data.insert(data.begin() + 1, node->inside);
         }

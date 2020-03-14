@@ -26,8 +26,6 @@
 
 !polymorphic_shared_ptr(carto::MapBoxOnlineGeocodingService, geocoding.MapBoxOnlineGeocodingService)
 
-%attribute(carto::MapBoxOnlineGeocodingService, bool, Autocomplete, isAutocomplete, setAutocomplete)
-%attributestring(carto::MapBoxOnlineGeocodingService, std::string, Language, getLanguage, setLanguage)
 %attributestring(carto::MapBoxOnlineGeocodingService, std::string, CustomServiceURL, getCustomServiceURL, setCustomServiceURL)
 %std_io_exceptions(carto::MapBoxOnlineGeocodingService::calculateAddresses)
 

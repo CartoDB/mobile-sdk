@@ -3,17 +3,14 @@
 #include "RouteMatchingResult.h"
 #include "components/Exceptions.h"
 
-#include <numeric>
-#include <functional>
-#include <utility>
-#include <iomanip>
 #include <sstream>
 
 namespace carto {
 
-    RouteMatchingResult::RouteMatchingResult(const std::shared_ptr<Projection>& projection, const std::vector<MapPos>& points) :
+    RouteMatchingResult::RouteMatchingResult(const std::shared_ptr<Projection>& projection, const std::vector<RouteMatchingPoint>& matchingPoints, const std::vector<RouteMatchingEdge>& matchingEdges) :
         _projection(projection),
-        _points(points)
+        _matchingPoints(matchingPoints),
+        _matchingEdges(matchingEdges)
     {
         if (!projection) {
             throw NullArgumentException("Null projection");
@@ -27,20 +24,34 @@ namespace carto {
         return _projection;
     }
 
-    const std::vector<MapPos>& RouteMatchingResult::getPoints() const {
-        return _points;
+    std::vector<MapPos> RouteMatchingResult::getPoints() const {
+        std::vector<MapPos> poses;
+        poses.reserve(_matchingPoints.size());
+        for (const RouteMatchingPoint& point : _matchingPoints) {
+            poses.push_back(point.getPos());
+        }
+        return poses;
+    }
+
+    const std::vector<RouteMatchingEdge>& RouteMatchingResult::getMatchingEdges() const {
+        return _matchingEdges;
+    }
+
+    const std::vector<RouteMatchingPoint>& RouteMatchingResult::getMatchingPoints() const {
+        return _matchingPoints;
     }
 
     std::string RouteMatchingResult::toString() const {
         std::stringstream ss;
-        ss << std::setiosflags(std::ios::fixed);
-        ss << "RouteMatchingResult [";
-        ss << "points=";
-        for (auto it = _points.begin(); it != _points.end(); ++it) {
-            const MapPos& pos = *it;
-            ss << (it == _points.begin() ? "" : ", ") << pos.toString();
+        ss << "RouteMatchingResult [matchingPoints=[";
+        for (auto it = _matchingPoints.begin(); it != _matchingPoints.end(); ++it) {
+            ss << (it == _matchingPoints.begin() ? "" : ", ") << (*it).toString();
         }
-        ss << "]";
+        ss << "], matchingEdges=[";
+        for (auto it = _matchingEdges.begin(); it != _matchingEdges.end(); ++it) {
+            ss << (it == _matchingEdges.begin() ? "" : ", ") << (*it).toString();
+        }
+        ss << "]]";
         return ss.str();
     }
 

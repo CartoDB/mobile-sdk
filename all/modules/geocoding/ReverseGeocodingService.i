@@ -16,6 +16,7 @@
 #include <memory>
 %}
 
+%include <std_string.i>
 %include <std_shared_ptr.i>
 %include <cartoswig.i>
 
@@ -24,6 +25,8 @@
 
 !polymorphic_shared_ptr(carto::ReverseGeocodingService, geocoding.ReverseGeocodingService)
 
+%attributestring(carto::ReverseGeocodingService, std::string, Language, getLanguage, setLanguage)
+%std_exceptions(carto::ReverseGeocodingService::setLanguage)
 %std_io_exceptions(carto::ReverseGeocodingService::calculateAddresses)
 
 %feature("director") carto::ReverseGeocodingService;

@@ -68,6 +68,10 @@ namespace carto {
         }
     }
 
+    std::shared_ptr<RouteMatchingResult> SGREOfflineRoutingService::matchRoute(const std::shared_ptr<RouteMatchingRequest>& request) const {
+        throw GenericException("matchRoute not implemented for this RoutingService");
+    }
+
     std::shared_ptr<RoutingResult> SGREOfflineRoutingService::calculateRoute(const std::shared_ptr<RoutingRequest>& request) const {
         if (!request) {
             throw NullArgumentException("Null request");
@@ -86,7 +90,8 @@ namespace carto {
                     sgre::GraphBuilder graphBuilder(std::move(ruleList));
                     graphBuilder.importGeoJSON(_featureData);
                     _cachedRouteFinder = sgre::RouteFinder::create(graphBuilder.build(), _config);
-                } catch (const std::exception& ex) {
+                }
+                catch (const std::exception& ex) {
                     throw GenericException("Failed to create routing graph", ex.what());
                 }
             }
@@ -94,7 +99,6 @@ namespace carto {
         }
 
         std::shared_ptr<Projection> proj = request->getProjection();
-        std::vector<Variant> filters = request->getGeometryTagFilters();
         EPSG3857 epsg3857;
 
         std::size_t totalPoints = 0;
@@ -105,23 +109,22 @@ namespace carto {
             double z0 = request->getPoints()[i - 1].getZ();
             MapPos p1 = proj->toWgs84(request->getPoints()[i]);
             double z1 = request->getPoints()[i].getZ();
+
             sgre::Query query(sgre::Point(p0.getX(), p0.getY(), z0), sgre::Point(p1.getX(), p1.getY(), z1));
-            if (i - 1 < filters.size()) {
-                picojson::value filter0 = filters[i - 1].toPicoJSON();
-                if (filter0.is<picojson::object>()) {
-                    query.setFilter(0, filter0.get<picojson::object>());
-                }
+            picojson::value filter0 = request->getPointParameter(static_cast<int>(i - 1), "geometry_tag_filter").toPicoJSON();
+            if (filter0.is<picojson::object>()) {
+                query.setFilter(0, filter0.get<picojson::object>());
             }
-            if (i < filters.size()) {
-                picojson::value filter1 = filters[i].toPicoJSON();
-                if (filter1.is<picojson::object>()) {
-                    query.setFilter(1, filter1.get<picojson::object>());
-                }
+            picojson::value filter1 = request->getPointParameter(static_cast<int>(i), "geometry_tag_filter").toPicoJSON();
+            if (filter1.is<picojson::object>()) {
+                query.setFilter(1, filter1.get<picojson::object>());
             }
+
             sgre::Result result = routeFinder->find(query);
             if (result.getStatus() == sgre::Result::Status::FAILED) {
                 throw GenericException("Routing failed");
             }
+
             totalPoints += result.getGeometry().size();
             totalInstructions += result.getInstructions().size();
             results.push_back(std::move(result));

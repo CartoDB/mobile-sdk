@@ -16,6 +16,9 @@
 %}
 
 %include <std_shared_ptr.i>
+%include <std_string.i>
+%include <std_map.i>
+%include <std_vector.i>
 %include <cartoswig.i>
 
 %import "core/MapPos.i"
@@ -27,6 +30,8 @@
 %attributestring(carto::RoutingRequest, std::shared_ptr<carto::Projection>, Projection, getProjection)
 %attributeval(carto::RoutingRequest, std::vector<carto::MapPos>, Points, getPoints)
 %attributeval(carto::RoutingRequest, std::vector<carto::Variant>, GeometryTagFilters, getGeometryTagFilters, setGeometryTagFilters)
+%ignore carto::RoutingRequest::getPointParameters;
+%ignore carto::RoutingRequest::getCustomParameters;
 %std_exceptions(carto::RoutingRequest::RoutingRequest)
 !standard_equals(carto::RoutingRequest);
 !custom_tostring(carto::RoutingRequest);

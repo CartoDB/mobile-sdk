@@ -12,6 +12,7 @@
 #include "search/SearchRequest.h"
 
 #include <memory>
+#include <mutex>
 #include <vector>
 
 namespace carto {
@@ -44,6 +45,18 @@ namespace carto {
         const std::shared_ptr<FeatureCollection>& getFeatureCollection() const;
 
         /**
+         * Returns the maximum number of results the search service returns.
+         * @return The maximum number of results the search service returns.
+         */
+        int getMaxResults() const;
+        /**
+         * Sets the maximum number of results the search service returns.
+         * The default number of results is 1000.
+         * @param maxResults The new maximum number of results the geocoding service returns.
+         */
+        void setMaxResults(int maxResults);
+
+        /**
          * Searches for the features specified by search request from the feature collection bound to the service.
          * @param request The search request containing search filters.
          * @return The resulting feature collection containing features matching the request.
@@ -53,6 +66,10 @@ namespace carto {
     protected:
         const std::shared_ptr<Projection> _projection;
         const std::shared_ptr<FeatureCollection> _featureCollection;
+
+        int _maxResults;
+
+        mutable std::mutex _mutex;
     };
     
 }

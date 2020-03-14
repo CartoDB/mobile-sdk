@@ -24,8 +24,6 @@
 
 !polymorphic_shared_ptr(carto::PackageManagerGeocodingService, geocoding.PackageManagerGeocodingService)
 
-%attribute(carto::PackageManagerGeocodingService, bool, Autocomplete, isAutocomplete, setAutocomplete)
-%attributestring(carto::PackageManagerGeocodingService, std::string, Language, getLanguage, setLanguage)
 %std_exceptions(carto::PackageManagerGeocodingService::PackageManagerGeocodingService)
 %std_io_exceptions(carto::PackageManagerGeocodingService::calculateAddresses)
 

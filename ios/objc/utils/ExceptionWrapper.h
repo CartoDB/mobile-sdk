@@ -17,6 +17,6 @@ __attribute__ ((visibility("default"))) @interface NTExceptionWrapper : NSObject
  * @param error Pointer to the NSError object used to store the exception info, if exception occured. 
                 'ExceptionName' and 'ExceptionReason' keys in error userInfo can be used to retrieve details of the exception.
  */
-+(BOOL)catchException:(void(^)())tryBlock error:(__autoreleasing NSError **)error;
++(BOOL)catchException:(void(^)(void))tryBlock error:(__autoreleasing NSError **)error;
 
 @end

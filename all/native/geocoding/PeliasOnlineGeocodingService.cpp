@@ -9,6 +9,8 @@
 #include "utils/NetworkUtils.h"
 #include "utils/Log.h"
 
+#include <algorithm>
+
 #include <boost/lexical_cast.hpp>
 
 namespace carto {
@@ -17,12 +19,23 @@ namespace carto {
         _apiKey(apiKey),
         _autocomplete(false),
         _language(),
+        _maxResults(10),
         _serviceURL(),
         _mutex()
     {
     }
 
     PeliasOnlineGeocodingService::~PeliasOnlineGeocodingService() {
+    }
+
+    std::string PeliasOnlineGeocodingService::getCustomServiceURL() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _serviceURL;
+    }
+
+    void PeliasOnlineGeocodingService::setCustomServiceURL(const std::string& serviceURL) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _serviceURL = serviceURL;
     }
 
     bool PeliasOnlineGeocodingService::isAutocomplete() const {
@@ -45,14 +58,14 @@ namespace carto {
         _language = lang;
     }
 
-    std::string PeliasOnlineGeocodingService::getCustomServiceURL() const {
+    int PeliasOnlineGeocodingService::getMaxResults() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return _serviceURL;
+        return _maxResults;
     }
 
-    void PeliasOnlineGeocodingService::setCustomServiceURL(const std::string& serviceURL) {
+    void PeliasOnlineGeocodingService::setMaxResults(int maxResults) {
         std::lock_guard<std::mutex> lock(_mutex);
-        _serviceURL = serviceURL;
+        _maxResults = maxResults;
     }
 
     std::vector<std::shared_ptr<GeocodingResult> > PeliasOnlineGeocodingService::calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const {
@@ -94,23 +107,17 @@ namespace carto {
             if (!_language.empty()) {
                 params["lang"] = _language;
             }
+
+            params["size"] = boost::lexical_cast<std::string>(std::max(1, _maxResults));
         }
 
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
         Log::Debugf("PeliasOnlineGeocodingService::calculateAddresses: Loading %s", url.c_str());
 
-        std::shared_ptr<BinaryData> responseData;
-        if (!NetworkUtils::GetHTTP(url, responseData, Log::IsShowDebug())) {
+        std::string responseString;
+        if (!NetworkUtils::GetHTTP(url, responseString, Log::IsShowDebug())) {
             throw NetworkException("Failed to fetch response");
         }
-
-        std::string responseString;
-        if (responseData) {
-            responseString = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
-        } else {
-            throw GenericException("Empty response");
-        }
-
         return PeliasGeocodingProxy::ReadResponse(responseString, request->getProjection());
     }
 

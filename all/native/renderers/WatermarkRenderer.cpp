@@ -88,8 +88,7 @@ namespace carto {
         if (_watermarkBitmap != watermarkBitmap) {
             if (watermarkBitmap) {
                 _watermarkTex = _textureManager->createTexture(watermarkBitmap, true, false);
-            }
-            else {
+            } else {
                 _watermarkTex.reset();
             }
 
@@ -148,7 +147,11 @@ namespace carto {
         }
     
         if (_watermarkTex) {
+            glDisable(GL_DEPTH_TEST);
+
             drawWatermark(viewState);
+
+            glEnable(GL_DEPTH_TEST);
         }
     
         GLContext::CheckGLError("WatermarkRenderer::onDrawFrame");
@@ -167,17 +170,18 @@ namespace carto {
         glUseProgram(_shader->getProgId());
         // Texture
         glUniform1i(_u_tex, 0);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, _watermarkTex->getTexId());
         // Matrix
         glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, _modelviewProjectionMat.data());
         // Coords, texCoords, colors
         glEnableVertexAttribArray(_a_coord);
         glEnableVertexAttribArray(_a_texCoord);
-        // Texture
-        glBindTexture(GL_TEXTURE_2D, _watermarkTex->getTexId());
         // Draw
         glVertexAttribPointer(_a_coord, 3, GL_FLOAT, GL_FALSE, 0, _watermarkCoords);
         glVertexAttribPointer(_a_texCoord, 2, GL_FLOAT, GL_FALSE, 0, _watermarkTexCoords);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, sizeof(_watermarkCoords) / sizeof(float) / 3);
+
         // Disable bound arrays
         glDisableVertexAttribArray(_a_coord);
         glDisableVertexAttribArray(_a_texCoord);

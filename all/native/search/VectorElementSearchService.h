@@ -12,6 +12,7 @@
 #include "search/SearchRequest.h"
 
 #include <memory>
+#include <mutex>
 #include <vector>
 
 namespace carto {
@@ -38,6 +39,18 @@ namespace carto {
         const std::shared_ptr<VectorDataSource>& getDataSource() const;
 
         /**
+         * Returns the maximum number of results the search service returns.
+         * @return The maximum number of results the search service returns.
+         */
+        int getMaxResults() const;
+        /**
+         * Sets the maximum number of results the search service returns.
+         * The default number of results is 1000.
+         * @param maxResults The new maximum number of results the geocoding service returns.
+         */
+        void setMaxResults(int maxResults);
+
+        /**
          * Searches for the vector elements specified by search request from the data source bound to the service.
          * @param request The search request containing search filters.
          * @return The resulting list of vector elements matching the request.
@@ -46,6 +59,10 @@ namespace carto {
 
     protected:
         const std::shared_ptr<VectorDataSource> _dataSource;
+
+        int _maxResults;
+
+        mutable std::mutex _mutex;
     };
     
 }

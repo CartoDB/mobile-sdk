@@ -100,6 +100,10 @@ namespace {
             for (std::size_t i = 0; i < rings.size(); i++) {
                 BoostPolygonType::ring_type boostRing;
                 std::for_each(rings[i].begin(), rings[i].end(), [&boostRing](const carto::MapPos& mapPos) { boostRing.push_back(BoostPointType(mapPos.getX(), mapPos.getY())); });
+                if (!boostRing.empty()) {
+                    BoostPointType pos = boostRing.front();
+                    boostRing.push_back(pos);
+                }
                 if (i == 0) {
                     boostPolygon.outer() = std::move(boostRing);
                 } else {
@@ -313,7 +317,8 @@ namespace carto {
             points[2] = bounds.getMax();
             points[3] = MapPos(bounds.getMax().getX(), bounds.getMin().getY());
             auto geometry = std::make_shared<PolygonGeometry>(std::move(points));
-            if (calculateDistance(convertToEPSG3857(geometry, _projection), _geometry) > _searchRadius) {
+            double dist = calculateDistance(convertToEPSG3857(geometry, _projection), _geometry);
+            if (dist > _searchRadius) {
                 return false;
             }
         }

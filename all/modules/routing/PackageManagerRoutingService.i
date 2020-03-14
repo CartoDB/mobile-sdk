@@ -5,7 +5,7 @@
 
 #if defined(_CARTO_ROUTING_SUPPORT) && defined(_CARTO_PACKAGEMANAGER_SUPPORT)
 
-!proxy_imports(carto::PackageManagerRoutingService, packagemanager.PackageManager, routing.RoutingService, routing.RoutingRequest, routing.RoutingResult)
+!proxy_imports(carto::PackageManagerRoutingService, packagemanager.PackageManager, routing.RoutingService, routing.RoutingRequest, routing.RoutingResult, routing.RouteMatchingRequest, routing.RouteMatchingResult)
 
 %{
 #include "routing/PackageManagerRoutingService.h"
@@ -22,6 +22,7 @@
 !polymorphic_shared_ptr(carto::PackageManagerRoutingService, routing.PackageManagerRoutingService)
 
 %std_exceptions(carto::PackageManagerRoutingService::PackageManagerRoutingService)
+%std_io_exceptions(carto::PackageManagerRoutingService::matchRoute)
 %std_io_exceptions(carto::PackageManagerRoutingService::calculateRoute)
 
 %feature("director") carto::PackageManagerRoutingService;

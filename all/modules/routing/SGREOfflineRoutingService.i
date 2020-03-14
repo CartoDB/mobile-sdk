@@ -5,7 +5,7 @@
 
 #if defined(_CARTO_ROUTING_SUPPORT) && defined(_CARTO_OFFLINE_SUPPORT)
 
-!proxy_imports(carto::SGREOfflineRoutingService, core.Variant, geometry.FeatureCollection, projections.Projection, routing.RoutingService, routing.RoutingRequest, routing.RoutingResult)
+!proxy_imports(carto::SGREOfflineRoutingService, core.Variant, geometry.FeatureCollection, projections.Projection, routing.RoutingService, routing.RoutingRequest, routing.RoutingResult, routing.RouteMatchingRequest, routing.RouteMatchingResult)
 
 %{
 #include "routing/SGREOfflineRoutingService.h"
@@ -24,8 +24,8 @@
 
 !polymorphic_shared_ptr(carto::SGREOfflineRoutingService, routing.SGREOfflineRoutingService)
 
-%attributestring(carto::SGREOfflineRoutingService, std::string, Profile, getProfile, setProfile)
 %std_io_exceptions(carto::SGREOfflineRoutingService::SGREOfflineRoutingService)
+%std_io_exceptions(carto::SGREOfflineRoutingService::matchRoute)
 %std_io_exceptions(carto::SGREOfflineRoutingService::calculateRoute)
 
 %feature("director") carto::SGREOfflineRoutingService;

@@ -26,7 +26,6 @@
 
 !polymorphic_shared_ptr(carto::PeliasOnlineReverseGeocodingService, geocoding.PeliasOnlineReverseGeocodingService)
 
-%attributestring(carto::PeliasOnlineReverseGeocodingService, std::string, Language, getLanguage, setLanguage)
 %attributestring(carto::PeliasOnlineReverseGeocodingService, std::string, CustomServiceURL, getCustomServiceURL, setCustomServiceURL)
 %std_io_exceptions(carto::PeliasOnlineReverseGeocodingService::calculateAddresses)
 

@@ -71,18 +71,11 @@ namespace carto {
 
         std::map<std::string, std::string> requestHeaders = NetworkUtils::CreateAppRefererHeader();
         std::map<std::string, std::string> responseHeaders;
-        std::shared_ptr<BinaryData> responseData;
-        if (!NetworkUtils::GetHTTP(url, requestHeaders, responseHeaders, responseData, Log::IsShowDebug())) {
+        std::string responseString;
+        if (!NetworkUtils::GetHTTP(url, requestHeaders, responseHeaders, responseString, Log::IsShowDebug())) {
             Log::Warnf("MapTilerOnlineTileDataSource: Failed to fetch tile source configuration"); // NOTE: we may have error messages, thus do not return from here
         }
 
-        std::string responseString;
-        if (responseData) {
-            responseString = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
-        } else {
-            Log::Error("MapTilerOnlineTileDataSource: Empty response");
-            return false;
-        }
         picojson::value config;
         std::string err = picojson::parse(config, responseString);
         if (!err.empty()) {
@@ -143,7 +136,8 @@ namespace carto {
                     return std::shared_ptr<TileData>();
                 }
             }
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("MapTilerOnlineTileDataSource::loadOnlineTile: Exception while loading tile %d/%d/%d: %s", mapTile.getZoom(), mapTile.getX(), mapTile.getY(), ex.what());
             return std::shared_ptr<TileData>();
         }

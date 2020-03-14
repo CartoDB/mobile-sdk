@@ -18,8 +18,7 @@ namespace carto {
             for (int i = 0; i < nameMetaInfo.getArraySize(); i++) {
                 return nameMetaInfo.getArrayElement(i).getString();
             }
-        }
-        else if (nameMetaInfo.getType() == VariantType::VARIANT_TYPE_STRING) {
+        } else if (nameMetaInfo.getType() == VariantType::VARIANT_TYPE_STRING) {
             return nameMetaInfo.getString();
         }
         return _packageId;
@@ -42,11 +41,9 @@ namespace carto {
             for (int i = 0; i < nameMetaInfo.getArraySize(); i++) {
                 names.push_back(nameMetaInfo.getArrayElement(i).getString());
             }
-        }
-        else if (nameMetaInfo.getType() == VariantType::VARIANT_TYPE_STRING) {
+        } else if (nameMetaInfo.getType() == VariantType::VARIANT_TYPE_STRING) {
             names.push_back(nameMetaInfo.getString());
-        }
-        else {
+        } else {
             names.push_back(_packageId);
         }
         return names;

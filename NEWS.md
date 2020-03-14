@@ -1,3 +1,68 @@
+CARTO Mobile SDK 4.3.0RC1
+-------------------
+
+This version is a major update and brings several new features and optimizations. Note that due to the inclusion of Valhalla 3,
+then binaries of the SDK are considerably larger on Android compared to SDK 4.2.x.
+
+### Key highlights:
+
+* Valhalla 3 routing support. Valhalla 2 routing was supported in SDK 4.1.x and removed from SDK 4.2.x. This release brings Valhalla back but with new major version and lots of improvements. Note that previous Valhalla 2 offline packages are incompatible with Valhalla 3 and can not be used.
+
+### New features:
+
+* A fully featued matchRoute API for matching points to routing network and extracting routing attributes. 
+* Added custom metadata support for Layer class (getMetaData, setMetaData, containsMetaDataKey methods in Layer class)
+* Support for rendering basemap Point-of-Interests, API for directly controlling POI/building rendering mode (setPOIRenderMode/getPOIRenderMode methods in CartoVectorTileLayer class)
+* API for controlling the render style of basemap buildings (setBuildingRenderMode/getBuildingRenderMode methods in CartoVectorTileLayer class)
+* Added 'custom parameters' option to RoutingRequest and RouteMatchingRequest classes. Custom parameters can be used to customize routing schemas of specific routing engines.
+* Moved matchRoute method to base RoutingService interface
+* Moved setProfile/getProfile methods to base RoutingService interface
+* Moved setLanguage and setAutocomplete methods to base GeocodingService interface.
+* Added setMaxResults and getMaxResults methods to base GeocodingService interface.
+* Moved setLanguage method to base ReverseGeocodingService interface.
+* Added setClickRadius and getClickRadius methods to VectorTileLayer
+* Added setMaxResults and getMaxResults methods to all search services. Note that searches are now capped, thus applications may need to configure the limit appropriately.
+* Added 'uppercase', 'lowercase', 'length', 'concat', 'match', 'replace' functions to CartoCSS compiler.
+* Added 'regexp_ilike' operator to the search API query language to perform case-insensitive substring matching
+* Added support for ARM64 UWP target, removed deprecated ARM UWP target.
+
+### Changes/fixes:
+
+* setGeometryTagFilters, getGeometryTagFilters methods in RoutingRequest are deprecated and will be removed in future versions. Instead use more general setPointParameter/getPointParameter methods with 'geometry_tag_filter' parameter name.
+* SDK does not throw exception anymore when package manager device keys do not match, this fixes issues with TestFlight on iOS
+* Tweaked and optimized offline geocoder, mostly affects autocomplete mode
+* Better reporting of online Valhalla routing errors
+* Added ferry instruction types (enter/leave ferry) to RoutingAction enum
+* Fixed search API issues with tiles and non-closed polygons
+* Tweaked rendering of lines with round join types to look smoother, especially when used with thin lines
+* Suppressed GLKView deprecation warnings on iOS
+* Additional NPE safety in OnlineNMLModelLODTreeDataSource
+* Fixed native crash when loading 0-sized image files
+* Minor improvements to CartoCSS error reporting.
+* Made Mapnik-level string expression parsing recursive, fixes subtle issues with complex expressions
+* Better SVG compatibility with RGBA color support
+
+
+CARTO Mobile SDK 4.2.2
+-------------------
+
+### Changes/fixes:
+
+* Fixed iOS specific compilation warning in NTExceptionWrapper.h ("This function declaration is not a prototype")
+* Disabled LTO on iOS builds (fixes issue with bitcode generation on iOS platform)
+
+
+CARTO Mobile SDK 4.2.2RC2
+-------------------
+
+### Changes/fixes:
+
+* Fixed vector tile click radius of points if 'allow-overlapping' flag was set to true
+* Fixed name wrapping of setWatermarkPadding method in Options class on iOS (was setWatermarkPaddingX, now setWatermarkPadding)
+* Clearer error reporting when parsing CartoCSS styles
+* Improvements and tweaks to text-on-line rendering in vector tiles
+
+
 CARTO Mobile SDK 4.2.2RC1
 -------------------
 
@@ -306,6 +371,7 @@ This is a maintenance release for SDK 4.1.x containing mostly fixes
 but also some new features.
 
 ### New features:
+
 * Implemented route matching support in ValhallaOfflineRoutingService and PackageManagerValhallaRoutingService classes
 * Included NMLModelLODTree in the build (missing from all previous 4.x builds)
 * Added postcode to geocoding responses
@@ -314,6 +380,7 @@ but also some new features.
 
 
 ### Fixes/changes:
+
 * Improved text placement in vector tile renderer with texts that have non-zero vertical offsets
 * Improved tilting gesture handling on UWP
 * Performance optimizations for MB vector tile decoder
@@ -340,6 +407,7 @@ This is a major release containing many new features, fixes and performance
 optimizations.
 
 ### Key highlights:
+
 * SDK now supports **geocoding** and **reverse geocoding**. For offline geocoding, custom geocoding packages can be used through PackageManager. We have provided country-based packages (bigger countries like US, Germany have split packages) but custom packages based on bounding box can be also used. For online geocoding, SDK includes wrapper class for MapZen Pelias geocoder; your MapZen API key is required for that.
 * SDK has optional support for **MapZen Valhalla routing**. This feature requires a special SDK build as the routing engine is fairly complex and makes compiled SDK binaries approximately 30% larger. Compared to the custom built-in routing Valhalla routing packages are univeral -  single package can be used for car, bicycle or walking profiles. We have prepared country-based packages that can be downloaded  using PackageManager. Also, custom packages based on bounding box are supported. For online Valhalla routing, SDK includes wrapper class that uses MapZen Mobility API.
 * New **built-in styles** and vector tile structure. This change is backward-incompatible due to two reasons: the old styles are removed from the SDK and new styles require different tile and offline package sources. New styles are better optimized for lower-end devices and have more consistent information density on all zoom levels. Also, new styles are based on view-dependent zoom parameters instead of tile-based zoom parameters, which gives much more pleasant zooming experience and cleaner visuals at fractional zoom levels.
@@ -349,6 +417,7 @@ optimizations.
 * Lots of lower level performance and memory usage optimizations, mostly related to vector tiles.
 
 ### API changes:
+
 * The new built-in styles (Voyager, Positron, Darkmatter) use different data schema and are not compatible with *nutiteq.osm* source. Instead, "**carto.streets**"  source must be used. This applies to both online tiles and offline map packages. The old styles (Dark, Grey, Nutibright) and data source continue to work for now, but are no longer included in the SDK and must be downloaded/applied separately. Offline map packages are not updated for nutiteq.osm source.
 * The old nutibright, dark and grey styles are no longer included in the SDK and as a result the following CartoBaseMapStyles are removed:  CARTO_BASEMAP_STYLE_DEFAULT, CARTO_BASEMAP_STYLE_GREY, CARTO_BASEMAP_STYLE_DARK. Instead, new styles CARTO_BASEMAP_STYLE_VOYAGER,  CARTO_BASEMAP_STYLE_POSITRON, CARTO_BASEMAP_STYLE_DARKMATTER should be used.
 * Public constructors from various vector element Style classes are now hidden, these classes can now be instanced only through corresponding StyleBuilders.
@@ -362,6 +431,7 @@ optimizations.
 
 
 ### Detailed list of new features:
+
 * New 'geocoding' module that includes following generic classes/interfaces: GeocodingRequest, GeocodingResult, GeocodingService, ReverseGeocodingRequest, ReverseGeocodingService. The module also includes several classes for offline geocoding/reverse geocoding: OSMOfflineGeocodingService, OSMOfflineReverseGeocodingService, PackageManagerGeocodingService, PackageManagerReverseGeocodingService.  For online geocoding the module includes PeliasGeocodingService and PeliasReverseGeocodingService classes.
 * The routing module includes three new classes for Valhalla routing: PackageManagerValhallaRoutingService, ValhallaOfflineRoutingService, ValhallaOnlineRoutingService.  These classes are only included in Valhalla-supporting builds.
 * New 'search' module for searching features from various sources. The module includes following classes: SearchRequest, FeatureCollectionSearchService, VectorElementSearchService and VectorTileSearchService.  These classes can be used to search features from loaded geojson collections, vector data sources and vector tile data sources.
@@ -411,6 +481,7 @@ optimizations.
 
 
 ### Fixes:
+
 * Fixed equals/hash implementation for several built-in classes. Previously both methods provided unreliable results.
 * Tile layer preloading tweaks - avoid cache trashing and constant refreshing in rare cases, reduce preloading dataset size
 * SDK does not show harmless 'failed to decode tile' warning for empty tiles anymore
@@ -430,6 +501,7 @@ CARTO Mobile SDK 4.0.2
 Maintenance release for CARTO Mobile SDK 4.0.x
 
 ### Fixes/Changes:
+
 * Enabled stack protector for Android builds for better app security
 * Implemented null pointer checks throwing exceptions for various Layers methods, previously such cases could result in native level crashes
 * Implemented workaround for Xamarin/Android multithreading issues - native threads were sometimes not automatically registered when managed delegates are called from multiple threads
@@ -448,6 +520,7 @@ This is a maintenance release for 4.0.x that includes several important reliabil
 some minor new features.
 
 ### New features and changes:
+
 * Added Layer visibility control API to CartoVectorTileDecoder (setLayerVisible, isLayerVisible methods)
 * Implemented 'screen' and ‘clear’ comp-op support for CartoCSS/vector tile rendering
 * Rendering of vector tile layers with multiple line/polygon symbolisers is now optimized as a special case, this is usually done with a single draw call
@@ -465,6 +538,7 @@ some minor new features.
 * More precise label coverage analysis for transformed labels
 
 ### Fixes:
+
 * Fixed Torque tile usage  in MapsService API due to malformed URL
 * Fixed deadlock with indirect texts fields in Text and BalloonPopup objects
 * Fixed feature batching related issue in vector tile renderer that caused high number of draw calls and low performance
@@ -496,6 +570,7 @@ CARTO Mobile SDK is built on top of [*Nutiteq Maps SDK 3.3*](http://developer.nu
 Release notes for next releases can be found from [Releases section](https://github.com/CartoDB/mobile-sdk/releases).
 
 ### New features and improvements:
+
 * New 'services' module that gives integration with CARTO online services (Maps services, SQL API, high level VisJSON map configuration)
 * JSON serializing/deserializing support and JSON based vector element metadata
 * Revamped tile layer support, with more shared features between all tile layers including generic UTF grid support for vector/raster tile layers and many other tweaking options
@@ -511,5 +586,6 @@ Release notes for next releases can be found from [Releases section](https://git
 * Click detection and feature introspection for vector tiles
 
 ### Removed features:
+
 * Windows Phone 8.1 is no longer supported, as the platform is generally deprecated, only Windows Phone 10 is now supported
 * Basic CartoCSS styling support is removed from styles module, full CartoCSS is available for vector tiles

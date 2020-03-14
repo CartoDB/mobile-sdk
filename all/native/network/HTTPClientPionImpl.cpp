@@ -93,8 +93,7 @@ namespace carto {
         pionRequest.set_query_string(query);
         if (!request.contentType.empty()) {
             pionRequest.set_content(reinterpret_cast<const char*>(request.body.data()), request.body.size());
-        }
-        else {
+        } else {
             pionRequest.set_do_not_send_content_length();
         }
         pionRequest.add_header("Host", request.url);
@@ -153,8 +152,7 @@ namespace carto {
                 int maxRequests = boost::lexical_cast<int>(what[1]);
                 connection.maxRequests = std::min(connection.maxRequests, maxRequests);
             }
-        }
-        else {
+        } else {
             connection.keepAliveTime = requestTime + std::chrono::seconds(5); // Apache servers have this limitation typically
         }
 
@@ -163,8 +161,7 @@ namespace carto {
         auto it = pionResponse.get_headers().find("Content-Length");
         if (it != pionResponse.get_headers().end()) {
             contentLength = boost::lexical_cast<std::uint64_t>(it->second);
-        }
-        else {
+        } else {
             connection.maxRequests = 0; // force new connection next time
         }
 

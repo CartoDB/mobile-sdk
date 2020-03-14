@@ -1018,8 +1018,7 @@ namespace carto {
                     std::string tileMaskValue;
                     if (package->getTileMask()) {
                         tileMaskValue = EncodeTileMask(package->getTileMask());
-                    }
-                    else if (auto handler = PackageHandlerFactory(_serverEncKey, _localEncKey).createPackageHandler(task.packageType, packageFileName)) {
+                    } else if (auto handler = PackageHandlerFactory(_serverEncKey, _localEncKey).createPackageHandler(task.packageType, packageFileName)) {
                         tileMaskValue = EncodeTileMask(handler->calculateTileMask());
                     }
                     std::uint64_t fileSize = package->getSize();
@@ -1496,7 +1495,7 @@ namespace carto {
             }
             std::string sha1 = qit->get<const char*>(0);
             if (sha1 != CalculateKeyHash(encKey)) {
-                throw PackageException(PackageErrorType::PACKAGE_ERROR_TYPE_SYSTEM, "Package encryption keys do not match");
+                Log::Warn("Package encryption keys do not match");
             }
             return true;
         }

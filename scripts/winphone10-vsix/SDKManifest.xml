@@ -6,7 +6,7 @@
     MinVSVersion="14.0"
     DependsOn="Microsoft.VCLibs, Version=14.0"
     SupportsMultipleVersions="Error"
-    SupportedArchitectures="x86;x64;ARM">
+    SupportedArchitectures="x86;x64;ARM64">
 <!--
   <File Reference="libEGL.winmd" Implementation="libEGL.dll" />
   <File Reference="libGLESv2.winmd" Implementation="libGLESv2.dll" /> 

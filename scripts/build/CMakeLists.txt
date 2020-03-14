@@ -41,8 +41,8 @@ endif(WIN32)
 if(IOS)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fobjc-arc -fmodules -fvisibility=hidden")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc -fmodules -stdlib=libc++ -std=c++11 -ftemplate-depth=1024 -fexceptions -frtti -fvisibility=hidden -fvisibility-inlines-hidden")
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os -flto=thin")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Os -flto=thin")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Os")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Os")
 set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -ObjC")
 
 set(CMAKE_XCODE_ATTRIBUTE_ONLY_ACTIVE_ARCH YES)
@@ -130,6 +130,7 @@ include_directories(
     "${SDK_EXTERNAL_LIBS_DIR}/valhalla/include"
     "${SDK_EXTERNAL_LIBS_DIR}/valhalla/include/valhalla" 
     "${SDK_EXTERNAL_LIBS_DIR}/protobuf/src"
+    "${SDK_EXTERNAL_LIBS_DIR}/date/include"
 )
 endif(INCLUDE_VALHALLA)
 
@@ -152,14 +153,17 @@ include_directories(
 elseif(IOS)
 include_directories(
     "${SDK_SRC_DIR}/../../ios/native"
+    "${SDK_SRC_DIR}/../../ios/gl"
     "${SDK_SRC_DIR}/../../generated/ios-objc/proxies"
     "${SDK_SRC_DIR}/../../generated/ios-objc/wrappers"
 )
 elseif(WIN32)
 include_directories(
     "${SDK_SRC_DIR}/../../winphone/native"
+    "${SDK_SRC_DIR}/../../libs-external/angle-uwp/include"
     "${SDK_EXTERNAL_LIBS_DIR}/zlib"
 )
+link_directories("${SDK_BASE_DIR}/libs-external/angle-uwp/${WINPHONE_ARCH}")
 endif()
 
 # Subprojects
@@ -188,6 +192,7 @@ add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/tess2" tess2)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/webp" webp)
 
 if(INCLUDE_VALHALLA)
+add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/date" date)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/protobuf" protobuf)
 add_subdirectory("${SDK_EXTERNAL_LIBS_DIR}/valhalla" valhalla)
 endif(INCLUDE_VALHALLA)
@@ -303,6 +308,7 @@ set(SDK_SRC_FILES
 
 if(INCLUDE_VALHALLA)
 set(SDK_SRC_FILES ${SDK_SRC_FILES}
+    "${date_SRC_FILES}"
     "${protobuf_SRC_FILES}"
     "${valhalla_SRC_FILES}"
 )
@@ -348,6 +354,7 @@ set(SDK_OBJECTS
 
 if(INCLUDE_VALHALLA)
 set(SDK_OBJECTS ${SDK_OBJECTS}
+    $<TARGET_OBJECTS:date>
     $<TARGET_OBJECTS:protobuf>
     $<TARGET_OBJECTS:valhalla>
 )
@@ -381,5 +388,5 @@ target_link_libraries(carto_mobile_sdk EGL GLESv2 z log android jnigraphics)
 elseif(IOS)
 target_link_libraries(carto_mobile_sdk "-framework Foundation" "-framework CoreGraphics" "-framework CoreText" "-framework OpenGLES" "-framework GLKit" "-framework UIKit" "-framework CFNetwork")
 elseif(WIN32)
-target_link_libraries(carto_mobile_sdk msxml6.lib d3d11.lib dwrite.lib d2d1.lib)
+target_link_libraries(carto_mobile_sdk msxml6.lib d3d11.lib dwrite.lib d2d1.lib libEGL.dll.lib libGLESv2.dll.lib)
 endif()

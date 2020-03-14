@@ -89,8 +89,7 @@ namespace carto {
         if (shader) {
             if (std::this_thread::get_id() == _glThreadId) {
                 shader->unload();
-            }
-            else {
+            } else {
                 if (shader->_vertShaderId != 0) {
                     _deleteShaderIdQueue.push_back(shader->_vertShaderId);
                 }

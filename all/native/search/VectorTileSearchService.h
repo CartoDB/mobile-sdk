@@ -71,6 +71,18 @@ namespace carto {
         void setMaxZoom(int maxZoom);
 
         /**
+         * Returns the maximum number of results the search service returns.
+         * @return The maximum number of results the search service returns.
+         */
+        int getMaxResults() const;
+        /**
+         * Sets the maximum number of results the search service returns.
+         * The default number of results is 1000.
+         * @param maxResults The new maximum number of results the geocoding service returns.
+         */
+        void setMaxResults(int maxResults);
+
+        /**
          * Searches for the features specified by search request from the vector tiles bound to the service.
          * The zoom level range used for searching is specified using minZoom/maxZoom attributes of the search service.
          * @param request The search request containing search filters.
@@ -84,6 +96,7 @@ namespace carto {
 
         int _minZoom;
         int _maxZoom;
+        int _maxResults;
 
         mutable std::mutex _mutex;
     };

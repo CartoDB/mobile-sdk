@@ -16,6 +16,7 @@ namespace carto {
         _packageManager(packageManager),
         _autocomplete(false),
         _language(),
+        _maxResults(10),
         _cachedPackageDatabaseMap(),
         _cachedGeocoder(),
         _mutex()
@@ -59,6 +60,19 @@ namespace carto {
         }
     }
 
+    int PackageManagerGeocodingService::getMaxResults() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _maxResults;
+    }
+
+    void PackageManagerGeocodingService::setMaxResults(int maxResults) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        if (maxResults != _maxResults) {
+            _maxResults = maxResults;
+            _cachedGeocoder.reset();
+        }
+    }
+
     std::vector<std::shared_ptr<GeocodingResult> > PackageManagerGeocodingService::calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const {
         if (!request) {
             throw NullArgumentException("Null request");
@@ -81,6 +95,7 @@ namespace carto {
                 auto geocoder = std::make_shared<geocoding::Geocoder>();
                 geocoder->setAutocomplete(_autocomplete);
                 geocoder->setLanguage(_language);
+                geocoder->setMaxResults(_maxResults);
                 for (auto it = packageDatabaseMap.begin(); it != packageDatabaseMap.end(); it++) {
                     try {
                         if (!geocoder->import(it->second)) {

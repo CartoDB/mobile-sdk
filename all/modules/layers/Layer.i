@@ -5,7 +5,7 @@
 
 %module Layer
 
-!proxy_imports(carto::Layer, core.MapRange, core.ScreenPos, graphics.ViewState, renderers.components.CullState, ui.ClickType)
+!proxy_imports(carto::Layer, core.MapRange, core.ScreenPos, core.Variant, core.StringVariantMap, graphics.ViewState, renderers.components.CullState, ui.ClickType)
 
 %{
 #include "layers/Layer.h"
@@ -17,6 +17,7 @@
 
 %import "core/MapRange.i"
 %import "core/ScreenPos.i"
+%import "core/Variant.i"
 %import "graphics/ViewState.i"
 %import "renderers/components/CullState.i"
 %import "ui/ClickType.i"
@@ -24,6 +25,7 @@
 !polymorphic_shared_ptr(carto::Layer, layers.Layer)
 !value_type(std::vector<std::shared_ptr<carto::Layer> >, layers.LayerVector)
 
+%attributeval(carto::Layer, %arg(std::map<std::string, carto::Variant>), MetaData, getMetaData, setMetaData)
 %attribute(carto::Layer, int, UpdatePriority, getUpdatePriority, setUpdatePriority)
 %attribute(carto::Layer, int, CullDelay, getCullDelay, setCullDelay)
 %attribute(carto::Layer, bool, Visible, isVisible, setVisible)

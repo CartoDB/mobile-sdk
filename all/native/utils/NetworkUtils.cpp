@@ -19,6 +19,12 @@
 #include <boost/lexical_cast.hpp>
 
 namespace carto {
+
+    bool NetworkUtils::GetHTTP(const std::string& url, std::string& responseString, bool log) {
+        std::map<std::string, std::string> requestHeaders;
+        std::map<std::string, std::string> responseHeaders;
+        return GetHTTP(url, requestHeaders, responseHeaders, responseString, log);
+    }
     
     bool NetworkUtils::GetHTTP(const std::string& url, std::shared_ptr<BinaryData>& responseData, bool log) {
         std::map<std::string, std::string> requestHeaders;
@@ -26,11 +32,26 @@ namespace carto {
         return GetHTTP(url, requestHeaders, responseHeaders, responseData, log);
     }
 
+    bool NetworkUtils::GetHTTP(const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, std::string& responseString, bool log) {
+        std::shared_ptr<BinaryData> responseData;
+        bool success = GetHTTP(url, requestHeaders, responseHeaders, responseData, log);
+        if (responseData) {
+            responseString = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
+        } else {
+            responseString.clear();
+            if (success && log) {
+                Log::Warn("GetHTTP: Empty response data");
+            }
+        }
+        return success;
+    }
+    
     bool NetworkUtils::GetHTTP(const std::string& url, const std::map<std::string, std::string>& requestHeaders, std::map<std::string, std::string>& responseHeaders, std::shared_ptr<BinaryData>& responseData, bool log) {
         HTTPClient client(log);
         try {
             return client.get(url, requestHeaders, responseHeaders, responseData) == 0;
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             if (log) {
                 Log::Errorf("GetHTTP: Exception: %s", ex.what());
             }
@@ -42,7 +63,8 @@ namespace carto {
         HTTPClient client(log);
         try {
             return client.streamResponse(method, url, requestHeaders, responseHeaders, handler, offset);
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             if (log) {
                 Log::Errorf("StreamHTTPResponse: Exception: %s", ex.what());
             }
@@ -138,8 +160,7 @@ namespace carto {
             std::string::size_type pos = encKeyValue.find('=');
             if (pos == std::string::npos) {
                 valueMap.insert({ URLDecode(encKeyValue), std::string() });
-            }
-            else {
+            } else {
                 valueMap.insert({ URLDecode(encKeyValue.substr(0, pos)), URLDecode(encKeyValue.substr(pos + 1)) });
             }
         }
@@ -201,8 +222,7 @@ namespace carto {
         index = url.find(":");
         if (index != std::string::npos) {
             url.erase(0, index + 1);
-        }
-        else {
+        } else {
             return 80;
         }
 

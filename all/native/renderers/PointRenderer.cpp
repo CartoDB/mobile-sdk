@@ -282,6 +282,7 @@ namespace carto {
         glUseProgram(_shader->getProgId());
         // Texture
         glUniform1i(_u_tex, 0);
+        glActiveTexture(GL_TEXTURE0);
         // Matrix
         const cglib::mat4x4<float>& mvpMat = viewState.getRTEModelviewProjectionMat();
         glUniformMatrix4fv(_u_mvpMat, 1, GL_FALSE, mvpMat.data());

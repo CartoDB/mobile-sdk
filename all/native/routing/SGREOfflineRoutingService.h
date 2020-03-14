@@ -50,16 +50,10 @@ namespace carto {
         SGREOfflineRoutingService(const std::shared_ptr<Projection>& projection, const std::shared_ptr<FeatureCollection>& featureCollection, const Variant& config);
         virtual ~SGREOfflineRoutingService();
 
-        /**
-         * Returns the current routing profile.
-         * @return The current routing profile. This can be defined in the rule list.
-         */
-        std::string getProfile() const;
-        /**
-         * Sets the current routing profile.
-         * @param profile The new profile. This can be defined in the rule list.
-         */
-        void setProfile(const std::string& profile);
+        virtual std::string getProfile() const;
+        virtual void setProfile(const std::string& profile);
+
+        virtual std::shared_ptr<RouteMatchingResult> matchRoute(const std::shared_ptr<RouteMatchingRequest>& request) const;
 
         virtual std::shared_ptr<RoutingResult> calculateRoute(const std::shared_ptr<RoutingRequest>& request) const;
 

@@ -22,8 +22,7 @@ namespace carto {
                 if (expr->evaluate(context)) {
                     return rule->getStyle();
                 }
-            }
-            else {
+            } else {
                 return rule->getStyle();
             }
         }

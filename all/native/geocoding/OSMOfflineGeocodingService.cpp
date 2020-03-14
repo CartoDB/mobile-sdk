@@ -42,6 +42,14 @@ namespace carto {
         _geocoder->setLanguage(lang);
     }
 
+    int OSMOfflineGeocodingService::getMaxResults() const {
+        return _geocoder->getMaxResults();
+    }
+
+    void OSMOfflineGeocodingService::setMaxResults(int maxResults) {
+        _geocoder->setMaxResults(maxResults);
+    }
+
     std::vector<std::shared_ptr<GeocodingResult> > OSMOfflineGeocodingService::calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const {
         if (!request) {
             throw NullArgumentException("Null request");

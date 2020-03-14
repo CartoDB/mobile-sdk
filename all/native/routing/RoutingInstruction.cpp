@@ -131,6 +131,12 @@ namespace carto {
         case RoutingAction::ROUTING_ACTION_WAIT:
             actionName = "Wait";
             break;
+        case RoutingAction::ROUTING_ACTION_ENTER_FERRY:
+            actionName = "Enter ferry";
+            break;
+        case RoutingAction::ROUTING_ACTION_LEAVE_FERRY:
+            actionName = "Leave ferry";
+            break;
         }
 
         std::stringstream ss;

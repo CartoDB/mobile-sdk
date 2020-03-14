@@ -104,6 +104,20 @@ namespace carto {
          * @param renderOrder The new display order of the labels.
          */
         void setBuildingRenderOrder(VectorTileRenderOrder::VectorTileRenderOrder renderOrder);
+
+        /**
+         * Returns the click radius of vector tile features.
+         * Units are screen density independent pixels (DP or DIP).
+         * @return The click radius of vector tile features.
+         */
+        float getClickRadius() const;
+        /**
+         * Sets the click radius of vector tile features.
+         * The click radius is applied as an extra buffer to the vector tile features to make clicking on small features less sensitive.
+         * Units are screen density independent pixels (DP or DIP).
+         * @param radius The new click radius of vector tile features. The default value is 4.
+         */
+        void setClickRadius(float radius);
     
         /**
          * Returns the vector tile event listener.
@@ -214,6 +228,7 @@ namespace carto {
 
         VectorTileRenderOrder::VectorTileRenderOrder _labelRenderOrder;
         VectorTileRenderOrder::VectorTileRenderOrder _buildingRenderOrder;
+        float _clickRadius;
     
         const std::shared_ptr<VectorTileDecoder> _tileDecoder;
         std::shared_ptr<TileDecoderListener> _tileDecoderListener;

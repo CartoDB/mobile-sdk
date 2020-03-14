@@ -15,6 +15,7 @@
 #include <memory>
 #include <mutex>
 #include <vector>
+#include <map>
 
 namespace carto {
     class Projection;
@@ -44,13 +45,57 @@ namespace carto {
         const std::vector<MapPos>& getPoints() const;
 
         /**
+         * Returns the set of given point parameters as a variant.
+         * @return The set of given point parameters as a variant. Can be empty.
+         */
+        Variant getPointParameters(int index) const;
+        /**
+         * Returns the parameter value for the given routing point.
+         * @param index The routing point index.
+         * @param param The name of the parameter.
+         * @return The value of the specified parameter of the given routing point. If the parameter does not exist, empty variant is returned.
+         */
+        Variant getPointParameter(int index, const std::string& param) const;
+        /**
+         * Sets the parameter value for the given routing point.
+         * This is currently supported by Valhalla routing engine and can be used to specify initial or final heading, for example.
+         * In addition to Valhalla, SGRE routing engine supports 'geometry_tag_filter' parameter for specifying how to filter matching edges.
+         * @param index The routing point index.
+         * @param param The name of the parameter to set.
+         * @param value The new value for the parameter of the given routing point.
+         */
+        void setPointParameter(int index, const std::string& param, const Variant& value);
+
+        /**
+         * Returns the set of custom parameters of the request as a variant.
+         * @return The set of custom parameters as a variant. Can be empty.
+         */
+        Variant getCustomParameters() const;
+        /**
+         * Returns the custom parameter value of the request.
+         * @param param The name of the parameter to return.
+         * @return The value of the parameter. If the parameter does not exist, empty variant is returned.
+         */
+        Variant getCustomParameter(const std::string& param) const;
+        /**
+         * Sets a custom parameter value for the the request.
+         * @param param The name of the parameter. For example, "trace_options.search_radius".
+         * @param value The new value for the parameter.
+         */
+        void setCustomParameter(const std::string& param, const Variant& value);
+
+        /**
          * Returns the geometry tag filter list of the request.
+         * This method is now deprecated, getPointParameter method should be used instead.
          * @return The geometry tag filter list of the request.
+         * @deprecated
          */
         std::vector<Variant> getGeometryTagFilters() const;
         /**
          * Sets the geometry tag filter list for the request.
+         * This method is now deprecated, setPointParameter method should be used instead.
          * @param filters The new filter list for the request.
+         * @deprecated
          */
         void setGeometryTagFilters(const std::vector<Variant>& filters);
 
@@ -63,8 +108,9 @@ namespace carto {
     private:
         const std::shared_ptr<Projection> _projection;
         const std::vector<MapPos> _points;
+        std::map<int, Variant> _pointParams;
+        Variant _customParams;
 
-        std::vector<Variant> _filters;
         mutable std::mutex _mutex;
     };
     

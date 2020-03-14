@@ -107,7 +107,8 @@ namespace carto {
         try {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             _cache.clear(); // forces all elements to be removed, but can be slow
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("PersistentCacheTileDataSource::clear: Failed to clear cache: %s", ex.what());
         }
     }
@@ -125,7 +126,8 @@ namespace carto {
     void PersistentCacheTileDataSource::openDatabase(const std::string& databasePath) {
         try {
             _database.reset(new sqlite3pp::database(databasePath.c_str()));
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("PersistentCacheTileDataSource::openDatabase: Failed to connect to database: %s", ex.what());
             _database.reset();
             return;
@@ -148,7 +150,8 @@ namespace carto {
                     query2.finish();
                 }
                 query1.finish();
-            } catch (const std::exception&) {
+            }
+            catch (const std::exception&) {
                 Log::Info("PersistentCacheTileDataSource::openDatabase: Reinitializing database");
                 sqlite3pp::command command(*_database, "DROP TABLE IF EXISTS persistent_cache");
                 command.execute();
@@ -158,7 +161,8 @@ namespace carto {
             sqlite3pp::command command3(*_database, "CREATE TABLE IF NOT EXISTS persistent_cache(tileId INTEGER NOT NULL PRIMARY KEY, compressed BLOB, time INTEGER, expirationTime INTEGER)");
             command3.execute();
             command3.finish();
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("PersistentCacheTileDataSource::openDatabase: Failed to initialize database: %s", ex.what());
             _database.reset();
             return;
@@ -175,7 +179,8 @@ namespace carto {
                 Log::Error("PersistentCacheTileDataSource::closeDatabase: Failed to close database");
             }
             _database.reset();
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("PersistentCacheTileDataSource::closeDatabase: Failed to close database: %s", ex.what());
             _database.reset();
         }
@@ -197,7 +202,8 @@ namespace carto {
                 _cache.put(tileId, createTileId(tileId), tileSize);
             }
             query.finish();
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("PersistentCacheTileDataSource::loadTileInfo: Failed to query tile set from the database: %s", ex.what());
         }
     }
@@ -231,7 +237,8 @@ namespace carto {
                 tileData->setMaxAge(maxAge > 0 ? maxAge : 0);
             }
             return tileData;
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("PersistentCacheTileDataSource::get: Failed to query tile data from the database: %s", ex.what());
             return std::shared_ptr<TileData>();
         }
@@ -257,7 +264,8 @@ namespace carto {
             command.bind(":expirationTime", static_cast<std::uint64_t>(expirationTime));
             command.execute();
             command.finish();
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("PersistentCacheTileDataSource::store: Failed to store tile data in the database: %s", ex.what());
         }
     }
@@ -272,7 +280,8 @@ namespace carto {
             command.bind(":tileId", static_cast<std::uint64_t>(tileId));
             command.execute();
             command.finish();
-        } catch (const std::exception& ex) {
+        }
+        catch (const std::exception& ex) {
             Log::Errorf("PersistentCacheTileDataSource::remove: Failed to remove tile from the database: %s", ex.what());
         }
     }

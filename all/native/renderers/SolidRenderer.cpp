@@ -77,6 +77,7 @@ namespace carto {
         glUniform1i(_u_tex, 0);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, _bitmapTex->getTexId());
+
         float alpha = _color.getA() / 255.0f;
         glUniform4f(_u_color, _color.getR() * alpha / 255.0f, _color.getG() * alpha / 255.0f, _color.getB() * alpha / 255.0f, alpha);
         // Coords, texCoords, colors

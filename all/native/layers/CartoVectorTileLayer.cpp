@@ -1,5 +1,5 @@
 #include "CartoVectorTileLayer.h"
-#include "assets/CartoStylesV1ZIP.h"
+#include "assets/CartoStylesV2ZIP.h"
 #include "core/BinaryData.h"
 #include "components/Exceptions.h"
 #include "styles/CompiledStyleSet.h"
@@ -7,6 +7,8 @@
 #include "utils/AssetPackage.h"
 #include "utils/ZippedAssetPackage.h"
 #include "utils/Log.h"
+
+#include <boost/lexical_cast.hpp>
 
 namespace carto {
     
@@ -53,6 +55,32 @@ namespace carto {
             tileDecoder->setStyleParameter("fallback_lang", lang);
         }
     }
+
+    CartoBaseMapPOIRenderMode::CartoBaseMapPOIRenderMode CartoVectorTileLayer::getPOIRenderMode() const {
+        if (auto tileDecoder = std::dynamic_pointer_cast<MBVectorTileDecoder>(getTileDecoder())) {
+            return static_cast<CartoBaseMapPOIRenderMode::CartoBaseMapPOIRenderMode>(boost::lexical_cast<int>(tileDecoder->getStyleParameter("icons")));
+        }
+        return CartoBaseMapPOIRenderMode::CARTO_BASEMAP_POI_RENDER_MODE_NONE;
+    }
+
+    void CartoVectorTileLayer::setPOIRenderMode(CartoBaseMapPOIRenderMode::CartoBaseMapPOIRenderMode renderMode) {
+        if (auto tileDecoder = std::dynamic_pointer_cast<MBVectorTileDecoder>(getTileDecoder())) {
+            tileDecoder->setStyleParameter("pois", boost::lexical_cast<std::string>(static_cast<int>(renderMode)));
+        }
+    }
+    
+    CartoBaseMapBuildingRenderMode::CartoBaseMapBuildingRenderMode CartoVectorTileLayer::getBuildingRenderMode() const {
+        if (auto tileDecoder = std::dynamic_pointer_cast<MBVectorTileDecoder>(getTileDecoder())) {
+            return static_cast<CartoBaseMapBuildingRenderMode::CartoBaseMapBuildingRenderMode>(boost::lexical_cast<int>(tileDecoder->getStyleParameter("pois")));
+        }
+        return CartoBaseMapBuildingRenderMode::CARTO_BASEMAP_BUILDING_RENDER_MODE_NONE;
+    }
+
+    void CartoVectorTileLayer::setBuildingRenderMode(CartoBaseMapBuildingRenderMode::CartoBaseMapBuildingRenderMode renderMode) {
+        if (auto tileDecoder = std::dynamic_pointer_cast<MBVectorTileDecoder>(getTileDecoder())) {
+            tileDecoder->setStyleParameter("buildings", boost::lexical_cast<std::string>(static_cast<int>(renderMode)));
+        }
+    }
     
     std::shared_ptr<VectorTileDecoder> CartoVectorTileLayer::CreateTileDecoder(CartoBaseMapStyle::CartoBaseMapStyle style) {
         return std::make_shared<MBVectorTileDecoder>(std::make_shared<CompiledStyleSet>(CreateStyleAssetPackage(), GetStyleName(style)));
@@ -73,7 +101,7 @@ namespace carto {
     }
 
     std::shared_ptr<AssetPackage> CartoVectorTileLayer::CreateStyleAssetPackage() {
-        auto styleAsset = std::make_shared<BinaryData>(cartostyles_v1_zip, cartostyles_v1_zip_len);
+        auto styleAsset = std::make_shared<BinaryData>(cartostyles_v2_zip, cartostyles_v2_zip_len);
         return std::make_shared<ZippedAssetPackage>(styleAsset);
     }
 

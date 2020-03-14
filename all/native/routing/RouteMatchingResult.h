@@ -10,6 +10,8 @@
 #ifdef _CARTO_ROUTING_SUPPORT
 
 #include "core/MapPos.h"
+#include "routing/RouteMatchingPoint.h"
+#include "routing/RouteMatchingEdge.h"
 
 #include <memory>
 #include <vector>
@@ -25,9 +27,10 @@ namespace carto {
         /**
          * Constructs a new RouteMatchingResult instance from projection and matched points.
          * @param projection The projection of the routing result (same as the request).
-         * @param points The points corresponding to the requested points snapped to road network.
+         * @param matchingPoints The matched points corresponding to the requested points snapped to road network.
+         * @param matchingEdges The matched edges that are referenced through matching points.
          */
-        RouteMatchingResult(const std::shared_ptr<Projection>& projection, const std::vector<MapPos>& points);
+        RouteMatchingResult(const std::shared_ptr<Projection>& projection, const std::vector<RouteMatchingPoint>& matchingPoints, const std::vector<RouteMatchingEdge>& matchingEdges);
         virtual ~RouteMatchingResult();
 
         /**
@@ -39,7 +42,17 @@ namespace carto {
          * Returns the point list of the result. The list contains all the points from the request snapped to the road network.
          * @return The point list of the result.
          */
-        const std::vector<MapPos>& getPoints() const;
+        std::vector<MapPos> getPoints() const;
+        /**
+         * Returns the list with details of the matched edges.
+         * @return The list with details of the matched edges.
+         */
+        const std::vector<RouteMatchingEdge>& getMatchingEdges() const;
+        /**
+         * Returns the list with details of the matched points.
+         * @return The list with details of the matched points.
+         */
+        const std::vector<RouteMatchingPoint>& getMatchingPoints() const;
 
         /**
          * Creates a string representation of this result object, useful for logging.
@@ -49,7 +62,8 @@ namespace carto {
         
     private:
         std::shared_ptr<Projection> _projection;
-        std::vector<MapPos> _points;
+        std::vector<RouteMatchingPoint> _matchingPoints;
+        std::vector<RouteMatchingEdge> _matchingEdges;
     };
     
 }

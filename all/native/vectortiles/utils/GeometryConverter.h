@@ -52,32 +52,27 @@ namespace carto {
             std::transform(poses.begin(), poses.end(), std::back_inserter(points), [](const MapPos& pos) { return std::make_shared<PointGeometry>(pos); });
             if (points.size() == 1) {
                 return points.front();
-            }
-            else {
+            } else {
                 return std::make_shared<MultiPointGeometry>(points);
             }
-        }
-        else if (auto mvtLine = std::dynamic_pointer_cast<const mvt::LineGeometry>(mvtGeometry)) {
+        } else if (auto mvtLine = std::dynamic_pointer_cast<const mvt::LineGeometry>(mvtGeometry)) {
             std::vector<std::vector<MapPos>> posesList = convertPointsList(convertFn, mvtLine->getVerticesList());
             std::vector<std::shared_ptr<LineGeometry> > lines;
             lines.reserve(posesList.size());
             std::transform(posesList.begin(), posesList.end(), std::back_inserter(lines), [](const std::vector<MapPos>& poses) { return std::make_shared<LineGeometry>(poses); });
             if (lines.size() == 1) {
                 return lines.front();
-            }
-            else {
+            } else {
                 return std::make_shared<MultiLineGeometry>(lines);
             }
-        }
-        else if (auto mvtPolygon = std::dynamic_pointer_cast<const mvt::PolygonGeometry>(mvtGeometry)) {
+        } else if (auto mvtPolygon = std::dynamic_pointer_cast<const mvt::PolygonGeometry>(mvtGeometry)) {
             std::vector<std::vector<std::vector<MapPos> > > posesLists = convertPointsLists(convertFn, mvtPolygon->getPolygonList());
             std::vector<std::shared_ptr<PolygonGeometry> > polygons;
             polygons.reserve(posesLists.size());
             std::transform(posesLists.begin(), posesLists.end(), std::back_inserter(polygons), [](const std::vector<std::vector<MapPos> >& posesList) { return std::make_shared<PolygonGeometry>(posesList); });
             if (polygons.size() == 1) {
                 return polygons.front();
-            }
-            else {
+            } else {
                 return std::make_shared<MultiPolygonGeometry>(polygons);
             }
         }

@@ -17,12 +17,23 @@ namespace carto {
         _apiKey(apiKey),
         _autocomplete(false),
         _language(),
+        _maxResults(10),
         _serviceURL(),
         _mutex()
     {
     }
 
     TomTomOnlineGeocodingService::~TomTomOnlineGeocodingService() {
+    }
+
+    std::string TomTomOnlineGeocodingService::getCustomServiceURL() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _serviceURL;
+    }
+
+    void TomTomOnlineGeocodingService::setCustomServiceURL(const std::string& serviceURL) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _serviceURL = serviceURL;
     }
 
     bool TomTomOnlineGeocodingService::isAutocomplete() const {
@@ -45,14 +56,14 @@ namespace carto {
         _language = lang;
     }
 
-    std::string TomTomOnlineGeocodingService::getCustomServiceURL() const {
+    int TomTomOnlineGeocodingService::getMaxResults() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return _serviceURL;
+        return _maxResults;
     }
 
-    void TomTomOnlineGeocodingService::setCustomServiceURL(const std::string& serviceURL) {
+    void TomTomOnlineGeocodingService::setMaxResults(int maxResults) {
         std::lock_guard<std::mutex> lock(_mutex);
-        _serviceURL = serviceURL;
+        _maxResults = maxResults;
     }
 
     std::vector<std::shared_ptr<GeocodingResult> > TomTomOnlineGeocodingService::calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const {
@@ -91,23 +102,17 @@ namespace carto {
             if (!_language.empty()) {
                 params["language"] = _language;
             }
+
+            params["limit"] = boost::lexical_cast<std::string>(std::max(1, std::min(100, _maxResults)));
         }
 
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
         Log::Debugf("TomTomOnlineGeocodingService::calculateAddresses: Loading %s", url.c_str());
 
-        std::shared_ptr<BinaryData> responseData;
-        if (!NetworkUtils::GetHTTP(url, responseData, Log::IsShowDebug())) {
+        std::string responseString;
+        if (!NetworkUtils::GetHTTP(url, responseString, Log::IsShowDebug())) {
             throw NetworkException("Failed to fetch response");
         }
-
-        std::string responseString;
-        if (responseData) {
-            responseString = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
-        } else {
-            throw GenericException("Empty response");
-        }
-
         return TomTomGeocodingProxy::ReadResponse(responseString, request->getProjection());
     }
 

@@ -53,8 +53,8 @@ namespace carto {
         void setId(long long id);
     
         /**
-         * Returns a copy of the meta data map. The changes you make to this map are NOT reflected in the actual meta data of the element.
-         * @return A copy of the meta data map.
+         * Returns a copy of the vector element meta data map. The changes you make to this map are NOT reflected in the actual meta data of the element.
+         * @return A copy of the vector element meta data map.
          */
         std::map<std::string, Variant> getMetaData() const;
         /**
@@ -64,15 +64,15 @@ namespace carto {
         void setMetaData(const std::map<std::string, Variant>& metaData);
         
         /** 
-         * Returns true if the specified key exists in the element meta data.
-         * @param key The key to use.
-         * @return True if the meta data element exists.
+         * Returns true if the specified key exists in the vector element meta data map.
+         * @param key The key to check.
+         * @return True if the vector element meta data element exists.
          */
         bool containsMetaDataKey(const std::string& key) const;
         /** 
          * Returns a meta data element corresponding to the key. If no value is found null variant is returned.
          * @param key The key to use.
-         * @return The value corresponding to the key from the meta data map. May be null.
+         * @return The value corresponding to the key from the meta data map. If the key does not exists, empty variant is returned.
          */
         Variant getMetaDataElement(const std::string& key) const;
         /**

@@ -391,8 +391,7 @@ namespace carto {
 #endif
                     auto dataSource = std::make_shared<MemoryCacheTileDataSource>(baseDataSource); // in memory cache allows to change style quickly
                     tileLayer = std::make_shared<VectorTileLayer>(dataSource, vectorTileDecoder);
-                }
-                else {
+                } else {
                     auto dataSource = std::make_shared<HTTPTileDataSource>(minZoom, maxZoom, urlTemplateBase + "/{z}/{x}/{y}.png" + urlTemplateSuffix);
                     tileLayer = std::make_shared<RasterTileLayer>(dataSource);
                 }

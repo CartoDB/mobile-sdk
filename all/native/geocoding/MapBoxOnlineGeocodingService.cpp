@@ -12,6 +12,7 @@
 #include "utils/Log.h"
 
 #include <cmath>
+#include <algorithm>
 
 #include <boost/lexical_cast.hpp>
 
@@ -21,12 +22,23 @@ namespace carto {
         _accessToken(accessToken),
         _autocomplete(false),
         _language(),
+        _maxResults(10),
         _serviceURL(),
         _mutex()
     {
     }
 
     MapBoxOnlineGeocodingService::~MapBoxOnlineGeocodingService() {
+    }
+
+    std::string MapBoxOnlineGeocodingService::getCustomServiceURL() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _serviceURL;
+    }
+
+    void MapBoxOnlineGeocodingService::setCustomServiceURL(const std::string& serviceURL) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _serviceURL = serviceURL;
     }
 
     bool MapBoxOnlineGeocodingService::isAutocomplete() const {
@@ -49,14 +61,14 @@ namespace carto {
         _language = lang;
     }
 
-    std::string MapBoxOnlineGeocodingService::getCustomServiceURL() const {
+    int MapBoxOnlineGeocodingService::getMaxResults() const {
         std::lock_guard<std::mutex> lock(_mutex);
-        return _serviceURL;
+        return _maxResults;
     }
 
-    void MapBoxOnlineGeocodingService::setCustomServiceURL(const std::string& serviceURL) {
+    void MapBoxOnlineGeocodingService::setMaxResults(int maxResults) {
         std::lock_guard<std::mutex> lock(_mutex);
-        _serviceURL = serviceURL;
+        _maxResults = maxResults;
     }
 
     std::vector<std::shared_ptr<GeocodingResult> > MapBoxOnlineGeocodingService::calculateAddresses(const std::shared_ptr<GeocodingRequest>& request) const {
@@ -84,6 +96,8 @@ namespace carto {
             if (!_language.empty()) {
                 params["language"] = _language;
             }
+
+            params["limit"] = boost::lexical_cast<std::string>(std::max(1, std::min(10, _maxResults)));
         }
 
         if (request->isLocationDefined()) {
@@ -106,18 +120,10 @@ namespace carto {
         std::string url = NetworkUtils::BuildURLFromParameters(baseURL, params);
         Log::Debugf("MapBoxOnlineGeocodingService::calculateAddresses: Loading %s", url.c_str());
 
-        std::shared_ptr<BinaryData> responseData;
-        if (!NetworkUtils::GetHTTP(url, responseData, Log::IsShowDebug())) {
+        std::string responseString;
+        if (!NetworkUtils::GetHTTP(url, responseString, Log::IsShowDebug())) {
             throw NetworkException("Failed to fetch response");
         }
-
-        std::string responseString;
-        if (responseData) {
-            responseString = std::string(reinterpret_cast<const char*>(responseData->data()), responseData->size());
-        } else {
-            throw GenericException("Empty response");
-        }
-
         return MapBoxGeocodingProxy::ReadResponse(responseString, request->getProjection());
     }
 

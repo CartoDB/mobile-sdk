@@ -82,8 +82,7 @@ namespace carto {
         if (frameBuffer) {
             if (std::this_thread::get_id() == _glThreadId) {
                 frameBuffer->destroy();
-            }
-            else {
+            } else {
                 if (frameBuffer->_fboId != 0) {
                     _deleteFBOIdQueue.push_back(frameBuffer->_fboId);
                 }
