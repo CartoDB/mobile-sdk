@@ -13,6 +13,7 @@
 #include "utils/Const.h"
 
 #include <vt/Label.h>
+#include <vt/LabelCuller.h>
 #include <vt/TileTransformer.h>
 #include <vt/GLTileRenderer.h>
 #include <vt/GLExtensions.h>
@@ -142,7 +143,9 @@ namespace carto {
 
         if (_firstDraw) {
             _glRenderer->setVisibleTiles(_tiles, _horizontalLayerOffset == 0);
-            _glRenderer->cullLabels(vt::ViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution()));
+            vt::LabelCuller culler(Const::WORLD_SIZE);
+            culler.setViewState(vt::ViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution()));
+            _glRenderer->cullLabels(culler);
             _firstDraw = false;
         }
 
@@ -233,7 +236,10 @@ namespace carto {
         if (!glRenderer) {
             return false;
         }
-        glRenderer->cullLabels(vt::ViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution()));
+
+        vt::LabelCuller culler(Const::WORLD_SIZE);
+        culler.setViewState(vt::ViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution()));
+        glRenderer->cullLabels(culler);
         return true;
     }
     
