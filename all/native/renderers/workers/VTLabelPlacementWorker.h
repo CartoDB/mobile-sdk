@@ -4,12 +4,10 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_BILLBOARDPLACEMENTWORKER_H_
-#define _CARTO_BILLBOARDPLACEMENTWORKER_H_
+#ifndef _CARTO_VTLABELPLACEMENTWORKER_H_
+#define _CARTO_VTLABELPLACEMENTWORKER_H_
 
 #include "components/ThreadWorker.h"
-#include "core/MapEnvelope.h"
-#include "geometry/utils/KDTreeSpatialIndex.h"
 
 #include <chrono>
 #include <condition_variable>
@@ -17,18 +15,17 @@
 #include <mutex>
 
 namespace carto {
-    class Billboard;
-    class BillboardDrawData;
+    class Layer;
     class MapRenderer;
     
-    class BillboardPlacementWorker : public ThreadWorker {
+    class VTLabelPlacementWorker : public ThreadWorker {
     public:
-        BillboardPlacementWorker();
-        virtual ~BillboardPlacementWorker();
+        VTLabelPlacementWorker();
+        virtual ~VTLabelPlacementWorker();
         
-        void setComponents(const std::weak_ptr<MapRenderer>& mapRenderer, const std::shared_ptr<BillboardPlacementWorker>& worker);
+        void setComponents(const std::weak_ptr<MapRenderer>& mapRenderer, const std::shared_ptr<VTLabelPlacementWorker>& worker);
         
-        void init(int delayTime);
+        void init(const std::shared_ptr<Layer>& layer, int delayTime);
         
         void stop();
         
@@ -39,18 +36,16 @@ namespace carto {
     private:
         void run();
         
-        bool calculateBillboardPlacement();
+        bool calculateVTLabelPlacement();
         
         bool _stop;
         bool _idle;
-        
-        KDTreeSpatialIndex<MapEnvelope> _kdTree;
         
         bool _pendingWakeup;
         std::chrono::steady_clock::time_point _wakeupTime;
         
         std::weak_ptr<MapRenderer> _mapRenderer;
-        std::shared_ptr<BillboardPlacementWorker> _worker;
+        std::shared_ptr<VTLabelPlacementWorker> _worker;
     
         std::condition_variable _condition;
         mutable std::mutex _mutex;

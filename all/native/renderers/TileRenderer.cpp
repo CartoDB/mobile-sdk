@@ -13,6 +13,7 @@
 #include "utils/Const.h"
 
 #include <vt/Label.h>
+#include <vt/LabelCuller.h>
 #include <vt/TileTransformer.h>
 #include <vt/GLTileRenderer.h>
 #include <vt/GLExtensions.h>
@@ -40,7 +41,6 @@ namespace carto {
         _mapRenderer(mapRenderer),
         _tileTransformer(tileTransformer),
         _glRenderer(),
-        _firstDraw(false),
         _interactionMode(false),
         _subTileBlending(true),
         _labelOrder(0),
@@ -122,7 +122,6 @@ namespace carto {
             new vt::GLTileRenderer(std::make_shared<vt::GLExtensions>(), _tileTransformer, lightingShader2D, lightingShader3D, Const::WORLD_SIZE), glRendererDeleter
         );
         _glRenderer->initializeRenderer();
-        _firstDraw = true;
         _horizontalLayerOffset = 0;
         _tiles.clear();
         GLContext::CheckGLError("TileRenderer::onSurfaceCreated");
@@ -139,12 +138,6 @@ namespace carto {
         _glRenderer->setViewState(vt::ViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution()));
         _glRenderer->setInteractionMode(_interactionMode);
         _glRenderer->setSubTileBlending(_subTileBlending);
-
-        if (_firstDraw) {
-            _glRenderer->setVisibleTiles(_tiles, _horizontalLayerOffset == 0);
-            _glRenderer->cullLabels(vt::ViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution()));
-            _firstDraw = false;
-        }
 
         _viewDir = cglib::unit(viewState.getFocusPosNormal());
         if (auto options = _options.lock()) {
@@ -218,22 +211,21 @@ namespace carto {
         _glRenderer.reset();
     }
     
-    bool TileRenderer::cullLabels(const ViewState& viewState) {
+    bool TileRenderer::cullLabels(vt::LabelCuller& culler, const ViewState& viewState) {
         std::shared_ptr<vt::GLTileRenderer> glRenderer;
         cglib::mat4x4<double> modelViewMat;
         {
             std::lock_guard<std::mutex> lock(_mutex);
 
-            if (!_firstDraw) {
-                glRenderer = _glRenderer;
-            }
+            glRenderer = _glRenderer;
             modelViewMat = viewState.getModelviewMat() * cglib::translate4_matrix(cglib::vec3<double>(_horizontalLayerOffset, 0, 0));
         }
 
         if (!glRenderer) {
             return false;
         }
-        glRenderer->cullLabels(vt::ViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution()));
+        culler.setViewState(vt::ViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution()));
+        glRenderer->cullLabels(culler);
         return true;
     }
     
@@ -251,9 +243,7 @@ namespace carto {
 
         bool changed = (tiles != _tiles) || (_horizontalLayerOffset != 0);
         if (changed) {
-            if (!_firstDraw) {
-                _glRenderer->setVisibleTiles(tiles, _horizontalLayerOffset == 0);
-            }
+            _glRenderer->setVisibleTiles(tiles, _horizontalLayerOffset == 0);
             _tiles = std::move(tiles);
             _horizontalLayerOffset = 0;
         }

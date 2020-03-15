@@ -25,8 +25,7 @@ namespace carto {
     BillboardPlacementWorker::~BillboardPlacementWorker() {
     }
         
-    void BillboardPlacementWorker::setComponents(const std::weak_ptr<MapRenderer>& mapRenderer, const std::shared_ptr<BillboardPlacementWorker>& worker)
-    {
+    void BillboardPlacementWorker::setComponents(const std::weak_ptr<MapRenderer>& mapRenderer, const std::shared_ptr<BillboardPlacementWorker>& worker) {
         _mapRenderer = mapRenderer;
         // When the map component gets destroyed all threads get detatched. Detatched threads need their worker objects to be alive,
         // so worker objects need to keep references to themselves, until the loop finishes.

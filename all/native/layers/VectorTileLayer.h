@@ -23,6 +23,7 @@
 namespace carto {
     class TileDrawData;
     class VectorTileEventListener;
+    class VTLabelPlacementWorker;
     namespace vt {
         class Tile;
     }
@@ -131,6 +132,8 @@ namespace carto {
         void setVectorTileEventListener(const std::shared_ptr<VectorTileEventListener>& eventListener);
     
     protected:
+        friend class VTLabelPlacementWorker;
+
         virtual bool tileExists(const MapTile& mapTile, bool preloadingCache) const;
         virtual bool tileValid(const MapTile& mapTile, bool preloadingCache) const;
         virtual void fetchTile(const MapTile& mapTile, bool preloadingTile, bool invalidated);
@@ -186,19 +189,6 @@ namespace carto {
             virtual bool loadTile(const std::shared_ptr<TileLayer>& tileLayer);
         };
         
-        class LabelCullTask : public CancelableTask {
-        public:
-            LabelCullTask(const std::shared_ptr<VectorTileLayer>& layer, const std::shared_ptr<TileRenderer>& tileRenderer, const ViewState& viewState);
-            
-            virtual void cancel();
-            virtual void run();
-    
-        private:
-            std::weak_ptr<VectorTileLayer> _layer;
-            std::weak_ptr<TileRenderer> _tileRenderer;
-            ViewState _viewState;
-        };
-
         class TileInfo {
         public:
             TileInfo() : _tileBounds(), _tileData(), _tileMap() { }
@@ -239,8 +229,6 @@ namespace carto {
         mutable Color _skyGroundColor;
         mutable std::shared_ptr<Bitmap> _skyBitmap;
         mutable std::shared_ptr<vt::Tile> _poleTiles[2];
-
-        std::shared_ptr<CancelableThreadPool> _labelCullThreadPool;
 
         std::vector<long long> _visibleTileIds;
         std::vector<std::shared_ptr<TileDrawData> > _tempDrawDatas;

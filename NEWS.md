@@ -29,6 +29,7 @@ then binaries of the SDK are considerably larger on Android compared to SDK 4.2.
 ### Changes/fixes:
 
 * setGeometryTagFilters, getGeometryTagFilters methods in RoutingRequest are deprecated and will be removed in future versions. Instead use more general setPointParameter/getPointParameter methods with 'geometry_tag_filter' parameter name.
+* Labels from different VectorTileLayer instances that have 'allow-overlap' flag set to false no longer overlap each other. This changes previous behavior where each VectorTileLayer did not affect other layers.
 * SDK does not throw exception anymore when package manager device keys do not match, this fixes issues with TestFlight on iOS
 * Tweaked and optimized offline geocoder, mostly affects autocomplete mode
 * Better reporting of online Valhalla routing errors

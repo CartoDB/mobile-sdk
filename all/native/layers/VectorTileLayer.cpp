@@ -39,7 +39,6 @@ namespace carto {
         _skyGroundColor(0, 0, 0, 0),
         _skyBitmap(),
         _poleTiles(),
-        _labelCullThreadPool(std::make_shared<CancelableThreadPool>()),
         _visibleTileIds(),
         _tempDrawDatas(),
         _visibleCache(DEFAULT_VISIBLE_CACHE_SIZE),
@@ -49,14 +48,10 @@ namespace carto {
             throw NullArgumentException("Null decoder");
         }
 
-        _labelCullThreadPool->setPoolSize(1);
-
         setCullDelay(DEFAULT_CULL_DELAY);
     }
     
     VectorTileLayer::~VectorTileLayer() {
-        _labelCullThreadPool->cancelAll();
-        _labelCullThreadPool->deinit();
     }
     
     std::shared_ptr<VectorTileDecoder> VectorTileLayer::getTileDecoder() const {
@@ -261,8 +256,11 @@ namespace carto {
     
     void VectorTileLayer::refreshDrawData(const std::shared_ptr<CullState>& cullState) {
         // Move tiles between caches
+        std::shared_ptr<MapRenderer> mapRenderer;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+            mapRenderer = _mapRenderer.lock();
 
             // Get all tiles currently in the visible cache
             std::unordered_set<long long> lastVisibleCacheTiles = _visibleCache.keys();
@@ -286,8 +284,7 @@ namespace carto {
         }
         
         // Update renderer if needed, run culler
-        bool refresh = false;
-        bool cull = false;
+        bool tilesChanged = false;
         if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
             if (!(_synchronizedRefresh && _fetchingTiles.getVisibleCount() > 0)) {
                 std::vector<std::shared_ptr<TileDrawData>> drawDatas = _tempDrawDatas;
@@ -307,26 +304,25 @@ namespace carto {
                 }
                 
                 if (tileRenderer->refreshTiles(drawDatas)) {
-                    refresh = true;
-                    cull = true;
+                    tilesChanged = true;
                 }
             }
         }
     
+        bool updateLabels = tilesChanged;
         if (!_lastCullState || cullState->getViewState().getModelviewProjectionMat() != _lastCullState->getViewState().getModelviewProjectionMat()) {
-            cull = true;
+            updateLabels = true;
         }
     
-        if (cull) {
-            _labelCullThreadPool->cancelAll();
-            std::shared_ptr<CancelableTask> task = std::make_shared<LabelCullTask>(std::static_pointer_cast<VectorTileLayer>(shared_from_this()), getTileRenderer(), cullState->getViewState());
-            _labelCullThreadPool->execute(task);
+        if (mapRenderer) {
+            if (updateLabels) {
+                mapRenderer->vtLabelsChanged(shared_from_this(), false);
+            }
+            if (tilesChanged) {
+                mapRenderer->requestRedraw();
+            }
         }
     
-        if (refresh) {
-            redraw();
-        }
-
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             _visibleTileIds.clear();
@@ -636,29 +632,6 @@ namespace carto {
         }
         
         return refresh;
-    }
-        
-    VectorTileLayer::LabelCullTask::LabelCullTask(const std::shared_ptr<VectorTileLayer>& layer, const std::shared_ptr<TileRenderer>& tileRenderer, const ViewState& viewState) :
-        _layer(layer),
-        _tileRenderer(tileRenderer),
-        _viewState(viewState)
-    {
-    }
-        
-    void VectorTileLayer::LabelCullTask::cancel() {
-    }
-        
-    void VectorTileLayer::LabelCullTask::run() {
-        std::shared_ptr<VectorTileLayer> layer = _layer.lock();
-        if (!layer) {
-            return;
-        }
-    
-        if (std::shared_ptr<TileRenderer> tileRenderer = _tileRenderer.lock()) {
-            if (tileRenderer->cullLabels(_viewState)) {
-                layer->redraw();
-            }
-        }
     }
 
     std::size_t VectorTileLayer::TileInfo::getSize() const {
