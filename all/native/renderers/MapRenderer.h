@@ -42,6 +42,7 @@ namespace carto {
     class Options;
     class ThreadWorker;
     class CullWorker;
+    class VTLabelPlacementWorker;
     class BillboardPlacementWorker;
     class FrameBuffer;
     class Shader;
@@ -107,6 +108,8 @@ namespace carto {
          * @param waitWhileUpdating If true, delay the capture until all asynchronous processes are finished (for example, until all tiles are loaded).
          */
         void captureRendering(const std::shared_ptr<RendererCaptureListener>& listener, bool waitWhileUpdating);
+
+        std::shared_ptr<Layers> getLayers() const;
         
         std::vector<std::shared_ptr<BillboardDrawData> > getBillboardDrawDatas() const;
     
@@ -134,6 +137,7 @@ namespace carto {
         void calculateRayIntersectedElements(const MapPos& targetPos, ViewState& viewState, std::vector<RayIntersectedElement>& results);
     
         void billboardsChanged();
+        void vtLabelsChanged(const std::shared_ptr<Layer>& layer, bool delay);
         void layerChanged(const std::shared_ptr<Layer>& layer, bool delay);
         void viewChanged(bool delay);
     
@@ -161,6 +165,7 @@ namespace carto {
         void handleRendererCaptureCallbacks();
 
         static const int BILLBOARD_PLACEMENT_TASK_DELAY;
+        static const int VT_LABEL_PLACEMENT_TASK_DELAY;
 
         static const int STYLE_TEXTURE_CACHE_SIZE; // Size limit (in bytes) for style texture cache
 
@@ -179,6 +184,9 @@ namespace carto {
     
         std::shared_ptr<CullWorker> _cullWorker;
         std::thread _cullThread;
+        
+        std::shared_ptr<VTLabelPlacementWorker> _vtLabelPlacementWorker;
+        std::thread _vtLabelPlacementThread;
         
         std::shared_ptr<OptionsListener> _optionsListener;
 

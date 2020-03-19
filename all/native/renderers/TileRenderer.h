@@ -31,6 +31,7 @@ namespace carto {
     class MapRenderer;
     class ViewState;
     namespace vt {
+        class LabelCuller;
         class TileTransformer;
         class GLTileRenderer;
     }
@@ -54,7 +55,7 @@ namespace carto {
         bool onDrawFrame3D(float deltaSeconds, const ViewState& viewState);
         void onSurfaceDestroyed();
     
-        bool cullLabels(const ViewState& viewState);
+        bool cullLabels(vt::LabelCuller& culler, const ViewState& viewState);
 
         bool refreshTiles(const std::vector<std::shared_ptr<TileDrawData> >& drawDatas);
 
@@ -69,7 +70,6 @@ namespace carto {
         std::weak_ptr<MapRenderer> _mapRenderer;
         std::shared_ptr<vt::TileTransformer> _tileTransformer;
         std::shared_ptr<vt::GLTileRenderer> _glRenderer;
-        bool _firstDraw;
         bool _interactionMode;
         bool _subTileBlending;
         int _labelOrder;

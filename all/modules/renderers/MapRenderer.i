@@ -29,6 +29,7 @@
 %ignore carto::MapRenderer::MapRenderer;
 %ignore carto::MapRenderer::init;
 %ignore carto::MapRenderer::deinit;
+%ignore carto::MapRenderer::getLayers;
 %ignore carto::MapRenderer::getBillboardDrawDatas;
 %ignore carto::MapRenderer::getProjectionSurface;
 %ignore carto::MapRenderer::getAnimationHandler;
@@ -49,6 +50,7 @@
 %ignore carto::MapRenderer::setZBuffering;
 %ignore carto::MapRenderer::calculateRayIntersectedElements;
 %ignore carto::MapRenderer::billboardsChanged;
+%ignore carto::MapRenderer::vtLabelsChanged;
 %ignore carto::MapRenderer::layerChanged;
 %ignore carto::MapRenderer::viewChanged;
 %ignore carto::MapRenderer::registerOnChangeListener;

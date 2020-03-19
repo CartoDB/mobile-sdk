@@ -27,6 +27,7 @@
 #include "renderers/cameraevents/CameraTiltEvent.h"
 #include "renderers/cameraevents/CameraZoomEvent.h"
 #include "renderers/workers/BillboardPlacementWorker.h"
+#include "renderers/workers/VTLabelPlacementWorker.h"
 #include "renderers/workers/CullWorker.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
@@ -45,6 +46,8 @@ namespace carto {
         _styleCache(),
         _cullWorker(std::make_shared<CullWorker>()),
         _cullThread(),
+        _vtLabelPlacementWorker(std::make_shared<VTLabelPlacementWorker>()),
+        _vtLabelPlacementThread(),
         _optionsListener(),
         _currentBoundFBOs(),
         _screenFrameBuffer(),
@@ -83,6 +86,9 @@ namespace carto {
         _cullWorker->setComponents(shared_from_this(), _cullWorker);
         _cullThread = std::thread(std::ref(*_cullWorker));
 
+        _vtLabelPlacementWorker->setComponents(shared_from_this(), _vtLabelPlacementWorker);
+        _vtLabelPlacementThread = std::thread(std::ref(*_vtLabelPlacementWorker));
+
         _billboardPlacementWorker->setComponents(shared_from_this(), _billboardPlacementWorker);
         _billboardPlacementThread = std::thread(std::ref(*_billboardPlacementWorker));
         
@@ -96,6 +102,9 @@ namespace carto {
         
         _cullWorker->stop();
         _cullThread.detach();
+
+        _vtLabelPlacementWorker->stop();
+        _vtLabelPlacementThread.detach();
         
         _billboardPlacementWorker->stop();
         _billboardPlacementThread.detach();
@@ -152,6 +161,11 @@ namespace carto {
             _rendererCaptureListeners.push_back(std::make_pair(DirectorPtr<RendererCaptureListener>(listener), waitWhileUpdating));
         }
         requestRedraw();
+    }
+
+    std::shared_ptr<Layers> MapRenderer::getLayers() const {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        return _layers;
     }
 
     std::vector<std::shared_ptr<BillboardDrawData> > MapRenderer::getBillboardDrawDatas() const {
@@ -775,7 +789,11 @@ namespace carto {
     void MapRenderer::billboardsChanged() {
         _billboardsChanged = true;
     }
-        
+
+    void MapRenderer::vtLabelsChanged(const std::shared_ptr<Layer>& layer, bool delay) {
+        _vtLabelPlacementWorker->init(layer, delay ? VT_LABEL_PLACEMENT_TASK_DELAY : 0);
+    }
+    
     void MapRenderer::layerChanged(const std::shared_ptr<Layer>& layer, bool delay) {
         // If screen size has been set, load the layers, otherwise wait for the onSurfaceChanged method
         // which will also start the cull worker
@@ -963,7 +981,7 @@ namespace carto {
                         break;
                     }
                 }
-                if (_redrawPending || layersUpdating || !_cullWorker->isIdle() || !_billboardPlacementWorker->isIdle()) {
+                if (_redrawPending || layersUpdating || !_cullWorker->isIdle() || !_billboardPlacementWorker->isIdle() || !_vtLabelPlacementWorker->isIdle()) {
                     std::lock_guard<std::mutex> lock(_rendererCaptureListenersMutex);
                     _rendererCaptureListeners.push_back(rendererCaptureListeners[i]);
                     callbacksPending = true;
@@ -1032,6 +1050,8 @@ namespace carto {
     }
 
     const int MapRenderer::BILLBOARD_PLACEMENT_TASK_DELAY = 200;
+
+    const int MapRenderer::VT_LABEL_PLACEMENT_TASK_DELAY = 200;
 
     const int MapRenderer::STYLE_TEXTURE_CACHE_SIZE = 8 * 1024 * 1024;
 
