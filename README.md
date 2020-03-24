@@ -57,19 +57,19 @@ python swigpp-java.py --profile standard
 python build-android.py --profile standard
 ```
 
-## iOS build:
+## iOS build
 ```
 python swigpp-objc.py --profile standard
 python build-ios.py --profile standard
 ```
 
-## Xamarin Android build:
+## Xamarin Android build
 ```
 python swigpp-csharp.py --profile standard android
 python build-xamarin.py --profile standard android
 ```
 
-## Xamarin iOS build:
+## Xamarin iOS build
 ```
 python swigpp-csharp.py --profile standard ios
 python build-xamarin.py --profile standard ios
