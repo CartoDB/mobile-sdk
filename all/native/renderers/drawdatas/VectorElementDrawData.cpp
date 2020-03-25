@@ -14,9 +14,13 @@ namespace carto {
     }
 
     Color VectorElementDrawData::GetPremultipliedColor(const Color& color) {
-        return Color(static_cast<unsigned char>(static_cast<unsigned int>(color.getR()) * color.getA() / 255),
-                     static_cast<unsigned char>(static_cast<unsigned int>(color.getG()) * color.getA() / 255),
-                     static_cast<unsigned char>(static_cast<unsigned int>(color.getB()) * color.getA() / 255),
+        unsigned int alpha = color.getA();
+        if (alpha == 255) {
+            return color;
+        }
+        return Color(static_cast<unsigned char>(color.getR() * alpha / 255),
+                     static_cast<unsigned char>(color.getG() * alpha / 255),
+                     static_cast<unsigned char>(color.getB() * alpha / 255),
                      color.getA());
     }
     
