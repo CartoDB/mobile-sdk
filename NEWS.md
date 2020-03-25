@@ -15,6 +15,7 @@ then binaries of the SDK are considerably larger on Android compared to SDK 4.2.
 * Support for rendering basemap Point-of-Interests, API for directly controlling POI/building rendering mode (setPOIRenderMode/getPOIRenderMode methods in CartoVectorTileLayer class)
 * API for controlling the render style of basemap buildings (setBuildingRenderMode/getBuildingRenderMode methods in CartoVectorTileLayer class)
 * Added 'custom parameters' option to RoutingRequest and RouteMatchingRequest classes. Custom parameters can be used to customize routing schemas of specific routing engines.
+* New helper classes FeatureBuilder and VectorTileFeatureBuilder
 * Moved matchRoute method to base RoutingService interface
 * Moved setProfile/getProfile methods to base RoutingService interface
 * Moved setLanguage and setAutocomplete methods to base GeocodingService interface.
