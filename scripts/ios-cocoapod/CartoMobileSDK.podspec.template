@@ -25,7 +25,7 @@ Pod::Spec.new do |s|
   s.author             = { "CARTO" => "https://www.carto.com" }
   s.social_media_url   = "https://twitter.com/carto"
 
-  s.platform     = :ios, "7.0"
+  s.platform     = :ios, "$iosversion"
 
   s.source       = { :http => "https://nutifront.s3.amazonaws.com/sdk_snapshots/sdk4-ios-$version.zip"}
 
@@ -36,7 +36,7 @@ Pod::Spec.new do |s|
 
   s.preserve_paths = "CartoMobileSDK.framework"
 
-  s.frameworks = "OpenGLES", "GLKit", "UIKit", "CoreGraphics", "CoreText", "CFNetwork", "Foundation", "CartoMobileSDK"
+  s.frameworks = $frameworks
 
   s.libraries = "z", "c++"
 

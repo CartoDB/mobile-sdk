@@ -151,16 +151,20 @@ include_directories(
     "${SDK_SRC_DIR}/../../android/native"
 )
 elseif(IOS)
+if(SDK_CPP_DEFINES MATCHES ".*_CARTO_USE_METALANGLE.*")
+include_directories("${SDK_SRC_DIR}/../../libs-external/angle-metal/include")
+else()
+include_directories("${SDK_SRC_DIR}/../../ios/gl")
+endif()
 include_directories(
     "${SDK_SRC_DIR}/../../ios/native"
-    "${SDK_SRC_DIR}/../../ios/gl"
     "${SDK_SRC_DIR}/../../generated/ios-objc/proxies"
     "${SDK_SRC_DIR}/../../generated/ios-objc/wrappers"
 )
 elseif(WIN32)
 include_directories(
-    "${SDK_SRC_DIR}/../../winphone/native"
     "${SDK_SRC_DIR}/../../libs-external/angle-uwp/include"
+    "${SDK_SRC_DIR}/../../winphone/native"
     "${SDK_EXTERNAL_LIBS_DIR}/zlib"
 )
 link_directories("${SDK_BASE_DIR}/libs-external/angle-uwp/${WINPHONE_ARCH}")
@@ -386,7 +390,11 @@ endif(INCLUDE_GDAL)
 if(ANDROID)
 target_link_libraries(carto_mobile_sdk EGL GLESv2 z log android jnigraphics)
 elseif(IOS)
+if(SDK_CPP_DEFINES MATCHES ".*_CARTO_USE_METALANGLE.*")
+target_link_libraries(carto_mobile_sdk "-framework Foundation" "-framework CoreGraphics" "-framework CoreText" "-framework IOSurface" "-framework UIKit" "-framework CFNetwork")
+else()
 target_link_libraries(carto_mobile_sdk "-framework Foundation" "-framework CoreGraphics" "-framework CoreText" "-framework OpenGLES" "-framework GLKit" "-framework UIKit" "-framework CFNetwork")
+endif()
 elseif(WIN32)
 target_link_libraries(carto_mobile_sdk msxml6.lib d3d11.lib dwrite.lib d2d1.lib libEGL.dll.lib libGLESv2.dll.lib)
 endif()
