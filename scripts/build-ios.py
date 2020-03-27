@@ -149,7 +149,7 @@ def buildIOSFramework(args, archs):
       for filename in filenames:
         if filename.endswith('.h'):
           destDir = '%s/Headers/%s' % (outputDir, dirpath)
-          if dir.find('objc') == -1:
+          if headerDirTemplate.find('objc') == -1:
             destDir = '%s/PrivateHeaders/%s' % (outputDir, dirpath)
             privateHeaders.append(os.path.normpath(os.path.join(dirpath, filename)))
           elif filename != 'CartoMobileSDK.h':

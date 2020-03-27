@@ -189,7 +189,7 @@ static const int NATIVE_NO_COORDINATE = -1;
             _nativeMapView = nil;
             _baseMapView = nil;
             _viewContext = nil;
-            _activeSize = CGSizeMake(0, 0);
+            _activeDrawableSize = CGSizeMake(0, 0);
         }
     }
 
