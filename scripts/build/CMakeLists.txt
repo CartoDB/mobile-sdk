@@ -154,7 +154,7 @@ elseif(IOS)
 if(SDK_CPP_DEFINES MATCHES ".*_CARTO_USE_METALANGLE.*")
 include_directories("${SDK_SRC_DIR}/../../libs-external/angle-metal/include")
 else()
-include_directories("${SDK_SRC_DIR}/../../ios/gl")
+include_directories("${SDK_SRC_DIR}/../../ios/glwrapper")
 endif()
 include_directories(
     "${SDK_SRC_DIR}/../../ios/native"
