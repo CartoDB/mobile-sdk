@@ -5,19 +5,17 @@
  */
 
 #import "NTRedrawRequestListener.h"
+#import "ui/MapView.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
-@class GLKView;
-
 @interface NTMapRedrawRequestListener : NTRedrawRequestListener
 
-@property (weak, nonatomic) GLKView* view;
+@property (weak, nonatomic) NTGLKView* view;
 
--(id)initWithView:(GLKView*)view;
+-(id)initWithView:(NTGLKView*)view;
 
 @end
 
 #pragma clang diagnostic pop
-

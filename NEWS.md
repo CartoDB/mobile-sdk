@@ -7,6 +7,7 @@ then binaries of the SDK are considerably larger on Android compared to SDK 4.2.
 ### Key highlights:
 
 * Valhalla 3 routing support. Valhalla 2 routing was supported in SDK 4.1.x and removed from SDK 4.2.x. This release brings Valhalla back but with new major version and lots of improvements. Note that previous Valhalla 2 offline packages are incompatible with Valhalla 3 and can not be used.
+* Support for building the SDK with Metal rendering backend on iOS, instead of OpenGLES. This is currently still experimental, as it generates larger binaries and is a bit slower.
 
 ### New features:
 
@@ -15,6 +16,7 @@ then binaries of the SDK are considerably larger on Android compared to SDK 4.2.
 * Support for rendering basemap Point-of-Interests, API for directly controlling POI/building rendering mode (setPOIRenderMode/getPOIRenderMode methods in CartoVectorTileLayer class)
 * API for controlling the render style of basemap buildings (setBuildingRenderMode/getBuildingRenderMode methods in CartoVectorTileLayer class)
 * Added 'custom parameters' option to RoutingRequest and RouteMatchingRequest classes. Custom parameters can be used to customize routing schemas of specific routing engines.
+* New helper classes FeatureBuilder and VectorTileFeatureBuilder
 * Moved matchRoute method to base RoutingService interface
 * Moved setProfile/getProfile methods to base RoutingService interface
 * Moved setLanguage and setAutocomplete methods to base GeocodingService interface.

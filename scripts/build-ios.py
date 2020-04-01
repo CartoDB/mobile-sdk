@@ -68,7 +68,7 @@ def buildIOSLib(args, arch):
     '-DSHARED_LIBRARY:BOOL=%s' % ('ON' if args.sharedlib else 'OFF'),
     '-DCMAKE_OSX_ARCHITECTURES=%s' % arch,
     '-DCMAKE_OSX_SYSROOT=iphone%s' % platform.lower(),
-    '-DCMAKE_OSX_DEPLOYMENT_TARGET=7.0',
+    '-DCMAKE_OSX_DEPLOYMENT_TARGET=%s' % ('9.0' if args.metalangle else '7.0'),
     '-DCMAKE_BUILD_TYPE=%s' % args.configuration,
     "-DSDK_CPP_DEFINES=%s" % " ".join(defines),
     "-DSDK_VERSION='%s'" % version,
@@ -93,12 +93,25 @@ def buildIOSFramework(args, archs):
     outputDir = '%s/CartoMobileSDK.framework/Versions/A' % distDir
   makedirs(outputDir)
 
+  libFilePaths = []
+  for platform, arch in platformArchs:
+    libFilePath = "%s/%s-%s/libcarto_mobile_sdk.%s" % (getBuildDir('ios', '%s-%s' % (platform, arch)), args.configuration, 'iphoneos' if arch.startswith("arm") else 'iphonesimulator', 'dylib' if args.sharedlib else 'a')
+    if args.metalangle:
+      mergedLibFilePath = '%s_merged.%s' % tuple(libFilePath.rsplit('.', 1))
+      angleLibFilePath = "%s/libs-external/angle-metal/%s/libangle.a" % (baseDir, arch)
+      if not execute('libtool', baseDir,
+        '-o', mergedLibFilePath, libFilePath, angleLibFilePath
+      ):
+        return False
+      libFilePath = mergedLibFilePath
+    libFilePaths.append(libFilePath)
+
   if not execute('lipo', baseDir,
     '-output', '%s/CartoMobileSDK' % outputDir,
-    '-create', *["%s/%s-%s/libcarto_mobile_sdk.%s" % (getBuildDir('ios', '%s-%s' % (platform, arch)), args.configuration, 'iphoneos' if arch.startswith("arm") else "iphonesimulator", 'dylib' if args.sharedlib else 'a') for platform, arch in platformArchs]
+    '-create', *libFilePaths
   ):
     return False
-  
+
   if not copyfile('%s/scripts/ios/Info.plist' % baseDir, '%s/Info.plist' % outputDir):
       return False
 
@@ -125,16 +138,20 @@ def buildIOSFramework(args, archs):
 
   publicHeaders = []
   privateHeaders = []
-  for dir in ['%s/all/native', '%s/ios/native', '%s/ios/objc', '%s/generated/ios-objc/proxies', '%s/libs-external/cglib']:
-    if not os.path.exists(dir % baseDir):
+  headerDirTemplates = ['%s/all/native', '%s/ios/native', '%s/ios/objc', '%s/generated/ios-objc/proxies', '%s/libs-external/cglib']
+  if args.metalangle:
+    headerDirTemplates.append('%s/libs-external/angle-metal/include')
+  for headerDirTemplate in headerDirTemplates:
+    headerDir = headerDirTemplate % baseDir
+    if not os.path.exists(headerDir):
       continue
     currentDir = os.getcwd()
-    os.chdir(dir % baseDir)
+    os.chdir(headerDir)
     for dirpath, dirnames, filenames in os.walk('.'):
       for filename in filenames:
         if filename.endswith('.h'):
           destDir = '%s/Headers/%s' % (outputDir, dirpath)
-          if dir.find('objc') == -1:
+          if headerDirTemplate.find('objc') == -1:
             destDir = '%s/PrivateHeaders/%s' % (outputDir, dirpath)
             privateHeaders.append(os.path.normpath(os.path.join(dirpath, filename)))
           elif filename != 'CartoMobileSDK.h':
@@ -158,9 +175,11 @@ def buildIOSCocoapod(args, buildpackage):
   distDir = getDistDir('ios')
   version = args.buildversion
   distName = 'sdk4-ios-%s.zip' % version
-  
+  iosversion = '9.0' if args.metalangle else '7.0'
+  frameworks = (["IOSurface"] if args.metalangle else ["OpenGLES", "GLKit"]) + ["UIKit", "CoreGraphics", "CoreText", "CFNetwork", "Foundation", "CartoMobileSDK"]
+
   with open('%s/scripts/ios-cocoapod/Akylas-CartoMobileSDK.podspec.template' % baseDir, 'r') as f:
-    cocoapodFile = string.Template(f.read()).safe_substitute({ 'baseDir': baseDir, 'distDir': distDir, 'distName': distName, 'version': version })
+    cocoapodFile = string.Template(f.read()).safe_substitute({ 'baseDir': baseDir, 'distDir': distDir, 'distName': distName, 'version': version, 'iosversion': iosversion, 'frameworks': ', '.join('"%s"' % framework for framework in frameworks) })
   with open('%s/CartoMobileSDK.podspec' % distDir, 'w') as f:
     f.write(cocoapodFile)
 
@@ -185,6 +204,7 @@ parser.add_argument('--build-number', dest='buildnumber', default='', help='Buil
 parser.add_argument('--build-version', dest='buildversion', default='%s-devel' % SDK_VERSION, help='Build version, goes to distributions')
 parser.add_argument('--build-cocoapod', dest='buildcocoapod', default=False, action='store_true', help='Build CocoaPod')
 parser.add_argument('--build-cocoapod-package', dest='buildcocoapodpackage', default=False, action='store_true', help='Build CocoaPod')
+parser.add_argument('--metalangle', dest='metalangle', default=False, action='store_true', help='Use MetalANGLE instead of Apple GL')
 parser.add_argument('--strip-bitcode', dest='stripbitcode', default=False, action='store_true', help='Strip bitcode from the built framework')
 parser.add_argument('--shared-framework', dest='sharedlib', default=False, action='store_true', help='Build shared framework instead of static')
 
@@ -192,6 +212,8 @@ args = parser.parse_args()
 if 'all' in args.iosarch or args.iosarch == []:
   args.iosarch = IOS_ARCHS
 args.defines += ';' + getProfile(args.profile).get('defines', '')
+if args.metalangle:
+  args.defines += ';' + '_CARTO_USE_METALANGLE'
 args.cmakeoptions += ';' + getProfile(args.profile).get('cmake-options', '')
 
 if not checkExecutable(args.cmake, '--help'):

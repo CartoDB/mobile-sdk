@@ -4,7 +4,23 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
+#ifdef _CARTO_USE_METALANGLE
+
+#import "MGLKit.h"
+
+#define NTGLContext MGLContext
+#define NTGLKView MGLKView
+#define NTGLKViewDelegate MGLKViewDelegate
+
+#else
+
 #import <GLKit/GLKit.h>
+
+#define NTGLContext EAGLContext
+#define NTGLKView GLKView
+#define NTGLKViewDelegate GLKViewDelegate
+
+#endif
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
@@ -22,7 +38,7 @@
 /**
  * MapView is a view class supporting map rendering and interaction.
  */
-__attribute__ ((visibility("default"))) @interface NTMapView : GLKView
+__attribute__ ((visibility("default"))) @interface NTMapView : NTGLKView
 
 @property (readonly, assign, nonatomic) void* nativeMapView;
 

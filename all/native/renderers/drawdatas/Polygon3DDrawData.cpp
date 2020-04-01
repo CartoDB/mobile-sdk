@@ -121,6 +121,7 @@ namespace carto {
         std::size_t edgeVertexCount = std::accumulate(ringsInternalPoses.begin(), ringsInternalPoses.end(), std::size_t(0), [](std::size_t count, const std::vector<MapPos>& ringInternalPoses) { return count + ringInternalPoses.size(); });
         _coords.reserve(roofIndices.size() + edgeVertexCount * 6);
         _normals.reserve(roofIndices.size() + edgeVertexCount * 6);
+        _attribs.reserve(roofIndices.size() + edgeVertexCount * 6);
         
         // Convert triangulator output to coord array
         for (std::size_t i = 0; i < roofIndices.size(); i++) {
