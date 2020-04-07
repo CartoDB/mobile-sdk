@@ -49,15 +49,15 @@ namespace carto {
     }
 
     const std::string& CompiledStyleSet::getStyleName() const {
-         return _styleName;
+        return _styleName;
     }
 
     const std::string& CompiledStyleSet::getStyleAssetName() const {
-         return _styleAssetName;
+        return _styleAssetName;
     }
 
     const std::shared_ptr<AssetPackage>& CompiledStyleSet::getAssetPackage() const {
-         return _assetPackage;
+        return _assetPackage;
     }
 
 }
