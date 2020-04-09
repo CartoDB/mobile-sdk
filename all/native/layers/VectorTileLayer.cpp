@@ -421,12 +421,8 @@ namespace carto {
     void VectorTileLayer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
         Layer::onSurfaceCreated(shaderManager, textureManager);
 
-        // Reset renderer    
-        if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
-            tileRenderer->onSurfaceDestroyed();
-            setTileRenderer(std::shared_ptr<TileRenderer>());
-    
-            // Clear all tile caches - renderer may cache/release tile info, so old tiles are potentially unusable at this point
+        // Clear all tile caches - renderer may cache/release tile info, so old tiles are potentially unusable at this point
+        {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             _preloadingCache.clear();
             _visibleCache.clear();
