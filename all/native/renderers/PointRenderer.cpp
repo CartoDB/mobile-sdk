@@ -63,13 +63,10 @@ namespace carto {
         _u_tex = _shader->getUniformLoc("u_tex");
 
         // Drop elements
-        std::vector<std::shared_ptr<Point>> elements;
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            std::swap(elements, _elements);
-        }
-        for (const std::shared_ptr<Point>& element : elements) {
-            element->setDrawData(std::shared_ptr<PointDrawData>());
+            _elements.clear();
+            _tempElements.clear();
         }
     }
     

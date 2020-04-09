@@ -5,7 +5,7 @@
 
 namespace carto {
 
-    MarkerDrawData::MarkerDrawData(const Marker& marker, const MarkerStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface) :
+    MarkerDrawData::MarkerDrawData(const Marker& marker, const MarkerStyle& style, const Projection& projection, const std::shared_ptr<ProjectionSurface>& projectionSurface) :
         BillboardDrawData(marker,
                           style,
                           projection,

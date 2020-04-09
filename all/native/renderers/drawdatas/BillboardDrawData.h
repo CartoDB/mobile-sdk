@@ -23,7 +23,6 @@ namespace carto {
     class BillboardStyle;
     class AnimationStyle;
     class Projection;
-    class ProjectionSurface;
     
     class BillboardDrawData : public VectorElementDrawData {
     public:
@@ -68,7 +67,8 @@ namespace carto {
         void setTransition(float transition);
     
         const cglib::vec3<double>& getPos() const;
-        void setPos(const cglib::vec3<double>& pos, const ProjectionSurface& projectionSurface); // Used for setting label position, when it's attached to another billboards
+        void setPos(const cglib::vec3<double>& pos); // Used for setting label position, when it's attached to another billboards
+
         const cglib::vec3<float>& getXAxis() const;
         const cglib::vec3<float>& getYAxis() const;
         const cglib::vec3<float>& getZAxis() const;
@@ -100,7 +100,7 @@ namespace carto {
         BillboardDrawData(const Billboard& billboard,
                           const BillboardStyle& style,
                           const Projection& projection,
-                          const ProjectionSurface& projectionSurface,
+                          const std::shared_ptr<ProjectionSurface>& projectionSurface,
                           const std::shared_ptr<Bitmap>& bitmap,
                           float anchorPointX,
                           float anchorPointY,

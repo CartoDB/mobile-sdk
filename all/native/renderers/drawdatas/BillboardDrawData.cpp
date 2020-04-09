@@ -107,12 +107,12 @@ namespace carto {
         return _pos;
     }
         
-    void BillboardDrawData::setPos(const cglib::vec3<double>& pos, const ProjectionSurface& projectionSurface) {
-        MapPos internalPos = projectionSurface.calculateMapPos(pos);
+    void BillboardDrawData::setPos(const cglib::vec3<double>& pos) {
+        MapPos internalPos = _projectionSurface->calculateMapPos(pos);
         _pos = pos;
-        _xAxis = cglib::vec3<float>::convert(cglib::unit(projectionSurface.calculateVector(internalPos, MapVec(1, 0, 0))));
-        _yAxis = cglib::vec3<float>::convert(cglib::unit(projectionSurface.calculateVector(internalPos, MapVec(0, 1, 0))));
-        _zAxis = cglib::vec3<float>::convert(cglib::unit(projectionSurface.calculateVector(internalPos, MapVec(0, 0, 1))));
+        _xAxis = cglib::vec3<float>::convert(cglib::unit(_projectionSurface->calculateVector(internalPos, MapVec(1, 0, 0))));
+        _yAxis = cglib::vec3<float>::convert(cglib::unit(_projectionSurface->calculateVector(internalPos, MapVec(0, 1, 0))));
+        _zAxis = cglib::vec3<float>::convert(cglib::unit(_projectionSurface->calculateVector(internalPos, MapVec(0, 0, 1))));
     }
 
     const cglib::vec3<float>& BillboardDrawData::getXAxis() const {
@@ -201,7 +201,7 @@ namespace carto {
     BillboardDrawData::BillboardDrawData(const Billboard& billboard,
                                          const BillboardStyle& style,
                                          const Projection& projection,
-                                         const ProjectionSurface& projectionSurface,
+                                         const std::shared_ptr<ProjectionSurface>& projectionSurface,
                                          const std::shared_ptr<Bitmap>& bitmap,
                                          float anchorPointX,
                                          float anchorPointY,
@@ -210,7 +210,7 @@ namespace carto {
                                          BillboardScaling::BillboardScaling scalingMode,
                                          float renderScale,
                                          float size) :
-        VectorElementDrawData(style.getColor()),
+        VectorElementDrawData(style.getColor(), projectionSurface),
         _anchorPointX(anchorPointX),
         _anchorPointY(anchorPointY),
         _aspect(bitmap ? static_cast<float>(bitmap->getWidth()) / bitmap->getHeight() : 1.0f),
@@ -245,10 +245,10 @@ namespace carto {
     {
         if (billboard.getGeometry()) {
             MapPos internalPos = projection.toInternal(billboard.getGeometry()->getCenterPos());
-            _pos = projectionSurface.calculatePosition(internalPos);
-            _xAxis = cglib::vec3<float>::convert(cglib::unit(projectionSurface.calculateVector(internalPos, MapVec(1, 0, 0))));
-            _yAxis = cglib::vec3<float>::convert(cglib::unit(projectionSurface.calculateVector(internalPos, MapVec(0, 1, 0))));
-            _zAxis = cglib::vec3<float>::convert(cglib::unit(projectionSurface.calculateVector(internalPos, MapVec(0, 0, 1))));
+            _pos = projectionSurface->calculatePosition(internalPos);
+            _xAxis = cglib::vec3<float>::convert(cglib::unit(projectionSurface->calculateVector(internalPos, MapVec(1, 0, 0))));
+            _yAxis = cglib::vec3<float>::convert(cglib::unit(projectionSurface->calculateVector(internalPos, MapVec(0, 1, 0))));
+            _zAxis = cglib::vec3<float>::convert(cglib::unit(projectionSurface->calculateVector(internalPos, MapVec(0, 0, 1))));
         }
 
         if (auto drawData = billboard.getDrawData()) {

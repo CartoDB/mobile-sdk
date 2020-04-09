@@ -18,11 +18,10 @@ namespace carto {
     class PointGeometry;
     class PointStyle;
     class Projection;
-    class ProjectionSurface;
     
     class PointDrawData : public VectorElementDrawData {
     public:
-        PointDrawData(const PointGeometry& geometry, const PointStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface);
+        PointDrawData(const PointGeometry& geometry, const PointStyle& style, const Projection& projection, const std::shared_ptr<ProjectionSurface>& projectionSurface);
         virtual ~PointDrawData();
     
         const std::shared_ptr<Bitmap> getBitmap() const;

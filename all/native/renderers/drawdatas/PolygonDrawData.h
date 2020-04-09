@@ -22,11 +22,10 @@ namespace carto {
     class PolygonGeometry;
     class PolygonStyle;
     class Projection;
-    class ProjectionSurface;
     
     class PolygonDrawData : public VectorElementDrawData {
     public:
-        PolygonDrawData(const PolygonGeometry& geometry, const PolygonStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface);
+        PolygonDrawData(const PolygonGeometry& geometry, const PolygonStyle& style, const Projection& projection, const std::shared_ptr<ProjectionSurface>& projectionSurface);
         virtual ~PolygonDrawData();
     
         const std::shared_ptr<Bitmap> getBitmap() const;

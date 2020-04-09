@@ -309,49 +309,49 @@ namespace carto {
         }
 
         if (const std::shared_ptr<Label>& label = std::dynamic_pointer_cast<Label>(element)) {
-            if (!label->getDrawData() || label->getDrawData()->isOffset()) {
-                label->setDrawData(std::make_shared<LabelDrawData>(*label, *label->getStyle(), *_dataSource->getProjection(), *projectionSurface, _lastCullState->getViewState()));
+            if (!label->getDrawData() || label->getDrawData()->isOffset() || label->getDrawData()->getProjectionSurface() != projectionSurface) {
+                label->setDrawData(std::make_shared<LabelDrawData>(*label, *label->getStyle(), *_dataSource->getProjection(), projectionSurface, _lastCullState->getViewState()));
             }
             _billboardRenderer->addElement(label);
         } else if (const std::shared_ptr<Line>& line = std::dynamic_pointer_cast<Line>(element)) {
-            if (!line->getDrawData() || line->getDrawData()->isOffset()) {
-                line->setDrawData(std::make_shared<LineDrawData>(*line->getGeometry(), *line->getStyle(), *_dataSource->getProjection(), *projectionSurface));
+            if (!line->getDrawData() || line->getDrawData()->isOffset() || line->getDrawData()->getProjectionSurface() != projectionSurface) {
+                line->setDrawData(std::make_shared<LineDrawData>(*line->getGeometry(), *line->getStyle(), *_dataSource->getProjection(), projectionSurface));
             }
             _lineRenderer->addElement(line);
         } else if (const std::shared_ptr<Marker>& marker = std::dynamic_pointer_cast<Marker>(element)) {
-            if (!marker->getDrawData() || marker->getDrawData()->isOffset()) {
-                marker->setDrawData(std::make_shared<MarkerDrawData>(*marker, *marker->getStyle(), *_dataSource->getProjection(), *projectionSurface));
+            if (!marker->getDrawData() || marker->getDrawData()->isOffset() || marker->getDrawData()->getProjectionSurface() != projectionSurface) {
+                marker->setDrawData(std::make_shared<MarkerDrawData>(*marker, *marker->getStyle(), *_dataSource->getProjection(), projectionSurface));
             }
             _billboardRenderer->addElement(marker);
         } else if (const std::shared_ptr<Point>& point = std::dynamic_pointer_cast<Point>(element)) {
-            if (!point->getDrawData() || point->getDrawData()->isOffset()) {
-                point->setDrawData(std::make_shared<PointDrawData>(*point->getGeometry(), *point->getStyle(), *_dataSource->getProjection(), *projectionSurface));
+            if (!point->getDrawData() || point->getDrawData()->isOffset() || point->getDrawData()->getProjectionSurface() != projectionSurface) {
+                point->setDrawData(std::make_shared<PointDrawData>(*point->getGeometry(), *point->getStyle(), *_dataSource->getProjection(), projectionSurface));
             }
             _pointRenderer->addElement(point);
         } else if (const std::shared_ptr<Polygon>& polygon = std::dynamic_pointer_cast<Polygon>(element)) {
-            if (!polygon->getDrawData() || polygon->getDrawData()->isOffset()) {
-                polygon->setDrawData(std::make_shared<PolygonDrawData>(*polygon->getGeometry(), *polygon->getStyle(), *_dataSource->getProjection(), *projectionSurface));
+            if (!polygon->getDrawData() || polygon->getDrawData()->isOffset() || polygon->getDrawData()->getProjectionSurface() != projectionSurface) {
+                polygon->setDrawData(std::make_shared<PolygonDrawData>(*polygon->getGeometry(), *polygon->getStyle(), *_dataSource->getProjection(), projectionSurface));
             }
             _polygonRenderer->addElement(polygon);
         } else if (const std::shared_ptr<GeometryCollection>& geomCollection = std::dynamic_pointer_cast<GeometryCollection>(element)) {
-            if (!geomCollection->getDrawData() || geomCollection->getDrawData()->isOffset()) {
-                geomCollection->setDrawData(std::make_shared<GeometryCollectionDrawData>(*geomCollection->getGeometry(), *geomCollection->getStyle(), *_dataSource->getProjection(), *projectionSurface));
+            if (!geomCollection->getDrawData() || geomCollection->getDrawData()->isOffset() || geomCollection->getDrawData()->getProjectionSurface() != projectionSurface) {
+                geomCollection->setDrawData(std::make_shared<GeometryCollectionDrawData>(*geomCollection->getGeometry(), *geomCollection->getStyle(), *_dataSource->getProjection(), projectionSurface));
             }
             _geometryCollectionRenderer->addElement(geomCollection);
         } else if (const std::shared_ptr<Polygon3D>& polygon3D = std::dynamic_pointer_cast<Polygon3D>(element)) {
-            if (!polygon3D->getDrawData() || polygon3D->getDrawData()->isOffset()) {
-                polygon3D->setDrawData(std::make_shared<Polygon3DDrawData>(*polygon3D, *polygon3D->getStyle(), *_dataSource->getProjection(), *projectionSurface));
+            if (!polygon3D->getDrawData() || polygon3D->getDrawData()->isOffset() || polygon3D->getDrawData()->getProjectionSurface() != projectionSurface) {
+                polygon3D->setDrawData(std::make_shared<Polygon3DDrawData>(*polygon3D, *polygon3D->getStyle(), *_dataSource->getProjection(), projectionSurface));
             }
             _polygon3DRenderer->addElement(polygon3D);
         } else if (const std::shared_ptr<NMLModel>& nmlModel = std::dynamic_pointer_cast<NMLModel>(element)) {
-            if (!nmlModel->getDrawData() || nmlModel->getDrawData()->isOffset()) {
-                nmlModel->setDrawData(std::make_shared<NMLModelDrawData>(*nmlModel, *nmlModel->getStyle(), *_dataSource->getProjection(), *projectionSurface));
+            if (!nmlModel->getDrawData() || nmlModel->getDrawData()->isOffset() || nmlModel->getDrawData()->getProjectionSurface() != projectionSurface) {
+                nmlModel->setDrawData(std::make_shared<NMLModelDrawData>(*nmlModel, *nmlModel->getStyle(), *_dataSource->getProjection(), projectionSurface));
             }
             _nmlModelRenderer->addElement(nmlModel);
         } else if (const std::shared_ptr<Popup>& popup = std::dynamic_pointer_cast<Popup>(element)) {
-            if (!popup->getDrawData() || popup->getDrawData()->isOffset()) {
+            if (!popup->getDrawData() || popup->getDrawData()->isOffset() || popup->getDrawData()->getProjectionSurface() != projectionSurface) {
                 if (auto options = _options.lock()) {
-                    popup->setDrawData(std::make_shared<PopupDrawData>(*popup, *popup->getStyle(), *_dataSource->getProjection(), *projectionSurface, options, _lastCullState->getViewState()));
+                    popup->setDrawData(std::make_shared<PopupDrawData>(*popup, *popup->getStyle(), *_dataSource->getProjection(), projectionSurface, options, _lastCullState->getViewState()));
                 } else {
                     return;
                 }
@@ -393,7 +393,7 @@ namespace carto {
         // Update/remove the draw data of a single element in one of the renderers,
         if (const std::shared_ptr<Label>& label = std::dynamic_pointer_cast<Label>(element)) {
             if (visible && !remove) {
-                label->setDrawData(std::make_shared<LabelDrawData>(*label, *label->getStyle(), *_dataSource->getProjection(), *projectionSurface, viewState));
+                label->setDrawData(std::make_shared<LabelDrawData>(*label, *label->getStyle(), *_dataSource->getProjection(), projectionSurface, viewState));
                 _billboardRenderer->updateElement(label);
             } else {
                 _billboardRenderer->removeElement(label);
@@ -401,14 +401,14 @@ namespace carto {
             billboardsChanged = true;
         } else if (const std::shared_ptr<Line>& line = std::dynamic_pointer_cast<Line>(element)) {
             if (visible && !remove) {
-                line->setDrawData(std::make_shared<LineDrawData>(*line->getGeometry(), *line->getStyle(), *_dataSource->getProjection(), *projectionSurface));
+                line->setDrawData(std::make_shared<LineDrawData>(*line->getGeometry(), *line->getStyle(), *_dataSource->getProjection(), projectionSurface));
                 _lineRenderer->updateElement(line);
             } else {
                 _lineRenderer->removeElement(line);
             }
         } else if (const std::shared_ptr<Marker>& marker = std::dynamic_pointer_cast<Marker>(element)) {
             if (visible && !remove) {
-                marker->setDrawData(std::make_shared<MarkerDrawData>(*marker, *marker->getStyle(), *_dataSource->getProjection(), *projectionSurface));
+                marker->setDrawData(std::make_shared<MarkerDrawData>(*marker, *marker->getStyle(), *_dataSource->getProjection(), projectionSurface));
                 _billboardRenderer->updateElement(marker);
             } else {
                 _billboardRenderer->removeElement(marker);
@@ -416,35 +416,35 @@ namespace carto {
             billboardsChanged = true;
         } else if (const std::shared_ptr<Point>& point = std::dynamic_pointer_cast<Point>(element)) {
             if (visible && !remove) {
-                point->setDrawData(std::make_shared<PointDrawData>(*point->getGeometry(), *point->getStyle(), *_dataSource->getProjection(), *projectionSurface));
+                point->setDrawData(std::make_shared<PointDrawData>(*point->getGeometry(), *point->getStyle(), *_dataSource->getProjection(), projectionSurface));
                 _pointRenderer->updateElement(point);
             } else {
                 _pointRenderer->removeElement(point);
             }
         } else if (const std::shared_ptr<Polygon>& polygon = std::dynamic_pointer_cast<Polygon>(element)) {
             if (visible && !remove) {
-                polygon->setDrawData(std::make_shared<PolygonDrawData>(*polygon->getGeometry(), *polygon->getStyle(), *_dataSource->getProjection(), *projectionSurface));
+                polygon->setDrawData(std::make_shared<PolygonDrawData>(*polygon->getGeometry(), *polygon->getStyle(), *_dataSource->getProjection(), projectionSurface));
                 _polygonRenderer->updateElement(polygon);
             } else {
                 _polygonRenderer->removeElement(polygon);
             }
         } else if (const std::shared_ptr<GeometryCollection>& geomCollection = std::dynamic_pointer_cast<GeometryCollection>(element)) {
             if (visible && !remove) {
-                geomCollection->setDrawData(std::make_shared<GeometryCollectionDrawData>(*geomCollection->getGeometry(), *geomCollection->getStyle(), *_dataSource->getProjection(), *projectionSurface));
+                geomCollection->setDrawData(std::make_shared<GeometryCollectionDrawData>(*geomCollection->getGeometry(), *geomCollection->getStyle(), *_dataSource->getProjection(), projectionSurface));
                 _geometryCollectionRenderer->updateElement(geomCollection);
             } else {
                 _geometryCollectionRenderer->removeElement(geomCollection);
             }
         } else if (const std::shared_ptr<Polygon3D>& polygon3D = std::dynamic_pointer_cast<Polygon3D>(element)) {
             if (visible && !remove) {
-                polygon3D->setDrawData(std::make_shared<Polygon3DDrawData>(*polygon3D, *polygon3D->getStyle(), *_dataSource->getProjection(), *projectionSurface));
+                polygon3D->setDrawData(std::make_shared<Polygon3DDrawData>(*polygon3D, *polygon3D->getStyle(), *_dataSource->getProjection(), projectionSurface));
                 _polygon3DRenderer->updateElement(polygon3D);
             } else {
                 _polygon3DRenderer->removeElement(polygon3D);
             }
         } else if (const std::shared_ptr<NMLModel>& nmlModel = std::dynamic_pointer_cast<NMLModel>(element)) {
             if (visible && !remove) {
-                nmlModel->setDrawData(std::make_shared<NMLModelDrawData>(*nmlModel, *nmlModel->getStyle(), *_dataSource->getProjection(), *projectionSurface));
+                nmlModel->setDrawData(std::make_shared<NMLModelDrawData>(*nmlModel, *nmlModel->getStyle(), *_dataSource->getProjection(), projectionSurface));
                 _nmlModelRenderer->updateElement(nmlModel);
             } else {
                 _nmlModelRenderer->removeElement(nmlModel);
@@ -452,7 +452,7 @@ namespace carto {
         } else if (const std::shared_ptr<Popup>& popup = std::dynamic_pointer_cast<Popup>(element)) {
             if (visible && !remove) {
                 if (auto options = _options.lock()) {
-                    popup->setDrawData(std::make_shared<PopupDrawData>(*popup, *popup->getStyle(), *_dataSource->getProjection(), *projectionSurface, options, viewState));
+                    popup->setDrawData(std::make_shared<PopupDrawData>(*popup, *popup->getStyle(), *_dataSource->getProjection(), projectionSurface, options, viewState));
                     _billboardRenderer->updateElement(popup);
                 }
             } else {

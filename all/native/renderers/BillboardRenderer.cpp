@@ -130,13 +130,10 @@ namespace carto {
         _u_tex = _shader->getUniformLoc("u_tex");
 
         // Drop elements
-        std::vector<std::shared_ptr<Billboard>> elements;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
-            std::swap(elements, _elements);
-        }
-        for (const std::shared_ptr<Billboard>& element : elements) {
-            element->setDrawData(std::shared_ptr<BillboardDrawData>());
+            _elements.clear();
+            _tempElements.clear();
         }
     }
     
@@ -506,9 +503,7 @@ namespace carto {
 
         // Calculate delta, update position
         cglib::vec3<double> delta = cglib::vec3<double>::convert(xAxis * labelAnchorVec(0) + yAxis * labelAnchorVec(1));
-        if (std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface()) {
-            drawData->setPos(baseBillboardPos + delta, *projectionSurface);
-        }
+        drawData->setPos(baseBillboardPos + delta);
         return true;
     }
         

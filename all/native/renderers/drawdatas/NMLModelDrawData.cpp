@@ -8,16 +8,16 @@
 
 namespace carto {
 
-    NMLModelDrawData::NMLModelDrawData(const NMLModel& model, const NMLModelStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface) :
-        VectorElementDrawData(style.getColor()),
+    NMLModelDrawData::NMLModelDrawData(const NMLModel& model, const NMLModelStyle& style, const Projection& projection, const std::shared_ptr<ProjectionSurface>& projectionSurface) :
+        VectorElementDrawData(style.getColor(), projectionSurface),
         _sourceModel(style.getSourceModel()),
         _localMat()
     {
         MapPos mapPosInternal = projection.toInternal(model.getGeometry()->getCenterPos());
-        cglib::vec3<double> pos = projectionSurface.calculatePosition(mapPosInternal);
-        cglib::mat4x4<double> rotateMat = cglib::rotate4_matrix(projectionSurface.calculateVector(mapPosInternal, model.getRotationAxis()), model.getRotationAngle() * Const::DEG_TO_RAD);
+        cglib::vec3<double> pos = projectionSurface->calculatePosition(mapPosInternal);
+        cglib::mat4x4<double> rotateMat = cglib::rotate4_matrix(projectionSurface->calculateVector(mapPosInternal, model.getRotationAxis()), model.getRotationAngle() * Const::DEG_TO_RAD);
         cglib::mat4x4<double> scaleMat = cglib::scale4_matrix(cglib::vec3<double>(model.getScale(), model.getScale(), model.getScale()));
-        _localMat = projectionSurface.calculateLocalFrameMatrix(pos) * rotateMat * scaleMat;
+        _localMat = projectionSurface->calculateLocalFrameMatrix(pos) * rotateMat * scaleMat;
     }
 
     NMLModelDrawData::~NMLModelDrawData() {

@@ -15,6 +15,8 @@
 namespace carto {
 
     GeometryCollectionRenderer::GeometryCollectionRenderer() :
+        _elements(),
+        _tempElements(),
         _pointRenderer(),
         _lineRenderer(),
         _polygonRenderer(),
@@ -39,13 +41,10 @@ namespace carto {
         _polygonRenderer.onSurfaceCreated(shaderManager, textureManager);
 
         // Drop elements
-        std::vector<std::shared_ptr<GeometryCollection>> elements;
         {
             std::lock_guard<std::mutex> lock(_mutex);
-            std::swap(elements, _elements);
-        }
-        for (const std::shared_ptr<GeometryCollection>& element : elements) {
-            element->setDrawData(std::shared_ptr<GeometryCollectionDrawData>());
+            _elements.clear();
+            _tempElements.clear();
         }
     }
 

@@ -123,7 +123,6 @@ namespace carto {
             new vt::GLTileRenderer(std::make_shared<vt::GLExtensions>(), _tileTransformer, lightingShader2D, lightingShader3D, Const::WORLD_SIZE), glRendererDeleter
         );
         _glRenderer->initializeRenderer();
-        _horizontalLayerOffset = 0;
         _tiles.clear();
         GLContext::CheckGLError("TileRenderer::onSurfaceCreated");
     }

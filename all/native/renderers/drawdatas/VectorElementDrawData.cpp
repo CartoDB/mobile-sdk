@@ -24,9 +24,10 @@ namespace carto {
                      color.getA());
     }
     
-    VectorElementDrawData::VectorElementDrawData(const Color& color) :
+    VectorElementDrawData::VectorElementDrawData(const Color& color, const std::shared_ptr<ProjectionSurface>& projectionSurface) :
         _color(GetPremultipliedColor(color)),
-        _isOffset(false)
+        _isOffset(false),
+        _projectionSurface(projectionSurface)
     {
     }
 
@@ -34,5 +35,7 @@ namespace carto {
         _isOffset = isOffset;
     }
     
-    
+    const std::shared_ptr<ProjectionSurface>& VectorElementDrawData::getProjectionSurface() const {
+        return _projectionSurface;
+    }
 }

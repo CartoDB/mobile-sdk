@@ -21,12 +21,11 @@ namespace carto {
     class MapPos;
     class PolygonGeometry;
     class Projection;
-    class ProjectionSurface;
     
     class LineDrawData : public VectorElementDrawData {
     public:
-        LineDrawData(const LineGeometry& geometry, const LineStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface);
-        LineDrawData(const std::vector<MapPos>& poses, const LineStyle& style, const Projection& projection, const ProjectionSurface& projectionSurface);
+        LineDrawData(const LineGeometry& geometry, const LineStyle& style, const Projection& projection, const std::shared_ptr<ProjectionSurface>& projectionSurface);
+        LineDrawData(const std::vector<MapPos>& poses, const LineStyle& style, const Projection& projection, const std::shared_ptr<ProjectionSurface>& projectionSurface);
         virtual ~LineDrawData();
     
         const std::shared_ptr<Bitmap> getBitmap() const;
@@ -54,7 +53,7 @@ namespace carto {
     
         static const float CLICK_WIDTH_COEF;
         
-        void init(const std::vector<MapPos>& poses, const Projection& projection, const ProjectionSurface& projectionSurface, const LineStyle& style);
+        void init(const std::vector<MapPos>& poses, const Projection& projection, const LineStyle& style);
     
         std::shared_ptr<Bitmap> _bitmap;
     

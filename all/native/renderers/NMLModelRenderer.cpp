@@ -63,6 +63,12 @@ namespace carto {
         _glResourceManager = std::make_shared<nml::GLResourceManager>();
         _glModelMap.clear();
 
+        {
+            std::lock_guard<std::mutex> lock(_mutex);
+            _elements.clear();
+            _tempElements.clear();
+        }
+
         nml::GLTexture::registerGLExtensions();
     }
 
