@@ -26,7 +26,9 @@ namespace {
         GLTileRendererDeleter(std::unique_ptr<carto::vt::GLTileRenderer> renderer) : _renderer(std::move(renderer)) { }
         
         virtual void operator () () {
+            carto::Log::Debug("GLTileRendererDeleter: Releasing renderer resources");
             _renderer->deinitializeRenderer();
+            carto::GLContext::CheckGLError("GLTileRendererDeleter::operator ()");
         }
         
     private:
@@ -113,7 +115,6 @@ namespace carto {
         std::weak_ptr<MapRenderer> mapRendererWeak(_mapRenderer);
         auto glRendererDeleter = [mapRendererWeak](vt::GLTileRenderer* rendererPtr) {
             std::unique_ptr<vt::GLTileRenderer> renderer(rendererPtr);
-            Log::Debug("TileRenderer: Releasing renderer resources");
             if (auto mapRenderer = mapRendererWeak.lock()) {
                 mapRenderer->addRenderThreadCallback(std::make_shared<GLTileRendererDeleter>(std::move(renderer)));
             }
