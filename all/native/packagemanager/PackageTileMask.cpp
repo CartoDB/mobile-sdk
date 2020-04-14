@@ -50,12 +50,13 @@ namespace {
         '8', '9', '+', '/'
     };
 
-    std::queue<bool> decodeBase64(const std::string& stringValue) {
-        std::queue<bool> data;
+    std::vector<bool> decodeBase64(const std::string& stringValue) {
+        std::vector<bool> data;
+        data.reserve(stringValue.size() * 6);
         for (char c : stringValue) {
             int val = base64DecodeTable[static_cast<unsigned char>(c)];
             for (int i = 5; i >= 0; i--) {
-                data.push(((val >> i) & 1) != 0);
+                data.push_back(((val >> i) & 1) != 0);
             }
         }
         return data;
@@ -152,24 +153,25 @@ namespace carto {
     
     PackageTileMask::PackageTileMask(const std::string& stringValue, int maxZoom) :
         _stringValue(stringValue),
+        _maxZoomLevel(maxZoom),
         _rootNode(),
-        _maxZoomLevel(maxZoom)
+        _mutex()
     {
-        std::queue<bool> data = decodeBase64(stringValue);
-        _rootNode = DecodeTileNode(data, MapTile(0, 0, 0, 0));
     }
 
     PackageTileMask::PackageTileMask(const std::vector<MapTile>& tiles, int clipZoom) :
         _stringValue(),
+        _maxZoomLevel(0),
         _rootNode(),
-        _maxZoomLevel(0)
+        _mutex()
     {
         std::unordered_set<MapTile> tileSet(tiles.begin(), tiles.end());
         _rootNode = BuildTileNode(tileSet, MapTile(0, 0, 0, 0), clipZoom);
         for (const MapTile& tile : tiles) {
             _maxZoomLevel = std::max(_maxZoomLevel, tile.getZoom());
         }
-        std::vector<bool> data = EncodeTileNode(_rootNode);
+        std::vector<bool> data;
+        EncodeTileNode(_rootNode, data);
         _stringValue = encodeBase64(std::move(data));
     }
 
@@ -193,7 +195,7 @@ namespace carto {
             throw NullArgumentException("Null projection");
         }
 
-        std::vector<std::vector<MapPos> > poly = CalculateTileNodeBoundingPolygon(_rootNode, projection);
+        std::vector<std::vector<MapPos> > poly = CalculateTileNodeBoundingPolygon(getRootNode(), projection);
 
         std::vector<std::vector<MapPos> > optimizedPoly;
         for (std::size_t i = 0; i < poly.size(); i++) {
@@ -214,10 +216,19 @@ namespace carto {
         return PackageTileStatus::PACKAGE_TILE_STATUS_MISSING;
     }
 
+    std::shared_ptr<PackageTileMask::TileNode> PackageTileMask::getRootNode() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        if (!_rootNode) {
+            std::size_t offset = 0;
+            _rootNode = DecodeTileNode(offset, decodeBase64(_stringValue), MapTile(0, 0, 0, 0));
+        }
+        return _rootNode;
+    }
+
     std::shared_ptr<PackageTileMask::TileNode> PackageTileMask::findTileNode(const MapTile& tile) const {
         if (tile.getZoom() == 0) {
             if (tile.getX() == 0 && tile.getY() == 0) {
-                return _rootNode;
+                return getRootNode();
             }
             return std::shared_ptr<TileNode>();
         }
@@ -264,17 +275,15 @@ namespace carto {
         return node;
     }
     
-    std::shared_ptr<PackageTileMask::TileNode> PackageTileMask::DecodeTileNode(std::queue<bool>& data, const MapTile& tile) {
-        bool leaf = !data.front();
-        data.pop();
-        bool inside = data.front();
-        data.pop();
+    std::shared_ptr<PackageTileMask::TileNode> PackageTileMask::DecodeTileNode(std::size_t& offset, const std::vector<bool>& data, const MapTile& tile) {
+        bool leaf = !data.at(offset++);
+        bool inside = data.at(offset++);
         auto node = std::make_shared<TileNode>(tile, inside);
         if (!leaf) {
             int idx = 0;
             for (int dy = 0; dy < 2; dy++) {
                 for (int dx = 0; dx < 2; dx++) {
-                    node->subNodes[idx] = DecodeTileNode(data, MapTile(tile.getX() * 2 + dx, tile.getY() * 2 + dy, tile.getZoom() + 1, tile.getFrameNr()));
+                    node->subNodes[idx] = DecodeTileNode(offset, data, MapTile(tile.getX() * 2 + dx, tile.getY() * 2 + dy, tile.getZoom() + 1, tile.getFrameNr()));
                     idx++;
                 }
             }
@@ -282,23 +291,16 @@ namespace carto {
         return node;
     }
 
-    std::vector<bool> PackageTileMask::EncodeTileNode(const std::shared_ptr<TileNode>& node) {
-        std::vector<bool> data;
+    void PackageTileMask::EncodeTileNode(const std::shared_ptr<TileNode>& node, std::vector<bool>& data) {
         if (!node) {
-            return data;
+            return;
         }
+
+        data.push_back(node->subNodes[0] ? true : false); // if subnode 0 is not null, then all other subnodes are also not null
+        data.push_back(node->inside);
         for (int idx = 0; idx < 4; idx++) {
-            std::vector<bool> subData = EncodeTileNode(node->subNodes[idx]);
-            data.insert(data.end(), subData.begin(), subData.end());
+            EncodeTileNode(node->subNodes[idx], data);
         }
-        if (data.empty()) {
-            data.push_back(false);
-            data.push_back(node->inside);
-        } else {
-            data.insert(data.begin(), true);
-            data.insert(data.begin() + 1, node->inside);
-        }
-        return data;
     }
 
     std::vector<std::vector<MapPos> > PackageTileMask::CalculateTileNodeBoundingPolygon(const std::shared_ptr<TileNode>& node, const std::shared_ptr<Projection>& proj) {

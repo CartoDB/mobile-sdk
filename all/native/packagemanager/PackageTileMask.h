@@ -12,7 +12,7 @@
 
 #include <string>
 #include <memory>
-#include <queue>
+#include <mutex>
 #include <vector>
 #include <unordered_set>
 
@@ -102,16 +102,20 @@ namespace carto {
             TileNode(const MapTile& tile, bool inside) : tile(tile), inside(inside) { }
         };
 
+        std::shared_ptr<TileNode> getRootNode() const;
         std::shared_ptr<TileNode> findTileNode(const MapTile& tile) const;
 
         static std::shared_ptr<TileNode> BuildTileNode(const std::unordered_set<MapTile>& tileSet, const MapTile& tile, int clipZoom);
-        static std::shared_ptr<TileNode> DecodeTileNode(std::queue<bool>& data, const MapTile& tile);
-        static std::vector<bool> EncodeTileNode(const std::shared_ptr<TileNode>& node);
+        static std::shared_ptr<TileNode> DecodeTileNode(std::size_t& offset, const std::vector<bool>& data, const MapTile& tile);
+        static void EncodeTileNode(const std::shared_ptr<TileNode>& node, std::vector<bool>& data);
+
         static std::vector<std::vector<MapPos> > CalculateTileNodeBoundingPolygon(const std::shared_ptr<TileNode>& node, const std::shared_ptr<Projection>& proj);
 
         std::string _stringValue;
-        std::shared_ptr<TileNode> _rootNode;
         int _maxZoomLevel;
+
+        mutable std::shared_ptr<TileNode> _rootNode;
+        mutable std::mutex _mutex;
     };
 }
 
