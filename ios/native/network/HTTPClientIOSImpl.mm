@@ -7,6 +7,7 @@
 @interface URLConnection : NSObject <NSURLSessionDelegate, NSURLSessionTaskDelegate, NSURLSessionDataDelegate>
 
 -(id)init;
+-(void)deinit;
 -(NSError*)sendSynchronousRequest:(NSURLRequest*)request didReceiveResponse:(BOOL(^)(NSURLResponse*))responseHandler didReceiveData:(BOOL(^)(NSData*))dataHandler;
 
 @end
@@ -32,6 +33,10 @@
     self.responseHandlers = [[NSMutableDictionary alloc] init];
     self.dataHandlers = [[NSMutableDictionary alloc] init];
     return self;
+}
+
+-(void)deinit {
+    [self.session finishTasksAndInvalidate];
 }
 
 -(NSError*)sendSynchronousRequest:(NSURLRequest*)request didReceiveResponse:(BOOL(^)(NSURLResponse*))responseHandler didReceiveData:(BOOL(^)(NSData*))dataHandler {
@@ -116,8 +121,11 @@ namespace carto {
     }
     
     HTTPClient::IOSImpl::~IOSImpl() {
-        URLConnection* connection = (__bridge_transfer URLConnection*)_connection;
-        _connection = nullptr;
+        @autoreleasepool {
+            URLConnection* connection = (__bridge_transfer URLConnection*)_connection;
+            [connection deinit];
+            _connection = nullptr;
+        }
     }
 
     void HTTPClient::IOSImpl::setTimeout(int milliseconds) {
