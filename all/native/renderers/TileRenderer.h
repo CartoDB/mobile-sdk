@@ -9,6 +9,7 @@
 
 #include "graphics/Color.h"
 #include "graphics/ViewState.h"
+#include "renderers/utils/GLResource.h"
 
 #include <memory>
 #include <mutex>
@@ -21,14 +22,14 @@
 #include <vt/TileId.h>
 #include <vt/Tile.h>
 #include <vt/Bitmap.h>
+#include <vt/GLTileRenderer.h>
 
 namespace carto {
     class Options;
-    class Shader;
-    class ShaderManager;
-    class TextureManager;
-    class TileDrawData;
     class MapRenderer;
+    class GLResourceManager;
+    class Shader;
+    class TileDrawData;
     class ViewState;
     namespace vt {
         class LabelCuller;
@@ -36,12 +37,12 @@ namespace carto {
         class GLTileRenderer;
     }
     
-    class TileRenderer : public std::enable_shared_from_this<TileRenderer> {
+    class TileRenderer {
     public:
-        TileRenderer(const std::weak_ptr<MapRenderer>& mapRenderer, const std::shared_ptr<vt::TileTransformer>& tileTransformer);
+        TileRenderer(const std::shared_ptr<vt::TileTransformer>& tileTransformer);
         virtual ~TileRenderer();
     
-        void setOptions(const std::weak_ptr<Options>& options);
+        void setComponents(const std::weak_ptr<Options>& options, const std::weak_ptr<MapRenderer>& mapRenderer);
     
         void setInteractionMode(bool enabled);
         void setSubTileBlending(bool enabled);
@@ -50,10 +51,8 @@ namespace carto {
 
         void offsetLayerHorizontally(double offset);
     
-        void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
         bool onDrawFrame(float deltaSeconds, const ViewState& viewState);
         bool onDrawFrame3D(float deltaSeconds, const ViewState& viewState);
-        void onSurfaceDestroyed();
     
         bool cullLabels(vt::LabelCuller& culler, const ViewState& viewState);
 
@@ -64,12 +63,44 @@ namespace carto {
         void calculateRayIntersectedBitmaps(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<std::tuple<vt::TileId, double, vt::TileBitmap, cglib::vec2<float> > >& results) const;
     
     private:
+        class GLBaseRenderer : public GLResource {
+        public:
+            virtual ~GLBaseRenderer();
+
+            std::shared_ptr<vt::GLTileRenderer> get() const {
+                std::lock_guard<std::mutex> lock(_mutex);
+                return _renderer;
+            }
+
+        protected:
+            friend GLResourceManager;
+
+            GLBaseRenderer(const std::shared_ptr<GLResourceManager>& manager, const std::shared_ptr<vt::TileTransformer>& tileTransformer, const boost::optional<vt::GLTileRenderer::LightingShader>& lightingShader2D, const boost::optional<vt::GLTileRenderer::LightingShader>& lightingShader3D);
+
+            virtual void create() const;
+            virtual void destroy() const;
+
+        private:
+            const std::shared_ptr<vt::TileTransformer> _tileTransformer;
+            const boost::optional<vt::GLTileRenderer::LightingShader> _lightingShader2D;
+            const boost::optional<vt::GLTileRenderer::LightingShader> _lightingShader3D;
+
+            mutable std::shared_ptr<vt::GLTileRenderer> _renderer;
+
+            mutable std::mutex _mutex;
+        };
+
+        bool initializeRenderer();
+
         static const std::string LIGHTING_SHADER_2D;
         static const std::string LIGHTING_SHADER_3D;
 
+        const std::shared_ptr<vt::TileTransformer> _tileTransformer;
         std::weak_ptr<MapRenderer> _mapRenderer;
-        std::shared_ptr<vt::TileTransformer> _tileTransformer;
-        std::shared_ptr<vt::GLTileRenderer> _glRenderer;
+        std::weak_ptr<Options> _options;
+
+        std::shared_ptr<GLBaseRenderer> _glBaseRenderer;
+
         bool _interactionMode;
         bool _subTileBlending;
         int _labelOrder;
@@ -78,8 +109,6 @@ namespace carto {
         cglib::vec3<float> _viewDir;
         cglib::vec3<float> _mainLightDir;
         std::map<vt::TileId, std::shared_ptr<const vt::Tile> > _tiles;
-
-        std::weak_ptr<Options> _options;
         
         mutable std::mutex _mutex;
     };

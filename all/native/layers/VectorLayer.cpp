@@ -97,10 +97,13 @@ namespace carto {
                                     const std::weak_ptr<TouchHandler>& touchHandler)
     {
         Layer::setComponents(envelopeThreadPool, tileThreadPool, options, mapRenderer, touchHandler);
-        _billboardRenderer->setLayer(std::static_pointer_cast<VectorLayer>(shared_from_this()));
-        _polygon3DRenderer->setOptions(options);
-        _nmlModelRenderer->setOptions(options);
-        _nmlModelRenderer->setMapRenderer(mapRenderer);
+        _billboardRenderer->setComponents(std::static_pointer_cast<VectorLayer>(shared_from_this()), options, mapRenderer);
+        _geometryCollectionRenderer->setComponents(options, mapRenderer);
+        _lineRenderer->setComponents(options, mapRenderer);
+        _pointRenderer->setComponents(options, mapRenderer);
+        _polygonRenderer->setComponents(options, mapRenderer);
+        _polygon3DRenderer->setComponents(options, mapRenderer);
+        _nmlModelRenderer->setComponents(options, mapRenderer);
     }
     
     void VectorLayer::loadData(const std::shared_ptr<CullState>& cullState) {
@@ -160,18 +163,11 @@ namespace carto {
         _nmlModelRenderer->offsetLayerHorizontally(offset);
     }
     
-    void VectorLayer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        Layer::onSurfaceCreated(shaderManager, textureManager);
-        _billboardRenderer->onSurfaceCreated(shaderManager, textureManager);
-        _geometryCollectionRenderer->onSurfaceCreated(shaderManager, textureManager);
-        _lineRenderer->onSurfaceCreated(shaderManager, textureManager);
-        _pointRenderer->onSurfaceCreated(shaderManager, textureManager);
-        _polygonRenderer->onSurfaceCreated(shaderManager, textureManager);
-        _polygon3DRenderer->onSurfaceCreated(shaderManager, textureManager);
-        _nmlModelRenderer->onSurfaceCreated(shaderManager, textureManager);
+    void VectorLayer::onSurfaceCreated(const std::shared_ptr<GLResourceManager>& resourceManager) {
+        Layer::onSurfaceCreated(resourceManager);
     }
     
-    bool VectorLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
+    bool VectorLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
         if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
             float opacity = getOpacity();
             bool zBuffering = isZBuffering();
@@ -183,11 +179,11 @@ namespace carto {
                 mapRenderer->setZBuffering(true);
             }
 
-            bool refresh = _billboardRenderer->onDrawFrame(deltaSeconds, billboardSorter, styleCache, viewState);
-            _geometryCollectionRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
-            _lineRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
-            _pointRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
-            _polygonRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
+            bool refresh = _billboardRenderer->onDrawFrame(deltaSeconds, billboardSorter, viewState);
+            _geometryCollectionRenderer->onDrawFrame(deltaSeconds, viewState);
+            _lineRenderer->onDrawFrame(deltaSeconds, viewState);
+            _pointRenderer->onDrawFrame(deltaSeconds, viewState);
+            _polygonRenderer->onDrawFrame(deltaSeconds, viewState);
             _polygon3DRenderer->onDrawFrame(deltaSeconds, viewState);
             _nmlModelRenderer->onDrawFrame(deltaSeconds, viewState);
 
@@ -204,13 +200,6 @@ namespace carto {
     }
     
     void VectorLayer::onSurfaceDestroyed() {
-        _billboardRenderer->onSurfaceDestroyed();
-        _geometryCollectionRenderer->onSurfaceDestroyed();
-        _lineRenderer->onSurfaceDestroyed();
-        _pointRenderer->onSurfaceDestroyed();
-        _polygonRenderer->onSurfaceDestroyed();
-        _polygon3DRenderer->onSurfaceDestroyed();
-        _nmlModelRenderer->onSurfaceDestroyed();
         Layer::onSurfaceDestroyed();
     }
     

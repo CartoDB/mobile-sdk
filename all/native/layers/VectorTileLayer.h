@@ -156,9 +156,9 @@ namespace carto {
 
         virtual void offsetLayerHorizontally(double offset);
         
-        virtual void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
-        virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
-        virtual bool onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
+        virtual void onSurfaceCreated(const std::shared_ptr<GLResourceManager>& resourceManager);
+        virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
+        virtual bool onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
         virtual void onSurfaceDestroyed();
         
         virtual std::shared_ptr<Bitmap> getBackgroundBitmap() const;

@@ -8,7 +8,8 @@
 #define _CARTO_BILLBOARDRENDERER_H_
 
 #include "core/MapPos.h"
-#include "graphics/utils/GLContext.h"
+#include "renderers/utils/GLContext.h"
+#include "renderers/utils/BitmapTextureCache.h"
 
 #include <deque>
 #include <memory>
@@ -24,13 +25,12 @@ namespace carto {
     class BillboardDrawData;
     class BillboardSorter;
     class Bitmap;
+    class Options;
+    class MapRenderer;
     class Shader;
-    class ShaderManager;
-    class TextureManager;
     class RayIntersectedElement;
     class VectorLayer;
     class ViewState;
-    class StyleTextureCache;
     
     class BillboardRenderer : public std::enable_shared_from_this<BillboardRenderer> {
     public:
@@ -40,22 +40,19 @@ namespace carto {
         BillboardRenderer();
         virtual ~BillboardRenderer();
     
+        void setComponents(const std::weak_ptr<VectorLayer>& layer, const std::weak_ptr<Options>& options, const std::weak_ptr<MapRenderer>& mapRenderer);
+
         void offsetLayerHorizontally(double offset);
     
-        void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
-        bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
-        void onDrawFrameSorted(float deltaSeconds, const std::vector<std::shared_ptr<BillboardDrawData> >& billboardDrawDatas, StyleTextureCache& styleCache, const ViewState& viewState);
-        void onSurfaceDestroyed();
+        bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
+        void onDrawFrameSorted(float deltaSeconds, const std::vector<std::shared_ptr<BillboardDrawData> >& billboardDrawDatas, const ViewState& viewState);
     
         std::size_t getElementCount() const;
         void addElement(const std::shared_ptr<Billboard>& element);
         void refreshElements();
         void updateElement(const std::shared_ptr<Billboard>& element);
         void removeElement(const std::shared_ptr<Billboard>& element);
-        
-        void setLayer(const std::shared_ptr<VectorLayer>& layer);
-        std::shared_ptr<VectorLayer> getLayer() const;
-    
+
         void calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
     
     private:
@@ -69,16 +66,19 @@ namespace carto {
                                         std::vector<std::shared_ptr<BillboardDrawData> >& drawDataBuffer,
                                         const cglib::vec2<float>& texCoordScale,
                                         float opacity,
-                                        StyleTextureCache& styleCache,
                                         const ViewState& viewState);
         
         bool calculateBaseBillboardDrawData(const std::shared_ptr<BillboardDrawData>& drawData, const ViewState& viewState);
         
-        void drawBatch(float opacity, StyleTextureCache& styleCache, const ViewState& viewState);
+        bool initializeRenderer();
+        void drawBatch(float opacity, const ViewState& viewState);
         
         static const std::string BILLBOARD_VERTEX_SHADER;
         static const std::string BILLBOARD_FRAGMENT_SHADER;
+
+        static const unsigned int TEXTURE_CACHE_SIZE;
         
+        std::weak_ptr<MapRenderer> _mapRenderer;
         std::weak_ptr<VectorLayer> _layer;
     
         std::vector<std::shared_ptr<Billboard> > _elements;
@@ -91,6 +91,7 @@ namespace carto {
         std::vector<unsigned short> _indexBuf;
         std::vector<float> _texCoordBuf;
     
+        std::shared_ptr<BitmapTextureCache> _textureCache;
         std::shared_ptr<Shader> _shader;
         GLuint _a_color;
         GLuint _a_coord;

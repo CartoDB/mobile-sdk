@@ -339,15 +339,11 @@ namespace carto {
         }
     }
     
-    void RasterTileLayer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        Layer::onSurfaceCreated(shaderManager, textureManager);
+    void RasterTileLayer::onSurfaceCreated(const std::shared_ptr<GLResourceManager>& resourceManager) {
+        TileLayer::onSurfaceCreated(resourceManager);
 
-        // Reset renderer
-        if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
-            tileRenderer->onSurfaceDestroyed();
-            setTileRenderer(std::shared_ptr<TileRenderer>());
-    
-            // Clear all tile caches - renderer may cache/release tile info, so old tiles are potentially unusable at this point
+        // Clear all tile caches - renderer may cache/release tile info, so old tiles are potentially unusable at this point
+        {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             _preloadingCache.clear();
             _visibleCache.clear();
@@ -355,12 +351,11 @@ namespace carto {
     
         // Create new rendererer, simply drop old one (if exists)
         resetTileTransformer();
-        auto tileRenderer = std::make_shared<TileRenderer>(_mapRenderer, getTileTransformer());
-        tileRenderer->onSurfaceCreated(shaderManager, textureManager);
+        auto tileRenderer = std::make_shared<TileRenderer>(getTileTransformer());
         setTileRenderer(tileRenderer);
     }
     
-    bool RasterTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
+    bool RasterTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
         updateTileLoadListener();
 
         if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
@@ -384,7 +379,7 @@ namespace carto {
         return false;
     }
     
-    bool RasterTileLayer::onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
+    bool RasterTileLayer::onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
         if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
             return tileRenderer->onDrawFrame3D(deltaSeconds, viewState);
         }
@@ -394,7 +389,6 @@ namespace carto {
     void RasterTileLayer::onSurfaceDestroyed() {
         // Reset renderer
         if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
-            tileRenderer->onSurfaceDestroyed();
             setTileRenderer(std::shared_ptr<TileRenderer>());
         }
         
@@ -405,7 +399,7 @@ namespace carto {
             _visibleCache.clear();
         }
     
-        Layer::onSurfaceDestroyed();
+        TileLayer::onSurfaceDestroyed();
     }
     
     void RasterTileLayer::registerDataSourceListener() {

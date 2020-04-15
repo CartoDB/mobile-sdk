@@ -211,11 +211,11 @@ namespace carto {
         return _surfaceCreated;
     }
     
-    void Layer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
+    void Layer::onSurfaceCreated(const std::shared_ptr<GLResourceManager>& resourceManager) {
         _surfaceCreated = true;
     }
     
-    bool Layer::onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
+    bool Layer::onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
         return false;
     }
     

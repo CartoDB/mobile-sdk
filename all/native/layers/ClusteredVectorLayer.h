@@ -143,7 +143,7 @@ namespace carto {
         bool _refreshRootCluster;
         mutable std::mutex _clusterMutex; // for _minClusterDistance, _maxClusterZoom, _dpiScale, _rootClusterIdx, _refreshRootCluster, _renderClusters, _renderClusterIdxs
 
-        virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
+        virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
 
         virtual void refreshElement(const std::shared_ptr<VectorElement>& element, bool remove);
 

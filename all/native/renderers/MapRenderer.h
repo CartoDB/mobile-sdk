@@ -7,9 +7,12 @@
 #ifndef _CARTO_MAPRENDERER_H_
 #define _CARTO_MAPRENDERER_H_
 
+#include "core/MapPos.h"
+#include "core/MapVec.h"
+#include "core/ScreenPos.h"
+#include "core/ScreenBounds.h"
 #include "components/DirectorPtr.h"
 #include "graphics/ViewState.h"
-#include "renderers/components/StyleTextureCache.h"
 #include "renderers/BackgroundRenderer.h"
 #include "renderers/components/AnimationHandler.h"
 #include "renderers/components/BillboardSorter.h"
@@ -31,10 +34,6 @@ namespace carto {
     class BillboardDrawData;
     class Layer;
     class Layers;
-    class MapPos;
-    class ScreenPos;
-    class ScreenBounds;
-    class MapVec;
     class MapRendererListener;
     class RendererCaptureListener;
     class RedrawRequestListener;
@@ -47,9 +46,7 @@ namespace carto {
     class FrameBuffer;
     class Shader;
     class Texture;
-    class FrameBufferManager;
-    class ShaderManager;
-    class TextureManager;
+    class GLResourceManager;
 
     /**
      * The map renderer component.
@@ -111,11 +108,13 @@ namespace carto {
 
         std::shared_ptr<Layers> getLayers() const;
         
+        std::shared_ptr<GLResourceManager> getGLResourceManager() const;
+
         std::vector<std::shared_ptr<BillboardDrawData> > getBillboardDrawDatas() const;
     
         AnimationHandler& getAnimationHandler();
         KineticEventHandler& getKineticEventHandler();
-        
+
         void calculateCameraEvent(CameraPanEvent& cameraEvent, float durationSeconds, bool updateKinetic);
         void calculateCameraEvent(CameraRotationEvent& cameraEvent, float durationSeconds, bool updateKinetic);
         void calculateCameraEvent(CameraTiltEvent& cameraEvent, float durationSeconds, bool updateKinetic);
@@ -144,8 +143,6 @@ namespace carto {
         void registerOnChangeListener(const std::shared_ptr<OnChangeListener>& listener);
         void unregisterOnChangeListener(const std::shared_ptr<OnChangeListener>& listener);
         
-        void addRenderThreadCallback(const std::shared_ptr<ThreadWorker>& callback);
-        
     private:
         class OptionsListener : public Options::OnChangeListener {
         public:
@@ -161,13 +158,10 @@ namespace carto {
 
         void drawLayers(float deltaSeconds, const ViewState& viewState);
         
-        void handleRenderThreadCallbacks();
         void handleRendererCaptureCallbacks();
 
         static const int BILLBOARD_PLACEMENT_TASK_DELAY;
         static const int VT_LABEL_PLACEMENT_TASK_DELAY;
-
-        static const int STYLE_TEXTURE_CACHE_SIZE; // Size limit (in bytes) for style texture cache
 
         static const std::string BLEND_VERTEX_SHADER;
         static const std::string BLEND_FRAGMENT_SHADER;
@@ -176,12 +170,8 @@ namespace carto {
     
         ViewState _viewState;
 
-        std::shared_ptr<FrameBufferManager> _frameBufferManager;
-        std::shared_ptr<ShaderManager> _shaderManager;
-        std::shared_ptr<TextureManager> _textureManager;
+        std::shared_ptr<GLResourceManager> _glResourceManager;
 
-        std::shared_ptr<StyleTextureCache> _styleCache;
-    
         std::shared_ptr<CullWorker> _cullWorker;
         std::thread _cullThread;
         
@@ -212,6 +202,7 @@ namespace carto {
         mutable std::atomic<bool> _surfaceCreated;
         mutable std::atomic<bool> _surfaceChanged;
         mutable std::atomic<bool> _billboardsChanged;
+// TODO: remove
         mutable std::atomic<bool> _renderProjectionChanged;
         mutable std::atomic<bool> _redrawPending;
 
@@ -225,9 +216,6 @@ namespace carto {
         std::vector<std::shared_ptr<OnChangeListener> > _onChangeListeners;
         mutable std::mutex _onChangeListenersMutex;
 
-        std::vector<std::shared_ptr<ThreadWorker> > _renderThreadCallbacks;
-        mutable std::mutex _renderThreadCallbacksMutex;
-    
         mutable std::recursive_mutex _mutex;
     };
     

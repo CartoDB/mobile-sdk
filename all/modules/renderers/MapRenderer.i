@@ -30,6 +30,7 @@
 %ignore carto::MapRenderer::init;
 %ignore carto::MapRenderer::deinit;
 %ignore carto::MapRenderer::getLayers;
+%ignore carto::MapRenderer::getGLResourceManager;
 %ignore carto::MapRenderer::getBillboardDrawDatas;
 %ignore carto::MapRenderer::getProjectionSurface;
 %ignore carto::MapRenderer::getAnimationHandler;

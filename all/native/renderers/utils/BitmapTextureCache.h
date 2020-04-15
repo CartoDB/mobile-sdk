@@ -4,8 +4,10 @@
  * to license terms, as given in https://cartodb.com/terms/
  */
 
-#ifndef _CARTO_STYLETEXTURECACHE_H_
-#define _CARTO_STYLETEXTURECACHE_H_
+#ifndef _CARTO_BITMAPTEXTURECACHE_H_
+#define _CARTO_BITMAPTEXTURECACHE_H_
+
+#include "renderers/utils/GLResource.h"
 
 #include <memory>
 #include <mutex>
@@ -15,26 +17,26 @@
 namespace carto {
     class Bitmap;
     class Texture;
-    class TextureManager;
     
-    class StyleTextureCache {
+    class BitmapTextureCache : public GLResource {
     public:
-        StyleTextureCache(const std::shared_ptr<TextureManager>& textureManager, unsigned int capacityInBytes);
-        virtual ~StyleTextureCache();
+        BitmapTextureCache(const std::shared_ptr<GLResourceManager>& manager, std::size_t capacityInBytes);
+        virtual ~BitmapTextureCache();
         
         std::size_t getCapacity() const;
         void setCapacity(std::size_t capacityInBytes);
 
-        void setTextureManager(const std::shared_ptr<TextureManager>& textureManager);
-        
+        void clear();
+
+        std::shared_ptr<Texture> get(const std::shared_ptr<Bitmap>& bitmap) const;
         std::shared_ptr<Texture> create(const std::shared_ptr<Bitmap>& bitmap, bool genMipmaps, bool repeat);
     
-        std::shared_ptr<Texture> get(const std::shared_ptr<Bitmap>& bitmap);
+    protected:
+        virtual void create() const;
+        virtual void destroy() const;
 
     private:
-        std::shared_ptr<TextureManager> _textureManager;
-
-        cache::timed_lru_cache<std::shared_ptr<Bitmap>, std::shared_ptr<Texture> > _cache;
+        mutable cache::timed_lru_cache<std::shared_ptr<Bitmap>, std::shared_ptr<Texture> > _cache;
         
         mutable std::mutex _mutex;
     };

@@ -1,7 +1,6 @@
 #include "Texture.h"
-#include "graphics/TextureManager.h"
 #include "graphics/Bitmap.h"
-#include "graphics/utils/GLContext.h"
+#include "renderers/utils/GLResourceManager.h"
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
 
@@ -27,25 +26,20 @@ namespace carto {
     const cglib::vec2<float>& Texture::getTexCoordScale() const {
         return _texCoordScale;
     }
-    
-    GLuint Texture::getTexId() const {
-        if (std::this_thread::get_id() != _textureManager->getGLThreadId()) {
-            Log::Warn("Texture::getTexId: Method called from wrong thread!");
-            return 0;
-        }
 
-        load();
+    GLuint Texture::getTexId() const {
+        create();
         return _texId;
     }
 
-    Texture::Texture(const std::shared_ptr<TextureManager>& textureManager, const std::shared_ptr<Bitmap>& bitmap, bool genMipmaps, bool repeat) :
+    Texture::Texture(const std::shared_ptr<GLResourceManager>& manager, const std::shared_ptr<Bitmap>& bitmap, bool genMipmaps, bool repeat) :
+        GLResource(manager),
         _bitmap(bitmap),
         _mipmaps(genMipmaps),
         _repeat(repeat),
         _sizeInBytes(0),
         _texCoordScale(1.0f, 1.0f),
-        _texId(0),
-        _textureManager(textureManager)
+        _texId(0)
     {
         bool npot = !GeneralUtils::IsPow2(bitmap->getWidth()) || !GeneralUtils::IsPow2(bitmap->getHeight());
         if (npot && !GLContext::TEXTURE_NPOT_REPEAT) {
@@ -64,22 +58,22 @@ namespace carto {
         _sizeInBytes = static_cast<std::size_t>((_mipmaps ? MIPMAP_SIZE_MULTIPLIER : 1.0) * _bitmap->getWidth() * _bitmap->getHeight() * _bitmap->getBytesPerPixel());
     }
 
-    void Texture::load() const {
+    void Texture::create() const {
         if (_texId == 0) {
-            _texId = loadFromBitmap(*_bitmap, _mipmaps, _repeat);
+            _texId = LoadFromBitmap(*_bitmap, _mipmaps, _repeat);
         }
     }
 
-    void Texture::unload() const {
+    void Texture::destroy() const {
         if (_texId != 0) {
             glDeleteTextures(1, &_texId);
             _texId = 0;
 
-            GLContext::CheckGLError("Texture::unload");
+            GLContext::CheckGLError("Texture::destroy");
         }
     }
     
-    GLuint Texture::loadFromBitmap(const Bitmap& bitmap, bool genMipmaps, bool repeat) const {
+    GLuint Texture::LoadFromBitmap(const Bitmap& bitmap, bool genMipmaps, bool repeat) {
         if (bitmap.getColorFormat() == ColorFormat::COLOR_FORMAT_UNSUPPORTED) {
             Log::Error("Texture::loadFromBitmap: Failed to create texture from bitmap, unsupported color format");
             return 0;
@@ -104,11 +98,12 @@ namespace carto {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         }
     
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    
-        if (!genMipmaps) {
+        bool npot = !GeneralUtils::IsPow2(bitmap.getWidth()) || !GeneralUtils::IsPow2(bitmap.getHeight());
+        if (!genMipmaps || (npot && !GLContext::TEXTURE_NPOT_MIPMAPS)) {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         } else {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     
             if (GLContext::TEXTURE_FILTER_ANISOTROPIC) {
@@ -124,7 +119,7 @@ namespace carto {
 
         glBindTexture(GL_TEXTURE_2D, oldTexId);
     
-        GLContext::CheckGLError("Texture::loadFromBitmap");
+        GLContext::CheckGLError("Texture::LoadFromBitmap");
     
         return texId;
     }

@@ -222,7 +222,7 @@ namespace carto {
 
         std::lock_guard<std::recursive_mutex> lock(_mutex);
         if (_tileRenderer) {
-            _tileRenderer->setOptions(_options);
+            _tileRenderer->setComponents(options, mapRenderer);
         }
         resetTileTransformer();
     }
@@ -616,7 +616,7 @@ namespace carto {
         _tileRenderer = renderer;
 
         if (_tileRenderer) {
-            _tileRenderer->setOptions(_options);
+            _tileRenderer->setComponents(_options, _mapRenderer);
         }
     }
 

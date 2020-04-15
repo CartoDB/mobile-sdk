@@ -1,16 +1,13 @@
 #include "PolygonRenderer.h"
 #include "graphics/Bitmap.h"
-#include "graphics/Shader.h"
-#include "graphics/ShaderManager.h"
-#include "graphics/Texture.h"
-#include "graphics/TextureManager.h"
 #include "graphics/ViewState.h"
-#include "graphics/utils/GLContext.h"
 #include "layers/VectorLayer.h"
+#include "renderers/MapRenderer.h"
 #include "renderers/drawdatas/LineDrawData.h"
 #include "renderers/drawdatas/PolygonDrawData.h"
 #include "renderers/components/RayIntersectedElement.h"
-#include "renderers/components/StyleTextureCache.h"
+#include "renderers/utils/GLResourceManager.h"
+#include "renderers/utils/Shader.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "vectorelements/Polygon.h"
@@ -20,6 +17,7 @@
 namespace carto {
 
     PolygonRenderer::PolygonRenderer() :
+        _mapRenderer(),
         _elements(),
         _tempElements(),
         _drawDataBuffer(),
@@ -31,11 +29,20 @@ namespace carto {
         _a_color(0),
         _a_coord(0),
         _u_mvpMat(0),
+        _lineRenderer(),
         _mutex()
     {
     }
     
     PolygonRenderer::~PolygonRenderer() {
+    }
+    
+    void PolygonRenderer::setComponents(const std::weak_ptr<Options>& options, const std::weak_ptr<MapRenderer>& mapRenderer) {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        _lineRenderer.setComponents(options, mapRenderer);
+        _mapRenderer = mapRenderer;
+        _shader.reset();
     }
     
     void PolygonRenderer::offsetLayerHorizontally(double offset) {
@@ -49,32 +56,15 @@ namespace carto {
         _lineRenderer.offsetLayerHorizontally(offset);
     }
     
-    void PolygonRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        static ShaderSource shaderSource("polygon", &POLYGON_VERTEX_SHADER, &POLYGON_FRAGMENT_SHADER);
-
-        _shader = shaderManager->createShader(shaderSource);
-
-        // Get shader variables locations
-        glUseProgram(_shader->getProgId());
-        _a_color = _shader->getAttribLoc("a_color");
-        _a_coord = _shader->getAttribLoc("a_coord");
-        _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
-
-        // Drop elements
-        {
-            std::lock_guard<std::mutex> lock(_mutex);
-            _elements.clear();
-            _tempElements.clear();
-        }
-
-        _lineRenderer.onSurfaceCreated(shaderManager, textureManager);
-    }
-    
-    void PolygonRenderer::onDrawFrame(float deltaSeconds, StyleTextureCache& styleCache, const ViewState& viewState) {
+    void PolygonRenderer::onDrawFrame(float deltaSeconds, const ViewState& viewState) {
         std::lock_guard<std::mutex> lock(_mutex);
         
         if (_elements.empty()) {
             // Early return, to avoid calling glUseProgram etc.
+            return;
+        }
+
+        if (!initializeRenderer()) {
             return;
         }
 
@@ -84,21 +74,15 @@ namespace carto {
     
         // Draw, batch polygons with the same bitmap and no line style
         for (const std::shared_ptr<Polygon>& element : _elements) {
-            addToBatch(element->getDrawData(), styleCache, viewState);
+            addToBatch(element->getDrawData(), viewState);
         }
-        drawBatch(styleCache, viewState);
+        drawBatch(viewState);
         
         unbind();
 
         glEnable(GL_CULL_FACE);
     
         GLContext::CheckGLError("PolygonRenderer::onDrawFrame");
-    }
-    
-    void PolygonRenderer::onSurfaceDestroyed() {
-        _shader.reset();
-
-        _lineRenderer.onSurfaceDestroyed();
     }
     
     void PolygonRenderer::addElement(const std::shared_ptr<Polygon>& element) {
@@ -141,7 +125,6 @@ namespace carto {
                                               std::vector<float>& coordBuf,
                                               std::vector<unsigned short>& indexBuf,
                                               std::vector<std::shared_ptr<PolygonDrawData> >& drawDataBuffer,
-                                              StyleTextureCache& styleCache,
                                               const ViewState& viewState)
     {
         // Calculate buffer size
@@ -253,6 +236,25 @@ namespace carto {
         return false;
     }
     
+    bool PolygonRenderer::initializeRenderer() {
+        static const Shader::Source shaderSource("polygon", POLYGON_VERTEX_SHADER, POLYGON_FRAGMENT_SHADER);
+
+        if (_shader && _shader->isValid() && _lineRenderer.initializeRenderer()) {
+            return true;
+        }
+
+        if (auto mapRenderer = _mapRenderer.lock()) {
+            _shader = mapRenderer->getGLResourceManager()->create<Shader>(shaderSource);
+
+            // Get shader variables locations
+            _a_color = _shader->getAttribLoc("a_color");
+            _a_coord = _shader->getAttribLoc("a_coord");
+            _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
+        }
+
+        return _shader && _shader->isValid() && _lineRenderer.initializeRenderer();
+    }
+    
     void PolygonRenderer::bind(const ViewState &viewState) {
         // Prepare for drawing
         glUseProgram(_shader->getProgId());
@@ -274,11 +276,11 @@ namespace carto {
         return _drawDataBuffer.empty();
     }
     
-    void PolygonRenderer::addToBatch(const std::shared_ptr<PolygonDrawData>& drawData, StyleTextureCache& styleCache, const ViewState& viewState) {
+    void PolygonRenderer::addToBatch(const std::shared_ptr<PolygonDrawData>& drawData, const ViewState& viewState) {
         const Bitmap* bitmap = drawData->getBitmap().get();
         
         if (_prevBitmap && _prevBitmap != bitmap) {
-            drawBatch(styleCache, viewState);
+            drawBatch(viewState);
         }
         
         _drawDataBuffer.push_back(drawData);
@@ -286,31 +288,31 @@ namespace carto {
         
         if (!drawData->getLineDrawDatas().empty()) {
             if (_prevBitmap) {
-                drawBatch(styleCache, viewState);
+                drawBatch(viewState);
             }
 
             unbind();
             
             // Draw the draw datas, multiple passes may be necessary
             for (const std::shared_ptr<LineDrawData>& lineDrawData : drawData->getLineDrawDatas()) {
-                _lineRenderer.addToBatch(lineDrawData, styleCache, viewState);
+                _lineRenderer.addToBatch(lineDrawData, viewState);
             }
 
             _lineRenderer.bind(viewState);
-            _lineRenderer.drawBatch(styleCache, viewState);
+            _lineRenderer.drawBatch(viewState);
             _lineRenderer.unbind();
 
             bind(viewState);
         }
     }
     
-    void PolygonRenderer::drawBatch(StyleTextureCache& styleCache, const ViewState& viewState) {
+    void PolygonRenderer::drawBatch(const ViewState& viewState) {
         if (_drawDataBuffer.empty()) {
             return;
         }
 
         // Build buffers and draw
-        BuildAndDrawBuffers(_a_color, _a_coord, _colorBuf, _coordBuf, _indexBuf, _drawDataBuffer, styleCache, viewState);
+        BuildAndDrawBuffers(_a_color, _a_coord, _colorBuf, _coordBuf, _indexBuf, _drawDataBuffer, viewState);
         
         _drawDataBuffer.clear();
         _prevBitmap = nullptr;

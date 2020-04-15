@@ -2,13 +2,11 @@
 #include "components/Layers.h"
 #include "components/Options.h"
 #include "graphics/Bitmap.h"
-#include "graphics/Shader.h"
-#include "graphics/ShaderManager.h"
-#include "graphics/TextureManager.h"
-#include "graphics/Texture.h"
 #include "graphics/ViewState.h"
-#include "graphics/utils/GLContext.h"
 #include "layers/Layer.h"
+#include "renderers/utils/GLResourceManager.h"
+#include "renderers/utils/Shader.h"
+#include "renderers/utils/Texture.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 
@@ -37,7 +35,7 @@ namespace carto {
         _u_tex(0),
         _u_lightDir(0),
         _u_mvpMat(0),
-        _textureManager(),
+        _glResourceManager(),
         _options(options),
         _layers(layers)
     {
@@ -46,13 +44,14 @@ namespace carto {
     BackgroundRenderer::~BackgroundRenderer() {
     }
     
-    void BackgroundRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        static ShaderSource shaderSource("background", &BACKGROUND_VERTEX_SHADER, &BACKGROUND_FRAGMENT_SHADER);
+    void BackgroundRenderer::onSurfaceCreated(const std::shared_ptr<GLResourceManager>& resourceManager) {
+        static const Shader::Source shaderSource("background", BACKGROUND_VERTEX_SHADER, BACKGROUND_FRAGMENT_SHADER);
 
-        _shader = shaderManager->createShader(shaderSource);
+        _glResourceManager = resourceManager;
+
+        _shader = _glResourceManager->create<Shader>(shaderSource);
 
         // Get shader variables locations
-        glUseProgram(_shader->getProgId());
         _u_tex = _shader->getUniformLoc("u_tex");
         _u_lightDir = _shader->getUniformLoc("u_lightDir");
         _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
@@ -60,7 +59,6 @@ namespace carto {
         _a_normal = _shader->getAttribLoc("a_normal");
         _a_texCoord = _shader->getAttribLoc("a_texCoord");
     
-        _textureManager = textureManager;
         _backgroundBitmap.reset();
         _backgroundTex.reset();
         _skyBitmap.reset();
@@ -79,7 +77,7 @@ namespace carto {
         }
         if (_backgroundBitmap != backgroundBitmap) {
             if (backgroundBitmap) {
-                _backgroundTex = _textureManager->createTexture(backgroundBitmap, true, true);
+                _backgroundTex = _glResourceManager->create<Texture>(backgroundBitmap, true, true);
             } else {
                 _backgroundTex.reset();
             }
@@ -95,7 +93,7 @@ namespace carto {
         }
         if (_skyBitmap != skyBitmap) {
             if (skyBitmap) {
-                _skyTex = _textureManager->createTexture(skyBitmap, false, false);
+                _skyTex = _glResourceManager->create<Texture>(skyBitmap, false, false);
             } else {
                 _skyTex.reset();
             }
@@ -168,7 +166,8 @@ namespace carto {
         _skyTex.reset();
 
         _shader.reset();
-        _textureManager.reset();
+
+        _glResourceManager.reset();
     }
     
     void BackgroundRenderer::drawBackground(const ViewState& viewState) {

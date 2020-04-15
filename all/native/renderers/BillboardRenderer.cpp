@@ -1,16 +1,14 @@
 #include "BillboardRenderer.h"
 #include "graphics/Bitmap.h"
-#include "graphics/Shader.h"
-#include "graphics/ShaderManager.h"
-#include "graphics/Texture.h"
-#include "graphics/TextureManager.h"
 #include "graphics/ViewState.h"
-#include "graphics/utils/GLContext.h"
 #include "layers/VectorLayer.h"
+#include "renderers/MapRenderer.h"
+#include "renderers/utils/GLResourceManager.h"
+#include "renderers/utils/Shader.h"
+#include "renderers/utils/Texture.h"
 #include "projections/ProjectionSurface.h"
 #include "renderers/drawdatas/BillboardDrawData.h"
 #include "renderers/components/RayIntersectedElement.h"
-#include "renderers/components/StyleTextureCache.h"
 #include "renderers/components/BillboardSorter.h"
 #include "styles/AnimationStyle.h"
 #include "styles/BillboardStyle.h"
@@ -87,6 +85,7 @@ namespace carto {
     }
     
     BillboardRenderer::BillboardRenderer() :
+        _mapRenderer(),
         _layer(),
         _elements(),
         _tempElements(),
@@ -94,6 +93,7 @@ namespace carto {
         _coordBuf(),
         _indexBuf(),
         _texCoordBuf(),
+        _textureCache(),
         _shader(),
         _a_color(0),
         _a_coord(0),
@@ -107,6 +107,15 @@ namespace carto {
     BillboardRenderer::~BillboardRenderer() {
     }
     
+    void BillboardRenderer::setComponents(const std::weak_ptr<VectorLayer>& layer, const std::weak_ptr<Options>& options, const std::weak_ptr<MapRenderer>& mapRenderer) {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+        _layer = layer;
+        _mapRenderer = mapRenderer;
+        _textureCache.reset();
+        _shader.reset();
+    }
+
     void BillboardRenderer::offsetLayerHorizontally(double offset) {
         // Offset current draw data batch horizontally by the required amount
         std::lock_guard<std::recursive_mutex> lock(_mutex);
@@ -116,29 +125,17 @@ namespace carto {
         }
     }
     
-    void BillboardRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        static ShaderSource shaderSource("billboard", &BILLBOARD_VERTEX_SHADER, &BILLBOARD_FRAGMENT_SHADER);
-
-        _shader = shaderManager->createShader(shaderSource);
-
-        // Get shader variables locations
-        glUseProgram(_shader->getProgId());
-        _a_color = _shader->getAttribLoc("a_color");
-        _a_coord = _shader->getAttribLoc("a_coord");
-        _a_texCoord = _shader->getAttribLoc("a_texCoord");
-        _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
-        _u_tex = _shader->getUniformLoc("u_tex");
-
-        // Drop elements
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _elements.clear();
-            _tempElements.clear();
-        }
-    }
-    
-    bool BillboardRenderer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
+    bool BillboardRenderer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+        if (_elements.empty()) {
+            // Skip heavy GL calls
+            return false;
+        }
+
+        if (!initializeRenderer()) {
+            return false;
+        }
     
         // Billboards can't be rendered in layer order, they have to be sorted globally and drawn from back to front
         bool refresh = false;
@@ -180,16 +177,25 @@ namespace carto {
     
     void BillboardRenderer::onDrawFrameSorted(float deltaSeconds,
                                               const std::vector<std::shared_ptr<BillboardDrawData> >& billboardDrawDatas,
-                                              StyleTextureCache& styleCache, const ViewState& viewState)
+                                              const ViewState& viewState)
     {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+
+        if (billboardDrawDatas.empty()) {
+            // Skip heavy GL calls
+            return;
+        }
+
+        if (!initializeRenderer()) {
+            return;
+        }
+    
         // Get layer opacity
-        float opacity = 1.0f;
-        if (std::shared_ptr<VectorLayer> layer = getLayer()) {
+        float opacity = 0;
+        if (std::shared_ptr<VectorLayer> layer = _layer.lock()) {
             opacity = layer->getOpacity();
         }
     
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-
         // Prepare for drawing
         glUseProgram(_shader->getProgId());
         // Coords, texCoords, colors
@@ -209,7 +215,7 @@ namespace carto {
         for (const std::shared_ptr<BillboardDrawData>& drawData : billboardDrawDatas) {
             if (std::shared_ptr<Bitmap> bitmap = drawData->getBitmap()) {
                 if (prevBitmap && prevBitmap != bitmap) {
-                    drawBatch(opacity, styleCache, viewState);
+                    drawBatch(opacity, viewState);
                     _drawDataBuffer.clear();
                 }
         
@@ -219,7 +225,7 @@ namespace carto {
         }
     
         if (prevBitmap) {
-            drawBatch(opacity, styleCache, viewState);
+            drawBatch(opacity, viewState);
         }
     
         glDisableVertexAttribArray(_a_coord);
@@ -227,10 +233,6 @@ namespace carto {
         glDisableVertexAttribArray(_a_color);
     
         GLContext::CheckGLError("BillboardRenderer::onDrawFrameSorted");
-    }
-    
-    void BillboardRenderer::onSurfaceDestroyed() {
-        _shader.reset();
     }
     
     std::size_t BillboardRenderer::getElementCount() const {
@@ -275,16 +277,6 @@ namespace carto {
         } else {
             _elements.erase(std::remove(_elements.begin(), _elements.end(), element), _elements.end());
         }
-    }
-    
-    void BillboardRenderer::setLayer(const std::shared_ptr<VectorLayer>& layer) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        _layer = layer;
-    }
-    
-    std::shared_ptr<VectorLayer> BillboardRenderer::getLayer() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _layer.lock();
     }
     
     void BillboardRenderer::calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
@@ -347,7 +339,6 @@ namespace carto {
                                                 std::vector<std::shared_ptr<BillboardDrawData> >& drawDataBuffer,
                                                 const cglib::vec2<float>& texCoordScale,
                                                 float opacity,
-                                                StyleTextureCache& styleCache,
                                                 const ViewState& viewState)
     {
         // Resize the buffers, if necessary
@@ -507,18 +498,40 @@ namespace carto {
         return true;
     }
         
-    void BillboardRenderer::drawBatch(float opacity, StyleTextureCache& styleCache, const ViewState& viewState) {
+    bool BillboardRenderer::initializeRenderer() {
+        static const Shader::Source shaderSource("billboard", BILLBOARD_VERTEX_SHADER, BILLBOARD_FRAGMENT_SHADER);
+
+        if (_shader && _shader->isValid() && _textureCache && _textureCache->isValid()) {
+            return true;
+        }
+
+        if (auto mapRenderer = _mapRenderer.lock()) {
+            _textureCache = mapRenderer->getGLResourceManager()->create<BitmapTextureCache>(TEXTURE_CACHE_SIZE);
+            _shader = mapRenderer->getGLResourceManager()->create<Shader>(shaderSource);
+
+            // Get shader variables locations
+            _a_color = _shader->getAttribLoc("a_color");
+            _a_coord = _shader->getAttribLoc("a_coord");
+            _a_texCoord = _shader->getAttribLoc("a_texCoord");
+            _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
+            _u_tex = _shader->getUniformLoc("u_tex");
+        }
+
+        return _shader && _shader->isValid() && _textureCache && _textureCache->isValid();
+    }
+    
+    void BillboardRenderer::drawBatch(float opacity, const ViewState& viewState) {
         // Bind texture
         const std::shared_ptr<Bitmap>& bitmap = _drawDataBuffer.front()->getBitmap();
-        std::shared_ptr<Texture> texture = styleCache.get(bitmap);
+        std::shared_ptr<Texture> texture = _textureCache->get(bitmap);
         if (!texture) {
-            texture = styleCache.create(bitmap, _drawDataBuffer.front()->isGenMipmaps(), false);
+            texture = _textureCache->create(bitmap, _drawDataBuffer.front()->isGenMipmaps(), false);
         }
         glBindTexture(GL_TEXTURE_2D, texture->getTexId());
         
         // Draw the draw datas, multiple passes may be necessary
         BuildAndDrawBuffers(_a_color, _a_coord, _a_texCoord, _colorBuf, _coordBuf, _indexBuf, _texCoordBuf, _drawDataBuffer,
-                            texture->getTexCoordScale(), opacity, styleCache, viewState);
+                            texture->getTexCoordScale(), opacity, viewState);
     }
     
     const std::string BillboardRenderer::BILLBOARD_VERTEX_SHADER = R"GLSL(
@@ -550,5 +563,7 @@ namespace carto {
             gl_FragColor = color;
         }
     )GLSL";
+
+    const unsigned int BillboardRenderer::TEXTURE_CACHE_SIZE = 16 * 1024 * 1024;
 
 }

@@ -128,6 +128,7 @@ namespace carto {
         const std::weak_ptr<TouchHandler>& touchHandler)
     {
         VectorLayer::setComponents(envelopeThreadPool, tileThreadPool, options, mapRenderer, touchHandler);
+        _overlayRenderer->setComponents(options, mapRenderer);
 
         if (touchHandler.lock()) {
             registerTouchHandlerListener();
@@ -138,16 +139,14 @@ namespace carto {
 
     void EditableVectorLayer::offsetLayerHorizontally(double offset) {
         VectorLayer::offsetLayerHorizontally(offset);
-        _overlayRenderer->offsetLayerHorizontally(offset);
     }
 
-    void EditableVectorLayer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        VectorLayer::onSurfaceCreated(shaderManager, textureManager);
-        _overlayRenderer->onSurfaceCreated(shaderManager, textureManager);
+    void EditableVectorLayer::onSurfaceCreated(const std::shared_ptr<GLResourceManager>& resourceManager) {
+        VectorLayer::onSurfaceCreated(resourceManager);
     }
 
-    bool EditableVectorLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
-        bool refresh = VectorLayer::onDrawFrame(deltaSeconds, billboardSorter, styleCache, viewState);
+    bool EditableVectorLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
+        bool refresh = VectorLayer::onDrawFrame(deltaSeconds, billboardSorter, viewState);
 
         if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
             float opacity = getOpacity();
@@ -156,7 +155,7 @@ namespace carto {
                 mapRenderer->clearAndBindScreenFBO(Color(0, 0, 0, 0), false, false);
             }
 
-            _overlayRenderer->onDrawFrame(deltaSeconds, styleCache, viewState);
+            _overlayRenderer->onDrawFrame(deltaSeconds, viewState);
 
             if (opacity < 1.0f) {
                 mapRenderer->blendAndUnbindScreenFBO(opacity);
@@ -167,7 +166,6 @@ namespace carto {
     }
 
     void EditableVectorLayer::onSurfaceDestroyed() {
-        _overlayRenderer->onSurfaceDestroyed();
         VectorLayer::onSurfaceDestroyed();
     }
 

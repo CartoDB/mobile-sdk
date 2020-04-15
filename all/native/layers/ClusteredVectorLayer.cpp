@@ -130,13 +130,13 @@ namespace carto {
         VectorLayer::refresh();
     }
 
-    bool ClusteredVectorLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
+    bool ClusteredVectorLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
         if (!isVisible() || !_lastCullState || !getVisibleZoomRange().inRange(viewState.getZoom()) || getOpacity() <= 0) {
             return false;
         }
 
         bool refresh = renderClusters(viewState, deltaSeconds);
-        return VectorLayer::onDrawFrame(deltaSeconds, billboardSorter, styleCache, viewState) || refresh;
+        return VectorLayer::onDrawFrame(deltaSeconds, billboardSorter, viewState) || refresh;
     }
 
     void ClusteredVectorLayer::refreshElement(const std::shared_ptr<VectorElement>& element, bool remove) {

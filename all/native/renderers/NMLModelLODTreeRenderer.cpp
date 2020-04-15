@@ -3,41 +3,24 @@
 #include "NMLModelLODTreeRenderer.h"
 #include "components/ThreadWorker.h"
 #include "datasources/NMLModelLODTreeDataSource.h"
-#include "graphics/Shader.h"
-#include "graphics/ShaderManager.h"
 #include "graphics/ViewState.h"
-#include "graphics/utils/GLContext.h"
 #include "layers/NMLModelLODTreeLayer.h"
 #include "projections/ProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
+#include "renderers/utils/GLResourceManager.h"
 #include "utils/Log.h"
 
 #include <nml/GLModel.h>
 #include <nml/GLTexture.h>
 #include <nml/GLResourceManager.h>
 
-namespace {
-
-    struct GLResourceDeleter : carto::ThreadWorker {
-        GLResourceDeleter(std::shared_ptr<carto::nml::GLResourceManager> glResourceManager) : _glResourceManager(std::move(glResourceManager)) { }
-
-        virtual void operator () () {
-            _glResourceManager->deleteAll();
-        }
-
-    private:
-        std::shared_ptr<carto::nml::GLResourceManager> _glResourceManager;
-    };
-
-}
-
 namespace carto {
 
-    NMLModelLODTreeRenderer::NMLModelLODTreeRenderer(const std::weak_ptr<MapRenderer>& mapRenderer, const std::weak_ptr<Options>& options) :
-        _mapRenderer(mapRenderer),
-        _options(options),
-        _glResourceManager(),
+    NMLModelLODTreeRenderer::NMLModelLODTreeRenderer() :
+        _mapRenderer(),
+        _options(),
+        _glBaseResourceManager(),
         _tempDrawDatas(),
         _drawRecordMap(),
         _mutex()
@@ -45,13 +28,16 @@ namespace carto {
     }
     
     NMLModelLODTreeRenderer::~NMLModelLODTreeRenderer() {
-        if (_glResourceManager) {
-            if (auto mapRenderer = _mapRenderer.lock()) {
-                mapRenderer->addRenderThreadCallback(std::make_shared<GLResourceDeleter>(_glResourceManager));
-            }
-        }
     }
     
+    void NMLModelLODTreeRenderer::setComponents(const std::weak_ptr<Options>& options, const std::weak_ptr<MapRenderer>& mapRenderer) {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        _options = options;
+        _mapRenderer = mapRenderer;
+        _glBaseResourceManager.reset();
+    }
+
     void NMLModelLODTreeRenderer::offsetLayerHorizontally(double offset) {
         std::lock_guard<std::mutex> lock(_mutex);
         
@@ -61,19 +47,20 @@ namespace carto {
         }
     }
 
-    void NMLModelLODTreeRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        _glResourceManager = std::make_shared<nml::GLResourceManager>();
-        _drawRecordMap.clear();
-        _tempDrawDatas.clear();
-
-        nml::GLTexture::registerGLExtensions();
-    }
-
     bool NMLModelLODTreeRenderer::onDrawFrame(float deltaSeconds, const ViewState& viewState) {
         std::lock_guard<std::mutex> lock(_mutex);
     
         std::shared_ptr<Options> options = _options.lock();
         if (!options) {
+            return false;
+        }
+
+        if (!initializeRenderer()) {
+            return false;
+        }
+
+        std::shared_ptr<nml::GLResourceManager> resourceManager = _glBaseResourceManager->get();
+        if (!resourceManager) {
             return false;
         }
 
@@ -96,7 +83,7 @@ namespace carto {
                 continue;
             }
     
-            record.drawData.getGLModel()->create(*_glResourceManager);
+            record.drawData.getGLModel()->create(*resourceManager);
 
             record.created = true;
         }
@@ -140,7 +127,7 @@ namespace carto {
             cglib::mat4x4<float> mvMat = cglib::mat4x4<float>::convert(viewState.getModelviewMat() * record.drawData.getLocalMat());
             nml::RenderState renderState(projMat, mvMat, ambientLightColor, mainLightColor, mainLightDir);
 
-            record.drawData.getGLModel()->draw(*_glResourceManager, renderState);
+            record.drawData.getGLModel()->draw(*resourceManager, renderState);
         }
     
         // Remove all unused models, update parent-child links
@@ -164,18 +151,13 @@ namespace carto {
         }
     
         // Release unused resources
-        _glResourceManager->deleteUnused();
+        resourceManager->deleteUnused();
         
         // Restore expected GL state
         glDepthMask(GL_FALSE);
         glActiveTexture(GL_TEXTURE0);
 
         return false;
-    }
-
-    void NMLModelLODTreeRenderer::onSurfaceDestroyed() {
-        _glResourceManager.reset();
-        _drawRecordMap.clear();
     }
 
     void NMLModelLODTreeRenderer::addDrawData(const std::shared_ptr<NMLModelLODTreeDrawData>& drawData) {
@@ -252,6 +234,50 @@ namespace carto {
                 cglib::vec3<double> pos = cglib::transform_point(intersections[i].pos, modelMat);
                 results.push_back(RayIntersectedElement(std::make_shared<NMLModelLODTree::Proxy>(proxyIt->second), layer, pos, pos, true));
             }
+        }
+    }
+
+    bool NMLModelLODTreeRenderer::initializeRenderer() {
+        if (_glBaseResourceManager && _glBaseResourceManager->isValid()) {
+            return true;
+        }
+
+        if (auto mapRenderer = _mapRenderer.lock()) {
+            _glBaseResourceManager = mapRenderer->getGLResourceManager()->create<GLBaseResourceManager>();
+        }
+
+        return _glBaseResourceManager && _glBaseResourceManager->isValid();
+    }
+
+    NMLModelLODTreeRenderer::GLBaseResourceManager::~GLBaseResourceManager() {
+    }
+
+    NMLModelLODTreeRenderer::GLBaseResourceManager::GLBaseResourceManager(const std::shared_ptr<GLResourceManager>& manager) :
+        GLResource(manager),
+        _resourceManager(),
+        _mutex()
+    {
+    }
+
+    void NMLModelLODTreeRenderer::GLBaseResourceManager::create() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        if (!_resourceManager) {
+            Log::Debug("NMLModelLODTreeRenderer::GLBaseResourceManager::create: Creating renderer");
+            nml::GLTexture::registerGLExtensions();
+            _resourceManager = std::make_shared<nml::GLResourceManager>();
+            GLContext::CheckGLError("NMLModelLODTreeRenderer::GLBaseResourceManager::create");
+        }
+    }
+
+    void NMLModelLODTreeRenderer::GLBaseResourceManager::destroy() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        if (_resourceManager) {
+             Log::Debug("NMLModelLODTreeRenderer::GLBaseResourceManager::destroy: Releasing renderer");
+             _resourceManager->deleteAll();
+             _resourceManager.reset();
+             GLContext::CheckGLError("NMLModelLODTreeRenderer::GLBaseResourceManager::destroy");
         }
     }
 

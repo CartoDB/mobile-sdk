@@ -11,6 +11,7 @@
 
 #include "datasources/components/NMLModelLODTree.h"
 #include "renderers/drawdatas/NMLModelLODTreeDrawData.h"
+#include "renderers/utils/GLResource.h"
 
 #include <memory>
 #include <mutex>
@@ -21,14 +22,10 @@
 #include <cglib/ray.h>
 
 namespace carto {
-    class MapPos;
-    class MapVec;
     class Options;
-    class Shader;
-    class ShaderManager;
-    class TextureManager;
-    class RayIntersectedElement;
     class MapRenderer;
+    class GLResourceManager;
+    class RayIntersectedElement;
     class ViewState;
     class NMLModelLODTreeDataSource;
     class NMLModelLODTreeLayer;
@@ -40,14 +37,14 @@ namespace carto {
 
     class NMLModelLODTreeRenderer {
     public:
-        NMLModelLODTreeRenderer(const std::weak_ptr<MapRenderer>& mapRenderer, const std::weak_ptr<Options>& options);
+        NMLModelLODTreeRenderer();
         virtual ~NMLModelLODTreeRenderer();
     
+        void setComponents(const std::weak_ptr<Options>& options, const std::weak_ptr<MapRenderer>& mapRenderer);
+
         void offsetLayerHorizontally(double offset);
     
-        void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
         bool onDrawFrame(float deltaSeconds, const ViewState& viewState);
-        void onSurfaceDestroyed();
 
         void addDrawData(const std::shared_ptr<NMLModelLODTreeDrawData>& drawData);
         void refreshDrawData();
@@ -55,6 +52,34 @@ namespace carto {
         void calculateRayIntersectedElements(const std::shared_ptr<NMLModelLODTreeLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
     
     protected:
+        class GLBaseResourceManager : public GLResource {
+        public:
+            virtual ~GLBaseResourceManager();
+
+            std::shared_ptr<nml::GLResourceManager> get() const {
+                std::lock_guard<std::mutex> lock(_mutex);
+                return _resourceManager;
+            }
+
+            nml::GLResourceManager* operator -> () const {
+                std::lock_guard<std::mutex> lock(_mutex);
+                return _resourceManager.get();
+            }
+
+        protected:
+            friend GLResourceManager;
+
+            GLBaseResourceManager(const std::shared_ptr<GLResourceManager>& manager);
+
+            virtual void create() const;
+            virtual void destroy() const;
+
+        private:
+            mutable std::shared_ptr<nml::GLResourceManager> _resourceManager;
+
+            mutable std::mutex _mutex;
+        };
+
         struct ModelNodeDrawRecord {
             NMLModelLODTreeDrawData drawData;
             ModelNodeDrawRecord* parent;
@@ -64,11 +89,13 @@ namespace carto {
     
             ModelNodeDrawRecord(const NMLModelLODTreeDrawData& drawData) : drawData(drawData), parent(0), children(), used(false), created(false) { }
         };
+
+        bool initializeRenderer();
     
         std::weak_ptr<MapRenderer> _mapRenderer;
         std::weak_ptr<Options> _options;
 
-        std::shared_ptr<nml::GLResourceManager> _glResourceManager;
+        std::shared_ptr<GLBaseResourceManager> _glBaseResourceManager;
         std::vector<std::shared_ptr<NMLModelLODTreeDrawData> > _tempDrawDatas;
         std::map<long long, std::shared_ptr<ModelNodeDrawRecord> > _drawRecordMap;
 

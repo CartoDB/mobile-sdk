@@ -80,6 +80,10 @@ namespace carto {
         _colorFormat(ColorFormat::COLOR_FORMAT_UNSUPPORTED),
         _pixelData()
     {
+        if (!pixelData) {
+            throw NullArgumentException("Null pixelData");
+        }
+
         loadFromUncompressedBytes(pixelData->data(), width, height, colorFormat, bytesPerRow);
     }
     
@@ -91,6 +95,10 @@ namespace carto {
         _colorFormat(ColorFormat::COLOR_FORMAT_UNSUPPORTED),
         _pixelData()
     {
+        if (!pixelData) {
+            throw NullArgumentException("Null pixelData");
+        }
+
         loadFromUncompressedBytes(pixelData, width, height, colorFormat, bytesPerRow);
     }
     
@@ -476,6 +484,7 @@ namespace carto {
         if (!compressedData) {
             throw NullArgumentException("Null compressedData");
         }
+
         return CreateFromCompressed(compressedData->data(), compressedData->size());
     }
 
@@ -483,6 +492,7 @@ namespace carto {
         if (!compressedData) {
             throw NullArgumentException("Null compressedData");
         }
+
         std::shared_ptr<Bitmap> bitmap(new Bitmap);
         if (!bitmap->loadFromCompressedBytes(compressedData, dataSize)) {
             return std::shared_ptr<Bitmap>();

@@ -7,7 +7,7 @@
 #ifndef _CARTO_TEXTURE_H_
 #define _CARTO_TEXTURE_H_
 
-#include "graphics/utils/GLContext.h"
+#include "renderers/utils/GLResource.h"
 
 #include <memory>
 
@@ -15,9 +15,8 @@
 
 namespace carto {
     class Bitmap;
-    class TextureManager;
     
-    class Texture {
+    class Texture : public GLResource {
     public:
         virtual ~Texture();
         
@@ -28,23 +27,23 @@ namespace carto {
         std::size_t getSize() const;
         
         const cglib::vec2<float>& getTexCoordScale() const;
-        
+
         GLuint getTexId() const;
 
     protected:
-        friend class TextureManager;
+        friend GLResourceManager;
 
-        Texture(const std::shared_ptr<TextureManager>& textureManager, const std::shared_ptr<Bitmap>& bitmap, bool genMipmaps, bool repeat);
+        Texture(const std::shared_ptr<GLResourceManager>& manager, const std::shared_ptr<Bitmap>& bitmap, bool genMipmaps, bool repeat);
 
-        void load() const;
-        void unload() const;
+        virtual void create() const;
+        virtual void destroy() const;
 
     private:
         static const int MAX_ANISOTROPY;
         
         static const double MIPMAP_SIZE_MULTIPLIER;
     
-        GLuint loadFromBitmap(const Bitmap& bitmap, bool genMipmaps, bool repeat) const;
+        static GLuint LoadFromBitmap(const Bitmap& bitmap, bool genMipmaps, bool repeat);
         
         std::shared_ptr<Bitmap> _bitmap;
         bool _mipmaps;
@@ -55,8 +54,6 @@ namespace carto {
         cglib::vec2<float> _texCoordScale;
     
         mutable GLuint _texId;
-
-        std::shared_ptr<TextureManager> _textureManager;
     };
     
 }

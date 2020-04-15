@@ -20,8 +20,6 @@ namespace carto {
     class GeometryCollection;
     class GeometryCollectionDrawData;
     class Projection;
-    class Shader;
-    class ShaderManager;
     class RayIntersectedElement;
     class VectorLayer;
     class ViewState;
@@ -31,11 +29,11 @@ namespace carto {
         GeometryCollectionRenderer();
         virtual ~GeometryCollectionRenderer();
 
+        void setComponents(const std::weak_ptr<Options>& options, const std::weak_ptr<MapRenderer>& mapRenderer);
+
         void offsetLayerHorizontally(double offset);
 
-        void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
-        void onDrawFrame(float deltaSeconds, StyleTextureCache& styleCache, const ViewState& viewState);
-        void onSurfaceDestroyed();
+        void onDrawFrame(float deltaSeconds, const ViewState& viewState);
 
         void addElement(const std::shared_ptr<GeometryCollection>& element);
         void refreshElements();
@@ -45,6 +43,8 @@ namespace carto {
         void calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
 
     private:
+        bool initializeRenderer();
+
         std::vector<std::shared_ptr<GeometryCollection> > _elements;
         std::vector<std::shared_ptr<GeometryCollection> > _tempElements;
 

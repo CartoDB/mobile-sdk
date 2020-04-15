@@ -32,7 +32,7 @@ namespace carto {
         return static_cast<int>(count);
     }
 
-    bool TorqueTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) {
+    bool TorqueTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
         updateTileLoadListener();
 
         if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {

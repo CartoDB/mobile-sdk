@@ -2,12 +2,10 @@
 #include "components/Options.h"
 #include "components/LicenseManager.h"
 #include "graphics/Bitmap.h"
-#include "graphics/Shader.h"
-#include "graphics/ShaderManager.h"
-#include "graphics/TextureManager.h"
-#include "graphics/Texture.h"
 #include "graphics/ViewState.h"
-#include "graphics/utils/GLContext.h"
+#include "renderers/utils/GLResourceManager.h"
+#include "renderers/utils/Shader.h"
+#include "renderers/utils/Texture.h"
 #include "utils/Const.h"
 #include "utils/Log.h"
 #include "utils/GeneralUtils.h"
@@ -26,7 +24,7 @@ namespace carto {
         _u_mvpMat(0),
         _a_coord(0),
         _a_texCoord(0),
-        _textureManager(),
+        _glResourceManager(),
         _options(options)
     {
         std::fill_n(_watermarkCoords, sizeof(_watermarkCoords) / sizeof(float), 0.0f);
@@ -39,19 +37,19 @@ namespace carto {
     WatermarkRenderer::~WatermarkRenderer() {
     }
     
-    void WatermarkRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        static ShaderSource shaderSource("watermark", &WATERMARK_VERTEX_SHADER, &WATERMARK_FRAGMENT_SHADER);
+    void WatermarkRenderer::onSurfaceCreated(const std::shared_ptr<GLResourceManager>& resourceManager) {
+        static const Shader::Source shaderSource("watermark", WATERMARK_VERTEX_SHADER, WATERMARK_FRAGMENT_SHADER);
 
-        _shader = shaderManager->createShader(shaderSource);
+        _glResourceManager = resourceManager;
+
+        _shader = _glResourceManager->create<Shader>(shaderSource);
 
         // Get shader variables locations
-        glUseProgram(_shader->getProgId());
         _u_tex = _shader->getUniformLoc("u_tex");
         _u_mvpMat = _shader->getUniformLoc("u_mvpMat");
         _a_coord = _shader->getAttribLoc("a_coord");
         _a_texCoord = _shader->getAttribLoc("a_texCoord");
     
-        _textureManager = textureManager;
         _watermarkBitmap.reset();
         _watermarkTex.reset();
     }
@@ -87,7 +85,7 @@ namespace carto {
         bool watermarkChanged = false;
         if (_watermarkBitmap != watermarkBitmap) {
             if (watermarkBitmap) {
-                _watermarkTex = _textureManager->createTexture(watermarkBitmap, true, false);
+                _watermarkTex = _glResourceManager->create<Texture>(watermarkBitmap, true, false);
             } else {
                 _watermarkTex.reset();
             }
@@ -162,7 +160,8 @@ namespace carto {
         _watermarkTex.reset();
 
         _shader.reset();
-        _textureManager.reset();
+
+        _glResourceManager.reset();
     }
     
     void WatermarkRenderer::drawWatermark(const ViewState& viewState) {

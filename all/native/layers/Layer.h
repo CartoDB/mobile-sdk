@@ -10,7 +10,6 @@
 #include "core/ScreenPos.h"
 #include "core/MapRange.h"
 #include "core/Variant.h"
-#include "renderers/components/StyleTextureCache.h"
 #include "renderers/components/CullState.h"
 #include "ui/ClickType.h"
 
@@ -28,11 +27,8 @@ namespace carto {
     class BillboardSorter;
     class DataSource;
     class Layers;
-    class MapPos;
-    class MapVec;
     class MapRenderer;
-    class ShaderManager;
-    class TextureManager;
+    class GLResourceManager;
     class TouchHandler;
     class CancelableThreadPool;
     class RayIntersectedElement;
@@ -185,9 +181,9 @@ namespace carto {
         virtual void offsetLayerHorizontally(double offset) = 0;
 
         virtual bool isSurfaceCreated() const;
-        virtual void onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager);
-        virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState) = 0;
-        virtual bool onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, StyleTextureCache& styleCache, const ViewState& viewState);
+        virtual void onSurfaceCreated(const std::shared_ptr<GLResourceManager>& resourceManager);
+        virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) = 0;
+        virtual bool onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
         virtual void onSurfaceDestroyed();
         
         virtual std::shared_ptr<Bitmap> getBackgroundBitmap() const;

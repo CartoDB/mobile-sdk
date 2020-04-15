@@ -1,14 +1,12 @@
 #include "TileRenderer.h"
 #include "components/Options.h"
 #include "components/ThreadWorker.h"
-#include "graphics/Shader.h"
-#include "graphics/ShaderManager.h"
 #include "graphics/ViewState.h"
-#include "graphics/utils/GLContext.h"
 #include "projections/ProjectionSurface.h"
 #include "projections/PlanarProjectionSurface.h"
 #include "renderers/MapRenderer.h"
 #include "renderers/drawdatas/TileDrawData.h"
+#include "renderers/utils/GLResourceManager.h"
 #include "utils/Log.h"
 #include "utils/Const.h"
 
@@ -20,29 +18,13 @@
 
 #include <cglib/mat.h>
 
-namespace {
-    
-    struct GLTileRendererDeleter : carto::ThreadWorker {
-        GLTileRendererDeleter(std::unique_ptr<carto::vt::GLTileRenderer> renderer) : _renderer(std::move(renderer)) { }
-        
-        virtual void operator () () {
-            carto::Log::Debug("GLTileRendererDeleter: Releasing renderer resources");
-            _renderer->deinitializeRenderer();
-            carto::GLContext::CheckGLError("GLTileRendererDeleter::operator ()");
-        }
-        
-    private:
-        std::unique_ptr<carto::vt::GLTileRenderer> _renderer;
-    };
-
-}
-    
 namespace carto {
     
-    TileRenderer::TileRenderer(const std::weak_ptr<MapRenderer>& mapRenderer, const std::shared_ptr<vt::TileTransformer>& tileTransformer) :
-        _mapRenderer(mapRenderer),
+    TileRenderer::TileRenderer(const std::shared_ptr<vt::TileTransformer>& tileTransformer) :
         _tileTransformer(tileTransformer),
-        _glRenderer(),
+        _mapRenderer(),
+        _options(),
+        _glBaseRenderer(),
         _interactionMode(false),
         _subTileBlending(true),
         _labelOrder(0),
@@ -51,7 +33,6 @@ namespace carto {
         _viewDir(0, 0, 0),
         _mainLightDir(0, 0, 0),
         _tiles(),
-        _options(),
         _mutex()
     {
     }
@@ -59,9 +40,12 @@ namespace carto {
     TileRenderer::~TileRenderer() {
     }
     
-    void TileRenderer::setOptions(const std::weak_ptr<Options>& options) {
+    void TileRenderer::setComponents(const std::weak_ptr<Options>& options, const std::weak_ptr<MapRenderer>& mapRenderer) {
         std::lock_guard<std::mutex> lock(_mutex);
+
         _options = options;
+        _mapRenderer = mapRenderer;
+        _glBaseRenderer.reset();
     }
     
     void TileRenderer::setInteractionMode(bool enabled) {
@@ -89,73 +73,40 @@ namespace carto {
         _horizontalLayerOffset += offset;
     }
     
-    void TileRenderer::onSurfaceCreated(const std::shared_ptr<ShaderManager>& shaderManager, const std::shared_ptr<TextureManager>& textureManager) {
-        std::lock_guard<std::mutex> lock(_mutex);
-        
-        Log::Debug("TileRenderer: Surface created");
-
-        boost::optional<vt::GLTileRenderer::LightingShader> lightingShader2D;
-        if (auto mapRenderer = _mapRenderer.lock()) {
-            if (!std::dynamic_pointer_cast<PlanarProjectionSurface>(mapRenderer->getProjectionSurface())) {
-                lightingShader2D = vt::GLTileRenderer::LightingShader(true, LIGHTING_SHADER_2D, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
-                    glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1, _viewDir.data());
-                });
-            }
-        }
-        boost::optional<vt::GLTileRenderer::LightingShader> lightingShader3D = vt::GLTileRenderer::LightingShader(true, LIGHTING_SHADER_3D, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
-            if (auto options = _options.lock()) {
-                const Color& ambientLightColor = options->getAmbientLightColor();
-                glUniform4f(glGetUniformLocation(shaderProgram, "u_ambientColor"), ambientLightColor.getR() / 255.0f, ambientLightColor.getG() / 255.0f, ambientLightColor.getB() / 255.0f, ambientLightColor.getA() / 255.0f);
-                const Color& mainLightColor = options->getMainLightColor();
-                glUniform4f(glGetUniformLocation(shaderProgram, "u_lightColor"), mainLightColor.getR() / 255.0f, mainLightColor.getG() / 255.0f, mainLightColor.getB() / 255.0f, mainLightColor.getA() / 255.0f);
-                glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1, _mainLightDir.data());
-            }
-        });
-
-        std::weak_ptr<MapRenderer> mapRendererWeak(_mapRenderer);
-        auto glRendererDeleter = [mapRendererWeak](vt::GLTileRenderer* rendererPtr) {
-            std::unique_ptr<vt::GLTileRenderer> renderer(rendererPtr);
-            if (auto mapRenderer = mapRendererWeak.lock()) {
-                mapRenderer->addRenderThreadCallback(std::make_shared<GLTileRendererDeleter>(std::move(renderer)));
-            }
-        };
-        _glRenderer = std::shared_ptr<vt::GLTileRenderer>(
-            new vt::GLTileRenderer(std::make_shared<vt::GLExtensions>(), _tileTransformer, lightingShader2D, lightingShader3D, Const::WORLD_SIZE), glRendererDeleter
-        );
-        _glRenderer->initializeRenderer();
-        _tiles.clear();
-        GLContext::CheckGLError("TileRenderer::onSurfaceCreated");
-    }
-    
     bool TileRenderer::onDrawFrame(float deltaSeconds, const ViewState& viewState) {
         std::lock_guard<std::mutex> lock(_mutex);
         
-        if (!_glRenderer) {
+        if (!initializeRenderer()) {
+            return false;
+        }
+
+        std::shared_ptr<vt::GLTileRenderer> tileRenderer = _glBaseRenderer->get();
+        if (!tileRenderer) {
             return false;
         }
 
         cglib::mat4x4<double> modelViewMat = viewState.getModelviewMat() * cglib::translate4_matrix(cglib::vec3<double>(_horizontalLayerOffset, 0, 0));
-        _glRenderer->setViewState(vt::ViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution()));
-        _glRenderer->setInteractionMode(_interactionMode);
-        _glRenderer->setSubTileBlending(_subTileBlending);
+        tileRenderer->setViewState(vt::ViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution()));
+        tileRenderer->setInteractionMode(_interactionMode);
+        tileRenderer->setSubTileBlending(_subTileBlending);
 
         _viewDir = cglib::unit(viewState.getFocusPosNormal());
         if (auto options = _options.lock()) {
             _mainLightDir = cglib::vec3<float>::convert(cglib::unit(viewState.getProjectionSurface()->calculateVector(MapPos(0, 0), options->getMainLightDirection())));
         }
 
-        _glRenderer->startFrame(deltaSeconds * 3);
+        tileRenderer->startFrame(deltaSeconds * 3);
 
         bool refresh = false;
-        refresh = _glRenderer->renderGeometry2D() || refresh;
+        refresh = tileRenderer->renderGeometry2D() || refresh;
         if (_labelOrder == 0) {
-            refresh = _glRenderer->renderLabels(true, false) || refresh;
+            refresh = tileRenderer->renderLabels(true, false) || refresh;
         }
         if (_buildingOrder == 0) {
-            refresh = _glRenderer->renderGeometry3D() || refresh;
+            refresh = tileRenderer->renderGeometry3D() || refresh;
         }
         if (_labelOrder == 0) {
-            refresh = _glRenderer->renderLabels(false, true) || refresh;
+            refresh = tileRenderer->renderLabels(false, true) || refresh;
         }
     
         // Reset GL state to the expected state
@@ -171,22 +122,27 @@ namespace carto {
     bool TileRenderer::onDrawFrame3D(float deltaSeconds, const ViewState& viewState) {
         std::lock_guard<std::mutex> lock(_mutex);
         
-        if (!_glRenderer) {
+        if (!initializeRenderer()) {
             return false;
         }
 
-        bool refresh = false;    
-        if (_labelOrder == 1) {
-            refresh = _glRenderer->renderLabels(true, false) || refresh;
-        }
-        if (_buildingOrder == 1) {
-            refresh = _glRenderer->renderGeometry3D() || refresh;
-        }
-        if (_labelOrder == 1) {
-            refresh = _glRenderer->renderLabels(false, true) || refresh;
+        std::shared_ptr<vt::GLTileRenderer> tileRenderer = _glBaseRenderer->get();
+        if (!tileRenderer) {
+            return false;
         }
 
-        _glRenderer->endFrame();
+        bool refresh = false;
+        if (_labelOrder == 1) {
+            refresh = tileRenderer->renderLabels(true, false) || refresh;
+        }
+        if (_buildingOrder == 1) {
+            refresh = tileRenderer->renderGeometry3D() || refresh;
+        }
+        if (_labelOrder == 1) {
+            refresh = tileRenderer->renderLabels(false, true) || refresh;
+        }
+
+        tileRenderer->endFrame();
 
         // Reset GL state to the expected state
         glEnable(GL_CULL_FACE);
@@ -198,43 +154,28 @@ namespace carto {
         return refresh;
     }
     
-    void TileRenderer::onSurfaceDestroyed() {
-        std::lock_guard<std::mutex> lock(_mutex);
-
-        if (!_glRenderer) {
-            return;
-        }
-
-        Log::Debug("TileRenderer: Surface destroyed");
-
-        _glRenderer->resetRenderer();
-        _glRenderer.reset();
-    }
-    
     bool TileRenderer::cullLabels(vt::LabelCuller& culler, const ViewState& viewState) {
-        std::shared_ptr<vt::GLTileRenderer> glRenderer;
+        std::shared_ptr<vt::GLTileRenderer> tileRenderer;
         cglib::mat4x4<double> modelViewMat;
         {
             std::lock_guard<std::mutex> lock(_mutex);
 
-            glRenderer = _glRenderer;
+            if (_glBaseRenderer) {
+                tileRenderer = _glBaseRenderer->get();
+            }
             modelViewMat = viewState.getModelviewMat() * cglib::translate4_matrix(cglib::vec3<double>(_horizontalLayerOffset, 0, 0));
         }
 
-        if (!glRenderer) {
+        if (!tileRenderer) {
             return false;
         }
         culler.setViewState(vt::ViewState(viewState.getProjectionMat(), modelViewMat, viewState.getZoom(), viewState.getAspectRatio(), viewState.getNormalizedResolution()));
-        glRenderer->cullLabels(culler);
+        tileRenderer->cullLabels(culler);
         return true;
     }
     
     bool TileRenderer::refreshTiles(const std::vector<std::shared_ptr<TileDrawData> >& drawDatas) {
         std::lock_guard<std::mutex> lock(_mutex);
-
-        if (!_glRenderer) {
-            return false;
-        }
 
         std::map<vt::TileId, std::shared_ptr<const vt::Tile> > tiles;
         for (const std::shared_ptr<TileDrawData>& drawData : drawDatas) {
@@ -242,59 +183,148 @@ namespace carto {
         }
 
         bool changed = (tiles != _tiles) || (_horizontalLayerOffset != 0);
-        if (changed) {
-            _glRenderer->setVisibleTiles(tiles, _horizontalLayerOffset == 0);
-            _tiles = std::move(tiles);
-            _horizontalLayerOffset = 0;
+        if (!changed) {
+            return false;
         }
-        return changed;
+
+        if (_glBaseRenderer) {
+            if (std::shared_ptr<vt::GLTileRenderer> tileRenderer = _glBaseRenderer->get()) {
+                tileRenderer->setVisibleTiles(tiles, _horizontalLayerOffset == 0);
+            }
+        }
+        _tiles = std::move(tiles);
+        _horizontalLayerOffset = 0;
+        return true;
     }
 
     void TileRenderer::calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, float radius, std::vector<std::tuple<vt::TileId, double, long long> >& results) const {
         std::lock_guard<std::mutex> lock(_mutex);
 
-        if (!_glRenderer) {
+        if (!_glBaseRenderer) {
+            return;
+        }
+        std::shared_ptr<vt::GLTileRenderer> tileRenderer = _glBaseRenderer->get();
+        if (!tileRenderer) {
             return;
         }
 
-        _glRenderer->findGeometryIntersections(ray, results, radius, true, false);
+        tileRenderer->findGeometryIntersections(ray, results, radius, true, false);
         if (_labelOrder == 0) {
-            _glRenderer->findLabelIntersections(ray, results, radius, true, false);
+            tileRenderer->findLabelIntersections(ray, results, radius, true, false);
         }
         if (_buildingOrder == 0) {
-            _glRenderer->findGeometryIntersections(ray, results, radius, false, true);
+            tileRenderer->findGeometryIntersections(ray, results, radius, false, true);
         }
         if (_labelOrder == 0) {
-            _glRenderer->findLabelIntersections(ray, results, radius, false, true);
+            tileRenderer->findLabelIntersections(ray, results, radius, false, true);
         }
     }
         
     void TileRenderer::calculateRayIntersectedElements3D(const cglib::ray3<double>& ray, const ViewState& viewState, float radius, std::vector<std::tuple<vt::TileId, double, long long> >& results) const {
         std::lock_guard<std::mutex> lock(_mutex);
 
-        if (!_glRenderer) {
+        if (!_glBaseRenderer) {
+            return;
+        }
+        std::shared_ptr<vt::GLTileRenderer> tileRenderer = _glBaseRenderer->get();
+        if (!tileRenderer) {
             return;
         }
 
         if (_labelOrder == 1) {
-            _glRenderer->findLabelIntersections(ray, results, radius, true, false);
+            tileRenderer->findLabelIntersections(ray, results, radius, true, false);
         }
         if (_buildingOrder == 1) {
-            _glRenderer->findGeometryIntersections(ray, results, radius, false, true);
+            tileRenderer->findGeometryIntersections(ray, results, radius, false, true);
         }
         if (_labelOrder == 1) {
-            _glRenderer->findLabelIntersections(ray, results, radius, false, true);
+            tileRenderer->findLabelIntersections(ray, results, radius, false, true);
         }
     }
 
     void TileRenderer::calculateRayIntersectedBitmaps(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<std::tuple<vt::TileId, double, vt::TileBitmap, cglib::vec2<float> > >& results) const {
         std::lock_guard<std::mutex> lock(_mutex);
 
-        if (!_glRenderer) {
+        if (!_glBaseRenderer) {
+            return;
+        }
+        std::shared_ptr<vt::GLTileRenderer> tileRenderer = _glBaseRenderer->get();
+        if (!tileRenderer) {
             return;
         }
 
-        _glRenderer->findBitmapIntersections(ray, results);
+        tileRenderer->findBitmapIntersections(ray, results);
+    }
+
+    bool TileRenderer::initializeRenderer() {
+        if (_glBaseRenderer && _glBaseRenderer->isValid()) {
+            return true;
+        }
+
+        std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock();
+        if (!mapRenderer) {
+            return false; // safety check, should never happen
+        }
+
+        boost::optional<vt::GLTileRenderer::LightingShader> lightingShader2D;
+        if (!std::dynamic_pointer_cast<PlanarProjectionSurface>(mapRenderer->getProjectionSurface())) {
+            lightingShader2D = vt::GLTileRenderer::LightingShader(true, LIGHTING_SHADER_2D, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
+                glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1, _viewDir.data());
+            });
+        }
+        boost::optional<vt::GLTileRenderer::LightingShader> lightingShader3D = vt::GLTileRenderer::LightingShader(true, LIGHTING_SHADER_3D, [this](GLuint shaderProgram, const vt::ViewState& viewState) {
+            if (auto options = _options.lock()) {
+                const Color& ambientLightColor = options->getAmbientLightColor();
+                glUniform4f(glGetUniformLocation(shaderProgram, "u_ambientColor"), ambientLightColor.getR() / 255.0f, ambientLightColor.getG() / 255.0f, ambientLightColor.getB() / 255.0f, ambientLightColor.getA() / 255.0f);
+                const Color& mainLightColor = options->getMainLightColor();
+                glUniform4f(glGetUniformLocation(shaderProgram, "u_lightColor"), mainLightColor.getR() / 255.0f, mainLightColor.getG() / 255.0f, mainLightColor.getB() / 255.0f, mainLightColor.getA() / 255.0f);
+                glUniform3fv(glGetUniformLocation(shaderProgram, "u_lightDir"), 1, _mainLightDir.data());
+            }
+        });
+
+        Log::Debug("TileRenderer: Initializing renderer");
+        _glBaseRenderer = mapRenderer->getGLResourceManager()->create<GLBaseRenderer>(_tileTransformer, lightingShader2D, lightingShader3D);
+        if (std::shared_ptr<vt::GLTileRenderer> tileRenderer = _glBaseRenderer->get()) {
+            tileRenderer->setVisibleTiles(_tiles, _horizontalLayerOffset == 0);
+        }
+
+        return _glBaseRenderer && _glBaseRenderer->isValid();
+    }
+
+    TileRenderer::GLBaseRenderer::~GLBaseRenderer() {
+    }
+
+    TileRenderer::GLBaseRenderer::GLBaseRenderer(const std::shared_ptr<GLResourceManager>& manager, const std::shared_ptr<vt::TileTransformer>& tileTransformer, const boost::optional<vt::GLTileRenderer::LightingShader>& lightingShader2D, const boost::optional<vt::GLTileRenderer::LightingShader>& lightingShader3D) :
+        GLResource(manager),
+        _tileTransformer(tileTransformer),
+        _lightingShader2D(lightingShader2D),
+        _lightingShader3D(lightingShader3D),
+        _renderer(),
+        _mutex()
+    {
+    }
+
+    void TileRenderer::GLBaseRenderer::create() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        if (!_renderer) {
+            Log::Debug("TileRenderer::GLBaseRenderer::create: Creating renderer");
+            auto extensions = std::make_shared<vt::GLExtensions>();
+            _renderer = std::make_shared<vt::GLTileRenderer>(extensions, _tileTransformer, _lightingShader2D, _lightingShader3D, Const::WORLD_SIZE);
+            _renderer->initializeRenderer();
+            GLContext::CheckGLError("TileRenderer::GLBaseRenderer::create");
+        }
+    }
+
+    void TileRenderer::GLBaseRenderer::destroy() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+
+        if (_renderer) {
+            Log::Debug("TileRenderer::GLBaseRenderer::destroy: Releasing renderer");
+            _renderer->deinitializeRenderer();
+            _renderer.reset();
+            GLContext::CheckGLError("TileRenderer::GLBaseRenderer::destroy");
+        }
     }
 
     const std::string TileRenderer::LIGHTING_SHADER_2D = R"GLSL(
