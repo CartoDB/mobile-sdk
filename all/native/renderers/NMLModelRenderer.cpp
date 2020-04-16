@@ -8,6 +8,7 @@
 #include "renderers/drawdatas/NMLModelDrawData.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/utils/GLResourceManager.h"
+#include "renderers/utils/NMLResources.h"
 #include "vectorelements/NMLModel.h"
 #include "utils/Log.h"
 
@@ -21,8 +22,8 @@ namespace carto {
     NMLModelRenderer::NMLModelRenderer() :
         _mapRenderer(),
         _options(),
-        _glBaseResourceManager(),
-        _glModelMap(),
+        _nmlResources(),
+        _nmlModelMap(),
         _elements(),
         _tempElements(),
         _mutex()
@@ -37,7 +38,8 @@ namespace carto {
 
         _options = options;
         _mapRenderer = mapRenderer;
-        _glBaseResourceManager.reset();
+        _nmlResources.reset();
+        _nmlModelMap.clear();
     }
 
     void NMLModelRenderer::offsetLayerHorizontally(double offset) {
@@ -65,7 +67,7 @@ namespace carto {
             return false;
         }
 
-        std::shared_ptr<nml::GLResourceManager> resourceManager = _glBaseResourceManager->get();
+        std::shared_ptr<nml::GLResourceManager> resourceManager = _nmlResources->getResourceManager();
         if (!resourceManager) {
             return false;
         }
@@ -89,11 +91,11 @@ namespace carto {
             Color drawDataColor = drawData.getColor();
             cglib::vec4<float> modelColor = cglib::vec4<float>(drawDataColor.getR(), drawDataColor.getG(), drawDataColor.getB(), drawDataColor.getA()) * (1.0f / 255.0f);
             std::shared_ptr<nml::Model> sourceModel = drawData.getSourceModel();
-            std::shared_ptr<nml::GLModel> glModel = _glModelMap[sourceModel];
+            std::shared_ptr<nml::GLModel> glModel = _nmlModelMap[sourceModel];
             if (!glModel) {
                 glModel = std::make_shared<nml::GLModel>(*sourceModel);
                 glModel->create(*resourceManager);
-                _glModelMap[sourceModel] = glModel;
+                _nmlModelMap[sourceModel] = glModel;
             }
     
             cglib::mat4x4<float> mvMat = cglib::mat4x4<float>::convert(viewState.getModelviewMat() * drawData.getLocalMat());
@@ -103,9 +105,9 @@ namespace carto {
         }
 
         // Remove stale models
-        for (auto it = _glModelMap.begin(); it != _glModelMap.end(); ) {
+        for (auto it = _nmlModelMap.begin(); it != _nmlModelMap.end(); ) {
             if (it->first.expired()) {
-                it = _glModelMap.erase(it);
+                it = _nmlModelMap.erase(it);
             } else {
                 it++;
             }
@@ -151,8 +153,8 @@ namespace carto {
             const NMLModelDrawData& drawData = *element->getDrawData();
             
             std::shared_ptr<nml::Model> sourceModel = drawData.getSourceModel();
-            auto modelIt = _glModelMap.find(sourceModel);
-            if (modelIt == _glModelMap.end()) {
+            auto modelIt = _nmlModelMap.find(sourceModel);
+            if (modelIt == _nmlModelMap.end()) {
                 continue;
             }
             std::shared_ptr<nml::GLModel> glModel = modelIt->second;
@@ -177,47 +179,17 @@ namespace carto {
     }
 
     bool NMLModelRenderer::initializeRenderer() {
-        if (_glBaseResourceManager && _glBaseResourceManager->isValid()) {
+        if (_nmlResources && _nmlResources->isValid()) {
             return true;
         }
 
         if (auto mapRenderer = _mapRenderer.lock()) {
-            _glBaseResourceManager = mapRenderer->getGLResourceManager()->create<GLBaseResourceManager>();
+            _nmlResources = mapRenderer->getGLResourceManager()->create<NMLResources>();
+
+            _nmlModelMap.clear();
         }
 
-        return _glBaseResourceManager && _glBaseResourceManager->isValid();
-    }
-
-    NMLModelRenderer::GLBaseResourceManager::~GLBaseResourceManager() {
-    }
-
-    NMLModelRenderer::GLBaseResourceManager::GLBaseResourceManager(const std::shared_ptr<GLResourceManager>& manager) :
-        GLResource(manager),
-        _resourceManager(),
-        _mutex()
-    {
-    }
-
-    void NMLModelRenderer::GLBaseResourceManager::create() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-
-        if (!_resourceManager) {
-            Log::Debug("NMLModelRenderer::GLBaseResourceManager::create: Creating renderer");
-            nml::GLTexture::registerGLExtensions();
-            _resourceManager = std::make_shared<nml::GLResourceManager>();
-            GLContext::CheckGLError("NMLModelRenderer::GLBaseResourceManager::create");
-        }
-    }
-
-    void NMLModelRenderer::GLBaseResourceManager::destroy() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-
-        if (_resourceManager) {
-             Log::Debug("NMLModelRenderer::GLBaseResourceManager::destroy: Releasing renderer");
-             _resourceManager->deleteAll();
-             _resourceManager.reset();
-             GLContext::CheckGLError("NMLModelRenderer::GLBaseResourceManager::destroy");
-        }
+        return _nmlResources && _nmlResources->isValid();
     }
 
 }

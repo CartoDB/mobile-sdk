@@ -7,8 +7,8 @@
 #include "renderers/MapRenderer.h"
 #include "renderers/drawdatas/TileDrawData.h"
 #include "renderers/utils/GLResourceManager.h"
+#include "renderers/utils/VTRenderer.h"
 #include "utils/Log.h"
-#include "utils/Const.h"
 
 #include <vt/Label.h>
 #include <vt/LabelCuller.h>
@@ -20,11 +20,11 @@
 
 namespace carto {
     
-    TileRenderer::TileRenderer(const std::shared_ptr<vt::TileTransformer>& tileTransformer) :
-        _tileTransformer(tileTransformer),
+    TileRenderer::TileRenderer() :
         _mapRenderer(),
         _options(),
-        _glBaseRenderer(),
+        _tileTransformer(),
+        _vtRenderer(),
         _interactionMode(false),
         _subTileBlending(true),
         _labelOrder(0),
@@ -42,10 +42,22 @@ namespace carto {
     
     void TileRenderer::setComponents(const std::weak_ptr<Options>& options, const std::weak_ptr<MapRenderer>& mapRenderer) {
         std::lock_guard<std::mutex> lock(_mutex);
-
         _options = options;
         _mapRenderer = mapRenderer;
-        _glBaseRenderer.reset();
+        _vtRenderer.reset();
+    }
+
+    std::shared_ptr<vt::TileTransformer> TileRenderer::getTileTransformer() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        return _tileTransformer;
+    }
+
+    void TileRenderer::setTileTransformer(const std::shared_ptr<vt::TileTransformer>& tileTransformer) {
+        std::lock_guard<std::mutex> lock(_mutex);
+        if (_tileTransformer != tileTransformer) {
+            _vtRenderer.reset();
+        }
+        _tileTransformer = tileTransformer;
     }
     
     void TileRenderer::setInteractionMode(bool enabled) {
@@ -80,7 +92,7 @@ namespace carto {
             return false;
         }
 
-        std::shared_ptr<vt::GLTileRenderer> tileRenderer = _glBaseRenderer->get();
+        std::shared_ptr<vt::GLTileRenderer> tileRenderer = _vtRenderer->getTileRenderer();
         if (!tileRenderer) {
             return false;
         }
@@ -126,7 +138,7 @@ namespace carto {
             return false;
         }
 
-        std::shared_ptr<vt::GLTileRenderer> tileRenderer = _glBaseRenderer->get();
+        std::shared_ptr<vt::GLTileRenderer> tileRenderer = _vtRenderer->getTileRenderer();
         if (!tileRenderer) {
             return false;
         }
@@ -160,8 +172,8 @@ namespace carto {
         {
             std::lock_guard<std::mutex> lock(_mutex);
 
-            if (_glBaseRenderer) {
-                tileRenderer = _glBaseRenderer->get();
+            if (_vtRenderer) {
+                tileRenderer = _vtRenderer->getTileRenderer();
             }
             modelViewMat = viewState.getModelviewMat() * cglib::translate4_matrix(cglib::vec3<double>(_horizontalLayerOffset, 0, 0));
         }
@@ -187,8 +199,8 @@ namespace carto {
             return false;
         }
 
-        if (_glBaseRenderer) {
-            if (std::shared_ptr<vt::GLTileRenderer> tileRenderer = _glBaseRenderer->get()) {
+        if (_vtRenderer) {
+            if (std::shared_ptr<vt::GLTileRenderer> tileRenderer = _vtRenderer->getTileRenderer()) {
                 tileRenderer->setVisibleTiles(tiles, _horizontalLayerOffset == 0);
             }
         }
@@ -200,10 +212,10 @@ namespace carto {
     void TileRenderer::calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, float radius, std::vector<std::tuple<vt::TileId, double, long long> >& results) const {
         std::lock_guard<std::mutex> lock(_mutex);
 
-        if (!_glBaseRenderer) {
+        if (!_vtRenderer) {
             return;
         }
-        std::shared_ptr<vt::GLTileRenderer> tileRenderer = _glBaseRenderer->get();
+        std::shared_ptr<vt::GLTileRenderer> tileRenderer = _vtRenderer->getTileRenderer();
         if (!tileRenderer) {
             return;
         }
@@ -223,10 +235,10 @@ namespace carto {
     void TileRenderer::calculateRayIntersectedElements3D(const cglib::ray3<double>& ray, const ViewState& viewState, float radius, std::vector<std::tuple<vt::TileId, double, long long> >& results) const {
         std::lock_guard<std::mutex> lock(_mutex);
 
-        if (!_glBaseRenderer) {
+        if (!_vtRenderer) {
             return;
         }
-        std::shared_ptr<vt::GLTileRenderer> tileRenderer = _glBaseRenderer->get();
+        std::shared_ptr<vt::GLTileRenderer> tileRenderer = _vtRenderer->getTileRenderer();
         if (!tileRenderer) {
             return;
         }
@@ -245,10 +257,10 @@ namespace carto {
     void TileRenderer::calculateRayIntersectedBitmaps(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<std::tuple<vt::TileId, double, vt::TileBitmap, cglib::vec2<float> > >& results) const {
         std::lock_guard<std::mutex> lock(_mutex);
 
-        if (!_glBaseRenderer) {
+        if (!_vtRenderer) {
             return;
         }
-        std::shared_ptr<vt::GLTileRenderer> tileRenderer = _glBaseRenderer->get();
+        std::shared_ptr<vt::GLTileRenderer> tileRenderer = _vtRenderer->getTileRenderer();
         if (!tileRenderer) {
             return;
         }
@@ -257,7 +269,7 @@ namespace carto {
     }
 
     bool TileRenderer::initializeRenderer() {
-        if (_glBaseRenderer && _glBaseRenderer->isValid()) {
+        if (_vtRenderer && _vtRenderer->isValid()) {
             return true;
         }
 
@@ -283,48 +295,12 @@ namespace carto {
         });
 
         Log::Debug("TileRenderer: Initializing renderer");
-        _glBaseRenderer = mapRenderer->getGLResourceManager()->create<GLBaseRenderer>(_tileTransformer, lightingShader2D, lightingShader3D);
-        if (std::shared_ptr<vt::GLTileRenderer> tileRenderer = _glBaseRenderer->get()) {
+        _vtRenderer = mapRenderer->getGLResourceManager()->create<VTRenderer>(_tileTransformer, lightingShader2D, lightingShader3D);
+        if (std::shared_ptr<vt::GLTileRenderer> tileRenderer = _vtRenderer->getTileRenderer()) {
             tileRenderer->setVisibleTiles(_tiles, _horizontalLayerOffset == 0);
         }
 
-        return _glBaseRenderer && _glBaseRenderer->isValid();
-    }
-
-    TileRenderer::GLBaseRenderer::~GLBaseRenderer() {
-    }
-
-    TileRenderer::GLBaseRenderer::GLBaseRenderer(const std::shared_ptr<GLResourceManager>& manager, const std::shared_ptr<vt::TileTransformer>& tileTransformer, const boost::optional<vt::GLTileRenderer::LightingShader>& lightingShader2D, const boost::optional<vt::GLTileRenderer::LightingShader>& lightingShader3D) :
-        GLResource(manager),
-        _tileTransformer(tileTransformer),
-        _lightingShader2D(lightingShader2D),
-        _lightingShader3D(lightingShader3D),
-        _renderer(),
-        _mutex()
-    {
-    }
-
-    void TileRenderer::GLBaseRenderer::create() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-
-        if (!_renderer) {
-            Log::Debug("TileRenderer::GLBaseRenderer::create: Creating renderer");
-            auto extensions = std::make_shared<vt::GLExtensions>();
-            _renderer = std::make_shared<vt::GLTileRenderer>(extensions, _tileTransformer, _lightingShader2D, _lightingShader3D, Const::WORLD_SIZE);
-            _renderer->initializeRenderer();
-            GLContext::CheckGLError("TileRenderer::GLBaseRenderer::create");
-        }
-    }
-
-    void TileRenderer::GLBaseRenderer::destroy() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-
-        if (_renderer) {
-            Log::Debug("TileRenderer::GLBaseRenderer::destroy: Releasing renderer");
-            _renderer->deinitializeRenderer();
-            _renderer.reset();
-            GLContext::CheckGLError("TileRenderer::GLBaseRenderer::destroy");
-        }
+        return _vtRenderer && _vtRenderer->isValid();
     }
 
     const std::string TileRenderer::LIGHTING_SHADER_2D = R"GLSL(

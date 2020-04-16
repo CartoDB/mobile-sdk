@@ -261,15 +261,14 @@ namespace carto {
     }
 
     bool PointRenderer::initializeRenderer() {
-        static const Shader::Source shaderSource("point", POINT_VERTEX_SHADER, POINT_FRAGMENT_SHADER);
-        
         if (_shader && _shader->isValid() && _textureCache && _textureCache->isValid()) {
             return true;
         }
 
         if (auto mapRenderer = _mapRenderer.lock()) {
             _textureCache = mapRenderer->getGLResourceManager()->create<BitmapTextureCache>(TEXTURE_CACHE_SIZE);
-            _shader = mapRenderer->getGLResourceManager()->create<Shader>(shaderSource);
+
+            _shader = mapRenderer->getGLResourceManager()->create<Shader>("point", POINT_VERTEX_SHADER, POINT_FRAGMENT_SHADER);
     
             // Get shader variables locations
             _a_color = _shader->getAttribLoc("a_color");

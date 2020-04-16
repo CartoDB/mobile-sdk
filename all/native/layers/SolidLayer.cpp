@@ -88,10 +88,6 @@ namespace carto {
     void SolidLayer::offsetLayerHorizontally(double offset) {
     }
     
-    void SolidLayer::onSurfaceCreated(const std::shared_ptr<GLResourceManager>& resourceManager) {
-        Layer::onSurfaceCreated(resourceManager);
-    }
-    
     bool SolidLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
         Color color = getColor();
         _solidRenderer->setColor(Color(color.getR(), color.getG(), color.getB(), static_cast<unsigned char>(color.getA() * getOpacity())));
@@ -100,10 +96,6 @@ namespace carto {
         return false;
     }
     
-    void SolidLayer::onSurfaceDestroyed(){
-        Layer::onSurfaceDestroyed();
-    }
-
     std::shared_ptr<Bitmap> SolidLayer::getBackgroundBitmap() const {
         return std::shared_ptr<Bitmap>();
     }

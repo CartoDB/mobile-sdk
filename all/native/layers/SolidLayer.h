@@ -88,9 +88,7 @@ namespace carto {
 
         virtual void offsetLayerHorizontally(double offset);
         
-        virtual void onSurfaceCreated(const std::shared_ptr<GLResourceManager>& resourceManager);
         virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
-        virtual void onSurfaceDestroyed();
         
         virtual std::shared_ptr<Bitmap> getBackgroundBitmap() const;
         virtual std::shared_ptr<Bitmap> getSkyBitmap() const;

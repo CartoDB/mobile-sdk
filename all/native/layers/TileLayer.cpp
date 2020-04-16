@@ -195,11 +195,12 @@ namespace carto {
         _zoomLevelBias(0.0f),
         _maxOverzoomLevel(MAX_PARENT_SEARCH_DEPTH),
         _maxUnderzoomLevel(MAX_CHILD_SEARCH_DEPTH),
+        _tileRenderer(std::make_shared<TileRenderer>()),
         _visibleTiles(),
         _preloadingTiles(),
         _utfGridTiles(),
-        _tileRenderer(),
-        _tileTransformer()
+        _glResourceManager(),
+        _projectionSurface()
     {
         if (!dataSource) {
             throw NullArgumentException("Null dataSource");
@@ -219,12 +220,13 @@ namespace carto {
                                   const std::weak_ptr<TouchHandler>& touchHandler)
     {
         Layer::setComponents(envelopeThreadPool, tileThreadPool, options, mapRenderer, touchHandler);
+        _tileRenderer->setComponents(options, mapRenderer);
 
+        // To reduce memory usage, release all the caches now
         std::lock_guard<std::recursive_mutex> lock(_mutex);
-        if (_tileRenderer) {
-            _tileRenderer->setComponents(options, mapRenderer);
-        }
-        resetTileTransformer();
+        clearTileCaches(true);
+        _projectionSurface.reset();
+        _glResourceManager.reset();
     }
 
     void TileLayer::loadData(const std::shared_ptr<CullState>& cullState) {
@@ -232,6 +234,20 @@ namespace carto {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
         _calculatingTiles = true;
+
+        // Check if we need to invalidate caches
+        std::shared_ptr<ProjectionSurface> projectionSurface;
+        std::shared_ptr<GLResourceManager> glResourceManager;
+        if (auto mapRenderer = _mapRenderer.lock()) {
+            projectionSurface = mapRenderer->getProjectionSurface();
+            glResourceManager = mapRenderer->getGLResourceManager();
+        }
+        if (_projectionSurface.lock() != projectionSurface || _glResourceManager.lock() != glResourceManager) {
+            clearTileCaches(true);
+            resetTileTransformer();
+            _projectionSurface = projectionSurface;
+            _glResourceManager = glResourceManager;
+        }
 
         // Remove UTF grid tiles that are missing from the cache
         for (auto it = _utfGridTiles.begin(); it != _utfGridTiles.end(); ) {
@@ -313,6 +329,9 @@ namespace carto {
         }
 
         std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            return;
+        }
 
         // Find intersection with projection surface
         double t = -1;
@@ -365,6 +384,9 @@ namespace carto {
 
     bool TileLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
         std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            return false;
+        }
         
         DirectorPtr<UTFGridEventListener> utfGridEventListener = _utfGridEventListener;
 
@@ -414,7 +436,7 @@ namespace carto {
             return;
         }
         
-        cglib::bbox3<double> tileBounds = _tileTransformer->calculateTileBBox(vt::TileId(tile.getZoom(), tile.getX(), tile.getY()));
+        cglib::bbox3<double> tileBounds = getTileTransformer()->calculateTileBBox(vt::TileId(tile.getZoom(), tile.getX(), tile.getY()));
         cglib::vec3<double> tileCenter = tileBounds.center();
         cglib::bbox3<double> preloadingBounds(tileCenter + (tileBounds.min - tileCenter) * PRELOADING_TILE_SCALE, tileCenter + (tileBounds.max - tileCenter) * PRELOADING_TILE_SCALE);
 
@@ -472,7 +494,7 @@ namespace carto {
                 }
             }
 
-            cglib::vec3<double> center = _tileTransformer->calculateTileOrigin(vt::TileId(mapTile.getZoom(), mapTile.getX(), mapTile.getY()));
+            cglib::vec3<double> center = getTileTransformer()->calculateTileOrigin(vt::TileId(mapTile.getZoom(), mapTile.getX(), mapTile.getY()));
             double dist = cglib::length(center - viewState.getCameraPos());
 
             taggedTiles.emplace_back(std::make_tuple(parentSubstLevel, childSubstLevel, dist), mapTile);
@@ -591,33 +613,23 @@ namespace carto {
     }
 
     std::shared_ptr<vt::TileTransformer> TileLayer::getTileTransformer() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _tileTransformer;
+        return _tileRenderer->getTileTransformer();
     }
 
     void TileLayer::resetTileTransformer() {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        if (auto options = _options.lock()) {
-            if (options->getRenderProjectionMode() == RenderProjectionMode::RENDER_PROJECTION_MODE_SPHERICAL) {
-                _tileTransformer = std::make_shared<vt::SphericalTileTransformer>(static_cast<float>(Const::WORLD_SIZE / Const::PI));
-                return;
+        std::shared_ptr<vt::TileTransformer> tileTransformer;
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            if (auto options = _options.lock()) {
+                if (options->getRenderProjectionMode() == RenderProjectionMode::RENDER_PROJECTION_MODE_SPHERICAL) {
+                    tileTransformer = std::make_shared<vt::SphericalTileTransformer>(static_cast<float>(Const::WORLD_SIZE / Const::PI));
+                }
+            }
+            if (!tileTransformer) {
+                tileTransformer = std::make_shared<vt::DefaultTileTransformer>(static_cast<float>(Const::WORLD_SIZE));
             }
         }
-        _tileTransformer = std::make_shared<vt::DefaultTileTransformer>(static_cast<float>(Const::WORLD_SIZE));
-    }
-
-    std::shared_ptr<TileRenderer> TileLayer::getTileRenderer() const {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        return _tileRenderer;
-    }
-
-    void TileLayer::setTileRenderer(const std::shared_ptr<TileRenderer>& renderer) {
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        _tileRenderer = renderer;
-
-        if (_tileRenderer) {
-            _tileRenderer->setComponents(_options, _mapRenderer);
-        }
+        _tileRenderer->setTileTransformer(tileTransformer);
     }
 
     TileLayer::FetchTaskBase::FetchTaskBase(const std::shared_ptr<TileLayer>& layer, const MapTile& tile, bool preloadingTile) :

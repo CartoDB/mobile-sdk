@@ -101,15 +101,13 @@ namespace carto {
     }
     
     bool SolidRenderer::initializeRenderer() {
-        static const Shader::Source shaderSource("solid", SOLID_VERTEX_SHADER, SOLID_FRAGMENT_SHADER);
-        
         if (_shader && _shader->isValid() && _bitmapTex && _bitmapTex->isValid()) {
             return true;
         }
 
         if (auto mapRenderer = _mapRenderer.lock()) {
             // Shader and textures must be reloaded
-            _shader = mapRenderer->getGLResourceManager()->create<Shader>(shaderSource);
+            _shader = mapRenderer->getGLResourceManager()->create<Shader>("solid", SOLID_VERTEX_SHADER, SOLID_FRAGMENT_SHADER);
         
             // Get shader variables locations
             _u_mvpMat = _shader->getUniformLoc("u_mvpMat");

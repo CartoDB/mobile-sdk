@@ -71,7 +71,9 @@ namespace carto {
         _fetchThreadPool(std::make_shared<CancelableThreadPool>()),
         _dataSource(dataSource),
         _nmlModelLODTreeEventListener(),
-        _nmlModelLODTreeRenderer(std::make_shared<NMLModelLODTreeRenderer>())
+        _nmlModelLODTreeRenderer(std::make_shared<NMLModelLODTreeRenderer>()),
+        _glResourceManager(),
+        _projectionSurface()
     {
         if (!dataSource) {
             throw NullArgumentException("Null dataSource");
@@ -127,19 +129,6 @@ namespace carto {
         _nmlModelLODTreeRenderer->offsetLayerHorizontally(offset);
     }
     
-    void NMLModelLODTreeLayer::onSurfaceCreated(const std::shared_ptr<GLResourceManager>& resourceManager) {
-        Layer::onSurfaceCreated(resourceManager);
-
-        // Reset caches/model info
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _meshMap.clear();
-            _meshCache.clear();
-            _textureMap.clear();
-            _textureCache.clear();
-        }
-    }
-    
     bool NMLModelLODTreeLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
         if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
             float opacity = getOpacity();
@@ -159,18 +148,6 @@ namespace carto {
         return false;
     }
     
-    void NMLModelLODTreeLayer::onSurfaceDestroyed() {
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _meshMap.clear();
-            _meshCache.clear();
-            _textureMap.clear();
-            _textureCache.clear();
-        }
-
-        Layer::onSurfaceDestroyed();
-    }
-    
     void NMLModelLODTreeLayer::calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
         std::shared_ptr<NMLModelLODTreeLayer> thisLayer = std::static_pointer_cast<NMLModelLODTreeLayer>(std::const_pointer_cast<Layer>(shared_from_this()));
         _nmlModelLODTreeRenderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
@@ -178,6 +155,9 @@ namespace carto {
 
     bool NMLModelLODTreeLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
         std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            return false;
+        }
         
         DirectorPtr<NMLModelLODTreeEventListener> nmlModelLODTreeEventListener = _nmlModelLODTreeEventListener;
 
@@ -209,9 +189,29 @@ namespace carto {
     {
         Layer::setComponents(envelopeThreadPool, tileThreadPool, options, mapRenderer, touchHandler);
         _nmlModelLODTreeRenderer->setComponents(options, mapRenderer);
+
+        // To reduce memory usage, release all the caches now
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        clearCaches();
+        _projectionSurface.reset();
+        _glResourceManager.reset();
     }
     
     void NMLModelLODTreeLayer::loadData(const std::shared_ptr<CullState>& cullState) {
+        // Check if we need to invalidate caches
+        std::shared_ptr<ProjectionSurface> projectionSurface;
+        std::shared_ptr<GLResourceManager> glResourceManager;
+        if (auto mapRenderer = _mapRenderer.lock()) {
+            projectionSurface = mapRenderer->getProjectionSurface();
+            glResourceManager = mapRenderer->getGLResourceManager();
+        }
+        if (_projectionSurface.lock() != projectionSurface || _glResourceManager.lock() != glResourceManager) {
+            clearCaches();
+            _projectionSurface = projectionSurface;
+            _glResourceManager = glResourceManager;
+        }
+
+        // Check the visibility state
         float zoom = cullState->getViewState().getZoom();
         if (!isVisible() || !getVisibleZoomRange().inRange(zoom) || getOpacity() <= 0) {
             _nmlModelLODTreeRenderer->refreshDrawData();
@@ -228,6 +228,16 @@ namespace carto {
             _envelopeThreadPool->execute(task, getUpdatePriority());
             _lastMapTilesFetchTask = task;
         }
+    }
+
+    void NMLModelLODTreeLayer::clearCaches() {
+        std::lock_guard<std::recursive_mutex> lock(_mutex);
+        _modelLODTreeMap.clear();
+        _modelLODTreeCache.clear();
+        _meshMap.clear();
+        _meshCache.clear();
+        _textureMap.clear();
+        _textureCache.clear();
     }
     
     bool NMLModelLODTreeLayer::isDataAvailable(const NMLModelLODTree* modelLODTree, int nodeId) {

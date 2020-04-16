@@ -9,6 +9,7 @@
 #include "renderers/MapRenderer.h"
 #include "renderers/components/RayIntersectedElement.h"
 #include "renderers/utils/GLResourceManager.h"
+#include "renderers/utils/NMLResources.h"
 #include "utils/Log.h"
 
 #include <nml/GLModel.h>
@@ -20,7 +21,7 @@ namespace carto {
     NMLModelLODTreeRenderer::NMLModelLODTreeRenderer() :
         _mapRenderer(),
         _options(),
-        _glBaseResourceManager(),
+        _nmlResources(),
         _tempDrawDatas(),
         _drawRecordMap(),
         _mutex()
@@ -35,7 +36,7 @@ namespace carto {
 
         _options = options;
         _mapRenderer = mapRenderer;
-        _glBaseResourceManager.reset();
+        _nmlResources.reset();
     }
 
     void NMLModelLODTreeRenderer::offsetLayerHorizontally(double offset) {
@@ -59,7 +60,7 @@ namespace carto {
             return false;
         }
 
-        std::shared_ptr<nml::GLResourceManager> resourceManager = _glBaseResourceManager->get();
+        std::shared_ptr<nml::GLResourceManager> resourceManager = _nmlResources->getResourceManager();
         if (!resourceManager) {
             return false;
         }
@@ -238,47 +239,15 @@ namespace carto {
     }
 
     bool NMLModelLODTreeRenderer::initializeRenderer() {
-        if (_glBaseResourceManager && _glBaseResourceManager->isValid()) {
+        if (_nmlResources && _nmlResources->isValid()) {
             return true;
         }
 
         if (auto mapRenderer = _mapRenderer.lock()) {
-            _glBaseResourceManager = mapRenderer->getGLResourceManager()->create<GLBaseResourceManager>();
+            _nmlResources = mapRenderer->getGLResourceManager()->create<NMLResources>();
         }
 
-        return _glBaseResourceManager && _glBaseResourceManager->isValid();
-    }
-
-    NMLModelLODTreeRenderer::GLBaseResourceManager::~GLBaseResourceManager() {
-    }
-
-    NMLModelLODTreeRenderer::GLBaseResourceManager::GLBaseResourceManager(const std::shared_ptr<GLResourceManager>& manager) :
-        GLResource(manager),
-        _resourceManager(),
-        _mutex()
-    {
-    }
-
-    void NMLModelLODTreeRenderer::GLBaseResourceManager::create() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-
-        if (!_resourceManager) {
-            Log::Debug("NMLModelLODTreeRenderer::GLBaseResourceManager::create: Creating renderer");
-            nml::GLTexture::registerGLExtensions();
-            _resourceManager = std::make_shared<nml::GLResourceManager>();
-            GLContext::CheckGLError("NMLModelLODTreeRenderer::GLBaseResourceManager::create");
-        }
-    }
-
-    void NMLModelLODTreeRenderer::GLBaseResourceManager::destroy() const {
-        std::lock_guard<std::mutex> lock(_mutex);
-
-        if (_resourceManager) {
-             Log::Debug("NMLModelLODTreeRenderer::GLBaseResourceManager::destroy: Releasing renderer");
-             _resourceManager->deleteAll();
-             _resourceManager.reset();
-             GLContext::CheckGLError("NMLModelLODTreeRenderer::GLBaseResourceManager::destroy");
-        }
+        return _nmlResources && _nmlResources->isValid();
     }
 
 }

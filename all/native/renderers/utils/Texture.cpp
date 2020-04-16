@@ -61,6 +61,8 @@ namespace carto {
     void Texture::create() const {
         if (_texId == 0) {
             _texId = LoadFromBitmap(*_bitmap, _mipmaps, _repeat);
+
+            GLContext::CheckGLError("Texture::create");
         }
     }
 
@@ -118,8 +120,6 @@ namespace carto {
         }
 
         glBindTexture(GL_TEXTURE_2D, oldTexId);
-    
-        GLContext::CheckGLError("Texture::LoadFromBitmap");
     
         return texId;
     }

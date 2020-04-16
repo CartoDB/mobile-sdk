@@ -23,6 +23,7 @@ namespace carto {
     class GLResourceManager;
     class RayIntersectedElement;
     class NMLModel;
+    class NMLResources;
     class ViewState;
     class VectorLayer;
     
@@ -51,41 +52,13 @@ namespace carto {
         void calculateRayIntersectedElements(const std::shared_ptr<VectorLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
     
     private:
-        class GLBaseResourceManager : public GLResource {
-        public:
-            virtual ~GLBaseResourceManager();
-
-            std::shared_ptr<nml::GLResourceManager> get() const {
-                std::lock_guard<std::mutex> lock(_mutex);
-                return _resourceManager;
-            }
-
-            nml::GLResourceManager* operator -> () const {
-                std::lock_guard<std::mutex> lock(_mutex);
-                return _resourceManager.get();
-            }
-
-        protected:
-            friend GLResourceManager;
-
-            GLBaseResourceManager(const std::shared_ptr<GLResourceManager>& manager);
-
-            virtual void create() const;
-            virtual void destroy() const;
-
-        private:
-            mutable std::shared_ptr<nml::GLResourceManager> _resourceManager;
-
-            mutable std::mutex _mutex;
-        };
-
         bool initializeRenderer();
 
         std::weak_ptr<MapRenderer> _mapRenderer;
         std::weak_ptr<Options> _options;
 
-        std::shared_ptr<GLBaseResourceManager> _glBaseResourceManager;
-        std::map<std::weak_ptr<nml::Model>, std::shared_ptr<nml::GLModel>, std::owner_less<std::weak_ptr<nml::Model> > > _glModelMap;
+        std::shared_ptr<NMLResources> _nmlResources;
+        std::map<std::weak_ptr<nml::Model>, std::shared_ptr<nml::GLModel>, std::owner_less<std::weak_ptr<nml::Model> > > _nmlModelMap;
         std::vector<std::shared_ptr<NMLModel> > _elements;
         std::vector<std::shared_ptr<NMLModel> > _tempElements;
 

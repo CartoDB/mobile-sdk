@@ -36,23 +36,21 @@ namespace carto {
         updateTileLoadListener();
 
         if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
-            if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
-                float opacity = getOpacity();
+            float opacity = getOpacity();
 
-                Color backgroundColor(0, 0, 0, 0);
-                if (std::shared_ptr<mvt::Map::Settings> mapSettings = getTileDecoder()->getMapSettings()) {
-                    backgroundColor = Color(mapSettings->backgroundColor.value());
-                }
-                mapRenderer->clearAndBindScreenFBO(backgroundColor, false, false);
-
-                tileRenderer->setInteractionMode(getVectorTileEventListener().get() ? true : false);
-                tileRenderer->setSubTileBlending(false);
-                bool refresh = tileRenderer->onDrawFrame(deltaSeconds, viewState);
-
-                mapRenderer->blendAndUnbindScreenFBO(opacity);
-
-                return refresh;
+            Color backgroundColor(0, 0, 0, 0);
+            if (std::shared_ptr<mvt::Map::Settings> mapSettings = getTileDecoder()->getMapSettings()) {
+                backgroundColor = Color(mapSettings->backgroundColor.value());
             }
+            mapRenderer->clearAndBindScreenFBO(backgroundColor, false, false);
+
+            _tileRenderer->setInteractionMode(getVectorTileEventListener().get() ? true : false);
+            _tileRenderer->setSubTileBlending(false);
+            bool refresh = _tileRenderer->onDrawFrame(deltaSeconds, viewState);
+
+            mapRenderer->blendAndUnbindScreenFBO(opacity);
+
+            return refresh;
         }
         return false;
     }

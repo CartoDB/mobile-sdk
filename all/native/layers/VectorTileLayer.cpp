@@ -285,27 +285,25 @@ namespace carto {
         
         // Update renderer if needed, run culler
         bool tilesChanged = false;
-        if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
-            if (!(_synchronizedRefresh && _fetchingTiles.getVisibleCount() > 0)) {
-                std::vector<std::shared_ptr<TileDrawData>> drawDatas = _tempDrawDatas;
+        if (!(_synchronizedRefresh && _fetchingTiles.getVisibleCount() > 0)) {
+            std::vector<std::shared_ptr<TileDrawData>> drawDatas = _tempDrawDatas;
 
-                // Add poles
-                if (auto options = _options.lock()) {
-                    if (options->getRenderProjectionMode() == RenderProjectionMode::RENDER_PROJECTION_MODE_SPHERICAL) {
-                        const cglib::frustum3<double>& frustum = cullState->getViewState().getFrustum();
-                        for (int y = -1; y <= 1; y += 2) {
-                            vt::TileId vtTile(0, 0, y);
-                            cglib::bbox3<double> bbox = getTileTransformer()->calculateTileBBox(vtTile);
-                            if (frustum.inside(bbox)) {
-                                drawDatas.push_back(std::make_shared<TileDrawData>(vtTile, getPoleTile(y), -1, false));
-                            }
+            // Add poles
+            if (auto options = _options.lock()) {
+                if (options->getRenderProjectionMode() == RenderProjectionMode::RENDER_PROJECTION_MODE_SPHERICAL) {
+                    const cglib::frustum3<double>& frustum = cullState->getViewState().getFrustum();
+                    for (int y = -1; y <= 1; y += 2) {
+                        vt::TileId vtTile(0, 0, y);
+                        cglib::bbox3<double> bbox = getTileTransformer()->calculateTileBBox(vtTile);
+                        if (frustum.inside(bbox)) {
+                            drawDatas.push_back(std::make_shared<TileDrawData>(vtTile, getPoleTile(y), -1, false));
                         }
                     }
                 }
-                
-                if (tileRenderer->refreshTiles(drawDatas)) {
-                    tilesChanged = true;
-                }
+            }
+            
+            if (_tileRenderer->refreshTiles(drawDatas)) {
+                tilesChanged = true;
             }
         }
     
@@ -358,12 +356,10 @@ namespace carto {
 
             for (int pass = 0; pass < 2; pass++) {
                 std::vector<std::tuple<vt::TileId, double, long long> > hitResults;
-                if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
-                    if (pass == 0) {
-                        tileRenderer->calculateRayIntersectedElements(ray, viewState, clickRadius, hitResults);
-                    } else {
-                        tileRenderer->calculateRayIntersectedElements3D(ray, viewState, clickRadius, hitResults);
-                    }
+                if (pass == 0) {
+                    _tileRenderer->calculateRayIntersectedElements(ray, viewState, clickRadius, hitResults);
+                } else {
+                    _tileRenderer->calculateRayIntersectedElements3D(ray, viewState, clickRadius, hitResults);
                 }
 
                 for (const std::tuple<vt::TileId, double, long long>& hitResult : hitResults) {
@@ -398,6 +394,9 @@ namespace carto {
 
     bool VectorTileLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
         std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            return false;
+        }
         
         DirectorPtr<VectorTileEventListener> eventListener = _vectorTileEventListener;
 
@@ -413,75 +412,36 @@ namespace carto {
     }
 
     void VectorTileLayer::offsetLayerHorizontally(double offset) {
-        if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
-            tileRenderer->offsetLayerHorizontally(offset);
-        }
-    }
-    
-    void VectorTileLayer::onSurfaceCreated(const std::shared_ptr<GLResourceManager>& resourceManager) {
-        TileLayer::onSurfaceCreated(resourceManager);
-
-        // Clear all tile caches - renderer may cache/release tile info, so old tiles are potentially unusable at this point
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _preloadingCache.clear();
-            _visibleCache.clear();
-        }
-
-        // Create new rendererer, simply drop old one (if exists)
-        resetTileTransformer();
-        auto tileRenderer = std::make_shared<TileRenderer>(getTileTransformer());
-        setTileRenderer(tileRenderer);
+        _tileRenderer->offsetLayerHorizontally(offset);
     }
     
     bool VectorTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
         updateTileLoadListener();
 
         if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
-            if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
-                float opacity = getOpacity();
+            float opacity = getOpacity();
 
-                if (opacity < 1.0f) {
-                    mapRenderer->clearAndBindScreenFBO(Color(0, 0, 0, 0), true, true);
-                }
-
-                tileRenderer->setLabelOrder(static_cast<int>(getLabelRenderOrder()));
-                tileRenderer->setBuildingOrder(static_cast<int>(getBuildingRenderOrder()));
-                tileRenderer->setInteractionMode(_vectorTileEventListener.get() ? true : false);
-                tileRenderer->setSubTileBlending(false);
-                bool refresh = tileRenderer->onDrawFrame(deltaSeconds, viewState);
-
-                if (opacity < 1.0f) {
-                    mapRenderer->blendAndUnbindScreenFBO(opacity);
-                }
-
-                return refresh;
+            if (opacity < 1.0f) {
+                mapRenderer->clearAndBindScreenFBO(Color(0, 0, 0, 0), true, true);
             }
+
+            _tileRenderer->setLabelOrder(static_cast<int>(getLabelRenderOrder()));
+            _tileRenderer->setBuildingOrder(static_cast<int>(getBuildingRenderOrder()));
+            _tileRenderer->setInteractionMode(_vectorTileEventListener.get() ? true : false);
+            _tileRenderer->setSubTileBlending(false);
+            bool refresh = _tileRenderer->onDrawFrame(deltaSeconds, viewState);
+
+            if (opacity < 1.0f) {
+                mapRenderer->blendAndUnbindScreenFBO(opacity);
+            }
+
+            return refresh;
         }
         return false;
     }
         
     bool VectorTileLayer::onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
-        if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
-            return tileRenderer->onDrawFrame3D(deltaSeconds, viewState);
-        }
-        return false;
-    }
-    
-    void VectorTileLayer::onSurfaceDestroyed() {
-        // Reset renderer
-        if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
-            setTileRenderer(std::shared_ptr<TileRenderer>());
-        }
-
-        // Clear all tile caches - renderer may cache/release tile info, so old tiles are potentially unusable at this point
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _preloadingCache.clear();
-            _visibleCache.clear();
-        }
-    
-        TileLayer::onSurfaceDestroyed();
+        return _tileRenderer->onDrawFrame3D(deltaSeconds, viewState);
     }
     
     std::shared_ptr<Bitmap> VectorTileLayer::getBackgroundBitmap() const {

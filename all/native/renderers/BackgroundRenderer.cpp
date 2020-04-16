@@ -45,11 +45,9 @@ namespace carto {
     }
     
     void BackgroundRenderer::onSurfaceCreated(const std::shared_ptr<GLResourceManager>& resourceManager) {
-        static const Shader::Source shaderSource("background", BACKGROUND_VERTEX_SHADER, BACKGROUND_FRAGMENT_SHADER);
-
         _glResourceManager = resourceManager;
 
-        _shader = _glResourceManager->create<Shader>(shaderSource);
+        _shader = _glResourceManager->create<Shader>("background", BACKGROUND_VERTEX_SHADER, BACKGROUND_FRAGMENT_SHADER);
 
         // Get shader variables locations
         _u_tex = _shader->getUniformLoc("u_tex");

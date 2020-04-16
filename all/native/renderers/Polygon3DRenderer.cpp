@@ -274,14 +274,12 @@ namespace carto {
     }
         
     bool Polygon3DRenderer::initializeRenderer() {
-        static const Shader::Source shaderSource("polygon3d", POLYGON3D_VERTEX_SHADER, POLYGON3D_FRAGMENT_SHADER);
-
         if (_shader && _shader->isValid()) {
             return true;
         }
 
         if (auto mapRenderer = _mapRenderer.lock()) {
-            _shader = mapRenderer->getGLResourceManager()->create<Shader>(shaderSource);
+            _shader = mapRenderer->getGLResourceManager()->create<Shader>("polygon3d", POLYGON3D_VERTEX_SHADER, POLYGON3D_FRAGMENT_SHADER);
 
             // Get shader variables locations
             _a_color = _shader->getAttribLoc("a_color");

@@ -48,9 +48,7 @@ namespace carto {
         std::shared_ptr<Bitmap> _bitmap;
         bool _mipmaps;
         bool _repeat;
-        
         std::size_t _sizeInBytes;
-        
         cglib::vec2<float> _texCoordScale;
     
         mutable GLuint _texId;

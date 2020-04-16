@@ -163,10 +163,6 @@ namespace carto {
         _nmlModelRenderer->offsetLayerHorizontally(offset);
     }
     
-    void VectorLayer::onSurfaceCreated(const std::shared_ptr<GLResourceManager>& resourceManager) {
-        Layer::onSurfaceCreated(resourceManager);
-    }
-    
     bool VectorLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
         if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
             float opacity = getOpacity();
@@ -199,10 +195,6 @@ namespace carto {
         return false;
     }
     
-    void VectorLayer::onSurfaceDestroyed() {
-        Layer::onSurfaceDestroyed();
-    }
-    
     void VectorLayer::calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const {
         std::shared_ptr<VectorLayer> thisLayer = std::static_pointer_cast<VectorLayer>(std::const_pointer_cast<Layer>(shared_from_this()));
         _billboardRenderer->calculateRayIntersectedElements(thisLayer, ray, viewState, results);
@@ -216,6 +208,9 @@ namespace carto {
 
     bool VectorLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
         std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            return false;
+        }
 
         if (auto element = intersectedElement.getElement<VectorElement>()) {
             if (auto popup = std::dynamic_pointer_cast<Popup>(element)) {

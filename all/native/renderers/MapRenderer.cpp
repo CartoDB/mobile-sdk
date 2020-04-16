@@ -60,7 +60,6 @@ namespace carto {
         _surfaceCreated(false),
         _surfaceChanged(false),
         _billboardsChanged(false),
-        _renderProjectionChanged(false),
         _redrawPending(false),
         _redrawRequestListener(),
         _mapRendererListener(),
@@ -497,11 +496,7 @@ namespace carto {
         // Notify renderers about the event
         _backgroundRenderer.onSurfaceCreated(_glResourceManager);
         _watermarkRenderer.onSurfaceCreated(_glResourceManager);
-    
-        for (const std::shared_ptr<Layer>& layer : _layers->getAll()) {
-            layer->onSurfaceCreated(_glResourceManager);
-        }
-        
+
         GLContext::CheckGLError("MapRenderer::onSurfaceCreated");
     }
 
@@ -619,11 +614,7 @@ namespace carto {
         _screenFrameBuffer.reset();
         _screenBlendShader.reset();
 
-        // Clean up all opengl resources
-        for (const std::shared_ptr<Layer>& layer : _layers->getAll()) {
-            layer->onSurfaceDestroyed();
-        }
-        
+        // Notify renderers about the event
         _watermarkRenderer.onSurfaceDestroyed();
         _backgroundRenderer.onSurfaceDestroyed();
     }
@@ -687,9 +678,7 @@ namespace carto {
         glBindFramebuffer(GL_FRAMEBUFFER, prevBoundFBO);
 
         if (!_screenBlendShader || !_screenBlendShader->isValid()) {
-            static const Shader::Source shaderSource("blend", BLEND_VERTEX_SHADER, BLEND_FRAGMENT_SHADER);
-            
-            _screenBlendShader = _glResourceManager->create<Shader>(shaderSource);
+            _screenBlendShader = _glResourceManager->create<Shader>("blend", BLEND_VERTEX_SHADER, BLEND_FRAGMENT_SHADER);
         }
         
         glUseProgram(_screenBlendShader->getProgId());
@@ -751,13 +740,8 @@ namespace carto {
         // If screen size has been set, load the layers, otherwise wait for the onSurfaceChanged method
         // which will also start the cull worker
         if (_surfaceCreated) {
-            // If layer not yet initialized, Force the layer to be initialized (and then culled) in the UI thread
-            if (!layer->isSurfaceCreated()) {
-                requestRedraw();
-            } else {
-                int delayTime = layer->getCullDelay();
-                _cullWorker->init(layer, delay ? delayTime : 0);
-            }
+            int delayTime = layer->getCullDelay();
+            _cullWorker->init(layer, delay ? delayTime : 0);
         }
     }
     
@@ -824,9 +808,6 @@ namespace carto {
         {
             std::vector<std::shared_ptr<Layer> > layers = _layers->getAll();
 
-            // Reset surfaces if renderprojection has changed
-            bool resetSurfaces = _renderProjectionChanged.exchange(false);
-
             // BillboardSorter modifications must be synchronized
             std::lock_guard<std::recursive_mutex> lock(_mutex);
             
@@ -837,12 +818,6 @@ namespace carto {
             for (const std::shared_ptr<Layer>& layer : layers) {
                 if (viewState.getHorizontalLayerOffsetDir() != 0) {
                     layer->offsetLayerHorizontally(viewState.getHorizontalLayerOffsetDir() * Const::WORLD_SIZE);
-                }
-    
-                // Initialize layer renderer if it was added after onSurfaceCreated was called
-                if (!layer->isSurfaceCreated() || resetSurfaces) {
-                    layer->onSurfaceCreated(_glResourceManager);
-                    layerChanged(layer, false);
                 }
     
                 needRedraw = layer->onDrawFrame(deltaSeconds, _billboardSorter, viewState) || needRedraw;
@@ -951,16 +926,7 @@ namespace carto {
                 updateView = true;
             }
 
-            if (optionName == "RenderProjectionMode") {
-                std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
-                mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
-                mapRenderer->_viewState.clampZoom(*mapRenderer->_options);
-                mapRenderer->_viewState.clampFocusPos(*mapRenderer->_options);
-                mapRenderer->_renderProjectionChanged = true;
-                updateView = true;
-            }
-
-            if (optionName == "BaseProjection" || optionName == "ZoomRange" || optionName == "PanBounds" || optionName == "RestrictedPanning") {
+            if (optionName == "RenderProjectionMode" || optionName == "BaseProjection" || optionName == "ZoomRange" || optionName == "PanBounds" || optionName == "RestrictedPanning") {
                 std::lock_guard<std::recursive_mutex> lock(mapRenderer->_mutex);
                 mapRenderer->_viewState.calculateViewState(*mapRenderer->_options);
                 mapRenderer->_viewState.clampZoom(*mapRenderer->_options);

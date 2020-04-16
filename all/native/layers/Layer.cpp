@@ -155,8 +155,7 @@ namespace carto {
         _visible(true),
         _visibleZoomRange(0, std::numeric_limits<float>::infinity()),
         _mutex(),
-        _metaData(),
-        _surfaceCreated(false)
+        _metaData()
     {
     }
     
@@ -207,20 +206,8 @@ namespace carto {
         }
     }
     
-    bool Layer::isSurfaceCreated() const {
-        return _surfaceCreated;
-    }
-    
-    void Layer::onSurfaceCreated(const std::shared_ptr<GLResourceManager>& resourceManager) {
-        _surfaceCreated = true;
-    }
-    
     bool Layer::onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
         return false;
-    }
-    
-    void Layer::onSurfaceDestroyed() {
-        _surfaceCreated = false;
     }
     
     std::shared_ptr<Bitmap> Layer::getBackgroundBitmap() const {

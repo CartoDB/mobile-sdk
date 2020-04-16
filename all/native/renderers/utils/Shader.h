@@ -17,19 +17,6 @@ namespace carto {
 
     class Shader : public GLResource {
     public:
-        struct Source {
-            Source(const std::string& name, const std::string& vertSource, const std::string& fragSource) :
-                _name(name),
-                _vertSource(vertSource),
-                _fragSource(fragSource)
-            {
-            }
-        
-            std::string _name;
-            std::string _vertSource;
-            std::string _fragSource;
-        };
-
         virtual ~Shader();
 
         GLuint getProgId() const;
@@ -39,7 +26,7 @@ namespace carto {
     protected:
         friend GLResourceManager;
         
-        Shader(const std::shared_ptr<GLResourceManager>& manager, const Source& source);
+        Shader(const std::shared_ptr<GLResourceManager>& manager, const std::string& name, const std::string& vertSource, const std::string& fragSource);
 
         virtual void create() const;
         virtual void destroy() const;
@@ -50,7 +37,9 @@ namespace carto {
         static GLuint LoadProg(const std::string& name, GLuint vertShaderId, GLuint fragShaderId);
         static GLuint LoadShader(const std::string& name, const std::string& source, GLenum shaderType);
 
-        Source _source;
+        const std::string _name;
+        const std::string _vertSource;
+        const std::string _fragSource;
         
         mutable GLuint _progId;
         mutable GLuint _vertShaderId;

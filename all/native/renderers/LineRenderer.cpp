@@ -333,15 +333,14 @@ namespace carto {
     }
     
     bool LineRenderer::initializeRenderer() {
-        static const Shader::Source shaderSource("line", LINE_VERTEX_SHADER, LINE_FRAGMENT_SHADER);
-        
         if (_shader && _shader->isValid() && _textureCache && _textureCache->isValid()) {
             return true;
         }
 
         if (auto mapRenderer = _mapRenderer.lock()) {
             _textureCache = mapRenderer->getGLResourceManager()->create<BitmapTextureCache>(TEXTURE_CACHE_SIZE);
-            _shader = mapRenderer->getGLResourceManager()->create<Shader>(shaderSource);
+
+            _shader = mapRenderer->getGLResourceManager()->create<Shader>("line", LINE_VERTEX_SHADER, LINE_FRAGMENT_SHADER);
 
             // Get shader variables locations
             _a_color = _shader->getAttribLoc("a_color");

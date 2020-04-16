@@ -202,8 +202,6 @@ namespace carto {
         mutable std::atomic<bool> _surfaceCreated;
         mutable std::atomic<bool> _surfaceChanged;
         mutable std::atomic<bool> _billboardsChanged;
-// TODO: remove
-        mutable std::atomic<bool> _renderProjectionChanged;
         mutable std::atomic<bool> _redrawPending;
 
         ThreadSafeDirectorPtr<RedrawRequestListener> _redrawRequestListener;

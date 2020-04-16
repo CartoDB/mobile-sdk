@@ -29,6 +29,7 @@ namespace carto {
     class ViewState;
     class NMLModelLODTreeDataSource;
     class NMLModelLODTreeLayer;
+    class NMLResources;
     
     namespace nml {
         class GLModel;
@@ -52,34 +53,6 @@ namespace carto {
         void calculateRayIntersectedElements(const std::shared_ptr<NMLModelLODTreeLayer>& layer, const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
     
     protected:
-        class GLBaseResourceManager : public GLResource {
-        public:
-            virtual ~GLBaseResourceManager();
-
-            std::shared_ptr<nml::GLResourceManager> get() const {
-                std::lock_guard<std::mutex> lock(_mutex);
-                return _resourceManager;
-            }
-
-            nml::GLResourceManager* operator -> () const {
-                std::lock_guard<std::mutex> lock(_mutex);
-                return _resourceManager.get();
-            }
-
-        protected:
-            friend GLResourceManager;
-
-            GLBaseResourceManager(const std::shared_ptr<GLResourceManager>& manager);
-
-            virtual void create() const;
-            virtual void destroy() const;
-
-        private:
-            mutable std::shared_ptr<nml::GLResourceManager> _resourceManager;
-
-            mutable std::mutex _mutex;
-        };
-
         struct ModelNodeDrawRecord {
             NMLModelLODTreeDrawData drawData;
             ModelNodeDrawRecord* parent;
@@ -95,7 +68,7 @@ namespace carto {
         std::weak_ptr<MapRenderer> _mapRenderer;
         std::weak_ptr<Options> _options;
 
-        std::shared_ptr<GLBaseResourceManager> _glBaseResourceManager;
+        std::shared_ptr<NMLResources> _nmlResources;
         std::vector<std::shared_ptr<NMLModelLODTreeDrawData> > _tempDrawDatas;
         std::map<long long, std::shared_ptr<ModelNodeDrawRecord> > _drawRecordMap;
 

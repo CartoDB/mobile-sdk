@@ -28,7 +28,6 @@ namespace carto {
     class DataSource;
     class Layers;
     class MapRenderer;
-    class GLResourceManager;
     class TouchHandler;
     class CancelableThreadPool;
     class RayIntersectedElement;
@@ -180,11 +179,8 @@ namespace carto {
         
         virtual void offsetLayerHorizontally(double offset) = 0;
 
-        virtual bool isSurfaceCreated() const;
-        virtual void onSurfaceCreated(const std::shared_ptr<GLResourceManager>& resourceManager);
         virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) = 0;
         virtual bool onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
-        virtual void onSurfaceDestroyed();
         
         virtual std::shared_ptr<Bitmap> getBackgroundBitmap() const;
         virtual std::shared_ptr<Bitmap> getSkyBitmap() const;
@@ -219,8 +215,6 @@ namespace carto {
         static const int DEFAULT_CULL_DELAY = 400;
 
         std::map<std::string, Variant> _metaData;
-
-        bool _surfaceCreated;
     };
     
 }

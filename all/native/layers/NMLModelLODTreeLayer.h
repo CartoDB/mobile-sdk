@@ -25,6 +25,8 @@
 
 namespace carto {
     class CullState;
+    class GLResourceManager;
+    class ProjectionSurface;
     class NMLModelLODTreeDrawData;
     class NMLModelLODTreeRenderer;
     class NMLModelLODTreeEventListener;
@@ -97,9 +99,7 @@ namespace carto {
     protected:
         virtual void offsetLayerHorizontally(double offset);
     
-        virtual void onSurfaceCreated(const std::shared_ptr<GLResourceManager>& resourceManager);
         virtual bool onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState);
-        virtual void onSurfaceDestroyed();
     
         virtual void calculateRayIntersectedElements(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<RayIntersectedElement>& results) const;
         virtual bool processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const;
@@ -196,6 +196,7 @@ namespace carto {
             NMLModelLODTree::TextureBinding _binding;
         };
     
+        void clearCaches();
         bool isDataAvailable(const NMLModelLODTree* modelLODTree, int nodeId);
         bool loadModelLODTrees(const MapTileList& mapTileList, bool checkOnly);
         bool loadMeshes(const NMLModelLODTree* modelLODTree, int nodeId, bool checkOnly);
@@ -241,6 +242,9 @@ namespace carto {
         ThreadSafeDirectorPtr<NMLModelLODTreeEventListener> _nmlModelLODTreeEventListener;
     
         std::shared_ptr<NMLModelLODTreeRenderer> _nmlModelLODTreeRenderer;
+
+        std::weak_ptr<GLResourceManager> _glResourceManager;
+        std::weak_ptr<ProjectionSurface> _projectionSurface;
     };
     
 }

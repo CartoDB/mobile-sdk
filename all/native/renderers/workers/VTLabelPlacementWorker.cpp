@@ -110,10 +110,8 @@ namespace carto {
                 continue;
             }
 
-            if (std::shared_ptr<TileRenderer> tileRenderer = vectorTileLayer->getTileRenderer()) {
-                if (tileRenderer->cullLabels(culler, viewState)) {
-                    changed = true;
-                }
+            if (vectorTileLayer->_tileRenderer->cullLabels(culler, viewState)) {
+                changed = true;
             }
         }
 

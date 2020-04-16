@@ -38,11 +38,9 @@ namespace carto {
     }
     
     void WatermarkRenderer::onSurfaceCreated(const std::shared_ptr<GLResourceManager>& resourceManager) {
-        static const Shader::Source shaderSource("watermark", WATERMARK_VERTEX_SHADER, WATERMARK_FRAGMENT_SHADER);
-
         _glResourceManager = resourceManager;
 
-        _shader = _glResourceManager->create<Shader>(shaderSource);
+        _shader = _glResourceManager->create<Shader>("watermark", WATERMARK_VERTEX_SHADER, WATERMARK_FRAGMENT_SHADER);
 
         // Get shader variables locations
         _u_tex = _shader->getUniformLoc("u_tex");

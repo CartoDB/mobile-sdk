@@ -22,15 +22,13 @@
 #include <vt/TileId.h>
 #include <vt/Tile.h>
 #include <vt/Bitmap.h>
-#include <vt/GLTileRenderer.h>
 
 namespace carto {
     class Options;
     class MapRenderer;
-    class GLResourceManager;
-    class Shader;
     class TileDrawData;
     class ViewState;
+    class VTRenderer;
     namespace vt {
         class LabelCuller;
         class TileTransformer;
@@ -39,10 +37,13 @@ namespace carto {
     
     class TileRenderer {
     public:
-        TileRenderer(const std::shared_ptr<vt::TileTransformer>& tileTransformer);
+        TileRenderer();
         virtual ~TileRenderer();
     
         void setComponents(const std::weak_ptr<Options>& options, const std::weak_ptr<MapRenderer>& mapRenderer);
+
+        std::shared_ptr<vt::TileTransformer> getTileTransformer() const;
+        void setTileTransformer(const std::shared_ptr<vt::TileTransformer>& tileTransformer);
     
         void setInteractionMode(bool enabled);
         void setSubTileBlending(bool enabled);
@@ -63,44 +64,16 @@ namespace carto {
         void calculateRayIntersectedBitmaps(const cglib::ray3<double>& ray, const ViewState& viewState, std::vector<std::tuple<vt::TileId, double, vt::TileBitmap, cglib::vec2<float> > >& results) const;
     
     private:
-        class GLBaseRenderer : public GLResource {
-        public:
-            virtual ~GLBaseRenderer();
-
-            std::shared_ptr<vt::GLTileRenderer> get() const {
-                std::lock_guard<std::mutex> lock(_mutex);
-                return _renderer;
-            }
-
-        protected:
-            friend GLResourceManager;
-
-            GLBaseRenderer(const std::shared_ptr<GLResourceManager>& manager, const std::shared_ptr<vt::TileTransformer>& tileTransformer, const boost::optional<vt::GLTileRenderer::LightingShader>& lightingShader2D, const boost::optional<vt::GLTileRenderer::LightingShader>& lightingShader3D);
-
-            virtual void create() const;
-            virtual void destroy() const;
-
-        private:
-            const std::shared_ptr<vt::TileTransformer> _tileTransformer;
-            const boost::optional<vt::GLTileRenderer::LightingShader> _lightingShader2D;
-            const boost::optional<vt::GLTileRenderer::LightingShader> _lightingShader3D;
-
-            mutable std::shared_ptr<vt::GLTileRenderer> _renderer;
-
-            mutable std::mutex _mutex;
-        };
-
         bool initializeRenderer();
 
         static const std::string LIGHTING_SHADER_2D;
         static const std::string LIGHTING_SHADER_3D;
 
-        const std::shared_ptr<vt::TileTransformer> _tileTransformer;
         std::weak_ptr<MapRenderer> _mapRenderer;
         std::weak_ptr<Options> _options;
+        std::shared_ptr<vt::TileTransformer> _tileTransformer;
 
-        std::shared_ptr<GLBaseRenderer> _glBaseRenderer;
-
+        std::shared_ptr<VTRenderer> _vtRenderer;
         bool _interactionMode;
         bool _subTileBlending;
         int _labelOrder;

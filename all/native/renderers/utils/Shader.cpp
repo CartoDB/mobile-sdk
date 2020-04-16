@@ -17,7 +17,7 @@ namespace carto {
     GLuint Shader::getUniformLoc(const std::string& uniformName) const {
         auto it = _uniformMap.find(uniformName);
         if (it == _uniformMap.end()) {
-            Log::Errorf("Shader::getUniformLoc: Uniform '%s' not found in shader '%s'", uniformName.c_str(), _source._name.c_str());
+            Log::Errorf("Shader::getUniformLoc: Uniform '%s' not found in shader '%s'", uniformName.c_str(), _name.c_str());
             return 0;
         }
         return it->second;
@@ -26,15 +26,17 @@ namespace carto {
     GLuint Shader::getAttribLoc(const std::string& attribName) const {
         auto it = _attribMap.find(attribName);
         if (it == _attribMap.end()) {
-            Log::Errorf("Shader::getAttribLoc: Attribute '%s' not found in shader '%s'", attribName.c_str(), _source._name.c_str());
+            Log::Errorf("Shader::getAttribLoc: Attribute '%s' not found in shader '%s'", attribName.c_str(), _name.c_str());
             return 0;
         }
         return it->second;
     }
     
-    Shader::Shader(const std::shared_ptr<GLResourceManager>& manager, const Source& source) :
+    Shader::Shader(const std::shared_ptr<GLResourceManager>& manager, const std::string& name, const std::string& vertSource, const std::string& fragSource) :
         GLResource(manager),
-        _source(source),
+        _name(name),
+        _vertSource(vertSource),
+        _fragSource(fragSource),
         _progId(0),
         _vertShaderId(0),
         _fragShaderId(0),
@@ -45,9 +47,9 @@ namespace carto {
 
     void Shader::create() const {
         if (_progId == 0) {
-            _vertShaderId = LoadShader(_source._name, _source._vertSource, GL_VERTEX_SHADER);
-            _fragShaderId = LoadShader(_source._name, _source._fragSource, GL_FRAGMENT_SHADER);
-            _progId = LoadProg(_source._name, _vertShaderId, _fragShaderId);
+            _vertShaderId = LoadShader(_name, _vertSource, GL_VERTEX_SHADER);
+            _fragShaderId = LoadShader(_name, _fragSource, GL_FRAGMENT_SHADER);
+            _progId = LoadProg(_name, _vertShaderId, _fragShaderId);
 
             registerVars(_progId);
         }

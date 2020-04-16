@@ -237,11 +237,9 @@ namespace carto {
         
         // Update renderer if needed, run culler
         bool refresh = false;
-        if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
-            if (!(_synchronizedRefresh && _fetchingTiles.getVisibleCount() > 0)) {
-                if (tileRenderer->refreshTiles(_tempDrawDatas)) {
-                    refresh = true;
-                }
+        if (!(_synchronizedRefresh && _fetchingTiles.getVisibleCount() > 0)) {
+            if (_tileRenderer->refreshTiles(_tempDrawDatas)) {
+                refresh = true;
             }
         }
     
@@ -277,9 +275,7 @@ namespace carto {
 
         if (eventListener) {
             std::vector<std::tuple<vt::TileId, double, vt::TileBitmap, cglib::vec2<float> > > hitResults;
-            if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
-                tileRenderer->calculateRayIntersectedBitmaps(ray, viewState, hitResults);
-            }
+            _tileRenderer->calculateRayIntersectedBitmaps(ray, viewState, hitResults);
 
             for (const std::tuple<vt::TileId, double, vt::TileBitmap, cglib::vec2<float> >& hitResult : hitResults) {
                 vt::TileId vtTileId = std::get<0>(hitResult);
@@ -315,6 +311,9 @@ namespace carto {
 
     bool RasterTileLayer::processClick(ClickType::ClickType clickType, const RayIntersectedElement& intersectedElement, const ViewState& viewState) const {
         std::shared_ptr<ProjectionSurface> projectionSurface = viewState.getProjectionSurface();
+        if (!projectionSurface) {
+            return false;
+        }
         
         DirectorPtr<RasterTileEventListener> eventListener = _rasterTileEventListener;
 
@@ -334,74 +333,35 @@ namespace carto {
     }
 
     void RasterTileLayer::offsetLayerHorizontally(double offset) {
-        if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
-            tileRenderer->offsetLayerHorizontally(offset);
-        }
-    }
-    
-    void RasterTileLayer::onSurfaceCreated(const std::shared_ptr<GLResourceManager>& resourceManager) {
-        TileLayer::onSurfaceCreated(resourceManager);
-
-        // Clear all tile caches - renderer may cache/release tile info, so old tiles are potentially unusable at this point
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _preloadingCache.clear();
-            _visibleCache.clear();
-        }
-    
-        // Create new rendererer, simply drop old one (if exists)
-        resetTileTransformer();
-        auto tileRenderer = std::make_shared<TileRenderer>(getTileTransformer());
-        setTileRenderer(tileRenderer);
+        _tileRenderer->offsetLayerHorizontally(offset);
     }
     
     bool RasterTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
         updateTileLoadListener();
 
         if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
-            if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
-                float opacity = getOpacity();
+            float opacity = getOpacity();
 
-                if (opacity < 1.0f) {
-                    mapRenderer->clearAndBindScreenFBO(Color(0, 0, 0, 0), false, false);
-                }
-
-                tileRenderer->setInteractionMode(_rasterTileEventListener.get() ? true : false);
-                bool refresh = tileRenderer->onDrawFrame(deltaSeconds, viewState);
-
-                if (opacity < 1.0f) {
-                    mapRenderer->blendAndUnbindScreenFBO(opacity);
-                }
-
-                return refresh;
+            if (opacity < 1.0f) {
+                mapRenderer->clearAndBindScreenFBO(Color(0, 0, 0, 0), false, false);
             }
+
+            _tileRenderer->setInteractionMode(_rasterTileEventListener.get() ? true : false);
+            bool refresh = _tileRenderer->onDrawFrame(deltaSeconds, viewState);
+
+            if (opacity < 1.0f) {
+                mapRenderer->blendAndUnbindScreenFBO(opacity);
+            }
+
+            return refresh;
         }
         return false;
     }
     
     bool RasterTileLayer::onDrawFrame3D(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
-        if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
-            return tileRenderer->onDrawFrame3D(deltaSeconds, viewState);
-        }
-        return false;
+        return _tileRenderer->onDrawFrame3D(deltaSeconds, viewState);
     }
 
-    void RasterTileLayer::onSurfaceDestroyed() {
-        // Reset renderer
-        if (std::shared_ptr<TileRenderer> tileRenderer = getTileRenderer()) {
-            setTileRenderer(std::shared_ptr<TileRenderer>());
-        }
-        
-        // Clear all tile caches - renderer may cache/release tile info, so old tiles are potentially unusable at this point
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            _preloadingCache.clear();
-            _visibleCache.clear();
-        }
-    
-        TileLayer::onSurfaceDestroyed();
-    }
-    
     void RasterTileLayer::registerDataSourceListener() {
         _dataSourceListener = std::make_shared<DataSourceListener>(std::static_pointer_cast<RasterTileLayer>(shared_from_this()));
         _dataSource->registerOnChangeListener(_dataSourceListener);

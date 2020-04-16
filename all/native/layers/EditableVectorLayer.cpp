@@ -141,10 +141,6 @@ namespace carto {
         VectorLayer::offsetLayerHorizontally(offset);
     }
 
-    void EditableVectorLayer::onSurfaceCreated(const std::shared_ptr<GLResourceManager>& resourceManager) {
-        VectorLayer::onSurfaceCreated(resourceManager);
-    }
-
     bool EditableVectorLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
         bool refresh = VectorLayer::onDrawFrame(deltaSeconds, billboardSorter, viewState);
 
@@ -163,10 +159,6 @@ namespace carto {
         }
 
         return refresh;
-    }
-
-    void EditableVectorLayer::onSurfaceDestroyed() {
-        VectorLayer::onSurfaceDestroyed();
     }
 
     void EditableVectorLayer::addRendererElement(const std::shared_ptr<VectorElement>& element) {
@@ -293,8 +285,11 @@ namespace carto {
         if (!mapRenderer) {
             return false;
         }
-        
         std::shared_ptr<ProjectionSurface> projectionSurface = mapRenderer->getProjectionSurface();
+        if (!projectionSurface) {
+            return false;
+        }
+
         ViewState viewState = mapRenderer->getViewState();
         cglib::vec3<double> worldPos1 = viewState.screenToWorld(cglib::vec2<float>(screenPos1.getX(), screenPos1.getY()), 0);
         if (std::isnan(cglib::norm(worldPos1))) {
@@ -488,6 +483,7 @@ namespace carto {
         if (!projectionSurface) {
             return geometry;
         }
+
         cglib::vec3<double> pos0 = projectionSurface->calculatePosition(_dataSource->getProjection()->toInternal(mapPos0));
         cglib::vec3<double> pos1 = projectionSurface->calculatePosition(_dataSource->getProjection()->toInternal(mapPos1));
         cglib::mat4x4<double> transform = projectionSurface->calculateTranslateMatrix(pos0, pos1, 1.0f);
@@ -753,12 +749,16 @@ namespace carto {
     }
 
     void EditableVectorLayer::createGeometryOverlayPoints(const std::shared_ptr<Geometry>& geometry, int& index, std::vector<std::shared_ptr<Point> >& overlayPoints) const {
+        std::shared_ptr<Projection> projection = _dataSource->getProjection();
+
         std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock();
         if (!mapRenderer) {
             return;
         }
-        std::shared_ptr<Projection> projection = _dataSource->getProjection();
         std::shared_ptr<ProjectionSurface> projectionSurface = mapRenderer->getProjectionSurface();
+        if (!projectionSurface) {
+            return;
+        }
 
         if (auto pointGeometry = std::dynamic_pointer_cast<PointGeometry>(geometry)) {
             MapPos mapPos = pointGeometry->getPos();
