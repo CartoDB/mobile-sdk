@@ -161,7 +161,7 @@ namespace carto {
     bool ClusteredVectorLayer::ClusterFetchTask::loadElements(const std::shared_ptr<CullState>& cullState) {
         std::shared_ptr<ClusteredVectorLayer> layer = std::static_pointer_cast<ClusteredVectorLayer>(_layer.lock());
 
-        if (auto options = layer->_options.lock()) {
+        if (auto options = layer->getOptions()) {
             std::lock_guard<std::mutex> lock(layer->_clusterMutex);
             layer->_dpiScale = options->getDPI() / Const::UNSCALED_DPI;
         }
@@ -184,7 +184,7 @@ namespace carto {
 
     void ClusteredVectorLayer::rebuildClusters(const std::vector<std::shared_ptr<VectorElement> >& vectorElements) {
         std::shared_ptr<ProjectionSurface> projectionSurface;
-        if (auto mapRenderer = _mapRenderer.lock()) {
+        if (auto mapRenderer = getMapRenderer()) {
             projectionSurface = mapRenderer->getProjectionSurface();
         }
         if (!projectionSurface) {
@@ -510,8 +510,7 @@ namespace carto {
 
         // If billboards were changed and no animations running, notify map renderer
         if (billboardsChanged && !refresh) {
-            std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock();
-            if (mapRenderer) {
+            if (auto mapRenderer = getMapRenderer()) {
                 mapRenderer->billboardsChanged();
             }
         }

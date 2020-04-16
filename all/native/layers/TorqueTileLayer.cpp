@@ -35,7 +35,7 @@ namespace carto {
     bool TorqueTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
         updateTileLoadListener();
 
-        if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
+        if (auto mapRenderer = getMapRenderer()) {
             float opacity = getOpacity();
 
             Color backgroundColor(0, 0, 0, 0);

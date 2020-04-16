@@ -238,7 +238,7 @@ namespace carto {
         // Check if we need to invalidate caches
         std::shared_ptr<ProjectionSurface> projectionSurface;
         std::shared_ptr<GLResourceManager> glResourceManager;
-        if (auto mapRenderer = _mapRenderer.lock()) {
+        if (auto mapRenderer = getMapRenderer()) {
             projectionSurface = mapRenderer->getProjectionSurface();
             glResourceManager = mapRenderer->getGLResourceManager();
         }
@@ -408,7 +408,7 @@ namespace carto {
 
         // Recursively calculate visible tiles
         calculateVisibleTilesRecursive(cullState, MapTile(0, 0, 0, _frameNr), _dataSource->getDataExtent());
-        if (auto options = _options.lock()) {
+        if (auto options = getOptions()) {
             if (options->getRenderProjectionMode() == RenderProjectionMode::RENDER_PROJECTION_MODE_PLANAR && options->isSeamlessPanning()) {
                 // Additional visibility testing has to be done if seamless panning is enabled
                 for (int i = 1; i <= 5; i++) {
@@ -618,16 +618,13 @@ namespace carto {
 
     void TileLayer::resetTileTransformer() {
         std::shared_ptr<vt::TileTransformer> tileTransformer;
-        {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            if (auto options = _options.lock()) {
-                if (options->getRenderProjectionMode() == RenderProjectionMode::RENDER_PROJECTION_MODE_SPHERICAL) {
-                    tileTransformer = std::make_shared<vt::SphericalTileTransformer>(static_cast<float>(Const::WORLD_SIZE / Const::PI));
-                }
+        if (auto options = getOptions()) {
+            if (options->getRenderProjectionMode() == RenderProjectionMode::RENDER_PROJECTION_MODE_SPHERICAL) {
+                tileTransformer = std::make_shared<vt::SphericalTileTransformer>(static_cast<float>(Const::WORLD_SIZE / Const::PI));
             }
-            if (!tileTransformer) {
-                tileTransformer = std::make_shared<vt::DefaultTileTransformer>(static_cast<float>(Const::WORLD_SIZE));
-            }
+        }
+        if (!tileTransformer) {
+            tileTransformer = std::make_shared<vt::DefaultTileTransformer>(static_cast<float>(Const::WORLD_SIZE));
         }
         _tileRenderer->setTileTransformer(tileTransformer);
     }
@@ -705,12 +702,7 @@ namespace carto {
         layer->_fetchingTiles.remove(_tile.getTileId());
 
         if (refresh) {
-            std::shared_ptr<MapRenderer> mapRenderer;
-            {
-                std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
-                mapRenderer = layer->_mapRenderer.lock();
-            }
-            if (mapRenderer) {
+            if (auto mapRenderer = layer->getMapRenderer()) {
                 mapRenderer->layerChanged(layer->shared_from_this(), false);
                 mapRenderer->requestRedraw();
             }

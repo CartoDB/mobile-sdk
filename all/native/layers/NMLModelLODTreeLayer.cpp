@@ -130,7 +130,7 @@ namespace carto {
     }
     
     bool NMLModelLODTreeLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
-        if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
+        if (auto mapRenderer = getMapRenderer()) {
             float opacity = getOpacity();
 
             if (opacity < 1.0f) {
@@ -201,7 +201,7 @@ namespace carto {
         // Check if we need to invalidate caches
         std::shared_ptr<ProjectionSurface> projectionSurface;
         std::shared_ptr<GLResourceManager> glResourceManager;
-        if (auto mapRenderer = _mapRenderer.lock()) {
+        if (auto mapRenderer = getMapRenderer()) {
             projectionSurface = mapRenderer->getProjectionSurface();
             glResourceManager = mapRenderer->getGLResourceManager();
         }
@@ -218,15 +218,18 @@ namespace carto {
             return;
         }
 
-        std::lock_guard<std::recursive_mutex> lock(_mutex);
-        if (_lastMapTilesFetchTask) {
-            _lastMapTilesFetchTask->cancel();
-        }
-    
         auto task = std::make_shared<MapTilesFetchTask>(std::static_pointer_cast<NMLModelLODTreeLayer>(shared_from_this()), cullState);
-        if (_envelopeThreadPool) {
-            _envelopeThreadPool->execute(task, getUpdatePriority());
+        std::shared_ptr<CancelableThreadPool> envelopeThreadPool;
+        {
+            std::lock_guard<std::recursive_mutex> lock(_mutex);
+            if (_lastMapTilesFetchTask) {
+                _lastMapTilesFetchTask->cancel();
+            }
             _lastMapTilesFetchTask = task;
+            envelopeThreadPool = _envelopeThreadPool;
+        }
+        if (envelopeThreadPool) {
+            envelopeThreadPool->execute(task, getUpdatePriority());
         }
     }
 
@@ -709,7 +712,7 @@ namespace carto {
             layer->_modelLODTreeMap[_mapTile.modelLODTreeId] = modelLODTree;
             layer->_modelLODTreeCache.put(_mapTile.modelLODTreeId, modelLODTree, 1);
     
-            if (std::shared_ptr<MapRenderer> mapRenderer = layer->_mapRenderer.lock()) {
+            if (auto mapRenderer = layer->getMapRenderer()) {
                 mapRenderer->layerChanged(layer->shared_from_this(), false);
             }
         }
@@ -759,7 +762,7 @@ namespace carto {
             layer->_meshMap[_binding.meshId] = glMesh;
             layer->_meshCache.put(_binding.meshId, glMesh, glMesh->getTotalGeometrySize());
     
-            if (std::shared_ptr<MapRenderer> mapRenderer = layer->_mapRenderer.lock()) {
+            if (auto mapRenderer = layer->getMapRenderer()) {
                 mapRenderer->layerChanged(layer->shared_from_this(), false);
             }
         }
@@ -811,7 +814,7 @@ namespace carto {
             layer->_textureMap[_binding.textureId] = glTexture;
             layer->_textureCache.put(_binding.textureId, glTexture, glTexture->getTextureSize());
     
-            if (std::shared_ptr<MapRenderer> mapRenderer = layer->_mapRenderer.lock()) {
+            if (auto mapRenderer = layer->getMapRenderer()) {
                 mapRenderer->layerChanged(layer->shared_from_this(), false);
             }
         }

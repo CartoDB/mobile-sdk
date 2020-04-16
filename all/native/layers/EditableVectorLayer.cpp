@@ -144,7 +144,7 @@ namespace carto {
     bool EditableVectorLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
         bool refresh = VectorLayer::onDrawFrame(deltaSeconds, billboardSorter, viewState);
 
-        if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
+        if (auto mapRenderer = getMapRenderer()) {
             float opacity = getOpacity();
 
             if (opacity < 1.0f) {
@@ -194,14 +194,14 @@ namespace carto {
     }
 
     void EditableVectorLayer::registerTouchHandlerListener() {
-        if (std::shared_ptr<TouchHandler> touchHandler = _touchHandler.lock()) {
+        if (auto touchHandler = getTouchHandler()) {
             _touchHandlerListener = std::make_shared<TouchHandlerListener>(std::static_pointer_cast<EditableVectorLayer>(shared_from_this()));
             touchHandler->registerOnTouchListener(_touchHandlerListener);
         }
     }
 
     void EditableVectorLayer::unregisterTouchHandlerListener() {
-        if (std::shared_ptr<TouchHandler> touchHandler = _touchHandler.lock()) {
+        if (auto touchHandler = getTouchHandler()) {
             touchHandler->unregisterOnTouchListener(_touchHandlerListener);
             _touchHandlerListener.reset();
         }
@@ -277,11 +277,7 @@ namespace carto {
 
         DirectorPtr<VectorEditEventListener> vectorEditEventListener = layer->_vectorEditEventListener;
 
-        std::shared_ptr<MapRenderer> mapRenderer;
-        {
-            std::lock_guard<std::recursive_mutex> lock(layer->_mutex);
-            mapRenderer = layer->_mapRenderer.lock();
-        }
+        auto mapRenderer = layer->getMapRenderer();
         if (!mapRenderer) {
             return false;
         }
@@ -751,7 +747,7 @@ namespace carto {
     void EditableVectorLayer::createGeometryOverlayPoints(const std::shared_ptr<Geometry>& geometry, int& index, std::vector<std::shared_ptr<Point> >& overlayPoints) const {
         std::shared_ptr<Projection> projection = _dataSource->getProjection();
 
-        std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock();
+        auto mapRenderer = getMapRenderer();
         if (!mapRenderer) {
             return;
         }
@@ -808,8 +804,7 @@ namespace carto {
             overlayPoint = std::make_shared<Point>(mapPos, virtualPoint ? _overlayStyleVirtual : _overlayStyleNormal);
         }
         if (overlayPoint->getStyle()) {
-            std::lock_guard<std::recursive_mutex> lock(_mutex);
-            if (auto mapRenderer = _mapRenderer.lock()) {
+            if (auto mapRenderer = getMapRenderer()) {
                 overlayPoint->setDrawData(std::make_shared<PointDrawData>(*overlayPoint->getGeometry(), *overlayPoint->getStyle(), *_dataSource->getProjection(), mapRenderer->getProjectionSurface()));
             }
         }

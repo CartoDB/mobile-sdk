@@ -171,6 +171,9 @@ namespace carto {
                                    const std::weak_ptr<MapRenderer>& mapRenderer,
                                    const std::weak_ptr<TouchHandler>& touchHandler);
     
+        std::shared_ptr<Options> getOptions() const;
+        std::shared_ptr<MapRenderer> getMapRenderer() const;
+        std::shared_ptr<TouchHandler> getTouchHandler() const;
         std::shared_ptr<CullState> getLastCullState() const;
 
         void redraw() const;
@@ -193,9 +196,6 @@ namespace carto {
     
         std::shared_ptr<CancelableThreadPool> _envelopeThreadPool;
         std::shared_ptr<CancelableThreadPool> _tileThreadPool;
-        std::weak_ptr<Options> _options;
-        std::weak_ptr<MapRenderer> _mapRenderer;
-        std::weak_ptr<TouchHandler> _touchHandler;
         
         std::shared_ptr<CullState> _lastCullState;
        
@@ -215,6 +215,10 @@ namespace carto {
         static const int DEFAULT_CULL_DELAY = 400;
 
         std::map<std::string, Variant> _metaData;
+
+        std::weak_ptr<Options> _options;
+        std::weak_ptr<MapRenderer> _mapRenderer;
+        std::weak_ptr<TouchHandler> _touchHandler;
     };
     
 }

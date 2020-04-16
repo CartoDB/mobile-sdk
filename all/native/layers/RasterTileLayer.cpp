@@ -339,7 +339,7 @@ namespace carto {
     bool RasterTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
         updateTileLoadListener();
 
-        if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
+        if (auto mapRenderer = getMapRenderer()) {
             float opacity = getOpacity();
 
             if (opacity < 1.0f) {

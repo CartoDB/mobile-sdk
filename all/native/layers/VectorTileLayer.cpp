@@ -256,11 +256,8 @@ namespace carto {
     
     void VectorTileLayer::refreshDrawData(const std::shared_ptr<CullState>& cullState) {
         // Move tiles between caches
-        std::shared_ptr<MapRenderer> mapRenderer;
         {
             std::lock_guard<std::recursive_mutex> lock(_mutex);
-
-            mapRenderer = _mapRenderer.lock();
 
             // Get all tiles currently in the visible cache
             std::unordered_set<long long> lastVisibleCacheTiles = _visibleCache.keys();
@@ -289,7 +286,7 @@ namespace carto {
             std::vector<std::shared_ptr<TileDrawData>> drawDatas = _tempDrawDatas;
 
             // Add poles
-            if (auto options = _options.lock()) {
+            if (auto options = getOptions()) {
                 if (options->getRenderProjectionMode() == RenderProjectionMode::RENDER_PROJECTION_MODE_SPHERICAL) {
                     const cglib::frustum3<double>& frustum = cullState->getViewState().getFrustum();
                     for (int y = -1; y <= 1; y += 2) {
@@ -312,7 +309,7 @@ namespace carto {
             updateLabels = true;
         }
     
-        if (mapRenderer) {
+        if (auto mapRenderer = getMapRenderer()) {
             if (updateLabels) {
                 mapRenderer->vtLabelsChanged(shared_from_this(), false);
             }
@@ -418,7 +415,7 @@ namespace carto {
     bool VectorTileLayer::onDrawFrame(float deltaSeconds, BillboardSorter& billboardSorter, const ViewState& viewState) {
         updateTileLoadListener();
 
-        if (std::shared_ptr<MapRenderer> mapRenderer = _mapRenderer.lock()) {
+        if (auto mapRenderer = getMapRenderer()) {
             float opacity = getOpacity();
 
             if (opacity < 1.0f) {
@@ -465,10 +462,11 @@ namespace carto {
     std::shared_ptr<Bitmap> VectorTileLayer::getSkyBitmap() const {
         std::lock_guard<std::recursive_mutex> lock(_mutex);
 
-        std::shared_ptr<Options> options = _options.lock();
+        auto options = getOptions();
         if (!options) {
             return std::shared_ptr<Bitmap>();
         }
+
         Color skyGroundColor = _skyGroundColor;
         if (std::shared_ptr<mvt::Map::Settings> mapSettings = _tileDecoder->getMapSettings()) {
             skyGroundColor = Color(mapSettings->backgroundColor.value());
