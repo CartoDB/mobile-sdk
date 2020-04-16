@@ -14,6 +14,7 @@
 #include <string>
 
 #include "core/MapPos.h"
+#include "core/Variant.h"
 
 namespace carto {
     class Projection;
@@ -74,17 +75,36 @@ namespace carto {
         void setLocationRadius(float radius);
         
         /**
+         * Returns the set of custom parameters of the request as a variant.
+         * @return The set of custom parameters as a variant. Can be empty.
+         */
+        Variant getCustomParameters() const;
+        /**
+         * Returns the custom parameter value of the request.
+         * @param param The name of the parameter to return.
+         * @return The value of the parameter. If the parameter does not exist, empty variant is returned.
+         */
+        Variant getCustomParameter(const std::string& param) const;
+        /**
+         * Sets a custom parameter value for the the request.
+         * @param param The name of the parameter. For example, "ranking.location_sigma".
+         * @param value The new value for the parameter.
+         */
+        void setCustomParameter(const std::string& param, const Variant& value);
+
+        /**
          * Creates a string representation of this request object, useful for logging.
          * @return The string representation of this request object.
          */
         std::string toString() const;
 
     private:
-        std::string _query;
-        std::shared_ptr<Projection> _projection;
+        const std::string _query;
+        const std::shared_ptr<Projection> _projection;
         MapPos _location;
         bool _locationDefined;
         float _locationRadius;
+        Variant _customParams;
 
         mutable std::mutex _mutex;
     };
