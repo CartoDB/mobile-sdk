@@ -10,9 +10,11 @@
 #include "core/MapPos.h"
 #include "core/MapTile.h"
 
+#include <array>
+#include <cstdint>
 #include <string>
 #include <memory>
-#include <queue>
+#include <mutex>
 #include <vector>
 #include <unordered_set>
 
@@ -95,23 +97,26 @@ namespace carto {
 
     private:
         struct TileNode {
-            MapTile tile;
-            bool inside;
-            std::shared_ptr<TileNode> subNodes[4];
+            std::uint64_t x : 24, y : 24, zoom : 8, inside : 1;
+            std::unique_ptr<std::array<TileNode, 4> > subNodes;
 
-            TileNode(const MapTile& tile, bool inside) : tile(tile), inside(inside) { }
+            TileNode() : x(0), y(0), zoom(0), inside(1), subNodes() { }
         };
 
-        std::shared_ptr<TileNode> findTileNode(const MapTile& tile) const;
+        const TileNode* getRootNode() const;
+        const TileNode* findTileNode(const MapTile& tile) const;
 
-        static std::shared_ptr<TileNode> BuildTileNode(const std::unordered_set<MapTile>& tileSet, const MapTile& tile, int clipZoom);
-        static std::shared_ptr<TileNode> DecodeTileNode(std::queue<bool>& data, const MapTile& tile);
-        static std::vector<bool> EncodeTileNode(const std::shared_ptr<TileNode>& node);
-        static std::vector<std::vector<MapPos> > CalculateTileNodeBoundingPolygon(const std::shared_ptr<TileNode>& node, const std::shared_ptr<Projection>& proj);
+        static void BuildTileNode(TileNode& node, const std::unordered_set<MapTile>& tileSet, const MapTile& tile, int clipZoom);
+        static void DecodeTileNode(TileNode& node, const std::vector<bool>& data, std::size_t& offset, const MapTile& tile);
+        static void EncodeTileNode(const TileNode& node, std::vector<bool>& data);
+
+        static std::vector<std::vector<MapPos> > CalculateTileNodeBoundingPolygon(const TileNode& node, const std::shared_ptr<Projection>& proj);
 
         std::string _stringValue;
-        std::shared_ptr<TileNode> _rootNode;
         int _maxZoomLevel;
+
+        mutable std::unique_ptr<TileNode> _cachedRootNode;
+        mutable std::mutex _mutex;
     };
 }
 

@@ -50,12 +50,13 @@ namespace {
         '8', '9', '+', '/'
     };
 
-    std::queue<bool> decodeBase64(const std::string& stringValue) {
-        std::queue<bool> data;
+    std::vector<bool> decodeBase64(const std::string& stringValue) {
+        std::vector<bool> data;
+        data.reserve(stringValue.size() * 6);
         for (char c : stringValue) {
             int val = base64DecodeTable[static_cast<unsigned char>(c)];
             for (int i = 5; i >= 0; i--) {
-                data.push(((val >> i) & 1) != 0);
+                data.push_back(((val >> i) & 1) != 0);
             }
         }
         return data;
@@ -152,24 +153,26 @@ namespace carto {
     
     PackageTileMask::PackageTileMask(const std::string& stringValue, int maxZoom) :
         _stringValue(stringValue),
-        _rootNode(),
-        _maxZoomLevel(maxZoom)
+        _maxZoomLevel(maxZoom),
+        _cachedRootNode(),
+        _mutex()
     {
-        std::queue<bool> data = decodeBase64(stringValue);
-        _rootNode = DecodeTileNode(data, MapTile(0, 0, 0, 0));
     }
 
     PackageTileMask::PackageTileMask(const std::vector<MapTile>& tiles, int clipZoom) :
         _stringValue(),
-        _rootNode(),
-        _maxZoomLevel(0)
+        _maxZoomLevel(0),
+        _cachedRootNode(),
+        _mutex()
     {
         std::unordered_set<MapTile> tileSet(tiles.begin(), tiles.end());
-        _rootNode = BuildTileNode(tileSet, MapTile(0, 0, 0, 0), clipZoom);
+        _cachedRootNode = std::unique_ptr<TileNode>(new TileNode);
+        BuildTileNode(*_cachedRootNode, tileSet, MapTile(0, 0, 0, 0), clipZoom);
         for (const MapTile& tile : tiles) {
             _maxZoomLevel = std::max(_maxZoomLevel, tile.getZoom());
         }
-        std::vector<bool> data = EncodeTileNode(_rootNode);
+        std::vector<bool> data;
+        EncodeTileNode(*_cachedRootNode, data);
         _stringValue = encodeBase64(std::move(data));
     }
 
@@ -193,7 +196,7 @@ namespace carto {
             throw NullArgumentException("Null projection");
         }
 
-        std::vector<std::vector<MapPos> > poly = CalculateTileNodeBoundingPolygon(_rootNode, projection);
+        std::vector<std::vector<MapPos> > poly = CalculateTileNodeBoundingPolygon(*getRootNode(), projection);
 
         std::vector<std::vector<MapPos> > optimizedPoly;
         for (std::size_t i = 0; i < poly.size(); i++) {
@@ -206,7 +209,7 @@ namespace carto {
     }
 
     PackageTileStatus::PackageTileStatus PackageTileMask::getTileStatus(const MapTile& mapTile) const {
-        if (std::shared_ptr<TileNode> node = findTileNode(mapTile)) {
+        if (const TileNode* node = findTileNode(mapTile)) {
             if (mapTile.getZoom() <= _maxZoomLevel) {
                 return (node->inside ? PackageTileStatus::PACKAGE_TILE_STATUS_FULL : PackageTileStatus::PACKAGE_TILE_STATUS_MISSING);
             }
@@ -214,20 +217,29 @@ namespace carto {
         return PackageTileStatus::PACKAGE_TILE_STATUS_MISSING;
     }
 
-    std::shared_ptr<PackageTileMask::TileNode> PackageTileMask::findTileNode(const MapTile& tile) const {
+    const PackageTileMask::TileNode* PackageTileMask::getRootNode() const {
+        std::lock_guard<std::mutex> lock(_mutex);
+        if (!_cachedRootNode) {
+            _cachedRootNode = std::unique_ptr<TileNode>(new TileNode);
+            std::size_t offset = 0;
+            DecodeTileNode(*_cachedRootNode, decodeBase64(_stringValue), offset, MapTile(0, 0, 0, 0));
+        }
+        return _cachedRootNode.get();
+    }
+
+    const PackageTileMask::TileNode* PackageTileMask::findTileNode(const MapTile& tile) const {
         if (tile.getZoom() == 0) {
             if (tile.getX() == 0 && tile.getY() == 0) {
-                return _rootNode;
+                return getRootNode();
             }
-            return std::shared_ptr<TileNode>();
+            return nullptr;
         }
 
-        std::shared_ptr<TileNode> parentNode = findTileNode(MapTile(tile.getX() / 2, tile.getY() / 2, tile.getZoom() - 1, tile.getFrameNr()));
-        if (parentNode) {
-            for (int i = 0; i < 4; i++) {
-                const std::shared_ptr<TileNode>& node = parentNode->subNodes[i];
-                if (node) {
-                    if (node->tile == tile) {
+        if (const TileNode* parentNode = findTileNode(MapTile(tile.getX() / 2, tile.getY() / 2, tile.getZoom() - 1, tile.getFrameNr()))) {
+            if (parentNode->subNodes) {
+                for (int idx = 0; idx < 4; idx++) {
+                    const TileNode* node = &(*parentNode->subNodes)[idx];
+                    if (node->zoom == tile.getZoom() && node->x == tile.getX() && node->y == tile.getY()) {
                         return node;
                     }
                 }
@@ -236,90 +248,80 @@ namespace carto {
                 return parentNode;
             }
         }
-        return std::shared_ptr<TileNode>();
+        return nullptr;
     }
 
-    std::shared_ptr<PackageTileMask::TileNode> PackageTileMask::BuildTileNode(const std::unordered_set<MapTile>& tileSet, const MapTile& tile, int clipZoom) {
-        auto node = std::make_shared<TileNode>(tile, tileSet.find(tile) != tileSet.end());
-        if (!node->inside || tile.getZoom() >= clipZoom) {
-            return node; // Note: we assume here that tile does not exist implies subtiles do not exist
+    void PackageTileMask::BuildTileNode(TileNode& node, const std::unordered_set<MapTile>& tileSet, const MapTile& tile, int clipZoom) {
+        node.x = tile.getX();
+        node.y = tile.getY();
+        node.zoom = tile.getZoom();
+        node.inside = (tileSet.find(tile) != tileSet.end() ? 1 : 0);
+        if (!node.inside || node.zoom >= clipZoom) {
+            return; // Note: we assume here that tile does not exist implies subtiles do not exist
         }
 
-        int idx = 0;
-        bool deep = false;
-        for (int dy = 0; dy < 2; dy++) {
-            for (int dx = 0; dx < 2; dx++) {
-                node->subNodes[idx] = BuildTileNode(tileSet, MapTile(tile.getX() * 2 + dx, tile.getY() * 2 + dy, tile.getZoom() + 1, tile.getFrameNr()), clipZoom);
-                for (int i = 0; i < 4; i++) {
-                    deep = deep || node->subNodes[idx]->subNodes[i];
-                }
-                idx++;
+        node.subNodes = std::unique_ptr<std::array<TileNode, 4> >(new std::array<TileNode, 4>);
+        for (int idx = 0; idx < 4; idx++) {
+            int dx = idx % 2;
+            int dy = idx / 2;
+            BuildTileNode((*node.subNodes)[idx], tileSet, MapTile(tile.getX() * 2 + dx, tile.getY() * 2 + dy, tile.getZoom() + 1, tile.getFrameNr()), clipZoom);
+        }
+
+        bool keepSubnodes = false;
+        for (int idx = 0; idx < 4; idx++) {
+            const TileNode& subNode = (*node.subNodes)[idx];
+            if (!subNode.inside || subNode.subNodes) {
+                keepSubnodes = true;
             }
         }
-        if (!deep) {
-            if (node->subNodes[0]->inside && node->subNodes[1]->inside && node->subNodes[2]->inside && node->subNodes[3]->inside) {
-                node->subNodes[0] = node->subNodes[1] = node->subNodes[2] = node->subNodes[3] = std::shared_ptr<TileNode>();
-            }
+        if (!keepSubnodes) {
+            node.subNodes.reset();
         }
-        return node;
     }
     
-    std::shared_ptr<PackageTileMask::TileNode> PackageTileMask::DecodeTileNode(std::queue<bool>& data, const MapTile& tile) {
-        bool leaf = !data.front();
-        data.pop();
-        bool inside = data.front();
-        data.pop();
-        auto node = std::make_shared<TileNode>(tile, inside);
-        if (!leaf) {
-            int idx = 0;
-            for (int dy = 0; dy < 2; dy++) {
-                for (int dx = 0; dx < 2; dx++) {
-                    node->subNodes[idx] = DecodeTileNode(data, MapTile(tile.getX() * 2 + dx, tile.getY() * 2 + dy, tile.getZoom() + 1, tile.getFrameNr()));
-                    idx++;
+    void PackageTileMask::DecodeTileNode(TileNode& node, const std::vector<bool>& data, std::size_t& offset, const MapTile& tile) {
+        bool subNodes = data.at(offset++);
+        bool inside = data.at(offset++);
+        if (subNodes) {
+            node.subNodes = std::unique_ptr<std::array<TileNode, 4> >(new std::array<TileNode, 4>);
+            for (int idx = 0; idx < 4; idx++) {
+                int dx = idx % 2;
+                int dy = idx / 2;
+                DecodeTileNode((*node.subNodes)[idx], data, offset, MapTile(tile.getX() * 2 + dx, tile.getY() * 2 + dy, tile.getZoom() + 1, tile.getFrameNr()));
+            }
+        }
+        node.x = tile.getX();
+        node.y = tile.getY();
+        node.zoom = tile.getZoom();
+        node.inside = inside ? 1 : 0;
+    }
+
+    void PackageTileMask::EncodeTileNode(const TileNode& node, std::vector<bool>& data) {
+        data.push_back(node.subNodes ? true : false);
+        data.push_back(node.inside ? true : false);
+        if (node.subNodes) {
+            for (int idx = 0; idx < 4; idx++) {
+                EncodeTileNode((*node.subNodes)[idx], data);
+            }
+        }
+    }
+
+    std::vector<std::vector<MapPos> > PackageTileMask::CalculateTileNodeBoundingPolygon(const TileNode& node, const std::shared_ptr<Projection>& proj) {
+        std::vector<std::vector<MapPos> > poly;
+        if (node.subNodes) {
+            for (int idx = 0; idx < 4; idx++) {
+                std::vector<std::vector<MapPos> > subPoly = CalculateTileNodeBoundingPolygon((*node.subNodes)[idx], proj);
+                if (!poly.empty() && !subPoly.empty()) {
+                    poly = unifyTilePolygons(poly, subPoly);
+                } else if (!subPoly.empty()) {
+                    poly = std::move(subPoly);
                 }
             }
         }
-        return node;
-    }
 
-    std::vector<bool> PackageTileMask::EncodeTileNode(const std::shared_ptr<TileNode>& node) {
-        std::vector<bool> data;
-        if (!node) {
-            return data;
+        if (poly.empty() && node.inside) {
+            poly = createTilePolygon(MapTile(node.x, node.y, node.zoom, 0), proj);
         }
-        for (int idx = 0; idx < 4; idx++) {
-            std::vector<bool> subData = EncodeTileNode(node->subNodes[idx]);
-            data.insert(data.end(), subData.begin(), subData.end());
-        }
-        if (data.empty()) {
-            data.push_back(false);
-            data.push_back(node->inside);
-        } else {
-            data.insert(data.begin(), true);
-            data.insert(data.begin() + 1, node->inside);
-        }
-        return data;
-    }
-
-    std::vector<std::vector<MapPos> > PackageTileMask::CalculateTileNodeBoundingPolygon(const std::shared_ptr<TileNode>& node, const std::shared_ptr<Projection>& proj) {
-        std::vector<std::vector<MapPos> > poly;
-        if (!node) {
-            return poly;
-        }
-
-        for (int i = 0; i < 4; i++) {
-            std::vector<std::vector<MapPos> > subPoly = CalculateTileNodeBoundingPolygon(node->subNodes[i], proj);
-            if (!poly.empty() && !subPoly.empty()) {
-                poly = unifyTilePolygons(poly, subPoly);
-            } else if (!subPoly.empty()) {
-                poly = std::move(subPoly);
-            }
-        }
-
-        if (poly.empty() && node->inside) {
-            poly = createTilePolygon(node->tile, proj);
-        }
-
         return poly;
     }
 
