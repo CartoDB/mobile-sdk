@@ -11,6 +11,7 @@
 #include "core/MapTile.h"
 
 #include <array>
+#include <cstdint>
 #include <string>
 #include <memory>
 #include <mutex>
@@ -96,11 +97,10 @@ namespace carto {
 
     private:
         struct TileNode {
-            MapTile tile;
-            bool inside;
+            std::uint64_t x : 24, y : 24, zoom : 8, inside : 1;
             std::unique_ptr<std::array<TileNode, 4> > subNodes;
 
-            TileNode() : tile(0, 0, 0, 0), inside(true), subNodes() { }
+            TileNode() : x(0), y(0), zoom(0), inside(1), subNodes() { }
         };
 
         const TileNode* getRootNode() const;

@@ -239,7 +239,7 @@ namespace carto {
             if (parentNode->subNodes) {
                 for (int idx = 0; idx < 4; idx++) {
                     const TileNode* node = &(*parentNode->subNodes)[idx];
-                    if (node->tile == tile) {
+                    if (node->zoom == tile.getZoom() && node->x == tile.getX() && node->y == tile.getY()) {
                         return node;
                     }
                 }
@@ -252,9 +252,11 @@ namespace carto {
     }
 
     void PackageTileMask::BuildTileNode(TileNode& node, const std::unordered_set<MapTile>& tileSet, const MapTile& tile, int clipZoom) {
-        node.tile = tile;
-        node.inside = tileSet.find(tile) != tileSet.end();
-        if (!node.inside || node.tile.getZoom() >= clipZoom) {
+        node.x = tile.getX();
+        node.y = tile.getY();
+        node.zoom = tile.getZoom();
+        node.inside = (tileSet.find(tile) != tileSet.end() ? 1 : 0);
+        if (!node.inside || node.zoom >= clipZoom) {
             return; // Note: we assume here that tile does not exist implies subtiles do not exist
         }
 
@@ -288,13 +290,15 @@ namespace carto {
                 DecodeTileNode((*node.subNodes)[idx], data, offset, MapTile(tile.getX() * 2 + dx, tile.getY() * 2 + dy, tile.getZoom() + 1, tile.getFrameNr()));
             }
         }
-        node.inside = inside;
-        node.tile = tile;
+        node.x = tile.getX();
+        node.y = tile.getY();
+        node.zoom = tile.getZoom();
+        node.inside = inside ? 1 : 0;
     }
 
     void PackageTileMask::EncodeTileNode(const TileNode& node, std::vector<bool>& data) {
         data.push_back(node.subNodes ? true : false);
-        data.push_back(node.inside);
+        data.push_back(node.inside ? true : false);
         if (node.subNodes) {
             for (int idx = 0; idx < 4; idx++) {
                 EncodeTileNode((*node.subNodes)[idx], data);
@@ -316,7 +320,7 @@ namespace carto {
         }
 
         if (poly.empty() && node.inside) {
-            poly = createTilePolygon(node.tile, proj);
+            poly = createTilePolygon(MapTile(node.x, node.y, node.zoom, 0), proj);
         }
         return poly;
     }
