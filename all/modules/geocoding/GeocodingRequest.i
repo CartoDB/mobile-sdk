@@ -7,7 +7,7 @@
 
 #ifdef _CARTO_GEOCODING_SUPPORT
 
-!proxy_imports(carto::GeocodingRequest, core.MapPos, projections.Projection)
+!proxy_imports(carto::GeocodingRequest, core.MapPos, core.Variant, projections.Projection)
 
 %{
 #include "geocoding/GeocodingRequest.h"
@@ -20,6 +20,7 @@
 %include <cartoswig.i>
 
 %import "core/MapPos.i"
+%import "core/Variant.i"
 %import "projections/Projection.i"
 
 !shared_ptr(carto::GeocodingRequest, geocoding.GeocodingRequest)
@@ -29,6 +30,7 @@
 %attributeval(carto::GeocodingRequest, carto::MapPos, Location, getLocation, setLocation)
 %attribute(carto::GeocodingRequest, float, LocationRadius, getLocationRadius, setLocationRadius)
 %ignore carto::GeocodingRequest::isLocationDefined;
+%ignore carto::GeocodingRequest::getCustomParameters;
 %std_exceptions(carto::GeocodingRequest::GeocodingRequest)
 !standard_equals(carto::GeocodingRequest);
 !custom_tostring(carto::GeocodingRequest);

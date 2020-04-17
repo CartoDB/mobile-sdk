@@ -49,6 +49,11 @@ namespace carto {
             MapPos wgs84Pos1 = epsg3857.toWgs84(mercPos1);
             options.bounds = cglib::bbox2<double>(cglib::vec2<double>(wgs84Pos0.getX(), wgs84Pos0.getY()), cglib::vec2<double>(wgs84Pos1.getX(), wgs84Pos1.getY()));
         }
+        Variant locationSigma = request->getCustomParameter("ranking.location_sigma");
+        if (locationSigma.getType() != VariantType::VARIANT_TYPE_NULL) {
+            options.locationSigma = static_cast<float>(locationSigma.getDouble());
+        }
+
         std::vector<std::pair<geocoding::Address, float> > addrs = geocoder->findAddresses(request->getQuery(), options);
 
         std::vector<std::shared_ptr<GeocodingResult> > results;
